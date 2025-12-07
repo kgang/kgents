@@ -124,8 +124,27 @@ result = await judge.invoke(JudgeInput(subject=my_agent))
 - `spec/bootstrap.md` - Bootstrap agents spec
 - `spec/principles.md` - Design philosophy
 
+## Manual Testing Runtime
+
+```bash
+cd impl/claude-openrouter
+uv run python -c "
+import asyncio
+from runtime import get_client, detect_auth_method, user
+
+print(detect_auth_method())  # Shows which auth is active
+
+async def test():
+    client = get_client()
+    r = await client.complete([user('Say hello')])
+    print(r.content)
+
+asyncio.run(test())
+"
+```
+
 ## Recent Changes
 
+- **CLI client fix** - Removed invalid `--max-tokens` flag from ClaudeCLIClient
 - **Runtime implemented** - LLMJudge, LLMSublate, LLMContradict with 4 auth methods
 - demo.py refactored into modular CLI with `--section`, `--list` options
-- All 7 bootstrap agents demonstrated with architectural insights
