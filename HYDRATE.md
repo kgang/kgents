@@ -14,7 +14,9 @@
 | 7 Principles | ✅ Defined in `spec/principles.md` |
 | 7 Bootstrap Agents | ✅ Spec (`spec/bootstrap.md`) + Impl (`impl/claude-openrouter/bootstrap/`) |
 | zen-agents | ✅ Textual TUI using bootstrap patterns (`impl/zen-agents/`) |
-| 5 Agent Genera (A,B,C,H,K) | ⏳ Spec exists, impl pending |
+| C-gents (Category Theory) | ✅ `impl/claude-openrouter/agents/c/` |
+| H-gents (Hegel/Jung/Lacan) | ✅ `impl/claude-openrouter/agents/h/` |
+| 3 Agent Genera (A,B,K) | ⏳ Spec exists, impl pending |
 | runtime/ | ⏳ Pending (LLM-backed agents) |
 
 ## 7 Bootstrap Agents (Implemented)
@@ -39,7 +41,9 @@ kgents/
 │   └── {a,b,c,h,k}-gents/   # 5 agent genera
 ├── impl/claude-openrouter/  # Reference implementation
 │   ├── bootstrap/           # ✅ 7 bootstrap agents (Python)
-│   ├── agents/{a,b,c,h,k}/  # ⏳ Pending
+│   ├── agents/c/            # ✅ Category theory (Maybe, Either, Parallel, Conditional)
+│   ├── agents/h/            # ✅ Dialectics (Hegel, Jung, Lacan)
+│   ├── agents/{a,b,k}/      # ⏳ Pending
 │   └── runtime/             # ⏳ Pending
 └── impl/zen-agents/         # ✅ Textual TUI (bootstrap demonstration)
     └── zen_agents/          # Package directory
@@ -58,10 +62,36 @@ From `spec/bootstrap.md`:
 2. **Conflict is Data** — `NameCollisionChecker`, `ConfigConflictChecker`
 3. **Compose, Don't Concatenate** — `>>` operator for pipelines
 
+## C-gents (Implemented)
+
+Category theory patterns for agent composition:
+
+| Pattern | Purpose | Usage |
+|---------|---------|-------|
+| `Maybe`, `Just`, `Nothing` | Optional values | `maybe(agent)` lifts to Maybe |
+| `Either`, `Right`, `Left` | Error handling | `either(agent)` lifts to Either |
+| `parallel(*agents)` | Concurrent execution | Returns `list[B]` |
+| `fan_out(*agents)` | Fan-out to tuple | Returns `tuple` of results |
+| `race(*agents)` | First to complete wins | Returns single `B` |
+| `branch(pred, if_true, if_false)` | Conditional | Routes by predicate |
+| `switch(key_fn, cases, default)` | Multi-way switch | Routes by key |
+
+## H-gents (Implemented)
+
+Dialectic introspection agents (system-facing, not user-therapeutic):
+
+| Agent | Purpose | Key Type |
+|-------|---------|----------|
+| `HegelAgent` | Thesis + antithesis → synthesis | `DialecticInput → DialecticOutput` |
+| `JungAgent` | Shadow integration | `JungInput → JungOutput` |
+| `LacanAgent` | Real/Symbolic/Imaginary triangulation | `LacanInput → LacanOutput` |
+
+Quick versions: `quick_shadow(self_image)`, `quick_register(text)`
+
 ## Next Steps
 
 1. **Run zen-agents** - `cd impl/zen-agents && python3.11 -m venv .venv && source .venv/bin/activate && pip install -e . && zen-agents`
-2. Implement `agents/{a,b,c,h,k}/` genera from specs
+2. Implement `agents/{a,b,k}/` genera from specs
 3. Build `runtime/` for LLM-backed agent execution
 
 ## Recent Fixes
@@ -71,16 +101,37 @@ From `spec/bootstrap.md`:
 ## Quick Start
 
 ```python
+# Bootstrap agents
 from impl.claude_openrouter.bootstrap import (
     Id, Compose, Judge, Ground, Contradict, Sublate, Fix, fix
+)
+
+# C-gents: Category theory composition
+from impl.claude_openrouter.agents.c import (
+    Maybe, Just, Nothing, maybe, either,
+    parallel, fan_out, race, branch, switch
+)
+
+# H-gents: Dialectic introspection
+from impl.claude_openrouter.agents.h import (
+    hegel, jung, lacan,
+    DialecticInput, JungInput, LacanInput
 )
 
 # Build pipelines
 pipeline = validate >> transform >> persist
 
-# Ground facts
-facts = await Ground().invoke(None)
+# Parallel execution
+results = await parallel(agent1, agent2, agent3).invoke(input)
 
-# Iterate to stability
-result = await fix(transform=step, initial=state)
+# Dialectic synthesis
+synthesis = await hegel().invoke(DialecticInput(
+    thesis="prioritize readability",
+    antithesis="prioritize performance"
+))
+
+# Shadow analysis
+shadow = await jung().invoke(JungInput(
+    system_self_image="helpful, accurate, safe assistant"
+))
 ```
