@@ -17,7 +17,7 @@
 | 5 Agent Genera (A,B,C,H,K) | ✅ Implemented |
 | zen-agents | ✅ **41 tests** |
 | runtime/ | ✅ **LLM-backed** (53 tests) |
-| zen-agents UI | ✅ **Phase 2** (Full TUI) |
+| zen-agents UI | ✅ **Phase 3** (Polish + Search) |
 
 ## Quick Commands
 
@@ -64,8 +64,7 @@ kgents/
 
 ## Next Steps
 
-1. **UI Phase 3**: Polish, keyboard shortcuts, search/filter
-2. Refactor zenportal to use zen-agents as library
+1. **UI Phase 4**: Themes, persistence, session templates
 
 ## Key Files
 
@@ -76,6 +75,6 @@ kgents/
 
 ## Recent Changes
 
+- **UI Phase 3** - Search/filter (/), type quick-filter (1-5), command palette (Ctrl+P), status bar
 - **UI Phase 2** - NewSessionModal, ConflictModal, session actions, TmuxCapture streaming
 - **UI Phase 1** - MainScreen, SessionList, OutputView, HelpScreen
-- **Runtime** - LLMJudge, LLMSublate, LLMContradict

@@ -11,9 +11,9 @@ HELP_TEXT = """
 [bold]zen-agents[/bold] - Agent-based session management
 
 [underline]Navigation[/underline]
-  j/k or arrows   Move selection up/down
-  space           Toggle grab mode (reorder sessions)
-  escape          Exit grab mode
+  j/k or ↑↓       Move selection up/down
+  space/l         Toggle grab mode (reorder sessions)
+  escape          Exit current mode / clear filter
 
 [underline]Session Actions[/underline]
   n               New session
@@ -23,13 +23,19 @@ HELP_TEXT = """
   d               Clean up dead session
   v               Revive session
 
+[underline]Search & Filter[/underline]
+  /               Search sessions by name
+  f               Cycle type filter
+  1-5             Quick filter (1=Claude 2=Shell 3=Codex 4=Gemini 5=Custom)
+  0               Clear all filters
+
 [underline]View[/underline]
   r               Refresh output
   s               Toggle streaming mode
-  ctrl+i          Toggle info view
 
-[underline]Other[/underline]
-  ?               Show this help
+[underline]Commands[/underline]
+  ctrl+p          Open command palette
+  ?/F1            Show this help
   q               Quit
 
 [dim]Built on kgents bootstrap agents: Compose, Judge, Ground,

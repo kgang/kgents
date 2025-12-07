@@ -8,7 +8,7 @@ from textual.containers import Horizontal
 from textual.reactive import reactive
 from textual.widgets import Header, Static
 
-from ...types import Session, SessionState, SessionConfig
+from ...types import Session, SessionState, SessionConfig, SessionType
 from ...ground import ZenGround
 from ...conflicts import resolve_conflicts, SessionContradictInput
 from ...tmux.capture import TmuxCapture, capture_output
@@ -37,7 +37,7 @@ class MainScreen(ZenScreen):
         ("up", "move_up", "Up"),
         Binding("l", "toggle_grab", "Grab", show=False),
         Binding("space", "toggle_grab", "Grab", show=False),
-        Binding("escape", "exit_grab", "Exit", show=False),
+        Binding("escape", "exit_mode", "Exit", show=False),
         ("n", "new_session", "New"),
         ("a", "attach", "Attach"),
         ("p", "pause", "Pause"),
@@ -46,7 +46,19 @@ class MainScreen(ZenScreen):
         ("v", "revive", "Revive"),
         ("r", "refresh", "Refresh"),
         Binding("s", "toggle_streaming", "Stream", show=False),
+        # Search/filter
+        Binding("/", "search", "Search", show=False),
+        Binding("f", "cycle_filter", "Filter", show=False),
+        Binding("1", "filter_claude", "Claude", show=False),
+        Binding("2", "filter_shell", "Shell", show=False),
+        Binding("3", "filter_codex", "Codex", show=False),
+        Binding("4", "filter_gemini", "Gemini", show=False),
+        Binding("5", "filter_custom", "Custom", show=False),
+        Binding("0", "clear_filter", "All", show=False),
+        # Help
         ("?", "show_help", "Help"),
+        Binding("f1", "show_help", "Help", show=False),
+        Binding("ctrl+p", "command_palette", "Commands", show=False),
         ("q", "quit", "Quit"),
         Binding("ctrl+q", "quit", "Quit", show=False),
     ]
@@ -84,6 +96,17 @@ class MainScreen(ZenScreen):
         margin-top: 1;
     }
 
+    MainScreen #status-bar {
+        dock: bottom;
+        height: 1;
+        color: $text-muted;
+        padding: 0 2;
+    }
+
+    MainScreen #status-bar .stat {
+        margin-right: 2;
+    }
+
     MainScreen #notifications {
         dock: bottom;
         layer: notification;
@@ -105,6 +128,7 @@ class MainScreen(ZenScreen):
         with Horizontal(id="content"):
             yield SessionList(id="session-list")
             yield OutputView(id="output-view")
+        yield Static("", id="status-bar")
         yield Static("j/k nav  n new  a attach  ? help  q quit", id="hint", classes="hint")
         yield from super().compose()
 
@@ -120,6 +144,7 @@ class MainScreen(ZenScreen):
         sessions = list(state.sessions.values())
         session_list = self.query_one("#session-list", SessionList)
         session_list.update_sessions(sessions)
+        self._update_status_bar(sessions)
 
     def _refresh_selected_output(self) -> None:
         """Refresh output for currently selected session."""
@@ -215,12 +240,18 @@ class MainScreen(ZenScreen):
             session_list.toggle_grab_mode()
             self.zen_notify("grab mode: j/k to reorder, space/esc to exit")
 
-    def action_exit_grab(self) -> None:
-        """Exit grab mode."""
+    def action_exit_mode(self) -> None:
+        """Exit current mode (grab or search)."""
         session_list = self.query_one("#session-list", SessionList)
         if session_list.grab_mode:
             session_list.exit_grab_mode()
             self.zen_notify("order saved")
+        elif session_list.search_mode:
+            session_list.exit_search_mode()
+        elif session_list.search_query or session_list.type_filter:
+            session_list.clear_search()
+            session_list.set_type_filter(None)
+            self.zen_notify("filter cleared")
 
     def action_new_session(self) -> None:
         """Open new session modal."""
@@ -299,6 +330,86 @@ class MainScreen(ZenScreen):
         self.zen_notify(f"output mode: {mode}")
         self._update_hint()
 
+    # Search/filter actions
+    def action_search(self) -> None:
+        """Enter search mode."""
+        session_list = self.query_one("#session-list", SessionList)
+        session_list.enter_search_mode()
+        self._update_hint()
+
+    def action_cycle_filter(self) -> None:
+        """Cycle through type filters."""
+        session_list = self.query_one("#session-list", SessionList)
+        new_filter = session_list.cycle_type_filter()
+        if new_filter:
+            self.zen_notify(f"filter: {new_filter.value}")
+        else:
+            self.zen_notify("filter: all")
+        self._update_hint()
+
+    def action_filter_claude(self) -> None:
+        """Filter to Claude sessions."""
+        self._set_type_filter(SessionType.CLAUDE)
+
+    def action_filter_shell(self) -> None:
+        """Filter to Shell sessions."""
+        self._set_type_filter(SessionType.SHELL)
+
+    def action_filter_codex(self) -> None:
+        """Filter to Codex sessions."""
+        self._set_type_filter(SessionType.CODEX)
+
+    def action_filter_gemini(self) -> None:
+        """Filter to Gemini sessions."""
+        self._set_type_filter(SessionType.GEMINI)
+
+    def action_filter_custom(self) -> None:
+        """Filter to Custom sessions."""
+        self._set_type_filter(SessionType.CUSTOM)
+
+    def action_clear_filter(self) -> None:
+        """Clear all filters."""
+        session_list = self.query_one("#session-list", SessionList)
+        session_list.clear_search()
+        session_list.set_type_filter(None)
+        self.zen_notify("filter: all")
+        self._update_hint()
+
+    def _set_type_filter(self, session_type: SessionType) -> None:
+        """Set type filter helper."""
+        session_list = self.query_one("#session-list", SessionList)
+        session_list.set_type_filter(session_type)
+        self.zen_notify(f"filter: {session_type.value}")
+        self._update_hint()
+
+    def action_command_palette(self) -> None:
+        """Show command palette."""
+        from .command_palette import CommandPaletteModal
+        self.app.push_screen(CommandPaletteModal(), self._on_command_selected)
+
+    def _on_command_selected(self, command: str | None) -> None:
+        """Handle command palette selection."""
+        if not command:
+            return
+        # Map command to action
+        action_map = {
+            "new": self.action_new_session,
+            "attach": self.action_attach,
+            "pause": self.action_pause,
+            "kill": self.action_kill,
+            "clean": self.action_clean,
+            "revive": self.action_revive,
+            "refresh": self.action_refresh,
+            "help": self.action_show_help,
+            "quit": self.action_quit,
+            "search": self.action_search,
+            "filter_claude": self.action_filter_claude,
+            "filter_shell": self.action_filter_shell,
+            "clear_filter": self.action_clear_filter,
+        }
+        if command in action_map:
+            action_map[command]()
+
     def action_show_help(self) -> None:
         """Show help screen."""
         from .help import HelpScreen
@@ -309,13 +420,57 @@ class MainScreen(ZenScreen):
         self.app.exit()
 
     def _update_hint(self) -> None:
-        """Update hint bar."""
+        """Update hint bar with current mode/filter status."""
         hint = self.query_one("#hint", Static)
+        session_list = self.query_one("#session-list", SessionList)
+
         base = "j/k nav  n new  a attach  ? help  q quit"
+        extras = []
+
         if self.streaming:
-            hint.update(f"{base}  [dim]stream[/dim]")
+            extras.append("[dim]stream[/dim]")
+        if session_list.search_mode:
+            extras.append("[yellow]/ search[/yellow]")
+        elif session_list.search_query:
+            extras.append(f"[yellow]/{session_list.search_query}[/yellow]")
+        if session_list.type_filter:
+            extras.append(f"[green][{session_list.type_filter.value}][/green]")
+
+        if extras:
+            hint.update(f"{base}  {'  '.join(extras)}")
         else:
             hint.update(base)
+
+    def _update_status_bar(self, sessions: list[Session]) -> None:
+        """Update status bar with session statistics."""
+        status_bar = self.query_one("#status-bar", Static)
+
+        # Count by state
+        running = sum(1 for s in sessions if s.state == SessionState.RUNNING)
+        paused = sum(1 for s in sessions if s.state == SessionState.PAUSED)
+        completed = sum(1 for s in sessions if s.state == SessionState.COMPLETED)
+        failed = sum(1 for s in sessions if s.state == SessionState.FAILED)
+
+        # Count by type
+        type_counts = {}
+        for s in sessions:
+            t = s.config.session_type.value
+            type_counts[t] = type_counts.get(t, 0) + 1
+
+        # Build status text
+        parts = []
+        parts.append(f"[bold]{len(sessions)}[/bold] sessions")
+
+        if running:
+            parts.append(f"[green]{running} running[/green]")
+        if paused:
+            parts.append(f"[yellow]{paused} paused[/yellow]")
+        if completed:
+            parts.append(f"[dim]{completed} done[/dim]")
+        if failed:
+            parts.append(f"[red]{failed} failed[/red]")
+
+        status_bar.update("  ".join(parts))
 
     def on_session_selected(self, event: SessionSelected) -> None:
         """Handle session selection changes."""

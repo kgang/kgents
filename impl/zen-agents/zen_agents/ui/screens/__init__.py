@@ -5,6 +5,7 @@ from .main import MainScreen
 from .help import HelpScreen
 from .new_session import NewSessionModal, NewSessionResult
 from .conflict import ConflictModal, ConflictModalResult
+from .command_palette import CommandPaletteModal
 
 __all__ = [
     "ZenScreen",
@@ -15,4 +16,5 @@ __all__ = [
     "NewSessionResult",
     "ConflictModal",
     "ConflictModalResult",
+    "CommandPaletteModal",
 ]
