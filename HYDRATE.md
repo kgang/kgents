@@ -38,6 +38,7 @@ kgents/
 ├── spec/              # THE SPECIFICATION
 │   ├── principles.md  # 6 core principles
 │   ├── anatomy.md     # What is an agent?
+│   ├── bootstrap.md   # 7 irreducible agents (regeneration kernel)
 │   ├── a-agents/      # Abstract + Art
 │   ├── b-gents/       # Bio/Scientific
 │   ├── c-gents/       # Category Theory
@@ -56,11 +57,28 @@ kgents/
 5. **Composable** - Agents are morphisms; composition is primary
 6. **Heterarchical** - Agents exist in flux; autonomy and composability coexist
 
+## 7 Bootstrap Agents (Irreducible Kernel)
+
+The minimal set from which all kgents can be regenerated:
+
+| Agent | Symbol | Function |
+|-------|--------|----------|
+| **Id** | λx.x | Identity morphism (composition unit) |
+| **Compose** | ∘ | Agent-that-makes-agents |
+| **Judge** | ⊢ | Value function (embodies 6 principles) |
+| **Ground** | ⊥ | Empirical seed (Kent's preferences, world state) |
+| **Contradict** | ≢ | Recognizes tension between outputs |
+| **Sublate** | ↑ | Hegelian synthesis (or holds tension) |
+| **Fix** | μ | Fixed-point operator (self-reference) |
+
+Minimal bootstrap: `{Compose, Judge, Ground}` — structure, direction, material.
+
 ## Current State
 
-- Phase 1 skeleton COMPLETE (commit `e06aa14`)
+- Phase 1 skeleton COMPLETE
 - 5 agent genera specified: A, B, C, H, K
 - 6 principles defined
+- **NEW**: Bootstrap spec added (7 irreducible agents)
 - No implementation yet
 
 ## Next Steps
@@ -72,6 +90,7 @@ kgents/
 
 ## Key Files to Read
 
+- `spec/bootstrap.md` - **The 7 irreducible agents** (regeneration kernel)
 - `spec/principles.md` - Design philosophy (6 principles incl. Heterarchical)
 - `spec/anatomy.md` - What constitutes an agent
 - `spec/c-gents/composition.md` - How agents combine
