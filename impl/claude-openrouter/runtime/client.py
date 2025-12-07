@@ -83,12 +83,11 @@ class ClaudeCLIClient(LLMClient):
 
         prompt = "\n".join(prompt_parts)
 
-        # Run claude CLI
+        # Run claude CLI (--max-tokens not supported, model handles limits)
         cmd = [
             "claude",
             "--print",
             "--model", model,
-            "--max-tokens", str(max_tokens),
             prompt
         ]
 
