@@ -13,9 +13,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Literal, Optional, Union, TYPE_CHECKING
 
-import sys
-sys.path.insert(0, str(__file__).rsplit("/impl/", 1)[0] + "/impl/claude-openrouter")
-
 from bootstrap import (
     Agent,
     Tension,

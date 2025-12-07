@@ -10,9 +10,6 @@ Why irreducible: Taste cannot be computed. "Is this tasteful?"
 
 from typing import TYPE_CHECKING
 
-import sys
-sys.path.insert(0, str(__file__).rsplit("/impl/", 1)[0] + "/impl/claude-openrouter")
-
 from bootstrap import (
     Agent,
     Judge,

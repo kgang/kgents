@@ -15,9 +15,6 @@ from typing import Any, Optional, Union
 import json
 import os
 
-import sys
-sys.path.insert(0, str(__file__).rsplit("/impl/", 1)[0] + "/impl/claude-openrouter")
-
 from bootstrap import (
     Agent,
     Ground,

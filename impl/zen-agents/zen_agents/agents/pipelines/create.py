@@ -14,9 +14,6 @@ from dataclasses import dataclass
 from typing import Optional, TYPE_CHECKING
 from uuid import uuid4
 
-import sys
-sys.path.insert(0, str(__file__).rsplit("/impl/", 1)[0] + "/impl/claude-openrouter")
-
 from bootstrap import Agent, Verdict, VerdictType, HoldTension
 
 if TYPE_CHECKING:

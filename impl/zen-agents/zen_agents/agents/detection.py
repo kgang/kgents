@@ -10,9 +10,6 @@ IDIOM: Polling is Fix
 from dataclasses import dataclass
 from typing import Optional, TYPE_CHECKING
 
-import sys
-sys.path.insert(0, str(__file__).rsplit("/impl/", 1)[0] + "/impl/claude-openrouter")
-
 from bootstrap import Agent, fix, FixResult
 
 if TYPE_CHECKING:

@@ -16,6 +16,9 @@ dependencies = [
     "textual>=0.40.0",
 ]
 
+# Dev note: Also install kgents-runtime from ../claude-openrouter
+# pip install -e ../claude-openrouter
+
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0",
