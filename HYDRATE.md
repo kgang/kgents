@@ -93,5 +93,6 @@ kgents/
 
 ## Recent Changes
 
+- **BOOTSTRAP_PROMPT.md** - Enhanced with LLM/human boundary, idioms, both impl targets
 - **Meta-analysis** - zen-agents vs zenportal comparison complete
 - **UI Phase 4** - 5 themes, persistence, templates, 49 tests
