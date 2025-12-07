@@ -42,10 +42,12 @@ kgents/
 │   ├── agents/{a,b,c,h,k}/  # ⏳ Pending
 │   └── runtime/             # ⏳ Pending
 └── impl/zen-agents/         # ✅ Textual TUI (bootstrap demonstration)
-    ├── agents/              # Fix, Contradict, Sublate, Ground, Judge patterns
-    ├── pipelines/           # Compose patterns for create/revive/clean
-    ├── services/            # tmux, session_manager, state_refresher
-    └── app.py               # Entry point
+    └── zen_agents/          # Package directory
+        ├── agents/          # Fix, Contradict, Sublate, Ground, Judge patterns
+        ├── services/        # tmux, session_manager, state_refresher
+        ├── screens/         # TUI screens
+        ├── widgets/         # TUI widgets
+        └── app.py           # Entry point
 ```
 
 ## Key Applied Idioms

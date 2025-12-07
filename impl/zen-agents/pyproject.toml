@@ -6,7 +6,6 @@ build-backend = "hatchling.build"
 name = "zen-agents"
 version = "0.1.0"
 description = "A contemplative TUI for managing parallel AI sessions"
-readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
 keywords = ["tui", "ai", "agents", "tmux", "claude"]
@@ -27,7 +26,7 @@ dev = [
 zen-agents = "zen_agents.app:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["."]
+packages = ["zen_agents"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

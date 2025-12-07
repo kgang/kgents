@@ -183,14 +183,34 @@ class ConfigGround(Ground):
         )
 
 
-@dataclass
 class ConfigTension(Tension):
     """Tension between config tiers."""
-    key: str
-    tier_a: str
-    tier_b: str
-    value_a: Any
-    value_b: Any
+
+    def __init__(
+        self,
+        mode: "TensionMode",
+        thesis: Any,
+        antithesis: Any,
+        description: str,
+        key: str,
+        tier_a: str,
+        tier_b: str,
+        value_a: Any,
+        value_b: Any,
+        severity: float = 0.5,
+    ):
+        super().__init__(
+            mode=mode,
+            thesis=thesis,
+            antithesis=antithesis,
+            description=description,
+            severity=severity,
+        )
+        self.key = key
+        self.tier_a = tier_a
+        self.tier_b = tier_b
+        self.value_a = value_a
+        self.value_b = value_b
 
 
 class ConfigSublate(Sublate):

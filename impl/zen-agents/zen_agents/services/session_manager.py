@@ -29,26 +29,26 @@ class SessionEvent:
     timestamp: datetime = field(default_factory=datetime.now)
 
 
-@dataclass
+@dataclass(kw_only=True)
 class SessionCreated(SessionEvent):
     """Emitted when a session is created."""
     session: Session
 
 
-@dataclass
+@dataclass(kw_only=True)
 class SessionStateChanged(SessionEvent):
     """Emitted when session state changes."""
     old_state: SessionState
     new_state: SessionState
 
 
-@dataclass
+@dataclass(kw_only=True)
 class SessionKilled(SessionEvent):
     """Emitted when a session is killed."""
-    exit_code: Optional[int]
+    exit_code: Optional[int] = None
 
 
-@dataclass
+@dataclass(kw_only=True)
 class SessionError(SessionEvent):
     """Emitted when an error occurs."""
     error: str

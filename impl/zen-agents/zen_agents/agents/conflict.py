@@ -34,7 +34,6 @@ if TYPE_CHECKING:
 MAX_SESSIONS = 10
 
 
-@dataclass
 class SessionConflict(Tension):
     """
     A conflict detected before session creation.
