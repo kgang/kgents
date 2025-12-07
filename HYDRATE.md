@@ -69,10 +69,29 @@ kgents/
 - `impl/zen-agents/zen_agents/templates.py` - Session templates
 - `impl/claude-openrouter/runtime/` - LLM-backed agents
 - `spec/bootstrap.md` - Bootstrap agents spec
+- `docs/RESEARCH-ZEN-AGENTS-META-ANALYSIS.md` - zen-agents vs zenportal analysis
+
+## Research Findings (Dec 2025)
+
+**zen-agents vs zenportal meta-analysis:**
+
+| Metric | zenportal | zen-agents | Delta |
+|--------|-----------|------------|-------|
+| LOC | 17,249 | 6,854 | -60% |
+| Commits | 100+ organic | 7 spec-driven | spec compresses |
+
+**Validated Principles:**
+- **Polling is Fix** — iteration patterns are fixed-point searches
+- **Compose, don't concatenate** — `A >> B >> C` not 130-line methods
+- **Conflict is Data** — Contradict/Sublate for robustness
+- **Spec is Compression** — 60% code reduction from spec-first
+
+**LLM/Human Boundary:**
+- Spec + Ground = Human (irreducible)
+- Impl = LLM (mechanical translation)
+- Polish = Hybrid (accumulated wisdom)
 
 ## Recent Changes
 
-- **UI Phase 4** - 5 themes (t), session persistence, templates (N), 49 tests
-- **UI Phase 3** - Search/filter (/), type quick-filter (1-5), command palette (Ctrl+P), status bar
-- **UI Phase 2** - NewSessionModal, ConflictModal, session actions, TmuxCapture streaming
-- **UI Phase 1** - MainScreen, SessionList, OutputView, HelpScreen
+- **Meta-analysis** - zen-agents vs zenportal comparison complete
+- **UI Phase 4** - 5 themes, persistence, templates, 49 tests
