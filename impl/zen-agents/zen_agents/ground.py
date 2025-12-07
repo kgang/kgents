@@ -14,13 +14,9 @@ What it grounds:
     - User preferences for zen behavior
 """
 
-import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
-
-# Add parent to path for bootstrap import (will be proper package later)
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "claude-openrouter"))
 
 from bootstrap import Agent, ground_agent, KENT_PERSONA
 from .types import (

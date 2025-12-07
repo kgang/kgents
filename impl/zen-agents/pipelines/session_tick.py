@@ -18,12 +18,9 @@ In zenportal: This is StateRefresher.refresh()
 In zen-agents: Explicit composition with Fix as the core operator.
 """
 
-import sys
 from dataclasses import dataclass, replace
 from datetime import datetime
 from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "claude-openrouter"))
 
 from bootstrap import Agent, contradict, sublate, Tension, TensionMode
 from zen_agents.types import (

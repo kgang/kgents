@@ -13,13 +13,7 @@ Run with: uv run python demo.py
 """
 
 import asyncio
-import sys
 from pathlib import Path
-
-# Add paths for imports
-ZEN_AGENTS_ROOT = Path(__file__).parent
-sys.path.insert(0, str(ZEN_AGENTS_ROOT))
-sys.path.insert(0, str(ZEN_AGENTS_ROOT.parent / "claude-openrouter"))
 
 from zen_agents.types import SessionConfig, SessionType, SessionState
 from zen_agents.ground import zen_ground, ZenGround

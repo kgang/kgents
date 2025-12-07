@@ -20,6 +20,11 @@ wheels = [
 ]
 
 [[package]]
+name = "kgents-bootstrap"
+version = "0.1.0"
+source = { editable = "../claude-openrouter" }
+
+[[package]]
 name = "packaging"
 version = "25.0"
 source = { registry = "https://pypi.org/simple" }
@@ -77,7 +82,10 @@ wheels = [
 [[package]]
 name = "zen-agents"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
+dependencies = [
+    { name = "kgents-bootstrap" },
+]
 
 [package.dev-dependencies]
 dev = [
@@ -86,6 +94,7 @@ dev = [
 ]
 
 [package.metadata]
+requires-dist = [{ name = "kgents-bootstrap", editable = "../claude-openrouter" }]
 
 [package.metadata.requires-dev]
 dev = [

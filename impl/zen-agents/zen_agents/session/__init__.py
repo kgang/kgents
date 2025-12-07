@@ -13,10 +13,14 @@ Key mappings from research plan:
 
 from .create import SessionCreate, create_session
 from .detect import SessionDetect, detect_state
-from .lifecycle import SessionPause, SessionKill, pause_session, kill_session
+from .lifecycle import (
+    SessionPause, SessionKill, SessionRevive, SessionResume,
+    pause_session, kill_session, revive_session, resume_session
+)
 
 __all__ = [
     'SessionCreate', 'create_session',
     'SessionDetect', 'detect_state',
-    'SessionPause', 'SessionKill', 'pause_session', 'kill_session',
+    'SessionPause', 'SessionKill', 'SessionRevive', 'SessionResume',
+    'pause_session', 'kill_session', 'revive_session', 'resume_session',
 ]

@@ -17,13 +17,10 @@ This demonstrates the research plan's key insight:
 The pipeline is itself an agent - composition produces agents.
 """
 
-import sys
 from dataclasses import dataclass, replace
 from datetime import datetime
 from pathlib import Path
 from typing import Any
-
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "claude-openrouter"))
 
 from bootstrap import Agent, compose, pipeline as make_pipeline
 from zen_agents.types import (

@@ -8,12 +8,9 @@ Captures output from a tmux pane.
 Maps to zenportal's TmuxService.capture_pane()
 """
 
-import sys
 import asyncio
 from dataclasses import dataclass
 from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "claude-openrouter"))
 
 from bootstrap import Agent
 from ..types import TmuxSession

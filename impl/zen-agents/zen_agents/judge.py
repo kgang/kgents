@@ -14,11 +14,8 @@ What it judges:
     - State transitions (can this session move from X to Y?)
 """
 
-import sys
 from pathlib import Path
 from typing import Any
-
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "claude-openrouter"))
 
 from bootstrap import Agent, Verdict, VerdictStatus, Principle
 from .types import (

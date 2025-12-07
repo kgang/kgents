@@ -15,13 +15,10 @@ The detection process:
     4. Iterate until stable (Fix finds fixed point)
 """
 
-import sys
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Callable, Awaitable
-
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "claude-openrouter"))
 
 from bootstrap import Agent, fix, FixResult, FixConfig
 from ..types import (

@@ -6,13 +6,10 @@ Query agents for discovering tmux state:
     - TmuxExists: SessionName → bool
 """
 
-import sys
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "claude-openrouter"))
 
 from bootstrap import Agent
 from ..types import TmuxSession

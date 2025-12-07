@@ -10,12 +10,9 @@ Does NOT start the session - that's for tmux agents.
 This is a pure transform: config in, session out.
 """
 
-import sys
 import uuid
 from datetime import datetime
 from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "claude-openrouter"))
 
 from bootstrap import Agent
 from ..types import (

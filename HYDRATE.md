@@ -52,13 +52,19 @@ kgents/
 │       ├── c/               # Re-exports bootstrap
 │       ├── h/               # Hegel, Lacan, Jung
 │       └── k/               # K-gent (Kent simulacra)
-├── impl/zen-agents/         # Zenportal reimagined through kgents
+├── impl/zen-agents/         # Zenportal reimagined through kgents (PRODUCTION-READY)
 │   ├── zen_agents/          # Core agents
+│   │   ├── types.py         # Session, SessionConfig, ZenGroundState
 │   │   ├── ground.py        # ZenGround (config cascade + session state)
 │   │   ├── judge.py         # ZenJudge (session validation)
-│   │   ├── session/         # Session lifecycle agents
-│   │   └── tmux/            # tmux wrapper agents
+│   │   ├── conflicts.py     # SessionContradict/Sublate (conflict resolution)
+│   │   ├── persistence.py   # StateSave/StateLoad (file-based state)
+│   │   ├── discovery.py     # TmuxDiscovery, SessionReconcile, ClaudeSessionDiscovery
+│   │   ├── commands.py      # CommandBuild, CommandValidate (session type commands)
+│   │   ├── session/         # Session lifecycle (create, pause, kill, revive)
+│   │   └── tmux/            # tmux wrapper agents (spawn, capture, send, query, kill)
 │   ├── pipelines/           # Composed pipelines
+│   ├── tests/               # pytest test suite (41 tests)
 │   └── demo.py              # Demonstration script
 └── docs/                    # BOOTSTRAP_PROMPT.md, RESEARCH_PLAN.md
 ```
@@ -101,9 +107,21 @@ Minimal bootstrap: `{Compose, Judge, Ground}` — structure, direction, material
   - H-gents: Hegel (dialectic), Lacan (registers), Jung (shadow)
   - K-gent: Interactive persona (query, update, dialogue modes)
 
-## zen-agents (Research: kgents as Application Framework)
+## zen-agents (PRODUCTION-READY: Second Iteration)
 
-First iteration of rebuilding zenportal using kgents architecture.
+Zenportal reimagined through kgents - now feature-complete.
+
+**Iteration 2 Accomplishments:**
+
+| Feature | Status | Description |
+|---------|--------|-------------|
+| Proper Packaging | ✅ | `kgents-bootstrap` as editable dependency, no sys.path hacks |
+| Session Lifecycle | ✅ | Create, Pause, Kill, Revive with real tmux integration |
+| Config Persistence | ✅ | StateSave/StateLoad to ~/.zen-agents/state.json |
+| Discovery | ✅ | TmuxDiscovery, SessionReconcile, ClaudeSessionDiscovery |
+| Conflict Resolution | ✅ | SessionContradict + SessionSublate (name collision, resource limits) |
+| Command Factory | ✅ | CommandBuild for Claude/Codex/Gemini/Shell/Custom |
+| Test Suite | ✅ | 41 pytest tests passing |
 
 **Key Insights Demonstrated:**
 
@@ -113,24 +131,29 @@ First iteration of rebuilding zenportal using kgents architecture.
 | ConfigManager (3-tier) | ZenGround (config cascade as empirical seed) |
 | StateRefresher.refresh() | SessionTickPipeline (Fix-based polling) |
 | TmuxService.* | zen_agents/tmux/* (each method is an agent) |
+| SessionPersistence | StateSave/StateLoad (persistence agents) |
+| DiscoveryService | TmuxDiscovery, SessionReconcile |
+| SessionCommandBuilder | CommandBuild, CommandValidate |
 
-**Bootstrap Mapping:**
-- **Ground** → ZenGround (config + session state + tmux facts)
+**Bootstrap Mapping (ALL 7 NOW IN USE):**
+- **Id** → Pass-through transforms
+- **Compose** → Pipeline construction (NewSessionPipeline, SessionTickPipeline)
 - **Judge** → ZenJudge (session config validation)
-- **Compose** → Pipeline construction
+- **Ground** → ZenGround (config + session state + tmux facts)
+- **Contradict** → SessionContradict (name collision, resource limit detection)
+- **Sublate** → SessionSublate (auto-rename, conflict resolution)
 - **Fix** → State detection (polling as fixed-point search)
-- **Contradict/Sublate** → Conflict detection/resolution (future)
 
-Run demo: `cd impl/zen-agents && uv run python demo.py`
+**Run demo:** `cd impl/zen-agents && uv run python demo.py`
+**Run tests:** `cd impl/zen-agents && uv run pytest tests/ -v`
 
 ## Next Steps
 
 1. Add runtime/ (Claude API + OpenRouter integration for LLM-backed evaluation)
-2. zen-agents: Implement Contradict/Sublate for conflict resolution
-3. zen-agents: Add UI layer with agent outputs
-4. Create second "verified" test case using kgents architecture
-5. Add tests for all agents
-6. Consider Phase 2 agents (D, E, See)
+2. zen-agents: Add UI layer with agent outputs
+3. Create second "verified" test case using kgents architecture
+4. Consider Phase 2 agents (D, E, See)
+5. Refactor zenportal to use zen-agents as library
 
 ## Key Files to Read
 

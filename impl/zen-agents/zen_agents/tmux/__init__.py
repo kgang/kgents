@@ -16,10 +16,12 @@ from .spawn import TmuxSpawn, spawn_tmux
 from .capture import TmuxCapture, capture_output
 from .send import TmuxSendKeys, send_keys
 from .query import TmuxList, TmuxExists, list_sessions, session_exists
+from .kill import TmuxKill, TmuxClear, kill_tmux, clear_tmux
 
 __all__ = [
     'TmuxSpawn', 'spawn_tmux',
     'TmuxCapture', 'capture_output',
     'TmuxSendKeys', 'send_keys',
     'TmuxList', 'TmuxExists', 'list_sessions', 'session_exists',
+    'TmuxKill', 'TmuxClear', 'kill_tmux', 'clear_tmux',
 ]
