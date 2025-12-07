@@ -1,0 +1,77 @@
+"""Base screen classes with notification support."""
+
+from typing import Generic, TypeVar
+
+from textual.app import ComposeResult
+from textual.screen import ModalScreen, Screen
+
+from ..widgets.notification import ZenNotificationRack
+from ..events import NotificationRequest
+
+# Type variable for modal return types
+ModalResultType = TypeVar("ModalResultType", covariant=True)
+
+
+class ZenScreen(Screen):
+    """Base screen with automatic notification rack.
+
+    All screens should inherit from this to ensure consistent
+    notification support across the application.
+    """
+
+    DEFAULT_CSS = """
+    ZenScreen {
+        layers: base notification;
+    }
+
+    ZenScreen > ZenNotificationRack {
+        dock: bottom;
+        layer: notification;
+        height: auto;
+        width: 100%;
+        align: left bottom;
+        margin-bottom: 2;
+    }
+    """
+
+    def compose(self) -> ComposeResult:
+        """Override in subclass - call super().compose() at END to add notification rack."""
+        yield ZenNotificationRack(id="notifications")
+
+    def on_notification_request(self, event: NotificationRequest) -> None:
+        """Handle notification requests on this screen."""
+        try:
+            rack = self.query_one("#notifications", ZenNotificationRack)
+            rack.show(event.message, event.severity, event.timeout)
+        except Exception:
+            pass  # Rack not mounted yet
+
+
+class ZenModalScreen(ModalScreen[ModalResultType], Generic[ModalResultType]):
+    """Base modal screen with notification support.
+
+    Provides:
+    - Automatic focus trapping
+    - Notification support
+    - Escape to dismiss
+    """
+
+    BINDINGS = [
+        ("escape", "dismiss_modal", "Cancel"),
+    ]
+
+    def on_mount(self) -> None:
+        """Set up modal on mount."""
+        self.trap_focus = True
+
+    def action_dismiss_modal(self) -> None:
+        """Dismiss with None result."""
+        self.dismiss(None)
+
+    def on_notification_request(self, event: NotificationRequest) -> None:
+        """Handle notification requests."""
+        try:
+            rack = self.query_one("#notifications", ZenNotificationRack)
+            rack.show(event.message, event.severity, event.timeout)
+        except Exception:
+            pass

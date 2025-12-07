@@ -17,10 +17,14 @@
 | 5 Agent Genera (A,B,C,H,K) | ✅ Implemented |
 | zen-agents | ✅ **Production-ready** (41 tests) |
 | runtime/ | ✅ **LLM-backed agents** (53 tests) |
+| zen-agents UI | ✅ **Phase 1 complete** (Textual TUI) |
 
 ## Quick Commands
 
 ```bash
+# Launch zen-agents TUI
+cd impl/zen-agents && uv run zen-agents
+
 # Run zen-agents demo (comprehensive tour)
 cd impl/zen-agents && uv run python demo.py
 
@@ -74,7 +78,11 @@ kgents/
     │   ├── ground.py, judge.py, conflicts.py, persistence.py
     │   ├── discovery.py, commands.py
     │   ├── session/         # create, detect, lifecycle
-    │   └── tmux/            # spawn, capture, send, query, kill
+    │   ├── tmux/            # spawn, capture, send, query, kill
+    │   └── ui/              # NEW: Textual TUI (Phase 1)
+    │       ├── app.py       # ZenAgentsApp
+    │       ├── screens/     # MainScreen, HelpScreen
+    │       └── widgets/     # SessionList, OutputView, Notification
     ├── pipelines/           # NewSessionPipeline, SessionTickPipeline
     └── tests/               # 41 pytest tests
 ```
@@ -94,9 +102,137 @@ kgents/
 ## Next Steps
 
 1. ~~**Implement `runtime/`**~~ ✅ Done (53 tests)
-2. Build UI layer for zen-agents
-3. Refactor zenportal to use zen-agents as library
-4. Consider Phase 2 agents (D, E, See)
+2. ~~**Build UI layer for zen-agents (Phase 1)**~~ ✅ Done
+3. **UI Phase 2**: NewSessionModal, conflict resolution dialogs
+4. Refactor zenportal to use zen-agents as library
+5. Consider Phase 2 agents (D, E, See)
+
+---
+
+## UI/UX Plan for zen-agents
+
+### Reference: zenportal (~/git/zenportal)
+
+**Tech stack**: Textual 6.7+ TUI framework, Rich rendering
+
+**Architecture patterns to adopt**:
+- Screen-based navigation (MainScreen + modal stack)
+- Vim-style keybindings (j/k navigation, mnemonics)
+- ZenScreen/ZenModalScreen base classes
+- Reactive state via Textual's `reactive` properties
+- Custom Message classes for inter-widget events
+- Central CSS system (`styles/base.py`)
+- Eye-strain optimization (session echo in output header)
+
+**Key zenportal components**:
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| MainScreen | screens/main.py | Primary UI: session list + output view |
+| SessionList | widgets/session_list.py | Vim nav, grab-mode reorder |
+| OutputView | widgets/output_view.py | RichLog with search |
+| SessionInfo | widgets/session_info.py | Metadata + token sparkline |
+| NewSessionModal | screens/new_session_modal.py | 3-tab create/attach/resume |
+| ZenNotification | widgets/notification.py | Toast system |
+
+### kgents Bootstrap Integration for UI
+
+**Compose**: Build UI pipelines
+```python
+# Input validation → judge → create → render
+session_create_pipeline = pipeline(
+    ParseInputAgent,
+    ZenJudge,
+    SessionCreate,
+    RenderConfirmation
+)
+```
+
+**Judge**: Quality-gate UI components
+```python
+# Validate user input against principles
+verdict = await zen_judge.invoke(session_config)
+if verdict.overall == Verdict.REJECT:
+    show_notification(verdict.reasons, severity="error")
+```
+
+**Ground**: Persona-aware rendering
+```python
+state = await zen_ground.invoke()
+theme = state.query("preferences.aesthetics")  # minimal, functional
+```
+
+**Contradict + Sublate**: Conflict resolution UI
+```python
+# Show detected conflicts, offer resolutions
+conflicts = await session_contradict.invoke((config, ground_state))
+for conflict in conflicts:
+    resolution = await session_sublate.invoke(conflict)
+    show_conflict_dialog(conflict, resolution)
+```
+
+**Fix**: State stabilization
+```python
+# Poll until session state stabilizes (already implemented in SessionDetect)
+result = await fix(poll_and_detect, initial_state)
+update_ui(result.value.state)
+```
+
+### Proposed UI Architecture
+
+```
+impl/zen-agents/
+├── zen_agents/           # Existing agents (unchanged)
+├── pipelines/            # Existing pipelines (unchanged)
+├── ui/                   # NEW: Textual UI layer
+│   ├── app.py            # ZenAgentsApp (main Textual app)
+│   ├── screens/
+│   │   ├── base.py       # ZenScreen, ZenModalScreen
+│   │   ├── main.py       # MainScreen (list + output)
+│   │   ├── new_session.py # NewSessionModal
+│   │   ├── config.py     # ConfigScreen
+│   │   └── help.py       # HelpScreen
+│   ├── widgets/
+│   │   ├── session_list.py
+│   │   ├── output_view.py
+│   │   ├── session_info.py
+│   │   └── notification.py
+│   ├── styles/
+│   │   └── base.py       # Central CSS
+│   └── events.py         # Custom Textual messages
+├── cli.py                # NEW: CLI entry point (argparse or click)
+└── __main__.py           # python -m zen_agents
+```
+
+### Key Differences from zenportal
+
+| Aspect | zenportal | zen-agents UI |
+|--------|-----------|---------------|
+| Services | Procedural classes | Agents (composable) |
+| Validation | Inline checks | ZenJudge pipeline |
+| State | SessionManager | ZenGround (empirical seed) |
+| Conflicts | Manual handling | Contradict + Sublate agents |
+| Polling | Ad-hoc refresh | Fix-based (SessionDetect) |
+
+### Implementation Phases
+
+**Phase 1: Core UI Shell** ✅ DONE
+- [x] ZenAgentsApp with agent dependency injection
+- [x] MainScreen with SessionList + OutputView
+- [x] Vim-style keybindings (j/k nav, ?=help, q=quit)
+- [x] CLI entry point (`zen-agents` command)
+- [x] Notification system (toast messages)
+- [x] HelpScreen with keybinding reference
+
+**Phase 2: Session Management** ← Current
+- [ ] NewSessionModal (NewSessionPipeline integration)
+- [ ] Conflict resolution dialogs (Contradict/Sublate)
+- [ ] Session create/pause/kill/revive actions
+- [ ] TmuxCapture live output streaming
+
+**Phase 3: Polish**
+- [ ] Config screen
+- [ ] Theme support (from Ground persona)
+- [ ] Search in output view
 
 ## Runtime Module (impl/claude-openrouter/runtime/)
 
@@ -145,6 +281,7 @@ asyncio.run(test())
 
 ## Recent Changes
 
+- **UI Phase 1 complete** - Textual TUI with MainScreen, SessionList, OutputView, HelpScreen
 - **CLI client fix** - Removed invalid `--max-tokens` flag from ClaudeCLIClient
 - **Runtime implemented** - LLMJudge, LLMSublate, LLMContradict with 4 auth methods
 - demo.py refactored into modular CLI with `--section`, `--list` options

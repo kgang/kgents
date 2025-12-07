@@ -5,7 +5,11 @@ description = "Zenportal reimagined through kgents"
 requires-python = ">=3.13"
 dependencies = [
     "kgents-bootstrap",
+    "textual>=0.47",
 ]
+
+[project.scripts]
+zen-agents = "zen_agents.ui:main"
 
 [build-system]
 requires = ["hatchling"]
