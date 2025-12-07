@@ -6,93 +6,71 @@
 
 - `spec/` = Language spec (like Python)
 - `impl/claude-openrouter/` = Reference impl (like CPython)
-- `impl/zen-agents/` = **Production-ready** zenportal reimplementation
 
 ## Current State (Dec 2025)
 
 | Component | Status |
 |-----------|--------|
-| 7 Principles | ✅ Defined (added Generative) |
-| 7 Bootstrap Agents | ✅ Spec + Impl |
-| 5 Agent Genera (A,B,C,H,K) | ✅ Implemented |
-| zen-agents | ✅ **49 tests** |
-| runtime/ | ✅ **LLM-backed** (53 tests) |
-| zen-agents UI | ✅ **Phase 4** (Themes + Persistence + Templates) |
+| 7 Principles | ✅ Defined in `spec/principles.md` |
+| 7 Bootstrap Agents | ✅ Spec (`spec/bootstrap.md`) + Impl (`impl/claude-openrouter/bootstrap/`) |
+| 5 Agent Genera (A,B,C,H,K) | ⏳ Spec exists, impl pending |
+| runtime/ | ⏳ Pending (LLM-backed agents) |
+| zen-agents | ⏳ Placeholder only |
 
-## Quick Commands
+## 7 Bootstrap Agents (Implemented)
 
-```bash
-# Launch zen-agents TUI
-cd impl/zen-agents && uv run zen-agents
-
-# Run demo
-cd impl/zen-agents && uv run python demo.py
-
-# Run tests
-cd impl/zen-agents && uv run pytest tests/ -v
-```
-
-## 7 Bootstrap Agents
-
-| Agent | Symbol | Purpose |
-|-------|--------|---------|
-| **Id** | λx.x | Identity (composition unit) |
-| **Compose** | ∘ | Agent-that-makes-agents |
-| **Judge** | ⊢ | Value function (6 principles) |
-| **Ground** | ⊥ | Empirical seed (persona + world) |
-| **Contradict** | ≢ | Tension detection |
-| **Sublate** | ↑ | Hegelian synthesis |
-| **Fix** | μ | Fixed-point (self-reference) |
+| Agent | Type | File |
+|-------|------|------|
+| **Id** | `A → A` | `id.py` |
+| **Compose** | `(Agent, Agent) → Agent` | `compose.py` |
+| **Judge** | `(Agent, Principles) → Verdict` | `judge.py` |
+| **Ground** | `Void → Facts` | `ground.py` |
+| **Contradict** | `(A, B) → Tension \| None` | `contradict.py` |
+| **Sublate** | `Tension → Synthesis \| Hold` | `sublate.py` |
+| **Fix** | `(A → A) → A` | `fix.py` |
 
 ## Directory Map
 
 ```
 kgents/
 ├── spec/                    # THE SPECIFICATION
-│   ├── principles.md        # 6 core principles
+│   ├── principles.md        # 7 core principles
 │   ├── bootstrap.md         # 7 irreducible agents
 │   └── {a,b,c,h,k}-gents/   # 5 agent genera
 ├── impl/claude-openrouter/  # Reference implementation
-│   ├── bootstrap/           # 7 bootstrap agents (Python)
-│   ├── runtime/             # LLM-backed agents (4 auth methods)
-│   └── agents/{a,b,c,h,k}/  # 5 genera
-└── impl/zen-agents/         # PRODUCTION APP
-    ├── zen_agents/          # Core agents + ui/
-    ├── pipelines/           # NewSessionPipeline, SessionTickPipeline
-    └── tests/               # 49 pytest tests
+│   ├── bootstrap/           # ✅ 7 bootstrap agents (Python)
+│   ├── agents/{a,b,c,h,k}/  # ⏳ Pending
+│   └── runtime/             # ⏳ Pending
+└── impl/zen-agents/         # ⏳ Placeholder
 ```
 
-## Key Files
+## Key Applied Idioms
 
-- `impl/zen-agents/demo.py` - Comprehensive demo (13 sections)
-- `impl/zen-agents/zen_agents/ui/` - Textual TUI
-- `impl/zen-agents/zen_agents/templates.py` - Session templates
-- `impl/claude-openrouter/runtime/` - LLM-backed agents
-- `spec/bootstrap.md` - Bootstrap agents spec
-- `docs/RESEARCH-ZEN-AGENTS-META-ANALYSIS.md` - zen-agents vs zenportal analysis
+From `spec/bootstrap.md`:
 
-## Research Findings (Dec 2025)
+1. **Polling is Fix** — `RetryFix`, `ConvergeFix` variants
+2. **Conflict is Data** — `NameCollisionChecker`, `ConfigConflictChecker`
+3. **Compose, Don't Concatenate** — `>>` operator for pipelines
 
-**zen-agents vs zenportal meta-analysis:**
+## Next Steps
 
-| Metric | zenportal | zen-agents | Delta |
-|--------|-----------|------------|-------|
-| LOC | 17,249 | 6,854 | -60% |
-| Commits | 100+ organic | 7 spec-driven | spec compresses |
+1. Implement `agents/{a,b,c,h,k}/` genera from specs
+2. Build `runtime/` for LLM-backed agent execution
+3. Create zen-agents TUI as production demonstration
 
-**Validated Principles:**
-- **Polling is Fix** — iteration patterns are fixed-point searches
-- **Compose, don't concatenate** — `A >> B >> C` not 130-line methods
-- **Conflict is Data** — Contradict/Sublate for robustness
-- **Spec is Compression** — 60% code reduction from spec-first
+## Quick Start
 
-**LLM/Human Boundary:**
-- Spec + Ground = Human (irreducible)
-- Impl = LLM (mechanical translation)
-- Polish = Hybrid (accumulated wisdom)
+```python
+from impl.claude_openrouter.bootstrap import (
+    Id, Compose, Judge, Ground, Contradict, Sublate, Fix, fix
+)
 
-## Recent Changes
+# Build pipelines
+pipeline = validate >> transform >> persist
 
-- **BOOTSTRAP_PROMPT.md** - Enhanced with LLM/human boundary, idioms, both impl targets
-- **Meta-analysis** - zen-agents vs zenportal comparison complete
-- **UI Phase 4** - 5 themes, persistence, templates, 49 tests
+# Ground facts
+facts = await Ground().invoke(None)
+
+# Iterate to stability
+result = await fix(transform=step, initial=state)
+```
