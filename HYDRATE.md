@@ -88,20 +88,31 @@ kgents/
 
 ## Next Steps
 
-1. Add `runtime/` (Claude API + OpenRouter for LLM-backed evaluation)
+1. **Implement `runtime/`** - See `impl/claude-openrouter/PLAN.md` (plan ready)
 2. Build UI layer for zen-agents
 3. Refactor zenportal to use zen-agents as library
 4. Consider Phase 2 agents (D, E, See)
+
+## Runtime Plan (impl/claude-openrouter/PLAN.md)
+
+**4 Auth Methods** (priority order):
+1. Claude CLI (`claude login`) - Max subscribers, no API key
+2. OAuth token (`CLAUDE_CODE_OAUTH_TOKEN`) - containers/CI
+3. OpenRouter via y-router (`http://localhost:8787`) - multi-model
+4. Anthropic API key (fallback)
+
+**LLM-backed agents**: Judge, Sublate, Contradict (replace heuristics with LLM reasoning)
 
 ## Key Files
 
 - `impl/zen-agents/README.md` - zen-agents documentation
 - `impl/zen-agents/demo.py` - **Comprehensive demo** (13 modular sections, CLI interface)
+- `impl/claude-openrouter/PLAN.md` - **Runtime implementation plan** (ready to implement)
 - `spec/bootstrap.md` - Bootstrap agents spec
 - `spec/principles.md` - Design philosophy
 
 ## Recent Changes
 
+- **Runtime plan added** (`impl/claude-openrouter/PLAN.md`) - 4 auth methods, LLM-backed agents
 - **demo.py refactored** into modular CLI with `--section`, `--list` options
 - All 7 bootstrap agents demonstrated with architectural insights
-- Visual diagrams for pipeline composition and lifecycle state machine
