@@ -6,6 +6,8 @@ from .help import HelpScreen
 from .new_session import NewSessionModal, NewSessionResult
 from .conflict import ConflictModal, ConflictModalResult
 from .command_palette import CommandPaletteModal
+from .theme_selector import ThemeSelectorModal
+from .template_selector import TemplateSelectorModal, TemplateResult
 
 __all__ = [
     "ZenScreen",
@@ -17,4 +19,7 @@ __all__ = [
     "ConflictModal",
     "ConflictModalResult",
     "CommandPaletteModal",
+    "ThemeSelectorModal",
+    "TemplateSelectorModal",
+    "TemplateResult",
 ]

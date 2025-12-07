@@ -39,6 +39,7 @@ class MainScreen(ZenScreen):
         Binding("space", "toggle_grab", "Grab", show=False),
         Binding("escape", "exit_mode", "Exit", show=False),
         ("n", "new_session", "New"),
+        Binding("N", "new_from_template", "Template", show=False),
         ("a", "attach", "Attach"),
         ("p", "pause", "Pause"),
         ("x", "kill", "Kill"),
@@ -59,6 +60,7 @@ class MainScreen(ZenScreen):
         ("?", "show_help", "Help"),
         Binding("f1", "show_help", "Help", show=False),
         Binding("ctrl+p", "command_palette", "Commands", show=False),
+        Binding("t", "theme", "Theme", show=False),
         ("q", "quit", "Quit"),
         Binding("ctrl+q", "quit", "Quit", show=False),
     ]
@@ -261,12 +263,25 @@ class MainScreen(ZenScreen):
         )
         self.app.push_screen(modal, self._on_new_session_result)
 
+    def action_new_from_template(self) -> None:
+        """Open template selector modal."""
+        from .template_selector import TemplateSelectorModal
+        modal = TemplateSelectorModal(working_dir=Path.cwd())
+        self.app.push_screen(modal, self._on_template_result)
+
+    async def _on_template_result(self, result) -> None:
+        """Handle result from TemplateSelectorModal."""
+        if not result.selected or not result.config:
+            return
+        # Use same flow as new session
+        await self._create_session(result.config)
+
     def action_attach(self) -> None:
         """Attach to tmux session."""
         session_list = self.query_one("#session-list", SessionList)
         selected = session_list.get_selected()
         if selected and selected.tmux:
-            self.app.exit(result=f"attach:{selected.tmux.name}")
+            self.app.exit(result=f"attach:{selected.tmux.id}")
         else:
             self.zen_notify("no tmux session to attach", "warning")
 
@@ -414,6 +429,21 @@ class MainScreen(ZenScreen):
         """Show help screen."""
         from .help import HelpScreen
         self.app.push_screen(HelpScreen())
+
+    def action_theme(self) -> None:
+        """Show theme selector."""
+        from .theme_selector import ThemeSelectorModal
+        from ..styles import ThemeName
+        # Get current theme from app if available
+        current = getattr(self.app, '_current_theme', ThemeName.DARK)
+        self.app.push_screen(ThemeSelectorModal(current), self._on_theme_selected)
+
+    def _on_theme_selected(self, theme_name) -> None:
+        """Handle theme selection."""
+        if theme_name:
+            from ..styles import ThemeName
+            self.app.set_theme(theme_name)
+            self.zen_notify(f"theme: {theme_name.value}")
 
     def action_quit(self) -> None:
         """Quit the application."""

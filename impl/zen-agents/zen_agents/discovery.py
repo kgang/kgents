@@ -147,27 +147,27 @@ class SessionReconcile(Agent[ReconcileInput, ReconcileResult]):
         orphaned: list[TmuxSession] = []
         missing: list[Session] = []
 
-        # Build lookup maps
-        tmux_by_name = {ts.name: ts for ts in input.tmux_sessions}
-        known_by_name = {}
+        # Build lookup maps (use id, which is the actual tmux session name)
+        tmux_by_id = {ts.id: ts for ts in input.tmux_sessions}
+        known_by_id = {}
 
-        # Index known sessions by their tmux name (if they have tmux)
+        # Index known sessions by their tmux id (if they have tmux)
         for session in input.known_sessions.values():
             if session.tmux:
-                known_by_name[session.tmux.name] = session
+                known_by_id[session.tmux.id] = session
 
         # Find matches and missing
         for session in input.known_sessions.values():
-            if session.tmux and session.tmux.name in tmux_by_name:
+            if session.tmux and session.tmux.id in tmux_by_id:
                 # Session has matching tmux
-                matched.append((session, tmux_by_name[session.tmux.name]))
+                matched.append((session, tmux_by_id[session.tmux.id]))
             elif session.state in {SessionState.RUNNING, SessionState.PAUSED}:
                 # Session should be running but has no tmux
                 missing.append(session)
 
         # Find orphaned tmux sessions
         for tmux_session in input.tmux_sessions:
-            if tmux_session.name not in known_by_name:
+            if tmux_session.id not in known_by_id:
                 orphaned.append(tmux_session)
 
         return ReconcileResult(

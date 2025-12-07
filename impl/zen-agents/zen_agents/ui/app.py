@@ -13,7 +13,7 @@ from textual.binding import Binding
 from ..ground import ZenGround, zen_ground
 from ..tmux.capture import TmuxCapture, capture_output
 from .screens.main import MainScreen
-from .styles import BASE_CSS
+from .styles import BASE_CSS, ThemeName, get_theme, DEFAULT_THEME
 
 
 def check_dependencies() -> None:
@@ -57,11 +57,6 @@ class ZenAgentsApp(App):
     """
 
     TITLE = "zen-agents"
-    CSS = BASE_CSS + """
-    Screen {
-        background: $background;
-    }
-    """
 
     BINDINGS = [
         Binding("ctrl+s", "screenshot", "Screenshot", show=False),
@@ -73,15 +68,39 @@ class ZenAgentsApp(App):
         capture: TmuxCapture | None = None,
         working_dir: Path | None = None,
         focus_tmux_session: str | None = None,
+        theme: ThemeName | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
 
         # Inject agents (use singletons if not provided)
         self._ground = ground or zen_ground
-        self._capture = capture or tmux_capture
+        self._capture = capture or capture_output
         self._working_dir = working_dir or Path.cwd()
         self._focus_tmux_session = focus_tmux_session
+        self._current_theme = theme or DEFAULT_THEME
+
+        # Generate CSS with theme variables
+        theme_obj = get_theme(self._current_theme)
+        self.CSS = theme_obj.to_css_vars() + BASE_CSS + """
+        Screen {
+            background: $background;
+        }
+        """
+
+    def set_theme(self, theme_name: ThemeName) -> None:
+        """Switch to a different color theme."""
+        self._current_theme = theme_name
+        theme = get_theme(theme_name)
+
+        # Apply theme by updating design system dark mode
+        self.design = self.design.copy_with(
+            dark=(theme_name != ThemeName.LIGHT),
+        )
+
+        # Note: Full color theme switching would require reloading CSS
+        # or using dynamic CSS injection. For now, this handles dark/light.
+        self.refresh()
 
     def on_mount(self) -> None:
         """Push the main screen."""
@@ -89,6 +108,11 @@ class ZenAgentsApp(App):
             ground=self._ground,
             capture=self._capture,
         ))
+
+    async def action_quit(self) -> None:
+        """Quit the app, saving state first."""
+        await self._ground.save()
+        self.exit()
 
 
 def main():

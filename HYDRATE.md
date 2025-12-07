@@ -15,9 +15,9 @@
 | 6 Principles | ✅ Defined |
 | 7 Bootstrap Agents | ✅ Spec + Impl |
 | 5 Agent Genera (A,B,C,H,K) | ✅ Implemented |
-| zen-agents | ✅ **41 tests** |
+| zen-agents | ✅ **49 tests** |
 | runtime/ | ✅ **LLM-backed** (53 tests) |
-| zen-agents UI | ✅ **Phase 3** (Polish + Search) |
+| zen-agents UI | ✅ **Phase 4** (Themes + Persistence + Templates) |
 
 ## Quick Commands
 
@@ -59,22 +59,20 @@ kgents/
 └── impl/zen-agents/         # PRODUCTION APP
     ├── zen_agents/          # Core agents + ui/
     ├── pipelines/           # NewSessionPipeline, SessionTickPipeline
-    └── tests/               # 41 pytest tests
+    └── tests/               # 49 pytest tests
 ```
-
-## Next Steps
-
-1. **UI Phase 4**: Themes, persistence, session templates
 
 ## Key Files
 
 - `impl/zen-agents/demo.py` - Comprehensive demo (13 sections)
 - `impl/zen-agents/zen_agents/ui/` - Textual TUI
+- `impl/zen-agents/zen_agents/templates.py` - Session templates
 - `impl/claude-openrouter/runtime/` - LLM-backed agents
 - `spec/bootstrap.md` - Bootstrap agents spec
 
 ## Recent Changes
 
+- **UI Phase 4** - 5 themes (t), session persistence, templates (N), 49 tests
 - **UI Phase 3** - Search/filter (/), type quick-filter (1-5), command palette (Ctrl+P), status bar
 - **UI Phase 2** - NewSessionModal, ConflictModal, session actions, TmuxCapture streaming
 - **UI Phase 1** - MainScreen, SessionList, OutputView, HelpScreen

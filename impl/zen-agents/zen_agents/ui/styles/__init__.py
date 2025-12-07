@@ -1,5 +1,14 @@
 """Central CSS definitions for zen-agents design system."""
 
+from .themes import (
+    Theme,
+    ThemeName,
+    THEMES,
+    DEFAULT_THEME,
+    get_theme,
+    get_theme_names,
+)
+
 # Modal base styles
 MODAL_CSS = """
 .modal-base {
@@ -170,4 +179,12 @@ Button.flat:focus {
 # Combined base CSS
 BASE_CSS = MODAL_CSS + CONTAINER_CSS + COMMON_CSS + NOTIFICATION_CSS + FLAT_BUTTON_CSS
 
-__all__ = ["BASE_CSS"]
+__all__ = [
+    "BASE_CSS",
+    "Theme",
+    "ThemeName",
+    "THEMES",
+    "DEFAULT_THEME",
+    "get_theme",
+    "get_theme_names",
+]

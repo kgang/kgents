@@ -28,6 +28,7 @@ from .types import (
     SessionState,
     TmuxSession,
 )
+from .persistence import state_load, state_save
 
 
 class ZenGround(Agent[None, ZenGroundState]):
@@ -49,10 +50,13 @@ class ZenGround(Agent[None, ZenGroundState]):
         self,
         config_path: Path | None = None,
         discover_tmux: bool = True,
+        auto_persist: bool = True,
     ):
         self._config_path = config_path
         self._discover_tmux = discover_tmux
+        self._auto_persist = auto_persist
         self._cached_state: ZenGroundState | None = None
+        self._loaded = False
 
     @property
     def name(self) -> str:
@@ -71,10 +75,16 @@ class ZenGround(Agent[None, ZenGroundState]):
         Build and return the ground state.
 
         This gathers facts from:
-            1. Config files (if present)
-            2. tmux (if available)
-            3. Cached session state
+            1. Persisted state (if exists and not yet loaded)
+            2. Config files (if present)
+            3. tmux (if available)
+            4. Cached session state
         """
+        # Load persisted state on first invoke
+        if not self._loaded:
+            await self._load_persisted_state()
+            self._loaded = True
+
         # Build config cascade
         config_cascade = await self._build_config_cascade()
 
@@ -100,6 +110,22 @@ class ZenGround(Agent[None, ZenGroundState]):
 
         self._cached_state = state
         return state
+
+    async def _load_persisted_state(self) -> None:
+        """Load state from disk if available."""
+        loaded = await state_load.invoke(None)
+        if loaded:
+            self._cached_state = loaded
+
+    async def save(self) -> bool:
+        """Persist current state to disk."""
+        if self._cached_state:
+            try:
+                await state_save.invoke(self._cached_state)
+                return True
+            except OSError:
+                return False
+        return False
 
     async def _build_config_cascade(self) -> list[ConfigLayer]:
         """
