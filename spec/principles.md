@@ -1,6 +1,6 @@
 # Design Principles
 
-These five principles guide all kgents design decisions.
+These six principles guide all kgents design decisions.
 
 ---
 
@@ -86,6 +86,50 @@ This principle comes from [C-gents](c-gents/) but applies to all agents.
 
 ---
 
+## 6. Heterarchical
+
+> Agents exist in flux, not fixed hierarchy; autonomy and composability coexist.
+
+Agents have a dual nature:
+- **Loop mode** (autonomous): perception → action → feedback → repeat
+- **Function mode** (composable): input → transform → output
+
+Traditional multi-agent systems impose hierarchy (orchestrator/worker). This creates **intransience**—rigid power dynamics that calcify over time. Kgents reject this.
+
+- **Heterarchy over hierarchy**: No fixed "boss" agent; leadership is contextual
+- **Temporal composition**: Agents compose across time, not just sequential pipelines
+- **Resource flux**: Compute and attention flow where needed, not allocated top-down
+- **Entanglement**: Agents may share state without ownership; mutual influence without control
+- **Parallelized allocation**: Resources distributed across compute AND time dimensions
+
+### The Dual Loop
+
+```
+┌─────────────────────────────────────────────────────┐
+│                    AUTONOMOUS LOOP                  │
+│   ┌─────────┐     ┌─────────┐     ┌─────────┐      │
+│   │ Perceive│ ──→ │  Act    │ ──→ │Feedback │ ─┐   │
+│   └─────────┘     └─────────┘     └─────────┘  │   │
+│        ▲                                       │   │
+│        └───────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────┘
+                        ↕ (can be interrupted/composed)
+┌─────────────────────────────────────────────────────┐
+│                   FUNCTIONAL MODE                   │
+│        Input ────→ [Transform] ────→ Output         │
+└─────────────────────────────────────────────────────┘
+```
+
+An agent can be **invoked** (functional) or **running** (autonomous). The same agent, two modes.
+
+### Anti-patterns
+- Permanent orchestrator/worker relationships
+- Agents that can only be called, never run autonomously
+- Fixed resource budgets that prevent dynamic reallocation
+- "Chain of command" that prevents peer-to-peer agent interaction
+
+---
+
 ## Applying the Principles
 
 When designing or reviewing an agent, ask:
@@ -97,5 +141,6 @@ When designing or reviewing an agent, ask:
 | Ethical | Does this respect human agency and privacy? |
 | Joy-Inducing | Would I enjoy interacting with this? |
 | Composable | Can this work with other agents? |
+| Heterarchical | Can this agent both lead and follow? Does it avoid fixed hierarchy? |
 
 A "no" on any principle is a signal to reconsider.
