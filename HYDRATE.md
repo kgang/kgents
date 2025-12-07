@@ -60,9 +60,13 @@ From `spec/bootstrap.md`:
 
 ## Next Steps
 
-1. **Run zen-agents** - `pip install -e impl/zen-agents && zen-agents`
+1. **Run zen-agents** - `cd impl/zen-agents && python3.11 -m venv .venv && source .venv/bin/activate && pip install -e . && zen-agents`
 2. Implement `agents/{a,b,c,h,k}/` genera from specs
 3. Build `runtime/` for LLM-backed agent execution
+
+## Recent Fixes
+
+- **Attach session** (Dec 2025): Implemented `action_attach` in `screens/main.py` to use Textual's `app.suspend()` context manager, which suspends the TUI and runs `tmux attach-session` in the foreground. Press `a` or click the Attach button.
 
 ## Quick Start
 

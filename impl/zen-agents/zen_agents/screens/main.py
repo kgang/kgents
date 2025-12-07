@@ -299,10 +299,30 @@ class MainScreen(Screen):
         session = session_list.selected_session
 
         if session and session.state == SessionState.RUNNING:
-            # Note: Actual attachment would need to be handled by
-            # suspending the TUI and running tmux attach
+            # Suspend the TUI, attach to tmux, then resume
+            await self._attach_to_session(session.tmux_name)
+        else:
             status_bar = self.query_one("#status-bar", StatusBar)
-            status_bar.set_message(f"Attach: tmux attach-session -t {session.tmux_name}")
+            status_bar.set_message("No running session selected to attach")
+
+    async def _attach_to_session(self, tmux_name: str) -> None:
+        """Suspend TUI and attach to tmux session."""
+        import subprocess
+        import os
+
+        # Suspend the app to release the terminal
+        with self.app.suspend():
+            # Run tmux attach in the foreground
+            subprocess.run(
+                ["tmux", "attach-session", "-t", tmux_name],
+                stdin=None,
+                stdout=None,
+                stderr=None,
+            )
+
+        # After detaching from tmux, the TUI resumes automatically
+        status_bar = self.query_one("#status-bar", StatusBar)
+        status_bar.set_message(f"Detached from {tmux_name}")
 
     def action_help(self) -> None:
         """Show help."""
@@ -330,6 +350,11 @@ class MainScreen(Screen):
             detail = self.query_one("#session-detail", SessionDetail)
             if detail._session:
                 await self._manager.revive_session(detail._session.id)
+
+        elif button_id == "action-attach":
+            detail = self.query_one("#session-detail", SessionDetail)
+            if detail._session and detail._session.state == SessionState.RUNNING:
+                await self._attach_to_session(detail._session.tmux_name)
 
         elif button_id == "action-remove":
             detail = self.query_one("#session-detail", SessionDetail)
