@@ -20,12 +20,22 @@
 ## Quick Commands
 
 ```bash
-# Run zen-agents demo
+# Run zen-agents demo (comprehensive tour)
 cd impl/zen-agents && uv run python demo.py
+
+# Run specific demo section
+cd impl/zen-agents && uv run python demo.py --section conflicts
+
+# List demo sections
+cd impl/zen-agents && uv run python demo.py --list
 
 # Run tests
 cd impl/zen-agents && uv run pytest tests/ -v
 ```
+
+## Demo Sections (13 total)
+
+`intro` `ground` `judge` `create` `conflicts` `pipeline` `fix` `lifecycle` `discovery` `commands` `persistence` `bootstrap` `summary`
 
 ## 7 Bootstrap Agents
 
@@ -86,6 +96,12 @@ kgents/
 ## Key Files
 
 - `impl/zen-agents/README.md` - zen-agents documentation
-- `impl/zen-agents/demo.py` - Working demonstration
+- `impl/zen-agents/demo.py` - **Comprehensive demo** (13 modular sections, CLI interface)
 - `spec/bootstrap.md` - Bootstrap agents spec
 - `spec/principles.md` - Design philosophy
+
+## Recent Changes
+
+- **demo.py refactored** into modular CLI with `--section`, `--list` options
+- All 7 bootstrap agents demonstrated with architectural insights
+- Visual diagrams for pipeline composition and lifecycle state machine
