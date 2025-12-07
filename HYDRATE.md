@@ -46,8 +46,9 @@ kgents/
 │   ├── agents/c/            # ✅ Category theory (Maybe, Either, Parallel, Conditional)
 │   ├── agents/h/            # ✅ Dialectics (Hegel, Jung, Lacan)
 │   ├── agents/k/            # ✅ K-gent persona (Dialogue, Query, Evolution)
-│   ├── agents/{a,b}/        # ⏳ Pending
-│   └── runtime/             # ✅ LLM execution (ClaudeRuntime, OpenRouterRuntime)
+│   ├── agents/a/            # ✅ AbstractSkeleton, AgentMeta, CreativityCoach
+│   ├── agents/b/            # ⏳ Pending (HypothesisEngine, Robin)
+│   └── runtime/             # ✅ LLM execution (ClaudeCLIRuntime, ClaudeRuntime, OpenRouterRuntime)
 └── impl/zen-agents/         # ✅ Textual TUI (bootstrap demonstration)
     └── zen_agents/          # Package directory
         ├── agents/          # Fix, Contradict, Sublate, Ground, Judge patterns
@@ -102,6 +103,19 @@ The personalizer - Ground projected through persona_schema:
 | `EvolutionAgent` | Persona evolution | `EvolutionInput → EvolutionOutput` |
 
 Dialogue modes: `REFLECT`, `ADVISE`, `CHALLENGE`, `EXPLORE`
+
+## A-gents (Implemented)
+
+Abstract architectures + Art/Creativity:
+
+| Agent | Purpose | Key Type |
+|-------|---------|----------|
+| `AbstractAgent` | Alias for `Agent[A,B]` — the skeleton IS the bootstrap | Type alias |
+| `AgentMeta` | Optional rich metadata (identity, interface, behavior) | Dataclass |
+| `CreativityCoach` | First LLMAgent — expands ideas via 4 modes | `CreativityInput → CreativityResponse` |
+
+Modes: `EXPAND`, `CONNECT`, `CONSTRAIN`, `QUESTION`
+Personas: `PLAYFUL`, `PHILOSOPHICAL`, `PRACTICAL`, `PROVOCATIVE`, `WARM`
 
 ## Runtime (Implemented)
 
