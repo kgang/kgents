@@ -1,6 +1,6 @@
 # Design Principles
 
-These six principles guide all kgents design decisions.
+These seven principles guide all kgents design decisions.
 
 ---
 
@@ -130,6 +130,32 @@ An agent can be **invoked** (functional) or **running** (autonomous). The same a
 
 ---
 
+## 7. Generative
+
+> Spec is compression; design should generate implementation.
+
+A well-formed specification captures the essential decisions, reducing implementation entropy. The zen-agents experiment achieved 60% code reduction compared to organic development—proof that spec-first design compresses accumulated wisdom into regenerable form.
+
+- **Spec captures judgment**: Design decisions made once, applied everywhere
+- **Implementation follows mechanically**: Given spec + Ground, impl is derivable
+- **Compression is quality**: If you can't compress, you don't understand
+- **Regenerability over documentation**: A generative spec beats extensive docs
+
+### The Generative Test
+
+A design is generative if:
+1. You could delete the implementation and regenerate it from spec
+2. The regenerated impl would be isomorphic to the original
+3. The spec is smaller than the impl (compression achieved)
+
+### Anti-patterns
+- Specs that merely describe existing code (documentation, not generation)
+- Implementations that diverge from spec (spec rot)
+- Designs that require extensive prose to explain (not compressed)
+- "Living documentation" that tracks impl instead of generating it
+
+---
+
 ## Applying the Principles
 
 When designing or reviewing an agent, ask:
@@ -142,5 +168,6 @@ When designing or reviewing an agent, ask:
 | Joy-Inducing | Would I enjoy interacting with this? |
 | Composable | Can this work with other agents? |
 | Heterarchical | Can this agent both lead and follow? Does it avoid fixed hierarchy? |
+| Generative | Could this be regenerated from spec? Is the design compressed? |
 
 A "no" on any principle is a signal to reconsider.

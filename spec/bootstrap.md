@@ -77,7 +77,7 @@ Judge: (Agent, Principles) → Verdict
 Judge(agent, principles) = {accept, reject, revise(how)}
 ```
 
-The value function. Embodies the six principles as executable judgment.
+The value function. Embodies the seven principles as executable judgment.
 
 **Why irreducible**: Taste cannot be computed. "Is this tasteful?" "Is this ethical?" "Does this spark joy?" These require grounding in human values that cannot be derived from logic alone.
 
@@ -85,11 +85,12 @@ The value function. Embodies the six principles as executable judgment.
 
 **Substructure** (still irreducible, but decomposable for clarity):
 - Judge-taste: Is this aesthetically considered?
+- Judge-curate: Does this add unique value?
 - Judge-ethics: Does this respect human agency?
 - Judge-joy: Would I enjoy this?
 - Judge-compose: Can this combine with others?
 - Judge-hetero: Does this avoid fixed hierarchy?
-- Judge-curate: Does this add unique value?
+- Judge-generate: Could this be regenerated from spec?
 
 ---
 
@@ -110,6 +111,34 @@ The empirical seed. The irreducible facts about the person and world that cannot
 - Persona seed: Name, roles, preferences, patterns, values
 - World seed: Date, context, active projects
 - History seed: Past decisions, established patterns
+
+### The Bootstrap Paradox
+
+Ground reveals the fundamental limit of algorithmic bootstrapping:
+
+> **Ground cannot be bypassed.** LLMs can amplify but not replace Ground.
+
+**What LLMs can do**:
+- Amplify Ground (generate variations, explore implications)
+- Apply Ground (translate preferences into code)
+- Extend Ground (infer related preferences from stated ones)
+
+**What LLMs cannot do**:
+- Create Ground from nothing
+- Replace human judgment about what matters
+- Substitute for real-world usage feedback
+
+**Corollary**: Any system that claims to "bootstrap from nothing" is either:
+1. Implicitly using Ground from training data (borrowed preferences)
+2. Limited to structural/syntactic generation (form without substance)
+3. Producing thin implementations lacking depth (correct but not delightful)
+
+This is why the spec-first approach achieves 60% code reduction: the spec IS the compressed Ground. Human judgment about what matters is captured once; implementation follows mechanically.
+
+**The LLM/Human boundary**:
+- Spec + Ground = Human territory (irreducible)
+- Impl = LLM territory (mechanical translation)
+- Polish = Hybrid territory (accumulated wisdom from real usage)
 
 ---
 
@@ -279,6 +308,122 @@ To regenerate the project from bootstrap:
 6. **Fix**: Iterate until stable (Judge accepts all, Contradict finds nothing new)
 
 The output should be isomorphic to the current kgents specification.
+
+---
+
+## Applied Idioms
+
+The bootstrap agents are abstract. When applied to real systems, recurring patterns emerge. These idioms are not new agents—they are the seven agents in action.
+
+### Idiom 1: Polling is Fix
+
+> Any iteration pattern is a fixed-point search.
+
+Polling, retry loops, watch patterns, reconciliation—all are instances of Fix:
+
+```
+Fix(poll_state) = stable_state where poll_state(stable_state) = stable_state
+```
+
+**Structure**:
+- The **transform** defines "one step" (poll once, retry once, check once)
+- The **equality check** defines "stability" (state unchanged, success achieved, resources match)
+- Fix iterates until stable or max iterations
+
+**Example** (from zen-agents):
+```python
+result = await fix(
+    transform=poll_and_detect,
+    initial=DetectionState(RUNNING, confidence=0.0),
+    equality_check=lambda a, b: a.state == b.state and b.confidence >= 0.8
+)
+```
+
+**Benefits**:
+- Termination conditions are explicit (not buried in while-loop logic)
+- Composes with other Fix operations
+- Separates "what" (detect state) from "how" (polling mechanics)
+
+**Anti-pattern**: `while True` loops with inline break conditions.
+
+---
+
+### Idiom 2: Conflict is Data
+
+> Tensions should be first-class citizens.
+
+The Contradict/Sublate pattern generalizes beyond dialectics to system robustness:
+
+```
+Contradict: (A, B) → Tension | None
+Sublate: Tension → Resolution | HoldTension
+```
+
+**Structure**:
+1. **Detect** tensions explicitly (don't let them surface as runtime errors)
+2. **Surface** them to the appropriate resolver (user, automated policy, or hold)
+3. **Resolve or hold**—premature synthesis is worse than held tension
+
+**Applies to**:
+- Name collisions → detect before creation fails
+- Resource conflicts → warn before exhaustion
+- Configuration contradictions → surface at load time
+- Concurrent modifications → explicit merge policies
+
+**Example** (from zen-agents):
+```python
+@dataclass
+class SessionConflict:
+    conflict_type: str  # NAME_COLLISION, PORT_CONFLICT, WORKTREE_CONFLICT
+    suggested_resolution: str
+
+conflicts = await session_contradict.invoke((config, ground_state))
+if conflicts:
+    resolution = await session_sublate.invoke(conflicts[0])
+```
+
+**Anti-pattern**: Silent failures, swallowed exceptions, "last write wins" without warning.
+
+---
+
+### Idiom 3: Compose, Don't Concatenate
+
+> If a function does A then B then C, it should BE the composition of A, B, C.
+
+This is Compose applied as a design discipline:
+
+```
+Pipeline = A >> B >> C
+# Not:
+def do_everything():
+    a_result = do_a()
+    b_result = do_b(a_result)
+    c_result = do_c(b_result)
+    return c_result
+```
+
+**Benefits**:
+- Each step is testable in isolation
+- Clear data flow between steps
+- Steps are replaceable/mockable
+- Debugging: "which step failed?"
+
+**Applies at all scales**:
+- **Method level**: Extract steps as separate agents
+- **Class level**: Compose services rather than inherit
+- **System level**: Pipeline architectures over monoliths
+
+**Example** (from zen-agents):
+```python
+NewSessionPipeline = (
+    Judge(config)      # validate
+    >> Create(config)  # make session object
+    >> Spawn(session)  # create tmux
+    >> Detect(session) # Fix-based state detection
+)
+```
+
+**Anti-pattern**: 130-line methods mixing validation, I/O, state mutation, and error handling.
 
 ---
 

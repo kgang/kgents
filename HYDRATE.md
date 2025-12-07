@@ -12,7 +12,7 @@
 
 | Component | Status |
 |-----------|--------|
-| 6 Principles | ✅ Defined |
+| 7 Principles | ✅ Defined (added Generative) |
 | 7 Bootstrap Agents | ✅ Spec + Impl |
 | 5 Agent Genera (A,B,C,H,K) | ✅ Implemented |
 | zen-agents | ✅ **49 tests** |
