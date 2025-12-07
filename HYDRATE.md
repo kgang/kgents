@@ -45,7 +45,7 @@ kgents/
 │   ├── h-gents/       # Hegelian dialectic (introspection)
 │   └── k-gent/        # Kent simulacra
 ├── impl/              # Reference implementations (empty)
-└── docs/              # Supporting docs (empty)
+└── docs/              # BOOTSTRAP_PROMPT.md lives here
 ```
 
 ## 6 Principles
@@ -90,7 +90,8 @@ Minimal bootstrap: `{Compose, Judge, Ground}` — structure, direction, material
 
 ## Key Files to Read
 
-- `spec/bootstrap.md` - **The 7 irreducible agents** (regeneration kernel)
+- `docs/BOOTSTRAP_PROMPT.md` - **Prompt to regenerate impl from spec**
+- `spec/bootstrap.md` - The 7 irreducible agents (regeneration kernel)
 - `spec/principles.md` - Design philosophy (6 principles incl. Heterarchical)
 - `spec/anatomy.md` - What constitutes an agent
 - `spec/c-gents/composition.md` - How agents combine
