@@ -20,11 +20,11 @@ Key insight: This is like Python (spec) vs CPython (impl). The `spec/` directory
 
 | Letter | Theme | Status |
 |--------|-------|--------|
-| **A** | Abstract + Art (creativity coach) | Skeleton done |
-| **B** | Bio/Scientific (hypothesis, Robin) | Skeleton done |
-| **C** | Category Theory (composition) | Skeleton done |
-| **H** | Hegelian dialectic (system introspection) | Skeleton done |
-| **K** | Kent simulacra (persona) | Skeleton done |
+| **A** | Abstract + Art (creativity coach) | **Implemented** |
+| **B** | Bio/Scientific (hypothesis engine) | **Implemented** |
+| **C** | Category Theory (composition) | **Implemented** |
+| **H** | Hegelian dialectic (Hegel, Lacan, Jung) | **Implemented** |
+| **K** | Kent simulacra (persona) | **Implemented** |
 | D | Absurdlings (NPCs) | Future |
 | E | Epistemological | Future |
 | See | Observability | Future |
@@ -45,7 +45,13 @@ kgents/
 │   ├── h-gents/       # Hegelian dialectic (introspection)
 │   └── k-gent/        # Kent simulacra
 ├── impl/claude-openrouter/  # Reference implementation (Python 3.13)
-│   └── bootstrap/           # 7 irreducible agents implemented
+│   ├── bootstrap/           # 7 irreducible agents
+│   └── agents/              # 5 agent genera (A, B, C, H, K)
+│       ├── a/               # Creativity Coach
+│       ├── b/               # Hypothesis Engine
+│       ├── c/               # Re-exports bootstrap
+│       ├── h/               # Hegel, Lacan, Jung
+│       └── k/               # K-gent (Kent simulacra)
 └── docs/                    # BOOTSTRAP_PROMPT.md lives here
 ```
 
@@ -76,23 +82,28 @@ Minimal bootstrap: `{Compose, Judge, Ground}` — structure, direction, material
 
 ## Current State
 
-- Phase 1 skeleton COMPLETE
-- 5 agent genera specified: A, B, C, H, K
+- Phase 1 COMPLETE
+- 5 agent genera specified AND implemented: A, B, C, H, K
 - 6 principles defined
-- Bootstrap spec complete (7 irreducible agents)
-- **Bootstrap implementation DONE** (Python 3.13, uv)
+- Bootstrap: 7 irreducible agents (spec + impl)
+- **All genera implemented** (Python 3.13, uv):
+  - A-gents: Creativity Coach (expand, connect, constrain, question modes)
+  - B-gents: Hypothesis Engine (falsifiable hypotheses from observations)
+  - C-gents: Re-exports bootstrap (Id, Compose, Fix, pipeline)
+  - H-gents: Hegel (dialectic), Lacan (registers), Jung (shadow)
+  - K-gent: Interactive persona (query, update, dialogue modes)
 
 ## Next Steps
 
-1. Add runtime/ (Claude API + OpenRouter integration)
-2. Generate higher-level agents from bootstrap
-3. Create HYDRATE.md bootstrapping for K-gent
+1. Add runtime/ (Claude API + OpenRouter integration for LLM-backed evaluation)
+2. Create HYDRATE.md bootstrapping for K-gent
+3. Add tests for all agents
 4. Consider Phase 2 agents (D, E, See)
 
 ## Key Files to Read
 
-- `impl/claude-openrouter/bootstrap/` - **Working implementation of 7 agents**
-- `docs/BOOTSTRAP_PROMPT.md` - Prompt to regenerate impl from spec
+- `impl/claude-openrouter/agents/` - **All 5 genera implemented**
+- `impl/claude-openrouter/bootstrap/` - 7 irreducible agents
 - `spec/bootstrap.md` - The 7 irreducible agents (regeneration kernel)
 - `spec/principles.md` - Design philosophy (6 principles)
 - `spec/k-gent/persona.md` - Kent simulacra (Ground's persona seed)
