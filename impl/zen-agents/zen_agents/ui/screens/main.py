@@ -1,18 +1,23 @@
 """MainScreen: The primary session management interface."""
 
+from pathlib import Path
+
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal
 from textual.reactive import reactive
 from textual.widgets import Header, Static
 
-from ...types import Session, SessionState
+from ...types import Session, SessionState, SessionConfig
 from ...ground import ZenGround
+from ...conflicts import resolve_conflicts, SessionContradictInput
 from ...tmux.capture import TmuxCapture, capture_output
 from ..events import SessionSelected, NotificationRequest
 from ..widgets.session_list import SessionList
 from ..widgets.output_view import OutputView
 from .base import ZenScreen
+from .new_session import NewSessionModal, NewSessionResult
+from .conflict import ConflictModal, ConflictModalResult
 
 
 class MainScreen(ZenScreen):
@@ -122,29 +127,45 @@ class MainScreen(ZenScreen):
         selected = session_list.get_selected()
 
         if selected:
-            output_view = self.query_one("#output-view", OutputView)
-            # Get output from tmux if session is alive
-            if selected.is_alive() and selected.tmux:
-                # Would use TmuxCapture agent here
-                content = "\n".join(selected.output_lines) or "[dim]capturing...[/dim]"
-            else:
-                content = self._build_dead_session_info(selected)
+            # Use async worker to capture output
+            self.run_worker(self._capture_and_display(selected), exclusive=False)
 
-            glyphs = {
-                SessionState.CREATING: "...",
-                SessionState.RUNNING: ">>>",
-                SessionState.PAUSED: "||",
-                SessionState.COMPLETED: "ok",
-                SessionState.FAILED: "xx",
-                SessionState.UNKNOWN: "??",
-            }
+    async def _capture_and_display(self, session: Session) -> None:
+        """Capture output via TmuxCapture and update display."""
+        from ...tmux.capture import CaptureInput
 
-            output_view.update_session(
-                session_name=selected.config.name,
-                output=content,
-                glyph=glyphs.get(selected.state, "?"),
-                state=selected.state.value,
-            )
+        output_view = self.query_one("#output-view", OutputView)
+
+        if session.is_alive() and session.tmux:
+            # Use TmuxCapture agent for live output
+            capture_result = await self._capture.invoke(CaptureInput(
+                session=session.tmux,
+                lines=100,
+            ))
+            content = "\n".join(capture_result.lines) or "[dim]capturing...[/dim]"
+
+            # Update session output_lines cache
+            from dataclasses import replace
+            updated = replace(session, output_lines=capture_result.lines)
+            self._ground.update_session(updated)
+        else:
+            content = self._build_dead_session_info(session)
+
+        glyphs = {
+            SessionState.CREATING: "...",
+            SessionState.RUNNING: ">>>",
+            SessionState.PAUSED: "||",
+            SessionState.COMPLETED: "ok",
+            SessionState.FAILED: "xx",
+            SessionState.UNKNOWN: "??",
+        }
+
+        output_view.update_session(
+            session_name=session.config.name,
+            output=content,
+            glyph=glyphs.get(session.state, "?"),
+            state=session.state.value,
+        )
 
     def _build_dead_session_info(self, session: Session) -> str:
         """Build info content for inactive session."""
@@ -202,8 +223,12 @@ class MainScreen(ZenScreen):
             self.zen_notify("order saved")
 
     def action_new_session(self) -> None:
-        """Create new session (placeholder)."""
-        self.zen_notify("new session: coming soon", "warning")
+        """Open new session modal."""
+        modal = NewSessionModal(
+            ground=self._ground,
+            working_dir=Path.cwd(),
+        )
+        self.app.push_screen(modal, self._on_new_session_result)
 
     def action_attach(self) -> None:
         """Attach to tmux session."""
@@ -215,20 +240,52 @@ class MainScreen(ZenScreen):
             self.zen_notify("no tmux session to attach", "warning")
 
     def action_pause(self) -> None:
-        """Pause session (placeholder)."""
-        self.zen_notify("pause: coming soon", "warning")
+        """Pause selected session."""
+        session = self._get_selected_session()
+        if not session:
+            self.zen_notify("no session selected", "warning")
+            return
+        if session.state != SessionState.RUNNING:
+            self.zen_notify("session not running", "warning")
+            return
+        # Detach from tmux session (pauses it)
+        if session.tmux:
+            self.run_worker(self._pause_session(session), exclusive=True)
+        else:
+            self.zen_notify("no tmux session", "warning")
 
     def action_kill(self) -> None:
-        """Kill session (placeholder)."""
-        self.zen_notify("kill: coming soon", "warning")
+        """Kill selected session."""
+        session = self._get_selected_session()
+        if not session:
+            self.zen_notify("no session selected", "warning")
+            return
+        if not session.is_alive():
+            self.zen_notify("session already dead", "warning")
+            return
+        self.run_worker(self._kill_session(session), exclusive=True)
 
     def action_clean(self) -> None:
-        """Clean up dead session (placeholder)."""
-        self.zen_notify("clean: coming soon", "warning")
+        """Clean up dead session."""
+        session = self._get_selected_session()
+        if not session:
+            self.zen_notify("no session selected", "warning")
+            return
+        if session.is_alive():
+            self.zen_notify("session still alive - kill it first", "warning")
+            return
+        self.run_worker(self._clean_session(session), exclusive=True)
 
     def action_revive(self) -> None:
-        """Revive session (placeholder)."""
-        self.zen_notify("revive: coming soon", "warning")
+        """Revive a dead/paused session."""
+        session = self._get_selected_session()
+        if not session:
+            self.zen_notify("no session selected", "warning")
+            return
+        if session.state == SessionState.RUNNING:
+            self.zen_notify("session already running", "warning")
+            return
+        self.run_worker(self._revive_session(session), exclusive=True)
 
     def action_refresh(self) -> None:
         """Manual refresh."""
@@ -267,3 +324,143 @@ class MainScreen(ZenScreen):
     def zen_notify(self, message: str, severity: str = "success") -> None:
         """Helper for sending notifications."""
         self.post_message(NotificationRequest(message, severity))
+
+    def _get_selected_session(self) -> Session | None:
+        """Get currently selected session."""
+        session_list = self.query_one("#session-list", SessionList)
+        return session_list.get_selected()
+
+    async def _on_new_session_result(self, result: NewSessionResult) -> None:
+        """Handle result from NewSessionModal."""
+        if not result.created or not result.config:
+            return
+
+        # Check for conflicts via pipeline
+        ground_state = await self._ground.invoke()
+        conflict_result = await resolve_conflicts(
+            config=result.config,
+            ground_state=ground_state,
+            auto_resolve=True,
+        )
+
+        if conflict_result.has_conflicts:
+            # Show conflict modal
+            modal = ConflictModal(conflict_result, result.config)
+            self.app.push_screen(modal, self._on_conflict_result)
+        else:
+            # No conflicts - create session directly
+            await self._create_session(result.config)
+
+    async def _on_conflict_result(self, result: ConflictModalResult) -> None:
+        """Handle result from ConflictModal."""
+        if not result.resolved or not result.final_config:
+            self.zen_notify("session creation cancelled", "warning")
+            return
+
+        if result.action == "force":
+            self.zen_notify("forcing session creation...", "warning")
+
+        await self._create_session(result.final_config)
+
+    async def _create_session(self, config: SessionConfig) -> None:
+        """Create a new session via NewSessionPipeline."""
+        try:
+            # Import here to avoid circular imports
+            import sys
+            sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "pipelines"))
+            from pipelines.new_session import NewSessionPipeline
+
+            pipeline = NewSessionPipeline(ground=self._ground)
+            result = await pipeline.invoke(config)
+
+            if result.success:
+                self.zen_notify(f"created: {config.name}")
+                await self._refresh_sessions()
+            else:
+                self.zen_notify(f"failed: {result.error}", "error")
+        except ImportError:
+            # Pipeline not available - create placeholder
+            self.zen_notify(f"pipeline not available: {config.name}", "warning")
+        except Exception as e:
+            self.zen_notify(f"error: {e}", "error")
+
+    async def _pause_session(self, session: Session) -> None:
+        """Pause a session by sending SIGSTOP or detaching."""
+        import asyncio
+        from dataclasses import replace
+
+        if session.tmux:
+            # Send SIGSTOP to the tmux pane process
+            cmd = ["tmux", "send-keys", "-t", session.tmux.pane_id, "C-z"]
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.DEVNULL,
+                stderr=asyncio.subprocess.DEVNULL,
+            )
+            await process.wait()
+
+        # Update session state
+        updated = replace(session, state=SessionState.PAUSED)
+        self._ground.update_session(updated)
+        self.zen_notify(f"paused: {session.config.name}")
+        await self._refresh_sessions()
+
+    async def _kill_session(self, session: Session) -> None:
+        """Kill a session's tmux pane."""
+        import asyncio
+        from dataclasses import replace
+        from datetime import datetime
+
+        if session.tmux:
+            cmd = ["tmux", "kill-pane", "-t", session.tmux.pane_id]
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.DEVNULL,
+                stderr=asyncio.subprocess.DEVNULL,
+            )
+            await process.wait()
+
+        # Update session state
+        updated = replace(
+            session,
+            state=SessionState.COMPLETED,
+            completed_at=datetime.now(),
+        )
+        self._ground.update_session(updated)
+        self.zen_notify(f"killed: {session.config.name}")
+        await self._refresh_sessions()
+
+    async def _clean_session(self, session: Session) -> None:
+        """Remove a dead session from ground state."""
+        # Remove from ground state
+        ground_state = await self._ground.invoke()
+        if session.id in ground_state.sessions:
+            del ground_state.sessions[session.id]
+        self.zen_notify(f"cleaned: {session.config.name}")
+        await self._refresh_sessions()
+
+    async def _revive_session(self, session: Session) -> None:
+        """Revive a paused/dead session by recreating it."""
+        # For paused: send SIGCONT
+        # For dead: re-run via pipeline
+        import asyncio
+        from dataclasses import replace
+
+        if session.state == SessionState.PAUSED and session.tmux:
+            # Resume with fg or SIGCONT
+            cmd = ["tmux", "send-keys", "-t", session.tmux.pane_id, "fg", "Enter"]
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.DEVNULL,
+                stderr=asyncio.subprocess.DEVNULL,
+            )
+            await process.wait()
+
+            updated = replace(session, state=SessionState.RUNNING)
+            self._ground.update_session(updated)
+            self.zen_notify(f"revived: {session.config.name}")
+        else:
+            # Dead session - recreate via pipeline
+            await self._create_session(session.config)
+
+        await self._refresh_sessions()
