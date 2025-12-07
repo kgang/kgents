@@ -1,5 +1,10 @@
 """
 Claude Runtime - Execute agents using Anthropic's Claude API.
+
+Supports two authentication methods:
+1. API Key: Set ANTHROPIC_API_KEY or pass api_key
+2. OAuth Token: Set CLAUDE_CODE_OAUTH_TOKEN or pass auth_token
+   (Used by Claude Code CLI for delegated authentication)
 """
 
 import os
@@ -16,7 +21,12 @@ class ClaudeRuntime(Runtime):
     Runtime for executing LLM agents via Claude.
 
     Usage:
+        # With API key (default)
         runtime = ClaudeRuntime()
+
+        # With OAuth token (Claude Code CLI)
+        runtime = ClaudeRuntime(auth_token=os.environ["CLAUDE_CODE_OAUTH_TOKEN"])
+
         result = await runtime.execute(my_agent, input_data)
     """
 
@@ -25,6 +35,7 @@ class ClaudeRuntime(Runtime):
     def __init__(
         self,
         api_key: str | None = None,
+        auth_token: str | None = None,
         model: str | None = None,
     ):
         """
@@ -32,9 +43,13 @@ class ClaudeRuntime(Runtime):
 
         Args:
             api_key: Anthropic API key. Defaults to ANTHROPIC_API_KEY env var.
+            auth_token: OAuth token (e.g., from Claude Code CLI).
+                       Defaults to CLAUDE_CODE_OAUTH_TOKEN env var.
+                       Takes precedence over api_key if both are set.
             model: Model to use. Defaults to claude-sonnet-4-20250514.
         """
         self._api_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
+        self._auth_token = auth_token or os.environ.get("CLAUDE_CODE_OAUTH_TOKEN")
         self._model = model or self.DEFAULT_MODEL
         self._client = None
 
@@ -43,10 +58,20 @@ class ClaudeRuntime(Runtime):
         if self._client is None:
             try:
                 import anthropic
-                self._client = anthropic.AsyncAnthropic(api_key=self._api_key)
             except ImportError:
                 raise ImportError(
                     "anthropic package required. Install with: pip install anthropic"
+                )
+
+            # OAuth token takes precedence over API key
+            if self._auth_token:
+                self._client = anthropic.AsyncAnthropic(auth_token=self._auth_token)
+            elif self._api_key:
+                self._client = anthropic.AsyncAnthropic(api_key=self._api_key)
+            else:
+                raise ValueError(
+                    "No authentication configured. Set ANTHROPIC_API_KEY, "
+                    "CLAUDE_CODE_OAUTH_TOKEN, or pass api_key/auth_token to ClaudeRuntime."
                 )
         return self._client
 

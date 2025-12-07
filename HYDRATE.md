@@ -17,7 +17,8 @@
 | C-gents (Category Theory) | ✅ `impl/claude-openrouter/agents/c/` |
 | H-gents (Hegel/Jung/Lacan) | ✅ `impl/claude-openrouter/agents/h/` |
 | K-gent (Persona) | ✅ `impl/claude-openrouter/agents/k/` |
-| A-gents, B-gents | ⏳ Spec exists, impl pending |
+| A-gents (Skeleton + Creativity) | ✅ `impl/claude-openrouter/agents/a/` |
+| B-gents | ⏳ Spec exists, impl pending |
 | runtime/ | ✅ `impl/claude-openrouter/runtime/` (ClaudeRuntime, OpenRouterRuntime) |
 
 ## 7 Bootstrap Agents (Implemented)
@@ -110,26 +111,32 @@ LLM execution layer for agents:
 |-------|---------|-------|
 | `LLMAgent[A, B]` | Base for LLM-backed agents | Extend, implement `build_prompt` + `parse_response` |
 | `ClaudeRuntime` | Execute via Anthropic API | `await runtime.execute(agent, input)` |
+| `ClaudeCLIRuntime` | Execute via Claude Code CLI (OAuth) | No API key needed, uses Fix pattern for retries |
 | `OpenRouterRuntime` | Execute via OpenRouter | Same API, different provider |
 
 ## Next Steps
 
 **Bootstrap is now self-referential** — kgents can implement kgents.
 
-See `BOOTSTRAP_PLAN.md` for the meta-implementation plan.
+| Document | Purpose |
+|----------|---------|
+| `BOOTSTRAP_PLAN.md` | Original implementation plan |
+| `AUTONOMOUS_BOOTSTRAP_PROTOCOL.md` | **Active protocol** — Meta-level instructions for Kent + Claude Code collaboration |
 
 | Phase | Status | Notes |
 |-------|--------|-------|
 | K-gent | ✅ DONE | Personalizes all other agents |
-| A-gents | ← CURRENT | Abstract skeleton (already in bootstrap.Agent), CreativityCoach |
-| B-gents | ⏳ | HypothesisEngine, Robin (scientific companion) |
+| A-gents | ✅ DONE | AbstractSkeleton (alias), AgentMeta, CreativityCoach |
+| B-gents | ← CURRENT | HypothesisEngine, Robin (scientific companion) |
+
+**To begin:** `claude "Read AUTONOMOUS_BOOTSTRAP_PROTOCOL.md and implement Phase B.1"`
 
 ## Recent Changes
 
+- **ClaudeCLIRuntime** (Dec 2025): OAuth-authenticated runtime via `claude -p`, uses Fix pattern for parse retries
+- **A-gents implemented** (Dec 2025): `impl/claude-openrouter/agents/a/` - AbstractSkeleton (alias), AgentMeta, CreativityCoach (first LLMAgent!)
 - **K-gent implemented** (Dec 2025): `impl/claude-openrouter/agents/k/` - persona, query, evolution agents
 - **Runtime added** (Dec 2025): `impl/claude-openrouter/runtime/` with `ClaudeRuntime` and `OpenRouterRuntime` for LLM-backed agent execution
-- **Clean imports** (Dec 2025): zen-agents now imports from `bootstrap` cleanly (no more sys.path hacks)
-- **Attach session** (Dec 2025): `action_attach` in `screens/main.py` uses Textual's `app.suspend()` for tmux attach
 
 ## Quick Start
 
@@ -145,6 +152,13 @@ from agents.c import (
     parallel, fan_out, race, branch, switch
 )
 
+# A-gents: Abstract skeleton + creativity
+from agents.a import (
+    AbstractAgent, AgentMeta,
+    CreativityCoach, CreativityInput, CreativityMode,
+    creativity_coach, playful_coach
+)
+
 # H-gents: Dialectic introspection
 from agents.h import (
     hegel, jung, lacan,
@@ -158,7 +172,7 @@ from agents.k import (
 )
 
 # Runtime: LLM execution
-from runtime import ClaudeRuntime, OpenRouterRuntime, LLMAgent
+from runtime import ClaudeCLIRuntime, ClaudeRuntime, OpenRouterRuntime, LLMAgent
 
 # Build pipelines
 pipeline = validate >> transform >> persist
@@ -166,8 +180,8 @@ pipeline = validate >> transform >> persist
 # Parallel execution
 results = await parallel(agent1, agent2, agent3).invoke(input)
 
-# LLM-backed execution
-runtime = ClaudeRuntime()  # Uses ANTHROPIC_API_KEY
+# LLM-backed execution (CLI uses OAuth, no API key needed)
+runtime = ClaudeCLIRuntime()  # Or ClaudeRuntime() with API key
 result = await runtime.execute(my_llm_agent, input_data)
 
 # K-gent dialogue
@@ -181,4 +195,13 @@ print(response.response)  # "This might conflict with your dislike of 'feature c
 # K-gent composition: personalize other agents
 style = await query_persona().invoke(PersonaQuery(aspect="all", for_agent="robin"))
 # → suggested_style: ["be direct about uncertainty", "connect to first principles"]
+
+# Creativity Coach (first LLMAgent!)
+coach = playful_coach()
+runtime = ClaudeCLIRuntime()
+result = await runtime.execute(coach, CreativityInput(
+    seed="underwater city",
+    mode=CreativityMode.EXPAND
+))
+print(result.output.responses)  # ["Buoyancy-Based Social Hierarchy...", ...]
 ```
