@@ -8,7 +8,7 @@
 - `impl/claude-openrouter/` = Reference impl (like CPython)
 - `impl/zen-agents/` = **Production-ready** zenportal reimplementation proving kgents works
 
-## Current State (Dec 2024)
+## Current State (Dec 2025)
 
 | Component | Status |
 |-----------|--------|
@@ -16,6 +16,7 @@
 | 7 Bootstrap Agents | ✅ Spec + Impl |
 | 5 Agent Genera (A,B,C,H,K) | ✅ Implemented |
 | zen-agents | ✅ **Production-ready** (41 tests) |
+| runtime/ | ✅ **LLM-backed agents** (53 tests) |
 
 ## Quick Commands
 
@@ -63,6 +64,10 @@ kgents/
 │   └── {a,b,c,h,k}-gents/   # 5 agent genera
 ├── impl/claude-openrouter/  # Reference implementation
 │   ├── bootstrap/           # 7 bootstrap agents (Python)
+│   ├── runtime/             # LLM-backed execution (NEW)
+│   │   ├── client.py        # 4 auth methods (CLI, OAuth, OpenRouter, API)
+│   │   ├── llm_agents/      # LLMJudge, LLMSublate, LLMContradict
+│   │   └── cache.py, usage.py
 │   └── agents/{a,b,c,h,k}/  # 5 genera
 └── impl/zen-agents/         # PRODUCTION APP (zenportal reimagined)
     ├── zen_agents/          # Core agents
@@ -88,31 +93,39 @@ kgents/
 
 ## Next Steps
 
-1. **Implement `runtime/`** - See `impl/claude-openrouter/PLAN.md` (plan ready)
+1. ~~**Implement `runtime/`**~~ ✅ Done (53 tests)
 2. Build UI layer for zen-agents
 3. Refactor zenportal to use zen-agents as library
 4. Consider Phase 2 agents (D, E, See)
 
-## Runtime Plan (impl/claude-openrouter/PLAN.md)
+## Runtime Module (impl/claude-openrouter/runtime/)
 
-**4 Auth Methods** (priority order):
+**4 Auth Methods** (auto-detected in priority order):
 1. Claude CLI (`claude login`) - Max subscribers, no API key
 2. OAuth token (`CLAUDE_CODE_OAUTH_TOKEN`) - containers/CI
 3. OpenRouter via y-router (`http://localhost:8787`) - multi-model
 4. Anthropic API key (fallback)
 
-**LLM-backed agents**: Judge, Sublate, Contradict (replace heuristics with LLM reasoning)
+**LLM-backed agents**: LLMJudge, LLMSublate, LLMContradict
+
+```python
+from runtime import get_llm_judge, get_llm_sublate, get_llm_contradict
+
+# Get LLM-backed agents (auto-detects auth)
+judge = get_llm_judge()
+result = await judge.invoke(JudgeInput(subject=my_agent))
+```
 
 ## Key Files
 
 - `impl/zen-agents/README.md` - zen-agents documentation
 - `impl/zen-agents/demo.py` - **Comprehensive demo** (13 modular sections, CLI interface)
-- `impl/claude-openrouter/PLAN.md` - **Runtime implementation plan** (ready to implement)
+- `impl/claude-openrouter/runtime/` - **LLM-backed agents** (53 tests)
 - `spec/bootstrap.md` - Bootstrap agents spec
 - `spec/principles.md` - Design philosophy
 
 ## Recent Changes
 
-- **Runtime plan added** (`impl/claude-openrouter/PLAN.md`) - 4 auth methods, LLM-backed agents
-- **demo.py refactored** into modular CLI with `--section`, `--list` options
+- **Runtime implemented** - LLMJudge, LLMSublate, LLMContradict with 4 auth methods
+- demo.py refactored into modular CLI with `--section`, `--list` options
 - All 7 bootstrap agents demonstrated with architectural insights
