@@ -52,7 +52,15 @@ kgents/
 │       ├── c/               # Re-exports bootstrap
 │       ├── h/               # Hegel, Lacan, Jung
 │       └── k/               # K-gent (Kent simulacra)
-└── docs/                    # BOOTSTRAP_PROMPT.md lives here
+├── impl/zen-agents/         # Zenportal reimagined through kgents
+│   ├── zen_agents/          # Core agents
+│   │   ├── ground.py        # ZenGround (config cascade + session state)
+│   │   ├── judge.py         # ZenJudge (session validation)
+│   │   ├── session/         # Session lifecycle agents
+│   │   └── tmux/            # tmux wrapper agents
+│   ├── pipelines/           # Composed pipelines
+│   └── demo.py              # Demonstration script
+└── docs/                    # BOOTSTRAP_PROMPT.md, RESEARCH_PLAN.md
 ```
 
 ## 6 Principles
@@ -93,17 +101,44 @@ Minimal bootstrap: `{Compose, Judge, Ground}` — structure, direction, material
   - H-gents: Hegel (dialectic), Lacan (registers), Jung (shadow)
   - K-gent: Interactive persona (query, update, dialogue modes)
 
+## zen-agents (Research: kgents as Application Framework)
+
+First iteration of rebuilding zenportal using kgents architecture.
+
+**Key Insights Demonstrated:**
+
+| Zenportal Concept | kgents Equivalent |
+|-------------------|-------------------|
+| SessionManager.create_session() | NewSessionPipeline (Judge → Create → Spawn → Detect) |
+| ConfigManager (3-tier) | ZenGround (config cascade as empirical seed) |
+| StateRefresher.refresh() | SessionTickPipeline (Fix-based polling) |
+| TmuxService.* | zen_agents/tmux/* (each method is an agent) |
+
+**Bootstrap Mapping:**
+- **Ground** → ZenGround (config + session state + tmux facts)
+- **Judge** → ZenJudge (session config validation)
+- **Compose** → Pipeline construction
+- **Fix** → State detection (polling as fixed-point search)
+- **Contradict/Sublate** → Conflict detection/resolution (future)
+
+Run demo: `cd impl/zen-agents && uv run python demo.py`
+
 ## Next Steps
 
 1. Add runtime/ (Claude API + OpenRouter integration for LLM-backed evaluation)
-2. Create HYDRATE.md bootstrapping for K-gent
-3. Add tests for all agents
-4. Consider Phase 2 agents (D, E, See)
+2. zen-agents: Implement Contradict/Sublate for conflict resolution
+3. zen-agents: Add UI layer with agent outputs
+4. Create second "verified" test case using kgents architecture
+5. Add tests for all agents
+6. Consider Phase 2 agents (D, E, See)
 
 ## Key Files to Read
 
 - `impl/claude-openrouter/agents/` - **All 5 genera implemented**
 - `impl/claude-openrouter/bootstrap/` - 7 irreducible agents
+- `impl/zen-agents/` - **Zenportal reimagined** (first app test case)
+- `impl/zen-agents/demo.py` - Working demonstration
+- `docs/RESEARCH_PLAN.md` - zen-agents research methodology
 - `spec/bootstrap.md` - The 7 irreducible agents (regeneration kernel)
 - `spec/principles.md` - Design philosophy (6 principles)
 - `spec/k-gent/persona.md` - Kent simulacra (Ground's persona seed)
