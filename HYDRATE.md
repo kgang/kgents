@@ -60,7 +60,7 @@ From `spec/bootstrap.md`:
 
 ## Next Steps
 
-1. **Test zen-agents** - Install (`pip install -e impl/zen-agents`) and run TUI
+1. **Run zen-agents** - `pip install -e impl/zen-agents && zen-agents`
 2. Implement `agents/{a,b,c,h,k}/` genera from specs
 3. Build `runtime/` for LLM-backed agent execution
 
