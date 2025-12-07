@@ -44,8 +44,9 @@ kgents/
 │   ├── c-gents/       # Category Theory
 │   ├── h-gents/       # Hegelian dialectic (introspection)
 │   └── k-gent/        # Kent simulacra
-├── impl/              # Reference implementations (empty)
-└── docs/              # BOOTSTRAP_PROMPT.md lives here
+├── impl/claude-openrouter/  # Reference implementation (Python 3.13)
+│   └── bootstrap/           # 7 irreducible agents implemented
+└── docs/                    # BOOTSTRAP_PROMPT.md lives here
 ```
 
 ## 6 Principles
@@ -78,26 +79,20 @@ Minimal bootstrap: `{Compose, Judge, Ground}` — structure, direction, material
 - Phase 1 skeleton COMPLETE
 - 5 agent genera specified: A, B, C, H, K
 - 6 principles defined
-- **NEW**: Bootstrap spec added (7 irreducible agents)
-- No implementation yet
+- Bootstrap spec complete (7 irreducible agents)
+- **Bootstrap implementation DONE** (Python 3.13, uv)
 
 ## Next Steps
 
-1. Review/refine spec files
-2. Create HYDRATE.md bootstrapping for K-gent
-3. Start reference implementation in `impl/claude-openrouter/`
+1. Add runtime/ (Claude API + OpenRouter integration)
+2. Generate higher-level agents from bootstrap
+3. Create HYDRATE.md bootstrapping for K-gent
 4. Consider Phase 2 agents (D, E, See)
 
 ## Key Files to Read
 
-- `docs/BOOTSTRAP_PROMPT.md` - **Prompt to regenerate impl from spec**
+- `impl/claude-openrouter/bootstrap/` - **Working implementation of 7 agents**
+- `docs/BOOTSTRAP_PROMPT.md` - Prompt to regenerate impl from spec
 - `spec/bootstrap.md` - The 7 irreducible agents (regeneration kernel)
-- `spec/principles.md` - Design philosophy (6 principles incl. Heterarchical)
-- `spec/anatomy.md` - What constitutes an agent
-- `spec/c-gents/composition.md` - How agents combine
-- `spec/h-gents/index.md` - System introspection (Hegel, Lacan, Jung)
-- `spec/k-gent/persona.md` - Kent simulacra structure
-
-## Research Sources
-
-Plan file with full research: `~/.claude/plans/rippling-beaming-minsky.md`
+- `spec/principles.md` - Design philosophy (6 principles)
+- `spec/k-gent/persona.md` - Kent simulacra (Ground's persona seed)
