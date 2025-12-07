@@ -11,7 +11,7 @@ Key insight: This is like Python (spec) vs CPython (impl). The `spec/` directory
 | Decision | Choice |
 |----------|--------|
 | Approach | Specification-first, not framework |
-| Scope | Deep & narrow: A, B, C, K first (H pending) |
+| Scope | Deep & narrow: A, B, C, H, K |
 | E-gents | Epistemological (knowledge, truth) |
 | H-gents | System introspection (Hegel, Lacan, Jung) |
 | K-gent | Interactive persona (evolving preferences) |
@@ -23,7 +23,7 @@ Key insight: This is like Python (spec) vs CPython (impl). The `spec/` directory
 | **A** | Abstract + Art (creativity coach) | Skeleton done |
 | **B** | Bio/Scientific (hypothesis, Robin) | Skeleton done |
 | **C** | Category Theory (composition) | Skeleton done |
-| **H** | Hegelian dialectic (system introspection) | Skeleton done (uncommitted) |
+| **H** | Hegelian dialectic (system introspection) | Skeleton done |
 | **K** | Kent simulacra (persona) | Skeleton done |
 | D | Absurdlings (NPCs) | Future |
 | E | Epistemological | Future |
@@ -58,17 +58,17 @@ kgents/
 
 ## Current State
 
-- Phase 1 skeleton mostly complete (commit `5783126`)
-- **Uncommitted**: H-gents skeleton + Principle #6 (Heterarchical)
+- Phase 1 skeleton COMPLETE (commit `e06aa14`)
+- 5 agent genera specified: A, B, C, H, K
+- 6 principles defined
 - No implementation yet
 
 ## Next Steps
 
-1. **Commit pending work** (H-gents, Principle #6)
-2. Review/refine spec files
-3. Create HYDRATE.md bootstrapping for K-gent
-4. Start reference implementation in `impl/claude-openrouter/`
-5. Consider Phase 2 agents (D, E, See)
+1. Review/refine spec files
+2. Create HYDRATE.md bootstrapping for K-gent
+3. Start reference implementation in `impl/claude-openrouter/`
+4. Consider Phase 2 agents (D, E, See)
 
 ## Key Files to Read
 
