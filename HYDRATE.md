@@ -13,9 +13,9 @@
 |-----------|--------|
 | 7 Principles | ✅ Defined in `spec/principles.md` |
 | 7 Bootstrap Agents | ✅ Spec (`spec/bootstrap.md`) + Impl (`impl/claude-openrouter/bootstrap/`) |
+| zen-agents | ✅ Textual TUI using bootstrap patterns (`impl/zen-agents/`) |
 | 5 Agent Genera (A,B,C,H,K) | ⏳ Spec exists, impl pending |
 | runtime/ | ⏳ Pending (LLM-backed agents) |
-| zen-agents | ⏳ Placeholder only |
 
 ## 7 Bootstrap Agents (Implemented)
 
@@ -41,7 +41,11 @@ kgents/
 │   ├── bootstrap/           # ✅ 7 bootstrap agents (Python)
 │   ├── agents/{a,b,c,h,k}/  # ⏳ Pending
 │   └── runtime/             # ⏳ Pending
-└── impl/zen-agents/         # ⏳ Placeholder
+└── impl/zen-agents/         # ✅ Textual TUI (bootstrap demonstration)
+    ├── agents/              # Fix, Contradict, Sublate, Ground, Judge patterns
+    ├── pipelines/           # Compose patterns for create/revive/clean
+    ├── services/            # tmux, session_manager, state_refresher
+    └── app.py               # Entry point
 ```
 
 ## Key Applied Idioms
@@ -54,9 +58,9 @@ From `spec/bootstrap.md`:
 
 ## Next Steps
 
-1. Implement `agents/{a,b,c,h,k}/` genera from specs
-2. Build `runtime/` for LLM-backed agent execution
-3. Create zen-agents TUI as production demonstration
+1. **Test zen-agents** - Install (`pip install -e impl/zen-agents`) and run TUI
+2. Implement `agents/{a,b,c,h,k}/` genera from specs
+3. Build `runtime/` for LLM-backed agent execution
 
 ## Quick Start
 
