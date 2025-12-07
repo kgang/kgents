@@ -114,11 +114,15 @@ LLM execution layer for agents:
 
 ## Next Steps
 
-**Bootstrap in progress** — see `BOOTSTRAP_PLAN.md`
+**Bootstrap is now self-referential** — kgents can implement kgents.
 
-Phase 1: K-gent (personalizer) ✅ DONE
-Phase 2: A-gents (abstractors) ← CURRENT
-Phase 3: B-gents (discoverers)
+See `BOOTSTRAP_PLAN.md` for the meta-implementation plan.
+
+| Phase | Status | Notes |
+|-------|--------|-------|
+| K-gent | ✅ DONE | Personalizes all other agents |
+| A-gents | ← CURRENT | Abstract skeleton (already in bootstrap.Agent), CreativityCoach |
+| B-gents | ⏳ | HypothesisEngine, Robin (scientific companion) |
 
 ## Recent Changes
 
