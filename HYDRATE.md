@@ -64,18 +64,8 @@ kgents/
 
 ## Next Steps
 
-1. ~~runtime/~~ ✅ Done
-2. ~~UI Phase 1~~ ✅ Done
-3. ~~UI Phase 2~~ ✅ Done
-4. **UI Phase 3**: Polish, keyboard shortcuts, search/filter
-5. Refactor zenportal to use zen-agents as library
-
-## UI Phase 2 (Completed)
-
-- [x] NewSessionModal (NewSessionPipeline integration)
-- [x] ConflictModal (Contradict/Sublate dialogs)
-- [x] Session actions: create/pause/kill/revive/clean
-- [x] TmuxCapture live output streaming
+1. **UI Phase 3**: Polish, keyboard shortcuts, search/filter
+2. Refactor zenportal to use zen-agents as library
 
 ## Key Files
 
@@ -86,6 +76,6 @@ kgents/
 
 ## Recent Changes
 
-- **UI Phase 2 complete** - NewSessionModal, ConflictModal, session actions, live streaming
-- **UI Phase 1 complete** - MainScreen, SessionList, OutputView, HelpScreen
-- **Runtime implemented** - LLMJudge, LLMSublate, LLMContradict
+- **UI Phase 2** - NewSessionModal, ConflictModal, session actions, TmuxCapture streaming
+- **UI Phase 1** - MainScreen, SessionList, OutputView, HelpScreen
+- **Runtime** - LLMJudge, LLMSublate, LLMContradict
