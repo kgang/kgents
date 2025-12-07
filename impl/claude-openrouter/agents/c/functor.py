@@ -12,7 +12,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Generic, TypeVar, Callable, Any
 
-from ...bootstrap.types import Agent
+from bootstrap.types import Agent
 
 A = TypeVar("A")
 B = TypeVar("B")

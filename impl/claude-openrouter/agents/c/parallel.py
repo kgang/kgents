@@ -12,7 +12,7 @@ input ──┼→ [B] ─┼→ combine → output
 import asyncio
 from typing import TypeVar, Callable, Sequence, Any
 
-from ...bootstrap.types import Agent
+from bootstrap.types import Agent
 
 A = TypeVar("A")
 B = TypeVar("B")
@@ -135,7 +135,7 @@ def fan_out(*agents: Agent[A, Any]) -> FanOutAgent[A]:
 def combine(
     agents: Sequence[Agent[A, B]],
     combiner: Callable[[list[B]], C],
-) -> CombineAgent[A, B, C]:
+) -> CombineAgent[A, C]:
     """Run agents in parallel, combine with custom function."""
     return CombineAgent(agents, combiner)
 

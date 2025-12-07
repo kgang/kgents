@@ -8,7 +8,7 @@ input → [condition?] → [A] if true
 
 from typing import TypeVar, Callable, Union
 
-from ...bootstrap.types import Agent
+from bootstrap.types import Agent
 
 A = TypeVar("A")
 B = TypeVar("B")

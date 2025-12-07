@@ -11,7 +11,7 @@ Pattern: thesis + antithesis → synthesis (or hold productive tension)
 from dataclasses import dataclass
 from typing import Any, Optional
 
-from ...bootstrap.types import (
+from bootstrap.types import (
     Agent,
     Tension,
     TensionMode,
@@ -19,8 +19,8 @@ from ...bootstrap.types import (
     ResolutionType,
     HoldTension,
 )
-from ...bootstrap.contradict import Contradict
-from ...bootstrap.sublate import Sublate
+from bootstrap.contradict import Contradict
+from bootstrap.sublate import Sublate
 
 
 @dataclass

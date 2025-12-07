@@ -16,8 +16,9 @@
 | zen-agents | ✅ Textual TUI using bootstrap patterns (`impl/zen-agents/`) |
 | C-gents (Category Theory) | ✅ `impl/claude-openrouter/agents/c/` |
 | H-gents (Hegel/Jung/Lacan) | ✅ `impl/claude-openrouter/agents/h/` |
-| 3 Agent Genera (A,B,K) | ⏳ Spec exists, impl pending |
-| runtime/ | ⏳ Pending (LLM-backed agents) |
+| K-gent (Persona) | ✅ `impl/claude-openrouter/agents/k/` |
+| A-gents, B-gents | ⏳ Spec exists, impl pending |
+| runtime/ | ✅ `impl/claude-openrouter/runtime/` (ClaudeRuntime, OpenRouterRuntime) |
 
 ## 7 Bootstrap Agents (Implemented)
 
@@ -39,12 +40,13 @@ kgents/
 │   ├── principles.md        # 7 core principles
 │   ├── bootstrap.md         # 7 irreducible agents
 │   └── {a,b,c,h,k}-gents/   # 5 agent genera
-├── impl/claude-openrouter/  # Reference implementation
+├── impl/claude-openrouter/  # Reference implementation (kgents-runtime package)
 │   ├── bootstrap/           # ✅ 7 bootstrap agents (Python)
 │   ├── agents/c/            # ✅ Category theory (Maybe, Either, Parallel, Conditional)
 │   ├── agents/h/            # ✅ Dialectics (Hegel, Jung, Lacan)
-│   ├── agents/{a,b,k}/      # ⏳ Pending
-│   └── runtime/             # ⏳ Pending
+│   ├── agents/k/            # ✅ K-gent persona (Dialogue, Query, Evolution)
+│   ├── agents/{a,b}/        # ⏳ Pending
+│   └── runtime/             # ✅ LLM execution (ClaudeRuntime, OpenRouterRuntime)
 └── impl/zen-agents/         # ✅ Textual TUI (bootstrap demonstration)
     └── zen_agents/          # Package directory
         ├── agents/          # Fix, Contradict, Sublate, Ground, Judge patterns
@@ -88,35 +90,71 @@ Dialectic introspection agents (system-facing, not user-therapeutic):
 
 Quick versions: `quick_shadow(self_image)`, `quick_register(text)`
 
+## K-gent (Implemented)
+
+The personalizer - Ground projected through persona_schema:
+
+| Agent | Purpose | Key Type |
+|-------|---------|----------|
+| `KgentAgent` | Dialogue with 4 modes | `DialogueInput → DialogueOutput` |
+| `PersonaQueryAgent` | Query preferences | `PersonaQuery → PersonaResponse` |
+| `EvolutionAgent` | Persona evolution | `EvolutionInput → EvolutionOutput` |
+
+Dialogue modes: `REFLECT`, `ADVISE`, `CHALLENGE`, `EXPLORE`
+
+## Runtime (Implemented)
+
+LLM execution layer for agents:
+
+| Class | Purpose | Usage |
+|-------|---------|-------|
+| `LLMAgent[A, B]` | Base for LLM-backed agents | Extend, implement `build_prompt` + `parse_response` |
+| `ClaudeRuntime` | Execute via Anthropic API | `await runtime.execute(agent, input)` |
+| `OpenRouterRuntime` | Execute via OpenRouter | Same API, different provider |
+
 ## Next Steps
 
-1. **Run zen-agents** - `cd impl/zen-agents && python3.11 -m venv .venv && source .venv/bin/activate && pip install -e . && zen-agents`
-2. Implement `agents/{a,b,k}/` genera from specs
-3. Build `runtime/` for LLM-backed agent execution
+**Bootstrap in progress** — see `BOOTSTRAP_PLAN.md`
 
-## Recent Fixes
+Phase 1: K-gent (personalizer) ✅ DONE
+Phase 2: A-gents (abstractors) ← CURRENT
+Phase 3: B-gents (discoverers)
 
-- **Attach session** (Dec 2025): Implemented `action_attach` in `screens/main.py` to use Textual's `app.suspend()` context manager, which suspends the TUI and runs `tmux attach-session` in the foreground. Press `a` or click the Attach button.
+## Recent Changes
+
+- **K-gent implemented** (Dec 2025): `impl/claude-openrouter/agents/k/` - persona, query, evolution agents
+- **Runtime added** (Dec 2025): `impl/claude-openrouter/runtime/` with `ClaudeRuntime` and `OpenRouterRuntime` for LLM-backed agent execution
+- **Clean imports** (Dec 2025): zen-agents now imports from `bootstrap` cleanly (no more sys.path hacks)
+- **Attach session** (Dec 2025): `action_attach` in `screens/main.py` uses Textual's `app.suspend()` for tmux attach
 
 ## Quick Start
 
 ```python
 # Bootstrap agents
-from impl.claude_openrouter.bootstrap import (
-    Id, Compose, Judge, Ground, Contradict, Sublate, Fix, fix
+from bootstrap import (
+    Agent, Id, compose, Judge, Ground, Contradict, Sublate, Fix, fix
 )
 
 # C-gents: Category theory composition
-from impl.claude_openrouter.agents.c import (
+from agents.c import (
     Maybe, Just, Nothing, maybe, either,
     parallel, fan_out, race, branch, switch
 )
 
 # H-gents: Dialectic introspection
-from impl.claude_openrouter.agents.h import (
+from agents.h import (
     hegel, jung, lacan,
     DialecticInput, JungInput, LacanInput
 )
+
+# K-gent: Personalization
+from agents.k import (
+    kgent, query_persona,
+    DialogueMode, DialogueInput, PersonaQuery
+)
+
+# Runtime: LLM execution
+from runtime import ClaudeRuntime, OpenRouterRuntime, LLMAgent
 
 # Build pipelines
 pipeline = validate >> transform >> persist
@@ -124,14 +162,19 @@ pipeline = validate >> transform >> persist
 # Parallel execution
 results = await parallel(agent1, agent2, agent3).invoke(input)
 
-# Dialectic synthesis
-synthesis = await hegel().invoke(DialecticInput(
-    thesis="prioritize readability",
-    antithesis="prioritize performance"
-))
+# LLM-backed execution
+runtime = ClaudeRuntime()  # Uses ANTHROPIC_API_KEY
+result = await runtime.execute(my_llm_agent, input_data)
 
-# Shadow analysis
-shadow = await jung().invoke(JungInput(
-    system_self_image="helpful, accurate, safe assistant"
+# K-gent dialogue
+k = kgent()
+response = await k.invoke(DialogueInput(
+    message="Should I add another feature?",
+    mode=DialogueMode.CHALLENGE  # or REFLECT, ADVISE, EXPLORE
 ))
+print(response.response)  # "This might conflict with your dislike of 'feature creep'..."
+
+# K-gent composition: personalize other agents
+style = await query_persona().invoke(PersonaQuery(aspect="all", for_agent="robin"))
+# → suggested_style: ["be direct about uncertainty", "connect to first principles"]
 ```
