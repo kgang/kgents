@@ -276,15 +276,40 @@ class PreFlightChecker(Agent[PreFlightInput, PreFlightReport]):
                 for alias in node.names:
                     imported_names.add(alias.asname or alias.name)
 
-        # Get all defined names (classes, functions, variables)
+        # Get all defined names (classes, functions, variables, parameters)
         defined_names = set()
         for node in ast.walk(tree):
             if isinstance(node, ast.ClassDef):
                 defined_names.add(node.name)
             elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 defined_names.add(node.name)
+                # Add function parameters to defined names
+                for arg in node.args.args:
+                    defined_names.add(arg.arg)
+                # Add *args, **kwargs if present
+                if node.args.vararg:
+                    defined_names.add(node.args.vararg.arg)
+                if node.args.kwarg:
+                    defined_names.add(node.args.kwarg.arg)
             elif isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store):
                 defined_names.add(node.id)
+
+        # Add comprehension and loop variables to defined names
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)):
+                for generator in node.generators:
+                    if isinstance(generator.target, ast.Name):
+                        defined_names.add(generator.target.id)
+            elif isinstance(node, ast.For):
+                if isinstance(node.target, ast.Name):
+                    defined_names.add(node.target.id)
+            elif isinstance(node, ast.With):
+                for item in node.items:
+                    if item.optional_vars and isinstance(item.optional_vars, ast.Name):
+                        defined_names.add(item.optional_vars.id)
+            elif isinstance(node, ast.ExceptHandler):
+                if node.name:
+                    defined_names.add(node.name)
 
         # Get all used names
         used_names = set()
