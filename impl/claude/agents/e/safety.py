@@ -295,11 +295,11 @@ class SandboxTestAgent(Agent[SandboxTestInput, SandboxTestResult]):
     async def _check_types(self, path: Path, tmpdir: str) -> tuple[bool, str]:
         """Check types using mypy --strict."""
         try:
-            # Set MYPYPATH to include kgents root for imports
+            # Set MYPYPATH to include impl/claude for imports (bootstrap, etc.)
             import os
-            kgents_root = Path(__file__).parent.parent.parent.parent
+            impl_claude = Path(__file__).parent.parent.parent  # agents/e/ -> agents/ -> impl/claude
             env = os.environ.copy()
-            env["MYPYPATH"] = str(kgents_root)
+            env["MYPYPATH"] = str(impl_claude)
 
             proc = await asyncio.create_subprocess_exec(
                 sys.executable, "-m", "mypy", "--strict", str(path),
