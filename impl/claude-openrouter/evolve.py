@@ -80,7 +80,7 @@ class EvolveConfig:
     target: str = "all"
     dry_run: bool = False
     auto_apply: bool = False
-    max_improvements_per_module: int = 3
+    max_improvements_per_module: int = 4
     experiment_branch_prefix: str = "evolve"
     require_tests_pass: bool = True
     require_type_check: bool = True
@@ -152,26 +152,25 @@ class EvolutionReport:
 class ImproverInput:
     """Input for the code improver."""
     module: CodeModule
-    hypotheses: list[str]  # From self_improve.py
+    hypothesis: str  # Single hypothesis to explore
     constraints: list[str]
 
 
 @dataclass
 class ImproverOutput:
     """Output from the code improver."""
-    improvements: list[Improvement]
-    reasoning: str
+    improvement: Improvement  # Single improvement per invocation
 
 
 class CodeImprover(LLMAgent[ImproverInput, ImproverOutput]):
     """
     LLM Agent that generates concrete code improvements.
 
-    Takes analysis from HypothesisEngine and produces actual code changes.
+    Takes a SINGLE hypothesis and produces ONE concrete improvement.
+    Composable: call multiple times for multiple improvements.
     """
 
-    def __init__(self, max_improvements: int = 3, temperature: float = 0.7):
-        self._max_improvements = max_improvements
+    def __init__(self, temperature: float = 0.7):
         self._temperature = temperature
 
     @property
@@ -181,7 +180,7 @@ class CodeImprover(LLMAgent[ImproverInput, ImproverOutput]):
     def build_prompt(self, input: ImproverInput) -> AgentContext:
         system_prompt = """You are a code improvement agent for kgents, a spec-first agent framework.
 
-Your task is to generate CONCRETE, WORKING code improvements based on hypotheses.
+Your task is to generate ONE CONCRETE, WORKING code improvement based on a single hypothesis.
 
 PRINCIPLES YOU MUST FOLLOW:
 1. Agents are morphisms: A → B (clear input/output types)
@@ -197,27 +196,24 @@ IMPROVEMENT TYPES:
 - "feature": Add missing capability
 - "test": Add test coverage
 
-OUTPUT FORMAT (strict JSON):
-{
-    "improvements": [
-        {
-            "description": "Brief description of the change",
-            "rationale": "Why this improves the code",
-            "new_content": "COMPLETE new file content (not a diff)",
-            "improvement_type": "refactor|fix|feature|test",
-            "confidence": 0.0-1.0
-        }
-    ],
-    "reasoning": "Overall reasoning about the improvements"
-}
+OUTPUT FORMAT (TWO SECTIONS):
+
+## METADATA
+{"description": "Brief description", "rationale": "Why", "improvement_type": "refactor|fix|feature|test", "confidence": 0.8}
+
+## CODE
+```python
+# Complete file content here
+```
 
 CRITICAL:
-- new_content MUST be complete, valid Python that can replace the entire file
-- Focus on the most impactful improvements
+- METADATA section contains simple JSON (no code, no newlines in strings)
+- CODE section contains the complete Python file in a markdown block
+- Generate ONE focused improvement per invocation
 - Don't make changes that require external dependencies not already imported
 - Preserve existing functionality unless explicitly improving it"""
 
-        user_prompt = f"""Analyze this module and generate up to {self._max_improvements} improvements:
+        user_prompt = f"""Analyze this module and generate ONE improvement based on the hypothesis:
 
 MODULE: {input.module.name}
 CATEGORY: {input.module.category}
@@ -228,13 +224,13 @@ CURRENT CODE:
 {input.module.content}
 ```
 
-IMPROVEMENT HYPOTHESES (from analysis):
-{chr(10).join(f"- {h}" for h in input.hypotheses)}
+HYPOTHESIS TO EXPLORE:
+{input.hypothesis}
 
 CONSTRAINTS:
 {chr(10).join(f"- {c}" for c in input.constraints)}
 
-Generate concrete improvements. Return ONLY valid JSON."""
+Generate ONE concrete improvement. Return ONLY valid JSON."""
 
         return AgentContext(
             system_prompt=system_prompt,
@@ -244,29 +240,82 @@ Generate concrete improvements. Return ONLY valid JSON."""
         )
 
     def parse_response(self, response: str) -> ImproverOutput:
-        # Handle markdown code blocks
-        if "```json" in response:
-            response = response.split("```json")[1].split("```")[0]
-        elif "```" in response:
-            response = response.split("```")[1].split("```")[0]
+        """
+        Parse two-section response: METADATA (JSON) + CODE (markdown block).
 
-        data = json.loads(response.strip())
+        This format avoids JSON escaping issues for code.
+        """
+        import re
 
-        improvements = [
-            Improvement(
-                description=imp["description"],
-                rationale=imp["rationale"],
-                new_content=imp["new_content"],
-                improvement_type=imp["improvement_type"],
-                confidence=float(imp["confidence"]),
-            )
-            for imp in data["improvements"]
-        ]
-
-        return ImproverOutput(
-            improvements=improvements,
-            reasoning=data["reasoning"],
+        # Extract METADATA section
+        metadata_match = re.search(
+            r'##\s*METADATA\s*\n(.*?)(?=##\s*CODE|$)',
+            response,
+            re.DOTALL | re.IGNORECASE
         )
+
+        # Extract CODE section (markdown block)
+        code_match = re.search(
+            r'##\s*CODE\s*\n```(?:python)?\s*\n(.*?)```',
+            response,
+            re.DOTALL | re.IGNORECASE
+        )
+
+        # Parse metadata JSON
+        if metadata_match:
+            metadata_text = metadata_match.group(1).strip()
+            # Find JSON in metadata section
+            json_match = re.search(r'\{[^}]+\}', metadata_text, re.DOTALL)
+            if json_match:
+                try:
+                    data = json.loads(json_match.group(0))
+                except json.JSONDecodeError:
+                    # Fallback: extract fields with regex
+                    data = self._extract_metadata_fields(metadata_text)
+            else:
+                data = self._extract_metadata_fields(metadata_text)
+        else:
+            # Legacy fallback: try robust_json_parse on whole response
+            from runtime.base import robust_json_parse
+            data = robust_json_parse(response, allow_partial=True)
+
+        # Get code from CODE section or fallback
+        if code_match:
+            new_content = code_match.group(1)
+        elif 'new_content' in data:
+            new_content = data['new_content']
+        else:
+            raise ValueError("No code content found in response")
+
+        improvement = Improvement(
+            description=data.get("description", ""),
+            rationale=data.get("rationale", ""),
+            new_content=new_content,
+            improvement_type=data.get("improvement_type", "refactor"),
+            confidence=float(data.get("confidence", 0.5)),
+        )
+
+        return ImproverOutput(improvement=improvement)
+
+    def _extract_metadata_fields(self, text: str) -> dict:
+        """Extract metadata fields using regex when JSON parsing fails."""
+        import re
+        result = {}
+
+        # Extract each field
+        patterns = {
+            'description': r'"description"\s*:\s*"([^"]*)"',
+            'rationale': r'"rationale"\s*:\s*"([^"]*)"',
+            'improvement_type': r'"improvement_type"\s*:\s*"([^"]*)"',
+            'confidence': r'"confidence"\s*:\s*([\d.]+)',
+        }
+
+        for field, pattern in patterns.items():
+            match = re.search(pattern, text)
+            if match:
+                result[field] = match.group(1)
+
+        return result
 
     async def invoke(self, input: ImproverInput) -> ImproverOutput:
         """
@@ -440,13 +489,10 @@ class EvolutionPipeline:
         self._config = config
         self._base_path = Path(__file__).parent
 
-        # Initialize components
-        self._runtime = ClaudeCLIRuntime(timeout=300.0, max_retries=2)
-        self._hypothesis_engine = HypothesisEngine(hypothesis_count=3, temperature=0.7)
-        self._code_improver = CodeImprover(
-            max_improvements=config.max_improvements_per_module,
-            temperature=0.7
-        )
+        # Initialize components with verbose mode
+        self._runtime = ClaudeCLIRuntime(timeout=300.0, max_retries=2, verbose=True)
+        self._hypothesis_engine = HypothesisEngine(hypothesis_count=4, temperature=0.95)
+        self._code_improver = CodeImprover(temperature=0.95)
         self._judge = Judge()
         self._hegel = HegelAgent()
         self._validator = Validator(self._base_path)
@@ -459,11 +505,28 @@ class EvolutionPipeline:
             "runtime": ["runtime"],
             "agents": ["agents/a", "agents/b", "agents/c", "agents/h", "agents/k"],
             "bootstrap": ["bootstrap"],
+            "meta": [],  # Special: root-level meta files
             "all": ["runtime", "agents/a", "agents/b", "agents/c", "agents/h", "agents/k", "bootstrap"],
         }
 
-        dirs = targets.get(self._config.target, targets["all"])
         modules: list[CodeModule] = []
+
+        # Handle meta target (root-level files)
+        if self._config.target == "meta":
+            meta_files = ["evolve.py", "autopoiesis.py", "self_improve.py"]
+            for filename in meta_files:
+                py_file = self._base_path / filename
+                if py_file.exists():
+                    content = py_file.read_text()
+                    modules.append(CodeModule(
+                        name=py_file.stem,
+                        path=py_file,
+                        content=content,
+                        category="meta",
+                    ))
+            return modules
+
+        dirs = targets.get(self._config.target, targets["all"])
 
         for subdir in dirs:
             dir_path = self._base_path / subdir
@@ -486,12 +549,15 @@ class EvolutionPipeline:
 
     async def generate_hypotheses(self, module: CodeModule) -> list[str]:
         """Generate improvement hypotheses for a module."""
+        has_docstring = 'yes' if '"""' in module.content else 'no'
+        has_async = 'yes' if 'async def' in module.content else 'no'
+
         observations = [
             f"Module: {module.name}",
             f"Category: {module.category}",
             f"Lines: {len(module.content.splitlines())}",
-            f"Has docstring: {'yes' if '\"\"\"' in module.content else 'no'}",
-            f"Uses async: {'yes' if 'async def' in module.content else 'no'}",
+            f"Has docstring: {has_docstring}",
+            f"Uses async: {has_async}",
         ]
 
         if "# TODO" in module.content:
@@ -523,25 +589,39 @@ class EvolutionPipeline:
         module: CodeModule,
         hypotheses: list[str]
     ) -> list[Improvement]:
-        """Generate concrete code improvements."""
-        try:
-            result = await self._runtime.execute(
-                self._code_improver,
-                ImproverInput(
-                    module=module,
-                    hypotheses=hypotheses,
-                    constraints=[
-                        "kgents principles: tasteful, curated, composable",
-                        "Agents are morphisms with clear A → B types",
-                        "Use Fix for iteration/retry patterns",
-                        "Don't introduce new dependencies",
-                    ],
+        """
+        Generate concrete code improvements.
+
+        Calls CodeImprover once per hypothesis for composability.
+        Each agent invocation produces ONE improvement.
+        """
+        improvements: list[Improvement] = []
+
+        # Limit to max_improvements_per_module
+        hypotheses_to_explore = hypotheses[:self._config.max_improvements_per_module]
+
+        for i, hypothesis in enumerate(hypotheses_to_explore):
+            try:
+                log(f"   Exploring hypothesis {i+1}/{len(hypotheses_to_explore)}...", "      ")
+                result = await self._runtime.execute(
+                    self._code_improver,
+                    ImproverInput(
+                        module=module,
+                        hypothesis=hypothesis,
+                        constraints=[
+                            "kgents principles: tasteful, curated, composable",
+                            "Agents are morphisms with clear A → B types",
+                            "Use Fix for iteration/retry patterns",
+                            "Don't introduce new dependencies",
+                        ],
+                    )
                 )
-            )
-            return result.output.improvements
-        except Exception as e:
-            log(f"Improvement generation failed: {e}", "   ⚠️")
-            return []
+                improvements.append(result.output.improvement)
+            except Exception as e:
+                log(f"Improvement generation failed for hypothesis {i+1}: {e}", "   ⚠️")
+                continue
+
+        return improvements
 
     async def test_improvement(
         self,
@@ -761,7 +841,7 @@ def parse_args() -> EvolveConfig:
     for arg in sys.argv[1:]:
         if arg.startswith("--target="):
             config.target = arg.split("=")[1]
-        elif arg in ["runtime", "agents", "bootstrap", "all"]:
+        elif arg in ["runtime", "agents", "bootstrap", "meta", "all"]:
             config.target = arg
         elif arg == "--dry-run":
             config.dry_run = True
@@ -774,9 +854,9 @@ def parse_args() -> EvolveConfig:
 async def main():
     config = parse_args()
 
-    if config.target not in ["runtime", "agents", "bootstrap", "all"]:
+    if config.target not in ["runtime", "agents", "bootstrap", "meta", "all"]:
         log(f"Unknown target: {config.target}")
-        log("Usage: python evolve.py [runtime|agents|bootstrap|all] [--dry-run] [--auto-apply]")
+        log("Usage: python evolve.py [runtime|agents|bootstrap|meta|all] [--dry-run] [--auto-apply]")
         sys.exit(1)
 
     pipeline = EvolutionPipeline(config)

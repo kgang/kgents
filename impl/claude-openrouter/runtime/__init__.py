@@ -19,7 +19,7 @@ Usage:
     result = await runtime.execute(my_agent, input_data)
 """
 
-from .base import LLMAgent, AgentContext, AgentResult
+from .base import LLMAgent, AgentContext, AgentResult, robust_json_parse, json_response_parser
 from .claude import ClaudeRuntime
 from .cli import ClaudeCLIRuntime, ParseError
 from .openrouter import OpenRouterRuntime
@@ -32,4 +32,6 @@ __all__ = [
     "ClaudeCLIRuntime",
     "OpenRouterRuntime",
     "ParseError",
+    "robust_json_parse",
+    "json_response_parser",
 ]
