@@ -13,13 +13,14 @@
 |-----------|--------|
 | 7 Principles | ✅ Defined in `spec/principles.md` |
 | 7 Bootstrap Agents | ✅ Spec (`spec/bootstrap.md`) + Impl (`impl/claude-openrouter/bootstrap/`) |
-| zen-agents | ✅ Textual TUI using bootstrap patterns (`impl/zen-agents/`) |
-| C-gents (Category Theory) | ✅ `impl/claude-openrouter/agents/c/` |
+| Autopoiesis | ✅ `impl/claude-openrouter/autopoiesis.py` - kgents improves itself |
+| C-gents (Category Theory) | ✅ `impl/claude-openrouter/agents/c/` + specs for all patterns |
 | H-gents (Hegel/Jung/Lacan) | ✅ `impl/claude-openrouter/agents/h/` |
 | K-gent (Persona) | ✅ `impl/claude-openrouter/agents/k/` |
 | A-gents (Skeleton + Creativity) | ✅ `impl/claude-openrouter/agents/a/` |
-| B-gents (Hypothesis + Robin) | ✅ `impl/claude-openrouter/agents/b/` |
+| B-gents (Hypothesis + Robin) | ✅ `impl/claude-openrouter/agents/b/` + robin spec |
 | runtime/ | ✅ `impl/claude-openrouter/runtime/` (ClaudeRuntime, OpenRouterRuntime) |
+| zen-agents | ⏸️ Dropped - new generation planned |
 
 ## 7 Bootstrap Agents (Implemented)
 
@@ -163,9 +164,8 @@ LLM execution layer for agents:
 
 | Document | Purpose |
 |----------|---------|
-| `BOOTSTRAP_PLAN.md` | Original implementation plan |
+| `docs/BOOTSTRAP_PROMPT.md` | Active — LLM prompt for implementing kgents |
 | `AUTONOMOUS_BOOTSTRAP_PROTOCOL.md` | Completed — A-gents + B-gents implemented |
-| `ZENAGENTS_PROTOCOL.md` | **Active protocol** — Complete zen-agents using kgents + ClaudeCLIRuntime |
 
 ### Completed Phases
 
@@ -176,10 +176,6 @@ LLM execution layer for agents:
 | B-gents B.1 | ✅ DONE | HypothesisEngine |
 | B-gents B.2 | ✅ DONE | Robin (scientific companion) |
 
-### zen-agents Integration: COMPLETE ✅
-
-All 5 phases done. Run: `cd impl/zen-agents && uv run zen-agents`
-
 **What's Next:**
 - Tests: Add pytest suite for agents/b/ (hypothesis, robin)
 - D-gents: Data/Database agents (spec needed)
@@ -188,6 +184,7 @@ All 5 phases done. Run: `cd impl/zen-agents && uv run zen-agents`
 
 ## Recent Changes
 
+- **Autopoiesis Complete** (Dec 2025): kgents used its own bootstrap agents to improve itself. Created specs for conditional.md, parallel.md, robin.md; created monad.py impl; updated bio-gent.md. Result: 0 tensions, 22/22 verdicts accept. Fixed point reached.
 - **Autopoiesis Protocol** (Dec 2025): Updated bootstrap protocol to emphasize using kgents to build kgents; added autopoiesis score metric (>50% target) and 6 required patterns
 - **Analysis Worker Error Handling** (Dec 2025): Fixed silent exception swallowing in `_do_analysis` worker and LogViewer watchers; added `exclusive=True` to cancel stale analysis workers
 - **Session Remove Fix** (Dec 2025): `remove_session()` now emits `SessionRemoved` event so UI refreshes after removal
