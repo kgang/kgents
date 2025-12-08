@@ -44,19 +44,19 @@ class ComposedAgent(Agent[A, C]):
         return self._name
 
 
-class FixComposedAgent(Agent[A, C]):
+class FixComposedAgent(Agent[A, B]):
     """
     Agent composed with Fix-pattern iteration.
-    
+
     Applies: input -> agent -> check -> (retry if needed) -> output
-    
+
     Enables patterns like:
         Create >> Judge >> retry until accept
         Transform >> Validate >> retry until valid
-    
+
     Type: A -> (A -> B) -> (B -> bool) -> B
     """
-    
+
     def __init__(
         self,
         agent: Agent[A, B],
@@ -66,7 +66,7 @@ class FixComposedAgent(Agent[A, C]):
     ):
         """
         Create iterative composition with retry logic.
-        
+
         agent: The main agent to apply
         refine: Agent that produces new input from (original, failed_output)
         should_retry: Async predicate - True means retry
@@ -77,12 +77,12 @@ class FixComposedAgent(Agent[A, C]):
         self._should_retry = should_retry
         self._max_iterations = max_iterations
         self._name = f"Fix({agent.name})"
-    
+
     @property
     def name(self) -> str:
         return self._name
-    
-    async def invoke(self, input: A) -> C:
+
+    async def invoke(self, input: A) -> B:
         """Apply agent iteratively until should_retry returns False."""
         current_input = input
         

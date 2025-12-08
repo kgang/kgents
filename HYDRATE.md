@@ -5,23 +5,25 @@
 **kgents** = Kent's Agents. Spec-first agent framework with 7 irreducible bootstrap agents.
 
 - `spec/` = Language spec (like Python)
-- `impl/claude-openrouter/` = Reference impl (like CPython)
+- `impl/claude/` = Reference impl (like CPython) [renamed from claude-openrouter]
 
 ## Current State (Dec 8, 2025)
 
-**Latest:** Full-stack evolution complete! All 25 modules evolved with 100/100 experiments passed and incorporated (runtime, agents, bootstrap). Logging improved with persistent log files, prominent summary banners, and better UX for piped output.
+**Latest:** Phase 1 of 10 Critical Fixes complete! Type system foundation fixed (Fix and FixComposedAgent signatures). Branch `fix/phase-1-types` pushed and ready for merge.
+
+**Previously:** Full-stack evolution complete! All 25 modules evolved with 100/100 experiments passed and incorporated (runtime, agents, bootstrap). Logging improved with persistent log files, prominent summary banners, and better UX for piped output.
 
 | Component | Status |
 |-----------|--------|
 | 7 Principles | ✅ Defined in `spec/principles.md` |
-| 7 Bootstrap Agents | ✅ Spec (`spec/bootstrap.md`) + Impl (`impl/claude-openrouter/bootstrap/`) |
+| 7 Bootstrap Agents | ✅ Spec (`spec/bootstrap.md`) + Impl (`impl/claude/bootstrap/`) [Phase 1 ✅] |
 | Autopoiesis | ✅ `autopoiesis.py` (spec/impl) + `self_improve.py` (review) + `evolve.py` (apply, optimized) |
-| C-gents (Category Theory) | ✅ `impl/claude-openrouter/agents/c/` + specs for all patterns |
-| H-gents (Hegel/Jung/Lacan) | ✅ `impl/claude-openrouter/agents/h/` |
-| K-gent (Persona) | ✅ `impl/claude-openrouter/agents/k/` |
-| A-gents (Skeleton + Creativity) | ✅ `impl/claude-openrouter/agents/a/` |
-| B-gents (Hypothesis + Robin) | ✅ `impl/claude-openrouter/agents/b/` + robin spec |
-| runtime/ | ✅ `impl/claude-openrouter/runtime/` (ClaudeRuntime, OpenRouterRuntime) |
+| C-gents (Category Theory) | ✅ `impl/claude/agents/c/` + specs for all patterns |
+| H-gents (Hegel/Jung/Lacan) | ✅ `impl/claude/agents/h/` |
+| K-gent (Persona) | ✅ `impl/claude/agents/k/` |
+| A-gents (Skeleton + Creativity) | ✅ `impl/claude/agents/a/` |
+| B-gents (Hypothesis + Robin) | ✅ `impl/claude/agents/b/` + robin spec |
+| runtime/ | ✅ `impl/claude/runtime/` (ClaudeRuntime, OpenRouterRuntime) |
 | zen-agents | 🗑️ Removed (was Textual TUI demo) |
 
 ## 7 Bootstrap Agents (Implemented)
@@ -44,8 +46,8 @@ kgents/
 │   ├── principles.md        # 7 core principles
 │   ├── bootstrap.md         # 7 irreducible agents
 │   └── {a,b,c,h,k}-gents/   # 5 agent genera
-├── impl/claude-openrouter/  # Reference implementation (kgents-runtime package)
-│   ├── bootstrap/           # ✅ 7 bootstrap agents (Python)
+├── impl/claude/             # Reference implementation (kgents-runtime package)
+│   ├── bootstrap/           # ✅ 7 bootstrap agents (Python) [Phase 1 type fixes applied]
 │   ├── agents/c/            # ✅ Category theory (Maybe, Either, Parallel, Conditional)
 │   ├── agents/h/            # ✅ Dialectics (Hegel, Jung, Lacan)
 │   ├── agents/k/            # ✅ K-gent persona (Dialogue, Query, Evolution)
@@ -54,7 +56,8 @@ kgents/
 │   ├── runtime/             # ✅ LLM execution (ClaudeCLIRuntime, ClaudeRuntime, OpenRouterRuntime)
 │   ├── autopoiesis.py       # ✅ Spec/impl alignment check
 │   ├── self_improve.py      # ✅ Code review via HypothesisEngine + Judge
-│   └── evolve.py            # ✅ Experimental improvement framework
+│   ├── evolve.py            # ✅ Experimental improvement framework
+│   └── IMPLEMENTATION_PLAN.md # 📋 10 Critical Fixes roadmap (Phase 1 ✅)
 └── docs/                    # Supporting documentation
     └── BOOTSTRAP_PROMPT.md  # LLM prompt for implementing kgents
 ```
@@ -196,12 +199,14 @@ LLM execution layer for agents:
 | B-gents B.2 | ✅ DONE | Robin (scientific companion) |
 
 **What's Next:**
-- Apply 32 bootstrap improvements from latest evolution run
+- **IMMEDIATE**: Merge `fix/phase-1-types` branch (Phase 1 complete)
+- **Phase 2**: Architecture refactors (Issue #5 EvolutionAgent, #10 Contradict protocol)
+- **Phase 3**: Infrastructure (Issue #4 Retry logic, #6 Error handling transparency)
+- **Phase 0 Hotfix**: Security fix for parallel resource limits (Issue #9)
 - Tests: Add pytest suite for agents/b/ (hypothesis, robin)
 - D-gents: Data/Database agents (spec needed)
 - E-gents: Evaluation/Ethics agents (spec needed)
 - Package: Publish kgents-runtime to PyPI
-- Iterate on meta-evolution to achieve convergence (multiple runs show different improvement opportunities)
 
 ## evolve.py - Experimental Improvement Framework
 
@@ -270,6 +275,14 @@ Avoids JSON escaping issues for code content.
 
 ## Recent Changes
 
+- **Phase 1 Type Fixes Complete** (Dec 8, 2025): First phase of 10 Critical Fixes from IMPLEMENTATION_PLAN.md completed and pushed to `fix/phase-1-types`:
+  - Issue #1: Fix[A,B] → Fix[A] (fixed points now correctly map A → A)
+  - Issue #2: FixComposedAgent[A,C] → FixComposedAgent[A,B] (composition law compliance)
+  - Removed type: ignore workaround, passes mypy --strict with zero errors
+  - Zero breaking changes (no existing usages found)
+  - Renamed impl/claude-openrouter → impl/claude for Python package compliance
+  - Added mypy>=1.19.0 as dev dependency
+  - **Next**: Merge branch, proceed to Phase 2 (architecture refactors)
 - **Logging Improvements** (Dec 8, 2025): Added persistent log files to `.evolve_logs/`, prominent summary banners visible even with `| tail`, better structured output for long-running processes
 - **Full-Stack Evolution** (Dec 8, 2025): All 25 modules evolved successfully with 100% pass rate - runtime (4), agents (13), bootstrap (8) all improved with async/await, type annotations, error handling, Fix pattern retries
 - **Meta-Evolution Round 2 Success** (Dec 8, 2025): Second successful meta-evolution applied 8 more improvements to evolve.py and autopoiesis.py:
