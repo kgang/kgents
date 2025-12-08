@@ -30,6 +30,7 @@ Anti-pattern: Silent failures, swallowed exceptions, "last write wins".
 from dataclasses import dataclass, field
 from typing import Any, Optional, Callable, Protocol
 import time
+import asyncio
 
 from .types import Agent, Tension, TensionMode
 
@@ -64,6 +65,69 @@ class TensionDetector(Protocol):
 
 
 @dataclass
+class DetectorHealth:
+    """
+    Circuit breaker state for a detector.
+    
+    Tracks failures and timeouts to prevent cascading delays.
+    """
+    detector_name: str
+    failures: int = 0
+    consecutive_timeouts: int = 0
+    last_failure_time: float = 0.0
+    is_open: bool = False  # Circuit breaker state
+    
+    def record_success(self) -> None:
+        """Reset failure counters on success."""
+        self.failures = 0
+        self.consecutive_timeouts = 0
+        self.is_open = False
+    
+    def record_timeout(self) -> None:
+        """Record a timeout event."""
+        self.consecutive_timeouts += 1
+        self.failures += 1
+        self.last_failure_time = time.perf_counter()
+        
+        # Open circuit after 3 consecutive timeouts
+        if self.consecutive_timeouts >= 3:
+            self.is_open = True
+    
+    def record_error(self) -> None:
+        """Record a general error."""
+        self.failures += 1
+        self.last_failure_time = time.perf_counter()
+        
+        # Open circuit after 5 total failures
+        if self.failures >= 5:
+            self.is_open = True
+    
+    def should_skip(self) -> bool:
+        """Check if detector should be skipped (circuit open)."""
+        if not self.is_open:
+            return False
+        
+        # Auto-reset after 60 seconds
+        if time.perf_counter() - self.last_failure_time > 60.0:
+            self.is_open = False
+            self.failures = 0
+            self.consecutive_timeouts = 0
+            return False
+        
+        return True
+
+
+@dataclass
+class DetectorMetrics:
+    """Per-detector execution metrics."""
+    detector_name: str
+    execution_time_ms: float
+    timed_out: bool = False
+    skipped: bool = False
+    error: Optional[str] = None
+
+
+@dataclass
 class ContradictInput:
     """Two things to check for contradiction."""
     a: Any
@@ -89,10 +153,12 @@ class ContradictResult:
         # Debug observability
         print(f"Checked modes: {result.checked_modes}")
         print(f"Execution time: {result.execution_time_ms}ms")
+        print(f"Detector metrics: {result.detector_metrics}")
     """
     tension: Optional[Tension]
     checked_modes: list[TensionMode] = field(default_factory=list)
     execution_time_ms: float = 0.0
+    detector_metrics: list[DetectorMetrics] = field(default_factory=list)
     
     def __bool__(self) -> bool:
         """Allow 'if result:' to check for tension presence."""
@@ -104,14 +170,14 @@ class Contradict(Agent[ContradictInput, ContradictResult]):
     The contradiction-recognizer: surfaces tensions between two things.
 
     Usage:
-        # Default detectors
+        # Default detectors with timeout protection
         contradict = Contradict()
 
-        # Custom detectors
-        contradict = Contradict(detectors=[
-            SemanticTensionDetector(),
-            CustomLogicDetector(),
-        ])
+        # Custom timeout per detector
+        contradict = Contradict(
+            detectors=[SemanticTensionDetector()],
+            detector_timeout_ms=5000,  # 5 second timeout
+        )
 
         # Check for logical contradiction
         result = await contradict.invoke(ContradictInput(
@@ -124,33 +190,114 @@ class Contradict(Agent[ContradictInput, ContradictResult]):
             # Handle the conflict explicitly
             resolution = await sublate.invoke(result.tension)
 
-        # Observability: see what was checked
-        print(f"Checked {len(result.checked_modes)} modes in {result.execution_time_ms}ms")
+        # Observability: see what was checked and timing
+        for metric in result.detector_metrics:
+            if metric.timed_out:
+                print(f"{metric.detector_name} timed out")
+            elif metric.skipped:
+                print(f"{metric.detector_name} skipped (circuit open)")
 
-    The key insight: detect conflicts BEFORE they become runtime errors.
+    The key insight: detect conflicts BEFORE they become runtime errors,
+    but don't let expensive detectors cascade delays.
     """
 
     def __init__(
         self,
         detectors: Optional[list[TensionDetector]] = None,
+        detector_timeout_ms: float = 1000.0,  # 1 second default
     ):
         """
-        Initialize with optional custom tension detectors.
+        Initialize with optional custom tension detectors and timeout.
 
         If no detectors provided, uses DefaultTensionDetector.
 
         Args:
             detectors: List of TensionDetector implementations to use
+            detector_timeout_ms: Timeout per detector in milliseconds
         """
         self._detectors: list[TensionDetector]
         if detectors is None:
             self._detectors = [DefaultTensionDetector()]
         else:
             self._detectors = detectors
+        
+        self._timeout_seconds = detector_timeout_ms / 1000.0
+        self._health: dict[str, DetectorHealth] = {}
 
     @property
     def name(self) -> str:
         return "Contradict"
+
+    def _get_detector_name(self, detector: TensionDetector) -> str:
+        """Get a stable name for a detector."""
+        return detector.__class__.__name__
+
+    def _get_health(self, detector: TensionDetector) -> DetectorHealth:
+        """Get or create health tracker for detector."""
+        name = self._get_detector_name(detector)
+        if name not in self._health:
+            self._health[name] = DetectorHealth(detector_name=name)
+        return self._health[name]
+
+    async def _invoke_detector_with_timeout(
+        self,
+        detector: TensionDetector,
+        a: Any,
+        b: Any,
+        mode: TensionMode,
+    ) -> tuple[Optional[Tension], DetectorMetrics]:
+        """
+        Invoke detector with timeout and circuit breaker protection.
+        
+        Returns (tension, metrics) tuple.
+        """
+        detector_name = self._get_detector_name(detector)
+        health = self._get_health(detector)
+        
+        # Check circuit breaker
+        if health.should_skip():
+            return None, DetectorMetrics(
+                detector_name=detector_name,
+                execution_time_ms=0.0,
+                skipped=True,
+            )
+        
+        start_time = time.perf_counter()
+        
+        try:
+            # Invoke with timeout
+            tension = await asyncio.wait_for(
+                detector.detect(a, b, mode),
+                timeout=self._timeout_seconds,
+            )
+            
+            execution_time_ms = (time.perf_counter() - start_time) * 1000
+            health.record_success()
+            
+            return tension, DetectorMetrics(
+                detector_name=detector_name,
+                execution_time_ms=execution_time_ms,
+            )
+            
+        except asyncio.TimeoutError:
+            execution_time_ms = (time.perf_counter() - start_time) * 1000
+            health.record_timeout()
+            
+            return None, DetectorMetrics(
+                detector_name=detector_name,
+                execution_time_ms=execution_time_ms,
+                timed_out=True,
+            )
+            
+        except Exception as e:
+            execution_time_ms = (time.perf_counter() - start_time) * 1000
+            health.record_error()
+            
+            return None, DetectorMetrics(
+                detector_name=detector_name,
+                execution_time_ms=execution_time_ms,
+                error=str(e),
+            )
 
     async def invoke(self, input: ContradictInput) -> ContradictResult:
         """
@@ -163,6 +310,7 @@ class Contradict(Agent[ContradictInput, ContradictResult]):
         modes = [input.mode] if input.mode else list(TensionMode)
         checked_modes = []
         found_tension = None
+        all_metrics = []
 
         # Try each detector in sequence
         for detector in self._detectors:
@@ -170,7 +318,11 @@ class Contradict(Agent[ContradictInput, ContradictResult]):
                 if mode not in checked_modes:
                     checked_modes.append(mode)
 
-                tension = await detector.detect(input.a, input.b, mode)
+                tension, metrics = await self._invoke_detector_with_timeout(
+                    detector, input.a, input.b, mode
+                )
+                all_metrics.append(metrics)
+
                 if tension:
                     found_tension = tension
                     break
@@ -184,6 +336,7 @@ class Contradict(Agent[ContradictInput, ContradictResult]):
             tension=found_tension,
             checked_modes=checked_modes,
             execution_time_ms=execution_time_ms,
+            detector_metrics=all_metrics,
         )
 
 
