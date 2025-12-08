@@ -45,12 +45,15 @@ class DetectionState:
         )
 
 
-class StateDetector(Agent[tuple["Session", "TmuxService"], DetectionState]):
+class StateDetector(Agent[tuple["Session", "TmuxService", DetectionState], DetectionState]):
     """
     Detect session state through a single poll.
 
     This is the transform function for Fix.
     Each invocation is one polling iteration.
+
+    Input: (Session, TmuxService, previous_state) - previous_state for confidence tracking
+    Output: DetectionState with accumulated confidence
     """
 
     @property
@@ -58,12 +61,12 @@ class StateDetector(Agent[tuple["Session", "TmuxService"], DetectionState]):
         return "StateDetector"
 
     async def invoke(
-        self, input: tuple["Session", "TmuxService"]
+        self, input: tuple["Session", "TmuxService", DetectionState]
     ) -> DetectionState:
         """Poll once and return updated detection state."""
         from ..models.session import SessionState
 
-        session, tmux = input
+        session, tmux, previous_state = input
 
         # Check if tmux pane is still running
         is_alive = await tmux.is_session_alive(session.tmux_name)
@@ -86,10 +89,16 @@ class StateDetector(Agent[tuple["Session", "TmuxService"], DetectionState]):
                     error_message=f"Process exited with code {exit_code}",
                 )
 
-        # Still running - increase confidence
+        # Still running - accumulate confidence if state matches
+        if previous_state.session_state == SessionState.RUNNING:
+            new_confidence = min(1.0, previous_state.confidence + 0.2)
+        else:
+            # State changed, reset confidence
+            new_confidence = 0.2
+
         return DetectionState(
             session_state=SessionState.RUNNING,
-            confidence=min(1.0, 0.2),  # Running confidence builds slowly
+            confidence=new_confidence,
         )
 
 
@@ -102,6 +111,7 @@ async def detect_state(
     Detect session state using Fix.
 
     Polls until state is stable (confidence >= 0.8) or max iterations.
+    Confidence accumulates: 0.2 per consistent poll → 4 polls to reach 0.8.
 
     Usage:
         result = await detect_state(session, tmux_service)
@@ -112,19 +122,8 @@ async def detect_state(
 
     async def poll_once(state: DetectionState) -> DetectionState:
         """One polling iteration - the transform for Fix."""
-        new_state = await detector.invoke((session, tmux))
-
-        # If state matches previous, increase confidence
-        if new_state.session_state == state.session_state:
-            return DetectionState(
-                session_state=new_state.session_state,
-                confidence=min(1.0, state.confidence + 0.2),
-                exit_code=new_state.exit_code,
-                error_message=new_state.error_message,
-            )
-
-        # State changed - reset confidence
-        return new_state
+        # Pass previous state so detector can accumulate confidence
+        return await detector.invoke((session, tmux, state))
 
     return await fix(
         transform=poll_once,

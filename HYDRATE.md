@@ -182,7 +182,7 @@ LLM execution layer for agents:
 |-------|--------|-------|
 | 1.1 Import Bridge | ✅ DONE | `kgents_bridge.py` |
 | 1.2 AgentOrchestrator | ✅ DONE | `services/agent_orchestrator.py` |
-| 1.3 Fix Confidence Bug | 🔲 TODO | `detection.py` always returns 0.2 |
+| 1.3 Fix Confidence Bug | ✅ DONE | `StateDetector` now accumulates confidence |
 | 1.4 Pipeline Composition | 🔲 TODO | Use `>>` instead of manual |
 | 2.1 Session Types | 🔲 TODO | ROBIN, CREATIVITY, HYPOTHESIS, KGENT |
 | 2.2 Session Handler | 🔲 TODO | Route to appropriate agents |
