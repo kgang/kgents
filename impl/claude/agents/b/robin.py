@@ -134,113 +134,13 @@ class RobinOutput:
         return "\n".join(lines)
 
 
-# Composable synthesis morphism: ComponentData → str
-@dataclass
-class SynthesisInput:
-    """Input for narrative synthesis agent."""
-    domain: str
-    query: str
-    persona: PersonaResponse
-    kgent: DialogueOutput
-    hypotheses: HypothesisOutput
-    dialectic: Optional[DialecticOutput] = None
-
-
-class NarrativeSynthesizer(Agent[SynthesisInput, str]):
-    """
-    Morphism: SynthesisInput → str
-    
-    Creates coherent narrative from component outputs.
-    Reusable for any agent that combines persona + hypotheses + dialectic.
-    """
-    
-    @property
-    def name(self) -> str:
-        return "NarrativeSynthesizer"
-    
-    async def invoke(self, input: SynthesisInput, runtime: Optional[Runtime] = None) -> str:
-        """Synthesize narrative from components."""
-        parts = []
-
-        # Opening based on persona
-        if input.persona.patterns:
-            parts.append(
-                f"Given your tendency to {input.persona.patterns[0].lower()}, "
-                f"let's approach {input.domain} through that lens."
-            )
-
-        # Hypothesis summary
-        if input.hypotheses.hypotheses:
-            top_hyp = input.hypotheses.hypotheses[0]
-            parts.append(
-                f"The most promising hypothesis ({top_hyp.confidence:.0%} confidence): "
-                f"{top_hyp.statement}"
-            )
-            if len(input.hypotheses.hypotheses) > 1:
-                parts.append(
-                    f"Alternative view: {input.hypotheses.hypotheses[1].statement}"
-                )
-
-        # Dialectic insight
-        if input.dialectic:
-            if input.dialectic.productive_tension:
-                parts.append(
-                    "These views are in productive tension—don't rush to resolve them."
-                )
-            elif input.dialectic.synthesis:
-                parts.append(
-                    f"Synthesis emerges: {input.dialectic.synthesis}"
-                )
-
-        # K-gent reflection integration
-        if input.kgent.referenced_patterns:
-            parts.append(
-                f"This connects to your pattern of {input.kgent.referenced_patterns[0]}."
-            )
-
-        return " ".join(parts) if parts else "Further exploration needed."
-
-
-# Composable question generation morphism: QuestionData → list[str]
-@dataclass
-class QuestionInput:
-    """Input for next question generator."""
-    hypotheses: HypothesisOutput
-    dialectic: Optional[DialecticOutput] = None
-
-
-class NextQuestionGenerator(Agent[QuestionInput, list[str]]):
-    """
-    Morphism: QuestionInput → list[str]
-    
-    Generates next exploration questions from hypotheses and dialectic.
-    Reusable for any agent that needs to suggest follow-up queries.
-    """
-    
-    @property
-    def name(self) -> str:
-        return "NextQuestionGenerator"
-    
-    async def invoke(self, input: QuestionInput, runtime: Optional[Runtime] = None) -> list[str]:
-        """Generate questions to continue the inquiry."""
-        questions = []
-
-        # From suggested tests
-        for test in input.hypotheses.suggested_tests[:2]:
-            questions.append(f"How might we test: {test}?")
-
-        # From falsification criteria
-        if input.hypotheses.hypotheses:
-            for f in input.hypotheses.hypotheses[0].falsifiable_by[:1]:
-                questions.append(f"What would it mean if: {f}?")
-
-        # From dialectic tension
-        if input.dialectic and input.dialectic.productive_tension:
-            questions.append(
-                "What conditions would resolve this tension vs. reveal it as fundamental?"
-            )
-
-        return questions[:4]  # Limit to 4 questions
+from .robin_morphisms import (
+    SynthesisInput,
+    NarrativeSynthesizer,
+    QuestionInput,
+    NextQuestionGenerator,
+)
+from .robin_helpers import generate_fallback_hypotheses
 
 
 class RobinAgent(Agent[RobinInput, RobinOutput]):
@@ -335,60 +235,6 @@ class RobinAgent(Agent[RobinInput, RobinOutput]):
             fallback_mode=self._fallback_mode,
         )
 
-    def _generate_fallback_hypotheses(self, input: RobinInput) -> HypothesisOutput:
-        """
-        Generate deterministic fallback hypotheses for testing (Issue #8).
-
-        When runtime is unavailable or fallback_mode is enabled, this provides
-        predictable, domain-aware placeholder hypotheses for testing and debugging.
-        """
-        # Generate deterministic hypotheses based on query
-        fallback_hypotheses = [
-            Hypothesis(
-                statement=f"In {input.domain}, the pattern observed in '{input.query}' may result from structural constraints",
-                confidence=0.6,
-                novelty=NoveltyLevel.INCREMENTAL,
-                falsifiable_by=[
-                    f"Measure structural variance in {input.domain}",
-                    f"Compare against systems without constraint",
-                ],
-                supporting_observations=[],
-                assumptions=[
-                    f"Structural analysis is applicable to {input.domain}",
-                    "Observable pattern is not random noise",
-                ],
-            ),
-            Hypothesis(
-                statement=f"The question '{input.query}' suggests an optimization process at work",
-                confidence=0.5,
-                novelty=NoveltyLevel.EXPLORATORY,
-                falsifiable_by=[
-                    f"Test if variation follows optimization gradients",
-                    f"Look for local optima in {input.domain}",
-                ],
-                supporting_observations=[],
-                assumptions=[
-                    "System has sufficient degrees of freedom",
-                    "Optimization is energetically favorable",
-                ],
-            ),
-        ]
-
-        # Only return as many as requested
-        fallback_hypotheses = fallback_hypotheses[: self._hypothesis_count]
-
-        return HypothesisOutput(
-            hypotheses=fallback_hypotheses,
-            reasoning_chain=[
-                f"[Fallback mode: runtime unavailable for {input.domain}]",
-                "Generated deterministic placeholder hypotheses",
-                "Hypotheses follow structural and optimization heuristics",
-            ],
-            suggested_tests=[
-                f"Establish baseline measurement protocol for {input.domain}",
-                "Design controlled experiments to test structural hypothesis",
-            ],
-        )
 
     async def invoke(self, input: RobinInput, runtime: Optional[Runtime] = None) -> RobinOutput:
         """
@@ -426,7 +272,7 @@ class RobinAgent(Agent[RobinInput, RobinOutput]):
         # Step 3: Generate hypotheses
         if effective_runtime is None or self._fallback_mode:
             # Fallback mode: Generate deterministic placeholder hypotheses for testing
-            hypothesis_output = self._generate_fallback_hypotheses(input)
+            hypothesis_output = generate_fallback_hypotheses(input, self._hypothesis_count)
         else:
             # Build hypothesis input
             hyp_input = HypothesisInput(
