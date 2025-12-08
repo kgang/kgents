@@ -1,14 +1,14 @@
 """
-Test suite for T-gents Phase 1 implementation.
+Test suite for T-gents implementation.
 
 Tests:
-- Type I Nullifiers: MockAgent, FixtureAgent
-- Type II Saboteurs: FailingAgent
-- Type III Observers: SpyAgent, PredicateAgent
+- Phase 1: MockAgent, FixtureAgent, FailingAgent, SpyAgent, PredicateAgent
+- Phase 2: NoiseAgent, LatencyAgent, FlakyAgent, CounterAgent, MetricsAgent
 - Composition and categorical properties
 """
 
 import asyncio
+import time
 from typing import Any
 
 from agents.t import (
@@ -23,6 +23,12 @@ from agents.t import (
     PredicateAgent,
     not_empty,
     is_positive,
+    NoiseAgent,
+    NoiseType,
+    LatencyAgent,
+    FlakyAgent,
+    CounterAgent,
+    MetricsAgent,
 )
 
 
@@ -310,12 +316,213 @@ async def test_associativity():
     print("✓ Associativity: (f >> g) >> h ≡ f >> (g >> h)")
 
 
+async def test_noise_agent():
+    """Test NoiseAgent - semantic perturbation."""
+    print("\n=== Testing NoiseAgent ===")
+
+    # Test: deterministic noise with seed
+    noise = NoiseAgent(level=1.0, seed=42)  # Always perturb
+
+    input_str = "Fix the bug"
+    result1 = await noise.invoke(input_str)
+    assert result1 != input_str  # Should be perturbed
+    print(f"✓ NoiseAgent: '{input_str}' -> '{result1}'")
+
+    # Test: same seed yields same perturbation
+    noise2 = NoiseAgent(level=1.0, seed=42)
+    result2 = await noise2.invoke(input_str)
+    assert result1 == result2  # Deterministic with same seed
+    print("✓ NoiseAgent: Deterministic with same seed")
+
+    # Test: zero noise is identity
+    no_noise = NoiseAgent(level=0.0)
+    result = await no_noise.invoke(input_str)
+    assert result == input_str
+    print("✓ NoiseAgent: Level 0.0 is identity")
+
+    # Test: __is_test__ marker
+    assert noise.__is_test__ is True
+    print("✓ NoiseAgent: __is_test__ = True")
+
+
+async def test_latency_agent():
+    """Test LatencyAgent - temporal delay."""
+    print("\n=== Testing LatencyAgent ===")
+
+    # Test: adds delay
+    latency = LatencyAgent(delay=0.05, variance=0.0)
+
+    start = time.time()
+    result = await latency.invoke("test_data")
+    elapsed = time.time() - start
+
+    assert result == "test_data"  # Identity on data
+    assert elapsed >= 0.05  # Added delay
+    print(f"✓ LatencyAgent: Added {elapsed:.3f}s delay (expected ~0.050s)")
+
+    # Test: variance
+    latency_var = LatencyAgent(delay=0.05, variance=0.02, seed=42)
+    start = time.time()
+    result = await latency_var.invoke("test")
+    elapsed = time.time() - start
+    assert 0.03 <= elapsed <= 0.07  # 0.05 ± 0.02
+    print(f"✓ LatencyAgent: Variance works ({elapsed:.3f}s in [0.03, 0.07])")
+
+    # Test: __is_test__ marker
+    assert latency.__is_test__ is True
+    print("✓ LatencyAgent: __is_test__ = True")
+
+
+async def test_flaky_agent():
+    """Test FlakyAgent - probabilistic failure."""
+    print("\n=== Testing FlakyAgent ===")
+
+    # Test: always fails with p=1.0
+    mock = MockAgent[str, str](MockConfig(output="success"))
+    always_fail = FlakyAgent(mock, probability=1.0, seed=42)
+
+    try:
+        await always_fail.invoke("test")
+        assert False, "Should always fail with p=1.0"
+    except RuntimeError as e:
+        assert "Flaky failure" in str(e)
+        print(f"✓ FlakyAgent: p=1.0 always fails: {e}")
+
+    # Test: never fails with p=0.0
+    never_fail = FlakyAgent(mock, probability=0.0, seed=42)
+    result = await never_fail.invoke("test")
+    assert result == "success"
+    print("✓ FlakyAgent: p=0.0 never fails")
+
+    # Test: probabilistic behavior
+    sometimes_fail = FlakyAgent(mock, probability=0.5, seed=42)
+    failures = 0
+    successes = 0
+    for _ in range(20):
+        try:
+            await sometimes_fail.invoke("test")
+            successes += 1
+        except RuntimeError:
+            failures += 1
+
+    assert failures > 0, "Should have some failures"
+    assert successes > 0, "Should have some successes"
+    print(f"✓ FlakyAgent: p=0.5 -> {failures} failures, {successes} successes (of 20)")
+
+    # Test: __is_test__ marker
+    assert always_fail.__is_test__ is True
+    print("✓ FlakyAgent: __is_test__ = True")
+
+
+async def test_counter_agent():
+    """Test CounterAgent - invocation tracking."""
+    print("\n=== Testing CounterAgent ===")
+
+    counter = CounterAgent[str](label="TestCounter")
+
+    # Test: starts at zero
+    assert counter.count == 0
+
+    # Test: increments on each invocation
+    result1 = await counter.invoke("data1")
+    assert result1 == "data1"  # Identity
+    assert counter.count == 1
+
+    result2 = await counter.invoke("data2")
+    assert result2 == "data2"  # Identity
+    assert counter.count == 2
+
+    result3 = await counter.invoke("data3")
+    assert counter.count == 3
+    print(f"✓ CounterAgent: Count = {counter.count} after 3 invocations")
+
+    # Test: assert_count
+    counter.assert_count(3)
+    print("✓ CounterAgent: assert_count(3) passed")
+
+    # Test: reset
+    counter.reset()
+    assert counter.count == 0
+    print("✓ CounterAgent: reset() works")
+
+    # Test: __is_test__ marker
+    assert counter.__is_test__ is True
+    print("✓ CounterAgent: __is_test__ = True")
+
+
+async def test_metrics_agent():
+    """Test MetricsAgent - performance profiling."""
+    print("\n=== Testing MetricsAgent ===")
+
+    metrics = MetricsAgent[str](label="TestMetrics")
+
+    # Test: starts with zero invocations
+    assert metrics.metrics.invocation_count == 0
+    assert metrics.metrics.avg_time == 0.0
+
+    # Test: records timing
+    result1 = await metrics.invoke("data1")
+    assert result1 == "data1"  # Identity
+    assert metrics.metrics.invocation_count == 1
+    print(f"✓ MetricsAgent: Invocation 1, time = {metrics.metrics.total_time:.6f}s")
+
+    result2 = await metrics.invoke("data2")
+    assert metrics.metrics.invocation_count == 2
+
+    # Test: min/max/avg
+    assert metrics.metrics.min_time >= 0  # Can be zero for fast operations
+    assert metrics.metrics.max_time >= metrics.metrics.min_time
+    assert metrics.metrics.avg_time == metrics.metrics.total_time / 2
+    print(f"✓ MetricsAgent: avg={metrics.metrics.avg_time:.6f}s, "
+          f"min={metrics.metrics.min_time:.6f}s, "
+          f"max={metrics.metrics.max_time:.6f}s")
+
+    # Test: reset
+    metrics.reset()
+    assert metrics.metrics.invocation_count == 0
+    print("✓ MetricsAgent: reset() works")
+
+    # Test: __is_test__ marker
+    assert metrics.__is_test__ is True
+    print("✓ MetricsAgent: __is_test__ = True")
+
+
+async def test_phase2_composition():
+    """Test Phase 2 T-gent composition."""
+    print("\n=== Testing Phase 2 Composition ===")
+
+    # Create pipeline: Counter >> Metrics >> Noise
+    counter = CounterAgent[str](label="Calls")
+    metrics = MetricsAgent[str](label="Performance")
+    noise = NoiseAgent[str](level=0.5, seed=42)
+
+    pipeline = counter >> metrics >> noise
+
+    # Execute multiple times
+    for i in range(3):
+        result = await pipeline.invoke(f"input_{i}")
+        # Result may be perturbed
+        print(f"  Iteration {i+1}: '{f'input_{i}'}' -> '{result}'")
+
+    # Verify counter
+    assert counter.count == 3
+    print(f"✓ CounterAgent: {counter.count} invocations")
+
+    # Verify metrics
+    assert metrics.metrics.invocation_count == 3
+    print(f"✓ MetricsAgent: {metrics.metrics.invocation_count} invocations, "
+          f"avg={metrics.metrics.avg_time:.6f}s")
+
+    print("✓ Composition: Counter >> Metrics >> Noise works")
+
+
 async def main():
     """Run all tests."""
     print("=" * 60)
-    print("T-gents Phase 1 Test Suite")
+    print("T-gents Test Suite (Phase 1 + Phase 2)")
     print("=" * 60)
 
+    # Phase 1 tests
     await test_mock_agent()
     await test_fixture_agent()
     await test_fixture_agent_default()
@@ -327,8 +534,16 @@ async def main():
     await test_composition()
     await test_associativity()
 
+    # Phase 2 tests
+    await test_noise_agent()
+    await test_latency_agent()
+    await test_flaky_agent()
+    await test_counter_agent()
+    await test_metrics_agent()
+    await test_phase2_composition()
+
     print("\n" + "=" * 60)
-    print("✅ All T-gents Phase 1 tests passed!")
+    print("✅ All T-gents tests passed! (Phase 1 + Phase 2)")
     print("=" * 60)
 
 

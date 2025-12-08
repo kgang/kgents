@@ -9,7 +9,7 @@ Philosophy:
 - All T-gents marked with __is_test__ = True
 - Composable with other agents via >> operator
 
-Phase 1 T-gents (Implemented):
+Implemented T-gents:
 
 Type I - Nullifiers (Constants & Fixtures):
 - MockAgent: Constant morphism c_b: A → b
@@ -17,10 +17,15 @@ Type I - Nullifiers (Constants & Fixtures):
 
 Type II - Saboteurs (Chaos & Perturbation):
 - FailingAgent: Bottom morphism ⊥: A → Error
+- NoiseAgent: Semantic perturbation N_ε: A → A + ε
+- LatencyAgent: Temporal delay L_Δ: (A, t) → (A, t + Δ)
+- FlakyAgent: Probabilistic failure F_p: A → B ∪ {⊥}
 
 Type III - Observers (Identity with Side Effects):
 - SpyAgent: Writer Monad S: A → (A, [A])
 - PredicateAgent: Gate P: A → A ∪ {⊥}
+- CounterAgent: Invocation counter C: A → A
+- MetricsAgent: Performance profiler M: A → A
 
 Usage:
     from agents.t import MockAgent, FailingAgent, SpyAgent
@@ -75,6 +80,29 @@ from .predicate import (
     is_non_negative,
 )
 
+from .noise import (
+    NoiseAgent,
+    NoiseConfig,
+    NoiseType,
+)
+
+from .latency import (
+    LatencyAgent,
+)
+
+from .flaky import (
+    FlakyAgent,
+)
+
+from .counter import (
+    CounterAgent,
+)
+
+from .metrics import (
+    MetricsAgent,
+    PerformanceMetrics,
+)
+
 __all__ = [
     # Type I - Nullifiers
     "MockAgent",
@@ -90,11 +118,19 @@ __all__ = [
     "failing_agent",
     "syntax_failing",
     "import_failing",
+    "NoiseAgent",
+    "NoiseConfig",
+    "NoiseType",
+    "LatencyAgent",
+    "FlakyAgent",
     # Type III - Observers
     "SpyAgent",
     "spy_agent",
     "PredicateAgent",
     "predicate_agent",
+    "CounterAgent",
+    "MetricsAgent",
+    "PerformanceMetrics",
     # Predicate helpers
     "not_none",
     "not_empty",
