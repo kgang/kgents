@@ -77,12 +77,19 @@ from agents.h.hegel import HegelAgent, DialecticInput, DialecticOutput
 # Configuration
 # ============================================================================
 
-def log(msg: str = "", prefix: str = "") -> None:
-    """Print with immediate flush for real-time output."""
-    if prefix:
-        print(f"{prefix} {msg}", flush=True)
-    else:
-        print(msg, flush=True)
+def log(msg: str = "", prefix: str = "", file: Optional[Any] = None) -> None:
+    """Print with immediate flush for real-time output.
+
+    Args:
+        msg: Message to log
+        prefix: Optional prefix (e.g., emoji)
+        file: Optional file object to also write to
+    """
+    output = f"{prefix} {msg}" if prefix else msg
+    print(output, flush=True)
+    if file:
+        file.write(output + "\n")
+        file.flush()
 
 
 @dataclass
@@ -217,6 +224,19 @@ class EvolutionPipeline:
         if self._hegel is None:
             self._hegel = HegelAgent(runtime=self._get_runtime())
         return self._hegel
+
+    def _has_uncommitted_changes(self) -> bool:
+        """Check if there are uncommitted changes in git."""
+        try:
+            result = subprocess.run(
+                ["git", "status", "--porcelain"],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            return bool(result.stdout.strip())
+        except subprocess.CalledProcessError:
+            return False
 
     def discover_modules(self) -> list[CodeModule]:
         """Discover modules to evolve based on target."""
@@ -695,15 +715,24 @@ Generate ONE concrete improvement. Return ONLY valid JSON."""
 
     async def run(self) -> EvolutionReport:
         """Run the full evolution pipeline."""
+        # Create log file
+        log_dir = Path(__file__).parent / ".evolve_logs"
+        log_dir.mkdir(exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        log_path = log_dir / f"evolve_{self._config.target}_{timestamp}.log"
+        log_file = open(log_path, "w")
+
         log(f"{'='*60}")
-        log(f"EVOLUTION PIPELINE")
-        log(f"{'='*60}")
-        log(f"Target: {self._config.target}")
-        log(f"Dry run: {self._config.dry_run}")
-        log(f"Auto apply: {self._config.auto_apply}")
-        log(f"Quick mode: {self._config.quick_mode}")
-        log(f"Hypotheses per module: {self._config.hypothesis_count}")
-        log(f"Max improvements per module: {self._config.max_improvements_per_module}")
+        log(f"KGENTS EVOLUTION", file=log_file)
+        log(f"Target: {self._config.target}", file=log_file)
+        log(f"Dry run: {self._config.dry_run}", file=log_file)
+        log(f"Auto-apply: {self._config.auto_apply}", file=log_file)
+        log(f"Quick mode: {'True ⚡' if self._config.quick_mode else 'False'}", file=log_file)
+        log(f"{'='*60}", file=log_file)
+        log(f"⚠️ WARNING: Working tree is not clean. Use --dry-run or commit changes first." if self._has_uncommitted_changes() else "✓ Working tree is clean")
+        log(f"", file=log_file)
+        log(f"Loaded {len(self.discover_modules())} modules to evolve", file=log_file)
+        log(f"Log file: {log_path}", prefix="📝")
 
         # Discover modules
         modules = self.discover_modules()
@@ -744,33 +773,50 @@ Generate ONE concrete improvement. Return ONLY valid JSON."""
                     incorporated.append(experiment)
 
         # Summary
-        log(f"\n{'='*60}")
-        log("EVOLUTION SUMMARY")
-        log(f"{'='*60}")
-        log(f"Experiments run: {len(all_experiments)}")
-        log(f"  Passed: {len(passed)}")
-        log(f"  Failed: {len(rejected)}")
-        log(f"  Held (productive tension): {len(held)}")
-        log(f"  Incorporated: {len(incorporated)}")
+        log(f"\n{'='*60}", file=log_file)
+        log("EVOLUTION SUMMARY", file=log_file)
+        log(f"{'='*60}", file=log_file)
+        log(f"Experiments run: {len(all_experiments)}", file=log_file)
+        log(f"  Passed: {len(passed)}", file=log_file)
+        log(f"  Failed: {len(rejected)}", file=log_file)
+        log(f"  Held (productive tension): {len(held)}", file=log_file)
+        log(f"  Incorporated: {len(incorporated)}", file=log_file)
+        log(f"", file=log_file)
 
         if passed and not self._config.auto_apply:
-            log(f"\n{'-'*60}")
-            log("READY TO INCORPORATE")
-            log(f"{'-'*60}")
+            log(f"\n{'-'*60}", file=log_file)
+            log("READY TO INCORPORATE", file=log_file)
+            log(f"{'-'*60}", file=log_file)
             for exp in passed:
-                log(f"  [{exp.id}] {exp.improvement.description}")
-            log(f"\nRun with --auto-apply to incorporate these improvements.")
+                log(f"  [{exp.id}] {exp.improvement.description}", file=log_file)
+            log(f"\nRun with --auto-apply to incorporate these improvements.", file=log_file)
 
         if held:
-            log(f"\n{'-'*60}")
-            log("HELD TENSIONS (require human judgment)")
-            log(f"{'-'*60}")
+            log(f"\n{'-'*60}", file=log_file)
+            log("HELD TENSIONS (require human judgment)", file=log_file)
+            log(f"{'-'*60}", file=log_file)
             for exp in held:
-                log(f"  [{exp.id}] {exp.improvement.description}")
+                log(f"  [{exp.id}] {exp.improvement.description}", file=log_file)
                 if exp.synthesis:
-                    log(f"      Reason: {exp.synthesis.sublation_notes}")
+                    log(f"      Reason: {exp.synthesis.sublation_notes}", file=log_file)
+
+        # Final status banner (always visible even with tail)
+        log(f"\n")
+        log(f"╔{'═'*58}╗")
+        log(f"║{' '*58}║")
+        log(f"║  🎯 EVOLUTION COMPLETE - {self._config.target.upper():^32}  ║")
+        log(f"║{' '*58}║")
+        log(f"║  ✓ Passed: {len(passed):3d}   ✗ Failed: {len(rejected):3d}   ⏸ Held: {len(held):3d}   ✅ Applied: {len(incorporated):3d}  ║")
+        log(f"║{' '*58}║")
+        log(f"║  📝 Full log: {str(log_path)[-42:]:42}  ║")
+        log(f"║{' '*58}║")
+        log(f"╚{'═'*58}╝")
+        log(f"")
 
         summary = f"Evolved {len(modules)} modules: {len(incorporated)} incorporated, {len(rejected)} rejected, {len(held)} held"
+
+        # Close log file
+        log_file.close()
 
         return EvolutionReport(
             experiments=all_experiments,

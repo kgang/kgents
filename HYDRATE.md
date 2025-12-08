@@ -9,7 +9,7 @@
 
 ## Current State (Dec 8, 2025)
 
-**Latest:** Meta-evolution fixes applied. Runtime APIs stabilized with `AgentResult.success/error`, `AgentContext.metadata`, and `parse_structured_sections()`. Self-improve.py syntax errors fixed. System can now generate hypotheses but needs Robin integration for experiment generation.
+**Latest:** Full-stack evolution complete! All 25 modules evolved with 100/100 experiments passed and incorporated (runtime, agents, bootstrap). Logging improved with persistent log files, prominent summary banners, and better UX for piped output.
 
 | Component | Status |
 |-----------|--------|
@@ -196,12 +196,12 @@ LLM execution layer for agents:
 | B-gents B.2 | ✅ DONE | Robin (scientific companion) |
 
 **What's Next:**
-- **URGENT:** Fix evolve.py experiment generation (integrate Robin agent for code improvements)
-- **URGENT:** Stabilize runtime API contracts (prevent meta-evolution from breaking compatibility)
+- Apply 32 bootstrap improvements from latest evolution run
 - Tests: Add pytest suite for agents/b/ (hypothesis, robin)
 - D-gents: Data/Database agents (spec needed)
 - E-gents: Evaluation/Ethics agents (spec needed)
 - Package: Publish kgents-runtime to PyPI
+- Iterate on meta-evolution to achieve convergence (multiple runs show different improvement opportunities)
 
 ## evolve.py - Experimental Improvement Framework
 
@@ -270,22 +270,23 @@ Avoids JSON escaping issues for code content.
 
 ## Recent Changes
 
-- **Meta-Evolution API Fixes** (Dec 8, 2025): Fixed critical blocking issues in evolve.py after meta-evolution:
-  - Added `parse_structured_sections()` to runtime/base.py (parses LLM responses into dicts)
-  - Added `success`/`error` fields to `AgentResult` for proper error handling
-  - Added `metadata` field to `AgentContext` for agent execution context
-  - Fixed `HypothesisInput` API (use observations/domain/question/constraints, not context/count)
-  - Fixed `HypothesisEngine()` instantiation (no runtime param)
-  - Fixed f-string syntax errors in self_improve.py (extracted backslash expressions)
-  - Removed non-existent imports from agents/c/__init__.py
-  - **Status:** Hypothesis generation working (4 hypotheses generated), experiment generation needs Robin agent integration
-- **Meta-Evolution Success** (Dec 7, 2025): evolve.py and autopoiesis.py self-evolved with 8 improvements applied:
-  - Async/await for parallel processing
-  - Comprehensive type annotations
-  - Fix pattern retry logic for LLM calls
-  - Maybe/Either error boundaries
-  - Dependency injection for runtime
-  - **Side effect:** API changes broke compatibility, required manual fixes (see above)
+- **Logging Improvements** (Dec 8, 2025): Added persistent log files to `.evolve_logs/`, prominent summary banners visible even with `| tail`, better structured output for long-running processes
+- **Full-Stack Evolution** (Dec 8, 2025): All 25 modules evolved successfully with 100% pass rate - runtime (4), agents (13), bootstrap (8) all improved with async/await, type annotations, error handling, Fix pattern retries
+- **Meta-Evolution Round 2 Success** (Dec 8, 2025): Second successful meta-evolution applied 8 more improvements to evolve.py and autopoiesis.py:
+  - Async/await for experiment_one and incorporate functions
+  - Comprehensive type annotations and runtime validation
+  - Fix pattern retry logic for LLM calls in hypothesis generation
+  - Dependency injection (runtime passed as parameter, not hardcoded)
+  - Maybe/Either error boundaries for agent invocations
+  - Async timeout and cancellation support for file I/O
+  - **Bootstrap Evolution Ready:** 32 improvements identified for bootstrap agents (id, compose, sublate, types, contradict, fix, judge, ground)
+  - **Full Pipeline Working:** Hypothesis generation → Improvement generation → Testing → Auto-apply all functional
+- **Meta-Evolution API Fixes** (Dec 8, 2025): Fixed critical blocking issues after first meta-evolution:
+  - Added `parse_structured_sections()` to runtime/base.py
+  - Added `success`/`error` fields to `AgentResult`
+  - Added `metadata` field to `AgentContext`
+  - Fixed `HypothesisInput` API and `HypothesisEngine()` instantiation
+  - Fixed f-string syntax errors in self_improve.py
 - **evolve.py 2-5x Performance Boost** (Dec 7, 2025): Parallel module processing, AST caching, smart context pruning, configurable hypotheses/improvements. Runtime: 2-3s/module (fast) vs 10-15s (thorough).
 - **ClaudeCLIRuntime AI Coercion** (Dec 7, 2025): Last-resort recovery via AI-powered response reformatting when parse fails.
 - **self_improve.py Added** (Dec 2025): Code review via ClaudeCLIRuntime + HypothesisEngine + Judge + Contradict. Results: 25/25 modules ACCEPT, 75 hypotheses, 4 tensions resolved.
