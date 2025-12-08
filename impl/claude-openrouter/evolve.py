@@ -416,14 +416,27 @@ CONSTRAINTS:
 
 Generate ONE concrete improvement. Return ONLY valid JSON."""
 
-        # TODO: Implement experiment generation
-        # This needs to use an appropriate agent (like Robin) to generate improvements
-        log(f"[{module.name}] Experiment generation not yet implemented")
-        return None
+        # Execute LLM to generate improvement
+        try:
+            runtime = self._get_runtime()
+            # Create a simple agent context for the improvement generation
+            context = AgentContext(
+                system_prompt="You are a code improvement agent for kgents.",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.7,
+                max_tokens=16000,
+            )
+
+            # Execute using raw_completion
+            response_text, model = await runtime.raw_completion(context)
+
+        except Exception as e:
+            log(f"[{module.name}] Failed to generate improvement: {e}")
+            return None
 
         # Parse response
         try:
-            response = result.output.strip()
+            response = response_text.strip()
 
             # Extract METADATA section
             if "## METADATA" not in response or "## CODE" not in response:
