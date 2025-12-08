@@ -529,6 +529,9 @@ class EvolutionPipeline:
         self._git = GitSafety(self._base_path.parent.parent)  # Go up to repo root
         self._principles = make_default_principles()
 
+        # Performance optimization: Cache AST analysis
+        self._ast_cache: dict[str, list[str]] = {}
+
     def load_modules(self) -> list[CodeModule]:
         """Load Python modules from impl directory."""
         targets = {
