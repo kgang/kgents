@@ -9,11 +9,14 @@
 
 ## Current State (Dec 8, 2025)
 
-**Latest:** Phase 2 COMPLETE! ✅ Both architecture refactors merged and pushed to main (Dec 8, 2025):
-- Issue #10: TensionDetector Protocol extracted in contradict.py
-- Issue #5: EvolutionAgent decomposed → 4 handlers (ExplicitUpdate, Observation, Contradiction, Review) + TriggerRouter (58% code reduction)
+**Latest:** Bootstrap Documents Improvement Plan ✅
+- Generated comprehensive improvement plan for AUTONOMOUS_BOOTSTRAP_PROTOCOL.md and BOOTSTRAP_PROMPT.md
+- 51 improvement hypotheses identified (23 for PROTOCOL, 28 for PROMPT)
+- All 5 critical design decisions resolved: Judge (7 mini-judges), Autopoiesis (vibes), Directory (impl/claude/), Regeneration (behavior+vibes), Ground (agent-based)
+- Plan: 6 phases, 4-5 weeks, 74-104 hours estimated
+- **Next:** Implement Phase 1.1 (worked example for Id agent) and Phase 3.2 (seven mini-judges pattern)
 
-**Previously:** Phase 1 complete! Type system foundation fixed (Fix[A], FixComposedAgent[A,B]). Full-stack evolution: 100/100 experiments passed.
+**Previously:** Phase 2 COMPLETE! Both architecture refactors merged (Issue #10: TensionDetector Protocol, Issue #5: EvolutionAgent decomposed). Phase 1 complete! Type system foundation fixed.
 
 | Component | Status |
 |-----------|--------|
@@ -185,10 +188,11 @@ LLM execution layer for agents:
 
 **Bootstrap is now self-referential** — kgents can implement kgents.
 
-| Document | Purpose |
-|----------|---------|
-| `docs/BOOTSTRAP_PROMPT.md` | Active — LLM prompt for implementing kgents |
-| `AUTONOMOUS_BOOTSTRAP_PROTOCOL.md` | Completed — A-gents + B-gents implemented |
+| Document | Purpose | Status |
+|----------|---------|--------|
+| `BOOTSTRAP_DOCUMENTS_IMPROVEMENT_PLAN.md` | **New** — Grand plan to improve bootstrap docs | ✅ Complete, ready for implementation |
+| `docs/BOOTSTRAP_PROMPT.md` | LLM prompt for implementing kgents | 📋 Needs improvements per plan |
+| `AUTONOMOUS_BOOTSTRAP_PROTOCOL.md` | Meta-level protocol for Kent + Claude Code | 📋 Needs improvements per plan |
 
 ### Completed Phases
 
@@ -282,6 +286,15 @@ Avoids JSON escaping issues for code content.
 
 ## Recent Changes
 
+- **Bootstrap Documents Improvement Plan** (Dec 8, 2025):
+  - ✅ Generated comprehensive 51-hypothesis plan via evolutionary analysis (using kgents to improve kgents docs)
+  - Used 2 parallel Task agents for deep analysis of AUTONOMOUS_BOOTSTRAP_PROTOCOL.md and BOOTSTRAP_PROMPT.md
+  - Identified gaps (14), contradictions (8), improvements (12), enhancements (17) across both documents
+  - All 5 critical decisions resolved by Kent: Judge architecture (7 mini-judges), Autopoiesis (vibes-based), Directory (impl/claude/), Regeneration (behavior equivalence), Ground extraction (GroundParser agent)
+  - Plan structured in 6 phases with validation gates, prioritized execution order, and success metrics
+  - Timeline: 4-5 weeks, 74-104 hours estimated
+  - **Autopoiesis demonstrated:** Plan itself ~80% agent-generated (Task agents for analysis, human for synthesis)
+  - **Next actions:** Phase 1.1 (worked example for Id), Phase 3.2 (seven mini-judges pattern), Phase 5.3 (GroundParser agent)
 - **Phase 2 Architecture Refactors Complete** (Dec 8, 2025):
   - ✅ **Issue #10 COMPLETE**: Extracted TensionDetector Protocol in contradict.py for extensible contradiction detection. Merged to main.
   - ✅ **Issue #5 COMPLETE**: EvolutionAgent composition refactor. Extracted 4 handler classes (ExplicitUpdateHandler, ObservationHandler, ContradictionHandler, ReviewHandler), created TriggerRouter agent. EvolutionAgent now uses composition instead of orchestration (58% code reduction). Merged to main.
