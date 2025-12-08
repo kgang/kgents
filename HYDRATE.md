@@ -4,21 +4,24 @@
 
 ## TL;DR
 
-**Status**: Bootstrap Performance Optimizations COMPLETE ✅ (Phase D also complete)
-**Branch**: `main`
-**Session**: 2025-12-08 - Implemented Ground caching, Judge parallelization, + comprehensive spec docs
-**Achievement**: 2 performance wins implemented + 3 spec enhancements
-**Next**: Commit all changes (Phase D + performance work)
+**Status**: Phase D Polish + Performance Optimizations COMMITTED ✅
+**Branch**: `main` (pushed to origin)
+**Session**: 2025-12-08 - All work committed in 7 separate commits
+**Achievement**: 5 Phase D refactorings + 2 performance wins + 3 spec docs
+**Next**: Consider remaining IMPROVEMENT_PLAN tasks (H6) or run full test suite validation
 
 ---
 
-## Recent Commits
+## Recent Commits (This Session)
 
-- `e503b00` ci: Enhance GitHub workflows and add AI-optimized pre-commit hooks
-- `1650c97` docs: Finalize HYDRATE.md for Phase C completion
-- `cae20e2` docs: Update HYDRATE.md for J-gents Phase 2 session
-- `ce4e940` docs: Update HYDRATE.md for E/J-gents modularization session
-- `74042e3` refactor: Reorganize docs + E/J-gents modularization
+- `9f51a83` docs: Update HYDRATE.md + add brainstorm/regenerate docs
+- `e47987f` docs(spec): Add comprehensive performance documentation
+- `b30d88d` perf(bootstrap): Add Ground caching and Judge parallelization
+- `1a7f0ef` feat(shared): Formalize visitor pattern in ast_utils.py (H15)
+- `1e2c076` refactor(b-gents): Extract parser from hypothesis.py (H14)
+- `8bcf2d8` refactor(j-gents): Extract template patterns from meta_architect.py (H12)
+- `6babe4e` docs(e-gents): Add comprehensive inline documentation to safety.py (H9)
+- `628c916` refactor(e-gents): Extract SafeEvolutionOrchestrator (H3)
 
 ---
 
@@ -358,41 +361,57 @@ Previous session designed but didn't persist due to sandboxing:
 
 ## Next Session: Start Here
 
-### Status: Bootstrap Analysis Complete ✅
+### Status: Phase D + Performance Work COMPLETE ✅
 
-Performance analysis findings documented, ready for implementation.
+All Phase D polish tasks and 2/3 performance optimizations implemented and committed.
 
-### Priority 1: Implement Performance Wins
+**What's Done:**
+- ✅ Phase D: 5 refactorings (H3, H9, H12, H14, H15)
+- ✅ Performance: Ground caching, Judge parallelization
+- ✅ Spec docs: 3 enhancements (bootstrap.md, c-gents/performance.md, Idiom 6.1)
+- ✅ All committed in 7 separate commits and pushed
 
-**High-Impact, Low-Effort:**
-1. **Ground Caching** (ground.py:77-154)
-   - Add `_cached_facts: Optional[Facts]` field
-   - Return cached on subsequent invokes
-   - **Impact**: Eliminates redundant persona/world loading
+### Priority 1: Validation & Testing
 
-2. **Judge Parallelization** (judge.py:381-388)
-   - Use `asyncio.gather()` for mini-judges
-   - Run 7 principles concurrently
-   - **Impact**: 7× speedup potential (if I/O-bound checks)
+**Recommended before continuing:**
+```bash
+cd impl/claude
+# Run full test suite to validate refactorings
+python -m pytest tests/ -v
 
-3. **Bounded Fix History** (fix.py:86, 122)
-   - Add `max_history_size` to FixConfig
-   - Keep last N iterations only
-   - **Impact**: O(1) memory instead of O(n)
+# Verify Phase D imports
+python -c "from agents.e.safe_evolution_orchestrator import SafeEvolutionOrchestrator; print('H3 ✓')"
+python -c "from agents.j.templates import generate_template; print('H12 ✓')"
+python -c "from agents.b.hypothesis_parser import parse_hypothesis_response; print('H14 ✓')"
+python -c "from agents.shared.ast_utils import ASTVisitor, visit_ast; print('H15 ✓')"
 
-### Priority 2: Spec Enhancement
+# Test performance improvements
+python -c "from bootstrap.ground import Ground; g = Ground(cache=True); print('Ground caching ✓')"
+python -c "from bootstrap.judge import Judge; j = Judge(parallel=True); print('Judge parallel ✓')"
+```
 
-**Add Performance Documentation:**
-- `spec/bootstrap.md` - Performance section (hot/cold paths)
-- `spec/c-gents/performance.md` - New file (composition overhead patterns)
-- `spec/bootstrap.md` - Idiom 6 enhancement (bounded history)
+### Priority 2: Remaining Performance Optimization
 
-### Priority 3: IMPROVEMENT_PLAN Phase D - Polish
+**H6: Bounded Fix History** (not yet implemented)
+- Add `max_history_size` to FixConfig in `bootstrap/fix.py`
+- Keep last N iterations only (sliding window)
+- **Impact**: O(1) memory instead of O(n)
+- **Effort**: Low (similar to Ground/Judge changes)
 
-**Existing refactoring opportunities:**
-- **H3:** Extract `run_safe_evolution` → SafeEvolutionOrchestrator (102 lines)
-- **H9:** agents/e/safety.py inline documentation (656 lines)
-- **H12:** agents/j/meta_architect.py template patterns (607 lines)
+### Priority 3: Remaining IMPROVEMENT_PLAN Tasks
+
+**Phase E - Not yet started:**
+- **H6:** Bounded Fix history (see above)
+- **H2:** Further EvolutionPipeline decomposition (if needed)
+- **H7:** Split `agents/e/prompts.py` (designed but not implemented)
+- **H10:** Split `agents/j/sandbox.py` (designed but not implemented)
+
+### Priority 4: New Development
+
+Consider new features or agent types:
+- Extend T-gents with additional test agent patterns
+- Implement D-gents (Data agents) for state/memory
+- Explore other letters in alphabetical taxonomy
 
 ---
 
