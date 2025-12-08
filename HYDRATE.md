@@ -4,15 +4,39 @@
 
 ## TL;DR
 
-**Status**: T-gents specification COMPLETE - Category Theory-based testing framework
-**Branch**: `main` (pushed: d73283e)
-**New**: Complete `spec/t-gents/` with algebra, taxonomy, and Adversarial Gym
+**Status**: Phase 2.5d analysis COMPLETE - Evolution testing & failure diagnosis
+**Branch**: `main` (pushed: 0919279)
+**Key Finding**: Retry layer exists but needs API signature extraction
+**Next**: Implement API extraction to prevent hallucination → expect 0% to 70%+ success
 
 ---
 
-## This Session: T-gents Specification (2025-12-08)
+## This Session: Phase 2.5d Testing & Analysis (2025-12-08)
 
 ### Completed ✅
+
+**Commit 0919279: Phase 2.5d Testing & Analysis**
+
+**Created:**
+- `test_evolution_metrics.py`: Comprehensive metrics collection (syntax/parse/incorporation rates)
+- `docs/PHASE_2_5D_ANALYSIS.md`: Detailed failure mode analysis from meta run
+
+**Analysis Results:**
+- Tested `evolve.py meta --auto-apply`: 1 exp, 22 type errors, 0 incorporated
+- **Root Cause**: API hallucination - LLM invented kwargs (`runtime=`, `content=`) that don't exist
+- Error breakdown: 13 API mismatches, 4 attribute errors, 2 method names, 2 type errors
+
+**Key Findings:**
+- ✅ Reliability layer (retry/fallback/error_memory) IS integrated
+- ❌ Retry wasn't triggered (validation_report not passed to should_retry)
+- ❌ No API signature extraction → LLM hallucinates constructors
+- 📊 Need API extraction to inject actual signatures into prompts
+
+**Expected Impact:** With API extraction, expect 0% → 70%+ incorporation rate
+
+---
+
+## Previous: T-gents Specification (2025-12-08)
 
 **Commit d73283e: T-gents Specification**
 
@@ -94,22 +118,31 @@ Changes in working directory:
 
 ## Next Session: Start Here
 
-### Priority 1: Implement T-gents (Testing Agents)
+### Priority 1: Complete Phase 2.5d - API Signature Extraction ⚡ CRITICAL
 
-Now that spec is complete, implement the T-gents framework:
+**Problem**: LLM hallucinates API signatures (e.g., `CodeModule(content=...)` doesn't exist)
+**Solution**: Extract actual constructor/method signatures and inject into prompts
 
 ```bash
-cd impl/claude
-mkdir -p agents/t
-touch agents/t/__init__.py agents/t/core.py
+cd impl/claude/agents/e
+# Add to prompts.py:
+def extract_api_signatures(module: CodeModule) -> dict[str, str]:
+    """Extract actual API signatures from imports."""
+    # Parse AST, find imports, read actual source, extract signatures
 ```
 
-**Phase 1 Components:**
+**Then re-run evolution:**
+```bash
+python evolve.py meta --auto-apply  # Should improve from 0% to 70%+ incorporation
+python test_evolution_metrics.py --quick  # Measure improvement
+```
+
+### Priority 2: Implement T-gents (Testing Agents)
+
+Now that spec is complete, begin T-gents implementation:
 - [ ] Core Agent protocol with `__is_test__` flag
-- [ ] MockAgent (constant morphism)
-- [ ] FixtureAgent (lookup morphism)
-- [ ] SpyAgent (writer monad for logging)
-- [ ] FailingAgent (bottom morphism for chaos)
+- [ ] MockAgent, FixtureAgent (nullifiers)
+- [ ] FailingAgent (saboteur for testing recovery)
 
 **Phase 2 Components:**
 - [ ] NoiseAgent (semantic perturbation)
