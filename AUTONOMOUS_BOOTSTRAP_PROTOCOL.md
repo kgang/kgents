@@ -356,6 +356,336 @@ except Exception as e:
 
 ---
 
+## Common Pitfalls and How to Avoid Them
+
+This section captures failure modes observed in practice during kgents implementation. Learn from these mistakes to maintain high autopoiesis and composability.
+
+### Pitfall 1: Skipping Agent Invocation in Early Code
+
+**Symptom**: Writing implementation code before consulting agents, achieving <20% autopoiesis.
+
+**Example**:
+```python
+# WRONG: Jumping straight to implementation
+def implement_feature():
+    # Write 200 lines without using K-gent, CreativityCoach, or HypothesisEngine
+    class MyNewAgent:
+        ...
+```
+
+**Fix**: Use agents FIRST, especially for:
+- Naming decisions → K-gent (ADVISE mode)
+- Design exploration → CreativityCoach (EXPAND mode)
+- Architecture validation → HypothesisEngine
+- Quality checks → Judge
+
+**Pattern**:
+```python
+# RIGHT: Agent-driven workflow
+runtime = ClaudeCLIRuntime()
+
+# Step 1: Explore design space
+design = await runtime.execute(creativity_coach(), CreativityInput(
+    seed="feature description",
+    mode=CreativityMode.EXPAND
+))
+
+# Step 2: Get naming guidance
+name = await runtime.execute(kgent(), DialogueInput(
+    message="Which name fits better: X or Y?",
+    mode=DialogueMode.ADVISE
+))
+
+# Step 3: NOW implement with informed decisions
+```
+
+### Pitfall 2: Premature Synthesis (Not Using HoldTension)
+
+**Symptom**: Forcing synthesis when tensions should be held consciously.
+
+**Example**:
+```python
+# WRONG: Always synthesizing immediately
+tension = await contradict.invoke((approach_a, approach_b))
+if tension:
+    # Force immediate synthesis even when more exploration needed
+    synthesis = await sublate.invoke(tension)
+    # Might lose valuable information from tension
+```
+
+**Fix**: Use `HoldTension` when:
+- Tension is productive (creative tension)
+- More information needed to synthesize
+- Both sides have valid perspectives
+
+**Pattern**:
+```python
+# RIGHT: Conscious holding
+tension = await contradict.invoke((approach_a, approach_b))
+if tension:
+    result = await sublate.invoke(tension)
+    if isinstance(result, HoldTension):
+        # Document the tension, revisit later
+        self.held_tensions.append(result)
+        # Continue with explicit awareness of trade-off
+    else:
+        # Genuine synthesis achieved
+        return result.synthesis
+```
+
+### Pitfall 3: Stateless Fix Patterns
+
+**Symptom**: Fix iterations don't converge because state isn't accumulated.
+
+**Example**:
+```python
+# WRONG: No memory between iterations
+def poll_status() -> Status:
+    current = get_status()
+    if current == "ready":
+        return Status(ready=True)
+    return Status(ready=False)  # Resets confidence each time
+
+# Never converges—no accumulation
+result = await fix(transform=poll_status, initial=Status(ready=False))
+```
+
+**Fix**: Carry state between iterations, accumulate confidence/evidence.
+
+**Pattern**:
+```python
+# RIGHT: Stateful accumulation
+def poll_with_memory(previous: Status) -> Status:
+    current = get_status()
+    if current == "ready":
+        # Accumulate confidence
+        return Status(
+            ready=True,
+            confidence=min(1.0, previous.confidence + 0.2)
+        )
+    # Reset if state changes
+    return Status(ready=False, confidence=0.0)
+
+# Converges when confidence >= threshold
+result = await fix(
+    transform=poll_with_memory,
+    initial=Status(ready=False, confidence=0.0),
+    equality_check=lambda prev, curr: curr.ready and curr.confidence >= 0.8
+)
+```
+
+### Pitfall 4: Implicit Ground Assumptions
+
+**Symptom**: Code assumes platform/environment specifics without declaring them.
+
+**Example**:
+```python
+# WRONG: Assumes bash shell
+subprocess.run("read -p 'Enter name: ' name", shell=True)
+
+# WRONG: Assumes sys.path manipulation works
+import sys
+sys.path.insert(0, "../../")
+from bootstrap import Agent  # Fragile
+
+# WRONG: Assumes current directory
+with open("config.json") as f:  # Where is this file?
+```
+
+**Fix**: Make Ground explicit in code and documentation.
+
+**Pattern**:
+```python
+# RIGHT: POSIX-compatible Ground
+subprocess.run("printf 'Enter name: ' && read name", shell=True)
+
+# RIGHT: Proper packaging
+# pyproject.toml:
+# [project]
+# dependencies = ["kgents-runtime"]
+from bootstrap import Agent
+
+# RIGHT: Explicit paths
+from pathlib import Path
+config_path = Path(__file__).parent / "config.json"
+with open(config_path) as f:
+```
+
+**Ground declaration**:
+```python
+"""
+Ground:
+- Shell: POSIX-compatible (bash, zsh, sh)
+- Python: ≥3.11 (match/case, async/await)
+- Platform: darwin, linux (no Windows-specific code)
+- Packages: kgents-runtime, anthropic, openai
+"""
+```
+
+### Pitfall 5: Treating Judge as Binary (Ignoring REVISE)
+
+**Symptom**: Only handling ACCEPT or REJECT, missing iterative improvement via REVISE.
+
+**Example**:
+```python
+# WRONG: Binary judgment
+verdict = await judge.invoke(JudgeInput(agent=my_agent, principles=PRINCIPLES))
+if verdict.type == VerdictType.ACCEPT:
+    print("Done!")
+else:
+    print("Failed!")  # Gives up on REVISE or REJECT
+```
+
+**Fix**: Use REVISE as Fix pattern—iterate until ACCEPT.
+
+**Pattern**:
+```python
+# RIGHT: Iterative improvement via Fix
+async def improve_until_accept(agent_code: str) -> str:
+    """Apply Judge in Fix pattern—iterate until ACCEPT."""
+    current = agent_code
+
+    async def judge_and_revise(code: str) -> str:
+        verdict = await judge.invoke(JudgeInput(
+            agent_spec=code,
+            principles=PRINCIPLES
+        ))
+
+        if verdict.type == VerdictType.ACCEPT:
+            return code  # Converged
+
+        if verdict.type == VerdictType.REVISE:
+            # Apply suggested revisions
+            revised = apply_revisions(code, verdict.revisions)
+            return revised
+
+        if verdict.type == VerdictType.REJECT:
+            raise ValueError(f"Judge rejected: {verdict.reasoning}")
+
+    result = await fix(
+        transform=judge_and_revise,
+        initial=current,
+        equality_check=lambda prev, curr: curr == prev  # Stable
+    )
+    return result
+```
+
+### Pitfall 6: Over-Engineering Before Validation
+
+**Symptom**: Adding abstractions, configurability, and "future-proofing" before validating core concept.
+
+**Example**:
+```python
+# WRONG: Premature abstraction
+class ConfigurableAgent:
+    def __init__(
+        self,
+        strategy: Strategy,
+        cache: Optional[Cache] = None,
+        retry_policy: RetryPolicy = DefaultRetry(),
+        observability: ObservabilityHooks = NoOp(),
+        feature_flags: Dict[str, bool] = None,
+    ):
+        # 50 lines of configuration logic before ANY core functionality
+```
+
+**Fix**: Implement minimal version first, validate with Judge, THEN generalize if needed.
+
+**Pattern**:
+```python
+# RIGHT: Start minimal
+class MyAgent(Agent[A, B]):
+    async def invoke(self, input: A) -> B:
+        # Core logic only—20 lines
+        return result
+
+# Validate first
+verdict = await judge.invoke(JudgeInput(agent=my_agent, principles=PRINCIPLES))
+
+# ONLY IF ACCEPT and Kent requests it, add configurability
+```
+
+### Pitfall 7: Ignoring Contradict Output
+
+**Symptom**: Running Contradict but not acting on detected tensions.
+
+**Example**:
+```python
+# WRONG: Detect but ignore
+tension = await contradict.invoke((spec, impl))
+if tension:
+    print(f"Found tension: {tension.description}")
+    # Continue anyway without resolution
+```
+
+**Fix**: Either Sublate or consciously Hold every tension.
+
+**Pattern**:
+```python
+# RIGHT: Act on tensions
+tension = await contradict.invoke((spec, impl))
+if tension:
+    resolution = await sublate.invoke(tension)
+
+    if isinstance(resolution, Synthesis):
+        # Apply synthesis
+        impl = resolution.result
+    elif isinstance(resolution, HoldTension):
+        # Document and track
+        self.log.warning(f"Holding tension: {resolution.why_held}")
+        self.held_tensions.append(resolution)
+```
+
+### Pitfall 8: Breaking Composition Laws
+
+**Symptom**: Custom composition operators that violate associativity or identity laws.
+
+**Example**:
+```python
+# WRONG: Non-associative composition
+class MyAgent(Agent[A, B]):
+    def __rshift__(self, other):
+        # Special case that breaks (f >> g) >> h == f >> (g >> h)
+        if isinstance(other, SpecialAgent):
+            return CombinedAgent(self, other, magic=True)
+        return super().__rshift__(other)
+```
+
+**Fix**: Preserve category laws. Test associativity and identity explicitly.
+
+**Pattern**:
+```python
+# RIGHT: Law-preserving composition
+class MyAgent(Agent[A, B]):
+    def __rshift__(self, other: Agent[B, C]) -> Agent[A, C]:
+        # Standard composition, no special cases
+        return ComposedAgent(self, other)
+
+# Test laws
+def test_composition_laws():
+    f, g, h = AgentF(), AgentG(), AgentH()
+    assert (f >> g) >> h ≅ f >> (g >> h)  # Associativity
+    assert Id() >> f ≅ f  # Left identity
+    assert f >> Id() ≅ f  # Right identity
+```
+
+### Summary: Pitfall Checklist
+
+Before committing code, check:
+
+- [ ] Did I use agents (K-gent, CreativityCoach, etc.) for non-trivial decisions? (Autopoiesis)
+- [ ] Are tensions either Sublated or consciously Held? (No ignored Contradict output)
+- [ ] Does Fix accumulate state? (Memory between iterations)
+- [ ] Is Ground explicit? (No platform/shell assumptions)
+- [ ] Do I handle REVISE verdicts? (Judge as Fix pattern)
+- [ ] Is this minimal? (No premature abstraction)
+- [ ] Do composition laws hold? (Associativity, identity)
+- [ ] Are errors surfaced as data? (Conflicts logged, not swallowed)
+
+**Meta-principle**: When in doubt, use agents to check. Run Judge, Contradict, or K-gent (REFLECT mode) on your own code.
+
+---
+
 ## Execution Protocol
 
 ### For Each Implementation Phase
@@ -421,6 +751,355 @@ If spec is unclear:
 # Begin new implementation:
 claude "Read AUTONOMOUS_BOOTSTRAP_PROTOCOL.md. I want to implement {X}. Start by using CreativityCoach to explore the design space."
 ```
+
+---
+
+## Observability: Making the Protocol Visible
+
+The protocol is only useful if you can observe it working. This section describes how to track protocol execution and measure its health.
+
+### What to Observe
+
+**Core Metrics:**
+
+| Metric | What It Measures | Target | How to Track |
+|--------|------------------|--------|--------------|
+| **Autopoiesis %** | (Agent-generated lines) / (Total lines) | >50% | Narrative: "Which decisions used agents?" (vibes) |
+| **Agent Usage Frequency** | How often agents invoked per phase | Continuous | Count agent calls per implementation phase |
+| **Tension Resolution Rate** | Tensions resolved / Tensions detected | >80% | Track Contradict → Sublate outcomes |
+| **Judge Acceptance Rate** | ACCEPT / (ACCEPT + REVISE + REJECT) | >60% first pass, 100% after Fix | Track Judge verdicts over time |
+| **Fix Convergence** | Iterations to converge | <10 typical | Log Fix iterations, track average |
+| **Pattern Adherence** | Required patterns used correctly | 100% | Manual review or linter |
+
+**Qualitative Indicators:**
+- Does the process *feel* agent-driven? (Subjective but important)
+- Are decisions documented with agent rationale?
+- Can you reconstruct *why* a choice was made by reading agent outputs?
+
+### How to Track Protocol Events
+
+**Simple logging pattern:**
+
+```python
+"""Protocol Event Logger - Track bootstrap protocol execution"""
+
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Literal, Optional
+from enum import Enum
+
+class EventType(Enum):
+    AGENT_INVOKED = "agent_invoked"
+    TENSION_DETECTED = "tension_detected"
+    TENSION_RESOLVED = "tension_resolved"
+    JUDGE_VERDICT = "judge_verdict"
+    FIX_ITERATION = "fix_iteration"
+    PATTERN_APPLIED = "pattern_applied"
+
+@dataclass
+class ProtocolEvent:
+    """Single protocol execution event"""
+    type: EventType
+    timestamp: datetime = field(default_factory=datetime.now)
+    agent_name: Optional[str] = None
+    phase: Optional[str] = None  # e.g., "design", "implementation", "validation"
+    details: dict = field(default_factory=dict)
+
+class ProtocolObserver:
+    """
+    Observability layer for AUTONOMOUS_BOOTSTRAP_PROTOCOL execution.
+
+    Usage:
+        observer = ProtocolObserver()
+        observer.agent_invoked("K-gent", phase="naming")
+        observer.judge_verdict(verdict_type="ACCEPT")
+        observer.report()  # Print summary
+    """
+
+    def __init__(self):
+        self.events: list[ProtocolEvent] = []
+        self.start_time = datetime.now()
+
+    def agent_invoked(
+        self,
+        agent_name: str,
+        phase: str,
+        mode: Optional[str] = None,
+        purpose: Optional[str] = None
+    ):
+        """Record agent invocation"""
+        self.events.append(ProtocolEvent(
+            type=EventType.AGENT_INVOKED,
+            agent_name=agent_name,
+            phase=phase,
+            details={"mode": mode, "purpose": purpose}
+        ))
+
+    def tension_detected(self, tension_type: str, description: str, phase: str):
+        """Record Contradict finding tension"""
+        self.events.append(ProtocolEvent(
+            type=EventType.TENSION_DETECTED,
+            phase=phase,
+            details={"tension_type": tension_type, "description": description}
+        ))
+
+    def tension_resolved(
+        self,
+        resolution_type: Literal["synthesis", "hold"],
+        phase: str
+    ):
+        """Record Sublate resolution"""
+        self.events.append(ProtocolEvent(
+            type=EventType.TENSION_RESOLVED,
+            phase=phase,
+            details={"resolution": resolution_type}
+        ))
+
+    def judge_verdict(
+        self,
+        verdict_type: Literal["ACCEPT", "REVISE", "REJECT"],
+        phase: str,
+        agent_name: Optional[str] = None
+    ):
+        """Record Judge verdict"""
+        self.events.append(ProtocolEvent(
+            type=EventType.JUDGE_VERDICT,
+            agent_name=agent_name,
+            phase=phase,
+            details={"verdict": verdict_type}
+        ))
+
+    def fix_iteration(self, iteration: int, phase: str, converged: bool = False):
+        """Record Fix iteration"""
+        self.events.append(ProtocolEvent(
+            type=EventType.FIX_ITERATION,
+            phase=phase,
+            details={"iteration": iteration, "converged": converged}
+        ))
+
+    def pattern_applied(self, pattern_name: str, phase: str):
+        """Record required pattern usage"""
+        self.events.append(ProtocolEvent(
+            type=EventType.PATTERN_APPLIED,
+            phase=phase,
+            details={"pattern": pattern_name}
+        ))
+
+    def report(self) -> str:
+        """Generate human-readable protocol execution report"""
+        duration = datetime.now() - self.start_time
+
+        # Count by type
+        by_type = {}
+        for event in self.events:
+            by_type[event.type] = by_type.get(event.type, 0) + 1
+
+        # Agent usage narrative
+        agents_used = {}
+        for event in self.events:
+            if event.type == EventType.AGENT_INVOKED and event.agent_name:
+                agents_used[event.agent_name] = agents_used.get(event.agent_name, 0) + 1
+
+        # Tension resolution rate
+        tensions_detected = by_type.get(EventType.TENSION_DETECTED, 0)
+        tensions_resolved = by_type.get(EventType.TENSION_RESOLVED, 0)
+        resolution_rate = (
+            tensions_resolved / tensions_detected if tensions_detected > 0 else 1.0
+        )
+
+        # Judge acceptance (first pass)
+        judge_events = [e for e in self.events if e.type == EventType.JUDGE_VERDICT]
+        accepts = sum(1 for e in judge_events if e.details.get("verdict") == "ACCEPT")
+        acceptance_rate = accepts / len(judge_events) if judge_events else 0.0
+
+        # Format report
+        report = f"""
+=== AUTONOMOUS BOOTSTRAP PROTOCOL EXECUTION REPORT ===
+
+Duration: {duration.total_seconds():.1f}s
+
+Agent Usage (Autopoiesis Narrative):
+"""
+        for agent, count in sorted(agents_used.items(), key=lambda x: -x[1]):
+            report += f"  - {agent}: {count}x\n"
+
+        report += f"""
+Protocol Metrics:
+  - Total Events: {len(self.events)}
+  - Agent Invocations: {by_type.get(EventType.AGENT_INVOKED, 0)}
+  - Tensions Detected: {tensions_detected}
+  - Tensions Resolved: {tensions_resolved} ({resolution_rate:.0%} resolution rate)
+  - Judge Verdicts: {len(judge_events)} ({acceptance_rate:.0%} acceptance rate)
+  - Fix Iterations: {by_type.get(EventType.FIX_ITERATION, 0)}
+  - Patterns Applied: {by_type.get(EventType.PATTERN_APPLIED, 0)}
+
+Autopoiesis Assessment:
+  {'✓ Continuous agent usage' if len(agents_used) >= 3 else '⚠ Low agent diversity'}
+  {'✓ Healthy tension resolution' if resolution_rate >= 0.8 else '⚠ Many unresolved tensions'}
+  {'✓ Judge approves work' if acceptance_rate >= 0.6 else '⚠ High rejection rate'}
+
+=== END REPORT ===
+"""
+        return report
+
+    def autopoiesis_narrative(self) -> str:
+        """Generate qualitative autopoiesis story"""
+        agent_events = [
+            e for e in self.events
+            if e.type == EventType.AGENT_INVOKED
+        ]
+
+        if not agent_events:
+            return "No agent usage detected (0% autopoiesis)"
+
+        narrative = "Autopoiesis Story:\n"
+        for event in agent_events:
+            phase = event.phase or "unknown"
+            agent = event.agent_name or "unknown"
+            purpose = event.details.get("purpose", "")
+            narrative += f"  - Phase '{phase}': Used {agent}"
+            if purpose:
+                narrative += f" for {purpose}"
+            narrative += "\n"
+
+        return narrative
+```
+
+**Usage in practice:**
+
+```python
+# Initialize observer at start of implementation session
+observer = ProtocolObserver()
+
+# Throughout implementation, log events
+observer.agent_invoked("CreativityCoach", phase="design", purpose="explore architecture")
+observer.agent_invoked("K-gent", phase="naming", mode="ADVISE")
+observer.judge_verdict("REVISE", phase="validation", agent_name="MyNewAgent")
+observer.fix_iteration(iteration=1, phase="refinement")
+observer.judge_verdict("ACCEPT", phase="validation", agent_name="MyNewAgent")
+
+# At end of session
+print(observer.report())
+print(observer.autopoiesis_narrative())
+```
+
+### Health Dashboard (Conceptual)
+
+Imagine a dashboard showing:
+
+```
+┌─────────────────────────────────────────┐
+│  BOOTSTRAP PROTOCOL HEALTH              │
+├─────────────────────────────────────────┤
+│  Autopoiesis: 🟢 65% (Continuous usage)│
+│  Tension Resolution: 🟢 87%            │
+│  Judge Acceptance: 🟡 55% (improvable)│
+│  Fix Convergence: 🟢 4.2 avg iterations│
+│  Pattern Adherence: 🟢 100%            │
+├─────────────────────────────────────────┤
+│  Recent Agent Usage:                    │
+│    K-gent: 12x (naming, reflection)    │
+│    CreativityCoach: 8x (design)        │
+│    HypothesisEngine: 5x (validation)   │
+│    Judge: 15x (quality checks)         │
+│    Contradict: 7x (consistency)        │
+└─────────────────────────────────────────┘
+```
+
+Key indicators:
+- 🟢 Green: Meeting target
+- 🟡 Yellow: Below target but acceptable
+- 🔴 Red: Needs attention
+
+### When to Check Observability
+
+**During implementation:**
+- After each phase (design, naming, implementation, validation)
+- When stuck or uncertain (use metrics to diagnose)
+- Before committing code (check autopoiesis %, pattern adherence)
+
+**After implementation:**
+- Compare autopoiesis % to target (>50%)
+- Review tension resolution rate (>80%)
+- Check Judge acceptance trajectory (improving over Fix iterations?)
+- Identify which agents were underused
+
+**For retrospectives:**
+- Which phases had highest agent usage? (Good!)
+- Which phases had low usage? (Opportunity for improvement)
+- Did Fix converge quickly? (Sign of good design)
+- Were tensions resolved or held? (Held tensions = future work)
+
+### Integrating with Existing Tools
+
+**Git commit messages:**
+```bash
+git commit -m "feat: Implement MemoryAgent
+
+Autopoiesis: 68% (K-gent 4x, CreativityCoach 3x, Judge 5x)
+Patterns: Fix memory, Sublate merge, Events as traces
+Judge: ACCEPT after 2 REVISE iterations"
+```
+
+**Code comments (optional):**
+```python
+# Design influenced by CreativityCoach exploration (see session log)
+# Named "HistoryAgent" per K-gent recommendation (avoid overloaded "memory")
+class HistoryAgent(Agent[Message, List[Message]]):
+    ...
+```
+
+**Session logs:**
+Keep a `session.log` file during implementation:
+```
+2025-12-08 14:32 - Phase: Design
+2025-12-08 14:35 - CreativityCoach invoked: Explored 5 architecture options
+2025-12-08 14:42 - HypothesisEngine validated: SQLite approach most suitable
+2025-12-08 14:50 - K-gent (ADVISE): Recommended "HistoryAgent" over "MemoryAgent"
+2025-12-08 15:10 - Implementation: 120 lines written (guided by design)
+2025-12-08 15:25 - Judge verdict: REVISE (needs error handling)
+2025-12-08 15:40 - Applied revisions, Judge verdict: ACCEPT
+2025-12-08 15:42 - Contradict check: No tensions detected
+```
+
+### Observability Anti-Patterns
+
+**Don't:**
+- Track metrics mechanically without understanding them (just hitting 50% autopoiesis for its own sake)
+- Log every trivial event (noise)
+- Optimize metrics at expense of quality (gaming the system)
+- Skip observability entirely (flying blind)
+
+**Do:**
+- Use metrics as *indicators*, not *goals*
+- Tell a coherent narrative of agent usage
+- Review observability data during retrospectives
+- Adjust when metrics reveal problems
+
+### Meta-Observability
+
+Use agents to observe the protocol itself:
+
+```python
+# Use K-gent to reflect on protocol execution
+reflection = await runtime.execute(kgent(), DialogueInput(
+    message=f"I just implemented X with {autopoiesis_score}% autopoiesis. What could I improve?",
+    mode=DialogueMode.REFLECT
+))
+
+# Use HypothesisEngine to diagnose low metrics
+hypotheses = await runtime.execute(hypothesis_engine(), HypothesisInput(
+    observations=[
+        f"Autopoiesis only {score}%",
+        "Used agents at start, then forgot",
+        "Judge rejected 3 times before accepting"
+    ],
+    domain="software development process",
+    question="Why is autopoiesis low and how can I improve?"
+))
+```
+
+**This is the protocol being self-referential**: Use the bootstrap agents to observe and improve protocol execution itself.
 
 ---
 

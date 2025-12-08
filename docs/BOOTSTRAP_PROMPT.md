@@ -797,6 +797,678 @@ async def test_maybe_combinator():
 
 ---
 
+## Implementation Progress Template
+
+Use this checklist to track progress when implementing kgents from spec. Copy this to `PROGRESS.md` and check off items as you complete them.
+
+### Phase 0: Foundation
+
+**Goal**: Set up environment and understand specs
+
+- [ ] **Environment Setup**
+  - [ ] Clone/fork kgents repository
+  - [ ] Set up Python ≥3.11 virtual environment
+  - [ ] Install dependencies: `pip install -e .`
+  - [ ] Verify mypy installed: `mypy --version`
+  - [ ] Set up IDE with type checking
+
+- [ ] **Read Specifications** (in order)
+  - [ ] `spec/principles.md` - 7 core principles
+  - [ ] `spec/bootstrap.md` - 7 irreducible agents
+  - [ ] `spec/anatomy.md` - What constitutes an agent
+  - [ ] `spec/c-gents/composition.md` - How agents compose
+  - [ ] `AUTONOMOUS_BOOTSTRAP_PROTOCOL.md` - Meta-level protocol
+  - [ ] `docs/BOOTSTRAP_PROMPT.md` - This document
+
+- [ ] **Initialize Runtime** (Step 0, before ANY code)
+  - [ ] Set up ClaudeCLIRuntime or ClaudeRuntime
+  - [ ] Test basic agent invocation (try kgent or creativity_coach)
+  - [ ] Verify LLM access working
+
+**Autopoiesis checkpoint**: Did I use agents to plan the implementation approach? (CreativityCoach, HypothesisEngine)
+
+---
+
+### Phase 1: Foundation - Types and Base Classes
+
+**Goal**: Implement `types.py` with Agent[A, B] base class and composition operators
+
+**Files to create/modify**:
+- [ ] `impl/claude/bootstrap/types.py`
+
+**Tasks**:
+- [ ] Define `Agent[A, B]` abstract base class with `invoke` method
+- [ ] Implement `__rshift__` composition operator (`>>`)
+- [ ] Define `ComposedAgent[A, B, C]` for sequential composition
+- [ ] Add `Result[T, E]` types (Ok, Err) for error handling
+- [ ] Write module docstring with type signatures
+- [ ] Add comprehensive type annotations
+
+**Validation**:
+- [ ] `mypy --strict types.py` passes with zero errors
+- [ ] Manual review: Can compose agents with `f >> g` syntax?
+- [ ] Test: `Id >> SomeAgent` should equal `SomeAgent` (type level)
+
+**Autopoiesis checkpoint**:
+- [ ] Used K-gent for naming decisions?
+- [ ] Used CreativityCoach to explore API design?
+- [ ] Used Judge to review against principles?
+
+**Dependencies**: None (foundational)
+
+---
+
+### Phase 2: Level 1 Agents - Id and Ground
+
+**Goal**: Implement simplest agents with no dependencies
+
+#### 2.1 Id Agent
+
+**Files**:
+- [ ] `impl/claude/bootstrap/id.py`
+
+**Tasks**:
+- [ ] Read spec: `spec/bootstrap.md` (Id section)
+- [ ] Use agent template from docs/BOOTSTRAP_PROMPT.md
+- [ ] Implement `Id(Agent[A, A])` class
+- [ ] Optimize `__rshift__`: `Id >> f` should return `f`
+- [ ] Write tests: identity laws, composition laws
+
+**Validation**:
+- [ ] `mypy --strict id.py` passes
+- [ ] Tests pass (associativity, left/right identity)
+- [ ] Judge verdict: ACCEPT
+- [ ] Contradict(spec, impl): None
+
+**Autopoiesis**: Used agents to implement? (K-gent for naming, Judge for review)
+
+#### 2.2 Ground Agent
+
+**Files**:
+- [ ] `impl/claude/bootstrap/ground.py`
+- [ ] Optional: `impl/claude/bootstrap/ground_parser.py` (GroundParser agent)
+
+**Tasks**:
+- [ ] Read spec: `spec/bootstrap.md` (Ground section)
+- [ ] Implement `Ground(Agent[Void, Facts])` or specific variant
+- [ ] Load persona from `spec/k-gent/persona.md`
+- [ ] Parse markdown → PersonaSeed structure
+- [ ] Consider: Use LLM-based GroundParser for flexibility (see Phase 5.3)
+
+**Validation**:
+- [ ] Can load persona.md successfully
+- [ ] PersonaSeed structure complete (name, values, heuristics, etc.)
+- [ ] Judge verdict: ACCEPT
+- [ ] Ground checklist complete (see PROTOCOL)
+
+**Autopoiesis**: Used GroundParser agent (meta!)
+
+**Dependencies**: types.py
+
+---
+
+### Phase 3: Level 2 Agents - Compose and Contradict
+
+**Goal**: Implement agents that build on Level 1
+
+#### 3.1 Compose Agent
+
+**Files**:
+- [ ] `impl/claude/bootstrap/compose.py`
+
+**Tasks**:
+- [ ] Read spec: `spec/bootstrap.md` (Compose section)
+- [ ] Implement `Compose(Agent[(Agent, Agent), Agent])`
+- [ ] Verify composition laws (associativity)
+- [ ] Ensure types propagate correctly: `Agent[A,B] >> Agent[B,C] → Agent[A,C]`
+- [ ] Handle edge cases (Id composition, error propagation)
+
+**Validation**:
+- [ ] Composition laws hold (associativity tests)
+- [ ] Type safety verified with mypy
+- [ ] Judge: ACCEPT
+
+**Dependencies**: types.py, id.py
+
+#### 3.2 Contradict Agent
+
+**Files**:
+- [ ] `impl/claude/bootstrap/contradict.py`
+
+**Tasks**:
+- [ ] Read spec: `spec/bootstrap.md` (Contradict section)
+- [ ] Implement `Contradict(Agent[(A, B), Tension | None])`
+- [ ] Define Tension types (LOGICAL, PRAGMATIC, AESTHETIC)
+- [ ] Implement TensionDetector protocol for extensibility
+- [ ] Add 2-3 basic detectors (semantic, structural)
+
+**Validation**:
+- [ ] Detects obvious contradictions (tests with known conflicts)
+- [ ] Returns None when no tension (tests with aligned pairs)
+- [ ] Judge: ACCEPT
+- [ ] TensionDetector extensible (can add custom detectors)
+
+**Dependencies**: types.py
+
+---
+
+### Phase 4: Level 3 Agents - Judge and Sublate
+
+**Goal**: Implement evaluation and synthesis agents
+
+#### 4.1 Judge Agent (Seven Mini-Judges Architecture)
+
+**Files**:
+- [ ] `impl/claude/bootstrap/judge.py`
+- [ ] Optionally split into: `judge_tasteful.py`, `judge_curated.py`, etc.
+
+**Tasks**:
+- [ ] Read spec: `spec/bootstrap.md` (Judge section)
+- [ ] Read principles: `spec/principles.md` (all 7)
+- [ ] Implement seven mini-judges (see BOOTSTRAP_PROMPT section on Judge)
+  - [ ] JudgeTasteful (compressed expertise)
+  - [ ] JudgeCurated (unique value)
+  - [ ] JudgeEthical (respects agency)
+  - [ ] JudgeJoyful (inspiring)
+  - [ ] JudgeComposable (works with others)
+  - [ ] JudgeGenerative (regenerable)
+  - [ ] JudgeHeterarchical (avoids hierarchy)
+- [ ] Compose via `>>`: `judge = tasteful >> curated >> ... >> heterarchical`
+- [ ] Aggregate PartialVerdicts → final Verdict (ACCEPT/REVISE/REJECT)
+
+**Validation**:
+- [ ] Test on Id agent: should ACCEPT
+- [ ] Test on bootstrap agents: all should ACCEPT or REVISE (not REJECT)
+- [ ] Test on deliberately bad code: should REVISE or REJECT
+- [ ] Each mini-judge independently testable
+- [ ] Judge itself passes Judge (meta!)
+
+**Autopoiesis**: Used agents to implement Judge? (self-referential)
+
+**Dependencies**: types.py, compose.py
+
+#### 4.2 Sublate Agent
+
+**Files**:
+- [ ] `impl/claude/bootstrap/sublate.py`
+
+**Tasks**:
+- [ ] Read spec: `spec/bootstrap.md` (Sublate section)
+- [ ] Implement `Sublate(Agent[Tension, Synthesis | HoldTension])`
+- [ ] Define Synthesis and HoldTension types
+- [ ] Implement synthesis logic (LLM-based or rule-based)
+- [ ] Add pattern: conscious holding when synthesis not yet possible
+
+**Validation**:
+- [ ] Can synthesize simple tensions (tests)
+- [ ] Can consciously hold unresolvable tensions
+- [ ] Judge: ACCEPT
+
+**Dependencies**: types.py, contradict.py (for Tension type)
+
+---
+
+### Phase 5: Level 4 Agent - Fix
+
+**Goal**: Implement fixed-point iteration
+
+**Files**:
+- [ ] `impl/claude/bootstrap/fix.py`
+
+**Tasks**:
+- [ ] Read spec: `spec/bootstrap.md` (Fix section)
+- [ ] Implement `Fix(Agent[(A → A), A])`
+- [ ] Add convergence detection via `equality_check`
+- [ ] Add max_iterations safety limit
+- [ ] Implement stateful Fix pattern (memory between iterations)
+- [ ] Add convenience function: `fix(transform, initial, equality_check)`
+
+**Validation**:
+- [ ] Converges for simple cases (tests)
+- [ ] Respects max_iterations limit
+- [ ] Accumulates state correctly (see PROTOCOL Pitfall 3)
+- [ ] Judge: ACCEPT
+
+**Dependencies**: types.py, compose.py
+
+---
+
+### Phase 6: Verification and Validation
+
+**Goal**: Ensure all agents work correctly, compose properly, and pass Judge
+
+**Tasks**:
+- [ ] **Type checking**: `mypy --strict impl/claude/bootstrap/` (zero errors)
+- [ ] **Unit tests**: Write pytest suite for each agent
+  - [ ] Test composition laws (associativity, identity)
+  - [ ] Test type safety (inputs/outputs match signatures)
+  - [ ] Test error propagation
+  - [ ] Test state isolation (concurrent invocations)
+- [ ] **Integration tests**: Compose multiple agents, verify pipelines work
+- [ ] **Judge all agents**: Each bootstrap agent should pass Judge
+- [ ] **Contradict check**: Compare impl to spec, should find no tensions
+- [ ] **Autopoiesis review**: Calculate % agent usage, document narrative
+
+**Validation checklist** (from Verification section above):
+- [ ] All composition law tests pass
+- [ ] Type safety verified
+- [ ] Error propagation works
+- [ ] State isolation maintained
+- [ ] Judge verdict: ACCEPT for all bootstrap agents
+- [ ] Contradict(spec, impl) returns None for each agent
+- [ ] Autopoiesis >50% (or qualitative: "felt agent-driven")
+
+---
+
+### Phase 7: Regeneration Test (Behavior Equivalence)
+
+**Goal**: Validate that documents are sufficient by regenerating bootstrap
+
+**Tasks**:
+- [ ] **Backup current implementation**: `cp -r bootstrap/ bootstrap.backup/`
+- [ ] **Delete implementation**: `rm -rf bootstrap/*.py` (keep types.py)
+- [ ] **Regenerate from spec**: Follow BOOTSTRAP_PROMPT.md from scratch
+- [ ] **Compare behavior**:
+  - [ ] Run tests on regenerated code (should pass)
+  - [ ] Compare outputs for same inputs (should match)
+  - [ ] Run Contradict(original, regenerated) (no critical tensions)
+  - [ ] Qualitative check: "Does this feel like the same agent?"
+- [ ] **Document differences**: Style, variable names, comments OK; behavior must match
+
+**Success criteria** (from improvement plan Decision 4):
+- [ ] Tests pass on regenerated code
+- [ ] Behavior equivalence: same inputs → same outputs
+- [ ] No major tensions from Contradict
+- [ ] Vibes check: "Feels right" (qualitative)
+- [ ] Style differences acceptable (formatting, names, comments)
+
+**NOT required**:
+- Character-exact match (too brittle)
+- Identical implementation approach (allow creativity)
+
+---
+
+### Phase 8: Documentation and Finalization
+
+**Goal**: Complete documentation, examples, and final polish
+
+**Tasks**:
+- [ ] **Write examples**: `examples/` directory with usage examples
+- [ ] **Update HYDRATE.md**: Document completion, any learnings
+- [ ] **Write IMPLEMENTATION_PLAN retrospective**: What worked, what didn't
+- [ ] **Autopoiesis report**: Final narrative of agent usage throughout
+- [ ] **Commit with protocol-compliant message**:
+  ```bash
+  git commit -m "feat: Complete bootstrap agents implementation
+
+  All 7 bootstrap agents implemented and validated.
+  Autopoiesis: [X]% (K-gent [N]x, CreativityCoach [N]x, Judge [N]x, etc.)
+  Judge: All agents ACCEPT
+  Contradict: Zero tensions
+  Tests: 100% pass rate
+  Regeneration: Behavior equivalence verified"
+  ```
+
+---
+
+## Progress Tracking Tips
+
+### Daily Checklist
+
+At start of each session:
+1. [ ] Review PROGRESS.md, identify next phase
+2. [ ] Initialize ProtocolObserver (if using observability)
+3. [ ] Invoke agents for design decisions (Step 0)
+
+During session:
+4. [ ] Check off tasks as completed
+5. [ ] Log agent usage (for autopoiesis narrative)
+6. [ ] Document tensions/decisions
+
+At end of session:
+7. [ ] Update PROGRESS.md with current state
+8. [ ] Generate autopoiesis narrative
+9. [ ] Commit work with descriptive message
+
+### Measuring Progress
+
+**Quantitative**:
+- Files completed / Total files
+- Tests passing / Total tests
+- Judge ACCEPT rate
+
+**Qualitative**:
+- Does code reflect principles?
+- Is autopoiesis >50% (or "felt agent-driven")?
+- Would I be proud to show this code?
+
+### When Stuck
+
+1. Consult Troubleshooting section (below)
+2. Use K-gent (REFLECT mode) to explore problem
+3. Use HypothesisEngine to generate approaches
+4. Review AUTONOMOUS_BOOTSTRAP_PROTOCOL.md for guidance
+5. Check HYDRATE.md for recent relevant changes
+
+---
+
+## Troubleshooting Common Errors
+
+This section addresses common errors encountered during kgents implementation and provides actionable fixes.
+
+### Error 1: Type Errors - "Type is not subscriptable"
+
+**Symptom**:
+```
+TypeError: 'type' object is not subscriptable
+Agent[A, B]
+```
+
+**Cause**: Using generic types without importing from `typing` or using Python <3.9 syntax.
+
+**Fix**:
+```python
+# WRONG (Python <3.9)
+class MyAgent(Agent[str, int]):  # Error if Agent not properly imported
+    ...
+
+# RIGHT
+from typing import TypeVar
+from bootstrap.types import Agent
+
+A = TypeVar("A")
+B = TypeVar("B")
+
+class MyAgent(Agent[A, B]):  # Generic
+    ...
+
+# Or for concrete types
+class StrToIntAgent(Agent[str, int]):  # Requires proper Agent base
+    ...
+```
+
+**Prevention**: Always import `TypeVar` and define type variables at module level.
+
+### Error 2: Module Import Issues - "No module named bootstrap"
+
+**Symptom**:
+```
+ModuleNotFoundError: No module named 'bootstrap'
+```
+
+**Cause**: Package structure not set up correctly, or running from wrong directory.
+
+**Fix**:
+```bash
+# Check pyproject.toml exists and has correct structure
+cat pyproject.toml  # Should have [project] with dependencies
+
+# Install in development mode
+pip install -e .
+
+# Or ensure you're running from correct directory
+cd impl/claude/
+python -m pytest  # Use module syntax
+```
+
+**Prevention**: Use proper Python packaging from the start. No `sys.path` hacks.
+
+### Error 3: Contradict False Negatives - "Should detect tension but doesn't"
+
+**Symptom**: `Contradict(a, b)` returns `None` when there's an obvious conflict.
+
+**Cause**: Contradict implementation not comprehensive, or conflict is subtle/requires domain knowledge.
+
+**Example**:
+```python
+# Spec says: "Agent must be stateless"
+# Impl has: self.cache = {}  # State!
+# But Contradict returns None—missed it
+```
+
+**Fix**:
+1. **Extend TensionDetector**: Add domain-specific detectors
+2. **Be explicit in specs**: State requirements clearly
+3. **Use Judge as backup**: Judge can catch what Contradict misses
+
+```python
+# Add custom tension detector
+class StatefulnessDetector(TensionDetector):
+    def detect(self, spec: str, impl: str) -> Optional[Tension]:
+        if "stateless" in spec.lower() and "self." in impl:
+            # Check for instance variables (crude heuristic)
+            return Tension(
+                type=TensionType.PRAGMATIC,
+                description="Spec requires stateless, impl has instance state",
+                ...
+            )
+        return None
+```
+
+**Prevention**: Write explicit specs. Use both Contradict AND Judge.
+
+### Error 4: Fix Non-Convergence - "Fix loops forever"
+
+**Symptom**: `fix()` runs indefinitely without reaching fixed point.
+
+**Cause**:
+1. `equality_check` never returns True
+2. Transform function doesn't converge
+3. No state accumulation (see Pitfall 3 in PROTOCOL)
+
+**Fix**:
+```python
+# Add max iterations and debugging
+result = await fix(
+    transform=my_transform,
+    initial=initial_state,
+    equality_check=lambda prev, curr: prev == curr,
+    max_iterations=100,  # Safety limit
+)
+
+# Debug: Log iterations
+async def debug_transform(state):
+    print(f"Iteration: {state}")
+    return await my_transform(state)
+
+result = await fix(transform=debug_transform, ...)
+```
+
+**Prevention**:
+- Always accumulate state/confidence in transform
+- Test equality_check separately
+- Add max_iterations safety limit
+- Use Fix with memory pattern (see PROTOCOL Pitfall 3)
+
+### Error 5: Low Autopoiesis Score (<20%)
+
+**Symptom**: Implementation complete but hardly any agent usage.
+
+**Cause**: Forgot to use agents during development, or used them only at beginning.
+
+**Fix**:
+1. **Retrospectively document**: "Where COULD I have used agents?"
+2. **Refactor naming**: Use K-gent to rename poorly-named things
+3. **Use Judge to review**: Let Judge suggest improvements
+4. **For next feature**: Set reminder to invoke agents continuously
+
+**Pattern for sustained autopoiesis**:
+```python
+# Checkpoint throughout development
+async def feature_implementation():
+    # Phase 1: Design (use CreativityCoach)
+    design = await runtime.execute(creativity_coach(), ...)
+
+    # Phase 2: Naming (use K-gent)
+    name = await runtime.execute(kgent(), ...)
+
+    # Phase 3: Implementation (manual, guided by design)
+    code = implement_from_design(design)
+
+    # Phase 4: Review (use Judge)
+    verdict = await judge.invoke(JudgeInput(agent=code, ...))
+
+    # Phase 5: Check consistency (use Contradict)
+    tension = await contradict.invoke((spec, code))
+
+    # Now autopoiesis is high (used agents at 4/5 phases)
+```
+
+**Prevention**: Use agents FIRST (see Step 0 in this doc), not just once at start.
+
+### Error 6: Missing Type Annotations
+
+**Symptom**: `mypy` reports errors, or runtime type checking fails.
+
+**Cause**: Skipped type annotations, or used `Any` too liberally.
+
+**Fix**:
+```python
+# WRONG: No annotations
+def process(input):  # What type?
+    return transform(input)  # What does this return?
+
+# RIGHT: Full annotations
+def process(input: InputType) -> OutputType:
+    result: OutputType = transform(input)
+    return result
+
+# For generics
+A = TypeVar("A")
+B = TypeVar("B")
+
+class MyAgent(Agent[A, B]):
+    async def invoke(self, input: A) -> B:
+        ...
+```
+
+**Prevention**: Use `mypy --strict` from the start. Fix warnings incrementally.
+
+### Error 7: Composition Type Mismatches
+
+**Symptom**:
+```
+TypeError: Cannot compose Agent[A, B] with Agent[C, D] (B != C)
+```
+
+**Cause**: Output type of first agent doesn't match input type of second.
+
+**Example**:
+```python
+# WRONG: Type mismatch
+agent1: Agent[str, int] = StrToInt()
+agent2: Agent[str, bool] = StrToBool()  # Expects str, not int
+
+pipeline = agent1 >> agent2  # Error: int -> str mismatch
+```
+
+**Fix**: Use adapters or check types manually.
+
+```python
+# Option 1: Add adapter
+int_to_str = IntToStr()
+pipeline = agent1 >> int_to_str >> agent2  # str -> int -> str -> bool
+
+# Option 2: Use correct types from start
+agent2b: Agent[int, bool] = IntToBool()
+pipeline = agent1 >> agent2b  # str -> int -> bool ✓
+```
+
+**Prevention**: Write out type signatures before implementing. Verify B_1 == A_2 for `f: Agent[A, B_1]` and `g: Agent[A_2, C]`.
+
+### Error 8: Async/Await Mistakes
+
+**Symptom**:
+```
+RuntimeWarning: coroutine was never awaited
+```
+
+**Cause**: Forgot `await` on async function call.
+
+**Fix**:
+```python
+# WRONG: Missing await
+result = agent.invoke(input)  # Returns coroutine, not result
+
+# RIGHT: Await the coroutine
+result = await agent.invoke(input)
+
+# For parallel execution
+results = await asyncio.gather(
+    agent1.invoke(input1),
+    agent2.invoke(input2),
+)
+```
+
+**Prevention**: All `Agent.invoke()` calls are async and require `await`.
+
+### Error 9: Ground Extraction Failures
+
+**Symptom**: `Ground` agent can't parse persona.md or returns incomplete data.
+
+**Cause**: persona.md format doesn't match expected structure, or parser is too rigid.
+
+**Fix**:
+```python
+# Option 1: Use GroundParser agent (recommended, see Phase 5.3)
+parser = GroundParser()
+persona_seed = await parser.invoke(persona_md_content)
+
+# Option 2: Improve parser robustness
+# Make parser handle variations in markdown format
+# Use LLM-based extraction for flexibility
+```
+
+**Prevention**: Keep persona.md format consistent. Use agent-based parsing (GroundParser) for flexibility.
+
+### Error 10: Judge Rejects Everything
+
+**Symptom**: Judge always returns REJECT, even for reasonable code.
+
+**Cause**: Overly strict principles, or Judge implementation has bugs.
+
+**Fix**:
+1. **Check Judge implementation**: Verify seven mini-judges logic
+2. **Review principles**: Are they realistic? (See `spec/principles.md`)
+3. **Use REVISE mode**: Judge should suggest improvements, not just reject
+4. **Incremental validation**: Test Judge on known-good agents first
+
+```python
+# Debug Judge by testing on Id (should ACCEPT)
+verdict = await judge.invoke(JudgeInput(
+    agent_spec=id_agent_code,
+    principles=PRINCIPLES
+))
+assert verdict.type == VerdictType.ACCEPT  # Id should always pass
+
+# If this fails, Judge is too strict or buggy
+```
+
+**Prevention**: Validate Judge against bootstrap agents first (they should all ACCEPT).
+
+### Troubleshooting Checklist
+
+When stuck:
+
+1. **Check types first** - Most errors are type mismatches (use `mypy --strict`)
+2. **Verify imports** - Ensure proper package structure (no `sys.path` hacks)
+3. **Test components in isolation** - Before composing, verify each agent works alone
+4. **Use agents to debug** - K-gent (REFLECT mode) can help identify issues
+5. **Check Ground** - Are environmental assumptions explicit?
+6. **Read error messages carefully** - Python tracebacks point to exact line
+7. **Consult HYDRATE.md** - Recent changes and known issues documented there
+
+### Getting Help
+
+If errors persist:
+1. Check `HYDRATE.md` for recent changes that might affect your code
+2. Review `AUTONOMOUS_BOOTSTRAP_PROTOCOL.md` "Common Pitfalls" section
+3. Use Contradict to compare your impl with spec
+4. Use Judge to get specific feedback on what's wrong
+5. Use K-gent (REFLECT mode) to explore the problem space
+
+---
+
 ## Quick Start
 
 ```bash

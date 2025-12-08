@@ -293,6 +293,30 @@ Avoids JSON escaping issues for code content.
 
 ## Recent Changes
 
+- **Bootstrap Docs Phase 4 Complete** (Dec 8, 2025):
+  - ✅ Implemented all 4 optional Phase 4 improvements from BOOTSTRAP_DOCUMENTS_IMPROVEMENT_PLAN.md
+  - ✅ **Phase 4.1**: "Common Pitfalls" section to AUTONOMOUS_BOOTSTRAP_PROTOCOL.md (~330 lines)
+    - 8 pitfalls: skipping agents, premature synthesis, stateless Fix, implicit Ground, binary Judge, over-engineering, ignoring Contradict, breaking composition laws
+    - Each pitfall: symptom, WRONG/RIGHT examples, fix pattern
+    - Pre-commit checklist + meta-principle
+  - ✅ **Phase 4.2**: "Troubleshooting" section to docs/BOOTSTRAP_PROMPT.md (~315 lines)
+    - 10 common errors: type errors, imports, Contradict false negatives, Fix non-convergence, low autopoiesis, missing annotations, composition mismatches, async/await, Ground extraction, Judge rejection
+    - Each error: symptom, cause, fix, prevention
+    - Troubleshooting checklist + "Getting Help" guide
+  - ✅ **Phase 4.3**: "Observability Hooks" section to AUTONOMOUS_BOOTSTRAP_PROTOCOL.md (~350 lines)
+    - Complete ProtocolObserver implementation (event tracking, metrics, autopoiesis narrative)
+    - 6 core metrics: autopoiesis %, agent usage frequency, tension resolution rate, Judge acceptance, Fix convergence, pattern adherence
+    - Health dashboard concept, integration patterns (git commits, code comments, session logs)
+    - Meta-observability: using agents (K-gent, HypothesisEngine) to observe protocol execution
+  - ✅ **Phase 4.4**: "Implementation Progress Template" to docs/BOOTSTRAP_PROMPT.md (~355 lines)
+    - Complete 8-phase checklist (Phase 0: Foundation → Phase 8: Documentation)
+    - Each agent: tasks, validation criteria, autopoiesis checkpoints, dependencies
+    - Daily tracking tips, progress measurement (quantitative + qualitative)
+    - "When stuck" guidance referencing Troubleshooting + PROTOCOL
+  - **Total additions:** ~1350 lines of actionable, practice-validated guidance
+  - **Documents now**: BOOTSTRAP_PROMPT.md ~1480 lines, AUTONOMOUS_BOOTSTRAP_PROTOCOL.md ~1120 lines
+  - **Phase 4 complete**: Common pitfalls, troubleshooting, observability, progress tracking all documented
+  - **Status:** Optional phases 5-6 remain (cross-references, dependency diagram, GroundParser agent, regeneration validation)
 - **Bootstrap Docs Implementation + Infrastructure Fixes** (Dec 8, 2025):
   - ✅ **Phase 2.3**: Error handling pattern with Result types (~70 lines to BOOTSTRAP_PROMPT.md)
   - ✅ **Phase 2.2**: Composition verification checklist with 6 test categories (~170 lines to BOOTSTRAP_PROMPT.md)
