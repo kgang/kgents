@@ -23,8 +23,6 @@ from .base import (
     LLMAgent,
     AgentContext,
     AgentResult,
-    robust_json_parse,
-    json_response_parser,
     # Result types (Issue #6: Error handling transparency)
     Success,
     Error,
@@ -34,6 +32,11 @@ from .base import (
     result_from_exception,
     TransientError,
     PermanentError,
+)
+from .json_utils import (
+    robust_json_parse,
+    json_response_parser,
+    parse_structured_sections,
 )
 from .claude import ClaudeRuntime
 from .cli import ClaudeCLIRuntime, ParseError
@@ -47,8 +50,10 @@ __all__ = [
     "ClaudeCLIRuntime",
     "OpenRouterRuntime",
     "ParseError",
+    # JSON utilities
     "robust_json_parse",
     "json_response_parser",
+    "parse_structured_sections",
     # Result types
     "Success",
     "Error",

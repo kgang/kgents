@@ -185,7 +185,7 @@ Evaluate the output against the intent. Return JSON with scores."""
         Returns:
             JudgmentResult with scores
         """
-        from runtime.base import robust_json_parse
+        from runtime.json_utils import robust_json_parse
 
         # Parse JSON response
         try:

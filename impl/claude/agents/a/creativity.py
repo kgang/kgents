@@ -19,7 +19,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional
 
-from runtime.base import LLMAgent, AgentContext, parse_structured_sections
+from runtime.base import LLMAgent, AgentContext
+from runtime.json_utils import parse_structured_sections
 from .skeleton import AgentMeta, AgentIdentity, AgentInterface, AgentBehavior
 
 
