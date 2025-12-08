@@ -18,7 +18,7 @@
 | H-gents (Hegel/Jung/Lacan) | ✅ `impl/claude-openrouter/agents/h/` |
 | K-gent (Persona) | ✅ `impl/claude-openrouter/agents/k/` |
 | A-gents (Skeleton + Creativity) | ✅ `impl/claude-openrouter/agents/a/` |
-| B-gents | ⏳ Spec exists, impl pending |
+| B-gents (Hypothesis + Robin) | ✅ `impl/claude-openrouter/agents/b/` |
 | runtime/ | ✅ `impl/claude-openrouter/runtime/` (ClaudeRuntime, OpenRouterRuntime) |
 
 ## 7 Bootstrap Agents (Implemented)
@@ -47,7 +47,7 @@ kgents/
 │   ├── agents/h/            # ✅ Dialectics (Hegel, Jung, Lacan)
 │   ├── agents/k/            # ✅ K-gent persona (Dialogue, Query, Evolution)
 │   ├── agents/a/            # ✅ AbstractSkeleton, AgentMeta, CreativityCoach
-│   ├── agents/b/            # ⏳ Pending (HypothesisEngine, Robin)
+│   ├── agents/b/            # ✅ HypothesisEngine, Robin (scientific companion)
 │   └── runtime/             # ✅ LLM execution (ClaudeCLIRuntime, ClaudeRuntime, OpenRouterRuntime)
 └── impl/zen-agents/         # ✅ Textual TUI (bootstrap demonstration)
     └── zen_agents/          # Package directory
@@ -117,6 +117,35 @@ Abstract architectures + Art/Creativity:
 Modes: `EXPAND`, `CONNECT`, `CONSTRAIN`, `QUESTION`
 Personas: `PLAYFUL`, `PHILOSOPHICAL`, `PRACTICAL`, `PROVOCATIVE`, `WARM`
 
+## B-gents (Implemented)
+
+Scientific discovery agents with Popperian epistemology:
+
+| Agent | Purpose | Key Type |
+|-------|---------|----------|
+| `HypothesisEngine` | Generates falsifiable hypotheses from observations | `HypothesisInput → HypothesisOutput` |
+| `RobinAgent` | Personalized scientific companion (composes K-gent + Hypothesis + Hegel) | `RobinInput → RobinOutput` |
+
+**HypothesisEngine:**
+- Variants: `hypothesis_engine()`, `rigorous_engine()`, `exploratory_engine()`
+- Key types:
+  - `Hypothesis`: statement, confidence (0-1), novelty, falsifiable_by (REQUIRED), assumptions
+  - `NoveltyLevel`: `INCREMENTAL`, `EXPLORATORY`, `PARADIGM_SHIFTING`
+  - `HypothesisInput`: observations, domain, question (optional), constraints
+  - `HypothesisOutput`: hypotheses, reasoning_chain, suggested_tests
+
+**Robin:**
+- Variants: `robin()`, `robin_with_persona(seed)`, `quick_robin(runtime)`
+- Composes: K-gent personalization → hypothesis generation → dialectic refinement
+- Key types:
+  - `RobinInput`: query, observations, domain, dialogue_mode, apply_dialectic
+  - `RobinOutput`: personalization, kgent_reflection, hypotheses, dialectic, synthesis_narrative, next_questions
+
+**Design decisions (Dec 2025):**
+- **Falsifiability is strictly required** — `Hypothesis` validation fails without `falsifiable_by`. Lean into Popperian strictness.
+- **Robin is an orchestrator, not a simple composition** — Types don't align for `>>`, but conceptually: personalization → hypotheses → dialectic
+- **Future:** Confidence should evolve to support qualitative/quantitative ratings with uncertainty metadata
+
 ## Runtime (Implemented)
 
 LLM execution layer for agents:
@@ -141,12 +170,15 @@ LLM execution layer for agents:
 |-------|--------|-------|
 | K-gent | ✅ DONE | Personalizes all other agents |
 | A-gents | ✅ DONE | AbstractSkeleton (alias), AgentMeta, CreativityCoach |
-| B-gents | ← CURRENT | HypothesisEngine, Robin (scientific companion) |
+| B-gents B.1 | ✅ DONE | HypothesisEngine |
+| B-gents B.2 | ✅ DONE | Robin (scientific companion) |
 
-**To begin:** `claude "Read AUTONOMOUS_BOOTSTRAP_PROTOCOL.md and implement Phase B.1"`
+**Autonomous Bootstrap Protocol complete.** All phases (A.1, A.2, B.1, B.2) implemented.
 
 ## Recent Changes
 
+- **B-gents B.2 implemented** (Dec 2025): Robin - personalized scientific companion, composes K-gent + HypothesisEngine + HegelAgent
+- **B-gents B.1 implemented** (Dec 2025): `impl/claude-openrouter/agents/b/` - HypothesisEngine (Popperian hypothesis generation)
 - **ClaudeCLIRuntime** (Dec 2025): OAuth-authenticated runtime via `claude -p`, uses Fix pattern for parse retries
 - **A-gents implemented** (Dec 2025): `impl/claude-openrouter/agents/a/` - AbstractSkeleton (alias), AgentMeta, CreativityCoach (first LLMAgent!)
 - **K-gent implemented** (Dec 2025): `impl/claude-openrouter/agents/k/` - persona, query, evolution agents
@@ -171,6 +203,15 @@ from agents.a import (
     AbstractAgent, AgentMeta,
     CreativityCoach, CreativityInput, CreativityMode,
     creativity_coach, playful_coach
+)
+
+# B-gents: Scientific discovery
+from agents.b import (
+    HypothesisEngine, HypothesisInput, HypothesisOutput,
+    Hypothesis, NoveltyLevel,
+    hypothesis_engine, rigorous_engine, exploratory_engine,
+    RobinAgent, RobinInput, RobinOutput,
+    robin, robin_with_persona, quick_robin
 )
 
 # H-gents: Dialectic introspection
@@ -218,4 +259,26 @@ result = await runtime.execute(coach, CreativityInput(
     mode=CreativityMode.EXPAND
 ))
 print(result.output.responses)  # ["Buoyancy-Based Social Hierarchy...", ...]
+
+# Hypothesis Engine (scientific reasoning)
+engine = hypothesis_engine()
+result = await runtime.execute(engine, HypothesisInput(
+    observations=["Protein X aggregates at pH < 5", "Aggregation correlates with disease"],
+    domain="biochemistry",
+    question="Why does Protein X aggregate at low pH?"
+))
+for h in result.output.hypotheses:
+    print(h.statement)
+    print(f"  Falsifiable by: {h.falsifiable_by}")
+
+# Robin (scientific companion) - composes K-gent + Hypothesis + Hegel
+from agents.k import DialogueMode
+robin_agent = robin(runtime=runtime)
+result = await robin_agent.invoke(RobinInput(
+    query="Why do neurons form sparse codes?",
+    domain="neuroscience",
+    dialogue_mode=DialogueMode.EXPLORE,
+))
+print(result.synthesis_narrative)
+print(result.next_questions)  # What to explore next
 ```

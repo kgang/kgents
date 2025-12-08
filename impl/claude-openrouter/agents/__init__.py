@@ -10,8 +10,9 @@ Each letter represents a distinct agent genus:
 """
 
 from . import a
+from . import b
 from . import c
 from . import h
 from . import k
 
-__all__ = ["a", "c", "h", "k"]
+__all__ = ["a", "b", "c", "h", "k"]
