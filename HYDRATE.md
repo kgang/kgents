@@ -6,57 +6,60 @@
 
 ## TL;DR
 
-**Status**: Evolution pipeline working, all background processes cleaned up ✅
-**Latest**: Dec 8 - Evolution pipeline generates hypotheses successfully with proper venv
-**Branch**: `main` (clean working tree)
+**Status**: Bootstrap Phase 6 complete, Evolution pipeline enhanced ✅
+**Latest**: Dec 8 PM - Rich logging, JSON export, decision framework ready
+**Branch**: `main` (pushed, commit 72a6cd0)
+**Ready**: Run fresh evolution with enhanced logging to review improvements
 
 ---
 
-## Dec 8, 2025 Session: Evolution Pipeline Fix
+## Dec 8, 2025 Session Summary
 
-### What Was Fixed
+### Completed Work
 
-**Problem**: Evolution pipeline failing with `Error: [Errno 2] No such file or directory: 'mypy'`
+**Bootstrap Phase 6: Regeneration Validation** ✅
+- Created validation guide with manual test cases for all 7 agents
+- Built automated test harness (behavior snapshot approach)
+- Captured reference behavior: Id, Ground, Judge verified
+- Success criteria: behavior equivalence (not implementation matching)
 
-**Root cause**: Wrong Python venv being used
-- Shell had `VIRTUAL_ENV=/Users/kentgang/git/zenportal/.venv` from other projects
-- When running `python evolve.py`, system picked up wrong venv
-- Wrong venv didn't have mypy → all type checks failed (72/72 experiments)
+**Evolution Pipeline Enhancements** ✅
+- Rich logging: Full hypotheses + improvement metadata (type/confidence/rationale)
+- JSON export: Structured results for programmatic review (`.json` files)
+- Decision framework: 300+ line guide for tasteful improvement selection
+- Philosophy documented: Evolution suggests, humans curate
 
-**Solution**: Always activate kgents venv explicitly
-```bash
-cd /Users/kentgang/git/kgents
-source .venv/bin/activate  # ⚠️ CRITICAL STEP
-cd impl/claude
-python evolve.py <target> [flags]
-```
-
-**Verification**: ✅ Tested successfully
-- mypy 1.19.0 installed in kgents venv
-- Evolution pipeline loads 27 modules (including new `ground_parser`)
-- Generates hypotheses in parallel
-- Type checks run correctly with proper venv
+**Environment Fix** ✅
+- Venv issue resolved: Always `source .venv/bin/activate` before running evolution
+- Verified: mypy 1.19.0 available, 27 modules load correctly
 
 ---
 
 ## Next Session: Start Here
 
-### Run Evolution Pipeline
+### Option 1: Review Evolution Improvements (Recommended)
 
 ```bash
 cd /Users/kentgang/git/kgents
 source .venv/bin/activate
 cd impl/claude
 
-# Quick test
-python evolve.py bootstrap/id --dry-run --quick
-
-# Full evolution
+# Run fresh evolution with enhanced logging
 python evolve.py all --dry-run --quick
 
-# Auto-apply (use with caution)
-python evolve.py bootstrap --auto-apply
+# Review results
+ls -lt .evolve_logs/*.json | head -1
+cat .evolve_logs/evolve_all_YYYYMMDD_HHMMSS.json | jq '.passed_experiments'
+
+# Use EVOLUTION_DECISION_FRAMEWORK.md to evaluate each improvement
+# Make tasteful, principled incorporation decisions
 ```
+
+### Option 2: Other Priorities
+
+- **Tests for agents/b/**: pytest suite for hypothesis.py, robin.py
+- **D/E-gents specs**: Data/Database, Evaluation/Ethics specifications
+- **PyPI package**: Publish kgents-runtime
 
 ---
 
@@ -114,13 +117,12 @@ kgents/
 
 ---
 
-## Next Priorities
+## Key Deliverables This Session
 
-1. **Evolution improvements** - Many experimental improvements generated, need manual review
-2. **Tests for agents/b/** - pytest suite for hypothesis.py, robin.py
-3. **D/E-gents specs** - Data/Database, Evaluation/Ethics agent specifications
-4. **PyPI package** - Publish kgents-runtime to PyPI
-5. **Optional: Actual regeneration test** - Delete and regenerate one bootstrap agent from docs
+1. ✅ **Bootstrap Phase 6**: Validation guide, test harness, reference snapshots
+2. ✅ **Evolution Decision Support**: Rich logging, JSON export, 300+ line framework
+3. ✅ **Documentation**: HYDRATE.md updated, evolution refinement principle added
+4. ✅ **Commit**: 72a6cd0 pushed with 2091 line changes across 8 files
 
 ---
 
