@@ -4,66 +4,51 @@
 
 ## TL;DR
 
-**Status**: Systematic Evolution Analysis COMPLETE ✅
-**Branch**: `main` (clean)
-**Achievement**: Generated `impl/claude/IMPROVEMENT_PLAN.md` with 17 hypotheses
-**Next**: Phase A quick wins (H5: json_utils, H4: lazy imports, H2: SuggestionAgent)
+**Status**: Ready for IMPROVEMENT_PLAN Phase A ✅
+**Branch**: `main` (clean, just pushed)
+**Reference**: `impl/claude/IMPROVEMENT_PLAN.md` (17 hypotheses)
+**Next**: Phase A quick wins - H5: json_utils, H4: lazy imports, H2: SuggestionAgent
 
 ---
 
 ## Recent Commits
 
+- `745a04a` docs: Add systematic evolution analysis + improvement plan
 - `3c736dd` docs: Update HYDRATE.md for J-gents Phase 5 session
 - `4e3fce7` docs(j-gents): Complete Phase 5 Integration & Polish
-- `1fa2e8b` docs: Update HYDRATE.md for J-gents Phase 4 completion
 
 ---
 
-## This Session: Systematic Evolution Analysis (2025-12-08)
+## Next Session: Phase A Quick Wins
 
-### Canvas Results
+**See `impl/claude/IMPROVEMENT_PLAN.md` for full details.**
 
-Ran `evolve.py suggest` on all impl/ targets:
-- **meta**: EvolutionPipeline (19 methods), show_suggestions (55 lines)
-- **runtime**: robust_json_parse (96 lines), with_retry (53 lines)
-- **agents**: 50 modules analyzed, shared/ast_utils flagged
-- **bootstrap**: Clean ✅
+### H5: Extract `runtime/json_utils.py`
+Extract 250 lines from `runtime/base.py`:
+- `robust_json_parse`, `_repair_json`, `_extract_field_values`, `parse_structured_sections`
+- Pure refactor, no behavior change
 
-### Static Analysis Findings
+### H4: Lazy imports in `evolve.py`
+- 57 imports → `TYPE_CHECKING` + lazy factories
+- Reduces startup overhead
 
-| Metric | Count |
-|--------|-------|
-| Total lines | ~27,000 |
-| Files >500 lines | 18 |
-| Functions >50 lines | 45+ |
-| Classes >10 methods | 8 |
+### H2: Extract `SuggestionAgent`
+- Move `show_suggestions` (56 lines) to `agents/e/suggestion.py`
+- Composable agent pattern
+
+**Validation:** `python -m pytest -v` + `mypy --strict` on changed files
+
+---
+
+## Previous: Systematic Evolution Analysis (2025-12-08)
+
+**Analysis found:** 27k lines, 18 files >500 lines, 45+ functions >50 lines
 
 **Worst offenders:**
-1. `evolve.py` (1,286 lines, 8 long functions, 1 large class)
+1. `evolve.py` (1,286 lines)
 2. `agents/e/prompts.py` (762 lines)
 3. `agents/e/parser.py` (687 lines)
-4. `agents/j/sandbox.py` (460 lines, execute_in_sandbox: 150 lines!)
-
-### Generated: IMPROVEMENT_PLAN.md
-
-**17 Hypotheses across 4 priorities:**
-
-| Priority | Focus | Key Items |
-|----------|-------|-----------|
-| 1 | evolve.py | H1-H4: Decompose EvolutionPipeline, lazy imports |
-| 2 | runtime/E-gents | H5-H9: json_utils, prompts split, parser refactor |
-| 3 | J-gents/B-gents | H10-H14: sandbox split, chaosmonger decompose |
-| 4 | Shared | H15-H17: ast_utils polish, types cleanup |
-
-**Implementation Phases:**
-- Phase A: Quick wins (H5, H4, H2) - 1-2 sessions
-- Phase B: Core refactoring (H1, H7, H10) - 2-3 sessions
-- Phase C: Deep refactoring (H8, H11, H13) - 3-4 sessions
-- Phase D: Polish - remaining items
-
----
-
-## Previous: J-gents Phase 5 + Synergy 4A
+4. `agents/j/sandbox.py` (460 lines)
 
 ---
 
