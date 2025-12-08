@@ -43,6 +43,8 @@ class FailingConfig:
     error_type: FailureType = FailureType.TYPE
     fail_count: int = -1  # -1 = always fail, N = fail N times then succeed
     error_message: str = ""  # Custom error message
+    recovery_token: Any = None  # What to return after fail_count reached
+    seed: int | None = None  # For deterministic failures (future use)
 
     def get_error_message(self, attempt: int) -> str:
         """Generate error message based on failure type."""
@@ -68,6 +70,9 @@ class FailingAgent(Agent[A, B], Generic[A, B]):
 
     Morphism: A → Error (configurable failure type)
 
+    Category Theoretic Definition: The bottom morphism ⊥: A → ∅ that
+    never successfully returns (or recovers after N failures).
+
     Use cases:
     - Testing retry logic (fail N times, then succeed)
     - Testing fallback strategies (fail consistently)
@@ -77,7 +82,7 @@ class FailingAgent(Agent[A, B], Generic[A, B]):
     Example:
         # Fail 2 times with type errors, then succeed
         agent = FailingAgent[Input, Output](
-            FailingConfig(error_type=FailureType.TYPE, fail_count=2)
+            FailingConfig(error_type=FailureType.TYPE, fail_count=2, recovery_token="Success")
         )
 
         # Try 3 times
@@ -94,6 +99,7 @@ class FailingAgent(Agent[A, B], Generic[A, B]):
         """Initialize failing agent with configuration."""
         self.config = config
         self._attempt_count = 0
+        self.__is_test__ = True  # T-gent marker
 
     @property
     def name(self) -> str:
@@ -109,7 +115,7 @@ class FailingAgent(Agent[A, B], Generic[A, B]):
 
         Returns:
             Never returns normally - always raises an exception
-            (unless fail_count is reached)
+            (unless fail_count is reached, then returns recovery_token)
 
         Raises:
             Exception: With error message based on failure type
@@ -118,10 +124,11 @@ class FailingAgent(Agent[A, B], Generic[A, B]):
 
         # Check if we should succeed this time
         if self.config.fail_count >= 0 and self._attempt_count > self.config.fail_count:
-            # Success! Return a mock successful result
-            # This is a bit of a hack - in real usage, you'd want to provide
-            # a success_output parameter to the config
-            return {"status": "success", "message": "Recovered after failures"}  # type: ignore
+            # Recovery phase
+            if self.config.recovery_token is not None:
+                return self.config.recovery_token  # type: ignore
+            # Default recovery: return input as-is (identity)
+            return input  # type: ignore
 
         # Generate and raise appropriate error
         error_msg = self.config.get_error_message(self._attempt_count)

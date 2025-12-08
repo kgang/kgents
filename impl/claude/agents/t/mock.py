@@ -31,6 +31,9 @@ class MockAgent(Agent[A, B], Generic[A, B]):
 
     Morphism: A → B (where B is pre-configured)
 
+    Category Theoretic Definition: The constant morphism c_b: A → B where
+    ∀ a ∈ A: c_b(a) = b for fixed b ∈ B.
+
     Example:
         # Mock hypothesis generator
         mock_hyp = MockAgent[HypothesisInput, HypothesisOutput](
@@ -45,6 +48,7 @@ class MockAgent(Agent[A, B], Generic[A, B]):
         """Initialize mock agent with configuration."""
         self.config = config
         self._call_count = 0
+        self.__is_test__ = True  # T-gent marker
 
     @property
     def name(self) -> str:

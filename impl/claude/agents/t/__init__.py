@@ -1,30 +1,43 @@
 """
 T-gents: Test Agents for kgents
 
-Lightweight testing utilities and mock agents for development and testing.
+Category Theory-based testing agents for verification, perturbation, and observation.
 
 Philosophy:
-- Test-gents are agents designed explicitly for testing other agents
-- They follow the same morphism principles (A → B types)
-- They can simulate failures, delays, edge cases
+- Testing is algebraic verification, not just examples
+- T-gents prove categorical properties: associativity, identity, resilience
+- All T-gents marked with __is_test__ = True
 - Composable with other agents via >> operator
 
-Core T-gents:
-- FailingAgent: Always fails with configurable error types
-- MockAgent: Returns configurable mock outputs
-- DelayAgent: Adds artificial delays for testing async behavior
-- CounterAgent: Tracks invocation counts for verification
+Phase 1 T-gents (Implemented):
+
+Type I - Nullifiers (Constants & Fixtures):
+- MockAgent: Constant morphism c_b: A → b
+- FixtureAgent: Deterministic lookup f: A → B
+
+Type II - Saboteurs (Chaos & Perturbation):
+- FailingAgent: Bottom morphism ⊥: A → Error
+
+Type III - Observers (Identity with Side Effects):
+- SpyAgent: Writer Monad S: A → (A, [A])
+- PredicateAgent: Gate P: A → A ∪ {⊥}
 
 Usage:
-    from agents.t import FailingAgent, MockAgent
+    from agents.t import MockAgent, FailingAgent, SpyAgent
+
+    # Mock expensive operations
+    mock = MockAgent(MockConfig(output="result"))
 
     # Test retry logic
-    failing = FailingAgent(error_type="type", fail_count=2)
-    result = await failing.invoke(test_input)
+    failing = FailingAgent(FailingConfig(
+        error_type=FailureType.NETWORK,
+        fail_count=2,
+        recovery_token="Success"
+    ))
 
-    # Mock responses
-    mock = MockAgent(output={"status": "ok"})
-    result = await mock.invoke(anything)
+    # Observe pipeline data
+    spy = SpyAgent(label="Hypotheses")
+    pipeline = generate >> spy >> validate
 """
 
 from .failing import (
@@ -32,6 +45,8 @@ from .failing import (
     FailingConfig,
     FailureType,
     failing_agent,
+    syntax_failing,
+    import_failing,
 )
 
 from .mock import (
@@ -40,12 +55,49 @@ from .mock import (
     mock_agent,
 )
 
+from .fixture import (
+    FixtureAgent,
+    FixtureConfig,
+    fixture_agent,
+)
+
+from .spy import (
+    SpyAgent,
+    spy_agent,
+)
+
+from .predicate import (
+    PredicateAgent,
+    predicate_agent,
+    not_none,
+    not_empty,
+    is_positive,
+    is_non_negative,
+)
+
 __all__ = [
+    # Type I - Nullifiers
+    "MockAgent",
+    "MockConfig",
+    "mock_agent",
+    "FixtureAgent",
+    "FixtureConfig",
+    "fixture_agent",
+    # Type II - Saboteurs
     "FailingAgent",
     "FailingConfig",
     "FailureType",
     "failing_agent",
-    "MockAgent",
-    "MockConfig",
-    "mock_agent",
+    "syntax_failing",
+    "import_failing",
+    # Type III - Observers
+    "SpyAgent",
+    "spy_agent",
+    "PredicateAgent",
+    "predicate_agent",
+    # Predicate helpers
+    "not_none",
+    "not_empty",
+    "is_positive",
+    "is_non_negative",
 ]
