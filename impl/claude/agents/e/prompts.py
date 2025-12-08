@@ -43,6 +43,10 @@ class PromptContext:
     similar_patterns: list[str]  # from codebase grep
     principles: list[str]  # kgents principles to follow
     complexity_hints: list[str] = field(default_factory=list)
+    # API stubs to prevent hallucinations
+    dataclass_fields: dict[str, list[tuple[str, str]]] = field(default_factory=dict)  # class → [(field, type)]
+    enum_values: dict[str, list[str]] = field(default_factory=dict)  # enum → [values]
+    imported_apis: dict[str, str] = field(default_factory=dict)  # API → signature
 
     @property
     def module_name(self) -> str:
@@ -102,6 +106,11 @@ def build_prompt_context(
     if ast_structure:
         complexity_hints = list(ast_structure.complexity_hints)
 
+    # Extract API stubs to prevent hallucinations
+    dataclass_fields = extract_dataclass_fields(current_code)
+    enum_values = extract_enum_values(current_code)
+    imported_apis = extract_api_signatures(imports, module.path.parent)
+
     return PromptContext(
         module_path=module.path,
         current_code=current_code,
@@ -112,6 +121,9 @@ def build_prompt_context(
         similar_patterns=similar_patterns,
         principles=principles,
         complexity_hints=complexity_hints,
+        dataclass_fields=dataclass_fields,
+        enum_values=enum_values,
+        imported_apis=imported_apis,
     )
 
 
@@ -178,6 +190,204 @@ def extract_imports(code: str) -> list[str]:
                 imports.append(import_line)
 
     return imports
+
+
+def extract_dataclass_fields(code: str) -> dict[str, list[tuple[str, str]]]:
+    """
+    Extract dataclass field definitions from code.
+
+    Returns mapping of class name to list of (field_name, field_type) tuples.
+    Example: {"CodeModule": [("name", "str"), ("path", "Path")]}
+    """
+    fields_map: dict[str, list[tuple[str, str]]] = {}
+
+    try:
+        tree = ast.parse(code)
+    except SyntaxError:
+        return fields_map
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ClassDef):
+            # Check if it's a dataclass
+            is_dataclass = any(
+                (isinstance(dec, ast.Name) and dec.id == "dataclass") or
+                (isinstance(dec, ast.Call) and isinstance(dec.func, ast.Name) and dec.func.id == "dataclass")
+                for dec in node.decorator_list
+            )
+
+            if is_dataclass:
+                fields: list[tuple[str, str]] = []
+                for item in node.body:
+                    if isinstance(item, ast.AnnAssign) and isinstance(item.target, ast.Name):
+                        field_name = item.target.id
+                        field_type = ast.unparse(item.annotation) if item.annotation else "Any"
+                        fields.append((field_name, field_type))
+
+                if fields:
+                    fields_map[node.name] = fields
+
+    return fields_map
+
+
+def extract_enum_values(code: str) -> dict[str, list[str]]:
+    """
+    Extract enum member names from code.
+
+    Returns mapping of enum class name to list of member names.
+    Example: {"ExperimentStatus": ["PENDING", "RUNNING", "PASSED", "FAILED", "HELD"]}
+    """
+    enum_map: dict[str, list[str]] = {}
+
+    try:
+        tree = ast.parse(code)
+    except SyntaxError:
+        return enum_map
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ClassDef):
+            # Check if it inherits from Enum
+            is_enum = any(
+                (isinstance(base, ast.Name) and base.id == "Enum") or
+                (isinstance(base, ast.Attribute) and base.attr == "Enum")
+                for base in node.bases
+            )
+
+            if is_enum:
+                members: list[str] = []
+                for item in node.body:
+                    if isinstance(item, ast.Assign):
+                        for target in item.targets:
+                            if isinstance(target, ast.Name):
+                                members.append(target.id)
+
+                if members:
+                    enum_map[node.name] = members
+
+    return enum_map
+
+
+def extract_api_signatures(imports: list[str], base_path: Path) -> dict[str, str]:
+    """
+    Extract API signatures from imported modules.
+
+    Resolves local imports and extracts key signatures like Agent.invoke(),
+    dataclass constructors, etc.
+
+    Returns mapping of API name to signature string.
+    Example: {"Agent.invoke": "async def invoke(self, input: A) -> B"}
+    """
+    api_sigs: dict[str, str] = {}
+
+    # Try to find the project root (where impl/claude is)
+    project_root = base_path
+    while project_root.name != "claude" and project_root.parent != project_root:
+        project_root = project_root.parent
+
+    for import_line in imports:
+        # Parse local imports (multiple patterns)
+        try:
+            if "from" not in import_line or "import" not in import_line:
+                continue
+
+            parts = import_line.split("import")
+            if len(parts) != 2:
+                continue
+
+            module_part = parts[0].replace("from", "").strip()
+            module_file: Optional[Path] = None
+
+            # Resolve path for different import patterns
+            if module_part.startswith("."):
+                # Relative import - look in same directory
+                module_file = base_path / f"{module_part[1:]}.py"
+            elif module_part == "bootstrap.types":
+                # Bootstrap module
+                module_file = project_root / "bootstrap" / "types.py"
+            elif module_part.startswith("agents.e"):
+                # agents.e package (could be from agents.e.experiment, agents.e.judge, etc.)
+                submodule = module_part.replace("agents.e", "").strip(".")
+                if submodule:
+                    module_file = project_root / "agents" / "e" / f"{submodule}.py"
+                else:
+                    # from agents.e import - look in __init__.py or common modules
+                    for common_module in ["experiment", "judge", "evolution"]:
+                        candidate = project_root / "agents" / "e" / f"{common_module}.py"
+                        if candidate.exists():
+                            _extract_sigs_from_file(candidate, api_sigs)
+                    continue
+            elif module_part.startswith("runtime."):
+                # Runtime module
+                submodule = module_part.replace("runtime.", "")
+                module_file = project_root / "runtime" / f"{submodule}.py"
+            else:
+                continue
+
+            if module_file and module_file.exists():
+                _extract_sigs_from_file(module_file, api_sigs)
+
+        except Exception:
+            pass
+
+    return api_sigs
+
+
+def _extract_sigs_from_file(module_file: Path, api_sigs: dict[str, str]) -> None:
+    """Helper to extract signatures from a single file."""
+    try:
+        module_code = module_file.read_text()
+        tree = ast.parse(module_code)
+
+        for node in ast.walk(tree):
+            # Look for Agent base class and its invoke method
+            if isinstance(node, ast.ClassDef) and node.name == "Agent":
+                for item in node.body:
+                    if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)) and item.name == "invoke":
+                        sig = ast.unparse(item).split(":", 1)[0]
+                        if item.returns:
+                            sig += f" -> {ast.unparse(item.returns)}"
+                        api_sigs["Agent.invoke"] = sig.strip()
+
+            # Extract dataclass fields for commonly imported types
+            if isinstance(node, ast.ClassDef) and node.name in [
+                "CodeModule", "TestInput", "JudgeInput", "AgentContext",
+                "ExperimentInput", "CodeImprovement", "HypothesisInput"
+            ]:
+                is_dataclass = any(
+                    (isinstance(dec, ast.Name) and dec.id == "dataclass") or
+                    (isinstance(dec, ast.Call) and isinstance(dec.func, ast.Name) and dec.func.id == "dataclass")
+                    for dec in node.decorator_list
+                )
+                if is_dataclass:
+                    field_sigs = []
+                    for item in node.body:
+                        if isinstance(item, ast.AnnAssign) and isinstance(item.target, ast.Name):
+                            field_name = item.target.id
+                            field_type = ast.unparse(item.annotation) if item.annotation else "Any"
+                            field_sigs.append(f"{field_name}: {field_type}")
+
+                    if field_sigs:
+                        api_sigs[f"{node.name} fields"] = ", ".join(field_sigs[:8])  # First 8 fields
+
+            # Extract enum values for commonly imported enums
+            if isinstance(node, ast.ClassDef) and node.name in ["ExperimentStatus", "VerdictType"]:
+                is_enum = any(
+                    (isinstance(base, ast.Name) and base.id == "Enum") or
+                    (isinstance(base, ast.Attribute) and base.attr == "Enum")
+                    for base in node.bases
+                )
+                if is_enum:
+                    members: list[str] = []
+                    for item in node.body:
+                        if isinstance(item, ast.Assign):
+                            for target in item.targets:
+                                if isinstance(target, ast.Name):
+                                    members.append(target.id)
+
+                    if members:
+                        api_sigs[f"{node.name} values"] = ", ".join(members)
+
+    except (SyntaxError, Exception):
+        pass
 
 
 def check_existing_errors(path: Path) -> list[str]:
@@ -327,6 +537,55 @@ def format_principles(principles: list[str]) -> str:
     return "\n".join(f"  - {p}" for p in principles)
 
 
+def format_dataclass_fields(fields_map: dict[str, list[tuple[str, str]]]) -> str:
+    """Format dataclass field definitions for display in prompt."""
+    if not fields_map:
+        return "(No dataclasses found)"
+
+    lines = []
+    for class_name, fields in list(fields_map.items())[:5]:  # Limit to 5 classes
+        fields_str = ", ".join(f"{name}: {typ}" for name, typ in fields[:8])  # First 8 fields
+        if len(fields) > 8:
+            fields_str += f" ... (+{len(fields) - 8} more)"
+        lines.append(f"  @dataclass {class_name}({fields_str})")
+
+    if len(fields_map) > 5:
+        lines.append(f"  ... and {len(fields_map) - 5} more dataclasses")
+
+    return "\n".join(lines)
+
+
+def format_enum_values(enum_map: dict[str, list[str]]) -> str:
+    """Format enum values for display in prompt."""
+    if not enum_map:
+        return "(No enums found)"
+
+    lines = []
+    for enum_name, values in list(enum_map.items())[:5]:  # Limit to 5 enums
+        values_str = ", ".join(values)
+        lines.append(f"  {enum_name}: {values_str}")
+
+    if len(enum_map) > 5:
+        lines.append(f"  ... and {len(enum_map) - 5} more enums")
+
+    return "\n".join(lines)
+
+
+def format_imported_apis(api_map: dict[str, str]) -> str:
+    """Format imported API signatures for display in prompt."""
+    if not api_map:
+        return "(No imported APIs extracted)"
+
+    lines = []
+    for api_name, sig in list(api_map.items())[:10]:  # Limit to 10 APIs
+        lines.append(f"  {api_name}: {sig}")
+
+    if len(api_map) > 10:
+        lines.append(f"  ... and {len(api_map) - 10} more APIs")
+
+    return "\n".join(lines)
+
+
 def build_improvement_prompt(
     hypothesis: str,
     context: PromptContext,
@@ -365,6 +624,25 @@ Lines: {len(context.current_code.splitlines())}
 
 ## Type Signatures (MUST PRESERVE OR IMPROVE)
 {format_type_signatures(context.type_annotations)}
+
+## API Reference (USE THESE EXACT SIGNATURES)
+
+The following are the EXACT APIs available. Do NOT hallucinate or guess APIs.
+
+### Dataclass Constructors
+{format_dataclass_fields(context.dataclass_fields)}
+
+### Enum Values
+{format_enum_values(context.enum_values)}
+
+### Imported Module APIs
+{format_imported_apis(context.imported_apis)}
+
+CRITICAL: Only use APIs listed above. Common mistakes to AVOID:
+  - ❌ CodeModule.code (doesn't exist) → ✓ Use CodeModule.path
+  - ❌ ExperimentStatus.REJECTED (doesn't exist) → ✓ Use PENDING/RUNNING/PASSED/FAILED/HELD
+  - ❌ agent.run() (doesn't exist) → ✓ Use agent.invoke()
+  - ❌ Guessing constructor arguments → ✓ Use exact fields listed above
 
 ## Pre-Existing Issues (DO NOT INTRODUCE MORE)
 {format_errors(context.pre_existing_errors)}

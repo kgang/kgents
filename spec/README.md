@@ -6,11 +6,14 @@ This directory contains the conceptual specification for kgents—implementation
 
 1. **[principles.md](principles.md)** - Core design principles (start here)
 2. **[anatomy.md](anatomy.md)** - What constitutes an agent
-3. **Agent Genera** - Explore specific agent types:
+3. **[bootstrap.md](bootstrap.md)** - The irreducible kernel (7 agents)
+4. **Agent Genera** - Explore specific agent types:
    - [a-agents/](a-agents/) - Abstract + Art
    - [b-gents/](b-gents/) - Bio/Scientific
-   - [c-gents/](c-gents/) - Category Theory
-   - [k-gent/](k-gent/) - Kent Simulacra
+   - [c-gents/](c-gents/) - Category Theory (composition)
+   - [h-gents/](h-gents/) - Hegelian/Dialectic (introspection)
+   - [j-gents/](j-gents/) - JIT Agent Intelligence (lazy evaluation, JIT compilation)
+   - [k-gent/](k-gent/) - Kent Simulacra (personalization)
 
 ## The Spec/Impl Distinction
 
