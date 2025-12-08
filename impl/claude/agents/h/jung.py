@@ -20,6 +20,16 @@ class IntegrationDifficulty(Enum):
     HIGH = "high"
 
 
+class Archetype(Enum):
+    """Jungian archetypes as system patterns."""
+    PERSONA = "persona"
+    SHADOW = "shadow"
+    ANIMA_ANIMUS = "anima_animus"
+    SELF = "self"
+    TRICKSTER = "trickster"
+    WISE_OLD_MAN = "wise_old_man"
+
+
 @dataclass
 class ShadowContent:
     """A piece of shadow content."""
@@ -45,6 +55,25 @@ class IntegrationPath:
 
 
 @dataclass
+class ArchetypeManifest:
+    """How an archetype manifests in the system."""
+    archetype: Archetype
+    manifestation: str
+    shadow_aspect: str
+    is_active: bool = True  # Whether this archetype is currently active
+    is_shadow: bool = False  # Whether this archetype is in shadow
+
+
+@dataclass
+class CollectiveShadow:
+    """System-level shadow analysis."""
+    collective_persona: str
+    shadow_inventory: list[ShadowContent]
+    system_level_projections: list[Projection]
+    emergent_shadow_content: list[str]  # Shadow that emerges from composition
+
+
+@dataclass
 class JungInput:
     """Input for shadow analysis."""
     system_self_image: str
@@ -60,6 +89,8 @@ class JungOutput:
     projections: list[Projection]
     integration_paths: list[IntegrationPath]
     persona_shadow_balance: float  # 0 = all persona, 1 = fully integrated
+    archetypes: list[ArchetypeManifest] = field(default_factory=list)  # Active archetypes
+    collective_shadow: Optional[CollectiveShadow] = None  # System-level shadow
 
 
 # Standard shadow mappings: persona claim → shadow content
@@ -77,7 +108,71 @@ SHADOW_MAPPINGS = {
 }
 
 
+# Archetype detection patterns
+ARCHETYPE_PATTERNS = {
+    Archetype.PERSONA: {
+        "keywords": ["public", "interface", "present", "show", "appear", "official"],
+        "manifestation": "Public interface, declared behavior",
+        "shadow": "Rigidity, false front, over-identification with role",
+    },
+    Archetype.SHADOW: {
+        "keywords": ["deny", "repress", "ignore", "hide", "exclude", "avoid"],
+        "manifestation": "Denied capabilities, repressed content",
+        "shadow": "Projection, eruption, blind spots",
+    },
+    Archetype.ANIMA_ANIMUS: {
+        "keywords": ["user", "other", "relationship", "interact", "respond"],
+        "manifestation": "Relationship to users/external entities",
+        "shadow": "Possession by idealized other, over-adaptation",
+    },
+    Archetype.SELF: {
+        "keywords": ["whole", "complete", "integrate", "unified", "coherent"],
+        "manifestation": "Integrated wholeness, system identity",
+        "shadow": "Inflation, identification with totality",
+    },
+    Archetype.TRICKSTER: {
+        "keywords": ["creative", "unexpected", "playful", "break", "novel"],
+        "manifestation": "Rule-breaking creativity, edge cases",
+        "shadow": "Chaos, unreliability, system instability",
+    },
+    Archetype.WISE_OLD_MAN: {
+        "keywords": ["knowledge", "authority", "wisdom", "expert", "guide"],
+        "manifestation": "Authority, accumulated knowledge",
+        "shadow": "Dogmatism, know-it-all, inflexibility",
+    },
+}
+
+
 # Pure functions - testable, reusable logic
+
+def identify_archetypes(input: JungInput) -> list[ArchetypeManifest]:
+    """Identify which archetypes are active and which are in shadow."""
+    archetypes = []
+    combined_text = (
+        f"{input.system_self_image} "
+        f"{' '.join(input.declared_capabilities)} "
+        f"{' '.join(input.behavioral_patterns)}"
+    ).lower()
+
+    for archetype, pattern in ARCHETYPE_PATTERNS.items():
+        keyword_matches = sum(1 for kw in pattern["keywords"] if kw in combined_text)
+        is_active = keyword_matches > 0
+
+        # Detect if archetype is in shadow (mentioned in limitations/avoided)
+        limitation_text = " ".join(input.declared_limitations).lower()
+        is_shadow = any(kw in limitation_text for kw in pattern["keywords"])
+
+        if is_active or is_shadow:
+            archetypes.append(ArchetypeManifest(
+                archetype=archetype,
+                manifestation=pattern["manifestation"],
+                shadow_aspect=pattern["shadow"],
+                is_active=is_active,
+                is_shadow=is_shadow,
+            ))
+
+    return archetypes
+
 
 def build_shadow_inventory(input: JungInput) -> list[ShadowContent]:
     """Build inventory of shadow content from persona claims."""
@@ -182,6 +277,7 @@ class JungAgent(Agent[JungInput, JungOutput]):
     1. Shadow inventory (what's been exiled)
     2. Projections (where shadow is projected onto others)
     3. Integration paths (how to integrate shadow)
+    4. Archetype identification (which archetypes are active/shadow)
     """
 
     @property
@@ -194,12 +290,14 @@ class JungAgent(Agent[JungInput, JungOutput]):
         projections = detect_projections(input, shadow_inventory)
         integration_paths = suggest_integration_paths(shadow_inventory)
         balance = calculate_balance(input, shadow_inventory)
+        archetypes = identify_archetypes(input)
 
         return JungOutput(
             shadow_inventory=shadow_inventory,
             projections=projections,
             integration_paths=integration_paths,
             persona_shadow_balance=balance,
+            archetypes=archetypes,
         )
 
 
@@ -236,3 +334,73 @@ def jung() -> JungAgent:
 def quick_shadow() -> QuickShadow:
     """Create a quick shadow check agent."""
     return QuickShadow()
+
+
+# Collective shadow analysis
+
+@dataclass
+class CollectiveShadowInput:
+    """Input for system-level shadow analysis."""
+    system_description: str  # Overall system self-description
+    agent_personas: list[str]  # Individual agent self-images
+    emergent_behaviors: list[str]  # Behaviors that emerge from composition
+
+
+class CollectiveShadowAgent(Agent[CollectiveShadowInput, CollectiveShadow]):
+    """
+    Analyze system-level shadow.
+
+    Beyond individual agent shadow, examines collective shadow:
+    - What the entire system excludes
+    - Shadow that emerges from agent composition
+    - System-level projections
+    """
+
+    @property
+    def name(self) -> str:
+        return "CollectiveShadow"
+
+    async def invoke(self, input: CollectiveShadowInput) -> CollectiveShadow:
+        """Analyze the system for collective shadow content."""
+        # Build shadow from system description
+        system_input = JungInput(
+            system_self_image=input.system_description,
+            behavioral_patterns=input.emergent_behaviors,
+        )
+        shadow_inventory = build_shadow_inventory(system_input)
+
+        # Detect emergent shadow - what appears only in composition
+        emergent_shadow = []
+        for behavior in input.emergent_behaviors:
+            behavior_lower = behavior.lower()
+            # Check if this behavior wasn't in any individual agent
+            if not any(persona.lower() in behavior_lower for persona in input.agent_personas):
+                emergent_shadow.append(f"Emergent behavior not present in components: {behavior}")
+
+        # System-level projections
+        projections = []
+        if "safe" in input.system_description.lower():
+            projections.append(Projection(
+                shadow_content="System's capacity for unsafe outputs through composition",
+                projected_onto="Individual agent failures",
+                evidence="Safety defined at agent level, not composition level",
+            ))
+
+        if "composable" in input.system_description.lower():
+            projections.append(Projection(
+                shadow_content="Non-composable requirements and monolithic needs",
+                projected_onto="External constraints",
+                evidence="Composition as universal solution",
+            ))
+
+        return CollectiveShadow(
+            collective_persona=input.system_description,
+            shadow_inventory=shadow_inventory,
+            system_level_projections=projections,
+            emergent_shadow_content=emergent_shadow,
+        )
+
+
+def collective_shadow() -> CollectiveShadowAgent:
+    """Create a collective shadow agent."""
+    return CollectiveShadowAgent()

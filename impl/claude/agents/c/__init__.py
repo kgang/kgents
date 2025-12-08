@@ -4,14 +4,17 @@ C-gents: Category Theory Agents
 Composability as a first principle. Agents as morphisms.
 
 Core concepts:
-- Functors: Structure-preserving transformations (Maybe, Either)
+- Functors: Structure-preserving transformations (Maybe, Either, List, Async, Logged, Promise)
 - Parallel: Concurrent execution patterns
 - Conditional: Branching composition
 
-Laws:
+Functor Laws:
+- Identity: F(id_A) = id_F(A)
+- Composition: F(g ∘ f) = F(g) ∘ F(f)
+
+Category Laws:
 - Associativity: (f >> g) >> h = f >> (g >> h)
 - Identity: Id >> f = f = f >> Id
-- Functor: F(g . f) = F(g) . F(f)
 """
 
 # Functor types and lifted agents
@@ -28,6 +31,26 @@ from .functor import (
     Left,
     EitherAgent,
     either,
+    # Fix (retry)
+    FixAgent,
+    fix,
+    # List
+    ListAgent,
+    list_agent,
+    # Async
+    AsyncAgent,
+    async_agent,
+    # Logged
+    LoggedAgent,
+    LogEntry,
+    logged,
+    # Promise
+    PromiseAgent,
+    promise_agent,
+    resolve_promise,
+    # Law validation
+    check_identity_law,
+    check_composition_law,
 )
 
 # Parallel composition
@@ -76,6 +99,26 @@ __all__ = [
     "Left",
     "EitherAgent",
     "either",
+    # Fix (retry)
+    "FixAgent",
+    "fix",
+    # List
+    "ListAgent",
+    "list_agent",
+    # Async
+    "AsyncAgent",
+    "async_agent",
+    # Logged
+    "LoggedAgent",
+    "LogEntry",
+    "logged",
+    # Promise
+    "PromiseAgent",
+    "promise_agent",
+    "resolve_promise",
+    # Law validation
+    "check_identity_law",
+    "check_composition_law",
     # Parallel
     "ParallelAgent",
     "FanOutAgent",

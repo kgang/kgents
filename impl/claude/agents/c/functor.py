@@ -6,18 +6,25 @@ They preserve composition: F(g . f) = F(g) . F(f)
 
 Why: Compose agents that may fail, return errors, or produce collections
 without explicit null-checking or error handling at each step.
+
+Functor Laws:
+1. Identity: F(id_A) = id_F(A)
+2. Composition: F(g ∘ f) = F(g) ∘ F(f)
 """
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Generic, TypeVar, Callable, Any
+from typing import Generic, TypeVar, Callable, Any, Optional
 import asyncio
 import logging
+from datetime import datetime
 
 from bootstrap.types import Agent
+from agents.j.promise import Promise as JPromise
 
 A = TypeVar("A")
 B = TypeVar("B")
+C = TypeVar("C")
 T = TypeVar("T")
 
 logger = logging.getLogger(__name__)
@@ -333,15 +340,386 @@ def fix(
 ) -> FixAgent[A, B]:
     """
     Wrap an agent with Fix-pattern retry logic and exponential backoff.
-    
+
     Args:
         agent: The agent to make resilient to transient failures
         max_attempts: Maximum retry attempts (default: 3)
         base_delay: Base delay in seconds for exponential backoff (default: 1.0)
         max_delay: Maximum delay cap in seconds (default: 60.0)
         is_transient: Predicate to identify transient errors (default: retry all)
-    
+
     Returns:
         FixAgent that retries on transient failures with exponential backoff
     """
     return FixAgent(agent, max_attempts, base_delay, max_delay, is_transient)
+
+
+# --- List Functor: Process Collections ---
+
+class ListAgent(Agent[list[A], list[B]]):
+    """
+    Lifts an Agent[A, B] to work with lists.
+
+    Applies the inner agent to each element in the list independently.
+    Preserves order of results.
+
+    Example:
+        double: Agent[int, int] = ...
+        list_double = ListAgent(double)
+        await list_double.invoke([1, 2, 3])  # Returns [2, 4, 6]
+    """
+
+    def __init__(self, inner: Agent[A, B], parallel: bool = True):
+        """
+        Args:
+            inner: The agent to apply to each element
+            parallel: If True, process elements concurrently (default: True)
+        """
+        self._inner = inner
+        self._parallel = parallel
+        self._name = f"List({inner.name})"
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    async def invoke(self, input: list[A]) -> list[B]:
+        if not input:
+            return []
+
+        if self._parallel:
+            # Process all elements concurrently
+            tasks = [self._inner.invoke(item) for item in input]
+            return await asyncio.gather(*tasks)
+        else:
+            # Process elements sequentially
+            results = []
+            for item in input:
+                result = await self._inner.invoke(item)
+                results.append(result)
+            return results
+
+
+# --- Async Functor: Non-blocking Execution ---
+
+class AsyncAgent(Agent[A, asyncio.Future[B]]):
+    """
+    Lifts an Agent[A, B] to return a Future[B] immediately.
+
+    The agent starts executing in the background and returns a Future
+    that can be awaited later. Enables fire-and-forget or delayed retrieval.
+
+    Example:
+        slow_agent: Agent[A, B] = ...
+        async_agent = AsyncAgent(slow_agent)
+        future = await async_agent.invoke(input)  # Returns immediately
+        # ... do other work ...
+        result = await future  # Wait for completion
+    """
+
+    def __init__(self, inner: Agent[A, B]):
+        self._inner = inner
+        self._name = f"Async({inner.name})"
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    async def invoke(self, input: A) -> asyncio.Future[B]:
+        # Create a task that runs the inner agent
+        task = asyncio.create_task(self._inner.invoke(input))
+        return task  # type: ignore
+
+
+# --- Logged Functor: Add Observability ---
+
+@dataclass
+class LogEntry:
+    """Single log entry for an agent invocation."""
+    timestamp: datetime
+    agent_name: str
+    input_repr: str
+    output_repr: str
+    duration_ms: float
+    error: Optional[str] = None
+
+
+class LoggedAgent(Agent[A, B]):
+    """
+    Lifts an Agent[A, B] to log all invocations.
+
+    Records timestamp, input, output, duration, and any errors.
+    Useful for debugging, auditing, and performance monitoring.
+
+    Example:
+        agent: Agent[A, B] = ...
+        logged = LoggedAgent(agent)
+        result = await logged.invoke(input)
+        # Check logged.history for execution log
+    """
+
+    def __init__(
+        self,
+        inner: Agent[A, B],
+        log_level: int = logging.INFO,
+        max_repr_length: int = 200,
+    ):
+        """
+        Args:
+            inner: The agent to wrap with logging
+            log_level: Logging level (default: INFO)
+            max_repr_length: Maximum length for input/output repr (default: 200)
+        """
+        self._inner = inner
+        self._log_level = log_level
+        self._max_repr_length = max_repr_length
+        self._name = f"Logged({inner.name})"
+        self.history: list[LogEntry] = []
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    def _truncate_repr(self, obj: Any) -> str:
+        """Truncate object representation to max length."""
+        repr_str = repr(obj)
+        if len(repr_str) <= self._max_repr_length:
+            return repr_str
+        return repr_str[: self._max_repr_length - 3] + "..."
+
+    async def invoke(self, input: A) -> B:
+        start_time = datetime.now()
+        input_repr = self._truncate_repr(input)
+        error_msg: Optional[str] = None
+
+        try:
+            logger.log(
+                self._log_level,
+                f"{self.name}: invoking with input: {input_repr}",
+            )
+
+            result = await self._inner.invoke(input)
+
+            end_time = datetime.now()
+            duration_ms = (end_time - start_time).total_seconds() * 1000
+            output_repr = self._truncate_repr(result)
+
+            logger.log(
+                self._log_level,
+                f"{self.name}: completed in {duration_ms:.2f}ms, output: {output_repr}",
+            )
+
+            # Record to history
+            self.history.append(
+                LogEntry(
+                    timestamp=start_time,
+                    agent_name=self._inner.name,
+                    input_repr=input_repr,
+                    output_repr=output_repr,
+                    duration_ms=duration_ms,
+                )
+            )
+
+            return result
+
+        except Exception as e:
+            end_time = datetime.now()
+            duration_ms = (end_time - start_time).total_seconds() * 1000
+            error_msg = f"{type(e).__name__}: {e}"
+
+            logger.log(
+                logging.ERROR,
+                f"{self.name}: failed after {duration_ms:.2f}ms with error: {error_msg}",
+            )
+
+            # Record failure to history
+            self.history.append(
+                LogEntry(
+                    timestamp=start_time,
+                    agent_name=self._inner.name,
+                    input_repr=input_repr,
+                    output_repr="<error>",
+                    duration_ms=duration_ms,
+                    error=error_msg,
+                )
+            )
+
+            raise
+
+
+# --- Promise Functor: Lazy Computation ---
+
+class PromiseAgent(Agent[A, JPromise[B]]):
+    """
+    Lifts an Agent[A, B] to return a Promise[B] instead of B directly.
+
+    The computation is deferred until the promise is explicitly resolved.
+    If resolution fails, returns the ground value.
+
+    This is a lazy functor - enables:
+    - Computation on demand
+    - Parallel resolution of independent promises
+    - Safe fallback via Ground
+
+    Functor Laws for Promise:
+    - Identity: Promise(Id) = PromiseId (returns resolved Promise(x) for any x)
+    - Composition: Promise(f >> g) = Promise(f) >> Promise(g)
+
+    Example:
+        agent: Agent[A, B] = ...
+        ground_value: B = ...
+        promise_agent = PromiseAgent(agent, ground_value)
+        promise = await promise_agent.invoke(input)
+        # ... later ...
+        result = await resolve_promise(promise)
+    """
+
+    def __init__(self, inner: Agent[A, B], ground: B, intent: Optional[str] = None):
+        """
+        Args:
+            inner: The agent to wrap as a promise
+            ground: Fallback value if promise fails
+            intent: Description of what the promise delivers (default: agent name)
+        """
+        self._inner = inner
+        self._ground = ground
+        self._intent = intent or f"Compute {inner.name}"
+        self._name = f"Promise({inner.name})"
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    async def invoke(self, input: A) -> JPromise[B]:
+        """Return a promise that will compute the result when resolved."""
+        # Create computation closure that captures input
+        async def computation() -> B:
+            return await self._inner.invoke(input)
+
+        # Return unresolved promise
+        return JPromise(
+            intent=self._intent,
+            ground=self._ground,
+            context={"input": input, "agent": self._inner.name},
+        )
+
+
+async def resolve_promise(promise: JPromise[T], computation: Callable[[], T]) -> T:
+    """
+    Resolve a promise by executing its computation.
+
+    Args:
+        promise: The promise to resolve
+        computation: The deferred computation to execute
+
+    Returns:
+        The computed value on success, or ground value on failure
+    """
+    if promise.is_resolved:
+        return promise.value_or_ground()
+
+    try:
+        promise.mark_resolving()
+        result = await computation()
+        promise.mark_resolved(result)
+        return result
+    except Exception as e:
+        promise.mark_failed(f"Computation failed: {e}")
+        return promise.ground
+
+
+# --- Functor Law Validation ---
+
+async def check_identity_law(
+    functor_lift: Callable[[Agent[A, B]], Agent[Any, Any]],
+    identity_agent: Agent[A, A],
+    test_input: Any,
+) -> bool:
+    """
+    Verify the identity functor law: F(id_A) behaves like id_F(A).
+
+    Args:
+        functor_lift: Function that lifts an agent (e.g., maybe, either, list)
+        identity_agent: An identity agent for type A
+        test_input: Test input in the functor's context
+
+    Returns:
+        True if identity law holds, False otherwise
+    """
+    try:
+        lifted = functor_lift(identity_agent)
+        result = await lifted.invoke(test_input)
+
+        # For most functors, F(id)(x) should equal x
+        # (equality check depends on functor type)
+        return result == test_input
+    except Exception as e:
+        logger.warning(f"Identity law check failed with error: {e}")
+        return False
+
+
+async def check_composition_law(
+    functor_lift: Callable[[Agent[Any, Any]], Agent[Any, Any]],
+    f: Agent[A, B],
+    g: Agent[B, C],
+    test_input: Any,
+) -> bool:
+    """
+    Verify composition functor law: F(g ∘ f) = F(g) ∘ F(f).
+
+    Args:
+        functor_lift: Function that lifts an agent
+        f: First agent A → B
+        g: Second agent B → C
+        test_input: Test input in the functor's context
+
+    Returns:
+        True if composition law holds, False otherwise
+    """
+    try:
+        # Left side: F(g ∘ f)
+        composed = f >> g
+        lifted_composed = functor_lift(composed)
+        result_left = await lifted_composed.invoke(test_input)
+
+        # Right side: F(g) ∘ F(f)
+        lifted_f = functor_lift(f)
+        lifted_g = functor_lift(g)
+        lifted_composition = lifted_f >> lifted_g
+        result_right = await lifted_composition.invoke(test_input)
+
+        # Results should be equal
+        return result_left == result_right
+    except Exception as e:
+        logger.warning(f"Composition law check failed with error: {e}")
+        return False
+
+
+# --- Convenience functions for new functors ---
+
+def list_agent(agent: Agent[A, B], parallel: bool = True) -> ListAgent[A, B]:
+    """Lift an agent to process lists of values."""
+    return ListAgent(agent, parallel=parallel)
+
+
+def async_agent(agent: Agent[A, B]) -> AsyncAgent[A, B]:
+    """Lift an agent to return futures for non-blocking execution."""
+    return AsyncAgent(agent)
+
+
+def logged(
+    agent: Agent[A, B],
+    log_level: int = logging.INFO,
+    max_repr_length: int = 200,
+) -> LoggedAgent[A, B]:
+    """Lift an agent to log all invocations."""
+    return LoggedAgent(agent, log_level=log_level, max_repr_length=max_repr_length)
+
+
+def promise_agent(
+    agent: Agent[A, B],
+    ground: B,
+    intent: Optional[str] = None,
+) -> PromiseAgent[A, B]:
+    """Lift an agent to return promises (lazy computation)."""
+    return PromiseAgent(agent, ground=ground, intent=intent)

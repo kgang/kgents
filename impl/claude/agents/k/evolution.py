@@ -46,11 +46,11 @@ class ChangeSource(Enum):
 class EvolutionInput:
     """Input for persona evolution."""
     # What triggered this evolution
-    trigger: str  # "explicit", "observation", "contradiction", "review"
+    trigger: str  # "explicit", "observation", "contradiction", "review", "forget"
 
     # The content of the change
     aspect: str  # "preference", "pattern", "context"
-    operation: str  # "add", "modify", "remove", "confirm"
+    operation: str  # "add", "modify", "remove", "confirm", "archive"
     content: Any
     reason: Optional[str] = None
 
@@ -387,12 +387,17 @@ class ContradictionHandler:
     """
     Handler for contradictions between behavior and stated preferences.
 
-    Asks for user clarification.
+    Asks for user clarification with resolution options:
+    - Ask: Request clarification on when each preference applies
+    - Contextualize: Both valid but context-specific
+    - Supersede: More recent evidence takes precedence
     Implements EvolutionHandler protocol.
     """
 
-    def __init__(self, state: PersonaState):
+    def __init__(self, state: PersonaState, trackers: dict[str, ConfidenceTracker]):
         self._state = state
+        self._trackers = trackers
+        self._detector = ConflictDetector(trackers)
 
     async def handle(self, input: EvolutionInput) -> EvolutionOutput:
         """Handle contradictions between behavior and stated preferences."""
@@ -406,17 +411,198 @@ class ContradictionHandler:
             }
         )
 
+        # Check for automatically detected conflicts
+        conflicts = self._detector.detect_conflicts()
+
+        if conflicts:
+            # Format multiple conflicts for presentation
+            conflict_details = "\n".join(
+                f"  - {c.preference_a} vs {c.preference_b}"
+                for c in conflicts[:3]  # Show first 3
+            )
+
+            prompt = (
+                f"Your recent behavior seems to contradict stated preferences:\n"
+                f"{conflict_details}\n\n"
+                f"Resolution options:\n"
+                f"1. Clarify when each applies (context-specific)\n"
+                f"2. Update to current preference (supersede old)\n"
+                f"3. Keep both as valid alternatives\n\n"
+                f"How should I resolve this?"
+            )
+        else:
+            # Single contradiction from input
+            prompt = (
+                f"Your recent behavior seems to contradict a stated preference. "
+                f"{input.content}\n"
+                f"Has your preference shifted, or is this context-specific?"
+            )
+
         return EvolutionOutput(
             accepted=False,
             new_state=self._state,
             change_summary=f"Contradiction detected: {input.content}",
             needs_confirmation=True,
-            confirmation_prompt=(
-                f"Your recent behavior seems to contradict a stated preference. "
-                f"{input.content}\n"
-                f"Has your preference shifted, or is this context-specific?"
-            ),
+            confirmation_prompt=prompt,
         )
+
+
+class ForgetHandler:
+    """
+    Handler for intentional and natural forgetting.
+
+    Supports:
+    - Intentional forgetting (user requests removal)
+    - Natural decay (automatic archiving of stale data)
+    Implements EvolutionHandler protocol.
+    """
+
+    def __init__(self, state: PersonaState, trackers: dict[str, ConfidenceTracker]):
+        self._state = state
+        self._trackers = trackers
+
+    async def handle(self, input: EvolutionInput) -> EvolutionOutput:
+        """Handle forgetting - intentional removal or archival."""
+        logger.info(
+            "Handling forget request",
+            extra={
+                "event": "forget_request",
+                "aspect": input.aspect,
+                "content": str(input.content),
+                "reason": input.reason,
+            }
+        )
+
+        key = f"{input.aspect}.{input.content}"
+
+        # Remove from trackers
+        if key in self._trackers:
+            del self._trackers[key]
+            logger.info(
+                "Removed from confidence tracking",
+                extra={"event": "tracker_removed", "key": key}
+            )
+
+        # Remove from state
+        new_state = self._remove_from_state(input)
+
+        return EvolutionOutput(
+            accepted=True,
+            new_state=new_state,
+            change_summary=f"Forgot: {input.content}",
+        )
+
+    def _remove_from_state(self, input: EvolutionInput) -> PersonaState:
+        """Remove item from persona state."""
+        # Create a copy of the state
+        new_seed = PersonaSeed(
+            name=self._state.seed.name,
+            roles=list(self._state.seed.roles),
+            preferences=dict(self._state.seed.preferences),
+            patterns=dict(self._state.seed.patterns),
+        )
+
+        new_state = PersonaState(
+            seed=new_seed,
+            current_focus=self._state.current_focus,
+            recent_interests=list(self._state.recent_interests),
+            active_projects=list(self._state.active_projects),
+            confidence=dict(self._state.confidence),
+            sources=dict(self._state.sources),
+        )
+
+        # Remove the content
+        if input.aspect == "preference":
+            values = new_state.seed.preferences.get("values", [])
+            if isinstance(values, list) and input.content in values:
+                values.remove(input.content)
+                logger.debug("Removed preference value", extra={"value": input.content})
+
+        elif input.aspect == "pattern":
+            # Remove from all pattern categories
+            for category, patterns in new_state.seed.patterns.items():
+                if input.content in patterns:
+                    patterns.remove(input.content)
+                    logger.debug(
+                        "Removed pattern",
+                        extra={"category": category, "pattern": input.content}
+                    )
+
+        elif input.aspect == "context":
+            if "recent_interests" in str(input.content):
+                interest = str(input.content).replace("recent_interests.", "")
+                if interest in new_state.recent_interests:
+                    new_state.recent_interests.remove(interest)
+
+        self._state = new_state
+        return new_state
+
+
+@dataclass
+class ConflictData:
+    """Data about conflicting preferences."""
+    preference_a: str
+    preference_b: str
+    evidence_a: list[str]
+    evidence_b: list[str]
+    suggested_resolution: str
+
+
+class ConflictDetector:
+    """
+    Detects conflicts between preferences and patterns.
+
+    Analyzes evidence for contradictory preferences and suggests resolutions.
+    Not a full handler - used by ContradictionHandler for analysis.
+    """
+
+    def __init__(self, trackers: dict[str, ConfidenceTracker]):
+        self._trackers = trackers
+
+    def detect_conflicts(self) -> list[ConflictData]:
+        """
+        Detect conflicting preferences based on evidence.
+
+        Returns list of conflicts found.
+        """
+        conflicts = []
+
+        # Group trackers by aspect (simplified conflict detection)
+        aspect_groups: dict[str, list[tuple[str, ConfidenceTracker]]] = {}
+
+        for key, tracker in self._trackers.items():
+            if "." in key:
+                aspect = key.split(".")[0]
+                if aspect not in aspect_groups:
+                    aspect_groups[aspect] = []
+                aspect_groups[aspect].append((key, tracker))
+
+        # Look for contradictory evidence within each aspect
+        for aspect, items in aspect_groups.items():
+            # Simple heuristic: if multiple items in same aspect have contradicting sources
+            for i, (key_a, tracker_a) in enumerate(items):
+                for key_b, tracker_b in items[i + 1:]:
+                    # Check if both have high evidence but different sources
+                    if (
+                        tracker_a.evidence_count >= 3
+                        and tracker_b.evidence_count >= 3
+                        and tracker_a.source != tracker_b.source
+                    ):
+                        # Potential conflict
+                        conflicts.append(
+                            ConflictData(
+                                preference_a=key_a,
+                                preference_b=key_b,
+                                evidence_a=[f"count:{tracker_a.evidence_count}"],
+                                evidence_b=[f"count:{tracker_b.evidence_count}"],
+                                suggested_resolution=(
+                                    f"Ask: Help me understand when you prefer "
+                                    f"{key_a.split('.')[-1]} vs {key_b.split('.')[-1]}"
+                                ),
+                            )
+                        )
+
+        return conflicts
 
 
 class ReviewHandler:
@@ -434,10 +620,36 @@ class ReviewHandler:
     async def handle(self, input: EvolutionInput) -> EvolutionOutput:
         """Handle periodic reviews of stale preferences."""
         stale_items = []
+        very_stale_items = []  # For automatic archival
+
+        now = datetime.now()
 
         for key, tracker in self._trackers.items():
-            if tracker.level in (ConfidenceLevel.LOW, ConfidenceLevel.UNCERTAIN):
+            # Check for very old items (>1 year without confirmation)
+            if tracker.last_confirmed:
+                months_old = (now - tracker.last_confirmed).days / 30.0
+
+                # Natural decay: archive very old, low-confidence items
+                if months_old > 12 and tracker.value < 0.3:
+                    very_stale_items.append(key)
+                # Seasonal review: flag items >6 months old
+                elif months_old > 6 and tracker.level in (ConfidenceLevel.LOW, ConfidenceLevel.UNCERTAIN):
+                    stale_items.append(key)
+            elif tracker.level in (ConfidenceLevel.LOW, ConfidenceLevel.UNCERTAIN):
                 stale_items.append(key)
+
+        # Automatically archive very stale items
+        if very_stale_items:
+            logger.info(
+                "Archiving very stale items",
+                extra={
+                    "event": "auto_archive",
+                    "count": len(very_stale_items),
+                    "items": very_stale_items,
+                }
+            )
+            for key in very_stale_items:
+                del self._trackers[key]
 
         if stale_items:
             logger.info(
@@ -455,9 +667,9 @@ class ReviewHandler:
                 change_summary=f"Review needed for {len(stale_items)} items",
                 needs_confirmation=True,
                 confirmation_prompt=(
-                    f"Some preferences haven't been confirmed in a while:\n"
+                    f"It's been a while since we talked about some preferences:\n"
                     f"{', '.join(stale_items[:3])}\n"
-                    f"Are these still accurate?"
+                    f"Are these still relevant to who you are?"
                 ),
             )
 
@@ -466,13 +678,14 @@ class ReviewHandler:
             extra={
                 "event": "review_completed",
                 "stale_count": 0,
+                "archived_count": len(very_stale_items),
             }
         )
 
         return EvolutionOutput(
             accepted=True,
             new_state=self._state,
-            change_summary="All preferences current - no review needed",
+            change_summary=f"All preferences current - archived {len(very_stale_items)} very old items",
         )
 
 
@@ -501,8 +714,9 @@ class TriggerRouter(Agent[EvolutionInput, EvolutionOutput]):
         self._handlers: dict[str, EvolutionHandler] = {
             "explicit": ExplicitUpdateHandler(state, trackers),
             "observation": ObservationHandler(state, trackers),
-            "contradiction": ContradictionHandler(state),
+            "contradiction": ContradictionHandler(state, trackers),
             "review": ReviewHandler(state, trackers),
+            "forget": ForgetHandler(state, trackers),
         }
 
     @property
@@ -623,8 +837,158 @@ class EvolutionAgent(Agent[EvolutionInput, EvolutionOutput]):
         return result
 
 
-# Convenience function
+# Bootstrap functionality
+
+class BootstrapMode(Enum):
+    """Bootstrap modes for initial persona population."""
+    CLEAN_SLATE = "clean_slate"      # Start empty, build through interaction
+    INTERVIEW = "interview"           # Structured onboarding conversation
+    DOCUMENT_IMPORT = "document"      # Import from existing writings
+    HYBRID = "hybrid"                 # Recommended: interview + observation
+
+
+@dataclass
+class BootstrapConfig:
+    """Configuration for persona bootstrapping."""
+    mode: BootstrapMode = BootstrapMode.HYBRID
+
+    # For INTERVIEW mode
+    core_questions: list[str] = field(default_factory=lambda: [
+        "What are your core values?",
+        "What's your current focus?",
+        "What matters most to you in how others communicate with you?",
+    ])
+
+    # For DOCUMENT_IMPORT mode
+    import_sources: list[str] = field(default_factory=list)
+
+    # For HYBRID mode
+    skip_patterns: bool = True  # Patterns must be observed, not imported
+
+
+async def bootstrap_persona(
+    config: BootstrapConfig,
+    existing_state: Optional[PersonaState] = None
+) -> PersonaState:
+    """
+    Bootstrap a persona state based on configuration.
+
+    Implements the bootstrap problem solutions from spec:
+    - CLEAN_SLATE: Start with minimal seed
+    - INTERVIEW: Guided questions (requires interaction - returns prompts)
+    - DOCUMENT_IMPORT: Parse from existing data
+    - HYBRID: Light interview + clean patterns + optional docs
+
+    Args:
+        config: Bootstrap configuration
+        existing_state: Optional existing state to enhance
+
+    Returns:
+        Initialized PersonaState ready for evolution
+    """
+    logger.info(
+        "Bootstrapping persona",
+        extra={
+            "event": "bootstrap_start",
+            "mode": config.mode.value,
+        }
+    )
+
+    if config.mode == BootstrapMode.CLEAN_SLATE:
+        # Minimal seed - everything learned through interaction
+        seed = PersonaSeed(
+            name="Kent",
+            roles=[],
+            preferences={},
+            patterns={},
+        )
+
+        state = PersonaState(
+            seed=seed,
+            current_focus="",
+            recent_interests=[],
+            active_projects=[],
+        )
+
+        logger.info("Created clean slate persona", extra={"event": "bootstrap_clean"})
+        return state
+
+    elif config.mode == BootstrapMode.INTERVIEW:
+        # Start with existing or minimal state
+        state = existing_state or PersonaState(seed=PersonaSeed())
+
+        # Interview mode requires interaction - log questions for caller
+        logger.info(
+            "Interview mode - questions ready",
+            extra={
+                "event": "bootstrap_interview",
+                "questions": config.core_questions,
+            }
+        )
+
+        # Return state with metadata about needed questions
+        # Caller should present questions and update via explicit triggers
+        return state
+
+    elif config.mode == BootstrapMode.DOCUMENT_IMPORT:
+        # Import from documents (simplified - would need actual parser)
+        state = existing_state or PersonaState(seed=PersonaSeed())
+
+        logger.info(
+            "Document import mode",
+            extra={
+                "event": "bootstrap_import",
+                "source_count": len(config.import_sources),
+            }
+        )
+
+        # TODO: Actual document parsing would go here
+        # For now, use existing state or default
+        return state
+
+    elif config.mode == BootstrapMode.HYBRID:
+        # Recommended: Light interview + clean patterns + optional docs
+        state = existing_state or PersonaState(seed=PersonaSeed())
+
+        if config.skip_patterns:
+            # Clear patterns - must be observed
+            state.seed.patterns = {}
+            logger.info(
+                "Hybrid mode - cleared patterns for observation",
+                extra={"event": "bootstrap_hybrid"}
+            )
+
+        # Keep core preferences from seed/import
+        # Interview questions ready for caller
+        logger.info(
+            "Hybrid bootstrap ready",
+            extra={
+                "event": "bootstrap_hybrid_ready",
+                "questions": config.core_questions[:2],  # Fewer questions in hybrid
+            }
+        )
+
+        return state
+
+    # Fallback
+    return existing_state or PersonaState(seed=PersonaSeed())
+
+
+# Convenience functions
 
 def evolve_persona(state: PersonaState) -> EvolutionAgent:
     """Create an evolution agent for the given persona state."""
     return EvolutionAgent(state)
+
+
+async def bootstrap_clean_slate() -> PersonaState:
+    """Quick bootstrap with clean slate mode."""
+    return await bootstrap_persona(BootstrapConfig(mode=BootstrapMode.CLEAN_SLATE))
+
+
+async def bootstrap_hybrid(existing_state: Optional[PersonaState] = None) -> PersonaState:
+    """Quick bootstrap with recommended hybrid mode."""
+    return await bootstrap_persona(
+        BootstrapConfig(mode=BootstrapMode.HYBRID),
+        existing_state=existing_state
+    )

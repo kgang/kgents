@@ -327,6 +327,73 @@ class ContinuousDialectic(Agent[list[Any], list[DialecticOutput]]):
         return outputs
 
 
+class BackgroundDialectic(Agent[list[Any], list[Tension]]):
+    """
+    Background monitoring mode for dialectic.
+
+    Continuously examines system outputs, flagging contradictions
+    for future synthesis without immediately synthesizing.
+
+    This is useful for:
+    - Monitoring agent composition for emergent contradictions
+    - Building a tension inventory for later analysis
+    - Detecting when to invoke full dialectic synthesis
+    """
+
+    def __init__(self, severity_threshold: float = 0.3):
+        self._contradict = Contradict()
+        self._severity_threshold = severity_threshold
+
+    @property
+    def name(self) -> str:
+        return "BackgroundDialectic"
+
+    async def invoke(self, outputs: list[Any]) -> list[Tension]:
+        """
+        Monitor outputs for contradictions.
+
+        Returns list of detected tensions that exceed severity threshold.
+        Does NOT synthesize - just surfaces tensions for awareness.
+        """
+        if len(outputs) < 2:
+            logger.debug("background_dialectic.insufficient_outputs")
+            return []
+
+        logger.info(
+            "background_dialectic.start",
+            extra={"output_count": len(outputs), "threshold": self._severity_threshold}
+        )
+
+        tensions = []
+
+        # Pairwise contradiction detection
+        for i in range(len(outputs) - 1):
+            for j in range(i + 1, len(outputs)):
+                result = await self._contradict.invoke(
+                    ContradictInput(a=outputs[i], b=outputs[j])
+                )
+
+                if not result.no_tension:
+                    for tension in result.tensions:
+                        if tension.severity >= self._severity_threshold:
+                            tensions.append(tension)
+                            logger.debug(
+                                "background_dialectic.tension_detected",
+                                extra={
+                                    "pair": (i, j),
+                                    "mode": tension.mode.value,
+                                    "severity": tension.severity,
+                                }
+                            )
+
+        logger.info(
+            "background_dialectic.complete",
+            extra={"tensions_found": len(tensions)}
+        )
+
+        return tensions
+
+
 # Convenience functions
 
 def hegel() -> HegelAgent:
@@ -337,3 +404,8 @@ def hegel() -> HegelAgent:
 def continuous_dialectic(max_iterations: int = 5) -> ContinuousDialectic:
     """Create a continuous dialectic agent."""
     return ContinuousDialectic(max_iterations)
+
+
+def background_dialectic(severity_threshold: float = 0.3) -> BackgroundDialectic:
+    """Create a background monitoring dialectic agent."""
+    return BackgroundDialectic(severity_threshold)

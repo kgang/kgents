@@ -33,6 +33,15 @@ from .evolution import (
     ChangeSource,
     EvolutionAgent,
     evolve_persona,
+    # Bootstrap
+    BootstrapMode,
+    BootstrapConfig,
+    bootstrap_persona,
+    bootstrap_clean_slate,
+    bootstrap_hybrid,
+    # Conflict detection
+    ConflictData,
+    ConflictDetector,
 )
 
 __all__ = [
@@ -57,4 +66,13 @@ __all__ = [
     "EvolutionOutput",
     "ConfidenceLevel",
     "ChangeSource",
+    # Bootstrap
+    "BootstrapMode",
+    "BootstrapConfig",
+    "bootstrap_persona",
+    "bootstrap_clean_slate",
+    "bootstrap_hybrid",
+    # Conflict detection
+    "ConflictData",
+    "ConflictDetector",
 ]
