@@ -32,6 +32,7 @@ from .robin import (
     robin,
     robin_with_persona,
     quick_robin,
+    fallback_robin,
 )
 
 __all__ = [
@@ -51,4 +52,5 @@ __all__ = [
     "robin",
     "robin_with_persona",
     "quick_robin",
+    "fallback_robin",
 ]

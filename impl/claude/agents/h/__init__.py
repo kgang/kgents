@@ -18,6 +18,7 @@ from .hegel import (
     ContinuousDialectic,
     DialecticInput,
     DialecticOutput,
+    DialecticStep,
     hegel,
     continuous_dialectic,
 )
@@ -56,6 +57,7 @@ __all__ = [
     "ContinuousDialectic",
     "DialecticInput",
     "DialecticOutput",
+    "DialecticStep",
     "hegel",
     "continuous_dialectic",
     # Jung

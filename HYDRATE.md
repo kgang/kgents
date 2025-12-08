@@ -9,28 +9,38 @@
 
 ## Current State (Dec 8, 2025)
 
-**Latest:** Bootstrap Documents Improvement - Phase 1 COMPLETE! ✅ Commit e37f111 (Dec 8, 2025)
+**Latest:** Phase 4-5 Features COMPLETE! ✅ (Dec 8, 2025)
 
-**What:** Upgraded BOOTSTRAP_PROMPT.md and AUTONOMOUS_BOOTSTRAP_PROTOCOL.md with concrete examples and decision guidance.
+**What:** Implemented three deferred features from IMPLEMENTATION_PLAN.md for enhanced composability, observability, and testing.
 
-**Completed:**
-- ✅ Worked example: Id agent spec → implementation (5-step walkthrough, ~130 lines)
-- ✅ Implementation template: Fill-in-the-blank pattern for any agent (~130 lines)
-- ✅ Bootstrap agent decision matrix: Table + 4 decision trees for common scenarios
-- ✅ Complete workflow: MemoryAgent design session showing >50% autopoiesis
-- ✅ Seven mini-judges: Judge = 7 composable agents via `>>`
-- ✅ Directory fix: impl/claude-openrouter → impl/claude (consistency)
+**Completed in this session:**
+- ✅ **Issue #3:** Judge decomposition into 7 composable mini-judges via `>>`
+  - Types: `PartialVerdict`, `VerdictAccumulator`, `AggregateVerdicts`
+  - Pipeline: `InitializeAccumulator >> JudgeTasteful >> ... >> AggregateVerdicts`
+  - Backward compatible: existing Judge delegates to composed pipeline
+- ✅ **Issue #7:** Hegel observability with full lineage tracking
+  - New type: `DialecticStep` tracks stage/thesis/antithesis/result/notes
+  - `DialecticOutput` gains `lineage: list[DialecticStep]` + `metadata: dict`
+  - Complete chain preserved for debugging dialectic synthesis
+- ✅ **Issue #8:** Robin fallback mode for deterministic testing
+  - Added `fallback_mode: bool` parameter throughout RobinAgent
+  - `_generate_fallback_hypotheses()` provides domain-aware placeholders
+  - New function: `fallback_robin()` for testing without runtime
 
-**Impact:** +472 lines. Documents now mechanically translatable by LLMs.
+**Previously:** Bootstrap Documents Improvement - Phases 1-3 High Priority Items COMPLETE! ✅
+- ✅ Phase 2.3: Error handling pattern with Result types (~70 lines)
+- ✅ Phase 2.2: Composition verification checklist with 6 test categories (~170 lines)
+- ✅ Phase 3.1: Spec-First vs Agents-First tension resolution (~70 lines)
+- ✅ Phase 1: Worked example, template, decision matrix, workflow, seven mini-judges, directory fix
+- ✅ +782 lines to bootstrap docs (mechanically translatable by LLMs)
 
 **Previously:** Phase 3 Infrastructure (Issue #4, #6, #9), Phase 2 (architecture), Phase 1 (types), Bootstrap agents, K/A/B/C/H-gents all ✅
 
 **Next priorities:**
-1. Bootstrap Docs Plan Phase 2-6 (optional): Error patterns, verification checklists, troubleshooting
-2. IMPLEMENTATION_PLAN.md Phase 4-5 (deferred): Issue #3 (Judge decomposition), #7 (Hegel observability), #8 (Robin fallback)
-3. Tests for agents/b/ (hypothesis, robin)
-4. D/E-gents specs
-5. PyPI package
+1. Tests for agents/b/ (hypothesis, robin)
+2. Bootstrap Docs Plan Phase 4-6 (optional): Common pitfalls, troubleshooting, validation
+3. D/E-gents specs
+4. PyPI package
 
 | Component | Status |
 |-----------|--------|

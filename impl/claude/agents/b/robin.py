@@ -296,6 +296,7 @@ class RobinAgent(Agent[RobinInput, RobinOutput]):
         persona_state: Optional[PersonaState] = None,
         hypothesis_count: int = 3,
         runtime: Optional[Runtime] = None,
+        fallback_mode: bool = False,
     ):
         """
         Initialize Robin.
@@ -304,17 +305,19 @@ class RobinAgent(Agent[RobinInput, RobinOutput]):
             persona_state: Optional K-gent persona state. If None, uses defaults.
             hypothesis_count: Number of hypotheses to generate (default 3).
             runtime: Runtime for LLM-backed hypothesis generation.
+            fallback_mode: If True, operates in deterministic fallback mode for testing.
         """
         self._persona_state = persona_state or PersonaState(seed=PersonaSeed())
         self._hypothesis_count = hypothesis_count
         self._runtime = runtime
+        self._fallback_mode = fallback_mode
 
         # Initialize component agents
         self._kgent = KgentAgent(self._persona_state)
         self._query_agent = PersonaQueryAgent(self._persona_state)
         self._hypothesis_engine = HypothesisEngine(hypothesis_count=hypothesis_count)
         self._hegel = HegelAgent()
-        
+
         # Initialize composable morphisms
         self._synthesizer = NarrativeSynthesizer()
         self._question_gen = NextQuestionGenerator()
@@ -329,6 +332,60 @@ class RobinAgent(Agent[RobinInput, RobinOutput]):
             persona_state=self._persona_state,
             hypothesis_count=self._hypothesis_count,
             runtime=runtime,
+            fallback_mode=self._fallback_mode,
+        )
+
+    def _generate_fallback_hypotheses(self, input: RobinInput) -> HypothesisOutput:
+        """
+        Generate deterministic fallback hypotheses for testing (Issue #8).
+
+        When runtime is unavailable or fallback_mode is enabled, this provides
+        predictable, domain-aware placeholder hypotheses for testing and debugging.
+        """
+        # Generate deterministic hypotheses based on query
+        fallback_hypotheses = [
+            Hypothesis(
+                statement=f"In {input.domain}, the pattern observed in '{input.query}' may result from structural constraints",
+                confidence=0.6,
+                novelty=NoveltyLevel.INCREMENTAL,
+                falsifiable_by=[
+                    f"Measure structural variance in {input.domain}",
+                    f"Compare against systems without constraint",
+                ],
+                assumptions=[
+                    f"Structural analysis is applicable to {input.domain}",
+                    "Observable pattern is not random noise",
+                ],
+            ),
+            Hypothesis(
+                statement=f"The question '{input.query}' suggests an optimization process at work",
+                confidence=0.5,
+                novelty=NoveltyLevel.EXPLORATORY,
+                falsifiable_by=[
+                    f"Test if variation follows optimization gradients",
+                    f"Look for local optima in {input.domain}",
+                ],
+                assumptions=[
+                    "System has sufficient degrees of freedom",
+                    "Optimization is energetically favorable",
+                ],
+            ),
+        ]
+
+        # Only return as many as requested
+        fallback_hypotheses = fallback_hypotheses[: self._hypothesis_count]
+
+        return HypothesisOutput(
+            hypotheses=fallback_hypotheses,
+            reasoning_chain=[
+                f"[Fallback mode: runtime unavailable for {input.domain}]",
+                "Generated deterministic placeholder hypotheses",
+                "Hypotheses follow structural and optimization heuristics",
+            ],
+            suggested_tests=[
+                f"Establish baseline measurement protocol for {input.domain}",
+                "Design controlled experiments to test structural hypothesis",
+            ],
         )
 
     async def invoke(self, input: RobinInput, runtime: Optional[Runtime] = None) -> RobinOutput:
@@ -365,14 +422,9 @@ class RobinAgent(Agent[RobinInput, RobinOutput]):
         )
 
         # Step 3: Generate hypotheses
-        if effective_runtime is None:
-            # Fallback: cannot use HypothesisEngine without runtime
-            # Return partial output with placeholder hypotheses
-            hypothesis_output = HypothesisOutput(
-                hypotheses=[],
-                reasoning_chain=["[Runtime required for hypothesis generation]"],
-                suggested_tests=[],
-            )
+        if effective_runtime is None or self._fallback_mode:
+            # Fallback mode: Generate deterministic placeholder hypotheses for testing
+            hypothesis_output = self._generate_fallback_hypotheses(input)
         else:
             # Build hypothesis input
             hyp_input = HypothesisInput(
@@ -452,6 +504,7 @@ def robin(
     persona_state: Optional[PersonaState] = None,
     hypothesis_count: int = 3,
     runtime: Optional[Runtime] = None,
+    fallback_mode: bool = False,
 ) -> RobinAgent:
     """
     Create a Robin scientific companion agent.
@@ -460,6 +513,7 @@ def robin(
         persona_state: Optional K-gent persona. If None, uses defaults.
         hypothesis_count: Number of hypotheses to generate.
         runtime: Runtime for LLM-backed hypothesis generation.
+        fallback_mode: If True, operates in deterministic fallback mode for testing.
 
     Returns:
         RobinAgent instance.
@@ -475,17 +529,40 @@ def robin(
         persona_state=persona_state,
         hypothesis_count=hypothesis_count,
         runtime=runtime,
+        fallback_mode=fallback_mode,
     )
 
 
-def robin_with_persona(seed: PersonaSeed, runtime: Optional[Runtime] = None) -> RobinAgent:
+def robin_with_persona(
+    seed: PersonaSeed,
+    runtime: Optional[Runtime] = None,
+    fallback_mode: bool = False,
+) -> RobinAgent:
     """Create Robin with a specific persona seed."""
     return RobinAgent(
         persona_state=PersonaState(seed=seed),
         runtime=runtime,
+        fallback_mode=fallback_mode,
     )
 
 
-def quick_robin(runtime: Runtime) -> RobinAgent:
+def quick_robin(runtime: Runtime, fallback_mode: bool = False) -> RobinAgent:
     """Create Robin with defaults and attached runtime."""
-    return RobinAgent(runtime=runtime)
+    return RobinAgent(runtime=runtime, fallback_mode=fallback_mode)
+
+
+def fallback_robin(persona_state: Optional[PersonaState] = None) -> RobinAgent:
+    """
+    Create Robin in fallback mode for testing.
+
+    Operates deterministically without runtime, generating predictable
+    placeholder hypotheses. Useful for testing and development.
+
+    Returns:
+        RobinAgent configured for fallback mode.
+    """
+    return RobinAgent(
+        persona_state=persona_state,
+        runtime=None,
+        fallback_mode=True,
+    )

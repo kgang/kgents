@@ -217,6 +217,69 @@ Neither Kent nor Claude Code is "in charge." The collaboration is heterarchical:
 3. Implement as mechanical translation
 4. Validate: `Contradict(impl, spec) = None`
 
+#### Resolving the Spec-First / Agents-First Tension
+
+**The tension**: Protocol says "Spec Before Impl" but also says "USE kgents agents FIRST."
+
+**Synthesis**:
+
+1. **For new agent families (D-gents, E-gents, etc.)**:
+   - Write spec first (Ground: define what you're building)
+   - Use agents to implement (autopoiesis: build with kgents)
+   - Pattern: `spec/*.md → agents.{letter}/*.py`
+
+2. **For bootstrap agents themselves**:
+   - They ARE the spec (self-describing)
+   - Implementation and specification co-evolve
+   - Pattern: `spec/bootstrap.md ≅ bootstrap/*.py`
+
+3. **For design exploration** (when spec doesn't exist yet):
+   - Use agents to GENERATE spec candidates
+   - CreativityCoach explores design space
+   - HypothesisEngine validates architectures
+   - K-gent reviews against persona
+   - THEN crystallize into spec
+   - Pattern: `agents → spec.md → refined implementation`
+
+**Decision rule**:
+```
+IF spec exists THEN
+    implement from spec (using agents to help)
+ELSE IF exploring new territory THEN
+    use agents to generate spec candidates
+ELSE IF regenerating bootstrap THEN
+    spec and impl are isomorphic
+```
+
+**Example 1: Implementing C-gents** (spec exists)
+```python
+# 1. Read spec/c-gents/composition.md
+# 2. Use CreativityCoach to explore implementation approaches
+# 3. Implement mechanically from spec
+# 4. Contradict(impl, spec) should be None
+```
+
+**Example 2: Designing F-gents** (spec doesn't exist)
+```python
+# 1. Use CreativityCoach to explore "what F-gents could be"
+# 2. Use HypothesisEngine to validate ideas
+# 3. Use K-gent to align with persona
+# 4. Write spec/f-gents/*.md
+# 5. Implement from spec
+```
+
+**Example 3: Regenerating Judge** (spec IS impl)
+```python
+# 1. Read spec/bootstrap.md (defines Judge abstractly)
+# 2. Read bootstrap/judge.py (defines Judge concretely)
+# 3. Use agents to regenerate, verify isomorphism
+# 4. Contradict(original, regenerated) should find no critical tensions
+```
+
+This resolution preserves both principles:
+- Spec-first for new work (grounding)
+- Agents-first for process (autopoiesis)
+
 ---
 
 ## Required Patterns

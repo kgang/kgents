@@ -544,6 +544,78 @@ Pipeline = Judge(config) >> Create(config) >> Spawn(session) >> Detect(session)
 
 Anti-pattern: 130-line methods mixing validation, I/O, state, errors.
 
+### Idiom 4: Error Handling with Result Types
+
+When to use exceptions vs Result types:
+
+**Use Result[A, E] for**:
+- Expected failures (validation, parsing, network errors)
+- Composable error propagation
+- When errors are part of the domain model
+
+**Use exceptions for**:
+- Programming errors (assertions, type errors)
+- Truly exceptional conditions (out of memory, system failures)
+- When immediate termination is desired
+
+**Pattern: Result type composition**
+
+```python
+from bootstrap.types import Result, Ok, Err
+
+# Agent that may fail
+class ParseConfig(Agent[str, Result[Config, ConfigError]]):
+    async def invoke(self, input: str) -> Result[Config, ConfigError]:
+        try:
+            config = parse(input)
+            return Ok(config)
+        except ValueError as e:
+            return Err(ConfigError(str(e)))
+
+# Composing Result-returning agents
+validate_result = await validate_agent.invoke(data)
+match validate_result:
+    case Ok(validated):
+        transform_result = await transform_agent.invoke(validated)
+        match transform_result:
+            case Ok(transformed):
+                return Ok(transformed)
+            case Err(e):
+                return Err(e)
+    case Err(e):
+        return Err(e)
+
+# Or use bind for cleaner composition
+result = (
+    await validate_agent.invoke(data)
+    .bind(lambda v: transform_agent.invoke(v))
+    .bind(lambda t: persist_agent.invoke(t))
+)
+```
+
+**Pattern: Graceful degradation**
+
+```python
+# WRONG: Fail hard on optional features
+def process(data):
+    enhanced = expensive_enhancement(data)  # Might fail
+    return enhanced
+
+# RIGHT: Degrade gracefully
+def process(data):
+    try:
+        enhanced = expensive_enhancement(data)
+        return enhanced
+    except EnhancementError as e:
+        self.log.warning(f"Enhancement failed: {e}, using base data")
+        return data  # Fallback to unenhanced
+```
+
+**From practice (impl/claude/runtime/base.py)**:
+- LLM parsing failures → structured Result types
+- Network errors → retryable vs permanent classification
+- Validation failures → detailed error messages with context
+
 ---
 
 ## Constraints
@@ -565,6 +637,163 @@ assert Judge(Impl, Principles).verdict == "accept"
 assert Contradict(Impl, Spec) is None
 assert autopoiesis_score() > 0.5
 ```
+
+### Composition Verification Checklist
+
+When implementing or reviewing an agent, verify these composability properties:
+
+#### 1. Type Safety
+
+- [ ] **Input type is clearly defined** - Agent[A, B] has concrete A type
+- [ ] **Output type is clearly defined** - Agent[A, B] has concrete B type
+- [ ] **Type variables are consistent** - Same TypeVar used throughout
+- [ ] **Generic constraints are documented** - If A must be Serializable, state it
+
+```python
+# Example type safety test
+def test_type_preservation():
+    agent: Agent[str, int] = MyAgent()
+    result = await agent.invoke("test")
+    assert isinstance(result, int)  # Output type matches signature
+```
+
+#### 2. Composition Laws
+
+- [ ] **Associativity holds** - `(f >> g) >> h == f >> (g >> h)`
+- [ ] **Left identity holds** - `Id() >> agent == agent`
+- [ ] **Right identity holds** - `agent >> Id() == agent`
+
+```python
+# Example composition law tests
+async def test_associativity():
+    f, g, h = AgentF(), AgentG(), AgentH()
+    input_data = create_test_input()
+
+    # (f >> g) >> h
+    result1 = await ((f >> g) >> h).invoke(input_data)
+
+    # f >> (g >> h)
+    result2 = await (f >> (g >> h)).invoke(input_data)
+
+    assert result1 == result2
+
+async def test_left_identity():
+    agent = MyAgent()
+    input_data = create_test_input()
+
+    result1 = await (Id() >> agent).invoke(input_data)
+    result2 = await agent.invoke(input_data)
+
+    assert result1 == result2
+
+async def test_right_identity():
+    agent = MyAgent()
+    input_data = create_test_input()
+
+    result1 = await (agent >> Id()).invoke(input_data)
+    result2 = await agent.invoke(input_data)
+
+    assert result1 == result2
+```
+
+#### 3. Error Propagation
+
+- [ ] **Errors compose correctly** - Result[A, E] >> Result[B, E] propagates E
+- [ ] **Exceptions are documented** - Raised exceptions listed in docstring
+- [ ] **Graceful degradation is explicit** - Fallback behavior is clear
+
+```python
+# Example error propagation test
+async def test_error_propagation():
+    failing_agent = FailingAgent()
+    downstream_agent = DownstreamAgent()
+
+    pipeline = failing_agent >> downstream_agent
+
+    with pytest.raises(ExpectedError):
+        await pipeline.invoke(test_input)
+    # Verify downstream never executed when upstream fails
+```
+
+#### 4. State Isolation
+
+- [ ] **No shared mutable state** - Each invocation is independent
+- [ ] **Thread-safe if needed** - Concurrent invocations don't interfere
+- [ ] **Idempotent where expected** - Same input → same output (for pure agents)
+
+```python
+# Example state isolation test
+async def test_state_isolation():
+    agent = MyAgent()
+
+    # Concurrent invocations
+    results = await asyncio.gather(
+        agent.invoke(input1),
+        agent.invoke(input2),
+        agent.invoke(input1),  # Repeat
+    )
+
+    # Verify no cross-contamination
+    assert results[0] == results[2]  # Same input → same output
+    assert results[0] != results[1]  # Different inputs → different outputs
+```
+
+#### 5. Composition Operators
+
+- [ ] **`>>` (right shift) works correctly** - Sequential composition
+- [ ] **`__rshift__` preserves types** - Agent[A,B] >> Agent[B,C] → Agent[A,C]
+- [ ] **Optimization is sound** - Fast paths don't break semantics (e.g., Id >> f = f)
+
+```python
+# Example composition operator test
+def test_rshift_types():
+    f: Agent[str, int] = StrToInt()
+    g: Agent[int, bool] = IntToBool()
+
+    composed: Agent[str, bool] = f >> g
+
+    # Type checker should accept this
+    result: bool = await composed.invoke("42")
+    assert isinstance(result, bool)
+```
+
+#### 6. Practical Composability
+
+- [ ] **Works with standard combinators** - maybe(), either(), parallel(), etc.
+- [ ] **Integrates with Fix** - Can be used in fixed-point iteration
+- [ ] **Compatible with Judge** - Can be evaluated against principles
+- [ ] **Serializable if needed** - State can be saved/restored for stateful agents
+
+```python
+# Example combinator compatibility test
+async def test_maybe_combinator():
+    agent = MyAgent()
+    maybe_agent = maybe(agent)
+
+    # Should handle None gracefully
+    result = await maybe_agent.invoke(None)
+    assert result is None
+
+    # Should pass through valid input
+    result = await maybe_agent.invoke(valid_input)
+    assert result == expected_output
+```
+
+### Verification Anti-Patterns
+
+**❌ Don't:**
+- Skip type annotations ("will add later")
+- Test only happy path (ignore error cases)
+- Assume single-threaded usage without documenting it
+- Mix stateful and stateless behavior without clear boundaries
+- Optimize before verifying correctness
+
+**✅ Do:**
+- Write composition law tests first
+- Document state assumptions explicitly
+- Test edge cases and error propagation
+- Verify type safety with mypy --strict
+- Use agents to verify agents (Judge, Contradict)
 
 ---
 

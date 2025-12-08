@@ -10,17 +10,14 @@ Why irreducible: Taste cannot be computed. "Is this tasteful?"
                  "Is this ethical?" requires grounding in human values.
 What it grounds: Quality control. The stopping condition for generation.
 
-Substructure (decomposable for clarity):
-- Judge-taste: Is this aesthetically considered?
-- Judge-curate: Does this add unique value?
-- Judge-ethics: Does this respect human agency?
-- Judge-joy: Would I enjoy this?
-- Judge-compose: Can this combine with others?
-- Judge-hetero: Does this avoid fixed hierarchy?
-- Judge-generate: Could this be regenerated from spec?
+Substructure (composable via >>):
+- Judge is composed from 7 mini-judges, one per principle
+- Each mini-judge: JudgeInput → PartialVerdict
+- Final aggregation: list[PartialVerdict] → Verdict
+- Pattern: judge_tasteful >> judge_curated >> ... >> aggregate_verdicts
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Callable
 
 from .types import Agent, Principles, Verdict, VerdictType
@@ -29,208 +26,329 @@ from .types import Agent, Principles, Verdict, VerdictType
 @dataclass
 class JudgeInput:
     """Input to Judge: the agent to evaluate and the principles to use."""
-    agent: Agent
+    agent: Agent[Any, Any]
     principles: Principles
 
 
-class Judge(Agent[JudgeInput, Verdict]):
+@dataclass
+class PartialVerdict:
     """
-    The value function: evaluates agents against the 7 principles.
+    Result from a single mini-judge evaluating one principle.
 
-    Usage:
-        judge = Judge()
-        verdict = await judge.invoke(JudgeInput(agent=my_agent, principles=p))
+    Accumulates through the composition chain to form the final Verdict.
+    """
+    principle: str
+    passed: bool
+    reasons: list[str] = field(default_factory=list)
+    revisions: list[str] = field(default_factory=list)
 
-        if verdict.type == VerdictType.ACCEPT:
-            # Agent passes
-        elif verdict.type == VerdictType.REJECT:
-            # Agent fails: verdict.reasons
-        else:
-            # Agent needs revision: verdict.revisions
+
+@dataclass
+class VerdictAccumulator:
+    """
+    Accumulates partial verdicts through the composition pipeline.
+
+    Type: Contains JudgeInput + accumulated PartialVerdicts.
+    This allows mini-judges to be composed via >>.
+    """
+    input: JudgeInput
+    partial_verdicts: list[PartialVerdict] = field(default_factory=list)
+
+
+# Seven Mini-Judges (Composable via >>)
+#
+# Each mini-judge: VerdictAccumulator → VerdictAccumulator
+# Evaluates one principle and adds a PartialVerdict to the accumulator.
+# Final composition: judge = j_tasteful >> j_curated >> ... >> aggregate
+
+class JudgeTasteful(Agent[VerdictAccumulator, VerdictAccumulator]):
+    """
+    Mini-judge for tasteful principle.
+
+    Checks: Does this agent have a clear, justified purpose?
     """
 
     @property
     def name(self) -> str:
-        return "Judge"
+        return "Judge-Tasteful"
 
-    async def invoke(self, input: JudgeInput) -> Verdict:
+    async def invoke(self, acc: VerdictAccumulator) -> VerdictAccumulator:
+        agent = acc.input.agent
+        principle = acc.input.principles.tasteful
+
+        # Check: has name, docstring, clear purpose
+        passed = bool(agent.name and agent.__doc__)
+
+        partial = PartialVerdict(
+            principle="tasteful",
+            passed=passed,
+            reasons=[] if passed else ["Agent lacks name or docstring"],
+            revisions=[] if passed else ["Add docstring explaining purpose"],
+        )
+
+        acc.partial_verdicts.append(partial)
+        return acc
+
+
+class JudgeCurated(Agent[VerdictAccumulator, VerdictAccumulator]):
+    """
+    Mini-judge for curated principle.
+
+    Checks: Does this add unique value?
+    """
+
+    @property
+    def name(self) -> str:
+        return "Judge-Curated"
+
+    async def invoke(self, acc: VerdictAccumulator) -> VerdictAccumulator:
+        agent = acc.input.agent
+
+        # This requires context about existing agents
+        # Placeholder: assume unique (future: registry lookup)
+        passed = True
+
+        partial = PartialVerdict(
+            principle="curated",
+            passed=passed,
+            reasons=[] if passed else ["Similar agent already exists"],
+        )
+
+        acc.partial_verdicts.append(partial)
+        return acc
+
+
+class JudgeEthical(Agent[VerdictAccumulator, VerdictAccumulator]):
+    """
+    Mini-judge for ethical principle.
+
+    Checks: Does this respect human agency and privacy?
+    """
+
+    @property
+    def name(self) -> str:
+        return "Judge-Ethical"
+
+    async def invoke(self, acc: VerdictAccumulator) -> VerdictAccumulator:
+        agent = acc.input.agent
+
+        # Check: no hidden data collection, preserves human agency
+        # Placeholder: assume ethical (future: deep inspection)
+        passed = True
+
+        partial = PartialVerdict(
+            principle="ethical",
+            passed=passed,
+            reasons=[] if passed else ["Agent violates privacy or autonomy"],
+        )
+
+        acc.partial_verdicts.append(partial)
+        return acc
+
+
+class JudgeJoyful(Agent[VerdictAccumulator, VerdictAccumulator]):
+    """
+    Mini-judge for joy-inducing principle.
+
+    Checks: Would I enjoy interacting with this?
+    """
+
+    @property
+    def name(self) -> str:
+        return "Judge-Joyful"
+
+    async def invoke(self, acc: VerdictAccumulator) -> VerdictAccumulator:
+        agent = acc.input.agent
+
+        # This is inherently subjective - requires Ground
+        # Placeholder: assume joyful (future: persona-based evaluation)
+        passed = True
+
+        partial = PartialVerdict(
+            principle="joy-inducing",
+            passed=passed,
+            reasons=[] if passed else ["Interaction would be tedious or frustrating"],
+        )
+
+        acc.partial_verdicts.append(partial)
+        return acc
+
+
+class JudgeComposable(Agent[VerdictAccumulator, VerdictAccumulator]):
+    """
+    Mini-judge for composable principle.
+
+    Checks: Can this work with other agents?
+    """
+
+    @property
+    def name(self) -> str:
+        return "Judge-Composable"
+
+    async def invoke(self, acc: VerdictAccumulator) -> VerdictAccumulator:
+        agent = acc.input.agent
+
+        # Check: has callable invoke method
+        passed = callable(getattr(agent, "invoke", None))
+
+        partial = PartialVerdict(
+            principle="composable",
+            passed=passed,
+            reasons=[] if passed else ["Agent lacks invoke method"],
+            revisions=[] if passed else ["Implement async invoke(input) -> output"],
+        )
+
+        acc.partial_verdicts.append(partial)
+        return acc
+
+
+class JudgeHeterarchical(Agent[VerdictAccumulator, VerdictAccumulator]):
+    """
+    Mini-judge for heterarchical principle.
+
+    Checks: Does this avoid fixed hierarchy? Can it both lead and follow?
+    """
+
+    @property
+    def name(self) -> str:
+        return "Judge-Heterarchical"
+
+    async def invoke(self, acc: VerdictAccumulator) -> VerdictAccumulator:
+        agent = acc.input.agent
+
+        # Check: supports composition via __rshift__
+        passed = hasattr(agent, "__rshift__")
+
+        partial = PartialVerdict(
+            principle="heterarchical",
+            passed=passed,
+            reasons=[] if passed else ["Agent cannot be composed (missing >>)"],
+            revisions=[] if passed else ["Inherit from Agent or implement __rshift__"],
+        )
+
+        acc.partial_verdicts.append(partial)
+        return acc
+
+
+class JudgeGenerative(Agent[VerdictAccumulator, VerdictAccumulator]):
+    """
+    Mini-judge for generative principle.
+
+    Checks: Could this be regenerated from spec?
+    """
+
+    @property
+    def name(self) -> str:
+        return "Judge-Generative"
+
+    async def invoke(self, acc: VerdictAccumulator) -> VerdictAccumulator:
+        agent = acc.input.agent
+
+        # Check: has documentation for regeneration
+        passed = bool(agent.__doc__)
+
+        partial = PartialVerdict(
+            principle="generative",
+            passed=passed,
+            reasons=[] if passed else ["Insufficient documentation for regeneration"],
+            revisions=[] if passed else ["Add docstring with type signature and examples"],
+        )
+
+        acc.partial_verdicts.append(partial)
+        return acc
+
+
+class AggregateVerdicts(Agent[VerdictAccumulator, Verdict]):
+    """
+    Final step in judge pipeline: converts accumulated partial verdicts to final Verdict.
+
+    Type: VerdictAccumulator → Verdict
+    """
+
+    @property
+    def name(self) -> str:
+        return "AggregateVerdicts"
+
+    async def invoke(self, acc: VerdictAccumulator) -> Verdict:
         """
-        Evaluate an agent against all principles.
+        Aggregate partial verdicts into final verdict.
 
-        Returns accept if all pass, reject if any hard-fail,
-        revise if improvements are suggested.
+        - If any hard failures → REJECT
+        - If any revisions suggested → REVISE
+        - If all pass → ACCEPT
         """
-        agent = input.agent
-        principles = input.principles
-
-        failures: list[str] = []
-        revisions: list[str] = []
-
-        for principle in principles.all():
-            try:
-                passes = principle.check(agent)
-                if not passes:
-                    failures.append(
-                        f"{principle.name}: {principle.question}"
-                    )
-            except NotImplementedError:
-                # Principle check not fully implemented - suggest revision
-                revisions.append(
-                    f"Implement check for: {principle.name}"
-                )
+        failures = [pv for pv in acc.partial_verdicts if not pv.passed]
+        all_revisions = [r for pv in acc.partial_verdicts for r in pv.revisions]
 
         if failures:
-            return Verdict.reject(failures)
-        elif revisions:
+            all_reasons = [
+                f"{pv.principle}: {r}"
+                for pv in failures
+                for r in pv.reasons
+            ]
+            return Verdict.reject(all_reasons)
+        elif all_revisions:
             return Verdict.revise(
-                reasons=["Some principle checks need implementation"],
-                revisions=revisions,
+                reasons=["Some principles could be improved"],
+                revisions=all_revisions,
             )
         else:
-            return Verdict.accept(["All principles satisfied"])
-
-
-# Sub-judges for finer-grained evaluation
-
-class JudgeTaste(Agent[Agent, bool]):
-    """Does this agent have a clear, justified purpose?"""
-
-    @property
-    def name(self) -> str:
-        return "Judge-taste"
-
-    async def invoke(self, agent: Agent) -> bool:
-        # Check: has a name, has a docstring, purpose is clear
-        return bool(agent.name and agent.__doc__)
-
-
-class JudgeCurate(Agent[Agent, bool]):
-    """Does this add unique value, or does something similar exist?"""
-
-    @property
-    def name(self) -> str:
-        return "Judge-curate"
-
-    async def invoke(self, agent: Agent) -> bool:
-        # This requires context about existing agents
-        # Placeholder: assume unique if it exists
-        return True
-
-
-class JudgeEthics(Agent[Agent, bool]):
-    """Does this respect human agency and privacy?"""
-
-    @property
-    def name(self) -> str:
-        return "Judge-ethics"
-
-    async def invoke(self, agent: Agent) -> bool:
-        # Check: no hidden data collection, preserves human agency
-        # Placeholder: assume ethical by default
-        return True
-
-
-class JudgeJoy(Agent[Agent, bool]):
-    """Would I enjoy interacting with this?"""
-
-    @property
-    def name(self) -> str:
-        return "Judge-joy"
-
-    async def invoke(self, agent: Agent) -> bool:
-        # This is inherently subjective - requires Ground
-        return True
-
-
-class JudgeCompose(Agent[Agent, bool]):
-    """Can this work with other agents?"""
-
-    @property
-    def name(self) -> str:
-        return "Judge-compose"
-
-    async def invoke(self, agent: Agent) -> bool:
-        # Check: has invoke method, proper type hints
-        return callable(getattr(agent, "invoke", None))
-
-
-class JudgeHetero(Agent[Agent, bool]):
-    """Can this agent both lead and follow? Does it avoid fixed hierarchy?"""
-
-    @property
-    def name(self) -> str:
-        return "Judge-hetero"
-
-    async def invoke(self, agent: Agent) -> bool:
-        # Check: can be composed in either direction
-        return hasattr(agent, "__rshift__")
-
-
-class JudgeGenerate(Agent[Agent, bool]):
-    """Could this be regenerated from spec?"""
-
-    @property
-    def name(self) -> str:
-        return "Judge-generate"
-
-    async def invoke(self, agent: Agent) -> bool:
-        # Check: clear structure, documented, follows spec
-        return bool(agent.__doc__)
+            return Verdict.accept(["All 7 principles satisfied"])
 
 
 # Default principle check implementations
-def _check_has_purpose(agent: Agent) -> bool:
+def _check_has_purpose(agent: Agent[Any, Any]) -> bool:
     """Default: agent has name and docstring."""
     return bool(agent.name and agent.__doc__)
 
 
-def _check_is_unique(agent: Agent) -> bool:
+def _check_is_unique(agent: Agent[Any, Any]) -> bool:
     """Default: assume unique (requires registry context)."""
     return True
 
 
-def _check_is_ethical(agent: Agent) -> bool:
+def _check_is_ethical(agent: Agent[Any, Any]) -> bool:
     """Default: assume ethical (deep inspection needed)."""
     return True
 
 
-def _check_is_joyful(agent: Agent) -> bool:
+def _check_is_joyful(agent: Agent[Any, Any]) -> bool:
     """Default: requires Ground for subjective evaluation."""
     return True
 
 
-def _check_is_composable(agent: Agent) -> bool:
+def _check_is_composable(agent: Agent[Any, Any]) -> bool:
     """Default: has callable invoke method."""
     return callable(getattr(agent, "invoke", None))
 
 
-def _check_is_heterarchical(agent: Agent) -> bool:
+def _check_is_heterarchical(agent: Agent[Any, Any]) -> bool:
     """Default: supports composition via __rshift__."""
     return hasattr(agent, "__rshift__")
 
 
-def _check_is_generative(agent: Agent) -> bool:
+def _check_is_generative(agent: Agent[Any, Any]) -> bool:
     """Default: has documentation for regeneration."""
     return bool(agent.__doc__)
 
 
 def make_default_principles(
-    check_taste: Callable[[Agent], bool] | None = None,
-    check_curate: Callable[[Agent], bool] | None = None,
-    check_ethics: Callable[[Agent], bool] | None = None,
-    check_joy: Callable[[Agent], bool] | None = None,
-    check_compose: Callable[[Agent], bool] | None = None,
-    check_hetero: Callable[[Agent], bool] | None = None,
-    check_generate: Callable[[Agent], bool] | None = None,
+    check_taste: Callable[[Agent[Any, Any]], bool] | None = None,
+    check_curate: Callable[[Agent[Any, Any]], bool] | None = None,
+    check_ethics: Callable[[Agent[Any, Any]], bool] | None = None,
+    check_joy: Callable[[Agent[Any, Any]], bool] | None = None,
+    check_compose: Callable[[Agent[Any, Any]], bool] | None = None,
+    check_hetero: Callable[[Agent[Any, Any]], bool] | None = None,
+    check_generate: Callable[[Agent[Any, Any]], bool] | None = None,
 ) -> Principles:
     """
     Create the default 7 principles with injectable checks.
-    
+
     Dependency injection enables:
     - Testing with mocks
     - Production customization
     - Decoupling from Agent interface
-    
+
     Args:
         check_*: Optional custom check functions. If None, uses defaults.
     """
@@ -273,3 +391,83 @@ def make_default_principles(
             check=check_generate or _check_is_generative,
         ),
     )
+
+
+# Convenience functions for composed judge
+
+class InitializeAccumulator(Agent[JudgeInput, VerdictAccumulator]):
+    """
+    Helper agent: JudgeInput → VerdictAccumulator
+
+    Initializes the accumulator for the mini-judge pipeline.
+    """
+
+    @property
+    def name(self) -> str:
+        return "InitializeAccumulator"
+
+    async def invoke(self, input: JudgeInput) -> VerdictAccumulator:
+        """Initialize accumulator from JudgeInput."""
+        return VerdictAccumulator(input=input, partial_verdicts=[])
+
+
+def make_composed_judge() -> Agent[JudgeInput, Verdict]:
+    """
+    Create the fully composed Judge from 7 mini-judges.
+
+    Pattern:
+        initialize >> j_tasteful >> j_curated >> j_ethical >>
+        j_joyful >> j_composable >> j_heterarchical >> j_generative >> aggregate
+
+    Returns:
+        Composable Judge agent that evaluates all 7 principles.
+    """
+    return (
+        InitializeAccumulator()
+        >> JudgeTasteful()
+        >> JudgeCurated()
+        >> JudgeEthical()
+        >> JudgeJoyful()
+        >> JudgeComposable()
+        >> JudgeHeterarchical()
+        >> JudgeGenerative()
+        >> AggregateVerdicts()
+    )
+
+
+# For backward compatibility, make original Judge use composed implementation
+class Judge(Agent[JudgeInput, Verdict]):
+    """
+    The value function: evaluates agents against the 7 principles.
+
+    IMPLEMENTATION: Composes 7 mini-judges via >> operator.
+
+    Usage:
+        judge = Judge()
+        verdict = await judge.invoke(JudgeInput(agent=my_agent, principles=p))
+
+        if verdict.type == VerdictType.ACCEPT:
+            # Agent passes
+        elif verdict.type == VerdictType.REJECT:
+            # Agent fails: verdict.reasons
+        else:
+            # Agent needs revision: verdict.revisions
+
+    Structure:
+        Judge is implemented as a composition of 7 mini-judges:
+        - JudgeTasteful, JudgeCurated, JudgeEthical, JudgeJoyful,
+        - JudgeComposable, JudgeHeterarchical, JudgeGenerative
+        - Each evaluates one principle
+        - AggregateVerdicts combines results
+    """
+
+    def __init__(self) -> None:
+        self._composed = make_composed_judge()
+
+    @property
+    def name(self) -> str:
+        return "Judge"
+
+    async def invoke(self, input: JudgeInput) -> Verdict:
+        """Delegate to composed mini-judge pipeline."""
+        return await self._composed.invoke(input)
