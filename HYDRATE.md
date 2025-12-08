@@ -4,53 +4,66 @@
 
 ## TL;DR
 
-**Status**: J-gents Phase 5 + Synergy Phase 4A COMPLETE ✅
-**Branch**: `main` (clean, just pushed)
-**Achievement**: Complete J-gents spec (6 docs) + shared AST utils + E/T integration
-**Next**: Synergy Phase 4B (abstractions), meta-evolution hypotheses
+**Status**: Systematic Evolution Analysis COMPLETE ✅
+**Branch**: `main` (clean)
+**Achievement**: Generated `impl/claude/IMPROVEMENT_PLAN.md` with 17 hypotheses
+**Next**: Phase A quick wins (H5: json_utils, H4: lazy imports, H2: SuggestionAgent)
 
 ---
 
 ## Recent Commits
 
+- `3c736dd` docs: Update HYDRATE.md for J-gents Phase 5 session
 - `4e3fce7` docs(j-gents): Complete Phase 5 Integration & Polish
 - `1fa2e8b` docs: Update HYDRATE.md for J-gents Phase 4 completion
-- `08c09ee` feat(j-gents): Implement Phase 3 JIT + Phase 4 Coordinator
 
 ---
 
-## This Session: J-gents Phase 5 + Synergy 4A (2025-12-08)
+## This Session: Systematic Evolution Analysis (2025-12-08)
 
-### J-gents Phase 5: Integration & Polish ✅
+### Canvas Results
 
-**Specification Complete (all 6 docs):**
-- ✅ `spec/j-gents/integration.md` (517 lines) - Full ecosystem integration
-  - Global memoization & caching (LRU, hash-based)
-  - Cross-genus composition (J+H, J+E, J+T, J+C)
-  - Bootstrap derivation proof
-  - Performance optimization strategies
+Ran `evolve.py suggest` on all impl/ targets:
+- **meta**: EvolutionPipeline (19 methods), show_suggestions (55 lines)
+- **runtime**: robust_json_parse (96 lines), with_retry (53 lines)
+- **agents**: 50 modules analyzed, shared/ast_utils flagged
+- **bootstrap**: Clean ✅
 
-**Bootstrap Integration:**
-- ✅ `spec/bootstrap.md` - Idiom 7: Reality is Trichotomous
-- ✅ `spec/c-gents/functors.md` - Promise Functor with laws
-- ✅ `spec/anatomy.md` - Ephemeral Agents section
+### Static Analysis Findings
 
-### Synergy Phase 4A: Quick Wins ✅
+| Metric | Count |
+|--------|-------|
+| Total lines | ~27,000 |
+| Files >500 lines | 18 |
+| Functions >50 lines | 45+ |
+| Classes >10 methods | 8 |
 
-**Per SYNERGY_REFACTOR_PLAN.md:**
+**Worst offenders:**
+1. `evolve.py` (1,286 lines, 8 long functions, 1 large class)
+2. `agents/e/prompts.py` (762 lines)
+3. `agents/e/parser.py` (687 lines)
+4. `agents/j/sandbox.py` (460 lines, execute_in_sandbox: 150 lines!)
 
-| Task | Status | Tests |
-|------|--------|-------|
-| Extract shared AST utils | ✅ COMMITTED | 20 |
-| E-gents regression validator | ✅ COMMITTED | 11 |
-| Unify Judge interface | ⏭️ SKIPPED | - |
+### Generated: IMPROVEMENT_PLAN.md
 
-**New Cross-Genus Files:**
-- `agents/shared/ast_utils.py` - Common AST utilities (J/E/T-gents)
-- `agents/e/regression_validator.py` - E+T integration
-- Comprehensive test coverage (31 new tests)
+**17 Hypotheses across 4 priorities:**
 
-**Total Tests: 93** (J-gents 50 + T-gents 12 + Synergy 31)
+| Priority | Focus | Key Items |
+|----------|-------|-----------|
+| 1 | evolve.py | H1-H4: Decompose EvolutionPipeline, lazy imports |
+| 2 | runtime/E-gents | H5-H9: json_utils, prompts split, parser refactor |
+| 3 | J-gents/B-gents | H10-H14: sandbox split, chaosmonger decompose |
+| 4 | Shared | H15-H17: ast_utils polish, types cleanup |
+
+**Implementation Phases:**
+- Phase A: Quick wins (H5, H4, H2) - 1-2 sessions
+- Phase B: Core refactoring (H1, H7, H10) - 2-3 sessions
+- Phase C: Deep refactoring (H8, H11, H13) - 3-4 sessions
+- Phase D: Polish - remaining items
+
+---
+
+## Previous: J-gents Phase 5 + Synergy 4A
 
 ---
 
