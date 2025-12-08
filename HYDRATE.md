@@ -4,35 +4,52 @@
 
 ## TL;DR
 
-**Status**: Phase 2.5d analysis COMPLETE - Evolution testing & failure diagnosis
-**Branch**: `main` (pushed: 0919279)
-**Key Finding**: Retry layer exists but needs API signature extraction
-**Next**: Implement API extraction to prevent hallucination → expect 0% to 70%+ success
+**Status**: J-gents Phase 2 COMPLETE - Chaosmonger AST analyzer implemented
+**Branch**: `main` (pushed: b917e2e)
+**Key Achievement**: Pre-Judge stability filter with import/complexity/recursion checks
+**Next**: Phase 2 remaining tasks (entropy budget to Fix, SafetyConfig integration)
 
 ---
 
-## This Session: Phase 2.5d Testing & Analysis (2025-12-08)
+## This Session: J-gents Phase 2 - Chaosmonger (2025-12-08)
 
 ### Completed ✅
 
-**Commit 0919279: Phase 2.5d Testing & Analysis**
+**Commit b917e2e: J-gents Phase 2 - Chaosmonger AST Analyzer**
 
 **Created:**
-- `test_evolution_metrics.py`: Comprehensive metrics collection (syntax/parse/incorporation rates)
-- `docs/PHASE_2_5D_ANALYSIS.md`: Detailed failure mode analysis from meta run
+- `impl/claude/agents/j/chaosmonger.py` (~400 lines): Full AST-based stability analyzer
 
-**Analysis Results:**
-- Tested `evolve.py meta --auto-apply`: 1 exp, 22 type errors, 0 incorporated
-- **Root Cause**: API hallucination - LLM invented kwargs (`runtime=`, `content=`) that don't exist
-- Error breakdown: 13 API mismatches, 4 attribute errors, 2 method names, 2 type errors
+**Features:**
+- **StabilityConfig**: Thresholds, allowed/forbidden imports
+- **Import Analysis**: Extract imports, check whitelist/blacklist, calculate risk
+- **Cyclomatic Complexity**: Count decision points in code
+- **Branching Factor**: Estimate computation tree width
+- **Unbounded Recursion Detection**: while True without break, recursive functions without base case
+- **Runtime Estimation**: O(1) to unbounded complexity
+- **Max Nesting Depth**: Control structure depth analysis
 
-**Key Findings:**
-- ✅ Reliability layer (retry/fallback/error_memory) IS integrated
-- ❌ Retry wasn't triggered (validation_report not passed to should_retry)
-- ❌ No API signature extraction → LLM hallucinates constructors
-- 📊 Need API extraction to inject actual signatures into prompts
+**Test Results:**
+```
+✓ Stable code (dataclass + function) → is_stable=True
+✓ while True without break → "Unbounded recursion detected"
+✓ import subprocess → "Import 'subprocess' is forbidden"
+✓ mypy --strict passes
+```
 
-**Expected Impact:** With API extraction, expect 0% → 70%+ incorporation rate
+**Updated:**
+- `agents/j/__init__.py`: Export Chaosmonger, StabilityConfig, StabilityInput, etc.
+
+---
+
+## Previous: Phase 2.5d Testing & Analysis (2025-12-08)
+
+**Commit 0919279: Phase 2.5d Testing & Analysis**
+
+- Created `test_evolution_metrics.py` for evolution metrics collection
+- Created `docs/PHASE_2_5D_ANALYSIS.md` documenting failure modes
+- Root cause: API hallucination - LLM invents kwargs that don't exist
+- Solution: Extract actual API signatures into prompts
 
 ---
 
@@ -40,185 +57,109 @@
 
 **Commit d73283e: T-gents Specification**
 
-Created comprehensive Category Theory-based testing specification:
-
-**Files Created:**
-- `spec/t-gents/README.md` (10K): Core philosophy, dual mandate, full taxonomy
-- `spec/t-gents/algebra.md` (10K): Category laws, functors, monads, commutative diagrams
-- `spec/t-gents/taxonomy.md` (19K): Detailed specs for 11+ T-gent types with implementation skeletons
-- `spec/t-gents/adversarial.md` (16K): Adversarial Gym chaos engineering framework
-
-**Key Concepts:**
-- Testing as **algebraic verification** (not just examples)
-- Four T-gent types: Nullifiers, Saboteurs, Observers, Critics
-- Commutative diagram testing
-- Monte Carlo stress testing via Adversarial Gym
-- Integration with E-gents evolution
-
-**Taxonomy:**
-- Type I (Nullifiers): MockAgent, FixtureAgent
-- Type II (Saboteurs): FailingAgent, NoiseAgent, LatencyAgent, FlakyAgent
-- Type III (Observers): SpyAgent, PredicateAgent, CounterAgent, MetricsAgent
-- Type IV (Critics): JudgeAgent, CorrectnessAgent, SafetyAgent
-
-Transforms testing from example-based to proof-based reliability.
+Complete Category Theory-based testing specification (55K total):
+- `spec/t-gents/README.md`: Core philosophy, taxonomy
+- `spec/t-gents/algebra.md`: Category laws, functors, monads
+- `spec/t-gents/taxonomy.md`: 11+ T-gent types with skeletons
+- `spec/t-gents/adversarial.md`: Adversarial Gym chaos engineering
 
 ---
 
 ## Previous: J-gents Phase 1 Implementation (2025-12-08)
 
-### Completed ✅
-
 **Commit dc27faa: J-gents Phase 1**
 
-Created `impl/claude/agents/j/` directory with:
-
-**1. promise.py - Promise[T] Data Type**
-- `Promise[T]` generic dataclass with Ground fallback
-- `PromiseState` enum: pending, resolving, resolved, collapsed, failed
-- Entropy budget calculation: `1/(depth+1)`
-- Tree structure for PROBABILISTIC decomposition
-- `PromiseMetrics` for execution analysis
-- Helpers: `promise()`, `child_promise()`, `collect_metrics()`
-
-**2. reality.py - RealityClassifier Agent**
-- `Reality` enum: DETERMINISTIC | PROBABILISTIC | CHAOTIC
-- `RealityClassifier` agent implementing spec/j-gents/reality.md
-- Heuristic keyword-based classification:
-  - ATOMIC_KEYWORDS: read, get, fetch, query, return, format, etc.
-  - COMPLEX_KEYWORDS: refactor, analyze, fix, implement, etc.
-  - CHAOTIC_KEYWORDS: infinite, forever, everything, always, etc.
-- Budget-based chaos threshold (default 0.1)
-- `classify()` async and `classify_sync()` helpers
-
-**3. __init__.py - Module Exports**
-- All Promise types and helpers
-- All Reality types and classifier
-
-### Test Results
-
-All classification tests pass:
-```
-classify("Read config.yaml") → deterministic ✓
-classify("Refactor the auth module") → probabilistic ✓
-classify("Make everything better forever") → chaotic ✓
-classify("Simple task", budget=0.05) → chaotic ✓
-```
-
----
-
-## Previous: Phase 2.5c Recovery Layer (UNCOMMITTED)
-
-Changes in working directory:
-- `evolve.py`: Recovery layer integration
-- `agents/t/`: T-gents test framework
-- `spec/t-gents/`: T-gents spec
+Created `impl/claude/agents/j/`:
+- `promise.py`: Promise[T] lazy computation with Ground fallback
+- `reality.py`: RealityClassifier (DETERMINISTIC | PROBABILISTIC | CHAOTIC)
+- `__init__.py`: Module exports
 
 ---
 
 ## Next Session: Start Here
 
-### Priority 1: Complete Phase 2.5d - API Signature Extraction ⚡ CRITICAL
+### Priority 1: Complete J-gents Phase 2 Remaining Tasks
 
-**Problem**: LLM hallucinates API signatures (e.g., `CodeModule(content=...)` doesn't exist)
-**Solution**: Extract actual constructor/method signatures and inject into prompts
+From JGENT_SPEC_PLAN.md Phase 2:
+- [x] Write stability.md spec (DONE)
+- [x] Implement Chaosmonger AST analyzer (DONE)
+- [ ] Add entropy budget to Fix (bootstrap/fix.py)
+- [ ] Integrate with SafetyConfig (agents/e/safety.py)
 
 ```bash
-cd impl/claude/agents/e
-# Add to prompts.py:
-def extract_api_signatures(module: CodeModule) -> dict[str, str]:
-    """Extract actual API signatures from imports."""
-    # Parse AST, find imports, read actual source, extract signatures
+# Extend Fix with entropy tracking
+cd impl/claude/bootstrap
+# Add entropy_budget field to FixConfig
+# Add entropy_remaining to FixResult
 ```
 
-**Then re-run evolution:**
-```bash
-python evolve.py meta --auto-apply  # Should improve from 0% to 70%+ incorporation
-python test_evolution_metrics.py --quick  # Measure improvement
-```
+### Priority 2: J-gents Phase 3 - JIT Compilation
 
-### Priority 2: Implement T-gents (Testing Agents)
+From JGENT_SPEC_PLAN.md:
+- [ ] Write jit.md spec
+- [ ] Implement MetaArchitect agent
+- [ ] Sandboxed execution environment
+- [ ] Integration with Judge
 
-Now that spec is complete, begin T-gents implementation:
-- [ ] Core Agent protocol with `__is_test__` flag
-- [ ] MockAgent, FixtureAgent (nullifiers)
-- [ ] FailingAgent (saboteur for testing recovery)
+### Priority 3: Uncommitted Files (Review)
 
-**Phase 2 Components:**
-- [ ] NoiseAgent (semantic perturbation)
-- [ ] PredicateAgent (runtime validation gate)
-- [ ] Basic AdversarialGym framework
-
-**Integration:**
-- [ ] Use T-gents to test evolution pipeline
-- [ ] Create commutative diagram tests
-- [ ] Bootstrap Gym with existing agents
-
-### Priority 2: Continue J-gents Implementation
-
-Phase 2 from JGENT_SPEC_PLAN.md:
-- [ ] Implement Chaosmonger AST analyzer
-- [ ] Add entropy budget to Fix
-- [ ] Integrate with SafetyConfig
-
-### Priority 3: Uncommitted Files
-
-Review and commit/discard:
-- `impl/claude/docs/PHASE_2_5D_ANALYSIS.md`
-- `impl/claude/test_evolution_metrics.py`
-- Check if recovery layer changes in `evolve.py` still needed
+Other changes in working directory:
+- `impl/claude/agents/e/prompts.py` - Evolution prompts changes
+- `impl/claude/agents/t/*.py` - T-gents implementation files
+- Deleted: `bootstrap_reference/behavior_*.{json,pkl}`
 
 ---
 
 ## What Exists
 
-**J-gents Implementation** (`impl/claude/agents/j/`) ✅ Phase 1
+**J-gents Implementation** (`impl/claude/agents/j/`) ✅ Phase 2
 - promise.py: Promise[T] lazy computation
 - reality.py: RealityClassifier agent
+- chaosmonger.py: AST stability analyzer (NEW)
 - __init__.py: Module exports
 
 **J-gents Spec** (`spec/j-gents/`) ✅ Complete
 - README.md: Overview
 - reality.md: Trichotomy spec
 - lazy.md: Promise abstraction
-- stability.md: Entropy budgets
+- stability.md: Entropy budgets & Chaosmonger
 - JGENT_SPEC_PLAN.md: Implementation phases
 
 **T-gents Spec** (`spec/t-gents/`) ✅ Complete
-- README.md: Core philosophy, taxonomy (4 types, 11+ T-gents)
-- algebra.md: Category Theory foundations (laws, functors, monads)
-- taxonomy.md: Detailed specs with implementation skeletons
-- adversarial.md: Adversarial Gym chaos engineering
-
-**Evolution Pipeline** (`agents/e/`)
-- prompts.py: API stub extraction
-- parser.py: F-string repair
-- retry.py, fallback.py, error_memory.py: Recovery layer (awaiting commit)
+- README.md: Core philosophy, taxonomy
+- algebra.md: Category Theory foundations
+- taxonomy.md: Detailed specs with skeletons
+- adversarial.md: Adversarial Gym
 
 ---
 
 ## Session Log
 
-**Dec 8 PM**: d73283e - T-gents specification complete (4 docs, 55K total)
-**Dec 8 PM (prev)**: dc27faa - J-gents Phase 1 implementation (Promise[T], RealityClassifier)
-**Dec 8 PM (prev)**: db0f802 - HYDRATE.md update
-**Dec 8 PM (prev)**: UNCOMMITTED - Phase 2.5c recovery layer + T-gents impl
+**Dec 8 (this)**: b917e2e - J-gents Phase 2 Chaosmonger implementation
+**Dec 8**: 8db89da - HYDRATE.md update for Phase 2.5d
+**Dec 8**: 0919279 - Phase 2.5d testing & analysis
+**Dec 8**: d73283e - T-gents specification complete
+**Dec 8**: dc27faa - J-gents Phase 1 (Promise[T], RealityClassifier)
 
 ---
 
 ## Quick Commands
 
 ```bash
-# Test J-gents
+# Test J-gents Phase 2
 cd impl/claude
-python -c "from agents.j import classify_sync; print(classify_sync('Fix bug'))"
+python -c "from agents.j import is_stable; print(is_stable('def f(): pass'))"
+
+# Check stability of code
+python -c "
+from agents.j import check_stability
+code = 'import subprocess; subprocess.run([\"ls\"])'
+r = check_stability(code)
+print(f'stable={r.is_stable}, violations={r.violations}')
+"
 
 # Type check J-gents
 python -m mypy --strict --explicit-package-bases agents/j/
-
-# Evolution
-python evolve.py status
-python evolve.py meta --auto-apply
 ```
 
 ---
