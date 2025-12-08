@@ -13,7 +13,7 @@
 |-----------|--------|
 | 7 Principles | ✅ Defined in `spec/principles.md` |
 | 7 Bootstrap Agents | ✅ Spec (`spec/bootstrap.md`) + Impl (`impl/claude-openrouter/bootstrap/`) |
-| Autopoiesis | ✅ `impl/claude-openrouter/autopoiesis.py` - kgents improves itself |
+| Autopoiesis | ✅ `autopoiesis.py` (spec/impl check) + `self_improve.py` (code review) |
 | C-gents (Category Theory) | ✅ `impl/claude-openrouter/agents/c/` + specs for all patterns |
 | H-gents (Hegel/Jung/Lacan) | ✅ `impl/claude-openrouter/agents/h/` |
 | K-gent (Persona) | ✅ `impl/claude-openrouter/agents/k/` |
@@ -50,7 +50,8 @@ kgents/
 │   ├── agents/a/            # ✅ AbstractSkeleton, AgentMeta, CreativityCoach
 │   ├── agents/b/            # ✅ HypothesisEngine, Robin (scientific companion)
 │   ├── runtime/             # ✅ LLM execution (ClaudeCLIRuntime, ClaudeRuntime, OpenRouterRuntime)
-│   └── autopoiesis.py       # ✅ Self-improvement via bootstrap agents
+│   ├── autopoiesis.py       # ✅ Spec/impl alignment check
+│   └── self_improve.py      # ✅ Code review via HypothesisEngine + Judge
 └── docs/                    # Supporting documentation
     └── BOOTSTRAP_PROMPT.md  # LLM prompt for implementing kgents
 ```
@@ -180,12 +181,9 @@ LLM execution layer for agents:
 
 ## Recent Changes
 
-- **Autopoiesis Complete** (Dec 2025): kgents used its own bootstrap agents to improve itself. Created specs for conditional.md, parallel.md, robin.md; created monad.py impl; updated bio-gent.md. Result: 0 tensions, 22/22 verdicts accept. Fixed point reached.
+- **self_improve.py Added** (Dec 2025): Code review via ClaudeCLIRuntime + HypothesisEngine + Judge + Contradict. Results: 25/25 modules ACCEPT, 75 hypotheses, 4 tensions resolved. Key findings: testing gap across all modules, type annotation improvements needed.
+- **Autopoiesis Complete** (Dec 2025): Spec/impl alignment check. 0 tensions, 22/22 verdicts accept.
 - **zen-agents Dropped** (Dec 2025): Textual TUI demo removed; new generation planned
-- **B-gents Complete** (Dec 2025): HypothesisEngine + Robin (scientific companion)
-- **A-gents Complete** (Dec 2025): AbstractSkeleton, AgentMeta, CreativityCoach
-- **K-gent Complete** (Dec 2025): Persona dialogue, query, evolution agents
-- **ClaudeCLIRuntime** (Dec 2025): OAuth-authenticated runtime via `claude -p`
 
 ## Quick Start
 
