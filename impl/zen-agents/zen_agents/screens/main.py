@@ -193,13 +193,14 @@ class SessionDetail(Container):
             details.mount(Label(f"Exit: {session.exit_code}", classes="detail-row"))
 
         # Actions
-        with Container(classes="actions"):
-            if session.state == SessionState.RUNNING:
-                details.mount(Button("Kill", variant="error", id="action-kill"))
-                details.mount(Button("Attach", variant="primary", id="action-attach"))
-            elif session.state in (SessionState.PAUSED, SessionState.KILLED):
-                details.mount(Button("Revive", variant="success", id="action-revive"))
-            details.mount(Button("Remove", variant="warning", id="action-remove"))
+        actions = Container(classes="actions")
+        details.mount(actions)
+        if session.state == SessionState.RUNNING:
+            actions.mount(Button("Kill", variant="error", id="action-kill"))
+            actions.mount(Button("Attach", variant="primary", id="action-attach"))
+        elif session.state in (SessionState.PAUSED, SessionState.KILLED):
+            actions.mount(Button("Revive", variant="success", id="action-revive"))
+        actions.mount(Button("Remove", variant="warning", id="action-remove"))
 
 
 class MainScreen(Screen):

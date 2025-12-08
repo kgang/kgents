@@ -58,11 +58,31 @@ class ZenConfig:
         "gemini": "gemini",
         "shell": os.environ.get("SHELL", "/bin/bash"),
         "openrouter": "python -m openrouter_cli",
+        # LLM-backed kgents - show usage instructions
+        "creativity": "echo '🎨 CREATIVITY SESSION\n\nThis session uses CreativityCoach for idea expansion.\n\nUsage (from TUI LogViewer):\n  /connect <idea>    Find associations\n  /constrain <idea>  Add creative limitations\n  /question <idea>   Challenge assumptions\n  <idea>             Expand variations (default)\n\nSelect this session and use \"l\" to view logs, then Analyze.' && read -p '\n[Press Enter to continue] ' && exec $SHELL",
+        "robin": "echo '🔬 ROBIN SESSION\n\nRobin is your scientific companion.\nComposes K-gent + HypothesisEngine + HegelAgent.\n\nUsage:\n  Enter scientific queries for dialectic-refined exploration.\n  Hypotheses will be generated with falsification tests.\n\nSelect this session and use \"l\" to view logs, then Analyze.' && read -p '\n[Press Enter to continue] ' && exec $SHELL",
+        "hypothesis": "echo '🧪 HYPOTHESIS SESSION\n\nUses HypothesisEngine for Popperian hypothesis generation.\n\nUsage:\n  Enter observations to generate falsifiable hypotheses.\n  Each hypothesis includes suggested falsification tests.\n\nSelect this session and use \"l\" to view logs, then Analyze.' && read -p '\n[Press Enter to continue] ' && exec $SHELL",
+        "kgent": "echo '🤖 K-GENT SESSION\n\nPersonalized dialogue with Kent simulacra.\n\nDialogue modes:\n  /challenge <msg>  Pushback, devil\\'s advocate\n  /advise <msg>     Actionable suggestions\n  /explore <msg>    Open-ended exploration\n  <msg>             Reflect mode (default)\n\nSelect this session and use \"l\" to view logs, then Analyze.' && read -p '\n[Press Enter to continue] ' && exec $SHELL",
     })
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "ZenConfig":
         """Create config from dictionary."""
+        # Merge session_commands with defaults (don't replace with empty dict)
+        default_commands = {
+            "claude": "claude",
+            "codex": "codex",
+            "gemini": "gemini",
+            "shell": os.environ.get("SHELL", "/bin/bash"),
+            "openrouter": "python -m openrouter_cli",
+            # LLM-backed kgents
+            "creativity": "echo '🎨 CREATIVITY SESSION\n\nThis session uses CreativityCoach for idea expansion.\n\nUsage (from TUI LogViewer):\n  /connect <idea>    Find associations\n  /constrain <idea>  Add creative limitations\n  /question <idea>   Challenge assumptions\n  <idea>             Expand variations (default)\n\nSelect this session and use \"l\" to view logs, then Analyze.' && read -p '\n[Press Enter to continue] ' && exec $SHELL",
+            "robin": "echo '🔬 ROBIN SESSION\n\nRobin is your scientific companion.\nComposes K-gent + HypothesisEngine + HegelAgent.\n\nUsage:\n  Enter scientific queries for dialectic-refined exploration.\n  Hypotheses will be generated with falsification tests.\n\nSelect this session and use \"l\" to view logs, then Analyze.' && read -p '\n[Press Enter to continue] ' && exec $SHELL",
+            "hypothesis": "echo '🧪 HYPOTHESIS SESSION\n\nUses HypothesisEngine for Popperian hypothesis generation.\n\nUsage:\n  Enter observations to generate falsifiable hypotheses.\n  Each hypothesis includes suggested falsification tests.\n\nSelect this session and use \"l\" to view logs, then Analyze.' && read -p '\n[Press Enter to continue] ' && exec $SHELL",
+            "kgent": "echo '🤖 K-GENT SESSION\n\nPersonalized dialogue with Kent simulacra.\n\nDialogue modes:\n  /challenge <msg>  Pushback, devil\\'s advocate\n  /advise <msg>     Actionable suggestions\n  /explore <msg>    Open-ended exploration\n  <msg>             Reflect mode (default)\n\nSelect this session and use \"l\" to view logs, then Analyze.' && read -p '\n[Press Enter to continue] ' && exec $SHELL",
+        }
+        session_commands = {**default_commands, **data.get("session_commands", {})}
+
         return cls(
             poll_interval=data.get("poll_interval", 1.0),
             grace_period=data.get("grace_period", 5.0),
@@ -70,7 +90,7 @@ class ZenConfig:
             scrollback_lines=data.get("scrollback_lines", 50000),
             default_shell=data.get("default_shell", "/bin/bash"),
             tmux_prefix=data.get("tmux_prefix", "zen"),
-            session_commands=data.get("session_commands", {}),
+            session_commands=session_commands,
         )
 
 

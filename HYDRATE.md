@@ -188,6 +188,9 @@ All 5 phases done. Run: `cd impl/zen-agents && uv run zen-agents`
 
 ## Recent Changes
 
+- **LLM Session Welcome Messages** (Dec 2025): CREATIVITY, ROBIN, HYPOTHESIS, KGENT sessions now show usage instructions instead of blank shell
+- **Claude Session Command Bug Fix** (Dec 2025): Fixed `ZenConfig.from_dict()` defaulting `session_commands` to `{}` instead of merging with defaults - CLAUDE sessions now correctly run `claude`
+- **Session Selection Bug Fix** (Dec 2025): Fixed `IndexError` in `_update_display()` - Textual's `with Container()` context manager only works in `compose()`, not event handlers
 - **Phase 5 Testing Complete** (Dec 2025): 188 tests in `tests/` - core agent logic 95-100% coverage; TUI components need Textual testing framework
 - **Phase 4 Session Persistence** (Dec 2025): `services/persistence.py` - JSON-based save/load; sessions survive TUI restarts
 - **Phase 3.3 K-gent Name Suggestions** (Dec 2025): "Suggest" button in CreateSessionModal; K-gent suggests personalized session names
