@@ -225,6 +225,7 @@ Avoids JSON escaping issues for code content.
 
 ## Recent Changes
 
+- **Minimal Output Principle Added to Spec** (Dec 7, 2025): Backpropagated CodeImprover insight to pure spec. "Serialization constraints are signals, not obstacles." When JSON becomes painful, agent output granularity is wrong. LLM agents should return single outputs; composition happens at pipeline level.
 - **evolve.py Refactored** (Dec 7, 2025): CodeImprover now composable — single hypothesis → single improvement. Two-section output (METADATA + CODE) avoids JSON escaping. Runtime enhanced with robust_json_parse + delta retry pattern.
 - **evolve.py Added** (Dec 2025): Experimental improvement framework. Extends self_improve.py to actually generate and apply code changes via LLM + dialectic synthesis.
 - **self_improve.py Added** (Dec 2025): Code review via ClaudeCLIRuntime + HypothesisEngine + Judge + Contradict. Results: 25/25 modules ACCEPT, 75 hypotheses, 4 tensions resolved. Key findings: testing gap across all modules, type annotation improvements needed.
