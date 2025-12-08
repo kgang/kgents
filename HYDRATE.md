@@ -4,309 +4,135 @@
 
 ## TL;DR
 
-**Status**: E-gents implementation FULLY ALIGNED with spec ✅
-**Branch**: `EEGENTS-5ccbc0bd` (latest: 4f519f7)
-**Achievement**: Verified impl/claude/agents/e matches spec/e-gents completely
-**Quality**: 17 modules, 3-layer reliability, production-ready
-**Next**: J-gents Phase 3 (JIT compilation) OR T-gents Phase 2 OR use E-gents in practice
+**Status**: E-gents Status Refactor COMMITTED ✅
+**Branch**: `main` (uncommitted T-gents Phase 3 + J-gents Phase 3)
+**Achievement**: show_status → composable morphisms (ac7987a)
+**Next**: Commit T-gents Phase 3 + J-gents Phase 3, implement show_suggestions refactor
 
 ---
 
-## This Session: E-gents Implementation Alignment (2025-12-08)
+## This Session: E-gents Status Refactor COMMITTED (2025-12-08)
 
 ### Completed ✅
 
-**E-gents Implementation Fully Aligned with Spec**
+**Commit ac7987a: show_status Refactor (Phase 2.5e)**
+- Refactored 83-line monolithic function → 4 composable agents (88% reduction)
+- New `agents/e/status.py` (259 lines):
+  ```
+  StatusReporter = GitStatusAgent >> EvolutionLogAgent >> HydrateStatusAgent >> StatusPresenter
+  ```
+- Each agent is a morphism with clear input/output types
+- Demonstrates morphism principle from meta-evolution analysis
+- Verified working with `python evolve.py status`
 
-Analyzed `impl/claude/agents/e/` against `spec/e-gents/` - implementation is comprehensive and matches spec:
+**Meta-Evolution Insights:**
+- Ran 3 `evolve.py meta --auto-apply` processes
+- Generated valuable hypotheses (H3, H4, H5)
+- All auto-generated code failed type checking (API hallucination)
+- **Key Learning**: Manual implementation succeeds where auto-generation fails
+- Evolution system excels at hypothesis generation, not code generation
 
-**6-Stage Pipeline** (evolution-agent.md):
-- ✅ PreFlight: `preflight.py` - module health validation
-- ✅ Ground: `ast_analyzer.py` - AST analysis with complexity metrics
-- ✅ Hypothesize: `evolution.py` - AST + LLM hypothesis generation with memory filtering
-- ✅ Experiment: `experiment.py` - multi-layer validation (syntax, types, tests)
-- ✅ Judge: `judge.py` - 7 principles evaluation
-- ✅ Incorporate: `incorporate.py` - git-safe application
-
-**Grounding** (grounding.md):
-- ✅ CodeStructure extraction (classes, functions, imports)
-- ✅ Complexity metrics (cyclomatic, nesting depth)
-- ✅ Targeted hypothesis generation from AST
-- ✅ Caching strategy in EvolutionPipeline
-
-**Memory** (memory.md):
-- ✅ ImprovementMemory: accepted/rejected/held tracking
-- ✅ ErrorMemory: failure pattern learning
-- ✅ Hash-based similarity matching (pragmatic vs spec's Levenshtein)
-- ✅ `.evolve_memory.json` persistence
-
-**Safety** (safety.md):
-- ✅ SelfEvolutionAgent with fixed-point iteration
-- ✅ Convergence detection (similarity threshold 0.95)
-- ✅ Sandbox testing (syntax, types, self-test)
-- ✅ Dual similarity metrics (Levenshtein + structural)
-- ✅ Chaosmonger integration (J-gents Phase 2)
-
-**Reliability Layers** (3-layer defense in depth):
-- ✅ Layer 1: PreFlightChecker, PromptContext, structured prompts
-- ✅ Layer 2: CodeParser (4 strategies), SchemaValidator, CodeRepairer
-- ✅ Layer 3: RetryStrategy, FallbackStrategy, ErrorMemory
-
-**Implementation Quality**:
-- 17 modules, ~240KB of code
-- Comprehensive type annotations
-- Immutable dataclasses for safety
-- Clear composability (all agents are morphisms)
-- Production-ready error handling
-
-**Minor Notes**:
-- Sublate (H-gents dialectic) available but optional (quick_mode can skip)
-- Memory uses hash matching (faster) vs spec's fuzzy Levenshtein (acceptable trade-off)
-
-**Status**: Implementation fully aligned with spec, ready for use ✅
+**Remaining Meta-Evolution Hypotheses:**
+- H4: show_suggestions (56 lines) should be refactored (next candidate)
+- H3: EvolutionPipeline (1100 lines) decomposition (larger effort)
+- H5: 57 imports lazy-loading (optimization)
 
 ---
 
-## Previous: E-gents Specification (2025-12-08)
+## Uncommitted Work (Ready to Commit)
 
-### Completed ✅
+### T-gents Phase 3: Type IV Critics ✅
 
-**Commit 4f519f7: E-gents (Evolution Agents) Complete Specification**
+**Files:**
+- `agents/t/judge.py` - LLM-as-Judge semantic evaluation
+- `agents/t/property.py` - Property-based testing with generators
+- `agents/t/oracle.py` - Differential testing oracle
+- `test_t_gents_phase3.py` - 12 tests, all passing ✅
 
-Created comprehensive specification from first principles:
+**Total T-gents:** 13 agents (2 Nullifiers + 4 Saboteurs + 4 Observers + 3 Critics)
 
-**spec/e-gents/README.md** (~200 lines):
-- Philosophy: Dialectical evolution through safe experimentation
-- 3 new principles: Experimental, Dialectical, Self-Aware
-- 6-stage pipeline architecture
-- 3-layer reliability (prompt, parse/validate, recovery/learning)
+### J-gents Phase 3: JIT Compilation ✅
 
-**spec/e-gents/evolution-agent.md** (~800 lines):
-- Full YAML specification (input/output types, errors, behavior)
-- Detailed pipeline stages: PreFlight → Ground → Hypothesize → Experiment → Judge → Incorporate
-- Concrete example: evolving calculate() function through all 6 stages
-- Composition patterns with B-gents, H-gents, K-gent
-- Anti-patterns and safety guarantees
+**Specification:**
+- `spec/j-gents/jit.md` (650+ lines) - Complete JIT spec
 
-**spec/e-gents/grounding.md** (~500 lines):
-- AST analysis specification (classes, functions, complexity metrics)
-- Targeted hypothesis generation from code structure
-- Cyclomatic complexity & nesting depth metrics
-- Example: analyzing DataProcessor class with complexity 11
-- Caching strategy and integration with LLM hypotheses
+**Implementation:**
+- `agents/j/meta_architect.py` (~550 lines) - JIT agent compiler
+- `agents/j/sandbox.py` (~465 lines) - Safe execution environment
+- `agents/j/jgent.py` - Additional J-gent utilities
+- `test_j_gents_phase3.py` - 22 tests, all passing ✅
+- `test_j_gents_phase4.py` - Additional phase 4 tests
 
-**spec/e-gents/memory.md** (~600 lines):
-- ImprovementMemory: track accepted/rejected/held outcomes
-- ErrorMemory: learn from failure patterns across sessions
-- Fuzzy matching (Levenshtein similarity, 80% threshold)
-- .evolve_memory.json persistence format
-- Memory-driven prompt refinement and hypothesis filtering
-
-**spec/e-gents/safety.md** (~600 lines):
-- Self-evolution via fixed-point iteration
-- Dual similarity metrics (Levenshtein + structural AST)
-- Sandbox testing (syntax, types, self-test)
-- Convergence detection (threshold 0.95, max iterations 3-5)
-- Human approval gates for high-risk changes
-- Example: evolve.py evolving itself through 3 iterations
-
-**Design Innovations:**
-- Dialectical foundation (thesis/antithesis/synthesis via H-gents)
-- Every stage is composable morphism (A → B)
-- Multi-layer defense in depth (not single validation)
-- Institutional memory prevents wasted re-proposals
-- Meta-circular: E-gents can safely evolve themselves
-
-**Total**: ~2,800 lines of specification across 5 files
-
----
-
-## Previous: J-gents Phase 2 Completion (2025-12-08)
-
-### Completed ✅
-
-**Commit 0107f3f: J-gents Phase 2 - Entropy Budget & Chaosmonger Integration**
-
-**bootstrap/types.py:**
-- Add `entropy_budget` field to `FixConfig` (J-gents entropy tracking)
-- Add `entropy_remaining` field to `FixResult` (budget consumption tracking)
-
-**bootstrap/fix.py:**
-- Implement entropy budget tracking in fixed-point iteration
-- Diminishing budget per iteration: `budget / (iteration + 1)`
-- Early termination when budget < 0.1 threshold
-- Add `entropy_budget` parameter to `fix()` convenience function
-
-**agents/e/safety.py:**
-- Add Chaosmonger integration fields to `SafetyConfig`:
-  - `chaosmonger_enabled` (default True)
-  - `max_cyclomatic_complexity` (20)
-  - `max_branching_factor` (5)
-  - `allowed_imports` / `forbidden_imports`
-- Add `stability_valid` field to `SandboxTestResult`
-- Implement `_check_stability()` method using Chaosmonger
-- Pre-Judge stability check runs before syntax/type checks
-
-**Test Results:**
-```
-✓ FixConfig with entropy_budget: 1.0
-✓ FixResult with entropy_remaining: 0.5
-✓ SafetyConfig.chaosmonger_enabled: True
-✓ SafetyConfig.max_cyclomatic_complexity: 20
-✓ All syntax checks pass
-```
-
----
-
-## Previous: J-gents Phase 2 - Chaosmonger (2025-12-08)
-
-**Commit b917e2e: Chaosmonger AST Analyzer**
-
-- `impl/claude/agents/j/chaosmonger.py` (~400 lines): Full AST-based stability analyzer
-- Features: Import analysis, cyclomatic complexity, unbounded recursion detection
-- All tests passing, mypy --strict passes
-
----
-
-## Previous: T-gents Phase 1 Implementation (2025-12-08)
-
-**Commit 8189e79: T-gents Phase 1**
-
-5 T-gent types implemented:
-- MockAgent, FixtureAgent, FailingAgent, SpyAgent, PredicateAgent
-- Comprehensive test suite (10 tests, all passing)
+**Stray File:**
+- `SYNERGY_REFACTOR_PLAN.md` - Review and commit or remove
 
 ---
 
 ## Next Session: Start Here
 
-### Priority 1: Use E-gents in Practice ✅
+### Priority 1: Commit Phase 3 Work ⭐
 
-Implementation is complete and aligned with spec:
-- ✅ impl/claude/agents/e fully aligned with spec/e-gents
-- ✅ EvolutionPipeline implements 6-stage spec
-- ✅ PreFlightChecker matches grounding.md
-- ✅ ImprovementMemory matches memory.md spec
-- ✅ SafeEvolutionAgent matches safety.md
+**T-gents Phase 3** (ready):
+```bash
+git add impl/claude/agents/t/{judge,property,oracle}.py \
+        impl/claude/agents/t/__init__.py \
+        impl/claude/test_t_gents_phase3.py
+git commit -m "feat(t-gents): Implement Phase 3 Type IV Critics"
+```
 
-**Next: Apply E-gents to evolve kgents codebase OR continue with other genera:**
+**J-gents Phase 3** (ready):
+```bash
+git add spec/j-gents/jit.md \
+        impl/claude/agents/j/{meta_architect,sandbox,jgent}.py \
+        impl/claude/agents/j/__init__.py \
+        impl/claude/test_j_gents_phase3.py \
+        impl/claude/test_j_gents_phase4.py
+git commit -m "feat(j-gents): Implement Phase 3 JIT Compilation"
+```
 
-### Priority 2: J-gents Phase 3 - JIT Compilation
+### Priority 2: Implement show_suggestions Refactor
 
-From JGENT_SPEC_PLAN.md:
-- [ ] Write jit.md spec
-- [ ] Implement MetaArchitect agent
-- [ ] Sandboxed execution environment
-- [ ] Integration with Judge
+Following show_status pattern (H4 from meta-evolution):
+- 56-line function → composable pipeline
+- StatusCheck >> ASTAnalysis >> HypothesisGen >> Format
+- Add to `agents/e/status.py` or create `agents/e/suggestions.py`
 
-### Priority 3: T-gents Phase 2 - Additional Observers & Saboteurs
+### Priority 3: Review Stray Files
 
-Continue T-gents implementation:
-- [ ] NoiseAgent (semantic perturbation - Type II)
-- [ ] LatencyAgent (temporal delay - Type II)
-- [ ] FlakyAgent (probabilistic failure - Type II)
-- [ ] CounterAgent (invocation tracking - Type III)
-- [ ] MetricsAgent (performance profiling - Type III)
-
-### Priority 4: J-gents Phase 4 - Coordination
-
-From JGENT_SPEC_PLAN.md:
-- [ ] Write lazy.md spec (promises)
-- [ ] Implement main JGent coordinator
-- [ ] Test-driven reality (test generation)
-- [ ] End-to-end integration tests
-
----
-
-## What Exists
-
-**E-gents Spec** (`spec/e-gents/`) ✅ Complete
-- README.md: Philosophy, principles, overview
-- evolution-agent.md: Main 6-stage pipeline spec
-- grounding.md: AST analysis and targeted hypotheses
-- memory.md: Institutional learning and error memory
-- safety.md: Self-evolution with convergence detection
-
-**E-gents Implementation** (`impl/claude/agents/e/`) ✅ FULLY ALIGNED with spec
-- Core pipeline: evolution.py, preflight.py, ast_analyzer.py, experiment.py, judge.py, incorporate.py
-- Memory: memory.py, error_memory.py
-- Reliability Layer 1: prompts.py
-- Reliability Layer 2: parser.py, validator.py, repair.py
-- Reliability Layer 3: retry.py, fallback.py
-- Safety: safety.py (with Chaosmonger integration)
-- Status: Production-ready, matches spec completely
-
-**J-gents Implementation** (`impl/claude/agents/j/`) ✅ Phase 2 COMPLETE
-- promise.py: Promise[T] lazy computation
-- reality.py: RealityClassifier agent
-- chaosmonger.py: AST stability analyzer
-- __init__.py: Module exports
-
-**J-gents Bootstrap Integration** ✅ Phase 2 COMPLETE
-- bootstrap/types.py: FixConfig.entropy_budget, FixResult.entropy_remaining
-- bootstrap/fix.py: Entropy tracking in iteration
-- agents/e/safety.py: SafetyConfig + Chaosmonger integration
-
-**T-gents Implementation** (`impl/claude/agents/t/`) ✅ Phase 1 COMPLETE
-- mock.py: MockAgent (constant morphism)
-- fixture.py: FixtureAgent (deterministic lookup)
-- failing.py: FailingAgent (bottom morphism with recovery)
-- spy.py: SpyAgent (Writer Monad)
-- predicate.py: PredicateAgent (validation gate)
-
-**J-gents Spec** (`spec/j-gents/`) ✅ Complete
-- README.md, reality.md, lazy.md, stability.md, JGENT_SPEC_PLAN.md
-
-**T-gents Spec** (`spec/t-gents/`) ✅ Complete
-- README.md, algebra.md, taxonomy.md, adversarial.md
-
----
-
-## Session Log
-
-**Dec 8 (this)**: 4f519f7 - E-gents complete specification from first principles (~2,800 lines)
-**Dec 8**: 0107f3f - J-gents Phase 2 completion (entropy budget + Chaosmonger integration)
-**Dec 8**: 8189e79 - T-gents Phase 1 implementation
-**Dec 8**: b917e2e - J-gents Phase 2 Chaosmonger implementation
-**Dec 8**: 0919279 - Phase 2.5d testing & analysis
-**Dec 8**: d73283e - T-gents specification complete
-**Dec 8**: dc27faa - J-gents Phase 1 (Promise[T], RealityClassifier)
+- Check `SYNERGY_REFACTOR_PLAN.md` - commit or remove
+- Ensure no uncommitted test artifacts
 
 ---
 
 ## Quick Commands
 
 ```bash
-# View E-gents specification
-cat spec/e-gents/README.md
-cat spec/e-gents/evolution-agent.md  # Main pipeline
-cat spec/e-gents/grounding.md        # AST analysis
-cat spec/e-gents/memory.md           # Institutional learning
-cat spec/e-gents/safety.md           # Self-evolution
+# Status
+python evolve.py status
 
-# Check E-gents implementation alignment
-ls -la impl/claude/agents/e/
-
-# Test J-gents entropy budget
+# Run T-gents tests
 cd impl/claude
-python -c "
-from bootstrap.types import FixConfig, FixResult
-config = FixConfig(max_iterations=10, entropy_budget=1.0)
-print(f'entropy_budget: {config.entropy_budget}')
-"
+uv run pytest tests/agents/test_t_gents.py test_t_gents_phase3.py -v
 
-# Test Chaosmonger
-python -c "from agents.j import is_stable; print(is_stable('def f(): pass'))"
-
-# Test SafetyConfig integration
-python -c "
-from agents.e.safety import SafetyConfig
-c = SafetyConfig()
-print(f'chaosmonger_enabled: {c.chaosmonger_enabled}')
-"
+# Run J-gents tests
+uv run pytest test_j_gents_phase3.py test_j_gents_phase4.py -v
 
 # Type check
-python -m mypy --strict --explicit-package-bases bootstrap/types.py bootstrap/fix.py
+python -m mypy --strict --explicit-package-bases agents/ bootstrap/ runtime/
+
+# Meta-evolution
+python evolve.py meta --auto-apply
 ```
+
+---
+
+## Session Log
+
+**Dec 8 (this)**: ac7987a - E-gents status refactor (composable morphisms)
+**Dec 8**: df4f952 - D-gents specification merge
+**Dec 8**: d67dd93 - Test organization + CI workflow
+**Dec 8**: ff576c5 - T-gents Phase 2 (NoiseAgent, LatencyAgent, etc.)
+**Dec 8**: 41c8d4c - T-gents Phase 2 completion
+**Dec 8**: 8189e79 - T-gents Phase 1 implementation
 
 ---
