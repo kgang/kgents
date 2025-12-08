@@ -79,12 +79,32 @@ class Fix(Agent[tuple[Callable[[A], Awaitable[A]], A], FixResult[A]], Generic[A]
         1. Value stabilizes (equality_check returns True)
         2. should_continue returns False
         3. max_iterations reached
+        4. Entropy budget exhausted (J-gents integration)
         """
         transform, initial = input
         current = initial
         history: list[A] = [initial]
 
+        # Track entropy budget if specified
+        initial_budget = self._config.entropy_budget
+        current_budget = initial_budget
+
         for i in range(self._config.max_iterations):
+            # Check entropy budget (J-gents: force stop if budget exhausted)
+            if current_budget is not None:
+                # Entropy diminishes: 1.0 / (iteration + 1)
+                current_budget = initial_budget / (i + 1) if initial_budget else None
+                if current_budget is not None and current_budget < 0.1:
+                    # Budget exhausted - return with entropy_remaining=0
+                    return FixResult(
+                        value=current,
+                        converged=False,
+                        iterations=i + 1,
+                        history=tuple(history),
+                        proximity=self._compute_proximity(history),
+                        entropy_remaining=0.0,
+                    )
+
             # Check if we should continue
             if not self._config.should_continue(current, i):
                 return FixResult(
@@ -93,6 +113,7 @@ class Fix(Agent[tuple[Callable[[A], Awaitable[A]], A], FixResult[A]], Generic[A]
                     iterations=i + 1,
                     history=tuple(history),
                     proximity=self._compute_proximity(history),
+                    entropy_remaining=current_budget,
                 )
 
             # Apply transform
@@ -108,6 +129,7 @@ class Fix(Agent[tuple[Callable[[A], Awaitable[A]], A], FixResult[A]], Generic[A]
                     iterations=i + 1,
                     history=tuple(history),
                     proximity=0.0,  # Converged = 0 distance
+                    entropy_remaining=current_budget,
                 )
 
         # Max iterations reached without convergence
@@ -117,6 +139,7 @@ class Fix(Agent[tuple[Callable[[A], Awaitable[A]], A], FixResult[A]], Generic[A]
             iterations=self._config.max_iterations,
             history=tuple(history),
             proximity=self._compute_proximity(history),
+            entropy_remaining=current_budget,
         )
 
     def _compute_proximity(self, history: list[A]) -> float:
@@ -154,6 +177,7 @@ async def fix(
     initial: A,
     max_iterations: int = 100,
     equality_check: Optional[Callable[[A, A], bool]] = None,
+    entropy_budget: Optional[float] = None,
 ) -> FixResult[A]:
     """
     Find fixed point of transform.
@@ -165,6 +189,7 @@ async def fix(
         initial: Starting value
         max_iterations: Maximum iterations before giving up
         equality_check: Custom equality (default: ==)
+        entropy_budget: J-gents entropy budget (diminishes per iteration)
 
     Returns:
         FixResult with converged value and metadata
@@ -172,6 +197,7 @@ async def fix(
     config: FixConfig[A] = FixConfig(
         max_iterations=max_iterations,
         equality_check=equality_check or (lambda a, b: a == b),
+        entropy_budget=entropy_budget,
     )
     return await Fix(config).invoke((transform, initial))
 

@@ -421,6 +421,9 @@ class FixConfig(Generic[A]):
     should_continue: Callable[[A, int], bool] = field(
         default_factory=lambda: lambda a, i: True
     )
+    # J-gents entropy budget: diminishes with recursion depth
+    # None means no budget tracking (backward compatible)
+    entropy_budget: Optional[float] = None
 
 
 @dataclass(frozen=True)
@@ -432,6 +435,8 @@ class FixResult(Generic[A]):
     iterations: int
     history: tuple[A, ...] = ()
     proximity: float = 0.0  # Distance from fixed point (adaptive convergence metric)
+    # J-gents entropy tracking: remaining budget after iteration
+    entropy_remaining: Optional[float] = None
 
 
 # --- Contradict Input/Output Types ---

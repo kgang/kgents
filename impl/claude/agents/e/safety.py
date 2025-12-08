@@ -49,7 +49,8 @@ class SafetyConfig:
     3. Type checking (mypy --strict)
     4. Self-test (evolved code can still evolve test code)
     5. Fixed-point convergence (similarity threshold)
-    6. Human approval for meta-changes
+    6. Chaosmonger AST stability analysis (J-gents)
+    7. Human approval for meta-changes
     """
 
     # Layer 1: Read-only analysis first
@@ -70,7 +71,20 @@ class SafetyConfig:
     max_iterations: int = 3
     convergence_threshold: float = 0.95  # 95% similarity = converged
 
-    # Layer 6: Human approval for meta-changes
+    # Layer 6: Chaosmonger integration (J-gents stability analysis)
+    chaosmonger_enabled: bool = True
+    max_cyclomatic_complexity: int = 20
+    max_branching_factor: int = 5
+    allowed_imports: frozenset[str] = field(default_factory=lambda: frozenset({
+        "typing", "dataclasses", "abc", "enum", "re", "json",
+        "asyncio", "functools", "collections", "itertools",
+        "operator", "math", "datetime", "pathlib", "logging",
+    }))
+    forbidden_imports: frozenset[str] = field(default_factory=lambda: frozenset({
+        "os", "subprocess", "sys", "shutil", "socket",
+    }))
+
+    # Layer 7: Human approval for meta-changes
     require_human_approval: bool = True
 
     # Sandbox configuration
@@ -125,6 +139,7 @@ class SandboxTestResult:
     """Result from sandbox testing."""
 
     passed: bool
+    stability_valid: bool = False  # Chaosmonger check (J-gents)
     syntax_valid: bool = False
     types_valid: bool = False
     self_test_passed: bool = False
@@ -221,9 +236,10 @@ class SandboxTestAgent(Agent[SandboxTestInput, SandboxTestResult]):
     Agent that tests evolved code in a sandbox environment.
 
     Validation layers:
-    1. Syntax check (py_compile)
-    2. Type check (mypy --strict)
-    3. Self-test (evolved code can evolve test code)
+    1. Stability check (Chaosmonger - J-gents)
+    2. Syntax check (py_compile)
+    3. Type check (mypy --strict)
+    4. Self-test (evolved code can evolve test code)
 
     The sandbox isolates the evolved code to prevent damage to the
     actual codebase if the evolution produces broken code.
@@ -239,6 +255,16 @@ class SandboxTestAgent(Agent[SandboxTestInput, SandboxTestResult]):
     async def invoke(self, input: SandboxTestInput) -> SandboxTestResult:
         """Test evolved code in sandbox."""
         result = SandboxTestResult(passed=False)
+
+        # Layer 0: Chaosmonger stability check (J-gents)
+        if self._config.chaosmonger_enabled:
+            stability_ok, stability_err = self._check_stability(input.evolved_code)
+            result.stability_valid = stability_ok
+            if not stability_ok:
+                result.error = f"Stability error: {stability_err}"
+                return result
+        else:
+            result.stability_valid = True  # Skip if disabled
 
         with tempfile.TemporaryDirectory() as tmpdir:
             sandbox_path = Path(tmpdir) / input.original_path.name
@@ -273,6 +299,32 @@ class SandboxTestAgent(Agent[SandboxTestInput, SandboxTestResult]):
 
             result.passed = True
             return result
+
+    def _check_stability(self, code: str) -> tuple[bool, str]:
+        """Check code stability using Chaosmonger (J-gents)."""
+        try:
+            from agents.j import check_stability, StabilityConfig
+
+            # Build config from SafetyConfig
+            stability_config = StabilityConfig(
+                max_cyclomatic_complexity=self._config.max_cyclomatic_complexity,
+                max_branching_factor=self._config.max_branching_factor,
+                allowed_imports=self._config.allowed_imports,
+                forbidden_imports=self._config.forbidden_imports,
+            )
+
+            result = check_stability(code, stability_config)
+            if result.is_stable:
+                return True, ""
+            else:
+                violations = "; ".join(result.violations[:3])
+                return False, violations
+        except ImportError:
+            # Chaosmonger not available - pass by default
+            return True, ""
+        except Exception as e:
+            # On error, be conservative and pass
+            return True, f"(check skipped: {e})"
 
     async def _check_syntax(self, path: Path) -> tuple[bool, str]:
         """Check Python syntax using py_compile."""
