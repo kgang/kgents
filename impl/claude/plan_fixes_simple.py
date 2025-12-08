@@ -4,11 +4,11 @@ Use HypothesisEngine to create implementation plan for critical fixes.
 """
 
 import asyncio
-from agents.b.hypothesis import hypothesis_engine, HypothesisInput
+from agents.b.hypothesis import hypothesis_engine, HypothesisInput, HypothesisOutput
 from runtime.cli import ClaudeCLIRuntime
 
 
-async def main():
+async def main() -> None:
     """Generate implementation plan using HypothesisEngine."""
 
     runtime = ClaudeCLIRuntime(verbose=True, timeout=180.0)
@@ -57,30 +57,34 @@ async def main():
     print("📋 IMPLEMENTATION PLAN HYPOTHESES")
     print("=" * 70)
 
-    for i, h in enumerate(result.output.hypotheses, 1):
-        print(f"\n{'='*70}")
-        print(f"PHASE {i}: {h.statement}")
-        print(f"{'='*70}")
-        print(f"Confidence: {h.confidence:.0%}")
-        print(f"Novelty: {h.novelty}")
-        print(f"\nFalsifiable by: {h.falsifiable_by}")
+    output = result.output
+    if isinstance(output, HypothesisOutput):
+        for i, h in enumerate(output.hypotheses, 1):
+            print(f"\n{'='*70}")
+            print(f"PHASE {i}: {h.statement}")
+            print(f"{'='*70}")
+            print(f"Confidence: {h.confidence:.0%}")
+            print(f"Novelty: {h.novelty}")
+            print(f"\nFalsifiable by: {h.falsifiable_by}")
 
-        if h.assumptions:
-            print(f"\nAssumptions:")
-            for assumption in h.assumptions:
-                print(f"  - {assumption}")
+            if h.assumptions:
+                print(f"\nAssumptions:")
+                for assumption in h.assumptions:
+                    print(f"  - {assumption}")
 
-    print("\n" + "=" * 70)
-    print("🧪 SUGGESTED TESTS")
-    print("=" * 70)
-    for i, test in enumerate(result.output.suggested_tests, 1):
-        print(f"{i}. {test}")
+        print("\n" + "=" * 70)
+        print("🧪 SUGGESTED TESTS")
+        print("=" * 70)
+        for i, test in enumerate(output.suggested_tests, 1):
+            print(f"{i}. {test}")
 
-    print("\n" + "=" * 70)
-    print("🧠 REASONING CHAIN")
-    print("=" * 70)
-    for i, step in enumerate(result.output.reasoning_chain, 1):
-        print(f"\n{i}. {step}")
+        print("\n" + "=" * 70)
+        print("🧠 REASONING CHAIN")
+        print("=" * 70)
+        for i, step in enumerate(output.reasoning_chain, 1):
+            print(f"\n{i}. {step}")
+    else:
+        print(f"Error: {output}")
 
     print("\n" + "=" * 70)
     print("✅ Plan generation complete!")

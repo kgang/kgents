@@ -34,7 +34,7 @@ class APIClient:
 
     _client: Any = None
     
-    def _ensure_client(self):
+    def _ensure_client(self) -> None:
         """Lazy-initialize the HTTP client."""
         if self._client is None:
             try:
@@ -135,7 +135,7 @@ class APIClient:
 
         return result
     
-    async def close(self):
+    async def close(self) -> None:
         """Release resources."""
         if self._client:
             await self._client.aclose()
@@ -297,6 +297,6 @@ class OpenRouterRuntime(Runtime):
             usage=metadata["usage"],
         )
 
-    async def close(self):
+    async def close(self) -> None:
         """Close the HTTP client."""
         await self._client.close()

@@ -38,6 +38,7 @@ from bootstrap.types import (
     Facts,
     HoldTension,
     PersonaSeed,
+    SublateInput,
     Synthesis,
     Tension,
     TensionMode,
@@ -260,11 +261,11 @@ async def run_autopoiesis() -> AnalysisState:
 
         # Contradict: Find tensions
         print("  [CONTRADICT] Finding tensions...")
-        contradict = Contradict(checker=spec_impl_contradiction_check)
         new_tensions: list[Tension] = []
 
         for pair in state.pairs:
-            tension = await contradict.invoke(ContradictInput(a=pair, b=None))
+            # Use custom check for spec/impl pairs
+            tension = spec_impl_contradiction_check(pair, None, TensionMode.PRAGMATIC)
             if tension:
                 new_tensions.append(tension)
                 print(f"    ⚡ {tension.description}")
@@ -297,11 +298,11 @@ async def run_autopoiesis() -> AnalysisState:
                 )
                 agent.__doc__ = agent._doc
 
-                verdict = await judge.invoke(JudgeInput(agent=agent, principles=principles))
+                verdict = await judge.invoke(JudgeInput(agent=agent, principles=tuple(principles.keys()) if isinstance(principles, dict) else principles))
                 verdicts.append((pair.name, verdict))
 
                 if verdict.type != VerdictType.ACCEPT:
-                    print(f"    ❌ {pair.name}: {verdict.type.value} - {verdict.reasons}")
+                    print(f"    ❌ {pair.name}: {verdict.type.value} - {verdict.reasoning}")
 
         # Sublate: Resolve tensions
         print("  [SUBLATE] Resolving tensions...")
@@ -309,15 +310,15 @@ async def run_autopoiesis() -> AnalysisState:
         resolutions: list[Synthesis | HoldTension] = []
 
         for tension in new_tensions:
-            resolution = await sublate.invoke(tension)
+            resolution = await sublate.invoke(SublateInput(tensions=(tension,)))
             resolutions.append(resolution)
 
             if isinstance(resolution, HoldTension):
                 print(f"    ⏸️  HOLD: {tension.description}")
-                print(f"       Reason: {resolution.reason}")
+                print(f"       Reason: {resolution.why_held}")
             else:
                 print(f"    ✅ RESOLVED: {tension.description}")
-                print(f"       {resolution.resolution_type.value}: {resolution.explanation}")
+                print(f"       {resolution.resolution_type}: {resolution.explanation}")
 
         return AnalysisState(
             pairs=state.pairs,

@@ -85,7 +85,7 @@ class ClaudeRuntime(Runtime):
         self._max_retries = max_retries
         self._backoff_base = backoff_base
 
-    def _ensure_client(self):
+    def _ensure_client(self) -> None:
         """Lazy-initialize the Anthropic client."""
         if self._client is None:
             try:

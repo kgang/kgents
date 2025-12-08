@@ -11,7 +11,7 @@ from agents.k.persona import DialogueMode
 from runtime.cli import ClaudeCLIRuntime
 
 
-async def main():
+async def main() -> None:
     """Generate implementation plan using Robin agent."""
 
     runtime = ClaudeCLIRuntime(verbose=True, timeout=300.0)  # 5 min for complex Robin chains
@@ -107,8 +107,9 @@ REQUIREMENTS:
         print("\n" + "=" * 70)
         print("⚖️  DIALECTIC SYNTHESIS:")
         print("=" * 70)
-        print(f"\nThesis: {result.dialectic.thesis}")
-        print(f"Antithesis: {result.dialectic.antithesis}")
+        if result.dialectic.tension:
+            print(f"\nThesis: {result.dialectic.tension.thesis}")
+            print(f"Antithesis: {result.dialectic.tension.antithesis}")
         print(f"\n{result.dialectic.synthesis}")
 
         if result.dialectic.productive_tension:

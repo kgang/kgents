@@ -13,7 +13,7 @@ Core principles (Popperian):
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 from runtime.base import LLMAgent, AgentContext
 from agents.a.skeleton import AgentMeta, AgentIdentity, AgentInterface, AgentBehavior
@@ -41,7 +41,7 @@ class Hypothesis:
     supporting_observations: list[int]    # Indices into input observations
     assumptions: list[str]                # Unstated assumptions
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Validate confidence bounds
         if not 0.0 <= self.confidence <= 1.0:
             raise ValueError(f"Confidence must be 0.0-1.0, got {self.confidence}")
@@ -100,7 +100,7 @@ class HypothesisError:
     code: str                             # Error code from meta.interface.error_codes
     message: str                          # Human-readable description
     recoverable: bool                     # Whether retry/Fix pattern could help
-    context: dict = field(default_factory=dict)  # Additional error context
+    context: dict[str, Any] = field(default_factory=dict)  # Additional error context
 
     def __str__(self) -> str:
         return f"{self.code}: {self.message}"
@@ -211,7 +211,7 @@ class HypothesisEngine(LLMAgent[HypothesisInput, AgentResult]):
         interface=AgentInterface(
             input_type=HypothesisInput,
             input_description="Observations and context for hypothesis generation",
-            output_type=AgentResult,
+            output_type=HypothesisOutput,  # Actually returns AgentResult union
             output_description="Either HypothesisOutput (success) or HypothesisError (failure)",
             error_codes=[
                 ("INSUFFICIENT_OBSERVATIONS", "Not enough data to generate hypotheses"),
@@ -241,6 +241,8 @@ class HypothesisEngine(LLMAgent[HypothesisInput, AgentResult]):
     ):
         self.hypothesis_count = hypothesis_count
         self.temperature = temperature
+        self._input_error: Optional[HypothesisError] = None
+        self._current_input: Optional[HypothesisInput] = None
 
     @property
     def name(self) -> str:
@@ -295,8 +297,8 @@ class HypothesisEngine(LLMAgent[HypothesisInput, AgentResult]):
         suggested_tests = []
 
         lines = response.strip().split('\n')
-        section = None
-        current_hypothesis = {}
+        section: Optional[str] = None
+        current_hypothesis: dict[str, Any] = {}
 
         for line in lines:
             line = line.strip()
@@ -398,7 +400,7 @@ class HypothesisEngine(LLMAgent[HypothesisInput, AgentResult]):
             suggested_tests=suggested_tests,
         )
 
-    def _build_hypothesis(self, data: dict) -> Hypothesis:
+    def _build_hypothesis(self, data: dict[str, Any]) -> Hypothesis:
         """Build a Hypothesis from parsed data with defaults."""
         # Map novelty string to enum
         novelty_str = data.get('novelty', 'incremental').lower()

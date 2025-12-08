@@ -14,6 +14,8 @@ import logging
 
 from bootstrap.types import (
     Agent,
+    ContradictInput,
+    SublateInput,
     Tension,
     TensionMode,
     Synthesis,
@@ -31,7 +33,7 @@ class DialecticInput:
     """Input for dialectic synthesis."""
     thesis: Any
     antithesis: Optional[Any] = None  # If None, H-hegel surfaces it
-    context: Optional[dict] = None
+    context: Optional[dict[str, Any]] = None
 
 
 @dataclass
@@ -114,6 +116,7 @@ class HegelAgent(Agent[DialecticInput, DialecticOutput]):
                 mode=TensionMode.LOGICAL,
                 thesis=input.thesis,
                 antithesis=input.antithesis,
+                severity=0.5,
                 description=f"Tension between: {input.thesis} vs {input.antithesis}",
             )
             lineage.append(DialecticStep(
@@ -130,8 +133,8 @@ class HegelAgent(Agent[DialecticInput, DialecticOutput]):
         else:
             # Implicit dialectic - surface antithesis
             logger.debug("surfacing.antithesis")
-            tension = await self._contradict.invoke((input.thesis, None))
-            if tension is None:
+            contradict_result = await self._contradict.invoke(ContradictInput(a=input.thesis, b=None))
+            if contradict_result.no_tension or not contradict_result.tensions:
                 # No contradiction found - thesis stands alone
                 lineage.append(DialecticStep(
                     stage="no_antithesis",
@@ -154,6 +157,7 @@ class HegelAgent(Agent[DialecticInput, DialecticOutput]):
                     lineage=lineage,
                     metadata=metadata,
                 )
+            tension = contradict_result.tensions[0]
             lineage.append(DialecticStep(
                 stage="surface_antithesis",
                 thesis=input.thesis,
@@ -168,7 +172,7 @@ class HegelAgent(Agent[DialecticInput, DialecticOutput]):
 
         # Attempt sublation
         logger.debug("attempting.sublation")
-        result = await self._sublate.invoke(tension)
+        result = await self._sublate.invoke(SublateInput(tensions=(tension,)))
 
         if isinstance(result, HoldTension):
             # Productive tension - don't force synthesis
@@ -177,19 +181,19 @@ class HegelAgent(Agent[DialecticInput, DialecticOutput]):
                 thesis=tension.thesis,
                 antithesis=tension.antithesis,
                 result=result,
-                notes=f"Holding productive tension: {result.reason}",
+                notes=f"Holding productive tension: {result.why_held}",
             ))
             logger.info(
                 "dialectic.complete",
                 extra={
                     "outcome": "tension_held",
-                    "reason": result.reason,
+                    "reason": result.why_held,
                     "synthesis_achieved": False,
                 }
             )
             return DialecticOutput(
                 synthesis=None,
-                sublation_notes=result.reason,
+                sublation_notes=result.why_held,
                 productive_tension=True,
                 tension=tension,
                 lineage=lineage,

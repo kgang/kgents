@@ -34,6 +34,7 @@ from bootstrap import (
 )
 from bootstrap.types import (
     Agent,
+    SublateInput,
     Tension,
     TensionMode,
     Verdict,
@@ -204,7 +205,7 @@ async def analyze_module(
     judge: Judge,
     contradict: Contradict,
     sublate: Sublate,
-    principles,
+    principles: Any,
 ) -> ImprovementReport:
     """Analyze a single module for improvements."""
 
@@ -255,12 +256,16 @@ async def analyze_module(
                 "Conflicts are data (log, don't swallow)",
             ],
         ))
-        hypotheses = result.output
+        result_output = result.output
         elapsed = time.time() - step_start
         log(f"      ✓ Done in {elapsed:.1f}s")
-        log(f"    Generated {len(hypotheses.hypotheses)} hypotheses")
-        for i, h in enumerate(hypotheses.hypotheses, 1):
-            log(f"    {i}. {h.statement[:80]}...")
+        if isinstance(result_output, HypothesisOutput):
+            hypotheses = result_output
+            log(f"    Generated {len(hypotheses.hypotheses)} hypotheses")
+            for i, h in enumerate(hypotheses.hypotheses, 1):
+                log(f"    {i}. {h.statement[:80]}...")
+        else:
+            log(f"    ⚠️  Hypothesis generation returned error")
     except Exception as e:
         elapsed = time.time() - step_start
         log(f"    ⚠️  Hypothesis generation failed after {elapsed:.1f}s: {e}")
@@ -273,9 +278,9 @@ async def analyze_module(
     verdict = await judge.invoke(JudgeInput(agent=agent_wrapper, principles=principles))
 
     if verdict.type == VerdictType.ACCEPT:
-        log(f"    ✅ ACCEPT: {verdict.reasons}")
+        log(f"    ✅ ACCEPT: {verdict.reasoning}")
     elif verdict.type == VerdictType.REJECT:
-        log(f"    ❌ REJECT: {verdict.reasons}")
+        log(f"    ❌ REJECT: {verdict.reasoning}")
     else:
         log(f"    ⚠️  REVISE: {verdict.revisions}")
 
@@ -284,8 +289,7 @@ async def analyze_module(
     tensions: list[Tension] = []
 
     # Check with our custom code quality checker
-    local_contradict = Contradict(checker=code_quality_check)
-    tension = await local_contradict.invoke(ContradictInput(a=module, b=None))
+    tension = code_quality_check(module, None, TensionMode.AXIOLOGICAL)
     if tension:
         tensions.append(tension)
         log(f"    ⚡ {tension.description} (severity: {tension.severity})")
@@ -298,15 +302,15 @@ async def analyze_module(
     resolutions: list[Synthesis | HoldTension] = []
 
     for t in tensions:
-        resolution = await sublate.invoke(t)
+        resolution = await sublate.invoke(SublateInput(tensions=(t,)))
         resolutions.append(resolution)
 
         if isinstance(resolution, HoldTension):
             log(f"    ⏸️  HOLD: {t.description}")
-            log(f"       Reason: {resolution.reason}")
+            log(f"       Reason: {resolution.why_held}")
         else:
             log(f"    ✅ RESOLVED: {t.description}")
-            log(f"       {resolution.resolution_type.value}: {resolution.explanation}")
+            log(f"       {resolution.resolution_type}: {resolution.explanation}")
 
     total_time = time.time() - start_time
     log(f"\n✓ {module.name} completed in {total_time:.1f}s")
@@ -411,7 +415,7 @@ async def run_self_improvement(target: str = "all") -> list[ImprovementReport]:
         log("-"*60)
         for name, tension, hold in held_tensions:
             log(f"\n{name}: {tension.description}")
-            log(f"  Reason held: {hold.reason}")
+            log(f"  Reason held: {hold.why_held}")
             log(f"  Revisit when: {hold.revisit_conditions}")
 
     return reports

@@ -352,6 +352,7 @@ class RobinAgent(Agent[RobinInput, RobinOutput]):
                     f"Measure structural variance in {input.domain}",
                     f"Compare against systems without constraint",
                 ],
+                supporting_observations=[],
                 assumptions=[
                     f"Structural analysis is applicable to {input.domain}",
                     "Observable pattern is not random noise",
@@ -365,6 +366,7 @@ class RobinAgent(Agent[RobinInput, RobinOutput]):
                     f"Test if variation follows optimization gradients",
                     f"Look for local optima in {input.domain}",
                 ],
+                supporting_observations=[],
                 assumptions=[
                     "System has sufficient degrees of freedom",
                     "Optimization is energetically favorable",
