@@ -4,12 +4,95 @@
 
 ## TL;DR
 
-**Status**: D-gents Phase 3 complete: CachedAgent with layered persistence ✅
-**Branch**: `main` (70/70 tests passing)
-**Session**: 2025-12-08 - Implemented cache + backend composition pattern
-**Achievement**: Phase 3 deliverable complete (CachedAgent with write-through caching)
-**Tests**: 70 tests passing (11 new: cache hit, write-through, warm/invalidate, isolation)
-**Next**: Apply D-gents to other genera (K-gent persona, B-gents hypotheses) OR Phase 4 ecosystem integration
+**Status**: Bootstrap dialectic resolved (committed 4258285) + file splits complete ✅
+**Branch**: `main` (pushed)
+**Session**: 2025-12-08 - Resolved spec-impl contradiction via stratification + file splits
+**Achievement**: Formalized infrastructure vs composition across ALL genera; split E/J-gents monoliths
+**Specs**: 3 updated + 2 new pattern docs (monad transformers, infrastructure/composition)
+**Impl**: prompts.py→prompts/, sandbox.py→sandbox/
+**Next**: Commit D-gents Phase 2/3 implementations OR apply stratification to F/E-gents specs
+
+---
+
+## Next Session: Start Here
+
+### What Just Happened (Quick Context)
+
+**Bootstrap Dialectic RESOLVED** ✅ (commit 4258285):
+- D-gents "violation" was actually a **synthesis**
+- Specs now document two-level architecture: infrastructure (DataAgent) vs composition (Symbiont)
+- Pattern formalized across ALL genera in `spec/patterns/`
+- Key insight: Symbiont IS a bootstrap agent (State Monad Transformer)
+
+### Uncommitted Work
+
+**D-gents Phase 2/3** (59→70 tests, ready to commit):
+- `impl/claude/agents/d/persistent.py` - File-backed state (211 lines, 13 tests)
+- `impl/claude/agents/d/lens.py` - Compositional state access (260 lines, 21 tests)
+- `impl/claude/agents/d/lens_agent.py` - Focused views (104 lines, 10 tests)
+- `impl/claude/agents/d/cached.py` - Layered persistence (183 lines, 11 tests)
+
+**Session Artifacts**:
+- `DGENT_BOOTSTRAP_DIALECTIC.md` - Dialectic analysis (committed)
+- `DGENT_IMPLEMENTATION_PLAN.md` - Implementation plan (uncommitted)
+- `H_GENTS_IMPLEMENTATION_SUMMARY.md` - Session summary (uncommitted)
+- Deleted docs: `docs/*.md` (stale, unstaged)
+
+### Recommended Next Actions
+
+**Option A: Commit D-gents Phase 2/3**
+```bash
+git add impl/claude/agents/d/
+git add DGENT_IMPLEMENTATION_PLAN.md H_GENTS_IMPLEMENTATION_SUMMARY.md
+git rm docs/*.md
+git commit -m "feat(d-gents): Phase 2/3 implementation"
+```
+
+**Option B: Apply Stratification to F/E-gents**
+- Create `spec/f-gents/README.md` (Parser infrastructure → ForgeAgent composition)
+- Create `spec/e-gents/README.md` (Population infrastructure → EvolutionAgent composition)
+- Follow `spec/patterns/monad_transformers.md` template
+
+**Option C: Use D-gents in Practice**
+- K-gent with PersistentAgent for persona memory
+- B-gents with Lens for hypothesis state
+- Show stratification working end-to-end
+
+---
+
+## This Session Part 7: H7/H10 File Splits (2025-12-08) ✅
+
+### What Was Done
+
+Split two large monolithic files into focused modules:
+
+**H7: prompts.py (762 lines) → prompts/ package**:
+- `prompts/__init__.py`: Re-exports for backward compatibility
+- `prompts/base.py`: PromptContext dataclass + build_prompt_context
+- `prompts/analysis.py`: extract_type_annotations, extract_imports, extract_dataclass_fields, extract_enum_values, extract_api_signatures, check_existing_errors, find_similar_patterns, get_relevant_principles
+- `prompts/improvement.py`: format_* functions + build_improvement_prompt, build_simple_prompt
+
+**H10: sandbox.py (460 lines) → sandbox/ package**:
+- `sandbox/__init__.py`: Re-exports for backward compatibility
+- `sandbox/namespace.py`: SandboxConfig, SandboxResult, SandboxedNamespace
+- `sandbox/executor.py`: type_check_source, execute_in_sandbox, jit_compile_and_execute
+- `sandbox/validation.py`: validate_jit_safety
+
+### Backward Compatibility
+
+All existing imports work unchanged:
+```python
+from agents.e import PromptContext, build_prompt_context  # ✓
+from agents.j import SandboxConfig, execute_in_sandbox    # ✓
+```
+
+### Verification
+
+```bash
+python -m pytest agents/d/_tests/ -v  # 70 passed
+python -c "from agents.e.prompts import PromptContext; print('OK')"
+python -c "from agents.j.sandbox import SandboxConfig; print('OK')"
+```
 
 ---
 
@@ -377,12 +460,12 @@ Created `impl/claude/agents/d/` with Phase 1 deliverables:
 - `StreamAgent` - Event sourcing pattern (audit logs, time-travel)
 - `GraphAgent` - Knowledge graph state (ontologies, relationships)
 
-### Priority 2: Remaining IMPROVEMENT_PLAN
+### Priority 2: IMPROVEMENT_PLAN Status
 
 | Task | File | Status |
 |------|------|--------|
-| H7 | `agents/e/prompts.py` (762 lines) | Split into prompts/{base,improvement,analysis}.py |
-| H10 | `agents/j/sandbox.py` (460 lines) | Split into sandbox/{executor,namespace,validation}.py |
+| H7 | `agents/e/prompts.py` (762 lines) | ✅ Split into prompts/{base,improvement,analysis}.py |
+| H10 | `agents/j/sandbox.py` (460 lines) | ✅ Split into sandbox/{executor,namespace,validation}.py |
 
 ### Quick Verification
 

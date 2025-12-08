@@ -35,7 +35,18 @@ from .errors import (
     StorageError,
 )
 from .volatile import VolatileAgent
+from .persistent import PersistentAgent
 from .symbiont import Symbiont
+from .lens import (
+    Lens,
+    key_lens,
+    field_lens,
+    index_lens,
+    identity_lens,
+    verify_lens_laws,
+)
+from .lens_agent import LensAgent, focused
+from .cached import CachedAgent
 
 __all__ = [
     # Protocol
@@ -48,5 +59,16 @@ __all__ = [
     "StorageError",
     # Implementations
     "VolatileAgent",
+    "PersistentAgent",
+    "CachedAgent",
     "Symbiont",
+    # Lenses
+    "Lens",
+    "key_lens",
+    "field_lens",
+    "index_lens",
+    "identity_lens",
+    "verify_lens_laws",
+    "LensAgent",
+    "focused",
 ]

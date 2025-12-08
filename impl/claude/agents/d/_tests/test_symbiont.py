@@ -8,6 +8,7 @@ Tests cover:
 - Pure logic testability
 """
 
+import asyncio
 import pytest
 from agents.d import VolatileAgent, Symbiont
 
