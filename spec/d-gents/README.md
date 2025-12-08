@@ -40,6 +40,49 @@ The D-gent **abstracts** the mechanism of state management:
 
 This allows the host agent to remain **functionally pure** in its logic while the D-gent handles memory as a managed side effect.
 
+### D-gents and the Bootstrap Category: Stratified Architecture
+
+D-gents exist at **two distinct abstraction levels**, resolving an apparent contradiction:
+
+**Infrastructure Level: DataAgent[S]**
+- **Protocol**: `load()`, `save()`, `history()`
+- **NOT a bootstrap agent** (no `invoke` method)
+- **Purpose**: Manages state as infrastructure primitive
+- **Category**: Forms $\mathcal{C}_{Data}$, distinct from $\mathcal{C}_{Agent}$
+
+**Composition Level: Symbiont[I, O, S]**
+- **Wrapper**: Fuses logic $(I, S) \to (O, S)$ with memory `DataAgent[S]`
+- **IS a bootstrap agent** (implements `Agent[I, O]`)
+- **Purpose**: Composable via `>>` operator
+- **Category**: Forms morphism in $\mathcal{C}_{Agent}$
+
+**The Monad Transformer Pattern**
+
+Symbiont is the **State Monad Transformer** for kgents:
+- Lifts stateless agents to stateful agents
+- Threads state implicitly through composition
+- Enables `symbiont_a >> symbiont_b` to work naturally
+
+This pattern appears throughout bootstrap agents:
+- **Fix**: Fixed-Point Monad Transformer (μ)
+- **Result**: Error Monad Transformer (Either)
+- **Compose**: Reader Monad Transformer (→)
+
+**Derivation from Bootstrap**
+
+```python
+# DataAgent is NOT derived from bootstrap (it's infrastructure)
+DataAgent = StateInfrastructure  # New primitive at infrastructure level
+
+# Symbiont IS derived from bootstrap via Compose
+Symbiont[I, O, S] = Compose(
+  logic: (I, S) → (O, S),
+  memory: DataAgent[S]
+) : Agent[I, O]
+```
+
+This stratification resolves the apparent contradiction: D-gent **infrastructure** is orthogonal to agents, but D-gent **composition** (Symbiont) is squarely in the bootstrap agent category.
+
 ### Endosymbiosis: D-gents Inside Agents
 
 D-gents are designed to live *inside* other agents (the "Host"), providing them with:

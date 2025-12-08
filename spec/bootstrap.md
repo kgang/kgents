@@ -275,9 +275,23 @@ A-gents = Compose(Ground, abstract_patterns)
         | Compose(Ground, creativity_support)
 B-gents = Compose(Ground, scientific_method)
 C-gents = {Id, Compose, Fix}  // C-gents ARE bootstrap agents
+D-gents = {DataAgent (infrastructure), Symbiont (bootstrap agent)}
 H-gents = {Contradict, Sublate, introspection_targets}
 K-gent = Ground() projected through persona_schema
 ```
+
+### Generating D-gents
+
+```
+DataAgent = StateInfrastructure  // Not derived (new primitive at infrastructure level)
+
+Symbiont[I, O, S] = Fix(λs.
+  let stateful = Compose(logic: (I, S) → (O, S), memory: DataAgent[S])
+  in if Judge(stateful, composability) then s else refine(s)
+) : Agent[I, O]
+```
+
+**Key Insight**: Symbiont is derivable from Compose + DataAgent. DataAgent itself is a new primitive at the infrastructure level, but Symbiont (the composition layer) IS a bootstrap agent via the State Monad Transformer pattern.
 
 ### Generating the Spec
 
@@ -331,6 +345,7 @@ Regenerate(Bootstrap) ≅ Bootstrap
 | Contradict | H-gents (pre-dialectic) | All (consistency checking) |
 | Sublate | H-hegel (hegel.md) | All (system evolution) |
 | Fix | C-gents (recursive definitions) | Bootstrap itself |
+| Symbiont (D-gent) | Agent[I, O] wrapper with state | State Monad Transformer |
 
 ---
 

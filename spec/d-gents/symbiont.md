@@ -55,7 +55,11 @@ Classic example: **Mitochondria** (energy producers) inside eukaryotic cells:
 
 ## The Symbiont Specification
 
-### Interface
+### Symbiont in the Bootstrap Category
+
+**Symbiont IS a Bootstrap Agent**
+
+The Symbiont pattern wraps a `DataAgent[S]` (infrastructure) to produce an `Agent[I, O]` (bootstrap-composable):
 
 ```python
 from typing import TypeVar, Generic, Callable, Tuple
@@ -68,9 +72,19 @@ S = TypeVar("S")  # State type
 LogicFunction = Callable[[I, S], Tuple[O, S]]
 
 @dataclass
-class Symbiont(Generic[I, O, S]):
+class Symbiont(Agent[I, O], Generic[I, O, S]):
     """
     An agent that fuses pure logic with stateful memory.
+
+    **Bootstrap Agent Status**: Symbiont IS a valid bootstrap agent.
+    - Implements Agent[I, O] protocol
+    - Composable via >> operator
+    - Satisfies category laws (identity, associativity)
+
+    **Monad Transformer**: Symbiont is the State Monad Transformer.
+    - Lifts stateless logic to stateful computation
+    - Threads state implicitly through composition
+    - Encapsulates DataAgent[S] as internal infrastructure
 
     The logic function is pure: (input, state) → (output, new_state)
     The D-gent handles all persistence side effects.
@@ -107,6 +121,39 @@ class Symbiont(Generic[I, O, S]):
         # 4. Return result
         return output
 ```
+
+**Category-Theoretic View**
+
+```
+Symbiont: 𝒞_Agent[I, O] × 𝒞_Data[S] → 𝒞_Agent[I, O]
+```
+
+Symbiont is a functor that takes:
+- An agent-like computation `(I, S) → (O, S)`
+- A data agent `DataAgent[S]`
+- Returns a bootstrap agent `Agent[I, O]`
+
+The `DataAgent[S]` is encapsulated *inside* Symbiont. Externally, Symbiont is just another morphism `I → O` in $\mathcal{C}_{Agent}$.
+
+**Bootstrap Composition Properties**
+
+By implementing `Agent[I, O]`, Symbiont participates fully in the bootstrap category:
+
+- **Composable**: `symbiont_a >> symbiont_b` works
+- **Identity**: `Id >> symbiont ≡ symbiont ≡ symbiont >> Id`
+- **Associative**: `(s1 >> s2) >> s3 ≡ s1 >> (s2 >> s3)`
+
+This is the State Monad Transformer pattern from Haskell:
+
+```haskell
+StateT s m a = s -> m (a, s)
+```
+
+Where:
+- `s` = State type `S`
+- `m` = Agent monad
+- `a` = Output type `O`
+- Input `I` is curried
 
 ### Key Properties
 

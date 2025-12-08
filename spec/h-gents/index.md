@@ -29,6 +29,52 @@ These traditions are not competing—they address different aspects of system in
 
 ---
 
+## H-gents and the Bootstrap Category: Stratified Architecture
+
+Like D-gents, H-gents exist at **two distinct abstraction levels**:
+
+**Infrastructure Level: Dialectic Operations**
+- **Contradict**: `(A, B) → Tension | None` - Detects contradictions
+- **Sublate**: `Tension → Synthesis | HoldTension` - Resolves or preserves tensions
+- **NOT bootstrap agents** (meta-operations, not `Agent[I, O]`)
+- **Category**: Forms $\mathcal{C}_{Dialectic}$, distinct from $\mathcal{C}_{Agent}$
+
+**Composition Level: DialecticAgent**
+- **Wrapper**: Fuses contradiction detection + synthesis logic
+- **IS a bootstrap agent** (implements `Agent[Pair, Synthesis]`)
+- **Composable** via `>>` operator
+- **Category**: Forms morphism in $\mathcal{C}_{Agent}$
+
+**The Monad Transformer Pattern**
+
+H-gents implement the **Continuation Monad Transformer**:
+- Suspends computation when contradiction detected
+- Continues when synthesis achieved (or tension held)
+- Threads dialectical context through composition
+
+This pattern mirrors:
+- **Contradict** ≈ Exception detection (short-circuit on contradiction)
+- **Sublate** ≈ Exception handler (resolve or re-raise)
+- **DialecticAgent** ≈ Try/Catch wrapper that makes errors composable
+
+**Derivation from Bootstrap**
+
+```python
+# Contradict and Sublate are bootstrap primitives (infrastructure)
+Contradict: Bootstrap primitive  # Tension detection
+Sublate: Bootstrap primitive      # Synthesis operation
+
+# DialecticAgent IS derived from bootstrap via Compose
+DialecticAgent[T, A, S] = Compose(
+  detect: (T, A) → Tension,
+  resolve: Tension → S
+) : Agent[Pair[T, A], S]
+```
+
+This stratification explains why `Contradict` and `Sublate` are bootstrap primitives (spec/bootstrap.md) while H-hegel, H-lacan, H-jung are composable agents built on top of them.
+
+---
+
 ## Why "Inward-Facing"?
 
 Traditional agents face **outward**: they process user requests, generate outputs, take actions in the world.
