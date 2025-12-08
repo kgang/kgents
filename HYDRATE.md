@@ -6,53 +6,63 @@
 
 ## TL;DR
 
-**Status**: Bootstrap Phase 6 complete, Evolution pipeline enhanced ✅
-**Latest**: Dec 8 PM - Rich logging, JSON export, decision framework ready
-**Branch**: `main` (pushed, commit 72a6cd0)
-**Ready**: Run fresh evolution with enhanced logging to review improvements
+**Status**: 14 evolution improvements applied to bootstrap modules ✅
+**Latest**: Dec 8 - Major evolution: Id, Compose, Types, Fix, Judge, Contradict, Sublate improved
+**Branch**: `main` (15 new commits since last push)
 
 ---
 
-## Dec 8, 2025 Session Summary
+## Dec 8, 2025 Session: Evolution Applied
 
-### Completed Work
+### 14 Improvements Incorporated
 
-**Bootstrap Phase 6: Regeneration Validation** ✅
-- Created validation guide with manual test cases for all 7 agents
-- Built automated test harness (behavior snapshot approach)
-- Captured reference behavior: Id, Ground, Judge verified
-- Success criteria: behavior equivalence (not implementation matching)
+**Id Agent** (3 improvements):
+- `__rlshift__` for left-identity law optimization
+- Relaxed strict `is` check (now uses equality)
+- `__rrshift__` for right-identity symmetry
 
-**Evolution Pipeline Enhancements** ✅
-- Rich logging: Full hypotheses + improvement metadata (type/confidence/rationale)
-- JSON export: Structured results for programmatic review (`.json` files)
-- Decision framework: 300+ line guide for tasteful improvement selection
-- Philosophy documented: Evolution suggests, humans curate
+**Compose** (2 improvements):
+- `FixComposedAgent` now total via Either type
+- Decoupled Fix pattern refiner (analyzer/transformer split)
 
-**Environment Fix** ✅
-- Venv issue resolved: Always `source .venv/bin/activate` before running evolution
-- Verified: mypy 1.19.0 available, 27 modules load correctly
+**Types** (1 improvement):
+- `FixConfig.should_continue` enhanced with iteration context
+
+**Fix** (1 improvement):
+- Proximity metric for adaptive convergence strategies
+
+**Judge** (4 improvements):
+- Mini-judges refactored to pure functions
+- Placeholder checks → explicit `NotImplementedError`
+- Mini-judges now delegate to `Principles.check`
+- `VerdictAccumulator` made immutable (frozen)
+
+**Contradict** (2 improvements):
+- Per-detector timeout and circuit breaker
+- `TensionEvidence` tracking for bidirectional learning
+
+**Ground** (1 improvement):
+- Simplified: removed unused Fix retry wrapper (static data)
+
+### Bug Fixes
+- Fixed `evolve.py`: `verdict.verdict_type` → `verdict.type`
+- Fixed `ground.py`: Corrected Fix import path
 
 ---
 
 ## Next Session: Start Here
 
-### Option 1: Review Evolution Improvements (Recommended)
+### Option 1: Push Changes & Continue Evolution
 
 ```bash
 cd /Users/kentgang/git/kgents
+git push  # 15 commits ready
+
+# Run evolution on remaining modules
 source .venv/bin/activate
 cd impl/claude
-
-# Run fresh evolution with enhanced logging
-python evolve.py all --dry-run --quick
-
-# Review results
-ls -lt .evolve_logs/*.json | head -1
-cat .evolve_logs/evolve_all_YYYYMMDD_HHMMSS.json | jq '.passed_experiments'
-
-# Use EVOLUTION_DECISION_FRAMEWORK.md to evaluate each improvement
-# Make tasteful, principled incorporation decisions
+python evolve.py agents --dry-run --quick
+python evolve.py runtime --dry-run --quick
 ```
 
 ### Option 2: Other Priorities
@@ -150,19 +160,16 @@ git push
 
 ## Session Log
 
+**Dec 8, 2025 (Evolution Session)**:
+- ✅ Ran evolution pipeline on bootstrap modules
+- ✅ Fixed `evolve.py` bug: `verdict.verdict_type` → `verdict.type`
+- ✅ Applied 14 improvements across 7 modules (Id, Compose, Types, Fix, Judge, Contradict, Ground)
+- ✅ Fixed `ground.py` import error after evolution
+- ✅ All core bootstrap modules pass type checking
+
 **Dec 8, 2025 (PM Session)**:
 - ✅ Completed Bootstrap Docs Phase 6: Regeneration Validation
-- ✅ Created `REGENERATION_VALIDATION_GUIDE.md` with manual test cases for all 7 agents
-- ✅ Created `test_regeneration.py` automated test harness
-- ✅ Captured reference behavior snapshot (Id, Ground, Judge agents verified)
-- ✅ Defined success criteria: behavior equivalence (not implementation matching)
-- ✅ Updated HYDRATE.md: Phase 6 complete, ~300 lines of validation documentation
-- ✅ Enhanced evolution pipeline logging for better decision-making:
-  - Full hypothesis logging (not truncated)
-  - Rich improvement metadata (type, confidence, rationale)
-  - JSON export of experiment results for review
-  - Created `EVOLUTION_DECISION_FRAMEWORK.md` (decision guide for reviewing improvements)
-- ✅ Documented evolution refinement principle in HYDRATE.md
+- ✅ Enhanced evolution pipeline logging (JSON export, rich metadata)
 
 **Dec 8, 2025 (AM Session)**:
 - ✅ Diagnosed evolution pipeline mypy errors
