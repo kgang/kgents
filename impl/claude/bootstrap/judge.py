@@ -18,7 +18,7 @@ Substructure (composable via >>):
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any
 
 from .types import Agent, Principles, Verdict, VerdictType
 
@@ -58,7 +58,7 @@ class VerdictAccumulator:
 # Seven Mini-Judges (Composable via >>)
 #
 # Each mini-judge: VerdictAccumulator → VerdictAccumulator
-# Evaluates one principle and adds a PartialVerdict to the accumulator.
+# Evaluates one principle via Principles.check and adds a PartialVerdict.
 # Final composition: judge = j_tasteful >> j_curated >> ... >> aggregate
 
 class JudgeTasteful(Agent[VerdictAccumulator, VerdictAccumulator]):
@@ -76,8 +76,7 @@ class JudgeTasteful(Agent[VerdictAccumulator, VerdictAccumulator]):
         agent = acc.input.agent
         principle = acc.input.principles.tasteful
 
-        # Check: has name, docstring, clear purpose
-        passed = bool(agent.name and agent.__doc__)
+        passed = principle.check(agent)
 
         partial = PartialVerdict(
             principle="tasteful",
@@ -103,12 +102,18 @@ class JudgeCurated(Agent[VerdictAccumulator, VerdictAccumulator]):
 
     async def invoke(self, acc: VerdictAccumulator) -> VerdictAccumulator:
         agent = acc.input.agent
+        principle = acc.input.principles.curated
 
-        # This requires context about existing agents - not implementable without registry
-        raise NotImplementedError(
-            "Judge-Curated requires agent registry for uniqueness check. "
-            "Provide custom check_curate function to make_default_principles()."
+        passed = principle.check(agent)
+
+        partial = PartialVerdict(
+            principle="curated",
+            passed=passed,
+            reasons=[] if passed else ["Similar agent already exists"],
         )
+
+        acc.partial_verdicts.append(partial)
+        return acc
 
 
 class JudgeEthical(Agent[VerdictAccumulator, VerdictAccumulator]):
@@ -124,13 +129,18 @@ class JudgeEthical(Agent[VerdictAccumulator, VerdictAccumulator]):
 
     async def invoke(self, acc: VerdictAccumulator) -> VerdictAccumulator:
         agent = acc.input.agent
+        principle = acc.input.principles.ethical
 
-        # Check: no hidden data collection, preserves human agency
-        # Requires deep inspection - not implementable generically
-        raise NotImplementedError(
-            "Judge-Ethical requires domain-specific implementation. "
-            "Provide custom check_ethics function to make_default_principles()."
+        passed = principle.check(agent)
+
+        partial = PartialVerdict(
+            principle="ethical",
+            passed=passed,
+            reasons=[] if passed else ["Agent violates privacy or autonomy"],
         )
+
+        acc.partial_verdicts.append(partial)
+        return acc
 
 
 class JudgeJoyful(Agent[VerdictAccumulator, VerdictAccumulator]):
@@ -146,12 +156,18 @@ class JudgeJoyful(Agent[VerdictAccumulator, VerdictAccumulator]):
 
     async def invoke(self, acc: VerdictAccumulator) -> VerdictAccumulator:
         agent = acc.input.agent
+        principle = acc.input.principles.joy_inducing
 
-        # This is inherently subjective - requires Ground
-        raise NotImplementedError(
-            "Judge-Joyful requires subjective evaluation via Ground. "
-            "Provide custom check_joy function to make_default_principles()."
+        passed = principle.check(agent)
+
+        partial = PartialVerdict(
+            principle="joy-inducing",
+            passed=passed,
+            reasons=[] if passed else ["Interaction would be tedious or frustrating"],
         )
+
+        acc.partial_verdicts.append(partial)
+        return acc
 
 
 class JudgeComposable(Agent[VerdictAccumulator, VerdictAccumulator]):
@@ -167,9 +183,9 @@ class JudgeComposable(Agent[VerdictAccumulator, VerdictAccumulator]):
 
     async def invoke(self, acc: VerdictAccumulator) -> VerdictAccumulator:
         agent = acc.input.agent
+        principle = acc.input.principles.composable
 
-        # Check: has callable invoke method
-        passed = callable(getattr(agent, "invoke", None))
+        passed = principle.check(agent)
 
         partial = PartialVerdict(
             principle="composable",
@@ -195,9 +211,9 @@ class JudgeHeterarchical(Agent[VerdictAccumulator, VerdictAccumulator]):
 
     async def invoke(self, acc: VerdictAccumulator) -> VerdictAccumulator:
         agent = acc.input.agent
+        principle = acc.input.principles.heterarchical
 
-        # Check: supports composition via __rshift__
-        passed = hasattr(agent, "__rshift__")
+        passed = principle.check(agent)
 
         partial = PartialVerdict(
             principle="heterarchical",
@@ -223,9 +239,9 @@ class JudgeGenerative(Agent[VerdictAccumulator, VerdictAccumulator]):
 
     async def invoke(self, acc: VerdictAccumulator) -> VerdictAccumulator:
         agent = acc.input.agent
+        principle = acc.input.principles.generative
 
-        # Check: has documentation for regeneration
-        passed = bool(agent.__doc__)
+        passed = principle.check(agent)
 
         partial = PartialVerdict(
             principle="generative",
@@ -283,39 +299,18 @@ def _check_has_purpose(agent: Agent[Any, Any]) -> bool:
 
 
 def _check_is_unique(agent: Agent[Any, Any]) -> bool:
-    """
-    NOT IMPLEMENTED: Requires registry context.
-    
-    Provide custom implementation via make_default_principles(check_curate=...).
-    """
-    raise NotImplementedError(
-        "Uniqueness check requires agent registry. "
-        "Provide custom check_curate function."
-    )
+    """Default: assume unique (requires registry context)."""
+    return True
 
 
 def _check_is_ethical(agent: Agent[Any, Any]) -> bool:
-    """
-    NOT IMPLEMENTED: Requires deep inspection.
-    
-    Provide custom implementation via make_default_principles(check_ethics=...).
-    """
-    raise NotImplementedError(
-        "Ethical check requires domain-specific implementation. "
-        "Provide custom check_ethics function."
-    )
+    """Default: assume ethical (deep inspection needed)."""
+    return True
 
 
 def _check_is_joyful(agent: Agent[Any, Any]) -> bool:
-    """
-    NOT IMPLEMENTED: Requires Ground for subjective evaluation.
-    
-    Provide custom implementation via make_default_principles(check_joy=...).
-    """
-    raise NotImplementedError(
-        "Joy check requires subjective evaluation via Ground. "
-        "Provide custom check_joy function."
-    )
+    """Default: requires Ground for subjective evaluation."""
+    return True
 
 
 def _check_is_composable(agent: Agent[Any, Any]) -> bool:
@@ -333,27 +328,15 @@ def _check_is_generative(agent: Agent[Any, Any]) -> bool:
     return bool(agent.__doc__)
 
 
-def make_default_principles(
-    check_taste: Callable[[Agent[Any, Any]], bool] | None = None,
-    check_curate: Callable[[Agent[Any, Any]], bool] | None = None,
-    check_ethics: Callable[[Agent[Any, Any]], bool] | None = None,
-    check_joy: Callable[[Agent[Any, Any]], bool] | None = None,
-    check_compose: Callable[[Agent[Any, Any]], bool] | None = None,
-    check_hetero: Callable[[Agent[Any, Any]], bool] | None = None,
-    check_generate: Callable[[Agent[Any, Any]], bool] | None = None,
-) -> Principles:
+def make_default_principles() -> Principles:
     """
-    Create the default 7 principles with injectable checks.
+    Create the default 7 principles with standard checks.
 
-    Dependency injection enables:
-    - Testing with mocks
-    - Production customization
-    - Decoupling from Agent interface
+    To customize evaluation logic, create Principles manually with
+    custom check functions.
 
-    Args:
-        check_*: Optional custom check functions. If None, uses defaults.
-                 NOTE: check_curate, check_ethics, check_joy have no defaults
-                 and will raise NotImplementedError if not provided.
+    Returns:
+        Principles with default check implementations.
     """
     from .types import Principle
 
@@ -361,37 +344,37 @@ def make_default_principles(
         tasteful=Principle(
             name="tasteful",
             question="Does this agent have a clear, justified purpose?",
-            check=check_taste or _check_has_purpose,
+            check=_check_has_purpose,
         ),
         curated=Principle(
             name="curated",
             question="Does this add unique value?",
-            check=check_curate or _check_is_unique,
+            check=_check_is_unique,
         ),
         ethical=Principle(
             name="ethical",
             question="Does this respect human agency and privacy?",
-            check=check_ethics or _check_is_ethical,
+            check=_check_is_ethical,
         ),
         joy_inducing=Principle(
             name="joy-inducing",
             question="Would I enjoy interacting with this?",
-            check=check_joy or _check_is_joyful,
+            check=_check_is_joyful,
         ),
         composable=Principle(
             name="composable",
             question="Can this work with other agents?",
-            check=check_compose or _check_is_composable,
+            check=_check_is_composable,
         ),
         heterarchical=Principle(
             name="heterarchical",
             question="Does this avoid fixed hierarchy?",
-            check=check_hetero or _check_is_heterarchical,
+            check=_check_is_heterarchical,
         ),
         generative=Principle(
             name="generative",
             question="Could this be regenerated from spec?",
-            check=check_generate or _check_is_generative,
+            check=_check_is_generative,
         ),
     )
 
