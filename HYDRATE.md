@@ -4,14 +4,49 @@
 
 ## TL;DR
 
-**Status**: T-gents Phase 2 COMMITTED ✅ - 10 T-gent types complete
-**Branch**: `main` (clean, pushed - commit 41c8d4c)
-**Achievement**: NoiseAgent, LatencyAgent, FlakyAgent, CounterAgent, MetricsAgent implemented
-**Next**: T-gents Phase 3 (Type IV Critics: JudgeAgent, PropertyAgent) OR J-gents Phase 3
+**Status**: Context hydrated ✅ - Meta-evolution experiments completed (all failed)
+**Branch**: `main` (commit ff576c5)
+**Activity**: Two meta-evolution processes tried evolving `meta/evolve` module, all experiments rejected
+**Next**: Clean uncommitted changes OR continue T-gents Phase 3 OR J-gents Phase 3
 
 ---
 
-## This Session: T-gents Phase 2 Implementation (2025-12-08)
+## This Session: Context Hydration + Test Organization (2025-12-08)
+
+### Completed ✅
+
+**Test Suite Organization** ⭐
+- Reorganized all test files into concern-based folders:
+  - `tests/agents/`: T-gents tests (test_t_gents.py)
+  - `tests/evolution/`: Pipeline tests (test_metrics.py)
+  - `tests/layers/`: E-gents layer tests (prompt, parsing, recovery)
+- Created GitHub Actions CI workflow with uv:
+  - Test job: Python 3.11, 3.12, 3.13
+  - Lint job: ruff format + lint + mypy
+  - Coverage job: pytest-cov with codecov upload
+- Updated pyproject.toml with pytest configuration
+- Created comprehensive tests/README.md documentation
+- All 16 T-gents tests passing in new location ✅
+
+**Meta-Evolution Experiments**
+- Ran two parallel `evolve.py meta --auto-apply` processes
+- Generated hypotheses about evolving the evolution system itself
+- Key hypotheses tested:
+  - Decomposing EvolutionPipeline into composable agent morphisms
+  - Extracting StatusReportAgent from show_status function
+  - Making DialecticFix explicit for thesis→antithesis→synthesis cycle
+- **Results**: All experiments failed type checking (API mismatches, incorrect signatures)
+- **Outcome**: 0 incorporated, 1 rejected per run, 0 held
+- Evolution logs saved to `.evolve_logs/evolve_meta_*`
+
+### Context Refreshed
+- HYDRATE.md reviewed and updated
+- T-gents Phase 2 status: COMPLETE (10 types, all tests passing)
+- Background processes completed successfully
+
+---
+
+## Previous: T-gents Phase 2 Implementation (2025-12-08)
 
 ### Completed ✅
 
@@ -197,7 +232,8 @@ From JGENT_SPEC_PLAN.md:
 
 ## Session Log
 
-**Dec 8 (this)**: 41c8d4c - T-gents Phase 2 (NoiseAgent, LatencyAgent, FlakyAgent, CounterAgent, MetricsAgent)
+**Dec 8 (this)**: ff576c5 - Context hydration + meta-evolution experiments (0 incorporated)
+**Dec 8**: 41c8d4c - T-gents Phase 2 (NoiseAgent, LatencyAgent, FlakyAgent, CounterAgent, MetricsAgent)
 **Dec 8**: 8189e79 - T-gents Phase 1 implementation
 **Dec 8**: 9d1c295 - HYDRATE.md update for J-gents Phase 2
 **Dec 8**: b917e2e - J-gents Phase 2 Chaosmonger implementation
@@ -210,34 +246,31 @@ From JGENT_SPEC_PLAN.md:
 ## Quick Commands
 
 ```bash
-# Test T-gents Phase 1 + Phase 2
+# Run all tests (recommended)
 cd impl/claude
-python test_t_gents.py
+uv run pytest
 
-# Test specific Phase 2 agents
-python -c "
-import asyncio
-from agents.t import NoiseAgent, LatencyAgent, CounterAgent, MetricsAgent
+# Test specific suites
+uv run pytest tests/agents/          # T-gents
+uv run pytest tests/evolution/       # Evolution pipeline
+uv run pytest tests/layers/          # E-gents layers
 
-async def test():
-    # NoiseAgent
-    noise = NoiseAgent(level=1.0, seed=42)
-    result = await noise.invoke('test')
-    print(f'NoiseAgent: test -> {result}')
+# Test T-gents Phase 1 + Phase 2
+uv run pytest tests/agents/test_t_gents.py -v
 
-    # CounterAgent
-    counter = CounterAgent('test')
-    await counter.invoke('data')
-    print(f'CounterAgent: count = {counter.count}')
-
-asyncio.run(test())
-"
+# Test with coverage
+uv run pytest --cov=agents --cov=bootstrap --cov=runtime --cov-report=term-missing
 
 # Test J-gents Chaosmonger
 python -c "from agents.j import is_stable; print(is_stable('def f(): pass'))"
 
-# Type check T-gents
-python -m mypy --strict --explicit-package-bases agents/t/
+# Type check
+cd impl/claude
+python -m mypy --strict --explicit-package-bases agents/ bootstrap/ runtime/
+
+# Lint & format
+uv run ruff format impl/claude
+uv run ruff check impl/claude
 ```
 
 ---
