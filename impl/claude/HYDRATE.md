@@ -2,10 +2,37 @@
 
 **Last Updated:** 2025-12-08
 
-## Current State
+## TL;DR
 
-**Phase:** Bootstrap Self-Improvement Implementation
-**Status:** evolve.py enhanced with bootstrap agents ✅
+**Status:** Bootstrap self-improvement applied to evolve.py ✅
+**Commit:** `07332d4` feat(evolve): Add bootstrap agent integration
+**Next:** Apply same patterns to `runtime/base.py` (with_retry → Fix) or `agents/t/` (self-evaluation)
+
+---
+
+## Next Session: Start Here
+
+### Quick Commands
+```bash
+cd impl/claude
+python evolve.py status          # Check evolution state
+python evolve.py suggest         # See bootstrap-enhanced suggestions
+python evolve.py meta --safe-mode --dry-run  # Test safe evolution
+```
+
+### Priority Options
+
+1. **Apply bootstrap to runtime/base.py**
+   - Replace `with_retry()` with bootstrap `Fix` agent
+   - Add convergence tracking, entropy budgets
+
+2. **Apply bootstrap to T-gents**
+   - Add Judge self-evaluation at agent creation
+   - Validate test agents against 7 principles
+
+3. **Continue IMPROVEMENT_PLAN.md Phase B**
+   - H7: Split `prompts.py` (762 lines)
+   - H10: Split `sandbox.py` (460 lines)
 
 ---
 
