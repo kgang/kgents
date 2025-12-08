@@ -18,51 +18,13 @@ from typing import Any, Optional, Union
 from runtime.base import LLMAgent, AgentContext
 from agents.a.skeleton import AgentMeta, AgentIdentity, AgentInterface, AgentBehavior
 
-
-class NoveltyLevel(Enum):
-    """Classification of hypothesis novelty."""
-    INCREMENTAL = "incremental"           # Builds on existing knowledge
-    EXPLORATORY = "exploratory"           # Tests new territory
-    PARADIGM_SHIFTING = "paradigm_shifting"  # Challenges fundamentals
-
-
-@dataclass
-class Hypothesis:
-    """
-    A testable scientific hypothesis.
-
-    The falsifiable_by field is REQUIRED - a hypothesis without
-    falsification criteria is not scientific (Popper).
-    """
-    statement: str                        # The hypothesis itself
-    confidence: float                     # 0.0-1.0, epistemic confidence
-    novelty: NoveltyLevel                 # How novel is this hypothesis
-    falsifiable_by: list[str]             # What would disprove this (REQUIRED)
-    supporting_observations: list[int]    # Indices into input observations
-    assumptions: list[str]                # Unstated assumptions
-
-    def __post_init__(self) -> None:
-        # Validate confidence bounds
-        if not 0.0 <= self.confidence <= 1.0:
-            raise ValueError(f"Confidence must be 0.0-1.0, got {self.confidence}")
-        # Ensure falsifiability
-        if not self.falsifiable_by:
-            raise ValueError("Hypothesis must have falsification criteria")
-
-    def __str__(self) -> str:
-        lines = [
-            f"Hypothesis: {self.statement}",
-            f"  Confidence: {self.confidence:.0%}",
-            f"  Novelty: {self.novelty.value}",
-            f"  Falsifiable by:",
-        ]
-        for f in self.falsifiable_by:
-            lines.append(f"    - {f}")
-        if self.assumptions:
-            lines.append(f"  Assumptions:")
-            for a in self.assumptions:
-                lines.append(f"    - {a}")
-        return "\n".join(lines)
+# Parser extraction (Phase D - H14)
+from .hypothesis_parser import (
+    Hypothesis,
+    NoveltyLevel,
+    ParsedHypothesisResponse,
+    parse_hypothesis_response,
+)
 
 
 @dataclass
@@ -74,24 +36,8 @@ class HypothesisInput:
     constraints: list[str] = field(default_factory=list)  # Known constraints or established facts
 
 
-@dataclass
-class HypothesisOutput:
-    """Output from the Hypothesis Engine."""
-    hypotheses: list[Hypothesis]          # Ranked hypotheses
-    reasoning_chain: list[str]            # How hypotheses were derived
-    suggested_tests: list[str]            # Ways to test the hypotheses
-
-    def __str__(self) -> str:
-        lines = ["HYPOTHESES:"]
-        for i, h in enumerate(self.hypotheses, 1):
-            lines.append(f"\n{i}. {h}")
-        lines.append("\nREASONING CHAIN:")
-        for i, r in enumerate(self.reasoning_chain, 1):
-            lines.append(f"  {i}. {r}")
-        lines.append("\nSUGGESTED TESTS:")
-        for t in self.suggested_tests:
-            lines.append(f"  - {t}")
-        return "\n".join(lines)
+# Re-export ParsedHypothesisResponse as HypothesisOutput for backward compatibility
+HypothesisOutput = ParsedHypothesisResponse
 
 
 @dataclass
@@ -287,144 +233,27 @@ class HypothesisEngine(LLMAgent[HypothesisInput, AgentResult]):
         )
 
     def parse_response(self, response: str) -> AgentResult:
-        """Parse LLM response to AgentResult (Either HypothesisOutput or HypothesisError)."""
+        """
+        Parse LLM response to AgentResult (Either HypothesisOutput or HypothesisError).
+
+        Refactored (Phase D - H14) to use extracted HypothesisResponseParser
+        for cleaner separation and better testability.
+        """
         # Check for input validation errors
-        if hasattr(self, '_input_error') and self._input_error:
+        if hasattr(self, "_input_error") and self._input_error:
             return self._input_error
 
-        hypotheses = []
-        reasoning_chain = []
-        suggested_tests = []
-
-        lines = response.strip().split('\n')
-        section: Optional[str] = None
-        current_hypothesis: dict[str, Any] = {}
-
-        for line in lines:
-            line = line.strip()
-            if not line:
-                continue
-
-            # Detect section headers
-            upper = line.upper()
-            if upper.startswith('HYPOTHES') or upper.startswith('**HYPOTHES'):
-                section = 'hypotheses'
-                continue
-            elif upper.startswith('REASONING') or upper.startswith('**REASONING'):
-                # Save any pending hypothesis
-                if current_hypothesis.get('statement'):
-                    hypotheses.append(self._build_hypothesis(current_hypothesis))
-                    current_hypothesis = {}
-                section = 'reasoning'
-                continue
-            elif upper.startswith('SUGGESTED') or upper.startswith('**SUGGESTED'):
-                section = 'tests'
-                continue
-
-            # Parse content based on section
-            if section == 'hypotheses':
-                # Parse hypothesis structure
-                if line[0].isdigit() and '. STATEMENT:' in line.upper():
-                    # Save previous hypothesis
-                    if current_hypothesis.get('statement'):
-                        hypotheses.append(self._build_hypothesis(current_hypothesis))
-                    current_hypothesis = {
-                        'statement': line.split(':', 1)[1].strip() if ':' in line else '',
-                        'falsifiable_by': [],
-                        'assumptions': [],
-                        'supporting_observations': [],
-                    }
-                elif 'STATEMENT:' in line.upper():
-                    current_hypothesis['statement'] = line.split(':', 1)[1].strip()
-                elif 'CONFIDENCE:' in line.upper():
-                    try:
-                        val = line.split(':', 1)[1].strip()
-                        current_hypothesis['confidence'] = float(val)
-                    except ValueError:
-                        current_hypothesis['confidence'] = 0.5
-                elif 'NOVELTY:' in line.upper():
-                    val = line.split(':', 1)[1].strip().lower()
-                    current_hypothesis['novelty'] = val
-                elif 'FALSIFIABLE_BY:' in line.upper():
-                    current_hypothesis['_section'] = 'falsifiable'
-                elif 'SUPPORTS_OBS' in line.upper() or 'SUPPORTING_OBS' in line.upper():
-                    val = line.split(':', 1)[1].strip() if ':' in line else ''
-                    try:
-                        indices = [int(x.strip()) for x in val.split(',') if x.strip().isdigit()]
-                        current_hypothesis['supporting_observations'] = indices
-                    except ValueError:
-                        pass
-                    current_hypothesis['_section'] = None
-                elif 'ASSUMPTIONS:' in line.upper():
-                    current_hypothesis['_section'] = 'assumptions'
-                elif line.startswith('-') or line.startswith('*'):
-                    text = line.lstrip('-* ').strip()
-                    subsection = current_hypothesis.get('_section')
-                    if subsection == 'falsifiable' and text:
-                        current_hypothesis['falsifiable_by'].append(text)
-                    elif subsection == 'assumptions' and text:
-                        current_hypothesis['assumptions'].append(text)
-
-            elif section == 'reasoning':
-                if line[0].isdigit():
-                    text = line.lstrip('0123456789.-) ').strip()
-                    if text:
-                        reasoning_chain.append(text)
-                elif line.startswith('-') or line.startswith('*'):
-                    text = line.lstrip('-* ').strip()
-                    if text:
-                        reasoning_chain.append(text)
-
-            elif section == 'tests':
-                if line.startswith('-') or line.startswith('*') or line[0].isdigit():
-                    text = line.lstrip('-*0123456789.) ').strip()
-                    if text:
-                        suggested_tests.append(text)
-
-        # Don't forget the last hypothesis
-        if current_hypothesis.get('statement'):
-            hypotheses.append(self._build_hypothesis(current_hypothesis))
-
-        # Validate output - return error if malformed
-        if not hypotheses:
+        # Use extracted parser (Phase D - H14)
+        try:
+            return parse_hypothesis_response(response)
+        except ValueError as e:
+            # Parser failed to find valid hypotheses
             return HypothesisError(
                 code="INSUFFICIENT_OBSERVATIONS",
-                message="LLM failed to generate any valid hypotheses",
+                message=str(e),
                 recoverable=True,  # Retry might help (temperature/prompt variation)
-                context={"response_length": len(response)}
+                context={"response_length": len(response)},
             )
-
-        return HypothesisOutput(
-            hypotheses=hypotheses,
-            reasoning_chain=reasoning_chain,
-            suggested_tests=suggested_tests,
-        )
-
-    def _build_hypothesis(self, data: dict[str, Any]) -> Hypothesis:
-        """Build a Hypothesis from parsed data with defaults."""
-        # Map novelty string to enum
-        novelty_str = data.get('novelty', 'incremental').lower()
-        novelty_map = {
-            'incremental': NoveltyLevel.INCREMENTAL,
-            'exploratory': NoveltyLevel.EXPLORATORY,
-            'paradigm_shifting': NoveltyLevel.PARADIGM_SHIFTING,
-            'paradigm-shifting': NoveltyLevel.PARADIGM_SHIFTING,
-        }
-        novelty = novelty_map.get(novelty_str, NoveltyLevel.INCREMENTAL)
-
-        # Ensure falsifiable_by has at least one entry
-        falsifiable_by = data.get('falsifiable_by', [])
-        if not falsifiable_by:
-            falsifiable_by = ["[No falsification criteria provided - hypothesis incomplete]"]
-
-        return Hypothesis(
-            statement=data.get('statement', ''),
-            confidence=min(1.0, max(0.0, data.get('confidence', 0.5))),
-            novelty=novelty,
-            falsifiable_by=falsifiable_by,
-            supporting_observations=data.get('supporting_observations', []),
-            assumptions=data.get('assumptions', []),
-        )
 
     async def invoke(self, input: HypothesisInput) -> AgentResult:
         """
