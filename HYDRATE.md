@@ -201,6 +201,7 @@ LLM execution layer for agents:
 
 ## Recent Changes
 
+- **Phase 1.3 Confidence Fix** (Dec 2025): `StateDetector` now accumulates confidence via previous_state input
 - **AgentOrchestrator** (Dec 2025): `impl/zen-agents/zen_agents/services/agent_orchestrator.py` - Central service for LLM-backed agents in TUI
 - **B-gents B.2 implemented** (Dec 2025): Robin - personalized scientific companion, composes K-gent + HypothesisEngine + HegelAgent
 - **B-gents B.1 implemented** (Dec 2025): `impl/claude-openrouter/agents/b/` - HypothesisEngine (Popperian hypothesis generation)
