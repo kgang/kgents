@@ -4,9 +4,9 @@
 
 ## TL;DR
 
-**Status**: IMPROVEMENT_PLAN Phase A - H5 COMPLETE ✅
+**Status**: IMPROVEMENT_PLAN Phase A - H4 & H5 COMPLETE ✅
 **Branch**: `main`
-**Achievement**: Extracted runtime/json_utils.py (-273 lines from base.py!)
+**Achievement**: Lazy imports in evolve.py + json_utils extraction (-273 lines!)
 **Next**: Phase B core refactoring (H1: EvolutionPipeline decomposition)
 
 ---
@@ -19,7 +19,7 @@
 
 ---
 
-## This Session: IMPROVEMENT_PLAN Phase A - H5 (2025-12-08)
+## This Session: IMPROVEMENT_PLAN Phase A - H4 & H5 (2025-12-08)
 
 ### Completed: H5 - Extract runtime/json_utils.py ✅
 
@@ -43,15 +43,33 @@
 
 **Tests:** All pass ✅ (31 synergy tests, judge tests)
 
+### Completed: H4 - Lazy Imports in evolve.py ✅
+
+**Changes:**
+- Added `TYPE_CHECKING` import pattern to defer type-only imports
+- Moved runtime imports into lazy instantiation methods:
+  - `HypothesisEngine` → `_get_hypothesis_engine()`
+  - `HegelAgent` → `_get_hegel()`
+  - `Sublate` → `_get_sublate()`
+  - `AgentContext` → imported at usage site
+- Updated type annotations to use string literals for forward references
+
+**Benefits:**
+- Reduced startup time for status/suggest modes
+- Improved testability (easier to mock dependencies)
+- Clear separation between type-checking and runtime imports
+
+**Tests:** All pass ✅ (syntax valid, import successful, status command working)
+
 ### Phase A Status
 
 | Hypothesis | Status | Notes |
 |------------|--------|-------|
 | H5: json_utils extraction | ✅ Complete | -273 lines from base.py |
-| H4: Lazy imports | ⏸️ Deferred | Too complex, not a quick win |
+| H4: Lazy imports | ✅ Complete | TYPE_CHECKING pattern + lazy methods |
 | H2: SuggestionAgent | ⏸️ Deferred | Function already simple, no extraction needed |
 
-**Verdict:** Phase A yielded **1 substantial improvement** (H5). H4 and H2 require deeper analysis.
+**Verdict:** Phase A yielded **2 substantial improvements** (H4, H5).
 
 ### Background Meta-Evolution Results
 

@@ -59,7 +59,14 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, TYPE_CHECKING
+
+# TYPE_CHECKING: Import types only during type-checking to reduce startup time
+if TYPE_CHECKING:
+    from agents.b.hypothesis import HypothesisEngine, HypothesisInput
+    from agents.h.hegel import HegelAgent, DialecticInput, DialecticOutput
+    from bootstrap.sublate import Sublate
+    from runtime.base import LLMAgent, AgentContext, AgentResult
 
 # E-gents: Evolution agents (Phase 1 extraction)
 from agents.e import (
@@ -109,14 +116,6 @@ from bootstrap.types import (
     Tension,
     HoldTension,
 )
-from bootstrap.sublate import Sublate
-
-# Runtime
-from runtime.base import LLMAgent, AgentContext, AgentResult
-
-# Agents
-from agents.b.hypothesis import HypothesisEngine, HypothesisInput
-from agents.h.hegel import HegelAgent, DialecticInput, DialecticOutput
 
 
 # ============================================================================
@@ -205,9 +204,9 @@ class EvolutionPipeline:
         self._error_memory = ErrorMemory() if config.enable_error_memory else None
 
         # Agents requiring runtime (lazy instantiation)
-        self._hypothesis_engine: Optional[HypothesisEngine] = None
-        self._hegel: Optional[HegelAgent] = None
-        self._sublate: Optional[Sublate] = None
+        self._hypothesis_engine: Optional["HypothesisEngine"] = None
+        self._hegel: Optional["HegelAgent"] = None
+        self._sublate: Optional["Sublate"] = None
 
         # AST cache
         self._ast_cache: dict[str, Any] = {}
@@ -219,21 +218,24 @@ class EvolutionPipeline:
             self._runtime = ClaudeCLIRuntime()
         return self._runtime
 
-    def _get_hypothesis_engine(self) -> HypothesisEngine:
+    def _get_hypothesis_engine(self) -> "HypothesisEngine":
         """Lazy instantiation of hypothesis engine."""
         if self._hypothesis_engine is None:
+            from agents.b.hypothesis import HypothesisEngine
             self._hypothesis_engine = HypothesisEngine()
         return self._hypothesis_engine
 
-    def _get_hegel(self) -> HegelAgent:
+    def _get_hegel(self) -> "HegelAgent":
         """Lazy instantiation of Hegel."""
         if self._hegel is None:
+            from agents.h.hegel import HegelAgent
             self._hegel = HegelAgent()
         return self._hegel
 
-    def _get_sublate(self) -> Sublate:
+    def _get_sublate(self) -> "Sublate":
         """Lazy instantiation of Sublate for tension resolution."""
         if self._sublate is None:
+            from bootstrap.sublate import Sublate
             self._sublate = Sublate()
         return self._sublate
 
@@ -333,6 +335,8 @@ AST ANALYSIS:
 - Imports: {len(structure.imports)} total
 - Complexity hints: {structure.complexity_hints[:2] if structure.complexity_hints else 'None'}
 """
+
+        from agents.b.hypothesis import HypothesisInput
 
         hypothesis_input = HypothesisInput(
             observations=[
@@ -469,6 +473,8 @@ HYPOTHESIS TO EXPLORE:
 Generate ONE concrete improvement. Return ONLY valid JSON."""
 
         try:
+            from runtime.base import AgentContext
+
             runtime = self._get_runtime()
             context = AgentContext(
                 system_prompt="You are a code improvement agent for kgents.",
@@ -551,6 +557,8 @@ Generate ONE concrete improvement. Return ONLY valid JSON."""
             return None
 
         log(f"[{experiment.id}] Synthesizing via dialectic...")
+
+        from agents.h.hegel import DialecticInput
 
         current_code = experiment.module.path.read_text()
 
