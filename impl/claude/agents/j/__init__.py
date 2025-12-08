@@ -13,6 +13,9 @@ Core components:
 - Reality: DETERMINISTIC | PROBABILISTIC | CHAOTIC classification
 - RealityClassifier: Agent that classifies tasks
 - Chaosmonger: AST-based stability analyzer (Phase 2)
+- MetaArchitect: JIT agent compiler (Phase 3)
+- Sandbox: Safe execution environment (Phase 3)
+- JGent: Main coordinator (Phase 4)
 
 See spec/j-gents/ for the full specification.
 """
@@ -26,6 +29,24 @@ from .chaosmonger import (
     analyze_stability,
     check_stability,
     is_stable,
+)
+from .jgent import (
+    GeneratedTest,
+    JGent,
+    JGentConfig,
+    JGentInput,
+    JGentResult,
+    generate_test_for_intent,
+    jgent,
+    jgent_sync,
+)
+from .meta_architect import (
+    AgentSource,
+    ArchitectConstraints,
+    ArchitectInput,
+    MetaArchitect,
+    compile_agent,
+    validate_source_safety,
 )
 from .promise import (
     Promise,
@@ -44,9 +65,18 @@ from .reality import (
     classify_intent,
     classify_sync,
 )
+from .sandbox import (
+    SandboxConfig,
+    SandboxResult,
+    SandboxedNamespace,
+    execute_in_sandbox,
+    jit_compile_and_execute,
+    type_check_source,
+    validate_jit_safety,
+)
 
 __all__ = [
-    # Promise types
+    # Promise types (Phase 1)
     "Promise",
     "PromiseState",
     "PromiseMetrics",
@@ -54,7 +84,7 @@ __all__ = [
     "promise",
     "child_promise",
     "collect_metrics",
-    # Reality types
+    # Reality types (Phase 1)
     "Reality",
     "ClassificationInput",
     "ClassificationOutput",
@@ -75,4 +105,33 @@ __all__ = [
     "analyze_stability",
     "check_stability",
     "is_stable",
+    # MetaArchitect types (Phase 3)
+    "ArchitectInput",
+    "ArchitectConstraints",
+    "AgentSource",
+    # MetaArchitect agent (Phase 3)
+    "MetaArchitect",
+    # MetaArchitect helpers (Phase 3)
+    "compile_agent",
+    "validate_source_safety",
+    # Sandbox types (Phase 3)
+    "SandboxConfig",
+    "SandboxResult",
+    "SandboxedNamespace",
+    # Sandbox helpers (Phase 3)
+    "execute_in_sandbox",
+    "jit_compile_and_execute",
+    "type_check_source",
+    "validate_jit_safety",
+    # JGent types (Phase 4)
+    "JGentConfig",
+    "JGentInput",
+    "JGentResult",
+    "GeneratedTest",
+    # JGent coordinator (Phase 4)
+    "JGent",
+    # JGent helpers (Phase 4)
+    "jgent",
+    "jgent_sync",
+    "generate_test_for_intent",
 ]
