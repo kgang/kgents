@@ -9,7 +9,7 @@
 
 ## Current State (Dec 8, 2025)
 
-**Latest:** Phase 2 partially complete! Issue #10 (Contradict Protocol) ✅ merged to main. Issue #5 (EvolutionAgent Composition) 🔄 in progress on branch `fix/phase-2-evolution-composition` - EvolutionHandler Protocol added, need to extract concrete handlers next.
+**Latest:** Phase 2 progress! Issue #10 (Contradict Protocol) ✅ merged to main. Issue #5 (EvolutionAgent Composition) ✅ COMPLETE and merged to main! Extracted 4 handler classes (ExplicitUpdateHandler, ObservationHandler, ContradictionHandler, ReviewHandler), created TriggerRouter agent, refactored EvolutionAgent to use composition instead of orchestration.
 
 **Previously:** Phase 1 complete and merged! Type system foundation fixed. Full-stack evolution complete with 100/100 experiments passed.
 
@@ -24,7 +24,6 @@
 | A-gents (Skeleton + Creativity) | ✅ `impl/claude/agents/a/` |
 | B-gents (Hypothesis + Robin) | ✅ `impl/claude/agents/b/` + robin spec |
 | runtime/ | ✅ `impl/claude/runtime/` (ClaudeRuntime, OpenRouterRuntime) |
-| zen-agents | 🗑️ Removed (was Textual TUI demo) |
 
 ## 7 Bootstrap Agents (Implemented)
 
@@ -199,11 +198,10 @@ LLM execution layer for agents:
 | B-gents B.2 | ✅ DONE | Robin (scientific companion) |
 
 **What's Next:**
-- **IMMEDIATE**: Complete Issue #5 on `fix/phase-2-evolution-composition` branch
-  - Extract concrete handler classes (ExplicitUpdateHandler, ObservationHandler, etc.)
-  - Create TriggerRouter agent for composition
-  - Test, commit, merge to main
-- **Then Phase 3**: Infrastructure (Issue #4 Retry logic, #6 Error handling transparency)
+- **Phase 2 COMPLETE**: Issues #10 and #5 merged to main! ✅
+  - Issue #10: TensionDetector Protocol extracted
+  - Issue #5: EvolutionAgent decomposed into 4 handlers + TriggerRouter
+- **NEXT: Phase 3**: Infrastructure (Issue #4 Retry logic, #6 Error handling transparency)
 - **Phase 0 Hotfix**: Security fix for parallel resource limits (Issue #9)
 - Tests: Add pytest suite for agents/b/ (hypothesis, robin)
 - D-gents: Data/Database agents (spec needed)
@@ -277,9 +275,9 @@ Avoids JSON escaping issues for code content.
 
 ## Recent Changes
 
-- **Phase 2 Architecture Refactors Started** (Dec 8, 2025):
+- **Phase 2 Architecture Refactors Complete** (Dec 8, 2025):
   - ✅ **Issue #10 COMPLETE**: Extracted TensionDetector Protocol in contradict.py for extensible contradiction detection. Merged to main.
-  - 🔄 **Issue #5 IN PROGRESS**: EvolutionAgent composition refactor. Added EvolutionHandler Protocol on branch `fix/phase-2-evolution-composition`. Next: extract concrete handler classes.
+  - ✅ **Issue #5 COMPLETE**: EvolutionAgent composition refactor. Extracted 4 handler classes (ExplicitUpdateHandler, ObservationHandler, ContradictionHandler, ReviewHandler), created TriggerRouter agent. EvolutionAgent now uses composition instead of orchestration (58% code reduction). Merged to main.
 - **Phase 1 Type Fixes Complete** (Dec 8, 2025): First phase of 10 Critical Fixes from IMPLEMENTATION_PLAN.md completed and merged to main:
   - Issue #1: Fix[A,B] → Fix[A] (fixed points now correctly map A → A)
   - Issue #2: FixComposedAgent[A,C] → FixComposedAgent[A,B] (composition law compliance)
