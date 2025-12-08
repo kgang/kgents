@@ -193,6 +193,66 @@ The fixed-point operator. Takes a self-referential definition and finds what it 
 
 ---
 
+## Performance Considerations
+
+The bootstrap agents are designed for correctness and composability first, performance second. However, certain patterns emerge from production use:
+
+### Hot Paths vs Cold Paths
+
+**Hot Paths** (optimize for speed):
+- **Compose** (`>>` operator): Called on every composition, optimize for allocation
+- **Id**: Should be zero-cost in composition chains (law: `Id >> f ≡ f`)
+- **Judge**: Called frequently in generation loops, parallelize mini-judges
+
+**Cold Paths** (depth over speed):
+- **Ground**: Invoked once per session, caching acceptable
+- **Contradict**: Called during synthesis only, correctness > speed
+- **Sublate**: Resolution is rare, wisdom > speed
+- **Fix**: Bounded by `max_iterations`, not by single-step speed
+
+### Optimization Principles
+
+1. **Immutability enables sharing**
+   - Frozen dataclasses (`Ok`, `Err`, `Tension`, `Verdict`) cache hashes
+   - Safe to share across async contexts
+   - No defensive copying needed
+
+2. **Protocols over ABCs**
+   - Structural typing (`TensionDetector`, `ResolutionStrategy`) is faster
+   - No metaclass machinery or inheritance overhead
+   - Duck typing at runtime
+
+3. **Parallel independent operations**
+   - Judge: 7 mini-judges are independent → run concurrently
+   - Contradict: Multiple detectors can run in parallel
+   - Use `asyncio.gather()` for CPU-bound or I/O-bound checks
+
+4. **Circuit breakers prevent cascades**
+   - Contradict: Failed detectors disabled after 3 strikes
+   - Fail fast on broken components
+   - Bounded execution time via timeouts
+
+5. **Entropy budgets bound recursion**
+   - Fix tracks J-gents entropy (diminishes per iteration: `budget / (i + 1)`)
+   - Forces termination of unbounded recursion
+   - Prevents runaway Fix iterations
+
+### Anti-Patterns
+
+**Avoid:**
+- ❌ Unbounded history accumulation in Fix (use bounded/sampled history)
+- ❌ Sequential execution of independent checks (parallelize Judge/Contradict)
+- ❌ Re-computing static Ground data (cache persona seed)
+- ❌ Deep composition chains without flattening (use `flatten()` for debugging)
+
+**Implementation Status** (see `impl/claude/bootstrap/`):
+- ✅ Ground caching (v1.0+): `cache=True` parameter
+- ✅ Judge parallelization (v1.0+): `parallel=True` parameter
+- ⏳ Bounded Fix history: Future enhancement
+- ⏳ Id composition optimization: Future enhancement
+
+---
+
 ## Generation Rules
 
 From the seven bootstrap agents, all of kgents can be regenerated:
@@ -559,6 +619,66 @@ def detect(session, previous: Result) -> Result:
 ```
 
 **Pattern**: Fix carries `previous` state through iterations. The transform is `(State, Input) -> State`, not just `Input -> State`.
+
+---
+
+### Idiom 6.1: Bounded History (Performance Variant)
+
+> Fixed-point iteration requires carrying state, but unbounded history is wasteful.
+
+The current Fix implementation accumulates full history: `history: list[A] = [initial]`. For long-running iterations or large state objects, this consumes O(n × value_size) memory.
+
+**Three History Strategies:**
+
+**1. Full History (default)**
+```python
+# All iterations stored
+FixConfig(max_iterations=100)
+# Memory: O(n × value_size)
+# Benefit: Complete debugging trace
+```
+
+**2. Bounded History**
+```python
+# Keep last N iterations only
+@dataclass(frozen=True)
+class BoundedFixConfig(FixConfig[A]):
+    max_history_size: int = 100
+
+    def should_keep(self, iteration: int, total: int) -> bool:
+        # Keep last max_history_size iterations
+        return iteration >= (total - self.max_history_size)
+
+# Memory: O(min(n, max_history_size) × value_size)
+# Benefit: Bounded memory, recent history for debugging
+```
+
+**3. Sampled History (logarithmic)**
+```python
+@dataclass(frozen=True)
+class SampledFixConfig(FixConfig[A]):
+    def should_keep(self, iteration: int) -> bool:
+        # Keep powers of 2: iterations 0, 1, 2, 4, 8, 16, 32, ...
+        return iteration == 0 or (iteration & (iteration - 1)) == 0
+
+# Memory: O(log n × value_size)
+# Benefit: Key checkpoints preserved (exponential sampling)
+```
+
+**Trade-off Matrix:**
+
+| Strategy | Memory | Debugging | Use Case |
+|----------|--------|-----------|----------|
+| Full | O(n) | Complete trace | Development, small state |
+| Bounded | O(1) | Recent context | Production, large state |
+| Sampled | O(log n) | Checkpoints | Long iterations, analysis |
+
+**Recommendation:**
+- **Development**: Full history for complete debugging
+- **Production**: Bounded history (last 10-100 iterations)
+- **Analysis**: Sampled history for convergence studies
+
+**Implementation Status**: Future enhancement to `impl/claude/bootstrap/fix.py`.
 
 ---
 
