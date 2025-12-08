@@ -27,6 +27,11 @@ Type III - Observers (Identity with Side Effects):
 - CounterAgent: Invocation counter C: A → A
 - MetricsAgent: Performance profiler M: A → A
 
+Type IV - Critics (Semantic Evaluation):
+- JudgeAgent: LLM-as-Judge semantic evaluation J: (A, Criteria) → Judgment
+- PropertyAgent: Property-based testing P: (A, Property) → TestResult
+- OracleAgent: Differential testing O: (A, A') → DiffResult
+
 Usage:
     from agents.t import MockAgent, FailingAgent, SpyAgent
 
@@ -103,6 +108,31 @@ from .metrics import (
     PerformanceMetrics,
 )
 
+from .judge import (
+    JudgeAgent,
+    JudgmentCriteria,
+    JudgmentResult,
+)
+
+from .property import (
+    PropertyAgent,
+    PropertyTestResult,
+    IntGenerator,
+    StringGenerator,
+    ChoiceGenerator,
+    identity_property,
+    not_none_property,
+    length_preserved_property,
+)
+
+from .oracle import (
+    OracleAgent,
+    RegressionOracle,
+    DiffResult,
+    semantic_equality,
+    numeric_equality,
+)
+
 __all__ = [
     # Type I - Nullifiers
     "MockAgent",
@@ -131,6 +161,23 @@ __all__ = [
     "CounterAgent",
     "MetricsAgent",
     "PerformanceMetrics",
+    # Type IV - Critics
+    "JudgeAgent",
+    "JudgmentCriteria",
+    "JudgmentResult",
+    "PropertyAgent",
+    "PropertyTestResult",
+    "IntGenerator",
+    "StringGenerator",
+    "ChoiceGenerator",
+    "identity_property",
+    "not_none_property",
+    "length_preserved_property",
+    "OracleAgent",
+    "RegressionOracle",
+    "DiffResult",
+    "semantic_equality",
+    "numeric_equality",
     # Predicate helpers
     "not_none",
     "not_empty",
