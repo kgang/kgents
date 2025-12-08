@@ -8,7 +8,7 @@ Composes bootstrap primitives: Contradict >> Sublate
 Pattern: thesis + antithesis → synthesis (or hold productive tension)
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Optional
 import logging
 

@@ -518,7 +518,7 @@ Generate ONE concrete improvement. Return ONLY valid JSON."""
             # 2. Type check (if required)
             if self._config.require_type_check:
                 result = subprocess.run(
-                    ["mypy", str(tmp_path), "--ignore-missing-imports"],
+                    [sys.executable, "-m", "mypy", str(tmp_path), "--ignore-missing-imports"],
                     capture_output=True,
                     text=True,
                 )
