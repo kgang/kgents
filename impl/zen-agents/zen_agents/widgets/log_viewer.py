@@ -22,8 +22,8 @@ class LogViewer(Vertical):
     LLM-powered analysis via the "Analyze" button.
 
     Layout:
-        - Log Container (70%): Raw session output with syntax highlighting
-        - Analysis Container (30%): Markdown-rendered analysis from HypothesisEngine
+        - Log Container (1fr, min 5 lines): Raw session output with syntax highlighting
+        - Analysis Container (1fr, min 8 lines): Markdown-rendered analysis from HypothesisEngine
 
     Messages:
         AnalyzeRequested: Emitted when user clicks Analyze button
@@ -37,7 +37,8 @@ class LogViewer(Vertical):
     }
 
     LogViewer #log-container {
-        height: 70%;
+        height: 1fr;
+        min-height: 5;
         border-bottom: solid $surface-lighten-1;
     }
 
@@ -55,7 +56,8 @@ class LogViewer(Vertical):
     }
 
     LogViewer #analysis-container {
-        height: 30%;
+        height: 1fr;
+        min-height: 8;
     }
 
     LogViewer #analysis-header {
@@ -80,6 +82,7 @@ class LogViewer(Vertical):
 
     LogViewer #analysis-panel {
         padding: 0 1;
+        height: auto;
     }
 
     LogViewer .empty-state {
@@ -129,8 +132,9 @@ class LogViewer(Vertical):
                 log.scroll_home()
             else:
                 log.write("[dim]No output captured[/dim]")
-        except Exception:
-            pass  # Widget may not be mounted yet
+        except Exception as e:
+            # Log error but don't crash - widget may not be mounted yet
+            self.log.warning(f"Failed to update log panel: {e}")
 
     def watch_analysis_content(self, content: str) -> None:
         """Update analysis display when content changes."""
@@ -145,8 +149,9 @@ class LogViewer(Vertical):
             else:
                 panel.add_class("empty-state")
                 panel.update("Select a session and click Analyze")
-        except Exception:
-            pass  # Widget may not be mounted yet
+        except Exception as e:
+            # Log error but don't crash - widget may not be mounted yet
+            self.log.warning(f"Failed to update analysis panel: {e}")
 
     def watch_is_analyzing(self, analyzing: bool) -> None:
         """Update UI state during analysis."""
@@ -163,8 +168,8 @@ class LogViewer(Vertical):
                 btn.disabled = False
                 btn.label = "Analyze"
                 panel.remove_class("analyzing")
-        except Exception:
-            pass
+        except Exception as e:
+            self.log.warning(f"Failed to update analyzing state: {e}")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle button press."""

@@ -56,6 +56,12 @@ class SessionError(SessionEvent):
     error_type: str
 
 
+@dataclass(kw_only=True)
+class SessionRemoved(SessionEvent):
+    """Emitted when a session is removed from tracking."""
+    pass
+
+
 EventHandler = Callable[[SessionEvent], Awaitable[None]]
 
 
@@ -293,6 +299,10 @@ class SessionManager:
             if session_id in self._sessions:
                 del self._sessions[session_id]
                 self._save()
+
+                # Emit event so UI updates
+                await self._emit_event(SessionRemoved(session_id=session_id))
+
                 return True
             return False
 

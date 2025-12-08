@@ -188,6 +188,9 @@ All 5 phases done. Run: `cd impl/zen-agents && uv run zen-agents`
 
 ## Recent Changes
 
+- **Analysis Worker Error Handling** (Dec 2025): Fixed silent exception swallowing in `_do_analysis` worker and LogViewer watchers; added `exclusive=True` to cancel stale analysis workers
+- **Session Remove Fix** (Dec 2025): `remove_session()` now emits `SessionRemoved` event so UI refreshes after removal
+- **LogViewer Layout Fix** (Dec 2025): Analysis panel now uses flexible `1fr` sizing with `min-height: 8` instead of fixed 30%
 - **LogViewer Scroll Fix** (Dec 2025): Both log and analysis panels now scroll to top after content update
 - **LLM Session Shell Portability Fix** (Dec 2025): Changed `read -p` to `printf + read` in session commands - `read -p` is bash-only, failed on zsh
 - **LLM Session Welcome Messages** (Dec 2025): CREATIVITY, ROBIN, HYPOTHESIS, KGENT sessions now show usage instructions instead of blank shell

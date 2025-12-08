@@ -303,6 +303,7 @@ class MainScreen(Screen):
             SessionCreated,
             SessionStateChanged,
             SessionKilled,
+            SessionRemoved,
         )
 
         if isinstance(event, SessionCreated):
@@ -313,6 +314,8 @@ class MainScreen(Screen):
             )
         elif isinstance(event, SessionKilled):
             status_bar.set_message(f"Session killed (exit: {event.exit_code})")
+        elif isinstance(event, SessionRemoved):
+            status_bar.set_message("Session removed")
 
     def action_new_session(self) -> None:
         """Show the new session modal."""
@@ -565,14 +568,15 @@ class MainScreen(Screen):
                 self._selected_session.metadata.get("domain", "software engineering"),
             ),
             name="analyze_log",
+            exclusive=True,  # Cancel previous analysis if still running
         )
 
     async def _do_analysis(self, log_content: str, domain: str) -> None:
         """Perform LLM analysis in background worker."""
-        log_viewer = self.query_one("#log-viewer", LogViewer)
-        status_bar = self.query_one("#status-bar", StatusBar)
-
         try:
+            log_viewer = self.query_one("#log-viewer", LogViewer)
+            status_bar = self.query_one("#status-bar", StatusBar)
+
             # Check if LLM is available
             if not await self._orchestrator.check_available():
                 log_viewer.show_error("Claude CLI not available. Install with: npm install -g @anthropic/claude-code")
@@ -602,5 +606,11 @@ class MainScreen(Screen):
             status_bar.set_message(f"Analysis complete: {len(result.hypotheses)} hypotheses")
 
         except Exception as e:
-            log_viewer.show_error(str(e))
-            status_bar.set_message(f"Analysis failed: {e}")
+            # Try to show error in UI, fall back to logging
+            try:
+                log_viewer = self.query_one("#log-viewer", LogViewer)
+                status_bar = self.query_one("#status-bar", StatusBar)
+                log_viewer.show_error(str(e))
+                status_bar.set_message(f"Analysis failed: {e}")
+            except Exception:
+                self.log.error(f"Analysis failed: {e}")
