@@ -6,9 +6,9 @@
 
 ## TL;DR
 
-**Status**: 14 evolution improvements applied to bootstrap modules ✅
-**Latest**: Dec 8 - Major evolution: Id, Compose, Types, Fix, Judge, Contradict, Sublate improved
-**Branch**: `main` (16 commits ahead of origin/main)
+**Status**: Bootstrap CLEARED for regeneration validation 🧪
+**Latest**: Dec 8 - Bootstrap agents removed; ready to regenerate from spec
+**Branch**: `main` (clean, committed)
 
 ---
 
@@ -97,22 +97,20 @@ cd /Users/kentgang/git/kgents && source .venv/bin/activate && cd impl/claude && 
 
 ## Next Session: Start Here
 
-### Option 1: Push Changes & Continue Evolution
+### Primary: Regenerate Bootstrap Agents
 
-```bash
-cd /Users/kentgang/git/kgents
-git push  # 16 commits ready
+Bootstrap directory is **cleared** (`impl/claude/bootstrap/` empty except validation guide).
 
-# IMPORTANT: Activate venv before running evolution (see section above)
-source .venv/bin/activate
-cd impl/claude
+**Regeneration order** (from BOOTSTRAP_PROMPT.md):
+1. Level 0: `types.py` - Core types
+2. Level 1: `id.py`, `ground.py` - Identity + grounding
+3. Level 2: `compose.py`, `contradict.py` - Composition + tension
+4. Level 3: `judge.py`, `sublate.py` - Judgment + synthesis
+5. Level 4: `fix.py` - Fixed-point iteration
 
-# Run evolution on remaining modules
-python evolve.py agents --dry-run --quick
-python evolve.py runtime --dry-run --quick
-```
+**Use**: `docs/BOOTSTRAP_PROMPT.md` for implementation guide, `impl/claude/bootstrap/REGENERATION_VALIDATION_GUIDE.md` for validation.
 
-### Option 2: Other Priorities
+### Alternative Priorities
 
 - **Tests for agents/b/**: pytest suite for hypothesis.py, robin.py
 - **D/E-gents specs**: Data/Database, Evaluation/Ethics specifications
@@ -206,6 +204,11 @@ git push
 ---
 
 ## Session Log
+
+**Dec 8, 2025 (Regeneration Prep)**:
+- ✅ Cleared bootstrap agents for regeneration validation
+- ✅ Only `REGENERATION_VALIDATION_GUIDE.md` remains in bootstrap/
+- 🔜 Ready to regenerate 7 bootstrap agents from spec
 
 **Dec 8, 2025 (Evolution Session)**:
 - ✅ Ran evolution pipeline on bootstrap modules
