@@ -176,24 +176,11 @@ LLM execution layer for agents:
 | B-gents B.1 | ✅ DONE | HypothesisEngine |
 | B-gents B.2 | ✅ DONE | Robin (scientific companion) |
 
-### Active: zen-agents Integration (ZENAGENTS_PROTOCOL.md)
+### zen-agents Integration: COMPLETE ✅
 
-| Phase | Status | Focus |
-|-------|--------|-------|
-| 1.1 Import Bridge | ✅ DONE | `kgents_bridge.py` |
-| 1.2 AgentOrchestrator | ✅ DONE | `services/agent_orchestrator.py` |
-| 1.3 Fix Confidence Bug | ✅ DONE | `StateDetector` now accumulates confidence |
-| 1.4 Pipeline Composition | ✅ DONE | `CreateSessionPipeline` uses `>>` |
-| 2.1 Session Types | ✅ DONE | ROBIN, CREATIVITY, HYPOTHESIS, KGENT + `session_requires_llm()` |
-| 2.2 Session Handler | ✅ DONE | `services/session_handler.py` routes to kgents agents |
-| 3.1 Log Viewer | ✅ DONE | `widgets/log_viewer.py` with analysis panel |
-| 3.2 MainScreen Integration | ✅ DONE | Orchestrator + LogViewer wired to UI |
-| 3.3 K-gent Name Suggestions | ✅ DONE | Suggest button in CreateSessionModal |
-| 4.1 Session Persistence | ✅ DONE | `services/persistence.py` with JSON save/load |
-| 4.2 Integrate Persistence | ✅ DONE | Auto-save in SessionManager, load on startup |
-| 5 Testing | ✅ DONE | 188 tests, core logic 95-100% coverage |
+All 5 phases done. Run: `cd impl/zen-agents && uv run zen-agents`
 
-**What's Next (beyond zen-agents):**
+**What's Next:**
 - Tests: Add pytest suite for agents/b/ (hypothesis, robin)
 - D-gents: Data/Database agents (spec needed)
 - E-gents: Evaluation/Ethics agents (spec needed)
