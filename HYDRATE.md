@@ -9,21 +9,18 @@
 
 ## Current State (Dec 8, 2025)
 
-**Latest:** Phase 3 Infrastructure COMPLETE! ✅ (Dec 8, 2025)
-- Issue #4: Runtime retry logic with Fix pattern + exponential backoff (ClaudeRuntime, OpenRouterRuntime)
-  - Smart error classification (transient vs permanent)
-  - Configurable max_retries and backoff_base
-  - Logging includes retry_attempts metadata
-- Issue #6: Result/Either error transparency types (Success, Error, Result) - BREAKING but backward compatible
-  - Success[B] and Error[E] types with is_success(), is_error(), unwrap(), unwrap_or()
-  - Helper functions: success(), error(), result_from_exception()
-  - Exported from runtime module for transparent error handling
-- Issue #9: Parallel resource limits - DoS vulnerability FIXED
-  - ParallelConfig with max_concurrent (default: 10), timeout_per_agent, total_timeout
-  - Semaphore-based concurrency limiting
-  - Applied to ParallelAgent, configurable via parallel() function
+**Latest:** Phase 3 Infrastructure COMPLETE! ✅ Commit f66a0a4 pushed to main
+- **Issue #4:** Runtime retry with Fix pattern (ClaudeRuntime, OpenRouterRuntime) - exponential backoff, smart error classification
+- **Issue #6:** Result/Either types (Success, Error, Result) - transparent error handling, Railway Oriented Programming
+- **Issue #9:** Parallel resource limits (ParallelConfig) - DoS vulnerability fixed, semaphore-based max_concurrent=10
 
-**Previously:** Bootstrap Documents Improvement Plan. Phase 2 complete! Architecture refactors (TensionDetector Protocol, EvolutionAgent composition). Phase 1 complete! Type system foundation fixed.
+**History:** Phase 2 (architecture), Phase 1 (types), Bootstrap agents, K/A/B/C/H-gents all ✅
+
+**Next priorities:**
+1. Phase 4-5 features (defer): Issue #3 (Judge decomposition), #7 (Hegel observability), #8 (Robin fallback)
+2. Tests: pytest suite for agents/b/ (hypothesis, robin)
+3. D/E-gents specs
+4. PyPI package publication
 
 | Component | Status |
 |-----------|--------|
