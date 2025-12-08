@@ -52,9 +52,9 @@ kgents/
 └── impl/zen-agents/         # ✅ Textual TUI (bootstrap demonstration)
     └── zen_agents/          # Package directory
         ├── agents/          # Fix, Contradict, Sublate, Ground, Judge patterns
-        ├── services/        # tmux, session_manager, state_refresher
+        ├── services/        # tmux, session_manager, state_refresher, persistence, agent_orchestrator
         ├── screens/         # TUI screens
-        ├── widgets/         # TUI widgets
+        ├── widgets/         # TUI widgets (session_list, log_viewer)
         └── app.py           # Entry point
 ```
 
@@ -188,9 +188,9 @@ LLM execution layer for agents:
 | 2.2 Session Handler | ✅ DONE | `services/session_handler.py` routes to kgents agents |
 | 3.1 Log Viewer | ✅ DONE | `widgets/log_viewer.py` with analysis panel |
 | 3.2 MainScreen Integration | ✅ DONE | Orchestrator + LogViewer wired to UI |
-| 3.3 K-gent Name Suggestions | 🔲 TODO | Personalized session names |
-| 4.1 Session Persistence | 🔲 TODO | JSON-based save/load |
-| 4.2 Integrate Persistence | 🔲 TODO | Auto-save on changes |
+| 3.3 K-gent Name Suggestions | ✅ DONE | Suggest button in CreateSessionModal |
+| 4.1 Session Persistence | ✅ DONE | `services/persistence.py` with JSON save/load |
+| 4.2 Integrate Persistence | ✅ DONE | Auto-save in SessionManager, load on startup |
 | 5 Testing | 🔲 TODO | pytest suite, 80%+ coverage |
 
 **What's Next (beyond zen-agents):**
@@ -201,6 +201,8 @@ LLM execution layer for agents:
 
 ## Recent Changes
 
+- **Phase 4 Session Persistence** (Dec 2025): `services/persistence.py` - JSON-based save/load; sessions survive TUI restarts
+- **Phase 3.3 K-gent Name Suggestions** (Dec 2025): "Suggest" button in CreateSessionModal; K-gent suggests personalized session names
 - **Phase 3.2 MainScreen Integration** (Dec 2025): LogViewer + AgentOrchestrator wired to TUI; 'l' captures log, Analyze button triggers HypothesisEngine
 - **Phase 3.1 LogViewer Widget** (Dec 2025): `widgets/log_viewer.py` - session output display with LLM analysis panel
 - **Phase 2.2 SessionHandler** (Dec 2025): `services/session_handler.py` - routes ROBIN/CREATIVITY/HYPOTHESIS/KGENT to agents

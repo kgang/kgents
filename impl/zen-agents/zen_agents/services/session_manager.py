@@ -19,6 +19,7 @@ from ..agents.pipelines.create import create_session_pipeline, ValidationError, 
 from ..agents.pipelines.revive import revive_session_pipeline, ReviveError
 from ..agents.pipelines.clean import clean_session_pipeline, clean_all_sessions, CleanError
 from .tmux import TmuxService
+from .persistence import SessionPersistence
 
 
 # Event types for UI updates
@@ -69,6 +70,7 @@ class SessionManager:
         self,
         tmux: Optional[TmuxService] = None,
         session_config: Optional[dict] = None,
+        persistence: Optional[SessionPersistence] = None,
     ):
         self._tmux = tmux or TmuxService()
         self._sessions: dict[UUID, Session] = {}
@@ -76,6 +78,7 @@ class SessionManager:
         self._zen_config: Optional[ZenConfig] = None
         self._session_config = session_config or {}
         self._lock = asyncio.Lock()
+        self._persistence = persistence or SessionPersistence()
 
     @property
     def sessions(self) -> list[Session]:
@@ -114,6 +117,22 @@ class SessionManager:
                 await handler(event)
             except Exception:
                 pass  # Don't let handler errors break the manager
+
+    def _save(self) -> None:
+        """Persist current sessions to disk."""
+        self._persistence.save(list(self._sessions.values()))
+
+    def load_persisted_sessions(self) -> list[Session]:
+        """
+        Load sessions from persistence.
+
+        Returns the loaded sessions. Caller should then reconcile
+        with actual tmux state using refresh_sessions_from_tmux().
+        """
+        sessions = self._persistence.load()
+        for session in sessions:
+            self._sessions[session.id] = session
+        return sessions
 
     async def _ensure_config(self) -> ZenConfig:
         """Ensure we have loaded config."""
@@ -160,6 +179,7 @@ class SessionManager:
 
             # Register session
             self._sessions[session.id] = session
+            self._save()
 
             # Emit event
             await self._emit_event(SessionCreated(
@@ -191,6 +211,7 @@ class SessionManager:
 
             # Update registry
             self._sessions[session.id] = session
+            self._save()
 
             # Emit event
             await self._emit_event(SessionStateChanged(
@@ -228,6 +249,7 @@ class SessionManager:
 
             # Update registry
             self._sessions[session.id] = session
+            self._save()
 
             # Emit event
             await self._emit_event(SessionKilled(
@@ -257,6 +279,7 @@ class SessionManager:
                     exit_code=session.exit_code,
                 ))
 
+            self._save()
             return sessions
 
     async def remove_session(self, session_id: UUID) -> bool:
@@ -269,6 +292,7 @@ class SessionManager:
         async with self._lock:
             if session_id in self._sessions:
                 del self._sessions[session_id]
+                self._save()
                 return True
             return False
 
@@ -297,6 +321,7 @@ class SessionManager:
                 session.exit_code = exit_code
 
             self._sessions[session.id] = session
+            self._save()
 
             await self._emit_event(SessionStateChanged(
                 session_id=session.id,

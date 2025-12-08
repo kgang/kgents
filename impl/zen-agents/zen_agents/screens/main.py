@@ -76,12 +76,29 @@ class CreateSessionModal(Container):
     CreateSessionModal Button {
         margin: 0 1;
     }
+
+    CreateSessionModal .name-row {
+        height: auto;
+        margin-bottom: 1;
+    }
+
+    CreateSessionModal .name-row Input {
+        width: 1fr;
+        margin-bottom: 0;
+    }
+
+    CreateSessionModal .name-row Button {
+        width: auto;
+        min-width: 10;
+    }
     """
 
     def compose(self) -> ComposeResult:
         yield Label("Create New Session", classes="title")
         yield Label("Name:")
-        yield Input(placeholder="session-name", id="session-name")
+        with Horizontal(classes="name-row"):
+            yield Input(placeholder="session-name", id="session-name")
+            yield Button("Suggest", id="suggest-btn", variant="default")
         yield Label("Type:")
         yield Select(
             [(t.value, t) for t in SessionType],
@@ -366,6 +383,9 @@ class MainScreen(Screen):
             overlay.add_class("hidden")
             overlay.remove_children()
 
+        elif button_id == "suggest-btn":
+            await self._suggest_session_name()
+
         elif button_id == "create-btn":
             await self._create_session_from_modal()
 
@@ -422,6 +442,42 @@ class MainScreen(Screen):
         except Exception as e:
             status_bar = self.query_one("#status-bar", StatusBar)
             status_bar.set_message(f"Error: {e}")
+
+    async def _suggest_session_name(self) -> None:
+        """Get K-gent name suggestion for the new session."""
+        overlay = self.query_one("#modal-overlay", Container)
+        modal = overlay.query_one(CreateSessionModal)
+        status_bar = self.query_one("#status-bar", StatusBar)
+
+        name_input = modal.query_one("#session-name", Input)
+        type_select = modal.query_one("#session-type", Select)
+        dir_input = modal.query_one("#working-dir", Input)
+
+        working_dir = dir_input.value.strip() or "~"
+        session_type = type_select.value
+
+        # Check if LLM is available
+        if not await self._orchestrator.check_available():
+            status_bar.set_message("Claude CLI not available for suggestions")
+            # Fallback to timestamp-based name
+            from datetime import datetime
+            name_input.value = f"session-{datetime.now():%H%M}"
+            return
+
+        status_bar.set_message("Asking K-gent for name suggestion...")
+
+        try:
+            name = await self._orchestrator.suggest_session_name(
+                working_dir=working_dir,
+                session_type=session_type.value if session_type else "shell"
+            )
+            name_input.value = name
+            status_bar.set_message(f"Suggested: {name}")
+        except Exception as e:
+            status_bar.set_message(f"Suggestion failed: {e}")
+            # Fallback to timestamp-based name
+            from datetime import datetime
+            name_input.value = f"session-{datetime.now():%H%M}"
 
     def on_session_list_session_selected(
         self,

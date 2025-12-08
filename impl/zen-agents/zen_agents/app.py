@@ -51,8 +51,12 @@ class ZenAgentsApp(App):
             poll_interval=1.0,
         )
 
-    def on_mount(self) -> None:
+    async def on_mount(self) -> None:
         """Push the main screen on mount."""
+        # Load persisted sessions and reconcile with tmux
+        self._manager.load_persisted_sessions()
+        await self._manager.refresh_sessions_from_tmux()
+
         self.push_screen(MainScreen(
             manager=self._manager,
             refresher=self._refresher,
