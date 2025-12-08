@@ -5,6 +5,7 @@ from .session import (
     SessionState,
     SessionType,
     NewSessionConfig,
+    session_requires_llm,
 )
 
 __all__ = [
@@ -12,4 +13,5 @@ __all__ = [
     "SessionState",
     "SessionType",
     "NewSessionConfig",
+    "session_requires_llm",
 ]

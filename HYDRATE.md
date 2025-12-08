@@ -191,7 +191,7 @@ LLM execution layer for agents:
 | 3.3 K-gent Name Suggestions | ✅ DONE | Suggest button in CreateSessionModal |
 | 4.1 Session Persistence | ✅ DONE | `services/persistence.py` with JSON save/load |
 | 4.2 Integrate Persistence | ✅ DONE | Auto-save in SessionManager, load on startup |
-| 5 Testing | 🔲 TODO | pytest suite, 80%+ coverage |
+| 5 Testing | ✅ DONE | 188 tests, core logic 95-100% coverage |
 
 **What's Next (beyond zen-agents):**
 - Tests: Add pytest suite for agents/b/ (hypothesis, robin)
@@ -201,6 +201,7 @@ LLM execution layer for agents:
 
 ## Recent Changes
 
+- **Phase 5 Testing Complete** (Dec 2025): 188 tests in `tests/` - core agent logic 95-100% coverage; TUI components need Textual testing framework
 - **Phase 4 Session Persistence** (Dec 2025): `services/persistence.py` - JSON-based save/load; sessions survive TUI restarts
 - **Phase 3.3 K-gent Name Suggestions** (Dec 2025): "Suggest" button in CreateSessionModal; K-gent suggests personalized session names
 - **Phase 3.2 MainScreen Integration** (Dec 2025): LogViewer + AgentOrchestrator wired to TUI; 'l' captures log, Analyze button triggers HypothesisEngine

@@ -24,6 +24,7 @@ kgents-runtime = { workspace = true }
 dev = [
     "pytest>=7.0",
     "pytest-asyncio>=0.21",
+    "pytest-cov>=4.0",
 ]
 
 [project.scripts]
