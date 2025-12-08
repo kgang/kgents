@@ -253,16 +253,33 @@ class SandboxTestAgent(Agent[SandboxTestInput, SandboxTestResult]):
         return "SandboxTestAgent"
 
     async def invoke(self, input: SandboxTestInput) -> SandboxTestResult:
-        """Test evolved code in sandbox."""
+        """
+        Test evolved code in sandbox with multi-layer validation.
+
+        Validation layers (executed in order):
+        0. Chaosmonger stability (J-gents AST analysis)
+        1. Syntax check (py_compile)
+        2. Type check (mypy --strict)
+        3. Self-test (can the evolved code still function)
+
+        Early return on first failure to fail fast and provide clear error.
+
+        Args:
+            input: SandboxTestInput with evolved_code and original_path
+
+        Returns:
+            SandboxTestResult with passed status and validation details
+        """
         result = SandboxTestResult(passed=False)
 
         # Layer 0: Chaosmonger stability check (J-gents)
+        # Validates: complexity, imports, recursion patterns
         if self._config.chaosmonger_enabled:
             stability_ok, stability_err = self._check_stability(input.evolved_code)
             result.stability_valid = stability_ok
             if not stability_ok:
                 result.error = f"Stability error: {stability_err}"
-                return result
+                return result  # Fail fast - no point checking syntax if unstable
         else:
             result.stability_valid = True  # Skip if disabled
 
@@ -271,21 +288,27 @@ class SandboxTestAgent(Agent[SandboxTestInput, SandboxTestResult]):
             sandbox_path.write_text(input.evolved_code)
 
             # Layer 1: Syntax check
+            # Uses py_compile to validate Python syntax
+            # Fast check before expensive type-checking
             syntax_ok, syntax_err = await self._check_syntax(sandbox_path)
             result.syntax_valid = syntax_ok
             if not syntax_ok:
                 result.error = f"Syntax error: {syntax_err}"
-                return result
+                return result  # Fail fast - invalid syntax blocks everything else
 
             # Layer 2: Type check (mypy)
+            # Validates type annotations with mypy --strict
+            # Ensures evolved code maintains type safety
             if self._config.require_mypy_strict:
                 types_ok, types_err = await self._check_types(sandbox_path, tmpdir)
                 result.types_valid = types_ok
                 if not types_ok:
                     result.error = f"Type error: {types_err}"
-                    return result
+                    return result  # Fail fast - type errors indicate problems
 
             # Layer 3: Self-test (if enabled)
+            # Validates that evolved code can still execute (--help test)
+            # Critical for meta-evolution (evolved evolve.py must still work)
             if self._config.require_self_test:
                 self_test_ok, stdout, stderr = await self._self_test(
                     sandbox_path, input.test_module_code, tmpdir
@@ -295,17 +318,31 @@ class SandboxTestAgent(Agent[SandboxTestInput, SandboxTestResult]):
                 result.stderr = stderr
                 if not self_test_ok:
                     result.error = f"Self-test failed: {stderr[:500]}"
-                    return result
+                    return result  # Fail fast - broken execution is critical
 
+            # All layers passed!
             result.passed = True
             return result
 
     def _check_stability(self, code: str) -> tuple[bool, str]:
-        """Check code stability using Chaosmonger (J-gents)."""
+        """
+        Check code stability using Chaosmonger (J-gents).
+
+        Validates:
+        - Cyclomatic complexity within limits
+        - Branching factor reasonable
+        - Only allowed imports used
+        - No forbidden imports (os, subprocess, etc.)
+
+        Returns:
+            (is_stable, error_message) tuple
+            On import/exception errors, conservatively passes with warning
+        """
         try:
             from agents.j import check_stability, StabilityConfig
 
             # Build config from SafetyConfig
+            # Maps E-gents safety constraints to J-gents stability config
             stability_config = StabilityConfig(
                 max_cyclomatic_complexity=self._config.max_cyclomatic_complexity,
                 max_branching_factor=self._config.max_branching_factor,
@@ -317,17 +354,32 @@ class SandboxTestAgent(Agent[SandboxTestInput, SandboxTestResult]):
             if result.is_stable:
                 return True, ""
             else:
+                # Return first 3 violations for concise error
                 violations = "; ".join(result.violations[:3])
                 return False, violations
         except ImportError:
             # Chaosmonger not available - pass by default
+            # Better to allow evolution than block on missing dependency
             return True, ""
         except Exception as e:
             # On error, be conservative and pass
+            # Log the error but don't block evolution
             return True, f"(check skipped: {e})"
 
     async def _check_syntax(self, path: Path) -> tuple[bool, str]:
-        """Check Python syntax using py_compile."""
+        """
+        Check Python syntax using py_compile.
+
+        Fast validation step that catches syntax errors before
+        expensive type-checking or test execution.
+
+        Args:
+            path: Path to Python file in sandbox
+
+        Returns:
+            (is_valid, error_message) tuple
+            10-second timeout to prevent hanging
+        """
         try:
             proc = await asyncio.create_subprocess_exec(
                 sys.executable, "-m", "py_compile", str(path),
@@ -336,7 +388,7 @@ class SandboxTestAgent(Agent[SandboxTestInput, SandboxTestResult]):
             )
             stdout, stderr = await asyncio.wait_for(
                 proc.communicate(),
-                timeout=10.0
+                timeout=10.0  # 10 seconds should be plenty for syntax check
             )
             return proc.returncode == 0, stderr.decode()
         except asyncio.TimeoutError:
@@ -345,7 +397,23 @@ class SandboxTestAgent(Agent[SandboxTestInput, SandboxTestResult]):
             return False, str(e)
 
     async def _check_types(self, path: Path, tmpdir: str) -> tuple[bool, str]:
-        """Check types using mypy --strict."""
+        """
+        Check types using mypy --strict.
+
+        Validates type annotations to ensure evolved code maintains
+        type safety. Uses --strict mode for maximum safety.
+
+        MYPYPATH is set to include impl/claude so mypy can resolve
+        imports from bootstrap/, agents/, runtime/, etc.
+
+        Args:
+            path: Path to Python file in sandbox
+            tmpdir: Temporary directory (unused but kept for signature compat)
+
+        Returns:
+            (is_valid, error_output) tuple
+            Respects config.mypy_timeout_seconds (default 60s)
+        """
         try:
             # Set MYPYPATH to include impl/claude for imports (bootstrap, etc.)
             import os
@@ -361,7 +429,7 @@ class SandboxTestAgent(Agent[SandboxTestInput, SandboxTestResult]):
             )
             stdout, stderr = await asyncio.wait_for(
                 proc.communicate(),
-                timeout=self._config.mypy_timeout_seconds
+                timeout=self._config.mypy_timeout_seconds  # Configurable timeout
             )
             output = stdout.decode() + stderr.decode()
             return proc.returncode == 0, output
