@@ -20,7 +20,7 @@
 | A-gents (Skeleton + Creativity) | ✅ `impl/claude-openrouter/agents/a/` |
 | B-gents (Hypothesis + Robin) | ✅ `impl/claude-openrouter/agents/b/` + robin spec |
 | runtime/ | ✅ `impl/claude-openrouter/runtime/` (ClaudeRuntime, OpenRouterRuntime) |
-| zen-agents | ⏸️ Dropped - new generation planned |
+| zen-agents | 🗑️ Removed (was Textual TUI demo) |
 
 ## 7 Bootstrap Agents (Implemented)
 
@@ -49,14 +49,10 @@ kgents/
 │   ├── agents/k/            # ✅ K-gent persona (Dialogue, Query, Evolution)
 │   ├── agents/a/            # ✅ AbstractSkeleton, AgentMeta, CreativityCoach
 │   ├── agents/b/            # ✅ HypothesisEngine, Robin (scientific companion)
-│   └── runtime/             # ✅ LLM execution (ClaudeCLIRuntime, ClaudeRuntime, OpenRouterRuntime)
-└── impl/zen-agents/         # ✅ Textual TUI (bootstrap demonstration)
-    └── zen_agents/          # Package directory
-        ├── agents/          # Fix, Contradict, Sublate, Ground, Judge patterns
-        ├── services/        # tmux, session_manager, state_refresher, persistence, agent_orchestrator
-        ├── screens/         # TUI screens
-        ├── widgets/         # TUI widgets (session_list, log_viewer)
-        └── app.py           # Entry point
+│   ├── runtime/             # ✅ LLM execution (ClaudeCLIRuntime, ClaudeRuntime, OpenRouterRuntime)
+│   └── autopoiesis.py       # ✅ Self-improvement via bootstrap agents
+└── docs/                    # Supporting documentation
+    └── BOOTSTRAP_PROMPT.md  # LLM prompt for implementing kgents
 ```
 
 ## Key Applied Idioms
@@ -185,31 +181,11 @@ LLM execution layer for agents:
 ## Recent Changes
 
 - **Autopoiesis Complete** (Dec 2025): kgents used its own bootstrap agents to improve itself. Created specs for conditional.md, parallel.md, robin.md; created monad.py impl; updated bio-gent.md. Result: 0 tensions, 22/22 verdicts accept. Fixed point reached.
-- **Autopoiesis Protocol** (Dec 2025): Updated bootstrap protocol to emphasize using kgents to build kgents; added autopoiesis score metric (>50% target) and 6 required patterns
-- **Analysis Worker Error Handling** (Dec 2025): Fixed silent exception swallowing in `_do_analysis` worker and LogViewer watchers; added `exclusive=True` to cancel stale analysis workers
-- **Session Remove Fix** (Dec 2025): `remove_session()` now emits `SessionRemoved` event so UI refreshes after removal
-- **LogViewer Layout Fix** (Dec 2025): Analysis panel now uses flexible `1fr` sizing with `min-height: 8` instead of fixed 30%
-- **LogViewer Scroll Fix** (Dec 2025): Both log and analysis panels now scroll to top after content update
-- **LLM Session Shell Portability Fix** (Dec 2025): Changed `read -p` to `printf + read` in session commands - `read -p` is bash-only, failed on zsh
-- **LLM Session Welcome Messages** (Dec 2025): CREATIVITY, ROBIN, HYPOTHESIS, KGENT sessions now show usage instructions instead of blank shell
-- **Claude Session Command Bug Fix** (Dec 2025): Fixed `ZenConfig.from_dict()` defaulting `session_commands` to `{}` instead of merging with defaults - CLAUDE sessions now correctly run `claude`
-- **Session Selection Bug Fix** (Dec 2025): Fixed `IndexError` in `_update_display()` - Textual's `with Container()` context manager only works in `compose()`, not event handlers
-- **Phase 5 Testing Complete** (Dec 2025): 188 tests in `tests/` - core agent logic 95-100% coverage; TUI components need Textual testing framework
-- **Phase 4 Session Persistence** (Dec 2025): `services/persistence.py` - JSON-based save/load; sessions survive TUI restarts
-- **Phase 3.3 K-gent Name Suggestions** (Dec 2025): "Suggest" button in CreateSessionModal; K-gent suggests personalized session names
-- **Phase 3.2 MainScreen Integration** (Dec 2025): LogViewer + AgentOrchestrator wired to TUI; 'l' captures log, Analyze button triggers HypothesisEngine
-- **Phase 3.1 LogViewer Widget** (Dec 2025): `widgets/log_viewer.py` - session output display with LLM analysis panel
-- **Phase 2.2 SessionHandler** (Dec 2025): `services/session_handler.py` - routes ROBIN/CREATIVITY/HYPOTHESIS/KGENT to agents
-- **Phase 2.1 Session Types** (Dec 2025): Extended `SessionType` enum with LLM-backed types; added `session_requires_llm()` helper
-- **Phase 1.4 Pipeline Composition** (Dec 2025): `CreateSessionPipeline` now uses `>>` composition; `SpawnResult` carries tmux for type alignment
-- **Phase 1.3 Confidence Fix** (Dec 2025): `StateDetector` now accumulates confidence via previous_state input
-- **AgentOrchestrator** (Dec 2025): `impl/zen-agents/zen_agents/services/agent_orchestrator.py` - Central service for LLM-backed agents in TUI
-- **B-gents B.2 implemented** (Dec 2025): Robin - personalized scientific companion, composes K-gent + HypothesisEngine + HegelAgent
-- **B-gents B.1 implemented** (Dec 2025): `impl/claude-openrouter/agents/b/` - HypothesisEngine (Popperian hypothesis generation)
-- **ClaudeCLIRuntime** (Dec 2025): OAuth-authenticated runtime via `claude -p`, uses Fix pattern for parse retries
-- **A-gents implemented** (Dec 2025): `impl/claude-openrouter/agents/a/` - AbstractSkeleton (alias), AgentMeta, CreativityCoach (first LLMAgent!)
-- **K-gent implemented** (Dec 2025): `impl/claude-openrouter/agents/k/` - persona, query, evolution agents
-- **Runtime added** (Dec 2025): `impl/claude-openrouter/runtime/` with `ClaudeRuntime` and `OpenRouterRuntime` for LLM-backed agent execution
+- **zen-agents Dropped** (Dec 2025): Textual TUI demo removed; new generation planned
+- **B-gents Complete** (Dec 2025): HypothesisEngine + Robin (scientific companion)
+- **A-gents Complete** (Dec 2025): AbstractSkeleton, AgentMeta, CreativityCoach
+- **K-gent Complete** (Dec 2025): Persona dialogue, query, evolution agents
+- **ClaudeCLIRuntime** (Dec 2025): OAuth-authenticated runtime via `claude -p`
 
 ## Quick Start
 
