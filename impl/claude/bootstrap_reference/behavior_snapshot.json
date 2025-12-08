@@ -1,0 +1,15 @@
+{
+  "id": {
+    "test": "identity",
+    "input": "test_value",
+    "output": "test_value"
+  },
+  "ground": {
+    "test": "ground",
+    "has_facts": true
+  },
+  "judge": {
+    "test": "judge_id",
+    "verdict_type": "accept"
+  }
+}

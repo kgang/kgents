@@ -316,7 +316,8 @@ class EvolutionPipeline:
 
             log(f"[{module.name}] Generated {len(hypotheses)} hypotheses")
             for i, h in enumerate(hypotheses, 1):
-                log(f"  {i}. {h[:80]}...")
+                # Log full hypothesis for decision-making analysis
+                log(f"  💡 H{i}: {h}")
 
             return hypotheses
         except Exception as e:
@@ -339,7 +340,12 @@ class EvolutionPipeline:
             improvement=improvement,
         )
 
-        log(f"[{exp_id}] Generated: {improvement.description}")
+        # Rich logging for decision-making
+        log(f"[{exp_id}] ✨ Generated Improvement:")
+        log(f"  📋 Type: {improvement.improvement_type}")
+        log(f"  🎯 Confidence: {improvement.confidence}")
+        log(f"  💡 Description: {improvement.description}")
+        log(f"  📝 Rationale: {improvement.rationale[:150]}...")
         return experiment
 
     async def _generate_improvement(
@@ -656,7 +662,7 @@ Generate ONE concrete improvement. Return ONLY valid JSON."""
 
             # Judge
             verdict = await self.judge_experiment(exp)
-            if verdict.verdict_type == VerdictType.REJECT:
+            if verdict.type == VerdictType.REJECT:
                 exp.status = ExperimentStatus.FAILED
                 continue
 
@@ -766,6 +772,58 @@ Generate ONE concrete improvement. Return ONLY valid JSON."""
         log(f"")
 
         summary = f"Evolved {len(modules)} modules: {len(incorporated)} incorporated, {len(rejected)} rejected, {len(held)} held"
+
+        # Save structured results for decision-making
+        results_path = log_path.with_suffix('.json')
+        results_data = {
+            "timestamp": timestamp,
+            "config": {
+                "target": self._config.target,
+                "dry_run": self._config.dry_run,
+                "auto_apply": self._config.auto_apply,
+                "quick_mode": self._config.quick_mode,
+            },
+            "summary": {
+                "total_experiments": len(all_experiments),
+                "passed": len(passed),
+                "failed": len(rejected),
+                "held": len(held),
+                "incorporated": len(incorporated),
+                "elapsed_seconds": elapsed,
+            },
+            "passed_experiments": [
+                {
+                    "id": exp.id,
+                    "module": exp.module.name,
+                    "category": exp.module.category,
+                    "improvement": {
+                        "type": exp.improvement.improvement_type,
+                        "description": exp.improvement.description,
+                        "rationale": exp.improvement.rationale,
+                        "confidence": exp.improvement.confidence,
+                    },
+                    "status": exp.status.value,
+                }
+                for exp in passed
+            ],
+            "held_experiments": [
+                {
+                    "id": exp.id,
+                    "module": exp.module.name,
+                    "improvement": {
+                        "description": exp.improvement.description,
+                        "rationale": exp.improvement.rationale,
+                    },
+                    "synthesis_notes": exp.synthesis.sublation_notes if exp.synthesis else None,
+                }
+                for exp in held
+            ],
+        }
+
+        with open(results_path, 'w') as f:
+            json.dump(results_data, f, indent=2)
+
+        log(f"📊 Decision data saved: {results_path}")
 
         # Close log file
         log_file.close()

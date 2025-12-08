@@ -67,13 +67,22 @@ python evolve.py bootstrap --auto-apply
 | 1-3 | ✅ COMPLETE | Worked examples, composition verification, error handling (~800 lines) |
 | 4 | ✅ COMPLETE | Pitfalls, troubleshooting, observability, progress tracking (~1350 lines) |
 | 5 | ✅ COMPLETE | Cross-references, dependency graph, GroundParser agent (~155 lines) |
-| 6 | ❌ OPTIONAL | Regeneration validation (not started) |
+| 6 | ✅ COMPLETE | Regeneration validation guide and test harness (~300 lines) |
 
-**Total**: ~2287 lines of production-ready bootstrap documentation
+**Total**: ~2587 lines of production-ready bootstrap documentation
 
 **Documents**:
 - `docs/BOOTSTRAP_PROMPT.md` - ~1545 lines (implementation guide)
 - `AUTONOMOUS_BOOTSTRAP_PROTOCOL.md` - ~1135 lines (meta protocol)
+- `impl/claude/bootstrap/REGENERATION_VALIDATION_GUIDE.md` - ~300 lines (validation guide)
+- `impl/claude/bootstrap/test_regeneration.py` - Test harness (automated approach)
+
+**Phase 6 Deliverables**:
+- ✓ Behavior snapshot script (simple, works)
+- ✓ Manual test cases for all 7 bootstrap agents
+- ✓ Validation guide with success criteria
+- ✓ Reference behavior captured (`bootstrap_reference/behavior_snapshot.json`)
+- ⚠️ Full automated test harness (created but has serialization limitations)
 
 ---
 
@@ -111,7 +120,7 @@ kgents/
 2. **Tests for agents/b/** - pytest suite for hypothesis.py, robin.py
 3. **D/E-gents specs** - Data/Database, Evaluation/Ethics agent specifications
 4. **PyPI package** - Publish kgents-runtime to PyPI
-5. **Optional: Bootstrap Docs Phase 6** - Regeneration validation
+5. **Optional: Actual regeneration test** - Delete and regenerate one bootstrap agent from docs
 
 ---
 
@@ -139,7 +148,21 @@ git push
 
 ## Session Log
 
-**Dec 8, 2025**:
+**Dec 8, 2025 (PM Session)**:
+- ✅ Completed Bootstrap Docs Phase 6: Regeneration Validation
+- ✅ Created `REGENERATION_VALIDATION_GUIDE.md` with manual test cases for all 7 agents
+- ✅ Created `test_regeneration.py` automated test harness
+- ✅ Captured reference behavior snapshot (Id, Ground, Judge agents verified)
+- ✅ Defined success criteria: behavior equivalence (not implementation matching)
+- ✅ Updated HYDRATE.md: Phase 6 complete, ~300 lines of validation documentation
+- ✅ Enhanced evolution pipeline logging for better decision-making:
+  - Full hypothesis logging (not truncated)
+  - Rich improvement metadata (type, confidence, rationale)
+  - JSON export of experiment results for review
+  - Created `EVOLUTION_DECISION_FRAMEWORK.md` (decision guide for reviewing improvements)
+- ✅ Documented evolution refinement principle in HYDRATE.md
+
+**Dec 8, 2025 (AM Session)**:
 - ✅ Diagnosed evolution pipeline mypy errors
 - ✅ Identified wrong venv as root cause
 - ✅ Tested fix: `source .venv/bin/activate` before running
@@ -169,3 +192,12 @@ git push
 - AUTONOMOUS_BOOTSTRAP_PROTOCOL.md: Complete protocol with pitfalls, observability
 - BOOTSTRAP_PROMPT.md: Complete implementation guide with examples, troubleshooting
 - Both documents comprehensive and ready for LLM consumption
+
+**Evolution Pipeline Continuous Refinement**:
+The evolution pipeline (`evolve.py`) should be continuously refined when sensible:
+- ✅ **DO refine**: Better logging, decision-support features, usability improvements
+- ✅ **DO refine**: Structured output formats (JSON), rich metadata, error reporting
+- ✅ **DO refine**: Better hypotheses, smarter filtering, principle-aware judging
+- ⚠️ **BE CAUTIOUS**: Don't add complexity that makes evolution harder to understand
+- ❌ **DON'T**: Auto-apply improvements without human judgment (tasteful curation required)
+- **Latest improvements (Dec 8)**: Rich logging with full hypotheses, improvement metadata (type/confidence/rationale), JSON export for decision-making
