@@ -185,7 +185,7 @@ LLM execution layer for agents:
 A creative framework for testing, synthesizing, and incorporating improvements:
 
 ```
-Pipeline: HypothesisEngine >> CodeImprover >> Validator >> Hegel >> Apply
+Pipeline: HypothesisEngine >> CodeImprover (×N) >> Validator >> Hegel >> Apply
 ```
 
 | Stage | Agent | Function |
@@ -195,20 +195,37 @@ Pipeline: HypothesisEngine >> CodeImprover >> Validator >> Hegel >> Apply
 | **Synthesize** | `HegelAgent` | Dialectic: current vs improvement → synthesis |
 | **Incorporate** | `GitSafety` | Apply with git integration |
 
+**Composability principle (Dec 2025):** CodeImprover is now a pure morphism `(Module, Hypothesis) → Improvement`. Each agent call produces ONE improvement from ONE hypothesis. Pipeline composes by calling N times, not by asking agent to combine outputs.
+
 Usage:
 ```bash
 python evolve.py bootstrap --dry-run    # Preview improvements
 python evolve.py agents --auto-apply    # Apply improvements
+python evolve.py meta --dry-run         # Evolve meta-layer (self-improvement!)
 python evolve.py all                    # Full evolution
 ```
 
 Key types:
+- `CodeImprover`: `(Module, Hypothesis, Constraints) → Improvement` (single output)
 - `Experiment`: id, module, improvement, status, test_results, synthesis
 - `Improvement`: description, rationale, new_content, type, confidence
 - `ExperimentStatus`: PENDING → TESTING → PASSED → SYNTHESIZING → INCORPORATED
 
+Output format (two-section):
+```
+## METADATA
+{"description": "...", "rationale": "...", "improvement_type": "refactor", "confidence": 0.8}
+
+## CODE
+```python
+# Complete file content
+```
+```
+Avoids JSON escaping issues for code content.
+
 ## Recent Changes
 
+- **evolve.py Refactored** (Dec 7, 2025): CodeImprover now composable — single hypothesis → single improvement. Two-section output (METADATA + CODE) avoids JSON escaping. Runtime enhanced with robust_json_parse + delta retry pattern.
 - **evolve.py Added** (Dec 2025): Experimental improvement framework. Extends self_improve.py to actually generate and apply code changes via LLM + dialectic synthesis.
 - **self_improve.py Added** (Dec 2025): Code review via ClaudeCLIRuntime + HypothesisEngine + Judge + Contradict. Results: 25/25 modules ACCEPT, 75 hypotheses, 4 tensions resolved. Key findings: testing gap across all modules, type annotation improvements needed.
 - **Autopoiesis Complete** (Dec 2025): Spec/impl alignment check. 0 tensions, 22/22 verdicts accept.
