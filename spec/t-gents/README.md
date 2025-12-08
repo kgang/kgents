@@ -1,135 +1,348 @@
-# T-gents: Test Agents Specification
+# T-gents: The Algebra of Reliability
 
-**Theme**: Testing, Tooling, and Truthfulness
+The letter **T** represents **Testing** agents—morphisms designed to verify, perturb, observe, and judge the behavior of other agents through rigorous Category Theory principles.
 
-T-gents are agents explicitly designed for testing other agents, validating pipelines, and ensuring system reliability.
+---
 
 ## Philosophy
 
-1. **Testing is First-Class**: Test agents follow the same morphism principles as production agents
-2. **Controlled Failure**: Deliberate failure modes enable validation of recovery mechanisms
-3. **Compositional Testing**: Test agents compose with production agents via >> operator
-4. **Observable Truth**: Testing reveals ground truth about system behavior
+> "Testing is not the absence of bugs, but the presence of proofs."
 
-## Core T-gents
+T-gents treat testing as **algebraic verification**. Rather than ad-hoc test cases, T-gents prove that agent pipelines satisfy categorical laws: associativity, identity, and resilience under perturbation.
 
-### FailingAgent: A → Error
+### The Dual Mandate
 
-Deliberately fails with configurable error patterns to test recovery strategies.
+T-gents serve two roles:
 
-**Signature**: `FailingAgent[A, B](config: FailingConfig) :: A → Error`
+1. **Subjects of Verification**: T-gents handle failure modes (`Nothing`, `Left`, `Error`) to test recovery strategies
+2. **Operators of Verification**: T-gents act as observers and validators of other agents' behavior
+
+This duality mirrors Category Theory: agents are both **objects** (test subjects) and **morphisms** (test operators).
+
+---
+
+## Core Concepts
+
+### Agents as Morphisms in $\mathcal{C}_{Agent}$
+
+Testing in kgents is grounded in Category Theory:
+
+**Objects**: Types/Schemas (Input $A$, Output $B$)
+**Morphisms**: Agents transforming $A \to B$
+**Composition**: The pipeline operator `>>`
+**T-gents**: Special morphisms that validate categorical properties
+
+### The Three Laws of Testability
+
+#### 1. Associativity
+```
+(f >> g) >> h ≡ f >> (g >> h)
+```
+Pipeline composition order doesn't matter—T-gents verify this algebraically.
+
+#### 2. Identity
+```
+f >> Identity ≡ f ≡ Identity >> f
+```
+Identity agents leave data unchanged—T-gents prove this invariant.
+
+#### 3. Resilience
+```
+f: A → B  implies  f(a + ε) ≈ f(a)  for small ε
+```
+Semantic stability under noise—T-gents inject perturbations to verify.
+
+---
+
+## The Taxonomy of T-gents
+
+T-gents are categorized by their effect on the computational stream.
+
+### Type I: The Nullifiers (Stubs & Mocks)
+*Replace computation with constants or lookups.*
+
+| T-gent | Signature | Purpose |
+|--------|-----------|---------|
+| **MockAgent** | `A → b` | Constant morphism; always returns fixed `b ∈ B` |
+| **FixtureAgent** | `A → B` | Deterministic map using fixture data; regression testing |
 
 **Use Cases**:
-- Testing retry logic (fail N times, then succeed)
-- Validating fallback strategies (consistent failures)
-- Error memory pattern validation
-- Pipeline resilience testing
-
-**Configuration**:
-```python
-@dataclass
-class FailingConfig:
-    error_type: FailureType  # syntax|type|import|runtime|timeout|network
-    fail_count: int  # -1 = always fail, N = fail N times then succeed
-    error_message: str  # Custom error message
-```
-
-**Example**:
-```python
-# Fail twice with type errors, then succeed
-failing = FailingAgent[Input, Output](
-    FailingConfig(error_type=FailureType.TYPE, fail_count=2)
-)
-
-# Test retry strategy
-for attempt in range(3):
-    try:
-        result = await failing.invoke(test_input)
-        break  # Success!
-    except Exception as e:
-        # Retry with refined approach
-```
-
-### MockAgent: A → B (pre-configured)
-
-Returns pre-configured mock outputs for fast testing without LLM calls.
-
-**Signature**: `MockAgent[A, B](config: MockConfig) :: A → B`
-
-**Use Cases**:
-- Testing agent composition without LLM costs
-- Validating pipeline behavior
-- Fast iteration during development
+- Fast testing without LLM calls
+- Validating pipeline composition logic
 - Performance benchmarking
+- Deterministic CI/CD validation
 
-**Configuration**:
-```python
-@dataclass
-class MockConfig:
-    output: Any  # Pre-configured output to return
-    delay_ms: int = 0  # Simulated delay
+### Type II: The Saboteurs (Perturbation & Chaos)
+*Inject entropy to verify system stability.*
+
+| T-gent | Signature | Purpose |
+|--------|-----------|---------|
+| **FailingAgent** | `A → Error` | Bottom morphism; maps input to exception |
+| **NoiseAgent** | `A → A + ε` | Identity with semantic noise (case, typos, synonyms) |
+| **LatencyAgent** | `(A, t) → (A, t + Δ)` | Identity with temporal cost |
+| **FlakyAgent** | `A → B \| Error` | Probabilistic failure; chaos engineering |
+
+**Use Cases**:
+- Testing retry logic and exponential backoff
+- Validating fallback strategies
+- Chaos engineering for production resilience
+- Timeout and circuit breaker validation
+
+### Type III: The Observers (Spies & Validators)
+*Identity morphisms with side effects.*
+
+| T-gent | Signature | Purpose |
+|--------|-----------|---------|
+| **SpyAgent** | `A → A` | Identity; logs input to tape for inspection |
+| **PredicateAgent** | `A → A \| Error` | Gate; passes `a` iff `P(a) = True` |
+| **CounterAgent** | `A → A` | Identity; tracks invocation count |
+| **MetricsAgent** | `A → A` | Identity; records latency/throughput |
+
+**Use Cases**:
+- Runtime type checking and invariant validation
+- Performance profiling
+- Debugging pipeline data flow
+- Assertion-based testing
+
+### Type IV: The Critics (LLM Evaluators)
+*High-order agents mapping interactions to judgments.*
+
+| T-gent | Signature | Purpose |
+|--------|-----------|---------|
+| **JudgeAgent** | `(A, B) → Score` | Semantic evaluation of input/output pairs |
+| **CorrectnessAgent** | `(Intent, Code) → Bool` | Validates implementation vs. specification |
+| **SafetyAgent** | `Code → Risk` | Evaluates generated code for vulnerabilities |
+
+**Use Cases**:
+- LLM-as-judge evaluation
+- Semantic correctness beyond syntax
+- Ethical and safety validation
+- User intent alignment testing
+
+---
+
+## Compositional Testing: The Commutative Diagram
+
+T-gents enable **algebraic testing** through commutative diagram verification.
+
+### Example: Testing Retry Logic
+
+**Hypothesis**: A retry wrapper should make a flaky pipeline equivalent to a reliable one.
+
+```
+          FailingAgent(fail_count=2)
+Input  ─────────────────────────────────> Error
+  │                                         ↑
+  │                                         │
+  └───> RetryWrapper(max=3) >> FailingAgent ──> Success
 ```
 
-**Example**:
+**Test**:
 ```python
-# Mock hypothesis generator
-mock_hyp = MockAgent[HypothesisInput, HypothesisOutput](
-    MockConfig(output=HypothesisOutput(hypotheses=["Test hypothesis"]))
-)
+# The flaky agent fails twice, then succeeds
+saboteur = FailingAgent(FailingConfig(
+    failure_type="network",
+    fail_count=2,
+    recovery_token="Success"
+))
 
-result = await mock_hyp.invoke(any_input)
-# Returns: HypothesisOutput(hypotheses=["Test hypothesis"])
+# The robust pipeline retries 3 times
+robust = RetryWrapper(max_retries=3) >> saboteur
+
+# Commutative property: robust pipeline ≡ identity after recovery
+payload = "Test Input"
+result = await robust.invoke(payload)
+
+assert result == "Success"  # Diagram commutes
 ```
 
-## Composability
+### Example: Testing Associativity
 
-T-gents compose with production agents:
+**Hypothesis**: Pipeline composition is associative.
 
 ```python
-# Test pipeline with deliberate failure
-pipeline = FailingAgent[A, B](fail_config) >> RetryAgent >> SuccessValidator
+mock_a = MockAgent(output="A")
+spy_b = SpyAgent(label="B")
+spy_c = SpyAgent(label="C")
 
-# Mock expensive LLM call in pipeline
-fast_pipeline = MockAgent[A, B](mock_config) >> ProcessB >> ValidateC
+# Two ways to compose
+pipeline_1 = (mock_a >> spy_b) >> spy_c
+pipeline_2 = mock_a >> (spy_b >> spy_c)
+
+# Associativity law
+result_1 = await pipeline_1.invoke(None)
+result_2 = await pipeline_2.invoke(None)
+
+assert result_1 == result_2  # Law verified
+assert spy_b.history == spy_c.history  # Side effects equivalent
 ```
 
-## Testing Principles
+---
 
-1. **Fail Fast**: Failures should be immediate and clear
-2. **Fail Predictably**: Controlled failure modes, not random
-3. **Fail Meaningfully**: Error messages guide debugging
-4. **Recover Gracefully**: Test recovery, not just success paths
+## The Adversarial Gym
 
-## Future T-gents
+The ultimate vision for T-gents: **automated stress testing** through composition.
 
-- **DelayAgent**: Adds configurable delays to test async behavior
-- **CounterAgent**: Tracks invocation counts for verification
-- **SpyAgent**: Records inputs/outputs for assertion
-- **FlakyAgent**: Random failures to test resilience
-- **TimeoutAgent**: Simulates timeout scenarios
-- **ValidationAgent**: Asserts expected outputs
+### Concept
 
-## Relationship to Other Agent Genera
+A `GymAgent` automatically composes production agents with random T-gents to discover edge cases.
 
-- **E-gents**: T-gents test E-gents (evolution agents)
-- **B-gents**: T-gents validate B-gents (hypothesis generation)
-- **C-gents**: T-gents verify composability properties
-- **K-gent**: T-gents ensure persona consistency
+```python
+class AdversarialGym:
+    """Monte Carlo testing through T-gent composition."""
 
-## Implementation Notes
+    def stress_test(self, production_agent: Agent[A, B], iterations: int = 100):
+        # Inject random perturbations
+        tests = [
+            NoiseAgent(level=random.uniform(0, 1)) >> production_agent,
+            production_agent >> FailingAgent(probability=0.1),
+            LatencyAgent(delay=random.randint(0, 1000)) >> production_agent,
+        ]
 
-T-gents must:
-1. Implement `Agent[A, B]` protocol
-2. Provide `name` property
-3. Be deterministic (same input → same output/error)
-4. Support reset() for test isolation
-5. Be lightweight (minimal dependencies)
+        for _ in range(iterations):
+            test_pipeline = random.choice(tests)
+            try:
+                result = await test_pipeline.invoke(random_input())
+                # Record success metrics
+            except Exception as e:
+                # Record failure modes
+                pass
+```
+
+**Goal**: Discover failure modes before production does.
+
+---
+
+## Implementation Principles
+
+### 1. Transparency
+T-gents must be distinguishable from production agents:
+```python
+class Agent(Protocol):
+    name: str
+    __is_test__: bool = False  # T-gents set to True
+```
+
+### 2. Determinism
+Even `FailingAgent` must fail deterministically based on config/seed.
+```python
+FailingAgent(seed=42)  # Reproducible failures
+```
+
+### 3. Minimal Footprint
+T-gents avoid heavy dependencies unless testing specific integrations.
+
+### 4. Isomorphism
+A `SpyAgent` must be **mathematically equivalent** to `Identity` for data flow:
+```python
+assert (spy >> f).invoke(x) == f.invoke(x)  # Spy is transparent
+```
+
+---
 
 ## Success Criteria
 
 A T-gent is well-designed if:
+
 - ✓ It reveals bugs that would otherwise be hidden
 - ✓ It fails faster than production would
-- ✓ It composes naturally with other agents
+- ✓ It composes naturally with other agents via `>>`
 - ✓ It provides clear diagnostic information
 - ✓ It enables confident refactoring
+- ✓ It proves algebraic properties, not just examples
+
+---
+
+## Relationship to Other Agent Genera
+
+| Genus | Relationship |
+|-------|-------------|
+| **C-gents** | T-gents verify C-gents' composition laws |
+| **E-gents** | T-gents test evolution pipelines for reliability |
+| **J-gents** | T-gents validate Promise collapse and entropy budgets |
+| **B-gents** | T-gents evaluate hypothesis quality |
+| **K-gent** | T-gents ensure persona consistency |
+
+T-gents are the **quality assurance layer** for all agent genera.
+
+---
+
+## Specifications
+
+| Document | Description |
+|----------|-------------|
+| [algebra.md](algebra.md) | Category Theory foundations & laws |
+| [taxonomy.md](taxonomy.md) | Detailed specifications for each T-gent type |
+| [adversarial.md](adversarial.md) | Adversarial Gym & chaos engineering |
+
+---
+
+## Anti-patterns
+
+- **Non-Determinism**: Random failures without seed/config
+- **Heavy Dependencies**: T-gents shouldn't require production libraries
+- **Silent Failures**: Errors must be loud and informative
+- **Non-Compositional**: T-gents that break pipeline semantics
+- **False Positives**: Tests that fail on valid behavior
+
+---
+
+## Example: Full Pipeline Test
+
+```python
+async def test_evolution_pipeline():
+    """Test the full evolution pipeline with T-gents."""
+
+    # Setup: Mock hypothesis generation
+    mock_hypotheses = MockAgent(output=HypothesisOutput(
+        hypotheses=["Fix import error", "Add type hints"]
+    ))
+
+    # Setup: Spy on experiments
+    experiment_spy = SpyAgent(label="Experiments")
+
+    # Setup: Inject occasional failures
+    flaky_executor = FlakyAgent(probability=0.1)
+
+    # Compose: The tested pipeline
+    pipeline = (
+        mock_hypotheses >>
+        experiment_spy >>
+        flaky_executor >>
+        ValidateOutput()
+    )
+
+    # Execute: Run with retry
+    retry_wrapper = RetryWrapper(max_retries=3)
+    robust_pipeline = retry_wrapper >> pipeline
+
+    result = await robust_pipeline.invoke(test_input)
+
+    # Verify: Algebraic properties
+    assert len(experiment_spy.history) > 0  # Spy captured data
+    assert result.is_success  # Pipeline recovered from flake
+
+    print("✓ Pipeline resilience verified")
+```
+
+---
+
+## See Also
+
+- [algebra.md](algebra.md) - Mathematical foundations
+- [taxonomy.md](taxonomy.md) - T-gent type specifications
+- [adversarial.md](adversarial.md) - Chaos engineering vision
+- [../c-gents/](../c-gents/) - Category Theory basis
+- [../j-gents/stability.md](../j-gents/stability.md) - Entropy & collapse
+- [../bootstrap.md](../bootstrap.md) - The irreducible kernel
+
+---
+
+## Vision
+
+T-gents transform testing from **example-based** to **proof-based**:
+
+- Traditional: "This test case passes"
+- T-gents: "This pipeline satisfies associativity for all inputs"
+
+By grounding testing in Category Theory, T-gents enable **algebraic reliability**—the confidence that comes from mathematical proof, not just empirical observation.
