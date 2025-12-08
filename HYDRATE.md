@@ -4,14 +4,85 @@
 
 ## TL;DR
 
-**Status**: Phase 2.5a.2 complete - API stub extraction implemented
-**Branch**: `main` (clean, pushed to c7fa76e)
-**Mypy**: 0 errors (55 source files, strict)
-**Next**: Test API stubs effectiveness + wire Phase 2.5c recovery layer
+**Status**: Phase 2.5c COMPLETE - Recovery layer integrated + T-gents created ✅
+**Branch**: `main` (uncommitted: evolve.py + agents/t/ + spec/t-gents/)
+**Mypy**: 0 errors (evolve.py type checks pass)
+**Test results**: Recovery layer validated with test_recovery_layer.py
+**Next**: Test in production + commit changes
 
 ---
 
-## This Session: Phase 2.5a.2 - API Stub Extraction
+## This Session: Phase 2.5c Integration + T-gents Creation (2025-12-08)
+
+### Completed ✅
+
+**1. Recovery Layer Integrated into evolve.py**
+
+Added to `EvolveConfig` (lines 150-154):
+```python
+enable_retry: bool = True
+max_retries: int = 2
+enable_fallback: bool = True
+enable_error_memory: bool = True
+```
+
+Added to `EvolutionPipeline.__init__()` (lines 195-203):
+```python
+self._retry_strategy = RetryStrategy(RetryConfig(...))
+self._fallback_strategy = FallbackStrategy(FallbackConfig(...))
+self._error_memory = ErrorMemory()
+```
+
+New method `_test_with_recovery()` (lines 608-717):
+- Tests initial experiment
+- Records failures in error memory with categorization
+- Attempts retry with refined prompts (configurable max_retries)
+- Falls back to minimal/type-only/docs strategies
+- Returns (success, final_experiment) tuple
+
+Updated `_process_module()` (lines 748-779):
+- Replaces simple test() with _test_with_recovery()
+- Uses successful retry/fallback experiments
+- Records comprehensive failure details
+
+**2. T-gents (Test-gents) Framework Created**
+
+New directory: `impl/claude/agents/t/`
+- `failing.py`: FailingAgent with configurable error types
+- `mock.py`: MockAgent for pre-configured outputs
+- `__init__.py`: Exports both agents
+
+New spec: `spec/t-gents/README.md`
+- Full specification for T-gents genus
+- FailingAgent and MockAgent docs
+- Composability examples
+- Future T-gents roadmap
+
+**3. Recovery Layer Test Suite**
+
+New file: `test_recovery_layer.py`
+- Test 1: Retry strategy (fail 2x → succeed)
+- Test 2: Error memory pattern tracking
+- ✅ All tests passing!
+- Demonstrates T-gents + recovery layer working together
+
+### Integration Verification
+
+Type checking:
+```bash
+MYPYPATH=/Users/kentgang/git/kgents/impl/claude python -m mypy evolve.py
+# Result: 0 errors ✓
+```
+
+Test suite:
+```bash
+python test_recovery_layer.py
+# Result: ALL TESTS COMPLETE! ✓
+```
+
+---
+
+## Previous: Phase 2.5a.2 - API Stub Extraction
 
 ### Completed (commit 85c566d)
 
@@ -59,41 +130,59 @@ CRITICAL: Common mistakes to AVOID:
 
 ## Next Session: Start Here
 
-### Priority 1: Test API Stub Effectiveness
+### Priority 1: Validate Recovery in Production ⚡
 
-Run multiple experiments to measure impact:
+Test recovery layer with actual evolution runs:
 ```bash
-cd /Users/kentgang/git/kgents/impl/claude
-source ../../.venv/bin/activate
-PYTHONPATH=/Users/kentgang/git/kgents/impl/claude python evolve.py meta --auto-apply
+# Run with higher hypothesis count to trigger failures
+python evolve.py meta --hypotheses=5 --auto-apply
+
+# Monitor recovery effectiveness in logs:
+grep -E "Retry|Fallback|recovery" .evolve_logs/evolve_*.log
 ```
 
-**Measure:**
-- % of experiments with API hallucination errors (before: ~75%)
-- Check logs for "API Reference" section presence
-- Verify LLM sees correct signatures
+**Metrics to track:**
+- % experiments passing on first try (baseline)
+- % experiments recovering via retry (target: >30%)
+- % experiments recovering via fallback (target: >10%)
+- Total incorporation rate (target: >70%, was ~30-50%)
+- Error memory pattern accumulation
 
-### Priority 2: Wire Recovery Layer
+### Priority 2: Commit Recovery Layer + T-gents
 
-Integrate Phase 2.5c into evolve.py:
-```python
-from agents.e import RetryStrategy, FallbackStrategy, ErrorMemory
+Once validated:
+```bash
+git status
+git add evolve.py agents/t/ test_recovery_layer.py
+git add spec/t-gents/ HYDRATE.md
+git commit -m "feat: Integrate Phase 2.5c recovery layer + create T-gents
 
-# In _process_module() after test failure:
-if not passed and should_retry(exp):
-    refined_prompt = retry_strategy.refine_prompt(...)
-    # Re-run experiment with refined prompt
-elif retry_exhausted:
-    fallback_prompt = fallback_strategy.generate_minimal_prompt(...)
-    # Run fallback experiment
+- Wire retry/fallback/error_memory into evolve.py pipeline
+- Add T-gents (Test-gents) framework for controlled testing
+- Create FailingAgent and MockAgent for test scenarios
+- Add test_recovery_layer.py demonstrating recovery
+- Write spec/t-gents/README.md specification
+- Update HYDRATE.md with Phase 2.5c completion
+
+Changes:
+- evolve.py: Add recovery configuration + _test_with_recovery()
+- agents/t/: New test agent genus
+- test_recovery_layer.py: Recovery layer test suite"
 ```
 
-### Priority 3: Expand API Coverage
+### Priority 3: Expand T-gents Ecosystem
 
-Add more types to extraction as hallucinations discovered:
-- Add to `_extract_sigs_from_file()`: HypothesisInput, ASTAnalysisInput, etc.
-- Monitor error patterns in failed experiments
-- Update extraction lists incrementally
+Add more test utilities to agents/t/:
+- **DelayAgent**: Configurable delays for async testing
+- **CounterAgent**: Track invocation counts
+- **SpyAgent**: Record inputs/outputs for assertions
+- **FlakyAgent**: Random failures for resilience testing
+- **ValidationAgent**: Assert expected outputs
+
+### Priority 4: Implement J-gents (Optional)
+
+New untracked directory: `impl/claude/agents/j/`
+See `spec/j-gents/JGENT_SPEC_PLAN.md` for Phase 1 plan
 
 ---
 
@@ -110,11 +199,11 @@ Add more types to extraction as hallucinations discovered:
 - F-string repair for truncated outputs
 - Parse error recovery
 
-**Layer 3: Recovery & Learning** (retry.py, fallback.py, error_memory.py) ✅ Complete
-- Failure-aware prompt refinement
-- Progressive simplification fallbacks
-- Failure pattern tracking
-- **NOT YET INTEGRATED** into evolution pipeline
+**Layer 3: Recovery & Learning** (retry.py, fallback.py, error_memory.py) ✅ Complete & Integrated
+- Failure-aware prompt refinement with refined prompts
+- Progressive simplification fallbacks (minimal → type → docs)
+- Failure pattern tracking across sessions
+- **FULLY INTEGRATED** into evolution pipeline (evolve.py:608-813)
 
 **Other E-gent Tools:**
 - validator.py - Pre-mypy schema validation
@@ -125,6 +214,14 @@ Add more types to extraction as hallucinations discovered:
 ---
 
 ## Session Log
+
+**Dec 8 PM**: UNCOMMITTED - Phase 2.5c recovery layer + T-gents complete
+  - Integrated retry/fallback/error_memory into evolve.py
+  - Created T-gents (Test-gents) framework + spec
+  - Added FailingAgent, MockAgent for controlled testing
+  - Created test_recovery_layer.py test suite (passing)
+  - Wrote spec/t-gents/README.md full specification
+  - Updated HYDRATE.md with completion status
 
 **Dec 8 PM**: c7fa76e - Updated HYDRATE.md for Phase 2.5a.2 session
 **Dec 8 PM**: f976a09 - Reverted bad commit that deleted evolve.py

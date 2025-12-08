@@ -89,6 +89,12 @@ from agents.e import (
     SelfEvolutionAgent,
     SafeEvolutionInput,
     compute_code_similarity,
+    # Recovery Layer (Phase 2.5c)
+    RetryStrategy,
+    RetryConfig,
+    FallbackStrategy,
+    FallbackConfig,
+    ErrorMemory,
 )
 
 # Bootstrap imports
@@ -141,6 +147,11 @@ class EvolveConfig:
     safe_mode: bool = False
     max_iterations: int = 3
     convergence_threshold: float = 0.95
+    # Phase 2.5c: Recovery layer
+    enable_retry: bool = True
+    max_retries: int = 2
+    enable_fallback: bool = True
+    enable_error_memory: bool = True
 
 
 @dataclass
@@ -180,6 +191,16 @@ class EvolutionPipeline:
         self._test_agent = TestAgent()
         self._judge = CodeJudge()
         self._incorporate = IncorporateAgent()
+
+        # Recovery layer (Phase 2.5c)
+        self._retry_strategy = RetryStrategy(RetryConfig(
+            max_retries=config.max_retries,
+            verbose=False
+        )) if config.enable_retry else None
+        self._fallback_strategy = FallbackStrategy(FallbackConfig(
+            verbose=False
+        )) if config.enable_fallback else None
+        self._error_memory = ErrorMemory() if config.enable_error_memory else None
 
         # Agents requiring runtime (lazy instantiation)
         self._hypothesis_engine: Optional[HypothesisEngine] = None
@@ -584,6 +605,130 @@ Generate ONE concrete improvement. Return ONLY valid JSON."""
 
         return result.success
 
+    async def _test_with_recovery(
+        self,
+        experiment: Experiment,
+        module: CodeModule,
+        hypothesis: str
+    ) -> tuple[bool, Optional[Experiment]]:
+        """
+        Test experiment with retry and fallback recovery strategies.
+
+        Returns: (success, final_experiment)
+        - success: Whether any version passed
+        - final_experiment: The successful experiment or None
+        """
+        # Test initial experiment
+        passed = await self.test(experiment)
+        if passed:
+            return (True, experiment)
+
+        # Record initial failure in error memory
+        if self._error_memory and experiment.error:
+            self._error_memory.record_failure(
+                module_category=module.category,
+                module_name=module.name,
+                hypothesis=hypothesis,
+                failure_type=self._categorize_test_failure(experiment.error),
+                failure_details=experiment.error
+            )
+
+        # Try retry strategy
+        if self._retry_strategy and self._retry_strategy.should_retry(experiment):
+            log(f"[{experiment.id}] Attempting retry with refined prompt...")
+
+            for attempt in range(self._config.max_retries):
+                # Build prompt context for retry
+                from agents.e.prompts import build_prompt_context
+                context = build_prompt_context(module)
+
+                # Generate refined prompt
+                refined_prompt = self._retry_strategy.refine_prompt(
+                    original_hypothesis=hypothesis,
+                    failure_reason=experiment.error or "Unknown failure",
+                    attempt=attempt,
+                    context=context,
+                    validation_report=None  # Could extract from test result
+                )
+
+                # Generate new improvement with refined prompt
+                log(f"[{experiment.id}] Retry {attempt + 1}/{self._config.max_retries}")
+                retry_improvement = await self._generate_improvement(module, refined_prompt)
+                if not retry_improvement:
+                    continue
+
+                # Create retry experiment
+                retry_exp = Experiment(
+                    id=f"{experiment.id}_r{attempt + 1}",
+                    module=module,
+                    improvement=retry_improvement,
+                    hypothesis=hypothesis,
+                )
+
+                # Test retry
+                retry_passed = await self.test(retry_exp)
+                if retry_passed:
+                    log(f"[{experiment.id}] ✓ Retry {attempt + 1} succeeded!")
+                    return (True, retry_exp)
+                else:
+                    log(f"[{experiment.id}] ✗ Retry {attempt + 1} failed: {retry_exp.error}")
+                    if self._error_memory and retry_exp.error:
+                        self._error_memory.record_failure(
+                            module_category=module.category,
+                            module_name=module.name,
+                            hypothesis=hypothesis,
+                            failure_type=self._categorize_test_failure(retry_exp.error),
+                            failure_details=retry_exp.error
+                        )
+
+        # Try fallback strategy
+        if self._fallback_strategy and self._fallback_strategy.should_fallback(
+            experiment,
+            retry_exhausted=True
+        ):
+            log(f"[{experiment.id}] Attempting fallback strategies...")
+
+            # Try minimal version
+            if self._config.enable_fallback:
+                from agents.e.prompts import build_prompt_context
+                context = build_prompt_context(module)
+
+                minimal_prompt = self._fallback_strategy.generate_minimal_prompt(
+                    original_hypothesis=hypothesis,
+                    context=context
+                )
+
+                log(f"[{experiment.id}] Trying minimal fallback...")
+                fallback_improvement = await self._generate_improvement(module, minimal_prompt)
+                if fallback_improvement:
+                    fallback_exp = Experiment(
+                        id=f"{experiment.id}_fb",
+                        module=module,
+                        improvement=fallback_improvement,
+                        hypothesis=hypothesis,
+                    )
+
+                    fallback_passed = await self.test(fallback_exp)
+                    if fallback_passed:
+                        log(f"[{experiment.id}] ✓ Fallback succeeded!")
+                        return (True, fallback_exp)
+
+        # All recovery attempts failed
+        return (False, None)
+
+    def _categorize_test_failure(self, error: str) -> str:
+        """Categorize test failure type for error memory."""
+        error_lower = error.lower()
+        if "syntax" in error_lower or "parse" in error_lower:
+            return "syntax"
+        if "type" in error_lower or "mypy" in error_lower:
+            return "type"
+        if "import" in error_lower or "modulenotfound" in error_lower:
+            return "import"
+        if "test" in error_lower or "pytest" in error_lower:
+            return "test"
+        return "unknown"
+
     async def _process_module(self, module: CodeModule) -> list[Experiment]:
         """Process a single module (for parallel execution)."""
         log(f"\n{'='*60}")
@@ -600,17 +745,41 @@ Generate ONE concrete improvement. Return ONLY valid JSON."""
             if exp:
                 experiments.append(exp)
 
+        # Process each experiment with recovery strategies
+        processed_experiments = []
         for exp in experiments:
-            passed = await self.test(exp)
-            if not passed:
-                self._memory.record(
-                    module=module.name,
-                    hypothesis=exp.hypothesis,
-                    description=exp.improvement.description,
-                    outcome="rejected",
-                    rejection_reason=exp.error or "Test failure",
-                )
-                continue
+            # Use recovery layer if enabled, otherwise fallback to simple test
+            if self._config.enable_retry or self._config.enable_fallback:
+                passed, final_exp = await self._test_with_recovery(exp, module, exp.hypothesis)
+                if not passed:
+                    # All recovery attempts failed
+                    self._memory.record(
+                        module=module.name,
+                        hypothesis=exp.hypothesis,
+                        description=exp.improvement.description,
+                        outcome="rejected",
+                        rejection_reason=exp.error or "Test failure (all retries exhausted)",
+                    )
+                    continue
+                # Use the successful experiment (could be original, retry, or fallback)
+                exp = final_exp  # type: ignore
+                processed_experiments.append(exp)
+            else:
+                # Legacy path: simple test without recovery
+                passed = await self.test(exp)
+                if not passed:
+                    self._memory.record(
+                        module=module.name,
+                        hypothesis=exp.hypothesis,
+                        description=exp.improvement.description,
+                        outcome="rejected",
+                        rejection_reason=exp.error or "Test failure",
+                    )
+                    continue
+                processed_experiments.append(exp)
+
+        # Continue with judge/synthesize/incorporate for passed experiments
+        for exp in processed_experiments:
 
             verdict = await self.judge_experiment(exp)
             if verdict.type == VerdictType.REJECT:
