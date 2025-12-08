@@ -103,12 +103,39 @@ class Agent(ABC, Generic[A, B]):
         return f"<Agent:{self.name}>"
 
 
+@dataclass(frozen=True)
+class IterationContext(Generic[A]):
+    """
+    Context provided to FixConfig.should_continue predicate.
+    
+    Enables convergence detection patterns like:
+    - Stop if output unchanged
+    - Stop after N identical results
+    - Stop if quality metric plateaus
+    """
+    iteration: int
+    current_output: A
+    previous_output: Optional[A]
+    history: tuple[A, ...]  # All previous outputs (immutable)
+    
+    def unchanged(self) -> bool:
+        """Check if current output equals previous output."""
+        return self.previous_output is not None and self.current_output == self.previous_output
+    
+    def stable_for(self, n: int) -> bool:
+        """Check if output has been unchanged for last n iterations."""
+        if len(self.history) < n:
+            return False
+        recent = self.history[-n:]
+        return all(x == self.current_output for x in recent)
+
+
 @dataclass
 class FixConfig:
     """Configuration for Fix agent iteration."""
     max_iterations: int = 10
     min_iterations: int = 1
-    should_continue: Callable[[Any], bool] = lambda _: True
+    should_continue: Callable[[IterationContext], bool] = lambda _: True
 
 
 class Fix(Agent[A, A], Generic[A]):
@@ -119,8 +146,27 @@ class Fix(Agent[A, A], Generic[A]):
     This is the canonical pattern for self-improvement loops.
 
     Example:
+        # Basic usage
         improve = Fix(refine_agent, max_iterations=5)
         result = await improve.invoke(draft)
+        
+        # Stop on convergence
+        improve = Fix(
+            refine_agent,
+            FixConfig(
+                max_iterations=10,
+                should_continue=lambda ctx: not ctx.unchanged()
+            )
+        )
+        
+        # Stop after 3 stable iterations
+        improve = Fix(
+            refine_agent,
+            FixConfig(
+                max_iterations=20,
+                should_continue=lambda ctx: not ctx.stable_for(3)
+            )
+        )
     """
 
     def __init__(
@@ -142,12 +188,21 @@ class Fix(Agent[A, A], Generic[A]):
         Returns final output after iteration limit or early termination.
         """
         current = input
+        history: list[A] = []
         
         for i in range(self._config.max_iterations):
+            previous = current
             current = await self._agent.invoke(current)
+            history.append(previous)
 
             if i >= self._config.min_iterations - 1:
-                if not self._config.should_continue(current):
+                ctx = IterationContext(
+                    iteration=i + 1,
+                    current_output=current,
+                    previous_output=previous,
+                    history=tuple(history)
+                )
+                if not self._config.should_continue(ctx):
                     break
 
         return current
