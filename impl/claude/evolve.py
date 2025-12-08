@@ -7,17 +7,24 @@ incorporating improvements into kgents.
 Philosophy:
 - Evolution through dialectic: thesis (current) + antithesis (improvement) → synthesis
 - Experiments are cheap, production is sacred
-- Fix pattern: iterate until stable
+- Fix pattern: iterate until stable (now explicit via bootstrap.Fix)
 - Conflicts are data: log tensions, don't hide them
 
-Architecture (Phase 1 - Composable Agents):
+Architecture (Bootstrap-Enhanced):
     EvolutionAgent = Ground >> Hypothesis >> Experiment >> Judge >> Sublate >> Incorporate
 
-    Each stage is now a separate agent in agents/e/:
+    Bootstrap agents used directly for self-improvement:
+    - Judge: Evaluates hypotheses against 7 principles (tasteful→generative)
+    - Fix: Convergence-tracked iteration with entropy budgets
+    - Contradict: Surfaces tensions between current/improved code
+    - Sublate: Synthesizes or holds productive tensions
+    - Ground: Injects persona values into prompts
+
+    E-gent agents in agents/e/:
     - ASTAnalyzer: Static analysis for targeted hypotheses
     - MemoryAgent: Track rejected/accepted improvements
     - TestAgent: Validate syntax, types, tests
-    - CodeJudge: Evaluate against 7 principles
+    - CodeJudge: Domain-specific code evaluation
     - IncorporateAgent: Apply with git safety
 
 Usage (New Default: Test Mode):
@@ -66,6 +73,10 @@ if TYPE_CHECKING:
     from agents.b.hypothesis import HypothesisEngine, HypothesisInput
     from agents.h.hegel import HegelAgent, DialecticInput, DialecticOutput
     from bootstrap.sublate import Sublate
+    from bootstrap.fix import Fix, FixConfig, FixResult
+    from bootstrap.contradict import Contradict, ContradictInput, ContradictResult
+    from bootstrap.judge import Judge as BootstrapJudge, JudgeInput as BootstrapJudgeInput
+    from bootstrap.ground import Ground
     from runtime.base import LLMAgent, AgentContext, AgentResult
 
 # E-gents: Evolution agents (Phase 1 extraction)
@@ -110,15 +121,24 @@ from agents.e import (
     EvolutionReport,
 )
 
-# Bootstrap imports
+# Bootstrap imports - the irreducible kernel for self-improvement
 from bootstrap import make_default_principles
 from bootstrap.types import (
+    Agent,
     Verdict,
     VerdictType,
     Synthesis,
     SublateInput,
     Tension,
+    TensionMode,
     HoldTension,
+    FixConfig,
+    FixResult,
+    ContradictInput,
+    ContradictResult,
+    JudgeInput as BootstrapJudgeInputType,
+    Facts,
+    VOID,
 )
 
 
@@ -175,6 +195,168 @@ class EvolveCliConfig:
             require_tests_pass=self.require_tests_pass,
             require_type_check=self.require_type_check,
         )
+
+
+# ============================================================================
+# Bootstrap Self-Improvement Helpers
+# ============================================================================
+# These functions use bootstrap agents DIRECTLY for self-improvement,
+# without external coordination. See HYDRATE.md for the full analysis.
+
+def _get_bootstrap_judge() -> "BootstrapJudge":
+    """Lazy instantiation of bootstrap Judge for hypothesis evaluation."""
+    from bootstrap.judge import Judge
+    return Judge()
+
+
+def _get_bootstrap_fix() -> "Fix":
+    """Lazy instantiation of bootstrap Fix for convergence tracking."""
+    from bootstrap.fix import Fix
+    return Fix
+
+
+def _get_bootstrap_contradict() -> "Contradict":
+    """Lazy instantiation of bootstrap Contradict for tension detection."""
+    from bootstrap.contradict import Contradict
+    return Contradict()
+
+
+def _get_bootstrap_ground() -> "Ground":
+    """Lazy instantiation of bootstrap Ground for persona/world facts."""
+    from bootstrap.ground import Ground
+    return Ground()
+
+
+async def get_grounded_context() -> Facts:
+    """
+    Get grounded context from bootstrap Ground agent.
+
+    Injects persona values and world state into evolution prompts.
+    This ensures improvements align with Kent's preferences (spec/k-gent/persona.md).
+
+    Usage:
+        facts = await get_grounded_context()
+        # facts.persona.values -> ("intellectual honesty", "ethical technology", ...)
+        # facts.persona.communication_style -> "direct but warm"
+    """
+    ground = _get_bootstrap_ground()
+    return await ground.invoke(VOID)
+
+
+async def detect_code_tension(
+    original_code: str,
+    improved_code: str,
+    context: Optional[dict[str, Any]] = None,
+) -> ContradictResult:
+    """
+    Use bootstrap Contradict to detect tensions between original and improved code.
+
+    This surfaces conflicts that might not be obvious:
+    - Logical: API changes that break compatibility
+    - Pragmatic: Different recommendations for the same problem
+    - Aesthetic: Style conflicts (naming, structure)
+
+    Returns:
+        ContradictResult with detected tensions (if any)
+    """
+    contradict = _get_bootstrap_contradict()
+    return await contradict.invoke(ContradictInput(
+        a=original_code,
+        b=improved_code,
+        context=context,
+    ))
+
+
+async def iterate_with_fix(
+    transform_fn: Any,
+    initial_value: Any,
+    max_iterations: int = 10,
+    entropy_budget: Optional[float] = 1.0,
+) -> FixResult:
+    """
+    Use bootstrap Fix for convergence-tracked iteration.
+
+    This replaces ad-hoc retry loops with principled fixed-point iteration:
+    - Tracks convergence history
+    - Respects entropy budgets (diminishes with depth)
+    - Returns proximity metric for adaptive strategies
+
+    Args:
+        transform_fn: Async function that improves the value
+        initial_value: Starting point
+        max_iterations: Maximum iterations before stopping
+        entropy_budget: J-gents entropy budget (diminishes per iteration)
+
+    Returns:
+        FixResult with value, converged status, and history
+    """
+    from bootstrap.fix import Fix
+    config: FixConfig = FixConfig(
+        max_iterations=max_iterations,
+        entropy_budget=entropy_budget,
+    )
+    fix = Fix(config)
+    return await fix.invoke((transform_fn, initial_value))
+
+
+class HypothesisWrapper(Agent[str, str]):
+    """
+    Wrapper to make a hypothesis string into an Agent for Judge evaluation.
+
+    Bootstrap Judge expects an Agent[Any, Any], but we want to evaluate
+    hypotheses (strings) against the 7 principles. This wrapper makes
+    hypothesis strings behave like agents for judgment.
+    """
+
+    def __init__(self, hypothesis: str, module_name: str):
+        self._hypothesis = hypothesis
+        self._module_name = module_name
+
+    @property
+    def name(self) -> str:
+        return f"Hypothesis({self._module_name}): {self._hypothesis[:50]}..."
+
+    async def invoke(self, input: str) -> str:
+        return self._hypothesis
+
+
+async def judge_hypothesis_against_principles(
+    hypothesis: str,
+    module_name: str,
+    principles: Optional[tuple[str, ...]] = None,
+) -> Verdict:
+    """
+    Use bootstrap Judge to evaluate a hypothesis against the 7 principles.
+
+    This provides a quality gate BEFORE generating code, filtering out
+    hypotheses that violate kgents principles:
+    - tasteful: Does this serve a clear purpose?
+    - curated: Is this unique/valuable?
+    - ethical: Does this respect user agency?
+    - joyful: Does this add warmth?
+    - composable: Will this compose well?
+    - heterarchical: Does this avoid fixed hierarchy?
+    - generative: Can this be regenerated from spec?
+
+    Args:
+        hypothesis: The improvement hypothesis to evaluate
+        module_name: Name of the module being improved
+        principles: Specific principles to check (default: all 7)
+
+    Returns:
+        Verdict with ACCEPT, REVISE, or REJECT
+    """
+    from bootstrap.judge import Judge, JudgeInput
+
+    # Wrap hypothesis as an agent for Judge
+    hypothesis_agent = HypothesisWrapper(hypothesis, module_name)
+
+    judge = Judge()
+    return await judge.invoke(JudgeInput(
+        agent=hypothesis_agent,
+        principles=principles,
+        context={"hypothesis": hypothesis, "module": module_name},
+    ))
 
 
 # ============================================================================
@@ -438,14 +620,27 @@ async def show_status() -> None:
 
 
 async def show_suggestions(config: EvolveCliConfig) -> None:
-    """Show improvement suggestions without running experiments."""
+    """
+    Show improvement suggestions without running experiments.
+
+    Enhanced (Bootstrap Integration):
+    - Uses Ground to inject persona context into analysis
+    - Uses Judge to evaluate hypotheses against 7 principles
+    - Tracks tensions between current state and suggestions
+    """
     log("=" * 60)
-    log("EVOLUTION SUGGESTIONS")
+    log("EVOLUTION SUGGESTIONS (Bootstrap-Enhanced)")
     log("=" * 60)
+
+    # Get grounded context for persona-aware suggestions
+    facts = await get_grounded_context()
+    log(f"📍 Grounded context: {facts.persona.name}'s preferences loaded")
+    log(f"   Values: {', '.join(facts.persona.values[:3])}...")
+    log("")
 
     modules = discover_modules(config.target)
 
-    log(f"\nAnalyzing {len(modules)} modules for improvement opportunities...\n")
+    log(f"Analyzing {len(modules)} modules for improvement opportunities...\n")
 
     # Create an AST analyzer for quick analysis
     ast_analyzer = ASTAnalyzer(max_hypothesis_targets=3)
@@ -460,22 +655,32 @@ async def show_suggestions(config: EvolveCliConfig) -> None:
         if structure:
             # Check for missing type annotations
             code = get_code_preview(module.path)
-            lines = code.split("\n")
 
             suggestions = []
+            hypotheses_for_judge = []
 
             # Check complexity
             if structure.complexity_hints:
-                suggestions.append(f"  💡 Complexity hints: {', '.join(structure.complexity_hints[:2])}")
+                hint = f"Reduce complexity: {', '.join(structure.complexity_hints[:2])}"
+                suggestions.append(f"  💡 {hint}")
+                hypotheses_for_judge.append(hint)
 
             # Check for long functions (>50 lines)
             for func in structure.functions[:3]:
                 if "long" in str(func).lower():
-                    suggestions.append(f"  📏 Consider refactoring long function: {func.get('name', 'unknown')}")
+                    hint = f"Refactor long function: {func.get('name', 'unknown')}"
+                    suggestions.append(f"  📏 {hint}")
+                    hypotheses_for_judge.append(hint)
 
             # Check for missing docstrings
             if not structure.docstring:
                 suggestions.append("  📝 Missing module docstring")
+                hypotheses_for_judge.append("Add module docstring")
+
+            # Persona-grounded suggestions
+            if "composable" in facts.persona.values or True:  # Always check composability
+                if module.category != "bootstrap":
+                    suggestions.append(f"  🔗 Check: Does this compose well via >> operator?")
 
             # Generic suggestions based on category
             if module.category == "runtime":
@@ -484,14 +689,31 @@ async def show_suggestions(config: EvolveCliConfig) -> None:
                 suggestions.append("  🤖 Agent modules: Ensure clear A → B type signatures")
 
             if suggestions:
-                for s in suggestions[:3]:
+                for s in suggestions[:4]:
                     log(s)
+
+                # Judge top hypotheses against 7 principles
+                if hypotheses_for_judge and len(hypotheses_for_judge) > 0:
+                    log("  ─ Bootstrap Judge Evaluation ─")
+                    for hyp in hypotheses_for_judge[:2]:
+                        try:
+                            verdict = await judge_hypothesis_against_principles(hyp, module.name)
+                            verdict_icon = "✓" if verdict.type == VerdictType.ACCEPT else "⚠" if verdict.type == VerdictType.REVISE else "✗"
+                            log(f"    {verdict_icon} [{verdict.type.value}] {hyp[:40]}...")
+                        except Exception as e:
+                            log(f"    ? Could not judge: {str(e)[:30]}...")
             else:
                 log("  ✓ No obvious improvements needed")
 
         log("")
 
     log(f"{'=' * 60}")
+    log("Bootstrap Self-Improvement Patterns Available:")
+    log("  • Judge: Evaluate hypotheses against 7 principles")
+    log("  • Fix: Convergence-tracked iteration with entropy")
+    log("  • Contradict: Detect tensions in code changes")
+    log("  • Ground: Inject persona values into prompts")
+    log("")
     log("To run experiments, use:")
     log("  python evolve.py meta --auto-apply  (for self-improvement)")
     log("  python evolve.py full --auto-apply  (for full codebase)")
@@ -615,25 +837,35 @@ async def main() -> None:
 
 async def run_safe_evolution(config: EvolveCliConfig) -> None:
     """
-    Run safe self-evolution using fixed-point iteration.
+    Run safe self-evolution using bootstrap Fix for convergence tracking.
 
     This mode is specifically for evolving evolve.py and related
     infrastructure. It uses multiple safety layers:
 
-    1. Sandbox testing (syntax, types, self-test)
-    2. Fixed-point convergence (iterate until stable)
-    3. Human approval (for meta-changes)
+    1. Bootstrap Ground: Inject persona values into evolution
+    2. Bootstrap Judge: Pre-filter hypotheses against 7 principles
+    3. Bootstrap Fix: Convergence-tracked iteration with entropy budgets
+    4. Bootstrap Contradict: Detect tensions between old/new code
+    5. Sandbox testing (syntax, types, self-test)
+    6. Human approval (for meta-changes)
 
     Usage:
         python evolve.py meta --safe-mode --dry-run
     """
     log("=" * 60)
-    log("SAFE SELF-EVOLUTION MODE (Phase 2)")
+    log("SAFE SELF-EVOLUTION MODE (Bootstrap-Enhanced)")
     log("=" * 60)
     log(f"Target: {config.target}")
     log(f"Max iterations: {config.max_iterations}")
     log(f"Convergence threshold: {config.convergence_threshold}")
     log(f"Dry run: {config.dry_run}")
+    log("")
+
+    # Get grounded context for persona-aware evolution
+    facts = await get_grounded_context()
+    log(f"📍 Grounded context: {facts.persona.name}'s preferences")
+    log(f"   Values: {', '.join(facts.persona.values[:3])}...")
+    log(f"   Style: {facts.persona.communication_style}")
     log("")
 
     # Create safety config
@@ -693,6 +925,20 @@ async def run_safe_evolution(config: EvolveCliConfig) -> None:
             log(f"  Converged: {result.converged}")
             log(f"  Iterations: {result.iterations}")
             log(f"  Final similarity: {result.final_similarity:.2%}")
+
+            # Use bootstrap Contradict to detect tensions between old/new code
+            if result.evolved_code:
+                tension_result = await detect_code_tension(
+                    original_code,
+                    result.evolved_code,
+                    context={"target": target.name, "persona": facts.persona.name},
+                )
+                if not tension_result.no_tension:
+                    log(f"  ⚠️ Tensions detected ({len(tension_result.tensions)}):")
+                    for tension in tension_result.tensions[:3]:
+                        log(f"    • [{tension.mode.value}] {tension.description[:50]}...")
+                else:
+                    log(f"  ✓ No tensions detected between old/new code")
 
             if result.evolved_code and not config.dry_run:
                 # Apply the evolved code

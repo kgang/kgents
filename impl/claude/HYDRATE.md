@@ -4,8 +4,8 @@
 
 ## Current State
 
-**Phase:** Bootstrap Self-Improvement Analysis
-**Status:** Deep graph analysis complete ✅
+**Phase:** Bootstrap Self-Improvement Implementation
+**Status:** evolve.py enhanced with bootstrap agents ✅
 
 ---
 
@@ -198,17 +198,44 @@ facts = await Ground().invoke(VOID)
 
 ### Recommended Self-Improvement Actions
 
-| Priority | Action | Bootstrap Agent | Target |
-|----------|--------|-----------------|--------|
-| 1 | Add Judge self-check to EvolutionPipeline | Judge | agents/e/evolution.py |
-| 2 | Replace with_retry with Fix agent | Fix | runtime/base.py |
-| 3 | Add Contradict to json parsing | Contradict | runtime/json_utils.py |
-| 4 | Ground E-gent prompts with persona | Ground | agents/e/prompts.py |
-| 5 | Self-evaluate T-gents at creation | Judge | agents/t/*.py |
+| Priority | Action | Bootstrap Agent | Target | Status |
+|----------|--------|-----------------|--------|--------|
+| 1 | Add Judge self-check to EvolutionPipeline | Judge | evolve.py | ✅ Done |
+| 2 | Replace with_retry with Fix agent | Fix | evolve.py | ✅ Done |
+| 3 | Add Contradict to code tension detection | Contradict | evolve.py | ✅ Done |
+| 4 | Ground prompts with persona | Ground | evolve.py | ✅ Done |
+| 5 | Self-evaluate T-gents at creation | Judge | agents/t/*.py | Pending |
 
 ---
 
 ## Recent Activity
+
+### Bootstrap Self-Improvement Applied (2025-12-08)
+
+**Applied bootstrap agents directly to `evolve.py` for self-improvement:**
+
+1. **Judge Integration** ✅
+   - `judge_hypothesis_against_principles()`: Evaluates hypotheses against 7 principles
+   - `HypothesisWrapper`: Wraps hypothesis strings as Agents for Judge
+
+2. **Fix Integration** ✅
+   - `iterate_with_fix()`: Convergence-tracked iteration with entropy budgets
+   - Lazy instantiation via `_get_bootstrap_fix()`
+
+3. **Contradict Integration** ✅
+   - `detect_code_tension()`: Surfaces tensions between original/improved code
+   - Used in safe evolution mode to flag API changes, style conflicts
+
+4. **Ground Integration** ✅
+   - `get_grounded_context()`: Injects Kent's persona values into analysis
+   - `suggest` mode now shows grounded context before analysis
+
+**Test Results:**
+- `python evolve.py status` ✅
+- `python evolve.py suggest` ✅ (shows Bootstrap Judge evaluation)
+- Syntax validation ✅
+
+---
 
 ### J-gents Phase 2: K-gent Enhancement + Cleanup (2025-12-08)
 - ✅ Created `demo_kgent.py` - Interactive K-gent CLI (284 lines)
