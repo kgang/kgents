@@ -54,6 +54,7 @@ class FixResult(Generic[A]):
     iterations: int
     converged: bool
     history: list[A]  # For debugging/analysis
+    proximity_history: list[float]  # Distance from fixed point over time
 
     def __post_init__(self) -> None:
         """Validate result invariants."""
@@ -63,6 +64,24 @@ class FixResult(Generic[A]):
             raise TypeValidationError(f"converged must be bool, got {type(self.converged)}")
         if not isinstance(self.history, list):
             raise TypeValidationError(f"history must be list, got {type(self.history)}")
+        if not isinstance(self.proximity_history, list):
+            raise TypeValidationError(f"proximity_history must be list, got {type(self.proximity_history)}")
+
+    @property
+    def is_converging(self) -> bool:
+        """Check if proximity is decreasing (approaching fixed point)."""
+        if len(self.proximity_history) < 2:
+            return True
+        return self.proximity_history[-1] < self.proximity_history[-2]
+
+    @property
+    def convergence_rate(self) -> Optional[float]:
+        """Estimate convergence rate from proximity history."""
+        if len(self.proximity_history) < 2:
+            return None
+        if self.proximity_history[0] == 0:
+            return None
+        return self.proximity_history[-1] / self.proximity_history[0]
 
 
 class Fix(Agent[tuple[Callable[[A], Awaitable[A]], A], FixResult[A]]):
@@ -99,21 +118,39 @@ class Fix(Agent[tuple[Callable[[A], Awaitable[A]], A], FixResult[A]]):
             return apply_changes(state, desired, actual)
 
         result = await fix.invoke((reconcile, ClusterState.empty()))
+
+    Example - Adaptive strategy with proximity:
+        def distance(a: State, b: State) -> float:
+            return abs(a.value - b.value)
+
+        fix = Fix(proximity=distance)
+        result = await fix.invoke((transform, initial))
+        
+        if not result.converged:
+            if result.is_converging:
+                # Still making progress, could extend iterations
+                pass
+            else:
+                # Diverging or oscillating, abort early
+                pass
     """
 
     def __init__(
         self,
         config: Optional[FixConfig] = None,
         equality: Optional[Callable[[A, A], bool]] = None,
+        proximity: Optional[Callable[[A, A], float]] = None,
     ):
         """
         Initialize Fix with optional configuration.
 
         config: Iteration limits and convergence settings
         equality: Custom equality check (default: ==)
+        proximity: Distance metric A × A → ℝ (default: 0.0 if equal else 1.0)
         """
         self._config = config or FixConfig()
         self._equality = equality or (lambda a, b: a == b)
+        self._proximity = proximity or (lambda a, b: 0.0 if self._equality(a, b) else 1.0)
 
     @property
     def name(self) -> str:
@@ -147,11 +184,15 @@ class Fix(Agent[tuple[Callable[[A], Awaitable[A]], A], FixResult[A]]):
         
         transform, initial = input
         history: list[A] = [initial]
+        proximity_history: list[float] = []
 
         current = initial
         for i in range(self._config.max_iterations):
             next_value = await transform(current)
             history.append(next_value)
+
+            distance = self._proximity(current, next_value)
+            proximity_history.append(distance)
 
             if self._equality(current, next_value):
                 return FixResult(
@@ -159,6 +200,7 @@ class Fix(Agent[tuple[Callable[[A], Awaitable[A]], A], FixResult[A]]):
                     iterations=i + 1,
                     converged=True,
                     history=history,
+                    proximity_history=proximity_history,
                 )
 
             current = next_value
@@ -169,6 +211,7 @@ class Fix(Agent[tuple[Callable[[A], Awaitable[A]], A], FixResult[A]]):
             iterations=self._config.max_iterations,
             converged=False,
             history=history,
+            proximity_history=proximity_history,
         )
 
 
@@ -177,6 +220,7 @@ async def fix(
     transform: Callable[[A], Awaitable[A]],
     initial: A,
     equality_check: Optional[Callable[[A, A], bool]] = None,
+    proximity_metric: Optional[Callable[[A, A], float]] = None,
     max_iterations: int = 100,
     validate_types: bool = True,
 ) -> FixResult[A]:
@@ -188,10 +232,11 @@ async def fix(
             transform=poll_and_detect,
             initial=DetectionState(RUNNING, confidence=0.0),
             equality_check=lambda a, b: a.state == b.state and b.confidence >= 0.8,
+            proximity_metric=lambda a, b: abs(a.confidence - b.confidence),
         )
     """
     config = FixConfig(max_iterations=max_iterations, validate_types=validate_types)
-    fix_agent = Fix(config=config, equality=equality_check)
+    fix_agent = Fix(config=config, equality=equality_check, proximity=proximity_metric)
     return await fix_agent.invoke((transform, initial))
 
 
@@ -275,18 +320,23 @@ class ConvergeFix(Agent[tuple[Callable[[float], Awaitable[float]], float], FixRe
         
         transform, initial = input
         history: list[float] = [initial]
+        proximity_history: list[float] = []
 
         current = initial
         for i in range(self._max_iterations):
             next_value = await transform(current)
             history.append(next_value)
 
-            if abs(current - next_value) < self._threshold:
+            distance = abs(current - next_value)
+            proximity_history.append(distance)
+
+            if distance < self._threshold:
                 return FixResult(
                     value=next_value,
                     iterations=i + 1,
                     converged=True,
                     history=history,
+                    proximity_history=proximity_history,
                 )
 
             current = next_value
@@ -296,6 +346,7 @@ class ConvergeFix(Agent[tuple[Callable[[float], Awaitable[float]], float], FixRe
             iterations=self._max_iterations,
             converged=False,
             history=history,
+            proximity_history=proximity_history,
         )
 
 
