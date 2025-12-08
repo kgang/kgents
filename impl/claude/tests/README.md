@@ -7,13 +7,23 @@ Organized test suite for the kgents reference implementation.
 ```
 tests/
 ├── agents/          # Agent implementation tests
-│   └── test_t_gents.py       # T-gents (testing agents)
+│   ├── e_gents/            # E-gents (evolution agents)
+│   │   └── test_demo.py    # Demo tests
+│   ├── j_gents/            # J-gents (judgment agents)
+│   │   ├── test_phase3.py  # JIT compilation tests
+│   │   └── test_phase4.py  # Advanced judgment tests
+│   ├── t_gents/            # T-gents (testing agents)
+│   │   └── test_phase3.py  # Type IV critics tests
+│   └── test_t_gents.py     # Core T-gents tests
 ├── evolution/       # Meta-evolution pipeline tests
-│   └── test_metrics.py       # Pipeline metrics & performance
-└── layers/          # E-gents architectural layer tests
-    ├── test_prompt_layer.py   # Phase 2.5a: Prompt engineering
-    ├── test_parsing_layer.py  # Phase 2.5b: Parsing & validation
-    └── test_recovery_layer.py # Phase 2.5c: Retry & fallback
+│   └── test_metrics.py     # Pipeline metrics & performance
+├── layers/          # E-gents architectural layer tests
+│   ├── test_prompt_layer.py   # Phase 2.5a: Prompt engineering
+│   ├── test_parsing_layer.py  # Phase 2.5b: Parsing & validation
+│   └── test_recovery_layer.py # Phase 2.5c: Retry & fallback
+└── utils/           # Utility tests
+    ├── test_ast_utils.py          # AST manipulation utilities
+    └── test_regression_validator.py # Regression validation
 ```
 
 ## Running Tests
@@ -90,9 +100,14 @@ async def test_mock_agent():
 
 ### Agent Tests (`tests/agents/`)
 Tests for specific agent implementations:
-- T-gents: Testing agents (Mock, Fixture, Failing, Spy, etc.)
-- J-gents: Judgment agents (Promise, Reality, Chaosmonger) - *coming soon*
-- E-gents: Evolution agents - *coming soon*
+- **E-gents** (`e_gents/`): Evolution agents
+  - `test_demo.py`: Demo and integration tests
+- **J-gents** (`j_gents/`): Judgment agents
+  - `test_phase3.py`: JIT compilation, MetaArchitect, Chaosmonger
+  - `test_phase4.py`: Advanced judgment capabilities
+- **T-gents** (`t_gents/`): Testing agents
+  - `test_t_gents.py`: Core testing agents (Mock, Fixture, Failing, Spy)
+  - `test_phase3.py`: Type IV Critics (Judge, Property, Oracle)
 
 ### Evolution Tests (`tests/evolution/`)
 Tests for the meta-evolution system:
@@ -106,3 +121,8 @@ Tests for E-gents architectural layers:
 - **Prompt Layer**: PreFlight checking, context building
 - **Parsing Layer**: Response parsing, validation, repair
 - **Recovery Layer**: Retry strategies, fallback, error memory
+
+### Utility Tests (`tests/utils/`)
+Tests for utility modules:
+- **AST Utils**: AST parsing and manipulation for code generation
+- **Regression Validator**: Regression testing framework

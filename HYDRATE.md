@@ -4,10 +4,10 @@
 
 ## TL;DR
 
-**Status**: IMPROVEMENT_PLAN Phase A - H4 & H5 COMPLETE ✅
+**Status**: IMPROVEMENT_PLAN Phase B - H1 COMPLETE ✅
 **Branch**: `main`
-**Achievement**: Lazy imports in evolve.py + json_utils extraction (-273 lines!)
-**Next**: Phase B core refactoring (H1: EvolutionPipeline decomposition)
+**Achievement**: evolve.py refactored to use agents/e (-822 lines, 53% reduction!)
+**Next**: Phase B remaining (H7: prompts.py, H10: sandbox.py)
 
 ---
 

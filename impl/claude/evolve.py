@@ -104,6 +104,10 @@ from agents.e import (
     ErrorMemory,
     # Status Agents (Phase 2.5e)
     create_status_reporter,
+    # Evolution Pipeline (Phase B: Refactored to use agents/e)
+    EvolutionPipeline,
+    EvolutionConfig,
+    EvolutionReport,
 )
 
 # Bootstrap imports
@@ -132,8 +136,13 @@ def log(msg: str = "", prefix: str = "", file: Optional[Any] = None) -> None:
 
 
 @dataclass
-class EvolveConfig:
-    """Configuration for the evolution process."""
+class EvolveCliConfig:
+    """
+    CLI configuration for evolve.py.
+
+    This extends EvolutionConfig with CLI-specific options like mode and safe_mode.
+    Converted to EvolutionConfig via to_evolution_config() for use with agents/e.
+    """
     target: str = "meta"  # Default to single module for testing
     mode: str = "test"  # test|status|suggest|full
     dry_run: bool = True  # Safe by default
@@ -154,842 +163,260 @@ class EvolveConfig:
     enable_fallback: bool = True
     enable_error_memory: bool = True
 
-
-@dataclass
-class EvolutionReport:
-    """Summary of evolution run."""
-    experiments: list[Experiment]
-    incorporated: list[Experiment]
-    rejected: list[Experiment]
-    held: list[Experiment]
-    summary: str
+    def to_evolution_config(self) -> EvolutionConfig:
+        """Convert CLI config to EvolutionConfig for agents/e."""
+        return EvolutionConfig(
+            target=self.target,
+            dry_run=self.dry_run,
+            auto_apply=self.auto_apply,
+            max_improvements_per_module=self.max_improvements_per_module,
+            hypothesis_count=self.hypothesis_count,
+            quick_mode=self.quick_mode,
+            require_tests_pass=self.require_tests_pass,
+            require_type_check=self.require_type_check,
+        )
 
 
 # ============================================================================
-# Core Logic (using agents/e components)
+# Module Discovery (extracted from EvolutionPipeline)
 # ============================================================================
 
-class EvolutionPipeline:
+def discover_modules(target: str) -> list[CodeModule]:
     """
-    Main pipeline for evolving code.
+    Discover modules to evolve based on target.
 
-    Now delegates to composable agents in agents/e/:
-    - ASTAnalyzer for code structure analysis
-    - ImprovementMemory for avoiding re-proposals
-    - TestAgent for validation
-    - CodeJudge for principle-based evaluation
-    - IncorporateAgent for applying changes
+    Args:
+        target: One of "runtime", "agents", "bootstrap", "meta", "all"
+
+    Returns:
+        List of CodeModule instances to evolve
     """
+    base = Path(__file__).parent
+    modules = []
 
-    def __init__(self, config: EvolveConfig, runtime: Optional[Any] = None):
-        self._config = config
-        self._runtime = runtime
-        self._principles = make_default_principles()
+    if target in ["runtime", "all"]:
+        runtime_dir = base / "runtime"
+        for py_file in runtime_dir.glob("*.py"):
+            if py_file.name != "__init__.py":
+                modules.append(CodeModule(
+                    name=py_file.stem,
+                    category="runtime",
+                    path=py_file
+                ))
 
-        # Composable agents from agents/e
-        self._ast_analyzer = ASTAnalyzer(max_hypothesis_targets=3)
-        self._memory = ImprovementMemory()
-        self._test_agent = TestAgent()
-        self._judge = CodeJudge()
-        self._incorporate = IncorporateAgent()
+    if target in ["agents", "all"]:
+        agents_dir = base / "agents"
+        for letter_dir in agents_dir.iterdir():
+            if letter_dir.is_dir() and not letter_dir.name.startswith("_"):
+                for py_file in letter_dir.glob("*.py"):
+                    if py_file.name != "__init__.py":
+                        modules.append(CodeModule(
+                            name=py_file.stem,
+                            category=f"agents/{letter_dir.name}",
+                            path=py_file
+                        ))
 
-        # Recovery layer (Phase 2.5c)
-        self._retry_strategy = RetryStrategy(RetryConfig(
-            max_retries=config.max_retries,
-            verbose=False
-        )) if config.enable_retry else None
-        self._fallback_strategy = FallbackStrategy(FallbackConfig(
-            verbose=False
-        )) if config.enable_fallback else None
-        self._error_memory = ErrorMemory() if config.enable_error_memory else None
+    if target in ["bootstrap", "all"]:
+        bootstrap_dir = base / "bootstrap"
+        for py_file in bootstrap_dir.glob("*.py"):
+            if py_file.name != "__init__.py":
+                modules.append(CodeModule(
+                    name=py_file.stem,
+                    category="bootstrap",
+                    path=py_file
+                ))
 
-        # Agents requiring runtime (lazy instantiation)
-        self._hypothesis_engine: Optional["HypothesisEngine"] = None
-        self._hegel: Optional["HegelAgent"] = None
-        self._sublate: Optional["Sublate"] = None
-
-        # AST cache
-        self._ast_cache: dict[str, Any] = {}
-
-    def _get_runtime(self) -> Any:
-        """Get or create the runtime instance."""
-        if self._runtime is None:
-            from runtime import ClaudeCLIRuntime
-            self._runtime = ClaudeCLIRuntime()
-        return self._runtime
-
-    def _get_hypothesis_engine(self) -> "HypothesisEngine":
-        """Lazy instantiation of hypothesis engine."""
-        if self._hypothesis_engine is None:
-            from agents.b.hypothesis import HypothesisEngine
-            self._hypothesis_engine = HypothesisEngine()
-        return self._hypothesis_engine
-
-    def _get_hegel(self) -> "HegelAgent":
-        """Lazy instantiation of Hegel."""
-        if self._hegel is None:
-            from agents.h.hegel import HegelAgent
-            self._hegel = HegelAgent()
-        return self._hegel
-
-    def _get_sublate(self) -> "Sublate":
-        """Lazy instantiation of Sublate for tension resolution."""
-        if self._sublate is None:
-            from bootstrap.sublate import Sublate
-            self._sublate = Sublate()
-        return self._sublate
-
-    async def _get_ast_structure(self, module: CodeModule) -> Any:
-        """Get cached AST structure for a module."""
-        key = str(module.path)
-        if key not in self._ast_cache:
-            result = await self._ast_analyzer.invoke(ASTAnalysisInput(path=module.path))
-            self._ast_cache[key] = result.structure
-        return self._ast_cache[key]
-
-    def _has_uncommitted_changes(self) -> bool:
-        """Check if there are uncommitted changes in git."""
-        import subprocess
-        try:
-            result = subprocess.run(
-                ["git", "status", "--porcelain"],
-                capture_output=True,
-                text=True,
-                check=True
-            )
-            return bool(result.stdout.strip())
-        except subprocess.CalledProcessError:
-            return False
-
-    def discover_modules(self) -> list[CodeModule]:
-        """Discover modules to evolve based on target."""
-        base = Path(__file__).parent
-        modules = []
-
-        if self._config.target in ["runtime", "all"]:
-            runtime_dir = base / "runtime"
-            for py_file in runtime_dir.glob("*.py"):
-                if py_file.name != "__init__.py":
-                    modules.append(CodeModule(
-                        name=py_file.stem,
-                        category="runtime",
-                        path=py_file
-                    ))
-
-        if self._config.target in ["agents", "all"]:
-            agents_dir = base / "agents"
-            for letter_dir in agents_dir.iterdir():
-                if letter_dir.is_dir() and not letter_dir.name.startswith("_"):
-                    for py_file in letter_dir.glob("*.py"):
-                        if py_file.name != "__init__.py":
-                            modules.append(CodeModule(
-                                name=py_file.stem,
-                                category=f"agents/{letter_dir.name}",
-                                path=py_file
-                            ))
-
-        if self._config.target in ["bootstrap", "all"]:
-            bootstrap_dir = base / "bootstrap"
-            for py_file in bootstrap_dir.glob("*.py"):
-                if py_file.name != "__init__.py":
-                    modules.append(CodeModule(
-                        name=py_file.stem,
-                        category="bootstrap",
-                        path=py_file
-                    ))
-
-        if self._config.target in ["meta", "all"]:
-            modules.append(CodeModule(
-                name="evolve",
-                category="meta",
-                path=base / "evolve.py"
-            ))
-
-        return modules
-
-    async def generate_hypotheses(self, module: CodeModule) -> list[str]:
-        """Generate improvement hypotheses for a module."""
-        log(f"[{module.name}] Generating hypotheses...")
-
-        # Phase 1: AST-based targeted hypotheses
-        ast_hypotheses: list[str] = []
-        structure = await self._get_ast_structure(module)
-        if structure:
-            ast_hypotheses = generate_targeted_hypotheses(
-                structure,
-                max_targets=max(2, self._config.hypothesis_count // 2)
-            )
-            if ast_hypotheses:
-                log(f"[{module.name}] AST analysis found {len(ast_hypotheses)} targets:")
-                for i, h in enumerate(ast_hypotheses, 1):
-                    log(f"  🎯 AST{i}: {h}")
-
-        # Phase 2: LLM-generated hypotheses
-        code_content = get_code_preview(module.path)
-        ast_context = ""
-        if structure:
-            ast_context = f"""
-AST ANALYSIS:
-- Classes: {', '.join(c['name'] for c in structure.classes) or 'None'}
-- Functions: {', '.join(f['name'] for f in structure.functions[:10]) or 'None'}
-- Imports: {len(structure.imports)} total
-- Complexity hints: {structure.complexity_hints[:2] if structure.complexity_hints else 'None'}
-"""
-
-        from agents.b.hypothesis import HypothesisInput
-
-        hypothesis_input = HypothesisInput(
-            observations=[
-                f"Module: {module.name}",
-                f"Category: {module.category}",
-                f"Path: {module.path}",
-                ast_context,
-                f"Code preview:\n{code_content}",
-            ],
-            domain=f"Code improvement for {module.category}/{module.name}",
-            question=f"What are {self._config.hypothesis_count} specific improvements?",
-            constraints=[
-                "Agents are morphisms with clear A → B types",
-                "Composable via >> operator",
-                "Use Fix pattern for iteration/retry",
-                "Conflicts are data - log tensions",
-                "Tasteful: less is more",
-            ],
-        )
-
-        llm_hypotheses: list[str] = []
-        try:
-            engine = self._get_hypothesis_engine()
-            runtime = self._get_runtime()
-            result = await runtime.execute(engine, hypothesis_input)
-
-            hypotheses_output = result.output
-            if hasattr(hypotheses_output, 'hypotheses'):
-                llm_hypotheses = [h.statement for h in hypotheses_output.hypotheses]
-        except Exception as e:
-            log(f"[{module.name}] LLM hypothesis generation error: {e}")
-
-        # Combine and filter by memory
-        all_hypotheses = ast_hypotheses + llm_hypotheses
-        filtered_hypotheses: list[str] = []
-        skipped_count = 0
-
-        for h in all_hypotheses:
-            rejection = self._memory.was_rejected(module.name, h)
-            if rejection:
-                log(f"[{module.name}] ⏭ Skipping previously rejected: {h[:60]}...")
-                skipped_count += 1
-                continue
-
-            if self._memory.was_recently_accepted(module.name, h):
-                log(f"[{module.name}] ⏭ Skipping recently accepted: {h[:60]}...")
-                skipped_count += 1
-                continue
-
-            filtered_hypotheses.append(h)
-
-        log(f"[{module.name}] Generated {len(filtered_hypotheses)} hypotheses ({skipped_count} filtered)")
-        for i, h in enumerate(filtered_hypotheses, 1):
-            log(f"  💡 H{i}: {h}")
-
-        return filtered_hypotheses
-
-    async def experiment(self, module: CodeModule, hypothesis: str) -> Optional[Experiment]:
-        """Run a single experiment: generate improvement from hypothesis."""
-        exp_id = f"{module.name}_{hash(hypothesis) & 0xFFFF:04x}"
-        log(f"[{exp_id}] Experimenting with hypothesis...")
-
-        improvement = await self._generate_improvement(module, hypothesis)
-        if not improvement:
-            return None
-
-        experiment = Experiment(
-            id=exp_id,
-            module=module,
-            improvement=improvement,
-            hypothesis=hypothesis,
-        )
-
-        log(f"[{exp_id}] ✨ Generated Improvement:")
-        log(f"  📋 Type: {improvement.improvement_type}")
-        log(f"  🎯 Confidence: {improvement.confidence}")
-        log(f"  💡 Description: {improvement.description}")
-        log(f"  📝 Rationale: {improvement.rationale[:150]}...")
-        return experiment
-
-    async def _generate_improvement(
-        self, module: CodeModule, hypothesis: str
-    ) -> Optional[CodeImprovement]:
-        """Generate code improvement using LLM."""
-        code_content = get_code_preview(module.path)
-
-        prompt = f"""You are a code improvement agent for kgents, a spec-first agent framework.
-
-Your task is to generate ONE CONCRETE, WORKING code improvement based on a single hypothesis.
-
-PRINCIPLES YOU MUST FOLLOW:
-1. Agents are morphisms: A → B (clear input/output types)
-2. Composable: Use >> for pipelines, wrap with Maybe/Either for error handling
-3. Fix pattern: For retries, use the Fix agent pattern
-4. Conflicts are data: Log tensions, don't swallow exceptions
-5. Tasteful: Less is more. Don't over-engineer.
-6. Generative: Code should be regenerable from spec
-
-IMPROVEMENT TYPES:
-- "refactor": Restructure without changing behavior
-- "fix": Address a bug or tension
-- "feature": Add missing capability
-- "test": Add test coverage
-
-OUTPUT FORMAT (TWO SECTIONS):
-
-## METADATA
-{{"description": "Brief description", "rationale": "Why", "improvement_type": "refactor|fix|feature|test", "confidence": 0.8}}
-
-## CODE
-```python
-# Complete file content here
-```
-
-CRITICAL:
-- METADATA section contains simple JSON (no code, no newlines in strings)
-- CODE section contains the complete Python file in a markdown block
-- Generate ONE focused improvement per invocation
-- Don't make changes that require external dependencies not already imported
-- Preserve existing functionality unless explicitly improving it
-
-MODULE: {module.name}
-CATEGORY: {module.category}
-PATH: {module.path}
-
-CURRENT CODE (Preview - {len(code_content.splitlines())} lines total):
-```python
-{code_content}
-```
-
-HYPOTHESIS TO EXPLORE:
-{hypothesis}
-
-Generate ONE concrete improvement. Return ONLY valid JSON."""
-
-        try:
-            from runtime.base import AgentContext
-
-            runtime = self._get_runtime()
-            context = AgentContext(
-                system_prompt="You are a code improvement agent for kgents.",
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.7,
-                max_tokens=16000,
-            )
-
-            response_text, _ = await runtime.raw_completion(context)
-            response = response_text.strip()
-
-            metadata = extract_metadata(response, module.name)
-            if metadata is None:
-                return None
-
-            code = extract_code(response, module.name)
-            if code is None:
-                return None
-
-            return CodeImprovement(
-                description=metadata.get("description", "No description"),
-                rationale=metadata.get("rationale", "No rationale"),
-                improvement_type=metadata.get("improvement_type", "refactor"),
-                code=code,
-                confidence=metadata.get("confidence", 0.5),
-                metadata=metadata,
-            )
-
-        except Exception as e:
-            log(f"[{module.name}] Failed to generate improvement: {e}")
-            return None
-
-    async def test(self, experiment: Experiment) -> bool:
-        """Test an experimental improvement using TestAgent."""
-        log(f"[{experiment.id}] Testing improvement...")
-
-        result = await self._test_agent.invoke(TestInput(
-            experiment=experiment,
-            require_type_check=self._config.require_type_check,
-            require_tests_pass=self._config.require_tests_pass,
+    if target in ["meta", "all"]:
+        modules.append(CodeModule(
+            name="evolve",
+            category="meta",
+            path=base / "evolve.py"
         ))
 
-        if result.passed:
-            log(f"[{experiment.id}] ✓ All tests passed")
-        else:
-            log(f"[{experiment.id}] ✗ {result.error}")
+    return modules
 
-        return result.passed
 
-    async def judge_experiment(self, experiment: Experiment) -> Verdict:
-        """Judge if improvement should proceed using CodeJudge agent."""
-        log(f"[{experiment.id}] Judging improvement against 7 principles...")
-
-        original_code = experiment.module.path.read_text()
-        result = await self._judge.invoke(JudgeInput(
-            improvement=experiment.improvement,
-            original_code=original_code,
-            module_name=experiment.module.name,
-        ))
-
-        experiment.verdict = result.verdict
-
-        verdict_symbols = {
-            VerdictType.ACCEPT: "✓",
-            VerdictType.REVISE: "⚠",
-            VerdictType.REJECT: "✗",
-        }
-        symbol = verdict_symbols.get(result.verdict.type, "?")
-
-        log(f"[{experiment.id}] {symbol} {result.verdict.type.value.upper()}")
-        for reason in result.reasons:
-            log(f"    {reason}")
-
-        return result.verdict
-
-    async def synthesize(self, experiment: Experiment) -> Optional[Synthesis]:
-        """Dialectic synthesis of improvement vs current code."""
-        if self._config.quick_mode:
-            log(f"[{experiment.id}] Skipping synthesis (quick mode)")
-            return None
-
-        log(f"[{experiment.id}] Synthesizing via dialectic...")
-
-        from agents.h.hegel import DialecticInput
-
-        current_code = experiment.module.path.read_text()
-
-        dialectic_input = DialecticInput(
-            thesis=current_code,
-            antithesis=experiment.improvement.code,
-            context={
-                "module": experiment.module.name,
-                "improvement": experiment.improvement.description,
-                "rationale": experiment.improvement.rationale,
-            },
+def has_uncommitted_changes() -> bool:
+    """Check if there are uncommitted changes in git."""
+    import subprocess
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            capture_output=True,
+            text=True,
+            check=True
         )
+        return bool(result.stdout.strip())
+    except subprocess.CalledProcessError:
+        return False
 
-        hegel = self._get_hegel()
-        dialectic_output = await hegel.invoke(dialectic_input)
 
-        if dialectic_output.tension:
-            log(f"[{experiment.id}] ⚡ Productive tension detected")
-            log(f"      {dialectic_output.tension.description}")
+# ============================================================================
+# CLI Wrapper (using agents/e/evolution.py)
+# ============================================================================
 
-            sublate_agent = self._get_sublate()
-            sublate_input = SublateInput(tensions=(dialectic_output.tension,))
-            sublate_result = await sublate_agent.invoke(sublate_input)
+async def run_evolution_cli(config: EvolveCliConfig) -> EvolutionReport:
+    """
+    Run evolution with CLI-specific logging and reporting.
 
-            if isinstance(sublate_result, HoldTension):
-                experiment.status = ExperimentStatus.HELD
-                log(f"[{experiment.id}] ⊙ Tension held: {sublate_result.why_held}")
-                return None
-            elif isinstance(sublate_result, Synthesis):
-                experiment.synthesis = sublate_result
-                log(f"[{experiment.id}] ✓ Synthesized: {sublate_result.explanation}")
-                return sublate_result
+    This is a thin wrapper around agents/e/evolution.py that adds:
+    - Fancy CLI output with box-drawing
+    - Log file creation with timestamps
+    - JSON results export
+    - Git status checking
 
-        log(f"[{experiment.id}] ✓ Synthesis complete")
-        return experiment.synthesis
+    The core pipeline logic is in agents/e/evolution.py.
+    """
+    log_dir = Path(__file__).parent / ".evolve_logs"
+    log_dir.mkdir(exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_path = log_dir / f"evolve_{config.target}_{timestamp}.log"
+    log_file = open(log_path, "w")
 
-    async def incorporate(self, experiment: Experiment) -> bool:
-        """Incorporate approved improvement using IncorporateAgent."""
-        log(f"[{experiment.id}] Incorporating improvement...")
+    log(f"{'='*60}")
+    log(f"KGENTS EVOLUTION (Phase 1: Composable Agents)", file=log_file)
+    log(f"Target: {config.target}", file=log_file)
+    log(f"Dry run: {config.dry_run}", file=log_file)
+    log(f"Auto-apply: {config.auto_apply}", file=log_file)
+    log(f"Quick mode: {'True ⚡' if config.quick_mode else 'False'}", file=log_file)
+    log(f"{'='*60}", file=log_file)
+    log(f"⚠️ WARNING: Working tree is not clean." if has_uncommitted_changes() else "✓ Working tree is clean")
+    log(f"", file=log_file)
 
-        result = await self._incorporate.invoke(IncorporateInput(
-            experiment=experiment,
-            dry_run=self._config.dry_run,
-            commit=not self._config.dry_run,
-        ))
+    modules = discover_modules(config.target)
+    log(f"Loaded {len(modules)} modules to evolve", file=log_file)
+    log(f"📝 Log file: {log_path}")
 
-        if result.success:
-            if self._config.dry_run:
-                log(f"[{experiment.id}] (dry-run) Would write to {experiment.module.path}")
-            else:
-                log(f"[{experiment.id}] ✓ Incorporated (commit: {result.commit_sha})")
-        else:
-            log(f"[{experiment.id}] ✗ Failed: {result.error}")
+    log(f"\nDiscovered {len(modules)} modules to evolve")
 
-        return result.success
+    # Create pipeline using agents/e
+    evolution_config = config.to_evolution_config()
+    pipeline = EvolutionPipeline(evolution_config)
 
-    async def _test_with_recovery(
-        self,
-        experiment: Experiment,
-        module: CodeModule,
-        hypothesis: str
-    ) -> tuple[bool, Optional[Experiment]]:
-        """
-        Test experiment with retry and fallback recovery strategies.
+    # Run the pipeline
+    start_time = time.time()
+    report = await pipeline.run(modules, log_fn=log)
+    elapsed = time.time() - start_time
 
-        Returns: (success, final_experiment)
-        - success: Whether any version passed
-        - final_experiment: The successful experiment or None
-        """
-        # Test initial experiment
-        passed = await self.test(experiment)
-        if passed:
-            return (True, experiment)
+    log(f"\nProcessed {len(modules)} modules in {elapsed:.1f}s")
 
-        # Record initial failure in error memory
-        if self._error_memory and experiment.error:
-            self._error_memory.record_failure(
-                module_category=module.category,
-                module_name=module.name,
-                hypothesis=hypothesis,
-                failure_type=self._categorize_test_failure(experiment.error),
-                failure_details=experiment.error
-            )
+    # CLI-specific output
+    log(f"\n{'='*60}", file=log_file)
+    log("EVOLUTION SUMMARY", file=log_file)
+    log(f"{'='*60}", file=log_file)
+    log(f"Experiments run: {len(report.experiments)}", file=log_file)
+    log(f"  Passed: {len([e for e in report.experiments if e.status == ExperimentStatus.PASSED])}", file=log_file)
+    log(f"  Failed: {len(report.rejected)}", file=log_file)
+    log(f"  Held (productive tension): {len(report.held)}", file=log_file)
+    log(f"  Incorporated: {len(report.incorporated)}", file=log_file)
 
-        # Try retry strategy
-        if self._retry_strategy and self._retry_strategy.should_retry(experiment):
-            log(f"[{experiment.id}] Attempting retry with refined prompt...")
+    passed = [e for e in report.experiments if e.status == ExperimentStatus.PASSED and e not in report.held]
 
-            for attempt in range(self._config.max_retries):
-                # Build prompt context for retry
-                from agents.e.prompts import build_prompt_context
-                context = build_prompt_context(module)
+    if passed and not config.auto_apply:
+        log(f"\n{'-'*60}", file=log_file)
+        log("READY TO INCORPORATE", file=log_file)
+        log(f"{'-'*60}", file=log_file)
+        for exp in passed:
+            log(f"  [{exp.id}] {exp.improvement.description}", file=log_file)
+        log(f"\nRun with --auto-apply to incorporate these improvements.", file=log_file)
 
-                # Generate refined prompt
-                refined_prompt = self._retry_strategy.refine_prompt(
-                    original_hypothesis=hypothesis,
-                    failure_reason=experiment.error or "Unknown failure",
-                    attempt=attempt,
-                    context=context,
-                    validation_report=None  # Could extract from test result
-                )
+    if report.held:
+        log(f"\n{'-'*60}", file=log_file)
+        log("HELD TENSIONS (require human judgment)", file=log_file)
+        log(f"{'-'*60}", file=log_file)
+        for exp in report.held:
+            log(f"  [{exp.id}] {exp.improvement.description}", file=log_file)
 
-                # Generate new improvement with refined prompt
-                log(f"[{experiment.id}] Retry {attempt + 1}/{self._config.max_retries}")
-                retry_improvement = await self._generate_improvement(module, refined_prompt)
-                if not retry_improvement:
-                    continue
+    log(f"\n")
+    log(f"╔{'═'*58}╗")
+    log(f"║{' '*58}║")
+    log(f"║  🎯 EVOLUTION COMPLETE - {config.target.upper():^32}  ║")
+    log(f"║{' '*58}║")
+    log(f"║  ✓ Passed: {len(passed):3d}   ✗ Failed: {len(report.rejected):3d}   ⏸ Held: {len(report.held):3d}   ✅ Applied: {len(report.incorporated):3d}  ║")
+    log(f"║{' '*58}║")
+    log(f"║  📝 Full log: {str(log_path)[-42:]:42}  ║")
+    log(f"║{' '*58}║")
+    log(f"╚{'═'*58}╝")
 
-                # Create retry experiment
-                retry_exp = Experiment(
-                    id=f"{experiment.id}_r{attempt + 1}",
-                    module=module,
-                    improvement=retry_improvement,
-                    hypothesis=hypothesis,
-                )
+    # Export JSON results
+    results_path = log_path.with_suffix('.json')
+    results_data = {
+        "timestamp": timestamp,
+        "config": {
+            "target": config.target,
+            "dry_run": config.dry_run,
+            "auto_apply": config.auto_apply,
+            "quick_mode": config.quick_mode,
+        },
+        "summary": {
+            "total_experiments": len(report.experiments),
+            "passed": len(passed),
+            "failed": len(report.rejected),
+            "held": len(report.held),
+            "incorporated": len(report.incorporated),
+            "elapsed_seconds": elapsed,
+        },
+        "passed_experiments": [
+            {
+                "id": exp.id,
+                "module": exp.module.name,
+                "category": exp.module.category,
+                "improvement": {
+                    "type": exp.improvement.improvement_type,
+                    "description": exp.improvement.description,
+                    "rationale": exp.improvement.rationale,
+                    "confidence": exp.improvement.confidence,
+                },
+                "status": exp.status.value,
+            }
+            for exp in passed
+        ],
+        "held_experiments": [
+            {
+                "id": exp.id,
+                "module": exp.module.name,
+                "improvement": {
+                    "description": exp.improvement.description,
+                    "rationale": exp.improvement.rationale,
+                },
+            }
+            for exp in report.held
+        ],
+        "failed_experiments": [
+            {
+                "id": exp.id,
+                "module": exp.module.name,
+                "category": exp.module.category,
+                "hypothesis": exp.hypothesis,
+                "error": exp.error,
+                "improvement": {
+                    "type": exp.improvement.improvement_type,
+                    "description": exp.improvement.description,
+                } if exp.improvement else None,
+                "test_results": exp.test_results,
+            }
+            for exp in report.rejected
+        ],
+    }
 
-                # Test retry
-                retry_passed = await self.test(retry_exp)
-                if retry_passed:
-                    log(f"[{experiment.id}] ✓ Retry {attempt + 1} succeeded!")
-                    return (True, retry_exp)
-                else:
-                    log(f"[{experiment.id}] ✗ Retry {attempt + 1} failed: {retry_exp.error}")
-                    if self._error_memory and retry_exp.error:
-                        self._error_memory.record_failure(
-                            module_category=module.category,
-                            module_name=module.name,
-                            hypothesis=hypothesis,
-                            failure_type=self._categorize_test_failure(retry_exp.error),
-                            failure_details=retry_exp.error
-                        )
+    with open(results_path, 'w') as f:
+        json.dump(results_data, f, indent=2)
 
-        # Try fallback strategy
-        if self._fallback_strategy and self._fallback_strategy.should_fallback(
-            experiment,
-            retry_exhausted=True
-        ):
-            log(f"[{experiment.id}] Attempting fallback strategies...")
+    log(f"📊 Decision data saved: {results_path}")
 
-            # Try minimal version
-            if self._config.enable_fallback:
-                from agents.e.prompts import build_prompt_context
-                context = build_prompt_context(module)
+    log_file.close()
 
-                minimal_prompt = self._fallback_strategy.generate_minimal_prompt(
-                    original_hypothesis=hypothesis,
-                    context=context
-                )
+    return report
 
-                log(f"[{experiment.id}] Trying minimal fallback...")
-                fallback_improvement = await self._generate_improvement(module, minimal_prompt)
-                if fallback_improvement:
-                    fallback_exp = Experiment(
-                        id=f"{experiment.id}_fb",
-                        module=module,
-                        improvement=fallback_improvement,
-                        hypothesis=hypothesis,
-                    )
 
-                    fallback_passed = await self.test(fallback_exp)
-                    if fallback_passed:
-                        log(f"[{experiment.id}] ✓ Fallback succeeded!")
-                        return (True, fallback_exp)
-
-        # All recovery attempts failed
-        return (False, None)
-
-    def _categorize_test_failure(self, error: str) -> str:
-        """Categorize test failure type for error memory."""
-        error_lower = error.lower()
-        if "syntax" in error_lower or "parse" in error_lower:
-            return "syntax"
-        if "type" in error_lower or "mypy" in error_lower:
-            return "type"
-        if "import" in error_lower or "modulenotfound" in error_lower:
-            return "import"
-        if "test" in error_lower or "pytest" in error_lower:
-            return "test"
-        return "unknown"
-
-    async def _process_module(self, module: CodeModule) -> list[Experiment]:
-        """Process a single module (for parallel execution)."""
-        log(f"\n{'='*60}")
-        log(f"MODULE: {module.category}/{module.name}")
-        log(f"{'='*60}")
-
-        hypotheses = await self.generate_hypotheses(module)
-        if not hypotheses:
-            return []
-
-        experiments = []
-        for hypothesis in hypotheses[:self._config.max_improvements_per_module]:
-            exp = await self.experiment(module, hypothesis)
-            if exp:
-                experiments.append(exp)
-
-        # Process each experiment with recovery strategies
-        processed_experiments = []
-        for exp in experiments:
-            # Use recovery layer if enabled, otherwise fallback to simple test
-            if self._config.enable_retry or self._config.enable_fallback:
-                passed, final_exp = await self._test_with_recovery(exp, module, exp.hypothesis)
-                if not passed:
-                    # All recovery attempts failed
-                    self._memory.record(
-                        module=module.name,
-                        hypothesis=exp.hypothesis,
-                        description=exp.improvement.description,
-                        outcome="rejected",
-                        rejection_reason=exp.error or "Test failure (all retries exhausted)",
-                    )
-                    continue
-                # Use the successful experiment (could be original, retry, or fallback)
-                exp = final_exp  # type: ignore
-                processed_experiments.append(exp)
-            else:
-                # Legacy path: simple test without recovery
-                passed = await self.test(exp)
-                if not passed:
-                    self._memory.record(
-                        module=module.name,
-                        hypothesis=exp.hypothesis,
-                        description=exp.improvement.description,
-                        outcome="rejected",
-                        rejection_reason=exp.error or "Test failure",
-                    )
-                    continue
-                processed_experiments.append(exp)
-
-        # Continue with judge/synthesize/incorporate for passed experiments
-        for exp in processed_experiments:
-
-            verdict = await self.judge_experiment(exp)
-            if verdict.type == VerdictType.REJECT:
-                exp.status = ExperimentStatus.FAILED
-                self._memory.record(
-                    module=module.name,
-                    hypothesis=exp.hypothesis,
-                    description=exp.improvement.description,
-                    outcome="rejected",
-                    rejection_reason=verdict.reasoning,
-                )
-                continue
-
-            await self.synthesize(exp)
-
-            if exp.status == ExperimentStatus.HELD:
-                self._memory.record(
-                    module=module.name,
-                    hypothesis=exp.hypothesis,
-                    description=exp.improvement.description,
-                    outcome="held",
-                )
-            elif exp.status == ExperimentStatus.PASSED:
-                self._memory.record(
-                    module=module.name,
-                    hypothesis=exp.hypothesis,
-                    description=exp.improvement.description,
-                    outcome="accepted",
-                )
-
-        return experiments
-
-    async def run(self) -> EvolutionReport:
-        """Run the full evolution pipeline."""
-        log_dir = Path(__file__).parent / ".evolve_logs"
-        log_dir.mkdir(exist_ok=True)
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        log_path = log_dir / f"evolve_{self._config.target}_{timestamp}.log"
-        log_file = open(log_path, "w")
-
-        log(f"{'='*60}")
-        log(f"KGENTS EVOLUTION (Phase 1: Composable Agents)", file=log_file)
-        log(f"Target: {self._config.target}", file=log_file)
-        log(f"Dry run: {self._config.dry_run}", file=log_file)
-        log(f"Auto-apply: {self._config.auto_apply}", file=log_file)
-        log(f"Quick mode: {'True ⚡' if self._config.quick_mode else 'False'}", file=log_file)
-        log(f"{'='*60}", file=log_file)
-        log(f"⚠️ WARNING: Working tree is not clean." if self._has_uncommitted_changes() else "✓ Working tree is clean")
-        log(f"", file=log_file)
-        log(f"Loaded {len(self.discover_modules())} modules to evolve", file=log_file)
-        log(f"Log file: {log_path}", prefix="📝")
-
-        modules = self.discover_modules()
-        log(f"\nDiscovered {len(modules)} modules to evolve")
-
-        start_time = time.time()
-        results = await asyncio.gather(
-            *[self._process_module(module) for module in modules],
-            return_exceptions=True,
-        )
-        elapsed = time.time() - start_time
-
-        all_experiments: list[Experiment] = []
-        for result in results:
-            if isinstance(result, list):
-                all_experiments.extend(result)
-            elif isinstance(result, Exception):
-                log(f"⚠ Module processing error: {result}")
-
-        log(f"\nProcessed {len(modules)} modules in {elapsed:.1f}s")
-
-        incorporated: list[Experiment] = []
-        rejected = [e for e in all_experiments if e.status == ExperimentStatus.FAILED]
-        held = [e for e in all_experiments if e.status == ExperimentStatus.HELD]
-        passed = [e for e in all_experiments if e.status == ExperimentStatus.PASSED and e not in held]
-
-        if self._config.auto_apply and not self._config.dry_run:
-            log(f"\n{'='*60}")
-            log("INCORPORATING IMPROVEMENTS")
-            log(f"{'='*60}")
-
-            for experiment in passed:
-                if await self.incorporate(experiment):
-                    incorporated.append(experiment)
-
-        log(f"\n{'='*60}", file=log_file)
-        log("EVOLUTION SUMMARY", file=log_file)
-        log(f"{'='*60}", file=log_file)
-        log(f"Experiments run: {len(all_experiments)}", file=log_file)
-        log(f"  Passed: {len(passed)}", file=log_file)
-        log(f"  Failed: {len(rejected)}", file=log_file)
-        log(f"  Held (productive tension): {len(held)}", file=log_file)
-        log(f"  Incorporated: {len(incorporated)}", file=log_file)
-
-        if passed and not self._config.auto_apply:
-            log(f"\n{'-'*60}", file=log_file)
-            log("READY TO INCORPORATE", file=log_file)
-            log(f"{'-'*60}", file=log_file)
-            for exp in passed:
-                log(f"  [{exp.id}] {exp.improvement.description}", file=log_file)
-            log(f"\nRun with --auto-apply to incorporate these improvements.", file=log_file)
-
-        if held:
-            log(f"\n{'-'*60}", file=log_file)
-            log("HELD TENSIONS (require human judgment)", file=log_file)
-            log(f"{'-'*60}", file=log_file)
-            for exp in held:
-                log(f"  [{exp.id}] {exp.improvement.description}", file=log_file)
-                if exp.synthesis:
-                    log(f"      Reason: {exp.synthesis.sublation_notes}", file=log_file)
-
-        log(f"\n")
-        log(f"╔{'═'*58}╗")
-        log(f"║{' '*58}║")
-        log(f"║  🎯 EVOLUTION COMPLETE - {self._config.target.upper():^32}  ║")
-        log(f"║{' '*58}║")
-        log(f"║  ✓ Passed: {len(passed):3d}   ✗ Failed: {len(rejected):3d}   ⏸ Held: {len(held):3d}   ✅ Applied: {len(incorporated):3d}  ║")
-        log(f"║{' '*58}║")
-        log(f"║  📝 Full log: {str(log_path)[-42:]:42}  ║")
-        log(f"║{' '*58}║")
-        log(f"╚{'═'*58}╝")
-
-        summary = f"Evolved {len(modules)} modules: {len(incorporated)} incorporated, {len(rejected)} rejected, {len(held)} held"
-
-        results_path = log_path.with_suffix('.json')
-        results_data = {
-            "timestamp": timestamp,
-            "config": {
-                "target": self._config.target,
-                "dry_run": self._config.dry_run,
-                "auto_apply": self._config.auto_apply,
-                "quick_mode": self._config.quick_mode,
-            },
-            "summary": {
-                "total_experiments": len(all_experiments),
-                "passed": len(passed),
-                "failed": len(rejected),
-                "held": len(held),
-                "incorporated": len(incorporated),
-                "elapsed_seconds": elapsed,
-            },
-            "passed_experiments": [
-                {
-                    "id": exp.id,
-                    "module": exp.module.name,
-                    "category": exp.module.category,
-                    "improvement": {
-                        "type": exp.improvement.improvement_type,
-                        "description": exp.improvement.description,
-                        "rationale": exp.improvement.rationale,
-                        "confidence": exp.improvement.confidence,
-                    },
-                    "status": exp.status.value,
-                }
-                for exp in passed
-            ],
-            "held_experiments": [
-                {
-                    "id": exp.id,
-                    "module": exp.module.name,
-                    "improvement": {
-                        "description": exp.improvement.description,
-                        "rationale": exp.improvement.rationale,
-                    },
-                    "synthesis_notes": exp.synthesis.sublation_notes if exp.synthesis else None,
-                }
-                for exp in held
-            ],
-            "failed_experiments": [
-                {
-                    "id": exp.id,
-                    "module": exp.module.name,
-                    "category": exp.module.category,
-                    "hypothesis": exp.hypothesis,
-                    "error": exp.error,
-                    "improvement": {
-                        "type": exp.improvement.improvement_type,
-                        "description": exp.improvement.description,
-                    } if exp.improvement else None,
-                    "test_results": exp.test_results,
-                }
-                for exp in rejected
-            ],
-        }
-
-        with open(results_path, 'w') as f:
-            json.dump(results_data, f, indent=2)
-
-        log(f"📊 Decision data saved: {results_path}")
-
-        log_file.close()
-
-        return EvolutionReport(
-            experiments=all_experiments,
-            incorporated=incorporated,
-            rejected=rejected,
-            held=held,
-            summary=summary,
-        )
-
+# ============================================================================
+# DEPRECATED: Old EvolutionPipeline class (to be removed)
+# ============================================================================
+# The old 826-line EvolutionPipeline class has been replaced with:
+# - run_evolution_cli() function (above) for CLI-specific features
+# - agents/e/evolution.py for core pipeline logic
+#
+# TODO: Remove the old class entirely after validating the refactoring works.
 
 # ============================================================================
 # Status & Suggestion Modes (for AI agent interface)
@@ -1010,23 +437,26 @@ async def show_status() -> None:
     await reporter.invoke(base)
 
 
-async def show_suggestions(config: EvolveConfig) -> None:
+async def show_suggestions(config: EvolveCliConfig) -> None:
     """Show improvement suggestions without running experiments."""
     log("=" * 60)
     log("EVOLUTION SUGGESTIONS")
     log("=" * 60)
 
-    pipeline = EvolutionPipeline(config)
-    modules = pipeline.discover_modules()
+    modules = discover_modules(config.target)
 
     log(f"\nAnalyzing {len(modules)} modules for improvement opportunities...\n")
+
+    # Create an AST analyzer for quick analysis
+    ast_analyzer = ASTAnalyzer(max_hypothesis_targets=3)
 
     for module in modules[:5]:  # Limit to first 5
         log(f"Module: {module.category}/{module.name}")
         log("-" * 40)
 
         # Use AST analyzer to get quick insights
-        structure = await pipeline._get_ast_structure(module)
+        result = await ast_analyzer.invoke(ASTAnalysisInput(path=module.path))
+        structure = result.structure
         if structure:
             # Check for missing type annotations
             code = get_code_preview(module.path)
@@ -1072,9 +502,9 @@ async def show_suggestions(config: EvolveConfig) -> None:
 # Main
 # ============================================================================
 
-def parse_args() -> EvolveConfig:
+def parse_args() -> EvolveCliConfig:
     """Parse command line arguments."""
-    config = EvolveConfig()
+    config = EvolveCliConfig()
 
     for arg in sys.argv[1:]:
         if arg.startswith("--target="):
@@ -1179,13 +609,11 @@ async def main() -> None:
         return
 
     # Test or full mode - run the pipeline
-    pipeline = EvolutionPipeline(config)
-    report = await pipeline.run()
-
+    report = await run_evolution_cli(config)
     log(f"\n{report.summary}")
 
 
-async def run_safe_evolution(config: EvolveConfig) -> None:
+async def run_safe_evolution(config: EvolveCliConfig) -> None:
     """
     Run safe self-evolution using fixed-point iteration.
 
