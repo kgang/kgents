@@ -119,10 +119,11 @@ def build_improvement_prompt(
     This prompt includes:
     1. Clear type signature requirements
     2. Complete constructor examples
-    3. Pre-existing error warnings
-    4. Structural validation rules
-    5. Similar patterns as scaffolding
-    6. Relevant principles to follow
+    3. Core API reference (prevents hallucination)
+    4. Pre-existing error warnings
+    5. Structural validation rules
+    6. Similar patterns as scaffolding
+    7. Relevant principles to follow
 
     Args:
         hypothesis: The improvement hypothesis
@@ -132,6 +133,11 @@ def build_improvement_prompt(
     Returns:
         Complete prompt string ready for LLM
     """
+    # Import API signatures module
+    from ..api_signatures import get_kgents_api_reference
+
+    api_reference = get_kgents_api_reference()
+
     return f"""# Code Improvement Task
 
 ## Hypothesis
@@ -147,9 +153,9 @@ Lines: {len(context.current_code.splitlines())}
 ## Type Signatures (MUST PRESERVE OR IMPROVE)
 {format_type_signatures(context.type_annotations)}
 
-## API Reference (USE THESE EXACT SIGNATURES)
+{api_reference}
 
-The following are the EXACT APIs available. Do NOT hallucinate or guess APIs.
+## Module-Specific APIs (FROM CURRENT FILE)
 
 ### Dataclass Constructors
 {format_dataclass_fields(context.dataclass_fields)}
@@ -159,12 +165,6 @@ The following are the EXACT APIs available. Do NOT hallucinate or guess APIs.
 
 ### Imported Module APIs
 {format_imported_apis(context.imported_apis)}
-
-CRITICAL: Only use APIs listed above. Common mistakes to AVOID:
-  - CodeModule.code (doesn't exist) -> Use CodeModule.path
-  - ExperimentStatus.REJECTED (doesn't exist) -> Use PENDING/RUNNING/PASSED/FAILED/HELD
-  - agent.run() (doesn't exist) -> Use agent.invoke()
-  - Guessing constructor arguments -> Use exact fields listed above
 
 ## Pre-Existing Issues (DO NOT INTRODUCE MORE)
 {format_errors(context.pre_existing_errors)}

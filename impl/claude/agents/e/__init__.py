@@ -212,6 +212,26 @@ from .status import (
     create_status_reporter,
 )
 
+from .stages import (
+    GroundStage,
+    GroundInput,
+    GroundOutput,
+    HypothesisStage,
+    HypothesisStageInput,
+    HypothesisStageOutput,
+    ExperimentStage,
+    ExperimentStageInput,
+    ExperimentStageOutput,
+    ground_stage,
+    hypothesis_stage,
+    experiment_stage,
+)
+
+from .api_signatures import (
+    get_kgents_api_reference,
+    get_core_api_reference,
+)
+
 __all__ = [
     # AST Analysis
     "ASTAnalyzer",
@@ -351,4 +371,20 @@ __all__ = [
     "HydrateStatusAgent",
     "StatusPresenterAgent",
     "create_status_reporter",
+    # Pipeline Stages (Composable agents for evolution pipeline)
+    "GroundStage",
+    "GroundInput",
+    "GroundOutput",
+    "HypothesisStage",
+    "HypothesisStageInput",
+    "HypothesisStageOutput",
+    "ExperimentStage",
+    "ExperimentStageInput",
+    "ExperimentStageOutput",
+    "ground_stage",
+    "hypothesis_stage",
+    "experiment_stage",
+    # API Signatures (For prompt enhancement)
+    "get_kgents_api_reference",
+    "get_core_api_reference",
 ]
