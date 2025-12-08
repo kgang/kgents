@@ -25,6 +25,16 @@ from .hegel import (
     background_dialectic,
 )
 
+# Persistent Dialectic (DGent-backed)
+from .persistent_dialectic import (
+    PersistentDialecticAgent,
+    DialecticMemoryAgent,
+    DialecticHistory,
+    DialecticRecord,
+    persistent_dialectic_agent,
+    dialectic_memory_agent,
+)
+
 # Jung: Shadow integration
 from .jung import (
     JungAgent,
@@ -86,6 +96,13 @@ __all__ = [
     "hegel",
     "continuous_dialectic",
     "background_dialectic",
+    # Persistent Dialectic (DGent-backed)
+    "PersistentDialecticAgent",
+    "DialecticMemoryAgent",
+    "DialecticHistory",
+    "DialecticRecord",
+    "persistent_dialectic_agent",
+    "dialectic_memory_agent",
     # Jung
     "JungAgent",
     "QuickShadow",

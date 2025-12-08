@@ -59,6 +59,12 @@ from .memory import (
     memory_agent,
 )
 
+from .persistent_memory import (
+    PersistentMemoryAgent,
+    MemoryState,
+    persistent_memory_agent,
+)
+
 from .experiment import (
     CodeModule,
     CodeImprovement,
@@ -224,6 +230,10 @@ __all__ = [
     "RecordAgent",
     "RecordInput",
     "memory_agent",
+    # Persistent Memory (DGent-backed)
+    "PersistentMemoryAgent",
+    "MemoryState",
+    "persistent_memory_agent",
     # Experiment
     "CodeModule",
     "CodeImprovement",
