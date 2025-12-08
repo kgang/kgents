@@ -4,43 +4,92 @@
 
 ## TL;DR
 
-**Status**: Ready for IMPROVEMENT_PLAN Phase A ✅
-**Branch**: `main` (clean, just pushed)
-**Reference**: `impl/claude/IMPROVEMENT_PLAN.md` (17 hypotheses)
-**Next**: Phase A quick wins - H5: json_utils, H4: lazy imports, H2: SuggestionAgent
+**Status**: IMPROVEMENT_PLAN Phase A - H5 COMPLETE ✅
+**Branch**: `main`
+**Achievement**: Extracted runtime/json_utils.py (-273 lines from base.py!)
+**Next**: Phase B core refactoring (H1: EvolutionPipeline decomposition)
 
 ---
 
 ## Recent Commits
 
+- `cb98af8` refactor(runtime): Extract JSON utilities to separate module (H5)
 - `745a04a` docs: Add systematic evolution analysis + improvement plan
 - `3c736dd` docs: Update HYDRATE.md for J-gents Phase 5 session
-- `4e3fce7` docs(j-gents): Complete Phase 5 Integration & Polish
 
 ---
 
-## Next Session: Phase A Quick Wins
+## This Session: IMPROVEMENT_PLAN Phase A - H5 (2025-12-08)
 
-**See `impl/claude/IMPROVEMENT_PLAN.md` for full details.**
+### Completed: H5 - Extract runtime/json_utils.py ✅
 
-### H5: Extract `runtime/json_utils.py`
-Extract 250 lines from `runtime/base.py`:
-- `robust_json_parse`, `_repair_json`, `_extract_field_values`, `parse_structured_sections`
-- Pure refactor, no behavior change
+**Before:**
+- `runtime/base.py`: 635 lines (massive, mixed concerns)
 
-### H4: Lazy imports in `evolve.py`
-- 57 imports → `TYPE_CHECKING` + lazy factories
-- Reduces startup overhead
+**After:**
+- `runtime/base.py`: 362 lines (-273 lines, -43% reduction!)
+- `runtime/json_utils.py`: 287 lines (new, focused module)
 
-### H2: Extract `SuggestionAgent`
-- Move `show_suggestions` (56 lines) to `agents/e/suggestion.py`
-- Composable agent pattern
+**Extracted functions:**
+- `robust_json_parse`: Handle LLM markdown/truncation/edge cases
+- `json_response_parser`: Standard wrapper
+- `parse_structured_sections`: Extract structured lists from responses
+- Internal helpers: `_repair_json`, `_extract_field_values`
 
-**Validation:** `python -m pytest -v` + `mypy --strict` on changed files
+**Updated imports in:**
+- `runtime/__init__.py`: Export from json_utils
+- `agents/t/judge.py`: Use json_utils
+- `agents/a/creativity.py`: Use json_utils
+
+**Tests:** All pass ✅ (31 synergy tests, judge tests)
+
+### Phase A Status
+
+| Hypothesis | Status | Notes |
+|------------|--------|-------|
+| H5: json_utils extraction | ✅ Complete | -273 lines from base.py |
+| H4: Lazy imports | ⏸️ Deferred | Too complex, not a quick win |
+| H2: SuggestionAgent | ⏸️ Deferred | Function already simple, no extraction needed |
+
+**Verdict:** Phase A yielded **1 substantial improvement** (H5). H4 and H2 require deeper analysis.
+
+### Background Meta-Evolution Results
+
+Ran `evolve.py meta --auto-apply` (3 attempts, all completed):
+- Generated 5 hypotheses each run
+- All experiments failed type checking
+- No auto-incorporations (expected for meta-evolution)
+- Hypotheses aligned with IMPROVEMENT_PLAN.md ✅
 
 ---
 
-## Previous: Systematic Evolution Analysis (2025-12-08)
+## Next Session: Start Here
+
+### Priority 1: IMPROVEMENT_PLAN Phase B - Core Refactoring
+
+**H1: Decompose EvolutionPipeline (19 methods → 4 agents)**
+- Extract into composable E-gent agents following the pipeline pattern
+- Target: ~400 line reduction in evolve.py
+- Impact: Improves testability, composability
+
+**H7: Split agents/e/prompts.py (762 lines)**
+- Separate into base/improvement/analysis modules
+- Long functions: build_improvement_prompt (137 lines)
+
+**H10: Split agents/j/sandbox.py (460 lines)**
+- Long function: execute_in_sandbox (150 lines!)
+- Separate executor/namespace/validation concerns
+
+### Priority 2: Re-evaluate Phase A Deferrals
+
+**H4 (lazy imports):** Needs careful design to avoid breaking changes
+**H2 (SuggestionAgent):** Current implementation already simple
+
+---
+
+## Previous Sessions
+
+### Systematic Evolution Analysis (2025-12-08)
 
 **Analysis found:** 27k lines, 18 files >500 lines, 45+ functions >50 lines
 
@@ -91,30 +140,9 @@ Reality Classification → Promise Tree → JIT Compile → Test → Ground → 
 - Observers (4): Spy, Predicate, Counter, Metrics
 - Critics (3): Judge, Oracle, Property
 
----
+### J-gents Phase 5 Complete
 
-## Next Session: Start Here
-
-### Priority 1: Synergy Phase 4B - Abstractions
-
-**From SYNERGY_REFACTOR_PLAN.md:**
-- ValidationPipeline pattern (compose validators)
-- ResilientAgent wrapper (T-gents integration)
-- Property-based evolution testing (T-gents + E-gents)
-
-### Priority 2: Meta-Evolution Hypotheses
-
-**From `evolve.py meta` analysis:**
-- H4: `show_suggestions` refactor (56 lines → composable)
-- H3: `EvolutionPipeline` decomposition (1100 lines)
-- H5: Lazy import loading (57 imports)
-
-### Priority 3: Continue J-gents Work
-
-**Future enhancements from integration.md:**
-- Persistent agent cache (disk-backed)
-- Cross-genus integration tests
-- Performance benchmarking
+**Integration & Polish specification** written. See section below for details.
 
 ---
 
