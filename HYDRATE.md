@@ -9,30 +9,31 @@
 
 ## Current State (Dec 8, 2025)
 
-**Latest:** Bootstrap Docs Phases 1-3 Complete + Infrastructure Fixes ✅ (Dec 8, 2025)
+**Latest:** Bootstrap Docs Phase 4 Complete ✅ (commit 15aaa26, pushed to origin/main)
 
 **Completed this session:**
-- ✅ **Bootstrap Docs Phase 2-3**: Error handling pattern (~70 lines), Composition verification checklist (~170 lines), Spec-First vs Agents-First resolution (~70 lines)
-- ✅ **Infrastructure fixes** (commit 2bc0edc):
-  - Fixed mypy execution in evolve.py (now uses `sys.executable -m mypy` for venv portability)
-  - Fixed missing `field` import in hegel.py (Issue #7 implementation)
-- ✅ **Bootstrap Docs Phase 1** (previously): Worked example, template, decision matrix, workflow, seven mini-judges, directory fix
-- ✅ **Total Bootstrap Docs additions**: +782 lines across BOOTSTRAP_PROMPT.md and AUTONOMOUS_BOOTSTRAP_PROTOCOL.md
+- ✅ **Bootstrap Docs Phase 4** (commit 15aaa26): All 4 optional improvements (~1350 lines)
+  - Common Pitfalls section: 8 pitfalls with WRONG/RIGHT patterns, pre-commit checklist
+  - Troubleshooting section: 10 errors with symptom/cause/fix/prevention, "Getting Help" guide
+  - Observability Hooks section: ProtocolObserver implementation, 6 metrics, meta-observability
+  - Implementation Progress Template: 8-phase checklist, daily tracking tips, validation criteria
+- ✅ **Bootstrap Docs Phases 1-3** (commits 7ee9dc8, 8240000, 2bc0edc): Worked example (Id), composition verification, error handling, Spec-First/Agents-First resolution
+- ✅ **Total Bootstrap Docs**: +2132 lines total (Phases 1-4 combined)
 
-**Documents now mechanically translatable:**
-- BOOTSTRAP_PROMPT.md: ~800 lines (was ~258) with worked example, template, verification checklist
-- AUTONOMOUS_BOOTSTRAP_PROTOCOL.md: ~378 lines with decision matrix, workflow example, tension resolution
+**Documents now comprehensive and production-ready:**
+- BOOTSTRAP_PROMPT.md: ~1480 lines (was ~258) - Complete implementation guide with examples, patterns, troubleshooting
+- AUTONOMOUS_BOOTSTRAP_PROTOCOL.md: ~1120 lines (was ~378) - Full protocol with pitfalls, observability, decision matrices
 
-**Remaining Bootstrap Docs work (optional):**
-- Phase 4: Common pitfalls, troubleshooting (320-400 lines)
-- Phase 5: Cross-references, dependency diagram, GroundParser agent (140-200 lines)
-- Phase 6: Regeneration test validation
+**Bootstrap Docs Status:**
+- Phases 1-4: ✅ COMPLETE (mechanically translatable, troubleshooting, observability, progress tracking)
+- Phase 5: Optional - cross-references, dependency diagram, GroundParser agent (~140-200 lines)
+- Phase 6: Optional - regeneration test validation, final Contradict/Judge checks
 
 **Next priorities:**
-1. **Tests for agents/b/** (hypothesis, robin) - Critical gap
-2. **D/E-gents specs** - Next agent families
+1. **Tests for agents/b/** (hypothesis, robin) - pytest suite
+2. **D/E-gents specs** - Data/Database, Evaluation/Ethics agents
 3. **PyPI package** - Publish kgents-runtime
-4. Bootstrap Docs Phase 4-6 (optional enhancements)
+4. Optional: Bootstrap Docs Phase 5-6 (if desired for absolute completeness)
 
 | Component | Status |
 |-----------|--------|
