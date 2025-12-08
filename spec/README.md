@@ -11,6 +11,7 @@ This directory contains the conceptual specification for kgents—implementation
    - [a-agents/](a-agents/) - Abstract + Art
    - [b-gents/](b-gents/) - Bio/Scientific
    - [c-gents/](c-gents/) - Category Theory (composition)
+   - [d-gents/](d-gents/) - Data Agents (state, memory, persistence)
    - [h-gents/](h-gents/) - Hegelian/Dialectic (introspection)
    - [j-gents/](j-gents/) - JIT Agent Intelligence (lazy evaluation, JIT compilation)
    - [k-gent/](k-gent/) - Kent Simulacra (personalization)

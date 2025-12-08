@@ -17,6 +17,7 @@ Deeply specifying: **A-gents, B-gents, C-gents, K-gent**
 | A | Agents | Abstract architectures + Art/Creativity coaches |
 | B | Bgents | Bio/Scientific discovery |
 | C | Cgents | Category Theory basis (composability) |
+| D | Dgents | Data Agents (state, memory, persistence) |
 | K | Kgent | Kent simulacra (interactive persona) |
 
 ## Key Directories
