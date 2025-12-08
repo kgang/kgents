@@ -187,6 +187,18 @@ from .error_memory import (
     error_memory,
 )
 
+from .status import (
+    GitStatus,
+    EvolutionLogData,
+    HydrateStatus,
+    StatusData,
+    GitStatusAgent,
+    EvolutionLogAgent,
+    HydrateStatusAgent,
+    StatusPresenterAgent,
+    create_status_reporter,
+)
+
 __all__ = [
     # AST Analysis
     "ASTAnalyzer",
@@ -307,4 +319,14 @@ __all__ = [
     "ErrorWarning",
     "ErrorMemoryStats",
     "error_memory",
+    # Status Agents (Phase 2.5e)
+    "GitStatus",
+    "EvolutionLogData",
+    "HydrateStatus",
+    "StatusData",
+    "GitStatusAgent",
+    "EvolutionLogAgent",
+    "HydrateStatusAgent",
+    "StatusPresenterAgent",
+    "create_status_reporter",
 ]

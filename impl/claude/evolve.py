@@ -95,6 +95,8 @@ from agents.e import (
     FallbackStrategy,
     FallbackConfig,
     ErrorMemory,
+    # Status Agents (Phase 2.5e)
+    create_status_reporter,
 )
 
 # Bootstrap imports
@@ -986,87 +988,18 @@ Generate ONE concrete improvement. Return ONLY valid JSON."""
 # ============================================================================
 
 async def show_status() -> None:
-    """Show current evolution status - ideal for AI agents checking state."""
-    log("=" * 60)
-    log("KGENTS EVOLUTION STATUS")
-    log("=" * 60)
+    """
+    Show current evolution status - ideal for AI agents checking state.
 
+    Refactored (Phase 2.5e) to use composable status agents:
+        StatusReporter = GitStatusAgent >> EvolutionLogAgent >> HydrateStatusAgent >> StatusPresenter
+
+    This demonstrates the morphism principle by decomposing an 83-line monolithic
+    function into 4 composable agents with clear input/output types.
+    """
     base = Path(__file__).parent
-
-    # Check git status
-    import subprocess
-    try:
-        result = subprocess.run(
-            ["git", "status", "--porcelain"],
-            capture_output=True,
-            text=True,
-            check=True,
-            cwd=base
-        )
-        uncommitted = bool(result.stdout.strip())
-    except subprocess.CalledProcessError:
-        uncommitted = False
-
-    log(f"Git Status: {'⚠️  Uncommitted changes' if uncommitted else '✓ Clean'}")
-
-    # Check recent evolution logs
-    log_dir = base / ".evolve_logs"
-    if log_dir.exists():
-        recent_logs = sorted(log_dir.glob("evolve_*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
-        if recent_logs:
-            latest = recent_logs[0]
-            with open(latest) as f:
-                data = json.load(f)
-
-            summary = data.get("summary", {})
-            log(f"\nLast Run: {data.get('timestamp', 'unknown')}")
-            log(f"  Target: {data.get('config', {}).get('target', 'unknown')}")
-            log(f"  Experiments: {summary.get('total_experiments', 0)}")
-            log(f"    ✓ Passed: {summary.get('passed', 0)}")
-            log(f"    ✗ Failed: {summary.get('failed', 0)}")
-            log(f"    ⏸ Held: {summary.get('held', 0)}")
-            log(f"    ✅ Incorporated: {summary.get('incorporated', 0)}")
-
-            # Show failed experiments for next steps
-            failed = data.get("failed_experiments", [])
-            if failed:
-                log(f"\n  Recent Failures ({len(failed)} total):")
-                for exp in failed[:3]:
-                    log(f"    - {exp.get('module', 'unknown')}: {exp.get('error', 'no error')[:60]}")
-                if len(failed) > 3:
-                    log(f"    ... and {len(failed) - 3} more")
-    else:
-        log("\nNo evolution logs found")
-
-    # Check HYDRATE.md status
-    hydrate_path = base.parent.parent / "HYDRATE.md"
-    if hydrate_path.exists():
-        content = hydrate_path.read_text()
-        lines = content.split("\n")
-
-        # Extract TL;DR section
-        log("\nHYDRATE.md Status:")
-        in_tldr = False
-        for line in lines:
-            if "## TL;DR" in line:
-                in_tldr = True
-                continue
-            if in_tldr:
-                if line.startswith("##"):
-                    break
-                if line.strip() and not line.startswith("---"):
-                    log(f"  {line}")
-
-    # Recommendations for AI agents
-    log(f"\n{'=' * 60}")
-    log("RECOMMENDED ACTIONS FOR AI AGENTS")
-    log(f"{'=' * 60}")
-    log("1. Run 'python evolve.py suggest' to see improvement suggestions")
-    log("2. Run 'python evolve.py test' to test evolve.py improvements (fast)")
-    log("3. Run 'python evolve.py meta --auto-apply' to apply meta improvements")
-    log("4. Run 'python evolve.py full --auto-apply' for full codebase evolution")
-    log("5. Update HYDRATE.md after significant changes")
-    log("")
+    reporter = create_status_reporter()
+    await reporter.invoke(base)
 
 
 async def show_suggestions(config: EvolveConfig) -> None:
