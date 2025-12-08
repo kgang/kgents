@@ -8,7 +8,52 @@
 
 **Status**: 14 evolution improvements applied to bootstrap modules ✅
 **Latest**: Dec 8 - Major evolution: Id, Compose, Types, Fix, Judge, Contradict, Sublate improved
-**Branch**: `main` (15 new commits since last push)
+**Branch**: `main` (16 commits ahead of origin/main)
+
+---
+
+## ⚠️ CRITICAL: Running evolve.py with Correct Venv
+
+**The evolution pipeline REQUIRES the kgents venv to be activated before running.**
+
+### ✅ Correct Pattern (USE THIS ALWAYS)
+
+```bash
+# Step 1: Navigate to kgents root
+cd /Users/kentgang/git/kgents
+
+# Step 2: Activate the venv (CRITICAL - do not skip!)
+source .venv/bin/activate
+
+# Step 3: Navigate to impl directory
+cd impl/claude
+
+# Step 4: Run evolution
+python evolve.py <target> --dry-run --quick
+```
+
+### ❌ What Happens If You Skip Venv Activation
+
+Without activating the venv, you'll see errors like:
+- `Error: [Errno 2] No such file or directory: 'mypy'`
+- `ModuleNotFoundError: No module named 'anthropic'`
+- All experiments fail with type check errors
+
+### ✓ How to Verify Venv Is Active
+
+```bash
+# Should show: /Users/kentgang/git/kgents/.venv/bin/python
+which python
+
+# Should show: mypy 1.19.0 (compiled: yes)
+python -m mypy --version
+```
+
+### One-Line Command for Evolution
+
+```bash
+cd /Users/kentgang/git/kgents && source .venv/bin/activate && cd impl/claude && python evolve.py all --dry-run --quick
+```
 
 ---
 
@@ -56,11 +101,13 @@
 
 ```bash
 cd /Users/kentgang/git/kgents
-git push  # 15 commits ready
+git push  # 16 commits ready
 
-# Run evolution on remaining modules
+# IMPORTANT: Activate venv before running evolution (see section above)
 source .venv/bin/activate
 cd impl/claude
+
+# Run evolution on remaining modules
 python evolve.py agents --dry-run --quick
 python evolve.py runtime --dry-run --quick
 ```
@@ -166,6 +213,7 @@ git push
 - ✅ Applied 14 improvements across 7 modules (Id, Compose, Types, Fix, Judge, Contradict, Ground)
 - ✅ Fixed `ground.py` import error after evolution
 - ✅ All core bootstrap modules pass type checking
+- ✅ Added explicit venv activation instructions to HYDRATE.md (prominent warning section)
 
 **Dec 8, 2025 (PM Session)**:
 - ✅ Completed Bootstrap Docs Phase 6: Regeneration Validation
