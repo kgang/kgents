@@ -7,7 +7,7 @@ powered by kgents HypothesisEngine.
 from typing import Optional
 
 from textual.app import ComposeResult
-from textual.containers import Vertical, Horizontal
+from textual.containers import Vertical, Horizontal, VerticalScroll
 from textual.message import Message
 from textual.reactive import reactive
 from textual.widgets import Button, RichLog, Static
@@ -74,10 +74,12 @@ class LogViewer(Vertical):
         margin-left: 1;
     }
 
-    LogViewer #analysis-panel {
+    LogViewer #analysis-scroll {
         height: 1fr;
+    }
+
+    LogViewer #analysis-panel {
         padding: 0 1;
-        overflow-y: auto;
     }
 
     LogViewer .empty-state {
@@ -109,11 +111,12 @@ class LogViewer(Vertical):
             with Horizontal(id="analysis-header"):
                 yield Static("Analysis")
                 yield Button("Analyze", id="analyze-btn", variant="primary")
-            yield Static(
-                "Select a session and click Analyze",
-                id="analysis-panel",
-                classes="empty-state"
-            )
+            with VerticalScroll(id="analysis-scroll"):
+                yield Static(
+                    "Select a session and click Analyze",
+                    id="analysis-panel",
+                    classes="empty-state"
+                )
 
     def watch_log_content(self, content: str) -> None:
         """Update log display when content changes."""
@@ -122,6 +125,8 @@ class LogViewer(Vertical):
             log.clear()
             if content:
                 log.write(content)
+                # Scroll to top so user sees beginning of output
+                log.scroll_home()
             else:
                 log.write("[dim]No output captured[/dim]")
         except Exception:
@@ -131,9 +136,12 @@ class LogViewer(Vertical):
         """Update analysis display when content changes."""
         try:
             panel = self.query_one("#analysis-panel", Static)
+            scroll = self.query_one("#analysis-scroll", VerticalScroll)
             if content:
                 panel.remove_class("empty-state")
                 panel.update(Markdown(content))
+                # Scroll to top so user sees beginning of analysis
+                scroll.scroll_home()
             else:
                 panel.add_class("empty-state")
                 panel.update("Select a session and click Analyze")

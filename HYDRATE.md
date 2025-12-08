@@ -188,6 +188,8 @@ All 5 phases done. Run: `cd impl/zen-agents && uv run zen-agents`
 
 ## Recent Changes
 
+- **LogViewer Scroll Fix** (Dec 2025): Both log and analysis panels now scroll to top after content update
+- **LLM Session Shell Portability Fix** (Dec 2025): Changed `read -p` to `printf + read` in session commands - `read -p` is bash-only, failed on zsh
 - **LLM Session Welcome Messages** (Dec 2025): CREATIVITY, ROBIN, HYPOTHESIS, KGENT sessions now show usage instructions instead of blank shell
 - **Claude Session Command Bug Fix** (Dec 2025): Fixed `ZenConfig.from_dict()` defaulting `session_commands` to `{}` instead of merging with defaults - CLAUDE sessions now correctly run `claude`
 - **Session Selection Bug Fix** (Dec 2025): Fixed `IndexError` in `_update_display()` - Textual's `with Container()` context manager only works in `compose()`, not event handlers
