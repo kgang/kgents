@@ -4,10 +4,10 @@
 
 ## TL;DR
 
-**Status**: T-gents Phase 2 COMPLETE - Additional Saboteurs & Observers implemented
-**Branch**: `main` (uncommitted - 10 T-gent agents total, Phase 1 + Phase 2)
-**Achievement**: 10 T-gent types, 16 tests passing, composition verified
-**Next**: Commit T-gents Phase 1 + Phase 2 together
+**Status**: T-gents Phase 2 COMMITTED ✅ - 10 T-gent types complete
+**Branch**: `main` (clean, pushed - commit 41c8d4c)
+**Achievement**: NoiseAgent, LatencyAgent, FlakyAgent, CounterAgent, MetricsAgent implemented
+**Next**: T-gents Phase 3 (Type IV Critics: JudgeAgent, PropertyAgent) OR J-gents Phase 3
 
 ---
 
@@ -136,30 +136,36 @@ Created Category Theory-based testing framework in `impl/claude/agents/t/`:
 
 ## Next Session: Start Here
 
-### Priority 1: J-gents Phase 3 - JIT Compilation
+### Priority 1: Clean up uncommitted changes ⚠️
+
+Uncommitted changes from previous sessions (not related to T-gents Phase 2):
+```bash
+git status  # Shows:
+# modified:   impl/claude/agents/e/prompts.py (API signature extraction)
+# modified:   impl/claude/agents/e/safety.py (SafetyConfig updates)
+# modified:   impl/claude/bootstrap/fix.py (Entropy budget)
+# modified:   impl/claude/bootstrap/types.py (FixConfig.entropy_budget)
+# deleted:    impl/claude/bootstrap_reference/behavior_snapshot*.{json,pkl}
+```
+
+**Options:**
+1. Commit these changes (from Phase 2.5d session)
+2. Restore them with `git restore`
+3. Review and decide case-by-case
+
+### Priority 2: T-gents Phase 3 - Type IV Critics
+
+From `spec/t-gents/taxonomy.md` Section 4:
+- [ ] JudgeAgent: LLM-as-Judge for semantic evaluation
+- [ ] PropertyAgent: Property-based testing with generators
+- [ ] OracleAgent: Differential testing oracle
+
+### Priority 3: J-gents Phase 3 - JIT Compilation
 
 From JGENT_SPEC_PLAN.md:
 - [ ] Write jit.md spec
 - [ ] Implement MetaArchitect agent
 - [ ] Sandboxed execution environment
-- [ ] Integration with Judge
-
-### Priority 2: ~~T-gents Phase 2 - Additional Observers & Saboteurs~~ ✅ COMPLETE
-
-~~Continue T-gents implementation:~~
-- [x] NoiseAgent (semantic perturbation - Type II)
-- [x] LatencyAgent (temporal delay - Type II)
-- [x] FlakyAgent (probabilistic failure - Type II)
-- [x] CounterAgent (invocation tracking - Type III)
-- [x] MetricsAgent (performance profiling - Type III)
-
-### Priority 3: J-gents Phase 4 - Coordination
-
-From JGENT_SPEC_PLAN.md:
-- [ ] Write lazy.md spec (promises)
-- [ ] Implement main JGent coordinator
-- [ ] Test-driven reality (test generation)
-- [ ] End-to-end integration tests
 
 ---
 
@@ -191,7 +197,7 @@ From JGENT_SPEC_PLAN.md:
 
 ## Session Log
 
-**Dec 8 (this)**: UNCOMMITTED - T-gents Phase 2 (NoiseAgent, LatencyAgent, FlakyAgent, CounterAgent, MetricsAgent)
+**Dec 8 (this)**: 41c8d4c - T-gents Phase 2 (NoiseAgent, LatencyAgent, FlakyAgent, CounterAgent, MetricsAgent)
 **Dec 8**: 8189e79 - T-gents Phase 1 implementation
 **Dec 8**: 9d1c295 - HYDRATE.md update for J-gents Phase 2
 **Dec 8**: b917e2e - J-gents Phase 2 Chaosmonger implementation
