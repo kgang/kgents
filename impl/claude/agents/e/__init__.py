@@ -125,6 +125,13 @@ from .safety import (
     convergence_agent,
 )
 
+from .safe_evolution_orchestrator import (
+    SafeEvolutionOrchestrator,
+    SafeEvolutionOrchestratorInput,
+    SafeEvolutionOrchestratorResult,
+    safe_evolution_orchestrator,
+)
+
 from .preflight import (
     PreFlightChecker,
     PreFlightInput,
@@ -273,6 +280,11 @@ __all__ = [
     "self_evolution_agent",
     "sandbox_test_agent",
     "convergence_agent",
+    # Safe Evolution Orchestrator
+    "SafeEvolutionOrchestrator",
+    "SafeEvolutionOrchestratorInput",
+    "SafeEvolutionOrchestratorResult",
+    "safe_evolution_orchestrator",
     # PreFlight (Layer 1 Reliability)
     "PreFlightChecker",
     "PreFlightInput",

@@ -107,6 +107,10 @@ from agents.e import (
     SelfEvolutionAgent,
     SafeEvolutionInput,
     compute_code_similarity,
+    # Safe Evolution Orchestrator (Phase D - H3)
+    SafeEvolutionOrchestrator,
+    SafeEvolutionOrchestratorInput,
+    safe_evolution_orchestrator,
     # Recovery Layer (Phase 2.5c)
     RetryStrategy,
     RetryConfig,
@@ -837,11 +841,9 @@ async def main() -> None:
 
 async def run_safe_evolution(config: EvolveCliConfig) -> None:
     """
-    Run safe self-evolution using bootstrap Fix for convergence tracking.
+    Run safe self-evolution using SafeEvolutionOrchestrator.
 
-    This mode is specifically for evolving evolve.py and related
-    infrastructure. It uses multiple safety layers:
-
+    Refactored (Phase D - H3) to use composable orchestrator that integrates:
     1. Bootstrap Ground: Inject persona values into evolution
     2. Bootstrap Judge: Pre-filter hypotheses against 7 principles
     3. Bootstrap Fix: Convergence-tracked iteration with entropy budgets
@@ -852,22 +854,6 @@ async def run_safe_evolution(config: EvolveCliConfig) -> None:
     Usage:
         python evolve.py meta --safe-mode --dry-run
     """
-    log("=" * 60)
-    log("SAFE SELF-EVOLUTION MODE (Bootstrap-Enhanced)")
-    log("=" * 60)
-    log(f"Target: {config.target}")
-    log(f"Max iterations: {config.max_iterations}")
-    log(f"Convergence threshold: {config.convergence_threshold}")
-    log(f"Dry run: {config.dry_run}")
-    log("")
-
-    # Get grounded context for persona-aware evolution
-    facts = await get_grounded_context()
-    log(f"📍 Grounded context: {facts.persona.name}'s preferences")
-    log(f"   Values: {', '.join(facts.persona.values[:3])}...")
-    log(f"   Style: {facts.persona.communication_style}")
-    log("")
-
     # Create safety config
     safety_config = SafetyConfig(
         read_only=config.dry_run,
@@ -879,89 +865,16 @@ async def run_safe_evolution(config: EvolveCliConfig) -> None:
         require_human_approval=not config.auto_apply,
     )
 
-    # Determine target files
-    base = Path(__file__).parent
-    if config.target == "meta":
-        targets = [base / "evolve.py"]
-    elif config.target == "bootstrap":
-        targets = list((base / "bootstrap").glob("*.py"))
-    elif config.target == "agents":
-        targets = []
-        for letter_dir in (base / "agents").iterdir():
-            if letter_dir.is_dir() and not letter_dir.name.startswith("_"):
-                targets.extend(letter_dir.glob("*.py"))
-    else:
-        targets = [base / "evolve.py"]
-
-    log(f"Targets: {len(targets)} files")
-    for t in targets[:5]:
-        log(f"  - {t.name}")
-    if len(targets) > 5:
-        log(f"  ... and {len(targets) - 5} more")
-    log("")
-
-    # Run self-evolution agent on each target
-    agent = SelfEvolutionAgent(config=safety_config)
-
-    for target in targets:
-        log(f"\n{'='*60}")
-        log(f"EVOLVING: {target.name}")
-        log(f"{'='*60}")
-
-        if not target.exists():
-            log(f"  Skip: file not found")
-            continue
-
-        original_code = target.read_text()
-        log(f"  Original: {len(original_code.splitlines())} lines")
-
-        result = await agent.invoke(SafeEvolutionInput(
-            target=target,
-            config=safety_config,
-        ))
-
-        if result.success:
-            log(f"  Status: SUCCESS")
-            log(f"  Converged: {result.converged}")
-            log(f"  Iterations: {result.iterations}")
-            log(f"  Final similarity: {result.final_similarity:.2%}")
-
-            # Use bootstrap Contradict to detect tensions between old/new code
-            if result.evolved_code:
-                tension_result = await detect_code_tension(
-                    original_code,
-                    result.evolved_code,
-                    context={"target": target.name, "persona": facts.persona.name},
-                )
-                if not tension_result.no_tension:
-                    log(f"  ⚠️ Tensions detected ({len(tension_result.tensions)}):")
-                    for tension in tension_result.tensions[:3]:
-                        log(f"    • [{tension.mode.value}] {tension.description[:50]}...")
-                else:
-                    log(f"  ✓ No tensions detected between old/new code")
-
-            if result.evolved_code and not config.dry_run:
-                # Apply the evolved code
-                target.write_text(result.evolved_code)
-                log(f"  Applied: {len(result.evolved_code.splitlines())} lines")
-            elif result.evolved_code:
-                log(f"  (dry-run) Would write {len(result.evolved_code.splitlines())} lines")
-        else:
-            log(f"  Status: FAILED")
-            log(f"  Error: {result.error}")
-
-        # Show sandbox results
-        if result.sandbox_results:
-            log(f"  Sandbox tests: {len(result.sandbox_results)}")
-            for i, sr in enumerate(result.sandbox_results, 1):
-                status = "PASS" if sr.passed else "FAIL"
-                log(f"    [{i}] {status}")
-                if not sr.passed and sr.error:
-                    log(f"        Error: {sr.error[:80]}...")
-
-    log(f"\n{'='*60}")
-    log("SAFE SELF-EVOLUTION COMPLETE")
-    log(f"{'='*60}")
+    # Create and invoke orchestrator
+    orchestrator = safe_evolution_orchestrator()
+    result = await orchestrator.invoke(
+        SafeEvolutionOrchestratorInput(
+            target=config.target,
+            safety_config=safety_config,
+            dry_run=config.dry_run,
+            log_fn=log,
+        )
+    )
 
 
 if __name__ == "__main__":
