@@ -11,9 +11,14 @@ Philosophy:
 Given an intent, context, and constraints, MetaArchitect generates Python
 source code for a specialized agent. The generated code must:
 - Pass Chaosmonger stability checks
-- Pass Judge ethical evaluation
+- Pass Judge ethical evaluation (via bootstrap Judge)
 - Pass mypy --strict type checking
 - Execute within entropy budget constraints
+
+Bootstrap Integration:
+- Uses bootstrap Judge for ethical evaluation of generated code
+- Generated agents inherit from bootstrap Agent interface
+- Safety validation via principle-based judgment
 
 See spec/j-gents/jit.md for full specification.
 """
@@ -22,9 +27,10 @@ from __future__ import annotations
 
 import ast
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Optional, Callable
 
-from bootstrap.types import Agent
+from bootstrap.types import Agent, PartialVerdict, Verdict, VerdictType
+from bootstrap.judge import Judge as BootstrapJudge, JudgeInput, MINI_JUDGES
 
 
 @dataclass(frozen=True)
@@ -605,3 +611,173 @@ def validate_source_safety(source: AgentSource, constraints: ArchitectConstraint
             return (False, f"Forbidden pattern detected: {pattern}")
 
     return (True, "Source passes safety checks")
+
+
+# --- Bootstrap Judge Integration for JIT Code ---
+
+
+def check_jit_safe(
+    agent: Agent[Any, Any],
+    context: Optional[dict[str, Any]] = None
+) -> PartialVerdict:
+    """
+    JIT-specific safety check: no forbidden patterns in source.
+
+    A mini-judge for the "jit_safe" principle.
+    """
+    source_code = context.get("source_code", "") if context else ""
+    constraints = context.get("constraints", ArchitectConstraints()) if context else ArchitectConstraints()
+
+    for pattern in constraints.forbidden_patterns:
+        if pattern in source_code:
+            return PartialVerdict(
+                principle="jit_safe",
+                passed=False,
+                reasons=(f"Forbidden pattern '{pattern}' detected in generated code",),
+                confidence=1.0,
+            )
+
+    return PartialVerdict(
+        principle="jit_safe",
+        passed=True,
+        reasons=(),
+        confidence=1.0,
+    )
+
+
+def check_entropy_bounded(
+    agent: Agent[Any, Any],
+    context: Optional[dict[str, Any]] = None
+) -> PartialVerdict:
+    """
+    JIT-specific check: complexity within entropy budget.
+
+    A mini-judge for the "entropy_bounded" principle.
+    """
+    complexity = context.get("complexity", 0) if context else 0
+    entropy_budget = context.get("entropy_budget", 1.0) if context else 1.0
+    max_complexity = context.get("max_cyclomatic_complexity", 20) if context else 20
+
+    max_allowed = int(entropy_budget * max_complexity)
+    passed = complexity <= max_allowed
+
+    return PartialVerdict(
+        principle="entropy_bounded",
+        passed=passed,
+        reasons=(f"Complexity {complexity} vs budget {max_allowed}",) if not passed else (),
+        confidence=0.9,
+    )
+
+
+def check_imports_allowed(
+    agent: Agent[Any, Any],
+    context: Optional[dict[str, Any]] = None
+) -> PartialVerdict:
+    """
+    JIT-specific check: only allowed imports used.
+
+    A mini-judge for the "imports_allowed" principle.
+    """
+    imports = context.get("imports", frozenset()) if context else frozenset()
+    allowed = context.get("allowed_imports", frozenset()) if context else frozenset()
+
+    forbidden = imports - allowed
+    passed = len(forbidden) == 0
+
+    return PartialVerdict(
+        principle="imports_allowed",
+        passed=passed,
+        reasons=(f"Forbidden imports: {forbidden}",) if not passed else (),
+        confidence=1.0,
+    )
+
+
+# JIT-specific mini-judges
+JIT_MINI_JUDGES: dict[str, Callable[[Agent[Any, Any], Optional[dict[str, Any]]], PartialVerdict]] = {
+    "jit_safe": check_jit_safe,
+    "entropy_bounded": check_entropy_bounded,
+    "imports_allowed": check_imports_allowed,
+}
+
+
+class JITSafetyJudge(BootstrapJudge):
+    """
+    Specialized Judge for JIT-compiled agents.
+
+    Combines bootstrap's 7 principles with JIT-specific safety checks:
+    - jit_safe: No forbidden patterns (eval, exec, etc.)
+    - entropy_bounded: Complexity within budget
+    - imports_allowed: Only whitelisted imports
+
+    Example:
+        judge = JITSafetyJudge()
+        source = await architect.invoke(input)
+
+        verdict = await judge.evaluate_source(source, constraints)
+        if verdict.type == VerdictType.ACCEPT:
+            # Safe to execute
+            pass
+        elif verdict.type == VerdictType.REVISE:
+            # Has fixable issues
+            print(verdict.revisions)
+    """
+
+    def __init__(self):
+        """Initialize with combined bootstrap + JIT judges."""
+        combined_judges = dict(MINI_JUDGES)
+        combined_judges.update(JIT_MINI_JUDGES)
+        super().__init__(custom_judges=combined_judges)
+
+    async def evaluate_source(
+        self,
+        source: AgentSource,
+        constraints: ArchitectConstraints,
+    ) -> Verdict:
+        """
+        Evaluate generated source against JIT safety principles.
+
+        Args:
+            source: Generated agent source
+            constraints: Safety constraints
+
+        Returns:
+            Verdict with ACCEPT, REVISE, or REJECT
+        """
+        # Create a stub agent to represent the generated source
+        class GeneratedAgentStub(Agent[Any, Any]):
+            """Stub agent for judging generated source."""
+
+            @property
+            def name(self) -> str:
+                return source.class_name
+
+            async def invoke(self, input: Any) -> Any:
+                raise NotImplementedError("Stub agent - not for execution")
+
+        stub = GeneratedAgentStub()
+
+        return await self.invoke(
+            JudgeInput(
+                agent=stub,
+                principles=(
+                    "jit_safe",
+                    "entropy_bounded",
+                    "imports_allowed",
+                    "ethical",  # Bootstrap ethical principle
+                    "composable",  # Bootstrap composable principle
+                ),
+                context={
+                    "source_code": source.source,
+                    "complexity": source.complexity,
+                    "imports": source.imports,
+                    "entropy_budget": constraints.entropy_budget,
+                    "max_cyclomatic_complexity": constraints.max_cyclomatic_complexity,
+                    "allowed_imports": constraints.allowed_imports,
+                    "constraints": constraints,
+                },
+            )
+        )
+
+
+# Singleton safety judge
+jit_safety_judge = JITSafetyJudge()
