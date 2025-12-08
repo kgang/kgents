@@ -9,26 +9,28 @@
 
 ## Current State (Dec 8, 2025)
 
-**Latest:** Bootstrap Documents Improvement Plan - Phase 1 COMPLETE! ✅ (Dec 8, 2025)
-- ✅ **Phase 1.1:** Worked example (Id agent spec → implementation walkthrough)
-- ✅ **Phase 1.2:** Agent implementation template (fill-in-the-blank for new agents)
-- ✅ **Phase 1.3:** Bootstrap agent decision matrix (when to use which agent)
-- ✅ **Phase 1.4:** Complete workflow example (agent-driven design session showing >50% autopoiesis)
-- ✅ **Phase 3.2:** Seven mini-judges architecture (composable Judge = 7 mini-judges via `>>`)
-- ✅ **Phase 3.3:** Directory structure fixed (impl/claude-openrouter → impl/claude)
+**Latest:** Bootstrap Documents Improvement - Phase 1 COMPLETE! ✅ Commit e37f111 (Dec 8, 2025)
+
+**What:** Upgraded BOOTSTRAP_PROMPT.md and AUTONOMOUS_BOOTSTRAP_PROTOCOL.md with concrete examples and decision guidance.
+
+**Completed:**
+- ✅ Worked example: Id agent spec → implementation (5-step walkthrough, ~130 lines)
+- ✅ Implementation template: Fill-in-the-blank pattern for any agent (~130 lines)
+- ✅ Bootstrap agent decision matrix: Table + 4 decision trees for common scenarios
+- ✅ Complete workflow: MemoryAgent design session showing >50% autopoiesis
+- ✅ Seven mini-judges: Judge = 7 composable agents via `>>`
+- ✅ Directory fix: impl/claude-openrouter → impl/claude (consistency)
+
+**Impact:** +472 lines. Documents now mechanically translatable by LLMs.
 
 **Previously:** Phase 3 Infrastructure (Issue #4, #6, #9), Phase 2 (architecture), Phase 1 (types), Bootstrap agents, K/A/B/C/H-gents all ✅
 
-**Next from Bootstrap Docs Plan:**
-- Phase 2: Error handling pattern, composition verification checklist, Ground extraction protocol
-- Phase 4-5: Common pitfalls, troubleshooting, progress template
-- Phase 6: Validation & regeneration test
-
-**Other priorities:**
-1. Phase 4-5 features (defer): Issue #3 (Judge decomposition), #7 (Hegel observability), #8 (Robin fallback)
-2. Tests: pytest suite for agents/b/ (hypothesis, robin)
-3. D/E-gents specs
-4. PyPI package publication
+**Next priorities:**
+1. Bootstrap Docs Plan Phase 2-6 (optional): Error patterns, verification checklists, troubleshooting
+2. IMPLEMENTATION_PLAN.md Phase 4-5 (deferred): Issue #3 (Judge decomposition), #7 (Hegel observability), #8 (Robin fallback)
+3. Tests for agents/b/ (hypothesis, robin)
+4. D/E-gents specs
+5. PyPI package
 
 | Component | Status |
 |-----------|--------|
