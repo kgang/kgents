@@ -9,14 +9,14 @@
 
 ## Current State (Dec 8, 2025)
 
-**Latest:** Bootstrap Docs Phase 5 Complete ✅ (Phases 1-5 done, Phase 6 optional)
+**Latest:** Bootstrap Docs Phase 5 Complete ✅ (commit 16156c8, pushed to origin/main)
 
 **Completed this session:**
-- ✅ **Bootstrap Docs Phase 5** (Dec 8, 2025): Cross-references, dependency graph, GroundParser (~155 lines)
+- ✅ **Bootstrap Docs Phase 5** (commit 16156c8): Cross-references, dependency graph, GroundParser (~155 lines)
   - Cross-document links between AUTONOMOUS_BOOTSTRAP_PROTOCOL.md and BOOTSTRAP_PROMPT.md
-  - Case study section referencing IMPLEMENTATION_PLAN.md for concrete examples
-  - 4-level dependency graph showing implementation order (types → id/ground → compose/contradict → judge/sublate → fix)
-  - GroundParser agent: LLM-based markdown → PersonaSeed extraction (increases autopoiesis)
+  - Case study section in PROTOCOL referencing IMPLEMENTATION_PLAN.md for concrete examples
+  - 4-level dependency graph in BOOTSTRAP_PROMPT.md showing implementation order
+  - GroundParser agent (impl/claude/bootstrap/ground_parser.py): LLM-based markdown → PersonaSeed extraction
 - ✅ **Bootstrap Docs Phase 4** (commit 15aaa26): All 4 optional improvements (~1350 lines)
   - Common Pitfalls section: 8 pitfalls with WRONG/RIGHT patterns, pre-commit checklist
   - Troubleshooting section: 10 errors with symptom/cause/fix/prevention, "Getting Help" guide
@@ -30,21 +30,21 @@
 - AUTONOMOUS_BOOTSTRAP_PROTOCOL.md: ~1120 lines (was ~378) - Full protocol with pitfalls, observability, decision matrices
 
 **Bootstrap Docs Status:**
-- Phases 1-4: ✅ COMPLETE (mechanically translatable, troubleshooting, observability, progress tracking)
-- Phase 5: ✅ COMPLETE
-  - ✅ 5.1: Cross-references between PROTOCOL and PROMPT (~30 lines)
-  - ✅ 5.2: Dependency diagram (4-level implementation order) (~35 lines)
-  - ✅ 5.3: GroundParser agent (docs + impl) (~90 lines total)
-    - Documentation in BOOTSTRAP_PROMPT.md explaining agent-based parsing
-    - Implementation in impl/claude/bootstrap/ground_parser.py
-    - Demonstrates autopoiesis: using agents to build agents
-- Phase 6: Optional - regeneration test validation, final Contradict/Judge checks
+- ✅ **Phases 1-5 COMPLETE** (~2287 total lines added across all phases)
+  - Phase 1-3: Worked examples, composition verification, error handling patterns
+  - Phase 4: Common pitfalls, troubleshooting, observability, progress tracking
+  - Phase 5: Cross-references, dependency graph, GroundParser agent ✅ NEW
+- Phase 6: Optional - regeneration test validation, final Contradict/Judge checks (not started)
 
-**Next priorities:**
-1. **Tests for agents/b/** (hypothesis, robin) - pytest suite
-2. **D/E-gents specs** - Data/Database, Evaluation/Ethics agents
-3. **PyPI package** - Publish kgents-runtime
-4. Optional: Bootstrap Docs Phase 5-6 (if desired for absolute completeness)
+**Documents Status:**
+- BOOTSTRAP_PROMPT.md: ~1545 lines (was ~258) - Implementation guide
+- AUTONOMOUS_BOOTSTRAP_PROTOCOL.md: ~1135 lines (was ~378) - Meta protocol
+
+**Next Session Priorities:**
+1. **Tests for agents/b/** - pytest suite for hypothesis.py and robin.py
+2. **D/E-gents specs** - Data/Database, Evaluation/Ethics agent specifications
+3. **PyPI package** - Publish kgents-runtime to PyPI
+4. Optional: Bootstrap Docs Phase 6 (regeneration validation)
 
 | Component | Status |
 |-----------|--------|
