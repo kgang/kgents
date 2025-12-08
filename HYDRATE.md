@@ -4,14 +4,44 @@
 
 ## TL;DR
 
-**Status**: J-gents Phase 1 COMPLETE - Promise[T] and RealityClassifier pushed
-**Branch**: `main` (pushed: dc27faa)
-**Mypy**: 0 errors (agents/j/ passes --strict)
-**New**: `impl/claude/agents/j/` with Promise and RealityClassifier
+**Status**: T-gents specification COMPLETE - Category Theory-based testing framework
+**Branch**: `main` (pushed: d73283e)
+**New**: Complete `spec/t-gents/` with algebra, taxonomy, and Adversarial Gym
 
 ---
 
-## This Session: J-gents Phase 1 Implementation (2025-12-08)
+## This Session: T-gents Specification (2025-12-08)
+
+### Completed ✅
+
+**Commit d73283e: T-gents Specification**
+
+Created comprehensive Category Theory-based testing specification:
+
+**Files Created:**
+- `spec/t-gents/README.md` (10K): Core philosophy, dual mandate, full taxonomy
+- `spec/t-gents/algebra.md` (10K): Category laws, functors, monads, commutative diagrams
+- `spec/t-gents/taxonomy.md` (19K): Detailed specs for 11+ T-gent types with implementation skeletons
+- `spec/t-gents/adversarial.md` (16K): Adversarial Gym chaos engineering framework
+
+**Key Concepts:**
+- Testing as **algebraic verification** (not just examples)
+- Four T-gent types: Nullifiers, Saboteurs, Observers, Critics
+- Commutative diagram testing
+- Monte Carlo stress testing via Adversarial Gym
+- Integration with E-gents evolution
+
+**Taxonomy:**
+- Type I (Nullifiers): MockAgent, FixtureAgent
+- Type II (Saboteurs): FailingAgent, NoiseAgent, LatencyAgent, FlakyAgent
+- Type III (Observers): SpyAgent, PredicateAgent, CounterAgent, MetricsAgent
+- Type IV (Critics): JudgeAgent, CorrectnessAgent, SafetyAgent
+
+Transforms testing from example-based to proof-based reliability.
+
+---
+
+## Previous: J-gents Phase 1 Implementation (2025-12-08)
 
 ### Completed ✅
 
@@ -64,34 +94,46 @@ Changes in working directory:
 
 ## Next Session: Start Here
 
-### Priority 1: Continue J-gents Implementation
+### Priority 1: Implement T-gents (Testing Agents)
 
-Phase 2 from JGENT_SPEC_PLAN.md:
+Now that spec is complete, implement the T-gents framework:
+
 ```bash
-# Create stability layer
-touch impl/claude/agents/j/chaosmonger.py
+cd impl/claude
+mkdir -p agents/t
+touch agents/t/__init__.py agents/t/core.py
 ```
 
-Components:
-- [ ] Write stability.md integration
+**Phase 1 Components:**
+- [ ] Core Agent protocol with `__is_test__` flag
+- [ ] MockAgent (constant morphism)
+- [ ] FixtureAgent (lookup morphism)
+- [ ] SpyAgent (writer monad for logging)
+- [ ] FailingAgent (bottom morphism for chaos)
+
+**Phase 2 Components:**
+- [ ] NoiseAgent (semantic perturbation)
+- [ ] PredicateAgent (runtime validation gate)
+- [ ] Basic AdversarialGym framework
+
+**Integration:**
+- [ ] Use T-gents to test evolution pipeline
+- [ ] Create commutative diagram tests
+- [ ] Bootstrap Gym with existing agents
+
+### Priority 2: Continue J-gents Implementation
+
+Phase 2 from JGENT_SPEC_PLAN.md:
 - [ ] Implement Chaosmonger AST analyzer
 - [ ] Add entropy budget to Fix
 - [ ] Integrate with SafetyConfig
 
-### Priority 2: Commit T-gents + Recovery Layer
+### Priority 3: Uncommitted Files
 
-The uncommitted changes from previous session:
-```bash
-git add evolve.py agents/t/ test_recovery_layer.py spec/t-gents/
-git commit -m "feat: Phase 2.5c recovery layer + T-gents framework"
-```
-
-### Priority 3: Continue J-gents to JIT Compilation
-
-Phase 3 from JGENT_SPEC_PLAN.md:
-- [ ] Implement MetaArchitect agent
-- [ ] Sandboxed execution environment
-- [ ] Judge integration for JIT code
+Review and commit/discard:
+- `impl/claude/docs/PHASE_2_5D_ANALYSIS.md`
+- `impl/claude/test_evolution_metrics.py`
+- Check if recovery layer changes in `evolve.py` still needed
 
 ---
 
@@ -109,6 +151,12 @@ Phase 3 from JGENT_SPEC_PLAN.md:
 - stability.md: Entropy budgets
 - JGENT_SPEC_PLAN.md: Implementation phases
 
+**T-gents Spec** (`spec/t-gents/`) ✅ Complete
+- README.md: Core philosophy, taxonomy (4 types, 11+ T-gents)
+- algebra.md: Category Theory foundations (laws, functors, monads)
+- taxonomy.md: Detailed specs with implementation skeletons
+- adversarial.md: Adversarial Gym chaos engineering
+
 **Evolution Pipeline** (`agents/e/`)
 - prompts.py: API stub extraction
 - parser.py: F-string repair
@@ -118,10 +166,10 @@ Phase 3 from JGENT_SPEC_PLAN.md:
 
 ## Session Log
 
-**Dec 8 PM**: dc27faa - J-gents Phase 1 implementation (Promise[T], RealityClassifier)
-**Dec 8 PM (prev)**: UNCOMMITTED - Phase 2.5c recovery layer + T-gents
-**Dec 8 PM (prev)**: f976a09 - Reverted bad commit
-**Dec 8 PM (prev)**: 85c566d - Phase 2.5a.2 API stub extraction
+**Dec 8 PM**: d73283e - T-gents specification complete (4 docs, 55K total)
+**Dec 8 PM (prev)**: dc27faa - J-gents Phase 1 implementation (Promise[T], RealityClassifier)
+**Dec 8 PM (prev)**: db0f802 - HYDRATE.md update
+**Dec 8 PM (prev)**: UNCOMMITTED - Phase 2.5c recovery layer + T-gents impl
 
 ---
 
