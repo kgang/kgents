@@ -6,9 +6,9 @@
 
 ## TL;DR
 
-**Status**: Bootstrap REGENERATED ✅
-**Latest**: Dec 8 - All 8 bootstrap modules implemented (2423 lines)
-**Branch**: `main` (pushed)
+**Status**: evolve.py ENHANCED with self-improvement features ✅
+**Latest**: Dec 8 - 3 high-impact improvements: AST targeting, memory, principle judging
+**Branch**: `main` (uncommitted changes)
 
 ---
 
@@ -54,6 +54,35 @@ python -m mypy --version
 ```bash
 cd /Users/kentgang/git/kgents && source .venv/bin/activate && cd impl/claude && python evolve.py all --dry-run --quick
 ```
+
+---
+
+## Dec 8, 2025: evolve.py Self-Improvement Enhancement
+
+Three high-impact improvements to the evolution pipeline:
+
+### 1. AST-Aware Hypothesis Targeting
+- **File**: `evolve.py` lines 285-445
+- Parses module AST to extract classes, functions, imports
+- Generates **targeted** hypotheses like "Refactor class X (12 methods)" instead of generic "improve this file"
+- Identifies complexity hints (large classes, long functions, many parameters)
+- Cached analysis for performance
+
+### 2. Improvement Memory (Avoid Re-proposals)
+- **File**: `evolve.py` lines 163-277, stored in `.evolve_logs/improvement_history.json`
+- Tracks accepted/rejected/held improvements with hypothesis hashes
+- Filters out previously rejected hypotheses before experimenting
+- Prevents wasted cycles re-trying ideas that already failed
+- Records outcomes after each experiment
+
+### 3. Principle-Based Code Judging
+- **File**: `evolve.py` lines 453-546
+- Replaces TODO placeholder with real 7-principle evaluation
+- Evaluates: tasteful (line delta), curated (confidence), ethical (unsafe patterns), joyful (readability), composable (agent patterns), heterarchical (god objects), generative (spec refs)
+- Returns detailed scores and reasons
+- Verdict: ACCEPT (avg≥0.75), REJECT (avg<0.5 or ethical<0.5), REVISE (otherwise)
+
+**Line count change**: ~1006 → ~1510 lines (+504 lines of self-improvement infrastructure)
 
 ---
 
@@ -239,7 +268,91 @@ git push
 
 ---
 
+## Bootstrap Regeneration Analysis (Old vs New)
+
+Comparison between pre-regeneration (commit 862d256^) and post-regeneration (f292965):
+
+### Line Count Comparison
+
+| Module | Old | New | Delta | Notes |
+|--------|-----|-----|-------|-------|
+| types.py | 351 | 480 | +129 | Expanded type definitions, new protocols |
+| id.py | 59 | 101 | +42 | Added __rlshift__, __eq__, __hash__ |
+| ground.py | 154 | 163 | +9 | Minor reorganization |
+| compose.py | 208 | 163 | -45 | Simplified, removed complexity |
+| contradict.py | 477 | 359 | -118 | Streamlined detectors |
+| judge.py | 481 | 419 | -62 | Pure functions vs classes |
+| sublate.py | 258 | 336 | +78 | More resolution strategies |
+| fix.py | 364 | 276 | -88 | Cleaner iteration logic |
+| __init__.py | 150 | 126 | -24 | Simplified exports |
+| **Total** | **2502** | **2423** | **-79** | **3% smaller overall** |
+
+### Key Architectural Changes
+
+**Judge (481→419 lines)**:
+- OLD: Mini-judges as classes (`JudgeTasteful(Agent)`, etc.)
+- NEW: Mini-judges as pure functions (`check_tasteful()`, etc.)
+- Impact: Simpler composition, easier testing, less boilerplate
+
+**Contradict (477→359 lines)**:
+- OLD: `TensionEvidence` tracking, complex evidence trails
+- NEW: Streamlined detector protocol, circuit breaker pattern
+- Impact: Cleaner API, removed speculative features
+
+**Fix (364→276 lines)**:
+- OLD: Complex `FixConfig` with `proximity_history`, convergence rate
+- NEW: Simpler `FixConfig[A]` generic, focused on core iteration
+- Impact: More idiomatic, less over-engineering
+
+**Id (59→101 lines)**:
+- OLD: Strict `is` identity check, basic composition
+- NEW: Equality-based check, `__rlshift__`/`__eq__`/`__hash__`
+- Impact: Better composition law optimization
+
+**Types (351→480 lines)**:
+- NEW additions: `JudgeInput`, `PartialVerdict`, `SublateInput`, `SublateResult`, `ContradictInput`, `ContradictResult`
+- Moved types from individual modules to central types.py
+- Impact: Better type safety, clearer contracts
+
+### What Was Removed
+
+- `ground_parser.py` (132 lines) - Not regenerated
+- `test_regeneration.py` (456 lines) - Test harness not regenerated
+- `TensionEvidence` detailed tracking (speculative feature)
+- Complex `proximity_history` analytics in Fix
+- Class-based mini-judges in Judge
+
+### What Was Preserved
+
+- All 7 irreducible bootstrap agents (Id, Ground, Compose, Contradict, Judge, Sublate, Fix)
+- Core type system (Agent[A,B], Tension, Verdict, Synthesis)
+- Composition laws and category-theoretic structure
+- Hegelian dialectic pattern (Contradict → Sublate)
+
+### Summary
+
+The regeneration produced a **leaner implementation** (-3% total lines) while **strengthening the type system** (+37% in types.py). Key design decision: prefer pure functions over stateful classes where appropriate.
+
+---
+
 ## Session Log
+
+**Dec 8, 2025 (evolve.py Self-Improvement Enhancement)**:
+- ✅ Added AST-aware hypothesis targeting (analyze_module_ast, generate_targeted_hypotheses)
+- ✅ Added ImprovementMemory class for tracking accepted/rejected ideas
+- ✅ Implemented judge_code_improvement() with 7-principle scoring
+- ✅ Wired up memory recording after experiment outcomes
+- ✅ All changes pass mypy and syntax checks
+- ✅ +504 new lines of self-improvement infrastructure (1006→1510)
+
+**Dec 8, 2025 (evolve.py Refactor)**:
+- ✅ Analyzed old vs new bootstrap implementations
+- ✅ Added `Verdict.accept()`, `Verdict.reject()`, `Verdict.revise()` factory methods
+- ✅ Added `make_default_principles()` helper to bootstrap/__init__.py
+- ✅ Fixed evolve.py imports (SublateInput, HoldTension, Tension)
+- ✅ Added `_get_sublate()` lazy instantiation method
+- ✅ Fixed `synthesize()` to properly use Sublate agent
+- ✅ All files pass mypy --strict
 
 **Dec 8, 2025 (Bootstrap Implementation)**:
 - ✅ Implemented all 8 bootstrap modules from spec
@@ -310,4 +423,9 @@ The evolution pipeline (`evolve.py`) should be continuously refined when sensibl
 - ✅ **DO refine**: Better hypotheses, smarter filtering, principle-aware judging
 - ⚠️ **BE CAUTIOUS**: Don't add complexity that makes evolution harder to understand
 - ❌ **DON'T**: Auto-apply improvements without human judgment (tasteful curation required)
-- **Latest improvements (Dec 8)**: Rich logging with full hypotheses, improvement metadata (type/confidence/rationale), JSON export for decision-making
+
+**Latest improvements (Dec 8)**:
+- AST-aware hypothesis targeting (targeted instead of generic)
+- ImprovementMemory (avoid re-proposing rejected ideas)
+- Principle-based judging (7-principle scoring replaces TODO placeholder)
+- Memory recording (track outcomes for learning)

@@ -17,7 +17,6 @@ from bootstrap.types import (
     Tension,
     TensionMode,
     Synthesis,
-    ResolutionType,
     HoldTension,
 )
 from bootstrap.contradict import Contradict
@@ -204,21 +203,21 @@ class HegelAgent(Agent[DialecticInput, DialecticOutput]):
             thesis=tension.thesis,
             antithesis=tension.antithesis,
             result=synthesis.result,
-            notes=f"Synthesis via {synthesis.resolution_type.value}: {synthesis.explanation}",
+            notes=f"Synthesis via {synthesis.resolution_type}: {synthesis.explanation}",
         ))
         logger.info(
             "dialectic.complete",
             extra={
                 "outcome": "synthesis",
-                "resolution_type": synthesis.resolution_type.value,
-                "has_next_thesis": synthesis.resolution_type == ResolutionType.ELEVATE,
+                "resolution_type": synthesis.resolution_type,
+                "has_next_thesis": synthesis.resolution_type == "elevate",
             }
         )
         return DialecticOutput(
             synthesis=synthesis.result,
             sublation_notes=synthesis.explanation,
             productive_tension=False,
-            next_thesis=synthesis.result if synthesis.resolution_type == ResolutionType.ELEVATE else None,
+            next_thesis=synthesis.result if synthesis.resolution_type == "elevate" else None,
             tension=tension,
             lineage=lineage,
             metadata=metadata,

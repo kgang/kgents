@@ -13,6 +13,8 @@ The 7 bootstrap agents from which all of kgents can be regenerated:
 See spec/bootstrap.md for the full specification.
 """
 
+from typing import Optional, Dict, Any
+
 # Types
 from .types import (
     # Base types
@@ -123,4 +125,55 @@ __all__ = [
     "fix",
     "iterate_until_stable",
     "poll_until_stable",
+    # Helpers
+    "make_default_principles",
 ]
+
+
+# --- Helper Functions ---
+
+
+def make_default_principles() -> Dict[str, Any]:
+    """
+    Create the default 7 principles configuration.
+
+    Returns a dictionary with principle names and their default settings.
+    This is used by evolve.py and other tools that need principle-aware judgment.
+    """
+    return {
+        "tasteful": {
+            "name": Principles.TASTEFUL,
+            "description": "Clear, justified purpose; no bloat",
+            "enabled": True,
+        },
+        "curated": {
+            "name": Principles.CURATED,
+            "description": "Unique value; quality over quantity",
+            "enabled": True,
+        },
+        "ethical": {
+            "name": Principles.ETHICAL,
+            "description": "Transparent, respects agency",
+            "enabled": True,
+        },
+        "joyful": {
+            "name": Principles.JOYFUL,
+            "description": "Personality, warmth, collaboration feel",
+            "enabled": True,
+        },
+        "composable": {
+            "name": Principles.COMPOSABLE,
+            "description": "Works with others; single outputs; category laws",
+            "enabled": True,
+        },
+        "heterarchical": {
+            "name": Principles.HETERARCHICAL,
+            "description": "Can lead or follow; no fixed hierarchy",
+            "enabled": True,
+        },
+        "generative": {
+            "name": Principles.GENERATIVE,
+            "description": "Regenerable from spec; compressed design",
+            "enabled": True,
+        },
+    }

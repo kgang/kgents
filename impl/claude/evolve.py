@@ -32,8 +32,10 @@ Performance:
     AST analysis is cached to avoid redundant parsing
 """
 
+import ast
 import asyncio
 import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -42,7 +44,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Match, Optional
 
 # Bootstrap imports
 from bootstrap import make_default_principles
@@ -50,9 +52,12 @@ from bootstrap.types import (
     Verdict,
     VerdictType,
     Synthesis,
-    ResolutionType,
+    SublateInput,
+    Tension,
+    HoldTension,
 )
 from bootstrap.fix import Fix, FixResult, FixConfig
+from bootstrap.sublate import Sublate
 
 # Runtime
 from runtime.base import LLMAgent, AgentContext, AgentResult
@@ -133,6 +138,7 @@ class Experiment:
     id: str
     module: CodeModule
     improvement: CodeImprovement
+    hypothesis: str  # The hypothesis that generated this experiment
     status: ExperimentStatus = ExperimentStatus.PENDING
     test_results: Optional[dict] = None
     verdict: Optional[Verdict] = None
@@ -151,6 +157,399 @@ class EvolutionReport:
 
 
 # ============================================================================
+# Improvement Memory (Avoid Re-proposing Rejected Ideas)
+# ============================================================================
+
+
+@dataclass
+class ImprovementRecord:
+    """A record of a past improvement attempt."""
+    module: str
+    hypothesis_hash: str
+    description: str
+    outcome: str  # "accepted", "rejected", "held"
+    timestamp: str
+    rejection_reason: Optional[str] = None
+
+
+class ImprovementMemory:
+    """
+    Persistent memory of past improvements.
+
+    Stores accepted/rejected improvements to:
+    1. Avoid re-proposing similar rejected ideas
+    2. Track patterns of successful improvements
+    3. Enable learning from history
+    """
+
+    def __init__(self, history_path: Optional[Path] = None):
+        self._history_path = history_path or (
+            Path(__file__).parent / ".evolve_logs" / "improvement_history.json"
+        )
+        self._records: list[ImprovementRecord] = []
+        self._load()
+
+    def _load(self) -> None:
+        """Load history from disk."""
+        if self._history_path.exists():
+            try:
+                with open(self._history_path) as f:
+                    data = json.load(f)
+                self._records = [
+                    ImprovementRecord(**r) for r in data.get("records", [])
+                ]
+            except (json.JSONDecodeError, KeyError):
+                self._records = []
+
+    def _save(self) -> None:
+        """Save history to disk."""
+        self._history_path.parent.mkdir(parents=True, exist_ok=True)
+        data = {
+            "records": [
+                {
+                    "module": r.module,
+                    "hypothesis_hash": r.hypothesis_hash,
+                    "description": r.description,
+                    "outcome": r.outcome,
+                    "timestamp": r.timestamp,
+                    "rejection_reason": r.rejection_reason,
+                }
+                for r in self._records
+            ]
+        }
+        with open(self._history_path, "w") as f:
+            json.dump(data, f, indent=2)
+
+    def _hash_hypothesis(self, hypothesis: str) -> str:
+        """Create a normalized hash of a hypothesis."""
+        # Normalize: lowercase, remove extra whitespace, hash
+        normalized = " ".join(hypothesis.lower().split())
+        return f"{hash(normalized) & 0xFFFFFFFF:08x}"
+
+    def was_rejected(self, module: str, hypothesis: str) -> Optional[ImprovementRecord]:
+        """Check if a similar hypothesis was previously rejected."""
+        h = self._hash_hypothesis(hypothesis)
+        for r in self._records:
+            if r.module == module and r.hypothesis_hash == h and r.outcome == "rejected":
+                return r
+        return None
+
+    def was_recently_accepted(self, module: str, hypothesis: str, days: int = 7) -> bool:
+        """Check if a similar improvement was recently accepted."""
+        h = self._hash_hypothesis(hypothesis)
+        from datetime import datetime, timedelta
+        cutoff = (datetime.now() - timedelta(days=days)).isoformat()
+
+        for r in self._records:
+            if (r.module == module and
+                r.hypothesis_hash == h and
+                r.outcome == "accepted" and
+                r.timestamp > cutoff):
+                return True
+        return False
+
+    def record(
+        self,
+        module: str,
+        hypothesis: str,
+        description: str,
+        outcome: str,
+        rejection_reason: Optional[str] = None
+    ) -> None:
+        """Record an improvement attempt."""
+        record = ImprovementRecord(
+            module=module,
+            hypothesis_hash=self._hash_hypothesis(hypothesis),
+            description=description,
+            outcome=outcome,
+            timestamp=datetime.now().isoformat(),
+            rejection_reason=rejection_reason,
+        )
+        self._records.append(record)
+        self._save()
+
+    def get_success_patterns(self, module: str) -> dict[str, int]:
+        """Get counts of successful improvement types for a module."""
+        patterns: dict[str, int] = {}
+        for r in self._records:
+            if r.module == module and r.outcome == "accepted":
+                # Extract type from description if possible
+                patterns[r.description[:50]] = patterns.get(r.description[:50], 0) + 1
+        return patterns
+
+
+# ============================================================================
+# AST Analysis (Targeted Hypothesis Generation)
+# ============================================================================
+
+
+@dataclass
+class CodeStructure:
+    """Extracted structure of a Python module."""
+    module_name: str
+    classes: list[dict[str, Any]]
+    functions: list[dict[str, Any]]
+    imports: list[str]
+    docstring: Optional[str]
+    line_count: int
+    complexity_hints: list[str]
+
+
+def analyze_module_ast(path: Path) -> Optional[CodeStructure]:
+    """
+    Parse a Python module and extract its structure.
+
+    Returns detailed information about classes, functions, and potential
+    improvement targets.
+    """
+    try:
+        with open(path) as f:
+            source = f.read()
+        tree = ast.parse(source)
+    except (SyntaxError, FileNotFoundError):
+        return None
+
+    classes = []
+    functions = []
+    imports = []
+    complexity_hints = []
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ClassDef):
+            methods = [
+                {
+                    "name": m.name,
+                    "args": len(m.args.args),
+                    "lineno": m.lineno,
+                    "is_async": isinstance(m, ast.AsyncFunctionDef),
+                }
+                for m in node.body
+                if isinstance(m, (ast.FunctionDef, ast.AsyncFunctionDef))
+            ]
+            classes.append({
+                "name": node.name,
+                "lineno": node.lineno,
+                "methods": methods,
+                "method_count": len(methods),
+                "bases": [ast.unparse(b) for b in node.bases] if node.bases else [],
+            })
+
+            # Complexity hint: large classes
+            if len(methods) > 10:
+                complexity_hints.append(
+                    f"Class {node.name} has {len(methods)} methods - consider splitting"
+                )
+
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            # Skip methods (already captured in classes)
+            if any(isinstance(p, ast.ClassDef) for p in ast.walk(tree)):
+                parent_is_class = False
+                for cls in ast.walk(tree):
+                    if isinstance(cls, ast.ClassDef) and node in ast.walk(cls):
+                        parent_is_class = True
+                        break
+                if parent_is_class:
+                    continue
+
+            func_info = {
+                "name": node.name,
+                "lineno": node.lineno,
+                "args": [a.arg for a in node.args.args],
+                "is_async": isinstance(node, ast.AsyncFunctionDef),
+                "is_private": node.name.startswith("_"),
+            }
+            functions.append(func_info)
+
+            # Complexity hint: long functions
+            if hasattr(node, 'end_lineno') and node.end_lineno:
+                length = node.end_lineno - node.lineno
+                if length > 50:
+                    complexity_hints.append(
+                        f"Function {node.name} is {length} lines - consider refactoring"
+                    )
+
+        elif isinstance(node, (ast.Import, ast.ImportFrom)):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    imports.append(alias.name)
+            else:
+                module = node.module or ""
+                for alias in node.names:
+                    imports.append(f"{module}.{alias.name}")
+
+    # Module-level docstring
+    docstring: Optional[str] = None
+    if (tree.body and
+        isinstance(tree.body[0], ast.Expr) and
+        isinstance(tree.body[0].value, ast.Constant)):
+        raw_docstring = tree.body[0].value.value
+        if isinstance(raw_docstring, str):
+            docstring = raw_docstring[:200]
+
+    return CodeStructure(
+        module_name=path.stem,
+        classes=classes,
+        functions=functions,
+        imports=imports,
+        docstring=docstring,
+        line_count=len(source.splitlines()),
+        complexity_hints=complexity_hints,
+    )
+
+
+def generate_targeted_hypotheses(structure: CodeStructure, max_targets: int = 3) -> list[str]:
+    """
+    Generate targeted improvement hypotheses based on AST analysis.
+
+    Instead of generic "improve this file", generates specific hypotheses
+    like "Refactor the _extract_code method to reduce complexity".
+    """
+    hypotheses = []
+
+    # Target large classes
+    for cls in structure.classes:
+        if cls["method_count"] > 8:
+            hypotheses.append(
+                f"Refactor class {cls['name']} ({cls['method_count']} methods) - "
+                f"consider extracting cohesive method groups into separate classes"
+            )
+        if not cls["bases"]:
+            hypotheses.append(
+                f"Review class {cls['name']} - should it inherit from a Protocol or ABC?"
+            )
+
+    # Target complex functions
+    for func in structure.functions:
+        if len(func["args"]) > 5:
+            hypotheses.append(
+                f"Function {func['name']} has {len(func['args'])} parameters - "
+                f"consider using a dataclass to group related arguments"
+            )
+        if func["is_private"] and not func["name"].startswith("__"):
+            hypotheses.append(
+                f"Private function {func['name']} - is it tested? Consider adding test cases"
+            )
+
+    # Add complexity hints as hypotheses
+    for hint in structure.complexity_hints[:2]:
+        hypotheses.append(hint)
+
+    # Generic but structure-aware hypotheses
+    if len(structure.imports) > 15:
+        hypotheses.append(
+            f"Module has {len(structure.imports)} imports - review for unused imports"
+        )
+
+    if structure.line_count > 400:
+        hypotheses.append(
+            f"Module is {structure.line_count} lines - consider splitting into submodules"
+        )
+
+    return hypotheses[:max_targets]
+
+
+# ============================================================================
+# Code-Based Principle Judging
+# ============================================================================
+
+
+def judge_code_improvement(
+    improvement: "CodeImprovement",
+    original_code: str,
+    module_name: str,
+) -> tuple[Verdict, list[str]]:
+    """
+    Judge a code improvement against the 7 principles.
+
+    Returns (verdict, detailed_reasons).
+
+    Unlike the bootstrap Judge which evaluates Agent objects, this evaluates
+    code improvements using heuristics tailored for evolution.
+    """
+    reasons: list[str] = []
+    scores: dict[str, float] = {}
+
+    new_code = improvement.code
+
+    # 1. TASTEFUL: Clear purpose, no bloat
+    original_lines = len(original_code.splitlines())
+    new_lines = len(new_code.splitlines())
+    line_delta = new_lines - original_lines
+
+    if line_delta > original_lines * 0.3:  # >30% increase
+        reasons.append(f"⚠ Tasteful: +{line_delta} lines ({line_delta/original_lines*100:.0f}% increase) - may be bloat")
+        scores["tasteful"] = 0.5
+    elif line_delta < 0:
+        reasons.append(f"✓ Tasteful: {abs(line_delta)} fewer lines - leaner")
+        scores["tasteful"] = 1.0
+    else:
+        scores["tasteful"] = 0.8
+
+    # 2. CURATED: Quality over quantity
+    if improvement.confidence < 0.5:
+        reasons.append(f"⚠ Curated: Low confidence ({improvement.confidence}) - uncertain value")
+        scores["curated"] = 0.4
+    else:
+        scores["curated"] = improvement.confidence
+
+    # 3. ETHICAL: No concerning patterns
+    concerning = ["eval(", "exec(", "__import__", "os.system", "subprocess.call"]
+    new_concerning = sum(1 for c in concerning if c in new_code and c not in original_code)
+    if new_concerning > 0:
+        reasons.append(f"⚠ Ethical: Introduces {new_concerning} potentially unsafe pattern(s)")
+        scores["ethical"] = 0.3
+    else:
+        scores["ethical"] = 1.0
+
+    # 4. JOYFUL: Readable, well-structured
+    # Heuristic: docstrings, clear names
+    has_docstrings = '"""' in new_code or "'''" in new_code
+    scores["joyful"] = 0.8 if has_docstrings else 0.6
+
+    # 5. COMPOSABLE: Follows agent patterns
+    composable_patterns = ["async def", "def invoke", "Agent[", ">> "]
+    pattern_count = sum(1 for p in composable_patterns if p in new_code)
+    original_pattern_count = sum(1 for p in composable_patterns if p in original_code)
+
+    if pattern_count >= original_pattern_count:
+        scores["composable"] = 1.0
+    else:
+        reasons.append("⚠ Composable: May break composition patterns")
+        scores["composable"] = 0.6
+
+    # 6. HETERARCHICAL: Not creating god objects
+    class_count = new_code.count("class ")
+    if class_count > 5 and class_count > original_code.count("class ") + 2:
+        reasons.append(f"⚠ Heterarchical: Adds {class_count - original_code.count('class ')} new classes")
+        scores["heterarchical"] = 0.7
+    else:
+        scores["heterarchical"] = 1.0
+
+    # 7. GENERATIVE: Could be regenerated from spec
+    # Heuristic: code comments referencing spec
+    spec_refs = ["spec/", "See ", "per spec", "as specified"]
+    has_spec_ref = any(ref in new_code for ref in spec_refs)
+    scores["generative"] = 1.0 if has_spec_ref else 0.7
+
+    # Aggregate
+    avg_score = sum(scores.values()) / len(scores)
+
+    if avg_score >= 0.75 and scores["ethical"] >= 0.8:
+        verdict = Verdict.accept(reasons or ["Passes all principle checks"])
+    elif avg_score < 0.5 or scores["ethical"] < 0.5:
+        verdict = Verdict.reject(reasons or ["Failed critical principle checks"])
+    else:
+        revisions = [r for r in reasons if r.startswith("⚠")]
+        verdict = Verdict.revise(revisions, ["Needs refinement"])
+
+    # Add score summary
+    score_summary = ", ".join(f"{k}={v:.1f}" for k, v in scores.items())
+    reasons.append(f"Scores: [{score_summary}] avg={avg_score:.2f}")
+
+    return verdict, reasons
+
+
+# ============================================================================
 # Core Logic
 # ============================================================================
 
@@ -160,7 +559,7 @@ class EvolutionPipeline:
     def __init__(self, config: EvolveConfig, runtime: Optional[LLMAgent] = None):
         """
         Initialize the evolution pipeline.
-        
+
         Args:
             config: Evolution configuration
             runtime: Optional runtime to use. If None, creates ClaudeCLIRuntime.
@@ -172,6 +571,13 @@ class EvolutionPipeline:
         # Agents (instantiated on first use)
         self._hypothesis_engine: Optional[HypothesisEngine] = None
         self._hegel: Optional[HegelAgent] = None
+        self._sublate: Optional[Sublate] = None
+
+        # Improvement memory for avoiding re-proposals
+        self._memory = ImprovementMemory()
+
+        # AST cache for module analysis
+        self._ast_cache: dict[str, Optional[CodeStructure]] = {}
 
     def _get_runtime(self) -> LLMAgent:
         """Get or create the runtime instance."""
@@ -193,6 +599,19 @@ class EvolutionPipeline:
         if self._hegel is None:
             self._hegel = HegelAgent(runtime=self._get_runtime())
         return self._hegel
+
+    def _get_sublate(self) -> Sublate:
+        """Lazy instantiation of Sublate for tension resolution."""
+        if self._sublate is None:
+            self._sublate = Sublate()
+        return self._sublate
+
+    def _get_ast_structure(self, module: CodeModule) -> Optional[CodeStructure]:
+        """Get cached AST structure for a module."""
+        key = str(module.path)
+        if key not in self._ast_cache:
+            self._ast_cache[key] = analyze_module_ast(module.path)
+        return self._ast_cache[key]
 
     def _has_uncommitted_changes(self) -> bool:
         """Check if there are uncommitted changes in git."""
@@ -276,16 +695,46 @@ class EvolutionPipeline:
         )
 
     async def generate_hypotheses(self, module: CodeModule) -> list[str]:
-        """Generate improvement hypotheses for a module."""
+        """Generate improvement hypotheses for a module.
+
+        Uses AST analysis for targeted hypotheses and filters out
+        previously rejected ideas using improvement memory.
+        """
         log(f"[{module.name}] Generating hypotheses...")
 
+        # Phase 1: AST-based targeted hypotheses
+        ast_hypotheses: list[str] = []
+        structure = self._get_ast_structure(module)
+        if structure:
+            ast_hypotheses = generate_targeted_hypotheses(
+                structure,
+                max_targets=max(2, self._config.hypothesis_count // 2)
+            )
+            if ast_hypotheses:
+                log(f"[{module.name}] AST analysis found {len(ast_hypotheses)} targets:")
+                for i, h in enumerate(ast_hypotheses, 1):
+                    log(f"  🎯 AST{i}: {h}")
+
+        # Phase 2: LLM-generated hypotheses (informed by AST)
         code_content = self._get_code_preview(module.path)
+
+        # Include AST insights in the prompt
+        ast_context = ""
+        if structure:
+            ast_context = f"""
+AST ANALYSIS:
+- Classes: {', '.join(c['name'] for c in structure.classes) or 'None'}
+- Functions: {', '.join(f['name'] for f in structure.functions[:10]) or 'None'}
+- Imports: {len(structure.imports)} total
+- Complexity hints: {structure.complexity_hints[:2] if structure.complexity_hints else 'None'}
+"""
 
         hypothesis_input = HypothesisInput(
             observations=[
                 f"Module: {module.name}",
                 f"Category: {module.category}",
                 f"Path: {module.path}",
+                ast_context,
                 f"Code preview:\n{code_content}",
             ],
             domain=f"Code improvement for {module.category}/{module.name}",
@@ -299,30 +748,48 @@ class EvolutionPipeline:
             ],
         )
 
+        llm_hypotheses: list[str] = []
         try:
             engine = self._get_hypothesis_engine()
             runtime = self._get_runtime()
             result = await runtime.execute(engine, hypothesis_input)
 
-            # Check if output is HypothesisError or HypothesisOutput
             hypotheses_output = result.output
             if not hasattr(hypotheses_output, 'hypotheses'):
-                # Got HypothesisError instead of HypothesisOutput
                 error_msg = str(hypotheses_output) if hasattr(hypotheses_output, 'message') else "Unknown error"
-                log(f"[{module.name}] Failed to generate hypotheses: {error_msg}")
-                return []
+                log(f"[{module.name}] LLM hypothesis generation failed: {error_msg}")
+            else:
+                llm_hypotheses = [h.statement for h in hypotheses_output.hypotheses]
 
-            hypotheses = [h.statement for h in hypotheses_output.hypotheses]
-
-            log(f"[{module.name}] Generated {len(hypotheses)} hypotheses")
-            for i, h in enumerate(hypotheses, 1):
-                # Log full hypothesis for decision-making analysis
-                log(f"  💡 H{i}: {h}")
-
-            return hypotheses
         except Exception as e:
-            log(f"[{module.name}] Failed to generate hypotheses: {e}")
-            return []
+            log(f"[{module.name}] LLM hypothesis generation error: {e}")
+
+        # Combine AST and LLM hypotheses
+        all_hypotheses = ast_hypotheses + llm_hypotheses
+
+        # Phase 3: Filter out previously rejected hypotheses
+        filtered_hypotheses: list[str] = []
+        skipped_count = 0
+
+        for h in all_hypotheses:
+            rejection = self._memory.was_rejected(module.name, h)
+            if rejection:
+                log(f"[{module.name}] ⏭ Skipping previously rejected: {h[:60]}...")
+                skipped_count += 1
+                continue
+
+            if self._memory.was_recently_accepted(module.name, h):
+                log(f"[{module.name}] ⏭ Skipping recently accepted: {h[:60]}...")
+                skipped_count += 1
+                continue
+
+            filtered_hypotheses.append(h)
+
+        log(f"[{module.name}] Generated {len(filtered_hypotheses)} hypotheses ({skipped_count} filtered by memory)")
+        for i, h in enumerate(filtered_hypotheses, 1):
+            log(f"  💡 H{i}: {h}")
+
+        return filtered_hypotheses
 
     async def experiment(self, module: CodeModule, hypothesis: str) -> Optional[Experiment]:
         """Run a single experiment: generate improvement from hypothesis."""
@@ -338,6 +805,7 @@ class EvolutionPipeline:
             id=exp_id,
             module=module,
             improvement=improvement,
+            hypothesis=hypothesis,
         )
 
         # Rich logging for decision-making
@@ -433,37 +901,140 @@ Generate ONE concrete improvement. Return ONLY valid JSON."""
         try:
             response = response_text.strip()
 
-            # Extract METADATA section
-            if "## METADATA" not in response or "## CODE" not in response:
-                log(f"[{module.name}] Invalid response format (missing sections)")
+            # Extract METADATA section (flexible matching)
+            metadata = self._extract_metadata(response, module.name)
+            if metadata is None:
                 return None
 
-            metadata_section = response.split("## METADATA")[1].split("## CODE")[0].strip()
-            code_section = response.split("## CODE")[1].strip()
-
-            # Parse metadata JSON
-            metadata = json.loads(metadata_section)
-
-            # Extract code from markdown block
-            if "```python" in code_section:
-                code = code_section.split("```python")[1].split("```")[0].strip()
-            elif "```" in code_section:
-                code = code_section.split("```")[1].split("```")[0].strip()
-            else:
-                code = code_section.strip()
+            # Extract CODE section (flexible matching)
+            code = self._extract_code(response, module.name)
+            if code is None:
+                return None
 
             return CodeImprovement(
-                description=metadata["description"],
-                rationale=metadata["rationale"],
-                improvement_type=metadata["improvement_type"],
+                description=metadata.get("description", "No description"),
+                rationale=metadata.get("rationale", "No rationale"),
+                improvement_type=metadata.get("improvement_type", "refactor"),
                 code=code,
-                confidence=metadata["confidence"],
+                confidence=metadata.get("confidence", 0.5),
                 metadata=metadata,
             )
 
-        except (json.JSONDecodeError, KeyError, IndexError) as e:
+        except Exception as e:
             log(f"[{module.name}] Failed to parse LLM response: {e}")
             return None
+
+    def _extract_metadata(self, response: str, module_name: str) -> Optional[dict]:
+        """Extract metadata JSON from LLM response with flexible parsing."""
+        # Try multiple patterns for metadata section
+        patterns = [
+            r"##\s*METADATA\s*\n(.*?)(?=##\s*CODE|$)",  # Standard format
+            r"METADATA[:\s]*\n(.*?)(?=CODE|```python|$)",  # Relaxed format
+            r"\{[^{}]*\"description\"[^{}]*\}",  # Direct JSON object
+        ]
+
+        metadata_text = None
+        for pattern in patterns[:2]:  # Try section-based patterns first
+            match = re.search(pattern, response, re.DOTALL | re.IGNORECASE)
+            if match:
+                metadata_text = match.group(1).strip()
+                break
+
+        # Extract JSON from metadata text (may have surrounding prose)
+        if metadata_text:
+            json_obj = self._extract_json_object(metadata_text)
+            if json_obj:
+                return json_obj
+
+        # Fallback: find any JSON with required keys anywhere in response
+        match = re.search(patterns[2], response, re.DOTALL)
+        if match:
+            try:
+                return json.loads(match.group(0))
+            except json.JSONDecodeError:
+                pass
+
+        log(f"[{module_name}] Could not extract metadata from response")
+        return None
+
+    def _extract_json_object(self, text: str) -> Optional[dict]:
+        """Extract a JSON object from text that may have surrounding content."""
+        # Find JSON object boundaries
+        start = text.find("{")
+        if start == -1:
+            return None
+
+        # Find matching closing brace (handle nested braces)
+        depth = 0
+        for i, char in enumerate(text[start:], start):
+            if char == "{":
+                depth += 1
+            elif char == "}":
+                depth -= 1
+                if depth == 0:
+                    json_str = text[start : i + 1]
+                    try:
+                        return json.loads(json_str)
+                    except json.JSONDecodeError:
+                        # Try cleaning common issues
+                        cleaned = self._clean_json_string(json_str)
+                        try:
+                            return json.loads(cleaned)
+                        except json.JSONDecodeError:
+                            return None
+        return None
+
+    def _clean_json_string(self, json_str: str) -> str:
+        """Clean common JSON issues from LLM output."""
+        # Remove trailing commas before } or ]
+        cleaned = re.sub(r",\s*([}\]])", r"\1", json_str)
+
+        # Fix unescaped newlines in string values
+        # This is tricky - only fix within quoted strings
+        def fix_newlines(match: re.Match) -> str:
+            content = match.group(1)
+            return '"' + content.replace("\n", "\\n") + '"'
+
+        cleaned = re.sub(r'"([^"]*\n[^"]*)"', fix_newlines, cleaned)
+
+        return cleaned
+
+    def _extract_code(self, response: str, module_name: str) -> Optional[str]:
+        """Extract Python code from LLM response with flexible parsing."""
+        # Try multiple patterns for code extraction
+        patterns = [
+            # Standard markdown python block after CODE section
+            r"##\s*CODE.*?```python\s*\n(.*?)```",
+            # Any python block after CODE header
+            r"CODE.*?```python\s*\n(.*?)```",
+            # Python block with language tag variations
+            r"```(?:python|py)\s*\n(.*?)```",
+            # Generic code block (last resort)
+            r"```\s*\n(.*?)```",
+        ]
+
+        for pattern in patterns:
+            match = re.search(pattern, response, re.DOTALL | re.IGNORECASE)
+            if match:
+                code = match.group(1).strip()
+                # Validate it looks like Python
+                if self._looks_like_python(code):
+                    return code
+
+        log(f"[{module_name}] Could not extract code from response")
+        return None
+
+    def _looks_like_python(self, code: str) -> bool:
+        """Quick heuristic check if code looks like valid Python."""
+        if not code or len(code) < 20:
+            return False
+
+        # Check for common Python patterns
+        python_indicators = [
+            "import ", "from ", "def ", "class ", "async def ",
+            "if __name__", "return ", "self.", "@dataclass", "@"
+        ]
+        return any(indicator in code for indicator in python_indicators)
 
     async def test(self, experiment: Experiment) -> bool:
         """Test an experimental improvement."""
@@ -539,19 +1110,35 @@ Generate ONE concrete improvement. Return ONLY valid JSON."""
             tmp_path.unlink()
 
     async def judge_experiment(self, experiment: Experiment) -> Verdict:
-        """Judge if improvement should proceed."""
-        log(f"[{experiment.id}] Judging improvement...")
+        """Judge if improvement should proceed using principle-based evaluation.
 
-        # For now, auto-accept improvements that pass tests
-        # TODO: Implement proper principle-based judging for code improvements
-        verdict = Verdict.accept([
-            f"{experiment.improvement.improvement_type}: {experiment.improvement.description}",
-            f"Confidence: {experiment.improvement.confidence}"
-        ])
+        Evaluates the improvement against the 7 kgents principles:
+        tasteful, curated, ethical, joyful, composable, heterarchical, generative.
+        """
+        log(f"[{experiment.id}] Judging improvement against 7 principles...")
+
+        # Read original code for comparison
+        original_code = experiment.module.path.read_text()
+
+        # Apply principle-based judging
+        verdict, reasons = judge_code_improvement(
+            improvement=experiment.improvement,
+            original_code=original_code,
+            module_name=experiment.module.name,
+        )
         experiment.verdict = verdict
 
-        verdict_symbol = "✓" if verdict.type == VerdictType.ACCEPT else "?"
-        log(f"[{experiment.id}] {verdict_symbol} {verdict.type.value}")
+        # Log detailed judgment
+        verdict_symbols = {
+            VerdictType.ACCEPT: "✓",
+            VerdictType.REVISE: "⚠",
+            VerdictType.REJECT: "✗",
+        }
+        symbol = verdict_symbols.get(verdict.type, "?")
+
+        log(f"[{experiment.id}] {symbol} {verdict.type.value.upper()}")
+        for reason in reasons:
+            log(f"    {reason}")
 
         return verdict
 
@@ -591,17 +1178,19 @@ Generate ONE concrete improvement. Return ONLY valid JSON."""
                 log(f"      {tension.description}")
 
             # Use Sublate to resolve
-            sublate = self._get_sublate()
-            sublate_result = await sublate(dialectic_output.tensions)
+            sublate_agent = self._get_sublate()
+            sublate_input = SublateInput(tensions=tuple(dialectic_output.tensions))
+            sublate_result = await sublate_agent.invoke(sublate_input)
 
-            if sublate_result.success:
-                synthesis = sublate_result.output
-                experiment.synthesis = synthesis
-
-                if synthesis.resolution_type == ResolutionType.HOLD:
-                    experiment.status = ExperimentStatus.HELD
-                    log(f"[{experiment.id}] ⊙ Tension held for human judgment")
-                    return synthesis
+            # Check if result is HoldTension or Synthesis
+            if isinstance(sublate_result, HoldTension):
+                experiment.status = ExperimentStatus.HELD
+                log(f"[{experiment.id}] ⊙ Tension held: {sublate_result.why_held}")
+                return None
+            elif isinstance(sublate_result, Synthesis):
+                experiment.synthesis = sublate_result
+                log(f"[{experiment.id}] ✓ Synthesized: {sublate_result.explanation}")
+                return sublate_result
 
         log(f"[{experiment.id}] ✓ Synthesis complete")
         return experiment.synthesis
@@ -658,16 +1247,48 @@ Generate ONE concrete improvement. Return ONLY valid JSON."""
         for exp in experiments:
             passed = await self.test(exp)
             if not passed:
+                # Record test failure in memory
+                self._memory.record(
+                    module=module.name,
+                    hypothesis=exp.hypothesis,
+                    description=exp.improvement.description,
+                    outcome="rejected",
+                    rejection_reason=exp.error or "Test failure",
+                )
                 continue
 
-            # Judge
+            # Judge using principle-based evaluation
             verdict = await self.judge_experiment(exp)
             if verdict.type == VerdictType.REJECT:
                 exp.status = ExperimentStatus.FAILED
+                # Record rejection in memory
+                self._memory.record(
+                    module=module.name,
+                    hypothesis=exp.hypothesis,
+                    description=exp.improvement.description,
+                    outcome="rejected",
+                    rejection_reason=verdict.reasoning,
+                )
                 continue
 
             # Synthesize (dialectic)
             await self.synthesize(exp)
+
+            # Record outcome based on final status
+            if exp.status == ExperimentStatus.HELD:
+                self._memory.record(
+                    module=module.name,
+                    hypothesis=exp.hypothesis,
+                    description=exp.improvement.description,
+                    outcome="held",
+                )
+            elif exp.status == ExperimentStatus.PASSED:
+                self._memory.record(
+                    module=module.name,
+                    hypothesis=exp.hypothesis,
+                    description=exp.improvement.description,
+                    outcome="accepted",
+                )
 
         return experiments
 

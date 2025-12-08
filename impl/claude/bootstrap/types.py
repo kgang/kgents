@@ -290,6 +290,31 @@ class Verdict:
     revisions: Optional[tuple[str, ...]] = None
     reasoning: str = ""
 
+    @staticmethod
+    def accept(reasons: Optional[list[str]] = None) -> "Verdict":
+        """Factory for ACCEPT verdict."""
+        return Verdict(
+            type=VerdictType.ACCEPT,
+            reasoning="; ".join(reasons) if reasons else "Accepted",
+        )
+
+    @staticmethod
+    def reject(reasons: Optional[list[str]] = None) -> "Verdict":
+        """Factory for REJECT verdict."""
+        return Verdict(
+            type=VerdictType.REJECT,
+            reasoning="; ".join(reasons) if reasons else "Rejected",
+        )
+
+    @staticmethod
+    def revise(revisions: list[str], reasons: Optional[list[str]] = None) -> "Verdict":
+        """Factory for REVISE verdict with suggested changes."""
+        return Verdict(
+            type=VerdictType.REVISE,
+            revisions=tuple(revisions),
+            reasoning="; ".join(reasons) if reasons else "Needs revision",
+        )
+
 
 # --- Principles (Judge's criteria) ---
 
