@@ -9,9 +9,9 @@
 
 ## Current State (Dec 8, 2025)
 
-**Latest:** Phase 1 of 10 Critical Fixes complete! Type system foundation fixed (Fix and FixComposedAgent signatures). Branch `fix/phase-1-types` pushed and ready for merge.
+**Latest:** Phase 2 partially complete! Issue #10 (Contradict Protocol) ✅ merged to main. Issue #5 (EvolutionAgent Composition) 🔄 in progress on branch `fix/phase-2-evolution-composition` - EvolutionHandler Protocol added, need to extract concrete handlers next.
 
-**Previously:** Full-stack evolution complete! All 25 modules evolved with 100/100 experiments passed and incorporated (runtime, agents, bootstrap). Logging improved with persistent log files, prominent summary banners, and better UX for piped output.
+**Previously:** Phase 1 complete and merged! Type system foundation fixed. Full-stack evolution complete with 100/100 experiments passed.
 
 | Component | Status |
 |-----------|--------|
@@ -199,9 +199,11 @@ LLM execution layer for agents:
 | B-gents B.2 | ✅ DONE | Robin (scientific companion) |
 
 **What's Next:**
-- **IMMEDIATE**: Merge `fix/phase-1-types` branch (Phase 1 complete)
-- **Phase 2**: Architecture refactors (Issue #5 EvolutionAgent, #10 Contradict protocol)
-- **Phase 3**: Infrastructure (Issue #4 Retry logic, #6 Error handling transparency)
+- **IMMEDIATE**: Complete Issue #5 on `fix/phase-2-evolution-composition` branch
+  - Extract concrete handler classes (ExplicitUpdateHandler, ObservationHandler, etc.)
+  - Create TriggerRouter agent for composition
+  - Test, commit, merge to main
+- **Then Phase 3**: Infrastructure (Issue #4 Retry logic, #6 Error handling transparency)
 - **Phase 0 Hotfix**: Security fix for parallel resource limits (Issue #9)
 - Tests: Add pytest suite for agents/b/ (hypothesis, robin)
 - D-gents: Data/Database agents (spec needed)
@@ -275,7 +277,10 @@ Avoids JSON escaping issues for code content.
 
 ## Recent Changes
 
-- **Phase 1 Type Fixes Complete** (Dec 8, 2025): First phase of 10 Critical Fixes from IMPLEMENTATION_PLAN.md completed and pushed to `fix/phase-1-types`:
+- **Phase 2 Architecture Refactors Started** (Dec 8, 2025):
+  - ✅ **Issue #10 COMPLETE**: Extracted TensionDetector Protocol in contradict.py for extensible contradiction detection. Merged to main.
+  - 🔄 **Issue #5 IN PROGRESS**: EvolutionAgent composition refactor. Added EvolutionHandler Protocol on branch `fix/phase-2-evolution-composition`. Next: extract concrete handler classes.
+- **Phase 1 Type Fixes Complete** (Dec 8, 2025): First phase of 10 Critical Fixes from IMPLEMENTATION_PLAN.md completed and merged to main:
   - Issue #1: Fix[A,B] → Fix[A] (fixed points now correctly map A → A)
   - Issue #2: FixComposedAgent[A,C] → FixComposedAgent[A,B] (composition law compliance)
   - Removed type: ignore workaround, passes mypy --strict with zero errors
