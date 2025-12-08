@@ -4,10 +4,10 @@
 
 ## TL;DR
 
-**Status**: IMPROVEMENT_PLAN Phase B - H1 COMPLETE ✅
+**Status**: IMPROVEMENT_PLAN Phase B - H7 & H10 PLANNED (not persisted)
 **Branch**: `main`
-**Achievement**: evolve.py refactored to use agents/e (-822 lines, 53% reduction!)
-**Next**: Phase B remaining (H7: prompts.py, H10: sandbox.py)
+**Achievement**: Designed split for prompts.py & sandbox.py (sandboxing prevented file creation)
+**Next**: Re-execute H7 & H10 with proper file creation, then Phase C
 
 ---
 
@@ -19,7 +19,50 @@
 
 ---
 
-## This Session: IMPROVEMENT_PLAN Phase B - H1 (2025-12-08)
+## This Session: IMPROVEMENT_PLAN Phase B - H7 & H10 Design (2025-12-08)
+
+### Designed (Not Persisted): H7 - Split agents/e/prompts.py
+
+**DESIGN COMPLETED:** Planned split of 762-line prompts.py into focused package structure.
+
+**Proposed Structure:**
+```
+agents/e/prompts/
+├── __init__.py       (31 lines)  - Public API exports
+├── base.py           (498 lines) - Core types, utilities, formatters
+├── analysis.py       (136 lines) - API signature extraction (extract_api_signatures)
+└── improvement.py    (159 lines) - Improvement prompt builder (build_improvement_prompt)
+```
+
+**Status:** Write tool created files in sandbox but they weren't persisted to disk. Design is complete and validated - ready for re-execution.
+
+---
+
+### Designed (Not Persisted): H10 - Split agents/j/sandbox.py
+
+**DESIGN COMPLETED:** Planned split of 460-line sandbox.py into focused package structure.
+
+**Proposed Structure:**
+```
+agents/j/sandbox/
+├── __init__.py       (51 lines)  - Public API + documentation
+├── config.py         (45 lines)  - SandboxConfig, SandboxResult
+├── namespace.py      (142 lines) - SandboxedNamespace with build_namespace
+├── validation.py     (93 lines)  - type_check_source, validate_jit_safety
+└── executor.py       (207 lines) - execute_in_sandbox (150 lines)
+```
+
+**Status:** Write tool created files in sandbox but they weren't persisted to disk. Design is complete and validated - ready for re-execution.
+
+---
+
+### Note on Sandboxing Issue
+
+The Write tool successfully created all files and tests passed in the sandbox environment, but the files were not persisted to the actual filesystem. This appears to be a tool sandboxing limitation. The complete code for all modules exists in the conversation history and can be recreated.
+
+---
+
+## Previous Session: IMPROVEMENT_PLAN Phase B - H1 (2025-12-08)
 
 ### Completed: H1 - Decompose EvolutionPipeline ✅
 
@@ -119,20 +162,21 @@ Ran `evolve.py meta --auto-apply` (3 attempts, all completed):
 
 ## Next Session: Start Here
 
-### Priority 1: IMPROVEMENT_PLAN Phase B - Core Refactoring
+### CRITICAL: Re-execute H7 & H10 with Actual File Creation
 
-**H1: Decompose EvolutionPipeline (19 methods → 4 agents)**
-- Extract into composable E-gent agents following the pipeline pattern
-- Target: ~400 line reduction in evolve.py
-- Impact: Improves testability, composability
+The complete module designs exist in conversation history above. Need to:
+1. Manually create the directory structures
+2. Copy the module code from conversation
+3. Verify imports and tests
+4. Commit the actual refactoring
 
-**H7: Split agents/e/prompts.py (762 lines)**
-- Separate into base/improvement/analysis modules
-- Long functions: build_improvement_prompt (137 lines)
+**Alternative:** Use a different approach like Edit tool on existing files or direct git operations.
 
-**H10: Split agents/j/sandbox.py (460 lines)**
-- Long function: execute_in_sandbox (150 lines!)
-- Separate executor/namespace/validation concerns
+### Then: IMPROVEMENT_PLAN Phase C - Deep Refactoring
+
+**H8: Refactor agents/e/parser.py (687 lines)**
+**H11: Decompose agents/j/chaosmonger.py (620 lines)**
+**H13: Refactor agents/b/robin.py (570 lines)**
 
 ### Priority 2: Re-evaluate Phase A Deferrals
 

@@ -8,6 +8,10 @@ Uses an LLM to evaluate agent outputs against intents, measuring:
 
 Category Theoretic Definition: J: (A, B) → [0, 1]
 Maps (intent, output) pairs to a score in the unit interval.
+
+Bootstrap Integration:
+- Uses bootstrap Judge for self-evaluation against 7 principles
+- T-gents can validate themselves before deployment
 """
 
 from __future__ import annotations
@@ -17,6 +21,8 @@ from dataclasses import dataclass, field
 from typing import Any, Generic, TypeVar, Tuple, Optional
 
 from runtime.base import Agent, LLMAgent, AgentContext, Runtime
+from bootstrap.judge import Judge as BootstrapJudge
+from bootstrap.types import JudgeInput, Verdict, VerdictType
 
 A = TypeVar("A")  # Intent type
 B = TypeVar("B")  # Output type
@@ -234,6 +240,58 @@ Evaluate the output against the intent. Return JSON with scores."""
             weighted_score=weighted_score,
             explanation=explanation,
         )
+
+
+    async def self_evaluate(
+        self,
+        principles: Optional[tuple[str, ...]] = None,
+        context: Optional[dict[str, Any]] = None,
+    ) -> Verdict:
+        """
+        Self-evaluate this JudgeAgent against bootstrap's 7 principles.
+
+        Uses bootstrap Judge for meta-evaluation: Can this judge itself
+        be trusted? Does it satisfy tasteful, ethical, composable, etc.?
+
+        Args:
+            principles: Specific principles to check (default: all 7)
+            context: Additional context for evaluation
+
+        Returns:
+            Verdict with type ACCEPT, REVISE, or REJECT
+
+        Example:
+            judge = JudgeAgent(criteria)
+            verdict = await judge.self_evaluate()
+            if verdict.type == VerdictType.ACCEPT:
+                print("Judge is well-formed!")
+        """
+        bootstrap_judge = BootstrapJudge()
+        return await bootstrap_judge.invoke(
+            JudgeInput(agent=self, principles=principles, context=context)
+        )
+
+
+async def self_evaluate_t_gent(
+    agent: Agent[Any, Any],
+    principles: Optional[tuple[str, ...]] = None,
+) -> Verdict:
+    """
+    Evaluate any T-gent against bootstrap's 7 principles.
+
+    Convenience function for validating T-gents before deployment.
+
+    Args:
+        agent: The T-gent to evaluate
+        principles: Specific principles to check (default: all 7)
+
+    Returns:
+        Verdict with type ACCEPT, REVISE, or REJECT
+    """
+    bootstrap_judge = BootstrapJudge()
+    return await bootstrap_judge.invoke(
+        JudgeInput(agent=agent, principles=principles)
+    )
 
 
 # Singleton judge with default criteria

@@ -112,6 +112,7 @@ from .judge import (
     JudgeAgent,
     JudgmentCriteria,
     JudgmentResult,
+    self_evaluate_t_gent,
 )
 
 from .property import (
@@ -165,6 +166,7 @@ __all__ = [
     "JudgeAgent",
     "JudgmentCriteria",
     "JudgmentResult",
+    "self_evaluate_t_gent",
     "PropertyAgent",
     "PropertyTestResult",
     "IntGenerator",

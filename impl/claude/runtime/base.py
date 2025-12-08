@@ -3,6 +3,8 @@ Base Runtime - Core abstractions for LLM-backed agent execution.
 
 An LLMAgent wraps the bootstrap Agent with an LLM execution strategy.
 The runtime handles the actual API calls and response parsing.
+
+Uses bootstrap Fix pattern for retry logic with convergence tracking.
 """
 
 from abc import ABC, abstractmethod
@@ -12,6 +14,8 @@ import json
 import asyncio
 
 from bootstrap import Agent
+from bootstrap.types import FixConfig, FixResult
+from bootstrap.fix import Fix
 from .json_utils import (
     robust_json_parse,
     json_response_parser,
@@ -277,6 +281,15 @@ class PermanentError(Exception):
     pass
 
 
+@dataclass
+class RetryState(Generic[B]):
+    """State for retry-as-Fix pattern. Tracks value, errors, and attempts."""
+    value: Optional[B] = None
+    error: Optional[Exception] = None
+    attempt: int = 0
+    succeeded: bool = False
+
+
 async def with_retry(
     fn: Callable[[], Awaitable[B]],
     max_attempts: int = 3,
@@ -284,23 +297,23 @@ async def with_retry(
     is_transient: Optional[Callable[[Exception], bool]] = None
 ) -> tuple[B, int]:
     """
-    Fix pattern for retry logic.
-    
+    Fix pattern for retry logic using bootstrap Fix.
+
     Executes fn with exponential backoff on transient errors.
-    This is the Fix pattern: we repeatedly apply fn until success or max attempts.
-    
+    Uses bootstrap Fix for convergence tracking and proper iteration.
+
     Args:
         fn: Async function to retry
         max_attempts: Maximum number of attempts (default 3)
         backoff_base: Base for exponential backoff in seconds (default 2.0)
         is_transient: Predicate to determine if error is transient (default: check TransientError type)
-    
+
     Returns:
         Tuple of (result, attempt_count)
-    
+
     Raises:
         Last exception if all attempts fail
-    
+
     Example:
         result, attempts = await with_retry(
             lambda: runtime.raw_completion(context),
@@ -309,28 +322,67 @@ async def with_retry(
     """
     if is_transient is None:
         is_transient = lambda e: isinstance(e, TransientError)
-    
-    last_error = None
-    
-    for attempt in range(max_attempts):
+
+    async def retry_transform(state: RetryState[B]) -> RetryState[B]:
+        """Transform function for Fix: try fn, track result/error."""
+        if state.succeeded:
+            return state  # Already converged
+
+        # Apply backoff delay (not on first attempt)
+        if state.attempt > 0:
+            delay = backoff_base ** (state.attempt - 1)
+            await asyncio.sleep(delay)
+
         try:
             result = await fn()
-            return (result, attempt)
+            return RetryState(
+                value=result,
+                error=None,
+                attempt=state.attempt + 1,
+                succeeded=True,
+            )
         except Exception as e:
-            last_error = e
-            
-            # Don't retry on permanent errors
+            # Permanent error: mark as "converged" to stop iteration
             if not is_transient(e):
-                raise
-            
-            # Don't sleep after last attempt
-            if attempt < max_attempts - 1:
-                delay = backoff_base ** attempt
-                await asyncio.sleep(delay)
-    
-    # All attempts exhausted - should never reach here due to raise in loop
-    assert last_error is not None
-    raise last_error
+                return RetryState(
+                    value=None,
+                    error=e,
+                    attempt=state.attempt + 1,
+                    succeeded=True,  # Stop iteration
+                )
+            # Transient error: continue trying
+            return RetryState(
+                value=None,
+                error=e,
+                attempt=state.attempt + 1,
+                succeeded=False,
+            )
+
+    def has_converged(a: RetryState[B], b: RetryState[B]) -> bool:
+        """Converged when succeeded or hit max attempts."""
+        return b.succeeded or b.attempt >= max_attempts
+
+    config: FixConfig[RetryState[B]] = FixConfig(
+        max_iterations=max_attempts,
+        equality_check=has_converged,
+    )
+
+    initial_state: RetryState[B] = RetryState()
+    fix_agent: Fix[RetryState[B]] = Fix(config)
+    fix_result: FixResult[RetryState[B]] = await fix_agent.invoke(
+        (retry_transform, initial_state)
+    )
+
+    final_state = fix_result.value
+
+    # Check result
+    if final_state.succeeded and final_state.value is not None:
+        return (final_state.value, final_state.attempt)
+    elif final_state.error is not None:
+        raise final_state.error
+    else:
+        # Should not reach here
+        raise RuntimeError(f"Retry exhausted after {final_state.attempt} attempts")
 
 
 class Runtime(ABC):
