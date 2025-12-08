@@ -6,9 +6,36 @@
 
 ## TL;DR
 
-**Status**: Evolution pipeline fixed and working ✅
-**Latest**: Pushed 3 commits (7d99e18, e4b6e3f, 665d67f) fixing API issues
+**Status**: Evolution pipeline fixed, Bootstrap Docs complete ✅
+**Latest**: Fixed venv issue (mypy not found), tested evolution successfully
 **Branch**: `main` (synced with origin)
+
+---
+
+## Dec 8, 2025 Session: Evolution Pipeline Fix
+
+### What Was Fixed
+
+**Problem**: Evolution pipeline failing with `Error: [Errno 2] No such file or directory: 'mypy'`
+
+**Root cause**: Wrong Python venv being used
+- Shell had `VIRTUAL_ENV=/Users/kentgang/git/zenportal/.venv` from other projects
+- When running `python evolve.py`, system picked up wrong venv
+- Wrong venv didn't have mypy → all type checks failed (72/72 experiments)
+
+**Solution**: Always activate kgents venv explicitly
+```bash
+cd /Users/kentgang/git/kgents
+source .venv/bin/activate  # ⚠️ CRITICAL STEP
+cd impl/claude
+python evolve.py <target> [flags]
+```
+
+**Verification**: ✅ Tested successfully
+- mypy 1.19.0 installed in kgents venv
+- Evolution pipeline loads 27 modules (including new `ground_parser`)
+- Generates hypotheses in parallel
+- Type checks run correctly with proper venv
 
 ---
 
@@ -18,52 +45,127 @@
 
 ```bash
 cd /Users/kentgang/git/kgents
-source .venv/bin/activate  # ⚠️ CRITICAL - must use kgents venv!
-.venv/bin/python impl/claude/evolve.py bootstrap --dry-run --quick
-```
+source .venv/bin/activate
+cd impl/claude
 
-**Why venv matters**: Shell may have `VIRTUAL_ENV=/Users/kentgang/git/zenportal/.venv` from other projects. Always activate kgents venv explicitly.
+# Quick test
+python evolve.py bootstrap/id --dry-run --quick
+
+# Full evolution
+python evolve.py all --dry-run --quick
+
+# Auto-apply (use with caution)
+python evolve.py bootstrap --auto-apply
+```
 
 ---
 
-## What We Fixed (Dec 8, 2025)
+## Bootstrap Docs Status
 
-**Problem**: Evolution pipeline failing with 5 different API errors
+| Phase | Status | Content |
+|-------|--------|---------|
+| 1-3 | ✅ COMPLETE | Worked examples, composition verification, error handling (~800 lines) |
+| 4 | ✅ COMPLETE | Pitfalls, troubleshooting, observability, progress tracking (~1350 lines) |
+| 5 | ✅ COMPLETE | Cross-references, dependency graph, GroundParser agent (~155 lines) |
+| 6 | ❌ OPTIONAL | Regeneration validation (not started) |
 
-**Root causes**:
-1. Wrong venv → missing mypy
-2. Stale bytecode cache
-3. evolve.py using outdated Judge/Verdict APIs
+**Total**: ~2287 lines of production-ready bootstrap documentation
 
-**Solutions** (commits pushed):
-- `e4b6e3f` - Fixed Verdict API, removed broken Judge usage
-- `665d67f` - Cleared bytecode cache, documented venv requirement
-- `7d99e18` - Updated HYDRATE.md
+**Documents**:
+- `docs/BOOTSTRAP_PROMPT.md` - ~1545 lines (implementation guide)
+- `AUTONOMOUS_BOOTSTRAP_PROTOCOL.md` - ~1135 lines (meta protocol)
+
+---
+
+## Directory Structure
+
+```
+kgents/
+├── impl/claude/              # Reference implementation (27 modules)
+│   ├── bootstrap/            # 7 bootstrap agents + ground_parser
+│   ├── agents/               # A, B, C, H, K agent families
+│   ├── runtime/              # LLM execution layer
+│   └── evolve.py             # Evolution pipeline
+├── spec/                     # Specifications (language-agnostic)
+├── docs/                     # Bootstrap docs
+└── .venv/                    # Python venv (must activate!)
+```
+
+**Note**: `impl/claude-openrouter/` was deleted (user action, Dec 8) - all code in `impl/claude/`
+
+---
+
+## Known Issues
+
+**None currently** - Evolution pipeline working as expected
+
+**Previous issues (resolved)**:
+- ✅ Wrong venv causing mypy errors (fixed: activate kgents venv)
+- ✅ `impl/claude-openrouter` workspace errors (fixed: directory deleted)
 
 ---
 
 ## Next Priorities
 
-1. **Bootstrap evolution** - Ready to apply improvements
-2. **Tests for agents/b/** - pytest for hypothesis.py, robin.py
-3. **D/E-gents specs** - Data/Database, Evaluation/Ethics agents
-4. Bootstrap Docs Phase 6 (optional) - Regeneration validation
+1. **Evolution improvements** - Many experimental improvements generated, need manual review
+2. **Tests for agents/b/** - pytest suite for hypothesis.py, robin.py
+3. **D/E-gents specs** - Data/Database, Evaluation/Ethics agent specifications
+4. **PyPI package** - Publish kgents-runtime to PyPI
+5. **Optional: Bootstrap Docs Phase 6** - Regeneration validation
 
 ---
 
-## Project Status
+## Quick Commands Reference
 
-**Bootstrap Docs**: ✅ Complete (~2287 lines, commits 16156c8, 15aaa26, 7ee9dc8)
-**Bootstrap Agents**: ✅ 7 agents implemented
-**Evolution Pipeline**: ✅ Working (after API fixes)
-**Meta-evolution**: ✅ Applied 8 improvements to evolve.py, autopoiesis.py
+```bash
+# Always start with this
+cd /Users/kentgang/git/kgents
+source .venv/bin/activate
+
+# Check mypy is available
+python -m mypy --version  # Should show: mypy 1.19.0
+
+# Run evolution
+cd impl/claude
+python evolve.py <target> --dry-run --quick
+
+# Commit changes
+git add -A
+git commit -m "Your message"
+git push
+```
 
 ---
 
-## Key Files
+## Session Log
 
-- `impl/claude/evolve.py` - Evolution pipeline (fixed)
-- `impl/claude/bootstrap/` - 7 bootstrap agents
-- `impl/claude/agents/` - a,b,c,h,k-gents
-- `docs/BOOTSTRAP_PROMPT.md` - Implementation guide (~1545 lines)
-- `AUTONOMOUS_BOOTSTRAP_PROTOCOL.md` - Meta protocol (~1135 lines)
+**Dec 8, 2025**:
+- ✅ Diagnosed evolution pipeline mypy errors
+- ✅ Identified wrong venv as root cause
+- ✅ Tested fix: `source .venv/bin/activate` before running
+- ✅ Verified: Evolution loads 27 modules, generates hypotheses correctly
+- ✅ Updated HYDRATE.md with concise session context
+
+**Previous sessions**:
+- Dec 8 earlier: Bootstrap Docs Phases 1-5 complete (~2287 lines)
+- Dec 7: Phase 1 type fixes (Fix[A,B] → Fix[A]), EvolutionAgent refactor
+- Dec 7: Full-stack evolution (25 modules, 100% pass rate)
+
+---
+
+## Meta-Notes for Future Sessions
+
+**When evolution fails with "mypy not found"**:
+1. Check current venv: `which python` (should be `/Users/kentgang/git/kgents/.venv/bin/python`)
+2. If wrong venv: `source /Users/kentgang/git/kgents/.venv/bin/activate`
+3. Verify: `python -m mypy --version`
+
+**When working across multiple projects**:
+- Always check `which python` before running kgents commands
+- Shell may inherit `VIRTUAL_ENV` from previous projects
+- Use absolute path if needed: `/Users/kentgang/git/kgents/.venv/bin/python`
+
+**Bootstrap docs are production-ready**:
+- AUTONOMOUS_BOOTSTRAP_PROTOCOL.md: Complete protocol with pitfalls, observability
+- BOOTSTRAP_PROMPT.md: Complete implementation guide with examples, troubleshooting
+- Both documents comprehensive and ready for LLM consumption
