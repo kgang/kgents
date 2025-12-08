@@ -1,0 +1,29 @@
+[project]
+name = "kgents-workspace"
+version = "0.1.0"
+description = "kgents monorepo - tasteful, curated, ethical agents"
+requires-python = ">=3.11"
+dependencies = [
+    "kgents-runtime",
+    "zen-agents",
+]
+
+[tool.uv]
+# Define the workspace members
+# uv will automatically link these as editable installs
+dev-dependencies = [
+    "pytest>=7.0",
+    "pytest-asyncio>=0.21",
+    "ruff>=0.1.0",
+]
+
+[tool.uv.workspace]
+members = [
+    "impl/claude-openrouter",
+    "impl/zen-agents",
+]
+
+[tool.uv.sources]
+# Allow workspace packages to reference each other
+kgents-runtime = { workspace = true }
+zen-agents = { workspace = true }

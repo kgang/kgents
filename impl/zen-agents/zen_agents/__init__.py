@@ -18,6 +18,12 @@ Usage:
     app.run()
 """
 
+# kgents-runtime is installed via uv workspace, providing:
+# - bootstrap (Agent, compose, Judge, Fix, etc.)
+# - runtime (ClaudeCLIRuntime, LLMAgent, etc.)
+# - agents (a, b, c, h, k genera)
+# See kgents_bridge.py for convenient re-exports
+
 from .app import ZenAgentsApp
 from .models import Session, SessionState, SessionType, NewSessionConfig
 from .services import SessionManager, StateRefresher, TmuxService

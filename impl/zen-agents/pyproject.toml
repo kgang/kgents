@@ -14,10 +14,11 @@ authors = [
 ]
 dependencies = [
     "textual>=0.40.0",
+    "kgents-runtime",  # Workspace dependency - provides bootstrap, runtime, agents
 ]
 
-# Dev note: Also install kgents-runtime from ../claude-openrouter
-# pip install -e ../claude-openrouter
+[tool.uv.sources]
+kgents-runtime = { workspace = true }
 
 [project.optional-dependencies]
 dev = [

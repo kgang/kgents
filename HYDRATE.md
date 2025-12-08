@@ -164,7 +164,10 @@ LLM execution layer for agents:
 | Document | Purpose |
 |----------|---------|
 | `BOOTSTRAP_PLAN.md` | Original implementation plan |
-| `AUTONOMOUS_BOOTSTRAP_PROTOCOL.md` | **Active protocol** — Meta-level instructions for Kent + Claude Code collaboration |
+| `AUTONOMOUS_BOOTSTRAP_PROTOCOL.md` | Completed — A-gents + B-gents implemented |
+| `ZENAGENTS_PROTOCOL.md` | **Active protocol** — Complete zen-agents using kgents + ClaudeCLIRuntime |
+
+### Completed Phases
 
 | Phase | Status | Notes |
 |-------|--------|-------|
@@ -173,17 +176,32 @@ LLM execution layer for agents:
 | B-gents B.1 | ✅ DONE | HypothesisEngine |
 | B-gents B.2 | ✅ DONE | Robin (scientific companion) |
 
-**Autonomous Bootstrap Protocol complete.** All phases (A.1, A.2, B.1, B.2) implemented.
+### Active: zen-agents Integration (ZENAGENTS_PROTOCOL.md)
 
-**What's Next (suggestions):**
+| Phase | Status | Focus |
+|-------|--------|-------|
+| 1.1 Import Bridge | ✅ DONE | `kgents_bridge.py` |
+| 1.2 AgentOrchestrator | ✅ DONE | `services/agent_orchestrator.py` |
+| 1.3 Fix Confidence Bug | 🔲 TODO | `detection.py` always returns 0.2 |
+| 1.4 Pipeline Composition | 🔲 TODO | Use `>>` instead of manual |
+| 2.1 Session Types | 🔲 TODO | ROBIN, CREATIVITY, HYPOTHESIS, KGENT |
+| 2.2 Session Handler | 🔲 TODO | Route to appropriate agents |
+| 3.1 Log Viewer | 🔲 TODO | Display session output + analysis |
+| 3.2 MainScreen Integration | 🔲 TODO | Wire orchestrator to UI |
+| 3.3 K-gent Name Suggestions | 🔲 TODO | Personalized session names |
+| 4.1 Session Persistence | 🔲 TODO | JSON-based save/load |
+| 4.2 Integrate Persistence | 🔲 TODO | Auto-save on changes |
+| 5 Testing | 🔲 TODO | pytest suite, 80%+ coverage |
+
+**What's Next (beyond zen-agents):**
 - Tests: Add pytest suite for agents/b/ (hypothesis, robin)
 - D-gents: Data/Database agents (spec needed)
 - E-gents: Evaluation/Ethics agents (spec needed)
-- Integration: End-to-end example using Robin with real LLM runtime
 - Package: Publish kgents-runtime to PyPI
 
 ## Recent Changes
 
+- **AgentOrchestrator** (Dec 2025): `impl/zen-agents/zen_agents/services/agent_orchestrator.py` - Central service for LLM-backed agents in TUI
 - **B-gents B.2 implemented** (Dec 2025): Robin - personalized scientific companion, composes K-gent + HypothesisEngine + HegelAgent
 - **B-gents B.1 implemented** (Dec 2025): `impl/claude-openrouter/agents/b/` - HypothesisEngine (Popperian hypothesis generation)
 - **ClaudeCLIRuntime** (Dec 2025): OAuth-authenticated runtime via `claude -p`, uses Fix pattern for parse retries
