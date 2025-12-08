@@ -108,11 +108,11 @@ class ConfidenceTracker:
         """Increase confidence from new evidence."""
         old_value = self.value
         old_level = self.level
-        
+
         self.evidence_count += 1
         self.value = min(1.0, self.value + 0.1)
         self.last_confirmed = datetime.now()
-        
+
         logger.info(
             "Confidence reinforced",
             extra={
@@ -130,10 +130,10 @@ class ConfidenceTracker:
         """Decrease confidence over time."""
         old_value = self.value
         old_level = self.level
-        
+
         decay_rate = 0.1  # per month
         self.value = max(0.1, self.value - (decay_rate * months))
-        
+
         logger.warning(
             "Confidence decayed",
             extra={
@@ -152,10 +152,10 @@ class ConfidenceTracker:
         old_value = self.value
         old_level = self.level
         old_source = self.source
-        
+
         self.value = max(0.2, self.value - 0.2)
         self.source = ChangeSource.DECAYED
-        
+
         logger.warning(
             "Confidence contradicted",
             extra={
@@ -181,87 +181,21 @@ class ConfidenceTracker:
             return ConfidenceLevel.UNCERTAIN
 
 
-class EvolutionAgent(Agent[EvolutionInput, EvolutionOutput]):
-    """
-    Evolve K-gent's persona over time.
+# Concrete handler implementations
 
-    Handles:
-    - Explicit updates (immediate, high confidence)
-    - Inferred changes (proposed, medium confidence)
-    - Contradiction resolution (ask for clarification)
-    - Temporal decay (archive stale data)
+class ExplicitUpdateHandler:
+    """
+    Handler for explicit user updates.
+
+    Immediate acceptance with high confidence.
+    Implements EvolutionHandler protocol.
     """
 
-    def __init__(self, state: PersonaState):
+    def __init__(self, state: PersonaState, trackers: dict[str, ConfidenceTracker]):
         self._state = state
-        self._trackers: dict[str, ConfidenceTracker] = {}
-        
-        logger.info(
-            "EvolutionAgent initialized",
-            extra={
-                "event": "agent_initialized",
-                "agent_name": self.name,
-                "persona_name": state.seed.name,
-            }
-        )
+        self._trackers = trackers
 
-    @property
-    def name(self) -> str:
-        return "Evolution"
-
-    async def invoke(self, input: EvolutionInput) -> EvolutionOutput:
-        """
-        Evolve the persona based on input.
-
-        Returns new state and summary of changes.
-        """
-        logger.info(
-            "Evolution invoked",
-            extra={
-                "event": "evolution_invoked",
-                "trigger": input.trigger,
-                "aspect": input.aspect,
-                "operation": input.operation,
-                "reason": input.reason,
-            }
-        )
-        
-        if input.trigger == "explicit":
-            result = await self._handle_explicit(input)
-        elif input.trigger == "observation":
-            result = await self._handle_observation(input)
-        elif input.trigger == "contradiction":
-            result = await self._handle_contradiction(input)
-        elif input.trigger == "review":
-            result = await self._handle_review(input)
-        else:
-            logger.error(
-                "Unknown evolution trigger",
-                extra={
-                    "event": "unknown_trigger",
-                    "trigger": input.trigger,
-                }
-            )
-            result = EvolutionOutput(
-                accepted=False,
-                new_state=self._state,
-                change_summary="Unknown trigger type",
-                rejection_reason=f"Unknown trigger: {input.trigger}",
-            )
-        
-        logger.info(
-            "Evolution completed",
-            extra={
-                "event": "evolution_completed",
-                "accepted": result.accepted,
-                "needs_confirmation": result.needs_confirmation,
-                "change_summary": result.change_summary,
-            }
-        )
-        
-        return result
-
-    async def _handle_explicit(self, input: EvolutionInput) -> EvolutionOutput:
+    async def handle(self, input: EvolutionInput) -> EvolutionOutput:
         """Handle explicit user updates - immediate, high confidence."""
         logger.info(
             "Handling explicit update",
@@ -271,7 +205,7 @@ class EvolutionAgent(Agent[EvolutionInput, EvolutionOutput]):
                 "operation": input.operation,
             }
         )
-        
+
         new_state = self._apply_change(input)
 
         # Track with high confidence
@@ -289,131 +223,6 @@ class EvolutionAgent(Agent[EvolutionInput, EvolutionOutput]):
             change_summary=f"Explicit {input.operation}: {input.content}",
         )
 
-    async def _handle_observation(self, input: EvolutionInput) -> EvolutionOutput:
-        """Handle inferred changes - propose, medium confidence."""
-        key = f"{input.aspect}.{input.content}"
-
-        # Check if we've seen this pattern before
-        if key in self._trackers:
-            tracker = self._trackers[key]
-            tracker.reinforce()
-
-            if tracker.evidence_count >= 3 and tracker.level == ConfidenceLevel.HIGH:
-                # Enough evidence to add without confirmation
-                logger.info(
-                    "Pattern confirmed through observation",
-                    extra={
-                        "event": "pattern_confirmed",
-                        "key": key,
-                        "evidence_count": tracker.evidence_count,
-                        "confidence": tracker.value,
-                    }
-                )
-                
-                new_state = self._apply_change(input)
-                return EvolutionOutput(
-                    accepted=True,
-                    new_state=new_state,
-                    change_summary=f"Inferred pattern confirmed: {input.content}",
-                )
-
-        # Not enough evidence - propose change
-        if key not in self._trackers:
-            logger.info(
-                "New pattern observed",
-                extra={
-                    "event": "pattern_observed",
-                    "key": key,
-                    "initial_confidence": 0.4,
-                }
-            )
-            
-            self._trackers[key] = ConfidenceTracker(
-                value=0.4,
-                last_confirmed=datetime.now(),
-                source=ChangeSource.INFERRED,
-                evidence_count=1,
-            )
-
-        return EvolutionOutput(
-            accepted=False,
-            new_state=self._state,
-            change_summary=f"Observing pattern: {input.content}",
-            needs_confirmation=True,
-            confirmation_prompt=(
-                f"I've noticed you often {input.content}. "
-                f"Should I add this as a pattern, or is this situational?"
-            ),
-        )
-
-    async def _handle_contradiction(self, input: EvolutionInput) -> EvolutionOutput:
-        """Handle contradictions between behavior and stated preferences."""
-        logger.warning(
-            "Contradiction detected",
-            extra={
-                "event": "contradiction_detected",
-                "aspect": input.aspect,
-                "content": str(input.content),
-                "conflicting_evidence": input.conflicting_evidence,
-            }
-        )
-        
-        return EvolutionOutput(
-            accepted=False,
-            new_state=self._state,
-            change_summary=f"Contradiction detected: {input.content}",
-            needs_confirmation=True,
-            confirmation_prompt=(
-                f"Your recent behavior seems to contradict a stated preference. "
-                f"{input.content}\n"
-                f"Has your preference shifted, or is this context-specific?"
-            ),
-        )
-
-    async def _handle_review(self, input: EvolutionInput) -> EvolutionOutput:
-        """Handle periodic reviews of stale preferences."""
-        stale_items = []
-
-        for key, tracker in self._trackers.items():
-            if tracker.level in (ConfidenceLevel.LOW, ConfidenceLevel.UNCERTAIN):
-                stale_items.append(key)
-
-        if stale_items:
-            logger.info(
-                "Review identified stale items",
-                extra={
-                    "event": "stale_items_found",
-                    "count": len(stale_items),
-                    "items": stale_items[:5],  # Log first 5
-                }
-            )
-            
-            return EvolutionOutput(
-                accepted=False,
-                new_state=self._state,
-                change_summary=f"Review needed for {len(stale_items)} items",
-                needs_confirmation=True,
-                confirmation_prompt=(
-                    f"Some preferences haven't been confirmed in a while:\n"
-                    f"{', '.join(stale_items[:3])}\n"
-                    f"Are these still accurate?"
-                ),
-            )
-
-        logger.info(
-            "Review completed - all current",
-            extra={
-                "event": "review_completed",
-                "stale_count": 0,
-            }
-        )
-        
-        return EvolutionOutput(
-            accepted=True,
-            new_state=self._state,
-            change_summary="All preferences current - no review needed",
-        )
-
     def _apply_change(self, input: EvolutionInput) -> PersonaState:
         """Apply a change to the persona state."""
         logger.debug(
@@ -424,7 +233,7 @@ class EvolutionAgent(Agent[EvolutionInput, EvolutionOutput]):
                 "operation": input.operation,
             }
         )
-        
+
         # Create a copy of the state
         new_seed = PersonaSeed(
             name=self._state.seed.name,
@@ -474,6 +283,344 @@ class EvolutionAgent(Agent[EvolutionInput, EvolutionOutput]):
 
         self._state = new_state
         return new_state
+
+
+class ObservationHandler:
+    """
+    Handler for observed patterns.
+
+    Proposes changes with medium confidence after repeated evidence.
+    Implements EvolutionHandler protocol.
+    """
+
+    def __init__(self, state: PersonaState, trackers: dict[str, ConfidenceTracker]):
+        self._state = state
+        self._trackers = trackers
+
+    async def handle(self, input: EvolutionInput) -> EvolutionOutput:
+        """Handle inferred changes - propose, medium confidence."""
+        key = f"{input.aspect}.{input.content}"
+
+        # Check if we've seen this pattern before
+        if key in self._trackers:
+            tracker = self._trackers[key]
+            tracker.reinforce()
+
+            if tracker.evidence_count >= 3 and tracker.level == ConfidenceLevel.HIGH:
+                # Enough evidence to add without confirmation
+                logger.info(
+                    "Pattern confirmed through observation",
+                    extra={
+                        "event": "pattern_confirmed",
+                        "key": key,
+                        "evidence_count": tracker.evidence_count,
+                        "confidence": tracker.value,
+                    }
+                )
+
+                new_state = self._apply_change(input)
+                return EvolutionOutput(
+                    accepted=True,
+                    new_state=new_state,
+                    change_summary=f"Inferred pattern confirmed: {input.content}",
+                )
+
+        # Not enough evidence - propose change
+        if key not in self._trackers:
+            logger.info(
+                "New pattern observed",
+                extra={
+                    "event": "pattern_observed",
+                    "key": key,
+                    "initial_confidence": 0.4,
+                }
+            )
+
+            self._trackers[key] = ConfidenceTracker(
+                value=0.4,
+                last_confirmed=datetime.now(),
+                source=ChangeSource.INFERRED,
+                evidence_count=1,
+            )
+
+        return EvolutionOutput(
+            accepted=False,
+            new_state=self._state,
+            change_summary=f"Observing pattern: {input.content}",
+            needs_confirmation=True,
+            confirmation_prompt=(
+                f"I've noticed you often {input.content}. "
+                f"Should I add this as a pattern, or is this situational?"
+            ),
+        )
+
+    def _apply_change(self, input: EvolutionInput) -> PersonaState:
+        """Apply a change to the persona state (same as ExplicitUpdateHandler)."""
+        # Create a copy of the state
+        new_seed = PersonaSeed(
+            name=self._state.seed.name,
+            roles=list(self._state.seed.roles),
+            preferences=dict(self._state.seed.preferences),
+            patterns=dict(self._state.seed.patterns),
+        )
+
+        new_state = PersonaState(
+            seed=new_seed,
+            current_focus=self._state.current_focus,
+            recent_interests=list(self._state.recent_interests),
+            active_projects=list(self._state.active_projects),
+            confidence=dict(self._state.confidence),
+            sources=dict(self._state.sources),
+        )
+
+        # Apply the change
+        if input.aspect == "pattern":
+            if input.operation == "add":
+                patterns = new_state.seed.patterns.get("thinking", [])
+                patterns.append(input.content)
+
+        self._state = new_state
+        return new_state
+
+
+class ContradictionHandler:
+    """
+    Handler for contradictions between behavior and stated preferences.
+
+    Asks for user clarification.
+    Implements EvolutionHandler protocol.
+    """
+
+    def __init__(self, state: PersonaState):
+        self._state = state
+
+    async def handle(self, input: EvolutionInput) -> EvolutionOutput:
+        """Handle contradictions between behavior and stated preferences."""
+        logger.warning(
+            "Contradiction detected",
+            extra={
+                "event": "contradiction_detected",
+                "aspect": input.aspect,
+                "content": str(input.content),
+                "conflicting_evidence": input.conflicting_evidence,
+            }
+        )
+
+        return EvolutionOutput(
+            accepted=False,
+            new_state=self._state,
+            change_summary=f"Contradiction detected: {input.content}",
+            needs_confirmation=True,
+            confirmation_prompt=(
+                f"Your recent behavior seems to contradict a stated preference. "
+                f"{input.content}\n"
+                f"Has your preference shifted, or is this context-specific?"
+            ),
+        )
+
+
+class ReviewHandler:
+    """
+    Handler for periodic reviews of stale preferences.
+
+    Identifies low-confidence items needing reconfirmation.
+    Implements EvolutionHandler protocol.
+    """
+
+    def __init__(self, state: PersonaState, trackers: dict[str, ConfidenceTracker]):
+        self._state = state
+        self._trackers = trackers
+
+    async def handle(self, input: EvolutionInput) -> EvolutionOutput:
+        """Handle periodic reviews of stale preferences."""
+        stale_items = []
+
+        for key, tracker in self._trackers.items():
+            if tracker.level in (ConfidenceLevel.LOW, ConfidenceLevel.UNCERTAIN):
+                stale_items.append(key)
+
+        if stale_items:
+            logger.info(
+                "Review identified stale items",
+                extra={
+                    "event": "stale_items_found",
+                    "count": len(stale_items),
+                    "items": stale_items[:5],  # Log first 5
+                }
+            )
+
+            return EvolutionOutput(
+                accepted=False,
+                new_state=self._state,
+                change_summary=f"Review needed for {len(stale_items)} items",
+                needs_confirmation=True,
+                confirmation_prompt=(
+                    f"Some preferences haven't been confirmed in a while:\n"
+                    f"{', '.join(stale_items[:3])}\n"
+                    f"Are these still accurate?"
+                ),
+            )
+
+        logger.info(
+            "Review completed - all current",
+            extra={
+                "event": "review_completed",
+                "stale_count": 0,
+            }
+        )
+
+        return EvolutionOutput(
+            accepted=True,
+            new_state=self._state,
+            change_summary="All preferences current - no review needed",
+        )
+
+
+class TriggerRouter(Agent[EvolutionInput, EvolutionOutput]):
+    """
+    Routes evolution inputs to appropriate handlers based on trigger type.
+
+    Implements composable routing pattern from IMPLEMENTATION_PLAN.md Issue #5.
+    Uses switch-like composition to delegate to specialized handlers.
+
+    Example:
+        router = TriggerRouter(state, trackers)
+        result = await router.invoke(EvolutionInput(
+            trigger="explicit",
+            aspect="preference",
+            operation="add",
+            content="Direct communication"
+        ))
+    """
+
+    def __init__(self, state: PersonaState, trackers: dict[str, ConfidenceTracker]):
+        self._state = state
+        self._trackers = trackers
+
+        # Create handlers
+        self._handlers: dict[str, EvolutionHandler] = {
+            "explicit": ExplicitUpdateHandler(state, trackers),
+            "observation": ObservationHandler(state, trackers),
+            "contradiction": ContradictionHandler(state),
+            "review": ReviewHandler(state, trackers),
+        }
+
+    @property
+    def name(self) -> str:
+        return "TriggerRouter"
+
+    async def invoke(self, input: EvolutionInput) -> EvolutionOutput:
+        """Route input to appropriate handler based on trigger."""
+        logger.info(
+            "Routing evolution input",
+            extra={
+                "event": "routing_evolution",
+                "trigger": input.trigger,
+                "aspect": input.aspect,
+                "operation": input.operation,
+            }
+        )
+
+        # Get handler for trigger
+        handler = self._handlers.get(input.trigger)
+
+        if handler is None:
+            logger.error(
+                "Unknown evolution trigger",
+                extra={
+                    "event": "unknown_trigger",
+                    "trigger": input.trigger,
+                }
+            )
+            return EvolutionOutput(
+                accepted=False,
+                new_state=self._state,
+                change_summary="Unknown trigger type",
+                rejection_reason=f"Unknown trigger: {input.trigger}",
+            )
+
+        # Delegate to handler
+        result = await handler.handle(input)
+
+        logger.info(
+            "Evolution routing completed",
+            extra={
+                "event": "routing_completed",
+                "trigger": input.trigger,
+                "accepted": result.accepted,
+                "needs_confirmation": result.needs_confirmation,
+            }
+        )
+
+        return result
+
+
+class EvolutionAgent(Agent[EvolutionInput, EvolutionOutput]):
+    """
+    Evolve K-gent's persona over time.
+
+    REFACTORED (Issue #5): Now uses composable TriggerRouter pattern
+    instead of internal orchestration.
+
+    Delegates to specialized handlers via TriggerRouter:
+    - ExplicitUpdateHandler (immediate, high confidence)
+    - ObservationHandler (proposed, medium confidence)
+    - ContradictionHandler (ask for clarification)
+    - ReviewHandler (archive stale data)
+    """
+
+    def __init__(self, state: PersonaState):
+        self._state = state
+        self._trackers: dict[str, ConfidenceTracker] = {}
+
+        # Composition: delegate to TriggerRouter
+        self._router = TriggerRouter(state, self._trackers)
+
+        logger.info(
+            "EvolutionAgent initialized",
+            extra={
+                "event": "agent_initialized",
+                "agent_name": self.name,
+                "persona_name": state.seed.name,
+            }
+        )
+
+    @property
+    def name(self) -> str:
+        return "Evolution"
+
+    async def invoke(self, input: EvolutionInput) -> EvolutionOutput:
+        """
+        Evolve the persona based on input.
+
+        Delegates to TriggerRouter for composable handling.
+        Returns new state and summary of changes.
+        """
+        logger.info(
+            "Evolution invoked",
+            extra={
+                "event": "evolution_invoked",
+                "trigger": input.trigger,
+                "aspect": input.aspect,
+                "operation": input.operation,
+                "reason": input.reason,
+            }
+        )
+
+        # Delegate to router (composition, not orchestration)
+        result = await self._router.invoke(input)
+
+        logger.info(
+            "Evolution completed",
+            extra={
+                "event": "evolution_completed",
+                "accepted": result.accepted,
+                "needs_confirmation": result.needs_confirmation,
+                "change_summary": result.change_summary,
+            }
+        )
+
+        return result
 
 
 # Convenience function

@@ -9,7 +9,7 @@
 
 ## Current State (Dec 8, 2025)
 
-**Latest:** Phase 1 of 10 Critical Fixes complete and merged to main! Type system foundation fixed (Fix and FixComposedAgent signatures). Now beginning Phase 2: Architecture refactors (EvolutionAgent composition + Contradict protocol pattern).
+**Latest:** Phase 2 progress! Issue #10 (Contradict Protocol) ✅ merged to main. Issue #5 (EvolutionAgent Composition) ✅ COMPLETE on branch `fix/phase-2-evolution-composition` - ready to merge! Extracted 4 handler classes (ExplicitUpdateHandler, ObservationHandler, ContradictionHandler, ReviewHandler), created TriggerRouter agent, refactored EvolutionAgent to use composition instead of orchestration.
 
 **Previously:** Full-stack evolution complete! All 25 modules evolved with 100/100 experiments passed and incorporated (runtime, agents, bootstrap). Logging improved with persistent log files, prominent summary banners, and better UX for piped output.
 
@@ -24,7 +24,6 @@
 | A-gents (Skeleton + Creativity) | ✅ `impl/claude/agents/a/` |
 | B-gents (Hypothesis + Robin) | ✅ `impl/claude/agents/b/` + robin spec |
 | runtime/ | ✅ `impl/claude/runtime/` (ClaudeRuntime, OpenRouterRuntime) |
-| zen-agents | 🗑️ Removed (was Textual TUI demo) |
 
 ## 7 Bootstrap Agents (Implemented)
 
