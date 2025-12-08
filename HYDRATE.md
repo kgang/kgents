@@ -6,16 +6,53 @@
 
 ## TL;DR
 
-**Status**: Mypy strict passing (0 errors) ✅
-**Latest**: Dec 8 - All type errors fixed, pushed to main
-**Branch**: `main` (0a7a751)
+**Status**: Phase 2.5b (Parsing & Validation) complete ✅
+**Latest**: Dec 8 - Layer 2 Reliability: Parser + Validator + Repair
+**Branch**: `main` (Phase 2.5b ready to commit)
+**Tests**: 10/10 passing for Phase 2.5b
 **Mypy**: 0 errors (strict mode)
 
 ---
 
 ## What Was Done This Session
 
-### Type Error Fixes (50 → 0 errors)
+### Current Session: Phase 2.5b - Parsing & Validation Layer ✅
+
+**Implemented Layer 2 of Evolution Reliability Plan:**
+
+#### New Files Created:
+- `agents/e/parser.py` (500+ lines) - Multi-strategy code parsing
+  - 4 fallback strategies: Structured → JSON+Code → Code Block → AST Spans
+  - Handles malformed markdown, missing closing fences
+  - Confidence scoring for parsed code
+- `agents/e/validator.py` (340 lines) - Fast schema validation
+  - Pre-mypy validation: constructors, type annotations, generic types
+  - Checks for incomplete code (TODO, pass statements)
+  - Categorized issues with severity levels
+- `agents/e/repair.py` (350 lines) - AST-based incremental repair
+  - Automatic fixes: missing imports, generic types, empty functions
+  - Iterative repair with validation loop (max 3 iterations)
+  - Heuristic-based inference for common patterns
+- `test_parsing_layer.py` (280 lines) - Comprehensive test suite
+
+#### Modified Files:
+- `agents/e/experiment.py`: Updated extract_code/extract_metadata to use new parser
+- `agents/e/__init__.py`: Exported Layer 2 components with documentation
+
+#### Test Results:
+✅ All 10 tests passing:
+- Parser handles structured format, malformed markdown, code with noise
+- Validator catches missing constructors, incomplete generics, incomplete code
+- Validator passes valid code
+- Repairer fixes empty functions
+- Full integration: parse → validate → repair works end-to-end
+
+**Expected Impact:**
+- Target: >95% parse success rate (up from ~70%)
+- Fast pre-mypy validation catches errors early
+- Automatic repair reduces manual intervention
+
+### Previous Session: Type Error Fixes (50 → 0 errors)
 
 Fixed all remaining mypy --strict errors across 17 files:
 
@@ -53,28 +90,81 @@ Fixed all remaining mypy --strict errors across 17 files:
 
 ## Next Session: Start Here
 
-### Option 1: Run Full Evolution
+### ✅ COMPLETED: Phase 2.5b - Parsing & Validation Layer
 
-Now that types are clean, run a full evolution pass:
+Successfully implemented Layer 2 of reliability plan:
+- ✅ Multi-strategy parser with 4 fallback strategies
+- ✅ Fast schema validator (pre-mypy checks)
+- ✅ AST-based code repairer
+- ✅ All 10 tests passing
+- ✅ Ready to commit
+
+**Next step:** Commit Phase 2.5b work
+
+### Option 1: Commit Phase 2.5b Work
+
 ```bash
-cd /Users/kentgang/git/kgents && source .venv/bin/activate && cd impl/claude
-python evolve.py all --dry-run  # Preview changes
-python evolve.py all --auto-apply  # Apply improvements
+cd /Users/kentgang/git/kgents
+git add impl/claude/agents/e/parser.py
+git add impl/claude/agents/e/validator.py
+git add impl/claude/agents/e/repair.py
+git add impl/claude/agents/e/experiment.py
+git add impl/claude/agents/e/__init__.py
+git add impl/claude/test_parsing_layer.py
+git add HYDRATE.md
+
+git commit -m "$(cat <<'EOF'
+feat: Phase 2.5b - Parsing & Validation Layer for Evolution Reliability
+
+Layer 2 of EVOLUTION_RELIABILITY_PLAN.md: Robust parsing & validation
+
+New modules:
+- agents/e/parser.py (500+ lines): Multi-strategy code parsing
+  * 4 fallback strategies for LLM output extraction
+  * Handles malformed markdown, missing closing fences
+  * Confidence scoring for parsed code
+
+- agents/e/validator.py (340 lines): Fast schema validation
+  * Pre-mypy validation (constructors, types, generics)
+  * Catches incomplete code (TODO, pass statements)
+  * Categorized issues with severity levels
+
+- agents/e/repair.py (350 lines): AST-based incremental repair
+  * Auto-fixes: missing imports, generic types, empty functions
+  * Iterative repair with validation loop
+  * Heuristic-based inference
+
+- test_parsing_layer.py: 10/10 tests passing
+
+Updated:
+- agents/e/experiment.py: extract_code/metadata now use new parser
+- agents/e/__init__.py: Export Layer 2 components
+
+Expected impact: >95% parse success rate (up from ~70%)
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
+EOF
+)"
 ```
 
-### Option 2: Phase 2.5b - Parsing & Validation Layer
+### Option 2: Phase 2.5c - Recovery & Learning Layer
 
-Continue reliability improvements (see `docs/EVOLUTION_RELIABILITY_PLAN.md`):
-- Create `agents/e/parser.py` - Multi-strategy parsing
-- Create `agents/e/validator.py` - Schema validation
-- Create `agents/e/repair.py` - Incremental code repair
+Continue with Layer 3 reliability improvements:
+- Create `agents/e/retry.py` - Intelligent retry with refined prompts
+- Create `agents/e/fallback.py` - Progressive simplification strategies
+- Create `agents/e/error_memory.py` - Learn from failure patterns
 
-### Option 3: UX Improvements
+Target: >90% incorporation rate (up from ~30-50%)
 
-See `docs/EVOLVE_UX_BRAINSTORM.md` for ideas:
-- Confidence scores in output
-- Checkpoint/resume for long runs
-- Better progress visualization
+### Option 3: Measure Phase 2.5b Impact
+
+Run evolution to measure parsing improvements:
+```bash
+cd /Users/kentgang/git/kgents && source .venv/bin/activate && cd impl/claude
+python evolve.py bootstrap/id --dry-run --quick 2>&1 | tee phase_2.5b_test.log
+```
 
 ---
 
@@ -113,6 +203,15 @@ kgents/
 ---
 
 ## Session Log
+
+**Dec 8, 2025 PM (Phase 2.5b - Parsing & Validation Layer)**:
+- ✅ Implemented Layer 2 of Evolution Reliability Plan
+- ✅ Created parser.py, validator.py, repair.py (~1200 lines total)
+- ✅ Multi-strategy parsing with 4 fallback strategies
+- ✅ Fast schema validation (pre-mypy)
+- ✅ AST-based incremental repair
+- ✅ All 10 tests passing
+- Ready to commit
 
 **Dec 8, 2025 PM (Type Error Cleanup)**:
 - Fixed all 50 remaining mypy --strict errors

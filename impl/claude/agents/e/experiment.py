@@ -105,87 +105,37 @@ class TestResult:
 # Code extraction utilities
 
 def extract_metadata(response: str, module_name: str) -> Optional[dict[str, Any]]:
-    """Extract metadata JSON from LLM response with flexible parsing."""
-    patterns = [
-        r"##\s*METADATA\s*\n(.*?)(?=##\s*CODE|$)",
-        r"METADATA[:\s]*\n(.*?)(?=CODE|```python|$)",
-        r"\{[^{}]*\"description\"[^{}]*\}",
-    ]
+    """
+    Extract metadata JSON from LLM response using the new parser.
 
-    metadata_text = None
-    for pattern in patterns[:2]:
-        match = re.search(pattern, response, re.DOTALL | re.IGNORECASE)
-        if match:
-            metadata_text = match.group(1).strip()
-            break
+    This is a compatibility wrapper around the new CodeParser.
+    For new code, use CodeParser directly.
+    """
+    from .parser import code_parser
 
-    if metadata_text:
-        json_obj = _extract_json_object(metadata_text)
-        if json_obj:
-            return json_obj
+    parser = code_parser()
+    result = parser.parse(response)
 
-    match = re.search(patterns[2], response, re.DOTALL)
-    if match:
-        try:
-            return cast(dict[str, Any], json.loads(match.group(0)))
-        except json.JSONDecodeError:
-            pass
+    if result.success and result.metadata:
+        return result.metadata
 
     return None
-
-
-def _extract_json_object(text: str) -> Optional[dict[str, Any]]:
-    """Extract a JSON object from text that may have surrounding content."""
-    start = text.find("{")
-    if start == -1:
-        return None
-
-    depth = 0
-    for i, char in enumerate(text[start:], start):
-        if char == "{":
-            depth += 1
-        elif char == "}":
-            depth -= 1
-            if depth == 0:
-                json_str = text[start: i + 1]
-                try:
-                    return cast(dict[str, Any], json.loads(json_str))
-                except json.JSONDecodeError:
-                    cleaned = _clean_json_string(json_str)
-                    try:
-                        return cast(dict[str, Any], json.loads(cleaned))
-                    except json.JSONDecodeError:
-                        return None
-    return None
-
-
-def _clean_json_string(json_str: str) -> str:
-    """Clean common JSON issues from LLM output."""
-    cleaned = re.sub(r",\s*([}\]])", r"\1", json_str)
-
-    def fix_newlines(match: re.Match[str]) -> str:
-        content = match.group(1)
-        return '"' + content.replace("\n", "\\n") + '"'
-
-    cleaned = re.sub(r'"([^"]*\n[^"]*)"', fix_newlines, cleaned)
-    return cleaned
 
 
 def extract_code(response: str, module_name: str) -> Optional[str]:
-    """Extract Python code from LLM response with flexible parsing."""
-    patterns = [
-        r"##\s*CODE.*?```python\s*\n(.*?)```",
-        r"CODE.*?```python\s*\n(.*?)```",
-        r"```(?:python|py)\s*\n(.*?)```",
-        r"```\s*\n(.*?)```",
-    ]
+    """
+    Extract Python code from LLM response using the new parser.
 
-    for pattern in patterns:
-        match = re.search(pattern, response, re.DOTALL | re.IGNORECASE)
-        if match:
-            code = match.group(1).strip()
-            if _looks_like_python(code):
-                return code
+    This is a compatibility wrapper around the new CodeParser.
+    For new code, use CodeParser directly.
+    """
+    from .parser import code_parser
+
+    parser = code_parser()
+    result = parser.parse(response)
+
+    if result.success and result.code:
+        return result.code
 
     return None
 
