@@ -44,6 +44,7 @@ class Ground(Agent[Void, Facts]):
         self,
         spec_root: Optional[Path] = None,
         persona_path: Optional[Path] = None,
+        cache: bool = True,
     ):
         """
         Initialize Ground with paths to spec files.
@@ -51,6 +52,7 @@ class Ground(Agent[Void, Facts]):
         Args:
             spec_root: Root of spec directory (default: inferred from file location)
             persona_path: Path to persona.md (default: spec_root/k-gent/persona.md)
+            cache: Whether to cache Ground results (default: True for performance)
         """
         if spec_root is None:
             # Infer spec root: impl/claude/bootstrap -> impl/claude -> impl -> kgents -> spec
@@ -59,6 +61,8 @@ class Ground(Agent[Void, Facts]):
 
         self._spec_root = spec_root
         self._persona_path = persona_path or (spec_root / "k-gent" / "persona.md")
+        self._cache_enabled = cache
+        self._cached_facts: Optional[Facts] = None
 
     @property
     def name(self) -> str:
@@ -69,10 +73,28 @@ class Ground(Agent[Void, Facts]):
         Load and return grounded facts.
 
         Input is Void (ignored) - Ground produces facts from stored data.
+
+        Performance: Results are cached by default. For most use cases,
+        persona seed is static and world seed changes rarely. Caching
+        eliminates redundant persona loading.
+
+        To disable caching (e.g., for testing or dynamic world updates),
+        set cache=False in __init__.
         """
+        # Return cached facts if available
+        if self._cache_enabled and self._cached_facts is not None:
+            return self._cached_facts
+
+        # Load fresh facts
         persona = self._load_persona()
         world = self._load_world()
-        return Facts(persona=persona, world=world, history=None)
+        facts = Facts(persona=persona, world=world, history=None)
+
+        # Cache if enabled
+        if self._cache_enabled:
+            self._cached_facts = facts
+
+        return facts
 
     def _load_persona(self) -> PersonaSeed:
         """

@@ -22,6 +22,7 @@ See spec/bootstrap.md lines 72-93, spec/principles.md.
 """
 
 from __future__ import annotations
+import asyncio
 from dataclasses import dataclass
 from typing import Any, Callable, Optional
 
@@ -352,16 +353,19 @@ class Judge(Agent[JudgeInput, Verdict]):
     def __init__(
         self,
         custom_judges: Optional[dict[str, Callable[[Agent[Any, Any], Optional[dict[str, Any]]], PartialVerdict]]] = None,
+        parallel: bool = True,
     ):
         """
         Initialize Judge with optional custom mini-judges.
 
         Args:
             custom_judges: Override default mini-judges for specific principles
+            parallel: Run mini-judges in parallel (default: True for performance)
         """
         self._judges = dict(MINI_JUDGES)
         if custom_judges:
             self._judges.update(custom_judges)
+        self._parallel = parallel
 
     @property
     def name(self) -> str:
@@ -373,19 +377,46 @@ class Judge(Agent[JudgeInput, Verdict]):
 
         If input.principles is None, checks all 7 principles.
         Otherwise, checks only the specified subset.
+
+        Performance: Mini-judges run in parallel by default. Each principle
+        check is independent, so parallelization provides near-linear speedup
+        (7 principles → 7× faster if CPU-bound, or I/O-bound latency reduction).
+
+        To disable parallelization (e.g., for debugging), set parallel=False
+        in __init__.
         """
         principles_to_check = input.principles or Principles.all()
 
-        accumulator = VerdictAccumulator(context=input.context)
+        # Filter out unknown principles
+        valid_principles = [
+            p for p in principles_to_check if p in self._judges
+        ]
 
-        for principle in principles_to_check:
-            if principle not in self._judges:
-                # Unknown principle - skip or raise
-                continue
+        if self._parallel:
+            # Run all mini-judges in parallel
+            async def run_checker(principle: str) -> PartialVerdict:
+                checker = self._judges[principle]
+                # Run sync checker in thread pool to avoid blocking
+                return await asyncio.to_thread(checker, input.agent, input.context)
 
-            checker = self._judges[principle]
-            partial = checker(input.agent, input.context)
-            accumulator = accumulator.add(partial)
+            partial_verdicts = await asyncio.gather(
+                *[run_checker(p) for p in valid_principles],
+                return_exceptions=False,
+            )
+
+            # Build accumulator from all verdicts
+            accumulator = VerdictAccumulator(context=input.context)
+            for partial in partial_verdicts:
+                accumulator = accumulator.add(partial)
+
+        else:
+            # Sequential execution (original behavior)
+            accumulator = VerdictAccumulator(context=input.context)
+
+            for principle in valid_principles:
+                checker = self._judges[principle]
+                partial = checker(input.agent, input.context)
+                accumulator = accumulator.add(partial)
 
         return accumulator.finalize()
 
