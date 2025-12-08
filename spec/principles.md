@@ -79,10 +79,30 @@ This principle comes from [C-gents](c-gents/) but applies to all agents.
 - **Associativity holds**: (A ∘ B) ∘ C = A ∘ (B ∘ C)
 - **Interfaces are contracts**: Composability requires clear input/output specs
 
+### The Minimal Output Principle
+
+**For LLM agents producing structured outputs (JSON, etc.):**
+
+Agents should generate the **smallest output that can be reliably composed**, not combine multiple outputs into aggregates.
+
+- **Single output per invocation**: `Agent: (Input, X) → Y` not `Agent: (Input, [X]) → [Y]`
+- **Composition at pipeline level**: Call agent N times, don't ask agent to combine N outputs
+- **Serialization guides granularity**: If you can't cleanly serialize it, you're asking the agent to do composition work that belongs in the pipeline
+
+**Why this matters**: Structural constraints (JSON escaping, nesting depth, parsing brittleness) are not obstacles—they're signals. When serialization becomes painful, the agent's output granularity is wrong.
+
+**Example**:
+- ❌ `CodeImprover: (Module, [Hypothesis]) → {improvements: [Improvement], reasoning: str}`
+- ✅ `CodeImprover: (Module, Hypothesis) → Improvement` (call N times)
+
+**Corollary**: Multi-section output formats (METADATA + CODE) can avoid serialization issues when outputs contain diverse data types, but the principle still holds—one logical output per call.
+
 ### Anti-patterns
 - Monolithic agents that can't be broken apart
 - Agents with hidden state that prevents composition
 - "God agents" that must be used alone
+- **LLM agents that return arrays of outputs instead of single outputs**
+- **Prompts that ask agents to "combine" or "synthesize multiple" results**
 
 ---
 
@@ -166,7 +186,7 @@ When designing or reviewing an agent, ask:
 | Curated | Does this add unique value, or does something similar exist? |
 | Ethical | Does this respect human agency and privacy? |
 | Joy-Inducing | Would I enjoy interacting with this? |
-| Composable | Can this work with other agents? |
+| Composable | Can this work with other agents? (LLM agents: Does it return single outputs, or ask the prompt to combine?) |
 | Heterarchical | Can this agent both lead and follow? Does it avoid fixed hierarchy? |
 | Generative | Could this be regenerated from spec? Is the design compressed? |
 
