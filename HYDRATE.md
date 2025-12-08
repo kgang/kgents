@@ -4,123 +4,86 @@
 
 ## TL;DR
 
-**Status**: Phase 2.5a.2 complete - API stubs prevent hallucinations
-**Branch**: `main` (uncommitted: `prompts.py`)
+**Status**: Priority 1 complete - API stubs working + tested
+**Branch**: `main` (1 commit ahead: 0d511c0)
 **Mypy**: 0 errors (55 source files, strict)
-**Evolution**: Syntax errors 0%, API signatures now provided to LLM
+**Last test**: Meta evolution passed (1 improvement incorporated)
+**New**: API stub extraction operational in prompts.py
 
 ---
 
-## This Session: Phase 2.5a.2 - API Stub Extraction
+## Latest: 0d511c0 (evolution self-improvement)
 
-### Completed Implementation
+Meta evolution incorporated an improvement using new API stub extraction.
+Previous commit: 85c566d (API stubs + J-gents spec)
 
-Enhanced `impl/claude/agents/e/prompts.py` with API stub extraction to prevent LLM hallucinations:
+## Earlier: 85c566d
 
-**New Functions:**
-- `extract_dataclass_fields()` - Extracts field definitions from dataclasses
-- `extract_enum_values()` - Extracts enum member names  
-- `extract_api_signatures()` - Resolves imports and extracts API signatures
-- `_extract_sigs_from_file()` - Helper to extract from specific files
+- **J-gents spec** (`spec/j-gents/`): JIT Agent Intelligence
+  - Reality classification (D/P/C trichotomy)
+  - Entropy budgets & Chaosmonger stability
+  - Lazy promises & accountability
+  - Implementation plan with phases
 
-**Updated:**
-- `PromptContext` - Added `dataclass_fields`, `enum_values`, `imported_apis` fields
-- `build_prompt_context()` - Populates API stub fields
-- `build_improvement_prompt()` - Displays "API Reference" section with exact signatures
+- **Phase 2.5a.2**: API stub extraction prevents LLM hallucinations
+  - `extract_dataclass_fields()`, `extract_enum_values()`, `extract_api_signatures()`
+  - Prompts now show exact signatures to LLM
 
-### API Reference Section in Prompts
+---
 
-LLM now receives exact API signatures:
-```
-## API Reference (USE THESE EXACT SIGNATURES)
+## Next Session: Start Here
 
-### Dataclass Constructors
-  @dataclass CodeModule(name: str, category: str, path: Path)
+### Priority 2: Wire Recovery Layer (formerly Priority 2)
 
-### Enum Values
-  ExperimentStatus: PENDING, RUNNING, PASSED, FAILED, HELD
-
-### Imported Module APIs
-  CodeModule fields: name: str, category: str, path: Path
-  Agent.invoke: async def invoke(self, input: A) -> B
-
-CRITICAL: Common mistakes to AVOID:
-  - ❌ CodeModule.code → ✓ CodeModule.path
-  - ❌ ExperimentStatus.REJECTED → ✓ PENDING/RUNNING/PASSED/FAILED/HELD
-  - ❌ agent.run() → ✓ agent.invoke()
+Integrate Phase 2.5c recovery components into evolve.py `_process_module()`:
+```python
+# After test failure:
+if not passed and should_retry(exp, validation_report):
+    refined_prompt = retry_strategy.refine_prompt(...)
+    # Re-run experiment
+elif retry_exhausted:
+    fallback_prompt = fallback_strategy.generate_minimal_prompt(...)
+    # Run fallback experiment
 ```
 
-### Impact
+### Option 2: Implement J-gents
 
-**Before:** LLM hallucinated `CodeModule.code`, `ExperimentStatus.REJECTED`, `agent.run()` → 75% type errors
+Start Phase 1 from `spec/j-gents/JGENT_SPEC_PLAN.md`:
+```bash
+mkdir -p impl/claude/agents/j
+# Create: reality.py, promise.py, chaosmonger.py, jgent.py
+```
 
-**After:** LLM sees exact dataclass fields, enum values, method signatures in every prompt
+### Option 3: Full Evolution Test
 
-### Next Steps
-
-1. **Measure effectiveness**: Run multiple experiments to quantify type error reduction
-2. **Phase 2.5c Integration**: Wire retry/fallback/error_memory into evolution pipeline  
-3. **Expand coverage**: Add more types to extraction lists as hallucinations discovered
-
----
-
-## Session Log
-
-**Dec 8 PM (current)**: Phase 2.5a.2 - API stub extraction in prompts.py
-  - Added extraction functions for dataclasses, enums, imported APIs
-  - Enhanced prompts with "API Reference" section showing exact signatures
-  - Handles multiple import patterns (agents.e, bootstrap.types, relative)
-  - Tested: Correctly extracts CodeModule.path, ExperimentStatus values, Agent.invoke
-**Dec 8 PM**: e8295d5 - Evolve pipeline refactor for AI agent ergonomics
-**Dec 8 PM**: Full `evolve all --auto-apply`: 93 passed, 30 failed, 2 held
-**Dec 8 PM**: 05b56aa - Fixed MYPYPATH in SandboxTestAgent
-**Dec 8 PM**: 53e073b - Exported Phase 2.5c components
+Run full evolution to validate API stub impact:
+```bash
+cd /Users/kentgang/git/kgents/impl/claude
+source ../../.venv/bin/activate  # IMPORTANT: Use kgents venv for mypy
+python evolve.py all --auto-apply  # Compare failure rate to previous 24%
+```
 
 ---
 
-## What Exists (Phase 2.5 Layers)
+## What Exists
 
-**Layer 1: Prompt Engineering** (prompts.py) ✅ Complete
-- Type-aware prompting with API stubs
-- Dataclass field extraction
-- Enum value extraction
-- Imported API signature extraction
+**J-gents Spec** (`spec/j-gents/`)
+- README.md, reality.md, stability.md, lazy.md, JGENT_SPEC_PLAN.md
 
-**Layer 2: Parsing** (parser.py) ✅ Complete
-- Multi-strategy code extraction
-- F-string repair for truncated outputs
-- Parse error recovery
-
-**Layer 3: Recovery & Learning** (retry.py, fallback.py, error_memory.py) ✅ Complete
-- Failure-aware prompt refinement
-- Progressive simplification fallbacks
-- Failure pattern tracking
-
-**Other E-gent Tools:**
-- validator.py - Pre-mypy schema validation
-- repair.py - AST-based auto-fixes
-- preflight.py - Module health validation
-- ast_analyzer.py - Code structure analysis
+**Evolution Pipeline** (`agents/e/`)
+- prompts.py - API stubs prevent hallucinations
+- parser.py - F-string repair
+- retry.py, fallback.py, error_memory.py - Recovery layer (not yet wired)
 
 ---
 
 ## Quick Commands
 
 ```bash
-# Test mode (fast, safe, single module)
-python evolve.py
-
-# Check status (AI-friendly output)
-python evolve.py status
-
-# Get suggestions
-python evolve.py suggest
-
-# Self-improve with auto-apply
-python evolve.py meta --auto-apply
-
-# Full evolution
-python evolve.py full --auto-apply
+python evolve.py          # Test mode (fast, safe)
+python evolve.py status   # Check state
+python evolve.py suggest  # Get suggestions
+python evolve.py meta --auto-apply  # Self-improve
 ```
 
 ---
