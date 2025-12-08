@@ -111,18 +111,18 @@ class FixConfig:
     should_continue: Callable[[Any], bool] = lambda _: True
 
 
-class Fix(Agent[A, B], Generic[A, B]):
+class Fix(Agent[A, A], Generic[A]):
     """
     Fix-point agent for iteration and retry patterns.
-    
+
     Applies an agent repeatedly until convergence or limit reached.
     This is the canonical pattern for self-improvement loops.
-    
+
     Example:
         improve = Fix(refine_agent, max_iterations=5)
         result = await improve.invoke(draft)
     """
-    
+
     def __init__(
         self,
         agent: Agent[A, A],
@@ -130,12 +130,12 @@ class Fix(Agent[A, B], Generic[A, B]):
     ):
         self._agent = agent
         self._config = config
-    
+
     @property
     def name(self) -> str:
         return f"Fix({self._agent.name})"
-    
-    async def invoke(self, input: A) -> B:
+
+    async def invoke(self, input: A) -> A:
         """
         Apply agent repeatedly until convergence.
         
@@ -145,12 +145,12 @@ class Fix(Agent[A, B], Generic[A, B]):
         
         for i in range(self._config.max_iterations):
             current = await self._agent.invoke(current)
-            
+
             if i >= self._config.min_iterations - 1:
                 if not self._config.should_continue(current):
                     break
-        
-        return current  # type: ignore
+
+        return current
 
 
 # Verdict types for Judge
