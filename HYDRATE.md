@@ -215,6 +215,7 @@ Usage:
 python evolve.py runtime --dry-run --quick  # Fast preview (recommended first run)
 python evolve.py agents --auto-apply        # Apply with full synthesis
 python evolve.py bootstrap --quick          # Fast iteration mode
+python evolve.py meta --dry-run             # Self-improvement: evolve evolve.py, autopoiesis.py, self_improve.py
 ```
 
 Flags:
@@ -242,6 +243,7 @@ Avoids JSON escaping issues for code content.
 
 ## Recent Changes
 
+- **evolve.py meta target + Full Stack Test** (Dec 7, 2025): Added `meta` target to evolve the evolution framework itself (evolve.py, autopoiesis.py, self_improve.py). Successful dry-run: 12/12 experiments passed across all 3 meta modules, generating improvements for type annotations, error handling, composable morphisms, and async support.
 - **evolve.py Performance + Observability Overhaul** (Dec 7, 2025): 4x faster via parallel CodeImprover execution. AST-based analysis generates actionable hypotheses (type coverage, error handling patterns, anti-patterns). Rich observability: progress tracking, per-stage timing, clear fail reasons. New --quick mode skips synthesis for speed. Better mypy validation (filters noise, only shows real errors).
 - **ClaudeCLIRuntime AI Coercion** (Dec 7, 2025): Last-resort recovery via AI-powered response reformatting when parse fails. Configurable confidence threshold. Reduces failures on edge cases.
 - **Minimal Output Principle Added to Spec** (Dec 7, 2025): Backpropagated CodeImprover insight to pure spec. "Serialization constraints are signals, not obstacles." When JSON becomes painful, agent output granularity is wrong. LLM agents should return single outputs; composition happens at pipeline level.
