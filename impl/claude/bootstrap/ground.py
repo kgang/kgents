@@ -29,57 +29,11 @@ What LLMs CANNOT do:
 - Substitute for real-world usage feedback
 """
 
-import asyncio
 from datetime import date
-from typing import Optional, TypeVar, Callable, Any
+from typing import Optional
 
 from .types import Agent, Facts, PersonaSeed, WorldSeed
-
-
-A = TypeVar('A')
-B = TypeVar('B')
-
-
-class Fix(Agent[tuple[Callable[[A], B], A], B]):
-    """
-    Fix-pattern retry: repeatedly applies function until success or max attempts.
-    
-    Type: ((A → B), A, max_attempts, backoff) → B
-    
-    Implements exponential backoff for transient failures.
-    """
-    
-    def __init__(self, max_attempts: int = 3, initial_backoff: float = 0.1):
-        self.max_attempts = max_attempts
-        self.initial_backoff = initial_backoff
-    
-    @property
-    def name(self) -> str:
-        return "Fix"
-    
-    async def invoke(self, input: tuple[Callable[[A], B], A]) -> B:
-        """Apply function with exponential backoff retry."""
-        fn, arg = input
-        
-        last_error: Optional[Exception] = None
-        backoff = self.initial_backoff
-        
-        for attempt in range(self.max_attempts):
-            try:
-                if asyncio.iscoroutinefunction(fn):
-                    return await fn(arg)
-                else:
-                    return fn(arg)
-            except Exception as e:
-                last_error = e
-                if attempt < self.max_attempts - 1:
-                    await asyncio.sleep(backoff)
-                    backoff *= 2  # exponential backoff
-        
-        # All attempts failed
-        raise RuntimeError(
-            f"Fix failed after {self.max_attempts} attempts"
-        ) from last_error
+from .compose import Fix
 
 
 class Ground(Agent[None, Facts]):
