@@ -13,7 +13,7 @@
 |-----------|--------|
 | 7 Principles | ✅ Defined in `spec/principles.md` |
 | 7 Bootstrap Agents | ✅ Spec (`spec/bootstrap.md`) + Impl (`impl/claude-openrouter/bootstrap/`) |
-| Autopoiesis | ✅ `autopoiesis.py` (spec/impl check) + `self_improve.py` (code review) |
+| Autopoiesis | ✅ `autopoiesis.py` (spec/impl) + `self_improve.py` (review) + `evolve.py` (apply) |
 | C-gents (Category Theory) | ✅ `impl/claude-openrouter/agents/c/` + specs for all patterns |
 | H-gents (Hegel/Jung/Lacan) | ✅ `impl/claude-openrouter/agents/h/` |
 | K-gent (Persona) | ✅ `impl/claude-openrouter/agents/k/` |
@@ -51,7 +51,8 @@ kgents/
 │   ├── agents/b/            # ✅ HypothesisEngine, Robin (scientific companion)
 │   ├── runtime/             # ✅ LLM execution (ClaudeCLIRuntime, ClaudeRuntime, OpenRouterRuntime)
 │   ├── autopoiesis.py       # ✅ Spec/impl alignment check
-│   └── self_improve.py      # ✅ Code review via HypothesisEngine + Judge
+│   ├── self_improve.py      # ✅ Code review via HypothesisEngine + Judge
+│   └── evolve.py            # ✅ Experimental improvement framework
 └── docs/                    # Supporting documentation
     └── BOOTSTRAP_PROMPT.md  # LLM prompt for implementing kgents
 ```
@@ -179,8 +180,36 @@ LLM execution layer for agents:
 - E-gents: Evaluation/Ethics agents (spec needed)
 - Package: Publish kgents-runtime to PyPI
 
+## evolve.py - Experimental Improvement Framework
+
+A creative framework for testing, synthesizing, and incorporating improvements:
+
+```
+Pipeline: HypothesisEngine >> CodeImprover >> Validator >> Hegel >> Apply
+```
+
+| Stage | Agent | Function |
+|-------|-------|----------|
+| **Experiment** | `HypothesisEngine` → `CodeImprover` | Generate concrete code improvements from analysis |
+| **Test** | `Validator` | Syntax check, type check, import validation |
+| **Synthesize** | `HegelAgent` | Dialectic: current vs improvement → synthesis |
+| **Incorporate** | `GitSafety` | Apply with git integration |
+
+Usage:
+```bash
+python evolve.py bootstrap --dry-run    # Preview improvements
+python evolve.py agents --auto-apply    # Apply improvements
+python evolve.py all                    # Full evolution
+```
+
+Key types:
+- `Experiment`: id, module, improvement, status, test_results, synthesis
+- `Improvement`: description, rationale, new_content, type, confidence
+- `ExperimentStatus`: PENDING → TESTING → PASSED → SYNTHESIZING → INCORPORATED
+
 ## Recent Changes
 
+- **evolve.py Added** (Dec 2025): Experimental improvement framework. Extends self_improve.py to actually generate and apply code changes via LLM + dialectic synthesis.
 - **self_improve.py Added** (Dec 2025): Code review via ClaudeCLIRuntime + HypothesisEngine + Judge + Contradict. Results: 25/25 modules ACCEPT, 75 hypotheses, 4 tensions resolved. Key findings: testing gap across all modules, type annotation improvements needed.
 - **Autopoiesis Complete** (Dec 2025): Spec/impl alignment check. 0 tensions, 22/22 verdicts accept.
 - **zen-agents Dropped** (Dec 2025): Textual TUI demo removed; new generation planned
@@ -282,4 +311,9 @@ result = await robin_agent.invoke(RobinInput(
 ))
 print(result.synthesis_narrative)
 print(result.next_questions)  # What to explore next
+
+# Evolution: kgents improving itself
+# Run from impl/claude-openrouter/
+python evolve.py bootstrap --dry-run  # Preview improvements
+python evolve.py agents --auto-apply  # Apply improvements
 ```
