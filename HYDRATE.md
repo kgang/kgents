@@ -7,9 +7,9 @@
 - `spec/` = Language spec (like Python)
 - `impl/claude-openrouter/` = Reference impl (like CPython)
 
-## Current State (Dec 7, 2025)
+## Current State (Dec 8, 2025)
 
-**Latest:** evolve.py optimized for 2-5x speedup via parallel processing, AST caching, smart context pruning. Use `--quick --hypotheses=2` for fastest iteration (2-3s/module).
+**Latest:** Meta-evolution fixes applied. Runtime APIs stabilized with `AgentResult.success/error`, `AgentContext.metadata`, and `parse_structured_sections()`. Self-improve.py syntax errors fixed. System can now generate hypotheses but needs Robin integration for experiment generation.
 
 | Component | Status |
 |-----------|--------|
@@ -196,6 +196,8 @@ LLM execution layer for agents:
 | B-gents B.2 | ✅ DONE | Robin (scientific companion) |
 
 **What's Next:**
+- **URGENT:** Fix evolve.py experiment generation (integrate Robin agent for code improvements)
+- **URGENT:** Stabilize runtime API contracts (prevent meta-evolution from breaking compatibility)
 - Tests: Add pytest suite for agents/b/ (hypothesis, robin)
 - D-gents: Data/Database agents (spec needed)
 - E-gents: Evaluation/Ethics agents (spec needed)
@@ -268,12 +270,24 @@ Avoids JSON escaping issues for code content.
 
 ## Recent Changes
 
-- **evolve.py 2-5x Performance Boost** (Dec 7, 2025): Major optimization overhaul: parallel module processing (asyncio.gather), AST analysis caching, smart context pruning for files >500 lines (50-75% token reduction), configurable --hypotheses=N and --max-improvements=N flags. Combined with existing parallel improvement generation + --quick mode, achieves 2-5x speedup (20x in fast mode). Typical runtime: 2-3s/module (fast) vs 10-15s (thorough) vs 40-60s (before).
-- **evolve.py meta target + Full Stack Test** (Dec 7, 2025): Added `meta` target to evolve the evolution framework itself (evolve.py, autopoiesis.py, self_improve.py). Successful dry-run: 12/12 experiments passed across all 3 meta modules, generating improvements for type annotations, error handling, composable morphisms, and async support.
-- **evolve.py Performance + Observability Overhaul** (Dec 7, 2025): 4x faster via parallel CodeImprover execution. AST-based analysis generates actionable hypotheses (type coverage, error handling patterns, anti-patterns). Rich observability: progress tracking, per-stage timing, clear fail reasons. New --quick mode skips synthesis for speed. Better mypy validation (filters noise, only shows real errors).
-- **ClaudeCLIRuntime AI Coercion** (Dec 7, 2025): Last-resort recovery via AI-powered response reformatting when parse fails. Configurable confidence threshold. Reduces failures on edge cases.
-- **Minimal Output Principle Added to Spec** (Dec 7, 2025): Backpropagated CodeImprover insight to pure spec. "Serialization constraints are signals, not obstacles." When JSON becomes painful, agent output granularity is wrong. LLM agents should return single outputs; composition happens at pipeline level.
-- **evolve.py Refactored** (Dec 7, 2025): CodeImprover now composable — single hypothesis → single improvement. Two-section output (METADATA + CODE) avoids JSON escaping.
+- **Meta-Evolution API Fixes** (Dec 8, 2025): Fixed critical blocking issues in evolve.py after meta-evolution:
+  - Added `parse_structured_sections()` to runtime/base.py (parses LLM responses into dicts)
+  - Added `success`/`error` fields to `AgentResult` for proper error handling
+  - Added `metadata` field to `AgentContext` for agent execution context
+  - Fixed `HypothesisInput` API (use observations/domain/question/constraints, not context/count)
+  - Fixed `HypothesisEngine()` instantiation (no runtime param)
+  - Fixed f-string syntax errors in self_improve.py (extracted backslash expressions)
+  - Removed non-existent imports from agents/c/__init__.py
+  - **Status:** Hypothesis generation working (4 hypotheses generated), experiment generation needs Robin agent integration
+- **Meta-Evolution Success** (Dec 7, 2025): evolve.py and autopoiesis.py self-evolved with 8 improvements applied:
+  - Async/await for parallel processing
+  - Comprehensive type annotations
+  - Fix pattern retry logic for LLM calls
+  - Maybe/Either error boundaries
+  - Dependency injection for runtime
+  - **Side effect:** API changes broke compatibility, required manual fixes (see above)
+- **evolve.py 2-5x Performance Boost** (Dec 7, 2025): Parallel module processing, AST caching, smart context pruning, configurable hypotheses/improvements. Runtime: 2-3s/module (fast) vs 10-15s (thorough).
+- **ClaudeCLIRuntime AI Coercion** (Dec 7, 2025): Last-resort recovery via AI-powered response reformatting when parse fails.
 - **self_improve.py Added** (Dec 2025): Code review via ClaudeCLIRuntime + HypothesisEngine + Judge + Contradict. Results: 25/25 modules ACCEPT, 75 hypotheses, 4 tensions resolved.
 - **Autopoiesis Complete** (Dec 2025): Spec/impl alignment check. 0 tensions, 22/22 verdicts accept.
 
