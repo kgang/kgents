@@ -9,27 +9,30 @@
 
 ## Current State (Dec 8, 2025)
 
-**Latest:** Cleanup commit 2bc0edc (Dec 8, 2025)
+**Latest:** Bootstrap Docs Phases 1-3 Complete + Infrastructure Fixes ✅ (Dec 8, 2025)
 
-**Completed recently:**
-- ✅ **Cleanup fixes** (commit 2bc0edc): hegel.py field import, evolve.py mypy portability
-- ✅ **Phase 4-5 Features** (commit 97ac42f): Judge decomposition (#3), Hegel lineage (#7), Robin fallback (#8)
-- ✅ **Meta-evolution Round 2** (8 improvements to evolve.py/autopoiesis.py): async/await, Fix retry logic, dependency injection
-- ✅ **Full-stack evolution** (25 modules, 100% pass rate): runtime, agents, bootstrap all improved
-- ✅ **Bootstrap Docs Improvement Plan** (51 hypotheses, 6 phases): Ready for implementation
+**Completed this session:**
+- ✅ **Bootstrap Docs Phase 2-3**: Error handling pattern (~70 lines), Composition verification checklist (~170 lines), Spec-First vs Agents-First resolution (~70 lines)
+- ✅ **Infrastructure fixes** (commit 2bc0edc):
+  - Fixed mypy execution in evolve.py (now uses `sys.executable -m mypy` for venv portability)
+  - Fixed missing `field` import in hegel.py (Issue #7 implementation)
+- ✅ **Bootstrap Docs Phase 1** (previously): Worked example, template, decision matrix, workflow, seven mini-judges, directory fix
+- ✅ **Total Bootstrap Docs additions**: +782 lines across BOOTSTRAP_PROMPT.md and AUTONOMOUS_BOOTSTRAP_PROTOCOL.md
 
-**Bootstrap Docs Phase 4-6 (from BOOTSTRAP_DOCUMENTS_IMPROVEMENT_PLAN.md):**
-- **Phase 4:** Common pitfalls, troubleshooting, observability hooks, progress template (Week 4, 320-400 lines)
-- **Phase 5:** Cross-references, dependency diagram, GroundParser agent (Week 5, 140-200 lines)
-- **Phase 6:** Regeneration test (behavior equivalence), Contradict check, Judge validation (Week 6)
+**Documents now mechanically translatable:**
+- BOOTSTRAP_PROMPT.md: ~800 lines (was ~258) with worked example, template, verification checklist
+- AUTONOMOUS_BOOTSTRAP_PROTOCOL.md: ~378 lines with decision matrix, workflow example, tension resolution
 
-Status: Plan exists, **optional** per HYDRATE priority list. Phases 1-3 would come first (worked examples, patterns, contradiction resolution).
+**Remaining Bootstrap Docs work (optional):**
+- Phase 4: Common pitfalls, troubleshooting (320-400 lines)
+- Phase 5: Cross-references, dependency diagram, GroundParser agent (140-200 lines)
+- Phase 6: Regeneration test validation
 
 **Next priorities:**
-1. Tests for agents/b/ (hypothesis, robin) - pytest suite
-2. D/E-gents specs
-3. PyPI package
-4. Bootstrap Docs improvements (optional, Phases 1-6 if desired)
+1. **Tests for agents/b/** (hypothesis, robin) - Critical gap
+2. **D/E-gents specs** - Next agent families
+3. **PyPI package** - Publish kgents-runtime
+4. Bootstrap Docs Phase 4-6 (optional enhancements)
 
 | Component | Status |
 |-----------|--------|
@@ -290,12 +293,15 @@ Avoids JSON escaping issues for code content.
 
 ## Recent Changes
 
-- **Hydrate Session: Bootstrap Docs Phase 4-6 Tieup** (Dec 8, 2025):
-  - ✅ Reviewed all background evolution processes (6 runs, mix of success/failures)
-  - ✅ Committed cleanup fixes: hegel.py field import (for lineage tracking), evolve.py mypy portability (commit 2bc0edc)
-  - ✅ Updated HYDRATE.md with concise Bootstrap Docs Phase 4-6 summary
-  - **Key finding:** Phase 4-6 is OPTIONAL work for common pitfalls/troubleshooting docs (from BOOTSTRAP_DOCUMENTS_IMPROVEMENT_PLAN.md)
-  - **Status:** All loose ends tied. Phase 4-5 features (#3, #7, #8) already complete. Ready for next priorities.
+- **Bootstrap Docs Implementation + Infrastructure Fixes** (Dec 8, 2025):
+  - ✅ **Phase 2.3**: Error handling pattern with Result types (~70 lines to BOOTSTRAP_PROMPT.md)
+  - ✅ **Phase 2.2**: Composition verification checklist with 6 test categories (~170 lines to BOOTSTRAP_PROMPT.md)
+  - ✅ **Phase 3.1**: Spec-First vs Agents-First tension resolution (~70 lines to AUTONOMOUS_BOOTSTRAP_PROTOCOL.md)
+  - ✅ **Infrastructure fix**: evolve.py mypy portability (`sys.executable -m mypy` for venv)
+  - ✅ **Infrastructure fix**: hegel.py missing `field` import (Issue #7 lineage tracking)
+  - ✅ Pushed commits to origin/main (2bc0edc, 8240000)
+  - **Impact:** Bootstrap docs now ~800 lines (PROMPT) + ~378 lines (PROTOCOL), mechanically translatable by LLMs
+  - **Status:** Phases 1-3 complete. Phase 4-6 optional (common pitfalls, troubleshooting, validation).
 - **Bootstrap Documents Improvement Plan** (Dec 8, 2025):
   - ✅ Generated comprehensive 51-hypothesis plan via evolutionary analysis (using kgents to improve kgents docs)
   - Used 2 parallel Task agents for deep analysis of AUTONOMOUS_BOOTSTRAP_PROTOCOL.md and BOOTSTRAP_PROMPT.md
