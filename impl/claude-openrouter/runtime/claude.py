@@ -8,12 +8,27 @@ Supports two authentication methods:
 """
 
 import os
-from typing import Any, TypeVar
+from typing import Any, TypeVar, Protocol
 
 from .base import Runtime, LLMAgent, AgentContext, AgentResult
 
 A = TypeVar("A")
 B = TypeVar("B")
+
+
+class AsyncAnthropicClient(Protocol):
+    """Protocol for Anthropic async clients to enable dependency injection."""
+    
+    async def messages_create(
+        self,
+        *,
+        model: str,
+        max_tokens: int,
+        system: str,
+        messages: list[dict[str, Any]],
+    ) -> Any:
+        """Create a message completion."""
+        ...
 
 
 class ClaudeRuntime(Runtime):
@@ -27,6 +42,9 @@ class ClaudeRuntime(Runtime):
         # With OAuth token (Claude Code CLI)
         runtime = ClaudeRuntime(auth_token=os.environ["CLAUDE_CODE_OAUTH_TOKEN"])
 
+        # With custom client (for testing)
+        runtime = ClaudeRuntime(client=mock_client)
+
         result = await runtime.execute(my_agent, input_data)
     """
 
@@ -37,6 +55,7 @@ class ClaudeRuntime(Runtime):
         api_key: str | None = None,
         auth_token: str | None = None,
         model: str | None = None,
+        client: Any | None = None,
     ):
         """
         Initialize Claude runtime.
@@ -47,11 +66,13 @@ class ClaudeRuntime(Runtime):
                        Defaults to CLAUDE_CODE_OAUTH_TOKEN env var.
                        Takes precedence over api_key if both are set.
             model: Model to use. Defaults to claude-sonnet-4-20250514.
+            client: Pre-configured Anthropic client. If provided, api_key and
+                   auth_token are ignored. Useful for testing and custom configs.
         """
         self._api_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
         self._auth_token = auth_token or os.environ.get("CLAUDE_CODE_OAUTH_TOKEN")
         self._model = model or self.DEFAULT_MODEL
-        self._client = None
+        self._client = client
 
     def _ensure_client(self):
         """Lazy-initialize the Anthropic client."""

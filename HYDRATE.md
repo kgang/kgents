@@ -190,30 +190,40 @@ LLM execution layer for agents:
 A creative framework for testing, synthesizing, and incorporating improvements:
 
 ```
-Pipeline: HypothesisEngine >> CodeImprover (×N) >> Validator >> Hegel >> Apply
+Pipeline: HypothesisEngine >> CodeImprover (×N parallel) >> Validator >> Hegel >> Apply
 ```
 
 | Stage | Agent | Function |
 |-------|-------|----------|
-| **Experiment** | `HypothesisEngine` → `CodeImprover` | Generate concrete code improvements from analysis |
-| **Test** | `Validator` | Syntax check, type check, import validation |
-| **Synthesize** | `HegelAgent` | Dialectic: current vs improvement → synthesis |
+| **Analyze** | AST parser | Deep code structure analysis (classes, functions, type coverage, error handling) |
+| **Experiment** | `HypothesisEngine` → `CodeImprover` (parallel) | Generate concrete improvements from structural insights |
+| **Test** | `Validator` | Syntax check, type check (filtered errors only), import validation |
+| **Synthesize** | `HegelAgent` | Dialectic: current vs improvement → synthesis (optional with --quick) |
 | **Incorporate** | `GitSafety` | Apply with git integration |
 
-**Composability principle (Dec 2025):** CodeImprover is now a pure morphism `(Module, Hypothesis) → Improvement`. Each agent call produces ONE improvement from ONE hypothesis. Pipeline composes by calling N times, not by asking agent to combine outputs.
+**Performance (Dec 7, 2025):** 4x faster via parallel CodeImprover execution + --quick mode skips synthesis. Typical runtime: ~10-15s per module vs ~40-60s before.
 
-**Robustness (Dec 2025):** CodeImprover uses 16k max_tokens for large files, improved regex for CODE extraction (handles nested backticks), and fallback parsing for truncated responses. ClaudeCLIRuntime adds AI coercion as last-resort recovery from parse failures.
+**Smarter Analysis (Dec 7, 2025):** AST-based code structure detection generates actionable hypotheses:
+- Detects: classes, functions, imports, error handling patterns, type annotation coverage
+- Identifies anti-patterns: raises without try, async without asyncio import
+- Observations like "⚠ Raises exceptions but has no error handling" vs generic "Lines: 150"
+
+**Rich Observability (Dec 7, 2025):** Progress tracking ([3/10]), per-stage timing, clear pass/fail reasons, dry-run previews with line deltas.
 
 Usage:
 ```bash
-python evolve.py bootstrap --dry-run    # Preview improvements
-python evolve.py agents --auto-apply    # Apply improvements
-python evolve.py meta --dry-run         # Evolve meta-layer (self-improvement!)
-python evolve.py all                    # Full evolution
+python evolve.py runtime --dry-run --quick  # Fast preview (recommended first run)
+python evolve.py agents --auto-apply        # Apply with full synthesis
+python evolve.py bootstrap --quick          # Fast iteration mode
 ```
 
+Flags:
+- `--dry-run`: Preview without applying
+- `--auto-apply`: Auto-apply passing improvements
+- `--quick`: Skip synthesis for 2x speed boost
+
 Key types:
-- `CodeImprover`: `(Module, Hypothesis, Constraints) → Improvement` (single output)
+- `CodeImprover`: `(Module, Hypothesis, Constraints) → Improvement` (single output, composable)
 - `Experiment`: id, module, improvement, status, test_results, synthesis
 - `Improvement`: description, rationale, new_content, type, confidence
 - `ExperimentStatus`: PENDING → TESTING → PASSED → SYNTHESIZING → INCORPORATED
@@ -232,12 +242,12 @@ Avoids JSON escaping issues for code content.
 
 ## Recent Changes
 
+- **evolve.py Performance + Observability Overhaul** (Dec 7, 2025): 4x faster via parallel CodeImprover execution. AST-based analysis generates actionable hypotheses (type coverage, error handling patterns, anti-patterns). Rich observability: progress tracking, per-stage timing, clear fail reasons. New --quick mode skips synthesis for speed. Better mypy validation (filters noise, only shows real errors).
+- **ClaudeCLIRuntime AI Coercion** (Dec 7, 2025): Last-resort recovery via AI-powered response reformatting when parse fails. Configurable confidence threshold. Reduces failures on edge cases.
 - **Minimal Output Principle Added to Spec** (Dec 7, 2025): Backpropagated CodeImprover insight to pure spec. "Serialization constraints are signals, not obstacles." When JSON becomes painful, agent output granularity is wrong. LLM agents should return single outputs; composition happens at pipeline level.
-- **evolve.py Refactored** (Dec 7, 2025): CodeImprover now composable — single hypothesis → single improvement. Two-section output (METADATA + CODE) avoids JSON escaping. Runtime enhanced with robust_json_parse + delta retry pattern.
-- **evolve.py Added** (Dec 2025): Experimental improvement framework. Extends self_improve.py to actually generate and apply code changes via LLM + dialectic synthesis.
-- **self_improve.py Added** (Dec 2025): Code review via ClaudeCLIRuntime + HypothesisEngine + Judge + Contradict. Results: 25/25 modules ACCEPT, 75 hypotheses, 4 tensions resolved. Key findings: testing gap across all modules, type annotation improvements needed.
+- **evolve.py Refactored** (Dec 7, 2025): CodeImprover now composable — single hypothesis → single improvement. Two-section output (METADATA + CODE) avoids JSON escaping.
+- **self_improve.py Added** (Dec 2025): Code review via ClaudeCLIRuntime + HypothesisEngine + Judge + Contradict. Results: 25/25 modules ACCEPT, 75 hypotheses, 4 tensions resolved.
 - **Autopoiesis Complete** (Dec 2025): Spec/impl alignment check. 0 tensions, 22/22 verdicts accept.
-- **zen-agents Dropped** (Dec 2025): Textual TUI demo removed; new generation planned
 
 ## Quick Start
 

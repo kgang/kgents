@@ -7,13 +7,15 @@ The runtime handles the actual API calls and response parsing.
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Generic, TypeVar, Optional
+from typing import Any, Generic, TypeVar, Optional, Callable, Awaitable
 import json
+import asyncio
 
 from bootstrap import Agent
 
 A = TypeVar("A")
 B = TypeVar("B")
+C = TypeVar("C")
 
 
 @dataclass
@@ -77,6 +79,108 @@ class LLMAgent(Agent[A, B], ABC):
     def parse_response(self, response: str) -> B:
         """Parse LLM response to output type."""
         pass
+
+    async def execute_async(self, input: A, runtime: 'Runtime') -> B:
+        """
+        Async execution of this agent.
+        
+        Default implementation calls runtime.execute and extracts output.
+        Override for custom async behavior.
+        """
+        result = await runtime.execute(self, input)
+        return result.output
+
+    def then_async(self, g: 'LLMAgent[B, C]') -> 'AsyncComposedAgent[A, C]':
+        """
+        Async composition: self >> g.
+        
+        Returns an agent that executes self, then g on the result.
+        Both executions are awaited sequentially.
+        """
+        return AsyncComposedAgent(self, g)
+
+
+class AsyncComposedAgent(LLMAgent[A, C], Generic[A, B, C]):
+    """
+    Composition of two async agents: f >> g.
+    
+    Executes f, then g on f's output.
+    Preserves the morphism structure with clear A → B → C types.
+    """
+    
+    def __init__(self, f: LLMAgent[A, B], g: LLMAgent[B, C]):
+        self.f = f
+        self.g = g
+    
+    def build_prompt(self, input: A) -> AgentContext:
+        """Not used - async execution bypasses this."""
+        raise NotImplementedError("AsyncComposedAgent uses execute_async")
+    
+    def parse_response(self, response: str) -> C:
+        """Not used - async execution bypasses this."""
+        raise NotImplementedError("AsyncComposedAgent uses execute_async")
+    
+    async def execute_async(self, input: A, runtime: 'Runtime') -> C:
+        """Execute f, then g sequentially."""
+        b = await self.f.execute_async(input, runtime)
+        c = await self.g.execute_async(b, runtime)
+        return c
+
+
+async def acompose(*agents: LLMAgent) -> LLMAgent:
+    """
+    Async composition of multiple agents: f >> g >> h.
+    
+    Example:
+        pipeline = acompose(extract_facts, summarize, format_output)
+        result = await pipeline.execute_async(input, runtime)
+    """
+    if len(agents) == 0:
+        raise ValueError("acompose requires at least one agent")
+    if len(agents) == 1:
+        return agents[0]
+    
+    result = agents[0]
+    for agent in agents[1:]:
+        result = result.then_async(agent)
+    return result
+
+
+async def parallel_execute(
+    agents: list[LLMAgent[A, B]],
+    inputs: list[A],
+    runtime: 'Runtime'
+) -> list[B]:
+    """
+    Execute multiple agents concurrently on their respective inputs.
+    
+    This enables true parallelism for I/O-bound LLM calls.
+    
+    Args:
+        agents: List of agents to execute
+        inputs: Corresponding inputs for each agent
+        runtime: Runtime to use for execution
+    
+    Returns:
+        List of outputs in the same order as inputs
+    
+    Example:
+        # Process multiple documents concurrently
+        results = await parallel_execute(
+            [summarize_agent] * len(documents),
+            documents,
+            runtime
+        )
+    """
+    if len(agents) != len(inputs):
+        raise ValueError("agents and inputs must have same length")
+    
+    tasks = [
+        agent.execute_async(input_val, runtime)
+        for agent, input_val in zip(agents, inputs)
+    ]
+    
+    return await asyncio.gather(*tasks)
 
 
 class Runtime(ABC):

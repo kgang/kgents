@@ -11,6 +11,7 @@ import asyncio
 import json
 import shutil
 from typing import Any, TypeVar, Callable
+from enum import Enum
 
 from .base import Runtime, LLMAgent, AgentContext, AgentResult
 
@@ -18,11 +19,63 @@ A = TypeVar("A")
 B = TypeVar("B")
 
 
+class ParseErrorType(Enum):
+    """Classification of parse errors for retry strategy."""
+    TRANSIENT_FORMAT = "transient_format"  # Missing markdown, JSON syntax - retry
+    TRANSIENT_EXTRACTION = "transient_extraction"  # Data present but malformed - retry with coercion
+    PERMANENT_SCHEMA = "permanent_schema"  # Wrong data structure - fast fail or force coercion
+    PERMANENT_MISSING = "permanent_missing"  # Required data absent - fast fail
+    TIMEOUT = "timeout"  # CLI timeout - fast fail
+    UNKNOWN = "unknown"  # Unclassified - retry
+
+
 class ParseError(Exception):
     """Raised when LLM output cannot be parsed."""
-    def __init__(self, message: str, raw_response: str):
+    def __init__(self, message: str, raw_response: str, error_type: ParseErrorType = ParseErrorType.UNKNOWN):
         super().__init__(message)
         self.raw_response = raw_response
+        self.error_type = error_type
+
+
+def classify_parse_error(error_msg: str, raw_response: str) -> ParseErrorType:
+    """
+    Classify a parse error to determine retry strategy.
+    
+    Returns:
+        ParseErrorType indicating whether error is transient or permanent
+    """
+    error_lower = error_msg.lower()
+    
+    # Timeout errors - permanent
+    if "timeout" in error_lower:
+        return ParseErrorType.TIMEOUT
+    
+    # Missing sections - check if data exists but poorly formatted
+    if "no code content" in error_lower or "no json" in error_lower:
+        # If response is very short, data is likely missing (permanent)
+        if len(raw_response.strip()) < 50:
+            return ParseErrorType.PERMANENT_MISSING
+        # If response is substantial, likely formatting issue (transient)
+        return ParseErrorType.TRANSIENT_FORMAT
+    
+    # JSON errors - check if JSON-like content exists
+    if "json" in error_lower or "decode" in error_lower:
+        # Look for JSON-like patterns
+        if "{" in raw_response and "}" in raw_response:
+            return ParseErrorType.TRANSIENT_EXTRACTION
+        return ParseErrorType.PERMANENT_MISSING
+    
+    # Schema/type errors - permanent
+    if any(term in error_lower for term in ["schema", "type", "field required", "missing key"]):
+        return ParseErrorType.PERMANENT_SCHEMA
+    
+    # Extraction/parsing errors - transient if data seems present
+    if any(term in error_lower for term in ["extract", "parse", "format"]):
+        if len(raw_response.strip()) > 100:
+            return ParseErrorType.TRANSIENT_EXTRACTION
+        return ParseErrorType.PERMANENT_MISSING
+    
+    return ParseErrorType.UNKNOWN
 
 
 class ClaudeCLIRuntime(Runtime):
@@ -79,9 +132,9 @@ class ClaudeCLIRuntime(Runtime):
         if self._verbose:
             print(f"      [CLI] {msg}", flush=True)
 
-    def _build_retry_message(self, error: str, previous_response: str) -> str:
+    def _build_retry_message(self, error: str, previous_response: str, error_type: ParseErrorType) -> str:
         """
-        Build a targeted retry message based on what's missing.
+        Build a targeted retry message based on error type.
 
         This implements the "delta retry" pattern - ask only for what we don't have.
         """
@@ -258,16 +311,18 @@ OUTPUT FORMAT:
         Execute an LLM agent with Claude CLI.
 
         Implements Fix pattern: retries on parse failures with feedback.
+        Uses error classification to apply smart retry strategies.
         """
         context = agent.build_prompt(input)
         last_error = None
+        last_error_type = ParseErrorType.UNKNOWN
         all_responses = []
 
         for attempt in range(self._max_retries):
             # Add retry context if this is a retry
             if attempt > 0 and last_error:
                 # Construct a helpful retry message based on what's missing
-                retry_message = self._build_retry_message(last_error, all_responses[-1])
+                retry_message = self._build_retry_message(last_error, all_responses[-1], last_error_type)
                 retry_context = AgentContext(
                     system_prompt=context.system_prompt,
                     messages=context.messages + [
@@ -293,7 +348,22 @@ OUTPUT FORMAT:
                 )
             except Exception as e:
                 last_error = str(e)
-                self._log(f"Parse attempt {attempt + 1} failed: {last_error[:100]}")
+                last_error_type = classify_parse_error(last_error, response_text)
+                self._log(f"Parse attempt {attempt + 1} failed: {last_error_type.value} - {last_error[:100]}")
+
+                # Fast-fail on permanent errors if we're not on last retry
+                if attempt < self._max_retries - 1:
+                    if last_error_type in (ParseErrorType.PERMANENT_SCHEMA, ParseErrorType.PERMANENT_MISSING, ParseErrorType.TIMEOUT):
+                        self._log(f"Permanent error detected ({last_error_type.value}), skipping to coercion")
+                        # Jump to coercion logic if enabled
+                        if self._enable_coercion:
+                            attempt = self._max_retries - 1  # Force to last attempt
+                        else:
+                            raise ParseError(
+                                f"Permanent parse error on attempt {attempt + 1}: {last_error}",
+                                response_text,
+                                last_error_type
+                            )
 
                 # Last retry failed - try AI coercion if enabled
                 if attempt == self._max_retries - 1:
@@ -330,8 +400,9 @@ OUTPUT FORMAT:
 
                     raise ParseError(
                         f"Failed to parse response after {self._max_retries} attempts: {last_error}",
-                        response_text
+                        response_text,
+                        last_error_type
                     )
 
         # Should not reach here
-        raise ParseError("Unexpected: no response generated", "")
+        raise ParseError("Unexpected: no response generated", "", ParseErrorType.UNKNOWN)
