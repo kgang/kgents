@@ -28,10 +28,39 @@ Anti-pattern: Silent failures, swallowed exceptions, "last write wins".
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Optional, Callable
+from typing import Any, Optional, Callable, Protocol
 import time
 
 from .types import Agent, Tension, TensionMode
+
+
+# Protocol for extensible tension detection
+class TensionDetector(Protocol):
+    """
+    Protocol for custom tension detectors.
+
+    Allows extending Contradict with domain-specific contradiction logic
+    without modifying the core agent.
+
+    Example:
+        class SemanticTensionDetector:
+            async def detect(self, a: Any, b: Any, mode: TensionMode) -> Optional[Tension]:
+                # Use LLM to check semantic contradiction
+                ...
+
+        contradict = Contradict(detectors=[
+            SemanticTensionDetector(),
+            LogicalTensionDetector(),
+        ])
+    """
+
+    async def detect(self, a: Any, b: Any, mode: TensionMode) -> Optional[Tension]:
+        """
+        Detect tension between a and b for the given mode.
+
+        Returns Tension if contradiction detected, None otherwise.
+        """
+        ...
 
 
 @dataclass
@@ -75,7 +104,14 @@ class Contradict(Agent[ContradictInput, ContradictResult]):
     The contradiction-recognizer: surfaces tensions between two things.
 
     Usage:
+        # Default detectors
         contradict = Contradict()
+
+        # Custom detectors
+        contradict = Contradict(detectors=[
+            SemanticTensionDetector(),
+            CustomLogicDetector(),
+        ])
 
         # Check for logical contradiction
         result = await contradict.invoke(ContradictInput(
@@ -87,7 +123,7 @@ class Contradict(Agent[ContradictInput, ContradictResult]):
         if result.tension:
             # Handle the conflict explicitly
             resolution = await sublate.invoke(result.tension)
-        
+
         # Observability: see what was checked
         print(f"Checked {len(result.checked_modes)} modes in {result.execution_time_ms}ms")
 
@@ -96,15 +132,21 @@ class Contradict(Agent[ContradictInput, ContradictResult]):
 
     def __init__(
         self,
-        checker: Optional[Callable[[Any, Any, TensionMode], Optional[Tension]]] = None,
+        detectors: Optional[list[TensionDetector]] = None,
     ):
         """
-        Initialize with optional custom contradiction checker.
+        Initialize with optional custom tension detectors.
 
-        The default checker handles common cases. For domain-specific
-        contradictions, provide a custom checker.
+        If no detectors provided, uses DefaultTensionDetector.
+
+        Args:
+            detectors: List of TensionDetector implementations to use
         """
-        self._checker = checker or self._default_check
+        self._detectors: list[TensionDetector]
+        if detectors is None:
+            self._detectors = [DefaultTensionDetector()]
+        else:
+            self._detectors = detectors
 
     @property
     def name(self) -> str:
@@ -112,21 +154,28 @@ class Contradict(Agent[ContradictInput, ContradictResult]):
 
     async def invoke(self, input: ContradictInput) -> ContradictResult:
         """
-        Check for contradiction between a and b.
+        Check for contradiction between a and b using registered detectors.
 
         Returns ContradictResult with tension (if found) and metadata.
         """
         start_time = time.perf_counter()
-        
+
         modes = [input.mode] if input.mode else list(TensionMode)
         checked_modes = []
         found_tension = None
 
-        for mode in modes:
-            checked_modes.append(mode)
-            tension = self._checker(input.a, input.b, mode)
-            if tension:
-                found_tension = tension
+        # Try each detector in sequence
+        for detector in self._detectors:
+            for mode in modes:
+                if mode not in checked_modes:
+                    checked_modes.append(mode)
+
+                tension = await detector.detect(input.a, input.b, mode)
+                if tension:
+                    found_tension = tension
+                    break
+
+            if found_tension:
                 break
 
         execution_time_ms = (time.perf_counter() - start_time) * 1000
@@ -137,11 +186,21 @@ class Contradict(Agent[ContradictInput, ContradictResult]):
             execution_time_ms=execution_time_ms,
         )
 
-    def _default_check(
-        self, a: Any, b: Any, mode: TensionMode
-    ) -> Optional[Tension]:
-        """Default contradiction checks by mode."""
 
+# Default tension detector implementation
+class DefaultTensionDetector:
+    """
+    Default implementation of TensionDetector protocol.
+
+    Handles common contradiction cases:
+    - LOGICAL: Boolean opposites, string negations
+    - PRAGMATIC: Conflicting dict values
+    - AXIOLOGICAL: Value conflicts (requires Ground context)
+    - TEMPORAL: Past vs present conflicts (requires history)
+    """
+
+    async def detect(self, a: Any, b: Any, mode: TensionMode) -> Optional[Tension]:
+        """Detect tension using default logic."""
         if mode == TensionMode.LOGICAL:
             return self._check_logical(a, b)
         elif mode == TensionMode.PRAGMATIC:
@@ -234,7 +293,7 @@ class NameCollisionChecker(Agent[tuple[str, set[str]], Optional[Tension]]):
         return None
 
 
-class ConfigConflictChecker(Agent[tuple[dict, dict], Optional[Tension]]):
+class ConfigConflictChecker(Agent[tuple[dict[str, Any], dict[str, Any]], Optional[Tension]]):
     """Check for conflicting configuration values."""
 
     @property
@@ -242,7 +301,7 @@ class ConfigConflictChecker(Agent[tuple[dict, dict], Optional[Tension]]):
         return "ConfigConflictChecker"
 
     async def invoke(
-        self, input: tuple[dict, dict]
+        self, input: tuple[dict[str, Any], dict[str, Any]]
     ) -> Optional[Tension]:
         config_a, config_b = input
 
