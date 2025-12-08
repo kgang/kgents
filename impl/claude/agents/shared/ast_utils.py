@@ -10,13 +10,16 @@ Provides common AST operations:
 - Nesting depth analysis
 - Branching factor estimation
 - Function/class extraction
+
+Enhanced (Phase D - H15) with formal visitor pattern for extensible AST traversal.
 """
 
 from __future__ import annotations
 
 import ast
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any, Generic, Optional, TypeVar
 
 
 @dataclass(frozen=True)
@@ -608,3 +611,213 @@ class ASTAnalysisKit:
     def function_count(self) -> int:
         """Get total function count (including methods)."""
         return count_functions(self._tree)
+
+
+# ============================================================================
+# Formal Visitor Pattern (Phase D - H15)
+# ============================================================================
+# Provides extensible AST traversal for custom analysis without modifying
+# existing utility functions.
+
+
+T = TypeVar("T")
+
+
+class ASTVisitor(ABC, Generic[T]):
+    """
+    Abstract base class for AST visitors.
+
+    Implements the Visitor pattern for extensible AST traversal.
+    Subclasses override visit_* methods for specific node types.
+
+    Generic type T represents the accumulated result type.
+
+    Usage:
+        class ImportCollector(ASTVisitor[list[str]]):
+            def __init__(self):
+                self.imports = []
+
+            def visit_Import(self, node: ast.Import) -> None:
+                for alias in node.names:
+                    self.imports.append(alias.name)
+
+            def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
+                if node.module:
+                    self.imports.append(node.module)
+
+            def result(self) -> list[str]:
+                return self.imports
+
+        tree = ast.parse(source)
+        visitor = ImportCollector()
+        visitor.visit(tree)
+        print(visitor.result())
+    """
+
+    def visit(self, node: ast.AST) -> None:
+        """
+        Visit a node and dispatch to specialized visit_* method.
+
+        Args:
+            node: AST node to visit
+        """
+        method_name = f"visit_{node.__class__.__name__}"
+        visitor = getattr(self, method_name, self.generic_visit)
+        visitor(node)
+
+    def generic_visit(self, node: ast.AST) -> None:
+        """
+        Default visitor for unhandled node types.
+
+        Recursively visits all child nodes.
+
+        Args:
+            node: AST node to visit
+        """
+        for child in ast.iter_child_nodes(node):
+            self.visit(child)
+
+    @abstractmethod
+    def result(self) -> T:
+        """
+        Return the accumulated result of the visitor.
+
+        Returns:
+            Result of type T
+        """
+        pass
+
+
+class ComplexityVisitor(ASTVisitor[int]):
+    """
+    Visitor that calculates cyclomatic complexity.
+
+    Demonstrates the visitor pattern by reimplementing
+    calculate_cyclomatic_complexity as a visitor.
+
+    Complexity = 1 + decision points (if, for, while, etc.)
+    """
+
+    def __init__(self):
+        """Initialize with base complexity of 1."""
+        self._complexity = 1
+
+    def visit_If(self, node: ast.If) -> None:
+        """Visit if statement - adds 1 to complexity."""
+        self._complexity += 1
+        self.generic_visit(node)
+
+    def visit_For(self, node: ast.For) -> None:
+        """Visit for loop - adds 1 to complexity."""
+        self._complexity += 1
+        self.generic_visit(node)
+
+    def visit_While(self, node: ast.While) -> None:
+        """Visit while loop - adds 1 to complexity."""
+        self._complexity += 1
+        self.generic_visit(node)
+
+    def visit_AsyncFor(self, node: ast.AsyncFor) -> None:
+        """Visit async for loop - adds 1 to complexity."""
+        self._complexity += 1
+        self.generic_visit(node)
+
+    def visit_ExceptHandler(self, node: ast.ExceptHandler) -> None:
+        """Visit exception handler - adds 1 to complexity."""
+        self._complexity += 1
+        self.generic_visit(node)
+
+    def visit_With(self, node: ast.With) -> None:
+        """Visit with statement - adds 1 to complexity."""
+        self._complexity += 1
+        self.generic_visit(node)
+
+    def visit_AsyncWith(self, node: ast.AsyncWith) -> None:
+        """Visit async with statement - adds 1 to complexity."""
+        self._complexity += 1
+        self.generic_visit(node)
+
+    def visit_comprehension(self, node: ast.comprehension) -> None:
+        """Visit comprehension - adds 1 to complexity."""
+        self._complexity += 1
+        self.generic_visit(node)
+
+    def visit_BoolOp(self, node: ast.BoolOp) -> None:
+        """Visit boolean operation - adds branches - 1 to complexity."""
+        self._complexity += len(node.values) - 1
+        self.generic_visit(node)
+
+    def visit_IfExp(self, node: ast.IfExp) -> None:
+        """Visit ternary expression - adds 1 to complexity."""
+        self._complexity += 1
+        self.generic_visit(node)
+
+    def result(self) -> int:
+        """Return calculated cyclomatic complexity."""
+        return self._complexity
+
+
+class ImportVisitor(ASTVisitor[list[str]]):
+    """
+    Visitor that collects all imports.
+
+    Demonstrates visitor pattern for import extraction.
+    """
+
+    def __init__(self, detailed: bool = False):
+        """
+        Initialize import visitor.
+
+        Args:
+            detailed: If True, collect full paths (os.path), else base names (os)
+        """
+        self._imports: list[str] = []
+        self._detailed = detailed
+
+    def visit_Import(self, node: ast.Import) -> None:
+        """Visit import statement."""
+        for alias in node.names:
+            if self._detailed:
+                self._imports.append(alias.name)
+            else:
+                # Get base module name
+                self._imports.append(alias.name.split(".")[0])
+        self.generic_visit(node)
+
+    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
+        """Visit from...import statement."""
+        if node.module:
+            if self._detailed:
+                # Detailed: include what's imported (os.path.join)
+                for alias in node.names:
+                    self._imports.append(f"{node.module}.{alias.name}")
+            else:
+                # Base: just the module (os)
+                self._imports.append(node.module.split(".")[0])
+        self.generic_visit(node)
+
+    def result(self) -> list[str]:
+        """Return collected imports."""
+        return self._imports
+
+
+def visit_ast(tree: ast.AST, visitor: ASTVisitor[T]) -> T:
+    """
+    Visit an AST with a visitor and return result.
+
+    Convenience function for visitor pattern usage.
+
+    Args:
+        tree: AST to visit
+        visitor: Visitor instance
+
+    Returns:
+        Result from visitor.result()
+
+    Example:
+        tree = ast.parse(source)
+        complexity = visit_ast(tree, ComplexityVisitor())
+        imports = visit_ast(tree, ImportVisitor(detailed=True))
+    """
+    visitor.visit(tree)
+    return visitor.result()
