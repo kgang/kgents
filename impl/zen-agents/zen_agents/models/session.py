@@ -2,7 +2,10 @@
 Session models for zen-agents.
 
 Sessions have states: RUNNING, COMPLETED, PAUSED, FAILED, KILLED.
-Session types: CLAUDE, CODEX, GEMINI, SHELL, OPENROUTER.
+
+Session types:
+  - Provider backends: CLAUDE, CODEX, GEMINI, SHELL, OPENROUTER
+  - LLM-backed kgents: ROBIN, CREATIVITY, HYPOTHESIS, KGENT
 """
 
 from dataclasses import dataclass, field
@@ -22,12 +25,39 @@ class SessionState(Enum):
 
 
 class SessionType(Enum):
-    """Types of AI sessions."""
+    """Types of AI sessions.
+
+    Provider backends (infrastructure):
+        CLAUDE, CODEX, GEMINI, SHELL, OPENROUTER
+
+    LLM-backed kgents (agent personalities):
+        ROBIN - Round-robin orchestrator for multi-agent coordination
+        CREATIVITY - Art/creativity coach (A-gents domain)
+        HYPOTHESIS - Scientific hypothesis generator (B-gents domain)
+        KGENT - Kent simulacra interactive persona (K-gent)
+    """
+    # Provider backends
     CLAUDE = "claude"
     CODEX = "codex"
     GEMINI = "gemini"
     SHELL = "shell"
     OPENROUTER = "openrouter"
+
+    # LLM-backed kgents
+    ROBIN = "robin"
+    CREATIVITY = "creativity"
+    HYPOTHESIS = "hypothesis"
+    KGENT = "kgent"
+
+
+def session_requires_llm(session_type: SessionType) -> bool:
+    """Check if session type requires LLM runtime (kgents agents)."""
+    return session_type in {
+        SessionType.ROBIN,
+        SessionType.CREATIVITY,
+        SessionType.HYPOTHESIS,
+        SessionType.KGENT,
+    }
 
 
 @dataclass
@@ -72,6 +102,9 @@ class Session:
     working_dir: Optional[str] = None
     command: Optional[str] = None
 
+    # Flexible metadata for LLM-backed sessions
+    metadata: dict = field(default_factory=dict)
+
     @classmethod
     def create(
         cls,
@@ -103,6 +136,7 @@ class Session:
             error_message=self.error_message,
             working_dir=self.working_dir,
             command=self.command,
+            metadata=self.metadata.copy(),
         )
 
     def __repr__(self) -> str:

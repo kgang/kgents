@@ -1,7 +1,8 @@
 """
 Main Screen - The primary interface for zen-agents.
 
-A contemplative TUI for managing parallel AI sessions.
+A contemplative TUI for managing parallel AI sessions,
+with integrated LLM analysis via kgents agents.
 """
 
 from typing import Optional
@@ -11,10 +12,12 @@ from textual.binding import Binding
 from textual.containers import Container, Horizontal, Vertical
 from textual.screen import Screen
 from textual.widgets import Button, Footer, Header, Input, Label, Select, Static
+from textual.worker import Worker, get_current_worker
 
-from ..models import Session, SessionState, SessionType
+from ..models import Session, SessionState, SessionType, session_requires_llm
 from ..services import SessionManager, StateRefresher
-from ..widgets import SessionList
+from ..services.agent_orchestrator import AgentOrchestrator
+from ..widgets import SessionList, LogViewer
 
 
 class StatusBar(Static):
@@ -186,7 +189,8 @@ class MainScreen(Screen):
     """
     The main screen of zen-agents.
 
-    A contemplative TUI for managing parallel AI sessions.
+    A contemplative TUI for managing parallel AI sessions,
+    with integrated LLM analysis via kgents agents.
     """
 
     DEFAULT_CSS = """
@@ -200,8 +204,12 @@ class MainScreen(Screen):
     }
 
     MainScreen .session-list-container {
-        height: 1fr;
+        height: 50%;
         padding: 1;
+    }
+
+    MainScreen .log-container {
+        height: 50%;
     }
 
     MainScreen .hidden {
@@ -218,6 +226,7 @@ class MainScreen(Screen):
         Binding("n", "new_session", "New"),
         Binding("q", "quit", "Quit"),
         Binding("a", "attach", "Attach"),
+        Binding("l", "capture_log", "Capture Log"),
         Binding("?", "help", "Help"),
     ]
 
@@ -225,12 +234,15 @@ class MainScreen(Screen):
         self,
         manager: SessionManager,
         refresher: StateRefresher,
+        orchestrator: Optional[AgentOrchestrator] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
         self._manager = manager
         self._refresher = refresher
+        self._orchestrator = orchestrator or AgentOrchestrator()
         self._manager.add_event_handler(self._on_session_event)
+        self._selected_session: Optional[Session] = None
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
@@ -239,6 +251,8 @@ class MainScreen(Screen):
             with Vertical(classes="main-content"):
                 with Container(classes="session-list-container"):
                     yield SessionList(id="session-list")
+                with Container(classes="log-container"):
+                    yield LogViewer(id="log-viewer")
 
             yield SessionDetail(id="session-detail")
 
@@ -327,7 +341,21 @@ class MainScreen(Screen):
     def action_help(self) -> None:
         """Show help."""
         status_bar = self.query_one("#status-bar", StatusBar)
-        status_bar.set_message("n:New j/k:Navigate enter:Select d:Kill r:Revive q:Quit")
+        status_bar.set_message("n:New j/k:Nav enter:Sel a:Attach l:Log d:Kill r:Revive q:Quit")
+
+    async def action_capture_log(self) -> None:
+        """Capture and display the selected session's log."""
+        if not self._selected_session:
+            status_bar = self.query_one("#status-bar", StatusBar)
+            status_bar.set_message("No session selected")
+            return
+
+        if self._selected_session.state != SessionState.RUNNING:
+            status_bar = self.query_one("#status-bar", StatusBar)
+            status_bar.set_message("Session is not running")
+            return
+
+        await self._capture_session_log(self._selected_session)
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle button presses."""
@@ -400,8 +428,13 @@ class MainScreen(Screen):
         event: SessionList.SessionSelected,
     ) -> None:
         """Handle session selection."""
+        self._selected_session = event.session
         detail = self.query_one("#session-detail", SessionDetail)
         detail.set_session(event.session)
+
+        # Clear log viewer when selection changes
+        log_viewer = self.query_one("#log-viewer", LogViewer)
+        log_viewer.clear()
 
     async def on_session_list_session_action(
         self,
@@ -412,3 +445,105 @@ class MainScreen(Screen):
             await self._manager.kill_session(event.session.id)
         elif event.action == "revive":
             await self._manager.revive_session(event.session.id)
+
+    # -------------------------------------------------------------------------
+    # Log Capture and Analysis
+    # -------------------------------------------------------------------------
+
+    async def _capture_session_log(self, session: Session) -> None:
+        """Capture the session's tmux pane content and display in log viewer."""
+        import subprocess
+
+        status_bar = self.query_one("#status-bar", StatusBar)
+        log_viewer = self.query_one("#log-viewer", LogViewer)
+
+        try:
+            # Capture tmux pane content
+            result = subprocess.run(
+                ["tmux", "capture-pane", "-t", session.tmux_name, "-p", "-S", "-500"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+
+            if result.returncode == 0:
+                content = result.stdout
+                log_viewer.update_log(content)
+                status_bar.set_message(f"Captured log for {session.name}")
+            else:
+                log_viewer.show_error(f"Failed to capture: {result.stderr}")
+                status_bar.set_message("Failed to capture log")
+
+        except subprocess.TimeoutExpired:
+            log_viewer.show_error("Timeout capturing pane")
+            status_bar.set_message("Timeout capturing log")
+        except Exception as e:
+            log_viewer.show_error(str(e))
+            status_bar.set_message(f"Error: {e}")
+
+    def on_log_viewer_analyze_requested(
+        self,
+        event: LogViewer.AnalyzeRequested,
+    ) -> None:
+        """Handle analysis request from log viewer."""
+        log_viewer = self.query_one("#log-viewer", LogViewer)
+        status_bar = self.query_one("#status-bar", StatusBar)
+
+        if not log_viewer.log_content:
+            status_bar.set_message("No log content to analyze. Press 'l' to capture.")
+            return
+
+        if not self._selected_session:
+            status_bar.set_message("No session selected")
+            return
+
+        # Start analysis in worker thread
+        log_viewer.start_analyzing()
+        status_bar.set_message("Analyzing log with HypothesisEngine...")
+
+        # Run analysis in background worker
+        self.run_worker(
+            self._do_analysis(
+                log_viewer.log_content,
+                self._selected_session.metadata.get("domain", "software engineering"),
+            ),
+            name="analyze_log",
+        )
+
+    async def _do_analysis(self, log_content: str, domain: str) -> None:
+        """Perform LLM analysis in background worker."""
+        log_viewer = self.query_one("#log-viewer", LogViewer)
+        status_bar = self.query_one("#status-bar", StatusBar)
+
+        try:
+            # Check if LLM is available
+            if not await self._orchestrator.check_available():
+                log_viewer.show_error("Claude CLI not available. Install with: npm install -g @anthropic/claude-code")
+                status_bar.set_message("Claude CLI not available")
+                return
+
+            # Run analysis
+            result = await self._orchestrator.analyze_log(
+                log_content=log_content,
+                domain=domain,
+            )
+
+            # Format analysis as markdown
+            analysis = "## Hypotheses\n"
+            for h in result.hypotheses:
+                analysis += f"* {h}\n"
+
+            if result.suggested_tests:
+                analysis += "\n## Suggested Tests\n"
+                for t in result.suggested_tests:
+                    analysis += f"* {t}\n"
+
+            if result.reasoning:
+                analysis += f"\n## Reasoning\n{result.reasoning}\n"
+
+            log_viewer.show_analysis(analysis)
+            status_bar.set_message(f"Analysis complete: {len(result.hypotheses)} hypotheses")
+
+        except Exception as e:
+            log_viewer.show_error(str(e))
+            status_bar.set_message(f"Analysis failed: {e}")

@@ -35,11 +35,17 @@ STATE_COLORS = {
 }
 
 TYPE_ICONS = {
+    # Provider backends
     SessionType.CLAUDE: "🤖",
     SessionType.CODEX: "💻",
     SessionType.GEMINI: "✨",
     SessionType.SHELL: "⌘",
     SessionType.OPENROUTER: "🌐",
+    # LLM-backed kgents
+    SessionType.ROBIN: "🐦",      # Robin - scientific companion
+    SessionType.CREATIVITY: "🎨",  # Creativity coach
+    SessionType.HYPOTHESIS: "🔬",  # Hypothesis engine
+    SessionType.KGENT: "👤",       # Kent simulacra
 }
 
 

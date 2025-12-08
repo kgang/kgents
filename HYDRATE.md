@@ -184,10 +184,10 @@ LLM execution layer for agents:
 | 1.2 AgentOrchestrator | ✅ DONE | `services/agent_orchestrator.py` |
 | 1.3 Fix Confidence Bug | ✅ DONE | `StateDetector` now accumulates confidence |
 | 1.4 Pipeline Composition | ✅ DONE | `CreateSessionPipeline` uses `>>` |
-| 2.1 Session Types | 🔲 TODO | ROBIN, CREATIVITY, HYPOTHESIS, KGENT |
-| 2.2 Session Handler | 🔲 TODO | Route to appropriate agents |
-| 3.1 Log Viewer | 🔲 TODO | Display session output + analysis |
-| 3.2 MainScreen Integration | 🔲 TODO | Wire orchestrator to UI |
+| 2.1 Session Types | ✅ DONE | ROBIN, CREATIVITY, HYPOTHESIS, KGENT + `session_requires_llm()` |
+| 2.2 Session Handler | ✅ DONE | `services/session_handler.py` routes to kgents agents |
+| 3.1 Log Viewer | ✅ DONE | `widgets/log_viewer.py` with analysis panel |
+| 3.2 MainScreen Integration | ✅ DONE | Orchestrator + LogViewer wired to UI |
 | 3.3 K-gent Name Suggestions | 🔲 TODO | Personalized session names |
 | 4.1 Session Persistence | 🔲 TODO | JSON-based save/load |
 | 4.2 Integrate Persistence | 🔲 TODO | Auto-save on changes |
@@ -201,6 +201,10 @@ LLM execution layer for agents:
 
 ## Recent Changes
 
+- **Phase 3.2 MainScreen Integration** (Dec 2025): LogViewer + AgentOrchestrator wired to TUI; 'l' captures log, Analyze button triggers HypothesisEngine
+- **Phase 3.1 LogViewer Widget** (Dec 2025): `widgets/log_viewer.py` - session output display with LLM analysis panel
+- **Phase 2.2 SessionHandler** (Dec 2025): `services/session_handler.py` - routes ROBIN/CREATIVITY/HYPOTHESIS/KGENT to agents
+- **Phase 2.1 Session Types** (Dec 2025): Extended `SessionType` enum with LLM-backed types; added `session_requires_llm()` helper
 - **Phase 1.4 Pipeline Composition** (Dec 2025): `CreateSessionPipeline` now uses `>>` composition; `SpawnResult` carries tmux for type alignment
 - **Phase 1.3 Confidence Fix** (Dec 2025): `StateDetector` now accumulates confidence via previous_state input
 - **AgentOrchestrator** (Dec 2025): `impl/zen-agents/zen_agents/services/agent_orchestrator.py` - Central service for LLM-backed agents in TUI
