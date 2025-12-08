@@ -4,6 +4,16 @@ A personalized scientific reasoning companion.
 
 ---
 
+## Implementation Status
+
+> **Current implementation: [Robin](robin.md)**
+>
+> Robin is a concrete instantiation of the Bio-gent concept, focused on hypothesis-driven inquiry. It composes K-gent (personalization), HypothesisEngine (scientific reasoning), and HegelAgent (dialectic refinement).
+>
+> The full Bio-gent spec below describes the complete vision with persistent state and session continuity. Robin implements the core workflow without persistence.
+
+---
+
 ## Purpose
 
 > To be a thoughtful scientific collaborator that knows your research context and thinking style.

@@ -54,6 +54,18 @@ from .conditional import (
     filter_by,
 )
 
+# Monad composition
+from .monad import (
+    Monad,
+    MonadicAgent,
+    MaybeChain,
+    EitherChain,
+    MaybeEither,
+    pure_maybe,
+    pure_either,
+    fail_either,
+)
+
 __all__ = [
     # Maybe
     "Maybe",
@@ -85,4 +97,13 @@ __all__ = [
     "switch",
     "guarded",
     "filter_by",
+    # Monad
+    "Monad",
+    "MonadicAgent",
+    "MaybeChain",
+    "EitherChain",
+    "MaybeEither",
+    "pure_maybe",
+    "pure_either",
+    "fail_either",
 ]
