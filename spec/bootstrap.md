@@ -425,6 +425,58 @@ NewSessionPipeline = (
 
 **Anti-pattern**: 130-line methods mixing validation, I/O, state mutation, and error handling.
 
+### Idiom 7: Reality is Trichotomous
+
+> Classification precedes computation.
+
+Before expanding a task, classify its reality. This idiom derives from Fix + Judge: Fix requires knowing WHETHER to iterate; Judge determines the nature of the task.
+
+**The Trichotomy**:
+
+| Reality | Characteristic | Action |
+|---------|---------------|--------|
+| DETERMINISTIC | Atomic, bounded, single-step | Execute directly (no iteration) |
+| PROBABILISTIC | Complex, decomposable, multi-step | Iterate with budget (Fix with limit) |
+| CHAOTIC | Unbounded, unstable, recursive | Collapse to Ground (refuse iteration) |
+
+**Derivation**:
+
+```python
+# Reality classification = Judge applied to task structure
+RealityClassifier: (Task, EntropyBudget) → Reality
+
+# DETERMINISTIC: Task where Judge says "no decomposition needed"
+is_atomic(task) and Judge(task, "can_execute_directly") = accept
+
+# PROBABILISTIC: Task where Judge says "decompose and iterate"
+is_complex(task) and Judge(task, "can_decompose") = accept
+
+# CHAOTIC: Task where Judge says "stop, collapse to safety"
+is_unbounded(task) or Judge(task, "stable") = reject
+```
+
+**Application (J-gents)**:
+
+```python
+async def invoke(self, intent: str) -> T:
+    reality = await classify_reality(intent)
+
+    match reality:
+        case DETERMINISTIC:
+            return await execute_atomic(intent)  # Direct execution
+        case PROBABILISTIC:
+            return await Fix(decompose)(intent)  # Iterate until stable
+        case CHAOTIC:
+            return Ground()  # Refuse to proceed
+```
+
+**Benefits**:
+- Prevents runaway recursion (CHAOTIC → Ground)
+- Optimizes simple tasks (DETERMINISTIC → no overhead)
+- Enables resource budgeting (PROBABILISTIC → controlled iteration)
+
+**See**: `spec/j-gents/reality.md` for full specification
+
 ---
 
 ## Open Questions
@@ -441,10 +493,6 @@ NewSessionPipeline = (
 4. **What's the Kolmogorov complexity of the bootstrap?** How small can Ground() be while still regenerating Kent-specific kgents?
 
 ---
-
-## Validated: zen-agents Case Study (Dec 2025)
-
-The zen-agents implementation (Textual TUI for tmux session management) validated these idioms and revealed new patterns:
 
 ### Idiom 4: Events are Sublate Traces
 

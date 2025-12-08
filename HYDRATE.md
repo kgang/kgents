@@ -4,41 +4,70 @@
 
 ## TL;DR
 
-**Status**: J-gents Phase 4 + T-gents Phase 3 COMMITTED ✅
-**Branch**: `main` (clean)
-**Achievement**: Full J-gents pipeline (50 tests), T-gents critics (12 tests)
-**Next**: J-gents Phase 5 (integration.md), cross-genus synergy
+**Status**: Synergy Phase 4A IN PROGRESS
+**Branch**: `main` (uncommitted synergy work)
+**Achievement**: Shared AST utils (20 tests) + E-gents regression validator (11 tests)
+**Next**: Complete Phase 4A (Judge unification), commit
 
 ---
 
 ## Recent Commits
 
+- `1fa2e8b` docs: Update HYDRATE.md for J-gents Phase 4 completion
 - `08c09ee` feat(j-gents): Implement Phase 3 JIT + Phase 4 Coordinator
 - `1a77432` feat(t-gents): Implement Phase 3 Type IV Critics
-- `ac7987a` refactor(evolve): Extract show_status into composable agents
 
 ---
 
-## J-gents: Complete (Phases 1-4) ✅
+## This Session: Synergy Phase 4A - Quick Wins
 
-**Full Pipeline Operational:**
+**Per SYNERGY_REFACTOR_PLAN.md:**
+
+| Task | Status | Tests |
+|------|--------|-------|
+| Extract shared AST utils | ✅ DONE | 20 |
+| E-gents regression validator | ✅ DONE | 11 |
+| Unify Judge interface | TODO | - |
+
+**New Files Created:**
+- `agents/shared/__init__.py` - Shared module exports
+- `agents/shared/ast_utils.py` - AST utilities from J/E-gents
+- `agents/e/regression_validator.py` - T-gents Oracle integration
+- `test_ast_utils.py` - 20 tests for shared AST
+- `test_regression_validator.py` - 11 tests for regression
+
+**Total Tests Passing: 93** (J-gents 50 + T-gents 12 + AST 20 + Regression 11)
+
+---
+
+## J-gents: Complete (Phases 1-5) ✅
+
+**Full Pipeline Operational + Integrated:**
 ```
-Reality Classification → Promise Tree → JIT Compile → Test → Ground
+Reality Classification → Promise Tree → JIT Compile → Test → Ground → Cache
 ```
 
-| Phase | Component | Tests |
-|-------|-----------|-------|
-| 1 | Promise[T], Reality, RealityClassifier | ✓ |
-| 2 | Chaosmonger (AST stability) | ✓ |
-| 3 | MetaArchitect, Sandbox | 22 |
-| 4 | JGent coordinator | 28 |
-| **Total** | | **50** |
+| Phase | Component | Status |
+|-------|-----------|--------|
+| 1 | Promise[T], Reality, RealityClassifier | ✓ Spec + Impl |
+| 2 | Chaosmonger (AST stability) | ✓ Spec + Impl |
+| 3 | MetaArchitect, Sandbox | ✓ Spec + Impl (22 tests) |
+| 4 | JGent coordinator | ✓ Spec + Impl (28 tests) |
+| 5 | Integration & Polish | ✓ Spec (this session) |
+| **Total** | | **50 tests passing** |
 
-**Key Files:**
-- `agents/j/jgent.py` - Main coordinator
-- `agents/j/meta_architect.py` - JIT agent compiler
-- `agents/j/sandbox.py` - Safe execution
-- `spec/j-gents/jit.md` - JIT specification
+**Complete Specification (6 docs):**
+- `spec/j-gents/README.md` - Philosophy & overview
+- `spec/j-gents/reality.md` - Reality classification
+- `spec/j-gents/lazy.md` - Promise abstraction
+- `spec/j-gents/stability.md` - Entropy budgets & Chaosmonger
+- `spec/j-gents/jit.md` - JIT compilation
+- `spec/j-gents/integration.md` - Caching & ecosystem (new ✨)
+
+**Implementation:**
+- `agents/j/jgent.py` (~400 lines) - Main coordinator
+- `agents/j/meta_architect.py` (~550 lines) - JIT agent compiler
+- `agents/j/sandbox.py` (~465 lines) - Safe execution
 
 ---
 
@@ -52,22 +81,24 @@ Reality Classification → Promise Tree → JIT Compile → Test → Ground
 
 ---
 
-## Next Session Priorities
+## Next Steps
 
-### 1. J-gents Phase 5: Integration & Polish
-- Write `spec/j-gents/integration.md` (memoization, caching)
-- Performance optimization
-- Documentation
+### 1. Complete Phase 4A
+- Unify Judge interface (optional - T-gents and E-gents judges have different purposes)
 
-### 2. Cross-Genus Synergy
-- See `SYNERGY_REFACTOR_PLAN.md` for detailed plan
-- Quick wins: Extract shared AST utils
-- E-gents → T-gents regression testing integration
+### 2. Commit Current Work
+```bash
+git add impl/claude/agents/shared/ \
+        impl/claude/agents/e/regression_validator.py \
+        impl/claude/test_ast_utils.py \
+        impl/claude/test_regression_validator.py \
+        HYDRATE.md
+```
 
-### 3. Meta-Evolution Hypotheses (from evolve.py meta)
-- H4: show_suggestions refactor (56 lines)
-- H3: EvolutionPipeline decomposition
-- H5: Lazy import loading
+### 3. Phase 4B: Abstractions
+- ValidationPipeline pattern
+- ResilientAgent wrapper
+- Property-based evolution testing
 
 ---
 
@@ -76,17 +107,12 @@ Reality Classification → Promise Tree → JIT Compile → Test → Ground
 ```bash
 cd impl/claude
 
-# Run all J-gents tests
-python -m pytest test_j_gents_phase3.py test_j_gents_phase4.py -v
+# Run all tests (93 total)
+python -m pytest test_j_gents_phase*.py test_t_gents_phase3.py \
+                 test_ast_utils.py test_regression_validator.py -v
 
-# Run T-gents tests
-python -m pytest test_t_gents_phase3.py -v
-
-# Type check
-python -m mypy --strict agents/j/
-
-# Evolution status
-python evolve.py status
+# Just synergy tests (31 new)
+python -m pytest test_ast_utils.py test_regression_validator.py -v
 ```
 
 ---
