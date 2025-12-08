@@ -7,8 +7,8 @@
 ## TL;DR
 
 **Status**: evolve.py ENHANCED with self-improvement features ✅
-**Latest**: Dec 8 - 3 high-impact improvements: AST targeting, memory, principle judging
-**Branch**: `main` (uncommitted changes)
+**Latest**: Dec 8 - AST targeting, memory, principle judging pushed
+**Branch**: `main` (pushed)
 
 ---
 
@@ -126,47 +126,28 @@ Three high-impact improvements to the evolution pipeline:
 
 ## Next Session: Start Here
 
-### Primary: Verify and Test Bootstrap
+### Primary: Test Enhanced Evolution Pipeline
 
-**Status**: All 8 modules implemented, mypy --strict passes ✅
+**Status**: evolve.py enhanced with 3 self-improvement features ✅
 
-**Verification needed**:
+**Test the new features**:
 ```bash
-# Run mypy on full bootstrap
-cd /Users/kentgang/git/kgents
-source .venv/bin/activate
-python -m mypy --strict impl/claude/bootstrap/
+cd /Users/kentgang/git/kgents && source .venv/bin/activate && cd impl/claude
+python evolve.py bootstrap --dry-run --quick
 ```
 
-**Optional: Run basic validation**:
-```python
-import asyncio
-from impl.claude.bootstrap import (
-    Id, Ground, Judge, Contradict, Sublate, Fix,
-    compose, VOID, JudgeInput, VerdictType
-)
+**What to observe**:
+- 🎯 AST-targeted hypotheses (specific function/class suggestions)
+- ⏭ Memory filtering (skipped previously rejected ideas)
+- 📊 7-principle scoring in judgment output
 
-async def test_basic():
-    # Test Id
-    id_agent = Id()
-    assert await id_agent.invoke(42) == 42
-
-    # Test Ground
-    facts = await Ground().invoke(VOID)
-    print(f"Persona: {facts.persona.name}")
-
-    # Test composition
-    pipeline = id_agent >> id_agent
-    assert await pipeline.invoke("test") == "test"
-
-asyncio.run(test_basic())
-```
+**Memory file location**: `.evolve_logs/improvement_history.json`
 
 ### Next Priorities
 
-- **Full validation**: Run against REGENERATION_VALIDATION_GUIDE.md test cases
-- **Integration**: Fix runtime/base.py imports (currently imports from bootstrap)
-- **Tests for agents/b/**: pytest suite for hypothesis.py, robin.py
+- **Run full evolution**: Test on all modules to populate memory
+- **Tune judgment thresholds**: Adjust principle weights based on results
+- **Bootstrap validation**: Run against REGENERATION_VALIDATION_GUIDE.md
 - **D/E-gents specs**: Data/Database, Evaluation/Ethics specifications
 
 ---
