@@ -33,7 +33,6 @@ from datetime import date
 from typing import Optional
 
 from .types import Agent, Facts, PersonaSeed, WorldSeed
-from .compose import Fix
 
 
 class Ground(Agent[None, Facts]):
@@ -56,18 +55,16 @@ class Ground(Agent[None, Facts]):
     or will use the default Kent persona from spec.
     """
 
-    def __init__(self, facts: Optional[Facts] = None, use_retry: bool = True):
+    def __init__(self, facts: Optional[Facts] = None):
         """
         Initialize Ground with optional custom facts.
 
         If no facts provided, loads the default Kent persona from spec.
-        
+
         Args:
             facts: Optional pre-loaded facts (for testing)
-            use_retry: Whether to use Fix-pattern retry for loading (default True)
         """
-        self._use_retry = use_retry
-        self._facts = facts or None  # Lazy load on first invoke
+        self._facts = facts
 
     @property
     def name(self) -> str:
@@ -76,21 +73,14 @@ class Ground(Agent[None, Facts]):
     async def invoke(self, _: None) -> Facts:
         """Return the grounded facts. Input is ignored (Void → Facts)."""
         if self._facts is None:
-            if self._use_retry:
-                fix = Fix(max_attempts=3, initial_backoff=0.1)
-                self._facts = await fix.invoke((self._load_default_facts_sync, None))
-            else:
-                self._facts = self._load_default_facts_sync(None)
-        
+            self._facts = self._load_default_facts()
         return self._facts
 
-    def _load_default_facts_sync(self, _: None) -> Facts:
+    def _load_default_facts(self) -> Facts:
         """
         Load the default Kent persona from spec/k-gent/persona.md.
 
         This is the irreducible seed - human judgment captured as data.
-        
-        Wrapped by Fix pattern to handle transient filesystem/network issues.
         """
         # In production, this might read from external file/API
         # For now, returns hardcoded seed with potential for external load
