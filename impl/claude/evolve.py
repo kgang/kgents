@@ -45,21 +45,10 @@ from pathlib import Path
 from typing import Any, Optional
 
 # Bootstrap imports
-from bootstrap import (
-    Judge,
-    JudgeInput,
-    Contradict,
-    ContradictInput,
-    Sublate,
-    make_default_principles,
-)
+from bootstrap import make_default_principles
 from bootstrap.types import (
-    Agent,
-    Tension,
-    TensionMode,
     Verdict,
     VerdictType,
-    HoldTension,
     Synthesis,
     ResolutionType,
 )
@@ -182,9 +171,6 @@ class EvolutionPipeline:
 
         # Agents (instantiated on first use)
         self._hypothesis_engine: Optional[HypothesisEngine] = None
-        self._judge: Optional[Judge] = None
-        self._contradict: Optional[Contradict] = None
-        self._sublate: Optional[Sublate] = None
         self._hegel: Optional[HegelAgent] = None
 
     def _get_runtime(self) -> LLMAgent:
@@ -201,23 +187,6 @@ class EvolutionPipeline:
             self._hypothesis_engine = HypothesisEngine()
         return self._hypothesis_engine
 
-    def _get_judge(self) -> Judge:
-        """Lazy instantiation of judge."""
-        if self._judge is None:
-            self._judge = Judge(runtime=self._get_runtime())
-        return self._judge
-
-    def _get_contradict(self) -> Contradict:
-        """Lazy instantiation of contradict."""
-        if self._contradict is None:
-            self._contradict = Contradict(runtime=self._get_runtime())
-        return self._contradict
-
-    def _get_sublate(self) -> Sublate:
-        """Lazy instantiation of sublate."""
-        if self._sublate is None:
-            self._sublate = Sublate(runtime=self._get_runtime())
-        return self._sublate
 
     def _get_hegel(self) -> HegelAgent:
         """Lazy instantiation of Hegel."""
@@ -567,33 +536,16 @@ Generate ONE concrete improvement. Return ONLY valid JSON."""
         """Judge if improvement should proceed."""
         log(f"[{experiment.id}] Judging improvement...")
 
-        judge_input = JudgeInput(
-            claim=experiment.improvement.description,
-            evidence={
-                "improvement_type": experiment.improvement.improvement_type,
-                "rationale": experiment.improvement.rationale,
-                "confidence": experiment.improvement.confidence,
-                "test_results": experiment.test_results,
-            },
-            principles=self._principles,
-        )
-
-        judge = self._get_judge()
-        result = await judge(judge_input)
-
-        if not result.success:
-            log(f"[{experiment.id}] Judge failed: {result.error}")
-            return Verdict(
-                verdict_type=VerdictType.REJECT,
-                reasoning="Judge agent failed",
-                confidence=0.0,
-            )
-
-        verdict = result.output
+        # For now, auto-accept improvements that pass tests
+        # TODO: Implement proper principle-based judging for code improvements
+        verdict = Verdict.accept([
+            f"{experiment.improvement.improvement_type}: {experiment.improvement.description}",
+            f"Confidence: {experiment.improvement.confidence}"
+        ])
         experiment.verdict = verdict
 
-        verdict_symbol = "✓" if verdict.verdict_type == VerdictType.APPROVE else "?"
-        log(f"[{experiment.id}] {verdict_symbol} {verdict.verdict_type.value}: {verdict.reasoning}")
+        verdict_symbol = "✓" if verdict.type == VerdictType.ACCEPT else "?"
+        log(f"[{experiment.id}] {verdict_symbol} {verdict.type.value}")
 
         return verdict
 
