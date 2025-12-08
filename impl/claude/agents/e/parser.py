@@ -28,6 +28,7 @@ class ParseStrategy(Enum):
     JSON_CODE = "json_code"    # JSON + code blocks
     CODE_BLOCK = "code_block"   # Pure ```python blocks
     AST_SPAN = "ast_span"       # AST-based extraction
+    REPAIRED = "repaired"       # Code required syntax repair
     FAILED = "failed"           # All strategies failed
 
 
@@ -53,6 +54,87 @@ class ParserConfig:
     require_content: bool = True
     # Maximum attempts for AST span search
     max_ast_attempts: int = 1000
+    # Try to repair truncated strings
+    try_repair: bool = True
+
+
+def _repair_truncated_strings(code: str) -> tuple[str, list[str]]:
+    """
+    Attempt to repair truncated triple-quoted strings.
+
+    Common issue: LLM runs out of tokens mid-f-string.
+    Returns (repaired_code, list_of_repairs_made).
+    """
+    repairs: list[str] = []
+
+    # Count open triple quotes
+    triple_double = code.count('"""')
+    triple_single = code.count("'''")
+
+    # Check for f-strings specifically
+    fstring_pattern = r'f"""[^"]*$|f\'\'\'[^\']*$'
+
+    repaired = code
+
+    # If odd number of triple quotes, close them
+    if triple_double % 2 == 1:
+        # Find the last unclosed one
+        last_open = code.rfind('"""')
+        if last_open != -1:
+            # Check if it's an f-string
+            prefix_start = max(0, last_open - 10)
+            prefix = code[prefix_start:last_open]
+            if 'f' in prefix or 'f"""' in code[last_open-1:last_open+3]:
+                # Truncated f-string - close it simply
+                repaired = code + '"""'
+                repairs.append(f"Closed truncated f-string at char {last_open}")
+            else:
+                repaired = code + '"""'
+                repairs.append(f"Closed truncated triple-double-quote at char {last_open}")
+
+    if triple_single % 2 == 1:
+        last_open = repaired.rfind("'''")
+        if last_open != -1:
+            repaired = repaired + "'''"
+            repairs.append(f"Closed truncated triple-single-quote at char {last_open}")
+
+    # Check for unclosed regular strings at end of lines
+    lines = repaired.split('\n')
+    for i, line in enumerate(lines):
+        stripped = line.rstrip()
+        # Check for unclosed single quotes
+        single_count = stripped.count("'") - stripped.count("\\'") - stripped.count("'''") * 3
+        double_count = stripped.count('"') - stripped.count('\\"') - stripped.count('"""') * 3
+
+        # Don't try to repair lines, too error prone
+
+    return repaired, repairs
+
+
+def _repair_incomplete_function(code: str) -> tuple[str, list[str]]:
+    """
+    Attempt to repair incomplete function definitions.
+
+    Common issue: Function body is truncated mid-statement.
+    """
+    repairs: list[str] = []
+
+    lines = code.split('\n')
+
+    # Check if we end mid-function (indented line without proper closure)
+    if lines:
+        last_line = lines[-1]
+        # If last line is indented and doesn't end with : or complete statement
+        if last_line and last_line[0] == ' ':
+            stripped = last_line.strip()
+            # If it looks incomplete (ends with operator, comma, open paren)
+            if stripped and stripped[-1] in '(,+-*/:=':
+                # Add a pass statement to complete the function
+                indent = len(last_line) - len(last_line.lstrip())
+                lines.append(' ' * indent + 'pass  # AUTO-REPAIR: truncated')
+                repairs.append(f"Added pass to complete truncated function")
+
+    return '\n'.join(lines), repairs
 
 
 class CodeParser:
@@ -76,6 +158,7 @@ class CodeParser:
         2. JSON + code blocks
         3. Pure code block
         4. AST-based extraction
+        5. Repair + retry (if enabled)
 
         Returns the first successful parse result.
         """
@@ -99,11 +182,93 @@ class CodeParser:
         if result.success:
             return result
 
+        # Strategy 5: Try repair if enabled
+        if self.config.try_repair:
+            result = self._parse_with_repair(llm_response)
+            if result.success:
+                return result
+
         # All strategies failed
         return ParseResult(
             success=False,
             strategy=ParseStrategy.FAILED,
             error="All parsing strategies failed - no valid code found"
+        )
+
+    def _parse_with_repair(self, response: str) -> ParseResult:
+        """
+        Try to repair and parse truncated code.
+
+        Applies repairs for common LLM truncation issues:
+        - Unclosed triple-quoted strings (f-strings)
+        - Incomplete function bodies
+        """
+        # Extract code block first (even if invalid)
+        code_match = re.search(
+            r'```(?:python|py)?\s*\n(.*)',
+            response,
+            re.DOTALL | re.IGNORECASE
+        )
+
+        if not code_match:
+            return ParseResult(
+                success=False,
+                error="No code block found to repair"
+            )
+
+        raw_code = code_match.group(1)
+
+        # Remove trailing markdown if present
+        if '```' in raw_code:
+            raw_code = raw_code.split('```')[0]
+
+        raw_code = raw_code.strip()
+
+        # Try repairs
+        repaired, string_repairs = _repair_truncated_strings(raw_code)
+        repaired, func_repairs = _repair_incomplete_function(repaired)
+
+        all_repairs = string_repairs + func_repairs
+
+        if not all_repairs:
+            return ParseResult(
+                success=False,
+                error="No repairs applicable"
+            )
+
+        # Try to parse repaired code
+        try:
+            ast.parse(repaired)
+        except SyntaxError as e:
+            return ParseResult(
+                success=False,
+                error=f"Repair failed: syntax error at line {e.lineno}: {e.msg}"
+            )
+
+        # Extract metadata from original response
+        json_match = re.search(
+            r'```(?:json)?\s*\n(\{.*?\})\s*```',
+            response,
+            re.DOTALL | re.IGNORECASE
+        )
+
+        metadata = None
+        if json_match:
+            try:
+                metadata = json.loads(json_match.group(1).strip())
+            except json.JSONDecodeError:
+                pass
+
+        # Reduce confidence for repaired code
+        confidence = self._assess_completeness(repaired) * 0.8
+
+        return ParseResult(
+            success=True,
+            code=repaired,
+            metadata=metadata or self._infer_metadata_from_ast(repaired),
+            strategy=ParseStrategy.REPAIRED,
+            confidence=confidence,
+            error=f"Repairs applied: {'; '.join(all_repairs)}"
         )
 
     def _parse_structured(self, response: str) -> ParseResult:

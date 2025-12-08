@@ -762,6 +762,21 @@ Generate ONE concrete improvement. Return ONLY valid JSON."""
                 }
                 for exp in held
             ],
+            "failed_experiments": [
+                {
+                    "id": exp.id,
+                    "module": exp.module.name,
+                    "category": exp.module.category,
+                    "hypothesis": exp.hypothesis,
+                    "error": exp.error,
+                    "improvement": {
+                        "type": exp.improvement.improvement_type,
+                        "description": exp.improvement.description,
+                    } if exp.improvement else None,
+                    "test_results": exp.test_results,
+                }
+                for exp in rejected
+            ],
         }
 
         with open(results_path, 'w') as f:

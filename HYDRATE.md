@@ -6,11 +6,11 @@
 
 ## TL;DR
 
-**Status**: Phase 2.5b (Parsing & Validation) complete ✅
-**Latest**: Dec 8 - Layer 2 Reliability: Parser + Validator + Repair
-**Branch**: `main` (Phase 2.5b ready to commit)
-**Tests**: 10/10 passing for Phase 2.5b
-**Mypy**: 0 errors (strict mode)
+**Status**: Phase 2.5b complete + post-evolution type fixes
+**Latest**: Dec 8 - Type fixes after evolution run
+**Branch**: `main` (uncommitted: type fixes + evolution files)
+**Mypy**: 0 errors (55 source files, strict mode)
+**Evolution**: 48 experiments, 0 incorporated (all failed)
 
 ---
 
@@ -90,80 +90,47 @@ Fixed all remaining mypy --strict errors across 17 files:
 
 ## Next Session: Start Here
 
-### ✅ COMPLETED: Phase 2.5b - Parsing & Validation Layer
+### Priority: Debug Evolution Failure (0/48 incorporated)
 
-Successfully implemented Layer 2 of reliability plan:
-- ✅ Multi-strategy parser with 4 fallback strategies
-- ✅ Fast schema validator (pre-mypy checks)
-- ✅ AST-based code repairer
-- ✅ All 10 tests passing
-- ✅ Ready to commit
+The evolution run completed but 0/48 experiments were incorporated. Need to diagnose:
 
-**Next step:** Commit Phase 2.5b work
+1. **Check log file:**
+```bash
+cat impl/claude/.evolve_logs/evolve_all_20251208_120703.log | head -100
+```
 
-### Option 1: Commit Phase 2.5b Work
+2. **Run single module with verbose output:**
+```bash
+cd /Users/kentgang/git/kgents && source .venv/bin/activate && cd impl/claude
+python evolve.py runtime/base --dry-run
+```
+
+### Option 1: Integrate Parsing Layer
+
+The parser/validator/repair exist but may not be wired in:
+- Check `experiment.py` actually uses `CodeParser`
+- Check if `SchemaValidator` runs before mypy
+- Hook repair into the failed experiment flow
+
+### Option 2: Commit Current Fixes
+
+Uncommitted changes:
+- Type fixes in retry.py, fallback.py, validator.py, repair.py
+- New files: parser.py, validator.py, repair.py
+- Test file: test_parsing_layer.py
 
 ```bash
 cd /Users/kentgang/git/kgents
-git add impl/claude/agents/e/parser.py
-git add impl/claude/agents/e/validator.py
-git add impl/claude/agents/e/repair.py
-git add impl/claude/agents/e/experiment.py
-git add impl/claude/agents/e/__init__.py
-git add impl/claude/test_parsing_layer.py
-git add HYDRATE.md
-
-git commit -m "$(cat <<'EOF'
-feat: Phase 2.5b - Parsing & Validation Layer for Evolution Reliability
-
-Layer 2 of EVOLUTION_RELIABILITY_PLAN.md: Robust parsing & validation
-
-New modules:
-- agents/e/parser.py (500+ lines): Multi-strategy code parsing
-  * 4 fallback strategies for LLM output extraction
-  * Handles malformed markdown, missing closing fences
-  * Confidence scoring for parsed code
-
-- agents/e/validator.py (340 lines): Fast schema validation
-  * Pre-mypy validation (constructors, types, generics)
-  * Catches incomplete code (TODO, pass statements)
-  * Categorized issues with severity levels
-
-- agents/e/repair.py (350 lines): AST-based incremental repair
-  * Auto-fixes: missing imports, generic types, empty functions
-  * Iterative repair with validation loop
-  * Heuristic-based inference
-
-- test_parsing_layer.py: 10/10 tests passing
-
-Updated:
-- agents/e/experiment.py: extract_code/metadata now use new parser
-- agents/e/__init__.py: Export Layer 2 components
-
-Expected impact: >95% parse success rate (up from ~70%)
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-
-Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
-EOF
-)"
+git add -A
+git status
 ```
 
-### Option 2: Phase 2.5c - Recovery & Learning Layer
+### Option 3: Run Targeted Test
 
-Continue with Layer 3 reliability improvements:
-- Create `agents/e/retry.py` - Intelligent retry with refined prompts
-- Create `agents/e/fallback.py` - Progressive simplification strategies
-- Create `agents/e/error_memory.py` - Learn from failure patterns
-
-Target: >90% incorporation rate (up from ~30-50%)
-
-### Option 3: Measure Phase 2.5b Impact
-
-Run evolution to measure parsing improvements:
+Test the parsing layer integration directly:
 ```bash
 cd /Users/kentgang/git/kgents && source .venv/bin/activate && cd impl/claude
-python evolve.py bootstrap/id --dry-run --quick 2>&1 | tee phase_2.5b_test.log
+python test_parsing_layer.py
 ```
 
 ---
@@ -204,14 +171,20 @@ kgents/
 
 ## Session Log
 
+**Dec 8, 2025 PM (Post-Evolution Fixes)**:
+- Fixed type errors in retry.py (IssueCategory enum vs strings)
+- Fixed syntax error in retry.py (triple-quote string with quotes inside)
+- Fixed no-any-return errors in fallback.py
+- Fixed Optional type annotations in validator.py, repair.py
+- Ran evolution: 33 modules, 48 experiments, 0 incorporated
+- Mypy --strict passes (55 source files, excluding tests)
+
 **Dec 8, 2025 PM (Phase 2.5b - Parsing & Validation Layer)**:
-- ✅ Implemented Layer 2 of Evolution Reliability Plan
-- ✅ Created parser.py, validator.py, repair.py (~1200 lines total)
-- ✅ Multi-strategy parsing with 4 fallback strategies
-- ✅ Fast schema validation (pre-mypy)
-- ✅ AST-based incremental repair
-- ✅ All 10 tests passing
-- Ready to commit
+- Created parser.py, validator.py, repair.py (~1200 lines total)
+- Multi-strategy parsing with 4 fallback strategies
+- Fast schema validation (pre-mypy)
+- AST-based incremental repair
+- All 10 tests passing
 
 **Dec 8, 2025 PM (Type Error Cleanup)**:
 - Fixed all 50 remaining mypy --strict errors
