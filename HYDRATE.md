@@ -4,70 +4,89 @@
 
 ## TL;DR
 
-**Status**: Parser f-string repair added + diagnostic logging
-**Branch**: `main` (uncommitted changes in parser.py, evolve.py)
+**Status**: Evolve pipeline refactored for AI agent ergonomics
+**Branch**: `main` (uncommitted: `evolve.py`)
 **Mypy**: 0 errors (55 source files, strict)
-**Evolution**: Syntax errors 75% → 0%, Type errors remain at 75%
+**Evolution**: Test-friendly defaults + AI agent interface added
 
 ---
 
-## This Session: Results
+## This Session: Evolve Pipeline Improvements
 
-Ran `evolve meta --auto-apply` and analyzed failure patterns:
+### New Modes for AI Agents
 
-### Key Finding: Syntax Error Repair Works!
+| Mode | Purpose | Speed | Default |
+|------|---------|-------|---------|
+| `test` | Fast iteration | ⚡⚡⚡ | ✓ (now default) |
+| `status` | Check state | ⚡⚡⚡ | Read-only |
+| `suggest` | Get suggestions | ⚡⚡ | Read-only |
+| `full` | Complete evolution | ⚡ | Was default |
 
-| Before Repair | After Repair |
-|---------------|--------------|
-| 3 syntax errors (75%) | 0 syntax errors |
-| 1 type error (25%) | 3 type errors (75%) |
-| 0 passed/held | 1 HELD (productive tension!) |
+### Changed Defaults (more test-friendly)
 
-### Changes Made
+**Before**: `python evolve.py` → full evolution (slow, modifies files)
+**After**: `python evolve.py` → test mode (fast, dry-run, safe)
 
-1. **parser.py** - Added `_repair_truncated_strings()` + `_parse_with_repair()`
-   - Closes unclosed triple-quoted f-strings
-   - New `ParseStrategy.REPAIRED` enum value
-2. **evolve.py** - Added `failed_experiments` to JSON output
-   - Captures hypothesis, error, and test_results for diagnosis
+- Target: `meta` (single module) instead of `all`
+- Dry-run: `True` by default (safe)
+- Quick mode: `True` (skip dialectic synthesis)
+- Hypotheses: `2` per module (down from 4)
+- Max improvements: `1` per module (down from 4)
 
-### Root Cause of Type Errors
+### AI Agent Workflow Pattern
 
-LLM hallucinates APIs that don't exist:
-- `CodeModule.code` (should be `path`)
-- `ExperimentStatus.REJECTED` (doesn't exist)
-- `.run()` method (should be `.invoke()`)
-- Wrong constructor args for `AgentContext`, `TestInput`, `JudgeInput`
+```bash
+# Periodic check (for /hydrate command)
+python evolve.py status
 
-**Next step**: Add API stubs to prompt context (Phase 2.5a.2)
+# Get improvement suggestions
+python evolve.py suggest
+
+# Fast test run
+python evolve.py  # defaults to test mode
+
+# Apply improvements
+python evolve.py meta --auto-apply
+```
 
 ---
 
 ## Next Session: Start Here
 
-### Option 1: Add API Stubs to Prompts
-
-Enhance `prompts.py` to include actual API signatures:
-```python
-# In build_prompt_context(), extract and format:
-# - Dataclass field definitions
-# - Function signatures from imported modules
-# - Enum values
-```
-
-### Option 2: Wire Recovery Layer
-
-Phase 2.5c modules exist but need integration:
-- `retry.py`: Call on failures
-- `fallback.py`: When retries exhausted
-- `error_memory.py`: Track failure patterns
-
-### Quick Retest
+### Recommended: Test the New Interface
 
 ```bash
-cd /Users/kentgang/git/kgents && source .venv/bin/activate && cd impl/claude
-python evolve.py meta --auto-apply
+cd /Users/kentgang/git/kgents/impl/claude
+
+# Test new modes
+python evolve.py status    # Should show current state
+python evolve.py suggest   # Should analyze modules
+python evolve.py           # Should run test mode (fast)
 ```
+
+### Option 1: Wire Recovery Layer
+
+Integrate Phase 2.5c into evolve pipeline:
+- Call `RetryStrategy` on test failures in `_process_module()`
+- Use `FallbackStrategy` when retries exhausted
+- Track patterns in `ErrorMemory`
+
+### Option 2: Add API Stubs to Prompts
+
+Enhance `prompts.py` to include actual API signatures:
+- Dataclass field definitions
+- Function signatures from imported modules
+- Enum values
+
+This will reduce hallucinated APIs that caused 30 failures in last run.
+
+### Option 3: Message Bus Isomorphism
+
+Future generalization:
+- Evolve pipeline as message handler
+- Status/suggest as query messages
+- Test/full as command messages
+- Foundation for distributed agent coordination
 
 ---
 
@@ -86,14 +105,14 @@ python evolve.py meta --auto-apply
 
 ## Session Log
 
-**Dec 8 PM (current session)**: 53e073b - Exported Phase 2.5c components from agents/e
-  - Updated __init__.py to export retry, fallback, error_memory modules
-  - Created test_recovery_layer.py with 20/20 passing tests
-  - Phase 2.5c implementation complete, ready for integration
-**Dec 8 PM**: F-string repair in parser.py, diagnostic logging
+**Dec 8 PM (current)**: Evolve pipeline refactor for AI agent ergonomics
+  - Added 4 modes: test (default), status, suggest, full
+  - Changed defaults to test-friendly (dry-run, quick, single module)
+  - Created AI agent interface for periodic checks via /hydrate
+  - Foundation for future message bus isomorphism pattern
+**Dec 8 PM**: Full `evolve all --auto-apply` run: 93 passed, 30 failed, 2 held
+**Dec 8 PM**: 05b56aa - Fixed MYPYPATH in SandboxTestAgent
+**Dec 8 PM**: 53e073b - Exported Phase 2.5c components from agents/e
 **Dec 8 PM**: dd32fa7 - Phase 2.5c Recovery Layer
-**Dec 8 PM**: d7d3e34 - Phase 2.5b Parsing Layer
-**Dec 8 PM**: 0a7a751 - Fixed all mypy --strict errors
-**Dec 8 PM**: 1ae1e78 - Phase 2.5a Prompt Engineering Layer
 
 ---

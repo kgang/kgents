@@ -20,15 +20,31 @@ Architecture (Phase 1 - Composable Agents):
     - CodeJudge: Evaluate against 7 principles
     - IncorporateAgent: Apply with git safety
 
-Usage:
-    python evolve.py [--target runtime|agents|bootstrap|all] [FLAGS]
+Usage (New Default: Test Mode):
+    python evolve.py                      # Test mode (fast, safe, single module)
+    python evolve.py status               # Check current status (AI agent friendly)
+    python evolve.py suggest              # Get improvement suggestions
+    python evolve.py meta --auto-apply    # Self-improve evolve.py
+    python evolve.py full --auto-apply    # Full codebase evolution
+
+Modes:
+    test (default): Fast testing on single module (dry-run, quick, 2 hypotheses)
+    status: Show current evolution state and recommendations
+    suggest: Analyze and suggest improvements without running experiments
+    full: Thorough evolution (all modules, 4 hypotheses, dialectic synthesis)
 
 Flags:
-    --dry-run: Preview improvements without applying
+    --dry-run: Preview improvements without applying (default in test mode)
     --auto-apply: Automatically apply improvements that pass tests
     --quick: Skip dialectic synthesis for faster iteration
-    --hypotheses=N: Number of hypotheses per module (default: 4)
-    --max-improvements=N: Max improvements per module (default: 4)
+    --thorough: Use full dialectic synthesis
+    --hypotheses=N: Number of hypotheses per module
+    --max-improvements=N: Max improvements per module
+
+AI Agent Interface:
+    The 'status' and 'suggest' modes are designed for AI agents to query
+    the current state and get actionable recommendations without making changes.
+    This supports periodic checks via /hydrate command.
 
 Performance:
     Modules are processed in parallel for 2-5x speedup
@@ -111,15 +127,16 @@ def log(msg: str = "", prefix: str = "", file: Optional[Any] = None) -> None:
 @dataclass
 class EvolveConfig:
     """Configuration for the evolution process."""
-    target: str = "all"
-    dry_run: bool = False
+    target: str = "meta"  # Default to single module for testing
+    mode: str = "test"  # test|status|suggest|full
+    dry_run: bool = True  # Safe by default
     auto_apply: bool = False
-    max_improvements_per_module: int = 4
+    max_improvements_per_module: int = 1  # Reduced for testing
     experiment_branch_prefix: str = "evolve"
     require_tests_pass: bool = True
     require_type_check: bool = True
-    quick_mode: bool = False
-    hypothesis_count: int = 4
+    quick_mode: bool = True  # Fast by default for testing
+    hypothesis_count: int = 2  # Reduced for testing
     # Phase 2: Safe self-evolution
     safe_mode: bool = False
     max_iterations: int = 3
@@ -796,6 +813,152 @@ Generate ONE concrete improvement. Return ONLY valid JSON."""
 
 
 # ============================================================================
+# Status & Suggestion Modes (for AI agent interface)
+# ============================================================================
+
+async def show_status() -> None:
+    """Show current evolution status - ideal for AI agents checking state."""
+    log("=" * 60)
+    log("KGENTS EVOLUTION STATUS")
+    log("=" * 60)
+
+    base = Path(__file__).parent
+
+    # Check git status
+    import subprocess
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            capture_output=True,
+            text=True,
+            check=True,
+            cwd=base
+        )
+        uncommitted = bool(result.stdout.strip())
+    except subprocess.CalledProcessError:
+        uncommitted = False
+
+    log(f"Git Status: {'⚠️  Uncommitted changes' if uncommitted else '✓ Clean'}")
+
+    # Check recent evolution logs
+    log_dir = base / ".evolve_logs"
+    if log_dir.exists():
+        recent_logs = sorted(log_dir.glob("evolve_*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
+        if recent_logs:
+            latest = recent_logs[0]
+            with open(latest) as f:
+                data = json.load(f)
+
+            summary = data.get("summary", {})
+            log(f"\nLast Run: {data.get('timestamp', 'unknown')}")
+            log(f"  Target: {data.get('config', {}).get('target', 'unknown')}")
+            log(f"  Experiments: {summary.get('total_experiments', 0)}")
+            log(f"    ✓ Passed: {summary.get('passed', 0)}")
+            log(f"    ✗ Failed: {summary.get('failed', 0)}")
+            log(f"    ⏸ Held: {summary.get('held', 0)}")
+            log(f"    ✅ Incorporated: {summary.get('incorporated', 0)}")
+
+            # Show failed experiments for next steps
+            failed = data.get("failed_experiments", [])
+            if failed:
+                log(f"\n  Recent Failures ({len(failed)} total):")
+                for exp in failed[:3]:
+                    log(f"    - {exp.get('module', 'unknown')}: {exp.get('error', 'no error')[:60]}")
+                if len(failed) > 3:
+                    log(f"    ... and {len(failed) - 3} more")
+    else:
+        log("\nNo evolution logs found")
+
+    # Check HYDRATE.md status
+    hydrate_path = base.parent.parent / "HYDRATE.md"
+    if hydrate_path.exists():
+        content = hydrate_path.read_text()
+        lines = content.split("\n")
+
+        # Extract TL;DR section
+        log("\nHYDRATE.md Status:")
+        in_tldr = False
+        for line in lines:
+            if "## TL;DR" in line:
+                in_tldr = True
+                continue
+            if in_tldr:
+                if line.startswith("##"):
+                    break
+                if line.strip() and not line.startswith("---"):
+                    log(f"  {line}")
+
+    # Recommendations for AI agents
+    log(f"\n{'=' * 60}")
+    log("RECOMMENDED ACTIONS FOR AI AGENTS")
+    log(f"{'=' * 60}")
+    log("1. Run 'python evolve.py suggest' to see improvement suggestions")
+    log("2. Run 'python evolve.py test' to test evolve.py improvements (fast)")
+    log("3. Run 'python evolve.py meta --auto-apply' to apply meta improvements")
+    log("4. Run 'python evolve.py full --auto-apply' for full codebase evolution")
+    log("5. Update HYDRATE.md after significant changes")
+    log("")
+
+
+async def show_suggestions(config: EvolveConfig) -> None:
+    """Show improvement suggestions without running experiments."""
+    log("=" * 60)
+    log("EVOLUTION SUGGESTIONS")
+    log("=" * 60)
+
+    pipeline = EvolutionPipeline(config)
+    modules = pipeline.discover_modules()
+
+    log(f"\nAnalyzing {len(modules)} modules for improvement opportunities...\n")
+
+    for module in modules[:5]:  # Limit to first 5
+        log(f"Module: {module.category}/{module.name}")
+        log("-" * 40)
+
+        # Use AST analyzer to get quick insights
+        structure = await pipeline._get_ast_structure(module)
+        if structure:
+            # Check for missing type annotations
+            code = get_code_preview(module.path)
+            lines = code.split("\n")
+
+            suggestions = []
+
+            # Check complexity
+            if structure.complexity_hints:
+                suggestions.append(f"  💡 Complexity hints: {', '.join(structure.complexity_hints[:2])}")
+
+            # Check for long functions (>50 lines)
+            for func in structure.functions[:3]:
+                if "long" in str(func).lower():
+                    suggestions.append(f"  📏 Consider refactoring long function: {func.get('name', 'unknown')}")
+
+            # Check for missing docstrings
+            if not structure.docstring:
+                suggestions.append("  📝 Missing module docstring")
+
+            # Generic suggestions based on category
+            if module.category == "runtime":
+                suggestions.append("  ⚡ Runtime modules: Focus on performance and error handling")
+            elif "agents" in module.category:
+                suggestions.append("  🤖 Agent modules: Ensure clear A → B type signatures")
+
+            if suggestions:
+                for s in suggestions[:3]:
+                    log(s)
+            else:
+                log("  ✓ No obvious improvements needed")
+
+        log("")
+
+    log(f"{'=' * 60}")
+    log("To run experiments, use:")
+    log("  python evolve.py meta --auto-apply  (for self-improvement)")
+    log("  python evolve.py full --auto-apply  (for full codebase)")
+    log("")
+
+
+# ============================================================================
 # Main
 # ============================================================================
 
@@ -808,12 +971,21 @@ def parse_args() -> EvolveConfig:
             config.target = arg.split("=")[1]
         elif arg in ["runtime", "agents", "bootstrap", "meta", "all"]:
             config.target = arg
+        elif arg.startswith("--mode="):
+            config.mode = arg.split("=")[1]
+        elif arg in ["test", "status", "suggest", "full"]:
+            config.mode = arg
         elif arg == "--dry-run":
             config.dry_run = True
+        elif arg == "--no-dry-run":
+            config.dry_run = False
         elif arg == "--auto-apply":
             config.auto_apply = True
+            config.dry_run = False
         elif arg == "--quick":
             config.quick_mode = True
+        elif arg == "--thorough":
+            config.quick_mode = False
         elif arg.startswith("--hypotheses="):
             config.hypothesis_count = int(arg.split("=")[1])
         elif arg.startswith("--max-improvements="):
@@ -825,34 +997,78 @@ def parse_args() -> EvolveConfig:
         elif arg.startswith("--convergence="):
             config.convergence_threshold = float(arg.split("=")[1])
 
+    # Mode-specific defaults
+    if config.mode == "full":
+        config.target = config.target if config.target != "meta" else "all"
+        config.quick_mode = False
+        config.hypothesis_count = 4
+        config.max_improvements_per_module = 4
+    elif config.mode == "test":
+        # Keep test defaults (fast, single module)
+        pass
+
     return config
 
 
 async def main() -> None:
     config = parse_args()
 
+    # Show help if needed
     if config.target not in ["runtime", "agents", "bootstrap", "meta", "all"]:
         log(f"Unknown target: {config.target}")
-        log("Usage: python evolve.py [runtime|agents|bootstrap|meta|all] [FLAGS]")
+        log("Usage: python evolve.py [MODE] [TARGET] [FLAGS]")
+        log("")
+        log("Modes (default: test):")
+        log("  test                   Fast test on single module (dry-run, quick)")
+        log("  status                 Show current evolution status (AI agent friendly)")
+        log("  suggest                Show improvement suggestions without running")
+        log("  full                   Full evolution run (all modules, thorough)")
+        log("")
+        log("Targets (default: meta):")
+        log("  runtime                Runtime modules")
+        log("  agents                 All agent modules")
+        log("  bootstrap              Bootstrap modules")
+        log("  meta                   evolve.py itself")
+        log("  all                    All modules")
         log("")
         log("Flags:")
-        log("  --dry-run              Preview improvements without applying")
+        log("  --dry-run              Preview improvements without applying (default)")
+        log("  --no-dry-run           Disable dry-run mode")
         log("  --auto-apply           Automatically apply improvements that pass tests")
         log("  --quick                Skip dialectic synthesis for faster iteration")
-        log("  --hypotheses=N         Number of hypotheses per module (default: 4)")
-        log("  --max-improvements=N   Max improvements per module (default: 4)")
+        log("  --thorough             Use full dialectic synthesis")
+        log("  --hypotheses=N         Number of hypotheses per module (default: 2)")
+        log("  --max-improvements=N   Max improvements per module (default: 1)")
         log("")
         log("Safe self-evolution (Phase 2):")
         log("  --safe-mode            Enable safe self-evolution with fixed-point iteration")
         log("  --max-iterations=N     Max fixed-point iterations (default: 3)")
         log("  --convergence=F        Convergence threshold 0.0-1.0 (default: 0.95)")
+        log("")
+        log("Examples:")
+        log("  python evolve.py                        # Test mode (fast, safe)")
+        log("  python evolve.py status                 # Check current status")
+        log("  python evolve.py suggest                # Get suggestions")
+        log("  python evolve.py meta --auto-apply      # Improve evolve.py")
+        log("  python evolve.py full --auto-apply      # Full evolution")
         sys.exit(1)
+
+    # Status mode - show current state
+    if config.mode == "status":
+        await show_status()
+        return
+
+    # Suggest mode - show suggestions without running
+    if config.mode == "suggest":
+        await show_suggestions(config)
+        return
 
     # Phase 2: Safe self-evolution mode
     if config.safe_mode:
         await run_safe_evolution(config)
         return
 
+    # Test or full mode - run the pipeline
     pipeline = EvolutionPipeline(config)
     report = await pipeline.run()
 
