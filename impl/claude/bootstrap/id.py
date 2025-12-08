@@ -51,5 +51,10 @@ class Id(Agent[A, A]):
         # Optimization: composing with Id on the left is just the other agent
         return other
 
+    def __rlshift__(self, other: "Agent[Any, A]") -> "Agent[Any, A]":
+        """Left identity law: f >> Id = f"""
+        # Optimization: composing with Id on the right is just the other agent
+        return other
+
     def __repr__(self) -> str:
         return "Id()"
