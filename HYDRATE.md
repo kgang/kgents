@@ -6,9 +6,9 @@
 
 ## TL;DR
 
-**Status**: Bootstrap CLEARED for regeneration validation 🧪
-**Latest**: Dec 8 - Bootstrap agents removed; ready to regenerate from spec
-**Branch**: `main` (clean, committed)
+**Status**: Bootstrap CLEARED + PLAN READY 📋
+**Latest**: Dec 8 - `BOOTSTRAP_REGENERATION_PLAN.md` created (~475 lines)
+**Branch**: `main` (pushed)
 
 ---
 
@@ -97,18 +97,23 @@ cd /Users/kentgang/git/kgents && source .venv/bin/activate && cd impl/claude && 
 
 ## Next Session: Start Here
 
-### Primary: Regenerate Bootstrap Agents
+### Primary: Implement Bootstrap from Plan
 
-Bootstrap directory is **cleared** (`impl/claude/bootstrap/` empty except validation guide).
+**Plan**: `BOOTSTRAP_REGENERATION_PLAN.md` (comprehensive, 475 lines)
 
-**Regeneration order** (from BOOTSTRAP_PROMPT.md):
-1. Level 0: `types.py` - Core types
-2. Level 1: `id.py`, `ground.py` - Identity + grounding
-3. Level 2: `compose.py`, `contradict.py` - Composition + tension
-4. Level 3: `judge.py`, `sublate.py` - Judgment + synthesis
-5. Level 4: `fix.py` - Fixed-point iteration
+**Implementation order**:
+```
+Level 0: types.py (~150 lines)
+Level 1: id.py, ground.py (~150 lines)
+Level 2: compose.py, contradict.py (~225 lines)
+Level 3: judge.py, sublate.py (~450 lines)
+Level 4: fix.py (~100 lines)
+```
 
-**Use**: `docs/BOOTSTRAP_PROMPT.md` for implementation guide, `impl/claude/bootstrap/REGENERATION_VALIDATION_GUIDE.md` for validation.
+**Key docs**:
+- `BOOTSTRAP_REGENERATION_PLAN.md` - Implementation plan with types and patterns
+- `docs/BOOTSTRAP_PROMPT.md` - Full implementation guide
+- `impl/claude/bootstrap/REGENERATION_VALIDATION_GUIDE.md` - Test cases
 
 ### Alternative Priorities
 
@@ -174,10 +179,9 @@ kgents/
 
 ## Key Deliverables This Session
 
-1. ✅ **Bootstrap Phase 6**: Validation guide, test harness, reference snapshots
-2. ✅ **Evolution Decision Support**: Rich logging, JSON export, 300+ line framework
-3. ✅ **Documentation**: HYDRATE.md updated, evolution refinement principle added
-4. ✅ **Commit**: 72a6cd0 pushed with 2091 line changes across 8 files
+1. ✅ **Bootstrap Regeneration Plan**: `BOOTSTRAP_REGENERATION_PLAN.md` (475 lines)
+2. ✅ **Research**: Analyzed spec/, 4 key docs, impl/agents, impl/runtime patterns
+3. ✅ **Ready to implement**: 8 files, ~1100 lines total, dependency-ordered
 
 ---
 
@@ -205,10 +209,15 @@ git push
 
 ## Session Log
 
+**Dec 8, 2025 (Planning Session)**:
+- ✅ Created `BOOTSTRAP_REGENERATION_PLAN.md` (475 lines)
+- ✅ Researched spec/, docs/, impl/agents, impl/runtime for patterns
+- ✅ Defined 8-file implementation with dependency graph
+- ✅ Pushed to main
+
 **Dec 8, 2025 (Regeneration Prep)**:
 - ✅ Cleared bootstrap agents for regeneration validation
 - ✅ Only `REGENERATION_VALIDATION_GUIDE.md` remains in bootstrap/
-- 🔜 Ready to regenerate 7 bootstrap agents from spec
 
 **Dec 8, 2025 (Evolution Session)**:
 - ✅ Ran evolution pipeline on bootstrap modules
