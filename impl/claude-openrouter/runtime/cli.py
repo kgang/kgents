@@ -44,6 +44,8 @@ class ClaudeCLIRuntime(Runtime):
         max_retries: int = 3,
         verbose: bool = False,
         progress_callback: Callable[[str], None] | None = None,
+        enable_coercion: bool = True,
+        coercion_confidence: float = 0.9,
     ):
         """
         Initialize Claude CLI runtime.
@@ -54,12 +56,16 @@ class ClaudeCLIRuntime(Runtime):
             max_retries: Maximum retries on parse failures (Fix pattern).
             verbose: Print progress messages during execution.
             progress_callback: Optional callback for progress updates.
+            enable_coercion: Use AI to coerce malformed responses as last resort.
+            coercion_confidence: Minimum confidence (0-1) to accept coerced response.
         """
         self._claude_path = claude_path or shutil.which("claude")
         self._timeout = timeout
         self._max_retries = max_retries
         self._verbose = verbose
         self._progress_callback = progress_callback
+        self._enable_coercion = enable_coercion
+        self._coercion_confidence = coercion_confidence
 
         if not self._claude_path:
             raise RuntimeError(
@@ -106,6 +112,86 @@ class ClaudeCLIRuntime(Runtime):
                 "Please provide your response in the expected format. "
                 "Keep it simple - one field at a time if needed."
             )
+
+    async def _coerce_response(
+        self,
+        malformed_response: str,
+        expected_format: str,
+        error_message: str,
+    ) -> tuple[str, float]:
+        """
+        Use AI to coerce a malformed response into the expected format.
+
+        Returns (coerced_response, confidence).
+        """
+        coercion_prompt = f"""You are a response parser. Extract data from a malformed LLM response and reformat it correctly.
+
+MALFORMED RESPONSE:
+{malformed_response[:8000]}  # Truncate to avoid massive prompts
+
+EXPECTED FORMAT:
+{expected_format}
+
+PARSE ERROR:
+{error_message}
+
+INSTRUCTIONS:
+1. Extract all relevant data from the malformed response
+2. Reformat it into the expected structure
+3. If data is missing, use reasonable defaults or "unknown"
+4. Return the reformatted response followed by your confidence (0.0-1.0)
+
+OUTPUT FORMAT:
+## REFORMATTED
+[Your reformatted response here]
+
+## CONFIDENCE
+[A number between 0.0 and 1.0]"""
+
+        self._log("Attempting AI coercion of malformed response...")
+
+        context = AgentContext(
+            system_prompt="You are a precise data extraction and reformatting assistant.",
+            messages=[{"role": "user", "content": coercion_prompt}],
+            temperature=0.1,  # Low temperature for precise extraction
+            max_tokens=4096,
+        )
+
+        response_text, _ = await self.raw_completion(context)
+
+        # Parse the coercion response
+        import re
+
+        # Extract reformatted content
+        reformatted_match = re.search(
+            r'##\s*REFORMATTED\s*\n(.*?)(?=##\s*CONFIDENCE|$)',
+            response_text,
+            re.DOTALL | re.IGNORECASE
+        )
+
+        # Extract confidence
+        confidence_match = re.search(
+            r'##\s*CONFIDENCE\s*\n\s*([\d.]+)',
+            response_text,
+            re.IGNORECASE
+        )
+
+        if reformatted_match:
+            coerced = reformatted_match.group(1).strip()
+        else:
+            # Fallback: use the whole response
+            coerced = response_text
+
+        if confidence_match:
+            try:
+                confidence = float(confidence_match.group(1))
+            except ValueError:
+                confidence = 0.5
+        else:
+            confidence = 0.5
+
+        self._log(f"Coercion confidence: {confidence:.2f}")
+        return coerced, confidence
 
     async def raw_completion(
         self,
@@ -207,7 +293,41 @@ class ClaudeCLIRuntime(Runtime):
                 )
             except Exception as e:
                 last_error = str(e)
+                self._log(f"Parse attempt {attempt + 1} failed: {last_error[:100]}")
+
+                # Last retry failed - try AI coercion if enabled
                 if attempt == self._max_retries - 1:
+                    if self._enable_coercion:
+                        # Try to coerce the response using another AI call
+                        try:
+                            # Get expected format from the agent's docstring or system prompt
+                            expected_format = getattr(agent, '_expected_format', None)
+                            if not expected_format:
+                                expected_format = context.system_prompt[:1000] if context.system_prompt else "JSON object"
+
+                            coerced, confidence = await self._coerce_response(
+                                malformed_response=response_text,
+                                expected_format=expected_format,
+                                error_message=last_error,
+                            )
+
+                            if confidence >= self._coercion_confidence:
+                                self._log(f"Coercion succeeded with confidence {confidence:.2f}")
+                                try:
+                                    output = agent.parse_response(coerced)
+                                    return AgentResult(
+                                        output=output,
+                                        raw_response=coerced,
+                                        model=metadata["model"] + "+coerced",
+                                        usage=metadata["usage"],
+                                    )
+                                except Exception as coerce_error:
+                                    self._log(f"Coerced response still failed to parse: {coerce_error}")
+                            else:
+                                self._log(f"Coercion confidence {confidence:.2f} below threshold {self._coercion_confidence}")
+                        except Exception as coercion_err:
+                            self._log(f"Coercion failed: {coercion_err}")
+
                     raise ParseError(
                         f"Failed to parse response after {self._max_retries} attempts: {last_error}",
                         response_text

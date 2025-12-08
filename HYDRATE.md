@@ -153,8 +153,13 @@ LLM execution layer for agents:
 |-------|---------|-------|
 | `LLMAgent[A, B]` | Base for LLM-backed agents | Extend, implement `build_prompt` + `parse_response` |
 | `ClaudeRuntime` | Execute via Anthropic API | `await runtime.execute(agent, input)` |
-| `ClaudeCLIRuntime` | Execute via Claude Code CLI (OAuth) | No API key needed, uses Fix pattern for retries |
+| `ClaudeCLIRuntime` | Execute via Claude Code CLI (OAuth) | No API key needed, uses Fix pattern for retries + AI coercion fallback |
 | `OpenRouterRuntime` | Execute via OpenRouter | Same API, different provider |
+
+**ClaudeCLIRuntime features:**
+- Fix pattern with configurable `max_retries` (default: 3)
+- AI coercion: Uses another AI call to recover from parse failures (`enable_coercion=True`, `coercion_confidence=0.9`)
+- Verbose mode and progress callbacks for observability
 
 ## Next Steps
 
@@ -196,6 +201,8 @@ Pipeline: HypothesisEngine >> CodeImprover (×N) >> Validator >> Hegel >> Apply
 | **Incorporate** | `GitSafety` | Apply with git integration |
 
 **Composability principle (Dec 2025):** CodeImprover is now a pure morphism `(Module, Hypothesis) → Improvement`. Each agent call produces ONE improvement from ONE hypothesis. Pipeline composes by calling N times, not by asking agent to combine outputs.
+
+**Robustness (Dec 2025):** CodeImprover uses 16k max_tokens for large files, improved regex for CODE extraction (handles nested backticks), and fallback parsing for truncated responses. ClaudeCLIRuntime adds AI coercion as last-resort recovery from parse failures.
 
 Usage:
 ```bash

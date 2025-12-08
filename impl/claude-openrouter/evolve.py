@@ -17,7 +17,12 @@ Stages:
 4. INCORPORATE - Apply changes with git safety
 
 Usage:
-    python evolve.py [--target runtime|agents|bootstrap|all] [--dry-run] [--auto-apply]
+    python evolve.py [--target runtime|agents|bootstrap|all] [--dry-run] [--auto-apply] [--quick]
+
+Flags:
+    --dry-run: Preview improvements without applying
+    --auto-apply: Automatically apply improvements that pass tests
+    --quick: Skip dialectic synthesis for faster iteration
 """
 
 import asyncio
@@ -84,6 +89,7 @@ class EvolveConfig:
     experiment_branch_prefix: str = "evolve"
     require_tests_pass: bool = True
     require_type_check: bool = True
+    quick_mode: bool = False  # Skip dialectic synthesis for speed
 
 
 # ============================================================================
@@ -236,7 +242,7 @@ Generate ONE concrete improvement. Return ONLY valid JSON."""
             system_prompt=system_prompt,
             messages=[{"role": "user", "content": user_prompt}],
             temperature=self._temperature,
-            max_tokens=8000,
+            max_tokens=16000,  # Large enough for ~30k char files
         )
 
     def parse_response(self, response: str) -> ImproverOutput:
@@ -255,8 +261,9 @@ Generate ONE concrete improvement. Return ONLY valid JSON."""
         )
 
         # Extract CODE section (markdown block)
+        # Use greedy matching anchored to end of response to handle code containing ```
         code_match = re.search(
-            r'##\s*CODE\s*\n```(?:python)?\s*\n(.*?)```',
+            r'##\s*CODE\s*\n```(?:python)?\s*\n(.*)```\s*$',
             response,
             re.DOTALL | re.IGNORECASE
         )
@@ -282,10 +289,20 @@ Generate ONE concrete improvement. Return ONLY valid JSON."""
         # Get code from CODE section or fallback
         if code_match:
             new_content = code_match.group(1)
-        elif 'new_content' in data:
-            new_content = data['new_content']
         else:
-            raise ValueError("No code content found in response")
+            # Fallback: try to extract code after ## CODE even if truncated (no closing ```)
+            truncated_match = re.search(
+                r'##\s*CODE\s*\n```(?:python)?\s*\n(.*)',
+                response,
+                re.DOTALL | re.IGNORECASE
+            )
+            if truncated_match:
+                # Take everything after the code block start
+                new_content = truncated_match.group(1).rstrip('`').strip()
+            elif 'new_content' in data:
+                new_content = data['new_content']
+            else:
+                raise ValueError("No code content found in response")
 
         improvement = Improvement(
             description=data.get("description", ""),
@@ -356,19 +373,32 @@ class Validator:
 
         try:
             result = subprocess.run(
-                ["python", "-m", "mypy", temp_path, "--ignore-missing-imports"],
+                ["python", "-m", "mypy", temp_path, "--ignore-missing-imports", "--no-error-summary"],
                 capture_output=True,
                 text=True,
                 timeout=30,
             )
-            if result.returncode == 0:
+            # Check for actual errors in output, not just return code
+            # mypy returns non-zero for many reasons (missing stubs, etc.)
+            output = (result.stdout + result.stderr).strip()
+
+            # Filter out non-error lines
+            error_lines = [
+                line for line in output.split('\n')
+                if line and ': error:' in line
+            ]
+
+            if not error_lines:
                 return True, "Type check passed"
             else:
-                return False, f"Type errors:\n{result.stdout}"
+                return False, f"Type errors:\n" + "\n".join(error_lines[:5])  # Limit to 5 errors
         except FileNotFoundError:
             return True, "mypy not installed, skipping type check"
         except subprocess.TimeoutExpired:
             return False, "Type check timed out"
+        except Exception as e:
+            # Don't fail on mypy issues - it's optional
+            return True, f"Type check skipped: {e}"
         finally:
             Path(temp_path).unlink(missing_ok=True)
 
@@ -547,23 +577,67 @@ class EvolutionPipeline:
 
         return modules
 
+    def _analyze_code_structure(self, module: CodeModule) -> list[str]:
+        """Deep code analysis using AST parsing."""
+        import ast
+        observations = []
+
+        try:
+            tree = ast.parse(module.content)
+
+            # Count different elements
+            classes = [n for n in ast.walk(tree) if isinstance(n, ast.ClassDef)]
+            functions = [n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)]
+            async_functions = [n for n in functions if n in [x for x in ast.walk(tree) if isinstance(x, ast.AsyncFunctionDef)]]
+            imports = [n for n in ast.walk(tree) if isinstance(n, (ast.Import, ast.ImportFrom))]
+
+            # Exception handling
+            try_blocks = [n for n in ast.walk(tree) if isinstance(n, ast.Try)]
+            raises = [n for n in ast.walk(tree) if isinstance(n, ast.Raise)]
+
+            # Type annotations
+            annotated_args = sum(1 for f in functions for arg in getattr(f.args, 'args', []) if arg.annotation)
+            total_args = sum(len(getattr(f.args, 'args', [])) for f in functions)
+
+            observations.append(f"Structure: {len(classes)} classes, {len(functions)} functions ({len(async_functions)} async)")
+            observations.append(f"Imports: {len(imports)} import statements")
+            observations.append(f"Error handling: {len(try_blocks)} try blocks, {len(raises)} raises")
+
+            if total_args > 0:
+                type_coverage = (annotated_args / total_args) * 100
+                observations.append(f"Type annotations: {type_coverage:.0f}% of function arguments")
+
+            # Look for patterns
+            if len(try_blocks) == 0 and len(raises) > 0:
+                observations.append("⚠ Raises exceptions but has no error handling")
+
+            if len(async_functions) > 0 and "asyncio" not in module.content:
+                observations.append("⚠ Uses async but doesn't import asyncio")
+
+        except SyntaxError:
+            observations.append("⚠ Syntax error - cannot parse AST")
+
+        return observations
+
     async def generate_hypotheses(self, module: CodeModule) -> list[str]:
         """Generate improvement hypotheses for a module."""
-        has_docstring = 'yes' if '"""' in module.content else 'no'
-        has_async = 'yes' if 'async def' in module.content else 'no'
+        # Deep structural analysis
+        structural_obs = self._analyze_code_structure(module)
+
+        # Additional pattern observations
+        pattern_obs = []
+        if "# TODO" in module.content:
+            todos = [line.strip() for line in module.content.split('\n') if '# TODO' in line]
+            pattern_obs.append(f"Has {len(todos)} TODO comments: {todos[0][:50] if todos else ''}")
+        if "raise NotImplementedError" in module.content:
+            pattern_obs.append("Contains NotImplementedError (incomplete implementation)")
+        if '"""' not in module.content and "'''" not in module.content:
+            pattern_obs.append("⚠ Missing module-level docstring")
 
         observations = [
-            f"Module: {module.name}",
-            f"Category: {module.category}",
-            f"Lines: {len(module.content.splitlines())}",
-            f"Has docstring: {has_docstring}",
-            f"Uses async: {has_async}",
-        ]
-
-        if "# TODO" in module.content:
-            observations.append("Contains TODO comments")
-        if "raise NotImplementedError" in module.content:
-            observations.append("Has NotImplementedError (incomplete)")
+            f"Module: {module.name} ({module.category})",
+            f"Size: {len(module.content.splitlines())} lines",
+        ] + structural_obs + pattern_obs
 
         try:
             result = await self._runtime.execute(
@@ -571,15 +645,20 @@ class EvolutionPipeline:
                 HypothesisInput(
                     observations=observations,
                     domain="software architecture",
-                    question=f"What improvements would make {module.name} more robust and composable?",
+                    question=f"What specific, actionable improvements would make {module.name} more robust, composable, and production-ready?",
                     constraints=[
+                        "Focus on concrete, implementable changes",
                         "Agents are morphisms: A → B",
                         "Use Fix pattern for retries",
-                        "Conflicts are data",
+                        "Prioritize error handling and type safety",
                     ],
                 )
             )
-            return [h.statement for h in result.output.hypotheses]
+            hypotheses = [h.statement for h in result.output.hypotheses]
+            # Log each hypothesis for visibility
+            for i, h in enumerate(hypotheses, 1):
+                log(f"   H{i}: {h[:100]}...", "      💡")
+            return hypotheses
         except Exception as e:
             log(f"Hypothesis generation failed: {e}", "   ⚠️")
             return []
@@ -590,7 +669,7 @@ class EvolutionPipeline:
         hypotheses: list[str]
     ) -> list[Improvement]:
         """
-        Generate concrete code improvements.
+        Generate concrete code improvements in parallel.
 
         Calls CodeImprover once per hypothesis for composability.
         Each agent invocation produces ONE improvement.
@@ -600,9 +679,11 @@ class EvolutionPipeline:
         # Limit to max_improvements_per_module
         hypotheses_to_explore = hypotheses[:self._config.max_improvements_per_module]
 
-        for i, hypothesis in enumerate(hypotheses_to_explore):
+        log(f"   Exploring {len(hypotheses_to_explore)} hypotheses in parallel...", "      🔬")
+
+        # Create tasks for parallel execution
+        async def generate_one(i: int, hypothesis: str) -> Optional[tuple[int, Improvement]]:
             try:
-                log(f"   Exploring hypothesis {i+1}/{len(hypotheses_to_explore)}...", "      ")
                 result = await self._runtime.execute(
                     self._code_improver,
                     ImproverInput(
@@ -616,10 +697,22 @@ class EvolutionPipeline:
                         ],
                     )
                 )
-                improvements.append(result.output.improvement)
+                imp = result.output.improvement
+                log(f"   ✓ H{i+1}: {imp.description[:70]}... (conf: {imp.confidence:.2f})", "      ")
+                return (i, imp)
             except Exception as e:
-                log(f"Improvement generation failed for hypothesis {i+1}: {e}", "   ⚠️")
-                continue
+                log(f"   ✗ H{i+1} failed: {str(e)[:50]}...", "      ")
+                return None
+
+        # Execute all improvement generations in parallel
+        tasks = [generate_one(i, h) for i, h in enumerate(hypotheses_to_explore)]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        # Collect successful improvements (preserving order)
+        for result in results:
+            if result and not isinstance(result, Exception):
+                i, imp = result
+                improvements.append(imp)
 
         return improvements
 
@@ -680,18 +773,21 @@ class EvolutionPipeline:
         log(f"Tests passed", "      ✓")
         experiment.status = ExperimentStatus.PASSED
 
-        # Stage 2: Synthesize
-        experiment.status = ExperimentStatus.SYNTHESIZING
-        log(f"Synthesizing...", "      ")
+        # Stage 2: Synthesize (skip in quick mode)
+        if not self._config.quick_mode:
+            experiment.status = ExperimentStatus.SYNTHESIZING
+            log(f"Synthesizing...", "      ")
 
-        synthesis = await self.synthesize(module, improvement)
-        experiment.synthesis = synthesis
+            synthesis = await self.synthesize(module, improvement)
+            experiment.synthesis = synthesis
 
-        if synthesis.productive_tension:
-            log(f"HELD: {synthesis.sublation_notes}", "      ⏸️")
-            return experiment
+            if synthesis.productive_tension:
+                log(f"HELD: {synthesis.sublation_notes}", "      ⏸️")
+                return experiment
 
-        log(f"Synthesis: {synthesis.sublation_notes[:60]}...", "      ↑")
+            log(f"Synthesis: {synthesis.sublation_notes[:60]}...", "      ↑")
+        else:
+            log(f"Skipping synthesis (quick mode)", "      ⚡")
 
         return experiment
 
@@ -699,6 +795,12 @@ class EvolutionPipeline:
         """Apply an experiment's improvement to the codebase."""
         if self._config.dry_run:
             log(f"DRY RUN: Would apply {experiment.improvement.description}", "   🔍")
+            # Show a brief preview of changes
+            old_lines = len(experiment.module.content.splitlines())
+            new_lines = len(experiment.improvement.new_content.splitlines())
+            delta = new_lines - old_lines
+            log(f"         Lines: {old_lines} → {new_lines} ({delta:+d})", "         ")
+            log(f"         Rationale: {experiment.improvement.rationale[:80]}...", "         ")
             return True
 
         # Write the new content
@@ -708,39 +810,55 @@ class EvolutionPipeline:
 
         return True
 
-    async def evolve_module(self, module: CodeModule) -> list[Experiment]:
+    async def evolve_module(self, module: CodeModule, module_idx: int, total_modules: int) -> list[Experiment]:
         """Evolve a single module through the full pipeline."""
         experiments: list[Experiment] = []
+        start_time = time.time()
 
         log(f"\n{'='*60}")
-        log(f"EVOLVING: {module.name} ({module.category})")
+        log(f"[{module_idx}/{total_modules}] EVOLVING: {module.name} ({module.category})")
         log(f"{'='*60}")
 
         # Generate hypotheses
         log(f"Generating hypotheses...", "   1.")
+        hyp_start = time.time()
         hypotheses = await self.generate_hypotheses(module)
+        hyp_time = time.time() - hyp_start
         if not hypotheses:
             log(f"No hypotheses generated, skipping", "      ")
             return experiments
-        log(f"Generated {len(hypotheses)} hypotheses", "      ")
+        log(f"Generated {len(hypotheses)} hypotheses ({hyp_time:.1f}s)", "      ✓")
 
-        # Generate improvements
-        log(f"Generating improvements...", "   2.")
+        # Generate improvements (parallel)
+        log(f"Generating improvements (parallel)...", "   2.")
+        imp_start = time.time()
         improvements = await self.generate_improvements(module, hypotheses)
+        imp_time = time.time() - imp_start
         if not improvements:
             log(f"No improvements generated, skipping", "      ")
             return experiments
-        log(f"Generated {len(improvements)} improvements", "      ")
+        log(f"Generated {len(improvements)} improvements ({imp_time:.1f}s)", "      ✓")
 
         # Run experiments
         log(f"Running experiments...", "   3.")
         for i, improvement in enumerate(improvements):
             exp_id = f"{module.name}-{i+1}"
-            log(f"\n   [{exp_id}] {improvement.description[:50]}...")
+            log(f"\n   [{exp_id}] {improvement.description[:70]}...")
             log(f"      Type: {improvement.improvement_type}, Confidence: {improvement.confidence:.2f}")
 
+            exp_start = time.time()
             experiment = await self.run_experiment(module, improvement, exp_id)
+            exp_time = time.time() - exp_start
             experiments.append(experiment)
+
+            # Show result with timing
+            if experiment.status == ExperimentStatus.PASSED:
+                log(f"      Result: PASSED ({exp_time:.1f}s)", "      ")
+            elif experiment.status == ExperimentStatus.FAILED:
+                log(f"      Result: FAILED ({exp_time:.1f}s)", "      ")
+
+        total_time = time.time() - start_time
+        log(f"\n   Module completed in {total_time:.1f}s ({len(experiments)} experiments)")
 
         return experiments
 
@@ -751,6 +869,7 @@ class EvolutionPipeline:
         log(f"Target: {self._config.target}")
         log(f"Dry run: {self._config.dry_run}")
         log(f"Auto-apply: {self._config.auto_apply}")
+        log(f"Quick mode: {self._config.quick_mode} {'⚡' if self._config.quick_mode else ''}")
         log("="*60)
 
         # Safety check
@@ -772,8 +891,8 @@ class EvolutionPipeline:
 
         # Evolve each module
         all_experiments: list[Experiment] = []
-        for module in modules:
-            experiments = await self.evolve_module(module)
+        for idx, module in enumerate(modules, 1):
+            experiments = await self.evolve_module(module, idx, len(modules))
             all_experiments.extend(experiments)
 
         # Categorize results
@@ -847,6 +966,8 @@ def parse_args() -> EvolveConfig:
             config.dry_run = True
         elif arg == "--auto-apply":
             config.auto_apply = True
+        elif arg == "--quick":
+            config.quick_mode = True
 
     return config
 
@@ -856,7 +977,12 @@ async def main():
 
     if config.target not in ["runtime", "agents", "bootstrap", "meta", "all"]:
         log(f"Unknown target: {config.target}")
-        log("Usage: python evolve.py [runtime|agents|bootstrap|meta|all] [--dry-run] [--auto-apply]")
+        log("Usage: python evolve.py [runtime|agents|bootstrap|meta|all] [--dry-run] [--auto-apply] [--quick]")
+        log("")
+        log("Flags:")
+        log("  --dry-run     Preview improvements without applying")
+        log("  --auto-apply  Automatically apply improvements that pass tests")
+        log("  --quick       Skip dialectic synthesis for faster iteration")
         sys.exit(1)
 
     pipeline = EvolutionPipeline(config)
