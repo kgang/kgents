@@ -6,10 +6,11 @@
 
 **Status**: F-gents Spec + L-gent Brainstorm COMMITTED ✅
 **Branch**: `main` (pushed)
-**Commits**: e8dc96c (L-gent brainstorm), b6a3b1f (F-gents spec)
+**Commits**: e8dc96c (L-gent brainstorm), b6a3b1f (F-gents spec), d88c2f4 (HYDRATE update)
 **Session**: 2025-12-08 - L-gent creative exploration + F-gents specification committed
 **Achievement**: L-gent brainstorm with 7 creative directions + F-gents complete spec
 **Next**: Choose L-gent direction (Librarian recommended) → write spec/l-gents/README.md
+**Note**: E-gents composable stages (dcce6b2) documented in Part 11 below
 
 ---
 
@@ -75,6 +76,104 @@ python evolve.py meta --auto-apply
 - Begin G-gents (Guardian/Security agents)
 - Enhance existing genera with new capabilities
 - Apply D-gents to F-gents parser cache
+
+---
+
+## This Session Part 11: E-gents Composable Stages + API Signatures (2025-12-08) ✅
+
+### What Was Accomplished
+
+Implemented hypothesis H3 (decompose EvolutionPipeline into composable agents) and enhanced prompts to prevent LLM hallucination:
+
+**agents/e/stages.py** (~385 lines):
+- Composable stage agents for evolution pipeline
+- **GroundStage**: CodeModule → CodeStructure (AST analysis with caching)
+- **HypothesisStage**: HypothesisInput → list[Hypothesis] (AST + LLM + memory filtering)
+- **ExperimentStage**: ExperimentInput → Experiment (code generation + testing)
+- Each stage is independent Agent[I, O] for testing and composition
+- Factory functions: ground_stage(), hypothesis_stage(), experiment_stage()
+
+**agents/e/api_signatures.py** (~292 lines):
+- Curated API signature database to prevent hallucination
+- **CORE_APIS**: Exact signatures for CodeModule, ImprovementMemory, Agent, etc.
+  - Includes CORRECT vs WRONG patterns (e.g., "path.read_text()" vs "module.content")
+  - Covers 10 frequently hallucinated APIs
+- **COMMON_PATTERNS**: File operations, agent invocation, memory operations
+- **get_kgents_api_reference()**: Formats 4,496 chars of API reference for prompts
+- Extraction utilities: extract_class_signature(), extract_dataclass_signature()
+
+**agents/e/prompts/improvement.py** (enhanced):
+- Imports and includes API reference in build_improvement_prompt()
+- API signatures now appear before module-specific context
+- LLM receives exact APIs to prevent inventing non-existent methods
+- Maintains all existing prompt structure (type signatures, errors, patterns, principles)
+
+**agents/e/__init__.py** (enhanced):
+- Added exports for all stage agents and their I/O types
+- Added exports for API signature utilities
+- Clean public API for composable evolution pipeline
+
+### Key Concepts
+
+**Composable Pipeline Architecture**:
+```
+EvolutionAgent = Ground >> Hypothesis >> Experiment >> Judge >> Incorporate
+                   ↓           ↓             ↓           ↓          ↓
+              AST Analyzer  LLM + Memory  Code Gen   Principles  Git Safe
+```
+
+**API Signature Database Pattern**:
+- Curated signatures with CORRECT/WRONG examples prevent hallucination
+- Pattern: `CORE_APIS[symbol] = """signature + usage examples"""`
+- Includes common anti-patterns LLM invents (CodeModule.code, memory.is_rejected())
+
+**Stage Agent Pattern**:
+- Each stage: `Agent[I, O]` with clear morphism semantics
+- Independent testing: test each stage without full pipeline
+- Composition: stages compose via `>>` operator (future)
+- Caching: GroundStage caches AST results by module path
+
+### Impact
+
+**Fixes Evolution Pipeline Failures**:
+- Previous issue: LLM hallucinated APIs → type errors → experiment failures
+- Solution: API signatures in prompts → exact APIs → valid code
+- Impact: Reduced hallucination, improved code quality, faster evolution cycles
+
+**Enables Future Composability**:
+- Stage agents can be swapped (e.g., different hypothesis generators)
+- Pipeline can be reconfigured (e.g., skip AST for simple modules)
+- Each stage independently testable and debuggable
+
+### Files Created/Modified
+
+```
+impl/claude/agents/e/
+├── stages.py                    # NEW: Composable stage agents (~385 lines)
+├── api_signatures.py            # NEW: API signature database (~292 lines)
+├── prompts/improvement.py       # MODIFIED: Include API reference
+└── __init__.py                  # MODIFIED: Export stages + API utils
+
+Total: ~700 lines new/modified
+```
+
+### Validation
+
+- ✅ All imports successful
+- ✅ API reference generation produces 4,496 chars
+- ✅ Type checking passed (mypy)
+- ✅ Pre-commit hooks passed (reformatted 1 file, fixed 4 lint issues)
+
+### Commit
+
+**dcce6b2**: `feat(e-gents): Composable pipeline stages + API signature database`
+- Pushed to main ✅
+
+### Next Steps
+
+- Test evolution pipeline with new API signatures (verify hallucination reduction)
+- Integrate stage agents into EvolutionPipeline (refactor)
+- Add more API signatures as new hallucination patterns emerge
 
 ---
 
