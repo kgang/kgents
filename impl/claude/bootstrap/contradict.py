@@ -29,10 +29,40 @@ Anti-pattern: Silent failures, swallowed exceptions, "last write wins".
 
 from dataclasses import dataclass, field
 from typing import Any, Optional, Callable, Protocol
+from enum import Enum
 import time
-import asyncio
 
 from .types import Agent, Tension, TensionMode
+
+
+class EvidenceType(Enum):
+    """Type of evidence for or against contradiction."""
+    POSITIVE = "positive"  # Evidence of contradiction
+    NEGATIVE = "negative"  # Evidence of non-contradiction
+    UNCERTAIN = "uncertain"  # Ambiguous evidence
+
+
+@dataclass
+class TensionEvidence:
+    """
+    Evidence trail for why a contradiction was/wasn't detected.
+    
+    This enables learning from both true and false positives by maintaining
+    a record of what was checked and what was found.
+    
+    Usage:
+        # After detection
+        for evidence in result.evidence_trail:
+            if evidence.evidence_type == EvidenceType.NEGATIVE:
+                # Log why these DON'T contradict
+                logger.info(f"No {evidence.mode} tension: {evidence.reason}")
+    """
+    mode: TensionMode
+    evidence_type: EvidenceType
+    reason: str
+    confidence: float  # 0.0-1.0: how confident is this evidence?
+    detector_name: str
+    timestamp: float = field(default_factory=time.time)
 
 
 # Protocol for extensible tension detection
@@ -45,9 +75,22 @@ class TensionDetector(Protocol):
 
     Example:
         class SemanticTensionDetector:
-            async def detect(self, a: Any, b: Any, mode: TensionMode) -> Optional[Tension]:
+            @property
+            def detector_name(self) -> str:
+                return "SemanticTensionDetector"
+            
+            async def detect(
+                self, a: Any, b: Any, mode: TensionMode
+            ) -> tuple[Optional[Tension], list[TensionEvidence]]:
                 # Use LLM to check semantic contradiction
-                ...
+                evidence = [TensionEvidence(
+                    mode=mode,
+                    evidence_type=EvidenceType.POSITIVE,
+                    reason="Semantic contradiction detected via LLM",
+                    confidence=0.8,
+                    detector_name=self.detector_name,
+                )]
+                return tension, evidence
 
         contradict = Contradict(detectors=[
             SemanticTensionDetector(),
@@ -55,76 +98,22 @@ class TensionDetector(Protocol):
         ])
     """
 
-    async def detect(self, a: Any, b: Any, mode: TensionMode) -> Optional[Tension]:
+    @property
+    def detector_name(self) -> str:
+        """Name of this detector for evidence tracking."""
+        ...
+
+    async def detect(
+        self, a: Any, b: Any, mode: TensionMode
+    ) -> tuple[Optional[Tension], list[TensionEvidence]]:
         """
         Detect tension between a and b for the given mode.
 
-        Returns Tension if contradiction detected, None otherwise.
+        Returns (Tension, evidence_trail) where:
+        - Tension is present if contradiction detected, None otherwise
+        - evidence_trail contains reasoning for both positive and negative findings
         """
         ...
-
-
-@dataclass
-class DetectorHealth:
-    """
-    Circuit breaker state for a detector.
-    
-    Tracks failures and timeouts to prevent cascading delays.
-    """
-    detector_name: str
-    failures: int = 0
-    consecutive_timeouts: int = 0
-    last_failure_time: float = 0.0
-    is_open: bool = False  # Circuit breaker state
-    
-    def record_success(self) -> None:
-        """Reset failure counters on success."""
-        self.failures = 0
-        self.consecutive_timeouts = 0
-        self.is_open = False
-    
-    def record_timeout(self) -> None:
-        """Record a timeout event."""
-        self.consecutive_timeouts += 1
-        self.failures += 1
-        self.last_failure_time = time.perf_counter()
-        
-        # Open circuit after 3 consecutive timeouts
-        if self.consecutive_timeouts >= 3:
-            self.is_open = True
-    
-    def record_error(self) -> None:
-        """Record a general error."""
-        self.failures += 1
-        self.last_failure_time = time.perf_counter()
-        
-        # Open circuit after 5 total failures
-        if self.failures >= 5:
-            self.is_open = True
-    
-    def should_skip(self) -> bool:
-        """Check if detector should be skipped (circuit open)."""
-        if not self.is_open:
-            return False
-        
-        # Auto-reset after 60 seconds
-        if time.perf_counter() - self.last_failure_time > 60.0:
-            self.is_open = False
-            self.failures = 0
-            self.consecutive_timeouts = 0
-            return False
-        
-        return True
-
-
-@dataclass
-class DetectorMetrics:
-    """Per-detector execution metrics."""
-    detector_name: str
-    execution_time_ms: float
-    timed_out: bool = False
-    skipped: bool = False
-    error: Optional[str] = None
 
 
 @dataclass
@@ -150,19 +139,32 @@ class ContradictResult:
             # Handle the conflict
             await sublate.invoke(result.tension)
         
+        # Learn from evidence trail
+        for evidence in result.evidence_trail:
+            if evidence.evidence_type == EvidenceType.NEGATIVE:
+                # These DON'T contradict because...
+                log_non_contradiction(evidence)
+        
         # Debug observability
         print(f"Checked modes: {result.checked_modes}")
         print(f"Execution time: {result.execution_time_ms}ms")
-        print(f"Detector metrics: {result.detector_metrics}")
     """
     tension: Optional[Tension]
     checked_modes: list[TensionMode] = field(default_factory=list)
     execution_time_ms: float = 0.0
-    detector_metrics: list[DetectorMetrics] = field(default_factory=list)
+    evidence_trail: list[TensionEvidence] = field(default_factory=list)
     
     def __bool__(self) -> bool:
         """Allow 'if result:' to check for tension presence."""
         return self.tension is not None
+    
+    def get_negative_evidence(self) -> list[TensionEvidence]:
+        """Get evidence for why things DON'T contradict."""
+        return [e for e in self.evidence_trail if e.evidence_type == EvidenceType.NEGATIVE]
+    
+    def get_positive_evidence(self) -> list[TensionEvidence]:
+        """Get evidence for why things DO contradict."""
+        return [e for e in self.evidence_trail if e.evidence_type == EvidenceType.POSITIVE]
 
 
 class Contradict(Agent[ContradictInput, ContradictResult]):
@@ -170,14 +172,14 @@ class Contradict(Agent[ContradictInput, ContradictResult]):
     The contradiction-recognizer: surfaces tensions between two things.
 
     Usage:
-        # Default detectors with timeout protection
+        # Default detectors
         contradict = Contradict()
 
-        # Custom timeout per detector
-        contradict = Contradict(
-            detectors=[SemanticTensionDetector()],
-            detector_timeout_ms=5000,  # 5 second timeout
-        )
+        # Custom detectors
+        contradict = Contradict(detectors=[
+            SemanticTensionDetector(),
+            CustomLogicDetector(),
+        ])
 
         # Check for logical contradiction
         result = await contradict.invoke(ContradictInput(
@@ -190,127 +192,52 @@ class Contradict(Agent[ContradictInput, ContradictResult]):
             # Handle the conflict explicitly
             resolution = await sublate.invoke(result.tension)
 
-        # Observability: see what was checked and timing
-        for metric in result.detector_metrics:
-            if metric.timed_out:
-                print(f"{metric.detector_name} timed out")
-            elif metric.skipped:
-                print(f"{metric.detector_name} skipped (circuit open)")
+        # Learn from evidence
+        for evidence in result.get_negative_evidence():
+            # Track what DOESN'T contradict and why
+            calibration_agent.record(evidence)
 
-    The key insight: detect conflicts BEFORE they become runtime errors,
-    but don't let expensive detectors cascade delays.
+        # Observability: see what was checked
+        print(f"Checked {len(result.checked_modes)} modes in {result.execution_time_ms}ms")
+
+    The key insight: detect conflicts BEFORE they become runtime errors.
+    Track evidence to learn from both hits and misses.
     """
 
     def __init__(
         self,
         detectors: Optional[list[TensionDetector]] = None,
-        detector_timeout_ms: float = 1000.0,  # 1 second default
     ):
         """
-        Initialize with optional custom tension detectors and timeout.
+        Initialize with optional custom tension detectors.
 
         If no detectors provided, uses DefaultTensionDetector.
 
         Args:
             detectors: List of TensionDetector implementations to use
-            detector_timeout_ms: Timeout per detector in milliseconds
         """
         self._detectors: list[TensionDetector]
         if detectors is None:
             self._detectors = [DefaultTensionDetector()]
         else:
             self._detectors = detectors
-        
-        self._timeout_seconds = detector_timeout_ms / 1000.0
-        self._health: dict[str, DetectorHealth] = {}
 
     @property
     def name(self) -> str:
         return "Contradict"
 
-    def _get_detector_name(self, detector: TensionDetector) -> str:
-        """Get a stable name for a detector."""
-        return detector.__class__.__name__
-
-    def _get_health(self, detector: TensionDetector) -> DetectorHealth:
-        """Get or create health tracker for detector."""
-        name = self._get_detector_name(detector)
-        if name not in self._health:
-            self._health[name] = DetectorHealth(detector_name=name)
-        return self._health[name]
-
-    async def _invoke_detector_with_timeout(
-        self,
-        detector: TensionDetector,
-        a: Any,
-        b: Any,
-        mode: TensionMode,
-    ) -> tuple[Optional[Tension], DetectorMetrics]:
-        """
-        Invoke detector with timeout and circuit breaker protection.
-        
-        Returns (tension, metrics) tuple.
-        """
-        detector_name = self._get_detector_name(detector)
-        health = self._get_health(detector)
-        
-        # Check circuit breaker
-        if health.should_skip():
-            return None, DetectorMetrics(
-                detector_name=detector_name,
-                execution_time_ms=0.0,
-                skipped=True,
-            )
-        
-        start_time = time.perf_counter()
-        
-        try:
-            # Invoke with timeout
-            tension = await asyncio.wait_for(
-                detector.detect(a, b, mode),
-                timeout=self._timeout_seconds,
-            )
-            
-            execution_time_ms = (time.perf_counter() - start_time) * 1000
-            health.record_success()
-            
-            return tension, DetectorMetrics(
-                detector_name=detector_name,
-                execution_time_ms=execution_time_ms,
-            )
-            
-        except asyncio.TimeoutError:
-            execution_time_ms = (time.perf_counter() - start_time) * 1000
-            health.record_timeout()
-            
-            return None, DetectorMetrics(
-                detector_name=detector_name,
-                execution_time_ms=execution_time_ms,
-                timed_out=True,
-            )
-            
-        except Exception as e:
-            execution_time_ms = (time.perf_counter() - start_time) * 1000
-            health.record_error()
-            
-            return None, DetectorMetrics(
-                detector_name=detector_name,
-                execution_time_ms=execution_time_ms,
-                error=str(e),
-            )
-
     async def invoke(self, input: ContradictInput) -> ContradictResult:
         """
         Check for contradiction between a and b using registered detectors.
 
-        Returns ContradictResult with tension (if found) and metadata.
+        Returns ContradictResult with tension (if found), evidence trail, and metadata.
         """
         start_time = time.perf_counter()
 
         modes = [input.mode] if input.mode else list(TensionMode)
         checked_modes = []
         found_tension = None
-        all_metrics = []
+        evidence_trail = []
 
         # Try each detector in sequence
         for detector in self._detectors:
@@ -318,11 +245,9 @@ class Contradict(Agent[ContradictInput, ContradictResult]):
                 if mode not in checked_modes:
                     checked_modes.append(mode)
 
-                tension, metrics = await self._invoke_detector_with_timeout(
-                    detector, input.a, input.b, mode
-                )
-                all_metrics.append(metrics)
-
+                tension, evidence = await detector.detect(input.a, input.b, mode)
+                evidence_trail.extend(evidence)
+                
                 if tension:
                     found_tension = tension
                     break
@@ -336,7 +261,7 @@ class Contradict(Agent[ContradictInput, ContradictResult]):
             tension=found_tension,
             checked_modes=checked_modes,
             execution_time_ms=execution_time_ms,
-            detector_metrics=all_metrics,
+            evidence_trail=evidence_trail,
         )
 
 
@@ -352,8 +277,14 @@ class DefaultTensionDetector:
     - TEMPORAL: Past vs present conflicts (requires history)
     """
 
-    async def detect(self, a: Any, b: Any, mode: TensionMode) -> Optional[Tension]:
-        """Detect tension using default logic."""
+    @property
+    def detector_name(self) -> str:
+        return "DefaultTensionDetector"
+
+    async def detect(
+        self, a: Any, b: Any, mode: TensionMode
+    ) -> tuple[Optional[Tension], list[TensionEvidence]]:
+        """Detect tension using default logic, return (tension, evidence)."""
         if mode == TensionMode.LOGICAL:
             return self._check_logical(a, b)
         elif mode == TensionMode.PRAGMATIC:
@@ -363,61 +294,136 @@ class DefaultTensionDetector:
         elif mode == TensionMode.TEMPORAL:
             return self._check_temporal(a, b)
 
-        return None
+        return None, []
 
-    def _check_logical(self, a: Any, b: Any) -> Optional[Tension]:
+    def _check_logical(self, a: Any, b: Any) -> tuple[Optional[Tension], list[TensionEvidence]]:
         """Check for direct logical contradiction."""
+        evidence = []
+        
         # Simple case: boolean opposites
-        if isinstance(a, bool) and isinstance(b, bool) and a != b:
-            return Tension(
-                mode=TensionMode.LOGICAL,
-                thesis=a,
-                antithesis=b,
-                description=f"Boolean contradiction: {a} vs {b}",
-                severity=1.0,
-            )
+        if isinstance(a, bool) and isinstance(b, bool):
+            if a != b:
+                evidence.append(TensionEvidence(
+                    mode=TensionMode.LOGICAL,
+                    evidence_type=EvidenceType.POSITIVE,
+                    reason=f"Boolean values differ: {a} ≠ {b}",
+                    confidence=1.0,
+                    detector_name=self.detector_name,
+                ))
+                return Tension(
+                    mode=TensionMode.LOGICAL,
+                    thesis=a,
+                    antithesis=b,
+                    description=f"Boolean contradiction: {a} vs {b}",
+                    severity=1.0,
+                ), evidence
+            else:
+                evidence.append(TensionEvidence(
+                    mode=TensionMode.LOGICAL,
+                    evidence_type=EvidenceType.NEGATIVE,
+                    reason=f"Boolean values identical: {a} = {b}",
+                    confidence=1.0,
+                    detector_name=self.detector_name,
+                ))
+                return None, evidence
 
         # String negation patterns
         if isinstance(a, str) and isinstance(b, str):
             a_lower, b_lower = a.lower(), b.lower()
             if f"not {a_lower}" == b_lower or f"not {b_lower}" == a_lower:
+                evidence.append(TensionEvidence(
+                    mode=TensionMode.LOGICAL,
+                    evidence_type=EvidenceType.POSITIVE,
+                    reason=f"Negation pattern detected: '{a}' vs '{b}'",
+                    confidence=0.9,
+                    detector_name=self.detector_name,
+                ))
                 return Tension(
                     mode=TensionMode.LOGICAL,
                     thesis=a,
                     antithesis=b,
                     description=f"Negation: '{a}' vs '{b}'",
                     severity=0.9,
-                )
+                ), evidence
+            else:
+                evidence.append(TensionEvidence(
+                    mode=TensionMode.LOGICAL,
+                    evidence_type=EvidenceType.NEGATIVE,
+                    reason=f"No negation pattern between '{a}' and '{b}'",
+                    confidence=0.7,
+                    detector_name=self.detector_name,
+                ))
 
-        return None
+        return None, evidence
 
-    def _check_pragmatic(self, a: Any, b: Any) -> Optional[Tension]:
+    def _check_pragmatic(self, a: Any, b: Any) -> tuple[Optional[Tension], list[TensionEvidence]]:
         """Check for conflicting recommendations."""
+        evidence = []
+        
         # Dict-based recommendations
         if isinstance(a, dict) and isinstance(b, dict):
-            for key in set(a.keys()) & set(b.keys()):
+            common_keys = set(a.keys()) & set(b.keys())
+            
+            if not common_keys:
+                evidence.append(TensionEvidence(
+                    mode=TensionMode.PRAGMATIC,
+                    evidence_type=EvidenceType.NEGATIVE,
+                    reason="No overlapping keys in dicts",
+                    confidence=0.9,
+                    detector_name=self.detector_name,
+                ))
+                return None, evidence
+            
+            for key in common_keys:
                 if a[key] != b[key]:
+                    evidence.append(TensionEvidence(
+                        mode=TensionMode.PRAGMATIC,
+                        evidence_type=EvidenceType.POSITIVE,
+                        reason=f"Key '{key}' has conflicting values: {a[key]} vs {b[key]}",
+                        confidence=0.8,
+                        detector_name=self.detector_name,
+                    ))
                     return Tension(
                         mode=TensionMode.PRAGMATIC,
                         thesis=a,
                         antithesis=b,
                         description=f"Different values for '{key}': {a[key]} vs {b[key]}",
                         severity=0.7,
-                    )
+                    ), evidence
+                else:
+                    evidence.append(TensionEvidence(
+                        mode=TensionMode.PRAGMATIC,
+                        evidence_type=EvidenceType.NEGATIVE,
+                        reason=f"Key '{key}' has same value in both: {a[key]}",
+                        confidence=0.8,
+                        detector_name=self.detector_name,
+                    ))
 
-        return None
+        return None, evidence
 
-    def _check_axiological(self, a: Any, b: Any) -> Optional[Tension]:
+    def _check_axiological(self, a: Any, b: Any) -> tuple[Optional[Tension], list[TensionEvidence]]:
         """Check for value conflicts."""
         # Would need Ground context to know values
-        # Placeholder for value-aware checking
-        return None
+        evidence = [TensionEvidence(
+            mode=TensionMode.AXIOLOGICAL,
+            evidence_type=EvidenceType.UNCERTAIN,
+            reason="Axiological checking requires Ground context (not implemented)",
+            confidence=0.0,
+            detector_name=self.detector_name,
+        )]
+        return None, evidence
 
-    def _check_temporal(self, a: Any, b: Any) -> Optional[Tension]:
+    def _check_temporal(self, a: Any, b: Any) -> tuple[Optional[Tension], list[TensionEvidence]]:
         """Check for past-self vs present-self conflicts."""
         # Would need history context
-        # Placeholder for temporal checking
-        return None
+        evidence = [TensionEvidence(
+            mode=TensionMode.TEMPORAL,
+            evidence_type=EvidenceType.UNCERTAIN,
+            reason="Temporal checking requires history context (not implemented)",
+            confidence=0.0,
+            detector_name=self.detector_name,
+        )]
+        return None, evidence
 
 
 # Specific contradiction checkers for common scenarios
