@@ -19,7 +19,7 @@ Why Monads matter:
 """
 
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar, Callable
+from typing import Any, Generic, TypeVar, Callable
 
 from .functor import Maybe, Just, Nothing, Either, Right, Left
 
@@ -85,7 +85,7 @@ class MaybeEither(Generic[A]):
         - Explicit error (Either)
     """
 
-    def __init__(self, value: Maybe[Either]):
+    def __init__(self, value: Maybe[Either[Any, A]]):
         self._value = value
 
     @classmethod
@@ -94,12 +94,12 @@ class MaybeEither(Generic[A]):
         return cls(Just(Right(a)))
 
     @classmethod
-    def fail_nothing(cls) -> "MaybeEither":
+    def fail_nothing(cls) -> "MaybeEither[Any]":
         """Represent absence."""
-        return cls(Nothing)  # type: ignore
+        return cls(Nothing)  # type: ignore[arg-type]
 
     @classmethod
-    def fail_left(cls, error) -> "MaybeEither":
+    def fail_left(cls, error: Any) -> "MaybeEither[Any]":
         """Represent explicit error."""
         return cls(Just(Left(error)))
 
@@ -110,13 +110,13 @@ class MaybeEither(Generic[A]):
         Short-circuits on Nothing or Left.
         """
         if self._value.is_nothing():
-            return MaybeEither(Nothing)  # type: ignore
+            return MaybeEither(Nothing)  # type: ignore[arg-type]
         inner = self._value.value  # type: ignore
         if inner.is_left():
             return MaybeEither(Just(inner))
         return f(inner.value)
 
-    def run(self) -> Maybe[Either]:
+    def run(self) -> Maybe[Either[Any, A]]:
         """Extract the wrapped value."""
         return self._value
 

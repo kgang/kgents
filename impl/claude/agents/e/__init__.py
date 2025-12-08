@@ -8,6 +8,8 @@ This module provides composable agents for evolutionary code improvement:
 - TestAgent: Validate experiments (syntax, types, tests)
 - CodeJudge: Evaluate against 7 kgents principles
 - IncorporateAgent: Apply changes with git safety
+- PreFlightChecker: Module health validation (Layer 1 reliability)
+- PromptContext: Rich context for high-quality code generation (Layer 1 reliability)
 - EvolutionAgent: Composed pipeline
 
 Architecture:
@@ -108,6 +110,20 @@ from .safety import (
     convergence_agent,
 )
 
+from .preflight import (
+    PreFlightChecker,
+    PreFlightInput,
+    PreFlightReport,
+    preflight_checker,
+)
+
+from .prompts import (
+    PromptContext,
+    build_prompt_context,
+    build_improvement_prompt,
+    build_simple_prompt,
+)
+
 __all__ = [
     # AST Analysis
     "ASTAnalyzer",
@@ -182,4 +198,14 @@ __all__ = [
     "self_evolution_agent",
     "sandbox_test_agent",
     "convergence_agent",
+    # PreFlight (Layer 1 Reliability)
+    "PreFlightChecker",
+    "PreFlightInput",
+    "PreFlightReport",
+    "preflight_checker",
+    # Prompts (Layer 1 Reliability)
+    "PromptContext",
+    "build_prompt_context",
+    "build_improvement_prompt",
+    "build_simple_prompt",
 ]

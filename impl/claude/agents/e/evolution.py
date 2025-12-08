@@ -38,6 +38,8 @@ from .experiment import (
 from .incorporate import IncorporateAgent, IncorporateInput
 from .judge import CodeJudge, JudgeInput
 from .memory import ImprovementMemory, MemoryAgent
+from .preflight import PreFlightChecker, PreFlightInput
+from .prompts import build_prompt_context, build_improvement_prompt
 
 
 @dataclass
@@ -102,6 +104,7 @@ class EvolutionPipeline:
         self._test_agent = TestAgent()
         self._judge = CodeJudge()
         self._incorporate = IncorporateAgent()
+        self._preflight = PreFlightChecker()
 
         # Lazy-loaded agents (require runtime)
         self._hypothesis_engine: Optional[Any] = None
@@ -297,55 +300,27 @@ AST ANALYSIS:
         module: CodeModule,
         hypothesis: str,
     ) -> Optional[CodeImprovement]:
-        """Generate code improvement using LLM."""
+        """Generate code improvement using LLM with rich prompt context."""
         from runtime.base import AgentContext
         from .experiment import extract_metadata, extract_code
 
-        code_content = get_code_preview(module.path)
+        # Build rich prompt context
+        structure = await self.analyze_module(module)
+        prompt_context = build_prompt_context(module, structure)
 
-        prompt = f"""You are a code improvement agent for kgents, a spec-first agent framework.
-
-Your task is to generate ONE CONCRETE, WORKING code improvement based on a single hypothesis.
-
-PRINCIPLES:
-1. Agents are morphisms: A → B (clear input/output types)
-2. Composable: Use >> for pipelines
-3. Fix pattern: For retries
-4. Tasteful: Less is more
-
-OUTPUT FORMAT:
-
-## METADATA
-{{"description": "Brief description", "rationale": "Why", "improvement_type": "refactor|fix|feature|test", "confidence": 0.8}}
-
-## CODE
-```python
-# Complete file content here
-```
-
-MODULE: {module.name}
-CATEGORY: {module.category}
-
-CURRENT CODE:
-```python
-{code_content}
-```
-
-HYPOTHESIS:
-{hypothesis}
-
-Generate ONE concrete improvement."""
+        # Use new prompt system with error-aware context
+        prompt = build_improvement_prompt(hypothesis, prompt_context, improvement_type="refactor")
 
         try:
             runtime = self._get_runtime()
-            context = AgentContext(
+            agent_context = AgentContext(
                 system_prompt="You are a code improvement agent for kgents.",
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.7,
                 max_tokens=16000,
             )
 
-            response_text, _ = await runtime.raw_completion(context)
+            response_text, _ = await runtime.raw_completion(agent_context)
             response = response_text.strip()
 
             metadata = extract_metadata(response, module.name)
@@ -373,8 +348,27 @@ Generate ONE concrete improvement."""
         module: CodeModule,
         log_fn: Optional[Any] = None,
     ) -> list[Experiment]:
-        """Process a single module through the pipeline."""
+        """Process a single module through the pipeline with pre-flight checks."""
         log = log_fn or print
+
+        # Pre-flight check: verify module health before attempting evolution
+        preflight_result = await self._preflight.invoke(PreFlightInput(module=module))
+
+        if not preflight_result.can_evolve:
+            log(f"[{module.name}] ⚠️ Pre-flight check FAILED")
+            for issue in preflight_result.blocking_issues:
+                log(f"  {issue}")
+            for rec in preflight_result.recommendations:
+                log(f"  💡 {rec}")
+            return []
+
+        if preflight_result.warnings:
+            log(f"[{module.name}] ⚠️ Pre-flight warnings:")
+            for warning in preflight_result.warnings:
+                log(f"  {warning}")
+
+        if preflight_result.baseline_error_count > 0:
+            log(f"[{module.name}] 📊 Baseline: {preflight_result.baseline_error_count} pre-existing errors")
 
         hypotheses = await self.generate_hypotheses(module, log_fn)
         if not hypotheses:
