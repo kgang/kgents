@@ -9,7 +9,7 @@
 
 ## Current State (Dec 8, 2025)
 
-**Latest:** Phase 1 of 10 Critical Fixes complete! Type system foundation fixed (Fix and FixComposedAgent signatures). Branch `fix/phase-1-types` pushed and ready for merge.
+**Latest:** Phase 1 of 10 Critical Fixes complete and merged to main! Type system foundation fixed (Fix and FixComposedAgent signatures). Now beginning Phase 2: Architecture refactors (EvolutionAgent composition + Contradict protocol pattern).
 
 **Previously:** Full-stack evolution complete! All 25 modules evolved with 100/100 experiments passed and incorporated (runtime, agents, bootstrap). Logging improved with persistent log files, prominent summary banners, and better UX for piped output.
 
@@ -199,8 +199,9 @@ LLM execution layer for agents:
 | B-gents B.2 | ✅ DONE | Robin (scientific companion) |
 
 **What's Next:**
-- **IMMEDIATE**: Merge `fix/phase-1-types` branch (Phase 1 complete)
-- **Phase 2**: Architecture refactors (Issue #5 EvolutionAgent, #10 Contradict protocol)
+- **IMMEDIATE (IN PROGRESS)**: Phase 2 architecture refactors
+  - Issue #10: Contradict Protocol Pattern (extract TensionDetector strategy, 8-12 hrs)
+  - Issue #5: EvolutionAgent Composition (decompose into morphisms, 16-24 hrs)
 - **Phase 3**: Infrastructure (Issue #4 Retry logic, #6 Error handling transparency)
 - **Phase 0 Hotfix**: Security fix for parallel resource limits (Issue #9)
 - Tests: Add pytest suite for agents/b/ (hypothesis, robin)

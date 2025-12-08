@@ -19,6 +19,7 @@ import logging
 
 from bootstrap.types import Agent
 from .persona import PersonaState, PersonaSeed
+from typing import Protocol
 
 
 # Configure structured logging
@@ -70,6 +71,29 @@ class EvolutionOutput:
     # If change needs confirmation
     needs_confirmation: bool = False
     confirmation_prompt: Optional[str] = None
+
+
+# Protocol for evolution handlers
+class EvolutionHandler(Protocol):
+    """
+    Protocol for handlers that process specific evolution triggers.
+
+    Enables decomposition of EvolutionAgent into composable morphisms.
+
+    Example:
+        explicit_handler = ExplicitUpdateHandler(state, trackers)
+        observation_handler = ObservationHandler(state, trackers)
+
+        # Compose via routing
+        evolution = TriggerRouter({
+            "explicit": explicit_handler,
+            "observation": observation_handler,
+        })
+    """
+
+    async def handle(self, input: EvolutionInput) -> EvolutionOutput:
+        """Handle evolution input and return output."""
+        ...
 
 
 @dataclass
