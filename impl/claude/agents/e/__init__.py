@@ -22,6 +22,11 @@ Layer 2 - Parsing & Validation:
 - SchemaValidator: Fast pre-mypy validation (constructors, types, generics)
 - CodeRepairer: Incremental AST-based repair for common errors
 
+Layer 3 - Recovery & Learning:
+- RetryStrategy: Intelligent retry with failure-aware prompt refinement
+- FallbackStrategy: Progressive simplification (minimal → type-only → docs)
+- ErrorMemory: Track and learn from failure patterns across sessions
+
 Architecture:
     EvolutionAgent = Ground >> Hypothesis >> Experiment >> Judge >> Sublate >> Incorporate
 
@@ -158,6 +163,30 @@ from .repair import (
     code_repairer,
 )
 
+from .retry import (
+    RetryStrategy,
+    RetryConfig,
+    RetryAttempt,
+    RetryResult,
+    retry_strategy,
+)
+
+from .fallback import (
+    FallbackStrategy,
+    FallbackConfig,
+    FallbackLevel,
+    FallbackResult,
+    fallback_strategy,
+)
+
+from .error_memory import (
+    ErrorMemory,
+    ErrorPattern,
+    ErrorWarning,
+    ErrorMemoryStats,
+    error_memory,
+)
+
 __all__ = [
     # AST Analysis
     "ASTAnalyzer",
@@ -260,4 +289,22 @@ __all__ = [
     "RepairResult",
     "Repair",
     "code_repairer",
+    # Retry (Layer 3 Reliability)
+    "RetryStrategy",
+    "RetryConfig",
+    "RetryAttempt",
+    "RetryResult",
+    "retry_strategy",
+    # Fallback (Layer 3 Reliability)
+    "FallbackStrategy",
+    "FallbackConfig",
+    "FallbackLevel",
+    "FallbackResult",
+    "fallback_strategy",
+    # Error Memory (Layer 3 Reliability)
+    "ErrorMemory",
+    "ErrorPattern",
+    "ErrorWarning",
+    "ErrorMemoryStats",
+    "error_memory",
 ]
