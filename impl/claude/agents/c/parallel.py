@@ -170,7 +170,7 @@ class ParallelAgent(Agent[A, list[B]]):
         return ParallelResult(successes=successes, failures=failures)
 
 
-class FanOutAgent(Agent[A, tuple]):
+class FanOutAgent(Agent[A, tuple[Any, ...]]):
     """
     Fan-out: send input to multiple agents, return tuple of results.
 
@@ -186,7 +186,7 @@ class FanOutAgent(Agent[A, tuple]):
     def name(self) -> str:
         return self._name
 
-    async def invoke(self, input: A) -> tuple:
+    async def invoke(self, input: A) -> tuple[Any, ...]:
         """Run all agents concurrently, return tuple of results."""
         tasks = [agent.invoke(input) for agent in self._agents]
         results = await asyncio.gather(*tasks)

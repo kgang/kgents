@@ -153,7 +153,7 @@ def extract_type_annotations(code: str) -> dict[str, str]:
 
 def extract_imports(code: str) -> list[str]:
     """Extract import statements from code."""
-    imports = []
+    imports: list[str] = []
 
     try:
         tree = ast.parse(code)

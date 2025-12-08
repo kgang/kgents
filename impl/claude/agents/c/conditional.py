@@ -23,7 +23,10 @@ async def _eval_predicate(predicate: Predicate[A], input: A) -> bool:
     """Evaluate a predicate, handling both sync and async cases."""
     result = predicate(input)
     if asyncio.iscoroutine(result):
-        return await result
+        awaited: bool = await result
+        return awaited
+    # result is bool since we checked it's not a coroutine
+    assert isinstance(result, bool)
     return result
 
 

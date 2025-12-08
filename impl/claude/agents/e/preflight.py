@@ -39,10 +39,10 @@ class PreFlightReport:
     def from_lists(
         cls,
         can_evolve: bool,
-        blocking_issues: list[str] = None,
-        warnings: list[str] = None,
+        blocking_issues: list[str] | None = None,
+        warnings: list[str] | None = None,
         baseline_error_count: int = 0,
-        recommendations: list[str] = None,
+        recommendations: list[str] | None = None,
     ) -> PreFlightReport:
         """Create PreFlightReport from mutable lists."""
         return cls(

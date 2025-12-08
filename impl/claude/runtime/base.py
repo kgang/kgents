@@ -161,10 +161,10 @@ class LLMAgent(Agent[A, B], ABC):
         result = await runtime.execute(self, input)
         return result.output
 
-    def then_async(self, g: 'LLMAgent[B, C]') -> 'AsyncComposedAgent[A, C]':
+    def then_async(self, g: 'LLMAgent[B, C]') -> 'AsyncComposedAgent[A, B, C]':
         """
         Async composition: self >> g.
-        
+
         Returns an agent that executes self, then g on the result.
         Both executions are awaited sequentially.
         """
@@ -174,23 +174,31 @@ class LLMAgent(Agent[A, B], ABC):
 class AsyncComposedAgent(LLMAgent[A, C], Generic[A, B, C]):
     """
     Composition of two async agents: f >> g.
-    
+
     Executes f, then g on f's output.
     Preserves the morphism structure with clear A → B → C types.
     """
-    
+
     def __init__(self, f: LLMAgent[A, B], g: LLMAgent[B, C]):
         self.f = f
         self.g = g
-    
+
+    @property
+    def name(self) -> str:
+        return f"({self.f.name} >> {self.g.name})"
+
+    async def invoke(self, input: A) -> C:
+        """Not implemented - use execute_async with runtime instead."""
+        raise NotImplementedError("AsyncComposedAgent requires runtime. Use execute_async.")
+
     def build_prompt(self, input: A) -> AgentContext:
         """Not used - async execution bypasses this."""
         raise NotImplementedError("AsyncComposedAgent uses execute_async")
-    
+
     def parse_response(self, response: str) -> C:
         """Not used - async execution bypasses this."""
         raise NotImplementedError("AsyncComposedAgent uses execute_async")
-    
+
     async def execute_async(self, input: A, runtime: 'Runtime') -> C:
         """Execute f, then g sequentially."""
         b = await self.f.execute_async(input, runtime)
@@ -198,7 +206,7 @@ class AsyncComposedAgent(LLMAgent[A, C], Generic[A, B, C]):
         return c
 
 
-async def acompose(*agents: LLMAgent) -> LLMAgent:
+async def acompose(*agents: LLMAgent[Any, Any]) -> LLMAgent[Any, Any]:
     """
     Async composition of multiple agents: f >> g >> h.
     
@@ -315,7 +323,8 @@ async def with_retry(
                 delay = backoff_base ** attempt
                 await asyncio.sleep(delay)
     
-    # All attempts exhausted
+    # All attempts exhausted - should never reach here due to raise in loop
+    assert last_error is not None
     raise last_error
 
 
@@ -410,7 +419,8 @@ def robust_json_parse(response: str, allow_partial: bool = True) -> dict[str, An
 
     # Step 3: Try direct parse first
     try:
-        return json.loads(text)
+        result: dict[str, Any] = json.loads(text)
+        return result
     except json.JSONDecodeError:
         pass
 
@@ -418,7 +428,8 @@ def robust_json_parse(response: str, allow_partial: bool = True) -> dict[str, An
     if allow_partial:
         repaired = _repair_json(text, opener, closer)
         try:
-            return json.loads(repaired)
+            result = json.loads(repaired)
+            return result
         except json.JSONDecodeError:
             pass
 
@@ -437,7 +448,8 @@ def robust_json_parse(response: str, allow_partial: bool = True) -> dict[str, An
             if depth == 0 and start >= 0:
                 candidate = text[start:i+1]
                 try:
-                    return json.loads(candidate)
+                    result = json.loads(candidate)
+                    return result
                 except json.JSONDecodeError:
                     pass
 
@@ -579,8 +591,8 @@ def parse_structured_sections(
         pattern = re.compile(rf'^{pattern_name}\s*:\s*$', re.IGNORECASE)
         section_patterns[name] = pattern
 
-    current_section = None
-    current_items = []
+    current_section: str | None = None
+    current_items: list[str] = []
 
     for line in lines:
         stripped = line.strip()

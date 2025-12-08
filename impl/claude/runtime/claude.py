@@ -105,7 +105,6 @@ class ClaudeRuntime(Runtime):
                     "No authentication configured. Set ANTHROPIC_API_KEY, "
                     "CLAUDE_CODE_OAUTH_TOKEN, or pass api_key/auth_token to ClaudeRuntime."
                 )
-        return self._client
 
     def _is_transient_error(self, error: Exception) -> bool:
         """
@@ -180,9 +179,10 @@ class ClaudeRuntime(Runtime):
 
         async def _attempt() -> tuple[str, dict[str, Any]]:
             """Single attempt at completion."""
-            client = self._ensure_client()
+            self._ensure_client()
+            assert self._client is not None  # Guaranteed by _ensure_client
 
-            response = await client.messages.create(
+            response = await self._client.messages.create(
                 model=self._model,
                 max_tokens=context.max_tokens,
                 system=context.system_prompt,

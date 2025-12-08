@@ -19,7 +19,7 @@ import tempfile
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 from bootstrap.types import Agent, Verdict
 
@@ -127,7 +127,7 @@ def extract_metadata(response: str, module_name: str) -> Optional[dict[str, Any]
     match = re.search(patterns[2], response, re.DOTALL)
     if match:
         try:
-            return json.loads(match.group(0))
+            return cast(dict[str, Any], json.loads(match.group(0)))
         except json.JSONDecodeError:
             pass
 
@@ -149,11 +149,11 @@ def _extract_json_object(text: str) -> Optional[dict[str, Any]]:
             if depth == 0:
                 json_str = text[start: i + 1]
                 try:
-                    return json.loads(json_str)
+                    return cast(dict[str, Any], json.loads(json_str))
                 except json.JSONDecodeError:
                     cleaned = _clean_json_string(json_str)
                     try:
-                        return json.loads(cleaned)
+                        return cast(dict[str, Any], json.loads(cleaned))
                     except json.JSONDecodeError:
                         return None
     return None

@@ -22,7 +22,7 @@ from agents.e import (
 )
 
 
-async def test_preflight_syntax_error():
+async def test_preflight_syntax_error() -> None:
     """Test that PreFlightChecker catches syntax errors."""
     print("\n=== Test 1: PreFlight catches syntax errors ===")
 
@@ -47,7 +47,7 @@ def broken_function():
         temp_path.unlink()
 
 
-async def test_preflight_type_errors():
+async def test_preflight_type_errors() -> None:
     """Test that PreFlightChecker detects type errors baseline."""
     print("\n=== Test 2: PreFlight detects type errors ===")
 
@@ -76,7 +76,7 @@ result = add_numbers("hello", "world")
         temp_path.unlink()
 
 
-async def test_prompt_context():
+async def test_prompt_context() -> None:
     """Test that PromptContext builds rich context."""
     print("\n=== Test 3: PromptContext builds rich context ===")
 
@@ -120,7 +120,7 @@ def process(input: str) -> int:
         temp_path.unlink()
 
 
-async def test_improvement_prompt():
+async def test_improvement_prompt() -> None:
     """Test that build_improvement_prompt generates rich prompts."""
     print("\n=== Test 4: build_improvement_prompt generates structured prompt ===")
 
@@ -168,7 +168,7 @@ class SimpleClass:
         temp_path.unlink()
 
 
-async def main():
+async def main() -> None:
     print("=" * 60)
     print("TESTING PHASE 2.5a: PROMPT ENGINEERING IMPROVEMENTS")
     print("=" * 60)

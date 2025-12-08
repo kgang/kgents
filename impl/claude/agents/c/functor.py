@@ -91,10 +91,10 @@ class _Nothing(Maybe[Any]):
         return True
 
     def map(self, f: Callable[[Any], B]) -> Maybe[B]:
-        return self  # type: ignore
+        return self  # Nothing is a singleton, safe cast
 
     def flat_map(self, f: Callable[[Any], Maybe[B]]) -> Maybe[B]:
-        return self  # type: ignore
+        return self  # Nothing is a singleton, safe cast
 
     def get_or(self, default: T) -> T:
         return default
@@ -161,7 +161,7 @@ class Right(Either[Any, T]):
         return f(self.value)
 
     def map_left(self, f: Callable[[Any], B]) -> Either[B, T]:
-        return self  # type: ignore
+        return self  # Right is covariant, safe cast
 
     def __repr__(self) -> str:
         return f"Right({self.value!r})"
@@ -179,10 +179,10 @@ class Left(Either[E, Any]):
         return True
 
     def map(self, f: Callable[[Any], B]) -> Either[E, B]:
-        return self  # type: ignore
+        return self  # Left is covariant in error type, safe cast
 
     def flat_map(self, f: Callable[[Any], Either[E, B]]) -> Either[E, B]:
-        return self  # type: ignore
+        return self  # Left is covariant in error type, safe cast
 
     def map_left(self, f: Callable[[E], B]) -> Either[B, Any]:
         return Left(f(self.error))

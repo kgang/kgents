@@ -6,105 +6,75 @@
 
 ## TL;DR
 
-**Status**: Phase 2.5a (Prompt Engineering) complete and committed
-**Latest**: Dec 8 - Reliability improvements: PreFlight + rich prompts
-**Branch**: `main` (Phase 2.5a committed: 1ae1e78)
-**Mypy**: 122 → 50 errors (50 remaining are structural)
+**Status**: Mypy strict passing (0 errors across 50 files)
+**Latest**: Dec 8 - Fixed all type errors, evolve.py verified working
+**Branch**: `main`
+**Mypy**: 50 → 0 errors (all fixed!)
 
 ---
 
 ## What Was Done This Session
 
-### Previous Work (Dec 8 morning)
+### Type Error Fixes (50 → 0 errors)
 
-1. **Type Error Fixes** (122 → 50 errors): Fixed API mismatches across multiple files
-2. **E-gents Extraction**: Created `agents/e/` with composable evolution agents
-3. **Planning Docs**: Created `EVOLUTION_RELIABILITY_PLAN.md`
+Fixed all remaining mypy --strict errors across 17 files:
 
-### Current Session: Phase 2.5a Implementation
+**Files modified:**
+- `__init__.py` - import-not-found ignore
+- `agents/a/skeleton.py` - Agent[Any, Any] type parameters for utility functions
+- `agents/b/robin.py` - arg-type ignore for HypothesisEngine
+- `agents/c/conditional.py` - reworked _eval_predicate to avoid Any returns
+- `agents/c/functor.py` - replaced unused type: ignore with comments
+- `agents/c/monad.py` - fixed MaybeEither generics, replaced unused ignores
+- `agents/c/parallel.py` - tuple[Any, ...] type params
+- `agents/e/experiment.py` - cast() for json.loads
+- `agents/e/preflight.py` - Optional types for list args
+- `agents/e/prompts.py` - type annotation for imports list
+- `agents/h/lacan.py` - __post_init__ return type, dict generics
+- `agents/k/persona.py` - Fixed imports, Maybe.map typing
+- `runtime/base.py` - AsyncComposedAgent with name/invoke, json.loads returns
+- `runtime/claude.py` - assert for _client after _ensure_client
+- `runtime/cli.py` - assert for _claude_path
+- `runtime/openrouter.py` - removed return from _ensure_client, validate api_key
+- `test_prompt_improvements.py` - async function return types
 
-**Implemented Layer 1 of Evolution Reliability Plan:**
+**Key changes:**
+- AsyncComposedAgent now implements `name` property and `invoke` method
+- Replaced plain `type: ignore` with specific codes or removed unused ones
+- Fixed implicit Optional issues (PEP 484 compliance)
+- Added proper type annotations for generic containers
 
-#### New Files Created:
-- `agents/e/prompts.py` (484 lines) - Rich prompt context system
-  - `PromptContext`: Type signatures, error baseline, similar patterns
-  - `build_improvement_prompt()`: Structured, error-aware prompts
-  - `build_prompt_context()`: Context gathering from AST + mypy
-- `agents/e/preflight.py` (346 lines) - Module health validation
-  - `PreFlightChecker`: Syntax, types, imports, completeness
-  - Early detection of blocking issues before LLM calls
-- `test_prompt_improvements.py` (192 lines) - Validation suite
+### Verified
 
-#### Modified Files:
-- `agents/e/evolution.py`: Integrated PreFlight + rich prompts
-- `agents/e/__init__.py`: Exported new components
-- `agents/c/monad.py`: Fixed missing `Any` import (NameError)
-
-#### Test Results:
-✅ All 4 tests passing:
-- PreFlight catches syntax errors
-- PreFlight detects type error baseline
-- PromptContext builds rich context (type annotations, imports, principles)
-- build_improvement_prompt generates structured output (3071 chars)
-
-### Commits This Session
-
-```
-1ae1e78 feat: Phase 2.5a - Prompt Engineering Layer for Evolution Reliability
-```
+- `python -m mypy . --strict --explicit-package-bases` → Success: no issues
+- `python evolve.py --help` → Works correctly
 
 ---
 
 ## Next Session: Start Here
 
-### ✅ COMPLETED: Phase 2.5a - Prompt Engineering Layer
+### Option 1: Run Full Evolution
 
-Successfully implemented:
-- ✅ PreFlightChecker for module health validation
-- ✅ Rich PromptContext with type signatures, error baseline
-- ✅ Structured prompts with critical requirements
-- ✅ All tests passing
-- ✅ Committed (1ae1e78)
-
-**Expected Impact:**
-- Target: <10% syntax errors (down from ~20-30%)
-- Pre-existing error awareness: 100%
-- Prompt structure compliance: 100%
-
-### Option 1: Phase 2.5b - Parsing & Validation Layer
-
-**Next reliability phase** (see `docs/EVOLUTION_RELIABILITY_PLAN.md` lines 282-574):
-
-Create robust parsing with multiple fallback strategies:
+Now that types are clean, run a full evolution pass:
 ```bash
 cd /Users/kentgang/git/kgents && source .venv/bin/activate && cd impl/claude
-# Create agents/e/parser.py - Multi-strategy parsing
-# Create agents/e/validator.py - Schema validation (pre-mypy)
-# Create agents/e/repair.py - Incremental code repair
+python evolve.py all --dry-run  # Preview changes
+python evolve.py all --auto-apply  # Apply improvements
 ```
 
-**Goal:** >95% parse success rate (up from ~70%)
+### Option 2: Phase 2.5b - Parsing & Validation Layer
 
-### Option 2: Measure Phase 2.5a Impact
+Continue reliability improvements (see `docs/EVOLUTION_RELIABILITY_PLAN.md`):
+- Create `agents/e/parser.py` - Multi-strategy parsing
+- Create `agents/e/validator.py` - Schema validation
+- Create `agents/e/repair.py` - Incremental code repair
 
-Run full evolution to measure syntax error rate improvement:
-```bash
-cd /Users/kentgang/git/kgents && source .venv/bin/activate && cd impl/claude
-python evolve.py all --dry-run 2>&1 | tee phase_2.5a_results.log
-# Analyze: grep -i "syntax error\|type error\|passed\|failed" phase_2.5a_results.log
-```
+### Option 3: UX Improvements
 
-### Option 3: Fix Remaining 50 Type Errors
-
-Structural issues remaining in:
-- `runtime/base.py` - AsyncComposedAgent type parameters
-- `agents/c/functor.py`, `monad.py` - Generic type params
-- `agents/a/skeleton.py` - Missing Agent type parameters
-
-```bash
-cd /Users/kentgang/git/kgents && source .venv/bin/activate && cd impl/claude
-python -m mypy . --strict --explicit-package-bases 2>&1 | head -60
-```
+See `docs/EVOLVE_UX_BRAINSTORM.md` for ideas:
+- Confidence scores in output
+- Checkpoint/resume for long runs
+- Better progress visualization
 
 ---
 
@@ -128,7 +98,7 @@ kgents/
 ├── impl/claude/
 │   ├── bootstrap/         # 7 bootstrap agents
 │   ├── agents/
-│   │   ├── e/             # Evolution agents (NEW)
+│   │   ├── e/             # Evolution agents
 │   │   ├── h/             # Hegelian dialectic
 │   │   ├── b/             # Bio/Scientific
 │   │   └── ...
@@ -144,19 +114,22 @@ kgents/
 
 ## Session Log
 
+**Dec 8, 2025 PM (Type Error Cleanup)**:
+- Fixed all 50 remaining mypy --strict errors
+- Modified 17 files across agents, runtime, tests
+- Key fix: AsyncComposedAgent now properly implements abstract methods
+- Verified evolve.py compatibility
+- Ready for commit
+
 **Dec 8, 2025 PM (Phase 2.5a - Reliability)**:
-- ✅ Implemented Prompt Engineering Layer (Layer 1 of reliability plan)
-- ✅ Created `agents/e/prompts.py` (484 lines) - Rich context system
-- ✅ Created `agents/e/preflight.py` (346 lines) - Health validation
-- ✅ All tests passing (4/4)
-- ✅ Committed 1ae1e78: "feat: Phase 2.5a - Prompt Engineering Layer"
-- Next: Phase 2.5b (Parsing) or measure impact
+- Implemented Prompt Engineering Layer
+- Created `agents/e/prompts.py`, `agents/e/preflight.py`
+- All tests passing
+- Committed 1ae1e78
 
 **Dec 8, 2025 AM (Type Fixes & E-gents)**:
-- Fixed 72 type errors across impl/claude
-- Major API mismatches: Contradict, Sublate, Tension
+- Fixed 72 type errors
 - Extracted E-gents to agents/e/
-- Pushed 3 commits to main
-- Remaining: 50 structural type errors
+- Remaining: 50 structural type errors (now fixed!)
 
 ---

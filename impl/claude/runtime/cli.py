@@ -147,6 +147,7 @@ class CLIAgent:
         self._log(f"Sending {prompt_len:,} chars to Claude CLI...")
         
         # Execute claude -p
+        assert self._claude_path is not None  # Already validated in __init__
         proc = await asyncio.create_subprocess_exec(
             self._claude_path,
             "-p", full_prompt,

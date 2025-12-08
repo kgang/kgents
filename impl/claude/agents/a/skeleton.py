@@ -173,7 +173,7 @@ class Composable(Protocol):
     to detect type mismatches before runtime.
     """
     
-    def can_compose_with(self, other: Agent) -> tuple[bool, str]:
+    def can_compose_with(self, other: Agent[Any, Any]) -> tuple[bool, str]:
         """
         Check if this agent's output type matches other's input type.
         
@@ -182,34 +182,34 @@ class Composable(Protocol):
         ...
 
 
-def has_meta(agent: Agent) -> bool:
+def has_meta(agent: Agent[Any, Any]) -> bool:
     """Check if an agent has AgentMeta defined."""
     return hasattr(agent, 'meta') and isinstance(agent.meta, AgentMeta)
 
 
-def get_meta(agent: Agent) -> AgentMeta | None:
+def get_meta(agent: Agent[Any, Any]) -> AgentMeta | None:
     """Get AgentMeta from an agent if present."""
     if has_meta(agent):
         return agent.meta  # type: ignore
     return None
 
 
-def is_introspectable(agent: Agent) -> bool:
+def is_introspectable(agent: Agent[Any, Any]) -> bool:
     """Check if agent implements Introspectable protocol."""
     return isinstance(agent, Introspectable)
 
 
-def is_validatable(agent: Agent) -> bool:
+def is_validatable(agent: Agent[Any, Any]) -> bool:
     """Check if agent implements Validatable protocol."""
     return isinstance(agent, Validatable)
 
 
-def is_composable(agent: Agent) -> bool:
+def is_composable(agent: Agent[Any, Any]) -> bool:
     """Check if agent implements Composable protocol."""
     return isinstance(agent, Composable)
 
 
-def check_composition(agent_a: Agent, agent_b: Agent) -> tuple[bool, str]:
+def check_composition(agent_a: Agent[Any, Any], agent_b: Agent[Any, Any]) -> tuple[bool, str]:
     """
     Check if two agents can be composed (agent_a >> agent_b).
     

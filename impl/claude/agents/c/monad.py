@@ -96,7 +96,7 @@ class MaybeEither(Generic[A]):
     @classmethod
     def fail_nothing(cls) -> "MaybeEither[Any]":
         """Represent absence."""
-        return cls(Nothing)  # type: ignore[arg-type]
+        return cls(Nothing)  # Nothing is compatible with Maybe[Either[Any, Any]]
 
     @classmethod
     def fail_left(cls, error: Any) -> "MaybeEither[Any]":
@@ -110,7 +110,7 @@ class MaybeEither(Generic[A]):
         Short-circuits on Nothing or Left.
         """
         if self._value.is_nothing():
-            return MaybeEither(Nothing)  # type: ignore[arg-type]
+            return MaybeEither(Nothing)  # Nothing is compatible with Maybe[Either[Any, B]]
         inner = self._value.value  # type: ignore
         if inner.is_left():
             return MaybeEither(Just(inner))

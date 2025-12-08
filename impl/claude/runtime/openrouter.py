@@ -53,7 +53,6 @@ class APIClient:
                 raise ImportError(
                     "httpx package required. Install with: pip install httpx"
                 )
-        return self._client
     
     def _is_transient_error(self, error: Exception) -> bool:
         """Classify HTTP errors as transient or permanent."""
@@ -92,7 +91,8 @@ class APIClient:
         """
         async def _attempt() -> tuple[str, dict[str, Any]]:
             """Single API call attempt."""
-            client = self._ensure_client()
+            self._ensure_client()
+            client = self._client
 
             messages = [
                 {"role": "system", "content": context.system_prompt},
@@ -178,8 +178,11 @@ class OpenRouterRuntime(Runtime):
         self._validate_types = validate_types
 
         # Initialize composable API client morphism
+        resolved_api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
+        if not resolved_api_key:
+            raise ValueError("OpenRouter API key required. Set OPENROUTER_API_KEY or pass api_key.")
         self._client = APIClient(
-            api_key=api_key or os.environ.get("OPENROUTER_API_KEY"),
+            api_key=resolved_api_key,
             model=model or self.DEFAULT_MODEL,
             site_url=site_url,
             site_name=site_name,

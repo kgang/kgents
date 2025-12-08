@@ -8,11 +8,11 @@ K-gent is Ground projected through persona_schema:
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Optional, Generic, TypeVar
+from typing import Any, Callable, Optional, Generic, TypeVar
 from enum import Enum
 
-from bootstrap.types import Agent
-from bootstrap.ground import Ground, Facts
+from bootstrap.types import Agent, Facts
+from bootstrap.ground import Ground
 
 A = TypeVar('A')
 
@@ -50,12 +50,12 @@ class Maybe(Generic[A]):
         """Get value or return default."""
         return self._value if self._value is not None else default
     
-    def map(self, f) -> 'Maybe':
+    def map(self, f: Callable[[A], Any]) -> 'Maybe[Any]':
         """Apply function if value exists."""
         if self.is_nothing:
-            return Maybe.nothing(self._error)
+            return Maybe[Any].nothing(self._error or "No value")
         try:
-            return Maybe.just(f(self._value))
+            return Maybe.just(f(self._value))  # type: ignore[arg-type]
         except Exception as e:
             return Maybe.nothing(f"map failed: {str(e)}")
     

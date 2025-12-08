@@ -37,7 +37,7 @@ class RegisterLocation:
     imaginary: float  # 0-1 how much in Imaginary
     real_proximity: float  # 0-1 how close to the Real
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validate register values are in [0, 1]."""
         for field_name in ['symbolic', 'imaginary', 'real_proximity']:
             value = getattr(self, field_name)
@@ -57,7 +57,7 @@ class Slippage:
 class LacanInput:
     """Input for register analysis."""
     output: Any
-    context: Optional[dict] = None
+    context: Optional[dict[str, Any]] = None
     focus: Optional[Register] = None  # Focus on specific register
 
 
@@ -189,7 +189,7 @@ class LacanAgent(Agent[LacanInput, LacanResult]):
             real_proximity=real_proximity,
         )
 
-    def _identify_gaps(self, output: str, context: Optional[dict]) -> list[str]:
+    def _identify_gaps(self, output: str, context: Optional[dict[str, Any]]) -> list[str]:
         """Identify what cannot be represented."""
         gaps = []
 

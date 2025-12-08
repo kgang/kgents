@@ -437,7 +437,7 @@ class RobinAgent(Agent[RobinInput, RobinOutput]):
             )
 
             result: AgentResult[HypothesisOutput] = await effective_runtime.execute(
-                self._hypothesis_engine,
+                self._hypothesis_engine,  # type: ignore[arg-type]
                 hyp_input,
             )
             hypothesis_output = result.output
