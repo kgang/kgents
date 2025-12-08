@@ -6,6 +6,12 @@ Permanent artifact synthesis from natural language intent.
 Motto: "Intent crystallizes into artifact; contracts enable composition"
 """
 
+from agents.f.contract import (
+    CompositionRule,
+    Contract,
+    Invariant,
+    synthesize_contract,
+)
 from agents.f.intent import (
     Dependency,
     DependencyType,
@@ -21,4 +27,9 @@ __all__ = [
     "Example",
     "Intent",
     "parse_intent",
+    # Contract synthesis (Phase 2)
+    "CompositionRule",
+    "Contract",
+    "Invariant",
+    "synthesize_contract",
 ]
