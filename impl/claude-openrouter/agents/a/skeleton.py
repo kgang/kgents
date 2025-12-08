@@ -20,7 +20,7 @@ for semantic clarity, but it's the same class.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, TypeVar, Generic, Type
+from typing import Any, TypeVar, Generic, Type, Protocol, runtime_checkable
 
 # Re-export the bootstrap Agent as AbstractAgent
 # This is NOT a new class - it's the recognition that Agent IS the skeleton
@@ -132,6 +132,56 @@ class AgentMeta:
         )
 
 
+# Protocol-based extension points for introspection and validation
+
+
+@runtime_checkable
+class Introspectable(Protocol):
+    """
+    Protocol for agents that provide metadata introspection.
+    
+    Agents implementing this protocol expose their AgentMeta
+    for runtime inspection without requiring inheritance.
+    """
+    meta: AgentMeta
+
+
+@runtime_checkable
+class Validatable(Protocol):
+    """
+    Protocol for agents that can validate their inputs.
+    
+    Allows pre-flight validation before invoke() to catch
+    type/constraint violations early.
+    """
+    
+    def validate_input(self, input: Any) -> tuple[bool, str]:
+        """
+        Validate input before processing.
+        
+        Returns: (is_valid, error_message)
+        """
+        ...
+
+
+@runtime_checkable
+class Composable(Protocol):
+    """
+    Protocol for agents that can check composition compatibility.
+    
+    Enables static checking of A → B → C composition chains
+    to detect type mismatches before runtime.
+    """
+    
+    def can_compose_with(self, other: Agent) -> tuple[bool, str]:
+        """
+        Check if this agent's output type matches other's input type.
+        
+        Returns: (is_compatible, reason)
+        """
+        ...
+
+
 def has_meta(agent: Agent) -> bool:
     """Check if an agent has AgentMeta defined."""
     return hasattr(agent, 'meta') and isinstance(agent.meta, AgentMeta)
@@ -142,6 +192,45 @@ def get_meta(agent: Agent) -> AgentMeta | None:
     if has_meta(agent):
         return agent.meta  # type: ignore
     return None
+
+
+def is_introspectable(agent: Agent) -> bool:
+    """Check if agent implements Introspectable protocol."""
+    return isinstance(agent, Introspectable)
+
+
+def is_validatable(agent: Agent) -> bool:
+    """Check if agent implements Validatable protocol."""
+    return isinstance(agent, Validatable)
+
+
+def is_composable(agent: Agent) -> bool:
+    """Check if agent implements Composable protocol."""
+    return isinstance(agent, Composable)
+
+
+def check_composition(agent_a: Agent, agent_b: Agent) -> tuple[bool, str]:
+    """
+    Check if two agents can be composed (agent_a >> agent_b).
+    
+    Uses Composable protocol if available, otherwise returns permissive result.
+    Returns: (is_compatible, reason)
+    """
+    if is_composable(agent_a):
+        return agent_a.can_compose_with(agent_b)  # type: ignore
+    
+    # Fallback: check metadata if available
+    meta_a = get_meta(agent_a)
+    meta_b = get_meta(agent_b)
+    
+    if meta_a and meta_a.interface and meta_b and meta_b.interface:
+        output_type = meta_a.interface.output_type
+        input_type = meta_b.interface.input_type
+        
+        if output_type != input_type:
+            return (False, f"Type mismatch: {output_type.__name__} → {input_type.__name__}")
+    
+    return (True, "Composition allowed (no metadata to verify)")
 
 
 # Note on the Identity Agent:

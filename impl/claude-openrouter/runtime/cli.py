@@ -78,12 +78,118 @@ def classify_parse_error(error_msg: str, raw_response: str) -> ParseErrorType:
     return ParseErrorType.UNKNOWN
 
 
+class CLIAgent:
+    """
+    Pure morphism: AgentContext → (str, dict).
+    
+    This is the core CLI execution primitive - a simple function
+    from prompt context to raw LLM response.
+    
+    Type signature: AgentContext → (response_text, metadata)
+    
+    Benefits:
+    - Composable: Can be wrapped, chained, or tested independently
+    - Clear contract: Input and output types are explicit
+    - Single responsibility: Just execute, don't retry/parse
+    """
+    
+    def __init__(
+        self,
+        claude_path: str | None = None,
+        timeout: float = 120.0,
+        verbose: bool = False,
+        progress_callback: Callable[[str], None] | None = None,
+    ):
+        """
+        Initialize CLI agent.
+        
+        Args:
+            claude_path: Path to claude CLI. Defaults to finding it in PATH.
+            timeout: Timeout in seconds for CLI execution.
+            verbose: Print progress messages during execution.
+            progress_callback: Optional callback for progress updates.
+        """
+        self._claude_path = claude_path or shutil.which("claude")
+        self._timeout = timeout
+        self._verbose = verbose
+        self._progress_callback = progress_callback
+        
+        if not self._claude_path:
+            raise RuntimeError(
+                "Claude CLI not found. Install with: npm install -g @anthropic-ai/claude-code"
+            )
+    
+    def _log(self, msg: str) -> None:
+        """Log progress if verbose or callback is set."""
+        if self._progress_callback:
+            self._progress_callback(msg)
+        if self._verbose:
+            print(f"      [CLI] {msg}", flush=True)
+    
+    async def __call__(self, context: AgentContext) -> tuple[str, dict[str, Any]]:
+        """
+        Execute: AgentContext → (response_text, metadata).
+        
+        This is the morphism application - pure execution without retry logic.
+        """
+        # Build the prompt from system + user messages
+        prompt_parts = []
+        
+        if context.system_prompt:
+            prompt_parts.append(context.system_prompt)
+        
+        for msg in context.messages:
+            if msg["role"] == "user":
+                prompt_parts.append(msg["content"])
+        
+        full_prompt = "\n\n".join(prompt_parts)
+        prompt_len = len(full_prompt)
+        self._log(f"Sending {prompt_len:,} chars to Claude CLI...")
+        
+        # Execute claude -p
+        proc = await asyncio.create_subprocess_exec(
+            self._claude_path,
+            "-p", full_prompt,
+            "--output-format", "text",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        
+        try:
+            stdout, stderr = await asyncio.wait_for(
+                proc.communicate(),
+                timeout=self._timeout
+            )
+        except asyncio.TimeoutError:
+            proc.kill()
+            raise TimeoutError(f"Claude CLI timed out after {self._timeout}s")
+        
+        if proc.returncode != 0:
+            error_msg = stderr.decode() if stderr else "Unknown error"
+            raise RuntimeError(f"Claude CLI failed: {error_msg}")
+        
+        response_text = stdout.decode().strip()
+        self._log(f"Received {len(response_text):,} chars response")
+        
+        # CLI doesn't provide token counts, so we estimate
+        metadata = {
+            "model": "claude-cli",
+            "usage": {
+                "input_tokens": len(full_prompt) // 4,  # Rough estimate
+                "output_tokens": len(response_text) // 4,
+                "total_tokens": (len(full_prompt) + len(response_text)) // 4,
+            },
+        }
+        
+        return response_text, metadata
+
+
 class ClaudeCLIRuntime(Runtime):
     """
     Runtime for executing LLM agents via Claude Code CLI.
 
-    Uses `claude -p` which is already authenticated via OAuth.
-    No API key required.
+    Uses CLIAgent morphism internally for execution.
+    Adds retry logic (Fix pattern) and response coercion.
 
     Usage:
         runtime = ClaudeCLIRuntime()
@@ -112,25 +218,20 @@ class ClaudeCLIRuntime(Runtime):
             enable_coercion: Use AI to coerce malformed responses as last resort.
             coercion_confidence: Minimum confidence (0-1) to accept coerced response.
         """
-        self._claude_path = claude_path or shutil.which("claude")
-        self._timeout = timeout
+        # Compose with CLIAgent morphism
+        self._cli_agent = CLIAgent(
+            claude_path=claude_path,
+            timeout=timeout,
+            verbose=verbose,
+            progress_callback=progress_callback,
+        )
         self._max_retries = max_retries
-        self._verbose = verbose
-        self._progress_callback = progress_callback
         self._enable_coercion = enable_coercion
         self._coercion_confidence = coercion_confidence
 
-        if not self._claude_path:
-            raise RuntimeError(
-                "Claude CLI not found. Install with: npm install -g @anthropic-ai/claude-code"
-            )
-
     def _log(self, msg: str) -> None:
-        """Log progress if verbose or callback is set."""
-        if self._progress_callback:
-            self._progress_callback(msg)
-        if self._verbose:
-            print(f"      [CLI] {msg}", flush=True)
+        """Log progress (delegate to CLI agent)."""
+        self._cli_agent._log(msg)
 
     def _build_retry_message(self, error: str, previous_response: str, error_type: ParseErrorType) -> str:
         """
@@ -210,7 +311,7 @@ OUTPUT FORMAT:
             max_tokens=4096,
         )
 
-        response_text, _ = await self.raw_completion(context)
+        response_text, _ = await self._cli_agent(context)
 
         # Parse the coercion response
         import re
@@ -250,57 +351,8 @@ OUTPUT FORMAT:
         self,
         context: AgentContext,
     ) -> tuple[str, dict[str, Any]]:
-        """Execute raw completion via Claude CLI."""
-        # Build the prompt from system + user messages
-        prompt_parts = []
-
-        if context.system_prompt:
-            prompt_parts.append(context.system_prompt)
-
-        for msg in context.messages:
-            if msg["role"] == "user":
-                prompt_parts.append(msg["content"])
-
-        full_prompt = "\n\n".join(prompt_parts)
-        prompt_len = len(full_prompt)
-        self._log(f"Sending {prompt_len:,} chars to Claude CLI...")
-
-        # Execute claude -p
-        proc = await asyncio.create_subprocess_exec(
-            self._claude_path,
-            "-p", full_prompt,
-            "--output-format", "text",
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-
-        try:
-            stdout, stderr = await asyncio.wait_for(
-                proc.communicate(),
-                timeout=self._timeout
-            )
-        except asyncio.TimeoutError:
-            proc.kill()
-            raise TimeoutError(f"Claude CLI timed out after {self._timeout}s")
-
-        if proc.returncode != 0:
-            error_msg = stderr.decode() if stderr else "Unknown error"
-            raise RuntimeError(f"Claude CLI failed: {error_msg}")
-
-        response_text = stdout.decode().strip()
-        self._log(f"Received {len(response_text):,} chars response")
-
-        # CLI doesn't provide token counts, so we estimate
-        metadata = {
-            "model": "claude-cli",
-            "usage": {
-                "input_tokens": len(full_prompt) // 4,  # Rough estimate
-                "output_tokens": len(response_text) // 4,
-                "total_tokens": (len(full_prompt) + len(response_text)) // 4,
-            },
-        }
-
-        return response_text, metadata
+        """Execute raw completion via CLI agent morphism."""
+        return await self._cli_agent(context)
 
     async def execute(
         self,
@@ -332,9 +384,9 @@ OUTPUT FORMAT:
                     temperature=context.temperature,
                     max_tokens=context.max_tokens,
                 )
-                response_text, metadata = await self.raw_completion(retry_context)
+                response_text, metadata = await self._cli_agent(retry_context)
             else:
-                response_text, metadata = await self.raw_completion(context)
+                response_text, metadata = await self._cli_agent(context)
 
             all_responses.append(response_text)
 

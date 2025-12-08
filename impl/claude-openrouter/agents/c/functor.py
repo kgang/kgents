@@ -11,12 +11,16 @@ without explicit null-checking or error handling at each step.
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Generic, TypeVar, Callable, Any
+import asyncio
+import logging
 
 from bootstrap.types import Agent
 
 A = TypeVar("A")
 B = TypeVar("B")
 T = TypeVar("T")
+
+logger = logging.getLogger(__name__)
 
 
 # --- Maybe: Optional values ---
@@ -233,6 +237,81 @@ class EitherAgent(Agent[Either[E, A], Either[E, B]]):
         return Right(await self._inner.invoke(input.value))  # type: ignore
 
 
+# --- Fix Pattern: Retry with Exponential Backoff ---
+
+class FixAgent(Agent[A, B]):
+    """
+    Fix-pattern retry wrapper for transient failures.
+    
+    Applies exponential backoff: base_delay * (2 ** attempt)
+    Logs all retry attempts as data (conflicts are data principle).
+    
+    Example:
+        reliable_agent = fix(flaky_agent, max_attempts=3, base_delay=1.0)
+    """
+
+    def __init__(
+        self,
+        inner: Agent[A, B],
+        max_attempts: int = 3,
+        base_delay: float = 1.0,
+        max_delay: float = 60.0,
+        is_transient: Callable[[Exception], bool] | None = None,
+    ):
+        """
+        Args:
+            inner: The agent to wrap with retry logic
+            max_attempts: Maximum retry attempts (default: 3)
+            base_delay: Base delay in seconds (default: 1.0)
+            max_delay: Maximum delay cap in seconds (default: 60.0)
+            is_transient: Predicate to identify transient errors (default: all exceptions)
+        """
+        self._inner = inner
+        self._max_attempts = max_attempts
+        self._base_delay = base_delay
+        self._max_delay = max_delay
+        self._is_transient = is_transient or (lambda _: True)
+        self._name = f"Fix({inner.name})"
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    async def invoke(self, input: A) -> B:
+        last_error: Exception | None = None
+        
+        for attempt in range(self._max_attempts):
+            try:
+                result = await self._inner.invoke(input)
+                if attempt > 0:
+                    logger.info(
+                        f"{self.name}: succeeded on attempt {attempt + 1}/{self._max_attempts}"
+                    )
+                return result
+            except Exception as e:
+                last_error = e
+                
+                # If non-transient or last attempt, propagate immediately
+                if not self._is_transient(e) or attempt == self._max_attempts - 1:
+                    logger.warning(
+                        f"{self.name}: failed on attempt {attempt + 1}/{self._max_attempts} "
+                        f"(error: {type(e).__name__}: {e})"
+                    )
+                    raise
+                
+                # Calculate backoff delay
+                delay = min(self._base_delay * (2 ** attempt), self._max_delay)
+                logger.info(
+                    f"{self.name}: transient failure on attempt {attempt + 1}/{self._max_attempts}, "
+                    f"retrying in {delay:.2f}s (error: {type(e).__name__}: {e})"
+                )
+                await asyncio.sleep(delay)
+        
+        # Should never reach here due to raise in loop, but satisfy type checker
+        assert last_error is not None
+        raise last_error
+
+
 # --- Convenience functions ---
 
 def maybe(agent: Agent[A, B]) -> MaybeAgent[A, B]:
@@ -243,3 +322,26 @@ def maybe(agent: Agent[A, B]) -> MaybeAgent[A, B]:
 def either(agent: Agent[A, B]) -> EitherAgent[Any, A, B]:
     """Lift an agent to handle Either values."""
     return EitherAgent(agent)
+
+
+def fix(
+    agent: Agent[A, B],
+    max_attempts: int = 3,
+    base_delay: float = 1.0,
+    max_delay: float = 60.0,
+    is_transient: Callable[[Exception], bool] | None = None,
+) -> FixAgent[A, B]:
+    """
+    Wrap an agent with Fix-pattern retry logic and exponential backoff.
+    
+    Args:
+        agent: The agent to make resilient to transient failures
+        max_attempts: Maximum retry attempts (default: 3)
+        base_delay: Base delay in seconds for exponential backoff (default: 1.0)
+        max_delay: Maximum delay cap in seconds (default: 60.0)
+        is_transient: Predicate to identify transient errors (default: retry all)
+    
+    Returns:
+        FixAgent that retries on transient failures with exponential backoff
+    """
+    return FixAgent(agent, max_attempts, base_delay, max_delay, is_transient)

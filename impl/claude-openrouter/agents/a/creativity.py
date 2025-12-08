@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional
 
-from runtime.base import LLMAgent, AgentContext
+from runtime.base import LLMAgent, AgentContext, parse_structured_sections
 from .skeleton import AgentMeta, AgentIdentity, AgentInterface, AgentBehavior
 
 
@@ -214,49 +214,19 @@ FOLLOW-UPS:
         )
 
     def parse_response(self, response: str) -> CreativityResponse:
-        """Parse LLM response to CreativityResponse."""
-        responses = []
-        follow_ups = []
-
-        lines = response.strip().split('\n')
-        section = None
-
-        for line in lines:
-            line = line.strip()
-            if not line:
-                continue
-
-            # Detect section headers
-            if line.upper().startswith('RESPONSES') or line.upper().startswith('**RESPONSES'):
-                section = 'responses'
-                continue
-            elif line.upper().startswith('FOLLOW') or line.upper().startswith('**FOLLOW'):
-                section = 'follow_ups'
-                continue
-
-            # Parse content based on section
-            if section == 'responses':
-                # Handle numbered items: "1. text" or "1) text" or just "- text"
-                if line[0].isdigit():
-                    # Remove number prefix like "1. " or "1) "
-                    text = line.lstrip('0123456789.-) ').strip()
-                    if text:
-                        responses.append(text)
-                elif line.startswith('-') or line.startswith('*'):
-                    text = line.lstrip('-* ').strip()
-                    if text:
-                        responses.append(text)
-            elif section == 'follow_ups':
-                # Handle bullet items
-                if line.startswith('-') or line.startswith('*') or line[0].isdigit():
-                    text = line.lstrip('-*0123456789.) ').strip()
-                    if text:
-                        follow_ups.append(text)
-
+        """Parse LLM response to CreativityResponse using shared parsing utility."""
+        sections = parse_structured_sections(
+            response,
+            section_names=["responses", "follow-ups", "follow_ups"]
+        )
+        
+        # Normalize follow-ups (handle both "follow-ups" and "follow_ups")
+        follow_ups = sections.get("follow-ups", []) or sections.get("follow_ups", [])
+        
         return CreativityResponse(
             original_seed=self._current_seed,
             mode_used=self._current_mode,
-            responses=responses,
+            responses=sections.get("responses", []),
             follow_ups=follow_ups,
         )
 

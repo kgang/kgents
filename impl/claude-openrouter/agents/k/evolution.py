@@ -15,9 +15,14 @@ from dataclasses import dataclass, field
 from typing import Any, Optional
 from enum import Enum
 from datetime import datetime
+import logging
 
 from bootstrap.types import Agent
 from .persona import PersonaState, PersonaSeed
+
+
+# Configure structured logging
+logger = logging.getLogger(__name__)
 
 
 class ConfidenceLevel(Enum):
@@ -77,19 +82,68 @@ class ConfidenceTracker:
 
     def reinforce(self) -> None:
         """Increase confidence from new evidence."""
+        old_value = self.value
+        old_level = self.level
+        
         self.evidence_count += 1
         self.value = min(1.0, self.value + 0.1)
         self.last_confirmed = datetime.now()
+        
+        logger.info(
+            "Confidence reinforced",
+            extra={
+                "event": "confidence_reinforced",
+                "old_value": old_value,
+                "new_value": self.value,
+                "old_level": old_level.value,
+                "new_level": self.level.value,
+                "evidence_count": self.evidence_count,
+                "source": self.source.value,
+            }
+        )
 
     def decay(self, months: float) -> None:
         """Decrease confidence over time."""
+        old_value = self.value
+        old_level = self.level
+        
         decay_rate = 0.1  # per month
         self.value = max(0.1, self.value - (decay_rate * months))
+        
+        logger.warning(
+            "Confidence decayed",
+            extra={
+                "event": "confidence_decayed",
+                "old_value": old_value,
+                "new_value": self.value,
+                "old_level": old_level.value,
+                "new_level": self.level.value,
+                "months_elapsed": months,
+                "decay_rate": decay_rate,
+            }
+        )
 
     def contradict(self) -> None:
         """Decrease confidence from contradictory evidence."""
+        old_value = self.value
+        old_level = self.level
+        old_source = self.source
+        
         self.value = max(0.2, self.value - 0.2)
         self.source = ChangeSource.DECAYED
+        
+        logger.warning(
+            "Confidence contradicted",
+            extra={
+                "event": "confidence_contradicted",
+                "old_value": old_value,
+                "new_value": self.value,
+                "old_level": old_level.value,
+                "new_level": self.level.value,
+                "old_source": old_source.value,
+                "new_source": self.source.value,
+            }
+        )
 
     @property
     def level(self) -> ConfidenceLevel:
@@ -117,6 +171,15 @@ class EvolutionAgent(Agent[EvolutionInput, EvolutionOutput]):
     def __init__(self, state: PersonaState):
         self._state = state
         self._trackers: dict[str, ConfidenceTracker] = {}
+        
+        logger.info(
+            "EvolutionAgent initialized",
+            extra={
+                "event": "agent_initialized",
+                "agent_name": self.name,
+                "persona_name": state.seed.name,
+            }
+        )
 
     @property
     def name(self) -> str:
@@ -128,24 +191,63 @@ class EvolutionAgent(Agent[EvolutionInput, EvolutionOutput]):
 
         Returns new state and summary of changes.
         """
+        logger.info(
+            "Evolution invoked",
+            extra={
+                "event": "evolution_invoked",
+                "trigger": input.trigger,
+                "aspect": input.aspect,
+                "operation": input.operation,
+                "reason": input.reason,
+            }
+        )
+        
         if input.trigger == "explicit":
-            return await self._handle_explicit(input)
+            result = await self._handle_explicit(input)
         elif input.trigger == "observation":
-            return await self._handle_observation(input)
+            result = await self._handle_observation(input)
         elif input.trigger == "contradiction":
-            return await self._handle_contradiction(input)
+            result = await self._handle_contradiction(input)
         elif input.trigger == "review":
-            return await self._handle_review(input)
+            result = await self._handle_review(input)
         else:
-            return EvolutionOutput(
+            logger.error(
+                "Unknown evolution trigger",
+                extra={
+                    "event": "unknown_trigger",
+                    "trigger": input.trigger,
+                }
+            )
+            result = EvolutionOutput(
                 accepted=False,
                 new_state=self._state,
                 change_summary="Unknown trigger type",
                 rejection_reason=f"Unknown trigger: {input.trigger}",
             )
+        
+        logger.info(
+            "Evolution completed",
+            extra={
+                "event": "evolution_completed",
+                "accepted": result.accepted,
+                "needs_confirmation": result.needs_confirmation,
+                "change_summary": result.change_summary,
+            }
+        )
+        
+        return result
 
     async def _handle_explicit(self, input: EvolutionInput) -> EvolutionOutput:
         """Handle explicit user updates - immediate, high confidence."""
+        logger.info(
+            "Handling explicit update",
+            extra={
+                "event": "explicit_update",
+                "aspect": input.aspect,
+                "operation": input.operation,
+            }
+        )
+        
         new_state = self._apply_change(input)
 
         # Track with high confidence
@@ -174,6 +276,16 @@ class EvolutionAgent(Agent[EvolutionInput, EvolutionOutput]):
 
             if tracker.evidence_count >= 3 and tracker.level == ConfidenceLevel.HIGH:
                 # Enough evidence to add without confirmation
+                logger.info(
+                    "Pattern confirmed through observation",
+                    extra={
+                        "event": "pattern_confirmed",
+                        "key": key,
+                        "evidence_count": tracker.evidence_count,
+                        "confidence": tracker.value,
+                    }
+                )
+                
                 new_state = self._apply_change(input)
                 return EvolutionOutput(
                     accepted=True,
@@ -183,6 +295,15 @@ class EvolutionAgent(Agent[EvolutionInput, EvolutionOutput]):
 
         # Not enough evidence - propose change
         if key not in self._trackers:
+            logger.info(
+                "New pattern observed",
+                extra={
+                    "event": "pattern_observed",
+                    "key": key,
+                    "initial_confidence": 0.4,
+                }
+            )
+            
             self._trackers[key] = ConfidenceTracker(
                 value=0.4,
                 last_confirmed=datetime.now(),
@@ -203,6 +324,16 @@ class EvolutionAgent(Agent[EvolutionInput, EvolutionOutput]):
 
     async def _handle_contradiction(self, input: EvolutionInput) -> EvolutionOutput:
         """Handle contradictions between behavior and stated preferences."""
+        logger.warning(
+            "Contradiction detected",
+            extra={
+                "event": "contradiction_detected",
+                "aspect": input.aspect,
+                "content": str(input.content),
+                "conflicting_evidence": input.conflicting_evidence,
+            }
+        )
+        
         return EvolutionOutput(
             accepted=False,
             new_state=self._state,
@@ -224,6 +355,15 @@ class EvolutionAgent(Agent[EvolutionInput, EvolutionOutput]):
                 stale_items.append(key)
 
         if stale_items:
+            logger.info(
+                "Review identified stale items",
+                extra={
+                    "event": "stale_items_found",
+                    "count": len(stale_items),
+                    "items": stale_items[:5],  # Log first 5
+                }
+            )
+            
             return EvolutionOutput(
                 accepted=False,
                 new_state=self._state,
@@ -236,6 +376,14 @@ class EvolutionAgent(Agent[EvolutionInput, EvolutionOutput]):
                 ),
             )
 
+        logger.info(
+            "Review completed - all current",
+            extra={
+                "event": "review_completed",
+                "stale_count": 0,
+            }
+        )
+        
         return EvolutionOutput(
             accepted=True,
             new_state=self._state,
@@ -244,6 +392,15 @@ class EvolutionAgent(Agent[EvolutionInput, EvolutionOutput]):
 
     def _apply_change(self, input: EvolutionInput) -> PersonaState:
         """Apply a change to the persona state."""
+        logger.debug(
+            "Applying change to persona state",
+            extra={
+                "event": "apply_change",
+                "aspect": input.aspect,
+                "operation": input.operation,
+            }
+        )
+        
         # Create a copy of the state
         new_seed = PersonaSeed(
             name=self._state.seed.name,
@@ -267,24 +424,29 @@ class EvolutionAgent(Agent[EvolutionInput, EvolutionOutput]):
                 values = new_state.seed.preferences.get("values", [])
                 if isinstance(values, list):
                     values.append(input.content)
+                    logger.debug("Added preference value", extra={"value": input.content})
             elif input.operation == "remove":
                 values = new_state.seed.preferences.get("values", [])
                 if isinstance(values, list) and input.content in values:
                     values.remove(input.content)
+                    logger.debug("Removed preference value", extra={"value": input.content})
 
         elif input.aspect == "pattern":
             if input.operation == "add":
                 # Add to thinking patterns by default
                 patterns = new_state.seed.patterns.get("thinking", [])
                 patterns.append(input.content)
+                logger.debug("Added thinking pattern", extra={"pattern": input.content})
 
         elif input.aspect == "context":
             if input.operation == "modify":
                 if isinstance(input.content, dict):
                     if "current_focus" in input.content:
                         new_state.current_focus = input.content["current_focus"]
+                        logger.debug("Modified current_focus", extra={"focus": input.content["current_focus"]})
                     if "recent_interests" in input.content:
                         new_state.recent_interests = input.content["recent_interests"]
+                        logger.debug("Modified recent_interests", extra={"count": len(input.content["recent_interests"])})
 
         self._state = new_state
         return new_state

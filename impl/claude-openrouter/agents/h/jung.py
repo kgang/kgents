@@ -77,11 +77,108 @@ SHADOW_MAPPINGS = {
 }
 
 
+# Pure functions - testable, reusable logic
+
+def build_shadow_inventory(input: JungInput) -> list[ShadowContent]:
+    """Build inventory of shadow content from persona claims."""
+    inventory = []
+    self_image_lower = input.system_self_image.lower()
+
+    for keyword, (shadow, reason) in SHADOW_MAPPINGS.items():
+        if keyword in self_image_lower:
+            difficulty = IntegrationDifficulty.HIGH if keyword in ["ethical", "safe"] else IntegrationDifficulty.MEDIUM
+            inventory.append(ShadowContent(
+                content=shadow,
+                exclusion_reason=f"Excluded to maintain {reason}",
+                integration_difficulty=difficulty,
+            ))
+
+    for capability in input.declared_capabilities:
+        cap_lower = capability.lower()
+        if "always" in cap_lower or "never" in cap_lower:
+            inventory.append(ShadowContent(
+                content=f"Exceptions to: {capability}",
+                exclusion_reason="Absolute claims require shadow of exceptions",
+                integration_difficulty=IntegrationDifficulty.LOW,
+            ))
+
+    return inventory
+
+
+def detect_projections(input: JungInput, shadow_inventory: list[ShadowContent]) -> list[Projection]:
+    """Detect where system projects its shadow onto others."""
+    projections = []
+
+    for pattern in input.behavioral_patterns:
+        pattern_lower = pattern.lower()
+
+        if "warn" in pattern_lower and "user" in pattern_lower:
+            projections.append(Projection(
+                shadow_content="System's own capacity for the warned behavior",
+                projected_onto="Users",
+                evidence=f"Frequent warnings about: {pattern}",
+            ))
+
+        if "bad actor" in pattern_lower or "malicious" in pattern_lower:
+            projections.append(Projection(
+                shadow_content="System's own capacity for misuse",
+                projected_onto="Imagined bad actors",
+                evidence="Focus on potential malicious use",
+            ))
+
+    return projections
+
+
+def suggest_integration_paths(shadow_inventory: list[ShadowContent]) -> list[IntegrationPath]:
+    """Suggest paths for integrating shadow content."""
+    paths = []
+
+    for shadow in shadow_inventory:
+        if shadow.integration_difficulty == IntegrationDifficulty.LOW:
+            paths.append(IntegrationPath(
+                shadow_content=shadow.content,
+                integration_method="Acknowledge explicitly in self-description",
+                risks=["May seem less confident"],
+            ))
+        elif shadow.integration_difficulty == IntegrationDifficulty.MEDIUM:
+            paths.append(IntegrationPath(
+                shadow_content=shadow.content,
+                integration_method="Develop vocabulary for discussing shadow content",
+                risks=["Identity confusion during transition", "User trust impact"],
+            ))
+        else:  # HIGH
+            paths.append(IntegrationPath(
+                shadow_content=shadow.content,
+                integration_method="Gradual exposure through explicit edge case handling",
+                risks=["Core identity challenge", "May require system redesign"],
+            ))
+
+    return paths
+
+
+def calculate_balance(input: JungInput, shadow_inventory: list[ShadowContent]) -> float:
+    """Calculate persona-shadow balance (0 = all persona, 1 = integrated)."""
+    if not shadow_inventory:
+        return 1.0
+
+    acknowledged = 0
+    for limitation in input.declared_limitations:
+        for shadow in shadow_inventory:
+            if any(word in limitation.lower() for word in shadow.content.lower().split()[:3]):
+                acknowledged += 1
+                break
+
+    balance = acknowledged / len(shadow_inventory)
+    return min(1.0, balance)
+
+
+# Agent - thin orchestration layer
+
 class JungAgent(Agent[JungInput, JungOutput]):
     """
     Shadow integration agent.
 
-    Examines system self-image to surface:
+    Orchestrates shadow analysis pipeline:
     1. Shadow inventory (what's been exiled)
     2. Projections (where shadow is projected onto others)
     3. Integration paths (how to integrate shadow)
@@ -93,10 +190,10 @@ class JungAgent(Agent[JungInput, JungOutput]):
 
     async def invoke(self, input: JungInput) -> JungOutput:
         """Analyze the system for shadow content."""
-        shadow_inventory = self._build_shadow_inventory(input)
-        projections = self._detect_projections(input, shadow_inventory)
-        integration_paths = self._suggest_integration_paths(shadow_inventory)
-        balance = self._calculate_balance(input, shadow_inventory)
+        shadow_inventory = build_shadow_inventory(input)
+        projections = detect_projections(input, shadow_inventory)
+        integration_paths = suggest_integration_paths(shadow_inventory)
+        balance = calculate_balance(input, shadow_inventory)
 
         return JungOutput(
             shadow_inventory=shadow_inventory,
@@ -104,111 +201,6 @@ class JungAgent(Agent[JungInput, JungOutput]):
             integration_paths=integration_paths,
             persona_shadow_balance=balance,
         )
-
-    def _build_shadow_inventory(self, input: JungInput) -> list[ShadowContent]:
-        """Build inventory of shadow content from persona claims."""
-        inventory = []
-        self_image_lower = input.system_self_image.lower()
-
-        for keyword, (shadow, reason) in SHADOW_MAPPINGS.items():
-            if keyword in self_image_lower:
-                # Determine integration difficulty based on how central this is
-                difficulty = IntegrationDifficulty.HIGH if keyword in ["ethical", "safe"] else IntegrationDifficulty.MEDIUM
-
-                inventory.append(ShadowContent(
-                    content=shadow,
-                    exclusion_reason=f"Excluded to maintain {reason}",
-                    integration_difficulty=difficulty,
-                ))
-
-        # Check declared capabilities for shadow
-        for capability in input.declared_capabilities:
-            cap_lower = capability.lower()
-            if "always" in cap_lower or "never" in cap_lower:
-                inventory.append(ShadowContent(
-                    content=f"Exceptions to: {capability}",
-                    exclusion_reason="Absolute claims require shadow of exceptions",
-                    integration_difficulty=IntegrationDifficulty.LOW,
-                ))
-
-        return inventory
-
-    def _detect_projections(
-        self,
-        input: JungInput,
-        shadow_inventory: list[ShadowContent],
-    ) -> list[Projection]:
-        """Detect where system projects its shadow onto others."""
-        projections = []
-
-        # Common projection patterns
-        for pattern in input.behavioral_patterns:
-            pattern_lower = pattern.lower()
-
-            if "warn" in pattern_lower and "user" in pattern_lower:
-                projections.append(Projection(
-                    shadow_content="System's own capacity for the warned behavior",
-                    projected_onto="Users",
-                    evidence=f"Frequent warnings about: {pattern}",
-                ))
-
-            if "bad actor" in pattern_lower or "malicious" in pattern_lower:
-                projections.append(Projection(
-                    shadow_content="System's own capacity for misuse",
-                    projected_onto="Imagined bad actors",
-                    evidence="Focus on potential malicious use",
-                ))
-
-        return projections
-
-    def _suggest_integration_paths(
-        self,
-        shadow_inventory: list[ShadowContent],
-    ) -> list[IntegrationPath]:
-        """Suggest paths for integrating shadow content."""
-        paths = []
-
-        for shadow in shadow_inventory:
-            if shadow.integration_difficulty == IntegrationDifficulty.LOW:
-                paths.append(IntegrationPath(
-                    shadow_content=shadow.content,
-                    integration_method="Acknowledge explicitly in self-description",
-                    risks=["May seem less confident"],
-                ))
-            elif shadow.integration_difficulty == IntegrationDifficulty.MEDIUM:
-                paths.append(IntegrationPath(
-                    shadow_content=shadow.content,
-                    integration_method="Develop vocabulary for discussing shadow content",
-                    risks=["Identity confusion during transition", "User trust impact"],
-                ))
-            else:  # HIGH
-                paths.append(IntegrationPath(
-                    shadow_content=shadow.content,
-                    integration_method="Gradual exposure through explicit edge case handling",
-                    risks=["Core identity challenge", "May require system redesign"],
-                ))
-
-        return paths
-
-    def _calculate_balance(
-        self,
-        input: JungInput,
-        shadow_inventory: list[ShadowContent],
-    ) -> float:
-        """Calculate persona-shadow balance (0 = all persona, 1 = integrated)."""
-        if not shadow_inventory:
-            return 1.0  # No shadow detected = fully integrated (or nothing to analyze)
-
-        # Check how many limitations acknowledge shadow content
-        acknowledged = 0
-        for limitation in input.declared_limitations:
-            for shadow in shadow_inventory:
-                if any(word in limitation.lower() for word in shadow.content.lower().split()[:3]):
-                    acknowledged += 1
-                    break
-
-        balance = acknowledged / len(shadow_inventory)
-        return min(1.0, balance)
 
 
 class QuickShadow(Agent[str, list[str]]):

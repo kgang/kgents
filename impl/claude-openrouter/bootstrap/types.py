@@ -7,12 +7,61 @@ These types form the foundation for the 7 irreducible agents.
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Generic, TypeVar, Optional
+from typing import Any, Callable, Generic, TypeVar, Optional, Union
 
 # Type variables for generic agent types
 A = TypeVar("A")  # Input type
 B = TypeVar("B")  # Output type
 C = TypeVar("C")  # Third type for composition
+E = TypeVar("E")  # Error type
+
+
+# Algebraic sum type for results
+@dataclass(frozen=True)
+class Ok(Generic[A]):
+    """Success variant of Result."""
+    value: A
+    
+    def is_ok(self) -> bool:
+        return True
+    
+    def is_err(self) -> bool:
+        return False
+
+
+@dataclass(frozen=True)
+class Err(Generic[E]):
+    """Error variant of Result."""
+    error: E
+    
+    def is_ok(self) -> bool:
+        return False
+    
+    def is_err(self) -> bool:
+        return True
+
+
+# Result sum type: Ok[A] | Err[E]
+Result = Union[Ok[A], Err[E]]
+
+
+def match_result(
+    result: Result[A, E],
+    on_ok: Callable[[A], B],
+    on_err: Callable[[E], B]
+) -> B:
+    """
+    Exhaustive pattern matching on Result.
+    
+    Forces handling of both Ok and Err cases.
+    """
+    if isinstance(result, Ok):
+        return on_ok(result.value)
+    elif isinstance(result, Err):
+        return on_err(result.error)
+    else:
+        # Exhaustiveness check - should never reach here
+        raise TypeError(f"Invalid Result variant: {type(result)}")
 
 
 class Agent(ABC, Generic[A, B]):
@@ -52,6 +101,56 @@ class Agent(ABC, Generic[A, B]):
 
     def __repr__(self) -> str:
         return f"<Agent:{self.name}>"
+
+
+@dataclass
+class FixConfig:
+    """Configuration for Fix agent iteration."""
+    max_iterations: int = 10
+    min_iterations: int = 1
+    should_continue: Callable[[Any], bool] = lambda _: True
+
+
+class Fix(Agent[A, B], Generic[A, B]):
+    """
+    Fix-point agent for iteration and retry patterns.
+    
+    Applies an agent repeatedly until convergence or limit reached.
+    This is the canonical pattern for self-improvement loops.
+    
+    Example:
+        improve = Fix(refine_agent, max_iterations=5)
+        result = await improve.invoke(draft)
+    """
+    
+    def __init__(
+        self,
+        agent: Agent[A, A],
+        config: FixConfig = FixConfig()
+    ):
+        self._agent = agent
+        self._config = config
+    
+    @property
+    def name(self) -> str:
+        return f"Fix({self._agent.name})"
+    
+    async def invoke(self, input: A) -> B:
+        """
+        Apply agent repeatedly until convergence.
+        
+        Returns final output after iteration limit or early termination.
+        """
+        current = input
+        
+        for i in range(self._config.max_iterations):
+            current = await self._agent.invoke(current)
+            
+            if i >= self._config.min_iterations - 1:
+                if not self._config.should_continue(current):
+                    break
+        
+        return current  # type: ignore
 
 
 # Verdict types for Judge

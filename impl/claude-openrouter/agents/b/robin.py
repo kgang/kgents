@@ -134,6 +134,115 @@ class RobinOutput:
         return "\n".join(lines)
 
 
+# Composable synthesis morphism: ComponentData → str
+@dataclass
+class SynthesisInput:
+    """Input for narrative synthesis agent."""
+    domain: str
+    query: str
+    persona: PersonaResponse
+    kgent: DialogueOutput
+    hypotheses: HypothesisOutput
+    dialectic: Optional[DialecticOutput] = None
+
+
+class NarrativeSynthesizer(Agent[SynthesisInput, str]):
+    """
+    Morphism: SynthesisInput → str
+    
+    Creates coherent narrative from component outputs.
+    Reusable for any agent that combines persona + hypotheses + dialectic.
+    """
+    
+    @property
+    def name(self) -> str:
+        return "NarrativeSynthesizer"
+    
+    async def invoke(self, input: SynthesisInput, runtime: Optional[Runtime] = None) -> str:
+        """Synthesize narrative from components."""
+        parts = []
+
+        # Opening based on persona
+        if input.persona.patterns:
+            parts.append(
+                f"Given your tendency to {input.persona.patterns[0].lower()}, "
+                f"let's approach {input.domain} through that lens."
+            )
+
+        # Hypothesis summary
+        if input.hypotheses.hypotheses:
+            top_hyp = input.hypotheses.hypotheses[0]
+            parts.append(
+                f"The most promising hypothesis ({top_hyp.confidence:.0%} confidence): "
+                f"{top_hyp.statement}"
+            )
+            if len(input.hypotheses.hypotheses) > 1:
+                parts.append(
+                    f"Alternative view: {input.hypotheses.hypotheses[1].statement}"
+                )
+
+        # Dialectic insight
+        if input.dialectic:
+            if input.dialectic.productive_tension:
+                parts.append(
+                    "These views are in productive tension—don't rush to resolve them."
+                )
+            elif input.dialectic.synthesis:
+                parts.append(
+                    f"Synthesis emerges: {input.dialectic.synthesis}"
+                )
+
+        # K-gent reflection integration
+        if input.kgent.referenced_patterns:
+            parts.append(
+                f"This connects to your pattern of {input.kgent.referenced_patterns[0]}."
+            )
+
+        return " ".join(parts) if parts else "Further exploration needed."
+
+
+# Composable question generation morphism: QuestionData → list[str]
+@dataclass
+class QuestionInput:
+    """Input for next question generator."""
+    hypotheses: HypothesisOutput
+    dialectic: Optional[DialecticOutput] = None
+
+
+class NextQuestionGenerator(Agent[QuestionInput, list[str]]):
+    """
+    Morphism: QuestionInput → list[str]
+    
+    Generates next exploration questions from hypotheses and dialectic.
+    Reusable for any agent that needs to suggest follow-up queries.
+    """
+    
+    @property
+    def name(self) -> str:
+        return "NextQuestionGenerator"
+    
+    async def invoke(self, input: QuestionInput, runtime: Optional[Runtime] = None) -> list[str]:
+        """Generate questions to continue the inquiry."""
+        questions = []
+
+        # From suggested tests
+        for test in input.hypotheses.suggested_tests[:2]:
+            questions.append(f"How might we test: {test}?")
+
+        # From falsification criteria
+        if input.hypotheses.hypotheses:
+            for f in input.hypotheses.hypotheses[0].falsifiable_by[:1]:
+                questions.append(f"What would it mean if: {f}?")
+
+        # From dialectic tension
+        if input.dialectic and input.dialectic.productive_tension:
+            questions.append(
+                "What conditions would resolve this tension vs. reveal it as fundamental?"
+            )
+
+        return questions[:4]  # Limit to 4 questions
+
+
 class RobinAgent(Agent[RobinInput, RobinOutput]):
     """
     Robin: Personalized Scientific Companion.
@@ -205,6 +314,10 @@ class RobinAgent(Agent[RobinInput, RobinOutput]):
         self._query_agent = PersonaQueryAgent(self._persona_state)
         self._hypothesis_engine = HypothesisEngine(hypothesis_count=hypothesis_count)
         self._hegel = HegelAgent()
+        
+        # Initialize composable morphisms
+        self._synthesizer = NarrativeSynthesizer()
+        self._question_gen = NextQuestionGenerator()
 
     @property
     def name(self) -> str:
@@ -226,7 +339,8 @@ class RobinAgent(Agent[RobinInput, RobinOutput]):
         2. Get K-gent dialogue reflection
         3. Generate hypotheses (requires runtime)
         4. Optionally apply dialectic synthesis
-        5. Synthesize into coherent narrative
+        5. Synthesize into coherent narrative (via NarrativeSynthesizer)
+        6. Generate next questions (via NextQuestionGenerator)
         """
         effective_runtime = runtime or self._runtime
 
@@ -300,14 +414,24 @@ class RobinAgent(Agent[RobinInput, RobinOutput]):
                 )
             )
 
-        # Step 5: Synthesize narrative
-        synthesis = self._synthesize_narrative(
-            input, persona_response, kgent_output, hypothesis_output, dialectic_output
+        # Step 5: Synthesize narrative (via composable morphism)
+        synthesis = await self._synthesizer.invoke(
+            SynthesisInput(
+                domain=input.domain,
+                query=input.query,
+                persona=persona_response,
+                kgent=kgent_output,
+                hypotheses=hypothesis_output,
+                dialectic=dialectic_output,
+            )
         )
 
-        # Generate next questions
-        next_questions = self._generate_next_questions(
-            input, hypothesis_output, dialectic_output
+        # Step 6: Generate next questions (via composable morphism)
+        next_questions = await self._question_gen.invoke(
+            QuestionInput(
+                hypotheses=hypothesis_output,
+                dialectic=dialectic_output,
+            )
         )
 
         return RobinOutput(
@@ -320,86 +444,6 @@ class RobinAgent(Agent[RobinInput, RobinOutput]):
             synthesis_narrative=synthesis,
             next_questions=next_questions,
         )
-
-    def _synthesize_narrative(
-        self,
-        input: RobinInput,
-        persona: PersonaResponse,
-        kgent: DialogueOutput,
-        hypotheses: HypothesisOutput,
-        dialectic: Optional[DialecticOutput],
-    ) -> str:
-        """
-        Create a coherent narrative from all components.
-
-        This is Robin's unique contribution: weaving together
-        personalization, hypotheses, and dialectic into insight.
-        """
-        parts = []
-
-        # Opening based on persona
-        if persona.patterns:
-            parts.append(
-                f"Given your tendency to {persona.patterns[0].lower()}, "
-                f"let's approach {input.domain} through that lens."
-            )
-
-        # Hypothesis summary
-        if hypotheses.hypotheses:
-            top_hyp = hypotheses.hypotheses[0]
-            parts.append(
-                f"The most promising hypothesis ({top_hyp.confidence:.0%} confidence): "
-                f"{top_hyp.statement}"
-            )
-            if len(hypotheses.hypotheses) > 1:
-                parts.append(
-                    f"Alternative view: {hypotheses.hypotheses[1].statement}"
-                )
-
-        # Dialectic insight
-        if dialectic:
-            if dialectic.productive_tension:
-                parts.append(
-                    "These views are in productive tension—don't rush to resolve them."
-                )
-            elif dialectic.synthesis:
-                parts.append(
-                    f"Synthesis emerges: {dialectic.synthesis}"
-                )
-
-        # K-gent reflection integration
-        if kgent.referenced_patterns:
-            parts.append(
-                f"This connects to your pattern of {kgent.referenced_patterns[0]}."
-            )
-
-        return " ".join(parts) if parts else "Further exploration needed."
-
-    def _generate_next_questions(
-        self,
-        input: RobinInput,
-        hypotheses: HypothesisOutput,
-        dialectic: Optional[DialecticOutput],
-    ) -> list[str]:
-        """Generate questions to continue the inquiry."""
-        questions = []
-
-        # From suggested tests
-        for test in hypotheses.suggested_tests[:2]:
-            questions.append(f"How might we test: {test}?")
-
-        # From falsification criteria
-        if hypotheses.hypotheses:
-            for f in hypotheses.hypotheses[0].falsifiable_by[:1]:
-                questions.append(f"What would it mean if: {f}?")
-
-        # From dialectic tension
-        if dialectic and dialectic.productive_tension:
-            questions.append(
-                "What conditions would resolve this tension vs. reveal it as fundamental?"
-            )
-
-        return questions[:4]  # Limit to 4 questions
 
 
 # Convenience functions

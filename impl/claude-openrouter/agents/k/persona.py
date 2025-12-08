@@ -8,11 +8,60 @@ K-gent is Ground projected through persona_schema:
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any, Optional, Generic, TypeVar
 from enum import Enum
 
 from bootstrap.types import Agent
 from bootstrap.ground import Ground, Facts
+
+A = TypeVar('A')
+
+
+class Maybe(Generic[A]):
+    """
+    Maybe monad for graceful degradation.
+    
+    Represents a value that might not exist without throwing exceptions.
+    Allows composition of potentially failing operations.
+    """
+    def __init__(self, value: Optional[A], error: Optional[str] = None):
+        self._value = value
+        self._error = error
+    
+    @staticmethod
+    def just(value: A) -> 'Maybe[A]':
+        """Create a Maybe with a value."""
+        return Maybe(value)
+    
+    @staticmethod
+    def nothing(error: str = "No value") -> 'Maybe[A]':
+        """Create an empty Maybe with error context."""
+        return Maybe(None, error)
+    
+    @property
+    def is_just(self) -> bool:
+        return self._value is not None
+    
+    @property
+    def is_nothing(self) -> bool:
+        return self._value is None
+    
+    def value_or(self, default: A) -> A:
+        """Get value or return default."""
+        return self._value if self._value is not None else default
+    
+    def map(self, f) -> 'Maybe':
+        """Apply function if value exists."""
+        if self.is_nothing:
+            return Maybe.nothing(self._error)
+        try:
+            return Maybe.just(f(self._value))
+        except Exception as e:
+            return Maybe.nothing(f"map failed: {str(e)}")
+    
+    @property
+    def error(self) -> Optional[str]:
+        return self._error
 
 
 class DialogueMode(Enum):
@@ -143,6 +192,7 @@ class PersonaQueryAgent(Agent[PersonaQuery, PersonaResponse]):
     Query K-gent's preferences and patterns.
 
     Used by other agents to personalize their behavior.
+    Now returns Maybe[PersonaResponse] for graceful degradation.
     """
 
     def __init__(self, state: Optional[PersonaState] = None):
@@ -153,55 +203,75 @@ class PersonaQueryAgent(Agent[PersonaQuery, PersonaResponse]):
         return "PersonaQuery"
 
     async def invoke(self, query: PersonaQuery) -> PersonaResponse:
-        """Query preferences and patterns."""
-        seed = self._state.seed
+        """Query preferences and patterns with Maybe wrapper."""
+        maybe_response = self.invoke_safe(query)
+        
+        # For backwards compatibility, unwrap with default
+        return maybe_response.value_or(PersonaResponse(
+            preferences=[],
+            patterns=[],
+            suggested_style=["be direct but warm"],
+            confidence=0.0,
+        ))
+    
+    def invoke_safe(self, query: PersonaQuery) -> Maybe[PersonaResponse]:
+        """Safe query that returns Maybe for composition."""
+        try:
+            if not self._state or not self._state.seed:
+                return Maybe.nothing("Persona state not initialized")
+            
+            seed = self._state.seed
 
-        preferences = []
-        patterns = []
-        style = []
+            preferences = []
+            patterns = []
+            style = []
 
-        if query.aspect in ("preference", "all"):
-            # Extract relevant preferences
-            if query.topic:
-                # Filter by topic
-                for key, value in seed.preferences.items():
-                    if query.topic.lower() in key.lower():
-                        if isinstance(value, dict):
-                            preferences.extend([f"{k}: {v}" for k, v in value.items()])
-                        elif isinstance(value, list):
-                            preferences.extend(value)
-                        else:
-                            preferences.append(str(value))
+            if query.aspect in ("preference", "all"):
+                # Extract relevant preferences
+                if query.topic:
+                    # Filter by topic
+                    for key, value in seed.preferences.items():
+                        if query.topic.lower() in key.lower():
+                            if isinstance(value, dict):
+                                preferences.extend([f"{k}: {v}" for k, v in value.items()])
+                            elif isinstance(value, list):
+                                preferences.extend(value)
+                            else:
+                                preferences.append(str(value))
+                else:
+                    # All preferences
+                    preferences = seed.preferences.get("values", [])
+
+            if query.aspect in ("pattern", "all"):
+                # Extract patterns
+                if query.topic:
+                    for key, value in seed.patterns.items():
+                        if query.topic.lower() in key.lower():
+                            patterns.extend(value)
+                else:
+                    # All patterns
+                    for pats in seed.patterns.values():
+                        patterns.extend(pats)
+
+            # Generate style suggestions based on requesting agent
+            if query.for_agent:
+                style = self._style_for_agent(query.for_agent)
             else:
-                # All preferences
-                preferences = seed.preferences.get("values", [])
+                comm_prefs = seed.preferences.get("communication", {})
+                style = [
+                    comm_prefs.get("style", "direct"),
+                    comm_prefs.get("length", "concise"),
+                ]
 
-        if query.aspect in ("pattern", "all"):
-            # Extract patterns
-            if query.topic:
-                for key, value in seed.patterns.items():
-                    if query.topic.lower() in key.lower():
-                        patterns.extend(value)
-            else:
-                # All patterns
-                for pats in seed.patterns.values():
-                    patterns.extend(pats)
-
-        # Generate style suggestions based on requesting agent
-        if query.for_agent:
-            style = self._style_for_agent(query.for_agent)
-        else:
-            style = [
-                seed.preferences.get("communication", {}).get("style", "direct"),
-                seed.preferences.get("communication", {}).get("length", "concise"),
-            ]
-
-        return PersonaResponse(
-            preferences=preferences,
-            patterns=patterns,
-            suggested_style=style,
-            confidence=0.9,  # High confidence for explicit preferences
-        )
+            return Maybe.just(PersonaResponse(
+                preferences=preferences,
+                patterns=patterns,
+                suggested_style=style,
+                confidence=0.9,  # High confidence for explicit preferences
+            ))
+        
+        except Exception as e:
+            return Maybe.nothing(f"Query failed: {str(e)}")
 
     def _style_for_agent(self, agent: str) -> list[str]:
         """Generate style suggestions for specific agents."""

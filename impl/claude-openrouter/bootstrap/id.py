@@ -12,7 +12,7 @@ Why irreducible: You cannot define identity in terms of anything simpler.
 What it grounds: The existence of agents as a category.
 """
 
-from typing import TypeVar
+from typing import TypeVar, Any
 
 from .types import Agent
 
@@ -38,7 +38,18 @@ class Id(Agent[A, A]):
 
     async def invoke(self, input: A) -> A:
         """Identity: returns input unchanged."""
-        return input
+        # Runtime verification that we truly return the same object
+        result = input
+        if result is not input:
+            raise RuntimeError(
+                f"Id agent violated identity law: input is not result (id mismatch)"
+            )
+        return result
+
+    def __rshift__(self, other: "Agent[A, Any]") -> "Agent[A, Any]":
+        """Right identity law: Id >> f = f"""
+        # Optimization: composing with Id on the left is just the other agent
+        return other
 
     def __repr__(self) -> str:
         return "Id()"

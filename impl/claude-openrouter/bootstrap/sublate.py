@@ -38,14 +38,117 @@ from .types import (
 SublateResult = Union[Synthesis, HoldTension]
 
 
+# Resolution strategies as composable morphisms
+class LogicalResolver(Agent[Tension, SublateResult]):
+    """Resolve logical contradictions: one side must be negated."""
+
+    @property
+    def name(self) -> str:
+        return "LogicalResolver"
+
+    async def invoke(self, tension: Tension) -> SublateResult:
+        return Synthesis(
+            resolution_type=ResolutionType.NEGATE,
+            result=None,  # Requires external judgment
+            explanation="Logical contradiction requires external judgment to resolve",
+            preserved=[],
+            negated=[],  # Unknown which to negate
+        )
+
+
+class PragmaticResolver(Agent[Tension, SublateResult]):
+    """Resolve pragmatic conflicts via contextual separation."""
+
+    @property
+    def name(self) -> str:
+        return "PragmaticResolver"
+
+    async def invoke(self, tension: Tension) -> SublateResult:
+        return Synthesis(
+            resolution_type=ResolutionType.PRESERVE,
+            result={
+                "when_a": f"Use {tension.thesis} in context A",
+                "when_b": f"Use {tension.antithesis} in context B",
+            },
+            explanation="Pragmatic conflict resolved by context separation",
+            preserved=[tension.thesis, tension.antithesis],
+            negated=[],
+        )
+
+
+class TemporalResolver(Agent[Tension, SublateResult]):
+    """Resolve temporal conflicts: present supersedes past."""
+
+    @property
+    def name(self) -> str:
+        return "TemporalResolver"
+
+    async def invoke(self, tension: Tension) -> SublateResult:
+        return Synthesis(
+            resolution_type=ResolutionType.NEGATE,
+            result=tension.antithesis,  # Present (antithesis by convention)
+            explanation="Temporal conflict: present supersedes past",
+            preserved=[tension.antithesis],
+            negated=[tension.thesis],
+        )
+
+
+class AxiologicalResolver(Agent[Tension, SublateResult]):
+    """Resolve value conflicts: usually hold for reflection."""
+
+    @property
+    def name(self) -> str:
+        return "AxiologicalResolver"
+
+    async def invoke(self, tension: Tension) -> SublateResult:
+        return HoldTension(
+            tension=tension,
+            reason="Value conflict requires reflection before resolution",
+            revisit_conditions=[
+                "More context is available",
+                "Stakes become clearer",
+                "Human judgment is provided",
+            ],
+        )
+
+
+class LowSeverityResolver(Agent[Tension, SublateResult]):
+    """Resolve low-severity tensions by preserving both."""
+
+    @property
+    def name(self) -> str:
+        return "LowSeverityResolver"
+
+    async def invoke(self, tension: Tension) -> SublateResult:
+        return Synthesis(
+            resolution_type=ResolutionType.PRESERVE,
+            result={
+                "context_a": tension.thesis,
+                "context_b": tension.antithesis,
+            },
+            explanation="Low-severity tension: both valid in different contexts",
+            preserved=[tension.thesis, tension.antithesis],
+            negated=[],
+        )
+
+
 class Sublate(Agent[Tension, SublateResult]):
     """
     The synthesizer: resolves tensions or consciously holds them.
 
     Usage:
+        # Default routing by severity and mode
         sublate = Sublate()
 
-        # Given a tension from Contradict
+        # Custom resolver
+        sublate = Sublate(resolver=my_custom_resolver)
+
+        # Custom strategy per mode
+        sublate = Sublate(
+            logical_resolver=MyLogicalResolver(),
+            pragmatic_resolver=MyPragmaticResolver(),
+        )
+
         result = await sublate.invoke(tension)
 
         if isinstance(result, Synthesis):
@@ -65,15 +168,25 @@ class Sublate(Agent[Tension, SublateResult]):
 
     def __init__(
         self,
-        resolver: Optional[Callable[[Tension], SublateResult]] = None,
+        resolver: Optional[Agent[Tension, SublateResult]] = None,
+        logical_resolver: Optional[Agent[Tension, SublateResult]] = None,
+        pragmatic_resolver: Optional[Agent[Tension, SublateResult]] = None,
+        temporal_resolver: Optional[Agent[Tension, SublateResult]] = None,
+        axiological_resolver: Optional[Agent[Tension, SublateResult]] = None,
+        low_severity_resolver: Optional[Agent[Tension, SublateResult]] = None,
     ):
         """
-        Initialize with optional custom resolution logic.
+        Initialize with optional custom resolution strategies.
 
-        The default resolver handles common patterns. For domain-specific
-        synthesis, provide a custom resolver.
+        If resolver is provided, it overrides mode-specific resolvers.
+        Otherwise, mode-specific resolvers are used (with defaults).
         """
-        self._resolver = resolver or self._default_resolve
+        self._resolver = resolver
+        self._logical = logical_resolver or LogicalResolver()
+        self._pragmatic = pragmatic_resolver or PragmaticResolver()
+        self._temporal = temporal_resolver or TemporalResolver()
+        self._axiological = axiological_resolver or AxiologicalResolver()
+        self._low_severity = low_severity_resolver or LowSeverityResolver()
 
     @property
     def name(self) -> str:
@@ -83,103 +196,26 @@ class Sublate(Agent[Tension, SublateResult]):
         """
         Attempt to resolve a tension.
 
-        May return:
-        - Synthesis: The tension was resolved
-        - HoldTension: The tension should be held for now
+        Routes to appropriate strategy based on severity and mode.
         """
-        return self._resolver(tension)
+        # If custom resolver provided, use it
+        if self._resolver:
+            return await self._resolver.invoke(tension)
 
-    def _default_resolve(self, tension: Tension) -> SublateResult:
-        """Default resolution strategies by tension mode."""
+        # Low severity: preserve both
+        if tension.severity < 0.5:
+            return await self._low_severity.invoke(tension)
 
-        # High-severity tensions need careful consideration
-        if tension.severity >= 0.9:
-            return self._attempt_resolution(tension)
+        # Route by tension mode
+        resolver_map = {
+            TensionMode.LOGICAL: self._logical,
+            TensionMode.PRAGMATIC: self._pragmatic,
+            TensionMode.TEMPORAL: self._temporal,
+            TensionMode.AXIOLOGICAL: self._axiological,
+        }
 
-        # Medium severity: try to resolve
-        if tension.severity >= 0.5:
-            return self._attempt_resolution(tension)
-
-        # Low severity: often can preserve both
-        return Synthesis(
-            resolution_type=ResolutionType.PRESERVE,
-            result={
-                "context_a": tension.thesis,
-                "context_b": tension.antithesis,
-            },
-            explanation="Low-severity tension: both valid in different contexts",
-            preserved=[tension.thesis, tension.antithesis],
-            negated=[],
-        )
-
-    def _attempt_resolution(self, tension: Tension) -> SublateResult:
-        """Attempt to resolve based on tension mode."""
-
-        if tension.mode == TensionMode.LOGICAL:
-            # Logical contradictions usually require negation
-            return self._resolve_logical(tension)
-
-        elif tension.mode == TensionMode.PRAGMATIC:
-            # Pragmatic conflicts might be contextual
-            return self._resolve_pragmatic(tension)
-
-        elif tension.mode == TensionMode.AXIOLOGICAL:
-            # Value conflicts often need to be held
-            return self._hold_for_reflection(tension)
-
-        elif tension.mode == TensionMode.TEMPORAL:
-            # Temporal conflicts: usually the present wins
-            return self._resolve_temporal(tension)
-
-        # Unknown mode: hold for human judgment
-        return self._hold_for_reflection(tension)
-
-    def _resolve_logical(self, tension: Tension) -> SublateResult:
-        """Resolve logical contradiction: one side must be negated."""
-        # Without additional context, we can't know which side is correct
-        # Return a synthesis that acknowledges the contradiction
-        return Synthesis(
-            resolution_type=ResolutionType.NEGATE,
-            result=None,  # Requires external judgment
-            explanation="Logical contradiction requires external judgment to resolve",
-            preserved=[],
-            negated=[],  # Unknown which to negate
-        )
-
-    def _resolve_pragmatic(self, tension: Tension) -> SublateResult:
-        """Resolve pragmatic conflict: find contextual separation."""
-        return Synthesis(
-            resolution_type=ResolutionType.PRESERVE,
-            result={
-                "when_a": f"Use {tension.thesis} in context A",
-                "when_b": f"Use {tension.antithesis} in context B",
-            },
-            explanation="Pragmatic conflict resolved by context separation",
-            preserved=[tension.thesis, tension.antithesis],
-            negated=[],
-        )
-
-    def _resolve_temporal(self, tension: Tension) -> SublateResult:
-        """Resolve temporal conflict: present usually supersedes past."""
-        return Synthesis(
-            resolution_type=ResolutionType.NEGATE,
-            result=tension.antithesis,  # Present (antithesis by convention)
-            explanation="Temporal conflict: present supersedes past",
-            preserved=[tension.antithesis],
-            negated=[tension.thesis],
-        )
-
-    def _hold_for_reflection(self, tension: Tension) -> HoldTension:
-        """When resolution would be premature, hold the tension."""
-        return HoldTension(
-            tension=tension,
-            reason="This tension requires reflection before resolution",
-            revisit_conditions=[
-                "More context is available",
-                "Stakes become clearer",
-                "Human judgment is provided",
-            ],
-        )
+        resolver = resolver_map.get(tension.mode, self._axiological)
+        return await resolver.invoke(tension)
 
 
 # Specialized sublaters for common scenarios

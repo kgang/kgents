@@ -13,7 +13,7 @@ Core principles (Popperian):
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
+from typing import Optional, Union
 
 from runtime.base import LLMAgent, AgentContext
 from agents.a.skeleton import AgentMeta, AgentIdentity, AgentInterface, AgentBehavior
@@ -94,6 +94,32 @@ class HypothesisOutput:
         return "\n".join(lines)
 
 
+@dataclass
+class HypothesisError:
+    """Structured error from Hypothesis Engine, enabling composable error handling."""
+    code: str                             # Error code from meta.interface.error_codes
+    message: str                          # Human-readable description
+    recoverable: bool                     # Whether retry/Fix pattern could help
+    context: dict = field(default_factory=dict)  # Additional error context
+
+    def __str__(self) -> str:
+        return f"{self.code}: {self.message}"
+
+
+# AgentResult represents Either[HypothesisError, HypothesisOutput]
+AgentResult = Union[HypothesisOutput, HypothesisError]
+
+
+def is_success(result: AgentResult) -> bool:
+    """Type guard for successful results."""
+    return isinstance(result, HypothesisOutput)
+
+
+def is_error(result: AgentResult) -> bool:
+    """Type guard for error results."""
+    return isinstance(result, HypothesisError)
+
+
 SYSTEM_PROMPT = """You are a Hypothesis Engine - a scientific reasoning agent.
 
 Your role:
@@ -145,12 +171,16 @@ SUGGESTED_TESTS:
 """
 
 
-class HypothesisEngine(LLMAgent[HypothesisInput, HypothesisOutput]):
+class HypothesisEngine(LLMAgent[HypothesisInput, AgentResult]):
     """
     An LLM-backed agent for generating scientific hypotheses.
 
     Transforms observations into ranked, falsifiable hypotheses
     with transparent reasoning.
+
+    Returns AgentResult (Either-like) for composable error handling:
+    - HypothesisOutput on success
+    - HypothesisError on failure (with error codes from meta.interface)
 
     Usage:
         engine = HypothesisEngine()
@@ -159,21 +189,30 @@ class HypothesisEngine(LLMAgent[HypothesisInput, HypothesisOutput]):
             domain="biochemistry",
             question="Why does Protein X aggregate at low pH?"
         ))
-        print(result.output)
+        if is_success(result):
+            print(result)  # HypothesisOutput
+        else:
+            # Downstream agent decides: retry with Fix or fail-fast
+            if result.recoverable:
+                # Use Fix pattern for retry
+                pass
+            else:
+                # Propagate error
+                raise Exception(result)
     """
 
     meta = AgentMeta(
         identity=AgentIdentity(
             name="Hypothesis Engine",
             genus="b",
-            version="0.1.0",
+            version="0.2.0",
             purpose="Generates falsifiable hypotheses from scientific observations"
         ),
         interface=AgentInterface(
             input_type=HypothesisInput,
             input_description="Observations and context for hypothesis generation",
-            output_type=HypothesisOutput,
-            output_description="Ranked hypotheses with supporting reasoning",
+            output_type=AgentResult,
+            output_description="Either HypothesisOutput (success) or HypothesisError (failure)",
             error_codes=[
                 ("INSUFFICIENT_OBSERVATIONS", "Not enough data to generate hypotheses"),
                 ("UNFAMILIAR_DOMAIN", "Domain outside agent's competence"),
@@ -185,6 +224,7 @@ class HypothesisEngine(LLMAgent[HypothesisInput, HypothesisOutput]):
                 "All hypotheses are falsifiable",
                 "Confidence levels are calibrated (not overconfident)",
                 "Reasoning chain is provided",
+                "Errors include structured error codes for downstream handling",
             ],
             constraints=[
                 "Does not claim empirical certainty",
@@ -208,6 +248,18 @@ class HypothesisEngine(LLMAgent[HypothesisInput, HypothesisOutput]):
 
     def build_prompt(self, input: HypothesisInput) -> AgentContext:
         """Convert HypothesisInput to LLM context."""
+        # Validate input - return error if insufficient
+        if not input.observations or len(input.observations) < 2:
+            # Store error for parse_response to return
+            self._input_error = HypothesisError(
+                code="INSUFFICIENT_OBSERVATIONS",
+                message=f"Need at least 2 observations, got {len(input.observations)}",
+                recoverable=False,
+                context={"observation_count": len(input.observations)}
+            )
+        else:
+            self._input_error = None
+
         # Store for parse_response
         self._current_input = input
 
@@ -232,8 +284,12 @@ class HypothesisEngine(LLMAgent[HypothesisInput, HypothesisOutput]):
             temperature=self.temperature,
         )
 
-    def parse_response(self, response: str) -> HypothesisOutput:
-        """Parse LLM response to HypothesisOutput."""
+    def parse_response(self, response: str) -> AgentResult:
+        """Parse LLM response to AgentResult (Either HypothesisOutput or HypothesisError)."""
+        # Check for input validation errors
+        if hasattr(self, '_input_error') and self._input_error:
+            return self._input_error
+
         hypotheses = []
         reasoning_chain = []
         suggested_tests = []
@@ -327,6 +383,15 @@ class HypothesisEngine(LLMAgent[HypothesisInput, HypothesisOutput]):
         if current_hypothesis.get('statement'):
             hypotheses.append(self._build_hypothesis(current_hypothesis))
 
+        # Validate output - return error if malformed
+        if not hypotheses:
+            return HypothesisError(
+                code="INSUFFICIENT_OBSERVATIONS",
+                message="LLM failed to generate any valid hypotheses",
+                recoverable=True,  # Retry might help (temperature/prompt variation)
+                context={"response_length": len(response)}
+            )
+
         return HypothesisOutput(
             hypotheses=hypotheses,
             reasoning_chain=reasoning_chain,
@@ -359,7 +424,7 @@ class HypothesisEngine(LLMAgent[HypothesisInput, HypothesisOutput]):
             assumptions=data.get('assumptions', []),
         )
 
-    async def invoke(self, input: HypothesisInput) -> HypothesisOutput:
+    async def invoke(self, input: HypothesisInput) -> AgentResult:
         """
         LLMAgents require a runtime for execution.
 

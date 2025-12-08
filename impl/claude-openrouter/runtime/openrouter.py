@@ -6,11 +6,97 @@ OpenRouter provides access to multiple LLM providers through a unified API.
 
 import os
 from typing import Any, TypeVar, get_args, get_origin
+from dataclasses import dataclass
 
 from .base import Runtime, LLMAgent, AgentContext, AgentResult
 
 A = TypeVar("A")
 B = TypeVar("B")
+
+
+@dataclass
+class APIClient:
+    """
+    Morphism: AgentContext → (str, dict[str, Any])
+    
+    Pure API client that encapsulates HTTP interaction with OpenRouter.
+    Composable, testable, and reusable across different runtimes.
+    """
+    
+    api_key: str
+    model: str
+    base_url: str = "https://openrouter.ai/api/v1"
+    site_url: str | None = None
+    site_name: str | None = None
+    timeout: float = 120.0
+    
+    _client: Any = None
+    
+    def _ensure_client(self):
+        """Lazy-initialize the HTTP client."""
+        if self._client is None:
+            try:
+                import httpx
+                self._client = httpx.AsyncClient(
+                    base_url=self.base_url,
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "Content-Type": "application/json",
+                        **({"HTTP-Referer": self.site_url} if self.site_url else {}),
+                        **({"X-Title": self.site_name} if self.site_name else {}),
+                    },
+                    timeout=self.timeout,
+                )
+            except ImportError:
+                raise ImportError(
+                    "httpx package required. Install with: pip install httpx"
+                )
+        return self._client
+    
+    async def __call__(self, context: AgentContext) -> tuple[str, dict[str, Any]]:
+        """
+        Execute the morphism: AgentContext → (response_text, metadata).
+        
+        This makes APIClient a callable morphism that can be composed.
+        """
+        client = self._ensure_client()
+        
+        messages = [
+            {"role": "system", "content": context.system_prompt},
+            *context.messages,
+        ]
+        
+        payload = {
+            "model": self.model,
+            "messages": messages,
+            "max_tokens": context.max_tokens,
+            "temperature": context.temperature,
+        }
+        
+        response = await client.post("/chat/completions", json=payload)
+        response.raise_for_status()
+        data = response.json()
+        
+        text = data["choices"][0]["message"]["content"]
+        usage = data.get("usage", {})
+        
+        metadata = {
+            "model": data.get("model", self.model),
+            "usage": {
+                "input_tokens": usage.get("prompt_tokens", 0),
+                "output_tokens": usage.get("completion_tokens", 0),
+                "total_tokens": usage.get("total_tokens", 0),
+            },
+            "finish_reason": data["choices"][0].get("finish_reason"),
+        }
+        
+        return text, metadata
+    
+    async def close(self):
+        """Release resources."""
+        if self._client:
+            await self._client.aclose()
+            self._client = None
 
 
 class OpenRouterRuntime(Runtime):
@@ -22,7 +108,6 @@ class OpenRouterRuntime(Runtime):
         result = await runtime.execute(my_agent, input_data)
     """
 
-    BASE_URL = "https://openrouter.ai/api/v1"
     DEFAULT_MODEL = "anthropic/claude-3.5-sonnet"
 
     def __init__(
@@ -43,33 +128,15 @@ class OpenRouterRuntime(Runtime):
             site_name: Your site name for rankings (optional).
             validate_types: If True, validate parse_response output types at runtime.
         """
-        self._api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
-        self._model = model or self.DEFAULT_MODEL
-        self._site_url = site_url
-        self._site_name = site_name
         self._validate_types = validate_types
-        self._client = None
-
-    def _ensure_client(self):
-        """Lazy-initialize the HTTP client."""
-        if self._client is None:
-            try:
-                import httpx
-                self._client = httpx.AsyncClient(
-                    base_url=self.BASE_URL,
-                    headers={
-                        "Authorization": f"Bearer {self._api_key}",
-                        "Content-Type": "application/json",
-                        **({"HTTP-Referer": self._site_url} if self._site_url else {}),
-                        **({"X-Title": self._site_name} if self._site_name else {}),
-                    },
-                    timeout=120.0,
-                )
-            except ImportError:
-                raise ImportError(
-                    "httpx package required. Install with: pip install httpx"
-                )
-        return self._client
+        
+        # Initialize composable API client morphism
+        self._client = APIClient(
+            api_key=api_key or os.environ.get("OPENROUTER_API_KEY"),
+            model=model or self.DEFAULT_MODEL,
+            site_url=site_url,
+            site_name=site_name,
+        )
 
     def _validate_output_type(self, output: Any, agent: LLMAgent[A, B]) -> None:
         """
@@ -158,39 +225,7 @@ class OpenRouterRuntime(Runtime):
         context: AgentContext,
     ) -> tuple[str, dict[str, Any]]:
         """Execute raw completion via OpenRouter API."""
-        client = self._ensure_client()
-
-        # Build messages with system prompt
-        messages = [
-            {"role": "system", "content": context.system_prompt},
-            *context.messages,
-        ]
-
-        payload = {
-            "model": self._model,
-            "messages": messages,
-            "max_tokens": context.max_tokens,
-            "temperature": context.temperature,
-        }
-
-        response = await client.post("/chat/completions", json=payload)
-        response.raise_for_status()
-        data = response.json()
-
-        text = data["choices"][0]["message"]["content"]
-        usage = data.get("usage", {})
-
-        metadata = {
-            "model": data.get("model", self._model),
-            "usage": {
-                "input_tokens": usage.get("prompt_tokens", 0),
-                "output_tokens": usage.get("completion_tokens", 0),
-                "total_tokens": usage.get("total_tokens", 0),
-            },
-            "finish_reason": data["choices"][0].get("finish_reason"),
-        }
-
-        return text, metadata
+        return await self._client(context)
 
     async def execute(
         self,
@@ -215,6 +250,4 @@ class OpenRouterRuntime(Runtime):
 
     async def close(self):
         """Close the HTTP client."""
-        if self._client:
-            await self._client.aclose()
-            self._client = None
+        await self._client.close()

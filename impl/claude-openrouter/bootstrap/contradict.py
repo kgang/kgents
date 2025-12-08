@@ -27,8 +27,9 @@ The Contradict/Sublate pattern generalizes to system robustness:
 Anti-pattern: Silent failures, swallowed exceptions, "last write wins".
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Optional, Callable
+import time
 
 from .types import Agent, Tension, TensionMode
 
@@ -41,7 +42,35 @@ class ContradictInput:
     mode: Optional[TensionMode] = None  # If None, check all modes
 
 
-class Contradict(Agent[ContradictInput, Optional[Tension]]):
+@dataclass
+class ContradictResult:
+    """
+    Result of contradiction detection with observability metadata.
+    
+    This wraps Optional[Tension] with diagnostic information useful for
+    debugging why contradictions were/weren't detected.
+    
+    Usage:
+        result = await contradict.invoke(input)
+        
+        if result.tension:
+            # Handle the conflict
+            await sublate.invoke(result.tension)
+        
+        # Debug observability
+        print(f"Checked modes: {result.checked_modes}")
+        print(f"Execution time: {result.execution_time_ms}ms")
+    """
+    tension: Optional[Tension]
+    checked_modes: list[TensionMode] = field(default_factory=list)
+    execution_time_ms: float = 0.0
+    
+    def __bool__(self) -> bool:
+        """Allow 'if result:' to check for tension presence."""
+        return self.tension is not None
+
+
+class Contradict(Agent[ContradictInput, ContradictResult]):
     """
     The contradiction-recognizer: surfaces tensions between two things.
 
@@ -49,21 +78,18 @@ class Contradict(Agent[ContradictInput, Optional[Tension]]):
         contradict = Contradict()
 
         # Check for logical contradiction
-        tension = await contradict.invoke(ContradictInput(
+        result = await contradict.invoke(ContradictInput(
             a="The sky is blue",
             b="The sky is not blue",
             mode=TensionMode.LOGICAL,
         ))
 
-        # Check all modes
-        tension = await contradict.invoke(ContradictInput(
-            a=config_v1,
-            b=config_v2,
-        ))
-
-        if tension:
+        if result.tension:
             # Handle the conflict explicitly
-            resolution = await sublate.invoke(tension)
+            resolution = await sublate.invoke(result.tension)
+        
+        # Observability: see what was checked
+        print(f"Checked {len(result.checked_modes)} modes in {result.execution_time_ms}ms")
 
     The key insight: detect conflicts BEFORE they become runtime errors.
     """
@@ -84,20 +110,32 @@ class Contradict(Agent[ContradictInput, Optional[Tension]]):
     def name(self) -> str:
         return "Contradict"
 
-    async def invoke(self, input: ContradictInput) -> Optional[Tension]:
+    async def invoke(self, input: ContradictInput) -> ContradictResult:
         """
         Check for contradiction between a and b.
 
-        Returns Tension if contradiction found, None otherwise.
+        Returns ContradictResult with tension (if found) and metadata.
         """
+        start_time = time.perf_counter()
+        
         modes = [input.mode] if input.mode else list(TensionMode)
+        checked_modes = []
+        found_tension = None
 
         for mode in modes:
+            checked_modes.append(mode)
             tension = self._checker(input.a, input.b, mode)
             if tension:
-                return tension
+                found_tension = tension
+                break
 
-        return None
+        execution_time_ms = (time.perf_counter() - start_time) * 1000
+
+        return ContradictResult(
+            tension=found_tension,
+            checked_modes=checked_modes,
+            execution_time_ms=execution_time_ms,
+        )
 
     def _default_check(
         self, a: Any, b: Any, mode: TensionMode

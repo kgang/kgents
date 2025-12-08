@@ -31,6 +31,7 @@ class AgentContext:
     facts: Optional[dict[str, Any]] = None
     temperature: float = 0.7
     max_tokens: int = 4096
+    metadata: Optional[dict[str, Any]] = None  # Arbitrary metadata for agent execution
 
 
 @dataclass
@@ -44,6 +45,9 @@ class AgentResult(Generic[B]):
     raw_response: str
     model: str
     usage: dict[str, int] = field(default_factory=dict)
+    retry_count: int = 0
+    success: bool = True  # Whether execution succeeded
+    error: Optional[str] = None  # Error message if failed
 
     @property
     def total_tokens(self) -> int:
@@ -181,6 +185,71 @@ async def parallel_execute(
     ]
     
     return await asyncio.gather(*tasks)
+
+
+class TransientError(Exception):
+    """Transient error that may succeed on retry (rate limits, timeouts, etc)."""
+    pass
+
+
+class PermanentError(Exception):
+    """Permanent error that won't succeed on retry (auth, invalid input, etc)."""
+    pass
+
+
+async def with_retry(
+    fn: Callable[[], Awaitable[B]],
+    max_attempts: int = 3,
+    backoff_base: float = 2.0,
+    is_transient: Optional[Callable[[Exception], bool]] = None
+) -> tuple[B, int]:
+    """
+    Fix pattern for retry logic.
+    
+    Executes fn with exponential backoff on transient errors.
+    This is the Fix pattern: we repeatedly apply fn until success or max attempts.
+    
+    Args:
+        fn: Async function to retry
+        max_attempts: Maximum number of attempts (default 3)
+        backoff_base: Base for exponential backoff in seconds (default 2.0)
+        is_transient: Predicate to determine if error is transient (default: check TransientError type)
+    
+    Returns:
+        Tuple of (result, attempt_count)
+    
+    Raises:
+        Last exception if all attempts fail
+    
+    Example:
+        result, attempts = await with_retry(
+            lambda: runtime.raw_completion(context),
+            max_attempts=5
+        )
+    """
+    if is_transient is None:
+        is_transient = lambda e: isinstance(e, TransientError)
+    
+    last_error = None
+    
+    for attempt in range(max_attempts):
+        try:
+            result = await fn()
+            return (result, attempt)
+        except Exception as e:
+            last_error = e
+            
+            # Don't retry on permanent errors
+            if not is_transient(e):
+                raise
+            
+            # Don't sleep after last attempt
+            if attempt < max_attempts - 1:
+                delay = backoff_base ** attempt
+                await asyncio.sleep(delay)
+    
+    # All attempts exhausted
+    raise last_error
 
 
 class Runtime(ABC):
@@ -396,3 +465,92 @@ def _extract_field_values(text: str, fields: list[str]) -> dict[str, Any]:
 def json_response_parser(response: str) -> dict[str, Any]:
     """Standard JSON response parser with markdown code block handling."""
     return robust_json_parse(response, allow_partial=True)
+
+
+def parse_structured_sections(
+    response: str,
+    section_names: list[str]
+) -> dict[str, list[str]]:
+    """
+    Parse structured sections from LLM response.
+
+    Looks for section headers (e.g., "RESPONSES:", "FOLLOW-UPS:") and extracts
+    content as lists. Handles both numbered lists (1. item) and bullet lists (- item).
+
+    Args:
+        response: The LLM response text
+        section_names: List of section names to look for (case-insensitive)
+
+    Returns:
+        Dict mapping section names to lists of extracted items
+
+    Example:
+        >>> response = '''
+        ... RESPONSES:
+        ... 1. First response
+        ... 2. Second response
+        ...
+        ... FOLLOW-UPS:
+        ... - First question?
+        ... - Second question?
+        ... '''
+        >>> parse_structured_sections(response, ["responses", "follow-ups"])
+        {'responses': ['First response', 'Second response'],
+         'follow-ups': ['First question?', 'Second question?']}
+    """
+    import re
+
+    result: dict[str, list[str]] = {}
+    lines = response.split('\n')
+
+    # Build regex patterns for section headers (case-insensitive)
+    # Match "SECTION_NAME:" or "SECTION-NAME:" or "SECTION NAME:"
+    section_patterns = {}
+    for name in section_names:
+        # Normalize name for pattern matching (replace underscores/hyphens with flexible pattern)
+        pattern_name = name.replace('_', r'[\s_-]').replace('-', r'[\s_-]')
+        pattern = re.compile(rf'^{pattern_name}\s*:\s*$', re.IGNORECASE)
+        section_patterns[name] = pattern
+
+    current_section = None
+    current_items = []
+
+    for line in lines:
+        stripped = line.strip()
+
+        # Check if this line is a section header
+        found_section = False
+        for section_name, pattern in section_patterns.items():
+            if pattern.match(stripped):
+                # Save previous section if any
+                if current_section and current_items:
+                    result[current_section] = current_items
+
+                # Start new section
+                current_section = section_name
+                current_items = []
+                found_section = True
+                break
+
+        if found_section:
+            continue
+
+        # If we're in a section, try to extract list items
+        if current_section:
+            # Match numbered lists: "1. item" or "1) item"
+            numbered_match = re.match(r'^\d+[\.\)]\s+(.+)$', stripped)
+            if numbered_match:
+                current_items.append(numbered_match.group(1))
+                continue
+
+            # Match bullet lists: "- item" or "* item"
+            bullet_match = re.match(r'^[-\*]\s+(.+)$', stripped)
+            if bullet_match:
+                current_items.append(bullet_match.group(1))
+                continue
+
+    # Save last section
+    if current_section and current_items:
+        result[current_section] = current_items
+
+    return result

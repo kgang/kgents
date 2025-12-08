@@ -8,12 +8,17 @@ Supports two authentication methods:
 """
 
 import os
+import logging
+import time
+import uuid
 from typing import Any, TypeVar, Protocol
 
 from .base import Runtime, LLMAgent, AgentContext, AgentResult
 
 A = TypeVar("A")
 B = TypeVar("B")
+
+logger = logging.getLogger(__name__)
 
 
 class AsyncAnthropicClient(Protocol):
@@ -101,27 +106,69 @@ class ClaudeRuntime(Runtime):
         context: AgentContext,
     ) -> tuple[str, dict[str, Any]]:
         """Execute raw completion via Claude API."""
-        client = self._ensure_client()
-
-        response = await client.messages.create(
-            model=self._model,
-            max_tokens=context.max_tokens,
-            system=context.system_prompt,
-            messages=context.messages,
-        )
-
-        text = response.content[0].text
-        metadata = {
-            "model": response.model,
-            "usage": {
-                "input_tokens": response.usage.input_tokens,
-                "output_tokens": response.usage.output_tokens,
-                "total_tokens": response.usage.input_tokens + response.usage.output_tokens,
+        trace_id = str(uuid.uuid4())
+        start_time = time.perf_counter()
+        
+        logger.info(
+            "raw_completion.start",
+            extra={
+                "trace_id": trace_id,
+                "model": self._model,
+                "max_tokens": context.max_tokens,
+                "message_count": len(context.messages),
             },
-            "stop_reason": response.stop_reason,
-        }
+        )
+        
+        try:
+            client = self._ensure_client()
 
-        return text, metadata
+            response = await client.messages.create(
+                model=self._model,
+                max_tokens=context.max_tokens,
+                system=context.system_prompt,
+                messages=context.messages,
+            )
+
+            text = response.content[0].text
+            metadata = {
+                "model": response.model,
+                "usage": {
+                    "input_tokens": response.usage.input_tokens,
+                    "output_tokens": response.usage.output_tokens,
+                    "total_tokens": response.usage.input_tokens + response.usage.output_tokens,
+                },
+                "stop_reason": response.stop_reason,
+                "trace_id": trace_id,
+            }
+
+            elapsed = time.perf_counter() - start_time
+            logger.info(
+                "raw_completion.success",
+                extra={
+                    "trace_id": trace_id,
+                    "model": response.model,
+                    "input_tokens": response.usage.input_tokens,
+                    "output_tokens": response.usage.output_tokens,
+                    "stop_reason": response.stop_reason,
+                    "elapsed_seconds": round(elapsed, 3),
+                },
+            )
+
+            return text, metadata
+            
+        except Exception as e:
+            elapsed = time.perf_counter() - start_time
+            logger.error(
+                "raw_completion.error",
+                extra={
+                    "trace_id": trace_id,
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                    "elapsed_seconds": round(elapsed, 3),
+                },
+                exc_info=True,
+            )
+            raise
 
     async def execute(
         self,

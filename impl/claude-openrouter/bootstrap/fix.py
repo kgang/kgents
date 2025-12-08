@@ -27,11 +27,16 @@ Anti-pattern: `while True` loops with inline break conditions.
 """
 
 from dataclasses import dataclass
-from typing import Any, Awaitable, Callable, Generic, Optional, TypeVar, Union
+from typing import Any, Awaitable, Callable, Generic, Optional, TypeVar, Union, get_args, get_origin
 
 from .types import Agent
 
 A = TypeVar("A")
+
+
+class TypeValidationError(TypeError):
+    """Raised when runtime type validation fails."""
+    pass
 
 
 @dataclass
@@ -39,6 +44,7 @@ class FixConfig:
     """Configuration for fixed-point iteration."""
     max_iterations: int = 100
     convergence_threshold: float = 0.0  # For numeric convergence
+    validate_types: bool = True  # Runtime type checking
 
 
 @dataclass
@@ -48,6 +54,15 @@ class FixResult(Generic[A]):
     iterations: int
     converged: bool
     history: list[A]  # For debugging/analysis
+
+    def __post_init__(self) -> None:
+        """Validate result invariants."""
+        if self.iterations < 0:
+            raise TypeValidationError(f"iterations must be non-negative, got {self.iterations}")
+        if not isinstance(self.converged, bool):
+            raise TypeValidationError(f"converged must be bool, got {type(self.converged)}")
+        if not isinstance(self.history, list):
+            raise TypeValidationError(f"history must be list, got {type(self.history)}")
 
 
 class Fix(Agent[tuple[Callable[[A], Awaitable[A]], A], FixResult[A]]):
@@ -104,6 +119,21 @@ class Fix(Agent[tuple[Callable[[A], Awaitable[A]], A], FixResult[A]]):
     def name(self) -> str:
         return "Fix"
 
+    def _validate_input(self, input: tuple[Callable[[A], Awaitable[A]], A]) -> None:
+        """Validate input tuple structure at runtime."""
+        if not self._config.validate_types:
+            return
+
+        if not isinstance(input, tuple):
+            raise TypeValidationError(f"Fix input must be tuple, got {type(input)}")
+        
+        if len(input) != 2:
+            raise TypeValidationError(f"Fix input must be 2-tuple (transform, initial), got length {len(input)}")
+        
+        transform, initial = input
+        if not callable(transform):
+            raise TypeValidationError(f"transform must be callable, got {type(transform)}")
+
     async def invoke(
         self, input: tuple[Callable[[A], Awaitable[A]], A]
     ) -> FixResult[A]:
@@ -113,6 +143,8 @@ class Fix(Agent[tuple[Callable[[A], Awaitable[A]], A], FixResult[A]]):
         Iterates: x_{n+1} = transform(x_n)
         Until: x_{n+1} == x_n (or max iterations)
         """
+        self._validate_input(input)
+        
         transform, initial = input
         history: list[A] = [initial]
 
@@ -146,6 +178,7 @@ async def fix(
     initial: A,
     equality_check: Optional[Callable[[A, A], bool]] = None,
     max_iterations: int = 100,
+    validate_types: bool = True,
 ) -> FixResult[A]:
     """
     Convenience function for fixed-point iteration.
@@ -157,7 +190,7 @@ async def fix(
             equality_check=lambda a, b: a.state == b.state and b.confidence >= 0.8,
         )
     """
-    config = FixConfig(max_iterations=max_iterations)
+    config = FixConfig(max_iterations=max_iterations, validate_types=validate_types)
     fix_agent = Fix(config=config, equality=equality_check)
     return await fix_agent.invoke((transform, initial))
 
@@ -175,9 +208,22 @@ class RetryFix(Agent[tuple[Callable[[], Awaitable[A]], int], Optional[A]]):
     def name(self) -> str:
         return "RetryFix"
 
+    def _validate_input(self, input: tuple[Callable[[], Awaitable[A]], int]) -> None:
+        """Validate retry input at runtime."""
+        if not isinstance(input, tuple) or len(input) != 2:
+            raise TypeValidationError(f"RetryFix input must be 2-tuple, got {type(input)}")
+        
+        operation, max_attempts = input
+        if not callable(operation):
+            raise TypeValidationError(f"operation must be callable, got {type(operation)}")
+        if not isinstance(max_attempts, int) or max_attempts < 1:
+            raise TypeValidationError(f"max_attempts must be positive int, got {max_attempts}")
+
     async def invoke(
         self, input: tuple[Callable[[], Awaitable[A]], int]
     ) -> Optional[A]:
+        self._validate_input(input)
+        
         operation, max_attempts = input
 
         for attempt in range(max_attempts):
@@ -199,6 +245,11 @@ class ConvergeFix(Agent[tuple[Callable[[float], Awaitable[float]], float], FixRe
     """
 
     def __init__(self, threshold: float = 1e-6, max_iterations: int = 1000):
+        if threshold <= 0:
+            raise TypeValidationError(f"threshold must be positive, got {threshold}")
+        if max_iterations < 1:
+            raise TypeValidationError(f"max_iterations must be positive, got {max_iterations}")
+        
         self._threshold = threshold
         self._max_iterations = max_iterations
 
@@ -206,9 +257,22 @@ class ConvergeFix(Agent[tuple[Callable[[float], Awaitable[float]], float], FixRe
     def name(self) -> str:
         return "ConvergeFix"
 
+    def _validate_input(self, input: tuple[Callable[[float], Awaitable[float]], float]) -> None:
+        """Validate numeric convergence input."""
+        if not isinstance(input, tuple) or len(input) != 2:
+            raise TypeValidationError(f"ConvergeFix input must be 2-tuple, got {type(input)}")
+        
+        transform, initial = input
+        if not callable(transform):
+            raise TypeValidationError(f"transform must be callable, got {type(transform)}")
+        if not isinstance(initial, (int, float)):
+            raise TypeValidationError(f"initial must be numeric, got {type(initial)}")
+
     async def invoke(
         self, input: tuple[Callable[[float], Awaitable[float]], float]
     ) -> FixResult[float]:
+        self._validate_input(input)
+        
         transform, initial = input
         history: list[float] = [initial]
 

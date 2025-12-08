@@ -21,7 +21,7 @@ Substructure (decomposable for clarity):
 """
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Callable
 
 from .types import Agent, Principles, Verdict, VerdictType
 
@@ -178,69 +178,98 @@ class JudgeGenerate(Agent[Agent, bool]):
         return bool(agent.__doc__)
 
 
-def make_default_principles() -> Principles:
-    """Create the default 7 principles with basic checks."""
+# Default principle check implementations
+def _check_has_purpose(agent: Agent) -> bool:
+    """Default: agent has name and docstring."""
+    return bool(agent.name and agent.__doc__)
 
-    def has_purpose(agent: Agent) -> bool:
-        return bool(agent.name and agent.__doc__)
 
-    def is_unique(_: Agent) -> bool:
-        # Requires registry - assume true for bootstrap
-        return True
+def _check_is_unique(agent: Agent) -> bool:
+    """Default: assume unique (requires registry context)."""
+    return True
 
-    def is_ethical(_: Agent) -> bool:
-        # Deep check would inspect behavior - assume true
-        return True
 
-    def is_joyful(_: Agent) -> bool:
-        # Subjective - requires Ground
-        return True
+def _check_is_ethical(agent: Agent) -> bool:
+    """Default: assume ethical (deep inspection needed)."""
+    return True
 
-    def is_composable(agent: Agent) -> bool:
-        return callable(getattr(agent, "invoke", None))
 
-    def is_heterarchical(agent: Agent) -> bool:
-        return hasattr(agent, "__rshift__")
+def _check_is_joyful(agent: Agent) -> bool:
+    """Default: requires Ground for subjective evaluation."""
+    return True
 
-    def is_generative(agent: Agent) -> bool:
-        return bool(agent.__doc__)
 
+def _check_is_composable(agent: Agent) -> bool:
+    """Default: has callable invoke method."""
+    return callable(getattr(agent, "invoke", None))
+
+
+def _check_is_heterarchical(agent: Agent) -> bool:
+    """Default: supports composition via __rshift__."""
+    return hasattr(agent, "__rshift__")
+
+
+def _check_is_generative(agent: Agent) -> bool:
+    """Default: has documentation for regeneration."""
+    return bool(agent.__doc__)
+
+
+def make_default_principles(
+    check_taste: Callable[[Agent], bool] | None = None,
+    check_curate: Callable[[Agent], bool] | None = None,
+    check_ethics: Callable[[Agent], bool] | None = None,
+    check_joy: Callable[[Agent], bool] | None = None,
+    check_compose: Callable[[Agent], bool] | None = None,
+    check_hetero: Callable[[Agent], bool] | None = None,
+    check_generate: Callable[[Agent], bool] | None = None,
+) -> Principles:
+    """
+    Create the default 7 principles with injectable checks.
+    
+    Dependency injection enables:
+    - Testing with mocks
+    - Production customization
+    - Decoupling from Agent interface
+    
+    Args:
+        check_*: Optional custom check functions. If None, uses defaults.
+    """
     from .types import Principle
 
     return Principles(
         tasteful=Principle(
             name="tasteful",
             question="Does this agent have a clear, justified purpose?",
-            check=has_purpose,
+            check=check_taste or _check_has_purpose,
         ),
         curated=Principle(
             name="curated",
             question="Does this add unique value?",
-            check=is_unique,
+            check=check_curate or _check_is_unique,
         ),
         ethical=Principle(
             name="ethical",
             question="Does this respect human agency and privacy?",
-            check=is_ethical,
+            check=check_ethics or _check_is_ethical,
         ),
         joy_inducing=Principle(
             name="joy-inducing",
             question="Would I enjoy interacting with this?",
-            check=is_joyful,
+            check=check_joy or _check_is_joyful,
         ),
         composable=Principle(
             name="composable",
             question="Can this work with other agents?",
-            check=is_composable,
+            check=check_compose or _check_is_composable,
         ),
         heterarchical=Principle(
             name="heterarchical",
             question="Does this avoid fixed hierarchy?",
-            check=is_heterarchical,
+            check=check_hetero or _check_is_heterarchical,
         ),
         generative=Principle(
             name="generative",
             question="Could this be regenerated from spec?",
-            check=is_generative,
+            check=check_generate or _check_is_generative,
         ),
     )

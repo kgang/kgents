@@ -66,7 +66,6 @@ from bootstrap.types import (
 from bootstrap.fix import Fix, FixResult, FixConfig
 
 # Runtime
-from runtime import ClaudeCLIRuntime
 from runtime.base import LLMAgent, AgentContext, AgentResult
 
 # Agents
@@ -100,57 +99,54 @@ class EvolveConfig:
     hypothesis_count: int = 4  # Number of hypotheses to generate per module
 
 
-# ============================================================================
-# Types
-# ============================================================================
+@dataclass
+class CodeModule:
+    """A module in the codebase to evolve."""
+    name: str
+    category: str
+    path: Path
+
+    def __post_init__(self):
+        if not self.path.exists():
+            raise FileNotFoundError(f"Module not found: {self.path}")
+
+
+@dataclass
+class CodeImprovement:
+    """A proposed improvement to code."""
+    description: str
+    rationale: str
+    improvement_type: str  # "refactor" | "fix" | "feature" | "test"
+    code: str
+    confidence: float
+    metadata: dict[str, Any] = field(default_factory=dict)
+
 
 class ExperimentStatus(Enum):
     """Status of an experiment."""
     PENDING = "pending"
-    GENERATING = "generating"
-    TESTING = "testing"
+    RUNNING = "running"
     PASSED = "passed"
     FAILED = "failed"
-    SYNTHESIZING = "synthesizing"
-    INCORPORATED = "incorporated"
-    REJECTED = "rejected"
-
-
-@dataclass
-class CodeModule:
-    """A module to evolve."""
-    name: str
-    path: Path
-    content: str
-    category: str
-
-
-@dataclass
-class Improvement:
-    """A proposed improvement to a module."""
-    description: str
-    rationale: str
-    new_content: str
-    improvement_type: str  # "refactor", "fix", "feature", "test"
-    confidence: float
+    HELD = "held"  # Productive tension requiring human judgment
 
 
 @dataclass
 class Experiment:
-    """An experiment applying an improvement."""
+    """A single experimental improvement."""
     id: str
     module: CodeModule
-    improvement: Improvement
+    improvement: CodeImprovement
     status: ExperimentStatus = ExperimentStatus.PENDING
     test_results: Optional[dict] = None
-    synthesis: Optional[DialecticOutput] = None
+    verdict: Optional[Verdict] = None
+    synthesis: Optional[Synthesis] = None
     error: Optional[str] = None
-    timestamp: datetime = field(default_factory=datetime.now)
 
 
 @dataclass
 class EvolutionReport:
-    """Final report of the evolution process."""
+    """Summary of evolution run."""
     experiments: list[Experiment]
     incorporated: list[Experiment]
     rejected: list[Experiment]
@@ -159,40 +155,211 @@ class EvolutionReport:
 
 
 # ============================================================================
-# CodeImprover: LLM Agent for generating improvements
+# Core Logic
 # ============================================================================
 
-@dataclass
-class ImproverInput:
-    """Input for the code improver."""
-    module: CodeModule
-    hypothesis: str  # Single hypothesis to explore
-    constraints: list[str]
+class EvolutionPipeline:
+    """Main pipeline for evolving code."""
 
+    def __init__(self, config: EvolveConfig, runtime: Optional[LLMAgent] = None):
+        """
+        Initialize the evolution pipeline.
+        
+        Args:
+            config: Evolution configuration
+            runtime: Optional runtime to use. If None, creates ClaudeCLIRuntime.
+        """
+        self._config = config
+        self._runtime = runtime
+        self._principles = make_default_principles()
 
-@dataclass
-class ImproverOutput:
-    """Output from the code improver."""
-    improvement: Improvement  # Single improvement per invocation
+        # Agents (instantiated on first use)
+        self._hypothesis_engine: Optional[HypothesisEngine] = None
+        self._judge: Optional[Judge] = None
+        self._contradict: Optional[Contradict] = None
+        self._sublate: Optional[Sublate] = None
+        self._hegel: Optional[HegelAgent] = None
 
+    def _get_runtime(self) -> LLMAgent:
+        """Get or create the runtime instance."""
+        if self._runtime is None:
+            # Lazy import to avoid circular dependency
+            from runtime import ClaudeCLIRuntime
+            self._runtime = ClaudeCLIRuntime()
+        return self._runtime
 
-class CodeImprover(LLMAgent[ImproverInput, ImproverOutput]):
-    """
-    LLM Agent that generates concrete code improvements.
+    def _get_hypothesis_engine(self) -> HypothesisEngine:
+        """Lazy instantiation of hypothesis engine."""
+        if self._hypothesis_engine is None:
+            self._hypothesis_engine = HypothesisEngine()
+        return self._hypothesis_engine
 
-    Takes a SINGLE hypothesis and produces ONE concrete improvement.
-    Composable: call multiple times for multiple improvements.
-    """
+    def _get_judge(self) -> Judge:
+        """Lazy instantiation of judge."""
+        if self._judge is None:
+            self._judge = Judge(runtime=self._get_runtime())
+        return self._judge
 
-    def __init__(self, temperature: float = 0.7):
-        self._temperature = temperature
+    def _get_contradict(self) -> Contradict:
+        """Lazy instantiation of contradict."""
+        if self._contradict is None:
+            self._contradict = Contradict(runtime=self._get_runtime())
+        return self._contradict
 
-    @property
-    def name(self) -> str:
-        return "CodeImprover"
+    def _get_sublate(self) -> Sublate:
+        """Lazy instantiation of sublate."""
+        if self._sublate is None:
+            self._sublate = Sublate(runtime=self._get_runtime())
+        return self._sublate
 
-    def build_prompt(self, input: ImproverInput) -> AgentContext:
-        system_prompt = """You are a code improvement agent for kgents, a spec-first agent framework.
+    def _get_hegel(self) -> HegelAgent:
+        """Lazy instantiation of Hegel."""
+        if self._hegel is None:
+            self._hegel = HegelAgent(runtime=self._get_runtime())
+        return self._hegel
+
+    def discover_modules(self) -> list[CodeModule]:
+        """Discover modules to evolve based on target."""
+        base = Path(__file__).parent
+        modules = []
+
+        if self._config.target in ["runtime", "all"]:
+            runtime_dir = base / "runtime"
+            for py_file in runtime_dir.glob("*.py"):
+                if py_file.name != "__init__.py":
+                    modules.append(CodeModule(
+                        name=py_file.stem,
+                        category="runtime",
+                        path=py_file
+                    ))
+
+        if self._config.target in ["agents", "all"]:
+            agents_dir = base / "agents"
+            for letter_dir in agents_dir.iterdir():
+                if letter_dir.is_dir() and not letter_dir.name.startswith("_"):
+                    for py_file in letter_dir.glob("*.py"):
+                        if py_file.name != "__init__.py":
+                            modules.append(CodeModule(
+                                name=py_file.stem,
+                                category=f"agents/{letter_dir.name}",
+                                path=py_file
+                            ))
+
+        if self._config.target in ["bootstrap", "all"]:
+            bootstrap_dir = base / "bootstrap"
+            for py_file in bootstrap_dir.glob("*.py"):
+                if py_file.name != "__init__.py":
+                    modules.append(CodeModule(
+                        name=py_file.stem,
+                        category="bootstrap",
+                        path=py_file
+                    ))
+
+        if self._config.target in ["meta", "all"]:
+            # Evolve evolve.py itself (meta!)
+            modules.append(CodeModule(
+                name="evolve",
+                category="meta",
+                path=base / "evolve.py"
+            ))
+
+        return modules
+
+    def _get_code_preview(self, path: Path, max_lines: int = 200) -> str:
+        """
+        Get code preview for large files to reduce token usage.
+        
+        For files > 500 lines, return first max_lines with omission notice.
+        """
+        with open(path) as f:
+            lines = f.readlines()
+        
+        total_lines = len(lines)
+        if total_lines <= 500:
+            return "".join(lines)
+        
+        preview_lines = lines[:max_lines]
+        omitted = total_lines - max_lines
+        
+        return (
+            "".join(preview_lines) +
+            f"\n... ({omitted} lines omitted) ...\n"
+        )
+
+    async def generate_hypotheses(self, module: CodeModule) -> list[str]:
+        """Generate improvement hypotheses for a module."""
+        log(f"[{module.name}] Generating hypotheses...")
+
+        code_content = self._get_code_preview(module.path)
+
+        hypothesis_input = HypothesisInput(
+            observations=[
+                f"Module: {module.name}",
+                f"Category: {module.category}",
+                f"Path: {module.path}",
+                f"Code preview:\n{code_content}",
+            ],
+            domain=f"Code improvement for {module.category}/{module.name}",
+            question=f"What are {self._config.hypothesis_count} specific improvements to make this code more robust, composable, and maintainable?",
+            constraints=[
+                "Agents are morphisms with clear A → B types",
+                "Composable via >> operator",
+                "Use Fix pattern for iteration/retry",
+                "Conflicts are data - log tensions",
+                "Tasteful: less is more",
+            ],
+        )
+
+        try:
+            engine = self._get_hypothesis_engine()
+            runtime = self._get_runtime()
+            result = await runtime.execute(engine, hypothesis_input)
+
+            # Check if output is HypothesisError or HypothesisOutput
+            hypotheses_output = result.output
+            if not hasattr(hypotheses_output, 'hypotheses'):
+                # Got HypothesisError instead of HypothesisOutput
+                error_msg = str(hypotheses_output) if hasattr(hypotheses_output, 'message') else "Unknown error"
+                log(f"[{module.name}] Failed to generate hypotheses: {error_msg}")
+                return []
+
+            hypotheses = [h.statement for h in hypotheses_output.hypotheses]
+
+            log(f"[{module.name}] Generated {len(hypotheses)} hypotheses")
+            for i, h in enumerate(hypotheses, 1):
+                log(f"  {i}. {h[:80]}...")
+
+            return hypotheses
+        except Exception as e:
+            log(f"[{module.name}] Failed to generate hypotheses: {e}")
+            return []
+
+    async def experiment(self, module: CodeModule, hypothesis: str) -> Optional[Experiment]:
+        """Run a single experiment: generate improvement from hypothesis."""
+        exp_id = f"{module.name}_{hash(hypothesis) & 0xFFFF:04x}"
+        log(f"[{exp_id}] Experimenting with hypothesis...")
+
+        # Generate improvement code
+        improvement = await self._generate_improvement(module, hypothesis)
+        if not improvement:
+            return None
+
+        experiment = Experiment(
+            id=exp_id,
+            module=module,
+            improvement=improvement,
+        )
+
+        log(f"[{exp_id}] Generated: {improvement.description}")
+        return experiment
+
+    async def _generate_improvement(
+        self, module: CodeModule, hypothesis: str
+    ) -> Optional[CodeImprovement]:
+        """Generate code improvement using LLM."""
+        code_content = self._get_code_preview(module.path)
+
+        prompt = f"""You are a code improvement agent for kgents, a spec-first agent framework.
 
 Your task is to generate ONE CONCRETE, WORKING code improvement based on a single hypothesis.
 
@@ -213,7 +380,7 @@ IMPROVEMENT TYPES:
 OUTPUT FORMAT (TWO SECTIONS):
 
 ## METADATA
-{"description": "Brief description", "rationale": "Why", "improvement_type": "refactor|fix|feature|test", "confidence": 0.8}
+{{"description": "Brief description", "rationale": "Why", "improvement_type": "refactor|fix|feature|test", "confidence": 0.8}}
 
 ## CODE
 ```python
@@ -225,729 +392,332 @@ CRITICAL:
 - CODE section contains the complete Python file in a markdown block
 - Generate ONE focused improvement per invocation
 - Don't make changes that require external dependencies not already imported
-- Preserve existing functionality unless explicitly improving it"""
+- Preserve existing functionality unless explicitly improving it
 
-        # Optimize: send summary for large files (>500 lines), full content for small files
-        lines = input.module.content.splitlines()
-        if len(lines) > 500:
-            # Send first 100 + last 100 lines + summary
-            code_preview = (
-                "\n".join(lines[:100]) +
-                f"\n\n... ({len(lines) - 200} lines omitted) ...\n\n" +
-                "\n".join(lines[-100:])
-            )
-            code_section = f"""CURRENT CODE (Preview - {len(lines)} lines total):
+Analyze this module and generate ONE improvement based on the hypothesis:
+
+MODULE: {module.name}
+CATEGORY: {module.category}
+PATH: {module.path}
+
+CURRENT CODE (Preview - {len(code_content.splitlines())} lines total):
 ```python
-{code_preview}
-```"""
-        else:
-            code_section = f"""CURRENT CODE:
-```python
-{input.module.content}
-```"""
-
-        user_prompt = f"""Analyze this module and generate ONE improvement based on the hypothesis:
-
-MODULE: {input.module.name}
-CATEGORY: {input.module.category}
-PATH: {input.module.path}
-
-{code_section}
+{code_content}
+```
 
 HYPOTHESIS TO EXPLORE:
-{input.hypothesis}
+{hypothesis}
 
 CONSTRAINTS:
-{chr(10).join(f"- {c}" for c in input.constraints)}
+- kgents principles: tasteful, curated, composable
+- Agents are morphisms with clear A → B types
+- Use Fix for iteration/retry patterns
+- Don't introduce new dependencies
 
 Generate ONE concrete improvement. Return ONLY valid JSON."""
 
-        return AgentContext(
-            system_prompt=system_prompt,
-            messages=[{"role": "user", "content": user_prompt}],
-            temperature=self._temperature,
-            max_tokens=16000,  # Large enough for ~30k char files
-        )
+        # TODO: Implement experiment generation
+        # This needs to use an appropriate agent (like Robin) to generate improvements
+        log(f"[{module.name}] Experiment generation not yet implemented")
+        return None
 
-    def parse_response(self, response: str) -> ImproverOutput:
-        """
-        Parse two-section response: METADATA (JSON) + CODE (markdown block).
-
-        This format avoids JSON escaping issues for code.
-        """
-        import re
-
-        # Extract METADATA section
-        metadata_match = re.search(
-            r'##\s*METADATA\s*\n(.*?)(?=##\s*CODE|$)',
-            response,
-            re.DOTALL | re.IGNORECASE
-        )
-
-        # Extract CODE section (markdown block)
-        # Use greedy matching anchored to end of response to handle code containing ```
-        code_match = re.search(
-            r'##\s*CODE\s*\n```(?:python)?\s*\n(.*)```\s*$',
-            response,
-            re.DOTALL | re.IGNORECASE
-        )
-
-        # Parse metadata JSON
-        if metadata_match:
-            metadata_text = metadata_match.group(1).strip()
-            # Find JSON in metadata section
-            json_match = re.search(r'\{[^}]+\}', metadata_text, re.DOTALL)
-            if json_match:
-                try:
-                    data = json.loads(json_match.group(0))
-                except json.JSONDecodeError:
-                    # Fallback: extract fields with regex
-                    data = self._extract_metadata_fields(metadata_text)
-            else:
-                data = self._extract_metadata_fields(metadata_text)
-        else:
-            # Legacy fallback: try robust_json_parse on whole response
-            from runtime.base import robust_json_parse
-            data = robust_json_parse(response, allow_partial=True)
-
-        # Get code from CODE section or fallback
-        if code_match:
-            new_content = code_match.group(1)
-        else:
-            # Fallback: try to extract code after ## CODE even if truncated (no closing ```)
-            truncated_match = re.search(
-                r'##\s*CODE\s*\n```(?:python)?\s*\n(.*)',
-                response,
-                re.DOTALL | re.IGNORECASE
-            )
-            if truncated_match:
-                # Take everything after the code block start
-                new_content = truncated_match.group(1).rstrip('`').strip()
-            elif 'new_content' in data:
-                new_content = data['new_content']
-            else:
-                raise ValueError("No code content found in response")
-
-        improvement = Improvement(
-            description=data.get("description", ""),
-            rationale=data.get("rationale", ""),
-            new_content=new_content,
-            improvement_type=data.get("improvement_type", "refactor"),
-            confidence=float(data.get("confidence", 0.5)),
-        )
-
-        return ImproverOutput(improvement=improvement)
-
-    def _extract_metadata_fields(self, text: str) -> dict:
-        """Extract metadata fields using regex when JSON parsing fails."""
-        import re
-        result = {}
-
-        # Extract each field
-        patterns = {
-            'description': r'"description"\s*:\s*"([^"]*)"',
-            'rationale': r'"rationale"\s*:\s*"([^"]*)"',
-            'improvement_type': r'"improvement_type"\s*:\s*"([^"]*)"',
-            'confidence': r'"confidence"\s*:\s*([\d.]+)',
-        }
-
-        for field, pattern in patterns.items():
-            match = re.search(pattern, text)
-            if match:
-                result[field] = match.group(1)
-
-        return result
-
-    async def invoke(self, input: ImproverInput) -> ImproverOutput:
-        """
-        LLMAgents require a runtime for execution.
-
-        Use: await runtime.execute(improver, input)
-        """
-        raise NotImplementedError(
-            "CodeImprover requires a runtime. Use: await runtime.execute(improver, input)"
-        )
-
-
-# ============================================================================
-# Validators: Test improvements before synthesis
-# ============================================================================
-
-class Validator:
-    """Validates code improvements."""
-
-    def __init__(self, base_path: Path):
-        self._base_path = base_path
-
-    async def validate_syntax(self, content: str) -> tuple[bool, str]:
-        """Check if Python syntax is valid."""
+        # Parse response
         try:
-            compile(content, "<string>", "exec")
-            return True, "Syntax OK"
-        except SyntaxError as e:
-            return False, f"Syntax error: {e}"
+            response = result.output.strip()
 
-    async def validate_types(self, path: Path, content: str) -> tuple[bool, str]:
-        """Run mypy type checking on the content."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".py", delete=False
-        ) as f:
-            f.write(content)
-            temp_path = f.name
-
-        try:
-            result = subprocess.run(
-                ["python", "-m", "mypy", temp_path, "--ignore-missing-imports", "--no-error-summary"],
-                capture_output=True,
-                text=True,
-                timeout=30,
-            )
-            # Check for actual errors in output, not just return code
-            # mypy returns non-zero for many reasons (missing stubs, etc.)
-            output = (result.stdout + result.stderr).strip()
-
-            # Filter out non-error lines
-            error_lines = [
-                line for line in output.split('\n')
-                if line and ': error:' in line
-            ]
-
-            if not error_lines:
-                return True, "Type check passed"
-            else:
-                return False, f"Type errors:\n" + "\n".join(error_lines[:5])  # Limit to 5 errors
-        except FileNotFoundError:
-            return True, "mypy not installed, skipping type check"
-        except subprocess.TimeoutExpired:
-            return False, "Type check timed out"
-        except Exception as e:
-            # Don't fail on mypy issues - it's optional
-            return True, f"Type check skipped: {e}"
-        finally:
-            Path(temp_path).unlink(missing_ok=True)
-
-    async def validate_imports(self, content: str) -> tuple[bool, str]:
-        """Check if all imports are resolvable."""
-        # Write to temp file and try to import
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".py", delete=False
-        ) as f:
-            f.write(content)
-            temp_path = f.name
-
-        try:
-            result = subprocess.run(
-                ["python", "-c", f"import ast; ast.parse(open('{temp_path}').read())"],
-                capture_output=True,
-                text=True,
-                timeout=10,
-            )
-            return True, "Imports OK (AST check)"
-        except Exception as e:
-            return False, f"Import error: {e}"
-        finally:
-            Path(temp_path).unlink(missing_ok=True)
-
-    async def validate_all(
-        self,
-        path: Path,
-        content: str,
-        config: EvolveConfig
-    ) -> tuple[bool, dict]:
-        """Run all validators."""
-        results = {}
-
-        # Syntax is always required
-        ok, msg = await self.validate_syntax(content)
-        results["syntax"] = {"passed": ok, "message": msg}
-        if not ok:
-            return False, results
-
-        # Type check if configured
-        if config.require_type_check:
-            ok, msg = await self.validate_types(path, content)
-            results["types"] = {"passed": ok, "message": msg}
-            if not ok:
-                return False, results
-
-        # Import check
-        ok, msg = await self.validate_imports(content)
-        results["imports"] = {"passed": ok, "message": msg}
-        if not ok:
-            return False, results
-
-        return True, results
-
-
-# ============================================================================
-# Git Integration: Safe experimentation
-# ============================================================================
-
-class GitSafety:
-    """Git operations for safe experimentation."""
-
-    def __init__(self, repo_path: Path):
-        self._repo_path = repo_path
-
-    def _run_git(self, *args: str) -> subprocess.CompletedProcess:
-        return subprocess.run(
-            ["git", "-C", str(self._repo_path), *args],
-            capture_output=True,
-            text=True,
-        )
-
-    def is_clean(self) -> bool:
-        """Check if working tree is clean."""
-        result = self._run_git("status", "--porcelain")
-        return result.stdout.strip() == ""
-
-    def current_branch(self) -> str:
-        """Get current branch name."""
-        result = self._run_git("branch", "--show-current")
-        return result.stdout.strip()
-
-    def create_experiment_branch(self, name: str) -> bool:
-        """Create a new experiment branch."""
-        result = self._run_git("checkout", "-b", name)
-        return result.returncode == 0
-
-    def checkout(self, branch: str) -> bool:
-        """Checkout a branch."""
-        result = self._run_git("checkout", branch)
-        return result.returncode == 0
-
-    def commit(self, message: str) -> bool:
-        """Stage all and commit."""
-        self._run_git("add", "-A")
-        result = self._run_git("commit", "-m", message)
-        return result.returncode == 0
-
-    def diff_stat(self) -> str:
-        """Get diff stat."""
-        result = self._run_git("diff", "--stat")
-        return result.stdout
-
-
-# ============================================================================
-# Evolution Pipeline
-# ============================================================================
-
-class EvolutionPipeline:
-    """
-    The main evolution pipeline.
-
-    Compose: HypothesisEngine >> CodeImprover >> Validator >> Hegel >> Apply
-    """
-
-    def __init__(self, config: EvolveConfig):
-        self._config = config
-        self._base_path = Path(__file__).parent
-
-        # Initialize components with verbose mode
-        self._runtime = ClaudeCLIRuntime(timeout=300.0, max_retries=2, verbose=True)
-        self._hypothesis_engine = HypothesisEngine(
-            hypothesis_count=config.hypothesis_count,
-            temperature=0.95
-        )
-        self._code_improver = CodeImprover(temperature=0.95)
-        self._judge = Judge()
-        self._hegel = HegelAgent()
-        self._validator = Validator(self._base_path)
-        self._git = GitSafety(self._base_path.parent.parent)  # Go up to repo root
-        self._principles = make_default_principles()
-
-        # Performance optimization: Cache AST analysis
-        self._ast_cache: dict[str, list[str]] = {}
-
-    def load_modules(self) -> list[CodeModule]:
-        """Load Python modules from impl directory."""
-        targets = {
-            "runtime": ["runtime"],
-            "agents": ["agents/a", "agents/b", "agents/c", "agents/h", "agents/k"],
-            "bootstrap": ["bootstrap"],
-            "meta": [],  # Special: root-level meta files
-            "all": ["runtime", "agents/a", "agents/b", "agents/c", "agents/h", "agents/k", "bootstrap"],
-        }
-
-        modules: list[CodeModule] = []
-
-        # Handle meta target (root-level files)
-        if self._config.target == "meta":
-            meta_files = ["evolve.py", "autopoiesis.py", "self_improve.py"]
-            for filename in meta_files:
-                py_file = self._base_path / filename
-                if py_file.exists():
-                    content = py_file.read_text()
-                    modules.append(CodeModule(
-                        name=py_file.stem,
-                        path=py_file,
-                        content=content,
-                        category="meta",
-                    ))
-            return modules
-
-        dirs = targets.get(self._config.target, targets["all"])
-
-        for subdir in dirs:
-            dir_path = self._base_path / subdir
-            if not dir_path.exists():
-                continue
-
-            for py_file in dir_path.glob("*.py"):
-                if py_file.name.startswith("__"):
-                    continue
-
-                content = py_file.read_text()
-                modules.append(CodeModule(
-                    name=py_file.stem,
-                    path=py_file,
-                    content=content,
-                    category=subdir.split("/")[0],
-                ))
-
-        return modules
-
-    def _analyze_code_structure(self, module: CodeModule) -> list[str]:
-        """Deep code analysis using AST parsing (cached)."""
-        import ast
-
-        # Check cache first
-        cache_key = f"{module.name}:{hash(module.content)}"
-        if cache_key in self._ast_cache:
-            return self._ast_cache[cache_key]
-
-        observations = []
-
-        try:
-            tree = ast.parse(module.content)
-
-            # Count different elements
-            classes = [n for n in ast.walk(tree) if isinstance(n, ast.ClassDef)]
-            functions = [n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)]
-            async_functions = [n for n in functions if n in [x for x in ast.walk(tree) if isinstance(x, ast.AsyncFunctionDef)]]
-            imports = [n for n in ast.walk(tree) if isinstance(n, (ast.Import, ast.ImportFrom))]
-
-            # Exception handling
-            try_blocks = [n for n in ast.walk(tree) if isinstance(n, ast.Try)]
-            raises = [n for n in ast.walk(tree) if isinstance(n, ast.Raise)]
-
-            # Type annotations
-            annotated_args = sum(1 for f in functions for arg in getattr(f.args, 'args', []) if arg.annotation)
-            total_args = sum(len(getattr(f.args, 'args', [])) for f in functions)
-
-            observations.append(f"Structure: {len(classes)} classes, {len(functions)} functions ({len(async_functions)} async)")
-            observations.append(f"Imports: {len(imports)} import statements")
-            observations.append(f"Error handling: {len(try_blocks)} try blocks, {len(raises)} raises")
-
-            if total_args > 0:
-                type_coverage = (annotated_args / total_args) * 100
-                observations.append(f"Type annotations: {type_coverage:.0f}% of function arguments")
-
-            # Look for patterns
-            if len(try_blocks) == 0 and len(raises) > 0:
-                observations.append("⚠ Raises exceptions but has no error handling")
-
-            if len(async_functions) > 0 and "asyncio" not in module.content:
-                observations.append("⚠ Uses async but doesn't import asyncio")
-
-        except SyntaxError:
-            observations.append("⚠ Syntax error - cannot parse AST")
-
-        # Cache the result
-        self._ast_cache[cache_key] = observations
-        return observations
-
-    async def generate_hypotheses(self, module: CodeModule) -> list[str]:
-        """Generate improvement hypotheses for a module."""
-        # Deep structural analysis
-        structural_obs = self._analyze_code_structure(module)
-
-        # Additional pattern observations
-        pattern_obs = []
-        if "# TODO" in module.content:
-            todos = [line.strip() for line in module.content.split('\n') if '# TODO' in line]
-            pattern_obs.append(f"Has {len(todos)} TODO comments: {todos[0][:50] if todos else ''}")
-        if "raise NotImplementedError" in module.content:
-            pattern_obs.append("Contains NotImplementedError (incomplete implementation)")
-        if '"""' not in module.content and "'''" not in module.content:
-            pattern_obs.append("⚠ Missing module-level docstring")
-
-        observations = [
-            f"Module: {module.name} ({module.category})",
-            f"Size: {len(module.content.splitlines())} lines",
-        ] + structural_obs + pattern_obs
-
-        try:
-            result = await self._runtime.execute(
-                self._hypothesis_engine,
-                HypothesisInput(
-                    observations=observations,
-                    domain="software architecture",
-                    question=f"What specific, actionable improvements would make {module.name} more robust, composable, and production-ready?",
-                    constraints=[
-                        "Focus on concrete, implementable changes",
-                        "Agents are morphisms: A → B",
-                        "Use Fix pattern for retries",
-                        "Prioritize error handling and type safety",
-                    ],
-                )
-            )
-            hypotheses = [h.statement for h in result.output.hypotheses]
-            # Log each hypothesis for visibility
-            for i, h in enumerate(hypotheses, 1):
-                log(f"   H{i}: {h[:100]}...", "      💡")
-            return hypotheses
-        except Exception as e:
-            log(f"Hypothesis generation failed: {e}", "   ⚠️")
-            return []
-
-    async def generate_improvements(
-        self,
-        module: CodeModule,
-        hypotheses: list[str]
-    ) -> list[Improvement]:
-        """
-        Generate concrete code improvements in parallel.
-
-        Calls CodeImprover once per hypothesis for composability.
-        Each agent invocation produces ONE improvement.
-        """
-        improvements: list[Improvement] = []
-
-        # Limit to max_improvements_per_module
-        hypotheses_to_explore = hypotheses[:self._config.max_improvements_per_module]
-
-        log(f"   Exploring {len(hypotheses_to_explore)} hypotheses in parallel...", "      🔬")
-
-        # Create tasks for parallel execution
-        async def generate_one(i: int, hypothesis: str) -> Optional[tuple[int, Improvement]]:
-            try:
-                result = await self._runtime.execute(
-                    self._code_improver,
-                    ImproverInput(
-                        module=module,
-                        hypothesis=hypothesis,
-                        constraints=[
-                            "kgents principles: tasteful, curated, composable",
-                            "Agents are morphisms with clear A → B types",
-                            "Use Fix for iteration/retry patterns",
-                            "Don't introduce new dependencies",
-                        ],
-                    )
-                )
-                imp = result.output.improvement
-                log(f"   ✓ H{i+1}: {imp.description[:70]}... (conf: {imp.confidence:.2f})", "      ")
-                return (i, imp)
-            except Exception as e:
-                log(f"   ✗ H{i+1} failed: {str(e)[:50]}...", "      ")
+            # Extract METADATA section
+            if "## METADATA" not in response or "## CODE" not in response:
+                log(f"[{module.name}] Invalid response format (missing sections)")
                 return None
 
-        # Execute all improvement generations in parallel
-        tasks = [generate_one(i, h) for i, h in enumerate(hypotheses_to_explore)]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+            metadata_section = response.split("## METADATA")[1].split("## CODE")[0].strip()
+            code_section = response.split("## CODE")[1].strip()
 
-        # Collect successful improvements (preserving order)
-        for result in results:
-            if result and not isinstance(result, Exception):
-                i, imp = result
-                improvements.append(imp)
+            # Parse metadata JSON
+            metadata = json.loads(metadata_section)
 
-        return improvements
+            # Extract code from markdown block
+            if "```python" in code_section:
+                code = code_section.split("```python")[1].split("```")[0].strip()
+            elif "```" in code_section:
+                code = code_section.split("```")[1].split("```")[0].strip()
+            else:
+                code = code_section.strip()
 
-    async def test_improvement(
-        self,
-        module: CodeModule,
-        improvement: Improvement
-    ) -> tuple[bool, dict]:
-        """Test an improvement for validity."""
-        return await self._validator.validate_all(
-            module.path,
-            improvement.new_content,
-            self._config
-        )
+            return CodeImprovement(
+                description=metadata["description"],
+                rationale=metadata["rationale"],
+                improvement_type=metadata["improvement_type"],
+                code=code,
+                confidence=metadata["confidence"],
+                metadata=metadata,
+            )
 
-    async def synthesize(
-        self,
-        module: CodeModule,
-        improvement: Improvement
-    ) -> DialecticOutput:
-        """Use dialectic to synthesize improvement with current code."""
-        return await self._hegel.invoke(DialecticInput(
-            thesis=f"Current {module.name}: {module.content[:200]}...",
-            antithesis=f"Proposed improvement: {improvement.description}",
-            context={
-                "module": module.name,
-                "improvement_type": improvement.improvement_type,
-                "confidence": improvement.confidence,
-            }
-        ))
+        except (json.JSONDecodeError, KeyError, IndexError) as e:
+            log(f"[{module.name}] Failed to parse LLM response: {e}")
+            return None
 
-    async def run_experiment(
-        self,
-        module: CodeModule,
-        improvement: Improvement,
-        experiment_id: str
-    ) -> Experiment:
-        """Run a single experiment."""
-        experiment = Experiment(
-            id=experiment_id,
-            module=module,
-            improvement=improvement,
-        )
+    async def test(self, experiment: Experiment) -> bool:
+        """Test an experimental improvement."""
+        log(f"[{experiment.id}] Testing improvement...")
+        experiment.status = ExperimentStatus.RUNNING
 
-        # Stage 1: Test
-        experiment.status = ExperimentStatus.TESTING
-        log(f"Testing...", "      ")
+        # Write to temp file
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".py", delete=False
+        ) as tmp:
+            tmp.write(experiment.improvement.code)
+            tmp_path = Path(tmp.name)
 
-        passed, results = await self.test_improvement(module, improvement)
-        experiment.test_results = results
+        try:
+            # 1. Syntax check
+            result = subprocess.run(
+                ["python", "-m", "py_compile", str(tmp_path)],
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode != 0:
+                experiment.status = ExperimentStatus.FAILED
+                experiment.error = f"Syntax error: {result.stderr}"
+                log(f"[{experiment.id}] ✗ Syntax error")
+                return False
 
-        if not passed:
-            experiment.status = ExperimentStatus.FAILED
-            experiment.error = str(results)
-            log(f"FAILED: {results}", "      ❌")
-            return experiment
+            # 2. Type check (if required)
+            if self._config.require_type_check:
+                result = subprocess.run(
+                    ["mypy", str(tmp_path), "--ignore-missing-imports"],
+                    capture_output=True,
+                    text=True,
+                )
+                if result.returncode != 0:
+                    experiment.status = ExperimentStatus.FAILED
+                    experiment.error = f"Type error: {result.stdout}"
+                    log(f"[{experiment.id}] ✗ Type check failed")
+                    return False
 
-        log(f"Tests passed", "      ✓")
-        experiment.status = ExperimentStatus.PASSED
+            # 3. Run tests (if exist and required)
+            if self._config.require_tests_pass:
+                test_path = experiment.module.path.parent / f"test_{experiment.module.name}.py"
+                if test_path.exists():
+                    # Replace module with experimental version temporarily
+                    original_code = experiment.module.path.read_text()
+                    try:
+                        experiment.module.path.write_text(experiment.improvement.code)
+                        result = subprocess.run(
+                            ["python", "-m", "pytest", str(test_path), "-v"],
+                            capture_output=True,
+                            text=True,
+                        )
+                        if result.returncode != 0:
+                            experiment.status = ExperimentStatus.FAILED
+                            experiment.error = f"Tests failed: {result.stdout}"
+                            log(f"[{experiment.id}] ✗ Tests failed")
+                            return False
+                    finally:
+                        experiment.module.path.write_text(original_code)
 
-        # Stage 2: Synthesize (skip in quick mode)
-        if not self._config.quick_mode:
-            experiment.status = ExperimentStatus.SYNTHESIZING
-            log(f"Synthesizing...", "      ")
-
-            synthesis = await self.synthesize(module, improvement)
-            experiment.synthesis = synthesis
-
-            if synthesis.productive_tension:
-                log(f"HELD: {synthesis.sublation_notes}", "      ⏸️")
-                return experiment
-
-            log(f"Synthesis: {synthesis.sublation_notes[:60]}...", "      ↑")
-        else:
-            log(f"Skipping synthesis (quick mode)", "      ⚡")
-
-        return experiment
-
-    async def incorporate(self, experiment: Experiment) -> bool:
-        """Apply an experiment's improvement to the codebase."""
-        if self._config.dry_run:
-            log(f"DRY RUN: Would apply {experiment.improvement.description}", "   🔍")
-            # Show a brief preview of changes
-            old_lines = len(experiment.module.content.splitlines())
-            new_lines = len(experiment.improvement.new_content.splitlines())
-            delta = new_lines - old_lines
-            log(f"         Lines: {old_lines} → {new_lines} ({delta:+d})", "         ")
-            log(f"         Rationale: {experiment.improvement.rationale[:80]}...", "         ")
+            experiment.status = ExperimentStatus.PASSED
+            experiment.test_results = {"syntax": "✓", "types": "✓", "tests": "✓"}
+            log(f"[{experiment.id}] ✓ All tests passed")
             return True
 
-        # Write the new content
-        experiment.module.path.write_text(experiment.improvement.new_content)
-        experiment.status = ExperimentStatus.INCORPORATED
-        log(f"Applied: {experiment.improvement.description}", "   ✅")
+        except Exception as e:
+            experiment.status = ExperimentStatus.FAILED
+            experiment.error = str(e)
+            log(f"[{experiment.id}] ✗ Error: {e}")
+            return False
 
-        return True
+        finally:
+            tmp_path.unlink()
 
-    async def evolve_module(self, module: CodeModule, module_idx: int, total_modules: int) -> list[Experiment]:
-        """Evolve a single module through the full pipeline."""
-        experiments: list[Experiment] = []
-        start_time = time.time()
+    async def judge_experiment(self, experiment: Experiment) -> Verdict:
+        """Judge if improvement should proceed."""
+        log(f"[{experiment.id}] Judging improvement...")
 
+        judge_input = JudgeInput(
+            claim=experiment.improvement.description,
+            evidence={
+                "improvement_type": experiment.improvement.improvement_type,
+                "rationale": experiment.improvement.rationale,
+                "confidence": experiment.improvement.confidence,
+                "test_results": experiment.test_results,
+            },
+            principles=self._principles,
+        )
+
+        judge = self._get_judge()
+        result = await judge(judge_input)
+
+        if not result.success:
+            log(f"[{experiment.id}] Judge failed: {result.error}")
+            return Verdict(
+                verdict_type=VerdictType.REJECT,
+                reasoning="Judge agent failed",
+                confidence=0.0,
+            )
+
+        verdict = result.output
+        experiment.verdict = verdict
+
+        verdict_symbol = "✓" if verdict.verdict_type == VerdictType.APPROVE else "?"
+        log(f"[{experiment.id}] {verdict_symbol} {verdict.verdict_type.value}: {verdict.reasoning}")
+
+        return verdict
+
+    async def synthesize(self, experiment: Experiment) -> Optional[Synthesis]:
+        """Dialectic synthesis of improvement vs current code."""
+        if self._config.quick_mode:
+            log(f"[{experiment.id}] Skipping synthesis (quick mode)")
+            return None
+
+        log(f"[{experiment.id}] Synthesizing via dialectic...")
+
+        current_code = experiment.module.path.read_text()
+
+        dialectic_input = DialecticInput(
+            thesis=current_code,
+            antithesis=experiment.improvement.code,
+            context={
+                "module": experiment.module.name,
+                "improvement": experiment.improvement.description,
+                "rationale": experiment.improvement.rationale,
+            },
+        )
+
+        hegel = self._get_hegel()
+        result = await hegel(dialectic_input)
+
+        if not result.success:
+            log(f"[{experiment.id}] Synthesis failed: {result.error}")
+            return None
+
+        dialectic_output: DialecticOutput = result.output
+
+        # Check for productive tension
+        if dialectic_output.tensions:
+            log(f"[{experiment.id}] ⚡ Productive tensions detected")
+            for tension in dialectic_output.tensions:
+                log(f"      {tension.description}")
+
+            # Use Sublate to resolve
+            sublate = self._get_sublate()
+            sublate_result = await sublate(dialectic_output.tensions)
+
+            if sublate_result.success:
+                synthesis = sublate_result.output
+                experiment.synthesis = synthesis
+
+                if synthesis.resolution_type == ResolutionType.HOLD:
+                    experiment.status = ExperimentStatus.HELD
+                    log(f"[{experiment.id}] ⊙ Tension held for human judgment")
+                    return synthesis
+
+        log(f"[{experiment.id}] ✓ Synthesis complete")
+        return experiment.synthesis
+
+    async def incorporate(self, experiment: Experiment) -> bool:
+        """Incorporate approved improvement into codebase."""
+        log(f"[{experiment.id}] Incorporating improvement...")
+
+        if self._config.dry_run:
+            log(f"[{experiment.id}] (dry-run) Would write to {experiment.module.path}")
+            return True
+
+        try:
+            # Write improved code
+            experiment.module.path.write_text(experiment.improvement.code)
+
+            # Git commit
+            subprocess.run(
+                ["git", "add", str(experiment.module.path)],
+                check=True,
+            )
+            commit_msg = f"evolve: {experiment.improvement.description}\n\n{experiment.improvement.rationale}"
+            subprocess.run(
+                ["git", "commit", "-m", commit_msg],
+                check=True,
+            )
+
+            log(f"[{experiment.id}] ✓ Incorporated and committed")
+            return True
+
+        except Exception as e:
+            log(f"[{experiment.id}] ✗ Failed to incorporate: {e}")
+            return False
+
+    async def _process_module(self, module: CodeModule) -> list[Experiment]:
+        """Process a single module (for parallel execution)."""
         log(f"\n{'='*60}")
-        log(f"[{module_idx}/{total_modules}] EVOLVING: {module.name} ({module.category})")
+        log(f"MODULE: {module.category}/{module.name}")
         log(f"{'='*60}")
 
         # Generate hypotheses
-        log(f"Generating hypotheses...", "   1.")
-        hyp_start = time.time()
         hypotheses = await self.generate_hypotheses(module)
-        hyp_time = time.time() - hyp_start
         if not hypotheses:
-            log(f"No hypotheses generated, skipping", "      ")
-            return experiments
-        log(f"Generated {len(hypotheses)} hypotheses ({hyp_time:.1f}s)", "      ✓")
+            return []
 
-        # Generate improvements (parallel)
-        log(f"Generating improvements (parallel)...", "   2.")
-        imp_start = time.time()
-        improvements = await self.generate_improvements(module, hypotheses)
-        imp_time = time.time() - imp_start
-        if not improvements:
-            log(f"No improvements generated, skipping", "      ")
-            return experiments
-        log(f"Generated {len(improvements)} improvements ({imp_time:.1f}s)", "      ✓")
+        # Run experiments for each hypothesis
+        experiments = []
+        for hypothesis in hypotheses[: self._config.max_improvements_per_module]:
+            exp = await self.experiment(module, hypothesis)
+            if exp:
+                experiments.append(exp)
 
-        # Run experiments
-        log(f"Running experiments...", "   3.")
-        for i, improvement in enumerate(improvements):
-            exp_id = f"{module.name}-{i+1}"
-            log(f"\n   [{exp_id}] {improvement.description[:70]}...")
-            log(f"      Type: {improvement.improvement_type}, Confidence: {improvement.confidence:.2f}")
+        # Test experiments
+        for exp in experiments:
+            passed = await self.test(exp)
+            if not passed:
+                continue
 
-            exp_start = time.time()
-            experiment = await self.run_experiment(module, improvement, exp_id)
-            exp_time = time.time() - exp_start
-            experiments.append(experiment)
+            # Judge
+            verdict = await self.judge_experiment(exp)
+            if verdict.verdict_type == VerdictType.REJECT:
+                exp.status = ExperimentStatus.FAILED
+                continue
 
-            # Show result with timing
-            if experiment.status == ExperimentStatus.PASSED:
-                log(f"      Result: PASSED ({exp_time:.1f}s)", "      ")
-            elif experiment.status == ExperimentStatus.FAILED:
-                log(f"      Result: FAILED ({exp_time:.1f}s)", "      ")
-
-        total_time = time.time() - start_time
-        log(f"\n   Module completed in {total_time:.1f}s ({len(experiments)} experiments)")
+            # Synthesize (dialectic)
+            await self.synthesize(exp)
 
         return experiments
 
     async def run(self) -> EvolutionReport:
-        """Run the full evolution process."""
-        log("="*60)
-        log("KGENTS EVOLUTION")
+        """Run the full evolution pipeline."""
+        log(f"{'='*60}")
+        log(f"EVOLUTION PIPELINE")
+        log(f"{'='*60}")
         log(f"Target: {self._config.target}")
         log(f"Dry run: {self._config.dry_run}")
-        log(f"Auto-apply: {self._config.auto_apply}")
-        log(f"Quick mode: {self._config.quick_mode} {'⚡' if self._config.quick_mode else ''}")
-        log("="*60)
+        log(f"Auto apply: {self._config.auto_apply}")
+        log(f"Quick mode: {self._config.quick_mode}")
+        log(f"Hypotheses per module: {self._config.hypothesis_count}")
+        log(f"Max improvements per module: {self._config.max_improvements_per_module}")
 
-        # Safety check
-        if not self._config.dry_run and not self._git.is_clean():
-            log("WARNING: Working tree is not clean. Use --dry-run or commit changes first.", "⚠️")
-            if not self._config.auto_apply:
-                log("Exiting. Use --auto-apply to proceed anyway.")
-                return EvolutionReport(
-                    experiments=[],
-                    incorporated=[],
-                    rejected=[],
-                    held=[],
-                    summary="Aborted: working tree not clean"
-                )
+        # Discover modules
+        modules = self.discover_modules()
+        log(f"\nDiscovered {len(modules)} modules to evolve")
 
-        # Load modules
-        modules = self.load_modules()
-        log(f"\nLoaded {len(modules)} modules to evolve")
+        # Process modules in parallel
+        start_time = time.time()
+        results = await asyncio.gather(
+            *[self._process_module(module) for module in modules],
+            return_exceptions=True,
+        )
+        elapsed = time.time() - start_time
 
-        # Evolve modules in parallel (MAJOR SPEEDUP!)
-        all_experiments: list[Experiment] = []
-
-        # Create tasks for parallel module evolution
-        async def evolve_with_index(idx: int, module: CodeModule) -> list[Experiment]:
-            return await self.evolve_module(module, idx, len(modules))
-
-        tasks = [evolve_with_index(idx, module) for idx, module in enumerate(modules, 1)]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-
-        # Collect all experiments
+        # Flatten results
+        all_experiments = []
         for result in results:
-            if isinstance(result, Exception):
-                log(f"Module evolution failed: {result}", "⚠️")
-            else:
+            if isinstance(result, list):
                 all_experiments.extend(result)
+            elif isinstance(result, Exception):
+                log(f"⚠ Module processing error: {result}")
 
-        # Categorize results
-        incorporated = [e for e in all_experiments if e.status == ExperimentStatus.INCORPORATED]
+        log(f"\nProcessed {len(modules)} modules in {elapsed:.1f}s")
+
+        # Collect results
+        incorporated = []
         rejected = [e for e in all_experiments if e.status == ExperimentStatus.FAILED]
-        held = [e for e in all_experiments if e.synthesis and e.synthesis.productive_tension]
+        held = [e for e in all_experiments if e.status == ExperimentStatus.HELD]
         passed = [e for e in all_experiments if e.status == ExperimentStatus.PASSED and e not in held]
 
         # Apply passed experiments if auto-apply

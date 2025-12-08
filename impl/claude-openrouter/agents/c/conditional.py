@@ -6,13 +6,25 @@ input → [condition?] → [A] if true
                       → [B] if false
 """
 
-from typing import TypeVar, Callable, Union
+from typing import TypeVar, Callable, Union, Awaitable
+import asyncio
 
 from bootstrap.types import Agent
 
 A = TypeVar("A")
 B = TypeVar("B")
 C = TypeVar("C")
+
+# Type alias for predicates that can be sync or async
+Predicate = Union[Callable[[A], bool], Callable[[A], Awaitable[bool]]]
+
+
+async def _eval_predicate(predicate: Predicate[A], input: A) -> bool:
+    """Evaluate a predicate, handling both sync and async cases."""
+    result = predicate(input)
+    if asyncio.iscoroutine(result):
+        return await result
+    return result
 
 
 class BranchAgent(Agent[A, Union[B, C]]):
@@ -21,11 +33,13 @@ class BranchAgent(Agent[A, Union[B, C]]):
 
     If predicate(input) is True, runs if_true agent.
     Otherwise, runs if_false agent.
+    
+    Predicate can be sync or async.
     """
 
     def __init__(
         self,
-        predicate: Callable[[A], bool],
+        predicate: Predicate[A],
         if_true: Agent[A, B],
         if_false: Agent[A, C],
     ):
@@ -39,7 +53,7 @@ class BranchAgent(Agent[A, Union[B, C]]):
         return self._name
 
     async def invoke(self, input: A) -> Union[B, C]:
-        if self._predicate(input):
+        if await _eval_predicate(self._predicate, input):
             return await self._if_true.invoke(input)
         return await self._if_false.invoke(input)
 
@@ -50,11 +64,13 @@ class SwitchAgent(Agent[A, B]):
 
     Maps input to a key, selects agent based on key.
     Falls back to default if key not found.
+    
+    Key function can be sync or async.
     """
 
     def __init__(
         self,
-        key_fn: Callable[[A], str],
+        key_fn: Union[Callable[[A], str], Callable[[A], Awaitable[str]]],
         cases: dict[str, Agent[A, B]],
         default: Agent[A, B],
     ):
@@ -69,7 +85,11 @@ class SwitchAgent(Agent[A, B]):
         return self._name
 
     async def invoke(self, input: A) -> B:
-        key = self._key_fn(input)
+        key_result = self._key_fn(input)
+        if asyncio.iscoroutine(key_result):
+            key = await key_result
+        else:
+            key = key_result
         agent = self._cases.get(key, self._default)
         return await agent.invoke(input)
 
@@ -79,11 +99,12 @@ class GuardedAgent(Agent[A, B]):
     Runs agent only if guard passes, otherwise returns default.
 
     Useful for validation-then-transform patterns.
+    Guard can be sync or async.
     """
 
     def __init__(
         self,
-        guard: Callable[[A], bool],
+        guard: Predicate[A],
         agent: Agent[A, B],
         on_fail: B,
     ):
@@ -97,7 +118,7 @@ class GuardedAgent(Agent[A, B]):
         return self._name
 
     async def invoke(self, input: A) -> B:
-        if self._guard(input):
+        if await _eval_predicate(self._guard, input):
             return await self._agent.invoke(input)
         return self._on_fail
 
@@ -107,9 +128,10 @@ class FilterAgent(Agent[list[A], list[A]]):
     Filters a list of inputs based on a predicate.
 
     Keeps only elements where predicate returns True.
+    Predicate can be sync or async.
     """
 
-    def __init__(self, predicate: Callable[[A], bool], name: str = "Filter"):
+    def __init__(self, predicate: Predicate[A], name: str = "Filter"):
         self._predicate = predicate
         self._name = name
 
@@ -118,13 +140,17 @@ class FilterAgent(Agent[list[A], list[A]]):
         return self._name
 
     async def invoke(self, input: list[A]) -> list[A]:
-        return [x for x in input if self._predicate(x)]
+        results = []
+        for x in input:
+            if await _eval_predicate(self._predicate, x):
+                results.append(x)
+        return results
 
 
 # --- Convenience functions ---
 
 def branch(
-    predicate: Callable[[A], bool],
+    predicate: Predicate[A],
     if_true: Agent[A, B],
     if_false: Agent[A, C],
 ) -> BranchAgent[A, B, C]:
@@ -133,7 +159,7 @@ def branch(
 
 
 def switch(
-    key_fn: Callable[[A], str],
+    key_fn: Union[Callable[[A], str], Callable[[A], Awaitable[str]]],
     cases: dict[str, Agent[A, B]],
     default: Agent[A, B],
 ) -> SwitchAgent[A, B]:
@@ -142,7 +168,7 @@ def switch(
 
 
 def guarded(
-    guard: Callable[[A], bool],
+    guard: Predicate[A],
     agent: Agent[A, B],
     on_fail: B,
 ) -> GuardedAgent[A, B]:
@@ -150,6 +176,6 @@ def guarded(
     return GuardedAgent(guard, agent, on_fail)
 
 
-def filter_by(predicate: Callable[[A], bool], name: str = "Filter") -> FilterAgent[A]:
+def filter_by(predicate: Predicate[A], name: str = "Filter") -> FilterAgent[A]:
     """Create a filter agent."""
     return FilterAgent(predicate, name)

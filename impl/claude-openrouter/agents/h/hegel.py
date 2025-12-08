@@ -10,6 +10,7 @@ Pattern: thesis + antithesis → synthesis (or hold productive tension)
 
 from dataclasses import dataclass
 from typing import Any, Optional
+import logging
 
 from bootstrap.types import (
     Agent,
@@ -21,6 +22,9 @@ from bootstrap.types import (
 )
 from bootstrap.contradict import Contradict
 from bootstrap.sublate import Sublate
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -67,6 +71,15 @@ class HegelAgent(Agent[DialecticInput, DialecticOutput]):
         2. Attempt sublation
         3. Return synthesis or acknowledge productive tension
         """
+        logger.info(
+            "dialectic.start",
+            extra={
+                "agent": self.name,
+                "has_explicit_antithesis": input.antithesis is not None,
+                "thesis_type": type(input.thesis).__name__,
+            }
+        )
+
         # Surface tension
         if input.antithesis is not None:
             # Explicit dialectic - tension provided
@@ -76,22 +89,47 @@ class HegelAgent(Agent[DialecticInput, DialecticOutput]):
                 antithesis=input.antithesis,
                 description=f"Tension between: {input.thesis} vs {input.antithesis}",
             )
+            logger.debug(
+                "tension.explicit",
+                extra={"tension_mode": tension.mode.value}
+            )
         else:
             # Implicit dialectic - surface antithesis
+            logger.debug("surfacing.antithesis")
             tension = await self._contradict.invoke((input.thesis, None))
             if tension is None:
                 # No contradiction found - thesis stands alone
+                logger.info(
+                    "dialectic.complete",
+                    extra={
+                        "outcome": "no_antithesis",
+                        "synthesis_achieved": True,
+                    }
+                )
                 return DialecticOutput(
                     synthesis=input.thesis,
                     sublation_notes="No antithesis surfaced. Thesis preserved as-is.",
                     productive_tension=False,
                 )
+            logger.debug(
+                "tension.surfaced",
+                extra={"tension_mode": tension.mode.value}
+            )
 
         # Attempt sublation
+        logger.debug("attempting.sublation")
         result = await self._sublate.invoke(tension)
 
         if isinstance(result, HoldTension):
             # Productive tension - don't force synthesis
+            logger.info(
+                "dialectic.complete",
+                extra={
+                    "outcome": "tension_held",
+                    "reason": result.reason,
+                    "synthesis_achieved": False,
+                }
+            )
             return DialecticOutput(
                 synthesis=None,
                 sublation_notes=result.reason,
@@ -101,6 +139,14 @@ class HegelAgent(Agent[DialecticInput, DialecticOutput]):
 
         # Synthesis achieved
         synthesis: Synthesis = result
+        logger.info(
+            "dialectic.complete",
+            extra={
+                "outcome": "synthesis",
+                "resolution_type": synthesis.resolution_type.value,
+                "has_next_thesis": synthesis.resolution_type == ResolutionType.ELEVATE,
+            }
+        )
         return DialecticOutput(
             synthesis=synthesis.result,
             sublation_notes=synthesis.explanation,
@@ -129,17 +175,34 @@ class ContinuousDialectic(Agent[list[Any], list[DialecticOutput]]):
     async def invoke(self, theses: list[Any]) -> list[DialecticOutput]:
         """Apply dialectic recursively to a list of theses."""
         if len(theses) == 0:
+            logger.warning("continuous_dialectic.empty_input")
             return []
+
+        logger.info(
+            "continuous_dialectic.start",
+            extra={
+                "thesis_count": len(theses),
+                "max_iterations": self._max_iterations,
+            }
+        )
 
         if len(theses) == 1:
             # Single thesis - surface antithesis
             result = await self._hegel.invoke(DialecticInput(thesis=theses[0]))
+            logger.info(
+                "continuous_dialectic.complete",
+                extra={"iterations": 1, "stopped_reason": "single_thesis"}
+            )
             return [result]
 
         outputs = []
         current = theses[0]
 
         for i, antithesis in enumerate(theses[1:], 1):
+            logger.debug(
+                "continuous_dialectic.iteration",
+                extra={"iteration": i, "max_iterations": self._max_iterations}
+            )
             result = await self._hegel.invoke(
                 DialecticInput(thesis=current, antithesis=antithesis)
             )
@@ -147,6 +210,13 @@ class ContinuousDialectic(Agent[list[Any], list[DialecticOutput]]):
 
             if result.productive_tension:
                 # Stop at productive tension
+                logger.info(
+                    "continuous_dialectic.complete",
+                    extra={
+                        "iterations": i,
+                        "stopped_reason": "productive_tension",
+                    }
+                )
                 break
 
             if result.next_thesis:
@@ -154,10 +224,33 @@ class ContinuousDialectic(Agent[list[Any], list[DialecticOutput]]):
             elif result.synthesis:
                 current = result.synthesis
             else:
+                logger.info(
+                    "continuous_dialectic.complete",
+                    extra={
+                        "iterations": i,
+                        "stopped_reason": "no_progression",
+                    }
+                )
                 break
 
             if i >= self._max_iterations:
+                logger.info(
+                    "continuous_dialectic.complete",
+                    extra={
+                        "iterations": i,
+                        "stopped_reason": "max_iterations_reached",
+                    }
+                )
                 break
+
+        if not any([result.productive_tension for result in outputs]) and len(outputs) < len(theses) - 1:
+            logger.warning(
+                "continuous_dialectic.incomplete",
+                extra={
+                    "processed": len(outputs),
+                    "total_theses": len(theses),
+                }
+            )
 
         return outputs
 

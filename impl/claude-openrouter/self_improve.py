@@ -218,13 +218,19 @@ async def analyze_module(
     step_start = time.time()
 
     # Extract observations from code
+    triple_quote = '"""'
+    line_count = len(module.content.splitlines())
+    has_docstring = 'yes' if triple_quote in module.content else 'no'
+    uses_async = 'yes' if 'async def' in module.content else 'no'
+    has_tests = 'no' if 'test_' not in module.name else 'yes'
+
     observations = [
         f"Module: {module.name}",
         f"Category: {module.category}",
-        f"Lines of code: {len(module.content.split(chr(10)))}",
-        f"Has docstring: {'yes' if '\"\"\"' in module.content else 'no'}",
-        f"Uses async: {'yes' if 'async def' in module.content else 'no'}",
-        f"Has tests: {'no' if 'test_' not in module.name else 'yes'}",
+        f"Lines of code: {line_count}",
+        f"Has docstring: {has_docstring}",
+        f"Uses async: {uses_async}",
+        f"Has tests: {has_tests}",
     ]
 
     # Add specific patterns

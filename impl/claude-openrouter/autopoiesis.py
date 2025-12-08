@@ -127,8 +127,33 @@ def spec_impl_contradiction_check(
 # ============================================================================
 
 
-def load_kgents_state() -> list[SpecImplPair]:
-    """Load all spec/impl pairs from the kgents repository."""
+async def _read_file_with_timeout(path: Path, timeout: float = 5.0) -> str | None:
+    """
+    Async file read with timeout and cancellation support.
+    
+    Returns file content or None if file doesn't exist, with timeout protection.
+    """
+    if not path.exists():
+        return None
+    
+    try:
+        # Wrap synchronous I/O in executor to avoid blocking event loop
+        loop = asyncio.get_event_loop()
+        content = await asyncio.wait_for(
+            loop.run_in_executor(None, path.read_text),
+            timeout=timeout
+        )
+        return content
+    except asyncio.TimeoutError:
+        print(f"    ⚠️  Timeout reading {path} (>{timeout}s)")
+        return None
+    except asyncio.CancelledError:
+        print(f"    ⚠️  Cancelled reading {path}")
+        raise
+
+
+async def load_kgents_state() -> list[SpecImplPair]:
+    """Load all spec/impl pairs from the kgents repository with async I/O."""
 
     base = Path(__file__).parent.parent.parent  # kgents root
     spec_dir = base / "spec"
@@ -173,24 +198,29 @@ def load_kgents_state() -> list[SpecImplPair]:
         ("k-gent/evolution", spec_dir / "k-gent" / "evolution.md", impl_dir / "agents" / "k" / "evolution.py"),
     ]
 
-    for name, spec_path, impl_path in mappings:
-        spec_content = None
-        impl_content = None
-
-        if spec_path and spec_path.exists():
-            spec_content = spec_path.read_text()
-        if impl_path and impl_path.exists():
-            impl_content = impl_path.read_text()
-
-        pairs.append(SpecImplPair(
+    # Read all files concurrently with timeout protection
+    async def load_pair(name: str, spec_path: Path | None, impl_path: Path | None) -> SpecImplPair:
+        """Load a single spec/impl pair with concurrent I/O."""
+        spec_content, impl_content = await asyncio.gather(
+            _read_file_with_timeout(spec_path) if spec_path else asyncio.sleep(0, result=None),
+            _read_file_with_timeout(impl_path) if impl_path else asyncio.sleep(0, result=None),
+        )
+        
+        return SpecImplPair(
             name=name,
             spec_path=spec_path if spec_path and spec_path.exists() else None,
             impl_path=impl_path if impl_path and impl_path.exists() else None,
             spec_content=spec_content,
             impl_content=impl_content,
-        ))
+        )
 
-    return pairs
+    # Load all pairs concurrently
+    pairs = await asyncio.gather(*[
+        load_pair(name, spec_path, impl_path)
+        for name, spec_path, impl_path in mappings
+    ])
+
+    return list(pairs)
 
 
 # ============================================================================
@@ -211,7 +241,7 @@ async def run_autopoiesis() -> AnalysisState:
 
     # Step 1: Ground - Load current state
     print("\n[1] GROUND: Loading kgents state...")
-    pairs = load_kgents_state()
+    pairs = await load_kgents_state()
     print(f"    Loaded {len(pairs)} spec/impl pairs")
 
     initial_state = AnalysisState(

@@ -13,7 +13,7 @@ Problems arise when the registers come unknotted.
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 from bootstrap.types import Agent
 
@@ -36,6 +36,13 @@ class RegisterLocation:
     symbolic: float  # 0-1 how much in Symbolic
     imaginary: float  # 0-1 how much in Imaginary
     real_proximity: float  # 0-1 how close to the Real
+
+    def __post_init__(self):
+        """Validate register values are in [0, 1]."""
+        for field_name in ['symbolic', 'imaginary', 'real_proximity']:
+            value = getattr(self, field_name)
+            if not (0 <= value <= 1):
+                raise ValueError(f"{field_name} must be in [0, 1], got {value}")
 
 
 @dataclass
@@ -64,6 +71,18 @@ class LacanOutput:
     objet_petit_a: Optional[str] = None  # What the system is organized around lacking
 
 
+@dataclass
+class LacanError:
+    """Error in register analysis - making the Real explicit."""
+    error_type: str
+    message: str
+    input_snapshot: str
+
+
+# Type alias for validated output
+LacanResult = Union[LacanOutput, LacanError]
+
+
 # Markers for each register
 SYMBOLIC_MARKERS = [
     "defined", "specified", "typed", "interface", "contract",
@@ -84,7 +103,7 @@ REAL_MARKERS = [
 ]
 
 
-class LacanAgent(Agent[LacanInput, LacanOutput]):
+class LacanAgent(Agent[LacanInput, LacanResult]):
     """
     Register triangulation agent.
 
@@ -93,29 +112,61 @@ class LacanAgent(Agent[LacanInput, LacanOutput]):
     2. Gaps (what cannot be represented)
     3. Slippages (miscategorizations)
     4. Knot status (are the registers properly knotted?)
+    
+    Returns LacanResult (union of LacanOutput | LacanError).
+    Failures become data rather than exceptions.
     """
 
     @property
     def name(self) -> str:
         return "H-lacan"
 
-    async def invoke(self, input: LacanInput) -> LacanOutput:
-        """Analyze output for register position."""
-        output_str = str(input.output).lower()
+    async def invoke(self, input: LacanInput) -> LacanResult:
+        """Analyze output for register position. Failures return LacanError."""
+        try:
+            if input.output is None:
+                return LacanError(
+                    error_type="validation",
+                    message="Cannot analyze None output",
+                    input_snapshot="None"
+                )
 
-        location = self._locate_in_registers(output_str)
-        gaps = self._identify_gaps(output_str, input.context)
-        slippages = self._detect_slippages(output_str, location)
-        knot_status = self._assess_knot(location, slippages)
-        objet_a = self._identify_objet_a(output_str, gaps)
+            output_str = str(input.output).lower()
 
-        return LacanOutput(
-            register_location=location,
-            gaps=gaps,
-            slippages=slippages,
-            knot_status=knot_status,
-            objet_petit_a=objet_a,
-        )
+            if not output_str.strip():
+                return LacanError(
+                    error_type="validation",
+                    message="Cannot analyze empty output",
+                    input_snapshot=""
+                )
+
+            location = self._locate_in_registers(output_str)
+            gaps = self._identify_gaps(output_str, input.context)
+            slippages = self._detect_slippages(output_str, location)
+            knot_status = self._assess_knot(location, slippages)
+            objet_a = self._identify_objet_a(output_str, gaps)
+
+            return LacanOutput(
+                register_location=location,
+                gaps=gaps,
+                slippages=slippages,
+                knot_status=knot_status,
+                objet_petit_a=objet_a,
+            )
+
+        except ValueError as e:
+            return LacanError(
+                error_type="value_error",
+                message=str(e),
+                input_snapshot=str(input.output)[:100]
+            )
+        except Exception as e:
+            # The Real intrudes - something we didn't symbolize
+            return LacanError(
+                error_type="real_intrusion",
+                message=f"Unexpected: {type(e).__name__}: {str(e)}",
+                input_snapshot=str(input.output)[:100]
+            )
 
     def _locate_in_registers(self, output: str) -> RegisterLocation:
         """Locate the output in the three registers."""
