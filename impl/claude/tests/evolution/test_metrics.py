@@ -25,10 +25,9 @@ from agents.e import (
     CodeModule,
     EvolutionPipeline,
     EvolutionConfig,
-    EvolutionMetrics,
     ErrorMemory,
 )
-from meta.evolve import discover_modules
+from evolve import discover_modules
 
 
 @dataclass

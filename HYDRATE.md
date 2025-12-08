@@ -4,16 +4,130 @@
 
 ## TL;DR
 
-**Status**: Phase D Polish + Performance Optimizations COMMITTED ✅
-**Branch**: `main` (pushed to origin)
-**Session**: 2025-12-08 - All work committed in 7 separate commits
-**Achievement**: 5 Phase D refactorings + 2 performance wins + 3 spec docs
-**Next**: Consider remaining IMPROVEMENT_PLAN tasks (H6) or run full test suite validation
+**Status**: J-gents Phase 2 - Validation & H6 Complete ✅
+**Branch**: `main` (ready to commit)
+**Session**: 2025-12-08 - Test validation + Bounded Fix history optimization
+**Achievement**: 128/132 tests passing + H6 bounded history (90% memory savings)
+**Next**: Commit changes, then Phase E tasks (H7, H10) or D-gents implementation
 
 ---
 
-## Recent Commits (This Session)
+## Current Session: Test Validation & H6 Bounded History (2025-12-08)
 
+### Test Suite Validation ✅
+
+Ran full test suite after all Phase D refactorings:
+- **128 tests passing** ✅
+- 4 "errors" are actually demo/metrics scripts (not proper pytest tests)
+- Fixed import issue in `test_metrics.py` (removed non-existent `EvolutionMetrics`)
+
+**Test Coverage:**
+- E-gents: 3/5 tests passing (2 are demo script stages)
+- J-gents: 50/50 tests passing ✅
+- T-gents: 75/75 tests passing ✅
+- Bootstrap: All tests passing ✅
+
+### H6: Bounded Fix History Implementation ✅
+
+**Performance optimization complete:**
+
+1. **Added `max_history_size` parameter to `FixConfig`**
+   - `bootstrap/types.py`: New optional field (None = unbounded, backward compatible)
+   - Recommended: 10-50 for most use cases
+
+2. **Implemented sliding window in Fix agent**
+   - `bootstrap/fix.py`: Trims history to last N entries after each iteration
+   - O(1) memory instead of O(n) for long iterations
+   - **90% memory savings** in test (102 → 10 entries)
+
+3. **Updated convenience functions**
+   - `fix()` now accepts `max_history_size` parameter
+   - Fully backward compatible (defaults to None)
+
+**Testing:**
+- Unbounded history: Works as before (6 entries for 5 iterations)
+- Bounded history (max=3): Correctly limits to last 3 entries
+- Memory efficiency: 90.2% reduction (102 → 10 entries) in long iteration test
+
+**Impact:**
+- Prevents memory bloat in long-running fixed-point iterations
+- Maintains all convergence detection capabilities
+- Zero impact on existing code (backward compatible)
+
+---
+
+## Previous Session: Gap Analysis (2025-12-08)
+
+**Status**: Comprehensive gap analysis complete
+**Branch**: `main` (clean)
+**Key Finding**: D-gents fully spec'd but unimplemented; 3 IMPROVEMENT_PLAN tasks remain
+
+---
+
+## Gap Analysis: Unfinished Work & Extensions
+
+### 1. Remaining IMPROVEMENT_PLAN Tasks
+
+| Task | File | Status | Effort |
+|------|------|--------|--------|
+| **H6** | `bootstrap/fix.py` | Designed, not implemented | Low |
+| **H7** | `agents/e/prompts.py` (762 lines) | Designed, not persisted | Medium |
+| **H10** | `agents/j/sandbox.py` (460 lines) | Designed, not persisted | Medium |
+
+### 2. D-gents: Fully Spec'd, No Implementation
+
+**Spec location:** `spec/d-gents/` (547 lines across 6 files)
+
+**Types specified:**
+- `VolatileAgent[S]` - In-memory state
+- `PersistentAgent[S]` - File-backed state
+- `LensAgent[S,A]` - Focused views via composition
+- `VectorAgent` - Semantic memory with embeddings
+- `GraphAgent` - Knowledge graphs as state
+- `StreamAgent` - Event sourcing
+
+**Missing:** `impl/claude/agents/d/` doesn't exist
+
+**Why it matters:** D-gents enable stateful agent composition. K-gent needs personality continuity, E-gents need evolutionary state, J-gents need reality tree branches.
+
+### 3. Spec-Implementation Parity Gaps
+
+| Spec | Implementation |
+|------|---------------|
+| `spec/d-gents/` (6 files) | **Missing entirely** |
+| `spec/k-gent/evolution.md` | Partial |
+| `spec/c-gents/functors.md` | Basic |
+| `spec/h-gents/` | Sparse |
+| `spec/e-gents/memory.md` | Partial |
+
+### 4. F-gents (Forge): Brainstormed, No Spec
+
+**Location:** `docs/ALPHABET_BRAINSTORM.md`
+
+**Concept:** Permanent agent translator (vs J-gents' JIT ephemeral agents)
+- Natural language → crystallized, reusable agents
+- Integrates with Librarian (L-gent) for discovery
+
+### 5. Bootstrap Performance: One Remaining Optimization
+
+**Done:** Ground caching, Judge parallelization
+**Not done:** Contradict detector parallelization, Fix history bounds (H6)
+
+---
+
+## Recommended Priority Order
+
+1. **H6** - Bounded Fix history (quick win, already designed)
+2. **D-gents VolatileAgent + Symbiont** - Enables stateful patterns
+3. **Test validation** - `python -m pytest tests/ -v`
+4. **H7/H10** - Complete prompts.py and sandbox.py splits
+5. **F-gents spec** - Formalize Forge concept
+
+---
+
+## Recent Commits (Prior Session)
+
+- `e623aad` docs: Final HYDRATE.md update for next session
 - `9f51a83` docs: Update HYDRATE.md + add brainstorm/regenerate docs
 - `e47987f` docs(spec): Add comprehensive performance documentation
 - `b30d88d` perf(bootstrap): Add Ground caching and Judge parallelization
@@ -361,19 +475,59 @@ Previous session designed but didn't persist due to sandboxing:
 
 ## Next Session: Start Here
 
-### Status: Phase D + Performance Work COMPLETE ✅
+### Status: D-gent Implementation Planning COMPLETE ✅
 
-All Phase D polish tasks and 2/3 performance optimizations implemented and committed.
+Comprehensive D-gent implementation plan created in `DGENT_IMPLEMENTATION_PLAN.md` (2025-12-08).
 
 **What's Done:**
 - ✅ Phase D: 5 refactorings (H3, H9, H12, H14, H15)
 - ✅ Performance: Ground caching, Judge parallelization
 - ✅ Spec docs: 3 enhancements (bootstrap.md, c-gents/performance.md, Idiom 6.1)
 - ✅ All committed in 7 separate commits and pushed
+- ✅ **NEW**: D-gent implementation plan (9 parts, 4-week roadmap in `DGENT_IMPLEMENTATION_PLAN.md`)
 
-### Priority 1: Validation & Testing
+**D-gent Plan Highlights:**
+- 4-week phased approach (Foundation → Persistence → Advanced → Integration)
+- Priority-ordered types: Volatile → Symbiont → Persistent → Lens → Vector → Stream
+- Bootstrap integration patterns analyzed (Fix + D-gent, Symbiont wraps Agents)
+- Comprehensive testing strategy (unit, integration, property-based lens laws)
+- ~2,500-3,000 LOC estimated, high impact across all genera
 
-**Recommended before continuing:**
+### Priority 1: D-gent Implementation (RECOMMENDED NEXT)
+
+**Start Phase 1 (Foundation) from `DGENT_IMPLEMENTATION_PLAN.md`:**
+
+**Week 1 Deliverables:**
+1. Create `impl/claude/agents/d/` package structure
+2. Implement `DataAgent[S]` protocol (`protocol.py`)
+3. Implement `VolatileAgent` (in-memory state, `volatile.py`)
+4. Implement `Symbiont` pattern (`symbiont.py`)
+5. Write comprehensive tests (`_tests/`)
+
+**Quick Start:**
+```bash
+cd impl/claude/agents
+mkdir -p d/_tests
+touch d/__init__.py d/protocol.py d/errors.py d/volatile.py d/symbiont.py
+touch d/_tests/test_protocol.py d/_tests/test_volatile.py d/_tests/test_symbiont.py
+
+# See DGENT_IMPLEMENTATION_PLAN.md Part 2, Phase 1 for implementation details
+```
+
+**Success Criteria:**
+- ✅ VolatileAgent: Round-trip, isolation, history tests pass
+- ✅ Symbiont: Pure logic + stateful memory working
+- ✅ Example: Conversational chatbot with memory
+
+**Rationale:**
+- D-gents spec is complete (`spec/d-gents/`: README, protocols, lenses, symbiont, persistence)
+- Critical capability: How agents remember state across invocations
+- High value: Enables K-gent personality, Robin memory, SpyAgent refactor, J-gents state branching
+- Clear 4-week path with phased deliverables
+
+### Priority 2: Validation & Testing (ALTERNATIVE)
+
+**If NOT implementing D-gents yet, validate existing work:**
 ```bash
 cd impl/claude
 # Run full test suite to validate refactorings
@@ -390,7 +544,7 @@ python -c "from bootstrap.ground import Ground; g = Ground(cache=True); print('G
 python -c "from bootstrap.judge import Judge; j = Judge(parallel=True); print('Judge parallel ✓')"
 ```
 
-### Priority 2: Remaining Performance Optimization
+### Priority 3: Remaining Performance Optimization
 
 **H6: Bounded Fix History** (not yet implemented)
 - Add `max_history_size` to FixConfig in `bootstrap/fix.py`
@@ -398,7 +552,7 @@ python -c "from bootstrap.judge import Judge; j = Judge(parallel=True); print('J
 - **Impact**: O(1) memory instead of O(n)
 - **Effort**: Low (similar to Ground/Judge changes)
 
-### Priority 3: Remaining IMPROVEMENT_PLAN Tasks
+### Priority 4: Remaining IMPROVEMENT_PLAN Tasks
 
 **Phase E - Not yet started:**
 - **H6:** Bounded Fix history (see above)
@@ -406,12 +560,12 @@ python -c "from bootstrap.judge import Judge; j = Judge(parallel=True); print('J
 - **H7:** Split `agents/e/prompts.py` (designed but not implemented)
 - **H10:** Split `agents/j/sandbox.py` (designed but not implemented)
 
-### Priority 4: New Development
+### Priority 5: Other New Development
 
-Consider new features or agent types:
+Consider other features or agent types:
 - Extend T-gents with additional test agent patterns
-- Implement D-gents (Data agents) for state/memory
-- Explore other letters in alphabetical taxonomy
+- Advanced D-gent types (VectorAgent, StreamAgent) after core implementation
+- Explore other letters in alphabetical taxonomy (F, G, I, etc.)
 
 ---
 

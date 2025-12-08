@@ -89,6 +89,9 @@ class Fix(Agent[tuple[Callable[[A], Awaitable[A]], A], FixResult[A]], Generic[A]
         initial_budget = self._config.entropy_budget
         current_budget = initial_budget
 
+        # Performance: Bounded history sliding window (H6)
+        max_history = self._config.max_history_size
+
         for i in range(self._config.max_iterations):
             # Check entropy budget (J-gents: force stop if budget exhausted)
             if current_budget is not None:
@@ -120,6 +123,10 @@ class Fix(Agent[tuple[Callable[[A], Awaitable[A]], A], FixResult[A]], Generic[A]
             previous = current
             current = await transform(current)
             history.append(current)
+
+            # Performance: Trim history to max_history_size if bounded (H6)
+            if max_history is not None and len(history) > max_history:
+                history = history[-max_history:]
 
             # Check for convergence
             if self._config.equality_check(previous, current):
@@ -178,6 +185,7 @@ async def fix(
     max_iterations: int = 100,
     equality_check: Optional[Callable[[A, A], bool]] = None,
     entropy_budget: Optional[float] = None,
+    max_history_size: Optional[int] = None,
 ) -> FixResult[A]:
     """
     Find fixed point of transform.
@@ -190,6 +198,7 @@ async def fix(
         max_iterations: Maximum iterations before giving up
         equality_check: Custom equality (default: ==)
         entropy_budget: J-gents entropy budget (diminishes per iteration)
+        max_history_size: Bounded history size (None = unbounded)
 
     Returns:
         FixResult with converged value and metadata
@@ -198,6 +207,7 @@ async def fix(
         max_iterations=max_iterations,
         equality_check=equality_check or (lambda a, b: a == b),
         entropy_budget=entropy_budget,
+        max_history_size=max_history_size,
     )
     return await Fix(config).invoke((transform, initial))
 

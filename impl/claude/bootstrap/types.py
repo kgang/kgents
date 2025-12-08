@@ -424,6 +424,11 @@ class FixConfig(Generic[A]):
     # J-gents entropy budget: diminishes with recursion depth
     # None means no budget tracking (backward compatible)
     entropy_budget: Optional[float] = None
+    # Performance: Bounded history (H6 optimization)
+    # If set, keep only last N iterations in history (sliding window)
+    # None means unbounded (keep all iterations, backward compatible)
+    # Recommended: 10-50 for most use cases
+    max_history_size: Optional[int] = None
 
 
 @dataclass(frozen=True)
