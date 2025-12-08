@@ -188,6 +188,7 @@ All 5 phases done. Run: `cd impl/zen-agents && uv run zen-agents`
 
 ## Recent Changes
 
+- **Autopoiesis Protocol** (Dec 2025): Updated bootstrap protocol to emphasize using kgents to build kgents; added autopoiesis score metric (>50% target) and 6 required patterns
 - **Analysis Worker Error Handling** (Dec 2025): Fixed silent exception swallowing in `_do_analysis` worker and LogViewer watchers; added `exclusive=True` to cancel stale analysis workers
 - **Session Remove Fix** (Dec 2025): `remove_session()` now emits `SessionRemoved` event so UI refreshes after removal
 - **LogViewer Layout Fix** (Dec 2025): Analysis panel now uses flexible `1fr` sizing with `min-height: 8` instead of fixed 30%
