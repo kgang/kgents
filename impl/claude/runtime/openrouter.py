@@ -8,7 +8,7 @@ import os
 from typing import Any, TypeVar, get_args, get_origin
 from dataclasses import dataclass
 
-from .base import Runtime, LLMAgent, AgentContext, AgentResult
+from .base import Runtime, LLMAgent, AgentContext, AgentResult, with_retry, TransientError, PermanentError
 
 A = TypeVar("A")
 B = TypeVar("B")
@@ -18,18 +18,20 @@ B = TypeVar("B")
 class APIClient:
     """
     Morphism: AgentContext → (str, dict[str, Any])
-    
+
     Pure API client that encapsulates HTTP interaction with OpenRouter.
     Composable, testable, and reusable across different runtimes.
     """
-    
+
     api_key: str
     model: str
     base_url: str = "https://openrouter.ai/api/v1"
     site_url: str | None = None
     site_name: str | None = None
     timeout: float = 120.0
-    
+    max_retries: int = 3
+    backoff_base: float = 2.0
+
     _client: Any = None
     
     def _ensure_client(self):
@@ -53,44 +55,85 @@ class APIClient:
                 )
         return self._client
     
+    def _is_transient_error(self, error: Exception) -> bool:
+        """Classify HTTP errors as transient or permanent."""
+        error_str = str(error).lower()
+        error_type = type(error).__name__
+
+        # Already classified
+        if isinstance(error, TransientError):
+            return True
+        if isinstance(error, PermanentError):
+            return False
+
+        # HTTP status code errors
+        if "429" in error_str or "rate limit" in error_str:
+            return True
+        if "500" in error_str or "502" in error_str or "503" in error_str or "504" in error_str:
+            return True
+        if "timeout" in error_str:
+            return True
+        if "connection" in error_str or "network" in error_str:
+            return True
+
+        # Permanent HTTP errors
+        if any(code in error_str for code in ["400", "401", "403", "404"]):
+            return False
+
+        # Default to transient
+        return True
+
     async def __call__(self, context: AgentContext) -> tuple[str, dict[str, Any]]:
         """
         Execute the morphism: AgentContext → (response_text, metadata).
-        
+
         This makes APIClient a callable morphism that can be composed.
+        Uses Fix pattern retry with exponential backoff.
         """
-        client = self._ensure_client()
-        
-        messages = [
-            {"role": "system", "content": context.system_prompt},
-            *context.messages,
-        ]
-        
-        payload = {
-            "model": self.model,
-            "messages": messages,
-            "max_tokens": context.max_tokens,
-            "temperature": context.temperature,
-        }
-        
-        response = await client.post("/chat/completions", json=payload)
-        response.raise_for_status()
-        data = response.json()
-        
-        text = data["choices"][0]["message"]["content"]
-        usage = data.get("usage", {})
-        
-        metadata = {
-            "model": data.get("model", self.model),
-            "usage": {
-                "input_tokens": usage.get("prompt_tokens", 0),
-                "output_tokens": usage.get("completion_tokens", 0),
-                "total_tokens": usage.get("total_tokens", 0),
-            },
-            "finish_reason": data["choices"][0].get("finish_reason"),
-        }
-        
-        return text, metadata
+        async def _attempt() -> tuple[str, dict[str, Any]]:
+            """Single API call attempt."""
+            client = self._ensure_client()
+
+            messages = [
+                {"role": "system", "content": context.system_prompt},
+                *context.messages,
+            ]
+
+            payload = {
+                "model": self.model,
+                "messages": messages,
+                "max_tokens": context.max_tokens,
+                "temperature": context.temperature,
+            }
+
+            response = await client.post("/chat/completions", json=payload)
+            response.raise_for_status()
+            data = response.json()
+
+            text = data["choices"][0]["message"]["content"]
+            usage = data.get("usage", {})
+
+            metadata = {
+                "model": data.get("model", self.model),
+                "usage": {
+                    "input_tokens": usage.get("prompt_tokens", 0),
+                    "output_tokens": usage.get("completion_tokens", 0),
+                    "total_tokens": usage.get("total_tokens", 0),
+                },
+                "finish_reason": data["choices"][0].get("finish_reason"),
+            }
+
+            return text, metadata
+
+        # Use Fix pattern retry
+        result, _ = await with_retry(
+            _attempt,
+            max_attempts=self.max_retries,
+            backoff_base=self.backoff_base,
+            is_transient=self._is_transient_error,
+        )
+
+        return result
     
     async def close(self):
         """Release resources."""
@@ -117,6 +160,8 @@ class OpenRouterRuntime(Runtime):
         site_url: str | None = None,
         site_name: str | None = None,
         validate_types: bool = True,
+        max_retries: int = 3,
+        backoff_base: float = 2.0,
     ):
         """
         Initialize OpenRouter runtime.
@@ -127,15 +172,19 @@ class OpenRouterRuntime(Runtime):
             site_url: Your site URL for rankings (optional).
             site_name: Your site name for rankings (optional).
             validate_types: If True, validate parse_response output types at runtime.
+            max_retries: Maximum retry attempts on transient errors (default: 3).
+            backoff_base: Base for exponential backoff in seconds (default: 2.0).
         """
         self._validate_types = validate_types
-        
+
         # Initialize composable API client morphism
         self._client = APIClient(
             api_key=api_key or os.environ.get("OPENROUTER_API_KEY"),
             model=model or self.DEFAULT_MODEL,
             site_url=site_url,
             site_name=site_name,
+            max_retries=max_retries,
+            backoff_base=backoff_base,
         )
 
     def _validate_output_type(self, output: Any, agent: LLMAgent[A, B]) -> None:

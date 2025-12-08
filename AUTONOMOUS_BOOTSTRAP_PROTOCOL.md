@@ -40,7 +40,7 @@ design = await runtime.execute(creativity_coach(), CreativityInput(
 ## Ground: The Bootstrap Kernel
 
 ```
-impl/claude-openrouter/
+impl/claude/
 ├── bootstrap/           # 7 irreducible agents
 │   ├── id.py           # Identity: A → A
 │   ├── compose.py      # Composition: (Agent, Agent) → Agent
@@ -175,7 +175,7 @@ Implementation is complete when:
 def protocol_complete() -> bool:
     return all([
         spec_exists(f"spec/{letter}-gents/"),
-        impl_exists(f"impl/claude-openrouter/agents/{letter}/"),
+        impl_exists(f"impl/claude/agents/{letter}/"),
         Judge(impl, Principles).verdict == "accept",
         Contradict(impl, spec) is None,
         autopoiesis_score() > 0.5,

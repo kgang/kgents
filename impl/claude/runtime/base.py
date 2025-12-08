@@ -7,7 +7,7 @@ The runtime handles the actual API calls and response parsing.
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Generic, TypeVar, Optional, Callable, Awaitable
+from typing import Any, Generic, TypeVar, Optional, Callable, Awaitable, Union
 import json
 import asyncio
 
@@ -16,6 +16,73 @@ from bootstrap import Agent
 A = TypeVar("A")
 B = TypeVar("B")
 C = TypeVar("C")
+E = TypeVar("E")  # Error type
+
+
+# --- Result Type (Either-based error handling) ---
+# This provides transparent error handling as per Issue #6
+
+
+@dataclass
+class Success(Generic[B]):
+    """Success result containing value."""
+    value: B
+
+    def is_success(self) -> bool:
+        return True
+
+    def is_error(self) -> bool:
+        return False
+
+    def unwrap(self) -> B:
+        """Extract the value."""
+        return self.value
+
+    def unwrap_or(self, default: B) -> B:
+        """Extract value or return default."""
+        return self.value
+
+
+@dataclass
+class Error(Generic[E]):
+    """Error result containing error information."""
+    error: E
+    message: str = ""
+    recoverable: bool = True  # Whether error is recoverable via retry
+
+    def is_success(self) -> bool:
+        return False
+
+    def is_error(self) -> bool:
+        return True
+
+    def unwrap(self) -> Any:
+        """Raises exception - can't unwrap an error."""
+        raise RuntimeError(f"Cannot unwrap Error: {self.message or self.error}")
+
+    def unwrap_or(self, default: B) -> B:
+        """Return default value."""
+        return default
+
+
+# Result is Either[Error, Success]
+# Following Railway Oriented Programming pattern
+Result = Union[Success[B], Error[E]]
+
+
+def success(value: B) -> Success[B]:
+    """Create a Success result."""
+    return Success(value)
+
+
+def error(err: E, message: str = "", recoverable: bool = True) -> Error[E]:
+    """Create an Error result."""
+    return Error(error=err, message=message, recoverable=recoverable)
+
+
+def result_from_exception(e: Exception, recoverable: bool = True) -> Error[Exception]:
+    """Convert an exception to an Error result."""
+    return Error(error=e, message=str(e), recoverable=recoverable)
 
 
 @dataclass

@@ -13,7 +13,7 @@ import time
 import uuid
 from typing import Any, TypeVar, Protocol
 
-from .base import Runtime, LLMAgent, AgentContext, AgentResult
+from .base import Runtime, LLMAgent, AgentContext, AgentResult, with_retry, TransientError, PermanentError
 
 A = TypeVar("A")
 B = TypeVar("B")
@@ -61,6 +61,8 @@ class ClaudeRuntime(Runtime):
         auth_token: str | None = None,
         model: str | None = None,
         client: Any | None = None,
+        max_retries: int = 3,
+        backoff_base: float = 2.0,
     ):
         """
         Initialize Claude runtime.
@@ -73,11 +75,15 @@ class ClaudeRuntime(Runtime):
             model: Model to use. Defaults to claude-sonnet-4-20250514.
             client: Pre-configured Anthropic client. If provided, api_key and
                    auth_token are ignored. Useful for testing and custom configs.
+            max_retries: Maximum retry attempts on transient errors (default: 3).
+            backoff_base: Base for exponential backoff in seconds (default: 2.0).
         """
         self._api_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
         self._auth_token = auth_token or os.environ.get("CLAUDE_CODE_OAUTH_TOKEN")
         self._model = model or self.DEFAULT_MODEL
         self._client = client
+        self._max_retries = max_retries
+        self._backoff_base = backoff_base
 
     def _ensure_client(self):
         """Lazy-initialize the Anthropic client."""
@@ -101,14 +107,67 @@ class ClaudeRuntime(Runtime):
                 )
         return self._client
 
+    def _is_transient_error(self, error: Exception) -> bool:
+        """
+        Classify if an error is transient (should retry) or permanent.
+
+        Transient errors: rate limits, timeouts, temporary network issues.
+        Permanent errors: auth failures, invalid requests, content filtering.
+        """
+        error_str = str(error).lower()
+        error_type = type(error).__name__
+
+        # Already classified
+        if isinstance(error, TransientError):
+            return True
+        if isinstance(error, PermanentError):
+            return False
+
+        # Rate limit errors - always transient
+        if "rate" in error_str and "limit" in error_str:
+            return True
+        if "429" in error_str or error_type == "RateLimitError":
+            return True
+
+        # Timeout errors - transient
+        if "timeout" in error_str or error_type in ("TimeoutError", "asyncio.TimeoutError"):
+            return True
+
+        # Overloaded errors - transient
+        if "overloaded" in error_str or "529" in error_str:
+            return True
+
+        # Connection errors - transient
+        if any(term in error_str for term in ["connection", "network", "dns"]):
+            return True
+
+        # Auth errors - permanent
+        if any(term in error_str for term in ["auth", "unauthorized", "forbidden", "401", "403"]):
+            return False
+
+        # Invalid request errors - permanent
+        if any(term in error_str for term in ["invalid", "malformed", "400"]):
+            return False
+
+        # Content filter errors - permanent
+        if "content" in error_str and "filter" in error_str:
+            return False
+
+        # Default to transient for unknown errors (conservative)
+        return True
+
     async def raw_completion(
         self,
         context: AgentContext,
     ) -> tuple[str, dict[str, Any]]:
-        """Execute raw completion via Claude API."""
+        """
+        Execute raw completion via Claude API with retry logic.
+
+        Uses Fix pattern with exponential backoff for transient errors.
+        """
         trace_id = str(uuid.uuid4())
         start_time = time.perf_counter()
-        
+
         logger.info(
             "raw_completion.start",
             extra={
@@ -118,8 +177,9 @@ class ClaudeRuntime(Runtime):
                 "message_count": len(context.messages),
             },
         )
-        
-        try:
+
+        async def _attempt() -> tuple[str, dict[str, Any]]:
+            """Single attempt at completion."""
             client = self._ensure_client()
 
             response = await client.messages.create(
@@ -141,21 +201,33 @@ class ClaudeRuntime(Runtime):
                 "trace_id": trace_id,
             }
 
+            return text, metadata
+
+        try:
+            # Use Fix pattern retry with exponential backoff
+            result, attempts = await with_retry(
+                _attempt,
+                max_attempts=self._max_retries,
+                backoff_base=self._backoff_base,
+                is_transient=self._is_transient_error,
+            )
+
             elapsed = time.perf_counter() - start_time
             logger.info(
                 "raw_completion.success",
                 extra={
                     "trace_id": trace_id,
-                    "model": response.model,
-                    "input_tokens": response.usage.input_tokens,
-                    "output_tokens": response.usage.output_tokens,
-                    "stop_reason": response.stop_reason,
+                    "model": result[1]["model"],
+                    "input_tokens": result[1]["usage"]["input_tokens"],
+                    "output_tokens": result[1]["usage"]["output_tokens"],
+                    "stop_reason": result[1]["stop_reason"],
                     "elapsed_seconds": round(elapsed, 3),
+                    "retry_attempts": attempts,
                 },
             )
 
-            return text, metadata
-            
+            return result
+
         except Exception as e:
             elapsed = time.perf_counter() - start_time
             logger.error(

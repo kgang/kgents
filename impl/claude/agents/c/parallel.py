@@ -10,7 +10,7 @@ input ──┼→ [B] ─┼→ combine → output
 """
 
 import asyncio
-from typing import TypeVar, Callable, Sequence, Any
+from typing import TypeVar, Callable, Sequence, Any, Optional
 from dataclasses import dataclass
 
 from bootstrap.types import Agent
@@ -18,6 +18,27 @@ from bootstrap.types import Agent
 A = TypeVar("A")
 B = TypeVar("B")
 C = TypeVar("C")
+
+
+@dataclass
+class ParallelConfig:
+    """
+    Configuration for parallel execution with resource limits.
+
+    Prevents DoS attacks from unbounded concurrent execution.
+    """
+    max_concurrent: int = 10  # Max parallel tasks
+    timeout_per_agent: Optional[float] = None  # Per-agent timeout in seconds
+    total_timeout: Optional[float] = None  # Total execution timeout
+
+    def __post_init__(self) -> None:
+        """Validate configuration."""
+        if self.max_concurrent < 1:
+            raise ValueError(f"max_concurrent must be >= 1, got {self.max_concurrent}")
+        if self.timeout_per_agent is not None and self.timeout_per_agent <= 0:
+            raise ValueError(f"timeout_per_agent must be > 0, got {self.timeout_per_agent}")
+        if self.total_timeout is not None and self.total_timeout <= 0:
+            raise ValueError(f"total_timeout must be > 0, got {self.total_timeout}")
 
 
 @dataclass
@@ -43,11 +64,19 @@ class ParallelAgent(Agent[A, list[B]]):
     All agents receive the same input.
     Returns list of all outputs (order preserved).
     Raises exception if any agent fails.
+
+    Security: Enforces resource limits via ParallelConfig to prevent DoS.
     """
 
-    def __init__(self, agents: Sequence[Agent[A, B]], allow_partial: bool = False):
+    def __init__(
+        self,
+        agents: Sequence[Agent[A, B]],
+        allow_partial: bool = False,
+        config: Optional[ParallelConfig] = None,
+    ):
         self._agents = list(agents)
         self._allow_partial = allow_partial
+        self._config = config or ParallelConfig()
         names = ", ".join(a.name for a in self._agents)
         self._name = f"Parallel({names})"
 
@@ -56,28 +85,88 @@ class ParallelAgent(Agent[A, list[B]]):
         return self._name
 
     async def invoke(self, input: A) -> list[B]:
-        """Run all agents concurrently, collect results."""
-        if self._allow_partial:
-            result = await self._invoke_with_partial(input)
-            return result.all_results_or_raise()
+        """
+        Run all agents concurrently with resource limits.
+
+        Uses semaphore to limit concurrent executions and prevent resource exhaustion.
+        """
+        # Create semaphore for concurrency limit
+        semaphore = asyncio.Semaphore(self._config.max_concurrent)
+
+        async def _run_with_limit(agent: Agent[A, B]) -> B:
+            """Execute single agent with semaphore and timeout."""
+            async with semaphore:
+                if self._config.timeout_per_agent:
+                    return await asyncio.wait_for(
+                        agent.invoke(input),
+                        timeout=self._config.timeout_per_agent
+                    )
+                else:
+                    return await agent.invoke(input)
+
+        tasks = [_run_with_limit(agent) for agent in self._agents]
+
+        if self._config.total_timeout:
+            # Apply total timeout to all tasks
+            if self._allow_partial:
+                result = await asyncio.wait_for(
+                    self._invoke_with_partial_limited(input, semaphore),
+                    timeout=self._config.total_timeout
+                )
+                return result.all_results_or_raise()
+            else:
+                return await asyncio.wait_for(
+                    asyncio.gather(*tasks),
+                    timeout=self._config.total_timeout
+                )
         else:
-            tasks = [agent.invoke(input) for agent in self._agents]
-            return await asyncio.gather(*tasks)
+            if self._allow_partial:
+                result = await self._invoke_with_partial_limited(input, semaphore)
+                return result.all_results_or_raise()
+            else:
+                return await asyncio.gather(*tasks)
     
     async def _invoke_with_partial(self, input: A) -> ParallelResult:
-        """Run with partial failure tracking (for subclasses)."""
+        """Run with partial failure tracking (legacy, no resource limits)."""
         tasks = [agent.invoke(input) for agent in self._agents]
         results = await asyncio.gather(*tasks, return_exceptions=True)
-        
+
         successes = []
         failures = []
-        
+
         for idx, result in enumerate(results):
             if isinstance(result, Exception):
                 failures.append((idx, result))
             else:
                 successes.append((idx, result))
-        
+
+        return ParallelResult(successes=successes, failures=failures)
+
+    async def _invoke_with_partial_limited(self, input: A, semaphore: asyncio.Semaphore) -> ParallelResult:
+        """Run with partial failure tracking AND resource limits."""
+        async def _run_with_limit(agent: Agent[A, B]) -> B:
+            """Execute single agent with semaphore and timeout."""
+            async with semaphore:
+                if self._config.timeout_per_agent:
+                    return await asyncio.wait_for(
+                        agent.invoke(input),
+                        timeout=self._config.timeout_per_agent
+                    )
+                else:
+                    return await agent.invoke(input)
+
+        tasks = [_run_with_limit(agent) for agent in self._agents]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        successes = []
+        failures = []
+
+        for idx, result in enumerate(results):
+            if isinstance(result, Exception):
+                failures.append((idx, result))
+            else:
+                successes.append((idx, result))
+
         return ParallelResult(successes=successes, failures=failures)
 
 
@@ -175,9 +264,26 @@ class RaceAgent(Agent[A, B]):
 
 # --- Convenience functions ---
 
-def parallel(*agents: Agent[A, B]) -> ParallelAgent[A, B]:
-    """Create a parallel agent from multiple agents."""
-    return ParallelAgent(agents)
+def parallel(
+    *agents: Agent[A, B],
+    config: Optional[ParallelConfig] = None
+) -> ParallelAgent[A, B]:
+    """
+    Create a parallel agent from multiple agents.
+
+    Args:
+        *agents: Agents to run in parallel
+        config: Optional resource limits configuration
+
+    Example:
+        # With default limits (max 10 concurrent)
+        result = await parallel(agent1, agent2, agent3).invoke(input)
+
+        # Custom limits
+        config = ParallelConfig(max_concurrent=5, timeout_per_agent=30.0)
+        result = await parallel(agent1, agent2, config=config).invoke(input)
+    """
+    return ParallelAgent(agents, config=config)
 
 
 def fan_out(*agents: Agent[A, Any]) -> FanOutAgent[A]:

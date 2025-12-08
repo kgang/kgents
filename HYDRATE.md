@@ -9,14 +9,21 @@
 
 ## Current State (Dec 8, 2025)
 
-**Latest:** Bootstrap Documents Improvement Plan ✅
-- Generated comprehensive improvement plan for AUTONOMOUS_BOOTSTRAP_PROTOCOL.md and BOOTSTRAP_PROMPT.md
-- 51 improvement hypotheses identified (23 for PROTOCOL, 28 for PROMPT)
-- All 5 critical design decisions resolved: Judge (7 mini-judges), Autopoiesis (vibes), Directory (impl/claude/), Regeneration (behavior+vibes), Ground (agent-based)
-- Plan: 6 phases, 4-5 weeks, 74-104 hours estimated
-- **Next:** Implement Phase 1.1 (worked example for Id agent) and Phase 3.2 (seven mini-judges pattern)
+**Latest:** Phase 3 Infrastructure COMPLETE! ✅ (Dec 8, 2025)
+- Issue #4: Runtime retry logic with Fix pattern + exponential backoff (ClaudeRuntime, OpenRouterRuntime)
+  - Smart error classification (transient vs permanent)
+  - Configurable max_retries and backoff_base
+  - Logging includes retry_attempts metadata
+- Issue #6: Result/Either error transparency types (Success, Error, Result) - BREAKING but backward compatible
+  - Success[B] and Error[E] types with is_success(), is_error(), unwrap(), unwrap_or()
+  - Helper functions: success(), error(), result_from_exception()
+  - Exported from runtime module for transparent error handling
+- Issue #9: Parallel resource limits - DoS vulnerability FIXED
+  - ParallelConfig with max_concurrent (default: 10), timeout_per_agent, total_timeout
+  - Semaphore-based concurrency limiting
+  - Applied to ParallelAgent, configurable via parallel() function
 
-**Previously:** Phase 2 COMPLETE! Both architecture refactors merged (Issue #10: TensionDetector Protocol, Issue #5: EvolutionAgent decomposed). Phase 1 complete! Type system foundation fixed.
+**Previously:** Bootstrap Documents Improvement Plan. Phase 2 complete! Architecture refactors (TensionDetector Protocol, EvolutionAgent composition). Phase 1 complete! Type system foundation fixed.
 
 | Component | Status |
 |-----------|--------|
@@ -202,14 +209,10 @@ LLM execution layer for agents:
 | A-gents | ✅ DONE | AbstractSkeleton (alias), AgentMeta, CreativityCoach |
 | B-gents B.1 | ✅ DONE | HypothesisEngine |
 | B-gents B.2 | ✅ DONE | Robin (scientific companion) |
+| Phase 3 Infrastructure | ✅ DONE | Issue #4 (retry), #6 (Result types), #9 (parallel limits) |
 
 **What's Next (IMPLEMENTATION_PLAN.md):**
-1. **Phase 3 - Infrastructure** (Week 3-4, can run parallel):
-   - Issue #4: Runtime retry logic using Fix pattern (12-16 hrs) - exponential backoff
-   - Issue #6: Error handling transparency with Result/Either (16-24 hrs) - BREAKING, high risk
-2. **Phase 0 - Security Hotfix** (if needed):
-   - Issue #9: Parallel resource limits in parallel.py (4-8 hrs) - DoS vulnerability
-3. **Phase 4-5 - Features** (defer as technical debt):
+1. **Phase 4-5 - Features** (defer as technical debt):
    - Issue #3: Judge decomposition into 7 sub-judges (24-32 hrs) - BREAKING
    - Issue #7: Hegel observability with lineage tracking (8-12 hrs)
    - Issue #8: Robin fallback mode for testing (12-16 hrs)

@@ -98,11 +98,13 @@ You cannot create Ground from nothing. You cannot replace human judgment. You CA
 
 ## Implementation Targets
 
-### Target: `impl/claude-openrouter/`
+### Target: `impl/claude/`
 Reference implementation. Bootstrap agents as Python, LLM runtime via Claude + OpenRouter.
 
+**Note**: Formerly specified as `impl/claude-openrouter/` in earlier docs. Path canonicalized to `impl/claude/` in Phase 1 (type system foundation).
+
 ```
-impl/claude-openrouter/
+impl/claude/
 ├── bootstrap/      # The 7 primitives
 ├── agents/{a,b,c,h,k}/  # 5 genera
 └── runtime/        # LLM-backed agents
