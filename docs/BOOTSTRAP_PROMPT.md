@@ -63,7 +63,9 @@ You cannot create Ground from nothing. You cannot replace human judgment. You CA
 2. `spec/principles.md` - Judge's 7 criteria
 3. `spec/anatomy.md` - What constitutes an agent
 4. `spec/c-gents/composition.md` - How agents compose
-5. `AUTONOMOUS_BOOTSTRAP_PROTOCOL.md` - The protocol
+5. `../AUTONOMOUS_BOOTSTRAP_PROTOCOL.md` - Meta-level protocol for Kent + Claude Code collaboration
+
+**Note:** This document provides implementation guidance for building the bootstrap agents. For the meta-level protocol governing how Kent and Claude Code collaborate during development, see `../AUTONOMOUS_BOOTSTRAP_PROTOCOL.md`.
 
 ---
 
@@ -82,6 +84,46 @@ You cannot create Ground from nothing. You cannot replace human judgment. You CA
 | **Contradict** | `(A, B) → Tension \| None` | Detect conflicts |
 | **Sublate** | `Tension → Synthesis \| Hold` | Resolve or hold |
 | **Fix** | `(A → A) → A` | Fixed-point iteration |
+
+---
+
+## Implementation Dependency Graph
+
+The 7 bootstrap agents have dependencies on each other. Implement them in this order:
+
+```
+Level 0 (Foundation):
+  └─ types.py          # Agent, Tension, Verdict, Synthesis, Result types
+
+Level 1 (No dependencies):
+  ├─ id.py             # Identity agent (A → A)
+  └─ ground.py         # Ground agent (Void → Facts)
+
+Level 2 (Depend on Level 0-1):
+  ├─ compose.py        # Composition (depends on Agent, Id)
+  └─ contradict.py     # Contradiction detection (depends on Tension)
+
+Level 3 (Depend on Level 0-2):
+  ├─ judge.py          # Judgment (depends on Verdict, compose for mini-judges)
+  └─ sublate.py        # Synthesis (depends on Tension, Synthesis)
+
+Level 4 (Depend on all others):
+  └─ fix.py            # Fixed-point iteration (depends on Agent, compose)
+```
+
+**Implementation Strategy:**
+1. Start with `types.py` - defines all core data structures
+2. Implement Level 1 agents (id, ground) - these are simplest and have no agent dependencies
+3. Implement Level 2 agents (compose, contradict) - now you can compose agents
+4. Implement Level 3 agents (judge, sublate) - these use composition
+5. Implement Level 4 (fix) - uses all previous agents for iteration patterns
+
+**Verification at each level:**
+- Write tests verifying composition laws (associativity, identity)
+- Check type safety with mypy
+- Ensure all agents satisfy `Agent[A, B]` protocol
+
+---
 
 ### Judge: Seven Mini-Judges Architecture
 
@@ -138,6 +180,51 @@ The composed pipeline accumulates partial verdicts. The final agent in the chain
 4. **Contradict** - Surface tensions before they become errors
 5. **Sublate** - Synthesize or consciously hold
 6. **Fix** - Iterate until stable (Judge accepts, Contradict finds nothing)
+
+### Ground Extraction via GroundParser Agent
+
+**Agent-based parsing (increases autopoiesis):**
+
+Instead of manually parsing `persona.md`, use a `GroundParser` agent to extract structured `PersonaSeed` data from markdown. This demonstrates using agents to build agents - a key autopoiesis pattern.
+
+**GroundParser Agent:**
+```python
+class GroundParser(LLMAgent[str, PersonaSeed]):
+    """
+    Parse natural language persona spec → structured PersonaSeed.
+
+    Input: markdown string from persona.md
+    Output: PersonaSeed(name, values, interests, style, dislikes, context)
+
+    Pattern:
+    - Markdown sections → PersonaSeed fields
+    - LLM extracts semantic content
+    - Validates completeness (all required fields present)
+    """
+    ...
+```
+
+**Usage in Ground agent:**
+```python
+async def invoke(self, _: None) -> PersonaSeed:
+    # Read persona.md
+    with open("spec/k-gent/persona.md") as f:
+        markdown = f.read()
+
+    # Use GroundParser to extract structured data
+    parser = GroundParser()
+    seed = await runtime.execute(parser, markdown)
+
+    return seed  # PersonaSeed ready for use
+```
+
+**Why this matters:**
+- **Autopoiesis**: Agents extract agent specifications
+- **Flexibility**: Easy to update persona.md without changing parsing code
+- **Validation**: LLM can detect missing or inconsistent persona fields
+- **Composability**: GroundParser is itself an agent (A → B morphism)
+
+**Implementation:** See `impl/claude/bootstrap/ground_parser.py`
 
 ---
 

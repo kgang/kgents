@@ -241,6 +241,8 @@ Neither Kent nor Claude Code is "in charge." The collaboration is heterarchical:
    - THEN crystallize into spec
    - Pattern: `agents → spec.md → refined implementation`
 
+See `docs/BOOTSTRAP_PROMPT.md` for detailed implementation guidance for each agent.
+
 **Decision rule**:
 ```
 IF spec exists THEN
@@ -1100,6 +1102,20 @@ hypotheses = await runtime.execute(hypothesis_engine(), HypothesisInput(
 ```
 
 **This is the protocol being self-referential**: Use the bootstrap agents to observe and improve protocol execution itself.
+
+---
+
+## Case Study: Phase 1 Bootstrap Implementation
+
+For a concrete example of this protocol in action, see `impl/claude/IMPLEMENTATION_PLAN.md` which documents the 10 Critical Fixes applied to the bootstrap agents themselves.
+
+**Key observations from that implementation:**
+- **Issue #1-2 (Type Fixes)**: Fix and Compose types corrected via systematic type checking → Judge verification → no breaking changes
+- **Issue #5 (EvolutionAgent)**: Tension detected (orchestration vs composition) → Sublated into 4 handler classes → 58% code reduction
+- **Issue #10 (TensionDetector Protocol)**: Extensibility added via Protocol pattern → composable contradiction detection
+- **Autopoiesis**: Used agents (Contradict, Judge, Hegel) to improve agent implementation → self-referential development
+
+**Pattern demonstrated**: The protocol successfully guided refactoring of its own foundation (the bootstrap agents) without breaking composition laws.
 
 ---
 

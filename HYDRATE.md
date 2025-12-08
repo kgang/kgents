@@ -9,9 +9,14 @@
 
 ## Current State (Dec 8, 2025)
 
-**Latest:** Bootstrap Docs Phase 4 Complete ✅ (commit 15aaa26, pushed to origin/main)
+**Latest:** Bootstrap Docs Phase 5 Complete ✅ (Phases 1-5 done, Phase 6 optional)
 
 **Completed this session:**
+- ✅ **Bootstrap Docs Phase 5** (Dec 8, 2025): Cross-references, dependency graph, GroundParser (~155 lines)
+  - Cross-document links between AUTONOMOUS_BOOTSTRAP_PROTOCOL.md and BOOTSTRAP_PROMPT.md
+  - Case study section referencing IMPLEMENTATION_PLAN.md for concrete examples
+  - 4-level dependency graph showing implementation order (types → id/ground → compose/contradict → judge/sublate → fix)
+  - GroundParser agent: LLM-based markdown → PersonaSeed extraction (increases autopoiesis)
 - ✅ **Bootstrap Docs Phase 4** (commit 15aaa26): All 4 optional improvements (~1350 lines)
   - Common Pitfalls section: 8 pitfalls with WRONG/RIGHT patterns, pre-commit checklist
   - Troubleshooting section: 10 errors with symptom/cause/fix/prevention, "Getting Help" guide
@@ -26,7 +31,13 @@
 
 **Bootstrap Docs Status:**
 - Phases 1-4: ✅ COMPLETE (mechanically translatable, troubleshooting, observability, progress tracking)
-- Phase 5: Optional - cross-references, dependency diagram, GroundParser agent (~140-200 lines)
+- Phase 5: ✅ COMPLETE
+  - ✅ 5.1: Cross-references between PROTOCOL and PROMPT (~30 lines)
+  - ✅ 5.2: Dependency diagram (4-level implementation order) (~35 lines)
+  - ✅ 5.3: GroundParser agent (docs + impl) (~90 lines total)
+    - Documentation in BOOTSTRAP_PROMPT.md explaining agent-based parsing
+    - Implementation in impl/claude/bootstrap/ground_parser.py
+    - Demonstrates autopoiesis: using agents to build agents
 - Phase 6: Optional - regeneration test validation, final Contradict/Judge checks
 
 **Next priorities:**
