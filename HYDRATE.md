@@ -9,14 +9,22 @@
 
 ## Current State (Dec 8, 2025)
 
-**Latest:** Phase 3 Infrastructure COMPLETE! ✅ Commit f66a0a4 pushed to main
-- **Issue #4:** Runtime retry with Fix pattern (ClaudeRuntime, OpenRouterRuntime) - exponential backoff, smart error classification
-- **Issue #6:** Result/Either types (Success, Error, Result) - transparent error handling, Railway Oriented Programming
-- **Issue #9:** Parallel resource limits (ParallelConfig) - DoS vulnerability fixed, semaphore-based max_concurrent=10
+**Latest:** Bootstrap Documents Improvement Plan - Phase 1 COMPLETE! ✅ (Dec 8, 2025)
+- ✅ **Phase 1.1:** Worked example (Id agent spec → implementation walkthrough)
+- ✅ **Phase 1.2:** Agent implementation template (fill-in-the-blank for new agents)
+- ✅ **Phase 1.3:** Bootstrap agent decision matrix (when to use which agent)
+- ✅ **Phase 1.4:** Complete workflow example (agent-driven design session showing >50% autopoiesis)
+- ✅ **Phase 3.2:** Seven mini-judges architecture (composable Judge = 7 mini-judges via `>>`)
+- ✅ **Phase 3.3:** Directory structure fixed (impl/claude-openrouter → impl/claude)
 
-**History:** Phase 2 (architecture), Phase 1 (types), Bootstrap agents, K/A/B/C/H-gents all ✅
+**Previously:** Phase 3 Infrastructure (Issue #4, #6, #9), Phase 2 (architecture), Phase 1 (types), Bootstrap agents, K/A/B/C/H-gents all ✅
 
-**Next priorities:**
+**Next from Bootstrap Docs Plan:**
+- Phase 2: Error handling pattern, composition verification checklist, Ground extraction protocol
+- Phase 4-5: Common pitfalls, troubleshooting, progress template
+- Phase 6: Validation & regeneration test
+
+**Other priorities:**
 1. Phase 4-5 features (defer): Issue #3 (Judge decomposition), #7 (Hegel observability), #8 (Robin fallback)
 2. Tests: pytest suite for agents/b/ (hypothesis, robin)
 3. D/E-gents specs

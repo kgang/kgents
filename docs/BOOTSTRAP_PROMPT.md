@@ -77,11 +77,56 @@ You cannot create Ground from nothing. You cannot replace human judgment. You CA
 |-------|------|---------|
 | **Id** | `A → A` | Composition unit (λx.x) |
 | **Compose** | `(Agent, Agent) → Agent` | Build pipelines |
-| **Judge** | `(Agent, Principles) → Verdict` | Value function (7 principles) |
+| **Judge** | `(Agent, Principles) → Verdict` | Value function (7 principles) - see below for composition structure |
 | **Ground** | `Void → Facts` | Empirical seed (persona + world) |
 | **Contradict** | `(A, B) → Tension \| None` | Detect conflicts |
 | **Sublate** | `Tension → Synthesis \| Hold` | Resolve or hold |
 | **Fix** | `(A → A) → A` | Fixed-point iteration |
+
+### Judge: Seven Mini-Judges Architecture
+
+**Judge is implemented as seven separate agents composed via `>>`**. This maximizes composability and testability.
+
+**Structure**:
+```python
+# Seven individual judge agents, one per principle
+judge_tasteful = JudgeTasteful()       # Is this aesthetically considered?
+judge_curated = JudgeCurated()         # Does this add unique value?
+judge_ethical = JudgeEthical()         # Does this respect human agency?
+judge_joyful = JudgeJoyful()           # Would I enjoy this?
+judge_composable = JudgeComposable()   # Can this combine with others?
+judge_generative = JudgeGenerative()   # Could this be regenerated from spec?
+judge_heterarchical = JudgeHeterarchical()  # Does this avoid fixed hierarchy?
+
+# Compose into full Judge pipeline
+judge = (judge_tasteful >> judge_curated >> judge_ethical >>
+         judge_joyful >> judge_composable >> judge_generative >>
+         judge_heterarchical)
+```
+
+**Each mini-judge type**:
+```python
+class JudgeTasteful(Agent[JudgeInput, PartialVerdict]):
+    """
+    Evaluates tasteful principle: compressed expertise, no bloat.
+
+    Input: JudgeInput with agent spec and context
+    Output: PartialVerdict with pass/fail and reasons for this principle
+    """
+    async def invoke(self, input: JudgeInput) -> PartialVerdict:
+        # Evaluate against tasteful principle
+        # Return PartialVerdict(principle="tasteful", passed=True/False, reasons=[...])
+```
+
+**Final aggregation**:
+The composed pipeline accumulates partial verdicts. The final agent in the chain (or a separate `AggregateVerdict` agent) converts `List[PartialVerdict]` → `Verdict` with overall ACCEPT/REJECT/REVISE.
+
+**Benefits**:
+- Each principle independently testable
+- Can reuse individual judges (e.g., just `judge_composable` for C-gents)
+- Clear separation of concerns
+- Easy to add/remove principles
+- Demonstrates composability principle in practice
 
 ---
 
@@ -192,6 +237,278 @@ height: 30%
 height: 1fr
 min-height: 8
 ```
+
+---
+
+## Worked Example: Implementing the Id Agent
+
+This section shows a complete spec-to-implementation walkthrough for the simplest bootstrap agent.
+
+### Step 1: Read the Spec
+
+From `spec/bootstrap.md` (lines 41-55):
+
+```
+### 1. Id (Identity)
+
+Id: A → A
+Id(x) = x
+
+The agent that does nothing. Required by the category-theoretic structure:
+- Left identity: Id ∘ f = f
+- Right identity: f ∘ Id = f
+
+Why irreducible: You cannot define identity in terms of anything simpler.
+It is the unit of composition.
+
+What it grounds: The existence of agents as a category. Without Id, composition has no unit.
+```
+
+### Step 2: Extract Type Signature
+
+**From spec**:
+- Type: `A → A` (generic input type A, returns same type A)
+- Law: `Id(x) = x` (identity function)
+- Composition laws: Left identity (`Id ∘ f = f`), Right identity (`f ∘ Id = f`)
+
+**Translation to Python**:
+```python
+class Id(Agent[A, A]):
+    # Agent[A, A] means: takes input of type A, returns output of type A
+```
+
+### Step 3: Generate Implementation
+
+Using the template pattern from `bootstrap/types.py`:
+
+```python
+"""
+Id (Identity) - The agent that does nothing.
+
+Type: A → A
+Law: Id(x) = x
+
+The composition unit. Required by category-theoretic structure:
+- Left identity:  Id ∘ f = f
+- Right identity: f ∘ Id = f
+"""
+
+from typing import TypeVar, Any
+from .types import Agent
+
+A = TypeVar("A")
+
+
+class Id(Agent[A, A]):
+    """
+    Identity agent: λx.x
+
+    Usage:
+        id_agent = Id()
+        result = await id_agent.invoke(x)  # result == x
+
+    Composition:
+        Id() >> SomeAgent == SomeAgent  # Right identity
+        SomeAgent >> Id() == SomeAgent  # Left identity
+    """
+
+    @property
+    def name(self) -> str:
+        return "Id"
+
+    async def invoke(self, input: A) -> A:
+        """Identity: returns input unchanged."""
+        # Runtime verification that we truly return the same object
+        result = input
+        if result is not input:
+            raise RuntimeError(
+                f"Id agent violated identity law: input is not result (id mismatch)"
+            )
+        return result
+
+    def __rshift__(self, other: "Agent[A, Any]") -> "Agent[A, Any]":
+        """Right identity law: Id >> f = f"""
+        # Optimization: composing with Id on the left is just the other agent
+        return other
+
+    def __repr__(self) -> str:
+        return "Id()"
+```
+
+### Step 4: Verify Composition Laws
+
+The implementation ensures the category laws:
+
+**Right identity (`Id >> f = f`)**:
+```python
+def __rshift__(self, other):
+    return other  # Id >> f just returns f
+```
+
+**Left identity (`f >> Id = f`)**:
+This is handled by the general composition operator in `Agent.__rshift__`, but the `invoke` method ensures that `Id(x) = x`, so `f(x) >> Id` will always equal `f(x)`.
+
+**Associativity**: Inherited from `>>` operator composition.
+
+### Step 5: Judge Against Principles
+
+**Tasteful**: ✓ Minimal, no unnecessary code
+**Curated**: ✓ Irreducible primitive, cannot be simpler
+**Ethical**: ✓ Transparent identity function
+**Joyful**: ✓ Clean implementation of mathematical concept
+**Composable**: ✓ Explicitly designed as composition unit
+**Generative**: ✓ Can be regenerated from spec
+**Heterarchical**: ✓ No hidden control flow
+
+**Verdict**: ACCEPT
+
+### Key Takeaways
+
+1. **Module docstring** mirrors spec language (type signature, laws, purpose)
+2. **Class docstring** adds usage examples and composition behavior
+3. **Type parameter** `A = TypeVar("A")` for generic input/output
+4. **Runtime verification** optional but demonstrates law compliance
+5. **Optimization** in `__rshift__` leverages identity law for performance
+6. **Minimal** - only what's required by the spec, nothing more
+
+This pattern applies to all bootstrap agents: Read spec → Extract types → Translate mechanically → Verify laws → Judge.
+
+---
+
+## Agent Implementation Template
+
+Use this template for implementing any new agent. Fill in the blanks based on the spec.
+
+```python
+"""
+[AgentName] - [One-line description from spec]
+
+Type: [Input] → [Output]
+[Key laws or properties from spec]
+
+[Purpose and why it's needed from spec]
+"""
+
+from typing import TypeVar
+from .types import Agent
+
+# Type variables (adjust as needed)
+A = TypeVar("A")  # Input type
+B = TypeVar("B")  # Output type
+
+
+class [AgentName](Agent[A, B]):
+    """
+    [Detailed description]
+
+    Usage:
+        agent = [AgentName]([constructor args if any])
+        result = await agent.invoke(input_data)
+
+    Composition:
+        [Example of composing with other agents if relevant]
+    """
+
+    def __init__(self, [constructor parameters if needed]):
+        """
+        Initialize [AgentName].
+
+        Args:
+            [parameter]: [description]
+        """
+        # Initialize state if needed
+        pass
+
+    @property
+    def name(self) -> str:
+        return "[AgentName]"
+
+    async def invoke(self, input: A) -> B:
+        """
+        [Brief description of transformation]
+
+        Args:
+            input: [Description of input type and meaning]
+
+        Returns:
+            [Description of output type and meaning]
+
+        Raises:
+            [Any expected exceptions]
+        """
+        # Step 1: [First transformation step]
+        # Step 2: [Second transformation step]
+        # Step 3: Return result
+
+        result: B = ...  # Implementation here
+        return result
+
+    # Optional: Override composition if special behavior needed
+    # def __rshift__(self, other: "Agent[B, C]") -> "Agent[A, C]":
+    #     """Special composition behavior if needed."""
+    #     return ...
+
+    def __repr__(self) -> str:
+        return f"[AgentName]([repr of key params])"
+
+
+# Optional: Convenience constructor functions
+def [agent_name_lowercase]([parameters]) -> [AgentName]:
+    """
+    Create [AgentName] with [specific configuration].
+
+    This is the default/recommended constructor.
+    """
+    return [AgentName]([parameters])
+```
+
+### Template Usage Checklist
+
+Before implementing a new agent, ensure:
+
+- [ ] **Read the spec completely** - understand purpose, laws, examples
+- [ ] **Extract type signature** - what are input and output types?
+- [ ] **Identify laws/properties** - what invariants must hold?
+- [ ] **Check for composition patterns** - does this compose with existing agents?
+- [ ] **Consider state** - does the agent need internal state? (Usually no for pure agents)
+- [ ] **Write module docstring** - copy key content from spec
+- [ ] **Write class docstring** - add usage examples
+- [ ] **Implement invoke** - mechanical translation of spec logic
+- [ ] **Add __repr__** - for debugging and introspection
+- [ ] **Consider convenience constructors** - make common cases easy
+- [ ] **Verify against spec** - does `Contradict(impl, spec)` return `None`?
+- [ ] **Judge against principles** - does it pass all 7 principles?
+
+### Example: Minimal Agent (PassThrough)
+
+```python
+"""PassThrough - Returns input with logging."""
+
+from typing import TypeVar
+from .types import Agent
+
+A = TypeVar("A")
+
+class PassThrough(Agent[A, A]):
+    """Identity with side effect (logging)."""
+
+    def __init__(self, label: str = "PassThrough"):
+        self.label = label
+
+    @property
+    def name(self) -> str:
+        return self.label
+
+    async def invoke(self, input: A) -> A:
+        """Log and return input unchanged."""
+        print(f"{self.label}: {input}")
+        return input
+
+    def __repr__(self) -> str:
+        return f"PassThrough('{self.label}')"
+```
+
+This minimal example shows the core structure. Real agents will have more complex logic in `invoke`, but the structure remains the same.
 
 ---
 
