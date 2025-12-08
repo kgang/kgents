@@ -12,11 +12,12 @@ What it grounds: All agent pipelines. The C-gents category.
 
 from typing import Awaitable, Callable, Optional, TypeVar
 
-from .types import Agent, Either, Left, Right
+from .types import Agent
 
 A = TypeVar("A")
 B = TypeVar("B")
 C = TypeVar("C")
+R = TypeVar("R")  # Refinement data type
 
 
 class ComposedAgent(Agent[A, C]):
@@ -44,54 +45,38 @@ class ComposedAgent(Agent[A, C]):
         return self._name
 
 
-class IterationExhausted(Exception):
-    """Raised when FixComposedAgent exhausts max_iterations without success."""
-    
-    def __init__(self, iterations: int, last_output: object):
-        self.iterations = iterations
-        self.last_output = last_output
-        super().__init__(f"Exhausted {iterations} iterations without acceptance")
-
-
-class FixComposedAgent(Agent[A, Either[IterationExhausted, B]]):
+class FixComposedAgent(Agent[A, B]):
     """
     Agent composed with Fix-pattern iteration.
 
     Applies: input -> agent -> check -> (retry if needed) -> output
 
-    Returns Either[IterationExhausted, B] to preserve totality:
-    - Right(value): Agent succeeded within max_iterations
-    - Left(error): Exhausted iterations, contains last output
+    Decoupled refinement: analyzer (B -> R) extracts failure info,
+    transformer ((A, R) -> A) applies corrections to input.
 
-    Enables patterns like:
-        Create >> Judge >> retry until accept
-        Transform >> Validate >> retry until valid
-
-    Type: A -> Either[IterationExhausted, B]
-    
-    Category law preservation:
-    - Total function: always returns a valid Either
-    - Compositional: failures are data, not silent corruption
-    - Identity-preserving: Either wrapping is explicit in type
+    This enables reusable analyzers across different agent types.
     """
 
     def __init__(
         self,
         agent: Agent[A, B],
-        refine: Agent[tuple[A, B], A],
+        analyze: Agent[B, R],
+        transform: Agent[tuple[A, R], A],
         should_retry: Callable[[B], Awaitable[bool]],
         max_iterations: int = 10,
     ):
         """
-        Create iterative composition with retry logic.
+        Create iterative composition with decoupled refinement.
 
         agent: The main agent to apply
-        refine: Agent that produces new input from (original, failed_output)
+        analyze: Extract refinement data from failed output (B -> R)
+        transform: Apply refinement to input ((A, R) -> A)
         should_retry: Async predicate - True means retry
         max_iterations: Maximum retry attempts
         """
         self._agent = agent
-        self._refine = refine
+        self._analyze = analyze
+        self._transform = transform
         self._should_retry = should_retry
         self._max_iterations = max_iterations
         self._name = f"Fix({agent.name})"
@@ -100,23 +85,23 @@ class FixComposedAgent(Agent[A, Either[IterationExhausted, B]]):
     def name(self) -> str:
         return self._name
 
-    async def invoke(self, input: A) -> Either[IterationExhausted, B]:
+    async def invoke(self, input: A) -> B:
         """Apply agent iteratively until should_retry returns False."""
         current_input = input
-        output: B
         
         for iteration in range(self._max_iterations):
             output = await self._agent.invoke(current_input)
             
             if not await self._should_retry(output):
-                return Right(output)  # Success
+                return output  # Success
             
             if iteration < self._max_iterations - 1:
-                # Refine input based on failed output
-                current_input = await self._refine.invoke((input, output))
+                # Analyze failure, then transform input
+                refinement = await self._analyze.invoke(output)
+                current_input = await self._transform.invoke((input, refinement))
         
-        # Max iterations reached - return Left with exhaustion error
-        return Left(IterationExhausted(self._max_iterations, output))
+        # Max iterations reached - return last output
+        return output
     
     def __repr__(self) -> str:
         return self._name
@@ -147,55 +132,52 @@ def compose(first: Agent[A, B], second: Agent[B, C]) -> Agent[A, C]:
 
 def fix_compose(
     agent: Agent[A, B],
-    refine: Agent[tuple[A, B], A],
+    analyze: Agent[B, R],
+    transform: Agent[tuple[A, R], A],
     should_retry: Callable[[B], Awaitable[bool]],
     max_iterations: int = 10,
-) -> Agent[A, Either[IterationExhausted, B]]:
+) -> Agent[A, B]:
     """
-    Compose agent with Fix-pattern retry logic.
+    Compose agent with Fix-pattern retry logic using decoupled refinement.
     
-    Creates an agent that iteratively applies:
-        1. Run agent on current input
-        2. Check output with should_retry
-        3. If retry needed, refine input and loop
-        4. If accepted, return Right(output)
-        5. If exhausted, return Left(IterationExhausted)
+    Splits refinement into two morphisms:
+    - analyze: B -> R (extract failure information)
+    - transform: (A, R) -> A (apply corrections to input)
     
-    Returns Either to preserve category theory totality:
-    - Success: Right(B) 
-    - Failure: Left(IterationExhausted) with last output
-    
-    This demonstrates how procedural composition enables functional
-    recursion schemes while maintaining compositional reasoning.
+    This separation enables:
+    1. Reusable analyzers across different agent types
+    2. Pure failure analysis (B -> R) independent of input type
+    3. Explicit refinement data structures (R)
     
     Usage:
-        # Retry pattern: generate until judge accepts
+        # Decoupled retry: analyzer is reusable
         generator = Create(config)
-        refiner = Revise(config)  # Takes (original, rejected) -> revised
-        checker = lambda output: judge.invoke(output).type == REJECT
+        
+        # Analyzer: extract what's wrong (pure, reusable)
+        error_analyzer = ExtractErrors()  # JudgmentResult -> ErrorList
+        
+        # Transformer: apply corrections to specific input type
+        prompt_fixer = FixPrompt()  # (Prompt, ErrorList) -> Prompt
+        
+        # Checker: predicate for retry
+        checker = lambda output: output.verdict == REJECT
         
         stable_generator = fix_compose(
             agent=generator,
-            refine=refiner,
+            analyze=error_analyzer,
+            transform=prompt_fixer,
             should_retry=checker,
             max_iterations=5
         )
         
-        # Handle the Either result
+        # Now: error_analyzer can be reused with different generators
         result = await stable_generator.invoke(spec)
-        match result:
-            case Right(value):
-                # Success within iterations
-                process(value)
-            case Left(error):
-                # Exhausted iterations - decide how to handle
-                log_failure(error.iterations, error.last_output)
     
-    This is Fix specialized for agent pipelines. Compare with Fix agent:
-        Fix: iterate (A -> A) until fixed point
-        FixCompose: iterate (A -> B) until predicate accepts, total via Either
+    Compare with monolithic refiner (A, B) -> A:
+    - Monolithic: couples failure analysis to input reconstruction
+    - Decoupled: analyzer (B -> R) reusable, transformer (A, R -> A) specific
     """
-    return FixComposedAgent(agent, refine, should_retry, max_iterations)
+    return FixComposedAgent(agent, analyze, transform, should_retry, max_iterations)
 
 
 # Idiom: Compose, Don't Concatenate
@@ -213,16 +195,15 @@ def fix_compose(
 # Idiom: Fix Composes With Agents
 #
 # Iteration patterns (retry, polling, refinement) should use Fix composition:
-#   fix_compose(agent, refiner, predicate) instead of while loops
+#   fix_compose(agent, analyzer, transformer, predicate) instead of while loops
 #
 # Benefits:
 # - Declarative: "retry until predicate" vs imperative loops
 # - Composable: Fix-composed agents are still agents
 # - Traceable: Iteration count and history available
-# - Testable: Mock predicates and refiners
-# - Total: Either type makes failure explicit
+# - Testable: Mock predicates, analyzers, and transformers
+# - Reusable: Analyzers (B -> R) work across agent types
 #
 # Example: Generate >> Judge >> Retry
-#   stable = fix_compose(generate, revise, is_rejected)
+#   stable = fix_compose(generate, extract_errors, fix_prompt, is_rejected)
 #   result = await stable.invoke(spec)
-#   # result is Either[IterationExhausted, Output]
