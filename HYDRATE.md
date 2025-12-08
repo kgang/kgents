@@ -9,22 +9,27 @@
 
 ## Current State (Dec 8, 2025)
 
-**Latest:** Phase 4-5 Features COMPLETE! ✅ (commit 97ac42f)
+**Latest:** Cleanup commit 2bc0edc (Dec 8, 2025)
 
-**Completed this session:**
-- ✅ **Issue #3:** Judge = 7 mini-judges via `>>` (PartialVerdict, VerdictAccumulator, backward compatible)
-- ✅ **Issue #7:** Hegel lineage tracking (DialecticStep, complete observability chain)
-- ✅ **Issue #8:** Robin fallback mode (deterministic testing via `fallback_robin()`)
+**Completed recently:**
+- ✅ **Cleanup fixes** (commit 2bc0edc): hegel.py field import, evolve.py mypy portability
+- ✅ **Phase 4-5 Features** (commit 97ac42f): Judge decomposition (#3), Hegel lineage (#7), Robin fallback (#8)
+- ✅ **Meta-evolution Round 2** (8 improvements to evolve.py/autopoiesis.py): async/await, Fix retry logic, dependency injection
+- ✅ **Full-stack evolution** (25 modules, 100% pass rate): runtime, agents, bootstrap all improved
+- ✅ **Bootstrap Docs Improvement Plan** (51 hypotheses, 6 phases): Ready for implementation
 
-**Impact:** +658 lines impl, +165 lines docs. All IMPLEMENTATION_PLAN.md Phase 4-5 items complete.
+**Bootstrap Docs Phase 4-6 (from BOOTSTRAP_DOCUMENTS_IMPROVEMENT_PLAN.md):**
+- **Phase 4:** Common pitfalls, troubleshooting, observability hooks, progress template (Week 4, 320-400 lines)
+- **Phase 5:** Cross-references, dependency diagram, GroundParser agent (Week 5, 140-200 lines)
+- **Phase 6:** Regeneration test (behavior equivalence), Contradict check, Judge validation (Week 6)
 
-**Previously complete:** Bootstrap docs Phase 1-3 (+782 lines), Phase 3 Infrastructure (Issues #4, #6, #9), Phase 2 (architecture), Phase 1 (types), all agent genera (K/A/B/C/H) ✅
+Status: Plan exists, **optional** per HYDRATE priority list. Phases 1-3 would come first (worked examples, patterns, contradiction resolution).
 
 **Next priorities:**
 1. Tests for agents/b/ (hypothesis, robin) - pytest suite
-2. Bootstrap Docs Phase 4-6 (optional) - Common pitfalls, troubleshooting
-3. D/E-gents specs
-4. PyPI package
+2. D/E-gents specs
+3. PyPI package
+4. Bootstrap Docs improvements (optional, Phases 1-6 if desired)
 
 | Component | Status |
 |-----------|--------|
@@ -212,16 +217,11 @@ LLM execution layer for agents:
 | B-gents B.2 | ✅ DONE | Robin (scientific companion) |
 | Phase 3 Infrastructure | ✅ DONE | Issue #4 (retry), #6 (Result types), #9 (parallel limits) |
 
-**What's Next (IMPLEMENTATION_PLAN.md):**
-1. **Phase 4-5 - Features** (defer as technical debt):
-   - Issue #3: Judge decomposition into 7 sub-judges (24-32 hrs) - BREAKING
-   - Issue #7: Hegel observability with lineage tracking (8-12 hrs)
-   - Issue #8: Robin fallback mode for testing (12-16 hrs)
-
-**Other priorities:**
-- Tests: pytest suite for agents/b/ (hypothesis, robin)
-- D/E-gents: Spec Data/Database and Evaluation/Ethics agents
-- Package: Publish kgents-runtime to PyPI
+**Next Steps (priority order):**
+1. Tests: pytest suite for agents/b/ (hypothesis, robin)
+2. D/E-gents: Spec Data/Database and Evaluation/Ethics agents
+3. Package: Publish kgents-runtime to PyPI
+4. Bootstrap Docs improvements (optional, see BOOTSTRAP_DOCUMENTS_IMPROVEMENT_PLAN.md for 6-phase plan)
 
 ## evolve.py - Experimental Improvement Framework
 
@@ -290,6 +290,12 @@ Avoids JSON escaping issues for code content.
 
 ## Recent Changes
 
+- **Hydrate Session: Bootstrap Docs Phase 4-6 Tieup** (Dec 8, 2025):
+  - ✅ Reviewed all background evolution processes (6 runs, mix of success/failures)
+  - ✅ Committed cleanup fixes: hegel.py field import (for lineage tracking), evolve.py mypy portability (commit 2bc0edc)
+  - ✅ Updated HYDRATE.md with concise Bootstrap Docs Phase 4-6 summary
+  - **Key finding:** Phase 4-6 is OPTIONAL work for common pitfalls/troubleshooting docs (from BOOTSTRAP_DOCUMENTS_IMPROVEMENT_PLAN.md)
+  - **Status:** All loose ends tied. Phase 4-5 features (#3, #7, #8) already complete. Ready for next priorities.
 - **Bootstrap Documents Improvement Plan** (Dec 8, 2025):
   - ✅ Generated comprehensive 51-hypothesis plan via evolutionary analysis (using kgents to improve kgents docs)
   - Used 2 parallel Task agents for deep analysis of AUTONOMOUS_BOOTSTRAP_PROTOCOL.md and BOOTSTRAP_PROMPT.md
