@@ -175,6 +175,13 @@ LLM execution layer for agents:
 
 **Autonomous Bootstrap Protocol complete.** All phases (A.1, A.2, B.1, B.2) implemented.
 
+**What's Next (suggestions):**
+- Tests: Add pytest suite for agents/b/ (hypothesis, robin)
+- D-gents: Data/Database agents (spec needed)
+- E-gents: Evaluation/Ethics agents (spec needed)
+- Integration: End-to-end example using Robin with real LLM runtime
+- Package: Publish kgents-runtime to PyPI
+
 ## Recent Changes
 
 - **B-gents B.2 implemented** (Dec 2025): Robin - personalized scientific companion, composes K-gent + HypothesisEngine + HegelAgent
