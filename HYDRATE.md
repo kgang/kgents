@@ -19,7 +19,43 @@
 
 ---
 
-## This Session: IMPROVEMENT_PLAN Phase A - H4 & H5 (2025-12-08)
+## This Session: IMPROVEMENT_PLAN Phase B - H1 (2025-12-08)
+
+### Completed: H1 - Decompose EvolutionPipeline ✅
+
+**MASSIVE REFACTORING:** Replaced the 826-line `EvolutionPipeline` class in evolve.py with a thin CLI wrapper that uses `agents/e/evolution.py`.
+
+**Changes:**
+1. **Added imports** from agents/e: `EvolutionPipeline`, `EvolutionConfig`, `EvolutionReport`
+2. **Renamed** `EvolveConfig` → `EvolveCliConfig` to avoid name clash
+3. **Extracted** `discover_modules()` and `has_uncommitted_changes()` as standalone functions
+4. **Created** `run_evolution_cli()` - 151-line wrapper that adds:
+   - Log file creation with timestamps
+   - Fancy CLI output (box-drawing)
+   - JSON results export
+   - Git status checking
+5. **Deleted** the entire 826-line `EvolutionPipelineWrapper` class
+6. **Updated** all references:
+   - `main()`: Now calls `run_evolution_cli(config)`
+   - `show_suggestions()`: Uses standalone `discover_modules()` + `ASTAnalyzer`
+   - `parse_args()`: Returns `EvolveCliConfig`
+   - `run_safe_evolution()`: Accepts `EvolveCliConfig`
+
+**Impact:**
+- evolve.py: **1,544 → 722 lines (-822 lines, -53% reduction!)**
+- Core pipeline logic now in `agents/e/evolution.py` (478 lines)
+- Better separation: CLI concerns vs. core logic
+- More testable and composable
+
+**Tests:**
+- ✓ Syntax valid (`python -m py_compile`)
+- ✓ `python evolve.py status` works
+- ✓ `python evolve.py suggest` works
+- ✓ `python evolve.py test` works (preflight checks functional)
+
+---
+
+## Previous Session: IMPROVEMENT_PLAN Phase A - H4 & H5 (2025-12-08)
 
 ### Completed: H5 - Extract runtime/json_utils.py ✅
 
