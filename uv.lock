@@ -227,7 +227,7 @@ wheels = [
 [[package]]
 name = "kgents-runtime"
 version = "0.1.0"
-source = { editable = "impl/claude-openrouter" }
+source = { editable = "impl/claude" }
 dependencies = [
     { name = "anthropic" },
     { name = "httpx" },
@@ -264,7 +264,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "kgents-runtime", editable = "impl/claude-openrouter" }]
+requires-dist = [{ name = "kgents-runtime", editable = "impl/claude" }]
 
 [package.metadata.requires-dev]
 dev = [
