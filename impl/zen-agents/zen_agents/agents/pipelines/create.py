@@ -3,11 +3,17 @@ CreateSessionPipeline: Compose-based session creation.
 
 Pipeline:
     ValidateConfig         # Judge: config passes principles
-    >> ResolveConfig       # Ground: merge tiers
+    >> ValidateLimit       # Judge: check session limit
     >> DetectConflicts     # Contradict: name collision, resource conflict
     >> ResolveConflicts    # Sublate: auto-resolve or surface to user
     >> SpawnTmux           # Id: pure creation
     >> DetectInitialState  # Fix: poll until state stabilizes
+
+Design notes:
+- All pipeline agents operate on CreateContext (unified context object)
+- ValidateConfig is called BEFORE entering the pipeline (on raw config)
+- DetectInitialState uses a factory to capture tmux dependency
+- Composition is: ValidateLimit >> DetectConflicts >> ResolveConflicts >> SpawnTmux >> DetectInitialState
 """
 
 from dataclasses import dataclass
@@ -43,6 +49,13 @@ class CreateContext:
     config: "NewSessionConfig"
     zen_config: "ZenConfig"
     existing_sessions: list["Session"]
+    tmux: "TmuxService"
+
+
+@dataclass
+class SpawnResult:
+    """Result of SpawnTmux, carries Session + tmux for DetectInitialState."""
+    session: "Session"
     tmux: "TmuxService"
 
 
@@ -165,19 +178,20 @@ class ResolveConflicts(Agent[CreateContext, CreateContext]):
         return ctx
 
 
-class SpawnTmux(Agent[CreateContext, "Session"]):
+class SpawnTmux(Agent[CreateContext, SpawnResult]):
     """
     Id: Pure creation - spawn tmux session.
 
-    The actual creation step. Transforms config into Session.
+    The actual creation step. Transforms config into SpawnResult.
+    Outputs SpawnResult to carry tmux reference for DetectInitialState.
     """
 
     @property
     def name(self) -> str:
         return "SpawnTmux"
 
-    async def invoke(self, ctx: CreateContext) -> "Session":
-        """Spawn tmux session and return Session model."""
+    async def invoke(self, ctx: CreateContext) -> SpawnResult:
+        """Spawn tmux session and return SpawnResult."""
         from ...models import Session, SessionState
 
         # Generate tmux name
@@ -201,7 +215,7 @@ class SpawnTmux(Agent[CreateContext, "Session"]):
         )
 
         # Create session model
-        return Session(
+        session = Session(
             id=uuid4(),
             name=ctx.config.name,
             session_type=ctx.config.session_type,
@@ -211,27 +225,32 @@ class SpawnTmux(Agent[CreateContext, "Session"]):
             command=command,
         )
 
+        return SpawnResult(session=session, tmux=ctx.tmux)
 
-class DetectInitialState(Agent["Session", "Session"]):
+
+class DetectInitialState(Agent[SpawnResult, "Session"]):
     """
     Fix: Poll until state stabilizes.
-    """
 
-    def __init__(self, tmux: "TmuxService"):
-        self._tmux = tmux
+    Takes SpawnResult (which carries tmux) and returns final Session.
+    This design enables >> composition without external dependencies.
+    """
 
     @property
     def name(self) -> str:
         return "DetectInitialState"
 
-    async def invoke(self, session: "Session") -> "Session":
+    async def invoke(self, spawn_result: SpawnResult) -> "Session":
         """Detect initial state using Fix-based polling."""
         from ..detection import detect_state
         from ...models import SessionState
 
+        session = spawn_result.session
+        tmux = spawn_result.tmux
+
         result = await detect_state(
             session=session,
-            tmux=self._tmux,
+            tmux=tmux,
             max_iterations=10,  # Quick initial check
         )
 
@@ -242,13 +261,23 @@ class DetectInitialState(Agent["Session", "Session"]):
         return session
 
 
-# The composed pipeline
-CreateSessionPipeline = (
-    ValidateLimit
-    # >> DetectConflicts  # Would need proper composition
-    # >> ResolveConflicts
-    # >> SpawnTmux
-    # >> DetectInitialState
+# The composed pipeline (types align!)
+#
+# Type flow:
+#   CreateContext
+#   → ValidateLimit    → CreateContext
+#   → DetectConflicts  → CreateContext
+#   → ResolveConflicts → CreateContext
+#   → SpawnTmux        → SpawnResult
+#   → DetectInitialState → Session
+#
+# This IS the pipeline: Compose, Don't Concatenate!
+CreateSessionPipeline: Agent[CreateContext, "Session"] = (
+    ValidateLimit()
+    >> DetectConflicts()
+    >> ResolveConflicts()
+    >> SpawnTmux()
+    >> DetectInitialState()
 )
 
 
@@ -261,38 +290,24 @@ async def create_session_pipeline(
     """
     Execute the full create session pipeline.
 
-    This is the orchestrated version that runs all steps in sequence.
-    The pipeline above shows the conceptual composition.
+    1. ValidateConfig is called separately (different input type)
+    2. CreateSessionPipeline handles: Limit >> Conflicts >> Resolve >> Spawn >> Detect
+
+    Uses >> composition: "Compose, Don't Concatenate" (from spec/bootstrap.md).
     """
+    # Pre-pipeline: Validate config (Judge) - different input type
+    validate_config = ValidateConfig()
+    validated_config = await validate_config.invoke(config)
+
+    # Build context for composed pipeline
     ctx = CreateContext(
-        config=config,
+        config=validated_config,
         zen_config=zen_config,
         existing_sessions=existing_sessions,
         tmux=tmux,
     )
 
-    # Step 1: Validate config (Judge)
-    validate_config = ValidateConfig()
-    ctx.config = await validate_config.invoke(ctx.config)
-
-    # Step 2: Validate limit (Judge)
-    validate_limit = ValidateLimit()
-    ctx = await validate_limit.invoke(ctx)
-
-    # Step 3: Detect conflicts (Contradict)
-    detect_conflicts = DetectConflicts()
-    ctx = await detect_conflicts.invoke(ctx)
-
-    # Step 4: Resolve conflicts (Sublate)
-    resolve_conflicts = ResolveConflicts()
-    ctx = await resolve_conflicts.invoke(ctx)
-
-    # Step 5: Spawn tmux (Id - pure creation)
-    spawn = SpawnTmux()
-    session = await spawn.invoke(ctx)
-
-    # Step 6: Detect initial state (Fix)
-    detect_state_agent = DetectInitialState(tmux)
-    session = await detect_state_agent.invoke(session)
+    # Execute composed pipeline: ValidateLimit >> DetectConflicts >> ResolveConflicts >> SpawnTmux >> DetectInitialState
+    session = await CreateSessionPipeline.invoke(ctx)
 
     return session

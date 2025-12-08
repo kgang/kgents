@@ -183,7 +183,7 @@ LLM execution layer for agents:
 | 1.1 Import Bridge | ✅ DONE | `kgents_bridge.py` |
 | 1.2 AgentOrchestrator | ✅ DONE | `services/agent_orchestrator.py` |
 | 1.3 Fix Confidence Bug | ✅ DONE | `StateDetector` now accumulates confidence |
-| 1.4 Pipeline Composition | 🔲 TODO | Use `>>` instead of manual |
+| 1.4 Pipeline Composition | ✅ DONE | `CreateSessionPipeline` uses `>>` |
 | 2.1 Session Types | 🔲 TODO | ROBIN, CREATIVITY, HYPOTHESIS, KGENT |
 | 2.2 Session Handler | 🔲 TODO | Route to appropriate agents |
 | 3.1 Log Viewer | 🔲 TODO | Display session output + analysis |
@@ -201,6 +201,7 @@ LLM execution layer for agents:
 
 ## Recent Changes
 
+- **Phase 1.4 Pipeline Composition** (Dec 2025): `CreateSessionPipeline` now uses `>>` composition; `SpawnResult` carries tmux for type alignment
 - **Phase 1.3 Confidence Fix** (Dec 2025): `StateDetector` now accumulates confidence via previous_state input
 - **AgentOrchestrator** (Dec 2025): `impl/zen-agents/zen_agents/services/agent_orchestrator.py` - Central service for LLM-backed agents in TUI
 - **B-gents B.2 implemented** (Dec 2025): Robin - personalized scientific companion, composes K-gent + HypothesisEngine + HegelAgent
