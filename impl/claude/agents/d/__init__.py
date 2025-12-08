@@ -47,6 +47,7 @@ from .lens import (
 )
 from .lens_agent import LensAgent, focused
 from .cached import CachedAgent
+from .entropy import EntropyConstrainedAgent, entropy_constrained
 
 __all__ = [
     # Protocol
@@ -62,6 +63,7 @@ __all__ = [
     "PersistentAgent",
     "CachedAgent",
     "Symbiont",
+    "EntropyConstrainedAgent",
     # Lenses
     "Lens",
     "key_lens",
@@ -71,4 +73,6 @@ __all__ = [
     "verify_lens_laws",
     "LensAgent",
     "focused",
+    # Convenience functions
+    "entropy_constrained",
 ]

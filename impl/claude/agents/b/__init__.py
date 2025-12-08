@@ -35,6 +35,12 @@ from .robin import (
     fallback_robin,
 )
 
+from .persistent_hypothesis import (
+    HypothesisMemory,
+    PersistentHypothesisStorage,
+    persistent_hypothesis_storage,
+)
+
 __all__ = [
     # HypothesisEngine
     "HypothesisEngine",
@@ -53,4 +59,8 @@ __all__ = [
     "robin_with_persona",
     "quick_robin",
     "fallback_robin",
+    # Persistent Storage
+    "HypothesisMemory",
+    "PersistentHypothesisStorage",
+    "persistent_hypothesis_storage",
 ]

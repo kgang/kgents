@@ -44,6 +44,13 @@ from .evolution import (
     ConflictDetector,
 )
 
+from .persistent_persona import (
+    PersistentPersonaAgent,
+    PersistentPersonaQueryAgent,
+    persistent_kgent,
+    persistent_query_persona,
+)
+
 __all__ = [
     # Persona types
     "PersonaSeed",
@@ -57,10 +64,14 @@ __all__ = [
     "KgentAgent",
     "PersonaQueryAgent",
     "EvolutionAgent",
+    "PersistentPersonaAgent",
+    "PersistentPersonaQueryAgent",
     # Convenience functions
     "kgent",
     "query_persona",
     "evolve_persona",
+    "persistent_kgent",
+    "persistent_query_persona",
     # Evolution types
     "EvolutionInput",
     "EvolutionOutput",

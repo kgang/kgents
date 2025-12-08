@@ -5,6 +5,9 @@ An observer that:
 - Passes data through unchanged (identity)
 - Records all inputs to history (Writer Monad)
 - Enables pipeline inspection and debugging
+
+Now uses VolatileAgent (D-gent) for history storage,
+demonstrating T-gent + D-gent integration.
 """
 
 from __future__ import annotations
@@ -12,6 +15,7 @@ from __future__ import annotations
 from typing import Generic, List, TypeVar
 
 from bootstrap.types import Agent
+from agents.d import VolatileAgent
 
 A = TypeVar("A")
 
@@ -27,9 +31,12 @@ class SpyAgent(Agent[A, A], Generic[A]):
 
     Properties:
     - Transparent: Data flows through unchanged
-    - Observable: All inputs recorded to history
+    - Observable: All inputs recorded to history via VolatileAgent
     - Composable: Can be inserted anywhere in pipeline
     - Testable: History can be inspected for assertions
+
+    Now uses VolatileAgent internally for history storage,
+    demonstrating D-gent integration with T-gents.
 
     Example:
         # Spy on intermediate pipeline data
@@ -39,25 +46,37 @@ class SpyAgent(Agent[A, A], Generic[A]):
         await pipeline.invoke(input_data)
 
         # Inspect what was passed
-        print(spy.history)  # [HypothesisOutput(...)]
+        history = await spy.get_history()
+        print(history)  # [HypothesisOutput(...)]
         spy.assert_count(1)
     """
 
     def __init__(self, label: str = "Spy"):
         """
-        Initialize spy agent.
+        Initialize spy agent with D-gent-backed history.
 
         Args:
             label: Human-readable label for this spy
         """
         self.label = label
-        self.history: List[A] = []
+        self._memory = VolatileAgent[List[A]](_state=[], max_history=100)
         self.__is_test__ = True  # T-gent marker
 
     @property
     def name(self) -> str:
         """Return agent name."""
         return f"Spy({self.label})"
+
+    @property
+    def history(self) -> List[A]:
+        """
+        Synchronous access to history (backward compatible).
+
+        Note: This returns the current state synchronously.
+        For full D-gent functionality, use get_history() async method.
+        """
+        # Access internal state directly for backward compatibility
+        return self._memory._state
 
     async def invoke(self, input: A) -> A:
         """
@@ -72,8 +91,10 @@ class SpyAgent(Agent[A, A], Generic[A]):
         # Log the capture
         print(f"[{self.name}] Capturing: {input}")
 
-        # Record to history
-        self.history.append(input)
+        # Record to D-gent history
+        current = await self._memory.load()
+        current.append(input)
+        await self._memory.save(current)
 
         # Return unchanged (identity)
         return input
@@ -83,9 +104,30 @@ class SpyAgent(Agent[A, A], Generic[A]):
         """Number of times invoke was called."""
         return len(self.history)
 
+    async def get_history(self) -> List[A]:
+        """
+        Get full history via D-gent interface.
+
+        Returns:
+            List of captured values
+        """
+        return await self._memory.load()
+
+    async def get_history_snapshots(self, limit: int = 10) -> List[List[A]]:
+        """
+        Get historical snapshots of spy state.
+
+        Args:
+            limit: Maximum number of snapshots
+
+        Returns:
+            List of historical states (newest first)
+        """
+        return await self._memory.history(limit=limit)
+
     def reset(self) -> None:
         """Clear history for test isolation."""
-        self.history.clear()
+        self._memory._state.clear()
 
     def assert_captured(self, expected: A) -> None:
         """
@@ -98,8 +140,7 @@ class SpyAgent(Agent[A, A], Generic[A]):
             AssertionError: If expected not in history
         """
         assert expected in self.history, (
-            f"Expected {expected} not captured in {self.name}. "
-            f"History: {self.history}"
+            f"Expected {expected} not captured in {self.name}. History: {self.history}"
         )
 
     def assert_count(self, count: int) -> None:
