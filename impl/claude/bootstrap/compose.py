@@ -12,7 +12,7 @@ What it grounds: All agent pipelines. The C-gents category.
 
 from typing import Awaitable, Callable, Optional, TypeVar
 
-from .types import Agent
+from .types import Agent, Either, Left, Right
 
 A = TypeVar("A")
 B = TypeVar("B")
@@ -44,17 +44,35 @@ class ComposedAgent(Agent[A, C]):
         return self._name
 
 
-class FixComposedAgent(Agent[A, B]):
+class IterationExhausted(Exception):
+    """Raised when FixComposedAgent exhausts max_iterations without success."""
+    
+    def __init__(self, iterations: int, last_output: object):
+        self.iterations = iterations
+        self.last_output = last_output
+        super().__init__(f"Exhausted {iterations} iterations without acceptance")
+
+
+class FixComposedAgent(Agent[A, Either[IterationExhausted, B]]):
     """
     Agent composed with Fix-pattern iteration.
 
     Applies: input -> agent -> check -> (retry if needed) -> output
 
+    Returns Either[IterationExhausted, B] to preserve totality:
+    - Right(value): Agent succeeded within max_iterations
+    - Left(error): Exhausted iterations, contains last output
+
     Enables patterns like:
         Create >> Judge >> retry until accept
         Transform >> Validate >> retry until valid
 
-    Type: A -> (A -> B) -> (B -> bool) -> B
+    Type: A -> Either[IterationExhausted, B]
+    
+    Category law preservation:
+    - Total function: always returns a valid Either
+    - Compositional: failures are data, not silent corruption
+    - Identity-preserving: Either wrapping is explicit in type
     """
 
     def __init__(
@@ -82,22 +100,23 @@ class FixComposedAgent(Agent[A, B]):
     def name(self) -> str:
         return self._name
 
-    async def invoke(self, input: A) -> B:
+    async def invoke(self, input: A) -> Either[IterationExhausted, B]:
         """Apply agent iteratively until should_retry returns False."""
         current_input = input
+        output: B
         
         for iteration in range(self._max_iterations):
             output = await self._agent.invoke(current_input)
             
             if not await self._should_retry(output):
-                return output  # Success
+                return Right(output)  # Success
             
             if iteration < self._max_iterations - 1:
                 # Refine input based on failed output
                 current_input = await self._refine.invoke((input, output))
         
-        # Max iterations reached - return last output
-        return output
+        # Max iterations reached - return Left with exhaustion error
+        return Left(IterationExhausted(self._max_iterations, output))
     
     def __repr__(self) -> str:
         return self._name
@@ -131,7 +150,7 @@ def fix_compose(
     refine: Agent[tuple[A, B], A],
     should_retry: Callable[[B], Awaitable[bool]],
     max_iterations: int = 10,
-) -> Agent[A, B]:
+) -> Agent[A, Either[IterationExhausted, B]]:
     """
     Compose agent with Fix-pattern retry logic.
     
@@ -139,10 +158,15 @@ def fix_compose(
         1. Run agent on current input
         2. Check output with should_retry
         3. If retry needed, refine input and loop
-        4. If accepted, return output
+        4. If accepted, return Right(output)
+        5. If exhausted, return Left(IterationExhausted)
+    
+    Returns Either to preserve category theory totality:
+    - Success: Right(B) 
+    - Failure: Left(IterationExhausted) with last output
     
     This demonstrates how procedural composition enables functional
-    recursion schemes: the Fix pattern composes WITH agents.
+    recursion schemes while maintaining compositional reasoning.
     
     Usage:
         # Retry pattern: generate until judge accepts
@@ -157,12 +181,19 @@ def fix_compose(
             max_iterations=5
         )
         
-        # Now: stable_generator will retry up to 5 times
+        # Handle the Either result
         result = await stable_generator.invoke(spec)
+        match result:
+            case Right(value):
+                # Success within iterations
+                process(value)
+            case Left(error):
+                # Exhausted iterations - decide how to handle
+                log_failure(error.iterations, error.last_output)
     
     This is Fix specialized for agent pipelines. Compare with Fix agent:
         Fix: iterate (A -> A) until fixed point
-        FixCompose: iterate (A -> B) until predicate accepts
+        FixCompose: iterate (A -> B) until predicate accepts, total via Either
     """
     return FixComposedAgent(agent, refine, should_retry, max_iterations)
 
@@ -189,7 +220,9 @@ def fix_compose(
 # - Composable: Fix-composed agents are still agents
 # - Traceable: Iteration count and history available
 # - Testable: Mock predicates and refiners
+# - Total: Either type makes failure explicit
 #
 # Example: Generate >> Judge >> Retry
 #   stable = fix_compose(generate, revise, is_rejected)
 #   result = await stable.invoke(spec)
+#   # result is Either[IterationExhausted, Output]
