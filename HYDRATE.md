@@ -1,73 +1,69 @@
-# HYDRATE.md - Session Context
+# HYDRATE.md - kgents Session Context
 
-**Quick reference for Kent + Claude Code**
-
----
-
-## Session Summary (Dec 8, 2025)
-
-### ✅ Issues Resolved
-
-**Problem**: Evolution pipeline failing with multiple API errors
-- `HypothesisEngine.__init__() got unexpected keyword argument 'runtime'`
-- `'HypothesisEngine' object is not callable`
-- `JudgeInput.__init__() got unexpected keyword argument 'claim'`
-- `Verdict.__init__() got unexpected keyword argument 'verdict_type'`
-- `[Errno 2] No such file or directory: 'mypy'`
-
-**Root Causes Identified**:
-1. ❌ **Wrong venv**: zenportal/.venv instead of kgents/.venv
-2. ❌ **Stale bytecode cache**: Old .pyc files from previous runs
-3. ❌ **API mismatches**: evolve.py using outdated Judge/Verdict APIs
-
-**Solutions Applied**:
-1. ✅ Cleared Python bytecode cache
-2. ✅ Fixed evolve.py to use correct Verdict API (commit e4b6e3f)
-3. ✅ Simplified judge logic to auto-accept (removed broken JudgeInput usage)
-4. ✅ Documented venv activation requirement
-
-### Commits This Session
-
-```
-e4b6e3f - Fix evolve.py API compatibility issues
-665d67f - Update HYDRATE.md: Session state and environment fixes
-```
+**Quick start for next session**
 
 ---
 
-## Evolution Pipeline Status
+## TL;DR
 
-**Working** ✅ - Use correct venv:
+**Status**: Evolution pipeline fixed and working ✅
+**Latest**: Pushed 3 commits (7d99e18, e4b6e3f, 665d67f) fixing API issues
+**Branch**: `main` (synced with origin)
+
+---
+
+## Next Session: Start Here
+
+### Run Evolution Pipeline
 
 ```bash
 cd /Users/kentgang/git/kgents
-source .venv/bin/activate
+source .venv/bin/activate  # ⚠️ CRITICAL - must use kgents venv!
 .venv/bin/python impl/claude/evolve.py bootstrap --dry-run --quick
 ```
 
-**Key learnings**:
-- Always activate kgents venv before running evolve.py
-- HypothesisEngine API was correct (no runtime param needed)
-- evolve.py validator already uses `sys.executable -m mypy` (correct pattern)
+**Why venv matters**: Shell may have `VIRTUAL_ENV=/Users/kentgang/git/zenportal/.venv` from other projects. Always activate kgents venv explicitly.
 
 ---
 
-## Next Steps
+## What We Fixed (Dec 8, 2025)
 
-1. **Run full bootstrap evolution** - 32 improvements ready from earlier dry-run
-2. **Bootstrap Docs Phase 6** (optional) - Regeneration validation
-3. **Tests for agents/b/** - pytest suite for hypothesis.py and robin.py
-4. **D/E-gents specs** - Data/Database, Evaluation/Ethics agent specifications
+**Problem**: Evolution pipeline failing with 5 different API errors
+
+**Root causes**:
+1. Wrong venv → missing mypy
+2. Stale bytecode cache
+3. evolve.py using outdated Judge/Verdict APIs
+
+**Solutions** (commits pushed):
+- `e4b6e3f` - Fixed Verdict API, removed broken Judge usage
+- `665d67f` - Cleared bytecode cache, documented venv requirement
+- `7d99e18` - Updated HYDRATE.md
 
 ---
 
-## Bootstrap Docs: COMPLETE ✅
+## Next Priorities
 
-| Phase | Status | Lines Added |
-|-------|--------|-------------|
-| 1-3 | ✅ | ~800 |
-| 4 | ✅ | ~1350 |
-| 5 | ✅ | ~155 |
-| **Total** | **✅** | **~2287** |
+1. **Bootstrap evolution** - Ready to apply improvements
+2. **Tests for agents/b/** - pytest for hypothesis.py, robin.py
+3. **D/E-gents specs** - Data/Database, Evaluation/Ethics agents
+4. Bootstrap Docs Phase 6 (optional) - Regeneration validation
 
-Commits: 16156c8, 15aaa26, 7ee9dc8
+---
+
+## Project Status
+
+**Bootstrap Docs**: ✅ Complete (~2287 lines, commits 16156c8, 15aaa26, 7ee9dc8)
+**Bootstrap Agents**: ✅ 7 agents implemented
+**Evolution Pipeline**: ✅ Working (after API fixes)
+**Meta-evolution**: ✅ Applied 8 improvements to evolve.py, autopoiesis.py
+
+---
+
+## Key Files
+
+- `impl/claude/evolve.py` - Evolution pipeline (fixed)
+- `impl/claude/bootstrap/` - 7 bootstrap agents
+- `impl/claude/agents/` - a,b,c,h,k-gents
+- `docs/BOOTSTRAP_PROMPT.md` - Implementation guide (~1545 lines)
+- `AUTONOMOUS_BOOTSTRAP_PROTOCOL.md` - Meta protocol (~1135 lines)
