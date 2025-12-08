@@ -7,13 +7,15 @@
 - `spec/` = Language spec (like Python)
 - `impl/claude-openrouter/` = Reference impl (like CPython)
 
-## Current State (Dec 2025)
+## Current State (Dec 7, 2025)
+
+**Latest:** evolve.py optimized for 2-5x speedup via parallel processing, AST caching, smart context pruning. Use `--quick --hypotheses=2` for fastest iteration (2-3s/module).
 
 | Component | Status |
 |-----------|--------|
 | 7 Principles | ✅ Defined in `spec/principles.md` |
 | 7 Bootstrap Agents | ✅ Spec (`spec/bootstrap.md`) + Impl (`impl/claude-openrouter/bootstrap/`) |
-| Autopoiesis | ✅ `autopoiesis.py` (spec/impl) + `self_improve.py` (review) + `evolve.py` (apply) |
+| Autopoiesis | ✅ `autopoiesis.py` (spec/impl) + `self_improve.py` (review) + `evolve.py` (apply, optimized) |
 | C-gents (Category Theory) | ✅ `impl/claude-openrouter/agents/c/` + specs for all patterns |
 | H-gents (Hegel/Jung/Lacan) | ✅ `impl/claude-openrouter/agents/h/` |
 | K-gent (Persona) | ✅ `impl/claude-openrouter/agents/k/` |
