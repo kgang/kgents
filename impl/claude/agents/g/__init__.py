@@ -55,6 +55,25 @@ from agents.g.forge_integration import (
     forge_with_interface,
 )
 
+from agents.g.fuzzing_integration import (
+    # Types
+    FuzzInputType,
+    FuzzResult,
+    FuzzReport,
+    PropertyType,
+    PropertyResult,
+    PropertyTestReport,
+    # Classes
+    TongueInputGenerator,
+    TongueFuzzer,
+    TonguePropertyTester,
+    # Convenience functions
+    fuzz_tongue,
+    property_test_tongue,
+    validate_tongue_with_t_gent,
+    generate_constraint_proofs,
+)
+
 __all__ = [
     # Core types
     "Tongue",
@@ -92,4 +111,18 @@ __all__ = [
     "create_invocation_handler",
     "bind_handlers",
     "forge_with_interface",
+    # T-gent integration (Phase 6)
+    "FuzzInputType",
+    "FuzzResult",
+    "FuzzReport",
+    "PropertyType",
+    "PropertyResult",
+    "PropertyTestReport",
+    "TongueInputGenerator",
+    "TongueFuzzer",
+    "TonguePropertyTester",
+    "fuzz_tongue",
+    "property_test_tongue",
+    "validate_tongue_with_t_gent",
+    "generate_constraint_proofs",
 ]
