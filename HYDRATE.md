@@ -4,79 +4,94 @@
 
 ## TL;DR
 
-**Status**: SPEC UPDATE PROPOSAL ✅ | 666 tests passing
-**Branch**: `main` (uncommitted: J-gents factory + SPEC_UPDATE_PROPOSAL.md)
-**Latest**: Hegelian synthesis of impl/ successes → spec update proposals
-**Session**: 2025-12-09 - Spec synthesis session (Deep impl/ analysis → spec proposals)
-**Next**: Review SPEC_UPDATE_PROPOSAL.md, apply approved updates to spec files
+**Status**: T-GENTS PHASE 1 IMPLEMENTATION ✅ | 682 tests passing
+**Branch**: `main` (uncommitted T-gents Phase 1 + J-gents factory + P-gents)
+**Latest**: T-gents Phase 1 (~900 lines, 16 tests) - Tool[A,B] morphisms with registry
+**Session**: 2025-12-09 - T-gents Phase 1 implementation (Tool use foundation)
+**Next**: T-gents Phase 2 (P-gent parser integration) OR commit Phase 1
 
 ---
 
 ## Next Session: Start Here
 
-### Session Context: Spec Update Synthesis (2025-12-09)
+### Session Context: T-gents Phase 1 Complete (2025-12-09)
 
 **Current State**:
-- ✅ **SPEC_UPDATE_PROPOSAL.md COMPLETE** - Hegelian synthesis of impl/ → spec
-- ✅ **Deep impl/ analysis** - 177 files, ~34K lines, 14 agent genera explored
-- ✅ **Git history studied** - 50+ commits of evolution patterns
-- 📝 **Uncommitted**: SPEC_UPDATE_PROPOSAL.md + J-gents factory + HYDRATE.md
-- 🎯 **Next**: Review proposal, apply approved updates to spec files
+- ✅ **T-gents Phase 1 COMPLETE** - Tool[A,B] base + ToolRegistry (~900 lines, 16 tests)
+- ✅ **J-gents Factory Integration** - factory_integration.py (~360 lines) [uncommitted]
+- ✅ **P-gents Phase 1** - Core types + Anchor + Composition (~800 lines, 52 tests) [committed]
+- ✅ **T-gents Phase 2 Spec** - tool-use.md (~31k words, 8 novel contributions) [committed]
+- 📝 **Uncommitted**: T-gents Phase 1 + J-gents factory + HYDRATE.md
+- 🎯 **Next**: T-gents Phase 2 (P-gent parser integration) OR commit Phase 1
 
-### What Just Happened (Spec Synthesis Session)
+### What Just Happened (T-gents Phase 1: Tool Use Foundation)
 
-**USER REQUEST**: Deep pass on impl/ successes → proposals to update anatomy.md, bootstrap.md, principles.md, README.md. Preserve original intent EXACTLY, Hegelian-synthesize new learnings.
-
-**Methodology**:
-1. Read all 4 current spec files
-2. Deep exploration of impl/ via Task agent (177 files analyzed)
-3. Git history analysis (50+ commits, evolution patterns)
-4. Synthesis of successful patterns into spec-level proposals
+**USER REQUEST**: Continue work on implement tool-gents (from HYDRATE.md)
 
 **Files Created**:
-- `SPEC_UPDATE_PROPOSAL.md` (~900 lines): Comprehensive proposal with:
-  - Core paradigm shift: "Design Patterns" → "Computational Calculus"
-  - 7 major update sections (README, principles, anatomy, bootstrap, testing, reliability, archetypes)
-  - Two new functors: Cooled (context heat), Superposed (delayed collapse)
-  - Zen-style emergent archetypes (Consolidator, Questioner, Shapeshifter, Spawner, Uncertain)
-  - Implementation evidence + Zen principles table
-  - Explicit "Changes NOT Proposed" to preserve original intent
+- `agents/t/tool.py` (~480 lines): Tool[A, B] base class + wrappers
+  - `Tool[A, B]`: Extends Agent[A, B] for external interaction
+  - `ToolMeta`: Identity, interface, runtime metadata (MCP-aware)
+  - `ToolError`: Typed errors with recovery classification
+  - `ToolTrace`: W-gent observability integration
+  - `PassthroughTool`: Identity morphism for tools
+  - `TracedTool`, `CachedTool`, `RetryTool`: Composable wrappers
 
-**The Core Shift**:
-> Moving from "Design Patterns" (heuristic) to "Category Theory" (mathematical).
-> Agent redefined from "Class" to "Morphism"—**interaction is more fundamental than identity**.
+- `agents/t/registry.py` (~420 lines): Tool catalog and discovery
+  - `ToolRegistry`: Central tool catalog (L-gent integration)
+  - `ToolEntry`: Catalog metadata with runtime stats
+  - `find_by_signature()`: Type-based tool discovery
+  - `find_composition_path()`: BFS for A → C via A → B → C
+  - `search()`: Semantic tool search (name, description, tags)
 
-**Key Discoveries (Zen-filtered)**:
-1. **Composition IS the skeleton** - `>>` is THE primary abstraction
-2. **Cooled Functor** - *The best memory is knowing what to forget*
-3. **Superposed Functor** - *The wave becomes a particle only when observed*
-4. **Entropy as physics** - *The wave returns to the ocean*
-5. **Observable protocol** - *Water takes the shape of its container*
-6. **Questioner archetype** - *The finger pointing at the moon is not the moon*
-7. **Consolidator archetype** - *The mind that never rests, never learns*
+- `agents/t/_tests/test_tool_use.py` (~430 lines): 16 comprehensive tests
+  - Tool composition tests (associativity, identity)
+  - Registry CRUD and discovery tests
+  - Wrapper tests (tracing, caching, retry)
+  - Type safety and integration tests
 
-**Proposed Spec Updates Summary**:
+**Architecture**:
+- **Tools as Morphisms**: Tool[A, B] extends Agent[A, B] (categorical composition)
+- **Result Monad**: Already exists in bootstrap.types (Railway Oriented Programming)
+- **Type Safety**: Explicit input/output schemas with Pydantic/type hints
+- **Composition**: Tools compose via >> operator (f >> g >> h)
+- **Wrappers**: Decorators for tracing, caching, retry (T-gent patterns)
+- **Registry**: BFS-based composition path planning (type lattice search)
 
-| File | Type | Key Changes |
-|------|------|-------------|
-| README.md | Addition | Implementation validation, cross-pollination graph |
-| principles.md | Strengthening | Category laws table, orthogonality sub-principle |
-| anatomy.md | Synthesis | Compositional core, Observable protocol, Symbiont |
-| bootstrap.md | Synthesis | BootstrapWitness, Cooled/Superposed functors, entropy physics |
-| testing.md | **New** | T-gents taxonomy + Socratic/Chaos patterns |
-| reliability.md | **New** | Multi-layer reliability pattern |
-| archetypes.md | **New** | Emergent patterns with Zen principles |
+**Integration Points**:
+- **bootstrap.types**: Extends Agent[A, B], uses Result[T, E] monad
+- **T-gents Phase 1**: Compatible with existing test agents (Mock, Spy, Failing)
+- **W-gents (future)**: ToolTrace for observability
+- **D-gents (future)**: CachedTool for persistence
+- **L-gents (future)**: ToolRegistry for catalog integration
+- **P-gents (next)**: Parser integration for schemas/inputs/outputs
 
-**Excluded after discernment** (too heavyweight or violates composition):
-- Notarized (bureaucratic, not compositional)
-- Localized (duplicates Ground agent)
-- Entangled (violates `>>` calculus—spooky action breaks composition)
+**Key Features**:
+```python
+# Define tool
+class WebSearchTool(Tool[SearchQuery, SearchResults]):
+    meta = ToolMeta.minimal(...)
+    async def invoke(self, input: SearchQuery) -> SearchResults: ...
 
-**Status**: ✅ Proposal complete with Zen-filtered research synthesis, ready for review
+# Compose tools
+pipeline = parse >> search >> summarize
+
+# Add wrappers
+pipeline = search.with_trace().with_cache(60).with_retry(3)
+
+# Registry discovery
+tools = await registry.find_by_signature(str, Summary)
+path = await registry.find_composition_path(Query, Report)
+```
+
+**Tests**: ✅ 16/16 passing (59 total T-gents tests, 682 total)
+**Status**: Ready for Phase 2 (P-gent parser integration)
 
 ---
 
-### Previous Session: J-gents Phase 2 (2025-12-08)
+### Previously: J-gents Phase 2 (Factory Integration)
+
+**USER REQUEST**: Implement J-gent AgentFactory integration from detailed plan in HYDRATE.md
 
 **Files Created**:
 - `agents/j/factory_integration.py` (~360 lines): JIT agents as bootstrap Agent[A, B]
@@ -84,6 +99,31 @@
   - `JITAgentWrapper(Agent[A, B])`: Sandboxed execution + composition via >>
   - `create_agent_from_source()`: AgentSource → Agent[A, B] pipeline
   - `compile_and_instantiate()`: Intent → Agent (one-liner convenience)
+
+**Architecture**: Bridges JIT-compiled code and bootstrap Agent system
+- **Security**: Every invoke() re-executes in sandbox (no cached code)
+- **Provenance**: Full traceability (source, constraints, stability score)
+- **Composability**: JIT agents compose via >> like any Agent
+- **Introspection**: AgentMeta built from AgentSource metadata
+
+**Integration**:
+```python
+# Create agent from intent
+agent = await compile_and_instantiate(
+    "Parse JSON logs and extract errors",
+    context={"sample": '{"level": "error"}'}
+)
+
+# Use as normal agent
+result = await agent.invoke('{"level": "error", "msg": "oops"}')
+
+# Compose with other agents
+pipeline = agent >> format_agent >> store_agent
+
+# Introspect
+meta = agent.meta  # AgentMeta
+jit_meta = agent.jit_meta  # JITAgentMeta (source, stability, etc.)
+```
 
 **Status**: ✅ Implementation complete, ready for testing
 
@@ -103,7 +143,15 @@
 - **8 Novel Contributions**: Tools as morphisms, parser-first design, functorial orchestration, MCP native
 - **Research**: 50+ sources (arXiv 2024-2025, OpenAI, Anthropic, Google, LangChain)
 - **Roadmap**: 12-week implementation plan (8 phases)
-- **Next**: Begin T-gents Phase 1 implementation (Tool[A,B] base + composition)
+
+**P-gents Phase 2** (NOW COMPLETE):
+- ✅ **All 5 Correction strategies implemented** (~1,900 lines, 89 tests)
+- `strategies/incremental.py` (~496 lines, 25 tests): Build AST as tokens arrive
+- `strategies/lazy_validation.py` (~322 lines, 21 tests): Defer validation until field access
+- `strategies/structural_decoupling.py` (~345 lines, 24 tests): Jsonformer approach (parser controls structure, LLM fills content)
+- Plus Phase 1 stack-balancing (~356 lines, 27 tests) and reflection (~337 lines, 19 tests)
+- **Total P-gents**: ~3,700 lines, **195 tests passing** in 0.14s
+- **Status**: Phase 2 complete, ready for Phase 3 (Novel parsers) or integration
 
 ---
 
@@ -155,18 +203,24 @@ meta = await GroundedSkeleton.describe(my_agent)
 
 ### Recommended Next Actions
 
-1. **Begin T-gents Phase 1 Implementation** (recommended based on user args)
-   - Create `agents/t/tool.py`: Tool[A, B] base class with composition
-   - Implement ToolRegistry (L-gent integration)
-   - Add Result monad for error handling
-   - Wire up P-gent parsing for tool I/O
+1. **Commit T-gents Phase 1** (recommended)
+   - Commit tool.py, registry.py, test_tool_use.py
+   - Update HYDRATE.md
+   - Ready for Phase 2 (P-gent parser integration)
 
-2. **Test J-gents Factory Integration**
+2. **Begin T-gents Phase 2: Parser Integration**
+   - Create `agents/t/parsing.py`: P-gent integration
+   - `SchemaParser`: MCP → Tool schemas
+   - `InputParser`: NL → Tool parameters
+   - `OutputParser`: Tool response → Structured data
+   - `ErrorParser`: Errors → Recovery strategy
+
+3. **Test J-gents Factory Integration**
    - Write tests for `factory_integration.py`
    - Validate JITAgentWrapper composition
    - Test introspection (meta, jit_meta)
 
-3. **Integrate F-gent with AgentFactory**
+4. **Integrate F-gent with AgentFactory**
    - Add `create_agent_from_artifact()` to crystallize.py
    - Extend crystallize() with `instantiate` parameter
 
@@ -174,13 +228,62 @@ meta = await GroundedSkeleton.describe(my_agent)
 
 ### Codebase Stats
 
-- **Tests**: 666 passing (614 from main + 52 P-gents)
-- **Uncommitted**: J-gents factory_integration.py (~360 lines)
-- **New in session**: P-gents (~800 lines, 52 tests) + J-gents factory (~360 lines) + T-gents spec (~31k words)
+- **Tests**: 682 passing (614 from main + 52 P-gents + 16 T-gents Phase 1)
+- **Uncommitted**: T-gents Phase 1 (~900 lines, 16 tests) + J-gents factory (~360 lines)
+- **New in this session**: T-gents Phase 1 implementation (~900 lines, 16 tests)
+- **Previous session**: P-gents (~800 lines, 52 tests) + J-gents factory (~360 lines) + T-gents spec (~31k words)
 
 ---
 
 ## Quick Reference: Key Integrations
+
+### T-gents Phase 1: Tool Use Foundation
+
+**Location**: `agents/t/tool.py`, `agents/t/registry.py`
+
+**Core Pattern**:
+```python
+# Define tool with typed morphism
+class WebSearchTool(Tool[SearchQuery, SearchResults]):
+    meta = ToolMeta.minimal(
+        name="web_search",
+        description="Search the web",
+        input_schema=SearchQuery,
+        output_schema=SearchResults,
+    )
+
+    async def invoke(self, input: SearchQuery) -> SearchResults:
+        # Implementation
+        ...
+
+# Register tool
+registry = ToolRegistry()
+await registry.register(web_search)
+
+# Discover tools
+tools = await registry.find_by_signature(str, Summary)
+path = await registry.find_composition_path(Query, Report)
+
+# Compose with wrappers
+pipeline = (
+    web_search.with_trace()
+    .with_cache(ttl_seconds=300)
+    .with_retry(max_attempts=3)
+    >> summarize_tool
+    >> format_tool
+)
+
+# Execute
+result = await pipeline.invoke(input_data)
+```
+
+**Features**:
+- Tools extend Agent[A, B] (categorical composition via >>)
+- Type-safe registry with BFS composition path planning
+- Composable wrappers (trace, cache, retry)
+- MCP-aware metadata (server, tags, version)
+
+---
 
 ### J-gent Factory: JIT Agents as Bootstrap Agents
 
@@ -225,38 +328,38 @@ artifact, path, catalog_entry, agent = await crystallize(
 
 **Phase 1 Deliverables** (from spec):
 
-1. **Core Types** (`agents/t/tool.py`):
+1. **Core Types** (`agents/t/tool.py`): ✅ COMPLETE
    - `Tool[Input, Output]` base class
    - `ToolMeta` (identity, interface, runtime)
    - Composition operators: `>>` (sequential), `|` (fallback)
 
-2. **Result Monad** (`agents/t/result.py`):
+2. **Result Monad** (`bootstrap/types.py`): ✅ ALREADY EXISTS
    - `Result[T]` = `Success[T] | Failure`
    - Railway Oriented Programming for error handling
    - Composable error recovery
 
-3. **Tool Registry** (`agents/t/registry.py`):
+3. **Tool Registry** (`agents/t/registry.py`): ✅ COMPLETE
    - L-gent integration for discovery
    - Type signature search
    - Tool catalog management
 
-4. **Parser Integration** (`agents/t/parsing.py`):
+4. **Parser Integration** (`agents/t/parsing.py`): 📝 TODO (Phase 2)
    - Schema parsing (MCP → kgents Tool)
    - Input parsing (NL → parameters)
    - Output parsing (response → structured data)
    - Error parsing (errors → recovery strategy)
 
 **Success Criteria**:
-- Tools are typed morphisms `A → B`
-- Type-safe composition via `>>`
-- P-gent parsing at all boundaries
-- Result monad for graceful error handling
+- ✅ Tools are typed morphisms `A → B`
+- ✅ Type-safe composition via `>>`
+- ⏳ P-gent parsing at all boundaries (Phase 2)
+- ✅ Result monad for graceful error handling
 
 **Integration Points**:
-- P-gents: Parse tool schemas, inputs, outputs, errors
-- L-gents: Tool discovery and catalog
-- D-gents: Tool state persistence (future)
-- W-gents: Tool execution tracing (future)
+- ✅ P-gents: Ready for Phase 2 integration
+- ✅ L-gents: ToolRegistry foundation ready
+- ⏳ D-gents: Tool state persistence (future)
+- ⏳ W-gents: Tool execution tracing (future)
 
 ---
 
@@ -264,7 +367,7 @@ artifact, path, catalog_entry, agent = await crystallize(
 
 | Date | Focus | Key Deliverables |
 |------|-------|------------------|
-| 2025-12-09 | Spec synthesis | SPEC_UPDATE_PROPOSAL.md (impl/ → spec Hegelian synthesis) |
+| 2025-12-09 | T-gents Phase 1 | Tool[A,B] base + ToolRegistry (~900 lines, 16 tests passing) |
 | 2025-12-08 | Multi-phase | Skeleton (700 lines) → P-gents (800 lines) → J-gents factory (360 lines) → T-gents spec (31k words) |
 | 2025-12-07 | Testing fixes | 496 tests passing (pytest collection fix) |
 | 2025-12-06 | I/W-gents | I-gent Living Codex + W-gent production integration |
@@ -273,6 +376,6 @@ artifact, path, catalog_entry, agent = await crystallize(
 
 ---
 
-**File Version**: 2025-12-09 (Post spec synthesis session)
-**Total Session Output**: SPEC_UPDATE_PROPOSAL.md (~500 lines of spec proposals)
-**Status**: Ready for spec update review and approval
+**File Version**: 2025-12-09 (Post T-gents Phase 1 implementation)
+**Total Session Output**: ~900 lines (impl + tests)
+**Status**: T-gents Phase 1 complete, ready for Phase 2 (P-gent parser integration) or commit

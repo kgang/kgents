@@ -32,6 +32,12 @@ Type IV - Critics (Semantic Evaluation):
 - PropertyAgent: Property-based testing P: (A, Property) → TestResult
 - OracleAgent: Differential testing O: (A, A') → DiffResult
 
+Type V - Tools (Phase 2: Tool Use):
+- Tool[A, B]: Typed morphism for external interaction
+- ToolRegistry: Catalog and discovery (L-gent integration)
+- ToolTrace: Observability (W-gent integration)
+- Tool wrappers: TracedTool, CachedTool, RetryTool
+
 Usage:
     from agents.t import MockAgent, FailingAgent, SpyAgent
 
@@ -48,6 +54,14 @@ Usage:
     # Observe pipeline data
     spy = SpyAgent(label="Hypotheses")
     pipeline = generate >> spy >> validate
+
+    # Tool use (Phase 2)
+    from agents.t import Tool, ToolRegistry
+
+    # Register and discover tools
+    registry = ToolRegistry()
+    await registry.register(web_search_tool)
+    tools = await registry.find_by_signature(str, Summary)
 """
 
 from .failing import (
@@ -158,6 +172,28 @@ from .evolution_integration import (
     evolve_with_law_validation,
 )
 
+from .tool import (
+    Tool,
+    ToolMeta,
+    ToolIdentity,
+    ToolInterface,
+    ToolRuntime,
+    ToolError,
+    ToolErrorType,
+    ToolTrace,
+    PassthroughTool,
+    TracedTool,
+    CachedTool,
+    RetryTool,
+)
+
+from .registry import (
+    ToolRegistry,
+    ToolEntry,
+    get_registry,
+    set_registry,
+)
+
 __all__ = [
     # Type I - Nullifiers
     "MockAgent",
@@ -229,4 +265,21 @@ __all__ = [
     "validate_evolution_pipeline",
     "validate_evolution_stages_from_pipeline",
     "evolve_with_law_validation",
+    # Type V - Tools (Phase 2: Tool Use)
+    "Tool",
+    "ToolMeta",
+    "ToolIdentity",
+    "ToolInterface",
+    "ToolRuntime",
+    "ToolError",
+    "ToolErrorType",
+    "ToolTrace",
+    "PassthroughTool",
+    "TracedTool",
+    "CachedTool",
+    "RetryTool",
+    "ToolRegistry",
+    "ToolEntry",
+    "get_registry",
+    "set_registry",
 ]
