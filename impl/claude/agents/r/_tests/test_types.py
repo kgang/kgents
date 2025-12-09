@@ -19,7 +19,6 @@ from agents.r.types import (
     TextualGradient,
     OptimizationIteration,
     OptimizationTrace,
-    OptimizedAgentMeta,
     TeleprompterStrategy,
     OptimizationBudget,
     ROIEstimate,
