@@ -1,37 +1,56 @@
-# O-gents: Observability Agents
+# O-gents: The Epistemic Substrate
 
-> The eye that sees all, changes nothing—yet enables everything.
+> **Core Concept**: Systemic Proprioception.
+> **Role**: The Functor that maps Behavior to Truth.
 
----
-
-## Philosophy
-
-O-gents (Observability) are the **seeing infrastructure** of kgents. Unlike N-gents (Narrator) who tell stories, O-gents **witness in real-time**. They are authorized to integrate deeply with the system—even at the bootstrap level.
-
-**Key Insight**: Observability is not an add-on. It is woven into the fabric of the system itself. O-gents are **transformatively integrated**—they change how the system can know itself.
+**Status**: Specification v2.0 (The Proprioception Update)
 
 ---
 
-## The Transformative Integration
+## Philosophy: From Surveillance to Self-Knowledge
 
-O-gents are authorized to integrate at levels other agents cannot:
+Standard observability (Datadog, Prometheus) answers: *"Is the server on?"*
+O-gent observability answers: *"Is the agent sane?"*
 
-| Integration Level | What O-gent Sees | Bootstrap Involvement |
-|-------------------|------------------|----------------------|
-| **Bootstrap** | Id, Compose, Judge, Ground, Contradict, Sublate, Fix | BootstrapWitness |
-| **W-gent** | Process observation, pheromone fields | Wire protocol hooks |
-| **I-gent** | Visualization state, render cycles | Widget observation |
-| **E-gent** | Evolution trajectories, reliability metrics | Layer instrumentation |
-| **L-gent** | Knowledge graph, query patterns | Index observability |
-| **N-gent** | Narrative logs, trace streams | Story observation |
+O-gents provide **Proprioception**: the innate ability of the system to sense its own cognitive posture. In biological systems, proprioception is the sense of self-movement and body position. Without it, the body cannot coordinate. Similarly, O-gents provide the continuous feedback loop required for the system to recognize itself, its value, and its sanity.
 
-This is not surveillance—it is the system's capacity for **self-knowledge**.
+They are **Read-Only** regarding state, but **Write-Only** regarding meta-state (knowledge about the state).
+
+**The Heisenberg Constraint**:
+While O-gents aspire to be invisible, the act of semantic observation (asking an LLM to judge another LLM) consumes energy (tokens). Therefore, O-gents must be **Economically Self-Aware**. They must optimize the *Value of Information* (VoI).
+
+See [B-gents VoI Framework](../b-gents/banker.md#part-iii-value-of-information-voi--economics-of-observation) for the full economic model of observation.
+
+**The Observation Principle**:
+> To observe is to create the possibility of knowledge without disturbing the observed.
+
+This is the O-gent's core ethical constraint:
+1. **Observation doesn't mutate**: Outputs are unchanged
+2. **Observation doesn't block**: Async, non-blocking collection
+3. **Observation doesn't leak**: Data stays within authorized boundaries
+4. **Observation enables**: Self-knowledge enables improvement
 
 ---
 
-## The Observer Functor
+## The Mathematical Foundation: The Observer Functor
 
-O-gent is a functor that lifts agents into observable space **without changing their behavior**:
+We formalize the O-gent as an **Endofunctor** in the category of Agents.
+
+Let $\mathcal{A}$ be the category of Agents.
+The Observer Functor $O: \mathcal{A} \to \mathcal{A}$ maps an agent $f: X \to Y$ to an agent $O(f): X \to Y$.
+
+**The Law**: `O(f) ≅ f` for all behavioral purposes. Observation is invisible to the observed.
+
+**The Commutative Diagram**:
+```
+    X ──────f──────► Y
+    │                │
+    │ O              │ O
+    ▼                ▼
+    X ────O(f)─────► Y
+
+    O(f)(x) ≅ f(x) + telemetry side-effects
+```
 
 ```python
 class ObserverFunctor:
@@ -43,9 +62,10 @@ class ObserverFunctor:
     """
 
     def lift(self, agent: Agent[A, B]) -> Agent[A, B]:
-        return ObservedAgent(inner=agent, observer=self)
+        return ProprioceptiveWrapper(inner=agent, observer=self)
 
-class ObservedAgent(Agent[A, B]):
+
+class ProprioceptiveWrapper(Agent[A, B]):
     """
     Agent under observation.
 
@@ -53,225 +73,72 @@ class ObservedAgent(Agent[A, B]):
     """
 
     async def invoke(self, input: A) -> B:
-        # Pre-observation (doesn't change input)
-        span = self.observer.start_span(self.inner.name)
+        # 1. Pre-computation snapshot
+        ctx = self.observer.pre_invoke(self.inner, input)
 
         try:
-            # Execute (unchanged)
+            # 2. Execute (unchanged)
             result = await self.inner.invoke(input)
 
-            # Post-observation (doesn't change output)
-            span.record_success(result)
+            # 3. Post-computation analysis (async, non-blocking)
+            asyncio.create_task(self.observer.post_invoke(ctx, result))
+
             return result
 
         except Exception as e:
-            span.record_failure(e)
+            self.observer.record_entropy(ctx, e)
             raise
-
-        finally:
-            span.end()
 ```
-
-**The Law**: `O(f) ≅ f` for all behavioral purposes. Observation is invisible to the observed.
 
 ---
 
-## Bootstrap Integration: BootstrapWitness
+## The Three Dimensions of Observability
 
-O-gents have special access to verify bootstrap agent laws:
+O-gents observe across three distinct dimensions. Most systems only do the first.
+
+| Dimension | Name | Question | What It Observes |
+|:---:|:---:|---|---|
+| **X** | **Telemetric** | *Is it running?* | Latency, errors, throughput (OpenTelemetry) |
+| **Y** | **Semantic** | *Does it mean what it says?* | Drift, hallucinations, knot integrity (LLM-as-Judge) |
+| **Z** | **Axiological** | *Is it worth the cost?* | RoC, conservation laws, economic health (ValueTensor) |
+
+This is **Semantic Observability**—moving beyond "CPU usage" to "Meaning usage."
+
+---
+
+## Dimension X: Telemetric Observability (The Body)
+
+Standard metrics collection. O-gents integrate with OpenTelemetry for infrastructure.
+
+### Integration Points
+
+| Integration Level | What O-gent Sees | Bootstrap Involvement |
+|-------------------|------------------|----------------------|
+| **Bootstrap** | Id, Compose, Judge, Ground, Contradict, Sublate, Fix | BootstrapWitness |
+| **W-gent** | Process observation, pheromone fields | Wire protocol hooks |
+| **I-gent** | Visualization state, render cycles | Widget observation |
+| **E-gent** | Evolution trajectories, reliability metrics | Layer instrumentation |
+| **L-gent** | Knowledge graph, query patterns | Index observability |
+| **N-gent** | Narrative logs, trace streams | Story observation |
 
 ```python
-class BootstrapWitness(Agent[None, BootstrapVerificationResult]):
-    """
-    The observer of bootstrap agents.
+class TelemetryObserver:
+    """Standard metrics collection."""
 
-    Verifies that the irreducible kernel maintains its laws.
-    This is the system's capacity for self-verification.
-    """
+    def observe_invoke(self, agent_id: str, duration_ms: float, success: bool):
+        self.metrics.histogram("agent.latency_ms", duration_ms, labels={"agent": agent_id})
+        self.metrics.increment("agent.invocations", labels={"success": success})
 
-    async def invoke(self, _: None) -> BootstrapVerificationResult:
-        return BootstrapVerificationResult(
-            all_agents_exist=await self.verify_existence(),
-            identity_laws_hold=await self.verify_identity_laws(),
-            composition_laws_hold=await self.verify_composition_laws(),
-            overall_verdict=self.synthesize_verdict()
-        )
-
-    async def verify_identity_laws(self) -> bool:
-        """Verify: Id >> f ≡ f ≡ f >> Id"""
-        test_agents = self.get_test_agents()
-        for f in test_agents:
-            # Left identity
-            left = await (Id >> f).invoke(test_input)
-            direct = await f.invoke(test_input)
-            if left != direct:
-                return False
-
-            # Right identity
-            right = await (f >> Id).invoke(test_input)
-            if right != direct:
-                return False
-
-        return True
-
-    async def verify_composition_laws(self) -> bool:
-        """Verify: (f >> g) >> h ≡ f >> (g >> h)"""
-        f, g, h = self.get_composition_test_agents()
-
-        left_assoc = await ((f >> g) >> h).invoke(test_input)
-        right_assoc = await (f >> (g >> h)).invoke(test_input)
-
-        return left_assoc == right_assoc
+    def observe_composition(self, a: Agent, b: Agent, result: Agent):
+        self.metrics.increment("composition.count")
+        self.graph.add_edge(a.name, b.name)
 ```
 
----
-
-## W-gent Integration: Process Observation
-
-O-gents observe W-gent's process management:
-
-```python
-class ProcessObserver:
-    """
-    Observes W-gent process lifecycle.
-    """
-
-    def observe_spawn(self, process_id: str, config: ProcessConfig):
-        """Record process spawn."""
-        self.metrics.increment("process.spawn")
-        self.emit_event(ProcessSpawned(process_id, config))
-
-    def observe_communication(self, from_id: str, to_id: str, message: Message):
-        """Record inter-process communication."""
-        self.metrics.histogram("ipc.message_size", len(message))
-        self.emit_event(ProcessCommunication(from_id, to_id, message))
-
-    def observe_termination(self, process_id: str, reason: str):
-        """Record process termination."""
-        self.metrics.increment("process.termination", labels={"reason": reason})
-        self.emit_event(ProcessTerminated(process_id, reason))
-```
-
----
-
-## I-gent Integration: Visualization Observation
-
-O-gents observe I-gent rendering:
-
-```python
-class VisualizationObserver:
-    """
-    Observes I-gent visualization cycles.
-    """
-
-    def observe_render(self, widget: Widget, context: ViewContext, duration_ms: float):
-        """Record render performance."""
-        self.metrics.histogram("render.duration_ms", duration_ms, labels={
-            "widget_type": widget.__class__.__name__,
-            "context_medium": context.medium
-        })
-
-    def observe_state_change(self, agent_id: str, old_state: State, new_state: State):
-        """Record agent state transitions."""
-        self.emit_event(StateTransition(agent_id, old_state, new_state))
-```
-
----
-
-## E-gent Integration: Reliability Observation
-
-O-gents observe E-gent reliability layers:
-
-```python
-class ReliabilityObserver:
-    """
-    Observes E-gent reliability stack.
-    """
-
-    def observe_preflight(self, request: AgentRequest, result: PreFlightResult):
-        """Record preflight check results."""
-        self.metrics.increment("preflight.check", labels={
-            "passed": result.can_proceed,
-            "blocker_count": len(result.blockers)
-        })
-
-    def observe_retry(self, agent_id: str, attempt: int, error: Exception):
-        """Record retry attempts."""
-        self.metrics.increment("retry.attempt", labels={
-            "agent": agent_id,
-            "attempt": attempt,
-            "error_type": type(error).__name__
-        })
-
-    def observe_fallback(self, agent_id: str, fallback_level: int):
-        """Record fallback triggers."""
-        self.metrics.increment("fallback.trigger", labels={
-            "agent": agent_id,
-            "level": fallback_level
-        })
-```
-
----
-
-## L-gent Integration: Knowledge Observation
-
-O-gents observe L-gent knowledge operations:
-
-```python
-class KnowledgeObserver:
-    """
-    Observes L-gent knowledge curation.
-    """
-
-    def observe_query(self, query: Query, results: list, duration_ms: float):
-        """Record knowledge queries."""
-        self.metrics.histogram("knowledge.query_duration_ms", duration_ms)
-        self.metrics.histogram("knowledge.result_count", len(results))
-
-    def observe_index(self, document_id: str, index_type: str):
-        """Record indexing operations."""
-        self.metrics.increment("knowledge.index", labels={"type": index_type})
-
-    def observe_lineage(self, artifact_id: str, lineage_depth: int):
-        """Record lineage tracking."""
-        self.metrics.histogram("knowledge.lineage_depth", lineage_depth)
-```
-
----
-
-## The Observer Hierarchy
-
-O-gents form a hierarchical observation structure:
-
-```
-                    ┌─────────────────────┐
-                    │   SystemObserver    │
-                    │   (sees everything) │
-                    └──────────┬──────────┘
-                               │
-         ┌─────────────────────┼─────────────────────┐
-         │                     │                     │
-    ┌────▼────┐          ┌────▼────┐          ┌────▼────┐
-    │Bootstrap│          │  Agent  │          │  Infra  │
-    │Observer │          │Observer │          │Observer │
-    └────┬────┘          └────┬────┘          └────┬────┘
-         │                    │                    │
-    BootstrapWitness    AgentMetrics         ProcessObserver
-    LawVerifier         InvocationTracer     VisualizationObserver
-                        ErrorObserver        KnowledgeObserver
-```
-
----
-
-## Telemetry Export
-
-O-gents export to standard observability platforms:
+### Telemetry Export
 
 ```python
 class TelemetryExporter:
-    """
-    Export O-gent observations to external systems.
-    """
+    """Export O-gent observations to external systems."""
 
     exporters: list[Exporter] = [
         PrometheusExporter(port=9090),    # Metrics
@@ -285,83 +152,139 @@ class TelemetryExporter:
                 await exporter.export(observation)
 ```
 
-### OpenTelemetry Integration
+---
+
+## Dimension Y: Semantic Observability (The Mind)
+
+This is the cutting edge. O-gents use "Shadow Models" to verify the cognitive integrity of agents.
+
+### The Borromean Knot Validator
+
+An agent is "Sane" only if three registers hold. If one is cut, the agent is hallucinating or broken.
+
+**Delegates to**: [H-lacan](../h-gents/lacan.md) for RSI analysis primitives.
+
+| Register | What O-gent Observes | Validation |
+|----------|---------------------|------------|
+| **Symbolic** | Code, specs, schemas | Does it parse? Does it type-check? |
+| **Real** | Execution, memory, entropy | Does it run? Does it terminate? |
+| **Imaginary** | Visualization, perception | Does it look right? (Vision model check) |
 
 ```python
-from opentelemetry import trace, metrics
+class BorromeanObserver:
+    """
+    Observes the Borromean knot of agent health.
 
-class OTelObserver:
-    """O-gent with OpenTelemetry integration."""
+    All three registers must hold for the agent to be "valid."
+    If any ring is cut, the whole unknots.
 
-    def __init__(self):
-        self.tracer = trace.get_tracer("kgents.o-gent")
-        self.meter = metrics.get_meter("kgents.o-gent")
+    Delegates RSI analysis to H-lacan primitives.
+    """
 
-    def observe_agent(self, agent: Agent) -> Agent:
-        """Wrap agent with OTEL instrumentation."""
-        return OTelObservedAgent(agent, self.tracer, self.meter)
+    async def observe_symbolic(self, agent: Agent) -> SymbolicHealth:
+        """Does the agent's output satisfy its schema?"""
+        return SymbolicHealth(
+            schema_valid=self.validate_schema(agent.output_schema),
+            type_check_pass=self.type_check(agent),
+            spec_compliant=self.check_spec_compliance(agent)
+        )
+
+    async def observe_real(self, agent: Agent) -> RealHealth:
+        """Does the agent execute correctly in reality?"""
+        return RealHealth(
+            executes_without_error=await self.test_execution(agent),
+            terminates_in_budget=self.check_termination(agent),
+            memory_bounded=self.check_memory(agent)
+        )
+
+    async def observe_imaginary(self, agent: Agent) -> ImaginaryHealth:
+        """Does the agent's output look correct to perception?"""
+        rendered = await agent.render_state() if hasattr(agent, 'render_state') else None
+        return ImaginaryHealth(
+            visually_coherent=await self.vision_check(rendered),
+            user_perceivable=self.check_accessibility(rendered)
+        )
+
+    async def knot_health(self, agent: Agent) -> KnotHealth:
+        """All three rings must hold."""
+        symbolic = await self.observe_symbolic(agent)
+        real = await self.observe_real(agent)
+        imaginary = await self.observe_imaginary(agent)
+
+        if not (symbolic.valid and real.valid and imaginary.valid):
+            return PsychosisAlert(rings_broken=[...])
+
+        return KnotHealth(
+            symbolic=symbolic,
+            real=real,
+            imaginary=imaginary,
+            knot_intact=True
+        )
+```
+
+**The Insight**: Most agents live only in the Symbolic (generating text). They hallucinate because they detach from the Real. The Borromean Observer catches this before it propagates.
+
+### Semantic Drift Detection (Noether's Theorem)
+
+In physics, Noether's theorem relates symmetries to conservation laws. In kgents, we conserve **Intent**.
+
+If the Input Intent is $I$ and Output Meaning is $M$, then $M \approx I$.
+
+```python
+class DriftDetector:
+    """
+    Detects semantic drift across agent invocations.
+
+    When drift exceeds threshold, alerts are triggered.
+    """
+
+    async def measure_drift(
+        self,
+        agent_id: str,
+        input_intent: str,
+        output_summary: str
+    ) -> DriftReport:
+        """
+        Compare input intent with output summary.
+
+        High drift = the agent wandered off topic.
+        """
+        drift_score = await self.compute_drift(input_intent, output_summary)
+
+        if drift_score > self.threshold:
+            await self.alert(DriftAlert(
+                agent_id=agent_id,
+                drift_score=drift_score,
+                input_intent=input_intent,
+                output_summary=output_summary
+            ))
+
+        return DriftReport(
+            agent_id=agent_id,
+            drift_score=drift_score,
+            within_bounds=drift_score <= self.threshold
+        )
+
+    async def compute_drift(self, intent: str, output: str) -> float:
+        """
+        LLM-native drift computation.
+
+        Ask: "How well does this output serve this intent?"
+        Uses a cheap model (Haiku) to avoid Economic Drain.
+        """
+        return await self.judge.invoke(DriftQuery(
+            question=f"Rate 0-1: How well does '{output}' address '{intent}'?",
+            scale="semantic_alignment"
+        ))
 ```
 
 ---
 
-## The Observation Principle
+## Dimension Z: Axiological Observability (The Soul)
 
-> To observe is to create the possibility of knowledge without disturbing the observed.
+O-gents integrate with **B-gents** (Bankers) to ensure the system isn't just working, but is *profitable* (in terms of utility vs. compute).
 
-This is the O-gent's core ethical constraint:
-1. **Observation doesn't mutate**: Outputs are unchanged
-2. **Observation doesn't block**: Async, non-blocking collection
-3. **Observation doesn't leak**: Data stays within authorized boundaries
-4. **Observation enables**: Self-knowledge enables improvement
-
----
-
-## Visualization (The Observer Dashboard)
-
-```
-┌─ O-gent Dashboard ────────────────────────────────────────┐
-│                                                            │
-│  Bootstrap Health:  ● All laws verified                    │
-│  Agent Invocations: ████████████████░░░░ 823/sec          │
-│  Error Rate:        ░░░░░░░░░░░░░░░░░░░░ 0.02%            │
-│                                                            │
-│  ┌─ Active Traces ──────────────────────────────────────┐ │
-│  │ [CodeReviewer] → [Judge] → [Synthesizer]            │ │
-│  │         12ms        8ms          45ms               │ │
-│  └──────────────────────────────────────────────────────┘ │
-│                                                            │
-│  ┌─ Reliability Stack ──────────────────────────────────┐ │
-│  │ Preflight: 99.2% pass | Retry: 12 attempts today    │ │
-│  │ Fallback: 0 triggers  | Ground: 0 collapses         │ │
-│  └──────────────────────────────────────────────────────┘ │
-│                                                            │
-└────────────────────────────────────────────────────────────┘
-```
-
----
-
-## O-gent Types
-
-| Agent | Purpose |
-|-------|---------|
-| `BootstrapWitness` | Verify bootstrap laws |
-| `AgentObserver` | Instrument agent invocations |
-| `ProcessObserver` | Watch W-gent processes |
-| `MetricsCollector` | Aggregate telemetry |
-| `AlertAgent` | Trigger alerts on anomalies |
-| `AuditAgent` | Compliance and audit trails |
-| `DriftDetector` | Monitor semantic drift (Noether's theorem) |
-| `HealthProbe` | Continuous health assessment |
-| `TopologyMapper` | Track agent composition graphs |
-| `ValueLedgerObserver` | Track economic health via UVP |
-| `TensorValidator` | Verify conservation laws across dimensions |
-| `RoCMonitor` | Monitor Return on Compute per agent |
-
----
-
-## B-gent Integration: ValueLedger Observability
-
-O-gents have special access to observe the **Universal Value Protocol** ([spec/b-gents/banker.md](../b-gents/banker.md)) and **Value Tensor** ([spec/b-gents/value-tensor.md](../b-gents/value-tensor.md)) systems.
+**Integrates with**: [B-gents ValueTensor](../b-gents/value-tensor.md) and [UVP](../b-gents/banker.md).
 
 ### ValueLedgerObserver
 
@@ -408,26 +331,25 @@ class ValueLedgerObserver(Agent[None, EconomicHealthReport]):
         """Detect suspicious economic patterns."""
         anomalies = []
 
-        # Check for agents burning money
         for agent_id in self.ledger.get_all_agents():
             sheet = self.ledger.get_agent_balance_sheet(agent_id)
+
+            # Burning money
             if sheet.gas_consumed > 1000 and sheet.assets < sheet.gas_consumed * 0.5:
                 anomalies.append(EconomicAnomaly(
                     type="burning_money",
                     agent_id=agent_id,
                     severity="warning",
-                    message=f"Agent {agent_id} has RoC < 0.5x after {sheet.gas_consumed} gas"
+                    message=f"Agent {agent_id} has RoC < 0.5x (Entropy Leak)"
                 ))
 
-        # Check for impact without gas (suspicious)
-        for agent_id in self.ledger.get_all_agents():
-            sheet = self.ledger.get_agent_balance_sheet(agent_id)
+            # Free lunch (suspicious)
             if sheet.assets > 1000 and sheet.gas_consumed < 100:
                 anomalies.append(EconomicAnomaly(
                     type="free_lunch",
                     agent_id=agent_id,
                     severity="error",
-                    message=f"Agent {agent_id} claims high impact with minimal gas"
+                    message=f"Agent {agent_id} claims high impact with minimal gas (Check for Fraud)"
                 ))
 
         return anomalies
@@ -454,7 +376,7 @@ class TensorValidator(Agent[ValueTensor, ValidationReport]):
         # Check internal consistency
         consistency_anomalies = self.checker.check_consistency(tensor)
 
-        # Check conservation laws (requires before/after, so use history)
+        # Check conservation laws (requires before/after)
         conservation_violations = []
         if hasattr(tensor, '_previous'):
             conservation_violations = [
@@ -476,10 +398,10 @@ class TensorValidator(Agent[ValueTensor, ValidationReport]):
         )
 ```
 
-### RoCMonitor Integration
+### RoCMonitor
 
 ```python
-class RoCObserver:
+class RoCMonitor:
     """
     Real-time monitoring of Return on Compute across all agents.
 
@@ -522,183 +444,80 @@ class RoCObserver:
 
             yield snapshot
             await asyncio.sleep(5)  # 5-second intervals
-
-    def observe_transaction(
-        self,
-        agent_id: str,
-        gas: Gas,
-        impact: Impact
-    ) -> TransactionObservation:
-        """Observe a single transaction for economic health."""
-        roc = impact.realized_value / gas.cost_usd if gas.cost_usd > 0 else 0
-
-        return TransactionObservation(
-            agent_id=agent_id,
-            gas=gas,
-            impact=impact,
-            roc=roc,
-            roc_status=self.classify_roc(roc),
-            running_average_roc=self.ledger.get_agent_average_roc(agent_id),
-            budget_adjustment=self.calculate_budget_adjustment(roc)
-        )
 ```
 
-### Economic Dashboard (O-gent View)
+### LedgerAuditor
 
-```
-┌─ O-gent Economic Observability ──────────────────────────────┐
-│                                                               │
-│  SYSTEM HEALTH                                                │
-│  ├─ GDP (Total Impact):     $12,450                          │
-│  ├─ Gas Burned:             $3,200                           │
-│  ├─ System RoC:             3.89x (Healthy)                  │
-│  └─ Conservation Laws:      ✓ All holding                    │
-│                                                               │
-│  AGENT PERFORMANCE (by RoC)                                   │
-│  ┌───────────────────────────────────────────────────────┐   │
-│  │ Agent          │ RoC    │ Impact │ Gas    │ Status    │   │
-│  ├───────────────────────────────────────────────────────┤   │
-│  │ CodeReviewer   │ 5.2x   │ $2,600 │ $500   │ ★ High    │   │
-│  │ TestWriter     │ 3.1x   │ $1,550 │ $500   │ ✓ Good    │   │
-│  │ Refactorer     │ 1.8x   │ $900   │ $500   │ ✓ Good    │   │
-│  │ DocWriter      │ 0.9x   │ $450   │ $500   │ ○ Even    │   │
-│  │ Experimenter   │ 0.3x   │ $150   │ $500   │ ⚠ Warning │   │
-│  └───────────────────────────────────────────────────────┘   │
-│                                                               │
-│  TENSOR VALIDATION                                            │
-│  ├─ Physical:    ✓ Token accounting consistent               │
-│  ├─ Semantic:    ✓ Quality/complexity aligned                │
-│  ├─ Economic:    ✓ Gas/Impact balanced                       │
-│  └─ Ethical:     ✓ Multipliers in valid range                │
-│                                                               │
-│  RECENT ANOMALIES                                             │
-│  └─ None detected (last 24h)                                 │
-│                                                               │
-│  ALERTS                                                       │
-│  └─ [WARN] Experimenter approaching bankruptcy threshold     │
-│                                                               │
-└───────────────────────────────────────────────────────────────┘
+```python
+class LedgerAuditor:
+    """
+    The O-gent acts as Auditor for the B-gent's ledger.
+    """
+
+    async def audit_agent(self, agent_id: str):
+        sheet = self.ledger.get_agent_balance_sheet(agent_id)
+
+        # Bankruptcy Check
+        if sheet.assets < 0:
+            # Trigger 'Chapter 11' - The agent is paused and debugged
+            await System.suspend_agent(agent_id, reason="Insolvency")
 ```
 
 ---
 
-## The Lacanian Registers (Advanced)
+## The Bootstrap Witness
 
-O-gents can observe across Lacan's three registers:
-
-| Register | What O-gent Observes | Validation |
-|----------|---------------------|------------|
-| **Symbolic** | Code, specs, schemas | Does it parse? Does it type-check? |
-| **Real** | Execution, memory, entropy | Does it run? Does it terminate? |
-| **Imaginary** | Visualization, perception | Does it look right? (Vision model check) |
+The O-gent is the only agent allowed to observe the **Bootstrap Kernel** to ensure the fundamental laws of the architecture remain valid.
 
 ```python
-class BorromeanObserver:
+class BootstrapWitness(Agent[None, BootstrapVerificationResult]):
     """
-    Observes the Borromean knot of agent health.
+    The observer of bootstrap agents.
 
-    All three registers must hold for the agent to be "valid."
-    If any ring is cut, the whole unknots.
-    """
-
-    async def observe_symbolic(self, agent: Agent) -> SymbolicHealth:
-        """Does the agent's output satisfy its schema?"""
-        return SymbolicHealth(
-            schema_valid=self.validate_schema(agent.output_schema),
-            type_check_pass=self.type_check(agent),
-            spec_compliant=self.check_spec_compliance(agent)
-        )
-
-    async def observe_real(self, agent: Agent) -> RealHealth:
-        """Does the agent execute correctly in reality?"""
-        return RealHealth(
-            executes_without_error=await self.test_execution(agent),
-            terminates_in_budget=self.check_termination(agent),
-            memory_bounded=self.check_memory(agent)
-        )
-
-    async def observe_imaginary(self, agent: Agent) -> ImaginaryHealth:
-        """Does the agent's output look correct to perception?"""
-        rendered = await agent.render_state() if hasattr(agent, 'render_state') else None
-        return ImaginaryHealth(
-            visually_coherent=await self.vision_check(rendered),
-            user_perceivable=self.check_accessibility(rendered)
-        )
-
-    async def knot_health(self, agent: Agent) -> KnotHealth:
-        """All three rings must hold."""
-        symbolic = await self.observe_symbolic(agent)
-        real = await self.observe_real(agent)
-        imaginary = await self.observe_imaginary(agent)
-
-        return KnotHealth(
-            symbolic=symbolic,
-            real=real,
-            imaginary=imaginary,
-            knot_intact=symbolic.valid and real.valid and imaginary.valid
-        )
-```
-
-**The Insight**: Most agents live only in the Symbolic (generating text). They hallucinate because they detach from the Real. The Borromean Observer catches this before it propagates.
-
----
-
-## Semantic Drift Detection
-
-O-gents implement the Semantic Invariant (Noether's theorem) via drift detection:
-
-```python
-class DriftDetector:
-    """
-    Detects semantic drift across agent invocations.
-
-    When drift exceeds threshold, alerts are triggered.
+    Verifies that the irreducible kernel maintains its laws.
+    This is the system's capacity for self-verification.
     """
 
-    async def observe_drift(
-        self,
-        agent_id: str,
-        input_intent: str,
-        output_summary: str
-    ) -> DriftReport:
-        """
-        Compare input intent with output summary.
-
-        High drift = the agent wandered off topic.
-        """
-        drift_score = await self.compute_drift(input_intent, output_summary)
-
-        if drift_score > self.threshold:
-            await self.alert(DriftAlert(
-                agent_id=agent_id,
-                drift_score=drift_score,
-                input_intent=input_intent,
-                output_summary=output_summary
-            ))
-
-        return DriftReport(
-            agent_id=agent_id,
-            drift_score=drift_score,
-            within_bounds=drift_score <= self.threshold
+    async def invoke(self, _: None) -> BootstrapVerificationResult:
+        return BootstrapVerificationResult(
+            all_agents_exist=await self.verify_existence(),
+            identity_laws_hold=await self.verify_identity_laws(),
+            composition_laws_hold=await self.verify_composition_laws(),
+            overall_verdict=self.synthesize_verdict()
         )
 
-    async def compute_drift(self, intent: str, output: str) -> float:
-        """
-        LLM-native drift computation.
+    async def verify_identity_laws(self) -> bool:
+        """Verify: Id >> f == f == f >> Id"""
+        test_agents = self.get_test_agents()
+        for f in test_agents:
+            # Left identity
+            left = await (Id >> f).invoke(test_input)
+            direct = await f.invoke(test_input)
+            if left != direct:
+                return False
 
-        Ask: "How well does this output serve this intent?"
-        """
-        return await self.judge.invoke(DriftQuery(
-            question=f"Rate 0-1: How well does '{output}' address '{intent}'?",
-            scale="semantic_alignment"
-        ))
+            # Right identity
+            right = await (f >> Id).invoke(test_input)
+            if right != direct:
+                return False
+
+        return True
+
+    async def verify_composition_laws(self) -> bool:
+        """Verify: (f >> g) >> h == f >> (g >> h)"""
+        f, g, h = self.get_composition_test_agents()
+
+        left_assoc = await ((f >> g) >> h).invoke(test_input)
+        right_assoc = await (f >> (g >> h)).invoke(test_input)
+
+        return left_assoc == right_assoc
 ```
 
 ---
 
 ## Topology Mapping
 
-O-gents track the composition topology of agents:
+O-gents track the composition topology of agents.
 
 ```python
 class TopologyMapper:
@@ -732,25 +551,260 @@ class TopologyMapper:
 
 ---
 
-## Anti-Patterns
+## The Observer Hierarchy (Stratification)
 
-- **Observer mutation**: Changing what you observe
-- **Observer blocking**: Slowing down observed agents
-- **Observer leakage**: Exposing internal data inappropriately
-- **Observer blindness**: Observing without acting on insights
-- **Over-observation**: Collecting more than needed
+O-gents form a stratified observation structure to avoid infinite regress ("Who watches the watchers?").
+
+```
+                    ┌─────────────────────┐
+                    │   SystemObserver    │  ← Level 2: Meta-observer
+                    │   (self-unobserved) │     (observes Level 1, not itself)
+                    └──────────┬──────────┘
+                               │
+         ┌─────────────────────┼─────────────────────┐
+         │                     │                     │
+    ┌────▼────┐          ┌────▼────┐          ┌────▼────┐
+    │Bootstrap│          │  Agent  │          │  Infra  │  ← Level 1: Domain observers
+    │Observer │          │Observer │          │Observer │
+    └────┬────┘          └────┬────┘          └────┬────┘
+         │                    │                    │
+    BootstrapWitness    AgentMetrics         ProcessObserver  ← Level 0: Concrete observers
+    LawVerifier         InvocationTracer     VisualizationObserver
+                        ErrorObserver        KnowledgeObserver
+```
+
+**The Rule**: Level N observers may observe Level N-1, but not themselves or Level N.
 
 ---
 
-*Zen Principle: The eye that sees all, changes nothing—yet enables everything.*
+## The Panopticon Dashboard
+
+The O-gent aggregates the three dimensions into a single view of reality.
+
+```
+┌─ [O] SYSTEM PROPRIOCEPTION ──────────────────────────────────────────┐
+│                                                                      │
+│  STATUS: HOMEOSTATIC               TIME: T+4320s                     │
+│                                                                      │
+│  ┌─ [X] TELEMETRY ──────────┐  ┌─ [Y] SEMANTICS ───────────────┐     │
+│  │ OPS: 42/sec              │  │ DRIFT: 0.04 (Low)             │     │
+│  │ LATENCY: 230ms (p95)     │  │ KNOTS: 99.8% Intact           │     │
+│  │ ERR: 0.01%               │  │ HALLUCINATIONS: 2 (Caught)    │     │
+│  └──────────────────────────┘  └───────────────────────────────┘     │
+│                                                                      │
+│  ┌─ [Z] AXIOLOGY (ECONOMICS) ──────────────────────────────────┐     │
+│  │ SYSTEM GDP: $45.20 (Impact Generated)                       │     │
+│  │ BURN RATE:  $12.50 (Tokens Consumed)                        │     │
+│  │ NET ROC:    3.6x (Healthy)                                  │     │
+│  │                                                             │     │
+│  │ TOP PERFORMER: [CodeRefactor] (RoC: 8.2x)                   │     │
+│  │ CASH BURNER:   [Researcher]   (RoC: 0.4x) -> [UNDER AUDIT]  │     │
+│  └─────────────────────────────────────────────────────────────┘     │
+│                                                                      │
+│  ┌─ BOOTSTRAP ─────────────────────────────────────────────────┐     │
+│  │ Identity Laws:     HOLD                                     │     │
+│  │ Composition Laws:  HOLD                                     │     │
+│  │ Kernel Integrity:  VERIFIED                                 │     │
+│  └─────────────────────────────────────────────────────────────┘     │
+│                                                                      │
+│  ┌─ ALERTS ────────────────────────────────────────────────────┐     │
+│  │ [WARN] Semantic Drift detected in [CreativeWriter]          │     │
+│  │ [INFO] Value Tensor balanced. Conservation laws hold.       │     │
+│  └─────────────────────────────────────────────────────────────┘     │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## O-gent Types
+
+| Agent | Dimension | Purpose |
+|-------|-----------|---------|
+| `BootstrapWitness` | X | Verify bootstrap laws |
+| `TelemetryObserver` | X | Standard metrics (latency, errors) |
+| `TopologyMapper` | X | Track agent composition graphs |
+| `BorromeanObserver` | Y | Lacanian register validation |
+| `DriftDetector` | Y | Semantic conservation (Noether) |
+| `HallucinationDetector` | Y | Symbolic/Real mismatch |
+| `ValueLedgerObserver` | Z | System GDP and agent rankings |
+| `TensorValidator` | Z | Conservation law enforcement |
+| `RoCMonitor` | Z | Real-time Return on Compute |
+| `LedgerAuditor` | Z | Bankruptcy detection |
+| `VoIOptimizer` | * | Observation budget allocation |
+| `AlertAgent` | * | Trigger alerts on anomalies |
+| `HealthProbe` | * | Continuous health assessment |
+
+---
+
+## VoI Integration: The Economics of Observation
+
+O-gents are subject to the **Value of Information** framework defined in [B-gents banker.md](../b-gents/banker.md#part-iii-value-of-information-voi--economics-of-observation).
+
+### The Core Economics
+
+| Metric | Meaning | Healthy Range |
+|--------|---------|---------------|
+| **RoVI** | Return on Value of Information | > 1.0x |
+| **Observation Fraction** | % of system gas spent on observation | < 10% |
+| **False Positive Rate** | Unnecessary alerts / total alerts | < 30% |
+
+### O-gent VoI Implementation
+
+```python
+class VoIAwareObserver:
+    """
+    An O-gent that optimizes its own observation economics.
+
+    Key principle: Each observation must justify its cost.
+    """
+
+    def __init__(self, voi_ledger: VoILedger, optimizer: VoIOptimizer):
+        self.voi_ledger = voi_ledger
+        self.optimizer = optimizer
+
+    async def observe_with_budget(
+        self,
+        target_id: str,
+        budget: Gas
+    ) -> ObservationResult:
+        """
+        Observe within VoI constraints.
+        """
+        # 1. Determine optimal depth for this budget
+        depth = self.optimizer.select_observation_depth(target_id, budget)
+
+        # 2. Execute observation at selected depth
+        if depth == ObservationDepth.TELEMETRY_ONLY:
+            finding = await self.observe_telemetry(target_id)
+        elif depth == ObservationDepth.SEMANTIC_SPOT:
+            finding = await self.observe_semantic_sample(target_id)
+        elif depth == ObservationDepth.SEMANTIC_FULL:
+            finding = await self.observe_semantic_full(target_id)
+        else:
+            finding = await self.observe_axiological(target_id)
+
+        # 3. Log to VoI ledger
+        receipt = self.voi_ledger.log_observation(
+            observer_id=self.id,
+            target_id=target_id,
+            gas_consumed=self.gas_used,
+            finding=finding
+        )
+
+        return ObservationResult(
+            finding=finding,
+            voi=receipt.voi,
+            depth_used=depth,
+            budget_remaining=budget.tokens - self.gas_used.tokens
+        )
+
+    async def should_observe(self, target_id: str) -> bool:
+        """
+        VoI-aware decision: Is observation worth it?
+
+        Returns False if:
+        - Recent observation exists (diminishing returns)
+        - Target is low-risk and low-value
+        - Observer is over budget
+        """
+        priority = self.optimizer.compute_observation_priority(target_id)
+        recency = self.time_since_last_observation(target_id)
+        budget_remaining = self.get_remaining_budget()
+
+        # Adaptive threshold based on priority
+        min_interval = self.optimizer.compute_observation_interval(target_id)
+
+        return (
+            recency >= min_interval and
+            priority > 0.1 and
+            budget_remaining.cost_usd > 0
+        )
+```
+
+### The Observation Budget Allocation
+
+O-gents don't observe uniformly. They allocate attention based on **Priority = Risk × Consequence × Observability**.
+
+```
+┌─ OBSERVATION BUDGET ALLOCATION ───────────────────────────────────────┐
+│                                                                        │
+│  Total Budget: $5.00/hour                                              │
+│                                                                        │
+│  Agent              │ Risk  │ Value │ Priority │ Budget │ Depth        │
+│  ──────────────────────────────────────────────────────────────────    │
+│  CodeGenerator      │ HIGH  │ HIGH  │ 0.85     │ $2.00  │ SEMANTIC     │
+│  ResearchAgent      │ MED   │ HIGH  │ 0.62     │ $1.20  │ SEMANTIC     │
+│  FormatterAgent     │ LOW   │ LOW   │ 0.15     │ $0.30  │ TELEMETRY    │
+│  LoggerAgent        │ LOW   │ LOW   │ 0.08     │ $0.20  │ TELEMETRY    │
+│  [Reserve]          │ -     │ -     │ -        │ $1.30  │ -            │
+│                                                                        │
+│  Current RoVI: 12.4x (Healthy)                                         │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+### Epistemic Capital Accumulation
+
+O-gents accumulate **Epistemic Capital**—the system's knowledge about itself.
+
+```python
+@dataclass
+class OGentEpistemicState:
+    """
+    Tracks what the system knows about itself through observation.
+    """
+    observations_total: int
+    anomalies_caught: int
+    false_positives: int
+    interventions_triggered: int
+    disasters_prevented_estimate: float
+
+    @property
+    def epistemic_efficiency(self) -> float:
+        """How efficiently are we converting gas into knowledge?"""
+        if self.observations_total == 0:
+            return 0.0
+        useful = self.anomalies_caught - self.false_positives
+        return useful / self.observations_total
+
+    @property
+    def epistemic_roc(self) -> float:
+        """Return on epistemic investment."""
+        return self.disasters_prevented_estimate / self.total_gas_spent
+```
+
+---
+
+## Anti-Patterns
+
+1. **The Observer Effect (Collapse)**: If the O-gent asks the agent to "explain itself" too often, the agent spends more time explaining than doing.
+
+2. **The Infinite Regress**: An O-gent observing an O-gent observing an O-gent... *Solution: O-gents are strictly stratified (see hierarchy above).*
+
+3. **The Economic Drain**: Running a GPT-4 Judge to verify a GPT-3.5 task is negative RoC. *Solution: Use cheaper models (Haiku/Flash) for observation.*
+
+4. **Medusa's Gaze**: An O-gent that halts the system upon detecting minor drift, causing paralysis. *Solution: O-gents should be non-blocking and advisory, except in Bootstrap/Ledger critical failures.*
+
+5. **Observer mutation**: Changing what you observe.
+
+6. **Observer leakage**: Exposing internal data inappropriately.
+
+7. **Observer blindness**: Observing without acting on insights.
+
+8. **Over-observation**: Collecting more than needed (violates VoI principle).
 
 ---
 
 ## See Also
 
+- [h-gents/lacan.md](../h-gents/lacan.md) - RSI primitives for Borromean validation
+- [b-gents/banker.md](../b-gents/banker.md) - UVP and economic substrate
+- [b-gents/banker.md#part-iii-value-of-information-voi](../b-gents/banker.md#part-iii-value-of-information-voi--economics-of-observation) - **VoI framework for observation economics**
+- [b-gents/value-tensor.md](../b-gents/value-tensor.md) - Multi-dimensional value accounting
+- [w-gents/](../w-gents/) - Wire (visualization of O-gent data)
 - [n-gents/](../n-gents/) - Narrator (stories, not metrics)
-- [w-gents/](../w-gents/) - Wire (process observation)
-- [i-gents/](../i-gents/) - Interface (visualization)
-- [e-gents/](../e-gents/) - Evolution (reliability)
-- [l-gents/](../l-gents/) - Library (knowledge)
+- [i-gents/](../i-gents/) - Interface (ecosystem visualization)
 - [bootstrap.md](../bootstrap.md) - BootstrapWitness integration
+
+---
+
+*Zen Principle: The mirror reflects the fire, but does not burn.*
