@@ -19,29 +19,57 @@ See docs/mirror-protocol-implementation.md for full roadmap.
 """
 
 from .types import (
+    # Enums
+    TensionMode,
+    TensionType,
+    InterventionType,
+    PatternType,
+    HoldReason,
     # Core types
     Thesis,
     Antithesis,
     Tension,
     Synthesis,
-    TensionType,
+    HoldTension,
+    SublateResult,
+    DivergenceScore,
+    # Observation types
+    PatternObservation,
     # Report types
     MirrorReport,
-    PatternObservation,
     # Configuration
     MirrorConfig,
+    # Marker constants
+    SYMBOLIC_MARKERS,
+    IMAGINARY_MARKERS,
+    REAL_MARKERS,
+    SHADOW_MAPPINGS,
 )
 
 __all__ = [
+    # Enums
+    "TensionMode",
+    "TensionType",
+    "InterventionType",
+    "PatternType",
+    "HoldReason",
     # Core types
     "Thesis",
     "Antithesis",
     "Tension",
     "Synthesis",
-    "TensionType",
+    "HoldTension",
+    "SublateResult",
+    "DivergenceScore",
+    # Observation types
+    "PatternObservation",
     # Report types
     "MirrorReport",
-    "PatternObservation",
     # Configuration
     "MirrorConfig",
+    # Marker constants
+    "SYMBOLIC_MARKERS",
+    "IMAGINARY_MARKERS",
+    "REAL_MARKERS",
+    "SHADOW_MAPPINGS",
 ]

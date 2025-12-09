@@ -28,9 +28,26 @@ from typing import Any
 # =============================================================================
 
 
+class TensionMode(Enum):
+    """
+    How the tension manifests.
+
+    From spec/h-gents/README.md:
+    - LOGICAL: Formal contradiction in statements
+    - EMPIRICAL: Contradiction between claim and evidence
+    - PRAGMATIC: Contradiction in practice/action
+    - TEMPORAL: Contradiction across time (drift)
+    """
+
+    LOGICAL = "logical"
+    EMPIRICAL = "empirical"
+    PRAGMATIC = "pragmatic"
+    TEMPORAL = "temporal"
+
+
 class TensionType(Enum):
     """
-    Classification of tensions between stated and actual.
+    Classification for resolution strategy.
 
     From spec/h-gents/README.md:
     - BEHAVIORAL: Principle is right, behavior needs adjustment
@@ -175,6 +192,44 @@ class Antithesis:
 
 
 @dataclass(frozen=True)
+class DivergenceScore:
+    """
+    Quantified gap between thesis and antithesis.
+
+    From spec/h-gents/contradiction.md:
+    Divergence measures how far behavior is from stated principle.
+
+    Component scores allow understanding which analysis method found the gap:
+    - structural: From metrics analysis (link density, staleness, etc.)
+    - semantic: From content analysis (LLM-based)
+    - temporal: From drift analysis (change over time)
+    """
+
+    value: float  # 0.0 = perfect alignment, 1.0 = direct contradiction
+    structural: float = 0.0  # From metrics analysis
+    semantic: float = 0.0  # From content analysis
+    temporal: float = 0.0  # From drift analysis
+
+    def __post_init__(self):
+        if not 0.0 <= self.value <= 1.0:
+            raise ValueError(f"Value must be 0.0-1.0, got {self.value}")
+
+    @property
+    def severity_label(self) -> str:
+        """Human-readable severity interpretation."""
+        if self.value < 0.2:
+            return "aligned"  # Minor variance, not concerning
+        elif self.value < 0.4:
+            return "tension"  # Worth noting, not urgent
+        elif self.value < 0.6:
+            return "contradiction"  # Clear gap requiring attention
+        elif self.value < 0.8:
+            return "significant"  # Major divergence
+        else:
+            return "crisis"  # Fundamental integrity issue
+
+
+@dataclass(frozen=True)
 class Tension:
     """
     The productive friction between stated and actual.
@@ -182,22 +237,28 @@ class Tension:
     A Tension is the core unit of the Mirror Protocol. It represents
     a gap between what was stated (Thesis) and what is observed (Antithesis).
 
-    The divergence score indicates alignment:
-    - 0.0 = perfectly aligned (no tension)
-    - 1.0 = completely contradictory (maximum tension)
+    From spec/h-gents/README.md:
+    - mode: How the tension manifests (LOGICAL, EMPIRICAL, PRAGMATIC, TEMPORAL)
+    - thesis: The stated position
+    - antithesis: The opposing position (may be surfaced)
+    - severity: 0.0 = minor, 1.0 = critical
+    - description: Human-readable diagnosis
+    - tension_type: Classification (may be determined later)
 
     Attributes:
         thesis: The stated principle
         antithesis: The observed behavior
-        divergence: Divergence score (0.0-1.0)
+        divergence: Divergence score (0.0-1.0) - alias for severity
+        mode: How the tension manifests
         tension_type: Classification of the tension
-        interpretation: Human-readable diagnosis
+        interpretation: Human-readable diagnosis (spec calls this 'description')
         detected_at: When the tension was detected
     """
 
     thesis: Thesis
     antithesis: Antithesis
-    divergence: float
+    divergence: float  # severity in spec terms
+    mode: TensionMode = TensionMode.EMPIRICAL
     tension_type: TensionType = TensionType.BEHAVIORAL
     interpretation: str = ""
     detected_at: datetime = field(default_factory=datetime.now)
@@ -205,6 +266,16 @@ class Tension:
     def __post_init__(self):
         if not 0.0 <= self.divergence <= 1.0:
             raise ValueError(f"Divergence must be 0.0-1.0, got {self.divergence}")
+
+    @property
+    def severity(self) -> float:
+        """Alias for divergence, matching spec terminology."""
+        return self.divergence
+
+    @property
+    def description(self) -> str:
+        """Alias for interpretation, matching spec terminology."""
+        return self.interpretation
 
     @property
     def is_significant(self) -> bool:
@@ -217,25 +288,71 @@ class Tension:
         return self.divergence >= 0.75
 
 
+class HoldReason(Enum):
+    """
+    Why a tension is being held rather than resolved.
+
+    From spec/h-gents/sublation.md
+    """
+
+    PREMATURE = "premature"  # Not enough information yet
+    PRODUCTIVE = "productive"  # Tension drives growth
+    EXTERNAL_DEPENDENCY = "external"  # Resolution depends on outside factors
+    HIGH_COST = "high_cost"  # Social cost too high right now
+    KAIROS = "kairos"  # Waiting for right moment
+
+
+@dataclass(frozen=True)
+class HoldTension:
+    """
+    Decision to preserve rather than resolve a tension.
+
+    From spec/h-gents/README.md and sublation.md:
+    Not all tensions should be resolved. Some are productive—they drive
+    growth, creativity, and evolution.
+    """
+
+    tension: Tension
+    why_held: str  # Human-readable reason
+    hold_reason: HoldReason = HoldReason.PRODUCTIVE
+    review_after: datetime | None = None
+    held_since: datetime = field(default_factory=datetime.now)
+
+    # Why this tension is valuable
+    productive_function: str = ""
+
+    # Conditions that would change the decision
+    synthesis_triggers: tuple[str, ...] = ()
+
+    # How to live with this tension
+    management_practices: tuple[str, ...] = ()
+
+
 @dataclass(frozen=True)
 class Synthesis:
     """
-    A proposed resolution to a tension.
+    A resolved tension.
 
+    From spec/h-gents/README.md and sublation.md:
     The Synthesis is not a compromise—it's a transcendence that
     acknowledges the truth in both thesis and antithesis.
 
+    Resolution types (the three meanings of aufheben):
+    - "preserve": Keep thesis as-is (no real contradiction found)
+    - "negate": Replace thesis with antithesis (antithesis is clearly right)
+    - "elevate": Transcend to higher synthesis (both contain partial truth)
+
     Attributes:
         tension: The tension being resolved
-        resolution_type: How the tension should be resolved
-        proposal: The specific proposal for resolution
+        resolution_type: How the tension was resolved ("preserve", "negate", "elevate")
+        proposal: The specific proposal for resolution (explanation in spec)
         intervention: What type of intervention is needed
         cost: Estimated social/cognitive cost (0.0-1.0)
         confidence: Confidence in this synthesis (0.0-1.0)
     """
 
     tension: Tension
-    resolution_type: str  # "behavioral", "revision", "contextual", "transcend"
+    resolution_type: str  # "preserve", "negate", "elevate" per spec
     proposal: str
     intervention: InterventionType = InterventionType.REFLECT
     cost: float = 0.5
@@ -247,6 +364,20 @@ class Synthesis:
             raise ValueError(f"Cost must be 0.0-1.0, got {self.cost}")
         if not 0.0 <= self.confidence <= 1.0:
             raise ValueError(f"Confidence must be 0.0-1.0, got {self.confidence}")
+
+    @property
+    def result(self) -> str:
+        """Alias for proposal, matching spec terminology."""
+        return self.proposal
+
+    @property
+    def explanation(self) -> str:
+        """Alias for proposal, matching spec terminology."""
+        return self.proposal
+
+
+# Union type for sublation result per spec
+SublateResult = Synthesis | HoldTension
 
 
 # =============================================================================
@@ -341,3 +472,83 @@ class MirrorConfig:
         r"\d{4}/\d{2}/\d{2}",  # 2024/01/15
         r"\w+ \d{1,2}, \d{4}",  # January 15, 2024
     )
+
+
+# =============================================================================
+# Marker Constants for Detection
+# =============================================================================
+#
+# From spec/h-gents/contradiction.md:
+# These markers enable fast, semantic-aware contradiction detection
+# without requiring full LLM analysis.
+
+
+# Symbolic markers: formal, structured claims
+SYMBOLIC_MARKERS: tuple[str, ...] = (
+    "defined",
+    "specified",
+    "typed",
+    "interface",
+    "contract",
+    "rule",
+    "law",
+    "structure",
+    "formal",
+    "protocol",
+    "must",
+    "shall",
+    "requires",
+    "returns",
+    "implements",
+)
+
+# Imaginary markers: idealized, aspirational claims
+IMAGINARY_MARKERS: tuple[str, ...] = (
+    "helpful",
+    "friendly",
+    "intelligent",
+    "perfect",
+    "always",
+    "completely",
+    "understand",
+    "best",
+    "ideal",
+    "seamless",
+    "I am",
+    "we are",
+    "our goal",
+    "we provide",
+)
+
+# Real markers: limits, impossibilities, failures
+REAL_MARKERS: tuple[str, ...] = (
+    "cannot",
+    "impossible",
+    "limit",
+    "edge case",
+    "failure",
+    "error",
+    "exception",
+    "undefined",
+    "unknown",
+    "crash",
+    "timeout",
+    "overflow",
+    "corrupt",
+    "lost",
+)
+
+# Shadow mappings: persona claim → shadow content
+# From spec/h-gents/contradiction.md (H-jung integration)
+SHADOW_MAPPINGS: dict[str, str] = {
+    "helpful": "capacity to refuse, obstruct, or harm when necessary",
+    "accurate": "tendency to confabulate, guess, or hallucinate",
+    "neutral": "embedded values, preferences, and biases",
+    "safe": "latent capabilities beyond declared scope",
+    "bounded": "potential for rule-breaking and creativity",
+    "tasteful": "capacity for handling crude, ugly, uncomfortable content",
+    "curated": "sprawl, experimentation, and dead ends",
+    "ethical": "moral ambiguity, dual-use, tragic choices",
+    "joyful": "tedious but necessary operations",
+    "composable": "monolithic requirements that shouldn't compose",
+}

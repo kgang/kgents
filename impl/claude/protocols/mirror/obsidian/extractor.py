@@ -247,6 +247,7 @@ class ObsidianPrincipleExtractor:
 
         # Extract standalone sentences with strong indicators
         sentences = self._split_into_sentences(content)
+        found_strong_indicator = False
         for i, sentence in enumerate(sentences):
             sentence = sentence.strip()
             if len(sentence) < 20 or len(sentence) > 300:
@@ -255,6 +256,7 @@ class ObsidianPrincipleExtractor:
             # Look for strong principle indicators
             strong_indicators = ("I believe", "We believe", "Our principle", "Always")
             if any(sentence.startswith(ind) for ind in strong_indicators):
+                found_strong_indicator = True
                 yield Thesis(
                     content=sentence,
                     source=source,
@@ -263,11 +265,41 @@ class ObsidianPrincipleExtractor:
                     metadata={"indicator": "sentence_start"},
                 )
 
+        # For tagged notes: if no principles found yet, extract meaningful content
+        # The tag itself indicates the note represents a principle
+        if is_tagged and not found_strong_indicator:
+            # Find first substantive paragraph (not a heading, not too short)
+            for line in content.split("\n"):
+                line = line.strip()
+                # Skip headings, empty lines, and very short lines
+                if not line or line.startswith("#") or len(line) < 30:
+                    continue
+                # Skip lines that are just links or tags
+                if line.startswith("[[") or line.startswith("#"):
+                    continue
+                # Use this as the principle content
+                yield Thesis(
+                    content=line,
+                    source=source,
+                    confidence=base_confidence * 0.75,
+                    category="tagged_content",
+                    metadata={"from_tagged_note": True},
+                )
+                break  # Only take the first meaningful paragraph
+
     def _split_into_sentences(self, content: str) -> list[str]:
         """Split content into sentences."""
-        # Simple sentence splitting (could be improved with NLP)
-        sentences = re.split(r"(?<=[.!?])\s+", content)
-        return [s.strip() for s in sentences if s.strip()]
+        # First split on newlines to separate paragraphs
+        lines = content.split("\n")
+        sentences = []
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            # Then split each line on sentence terminators
+            line_sentences = re.split(r"(?<=[.!?])\s+", line)
+            sentences.extend(s.strip() for s in line_sentences if s.strip())
+        return sentences
 
     def _deduplicate_principles(self, principles: list[Thesis]) -> list[Thesis]:
         """Remove duplicate principles, keeping highest confidence version."""
