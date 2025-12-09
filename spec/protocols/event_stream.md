@@ -1,7 +1,5 @@
 # EventStream Protocol: Temporal Observation
 
-**Where static snapshots become flowing time.**
-
 **Status:** Specification v1.0
 **Depends On:** J-gents (reality classification), W-gents (witness), H-gents (dialectic)
 **Part Of:** Mirror Protocol Phase 2
@@ -11,79 +9,62 @@
 
 ## Philosophy
 
-> "You cannot step into the same codebase twice—for it is not the same codebase, and you are not the same developer."
+> "You cannot step into the same codebase twice."
 
-The Mirror Protocol Phase 1 observes **snapshots**—static slices of reality frozen in time. But organizations are not static. They are **flows**—rivers of commits, evolving documents, drifting meanings.
+Phase 1 observes **snapshots**—frozen slices of reality. But systems are **flows**: commits, evolving documents, drifting meanings.
 
-EventStream abstracts the **temporal dimension**, allowing the Mirror to witness:
+EventStream abstracts the **temporal dimension**, enabling observation of:
 - **Change**: What shifted between observations?
 - **Momentum**: What direction is meaning moving?
-- **Conservation**: What principles are being preserved or violated?
-- **Drift**: What semantic fields are leaking entropy?
+- **Conservation**: What principles are preserved or violated?
+- **Drift**: What semantic fields leak entropy?
 
 ---
 
 ## The Three Realities
 
-Before processing any stream, we must classify its **nature** using J-gent reality classification:
+J-gent reality classification before processing:
 
 ```
-┌────────────────────────────────────────────────────────────────┐
-│                     REALITY TRICHOTOMY                         │
-│                                                                │
-│   DETERMINISTIC           PROBABILISTIC          CHAOTIC       │
-│   ───────────────        ───────────────        ──────────     │
-│                                                                │
-│   Bounded                Decomposable           Unbounded      │
-│   Single-step            Multi-step             Recursive      │
-│   Predictable            Analyzable             Unstable       │
-│                                                                │
-│   Examples:              Examples:              Examples:      │
-│   • File read            • Git history          • Live stream  │
-│   • Directory list       • Parse log file       • Infinite gen │
-│   • Fetch URL            • Analyze archive      • Cyclic deps  │
-│                                                                │
-│   Action:                Action:                Action:        │
-│   Execute directly       Spawn sub-promises     Collapse to    │
-│                          (lazy expansion)       Ground         │
-│                                                                │
-└────────────────────────────────────────────────────────────────┘
+REALITY TRICHOTOMY
+
+DETERMINISTIC        PROBABILISTIC         CHAOTIC
+Bounded              Decomposable          Unbounded
+Single-step          Multi-step            Recursive
+Predictable          Analyzable            Unstable
+
+Examples:            Examples:             Examples:
+• File read          • Git history         • Live stream
+• Directory list     • Parse log file      • Infinite gen
+• Fetch URL          • Analyze archive     • Cyclic deps
+
+Action:              Action:               Action:
+Execute directly     Lazy expansion        Collapse to Ground
 ```
 
-### Reality Classification Algorithm
+### Reality Classification
 
 ```python
 def classify_stream_reality(stream: EventStream) -> Reality:
-    """
-    Classify the nature of a stream before processing.
-
-    Returns:
-        DETERMINISTIC: Bounded, single-pass processing
-        PROBABILISTIC: Complex but decomposable
-        CHAOTIC: Unbounded or unstable
-    """
-    # Check boundedness
+    """Classify stream before processing."""
     if not stream.is_bounded():
         return Reality.CHAOTIC
 
-    # Estimate complexity
     est_size = stream.estimate_size()
     if est_size < DETERMINISTIC_THRESHOLD:
         return Reality.DETERMINISTIC
 
-    # Check for cycles or recursion
     if stream.has_cycles():
         return Reality.CHAOTIC
 
-    # Default: probabilistic (complex but manageable)
-    return Reality.PROBABILISTIC
+    return Reality.PROBABILISTIC  # Complex but manageable
 ```
 
 ---
 
 ## The EventStream Protocol
 
-A **protocol** (not a class)—implementations vary, interface is fixed.
+**Protocol** (not class)—implementations vary, interface is fixed.
 
 ### Core Interface
 
@@ -113,70 +94,47 @@ class Event:
     metadata: dict              # Additional context
 
 class EventStream(Protocol[T]):
-    """
-    Protocol for temporal event sources.
+    """Protocol for temporal event sources.
 
-    Streams can be:
-    - Pull-based (iterator) or push-based (async)
-    - Bounded (finite) or unbounded (infinite)
-    - Seekable (git history) or append-only (live log)
+    Pull-based (iterator) or push-based (async)
+    Bounded (finite) or unbounded (infinite)
+    Seekable (git) or append-only (live log)
     """
 
     def classify_reality(self) -> Reality:
-        """
-        Classify the nature of this stream.
-
-        Called before processing to determine strategy.
-        """
+        """Classify stream nature before processing."""
         ...
 
     def is_bounded(self) -> bool:
-        """Can we determine the stream will end?"""
+        """Can we determine stream will end?"""
         ...
 
     def estimate_size(self) -> int:
-        """Approximate number of events (best effort)."""
+        """Approximate event count."""
         ...
 
     def has_cycles(self) -> bool:
-        """Does this stream contain recursive/cyclic dependencies?"""
+        """Contains recursive/cyclic dependencies?"""
         ...
 
-    def events(self,
-               start: datetime | None = None,
+    def events(self, start: datetime | None = None,
                end: datetime | None = None,
                limit: int | None = None) -> Iterator[Event]:
-        """
-        Iterate events in temporal order.
-
-        Args:
-            start: Only events after this time
-            end: Only events before this time
-            limit: Maximum events to return
-        """
+        """Iterate events in temporal order."""
         ...
 
-    async def events_async(self,
-                           start: datetime | None = None,
+    async def events_async(self, start: datetime | None = None,
                            end: datetime | None = None,
                            limit: int | None = None) -> AsyncIterator[Event]:
         """Async variant for push-based streams."""
         ...
 
     def window(self, duration: timedelta) -> 'SlidingWindow':
-        """
-        Create a sliding window view of this stream.
-
-        Returns a stream that processes events in overlapping windows.
-        """
+        """Create sliding window view."""
         ...
 
     def entropy_budget(self, depth: int = 0) -> float:
-        """
-        Calculate available entropy budget for processing.
-
-        J-gent entropy budget: 1.0 / (depth + 1)
-        """
+        """J-gent entropy budget: 1.0 / (depth + 1)"""
         return 1.0 / (depth + 1)
 ```
 
