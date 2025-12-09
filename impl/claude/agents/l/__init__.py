@@ -13,8 +13,13 @@ Phase 2 Implementation (D-gent integration):
 - Auto-save strategies (ON_WRITE, MANUAL, ON_EXIT)
 - Catalog history tracking
 
+Phase 3 Implementation (Lineage Layer):
+- LineageGraph: DAG-based provenance tracking
+- Relationship types (successor_to, forked_from, depends_on, etc.)
+- Ancestor/descendant traversal
+- Cycle detection
+
 Future Phases:
-- Lineage tracking (DAG traversal)
 - Lattice compatibility (type checking)
 - Semantic search (embeddings + vector DB)
 """
@@ -35,6 +40,15 @@ from .persistence import (
     create_persistent_registry,
     load_or_create_registry,
 )
+from .lineage import (
+    LineageGraph,
+    Relationship,
+    RelationshipType,
+    LineageError,
+    record_evolution,
+    record_fork,
+    record_dependency,
+)
 
 __all__ = [
     # Core types
@@ -52,4 +66,12 @@ __all__ = [
     "SaveStrategy",
     "create_persistent_registry",
     "load_or_create_registry",
+    # Lineage (Phase 3)
+    "LineageGraph",
+    "Relationship",
+    "RelationshipType",
+    "LineageError",
+    "record_evolution",
+    "record_fork",
+    "record_dependency",
 ]

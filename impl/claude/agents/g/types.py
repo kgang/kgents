@@ -184,6 +184,11 @@ class Example:
     expected_ast: Any | None = None
     description: str = ""
 
+    @property
+    def input(self) -> str:
+        """Alias for text (for API convenience)."""
+        return self.text
+
 
 @dataclass(frozen=True)
 class CounterExample:
@@ -222,6 +227,11 @@ class ConstraintProof:
     verified_by: str = "T-gent"
     counter_examples: list[CounterExample] = field(default_factory=list)
     verified_at: str = ""
+
+    @property
+    def description(self) -> str:
+        """Alias for constraint (for API convenience)."""
+        return self.constraint
 
     def is_structural(self) -> bool:
         """Check if constraint is structurally enforced (not runtime)."""
@@ -343,6 +353,11 @@ class Tongue:
     # Verification
     constraint_proofs: tuple[ConstraintProof, ...] = field(default_factory=tuple)
     validated: bool = False
+
+    @property
+    def grammar_format(self) -> GrammarFormat:
+        """Alias for format (for API convenience)."""
+        return self.format
 
     def __hash__(self) -> int:
         """Hash based on name, version, and grammar content."""

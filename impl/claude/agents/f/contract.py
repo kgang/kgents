@@ -5,6 +5,7 @@ This module implements the Intent → Contract morphism from spec/f-gents/forge.
 """
 
 from dataclasses import dataclass, field
+from typing import Any, Optional
 
 from agents.f.intent import DependencyType, Intent
 
@@ -55,6 +56,11 @@ class Contract:
 
     # Metadata
     raw_intent: Intent | None = None  # Source of truth for lineage tracking
+
+    # G-gent Integration (optional)
+    # Stores tongue embedding for artifacts with DSL interfaces
+    # See spec/g-gents/integration.md "F-gent Integration"
+    interface_tongue: Optional[dict[str, Any]] = None  # TongueEmbedding.to_dict()
 
 
 def synthesize_contract(intent: Intent, agent_name: str = "Agent") -> Contract:

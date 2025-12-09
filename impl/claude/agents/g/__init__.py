@@ -44,6 +44,17 @@ from agents.g.catalog_integration import (
     update_tongue_metrics,
 )
 
+from agents.g.forge_integration import (
+    InterfaceTongue,
+    TongueEmbedding,
+    ArtifactInterface,
+    create_artifact_interface,
+    embed_tongue_in_contract,
+    create_invocation_handler,
+    bind_handlers,
+    forge_with_interface,
+)
+
 __all__ = [
     # Core types
     "Tongue",
@@ -72,4 +83,13 @@ __all__ = [
     "check_compatibility",
     "find_composable",
     "update_tongue_metrics",
+    # F-gent integration
+    "InterfaceTongue",
+    "TongueEmbedding",
+    "ArtifactInterface",
+    "create_artifact_interface",
+    "embed_tongue_in_contract",
+    "create_invocation_handler",
+    "bind_handlers",
+    "forge_with_interface",
 ]

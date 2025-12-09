@@ -24,6 +24,7 @@ class EntityType(Enum):
     TEMPLATE = "template"  # F-gent forge templates
     PATTERN = "pattern"  # Reusable design patterns
     TONGUE = "tongue"  # G-gent language artifacts (DSL definitions)
+    HYPOTHESIS = "hypothesis"  # B-gent scientific hypotheses (testable claims)
 
 
 class Status(Enum):

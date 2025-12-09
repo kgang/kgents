@@ -5,12 +5,17 @@ This package provides the core abstractions for state management in kgents:
 
 - DataAgent[S]: The protocol all D-gents implement
 - VolatileAgent[S]: In-memory state (fast, ephemeral)
+- PersistentAgent[S]: File-backed state (durable)
+- VectorAgent[S]: Semantic search via embeddings (Noosphere)
+- GraphAgent[N]: Relational lattice with graph operations (Noosphere)
+- StreamAgent[E,S]: Event-sourced state with time-travel (Noosphere)
 - Symbiont[I,O,S]: Fuses pure logic with stateful memory
 
 State management philosophy:
 - Pure logic should be stateless
 - D-gents contain the complexity of memory
 - Symbiont makes stateful agents composable via >>
+- Noosphere layer provides advanced memory modes (semantic, temporal, relational)
 
 Example:
     >>> from agents.d import VolatileAgent, Symbiont
@@ -33,6 +38,15 @@ from .errors import (
     StateCorruptionError,
     StateSerializationError,
     StorageError,
+    # Noosphere errors
+    NoosphereError,
+    SemanticError,
+    TemporalError,
+    LatticeError,
+    VoidNotFoundError,
+    DriftDetectionError,
+    NodeNotFoundError,
+    EdgeNotFoundError,
 )
 from .volatile import VolatileAgent
 from .persistent import PersistentAgent
@@ -49,6 +63,41 @@ from .lens_agent import LensAgent, focused
 from .cached import CachedAgent
 from .entropy import EntropyConstrainedAgent, entropy_constrained
 
+# Noosphere Layer: Advanced D-gent types
+# Vector requires numpy (optional dependency)
+try:
+    from .vector import (
+        VectorAgent,
+        VectorEntry,
+        Point,
+        Void,
+        DistanceMetric,
+    )
+
+    _VECTOR_AVAILABLE = True
+except ImportError:
+    _VECTOR_AVAILABLE = False
+    VectorAgent = None  # type: ignore
+    VectorEntry = None  # type: ignore
+    Point = None  # type: ignore
+    Void = None  # type: ignore
+    DistanceMetric = None  # type: ignore
+
+from .graph import (
+    GraphAgent,
+    GraphNode,
+    Edge,
+    Subgraph,
+    EdgeKind,
+)
+from .stream import (
+    StreamAgent,
+    WitnessReport,
+    DriftReport,
+    EventRecord,
+    Vector,
+)
+
 __all__ = [
     # Protocol
     "DataAgent",
@@ -58,12 +107,39 @@ __all__ = [
     "StateCorruptionError",
     "StateSerializationError",
     "StorageError",
-    # Implementations
+    # Noosphere errors
+    "NoosphereError",
+    "SemanticError",
+    "TemporalError",
+    "LatticeError",
+    "VoidNotFoundError",
+    "DriftDetectionError",
+    "NodeNotFoundError",
+    "EdgeNotFoundError",
+    # Core Implementations
     "VolatileAgent",
     "PersistentAgent",
     "CachedAgent",
     "Symbiont",
     "EntropyConstrainedAgent",
+    # Noosphere: Vector (Semantic Manifold)
+    "VectorAgent",
+    "VectorEntry",
+    "Point",
+    "Void",
+    "DistanceMetric",
+    # Noosphere: Graph (Relational Lattice)
+    "GraphAgent",
+    "GraphNode",
+    "Edge",
+    "Subgraph",
+    "EdgeKind",
+    # Noosphere: Stream (Temporal Witness)
+    "StreamAgent",
+    "WitnessReport",
+    "DriftReport",
+    "EventRecord",
+    "Vector",
     # Lenses
     "Lens",
     "key_lens",

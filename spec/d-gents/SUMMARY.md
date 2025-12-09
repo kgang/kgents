@@ -64,7 +64,7 @@ A complete specification for **D-gents (Data Agents)** - the memory and state ma
    - Testing strategies (logic isolation, integration)
    - State Monad implementation
 
-5. **[persistence.md](persistence.md)** (635 lines)
+7. **[persistence.md](persistence.md)** (635 lines)
    - The persistence spectrum (ephemeral → eternal)
    - 6 persistence types:
      - Volatile (in-memory)
@@ -76,6 +76,45 @@ A complete specification for **D-gents (Data Agents)** - the memory and state ma
    - Trade-off analysis and selection guide
    - Layered persistence (cache + backend)
    - Entropy-aware persistence (J-gents integration)
+
+---
+
+## 2025-12-09 Refinement: Memory as Landscape
+
+This refinement adds **futuristic vision** to the solid D-gent foundation:
+
+### New Files
+
+| File | Lines | Description |
+|------|-------|-------------|
+| **vision.md** | ~400 | Memory as Landscape philosophy + Memory Garden metaphor |
+| **noosphere.md** | ~500 | Detailed specs for advanced D-gent types |
+
+### Key Additions
+
+1. **Memory Garden Metaphor**: Data management reimagined as cultivation
+   - Seeds (hypotheses) → Saplings (patterns) → Trees (knowledge)
+   - Compost (deprecated) recycles into new growth (Accursed Share)
+   - Mycelium (relational lattice) connects hidden structures
+
+2. **Noosphere Layer**: Three advanced memory dimensions
+   - **Semantic Manifold**: Curvature, voids (Ma), geodesics
+   - **Temporal Witness**: Drift detection, semantic momentum
+   - **Relational Lattice**: Meet (∧), join (∨), entailment (≤)
+
+3. **Unified Memory Monad**: All layers compose via Lens Algebra
+   - Semantic, temporal, relational operations in single interface
+   - Entropy-aware persistence selection (J-gent integration)
+
+4. **Integration Points**: Deep connections to other genera
+   - L-gent: Catalog persistence + semantic search
+   - G-gent: Tongue evolution tracking + composition graphs
+   - J-gent: Entropy-constrained memory + postmortem streams
+   - K-gent: Personality as long-term trees, session as flowers
+
+### Why This Matters
+
+The original spec covers Types I-III beautifully. This refinement deepens Types IV-VI (VectorAgent, GraphAgent, StreamAgent) and adds a unifying vision that makes D-gents **joyful** to work with, not just functional.
 
 ---
 
