@@ -18,7 +18,7 @@ Use Cases:
 
 from typing import Iterator, Optional
 
-from agents.p.core import Parser, ParseResult, ParserConfig
+from agents.p.core import ParseResult, ParserConfig
 
 
 class AnchorBasedParser[A]:

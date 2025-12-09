@@ -21,10 +21,8 @@ Phase 3: Code-as-Schema (Hybrid Prevention + Correction)
 Phase 4: Novel / First-Principles Techniques
 - DiffBasedParser: Differential diffing (patch strategy)
 - AnchorBasedParser: Islands of stability
-- VisualValidationParser: Multimodal validation
 - ProbabilisticASTParser: Confidence-scored tree nodes
 - EvolvingParser: Schema evolution tracking
-- EnsembleParser: Multi-model structure + content specialists
 """
 
 from agents.p.strategies.anchor import AnchorBasedParser

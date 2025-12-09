@@ -16,8 +16,6 @@ Use Cases:
 """
 
 from dataclasses import dataclass, field
-from typing import Callable, Optional
-import difflib
 import re
 
 from agents.p.core import ParseResult, Parser, ParserConfig
@@ -81,7 +79,7 @@ class DiffBasedParser(Parser[str]):
 
         return ParseResult[str](
             success=False,
-            error=f"Could not parse diff in any known format. Tried: unified, simple replacement, line-based patch.",
+            error="Could not parse diff in any known format. Tried: unified, simple replacement, line-based patch.",
             strategy="diff-based",
         )
 

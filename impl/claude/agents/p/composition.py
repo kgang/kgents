@@ -294,7 +294,7 @@ class SwitchParser[A]:
                     result.metadata["switch_condition"] = condition.__name__
                     result.strategy = f"switch[{condition.__name__}]:{result.strategy}"
                     return result
-            except Exception as e:
+            except Exception:
                 # Condition evaluation failed, skip
                 continue
 

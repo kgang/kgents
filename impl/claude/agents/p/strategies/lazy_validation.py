@@ -17,9 +17,8 @@ Use Cases:
 
 import json
 from typing import Optional, Any, Callable, TypeVar, Generic
-from dataclasses import dataclass
 
-from agents.p.core import Parser, ParseResult, ParserConfig
+from agents.p.core import ParseResult, ParserConfig
 
 
 T = TypeVar("T")

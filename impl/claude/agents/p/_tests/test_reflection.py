@@ -4,7 +4,6 @@ Tests for Reflection Parser (Strategy 3.1)
 Tests LLM-based self-repair with reflection loop.
 """
 
-import pytest
 import json
 from agents.p.strategies.reflection import (
     ReflectionParser,
@@ -13,7 +12,7 @@ from agents.p.strategies.reflection import (
     create_reflection_parser_with_llm,
     mock_llm_fix_json,
 )
-from agents.p.core import Parser, ParseResult, ParserConfig
+from agents.p.core import ParseResult, ParserConfig
 
 
 # Simple JSON parser for testing

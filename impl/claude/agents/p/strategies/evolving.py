@@ -16,8 +16,7 @@ Use Cases:
 """
 
 from dataclasses import dataclass, field
-from typing import Callable, Optional
-from collections import Counter
+from typing import Optional
 import json
 import time
 
@@ -175,7 +174,7 @@ class EvolvingParser[A](Parser[A]):
                     # Track failure
                     self._stats[name].failure_count += 1
 
-            except Exception as e:
+            except Exception:
                 # Track exception as failure
                 self._stats[name].failure_count += 1
                 continue

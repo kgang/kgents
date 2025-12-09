@@ -10,7 +10,6 @@ from agents.p.strategies.stack_balancing import (
     html_stream_parser,
     json_stream_parser,
 )
-from agents.p.core import ParserConfig
 
 
 class TestStackBalancingJSON:
