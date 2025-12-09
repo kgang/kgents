@@ -4,29 +4,139 @@
 
 ## TL;DR
 
-**Status**: UNCOMMITTED | H-gent Impl→Spec Reconciliation + Fundamental Spec Updates
+**Status**: CLEAN | Mirror Protocol Phase 1 Complete, Assessing Phase 2
 **Branch**: `main`
-**Latest Commit**: 2232ff8 - feat(mirror): Add Obsidian principle extractor (P-gent)
-**This Session**: Deep reconciliation of H-gent impl insights into spec/, including fundamental documents
-**Modified Files**:
-  - `spec/h-gents/README.md` (UPDATED - operational modes, D-gent integration, composition)
-  - `spec/h-gents/contradiction.md` (UPDATED - marker-based detection, errors-as-data)
-  - `spec/h-gents/sublation.md` (UPDATED - resolution types preserve/negate/elevate)
-  - `spec/h-gents/composition.md` (NEW - ~350 lines, pipeline patterns)
-  - `spec/bootstrap.md` (UPDATED - TensionMode, H-gent derivation, LacanError idiom)
-  - `spec/archetypes.md` (UPDATED - +Dialectician, +Introspector archetypes)
-  - `spec/patterns/infrastructure_vs_composition.md` (UPDATED - H-gent composition agents)
-  - `HYDRATE.md` (this file)
-**Reconciliation Summary**:
-  - **H-gents spec/**: TensionMode, DialecticStep lineage, operational modes, marker detection, errors-as-data, composition pipelines
-  - **bootstrap.md**: TensionMode enum, detection strategies, errors-as-data idiom, H-gent operational modes derivation
-  - **archetypes.md**: Two new archetypes—Dialectician (辯) and Introspector (省)
-  - **infrastructure_vs_composition.md**: Expanded H-gent composition agents list
-**Next**: Commit reconciliation work
+**Latest Commit**: 9d4e055 - feat(protocols): Add Membrane Protocol and complete Mirror Phase 1
+**This Session**: Re-assess Phase 1 post-refactor; define Phase 2 (Event Stream + J-gents)
+**Phase 1 Reassessment**:
+  - Mirror Protocol Phase 1: ✅ COMPLETE (46 tests passing)
+  - Membrane Protocol v2.0: ✅ COMPLETE (topological perception layer)
+  - Alignment: mirror.md (engine) + membrane.md (interface) are complementary
+
+**Phase 2 Scope** (Event Stream Abstraction):
+  - Generic `EventStream` protocol (J-gent reality classification)
+  - Git history as event stream (W-gent temporal witness)
+  - Semantic momentum tracking (Noether's theorem, embedding drift)
+  - Temporal analysis with sliding windows
+
+**Next**: Define EventStream protocol spec with J-gent integration
 
 ---
 
-## What Just Happened: H-gent Impl→Spec Deep Reconciliation (2025-12-09)
+## Current Session: CLI Spec Refinement (2025-12-09)
+
+### Session Overview
+
+Refactored `spec/protocols/cli.md` for conciseness, reducing from 735 to 526 lines (28% reduction) while preserving all essential content.
+
+### Changes Made
+
+**File Modified**: `spec/protocols/cli.md`
+- Reduced from 735 → 526 lines
+- Condensed prose while maintaining technical accuracy
+- Streamlined examples and explanations
+- Preserved all core concepts: 3D CLI space, command grammar, heterarchy, composition, output contracts, error classification
+
+**Principles Applied**:
+- **Tasteful**: Removed verbose explanations, kept essential content
+- **Curated**: Every sentence earns its place
+- **Generative**: Spec remains complete but more economical
+
+---
+
+## Prior Session: Mirror Phase 2 Planning (J-gents Integration) (2025-12-09)
+
+### Session Overview
+
+Re-assessed Mirror Protocol Phase 1 following fundamental principle refactoring and Membrane Protocol introduction. Defined Phase 2 scope integrating J-gents for event stream abstraction.
+
+### Phase 1 Re-Assessment
+
+**Status**: ✅ COMPLETE
+
+**What was accomplished**:
+1. Core types (`protocols/mirror/types.py`): Thesis, Antithesis, Tension, Synthesis, MirrorReport
+2. Obsidian extractor (P-gent): Extract principles from vault structure
+3. Obsidian witness (W-gent): Observe behavioral patterns
+4. Tension detector (H-gent): Detect contradictions via declarative rules
+5. 46 passing tests with full coverage
+
+**Refactoring impact**:
+- Membrane Protocol (v2.0) introduced topological perception layer
+- Key concepts: Semantic Manifold (Curvature, Void/Ma, Flow, Dampening), Pocket Cortex, Grammar of Shape
+- **No conflict**: `mirror.md` = dialectical engine; `membrane.md` = perception/interface layer
+- Complementary relationship preserved
+
+### Phase 2 Definition: Event Stream Abstraction
+
+**Goal**: Scale from static files to generic event streams
+
+**Core Components**:
+
+1. **EventStream Protocol** (J-gent integration)
+   - Reality classification: DETERMINISTIC, PROBABILISTIC, CHAOTIC
+   - Lazy promise expansion for complex streams
+   - Entropy budget management for recursive analysis
+
+2. **Git History as Event Stream** (W-gent temporal witness)
+   - Commits as discrete events
+   - Diffs as behavior observations
+   - Author/time metadata for actor analysis
+
+3. **Semantic Momentum Tracking**
+   - p⃗ = m · v⃗ (mass × velocity)
+   - Embedding drift over sliding windows
+   - Conservation violations → entropy leaks
+
+4. **Temporal Analysis**
+   - Sliding observation windows (7d, 30d, 90d)
+   - Trend detection (improving, stable, declining)
+   - Drift velocity measurement
+
+**J-gents Connection**:
+- EventStream is a **reality classification** problem (deterministic vs probabilistic vs chaotic)
+- Stream processing requires **lazy promises** (defer computation until needed)
+- Stability analysis via **Chaosmonger** (pre-judge stream complexity)
+- Safety collapse to **Ground** if stream is unbounded/unstable
+
+**Design Principles Applied**:
+- **Composable**: EventStream is a protocol; implementations compose
+- **Generative**: Spec defines interface; implementations derive from it
+- **Heterarchical**: Streams can be both pull (functional) and push (autonomous)
+
+### Completed Work
+
+**Created `spec/protocols/event_stream.md`** (951 lines):
+- EventStream protocol with J-gent reality classification
+- Three concrete implementations: GitStream, ObsidianStream, FileSystemStream
+- TemporalWitness for drift detection (W-gent integration)
+- SemanticMomentumTracker with Noether's theorem (p⃗ = m · v⃗)
+- EntropyBudget for recursion depth management
+- SlidingWindow for temporal analysis
+- Stream composition (ComposedStream, FilteredStream, MappedStream)
+
+**Updated `spec/protocols/mirror.md`**:
+- Expanded Phase 2 section with EventStream integration details
+- Added CLI command examples (observe --temporal, trace, compare, drift)
+- Documented implementation path with 6-step plan
+- Cross-referenced event_stream.md for full protocol
+
+**Modified Files**:
+- `spec/protocols/event_stream.md` (NEW - 951 lines)
+- `spec/protocols/mirror.md` (UPDATED - Phase 2 section expanded)
+- `HYDRATE.md` (this file - session summary added)
+
+### Next Steps
+
+1. Begin Phase 2 implementation: Create `impl/claude/protocols/mirror/streams/` module
+2. Implement EventStream protocol base classes
+3. Implement GitStream with git-python library
+4. Add TemporalWitness for drift detection
+5. Add SemanticMomentumTracker with sentence-transformers
+
+---
+
+## Prior Session: H-gent Impl→Spec Deep Reconciliation (2025-12-09)
 
 ### Session Overview
 

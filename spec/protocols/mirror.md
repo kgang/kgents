@@ -110,15 +110,63 @@ kgents mirror observe ~/Documents/Vault
 
 **Goal**: Scale from static files to generic event streams.
 
-**Additions**:
-- Generic `EventStream` protocol
-- Git history as event stream
-- Semantic momentum tracking (drift detection)
-- Temporal analysis across observation windows
+**Status**: Specification complete → Implementation next
 
+**Specification**: See [event_stream.md](event_stream.md) for full protocol definition
+
+**Core Components**:
+
+1. **EventStream Protocol** (J-gent integration)
+   - Reality classification: DETERMINISTIC / PROBABILISTIC / CHAOTIC
+   - Lazy iteration with entropy budget management
+   - Bounded vs unbounded stream detection
+   - Safety collapse to Ground for chaotic streams
+
+2. **Concrete Implementations**:
+   - `GitStream`: Commit history as temporal event source
+   - `ObsidianStream`: Vault changes over time (git-backed or filesystem)
+   - `FileSystemStream`: Directory watching with cycle detection
+
+3. **Semantic Momentum Tracking**:
+   - p⃗ = m · v⃗ (mass × velocity from Noether's theorem)
+   - Embedding drift detection over sliding windows
+   - Conservation violation → entropy leak detection
+   - Topic evolution tracking across time periods
+
+4. **Temporal Analysis**:
+   - `SlidingWindow` for overlapping time periods
+   - Drift detection via `TemporalWitness` (W-gent)
+   - Activity pattern comparison across windows
+   - Trend analysis (improving / stable / declining)
+
+**J-gents Integration**:
+- Stream processing uses J-gent reality classification before execution
+- `EntropyBudget` enforces recursion depth limits
+- Lazy promises defer computation until needed
+- Chaosmonger prevents unbounded stream processing
+
+**CLI Extensions**:
 ```bash
+# Temporal observation with sliding windows
 kgents mirror observe ~/Vault --temporal --window=30d
+
+# Track semantic momentum of specific topic
+kgents mirror trace ~/Vault "authentication" --window=14d
+
+# Compare two time periods
+kgents mirror compare ~/Vault --period=30d --compare-with=90d
+
+# Detect entropy leaks (momentum violations)
+kgents mirror drift ~/Vault --threshold=0.15
 ```
+
+**Implementation Path**:
+1. Create `protocols/mirror/streams/` module
+2. Implement `EventStream` protocol and base implementations
+3. Add `TemporalWitness` for drift detection
+4. Add `SemanticMomentumTracker` with embedding model
+5. Extend CLI with temporal commands
+6. Write integration tests with git fixture repositories
 
 ### Phase 3: Kairos Controller
 

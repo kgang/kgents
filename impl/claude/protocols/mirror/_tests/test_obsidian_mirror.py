@@ -10,9 +10,6 @@ Tests cover:
 """
 
 import pytest
-import tempfile
-from datetime import datetime, timedelta
-from pathlib import Path
 
 from protocols.mirror.types import (
     # Enums
@@ -46,13 +43,11 @@ from protocols.mirror.obsidian.witness import (
     ObsidianPatternWitness,
     observe_vault_patterns,
     WitnessResult,
-    NoteMetadata,
 )
 from protocols.mirror.obsidian.tension import (
     ObsidianTensionDetector,
     detect_tensions,
     generate_mirror_report,
-    TensionRule,
 )
 
 
