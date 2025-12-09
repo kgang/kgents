@@ -51,6 +51,21 @@ Type VII - MCP Integration (Phase 4):
 - HttpSseTransport: Remote HTTP/SSE communication
 - JSON-RPC 2.0: Protocol message types
 
+Type VIII - Security & Permissions (Phase 5):
+- PermissionClassifier: ABAC (Attribute-Based Access Control)
+- AgentContext: Execution context with security attributes
+- ToolCapabilities: Tool requirement declarations
+- TemporaryToken: Short-lived permission tokens (15-60 min)
+- SecureToolExecutor: Permission-aware tool execution
+- AuditLogger: Comprehensive audit trail for compliance
+
+Type IX - Multi-Tool Orchestration (Phase 6):
+- SequentialOrchestrator: Chain tools in sequence (explicit wrapper for >>)
+- ParallelOrchestrator: Execute tools concurrently (product functor)
+- SupervisorPattern: Delegate tasks to worker tools (comma category)
+- HandoffPattern: Transfer control between tools (natural transformation)
+- DynamicToolSelector: Context-based tool selection (functor from Context → Tool)
+
 Usage:
     from agents.t import MockAgent, FailingAgent, SpyAgent
 
@@ -218,8 +233,26 @@ from .executor import (
     ToolExecutor,
     RetryExecutor,
     RobustToolExecutor,
+    SecureToolExecutor,
     # Config
     RetryConfig,
+)
+
+from .permissions import (
+    # Permission types
+    PermissionLevel,
+    SecurityLevel,
+    SensitivityLevel,
+    # Context and capabilities
+    AgentContext,
+    ToolCapabilities,
+    # Tokens
+    TemporaryToken,
+    # Classifier
+    PermissionClassifier,
+    # Audit
+    AuditLogger,
+    AuditLog,
 )
 
 from .mcp_client import (
@@ -239,6 +272,29 @@ from .mcp_client import (
     # Client
     MCPClient,
     MCPTool,
+)
+
+from .orchestration import (
+    # Sequential
+    SequentialOrchestrator,
+    # Parallel
+    ParallelOrchestrator,
+    ParallelResult,
+    # Supervisor
+    SupervisorPattern,
+    Task,
+    WorkerAssignment,
+    # Handoff
+    HandoffPattern,
+    HandoffCondition,
+    HandoffRule,
+    # Dynamic Selection
+    DynamicToolSelector,
+    SelectionContext,
+    SelectionStrategy,
+    CostBasedSelection,
+    LatencyBasedSelection,
+    EnvironmentBasedSelection,
 )
 
 __all__ = [
@@ -338,6 +394,7 @@ __all__ = [
     "ToolExecutor",
     "RetryExecutor",
     "RobustToolExecutor",
+    "SecureToolExecutor",
     "RetryConfig",
     # Type VII - MCP Integration (Phase 4)
     "MCPTransportType",
@@ -352,4 +409,30 @@ __all__ = [
     "HttpSseTransport",
     "MCPClient",
     "MCPTool",
+    # Type VIII - Security & Permissions (Phase 5)
+    "PermissionLevel",
+    "SecurityLevel",
+    "SensitivityLevel",
+    "AgentContext",
+    "ToolCapabilities",
+    "TemporaryToken",
+    "PermissionClassifier",
+    "AuditLogger",
+    "AuditLog",
+    # Type IX - Multi-Tool Orchestration (Phase 6)
+    "SequentialOrchestrator",
+    "ParallelOrchestrator",
+    "ParallelResult",
+    "SupervisorPattern",
+    "Task",
+    "WorkerAssignment",
+    "HandoffPattern",
+    "HandoffCondition",
+    "HandoffRule",
+    "DynamicToolSelector",
+    "SelectionContext",
+    "SelectionStrategy",
+    "CostBasedSelection",
+    "LatencyBasedSelection",
+    "EnvironmentBasedSelection",
 ]

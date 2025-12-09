@@ -28,10 +28,18 @@ import asyncio
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Generic, Optional, TypeVar
+from typing import Any, Generic, Optional, TypeVar
 
 from bootstrap.types import Result, ok, err
 from agents.t.tool import Tool, ToolError, ToolErrorType, ToolTrace
+from agents.t.permissions import (
+    PermissionClassifier,
+    AgentContext,
+    ToolCapabilities,
+    TemporaryToken,
+    PermissionLevel,
+    AuditLogger,
+)
 
 # Type variables
 A = TypeVar("A")
@@ -491,6 +499,291 @@ class RobustToolExecutor(Generic[A, B]):
         self.circuit_breaker.reset()
 
 
+# --- Secure Tool Executor (Phase 5: Security & Permissions) ---
+
+
+class SecureToolExecutor(Generic[A, B]):
+    """
+    Tool executor with permission checks and audit logging.
+
+    Implements T-gents Phase 5: Security & Permissions
+    - Permission checks before execution (ABAC)
+    - Short-lived token validation
+    - Audit logging for all executions
+    - Integration with RobustToolExecutor for reliability
+
+    Security Model:
+    - Zero standing privileges: All permissions contextual
+    - Attribute-based access control (ABAC)
+    - Short-lived tokens (15-60 minutes)
+    - Comprehensive audit trail
+
+    Usage:
+        tool = MyTool()
+        capabilities = ToolCapabilities(requires_network=True)
+        context = AgentContext(
+            agent_id="research_agent",
+            security_level=SecurityLevel.MEDIUM,
+            allow_network=True,
+        )
+
+        executor = SecureToolExecutor(
+            tool,
+            capabilities=capabilities,
+            context=context,
+        )
+
+        result = await executor.execute(input_data)
+        # Permission checked, execution audited
+    """
+
+    def __init__(
+        self,
+        tool: Tool[A, B],
+        capabilities: ToolCapabilities,
+        context: AgentContext,
+        classifier: Optional[PermissionClassifier] = None,
+        audit_logger: Optional[AuditLogger] = None,
+        circuit_config: Optional[CircuitBreakerConfig] = None,
+        retry_config: Optional[RetryConfig] = None,
+        enable_tracing: bool = True,
+    ):
+        """
+        Initialize secure tool executor.
+
+        Args:
+            tool: Tool to execute
+            capabilities: Required capabilities for this tool
+            context: Agent execution context
+            classifier: Permission classifier (default: create new)
+            audit_logger: Audit logger (default: create new)
+            circuit_config: Circuit breaker config
+            retry_config: Retry config
+            enable_tracing: Enable W-gent tracing
+        """
+        self.tool = tool
+        self.capabilities = capabilities
+        self.context = context
+
+        # Permission and audit
+        self.classifier = classifier or PermissionClassifier()
+        self.audit_logger = audit_logger or AuditLogger()
+
+        # Robust execution
+        self.robust_executor = RobustToolExecutor(
+            tool,
+            circuit_config=circuit_config,
+            retry_config=retry_config,
+            enable_tracing=enable_tracing,
+        )
+
+        # Token (if granted)
+        self.token: Optional[TemporaryToken] = None
+
+    async def request_permission(
+        self, duration_seconds: int = 900
+    ) -> Result[TemporaryToken, str]:
+        """
+        Request short-lived permission token.
+
+        Args:
+            duration_seconds: Token lifetime (default 900 = 15 min)
+
+        Returns:
+            Result containing token or error message
+        """
+        result = self.classifier.grant_temporary(
+            tool_id=self.tool.name,
+            capabilities=self.capabilities,
+            context=self.context,
+            duration_seconds=duration_seconds,
+        )
+
+        if result.is_ok():
+            self.token = result.value
+
+        # Log permission request
+        permission = self.classifier.classify(self.capabilities, self.context)
+        await self.audit_logger.log_permission_check(
+            tool_id=self.tool.name,
+            tool_name=self.tool.name,
+            context=self.context,
+            permission=permission,
+            token_id=self.token.token_id if self.token else None,
+        )
+
+        return result
+
+    async def execute(self, input: A) -> Result[B, ToolError]:
+        """
+        Execute tool with permission check and audit logging.
+
+        Algorithm:
+        1. Check permission (token or classify)
+        2. If denied, return permission error
+        3. Execute tool via robust executor
+        4. Log execution to audit trail
+        5. Return result
+
+        Returns:
+            Result[B, ToolError] with permission/execution errors
+        """
+        start_time = datetime.now()
+
+        # 1. Check permission
+        permission: PermissionLevel
+
+        if self.token:
+            # Use existing token
+            token_result = self.token.use()
+            if not token_result.is_ok():
+                # Token invalid/expired
+                permission_error = ToolError(
+                    error_type=ToolErrorType.PERMISSION,
+                    message=token_result.message,
+                    tool_name=self.tool.name,
+                    input=input,
+                    recoverable=False,
+                )
+
+                await self.audit_logger.log_execution(
+                    tool_id=self.tool.name,
+                    tool_name=self.tool.name,
+                    context=self.context,
+                    permission=PermissionLevel.DENIED,
+                    input_summary=self._summarize_input(input),
+                    success=False,
+                    error=str(permission_error),
+                    token_id=self.token.token_id,
+                )
+
+                return err(permission_error, str(permission_error), False)
+
+            permission = self.token.permission
+
+        else:
+            # Classify permission on-demand
+            permission = self.classifier.classify(self.capabilities, self.context)
+
+            if permission == PermissionLevel.DENIED:
+                permission_error = ToolError(
+                    error_type=ToolErrorType.PERMISSION,
+                    message=f"Permission denied for tool '{self.tool.name}' in context {self.context.agent_id}",
+                    tool_name=self.tool.name,
+                    input=input,
+                    recoverable=False,
+                )
+
+                await self.audit_logger.log_execution(
+                    tool_id=self.tool.name,
+                    tool_name=self.tool.name,
+                    context=self.context,
+                    permission=permission,
+                    input_summary=self._summarize_input(input),
+                    success=False,
+                    error=str(permission_error),
+                )
+
+                return err(permission_error, str(permission_error), False)
+
+            if permission == PermissionLevel.RESTRICTED:
+                permission_error = ToolError(
+                    error_type=ToolErrorType.PERMISSION,
+                    message=f"Tool '{self.tool.name}' requires additional approval",
+                    tool_name=self.tool.name,
+                    input=input,
+                    recoverable=True,  # Can be resolved with approval
+                )
+
+                await self.audit_logger.log_execution(
+                    tool_id=self.tool.name,
+                    tool_name=self.tool.name,
+                    context=self.context,
+                    permission=permission,
+                    input_summary=self._summarize_input(input),
+                    success=False,
+                    error=str(permission_error),
+                )
+
+                return err(permission_error, str(permission_error), True)
+
+        # 2. Execute tool via robust executor
+        result = await self.robust_executor.execute(input)
+
+        # 3. Calculate metrics
+        end_time = datetime.now()
+        duration_ms = (end_time - start_time).total_seconds() * 1000
+
+        # 4. Log execution
+        await self.audit_logger.log_execution(
+            tool_id=self.tool.name,
+            tool_name=self.tool.name,
+            context=self.context,
+            permission=permission,
+            input_summary=self._summarize_input(input),
+            success=result.is_ok(),
+            output_summary=self._summarize_output(result.value)
+            if result.is_ok()
+            else None,
+            error=str(result.error) if result.is_err() else None,
+            duration_ms=duration_ms,
+            token_id=self.token.token_id if self.token else None,
+        )
+
+        return result
+
+    def _summarize_input(self, input: A) -> str:
+        """
+        Summarize input for audit log.
+
+        Avoids logging full data (may contain sensitive info).
+        """
+        input_str = str(input)
+        if len(input_str) > 100:
+            return input_str[:97] + "..."
+        return input_str
+
+    def _summarize_output(self, output: B) -> str:
+        """
+        Summarize output for audit log.
+
+        Avoids logging full data (may contain sensitive info).
+        """
+        output_str = str(output)
+        if len(output_str) > 100:
+            return output_str[:97] + "..."
+        return output_str
+
+    def get_permission_status(self) -> dict[str, Any]:
+        """
+        Get current permission status.
+
+        Returns:
+            Dictionary with permission details:
+            - permission: Current permission level
+            - token: Token info (if exists)
+            - context: Context summary
+        """
+        permission = self.classifier.classify(self.capabilities, self.context)
+
+        status = {
+            "permission": permission.value,
+            "tool": self.tool.name,
+            "context_id": self.context.agent_id,
+            "token": None,
+        }
+
+        if self.token:
+            status["token"] = {
+                "id": self.token.token_id,
+                "valid": self.token.is_valid(),
+                "expires_at": self.token.expires_at.isoformat(),
+                "uses": self.token.uses,
+            }
+
+        return status
+
+
 # --- Exports ---
 
 __all__ = [
@@ -504,6 +797,7 @@ __all__ = [
     "ToolExecutor",
     "RetryExecutor",
     "RobustToolExecutor",
+    "SecureToolExecutor",
     # Config
     "RetryConfig",
 ]
