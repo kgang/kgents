@@ -4,12 +4,12 @@
 
 ## TL;DR
 
-**Status**: F-gent Phase 4 (Validate) COMPLETE ✅
+**Status**: Impl Evolution Session COMPLETE ✅
 **Branch**: `main` (uncommitted)
-**Latest**: F-gent Phase 4 - Sandbox validation with self-healing
-**Session**: 2025-12-08 - F-gent Phase 4 (Validate)
-**Achievement**: Complete validation pipeline with self-healing loop, 14 tests passing
-**Next**: Commit Phase 4 implementation
+**Latest**: Bug fixes + code quality improvements across impl/
+**Session**: 2025-12-08 - Impl Evolution (Tiers 1-3)
+**Achievement**: Fixed 6 test failures, added shared fixtures, renamed duplicate files
+**Next**: Commit evolution changes, then continue Phase C cross-pollination
 
 ---
 
@@ -17,26 +17,154 @@
 
 ### What Just Happened (Quick Context)
 
-**F-gent Phase 4 (Validate) IMPLEMENTED** ✅:
-- Implemented (SourceCode, Examples, Contract) → ValidationReport morphism
-- Sandbox execution: Isolated code execution with safety checks
-- Test execution: Run generated code against Intent examples
-- Invariant verification: Check Contract properties hold
-- Self-healing loop: Test failures → Phase 3 LLM retry
-- Convergence detection: Prevent infinite retry loops
-- Tests: 14 Phase 4 tests - ALL PASSING ✅
+**Impl Evolution Session COMPLETE** ✅:
 
-**Implementation Files**:
-- `agents/f/validate.py`: Phase 4 validation (~640 lines)
-- `agents/f/_tests/test_validate.py`: Validation tests (~260 lines)
-- `agents/f/__init__.py`: Updated exports
+**TIER 1 (Bug Fix)**: SpyAgent `max_history` parameter ✅
+- Fixed `agents/t/spy.py:62`: `max_history=100` → `_max_history=100`
+- Impact: Fixed 3 T-gent tests + 2 D-gent integration tests
 
-**F-gent Progress** (from spec/f-gents/forge.md):
-- ✅ Phase 1: Understand (Intent parsing)
-- ✅ Phase 2: Contract (Type synthesis + invariants)
-- ✅ Phase 3: Prototype (LLM code generation + static analysis)
-- ✅ Phase 4: Validate (Sandbox execution + self-healing) **NEW** ✨
-- ⏳ Phase 5: Crystallize (not yet implemented)
+**TIER 2.1 (Naming)**: Pytest-conflicting class names ✅
+- Renamed `TestResult` → `ExampleResult` in `agents/f/validate.py`
+- Renamed `TestResultStatus` → `ExampleResultStatus`
+- Added backward-compatibility aliases
+- Added `filterwarnings` to pyproject.toml to suppress remaining warnings
+
+**TIER 2.2**: Already done - all `__init__.py` files have `__all__` exports ✅
+
+**TIER 3.1 (Structure)**: Renamed duplicate test files ✅
+- `agents/e/_tests/test_forge_integration.py` → `test_e_forge_integration.py`
+- `agents/f/_tests/test_forge_integration.py` → `test_f_forge_integration.py`
+- `agents/j/_tests/test_forge_integration.py` → `test_j_forge_integration.py`
+
+**TIER 3.2 (DRY)**: Created shared test fixtures ✅
+- New file: `agents/shared/fixtures.py`
+- Functions: `make_sample_intent()`, `make_sample_contract()`, `make_sample_source_code()`, `make_sample_catalog_entry()`
+- Exported via `agents/shared/__init__.py`
+
+**Test Results After Evolution**:
+```
+F-gent: 192 passed, 1 skipped ✅ (was 150 + warnings)
+E-gent: 50 passed, 4 errors ⚠️ (pre-existing, need B-gent fixes)
+J-gent: 72 passed ✅
+T-gent: 43 passed ✅ (was 25 + 3 failures)
+D-gent: 73 passed, 3 failed ⚠️ (fixed 2/5, remaining are K-gent issues)
+L-gent: 39 passed ✅ (was 20)
+```
+
+**Files Changed**:
+- `agents/t/spy.py` - Bug fix
+- `agents/f/validate.py` - Renamed classes
+- `agents/f/__init__.py` - Updated exports
+- `agents/shared/fixtures.py` - New shared fixtures
+- `agents/shared/__init__.py` - Export fixtures
+- `pyproject.toml` - Added filterwarnings
+- `agents/e/_tests/test_e_forge_integration.py` - Renamed
+- `agents/f/_tests/test_f_forge_integration.py` - Renamed
+- `agents/j/_tests/test_j_forge_integration.py` - Renamed
+
+### Recommended Next Actions
+
+**Option A: Commit Evolution Changes** (recommended):
+```bash
+git add -A && git commit -m "refactor(impl): Evolution session - bug fixes + code quality"
+```
+
+**Option B: Continue Cross-Pollination Phase C**:
+- T2.6: T-gent + E-gent pipeline law validation
+- T2.8: C-gent + F-gent contract law validation
+- T2.10: B-gent + L-gent hypothesis outcome indexing
+
+**Option C: Fix Remaining Test Failures**:
+- D-gent K-gent integration: `test_kgent_persistent_persona_integration` needs K-gent persona fix
+- E-gent demo tests: Need B-gent hypothesis module
+
+---
+
+## Previous Sessions
+
+## Session Part 18: Impl Evolution (2025-12-08) ✅
+
+### What Was Accomplished
+
+Ran a conservative-to-confident evolution pass across impl/:
+
+**TIER 1 (Conservative - 99% confidence)**:
+- Fixed SpyAgent parameter mismatch: `max_history` → `_max_history`
+- This one-line fix resolved 5 test failures across T-gent and D-gent
+
+**TIER 2 (Medium - 85% confidence)**:
+- Renamed TestResult/TestResultStatus to ExampleResult/ExampleResultStatus
+- Added backward-compatibility aliases for existing code
+- Configured pytest to suppress PytestCollectionWarning
+
+**TIER 3 (Structural - 75% confidence)**:
+- Renamed 3 duplicate `test_forge_integration.py` files for pytest isolation
+- Created `agents/shared/fixtures.py` with reusable test factories
+
+**Impact**:
+- T-gent: +18 passing tests (25 → 43)
+- D-gent: +2 passing tests (71 → 73), fixed 2/5 failures
+- L-gent: +19 passing tests (20 → 39)
+- F-gent: warnings eliminated
+
+---
+
+## Session Part 17: F-gent Phase 5 (Crystallize) (2025-12-08) ✅
+
+### What Was Accomplished
+
+Implemented **Phase 5: Crystallize** - the final phase of the F-gent Forge Loop:
+
+**agents/f/crystallize.py** (~680 lines):
+- **Version dataclass**: Semantic versioning (MAJOR.MINOR.PATCH)
+  - Version.parse(): Parse version strings
+  - Version.bump(): Increment version numbers
+  - VersionBump enum: PATCH | MINOR | MAJOR
+
+- **ArtifactMetadata dataclass**: YAML frontmatter
+  - id, version, created_at, created_by
+  - parent_version (for re-forging)
+  - status: EXPERIMENTAL | ACTIVE | DEPRECATED | RETIRED
+  - hash: SHA-256 integrity hash
+  - tags: Searchable keywords
+  - dependencies: External libraries/APIs
+
+- **Artifact dataclass**: Complete .alo.md structure
+  - metadata: YAML frontmatter
+  - intent: Section 1 (human-editable)
+  - contract: Section 2 (machine-verified)
+  - source_code: Section 4 (auto-generated)
+  - changelog_entries: Version history
+
+- **assemble_artifact()**: Core morphism (Intent, Contract, SourceCode) → Artifact
+- **save_artifact()**: Persist artifact to .alo.md file
+- **extract_tags_from_intent()**: Auto-generate searchable tags
+- **determine_version_bump()**: Semantic versioning logic
+- **register_with_lgent()** (async): Optional L-gent catalog registration
+- **crystallize()** (async): Complete Phase 5 workflow
+
+**Test Results**:
+```bash
+$ cd impl/claude && python -m pytest agents/f/_tests/ -v
+============================= 192 passed, 1 skipped in 0.15s =============================
+```
+
+**Breakdown**:
+- Phase 1 (Intent): 35 tests ✅
+- Phase 2 (Contract): 37 tests ✅
+- Phase 3 (Prototype): 36 tests ✅
+- Phase 4 (Validate): 14 tests ✅
+- Phase 5 (Crystallize): 42 tests ✅ **NEW**
+- F+L Integration: 13 tests ✅
+- LLM Integration: 15 tests ✅
+
+**Key Features**:
+- **.alo.md format**: Structured markdown with YAML frontmatter
+- **Integrity hash**: SHA-256 for drift detection
+- **Semantic versioning**: Automatic version bump logic
+- **Lineage tracking**: parent_version for re-forging
+- **L-gent integration**: Optional catalog registration
+- **Human-editable intent**: Section 1 can be modified to trigger re-forge
 
 ---
 
@@ -67,7 +195,10 @@
 - ✅ Phase A.2: D-gent storage (PersistentAgent in L-gent) - COMMITTED
 - ✅ Phase A.3: F+L "search before forge" - COMMITTED (1a201bf)
 - ✅ Phase B (T1.2): E+F "re-forge from evolved intent" - COMMITTED (c61b0ac)
-- ✅ Phase B (T1.3): J+F template instantiation - IMPLEMENTED (uncommitted)
+- ✅ Phase B (T1.3): J+F template instantiation - COMMITTED (1f9eb75)
+- 🚧 Phase C (T2.6): T+E pipeline law validation - IN PROGRESS
+- ⏳ Phase C (T2.8): C+F contract law validation - PENDING
+- ⏳ Phase C (T2.10): B+L hypothesis outcome indexing - PENDING
 
 ### Recommended Next Actions
 

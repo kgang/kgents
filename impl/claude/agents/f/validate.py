@@ -31,18 +31,23 @@ class VerdictStatus(Enum):
     ESCALATE = "escalate"  # Stuck in failure loop, needs human intervention
 
 
-class TestResultStatus(Enum):
-    """Individual test result status."""
+class ExampleResultStatus(Enum):
+    """Individual example test result status."""
 
     PASS = "pass"
     FAIL = "fail"
     ERROR = "error"  # Exception during test execution
 
 
+# Backward compatibility aliases
+TestResultStatus = ExampleResultStatus
+ValidationTestStatus = ExampleResultStatus
+
+
 @dataclass
-class TestResult:
+class ExampleResult:
     """
-    Result of running a single test case.
+    Result of running a single example test case.
 
     Attributes:
         example: The test case that was run
@@ -54,7 +59,7 @@ class TestResult:
     """
 
     example: Example
-    status: TestResultStatus
+    status: ExampleResultStatus
     actual_output: Any = None
     expected_output: Any = None
     error: str | None = None
@@ -62,7 +67,12 @@ class TestResult:
 
     def is_passing(self) -> bool:
         """Check if test passed."""
-        return self.status == TestResultStatus.PASS
+        return self.status == ExampleResultStatus.PASS
+
+
+# Backward compatibility aliases
+TestResult = ExampleResult
+ValidationTestResult = ExampleResult
 
 
 @dataclass
@@ -245,13 +255,13 @@ def run_test(
 
         # Compare output to expected
         if actual_output == example.expected_output:
-            status = TestResultStatus.PASS
+            status = ExampleResultStatus.PASS
         else:
-            status = TestResultStatus.FAIL
+            status = ExampleResultStatus.FAIL
 
         execution_time = time.time() - start_time
 
-        return TestResult(
+        return ExampleResult(
             example=example,
             status=status,
             actual_output=actual_output,
@@ -261,9 +271,9 @@ def run_test(
 
     except Exception as e:
         execution_time = time.time() - start_time
-        return TestResult(
+        return ExampleResult(
             example=example,
-            status=TestResultStatus.ERROR,
+            status=ExampleResultStatus.ERROR,
             error=str(e),
             execution_time=execution_time,
         )
@@ -449,11 +459,11 @@ def _build_failure_summary(
     if failed_tests:
         lines.append("Test Failures:")
         for result in failed_tests:
-            if result.status == TestResultStatus.FAIL:
+            if result.status == ExampleResultStatus.FAIL:
                 lines.append(f"  - Input: {result.example.input!r}")
                 lines.append(f"    Expected: {result.expected_output!r}")
                 lines.append(f"    Actual: {result.actual_output!r}")
-            elif result.status == TestResultStatus.ERROR:
+            elif result.status == ExampleResultStatus.ERROR:
                 lines.append(f"  - Input: {result.example.input!r}")
                 lines.append(f"    Error: {result.error}")
 

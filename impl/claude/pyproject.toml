@@ -37,3 +37,7 @@ addopts = [
     "--strict-markers",
     "--tb=short",
 ]
+# Suppress PytestCollectionWarning for dataclass/enum classes that start with "Test" or similar
+filterwarnings = [
+    "ignore::pytest.PytestCollectionWarning",
+]

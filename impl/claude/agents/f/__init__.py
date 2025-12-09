@@ -31,16 +31,33 @@ from agents.f.prototype import (
     run_static_analysis,
 )
 from agents.f.validate import (
+    ExampleResult,
+    ExampleResultStatus,
     InvariantCheckResult,
-    TestResult,
-    TestResultStatus,
+    TestResult,  # Backward compat alias
+    TestResultStatus,  # Backward compat alias
     ValidationConfig,
     ValidationReport,
+    ValidationTestResult,  # Backward compat alias
+    ValidationTestStatus,  # Backward compat alias
     VerdictStatus,
     run_test,
     validate,
     validate_with_self_healing,
     verify_invariant,
+)
+from agents.f.crystallize import (
+    Artifact,
+    ArtifactMetadata,
+    ArtifactStatus,
+    Version,
+    VersionBump,
+    assemble_artifact,
+    crystallize,
+    determine_version_bump,
+    extract_tags_from_intent,
+    register_with_lgent,
+    save_artifact,
 )
 
 __all__ = [
@@ -66,14 +83,30 @@ __all__ = [
     "generate_prototype_async",
     "run_static_analysis",
     # Validation (Phase 4)
+    "ExampleResult",
+    "ExampleResultStatus",
     "InvariantCheckResult",
-    "TestResult",
-    "TestResultStatus",
+    "TestResult",  # Backward compat alias
+    "TestResultStatus",  # Backward compat alias
     "ValidationConfig",
     "ValidationReport",
+    "ValidationTestResult",  # Backward compat alias
+    "ValidationTestStatus",  # Backward compat alias
     "VerdictStatus",
     "run_test",
     "validate",
     "validate_with_self_healing",
     "verify_invariant",
+    # Crystallization (Phase 5)
+    "Artifact",
+    "ArtifactMetadata",
+    "ArtifactStatus",
+    "Version",
+    "VersionBump",
+    "assemble_artifact",
+    "crystallize",
+    "determine_version_bump",
+    "extract_tags_from_intent",
+    "register_with_lgent",
+    "save_artifact",
 ]

@@ -19,8 +19,16 @@ from agents.shared.ast_utils import (
     FunctionInfo,
     ClassInfo,
 )
+from agents.shared.fixtures import (
+    make_sample_intent,
+    make_sample_contract,
+    make_sample_source_code,
+    make_simple_agent_code,
+    make_sample_catalog_entry,
+)
 
 __all__ = [
+    # AST utilities
     "ASTAnalysisKit",
     "extract_imports",
     "calculate_cyclomatic_complexity",
@@ -32,4 +40,10 @@ __all__ = [
     "extract_classes",
     "FunctionInfo",
     "ClassInfo",
+    # Test fixtures
+    "make_sample_intent",
+    "make_sample_contract",
+    "make_sample_source_code",
+    "make_simple_agent_code",
+    "make_sample_catalog_entry",
 ]

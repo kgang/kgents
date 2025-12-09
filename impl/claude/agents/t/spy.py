@@ -59,7 +59,7 @@ class SpyAgent(Agent[A, A], Generic[A]):
             label: Human-readable label for this spy
         """
         self.label = label
-        self._memory = VolatileAgent[List[A]](_state=[], max_history=100)
+        self._memory = VolatileAgent[List[A]](_state=[], _max_history=100)
         self.__is_test__ = True  # T-gent marker
 
     @property
