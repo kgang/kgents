@@ -83,6 +83,14 @@ from .forge_integration import (
     instantiate_template,
     forge_and_instantiate,
 )
+from .factory_integration import (
+    JITAgentMeta,
+    JITAgentWrapper,
+    create_agent_from_source,
+    compile_and_instantiate,
+    get_jit_meta,
+    is_jit_agent,
+)
 
 __all__ = [
     # Promise types (Phase 1)
@@ -152,4 +160,12 @@ __all__ = [
     "contract_to_template",
     "instantiate_template",
     "forge_and_instantiate",
+    # AgentFactory Integration (Phase 5)
+    "JITAgentMeta",
+    "JITAgentWrapper",
+    # AgentFactory Integration helpers (Phase 5)
+    "create_agent_from_source",
+    "compile_and_instantiate",
+    "get_jit_meta",
+    "is_jit_agent",
 ]
