@@ -8,13 +8,18 @@ This directory contains the conceptual specification for kgents—implementation
 2. **[anatomy.md](anatomy.md)** - What constitutes an agent
 3. **[bootstrap.md](bootstrap.md)** - The irreducible kernel (7 agents)
 4. **Agent Genera** - Explore specific agent types:
-   - [a-agents/](a-agents/) - Abstract + Art
+   - [a-gents/](a-gents/) - Abstract + Art
    - [b-gents/](b-gents/) - Bio/Scientific
    - [c-gents/](c-gents/) - Category Theory (composition)
    - [d-gents/](d-gents/) - Data Agents (state, memory, persistence)
+   - [e-gents/](e-gents/) - Evolution (dialectical code improvement)
+   - [f-gents/](f-gents/) - Forge (artifact synthesis)
    - [h-gents/](h-gents/) - Hegelian/Dialectic (introspection)
+   - [i-gents/](i-gents/) - Interface (Living Codex Garden visualization)
    - [j-gents/](j-gents/) - JIT Agent Intelligence (lazy evaluation, JIT compilation)
    - [k-gent/](k-gent/) - Kent Simulacra (personalization)
+   - [l-gents/](l-gents/) - Library (knowledge curation, semantic discovery)
+   - [t-gents/](t-gents/) - Testing (algebraic reliability)
 
 ## The Spec/Impl Distinction
 
