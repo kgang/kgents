@@ -4,19 +4,263 @@
 
 ## TL;DR
 
-**Status**: ALL WORK PUSHED ✅ | 870 tests passing | 7 commits pushed
-**Branch**: `main` (synced with origin/main at 640ee5b)
-**Latest Commit**: 640ee5b - O-gents (Observability Agents) specification
-**Session**: 2025-12-09 PM - J-gents Tests + Spec Additions (Complete)
-**Commits This Session** (7 total):
-  - fef2b32: HYDRATE.md update (Phase 2 session tracking)
-  - 54de4d6: J-gents factory tests (+14 comprehensive tests, 29 total)
-  - 8a5fc5f: Spec refinements (Category Laws, Orthogonality, Accursed Share)
-  - 9248b23: Compositional core & functor lifting specs
-  - 37c1ac5: HYDRATE.md final session state
-  - 1ddf2c0: New theoretical foundations (13 spec files, +4,365 lines)
-  - 640ee5b: O-gents (Observability Agents) specification
-**Next**: T-gents Phase 2 (parser integration) OR continue spec work
+**Status**: UNCOMMITTED CHANGES | 923 tests passing
+**Branch**: `main`
+**Session**: 2025-12-09 Evening - T-gents Phase 2 Integration Testing
+**This Session**:
+  - **T-gents Phase 2 COMPLETE**: Parser integration tests + Cross-agent integration tests (P × J × T)
+  - Created `test_p_integration.py` (40 tests): T-gents × P-gents parser integration
+  - Created `test_cross_agent_integration.py` (13 tests): P × J × T workflows
+  - Fixed JIT sandbox import restrictions (manually constructed JSON strings)
+  - +53 tests (870 → 923 passing)
+  - 2 commits created: 74cd5a9 (tests) + 6d31647 (linting)
+**Uncommitted Files**:
+  - `HYDRATE.md` (this update)
+**Next**: Commit HYDRATE.md and push all commits to origin
+
+---
+
+## What Just Happened: T-gents Phase 2 - Integration Testing (P × J × T)
+
+### Session Overview (2025-12-09 Evening)
+
+Completed T-gents Phase 2 with comprehensive integration testing between T-gents (Tools), P-gents (Parsers), and J-gents (JIT compilation).
+
+### Work Completed
+
+**1. T-gents × P-gents Integration Tests** (`test_p_integration.py` - 40 tests):
+- **TestSchemaParser** (7 tests): MCP tool schemas → Tool[A,B] type signatures
+  - Simple schemas, titled types, primitive types
+  - Missing name/schema handling, original schema preservation
+- **TestInputParser** (6 tests): Natural language → Tool parameters
+  - Anchor-based parsing (`###param: value`)
+  - JSON fallback, partial matching
+- **TestOutputParser** (6 tests): Tool responses → Structured data
+  - Clean JSON, nested structures, empty output
+  - Malformed JSON with P-gent repairs
+  - Expected type tracking
+- **TestErrorParser** (10 tests): Error classification → Recovery strategies
+  - Timeout → retry
+  - Auth (401/403) → refresh_credentials
+  - Rate limit (429) → backoff
+  - Not found (404) → check_inputs
+  - Bad request (400) → validate_inputs
+  - Server error (503) → retry
+  - Network errors → retry
+  - Unknown errors → manual_intervention
+- **TestStreamingSupport** (4 tests): All parsers support streaming
+- **TestParserConfiguration** (4 tests): Runtime configuration
+- **TestRealWorldToolScenarios** (3 tests): Complete workflows (web search, API calls, DB queries)
+
+**2. Cross-Agent Integration Tests** (`test_cross_agent_integration.py` - 13 tests):
+- **TestParsersWithJITAgents** (3 tests): P-gent parsing JIT agent outputs
+  - JSON output from JIT agents
+  - Anchor-based output formats
+  - Composition with parser validation
+- **TestToolsWithParserIntegration** (3 tests): T-gents using P-gent parsers
+  - Tool schema parsing workflow
+  - Error classification workflow
+  - Output validation against schemas
+- **TestJITToolsIntegration** (2 tests): JIT-generated Tools
+  - JIT tool agents with metadata
+  - Error handling in JIT tools
+- **TestCompleteWorkflow** (3 tests): Full P × J × T integration
+  - JIT Tool with P-gent I/O parsing
+  - Tool pipelines with parser validation
+  - Fallback parsing for malformed output
+- **TestMetadataAndProvenance** (2 tests): Metadata tracking
+  - JIT tool provenance preservation
+  - Parser metadata tracking
+
+### Technical Challenges Solved
+
+**JIT Sandbox Import Restriction**:
+- **Issue**: JIT agents cannot use `import` statements (sandbox security)
+- **Attempted**: `import json; return json.dumps({...})`
+- **Error**: `RuntimeError: JIT execution failed: __import__ not found`
+- **Solution**: Manually construct JSON strings in JIT source code
+  ```python
+  # Before (fails):
+  import json
+  return json.dumps({"key": value})
+
+  # After (works):
+  return f'{{"key": "{value}"}}'
+  ```
+- **Affected tests**: 5 tests fixed with this approach
+
+### Commits Created
+
+1. **74cd5a9** - `test(t-gents): Add T-gents Phase 2 parser integration tests`
+   - +1045 lines (2 files)
+   - 53 new tests (40 T×P integration + 13 P×J×T cross-agent)
+
+2. **6d31647** - `style: Apply linting fixes to integration tests`
+   - Fixed unused imports
+   - Fixed `== True/False` comparisons
+   - Pre-commit hooks passed
+
+### Test Status
+
+- **Before**: 870 tests passing
+- **After**: 923 tests passing
+- **New**: +53 tests (40 T×P + 13 cross-agent)
+- **Performance**: All tests green ✅
+
+### Architecture Validated
+
+The tests validate the complete integration architecture:
+
+```
+T-gents (Tools)
+    ├──→ P-gents: Schema/Input/Output/Error parsing
+    ├──→ J-gents: JIT-generated tools
+    └──→ MCP: Tool schema format compatibility
+
+J-gents (JIT)
+    ├──→ P-gents: Intent/Source/Output parsing
+    └──→ T-gents: Can generate Tool agents
+
+P-gents (Parsers)
+    ├──→ T-gents: Tool I/O parsing
+    ├──→ J-gents: JIT output validation
+    └──→ Cross-validation: Multiple parsers per use case
+```
+
+---
+
+## What Just Happened: Principle Pass & Refactor
+
+### The Assessment
+
+Applied the 7 principles from `principles.md` to recent spec additions:
+
+| Principle | Ψ-gents (Before) | Ψ-gents (After) |
+|-----------|------------------|-----------------|
+| **TASTEFUL** | ⚠️ 4 paradigms, feels excessive | ✅ 2 novel + 2 delegated |
+| **CURATED** | ❌ Duplicates H-gents content | ✅ Delegates, no duplication |
+| **COMPOSABLE** | ⚠️ Pipeline, not composition | ✅ Uses >> via existing agents |
+| **GENERATIVE** | ❌ ~950 lines, verbose Python | ✅ ~255 lines, pseudocode |
+| **HETERARCHICAL** | ✅ MHC enables context-dependent | ✅ Preserved |
+| **ETHICAL** | ✅ Values made explicit | ✅ Preserved |
+| **JOY-INDUCING** | ✅ Interesting concepts | ✅ Preserved |
+
+### Key Changes
+
+1. **Ψ-gents Delegation Pattern**:
+   ```
+   Before: Ψ-gents reimplements Jung, Lacan (700+ lines)
+   After:  Ψ-gents delegates to H-jung, H-lacan, O-gent (~50 lines)
+   ```
+
+2. **Novel vs Composed**:
+   - ✅ NOVEL: MHC (complexity stratification), Axiological Type Theory
+   - ⚡ COMPOSED: BicameralAgent (H-jung + Sublate), RSIValidator (H-lacan + O-gent)
+
+3. **Code Style**:
+   - Before: Full Python with docstrings, imports, type hints
+   - After: Condensed pseudocode showing essence
+
+### Integration Graph Added
+
+```
+Ψ-gents
+    ├──→ H-gents: H-jung (shadow), H-lacan (RSI)
+    ├──→ O-gents: BorromeanObserver
+    ├──→ Bootstrap: Sublate
+    └──→ Novel: MHC, Axiological
+```
+
+### O-gents and N-gents Assessment
+
+Both pass principles (no changes needed):
+- **O-gents**: BorromeanObserver is novel (runtime RSI), not duplicate of H-lacan (analysis)
+- **N-gents**: All patterns are novel narrative structures, not duplicates
+
+---
+
+## What Just Happened: Spec Phase 3 (O/N/Ψ-gents) - Prior Session
+
+### O-gents Expansion (Observability)
+
+Added advanced observability patterns to `spec/o-gents/README.md`:
+
+1. **Lacanian Registers / BorromeanObserver**:
+   - Validates across Symbolic (parses?), Real (runs?), Imaginary (looks right?)
+   - If any register fails, the whole "knot" is invalid
+   - Hallucination detection via register mismatch (Symbolic OK but Real FAIL)
+
+2. **Semantic Drift Detection (DriftDetector)**:
+   - Implements Noether's theorem for semantic conservation
+   - Compares input intent vs output summary
+   - Alerts when drift exceeds threshold
+
+3. **Topology Mapping (TopologyMapper)**:
+   - Tracks agent composition graphs
+   - Identifies hot paths and bottlenecks
+   - Visualizes composition topology
+
+### N-gents Expansion (Narrator)
+
+Added narrative patterns to `spec/n-gents/README.md`:
+
+1. **Ergodic Narratives (ErgodicNarrative)**:
+   - Branching timeline stories (like choose-your-own-adventure)
+   - `branch_at()`: Create alternate timelines from decision points
+   - `compare_timelines()`: "What-if" analysis across branches
+
+2. **CounterfactualNarrator**:
+   - Auto-generate alternate timelines along dimensions (input, model, timeout)
+   - Explore counterfactuals systematically
+
+3. **UnreliableNarrator**:
+   - Hallucination-aware narration
+   - Confidence scoring per trace
+   - Contradiction/corroboration tracking
+
+4. **Chronicle (Multi-Agent Sagas)**:
+   - Weave multiple agent narratives into unified timeline
+   - `Interaction` tracking between agents
+   - Chapter identification for story structure
+
+5. **EpicNarrator**:
+   - Long-running operation narration
+   - Rolling summaries for context compression
+   - "Previously on..." recaps
+
+### Ψ-gents (Psychopomp) - New Genus
+
+Created `spec/psi-gents/README.md` with four synthesized paradigms:
+
+1. **MHC (Model of Hierarchical Complexity)**:
+   - 14-level complexity stack (SENSORIMOTOR → CROSS_PARADIGMATIC)
+   - `MHCRouter`: Route tasks to appropriate complexity level
+   - `MHCStratifiedAgent`: Execute at level-appropriate abstraction
+   - `VerticalDescent`: Ground abstractions to concrete operations
+
+2. **Jungian Shadow Integration**:
+   - `BicameralAgent`: Ego + Shadow positions generated in parallel
+   - `ShadowGenerator`: Construct shadow counterpart for any agent
+   - `JungianIntegrationLoop`: Synthesize opposites into higher unity
+
+3. **Lacanian RSI (Borromean Knot)**:
+   - Three registers: Symbolic, Real, Imaginary
+   - `BorromeanValidator`: All three must hold for validity
+   - `HallucinationDetector`: Detect register mismatches
+
+4. **Axiological Type Theory**:
+   - Value domains: EPISTEMIC, AESTHETIC, ETHICAL, PRAGMATIC, HEDONIC
+   - `ValuationMorphism`: Convert between value domains (with loss)
+   - `AxiologicalAgent`: Track value implications of operations
+
+5. **Grand Synthesis (PsychopompAgent)**:
+   - Integrates all four paradigms into single pipeline
+   - MHC routing → Bicameral generation → Borromean validation → Axiological typing
+
+### spec/README.md Updates
+
+- Added Ψ-gents to agent genera list
+- Added cross-pollination entries: Ψ+H, Ψ+O, Ψ+N
 
 ---
 
