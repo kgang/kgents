@@ -33,6 +33,50 @@ Most agent repositories are collections or framework wrappers. kgents is differe
 
 **Phase 1**: Deep specification of A, B, C, K
 
+## Installation
+
+The kgents CLI requires Python 3.11+.
+
+```bash
+# Clone the repository
+git clone https://github.com/kgents/kgents.git
+cd kgents
+
+# Install in development mode (from impl/claude directory)
+cd impl/claude
+pip install -e ".[dev]"
+
+# Verify installation
+kgents --version
+```
+
+## Quick Start
+
+```bash
+# One-line project health
+kgents pulse
+
+# Find holes in a hypothesis
+kgents falsify "all functions have docstrings"
+
+# Generate hypotheses from patterns
+kgents conjecture --limit 3
+
+# Steel-man an opposing view
+kgents rival "we should use microservices"
+
+# Observe tensions in your vault/workspace
+kgents mirror observe ~/Documents/Vault
+
+# Quick shape intuition
+kgents sense
+
+# See all commands
+kgents --help
+```
+
+See [docs/kgents-cli-reference.md](docs/kgents-cli-reference.md) for full CLI documentation.
+
 ## Structure
 
 ```

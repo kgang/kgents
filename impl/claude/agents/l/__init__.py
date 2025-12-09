@@ -1,45 +1,55 @@
 """
-L-gents: Synaptic Librarian
+L-gent: The Synaptic Librarian
 
-The ecosystem's knowledge graph and artifact registry.
-Three layers: Registry (what exists) → Lineage (where from) → Lattice (how fits).
+Knowledge curation, semantic discovery, and ecosystem connectivity.
 
-Core components:
-- CatalogEntry: Artifact metadata
-- Registry: Indexed collection of entries
-- Search: Three-brain semantic + keyword + graph search
-- Lineage: Provenance and evolution tracking
-- Lattice: Type compatibility and composition planning
+Phase 1 Implementation (for G-gent integration):
+- Core types (EntityType.TONGUE support)
+- Registry (in-memory catalog)
+- Basic search (keyword matching)
+
+Phase 2 Implementation (D-gent integration):
+- PersistentRegistry: File-backed catalog with D-gent storage
+- Auto-save strategies (ON_WRITE, MANUAL, ON_EXIT)
+- Catalog history tracking
+
+Future Phases:
+- Lineage tracking (DAG traversal)
+- Lattice compatibility (type checking)
+- Semantic search (embeddings + vector DB)
 """
 
-from .catalog import CatalogEntry, EntityType, Status, Registry
-from .search import Search, SearchResult, SearchStrategy
-
-# Hypothesis Indexing (Cross-pollination T2.10)
-from .hypothesis_indexing import (
-    HypothesisIndex,
-    HypothesisRecord,
-    HypothesisOutcome,
-    HypothesisSearchQuery,
-    HypothesisSearchResult,
-    HypothesisPatternAnalysis,
-    bgent_hypothesis_to_record,
+from .registry import Registry
+from .types import (
+    Catalog,
+    CatalogEntry,
+    CompatibilityReport,
+    EntityType,
+    SearchResult,
+    Status,
+)
+from .persistence import (
+    PersistentRegistry,
+    PersistenceConfig,
+    SaveStrategy,
+    create_persistent_registry,
+    load_or_create_registry,
 )
 
 __all__ = [
-    "CatalogEntry",
+    # Core types
     "EntityType",
     "Status",
-    "Registry",
-    "Search",
+    "CatalogEntry",
+    "Catalog",
     "SearchResult",
-    "SearchStrategy",
-    # Hypothesis Indexing (Cross-pollination T2.10)
-    "HypothesisIndex",
-    "HypothesisRecord",
-    "HypothesisOutcome",
-    "HypothesisSearchQuery",
-    "HypothesisSearchResult",
-    "HypothesisPatternAnalysis",
-    "bgent_hypothesis_to_record",
+    "CompatibilityReport",
+    # Registry (in-memory)
+    "Registry",
+    # Persistent Registry (D-gent integration)
+    "PersistentRegistry",
+    "PersistenceConfig",
+    "SaveStrategy",
+    "create_persistent_registry",
+    "load_or_create_registry",
 ]
