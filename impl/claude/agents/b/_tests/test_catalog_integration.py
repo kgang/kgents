@@ -471,8 +471,8 @@ def test_generate_hypothesis_name():
         statement="Short statement",
         confidence=0.5,
         novelty=NoveltyLevel.INCREMENTAL,
-        falsifiable_by=[],
-        supporting_observations=[],
+        falsifiable_by=["Test criteria"],
+        supporting_observations=[0],
         assumptions=[],
     )
 
@@ -480,8 +480,8 @@ def test_generate_hypothesis_name():
         statement="This is a very long hypothesis statement that exceeds fifty characters and should be truncated properly",
         confidence=0.5,
         novelty=NoveltyLevel.INCREMENTAL,
-        falsifiable_by=[],
-        supporting_observations=[],
+        falsifiable_by=["Test criteria"],
+        supporting_observations=[0],
         assumptions=[],
     )
 

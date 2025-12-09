@@ -196,8 +196,9 @@ async def find_hypotheses(
         EntityType.HYPOTHESIS if hasattr(EntityType, "HYPOTHESIS") else EntityType.SPEC
     )
 
+    # Pass None for empty query so registry returns all matching entity_type
     results = await registry.find(
-        query=query or "",
+        query=query if query else None,
         entity_type=entity_type,
     )
 

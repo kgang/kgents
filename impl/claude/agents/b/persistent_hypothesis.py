@@ -53,7 +53,18 @@ class HypothesisMemory:
     lineage_edges: list[HypothesisLineageEdge] = field(default_factory=list)
 
     # L-gent catalog IDs (for catalog integration)
+    # NOTE: JSON serializes int keys as strings, so we use _fix_catalog_ids after load
     catalog_ids: dict[int, str] = field(default_factory=dict)  # hyp_idx -> catalog_id
+
+    def __post_init__(self):
+        """Fix catalog_ids keys that were converted to strings by JSON serialization."""
+        # JSON doesn't support int keys, so they get serialized as strings
+        # Convert them back to ints when loading
+        if self.catalog_ids:
+            self.catalog_ids = {
+                int(k) if isinstance(k, str) else k: v
+                for k, v in self.catalog_ids.items()
+            }
 
     # Research session tracking
     sessions: list[dict[str, Any]] = field(default_factory=list)

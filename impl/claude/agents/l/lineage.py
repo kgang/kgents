@@ -21,7 +21,6 @@ from enum import Enum
 from typing import Any
 
 
-
 class RelationshipType(Enum):
     """Types of relationships in the lineage graph."""
 
@@ -439,7 +438,13 @@ class LineageGraph:
         - Trying to add: C → A
         - Path from A to C exists: A → B → C
         - So adding C → A creates cycle: A → B → C → A
+
+        Self-loops (A → A) are also cycles and must be prevented.
         """
+        # Self-loop is a cycle
+        if source_id == target_id:
+            return True
+
         # Check if there's already a path from target to source
         visited = set()
         queue = [target_id]

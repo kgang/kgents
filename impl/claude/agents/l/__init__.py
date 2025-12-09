@@ -19,8 +19,13 @@ Phase 3 Implementation (Lineage Layer):
 - Ancestor/descendant traversal
 - Cycle detection
 
+Phase 4 Implementation (Lattice Layer):
+- TypeLattice: Type compatibility and composition planning
+- Type operations (is_subtype, meet, join)
+- Composition verification (can_compose, verify_pipeline)
+- Path finding (find_path, suggest_composition)
+
 Future Phases:
-- Lattice compatibility (type checking)
 - Semantic search (embeddings + vector DB)
 """
 
@@ -49,6 +54,17 @@ from .lineage import (
     record_fork,
     record_dependency,
 )
+from .lattice import (
+    TypeLattice,
+    TypeNode,
+    TypeKind,
+    SubtypeEdge,
+    CompositionResult,
+    CompositionStage,
+    PipelineVerification,
+    CompositionSuggestion,
+    create_lattice,
+)
 
 __all__ = [
     # Core types
@@ -74,4 +90,14 @@ __all__ = [
     "record_evolution",
     "record_fork",
     "record_dependency",
+    # Lattice (Phase 4)
+    "TypeLattice",
+    "TypeNode",
+    "TypeKind",
+    "SubtypeEdge",
+    "CompositionResult",
+    "CompositionStage",
+    "PipelineVerification",
+    "CompositionSuggestion",
+    "create_lattice",
 ]
