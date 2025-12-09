@@ -20,50 +20,69 @@ The German word *aufheben* has three simultaneous meanings:
 
 ## The Sublate Operation
 
+### Core Types
+
 ```python
 @dataclass(frozen=True)
 class SublateInput:
     """Input to the Sublate operation."""
-    tension: Tension
-    context: SystemContext
-    constraints: SynthesisConstraints
+    tensions: tuple[Tension, ...]  # One or more tensions to process
 
 @dataclass(frozen=True)
-class SublateOutput:
-    """Output from the Sublate operation."""
-    result: Synthesis | HoldTension
-    confidence: float
-    rationale: str
+class Synthesis:
+    """A resolved tension."""
+    result: Any              # The synthesized output
+    resolution_type: str     # "preserve", "negate", "elevate"
+    explanation: str         # How the synthesis was achieved
 
 @dataclass(frozen=True)
 class HoldTension:
     """Decision to preserve rather than resolve a tension."""
     tension: Tension
-    hold_reason: HoldReason
-    review_after: datetime | None  # When to reconsider
-    productive_function: str  # What value the tension provides
+    why_held: str            # Human-readable reason
+    review_after: datetime | None = None
 
+# Union return type
+SublateResult = Synthesis | HoldTension
+```
+
+### Resolution Types
+
+The `resolution_type` field maps to the three meanings of *aufheben*:
+
+| Type | Meaning | When Used |
+|------|---------|-----------|
+| `"preserve"` | Keep thesis as-is | No real contradiction found |
+| `"negate"` | Replace thesis with antithesis | Antithesis is clearly right |
+| `"elevate"` | Transcend to higher synthesis | Both contain partial truth |
+
+### The Operation
+
+```python
+async def sublate(tensions: tuple[Tension, ...]) -> SublateResult:
+    """
+    Attempt to synthesize tension(s), or decide to hold.
+
+    Process:
+    1. CAN this tension be synthesized? (Is there enough information?)
+    2. SHOULD this tension be synthesized now? (Is timing right?)
+    3. If yes, WHAT is the synthesis? (preserve/negate/elevate?)
+    4. If no, WHY hold? (Document the reason)
+    """
+    ...
+```
+
+### Hold Reasons
+
+When synthesis is not appropriate:
+
+```python
 class HoldReason(Enum):
     PREMATURE = "premature"          # Not enough information yet
     PRODUCTIVE = "productive"        # Tension drives growth
     EXTERNAL_DEPENDENCY = "external" # Resolution depends on outside factors
     HIGH_COST = "high_cost"          # Social cost too high right now
     KAIROS = "kairos"                # Waiting for right moment
-
-async def sublate(
-    tension: Tension,
-    context: SystemContext,
-    force_synthesis: bool = False,
-) -> SublateOutput:
-    """
-    Attempt to synthesize a tension, or decide to hold it.
-
-    The operation must determine:
-    1. CAN this tension be synthesized?
-    2. SHOULD this tension be synthesized now?
-    3. If yes, WHAT is the synthesis?
-    """
-    ...
 ```
 
 ---
