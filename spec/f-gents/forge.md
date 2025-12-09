@@ -251,6 +251,71 @@ Each phase is a **morphism** with clear input/output types. Failures trigger ite
 
 ---
 
+## Phase 4.5: Optimize (via R-gent)
+
+**Signature**: `(SourceCode, Examples, Metric) → OptimizedSourceCode`
+
+**Purpose**: Refine prompts through systematic optimization before crystallization.
+
+### Overview
+
+This optional phase invokes the **R-gent (Refinery)** to optimize agent prompts using techniques like DSPy's MIPROv2, TextGrad, or OPRO. Only runs if:
+1. Dataset has sufficient examples (≥ 10)
+2. B-gent grants optimization budget
+3. Expected ROI is positive
+
+### Inputs
+- SourceCode (validated from Phase 4)
+- Examples (from Intent + synthetic generation)
+- Metric (provided by T-gent, or default accuracy)
+
+### Process
+
+1. **ROI Check** (via B-gent):
+   ```python
+   if not banker.should_optimize(agent, examples):
+       return source_code  # Skip optimization
+   ```
+
+2. **Teleprompter Selection**:
+   - Simple tasks (< 20 examples): BootstrapFewShot
+   - Medium complexity: MIPROv2
+   - High precision needed: TextGrad
+
+3. **Optimization Run**:
+   ```python
+   optimized = await r_gent.refine(
+       agent=source_code,
+       dataset=examples,
+       metric=metric,
+       max_iterations=50,
+       improvement_threshold=0.05
+   )
+   ```
+
+4. **Validation**:
+   - Optimized agent must improve metric by > 5%
+   - If no improvement, keep original (zero-shot may be optimal)
+
+### Outputs
+- **OptimizedSourceCode** (with refined prompts)
+- **OptimizationTrace** (iterations, scores, cost)
+
+### Success Criteria
+- Metric improves by > `improvement_threshold`
+- Cost stays within B-gent budget
+- No regression on held-out test set
+
+### When to Skip
+- Dataset too small (< 10 examples)
+- B-gent denies budget (ROI negative)
+- Agent is already optimized (re-forging)
+- User explicitly requests zero-shot
+
+See [R-gents/README.md](../r-gents/README.md) for full optimization specification.
+
+---
+
 ## Phase 5: Crystallize
 
 **Signature**: `(Intent, Contract, SourceCode) → Artifact`
@@ -288,6 +353,9 @@ Each phase is a **morphism** with clear input/output types. Failures trigger ite
      # 4. THE IMPLEMENTATION
      WARNING: AUTO-GENERATED. DO NOT EDIT DIRECTLY.
      [Python source code]
+
+     # 5. OPTIMIZATION TRACE (if R-gent was invoked)
+     [Method, iterations, baseline → final score, cost]
      ```
 
 2. **Integrity Hash**:

@@ -91,6 +91,27 @@ class CatalogEntry:
     # Deprecation info
     deprecation_reason: str | None = None
     deprecated_in_favor_of: str | None = None
+
+    # Optimization metadata (from R-gent)
+    optimization_method: str | None = None       # "mipro_v2", "textgrad", "opro", etc.
+    optimization_score: float | None = None      # Final metric score after optimization
+    optimization_baseline: float | None = None   # Pre-optimization score
+    optimization_iterations: int | None = None   # Number of optimization iterations
+    optimization_cost_usd: float | None = None   # Compute cost for optimization
+    optimization_trace_id: str | None = None     # Link to full optimization trace
+    optimized_for_model: str | None = None       # Model used during optimization (for drift detection)
+
+    @property
+    def improvement_percentage(self) -> float | None:
+        """Compute improvement from optimization."""
+        if self.optimization_score and self.optimization_baseline:
+            return (self.optimization_score - self.optimization_baseline) / self.optimization_baseline
+        return None
+
+    @property
+    def is_optimized(self) -> bool:
+        """Check if artifact has been through R-gent optimization."""
+        return self.optimization_method is not None
 ```
 
 ### Registry Operations
