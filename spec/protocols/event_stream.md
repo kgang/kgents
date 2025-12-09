@@ -141,12 +141,9 @@ class EventStream(Protocol[T]):
 ### Sliding Window
 
 ```python
-from datetime import timedelta
-
 @dataclass(frozen=True)
 class Window:
-    """A temporal window of events."""
-
+    """Temporal window of events."""
     start: datetime
     end: datetime
     events: tuple[Event, ...]
@@ -160,16 +157,10 @@ class Window:
         return len(self.events)
 
 class SlidingWindow:
-    """
-    A view of an event stream with overlapping windows.
+    """Event stream with overlapping windows (e.g., 30-day windows, 7-day step)."""
 
-    Example: 30-day windows, sliding by 7 days
-    """
-
-    def __init__(self,
-                 stream: EventStream,
-                 window_size: timedelta,
-                 step_size: timedelta):
+    def __init__(self, stream: EventStream,
+                 window_size: timedelta, step_size: timedelta):
         self.stream = stream
         self.window_size = window_size
         self.step_size = step_size
@@ -215,33 +206,20 @@ class GitStream:
         """Git DAG has no cycles."""
         return False
 
-    def events(self,
-               start: datetime | None = None,
+    def events(self, start: datetime | None = None,
                end: datetime | None = None,
                limit: int | None = None) -> Iterator[Event]:
-        """
-        Iterate commits as events.
-
-        Each commit becomes an Event with:
-        - id: commit SHA
-        - timestamp: commit timestamp
-        - actor: author name
-        - event_type: "commit"
-        - data: {"message": ..., "diff": ..., "files": [...]}
-        """
+        """Iterate commits as events."""
         repo = Repo(self.repo_path)
-        commit_iter = repo.iter_commits(self.branch)
-
         count = 0
-        for commit in commit_iter:
-            # Filter by time
+
+        for commit in repo.iter_commits(self.branch):
             commit_time = datetime.fromtimestamp(commit.committed_date)
             if start and commit_time < start:
                 continue
             if end and commit_time > end:
                 continue
 
-            # Yield event
             yield Event(
                 id=commit.hexsha,
                 timestamp=commit_time,
@@ -290,24 +268,13 @@ class ObsidianStream:
         return sum(1 for _ in self.vault_path.rglob("*.md"))
 
     def events(self, **kwargs) -> Iterator[Event]:
-        """
-        Stream note creation/modification events.
-
-        Events include:
-        - note_created
-        - note_modified
-        - link_added
-        - link_removed
-        """
+        """Stream note events: created, modified, link_added, link_removed."""
         if self.use_git and (self.vault_path / ".git").exists():
-            # Use git history
             git_stream = GitStream(self.vault_path)
             for git_event in git_stream.events(**kwargs):
-                # Transform git commits into note-level events
                 for note_event in self._parse_note_events(git_event):
                     yield note_event
         else:
-            # Use filesystem timestamps
             for note_path in sorted(self.vault_path.rglob("*.md")):
                 stat = note_path.stat()
                 yield Event(
@@ -338,17 +305,10 @@ class FileSystemStream:
     max_depth: int = 5
 
     def classify_reality(self) -> Reality:
-        """
-        Filesystem watching can be CHAOTIC.
-
-        If watching root or very large directory, classify as CHAOTIC
-        and collapse to Ground (refuse to process).
-        """
-        # Estimate directory depth
+        """Filesystem watching can be CHAOTIC. Large/deep dirs collapse to Ground."""
         if self.max_depth > 10:
             return Reality.CHAOTIC
 
-        # Estimate file count
         try:
             file_count = sum(1 for _ in self.watch_path.rglob("*"))
             if file_count > 100_000:
@@ -363,11 +323,7 @@ class FileSystemStream:
         return False
 
     def events(self, **kwargs) -> Iterator[Event]:
-        """
-        One-time scan of current filesystem state.
-
-        For continuous watching, use events_async().
-        """
+        """One-time scan of current state. For continuous, use events_async()."""
         for path in self.watch_path.rglob("*"):
             if path.is_file():
                 stat = path.stat()
@@ -381,12 +337,7 @@ class FileSystemStream:
                 )
 
     async def events_async(self, **kwargs) -> AsyncIterator[Event]:
-        """
-        Continuous filesystem watching (push-based).
-
-        Uses inotify/FSEvents to watch for changes.
-        WARNING: Can be unbounded. Respect entropy budget.
-        """
+        """Continuous watching (inotify/FSEvents). WARNING: Unbounded, respect budget."""
         # Implementation uses watchdog library
         ...
 ```
@@ -413,40 +364,24 @@ class TemporalWitness:
         self.stream = stream
         self.reality = stream.classify_reality()
 
-    def observe_drift(self,
-                      window_size: timedelta,
+    def observe_drift(self, window_size: timedelta,
                       compare_periods: int = 2) -> list[Antithesis]:
-        """
-        Detect behavioral drift across time windows.
-
-        Args:
-            window_size: Size of each observation window (e.g., 30 days)
-            compare_periods: How many periods to compare (2 = current vs previous)
-
-        Returns:
-            Antitheses describing detected drifts
-        """
-        # Refuse chaotic streams
+        """Detect behavioral drift across time windows."""
         if self.reality == Reality.CHAOTIC:
             return [Antithesis(
                 content="Stream is unbounded/chaotic",
                 evidence=["Reality classification: CHAOTIC"],
-                frequency=1.0,
-                severity=1.0,
+                frequency=1.0, severity=1.0,
                 pattern_type=PatternType.UNKNOWN,
             )]
 
-        # Create sliding windows
         windowed = self.stream.window(window_size)
         windows = list(itertools.islice(windowed.windows(), compare_periods))
 
         if len(windows) < 2:
-            return []  # Not enough data
+            return []
 
-        # Compare patterns between windows
         antitheses = []
-
-        # Example: Compare commit frequency
         recent_window = windows[-1]
         previous_window = windows[-2]
 
@@ -515,70 +450,39 @@ class SemanticMomentum:
         return np.linalg.norm(self.momentum)
 
     def is_conserved(self, threshold: float = 0.1) -> bool:
-        """
-        Is momentum conserved (stable meaning)?
-
-        Returns True if velocity magnitude < threshold.
-        """
+        """Momentum conserved (stable meaning)? velocity < threshold"""
         return np.linalg.norm(self.velocity) < threshold
 
 class SemanticMomentumTracker:
-    """
-    Track semantic momentum across event streams.
+    """Track semantic momentum using embeddings to measure topic drift."""
 
-    Uses embeddings to measure how topic meanings drift over time.
-    """
-
-    def __init__(self,
-                 model_name: str = "all-MiniLM-L6-v2",
+    def __init__(self, model_name: str = "all-MiniLM-L6-v2",
                  window_size: timedelta = timedelta(days=30)):
         self.model = SentenceTransformer(model_name)
         self.window_size = window_size
 
-    def track_topic(self,
-                    stream: EventStream,
+    def track_topic(self, stream: EventStream,
                     topic: str) -> list[SemanticMomentum]:
-        """
-        Track a topic's semantic momentum across time.
-
-        Args:
-            stream: Event stream to analyze
-            topic: Topic keyword to track
-
-        Returns:
-            List of SemanticMomentum observations (one per window)
-        """
-        # Create sliding windows
+        """Track topic's semantic momentum across time (one per window)."""
         windowed = stream.window(self.window_size)
-
         momentum_history = []
         previous_embedding = None
 
         for window in windowed.windows():
-            # Extract topic mentions in this window
             mentions = self._extract_topic_mentions(window, topic)
-
             if not mentions:
                 continue
 
-            # Calculate mass (attention in this window)
             mass = len(mentions)
-
-            # Calculate average embedding for topic in this window
             embeddings = self.model.encode(mentions)
             avg_embedding = np.mean(embeddings, axis=0)
 
-            # Calculate velocity (embedding drift since previous window)
-            if previous_embedding is not None:
-                velocity = avg_embedding - previous_embedding
-            else:
-                velocity = np.zeros_like(avg_embedding)
+            velocity = (avg_embedding - previous_embedding
+                       if previous_embedding is not None
+                       else np.zeros_like(avg_embedding))
 
-            # Record momentum
             momentum_history.append(SemanticMomentum(
-                topic=topic,
-                mass=mass,
-                velocity=velocity,
+                topic=topic, mass=mass, velocity=velocity,
                 timestamp=window.end,
             ))
 
@@ -586,32 +490,16 @@ class SemanticMomentumTracker:
 
         return momentum_history
 
-    def detect_entropy_leaks(self,
-                            momentum_history: list[SemanticMomentum],
+    def detect_entropy_leaks(self, momentum_history: list[SemanticMomentum],
                             threshold: float = 0.15) -> list[str]:
-        """
-        Detect entropy leaks (momentum violations).
-
-        An entropy leak occurs when:
-        1. Momentum is not conserved (high velocity)
-        2. No explicit principle evolution explains the drift
-
-        Args:
-            momentum_history: Momentum observations over time
-            threshold: Velocity magnitude threshold for conservation
-
-        Returns:
-            List of detected entropy leaks (descriptions)
-        """
+        """Detect entropy leaks: momentum not conserved, high velocity, no explanation."""
         leaks = []
-
-        for i, momentum in enumerate(momentum_history):
+        for momentum in momentum_history:
             if not momentum.is_conserved(threshold):
                 leaks.append(
                     f"Entropy leak at {momentum.timestamp}: "
                     f"Topic '{momentum.topic}' drifted with velocity {momentum.magnitude:.3f}"
                 )
-
         return leaks
 
     def _extract_topic_mentions(self, window: Window, topic: str) -> list[str]:
@@ -637,72 +525,48 @@ from dataclasses import dataclass
 
 @dataclass
 class EntropyBudget:
-    """
-    Computational freedom budget for stream processing.
-
-    Budget diminishes with recursion depth:
-        budget(0) = 1.00  (full freedom)
-        budget(1) = 0.50
-        budget(2) = 0.33
-        budget(3) = 0.25  (minimal freedom)
-    """
+    """Computational freedom budget. Diminishes with depth: 1.0→0.50→0.33→0.25"""
 
     depth: int
     max_depth: int = 3
 
     @property
     def remaining(self) -> float:
-        """Remaining entropy budget."""
+        """Remaining budget."""
         if self.depth >= self.max_depth:
             return 0.0
         return 1.0 / (self.depth + 1)
 
     def can_afford(self, cost: float) -> bool:
-        """Can we afford this computation?"""
+        """Can afford this computation?"""
         return self.remaining >= cost
 
     def descend(self) -> 'EntropyBudget':
         """Create child budget (recursion)."""
-        return EntropyBudget(
-            depth=self.depth + 1,
-            max_depth=self.max_depth,
-        )
+        return EntropyBudget(depth=self.depth + 1, max_depth=self.max_depth)
 
 def process_stream_with_budget(stream: EventStream,
                                budget: EntropyBudget) -> list[Event]:
-    """
-    Process stream respecting entropy budget.
-
-    Args:
-        stream: Event stream to process
-        budget: Available entropy budget
-
-    Returns:
-        Processed events (may be truncated if budget exhausted)
-    """
+    """Process stream respecting entropy budget. May truncate if exhausted."""
     reality = stream.classify_reality()
 
-    # CHAOTIC streams collapse to Ground
     if reality == Reality.CHAOTIC:
-        print(f"Stream classified as CHAOTIC, collapsing to Ground")
+        print("Stream CHAOTIC, collapsing to Ground")
         return []
 
-    # DETERMINISTIC streams execute directly
     if reality == Reality.DETERMINISTIC:
-        return list(stream.events(limit=100))  # Bounded limit
+        return list(stream.events(limit=100))
 
-    # PROBABILISTIC streams require budget
     if not budget.can_afford(0.3):
-        print(f"Insufficient entropy budget ({budget.remaining:.2f}), deferring")
+        print(f"Insufficient budget ({budget.remaining:.2f}), deferring")
         return []
 
-    # Process with child budget
     child_budget = budget.descend()
     events = []
 
     for event in stream.events(limit=1000):
         if not child_budget.can_afford(0.01):
-            print(f"Entropy budget exhausted at {len(events)} events")
+            print(f"Budget exhausted at {len(events)} events")
             break
         events.append(event)
 
@@ -719,11 +583,7 @@ EventStreams are **morphisms** in the category of temporal observations.
 
 ```python
 class ComposedStream:
-    """
-    Compose multiple event streams into a single unified stream.
-
-    Events are merged and sorted by timestamp.
-    """
+    """Compose multiple streams, merged and sorted by timestamp."""
 
     def __init__(self, *streams: EventStream):
         self.streams = streams
@@ -738,13 +598,9 @@ class ComposedStream:
         return Reality.DETERMINISTIC
 
     def events(self, **kwargs) -> Iterator[Event]:
-        """Merge events from all streams, sorted by timestamp."""
+        """Merge using heap (priority queue)."""
         import heapq
-
-        # Create iterators for all streams
         iterators = [s.events(**kwargs) for s in self.streams]
-
-        # Merge using heap (priority queue)
         for event in heapq.merge(*iterators, key=lambda e: e.timestamp):
             yield event
 ```
@@ -753,10 +609,9 @@ class ComposedStream:
 
 ```python
 class FilteredStream:
-    """Filter events by predicate (functor)."""
+    """Filter events by predicate."""
 
-    def __init__(self,
-                 stream: EventStream,
+    def __init__(self, stream: EventStream,
                  predicate: Callable[[Event], bool]):
         self.stream = stream
         self.predicate = predicate
@@ -767,10 +622,9 @@ class FilteredStream:
                 yield event
 
 class MappedStream:
-    """Transform events (functor)."""
+    """Transform events."""
 
-    def __init__(self,
-                 stream: EventStream,
+    def __init__(self, stream: EventStream,
                  transform: Callable[[Event], Event]):
         self.stream = stream
         self.transform = transform
@@ -848,38 +702,22 @@ print(f"Processed {len(events)} events")
 
 | Principle | Application |
 |-----------|-------------|
-| **Tasteful** | Clean protocol interface, clear purpose (temporal observation) |
-| **Curated** | Three stream types cover 90% of cases; avoid proliferation |
-| **Composable** | Streams compose (ComposedStream), transform (functors), window (SlidingWindow) |
-| **Generative** | Protocol spec generates concrete implementations |
-| **Heterarchical** | Streams can be pull (sync) or push (async), functional or autonomous |
-| **J-gent Integration** | Reality classification, entropy budgets, lazy promises |
+| **Tasteful** | Clean protocol, clear purpose (temporal observation) |
+| **Curated** | Three stream types cover 90% of cases |
+| **Composable** | Streams compose, transform, window |
+| **Generative** | Protocol spec generates implementations |
+| **Heterarchical** | Pull (sync) or push (async) modes |
+| **Ethical** | Entropy budgets prevent runaway computation, CHAOTIC collapse protects resources |
 
 ---
 
 ## Anti-Patterns
 
-### What NOT to Do
-
-1. **Unbounded Streams Without Classification**
-   - Always classify reality before processing
-   - Collapse CHAOTIC streams to Ground
-
-2. **Eager Consumption**
-   - Don't materialize entire stream upfront
-   - Use lazy iteration (generators/iterators)
-
-3. **Ignoring Entropy Budget**
-   - Respect budget at every recursion level
-   - Fail fast when budget exhausted
-
-4. **Mixing Sync/Async Carelessly**
-   - Choose one execution model per context
-   - Don't block async loops with sync streams
-
-5. **Over-Abstracting**
-   - Three concrete implementations (Git, Obsidian, FileSystem) are enough
-   - Don't create streams for every data source
+1. **Unbounded Streams Without Classification**: Always classify, collapse CHAOTIC to Ground
+2. **Eager Consumption**: Use lazy iteration, not full materialization
+3. **Ignoring Entropy Budget**: Respect budget, fail fast when exhausted
+4. **Mixing Sync/Async**: Choose one execution model per context
+5. **Over-Abstracting**: Three implementations (Git, Obsidian, FileSystem) suffice
 
 ---
 

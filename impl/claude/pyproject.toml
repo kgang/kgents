@@ -24,7 +24,10 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["bootstrap", "agents", "runtime"]
+packages = ["bootstrap", "agents", "runtime", "protocols"]
+
+[project.scripts]
+kgents = "protocols.cli.main:main"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
