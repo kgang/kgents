@@ -31,28 +31,26 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 ## TL;DR
 
-**Status**: Working (uncommitted Phase 3 fixes)
+**Status**: Clean (all committed and pushed)
 **Branch**: `main`
-**Latest Commit**: 449287d - feat(l-gents): Implement L-gent Phase 1 + G-gent catalog integration
+**Latest Commit**: 4c3e256 - feat: G-gent Phases 2-4, L-gent Phase 2, CLI scientific commands
 **Current State**:
-  - L-gent Phase 1: ✅ COMMITTED (Core Types + Registry - 12 tests passing)
-  - G-gent/L-gent Integration: ✅ COMMITTED (catalog_integration.py - 11 tests passing)
-  - G-gent Phase 3: 🚧 UNCOMMITTED (P/J-gent integration - fixes needed for 11 failing tests)
-  - G-gent Phase 2: ✅ COMMITTED (Grammar synthesis - 100 tests passing)
-  - G-gent Phase 1: ✅ COMMITTED (Core Types + Tongue - 51 tests passing)
-  - Tests: 345+ passing (23 new L-gent/integration tests), 25 skipped
-
-**Known Issues** (Phase 3 - uncommitted):
-  - `execution_time_ms` parameter in ExecutionResult (ruff may have reverted fixes)
-  - Pydantic parser: "BaseModel cannot be instantiated directly"
-  - Template functions: missing `constraints` parameter, wrong `pure_functions_only`/`runtime` defaults
-
-**Active Plan**: **Fix G-gent Phase 3 issues → Commit**
+  - G-gent Phases 1-4: ✅ COMPLETE (Core → Synthesis → P/J-gent → L-gent integration)
+  - L-gent Phases 1-2: ✅ COMPLETE (Registry + D-gent persistence integration)
+  - CLI Scientific: ✅ COMPLETE (falsify, conjecture, rival, sublate, shadow)
+  - D-gent Spec: ✅ COMPLETE (vision.md, noosphere.md)
+  - Tests: 400+ passing, 2 skipped
 
 **Next Steps**:
-1. Fix 11 Phase 3 test failures (parser.py, interpreter.py, tongue.py templates)
-2. Commit G-gent Phase 3-4 files
-3. CLI Phase 1: Intent Layer (~500 lines, 25 tests)
+1. D-gent Phase 2: VectorAgent, GraphAgent, StreamAgent implementation
+2. CLI Phase 1: Intent Layer (~500 lines, 25 tests)
+3. G-gent Phase 5-7: F-gent, T-gent, W-gent integration
+
+**Key Deliverables This Session**:
+- G-gent parse/execute/render pipeline (parser.py, interpreter.py, renderer.py)
+- G-gent grammar synthesis (synthesis.py, grammarian.py, validation.py)
+- L-gent persistent registry with D-gent storage (persistence.py)
+- CLI scientific commands for H-gent dialectics (scientific.py)
 
 ---
 
@@ -196,6 +194,68 @@ G-gents (Phase 4 done, needs economic), H-gents (needs 3-tradition), J-gents (en
 ---
 
 ## Recent Sessions
+
+### Session: D-gent Spec Refinement - Memory as Landscape (2025-12-09)
+
+**Status**: ✅ COMPLETE - Vision + Noosphere specifications added
+
+**Based On**: `docs/d-gent-analysis-and-vision.md` gap analysis + futuristic vision
+
+**New Files Created** (~1,200 lines total):
+- `spec/d-gents/vision.md` (~400 lines): Memory as Landscape philosophy
+  - Noosphere Architecture overview (Semantic + Temporal + Relational layers)
+  - Semantic Manifold: curvature, voids (Ma), geodesics
+  - Temporal Witness: drift detection, semantic momentum, entropy
+  - Relational Lattice: meet (∧), join (∨), entailment (≤)
+  - Unified Memory Monad specification
+  - Entropy-aware persistence selection (J-gent integration)
+  - Memory Garden metaphor with trust model
+  - Integration points (L-gent, G-gent, J-gent, K-gent)
+  - Implementation phases (2-4)
+
+- `spec/d-gents/noosphere.md` (~500 lines): Detailed layer specifications
+  - Full SemanticManifold protocol (VectorAgent++)
+  - Full TemporalWitness protocol (StreamAgent++)
+  - Full RelationalLattice protocol (GraphAgent++)
+  - Category-theoretic foundations for each layer
+  - Integration patterns with L-gent, K-gent, J-gent, H-gent
+  - Unified Memory composition patterns
+  - Implementation notes (dependencies, performance, errors)
+
+**Modified Files**:
+- `spec/d-gents/README.md`: Added Memory Garden section, enhanced Types IV-VI with vision links
+- `spec/d-gents/SUMMARY.md`: Added refinement summary + new file listings
+
+**Key Concepts Introduced**:
+
+1. **Memory Garden Metaphor**: Joy-inducing data management
+   - 🌱 Seeds: New hypotheses (low trust, high potential)
+   - 🌿 Saplings: Emerging patterns (growing certainty)
+   - 🌳 Trees: Established knowledge (high trust)
+   - 🍂 Compost: Deprecated → recycled (Accursed Share)
+   - 🌸 Flowers: Peak insights (ready for harvest)
+   - 🍄 Mycelium: Hidden connections (relational lattice)
+
+2. **Noosphere Layer**: Multi-dimensional memory landscape
+   - Semantic: "What is similar?" (curvature, voids, geodesics)
+   - Temporal: "When did it change?" (drift, momentum, entropy)
+   - Relational: "How does it relate?" (meet, join, lineage)
+
+3. **Integration Vision**:
+   - L-gent: Catalog persistence + semantic tongue discovery
+   - G-gent: Tongue evolution + composition graphs
+   - J-gent: Entropy-constrained memory + postmortem streams
+   - K-gent: Personality as trees, sessions as flowers
+
+**Why This Refinement**:
+The original spec covers Types I-III (Volatile, Persistent, Lens) excellently. This refinement:
+- Deepens Types IV-VI (Vector → Manifold, Graph → Lattice, Stream → Witness)
+- Adds unifying vision that aligns with "joy-inducing" principle
+- Provides implementation roadmap for Phases 2-4
+
+**Next**: Commit spec refinement, then D-gent Phase 2 implementation
+
+---
 
 ### Session: L-gent Phase 2 - D-gent Persistence Integration (2025-12-09)
 
