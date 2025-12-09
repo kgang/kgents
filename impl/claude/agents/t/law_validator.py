@@ -11,8 +11,7 @@ Cross-pollination T2.6: Validates E-gent evolution pipeline laws.
 """
 
 from dataclasses import dataclass
-from typing import Generic, TypeVar, Callable, Any, Protocol
-from abc import ABC, abstractmethod
+from typing import TypeVar, Callable, Any, Protocol
 import logging
 
 logger = logging.getLogger(__name__)

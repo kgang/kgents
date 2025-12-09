@@ -15,14 +15,12 @@ Test coverage:
 """
 
 import tempfile
-from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
 
 from agents.f.contract import CompositionRule, Contract, Invariant
 from agents.f.crystallize import (
-    Artifact,
     ArtifactMetadata,
     ArtifactStatus,
     Version,
