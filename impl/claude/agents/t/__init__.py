@@ -134,6 +134,30 @@ from .oracle import (
     numeric_equality,
 )
 
+from .law_validator import (
+    LawValidator,
+    LawValidationReport,
+    LawViolation,
+    check_associativity,
+    check_left_identity,
+    check_right_identity,
+    check_functor_identity,
+    check_functor_composition,
+    check_monad_left_identity,
+    check_monad_right_identity,
+    check_monad_associativity,
+    validate_evolution_pipeline_laws,
+)
+
+from .evolution_integration import (
+    PipelineValidationConfig,
+    PipelineStageReport,
+    EvolutionPipelineValidationReport,
+    validate_evolution_pipeline,
+    validate_evolution_stages_from_pipeline,
+    evolve_with_law_validation,
+)
+
 __all__ = [
     # Type I - Nullifiers
     "MockAgent",
@@ -185,4 +209,24 @@ __all__ = [
     "not_empty",
     "is_positive",
     "is_non_negative",
+    # Law Validation (Cross-pollination T2.6)
+    "LawValidator",
+    "LawValidationReport",
+    "LawViolation",
+    "check_associativity",
+    "check_left_identity",
+    "check_right_identity",
+    "check_functor_identity",
+    "check_functor_composition",
+    "check_monad_left_identity",
+    "check_monad_right_identity",
+    "check_monad_associativity",
+    "validate_evolution_pipeline_laws",
+    # E-gent Integration (Cross-pollination T2.6)
+    "PipelineValidationConfig",
+    "PipelineStageReport",
+    "EvolutionPipelineValidationReport",
+    "validate_evolution_pipeline",
+    "validate_evolution_stages_from_pipeline",
+    "evolve_with_law_validation",
 ]

@@ -86,6 +86,16 @@ from .monad import (
     fail_either,
 )
 
+# Contract validation (Cross-pollination T2.8)
+from .contract_validator import (
+    ContractValidator,
+    ContractValidationReport,
+    ContractLawViolation,
+    validate_contract_laws,
+    validate_composition_compatibility,
+    suggest_contract_improvements,
+)
+
 __all__ = [
     # Maybe
     "Maybe",
@@ -143,4 +153,11 @@ __all__ = [
     "pure_maybe",
     "pure_either",
     "fail_either",
+    # Contract validation (Cross-pollination T2.8)
+    "ContractValidator",
+    "ContractValidationReport",
+    "ContractLawViolation",
+    "validate_contract_laws",
+    "validate_composition_compatibility",
+    "suggest_contract_improvements",
 ]

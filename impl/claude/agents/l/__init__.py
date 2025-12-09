@@ -15,6 +15,17 @@ Core components:
 from .catalog import CatalogEntry, EntityType, Status, Registry
 from .search import Search, SearchResult, SearchStrategy
 
+# Hypothesis Indexing (Cross-pollination T2.10)
+from .hypothesis_indexing import (
+    HypothesisIndex,
+    HypothesisRecord,
+    HypothesisOutcome,
+    HypothesisSearchQuery,
+    HypothesisSearchResult,
+    HypothesisPatternAnalysis,
+    bgent_hypothesis_to_record,
+)
+
 __all__ = [
     "CatalogEntry",
     "EntityType",
@@ -23,4 +34,12 @@ __all__ = [
     "Search",
     "SearchResult",
     "SearchStrategy",
+    # Hypothesis Indexing (Cross-pollination T2.10)
+    "HypothesisIndex",
+    "HypothesisRecord",
+    "HypothesisOutcome",
+    "HypothesisSearchQuery",
+    "HypothesisSearchResult",
+    "HypothesisPatternAnalysis",
+    "bgent_hypothesis_to_record",
 ]
