@@ -91,6 +91,17 @@ from .factory_integration import (
     get_jit_meta,
     is_jit_agent,
 )
+from .t_integration import (
+    ToolTemplate,
+    JITToolMeta,
+    JITToolWrapper as JITTool,
+    compile_tool_from_intent,
+    compile_tool_from_template,
+    create_tool_from_source,
+    JSON_FIELD_EXTRACTOR,
+    TEXT_TRANSFORMER,
+    FILTER_TEMPLATE,
+)
 
 __all__ = [
     # Promise types (Phase 1)
@@ -168,4 +179,16 @@ __all__ = [
     "compile_and_instantiate",
     "get_jit_meta",
     "is_jit_agent",
+    # T+J Integration types (Cross-Pollination Phase 7)
+    "ToolTemplate",
+    "JITToolMeta",
+    "JITTool",
+    # T+J Integration helpers (Cross-Pollination Phase 7)
+    "compile_tool_from_intent",
+    "compile_tool_from_template",
+    "create_tool_from_source",
+    # T+J Common Templates
+    "JSON_FIELD_EXTRACTOR",
+    "TEXT_TRANSFORMER",
+    "FILTER_TEMPLATE",
 ]
