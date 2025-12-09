@@ -770,84 +770,7 @@ Generate 3 hypotheses. Prefix each with "###ITEM:" on its own line.
 
 ---
 
-### Strategy 4.3: Visual Feedback Loop (Multimodal Validation)
-
-**The Principle**: For visual outputs (HTML, diagrams), validate using **vision** not **syntax**.
-
-**Specific to W-gent**:
-
-**Implementation**:
-```python
-from playwright.sync_api import sync_playwright
-from anthropic import Anthropic
-
-class VisualValidationParser:
-    """Validate HTML by rendering and checking visual correctness."""
-
-    def __init__(self, vlm_client):
-        self.vlm = vlm_client  # Vision-Language Model (Claude 3.5 Sonnet, GPT-4V)
-
-    def parse_with_visual_validation(self, html: str) -> ParseResult[str]:
-        """Parse HTML and validate visually."""
-
-        # Step 1: Render HTML to screenshot
-        with sync_playwright() as p:
-            browser = p.chromium.launch()
-            page = browser.new_page()
-            page.set_content(html)
-            screenshot = page.screenshot()
-            browser.close()
-
-        # Step 2: VLM validates visual correctness
-        response = self.vlm.messages.create(
-            model="claude-3-5-sonnet-20241022",
-            messages=[{
-                "role": "user",
-                "content": [
-                    {"type": "image", "source": {"type": "base64", "data": screenshot}},
-                    {"type": "text", "text": "Does this page look broken? Check for: (1) collapsed divs (height=0), (2) overlapping text, (3) missing content. Respond with JSON: {\"is_broken\": bool, \"issues\": [str]}"}
-                ]
-            }]
-        )
-
-        validation = json.loads(response.content[0].text)
-
-        if validation["is_broken"]:
-            # Step 3: If broken, ask VLM to fix the HTML
-            fix_response = self.vlm.messages.create(
-                model="claude-3-5-sonnet-20241022",
-                messages=[{
-                    "role": "user",
-                    "content": [
-                        {"type": "image", "source": {"type": "base64", "data": screenshot}},
-                        {"type": "text", "text": f"This page has issues: {validation['issues']}. Here's the HTML:\n\n{html}\n\nFix the HTML to resolve these visual issues."}
-                    ]
-                }]
-            )
-
-            fixed_html = extract_code_block(fix_response.content[0].text)
-
-            return ParseResult(
-                success=True,
-                value=fixed_html,
-                confidence=0.7,
-                repairs=[f"Visual validation found issues: {validation['issues']}"],
-                strategy="visual-feedback-loop"
-            )
-
-        return ParseResult(success=True, value=html, confidence=1.0)
-```
-
-**Innovation**: This moves validation from **syntax** ("does it parse?") to **semantics** ("does it look right?").
-
-**kgents Use Cases**:
-- **W-gent real-time dashboards**: Validate rendered dashboard looks correct
-- **F-gent artifact visualization**: Ensure .alo.md renders correctly in markdown viewers
-- **Documentation generation**: Validate generated docs are readable
-
----
-
-### Strategy 4.4: Probabilistic AST (Confidence-Scored Tree Nodes)
+### Strategy 4.3: Probabilistic AST (Confidence-Scored Tree Nodes)
 
 **The Principle**: Instead of binary AST (valid/invalid), build an AST where **every node has a confidence score**.
 
@@ -921,7 +844,7 @@ class ProbabilisticParser:
 
 ---
 
-### Strategy 4.5: Schema Evolution (Parsers That Adapt)
+### Strategy 4.4: Schema Evolution (Parsers That Adapt)
 
 **The Principle**: LLM output formats **drift over time**. Parsers should track format changes and adapt.
 
@@ -997,69 +920,6 @@ print(parser.report_drift())
 - **Long-running E-gent evolution**: Track code generation format drift
 - **B-gent hypothesis format**: Detect when LLM starts using new section headers
 - **Cross-LLM compatibility**: Different LLMs prefer different formats
-
----
-
-### Strategy 4.6: Multi-Model Ensembles (Structure + Content Specialists)
-
-**The Principle**: Use **small fast models** for structure, **large capable models** for content.
-
-**Implementation**:
-```python
-class EnsembleParser:
-    """Use different models for structure vs content."""
-
-    def __init__(self, structure_model, content_model):
-        self.structure_model = structure_model  # Fast, cheap (GPT-3.5, Llama-3-8B)
-        self.content_model = content_model      # Capable, expensive (GPT-4, Claude Opus)
-
-    def parse_with_ensemble(self, user_input: str) -> ParseResult:
-        """Structure from fast model, content from capable model."""
-
-        # Step 1: Fast model generates structure
-        structure_prompt = f"""
-        Generate a JSON structure (keys only, empty values) for this request:
-        {user_input}
-
-        Output ONLY the JSON structure, no explanations.
-        """
-
-        structure = self.structure_model.generate(structure_prompt)
-        parsed_structure = json.loads(structure)
-
-        # Step 2: Capable model fills content
-        result = {}
-        for key, _ in parsed_structure.items():
-            content_prompt = f"""
-            For the field '{key}' in response to:
-            {user_input}
-
-            Generate the content (just the value, no JSON formatting).
-            """
-
-            result[key] = self.content_model.generate(content_prompt)
-
-        return ParseResult(
-            success=True,
-            value=result,
-            confidence=0.9,
-            strategy="ensemble",
-            metadata={
-                "structure_model": "gpt-3.5-turbo",
-                "content_model": "gpt-4"
-            }
-        )
-```
-
-**Benefits**:
-- **Cost optimization**: Expensive model only generates content, not structure
-- **Speed**: Fast model returns structure quickly (progressive rendering)
-- **Quality**: Capable model ensures high-quality content
-
-**kgents Use Cases**:
-- **F-gent artifact generation**: Fast model for contract structure, capable model for invariants
-- **B-gent hypothesis generation**: Fast model for format, capable model for reasoning
-- **Cost-conscious pipelines**: Optimize LLM costs across the system
 
 ---
 
@@ -1359,7 +1219,6 @@ class BadConfig:
 - Single repair applied: 0.6
 - Multiple repairs: 0.4
 - Anchor-based extraction: 0.7 (structure-independent)
-- Visual validation (VLM): 0.8 (semantic validation)
 - Reflection loop (1 retry): 0.7
 - Reflection loop (2+ retries): 0.5
 - Field extraction fallback: 0.3
@@ -1539,10 +1398,8 @@ A P-gent implementation is successful if:
 ### Phase 3: Novel Techniques
 - [ ] `DiffBasedParser` (patch strategy)
 - [ ] `AnchorBasedParser` (islands of stability)
-- [ ] `VisualValidationParser` (VLM validation for W-gent)
 - [ ] `ProbabilisticASTParser` (confidence-scored nodes)
 - [ ] `EvolvingParser` (schema drift tracking)
-- [ ] `EnsembleParser` (multi-model structure+content)
 
 ### Phase 4: Composition + Integration
 - [ ] `FallbackParser` with streaming support
@@ -1579,16 +1436,7 @@ A P-gent implementation is successful if:
    - Future: Learn from labeled data?
    - **Recommendation**: A/B test confidence thresholds in production
 
-4. **Visual validation cost?**
-   - VLM calls are expensive (screenshot + vision model)
-   - Only for critical visual correctness (W-gent dashboards)
-   - **Recommendation**: Cache screenshots, batch validations
-
-5. **Multi-model ensemble cost optimization?**
-   - When is structure+content split worth it?
-   - **Recommendation**: Benchmark on real workloads, optimize for cost/quality Pareto frontier
-
-6. **Schema evolution trigger?**
+4. **Schema evolution trigger?**
    - When to retrain/reorder strategies?
    - **Recommendation**: Trigger on >10% drift in format distribution
 
@@ -1614,7 +1462,6 @@ A P-gent implementation is successful if:
 - **CFG Logit Masking**: [Outlines](https://github.com/outlines-dev/outlines), [Guidance](https://github.com/guidance-ai/guidance)
 - **Fill-in-the-Middle**: [CodeLlama](https://arxiv.org/abs/2308.12950), [StarCoder](https://arxiv.org/abs/2305.06161)
 - **Jsonformer**: [Structured Generation](https://github.com/1rgs/jsonformer)
-- **Visual Validation**: Multimodal LLMs (Claude 3.5 Sonnet, GPT-4V)
 - **Reflection Loops**: [Self-Refine](https://arxiv.org/abs/2303.17651), [ReAct](https://arxiv.org/abs/2210.03629)
 
 ### Design Principles (kgents)

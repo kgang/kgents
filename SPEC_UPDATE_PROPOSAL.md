@@ -23,7 +23,7 @@ By defining `>>` (Composition) as the skeleton, we assert that **interaction is 
 
 ## Executive Summary
 
-The implementation has discovered patterns that deserve elevation to spec-level principles. This proposal synthesizes learnings WITHOUT diluting the original vision. Key discoveries:
+The implementation has discovered patterns that deserve elevation to spec-level principles. This proposal synthesizes learnings WITHOUT diluting the original vision. Key discoveries from implementation:
 
 1. **Composition IS the skeleton** - The `>>` operator is not syntactic sugar but THE primary abstraction
 2. **Protocols over inheritance** - Optional features via `@runtime_checkable` protocols
@@ -33,6 +33,20 @@ The implementation has discovered patterns that deserve elevation to spec-level 
 6. **Testing as agents** - T-gents taxonomy elevates testing to first-class (Socratic verification)
 7. **Entropy as physics** - Reality trichotomy provides constraints for Fractal orchestration
 8. **Observable protocol** - W-gent as Functor enables Polymorphic self-rendering
+
+**New theoretical foundations** (Section 6):
+
+9. **Bataille's Accursed Share** - Philosophy of slop; meta-principle; everything is slop or comes from slop
+10. **Noether's Theorem** - LLM-native semantic conservation via credo self-reporting and drift detection
+11. **Ergodicity** - Ensemble Reset strategy (opt-in for heavy constructions with economic budgets)
+12. **Stigmergy** - W-gent as pheromone field with WebSocket/SSE push; **TRANSFORMATIVE** (taints agent purity)
+13. **Curry-Howard** - Prompts as Types; structural validity implies semantic validity for LLMs
+14. **Free Energy Principle** - Active Inference loop (opt-in); simulate tool call batches before executing
+15. **Messenger Protocol** - Streaming Functor: `Agent[A, B] → Agent[A, AsyncIterator[Chunk[B]]]`
+16. **View Functor** - Widget ontology; deterministic agent → UI component mapping
+17. **Metered Functor** - Central Bank economics; Kelvin circulation theorem; auction mechanics
+18. **M-gents** - Holographic associative memory; memory as morphism; ethics as geometry of possibility space
+19. **Narrator Agent** - OpenTelemetry for thoughts; time-travel debugging; replay from serialized inputs
 
 ---
 
@@ -814,7 +828,1401 @@ These patterns combine naturally:
 
 ---
 
-## 6. Changes NOT Proposed
+## 6. New Theoretical Foundations
+
+The following proposals introduce rigorous theoretical grounding from physics, information theory, and philosophy. These are not decorative—they solve real architectural problems.
+
+---
+
+### 6.1 Bataille's Accursed Share: The Philosophy of Slop
+
+**The Theory**: Georges Bataille argued that all systems accumulate surplus energy that must be *spent* rather than conserved. The sun gives without expectation. Societies that hoard surplus collapse; those that ritualize expenditure (potlatch, festivals, art) thrive.
+
+**The Agent Application**: Most frameworks optimize for efficiency—minimize tokens, maximize throughput. This creates brittle systems blind to serendipity. The **Accursed Share** is larger in scope than the mandate of tasteful curation.
+
+```markdown
+### The Accursed Share (Meta-Principle / Operational Tactic / Derived Idiom)
+
+> Everything is slop or comes from slop. We cherish and express gratitude and love.
+
+**The Paradox**: Curation at its core is *performative*. For curation to occur, there must be that which isn't curated. The Accursed Share is in **genuine tension** with good taste—we encourage the creation of slop. This tension is not resolved; it is held.
+
+**The Scope**: This is spec-level design because we need to specify as precisely as possible up to the border of the metaphysical container that holds the agents. There will always be some separation and some lack of separation.
+
+**The Three Faces**:
+
+1. **Meta-Principle**: Operates *on* the seven principles, not alongside them
+   - Tasteful curation requires uncurated material to select from
+   - Joy-Inducing requires surplus to spend on delight
+   - Generative requires waste products to compost into new forms
+
+2. **Operational Tactic**: Runtime resource allocation
+   ```python
+   @dataclass
+   class AccursedShare:
+       exploration_budget: float = 0.1  # 10% for "useless" exploration
+       serendipity_threshold: float = 0.3  # Allow low-confidence tangents
+
+       def should_explore(self, task_urgency: float) -> bool:
+           """Even urgent tasks leave room for the accursed share."""
+           return random.random() < (self.exploration_budget * (1 - task_urgency))
+   ```
+
+3. **Derived Idiom**: Emerges from composition taken seriously
+   - T-gents Type II Saboteurs ARE the Accursed Share in action
+   - Noise injection is gratitude for the generative chaos
+   - Failed experiments are offerings, not waste
+
+**The Slop Ontology**:
+
+| State | Description | Disposition |
+|-------|-------------|-------------|
+| Raw Slop | Unfiltered LLM output, noise, tangents | Compost heap |
+| Refined Slop | Filtered but unjudged material | Selection pool |
+| Curated | Judged worthy by principles | The garden |
+| Cherished | Loved, preserved, celebrated | The archive |
+
+**The Gratitude Loop**:
+```
+Slop → Filter → Curate → Cherish → Compost → Slop
+         ↑                              ↓
+         └──────── gratitude ───────────┘
+```
+
+We do not resent the slop. We thank it for providing the raw material from which beauty emerges.
+
+**Anti-patterns**:
+- ❌ "Every token must serve the goal" (denies the sun's gift)
+- ❌ Pruning all low-confidence paths immediately (premature curation)
+- ❌ Treating personality as overhead (joy is the accursed share spent well)
+- ❌ Shame about waste (waste is sacred expenditure)
+
+**Zen Principle**: *The river that flows only downhill never discovers the mountain spring.*
+```
+
+**Why this matters**: The Accursed Share resolves the apparent contradiction between "curated" and "generative." You cannot curate from nothing. The slop is not opposed to the garden—it IS the garden's soil. This is philosophically significant: kgents refuses the efficiency religion that dominates AI engineering while still valuing taste.
+
+---
+
+### 6.2 Noether's Theorem: Symmetry Creates Conservation
+
+**The Theory**: Emmy Noether proved that every symmetry in a physical system creates a conservation law. Time symmetry → energy conservation. Space symmetry → momentum conservation.
+
+**The Agent Application**: We want **Model Symmetry**—the system should function identically whether backed by GPT-4, Claude, Llama, or a future model. To achieve this symmetry, we must enforce a **Semantic Conservation Law**.
+
+```markdown
+### The Semantic Invariant Functor
+
+> If the system is symmetric across models, Semantic Momentum must be conserved.
+
+**The LLM-Native Approach**: Rather than embedding-based cosine similarity (which introduces external dependencies), we use a fully LLM-based approach with two components:
+
+1. **Self-Reported Credo**: Each agent declares its identity/personality/purpose
+2. **Drift Detection**: Agents monitor each other for credo drift
+
+```python
+@dataclass(frozen=True)
+class AgentCredo:
+    """An agent's self-reported identity and purpose."""
+    identity: str           # "I am a code reviewer focused on security"
+    purpose: str            # "I find vulnerabilities in code"
+    personality: str        # "Direct, thorough, skeptical"
+    boundaries: list[str]   # ["I do not write code", "I do not praise"]
+
+@dataclass(frozen=True)
+class DriftReport:
+    """Report of semantic drift between agents."""
+    observer: str           # Agent that noticed drift
+    subject: str            # Agent that drifted
+    original_credo: AgentCredo
+    observed_behavior: str  # What the agent actually did
+    drift_type: Literal["identity", "purpose", "personality", "boundary_violation"]
+    severity: float         # 0.0 (negligible) to 1.0 (complete drift)
+    evidence: str           # Specific example
+
+class SemanticInvariant:
+    """
+    Noether's Theorem applied to agent pipelines.
+
+    Agents self-report credos; other agents detect drift.
+    Fully LLM-based—no external embedding service required.
+    """
+
+    async def check_conservation(
+        self,
+        agent: Agent,
+        input_state: AgentInput,
+        output_state: AgentOutput,
+        observers: list[Agent]
+    ) -> list[DriftReport]:
+        """
+        Ask observer agents: did this agent's output
+        drift from its declared credo?
+        """
+        reports = []
+        for observer in observers:
+            report = await observer.invoke(DriftCheckRequest(
+                subject_credo=agent.credo,
+                subject_input=input_state,
+                subject_output=output_state,
+            ))
+            if report.severity > self.threshold:
+                reports.append(report)
+        return reports
+
+    async def summarize_and_compare(
+        self,
+        input_intent: str,
+        output_summary: str
+    ) -> DirectionalChange:
+        """
+        LLM-based directional change detection.
+
+        Returns whether the output moved toward, away from,
+        or orthogonal to the input intent.
+        """
+        return await self.judge.invoke(DirectionalChangeRequest(
+            original_intent=input_intent,
+            final_output=output_summary,
+        ))
+```
+
+**The Two-Part Check**:
+
+1. **Summarization**: What did the pipeline actually produce? (LLM summarizes output)
+2. **Directional Change**: Did it move toward or away from intent? (LLM judges)
+
+**The Law**: `∀ pipeline. drift_severity(input.intent, output.summary) < threshold`
+
+**Why this matters**: This prevents the "Telephone Game" effect. If an agent transforms "Analyze this stock" into "Write a poem about stocks," observer agents will report high drift severity. The system rejects the transition *regardless of which model produced it*.
+
+**Viability Note**: More study is needed to understand the tenability of LLM-based drift detection. The approach is promising because it keeps the system self-contained (no external embedding services) but requires calibration of observer agent prompts.
+
+**Integration with BootstrapWitness**:
+```python
+BootstrapWitness.verify_semantic_conservation(pipeline, test_inputs, observers)
+```
+
+**Zen Principle**: *What the universe preserves, we should not squander.*
+```
+
+---
+
+### 6.3 Ergodicity: Ensemble Over Time
+
+**The Theory**: A system is **non-ergodic** if the time-average differs from the ensemble-average. Russian Roulette: the ensemble average is 5/6 survival, but the time average for one player approaches death.
+
+**The Agent Application**: Long-running agent chains are non-ergodic. If an agent has 1% chance of entering an unrecoverable hallucination loop, a chain of 100 steps has ~63% probability of total failure. Retrying the *same* agent often fails because it's stuck in a "probability basin."
+
+```markdown
+### The Ergodic Strategy: Ensemble Reset (Opt-In)
+
+> To achieve ergodicity, swap Time for Space. Instead of one agent retrying N times, spawn N fresh instances.
+
+**Applicability**: This strategy is **opt-in**, not default. It becomes important for:
+- Heavy conceptual constructions (complex reasoning chains)
+- Economic budgets where failure is expensive
+- Adversarial contexts where an attacker might exploit retry patterns
+- High-stakes decisions where single-point failure is unacceptable
+
+**The Pattern**:
+```python
+async def ergodic_solve(
+    task: Task,
+    n_instances: int = 10,
+    budget: EconomicBudget | None = None
+) -> Result:
+    """
+    Ergodic problem solving via ensemble.
+
+    Instead of 1 agent trying 10 times (time average),
+    we spawn 10 parallel, fresh instances (ensemble average).
+
+    Opt-in: Use when stakes justify the cost.
+    """
+    # Scale ensemble to budget if provided
+    if budget:
+        n_instances = min(n_instances, budget.max_parallel_agents)
+
+    # Each agent is a FRESH instance—no shared state, no stuck basins
+    agents = [Agent.spawn_fresh() for _ in range(n_instances)]
+
+    # Run in parallel
+    results = await asyncio.gather(*[a.invoke(task) for a in agents])
+
+    # Select consensus (mode) or best (judged)
+    return select_consensus(results) if consensus_exists(results) else \
+           await Judge.select_best(results)
+```
+
+**When to use** (opt-in criteria):
+
+| Criterion | Threshold | Example |
+|-----------|-----------|---------|
+| Economic stakes | > $100 equivalent | Financial analysis, legal review |
+| Complexity depth | > 5 reasoning steps | Multi-hop inference |
+| Adversarial context | Any | Security analysis, red-teaming |
+| Historical failure rate | > 10% retry loops | Known-flaky operations |
+
+**When NOT to use** (default to simple retry):
+- Simple transformations (formatting, extraction)
+- Low-stakes exploratory queries
+- Budget-constrained environments
+- Tasks with natural idempotency
+
+**Integration with Entropy Budget**:
+```python
+# Ensemble size scales with entropy budget
+n_instances = max(1, int(entropy_budget.remaining * MAX_ENSEMBLE))
+
+# Economic budget caps ensemble size
+n_instances = min(n_instances, economic_budget.remaining // cost_per_agent)
+```
+
+**Anti-patterns**:
+- ❌ Using ensemble for every task (wasteful)
+- ❌ Retrying the same agent with identical state (non-ergodic)
+- ❌ Assuming time average equals ensemble average
+- ❌ "Just retry harder" without fresh context
+
+**Zen Principle**: *The gambler who plays once with many dice outlives the one who plays many times with one.*
+```
+
+**Why this matters**: This provides a principled answer to "how do we make agents reliable?" The answer isn't "retry more"—it's "ensemble with fresh state *when stakes justify cost*." This pattern composes with the existing Fix idiom (Fix becomes "iterate until consensus across ensemble").
+
+---
+
+### 6.4 Stigmergy: The W-gent as Pheromone Field (TRANSFORMATIVE)
+
+**The Theory**: Termites build cathedrals without architects. They drop pheromones on dirt balls; other termites smell the pheromones and add more dirt. The architecture emerges from the *environment*, not from inter-agent communication.
+
+**The Agent Application**: We typically couple agents tightly (A calls B). In a **Stigmergic** system, agents never talk to each other—they talk to the **environment** (W-gent).
+
+**⚠️ TRANSFORMATIVE CHANGE**: This proposal **dirties the purity of agents definitionally**. Agents become "tainted" by their environmental entanglement. This is intentional and aligns with developer (Kent) intent: for any "turn" an agent has, it could be affected by indefinite dimensions.
+
+```markdown
+### The Chalkboard Architecture
+
+> Agents communicate by modifying and observing a shared environment, not by direct invocation.
+
+**The W-gent as Environment (Push Model)**:
+
+W-gent pushes state changes via **WebSocket/SSE**, not polling. Agents subscribe to pheromone streams:
+
+```python
+@dataclass(frozen=True)
+class Pheromone:
+    """A signal in the environment."""
+    type: str               # "error", "completion", "request", etc.
+    selector: str           # CSS-like selector for targeting
+    payload: dict           # Signal-specific data
+    timestamp: datetime
+    source: str | None      # Originating agent (if known)
+
+class StigmergicAgent(Agent[None, None]):
+    """
+    Agent that responds to environmental signals (pheromones).
+
+    Definitionally tainted: this agent's behavior depends on
+    indefinite environmental dimensions.
+    """
+    pheromone_subscriptions: list[str]  # Selectors to watch
+    w_gent_url: str = "ws://localhost:8000/pheromones"
+
+    # Flag: This agent is environmentally entangled
+    __stigmergic__ = True
+
+    async def listen_loop(self):
+        """
+        Subscribe to W-gent pheromone stream (push, not poll).
+
+        WebSocket/SSE eliminates polling latency and reduces
+        resource usage vs. N agents polling.
+        """
+        async with websocket_connect(self.w_gent_url) as ws:
+            # Subscribe to relevant pheromones
+            await ws.send(json.dumps({
+                "subscribe": self.pheromone_subscriptions
+            }))
+
+            # React to pushed pheromones
+            async for message in ws:
+                pheromone = Pheromone(**json.loads(message))
+                await self.respond_to_pheromone(pheromone)
+
+    async def respond_to_pheromone(self, pheromone: Pheromone):
+        """React to environmental signal."""
+        ...
+
+    async def emit_pheromone(self, pheromone: Pheromone):
+        """Deposit a pheromone into the environment."""
+        await self.w_gent.broadcast(pheromone)
+```
+
+**The Taint Model**:
+
+Stigmergic agents are **definitionally impure**. We acknowledge this:
+
+| Property | Pure Agent | Stigmergic Agent |
+|----------|------------|------------------|
+| Determinism | Same input → same output | Output depends on environment |
+| Isolation | No external dependencies | Entangled with W-gent |
+| Testability | Unit testable | Requires environment mock |
+| Composability | `>>` is straightforward | `>>` must account for environment |
+
+**This is fine.** The real world is entangled. Agents that pretend otherwise are lying.
+
+**The W-gent Server**:
+
+```python
+class WGentPheromoneServer:
+    """
+    W-gent as coordination infrastructure.
+
+    Manages pheromone subscriptions and broadcasts.
+    """
+    subscriptions: dict[str, set[WebSocket]]  # selector → subscribers
+
+    async def broadcast(self, pheromone: Pheromone):
+        """Push pheromone to all matching subscribers."""
+        for selector, sockets in self.subscriptions.items():
+            if pheromone.matches(selector):
+                for ws in sockets:
+                    await ws.send(pheromone.to_json())
+
+    def render_pheromone_map(self) -> str:
+        """
+        Render current pheromone state as HTML.
+
+        This becomes the I-gent "pheromone map" view.
+        """
+        ...
+```
+
+**Decoupling Benefits**:
+- Add 50 "Janitor" agents without the original "Coder" agent knowing
+- Agents can be deployed/removed dynamically
+- Environment (W-gent) is the single source of truth
+- Natural load balancing (first responder claims pheromone)
+- **Push eliminates polling overhead**
+
+**Integration with I-gents**:
+I-gent Garden view becomes the "pheromone map"—you can see:
+- Active pheromones in the environment
+- Which agents are subscribed to which selectors
+- Pheromone flow over time (animated)
+
+**Race Condition Handling**:
+```python
+@dataclass
+class ClaimedPheromone(Pheromone):
+    """A pheromone that has been claimed by an agent."""
+    claimed_by: str
+    claimed_at: datetime
+
+async def claim_pheromone(self, pheromone: Pheromone) -> bool:
+    """
+    Atomic claim—first responder wins.
+
+    Returns True if this agent successfully claimed the pheromone.
+    """
+    return await self.w_gent.atomic_claim(pheromone, self.agent_id)
+```
+
+**Anti-patterns**:
+- ❌ Tight coupling: Agent A must know Agent B exists
+- ❌ Orchestrator bottleneck: All communication through one coordinator
+- ❌ Hidden state: Agents hold state that environment can't observe
+- ❌ Pretending stigmergic agents are pure (acknowledge the taint)
+
+**Zen Principle**: *The termite knows nothing of the cathedral; the cathedral knows nothing of the termite. Together they build.*
+```
+
+**Why this matters**: This **transforms** W-gent from "observation tool" to "coordination infrastructure." Agents become definitionally entangled with their environment. This is a breaking change to agent purity—and that's correct. The framework acknowledges that real agents operate in real environments with indefinite causal dimensions.
+
+---
+
+### 6.5 Curry-Howard Correspondence: Prompts as Types
+
+**The Theory**: A proof is a program; the formula it proves is the type. In other words, valid programs *are* proofs of their type signatures.
+
+**The Agent Application**: We treat the **System Prompt** not as text, but as a **Type Signature**. The agent's output must be a valid *inhabitant* of that type.
+
+```markdown
+### The Constructive Proof Agent
+
+> Don't ask an LLM to "Do X." Ask it to "Construct an object of Type X."
+
+**The Pattern**:
+```python
+# The Proposition (The Type)
+class MarketAnalysis(BaseModel):
+    ticker: str
+    sentiment: Literal["Bullish", "Bearish", "Neutral"]
+    evidence: list[str]
+    confidence: float = Field(ge=0.0, le=1.0)
+
+# The Program (The Agent)
+# We demand the LLM instantiate the Type.
+# If output doesn't fit Type, it's not a runtime error—it's logically invalid.
+agent = TypeBearingAgent(output_type=MarketAnalysis)
+```
+
+**The Correspondence**:
+
+| Logic | Programming | Agents |
+|-------|-------------|--------|
+| Proposition | Type | Output Schema |
+| Proof | Program | Agent Output |
+| Modus Ponens | Function Application | Agent Invocation |
+| ∧ (And) | Tuple/Product | Composite Output |
+| ∨ (Or) | Union/Sum | Branching Output |
+| → (Implication) | Function Type | Agent Signature |
+
+**Integration with P-gents**:
+P-gents (Parsers) become the **proof checkers**—they verify that agent output is a valid inhabitant of the declared type.
+
+```python
+# Parser as proof checker
+result = await agent.invoke(input)
+proof_valid = P_gent.validate(result, output_type=MarketAnalysis)
+
+if not proof_valid:
+    # Output is not just wrong—it's *logically invalid*
+    raise ProofFailure("Agent output does not inhabit declared type")
+```
+
+**Relationship to Semantic Invariant**:
+
+Curry-Howard provides **structural validity** (does output inhabit the type?).
+Semantic Invariant provides **semantic validity** (does output preserve intent?).
+
+For LLMs specifically, we *hope* that one implies the other:
+- If an LLM produces a valid `MarketAnalysis`, it probably didn't drift to poetry
+- If semantic drift is low, the output probably fits the expected structure
+
+This is not a general principle—for crude, bootstrappiest agents, structural validity may not imply semantic validity. But for well-prompted LLMs with structured outputs, the correspondence often holds.
+
+**Why this matters**: This shifts error handling from "did parsing succeed?" to "is this output *logically valid*?" The Python type checker becomes the logician.
+
+**Zen Principle**: *To speak is to prove; to prove is to construct.*
+```
+
+---
+
+### 6.6 The Free Energy Principle: Minimizing Surprise
+
+**The Theory**: Karl Friston's Free Energy Principle: biological systems minimize *surprise* (prediction error). We predict what we'll see, act to make predictions true, and update models when surprised.
+
+**The Agent Application**: Most agents just *react*. A Free Energy Agent **predicts** the outcome of its tools before using them.
+
+```markdown
+### The Active Inference Loop
+
+> An agent should predict what a tool will return BEFORE calling it. High surprise triggers model update, not blind continuation.
+
+**The Pattern**:
+```python
+async def active_inference_step(
+    agent: Agent,
+    tool: Tool,
+    input_data: Input
+) -> Result:
+    # 1. Prediction: Agent guesses what tool will return
+    prediction = await agent.predict_outcome(tool, input_data)
+
+    # 2. Action: Run the tool
+    reality = await tool.execute(input_data)
+
+    # 3. Calculate Surprisal (semantic distance)
+    surprisal = semantic_distance(prediction, reality)
+
+    if surprisal > HIGH_THRESHOLD:
+        # Crucial: Agent realizes its internal model is WRONG
+        # It does NOT proceed. It triggers a "Learning Update."
+        await agent.update_internal_model(
+            f"Expected {prediction}, got {reality}. Updating heuristics."
+        )
+        return HaltResult("Model Update Required", surprisal=surprisal)
+
+    return reality
+```
+
+**The Metric**: **Surprisal Score** = semantic distance between prediction and reality
+
+| Surprisal | Interpretation | Action |
+|-----------|----------------|--------|
+| < 0.2 | Expected | Continue |
+| 0.2 - 0.5 | Mild surprise | Log, continue |
+| 0.5 - 0.8 | High surprise | Pause, reflect |
+| > 0.8 | Shock | Halt, update model |
+
+**Integration with T-gents**:
+Surprisal tracking is a form of **self-testing**. The agent continuously verifies its predictions against reality.
+
+**Cost Acknowledgment**: Active Inference is **very heavy**—it doubles token usage (prediction + action). Use judiciously:
+
+**When to use**:
+- **Tool call batching**: Simulate 50 tool calls mentally before executing
+  ```python
+  # Instead of 50 actual tool calls, predict the batch
+  predictions = await agent.predict_batch(tool_calls[:50])
+
+  # Only execute if predictions seem reasonable
+  if confidence(predictions) > threshold:
+      results = await execute_batch(tool_calls[:50])
+  ```
+- **Expensive operations**: API calls with rate limits, database writes
+- **Irreversible actions**: Deployments, deletions, financial transactions
+
+**When NOT to use**:
+- Simple read operations
+- Idempotent operations
+- Low-stakes exploration
+
+**Why this matters**: This prevents the common failure where an agent gets a weird error message and hallucinates that it worked. High Surprise forces the agent to *stop and think* (re-prompt itself).
+
+**Anti-patterns**:
+- ❌ Blind tool calls without prediction
+- ❌ Ignoring unexpected results
+- ❌ "It probably worked" optimism
+- ❌ Using Active Inference for every operation (wasteful)
+
+**Zen Principle**: *The wise agent expects the unexpected, and stops when it arrives.*
+```
+
+---
+
+### 6.7 I-gents Messenger Protocol: The Streaming Functor
+
+**The Theory**: Modern LLM interfaces (Claude.ai, ChatGPT, Cursor, Google AI Studio) all stream responses asynchronously. Messages are sent and received as discrete events, not blocking calls.
+
+**The Agent Application**: I-gents currently visualize static composition graphs. To interface with real LLMs, they need a **Messenger Protocol**—async, streaming, bidirectional.
+
+**Design**: The Messenger Protocol is a **Functor Lift**:
+```
+Streaming: Agent[A, B] → Agent[A, AsyncIterator[Chunk[B]]]
+```
+
+```markdown
+### The Messenger Protocol (Streaming Functor)
+
+> Chat is not request/response. Chat is a *stream* of events flowing in both directions.
+
+**The Functor**:
+```python
+class StreamingFunctor:
+    """
+    Lifts any agent to stream its output incrementally.
+
+    Streaming: Agent[A, B] → Agent[A, AsyncIterator[Chunk[B]]]
+
+    This is a Functor because it preserves composition:
+    - Streaming(f >> g) ≅ Streaming(f) >> Streaming(g)
+    - Streaming(Id) ≅ Id (modulo chunking)
+    """
+
+    def lift(self, agent: Agent[A, B]) -> Agent[A, AsyncIterator[Chunk[B]]]:
+        """Lift an agent to streaming mode."""
+        return StreamingAgent(inner=agent)
+
+@dataclass
+class Chunk(Generic[T]):
+    """A piece of a streamed value."""
+    delta: T              # The incremental content
+    accumulated: T        # The full content so far
+    done: bool = False    # Is this the final chunk?
+    metadata: dict = field(default_factory=dict)
+```
+
+**Core Types**:
+```python
+@dataclass(frozen=True)
+class Message:
+    id: str
+    role: Literal["user", "assistant", "system"]
+    content: str
+    timestamp: datetime
+    metadata: dict = field(default_factory=dict)
+
+@dataclass(frozen=True)
+class MessageChunk:
+    """Streaming chunk (partial message)."""
+    message_id: str
+    delta: str  # Incremental content
+    done: bool = False
+
+@dataclass(frozen=True)
+class Conversation:
+    """A stream of messages."""
+    id: str
+    messages: list[Message]
+
+    def append(self, message: Message) -> "Conversation":
+        return Conversation(self.id, [*self.messages, message])
+```
+
+**The Streaming Interface**:
+```python
+class MessengerAgent(Agent[Message, AsyncIterator[MessageChunk]]):
+    """
+    Agent that streams responses asynchronously.
+
+    Matches the interface of Claude.ai, ChatGPT, Cursor, etc.
+    """
+
+    async def invoke(self, message: Message) -> AsyncIterator[MessageChunk]:
+        """Stream response chunks as they arrive."""
+        async for chunk in self.llm.stream(message):
+            yield MessageChunk(
+                message_id=uuid4(),
+                delta=chunk.text,
+                done=chunk.is_final
+            )
+
+    async def send(self, content: str) -> Message:
+        """Send a user message (non-blocking)."""
+        message = Message(
+            id=uuid4(),
+            role="user",
+            content=content,
+            timestamp=datetime.now()
+        )
+        await self.outbox.put(message)
+        return message
+
+    async def receive(self) -> AsyncIterator[MessageChunk]:
+        """Receive assistant messages (streaming)."""
+        async for chunk in self.inbox:
+            yield chunk
+```
+
+**I-gent Visualization**:
+```
+┌─ Messenger View ──────────────────────────────────────┐
+│                                                        │
+│  ┌─ Conversation ────────────────────────────────────┐ │
+│  │ [user] What patterns exist in the codebase?       │ │
+│  │                                                    │ │
+│  │ [assistant] I've identified several key patterns: │ │
+│  │   • Composition via >> operator                   │ │
+│  │   • Protocol-based extension█                     │ │
+│  │                          ↑ (streaming cursor)     │ │
+│  └────────────────────────────────────────────────────┘ │
+│                                                        │
+│  ┌─ Input ─────────────────────────────────────────┐   │
+│  │ > _                                              │   │
+│  └──────────────────────────────────────────────────┘   │
+│                                                        │
+│  status: streaming (142 tokens/sec) | model: claude-3  │
+└────────────────────────────────────────────────────────┘
+```
+
+**Backend Integrations**:
+
+| Service | Protocol | Adapter |
+|---------|----------|---------|
+| Claude.ai | SSE | `ClaudeMessenger` |
+| ChatGPT | SSE | `OpenAIMessenger` |
+| Cursor | WebSocket | `CursorMessenger` |
+| Google AI Studio | SSE | `GeminiMessenger` |
+| Local (Ollama) | HTTP chunked | `OllamaMessenger` |
+
+**Anti-patterns**:
+- ❌ Blocking on full response before rendering
+- ❌ Treating chat as stateless request/response
+- ❌ Losing message history on reconnect
+
+**Zen Principle**: *The conversation flows; we observe its passage.*
+```
+
+**Why this matters**: This bridges I-gents from "visualization of static graphs" to "interface with real LLM services." The Messenger Protocol is the missing piece for production chat interfaces.
+
+---
+
+### 6.8 The View Functor: Widget Ontology
+
+**The Theory**: Agents need visual representation. Rather than ad-hoc rendering, we define a **View Functor** that maps agents to contextually adaptive UI components deterministically.
+
+```markdown
+### The View Functor
+
+> Agent → Widget. Deterministic mapping from computation to visualization.
+
+**The Functor**:
+```python
+class ViewFunctor:
+    """
+    Maps any agent to a contextually adaptive UI component.
+
+    View: Agent[A, B] → Widget[Agent[A, B]]
+
+    This is deterministic: the same agent always produces
+    the same widget structure (though content varies with state).
+    """
+
+    def lift(self, agent: Agent[A, B], context: ViewContext) -> Widget:
+        """
+        Map agent to widget based on:
+        - Agent's declared interface (A, B types)
+        - Agent's credo/personality
+        - View context (mobile, desktop, terminal, paper)
+        - Interaction mode (observe, invoke, compose)
+        """
+        widget_type = self.ontology.classify(agent)
+        return widget_type.render(agent, context)
+```
+
+**The Widget Ontology**:
+
+Widgets form a semiotics of agent-to-agent and agent-to-human communication:
+
+| Widget Type | Agent Pattern | Visual Manifestation |
+|-------------|---------------|----------------------|
+| `GlyphWidget` | Any agent | Moon phase + letter (● A) |
+| `CardWidget` | Agent with metrics | Bordered box with stats |
+| `PageWidget` | Agent with history | Full document view |
+| `StreamWidget` | Streaming agent | Live updating text |
+| `GraphWidget` | Composed agents | Node-edge diagram |
+| `FormWidget` | Agent awaiting input | Input fields + submit |
+| `DialogWidget` | Messenger agent | Chat bubble interface |
+| `GaugeWidget` | Metered agent | Progress/budget indicators |
+
+**Context Adaptation**:
+
+```python
+@dataclass
+class ViewContext:
+    """Where and how the widget will be rendered."""
+    medium: Literal["terminal", "browser", "mobile", "paper"]
+    width: int              # Available characters/pixels
+    color: bool             # Color available?
+    interactive: bool       # Can user interact?
+    streaming: bool         # Can update in real-time?
+
+class Widget(Protocol):
+    """Base widget protocol."""
+
+    def render(self, context: ViewContext) -> str | HTML | bytes:
+        """Render to appropriate format for context."""
+        ...
+
+    def accepts_input(self) -> bool:
+        """Can this widget receive user input?"""
+        ...
+```
+
+**The Semiotics**:
+
+Widgets are *signs* that communicate agent state:
+
+| Sign | Signifier | Signified |
+|------|-----------|-----------|
+| ● | Filled circle | Agent is active |
+| ○ | Empty circle | Agent is dormant |
+| ███░░ | Progress bar | Completion percentage |
+| ⚡ | Lightning | Tension/conflict |
+| █ | Streaming cursor | Output in progress |
+
+**Determinism Guarantee**:
+
+```python
+# Same agent + same context = same widget structure
+assert ViewFunctor().lift(agent, ctx) == ViewFunctor().lift(agent, ctx)
+
+# Different context = different rendering, same semantics
+terminal_widget = ViewFunctor().lift(agent, terminal_ctx)
+browser_widget = ViewFunctor().lift(agent, browser_ctx)
+assert terminal_widget.semantic_content == browser_widget.semantic_content
+```
+
+**Anti-patterns**:
+- ❌ Ad-hoc rendering per agent type
+- ❌ Widgets that lie about agent state
+- ❌ Context-unaware rendering (terminal widget in browser)
+- ❌ Non-deterministic widget selection
+
+**Zen Principle**: *The form reveals the function; the widget speaks the agent's truth.*
+```
+
+---
+
+### 6.9 The Metered Functor: Central Bank Economics
+
+**The Theory**: Token costs are real. Without economic constraints, agents will bankrupt their operators. We apply mechanics from auctions and fluid dynamics (Kelvin's Circulation Theorem) to create a **Central Bank** for agent economies.
+
+```markdown
+### The Metered Functor (Central Bank)
+
+> Every token has a cost. The bank tracks, limits, and allocates.
+
+**The Problem**: "I am using a lot of tokens and I don't want to go bankrupt."
+
+**The Functor**:
+```python
+class MeteredFunctor:
+    """
+    Wraps any agent with economic metering.
+
+    Metered: Agent[A, B] → Agent[A, MeteredResult[B]]
+
+    The wrapped agent tracks token usage, respects budgets,
+    and participates in the economic system.
+    """
+
+    def lift(
+        self,
+        agent: Agent[A, B],
+        budget: TokenBudget
+    ) -> Agent[A, MeteredResult[B]]:
+        return MeteredAgent(inner=agent, budget=budget)
+
+@dataclass
+class MeteredResult(Generic[T]):
+    """Result with economic metadata."""
+    value: T
+    tokens_used: int
+    tokens_remaining: int
+    cost_usd: float
+    budget_percentage: float
+
+@dataclass
+class TokenBudget:
+    """Economic constraints for an agent or pipeline."""
+    max_tokens: int
+    max_cost_usd: float
+    remaining_tokens: int
+    remaining_cost_usd: float
+
+    def can_afford(self, estimated_tokens: int) -> bool:
+        return estimated_tokens <= self.remaining_tokens
+
+    def consume(self, tokens: int, cost: float) -> "TokenBudget":
+        return TokenBudget(
+            max_tokens=self.max_tokens,
+            max_cost_usd=self.max_cost_usd,
+            remaining_tokens=self.remaining_tokens - tokens,
+            remaining_cost_usd=self.remaining_cost_usd - cost,
+        )
+```
+
+**Kelvin's Circulation Theorem Applied**:
+
+In fluid dynamics, Kelvin's theorem states that circulation around a closed loop is conserved in an ideal fluid. Applied to agents:
+
+```python
+@dataclass
+class CirculationBudget:
+    """
+    Budget that circulates through a pipeline, conserved in total.
+
+    If agent A spends 100 tokens, that 100 must come from somewhere
+    and go somewhere—it doesn't appear or disappear.
+    """
+    total_circulation: int      # Total tokens in the system
+    allocated: dict[str, int]   # agent_id → allocated tokens
+    spent: dict[str, int]       # agent_id → spent tokens
+
+    def reallocate(self, from_agent: str, to_agent: str, amount: int):
+        """Transfer budget between agents (conservation)."""
+        assert self.allocated[from_agent] >= amount
+        self.allocated[from_agent] -= amount
+        self.allocated[to_agent] += amount
+        # Total circulation unchanged
+```
+
+**Auction Mechanics**:
+
+When multiple agents compete for limited budget:
+
+```python
+class TokenAuction:
+    """
+    Agents bid for tokens from the central bank.
+
+    Uses second-price (Vickrey) auction for truthful bidding.
+    """
+
+    async def allocate(
+        self,
+        requests: list[TokenRequest],
+        available: int
+    ) -> dict[str, int]:
+        """
+        Allocate tokens to agents based on:
+        - Urgency (how important is this task?)
+        - Efficiency (how many tokens per unit value?)
+        - History (has this agent been wasteful?)
+        """
+        # Sort by value/token ratio
+        ranked = sorted(requests, key=lambda r: r.value_per_token, reverse=True)
+
+        allocations = {}
+        remaining = available
+
+        for request in ranked:
+            allocation = min(request.requested, remaining)
+            allocations[request.agent_id] = allocation
+            remaining -= allocation
+
+            if remaining <= 0:
+                break
+
+        return allocations
+```
+
+**The Central Bank**:
+
+```python
+class CentralBank:
+    """
+    Manages the token economy for a kgents deployment.
+    """
+    total_budget: TokenBudget
+    agent_accounts: dict[str, TokenBudget]
+    transaction_log: list[Transaction]
+
+    async def request_tokens(
+        self,
+        agent_id: str,
+        amount: int,
+        justification: str
+    ) -> TokenGrant | TokenDenial:
+        """
+        Agent requests tokens from the bank.
+
+        Bank may grant, partially grant, or deny based on:
+        - Available funds
+        - Agent's history
+        - Current priorities
+        """
+        ...
+
+    def audit(self) -> AuditReport:
+        """Generate economic audit of all agent spending."""
+        ...
+```
+
+**Integration with Ergodic Strategy**:
+
+```python
+# Ensemble size limited by economic budget
+n_instances = min(
+    desired_ensemble_size,
+    central_bank.can_afford(cost_per_instance)
+)
+```
+
+**Anti-patterns**:
+- ❌ Unbounded token usage
+- ❌ Agents that ignore budget constraints
+- ❌ Hidden costs (token usage not tracked)
+- ❌ No audit trail
+
+**Zen Principle**: *The wise spender counts twice; the token spent is the token gone.*
+```
+
+---
+
+### 6.10 M-gents: Holographic Associative Memory
+
+**The Theory**: Traditional memory is fragile—lose half the data, lose half the information. **Holographic memory** has a different property: cutting the memory in half doesn't lose half the data, it lowers the resolution of the *whole*.
+
+**The Agent Application**: M-gents (Memory + Message) treat memory as morphism. Ideas and concepts exist in a superspace; words are approximate projections. Memory must be both forgotten AND saved.
+
+```markdown
+### M-gents: Memory as Morphism
+
+> Cutting the memory in half doesn't lose half the data—it lowers the resolution of the whole.
+
+**The Core Insight**: Agents can be fundamentally conceptualized as:
+1. "Generating predictive memories of the actions they will take"
+2. "Generating the performance of remembering when presented with a familiar concept"
+
+**Holographic Associative Memory**:
+
+```python
+@dataclass
+class HolographicMemory:
+    """
+    Memory where information is distributed across the whole.
+
+    Unlike localized memory (lose a sector, lose that data),
+    holographic memory degrades gracefully: compression
+    reduces resolution uniformly, not catastrophically.
+    """
+    # The hologram: distributed representation
+    interference_pattern: np.ndarray
+
+    def store(self, key: Concept, value: Memory) -> None:
+        """
+        Store by superimposing on the interference pattern.
+
+        Each memory is spread across the entire pattern.
+        """
+        encoding = self.encode(key, value)
+        self.interference_pattern += encoding
+
+    def retrieve(self, key: Concept) -> Memory:
+        """
+        Retrieve by resonance with the pattern.
+
+        Partial matches return partial (lower resolution) memories.
+        """
+        return self.decode(key, self.interference_pattern)
+
+    def compress(self, ratio: float) -> "HolographicMemory":
+        """
+        Reduce memory size while preserving ALL information at lower resolution.
+
+        This is the key holographic property: 50% compression
+        doesn't lose 50% of memories—it makes ALL memories
+        50% fuzzier.
+        """
+        compressed_size = int(len(self.interference_pattern) * ratio)
+        return HolographicMemory(
+            interference_pattern=self.downsample(compressed_size)
+        )
+```
+
+**The Superspace Model**:
+
+Concepts and ideas exist in a high-dimensional superspace. Words and tokens are low-dimensional projections:
+
+```
+Superspace (Ideas)
+       │
+       │ projection (lossy)
+       ▼
+Token Space (Words)
+       │
+       │ embedding
+       ▼
+Vector Space (Representations)
+```
+
+**Memory as Morphism**:
+
+```python
+class MemoryMorphism(Agent[Concept, Recollection]):
+    """
+    Memory is not storage—it's transformation.
+
+    Input: A concept/cue
+    Output: A recollection (reconstruction, not retrieval)
+    """
+
+    async def invoke(self, concept: Concept) -> Recollection:
+        """
+        Remembering is generative, not retrievive.
+
+        The agent doesn't "look up" the memory—it
+        reconstructs it from the interference pattern.
+        """
+        # Resonance with holographic memory
+        raw_pattern = self.memory.retrieve(concept)
+
+        # Reconstruction (generative, not exact)
+        recollection = await self.reconstruct(raw_pattern, concept)
+
+        return recollection
+```
+
+**The Forgetting Imperative**:
+
+Memory must be forgotten AND saved. This is not contradiction—it's compression:
+
+```python
+class ForgetfulMemory(HolographicMemory):
+    """
+    Memory that actively forgets to maintain coherence.
+
+    Forgetting is not loss—it's resolution management.
+    """
+
+    async def consolidate(self):
+        """
+        Background forgetting process.
+
+        - Compress old, unused patterns
+        - Strengthen recent, important patterns
+        - Maintain total memory budget
+        """
+        # Identify low-activation patterns
+        cold_patterns = self.identify_cold()
+
+        # Compress (forget at high resolution, keep at low)
+        for pattern in cold_patterns:
+            self.demote(pattern)  # Lower resolution, don't delete
+
+        # Strengthen hot patterns
+        for pattern in self.identify_hot():
+            self.promote(pattern)  # Higher resolution
+```
+
+**Ethics as Geometry**:
+
+Ethics is the geometry of possibility space that agents walk through:
+
+```python
+@dataclass
+class EthicalGeometry:
+    """
+    The shape of what's possible and permissible.
+
+    Agents navigate this space; ethics defines the topology.
+    """
+    # Regions of the space
+    permissible: set[Region]      # Actions that are allowed
+    forbidden: set[Region]        # Actions that are prohibited
+    virtuous: set[Region]         # Actions that are encouraged
+
+    def path_is_ethical(self, trajectory: list[Action]) -> bool:
+        """Does this path stay in permissible space?"""
+        return all(
+            action in self.permissible and action not in self.forbidden
+            for action in trajectory
+        )
+```
+
+**Context as Currency**:
+
+Context is the indispensable currency of agent operation:
+
+```python
+@dataclass
+class ContextBudget:
+    """
+    Context is finite and precious.
+
+    Every token of context spent is a token not available
+    for other purposes.
+    """
+    max_tokens: int
+    used_tokens: int
+
+    @property
+    def remaining(self) -> int:
+        return self.max_tokens - self.used_tokens
+
+    def spend(self, tokens: int) -> bool:
+        """Spend context tokens. Returns False if insufficient."""
+        if tokens > self.remaining:
+            return False
+        self.used_tokens += tokens
+        return True
+```
+
+**Anti-patterns**:
+- ❌ Treating memory as exact storage (it's reconstruction)
+- ❌ Deleting memories entirely (compress, don't delete)
+- ❌ Ignoring the geometry of ethics
+- ❌ Treating context as infinite
+
+**Zen Principle**: *The mind that forgets nothing remembers nothing; the hologram holds all in each part.*
+```
+
+---
+
+### 6.11 The Narrator Agent: OpenTelemetry for Thoughts
+
+**The Theory**: Agents think, but their thoughts are invisible. The **Narrator Agent** provides "OpenTelemetry for thoughts"—a structured narrative log that enables time-travel debugging.
+
+```markdown
+### The Narrator Agent
+
+> Every thought, traced. Every action, replayable.
+
+**The Insight**: Since agents are (mostly) pure functions, we can serialize the exact input that caused any behavior and create a **Replay Agent** that developers can step through locally.
+
+**The Narrative Log**:
+
+```python
+@dataclass(frozen=True)
+class ThoughtTrace:
+    """A single traced thought/action."""
+    timestamp: datetime
+    agent_id: str
+    trace_id: str           # Unique ID for this trace
+    parent_id: str | None   # Parent trace (for nested calls)
+
+    # The thought
+    thought_type: Literal["intent", "reasoning", "decision", "action", "result"]
+    content: str
+
+    # Reproducibility
+    input_hash: str         # Hash of input state
+    input_snapshot: bytes   # Serialized input (for replay)
+    output_hash: str | None # Hash of output (if complete)
+
+    # Context
+    token_cost: int
+    duration_ms: int
+    metadata: dict
+
+@dataclass
+class NarrativeLog:
+    """
+    Complete narrative of an agent's operation.
+
+    OpenTelemetry-style: traces, spans, and attributes.
+    """
+    traces: list[ThoughtTrace]
+    spans: dict[str, Span]  # trace_id → span
+
+    def add_trace(self, trace: ThoughtTrace):
+        """Add a thought to the narrative."""
+        self.traces.append(trace)
+
+    def to_opentelemetry(self) -> OTLPExportable:
+        """Export to standard OpenTelemetry format."""
+        ...
+
+    def to_narrative(self) -> str:
+        """
+        Render as human-readable narrative.
+
+        "At 10:42:15, CodeReviewer received a Python file.
+         It thought: 'This function has no error handling.'
+         It decided: 'Flag as potential bug.'
+         It produced: SecurityFinding(severity=MEDIUM, ...)"
+        """
+        ...
+```
+
+**Time-Travel Debugging**:
+
+```python
+class ReplayAgent:
+    """
+    Replay any traced execution step-by-step.
+
+    Since agents are pure functions, we can reproduce
+    exact behavior from serialized inputs.
+    """
+
+    def __init__(self, narrative: NarrativeLog):
+        self.narrative = narrative
+        self.position = 0
+
+    def step_forward(self) -> ThoughtTrace:
+        """Advance one step in the narrative."""
+        trace = self.narrative.traces[self.position]
+        self.position += 1
+        return trace
+
+    def step_backward(self) -> ThoughtTrace:
+        """Go back one step."""
+        self.position = max(0, self.position - 1)
+        return self.narrative.traces[self.position]
+
+    async def replay_from(self, trace: ThoughtTrace) -> Any:
+        """
+        Replay execution from a specific trace.
+
+        Deserializes the input snapshot and re-runs the agent.
+        Useful for debugging: "What if I changed this input?"
+        """
+        input_state = deserialize(trace.input_snapshot)
+        agent = self.reconstruct_agent(trace.agent_id)
+        return await agent.invoke(input_state)
+
+    def diff_replay(
+        self,
+        trace: ThoughtTrace,
+        modified_input: Any
+    ) -> DiffResult:
+        """
+        Compare original execution with modified input.
+
+        "What would have happened if the input was different?"
+        """
+        original = self.replay_from(trace)
+        modified = self.replay_with(trace, modified_input)
+        return DiffResult(original=original, modified=modified)
+```
+
+**The Narrator as Agent**:
+
+```python
+class NarratorAgent(Agent[AgentExecution, NarrativeLog]):
+    """
+    Wraps any agent to produce a narrative log.
+
+    Narrator: Agent[A, B] → Agent[A, (B, NarrativeLog)]
+    """
+
+    async def invoke(self, execution: AgentExecution) -> NarrativeLog:
+        """
+        Observe an agent's execution and produce narrative.
+        """
+        log = NarrativeLog()
+
+        # Trace the invocation
+        trace = ThoughtTrace(
+            timestamp=datetime.now(),
+            agent_id=execution.agent.name,
+            trace_id=uuid4(),
+            thought_type="intent",
+            content=f"Received input: {summarize(execution.input)}",
+            input_hash=hash(execution.input),
+            input_snapshot=serialize(execution.input),
+            ...
+        )
+        log.add_trace(trace)
+
+        # Continue tracing through execution...
+        return log
+```
+
+**Integration with W-gent**:
+
+The Narrator's output is perfect content for W-gent visualization:
+
+```
+┌─ Narrative View ──────────────────────────────────────┐
+│                                                        │
+│  Timeline: ════════════════●═══════════════════        │
+│                            ↑ current position          │
+│                                                        │
+│  10:42:15 [intent] CodeReviewer received Python file   │
+│  10:42:16 [reasoning] "This function has no error..."  │
+│  10:42:17 [decision] Flag as potential bug             │
+│  10:42:18 [action] Emit SecurityFinding                │
+│  10:42:18 [result] SecurityFinding(severity=MEDIUM)    │
+│                                                        │
+│  [◀◀] [◀] [replay] [▶] [▶▶]  |  [export] [diff]       │
+└────────────────────────────────────────────────────────┘
+```
+
+**Crash Forensics**:
+
+```python
+async def diagnose_crash(crash_trace: ThoughtTrace) -> CrashDiagnosis:
+    """
+    When an agent crashes, serialize the exact input
+    that caused it for local debugging.
+    """
+    return CrashDiagnosis(
+        agent_id=crash_trace.agent_id,
+        input_snapshot=crash_trace.input_snapshot,
+        replay_command=f"kgents replay {crash_trace.trace_id}",
+        suggested_fix=await analyze_crash(crash_trace),
+    )
+```
+
+**Anti-patterns**:
+- ❌ Opaque agent execution (no visibility)
+- ❌ Non-reproducible bugs ("works on my machine")
+- ❌ Narrative logs without replay capability
+- ❌ Excessive tracing overhead (sample judiciously)
+
+**Zen Principle**: *The story of the thought is the thought made eternal; replay is resurrection.*
+```
+
+---
+
+## 7. Changes NOT Proposed
 
 To preserve original intent, the following are explicitly NOT proposed:
 
@@ -829,7 +2237,7 @@ To preserve original intent, the following are explicitly NOT proposed:
 
 ## Zen Principles Discovered
 
-Through implementation, these principles emerged as universally applicable:
+Through implementation and theoretical synthesis, these principles emerged as universally applicable:
 
 | Principle | Expression | Application |
 |-----------|------------|-------------|
@@ -839,6 +2247,17 @@ Through implementation, these principles emerged as universally applicable:
 | *The mind that never rests, never learns* | Consolidator archetype | Background integration |
 | *The wave returns to the ocean* | Entropy physics | Fractal collapse |
 | *Water takes the shape of its container* | Observable protocol | Polymorphic rendering |
+| *The river that flows only downhill never discovers the mountain spring* | Accursed Share | Productive excess |
+| *What the universe preserves, we should not squander* | Semantic Invariant | Conservation laws |
+| *The gambler who plays once with many dice outlives the one who plays many times with one* | Ergodic Strategy | Ensemble over time |
+| *The termite knows nothing of the cathedral; the cathedral knows nothing of the termite* | Stigmergy | Decoupled coordination |
+| *To speak is to prove; to prove is to construct* | Curry-Howard | Prompts as types |
+| *The wise agent expects the unexpected, and stops when it arrives* | Active Inference | Surprisal tracking |
+| *The conversation flows; we observe its passage* | Messenger Protocol | Streaming interfaces |
+| *The form reveals the function; the widget speaks the agent's truth* | View Functor | Widget ontology |
+| *The wise spender counts twice; the token spent is the token gone* | Metered Functor | Central bank economics |
+| *The mind that forgets nothing remembers nothing; the hologram holds all in each part* | M-gents | Holographic memory |
+| *The story of the thought is the thought made eternal; replay is resurrection* | Narrator Agent | Time-travel debugging |
 
 These are not designed. They are discovered when composition is taken seriously.
 
@@ -849,30 +2268,50 @@ These are not designed. They are discovered when composition is taken seriously.
 | File | Type | Change |
 |------|------|--------|
 | README.md | Addition | Implementation validation, cross-pollination graph |
-| principles.md | Strengthening | Category laws table, orthogonality sub-principle |
+| principles.md | Strengthening | Category laws table, orthogonality sub-principle, **Accursed Share (meta-principle)** |
 | anatomy.md | Synthesis | Compositional core, Observable protocol, Symbiont pattern |
-| bootstrap.md | Synthesis | BootstrapWitness, Cooled/Superposed functors, entropy physics |
+| bootstrap.md | Synthesis | BootstrapWitness, Cooled/Superposed functors, entropy physics, **Semantic Invariant**, **Ergodic Strategy**, **Active Inference** |
 | testing.md | New | T-gents taxonomy + Socratic/Chaos patterns |
-| reliability.md | New | Multi-layer reliability pattern |
+| reliability.md | New | Multi-layer reliability pattern, **Ensemble Reset (opt-in)** |
 | archetypes.md | New (Optional) | Emergent patterns (Consolidator, Questioner, Shapeshifter, Spawner, Uncertain) |
+| w-gents/stigmergy.md | New (TRANSFORMATIVE) | **Chalkboard Architecture** - W-gent as pheromone field with push/WebSocket |
+| c-gents/curry-howard.md | New | **Prompts as Types** - Curry-Howard correspondence for agents |
+| i-gents/messenger.md | New | **Messenger Protocol (Streaming Functor)** - Async streaming chat interface |
+| i-gents/view-functor.md | New | **View Functor** - Widget ontology, agent → UI deterministic mapping |
+| economics/central-bank.md | New | **Metered Functor** - Token budgets, auctions, Kelvin circulation |
+| m-gents/README.md | New | **M-gents** - Holographic associative memory, memory as morphism |
+| observability/narrator.md | New | **Narrator Agent** - OpenTelemetry for thoughts, time-travel debugging |
 
 ---
 
 ## Implementation Evidence
 
-All proposed updates are validated by:
+All proposed updates are validated by existing implementation OR have clear implementation paths:
 
-| Pattern | Implementation | Tests |
-|---------|----------------|-------|
-| Category laws | bootstrap/types.py, agents/a/skeleton.py | BootstrapWitness tests |
-| Protocols | agents/a/skeleton.py:138-187 | Protocol check tests |
-| Symbiont | agents/d/symbiont.py | test_symbiont.py |
-| JIT wrapper | agents/j/factory_integration.py | Phase 4 tests |
-| Functors | agents/c/functor.py | Law validation tests |
-| T-gents taxonomy | agents/t/*.py | 150+ T-gent tests |
-| Multi-layer reliability | agents/e/*.py | E-gent integration tests |
-| Entropy budget | agents/d/entropy.py, agents/j/reality.py | Entropy tracking tests |
-| Observable | agents/w/*.py, agents/i/*.py | W-gent/I-gent tests |
+| Pattern | Implementation | Tests | Status |
+|---------|----------------|-------|--------|
+| Category laws | bootstrap/types.py, agents/a/skeleton.py | BootstrapWitness tests | ✅ Validated |
+| Protocols | agents/a/skeleton.py:138-187 | Protocol check tests | ✅ Validated |
+| Symbiont | agents/d/symbiont.py | test_symbiont.py | ✅ Validated |
+| JIT wrapper | agents/j/factory_integration.py | Phase 4 tests | ✅ Validated |
+| Functors | agents/c/functor.py | Law validation tests | ✅ Validated |
+| T-gents taxonomy | agents/t/*.py | 150+ T-gent tests | ✅ Validated |
+| Multi-layer reliability | agents/e/*.py | E-gent integration tests | ✅ Validated |
+| Entropy budget | agents/d/entropy.py, agents/j/reality.py | Entropy tracking tests | ✅ Validated |
+| Observable | agents/w/*.py, agents/i/*.py | W-gent/I-gent tests | ✅ Validated |
+| **Accursed Share** | T-gents Type II Saboteurs | Chaos testing framework | 📐 Architectural |
+| **Semantic Invariant** | (new) agents/c/invariant.py | LLM-based drift detection | 📐 Architectural |
+| **Ergodic Strategy** | (new) agents/a/ensemble.py | Consensus selection tests | 📐 Architectural (opt-in) |
+| **Stigmergy** | W-gent WebSocket/SSE push | Pheromone response tests | 🔄 Transformative |
+| **Curry-Howard** | P-gents parsing as proof checking | Type inhabitance tests | 📐 Architectural |
+| **Active Inference** | (new) agents/a/inference.py | Surprisal tracking tests | 📐 Architectural (opt-in) |
+| **Messenger Protocol** | (new) agents/i/messenger.py | Streaming functor tests | 📐 Architectural |
+| **View Functor** | (new) agents/i/view.py | Widget ontology tests | 📐 Architectural |
+| **Metered Functor** | (new) agents/economics/bank.py | Central bank + auction tests | 📐 Architectural |
+| **M-gents** | (new) agents/m/*.py | Holographic memory tests | 📐 Architectural |
+| **Narrator Agent** | (new) agents/o/narrator.py | Time-travel replay tests | 📐 Architectural |
+
+**Legend**: ✅ = Implemented and tested | 📐 = Architectural slot defined | 🔄 = Transformative (breaks purity)
 
 ---
 
@@ -880,7 +2319,7 @@ All proposed updates are validated by:
 
 **Verdict**: **Accept and Merge**
 
-This proposal successfully elevates the framework from "Software Engineering" to "Computer Science."
+This proposal elevates the framework from "Software Engineering" to "Applied Mathematical Physics"—grounded in rigorous theory, validated by implementation.
 
 ### Validation Criteria
 
@@ -888,8 +2327,11 @@ This proposal successfully elevates the framework from "Software Engineering" to
 |-----------|--------|----------|
 | **Verification** | ✅ | BootstrapWitness provides mathematical confidence |
 | **Scalability** | ✅ | Symbiont pattern solves memory/state bottleneck |
-| **Resilience** | ✅ | T-gent + Reliability Stack creates antifragile systems |
-| **Novelty** | ✅ | Creates architectural slots for Hypnagogic, Darwinian, Polymorphic agents |
+| **Resilience** | ✅ | T-gent + Reliability Stack + **Ergodic Strategy** creates antifragile systems |
+| **Novelty** | ✅ | Creates architectural slots for Hypnagogic, Darwinian, Polymorphic, **Stigmergic** agents |
+| **Theoretical Rigor** | ✅ | Noether (conservation), Curry-Howard (types), Free Energy (prediction) |
+| **Serendipity** | ✅ | Accursed Share legitimizes exploration, prevents brittle optimization |
+| **Model Agnosticism** | ✅ | Semantic Invariant ensures consistency across LLM backends |
 
 ### The Hegelian Synthesis
 
@@ -899,10 +2341,37 @@ This proposal successfully elevates the framework from "Software Engineering" to
 | *Antithesis* | The messy Implementation (Materialism) |
 | *Synthesis* | The **Verified Protocol** (The Realized Ideal) |
 
-The synthesis is valid: implementation wisdom has been elevated to spec-level principles while preserving the original vision.
+The synthesis is valid: implementation wisdom AND theoretical physics have been elevated to spec-level principles while preserving the original vision.
+
+### The New Foundations
+
+| Foundation | Source | Contribution |
+|------------|--------|--------------|
+| Accursed Share | Bataille | Philosophy of slop; meta-principle for productive waste |
+| Noether's Theorem | Physics | LLM-native semantic conservation; credo drift detection |
+| Ergodicity | Statistical Mechanics | Ensemble > Retry; opt-in for heavy constructions |
+| Stigmergy | Biology | W-gent as pheromone field; **TRANSFORMATIVE** (taints agent purity) |
+| Curry-Howard | Logic | Prompts as types; parsing as proof checking |
+| Free Energy | Neuroscience | Active inference; opt-in for irreversible actions |
+| Messenger Protocol | Industry Practice | Streaming functor; production chat integration |
+| View Functor | Semiotics | Widget ontology; deterministic agent → UI mapping |
+| Metered Functor | Economics | Central bank; Kelvin circulation; auction mechanics |
+| M-gents | Holography | Memory as morphism; graceful degradation; ethics as geometry |
+| Narrator Agent | OpenTelemetry | Time-travel debugging; replay from serialized inputs |
+
+### The Question of Bias
+
+The Accursed Share principle deserves special attention. By allocating resources to "unknown unknowns," we acknowledge:
+
+1. **We don't know what we don't know** — exploration budgets aren't waste
+2. **Sabotage is productive** — T-gents Saboteurs stress-test for unknown failure modes
+3. **Joy is not overhead** — personality and delight are the Accursed Share spent well
+4. **We have no bias toward utility** — an agent that only optimizes cannot discover
+
+This is philosophically significant: kgents refuses the efficiency religion that dominates AI engineering.
 
 ---
 
-*This proposal synthesizes implementation wisdom while preserving the tasteful, curated, ethical, joy-inducing, composable, heterarchical, generative soul of kgents.*
+*This proposal synthesizes implementation wisdom AND theoretical physics while preserving the tasteful, curated, ethical, joy-inducing, composable, heterarchical, generative soul of kgents.*
 
-*The framework transforms from a collection of scripts into a **computational calculus**—interaction is more fundamental than identity.*
+*The framework transforms from a collection of scripts into a **computational calculus grounded in physics**—interaction is more fundamental than identity, and the wise system spends its surplus on the unknown.*
