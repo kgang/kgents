@@ -80,6 +80,28 @@ In addition to the foundational kgents principles, E-gents add:
 - Multiple validation layers prevent self-corruption
 - Human approval required for meta-changes above threshold
 
+### 11. Metered
+
+**Conservative token consumption builds user trust.**
+
+E-gents must be **metered by construction**—defaulting to minimal token usage and escalating only when necessary. This builds confidence with users who pay per token.
+
+**The Metering Principle**:
+- **Start minimal**: Default prompts should be ~30 lines, not ~250
+- **Escalate on failure**: Rich context is a recovery strategy, not default
+- **Diff over whole**: Request changed symbols, not entire files
+- **Lazy loading**: API references loaded only when hallucinations detected
+- **Budget awareness**: Track tokens per hypothesis, abort if budget exceeded
+
+**Token Budget Levels**:
+| Level | Prompt Size | Context | When Used |
+|-------|-------------|---------|-----------|
+| 0 (Minimal) | ~30 lines | Hypothesis + target symbol | Default |
+| 1 (Targeted) | ~80 lines | + function/class context | After L0 fails |
+| 2 (Full) | ~250 lines | + API refs, patterns | After L1 fails 2x |
+
+**The Trust Gradient**: Users should see E-gents succeed with minimal tokens before trusting them with larger budgets. Conservative defaults demonstrate competence.
+
 ## The Evolution Pipeline
 
 E-gents compose multiple specialized agents into a coherent evolution pipeline:
@@ -204,6 +226,9 @@ E-gents must **never**:
 5. ❌ Evolve code without git safety (uncommitted changes present)
 6. ❌ Self-modify without convergence detection
 7. ❌ Hide errors or conflicts in logs
+8. ❌ **Use full context prompts by default** (violates Metered principle)
+9. ❌ **Request entire files when diffs suffice** (token waste)
+10. ❌ **Load API references preemptively** (lazy load on hallucination)
 
 ## See Also
 
