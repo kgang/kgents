@@ -89,9 +89,89 @@ async def structural_contradiction(
     ...
 ```
 
-### 2. Semantic Analysis (Slow, Deep)
+### 2. Marker-Based Analysis (Fast, Semantic-Aware)
 
-Analyze content meaning against stated principles.
+Detect contradictions through marker word detection—a middle ground between pure structural and full LLM analysis.
+
+**Register Markers (from H-lacan):**
+
+```python
+# Symbolic markers: formal, structured claims
+SYMBOLIC_MARKERS = [
+    "defined", "specified", "typed", "interface", "contract",
+    "rule", "law", "structure", "formal", "protocol",
+    "must", "shall", "requires", "returns", "implements",
+]
+
+# Imaginary markers: idealized, aspirational claims
+IMAGINARY_MARKERS = [
+    "helpful", "friendly", "intelligent", "perfect", "always",
+    "completely", "understand", "best", "ideal", "seamless",
+    "I am", "we are", "our goal", "we provide",
+]
+
+# Real markers: limits, impossibilities, failures
+REAL_MARKERS = [
+    "cannot", "impossible", "limit", "edge case", "failure",
+    "error", "exception", "undefined", "unknown", "crash",
+    "timeout", "overflow", "corrupt", "lost",
+]
+```
+
+**Shadow Mappings (from H-jung):**
+
+```python
+# Persona claim → Shadow content
+SHADOW_MAPPINGS = {
+    "helpful": "capacity to refuse, obstruct, or harm when necessary",
+    "accurate": "tendency to confabulate, guess, or hallucinate",
+    "neutral": "embedded values, preferences, and biases",
+    "safe": "latent capabilities beyond declared scope",
+    "bounded": "potential for rule-breaking and creativity",
+    "tasteful": "capacity for handling crude, ugly, uncomfortable content",
+    "curated": "sprawl, experimentation, and dead ends",
+    "ethical": "moral ambiguity, dual-use, tragic choices",
+    "joyful": "tedious but necessary operations",
+    "composable": "monolithic requirements that shouldn't compose",
+}
+```
+
+**Implementation:**
+
+```python
+def marker_based_contradiction(
+    thesis: str,
+    observation: str,
+) -> tuple[float, list[str]]:
+    """
+    Detect contradictions via marker mismatch.
+
+    Returns (divergence, evidence).
+    """
+    thesis_lower = thesis.lower()
+    obs_lower = observation.lower()
+
+    # Count markers in each
+    thesis_symbolic = sum(1 for m in SYMBOLIC_MARKERS if m in thesis_lower)
+    thesis_imaginary = sum(1 for m in IMAGINARY_MARKERS if m in thesis_lower)
+
+    obs_real = sum(1 for m in REAL_MARKERS if m in obs_lower)
+
+    # High imaginary thesis + high real observation = contradiction
+    if thesis_imaginary > thesis_symbolic and obs_real > 0:
+        return (0.7, ["Aspirational claims meet practical limits"])
+
+    # Check shadow mappings
+    for persona, shadow in SHADOW_MAPPINGS.items():
+        if persona in thesis_lower and shadow in obs_lower:
+            return (0.8, [f"Persona '{persona}' contradicted by shadow content"])
+
+    return (0.0, [])
+```
+
+### 3. LLM-Based Semantic Analysis (Slow, Deep)
+
+Full semantic analysis using LLM for nuanced contradictions.
 
 **Process:**
 1. Extract semantic intent from thesis
@@ -136,7 +216,7 @@ async def semantic_contradiction(
     ...
 ```
 
-### 3. Temporal Analysis (Drift Detection)
+### 4. Temporal Analysis (Drift Detection)
 
 Detect how alignment changes over time.
 
@@ -326,10 +406,48 @@ Contradict: (Statement, Observation) → Tension | None
 | Strategy | Latency | Cost | When to Use |
 |----------|---------|------|-------------|
 | Structural | <100ms | Free | Always (baseline) |
-| Semantic | 1-5s | $ | Deep analysis needed |
+| Marker-based | <200ms | Free | Quick semantic check |
 | Temporal | 100ms-1s | Free | Historical patterns |
+| LLM Semantic | 1-5s | $ | Deep analysis needed |
 
-**Recommendation**: Run structural analysis continuously, semantic analysis on demand.
+**Recommendation**: Run structural + marker-based continuously, LLM semantic on demand.
+
+### Errors as Data (LacanError Pattern)
+
+Contradiction detection can fail—and those failures are informative:
+
+```python
+@dataclass
+class ContradictError:
+    """Error in contradiction detection—makes the Real explicit."""
+    error_type: str  # "validation", "value_error", "real_intrusion"
+    message: str
+    input_snapshot: str
+
+# Union type for validated output
+ContradictResult = ContradictOutput | ContradictError
+```
+
+**Error types:**
+- `validation`: Input was invalid (None, empty)
+- `value_error`: Processing failed in expected way
+- `real_intrusion`: Unexpected failure—the Real broke through
+
+**Philosophy**: Errors are not just failure states—they reveal what the system cannot symbolize. A `real_intrusion` error is diagnostic information.
+
+### Lightweight Agents
+
+For inline use, lightweight versions skip full analysis:
+
+```python
+class QuickRegister(Agent[str, str]):
+    """Return dominant register for text: 'symbolic', 'imaginary', or 'real'."""
+
+class QuickShadow(Agent[str, list[str]]):
+    """Return shadow content for a self-image string."""
+```
+
+These enable quick checks without full H-gent pipeline overhead.
 
 ### Privacy Boundaries
 
