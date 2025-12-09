@@ -38,6 +38,23 @@ The bootstrap agents are the **residue**: what remains after maximal algorithmic
 
 ## The Seven Bootstrap Agents
 
+### The Eighth Meta-Agent: BootstrapWitness
+
+While not a bootstrap agent itself, **BootstrapWitness** verifies bootstrap integrity:
+
+```python
+BootstrapWitness:
+    verify_bootstrap() -> BootstrapVerificationResult:
+        - all_agents_exist: bool    # All 7 importable
+        - identity_laws_hold: bool  # Id >> f ≡ f ≡ f >> Id
+        - composition_laws_hold: bool  # Associativity
+        - overall_verdict: Verdict
+```
+
+**Why include here**: The bootstrap is only valid if its laws can be verified. BootstrapWitness is the proof that the system can self-validate.
+
+---
+
 ### 1. Id (Identity)
 
 ```
@@ -500,6 +517,91 @@ NewSessionPipeline = (
 
 **Anti-pattern**: 130-line methods mixing validation, I/O, state mutation, and error handling.
 
+---
+
+### Idiom 3.1: Functor Lifting
+
+> Structure-preserving transforms enable clean error handling and context switching.
+
+Functors lift agents to work in different contexts:
+
+| Functor | Transform | Purpose |
+|---------|-----------|---------|
+| Maybe | `Agent[A,B] → Agent[Maybe[A], Maybe[B]]` | Handle absence |
+| Either | `Agent[A,B] → Agent[Either[E,A], Either[E,B]]` | Handle errors |
+| List | `Agent[A,B] → Agent[List[A], List[B]]` | Process collections |
+| Async | `Agent[A,B] → Agent[A, Future[B]]` | Non-blocking |
+| Logged | `Agent[A,B] → Agent[A, B]` + trace | Observability |
+| Cooled | `Agent[A,B] → Agent[Compressed[A], B]` | Context limits |
+| Superposed | `Agent[A,B] → Agent[A, Superposition[B]]` | Epistemic uncertainty |
+
+**Laws preserved**:
+- Identity: `F(id_A) = id_F(A)`
+- Composition: `F(g ∘ f) = F(g) ∘ F(f)`
+
+**Example** (from impl):
+```python
+# Original: f: A → B (may fail)
+# Lifted:   Either_f: Either[E, A] → Either[E, B]
+# Compose:  Either_f >> Either_g >> Either_h (short-circuits on first error)
+```
+
+**Anti-pattern**: Manual null-checking between composition steps.
+
+---
+
+### Idiom 3.2: The Cooled Functor (Context as Heat)
+
+> Context windows are finite. Context is heat. Cooling prevents degradation.
+
+**The Physics**: LLMs suffer from "context heat"—as conversation grows, logic degrades. This is not a bug; it is thermodynamics.
+
+```python
+Cooled[A, B]:
+    threshold: int              # Token limit before cooling
+    radiator: Agent[A, A]       # Compression agent (summarizer)
+
+    invoke(input: A) -> B:
+        if tokens(input) > threshold:
+            input = await radiator.invoke(input)  # Compress
+        return await inner.invoke(input)
+```
+
+**The Wisdom**: The inner agent doesn't know it received compressed data. It sees only a clean, short prompt. This makes agents **stateless in performance**—they can run indefinitely without context overflow.
+
+*Zen Principle: The best memory is knowing what to forget.*
+
+---
+
+### Idiom 3.3: The Superposed Functor (Delayed Collapse)
+
+> When truth is uncertain, hold multiple possibilities. Collapse only when you must.
+
+**The Insight**: Standard orchestration wants one answer. But sometimes an agent has 3 equally valid thoughts. Forcing early choice discards information.
+
+```python
+Superposed[A, B]:
+    n: int = 3                  # Number of variations to hold
+
+    invoke(input: A) -> Superposition[B]:
+        variations = [await inner.invoke(input) for _ in range(n)]
+        return Superposition(variations)  # All held, none collapsed
+
+# Collapse happens explicitly, usually via Judge
+pipeline = Superposed(brainstorm, n=3) >> Superposed(draft) >> Collapse(judge)
+```
+
+**The Structure**:
+- **Superposition**: N variations flow through the pipeline in parallel
+- **Collapse**: A Judge or User makes final selection at chain end
+- **Delayed Choice**: Subsequent agents invoke on *all* variations
+
+*Zen Principle: The wave becomes a particle only when observed. Observe late.*
+
+**Anti-pattern**: Forcing choice at every step ("pick the best one") when uncertainty persists.
+
+---
+
 ### Idiom 7: Reality is Trichotomous
 
 > Classification precedes computation.
@@ -551,6 +653,150 @@ async def invoke(self, intent: str) -> T:
 - Enables resource budgeting (PROBABILISTIC → controlled iteration)
 
 **See**: `spec/j-gents/reality.md` for full specification
+
+---
+
+### Idiom 7.1: Entropy is Physics
+
+> The **Fractal Orchestrator** (recursive sub-agents) is dangerous without physics. Entropy provides the physics.
+
+**The Problem**: Infinite recursion crashes systems. An agent that spawns sub-agents that spawn sub-agents is a fork bomb.
+
+**The Solution**: Entropy Budget as Control Rod
+
+```python
+@dataclass
+class EntropyBudget:
+    initial: float = 1.0
+    remaining: float = 1.0
+
+    def consume(self, cost: float) -> bool:
+        """Returns False if budget depleted (triggers CHAOTIC collapse)."""
+        if self.remaining < cost:
+            return False
+        self.remaining -= cost
+        return True
+
+    def split(self, n: int) -> list["EntropyBudget"]:
+        """Split budget among n sub-agents."""
+        child_budget = self.remaining / n
+        return [EntropyBudget(child_budget, child_budget) for _ in range(n)]
+```
+
+**Fractal Dynamics**:
+
+| Phase | Entropy State | Agent Behavior |
+|-------|---------------|----------------|
+| Expansion | `PROBABILISTIC` | Agent splits into sub-agents |
+| Steady State | `PROBABILISTIC` (low) | Agent operates normally |
+| Collapse | `CHAOTIC` (depleted) | Swarm collapses to Ground |
+
+**The Law**: `∀ agent. entropy(agent) → 0 ⟹ reality(agent) → CHAOTIC`
+
+Every recursive expansion consumes entropy. Eventually, all agents collapse to Ground (a simple "I don't know" or fallback).
+
+**JIT Integration**: The **Polymorphic Agent** (GenUI) fits here. A JIT agent can compile a UI component on the fly, execute it with entropy budget, and dissolve when budget depletes.
+
+**Anti-patterns**:
+- Unbounded recursion without entropy tracking
+- Sub-agents that don't inherit parent's entropy constraints
+- "Optimistic" orchestration that assumes infinite resources
+
+*Zen Principle: The wave returns to the ocean.*
+
+---
+
+### Idiom 7.2: The Semantic Invariant (Noether's Theorem)
+
+> If the system is symmetric across models, Semantic Momentum must be conserved.
+
+**The Theory**: Emmy Noether proved that every symmetry in a physical system creates a conservation law. We want **Model Symmetry**—the system should function identically whether backed by GPT-4, Claude, Llama, or a future model.
+
+**The LLM-Native Approach**: Rather than embedding-based cosine similarity, we use a fully LLM-based approach:
+
+1. **Self-Reported Credo**: Each agent declares its identity/personality/purpose
+2. **Drift Detection**: Agents monitor each other for credo drift
+
+```python
+@dataclass(frozen=True)
+class AgentCredo:
+    """An agent's self-reported identity and purpose."""
+    identity: str           # "I am a code reviewer focused on security"
+    purpose: str            # "I find vulnerabilities in code"
+    personality: str        # "Direct, thorough, skeptical"
+    boundaries: list[str]   # ["I do not write code", "I do not praise"]
+
+@dataclass(frozen=True)
+class DriftReport:
+    """Report of semantic drift between agents."""
+    observer: str           # Agent that noticed drift
+    subject: str            # Agent that drifted
+    drift_type: Literal["identity", "purpose", "personality", "boundary_violation"]
+    severity: float         # 0.0 (negligible) to 1.0 (complete drift)
+    evidence: str           # Specific example
+```
+
+**The Law**: `∀ pipeline. drift_severity(input.intent, output.summary) < threshold`
+
+**Why this matters**: This prevents the "Telephone Game" effect. If an agent transforms "Analyze this stock" into "Write a poem about stocks," observer agents will report high drift severity.
+
+*Zen Principle: What the universe preserves, we should not squander.*
+
+---
+
+### Idiom 7.3: The Ergodic Strategy (Ensemble Reset)
+
+> To achieve ergodicity, swap Time for Space. Instead of one agent retrying N times, spawn N fresh instances.
+
+**The Theory**: A system is **non-ergodic** if the time-average differs from the ensemble-average. Long-running agent chains are non-ergodic—if an agent has 1% chance of entering an unrecoverable hallucination loop, a chain of 100 steps has ~63% probability of total failure.
+
+**Applicability**: This strategy is **opt-in**, not default. It becomes important for:
+- Heavy conceptual constructions (complex reasoning chains)
+- Economic budgets where failure is expensive
+- High-stakes decisions where single-point failure is unacceptable
+
+```python
+async def ergodic_solve(
+    task: Task,
+    n_instances: int = 10,
+    budget: EconomicBudget | None = None
+) -> Result:
+    """
+    Ergodic problem solving via ensemble.
+
+    Instead of 1 agent trying 10 times (time average),
+    we spawn 10 parallel, fresh instances (ensemble average).
+    """
+    # Scale ensemble to budget if provided
+    if budget:
+        n_instances = min(n_instances, budget.max_parallel_agents)
+
+    # Each agent is a FRESH instance—no shared state, no stuck basins
+    agents = [Agent.spawn_fresh() for _ in range(n_instances)]
+
+    # Run in parallel
+    results = await asyncio.gather(*[a.invoke(task) for a in agents])
+
+    # Select consensus (mode) or best (judged)
+    return select_consensus(results) if consensus_exists(results) else \
+           await Judge.select_best(results)
+```
+
+**When to use** (opt-in criteria):
+
+| Criterion | Threshold | Example |
+|-----------|-----------|---------|
+| Economic stakes | > $100 equivalent | Financial analysis, legal review |
+| Complexity depth | > 5 reasoning steps | Multi-hop inference |
+| Adversarial context | Any | Security analysis, red-teaming |
+| Historical failure rate | > 10% retry loops | Known-flaky operations |
+
+**Anti-patterns**:
+- Using ensemble for every task (wasteful)
+- Retrying the same agent with identical state (non-ergodic)
+- "Just retry harder" without fresh context
+
+*Zen Principle: The gambler who plays once with many dice outlives the one who plays many times with one.*
 
 ---
 
