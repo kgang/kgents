@@ -31,26 +31,101 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 ## TL;DR
 
-**Status**: Clean, all committed and pushed
+**Status**: Working (uncommitted changes)
 **Branch**: `main`
-**Latest Commit**: 76ec866 - feat(cli): Add Kairos CLI commands (watch, timing, surface, history)
+**Latest Commit**: 7a574b5 - docs: Update HYDRATE.md with latest commit hash
 **Current State**:
+  - G-gent Phase 1: ✅ COMPLETE (Core Types + Tongue artifact - 51 tests passing)
+  - CLI Integrations Phase 2: ✅ COMPLETE (falsify, conjecture, rival, sublate, shadow)
+  - G-gent Specification: ✅ COMPLETE (4 files: README, grammar, tongue, integration)
   - Mirror Protocol Phase 3 (Kairos): ✅ COMPLETE (implementation + CLI integration)
   - Kairos CLI Commands: ✅ COMPLETE (watch, timing, surface, history)
   - CLI Integrations Phase 1: ✅ COMPLETE (pulse, ground, breathe, entropy)
-  - G-gent Specification: ✅ COMPLETE (4 files: README, grammar, tongue, integration)
   - Mirror Protocol Phase 1 & 2: ✅ COMPLETE (72 tests total)
-  - CLI Protocol: ✅ COMPLETE (59 tests)
-  - Tests: 81 passing (59 CLI + 22 Kairos), 22 skipped
+  - CLI Protocol: ✅ COMPLETE (100 tests - 59 original + 41 scientific)
+  - Tests: 173 passing (100 CLI + 22 Kairos + 51 G-gent), 23 skipped
 
 **Next Steps**:
-1. CLI Integrations Phase 2 (falsify, conjecture, rival, sublate, shadow) - Tier 2 scientific commands
-2. G-gent Phase 1 implementation (Core Types + Tongue artifact)
-3. Optional: Run test suite to verify Kairos CLI integration works end-to-end
+1. 🎯 **Commit G-gent Phase 1**: Create commit for G-gent foundation
+2. G-gent Phase 2: Grammar synthesis engine (reify() method)
+3. G-gent Phase 3: P-gent + J-gent integration
 
 ---
 
 ## Recent Sessions
+
+### Session: CLI Integrations Phase 2 - Scientific Core (2025-12-09)
+
+**Status**: ✅ COMPLETE - All 5 Scientific Commands Implemented
+
+**New Files Created**:
+- `impl/claude/protocols/cli/scientific.py` (~700 lines): Scientific core commands module
+- `impl/claude/protocols/cli/_tests/test_scientific.py` (~400 lines): 41 tests for scientific commands
+
+**Modified Files**:
+- `impl/claude/protocols/cli/main.py` (~130 lines added): CLI parser + handlers for 5 commands
+
+**Commands Implemented** (Tier 2 - 0 tokens, H-gent dialectics):
+- `kgents falsify "<hypothesis>" [path] [--depth]`: Find counterexamples to hypotheses (Popper)
+- `kgents conjecture [path] [--limit]`: Generate hypotheses from patterns (abduction)
+- `kgents rival "<position>"`: Steel-man opposing views (devil's advocate)
+- `kgents sublate "<thesis>" [--antithesis] [--force]`: Synthesize contradictions (Hegel)
+- `kgents shadow "<self-image>"`: Surface suppressed concerns (Jung)
+
+**Key Features**:
+- CounterexampleType enum (DIRECT, EDGE_CASE, TEMPORAL, STRUCTURAL)
+- ConjectureType enum (STRUCTURAL, BEHAVIORAL, TEMPORAL, NAMING)
+- SublationType enum (PRESERVE, NEGATE, ELEVATE, HOLD)
+- Shadow mappings from spec/h-gents/jung.md and contradiction.md
+- Known synthesis patterns (speed/quality, abstraction/concrete, etc.)
+- Rival patterns for common software development positions
+
+**Tests**: 41 new tests passing (total CLI: 100 tests)
+
+**Next**: G-gent Phase 1 implementation
+
+### Session: G-gent Phase 1 - Core Types + Tongue (2025-12-09)
+
+**Status**: ✅ COMPLETE
+
+**Deliverables** (~900 lines total):
+- `impl/claude/agents/g/__init__.py`: Module exports
+- `impl/claude/agents/g/types.py` (~450 lines): Core types
+- `impl/claude/agents/g/tongue.py` (~420 lines): Utilities + builder
+- `impl/claude/agents/g/_tests/test_types.py` (~300 lines)
+- `impl/claude/agents/g/_tests/test_tongue.py` (~450 lines)
+
+**Tests**: 51 passing, 1 skipped (YAML optional)
+
+**Core Types**:
+- `GrammarLevel`: SCHEMA, COMMAND, RECURSIVE
+- `GrammarFormat`: PYDANTIC, BNF, EBNF, LARK
+- `ParseResult`, `ExecutionResult`: Parse/execute result types
+- `ParserConfig`: P-gent config (strategy, confidence_threshold, repair_strategy)
+- `InterpreterConfig`: J-gent config (runtime, semantics, timeout_ms)
+- `ConstraintProof`: Verification tracking with `is_structural()` detection
+- `Example`, `CounterExample`: Test case types
+- `DomainAnalysis`: Domain extraction (entities, operations, constraints, lexicon)
+- `Tongue`: Frozen, hashable dataclass with JSON serialization
+
+**Tongue Features**:
+- Immutability (frozen=True), hashable (for L-gent cataloging)
+- JSON round-trip (to_dict/from_dict, to_json/from_json)
+- YAML support (optional, requires PyYAML)
+- Placeholders for P/J-gent integration (parse, execute, render - Phase 3)
+
+**Builder Pattern**:
+- `TongueBuilder`: Fluent interface (method chaining)
+- Parser strategy inference (PYDANTIC→pydantic, LARK→lark, COMMAND→regex)
+- Build-time validation (grammar/domain required)
+
+**Utilities**:
+- `validate_tongue()`: Structural validation (non-empty grammar/domain, constraints have structural proofs)
+- Templates: `create_schema_tongue()`, `create_command_tongue()`, `create_recursive_tongue()`
+- `evolve_tongue()`: Immutable versioning with dataclasses.replace
+- Serialization: `save_tongue_json()`, `load_tongue_json()`, `save_tongue_yaml()`, `load_tongue_yaml()`
+
+**Next**: Phase 2 (Grammar synthesis engine with reify() method)
 
 ### Session: Kairos CLI Integration (2025-12-09)
 
@@ -353,4 +428,5 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 ---
 
 *Last Updated: 2025-12-09*
+*Current Session: G-gent Phase 1 (Core Types + Tongue artifact)*
 *Hydrate sessions should be concise—archive old work, focus on now.*
