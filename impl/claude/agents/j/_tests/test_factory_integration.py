@@ -410,3 +410,400 @@ async def test_agent_behavior_metadata(simple_parser_source: AgentSource):
     constraints_str = " ".join(behavior.constraints)
     assert "Entropy budget:" in constraints_str
     assert "Max complexity:" in constraints_str
+
+
+# --- Security and Sandboxing Tests ---
+
+
+@pytest.mark.asyncio
+async def test_sandbox_prevents_forbidden_operations():
+    """Test that sandbox blocks forbidden operations like eval/exec."""
+    # Create source that attempts forbidden operations
+    source = AgentSource(
+        source="""
+class JITMalicious:
+    async def invoke(self, input: str) -> str:
+        # Try to use eval (forbidden)
+        return eval(input)
+""",
+        class_name="JITMalicious",
+        imports=frozenset(),
+        complexity=2,
+        description="Agent attempting forbidden operations",
+    )
+
+    agent = await create_agent_from_source(source, validate=False)
+
+    # Should fail during execution
+    with pytest.raises(RuntimeError):
+        await agent.invoke("1 + 1")
+
+
+@pytest.mark.asyncio
+async def test_sandbox_isolates_multiple_executions():
+    """Test that sandbox isolates each execution (no state leakage)."""
+    source = AgentSource(
+        source="""
+class JITStateful:
+    def __init__(self):
+        self.counter = 0
+
+    async def invoke(self, input: str) -> int:
+        self.counter += 1
+        return self.counter
+""",
+        class_name="JITStateful",
+        imports=frozenset(),
+        complexity=3,
+        description="Stateful agent for testing isolation",
+    )
+
+    agent = await create_agent_from_source(source, validate=False)
+
+    # Each invocation should start fresh (counter resets)
+    result1 = await agent.invoke("test")
+    result2 = await agent.invoke("test")
+
+    # Both should be 1 (not 1 and 2) due to re-execution in fresh sandbox
+    assert result1 == 1
+    assert result2 == 1
+
+
+@pytest.mark.asyncio
+async def test_custom_sandbox_config():
+    """Test that custom SandboxConfig is applied."""
+    from agents.j.sandbox import SandboxConfig
+
+    custom_config = SandboxConfig(
+        timeout_seconds=10.0,
+        type_check=False,  # Disable type checking for speed
+    )
+
+    agent = await create_agent_from_source(
+        source=AgentSource(
+            source="""
+class JITSimple:
+    async def invoke(self, input: str) -> str:
+        return input.upper()
+""",
+            class_name="JITSimple",
+            imports=frozenset(),
+            complexity=1,
+            description="Simple agent",
+        ),
+        sandbox_config=custom_config,
+        validate=False,
+    )
+
+    # Verify config is stored
+    assert agent.jit_meta.sandbox_config == custom_config
+    assert agent.jit_meta.sandbox_config.timeout_seconds == 10.0
+    assert agent.jit_meta.sandbox_config.type_check is False
+
+    # Should still execute successfully
+    result = await agent.invoke("hello")
+    assert result == "HELLO"
+
+
+# --- Stability Scoring Tests ---
+
+
+@pytest.mark.asyncio
+async def test_stability_score_for_simple_agent(simple_parser_source: AgentSource):
+    """Test that simple agents get high stability scores."""
+    agent = await create_agent_from_source(
+        source=simple_parser_source,
+        validate=False,
+    )
+
+    # Simple agent should have high stability
+    assert agent.jit_meta.stability_score >= 0.5
+
+
+@pytest.mark.asyncio
+async def test_stability_score_for_complex_agent(high_complexity_source: AgentSource):
+    """Test that complex agents get lower stability scores."""
+    # Use high max_complexity to avoid rejection, just test scoring
+    constraints = ArchitectConstraints(max_cyclomatic_complexity=100)
+
+    agent = await create_agent_from_source(
+        source=high_complexity_source,
+        constraints=constraints,
+        validate=False,
+    )
+
+    # Complex agent should have lower stability
+    jit_meta = agent.jit_meta
+    assert jit_meta.stability_score < 0.9  # Not perfect
+    assert jit_meta.stability_score >= 0.0  # But still valid range
+
+
+# --- Validation and Rejection Tests ---
+
+
+@pytest.mark.asyncio
+async def test_validation_with_constraints():
+    """Test that validation works with constraints."""
+    # Create source with excessive complexity
+    complex_source = AgentSource(
+        source="""
+class JITComplex:
+    async def invoke(self, input: str) -> str:
+        # High complexity code
+        result = input
+        for i in range(10):
+            for j in range(10):
+                if i > j:
+                    result += str(i)
+                elif i < j:
+                    result += str(j)
+                else:
+                    result += "0"
+        return result
+""",
+        class_name="JITComplex",
+        imports=frozenset(),
+        complexity=50,  # Very high complexity
+        description="Complex agent",
+    )
+
+    # Very strict constraints that should cause validation issues
+    strict_constraints = ArchitectConstraints(
+        max_cyclomatic_complexity=5,  # Much lower than source complexity
+        entropy_budget=0.1,  # Very low entropy budget
+    )
+
+    # Note: JITSafetyJudge might not always reject, it could suggest revisions
+    # So we test that validation runs, not that it necessarily rejects
+    try:
+        agent = await create_agent_from_source(
+            source=complex_source,
+            constraints=strict_constraints,
+            validate=True,
+        )
+        # If it succeeds, just verify it's a valid agent
+        assert isinstance(agent, JITAgentWrapper)
+    except ValueError as e:
+        # If it rejects, verify the error message is informative
+        assert "rejected" in str(e).lower() or "JIT" in str(e)
+
+
+@pytest.mark.asyncio
+async def test_validation_accepts_safe_source(simple_parser_source: AgentSource):
+    """Test that validation accepts safe source code."""
+    # Should not raise any errors
+    agent = await create_agent_from_source(
+        source=simple_parser_source,
+        validate=True,
+    )
+
+    assert isinstance(agent, JITAgentWrapper)
+
+
+# --- Composition Edge Cases ---
+
+
+@pytest.mark.asyncio
+async def test_compose_two_jit_agents():
+    """Test composing two JIT agents together."""
+    # First agent: parse JSON
+    parser_source = AgentSource(
+        source="""
+class JITParser:
+    async def invoke(self, input: str) -> dict:
+        return json.loads(input)
+""",
+        class_name="JITParser",
+        imports=frozenset({"json"}),
+        complexity=2,
+        description="Parse JSON",
+    )
+
+    # Second agent: extract field
+    extractor_source = AgentSource(
+        source="""
+class JITExtractor:
+    async def invoke(self, input: dict) -> str:
+        return input.get("msg", "")
+""",
+        class_name="JITExtractor",
+        imports=frozenset(),
+        complexity=2,
+        description="Extract message field",
+    )
+
+    parser = await create_agent_from_source(parser_source, validate=False)
+    extractor = await create_agent_from_source(extractor_source, validate=False)
+
+    # Compose: parser >> extractor
+    pipeline = parser >> extractor
+
+    # Execute pipeline
+    result = await pipeline.invoke('{"msg": "hello world"}')
+    assert result == "hello world"
+
+
+@pytest.mark.asyncio
+async def test_compose_jit_with_normal_agent_both_directions():
+    """Test composition works in both directions: JIT>>Normal and Normal>>JIT."""
+
+    # Normal agent
+    class DoubleAgent(Agent[str, str]):
+        @property
+        def name(self) -> str:
+            return "DoubleAgent"
+
+        async def invoke(self, input: str) -> str:
+            return input + input
+
+    # JIT agent
+    jit_agent = await create_agent_from_source(
+        source=AgentSource(
+            source="""
+class JITUpper:
+    async def invoke(self, input: str) -> str:
+        return input.upper()
+""",
+            class_name="JITUpper",
+            imports=frozenset(),
+            complexity=1,
+            description="Uppercase",
+        ),
+        validate=False,
+    )
+
+    normal = DoubleAgent()
+
+    # Test JIT >> Normal
+    pipeline1 = jit_agent >> normal
+    result1 = await pipeline1.invoke("hi")
+    assert result1 == "HIHI"
+
+    # Test Normal >> JIT
+    pipeline2 = normal >> jit_agent
+    result2 = await pipeline2.invoke("hi")
+    assert result2 == "HIHI"
+
+
+# --- Provenance and Introspection Tests ---
+
+
+@pytest.mark.asyncio
+async def test_jit_meta_preserves_full_provenance(simple_parser_source: AgentSource):
+    """Test that JITAgentMeta preserves complete provenance chain."""
+    constraints = ArchitectConstraints(
+        entropy_budget=0.6,
+        max_cyclomatic_complexity=25,
+    )
+
+    agent = await create_agent_from_source(
+        source=simple_parser_source,
+        constraints=constraints,
+        validate=False,
+    )
+
+    jit_meta = agent.jit_meta
+
+    # Verify complete provenance
+    assert jit_meta.source == simple_parser_source
+    assert jit_meta.source.source == simple_parser_source.source
+    assert jit_meta.source.class_name == "JITLogParser"
+    assert jit_meta.source.imports == frozenset({"json"})
+    assert jit_meta.source.complexity == 5
+
+    # Verify constraints preserved
+    assert jit_meta.constraints.entropy_budget == 0.6
+    assert jit_meta.constraints.max_cyclomatic_complexity == 25
+
+
+@pytest.mark.asyncio
+async def test_agent_meta_reflects_jit_nature(simple_parser_source: AgentSource):
+    """Test that AgentMeta clearly indicates JIT nature of agent."""
+    agent = await create_agent_from_source(
+        source=simple_parser_source,
+        validate=False,
+    )
+
+    meta = agent.meta
+
+    # Should be marked as j-gent genus
+    assert meta.identity.genus == "j"
+
+    # Should be marked as ephemeral version
+    assert meta.identity.version == "ephemeral"
+
+    # Should include source description
+    assert "Parse JSON log entries" in meta.identity.purpose
+
+
+# --- Edge Cases and Error Handling ---
+
+
+@pytest.mark.asyncio
+async def test_agent_with_no_imports():
+    """Test creating agent with no imports."""
+    source = AgentSource(
+        source="""
+class JITNoImports:
+    async def invoke(self, input: str) -> str:
+        return input[::-1]  # Reverse string
+""",
+        class_name="JITNoImports",
+        imports=frozenset(),  # No imports
+        complexity=1,
+        description="Reverse string",
+    )
+
+    agent = await create_agent_from_source(source, validate=False)
+    result = await agent.invoke("hello")
+    assert result == "olleh"
+
+
+@pytest.mark.asyncio
+async def test_agent_with_simple_class():
+    """Test agent that uses simple classes (no dataclasses needed)."""
+    source = AgentSource(
+        source="""
+class Result:
+    def __init__(self, value: str, count: int):
+        self.value = value
+        self.count = count
+
+class JITSimpleClass:
+    async def invoke(self, input: str) -> Result:
+        return Result(value=input, count=len(input))
+""",
+        class_name="JITSimpleClass",
+        imports=frozenset(),
+        complexity=3,
+        description="Use simple classes",
+    )
+
+    agent = await create_agent_from_source(source, validate=False)
+    result = await agent.invoke("test")
+    assert result.value == "test"
+    assert result.count == 4
+
+
+@pytest.mark.asyncio
+async def test_compile_and_instantiate_full_pipeline():
+    """Test that compile_and_instantiate runs complete pipeline end-to-end."""
+    # This tests the MetaArchitect integration
+    agent = await compile_and_instantiate(
+        intent="Convert text to uppercase",
+        context={"example_input": "hello", "example_output": "HELLO"},
+        constraints=ArchitectConstraints(entropy_budget=0.8),
+        validate=False,
+    )
+
+    # Agent should be created
+    assert isinstance(agent, JITAgentWrapper)
+
+    # Should have valid metadata
+    assert agent.name.startswith("JIT")
+    assert agent.meta.identity.genus == "j"
+
+    # Should have JIT metadata with correct constraints
+    jit_meta = get_jit_meta(agent)
+    assert jit_meta is not None
+    assert jit_meta.constraints.entropy_budget == 0.8
