@@ -31,26 +31,27 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 ## TL;DR
 
-**Status**: Working (uncommitted changes)
+**Status**: Working (uncommitted Phase 3 fixes)
 **Branch**: `main`
-**Latest Commit**: dd6e2ff - feat(g-gents): Implement G-gent Phase 1 (Core Types + Tongue artifact)
+**Latest Commit**: 449287d - feat(l-gents): Implement L-gent Phase 1 + G-gent catalog integration
 **Current State**:
-  - L-gent Phase 1: ✅ COMPLETE (Core Types + Registry - 12 tests passing)
-  - G-gent/L-gent Integration: ✅ COMPLETE (catalog_integration.py - 11 tests passing)
-  - G-gent Phase 3: 🚧 PARTIAL (P/J-gent integration - 7 tests failing due to test fixes needed)
-  - G-gent Phase 2: ✅ COMPLETE (Grammar synthesis engine with reify() - 100 tests passing)
-  - G-gent Phase 1: ✅ COMPLETE (Core Types + Tongue artifact - 51 tests passing)
-  - Tests: 322+ passing (33/41 in Phase 3-4 suite), 25 skipped
+  - L-gent Phase 1: ✅ COMMITTED (Core Types + Registry - 12 tests passing)
+  - G-gent/L-gent Integration: ✅ COMMITTED (catalog_integration.py - 11 tests passing)
+  - G-gent Phase 3: 🚧 UNCOMMITTED (P/J-gent integration - fixes needed for 11 failing tests)
+  - G-gent Phase 2: ✅ COMMITTED (Grammar synthesis - 100 tests passing)
+  - G-gent Phase 1: ✅ COMMITTED (Core Types + Tongue - 51 tests passing)
+  - Tests: 345+ passing (23 new L-gent/integration tests), 25 skipped
 
-**Known Issues**:
-  - Phase 3 tests need fixes: Pydantic parser validation, handler execution flow
-  - All L-gent and integration tests passing (23/23)
+**Known Issues** (Phase 3 - uncommitted):
+  - `execution_time_ms` parameter in ExecutionResult (ruff may have reverted fixes)
+  - Pydantic parser: "BaseModel cannot be instantiated directly"
+  - Template functions: missing `constraints` parameter, wrong `pure_functions_only`/`runtime` defaults
 
-**Active Plan**: **Finish G-gent Phase 3 fixes → Commit**
+**Active Plan**: **Fix G-gent Phase 3 issues → Commit**
 
 **Next Steps**:
-1. Fix remaining 7 Phase 3 test failures
-2. Commit G-gent Phases 1-4 + L-gent Phase 1
+1. Fix 11 Phase 3 test failures (parser.py, interpreter.py, tongue.py templates)
+2. Commit G-gent Phase 3-4 files
 3. CLI Phase 1: Intent Layer (~500 lines, 25 tests)
 
 ---
@@ -246,9 +247,9 @@ history = await registry.catalog_history(limit=5)
 
 **Next**: G-gent Phase 5-7 (F-gent, T-gent, W-gent integration)
 
-### Session: G-gent Phase 3 Fixes + Partial Commit (2025-12-09 Part 2)
+### Session: G-gent Phase 3 Fixes + L-gent/Catalog Commit (2025-12-09 Part 2)
 
-**Status**: 🚧 IN PROGRESS - Fixed parameter mismatches, 33/41 tests passing
+**Status**: ✅ PARTIAL COMMIT - L-gent Phase 1 + catalog integration committed (23 tests)
 
 **Work Done**:
 - Fixed `ParseResult` parameter issues (`ast=` not `value=`, removed `strategy=`)
@@ -264,11 +265,23 @@ history = await registry.catalog_history(limit=5)
 - G-gent Phase 3 pipeline: 14/18 ✅ (78%)
 - **Total**: 33/41 passing (80%)
 
-**Remaining Issues** (7 failing tests):
-1. Pydantic schema parsing: "Result is not instance of BaseModel" errors
-2. Handler execution flow needs investigation
+**Remaining Issues** (11 failing tests after ruff formatting):
+1. `execution_time_ms` parameter still appearing (ruff may have reverted sed changes)
+2. Pydantic schema parsing: "BaseModel cannot be instantiated directly" errors
+3. `create_command_tongue()` missing `constraints` parameter
+4. `create_schema_tongue()` `pure_functions_only` should be True
+5. `create_recursive_tongue()` runtime should be "sandboxed" not "python"
 
-**Next**: Fix remaining 7 test failures → Commit
+**Committed** (Commit 449287d):
+- ✅ L-gent Phase 1: types.py, registry.py, _tests/test_registry.py (12 tests)
+- ✅ G-gent catalog: catalog_integration.py, _tests/test_catalog_integration.py (11 tests)
+
+**Uncommitted** (Phase 3 files - 11 failing tests):
+- parser.py, interpreter.py, renderer.py (execution fixes)
+- tongue.py (template function signatures)
+- _tests/test_phase3_pipeline.py, _tests/test_tongue.py
+
+**Next Session**: Fix Phase 3 issues and commit remaining G-gent files
 
 ### Session: G-gent Phase 4 + L-gent Phase 1 (2025-12-09 Part 1)
 
