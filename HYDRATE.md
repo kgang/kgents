@@ -4,29 +4,189 @@
 
 ## TL;DR
 
-**Status**: UNCOMMITTED CHANGES | R-gents (Refinery) Specification Complete
+**Status**: UNCOMMITTED CHANGES | T-gents Phase 7 Complete (50%)
 **Branch**: `main`
 **Latest Commit**: 6f63dd3 - docs(spec): Cross-pollinate Ψ-gents with B-gents ValueTensor
-**This Session**:
-  - **R-gents Spec**: New agent genus for prompt optimization (DSPy/TextGrad/OPRO)
-  - **F-gent Integration**: Added Phase 4.5 (Optimize) to Forge Loop
-  - **L-gent Integration**: Added optimization metadata to CatalogEntry
-  - **Key Insight**: Optimization is an endofunctor `R: Agent[A,B] → Agent'[A,B]` where `Loss(Agent') < Loss(Agent)`
+**This Session**: T-gents Phase 7 (Cross-Genus Integration) - E-gent + J-gent Complete
+  - **E-gent ✅**: evolution_integration.py - Law validation (~293 lines)
+  - **J-gent ✅**: t_integration.py - Template-based tools (~500 lines)
+  - **F-gent 🔄**: Spec-level integration via R-gent (deferred)
+  - **B-gent 🔄**: Spec-level integration via R-gent (deferred)
+  - **I-gent ⏸️**: No I-gent implementation yet (deferred)
+  - **W-gent ⏸️**: Basic ToolTrace integration exists (deferred)
 **Uncommitted Files**:
-  - `spec/r-gents/README.md` (NEW - ~450 lines, full R-gent specification)
-  - `spec/f-gents/forge.md` (UPDATED - Phase 4.5 Optimize via R-gent)
-  - `spec/l-gents/catalog.md` (UPDATED - optimization metadata fields)
-  - `spec/README.md` (UPDATED - R-gent entry + cross-pollination)
-  - `spec/o-gents/README.md` (from prior session - O-gents v2.0)
-  - `spec/b-gents/banker.md` (from prior session - VoI economics)
-  - `impl/claude/agents/t/orchestration.py` (from Phase 6)
-  - `impl/claude/agents/t/_tests/test_orchestration.py` (from Phase 6)
-  - `impl/claude/agents/t/__init__.py` (exports updated for Phase 6)
-  - `impl/claude/agents/t/permissions.py` (from Phase 5)
-  - `impl/claude/agents/t/_tests/test_permissions.py` (from Phase 5)
-  - `impl/claude/agents/t/executor.py` (SecureToolExecutor from Phase 5)
+  - `impl/claude/agents/j/t_integration.py` (NEW - ~500 lines, J+T integration)
+  - `impl/claude/agents/j/__init__.py` (UPDATED - exports J+T)
+  - `spec/r-gents/README.md` (NEW - ~450 lines, R-gent spec)
+  - `spec/f-gents/forge.md` (UPDATED - R-gent optimization)
+  - `spec/l-gents/catalog.md` (UPDATED - optimization metadata)
+  - `spec/README.md` (UPDATED - R-gent + cross-pollination)
+  - `spec/o-gents/README.md`, `spec/b-gents/banker.md` (from prior)
+  - `impl/claude/agents/t/orchestration.py` + tests (Phase 6)
+  - `impl/claude/agents/t/permissions.py` + tests (Phase 5)
+  - `impl/claude/agents/t/executor.py` (SecureToolExecutor)
+  - `impl/claude/agents/t/__init__.py` (exports updated)
   - `HYDRATE.md` (this file)
-**Next**: Implement R-gent foundation OR commit spec updates
+**Next**: Write J+T integration tests OR commit Phase 7 work
+
+---
+
+## What Just Happened: T-gents Phase 7 (Cross-Genus Integration)
+
+### Session Overview (2025-12-09 Night - Phase 2)
+
+Working on T-gents Phase 7: connecting T-gents (Tools) with all other agent genera to enable cross-pollination and ecosystem integration.
+
+### Phase 7 Target Integrations
+
+From spec/t-gents/tool-use.md Phase 7:
+
+| Agent Genus | Integration Goal | Status |
+|-------------|-----------------|--------|
+| **E-gent** | Tool-augmented evolution + law validation | ✅ COMPLETE |
+| **F-gent** | Tool search before forge + R-gent optimization | 🔄 SPEC-LEVEL |
+| **B-gent** | Hypothesis validation tools + VoI optimization | 🔄 SPEC-LEVEL |
+| **J-gent** | Template-based tool generation | 🔄 IN PROGRESS |
+| **I-gent** | Tool execution visualization | ⏸️ DEFERRED |
+| **W-gent** | Live tool monitoring | ⏸️ DEFERRED |
+
+### E-gent Integration (COMPLETE ✅)
+
+**File**: `impl/claude/agents/t/evolution_integration.py` (~293 lines)
+
+**Architecture**:
+```
+E-gent Evolution Pipeline:
+  Ground >> Hypothesis >> Experiment >> Judge >> Sublate >> Incorporate
+           ↓
+  T-gent Law Validation:
+    - Associativity: (f >> g) >> h ≡ f >> (g >> h)
+    - Identity: id >> f ≡ f ≡ f >> id
+    - Composition correctness
+```
+
+**Key Functions**:
+- `validate_evolution_pipeline()`: Main entry point for law validation
+- `validate_evolution_stages_from_pipeline()`: Extract stages from pipeline
+- `evolve_with_law_validation()`: Wrap evolution with T-gent validation
+
+**Cross-Pollination Value**:
+- Mathematical confidence in E-gent pipeline correctness
+- Catch composition law violations early
+- Full categorical verification of evolution stages
+
+### F-gent Integration (SPEC-LEVEL 🔄)
+
+**Via R-gent Optimization**:
+- F-gent Forge Loop now includes Phase 4.5: Optimize (via R-gent)
+- Tool search before forge: Query L-gent catalog for existing tools
+- Optimization workflow: `Prototype → R-gent → Optimized → L-gent`
+
+**Files Modified**:
+- `spec/f-gents/forge.md`: Added Phase 4.5 Optimize
+- Integration deferred until R-gent implementation
+
+### B-gent Integration (SPEC-LEVEL 🔄)
+
+**Via R-gent VoI Optimization**:
+- R-gents respect B-gent budget constraints for optimization
+- ROI check: `if projected_value < optimization_cost: SKIP`
+- Value of Information framework guides optimization decisions
+
+**Files Modified**:
+- `spec/b-gents/banker.md`: Part III - Value of Information
+- Integration deferred until R-gent implementation
+
+### J-gent Integration (COMPLETE ✅)
+
+**File**: `impl/claude/agents/j/t_integration.py` (~500 lines)
+
+**Architecture**:
+```
+Natural Language Intent
+    ↓
+J-gent MetaArchitect (compile)
+    ↓
+AgentSource (validated Python)
+    ↓
+JITToolWrapper[A,B] (sandboxed execution)
+    ↓
+Tool[A,B] (composable via >>)
+```
+
+**Key Functions**:
+- `compile_tool_from_intent()`: Natural language → Tool[A,B]
+- `compile_tool_from_template()`: Template + params → Tool[A,B]
+- `create_tool_from_source()`: AgentSource → Tool[A,B]
+
+**Built-in Templates**:
+- `JSON_FIELD_EXTRACTOR`: Extract field from JSON
+- `TEXT_TRANSFORMER`: Transform text (upper, lower, strip, etc.)
+- `FILTER_TEMPLATE`: Filter items by condition
+
+**Cross-Pollination Value**:
+- Rapid tool creation from natural language
+- Reusable tool templates with parameterization
+- Sandboxed execution for security
+- Full categorical composition with existing tools
+
+**Example Usage**:
+```python
+from agents.j import compile_tool_from_intent
+
+# Generate tool from intent
+tool = await compile_tool_from_intent(
+    "Extract error field from JSON",
+    input_type=str,
+    output_type=str,
+)
+
+# Use tool
+result = await tool.invoke('{"error": "Failed"}')
+
+# Compose with other tools
+pipeline = parse >> tool >> log
+```
+
+### I-gent & W-gent Integrations (DEFERRED ⏸️)
+
+**I-gent (Visualization)**:
+- Goal: Render tool call trees, composition graphs
+- Status: Deferred until I-gent implementation exists
+
+**W-gent (Monitoring)**:
+- Goal: Live streaming of tool traces
+- Status: W-gent ToolTrace already used in executor.py
+- Full integration deferred
+
+### Integration Summary
+
+**Complete (Implementation)**:
+- ✅ E-gent: Full law validation integration (~293 lines)
+- ✅ J-gent: Template-based tool generation (~500 lines)
+
+**Complete (Spec-Level)**:
+- 🔄 F-gent: Tool search + optimization (spec updated, R-gent dependent)
+- 🔄 B-gent: VoI-guided optimization (spec updated, R-gent dependent)
+
+**Deferred**:
+- ⏸️ I-gent: Tool visualization (no I-gent implementation yet)
+- ⏸️ W-gent: Live monitoring (basic integration exists via ToolTrace)
+
+### Phase 7 Status
+
+**Completion**: ~50% (2/6 full implementations, 2/6 spec-level, 2/6 deferred)
+
+**Files Created**:
+- `impl/claude/agents/t/evolution_integration.py` (~293 lines, E-gent)
+- `impl/claude/agents/j/t_integration.py` (~500 lines, J-gent)
+- `impl/claude/agents/j/__init__.py` (exports updated)
+
+**Next Actions**:
+1. Write tests for J-gent tool integration
+2. Wait for R-gent implementation to activate F/B-gent integrations
+3. Implement I-gent visualization once I-gent exists
+4. Enhance W-gent integration beyond ToolTrace
 
 ---
 
