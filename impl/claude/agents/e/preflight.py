@@ -12,7 +12,7 @@ from __future__ import annotations
 import ast
 import subprocess
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
@@ -29,6 +29,7 @@ class PreFlightReport:
     Indicates whether module is ready for evolution and what
     issues need attention.
     """
+
     can_evolve: bool
     blocking_issues: tuple[str, ...] = ()
     warnings: tuple[str, ...] = ()
@@ -57,6 +58,7 @@ class PreFlightReport:
 @dataclass(frozen=True)
 class PreFlightInput:
     """Input for pre-flight checking."""
+
     module: CodeModule
 
 
@@ -97,7 +99,6 @@ class PreFlightChecker(Agent[PreFlightInput, PreFlightReport]):
     async def invoke(self, input: PreFlightInput) -> PreFlightReport:
         """Run pre-flight checks on a module."""
         module = input.module
-        issues: list[str] = []
         warnings: list[str] = []
         recommendations: list[str] = []
 
@@ -198,7 +199,14 @@ class PreFlightChecker(Agent[PreFlightInput, PreFlightReport]):
         """
         try:
             result = subprocess.run(
-                [sys.executable, "-m", "mypy", str(path), "--strict", "--no-error-summary"],
+                [
+                    sys.executable,
+                    "-m",
+                    "mypy",
+                    str(path),
+                    "--strict",
+                    "--no-error-summary",
+                ],
                 capture_output=True,
                 text=True,
                 timeout=10,
@@ -229,34 +237,20 @@ class PreFlightChecker(Agent[PreFlightInput, PreFlightReport]):
         for node in ast.walk(tree):
             # Classes without proper initialization
             if isinstance(node, ast.ClassDef):
-                has_init = any(
-                    isinstance(n, ast.FunctionDef) and n.name == "__init__"
-                    for n in node.body
-                )
-
-                has_dataclass = any(
-                    isinstance(d, ast.Name) and d.id == "dataclass"
-                    for d in node.decorator_list
-                )
-
                 # Check if class body is just 'pass'
-                is_stub = (
-                    len(node.body) == 1 and
-                    isinstance(node.body[0], ast.Pass)
-                )
+                is_stub = len(node.body) == 1 and isinstance(node.body[0], ast.Pass)
 
                 if is_stub:
                     issues.append(f"Class {node.name} is a stub (only contains 'pass')")
 
             # Functions with just 'pass'
             elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                is_stub = (
-                    len(node.body) == 1 and
-                    isinstance(node.body[0], ast.Pass)
-                )
+                is_stub = len(node.body) == 1 and isinstance(node.body[0], ast.Pass)
 
                 if is_stub and not node.name.startswith("_"):
-                    issues.append(f"Function {node.name} is a stub (only contains 'pass')")
+                    issues.append(
+                        f"Function {node.name} is a stub (only contains 'pass')"
+                    )
 
         return issues
 
@@ -296,7 +290,9 @@ class PreFlightChecker(Agent[PreFlightInput, PreFlightReport]):
 
         # Add comprehension and loop variables to defined names
         for node in ast.walk(tree):
-            if isinstance(node, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)):
+            if isinstance(
+                node, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)
+            ):
                 for generator in node.generators:
                     if isinstance(generator.target, ast.Name):
                         defined_names.add(generator.target.id)
@@ -317,21 +313,99 @@ class PreFlightChecker(Agent[PreFlightInput, PreFlightReport]):
             if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load):
                 used_names.add(node.id)
 
-        # Builtins to exclude
+        # Builtins to exclude - comprehensive list of Python built-in names
         builtins = {
-            'int', 'str', 'float', 'bool', 'list', 'dict', 'tuple', 'set',
-            'None', 'True', 'False', 'print', 'len', 'range', 'enumerate',
-            'zip', 'map', 'filter', 'any', 'all', 'isinstance', 'type',
-            'Exception', 'ValueError', 'TypeError', 'KeyError', 'IndexError',
+            # Basic types
+            "int",
+            "str",
+            "float",
+            "bool",
+            "list",
+            "dict",
+            "tuple",
+            "set",
+            "frozenset",
+            "bytes",
+            "bytearray",
+            "complex",
+            "object",
+            # Literals
+            "None",
+            "True",
+            "False",
+            "Ellipsis",
+            # Common functions
+            "print",
+            "len",
+            "range",
+            "enumerate",
+            "zip",
+            "map",
+            "filter",
+            "any",
+            "all",
+            "isinstance",
+            "type",
+            "id",
+            "hash",
+            "repr",
+            "str",
+            "abs",
+            "sum",
+            "min",
+            "max",
+            "sorted",
+            "reversed",
+            # Type checking and introspection
+            "hasattr",
+            "getattr",
+            "setattr",
+            "delattr",
+            "dir",
+            "vars",
+            "callable",
+            "classmethod",
+            "staticmethod",
+            "property",
+            # Object construction and manipulation
+            "super",
+            "iter",
+            "next",
+            "slice",
+            "compile",
+            "exec",
+            "eval",
+            "format",
+            "input",
+            "open",
+            "round",
+            # Common exceptions
+            "Exception",
+            "ValueError",
+            "TypeError",
+            "KeyError",
+            "IndexError",
+            "AttributeError",
+            "RuntimeError",
+            "NotImplementedError",
+            "ImportError",
+            "SyntaxError",
+            "TimeoutError",
+            "FileNotFoundError",
+            "StopIteration",
+            "AssertionError",
+            "OSError",
         }
 
         # Find potentially missing imports
         missing = []
         for name in used_names:
-            if (name not in imported_names and
-                name not in defined_names and
-                name not in builtins and
-                not name.startswith('_')):
+            if (
+                name not in imported_names
+                and name not in defined_names
+                and name not in builtins
+                and not name.startswith("_")
+            ):
                 missing.append(name)
 
         return missing[:5]  # Limit to first 5
@@ -347,12 +421,12 @@ class PreFlightChecker(Agent[PreFlightInput, PreFlightReport]):
         incomplete = []
 
         # Pattern 1: Unclosed brackets
-        pattern1 = r'\b[A-Z]\w*\[\s*(?:[A-Z]\w*\s*,\s*)*$'
+        pattern1 = r"\b[A-Z]\w*\[\s*(?:[A-Z]\w*\s*,\s*)*$"
         matches = re.findall(pattern1, source, re.MULTILINE)
         incomplete.extend(matches)
 
         # Pattern 2: Trailing comma in generic
-        pattern2 = r'\b([A-Z]\w*\[[A-Z]\w*\s*,\s*\])'
+        pattern2 = r"\b([A-Z]\w*\[[A-Z]\w*\s*,\s*\])"
         matches = re.findall(pattern2, source)
         incomplete.extend(matches)
 
