@@ -217,6 +217,96 @@ DialecticAgent[T, A, S] = Compose(
 
 ---
 
+## H-gent Composition
+
+The three traditions compose to form complete introspection pipelines:
+
+### Pipeline Patterns
+
+```
+Hegel → Lacan:  "Is this synthesis in the Imaginary?"
+Lacan → Jung:   "What shadow does this register structure create?"
+Jung → Hegel:   "Can we synthesize persona and shadow?"
+```
+
+### Full Introspection Pipeline
+
+```python
+class FullIntrospection(Agent[IntrospectionInput, IntrospectionOutput]):
+    """
+    Complete H-gent introspection pipeline.
+
+    Flow:
+    1. Hegel: Dialectic synthesis
+    2. Lacan: Register analysis of synthesis
+    3. Jung: Shadow analysis of register structure
+    4. Meta-synthesis: What do all perspectives reveal together?
+    """
+```
+
+**Output includes:**
+- `dialectic: DialecticOutput` — Hegel's synthesis
+- `register_analysis: LacanOutput` — Where the synthesis lives
+- `shadow_analysis: JungOutput` — What the synthesis excludes
+- `meta_notes: str` — Integration recommendation
+
+### Collective Shadow Analysis
+
+Beyond individual agent shadow, H-gents examine **system-level shadow**:
+
+```python
+class CollectiveShadowAgent(Agent[CollectiveShadowInput, CollectiveShadow]):
+    """
+    System-level shadow analysis.
+
+    Examines shadow that emerges from agent composition—
+    content that no individual agent owns but the system excludes.
+    """
+```
+
+---
+
+## D-gent Integration (Persistent Dialectic)
+
+H-gents integrate with D-gents for persistent state:
+
+```python
+class PersistentDialecticAgent(Agent[DialecticInput, DialecticOutput]):
+    """
+    D-gent-backed dialectic synthesis.
+
+    Wraps HegelAgent with persistent history via PersistentAgent.
+
+    Benefits:
+    - History of all dialectic operations across sessions
+    - Pattern analysis: recurring tensions, synthesis types
+    - Auditability: full lineage tracking
+    - Temporal analysis: when tensions emerge/resolve
+    """
+```
+
+### Query Capabilities
+
+```python
+async def get_history() -> list[DialecticRecord]: ...
+async def get_recent_tensions(limit: int = 10) -> list[DialecticRecord]: ...
+async def get_productive_tensions() -> list[DialecticRecord]: ...
+async def get_synthesis_count() -> dict[str, int]: ...
+```
+
+### DialecticMemoryAgent
+
+```python
+class DialecticMemoryAgent(Agent[str, list[DialecticRecord]]):
+    """
+    Query agent for dialectic history.
+
+    Enables searching past tensions by thesis/antithesis content.
+    """
+```
+
+---
+
 ## Operational Specifications
 
 | Document | Purpose |
@@ -224,6 +314,7 @@ DialecticAgent[T, A, S] = Compose(
 | [contradiction.md](contradiction.md) | How tensions are detected |
 | [sublation.md](sublation.md) | How tensions resolve |
 | [kairos.md](kairos.md) | The art of timing |
+| [composition.md](composition.md) | H-gent pipeline composition |
 
 ### Tradition-Specific Specifications
 
