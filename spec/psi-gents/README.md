@@ -1,193 +1,239 @@
-# Ψ-gents: Psychopomp Agents
+# Ψ-gents: The Morphic Engine (Psychopomp)
 
-> The guide between registers; projection that enables transformation.
+> **Core Concept**: The Universal Translator of Semantic Topologies.
+> **Role**: Functor between the unknown (Novelty) and the known (Archetype).
 
-**Status**: Specification v1.1 (Refactored for principle compliance)
+**Status**: Specification v2.0 (The Isomorphism Update)
 
 ---
 
 ## Philosophy
 
-Ψ-gents navigate liminal spaces between psychological registers. They **build upon** existing kgents primitives rather than re-implementing them:
+The Ψ-gent is not a validator pipeline—it is a **geometric transformation engine** that contorts novel problems into familiar metaphorical spaces, solves them there, and reifies solutions back.
 
-| Paradigm | Status | Relationship |
-|----------|--------|--------------|
-| **MHC** | NOVEL | Complexity stratification |
-| **Jungian Shadow** | DELEGATES | → [H-jung](../h-gents/jung.md) |
-| **Lacanian RSI** | DELEGATES | → [H-lacan](../h-gents/lacan.md) + [O-gent BorromeanObserver](../o-gents/) |
-| **Axiological Types** | NOVEL | Value-type system |
+### The Semantic Homomorphism
 
-**Key Insight**: Ψ-gents are a **thin orchestration layer**, not a reimplementation of H-gents.
+Let $P$ be the **Problem Space** (high entropy, novel, unstructured).
+Let $M$ be the **Metaphor Space** (low entropy, familiar, structured).
 
----
+The Ψ-gent constructs:
+1. **Φ (Project)**: $P \to M$
+2. **Σ (Solve)**: Operation within $M$
+3. **Φ^{-1}$ (Reify)**: $M \to P$
 
-## The Holonic Projection
+**The Contortion Formula**:
+$$S_{solution} = \Phi^{-1}(\Sigma(\Phi(P_{input})))$$
 
-From `principles.md`: Problems become tractable via isomorphic projection.
+**The Distortion Metric**:
+$$\Delta = | P_{input} - \Phi^{-1}(\Phi(P_{input})) |$$
 
-```
-HolonicProjector:
-    project(problem, source_puppet, target_puppet) → ProjectedProblem
-        encoded = target_puppet.encode(source_puppet.decode(problem))
-
-    solve_and_extract(projected) → Solution
-        solution = solve_in(projected.projected, target_puppet)
-        return projection.inverse().apply(solution)
-```
+Goal: Minimize $\Delta$ while maximizing tractability of $\Sigma$.
 
 ---
 
-## Paradigm 1: MHC (Model of Hierarchical Complexity)
+## The 4-Axis Tensor
 
-**NOVEL** — not covered elsewhere in kgents.
+Instead of a linear pipeline, Ψ-gents operate as a **coordinate system**:
 
-Michael Commons' MHC: stratified complexity from concrete to cross-paradigmatic.
-
-```
-MHCLevel (IntEnum):
-    CONCRETE = 7        # Operations on concretes
-    ABSTRACT = 8        # Operations on abstractions
-    FORMAL = 9          # Systematic logical reasoning
-    SYSTEMATIC = 10     # Systems of formal operations
-    METASYSTEMATIC = 11 # Operations on systems
-    PARADIGMATIC = 12   # Operations across paradigms
-    CROSS_PARADIGMATIC = 13
-
-MHCRouter: Task → MHCLevel
-    indicators = analyze(task)  # abstraction_depth, system_count, etc.
-    return min(max(indicators), 13)
-    # Under-level: miss nuance | Over-level: waste resources
-
-MHCStratifiedAgent: Task → Result
-    level = MHCRouter(task)
-    agent = level_agents[level]  # CONCRETE→ConcreteOp, FORMAL→Logician, etc.
-    return agent(task)
-
-VerticalDescent: AbstractConcept → GroundedConcept
-    # Descend MHC levels until grounded
-    while current_level > target_level:
-        current = lower_one_level(current)
-    return GroundedConcept(abstract, current, trace)
-```
+| Axis | Paradigm | Role | Delegates To |
+|:---:|:---:|:---|:---|
+| **Z** | MHC | **Resolution**: Abstraction altitude | NOVEL |
+| **X** | Jungian | **Parallax**: Shadow rotation | [H-jung](../h-gents/jung.md) |
+| **Y** | Lacanian | **Topology**: Knot integrity | [H-lacan](../h-gents/lacan.md) |
+| **T** | Axiological | **Cost**: Value exchange rates | NOVEL |
 
 ---
 
-## Paradigm 2: Jungian Shadow → H-jung
+## The MorphicFunctor
 
-**DELEGATES** to `h-gents/jung.md`. Ψ-gents adds the **BicameralAgent** wrapper:
+Replaces the linear `HolonicProjector`. This is a **Functor** in the C-gents sense—preserves composition while mapping between categories.
 
 ```
-BicameralAgent[Task, SynthesizedResult]:
-    ego: Agent[Task, Position]
-    shadow: Agent[Task, Position]  # from H-jung.ShadowGenerator
-    integrator: Agent[(Position, Position), Synthesis]  # IS Sublate
+MorphicFunctor[Source, Target]:
+    resolution: MHCLevel
+    exchange_rates: AxiologicalLossMatrix
 
-    invoke(task):
-        ego_pos, shadow_pos = parallel(ego(task), shadow(task))
-        return integrator((ego_pos, shadow_pos))
+    project(entity: Source) → Target:
+        simplified = VerticalDescent.at_level(entity, resolution)
+        return MetaphorLibrary.closest_match(simplified, Target)
+
+    inverse(result: Result[Target]) → Result[Source]:
+        return Contextualizer.reify(result, original_trace)
+
+    distortion() → float:
+        return |source - inverse(project(source))|
 ```
 
-The shadow generation logic lives in `h-gents/jung.md`.
-The integration logic IS `Sublate` from bootstrap — no new code needed.
+**Functor Laws** (from `c-gents/functors.md`):
+- Identity: `Φ(id) = id`
+- Composition: `Φ(g ∘ f) = Φ(g) ∘ Φ(f)`
 
 ---
 
-## Paradigm 3: Lacanian RSI → H-lacan + O-gents
+## Axis Z: MHC (Resolution)
 
-**DELEGATES** to:
-- `h-gents/lacan.md`: Register analysis, slippage detection
-- `o-gents/`: BorromeanObserver for runtime validation
-
-Ψ-gents adds composition wrappers:
+**NOVEL** — Vertical scaling of abstraction.
 
 ```
-RSIValidator: AgentOutput → BorromeanKnot
-    # Compose H-lacan analysis with O-gent observation
-    analysis = H_lacan.register_map(output)
-    health = O_gent.borromean_observe(output)
-    return BorromeanKnot(analysis, health)
+ResolutionScaler: Task → ScaledTask
+    complexity = measure(task)
 
-HallucinationDetector: AgentOutput → HallucinationReport
-    knot = RSIValidator(output)
-    # Hallucination signature: Symbolic OK + Real FAIL
-    if knot.symbolic.valid and not knot.real.valid:
-        return HallucinationReport(is_hallucination=True,
-            type="symbolic_real_mismatch")
-    return HallucinationReport(is_hallucination=False)
+    if complexity > TRACTABILITY_THRESHOLD:
+        return mhc_abstract(task)   # Blur details, find isomorphism
+    if is_vague(task):
+        return mhc_concretize(task) # Sharpen, add specifics
+
+    return task
 ```
+
+High MHC = blur details to find structural isomorphisms.
+Low MHC = sharpen to ground abstractions.
 
 ---
 
-## Paradigm 4: Axiological Type Theory
+## Axis X: Jungian Parallax (Rotation)
 
-**NOVEL** — not covered elsewhere in kgents.
-
-Values have types. Cross-domain operations require explicit conversion (with loss).
+**DELEGATES** to `h-gents/jung.md`.
 
 ```
-ValueDomain (Enum):
-    EPISTEMIC   # truth, belief, certainty
-    AESTHETIC   # beauty, elegance, harmony
-    ETHICAL     # right action, welfare, justice
-    PRAGMATIC   # effectiveness, utility
-    HEDONIC     # pleasure, satisfaction
+DialecticalRotator: MorphicFunctor → Stability
+    thesis = functor.project(task)
+    antithesis = H_jung.ShadowGenerator(thesis)
 
-Value[D]:
-    domain: ValueDomain
-    magnitude: float  # 0.0-1.0
-    polarity: "positive" | "negative"
+    # If solution fails in Shadow context, metaphor is fragile
+    if not solve_in_shadow(antithesis):
+        raise MetaphorCollapseError("Ignores negative externalities")
+```
 
-    __add__(other):
-        if self.domain != other.domain:
-            raise ValueTypeError("Use ValuationMorphism")
-        return Value(domain, min(1.0, self.magnitude + other.magnitude))
+The Shadow tests if the metaphor survives inversion.
 
-ValuationMorphism[A, B]:
+---
+
+## Axis Y: Lacanian Topology (Consistency)
+
+**DELEGATES** to `h-gents/lacan.md` + `o-gents/`.
+
+```
+TopologicalValidator: (Source, TargetProjection) → KnotStatus
+    knot = H_lacan.analyze(projection)
+
+    # Symbolic claims must match Real execution
+    if knot.symbolic != knot.real:
+        return SlippageWarning("Map ≠ Territory")
+
+    return ValidKnot()
+```
+
+Hallucination = Symbolic OK, Real FAIL.
+
+---
+
+## Axis T: Axiological Cost (Exchange)
+
+**NOVEL** — Economic system of meaning.
+
+```
+AxiologicalExchange: (SourceValues, TargetValues) → LossReport
+    if source.EPISTEMIC > target.EPISTEMIC:
+        report.accuracy_loss = delta
+    if target.PRAGMATIC > source.PRAGMATIC:
+        report.utility_gain = delta
+
+    return report
+
+ValueDomain: EPISTEMIC | AESTHETIC | ETHICAL | PRAGMATIC | HEDONIC
+
+ValuationMorphism[A → B]:
     loss_matrix = {
-        (PRAGMATIC, EPISTEMIC): 0.1,  # cheap
-        (AESTHETIC, ETHICAL): 0.5,    # expensive
+        (PRAGMATIC, EPISTEMIC): 0.1,   # cheap
+        (AESTHETIC, ETHICAL): 0.5,     # expensive
+        (ETHICAL, PRAGMATIC): 0.4,     # morally costly
+    }
+```
+
+Every metaphor trades values. Make the trade explicit.
+
+---
+
+## The Grand Synthesis: Search Loop
+
+Not a pipeline—a **search** for minimum-distortion transformation.
+
+```
+PsychopompAgent: NovelProblem → Solution
+    # 1. Analyze topology
+    complexity = MHC.analyze(problem)
+
+    # 2. Fetch candidate metaphors
+    candidates = MetaphorLibrary.fetch(problem)
+    # e.g., [MilitaryStrategy, Thermodynamics, BiologicalSystem]
+
+    best = None
+    min_Δ = ∞
+
+    # 3. Search for best transformation
+    for metaphor in candidates:
+        functor = MorphicFunctor(problem, metaphor)
+
+        # A. Optimize resolution (Z-axis)
+        functor.resolution = ResolutionScaler.optimize(problem)
+
+        # B. Check dialectical stability (X-axis)
+        if not DialecticalRotator.is_stable(functor):
+            continue  # Metaphor too fragile
+
+        # C. Project & Solve
+        projected = functor.project(problem)
+        proxy_solution = metaphor.solve(projected)
+
+        # D. Reify
+        real_solution = functor.inverse(proxy_solution)
+
+        # E. Validate topology (Y-axis) & cost (T-axis)
+        TopologicalValidator.check(problem, projected)
+        Δ = AxiologicalExchange.measure_loss(problem, real_solution)
+
+        if Δ < min_Δ:
+            min_Δ = Δ
+            best = real_solution
+
+    return best
+```
+
+---
+
+## MetaphorLibrary
+
+The "puppet store" of semantic spaces:
+
+```
+MetaphorLibrary:
+    puppets = {
+        "MilitaryStrategy": {operations: [flank, siege, retreat], ...},
+        "Thermodynamics": {operations: [heat_flow, entropy, equilibrium], ...},
+        "BiologicalSystem": {operations: [growth, apoptosis, immunity], ...},
+        "GameTheory": {operations: [nash_equilibrium, pareto, minimax], ...},
+        "HeroJourney": {operations: [call, threshold, abyss, return], ...},
     }
 
-    convert(value: Value[A]) → Value[B]:
-        loss = loss_matrix.get((A, B), 0.3)
-        return Value(B, value.magnitude * (1 - loss))
-
-AxiologicalAgent: Task → ValuedResult
-    result = core_agent(task)
-    values = {domain: assess(task, result) for domain in ValueDomain}
-    violations = check_value_type_constraints(values)
-    return ValuedResult(result, values, violations)
+    fetch_candidates(problem) → list[Metaphor]:
+        return rank_by_structural_similarity(problem, puppets)
 ```
 
 ---
 
-## The Grand Synthesis: PsychopompAgent
+## Example: Organizational Refactor
 
-```
-PsychopompAgent: Task → PsychopompResult
-    # Compose the four paradigms
+**Problem**: CEO restructures failing company (high entropy, social/systemic).
 
-    1. level = MHCRouter(task)
-
-    2. synthesis = BicameralAgent(task.with_level(level))
-       # Uses H-jung primitives
-
-    3. knot = RSIValidator(synthesis)
-       # Uses H-lacan + O-gent primitives
-       if not knot.intact: return Failure(knot.weakest_ring)
-
-    4. valued = AxiologicalAgent(synthesis)
-       if valued.violations: return Failure(violations)
-
-    return PsychopompResult(synthesis, level, knot, valued)
-```
-
-**Architecture**:
-```
-Task → [MHC] → [Bicameral] → [RSI] → [Axiological] → Result
-         ↓         ↓           ↓           ↓
-       level    synthesis     knot       values
-```
+| Axis | Action |
+|------|--------|
+| **Z (MHC)** | Scale to Level 11 (Metasystematic). Ignore individual grievances. |
+| **Φ (Project)** | Company → Organism. Department → Organ. Communication → Nervous System. |
+| **X (Parallax)** | Ego: "Optimize nervous system." Shadow: "What about immune system (HR/Compliance)?" |
+| **T (Cost)** | "Firing" → "Apoptosis" carries massive ETHICAL loss. Flagged. |
+| **Σ (Solve)** | Biology suggests "increase vascularization" not "amputation." |
+| **Φ⁻¹ (Reify)** | "Increase vascularization" → "Increase Sales budget." |
 
 ---
 
@@ -195,16 +241,13 @@ Task → [MHC] → [Bicameral] → [RSI] → [Axiological] → Result
 
 | Agent | Novel? | Purpose |
 |-------|--------|---------|
-| `MHCRouter` | ✅ | Route by complexity level |
-| `MHCStratifiedAgent` | ✅ | Execute at appropriate level |
-| `VerticalDescent` | ✅ | Ground abstractions |
-| `BicameralAgent` | ⚡ | Wrapper for H-jung + Sublate |
-| `RSIValidator` | ⚡ | Wrapper for H-lacan + O-gent |
-| `HallucinationDetector` | ⚡ | Derived from RSI |
-| `AxiologicalAgent` | ✅ | Value-type tracking |
-| `ValuationMorphism` | ✅ | Value domain conversion |
-| `PsychopompAgent` | ⚡ | Synthesis pipeline |
-| `HolonicProjector` | ✅ | Problem space projection |
+| `MorphicFunctor` | ✅ | Bidirectional semantic mapping |
+| `ResolutionScaler` | ✅ | MHC-based abstraction control |
+| `DialecticalRotator` | ⚡ | Shadow stress-test (via H-jung) |
+| `TopologicalValidator` | ⚡ | Knot integrity (via H-lacan) |
+| `AxiologicalExchange` | ✅ | Value trade accounting |
+| `MetaphorLibrary` | ✅ | Puppet/archetype catalog |
+| `PsychopompAgent` | ⚡ | Search loop synthesis |
 
 Legend: ✅ = Novel | ⚡ = Composition of existing primitives
 
@@ -213,41 +256,45 @@ Legend: ✅ = Novel | ⚡ = Composition of existing primitives
 ## Integration Graph
 
 ```
-Ψ-gents
-    │
-    ├──→ H-gents (primitives)
-    │       ├── H-jung: Shadow generation, inventory
-    │       └── H-lacan: RSI register analysis
-    │
-    ├──→ O-gents (observation)
-    │       └── BorromeanObserver: Runtime RSI validation
-    │
-    ├──→ Bootstrap (operations)
-    │       └── Sublate: Ego-shadow synthesis
-    │
-    └──→ Novel (Ψ-only)
-            ├── MHC: Complexity stratification
-            └── Axiological: Value-type system
+          ┌─────────────────────────────────────┐
+          │         PsychopompAgent             │
+          │         (Search Loop)               │
+          └───────────────┬─────────────────────┘
+                          │
+    ┌─────────┬───────────┼───────────┬─────────┐
+    │         │           │           │         │
+    ▼         ▼           ▼           ▼         ▼
+  Z-Axis    X-Axis      Y-Axis      T-Axis    Φ/Φ⁻¹
+   MHC      Jungian     Lacanian    Axiolog.  Functor
+    │         │           │           │         │
+    │     H-jung      H-lacan        │    MetaphorLib
+    │    (delegate)  + O-gent        │
+    │                (delegate)      │
+    └─────────┴───────────┴───────────┴─────────┘
+                    NOVEL
 ```
 
 ---
 
 ## Anti-Patterns
 
-- **Reimplementing H-gents**: Use delegation, not duplication
-- **Level collapse**: All problems at same MHC level
-- **Value blindness**: Ignoring axiological implications
-- **Puppet lock-in**: Forgetting puppet ≠ concept
-- **Shadow suppression**: Ignoring dismissed positions
+| Pattern | Description | Guard |
+|---------|-------------|-------|
+| **Procrustean Bed** | Force problem into ill-fitting metaphor | High Δ detected |
+| **Map-Territory Confusion** | Believe metaphor IS reality | TopologicalValidator |
+| **Resolution Mismatch** | Level 12 problem with Level 9 tools | ResolutionScaler |
+| **Shadow Blindness** | Accept Ego solution ignoring Shadow | DialecticalRotator |
+| **Value Blindness** | Ignore ethical cost of translation | AxiologicalExchange |
 
 ---
 
-*Zen Principle: The guide who knows all paths still asks which one you wish to walk.*
+*Zen Principle: To understand the mountain, become the river that flows around it.*
 
 ---
 
 ## See Also
 
+- [c-gents/functors.md](../c-gents/functors.md) — Functor laws
 - [h-gents/jung.md](../h-gents/jung.md) — Shadow primitives
 - [h-gents/lacan.md](../h-gents/lacan.md) — RSI primitives
 - [o-gents/](../o-gents/) — BorromeanObserver
