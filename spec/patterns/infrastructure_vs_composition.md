@@ -116,7 +116,7 @@ chatbot = Symbiont[str, str, ConversationState](
 | Genus | Infrastructure | Composition | Effect |
 |-------|----------------|-------------|--------|
 | **D-gents** | `DataAgent[S]` | `Symbiont[I, O, S]` | State |
-| **H-gents** | `Contradict`, `Sublate` | `DialecticAgent[T, A, S]` | Dialectics |
+| **H-gents** | `Contradict`, `Sublate` | `HegelAgent`, `ContinuousDialectic`, `BackgroundDialectic`, `FullIntrospection` | Dialectics |
 | **F-gents** (hypothesis) | `Parser`, `CodeGen` | `ForgeAgent[Intent, Agent]` | Compilation |
 | **E-gents** (hypothesis) | `Population`, `Mutate` | `EvolutionAgent[Fitness, Agent]` | Evolution |
 | **Bootstrap** | `Contradict`, `Sublate`, `Fix` | All bootstrap agents | Meta-operations |

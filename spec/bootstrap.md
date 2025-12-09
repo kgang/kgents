@@ -163,7 +163,7 @@ This is why the spec-first approach achieves 60% code reduction: the spec IS the
 
 ```
 Contradict: (Output, Output) → Tension | None
-Contradict(a, b) = Tension(thesis=a, antithesis=b) | None
+Contradict(a, b) = Tension(thesis=a, antithesis=b, mode=TensionMode) | None
 ```
 
 The contradiction-recognizer. Examines two outputs and surfaces if they are in tension.
@@ -172,11 +172,19 @@ The contradiction-recognizer. Examines two outputs and surfaces if they are in t
 
 **What it grounds**: H-gents dialectic. Quality assurance. The ability to catch inconsistency.
 
-**Modes**:
-- Logical: A and ¬A
-- Pragmatic: A recommends X, B recommends ¬X
-- Axiological: This serves value V, that serves value ¬V
-- Temporal: Past-self said X, present-self says ¬X
+**TensionMode** (how the tension manifests):
+
+| Mode | Signature | Example |
+|------|-----------|---------|
+| LOGICAL | A and ¬A | "We value speed" + "We never rush" |
+| EMPIRICAL | Claim vs evidence | Principle says X, metrics show ¬X |
+| PRAGMATIC | A recommends X, B recommends ¬X | Two agents give conflicting advice |
+| TEMPORAL | Past-self said X, present-self says ¬X | Drift over time |
+
+**Detection strategies** (from H-gent impl):
+1. **Structural**: Metrics-based, fast, no semantic analysis
+2. **Marker-based**: SYMBOLIC/IMAGINARY/REAL markers + SHADOW_MAPPINGS (mid-tier)
+3. **Semantic**: LLM-powered deep analysis (slow, expensive)
 
 ---
 
@@ -294,6 +302,11 @@ B-gents = Compose(Ground, scientific_method)
 C-gents = {Id, Compose, Fix}  // C-gents ARE bootstrap agents
 D-gents = {DataAgent (infrastructure), Symbiont (bootstrap agent)}
 H-gents = {Contradict, Sublate, introspection_targets}
+        // Operational modes derived from Contradict/Sublate composition:
+        //   HegelAgent: Single-pass synthesis
+        //   ContinuousDialectic: Recursive application until stability
+        //   BackgroundDialectic: Monitoring mode (detect without synthesize)
+        //   FullIntrospection: Hegel → Lacan → Jung pipeline
 K-gent = Ground() projected through persona_schema
 ```
 
@@ -473,6 +486,27 @@ conflicts = await session_contradict.invoke((config, ground_state))
 if conflicts:
     resolution = await session_sublate.invoke(conflicts[0])
 ```
+
+**Extension: Errors as Data (LacanError Pattern)**
+
+From H-gent Lacan: even detection *failures* are informative. When Contradict fails, the failure itself is data about what the system cannot symbolize.
+
+```python
+@dataclass
+class ContradictError:
+    """Error makes the Real explicit."""
+    error_type: str  # "validation", "value_error", "real_intrusion"
+    message: str
+    input_snapshot: str
+
+ContradictResult = Tension | None | ContradictError
+```
+
+- `validation`: Invalid input (None, empty)
+- `value_error`: Expected failure mode
+- `real_intrusion`: Unexpected failure—the Real broke through
+
+**Philosophy**: A `real_intrusion` error reveals what the system cannot represent—this is diagnostic information, not just a failure state.
 
 **Anti-pattern**: Silent failures, swallowed exceptions, "last write wins" without warning.
 

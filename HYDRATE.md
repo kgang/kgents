@@ -4,19 +4,343 @@
 
 ## TL;DR
 
-**Status**: CLEAN | Pushed to origin ✅
-**Branch**: `main` (synced with origin)
-**Latest Commit**: 730d7c5 - docs(h-gents): Add comprehensive H-gents specification
-**Recent Work**:
-  - R-gents Phase 4: Advanced features (auto-selection, drift detection, transfer analysis)
-  - H-gents spec: Complete specification for dialectical synthesis agents (~2,668 lines)
-  - Style fixes: Removed unused imports in R-gents advanced module
-**Test Coverage**: 262 R-gents tests (93 Phase 4) + 46 J-gent T-integration tests (all passing)
-**Next**: Ready for new work
+**Status**: UNCOMMITTED | H-gent Impl→Spec Reconciliation + Fundamental Spec Updates
+**Branch**: `main`
+**Latest Commit**: 2232ff8 - feat(mirror): Add Obsidian principle extractor (P-gent)
+**This Session**: Deep reconciliation of H-gent impl insights into spec/, including fundamental documents
+**Modified Files**:
+  - `spec/h-gents/README.md` (UPDATED - operational modes, D-gent integration, composition)
+  - `spec/h-gents/contradiction.md` (UPDATED - marker-based detection, errors-as-data)
+  - `spec/h-gents/sublation.md` (UPDATED - resolution types preserve/negate/elevate)
+  - `spec/h-gents/composition.md` (NEW - ~350 lines, pipeline patterns)
+  - `spec/bootstrap.md` (UPDATED - TensionMode, H-gent derivation, LacanError idiom)
+  - `spec/archetypes.md` (UPDATED - +Dialectician, +Introspector archetypes)
+  - `spec/patterns/infrastructure_vs_composition.md` (UPDATED - H-gent composition agents)
+  - `HYDRATE.md` (this file)
+**Reconciliation Summary**:
+  - **H-gents spec/**: TensionMode, DialecticStep lineage, operational modes, marker detection, errors-as-data, composition pipelines
+  - **bootstrap.md**: TensionMode enum, detection strategies, errors-as-data idiom, H-gent operational modes derivation
+  - **archetypes.md**: Two new archetypes—Dialectician (辯) and Introspector (省)
+  - **infrastructure_vs_composition.md**: Expanded H-gent composition agents list
+**Next**: Commit reconciliation work
 
 ---
 
-## What Just Happened: Commit & Push Session (2025-12-09)
+## What Just Happened: H-gent Impl→Spec Deep Reconciliation (2025-12-09)
+
+### Session Overview
+
+Analyzed `impl/claude/agents/h/` to backpropagate implementation insights to `spec/h-gents/`, then extended the reconciliation to fundamental spec documents (`bootstrap.md`, `archetypes.md`, `infrastructure_vs_composition.md`).
+
+### Phase 1: H-gent Spec Updates
+
+**From `hegel.py`:**
+- Added `TensionMode` enum (LOGICAL, EMPIRICAL, PRAGMATIC, TEMPORAL)
+- Added `DialecticStep` lineage tracking for observability
+- Added operational modes: HegelAgent, ContinuousDialectic, BackgroundDialectic
+
+**From `lacan.py`:**
+- Added marker-based detection (SYMBOLIC/IMAGINARY/REAL_MARKERS)
+- Added SHADOW_MAPPINGS (persona → shadow content)
+- Added errors-as-data pattern (LacanError as "Real intrusion")
+- Added QuickRegister/QuickShadow lightweight agents
+
+**From `jung.py`:**
+- Added CollectiveShadowAgent (system-level shadow)
+- Added pure function patterns for testability
+
+**From `composition.py`:**
+- Created `spec/h-gents/composition.md` (~350 lines)
+- Documented HegelLacan, LacanJung, JungHegel pipelines
+- Documented FullIntrospection pipeline and meta-synthesis
+
+**From `persistent_dialectic.py`:**
+- Added PersistentDialecticAgent (D-gent integration)
+- Added DialecticMemoryAgent (query agent)
+
+### Phase 2: Fundamental Spec Updates
+
+**`bootstrap.md` updates:**
+- Enhanced Contradict section with TensionMode table
+- Added detection strategies (structural, marker-based, semantic)
+- Enhanced H-gent derivation with operational modes
+- Added "Errors as Data (LacanError Pattern)" to Idiom 2
+
+**`archetypes.md` updates:**
+- Added **The Dialectician (辯)**: Contradict/Sublate loop with hold
+- Added **The Introspector (省)**: Hegel → Lacan → Jung pipeline
+- Updated composition table with new archetype combinations
+- Updated meta-principle to show 8 archetypes (was 6)
+
+**`infrastructure_vs_composition.md` updates:**
+- Expanded H-gent composition agents (was just DialecticAgent)
+- Now shows: HegelAgent, ContinuousDialectic, BackgroundDialectic, FullIntrospection
+
+### Spec-Impl Alignment Status
+
+| Area | Before | After |
+|------|--------|-------|
+| TensionMode | Not in spec | ✅ Aligned with impl |
+| Operational modes | Not in spec | ✅ Aligned with impl |
+| Marker detection | Not in spec | ✅ Aligned with impl |
+| Errors-as-data | Not in spec | ✅ Aligned with impl |
+| Composition pipelines | Not in spec | ✅ Aligned with impl |
+| CollectiveShadow | Not in spec | ✅ Aligned with impl |
+| Archetypes | 6 archetypes | ✅ 8 archetypes (dialectical patterns) |
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `spec/h-gents/README.md` | +operational modes, +D-gent integration, +composition section |
+| `spec/h-gents/contradiction.md` | +marker detection, +SHADOW_MAPPINGS, +errors-as-data |
+| `spec/h-gents/sublation.md` | +resolution types (preserve/negate/elevate) |
+| `spec/h-gents/composition.md` | **NEW** - complete pipeline composition spec |
+| `spec/bootstrap.md` | +TensionMode, +detection strategies, +LacanError idiom |
+| `spec/archetypes.md` | +Dialectician, +Introspector, updated meta-principle |
+| `spec/patterns/infrastructure_vs_composition.md` | +expanded H-gent composition list |
+
+---
+
+## Prior Session: Mirror Protocol Docs Synthesis (J-gents Phase 2) (2025-12-09)
+
+### Session Overview
+
+Synthesized advanced theoretical concepts from Phase 2 revision into `docs/mirror-protocol-implementation.md`, applying kgents principles (tasteful, generative, composable) while removing organizational/commercial deployment content.
+
+### Synthesis Approach
+
+**Input**: User-provided revision with:
+- Lattice theory (Deontic/Ontic/Tension graphs)
+- Semantic momentum tracking (Noether's theorem)
+- Quantum dialectic (Schrödinger's tension, semantic qubits)
+- Thermodynamic cost functions
+- Kairos search algorithm
+- Autopoietic closure
+
+**Processing**:
+1. Integrated Tri-Lattice System into guiding philosophy
+2. Added semantic momentum to Phase 1 (W-gent foundations)
+3. Added quantum dialectic (SuspendedTension, EntanglementBuffer) to Phase 1
+4. Transformed Phase 2 from "Organizational Witness" to "Event Stream Abstraction"
+5. Removed all Slack/Notion/organizational deployment plans
+6. Transformed Phase 3 to "Kairos Controller" with thermodynamic cost functions
+7. Transformed Phase 4 to "Autopoietic Loop" with entropy budget
+8. Updated Phase 5 to "Refined Deliverables" with clean module structure
+9. Updated implementation priorities to reflect Phase 1 completion
+10. Revised open design questions for personal/research focus
+
+**Principles Applied**:
+- **Tasteful**: Kept only research-grade concepts, removed product features
+- **Curated**: Selected cohesive theoretical framework (lattice + quantum + thermodynamics)
+- **Composable**: EventStream protocol, modular structure (streams/, core/, w-gents/)
+- **Generative**: Spec-first approach, clear derivation from theory to impl
+- **Ethical**: Removed surveillance/organizational monitoring aspects
+
+### Key Theoretical Additions
+
+**1. Tri-Lattice System**:
+```
+𝒟 (Deontic) - Graph of Oughts (principles, values)
+𝒪 (Ontic) - Graph of Is (behaviors, artifacts)
+𝒯 (Tension) - Graph of Divergence (weighted edges connecting 𝒟 ↔ 𝒪)
+```
+
+**2. Semantic Momentum**:
+```
+p⃗ = m · v⃗
+m = influence weight (link frequency)
+v⃗ = drift velocity (embedding shift)
+```
+
+**3. Quantum Dialectic**:
+```
+|ψ⟩ = α|Hypocrisy⟩ + β|Aspiration⟩
+SuspendedTension → EntanglementBuffer → CollapseFunction
+```
+
+**4. Thermodynamic Cost**:
+```
+C(t) = (η · S_friction(t) + γ · L_load(t)) / A_alignment
+Kairos = local minimum of C(t)
+```
+
+**5. Entropy Budget**:
+```
+TrustEntropy consumed per intervention
+Grand Collapse when trust < 0.2
+```
+
+### Changes to Implementation Plan
+
+| Phase | Before | After |
+|-------|--------|-------|
+| 1 | Minimal Mirror (Obsidian) | ✅ Same + quantum dialectic foundations |
+| 2 | Organizational Witness (Slack/Notion) | Event Stream Abstraction (generic protocols) |
+| 3 | Gentle Interventions (Slack app) | Kairos Controller (thermodynamic optimization) |
+| 4 | Dialectical Engine (H-gent) | Autopoietic Loop (fixed point search) |
+| 5 | Living Organization | Refined Deliverables (module structure) |
+
+### Modified Files
+
+- `docs/mirror-protocol-implementation.md`: ~700 lines
+  - Title updated to "Technical Implementation Path"
+  - Added status header (Phase 1 complete, focus on semantic topology)
+  - Integrated lattice theory throughout
+  - Removed all organizational deployment content
+  - Added deliverables structure (5 modules)
+
+---
+
+## Prior Session: Mirror Protocol Phase 1 (2025-12-09)
+
+### Session Overview
+
+Implemented the core Mirror Protocol for Obsidian vaults—the first concrete instantiation of the dialectical introspection system. This follows the implementation plan in `docs/mirror-protocol-implementation.md`.
+
+### Files Created
+
+**1. Core Types (`protocols/mirror/types.py`)**:
+- `Thesis`: Stated principle with content, source, confidence (0.0-1.0)
+- `Antithesis`: Observed pattern with evidence, frequency, severity
+- `Tension`: Divergence between thesis and antithesis (0.0-1.0)
+- `Synthesis`: Proposed resolution with intervention type and cost
+- `TensionType` enum: BEHAVIORAL, ASPIRATIONAL, OUTDATED, CONTEXTUAL, FUNDAMENTAL
+- `InterventionType` enum: REFLECT, REMEMBER, REMIND, SUGGEST, DRAFT, RITUAL, AUDIT
+- `PatternType` enum: ORPHAN_NOTES, LINK_DENSITY, NOTE_LENGTH, UPDATE_FREQUENCY, etc.
+- `MirrorReport`: Full analysis output with `integrity_score` property
+- `MirrorConfig`: Configuration with sensible defaults
+
+**2. Obsidian Extractor (`protocols/mirror/obsidian/extractor.py`)**:
+- `ObsidianPrincipleExtractor`: P-gent for extracting principles
+- Extraction strategies:
+  - README.md analysis (high confidence)
+  - Principles folder (high confidence)
+  - Tagged notes (#principle, #value, #belief)
+  - Strong indicator sentences ("I believe", "Always", etc.)
+- `extract_principles_from_vault()` convenience function
+
+**3. Obsidian Witness (`protocols/mirror/obsidian/witness.py`)**:
+- `ObsidianPatternWitness`: W-gent for observing patterns
+- `NoteMetadata`: Dataclass for note analysis
+- Pattern observations:
+  - Link patterns (density, orphans)
+  - Length patterns (average, % short notes)
+  - Update patterns (staleness, average age)
+  - Daily note patterns (with/without links)
+  - Tag patterns (% tagged, unique tags)
+- `observe_vault_patterns()` convenience function
+
+**4. Tension Detector (`protocols/mirror/obsidian/tension.py`)**:
+- `ObsidianTensionDetector`: H-gent for detecting contradictions
+- `TensionRule`: Declarative rules for mapping principles to patterns
+- 5 default rules:
+  - `daily_note_abandonment`: Daily notes with no links
+  - `connection_gap`: Orphan notes vs. connection ideals
+  - `depth_gap`: Short notes vs. depth ideals
+  - `staleness_gap`: Stale notes vs. living document ideals
+  - `organization_gap`: Untagged notes vs. organization ideals
+- `detect_tensions()` and `generate_mirror_report()` functions
+
+**5. Tests (`protocols/mirror/_tests/test_obsidian_mirror.py`)**:
+- 46 tests covering all components
+- Core types tests (Thesis, Antithesis, Tension, Synthesis, MirrorReport)
+- Extractor tests (README, tagged notes, exclusions)
+- Witness tests (link patterns, orphans, length, daily notes)
+- Tension detector tests (detection, sorting, thresholds)
+- Integration tests (full mirror flow, expected tensions)
+- Edge case tests (unicode, special chars, long notes, nested folders)
+
+### Architecture Decisions
+
+1. **Immutable Types**: All core types use `frozen=True` dataclasses
+2. **Confidence Scoring**: 0.0-1.0 throughout for probabilistic reasoning
+3. **Validation**: `__post_init__` validation for bounds checking
+4. **Rule-Based Detection**: `TensionRule` allows declarative tension patterns
+5. **Category Theory**: Functor Vault → (Thesis, Antithesis) → Tension
+
+### Test Results
+
+```
+46 passed in 0.07s
+```
+
+### Mirror Protocol Phase Status
+
+| Phase | Status | Notes |
+|-------|--------|-------|
+| Phase 0: H-gent spec | ✅ | Complete |
+| **Phase 1: Obsidian extractor** | ✅ | **This session** |
+| Phase 2: Personal Mirror CLI | 🔜 | Next |
+| Phase 3: Tension detection refinement | 🔜 | After CLI validation |
+
+---
+
+## Prior Session: Impl→Spec Reconciliation (2025-12-09)
+
+### Session Overview
+
+Analyzed `impl/claude/agents/h/` to backpropagate implementation insights to `spec/h-gents/`. The impl had evolved with concepts not yet reflected in the spec.
+
+### Key Insights Backpropagated
+
+**1. From `hegel.py`:**
+- `TensionMode` enum (LOGICAL, EMPIRICAL, PRAGMATIC, TEMPORAL)
+- `DialecticStep` with `stage` field for lineage tracking
+- `ContinuousDialectic` for recursive application until stability
+- `BackgroundDialectic` for monitoring without synthesizing
+- `severity` field on tensions (0.0-1.0)
+
+**2. From `lacan.py`:**
+- Concrete marker lists: `SYMBOLIC_MARKERS`, `IMAGINARY_MARKERS`, `REAL_MARKERS`
+- `LacanError` as "Real intrusion" pattern—errors become data
+- `objet_petit_a` identification
+- `QuickRegister` lightweight agent
+
+**3. From `jung.py`:**
+- `SHADOW_MAPPINGS` dictionary (persona→shadow mappings)
+- `ARCHETYPE_PATTERNS` for detection
+- `CollectiveShadowAgent` for system-level shadow
+- `QuickShadow` lightweight agent
+- Pure functions for testable logic
+
+**4. From `composition.py`:**
+- `HegelLacanPipeline`, `LacanJungPipeline`, `JungHegelPipeline`
+- `FullIntrospection` complete pipeline
+- `IntrospectionOutput` with `meta_notes`
+- `_integration_recommendation()` logic
+
+**5. From `persistent_dialectic.py`:**
+- `DialecticRecord` for persistence
+- `DialecticHistory` state schema
+- `PersistentDialecticAgent` D-gent integration
+- `DialecticMemoryAgent` query agent
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `spec/h-gents/README.md` | +TensionMode, +operational modes, +D-gent integration, +composition section |
+| `spec/h-gents/contradiction.md` | +marker-based detection, +SHADOW_MAPPINGS, +errors-as-data, +QuickRegister/QuickShadow |
+| `spec/h-gents/sublation.md` | +resolution_type values (preserve/negate/elevate), +simpler Synthesis type |
+| `spec/h-gents/composition.md` | NEW: Full pipeline composition spec |
+
+### Spec-Impl Alignment
+
+| Concept | Spec | Impl | Status |
+|---------|------|------|--------|
+| TensionMode | ✅ Added | ✅ | Aligned |
+| DialecticStep lineage | ✅ Added | ✅ | Aligned |
+| Operational modes | ✅ Added | ✅ | Aligned |
+| Marker-based detection | ✅ Added | ✅ | Aligned |
+| Errors-as-data | ✅ Added | ✅ | Aligned |
+| Composition pipelines | ✅ Added | ✅ | Aligned |
+| CollectiveShadow | ✅ Added | ✅ | Aligned |
+| PersistentDialectic | ✅ Added | ✅ | Aligned |
+
+---
+
+## Prior Session: Commit & Push Session (2025-12-09)
 
 ### Session Overview
 
