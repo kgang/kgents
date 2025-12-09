@@ -544,6 +544,48 @@ For more information, see: https://github.com/kgents/kgents
         help="Dump current CLI context",
     )
 
+    # ---------------------------------------------------------------------
+    # Bootstrap Commands (Phase 2)
+    # ---------------------------------------------------------------------
+
+    # laws
+    laws_parser = subparsers.add_parser(
+        "laws",
+        help="Display and verify the 7 category laws",
+    )
+    laws_parser.add_argument(
+        "subcommand",
+        nargs="?",
+        choices=["verify", "witness"],
+        help="Subcommand: verify or witness",
+    )
+    laws_parser.add_argument(
+        "operation",
+        nargs="?",
+        help="Operation to witness (for 'witness' subcommand)",
+    )
+    laws_parser.add_argument(
+        "--agent",
+        help="Agent ID to verify (for 'verify' subcommand)",
+    )
+
+    # principles
+    principles_parser = subparsers.add_parser(
+        "principles",
+        help="Display and check against the 7 design principles",
+    )
+    principles_parser.add_argument(
+        "subcommand",
+        nargs="?",
+        choices=["check"],
+        help="Subcommand: check",
+    )
+    principles_parser.add_argument(
+        "input",
+        nargs="?",
+        help="Input to check (text or file path)",
+    )
+
     return parser
 
 
@@ -856,6 +898,176 @@ def handle_debug_ctx(args: argparse.Namespace, ctx: CLIContext) -> int:
         print(f"  LLM Calls Used: {ctx.budget.llm_calls_used}")
         print()
         print("(Note: tokens/calls reset each CLI invocation)")
+
+    return 0
+
+
+# =============================================================================
+# Bootstrap Handlers (CLI Phase 2)
+# =============================================================================
+
+
+async def handle_laws(args: argparse.Namespace, ctx: CLIContext) -> int:
+    """Handle laws commands."""
+    from .bootstrap.laws import (
+        verify_laws,
+        witness_composition,
+        format_laws_rich,
+        format_laws_json,
+        format_verification_rich,
+        format_witness_rich,
+        Verdict,
+    )
+    import json as json_module
+
+    use_json = ctx.output_format == OutputFormat.JSON
+
+    # No subcommand - display laws
+    if not args.subcommand:
+        if use_json:
+            print(format_laws_json())
+        else:
+            print(format_laws_rich())
+        return 0
+
+    # Verify subcommand
+    if args.subcommand == "verify":
+        agent_id = args.agent if hasattr(args, "agent") else None
+        report = await verify_laws(agent_id)
+        if use_json:
+            print(
+                json_module.dumps(
+                    {
+                        "agent_id": report.agent_id,
+                        "verified_at": report.verified_at.isoformat(),
+                        "overall_verdict": report.overall_verdict.value,
+                        "passed": report.passed,
+                        "failed": report.failed,
+                        "skipped": report.skipped,
+                        "results": [
+                            {
+                                "law": r.law.value,
+                                "verdict": r.verdict.value,
+                                "evidence": r.evidence,
+                            }
+                            for r in report.results
+                        ],
+                    },
+                    indent=2,
+                )
+            )
+        else:
+            print(format_verification_rich(report))
+        return 0 if report.overall_verdict != Verdict.FAIL else 1
+
+    # Witness subcommand
+    if args.subcommand == "witness":
+        if not args.operation:
+            print("Error: witness requires an operation argument")
+            print("Usage: kgents laws witness <operation>")
+            print("Example: kgents laws witness 'ParseCode >> ValidateAST'")
+            return 1
+
+        report = await witness_composition(args.operation)
+        if use_json:
+            print(
+                json_module.dumps(
+                    {
+                        "operation": report.operation,
+                        "left": report.left,
+                        "right": report.right,
+                        "result_type": report.result_type,
+                        "valid": report.valid,
+                        "laws_checked": [law.value for law in report.laws_checked],
+                        "witnessed_at": report.witnessed_at.isoformat(),
+                        "notes": report.notes,
+                    },
+                    indent=2,
+                )
+            )
+        else:
+            print(format_witness_rich(report))
+        return 0 if report.valid else 1
+
+    return 0
+
+
+async def handle_principles(args: argparse.Namespace, ctx: CLIContext) -> int:
+    """Handle principles commands."""
+    from .bootstrap.principles import (
+        evaluate_against_principles,
+        evaluate_file,
+        format_principles_rich,
+        format_principles_json,
+        format_evaluation_rich,
+        Verdict,
+    )
+    from pathlib import Path
+    import json as json_module
+
+    use_json = ctx.output_format == OutputFormat.JSON
+
+    # No subcommand - display principles
+    if not args.subcommand:
+        if use_json:
+            print(format_principles_json())
+        else:
+            print(format_principles_rich())
+        return 0
+
+    # Check subcommand
+    if args.subcommand == "check":
+        if not args.input:
+            print("Error: check requires input text or file path")
+            print("Usage: kgents principles check <input>")
+            print(
+                'Example: kgents principles check "A monolithic agent that does everything"'
+            )
+            return 1
+
+        # Check if input is a file path
+        input_path = Path(args.input)
+        if input_path.exists():
+            report = await evaluate_file(input_path)
+        else:
+            # Treat as text input
+            report = await evaluate_against_principles(args.input)
+
+        if use_json:
+            print(
+                json_module.dumps(
+                    {
+                        "input": report.input_description,
+                        "evaluated_at": report.evaluated_at.isoformat(),
+                        "overall_verdict": report.overall_verdict.value,
+                        "accepted": report.accepted,
+                        "rejected": report.rejected,
+                        "unclear": report.unclear,
+                        "summary": report.summary,
+                        "evaluations": [
+                            {
+                                "principle": e.principle.value,
+                                "verdict": e.verdict.value,
+                                "reasoning": e.reasoning,
+                                "confidence": e.confidence,
+                                "suggestions": e.suggestions,
+                            }
+                            for e in report.evaluations
+                        ],
+                    },
+                    indent=2,
+                )
+            )
+        else:
+            print(format_evaluation_rich(report))
+
+        # Return code based on verdict
+        if report.overall_verdict == Verdict.ACCEPT:
+            return 0
+        elif report.overall_verdict == Verdict.REJECT:
+            return 1
+        else:
+            return 0  # Unclear/Revise are not failures
 
     return 0
 
@@ -1273,6 +1485,12 @@ async def async_main(argv: Sequence[str] | None = None) -> int:
 
     elif args.command == "debug":
         return handle_debug(args, ctx)
+
+    elif args.command == "laws":
+        return await handle_laws(args, ctx)
+
+    elif args.command == "principles":
+        return await handle_principles(args, ctx)
 
     else:
         print(f"Unknown command: {args.command}")
