@@ -150,6 +150,21 @@ from .prompts import (
     build_prompt_context,
     build_improvement_prompt,
     build_simple_prompt,
+    # Metered prompts (Principle 11 + B-gent Banker integration)
+    # Token Economics (from B-gent Banker)
+    PromptLevel,
+    TokenBudget,
+    SinkingFund,
+    TokenFuture,
+    Receipt,
+    # Metered Prompt System
+    MeteredPromptConfig,
+    MeteredPromptResult,
+    MeteredPromptBuilder,
+    build_minimal_prompt,
+    build_targeted_prompt,
+    build_full_prompt,
+    parse_minimal_output,
 )
 
 from .parser import (
@@ -334,6 +349,21 @@ __all__ = [
     "build_prompt_context",
     "build_improvement_prompt",
     "build_simple_prompt",
+    # Metered Prompts (Principle 11 + B-gent Banker)
+    # Token Economics (from B-gent Banker)
+    "PromptLevel",
+    "TokenBudget",
+    "SinkingFund",
+    "TokenFuture",
+    "Receipt",
+    # Metered Prompt System
+    "MeteredPromptConfig",
+    "MeteredPromptResult",
+    "MeteredPromptBuilder",
+    "build_minimal_prompt",
+    "build_targeted_prompt",
+    "build_full_prompt",
+    "parse_minimal_output",
     # Parser (Layer 2 Reliability)
     "CodeParser",
     "ParseResult",

@@ -80,27 +80,39 @@ In addition to the foundational kgents principles, E-gents add:
 - Multiple validation layers prevent self-corruption
 - Human approval required for meta-changes above threshold
 
-### 11. Metered
+### 11. Metered (via B-gent Banker)
 
 **Conservative token consumption builds user trust.**
 
-E-gents must be **metered by construction**—defaulting to minimal token usage and escalating only when necessary. This builds confidence with users who pay per token.
+E-gents integrate the **B-gent Banker** ([spec/b-gents/banker.md](../b-gents/banker.md)) to manage token economics. The Metered Functor transforms evolution agents into economic agents:
 
-**The Metering Principle**:
-- **Start minimal**: Default prompts should be ~30 lines, not ~250
-- **Escalate on failure**: Rich context is a recovery strategy, not default
+```
+Metered: Agent[A, B] → Agent[A, Receipt[B]]
+```
+
+**The Metering Principle** (from Banker):
+- **Linear Logic**: Tokens are resources that are *consumed*, not copied
+- **Start minimal**: Default prompts ~30 lines, escalate only on failure
 - **Diff over whole**: Request changed symbols, not entire files
-- **Lazy loading**: API references loaded only when hallucinations detected
-- **Budget awareness**: Track tokens per hypothesis, abort if budget exceeded
+- **Token Futures**: Reserve capacity for multi-step evolution jobs
+- **Sinking Fund**: 1% tax builds emergency reserve for critical fixes
 
-**Token Budget Levels**:
-| Level | Prompt Size | Context | When Used |
-|-------|-------------|---------|-----------|
-| 0 (Minimal) | ~30 lines | Hypothesis + target symbol | Default |
-| 1 (Targeted) | ~80 lines | + function/class context | After L0 fails |
-| 2 (Full) | ~250 lines | + API refs, patterns | After L1 fails 2x |
+**Token Budget Levels** (Progressive Escalation):
+| Level | Prompt Size | Context | Cost Multiplier |
+|-------|-------------|---------|-----------------|
+| 0 (Minimal) | ~30 lines | Hypothesis + target | 1x |
+| 1 (Targeted) | ~80 lines | + function context | 3x |
+| 2 (Full) | ~250 lines | + API refs, patterns | 10x |
 
-**The Trust Gradient**: Users should see E-gents succeed with minimal tokens before trusting them with larger budgets. Conservative defaults demonstrate competence.
+**The Hydraulic Model** (Token Bucket):
+```python
+# From B-gent Banker: Time = Money
+account.balance = min(max_balance, balance + (delta * refill_rate))
+```
+
+Evolution budgets refill over time. Burst capacity allows intensive sessions; sustained high usage triggers rate limiting.
+
+**The Trust Gradient**: Users see E-gents succeed with minimal tokens before trusting larger budgets. Conservative defaults demonstrate competence and build confidence.
 
 ## The Evolution Pipeline
 
@@ -238,6 +250,7 @@ E-gents must **never**:
 - **[safety.md](./safety.md)** - Self-evolution and convergence detection
 - **[H-gents](../h-gents/)** - Dialectical reasoning foundation
 - **[B-gents](../b-gents/)** - Hypothesis generation methodology
+- **[B-gents/banker.md](../b-gents/banker.md)** - Token economics and the Metered Functor
 
 ---
 
