@@ -50,6 +50,53 @@ from .refinery import (
     RefineryAgent,
 )
 
+from .dspy_backend import (
+    # DSPy availability
+    is_dspy_available,
+    # DSPy-backed teleprompters (Phase 2)
+    DSPyBootstrapFewShot,
+    DSPyMIPROv2,
+    # LLM-backed teleprompters (Phase 2)
+    LLMTextGrad,
+    LLMOpro,
+    # Factory
+    get_dspy_teleprompter,
+    # LLM function creators
+    create_openai_llm_func,
+    create_anthropic_llm_func,
+    # DSPy utilities
+    DSPyLLMConfig,
+    DSPyModuleWrapper,
+    signature_to_dspy,
+    example_to_dspy,
+    examples_to_dspy,
+)
+
+# Phase 3: Cross-Genus Integrations
+from .integrations import (
+    # F-gent integration
+    RefinePhase,
+    PrototypeRefinementRequest,
+    PrototypeRefinementResult,
+    FGentRefineryBridge,
+    # T-gent integration
+    MetricSignal,
+    TextualLossSignal,
+    TGentLossAdapter,
+    # B-gent integration
+    BudgetDenied,
+    BudgetGrant,
+    BudgetSpendReport,
+    BGentBudgetProtocol,
+    BudgetConstrainedRefinery,
+    # L-gent integration
+    OptimizationCatalogEntry,
+    LGentOptimizationIndex,
+    # Unified hub
+    RGentIntegrationConfig,
+    RGentIntegrationHub,
+)
+
 __all__ = [
     # Core types
     "Signature",
@@ -78,4 +125,44 @@ __all__ = [
     "ROIOptimizer",
     # Main interface
     "RefineryAgent",
+    # DSPy availability
+    "is_dspy_available",
+    # DSPy-backed teleprompters (Phase 2)
+    "DSPyBootstrapFewShot",
+    "DSPyMIPROv2",
+    # LLM-backed teleprompters (Phase 2)
+    "LLMTextGrad",
+    "LLMOpro",
+    # Factory
+    "get_dspy_teleprompter",
+    # LLM function creators
+    "create_openai_llm_func",
+    "create_anthropic_llm_func",
+    # DSPy utilities
+    "DSPyLLMConfig",
+    "DSPyModuleWrapper",
+    "signature_to_dspy",
+    "example_to_dspy",
+    "examples_to_dspy",
+    # Phase 3: F-gent integration
+    "RefinePhase",
+    "PrototypeRefinementRequest",
+    "PrototypeRefinementResult",
+    "FGentRefineryBridge",
+    # Phase 3: T-gent integration
+    "MetricSignal",
+    "TextualLossSignal",
+    "TGentLossAdapter",
+    # Phase 3: B-gent integration
+    "BudgetDenied",
+    "BudgetGrant",
+    "BudgetSpendReport",
+    "BGentBudgetProtocol",
+    "BudgetConstrainedRefinery",
+    # Phase 3: L-gent integration
+    "OptimizationCatalogEntry",
+    "LGentOptimizationIndex",
+    # Phase 3: Unified hub
+    "RGentIntegrationConfig",
+    "RGentIntegrationHub",
 ]
