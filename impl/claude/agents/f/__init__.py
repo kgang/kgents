@@ -19,6 +19,17 @@ from agents.f.intent import (
     Intent,
     parse_intent,
 )
+from agents.f.prototype import (
+    PrototypeConfig,
+    SourceCode,
+    StaticAnalysisReport,
+    ValidationCategory,
+    ValidationResult,
+    ValidationStatus,
+    generate_prototype,
+    generate_prototype_async,
+    run_static_analysis,
+)
 
 __all__ = [
     # Intent parsing (Phase 1)
@@ -32,4 +43,14 @@ __all__ = [
     "Contract",
     "Invariant",
     "synthesize_contract",
+    # Prototype generation (Phase 3)
+    "PrototypeConfig",
+    "SourceCode",
+    "StaticAnalysisReport",
+    "ValidationCategory",
+    "ValidationResult",
+    "ValidationStatus",
+    "generate_prototype",
+    "generate_prototype_async",
+    "run_static_analysis",
 ]
