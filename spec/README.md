@@ -45,6 +45,7 @@ The synthesis is valid: implementation wisdom has been elevated to spec-level pr
    - [o-gents/](o-gents/) - Observability (system-wide telemetry, bootstrap witness)
    - [p-gents/](p-gents/) - Parser (multi-strategy parsing, structured output)
    - [psi-gents/](psi-gents/) - Psychopomp (holonic projection, MHC, Jung, Lacan, metaethics)
+   - [r-gents/](r-gents/) - Refinery (prompt optimization, DSPy/TextGrad/OPRO integration)
    - [t-gents/](t-gents/) - Testing (algebraic reliability)
    - [w-gents/](w-gents/) - Wire (ephemeral process observation, stigmergic coordination)
 
@@ -69,6 +70,10 @@ Agents don't exist in isolation. Key integration points:
 | B+E | B-Banker UVP regulates E-gent evolution via Sin Tax / Virtue Subsidy |
 | B+O | O-gent ValueLedgerObserver monitors B-Banker economic health |
 | B+W | W-gent renders B-Banker RoC dashboard and Value Tensor |
+| R+F | R-gent optimizes F-gent prototypes before crystallization |
+| R+T | T-gent provides loss signals for R-gent optimization |
+| R+B | B-gent gates R-gent budget (ROI check) |
+| R+L | L-gent indexes R-gent optimization metadata |
 | Ψ+H | Ψ-gent uses H-gent dialectics for ego/shadow synthesis |
 | Ψ+O | O-gent observes Ψ-gent Borromean register transitions |
 | Ψ+N | N-gent narrates Ψ-gent's integration journeys |
