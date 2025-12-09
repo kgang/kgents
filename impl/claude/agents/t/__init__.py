@@ -44,6 +44,13 @@ Type VI - Execution Runtime (Phase 3):
 - RetryExecutor: Exponential backoff with jitter
 - RobustToolExecutor: Composite executor (circuit breaker + retry + Result monad)
 
+Type VII - MCP Integration (Phase 4):
+- MCPClient: Model Context Protocol client for remote tool servers
+- MCPTool: Tool[A, B] implementation for MCP remote tools
+- StdioTransport: Local process communication (most common)
+- HttpSseTransport: Remote HTTP/SSE communication
+- JSON-RPC 2.0: Protocol message types
+
 Usage:
     from agents.t import MockAgent, FailingAgent, SpyAgent
 
@@ -215,6 +222,25 @@ from .executor import (
     RetryConfig,
 )
 
+from .mcp_client import (
+    # MCP Protocol Types
+    MCPTransportType,
+    MCPServerInfo,
+    MCPToolSchema,
+    MCPResource,
+    # JSON-RPC
+    JsonRpcRequest,
+    JsonRpcResponse,
+    JsonRpcError,
+    # Transport
+    MCPTransport,
+    StdioTransport,
+    HttpSseTransport,
+    # Client
+    MCPClient,
+    MCPTool,
+)
+
 __all__ = [
     # Type I - Nullifiers
     "MockAgent",
@@ -313,4 +339,17 @@ __all__ = [
     "RetryExecutor",
     "RobustToolExecutor",
     "RetryConfig",
+    # Type VII - MCP Integration (Phase 4)
+    "MCPTransportType",
+    "MCPServerInfo",
+    "MCPToolSchema",
+    "MCPResource",
+    "JsonRpcRequest",
+    "JsonRpcResponse",
+    "JsonRpcError",
+    "MCPTransport",
+    "StdioTransport",
+    "HttpSseTransport",
+    "MCPClient",
+    "MCPTool",
 ]
