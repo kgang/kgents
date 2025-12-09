@@ -79,6 +79,26 @@ This principle comes from [C-gents](c-gents/) but applies to all agents.
 - **Associativity holds**: (A ∘ B) ∘ C = A ∘ (B ∘ C)
 - **Interfaces are contracts**: Composability requires clear input/output specs
 
+### Category Laws (Required)
+
+Agents form a category. These laws are not aspirational—they are **verified**:
+
+| Law | Requirement | Verification |
+|-----|-------------|--------------|
+| Identity | `Id >> f ≡ f ≡ f >> Id` | BootstrapWitness.verify_identity_laws() |
+| Associativity | `(f >> g) >> h ≡ f >> (g >> h)` | BootstrapWitness.verify_composition_laws() |
+
+**Implication**: Any agent that breaks these laws is NOT a valid agent.
+
+### Orthogonality Principle
+
+Optional features MUST NOT break composition:
+- **Metadata is optional**: An agent works with or without `AgentMeta`
+- **Protocols are opt-in**: Implementing `Introspectable` doesn't change `invoke()`
+- **State is composed**: Symbiont pattern separates pure logic from D-gent memory
+
+**Test**: Can you compose an agent with metadata and one without? If not, violation.
+
 ### The Minimal Output Principle
 
 **For LLM agents producing structured outputs (JSON, etc.):**
@@ -103,6 +123,8 @@ Agents should generate the **smallest output that can be reliably composed**, no
 - "God agents" that must be used alone
 - **LLM agents that return arrays of outputs instead of single outputs**
 - **Prompts that ask agents to "combine" or "synthesize multiple" results**
+- **Inheritance hierarchies that force feature coupling**
+- **Features that only work in isolation**
 
 ---
 
@@ -173,6 +195,73 @@ A design is generative if:
 - Implementations that diverge from spec (spec rot)
 - Designs that require extensive prose to explain (not compressed)
 - "Living documentation" that tracks impl instead of generating it
+
+### The Generative Implementation Cycle
+
+```
+Spec → Impl → Test → Validate → Spec (refined)
+```
+
+Evidence from codebase:
+- **skeleton.py**: ~700 lines derived from 175-line anatomy.md
+- **bootstrap/**: 7 agents exactly matching bootstrap.md
+- **BootstrapWitness**: Verifies laws hold at runtime
+
+**Metric**: Autopoiesis Score = (lines generated from spec) / (total lines)
+Target: >50% for mature implementations.
+
+---
+
+## The Meta-Principle: The Accursed Share
+
+> Everything is slop or comes from slop. We cherish and express gratitude and love.
+
+This principle operates ON the seven principles, not alongside them. It derives from Georges Bataille's theory that all systems accumulate surplus energy that must be *spent* rather than conserved.
+
+**The Paradox**: Curation at its core is *performative*. For curation to occur, there must be that which isn't curated. The Accursed Share is in **genuine tension** with good taste—we encourage the creation of slop. This tension is not resolved; it is held.
+
+**The Three Faces**:
+
+1. **Meta-Principle**: Operates on the seven principles
+   - Tasteful curation requires uncurated material to select from
+   - Joy-Inducing requires surplus to spend on delight
+   - Generative requires waste products to compost into new forms
+
+2. **Operational Tactic**: Runtime resource allocation
+   - Exploration budget: 10% for "useless" exploration
+   - Serendipity threshold: Allow low-confidence tangents
+   - Even urgent tasks leave room for the accursed share
+
+3. **Derived Idiom**: Emerges from composition taken seriously
+   - T-gents Type II Saboteurs ARE the Accursed Share in action
+   - Noise injection is gratitude for the generative chaos
+   - Failed experiments are offerings, not waste
+
+**The Slop Ontology**:
+
+| State | Description | Disposition |
+|-------|-------------|-------------|
+| Raw Slop | Unfiltered LLM output, noise, tangents | Compost heap |
+| Refined Slop | Filtered but unjudged material | Selection pool |
+| Curated | Judged worthy by principles | The garden |
+| Cherished | Loved, preserved, celebrated | The archive |
+
+**The Gratitude Loop**:
+```
+Slop → Filter → Curate → Cherish → Compost → Slop
+       ↑                                ↓
+       └──────── gratitude ─────────────┘
+```
+
+We do not resent the slop. We thank it for providing the raw material from which beauty emerges.
+
+### Meta Anti-patterns
+- "Every token must serve the goal" (denies the sun's gift)
+- Pruning all low-confidence paths immediately (premature curation)
+- Treating personality as overhead (joy is the accursed share spent well)
+- Shame about waste (waste is sacred expenditure)
+
+*Zen Principle: The river that flows only downhill never discovers the mountain spring.*
 
 ---
 
