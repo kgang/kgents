@@ -1,6 +1,6 @@
 # D-gents Specification Summary
 
-This document summarizes the completed D-gents specification.
+This document summarizes the D-gents specification.
 
 ---
 
@@ -8,17 +8,39 @@ This document summarizes the completed D-gents specification.
 
 A complete specification for **D-gents (Data Agents)** - the memory and state management layer of kgents.
 
-### Core Files (2,819 lines total)
+### Core Files (~4,000 lines total)
 
-1. **[README.md](README.md)** (546 lines)
+1. **[README.md](README.md)** (~620 lines)
    - Philosophy: "State is the shadow of computation; memory is the trace of time"
    - Theoretical foundation as the State Monad in Category Theory
    - Three pillars: Persistence, Projection, Plasticity
-   - Complete taxonomy of 6 D-gent types
+   - Complete taxonomy of 6 D-gent types (with advanced vision links)
+   - **NEW**: Memory Garden metaphor for joy-inducing data management
    - Relationships to all other genera (T, C, J, H, K, E)
    - Success criteria and anti-patterns
 
-2. **[protocols.md](protocols.md)** (517 lines)
+2. **[vision.md](vision.md)** (~400 lines) **NEW**
+   - Memory as Landscape philosophy
+   - Noosphere Architecture overview
+   - Semantic Manifold: curvature, voids (Ma), geodesics
+   - Temporal Witness: drift detection, semantic momentum
+   - Relational Lattice: meet, join, entailment
+   - Unified Memory Monad specification
+   - Entropy-aware persistence selection
+   - Memory Garden specification with trust model
+   - Integration points with L-gent, G-gent, J-gent, K-gent
+   - Implementation phases (2-4)
+
+3. **[noosphere.md](noosphere.md)** (~500 lines) **NEW**
+   - Detailed Semantic Manifold specification (VectorAgent++)
+   - Detailed Temporal Witness specification (StreamAgent++)
+   - Detailed Relational Lattice specification (GraphAgent++)
+   - Category-theoretic foundations for each layer
+   - Integration patterns with L-gent, K-gent, J-gent, H-gent
+   - Unified Memory composition patterns
+   - Implementation notes (dependencies, performance, errors)
+
+4. **[protocols.md](protocols.md)** (517 lines)
    - The DataAgent protocol (load/save/history interface)
    - Extended protocols: Transactional, Queryable, Observable
    - Reference implementations: VolatileAgent, PersistentAgent
@@ -26,7 +48,7 @@ A complete specification for **D-gents (Data Agents)** - the memory and state ma
    - Comprehensive testing patterns
    - Composition patterns (caching, migration)
 
-3. **[lenses.md](lenses.md)** (526 lines)
+5. **[lenses.md](lenses.md)** (526 lines)
    - Lens laws: GetPut, PutGet, PutPut
    - Basic lens examples (dict keys, dataclass fields, list indices)
    - Lens composition for nested state access
@@ -34,7 +56,7 @@ A complete specification for **D-gents (Data Agents)** - the memory and state ma
    - Advanced patterns: Traversals, Prisms
    - Category Theory foundations (lenses as comonads)
 
-4. **[symbiont.md](symbiont.md)** (595 lines)
+6. **[symbiont.md](symbiont.md)** (595 lines)
    - The endosymbiotic pattern (biological metaphor)
    - Fusing pure logic with stateful memory
    - Detailed comparison: with vs. without Symbiont

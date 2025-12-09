@@ -32,6 +32,7 @@ from .cli_types import (
     OutputFormat,
     PersonaMode,
     format_output,
+    with_metrics,
 )
 from .mirror_cli import MirrorCLI, format_mirror_report_rich
 from .membrane_cli import MembraneCLI, format_membrane_observe_rich
@@ -42,6 +43,9 @@ from .igent_synergy import (
 )
 from .companions import (
     CompanionsCLI,
+)
+from .scientific import (
+    ScientificCLI,
 )
 
 # Kairos imports
@@ -97,6 +101,12 @@ For more information, see: https://github.com/kgents/kgents
         "--explain",
         action="store_true",
         help="Show philosophical context for command",
+    )
+    parser.add_argument(
+        "--no-metrics",
+        action="store_true",
+        dest="no_metrics",
+        help="Hide token/cost metrics from output",
     )
     parser.add_argument(
         "--version",
@@ -434,6 +444,106 @@ For more information, see: https://github.com/kgents/kgents
         help="Path to analyze (default: current directory)",
     )
 
+    # ---------------------------------------------------------------------
+    # Scientific Core (Tier 2 - H-gent dialectics)
+    # ---------------------------------------------------------------------
+
+    # falsify
+    falsify_parser = subparsers.add_parser(
+        "falsify",
+        help="Find counterexamples to a hypothesis (0 tokens)",
+    )
+    falsify_parser.add_argument(
+        "hypothesis",
+        help="The hypothesis to falsify",
+    )
+    falsify_parser.add_argument(
+        "path",
+        nargs="?",
+        default=".",
+        help="Path to search for counterexamples (default: current directory)",
+    )
+    falsify_parser.add_argument(
+        "--depth",
+        choices=["shallow", "medium", "deep"],
+        default="medium",
+        help="Search depth (default: medium)",
+    )
+
+    # conjecture
+    conjecture_parser = subparsers.add_parser(
+        "conjecture",
+        help="Generate hypotheses from observed patterns (0 tokens)",
+    )
+    conjecture_parser.add_argument(
+        "path",
+        nargs="?",
+        default=".",
+        help="Path to analyze (default: current directory)",
+    )
+    conjecture_parser.add_argument(
+        "--limit",
+        type=int,
+        default=5,
+        help="Maximum conjectures to generate (default: 5)",
+    )
+
+    # rival
+    rival_parser = subparsers.add_parser(
+        "rival",
+        help="Steel-man opposing views for a position (0 tokens)",
+    )
+    rival_parser.add_argument(
+        "position",
+        help="The position to find rivals for",
+    )
+
+    # sublate
+    sublate_parser = subparsers.add_parser(
+        "sublate",
+        help="Synthesize contradictions dialectically (0 tokens)",
+    )
+    sublate_parser.add_argument(
+        "thesis",
+        help="The thesis to synthesize",
+    )
+    sublate_parser.add_argument(
+        "--antithesis",
+        help="The antithesis (optional, will be inferred if not provided)",
+    )
+    sublate_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Force synthesis even if productive tension",
+    )
+
+    # shadow
+    shadow_parser = subparsers.add_parser(
+        "shadow",
+        help="Surface suppressed concerns for a self-image (0 tokens)",
+    )
+    shadow_parser.add_argument(
+        "self_image",
+        help="The self-image to analyze (e.g., 'I am helpful and accurate')",
+    )
+
+    # ---------------------------------------------------------------------
+    # Debug Commands
+    # ---------------------------------------------------------------------
+
+    # debug
+    debug_parser = subparsers.add_parser(
+        "debug",
+        help="Debug utilities",
+    )
+    debug_sub = debug_parser.add_subparsers(dest="debug_command", help="Debug command")
+
+    # debug ctx
+    debug_sub.add_parser(
+        "ctx",
+        help="Dump current CLI context",
+    )
+
     return parser
 
 
@@ -577,7 +687,7 @@ async def handle_pulse(args: argparse.Namespace, ctx: CLIContext) -> int:
     result = await cli.pulse(path, ctx)
 
     if result.success and result.output:
-        print(result.output.render())
+        print(with_metrics(result.output.render(), result, ctx))
     else:
         print(format_output(result, ctx, "pulse"))
 
@@ -590,7 +700,7 @@ async def handle_ground(args: argparse.Namespace, ctx: CLIContext) -> int:
     result = await cli.ground(args.statement, ctx)
 
     if result.success and result.output:
-        print(result.output.render())
+        print(with_metrics(result.output.render(), result, ctx))
     else:
         print(format_output(result, ctx, "ground"))
 
@@ -603,7 +713,7 @@ async def handle_breathe(args: argparse.Namespace, ctx: CLIContext) -> int:
     result = await cli.breathe(ctx)
 
     if result.success and result.output:
-        print(result.output)
+        print(with_metrics(result.output, result, ctx))
     else:
         print(format_output(result, ctx, "breathe"))
 
@@ -617,11 +727,137 @@ async def handle_entropy(args: argparse.Namespace, ctx: CLIContext) -> int:
     result = await cli.entropy(path, ctx)
 
     if result.success and result.output:
-        print(result.output.render())
+        print(with_metrics(result.output.render(), result, ctx))
     else:
         print(format_output(result, ctx, "entropy"))
 
     return result.exit_code
+
+
+# =============================================================================
+# Scientific Core Handlers (Phase 2)
+# =============================================================================
+
+
+async def handle_falsify(args: argparse.Namespace, ctx: CLIContext) -> int:
+    """Handle falsify command."""
+    cli = ScientificCLI()
+    path = Path(args.path).expanduser().resolve()
+    result = await cli.falsify(args.hypothesis, path, ctx, depth=args.depth)
+
+    if result.success and result.output:
+        print(with_metrics(result.output.render(), result, ctx))
+    else:
+        print(format_output(result, ctx, "falsify"))
+
+    return result.exit_code
+
+
+async def handle_conjecture(args: argparse.Namespace, ctx: CLIContext) -> int:
+    """Handle conjecture command."""
+    cli = ScientificCLI()
+    path = Path(args.path).expanduser().resolve()
+    result = await cli.conjecture(path, ctx, limit=args.limit)
+
+    if result.success and result.output:
+        print(with_metrics(result.output.render(), result, ctx))
+    else:
+        print(format_output(result, ctx, "conjecture"))
+
+    return result.exit_code
+
+
+async def handle_rival(args: argparse.Namespace, ctx: CLIContext) -> int:
+    """Handle rival command."""
+    cli = ScientificCLI()
+    result = await cli.rival(args.position, ctx)
+
+    if result.success and result.output:
+        print(with_metrics(result.output.render(), result, ctx))
+    else:
+        print(format_output(result, ctx, "rival"))
+
+    return result.exit_code
+
+
+async def handle_sublate(args: argparse.Namespace, ctx: CLIContext) -> int:
+    """Handle sublate command."""
+    cli = ScientificCLI()
+    result = await cli.sublate(
+        args.thesis,
+        getattr(args, "antithesis", None),
+        ctx,
+        force=getattr(args, "force", False),
+    )
+
+    if result.success and result.output:
+        print(with_metrics(result.output.render(), result, ctx))
+    else:
+        print(format_output(result, ctx, "sublate"))
+
+    return result.exit_code
+
+
+async def handle_shadow(args: argparse.Namespace, ctx: CLIContext) -> int:
+    """Handle shadow command."""
+    cli = ScientificCLI()
+    result = await cli.shadow(args.self_image, ctx)
+
+    if result.success and result.output:
+        print(with_metrics(result.output.render(), result, ctx))
+    else:
+        print(format_output(result, ctx, "shadow"))
+
+    return result.exit_code
+
+
+# =============================================================================
+# Debug Handlers
+# =============================================================================
+
+
+def handle_debug(args: argparse.Namespace, ctx: CLIContext) -> int:
+    """Handle debug commands."""
+    if args.debug_command == "ctx":
+        return handle_debug_ctx(args, ctx)
+    else:
+        print(f"Unknown debug command: {args.debug_command}")
+        print("Available: ctx")
+        return 1
+
+
+def handle_debug_ctx(args: argparse.Namespace, ctx: CLIContext) -> int:
+    """Dump current CLI context."""
+    if ctx.output_format == OutputFormat.JSON:
+        print(
+            json.dumps(
+                {
+                    "output_format": ctx.output_format.value,
+                    "persona": ctx.persona.value,
+                    "show_metrics": ctx.show_metrics,
+                    "budget": {
+                        "level": ctx.budget.level.value,
+                        "tokens_used": ctx.budget.tokens_used,
+                        "llm_calls_used": ctx.budget.llm_calls_used,
+                    },
+                },
+                indent=2,
+            )
+        )
+    else:
+        print("=== CLI Context ===\n")
+        print(f"Output Format: {ctx.output_format.value}")
+        print(f"Persona: {ctx.persona.value}")
+        print(f"Show Metrics: {ctx.show_metrics}")
+        print()
+        print("Budget:")
+        print(f"  Level: {ctx.budget.level.value}")
+        print(f"  Tokens Used: {ctx.budget.tokens_used}")
+        print(f"  LLM Calls Used: {ctx.budget.llm_calls_used}")
+        print()
+        print("(Note: tokens/calls reset each CLI invocation)")
+
+    return 0
 
 
 # =============================================================================
@@ -965,6 +1201,7 @@ async def async_main(argv: Sequence[str] | None = None) -> int:
         budget=BudgetStatus.from_level(BudgetLevel(args.budget))
         if hasattr(args, "budget")
         else BudgetStatus.from_level(BudgetLevel.MEDIUM),
+        show_metrics=not getattr(args, "no_metrics", False),
     )
 
     # Route to handler
@@ -1017,6 +1254,25 @@ async def async_main(argv: Sequence[str] | None = None) -> int:
 
     elif args.command == "entropy":
         return await handle_entropy(args, ctx)
+
+    # Scientific Core (Tier 2 - H-gent dialectics)
+    elif args.command == "falsify":
+        return await handle_falsify(args, ctx)
+
+    elif args.command == "conjecture":
+        return await handle_conjecture(args, ctx)
+
+    elif args.command == "rival":
+        return await handle_rival(args, ctx)
+
+    elif args.command == "sublate":
+        return await handle_sublate(args, ctx)
+
+    elif args.command == "shadow":
+        return await handle_shadow(args, ctx)
+
+    elif args.command == "debug":
+        return handle_debug(args, ctx)
 
     else:
         print(f"Unknown command: {args.command}")

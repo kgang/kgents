@@ -361,6 +361,9 @@ class CLIContext:
     # Timestamps
     started_at: datetime = field(default_factory=datetime.now)
 
+    # Metrics visibility (for trust-building, default on)
+    show_metrics: bool = True
+
     def is_tty(self) -> bool:
         """Check if output is a TTY (for rich format default)."""
         import sys
@@ -475,14 +478,56 @@ def _format_rich(result: CommandResult[Any], ctx: CLIContext, agent: str) -> str
             for suggestion in result.error.suggestions:
                 lines.append(f"  - {suggestion}")
 
-    # Footer with cost/time
-    if result.budget_status and result.budget_status.tokens_used > 0:
+    # Footer with metrics (for trust-building, default on)
+    if ctx.show_metrics:
         lines.append("")
-        lines.append(
-            f"[tokens: {result.budget_status.tokens_used}, time: {result.duration_ms}ms]"
-        )
+        lines.append(_format_metrics_line(result, ctx))
 
     return "\n".join(lines)
+
+
+def _format_metrics_line(result: CommandResult[Any], ctx: CLIContext) -> str:
+    """Format metrics footer line for transparency."""
+    parts = []
+
+    # Tokens
+    tokens = result.budget_status.tokens_used if result.budget_status else 0
+    parts.append(f"tokens: {tokens}")
+
+    # LLM calls
+    llm_calls = result.budget_status.llm_calls_used if result.budget_status else 0
+    parts.append(f"llm: {llm_calls}")
+
+    # Duration
+    parts.append(f"time: {result.duration_ms}ms")
+
+    # Budget level
+    parts.append(f"budget: {ctx.budget.level.value}")
+
+    return f"[{' | '.join(parts)}]"
+
+
+def format_metrics(result: CommandResult[Any], ctx: CLIContext) -> str:
+    """
+    Get metrics line for appending to custom output.
+
+    Use this when a command has custom rendering but still wants metrics.
+    Returns empty string if metrics are disabled.
+    """
+    if not ctx.show_metrics:
+        return ""
+    return "\n" + _format_metrics_line(result, ctx)
+
+
+def with_metrics(output: str, result: CommandResult[Any], ctx: CLIContext) -> str:
+    """
+    Wrap custom output with metrics footer.
+
+    Convenience function for commands with custom render() methods.
+    """
+    if not ctx.show_metrics:
+        return output
+    return output + "\n\n" + _format_metrics_line(result, ctx)
 
 
 def _format_markdown(result: CommandResult[Any], agent: str) -> str:

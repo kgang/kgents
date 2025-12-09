@@ -212,20 +212,23 @@ def test_domain_analysis_populated():
 @pytest.fixture
 def sample_tongue():
     """Create a sample Tongue for testing."""
+    grammar = 'CMD ::= "CHECK" Date | "ADD" Event'
     return Tongue(
         name="CalendarTongue",
         version="1.0.0",
         lexicon=frozenset(["CHECK", "ADD", "Date", "Event"]),
-        grammar='CMD ::= "CHECK" Date | "ADD" Event',
+        grammar=grammar,
         mime_type="application/vnd.kgents.calendar",
         level=GrammarLevel.COMMAND,
         format=GrammarFormat.BNF,
         parser_config=ParserConfig(
             strategy="regex",
             grammar_format=GrammarFormat.BNF,
+            grammar_spec=grammar,
         ),
         interpreter_config=InterpreterConfig(
             runtime="python",
+            semantics="command",
         ),
         domain="Calendar Management",
         constraints=("No DELETE operations", "No overwrites"),
@@ -274,16 +277,20 @@ def test_tongue_hashable(sample_tongue):
     assert hash(sample_tongue) == hash(tongue2)
 
 
-def test_tongue_parse_not_implemented(sample_tongue):
-    """Test that parse() raises NotImplementedError (Phase 3)."""
-    with pytest.raises(NotImplementedError, match="P-gent integration"):
-        sample_tongue.parse("CHECK 2024-12-15")
+def test_tongue_parse_implemented(sample_tongue):
+    """Test that parse() works with BNF grammar (Phase 3 implemented)."""
+    result = sample_tongue.parse("CHECK 2024-12-15")
+    assert result.success
+    assert result.ast["verb"] == "CHECK"
+    assert result.ast["noun"] == "2024-12-15"
 
 
-def test_tongue_execute_not_implemented(sample_tongue):
-    """Test that execute() raises NotImplementedError (Phase 3)."""
-    with pytest.raises(NotImplementedError, match="J-gent integration"):
-        sample_tongue.execute({"type": "check"})
+def test_tongue_execute_implemented(sample_tongue):
+    """Test that execute() works with parsed AST (Phase 3 implemented)."""
+    result = sample_tongue.execute({"verb": "CHECK", "noun": "2024-12-15"})
+    assert result.success
+    # Command execution without handlers returns intent-only
+    assert result.value["executed"] is False
 
 
 def test_tongue_validate(sample_tongue):
@@ -291,10 +298,10 @@ def test_tongue_validate(sample_tongue):
     assert sample_tongue.validate() is True
 
 
-def test_tongue_render_not_implemented(sample_tongue):
-    """Test that render() raises NotImplementedError (Phase 3)."""
-    with pytest.raises(NotImplementedError, match="P-gent integration"):
-        sample_tongue.render({"type": "check"})
+def test_tongue_render_implemented(sample_tongue):
+    """Test that render() works with AST (Phase 3 implemented)."""
+    rendered = sample_tongue.render({"verb": "CHECK", "noun": "2024-12-15"})
+    assert rendered == "CHECK 2024-12-15"
 
 
 # ============================================================================

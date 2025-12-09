@@ -9,24 +9,19 @@ Tests cover:
 - Tongue evolution/versioning
 """
 
-import json
 import tempfile
 import pytest
 from pathlib import Path
 
-try:
-    import yaml
+import importlib.util
 
-    HAS_YAML = True
-except ImportError:
-    HAS_YAML = False
+HAS_YAML = importlib.util.find_spec("yaml") is not None
 
 from agents.g.types import (
     GrammarLevel,
     GrammarFormat,
     ParserConfig,
     InterpreterConfig,
-    Example,
     ConstraintProof,
 )
 from agents.g.tongue import (
@@ -351,7 +346,7 @@ def test_create_schema_tongue():
     tongue = create_schema_tongue(
         name="UserSchema",
         domain="User Data",
-        pydantic_model=pydantic_model,
+        grammar=pydantic_model,
     )
 
     assert tongue.name == "UserSchema"
@@ -366,14 +361,12 @@ def test_create_schema_tongue():
 def test_create_command_tongue():
     """Test creating a COMMAND-level tongue."""
     bnf_grammar = 'CMD ::= "CHECK" | "ADD"'
-    lexicon = {"CHECK", "ADD", "Date", "Event"}
     constraints = ["No DELETE operations", "No overwrites"]
 
     tongue = create_command_tongue(
         name="CalendarCommands",
         domain="Calendar Management",
-        bnf_grammar=bnf_grammar,
-        lexicon=lexicon,
+        grammar=bnf_grammar,
         constraints=constraints,
     )
 
@@ -392,13 +385,11 @@ def test_create_recursive_tongue():
     op: "filter" | "map" | "reduce"
     atom: STRING | NUMBER
     """
-    lexicon = {"filter", "map", "reduce"}
 
     tongue = create_recursive_tongue(
         name="DataTransform",
         domain="Data Transformation",
-        lark_grammar=lark_grammar,
-        lexicon=lexicon,
+        grammar=lark_grammar,
     )
 
     assert tongue.name == "DataTransform"
@@ -519,8 +510,8 @@ def test_template_validation_integration():
     tongue = create_command_tongue(
         name="SafeQuery",
         domain="Database Queries",
-        bnf_grammar='QUERY ::= "SELECT" | "INSERT"',
-        lexicon={"SELECT", "INSERT"},
+        grammar='QUERY ::= "SELECT" | "INSERT"',
+        # lexicon={"SELECT", "INSERT"},
         constraints=["No DELETE", "No DROP"],
     )
 

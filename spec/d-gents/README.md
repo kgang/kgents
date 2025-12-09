@@ -215,20 +215,25 @@ The composition $\text{decode} \circ \text{encode}$ must equal the identity morp
 
 **Endosymbiotic Role**: Specialized Access
 
-### Type IV: Indexed Memory (Queries)
+### Type IV: Semantic Memory (Manifold)
 
 **VectorAgent**: State represented as high-dimensional embeddings with semantic search.
 
 | Characteristic | Description |
 |----------------|-------------|
 | **Signature** | `VectorAgent[S](dimension: int, distance: Metric)` |
-| **Persistence** | Typically backed by vector DB |
+| **Persistence** | Typically backed by vector DB (FAISS, Pinecone, Weaviate) |
 | **Performance** | Fast semantic queries, slower exact retrieval |
 | **Use Case** | RAG systems, semantic memory, association networks |
 
 **Endosymbiotic Role**: Associative Memory
 
-### Type V: Structural Memory (Graphs)
+**Advanced Vision**: The Semantic Manifold (see [vision.md](vision.md)):
+- **Curvature**: High-curvature regions indicate conceptual boundaries—synthesis opportunities
+- **Voids (Ma)**: Unexplored semantic regions suggest generative potential
+- **Geodesics**: Paths of minimum semantic distance between concepts
+
+### Type V: Relational Memory (Lattice)
 
 **GraphAgent**: State as a knowledge graph with nodes, edges, and traversal queries.
 
@@ -241,7 +246,12 @@ The composition $\text{decode} \circ \text{encode}$ must equal the identity morp
 
 **Endosymbiotic Role**: Relational Memory
 
-### Type VI: Streaming Memory (Event Sourcing)
+**Advanced Vision**: The Relational Lattice (see [vision.md](vision.md)):
+- **Meet (∧)**: Greatest common sub-state ("what do A and B have in common?")
+- **Join (∨)**: Least common super-state ("smallest state containing both")
+- **Lineage**: Every artifact knows its derivation chain—essential for ethical memory
+
+### Type VI: Temporal Memory (Witness)
 
 **StreamAgent**: State derived from event stream; `load()` replays events, `save()` appends.
 
@@ -253,6 +263,38 @@ The composition $\text{decode} \circ \text{encode}$ must equal the identity morp
 | **Use Case** | Audit logs, collaborative editing, time-series analysis |
 
 **Endosymbiotic Role**: Temporal Memory
+
+**Advanced Vision**: The Temporal Witness (see [vision.md](vision.md)):
+- **Drift Detection**: "When did behavior diverge from expectation?"
+- **Semantic Momentum**: p⃗ = m · v⃗ (where is state heading?)
+- **Entropy Measurement**: Rate of change indicates system stability
+
+### The Memory Garden (Vision)
+
+Beyond the six types lies a **unifying metaphor**: memory as cultivation.
+
+```
+┌────────────────────────────────────────────────────────────┐
+│                    THE MEMORY GARDEN                        │
+│                                                            │
+│  🌱 Seeds:     New ideas, unvalidated hypotheses           │
+│  🌿 Saplings:  Emerging patterns, growing certainty        │
+│  🌳 Trees:     Established knowledge, high trust           │
+│  🍂 Compost:   Deprecated ideas, recycled into growth      │
+│  🌸 Flowers:   Peak insights, ready for harvesting         │
+│  🍄 Mycelium:  Hidden connections (relational lattice)     │
+│                                                            │
+└────────────────────────────────────────────────────────────┘
+```
+
+**Gardening Operations**:
+- `plant(seed)` → Track new hypothesis (low trust, high potential)
+- `nurture(sapling)` → Add evidence, increase trust
+- `harvest(flower)` → Extract and act on insight
+- `prune(tree)` → Remove outdated branches
+- `compost(dead)` → Transform deprecated to potential (Accursed Share)
+
+This metaphor aligns D-gents with kgents' **joy-inducing** principle: data management should feel like cultivation, not filing. See [vision.md](vision.md) for full specification.
 
 ---
 
@@ -485,6 +527,7 @@ A D-gent is well-designed if:
 | [lenses.md](lenses.md) | Lens laws, composition, and traversals |
 | [protocols.md](protocols.md) | The DataAgent protocol and implementations |
 | [symbiont.md](symbiont.md) | Endosymbiotic pattern for stateful agents |
+| [vision.md](vision.md) | **NEW**: Memory as Landscape + Noosphere Layer |
 | [vector.md](vector.md) | Semantic memory with embeddings |
 | [graph.md](graph.md) | Knowledge graphs as state |
 | [streams.md](streams.md) | Event sourcing and temporal state |

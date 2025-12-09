@@ -279,142 +279,6 @@ def load_tongue_yaml(filepath: str) -> Tongue:
 
 
 # ============================================================================
-# Tongue Templates
-# ============================================================================
-
-
-def create_schema_tongue(
-    name: str,
-    domain: str,
-    pydantic_model: str,
-    version: str = "1.0.0",
-) -> Tongue:
-    """
-    Create a simple SCHEMA-level tongue from a Pydantic model.
-
-    Args:
-        name: Tongue name
-        domain: Domain description
-        pydantic_model: Pydantic model as string
-        version: Version string
-
-    Returns:
-        A Tongue configured for SCHEMA level parsing
-    """
-    return (
-        TongueBuilder(name, version)
-        .with_domain(domain)
-        .with_level(GrammarLevel.SCHEMA)
-        .with_format(GrammarFormat.PYDANTIC)
-        .with_grammar(pydantic_model)
-        .with_parser_config(
-            ParserConfig(
-                strategy="pydantic",
-                grammar_format=GrammarFormat.PYDANTIC,
-            )
-        )
-        .with_interpreter_config(
-            InterpreterConfig(
-                runtime="python",
-                pure_functions_only=True,
-            )
-        )
-        .build()
-    )
-
-
-def create_command_tongue(
-    name: str,
-    domain: str,
-    bnf_grammar: str,
-    lexicon: set[str],
-    constraints: list[str],
-    version: str = "1.0.0",
-) -> Tongue:
-    """
-    Create a COMMAND-level tongue with BNF grammar.
-
-    Args:
-        name: Tongue name
-        domain: Domain description
-        bnf_grammar: BNF grammar specification
-        lexicon: Allowed tokens
-        constraints: Constraint list
-        version: Version string
-
-    Returns:
-        A Tongue configured for COMMAND level parsing
-    """
-    builder = (
-        TongueBuilder(name, version)
-        .with_domain(domain)
-        .with_level(GrammarLevel.COMMAND)
-        .with_format(GrammarFormat.BNF)
-        .with_grammar(bnf_grammar)
-        .with_lexicon(*lexicon)
-        .with_parser_config(
-            ParserConfig(
-                strategy="regex",
-                grammar_format=GrammarFormat.BNF,
-            )
-        )
-        .with_interpreter_config(
-            InterpreterConfig(
-                runtime="python",
-            )
-        )
-    )
-
-    for constraint in constraints:
-        builder.with_constraint(constraint)
-
-    return builder.build()
-
-
-def create_recursive_tongue(
-    name: str,
-    domain: str,
-    lark_grammar: str,
-    lexicon: set[str],
-    version: str = "1.0.0",
-) -> Tongue:
-    """
-    Create a RECURSIVE-level tongue with Lark grammar.
-
-    Args:
-        name: Tongue name
-        domain: Domain description
-        lark_grammar: Lark grammar specification
-        lexicon: Allowed tokens
-        version: Version string
-
-    Returns:
-        A Tongue configured for RECURSIVE level parsing
-    """
-    return (
-        TongueBuilder(name, version)
-        .with_domain(domain)
-        .with_level(GrammarLevel.RECURSIVE)
-        .with_format(GrammarFormat.LARK)
-        .with_grammar(lark_grammar)
-        .with_lexicon(*lexicon)
-        .with_parser_config(
-            ParserConfig(
-                strategy="lark",
-                grammar_format=GrammarFormat.LARK,
-            )
-        )
-        .with_interpreter_config(
-            InterpreterConfig(
-                runtime="sandboxed",
-                pure_functions_only=True,
-            )
-        )
-        .build()
-    )
-
-
-# ============================================================================
 # Tongue Evolution (Versioning)
 # ============================================================================
 
@@ -453,3 +317,143 @@ def evolve_tongue(
     updates.update(changes)
 
     return replace(tongue, **updates)
+
+
+# ============================================================================
+# Template Functions for Common Tongue Types
+# ============================================================================
+
+
+def create_schema_tongue(
+    name: str, domain: str, grammar: str, version: str = "1.0.0"
+) -> Tongue:
+    """
+    Create a Schema-level tongue (Level 1: Pydantic).
+
+    Args:
+        name: Tongue name
+        domain: Domain this tongue serves
+        grammar: Pydantic model definition as string
+        version: Version string
+
+    Returns:
+        Tongue configured for schema validation
+    """
+    return (
+        TongueBuilder(name, version)
+        .with_domain(domain)
+        .with_level(GrammarLevel.SCHEMA)
+        .with_format(GrammarFormat.PYDANTIC)
+        .with_grammar(grammar)
+        .with_parser_config(
+            ParserConfig(
+                strategy="pydantic",
+                grammar_format=GrammarFormat.PYDANTIC,
+                grammar_spec=grammar,
+                confidence_threshold=1.0,
+            )
+        )
+        .with_interpreter_config(
+            InterpreterConfig(
+                runtime="python",
+                semantics="pure",
+                pure_functions_only=True,
+                timeout_ms=1000,
+            )
+        )
+        .build()
+    )
+
+
+def create_command_tongue(
+    name: str,
+    domain: str,
+    grammar: str,
+    constraints: list[str] | None = None,
+    version: str = "1.0.0",
+) -> Tongue:
+    """
+    Create a Command-level tongue (Level 2: BNF verb-noun).
+
+    Args:
+        name: Tongue name
+        domain: Domain this tongue serves
+        grammar: BNF grammar specification
+        constraints: List of constraints to encode
+        version: Version string
+
+    Returns:
+        Tongue configured for command parsing
+    """
+    import re
+
+    # Extract verbs from grammar
+    verbs = re.findall(r'"([A-Z]+)"', grammar)
+    lexicon = set(verbs) if verbs else set()
+
+    builder = (
+        TongueBuilder(name, version)
+        .with_domain(domain)
+        .with_level(GrammarLevel.COMMAND)
+        .with_format(GrammarFormat.BNF)
+        .with_grammar(grammar)
+        .with_lexicon(*lexicon)
+        .with_parser_config(
+            ParserConfig(
+                strategy="regex",
+                grammar_format=GrammarFormat.BNF,
+                grammar_spec=grammar,
+                confidence_threshold=0.95,
+            )
+        )
+        .with_interpreter_config(
+            InterpreterConfig(runtime="python", semantics="command", timeout_ms=5000)
+        )
+    )
+
+    if constraints:
+        for constraint in constraints:
+            builder.with_constraint(constraint)
+
+    return builder.build()
+
+
+def create_recursive_tongue(
+    name: str, domain: str, grammar: str, version: str = "1.0.0"
+) -> Tongue:
+    """
+    Create a Recursive-level tongue (Level 3: Lark S-expressions).
+
+    Args:
+        name: Tongue name
+        domain: Domain this tongue serves
+        grammar: Lark EBNF grammar
+        version: Version string
+
+    Returns:
+        Tongue configured for recursive parsing
+    """
+    return (
+        TongueBuilder(name, version)
+        .with_domain(domain)
+        .with_level(GrammarLevel.RECURSIVE)
+        .with_format(GrammarFormat.LARK)
+        .with_grammar(grammar)
+        .with_parser_config(
+            ParserConfig(
+                strategy="lark",
+                grammar_format=GrammarFormat.LARK,
+                grammar_spec=grammar,
+                confidence_threshold=0.9,
+            )
+        )
+        .with_interpreter_config(
+            InterpreterConfig(
+                runtime="sandboxed",
+                semantics="recursive",
+                pure_functions_only=True,
+                timeout_ms=10000,
+            )
+        )
+        .build()
+    )

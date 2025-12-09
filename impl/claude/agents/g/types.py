@@ -111,6 +111,7 @@ class ParserConfig:
 
     strategy: Parsing strategy (regex, tokenizer, lark)
     grammar_format: The format of the grammar
+    grammar_spec: The grammar specification text
     confidence_threshold: Minimum confidence to accept parse [0.0, 1.0]
     repair_strategy: How to handle malformed input
     case_sensitive: Whether parsing is case-sensitive
@@ -118,9 +119,21 @@ class ParserConfig:
 
     strategy: str  # "regex" | "tokenizer" | "lark" | "pydantic"
     grammar_format: GrammarFormat
+    grammar_spec: str = ""  # The actual grammar text
     confidence_threshold: float = 0.8
     repair_strategy: str = "fail"  # "fail" | "best_effort" | "interactive"
     case_sensitive: bool = True
+
+    # Alias for backward compatibility
+    @property
+    def format(self) -> GrammarFormat:
+        """Alias for grammar_format."""
+        return self.grammar_format
+
+    @property
+    def parser_strategy(self) -> str | None:
+        """Alias for strategy."""
+        return self.strategy
 
     def __post_init__(self):
         if not 0.0 <= self.confidence_threshold <= 1.0:
@@ -342,19 +355,31 @@ class Tongue:
 
         Delegates to P-gent configured with parser_config.
         """
-        # Placeholder - will be implemented when P-gent integration is ready
-        raise NotImplementedError("parse() requires P-gent integration (Phase 3)")
+        # Import here to avoid circular dependency
+        from agents.g.parser import parse_with_tongue
+
+        return parse_with_tongue(text, self.parser_config)
 
     def execute(
-        self, ast: Any, context: dict[str, Any] | None = None
+        self,
+        ast: Any,
+        context: dict[str, Any] | None = None,
+        handlers: dict[str, Any] | None = None,
     ) -> ExecutionResult:
         """
         Execute parsed AST in context.
 
         Delegates to J-gent configured with interpreter_config.
+
+        Args:
+            ast: Parsed abstract syntax tree from parse()
+            context: Optional execution context (variables, state, etc.)
+            handlers: Optional command handlers for Level 2 commands
         """
-        # Placeholder - will be implemented when J-gent integration is ready
-        raise NotImplementedError("execute() requires J-gent integration (Phase 3)")
+        # Import here to avoid circular dependency
+        from agents.g.interpreter import execute_with_tongue
+
+        return execute_with_tongue(ast, self.interpreter_config, context, handlers)
 
     def validate(self) -> bool:
         """
@@ -376,9 +401,17 @@ class Tongue:
         Render AST back to text (inverse of parse).
 
         For round-trip validation: parse(render(ast)) == ast
+
+        Args:
+            ast: Abstract syntax tree (from parse() or execute())
+
+        Returns:
+            Text representation that can be re-parsed
         """
-        # Placeholder - will be implemented when P-gent integration is ready
-        raise NotImplementedError("render() requires P-gent integration (Phase 3)")
+        # Import here to avoid circular dependency
+        from agents.g.renderer import render_ast
+
+        return render_ast(ast, self.format, self.level)
 
     def to_dict(self) -> dict[str, Any]:
         """
