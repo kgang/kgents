@@ -74,6 +74,15 @@ from .sandbox import (
     type_check_source,
     validate_jit_safety,
 )
+from .forge_integration import (
+    ForgeTemplate,
+    TemplateParameters,
+    InstantiatedAgent,
+    TemplateRegistry,
+    contract_to_template,
+    instantiate_template,
+    forge_and_instantiate,
+)
 
 __all__ = [
     # Promise types (Phase 1)
@@ -134,4 +143,13 @@ __all__ = [
     "jgent",
     "jgent_sync",
     "generate_test_for_intent",
+    # F+J Integration types (Cross-Pollination T1.3)
+    "ForgeTemplate",
+    "TemplateParameters",
+    "InstantiatedAgent",
+    "TemplateRegistry",
+    # F+J Integration helpers (Cross-Pollination T1.3)
+    "contract_to_template",
+    "instantiate_template",
+    "forge_and_instantiate",
 ]
