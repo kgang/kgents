@@ -353,6 +353,232 @@ This is the O-gent's core ethical constraint:
 | `DriftDetector` | Monitor semantic drift (Noether's theorem) |
 | `HealthProbe` | Continuous health assessment |
 | `TopologyMapper` | Track agent composition graphs |
+| `ValueLedgerObserver` | Track economic health via UVP |
+| `TensorValidator` | Verify conservation laws across dimensions |
+| `RoCMonitor` | Monitor Return on Compute per agent |
+
+---
+
+## B-gent Integration: ValueLedger Observability
+
+O-gents have special access to observe the **Universal Value Protocol** ([spec/b-gents/banker.md](../b-gents/banker.md)) and **Value Tensor** ([spec/b-gents/value-tensor.md](../b-gents/value-tensor.md)) systems.
+
+### ValueLedgerObserver
+
+```python
+class ValueLedgerObserver(Agent[None, EconomicHealthReport]):
+    """
+    Observes the system's economic health via ValueLedger.
+
+    Provides:
+    - System GDP (total Impact generated)
+    - Gas efficiency (system-wide RoC)
+    - Agent performance rankings
+    - Ethical adjustment summaries
+    """
+
+    def __init__(self, ledger: ValueLedger):
+        self.ledger = ledger
+
+    async def invoke(self, _: None) -> EconomicHealthReport:
+        return EconomicHealthReport(
+            system_gdp=self.ledger.total_impact(),
+            total_gas_burned=self.ledger.total_gas(),
+            system_roc=self.ledger.system_roc(),
+            agent_rankings=self.get_agent_rankings(),
+            ethical_summary=self.get_ethical_summary(),
+            anomalies=self.detect_economic_anomalies()
+        )
+
+    def get_agent_rankings(self) -> list[AgentRanking]:
+        """Rank agents by Return on Compute."""
+        rankings = []
+        for agent_id in self.ledger.get_all_agents():
+            sheet = self.ledger.get_agent_balance_sheet(agent_id)
+            rankings.append(AgentRanking(
+                agent_id=agent_id,
+                roc=sheet.assets / sheet.gas_consumed if sheet.gas_consumed > 0 else 0,
+                impact=sheet.assets,
+                gas=sheet.gas_consumed,
+                status=self.classify_status(sheet)
+            ))
+        return sorted(rankings, key=lambda r: r.roc, reverse=True)
+
+    def detect_economic_anomalies(self) -> list[EconomicAnomaly]:
+        """Detect suspicious economic patterns."""
+        anomalies = []
+
+        # Check for agents burning money
+        for agent_id in self.ledger.get_all_agents():
+            sheet = self.ledger.get_agent_balance_sheet(agent_id)
+            if sheet.gas_consumed > 1000 and sheet.assets < sheet.gas_consumed * 0.5:
+                anomalies.append(EconomicAnomaly(
+                    type="burning_money",
+                    agent_id=agent_id,
+                    severity="warning",
+                    message=f"Agent {agent_id} has RoC < 0.5x after {sheet.gas_consumed} gas"
+                ))
+
+        # Check for impact without gas (suspicious)
+        for agent_id in self.ledger.get_all_agents():
+            sheet = self.ledger.get_agent_balance_sheet(agent_id)
+            if sheet.assets > 1000 and sheet.gas_consumed < 100:
+                anomalies.append(EconomicAnomaly(
+                    type="free_lunch",
+                    agent_id=agent_id,
+                    severity="error",
+                    message=f"Agent {agent_id} claims high impact with minimal gas"
+                ))
+
+        return anomalies
+```
+
+### TensorValidator
+
+```python
+class TensorValidator(Agent[ValueTensor, ValidationReport]):
+    """
+    Validates conservation laws across the Value Tensor.
+
+    Catches:
+    - Conservation violations (impossible state transitions)
+    - Cross-dimensional inconsistencies (delusion detection)
+    - Exchange rate anomalies
+    """
+
+    def __init__(self):
+        self.checker = AntiDelusionChecker()
+        self.laws = CONSERVATION_LAWS
+
+    async def invoke(self, tensor: ValueTensor) -> ValidationReport:
+        # Check internal consistency
+        consistency_anomalies = self.checker.check_consistency(tensor)
+
+        # Check conservation laws (requires before/after, so use history)
+        conservation_violations = []
+        if hasattr(tensor, '_previous'):
+            conservation_violations = [
+                law.name for law in self.laws
+                if not law.check(tensor._previous, tensor)
+            ]
+
+        return ValidationReport(
+            tensor_valid=len(consistency_anomalies) == 0,
+            conservation_valid=len(conservation_violations) == 0,
+            anomalies=consistency_anomalies,
+            violations=conservation_violations,
+            dimensions_healthy={
+                "physical": tensor.physical.total_tokens > 0,
+                "semantic": tensor.semantic.confidence > 0.3,
+                "economic": tensor.economic.roc >= 0,
+                "ethical": 0.1 <= tensor.ethical.net_ethical_multiplier <= 3.0
+            }
+        )
+```
+
+### RoCMonitor Integration
+
+```python
+class RoCObserver:
+    """
+    Real-time monitoring of Return on Compute across all agents.
+
+    Integrates with O-gent dashboard and alert systems.
+    """
+
+    def __init__(self, ledger: ValueLedger, alert_agent: AlertAgent):
+        self.ledger = ledger
+        self.alert_agent = alert_agent
+        self.thresholds = RoCThresholds(
+            bankruptcy=0.5,
+            break_even=1.0,
+            healthy=2.0
+        )
+
+    async def observe_continuously(self) -> AsyncIterator[RoCSnapshot]:
+        """Stream RoC snapshots for real-time dashboard."""
+        while True:
+            snapshot = RoCSnapshot(
+                timestamp=datetime.now(),
+                system_roc=self.ledger.system_roc(),
+                agent_rocs={
+                    agent_id: self.calculate_agent_roc(agent_id)
+                    for agent_id in self.ledger.get_all_agents()
+                },
+                alerts=[]
+            )
+
+            # Generate alerts for problem agents
+            for agent_id, roc in snapshot.agent_rocs.items():
+                if roc < self.thresholds.bankruptcy:
+                    snapshot.alerts.append(
+                        await self.alert_agent.invoke(RoCAlert(
+                            agent_id=agent_id,
+                            roc=roc,
+                            threshold="bankruptcy",
+                            action="budget_freeze"
+                        ))
+                    )
+
+            yield snapshot
+            await asyncio.sleep(5)  # 5-second intervals
+
+    def observe_transaction(
+        self,
+        agent_id: str,
+        gas: Gas,
+        impact: Impact
+    ) -> TransactionObservation:
+        """Observe a single transaction for economic health."""
+        roc = impact.realized_value / gas.cost_usd if gas.cost_usd > 0 else 0
+
+        return TransactionObservation(
+            agent_id=agent_id,
+            gas=gas,
+            impact=impact,
+            roc=roc,
+            roc_status=self.classify_roc(roc),
+            running_average_roc=self.ledger.get_agent_average_roc(agent_id),
+            budget_adjustment=self.calculate_budget_adjustment(roc)
+        )
+```
+
+### Economic Dashboard (O-gent View)
+
+```
+┌─ O-gent Economic Observability ──────────────────────────────┐
+│                                                               │
+│  SYSTEM HEALTH                                                │
+│  ├─ GDP (Total Impact):     $12,450                          │
+│  ├─ Gas Burned:             $3,200                           │
+│  ├─ System RoC:             3.89x (Healthy)                  │
+│  └─ Conservation Laws:      ✓ All holding                    │
+│                                                               │
+│  AGENT PERFORMANCE (by RoC)                                   │
+│  ┌───────────────────────────────────────────────────────┐   │
+│  │ Agent          │ RoC    │ Impact │ Gas    │ Status    │   │
+│  ├───────────────────────────────────────────────────────┤   │
+│  │ CodeReviewer   │ 5.2x   │ $2,600 │ $500   │ ★ High    │   │
+│  │ TestWriter     │ 3.1x   │ $1,550 │ $500   │ ✓ Good    │   │
+│  │ Refactorer     │ 1.8x   │ $900   │ $500   │ ✓ Good    │   │
+│  │ DocWriter      │ 0.9x   │ $450   │ $500   │ ○ Even    │   │
+│  │ Experimenter   │ 0.3x   │ $150   │ $500   │ ⚠ Warning │   │
+│  └───────────────────────────────────────────────────────┘   │
+│                                                               │
+│  TENSOR VALIDATION                                            │
+│  ├─ Physical:    ✓ Token accounting consistent               │
+│  ├─ Semantic:    ✓ Quality/complexity aligned                │
+│  ├─ Economic:    ✓ Gas/Impact balanced                       │
+│  └─ Ethical:     ✓ Multipliers in valid range                │
+│                                                               │
+│  RECENT ANOMALIES                                             │
+│  └─ None detected (last 24h)                                 │
+│                                                               │
+│  ALERTS                                                       │
+│  └─ [WARN] Experimenter approaching bankruptcy threshold     │
+│                                                               │
+└───────────────────────────────────────────────────────────────┘
+```
 
 ---
 

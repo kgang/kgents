@@ -86,7 +86,8 @@ The letter "B" holds both views simultaneously.
 | [hypothesis-engine.md](hypothesis-engine.md) | Bio | Generating testable hypotheses |
 | [robin.md](robin.md) | Bio | Scientific companion |
 | [bio-gent.md](bio-gent.md) | Bio | Personalized scientific companion |
-| [banker.md](banker.md) | Banker | The Metered Functor and Central Bank |
+| [banker.md](banker.md) | Banker | The Metered Functor, Central Bank, and Universal Value Protocol |
+| [value-tensor.md](value-tensor.md) | Banker | Multi-dimensional resource ontology |
 
 ---
 

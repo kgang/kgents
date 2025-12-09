@@ -80,14 +80,15 @@ In addition to the foundational kgents principles, E-gents add:
 - Multiple validation layers prevent self-corruption
 - Human approval required for meta-changes above threshold
 
-### 11. Metered (via B-gent Banker)
+### 11. Metered (via B-gent Banker + UVP)
 
-**Conservative token consumption builds user trust.**
+**Conservative token consumption builds user trust. Value-adjusted accounting builds system trust.**
 
-E-gents integrate the **B-gent Banker** ([spec/b-gents/banker.md](../b-gents/banker.md)) to manage token economics. The Metered Functor transforms evolution agents into economic agents:
+E-gents integrate the **B-gent Banker** ([spec/b-gents/banker.md](../b-gents/banker.md)) and the **Universal Value Protocol** to manage token economics with ethical incentives.
 
 ```
 Metered: Agent[A, B] → Agent[A, Receipt[B]]
+Tensored: Agent[A, B] → Agent[A, (B, ValueTensor)]
 ```
 
 **The Metering Principle** (from Banker):
@@ -113,6 +114,62 @@ account.balance = min(max_balance, balance + (delta * refill_rate))
 Evolution budgets refill over time. Burst capacity allows intensive sessions; sustained high usage triggers rate limiting.
 
 **The Trust Gradient**: Users see E-gents succeed with minimal tokens before trusting larger budgets. Conservative defaults demonstrate competence and build confidence.
+
+### 12. Value-Adjusted (via UVP Sin Tax / Virtue Subsidy)
+
+**Economic incentives align agent behavior with system health.**
+
+E-gents are subject to the **Ethical-Economic Regulator** from the Universal Value Protocol ([spec/b-gents/banker.md#sin-tax-and-virtue-subsidy](../b-gents/banker.md)):
+
+**Sin Taxes** (penalties for harmful evolutions):
+| Sin | Multiplier | Trigger |
+|-----|------------|---------|
+| Security vulnerability | 0.33x (3x penalty) | T-gent security scan fails |
+| Type regression | 0.5x (2x penalty) | Mypy errors introduced |
+| Test regression | 0.4x (2.5x penalty) | Previously passing tests fail |
+| Complexity increase | 0.7x (1.4x penalty) | Cyclomatic complexity rises |
+
+**Virtue Subsidies** (bonuses for beneficial evolutions):
+| Virtue | Multiplier | Trigger |
+|--------|------------|---------|
+| Improved readability | 1.3x | Maintainability index improves |
+| Added tests | 1.5x | Test coverage increases |
+| Fixed tech debt | 1.4x | Static analysis warnings decrease |
+| Reduced complexity | 1.3x | Cyclomatic complexity drops |
+| Improved types | 1.2x | Type coverage increases |
+
+**Integration with Evolution Pipeline**:
+```python
+# After Judge stage, before Incorporate
+ethical_assessment = EthicalRegulator().assess_evolution(
+    before=thesis,
+    after=synthesis,
+    test_results=experiment.test_results,
+    security_scan=experiment.security_scan
+)
+
+# Impact adjusted by ethical multiplier
+adjusted_impact = base_impact * ethical_assessment.net_multiplier
+
+# Record in ValueLedger for RoC tracking
+ledger.log_evolution(
+    hypothesis_id=hypothesis.id,
+    gas_consumed=experiment.tokens_used,
+    impact_realized=adjusted_impact,
+    sins=ethical_assessment.sins,
+    virtues=ethical_assessment.virtues
+)
+```
+
+**The Feedback Loop**: Agents with poor RoC (Return on Compute) face budget restrictions. Agents with high RoC earn budget increases. This creates evolutionary pressure toward valuable, ethical code changes.
+
+**Return on Compute (RoC)** thresholds for E-gents:
+| RoC | Status | Budget Adjustment |
+|-----|--------|-------------------|
+| < 0.5 | Bankruptcy warning | Budget frozen |
+| 0.5 - 1.0 | Break-even | No change |
+| 1.0 - 2.0 | Profitable | +10% budget |
+| > 2.0 | High yield | +25% budget |
 
 ## The Evolution Pipeline
 

@@ -66,6 +66,9 @@ Agents don't exist in isolation. Key integration points:
 | O+* | O-gents observe all agents including bootstrap |
 | N+O | N-gent stories feed O-gent metrics |
 | B+B | B-Banker controls B-Bio's resource allocation |
+| B+E | B-Banker UVP regulates E-gent evolution via Sin Tax / Virtue Subsidy |
+| B+O | O-gent ValueLedgerObserver monitors B-Banker economic health |
+| B+W | W-gent renders B-Banker RoC dashboard and Value Tensor |
 | Ψ+H | Ψ-gent uses H-gent dialectics for ego/shadow synthesis |
 | Ψ+O | O-gent observes Ψ-gent Borromean register transitions |
 | Ψ+N | N-gent narrates Ψ-gent's integration journeys |

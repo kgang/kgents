@@ -281,6 +281,120 @@ Show data operations:
 - Retrieval queries
 - Lineage tracking
 
+### B-gents (Banker / UVP)
+**W-gents render the Value Dashboard and RoC Stock Ticker.**
+
+The Universal Value Protocol ([spec/b-gents/banker.md](../b-gents/banker.md)) produces economic data that W-gents visualize:
+
+#### The Agent Stock Ticker
+
+Real-time RoC (Return on Compute) per agent, rendered as a trading dashboard:
+
+```
+┌─ AGENT STOCK TICKER ─────────────────────────────────────────┐
+│                                                               │
+│  System GDP: $12,450    Gas Burned: $3,200    RoC: 3.89x     │
+│  ════════════════════════════════════════════════════════════ │
+│                                                               │
+│  CodeReviewer (CRVW)                          ▲ 5.2x (+0.3)  │
+│  ████████████████████████████████████████████ HIGH YIELD     │
+│  Impact: $2,600 | Gas: $500 | Txns: 23                       │
+│                                                               │
+│  TestWriter (TSTW)                            ▲ 3.1x (+0.1)  │
+│  █████████████████████████░░░░░░░░░░░░░░░░░░░ PROFITABLE     │
+│  Impact: $1,550 | Gas: $500 | Txns: 18                       │
+│                                                               │
+│  Refactorer (RFCT)                            ─ 1.8x (0.0)   │
+│  █████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ PROFITABLE     │
+│  Impact: $900 | Gas: $500 | Txns: 12                         │
+│                                                               │
+│  DocWriter (DOCW)                             ▼ 0.9x (-0.2)  │
+│  ███████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ BREAK-EVEN     │
+│  Impact: $450 | Gas: $500 | Txns: 15                         │
+│                                                               │
+│  Experimenter (EXPR)                          ▼ 0.3x (-0.4)  │
+│  ██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ ⚠️ WARNING     │
+│  Impact: $150 | Gas: $500 | Txns: 8                          │
+│                                                               │
+│  [refresh: 5s]  [sort: RoC ▼]  [filter: all]                 │
+└───────────────────────────────────────────────────────────────┘
+```
+
+#### The Value Tensor Inspector
+
+Multi-dimensional view of agent state:
+
+```
+┌─ VALUE TENSOR :: CodeReviewer ───────────────────────────────┐
+│                                                               │
+│  PHYSICAL                    SEMANTIC                        │
+│  ┌─────────────────────┐    ┌─────────────────────┐         │
+│  │ Tokens:     12,450  │    │ Quality:      0.78  │         │
+│  │ Time (ms):   3,200  │    │ Compression:  0.34  │         │
+│  │ Memory:     256 MB  │    │ Confidence:   0.65  │         │
+│  │ Model: opus (15x)   │    │ AST Valid:    ✓     │         │
+│  └─────────────────────┘    └─────────────────────┘         │
+│                                                               │
+│  ECONOMIC                    ETHICAL                         │
+│  ┌─────────────────────┐    ┌─────────────────────┐         │
+│  │ Gas Cost:   $1.87   │    │ Sin Tax:      1.00x │         │
+│  │ Impact:     342     │    │ Virtue:       1.30x │         │
+│  │ RoC:        182.9x  │    │ Net:          1.30x │         │
+│  │ Status:  High Yield │    │ Risk:         LOW   │         │
+│  └─────────────────────┘    └─────────────────────┘         │
+│                                                               │
+│  TRANSACTION HISTORY (last 10)                               │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │ Time     │ Gas    │ Impact │ RoC   │ Ethical      │    │
+│  ├─────────────────────────────────────────────────────┤    │
+│  │ 10:42:15 │ $0.12  │ 45     │ 3.75x │ +tests 1.5x  │    │
+│  │ 10:41:02 │ $0.08  │ 28     │ 3.50x │ clean        │    │
+│  │ 10:39:45 │ $0.15  │ 62     │ 4.13x │ +readable    │    │
+│  └─────────────────────────────────────────────────────┘    │
+│                                                               │
+│  [live] [history] [export]                                   │
+└───────────────────────────────────────────────────────────────┘
+```
+
+#### Human Feedback Loop
+
+When you (the human) click "Merge PR," you validate the Impact:
+
+```
+┌─ MERGE CONFIRMATION ─────────────────────────────────────────┐
+│                                                               │
+│  PR #142: "Fix authentication race condition"                │
+│  Agent: CodeReviewer                                         │
+│                                                               │
+│  IMPACT CLAIMED                                               │
+│  ├─ Base Value:     100 (Tier: functional - tests passed)   │
+│  ├─ Virtue Bonus:   +50% (security fix)                      │
+│  └─ Total Impact:   150                                       │
+│                                                               │
+│  GAS CONSUMED                                                 │
+│  └─ Tokens: 2,340 ($0.35)                                    │
+│                                                               │
+│  YOUR FEEDBACK                                                │
+│  ┌───────────────────────────────────────────────────────┐   │
+│  │ This output was:                                      │   │
+│  │ [★★★★★] Excellent - Worth $500+ to the project       │   │
+│  │ [★★★★☆] Good - Worth the compute                     │   │
+│  │ [★★★☆☆] Acceptable - Marginal value                  │   │
+│  │ [★★☆☆☆] Poor - Barely useful                         │   │
+│  │ [★☆☆☆☆] Waste - Should not have been generated       │   │
+│  └───────────────────────────────────────────────────────┘   │
+│                                                               │
+│  Your feedback calibrates the Oracle's Impact calculations.  │
+│                                                               │
+│  [Merge & Rate]  [Merge Only]  [Cancel]                      │
+└───────────────────────────────────────────────────────────────┘
+```
+
+This human feedback loop teaches the system:
+- "This type of output is worth $X"
+- Agent RoC adjusts based on validated Impact
+- Future similar outputs get more accurate Impact predictions
+
 ### K-gent (Kent Simulacra)
 **K-gent may request W-gent observation.**
 
