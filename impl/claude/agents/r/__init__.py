@@ -97,6 +97,39 @@ from .integrations import (
     RGentIntegrationHub,
 )
 
+# Phase 4: Advanced Features
+from .advanced import (
+    # Part 1: Auto-selection
+    TaskComplexity,
+    DatasetCharacteristics,
+    TaskAnalysis,
+    StrategyRecommendation,
+    TaskAnalyzer,
+    AutoTeleprompterSelector,
+    # Part 2: Drift detection
+    PerformanceSample,
+    DriftReport,
+    DriftDetectionMethod,
+    ModelDriftDetector,
+    ReoptimizationTrigger,
+    # Part 3: Transfer analysis
+    ModelProfile,
+    TransferPrediction,
+    CrossModelTransferAnalyzer,
+    # Part 4: Fine-tuning
+    FinetuneStatus,
+    FinetuneJob,
+    FinetuneConfig,
+    FinetuneDataset,
+    FinetunePreparer,
+    OpenAIFinetunePreparer,
+    AnthropicFinetunePreparer,
+    BootstrapFinetuneTeleprompter,
+    # Part 5: Unified
+    AdvancedRefineryConfig,
+    AdvancedRefinery,
+)
+
 __all__ = [
     # Core types
     "Signature",
@@ -165,4 +198,33 @@ __all__ = [
     # Phase 3: Unified hub
     "RGentIntegrationConfig",
     "RGentIntegrationHub",
+    # Phase 4: Auto-selection
+    "TaskComplexity",
+    "DatasetCharacteristics",
+    "TaskAnalysis",
+    "StrategyRecommendation",
+    "TaskAnalyzer",
+    "AutoTeleprompterSelector",
+    # Phase 4: Drift detection
+    "PerformanceSample",
+    "DriftReport",
+    "DriftDetectionMethod",
+    "ModelDriftDetector",
+    "ReoptimizationTrigger",
+    # Phase 4: Transfer analysis
+    "ModelProfile",
+    "TransferPrediction",
+    "CrossModelTransferAnalyzer",
+    # Phase 4: Fine-tuning
+    "FinetuneStatus",
+    "FinetuneJob",
+    "FinetuneConfig",
+    "FinetuneDataset",
+    "FinetunePreparer",
+    "OpenAIFinetunePreparer",
+    "AnthropicFinetunePreparer",
+    "BootstrapFinetuneTeleprompter",
+    # Phase 4: Unified
+    "AdvancedRefineryConfig",
+    "AdvancedRefinery",
 ]

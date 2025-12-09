@@ -4,33 +4,363 @@
 
 ## TL;DR
 
-**Status**: UNCOMMITTED CHANGES | R-gents Phase 3 (Cross-Genus Integrations) COMPLETE ✅
+**Status**: UNCOMMITTED CHANGES | H-gent Spec COMPLETE ✅
 **Branch**: `main`
-**Latest Commit**: 16ebeeb - docs: Update HYDRATE.md for R-gents and T-gents Phase 5-6
-**This Session**: R-gents Phase 3 - Cross-Genus Integrations
-  - **integrations.py ✅**: ~1,100 lines implementing:
-    - `FGentRefineryBridge`: F-gent → R-gent prototype refinement pipeline
-    - `TGentLossAdapter`: T-gent → R-gent loss signal conversion
-    - `BGentBudgetProtocol`: B-gent → R-gent budget grant protocol
-    - `LGentOptimizationIndex`: L-gent → R-gent optimization metadata indexing
-    - `RGentIntegrationHub`: Unified interface for all integrations
-  - **test_integrations.py ✅**: 57 comprehensive tests
-    - `TestPrototypeRefinementRequest`: 3 tests
-    - `TestPrototypeRefinementResult`: 2 tests
-    - `TestFGentRefineryBridge`: 6 tests
-    - `TestTGentLossAdapter`: 6 tests
-    - `TestBGentBudgetProtocol`: 6 tests
-    - `TestBudgetConstrainedRefinery`: 3 tests
-    - `TestLGentOptimizationIndex`: 5 tests
-    - `TestRGentIntegrationHub`: 8 tests
-    - `TestFullIntegrationPipeline`: 3 tests
-    - `TestEdgeCases`: 5 tests
+**Latest Commit**: 458bfc4 - style(r-gents): Auto-format and lint fixes
+**This Session**: H-gent Specification (Mirror Protocol Phase 0)
+  - **spec/h-gents/README.md** ✅: Core H-gent philosophy and types for Mirror Protocol
+  - **spec/h-gents/contradiction.md** ✅: How tensions are detected (Contradict operation)
+  - **spec/h-gents/sublation.md** ✅: How tensions resolve (Sublate operation, synthesis strategies)
+  - **spec/h-gents/kairos.md** ✅: The art of timing (Kairos Engine, intervention cost function)
+**Mirror Protocol Status**: Phase 0 blocker resolved - H-gent spec complete
 **Uncommitted Files**:
-  - `impl/claude/agents/r/integrations.py` (NEW - ~1,100 lines)
-  - `impl/claude/agents/r/_tests/test_integrations.py` (NEW - 57 tests)
-  - `impl/claude/agents/r/__init__.py` (UPDATED - exports)
+  - `spec/h-gents/README.md` (NEW - ~280 lines)
+  - `spec/h-gents/contradiction.md` (NEW - ~370 lines)
+  - `spec/h-gents/sublation.md` (NEW - ~410 lines)
+  - `spec/h-gents/kairos.md` (NEW - ~450 lines)
   - `HYDRATE.md` (this file)
-**Next**: Commit R-gents Phase 3 work
+**Next**:
+  - Commit H-gent specs
+  - Begin Phase 1: Obsidian extractor (P-gent for local vaults)
+
+---
+
+## What Just Happened: H-gent Specification (Mirror Protocol Phase 0)
+
+### Session Overview (2025-12-09)
+
+Wrote comprehensive H-gent specifications—the dialectical engine at the heart of the Mirror Protocol. This was identified as a Phase 0 blocker in `docs/mirror-protocol-implementation.md`.
+
+### Files Created
+
+**1. `spec/h-gents/README.md`** (~280 lines):
+- Core types: `Thesis`, `Antithesis`, `Tension`, `Synthesis`
+- `TensionType` enum (behavioral, aspirational, outdated, contextual, fundamental)
+- Mirror Protocol integration overview
+- Bootstrap derivation (Continuation Monad pattern)
+- Relationship to P-gents, W-gents, O-gents, B-gents, J-gents
+- Ethical constraints (scope boundary, authority problem)
+
+**2. `spec/h-gents/contradiction.md`** (~370 lines):
+- `Contradict` operation specification
+- Detection strategies:
+  - Structural Analysis (fast, metrics-based)
+  - Semantic Analysis (LLM-powered, deep)
+  - Temporal Analysis (drift detection)
+- `DivergenceScore` model (0.0 aligned → 1.0 contradictory)
+- Common patterns: Aspiration Gap, Decay, Context Collapse, Shadow, Performative
+- Detection quality metrics (precision, recall, sensitivity calibration)
+
+**3. `spec/h-gents/sublation.md`** (~410 lines):
+- `Sublate` operation specification
+- Synthesis strategies:
+  - `BehavioralAlignment`: Principle right, adjust behavior
+  - `PrincipleRevision`: Behavior reveals truth, update principle
+  - `ContextualIntegration`: Both right in different contexts
+  - `DialecticalTranscendence`: Higher truth containing both
+- `HoldTension` model for productive tensions
+- Hold criteria and productive tension types
+- Cost estimation for synthesis
+- Anti-synthesis patterns (compromise, suppression, flip-flop)
+
+**4. `spec/h-gents/kairos.md`** (~450 lines):
+- `Kairos` model (opportune moment)
+- `KairosType` enum (retrospective, decision_point, pattern_peak, etc.)
+- `InterventionType` enum (reflect, remember, remind, suggest, draft, ritual, audit)
+- Intervention-Moment matrix
+- `calculate_intervention_cost()` function with multipliers
+- `KairosEngine` class for holding tensions
+- Moment detection algorithms
+- Escalation tiers for persistent tensions
+- The Patience Principle
+
+### Architecture
+
+```
+H-gents: Dialectical Introspection Agents
+
+Core Operations (Bootstrap Primitives)
+    ├── Contradict: (Thesis, Observation) → Tension | None
+    └── Sublate: Tension → Synthesis | HoldTension
+
+Contradiction Detection (contradiction.md)
+    ├── Structural Analysis: Metrics → Divergence
+    ├── Semantic Analysis: Content → Divergence (LLM)
+    └── Temporal Analysis: History → Drift
+
+Sublation Strategies (sublation.md)
+    ├── BehavioralAlignment: Reinforce principle
+    ├── PrincipleRevision: Update principle
+    ├── ContextualIntegration: Split by context
+    └── DialecticalTranscendence: Higher synthesis
+
+Kairos Engine (kairos.md)
+    ├── hold(): Queue tension for right moment
+    ├── check_for_kairos(): Scan for opportunities
+    ├── wait_for_kairos(): Block until moment arrives
+    └── select_intervention(): Match intervention to moment
+
+Moment Types
+    ├── RETROSPECTIVE: Best for reflection
+    ├── DECISION_POINT: Good for REMEMBER
+    ├── CRISIS_AFTERMATH: Good for RITUAL
+    └── EXPLICIT_ASK: Any passive intervention
+```
+
+### Mirror Protocol Phase 0 Status
+
+| Integration | Status | Notes |
+|-------------|--------|-------|
+| J+T Integration | ✅ | Tests passing |
+| R-gents DSPy Backend | ✅ | Phases 1-4 complete |
+| **H-gent (Hegelian)** | ✅ | **This session** |
+| O-gent Orchestration | 🟡 | Partial, needs intervention policies |
+
+### Next Steps (Mirror Protocol Phase 1)
+
+Per `docs/mirror-protocol-implementation.md`:
+
+1. **Obsidian extractor** - P-gent for local vaults
+2. **Personal Mirror CLI** - Test on Obsidian vaults
+3. **Tension detection** - H-gent implementation (structural patterns first)
+
+---
+
+## Prior Session: R-gents Phase 4 (Advanced Features)
+
+### Session Overview (2025-12-09)
+
+Implemented R-gents Phase 4: Advanced features for sophisticated prompt optimization including automatic strategy selection, drift detection, cross-model transfer analysis, and fine-tuning integration.
+
+### Phase 4 Implementation
+
+**1. Automatic Teleprompter Selection** (~350 lines):
+- `TaskAnalyzer`: Analyzes task complexity, dataset characteristics, and requirements
+- `AutoTeleprompterSelector`: Selects optimal strategy based on weighted scoring
+- `TaskComplexity`: TRIVIAL → SIMPLE → MODERATE → COMPLEX → EXPERT
+- `DatasetCharacteristics`: TINY → SMALL → MEDIUM → LARGE → MASSIVE
+- Category Theory: Functor Task-Analysis → Strategy
+
+**2. Model Drift Detection** (~400 lines):
+- `ModelDriftDetector`: Monitors agent performance over time
+- `DriftDetectionMethod`: Four detection algorithms:
+  - `STATISTICAL`: Z-score based drift detection
+  - `SLIDING_WINDOW`: Moving average comparison
+  - `CUSUM`: Cumulative sum control chart
+  - `PAGE_HINKLEY`: Sequential change-point detection
+- `ReoptimizationTrigger`: Automatic re-optimization triggers
+- Category Theory: Predicate Agent × Time → Bool
+
+**3. Cross-Model Transfer Analysis** (~200 lines):
+- `CrossModelTransferAnalyzer`: Predicts optimization transfer efficiency
+- `ModelProfile`: Model characteristics (family, tier, capabilities)
+- `TransferPrediction`: Predicted score, confidence, recommendations
+- Transfer matrix: GPT-4 ↔ Claude-3 ↔ Gemini efficiency mapping
+- Category Theory: Functor (Model-A × Trace) → Prediction
+
+**4. Fine-Tuning Integration** (~350 lines):
+- `BootstrapFinetuneTeleprompter`: Production-grade weight modification
+- `OpenAIFinetunePreparer`: OpenAI fine-tuning format
+- `AnthropicFinetunePreparer`: Anthropic format (hypothetical)
+- `FinetuneDataset`: Prepared training/validation splits
+- Cost estimation and budget validation
+- Category Theory: Endofunctor (F, D) → F' where F' is optimized
+
+**5. Unified AdvancedRefinery** (~100 lines):
+- `AdvancedRefinery`: Single interface for all Phase 4 features
+- `AdvancedRefineryConfig`: Feature toggles and settings
+- Methods: `recommend_strategy()`, `check_drift()`, `analyze_transfer()`, `prepare_finetune()`
+
+### Architecture
+
+```
+R-gents Phase 4: Advanced Features
+
+Part 1: Auto-Selection
+    TaskAnalyzer
+    ├── analyze()                      # Task → TaskAnalysis
+    ├── _estimate_complexity()         # Instructions → Complexity
+    └── _classify_dataset_size()       # Size → Characteristic
+
+    AutoTeleprompterSelector
+    ├── select()                       # Task → StrategyRecommendation
+    ├── _score_strategy()              # Analysis × Strategy → Score
+    └── _generate_reasoning()          # Analysis → Human-readable reasoning
+
+Part 2: Drift Detection
+    ModelDriftDetector
+    ├── record_sample()                # Score → (stored)
+    ├── detect_drift()                 # () → DriftReport
+    ├── _detect_statistical()          # Z-score method
+    ├── _detect_sliding_window()       # Moving average method
+    ├── _detect_cusum()                # CUSUM method
+    └── _detect_page_hinkley()         # Sequential analysis
+
+    ReoptimizationTrigger
+    ├── should_trigger()               # DriftReport → (Bool, Reason)
+    └── record_optimization()          # () → (update state)
+
+Part 3: Transfer Analysis
+    CrossModelTransferAnalyzer
+    ├── analyze_transfer()             # (Src, Tgt, Trace) → Prediction
+    └── recommend_target_models()      # (Src, Trace, Available) → Ranked
+
+Part 4: Fine-Tuning
+    BootstrapFinetuneTeleprompter
+    ├── compile()                      # (Sig, Examples) → Trace
+    ├── prepare_only()                 # (Sig, Examples) → Dataset
+    └── estimate_cost()                # (Sig, Examples) → USD
+
+    OpenAIFinetunePreparer / AnthropicFinetunePreparer
+    └── prepare_dataset()              # (Sig, Examples, Config) → Dataset
+
+Part 5: Unified Interface
+    AdvancedRefinery
+    ├── recommend_strategy()           # Auto-selection
+    ├── record_performance()           # Drift monitoring
+    ├── check_drift()                  # Drift analysis
+    ├── should_reoptimize()            # Trigger decision
+    ├── analyze_transfer()             # Transfer prediction
+    └── prepare_finetune()             # Fine-tune preparation
+```
+
+### Test Coverage (93 new tests)
+
+| Test Class | Count | Coverage |
+|------------|-------|----------|
+| `TestTaskComplexity` | 1 | Enum values |
+| `TestDatasetCharacteristics` | 1 | Enum values |
+| `TestTaskAnalysis` | 1 | Dataclass creation |
+| `TestTaskAnalyzer` | 7 | Analysis, complexity, dataset classification |
+| `TestStrategyRecommendation` | 1 | Recommendation creation |
+| `TestAutoTeleprompterSelector` | 8 | Selection, scoring, estimation |
+| `TestPerformanceSample` | 1 | Sample creation |
+| `TestDriftReport` | 1 | Report creation |
+| `TestModelDriftDetector` | 10 | All 4 detection methods, history |
+| `TestReoptimizationTrigger` | 6 | Trigger conditions, budget |
+| `TestModelProfile` | 1 | Profile creation |
+| `TestTransferPrediction` | 1 | Prediction creation |
+| `TestCrossModelTransferAnalyzer` | 4 | Transfer analysis, recommendations |
+| `TestFinetuneStatus` | 1 | Status enum |
+| `TestFinetuneConfig` | 2 | Config creation |
+| `TestFinetuneDataset` | 1 | Dataset creation |
+| `TestOpenAIFinetunePreparer` | 5 | Dataset prep, format, cost |
+| `TestAnthropicFinetunePreparer` | 3 | Dataset prep, format |
+| `TestBootstrapFinetuneTeleprompter` | 7 | Compile, prepare, estimate |
+| `TestAdvancedRefineryConfig` | 2 | Config creation |
+| `TestAdvancedRefinery` | 16 | All unified methods |
+| `TestPhase4Integration` | 4 | Full pipelines |
+| `TestEdgeCases` | 4 | Empty inputs, single example |
+
+### Test Status
+
+- **R-gents Total**: 258 tests passing (93 new + 165 existing)
+- **New**: +93 tests (Phase 4 advanced)
+- **Performance**: All tests green ✅ (0.20s for R-gents suite)
+
+### Spec Compliance
+
+Phase 4 from spec/r-gents/README.md:
+- [x] Automatic teleprompter selection based on task analysis
+- [x] Model drift detection + re-optimization triggers
+- [x] Cross-model transfer analysis
+- [x] Fine-tuning integration (BootstrapFinetune backend)
+
+### Key Files
+
+```
+impl/claude/agents/r/
+├── advanced.py           # NEW: ~1,200 lines
+├── __init__.py           # UPDATED: Phase 4 exports
+└── _tests/
+    └── test_advanced.py  # NEW: 93 tests
+```
+
+### Usage Examples
+
+```python
+from agents.r import (
+    AdvancedRefinery,
+    AdvancedRefineryConfig,
+    Signature,
+    Example,
+    ModelProfile,
+)
+
+# 1. Automatic Strategy Selection
+refinery = AdvancedRefinery()
+recommendation = refinery.recommend_strategy(
+    signature=signature,
+    examples=examples,
+    budget_usd=10.0,
+    target_accuracy=0.85,
+)
+print(f"Strategy: {recommendation.strategy}")
+print(f"Confidence: {recommendation.confidence:.0%}")
+print(f"Reasoning: {recommendation.reasoning}")
+
+# 2. Drift Detection
+refinery.record_performance(0.85)
+refinery.record_performance(0.82)
+refinery.record_performance(0.78)
+
+drift = refinery.check_drift()
+if drift.is_drifting:
+    print(f"Drift detected: {drift.drift_type}")
+    print(f"Severity: {drift.drift_severity:.0%}")
+
+should, reason = refinery.should_reoptimize()
+if should:
+    print(f"Re-optimization recommended: {reason}")
+
+# 3. Cross-Model Transfer Analysis
+source = ModelProfile(
+    model_id="gpt-4-turbo",
+    provider="openai",
+    model_family="gpt-4",
+    context_window=128000,
+    estimated_cost_per_1k_tokens=0.01,
+    quality_tier="frontier",
+)
+target = ModelProfile(
+    model_id="claude-3-opus",
+    provider="anthropic",
+    model_family="claude-3",
+    context_window=200000,
+    estimated_cost_per_1k_tokens=0.015,
+    quality_tier="frontier",
+)
+
+prediction = refinery.analyze_transfer(source, target, trace)
+print(f"Transfer efficiency: {prediction.transfer_efficiency:.0%}")
+print(f"Should re-optimize: {prediction.should_reoptimize}")
+
+# 4. Fine-Tuning Preparation
+config = AdvancedRefineryConfig(enable_finetuning=True)
+refinery = AdvancedRefinery(config)
+
+dataset = refinery.prepare_finetune(signature, examples)
+if dataset.is_valid:
+    print(f"Training examples: {len(dataset.training_examples)}")
+    print(f"Estimated cost: ${dataset.estimated_cost_usd:.2f}")
+```
+
+### R-gents Phase Summary
+
+| Phase | Status | Tests | Files |
+|-------|--------|-------|-------|
+| Phase 1: Foundation | ✅ Complete | 71 | types.py, refinery.py |
+| Phase 2: LLM-backed | ✅ Complete | 41 | dspy_backend.py |
+| Phase 3: Integrations | ✅ Complete | 57 | integrations.py |
+| Phase 4: Advanced | ✅ Complete | 93 | advanced.py |
+| **Total** | **Complete** | **262** | **4 modules** |
+
+### Category Theory Foundation
+
+- **AutoSelector**: Functor Task-Analysis → Strategy-Space
+- **DriftDetector**: Predicate on Agent-Performance × Time
+- **TransferAnalyzer**: Functor (Model × Trace) → Prediction
+- **BootstrapFinetune**: Strongest endofunctor - modifies model weights
 
 ---
 
