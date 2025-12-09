@@ -31,58 +31,45 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 ## TL;DR
 
-**Status**: READY TO COMMIT | Kairos Phase 3 Spec + CLI Publishing Complete
+**Status**: Clean, all committed and pushed
 **Branch**: `main`
-**Latest Commit**: 9d4e055 - feat(protocols): Add Membrane Protocol and complete Mirror Phase 1
+**Latest Commit**: 1da5127 - feat(protocols): Add Kairos Phase 3 spec and CLI publishing
 **Current State**:
   - Mirror Protocol Phase 1: ✅ COMPLETE (46 tests)
-  - Mirror Protocol Phase 2: ✅ IMPLEMENTATION COMPLETE (26 tests, ~700 lines)
-  - Mirror Protocol Phase 3 (Kairos): ✅ SPEC COMPLETE (opportune moment detection)
-  - Membrane Protocol v2.0: ✅ COMPLETE (topological perception)
-  - CLI Protocol: ✅ COMPLETE (59 tests, MirrorCLI + MembraneCLI + I-gent synergy)
-  - CLI Publishing: ✅ COMPLETE (`kgents` command installable via uv/pip)
-  - EventStream Protocol: ✅ IMPLEMENTED (GitStream, TemporalWitness, SemanticMomentumTracker)
-  - Protocol specs: ✅ REFACTORED (cli.md, event_stream.md more concise)
+  - Mirror Protocol Phase 2: ✅ COMPLETE (EventStream implementations, 26 tests)
+  - Mirror Protocol Phase 3 (Kairos): ✅ SPEC COMPLETE (needs implementation)
+  - CLI Publishing: ✅ COMPLETE (`kgents` command via pyproject.toml)
+  - CLI Protocol: ✅ COMPLETE (59 passing tests)
+  - Membrane Protocol v2.0: ✅ COMPLETE
+  - Tests: 63 passing, 22 skipped (optional deps)
 
-**Next**: Commit Kairos spec + CLI publishing, then implement Kairos Controller
-
----
-
-## Current Session: Kairos Phase 3 Spec + CLI Publishing (2025-12-09)
-
-### Overview
-
-Designed and specified Mirror Protocol Phase 3 (Kairos Controller) for opportune moment detection. Set up CLI as installable package.
-
-### Work Completed
-
-**Phase 3: Kairos Specification** (~500 lines):
-- `spec/protocols/kairos.md` - Complete spec for opportune moment detection
-- **Attention Budget**: User cognitive capacity tracking (DEEP_WORK/ACTIVE/TRANSITIONING/IDLE states)
-- **Tension Salience**: Urgency calculation via severity × momentum × recency
-- **Thermodynamic Cost Function**: B(t) = A(t) × S(t) / (1 + L(t)) for intervention timing
-- **Entropy Budget**: Rate limiting to prevent notification fatigue
-- **Kairos Controller**: State machine (OBSERVING → EVALUATING → SURFACING/DEFERRING → COOLDOWN)
-- **Ethical Considerations**: Attention respect, user control, emergency override, silence mode
-- **Integration**: Watch mode CLI (`kgents mirror watch --budget=medium`)
-
-**CLI Publishing Infrastructure**:
-- Updated `impl/claude/pyproject.toml`: Added `protocols` package + `kgents` console script
-- Created `impl/claude/protocols/cli/__main__.py`: Python module entry point
-- Tested both entry points:
-  - ✅ `kgents --help` (console script)
-  - ✅ `python -m protocols.cli --help` (module entry)
-- ✅ Installable via `uv pip install -e .`
-
-**Key Concepts**:
-- **Kairos** (καιρός): Greek concept of "opportune moment", not just chronological time
-- **Benefit Function**: Replaces cost minimization with value maximization
-- **Budget Levels**: LOW (1/4hr) / MEDIUM (3/2hr) / HIGH (6/hr) / UNLIMITED
-- **Severity Tiers**: CRITICAL (0.9+) / HIGH (0.7-0.9) / MEDIUM (0.4-0.7) / LOW (0.0-0.4)
+**Next Steps**:
+1. Implement Kairos Controller (attention detection, benefit function, watch mode)
+2. Fix lint warnings (2 unused variables in igent_synergy.py, membrane_cli.py)
+3. Consider Phase 4 (Autopoietic Loop) design
 
 ---
 
 ## Recent Sessions
+
+### Session: Kairos Phase 3 Spec + CLI Publishing (2025-12-09)
+
+**Commit**: 1da5127 - feat(protocols): Add Kairos Phase 3 spec and CLI publishing
+
+**Created**:
+- `spec/protocols/kairos.md` (~500 lines): Opportune moment detection spec
+  - Attention Budget, Tension Salience, Benefit Function B(t) = A(t)×S(t)/(1+L(t))
+  - Entropy Budget, Kairos Controller state machine, Ethical safeguards
+  - Watch mode: `kgents mirror watch --budget=medium`
+- `impl/claude/protocols/cli/__main__.py`: Module entry point
+
+**Modified**:
+- `impl/claude/pyproject.toml`: Added protocols package + kgents console script
+- CLI now installable: `kgents --help` and `python -m protocols.cli --help` both work
+
+**Included**: EventStream Phase 2 (GitStream, TemporalWitness, SemanticMomentumTracker) + CLI Protocol (59 tests)
+
+**Tests**: 63 passing, 22 skipped
 
 ### Session: EventStream Phase 2 Implementation (2025-12-09)
 
