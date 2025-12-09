@@ -4,14 +4,212 @@
 
 ## TL;DR
 
-**Status**: ALL PUSHED ✅ | 923 tests passing
+**Status**: UNCOMMITTED CHANGES | 945 tests passing (+22 new)
 **Branch**: `main`
 **Latest Commit**: 96d9936 - Ψ-gents refactor + E-gents Metered principle
-**Recent Work**:
-  - T-gents Phase 2: 53 integration tests (P × J × T)
-  - Ψ-gents principle refactor: 950 → 255 lines (73% reduction)
-  - E-gents: Added Metered principle (token conservation)
-**Next**: Implementation work or new spec development
+**This Session**:
+  - **T-gents Phase 3: Complete Execution Runtime** ✅
+  - Implemented ToolExecutor with Result monad (Railway Oriented Programming)
+  - Implemented CircuitBreakerTool (fail-fast pattern with CLOSED/OPEN/HALF_OPEN states)
+  - Implemented RetryExecutor with exponential backoff + jitter
+  - Implemented RobustToolExecutor (composite: circuit breaker + retry + Result monad)
+  - Added 22 comprehensive tests (all passing)
+**Uncommitted Files**:
+  - `impl/claude/agents/t/executor.py` (NEW - ~540 lines)
+  - `impl/claude/agents/t/_tests/test_executor.py` (NEW - ~620 lines, 22 tests)
+  - `impl/claude/agents/t/__init__.py` (exports updated)
+  - `spec/e-gents/README.md` (Metered principle + Banker integration)
+  - `impl/claude/agents/e/prompts/metered.py` (NEW - ~350 lines)
+  - `impl/claude/agents/e/prompts/__init__.py` (exports)
+  - `impl/claude/agents/e/__init__.py` (exports)
+**Next**: Commit T-gents Phase 3 changes OR continue with E-gents Metered
+
+---
+
+## What Just Happened: T-gents Phase 3 - Execution Runtime
+
+### Session Overview (2025-12-09 Evening)
+
+Completed T-gents Phase 3 by implementing a robust execution runtime for Tool[A, B] agents with Result monad, circuit breaker pattern, and retry logic with exponential backoff.
+
+### Work Completed
+
+**1. ToolExecutor with Result Monad** (`executor.py` - ~540 lines):
+- **ToolExecutor**: Wraps tool execution in Result[B, ToolError] for Railway Oriented Programming
+  - Converts exceptions to explicit error values
+  - Enables composition via `map`, `map_err`, `bind`
+  - Supports tracing via W-gents integration
+  - Timeout support with `execute_with_timeout()`
+
+**2. Circuit Breaker Pattern** (`CircuitBreakerTool`):
+- **States**: CLOSED (normal) → OPEN (fail fast) → HALF_OPEN (testing recovery)
+- **Behavior**:
+  - Opens after N consecutive failures (default: 5)
+  - Rejects requests immediately when OPEN
+  - Tests recovery in HALF_OPEN state
+  - Closes after M successes (default: 2)
+- **Configuration**: failure_threshold, success_threshold, timeout_seconds, monitored_errors
+- **Manual reset** via `reset()` method
+
+**3. Retry with Exponential Backoff** (`RetryExecutor`):
+- **Exponential backoff**: initial_delay_ms × multiplier^attempt
+- **Jitter**: Adds 10% randomness to prevent thundering herd
+- **Rate limit support**: Respects `retry_after_ms` from errors
+- **Smart retry**: Only retries recoverable errors (NETWORK, TIMEOUT, TRANSIENT)
+- **Max delay cap**: Prevents unbounded delays
+
+**4. Composite Executor** (`RobustToolExecutor`):
+- Combines all patterns into single robust executor
+- Composition order: Retry → Circuit Breaker → Tool
+- Full protection stack with minimal boilerplate
+- Exposes circuit state for monitoring
+
+### Test Coverage (22 tests, all passing)
+
+**ToolExecutor Tests** (4 tests):
+- Success path with Result monad
+- Error conversion to Result.Err
+- Timeout handling with async.wait_for
+- Successful completion within timeout
+
+**CircuitBreakerTool Tests** (6 tests):
+- Normal operation in CLOSED state
+- Opens after failure threshold
+- Transitions to HALF_OPEN after timeout
+- Closes after success threshold
+- Ignores non-monitored errors
+- Manual reset to CLOSED
+
+**RetryExecutor Tests** (6 tests):
+- Immediate success (no retry)
+- Eventual success after retries
+- Max attempts exceeded
+- No retry on non-recoverable errors
+- Exponential backoff timing
+- Rate limit retry_after_ms support
+
+**RobustToolExecutor Tests** (4 tests):
+- Success with full stack
+- Retry then success path
+- Circuit breaker opens after repeated failures
+- Manual circuit reset
+
+**Integration Tests** (2 tests):
+- Full stack with transient failures
+- Circuit breaker prevents retry spam
+
+### Architecture
+
+```
+Tool Execution Stack (Bottom → Top)
+
+Tool[A, B]
+    ↓
+CircuitBreakerTool  (Fail fast when unhealthy)
+    ↓
+RetryExecutor       (Exponential backoff for transient failures)
+    ↓
+ToolExecutor        (Result monad wrapper)
+    ↓
+Result[B, ToolError] (Railway Oriented Programming)
+```
+
+**Usage Example**:
+```python
+# Create tool
+tool = MyExternalAPI()
+
+# Wrap with robust executor
+executor = RobustToolExecutor(
+    tool,
+    circuit_config=CircuitBreakerConfig(failure_threshold=5),
+    retry_config=RetryConfig(max_attempts=3, initial_delay_ms=100)
+)
+
+# Execute with full protection
+result: Result[Output, ToolError] = await executor.execute(input_data)
+
+match result:
+    case Ok(value):
+        print(f"Success: {value}")
+    case Err(error):
+        print(f"Error: {error.error_type} - {error.message}")
+```
+
+### Integration with Other Agent Genera
+
+| Component | Integration | Purpose |
+|-----------|-------------|---------|
+| **Result Monad** | bootstrap.types | Railway Oriented Programming |
+| **Tool[A, B]** | agents/t/tool.py | Base tool abstraction |
+| **P-gents** | Error parsing | Classify errors → recovery strategies |
+| **W-gents** | ToolTrace | Observability via trace emission |
+| **D-gents** | CachedTool | Performance via caching |
+
+### Test Status
+
+- **Before**: 923 tests passing
+- **After**: 945 tests passing
+- **New**: +22 tests (executor runtime)
+- **Performance**: All tests green ✅ (4.69s)
+
+---
+
+## What Just Happened: E-gents + B-gent Banker Integration
+
+### The Problem
+
+E-gents implementation was consuming excessive tokens (~250 line prompts by default). This violated the GENERATIVE principle ("spec is compression") and the user's trust.
+
+### The Solution: B-gent Banker Integration
+
+Applied concepts from `spec/b-gents/banker.md` to create a metered, conservative prompt system:
+
+**1. Spec Changes** (`spec/e-gents/README.md`):
+- Added **Principle 11: Metered (via B-gent Banker)**
+- References banker.md for the Metered Functor: `Agent[A, B] → Agent[A, Receipt[B]]`
+- Defines 3 prompt levels with cost multipliers (1x → 3x → 10x)
+- Added 3 new anti-patterns: #8-10 on token waste
+
+**2. Implementation** (`impl/claude/agents/e/prompts/metered.py` - NEW ~350 lines):
+
+| Component | From Banker | Purpose |
+|-----------|-------------|---------|
+| `TokenBudget` | Token Bucket | Hydraulic refill: balance refills over time |
+| `SinkingFund` | 1% Tax Reserve | Emergency loans for critical jobs |
+| `TokenFuture` | Options Market | Reserve capacity for multi-step jobs |
+| `Receipt[B]` | Metered Functor | Track estimated vs actual tokens |
+| `MeteredPromptBuilder` | - | Progressive escalation (L0→L1→L2) |
+
+**Key Innovation**: Start with ~30 line minimal prompts, escalate only on failure.
+
+### Integration Architecture
+
+```
+E-gents Metering Stack
+    │
+    ├── spec/e-gents/README.md
+    │   └── Principle 11: Metered (references B-gent Banker)
+    │
+    ├── impl/claude/agents/e/prompts/metered.py (NEW)
+    │   ├── TokenBudget (hydraulic refill)
+    │   ├── SinkingFund (emergency reserve)
+    │   ├── TokenFuture (capacity reservation)
+    │   ├── Receipt[B] (execution tracking)
+    │   └── MeteredPromptBuilder (progressive escalation)
+    │
+    └── spec/b-gents/banker.md (source concepts)
+        ├── Linear Logic (tokens consumed, not copied)
+        ├── Metered Functor (Agent → Receipt)
+        ├── Token Bucket (Leaky Bucket algorithm)
+        ├── Sinking Fund (1% tax insurance)
+        └── Token Futures (atomic economics)
+```
+
+### Tests
+
+- All 47 E-gents tests pass ✅
+- Banker integration tested via inline script (TokenBudget, SinkingFund, Receipt)
 
 ---
 
