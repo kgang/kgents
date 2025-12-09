@@ -38,6 +38,12 @@ Type V - Tools (Phase 2: Tool Use):
 - ToolTrace: Observability (W-gent integration)
 - Tool wrappers: TracedTool, CachedTool, RetryTool
 
+Type VI - Execution Runtime (Phase 3):
+- ToolExecutor: Result monad wrapper for Railway Oriented Programming
+- CircuitBreakerTool: Fail-fast pattern for unhealthy services
+- RetryExecutor: Exponential backoff with jitter
+- RobustToolExecutor: Composite executor (circuit breaker + retry + Result monad)
+
 Usage:
     from agents.t import MockAgent, FailingAgent, SpyAgent
 
@@ -194,6 +200,21 @@ from .registry import (
     set_registry,
 )
 
+from .executor import (
+    # Circuit Breaker
+    CircuitState,
+    CircuitBreakerConfig,
+    CircuitBreakerState,
+    CircuitBreakerError,
+    CircuitBreakerTool,
+    # Executors
+    ToolExecutor,
+    RetryExecutor,
+    RobustToolExecutor,
+    # Config
+    RetryConfig,
+)
+
 __all__ = [
     # Type I - Nullifiers
     "MockAgent",
@@ -282,4 +303,14 @@ __all__ = [
     "ToolEntry",
     "get_registry",
     "set_registry",
+    # Type VI - Execution Runtime (Phase 3)
+    "CircuitState",
+    "CircuitBreakerConfig",
+    "CircuitBreakerState",
+    "CircuitBreakerError",
+    "CircuitBreakerTool",
+    "ToolExecutor",
+    "RetryExecutor",
+    "RobustToolExecutor",
+    "RetryConfig",
 ]
