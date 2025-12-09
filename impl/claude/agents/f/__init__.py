@@ -30,6 +30,18 @@ from agents.f.prototype import (
     generate_prototype_async,
     run_static_analysis,
 )
+from agents.f.validate import (
+    InvariantCheckResult,
+    TestResult,
+    TestResultStatus,
+    ValidationConfig,
+    ValidationReport,
+    VerdictStatus,
+    run_test,
+    validate,
+    validate_with_self_healing,
+    verify_invariant,
+)
 
 __all__ = [
     # Intent parsing (Phase 1)
@@ -53,4 +65,15 @@ __all__ = [
     "generate_prototype",
     "generate_prototype_async",
     "run_static_analysis",
+    # Validation (Phase 4)
+    "InvariantCheckResult",
+    "TestResult",
+    "TestResultStatus",
+    "ValidationConfig",
+    "ValidationReport",
+    "VerdictStatus",
+    "run_test",
+    "validate",
+    "validate_with_self_healing",
+    "verify_invariant",
 ]
