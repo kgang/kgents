@@ -31,30 +31,34 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 ## TL;DR
 
-**Status**: L-gent Phase 3 Complete (Lineage Layer)
+**Status**: Multi-phase commit complete (all pushed)
 **Branch**: `main`
-**Latest Commit**: 9af9bac - docs: Update HYDRATE.md for completed session (pending commit)
+**Latest Commit**: 628b2a9 - feat: G-gent Phase 5 + D-gent Phase 2 + CLI Phase 1 + B-gent + L-gent
 **Current State**:
   - G-gent Phases 1-5: ✅ COMPLETE (incl. F-gent Integration)
-  - **L-gent Phases 1-3**: ✅ COMPLETE (Registry, Persistence, **Lineage**)
-  - CLI Scientific: ✅ COMPLETE
-  - D-gent Spec: ✅ COMPLETE
+  - L-gent Phases 1-3: ✅ COMPLETE (Registry, Persistence, Lineage)
+  - D-gent Phase 2: ✅ COMPLETE (VectorAgent, GraphAgent, StreamAgent)
+  - **B-gent Phase 2**: ✅ COMPLETE (D-gent + L-gent integration)
   - CLI Phase 1: ✅ COMPLETE (Hollow Shell + Context)
-  - Tests: 430+ passing (164 G-gent, 136 CLI, 30+ L-gent Lineage)
+  - Tests: 193 passing, 4 skipped, **8 known failures** (to fix)
 
-**Latest Deliverables** (L-gent Phase 3):
-- `lineage.py`: DAG-based provenance tracking (~560 lines)
-- `LineageGraph`: Relationship management with cycle detection
-- `RelationshipType`: 7 relationship types (successor_to, forked_from, depends_on, etc.)
-- Ancestor/descendant traversal with depth limits
-- Path finding (BFS, shortest path)
-- 33 comprehensive tests covering all lineage operations
-- Convenience functions: `record_evolution`, `record_fork`, `record_dependency`
+**Key Deliverables**:
+- `hollow.py`: Lazy-loading CLI (< 50ms startup)
+- `context.py`: `.kgents/` workspace awareness
+- `forge_integration.py`: InterfaceTongue, TongueEmbedding
+- `vector.py`, `graph.py`, `stream.py`: Noosphere D-gent types
+- `lineage.py`: DAG-based provenance tracking
+- `catalog_integration.py`: B-gent + L-gent bridge
+
+**8 Known Failures** (fix next session):
+- B-gent catalog: find_by_domain/novelty/confidence (3), hypothesis parsing (2)
+- D-gent: graph meet_siblings (1), stream entropy (1)
+- L-gent: cycle detection self-loop (1)
 
 **Next Steps**:
-1. **L-gent Phase 4**: Lattice Layer (type compatibility, composition planning)
-2. **L-gent Phase 5**: Semantic Search (embeddings + vector DB)
-3. **CLI Phase 2**: Bootstrap & Laws (~300 lines, 15 tests)
+1. **Fix 8 failing tests** (prioritize B-gent catalog)
+2. **CLI Phase 2**: Bootstrap & Laws
+3. **G-gent Phase 6**: T-gent Integration (Fuzzing)
 
 ---
 
@@ -120,6 +124,68 @@ G-gents (Phase 5 done, needs T/W-gent), H-gents (needs 3-tradition), J-gents (en
 ---
 
 ## Recent Sessions
+
+### Session: B-gent Phase 2 - D-gent + L-gent Integration (2025-12-09)
+
+**Status**: ✅ COMPLETE - Hypothesis catalog integration + lineage tracking
+
+**New Files Created** (~700 lines):
+- `impl/claude/agents/b/catalog_integration.py` (~300 lines): L-gent integration
+  - `register_hypothesis()`: Register hypotheses with L-gent catalog
+  - `register_hypothesis_batch()`: Batch registration
+  - `find_hypotheses()`: Search by domain/novelty/confidence
+  - `find_related_hypotheses()`: Discover related hypotheses
+  - `record_hypothesis_evolution()`: Track hypothesis refinement lineage
+  - `record_hypothesis_fork()`: Track hypothesis forks
+  - `get_hypothesis_lineage()`: Full lineage (ancestors + descendants)
+  - `update_hypothesis_metrics()`: Track testing results
+  - `mark_hypothesis_falsified()`: Deprecate falsified hypotheses
+- `impl/claude/agents/b/_tests/test_catalog_integration.py` (~200 lines): 25 tests
+- `impl/claude/agents/b/_tests/test_persistent_hypothesis.py` (~200 lines): 20 tests
+
+**Modified Files**:
+- `impl/claude/agents/l/types.py`: Added `EntityType.HYPOTHESIS` for scientific artifacts
+- `impl/claude/agents/b/persistent_hypothesis.py`:
+  - Added `HypothesisLineageEdge`: Track hypothesis relationships
+  - Enhanced `HypothesisMemory` with lineage tracking
+  - Added `get_ancestors()`, `get_descendants()`: Graph traversal
+  - Added `set_catalog_id()`, `get_catalog_id()`: L-gent catalog links
+  - Added session tracking for research continuity
+- `impl/claude/agents/b/__init__.py`: Exported new integration functions
+
+**Core Capabilities** (Unblocking D-gent + L-gent):
+1. **Hypothesis Cataloging**: Register hypotheses as first-class L-gent artifacts
+2. **Lineage Tracking**: Track hypothesis evolution, refinement, and falsification
+3. **Discovery**: Find hypotheses by domain, novelty level, confidence threshold
+4. **Cross-System References**: Link hypothesis indices to L-gent catalog IDs
+5. **Session Management**: Track research sessions for continuity
+
+**Key Integration Points**:
+- **B-gent → L-gent**: `HYPOTHESIS` entity type enables hypothesis discovery
+- **B-gent → D-gent**: `HypothesisMemory` now has full lineage graph capabilities
+- **Lineage Pattern**: Same ancestor/descendant semantics as L-gent `LineageGraph`
+
+**Example Usage**:
+```python
+from agents.b import register_hypothesis, find_hypotheses, PersistentHypothesisStorage
+from agents.l import Registry
+
+# Register hypothesis with L-gent catalog
+registry = Registry()
+entry = await register_hypothesis(hypothesis, registry, domain="biochemistry")
+
+# Search for hypotheses
+results = await find_hypotheses(registry, domain="biochemistry", min_confidence=0.7)
+
+# Track lineage in persistent storage
+storage = PersistentHypothesisStorage(path="hypotheses.json")
+await storage.add_lineage(refined_idx, original_idx, "evolved_from")
+ancestors = await storage.get_ancestors(refined_idx)
+```
+
+**Next**: B-gent Phase 3 (Banker economics: Value Tensor, Metered Functor)
+
+---
 
 ### Session: L-gent Phase 3 - Lineage Layer (2025-12-09)
 
