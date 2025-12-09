@@ -12,8 +12,6 @@ Tests cover:
 """
 
 import pytest
-from unittest.mock import Mock, patch, MagicMock
-from datetime import datetime
 
 from agents.r.types import (
     Signature,
@@ -27,11 +25,9 @@ from agents.r.dspy_backend import (
     get_dspy_teleprompter,
     LLMTextGrad,
     LLMOpro,
-    DSPyModuleWrapper,
     signature_to_dspy,
     example_to_dspy,
     examples_to_dspy,
-    dspy_to_signature,
 )
 
 

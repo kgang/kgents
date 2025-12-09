@@ -10,7 +10,6 @@ Tests cover:
 """
 
 import pytest
-from datetime import datetime
 from typing import Any, Callable
 
 from agents.r.types import (

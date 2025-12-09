@@ -14,24 +14,22 @@ See spec/r-gents/README.md for full specification.
 """
 
 from __future__ import annotations
-from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Generic, Optional, TypeVar
+from typing import Any, Callable, Optional, TypeVar
 import hashlib
 import uuid
 
 from .types import (
     Example,
-    OptimizationBudget,
     OptimizationDecision,
     OptimizationTrace,
     ROIEstimate,
     Signature,
     TeleprompterStrategy,
 )
-from .refinery import RefineryAgent, ROIOptimizer, TeleprompterFactory
+from .refinery import RefineryAgent, ROIOptimizer
 
 # Optional imports - may not be available
 try:
@@ -211,7 +209,6 @@ class FGentRefineryBridge:
             Signature extracted from source
         """
         import ast
-        import re
 
         # Parse source code
         try:
