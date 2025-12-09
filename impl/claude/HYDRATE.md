@@ -2,317 +2,240 @@
 
 **Last Updated:** 2025-12-08
 
-## TL;DR
+## Quick Start
 
-**Status:** Bootstrap self-improvement applied to evolve.py ✅
-**Commit:** `07332d4` feat(evolve): Add bootstrap agent integration
-**Next:** Apply same patterns to `runtime/base.py` (with_retry → Fix) or `agents/t/` (self-evaluation)
-
----
-
-## Next Session: Start Here
-
-### Quick Commands
 ```bash
 cd impl/claude
-python evolve.py status          # Check evolution state
-python evolve.py suggest         # See bootstrap-enhanced suggestions
-python evolve.py meta --safe-mode --dry-run  # Test safe evolution
+source .venv/bin/activate
+python evolve.py status           # Check evolution state
+python evolve.py suggest          # Bootstrap-enhanced suggestions
+python -m pytest tests/ -v        # Run tests
 ```
-
-### Priority Options
-
-1. **Apply bootstrap to runtime/base.py**
-   - Replace `with_retry()` with bootstrap `Fix` agent
-   - Add convergence tracking, entropy budgets
-
-2. **Apply bootstrap to T-gents**
-   - Add Judge self-evaluation at agent creation
-   - Validate test agents against 7 principles
-
-3. **Continue IMPROVEMENT_PLAN.md Phase B**
-   - H7: Split `prompts.py` (762 lines)
-   - H10: Split `sandbox.py` (460 lines)
 
 ---
 
-## Bootstrap Self-Improvement Graph Analysis
-
-### The 7 Bootstrap Agents
-
-The bootstrap agents form the **irreducible kernel** from which all other agents can be regenerated:
+## Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    BOOTSTRAP AGENTS                             │
-├─────────────────────────────────────────────────────────────────┤
-│  Id         : A → A           (identity, composition unit)      │
-│  Compose    : (f,g) → f>>g    (morphism composition)            │
-│  Ground     : Void → Facts    (empirical seed: persona, world)  │
-│  Contradict : (A,B) → Tension (detect contradictions)           │
-│  Sublate    : Tension → Synthesis|Hold (Hegelian synthesis)     │
-│  Judge      : Agent → Verdict (7 principles: tasteful→generative)│
-│  Fix        : (f,a) → FixResult (fixed-point iteration)         │
-└─────────────────────────────────────────────────────────────────┘
+impl/claude/
+├── bootstrap/          # 7 irreducible agents (spec/bootstrap.md)
+│   ├── types.py        # Core types: Agent, Result, VerdictType
+│   ├── id.py           # Identity morphism
+│   ├── compose.py      # f >> g composition
+│   ├── ground.py       # Void → Facts (persona, world)
+│   ├── contradict.py   # (A,B) → Tension
+│   ├── sublate.py      # Tension → Synthesis|Hold
+│   ├── judge.py        # Agent → Verdict (7 principles)
+│   └── fix.py          # Fixed-point iteration with entropy
+│
+├── runtime/            # Execution infrastructure
+│   ├── base.py         # LLMAgent, AgentContext, Result
+│   ├── claude.py       # Anthropic API runtime
+│   ├── openrouter.py   # Multi-model runtime
+│   └── json_utils.py   # Robust JSON parsing (H5 ✅)
+│
+├── agents/             # Agent implementations by genus
+│   ├── a/              # Abstract (meta-schemas)
+│   ├── b/              # Bio/Scientific (robin, hypothesis)
+│   ├── c/              # Category (functor, conditional)
+│   ├── d/              # Data (volatile, persistent, lens)
+│   ├── e/              # Evolution (safety, parser, prompts)
+│   ├── f/              # Forge (artifact synthesis)
+│   ├── h/              # Hegelian (hegel, jung, lacan)
+│   ├── i/              # Interface (garden, renderers, export) ✨NEW
+│   ├── j/              # JIT (jgent, chaosmonger, sandbox)
+│   ├── k/              # Kent simulacra
+│   ├── l/              # Library (catalog, search)
+│   ├── t/              # Testing (mock, spy, failing)
+│   └── w/              # Wire (observation, fidelity, server) ✨NEW
+│
+├── evolve.py           # Meta-evolution CLI (1,286 lines)
+└── IMPROVEMENT_PLAN.md # Systematic refactoring roadmap
 ```
 
-### Dependency Graph: Bootstrap → Agents → Runtime
+---
 
-```
-                         ┌────────────────┐
-                         │   bootstrap/   │
-                         │   types.py     │
-                         │   (511 lines)  │
-                         └───────┬────────┘
-                                 │
-    ┌────────────────────────────┼────────────────────────────────┐
-    │                            │                                │
-    ▼                            ▼                                ▼
-┌─────────┐              ┌──────────────┐               ┌─────────────┐
-│  Id     │              │  Contradict  │               │    Judge    │
-│  102 L  │              │  360 L       │               │    420 L    │
-└────┬────┘              └──────┬───────┘               └──────┬──────┘
-     │                          │                              │
-     │                          │                              │
-     ▼                          ▼                              ▼
-┌─────────┐              ┌──────────────┐               ┌─────────────┐
-│ Compose │              │   Sublate    │               │    Fix      │
-│  164 L  │              │   337 L      │               │    303 L    │
-└────┬────┘              └──────┬───────┘               └─────────────┘
-     │                          │
-     └────────────┬─────────────┘
-                  │
-                  ▼
-            ┌────────────┐
-            │   Ground   │
-            │   164 L    │
-            └────────────┘
-```
+## Key Files by Purpose
 
-### How Agents Consume Bootstrap
+### Bootstrap Agents
+| File | Lines | Purpose |
+|------|-------|---------|
+| `bootstrap/types.py` | 511 | Core Agent protocol, Result types |
+| `bootstrap/judge.py` | 420 | Evaluate against 7 principles |
+| `bootstrap/contradict.py` | 360 | Detect contradictions |
+| `bootstrap/sublate.py` | 337 | Hegelian synthesis |
+| `bootstrap/fix.py` | 303 | Convergence iteration |
 
-| Agent Category | Bootstrap Dependencies | Key Usage |
-|----------------|------------------------|-----------|
-| **H-gents** (hegel, jung, lacan) | Contradict, Sublate, Agent | Dialectic synthesis via Contradict>>Sublate |
-| **E-gents** (evolution) | Agent, VerdictType, Sublate | Evolution pipeline with Fix pattern |
-| **J-gents** (jgent, reality) | Agent, Fix pattern | JIT compilation with entropy budgets |
-| **T-gents** (test agents) | Agent, ComposedAgent | Test harnesses for agents |
-| **K-gent** (persona) | Ground, Facts, Agent | Persona grounding |
-| **B-gents** (robin, hypothesis) | Agent | Scientific discovery |
-| **C-gents** (functor, conditional) | Agent | Category-theoretic composition |
+### Evolution Pipeline
+| File | Lines | Purpose |
+|------|-------|---------|
+| `evolve.py` | 1,286 | CLI + EvolutionPipeline orchestration |
+| `agents/e/safety.py` | 656 | Safe self-evolution with rollback |
+| `agents/e/parser.py` | 687 | Multi-strategy code extraction |
+| `agents/e/prompts.py` | 762 | Improvement prompt templates |
 
-### Direct Self-Improvement Paths
+### JIT Compilation
+| File | Lines | Purpose |
+|------|-------|---------|
+| `agents/j/jgent.py` | 450 | JIT agent compilation |
+| `agents/j/sandbox.py` | 460 | Secure code execution |
+| `agents/j/chaosmonger.py` | 620 | Stability analysis |
+| `agents/j/meta_architect.py` | 607 | Agent generation |
 
-**Key Insight:** Bootstrap agents can directly improve other agents **without external coordination** through these patterns:
+### I-gents (Interface)
+| File | Lines | Purpose |
+|------|-------|---------|
+| `agents/i/types.py` | 250 | Phase, Glyph, Scale, AgentState, GardenState |
+| `agents/i/renderers.py` | 350 | ASCII renderers (Card, Page, Garden, Library) |
+| `agents/i/export.py` | 200 | Markdown/Mermaid serialization |
+| `agents/i/breath.py` | 120 | Contemplative breath cycle animation |
+| `agents/i/observe.py` | 200 | W-gent integration ([observe] action) |
 
-#### 1. **Judge → Any Agent** (Quality Gate)
+### W-gents (Wire)
+| File | Lines | Purpose |
+|------|-------|---------|
+| `agents/w/protocol.py` | 300 | WireObservable mixin, WireState, WireEvent |
+| `agents/w/fidelity.py` | 400 | Teletype, Documentarian, LiveWire adapters |
+| `agents/w/server.py` | 200 | FastAPI server with SSE for live observation |
+
+---
+
+## Bootstrap Self-Improvement Patterns
+
+The bootstrap agents enable **direct self-improvement** without external coordination:
+
+### 1. Judge → Quality Gate
 ```python
-# Bootstrap Judge can evaluate ANY agent against 7 principles
 from bootstrap import Judge, JudgeInput
-
-async def self_check(agent: Agent) -> Verdict:
-    judge = Judge()
-    return await judge.invoke(JudgeInput(agent=agent))
-
-# Usage: Any agent can judge itself or peers
-verdict = await self_check(evolution_agent)
-if verdict.type == VerdictType.REVISE:
-    # Apply suggested revisions
+verdict = await Judge().invoke(JudgeInput(agent=any_agent))
+# Returns: ACCEPT | REVISE | REJECT with reasoning
 ```
 
-#### 2. **Contradict + Sublate → Conflict Resolution** (Hegelian Pattern)
+### 2. Contradict + Sublate → Conflict Resolution
 ```python
-# Already composed in H-hegel, directly usable
-from agents.h.hegel import HegelAgent, DialecticInput
-
-hegel = HegelAgent()  # Uses Contradict >> Sublate internally
-result = await hegel.invoke(DialecticInput(
-    thesis=old_agent_output,
-    antithesis=new_agent_output
-))
-# Result: Synthesis or productive tension to hold
+from agents.h.hegel import HegelAgent
+result = await HegelAgent().invoke(DialecticInput(thesis=old, antithesis=new))
+# Returns: Synthesis or productive tension to hold
 ```
 
-#### 3. **Fix → Iterative Refinement** (Convergence Pattern)
+### 3. Fix → Convergence Iteration
 ```python
 from bootstrap import Fix, FixConfig
-
-# Any improvement loop can use Fix for convergence
-async def improve_until_stable(agent, improve_fn):
-    fix = Fix(FixConfig(max_iterations=10, entropy_budget=1.0))
-    result = await fix.invoke((improve_fn, agent))
-    return result.value if result.converged else result.value
+fix = Fix(FixConfig(max_iterations=10, entropy_budget=1.0))
+result = await fix.invoke((improve_fn, initial_state))
 ```
 
-#### 4. **Ground → Context Injection** (Fact Seeding)
+### 4. Ground → Context Injection
 ```python
 from bootstrap import Ground, VOID
-
-# Any agent can ground itself with persona/world facts
 facts = await Ground().invoke(VOID)
-# facts.persona: Kent's values, communication style
-# facts.world: current context, active projects
+# facts.persona: Kent's values | facts.world: current context
 ```
 
-### Runtime Integration Points
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                      runtime/base.py                            │
-├─────────────────────────────────────────────────────────────────┤
-│  LLMAgent(Agent)  : Bootstrap Agent + LLM execution            │
-│  Runtime          : Abstract execution layer                    │
-│  AgentContext     : System prompt + messages + facts            │
-│  Result           : Either-based error handling                 │
-│  with_retry       : Fix pattern for transient errors            │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  claude.py     : Anthropic API runtime                          │
-│  cli.py        : Claude Code CLI runtime (OAuth)                │
-│  openrouter.py : Multi-model runtime                            │
-│  json_utils.py : LLM response parsing (robust_json_parse)       │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### Self-Improvement Without External Coordination
-
-**The key question:** Can bootstrap agents improve agents/runtime **directly**?
-
-**Answer: YES**, through these patterns:
-
-| Bootstrap Agent | Can Improve | How |
-|-----------------|-------------|-----|
-| **Judge** | Any agent | Evaluate against 7 principles, generate revision suggestions |
-| **Fix** | Iterative processes | Converge on stable improvements, entropy-budgeted evolution |
-| **Contradict+Sublate** | Conflicting outputs | Synthesize better solutions from thesis/antithesis |
-| **Ground** | Context-sensitive agents | Inject persona values, world state |
-| **Compose** | Agent pipelines | Build new compositions from existing agents |
-
-### Specific Improvement Targets
-
-#### For `impl/agents/`:
-
-1. **E-gents self-improve via Judge**:
-   - `evolution.py` can call `Judge` on generated hypotheses
-   - Already has `CodeJudge` but doesn't use bootstrap Judge for self-evaluation
-
-2. **H-gents are already optimal**:
-   - `hegel.py` directly composes `Contradict >> Sublate`
-   - No improvement needed - this IS the pattern
-
-3. **J-gents can use Fix with entropy**:
-   - `jgent.py` already uses entropy budgets
-   - Could benefit from bootstrap Fix's convergence tracking
-
-4. **T-gents can Judge themselves**:
-   - Test agents could use Judge to validate their own design
-   - Currently no self-validation
-
-#### For `impl/runtime/`:
-
-1. **LLMAgent inherits from bootstrap Agent** ✅
-   - Already properly integrated
-
-2. **with_retry uses Fix pattern implicitly**:
-   - Could be refactored to use actual `Fix` agent
-   - Would add convergence tracking, history
-
-3. **json_utils could use Contradict**:
-   - When parsing fails, surface tension between expected/actual
-   - Let Sublate attempt repair strategy
-
-### Recommended Self-Improvement Actions
-
-| Priority | Action | Bootstrap Agent | Target | Status |
-|----------|--------|-----------------|--------|--------|
-| 1 | Add Judge self-check to EvolutionPipeline | Judge | evolve.py | ✅ Done |
-| 2 | Replace with_retry with Fix agent | Fix | evolve.py | ✅ Done |
-| 3 | Add Contradict to code tension detection | Contradict | evolve.py | ✅ Done |
-| 4 | Ground prompts with persona | Ground | evolve.py | ✅ Done |
-| 5 | Self-evaluate T-gents at creation | Judge | agents/t/*.py | Pending |
-
----
-
-## Recent Activity
-
-### Bootstrap Self-Improvement Applied (2025-12-08)
-
-**Applied bootstrap agents directly to `evolve.py` for self-improvement:**
-
-1. **Judge Integration** ✅
-   - `judge_hypothesis_against_principles()`: Evaluates hypotheses against 7 principles
-   - `HypothesisWrapper`: Wraps hypothesis strings as Agents for Judge
-
-2. **Fix Integration** ✅
-   - `iterate_with_fix()`: Convergence-tracked iteration with entropy budgets
-   - Lazy instantiation via `_get_bootstrap_fix()`
-
-3. **Contradict Integration** ✅
-   - `detect_code_tension()`: Surfaces tensions between original/improved code
-   - Used in safe evolution mode to flag API changes, style conflicts
-
-4. **Ground Integration** ✅
-   - `get_grounded_context()`: Injects Kent's persona values into analysis
-   - `suggest` mode now shows grounded context before analysis
-
-**Test Results:**
-- `python evolve.py status` ✅
-- `python evolve.py suggest` ✅ (shows Bootstrap Judge evaluation)
-- Syntax validation ✅
-
----
-
-### J-gents Phase 2: K-gent Enhancement + Cleanup (2025-12-08)
-- ✅ Created `demo_kgent.py` - Interactive K-gent CLI (284 lines)
-- ✅ Comprehensive spec fidelity analysis (75/100 alignment)
-- ✅ Created `agents/k/README.md` - Developer documentation
-- 🧹 **Major Cleanup:**
-  - Removed K_GENT_SESSION_SUMMARY.md (details in agents/k/README.md)
-  - Removed 6 stale files (52K): plan scripts, demo_village_story, self_improve, decision docs
-  - Reorganized tests/ into proper structure:
-    - `agents/e_gents/`, `agents/j_gents/`, `agents/t_gents/`
-    - `utils/` for test utilities
-    - Updated tests/README.md with new structure
-- 🔴 **Critical Gap:** Access control not implemented (security/ethics)
-- ⚠️ **API Mismatch:** `EvolutionInput` vs spec's `PersonaUpdate`
-
-### Session 2025-12-08 (Earlier)
-- ✅ **H5 Complete**: JSON utilities extracted to `runtime/json_utils.py` (commit cb98af8)
-- ✅ Created HYDRATE.md to track implementation progress
-- 📊 Reviewed IMPROVEMENT_PLAN.md priorities
-- 🔍 Analyzed meta-evolution failures
-
-## Next Session Priorities
-
-**Recommended:** Continue with Phase A quick wins
-
-### Option 1: H4 - Lazy Imports (Recommended)
-**File:** `evolve.py` (1,286 lines)
-**Task:** Refactor 57 imports to use `typing.TYPE_CHECKING` and lazy loading
-**Impact:** Faster startup, better testability
-**Approach:**
+### 5. I-gent → Ecosystem Visualization
 ```python
-from typing import TYPE_CHECKING
+from agents.i import Phase, AgentState, GardenRenderer, BreathCycle
 
-if TYPE_CHECKING:
-    from agents.b.hypothesis import HypothesisEngine
-    from agents.h.hegel import HegelAgent
-    # ... other type-only imports
+state = AgentState(agent_id="robin", phase=Phase.ACTIVE, birth_time=datetime.now())
+state.joy = 0.9
+state.ethics = 0.85
 
-# Runtime imports in functions that use them
-def _get_hypothesis_engine():
-    from agents.b.hypothesis import HypothesisEngine
-    return HypothesisEngine(...)
+garden = GardenState(name="research", session_start=datetime.now())
+garden.add_agent(state)
+print(GardenRenderer(garden).render())
+# ASCII zen garden with moon phase glyphs
 ```
 
-### Option 2: H2 - Extract SuggestionAgent
-**File:** `evolve.py` lines 1005-1061 (56 lines)
-**Task:** Extract `show_suggestions` into composable agent
-**Note:** This might be over-engineering - consider simplifying instead
+### 6. W-gent → Process Observation
+```python
+from agents.w import WireObservable, WireServer
 
-### Option 3: Skip to Phase B - H7 (prompts.py split)
-**File:** `agents/e/prompts.py` (762 lines)
-**Task:** Split into `prompts/base.py`, `prompts/improvement.py`, `prompts/analysis.py`
-**Impact:** Better organization, clearer responsibilities
+class MyAgent(WireObservable):
+    def __init__(self):
+        super().__init__("my-agent")
+
+    async def run(self):
+        self.update_state(phase="active", progress=0.5)
+        self.log_event("INFO", "work", "Processing...")
+
+# Start observation server (opens browser at localhost:8000)
+server = WireServer("my-agent", port=8000)
+await server.start()
+```
+
+---
+
+## Recent Commits
+
+| Commit | Description |
+|--------|-------------|
+| `4b02086` | feat(i-gents): Living Codex Garden spec |
+| `294b068` | fix(evolve): Expand builtins in preflight |
+| `ea7c2a5` | feat(cross-poll): Phase C validation |
+| `4d883d2` | refactor(impl): Evolution bug fixes |
+| `0001386` | feat(f-gents): Sandbox with self-healing |
+
+---
+
+## Improvement Plan Status
+
+See `IMPROVEMENT_PLAN.md` for full details.
+
+### Completed
+- [x] **H5**: JSON utilities → `runtime/json_utils.py`
+- [x] Bootstrap integration in `evolve.py` (Judge, Fix, Contradict, Ground)
+
+### Phase A: Quick Wins
+- [ ] **H4**: Lazy imports in `evolve.py` (57 imports)
+- [ ] **H2**: Extract SuggestionAgent (56 lines)
+
+### Phase B: Core Refactoring
+- [ ] **H1**: Decompose EvolutionPipeline (19 methods → 4 agents)
+- [ ] **H7**: Split `prompts.py` (762 lines)
+- [ ] **H10**: Split `sandbox.py` (460 lines)
+
+### Key Targets
+| Metric | Current | Target |
+|--------|---------|--------|
+| Files >500 lines | 18 | 10 |
+| Functions >50 lines | 45+ | <20 |
+| evolve.py lines | 1,286 | <800 |
+
+---
+
+## Testing
+
+```bash
+# Unit tests
+python -m pytest tests/ -v
+
+# Type checking
+mypy --strict evolve.py
+
+# Evolution self-test
+python evolve.py test
+
+# Safe meta-evolution (dry run)
+python evolve.py meta --safe-mode --dry-run
+```
+
+---
+
+## Spec ↔ Impl Mapping
+
+| Spec | Impl |
+|------|------|
+| `spec/bootstrap.md` | `bootstrap/` |
+| `spec/a-gents/` | `agents/a/` |
+| `spec/b-gents/` | `agents/b/` (robin, hypothesis) |
+| `spec/c-gents/` | `agents/c/` (functor, conditional) |
+| `spec/d-gents/` | `agents/d/` (volatile, persistent) |
+| `spec/e-gents/` | `agents/e/` + `evolve.py` |
+| `spec/f-gents/` | `agents/f/` (forge, artifacts) |
+| `spec/h-gents/` | `agents/h/` (hegel, jung, lacan) |
+| `spec/i-gents/` | `agents/i/` (types, renderers, export, observe) ✨NEW |
+| `spec/j-gents/` | `agents/j/` (jgent, sandbox) |
+| `spec/k-gent/` | `agents/k/` |
+| `spec/l-gents/` | `agents/l/` (catalog, search) |
+| `spec/t-gents/` | `agents/t/` (mock, spy, failing) |
+| `spec/w-gents/` | `agents/w/` (protocol, fidelity, server) ✨NEW |
