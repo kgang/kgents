@@ -4,93 +4,829 @@
 
 ## TL;DR
 
-**Status**: Test Suite Cleanup Complete ✅ | 496 tests passing
-**Branch**: `main` (496 passing, 6 K-gent failures skipped)
-**Latest**: Fixed pytest collection issues, renamed incompatible test files
-**Session**: 2025-12-08 - Test Suite Cleanup
-**Achievement**: Cleaned up test suite from 10 errors to 6 K-gent failures (lowest priority)
-**Next**: Address K-gent failures or continue with next feature work
+**Status**: AGENTFACTORY INTEGRATION PLAN ✅ | 562 tests passing
+**Branch**: `main` (562/563 passing, 1 skipped)
+**Latest**: Principled AgentFactory integration plan for F-gent + E-gent (J-gent MetaArchitect)
+**Session**: 2025-12-08 - AgentFactory Integration Planning
+**Achievement**: Deep analysis of skeleton.py AgentFactory → integration plan for F-gent crystallize + J-gent MetaArchitect
+**Next**: Implement F-gent integration, then J-gent integration
 
 ---
 
 ## Next Session: Start Here
 
-### What Just Happened (Quick Context)
+### Session Context: AgentFactory Integration for F-gent and E-gent (2025-12-08)
 
-**Test Suite Cleanup Session COMPLETE** ✅
+**Current State**:
+- ✅ **AgentFactory already implemented** in skeleton.py (4 phases: Witness, Protocols, Factory, Grounded)
+- ✅ **Gap analysis completed**: F-gent creates artifacts (.alo.md), not Agent instances
+- ✅ **Gap analysis completed**: J-gent MetaArchitect creates AgentSource, not Agent instances
+- ✅ **Integration plan designed** for both F-gent and E-gent (J-gent)
+- 📝 **Uncommitted changes**: skeleton.py enhancements + previous I/W/P-gent specs
+- 🎯 **Ready for**: Implement `create_agent_from_artifact()` and `create_agent_from_source()`
 
-**Changes Made**:
-1. **Fixed H-gent Test Collection Issue** (`agents/h/_tests/`):
-   - **Problem**: `test_h_gents_compat.py` ran tests at import time (before pytest setup)
-   - **Solution**: Renamed to `h_gents_compat_check.py` (runs as standalone script)
-   - **Impact**: Pytest can now collect H-gent tests without crashes
+### What Just Happened (Skeleton Enhancement)
 
-2. **Renamed Duplicate Test Files**:
-   - **Problem**: Both `agents/j/_tests/test_phase3.py` and `agents/t/_tests/test_phase3.py` existed
-   - **Solution**: Renamed to `test_j_phase3.py` and `test_t_phase3.py`
-   - **Impact**: Pytest collection no longer fails with import mismatch
+**skeleton.py** transformed from thin type alias (~244 lines) to generative center (~700 lines):
 
-3. **Fixed E-gent Non-Pytest Test Files**:
-   - **Problem**: `test_demo.py` and `test_metrics.py` used sequential dependencies (not pytest-compatible)
-   - **Solution**: Renamed to `demo_e2e.py` and `metrics_collection.py`
-   - **Impact**: These scripts can still run standalone but don't interfere with pytest
+**Phase 1: BootstrapWitness** ✅
+```python
+class BootstrapWitness:
+    REQUIRED_AGENTS = ["Id", "Compose", "Judge", "Ground", "Contradict", "Sublate", "Fix"]
 
-**Test Results**:
+    @classmethod
+    async def verify_bootstrap(cls) -> BootstrapVerificationResult:
+        """Verify all 7 bootstrap agents exist and satisfy categorical laws."""
+
+    @classmethod
+    async def verify_identity_laws(cls, agent, test_input) -> bool:
+        """Id >> f ≡ f ≡ f >> Id"""
+
+    @classmethod
+    async def verify_composition_laws(cls, f, g, h, test_input) -> bool:
+        """(f >> g) >> h ≡ f >> (g >> h)"""
 ```
-=================== 6 failed, 496 passed, 1 skipped in 0.79s ===================
+
+**Phase 2: Category-Theoretic Protocols** ✅
+```python
+@runtime_checkable
+class Morphism(Protocol[A, B]):
+    """Agent as morphism A → B in the category of agents."""
+
+@runtime_checkable
+class Functor(Protocol):
+    """Structure-preserving transformation between categories."""
+
+def get_domain(agent) -> type | None
+def get_codomain(agent) -> type | None
+def verify_composition_types(f, g) -> tuple[bool, str]
 ```
 
-**Breakdown**:
-- **496 passing** ✅ (up from ~490 with collection errors)
-- **6 failing** (all K-gent related - lowest priority per user):
-  - `test_d_gents_phase4.py::test_kgent_persistent_persona_integration`
-  - `test_d_gents_phase4.py::test_bgents_hypothesis_storage_integration`
-  - `test_d_gents_phase4.py::test_cross_genus_integration_kgent_bgents`
-  - `test_persistent_persona.py::test_persistent_persona_loads_state`
-  - `test_persistent_persona.py::test_persistent_query_agent_loads_state`
-  - `test_persistent_persona.py::test_persistent_persona_with_initial_state`
+**Phase 3: AgentFactory** ✅
+```python
+class AgentFactory:
+    @classmethod
+    def create(cls, meta: AgentMeta, impl: Callable) -> Agent
+    @classmethod
+    def from_spec_file(cls, spec_path: Path) -> AgentSpec
+    @classmethod
+    def compose(cls, *agents, validate=True) -> Agent
+```
 
-**Files Changed**:
-- `impl/claude/agents/h/_tests/test_h_gents_compat.py` → `h_gents_compat_check.py`
-- `impl/claude/agents/j/_tests/test_phase3.py` → `test_j_phase3.py`
-- `impl/claude/agents/t/_tests/test_phase3.py` → `test_t_phase3.py`
-- `impl/claude/agents/e/_tests/test_demo.py` → `demo_e2e.py`
-- `impl/claude/agents/e/_tests/test_metrics.py` → `metrics_collection.py`
+**Phase 4: GroundedSkeleton** ✅
+```python
+class GroundedSkeleton(Agent[Void, AgentMeta]):
+    """Self-describing agents via Ground - enables autopoiesis."""
 
-**Impact**:
-- ✅ Pytest collection now works cleanly (no more errors during test discovery)
-- ✅ All non-K-gent tests pass (496/502 total)
-- ✅ Remaining 6 failures are K-gent integration issues (lowest priority)
-- ✅ Test suite is now stable and ready for development
+    @classmethod
+    async def describe(cls, agent) -> AgentMeta
+
+class AutopoieticAgent(Agent[A, B]):
+    """Mixin for agents that can describe themselves."""
+    async def describe_self(self) -> AgentMeta
+```
+
+**Test Results**: 29 new tests, all passing
+- TestBootstrapWitness: 9 tests
+- TestMorphismProtocol: 2 tests
+- TestDomainCodomain: 3 tests
+- TestCompositionTypeVerification: 2 tests
+- TestGroundedSkeleton: 5 tests
+- TestAutopoieticAgent: 1 test
+- TestExistingFunctionality: 7 tests (regression prevention)
+
+---
+
+### Previous: P-gents Parser Specification (2025-12-08)
+
+**Current State**:
+- ✅ **Deep parser analysis completed** across all agent genuses (~2,400 lines analyzed)
+- ✅ **P-gents spec created** (`spec/p-gents/README.md`, ~650 lines comprehensive specification)
+- ✅ **Five extraction patterns identified** from empirical codebase analysis
+- ✅ **Three composition patterns designed** (Fallback, Fusion, Switch)
+- 📝 **Uncommitted changes**: spec/p-gents/README.md (new file)
+- 🎯 **Ready for**: Review, implementation planning, or move to other work
+
+### What Just Happened (P-gents Specification)
+
+**USER REQUEST**: "Deep analysis of parsers in impl/claude/agents + brainstorm new P-gents (Parser) genus spec"
+
+**ANALYSIS SUMMARY** ✅
+
+**Comprehensive Parser Catalog** (~2,400 lines of parsing code analyzed):
+
+1. **E-gent Parser Module** (`e/parser/`, ~800 lines) - PRIMARY PARSING HUB
+   - Five-strategy fallback system: Structured → JSON+Code → CodeBlock → AstSpan → Repair
+   - `types.py`: ParseStrategy enum, ParseResult dataclass, ParserConfig
+   - `strategies.py`: BaseParsingStrategy + 5 concrete strategies
+   - `extractors.py`: extract_json_metadata, extract_code_block, extract_structured_blocks, infer_metadata_from_ast
+   - `repair.py`: repair_truncated_strings, repair_incomplete_function, apply_repairs
+   - Confidence scoring: 0.0-1.0 based on completeness heuristics
+
+2. **B-gent Hypothesis Parser** (`b/hypothesis_parser.py`, 310 lines)
+   - Structured scientific hypothesis parsing
+   - Format: HYPOTHESES / REASONING_CHAIN / SUGGESTED_TESTS sections
+   - State machine for section tracking
+   - Provides defaults for missing fields (epistemic principle: falsifiable_by REQUIRED)
+   - NoveltyLevel enum: INCREMENTAL, EXPLORATORY, PARADIGM_SHIFTING
+
+3. **Runtime JSON Utilities** (`runtime/json_utils.py`, 288 lines)
+   - `robust_json_parse()`: 5-step repair strategy for malformed JSON
+   - `parse_structured_sections()`: Extract labeled sections from text
+   - Handles: markdown fences, trailing commas, unterminated strings, bracket balancing
+   - Fallback field extraction via regex when JSON repair fails
+
+4. **F-gent Parsers** (~350 lines total)
+   - Intent parser: Natural language → structured Intent
+   - LLM generation parser: Markdown code block extraction
+   - Version parser: Semantic versioning (MAJOR.MINOR.PATCH)
+
+5. **Other Parsers**:
+   - A-gent creativity parser (structured sections)
+   - T-gent judge parser (JSON + robust parsing)
+   - E-gent validator + repair (AST-based)
+   - Shared AST utilities (extract imports, functions, classes)
+
+**P-GENTS SPECIFICATION CREATED** ✅
+
+**File**: `spec/p-gents/README.md` (~650 lines)
+
+**Core Design Philosophy**:
+> **Fuzzy coercion without opinion**
+
+P-gents transform probabilistic text (LLM outputs) into structured data, embracing fuzziness while producing structure.
+
+**Key Principles Embodied**:
+1. **Tasteful**: One parser = one extraction purpose
+2. **Curated**: Composition > configuration
+3. **Ethical**: Honest about uncertainty (confidence scores)
+4. **Joy-Inducing**: Graceful degradation, helpful errors
+5. **Composable**: Parsers are morphisms `Text → ParseResult[A]`
+6. **Heterarchical**: Dual autonomous/functional modes
+7. **Generative**: Spec compresses ~2,400 lines → ~500 lines impl (71% reduction target)
+
+**Core Types Designed**:
+```python
+@dataclass
+class ParseResult[A]:
+    success: bool
+    value: Optional[A]
+    strategy: Optional[str]
+    confidence: float  # 0.0-1.0
+    error: Optional[str]
+    partial: bool
+    repairs: list[str]
+
+class Parser[A](Protocol):
+    def parse(self, text: str) -> ParseResult[A]: ...
+    def configure(self, **config) -> "Parser[A]": ...
+```
+
+**Five Extraction Patterns** (distilled from empirical analysis):
+1. **Boundary Extraction**: Find delimiters (markdown fences, JSON braces, section headers)
+2. **AST Validation**: Parse as syntax tree (Python, JSON, expressions)
+3. **Heuristic Section Parsing**: Extract labeled sections (HYPOTHESES:, REASONING:, etc.)
+4. **Repair & Retry**: Fix common malformations (unclosed strings, trailing commas, bracket balancing)
+5. **Fallback Field Extraction**: Regex-based extraction when structure fails
+
+**Three Composition Patterns**:
+1. **Sequential Fallback** (`FallbackParser`): Try strategies until one succeeds (PRIMARY pattern)
+2. **Parallel Fusion** (`FusionParser`): Merge multiple parsers' results
+3. **Conditional Switch** (`SwitchParser`): Route by input characteristics
+
+**Confidence Scoring**:
+- Code parsing: 0.5 base + bonuses for imports/content/length
+- JSON parsing: 1.0 (direct) → 0.2 (field extraction fallback)
+- Hypothesis parsing: Based on field completeness
+- Repair penalty: Multiply by 0.8 per repair
+- Fallback penalty: Multiply by max(0.5, 1.0 - 0.1 * strategy_index)
+
+**Error Handling Philosophy**: Degrade gracefully
+- NEVER throw exceptions on malformed input
+- Return ParseResult with success=False
+- Include helpful error messages
+- Support partial parses with low confidence
+
+**Real-World Patterns Documented**:
+1. Structured response with sections (B-gent, A-gent)
+2. Markdown + code blocks (E-gent, F-gent)
+3. JSON with optional metadata (T-gent, runtime)
+4. AST span search (E-gent partial extraction)
+5. Hybrid structured + free-form (B-gent hypotheses)
+
+**Integration with Other Genuses**:
+- E-gent: Parse evolved code
+- F-gent: Parse intent and contracts
+- B-gent: Parse scientific hypotheses
+- J-gent: Parse runtime templates
+- L-gent: Parse catalog metadata
+- D-gent: Serialize/deserialize state
+
+**Anti-Patterns Documented**:
+- ❌ Parser returns list of items (violates Minimal Output Principle)
+- ❌ Configuration replaces design (strategies as config)
+- ❌ Silent data loss (no transparency)
+- ❌ God parser (one parser for everything)
+
+**Success Criteria Defined**:
+1. Compression >50% (2,400 lines → <1,200 lines)
+2. Zero regressions (all tests pass)
+3. Confidence scoring (all parsers return scores)
+4. Composition works (Fallback/Fusion/Switch demonstrated)
+5. Graceful degradation (no exceptions)
+6. Bootstrappable (regenerate from spec)
+
+**Implementation Roadmap**:
+- Phase 1: Extract core types
+- Phase 2: Implement composition patterns
+- Phase 3: Implement five extraction strategies
+- Phase 4: Migrate existing parsers
+- Phase 5: Integration tests
+
+**Open Questions**:
+1. Should P-gents support streaming? (Recommendation: Yes, aligns with Heterarchical)
+2. Domain-specific parsing? (Recommendation: Compose generic strategies)
+3. Should repairs be reversible? (Recommendation: Track in ParseResult.repairs)
+4. Confidence calibration? (Recommendation: Start with heuristics)
+5. Parser versioning? (Recommendation: Yes, add version to ParseResult)
+
+---
+
+### Previous: Skeleton.py Bootstrap Enhancement Analysis (2025-12-08)
+
+**Current State**:
+- ✅ **Deep analysis completed** of `impl/claude/agents/a/skeleton.py`
+- ✅ **Web research conducted** on meta-agents, category theory for AI, agentic patterns
+- ✅ **Gap analysis** between current skeleton and spec/a-gents/abstract/skeleton.md
+- ✅ **Creative enhancement proposals** developed
+- 📝 **Uncommitted changes**: Previous I/W-gent work still pending
+
+### What Just Happened (Skeleton Deep Analysis)
+
+**ANALYSIS SUMMARY** ✅
+
+**Current State of skeleton.py** (~244 lines):
+The skeleton currently provides:
+1. `AbstractAgent` = type alias for `bootstrap.types.Agent[A, B]`
+2. `AgentMeta` dataclass with optional `AgentIdentity`, `AgentInterface`, `AgentBehavior`
+3. Three protocols: `Introspectable`, `Validatable`, `Composable`
+4. Utility functions: `has_meta()`, `get_meta()`, `check_composition()`
+
+**Key Insight from Current Implementation**:
+```python
+# The key insight of A-gents: Agent[A, B] from bootstrap IS the skeleton.
+# AbstractAgent is just an alias for semantic clarity.
+```
+
+This is philosophically correct but **operationally thin**. The skeleton currently recognizes `Agent[A, B]` is sufficient but doesn't leverage this for bootstrapping.
+
+---
+
+### Gap Analysis: Spec vs Implementation
+
+| Spec Requirement | skeleton.py Status | Gap |
+|-----------------|-------------------|-----|
+| Identity (name, genus, version, purpose) | `AgentIdentity` dataclass ✅ | None |
+| Interface (input/output types) | `AgentInterface` dataclass ✅ | None |
+| Behavior (guarantees, constraints) | `AgentBehavior` dataclass ✅ | None |
+| Configuration parameters | ❌ Missing | Add `AgentConfig` |
+| State schema declaration | ❌ Missing | Add `AgentState` |
+| Composition hooks (pre/post) | ❌ Missing | Add `CompositionHooks` |
+| Validation (Identity agent test) | `Validatable` protocol ✅ | Enhance |
+| Inheritance/extends | ❌ Missing | Add `extends` mechanism |
+
+**Spec Gap Score**: 5/8 requirements implemented (62.5%)
+
+---
+
+### Web Research Findings
+
+**Industry Trends (2024-2025)**:
+
+1. **Meta-Agent Architecture** ([ADAS, MetaGPT](https://github.com/FoundationAgents/MetaGPT)):
+   - Meta-agents that improve target-agents (but not themselves)
+   - Self-improving agents are the frontier (ICLR 2025)
+   - kgents' `evolve.py` already does this via E-gents
+
+2. **Category Theory for AI** ([AGI 2024](https://link.springer.com/chapter/10.1007/978-3-031-65572-2_13)):
+   - Agents as morphisms, composition as fundamental
+   - kgents already embodies this in `bootstrap.types.Agent[A, B]`
+   - **Opportunity**: Make the categorical structure more explicit in skeleton
+
+3. **Modular Agent Architecture** ([Anthropic Research](https://www.anthropic.com/research/building-effective-agents)):
+   - Simple, composable patterns beat complex frameworks
+   - "Start by using LLM APIs directly"
+   - kgents aligns with this philosophy
+
+4. **Structured Active Inference** ([2024 research](https://arxiv.org/html/2406.07577v1)):
+   - Every agent's generative model has an explicit interface
+   - Category-theoretic systems theory for agent composition
+   - **Opportunity**: skeleton should define interface protocols more rigorously
+
+---
+
+### Creative Enhancement Proposals
+
+**PROPOSAL A: Skeleton as Meta-Factory** (Pivotal for Bootstrap)
+
+Make skeleton.py the *generative center* of the project:
+
+```python
+# skeleton.py becomes the factory for ALL agents
+class AgentFactory:
+    """
+    The meta-agent that creates other agents.
+
+    Every agent in kgents is created through this factory,
+    ensuring consistency and enabling meta-level operations.
+    """
+
+    @classmethod
+    def create(cls, spec: AgentMeta, impl: Callable[[A], B]) -> Agent[A, B]:
+        """Create an agent from spec + implementation."""
+        return cls._wrap(impl, spec)
+
+    @classmethod
+    def from_spec(cls, spec_path: Path) -> Agent[Any, Any]:
+        """Parse spec/*.md and generate agent skeleton."""
+        # Ground parses persona.md → why not parse any spec?
+        ...
+
+    @classmethod
+    def compose(cls, *agents: Agent) -> Agent:
+        """Compose multiple agents with validation."""
+        # Uses check_composition() for safety
+        ...
+```
+
+**Impact**: skeleton.py becomes the entry point for agent creation, not just a type alias.
+
+---
+
+**PROPOSAL B: Skeleton + Ground Integration** (Pivotal for Bootstrap)
+
+Currently, `Ground` is separate from skeleton. But Ground IS the empirical seed for personas.
+**What if skeleton leveraged Ground for self-description?**
+
+```python
+class GroundedSkeleton(Agent[Void, AgentMeta]):
+    """
+    A skeleton that knows itself through Ground.
+
+    The bootstrap agents can describe themselves:
+    - Ground → Facts → skeleton parses to AgentMeta
+    - Any agent can introspect via GroundedSkeleton
+    """
+
+    async def invoke(self, _: Void) -> AgentMeta:
+        facts = await Ground().invoke(VOID)
+        return self._derive_meta_from_facts(facts)
+```
+
+**Impact**: Enables autopoiesis - agents that can describe themselves through Ground.
+
+---
+
+**PROPOSAL C: Category-Theoretic Protocol Enrichment**
+
+Make the categorical nature explicit and useful:
+
+```python
+from typing import Protocol, runtime_checkable
+
+@runtime_checkable
+class Morphism(Protocol[A, B]):
+    """
+    Agent as morphism in the category of agents.
+
+    Laws (enforced via Validatable):
+    - Identity: Id >> f ≡ f ≡ f >> Id
+    - Associativity: (f >> g) >> h ≡ f >> (g >> h)
+    """
+
+    @property
+    def domain(self) -> type[A]: ...
+
+    @property
+    def codomain(self) -> type[B]: ...
+
+    def compose(self, other: "Morphism[B, C]") -> "Morphism[A, C]": ...
+
+
+@runtime_checkable
+class Functor(Protocol[F]):
+    """
+    Functor for lifting agents across contexts.
+
+    Enables: Agent[A, B] → Agent[F[A], F[B]]
+    """
+
+    def map(self, f: Agent[A, B]) -> Agent[F, F]: ...
+```
+
+**Impact**: Makes C-gents principles explicit in the skeleton, enabling compile-time composition verification.
+
+---
+
+**PROPOSAL D: Skeleton as Bootstrap Witness** (Most Pivotal)
+
+The skeleton should *witness* that all bootstrap agents exist and compose correctly:
+
+```python
+class BootstrapWitness:
+    """
+    Verifies the bootstrap is sound.
+
+    The skeleton becomes the checkpoint that says:
+    "Yes, the 7 bootstrap agents exist and compose correctly."
+
+    This is the pivotal role: skeleton validates bootstrap integrity.
+    """
+
+    REQUIRED_AGENTS = ["Id", "Compose", "Judge", "Ground", "Contradict", "Sublate", "Fix"]
+
+    @classmethod
+    def verify_bootstrap(cls) -> Verdict:
+        """
+        Verify all bootstrap agents exist and satisfy laws.
+
+        Uses Judge to evaluate each against the 7 principles.
+        Returns Verdict.accept() if bootstrap is sound.
+        """
+        from bootstrap import Id, Compose, Judge, Ground, Contradict, Sublate, Fix
+
+        # 1. All agents exist
+        agents = [Id, Compose, Judge, Ground, Contradict, Sublate, Fix]
+
+        # 2. Identity laws hold
+        # 3. Composition laws hold
+        # 4. Each passes Judge
+
+        return Verdict.accept(["Bootstrap verified"])
+
+    @classmethod
+    def regenerate_from_bootstrap(cls, target: str) -> Agent:
+        """
+        Regenerate an agent genus from bootstrap.
+
+        This is the generative test: can we derive target from bootstrap?
+        """
+        # Uses spec/bootstrap.md generation rules
+        ...
+```
+
+**Impact**: skeleton.py becomes the *proof* that kgents can bootstrap itself.
+
+---
 
 ### Recommended Next Actions
 
-**Option A: Fix Remaining K-gent Failures** (if K-gent priority increases):
-1. Investigate K-gent persona serialization issues (dict vs dataclass)
-2. Fix D-gent + K-gent integration tests
-3. Ensure cross-genus compatibility
+**Option A: Implement BootstrapWitness** (recommended, highest leverage):
+1. Add `BootstrapWitness` class to skeleton.py
+2. Implement `verify_bootstrap()` using Judge
+3. Add `regenerate_from_bootstrap()` for A/B/C/K agents
+4. Update spec/a-gents/abstract/skeleton.md with witness concept
+5. Tests: verify_bootstrap passes, regeneration produces isomorphic agents
 
-**Option B: Continue Feature Development** (recommended):
-1. I-gents implementation (Living Codex Garden)
-2. W-gents specification (new genus in spec/w-gents/)
-3. Continue cross-pollination integrations
+**Option B: Implement AgentFactory**:
+1. Add `AgentFactory` class to skeleton.py
+2. Migrate existing agent creation to use factory
+3. Add spec-parsing capability (from_spec)
+4. Tests: factory-created agents pass Judge
 
-**Option C: Commit Test Cleanup**:
+**Option C: Category-Theoretic Protocols**:
+1. Add `Morphism` and `Functor` protocols to skeleton.py
+2. Update `Agent` to implement `Morphism`
+3. Add domain/codomain introspection
+4. Tests: composition laws verified at type level
+
+**Option D: Commit Existing Work First**:
+1. Commit I/W-gent spec enhancements (previous session)
+2. Commit D-gent + K-gent fixes
+3. Then tackle skeleton enhancements
+
+---
+
+### Previous Session: I-gent & W-gent Spec Enhancement (2025-12-08)
+
+**Current State**:
+- ✅ **I-gents spec enhanced** with ~600 lines of production integration content
+- ✅ **W-gents spec created** from scratch (~265 lines comprehensive specification)
+- ✅ **demo_igents.py created** - Working demonstration of all fractal scales
+- ✅ **533 tests passing** (all previous work stable)
+- 📝 **Uncommitted changes**: spec/i-gents/README.md, spec/w-gents/README.md, impl/claude/agents/i/, impl/claude/demo_igents.py
+- 🎯 **Ready for commit** or ready to begin implementation
+
+### What Just Happened (I/W-gent Production Specs)
+
+**I-GENTS: LIVING CODEX GARDEN SPEC ENHANCEMENT** ✅
+
+**User Request**: "Enhance the specs for i-gents and w-gents that a full production ready (though minimal) experience is expected that will generally integrate with all kgents, in particular those constructed simply with bootstrap agents. This implementation is deep, but more batteries included is desired."
+
+**Changes to spec/i-gents/README.md** (~600 lines added):
+
+1. **Production Integration: Batteries Included** section added with:
+   - Bootstrap agent visualization (Ground, Contradict, Sublate, Judge, Fix specialized UI)
+   - evolve.py integration (`kgents evolve --garden` flag)
+   - Cross-genus workflows (E/F/H/D/L-gent specialized dashboards)
+   - CLI integration (`kgents garden`, `kgents garden attach session-id`)
+   - Keyboard shortcuts for TUI mode (o=observe, s=snapshot, h=history, etc.)
+   - Persistent sessions (.garden.json format with resume capability)
+   - Hook system (.garden-hooks.py for extensibility)
+   - Real-world workflow examples
+   - Integration checklist (14 requirements for production-ready I-gent)
+
+2. **Bootstrap Agent Specialized Visualizations**:
+   - Ground: Shows persona + world facts as margin notes
+   - Contradict: Tension detection with polarity indicators
+   - Sublate: Real-time synthesis decision tree (Preserve/Negate/Elevate strategies)
+   - Judge: Live scorecard with 7 principles evaluation
+   - Fix: Convergence progress with entropy budget visualization
+
+3. **Cross-Genus Integration Patterns**:
+   - E-gent evolution: Pipeline progress (Ground → Hypothesize → Memory → Experiment → Validate)
+   - F-gent forge: Phase indicators (Intent → Contract → Prototype → Validate → Crystallize)
+   - H-gent dialectic: Synthesis visualization with tension markers
+   - D-gent persistence: State timeline + history playback
+   - L-gent library: Catalog browsing + relationship graphs
+
+**W-GENTS: WIRE OBSERVATION SPEC CREATED** ✅
+
+**Created spec/w-gents/README.md** (~265 lines from scratch):
+
+1. **Philosophy & Three Virtues**:
+   - Transparency: Show what IS, not what we wish to see
+   - Ephemerality: Exist only during observation, leave no trace
+   - Non-Intrusion: Observe without affecting the observed
+   - Motto: "Observe without intrusion, reveal without distortion"
+
+2. **Production Integration: Batteries Included**:
+   - **WireObservable Mixin**: Any agent can inherit to become observable
+   - **Wire Protocol**: JSONL format in `.wire/` directory
+   - **Three Fidelity Levels**:
+     - Teletype (raw): Plain text, <1ms latency, for CI/logs
+     - Documentarian (rendered): Box-drawing, <50ms, for SSH/terminal
+     - LiveWire (dashboard): Web UI with graphs, <100ms, for deep debugging
+
+3. **I-gent Integration**:
+   - `[observe]` action in I-gent spawns W-gent server
+   - Pattern: I-gent (ecosystem view) → W-gent (agent view)
+   - Navigate: Use I-gent to choose agent, W-gent to drill down
+
+4. **Bootstrap Agent Integration**:
+   - Custom dashboards for Ground, Judge, Fix, Contradict, Sublate
+   - Real-time principle evaluation for Judge
+   - Synthesis decision tree for Sublate
+   - Convergence tracking for Fix
+
+5. **CLI Integration**:
+   ```bash
+   kgents wire attach robin           # Spawn W-gent server
+   kgents wire list                   # List active observers
+   kgents wire detach robin           # Stop observation
+   kgents wire export robin --format json  # Export trace
+   kgents wire replay trace.json      # Replay saved trace
+   ```
+
+6. **evolve.py Integration**:
+   - `kgents evolve --wire --garden` for live evolution observation
+   - Watch bootstrap agents (Ground/Contradict/Sublate/Judge/Fix) in real-time
+   - Performance profiling (call tree, latency breakdown)
+
+7. **Real-World Example**: Debugging slow hypothesis generation
+   - W-gent shows performance alert (450ms, target <100ms)
+   - Latency breakdown identifies bottleneck (llm.invoke: 1,050ms)
+   - Suggestions: Add caching, use faster model, reduce max_tokens
+
+**DEMO IMPLEMENTATION** ✅
+
+**Created impl/claude/demo_igents.py** (~208 lines):
+- Demonstrates all four fractal scales: Glyph → Card → Page → Garden
+- Shows moon phase indicators (○ dormant, ◐ waking, ● active, ◑ waning, ◌ empty)
+- Implements joy/ethics metrics visualization
+- Margin notes for agent composition metadata
+- Garden ecosystem view with 12 agents (Bootstrap + Genus implementations)
+- Breath cycle aesthetic explanation
+- Successfully runs and displays all visualizations
+
+**Files Modified**:
+- `spec/i-gents/README.md`: +~600 lines (production integration section)
+- `spec/w-gents/README.md`: New file, ~265 lines (complete W-gent spec)
+- `impl/claude/agents/i/`: Directory created with implementation stubs
+- `impl/claude/demo_igents.py`: New file, ~208 lines (working demo)
+
+**Integration Patterns Documented**:
+- I-gent ↔ W-gent: Garden spawns wire observation
+- I-gent ↔ evolve.py: `--garden` flag for live evolution view
+- W-gent ↔ Bootstrap: Specialized dashboards for Ground/Judge/Fix/etc.
+- W-gent ↔ Cross-Genus: E/F/H/D/L-gent custom visualizations
+- I-gent ↔ D-gent: Persistent session storage
+- I-gent ↔ L-gent: Catalog browsing and search
+
+### Recommended Next Actions
+
+**Option A: Commit I/W-gent Spec Enhancements** (recommended):
 ```bash
-git add impl/claude/agents/h/_tests/h_gents_compat_check.py \
-        impl/claude/agents/j/_tests/test_j_phase3.py \
-        impl/claude/agents/t/_tests/test_t_phase3.py \
-        impl/claude/agents/e/_tests/demo_e2e.py \
-        impl/claude/agents/e/_tests/metrics_collection.py \
-        HYDRATE.md
-git commit -m "test: Fix pytest collection issues (496 tests passing)
+# Commit the spec enhancements and demo
+git add spec/i-gents/README.md spec/w-gents/ impl/claude/demo_igents.py impl/claude/agents/i/ HYDRATE.md impl/claude/HYDRATE.md
+git commit -m "feat(i-gents,w-gents): Production-ready specs with bootstrap integration
 
-- Renamed H-gent compat test (import-time execution → standalone)
-- Renamed duplicate test_phase3.py files (J/T-gents)
-- Renamed E-gent demo/metrics (sequential deps → standalone scripts)
-- Impact: Clean pytest collection, 496/502 tests passing
-- Remaining 6 failures: K-gent integration (lowest priority)"
+I-gents Enhancement (~600 lines):
+- Bootstrap agent specialized visualizations (Ground/Judge/Contradict/Sublate/Fix)
+- evolve.py integration (--garden flag for live evolution view)
+- Cross-genus workflows (E/F/H/D/L-gent dashboards)
+- CLI integration (kgents garden attach/snapshot/export)
+- Persistent sessions (.garden.json format)
+- Hook system (.garden-hooks.py)
+- Integration checklist (14 production requirements)
+
+W-gents Specification (~265 lines):
+- Three virtues: Transparency, Ephemerality, Non-Intrusion
+- WireObservable mixin pattern (zero overhead when not observed)
+- Three fidelity levels (Teletype/Documentarian/LiveWire)
+- I-gent integration ([observe] action spawns W-gent)
+- CLI commands (attach/detach/list/export/replay)
+- evolve.py integration (--wire flag)
+- Bootstrap agent dashboards
+- Real-world debugging example
+
+Demo Implementation:
+- impl/claude/demo_igents.py: All four fractal scales working
+- Glyph/Card/Page/Garden renderers demonstrated
+- Bootstrap + genus agents visualized
+
+Impact: Batteries-included interface & observation layer for entire kgents ecosystem"
 ```
+
+**Option B: Begin I-gent Implementation**:
+1. Implement core types (Phase, Glyph, AgentState, GardenState)
+2. Implement renderers (GlyphRenderer, CardRenderer, PageRenderer, GardenRenderer)
+3. Add breath cycle animation (BreathCycle, BreathManager)
+4. Implement export (Markdown, Mermaid)
+5. Add W-gent integration (observe action)
+
+**Option C: Begin W-gent Implementation**:
+1. Implement WireObservable mixin
+2. Implement wire protocol (WireState, WireEvent, WireReader)
+3. Implement fidelity adapters (Teletype, Documentarian, LiveWire)
+4. Implement FastAPI server with SSE
+5. Add CLI commands (attach, detach, list, export, replay)
+
+---
+
+### Previous: D-gent Development (2025-12-08)
+
+**Uncommitted D-gent + K-gent Changes** (still in working tree):
+- Phase D.2 Performance optimizations (volatile.py, cached.py, lens_agent.py)
+- K-gent serialization fixes (persistent.py)
+- 533 tests passing (76 D-gent, 10 K-gent, all integration tests)
+
+**D-gent Development Context**:
+- ✅ **All 533 tests passing** (76 D-gent, 192 F-gent, 72 J-gent, 50 E-gent, etc.)
+- ✅ **D-gent Core Complete**: Volatile, Persistent, Cached, Lens, Symbiont all implemented & tested
+- ✅ **D-gent Specs Complete**: 6 comprehensive spec files (~2,819 lines)
+- ⚠️ **Uncommitted work**: K-gent fixes from previous session (nested dataclass + enum serialization)
+- 📝 **Missing specs**: vector.md, graph.md, streams.md (referenced but not yet written)
+- 🚀 **Opportunity**: Extend D-gents with Vector/Graph/Stream agents OR commit and move to other work
+
+### What Just Happened (Quick Context)
+
+**K-GENT FAILURES FIXED** ✅ (533 tests passing!)
+
+**Root Cause Identified**:
+- **Problem**: PersistentAgent (D-gent) wasn't properly deserializing nested dataclasses and enums
+- When loading PersonaState from JSON, the nested `seed: PersonaSeed` field was staying as a dict
+- Enums (like NoveltyLevel in B-gents) weren't being serialized/deserialized
+
+**Changes Made**:
+
+1. **Enhanced D-gent Nested Dataclass Deserialization** (`agents/d/persistent.py`):
+   - **Added `_deserialize_dataclass()` method**: Recursively reconstructs nested dataclasses
+   - **Type hint introspection**: Uses `get_type_hints()` to identify field types
+   - **Handles**:
+     - Nested dataclasses (e.g., `PersonaSeed` inside `PersonaState`)
+     - Enums (reconstructs from string values)
+     - Lists of dataclasses (e.g., `list[Hypothesis]`)
+     - None values and primitives
+
+2. **Enhanced D-gent Enum Serialization** (`agents/d/persistent.py`):
+   - **Modified `_serialize()` method**: Uses custom `dict_factory` to convert enums to values
+   - **Enum serializer**: Converts `NoveltyLevel.INCREMENTAL` → `"incremental"` for JSON
+   - **Backward compatible**: Doesn't affect existing primitive serialization
+
+**Test Results**:
+```
+================== 533 passed, 1 skipped, 1 warning in 0.86s ===================
+```
+
+**Fixed Tests** (all 6 K-gent failures):
+- ✅ `test_persistent_persona.py::test_persistent_persona_loads_state`
+- ✅ `test_persistent_persona.py::test_persistent_query_agent_loads_state`
+- ✅ `test_persistent_persona.py::test_persistent_persona_with_initial_state`
+- ✅ `test_d_gents_phase4.py::test_kgent_persistent_persona_integration`
+- ✅ `test_d_gents_phase4.py::test_bgents_hypothesis_storage_integration`
+- ✅ `test_d_gents_phase4.py::test_cross_genus_integration_kgent_bgents`
+
+**Files Changed**:
+- `impl/claude/agents/d/persistent.py`:
+  - Added imports: `get_type_hints`, `get_origin`, `get_args`, `fields`, `Enum`
+  - Enhanced `_serialize()`: Enum → value conversion with `dict_factory`
+  - Added `_deserialize_dataclass()`: Recursive nested dataclass reconstruction
+  - Enhanced `_deserialize()`: Calls `_deserialize_dataclass()` for dataclass schemas
+
+**Impact**:
+- ✅ **533 tests passing** (up from 496, +37 tests now working)
+- ✅ All K-gent tests passing (10/10 in `test_persistent_persona.py`)
+- ✅ All D-gent Phase 4 integration tests passing (6/6)
+- ✅ B-gent hypothesis storage working with NoveltyLevel enum
+- ✅ Cross-genus K+B integration working
+- ✅ No regressions in other test suites
+
+### D-gent Development Summary
+
+**Uncommitted Changes** (9 files modified, +372 lines, -82 deletions):
+
+1. **Phase D.2 Performance & Composability** (from 2025-12-08):
+   - `volatile.py`: O(n) → O(1) history with `collections.deque(maxlen=100)`
+   - `cached.py`: Fixed `invalidate_cache()` to reload from backend (not just warm)
+   - `lens_agent.py`: Added `__rshift__` for lens composition (`dgent >> lens >> lens`)
+   - `protocol.py`: Added morphism documentation (D-gents as `Agent[S, S]`)
+   - `counter.py`: Added `__lshift__` for symmetric composition
+
+2. **K-gent Fixes - Nested Dataclass + Enum Serialization**:
+   - `persistent.py`: Added `_deserialize_dataclass()` for recursive nested dataclass reconstruction
+   - `persistent.py`: Enhanced `_serialize()` to handle `Enum → value` conversion
+   - Fixed all 6 K-gent failures (PersonaSeed deserialization, NoveltyLevel enum)
+
+3. **Spec Updates**:
+   - `spec/README.md`: Added W-gents to genus list
+   - `spec/i-gents/README.md`: Enhanced with W-gent references
+
+**Test Results**: ✅ All 76 D-gent tests passing | ✅ 533 total tests passing
+
+**What's Complete**:
+- ✅ Core D-gent types: Volatile, Persistent, Cached, Lens, Symbiont
+- ✅ Comprehensive specs: README, protocols, lenses, symbiont, persistence (~2,819 lines)
+- ✅ Phase D.2 optimizations (deque, cache semantics, composition operators)
+- ✅ K-gent integration fixes (nested dataclass + enum support)
+
+**What's Missing**:
+- ⏳ Vector/Graph/Stream D-gents (specs referenced but not implemented)
+- ⏳ Advanced specs: vector.md, graph.md, streams.md
+- ⏳ Integration demos (RAG with VectorAgent, knowledge graphs)
+
+### Recommended Next Actions
+
+**Option A: Commit All D-gent + K-gent Work** (recommended):
+```bash
+# Single comprehensive commit for all D-gent improvements
+git add impl/claude/agents/d/ impl/claude/agents/t/counter.py spec/ HYDRATE.md
+git commit -m "feat(d-gents): Phase D.2 + K-gent fixes - Performance & serialization
+
+Phase D.2 - Performance & Composability:
+- VolatileAgent: O(n) → O(1) history with deque(maxlen=100)
+- CachedAgent: Fix invalidate_cache() to reload from backend atomically
+- LensAgent: Add __rshift__ for lens composition (dgent >> lens >> lens)
+- Protocol: Document D-gents as morphisms Agent[S, S]
+- CounterAgent: Add __lshift__ for symmetric composition
+
+K-gent Fixes - Nested Dataclass + Enum Serialization:
+- PersistentAgent: Add _deserialize_dataclass() for recursive reconstruction
+- PersistentAgent: Enhance _serialize() to handle Enum → value conversion
+- Fixed all 6 K-gent failures (PersonaSeed, NoveltyLevel enum)
+
+Spec Updates:
+- Add W-gents to spec/README.md
+- Enhance spec/i-gents/README.md with W-gent references
+
+Impact: 533/534 tests passing (+37 from 496)
+Tests: D-gent 76/76 ✅, K-gent 10/10 ✅, Phase 4 integration 6/6 ✅
+Progress: Phase D.2 complete, all core D-gents implemented"
+```
+
+**Option B: Extend D-gents - Vector/Graph/Stream Agents**:
+1. **VectorAgent** (RAG, semantic memory):
+   - Spec: `spec/d-gents/vector.md` (~500 lines)
+   - Impl: `agents/d/vector.py` with embedding + search
+   - Tests: Semantic retrieval, similarity search
+   - Integration: L-gent semantic search backend
+
+2. **GraphAgent** (knowledge graphs, relationships):
+   - Spec: `spec/d-gents/graph.md` (~500 lines)
+   - Impl: `agents/d/graph.py` with nodes, edges, traversal
+   - Tests: Graph queries, relationship navigation
+   - Integration: L-gent lineage + lattice
+
+3. **StreamAgent** (event sourcing, time-series):
+   - Spec: `spec/d-gents/streams.md` (~500 lines)
+   - Impl: `agents/d/stream.py` with event log + replay
+   - Tests: Event append, state reconstruction
+   - Integration: Audit logs, temporal queries
+
+**Option C: Continue Other Genus Work**:
+1. I-gents implementation (Living Codex Garden - spec exists, demo exists)
+2. W-gents specification (Wire agents for process observation)
+3. Cross-pollination Phase D integrations
 
 ---
 

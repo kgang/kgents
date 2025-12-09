@@ -5,10 +5,17 @@ Fast, ephemeral state management for temporary context and caches.
 """
 
 from dataclasses import dataclass, field
-from typing import Generic, TypeVar, List
+from typing import Generic, TypeVar, List, Callable, TYPE_CHECKING
+from collections import deque
 import copy
 
+if TYPE_CHECKING:
+    from .lens import Lens
+    from .lens_agent import LensAgent
+    from .transform_agent import TransformAgent
+
 S = TypeVar("S")
+A = TypeVar("A")  # Sub-state (for lens composition)
 
 
 @dataclass
@@ -24,11 +31,21 @@ class VolatileAgent(Generic[S]):
     mutations to loaded state don't affect the stored state.
 
     History is bounded to prevent unbounded memory growth (entropy-aware).
+    Uses deque with maxlen for O(1) history management.
     """
 
     _state: S
-    _history: List[S] = field(default_factory=list)
+    _history: deque = field(default_factory=lambda: deque(maxlen=100))
     _max_history: int = 100
+
+    def __post_init__(self):
+        """Initialize history deque with correct maxlen."""
+        if not isinstance(self._history, deque):
+            # Convert list to deque if passed as list
+            self._history = deque(self._history, maxlen=self._max_history)
+        elif self._history.maxlen != self._max_history:
+            # Update maxlen if different
+            self._history = deque(self._history, maxlen=self._max_history)
 
     async def load(self) -> S:
         """
@@ -43,14 +60,11 @@ class VolatileAgent(Generic[S]):
         Save new state.
 
         Archives the current state to history before updating.
-        Maintains bounded history by dropping oldest entries.
+        Maintains bounded history automatically via deque maxlen (O(1)).
         """
         # Archive current state to history
+        # deque with maxlen automatically evicts oldest entry when full
         self._history.append(copy.deepcopy(self._state))
-
-        # Maintain bounded history (entropy-conscious)
-        if len(self._history) > self._max_history:
-            self._history.pop(0)
 
         # Update to new state
         self._state = copy.deepcopy(state)
@@ -65,7 +79,8 @@ class VolatileAgent(Generic[S]):
         Args:
             limit: Maximum number of historical states to return
         """
-        hist = self._history[::-1]  # Newest first
+        # Convert deque to list for slicing, then reverse (newest first)
+        hist = list(reversed(self._history))
         if limit is not None:
             hist = hist[:limit]
         return [copy.deepcopy(s) for s in hist]
@@ -77,3 +92,50 @@ class VolatileAgent(Generic[S]):
         Returns current state without going through async load().
         """
         return copy.deepcopy(self._state)
+
+    def __rshift__(self, other: "Lens[S, A]") -> "LensAgent[S, A]":
+        """
+        Compose with a lens to create focused view: dgent >> lens.
+
+        Creates a LensAgent that provides scoped access to sub-state.
+
+        Type: VolatileAgent[S] >> Lens[S, A] → LensAgent[S, A]
+
+        Example:
+            >>> from agents.d.lens import key_lens
+            >>>
+            >>> # Global state
+            >>> dgent = VolatileAgent(_state={"users": {}, "products": {}})
+            >>>
+            >>> # Focus on users via composition
+            >>> user_dgent = dgent >> key_lens("users")
+            >>>
+            >>> # Focused agent sees only "users"
+            >>> await user_dgent.save({"alice": {"age": 30}})
+            >>> await user_dgent.load()
+            {'alice': {'age': 30}}
+        """
+        from .lens_agent import LensAgent
+
+        return LensAgent(parent=self, lens=other)
+
+    def __or__(self, transform: "Callable[[S], S]") -> "TransformAgent[S]":
+        """
+        Compose with a transformation function: dgent | transform.
+
+        Creates an agent that applies a transformation on save/load.
+
+        Type: VolatileAgent[S] | (S → S) → TransformAgent[S]
+
+        Example:
+            >>> # Normalize state on access
+            >>> dgent = VolatileAgent(_state={"count": 5})
+            >>> normalized = dgent | (lambda s: {**s, "count": max(0, s["count"])})
+            >>>
+            >>> await normalized.save({"count": -10})
+            >>> await normalized.load()
+            {'count': 0}  # Transformed to minimum 0
+        """
+        from .transform_agent import TransformAgent
+
+        return TransformAgent(parent=self, transform=transform)

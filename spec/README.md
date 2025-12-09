@@ -20,6 +20,7 @@ This directory contains the conceptual specification for kgents—implementation
    - [k-gent/](k-gent/) - Kent Simulacra (personalization)
    - [l-gents/](l-gents/) - Library (knowledge curation, semantic discovery)
    - [t-gents/](t-gents/) - Testing (algebraic reliability)
+   - [w-gents/](w-gents/) - Wire (ephemeral process observation, I-gent's observation backend)
 
 ## The Spec/Impl Distinction
 

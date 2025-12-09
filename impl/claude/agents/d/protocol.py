@@ -2,12 +2,15 @@
 The DataAgent protocol: minimal interface for state management.
 
 All D-gents must implement this protocol to provide uniform access to state.
+
+D-gents can also act as morphisms Agent[S, S] for composition with other agents.
 """
 
 from typing import TypeVar, Protocol, List
 from abc import abstractmethod
 
 S = TypeVar("S")  # State type
+T = TypeVar("T")  # Target state type (for composition)
 
 
 class DataAgent(Protocol[S]):
@@ -16,6 +19,12 @@ class DataAgent(Protocol[S]):
 
     A D-gent abstracts storage mechanisms, providing a uniform
     interface for stateful computation regardless of backend.
+
+    Morphism View:
+        D-gents can be viewed as Agent[S, S] morphisms that:
+        - Load state: () → S
+        - Save state: S → ()
+        - Can compose with other agents via >> operator
     """
 
     @abstractmethod

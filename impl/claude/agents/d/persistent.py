@@ -7,8 +7,18 @@ atomic file operations, and append-only history (JSONL).
 
 import json
 from pathlib import Path
-from typing import TypeVar, Generic, Type, List, Any
+from typing import (
+    TypeVar,
+    Generic,
+    Type,
+    List,
+    Any,
+    get_type_hints,
+    get_origin,
+    get_args,
+)
 from dataclasses import is_dataclass, asdict
+from enum import Enum
 
 from .errors import (
     StateNotFoundError,
@@ -191,13 +201,23 @@ class PersistentAgent(Generic[S]):
         - Primitives (str, int, float, bool, None)
         - Collections (list, dict)
         - Dataclasses (converted to dict)
+        - Enums (converted to their value)
 
         Raises:
             StateSerializationError: If state contains non-serializable types
         """
+
+        def enum_serializer(obj):
+            """Convert enums to their values for JSON serialization."""
+            if isinstance(obj, Enum):
+                return obj.value
+            return obj
+
         try:
             if is_dataclass(state):
-                return asdict(state)  # type: ignore
+                return asdict(
+                    state, dict_factory=lambda x: {k: enum_serializer(v) for k, v in x}
+                )  # type: ignore
             return state
         except Exception as e:
             raise StateSerializationError(f"Cannot serialize state: {e}")
@@ -205,6 +225,8 @@ class PersistentAgent(Generic[S]):
     def _deserialize(self, data: Any) -> S:
         """
         Deserialize JSON data to state type.
+
+        Recursively handles nested dataclasses.
 
         Args:
             data: JSON-compatible data structure
@@ -217,7 +239,82 @@ class PersistentAgent(Generic[S]):
         """
         try:
             if is_dataclass(self.schema):
-                return self.schema(**data)  # type: ignore
+                return self._deserialize_dataclass(self.schema, data)  # type: ignore
             return data  # type: ignore
         except Exception as e:
             raise StateCorruptionError(f"Cannot deserialize to {self.schema}: {e}")
+
+    def _deserialize_dataclass(self, cls: Type, data: dict) -> Any:
+        """
+        Recursively deserialize a dataclass and its nested dataclass fields.
+
+        Handles:
+        - Nested dataclasses (recursively reconstructed)
+        - Enums (reconstructed from string values)
+        - Lists of dataclasses or enums
+        - Primitives and collections (passed through)
+
+        Args:
+            cls: The dataclass type to instantiate
+            data: Dict of field values (may contain nested dicts)
+
+        Returns:
+            Instance of cls with all nested dataclasses properly constructed
+        """
+        if not isinstance(data, dict):
+            return data
+
+        # Get type hints for this dataclass
+        try:
+            type_hints = get_type_hints(cls)
+        except Exception:
+            # Fallback if type hints fail
+            type_hints = {}
+
+        # Build kwargs with recursively deserialized fields
+        kwargs = {}
+        for field_name, field_value in data.items():
+            field_type = type_hints.get(field_name)
+
+            # Handle None values
+            if field_value is None:
+                kwargs[field_name] = None
+            elif field_type and is_dataclass(field_type):
+                # Recursively deserialize nested dataclass
+                kwargs[field_name] = self._deserialize_dataclass(
+                    field_type, field_value
+                )
+            elif field_type:
+                # Try to handle enums (check if it's an Enum class)
+                try:
+                    if isinstance(field_type, type) and issubclass(field_type, Enum):
+                        # Reconstruct enum from its value
+                        kwargs[field_name] = field_type(field_value)
+                        continue
+                except TypeError:
+                    # Not a simple type, might be a generic like list[X]
+                    pass
+
+                # Handle lists of complex types
+                if isinstance(field_value, list) and field_value:
+                    # Get the generic type if available (e.g., list[Hypothesis])
+                    origin = get_origin(field_type)
+                    if origin is list:
+                        args = get_args(field_type)
+                        if args and is_dataclass(args[0]):
+                            # List of dataclasses
+                            kwargs[field_name] = [
+                                self._deserialize_dataclass(args[0], item)
+                                if isinstance(item, dict)
+                                else item
+                                for item in field_value
+                            ]
+                            continue
+
+                # Default: use as-is
+                kwargs[field_name] = field_value
+            else:
+                # No type hint - use as-is
+                kwargs[field_name] = field_value
+
+        return cls(**kwargs)

@@ -78,9 +78,9 @@ class CounterAgent(Generic[A]):
         Raises:
             AssertionError: If count doesn't match expected
         """
-        assert (
-            self.count == expected
-        ), f"Expected {expected} invocations, got {self.count}"
+        assert self.count == expected, (
+            f"Expected {expected} invocations, got {self.count}"
+        )
 
     def __rshift__(self, other: Agent[A, B]) -> ComposedAgent[A, A, B]:
         """Composition operator: self >> other.
@@ -94,3 +94,26 @@ class CounterAgent(Generic[A]):
         from bootstrap.types import ComposedAgent
 
         return ComposedAgent(self, other)
+
+    def __lshift__(self, other: Agent[B, A]) -> ComposedAgent[B, A, A]:
+        """Reverse composition operator: self << other.
+
+        Enables CounterAgent as right-hand operand: other >> counter.
+
+        Type: CounterAgent[A] << Agent[B, A] → ComposedAgent[B, A]
+
+        Args:
+            other: Agent to compose with (left-hand side)
+
+        Returns:
+            Composed agent (other >> self)
+
+        Example:
+            >>> # Count outputs from a pipeline
+            >>> counter = CounterAgent(label="Results")
+            >>> pipeline = data_loader >> processor >> counter
+            >>> # Equivalent to: counter << processor << data_loader
+        """
+        from bootstrap.types import ComposedAgent
+
+        return ComposedAgent(other, self)

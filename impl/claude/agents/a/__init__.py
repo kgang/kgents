@@ -4,6 +4,10 @@ A-gents: Abstract Architectures + Art/Creativity
 A-gents provide:
 - The agent skeleton (what every agent MUST be)
 - Creativity-focused agents for idea expansion
+- Bootstrap verification (BootstrapWitness)
+- Category-theoretic protocols (Morphism, Functor)
+- Agent factory (AgentFactory)
+- Self-describing agents (GroundedSkeleton)
 
 The key insight of A-gents: Agent[A, B] from bootstrap IS the skeleton.
 AbstractAgent is just an alias for semantic clarity.
@@ -22,6 +26,23 @@ from .skeleton import (
     # Utilities
     has_meta,
     get_meta,
+    check_composition,
+    # Phase 1: BootstrapWitness
+    BootstrapVerificationResult,
+    BootstrapWitness,
+    # Phase 2: Category-Theoretic Protocols
+    Morphism,
+    Functor,
+    get_domain,
+    get_codomain,
+    verify_composition_types,
+    # Phase 3: AgentFactory
+    AgentSpec,
+    AgentFactory,
+    FactoryAgent,
+    # Phase 4: GroundedSkeleton
+    GroundedSkeleton,
+    AutopoieticAgent,
 )
 
 from .creativity import (
@@ -50,6 +71,23 @@ __all__ = [
     # Utilities
     "has_meta",
     "get_meta",
+    "check_composition",
+    # Phase 1: BootstrapWitness
+    "BootstrapVerificationResult",
+    "BootstrapWitness",
+    # Phase 2: Category-Theoretic Protocols
+    "Morphism",
+    "Functor",
+    "get_domain",
+    "get_codomain",
+    "verify_composition_types",
+    # Phase 3: AgentFactory
+    "AgentSpec",
+    "AgentFactory",
+    "FactoryAgent",
+    # Phase 4: GroundedSkeleton
+    "GroundedSkeleton",
+    "AutopoieticAgent",
     # Creativity Coach
     "CreativityMode",
     "CreativityInput",

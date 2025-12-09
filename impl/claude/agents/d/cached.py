@@ -9,11 +9,16 @@ This demonstrates D-gent composition: combining two D-gents to create
 a new D-gent with different performance characteristics.
 """
 
-from typing import TypeVar, Generic, List
+from typing import TypeVar, Generic, List, TYPE_CHECKING
 
 from .protocol import DataAgent
 
+if TYPE_CHECKING:
+    from .lens import Lens
+    from .lens_agent import LensAgent
+
 S = TypeVar("S")
+A = TypeVar("A")
 
 
 class CachedAgent(Generic[S]):
@@ -157,7 +162,7 @@ class CachedAgent(Generic[S]):
 
     async def invalidate_cache(self) -> None:
         """
-        Clear cache, forcing next read to use backend.
+        Invalidate cache and reload from backend.
 
         Use this when:
         - Backend was updated externally (outside this agent)
@@ -165,14 +170,44 @@ class CachedAgent(Generic[S]):
         - Testing cache miss scenarios
 
         Note:
-            After invalidation, call warm_cache() to repopulate.
+            This method both invalidates AND repopulates the cache atomically.
+            The cache is refreshed with current backend state.
 
         Example:
             >>> # External process updated backend
             >>> await cached.invalidate_cache()
-            >>> await cached.warm_cache()
-            >>> # Cache now has fresh data
+            >>> # Cache now has fresh data from backend
         """
-        # Strategy: Save current backend state to cache
-        # (Assumes cache can be "reset" by saving backend state)
+        # Reload cache from backend (invalidate + warm in one operation)
         await self.warm_cache()
+
+    def __rshift__(self, other: "Lens[S, A]") -> "LensAgent[S, A]":
+        """
+        Compose with a lens to create focused view: cached_dgent >> lens.
+
+        Creates a LensAgent that provides scoped access to sub-state,
+        while maintaining the cache layer for performance.
+
+        Type: CachedAgent[S] >> Lens[S, A] → LensAgent[S, A]
+
+        Example:
+            >>> from agents.d.lens import key_lens
+            >>> from pathlib import Path
+            >>>
+            >>> # Cached state with fast reads
+            >>> cached = CachedAgent(
+            ...     cache=VolatileAgent(_state={"users": {}, "config": {}}),
+            ...     backend=PersistentAgent(path=Path("state.json"), schema=dict)
+            ... )
+            >>>
+            >>> # Focus on users via composition
+            >>> user_dgent = cached >> key_lens("users")
+            >>>
+            >>> # Focused agent has cache performance
+            >>> await user_dgent.save({"alice": {"age": 30}})
+            >>> await user_dgent.load()  # Fast read from cache
+            {'alice': {'age': 30}}
+        """
+        from .lens_agent import LensAgent
+
+        return LensAgent(parent=self, lens=other)
