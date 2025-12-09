@@ -31,24 +31,21 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 ## TL;DR
 
-**Status**: Uncommitted changes (CLI Integrations Phase 1)
+**Status**: Clean, all committed and pushed
 **Branch**: `main`
-**Latest Commit**: 599c928 - docs: Update HYDRATE.md for J-gents Phase 2 session
+**Latest Commit**: 3537266 - feat(protocols): Implement Kairos Controller for Mirror Phase 3
 **Current State**:
-  - CLI Integrations Phase 1: ✅ COMPLETE (4 daily companions)
-  - G-gent Specification: ✅ SPEC COMPLETE (needs implementation)
-  - Mirror Protocol Phase 1: ✅ COMPLETE (46 tests)
-  - Mirror Protocol Phase 2: ✅ COMPLETE (EventStream implementations, 26 tests)
-  - Mirror Protocol Phase 3 (Kairos): ✅ COMPLETE (controller, attention, salience, benefit, budget, watch)
-  - CLI Publishing: ✅ COMPLETE (`kgents` command via pyproject.toml)
-  - CLI Protocol: ✅ COMPLETE (59 passing tests)
-  - Membrane Protocol v2.0: ✅ COMPLETE
-  - Tests: 59 passing CLI + 22 Kairos + more
+  - Mirror Protocol Phase 3 (Kairos): ✅ COMPLETE (full implementation, 22 tests passing)
+  - CLI Integrations Phase 1: ✅ COMPLETE (pulse, ground, breathe, entropy)
+  - G-gent Specification: ✅ COMPLETE (4 files: README, grammar, tongue, integration)
+  - Mirror Protocol Phase 1 & 2: ✅ COMPLETE (72 tests total)
+  - CLI Protocol: ✅ COMPLETE (59 tests)
+  - Tests: 81 passing (59 CLI + 22 Kairos), 22 skipped
 
 **Next Steps**:
-1. CLI Integrations Phase 2 (Scientific Core: falsify, conjecture, rival, sublate, shadow)
-2. Implement G-gent Phase 1 (Core Types + Tongue artifact)
-3. Fix lint warnings (2 unused variables in igent_synergy.py, membrane_cli.py)
+1. Add CLI commands for Kairos (watch, timing, surface --next, history --window)
+2. CLI Integrations Phase 2 (falsify, conjecture, rival, sublate, shadow)
+3. Implement G-gent Phase 1 (Core Types + Tongue artifact)
 
 ---
 
