@@ -59,7 +59,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, TypeVar, Generic
 
-from bootstrap.types import Result
+from bootstrap.types import Result, ok, err
 
 from agents.t.tool import Tool, ToolMeta, ToolError, ToolErrorType
 from agents.t.permissions import ToolCapabilities
@@ -159,7 +159,7 @@ class JITToolWrapper(Tool[A, B], Generic[A, B]):
 
     @property
     def name(self) -> str:
-        return self._meta.name
+        return self._meta.identity.name
 
     @property
     def meta(self) -> ToolMeta:
@@ -180,31 +180,37 @@ class JITToolWrapper(Tool[A, B], Generic[A, B]):
         """
         try:
             # Execute in sandbox
+            # The sandbox executes the "invoke" function defined in the template source
             sandbox_result = await execute_in_sandbox(
-                self._source.source_code,
-                input_val,
-                self._jit_tool_meta.jit_meta.sandbox_config,
+                source=self._source,
+                method_name="invoke",
+                args=(input_val,),
+                config=self._jit_tool_meta.jit_meta.sandbox_config,
             )
 
             # Check for sandbox errors
             if not sandbox_result.success:
-                return Result.Err(
+                return err(
                     ToolError(
-                        error_type=ToolErrorType.EXECUTION,
+                        error_type=ToolErrorType.FATAL,
                         message=f"Sandbox execution failed: {sandbox_result.error}",
-                        details={"source": self._source.class_name},
+                        tool_name=self._source.class_name,
+                        input=input_val,
+                        recoverable=False,
                     )
                 )
 
             # Return successful result
-            return Result.Ok(sandbox_result.result)
+            return ok(sandbox_result.output)
 
         except Exception as e:
-            return Result.Err(
+            return err(
                 ToolError(
-                    error_type=ToolErrorType.EXECUTION,
+                    error_type=ToolErrorType.FATAL,
                     message=f"JIT tool execution failed: {str(e)}",
-                    details={"source": self._source.class_name},
+                    tool_name=self._source.class_name,
+                    input=input_val,
+                    recoverable=False,
                 )
             )
 
@@ -230,8 +236,10 @@ async def create_tool_from_source(
     Example:
         >>> source = AgentSource(
         ...     class_name="JsonParser",
-        ...     source_code="def invoke(x: str) -> dict: import json; return json.loads(x)",
-        ...     intent="Parse JSON strings",
+        ...     source="class JsonParser:\\n    def invoke(self, x: str) -> dict: ...",
+        ...     imports=frozenset(["json"]),
+        ...     complexity=2,
+        ...     description="Parse JSON strings",
         ... )
         >>> tool = await create_tool_from_source(
         ...     source,
@@ -240,16 +248,24 @@ async def create_tool_from_source(
         ... )
     """
     # Analyze stability
-    stability_result = await analyze_stability(
-        source.source_code,
-        StabilityConfig(),
+    stability_result = analyze_stability(
+        source.source,
+        entropy_budget=1.0,
+        config=StabilityConfig(),
     )
+
+    # Compute stability score from result (1.0 = stable, lower = unstable)
+    if stability_result.is_stable:
+        stability_score = 1.0
+    else:
+        # Reduce score based on violation count
+        stability_score = max(0.0, 1.0 - (len(stability_result.violations) * 0.2))
 
     # Create JIT metadata
     jit_meta = JITAgentMeta(
         source=source,
         constraints=constraints,
-        stability_score=stability_result.overall_score,
+        stability_score=stability_score,
         sandbox_config=sandbox_config or SandboxConfig(),
     )
 
@@ -297,10 +313,7 @@ async def compile_tool_from_intent(
         >>> assert result.unwrap() == "Failed"
     """
     # Default constraints
-    constraints = constraints or ArchitectConstraints(
-        forbidden_modules=["os", "sys", "subprocess"],
-        max_lines=50,
-    )
+    constraints = constraints or ArchitectConstraints()
 
     # Default capabilities
     capabilities = capabilities or ToolCapabilities()
@@ -313,10 +326,13 @@ async def compile_tool_from_intent(
     )
     source = await architect.invoke(architect_input)
 
-    # Create tool metadata
+    # Create tool metadata with Any types for JIT tools
+
     tool_meta = ToolMeta.minimal(
         name=f"jit_{source.class_name.lower()}",
         description=intent,
+        input_schema=input_type,
+        output_schema=output_type,
     )
 
     # Create tool from source
@@ -369,24 +385,30 @@ async def compile_tool_from_template(
     # Substitute parameters into template
     source_code = template.template_source.format(**params)
 
-    # Create agent source
-    source = AgentSource(
-        class_name=template.name.replace(" ", ""),
-        source_code=source_code,
-        intent=template.description,
-    )
+    # Extract class name from template name
+    class_name = template.name.replace(" ", "")
 
-    # Create tool metadata
-    tool_meta = ToolMeta.minimal(
-        name=template.name.lower().replace(" ", "_"),
+    # Create agent source with correct field names
+    source = AgentSource(
+        source=source_code,
+        class_name=class_name,
+        imports=frozenset({"json"}) if "json" in source_code else frozenset(),
+        complexity=2,  # Templates are simple
         description=template.description,
     )
 
-    # Default constraints
-    constraints = constraints or ArchitectConstraints(
-        forbidden_modules=["os", "sys", "subprocess"],
-        max_lines=100,
+    # Create tool metadata with Any types for template tools
+    from typing import Any as AnyType
+
+    tool_meta = ToolMeta.minimal(
+        name=template.name.lower().replace(" ", "_"),
+        description=template.description,
+        input_schema=AnyType,
+        output_schema=AnyType,
     )
+
+    # Default constraints
+    constraints = constraints or ArchitectConstraints()
 
     # Create JIT tool metadata with template
     jit_meta = JITAgentMeta(
@@ -413,15 +435,16 @@ JSON_FIELD_EXTRACTOR = ToolTemplate(
     name="JSON Field Extractor",
     description="Extract a specific field from JSON data",
     template_source="""
-import json
+class JSONFieldExtractor:
+    '''Extract a specific field from JSON data.'''
 
-def invoke(data: str) -> str:
-    '''Extract {field} from JSON string.'''
-    try:
-        parsed = json.loads(data)
-        return str(parsed.get("{field}", ""))
-    except json.JSONDecodeError:
-        return ""
+    def invoke(self, data: str) -> str:
+        '''Extract {field} from JSON string.'''
+        try:
+            parsed = json.loads(data)
+            return str(parsed.get("{field}", ""))
+        except Exception:
+            return ""
 """,
     parameters={"field": "error"},
     capabilities=ToolCapabilities(requires_network=False),
@@ -432,9 +455,12 @@ TEXT_TRANSFORMER = ToolTemplate(
     name="Text Transformer",
     description="Transform text using a function",
     template_source="""
-def invoke(text: str) -> str:
-    '''Transform text: {transform_description}'''
-    return text.{transform_method}()
+class TextTransformer:
+    '''Transform text using a string method.'''
+
+    def invoke(self, text: str) -> str:
+        '''Transform text: {transform_description}'''
+        return text.{transform_method}()
 """,
     parameters={
         "transform_method": "upper",
@@ -448,9 +474,12 @@ FILTER_TEMPLATE = ToolTemplate(
     name="Filter",
     description="Filter items based on condition",
     template_source="""
-def invoke(items: list) -> list:
-    '''Filter items where {condition}'''
-    return [item for item in items if {condition_code}]
+class Filter:
+    '''Filter items based on condition.'''
+
+    def invoke(self, items: list) -> list:
+        '''Filter items where {condition}'''
+        return [item for item in items if {condition_code}]
 """,
     parameters={
         "condition": "item > 0",
