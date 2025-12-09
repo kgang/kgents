@@ -170,14 +170,19 @@ class Registry:
 
     def __init__(self, storage_path: str = ".kgents/catalog.json"):
         """Initialize registry with persistent storage."""
-        self.storage = PersistentAgent[dict[str, dict]](path=storage_path)
+        self.storage = PersistentAgent(path=storage_path, schema=dict)
         self._entries: dict[str, CatalogEntry] = {}
         self._loaded = False
 
     async def _ensure_loaded(self):
         """Lazy load entries from storage."""
         if not self._loaded:
-            data = await self.storage.load()
+            try:
+                data = await self.storage.load()
+            except Exception:
+                # If file doesn't exist or is corrupted, start with empty catalog
+                data = {}
+
             self._entries = {
                 entry_id: CatalogEntry.from_dict(entry_data)
                 for entry_id, entry_data in data.items()

@@ -232,6 +232,15 @@ from .api_signatures import (
     get_core_api_reference,
 )
 
+from .forge_integration import (
+    ImprovedIntent,
+    ReforgeResult,
+    ReforgeStrategy,
+    propose_improved_intent,
+    reforge_from_evolved_intent,
+    evolve_and_reforge_workflow,
+)
+
 __all__ = [
     # AST Analysis
     "ASTAnalyzer",
@@ -387,4 +396,11 @@ __all__ = [
     # API Signatures (For prompt enhancement)
     "get_kgents_api_reference",
     "get_core_api_reference",
+    # F-gent Integration (Cross-pollination T1.2)
+    "ImprovedIntent",
+    "ReforgeResult",
+    "ReforgeStrategy",
+    "propose_improved_intent",
+    "reforge_from_evolved_intent",
+    "evolve_and_reforge_workflow",
 ]

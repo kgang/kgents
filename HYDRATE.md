@@ -4,18 +4,41 @@
 
 ## TL;DR
 
-**Status**: F-gent Phase 3 LLM Integration IMPLEMENTED ✅
+**Status**: Cross-Pollination Phase B (T1.2) COMPLETE ✅
 **Branch**: `main` (uncommitted)
-**Latest**: LLM-powered code generation with ClaudeRuntime
-**Session**: 2025-12-08 - F-gents Phase 3 LLM Integration
-**Achievement**: CodeGeneratorAgent + generate_prototype_async with 136 tests passing
-**Next**: Commit LLM integration OR begin Phase 4 (Validate)
+**Latest**: E+F Re-Forge from Evolved Intent integration
+**Session**: 2025-12-08 - Cross-Pollination Phase B (T1.2)
+**Achievement**: E-gent + F-gent re-forge workflow with 17 tests passing
+**Next**: Continue Phase B (T1.3: J+F template instantiation) or commit T1.2
 
 ---
 
 ## Next Session: Start Here
 
 ### What Just Happened (Quick Context)
+
+**E+F Cross-Pollination (T1.2) IMPLEMENTED** ✅:
+- Implemented "Re-Forge from Evolved Intent" workflow (T1.2 from Cross-Pollination Analysis)
+- Created `impl/claude/agents/e/forge_integration.py` (~320 lines)
+- Functions: `propose_improved_intent()`, `reforge_from_evolved_intent()`, `evolve_and_reforge_workflow()`
+- Tests: 17 comprehensive tests - ALL PASSING ✅
+- Embodies clean regeneration vs incremental patching
+
+**Implementation Files**:
+- `agents/e/forge_integration.py`: E+F integration (~320 lines)
+- `agents/e/_tests/test_forge_integration.py`: Integration tests (~470 lines)
+- `agents/e/__init__.py`: Updated exports
+
+**Cross-Pollination Progress** (from docs/CROSS_POLLINATION_ANALYSIS.md):
+- ✅ Phase A.1: L-gent MVP (catalog + search)
+- ✅ Phase A.2: D-gent storage (PersistentAgent integrated into L-gent)
+- ✅ Phase A.3: F+L "search before forge" (COMPLETE)
+- ✅ Phase B (T1.2): E+F "re-forge from evolved intent" (COMPLETE)
+- ⏳ Phase B (T1.3): J+F template instantiation (next)
+
+---
+
+## Previous: F-gent Phase 3 LLM Integration (2025-12-08) ✅
 
 **F-gent Phase 3 LLM Integration IMPLEMENTED** ✅:
 - Created `impl/claude/agents/f/llm_generation.py` (~270 lines)
