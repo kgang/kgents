@@ -12,14 +12,12 @@ Philosophy: Agents compose via >> and integrate via shared protocols.
 
 import json
 import pytest
-from agents.a.skeleton import AgentMeta
 from agents.j import (
     AgentSource,
     create_agent_from_source,
     JITAgentWrapper,
 )
 from agents.p import (
-    ParseResult,
     ParserConfig,
     AnchorBasedParser,
     ProbabilisticASTParser,
