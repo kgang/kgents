@@ -130,28 +130,53 @@ Hallucination = Symbolic OK, Real FAIL.
 
 ## Axis T: Axiological Cost (Exchange)
 
-**NOVEL** — Economic system of meaning.
+**BUILDS ON** [B-gents ValueTensor](../b-gents/value-tensor.md).
+
+The B-gents ValueTensor provides the concrete implementation of multi-dimensional value accounting. Ψ-gents lifts this into the metaphor transformation context.
+
+### Dimension Mapping
+
+| B-gents Dimension | Ψ-gents Domain | Role in Metaphor |
+|-------------------|----------------|------------------|
+| Physical | PRAGMATIC | Token/time cost of transformation |
+| Semantic | EPISTEMIC | Truth preserved through projection |
+| Economic | PRAGMATIC | Business value of solution |
+| Ethical | ETHICAL | Moral cost of metaphor choices |
+| — | AESTHETIC | Elegance of the transformation |
+| — | HEDONIC | Joy in the solution |
+
+### AxiologicalExchange via ExchangeMatrix
 
 ```
-AxiologicalExchange: (SourceValues, TargetValues) → LossReport
-    if source.EPISTEMIC > target.EPISTEMIC:
-        report.accuracy_loss = delta
-    if target.PRAGMATIC > source.PRAGMATIC:
-        report.utility_gain = delta
+AxiologicalExchange: (SourceTensor, TargetTensor) → LossReport
+    # Use B-gents ExchangeMatrix for concrete conversions
+    for (from_dim, to_dim) in dimension_pairs:
+        converted, loss = ExchangeMatrix.convert(source[from_dim], from_dim, to_dim)
+        report.add_conversion(from_dim, to_dim, converted, loss)
 
+    # Ψ-gent specific: track metaphor distortion
+    report.distortion_Δ = |source - inverse(project(source))|
     return report
-
-ValueDomain: EPISTEMIC | AESTHETIC | ETHICAL | PRAGMATIC | HEDONIC
-
-ValuationMorphism[A → B]:
-    loss_matrix = {
-        (PRAGMATIC, EPISTEMIC): 0.1,   # cheap
-        (AESTHETIC, ETHICAL): 0.5,     # expensive
-        (ETHICAL, PRAGMATIC): 0.4,     # morally costly
-    }
 ```
 
-Every metaphor trades values. Make the trade explicit.
+### Integration with AntiDelusionChecker
+
+The B-gents `AntiDelusionChecker` and Ψ-gents `TopologicalValidator` detect the same thing: **claims that don't match reality**.
+
+```
+HallucinationDetector: Output → Report
+    # Lacanian check (Symbolic vs Real)
+    knot = H_lacan.analyze(output)
+
+    # B-gents check (cross-dimensional consistency)
+    anomalies = AntiDelusionChecker.check(output.tensor)
+
+    # Unified: hallucination if either fails
+    if knot.symbolic != knot.real OR anomalies.has_critical:
+        return HallucinationReport(detected=True)
+```
+
+Every metaphor trades values. The ValueTensor makes the trade measurable.
 
 ---
 
@@ -245,7 +270,8 @@ MetaphorLibrary:
 | `ResolutionScaler` | ✅ | MHC-based abstraction control |
 | `DialecticalRotator` | ⚡ | Shadow stress-test (via H-jung) |
 | `TopologicalValidator` | ⚡ | Knot integrity (via H-lacan) |
-| `AxiologicalExchange` | ✅ | Value trade accounting |
+| `AxiologicalExchange` | ⚡ | Value trade accounting (via B-gents ValueTensor) |
+| `HallucinationDetector` | ⚡ | Unified RSI + AntiDelusion check |
 | `MetaphorLibrary` | ✅ | Puppet/archetype catalog |
 | `PsychopompAgent` | ⚡ | Search loop synthesis |
 
@@ -267,12 +293,20 @@ Legend: ✅ = Novel | ⚡ = Composition of existing primitives
   Z-Axis    X-Axis      Y-Axis      T-Axis    Φ/Φ⁻¹
    MHC      Jungian     Lacanian    Axiolog.  Functor
     │         │           │           │         │
-    │     H-jung      H-lacan        │    MetaphorLib
-    │    (delegate)  + O-gent        │
-    │                (delegate)      │
-    └─────────┴───────────┴───────────┴─────────┘
-                    NOVEL
+  NOVEL    H-jung      H-lacan    B-gents   MetaphorLib
+          (delegate)  + O-gent   ValueTensor   NOVEL
+                      (delegate) + AntiDelusion
 ```
+
+### Delegation Summary
+
+| Axis | Delegates To | What It Gets |
+|------|--------------|--------------|
+| Z (MHC) | — | NOVEL: complexity stratification |
+| X (Jung) | H-jung | Shadow generation, projection detection |
+| Y (Lacan) | H-lacan + O-gent | RSI analysis, BorromeanObserver |
+| T (Axiological) | B-gents ValueTensor | ExchangeMatrix, AntiDelusionChecker |
+| Φ/Φ⁻¹ | — | NOVEL: MetaphorLibrary, MorphicFunctor |
 
 ---
 
@@ -294,6 +328,7 @@ Legend: ✅ = Novel | ⚡ = Composition of existing primitives
 
 ## See Also
 
+- [b-gents/value-tensor.md](../b-gents/value-tensor.md) — ValueTensor (concrete axiological implementation)
 - [c-gents/functors.md](../c-gents/functors.md) — Functor laws
 - [h-gents/jung.md](../h-gents/jung.md) — Shadow primitives
 - [h-gents/lacan.md](../h-gents/lacan.md) — RSI primitives

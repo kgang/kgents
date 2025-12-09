@@ -833,6 +833,7 @@ class TensoredAgent(Agent[A, B]):
 
 - [banker.md](banker.md) - The Metered Functor and UVP
 - [README.md](README.md) - B-gents overview
+- [../psi-gents/README.md](../psi-gents/README.md) - Ψ-gents AxiologicalExchange (lifts ValueTensor into metaphor space)
 - [../o-gents/README.md](../o-gents/README.md) - Tensor observability
 - [../w-gents/README.md](../w-gents/README.md) - Tensor visualization
 - [../principles.md](../principles.md) - Conservation as principle
