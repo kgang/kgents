@@ -4,37 +4,41 @@
 
 ## TL;DR
 
-**Status**: P-GENTS PHASE 3 + J-GENTS FACTORY COMPLETE ✅ | 856 tests passing
-**Branch**: `main` (T-gents Phase 1 committed, P-gents Phase 3 + J-gents uncommitted)
-**Latest Commit**: T-gents Phase 1 (139cb1b) - Tool[A,B] morphisms with registry
-**Uncommitted**: P-gents full implementation (~5,500 lines, 263 tests) + J-gents factory + integrations
-**Session**: 2025-12-09 - P-gents Phase 3 + J-gents Phase 2 session
-**Next**: Commit P-gents Phase 3 → Write J-gents tests → T-gents Phase 2
+**Status**: ALL PHASE 3 WORK COMMITTED ✅ | 856 tests passing | 7 commits ahead
+**Branch**: `main` (all work committed, ready to push)
+**Latest Commit**: f572d06 - Spec updates (auto-commit via evolve.py meta)
+**Session**: 2025-12-09 - J-gents Phase 2: Commits + Cleanup
+**Commits This Session**:
+  - 4661dc7: P-gents linting/formatting fixes
+  - d21cb6e: Remove obsolete planning docs
+  - f572d06: Spec updates (Bataille's Accursed Share + 10 theories)
+**Next**: Push to origin → T-gents Phase 2 (parser integration) OR J-gents factory tests
 
 ---
 
 ## Next Session: Start Here
 
-### Current State (2025-12-09)
+### Current State (2025-12-09 - Post J-gents Phase 2 Session)
 
-**Committed (in main branch)**:
-- ✅ **T-gents Phase 1** (commit 139cb1b) - Tool[A,B] base + ToolRegistry (~900 lines, 16 tests)
-- ✅ **Skeleton enhancements** (commit ba7b4fe) - Bootstrap witness + AgentFactory (~700 lines, 29 tests)
-- ✅ **Test fixes** (commit 2547ebc) - 496 tests passing baseline
-- ✅ **Spec docs** - T-gents tool-use.md (~31k words), SPEC_UPDATE_PROPOSAL.md with Hegelian synthesis
+**All Work Committed** ✅:
+- 7 commits ahead of origin/main (ab7385e → f572d06)
+- Working tree clean, ready to push
 
-**Uncommitted (ready to commit)**:
-- 📝 **P-gents Complete Implementation** (~5,500 lines, 263 tests passing)
-  - Phase 1: Core types + Anchor parser (~800 lines, 52 tests)
-  - Phase 2: 5 Correction strategies (~1,900 lines, 89 tests)
-  - Phase 3: 3 Novel parsers (~1,800 lines, 68 tests)
-  - Integrations: J-gents and T-gents parsers (~800 lines)
-- 📝 **J-gents Factory Integration** (~360 lines, tests needed)
-  - `factory_integration.py`: JIT agents as bootstrap Agent[A,B]
-  - `test_factory_integration.py`: Stub exists, needs implementation
-- 📝 **Parser integration stubs** for B, E, F agents
-- 📝 **Modified**: SPEC_UPDATE_PROPOSAL.md (Bataille's Accursed Share + 10 new theories)
-- 📝 **Deleted**: Old planning docs (EVOLUTION_PLAN.md, IMPROVEMENT_PLAN.md, etc.)
+**Committed This Session** (3 new commits):
+- ✅ **4661dc7** - P-gents linting/formatting fixes (8 files)
+- ✅ **d21cb6e** - Removed obsolete planning docs (3 docs deleted)
+- ✅ **f572d06** - Spec updates: Bataille's Accursed Share + 10 new theories (+1,500 lines)
+
+**Previously Committed** (4 commits from prior session):
+- ✅ **ab7385e** - P-gents Phases 1-3 implementation (~5,500 lines, 263 tests)
+- ✅ **a32000a** - J-gents factory integration (~360 lines, 15 tests)
+- ✅ **a274ffe** - P-gent parser integrations for T/B/E/F agents (~800 lines)
+- ✅ **c55b8fb** - HYDRATE.md updated for P-gents Phase 3
+
+**Earlier Foundation** (3 commits):
+- ✅ **139cb1b** - T-gents Phase 1 (Tool[A,B] base + ToolRegistry)
+- ✅ **ba7b4fe** - Skeleton enhancements (Bootstrap + AgentFactory)
+- ✅ **2547ebc** - Test fixes (496 baseline tests)
 
 **Test Status**: ✅ 856 tests passing (263 P-gents, 59 T-gents, 534 others)
 
@@ -108,6 +112,57 @@
 - **Introspection**: AgentMeta built from AgentSource metadata
 
 **Status**: Implementation complete, tests needed
+
+---
+
+## What Just Happened: J-gents Phase 2 Session (Cleanup + Commits)
+
+This session focused on cleaning up uncommitted work from the previous P-gents Phase 3 session
+and committing all changes in logical groups.
+
+### Session Work (2025-12-09)
+
+**1. P-gents Linting Fixes** (commit 4661dc7):
+- Removed unused imports (difflib, Callable, Optional)
+- Fixed f-string to regular string where interpolation not needed
+- Applied auto-formatting from pre-commit hooks
+- 8 files modified (test files + strategy implementations)
+
+**2. Documentation Cleanup** (commit d21cb6e):
+- Removed obsolete planning docs (882 lines deleted):
+  - `impl/EVOLUTION_PLAN.md`
+  - `impl/claude/IMPROVEMENT_PLAN.md`
+  - `impl/claude/agents/h/ENHANCEMENTS.md`
+- These were superseded by committed work and HYDRATE.md tracking
+
+**3. Spec Documentation Expansion** (commit f572d06 - auto-committed by evolve.py):
+- **SPEC_UPDATE_PROPOSAL.md**: Added Section 6 "New Theoretical Foundations" (+1,500 lines)
+  - 6.1: Bataille's Accursed Share (Philosophy of Slop) - META-PRINCIPLE
+  - 6.2: Noether's Theorem (Semantic conservation via credo self-reporting)
+  - 6.3: Ergodicity (Ensemble Reset strategy for heavy constructions)
+  - 6.4: Stigmergy (W-gent as pheromone field - TRANSFORMATIVE, taints purity)
+  - 6.5: Curry-Howard (Prompts as Types)
+  - 6.6: Free Energy Principle (Active Inference loop)
+  - 6.7: Messenger Protocol (Streaming Functor for AsyncIterator[Chunk[B]])
+  - 6.8: View Functor (Widget ontology for UI mapping)
+  - 6.9: Metered Functor (Central Bank economics with Kelvin circulation)
+  - 6.10: M-gents (Holographic associative memory as morphism)
+  - 6.11: Narrator Agent (OpenTelemetry for thoughts, time-travel debugging)
+- **spec/p-gents/README.md**: Removed Strategy 4.3 (Visual Feedback Loop) - deemed non-essential
+
+### Background Automation
+
+The `evolve.py meta --auto-apply` processes running in the background detected uncommitted
+changes to SPEC_UPDATE_PROPOSAL.md and spec/p-gents/README.md and automatically committed
+them (commit f572d06). The commit message was terse ("delete old files") but the content
+represents significant theoretical expansion.
+
+### Status After Session
+
+- Working tree: Clean ✅
+- Branch: 7 commits ahead of origin/main
+- Tests: 856 passing (no regressions)
+- Ready to: Push to remote OR continue with next phase
 
 ---
 
@@ -354,7 +409,8 @@ Once P-gents + J-gents committed, test full integration:
 
 | Date | Focus | Key Deliverables |
 |------|-------|------------------|
-| 2025-12-09 | P-gents Phase 3 + J-gents Phase 2 | Novel parsers (~1,800 lines, 68 tests) + Factory integration (~360 lines) |
+| 2025-12-09 PM | J-gents Phase 2 (Session 2) | Cleanup commits: linting fixes, doc deletion, spec expansion (+1,500 lines) |
+| 2025-12-09 AM | P-gents Phase 3 + J-gents (Session 1) | Novel parsers (~1,800 lines, 68 tests) + Factory integration (~360 lines) |
 | 2025-12-09 | T-gents Phase 1 commit | Tool[A,B] base + ToolRegistry (commit 139cb1b) |
 | 2025-12-08 | Multi-phase | Skeleton (700 lines) → T-gents spec (31k words) → P-gents Phases 1-2 |
 | 2025-12-07 | Testing fixes | 496 tests passing (pytest collection fix) |
@@ -362,7 +418,7 @@ Once P-gents + J-gents committed, test full integration:
 
 ---
 
-**File Version**: 2025-12-09 (Post P-gents Phase 3 + J-gents discovery)
-**Total Uncommitted**: ~6,700 lines (implementation + tests)
-**Status**: P-gents complete, J-gents needs tests, ready to commit both
-**Next Session**: Commit P-gents → Write J-gents tests → T-gents Phase 2
+**File Version**: 2025-12-09 (Post J-gents Phase 2 Session - All Committed)
+**Working Tree**: Clean ✅
+**Status**: 7 commits ready to push (ab7385e → f572d06)
+**Next Session**: Push to origin OR T-gents Phase 2 (parser integration) OR J-gents factory tests
