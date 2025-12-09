@@ -293,7 +293,7 @@ async def test_mcp_client_connect_error():
     result = await client.connect()
 
     assert result.is_err()
-    error = result.unwrap_err()
+    error = result.error
     assert isinstance(error, ToolError)
     assert error.error_type == ToolErrorType.FATAL
     assert "initialization failed" in error.message.lower()
@@ -316,7 +316,7 @@ async def test_mcp_client_connect_timeout():
     result = await client.connect()
 
     assert result.is_err()
-    error = result.unwrap_err()
+    error = result.error
     assert error.error_type == ToolErrorType.TIMEOUT
 
 
@@ -372,7 +372,7 @@ async def test_mcp_client_list_tools_not_connected():
     result = await client.list_tools()
 
     assert result.is_err()
-    error = result.unwrap_err()
+    error = result.error
     assert error.error_type == ToolErrorType.FATAL
     assert "not connected" in error.message.lower()
 
@@ -422,7 +422,7 @@ async def test_mcp_client_call_tool_method_not_found():
     result = await client.call_tool("nonexistent_tool", {})
 
     assert result.is_err()
-    error = result.unwrap_err()
+    error = result.error
     assert error.error_type == ToolErrorType.NOT_FOUND
 
 
@@ -446,7 +446,7 @@ async def test_mcp_client_call_tool_invalid_params():
     result = await client.call_tool("web_search", {"invalid": "params"})
 
     assert result.is_err()
-    error = result.unwrap_err()
+    error = result.error
     assert error.error_type == ToolErrorType.VALIDATION
 
 
@@ -469,7 +469,7 @@ async def test_mcp_client_call_tool_timeout():
     result = await client.call_tool("slow_tool", {})
 
     assert result.is_err()
-    error = result.unwrap_err()
+    error = result.error
     assert error.error_type == ToolErrorType.TIMEOUT
 
 
