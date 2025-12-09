@@ -31,11 +31,12 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 ## TL;DR
 
-**Status**: Clean, all committed and pushed
+**Status**: Clean, working on Kairos CLI integration
 **Branch**: `main`
-**Latest Commit**: 3537266 - feat(protocols): Implement Kairos Controller for Mirror Phase 3
+**Latest Commit**: a341d05 - docs: Update HYDRATE.md for Kairos implementation session
 **Current State**:
-  - Mirror Protocol Phase 3 (Kairos): ✅ COMPLETE (full implementation, 22 tests passing)
+  - Mirror Protocol Phase 3 (Kairos): ✅ COMPLETE (implementation + CLI integration)
+  - Kairos CLI Commands: ✅ COMPLETE (watch, timing, surface, history)
   - CLI Integrations Phase 1: ✅ COMPLETE (pulse, ground, breathe, entropy)
   - G-gent Specification: ✅ COMPLETE (4 files: README, grammar, tongue, integration)
   - Mirror Protocol Phase 1 & 2: ✅ COMPLETE (72 tests total)
@@ -43,13 +44,43 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
   - Tests: 81 passing (59 CLI + 22 Kairos), 22 skipped
 
 **Next Steps**:
-1. Add CLI commands for Kairos (watch, timing, surface --next, history --window)
-2. CLI Integrations Phase 2 (falsify, conjecture, rival, sublate, shadow)
-3. Implement G-gent Phase 1 (Core Types + Tongue artifact)
+1. CLI Integrations Phase 2 (falsify, conjecture, rival, sublate, shadow)
+2. Implement G-gent Phase 1 (Core Types + Tongue artifact)
+3. Run test suite to verify Kairos CLI integration
 
 ---
 
 ## Recent Sessions
+
+### Session: Kairos CLI Integration (2025-12-09)
+
+**Status**: ✅ COMPLETE - Kairos CLI Commands Added
+
+**Modified Files**:
+- `impl/claude/protocols/cli/main.py` (~350 lines added): Kairos CLI integration
+
+**Commands Added**:
+- `kgents mirror watch [path] [--interval] [--verbose]`: Autonomous observation mode with opportune timing
+- `kgents mirror timing [path] [--show-state]`: Show current attention/budget/cognitive load context
+- `kgents mirror surface --next`: Force surface next deferred tension (override Kairos)
+- `kgents mirror history [--window=7d]`: Show intervention history within time window
+
+**Key Features**:
+- Maps CLI budget levels to Kairos budget levels (minimal→LOW, medium→MEDIUM, etc.)
+- Async watch loop with tension detection integration
+- Real-time surfacing callbacks with rich/JSON output
+- Full controller state visibility (`timing --show-state`)
+- Time window parsing (7d, 24h, 30m formats)
+- Force-surface with override evaluation
+- Intervention history tracking
+
+**Integration Points**:
+- Uses `KairosController` from `protocols.mirror.kairos.controller`
+- Integrates with `detect_tensions` from obsidian module
+- Leverages `watch_loop` for autonomous mode
+- Keyboard interrupt handling for graceful shutdown
+
+**Next**: Phase 2 scientific commands (falsify, conjecture, rival, sublate, shadow)
 
 ### Session: CLI Integrations Phase 1 (2025-12-09)
 

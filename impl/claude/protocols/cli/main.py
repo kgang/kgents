@@ -19,7 +19,9 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import sys
+from datetime import timedelta
 from pathlib import Path
 from typing import Sequence
 
@@ -40,10 +42,13 @@ from .igent_synergy import (
 )
 from .companions import (
     CompanionsCLI,
-    PulseReport,
-    GroundReport,
-    EntropyReport,
 )
+
+# Kairos imports
+from protocols.mirror.kairos.controller import KairosController
+from protocols.mirror.kairos.budget import BudgetLevel as KairosBudgetLevel
+from protocols.mirror.kairos.watch import watch_loop
+from protocols.mirror.obsidian.tension import detect_tensions
 
 
 # =============================================================================
@@ -155,6 +160,69 @@ For more information, see: https://github.com/kgents/kgents
         "--reason",
         default="Productive tension",
         help="Reason for holding",
+    )
+
+    # mirror watch (Kairos Phase 3)
+    mirror_watch = mirror_sub.add_parser(
+        "watch",
+        help="Autonomous observation mode (surfaces tensions at opportune moments)",
+    )
+    mirror_watch.add_argument(
+        "path",
+        nargs="?",
+        default=".",
+        help="Path to observe (default: current directory)",
+    )
+    mirror_watch.add_argument(
+        "--interval",
+        type=int,
+        default=10,
+        help="Observation interval in minutes (default: 10)",
+    )
+    mirror_watch.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Show debug logs",
+    )
+
+    # mirror timing (Kairos context)
+    mirror_timing = mirror_sub.add_parser(
+        "timing",
+        help="Show current timing context (attention, budget, cognitive load)",
+    )
+    mirror_timing.add_argument(
+        "path",
+        nargs="?",
+        default=".",
+        help="Path to analyze (default: current directory)",
+    )
+    mirror_timing.add_argument(
+        "--show-state",
+        action="store_true",
+        dest="show_state",
+        help="Show full controller state",
+    )
+
+    # mirror surface (force surface next)
+    mirror_surface = mirror_sub.add_parser(
+        "surface",
+        help="Force surface next deferred tension (override Kairos)",
+    )
+    mirror_surface.add_argument(
+        "--next",
+        action="store_true",
+        help="Surface next deferred tension",
+    )
+
+    # mirror history (intervention log)
+    mirror_history = mirror_sub.add_parser(
+        "history",
+        help="Show intervention history",
+    )
+    mirror_history.add_argument(
+        "--window",
+        default="7d",
+        help="Time window (e.g., '7d', '24h', '30m')",
     )
 
     # ---------------------------------------------------------------------
@@ -411,6 +479,18 @@ async def handle_mirror(args: argparse.Namespace, ctx: CLIContext) -> int:
         print(format_output(result, ctx, "mirror.hold"))
         return result.exit_code
 
+    elif args.operation == "watch":
+        return await handle_mirror_watch(args, ctx)
+
+    elif args.operation == "timing":
+        return await handle_mirror_timing(args, ctx)
+
+    elif args.operation == "surface":
+        return await handle_mirror_surface(args, ctx)
+
+    elif args.operation == "history":
+        return await handle_mirror_history(args, ctx)
+
     else:
         print(f"Unknown mirror operation: {args.operation}")
         return 1
@@ -542,6 +622,239 @@ async def handle_entropy(args: argparse.Namespace, ctx: CLIContext) -> int:
         print(format_output(result, ctx, "entropy"))
 
     return result.exit_code
+
+
+# =============================================================================
+# Kairos Handlers (Mirror Phase 3)
+# =============================================================================
+
+
+def _parse_time_window(window_str: str) -> timedelta:
+    """Parse time window string like '7d', '24h', '30m' into timedelta."""
+    unit = window_str[-1]
+    value = int(window_str[:-1])
+
+    if unit == "d":
+        return timedelta(days=value)
+    elif unit == "h":
+        return timedelta(hours=value)
+    elif unit == "m":
+        return timedelta(minutes=value)
+    elif unit == "s":
+        return timedelta(seconds=value)
+    else:
+        raise ValueError(f"Unknown time unit: {unit}. Use d/h/m/s")
+
+
+async def handle_mirror_watch(args: argparse.Namespace, ctx: CLIContext) -> int:
+    """Handle mirror watch command (autonomous Kairos mode)."""
+    path = Path(args.path).expanduser().resolve()
+    interval = timedelta(minutes=args.interval)
+    verbose = args.verbose
+
+    # Map CLI budget to Kairos budget
+    budget_map = {
+        "minimal": KairosBudgetLevel.LOW,
+        "low": KairosBudgetLevel.LOW,
+        "medium": KairosBudgetLevel.MEDIUM,
+        "high": KairosBudgetLevel.HIGH,
+        "unlimited": KairosBudgetLevel.UNLIMITED,
+    }
+    kairos_budget = budget_map.get(ctx.budget.level.value, KairosBudgetLevel.MEDIUM)
+
+    # Tension detector wrapper
+    async def tension_detector_wrapper(workspace_path: Path):
+        """Wrapper to call detect_tensions."""
+        return await detect_tensions(workspace_path)
+
+    # Callbacks for surfacing/deferring
+    async def on_surface(tension, evaluation):
+        """Called when tension surfaced."""
+        if ctx.output_format == OutputFormat.RICH:
+            print(f"\n🔔 [Kairos] Tension surfaced: {tension.id}")
+            print(f"   Thesis: {tension.thesis[:80]}...")
+            print(f"   Benefit: {evaluation.benefit:.2f}")
+        else:
+            print(
+                json.dumps(
+                    {
+                        "event": "surface",
+                        "tension_id": tension.id,
+                        "benefit": evaluation.benefit,
+                    }
+                )
+            )
+
+    async def on_defer(tension, reason):
+        """Called when tension deferred."""
+        if verbose:
+            print(f"   Deferred: {tension.id} ({reason})")
+
+    print(f"[Kairos] Starting watch mode on {path}")
+    print(f"[Kairos] Budget: {kairos_budget.label}")
+    print(f"[Kairos] Interval: {interval}")
+    print("[Kairos] Press Ctrl+C to stop\n")
+
+    try:
+        await watch_loop(
+            workspace_path=path,
+            tension_detector=tension_detector_wrapper,
+            budget_level=kairos_budget,
+            interval=interval,
+            on_surface=on_surface,
+            on_defer=on_defer,
+            verbose=verbose,
+        )
+    except KeyboardInterrupt:
+        print("\n[Kairos] Watch mode stopped")
+        return 0
+
+    return 0
+
+
+async def handle_mirror_timing(args: argparse.Namespace, ctx: CLIContext) -> int:
+    """Handle mirror timing command (show Kairos context)."""
+    path = Path(args.path).expanduser().resolve()
+
+    # Create controller to get context
+    controller = KairosController(workspace_path=path)
+
+    if args.show_state:
+        # Full controller state
+        status = controller.get_status()
+        if ctx.output_format == OutputFormat.JSON:
+            print(json.dumps(status, indent=2))
+        else:
+            print("=== Kairos Controller State ===\n")
+            print(f"State: {status['state']}")
+            print(f"Timestamp: {status['timestamp']}\n")
+
+            print("Context:")
+            for key, val in status["context"].items():
+                print(f"  {key}: {val}")
+
+            print("\nBudget:")
+            for key, val in status["budget"].items():
+                print(f"  {key}: {val}")
+
+            print(f"\nDeferred Queue: {status['deferred_queue']['count']} tensions")
+            for t in status["deferred_queue"]["tensions"]:
+                print(f"  - {t['id']}: {t['reason']} (retry={t['retry_count']})")
+
+            print("\nHistory:")
+            print(f"  Total interventions: {status['history']['total_interventions']}")
+            print(f"  Recent (7d): {status['history']['recent_7d']}")
+    else:
+        # Just show current context
+        context = controller.get_current_context()
+
+        if ctx.output_format == OutputFormat.JSON:
+            print(
+                json.dumps(
+                    {
+                        "attention_state": context.attention_state.name,
+                        "attention_budget": context.attention_budget,
+                        "cognitive_load": context.cognitive_load,
+                        "last_activity_age": context.last_activity_age,
+                        "active_files": context.active_files_count,
+                    },
+                    indent=2,
+                )
+            )
+        else:
+            print("=== Current Kairos Context ===\n")
+            print(f"Attention State: {context.attention_state.name}")
+            print(f"Attention Budget: {context.attention_budget:.2f}")
+            print(f"Cognitive Load: {context.cognitive_load:.2f}")
+            print(f"Last Activity: {context.last_activity_age:.1f}m ago")
+            print(f"Active Files: {context.active_files_count}")
+
+    return 0
+
+
+async def handle_mirror_surface(args: argparse.Namespace, ctx: CLIContext) -> int:
+    """Handle mirror surface command (force surface next)."""
+    if not args.next:
+        print("Error: --next flag required")
+        return 1
+
+    # Get current directory
+    path = Path.cwd()
+    controller = KairosController(workspace_path=path)
+
+    # Force surface next
+    record = controller.force_surface_next()
+
+    if record:
+        tension = record.tension
+        if ctx.output_format == OutputFormat.RICH:
+            print("=== Force-Surfaced Tension ===\n")
+            print(f"ID: {tension.id}")
+            print(f"Thesis: {tension.thesis}")
+            print(f"Antithesis: {tension.antithesis}")
+            print("\nEvaluation:")
+            print(f"  Benefit: {record.evaluation.benefit}")
+            print(f"  Severity: {record.evaluation.severity}")
+        else:
+            print(
+                json.dumps(
+                    {
+                        "tension_id": tension.id,
+                        "thesis": tension.thesis,
+                        "antithesis": tension.antithesis,
+                        "benefit": record.evaluation.benefit,
+                    },
+                    indent=2,
+                )
+            )
+        return 0
+    else:
+        print("No deferred tensions to surface")
+        return 1
+
+
+async def handle_mirror_history(args: argparse.Namespace, ctx: CLIContext) -> int:
+    """Handle mirror history command (show intervention log)."""
+    window = _parse_time_window(args.window)
+
+    # Get current directory
+    path = Path.cwd()
+    controller = KairosController(workspace_path=path)
+
+    # Get history
+    history = controller.get_intervention_history(window)
+
+    if ctx.output_format == OutputFormat.JSON:
+        print(
+            json.dumps(
+                [
+                    {
+                        "timestamp": record.timestamp.isoformat(),
+                        "tension_id": record.tension.id,
+                        "benefit": record.evaluation.benefit,
+                        "user_response": record.user_response,
+                        "duration_seconds": record.duration_seconds,
+                    }
+                    for record in history
+                ],
+                indent=2,
+            )
+        )
+    else:
+        print(f"=== Intervention History (last {args.window}) ===\n")
+        if not history:
+            print("No interventions recorded")
+        else:
+            for record in history:
+                print(f"[{record.timestamp.isoformat()}] {record.tension.id}")
+                print(f"  Benefit: {record.evaluation.benefit:.2f}")
+                if record.user_response:
+                    print(f"  Response: {record.user_response}")
+                if record.duration_seconds:
+                    print(f"  Duration: {record.duration_seconds:.1f}s")
+                print()
+
+    return 0
 
 
 # =============================================================================
