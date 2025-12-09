@@ -38,7 +38,6 @@ from agents.r.advanced import (
     CrossModelTransferAnalyzer,
     # Part 4: Fine-tuning
     FinetuneStatus,
-    FinetuneJob,
     FinetuneConfig,
     FinetuneDataset,
     OpenAIFinetunePreparer,

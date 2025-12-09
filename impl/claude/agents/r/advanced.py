@@ -28,7 +28,6 @@ from typing import Any, Callable, Generic, TypeVar
 
 from .types import (
     Example,
-    OptimizationBudget,
     OptimizationTrace,
     Signature,
     TeleprompterStrategy,
