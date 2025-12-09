@@ -38,6 +38,12 @@ from .igent_synergy import (
     get_whisper_for_prompt,
     run_garden_tui,
 )
+from .companions import (
+    CompanionsCLI,
+    PulseReport,
+    GroundReport,
+    EntropyReport,
+)
 
 
 # =============================================================================
@@ -316,6 +322,50 @@ For more information, see: https://github.com/kgents/kgents
         help="Whisper format",
     )
 
+    # ---------------------------------------------------------------------
+    # Daily Companions (Tier 1 - 0 token)
+    # ---------------------------------------------------------------------
+
+    # pulse
+    pulse_parser = subparsers.add_parser(
+        "pulse",
+        help="1-line project health pulse (0 tokens)",
+    )
+    pulse_parser.add_argument(
+        "path",
+        nargs="?",
+        default=".",
+        help="Path to check (default: current directory)",
+    )
+
+    # ground
+    ground_parser = subparsers.add_parser(
+        "ground",
+        help="Parse statement and reflect structure (0 tokens)",
+    )
+    ground_parser.add_argument(
+        "statement",
+        help="Statement to ground/parse",
+    )
+
+    # breathe
+    subparsers.add_parser(
+        "breathe",
+        help="Contemplative pause with gentle prompt (0 tokens)",
+    )
+
+    # entropy
+    entropy_parser = subparsers.add_parser(
+        "entropy",
+        help="Show session entropy/chaos budget (0 tokens)",
+    )
+    entropy_parser.add_argument(
+        "path",
+        nargs="?",
+        default=".",
+        help="Path to analyze (default: current directory)",
+    )
+
     return parser
 
 
@@ -438,6 +488,60 @@ def handle_whisper(args: argparse.Namespace) -> int:
         whisper = StatusWhisper()
         print(whisper.render())
     return 0
+
+
+async def handle_pulse(args: argparse.Namespace, ctx: CLIContext) -> int:
+    """Handle pulse command."""
+    cli = CompanionsCLI()
+    path = Path(args.path).expanduser().resolve()
+    result = await cli.pulse(path, ctx)
+
+    if result.success and result.output:
+        print(result.output.render())
+    else:
+        print(format_output(result, ctx, "pulse"))
+
+    return result.exit_code
+
+
+async def handle_ground(args: argparse.Namespace, ctx: CLIContext) -> int:
+    """Handle ground command."""
+    cli = CompanionsCLI()
+    result = await cli.ground(args.statement, ctx)
+
+    if result.success and result.output:
+        print(result.output.render())
+    else:
+        print(format_output(result, ctx, "ground"))
+
+    return result.exit_code
+
+
+async def handle_breathe(args: argparse.Namespace, ctx: CLIContext) -> int:
+    """Handle breathe command."""
+    cli = CompanionsCLI()
+    result = await cli.breathe(ctx)
+
+    if result.success and result.output:
+        print(result.output)
+    else:
+        print(format_output(result, ctx, "breathe"))
+
+    return result.exit_code
+
+
+async def handle_entropy(args: argparse.Namespace, ctx: CLIContext) -> int:
+    """Handle entropy command."""
+    cli = CompanionsCLI()
+    path = Path(args.path).expanduser().resolve()
+    result = await cli.entropy(path, ctx)
+
+    if result.success and result.output:
+        print(result.output.render())
+    else:
+        print(format_output(result, ctx, "entropy"))
+
+    return result.exit_code
 
 
 # =============================================================================
@@ -587,6 +691,19 @@ async def async_main(argv: Sequence[str] | None = None) -> int:
 
     elif args.command == "whisper":
         return handle_whisper(args)
+
+    # Daily Companions (Tier 1)
+    elif args.command == "pulse":
+        return await handle_pulse(args, ctx)
+
+    elif args.command == "ground":
+        return await handle_ground(args, ctx)
+
+    elif args.command == "breathe":
+        return await handle_breathe(args, ctx)
+
+    elif args.command == "entropy":
+        return await handle_entropy(args, ctx)
 
     else:
         print(f"Unknown command: {args.command}")

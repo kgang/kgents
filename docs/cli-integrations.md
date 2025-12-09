@@ -337,9 +337,111 @@ kgents permit "write to production config"
 
 ---
 
-## Tier 9: Forge & Factory (F-gent + J-gent)
+## Tier 9: Structural Economics (B-gent × G-gent)
 
-### 33. `kgents forge:intent "<description>"`
+### 33. `kgents bank topology`
+**Genus**: B-Topologist-Grammarian
+**Cost**: ~300 tokens
+**What**: Analyze semantic+grammatical topology. Where should resources flow?
+```
+kgents bank topology
+→ HIGH-VALUE: Agent pair (ResearchBot, CitationBot) — pidgin ROI: 65x
+→ CONSTITUTIONAL GAP: Financial operations lack LedgerTongue safety
+→ JIT OPPORTUNITY: BidParser hot path (15ms → <1ms possible)
+```
+
+### 34. `kgents bank pidgin <agent_a> <agent_b>`
+**Genus**: B-gent + G-gent (Compression Economy)
+**Cost**: ~10000 tokens (synthesis) + savings projection
+**What**: Commission compressed communication pidgin between agents.
+```
+kgents bank pidgin ResearchAgent CitationAgent
+→ PIDGIN: CiteTongue synthesized
+→ SAVINGS: 79% token reduction (650k tokens/year = $13)
+→ SYNTHESIS COST: $0.20
+→ ROI: 65x — RECOMMENDED: Adopt immediately
+```
+
+### 35. `kgents bank constitution <domain>`
+**Genus**: B-gent + G-gent (Fiscal Safety)
+**Cost**: ~20000 tokens (synthesis)
+**What**: Create constitutional grammar where illegal ops are grammatically impossible.
+```
+kgents bank constitution "financial ledger"
+→ LEDGERTONGUE: Created (double-entry enforced)
+→ FORBIDDEN VERBS: MINT, DELETE, FORGE (excluded from grammar)
+→ SAFETY: Bankruptcy now grammatically impossible
+→ ENFORCEMENT: All financial ops must speak LedgerTongue
+```
+
+### 36. `kgents bank phase`
+**Genus**: B-Choreographer (Bootstrap Portfolio)
+**Cost**: ~0 tokens (detection), variable (rebalancing)
+**What**: Detect and manage bootstrap phase transitions.
+```
+kgents bank phase
+→ CURRENT: Phase 1 (OBSERVER)
+→ METRICS: Agent reliability 0.85, Composition novelty 0.42
+→ TRANSITION: Phase 2 threshold reached (novelty > 0.5)
+→ REBALANCING: Epistemic 60% → 40%, Impact 40% → 60%
+→ RECOMMENDATION: Enable autonomous synthesis agents
+```
+
+### 37. `kgents grammar reify "<domain>" [--constraints]`
+**Genus**: G-gent (Grammarian)
+**Cost**: ~10000 tokens (synthesis + validation)
+**What**: Synthesize domain-specific language with constraints.
+```
+kgents grammar reify "calendar management" --constraints "no-deletes,append-only"
+→ TONGUE: CalendarTongue v1.0
+→ GRAMMAR: CMD ::= "CHECK" <Date> | "ADD" <Event>
+→ VALIDATION: T-gent verified (unambiguous)
+→ COMPLEXITY: Regular (Type 3) — SYNTAX TAX: 0.001/token
+```
+
+### 38. `kgents grammar syntax-tax <tongue>`
+**Genus**: B-gent (Syntax Tax)
+**Cost**: ~0 tokens (classification)
+**What**: Calculate complexity-based pricing for grammar.
+```
+kgents grammar syntax-tax QueryDSL
+→ CLASSIFICATION: Context-Free (Type 2)
+→ COST: 0.003/token
+→ GAS LIMIT: None (safe)
+→ ESCROW: Not required
+→ DOWNGRADE AVAILABLE: Yes (to Regular for 0.001/token)
+```
+
+### 39. `kgents jit:classify "<task>"`
+**Genus**: J-gent (reality classifier)
+**Cost**: ~300 tokens
+**What**: Is this task deterministic, probabilistic, or chaotic? Know before you start.
+```
+kgents jit:classify "parsing user input"
+→ REALITY: PROBABILISTIC (entropy: 0.6)
+→ RECOMMEND: Fuzzy parser + validation layer
+→ BUDGET: 1.0 / (depth + 1) entropy allocation
+```
+
+### 40. `kgents jit:compile <tongue> [--target=bytecode|C]`
+**Genus**: J-gent + G-gent + B-gent (JIT Efficiency)
+**Cost**: ~5000 tokens (compilation)
+**What**: Compile grammar to bytecode for high-frequency scenarios.
+```
+kgents jit:compile BidTongue --target=C
+→ BASELINE: 15ms/parse (Python)
+→ JIT: 0.05ms/parse (C)
+→ LATENCY REDUCTION: 14.95ms
+→ VALUE (HFT market): $1.50/bid
+→ PROJECTED (10k bids/day): $450k/month
+→ PROFIT SHARE: 30% G-gent, 30% J-gent, 40% System
+```
+
+---
+
+## Tier 10: Forge & Advanced Synthesis
+
+### 41. `kgents forge:intent "<description>"`
 **Genus**: F-gent (Phase 1 only)
 **Cost**: ~400 tokens
 **What**: Parse natural language into structured intent. Pre-implementation clarity.
@@ -348,38 +450,33 @@ kgents forge:intent "a parser that handles nested structures"
 → INTENT: Parser[str, Tree] with RECURSIVE dependency, ROBUSTNESS constraint
 ```
 
-### 34. `kgents forge:contract <intent_id>`
-**Genus**: F-gent (Phase 2)
+### 42. `kgents forge:contract <intent_id>`
+**Genus**: F-gent + G-gent (Phase 2)
 **Cost**: ~500 tokens
 **What**: Generate contract from intent. Design-by-contract before code.
 ```
 kgents forge:contract INT-001
 → CONTRACT: pre(is_string) → post(is_tree ∨ raises) | invariant(depth ≤ max_depth)
+→ TONGUE: ContractTongue (G-gent synthesized interface language)
+→ SYNTAX TAX: Regular (Type 3) — 0.001/token
 ```
 
-### 35. `kgents jit:classify "<task>"`
-**Genus**: J-gent (reality classifier)
-**Cost**: ~300 tokens
-**What**: Is this task deterministic, probabilistic, or chaotic? Know before you start.
-```
-kgents jit:classify "parsing user input"
-→ REALITY: PROBABILISTIC (entropy: 0.6). Recommend: fuzzy parser + validation layer.
-```
-
-### 36. `kgents factory <spec>`
-**Genus**: A-gent (AgentFactory)
+### 43. `kgents factory <spec>`
+**Genus**: A-gent + G-gent (AgentFactory)
 **Cost**: ~600 tokens
 **What**: Describe agent, get skeleton. Synthesis from specification.
 ```
 kgents factory "agent that summarizes git diffs into commit messages"
 → GENERATED: DiffSummaryAgent[GitDiff, CommitMessage] at agents/custom/diff_summary.py
+→ INTERFACE TONGUE: DiffTongue (G-gent) for structured diff representation
+→ COMPRESSION: 85% token reduction vs raw diff text
 ```
 
 ---
 
-## Tier 10: Integration & Meta
+## Tier 11: Integration & Meta
 
-### 37. `kgents xref <artifact>`
+### 44. `kgents xref <artifact>`
 **Genus**: L-gent + multiple genera
 **Cost**: ~0 tokens
 **What**: Cross-reference artifact across all genera. Where does this touch?
@@ -387,34 +484,44 @@ kgents factory "agent that summarizes git diffs into commit messages"
 kgents xref "parse_response"
 → E-GENT: evolved 3x | T-GENT: 2 test oracles | F-GENT: forged from INT-042
 → L-GENT: registered 2024-11 | R-GENT: optimized 2024-12
+→ G-GENT: ResponseTongue v2 (used by 3 agents)
+→ B-GENT: 4.2k tokens/week consumption, ROI: 1.8x
 ```
 
-### 38. `kgents harmony`
+### 45. `kgents harmony`
 **Genus**: C-gent (law validation)
 **Cost**: ~0 tokens
 **What**: Check system-wide composition legality. Are all agents playing nice?
 ```
 kgents harmony
 → ✓ 47 compositions verified. ⚠ 2 warnings: AsyncAgent × BlockingAgent (potential deadlock)
+→ BUDGET HARMONY: 3 agents exceeding allocation (syntax tax enforcement recommended)
+→ GRAMMAR HARMONY: 2 tongue conflicts (CiteTongue v1 vs v2)
 ```
 
-### 39. `kgents philosophy <command>`
+### 46. `kgents philosophy <command>`
 **Genus**: Meta (--explain expanded)
 **Cost**: ~0 tokens (static)
 **What**: Deep philosophical context for any command. Why does this exist?
 ```
-kgents philosophy falsify
-→ B-GENT: Implements Popperian epistemology. Science advances by falsification, not confirmation...
+kgents philosophy "bank pidgin"
+→ STRUCTURAL ECONOMICS: Language is expensive. Constraint is cheap.
+→ When communication costs exceed threshold, compress to domain pidgin.
+→ This is topological resource routing—flow through productive grammatical regions.
+→ See: docs/structural_economics_bg_integration.md
 ```
 
-### 40. `kgents today`
-**Genus**: D-gent + W-gent + K-gent
+### 47. `kgents today`
+**Genus**: D-gent + W-gent + K-gent + B-Choreographer
 **Cost**: ~200 tokens
 **What**: Personalized daily briefing. What matters today, in your voice?
 ```
 kgents today
-→ Good morning. 2 hypotheses await testing. Yesterday's tension resolved itself.
+→ Good morning. Bootstrap Phase 1 (OBSERVER) — 85% reliability.
+→ 2 hypotheses await testing. Yesterday's tension resolved itself.
 → SUGGESTION: The void around "deployment strategy" has grown. Consider naming it.
+→ ECONOMICS: System RoC 1.9x (healthy). Consider pidgin for ResearchBot↔CitationBot (ROI: 65x).
+→ PHASE TRANSITION: 0.08 from Phase 2 threshold (composition novelty trending up).
 ```
 
 ---

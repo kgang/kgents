@@ -1224,14 +1224,171 @@ The UVP draws from:
 
 ---
 
+---
+
+## Part IV: Structural Economics (G-gent Integration)
+
+> *Language is expensive. Constraint is cheap.*
+
+When B-gent (Resources) meets G-gent (Structure), resource allocation becomes **topological navigation through grammatical space**.
+
+### The Core Insight
+
+Not all communication costs the same. By controlling the **grammar** of agent interaction, B-gent can:
+
+1. **Compress** (90% token reduction via pidgins)
+2. **Constrain** (illegal operations become grammatically impossible)
+3. **Price** (Chomsky hierarchy-based syntax tax)
+4. **Accelerate** (JIT compilation for hot paths)
+
+### The Four Integration Patterns
+
+#### 1. Semantic Zipper (Compression Economy)
+
+**When**: Inter-agent communication exceeds token threshold
+
+**ROI Formula**:
+$$
+\text{ROI} = \frac{\text{TokenCost}_{\text{English}} - \text{TokenCost}_{\text{DSL}} - \text{SynthesisCost}}{\text{SynthesisCost}}
+$$
+
+**Trigger**: ROI > 2.0x (projected 30-day savings)
+
+**Example**:
+```python
+# Before: "I found a paper by Smith et al from 2020 that discusses transformers" (14 tokens)
+# After: "ref(Smith20,transformers)" (3 tokens)
+# Compression: 79%
+# Annual savings (1000 citations/week): ~650k tokens = $13/year
+# Synthesis cost: 10k tokens = $0.20
+# ROI: 65x
+```
+
+**B-gent Action**: Commissions G-gent to create pidgin when ROI threshold met
+
+#### 2. Fiscal Constitution (Safety Cage)
+
+**Problem**: Financial agents must not hallucinate. Runtime validation is fragile.
+
+**Solution**: G-gent creates `LedgerTongue` where bankruptcy is grammatically impossible.
+
+**Grammar Example**:
+```
+TRANSFER ::= "TRANSFER" <Amount> <Currency> "FROM" <Account> "TO" <Account>
+  WHERE Account(FROM).balance >= Amount  // Enforced at parse time
+
+(Note: No MINT, DELETE, FORGE verbs exist in grammar)
+```
+
+**Invariant**: `parse(operation) → Success` ⟹ `execute(operation)` is constitutionally sound
+
+**Key Insight**: Parse errors prevent illegal operations. Not runtime rejection—structural impossibility.
+
+#### 3. Syntax Tax (Complexity Pricing)
+
+Not all grammars cost the same to parse. B-gent charges differential rates based on **Chomsky Hierarchy**:
+
+| Level | Type | Cost/Token | Gas Limit | Example |
+|-------|------|-----------|-----------|---------|
+| 3 | Regular | 0.001 | None | Regex, schemas |
+| 2 | Context-Free | 0.003 | None | BNF, commands |
+| 1 | Context-Sensitive | 0.010 | 10x margin | Contextual rules |
+| 0 | Turing-Complete | 0.030 | 100k tokens | Recursive, loops |
+
+**Downgrade Negotiation**:
+```python
+# Agent: "I need a recursive language to parse code."
+# Banker: "That falls under Tier 3 Syntax Tax. Do you have the budget?"
+# Agent: "No."
+# Grammarian: "Downgrading to iterative command language (Tier 2)."
+```
+
+**Escrow Requirement**: Turing-complete grammars require 2x deposit to prevent runaway execution.
+
+#### 4. JIT Efficiency (High-Frequency Trading)
+
+**The G+J+B Trio**:
+
+1. **G-gent**: Defines minimal grammar (Regular only)
+2. **J-gent**: Compiles to bytecode/C
+3. **B-gent**: Measures latency reduction, credits efficiency gain
+
+**Value Formula**:
+$$
+\text{Value} = \text{LatencyReduction}_{\text{ms}} \times \text{TransactionCount} \times \text{TimeValue}_{\text{ms}}
+$$
+
+**Example (BidTongue for real-time auctions)**:
+- Python parser: 15ms/bid
+- JIT C parser: 0.05ms/bid
+- Latency reduction: 14.95ms
+- In HFT market (1ms = $0.10): **$1.50/bid value**
+- 10k bids/day: **$15k/day** value creation
+- Monthly: **$450k**
+
+**Profit Sharing**: 30% G-gent, 30% J-gent, 40% System
+
+### The Unified Budget
+
+Extends `DualBudget` (Entropy + Economic) to `TripleBudget`:
+
+```python
+@dataclass
+class TripleBudget:
+    """
+    Three conservation laws operating simultaneously.
+
+    Entropy: Recursion depth (J-gent)
+    Economic: Token consumption (B-gent)
+    Grammatical: Complexity tier (G-gent)
+    """
+    entropy: EntropyBudget
+    economic: TokenBudget
+    grammatical: GrammarComplexity
+
+    def can_proceed(self,
+                   entropy_cost: float,
+                   token_cost: int,
+                   grammar_level: ChomskyLevel) -> bool:
+        return (
+            self.entropy.can_afford(entropy_cost) and
+            self.economic.can_afford(token_cost) and
+            self.grammatical.allows(grammar_level)
+        )
+```
+
+### Success Metrics
+
+| Metric | Without G-gent | With G-gent | Target |
+|--------|---------------|-------------|--------|
+| **Inter-agent token cost** | 100% | 10-20% | < 20% (80%+ reduction) |
+| **Financial operation safety** | Runtime validation | Parse-time rejection | 0 runtime errors |
+| **Grammar complexity** | Unknown | Classified | 70% Regular, 25% CF, 5% Turing |
+| **HFT latency** | 15ms (Python) | 0.05ms (JIT) | < 1ms |
+| **Bankruptcy incidents** | Possible | Grammatically impossible | 0 incidents |
+
+### Implementation
+
+See `docs/structural_economics_bg_integration.md` for:
+- Complete architecture diagrams
+- Detailed implementation of 4 patterns
+- `StructuralEconomicsBank` unified API
+- 12-week implementation roadmap
+- New agents: `BTopologistGrammarian`, `GEconomist`
+
+---
+
 ## See Also
 
 - [value-tensor.md](value-tensor.md) - Multi-dimensional resource ontology
 - [README.md](README.md) - B-gents overview (Bio + Banker)
 - [hypothesis-engine.md](hypothesis-engine.md) - Scientific hypothesis generation
 - [robin.md](robin.md) - Scientific companion
+- [../g-gents/README.md](../g-gents/README.md) - Grammarian (structural partner)
 - [../bootstrap.md](../bootstrap.md) - Entropy Budget (related constraint)
 - [../reliability.md](../reliability.md) - Fallback on budget exhaustion
 - [../o-gents/README.md](../o-gents/README.md) - ValueLedger observability
 - [../w-gents/README.md](../w-gents/README.md) - Value Dashboard visualization
 - [../e-gents/README.md](../e-gents/README.md) - Ethical regulator integration
+- [../../docs/structural_economics_bg_integration.md](../../docs/structural_economics_bg_integration.md) - Full B×G integration spec
+- [../../docs/cyborg_cognition_bootstrapping.md](../../docs/cyborg_cognition_bootstrapping.md) - Bootstrap + Membrane integration

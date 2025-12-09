@@ -287,6 +287,11 @@ class Tension:
         """Whether this tension requires immediate attention."""
         return self.divergence >= 0.75
 
+    @property
+    def id(self) -> str:
+        """Generate a stable ID for this tension based on thesis/antithesis sources."""
+        return f"{hash((self.thesis.source, self.antithesis.pattern))}"
+
 
 class HoldReason(Enum):
     """

@@ -31,26 +31,108 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 ## TL;DR
 
-**Status**: Clean, all committed and pushed
+**Status**: Uncommitted changes (CLI Integrations Phase 1)
 **Branch**: `main`
-**Latest Commit**: 1da5127 - feat(protocols): Add Kairos Phase 3 spec and CLI publishing
+**Latest Commit**: 599c928 - docs: Update HYDRATE.md for J-gents Phase 2 session
 **Current State**:
+  - CLI Integrations Phase 1: ✅ COMPLETE (4 daily companions)
+  - G-gent Specification: ✅ SPEC COMPLETE (needs implementation)
   - Mirror Protocol Phase 1: ✅ COMPLETE (46 tests)
   - Mirror Protocol Phase 2: ✅ COMPLETE (EventStream implementations, 26 tests)
-  - Mirror Protocol Phase 3 (Kairos): ✅ SPEC COMPLETE (needs implementation)
+  - Mirror Protocol Phase 3 (Kairos): ✅ COMPLETE (controller, attention, salience, benefit, budget, watch)
   - CLI Publishing: ✅ COMPLETE (`kgents` command via pyproject.toml)
   - CLI Protocol: ✅ COMPLETE (59 passing tests)
   - Membrane Protocol v2.0: ✅ COMPLETE
-  - Tests: 63 passing, 22 skipped (optional deps)
+  - Tests: 59 passing CLI + 22 Kairos + more
 
 **Next Steps**:
-1. Implement Kairos Controller (attention detection, benefit function, watch mode)
-2. Fix lint warnings (2 unused variables in igent_synergy.py, membrane_cli.py)
-3. Consider Phase 4 (Autopoietic Loop) design
+1. CLI Integrations Phase 2 (Scientific Core: falsify, conjecture, rival, sublate, shadow)
+2. Implement G-gent Phase 1 (Core Types + Tongue artifact)
+3. Fix lint warnings (2 unused variables in igent_synergy.py, membrane_cli.py)
 
 ---
 
 ## Recent Sessions
+
+### Session: CLI Integrations Phase 1 (2025-12-09)
+
+**Status**: ✅ COMPLETE - Daily Companion Commands Implemented
+
+**New Files Created**:
+- `impl/claude/protocols/cli/companions.py` (~400 lines): Daily companion commands
+
+**Commands Implemented** (Tier 1 - 0 tokens, local only):
+- `kgents pulse`: 1-line project health (hypotheses pending, tensions held, flow phase)
+- `kgents ground "<statement>"`: Parse statement, reflect structure, detect contradictions
+- `kgents breathe`: Contemplative pause with gentle prompt
+- `kgents entropy`: Show session chaos budget from git/file analysis
+
+**Key Features**:
+- FlowPhase detection (morning/afternoon/evening/night)
+- Hypothesis detection from source file patterns (TODO, H:, What if)
+- Tension detection from .kgents state and TENSION markers
+- Activity level from git log timestamps (active/quiet/dormant)
+- Ground parsing: action-target extraction, contradiction scoring, complexity scoring
+- Entropy calculation: git diff stats + token usage + LLM calls
+
+**Tests**: All 59 CLI tests pass
+
+**Next**: Phase 2 (Scientific Core: falsify, conjecture, rival, sublate, shadow)
+
+### Session: Kairos Controller Implementation (2025-12-09)
+
+**Status**: ✅ COMPLETE - All core Kairos components implemented with 22 passing tests
+
+**New Files Created** (~1400 lines):
+- `impl/claude/protocols/mirror/kairos/` module structure:
+  - `attention.py` (~280 lines): Attention state detection from filesystem/git activity
+  - `salience.py` (~150 lines): Tension salience calculator with momentum & recency
+  - `benefit.py` (~170 lines): Benefit function B(t) = A(t) × S(t) / (1 + L(t))
+  - `budget.py` (~200 lines): EntropyBudget for rate limiting (4 levels)
+  - `controller.py` (~320 lines): KairosController with state machine
+  - `watch.py` (~145 lines): Autonomous watch mode loop
+  - `_tests/test_kairos.py` (~580 lines): Comprehensive test suite
+
+**Modified**:
+- `impl/claude/protocols/mirror/types.py`: Added `id` property to Tension type
+
+**Key Features**:
+- Attention Detection: Infers user state from file/git activity (DEEP_WORK/ACTIVE/TRANSITIONING/IDLE)
+- Salience Calculation: Tension urgency from severity × momentum × recency
+- Benefit Function: Balances attention budget, salience, cognitive load
+- Entropy Budget: 4 levels (LOW/MEDIUM/HIGH/UNLIMITED) prevent notification fatigue
+- Controller: Full state machine (OBSERVING → EVALUATING → SURFACING/DEFERRING → COOLDOWN)
+- Watch Mode: Async loop for autonomous observation
+
+**Tests**: 22 passing (100% pass rate)
+
+**Next**: CLI command integration (watch, timing, surface, history)
+
+### Session: G-gent Specification (2025-12-09)
+
+**Created**:
+- `spec/g-gents/README.md` (~500 lines): G-gent (Grammarian) specification
+  - DSL synthesis from domain intent + constraints
+  - Three grammar levels: Schema (Pydantic), Command (Verb-Noun), Recursive (S-expr)
+  - Tongue artifact: reified language with grammar, parser config, interpreter config
+  - "Constraint is Liberation" principle: forbidden ops → grammatically impossible
+- `spec/g-gents/grammar.md` (~400 lines): Grammar synthesis specification
+  - Domain analysis → Grammar generation → Ambiguity verification
+  - Constraint crystallization (structural, not runtime)
+- `spec/g-gents/tongue.md` (~350 lines): Tongue artifact specification
+  - Lifecycle: creation → registration → usage → evolution → deprecation
+  - Serialization, validation, security considerations
+- `spec/g-gents/integration.md` (~400 lines): Integration patterns
+  - P-gent (parsing), J-gent (execution), F-gent (artifact interface)
+  - L-gent (discovery), W-gent (inference), T-gent (fuzzing), H-gent (dialectic)
+- `docs/g-gent_implementation_plan.md` (~500 lines): Implementation roadmap
+  - 7 phases: Core Types → Synthesis → P/J/L/F Integration → Advanced
+
+**Key Concepts**:
+- G-gent fills gap between P-gent (parsing) and J-gent (execution)
+- Solves Precision/Ambiguity Trade-off (NL too fuzzy, Code too rigid, DSL "Goldilocks")
+- Functorial mapping: `G: (DomainContext, Constraints) → Tongue`
+- Use cases: Safety Cage (no DELETE in grammar), Shorthand (token compression), UI Bridge, Contract Protocol
 
 ### Session: Kairos Phase 3 Spec + CLI Publishing (2025-12-09)
 
