@@ -27,9 +27,10 @@ The synthesis is valid: implementation wisdom has been elevated to spec-level pr
 4. **[c-gents/composition.md](c-gents/composition.md)** - The `>>` operator as primary abstraction
 5. **[testing.md](testing.md)** - T-gents taxonomy (testing as first-class)
 6. **[reliability.md](reliability.md)** - Multi-layer reliability patterns
-7. **Agent Genera** - Explore specific agent types:
+7. **[archetypes.md](archetypes.md)** - Emergent behavioral patterns
+8. **Agent Genera** - Explore specific agent types:
    - [a-gents/](a-gents/) - Abstract + Art
-   - [b-gents/](b-gents/) - Bio/Scientific
+   - [b-gents/](b-gents/) - Bio + Banker (resource-constrained systems)
    - [c-gents/](c-gents/) - Category Theory (composition)
    - [d-gents/](d-gents/) - Data Agents (state, memory, persistence)
    - [e-gents/](e-gents/) - Evolution (dialectical code improvement)
@@ -37,10 +38,13 @@ The synthesis is valid: implementation wisdom has been elevated to spec-level pr
    - [h-gents/](h-gents/) - Hegelian/Dialectic (introspection)
    - [i-gents/](i-gents/) - Interface (Living Codex Garden visualization)
    - [j-gents/](j-gents/) - JIT Agent Intelligence (lazy evaluation, JIT compilation)
-   - [k-gent/](k-gent/) - Kent Simulacra (personalization)
+   - [k-gent/](k-gent/) - Personalization Functor (system's fix)
    - [l-gents/](l-gents/) - Library (knowledge curation, semantic discovery)
    - [m-gents/](m-gents/) - Memory (holographic associative memory, memory as morphism)
+   - [n-gents/](n-gents/) - Narrator (story-telling, time-travel debugging)
+   - [o-gents/](o-gents/) - Observability (system-wide telemetry, bootstrap witness)
    - [p-gents/](p-gents/) - Parser (multi-strategy parsing, structured output)
+   - [psi-gents/](psi-gents/) - Psychopomp (holonic projection, MHC, Jung, Lacan, metaethics)
    - [t-gents/](t-gents/) - Testing (algebraic reliability)
    - [w-gents/](w-gents/) - Wire (ephemeral process observation, stigmergic coordination)
 
@@ -55,10 +59,16 @@ Agents don't exist in isolation. Key integration points:
 | D+E | E-gents use D-gent memory for evolution state |
 | J+F | F-gent artifacts can be JIT-instantiated via J-gent |
 | T+* | T-gents can test any agent via Spy/Mock patterns |
-| K+B | B-gent Robin uses K-gent persona preferences |
+| K+* | K-gent functor lifts any agent into personalized space |
 | P+T | T-gent Tool parsing uses P-gent strategies |
 | W+I | W-gent observation feeds I-gent visualization |
 | M+D | M-gent holographic memory composes with D-gent persistence |
+| O+* | O-gents observe all agents including bootstrap |
+| N+O | N-gent stories feed O-gent metrics |
+| B+B | B-Banker controls B-Bio's resource allocation |
+| Ψ+H | Ψ-gent uses H-gent dialectics for ego/shadow synthesis |
+| Ψ+O | O-gent observes Ψ-gent Borromean register transitions |
+| Ψ+N | N-gent narrates Ψ-gent's integration journeys |
 
 See `impl/claude/agents/*/` `__init__.py` files for explicit cross-pollination labels.
 

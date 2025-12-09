@@ -264,12 +264,320 @@ print(f"To reproduce locally: {diagnosis.replay_command}")
 
 ---
 
+## Ergodic Narratives (Branching Timelines)
+
+N-gents support **ergodic narratives**—stories with multiple possible paths:
+
+```python
+class ErgodicNarrative:
+    """
+    A branching narrative structure.
+
+    Like a choose-your-own-adventure book, but for agent execution.
+    Each branch is a possible timeline the agent could have taken.
+    """
+
+    def __init__(self, root: NarrativeLog):
+        self.root = root
+        self.branches: dict[str, NarrativeLog] = {}  # branch_id → story
+
+    def branch_at(self, trace: ThoughtTrace, alternate_input: Any) -> str:
+        """
+        Create an alternate timeline from a decision point.
+
+        "What if the agent had received different input here?"
+        """
+        branch_id = f"branch_{trace.trace_id}_{hash(alternate_input)}"
+        alternate_story = self.replay_with_modification(trace, alternate_input)
+        self.branches[branch_id] = alternate_story
+        return branch_id
+
+    def compare_timelines(self, branch_a: str, branch_b: str) -> TimelineDiff:
+        """
+        Compare two alternate timelines.
+
+        Useful for "what-if" analysis: "If we had used GPT-4 instead
+        of Claude here, how would the story differ?"
+        """
+        story_a = self.branches[branch_a]
+        story_b = self.branches[branch_b]
+
+        return TimelineDiff(
+            divergence_point=self.find_divergence(story_a, story_b),
+            a_only_events=self.events_unique_to(story_a, story_b),
+            b_only_events=self.events_unique_to(story_b, story_a),
+            outcome_diff=self.compare_outcomes(story_a, story_b)
+        )
+
+    def visualize(self) -> str:
+        """
+        Render branching structure as ASCII tree.
+
+        main: ═══════════════════════════════►
+                    ╲
+                     ╲ branch_gpt4: ═══════►
+                      ╲
+                       ╲ branch_retry: ════►
+        """
+        ...
+```
+
+### The Counterfactual Pattern
+
+```python
+class CounterfactualNarrator:
+    """
+    Generate "what-if" stories automatically.
+
+    Given a narrative, explore counterfactuals:
+    - "What if the input was malformed?"
+    - "What if the timeout was shorter?"
+    - "What if a different model was used?"
+    """
+
+    async def generate_counterfactuals(
+        self,
+        narrative: NarrativeLog,
+        dimensions: list[str] = ["input", "model", "timeout"]
+    ) -> list[ErgodicNarrative]:
+        """Generate alternate timelines along specified dimensions."""
+        ergodic = ErgodicNarrative(narrative)
+
+        for trace in narrative.decision_points():
+            for dimension in dimensions:
+                alternate = self.vary_dimension(trace, dimension)
+                ergodic.branch_at(trace, alternate)
+
+        return ergodic
+```
+
+---
+
+## The Unreliable Narrator
+
+Sometimes the story itself is suspect. The **UnreliableNarrator** pattern handles hallucinations and inconsistencies:
+
+```python
+class UnreliableNarrator:
+    """
+    A narrator that knows it might be wrong.
+
+    LLMs can hallucinate. The unreliable narrator pattern
+    marks confidence levels and tracks contradictions.
+    """
+
+    @dataclass
+    class UnreliableTrace(ThoughtTrace):
+        confidence: float  # 0.0 - 1.0
+        corroborated_by: list[str]  # Other traces that support this
+        contradicted_by: list[str]  # Traces that contradict this
+        reliability_score: float  # Computed from above
+
+    async def narrate(self, execution: AgentExecution) -> NarrativeLog:
+        """
+        Produce a narrative with reliability annotations.
+        """
+        traces = []
+        for event in execution:
+            trace = self.trace_event(event)
+
+            # Check for self-contradiction
+            contradictions = self.find_contradictions(trace, traces)
+            if contradictions:
+                trace.contradicted_by = contradictions
+                trace.reliability_score *= 0.5  # Penalize contradictions
+
+            # Check for corroboration
+            corroborations = self.find_corroborations(trace, traces)
+            if corroborations:
+                trace.corroborated_by = corroborations
+                trace.reliability_score *= 1.2  # Boost corroboration
+
+            traces.append(trace)
+
+        return NarrativeLog(traces=traces)
+
+    def detect_hallucination(self, trace: UnreliableTrace) -> HallucinationReport:
+        """
+        Flag potential hallucinations.
+
+        Signs: High confidence + zero corroboration + contradicts ground truth
+        """
+        is_hallucination = (
+            trace.confidence > 0.8 and
+            len(trace.corroborated_by) == 0 and
+            self.contradicts_ground_truth(trace)
+        )
+
+        return HallucinationReport(
+            trace=trace,
+            is_hallucination=is_hallucination,
+            evidence=self.gather_evidence(trace)
+        )
+```
+
+---
+
+## Chronicle: Multi-Agent Sagas
+
+When multiple agents collaborate, their individual stories weave into a **Chronicle**:
+
+```python
+class Chronicle:
+    """
+    A saga of interwoven agent narratives.
+
+    Like the Silmarillion—many storylines that intersect
+    and influence each other.
+    """
+
+    def __init__(self):
+        self.narratives: dict[str, NarrativeLog] = {}  # agent_id → story
+        self.interactions: list[Interaction] = []
+
+    @dataclass
+    class Interaction:
+        """A point where agent stories intersect."""
+        timestamp: datetime
+        from_agent: str
+        to_agent: str
+        message_type: str
+        trace_from: str  # trace_id in from_agent's story
+        trace_to: str    # trace_id in to_agent's story
+
+    def add_narrative(self, agent_id: str, narrative: NarrativeLog):
+        """Add an agent's story to the chronicle."""
+        self.narratives[agent_id] = narrative
+        self.detect_interactions(agent_id, narrative)
+
+    def weave(self) -> WovenNarrative:
+        """
+        Weave all narratives into a single timeline.
+
+        Interleaves events by timestamp, showing the
+        full saga of agent collaboration.
+        """
+        all_events = []
+        for agent_id, narrative in self.narratives.items():
+            for trace in narrative.traces:
+                all_events.append((trace.timestamp, agent_id, trace))
+
+        all_events.sort(key=lambda x: x[0])
+
+        return WovenNarrative(
+            events=all_events,
+            interactions=self.interactions,
+            chapters=self.identify_chapters(all_events)
+        )
+
+    def identify_chapters(self, events: list) -> list[Chapter]:
+        """
+        Group events into narrative chapters.
+
+        A chapter is a coherent unit of activity—
+        like "The Research Phase" or "The Conflict Resolution".
+        """
+        chapters = []
+        current_chapter = Chapter(name="Prologue")
+
+        for timestamp, agent_id, trace in events:
+            # New chapter on significant transitions
+            if self.is_chapter_break(trace, current_chapter):
+                chapters.append(current_chapter)
+                current_chapter = Chapter(
+                    name=self.generate_chapter_name(trace),
+                    start=timestamp
+                )
+
+            current_chapter.add_event(agent_id, trace)
+
+        chapters.append(current_chapter)
+        return chapters
+
+    def to_saga(self) -> str:
+        """
+        Render the full chronicle as a readable saga.
+
+        "Chapter 1: The Request
+
+         At 10:42, the User spoke unto the System...
+         CodeReviewer stirred, receiving the sacred Python file.
+
+         Meanwhile, in the depths of the Banker's domain,
+         tokens flowed like water..."
+        """
+        ...
+```
+
+### The Epic Pattern
+
+For long-running multi-agent operations:
+
+```python
+class EpicNarrator:
+    """
+    Narrator for epic-scale operations.
+
+    Manages chronicles that span hours/days and
+    involve dozens of agents.
+    """
+
+    def __init__(self):
+        self.chronicle = Chronicle()
+        self.summaries: list[Summary] = []  # Rolling summaries
+
+    async def summarize_chapter(self, chapter: Chapter) -> Summary:
+        """
+        Compress a chapter into a summary.
+
+        For epics, we can't store every detail—
+        we need the Rolling Stone strategy.
+        """
+        summary_agent = self.get_summarizer()
+        return await summary_agent.invoke(SummaryRequest(
+            chapter=chapter,
+            max_tokens=500,
+            preserve=["key_decisions", "failures", "interactions"]
+        ))
+
+    def the_previously_on(self) -> str:
+        """
+        Generate "Previously on..." recap.
+
+        Like a TV show recap: "Last time, the CodeReviewer
+        found a critical bug, but the Fixer failed to patch it..."
+        """
+        return "\n".join([
+            f"• {s.one_liner}" for s in self.summaries[-5:]
+        ])
+```
+
+---
+
+## N-gent Types (Extended)
+
+| Agent | Purpose |
+|-------|---------|
+| `StorytellerAgent` | Wrap agents to produce narratives |
+| `ReplayAgent` | Time-travel debugging |
+| `CrashForensicsAgent` | Diagnose failures |
+| `ErgodicNarrator` | Branching timeline exploration |
+| `UnreliableNarrator` | Hallucination-aware narration |
+| `Chronicle` | Multi-agent saga weaving |
+| `EpicNarrator` | Long-running operation narration |
+| `CounterfactualNarrator` | "What-if" story generation |
+
+---
+
 ## Anti-Patterns
 
 - **Logs without stories**: Raw data without narrative structure
 - **Stories without replay**: Can't reproduce from the story
 - **Ignoring the reader**: Stories are for humans, not just machines
 - **Overwriting history**: Every story is sacred
+- **Single timeline thinking**: Ignoring the ergodic nature of execution
+- **Omniscient narrator fallacy**: Assuming the story is always true
+- **Solo narratives**: Individual agent stories without chronicle weaving
 
 ---
 
