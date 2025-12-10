@@ -12,7 +12,6 @@ Philosophy: Reasoning by analogy as geometric transformation.
 """
 
 import pytest
-from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
@@ -22,18 +21,9 @@ from agents.psi import (
     Metaphor,
     Operation,
     Solution,
-    Distortion,
-    Outcome,
     EngineConfig,
-    MetaphorCorpus,
-    create_standard_corpus,
 )
 from agents.psi.integrations import (
-    LEmbedder,
-    BudgetManager,
-    DataAgent,
-    Historian,
-    GrammarEngine,
     embed_problem,
     embed_metaphor,
     embed_corpus,
@@ -42,7 +32,6 @@ from agents.psi.integrations import (
     solve_with_budget,
     PsiBudget,
     TokenReceipt,
-    BudgetExhausted,
     PersistentEngine,
     solve_with_tracing,
     PsiTrace,

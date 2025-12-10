@@ -12,7 +12,6 @@ Tests:
 
 import pytest
 from agents.i.semantic_field import (
-    SemanticField,
     SemanticPheromone,
     SemanticPheromoneKind,
     FieldCoordinate,
@@ -20,10 +19,6 @@ from agents.i.semantic_field import (
     IntentPayload,
     WarningPayload,
     OpportunityPayload,
-    PsiFieldEmitter,
-    ForgeFieldSensor,
-    SafetyFieldEmitter,
-    EconomicFieldEmitter,
     create_semantic_field,
     create_psi_emitter,
     create_forge_sensor,
@@ -327,7 +322,7 @@ class TestPsiFieldEmitter:
         field = create_semantic_field()
         emitter = create_psi_emitter(field)
 
-        phero_id = emitter.emit_metaphor(
+        emitter.emit_metaphor(
             source_domain="database",
             target_domain="graph",
             confidence=0.85,
@@ -404,7 +399,7 @@ class TestForgeFieldSensor:
 
         position = FieldCoordinate(domain="software")
 
-        phero_id = sensor.emit_intent(
+        sensor.emit_intent(
             purpose="Create API client",
             position=position,
             behaviors=("fetch", "parse"),

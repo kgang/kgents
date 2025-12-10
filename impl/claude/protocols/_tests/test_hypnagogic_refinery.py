@@ -14,15 +14,9 @@ Tests:
 import pytest
 from datetime import datetime, timedelta
 from protocols.hypnagogic_refinery import (
-    HypnagogicRefinery,
-    MemoryStore,
-    MemoryRecord,
     MemoryTemperature,
-    OptimizationEngine,
-    OptimizationCandidate,
     OptimizationObjective,
     OptimizationStatus,
-    OptimizationResult,
     RefineryReport,
     create_memory_store,
     create_optimization_engine,
@@ -474,7 +468,7 @@ class Calculator:
 
         refinery.memory_store.add(memory)
 
-        report = await refinery.dream_cycle()
+        await refinery.dream_cycle()  # Side effect: optimizes memory
 
         # Get optimized memory
         optimized_memory = refinery.memory_store.get("functional-code")

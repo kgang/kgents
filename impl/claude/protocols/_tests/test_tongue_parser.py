@@ -12,15 +12,11 @@ Tests:
 
 import pytest
 from protocols.tongue_parser import (
-    TongueParser,
     TongueDocument,
     TongueIntegration,
     TongueContext,
-    TongueTrigger,
     TriggerType,
     TongueParseError,
-    ValidationError,
-    create_parser,
     parse_tongue,
     validate_document,
     generate_integration_code,
@@ -455,8 +451,7 @@ integration unclosed {
         # This might not raise depending on implementation
         # Just verify it doesn't crash
         try:
-            doc = parse_tongue(content)
-            # Document parsed but integration may be incomplete
+            parse_tongue(content)  # May parse incomplete or raise
         except TongueParseError:
             pass  # Expected
 
