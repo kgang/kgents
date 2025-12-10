@@ -3,7 +3,7 @@
 > **Core Concept**: Reasoning by analogy as geometric transformation.
 > **Role**: Find the metaphor that makes a hard problem easy.
 
-**Status**: Specification v3.0 (The Simplification)
+**Implementation**: `impl/claude/agents/psi/` (104 tests)
 
 ---
 
@@ -426,20 +426,6 @@ Distortion.total = 0.15. Solution accepted.
 | [verification.md](./verification.md) | VERIFY stage specification |
 | [learning.md](./learning.md) | Learning and adaptation |
 | [integration.md](./integration.md) | Integration with other gents |
-
----
-
-## Migration from v2.0
-
-| v2.0 Concept | v3.0 Equivalent |
-|--------------|-----------------|
-| MHC 15 levels | `abstraction: 0.0-1.0` continuous |
-| Jungian DialecticalRotator | CHALLENGE stage |
-| Lacanian TopologicalValidator | VERIFY structural checks |
-| Axiological 5 dimensions | Distortion (3 measurable dimensions) |
-| MetaphorUmwelt | Removed (filter in RETRIEVE) |
-| MetaphorDNA | Removed (learning replaces genetics) |
-| PsychopompAgent | MetaphorEngine |
 
 ---
 

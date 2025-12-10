@@ -1,300 +1,164 @@
 """
-Psi-gent Core Types: The Morphic Engine primitives.
+Psi-gent v3.0 Types.
 
-The Universal Translator of Semantic Topologies.
-Functor between the unknown (Novelty) and the known (Archetype).
+Minimal, measurable, meaningful.
 
-Philosophy:
-    To understand the mountain, become the river that flows around it.
+Design Philosophy:
+1. Observable: Every field can be measured or computed
+2. Useful: No fields that exist "for completeness"
+3. Composable: Types compose without special cases
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from datetime import datetime
+from dataclasses import dataclass, field, asdict
 from enum import Enum
-from typing import Any, TypeVar
-
-# Type variables for functor generics
-Source = TypeVar("Source")
-Target = TypeVar("Target")
-A = TypeVar("A")
-B = TypeVar("B")
+from typing import Any, ClassVar
+import json
 
 
 # =============================================================================
-# MHC Levels (Model of Hierarchical Complexity)
-# =============================================================================
-
-
-class MHCLevel(Enum):
-    """
-    Model of Hierarchical Complexity levels.
-
-    High MHC = blur details to find structural isomorphisms.
-    Low MHC = sharpen to ground abstractions.
-    """
-
-    # Concrete levels (low abstraction)
-    SENSORIMOTOR = 1  # Direct perception
-    CIRCULAR = 2  # Simple loops
-    SENSORIMOTOR_NOMINAL = 3  # Named actions
-    NOMINAL = 4  # Categories
-
-    # Abstract levels (medium abstraction)
-    SENTENTIAL = 5  # Propositions
-    PREOPERATIONAL = 6  # Simple relations
-    PRIMARY = 7  # Single abstractions
-    CONCRETE = 8  # Concrete operations
-
-    # Formal levels (high abstraction)
-    ABSTRACT = 9  # Abstract operations
-    FORMAL = 10  # Formal systems
-    SYSTEMATIC = 11  # System of systems
-    METASYSTEMATIC = 12  # Meta-systems
-
-    # Paradigmatic levels (very high abstraction)
-    PARADIGMATIC = 13  # Paradigm comparison
-    CROSS_PARADIGMATIC = 14  # Cross-paradigm synthesis
-    META_CROSS_PARADIGMATIC = 15  # Meta-synthesis
-
-    @property
-    def is_concrete(self) -> bool:
-        return self.value <= 4
-
-    @property
-    def is_abstract(self) -> bool:
-        return 5 <= self.value <= 8
-
-    @property
-    def is_formal(self) -> bool:
-        return 9 <= self.value <= 12
-
-    @property
-    def is_paradigmatic(self) -> bool:
-        return self.value >= 13
-
-
-# =============================================================================
-# Novel Problem Space
+# Core Input/Output Types
 # =============================================================================
 
 
 @dataclass(frozen=True)
-class Novel:
-    """
-    A novel problem in the high-entropy Problem Space.
+class Problem:
+    """A novel problem seeking metaphorical illumination."""
 
-    This is the input to the Psi-gent: an unstructured, unfamiliar problem
-    that needs to be projected into a familiar metaphor space.
-    """
-
-    # Identity
-    problem_id: str
-
-    # The problem description
+    id: str
     description: str
-    domain: str  # "software", "organization", "biology", etc.
-
-    # Complexity metrics (with defaults)
-    complexity: float = 0.5  # 0.0 = trivial, 1.0 = maximally complex
-    entropy: float = 0.5  # Structural randomness
-    timestamp: datetime = field(default_factory=datetime.now)
-
-    # Embedding for similarity search
+    domain: str
+    constraints: tuple[str, ...] = ()
+    context: dict[str, Any] = field(default_factory=dict)
     embedding: tuple[float, ...] | None = None
 
-    # Context
-    context: dict[str, Any] = field(default_factory=dict)
-    constraints: tuple[str, ...] = ()
+    @property
+    def complexity(self) -> float:
+        """Heuristic complexity estimate (0.0 to 1.0)."""
+        desc_factor = min(1.0, len(self.description) / 1000)
+        constraint_factor = min(1.0, len(self.constraints) / 10)
+        return (desc_factor + constraint_factor) / 2
 
-    def with_embedding(self, embedding: list[float]) -> Novel:
-        """Create a new Novel with the given embedding."""
-        return Novel(
-            problem_id=self.problem_id,
-            timestamp=self.timestamp,
+    def with_embedding(self, embedding: tuple[float, ...]) -> Problem:
+        """Return a new Problem with the given embedding."""
+        return Problem(
+            id=self.id,
             description=self.description,
             domain=self.domain,
-            complexity=self.complexity,
-            entropy=self.entropy,
-            embedding=tuple(embedding),
-            context=self.context,
             constraints=self.constraints,
+            context=self.context,
+            embedding=embedding,
         )
 
 
-# =============================================================================
-# Metaphor Space
-# =============================================================================
-
-
 @dataclass(frozen=True)
-class MetaphorOperation:
-    """
-    An operation available within a metaphor space.
-
-    Example: In MilitaryStrategy, operations might be ["flank", "siege", "retreat"].
-    """
+class Operation:
+    """An executable action within a metaphor framework."""
 
     name: str
     description: str
-    signature: str = "Any -> Any"  # Type signature like "Position -> Position"
-    inputs: tuple[str, ...] = ()
-    outputs: tuple[str, ...] = ()
+    signature: str = "entity -> entity"
     preconditions: tuple[str, ...] = ()
-    postconditions: tuple[str, ...] = ()
+    effects: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class Example:
+    """A concrete instance showing the metaphor in use."""
+
+    situation: str
+    application: str
+    outcome: str
 
 
 @dataclass(frozen=True)
 class Metaphor:
-    """
-    A familiar metaphor space for problem solving.
+    """A structured framework for reasoning about problems."""
 
-    The Metaphor Space is low-entropy, structured, and tractable.
-    Problems are projected here, solved, then reified back.
-    """
-
-    # Identity
-    metaphor_id: str
-    name: str  # "MilitaryStrategy", "Thermodynamics", "BiologicalSystem"
-    domain: str  # Category of metaphor
-
-    # Description
+    id: str
+    name: str
+    domain: str
     description: str
-
-    # Available operations in this space
-    operations: tuple[MetaphorOperation, ...] = ()
-
-    # Embedding for similarity matching
+    operations: tuple[Operation, ...]
+    examples: tuple[Example, ...] = ()
     embedding: tuple[float, ...] | None = None
 
-    # Structural properties
-    tractability: float = 0.8  # How easy to reason in this space
-    generality: float = 0.5  # How broadly applicable
+    @property
+    def tractability(self) -> float:
+        """How powerful is this metaphor for reasoning? (0.0 to 1.0)"""
+        return min(1.0, len(self.operations) / 5)
 
-    # Relationships to other metaphors
-    related_metaphors: tuple[str, ...] = ()  # IDs of related metaphors
-
-    # Usage tracking
-    usage_count: int = 0
-    success_rate: float = 0.5
-
-    def with_embedding(self, embedding: list[float]) -> Metaphor:
-        """Create a new Metaphor with the given embedding."""
+    def with_embedding(self, embedding: tuple[float, ...]) -> Metaphor:
+        """Return a new Metaphor with the given embedding."""
         return Metaphor(
-            metaphor_id=self.metaphor_id,
+            id=self.id,
             name=self.name,
             domain=self.domain,
             description=self.description,
             operations=self.operations,
-            embedding=tuple(embedding),
-            tractability=self.tractability,
-            generality=self.generality,
-            related_metaphors=self.related_metaphors,
-            usage_count=self.usage_count,
-            success_rate=self.success_rate,
-        )
-
-    def increment_usage(self, success: bool) -> Metaphor:
-        """Create a new Metaphor with updated usage stats."""
-        new_count = self.usage_count + 1
-        # Exponential moving average for success rate
-        alpha = 0.1
-        new_rate = self.success_rate * (1 - alpha) + (1.0 if success else 0.0) * alpha
-        return Metaphor(
-            metaphor_id=self.metaphor_id,
-            name=self.name,
-            domain=self.domain,
-            description=self.description,
-            operations=self.operations,
-            embedding=self.embedding,
-            tractability=self.tractability,
-            generality=self.generality,
-            related_metaphors=self.related_metaphors,
-            usage_count=new_count,
-            success_rate=new_rate,
+            examples=self.examples,
+            embedding=embedding,
         )
 
 
 # =============================================================================
-# Projection and Distortion
+# Projection Types
 # =============================================================================
 
 
 @dataclass(frozen=True)
 class ConceptMapping:
-    """A mapping from source concept to target concept."""
+    """A mapping between a problem concept and a metaphor concept."""
 
-    source_concept: str
-    target_concept: str
-    confidence: float = 0.5
-    notes: str = ""
+    source: str
+    target: str
+    confidence: float
+    rationale: str = ""
 
 
 @dataclass(frozen=True)
 class Projection:
-    """
-    The result of projecting a Novel problem into a Metaphor space.
+    """A problem mapped into metaphor terms."""
 
-    This is Φ(P) in the spec: the problem expressed in metaphor terms.
-    """
+    problem: Problem
+    metaphor: Metaphor
+    mappings: tuple[ConceptMapping, ...]
+    abstraction: float  # 0.0 (concrete) to 1.0 (abstract)
+    gaps: tuple[str, ...] = ()
+    confidence: float = 0.5
+    mapped_description: str = ""
 
-    # Source and target
-    source: Novel
-    target: Metaphor
+    @property
+    def coverage(self) -> float:
+        """What fraction of the problem was mapped? (0.0 to 1.0)"""
+        if not self.mappings:
+            return 0.0
+        total_concepts = len(self.mappings) + len(self.gaps)
+        return len(self.mappings) / total_concepts if total_concepts > 0 else 0.0
 
-    # The projected representation
-    projected_description: str
-    mapped_concepts: dict[str, str]  # source concept -> metaphor concept
-    applicable_operations: tuple[str, ...] = ()  # Which operations apply
 
-    # Quality metrics
-    confidence: float = 0.5  # How confident in this projection
-    coverage: float = 0.5  # What fraction of problem is captured
-
-    # Distortion tracking
-    projection_timestamp: datetime = field(default_factory=datetime.now)
+# =============================================================================
+# Challenge Types
+# =============================================================================
 
 
 @dataclass(frozen=True)
-class Distortion:
-    """
-    The semantic distortion from a metaphor transformation.
+class ChallengeResult:
+    """Result of stress-testing a projection."""
 
-    Δ = |P_input - Φ⁻¹(Φ(P_input))|
-
-    Lower distortion = better metaphor fit.
-    """
-
-    # The metric
-    delta: float  # 0.0 = lossless, 1.0 = complete information loss
-
-    # Human-readable details
-    details: str = ""
-
-    # Breakdown by aspect
-    structural_loss: float = 0.0  # Loss of structural information
-    semantic_loss: float = 0.0  # Loss of meaning
-    contextual_loss: float = 0.0  # Loss of context
-
-    # What was lost
-    lost_concepts: tuple[str, ...] = ()
-    lost_constraints: tuple[str, ...] = ()
-
-    # What was distorted
-    distorted_mappings: dict[str, str] = field(
-        default_factory=dict
-    )  # original -> distorted
+    survives: bool
+    challenges_passed: int
+    challenges_total: int
+    counterexamples: tuple[str, ...] = ()
+    caveats: tuple[str, ...] = ()
 
     @property
-    def is_acceptable(self) -> bool:
-        """Is this distortion within acceptable bounds?"""
-        return self.delta < 0.5
-
-    @property
-    def is_excellent(self) -> bool:
-        """Is this distortion excellent?"""
-        return self.delta < 0.2
+    def robustness(self) -> float:
+        """How robust is this projection? (0.0 to 1.0)"""
+        if self.challenges_total == 0:
+            return 0.5  # No testing = uncertain
+        return self.challenges_passed / self.challenges_total
 
 
 # =============================================================================
@@ -304,252 +168,217 @@ class Distortion:
 
 @dataclass(frozen=True)
 class MetaphorSolution:
-    """
-    A solution found within the metaphor space.
+    """Solution derived within metaphor space."""
 
-    This is Σ(Φ(P)) - the result of solving in the metaphor space,
-    before reification back to the original problem space.
-    """
-
-    # Context
     projection: Projection
-    operations_applied: tuple[str, ...]  # Which metaphor operations were used
-
-    # The solution (in metaphor terms)
-    intermediate_results: tuple[str, ...] = ()  # Results from each operation
-    final_state: str = ""  # Final state in metaphor terms
-    solution_description: str = ""  # Human-readable description
-    solution_data: dict[str, Any] = field(default_factory=dict)
-
-    # Quality
-    confidence: float = 0.5
-    completeness: float = 0.5  # Does it fully address the problem?
+    reasoning: str
+    operations_applied: tuple[str, ...]
+    conclusion: str
 
 
 @dataclass(frozen=True)
-class ReifiedSolution:
-    """
-    The final solution, reified back to the original problem space.
+class Distortion:
+    """Measures information loss through transformation."""
 
-    This is Φ⁻¹(Σ(Φ(P))) - the complete transformation.
-    """
+    structural_loss: float  # Unmapped concepts / total (0.0 to 1.0)
+    round_trip_error: float  # How different is Phi^-1(Phi(P)) from P? (0.0 to 1.0)
+    prediction_failures: int  # Implications that didn't hold
 
-    # Source (required)
-    original_problem: Novel
+    # Weights for combining (can be tuned)
+    STRUCTURAL_WEIGHT: ClassVar[float] = 0.3
+    ROUND_TRIP_WEIGHT: ClassVar[float] = 0.4
+    PREDICTION_WEIGHT: ClassVar[float] = 0.3
+    PREDICTION_PENALTY: ClassVar[float] = 0.1  # Per failure
+
+    @property
+    def total(self) -> float:
+        """Weighted distortion score (0.0 to ~1.0)."""
+        prediction_score = min(1.0, self.prediction_failures * self.PREDICTION_PENALTY)
+        return (
+            self.structural_loss * self.STRUCTURAL_WEIGHT
+            + self.round_trip_error * self.ROUND_TRIP_WEIGHT
+            + prediction_score * self.PREDICTION_WEIGHT
+        )
+
+    @property
+    def acceptable(self) -> bool:
+        """Is distortion low enough to trust the solution?"""
+        return self.total < 0.5
+
+
+@dataclass(frozen=True)
+class Solution:
+    """Complete solution with translation and quality metrics."""
+
+    problem: Problem
     metaphor_solution: MetaphorSolution
-
-    # The reified solution (required)
-    solution_description: str
-
-    # Quality metrics (required)
+    translated_answer: str
+    specific_actions: tuple[str, ...]
     distortion: Distortion
-
-    # Optional fields with defaults
-    solution_data: dict[str, Any] = field(default_factory=dict)
-    overall_quality: float = 0.5
-
-    # Audit trail
-    transformation_chain: tuple[str, ...] = ()  # IDs of transformations applied
-    reification_timestamp: datetime = field(default_factory=datetime.now)
+    trace_id: str | None = None
 
     @property
-    def is_successful(self) -> bool:
-        """Did the transformation produce an acceptable solution?"""
-        return self.distortion.is_acceptable and self.overall_quality > 0.5
+    def success(self) -> bool:
+        """Is this solution good enough?"""
+        return self.distortion.acceptable
 
 
 # =============================================================================
-# 4-Axis Tensor Components
+# Search State Types
 # =============================================================================
 
 
-class AxisType(Enum):
-    """The four axes of the Psi-gent tensor."""
+@dataclass
+class SearchState:
+    """Mutable state for the search loop."""
 
-    Z_MHC = "z"  # MHC - Abstraction altitude
-    X_JUNGIAN = "x"  # Parallax - Shadow rotation
-    Y_LACANIAN = "y"  # Topology - Knot integrity
-    T_AXIOLOGICAL = "t"  # Cost - Value exchange rates
+    problem: Problem
+    candidates_tried: list[str] = field(default_factory=list)  # Metaphor IDs
+    projections_attempted: list[Projection] = field(default_factory=list)
+    best_solution: Solution | None = None
+    best_distortion: float = float("inf")
+    backtrack_reasons: list[str] = field(default_factory=list)
+    iteration: int = 0
 
+    def record_attempt(
+        self, metaphor_id: str, projection: Projection | None, result: str
+    ) -> None:
+        """Record an attempt for learning."""
+        self.candidates_tried.append(metaphor_id)
+        if projection:
+            self.projections_attempted.append(projection)
+        self.iteration += 1
 
-# Alias for backward compatibility
-AxisType.Z_RESOLUTION = AxisType.Z_MHC
+    def record_backtrack(self, stage: str, reason: str) -> None:
+        """Record a backtrack event."""
+        self.backtrack_reasons.append(f"{stage}: {reason}")
+        self.iteration += 1
+
+    def update_best(self, solution: Solution) -> None:
+        """Update best solution if this one is better."""
+        if solution.distortion.total < self.best_distortion:
+            self.best_solution = solution
+            self.best_distortion = solution.distortion.total
 
 
 @dataclass(frozen=True)
-class AxisPosition:
-    """Position along a single axis."""
+class EngineConfig:
+    """Configuration for the Morphic Engine."""
 
-    axis: AxisType
-    value: float  # Normalized 0.0 to 1.0
-    label: str = ""
-
-
-@dataclass(frozen=True)
-class TensorPosition:
-    """
-    Position in the 4-axis Psi-gent tensor.
-
-    Instead of a linear pipeline, Psi-gents operate as a coordinate system.
-    """
-
-    z_altitude: float  # Resolution (MHC level normalized)
-    x_rotation: float  # Jungian parallax
-    y_topology: float  # Lacanian topology
-    t_axiological: float  # Axiological cost
-
-    # Legacy aliases
-    @property
-    def z(self) -> float:
-        return self.z_altitude
-
-    @property
-    def x(self) -> float:
-        return self.x_rotation
-
-    @property
-    def y(self) -> float:
-        return self.y_topology
-
-    @property
-    def t(self) -> float:
-        return self.t_axiological
-
-    @property
-    def overall(self) -> float:
-        """Overall position score (average of all axes)."""
-        return (
-            self.z_altitude + self.x_rotation + self.y_topology + self.t_axiological
-        ) / 4
-
-    @classmethod
-    def origin(cls) -> TensorPosition:
-        """The origin point (default position)."""
-        return cls(z_altitude=0.5, x_rotation=0.5, y_topology=0.5, t_axiological=0.5)
-
-    def distance_to(self, other: TensorPosition) -> float:
-        """Euclidean distance to another position."""
-        return (
-            (self.z_altitude - other.z_altitude) ** 2
-            + (self.x_rotation - other.x_rotation) ** 2
-            + (self.y_topology - other.y_topology) ** 2
-            + (self.t_axiological - other.t_axiological) ** 2
-        ) ** 0.5
+    max_candidates: int = 5
+    max_iterations: int = 10
+    min_abstraction: float = 0.0
+    max_abstraction: float = 1.0
+    abstraction_step: float = 0.2
+    distortion_threshold: float = 0.5
+    enable_learning: bool = True
+    enable_tracing: bool = True
 
 
 # =============================================================================
-# Stability and Validation
+# Learning Types
 # =============================================================================
 
 
-class StabilityStatus(Enum):
-    """Result of stability/validation checks."""
+class Outcome(Enum):
+    """Possible outcomes for learning."""
 
-    STABLE = "stable"
-    UNSTABLE = "unstable"
-    FRAGILE = "fragile"  # Passes but barely
-    UNKNOWN = "unknown"
-
-
-@dataclass(frozen=True)
-class ValidationResult:
-    """Result from an axis validator."""
-
-    axis: AxisType
-    status: StabilityStatus
-    score: float  # 0.0 = failed, 1.0 = perfect
-    message: str = ""
-    details: dict[str, Any] = field(default_factory=dict)
-
-    @property
-    def passed(self) -> bool:
-        return self.status in (StabilityStatus.STABLE, StabilityStatus.FRAGILE)
+    SUCCESS = "success"
+    PARTIAL = "partial"
+    CHALLENGE_FAILED = "challenge_failed"
+    PROJECTION_FAILED = "projection_failed"
+    SOLVE_FAILED = "solve_failed"
+    VERIFY_FAILED = "verify_failed"
 
 
 @dataclass(frozen=True)
-class TensorValidation:
-    """Combined validation across all axes."""
+class ProblemFeatures:
+    """Features extracted from a problem for learning."""
 
-    # Full API for PsychopompAgent
-    position: TensorPosition | None = None
-    z_result: ValidationResult | None = None
-    x_result: ValidationResult | None = None
-    y_result: ValidationResult | None = None
-    t_result: ValidationResult | None = None
-    overall_status: StabilityStatus = StabilityStatus.UNKNOWN
-    overall_confidence: float = 0.0
+    domain: str
+    domain_cluster: int
+    complexity: float
+    constraint_count: int
+    description_length: int
+    has_embedding: bool
+    embedding_cluster: int | None = None
 
-    # Legacy API
-    results: tuple[ValidationResult, ...] = ()
-    overall_score: float = 0.0
 
-    def __post_init__(self):
-        # If individual results are set, compute the tuple
-        if self.z_result or self.x_result or self.y_result or self.t_result:
-            results_list = []
-            for r in [self.z_result, self.x_result, self.y_result, self.t_result]:
-                if r is not None:
-                    results_list.append(r)
-            object.__setattr__(self, "results", tuple(results_list))
-            object.__setattr__(self, "overall_score", self.overall_confidence)
+@dataclass(frozen=True)
+class Feedback:
+    """Feedback for the learning system."""
 
-    @classmethod
-    def from_results(cls, results: list[ValidationResult]) -> TensorValidation:
-        """Create from individual axis results."""
-        if not results:
-            return cls(
-                results=(), overall_status=StabilityStatus.UNKNOWN, overall_score=0.0
-            )
-
-        # Overall score is product (all must pass)
-        scores = [r.score for r in results]
-        overall = 1.0
-        for s in scores:
-            overall *= s
-
-        # Overall status is worst status
-        statuses = [r.status for r in results]
-        if StabilityStatus.UNSTABLE in statuses:
-            status = StabilityStatus.UNSTABLE
-        elif StabilityStatus.FRAGILE in statuses:
-            status = StabilityStatus.FRAGILE
-        elif all(s == StabilityStatus.STABLE for s in statuses):
-            status = StabilityStatus.STABLE
-        else:
-            status = StabilityStatus.UNKNOWN
-
-        return cls(results=tuple(results), overall_status=status, overall_score=overall)
-
-    @property
-    def passed(self) -> bool:
-        return self.overall_status in (StabilityStatus.STABLE, StabilityStatus.FRAGILE)
+    problem_id: str
+    problem_features: ProblemFeatures
+    metaphor_id: str
+    abstraction: float
+    outcome: Outcome
+    distortion: float | None = None
+    time_to_solve_ms: int = 0
 
 
 # =============================================================================
-# Anti-Patterns
+# Serialization
 # =============================================================================
 
 
-class AntiPattern(Enum):
-    """
-    Known anti-patterns in metaphor transformation.
+def to_dict(obj: Any) -> Any:
+    """Convert dataclass to dict recursively."""
+    if hasattr(obj, "__dataclass_fields__"):
+        return {k: to_dict(v) for k, v in asdict(obj).items()}
+    elif isinstance(obj, (list, tuple)):
+        return [to_dict(item) for item in obj]
+    elif isinstance(obj, Enum):
+        return obj.value
+    elif isinstance(obj, dict):
+        return {k: to_dict(v) for k, v in obj.items()}
+    else:
+        return obj
 
-    These should be detected and avoided.
-    """
 
-    PROCRUSTEAN_BED = "procrustean"  # Force problem into ill-fitting metaphor
-    MAP_TERRITORY_CONFUSION = "map_territory"  # Believe metaphor IS reality
-    RESOLUTION_MISMATCH = "resolution"  # Level 12 problem with Level 9 tools
-    SHADOW_BLINDNESS = "shadow"  # Accept Ego solution ignoring Shadow
-    VALUE_BLINDNESS = "value"  # Ignore ethical cost of translation
+def to_json(obj: Any) -> str:
+    """Serialize to JSON."""
+    return json.dumps(to_dict(obj), indent=2)
 
 
-@dataclass(frozen=True)
-class AntiPatternDetection:
-    """Result of anti-pattern detection."""
+# =============================================================================
+# Type Invariants (for testing)
+# =============================================================================
 
-    pattern: AntiPattern
-    detected: bool
-    confidence: float
-    evidence: str = ""
-    mitigation: str = ""
+
+def validate_distortion(d: Distortion) -> list[str]:
+    """Validate distortion invariants."""
+    errors = []
+    if not 0.0 <= d.structural_loss <= 1.0:
+        errors.append(f"structural_loss out of bounds: {d.structural_loss}")
+    if not 0.0 <= d.round_trip_error <= 1.0:
+        errors.append(f"round_trip_error out of bounds: {d.round_trip_error}")
+    if d.prediction_failures < 0:
+        errors.append(f"prediction_failures negative: {d.prediction_failures}")
+    return errors
+
+
+def validate_projection(p: Projection) -> list[str]:
+    """Validate projection invariants."""
+    errors = []
+    if not 0.0 <= p.abstraction <= 1.0:
+        errors.append(f"abstraction out of bounds: {p.abstraction}")
+    if not 0.0 <= p.confidence <= 1.0:
+        errors.append(f"confidence out of bounds: {p.confidence}")
+    for mapping in p.mappings:
+        if not 0.0 <= mapping.confidence <= 1.0:
+            errors.append(f"mapping confidence out of bounds: {mapping.confidence}")
+    return errors
+
+
+def validate_metaphor(m: Metaphor) -> list[str]:
+    """Validate metaphor invariants."""
+    errors = []
+    if not m.operations and m.id != "null_metaphor":
+        errors.append("metaphor has no operations")
+    if len(m.description) < 10:
+        errors.append("description too short")
+    for op in m.operations:
+        if not op.effects:
+            errors.append(f"operation '{op.name}' has no effects")
+    return errors
