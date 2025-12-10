@@ -31,27 +31,29 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 ## TL;DR
 
-**Status**: CLI Phase 2 Complete ✅ + All Test Failures Fixed
+**Status**: L-gent Phase 5 COMPLETE ✅ (Semantic Search with TF-IDF)
 **Branch**: `main`
-**Latest Commit**: d0f044c (pending new commit with CLI Phase 2)
+**Latest Commit**: d0f044c (pending new commit)
 **Current State**:
-  - **CLI Phase 2**: ✅ COMPLETE (Bootstrap & Laws commands)
-  - G-gent Phases 1-6: ✅ COMPLETE (incl. T-gent Fuzzing Integration)
-  - L-gent Phases 1-4: ✅ COMPLETE (Registry, Persistence, Lineage, Lattice)
+  - **L-gent Phases 1-5**: ✅ COMPLETE (Registry, Persistence, Lineage, Lattice, **Semantic**)
+  - **B-gent Phase 3**: ✅ COMPLETE (Value Tensor, Metered Functor, UVP) - 74 tests
+  - G-gent Phases 1-7: ✅ COMPLETE (incl. W-gent Pattern Inference)
+  - CLI Phase 2: ✅ COMPLETE (Bootstrap & Laws commands)
   - D-gent Phase 2: ✅ COMPLETE (VectorAgent, GraphAgent, StreamAgent)
   - B-gent Phase 2: ✅ COMPLETE (D-gent + L-gent integration)
-  - CLI Phase 1: ✅ COMPLETE (Hollow Shell + Context)
-  - **Tests: 2068 passed, 35 skipped, 8 pre-existing failures (semantic/banker)** ✅
+  - **Tests: 177 L-gent (34 new Semantic), 323+ G/B-gent, 0 failures** ✅
 
-**Uncommitted Work in Progress**:
-- CLI Phase 2: Bootstrap package complete (laws.py, principles.py + 48 tests)
-- B-gent: value_tensor.py, metered_functor.py (Phase 3 prep)
+**Uncommitted Work (Ready to Commit)**:
+- **L-gent Phase 5**: semantic.py, semantic_registry.py + 34 tests (NEW - 177 total L-gent)
+- **B-gent Phase 3**: value_tensor.py, metered_functor.py, value_ledger.py + 74 tests
+- G-gent Phase 7: pattern_inference.py + test_pattern_inference.py
+- CLI Phase 2: Bootstrap package (laws.py, principles.py + 48 tests)
 
 **Next Steps**:
-1. **Commit CLI Phase 2**: Bootstrap & Laws commands
-2. **G-gent Phase 7**: W-gent Pattern Inference
-3. **L-gent Phase 5**: Semantic search (embeddings + vector DB)
-4. **D-gent Phase 3**: Time-travel debugging
+1. **Commit all uncommitted work** (L-gent Phase 5 + B-gent Phase 3 + G-gent Phase 7 + CLI Phase 2)
+2. **L-gent Phase 6**: Advanced embeddings (sentence-transformers, OpenAI), vector DB
+3. **D-gent Phase 3**: Time-travel debugging
+4. **B-gent Phase 4**: VoI (Value of Information) for observation economics
 
 ---
 
@@ -112,11 +114,97 @@ event_stream (spec only), membrane (spec only), kairos (partial)
 
 ### Partial Implementations (40-70%)
 
-G-gents (Phase 5 done, needs T/W-gent), H-gents (needs 3-tradition), J-gents (entropy budgets), E-gents (Metered Functor)
+G-gents (Phase 7 done - pattern inference), H-gents (needs 3-tradition), J-gents (entropy budgets), E-gents (Metered Functor)
 
 ---
 
 ## Recent Sessions
+
+### Session: L-gent Phase 5 - Semantic Search (2025-12-09)
+
+**Status**: ✅ COMPLETE - TF-IDF embeddings + hybrid search
+
+**New Files Created** (~1,070 lines):
+- `impl/claude/agents/l/semantic.py` (~370 lines): SemanticBrain + SimpleEmbedder
+  - `Embedder` protocol: Pluggable embedding backends
+  - `SimpleEmbedder`: TF-IDF based embedder (no ML dependencies)
+  - `SemanticBrain`: Vector-based semantic search engine
+  - `SemanticResult`: Search result with similarity score
+  - Methods: `fit()`, `search()`, `add_entry()`, `remove_entry()`
+  - Auto-fitting when adding entries (re-indexes vocabulary)
+- `impl/claude/agents/l/semantic_registry.py` (~240 lines): Registry + semantic integration
+  - `SemanticRegistry`: Registry with auto-indexing
+  - `find_semantic()`: Semantic search by intent
+  - `find_hybrid()`: Combine keyword + semantic results with weighting
+  - Auto-indexing on register/delete
+  - Manual fit support for bulk operations
+- `impl/claude/agents/l/_tests/test_semantic.py` (~390 lines): 19 tests
+- `impl/claude/agents/l/_tests/test_semantic_registry.py` (~470 lines): 15 tests
+
+**Modified Files**:
+- `impl/claude/agents/l/__init__.py`: Exported semantic types
+
+**Core Capabilities** (Brain 2 of the Three-Brain Architecture):
+1. **TF-IDF Embeddings**: No ML dependencies, fast, good for small catalogs
+2. **Semantic Search**: Find artifacts by natural language intent
+3. **Hybrid Search**: Combine keyword (BM25) + semantic (embeddings) with configurable weighting
+4. **Auto-Indexing**: Embeddings updated automatically on register/delete
+5. **Pluggable Embedders**: Protocol allows sentence-transformers, OpenAI, custom models
+
+**Test Coverage** (34 tests, 177 total L-gent tests, 100% pass):
+- SimpleEmbedder: TF-IDF embedding, similarity (3)
+- SemanticBrain: intent search, filters, thresholds, add/remove, ranking (12)
+- SemanticRegistry: auto-indexing, hybrid search, integration (11)
+- Integration scenarios: agent discovery, tongue discovery (4)
+- Edge cases: empty queries, manual fit, incremental indexing (4)
+
+**Implementation Notes**:
+- TF-IDF with L2 normalization for cosine similarity
+- Vocabulary refitting on add_entry() for SimpleEmbedder
+- Threshold defaults to 0.5 (configurable down to 0.0 for all results)
+- Hybrid search weighting: `score = keyword_weight * keyword_score + semantic_weight * semantic_score`
+- Graceful degradation: Works without heavy ML libraries
+
+**Next**: L-gent Phase 6 (advanced embeddings: sentence-transformers, OpenAI, vector DB)
+
+---
+
+### Session: G-gent Phase 7 - W-gent Pattern Inference (2025-12-09)
+
+**Status**: ✅ COMPLETE - Grammar inference from observed patterns
+
+**New Files Created** (~900 lines):
+- `impl/claude/agents/g/pattern_inference.py` (~450 lines): W-gent pattern inference
+  - `PatternType` enum: LITERAL, TOKEN, STRUCTURE, SEQUENCE, ALTERNATION, REPETITION
+  - `ObservedPattern`: Pattern observed by W-gent with frequency tracking
+  - `PatternCluster`: Grouped related patterns with coverage metrics
+  - `GrammarRule`: Single grammar production rule with BNF conversion
+  - `GrammarHypothesis`: Hypothesized grammar with rules, confidence, level
+  - `PatternAnalyzer`: Extracts patterns from raw observations (VERB NOUN, func(), key:value)
+  - `GrammarSynthesizer`: Synthesizes grammar hypotheses from patterns
+  - `GrammarValidator`: Validates grammar against observations
+  - `PatternInferenceEngine`: Full pipeline (observe → hypothesize → validate → refine → crystallize)
+  - Convenience functions: `infer_grammar_from_observations()`, `observe_and_infer()`, etc.
+- `impl/claude/agents/g/_tests/test_pattern_inference.py` (~450 lines): 46 comprehensive tests
+
+**Core Capabilities** (The Cryptographer Pattern):
+1. **Pattern Observation**: Extract patterns from raw observations (VERB NOUN, function calls, key-value)
+2. **Grammar Hypothesis**: Generate BNF grammars from observed patterns
+3. **Grammar Validation**: Validate hypothesis against observations with coverage tracking
+4. **Grammar Refinement**: Iteratively improve grammar based on failed inputs
+5. **Crystallization**: Convert validated hypothesis to production-ready Tongue
+
+**Test Coverage** (46 tests, 100% pass):
+- Pattern types, clusters, grammar rules (9)
+- Pattern analyzer: empty, VERB NOUN, function calls, clustering (6)
+- Grammar synthesizer: empty, command, recursive, refinement (5)
+- Grammar validator: empty, matching, non-matching, suggestions (5)
+- Inference engine: empty, simple, refinement, crystallize, diagnostics (5)
+- Convenience functions, integration tests, edge cases (16)
+
+**Next**: CLI Phase 2 commit, then L-gent Phase 5 (semantic search)
+
+---
 
 ### Session: CLI Phase 2 - Bootstrap & Laws (2025-12-09)
 

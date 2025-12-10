@@ -74,6 +74,27 @@ from agents.g.fuzzing_integration import (
     generate_constraint_proofs,
 )
 
+from agents.g.pattern_inference import (
+    # Types
+    PatternType,
+    ObservedPattern,
+    PatternCluster,
+    GrammarRule,
+    GrammarHypothesis,
+    ValidationResult,
+    InferenceReport,
+    # Classes
+    PatternAnalyzer,
+    GrammarSynthesizer,
+    GrammarValidator,
+    PatternInferenceEngine,
+    # Convenience functions
+    infer_grammar_from_observations,
+    observe_and_infer,
+    extract_patterns,
+    hypothesize_grammar,
+)
+
 __all__ = [
     # Core types
     "Tongue",
@@ -125,4 +146,20 @@ __all__ = [
     "property_test_tongue",
     "validate_tongue_with_t_gent",
     "generate_constraint_proofs",
+    # W-gent integration (Phase 7)
+    "PatternType",
+    "ObservedPattern",
+    "PatternCluster",
+    "GrammarRule",
+    "GrammarHypothesis",
+    "ValidationResult",
+    "InferenceReport",
+    "PatternAnalyzer",
+    "GrammarSynthesizer",
+    "GrammarValidator",
+    "PatternInferenceEngine",
+    "infer_grammar_from_observations",
+    "observe_and_infer",
+    "extract_patterns",
+    "hypothesize_grammar",
 ]

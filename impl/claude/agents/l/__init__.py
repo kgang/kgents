@@ -25,8 +25,15 @@ Phase 4 Implementation (Lattice Layer):
 - Composition verification (can_compose, verify_pipeline)
 - Path finding (find_path, suggest_composition)
 
+Phase 5 Implementation (Semantic Search):
+- SemanticBrain: Vector-based intent matching (TF-IDF embeddings)
+- SemanticRegistry: Registry + automatic semantic indexing
+- Hybrid search: Combine keyword + semantic results
+- Embedder protocol: Pluggable embedding backends
+
 Future Phases:
-- Semantic search (embeddings + vector DB)
+- Advanced embeddings (sentence-transformers, OpenAI)
+- Vector database integration (for large catalogs)
 """
 
 from .registry import Registry
@@ -65,6 +72,17 @@ from .lattice import (
     CompositionSuggestion,
     create_lattice,
 )
+from .semantic import (
+    SemanticBrain,
+    SemanticResult,
+    Embedder,
+    SimpleEmbedder,
+    create_semantic_brain,
+)
+from .semantic_registry import (
+    SemanticRegistry,
+    create_semantic_registry,
+)
 
 __all__ = [
     # Core types
@@ -100,4 +118,12 @@ __all__ = [
     "PipelineVerification",
     "CompositionSuggestion",
     "create_lattice",
+    # Semantic (Phase 5)
+    "SemanticBrain",
+    "SemanticResult",
+    "Embedder",
+    "SimpleEmbedder",
+    "create_semantic_brain",
+    "SemanticRegistry",
+    "create_semantic_registry",
 ]
