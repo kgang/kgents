@@ -9,6 +9,9 @@ This module implements the "Hollow Shell" pattern from docs/cli-integration-plan
 
 The Hollow Shell is the membrane between intent and action.
 It must be fast enough to feel like no interface at all.
+
+Auto-bootstrap: On startup, the cortex is automatically initialized via
+LifecycleManager, enabling DB persistence and telemetry from the first command.
 """
 
 from __future__ import annotations
@@ -17,6 +20,10 @@ import importlib
 import sys
 from pathlib import Path
 from typing import Callable, Sequence
+
+# Global lifecycle manager (lazy-initialized)
+_lifecycle_manager = None
+_lifecycle_state = None
 
 # =============================================================================
 # Version & Constants
@@ -215,6 +222,70 @@ def print_suggestions(command: str) -> None:
 
 
 # =============================================================================
+# Lifecycle Management (Auto-Bootstrap)
+# =============================================================================
+
+
+async def _bootstrap_cortex(project_path: Path | None = None):
+    """
+    Bootstrap the cortex asynchronously.
+
+    This initializes the LifecycleManager and storage providers,
+    enabling database persistence for all subsequent commands.
+
+    Called automatically by main() unless --no-bootstrap is specified.
+    """
+    global _lifecycle_manager, _lifecycle_state
+
+    if _lifecycle_manager is not None:
+        return _lifecycle_state
+
+    try:
+        from protocols.cli.instance_db.lifecycle import LifecycleManager
+
+        _lifecycle_manager = LifecycleManager()
+        _lifecycle_state = await _lifecycle_manager.bootstrap(project_path)
+
+        return _lifecycle_state
+    except Exception as e:
+        # Bootstrap failure shouldn't crash the CLI
+        # Commands should work in degraded (DB-less) mode
+        print(f"\033[33m[kgents]\033[0m Bootstrap warning: {e}", file=sys.stderr)
+        return None
+
+
+async def _shutdown_cortex():
+    """Gracefully shutdown the cortex."""
+    global _lifecycle_manager, _lifecycle_state
+
+    if _lifecycle_manager is not None:
+        await _lifecycle_manager.shutdown()
+        _lifecycle_manager = None
+        _lifecycle_state = None
+
+
+def get_lifecycle_state():
+    """
+    Get the current lifecycle state.
+
+    Returns None if bootstrap hasn't been called or failed.
+    Handlers can use this to access storage providers.
+    """
+    return _lifecycle_state
+
+
+def get_storage_provider():
+    """
+    Get the storage provider from the lifecycle state.
+
+    Returns None if not bootstrapped or in DB-less mode.
+    """
+    if _lifecycle_state is None:
+        return None
+    return _lifecycle_state.storage_provider
+
+
+# =============================================================================
 # Context System (.kgents directory)
 # =============================================================================
 
@@ -289,6 +360,7 @@ def parse_global_flags(args: list[str]) -> tuple[dict, list[str]]:
         "persona": "minimal",
         "explain": False,
         "no_metrics": False,
+        "no_bootstrap": False,
     }
     remaining = []
     skip_next = False
@@ -306,6 +378,8 @@ def parse_global_flags(args: list[str]) -> tuple[dict, list[str]]:
             flags["explain"] = True
         elif arg == "--no-metrics":
             flags["no_metrics"] = True
+        elif arg == "--no-bootstrap":
+            flags["no_bootstrap"] = True
         elif arg.startswith("--format="):
             flags["format"] = arg.split("=", 1)[1]
         elif arg == "--format" and i + 1 < len(args):
@@ -331,19 +405,59 @@ def parse_global_flags(args: list[str]) -> tuple[dict, list[str]]:
 # Main Entry Point
 # =============================================================================
 
+# Commands that don't need bootstrap (fast path)
+NO_BOOTSTRAP_COMMANDS = {
+    "help",
+    "--help",
+    "-h",
+    "--version",
+}
+
+
+def _sync_bootstrap(project_path: Path | None = None):
+    """
+    Bootstrap the cortex synchronously.
+
+    Uses asyncio.run() to run the async bootstrap in a fresh event loop.
+    This must be called BEFORE any handler that might create its own event loop.
+    """
+    import asyncio
+
+    try:
+        return asyncio.run(_bootstrap_cortex(project_path))
+    except Exception as e:
+        print(f"\033[33m[kgents]\033[0m Bootstrap warning: {e}", file=sys.stderr)
+        return None
+
+
+def _sync_shutdown():
+    """
+    Shutdown the cortex synchronously.
+
+    Uses asyncio.run() to run the async shutdown.
+    """
+    import asyncio
+
+    try:
+        asyncio.run(_shutdown_cortex())
+    except Exception:
+        pass  # Best effort
+
 
 def main(argv: Sequence[str] | None = None) -> int:
     """
     The Hollow Shell entry point.
 
     Fast path:
-    - --help: print help and exit (no imports)
-    - --version: print version and exit (no imports)
+    - --help: print help and exit (no imports, no bootstrap)
+    - --version: print version and exit (no imports, no bootstrap)
 
     Normal path:
+    - Auto-bootstrap cortex (enables DB persistence)
     - Parse command from first arg
     - Resolve to handler (lazy import)
     - Execute handler with remaining args
+    - Graceful shutdown
     """
     if argv is None:
         argv = sys.argv[1:]
@@ -353,12 +467,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     # Parse global flags (fast, no imports)
     flags, remaining = parse_global_flags(args)
 
-    # Fast path: --help
+    # Fast path: --help (no bootstrap)
     if flags["help"] and not remaining:
         print(HELP_TEXT)
         return 0
 
-    # Fast path: --version
+    # Fast path: --version (no bootstrap)
     if flags["version"]:
         print(f"kgents {__version__}")
         return 0
@@ -372,12 +486,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     command = remaining[0]
     command_args = remaining[1:]
 
-    # Check for command-level help
+    # Check for command-level help (no bootstrap needed)
     if flags["help"] or "--help" in command_args or "-h" in command_args:
-        # Delegate to command handler for its own help
         handler = resolve_command(command)
         if handler:
-            # Filter out help flags, let handler show its help
             filtered_args = [a for a in command_args if a not in ("--help", "-h")]
             return handler(["--help"] + filtered_args)
         else:
@@ -391,9 +503,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         print_suggestions(command)
         return 1
 
-    # Build context from .kgents/ and flags
-    # This is passed to handler via environment or args
-    # (Implementation detail for handlers)
+    # Auto-bootstrap cortex (unless --no-bootstrap flag is set)
+    # This initializes DB persistence and telemetry
+    # Runs synchronously BEFORE handler to avoid nested event loop issues
+    if not flags.get("no_bootstrap"):
+        project_root = find_kgents_root()
+        _sync_bootstrap(project_root)
 
     # Execute handler
     try:
@@ -409,9 +524,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             verbose = "--verbose" in command_args or "-v" in command_args
             print(handle_exception(e, verbose=verbose))
         except ImportError:
-            # Fallback if errors module not available
             print(f"Error: {e}")
         return 1
+    finally:
+        # Graceful shutdown
+        _sync_shutdown()
 
 
 if __name__ == "__main__":
