@@ -1,209 +1,81 @@
-# Mirror Protocol: Organizational Introspection
+# The Mirror: Agent Composition for Dialectical Introspection
 
-**The dialectical engine for surfacing tensions between stated and actual.**
+**The Mirror is not a protocol. It is an agent composition pattern.**
 
-**Status:** Specification v1.0
-**Depends On:** H-gents, P-gents, W-gents, O-gents, J-gents
-**Implementation:** `impl/claude/protocols/mirror/`
-
----
-
-## Philosophy
-
-> "An organization cannot change what it cannot see."
-
-The Mirror Protocol is the **heart** of kgents—the system that enables organizations (or individuals) to see themselves clearly. It surfaces the gap between:
-
-- **What is stated** (principles, values, intentions)
-- **What is done** (patterns, behaviors, realities)
-
-This gap is not a bug to fix—it is the raw material for transformation. The Mirror holds this tension without judgment, waiting for the right moment (kairos) to surface it.
+**Status:** Specification v2.0
+**Supersedes:** Previous mirror.md (v1.0)
+**Philosophy:** The Mirror is a composition of P, W, H, O, J agents operating in dialectical synthesis.
 
 ---
 
-## The Tri-Lattice Model
+## Core Insight
 
-The Mirror operates on three interrelated graphs:
+The old spec described the Mirror as a complex protocol with tri-lattices, topological data analysis, persistent homology, and quantum dialectics. Beautiful philosophy. Zero production implementations.
+
+The new spec describes the Mirror as **what it actually is**: a composition of five existing agents:
 
 ```
-    𝒟 (Deontic Lattice)          𝒪 (Ontic Lattice)
-    "The Graph of Oughts"         "The Graph of Is"
-    ┌───────────────────┐         ┌───────────────────┐
-    │   ○ Principle A   │         │   ● Actor X       │
-    │  ╱ ╲              │         │  ╱ ╲              │
-    │ ○   ○ B     C     │         │ ●   ● Y     Z     │
-    │  ╲ ╱              │         │  ╲ ╱              │
-    │   ○ Derived D     │         │   ● Artifact W    │
-    └───────────────────┘         └───────────────────┘
-             │                              │
-             │         𝒯 (Tension Lattice)  │
-             │         "The Graph of Gap"   │
-             └──────────────┼───────────────┘
-                            │
-                    ┌───────────────────┐
-                    │  ≈≈≈ Tension 1    │
-                    │  ≈≈  Tension 2    │
-                    │  ≈   Tension 3    │
-                    └───────────────────┘
+Mirror = P >> W >> H >> O >> J
+
+Where:
+  P-gent: Extracts principles (thesis)
+  W-gent: Observes patterns (antithesis candidate)
+  H-gent: Detects tensions (dialectic)
+  O-gent: Reports findings
+  J-gent: Executes at kairos (timing)
 ```
 
-### 𝒟: The Deontic Lattice
-
-What the organization claims to value:
-- **Nodes**: Principles, values, stated intentions
-- **Edges**: Logical relationships (supports, contradicts, elaborates)
-- **Extracted by**: P-gents from knowledge bases
-
-### 𝒪: The Ontic Lattice
-
-What the organization actually does:
-- **Nodes**: Actors, artifacts, events
-- **Edges**: Interactions (creates, modifies, references)
-- **Observed by**: W-gents from event streams
-
-### 𝒯: The Tension Lattice
-
-Where stated and actual diverge:
-- **Nodes**: Detected tensions
-- **Edges**: Relationships between tensions (compounds, contradicts)
-- **Computed by**: H-gents via dialectical analysis
+This is not a simplification. It is a realization that the Mirror was always this composition—we were just describing it in unnecessarily complex terms.
 
 ---
 
-## Protocol Phases
+## The Five Agents
 
-### Phase 1: Minimal Mirror (Obsidian)
+### P-gent: The Principle Extractor
 
-**Goal**: The simplest system that demonstrates value.
-
-**Scope**:
-- Local Obsidian vault analysis
-- Structural pattern detection (link density, staleness, orphans)
-- Single most significant tension surfaced
-- CLI output with reflection prompt
-
-**Implementation**: `impl/claude/protocols/mirror/obsidian/`
-
-```bash
-kgents mirror observe ~/Documents/Vault
-```
-
-**Output**:
-```
-╭─────────────────────────────────────────────────────╮
-│                    Mirror Report                     │
-├─────────────────────────────────────────────────────┤
-│ Thesis: "I value connecting ideas"                  │
-│ Source: README.md, line 15                          │
-│                                                     │
-│ Antithesis: 60% of notes have no outgoing links    │
-│                                                     │
-│ Divergence: 0.60                                    │
-│                                                     │
-│ Reflection: Your stated commitment to connection   │
-│ doesn't match your linking behavior. Is this       │
-│ aspirational, or have you drifted from practice?   │
-╰─────────────────────────────────────────────────────╯
-```
-
-### Phase 2: Event Stream Abstraction
-
-**Goal**: Scale from static files to generic event streams.
-
-**Status**: Specification complete → Implementation next
-
-**Specification**: See [event_stream.md](event_stream.md) for full protocol definition
-
-**Core Components**:
-
-1. **EventStream Protocol** (J-gent integration)
-   - Reality classification: DETERMINISTIC / PROBABILISTIC / CHAOTIC
-   - Lazy iteration with entropy budget management
-   - Bounded vs unbounded stream detection
-   - Safety collapse to Ground for chaotic streams
-
-2. **Concrete Implementations**:
-   - `GitStream`: Commit history as temporal event source
-   - `ObsidianStream`: Vault changes over time (git-backed or filesystem)
-   - `FileSystemStream`: Directory watching with cycle detection
-
-3. **Semantic Momentum Tracking**:
-   - p⃗ = m · v⃗ (mass × velocity from Noether's theorem)
-   - Embedding drift detection over sliding windows
-   - Conservation violation → entropy leak detection
-   - Topic evolution tracking across time periods
-
-4. **Temporal Analysis**:
-   - `SlidingWindow` for overlapping time periods
-   - Drift detection via `TemporalWitness` (W-gent)
-   - Activity pattern comparison across windows
-   - Trend analysis (improving / stable / declining)
-
-**J-gents Integration**:
-- Stream processing uses J-gent reality classification before execution
-- `EntropyBudget` enforces recursion depth limits
-- Lazy promises defer computation until needed
-- Chaosmonger prevents unbounded stream processing
-
-**CLI Extensions**:
-```bash
-# Temporal observation with sliding windows
-kgents mirror observe ~/Vault --temporal --window=30d
-
-# Track semantic momentum of specific topic
-kgents mirror trace ~/Vault "authentication" --window=14d
-
-# Compare two time periods
-kgents mirror compare ~/Vault --period=30d --compare-with=90d
-
-# Detect entropy leaks (momentum violations)
-kgents mirror drift ~/Vault --threshold=0.15
-```
-
-**Implementation Path**:
-1. Create `protocols/mirror/streams/` module
-2. Implement `EventStream` protocol and base implementations
-3. Add `TemporalWitness` for drift detection
-4. Add `SemanticMomentumTracker` with embedding model
-5. Extend CLI with temporal commands
-6. Write integration tests with git fixture repositories
-
-### Phase 3: Kairos Controller
-
-**Goal**: Determine when to surface tensions.
-
-**Additions**:
-- Thermodynamic cost functions
-- Entropy budget management
-- Opportune moment detection
-- Interactive intervention prompts
-
-```bash
-kgents mirror watch ~/Vault --autonomous --budget=medium
-```
-
-### Phase 4: Autopoietic Loop
-
-**Goal**: Continuous self-alignment.
-
-**Additions**:
-- Sublation loop (synthesis → new thesis)
-- Integrity score tracking
-- Ergodicity measurement
-- Grand collapse safety mechanism
-
----
-
-## Core Types
-
-### From H-gents (Dialectical Types)
+Extracts what is stated:
+- Scans for explicit values, principles, stated intentions
+- Sources: README.md, principles/, config files, comments
+- Output: `list[Thesis]`
 
 ```python
-class TensionMode(Enum):
-    LOGICAL = "logical"        # Formal contradiction
-    EMPIRICAL = "empirical"    # Claim vs evidence
-    PRAGMATIC = "pragmatic"    # Contradiction in practice
-    TEMPORAL = "temporal"      # Drift over time
+@dataclass(frozen=True)
+class Thesis:
+    content: str           # "We value code quality"
+    source: str            # "README.md:15"
+    confidence: float      # 0.0-1.0
+```
+
+### W-gent: The Pattern Witness
+
+Observes what is done:
+- Detects structural patterns without judgment
+- Sources: git history, file structure, link density
+- Output: `list[Observation]`
+
+```python
+@dataclass(frozen=True)
+class Observation:
+    pattern: str           # "60% of notes have no outgoing links"
+    evidence: str          # Path or git hash
+    strength: float        # 0.0-1.0
+```
+
+### H-gent: The Tension Detector
+
+Finds where stated and done diverge:
+- Compares P-gent output to W-gent output
+- Classifies tension type
+- Output: `list[Tension]`
+
+```python
+@dataclass(frozen=True)
+class Tension:
+    thesis: Thesis
+    observation: Observation
+    divergence: float      # 0.0 (aligned) to 1.0 (contradictory)
+    tension_type: TensionType
+    interpretation: str
 
 class TensionType(Enum):
     BEHAVIORAL = "behavioral"      # Behavior needs adjustment
@@ -211,268 +83,241 @@ class TensionType(Enum):
     OUTDATED = "outdated"          # Principle no longer serves
     CONTEXTUAL = "contextual"      # Both right in contexts
     FUNDAMENTAL = "fundamental"    # Deep conflict
-
-@dataclass(frozen=True)
-class Tension:
-    thesis: Thesis
-    antithesis: Antithesis
-    divergence: float  # 0.0 = aligned, 1.0 = contradictory
-    mode: TensionMode
-    tension_type: TensionType | None
-    interpretation: str
-
-@dataclass(frozen=True)
-class Synthesis:
-    tension: Tension
-    resolution_type: str  # "preserve", "negate", "elevate"
-    proposal: str
-    intervention: InterventionType
-    cost: float
-
-@dataclass(frozen=True)
-class HoldTension:
-    tension: Tension
-    why_held: str
-    hold_reason: HoldReason
-    review_after: datetime | None
 ```
 
-### Mirror-Specific Types
+### O-gent: The Reporter
+
+Synthesizes findings for human consumption:
+- Ranks tensions by significance
+- Generates reflection prompts
+- Output: `MirrorReport`
 
 ```python
 @dataclass
 class MirrorReport:
-    thesis: Thesis
-    antithesis: Antithesis
-    divergence: float
-    reflection: str
+    primary_tension: Tension
     all_tensions: list[Tension]
-    integrity_score: float
-
-@dataclass
-class IntegrityScore:
-    overall: float  # 0.0-1.0
-    by_principle: dict[str, float]
-    trend: str  # "improving", "stable", "declining"
-    observation_window: timedelta
-
-@dataclass
-class Kairos:
-    moment_type: KairosType
-    tension: Tension
-    cost_at_this_moment: float
-    recommended_action: str
-
-class KairosType(Enum):
-    REFLECTION = "reflection"     # User-initiated review
-    LOW_LOAD = "low_load"        # Activity indicates availability
-    EXPLICIT_ASK = "explicit"    # User queried mirror
-    PATTERN_COMPLETION = "pattern"  # Behavior pattern completed
+    integrity_score: float  # 0.0-1.0
+    reflection: str         # Human-readable prompt
 ```
+
+### J-gent: The Executor (Kairos)
+
+Determines when to surface:
+- Monitors for opportune moments
+- Respects entropy budget
+- Output: `Intervention | None`
 
 ---
 
-## Protocol Operations
+## The Composition
 
-### Surface Operations (CLI)
+### Functional Mode (observe)
 
-| Operation | Mode | Description |
-|-----------|------|-------------|
-| `observe` | Functional | Single-pass analysis, returns report |
-| `reflect` | Functional | Generate synthesis options for tension |
-| `integrate` | Functional | Propose specific interventions |
-| `watch` | Autonomous | Continuous observation, kairos-timed |
-| `hold` | Functional | Mark tension as productive, preserve |
-| `status` | Functional | Show current integrity score |
-| `history` | Functional | Show tension history and resolutions |
-
-### Agent Coordination
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Mirror Protocol                       │
-│                                                         │
-│  ┌─────────┐    ┌─────────┐    ┌─────────┐             │
-│  │ P-gent  │───▶│ H-gent  │◀───│ W-gent  │             │
-│  │Extract  │    │Contradict│    │Observe  │             │
-│  └─────────┘    └────┬────┘    └─────────┘             │
-│       │              │              │                   │
-│       │         Tensions            │                   │
-│       │              │              │                   │
-│       │         ┌────▼────┐         │                   │
-│       │         │ O-gent  │         │                   │
-│       │         │ Report  │         │                   │
-│       │         └────┬────┘         │                   │
-│       │              │              │                   │
-│       │         ┌────▼────┐         │                   │
-│       │         │ J-gent  │         │                   │
-│       └────────▶│ Execute │◀────────┘                   │
-│                 └─────────┘                             │
-│                      │                                  │
-│              Interventions                              │
-└──────────────────────┼──────────────────────────────────┘
-                       ▼
-                   [Output]
-```
-
----
-
-## Semantic Foundations
-
-### Semantic Momentum
-
-Beyond structural patterns, the Mirror tracks **semantic momentum**:
-
-```
-p⃗ = m · v⃗
-
-Where:
-  m = influence weight (link frequency, reference count)
-  v⃗ = drift velocity (embedding shift over time)
-```
-
-If Δp⃗ exceeds threshold without principle evolution → **Entropy Leak**
-
-### The Quantum Dialectic
-
-Tensions exist in superposition until evidence collapses them:
-
-```
-|ψ⟩ = α|Hypocrisy⟩ + β|Aspiration⟩
-```
-
-The Mirror holds this superposition, waiting for:
-- Future events that entangle with one path
-- Explicit user query (forced collapse)
-- Kairos moment (low-cost collapse opportunity)
-
----
-
-## Intervention Types
-
-### By Intrusiveness
-
-| Level | Type | Description | Cost |
-|-------|------|-------------|------|
-| 0 | **Observe** | Silent observation, no output | None |
-| 1 | **Reflect** | Output when queried | Low |
-| 2 | **Remind** | Gentle commitment tracking | Medium |
-| 3 | **Suggest** | Propose principle-aligned actions | Medium |
-| 4 | **Draft** | Generate documentation | Medium-High |
-| 5 | **Ritual** | Create recurring processes | High |
-| 6 | **Audit** | Systematic principle review | Very High |
-
-### Intervention Selection
+Single-pass analysis:
 
 ```python
-def select_intervention(tension: Tension, budget: EntropyBudget) -> Intervention:
-    """
-    Select intervention based on tension severity and available budget.
-    """
-    if tension.divergence < 0.3:
-        return Intervention.OBSERVE  # Not significant
-    elif tension.divergence < 0.5:
-        return Intervention.REFLECT  # Surface when asked
-    elif tension.divergence < 0.7:
-        if budget.can_afford(0.1):
-            return Intervention.REMIND
-        return Intervention.REFLECT
-    else:
-        if budget.can_afford(0.3):
-            return Intervention.SUGGEST
-        return Intervention.REMIND
+async def mirror_observe(path: Path) -> MirrorReport:
+    """The Mirror composition in functional mode."""
+
+    # Extract principles (thesis)
+    theses = await p_gent.extract(path)
+
+    # Observe patterns (antithesis candidates)
+    observations = await w_gent.observe(path)
+
+    # Detect tensions (dialectic)
+    tensions = await h_gent.contradict(theses, observations)
+
+    # Generate report
+    return await o_gent.report(tensions)
 ```
+
+### Autonomous Mode (watch)
+
+Continuous observation with kairos timing:
+
+```python
+async def mirror_watch(path: Path, budget: Budget) -> AsyncIterator[Intervention]:
+    """The Mirror composition in autonomous mode."""
+
+    async for event in w_gent.stream(path):
+        # Check for new tensions
+        tensions = await h_gent.check(event)
+
+        for tension in tensions:
+            # Wait for opportune moment
+            kairos = await j_gent.await_kairos(tension, budget)
+            if kairos:
+                yield kairos.intervention
+```
+
+---
+
+## CLI Surface
+
+### Commands
+
+All commands are compositions of the five agents:
+
+```bash
+# Functional mode
+kgents mirror observe path/    # P >> W >> H >> O
+kgents mirror status           # O (cached state)
+kgents mirror reflect          # H >> synthesis options
+
+# Gestures
+kgents mirror hold <index>     # Mark tension as productive
+kgents mirror resolve <index>  # Acknowledge resolution
+
+# Autonomous mode
+kgents mirror watch path/      # P >> W >> H >> J (loop)
+```
+
+### Output
+
+Observe produces structured output:
+
+```
+--- Mirror Report ---
+
+Thesis: "We value connecting ideas"
+Source: README.md:15
+
+Antithesis: 60% of notes have no outgoing links
+
+Divergence: 0.60
+Type: BEHAVIORAL
+
+Reflection: Your stated commitment to connection doesn't
+match your linking behavior. Is this aspirational, or
+have you drifted from practice?
+
+--- Integrity: 0.82 | Tensions: 3 ---
+```
+
+---
+
+## Implementation
+
+### Phase 1: Structural Mirror (NOW)
+
+**Goal**: Working observe command with zero LLM tokens.
+
+**What works**:
+- P-gent: Regex extraction of principles from README, headers
+- W-gent: File structure analysis (link density, orphans, staleness)
+- H-gent: Heuristic matching (principle keywords vs structural patterns)
+- O-gent: Template-based report generation
+
+**Lines of code**: ~500
+**Token cost**: 0
+
+### Phase 2: Semantic Mirror (NEXT)
+
+**Goal**: Add embedding-based analysis.
+
+**What changes**:
+- P-gent: Uses small model to extract implicit principles
+- W-gent: Embedding similarity for pattern detection
+- H-gent: Semantic divergence calculation
+
+**Token cost**: Low (local embeddings) to Medium (API calls)
+
+### Phase 3: Temporal Mirror (LATER)
+
+**Goal**: Track drift over time.
+
+**What adds**:
+- Git history as event stream
+- Sliding window analysis
+- Semantic momentum tracking
 
 ---
 
 ## Configuration
 
+Minimal, concrete:
+
 ```yaml
 # .kgents/mirror.yaml
 
-# Observation settings
-observation:
-  sources:
-    - type: obsidian
-      path: ~/Documents/Vault
-    - type: git
-      path: ~/Projects/*
+sources:
+  - path: ~/Documents/Vault
+    type: obsidian
+  - path: ~/Projects
+    type: git
 
-# Detection sensitivity
 detection:
   min_divergence: 0.3
   max_tensions: 5
-  sensitivity: balanced  # conservative | balanced | sensitive
 
-# Intervention policy
-intervention:
-  mode: autonomous  # passive | prompted | autonomous
-  budget: medium
-  max_per_day: 3
-  sanctuary:
-    - ~/Private
-    - ~/Work/Confidential
+budget: low  # low | medium | high
 
-# Kairos settings
-kairos:
-  detect_patterns: true
-  low_load_threshold: 0.3
-  respect_focus_mode: true
+sanctuary:
+  - ~/Private
 ```
 
 ---
 
-## Anti-Patterns
+## Anti-Patterns Rejected
 
-### What the Mirror Must Not Do
+### What We Removed
 
-1. **Judge**: Surface tensions, don't declare verdicts
-2. **Impose**: Suggest synthesis, don't mandate changes
-3. **Surveil**: Observe patterns, don't track individuals
-4. **Nag**: Respect entropy budget, don't overwhelm
-5. **Psychoanalyze**: Examine systems, not psyches
-6. **Absolutize**: Acknowledge context, don't universalize
+1. **Tri-Lattice Model** → Simple thesis/observation/tension types
+2. **Topological Data Analysis** → Structural heuristics first
+3. **Persistent Homology** → Not MVP, maybe never
+4. **Quantum Dialectic** → Metaphor, not implementation
+5. **Semantic Momentum Physics** → Phase 3, not Phase 1
+6. **864 Lines of Philosophy** → 200 lines of concrete spec
 
-### The Authority Problem
+### The Placeholder Test
 
-> "Who decides when the Mirror is right and the organization is wrong?"
+Every operation in this spec has a concrete implementation:
 
-**Resolution**: The Mirror never decides. It only surfaces tensions. Humans decide resolutions. The system suggests synthesis options but cannot impose them.
+| Operation | Implementation | Token Cost |
+|-----------|----------------|------------|
+| `observe` | `p_gent >> w_gent >> h_gent >> o_gent` | 0 |
+| `status` | Read cached state | 0 |
+| `reflect` | H-gent synthesis heuristics | 0 |
+| `hold` | D-gent persistence | 0 |
+| `watch` | Async loop with kairos | 0 (structural) |
+
+---
+
+## Design Principles Applied
+
+| Principle | How Mirror Embodies It |
+|-----------|------------------------|
+| **Tasteful** | Five agents, one composition. No sprawl. |
+| **Curated** | Only tensions worth surfacing appear. |
+| **Ethical** | Surface tensions, never judge. Human decides. |
+| **Joy-Inducing** | Reflections are invitations, not accusations. |
+| **Composable** | Mirror IS a composition. Standard agents. |
+| **Heterarchical** | Can be invoked or can run autonomously. |
+| **Generative** | This 200-line spec generates 500 lines impl. |
 
 ---
 
 ## Success Metrics
 
-### For the Protocol
-
-| Metric | Target | Meaning |
-|--------|--------|---------|
-| Integrity Score | Trending up | System is becoming more aligned |
-| Tension Resolution Rate | >50% | Surfaced tensions lead to action |
-| False Positive Rate | <20% | Detected tensions are real |
-| Intervention Acceptance | >60% | Suggestions are helpful |
-| Trust Entropy | Stable | Users aren't annoyed |
-
-### For Organizations Using It
-
-| Metric | Meaning |
-|--------|---------|
-| Principle Adherence | Behavior matches stated values |
-| Aspiration Gap | Distance between ideal and practice |
-| Evolution Rate | How often principles are updated |
-| Shadow Integration | Acknowledged vs hidden contradictions |
+| Metric | Target |
+|--------|--------|
+| Working `observe` command | Yes (no placeholders) |
+| Token cost for basic use | 0 |
+| Time to first tension | <2s |
+| False positive rate | <30% |
+| Spec:Impl ratio | 1:2.5 |
 
 ---
 
 ## See Also
 
+- [cli.md](cli.md) — CLI as agent composition
 - [../h-gents/README.md](../h-gents/README.md) — Dialectical engine
-- [../h-gents/contradiction.md](../h-gents/contradiction.md) — Tension detection
-- [../h-gents/sublation.md](../h-gents/sublation.md) — Resolution strategies
-- [../h-gents/kairos.md](../h-gents/kairos.md) — Timing of interventions
-- [cli.md](cli.md) — CLI surface for mirror commands
-- [../../docs/mirror-protocol-implementation.md](../../docs/mirror-protocol-implementation.md) — Full implementation plan
+- [../p-gents/README.md](../p-gents/README.md) — Principle extraction
+- [../w-gents/README.md](../w-gents/README.md) — Pattern witness
 
 ---
 
-*"The Mirror Protocol is not a feature to ship. It is a practice to cultivate—first in ourselves, then in our tools, then in the organizations we serve."*
+*"The Mirror was always five agents in a trench coat. Now we admit it."*

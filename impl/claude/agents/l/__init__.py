@@ -45,6 +45,13 @@ Phase 7 Implementation (Three-Brain Hybrid):
 - VectorSemanticBrain: SemanticBrain with VectorBackend support
 - Adaptive weighting based on query type classification
 - Serendipity suggestions for unexpected discoveries
+
+Phase 8 Implementation (D-gent Vector DB Integration):
+- DgentVectorBackend: VectorBackend using D-gent's VectorAgent
+- VectorCatalog: Unified catalog + vector DB with sync
+- D-gent semantic features: curvature, voids, geodesics
+- Migration utilities: Move between backends
+- Tight L-gent + D-gent integration as per spec
 """
 
 from .registry import Registry
@@ -129,6 +136,24 @@ from .semantic_vector import (
     create_best_semantic_brain,
 )
 
+# Check for D-gent VectorAgent availability
+try:
+    import numpy as np
+    from agents.d.vector import NUMPY_AVAILABLE as DGENT_VECTOR_AVAILABLE
+except ImportError:
+    DGENT_VECTOR_AVAILABLE = False
+
+# D-gent Vector DB integration (Phase 8)
+if DGENT_VECTOR_AVAILABLE:
+    from .vector_db import (
+        DgentVectorBackend,
+        VectorCatalog,
+        VectorSyncState,
+        create_dgent_vector_backend,
+        create_vector_catalog,
+        migrate_to_dgent_backend,
+    )
+
 # Conditional imports for optional dependencies
 if SENTENCE_TRANSFORMERS_AVAILABLE:
     from .embedders import SentenceTransformerEmbedder
@@ -210,6 +235,8 @@ __all__ = [
     "VectorSemanticBrain",
     "create_vector_semantic_brain",
     "create_best_semantic_brain",
+    # D-gent Vector DB (Phase 8)
+    "DGENT_VECTOR_AVAILABLE",
 ]
 
 # Add conditional exports
@@ -221,3 +248,14 @@ if CHROMADB_AVAILABLE:
     __all__.append("ChromaDBBackend")
 if FAISS_AVAILABLE:
     __all__.append("FAISSBackend")
+if DGENT_VECTOR_AVAILABLE:
+    __all__.extend(
+        [
+            "DgentVectorBackend",
+            "VectorCatalog",
+            "VectorSyncState",
+            "create_dgent_vector_backend",
+            "create_vector_catalog",
+            "migrate_to_dgent_backend",
+        ]
+    )

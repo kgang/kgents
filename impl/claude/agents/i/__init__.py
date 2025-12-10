@@ -55,6 +55,20 @@ from .export import MarkdownExporter
 from .breath import BreathCycle, BreathManager
 from .observe import ObserveAction, GardenObserver
 
+# Forge View (composition mode)
+from .forge_view import (
+    Archetype,
+    ArchetypeLevel,
+    Pipeline,
+    PipelineSlot,
+    ForgeViewState,
+    ForgeViewRenderer,
+    ForgeViewKeyHandler,
+    DEFAULT_ARCHETYPES,
+    create_demo_forge_state,
+    render_forge_view_once,
+)
+
 # New stigmergic field types
 from .field import (
     Entity,
@@ -91,6 +105,17 @@ __all__ = [
     # W-gent Integration
     "ObserveAction",
     "GardenObserver",
+    # Forge View (composition mode)
+    "Archetype",
+    "ArchetypeLevel",
+    "Pipeline",
+    "PipelineSlot",
+    "ForgeViewState",
+    "ForgeViewRenderer",
+    "ForgeViewKeyHandler",
+    "DEFAULT_ARCHETYPES",
+    "create_demo_forge_state",
+    "render_forge_view_once",
     # Stigmergic Field (new)
     "Entity",
     "EntityType",

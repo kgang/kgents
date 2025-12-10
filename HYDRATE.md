@@ -18,24 +18,27 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 ## TL;DR
 
-**Status**: O-gent Phase 4 W-gent Integration COMPLETE ✅
+**Status**: L-gent Phase 8 (D-gent Vector DB) COMPLETE ✅
 **Branch**: `main`
-**Latest Commit**: `8f51bbc` feat(i-gent): Stigmergic Field + TUI Renderer (37 tests, ~1,900 lines)
+**Latest Commit**: `8f51bbc` feat(i-gent): Stigmergic Field + TUI Renderer
 
 **Current State**:
-- **O-gent Phase 4**: ✅ COMPLETE - W-gent integration (40 tests)
-- **I-gent Stigmergic Field**: ✅ COMPLETE - Full rewrite from first principles (69 tests)
-- **D-gent Phase 5**: ✅ COMMITTED - SQL/Redis backends (41 tests)
-- **O-gent Phase 3**: ✅ COMPLETE - Panopticon Integration (137 tests)
-- **B×G Phases 1-6**: ✅ COMPLETE (575 tests)
+- **L-gent Phase 8**: ✅ COMPLETE - D-gent Vector DB integration (23 tests)
+- **Protocol Specs v2.0**: ✅ COMPLETE - CLI and Mirror rewritten as agent compositions
+- **CLI Phase 7**: ✅ COMMITTED - TUI Dashboard (73 tests)
+- **I-gent Stigmergic Field**: ✅ COMMITTED - Field + TUI (69 tests)
+- **O-gent Phase 4**: ✅ STAGED - W-gent integration (40 tests)
 
 **Uncommitted**:
-- `impl/claude/agents/o/observable_panopticon.py` - W-gent integration (NEW)
-- `impl/claude/agents/o/_tests/test_observable_panopticon.py` - Tests (40 tests)
+- `impl/claude/agents/l/vector_db.py` - D-gent Vector DB integration
+- `impl/claude/agents/l/_tests/test_vector_db.py` - 23 tests
+- `spec/protocols/cli.md` - Rewritten: CLI as C-gent composing agents
+- `spec/protocols/mirror.md` - Rewritten: Mirror as P >> W >> H >> O >> J
+- CLI handlers: debug, igent, membrane, mirror, scientific
 
 **Next Steps**:
-1. **Commit**: O-gent Phase 4 W-gent integration
-2. Proceed to next agent phase or consolidation
+1. **Commit**: L-gent Phase 8 + Protocol specs + CLI handlers
+2. **Implement**: Working mirror observe (Phase 1: Structural, 0 tokens)
 
 ---
 
@@ -51,7 +54,7 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 | 4 | MCP Server | ✅ DONE (42 tests) |
 | 5 | Big 5 Genera (G, J, P, L, W) | ✅ DONE (50 tests) |
 | 6 | Intent Layer (10 verbs) | ✅ DONE (94 tests) |
-| 7 | TUI Dashboard | ⏳ NEXT |
+| 7 | TUI Dashboard | ✅ DONE (73 tests) |
 
 **Key Features**: 10 Intent Verbs, Flowfiles (YAML), Sympathetic Errors, MCP Bidirectional
 
@@ -63,7 +66,7 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 |-------|--------|---------|
 | **B-gents** | ~100% | ✅ All 6 B×G phases complete (575 tests) |
 | **D-gents** | ~95% | ✅ Phase 5 SQL/Redis complete (276 tests) |
-| **L-gents** | ~70% | Vector DB integration |
+| **L-gents** | ~85% | ✅ Phase 8 D-gent Vector DB complete (23 tests) |
 | **G-gents** | ~90% | Phase 7 done |
 | **O-gents** | ~95% | ✅ Phase 4 complete (177 tests), W-gent integration |
 | **I-gents** | ~70% | ✅ Stigmergic Field (69 tests), forge/timeline pending |
@@ -74,43 +77,38 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 ## Current Session
 
-### Session: I-gent Stigmergic Field (2025-12-09)
+### Session: Protocol Specs v2.0 Rewrite (2025-12-09)
 
-**Status**: ✅ COMPLETE - Full rewrite from first principles
+**Status**: ✅ COMPLETE - CLI and Mirror specs rewritten from first principles
 
-**Reference**: `~/git/kgents-garden-interface/` (demo frontend)
+**Core Insight**: Protocols are not special entities—they are **agent compositions**.
 
-**Design Philosophy**: Stigmergic emergence—indirect coordination through shared environment
-- Traditional: "What is the state?" → Stigmergic: "What traces are being left?"
-- Three Layers: Physical (entities/positions), Topological (gravity/tension), Semantic (intent/values)
+**New Specs**:
+- `spec/protocols/cli.md` - CLI as C-gent composing other agents
+- `spec/protocols/mirror.md` - Mirror as P >> W >> H >> O >> J composition
 
-**Spec** (`spec/i-gents/README.md`):
-- Stigmergic field substrate with pheromone traces
-- Bootstrap agents: I/C/G/J/X/S/F (from spec/bootstrap.md)
-- Task attractors: Tasks, Hypotheses, Artifacts
-- Dialectic phases: DORMANT → FLUX → TENSION → SUBLATE → FIX → COOLING
-- Field dynamics: Brownian motion, context gravity, tension repulsion
-- Compost Heap: Event log celebrating "accursed share"
-- W-gent integration via [observe] action
+**Key Changes**:
+1. **CLI as Agent**: 10 intent verbs, all compositions
+2. **Mirror Simplified**: 864 lines → 200 lines, 0 placeholders
+3. **Generative Test**: Every spec operation has concrete implementation
+4. **Anti-Patterns Rejected**: TDA, persistent homology, quantum dialectic → MVP first
 
-**Implementation** (~1500 lines):
-- `impl/claude/agents/i/field.py`: Entity, Pheromone, FieldState, FieldSimulator
-- `impl/claude/agents/i/tui.py`: FieldRenderer, TUIApplication, KeyHandler
-- `impl/claude/protocols/cli/genus/i_gent.py`: Garden CLI commands
-
-**CLI Commands**:
-- `kgents garden` - Launch interactive field view
-- `kgents garden forge` - Composition pipeline view
-- `kgents garden export <file.md>` - Export to markdown
-- `kgents garden demo` - Run demo simulation
-
-**Test Coverage** (69 tests):
-- test_field.py: 37 tests (Entity, Pheromone, FieldState, Simulator)
-- test_tui.py: 32 tests (Renderer, Colors, KeyHandler, Edge cases)
+**Philosophy**: "The Mirror was always five agents in a trench coat. Now we admit it."
 
 ---
 
 ## Recent Sessions
+
+### Session: O-gent Phase 4 - W-gent Integration (2025-12-09) ✅ COMPLETE
+
+- `observable_panopticon.py`: WireObservable mixin, TUI dashboard
+- 40 tests, O-gent total now 177 tests
+
+### Session: I-gent Stigmergic Field (2025-12-09) ✅ COMMITTED
+
+- `field.py`: Entity, Pheromone, FieldState, FieldSimulator
+- `tui.py`: FieldRenderer with sparklines, TUIApplication
+- Commit: `8f51bbc` - 69 tests (37 field + 32 TUI)
 
 ### Session: O-gent Phase 3 - Panopticon Integration (2025-12-09)
 
@@ -122,11 +120,6 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 - `sql_agent.py`: SQLite + PostgreSQL backends with versioned state
 - `redis_agent.py`: Redis/Valkey with TTL, pub/sub, history
 - Commit: `7e4fba1` - 41 tests (36 skip when deps missing)
-
-### Session: B×G Phase 6 - JIT Efficiency (2025-12-09) ✅ COMMITTED
-
-- `jit_efficiency.py`: JIT compilers (Regex, JumpTable, Bytecode)
-- Commit: `ce5dd8d` - 84 tests, HFTongueBuilder
 
 ---
 
@@ -186,9 +179,11 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 | B-gent | W-gent | ValueDashboard | ✅ |
 | B-gent | G-gent | Syntax Tax, Compression, JIT Efficiency | ✅ Complete |
 | B-gent | O-gent | VoI Economics | ✅ Ready |
+| O-gent | W-gent | ObservablePanopticon | ✅ Phase 4 |
 | G-gent | L-gent | Tongue Catalog | ✅ |
 | G-gent | F-gent | InterfaceTongue | ✅ |
 | D-gent | L-gent | PersistentRegistry | ✅ |
+| D-gent | L-gent | VectorCatalog (Phase 8) | ✅ |
 | L-gent | Search | Three-Brain Hybrid | ✅ |
 
 ---
@@ -201,7 +196,7 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 | D-gent | 271 | ✅ (9 skipped) |
 | G-gent | 200+ | ✅ |
 | I-gent | 69 | ✅ (Stigmergic Field) |
-| L-gent | 177 | ✅ |
-| O-gent | 137 | ✅ (+50 Phase 3) |
+| L-gent | 200 | ✅ (Phase 8: +23) |
+| O-gent | 177 | ✅ (Phase 4 complete) |
 | CLI | 415 | ✅ |
-| **Total** | 2520+ | ✅ |
+| **Total** | 2560+ | ✅ |
