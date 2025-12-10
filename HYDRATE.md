@@ -1,18 +1,18 @@
 # HYDRATE.md - kgents Session Context
 
-**Status**: All Tests Passing | ~5,897 tests | Branch: `main`
+**Status**: All Tests Passing | ~6,122 tests | Branch: `main`
 
-## Recent: Instance DB Phase 6 - Observability + Dashboard (Design Complete)
+## Recent: Instance DB Phase 6 - Observability + Dashboard (✅ COMPLETE)
 
-Designed Phase 6 of the Bicameral Engine: O-gent/W-gent integration for real-time cortex health monitoring.
+Implemented Phase 6 of the Bicameral Engine: O-gent/W-gent/I-gent integration for real-time cortex health monitoring.
 
 | Component | Description | Location | Tests |
 |-----------|-------------|----------|-------|
-| `CortexObserver` | O-gent observer for Bicameral ops | `agents/o/cortex_observer.py` | 15 |
-| `CortexDashboard` | W-gent wire protocol dashboard | `agents/w/cortex_dashboard.py` | 12 |
-| `MetricsExporter` | Prometheus/OpenTelemetry bridge | `agents/o/metrics_export.py` | 8 |
-| `DreamReportRenderer` | I-gent rendering of dream reports | `agents/i/dream_view.py` | 5 |
-| **Total Designed** | | | **40** |
+| `CortexObserver` | O-gent observer for Bicameral ops | `agents/o/cortex_observer.py` | 29 |
+| `MetricsExporter` | Prometheus/OpenTelemetry/JSON export | `agents/o/metrics_export.py` | 21 |
+| `CortexDashboard` | W-gent wire protocol dashboard | `agents/w/cortex_dashboard.py` | 25 |
+| `DreamReportRenderer` | I-gent rendering of dream reports | `agents/i/dream_view.py` | 42 |
+| **Total Implemented** | | | **117** |
 
 ### CortexObserver (`agents/o/cortex_observer.py`)
 
@@ -55,7 +55,26 @@ print(dashboard.render_compact())
 - `cortex_hippocampus_size` - Short-term memory utilization
 - `cortex_dream_cycles_total` - REM cycles completed
 
-**See:** `docs/instance-db-implementation-plan.md` Phase 6 for full specification.
+---
+
+## Semantic Field: Current State
+
+Base implementation with 43 tests covering:
+- Psi-gent: METAPHOR emission
+- F-gent: METAPHOR sensing + INTENT emission
+- J-gent: WARNING emission
+- B-gent: OPPORTUNITY/SCARCITY emission
+- M-gent: MEMORY emission/sensing
+- N-gent: NARRATIVE emission/sensing
+- O-gent: Universal observer sensor
+
+## Next: Semantic Field Phases 1-4 (Planned)
+
+See `docs/semantic-field-integration-plan.md` for planned expansion:
+- Phase 1: E-gent, H-gent, K-gent, R-gent emitters/sensors
+- Phase 2: Cross-signal sensing
+- Phase 3: D-gent, T-gent, W-gent infrastructure
+- Phase 4: L-gent CAPABILITY signals
 
 ---
 
@@ -532,8 +551,8 @@ Implemented the Bicameral Engine with Active Inference, short-term memory, D-gen
 | 3 | D-gent Adapters + Bicameral | 69 | ✅ |
 | 4 | Composting + Lethe | 73 | ✅ |
 | 5 | Lucid Dreaming + Neurogenesis | 74 | ✅ |
-| 6 | Observability + Dashboard | 40 | ⏳ Design |
-| **Total** | | **455** | 415 impl, 40 design |
+| 6 | Observability + Dashboard | 117 | ✅ |
+| **Total** | | **532** | All Complete |
 
 ### Synapse (Active Inference Event Bus)
 
@@ -583,6 +602,16 @@ agents/d/                            # D-gent adapters (Phase 3)
 ├── infra_backends.py  # InstanceDBVectorBackend, InstanceDBRelationalBackend, CortexAdapter
 ├── bicameral.py       # BicameralMemory, Coherency Protocol, Ghost Self-Healing
 └── ...
+
+agents/o/                            # O-gent observability (Phase 6)
+├── cortex_observer.py  # CortexObserver, CortexHealthSnapshot
+└── metrics_export.py   # PrometheusExporter, OpenTelemetryExporter, JSONExporter
+
+agents/w/                            # W-gent dashboard (Phase 6)
+└── cortex_dashboard.py  # CortexDashboard, SparklineData
+
+agents/i/                            # I-gent rendering (Phase 6)
+└── dream_view.py        # render_dream_report, render_morning_briefing
 ```
 
 ## Agent Reference
