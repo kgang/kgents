@@ -290,6 +290,76 @@ except ImportError:
     create_redis_agent = None  # type: ignore
     create_valkey_agent = None  # type: ignore
 
+# Phase 3+: Infrastructure Backends (Instance DB Integration)
+try:
+    from .infra_backends import (
+        InstanceDBVectorBackend,
+        InstanceDBVectorBackendConfig,
+        InstanceDBRelationalBackend,
+        InstanceDBRelationalBackendConfig,
+        CortexAdapter,
+        CortexAdapterConfig,
+        ContentHash,
+        VectorMetadata,
+        RecallResult,
+        InfraBackendError,
+        GhostMemoryError,
+        StaleEmbeddingError,
+        create_vector_backend,
+        create_relational_backend,
+        create_cortex_adapter,
+    )
+
+    _INFRA_BACKENDS_AVAILABLE = True
+except ImportError:
+    _INFRA_BACKENDS_AVAILABLE = False
+    InstanceDBVectorBackend = None  # type: ignore
+    InstanceDBVectorBackendConfig = None  # type: ignore
+    InstanceDBRelationalBackend = None  # type: ignore
+    InstanceDBRelationalBackendConfig = None  # type: ignore
+    CortexAdapter = None  # type: ignore
+    CortexAdapterConfig = None  # type: ignore
+    ContentHash = None  # type: ignore
+    VectorMetadata = None  # type: ignore
+    RecallResult = None  # type: ignore
+    InfraBackendError = None  # type: ignore
+    GhostMemoryError = None  # type: ignore
+    StaleEmbeddingError = None  # type: ignore
+    create_vector_backend = None  # type: ignore
+    create_relational_backend = None  # type: ignore
+    create_cortex_adapter = None  # type: ignore
+
+# Phase 3+: Bicameral Memory (Ghost Detection + Self-Healing)
+try:
+    from .bicameral import (
+        BicameralMemory,
+        BicameralConfig,
+        BicameralCortex,
+        BicameralError,
+        CoherencyError,
+        CoherencyReport,
+        GhostRecord,
+        StaleRecord,
+        HemisphereRole,
+        create_bicameral_memory,
+        create_bicameral_cortex,
+    )
+
+    _BICAMERAL_AVAILABLE = True
+except ImportError:
+    _BICAMERAL_AVAILABLE = False
+    BicameralMemory = None  # type: ignore
+    BicameralConfig = None  # type: ignore
+    BicameralCortex = None  # type: ignore
+    BicameralError = None  # type: ignore
+    CoherencyError = None  # type: ignore
+    CoherencyReport = None  # type: ignore
+    GhostRecord = None  # type: ignore
+    StaleRecord = None  # type: ignore
+    HemisphereRole = None  # type: ignore
+    create_bicameral_memory = None  # type: ignore
+    create_bicameral_cortex = None  # type: ignore
+
 __all__ = [
     # Protocol
     "DataAgent",
@@ -464,4 +534,32 @@ __all__ = [
     "RedisAgent",
     "create_redis_agent",
     "create_valkey_agent",
+    # Phase 3+: Infrastructure Backends (Instance DB Integration)
+    "InstanceDBVectorBackend",
+    "InstanceDBVectorBackendConfig",
+    "InstanceDBRelationalBackend",
+    "InstanceDBRelationalBackendConfig",
+    "CortexAdapter",
+    "CortexAdapterConfig",
+    "ContentHash",
+    "VectorMetadata",
+    "RecallResult",
+    "InfraBackendError",
+    "GhostMemoryError",
+    "StaleEmbeddingError",
+    "create_vector_backend",
+    "create_relational_backend",
+    "create_cortex_adapter",
+    # Phase 3+: Bicameral Memory (Ghost Detection + Self-Healing)
+    "BicameralMemory",
+    "BicameralConfig",
+    "BicameralCortex",
+    "BicameralError",
+    "CoherencyError",
+    "CoherencyReport",
+    "GhostRecord",
+    "StaleRecord",
+    "HemisphereRole",
+    "create_bicameral_memory",
+    "create_bicameral_cortex",
 ]

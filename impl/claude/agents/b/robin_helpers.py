@@ -12,7 +12,7 @@ from .hypothesis import HypothesisOutput
 from .hypothesis_parser import Hypothesis, NoveltyLevel
 
 if TYPE_CHECKING:
-    from .robin import RobinInput
+    from .robin_integration import RobinInput
 
 
 def generate_fallback_hypotheses(input: Any, hypothesis_count: int) -> HypothesisOutput:

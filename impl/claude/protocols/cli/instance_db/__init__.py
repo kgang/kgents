@@ -52,6 +52,51 @@ from .hippocampus import (
     LetheEpoch,
     create_hippocampus,
 )
+from .compost import (
+    CompostBin,
+    CompostConfig,
+    CompostingStrategy,
+    NutrientBlock,
+    CountMinSketch,
+    HyperLogLog,
+    TDigestSimplified,
+    create_compost_bin,
+    create_nutrient_block,
+)
+from .lethe import (
+    LetheStore,
+    LetheGardener,
+    LetheGardenerConfig,
+    LetheRecord,
+    ForgetProof,
+    RetentionPolicy,
+    RetentionConfig,
+    create_lethe_store,
+    create_lethe_gardener,
+)
+from .dreamer import (
+    LucidDreamer,
+    DreamerConfig,
+    DreamPhase,
+    DreamReport,
+    NightWatch,
+    Question,
+    MaintenanceChunk,
+    MaintenanceTaskType,
+    create_lucid_dreamer,
+)
+from .neurogenesis import (
+    SchemaNeurogenesis,
+    NeurogenesisConfig,
+    MigrationProposal,
+    MigrationAction,
+    ColumnType,
+    PatternCluster,
+    TypeInferrer,
+    MockSchemaIntrospector,
+    ISchemaIntrospector,
+    create_schema_neurogenesis,
+)
 
 __all__ = [
     # Interfaces
@@ -83,4 +128,45 @@ __all__ = [
     "HippocampusConfig",
     "LetheEpoch",
     "create_hippocampus",
+    # Compost (Memory Compression)
+    "CompostBin",
+    "CompostConfig",
+    "CompostingStrategy",
+    "NutrientBlock",
+    "CountMinSketch",
+    "HyperLogLog",
+    "TDigestSimplified",
+    "create_compost_bin",
+    "create_nutrient_block",
+    # Lethe (Cryptographic Amnesia)
+    "LetheStore",
+    "LetheGardener",
+    "LetheGardenerConfig",
+    "LetheRecord",
+    "ForgetProof",
+    "RetentionPolicy",
+    "RetentionConfig",
+    "create_lethe_store",
+    "create_lethe_gardener",
+    # Lucid Dreamer (Phase 5)
+    "LucidDreamer",
+    "DreamerConfig",
+    "DreamPhase",
+    "DreamReport",
+    "NightWatch",
+    "Question",
+    "MaintenanceChunk",
+    "MaintenanceTaskType",
+    "create_lucid_dreamer",
+    # Schema Neurogenesis (Phase 5)
+    "SchemaNeurogenesis",
+    "NeurogenesisConfig",
+    "MigrationProposal",
+    "MigrationAction",
+    "ColumnType",
+    "PatternCluster",
+    "TypeInferrer",
+    "MockSchemaIntrospector",
+    "ISchemaIntrospector",
+    "create_schema_neurogenesis",
 ]

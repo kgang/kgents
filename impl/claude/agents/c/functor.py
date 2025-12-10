@@ -20,7 +20,6 @@ import logging
 from datetime import datetime
 
 from bootstrap.types import Agent
-from agents.j.promise import Promise as JPromise
 
 A = TypeVar("A")
 B = TypeVar("B")
@@ -31,6 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 # --- Maybe: Optional values ---
+
 
 class Maybe(Generic[T], ABC):
     """
@@ -67,6 +67,7 @@ class Maybe(Generic[T], ABC):
 @dataclass
 class Just(Maybe[T]):
     """Contains a value."""
+
     value: T
 
     def is_just(self) -> bool:
@@ -153,6 +154,7 @@ class Either(Generic[E, T], ABC):
 @dataclass
 class Right(Either[Any, T]):
     """Success case - contains the value."""
+
     value: T
 
     def is_right(self) -> bool:
@@ -177,6 +179,7 @@ class Right(Either[Any, T]):
 @dataclass
 class Left(Either[E, Any]):
     """Error case - contains the error."""
+
     error: E
 
     def is_right(self) -> bool:
@@ -199,6 +202,7 @@ class Left(Either[E, Any]):
 
 
 # --- Lifted Agents ---
+
 
 class MaybeAgent(Agent[Maybe[A], Maybe[B]]):
     """
@@ -246,13 +250,14 @@ class EitherAgent(Agent[Either[E, A], Either[E, B]]):
 
 # --- Fix Pattern: Retry with Exponential Backoff ---
 
+
 class FixAgent(Agent[A, B]):
     """
     Fix-pattern retry wrapper for transient failures.
-    
+
     Applies exponential backoff: base_delay * (2 ** attempt)
     Logs all retry attempts as data (conflicts are data principle).
-    
+
     Example:
         reliable_agent = fix(flaky_agent, max_attempts=3, base_delay=1.0)
     """
@@ -286,7 +291,7 @@ class FixAgent(Agent[A, B]):
 
     async def invoke(self, input: A) -> B:
         last_error: Exception | None = None
-        
+
         for attempt in range(self._max_attempts):
             try:
                 result = await self._inner.invoke(input)
@@ -297,7 +302,7 @@ class FixAgent(Agent[A, B]):
                 return result
             except Exception as e:
                 last_error = e
-                
+
                 # If non-transient or last attempt, propagate immediately
                 if not self._is_transient(e) or attempt == self._max_attempts - 1:
                     logger.warning(
@@ -305,21 +310,22 @@ class FixAgent(Agent[A, B]):
                         f"(error: {type(e).__name__}: {e})"
                     )
                     raise
-                
+
                 # Calculate backoff delay
-                delay = min(self._base_delay * (2 ** attempt), self._max_delay)
+                delay = min(self._base_delay * (2**attempt), self._max_delay)
                 logger.info(
                     f"{self.name}: transient failure on attempt {attempt + 1}/{self._max_attempts}, "
                     f"retrying in {delay:.2f}s (error: {type(e).__name__}: {e})"
                 )
                 await asyncio.sleep(delay)
-        
+
         # Should never reach here due to raise in loop, but satisfy type checker
         assert last_error is not None
         raise last_error
 
 
 # --- Convenience functions ---
+
 
 def maybe(agent: Agent[A, B]) -> MaybeAgent[A, B]:
     """Lift an agent to handle Maybe values."""
@@ -355,6 +361,7 @@ def fix(
 
 
 # --- List Functor: Process Collections ---
+
 
 class ListAgent(Agent[list[A], list[B]]):
     """
@@ -402,6 +409,7 @@ class ListAgent(Agent[list[A], list[B]]):
 
 # --- Async Functor: Non-blocking Execution ---
 
+
 class AsyncAgent(Agent[A, asyncio.Future[B]]):
     """
     Lifts an Agent[A, B] to return a Future[B] immediately.
@@ -433,9 +441,11 @@ class AsyncAgent(Agent[A, asyncio.Future[B]]):
 
 # --- Logged Functor: Add Observability ---
 
+
 @dataclass
 class LogEntry:
     """Single log entry for an agent invocation."""
+
     timestamp: datetime
     agent_name: str
     input_repr: str
@@ -547,88 +557,8 @@ class LoggedAgent(Agent[A, B]):
             raise
 
 
-# --- Promise Functor: Lazy Computation ---
-
-class PromiseAgent(Agent[A, JPromise[B]]):
-    """
-    Lifts an Agent[A, B] to return a Promise[B] instead of B directly.
-
-    The computation is deferred until the promise is explicitly resolved.
-    If resolution fails, returns the ground value.
-
-    This is a lazy functor - enables:
-    - Computation on demand
-    - Parallel resolution of independent promises
-    - Safe fallback via Ground
-
-    Functor Laws for Promise:
-    - Identity: Promise(Id) = PromiseId (returns resolved Promise(x) for any x)
-    - Composition: Promise(f >> g) = Promise(f) >> Promise(g)
-
-    Example:
-        agent: Agent[A, B] = ...
-        ground_value: B = ...
-        promise_agent = PromiseAgent(agent, ground_value)
-        promise = await promise_agent.invoke(input)
-        # ... later ...
-        result = await resolve_promise(promise)
-    """
-
-    def __init__(self, inner: Agent[A, B], ground: B, intent: Optional[str] = None):
-        """
-        Args:
-            inner: The agent to wrap as a promise
-            ground: Fallback value if promise fails
-            intent: Description of what the promise delivers (default: agent name)
-        """
-        self._inner = inner
-        self._ground = ground
-        self._intent = intent or f"Compute {inner.name}"
-        self._name = f"Promise({inner.name})"
-
-    @property
-    def name(self) -> str:
-        return self._name
-
-    async def invoke(self, input: A) -> JPromise[B]:
-        """Return a promise that will compute the result when resolved."""
-        # Create computation closure that captures input
-        async def computation() -> B:
-            return await self._inner.invoke(input)
-
-        # Return unresolved promise
-        return JPromise(
-            intent=self._intent,
-            ground=self._ground,
-            context={"input": input, "agent": self._inner.name},
-        )
-
-
-async def resolve_promise(promise: JPromise[T], computation: Callable[[], T]) -> T:
-    """
-    Resolve a promise by executing its computation.
-
-    Args:
-        promise: The promise to resolve
-        computation: The deferred computation to execute
-
-    Returns:
-        The computed value on success, or ground value on failure
-    """
-    if promise.is_resolved:
-        return promise.value_or_ground()
-
-    try:
-        promise.mark_resolving()
-        result = await computation()
-        promise.mark_resolved(result)
-        return result
-    except Exception as e:
-        promise.mark_failed(f"Computation failed: {e}")
-        return promise.ground
-
-
 # --- Functor Law Validation ---
+
 
 async def check_identity_law(
     functor_lift: Callable[[Agent[A, B]], Agent[Any, Any]],
@@ -697,6 +627,7 @@ async def check_composition_law(
 
 # --- Convenience functions for new functors ---
 
+
 def list_agent(agent: Agent[A, B], parallel: bool = True) -> ListAgent[A, B]:
     """Lift an agent to process lists of values."""
     return ListAgent(agent, parallel=parallel)
@@ -716,10 +647,4 @@ def logged(
     return LoggedAgent(agent, log_level=log_level, max_repr_length=max_repr_length)
 
 
-def promise_agent(
-    agent: Agent[A, B],
-    ground: B,
-    intent: Optional[str] = None,
-) -> PromiseAgent[A, B]:
-    """Lift an agent to return promises (lazy computation)."""
-    return PromiseAgent(agent, ground=ground, intent=intent)
+# Promise functor moved to j_integration.py (C×J integration)

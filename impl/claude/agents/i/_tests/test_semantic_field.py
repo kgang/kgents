@@ -24,6 +24,11 @@ from agents.i.semantic_field import (
     create_forge_sensor,
     create_safety_emitter,
     create_economic_emitter,
+    create_memory_emitter,
+    create_memory_sensor,
+    create_narrative_emitter,
+    create_narrative_sensor,
+    create_observer_sensor,
 )
 
 
@@ -578,6 +583,168 @@ class TestEconomicFieldEmitter:
         pheromones = field.get_all(SemanticPheromoneKind.SCARCITY)
         assert len(pheromones) == 1
         assert pheromones[0].intensity == 0.8
+
+
+class TestMemoryFieldEmitterSensor:
+    """Tests for MemoryFieldEmitter and MemoryFieldSensor."""
+
+    def test_emit_consolidation(self):
+        """Test emitting a memory consolidation signal."""
+        field = create_semantic_field()
+        emitter = create_memory_emitter(field)
+
+        position = FieldCoordinate(domain="conversation")
+
+        emitter.emit_consolidation(
+            memory_id="mem_001",
+            importance=0.8,
+            position=position,
+            decay_urgency=0.6,
+            context_tags=("user_preference", "topic:weather"),
+            summary="User prefers detailed explanations",
+        )
+
+        pheromones = field.get_all(SemanticPheromoneKind.MEMORY)
+        assert len(pheromones) == 1
+
+        payload = pheromones[0].payload
+        assert payload.memory_id == "mem_001"
+        assert payload.importance == 0.8
+        assert "user_preference" in payload.context_tags
+
+    def test_sense_memories_by_importance(self):
+        """Test sensing memories with importance threshold."""
+        field = create_semantic_field()
+        emitter = create_memory_emitter(field)
+        sensor = create_memory_sensor(field)
+
+        position = FieldCoordinate(domain="conversation")
+
+        # Emit two memories with different importance
+        emitter.emit_consolidation("mem_high", 0.9, position)
+        emitter.emit_consolidation("mem_low", 0.3, position)
+
+        # Sense all
+        all_memories = sensor.sense_memories(position)
+        assert len(all_memories) == 2
+
+        # Sense only high importance
+        high_memories = sensor.sense_memories(position, min_importance=0.5)
+        assert len(high_memories) == 1
+        assert high_memories[0].memory_id == "mem_high"
+
+
+class TestNarrativeFieldEmitterSensor:
+    """Tests for NarrativeFieldEmitter and NarrativeFieldSensor."""
+
+    def test_emit_story_event(self):
+        """Test emitting a narrative event."""
+        field = create_semantic_field()
+        emitter = create_narrative_emitter(field)
+
+        position = FieldCoordinate(domain="session")
+
+        emitter.emit_story_event(
+            thread_id="session_story",
+            event_type="beginning",
+            summary="User starts a new coding project",
+            position=position,
+            actors=("user", "claude"),
+            emotional_valence=0.7,
+        )
+
+        pheromones = field.get_all(SemanticPheromoneKind.NARRATIVE)
+        assert len(pheromones) == 1
+
+        payload = pheromones[0].payload
+        assert payload.thread_id == "session_story"
+        assert payload.event_type == "beginning"
+        assert "user" in payload.actors
+
+    def test_climax_has_highest_intensity(self):
+        """Test climax events have highest intensity."""
+        field = create_semantic_field()
+        emitter = create_narrative_emitter(field)
+
+        position = FieldCoordinate()
+
+        emitter.emit_story_event("t1", "beginning", "Start", position)
+        emitter.emit_story_event("t1", "climax", "Peak", position)
+        emitter.emit_story_event("t1", "resolution", "End", position)
+
+        pheromones = field.get_all(SemanticPheromoneKind.NARRATIVE)
+
+        intensities = {p.payload.event_type: p.intensity for p in pheromones}
+        assert intensities["climax"] == 1.0
+        assert intensities["beginning"] < intensities["climax"]
+
+    def test_sense_narratives_by_thread(self):
+        """Test filtering narratives by thread ID."""
+        field = create_semantic_field()
+        emitter = create_narrative_emitter(field)
+        sensor = create_narrative_sensor(field)
+
+        # Use domain-based coordinate to ensure distance=0
+        position = FieldCoordinate(domain="session")
+
+        emitter.emit_story_event("thread_a", "beginning", "A starts", position)
+        emitter.emit_story_event("thread_b", "beginning", "B starts", position)
+
+        thread_a = sensor.sense_narratives(position, thread_id="thread_a")
+        assert len(thread_a) == 1
+        assert thread_a[0].thread_id == "thread_a"
+
+
+class TestObserverFieldSensor:
+    """Tests for ObserverFieldSensor."""
+
+    def test_observe_all_kinds(self):
+        """Test observer can see all pheromone types."""
+        field = create_semantic_field()
+        observer = create_observer_sensor(field)
+        position = FieldCoordinate()
+
+        # Emit different pheromone types
+        create_psi_emitter(field).emit_metaphor("source", "target", 0.8, position)
+        create_safety_emitter(field).emit_warning("info", "test", position)
+        create_memory_emitter(field).emit_consolidation("m1", 0.5, position)
+
+        observed = observer.observe_all(position)
+
+        assert SemanticPheromoneKind.METAPHOR.value in observed
+        assert SemanticPheromoneKind.WARNING.value in observed
+        assert SemanticPheromoneKind.MEMORY.value in observed
+
+    def test_observe_warnings_by_severity(self):
+        """Test filtering warnings by severity."""
+        field = create_semantic_field()
+        observer = create_observer_sensor(field)
+        safety = create_safety_emitter(field)
+        position = FieldCoordinate()
+
+        safety.emit_warning("info", "low priority", position)
+        safety.emit_warning("error", "high priority", position)
+
+        # Get only error+ warnings
+        warnings = observer.observe_warnings(position, min_severity="error")
+        assert len(warnings) == 1
+        assert warnings[0].severity == "error"
+
+    def test_field_summary(self):
+        """Test field summary counts pheromones by type."""
+        field = create_semantic_field()
+        observer = create_observer_sensor(field)
+        position = FieldCoordinate()
+
+        # Emit various pheromones
+        create_psi_emitter(field).emit_metaphor("src_a", "tgt_a", 0.8, position)
+        create_psi_emitter(field).emit_metaphor("src_b", "tgt_b", 0.7, position)
+        create_safety_emitter(field).emit_warning("info", "test", position)
+
+        summary = observer.field_summary()
+
+        assert summary[SemanticPheromoneKind.METAPHOR.value] == 2
+        assert summary[SemanticPheromoneKind.WARNING.value] == 1
 
 
 class TestPheromoneKindProperties:

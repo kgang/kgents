@@ -92,7 +92,7 @@ from .hypothesis_parser import (
     NoveltyLevel,
 )
 
-from .robin import (
+from .robin_integration import (
     RobinAgent,
     RobinInput,
     RobinOutput,

@@ -644,6 +644,283 @@ class EconomicFieldEmitter:
 
 
 # =============================================================================
+# M-gent Field Interface (Memory Signals)
+# =============================================================================
+
+
+@dataclass
+class MemoryPayload:
+    """
+    Payload for MEMORY pheromones.
+
+    Represents a memory signal for consolidation.
+    """
+
+    memory_id: str
+    importance: float  # How important is this memory?
+    decay_urgency: float  # How soon should this be consolidated?
+    context_tags: tuple[str, ...] = ()
+    summary: str = ""
+
+
+class MemoryFieldEmitter:
+    """
+    M-gent's interface for emitting memory signals.
+
+    Emits when memories should be consolidated or when important
+    context should be shared with other agents.
+    """
+
+    def __init__(self, field: SemanticField, agent_id: str = "memory"):
+        self._field = field
+        self._agent_id = agent_id
+
+    def emit_consolidation(
+        self,
+        memory_id: str,
+        importance: float,
+        position: FieldCoordinate,
+        decay_urgency: float = 0.5,
+        context_tags: tuple[str, ...] = (),
+        summary: str = "",
+    ) -> str:
+        """
+        Emit a memory consolidation signal.
+
+        Called when M-gent detects a memory worth persisting.
+        """
+        payload = MemoryPayload(
+            memory_id=memory_id,
+            importance=importance,
+            decay_urgency=decay_urgency,
+            context_tags=context_tags,
+            summary=summary,
+        )
+
+        return self._field.emit(
+            emitter=self._agent_id,
+            kind=SemanticPheromoneKind.MEMORY,
+            payload=payload,
+            position=position,
+            intensity=importance,
+            metadata={"memory_id": memory_id, "urgency": decay_urgency},
+        )
+
+
+class MemoryFieldSensor:
+    """
+    Sensor for memory signals.
+
+    Other agents can use this to detect when important context
+    is available in the field.
+    """
+
+    def __init__(self, field: SemanticField, agent_id: str = "memory_sensor"):
+        self._field = field
+        self._agent_id = agent_id
+
+    def sense_memories(
+        self,
+        position: FieldCoordinate,
+        radius: float | None = None,
+        min_importance: float = 0.0,
+    ) -> list[MemoryPayload]:
+        """
+        Sense nearby memory signals.
+        """
+        pheromones = self._field.sense(
+            position=position,
+            radius=radius,
+            kind=SemanticPheromoneKind.MEMORY,
+        )
+
+        return [
+            p.payload
+            for p in pheromones
+            if isinstance(p.payload, MemoryPayload)
+            and p.payload.importance >= min_importance
+        ]
+
+
+# =============================================================================
+# N-gent Field Interface (Narrative Signals)
+# =============================================================================
+
+
+@dataclass
+class NarrativePayload:
+    """
+    Payload for NARRATIVE pheromones.
+
+    Represents a narrative thread or chronicle entry.
+    """
+
+    thread_id: str
+    event_type: str  # "beginning", "development", "climax", "resolution"
+    summary: str
+    actors: tuple[str, ...] = ()
+    emotional_valence: float = 0.0  # -1.0 (negative) to 1.0 (positive)
+
+
+class NarrativeFieldEmitter:
+    """
+    N-gent's interface for emitting narrative signals.
+
+    Emits story events that other agents can incorporate into
+    their context or decision-making.
+    """
+
+    def __init__(self, field: SemanticField, agent_id: str = "narrator"):
+        self._field = field
+        self._agent_id = agent_id
+
+    def emit_story_event(
+        self,
+        thread_id: str,
+        event_type: str,
+        summary: str,
+        position: FieldCoordinate,
+        actors: tuple[str, ...] = (),
+        emotional_valence: float = 0.0,
+    ) -> str:
+        """
+        Emit a narrative event signal.
+
+        Called when N-gent chronicles a significant event.
+        """
+        payload = NarrativePayload(
+            thread_id=thread_id,
+            event_type=event_type,
+            summary=summary,
+            actors=actors,
+            emotional_valence=emotional_valence,
+        )
+
+        # Intensity based on event type (climax = highest)
+        intensity_map = {
+            "beginning": 0.5,
+            "development": 0.6,
+            "climax": 1.0,
+            "resolution": 0.7,
+        }
+        intensity = intensity_map.get(event_type, 0.5)
+
+        return self._field.emit(
+            emitter=self._agent_id,
+            kind=SemanticPheromoneKind.NARRATIVE,
+            payload=payload,
+            position=position,
+            intensity=intensity,
+            metadata={"thread_id": thread_id, "event_type": event_type},
+        )
+
+
+class NarrativeFieldSensor:
+    """
+    Sensor for narrative signals.
+
+    Allows agents to incorporate story context into their operations.
+    """
+
+    def __init__(self, field: SemanticField, agent_id: str = "narrative_sensor"):
+        self._field = field
+        self._agent_id = agent_id
+
+    def sense_narratives(
+        self,
+        position: FieldCoordinate,
+        radius: float | None = None,
+        thread_id: str | None = None,
+    ) -> list[NarrativePayload]:
+        """
+        Sense nearby narrative signals.
+        """
+        pheromones = self._field.sense(
+            position=position,
+            radius=radius,
+            kind=SemanticPheromoneKind.NARRATIVE,
+        )
+
+        results = [
+            p.payload for p in pheromones if isinstance(p.payload, NarrativePayload)
+        ]
+
+        if thread_id:
+            results = [n for n in results if n.thread_id == thread_id]
+
+        return results
+
+
+# =============================================================================
+# O-gent Field Interface (Observer - senses all signals)
+# =============================================================================
+
+
+class ObserverFieldSensor:
+    """
+    O-gent's interface for observing the semantic field.
+
+    Can sense ALL pheromone types for monitoring and telemetry.
+    """
+
+    def __init__(self, field: SemanticField, agent_id: str = "observer"):
+        self._field = field
+        self._agent_id = agent_id
+
+    def observe_all(
+        self,
+        position: FieldCoordinate,
+        radius: float = 1.0,
+    ) -> dict[str, list[SemanticPheromone[Any]]]:
+        """
+        Observe all signals in the field.
+
+        Returns signals grouped by pheromone kind.
+        """
+        result: dict[str, list[SemanticPheromone[Any]]] = {}
+
+        for kind in SemanticPheromoneKind:
+            signals = self._field.sense(position=position, radius=radius, kind=kind)
+            if signals:
+                result[kind.value] = signals
+
+        return result
+
+    def observe_warnings(
+        self,
+        position: FieldCoordinate,
+        radius: float | None = None,
+        min_severity: str = "info",
+    ) -> list[WarningPayload]:
+        """
+        Specifically observe warning signals.
+        """
+        pheromones = self._field.sense(
+            position=position,
+            radius=radius,
+            kind=SemanticPheromoneKind.WARNING,
+        )
+
+        severity_levels = {"info": 0, "warning": 1, "error": 2, "critical": 3}
+        min_level = severity_levels.get(min_severity, 0)
+
+        return [
+            p.payload
+            for p in pheromones
+            if isinstance(p.payload, WarningPayload)
+            and severity_levels.get(p.payload.severity, 0) >= min_level
+        ]
+
+    def field_summary(self) -> dict[str, int]:
+        """
+        Get a summary of field activity by pheromone type.
+        """
+        return {
+            kind.value: len(self._field.get_all(kind)) for kind in SemanticPheromoneKind
+        }
+
+
+# =============================================================================
 # Factory Functions
 # =============================================================================
 
@@ -677,3 +954,38 @@ def create_economic_emitter(
 ) -> EconomicFieldEmitter:
     """Create a B-gent economic emitter."""
     return EconomicFieldEmitter(field, agent_id)
+
+
+def create_memory_emitter(
+    field: SemanticField, agent_id: str = "memory"
+) -> MemoryFieldEmitter:
+    """Create an M-gent memory emitter."""
+    return MemoryFieldEmitter(field, agent_id)
+
+
+def create_memory_sensor(
+    field: SemanticField, agent_id: str = "memory_sensor"
+) -> MemoryFieldSensor:
+    """Create a memory field sensor."""
+    return MemoryFieldSensor(field, agent_id)
+
+
+def create_narrative_emitter(
+    field: SemanticField, agent_id: str = "narrator"
+) -> NarrativeFieldEmitter:
+    """Create an N-gent narrative emitter."""
+    return NarrativeFieldEmitter(field, agent_id)
+
+
+def create_narrative_sensor(
+    field: SemanticField, agent_id: str = "narrative_sensor"
+) -> NarrativeFieldSensor:
+    """Create a narrative field sensor."""
+    return NarrativeFieldSensor(field, agent_id)
+
+
+def create_observer_sensor(
+    field: SemanticField, agent_id: str = "observer"
+) -> ObserverFieldSensor:
+    """Create an O-gent observer sensor."""
+    return ObserverFieldSensor(field, agent_id)

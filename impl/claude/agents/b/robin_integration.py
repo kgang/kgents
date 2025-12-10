@@ -135,7 +135,7 @@ class RobinOutput:
         return "\n".join(lines)
 
 
-from .robin_morphisms import (  # noqa: E402
+from .robin_morphisms_integration import (  # noqa: E402
     SynthesisInput,
     NarrativeSynthesizer,
     QuestionInput,

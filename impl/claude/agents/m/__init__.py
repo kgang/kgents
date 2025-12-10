@@ -177,6 +177,27 @@ from .context_injector import (
     create_context_injector,
 )
 
+# Phase 5 Polish: O-gent, Ψ-gent, I-gent Integrations
+from .cartography_integrations import (
+    # O-gent: Health monitoring
+    CartographicObserver,
+    EdgeHealth,
+    LandmarkHealth,
+    MapHealth,
+    # Ψ-gent: Metaphor discovery
+    MetaphorLocator,
+    MetaphorMatch,
+    MetaphorNeighborhood,
+    # I-gent: Visualization
+    MapRenderer,
+    MapRenderConfig,
+    # Factory functions
+    create_cartographic_observer,
+    create_metaphor_locator,
+    create_map_renderer,
+    annotate_and_render,
+)
+
 __all__ = [
     # Core
     "HolographicMemory",
@@ -287,4 +308,21 @@ __all__ = [
     "InjectorConfig",
     "inject_context",
     "create_context_injector",
+    # Phase 5 Polish: Integrations
+    # O-gent
+    "CartographicObserver",
+    "EdgeHealth",
+    "LandmarkHealth",
+    "MapHealth",
+    "create_cartographic_observer",
+    # Ψ-gent
+    "MetaphorLocator",
+    "MetaphorMatch",
+    "MetaphorNeighborhood",
+    "create_metaphor_locator",
+    # I-gent
+    "MapRenderer",
+    "MapRenderConfig",
+    "create_map_renderer",
+    "annotate_and_render",
 ]

@@ -450,48 +450,81 @@ Implemented:
 - `SynapseHippocampusIntegration` - Wires synapse handlers to hippocampus
 - Factory: `create_hippocampus(cortex, config_dict)`
 
-### Phase 3: D-gent Backend Adapters + Coherency (~70 tests)
+### Phase 3: D-gent Backend Adapters + Coherency ✅ COMPLETE (69 tests)
 
-| Task | Description | Tests |
-|------|-------------|-------|
-| `InstanceDBVectorBackend` | Wrap IVectorStore | 15 |
-| `InstanceDBRelationalBackend` | Wrap IRelationalStore | 15 |
-| `BicameralMemory` | Cross-hemisphere recall | 15 |
-| **Coherency Protocol** | Ghost detection + healing | 15 |
-| `UnifiedMemory.from_cortex()` | Factory method | 10 |
+**Status:** OPERATIONAL
+**Location:** `agents/d/infra_backends.py`, `agents/d/bicameral.py`
 
-**Critical:** Implement Ghost Memory detection and self-healing.
+Implemented:
+- `InstanceDBVectorBackend` - Wraps IVectorStore with coherency metadata
+  - `upsert()` / `search()` / `delete()` with content_hash tracking
+  - Ghost detection during search with auto-healing
+  - Staleness detection via content_hash mismatch
+- `InstanceDBRelationalBackend` - DataAgent[S] over IRelationalStore
+  - Versioned state storage with history
+  - `load()` / `save()` / `history()` / `exists()`
+- `CortexAdapter` - Unified interface for Bicameral operations
+  - `store()` / `recall()` / `fetch()` / `delete()`
+  - `create_agent()` factory for D-gent creation
+- `BicameralMemory` - Cross-hemisphere recall with Coherency Protocol
+  - `recall()` validates vector results against relational
+  - Ghost Memory detection and self-healing
+  - Staleness detection and flagging
+  - `coherency_check()` for full audit
+  - `GhostRecord` / `StaleRecord` / `CoherencyReport` types
+- `BicameralCortex` - ICortex implementation for Hippocampus integration
+- Factory functions: `create_bicameral_memory()`, `create_cortex_adapter()`
 
-**Deliverables:**
-- `agents/d/infra_backends.py`
-- `agents/d/bicameral.py`
+### Phase 4: Composting + Lethe Protocol ✅ COMPLETE (73 tests)
 
-### Phase 4: Composting + Lethe Protocol (~45 tests)
+**Status:** OPERATIONAL
+**Location:** `protocols/cli/instance_db/compost.py`, `protocols/cli/instance_db/lethe.py`
 
-| Task | Description | Tests |
-|------|-------------|-------|
-| `CompostBin` | Sketching-based compression | 15 |
-| `LetheStore` | Cryptographic amnesia | 15 |
-| `NutrientBlock` | Compressed statistics | 10 |
-| Integration with MemoryGarden | Lifecycle mapping | 5 |
+Implemented:
+- `CompostBin` - Sketching-based memory compression
+  - Count-Min Sketch for frequency estimation (O(1) space/query)
+  - HyperLogLog for cardinality estimation (~2% error)
+  - T-Digest for quantile estimation (p50, p95, p99)
+  - Configurable compression fields
+- `NutrientBlock` - Compressed statistics container
+  - `get_frequency()` / `get_cardinality()` / `get_quantile()`
+  - `get_mean()` from sum/count aggregations
+  - `merge()` for hierarchical compression
+  - `to_dict()` / `from_dict()` serialization
+- `LetheStore` - Cryptographic amnesia manager
+  - `forget()` creates verifiable `ForgetProof` (HMAC-SHA256)
+  - `compost()` extracts `NutrientBlock` before deletion
+  - `compost_then_forget()` preserves nutrients, deletes raw data
+  - `apply_retention_policy()` automates tier-based processing
+  - Audit log for compliance (GDPR Article 17)
+- `LetheGardener` - Background retention policy worker
+- `RetentionConfig` - Hot/Warm/Compost/Forget tier configuration
+- Integration with MemoryGarden lifecycle
 
-**Deliverables:**
-- `protocols/cli/instance_db/compost.py`
-- `protocols/cli/instance_db/lethe.py`
+### Phase 5: Lucid Dreaming + Neurogenesis ✅ COMPLETE (74 tests)
 
-### Phase 5: Lucid Dreaming + Neurogenesis (~50 tests)
+**Status:** OPERATIONAL
+**Location:** `protocols/cli/instance_db/dreamer.py`, `protocols/cli/instance_db/neurogenesis.py`
 
-| Task | Description | Tests |
-|------|-------------|-------|
-| `LucidDreamer` | Interruptible maintenance | 15 |
-| Interrupt checking | Yield to high-surprise | 10 |
-| Ambiguity resolution | Morning Briefing queue | 10 |
-| `SchemaNeurogenesis` | Propose schema migrations | 10 |
-| `NightWatch` scheduler | REM cycle scheduling | 5 |
-
-**Deliverables:**
-- `protocols/cli/instance_db/dreamer.py`
-- `protocols/cli/instance_db/neurogenesis.py`
+Implemented:
+- `LucidDreamer` class - Interruptible maintenance during REM cycles
+  - `rem_cycle()` with phase progression: ENTERING_REM → CONSOLIDATION → MAINTENANCE → REFLECTION → WAKING
+  - Interrupt checking via `synapse.has_flashbulb_pending()`
+  - Morning Briefing queue for accumulated questions
+  - Custom maintenance task hooks
+- `NightWatch` scheduler - REM cycle scheduling
+  - Configurable `rem_start_time_utc` and `rem_interval_hours`
+  - `trigger_now()` for manual triggers
+  - `should_dream()` / `mark_complete()` lifecycle
+- `DreamReport` - Detailed cycle reporting with completion rates
+- `SchemaNeurogenesis` class - Proposes schema migrations from JSON patterns
+  - `TypeInferrer` - O(1) type detection (INTEGER, TEXT, TIMESTAMP, etc.)
+  - `analyze()` - Finds recurring JSON keys above confidence threshold
+  - `MigrationProposal` - Approval workflow with SQL generation
+  - `approve()` / `reject()` / `execute_approved()` - Human-in-the-loop
+- `PatternCluster` - Grouped keys with type signatures
+- `ISchemaIntrospector` protocol - Database introspection interface
+- Factory functions: `create_lucid_dreamer()`, `create_schema_neurogenesis()`
 
 ### Phase 6: Observability + Dashboard (~35 tests)
 
@@ -593,11 +626,11 @@ coherency:
 | 1.5 Spinal Cord | 31 | ✅ Complete |
 | 2. Synapse + Active Inference | 46 | ✅ Complete |
 | 2.5 Hippocampus | 37 | ✅ Complete |
-| 3. D-gent Adapters + Coherency | ~70 | ⏳ Pending |
-| 4. Composting + Lethe | ~45 | ⏳ Pending |
-| 5. Lucid Dreaming + Neurogenesis | ~50 | ⏳ Pending |
+| 3. D-gent Adapters + Coherency | 69 | ✅ Complete |
+| 4. Composting + Lethe | 73 | ✅ Complete |
+| 5. Lucid Dreaming + Neurogenesis | 74 | ✅ Complete |
 | 6. Observability + Dashboard | ~35 | ⏳ Pending |
-| **Total** | **~399** | 199 complete |
+| **Total** | **~450** | 415 complete |
 
 ---
 

@@ -373,6 +373,7 @@ class ImportAuditResult(NamedTuple):
 # Agents that are allowed to be imported by others (foundational services)
 FOUNDATIONAL_AGENTS = {
     "shared",  # Shared utilities
+    "a",  # Abstract agent types (foundational - skeleton, meta)
     "d",  # Data/persistence (foundational)
     "l",  # Semantic lookup (foundational)
     "c",  # Category theory (foundational)

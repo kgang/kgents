@@ -9,7 +9,7 @@ Philosophy:
 > "Gravity not only validates outputs; it gates inputs."
 
 Integration Pattern:
-    from agents.f.reality_contracts import (
+    from agents.f.j_integration import (
         RealityGate,
         DeterministicOnly,
         BoundedComplexity,

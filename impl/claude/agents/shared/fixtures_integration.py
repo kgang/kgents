@@ -6,7 +6,7 @@ frequently-used test data structures. Import and use these in your tests
 to reduce duplication.
 
 Usage:
-    from agents.shared.fixtures import (
+    from agents.shared.fixtures_integration import (
         make_sample_intent,
         make_sample_contract,
         make_sample_source_code,

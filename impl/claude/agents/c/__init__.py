@@ -44,13 +44,16 @@ from .functor import (
     LoggedAgent,
     LogEntry,
     logged,
-    # Promise
-    PromiseAgent,
-    promise_agent,
-    resolve_promise,
     # Law validation
     check_identity_law,
     check_composition_law,
+)
+
+# Promise functor (J-gent integration)
+from .j_integration import (
+    PromiseAgent,
+    promise_agent,
+    resolve_promise,
 )
 
 # Parallel composition
