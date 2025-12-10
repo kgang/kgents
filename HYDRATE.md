@@ -31,9 +31,9 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 ## TL;DR
 
-**Status**: B-gent Phase 4 (VoI Economics) COMPLETE ✅
+**Status**: D-gent Finalization + B-gent Phase 4 COMMITTED ✅
 **Branch**: `main`
-**Latest Commit**: uncommitted (B-gent Phase 4 VoI)
+**Latest Commit**: 6a78b71 (D-gent Finalization)
 **Current State**:
   - **B-gent Phase 4**: ✅ COMPLETE - VoI Economics for O-gent observation (51 new tests, 289 B-gent total)
     - EpistemicCapital: Third currency for knowledge-about-the-system
