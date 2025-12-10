@@ -77,7 +77,7 @@ def _cmd_observe(args: list[str]) -> int:
     """Handle membrane observe - delegates to mirror observe."""
     from pathlib import Path
 
-    from ...mirror.composition import mirror_observe, format_report
+    from ...mirror.composition import mirror_observe
 
     path = Path(args[0]).expanduser() if args else Path.cwd()
 
@@ -109,7 +109,7 @@ def _cmd_sense(args: list[str]) -> int:
     """Handle membrane sense - quick mode observation."""
     from pathlib import Path
 
-    from ...mirror.composition import mirror_observe, format_status, mirror_status
+    from ...mirror.composition import mirror_observe, mirror_status
 
     path = Path(args[0]).expanduser() if args else None
 
@@ -118,8 +118,8 @@ def _cmd_sense(args: list[str]) -> int:
 
     try:
         if path:
-            # Quick observe
-            report = mirror_observe(path, quick=True)
+            # Quick observe - result cached for mirror_status
+            mirror_observe(path, quick=True)
             status = mirror_status(None)  # Use cached
         else:
             status = mirror_status(None)
