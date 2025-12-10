@@ -27,6 +27,41 @@ Currently implemented:
 - Central Bank: Token accounting with hydraulic refill
 - Value Ledger: Universal Value Protocol (UVP) implementation
 - RoC Monitor: Return on Compute tracking
+
+**Banker Economics (Phase 4):**
+- VoI (Value of Information): Economics of observation for O-gent integration
+- Epistemic Capital: Third currency for knowledge-about-the-system
+- VoI Ledger: Observation economics tracking
+- VoI Optimizer: Observation budget allocation
+- Adaptive Observer: Dynamic observation frequency
+- Unified Value Accounting: UVP + VoI integration
+
+**Structural Economics B×G Phase 1 (Compression Economy):**
+- Semantic Zipper: Compress inter-agent communication via domain-specific pidgins
+- Natural Language Tax: Economic pressure to adopt compressed languages
+- Communication Tracker: Monitor inter-agent message costs
+- Compression ROI Calculator: Determine when pidgin synthesis is justified
+
+**Structural Economics B×G Phase 2 (Fiscal Constitution):**
+- LedgerTongue: Constitutional grammar where bankruptcy is grammatically impossible
+- Parse-time Balance Checking: Invariants enforced BEFORE execution
+- Constitutional Banker: Grammar-based financial safety enforcement
+- Double-entry Bookkeeping: All transactions balance (credits = debits)
+
+**Structural Economics B×G Phase 3 (Syntax Tax):**
+- Chomsky-based Pricing: Price operations by grammar complexity (Type 0-3)
+- Grammar Classifier: Analyze grammars to determine Chomsky level
+- Syntax Tax Schedule: Cost tiers (Regular < Context-Free < Context-Sensitive < Turing-Complete)
+- Escrow for Turing-Complete: Safety deposits for high-risk grammars
+- Downgrade Negotiation: Help agents choose cheaper grammars when budget-constrained
+
+**Structural Economics B×G Phase 4 (Semantic Inflation):**
+- Complexity → Verbosity Pressure: Higher complexity demands more explanation tokens
+- ComplexityVector: Multi-dimensional complexity measurement (structural, temporal, conceptual, etc.)
+- AudienceProfile: Audience gap calculation for explanation targeting
+- InflationBudget: Token allocation between content and explanation
+- DeflationNegotiator: Compression strategies when budget constrained
+- SemanticCPIMonitor: System-wide inflation tracking (like economic CPI)
 """
 
 from .hypothesis import (
@@ -164,6 +199,122 @@ from .compression_economy import (
     analyze_compression_opportunity,
 )
 
+# VoI Economics (Phase 4: Value of Information for O-gent observation)
+from .voi_economics import (
+    # Enums
+    ObservationDepth,
+    FindingType,
+    # Finding types
+    ObservationFinding,
+    ObservationRecord,
+    Intervention,
+    InterventionOutcome,
+    VoIReceipt,
+    # Epistemic Capital (third currency)
+    EpistemicCapital,
+    # Ledger
+    VoILedger,
+    # Optimizer
+    VoIOptimizer,
+    # Adaptive observation
+    AdaptiveObserver,
+    # Unified accounting
+    UnifiedValueAccounting,
+    SystemHealthReport,
+    # Convenience functions
+    create_voi_ledger,
+    create_voi_optimizer,
+    create_adaptive_observer,
+    create_unified_accounting,
+)
+
+# Fiscal Constitution (B×G Phase 2: Grammar-based financial safety)
+from .fiscal_constitution import (
+    # Parse result types
+    ParseError,
+    ParseSuccess,
+    # Operation types
+    OperationType,
+    # Account types
+    AccountBalance,
+    Account,
+    LedgerState,
+    LedgerTransaction,
+    # Command AST nodes
+    TransferCommand,
+    QueryCommand,
+    ReserveCommand,
+    ReleaseCommand,
+    # Parser and Tongue
+    LedgerTongueParser,
+    LedgerTongue,
+    ExecutionResult,
+    # Banker
+    ConstitutionalBanker,
+    TransactionResult,
+    # Convenience functions
+    create_ledger_tongue,
+    create_constitutional_banker,
+    create_fiscal_constitution,
+)
+
+# Syntax Tax (B×G Phase 3: Chomsky-based pricing)
+from .syntax_tax import (
+    # Chomsky hierarchy types
+    ChomskyLevel,
+    GrammarFeature,
+    GrammarAnalysis,
+    # Classifier
+    GrammarClassifier,
+    # Pricing
+    SyntaxTaxSchedule,
+    SyntaxTaxDecision,
+    # Budget
+    SyntaxTaxBudget,
+    EscrowLease,
+    # Downgrade
+    DowngradeProposal,
+    DowngradeNegotiator,
+    # Convenience functions
+    create_syntax_tax_budget,
+    classify_grammar,
+    calculate_syntax_tax,
+    get_tier_costs,
+)
+
+# Semantic Inflation (B×G Phase 4: Complexity → Verbosity Pressure)
+from .semantic_inflation import (
+    # Complexity types
+    ComplexityDimension,
+    ComplexityVector,
+    # Audience types
+    AudienceLevel,
+    AudienceProfile,
+    # Inflation types
+    InflationPressure,
+    InflationCategory,
+    InflationReport,
+    # Allocation types
+    TokenAllocation,
+    AllocationDecision,
+    # Deflation types
+    DeflationStrategy,
+    DeflationProposal,
+    # CPI types
+    CPISnapshot,
+    # Classes
+    InflationBudget,
+    DeflationNegotiator as InflationDeflationNegotiator,  # Renamed to avoid collision
+    ComplexityAnalyzer,
+    SemanticCPIMonitor,
+    # Convenience functions
+    create_inflation_budget,
+    analyze_complexity,
+    calculate_inflation_pressure,
+    get_deflation_recommendations,
+    estimate_explanation_tokens,
+)
+
 __all__ = [
     # HypothesisEngine
     "HypothesisEngine",
@@ -259,4 +410,79 @@ __all__ = [
     "create_compression_monitor",
     "create_zipper_budget",
     "analyze_compression_opportunity",
+    # VoI Economics (Phase 4)
+    "ObservationDepth",
+    "FindingType",
+    "ObservationFinding",
+    "ObservationRecord",
+    "Intervention",
+    "InterventionOutcome",
+    "VoIReceipt",
+    "EpistemicCapital",
+    "VoILedger",
+    "VoIOptimizer",
+    "AdaptiveObserver",
+    "UnifiedValueAccounting",
+    "SystemHealthReport",
+    "create_voi_ledger",
+    "create_voi_optimizer",
+    "create_adaptive_observer",
+    "create_unified_accounting",
+    # Fiscal Constitution (B×G Phase 2)
+    "ParseError",
+    "ParseSuccess",
+    "OperationType",
+    "AccountBalance",
+    "Account",
+    "LedgerState",
+    "LedgerTransaction",
+    "TransferCommand",
+    "QueryCommand",
+    "ReserveCommand",
+    "ReleaseCommand",
+    "LedgerTongueParser",
+    "LedgerTongue",
+    "ExecutionResult",
+    "ConstitutionalBanker",
+    "TransactionResult",
+    "create_ledger_tongue",
+    "create_constitutional_banker",
+    "create_fiscal_constitution",
+    # Syntax Tax (B×G Phase 3)
+    "ChomskyLevel",
+    "GrammarFeature",
+    "GrammarAnalysis",
+    "GrammarClassifier",
+    "SyntaxTaxSchedule",
+    "SyntaxTaxDecision",
+    "SyntaxTaxBudget",
+    "EscrowLease",
+    "DowngradeProposal",
+    "DowngradeNegotiator",
+    "create_syntax_tax_budget",
+    "classify_grammar",
+    "calculate_syntax_tax",
+    "get_tier_costs",
+    # Semantic Inflation (B×G Phase 4)
+    "ComplexityDimension",
+    "ComplexityVector",
+    "AudienceLevel",
+    "AudienceProfile",
+    "InflationPressure",
+    "InflationCategory",
+    "InflationReport",
+    "TokenAllocation",
+    "AllocationDecision",
+    "DeflationStrategy",
+    "DeflationProposal",
+    "CPISnapshot",
+    "InflationBudget",
+    "InflationDeflationNegotiator",
+    "ComplexityAnalyzer",
+    "SemanticCPIMonitor",
+    "create_inflation_budget",
+    "analyze_complexity",
+    "calculate_inflation_pressure",
+    "get_deflation_recommendations",
+    "estimate_explanation_tokens",
 ]

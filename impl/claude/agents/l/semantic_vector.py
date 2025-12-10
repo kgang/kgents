@@ -199,7 +199,7 @@ class VectorSemanticBrain:
         In production, this should fetch the full entry from the registry.
         This is a fallback for when we only have vector backend data.
         """
-        from .types import EntityType, Status
+        from .types import EntityType
         from datetime import datetime
 
         return CatalogEntry(

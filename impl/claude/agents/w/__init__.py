@@ -50,6 +50,19 @@ from .fidelity import (
 )
 from .server import WireServer, serve_agent
 
+# Value Dashboard (B-gent economics visualization)
+from .value_dashboard import (
+    DashboardPanel,
+    TokenSnapshot,
+    TensorSnapshot,
+    VoISnapshot,
+    RoCSnapshot,
+    DashboardState,
+    ValueDashboard,
+    create_value_dashboard,
+    create_minimal_dashboard,
+)
+
 __all__ = [
     # Protocol
     "WireObservable",
@@ -68,4 +81,14 @@ __all__ = [
     # Server
     "WireServer",
     "serve_agent",
+    # Value Dashboard
+    "DashboardPanel",
+    "TokenSnapshot",
+    "TensorSnapshot",
+    "VoISnapshot",
+    "RoCSnapshot",
+    "DashboardState",
+    "ValueDashboard",
+    "create_value_dashboard",
+    "create_minimal_dashboard",
 ]

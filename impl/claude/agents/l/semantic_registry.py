@@ -235,6 +235,171 @@ class SemanticRegistry(Registry):
 
         return final_results[:limit]
 
+    # -------------------------------------------------------------------
+    # F-gent Integration: Artifact Forging with Duplicate Detection
+    # -------------------------------------------------------------------
+
+    async def find_for_forging(
+        self,
+        intent: str,
+        threshold: float = 0.9,
+        limit: int = 5,
+    ) -> list[SemanticResult]:
+        """Find existing artifacts before forging new ones (F-gent integration).
+
+        Before forging a new artifact, check if similar ones already exist.
+        This prevents ecosystem bloat and encourages reuse.
+
+        Args:
+            intent: User's intent for the artifact to be forged
+            threshold: Similarity threshold (default 0.9 = 90% similar)
+            limit: Maximum number of duplicates to return
+
+        Returns:
+            List of similar existing artifacts, ranked by similarity
+
+        Example:
+            # Before forging, check for duplicates
+            existing = await registry.find_for_forging(
+                intent="Agent that summarizes research papers to JSON",
+                threshold=0.9
+            )
+            if existing:
+                # Present alternatives to user
+                print(f"Found {len(existing)} similar artifacts:")
+                for result in existing:
+                    print(f"  - {result.entry.name} ({result.similarity:.2%})")
+        """
+        return await self.find_semantic(
+            intent=intent,
+            filters={"entity_type": EntityType.AGENT},  # Focus on agents
+            threshold=threshold,
+            limit=limit,
+        )
+
+    async def register_forged_artifact(
+        self,
+        entry: CatalogEntry,
+        forged_by: str = "F-gent",
+    ) -> str:
+        """Register newly forged artifact with F-gent metadata.
+
+        After successfully forging an artifact, register it in the catalog
+        with proper metadata tracking.
+
+        Args:
+            entry: Catalog entry for the forged artifact
+            forged_by: Name of the forging agent (default: "F-gent")
+
+        Returns:
+            Entry ID
+
+        Example:
+            # After forging: Register new artifact
+            artifact_id = await registry.register_forged_artifact(
+                artifact,
+                forged_by="F-gent"
+            )
+        """
+        # Add F-gent metadata
+        if "forged_by" not in entry.relationships:
+            entry.relationships["forged_by"] = []
+        entry.relationships["forged_by"].append(forged_by)
+
+        # Register with standard flow (includes auto-indexing)
+        return await self.register(entry)
+
+    # -------------------------------------------------------------------
+    # J-gent Integration: JIT Runtime Agent Selection
+    # -------------------------------------------------------------------
+
+    async def find_for_jit_selection(
+        self,
+        intent: str,
+        runtime_constraints: dict[str, Any] | None = None,
+        threshold: float = 0.7,
+        limit: int = 3,
+    ) -> list[SemanticResult]:
+        """Find candidate agents for JIT runtime selection (J-gent integration).
+
+        J-gent needs to select the right agent at runtime based on intent
+        and runtime constraints (entropy budget, performance requirements, etc.).
+
+        Args:
+            intent: What the user wants to accomplish
+            runtime_constraints: Optional filters (e.g., {"status": Status.STABLE})
+            threshold: Minimum similarity (default 0.7 = 70%)
+            limit: Maximum candidates to return (default 3)
+
+        Returns:
+            List of candidate agents, ranked by relevance
+
+        Example:
+            # J-gent runtime decision backed by L-gent
+            candidates = await registry.find_for_jit_selection(
+                intent="Parse JSON logs and extract errors",
+                runtime_constraints={"status": Status.STABLE},
+                threshold=0.7
+            )
+            # J-gent selects best candidate based on entropy budget
+            best_agent = j_gent.select_within_budget(candidates)
+        """
+        # Build filters from runtime constraints
+        filters = runtime_constraints.copy() if runtime_constraints else {}
+        filters["entity_type"] = EntityType.AGENT  # Only agents
+
+        return await self.find_semantic(
+            intent=intent,
+            filters=filters,
+            threshold=threshold,
+            limit=limit,
+        )
+
+    async def register_jit_execution(
+        self,
+        agent_id: str,
+        intent: str,
+        success: bool,
+        entropy_used: float | None = None,
+    ) -> None:
+        """Record JIT agent execution for feedback loop (J-gent integration).
+
+        Track which agents were selected for which intents and how they
+        performed. This creates a feedback loop for improving selection.
+
+        Args:
+            agent_id: ID of the agent that was executed
+            intent: Intent it was selected for
+            success: Whether execution succeeded
+            entropy_used: Optional entropy budget consumed
+
+        Example:
+            # After J-gent executes selected agent
+            await registry.register_jit_execution(
+                agent_id="parser_v3",
+                intent="Parse JSON logs",
+                success=True,
+                entropy_used=0.05
+            )
+        """
+        # Update usage metrics (parent class method)
+        await self.update_usage(agent_id, success=success)
+
+        # Add JIT metadata
+        entry = self.catalog.entries.get(agent_id)
+        if entry:
+            # Track intents this agent has handled
+            if "handled_intents" not in entry.relationships:
+                entry.relationships["handled_intents"] = []
+            if intent not in entry.relationships["handled_intents"]:
+                entry.relationships["handled_intents"].append(intent)
+
+            # Track entropy usage if provided
+            if entropy_used is not None:
+                if "entropy_history" not in entry.relationships:
+                    entry.relationships["entropy_history"] = []
+                entry.relationships["entropy_history"].append(entropy_used)
+
 
 # Convenience functions
 

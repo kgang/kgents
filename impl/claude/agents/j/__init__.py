@@ -103,6 +103,15 @@ from .t_integration import (
     FILTER_TEMPLATE,
 )
 
+# Shared Entropy Budget (J-gent × B-gent integration)
+from .shared_budget import (
+    SharedEntropyBudget,
+    DualEntropyBudget,
+    create_depth_based_budget,
+    compute_depth_from_budget,
+    create_dual_budget,
+)
+
 __all__ = [
     # Promise types (Phase 1)
     "Promise",
@@ -191,4 +200,10 @@ __all__ = [
     "JSON_FIELD_EXTRACTOR",
     "TEXT_TRANSFORMER",
     "FILTER_TEMPLATE",
+    # Shared Budget (J-gent × B-gent integration)
+    "SharedEntropyBudget",
+    "DualEntropyBudget",
+    "create_depth_based_budget",
+    "compute_depth_from_budget",
+    "create_dual_budget",
 ]
