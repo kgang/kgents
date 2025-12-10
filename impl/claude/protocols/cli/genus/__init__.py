@@ -20,6 +20,8 @@ from __future__ import annotations
 __all__ = [
     # G-gent commands
     "cmd_grammar",
+    # I-gent commands
+    "cmd_garden",
     # J-gent commands
     "cmd_jit",
     # P-gent commands
@@ -29,6 +31,13 @@ __all__ = [
     # W-gent commands
     "cmd_witness",
 ]
+
+
+def cmd_garden(args: list[str]) -> int:
+    """Garden/Interface commands (I-gent)."""
+    from .i_gent import cmd_garden as handler
+
+    return handler(args)
 
 
 def cmd_grammar(args: list[str]) -> int:

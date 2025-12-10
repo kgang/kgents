@@ -1,32 +1,38 @@
 """
-I-gents: The Living Codex Garden.
+I-gents: The Stigmergic Field.
 
-Interface agents that render the kgents ecosystem visible. They transform
-abstract composition graphs into tangible, navigable, contemplative spaces.
+Interface agents that render the kgents ecosystem as a stigmergic field:
+a shared environment where agents leave traces (pheromones), respond to
+traces, and coordinate without explicit communication.
 
 Core concepts:
-- Phase: Moon-cycle lifecycle states (dormant, waking, active, waning, empty)
-- Glyph: Atomic unit of visualization (phase symbol + identity)
-- Scale: Fractal zoom levels (glyph → card → page → garden → library)
+- Field: 2D grid where entities move and interact
+- Entity: Bootstrap agents + task attractors
+- Pheromone: Invisible environmental traces that affect behavior
+- Dialectic Phase: System-wide synthesis state
 
-Aesthetic:
-- Paper-Terminal: Warm cream + warm black, monospace, box-drawing characters
-- Contemplative: Breath cycle, margin notes, archival permanence
-- Fractal: Same grammar at all scales
+Three Layers:
+1. Physical - Entity positions, phases, events
+2. Topological - Composition morphisms, gravity, tension
+3. Semantic - Intent, dialectic phase, value alignment
 
 Example:
-    >>> from agents.i import Phase, Glyph, CardRenderer
+    >>> from agents.i import FieldState, Entity, EntityType, FieldSimulator
     >>>
-    >>> glyph = Glyph(agent_id="robin", phase=Phase.ACTIVE)
-    >>> print(glyph.render())  # "● robin"
+    >>> state = create_demo_field()
+    >>> simulator = FieldSimulator(state)
+    >>> simulator.tick()  # Advance simulation
     >>>
-    >>> card = CardRenderer(glyph, joy=0.9, ethics=0.8)
-    >>> print(card.render())
-    # ┌─ robin ────────┐
-    # │ ● active       │
-    # │ joy: █████████░│
-    # │ eth: ████████░░│
-    # └────────────────┘
+    >>> from agents.i.tui import TUIApplication
+    >>> app = TUIApplication(state)
+    >>> app.run_sync()  # Launch interactive TUI
+
+Legacy types (still available):
+- Phase: Moon-cycle lifecycle states
+- Glyph: Atomic unit of visualization
+- Scale: Fractal zoom levels
+
+See: spec/i-gents/README.md
 """
 
 from .types import (
@@ -49,8 +55,21 @@ from .export import MarkdownExporter
 from .breath import BreathCycle, BreathManager
 from .observe import ObserveAction, GardenObserver
 
+# New stigmergic field types
+from .field import (
+    Entity,
+    EntityType,
+    FieldState,
+    FieldSimulator,
+    Pheromone,
+    PheromoneType,
+    DialecticPhase,
+    create_default_field,
+    create_demo_field,
+)
+
 __all__ = [
-    # Types
+    # Legacy Types (still supported)
     "Phase",
     "Glyph",
     "Scale",
@@ -58,7 +77,7 @@ __all__ = [
     "NoteSource",
     "AgentState",
     "GardenState",
-    # Renderers
+    # Legacy Renderers
     "GlyphRenderer",
     "CardRenderer",
     "PageRenderer",
@@ -72,4 +91,14 @@ __all__ = [
     # W-gent Integration
     "ObserveAction",
     "GardenObserver",
+    # Stigmergic Field (new)
+    "Entity",
+    "EntityType",
+    "FieldState",
+    "FieldSimulator",
+    "Pheromone",
+    "PheromoneType",
+    "DialecticPhase",
+    "create_default_field",
+    "create_demo_field",
 ]

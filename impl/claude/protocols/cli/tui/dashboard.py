@@ -36,7 +36,6 @@ Keybindings:
 from __future__ import annotations
 
 import asyncio
-import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Callable
@@ -46,7 +45,6 @@ from .types import (
     AgentStatus,
     ArtifactEntry,
     DashboardEvent,
-    DashboardLayout,
     EventType,
     PlaybackState,
     Session,

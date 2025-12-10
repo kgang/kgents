@@ -18,26 +18,23 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 ## TL;DR
 
-**Status**: D-gent Phase 5 (SQL/Redis Backends) ✅
+**Status**: D-gent Phase 5 COMMITTED ✅
 **Branch**: `main`
-**Latest Commit**: `ce5dd8d` feat(b-gent): B×G Phase 5 - Grammar Insurance + JIT Efficiency
+**Latest Commit**: `7e4fba1` feat(d-gent): Phase 5 - SQL/Redis backends (open source)
 
 **Current State**:
-- **D-gent Phase 5**: ✅ NEW - SQL/Redis backends (41 tests, 36 skipped when deps missing)
-  - `sql_agent.py`: SQLite + PostgreSQL with versioned state
-  - `redis_agent.py`: Redis/Valkey with TTL, pub/sub, history
+- **D-gent Phase 5**: ✅ COMMITTED - SQL/Redis backends (41 tests, 36 skipped)
 - **O-gent Phase 3**: ✅ COMPLETE - Panopticon Integration (137 tests)
-- **CLI Phase 6**: ✅ COMMITTED - Intent Layer (94 tests)
 - **B×G Phases 1-6**: ✅ COMPLETE (575 tests)
 - D-gent (276 tests), L-gent, G-gent: ✅ COMPLETE
 
 **Uncommitted**:
-- **D-gent Phase 5**: `sql_agent.py`, `redis_agent.py` + tests
+- CLI TUI files in `impl/claude/protocols/cli/tui/`
+- O-gent Phase 3 panopticon files
 
 **Next Steps**:
-1. **Commit**: D-gent Phase 5 + O-gent Phase 3
-2. **CLI Phase 7**: TUI Dashboard (Textual-based DVR)
-3. **O-gent Phase 4**: W-gent integration for visualization
+1. **Commit**: O-gent Phase 3 + CLI TUI
+2. **O-gent Phase 4**: W-gent integration for visualization
 
 ---
 
@@ -64,7 +61,7 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 | Agent | Impl % | Key Gap |
 |-------|--------|---------|
 | **B-gents** | ~100% | ✅ All 6 B×G phases complete (575 tests) |
-| **D-gents** | ~80% | Minor SQL/Redis backends |
+| **D-gents** | ~95% | ✅ Phase 5 SQL/Redis complete (276 tests) |
 | **L-gents** | ~70% | Vector DB integration |
 | **G-gents** | ~90% | Phase 7 done |
 | **O-gents** | ~90% | ✅ Phase 3 complete (137 tests), W-gent viz next |
@@ -110,6 +107,12 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 ## Recent Sessions
 
+### Session: D-gent Phase 5 - SQL/Redis Backends (2025-12-09) ✅ COMMITTED
+
+- `sql_agent.py`: SQLite + PostgreSQL backends with versioned state
+- `redis_agent.py`: Redis/Valkey with TTL, pub/sub, history
+- Commit: `7e4fba1` - 41 tests (36 skip when deps missing)
+
 ### Session: B×G Phase 6 - JIT Efficiency (2025-12-09) ✅ COMMITTED
 
 - `jit_efficiency.py`: JIT compilers (Regex, JumpTable, Bytecode)
@@ -119,11 +122,6 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 - `bootstrap_witness.py`: Id/Compose agents, category law verification
 - Commit: `8c1a062` - 25 new tests (87 total O-gent)
-
-### Session: CLI Phase 6 - Intent Layer (2025-12-09) ✅ COMMITTED
-
-- `protocols/cli/intent/`: 10 core verbs, intent router, risk assessment
-- 94 tests
 
 ---
 

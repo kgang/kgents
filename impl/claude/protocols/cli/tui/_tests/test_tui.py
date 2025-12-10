@@ -9,7 +9,6 @@ Tests cover:
 - Session management
 """
 
-import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path
 
