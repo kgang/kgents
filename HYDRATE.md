@@ -18,27 +18,22 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 ## TL;DR
 
-**Status**: L-gent Phase 8 (D-gent Vector DB) COMPLETE ✅
+**Status**: Protocol Specs v2.0 + L-gent Vector DB COMMITTED ✅
 **Branch**: `main`
-**Latest Commit**: `8f51bbc` feat(i-gent): Stigmergic Field + TUI Renderer
+**Latest Commit**: `6bd9b63` feat: Protocol Specs v2.0 + L-gent Vector DB + I-gent Forge View
 
 **Current State**:
-- **L-gent Phase 8**: ✅ COMPLETE - D-gent Vector DB integration (23 tests)
-- **Protocol Specs v2.0**: ✅ COMPLETE - CLI and Mirror rewritten as agent compositions
-- **CLI Phase 7**: ✅ COMMITTED - TUI Dashboard (73 tests)
-- **I-gent Stigmergic Field**: ✅ COMMITTED - Field + TUI (69 tests)
-- **O-gent Phase 4**: ✅ STAGED - W-gent integration (40 tests)
+- **L-gent Phase 8**: ✅ COMMITTED `6bd9b63` - D-gent Vector DB (23 tests)
+- **Protocol Specs v2.0**: ✅ COMMITTED - CLI/Mirror as agent compositions
+- **O-gent Phase 4**: ✅ COMMITTED `dd153d3` - W-gent integration (40 tests)
+- **I-gent Stigmergic Field**: ✅ COMMITTED `8f51bbc` - Field + TUI (69 tests)
+- **CLI Phase 7**: ✅ COMMITTED `0f6fe84` - TUI Dashboard (73 tests)
 
-**Uncommitted**:
-- `impl/claude/agents/l/vector_db.py` - D-gent Vector DB integration
-- `impl/claude/agents/l/_tests/test_vector_db.py` - 23 tests
-- `spec/protocols/cli.md` - Rewritten: CLI as C-gent composing agents
-- `spec/protocols/mirror.md` - Rewritten: Mirror as P >> W >> H >> O >> J
-- CLI handlers: debug, igent, membrane, mirror, scientific
+**Uncommitted**: None - all clean
 
 **Next Steps**:
-1. **Commit**: L-gent Phase 8 + Protocol specs + CLI handlers
-2. **Implement**: Working mirror observe (Phase 1: Structural, 0 tokens)
+1. **Implement**: Working mirror observe (Phase 1: Structural, 0 tokens)
+2. Continue agent consolidation
 
 ---
 
@@ -77,23 +72,32 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 ## Current Session
 
-### Session: Protocol Specs v2.0 Rewrite (2025-12-09)
+### Session: L-gent Phase 8 - D-gent Vector DB (2025-12-09)
 
-**Status**: ✅ COMPLETE - CLI and Mirror specs rewritten from first principles
+**Status**: ✅ COMPLETE - Tight D-gent integration for vector search
 
-**Core Insight**: Protocols are not special entities—they are **agent compositions**.
+**New Files**:
+- `impl/claude/agents/l/vector_db.py` - D-gent Vector DB integration
+- `impl/claude/agents/l/_tests/test_vector_db.py` - 23 tests
 
-**New Specs**:
-- `spec/protocols/cli.md` - CLI as C-gent composing other agents
-- `spec/protocols/mirror.md` - Mirror as P >> W >> H >> O >> J composition
+**Key Components**:
+1. **DgentVectorBackend**: VectorBackend protocol using D-gent's VectorAgent
+2. **VectorCatalog**: Unified catalog + vector DB with auto-sync
+3. **D-gent Semantic Features**: curvature_at, find_void, cluster_centers
+4. **Migration Utilities**: migrate_to_dgent_backend
 
-**Key Changes**:
-1. **CLI as Agent**: 10 intent verbs, all compositions
-2. **Mirror Simplified**: 864 lines → 200 lines, 0 placeholders
-3. **Generative Test**: Every spec operation has concrete implementation
-4. **Anti-Patterns Rejected**: TDA, persistent homology, quantum dialectic → MVP first
+**Architecture**:
+```
+┌─────────────────────────────────────────────────────────────┐
+│                       VectorCatalog                          │
+│    (Unified view: metadata via Registry, vectors via D-gent) │
+├─────────────────────────────────────────────────────────────┤
+│   PersistentRegistry              DgentVectorBackend         │
+│   (D-gent: PersistentAgent)       (D-gent: VectorAgent)      │
+└─────────────────────────────────────────────────────────────┘
+```
 
-**Philosophy**: "The Mirror was always five agents in a trench coat. Now we admit it."
+**Tests**: 23 (all skip gracefully when numpy not installed)
 
 ---
 
