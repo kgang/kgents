@@ -1,8 +1,29 @@
 # HYDRATE.md - kgents Session Context
 
-**Status**: All Tests Passing | ~5,897 tests | Branch: `main`
+**Status**: All Tests Passing | ~6,020 tests | Branch: `kgents-3132ae6a`
 
-## Recent: Instance DB Phase 5 - Lucid Dreaming + Neurogenesis (✅ Complete)
+## Semantic Field: Current State
+
+Base implementation with 43 tests covering:
+- Psi-gent: METAPHOR emission
+- F-gent: METAPHOR sensing + INTENT emission
+- J-gent: WARNING emission
+- B-gent: OPPORTUNITY/SCARCITY emission
+- M-gent: MEMORY emission/sensing
+- N-gent: NARRATIVE emission/sensing
+- O-gent: Universal observer sensor
+
+## Next: Semantic Field Phases 1-4 (Planned)
+
+See `docs/semantic-field-integration-plan.md` for planned expansion:
+- Phase 1: E-gent, H-gent, K-gent, R-gent emitters/sensors
+- Phase 2: Cross-signal sensing
+- Phase 3: D-gent, T-gent, W-gent infrastructure
+- Phase 4: L-gent CAPABILITY signals
+
+---
+
+## Previous: Instance DB Phase 5 - Lucid Dreaming + Neurogenesis (✅ Complete)
 
 Implemented Phase 5 of the Bicameral Engine: Interruptible maintenance and self-evolving schema.
 
