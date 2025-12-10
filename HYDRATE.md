@@ -6,16 +6,15 @@ Keep it concise—focus on current state and recent work.
 
 ## TL;DR
 
-**Status**: N-gent Phase 5 COMPLETE ✅ | **Branch**: `main` | **Latest**: `89f831f`
+**Status**: Ψ-gent FIXED ✅ | **Branch**: `main` | **Latest**: `2aa68ce`
 
-**Recent Commits**:
-- `89f831f` feat(n-gent): Phase 1 Historian (146 tests)
-- `26dc88a` feat(m-gent): Phase 2-4 (148 tests)
-- `da0a3f1` feat(f-gent): Gravity (50 tests)
+**This Session**:
+- ✅ Fixed all 45 Ψ-gent test failures (177 tests now passing)
+- Key fixes: AxisType.Z_MHC, TensorPosition, MetaphorSolution, ComplexityMetrics, ShadowGenerator, DialecticalRotator
 
-**Uncommitted**: N-gent Phases 3-5 (echo_chamber.py, chronicle.py, integrations.py) - 107 new tests
+**Uncommitted**: Ψ-gent fixes (types.py, resolution_scaler.py, dialectical_rotator.py)
 
-**Next Steps**: Commit N-gent | Ψ-gent Phase 1 | DNA migration
+**Next Steps**: Commit Ψ-gent fixes | Integration tests | Full test run
 
 ---
 
@@ -26,46 +25,42 @@ Keep it concise—focus on current state and recent work.
 | B | 100 | 575 | ✅ B×G complete |
 | D | 95 | 276 | ✅ SQL/Redis |
 | G | 90 | 200+ | ✅ Phase 7 |
-| L | 85 | 200 | ✅ Vector DB |
+| L | 90 | 234 | ✅ AdvancedLattice |
 | O | 95 | 177 | ✅ W-gent |
-| I | 85 | 138 | ✅ Stigmergic |
-| F | 65 | 119 | ✅ Gravity |
+| I | 90 | 183 | ✅ UI Components |
+| F | 75 | 151 | ✅ Reality Contracts |
 | M | 95 | 148 | ✅ Phase 4 |
-| N | 90 | 253 | ✅ Phase 1-5 |
-| Ψ | 5 | - | Spec only |
-| **Total** | - | **2800+** | ✅ |
+| N | 100 | 304 | ✅ Phase 1-6 |
+| J | 100 | 184 | ✅ DNA migration |
+| Ψ | 100 | 177 | ✅ All passing |
+| **Total** | - | **3000+** | ✅ |
 
 ---
 
-## Current Focus
+## N-gent Phase 6: Epistemic Features
 
-### N-gent: Narrative Agents
-- **Phase 1** ✅: Historian, CrystalStore, HistorianTap
-- **Phase 2** ✅: Bard, ForensicBard, Narrative
-- **Phase 3** ✅: EchoChamber, LucidDreamer, DriftReport
-- **Phase 4** ✅: Chronicle, ChronicleBuilder, CorrelationDetector
-- **Phase 5** ✅: IndexedCrystalStore, ResonantCrystalStore, BudgetedBard, VisualizableBard
+### Components
+- `ConfidenceLevel`: Discrete confidence levels (CERTAIN/HIGH/MODERATE/LOW/UNCERTAIN)
+- `ReliabilityAnnotation`: Confidence + corroboration/contradiction tracking
+- `UnreliableTrace`: Trace with reliability metadata
+- `HallucinationType`: Types of potential hallucination
+- `HallucinationIndicator`: Signs of potential hallucination
+- `HallucinationDetector`: Detects overconfidence, contradictions, confabulation
+- `UnreliableNarrative`: Narrative with epistemic annotations
+- `UnreliableNarrator`: Narrator with epistemic humility
+- `PerspectiveSpec`: Configuration for one perspective
+- `Contradiction`: Where perspectives disagree
+- `RashomonNarrative`: Multiple perspectives on same events
+- `RashomonNarrator`: Multi-perspective story generation
+- `GroundTruth`: Verified fact for reconciliation
+- `ReconciliationResult`: Ground truth comparison result
+- `GroundTruthReconciler`: Compare narratives against facts
 
-### M-gent: Memory Agents
-- **Phase 2** ✅: D-gent backend, AssociativeWeb, TemporalMemory
-- **Phase 3** ✅: ProspectiveAgent, EthicalGeometryAgent
-- **Phase 4** ✅: VectorHolographicMemory, BudgetedMemory
-
-### Bootstrap
-- **DNA** ✅: Config germination, trait expression (58 tests)
-- **Umwelt** ✅: Agent-specific world projection (26 tests)
-- **Gravity** ✅: Output validation contracts (50 tests)
-
----
-
-## Key Docs
-
-| Doc | Content |
-|-----|---------|
-| `docs/m-gent-treatment.md` | Holographic memory spec (~850 lines) |
-| `docs/n-gent-treatment.md` | Historian/Bard architecture |
-| `docs/psi-gent-synthesis.md` | Cross-pollination roadmap |
-| `docs/24hr-retrospective-and-synthesis.md` | Harmonic Lattice proposal |
+### Philosophy
+The UnreliableNarrator and RashomonNarrator embody epistemic humility:
+- LLMs can hallucinate. Stories can be wrong.
+- Multiple perspectives on the same events yield different truths.
+- Confidence annotations mark uncertainty.
 
 ---
 
@@ -73,6 +68,8 @@ Keep it concise—focus on current state and recent work.
 
 | Integration | Status |
 |-------------|--------|
+| J×DNA | ✅ JGentConfig extends JGentDNA |
+| F×J RealityGate | ✅ Reality-aware gravity contracts |
 | B×J SharedEntropyBudget | ✅ |
 | B×W ValueDashboard | ✅ |
 | B×G Syntax/Compression | ✅ |
@@ -85,3 +82,14 @@ Keep it concise—focus on current state and recent work.
 | N×I VisualizableBard | ✅ |
 | N×B BudgetedBard | ✅ |
 | O×W Panopticon | ✅ |
+
+---
+
+## Key Docs
+
+| Doc | Content |
+|-----|---------|
+| `docs/m-gent-treatment.md` | Holographic memory spec (~850 lines) |
+| `docs/n-gent-treatment.md` | Historian/Bard architecture |
+| `docs/psi-gent-synthesis.md` | Cross-pollination roadmap |
+| `docs/24hr-retrospective-and-synthesis.md` | Harmonic Lattice proposal |

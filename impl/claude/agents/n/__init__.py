@@ -48,6 +48,23 @@ Phase 5 Components (Integrations):
 - BudgetedBard: B-gent token budgeting
 - NarrativeOrchestrator: Unified integration layer
 
+Phase 6 Components (Epistemic Features):
+- ConfidenceLevel: Discrete confidence levels
+- ReliabilityAnnotation: Confidence + corroboration tracking
+- UnreliableTrace: Trace with reliability metadata
+- HallucinationType: Types of potential hallucination
+- HallucinationIndicator: Signs of potential hallucination
+- HallucinationDetector: Detects hallucination patterns
+- UnreliableNarrative: Narrative with epistemic annotations
+- UnreliableNarrator: Narrator with epistemic humility
+- PerspectiveSpec: Configuration for one perspective
+- Contradiction: Where perspectives disagree
+- RashomonNarrative: Multiple perspectives on same events
+- RashomonNarrator: Multi-perspective story generation
+- GroundTruth: Verified fact for reconciliation
+- ReconciliationResult: Ground truth comparison result
+- GroundTruthReconciler: Compare narratives against facts
+
 Example (Phase 1 - Recording):
     >>> from agents.n import Historian, MemoryCrystalStore, SemanticTrace
     >>>
@@ -168,6 +185,25 @@ from .integrations import (
     VisualizableBard,
 )
 
+# Epistemic Features (Phase 6)
+from .epistemic import (
+    ConfidenceLevel,
+    Contradiction,
+    GroundTruth,
+    GroundTruthReconciler,
+    HallucinationDetector,
+    HallucinationIndicator,
+    HallucinationType,
+    PerspectiveSpec,
+    RashomonNarrative,
+    RashomonNarrator,
+    ReconciliationResult,
+    ReliabilityAnnotation,
+    UnreliableNarrative,
+    UnreliableNarrator,
+    UnreliableTrace,
+)
+
 __all__ = [
     # Core Types
     "Action",
@@ -228,4 +264,20 @@ __all__ = [
     "NarrativeVisualization",
     "ResonantCrystalStore",
     "VisualizableBard",
+    # Epistemic Features (Phase 6)
+    "ConfidenceLevel",
+    "Contradiction",
+    "GroundTruth",
+    "GroundTruthReconciler",
+    "HallucinationDetector",
+    "HallucinationIndicator",
+    "HallucinationType",
+    "PerspectiveSpec",
+    "RashomonNarrative",
+    "RashomonNarrator",
+    "ReconciliationResult",
+    "ReliabilityAnnotation",
+    "UnreliableNarrative",
+    "UnreliableNarrator",
+    "UnreliableTrace",
 ]
