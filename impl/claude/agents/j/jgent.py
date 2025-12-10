@@ -23,13 +23,18 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any, Callable, Generic, Optional, TypeVar
 
+from bootstrap.dna import JGentDNA
 from bootstrap.types import Agent
 
 from .chaosmonger import StabilityConfig, analyze_stability
-from .meta_architect import AgentSource, ArchitectConstraints, ArchitectInput, MetaArchitect
-from .promise import Promise, PromiseMetrics, PromiseState, collect_metrics
+from .meta_architect import (
+    ArchitectConstraints,
+    ArchitectInput,
+    MetaArchitect,
+)
+from .promise import Promise, PromiseMetrics, collect_metrics
 from .reality import ClassificationInput, Reality, RealityClassifier
-from .sandbox import SandboxConfig, SandboxResult, execute_in_sandbox
+from .sandbox import SandboxConfig, execute_in_sandbox
 
 T = TypeVar("T")
 
@@ -40,11 +45,24 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
-class JGentConfig:
-    """Configuration for JGent coordinator."""
+class JGentConfig(JGentDNA):
+    """
+    Configuration for JGent coordinator.
 
+    Extends JGentDNA to add runtime-specific configuration.
+    DNA provides: max_depth, entropy_budget, decay_factor
+    Config adds: stability checking, sandbox settings
+    """
+
+    # Override defaults from JGentDNA
     max_depth: int = 3  # Maximum recursion depth
-    entropy_threshold: float = 0.1  # Budget below which collapse to Ground
+    entropy_budget: float = 1.0  # Initial entropy (from JGentDNA)
+    decay_factor: float = 0.5  # Budget decay per depth (from JGentDNA)
+
+    # Derived threshold (collapse when budget falls below)
+    entropy_threshold: float = 0.1
+
+    # Runtime configuration (not DNA)
     chaosmonger_enabled: bool = True  # Run stability checks
     test_generation_enabled: bool = True  # Generate accountability tests
     sandbox_timeout: float = 30.0  # Execution timeout in seconds
@@ -53,10 +71,27 @@ class JGentConfig:
     max_cyclomatic_complexity: int = 20
     max_branching_factor: int = 5
     allowed_imports: frozenset[str] = field(
-        default_factory=lambda: frozenset({
-            "re", "json", "dataclasses", "typing", "datetime", "math"
-        })
+        default_factory=lambda: frozenset(
+            {"re", "json", "dataclasses", "typing", "datetime", "math"}
+        )
     )
+
+    @classmethod
+    def from_dna(cls, dna: JGentDNA, **runtime_config) -> "JGentConfig":
+        """
+        Create config from DNA with runtime overrides.
+
+        Example:
+            dna = JGentDNA.germinate(max_depth=5)
+            config = JGentConfig.from_dna(dna, sandbox_timeout=60.0)
+        """
+        return cls.germinate(
+            max_depth=dna.max_depth,
+            entropy_budget=dna.entropy_budget,
+            decay_factor=dna.decay_factor,
+            exploration_budget=dna.exploration_budget,
+            **runtime_config,
+        )
 
 
 @dataclass(frozen=True)
@@ -194,8 +229,13 @@ class JGent(Agent[JGentInput[T], JGentResult[T]], Generic[T]):
 
     @property
     def entropy_budget(self) -> float:
-        """Compute entropy budget based on depth."""
-        return 1.0 / (self._depth + 1)
+        """
+        Compute entropy budget based on depth.
+
+        Uses DNA decay_factor: budget = initial * (decay_factor ^ depth)
+        This gives geometric decay instead of linear.
+        """
+        return self._config.entropy_budget * (self._config.decay_factor**self._depth)
 
     @property
     def config(self) -> JGentConfig:
@@ -318,7 +358,9 @@ class JGent(Agent[JGentInput[T], JGentResult[T]], Generic[T]):
         # 2. Execute the tool
         # 3. Return the result
 
-        logger.debug(f"JGent[{self._depth}] DETERMINISTIC: returning ground (placeholder)")
+        logger.debug(
+            f"JGent[{self._depth}] DETERMINISTIC: returning ground (placeholder)"
+        )
 
         promise.mark_resolved(input.ground)
 

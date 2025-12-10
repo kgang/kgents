@@ -9,7 +9,7 @@ Tests:
 """
 
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from ..types import Determinism, SemanticTrace
@@ -43,7 +43,7 @@ def make_trace(
     return SemanticTrace(
         trace_id=trace_id,
         parent_id=None,
-        timestamp=timestamp or datetime.utcnow(),
+        timestamp=timestamp or datetime.now(timezone.utc),
         agent_id=agent_id,
         agent_genus="T",
         action=action,
@@ -60,7 +60,7 @@ def make_trace(
 
 def make_trace_sequence(count: int = 5) -> list[SemanticTrace]:
     """Create a sequence of traces."""
-    base_time = datetime.utcnow()
+    base_time = datetime.now(timezone.utc)
     traces = []
     for i in range(count):
         traces.append(

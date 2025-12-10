@@ -1,6 +1,6 @@
 """Tests for N-gent types: SemanticTrace and related structures."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 import pytest
 
@@ -102,7 +102,7 @@ class TestSemanticTrace:
         nested = SemanticTrace(
             trace_id="child-456",
             parent_id="test-123",
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
             agent_id="child-agent",
             agent_genus="G",
             action="GENERATE",
@@ -178,7 +178,7 @@ class TestTraceContext:
             agent_genus="B",
             input_snapshot=b"test data",
             input_hash="abc123",
-            start_time=datetime.utcnow(),
+            start_time=datetime.now(timezone.utc),
         )
 
         assert ctx.trace_id == "ctx-123"
@@ -194,7 +194,7 @@ class TestTraceContext:
             agent_genus="G",
             input_snapshot=b"nested data",
             input_hash="def456",
-            start_time=datetime.utcnow(),
+            start_time=datetime.now(timezone.utc),
         )
 
         assert ctx.parent_id == "parent-123"

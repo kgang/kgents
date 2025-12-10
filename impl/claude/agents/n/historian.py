@@ -14,7 +14,7 @@ from __future__ import annotations
 import hashlib
 import json
 from contextvars import ContextVar
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 from uuid import uuid4
 
@@ -116,7 +116,7 @@ class Historian:
             agent_genus=agent_genus,
             input_snapshot=input_snapshot,
             input_hash=input_hash,
-            start_time=datetime.utcnow(),
+            start_time=datetime.now(timezone.utc),
         )
 
     def end_trace(
@@ -267,7 +267,7 @@ class Historian:
 
     def _duration_ms(self, ctx: TraceContext) -> int:
         """Calculate duration in milliseconds."""
-        delta = datetime.utcnow() - ctx.start_time
+        delta = datetime.now(timezone.utc) - ctx.start_time
         return int(delta.total_seconds() * 1000)
 
 

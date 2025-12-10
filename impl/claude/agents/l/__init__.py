@@ -91,6 +91,15 @@ from .lattice import (
     CompositionSuggestion,
     create_lattice,
 )
+from .advanced_lattice import (
+    AdvancedLattice,
+    CachedLattice,
+    UnionType,
+    IntersectionType,
+    TypePath,
+    create_advanced_lattice,
+    create_cached_lattice,
+)
 from .semantic import (
     SemanticBrain,
     SemanticResult,
@@ -199,6 +208,14 @@ __all__ = [
     "PipelineVerification",
     "CompositionSuggestion",
     "create_lattice",
+    # Advanced Lattice (union/intersection/caching)
+    "AdvancedLattice",
+    "CachedLattice",
+    "UnionType",
+    "IntersectionType",
+    "TypePath",
+    "create_advanced_lattice",
+    "create_cached_lattice",
     # Semantic (Phase 5)
     "SemanticBrain",
     "SemanticResult",

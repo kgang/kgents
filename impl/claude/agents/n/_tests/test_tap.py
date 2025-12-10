@@ -1,6 +1,6 @@
 """Tests for HistorianTap wire protocol integration."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 import pytest
 
@@ -22,7 +22,7 @@ def make_frame(
     return WireFrame(
         frame_type=frame_type,
         correlation_id=correlation_id,
-        timestamp=datetime.utcnow(),
+        timestamp=datetime.now(timezone.utc),
         agent_id=agent_id,
         agent_genus=agent_genus,
         payload=payload or {},

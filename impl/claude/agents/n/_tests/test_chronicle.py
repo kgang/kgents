@@ -10,7 +10,7 @@ Tests:
 """
 
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from ..types import Determinism, SemanticTrace
@@ -44,7 +44,7 @@ def make_trace(
     return SemanticTrace(
         trace_id=trace_id,
         parent_id=parent_id,
-        timestamp=timestamp or datetime.utcnow(),
+        timestamp=timestamp or datetime.now(timezone.utc),
         agent_id=agent_id,
         agent_genus=agent_genus,
         action=action,
@@ -61,7 +61,7 @@ def make_trace(
 
 def make_multi_agent_traces() -> list[SemanticTrace]:
     """Create traces from multiple agents with interactions."""
-    base_time = datetime.utcnow()
+    base_time = datetime.now(timezone.utc)
 
     traces = [
         # Agent A starts
@@ -104,7 +104,7 @@ class TestInteraction:
     def test_interaction_creation(self):
         """Test creating an interaction."""
         interaction = Interaction(
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
             from_agent="AgentA",
             to_agent="AgentB",
             interaction_type="call",
@@ -119,7 +119,7 @@ class TestInteraction:
     def test_interaction_agents_property(self):
         """Test agents property."""
         interaction = Interaction(
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
             from_agent="AgentA",
             to_agent="AgentB",
             interaction_type="call",
@@ -132,7 +132,7 @@ class TestInteraction:
     def test_interaction_with_correlation_id(self):
         """Test interaction with correlation ID."""
         interaction = Interaction(
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
             from_agent="AgentA",
             to_agent="AgentB",
             interaction_type="call",
@@ -167,7 +167,7 @@ class TestTimelineView:
 
     def test_timeline_view_duration(self):
         """Test duration property."""
-        base_time = datetime.utcnow()
+        base_time = datetime.now(timezone.utc)
         traces = [
             make_trace("t-1", timestamp=base_time),
             make_trace("t-2", timestamp=base_time + timedelta(seconds=5)),
@@ -202,7 +202,7 @@ class TestTimelineView:
         traces = [make_trace("t-1")]
         outgoing = [
             Interaction(
-                timestamp=datetime.utcnow(),
+                timestamp=datetime.now(timezone.utc),
                 from_agent="AgentA",
                 to_agent="AgentB",
                 interaction_type="call",
@@ -212,7 +212,7 @@ class TestTimelineView:
         ]
         incoming = [
             Interaction(
-                timestamp=datetime.utcnow(),
+                timestamp=datetime.now(timezone.utc),
                 from_agent="AgentC",
                 to_agent="AgentA",
                 interaction_type="call",
@@ -327,7 +327,7 @@ class TestChronicle:
     def test_weave_around(self):
         """Test weaving around a specific trace."""
         chronicle = Chronicle()
-        base_time = datetime.utcnow()
+        base_time = datetime.now(timezone.utc)
         traces = [
             make_trace("t-1", timestamp=base_time),
             make_trace("t-2", timestamp=base_time + timedelta(seconds=2)),
@@ -354,7 +354,7 @@ class TestChronicle:
     def test_filter_by_time(self):
         """Test filtering by time range."""
         chronicle = Chronicle()
-        base_time = datetime.utcnow()
+        base_time = datetime.now(timezone.utc)
         traces = [
             make_trace("t-1", timestamp=base_time),
             make_trace("t-2", timestamp=base_time + timedelta(seconds=5)),
@@ -392,7 +392,7 @@ class TestChronicle:
     def test_time_span(self):
         """Test time_span property."""
         chronicle = Chronicle()
-        base_time = datetime.utcnow()
+        base_time = datetime.now(timezone.utc)
         traces = [
             make_trace("t-1", timestamp=base_time),
             make_trace("t-2", timestamp=base_time + timedelta(seconds=10)),
@@ -468,7 +468,7 @@ class TestChronicle:
         # Add manual interaction
         chronicle.add_interaction(
             Interaction(
-                timestamp=datetime.utcnow(),
+                timestamp=datetime.now(timezone.utc),
                 from_agent="AgentA",
                 to_agent="AgentB",
                 interaction_type="manual",
@@ -534,7 +534,7 @@ class TestChronicleBuilder:
         """Test adding manual interaction."""
         trace = make_trace("t-1")
         interaction = Interaction(
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
             from_agent="AgentA",
             to_agent="AgentB",
             interaction_type="manual",
@@ -582,7 +582,7 @@ class TestCorrelationDetector:
         detector = CorrelationDetector(
             temporal_window_ms=50
         )  # Small window to test parent-child specifically
-        base_time = datetime.utcnow()
+        base_time = datetime.now(timezone.utc)
 
         traces = [
             make_trace("parent", "AgentA", timestamp=base_time),
@@ -607,7 +607,7 @@ class TestCorrelationDetector:
     def test_detect_temporal_correlation(self):
         """Test detecting temporal correlations."""
         detector = CorrelationDetector(temporal_window_ms=100)
-        base_time = datetime.utcnow()
+        base_time = datetime.now(timezone.utc)
 
         traces = [
             make_trace("t-1", "AgentA", timestamp=base_time),
@@ -624,7 +624,7 @@ class TestCorrelationDetector:
     def test_no_correlation_outside_window(self):
         """Test no correlation for traces outside window."""
         detector = CorrelationDetector(temporal_window_ms=100)
-        base_time = datetime.utcnow()
+        base_time = datetime.now(timezone.utc)
 
         traces = [
             make_trace("t-1", "AgentA", timestamp=base_time),
@@ -640,7 +640,7 @@ class TestCorrelationDetector:
     def test_same_agent_no_correlation(self):
         """Test no correlation between same agent's traces."""
         detector = CorrelationDetector()
-        base_time = datetime.utcnow()
+        base_time = datetime.now(timezone.utc)
 
         traces = [
             make_trace("t-1", "AgentA", timestamp=base_time),

@@ -19,7 +19,7 @@ That's it. Everything else is optional enhancement.
 
 from __future__ import annotations
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 import json
@@ -75,7 +75,7 @@ class WireMetrics:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to JSON-serializable dict."""
         result = {
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             "uptime_seconds": self.uptime_seconds,
         }
         if self.memory_mb is not None:
@@ -140,7 +140,7 @@ class WireState:
         return cls(
             agent_id=data.get("agent_id", "unknown"),
             phase=data.get("phase", "empty"),
-            timestamp=datetime.fromisoformat(ts) if ts else datetime.utcnow(),
+            timestamp=datetime.fromisoformat(ts) if ts else datetime.now(timezone.utc),
             current_task=data.get("current_task"),
             progress=data.get("progress"),
             stage=data.get("stage"),
@@ -192,7 +192,7 @@ class WireObservable:
         self.output_dir.mkdir(exist_ok=True)
 
         # Track start time for uptime
-        self._start_time = datetime.utcnow()
+        self._start_time = datetime.now(timezone.utc)
 
         # Initialize state
         self._current_state = WireState(
@@ -238,7 +238,7 @@ class WireObservable:
         if metadata:
             self._current_state.metadata.update(metadata)
 
-        self._current_state.timestamp = datetime.utcnow()
+        self._current_state.timestamp = datetime.now(timezone.utc)
         self._write_state()
         return self._current_state
 
@@ -260,7 +260,7 @@ class WireObservable:
             The created WireEvent
         """
         event = WireEvent(
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
             level=level.upper(),
             stage=stage,
             message=message,
@@ -290,7 +290,7 @@ class WireObservable:
         Returns:
             The updated WireMetrics
         """
-        uptime = (datetime.utcnow() - self._start_time).total_seconds()
+        uptime = (datetime.now(timezone.utc) - self._start_time).total_seconds()
         metrics = WireMetrics(
             uptime_seconds=uptime,
             memory_mb=memory_mb,

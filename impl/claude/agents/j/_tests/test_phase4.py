@@ -9,29 +9,21 @@ Tests for:
 - Ground collapse semantics
 """
 
-import asyncio
 import pytest
 from typing import Any
 
 from agents.j import (
     # Phase 1: Promise & Reality
-    Promise,
-    PromiseState,
     Reality,
     classify_sync,
     # Phase 2: Chaosmonger
     is_stable,
-    # Phase 3: MetaArchitect & Sandbox
-    ArchitectInput,
-    ArchitectConstraints,
-    MetaArchitect,
 )
 from agents.j.jgent import (
     JGent,
     JGentConfig,
     JGentInput,
     JGentResult,
-    GeneratedTest,
     generate_test_for_intent,
     jgent,
     jgent_sync,
@@ -69,6 +61,7 @@ class TestTestGeneration:
         # Object with valid attribute
         class Result:
             valid = True
+
         assert test.test_fn(Result())
 
     def test_transform_intent_generates_non_none_test(self) -> None:
@@ -179,16 +172,28 @@ class TestJGentCoordinator:
         assert j1.name == "JGent[depth=1]"
 
     def test_entropy_budget_diminishes_with_depth(self) -> None:
-        """Entropy budget decreases as depth increases."""
+        """
+        Entropy budget decreases as depth increases.
+
+        Uses DNA decay_factor for geometric decay:
+        budget = initial * (decay_factor ^ depth)
+
+        With default decay_factor=0.5:
+        - depth 0: 1.0
+        - depth 1: 0.5
+        - depth 2: 0.25
+        - depth 3: 0.125
+        """
         j0 = JGent(depth=0)
         j1 = JGent(depth=1)
         j2 = JGent(depth=2)
         j3 = JGent(depth=3)
 
+        # Geometric decay with decay_factor=0.5
         assert j0.entropy_budget == 1.0
         assert j1.entropy_budget == 0.5
-        assert abs(j2.entropy_budget - 0.333) < 0.01
-        assert j3.entropy_budget == 0.25
+        assert j2.entropy_budget == 0.25
+        assert j3.entropy_budget == 0.125
 
     def test_spawn_child_increments_depth(self) -> None:
         """Spawning child JGent increments depth."""
@@ -364,19 +369,19 @@ class TestChaosmongerIntegration:
 
     def test_stable_code_passes_chaosmonger(self) -> None:
         """Simple stable code passes Chaosmonger."""
-        code = '''
+        code = """
 def simple_function(x):
     return x + 1
-'''
+"""
         assert is_stable(code) is True
 
     def test_unstable_code_fails_chaosmonger(self) -> None:
         """Unbounded recursion fails Chaosmonger."""
-        code = '''
+        code = """
 def infinite_loop():
     while True:
         pass
-'''
+"""
         # Note: Current Chaosmonger may not catch all unstable patterns
         # This test documents expected behavior
         # The actual stability depends on implementation details

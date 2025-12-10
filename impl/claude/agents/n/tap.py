@@ -13,7 +13,7 @@ Philosophy:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Callable
 
@@ -256,7 +256,7 @@ class WireIntegration:
                 start_frame = WireFrame(
                     frame_type=FrameType.INVOKE_START,
                     correlation_id=correlation_id,
-                    timestamp=datetime.utcnow(),
+                    timestamp=datetime.now(timezone.utc),
                     agent_id=agent_id,
                     agent_genus=agent_genus,
                     payload={"args": args, "kwargs": kwargs},
@@ -270,7 +270,7 @@ class WireIntegration:
                     end_frame = WireFrame(
                         frame_type=FrameType.INVOKE_END,
                         correlation_id=correlation_id,
-                        timestamp=datetime.utcnow(),
+                        timestamp=datetime.now(timezone.utc),
                         agent_id=agent_id,
                         agent_genus=agent_genus,
                         payload=result
@@ -286,7 +286,7 @@ class WireIntegration:
                     error_frame = WireFrame(
                         frame_type=FrameType.ERROR,
                         correlation_id=correlation_id,
-                        timestamp=datetime.utcnow(),
+                        timestamp=datetime.now(timezone.utc),
                         agent_id=agent_id,
                         agent_genus=agent_genus,
                         payload=e,
@@ -311,7 +311,7 @@ class WireIntegration:
         return WireFrame(
             frame_type=FrameType.INVOKE_START,
             correlation_id=correlation_id,
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
             agent_id=agent_id,
             agent_genus=agent_genus,
             payload=payload,
@@ -334,7 +334,7 @@ class WireIntegration:
         return WireFrame(
             frame_type=FrameType.INVOKE_END,
             correlation_id=correlation_id,
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
             agent_id=agent_id,
             agent_genus=agent_genus,
             payload=payload,
@@ -352,7 +352,7 @@ class WireIntegration:
         return WireFrame(
             frame_type=FrameType.ERROR,
             correlation_id=correlation_id,
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
             agent_id=agent_id,
             agent_genus=agent_genus,
             payload=error,

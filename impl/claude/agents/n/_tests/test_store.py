@@ -1,6 +1,6 @@
 """Tests for CrystalStore implementations."""
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
@@ -22,7 +22,7 @@ def make_trace(
     return SemanticTrace(
         trace_id=trace_id,
         parent_id=parent_id,
-        timestamp=timestamp or datetime.utcnow(),
+        timestamp=timestamp or datetime.now(timezone.utc),
         agent_id=agent_id,
         agent_genus=agent_genus,
         action=action,
@@ -128,7 +128,7 @@ class TestMemoryCrystalStore:
 
     def test_query_by_time_range(self, store):
         """Query filters by time range."""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         old = now - timedelta(hours=2)
         recent = now - timedelta(hours=1)
 
@@ -169,7 +169,9 @@ class TestMemoryCrystalStore:
         """Query respects offset."""
         for i in range(10):
             store.store(
-                make_trace(f"t{i}", timestamp=datetime.utcnow() + timedelta(seconds=i))
+                make_trace(
+                    f"t{i}", timestamp=datetime.now(timezone.utc) + timedelta(seconds=i)
+                )
             )
 
         results = store.query(offset=3, limit=3)
@@ -179,7 +181,7 @@ class TestMemoryCrystalStore:
 
     def test_query_sorted_by_timestamp(self, store):
         """Query results sorted by timestamp."""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         store.store(make_trace("t3", timestamp=now + timedelta(seconds=2)))
         store.store(make_trace("t1", timestamp=now))
         store.store(make_trace("t2", timestamp=now + timedelta(seconds=1)))
@@ -268,7 +270,7 @@ class TestCrystalStats:
 
     def test_stats_with_crystals(self, store):
         """Stats computed from crystals."""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         store.store(make_trace("t1", agent_id="a1", gas=100, timestamp=now))
         store.store(

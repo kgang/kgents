@@ -59,6 +59,17 @@ from agents.f.crystallize import (
     register_with_lgent,
     save_artifact,
 )
+from agents.f.reality_contracts import (
+    RealityGate,
+    DeterministicOnly,
+    BoundedComplexity,
+    EntropyAware,
+    IntentFilter,
+    create_safe_gate,
+    create_strict_gate,
+    admits_intent,
+    gate_intent,
+)
 
 __all__ = [
     # Intent parsing (Phase 1)
@@ -109,4 +120,14 @@ __all__ = [
     "extract_tags_from_intent",
     "register_with_lgent",
     "save_artifact",
+    # Reality contracts (J-gent integration)
+    "RealityGate",
+    "DeterministicOnly",
+    "BoundedComplexity",
+    "EntropyAware",
+    "IntentFilter",
+    "create_safe_gate",
+    "create_strict_gate",
+    "admits_intent",
+    "gate_intent",
 ]

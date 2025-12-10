@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Protocol, runtime_checkable
 
@@ -61,7 +61,7 @@ class Echo:
     echo_output: dict[str, Any]
     mode: EchoMode
     drift: float | None = None
-    echo_timestamp: datetime = field(default_factory=datetime.utcnow)
+    echo_timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     @property
     def trace_id(self) -> str:
@@ -383,7 +383,9 @@ class DriftReport:
     drift: float
     original_output: dict[str, Any]
     current_output: dict[str, Any]
-    report_timestamp: datetime = field(default_factory=datetime.utcnow)
+    report_timestamp: datetime = field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
 
     @property
     def significant(self) -> bool:

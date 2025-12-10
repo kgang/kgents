@@ -86,6 +86,28 @@ from .field import (
     create_demo_field,
 )
 
+# UI Components
+from .components import (
+    Color,
+    colorize,
+    ProgressBar,
+    ProgressBarStyle,
+    Spinner,
+    SpinnerStyle,
+    BorderStyle,
+    Panel,
+    Meter,
+    MeterThreshold,
+    StatusLine,
+    StatusItem,
+    Table,
+    TableColumn,
+    DashboardPanel,
+    create_progress_bar,
+    create_panel,
+    create_dashboard,
+)
+
 __all__ = [
     # Legacy Types (still supported)
     "Phase",
@@ -134,4 +156,23 @@ __all__ = [
     "DialecticPhase",
     "create_default_field",
     "create_demo_field",
+    # UI Components
+    "Color",
+    "colorize",
+    "ProgressBar",
+    "ProgressBarStyle",
+    "Spinner",
+    "SpinnerStyle",
+    "BorderStyle",
+    "Panel",
+    "Meter",
+    "MeterThreshold",
+    "StatusLine",
+    "StatusItem",
+    "Table",
+    "TableColumn",
+    "DashboardPanel",
+    "create_progress_bar",
+    "create_panel",
+    "create_dashboard",
 ]
