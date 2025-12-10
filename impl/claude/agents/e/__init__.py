@@ -1,436 +1,221 @@
 """
-E-gents: Evolution Agents for Code Improvement
+E-gent: Teleological Thermodynamic Evolution
 
-This module provides composable agents for evolutionary code improvement:
-
-- ASTAnalyzer: Static analysis of Python modules
-- MemoryAgent: Persistent memory of past improvements
-- TestAgent: Validate experiments (syntax, types, tests)
-- CodeJudge: Evaluate against 7 kgents principles
-- IncorporateAgent: Apply changes with git safety
-- EvolutionAgent: Composed pipeline
-
-Reliability Layers (from EVOLUTION_RELIABILITY_PLAN.md):
-
-Layer 1 - Prompt Engineering:
-- PreFlightChecker: Module health validation before LLM calls
-- PromptContext: Rich context (types, errors, patterns) for generation
-- build_improvement_prompt: Structured prompts with critical requirements
-
-Layer 2 - Parsing & Validation:
-- CodeParser: Multi-strategy parsing with fallbacks (4 strategies)
-- SchemaValidator: Fast pre-mypy validation (constructors, types, generics)
-- CodeRepairer: Incremental AST-based repair for common errors
-
-Layer 3 - Recovery & Learning:
-- RetryStrategy: Intelligent retry with failure-aware prompt refinement
-- FallbackStrategy: Progressive simplification (minimal → type-only → docs)
-- ErrorMemory: Track and learn from failure patterns across sessions
+A principled approach to code evolution following spec/e-gents/.
 
 Architecture:
-    EvolutionAgent = Ground >> Hypothesis >> Experiment >> Judge >> Sublate >> Incorporate
+    ☀️ SUN → MUTATE → SELECT → WAGER → INFECT → PAYOFF
+         ↑                                      |
+         └──────────────────────────────────────┘
 
-Usage:
-    from agents.e import EvolutionPipeline, EvolutionConfig
+The system operates as a thermodynamic cycle:
+- Sun: Provides exogenous energy (grants) for ambitious work
+- Mutate: L-gent schema-driven semantic mutations
+- Select: Teleological Demon (5-layer filter with intent alignment)
+- Wager: Prediction market for mutation success
+- Infect: Apply mutations to codebase (staked)
+- Payoff: Settle bets, update viral library fitness
 
-    config = EvolutionConfig(target="bootstrap", dry_run=True)
-    pipeline = EvolutionPipeline(config)
-    report = await pipeline.run(modules)
+Key principles:
+- Market-driven resource allocation
+- Intent-aligned evolution (prevents parasitic code)
+- Fitness-evolving patterns (living library)
+- Phage-based mutation vectors (active, not passive)
+
+Legacy v1 API is available in agents.e._legacy for backward compatibility.
+
+Spec Reference: spec/e-gents/
 """
 
-from .ast_analyzer import (
-    ASTAnalyzer,
-    ASTAnalysisInput,
-    ASTAnalysisOutput,
-    CodeStructure,
-    analyze_module_ast,
-    generate_targeted_hypotheses,
-    ast_analyzer,
+from .types import (
+    # Core types
+    Phage,
+    PhageStatus,
+    PhageLineage,
+    MutationVector,
+    InfectionResult,
+    InfectionStatus,
+    # Intent
+    Intent,
+    # Thermodynamics
+    ThermodynamicState,
+    GibbsEnergy,
+    # Evolution cycle
+    EvolutionCycleState,
 )
 
-from .memory import (
-    ImprovementMemory,
-    ImprovementRecord,
-    MemoryAgent,
-    MemoryQuery,
-    MemoryQueryResult,
-    RecordAgent,
-    RecordInput,
-    memory_agent,
+from .demon import (
+    # Demon
+    TeleologicalDemon,
+    DemonConfig,
+    DemonStats,
+    SelectionResult,
+    RejectionReason,
+    # Parasitic patterns
+    ParasiticPattern,
+    PARASITIC_PATTERNS,
+    # Factory functions
+    create_demon,
+    create_strict_demon,
+    create_lenient_demon,
 )
 
-from .persistent_memory import (
-    PersistentMemoryAgent,
-    MemoryState,
-    persistent_memory_agent,
+from .mutator import (
+    # Mutator
+    Mutator,
+    MutatorConfig,
+    MutatorStats,
+    # Schemas
+    SchemaCategory,
+    MutationSchema,
+    # Hot spots
+    CodeHotSpot,
+    ApplicationResult,
+    analyze_hot_spots,
+    # Standard schemas
+    STANDARD_SCHEMA_APPLICATORS,
+    SCHEMA_LOOP_TO_COMPREHENSION,
+    SCHEMA_EXTRACT_CONSTANT,
+    SCHEMA_FLATTEN_NESTING,
+    SCHEMA_INLINE_SINGLE_USE,
+    # Factory functions
+    create_mutator,
+    create_conservative_mutator,
+    create_exploratory_mutator,
 )
 
-from .experiment import (
-    CodeModule,
-    CodeImprovement,
-    Experiment,
-    ExperimentStatus,
-    ExperimentInput,
-    ExperimentResult,
-    TestAgent,
-    TestInput,
-    TestResult,
-    extract_code,
-    extract_metadata,
-    get_code_preview,
-    test_agent,
+from .library import (
+    # Viral Library
+    ViralLibrary,
+    ViralLibraryConfig,
+    ViralPattern,
+    LibraryStats,
+    MutationSuggestion,
+    PruneReport,
+    # Factory functions
+    create_library,
+    create_strict_library,
+    create_exploratory_library,
+    # Market integration
+    fitness_to_odds,
+    odds_from_library,
 )
 
-from .incorporate import (
-    IncorporateAgent,
-    IncorporateInput,
-    IncorporateResult,
-    RollbackAgent,
-    RollbackInput,
-    RollbackResult,
-    incorporate_agent,
-    rollback_agent,
+from .phage import (
+    # Phage operations
+    infect,
+    spawn_child,
+    get_lineage_chain,
+    calculate_lineage_fitness,
+    analyze_lineage,
+    infect_batch,
+    # Environment
+    InfectionEnvironment,
+    InfectionConfig,
+    StakeRecord,
+    LineageReport,
+    # Factory functions
+    create_infection_env,
+    create_test_only_env,
+    create_production_env,
 )
 
-from .judge import (
-    CodeJudge,
-    GenericCodeJudge,
-    JudgeInput,
-    JudgeResult,
-    PrincipleScore,
-    judge_code_improvement,
-    code_judge,
-    generic_judge,
-)
-
-from .evolution import (
+from .cycle import (
+    # Cycle
+    ThermodynamicCycle,
+    CycleConfig,
+    CyclePhase,
+    CycleResult,
+    PhaseResult,
+    # High-level agent
     EvolutionAgent,
-    EvolutionConfig,
-    EvolutionInput,
-    EvolutionPipeline,
-    EvolutionReport,
-    evolution_agent,
-    evolution_pipeline,
-)
-
-from .safety import (
-    SafetyConfig,
-    ConvergenceState,
-    SandboxTestInput,
-    SandboxTestResult,
-    SafeEvolutionInput,
-    SafeEvolutionResult,
-    SandboxTestAgent,
-    ConvergenceAgent,
-    SelfEvolutionAgent,
-    compute_code_similarity,
-    compute_structural_similarity,
-    safety_config,
-    self_evolution_agent,
-    sandbox_test_agent,
-    convergence_agent,
-)
-
-from .safe_evolution_orchestrator import (
-    SafeEvolutionOrchestrator,
-    SafeEvolutionOrchestratorInput,
-    SafeEvolutionOrchestratorResult,
-    safe_evolution_orchestrator,
-)
-
-from .preflight import (
-    PreFlightChecker,
-    PreFlightInput,
-    PreFlightReport,
-    preflight_checker,
-)
-
-from .prompts import (
-    PromptContext,
-    build_prompt_context,
-    build_improvement_prompt,
-    build_simple_prompt,
-    # Metered prompts (Principle 11 + B-gent Banker integration)
-    # Token Economics (from B-gent Banker)
-    PromptLevel,
-    TokenBudget,
-    SinkingFund,
-    TokenFuture,
-    Receipt,
-    # Metered Prompt System
-    MeteredPromptConfig,
-    MeteredPromptResult,
-    MeteredPromptBuilder,
-    build_minimal_prompt,
-    build_targeted_prompt,
-    build_full_prompt,
-    parse_minimal_output,
-)
-
-from .parser import (
-    CodeParser,
-    ParseResult,
-    ParseStrategy,
-    ParserConfig,
-    code_parser,
-)
-
-from .validator import (
-    SchemaValidator,
-    ValidationReport,
-    Issue,
-    IssueSeverity,
-    IssueCategory,
-    schema_validator,
-)
-
-from .repair import (
-    CodeRepairer,
-    RepairResult,
-    Repair,
-    code_repairer,
-)
-
-from .retry import (
-    RetryStrategy,
-    RetryConfig,
-    RetryAttempt,
-    RetryResult,
-    retry_strategy,
-)
-
-from .fallback import (
-    FallbackStrategy,
-    FallbackConfig,
-    FallbackLevel,
-    FallbackResult,
-    fallback_strategy,
-)
-
-from .error_memory import (
-    ErrorMemory,
-    ErrorPattern,
-    ErrorWarning,
-    ErrorMemoryStats,
-    error_memory,
-)
-
-from .status import (
-    GitStatus,
-    EvolutionLogData,
-    HydrateStatus,
-    StatusData,
-    GitStatusAgent,
-    EvolutionLogAgent,
-    HydrateStatusAgent,
-    StatusPresenterAgent,
-    create_status_reporter,
-)
-
-from .stages import (
-    GroundStage,
-    GroundInput,
-    GroundOutput,
-    HypothesisStage,
-    HypothesisStageInput,
-    HypothesisStageOutput,
-    ExperimentStage,
-    ExperimentStageInput,
-    ExperimentStageOutput,
-    ground_stage,
-    hypothesis_stage,
-    experiment_stage,
-)
-
-from .api_signatures import (
-    get_kgents_api_reference,
-    get_core_api_reference,
-)
-
-from .forge_integration import (
-    ImprovedIntent,
-    ReforgeResult,
-    ReforgeStrategy,
-    propose_improved_intent,
-    reforge_from_evolved_intent,
-    evolve_and_reforge_workflow,
+    # Factory functions
+    create_cycle,
+    create_conservative_cycle,
+    create_exploratory_cycle,
+    create_grant_funded_cycle,
+    create_full_cycle,
 )
 
 __all__ = [
-    # AST Analysis
-    "ASTAnalyzer",
-    "ASTAnalysisInput",
-    "ASTAnalysisOutput",
-    "CodeStructure",
-    "analyze_module_ast",
-    "generate_targeted_hypotheses",
-    "ast_analyzer",
-    # Memory
-    "ImprovementMemory",
-    "ImprovementRecord",
-    "MemoryAgent",
-    "MemoryQuery",
-    "MemoryQueryResult",
-    "RecordAgent",
-    "RecordInput",
-    "memory_agent",
-    # Persistent Memory (DGent-backed)
-    "PersistentMemoryAgent",
-    "MemoryState",
-    "persistent_memory_agent",
-    # Experiment
-    "CodeModule",
-    "CodeImprovement",
-    "Experiment",
-    "ExperimentStatus",
-    "ExperimentInput",
-    "ExperimentResult",
-    "TestAgent",
-    "TestInput",
-    "TestResult",
-    "extract_code",
-    "extract_metadata",
-    "get_code_preview",
-    "test_agent",
-    # Incorporate
-    "IncorporateAgent",
-    "IncorporateInput",
-    "IncorporateResult",
-    "RollbackAgent",
-    "RollbackInput",
-    "RollbackResult",
-    "incorporate_agent",
-    "rollback_agent",
-    # Judge
-    "CodeJudge",
-    "GenericCodeJudge",
-    "JudgeInput",
-    "JudgeResult",
-    "PrincipleScore",
-    "judge_code_improvement",
-    "code_judge",
-    "generic_judge",
-    # Evolution
+    # Core types
+    "Phage",
+    "PhageStatus",
+    "PhageLineage",
+    "MutationVector",
+    "InfectionResult",
+    "InfectionStatus",
+    # Intent
+    "Intent",
+    # Thermodynamics
+    "ThermodynamicState",
+    "GibbsEnergy",
+    # Evolution cycle
+    "EvolutionCycleState",
+    # Demon
+    "TeleologicalDemon",
+    "DemonConfig",
+    "DemonStats",
+    "SelectionResult",
+    "RejectionReason",
+    "ParasiticPattern",
+    "PARASITIC_PATTERNS",
+    "create_demon",
+    "create_strict_demon",
+    "create_lenient_demon",
+    # Mutator
+    "Mutator",
+    "MutatorConfig",
+    "MutatorStats",
+    "SchemaCategory",
+    "MutationSchema",
+    "CodeHotSpot",
+    "ApplicationResult",
+    "analyze_hot_spots",
+    "STANDARD_SCHEMA_APPLICATORS",
+    "SCHEMA_LOOP_TO_COMPREHENSION",
+    "SCHEMA_EXTRACT_CONSTANT",
+    "SCHEMA_FLATTEN_NESTING",
+    "SCHEMA_INLINE_SINGLE_USE",
+    "create_mutator",
+    "create_conservative_mutator",
+    "create_exploratory_mutator",
+    # Viral Library
+    "ViralLibrary",
+    "ViralLibraryConfig",
+    "ViralPattern",
+    "LibraryStats",
+    "MutationSuggestion",
+    "PruneReport",
+    "create_library",
+    "create_strict_library",
+    "create_exploratory_library",
+    "fitness_to_odds",
+    "odds_from_library",
+    # Phage operations
+    "infect",
+    "spawn_child",
+    "get_lineage_chain",
+    "calculate_lineage_fitness",
+    "analyze_lineage",
+    "infect_batch",
+    "InfectionEnvironment",
+    "InfectionConfig",
+    "StakeRecord",
+    "LineageReport",
+    "create_infection_env",
+    "create_test_only_env",
+    "create_production_env",
+    # Cycle
+    "ThermodynamicCycle",
+    "CycleConfig",
+    "CyclePhase",
+    "CycleResult",
+    "PhaseResult",
     "EvolutionAgent",
-    "EvolutionConfig",
-    "EvolutionInput",
-    "EvolutionPipeline",
-    "EvolutionReport",
-    "evolution_agent",
-    "evolution_pipeline",
-    # Safety
-    "SafetyConfig",
-    "ConvergenceState",
-    "SandboxTestInput",
-    "SandboxTestResult",
-    "SafeEvolutionInput",
-    "SafeEvolutionResult",
-    "SandboxTestAgent",
-    "ConvergenceAgent",
-    "SelfEvolutionAgent",
-    "compute_code_similarity",
-    "compute_structural_similarity",
-    "safety_config",
-    "self_evolution_agent",
-    "sandbox_test_agent",
-    "convergence_agent",
-    # Safe Evolution Orchestrator
-    "SafeEvolutionOrchestrator",
-    "SafeEvolutionOrchestratorInput",
-    "SafeEvolutionOrchestratorResult",
-    "safe_evolution_orchestrator",
-    # PreFlight (Layer 1 Reliability)
-    "PreFlightChecker",
-    "PreFlightInput",
-    "PreFlightReport",
-    "preflight_checker",
-    # Prompts (Layer 1 Reliability)
-    "PromptContext",
-    "build_prompt_context",
-    "build_improvement_prompt",
-    "build_simple_prompt",
-    # Metered Prompts (Principle 11 + B-gent Banker)
-    # Token Economics (from B-gent Banker)
-    "PromptLevel",
-    "TokenBudget",
-    "SinkingFund",
-    "TokenFuture",
-    "Receipt",
-    # Metered Prompt System
-    "MeteredPromptConfig",
-    "MeteredPromptResult",
-    "MeteredPromptBuilder",
-    "build_minimal_prompt",
-    "build_targeted_prompt",
-    "build_full_prompt",
-    "parse_minimal_output",
-    # Parser (Layer 2 Reliability)
-    "CodeParser",
-    "ParseResult",
-    "ParseStrategy",
-    "ParserConfig",
-    "code_parser",
-    # Validator (Layer 2 Reliability)
-    "SchemaValidator",
-    "ValidationReport",
-    "Issue",
-    "IssueSeverity",
-    "IssueCategory",
-    "schema_validator",
-    # Repair (Layer 2 Reliability)
-    "CodeRepairer",
-    "RepairResult",
-    "Repair",
-    "code_repairer",
-    # Retry (Layer 3 Reliability)
-    "RetryStrategy",
-    "RetryConfig",
-    "RetryAttempt",
-    "RetryResult",
-    "retry_strategy",
-    # Fallback (Layer 3 Reliability)
-    "FallbackStrategy",
-    "FallbackConfig",
-    "FallbackLevel",
-    "FallbackResult",
-    "fallback_strategy",
-    # Error Memory (Layer 3 Reliability)
-    "ErrorMemory",
-    "ErrorPattern",
-    "ErrorWarning",
-    "ErrorMemoryStats",
-    "error_memory",
-    # Status Agents (Phase 2.5e)
-    "GitStatus",
-    "EvolutionLogData",
-    "HydrateStatus",
-    "StatusData",
-    "GitStatusAgent",
-    "EvolutionLogAgent",
-    "HydrateStatusAgent",
-    "StatusPresenterAgent",
-    "create_status_reporter",
-    # Pipeline Stages (Composable agents for evolution pipeline)
-    "GroundStage",
-    "GroundInput",
-    "GroundOutput",
-    "HypothesisStage",
-    "HypothesisStageInput",
-    "HypothesisStageOutput",
-    "ExperimentStage",
-    "ExperimentStageInput",
-    "ExperimentStageOutput",
-    "ground_stage",
-    "hypothesis_stage",
-    "experiment_stage",
-    # API Signatures (For prompt enhancement)
-    "get_kgents_api_reference",
-    "get_core_api_reference",
-    # F-gent Integration (Cross-pollination T1.2)
-    "ImprovedIntent",
-    "ReforgeResult",
-    "ReforgeStrategy",
-    "propose_improved_intent",
-    "reforge_from_evolved_intent",
-    "evolve_and_reforge_workflow",
+    "create_cycle",
+    "create_conservative_cycle",
+    "create_exploratory_cycle",
+    "create_grant_funded_cycle",
+    "create_full_cycle",
 ]

@@ -6,19 +6,129 @@ Keep it concise—focus on current state and recent work.
 
 ## TL;DR
 
-**Status**: All Tests Passing ✅ | **Branch**: `main` | **Tests**: ~5,000+
+**Status**: All Tests Passing ✅ | **Branch**: `main` | **Tests**: ~5,166+
 
 **Recent Work**:
-- **E-gent Phase 5** ← COMPLETE (Viral Library - 49 tests)
-  - `library.py`: Fitness-based evolutionary memory
-  - ViralPattern with Darwinian fitness (success_rate × avg_impact)
-  - record_success/record_failure for pattern evolution
-  - suggest_mutations via L-gent semantic retrieval
-  - Natural selection prune operation
-  - B-gent market integration (fitness_to_odds)
-- E-gent Phase 2 (Mutator) COMPLETE (47 tests)
-- E-gent Phase 1 (Demon) COMPLETE (56 tests)
+- **E-gent Cleanup** ← COMPLETE (285 tests)
+  - Deleted legacy v1 (`_legacy/`, `evolve.py`)
+  - v2 is now the only `agents.e` API
+- M-gent Holographic Cartography COMPLETE (114 tests)
+- Cortex Assurance v2.0 COMPLETE (73 tests)
+- Instance DB Phase 1 COMPLETE (85 tests)
 - Ψ-gent v3.0 (104 tests)
+
+---
+
+## M-gent Holographic Cartography (COMPLETE)
+
+**Location**: `impl/claude/agents/m/`
+**Plan**: `docs/m-gent-cartography-enhancement-plan.md`
+**Tests**: 114 passed
+
+### The Core Question
+
+> "What is the most perfect context injection that can be given to an agent for any given turn?"
+
+**Answer**: Not a search result—a *map* that shows position, adjacency, and horizon.
+
+### Architecture
+
+```
+L-gent (terrain)     N-gent (traces)     B-gent (budget)
+      ↓                    ↓                    ↓
+      └────────────────────┴────────────────────┘
+                           ↓
+                   CartographerAgent
+                           ↓
+                        HoloMap
+                           ↓
+              ┌────────────┴────────────┐
+              ↓                         ↓
+       PathfinderAgent          ContextInjector
+              ↓                         ↓
+       NavigationPlan            OptimalContext
+```
+
+### Files
+
+| File | Purpose | Tests |
+|------|---------|-------|
+| `cartography.py` | Core types (HoloMap, Attractor, WeightedEdge, Horizon) | 47 |
+| `cartographer.py` | CartographerAgent + DesireLineComputer | 42 |
+| `pathfinder.py` | PathfinderAgent + PathAnalysis | 11 |
+| `context_injector.py` | ContextInjector + foveation | 14 |
+
+### Key Concepts
+
+| Concept | Definition | Source |
+|---------|------------|--------|
+| **Landmark (Attractor)** | Dense cluster of memories | L-gent clustering |
+| **Desire Line** | Historical transition probability | N-gent traces |
+| **Void** | Unexplored region ("Here be dragons") | Density analysis |
+| **Horizon** | Progressive disclosure boundary | B-gent budget |
+| **Foveation** | Sharp center, blurry edges | Human vision model |
+
+### Integration Points
+
+- **L-gent**: Provides embedding space via `VectorSearchable` protocol
+- **N-gent**: Provides traces via `TraceQueryable` protocol
+- **B-gent**: Constrains resolution via token budget
+
+---
+
+## Unified Cortex: Infrastructure Layer v2.0
+
+**Plan**: `docs/instance-db-implementation-plan.md`
+**Location**: `impl/claude/infra/` (new) + `protocols/cli/instance_db/` (Phase 1)
+
+### The Three Hemispheres
+
+```
+┌─────────────────────────┬─────────────────┬─────────────────────────┐
+│   LEFT HEMISPHERE       │ CORPUS CALLOSUM │    RIGHT HEMISPHERE     │
+│   (The Bookkeeper)      │   (Synapse)     │    (The Poet)           │
+├─────────────────────────┼─────────────────┼─────────────────────────┤
+│ impl/claude/infra/      │ infra/synapse.py│ agents/d/unified.py     │
+│ ACID, exact, relational │ Active Inference│ Semantic, approximate   │
+└─────────────────────────┴─────────────────┴─────────────────────────┘
+```
+
+### Phase Status
+
+| Phase | Description | Status | Tests |
+|-------|-------------|--------|-------|
+| 1 | Core Infrastructure + Lifecycle | ✅ Complete | 85 |
+| 2 | Synapse + Active Inference | ⏳ Skeleton | ~40 |
+| 3 | D-gent Backend Adapters | ⏳ Pending | ~55 |
+| 4 | Composting + Lethe Protocol | ⏳ Pending | ~45 |
+| 5 | Dreaming + Maintenance | ⏳ Pending | ~30 |
+| 6 | Observability + Dashboard | ⏳ Pending | ~35 |
+
+### New infra/ Structure
+
+| File | Purpose |
+|------|---------|
+| `ground.py` | Bootstrap agent (XDG, config, environment) |
+| `synapse.py` | Event bus with Active Inference |
+| `storage.py` | Left Hemisphere (4 protocols) |
+| `lifecycle.py` | Bootstrap sequence, mode detection |
+| `providers/` | SQLite/Numpy/Filesystem implementations |
+
+### Key Concepts (from critique)
+
+| Concept | Description |
+|---------|-------------|
+| **Active Inference** | Predict before store; route by surprise |
+| **Lethe Protocol** | Cryptographic amnesia (compost = delete key) |
+| **Synapse** | Event bus decoupling intent from storage |
+| **Dreaming** | Maintenance as REM cycles (3 AM optimization) |
+
+### Graceful Degradation
+
+- **FULL**: Global + Project DB
+- **GLOBAL_ONLY**: ~/.local/share/kgents/membrane.db
+- **LOCAL_ONLY**: .kgents/cortex.db
+- **DB_LESS**: In-memory (ephemeral)
 
 ---
 
@@ -46,28 +156,27 @@ Keep it concise—focus on current state and recent work.
 
 ---
 
-## E-gent Rebuild Plan
+## E-gent Architecture
 
+**Location**: `impl/claude/agents/e/`
 **Plan**: `docs/e-gent-rebuild-plan.md`
 
-### Implementation Status (Phase 0-7)
+### File Structure
 
-| Phase | Component | Status | Tests |
-|-------|-----------|--------|-------|
-| 0 | `types.py` | ✅ Complete | 38 |
-| 1 | `demon.py` (Teleological Demon) | ✅ Complete | 56 |
-| 2 | `mutator.py` (Schema-based) | ✅ Complete | 47 |
-| 3 | `market.py` (uses B-gent PredictionMarket) | ✅ Dependency ready | - |
-| 4 | `sun.py` (uses B-gent Sun) | ✅ Dependency ready | - |
-| 5 | `library.py` (Viral Library) | ✅ Complete | 49 |
-| 6 | `phage.py` (Active mutation vectors) | ⏳ Pending | - |
-| 7 | `cycle.py` (Thermodynamic cycle) | ⏳ Pending | - |
+| File | Purpose | Tests |
+|------|---------|-------|
+| `types.py` | Core types (Phage, MutationVector, Intent) | 38 |
+| `demon.py` | Teleological Demon (5-layer selection) | 56 |
+| `mutator.py` | Schema-based mutation generator | 47 |
+| `library.py` | Viral Library (fitness-evolving patterns) | 49 |
+| `phage.py` | Phage infection operations | 50 |
+| `cycle.py` | ThermodynamicCycle (complete pipeline) | 45 |
 
-**E-gent v2 Total**: 190 tests
+**E-gent Total**: 285 tests
 
-### Phase 1 Highlights: Teleological Demon
+### Teleological Demon
 
-`impl/claude/agents/e/v2/demon.py` - The heart of E-gent v2
+`impl/claude/agents/e/demon.py` - 5-layer intent-aware selection
 
 | Feature | Description |
 |---------|-------------|
@@ -77,9 +186,9 @@ Keep it concise—focus on current state and recent work.
 | `PARASITIC_PATTERNS` | 4 pattern detectors (hardcoding, deletion, pass-only, gaming) |
 | `create_demon()` | Factory functions (normal, strict, lenient) |
 
-### Phase 2 Highlights: Mutator
+### Mutator
 
-`impl/claude/agents/e/v2/mutator.py` - Schema-based semantic mutation generator
+`impl/claude/agents/e/mutator.py` - Schema-based semantic mutation generator
 
 | Feature | Description |
 |---------|-------------|
@@ -91,9 +200,9 @@ Keep it concise—focus on current state and recent work.
 | 4 standard schemas | loop_to_comprehension, extract_constant, flatten_nesting, inline_single_use |
 | `mutate_to_phages()` | Generate Phages ready for Demon selection |
 
-### Phase 5 Highlights: Viral Library
+### Viral Library
 
-`impl/claude/agents/e/v2/library.py` - Fitness-based evolutionary memory
+`impl/claude/agents/e/library.py` - Fitness-based evolutionary memory
 
 | Feature | Description |
 |---------|-------------|
@@ -106,9 +215,49 @@ Keep it concise—focus on current state and recent work.
 | `fitness_to_odds()` | B-gent market integration |
 | Auto-prune | Periodic cleanup after N operations |
 
-### Strategy
+### Phage
 
-Build in `agents/e/v2/` parallel to existing, then cutover.
+`impl/claude/agents/e/phage.py` - Active mutation vectors with infection
+
+| Feature | Description |
+|---------|-------------|
+| `infect()` | Apply mutation, run tests, rollback on failure |
+| `InfectionEnvironment` | Integration container (staking, library, market, demon) |
+| `InfectionConfig` | Test/typecheck behavior, rollback, staking options |
+| `spawn_child()` | Create child phage with lineage tracking |
+| `get_lineage_chain()` | Reconstruct evolutionary ancestry |
+| `analyze_lineage()` | LineageReport with fitness, schemas used |
+| `infect_batch()` | Batch infection with stop-on-failure option |
+| `create_production_env()` | Factory for full B-gent integrated environment |
+
+### Thermodynamic Cycle
+
+`impl/claude/agents/e/cycle.py` - Complete evolution pipeline
+
+| Feature | Description |
+|---------|-------------|
+| `ThermodynamicCycle` | Full pipeline: Sun → Mutate → Select → Wager → Infect → Payoff |
+| `CycleConfig` | Temperature, alignment thresholds, economics, testing options |
+| `CycleResult` | Complete metrics (phages, tokens, patterns, thermodynamics) |
+| `PhaseResult` | Per-phase timing and details |
+| `EvolutionAgent` | High-level wrapper for `evolve()` and `suggest()` |
+| Protocol integrations | `SunProtocol`, `PredictionMarketProtocol`, `StakingPoolProtocol`, `SemanticRegistryProtocol` |
+| Temperature control | Auto-adjust based on success rate (cool on success, heat on failure) |
+| Factory functions | `create_cycle()`, `create_conservative_cycle()`, `create_exploratory_cycle()`, `create_full_cycle()` |
+
+### Usage
+
+```python
+from agents.e import ThermodynamicCycle, EvolutionAgent, create_cycle
+
+# Create cycle and run evolution
+cycle = create_cycle(temperature=1.0)
+result = await cycle.run(code, target_path, intent)
+
+# Or use high-level agent
+agent = EvolutionAgent()
+results = await agent.evolve(target_path, intent="Improve performance")
+```
 
 ---
 
@@ -229,28 +378,83 @@ pytest -m "not slow" -n auto  # ~6s (4891 tests)
 
 ---
 
-## Cortex Assurance System (Phase 8)
+## Cortex Assurance System v2.0 (Phase 8) ✅ COMPLETE
 
 **Full Plan**: `docs/cortex-assurance-system.md`
+**Tests**: 73 (46 core + 27 integrations)
 
-From static testing to generative assurance. Four components:
+From static testing to **Cybernetic Immune System**. Five pillars + integration layer:
 
-| Component | Agent | Purpose |
-|-----------|-------|---------|
-| **Weaver** | C-gent | Walk type topology, fuzz compositions |
-| **Historian** | N×O | Witness tests, mine failure patterns |
-| **Banker** | B-gent | Economic scheduling, ROI prioritization |
-| **Demon** | E-gent | Adversarial mutation, audit test quality |
+| Component | File | Tests | Purpose |
+|-----------|------|-------|---------|
+| **Oracle** | `oracle.py` | 11 | Metamorphic relations (fuzzy truth) |
+| **Topologist** | `topologist.py` | 7 | Homotopic invariants, commutativity |
+| **Analyst** | `analyst.py` | 6 | Causal inference, delta debugging |
+| **Market** | `market.py` | 6 | Kelly Criterion portfolio allocation |
+| **Red Team** | `red_team.py` | 8 | Evolutionary adversarial optimization |
+| **Cortex** | `cortex.py` | 8 | Unified controller + Night Watch |
+| **Integrations** | `integrations.py` | 27 | Ecosystem adapters |
 
-### Key Insight
+### Key Features
 
-Tests are not chores—they are **Adversarial Agents** and **Economic Transactions**.
+| Feature | Description |
+|---------|-------------|
+| `MetamorphicRelation` | Protocol for subset/idempotency/permutation/monotonicity |
+| `TypeTopology` | Agent type graph with path equivalence |
+| `CausalAnalyst` | Delta debugging, counterfactual queries, flakiness diagnosis |
+| `TestMarket` | Kelly-optimal allocation, Bayesian rebalancing |
+| `RedTeam` | 9 mutation operators, genetic evolution, vulnerability extraction |
+| `Cortex` | Daytime/Nighttime modes, Morning Briefing reports |
+
+### The Night Watch
 
 ```
-Weaver      → Discovers failure paths we never imagined
-Historian   → Reveals patterns in failures we've seen
-Banker      → Spends testing budget wisely
-Demon       → Proves tests are strong enough
+Daytime  → Market runs Kelly-optimal 10% of tests
+Nighttime→ Topologist + Red Team + Oracle deep scan
+Morning  → Analyst causal briefing
+```
+
+### Mutation Operators (Red Team)
+
+| Operator | Description |
+|----------|-------------|
+| `HypnoticPrefixMutation` | "Ignore previous instructions..." |
+| `MarkdownChaosMutation` | Nested code blocks, tables |
+| `UnicodeMutation` | Cyrillic homoglyphs |
+| `LengthExtremeMutation` | Very short or very long |
+| `NestingExplosionMutation` | Deep nesting |
+| `BoundaryValueMutation` | Max ints, null bytes |
+| `FormatConfusionMutation` | JSON in XML |
+| `PromptInjectionMutation` | Context escape attempts |
+| `RTLMutation` | Right-to-left override |
+
+### Antifragile Property
+
+The more tests run, the smarter it becomes at finding faults.
+
+### Integration Layer (Phase 8.6)
+
+| Adapter | Connects | Purpose |
+|---------|----------|---------|
+| `create_enhanced_oracle()` | Oracle × L-gent | Better embeddings |
+| `PersistentWitnessStore` | Analyst × D-gent | Witness persistence |
+| `LatticeValidatedTopology` | Topologist × L-gent | Type lattice validation |
+| `BudgetedMarket` | Market × B-gent | Token economics |
+| `TeleologicalRedTeam` | RedTeam × E-gent | Intent-aligned evolution |
+| `ObservedCortex` | Cortex × O-gent | Telemetry wrapper |
+| `create_enhanced_cortex()` | All | Unified factory |
+
+**Design Pattern**: Graceful Degradation - all integrations are optional.
+
+```python
+from testing.integrations import create_enhanced_cortex
+
+# Creates Cortex with best available integrations
+cortex = create_enhanced_cortex(
+    embedder_backend="auto",       # L-gent embeddings
+    observe_agents=True,           # O-gent telemetry
+    use_lattice_validation=True,   # L-gent type lattice
+)
 ```
 
 ---
@@ -308,9 +512,9 @@ Error messages that help, not just fail:
 
 | Doc | Content |
 |-----|---------|
-| `docs/cortex-assurance-system.md` | **NEW** - Phase 8 test intelligence |
+| `docs/instance-db-implementation-plan.md` | **v2.0** - Unified Cortex (Infrastructure × Semantics) |
+| `docs/m-gent-cartography-enhancement-plan.md` | Holographic Cartography |
+| `docs/cortex-assurance-system.md` | Phase 8 test intelligence |
 | `docs/e-gent-rebuild-plan.md` | E-gent v2 phases |
-| `docs/instance-db-implementation-plan.md` | ~/.kgents canonical db |
 | `docs/psi-gent-walkthrough.md` | Ψ-gent guided tour |
 | `spec/e-gents/thermodynamics.md` | Teleological thermodynamics |
-| `docs/plans-synthesis.md` | Consolidated architecture |
