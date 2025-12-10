@@ -17,6 +17,12 @@ Phase 3 Extended Protocols:
 - ObservableDataAgent[S]: Reactive subscriptions and change notifications
 - UnifiedMemory[S]: Compose all memory modes through a single interface
 
+Phase 4 Noosphere Layer:
+- SemanticManifold[S]: Curved semantic space with curvature, voids, geodesics
+- TemporalWitness[E,S]: Enhanced temporal observation with drift detection
+- RelationalLattice[N]: Full lattice theory with meet, join, entailment
+- MemoryGarden[S]: Joy-inducing memory lifecycle (seeds, saplings, trees, flowers, compost)
+
 State management philosophy:
 - Pure logic should be stateless
 - D-gents contain the complexity of memory
@@ -152,6 +158,61 @@ from .unified import (
     create_unified_memory,
 )
 
+# Phase 4: Noosphere Layer
+# SemanticManifold requires numpy (optional dependency)
+try:
+    from .manifold import (
+        SemanticManifold,
+        SemanticPoint,
+        SemanticVoid,
+        Geodesic,
+        SemanticCluster,
+        ManifoldStats,
+        CurvatureRegion,
+    )
+
+    _MANIFOLD_AVAILABLE = True
+except ImportError:
+    _MANIFOLD_AVAILABLE = False
+    SemanticManifold = None  # type: ignore
+    SemanticPoint = None  # type: ignore
+    SemanticVoid = None  # type: ignore
+    Geodesic = None  # type: ignore
+    SemanticCluster = None  # type: ignore
+    ManifoldStats = None  # type: ignore
+    CurvatureRegion = None  # type: ignore
+
+from .witness import (
+    TemporalWitness,
+    Trajectory,
+    WitnessContext,
+    TemporalSnapshot,
+    TimelineEntry,
+    DriftSeverity,
+    EntropyLevel,
+)
+
+from .lattice import (
+    RelationalLattice,
+    LatticeNode,
+    LatticeRelation,
+    MeetJoinResult,
+    EntailmentProof,
+    LatticeStats,
+)
+
+from .garden import (
+    MemoryGarden,
+    GardenEntry,
+    Lifecycle,
+    Evidence,
+    EvidenceType,
+    Contradiction,
+    Insight,
+    Nutrients,
+    GardenStats,
+)
+
 __all__ = [
     # Protocol
     "DataAgent",
@@ -246,4 +307,37 @@ __all__ = [
     "UnifiedMemoryError",
     "LayerNotAvailableError",
     "create_unified_memory",
+    # Phase 4: SemanticManifold
+    "SemanticManifold",
+    "SemanticPoint",
+    "SemanticVoid",
+    "Geodesic",
+    "SemanticCluster",
+    "ManifoldStats",
+    "CurvatureRegion",
+    # Phase 4: TemporalWitness
+    "TemporalWitness",
+    "Trajectory",
+    "WitnessContext",
+    "TemporalSnapshot",
+    "TimelineEntry",
+    "DriftSeverity",
+    "EntropyLevel",
+    # Phase 4: RelationalLattice
+    "RelationalLattice",
+    "LatticeNode",
+    "LatticeRelation",
+    "MeetJoinResult",
+    "EntailmentProof",
+    "LatticeStats",
+    # Phase 4: MemoryGarden
+    "MemoryGarden",
+    "GardenEntry",
+    "Lifecycle",
+    "Evidence",
+    "EvidenceType",
+    "Contradiction",
+    "Insight",
+    "Nutrients",
+    "GardenStats",
 ]

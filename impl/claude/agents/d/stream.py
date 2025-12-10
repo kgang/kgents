@@ -322,6 +322,7 @@ class StreamAgent(Generic[E, S]):
                     drift_detected = z_score > 2.0  # 2 standard deviations
                     drift_magnitude = min(1.0, z_score / 5.0)
                 else:
+                    z_score = float("inf") if first_mean != second_mean else 0.0
                     drift_detected = first_mean != second_mean
                     drift_magnitude = 1.0 if drift_detected else 0.0
 

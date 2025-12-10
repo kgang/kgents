@@ -144,6 +144,26 @@ from .value_ledger import (
     RoCMonitor,
 )
 
+# Compression Economy (Phase 4: Structural Economics B×G Integration)
+from .compression_economy import (
+    # Types
+    AdoptionStatus,
+    CommunicationLog,
+    CompressionROI,
+    PidginMetadata,
+    PidginAvailable,
+    BudgetDecision,
+    # Classes
+    CommunicationTracker,
+    CompressionROICalculator,
+    CompressionEconomyMonitor,
+    SemanticZipperBudget,
+    # Convenience functions
+    create_compression_monitor,
+    create_zipper_budget,
+    analyze_compression_opportunity,
+)
+
 __all__ = [
     # HypothesisEngine
     "HypothesisEngine",
@@ -225,4 +245,18 @@ __all__ = [
     "RoCThresholds",
     "RoCAssessment",
     "RoCMonitor",
+    # Compression Economy (Phase 4: Structural Economics B×G)
+    "AdoptionStatus",
+    "CommunicationLog",
+    "CompressionROI",
+    "PidginMetadata",
+    "PidginAvailable",
+    "BudgetDecision",
+    "CommunicationTracker",
+    "CompressionROICalculator",
+    "CompressionEconomyMonitor",
+    "SemanticZipperBudget",
+    "create_compression_monitor",
+    "create_zipper_budget",
+    "analyze_compression_opportunity",
 ]

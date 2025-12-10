@@ -18,18 +18,14 @@ from typing import (
     Optional,
     Any,
     Dict,
-    Callable,
-    Awaitable,
-    Union,
     Tuple,
 )
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum, auto
-import asyncio
 
 from .protocol import DataAgent
-from .errors import StateError, NoosphereError
+from .errors import NoosphereError
 from .lens import Lens
 
 

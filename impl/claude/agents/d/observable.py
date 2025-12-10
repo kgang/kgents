@@ -19,14 +19,12 @@ from typing import (
     Dict,
     Callable,
     Awaitable,
-    Set,
 )
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, auto
 import asyncio
 import uuid
-from weakref import WeakSet
 
 from .protocol import DataAgent
 from .errors import StateError

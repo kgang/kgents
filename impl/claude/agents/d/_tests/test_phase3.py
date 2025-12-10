@@ -6,15 +6,11 @@ Tests TransactionalDataAgent, QueryableDataAgent, ObservableDataAgent, and Unifi
 
 import pytest
 import asyncio
-from datetime import datetime, timedelta
-from typing import Any, Dict, List
 
 from ..volatile import VolatileAgent
 from ..transactional import (
     TransactionalDataAgent,
-    TransactionState,
     TransactionError,
-    SavepointError,
     RollbackError,
 )
 from ..queryable import (
@@ -22,7 +18,6 @@ from ..queryable import (
     Query,
     Predicate,
     Operator,
-    QueryError,
     eq,
     gt,
     contains,
@@ -30,7 +25,6 @@ from ..queryable import (
 )
 from ..observable import (
     ObservableDataAgent,
-    Change,
     ChangeType,
 )
 from ..unified import (
