@@ -1,66 +1,84 @@
 # HYDRATE.md - kgents Session Context
 
-## TL;DR
+**Status**: All Tests Passing | ~5,620 tests | Branch: `main`
 
-**Status**: All Tests Passing ✅ | **Branch**: `main` | **Tests**: ~5,300+
+## Recent: Instance DB - Bicameral Engine (Phase 2-2.5)
 
-## Recent Completions
+Implemented the Active Inference event bus and short-term memory:
 
-- **Mirror Protocol Cleanup**: Removed deprecated mirror protocol (spec + impl). Membrane CLI now standalone stubs pointing to new cortex architecture. Reason: No provable functionality, supplanted by D-gent + instance_db + L-gent.
-- **Instance DB Operationalization**: Auto-bootstrap + wipe command + Transparent Infrastructure principle
-- **Bicameral Engine v3.0 Plan**: Spinal Cord, Hippocampus, Coherency Protocol in `docs/instance-db-implementation-plan.md`
-- **Integration Tests Phase 3**: 65 E2E tests (Agent Creation, Tool Pipeline, Memory Recall)
-- **E-gent v2**: 353 tests, thermodynamic evolution with safety guardrails
-- **M-gent Cartography**: 114 tests, holographic maps for context injection
-- **Ψ-gent v3.0**: 104 tests, metaphor engine with 6-stage pipeline
-- **Cortex Assurance v2.0**: 73 tests, cybernetic immune system
+| Phase | Component | Tests | Status |
+|-------|-----------|-------|--------|
+| 1 | Core Infrastructure | 85 | ✅ |
+| 1.5 | Spinal Cord (`nervous.py`) | 31 | ✅ |
+| 2 | Synapse + Active Inference | 46 | ✅ |
+| 2.5 | Hippocampus | 37 | ✅ |
+| **Total** | | **199** | |
 
-## Architecture Quick Reference
+### Synapse (Active Inference Event Bus)
+
+```python
+synapse = Synapse(telemetry_store, SynapseConfig(
+    surprise_threshold=0.5,
+    flashbulb_threshold=0.9,
+))
+synapse.on_fast_path(handler)
+await synapse.fire(Signal(signal_type="test", data={}))
+```
+
+- `PredictiveModel`: O(1) exponential smoothing
+- Routes: flashbulb (>0.9), fast (>0.5), batch (<0.5)
+- Automatic batching with `flush_batch()`
+- `peek_recent()` / `has_flashbulb_pending()` for interrupts
+
+### Hippocampus (Short-Term Memory)
+
+```python
+hippocampus = Hippocampus()
+await hippocampus.remember(signal)
+result = await hippocampus.flush_to_cortex()  # Creates LetheEpoch
+```
+
+- `LetheEpoch`: Sealed memory boundaries for forgetting
+- Flush strategies: on_sleep, on_size, on_age, manual
+- `SynapseHippocampusIntegration`: Wires synapse → hippocampus
+
+## Instance DB Files
+
+```
+protocols/cli/instance_db/
+├── interfaces.py    # IRelationalStore, IVectorStore, etc.
+├── storage.py       # StorageProvider, XDGPaths
+├── lifecycle.py     # LifecycleManager, OperationMode
+├── nervous.py       # NervousSystem (Spinal Cord)
+├── synapse.py       # Synapse (Active Inference)
+├── hippocampus.py   # Hippocampus (Short-Term Memory)
+└── providers/sqlite.py
+```
+
+## Agent Reference
 
 | Agent | Purpose | Key File |
 |-------|---------|----------|
-| **E-gent** | Code evolution (thermodynamic) | `agents/e/cycle.py` |
-| **M-gent** | Context cartography | `agents/m/cartographer.py` |
-| **Ψ-gent** | Metaphor solving | `agents/psi/v3/engine.py` |
-| **L-gent** | Semantic embeddings | `agents/l/semantic_registry.py` |
-| **B-gent** | Token economics | `agents/b/metered_functor.py` |
-| **N-gent** | Narrative traces | `agents/n/chronicle.py` |
-| **O-gent** | Observation hierarchy | `agents/o/observer.py` |
+| W | Wire/Middleware Bus | `agents/w/bus.py` |
+| E | Thermodynamic evolution | `agents/e/cycle.py` |
+| M | Context cartography | `agents/m/cartographer.py` |
+| Psi | Metaphor solving | `agents/psi/v3/engine.py` |
+| L | Semantic embeddings | `agents/l/semantic_registry.py` |
+| B | Token economics | `agents/b/metered_functor.py` |
+| N | Narrative traces | `agents/n/chronicle.py` |
+| O | Observation hierarchy | `agents/o/observer.py` |
 
-## CLI Commands
-
-```bash
-kgents check .          # Validate project (auto-bootstraps DB)
-kgents wipe global      # Remove global DB (~/.local/share/kgents/)
-kgents wipe local       # Remove project DB (.kgents/)
-kgents wipe all --force # Remove both without confirmation
-kgents mcp serve        # MCP server for Claude/Cursor
-```
-
-## Test Commands
+## Commands
 
 ```bash
-pytest -m "not slow" -n auto   # Fast (~6s, 4891 tests)
-pytest -m "slow"               # Slow tests only
-pytest -m "law"                # Property-based laws
+pytest -m "not slow" -n auto   # Fast (~6s)
+pytest protocols/cli/instance_db/_tests/ -v  # Instance DB tests
+kgents check .                 # Validate (auto-bootstraps DB)
 ```
 
-## Integration Map (All ✅)
+## API Notes
 
-J×DNA, F×J, B×J, B×W, B×G, D×L, D×M, M×L, M×B, N×L, N×M, N×I, N×B, O×W, E×B, E×L, Ψ×L, Ψ×B, Ψ×D, Ψ×N, Ψ×G
-
-## Key Docs
-
-| Doc | Topic |
-|-----|-------|
-| `docs/agent-cross-pollination-final-proposal.md` | Integration architecture |
-| `docs/instance-db-implementation-plan.md` | Unified Cortex |
-| `docs/cortex-assurance-system.md` | Test intelligence |
-| `spec/e-gents/thermodynamics.md` | E-gent theory |
-
-## API Notes (from reconciliation)
-
-- `CentralBank`: uses `max_balance`, not `initial_tokens`
-- `EntropyBudget`: uses `initial/remaining`, not `max_depth`
-- `Chronicle`: uses `get_agent_crystals()`, not `get_traces()`
-- `HolographicMemory`: uses `retrieve()`, not `recall()`
+- `PredictiveModel.update(signal_type)` → returns surprise [0,1]
+- `Synapse.fire(signal)` → DispatchResult with route
+- `Hippocampus.flush_to_cortex()` → FlushResult with epoch_id
+- Signal surprise thresholds: 0.5 (fast), 0.9 (flashbulb)

@@ -398,47 +398,57 @@ CLI Integration:
 - `kgents wipe local|global|all` with confirmation
 - Transparent Infrastructure messaging (first-run, verbose, degraded mode)
 
-### Phase 1.5: Spinal Cord (NEW) (~20 tests)
+### Phase 1.5: Spinal Cord ✅ COMPLETE (31 tests)
 
-**Priority:** HIGH (prevents Synapse latency trap)
+**Status:** OPERATIONAL
+**Location:** `protocols/cli/instance_db/nervous.py`
 
-| Task | Description | Tests |
-|------|-------------|-------|
-| `NervousSystem` class | Two-tier routing | 8 |
-| Reflex pattern matching | O(1) bypass logic | 6 |
-| Fast store integration | Direct to telemetry | 6 |
+Implemented:
+- `NervousSystem` class - Two-tier routing (reflex vs cortical)
+- `Signal`, `SignalPriority` - Signal types and priority levels
+- `NervousSystemConfig` - Configurable reflex/flashbulb patterns
+- O(1) pattern matching using set membership
+- Batch processing for efficient telemetry
+- Metrics tracking (reflex/cortical/dropped counts)
+- Dynamic configuration (add/remove patterns at runtime)
+- `ISynapse` protocol for Phase 2 integration
 
-**Deliverables:**
-- `protocols/cli/instance_db/nervous.py`
-- Configuration: `spinal_reflexes` in infrastructure.yaml
+### Phase 2: Synapse + Active Inference ✅ COMPLETE (46 tests)
 
-### Phase 2: Synapse + Active Inference (~40 tests)
+**Status:** OPERATIONAL
+**Location:** `protocols/cli/instance_db/synapse.py`
 
-| Task | Description | Tests |
-|------|-------------|-------|
-| `Synapse` class | Event bus with signal routing | 15 |
-| `PredictiveModel` | O(1) exponential smoothing (NOT heavy ML) | 10 |
-| Active Inference routing | High/low surprise paths | 10 |
-| Metrics collection | Signal counts, surprise distribution | 5 |
+Implemented:
+- `PredictiveModel` - O(1) exponential smoothing (no heavy ML)
+  - `predict()` / `update()` / `surprise_for()` - Core prediction API
+  - Variance tracking for surprise normalization
+  - Per-signal-type learning
+- `Synapse` class - Event bus with surprise-based routing
+  - Three routes: flashbulb (>0.9), fast (>0.5), batch (<0.5)
+  - Handler registration: `on_flashbulb()`, `on_fast_path()`, `on_batch_path()`
+  - Automatic batching with configurable size/interval
+  - `flush_batch()` for manual flush
+  - `peek_recent()` / `has_flashbulb_pending()` for interrupt checking
+- `SynapseConfig` - Configurable thresholds and parameters
+- `SurpriseMetrics` - Signal counts, surprise distribution
+- Factory: `create_synapse(telemetry_store, config_dict)`
 
-**Constraint:** PredictiveModel MUST be O(1) or O(log n). Use T-Digest for statistics.
+### Phase 2.5: Hippocampus ✅ COMPLETE (37 tests)
 
-**Deliverables:**
-- `protocols/cli/instance_db/synapse.py`
-- Tests: `_tests/test_synapse.py`
+**Status:** OPERATIONAL
+**Location:** `protocols/cli/instance_db/hippocampus.py`
 
-### Phase 2.5: Hippocampus (NEW) (~25 tests)
-
-| Task | Description | Tests |
-|------|-------------|-------|
-| `Hippocampus` class | Short-term consolidation | 10 |
-| Memory backend (in-memory) | Default implementation | 5 |
-| Flush to cortex | Transfer to long-term | 5 |
-| Lethe Epoch creation | Seal day's memories | 5 |
-
-**Deliverables:**
-- `protocols/cli/instance_db/hippocampus.py`
-- Configuration: `hippocampus.flush_strategy` in infrastructure.yaml
+Implemented:
+- `Hippocampus` class - Short-term memory consolidation
+  - `remember()` / `remember_batch()` - Store signals
+  - `flush_to_cortex()` - Transfer to long-term storage
+  - `peek()` / `recall_by_type()` - Non-destructive access
+- `MemoryBackend` - In-memory storage with max size
+- `LetheEpoch` - Sealed memory boundaries for forgetting
+  - `get_epoch()` / `forget_epoch()` - Epoch management
+- `HippocampusConfig` - flush_strategy: on_sleep, on_size, on_age, manual
+- `SynapseHippocampusIntegration` - Wires synapse handlers to hippocampus
+- Factory: `create_hippocampus(cortex, config_dict)`
 
 ### Phase 3: D-gent Backend Adapters + Coherency (~70 tests)
 
@@ -580,14 +590,14 @@ coherency:
 | Phase | Tests | Status |
 |-------|-------|--------|
 | 1. Core Infrastructure | 85 | ✅ Complete |
-| 1.5 Spinal Cord | ~20 | ⏳ NEW |
-| 2. Synapse + Active Inference | ~40 | ⏳ Pending |
-| 2.5 Hippocampus | ~25 | ⏳ NEW |
-| 3. D-gent Adapters + Coherency | ~70 | ⏳ Pending (expanded) |
+| 1.5 Spinal Cord | 31 | ✅ Complete |
+| 2. Synapse + Active Inference | 46 | ✅ Complete |
+| 2.5 Hippocampus | 37 | ✅ Complete |
+| 3. D-gent Adapters + Coherency | ~70 | ⏳ Pending |
 | 4. Composting + Lethe | ~45 | ⏳ Pending |
-| 5. Lucid Dreaming + Neurogenesis | ~50 | ⏳ Pending (expanded) |
+| 5. Lucid Dreaming + Neurogenesis | ~50 | ⏳ Pending |
 | 6. Observability + Dashboard | ~35 | ⏳ Pending |
-| **Total** | **~370** | |
+| **Total** | **~399** | 199 complete |
 
 ---
 
