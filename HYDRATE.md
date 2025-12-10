@@ -18,22 +18,24 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 ## TL;DR
 
-**Status**: Protocol Specs v2.0 + L-gent Vector DB COMMITTED ✅
+**Status**: F-gent × I-gent Forge View COMPLETE ✅
 **Branch**: `main`
-**Latest Commit**: `6bd9b63` feat: Protocol Specs v2.0 + L-gent Vector DB + I-gent Forge View
+**Latest Commit**: `6bd9b63` feat: Protocol Specs v2.0 + L-gent Vector DB
 
 **Current State**:
+- **F-gent × I-gent Forge View**: ✅ COMPLETE - Pipeline composition UI (69 tests)
 - **L-gent Phase 8**: ✅ COMMITTED `6bd9b63` - D-gent Vector DB (23 tests)
-- **Protocol Specs v2.0**: ✅ COMMITTED - CLI/Mirror as agent compositions
 - **O-gent Phase 4**: ✅ COMMITTED `dd153d3` - W-gent integration (40 tests)
-- **I-gent Stigmergic Field**: ✅ COMMITTED `8f51bbc` - Field + TUI (69 tests)
-- **CLI Phase 7**: ✅ COMMITTED `0f6fe84` - TUI Dashboard (73 tests)
+- **I-gent Total**: 138 tests (Stigmergic Field + Forge View)
 
-**Uncommitted**: None - all clean
+**Uncommitted**:
+- `impl/claude/agents/i/forge_view.py` - Forge View (~700 lines)
+- `impl/claude/agents/i/_tests/test_forge_view.py` - 69 tests
+- `impl/claude/protocols/cli/genus/i_gent.py` - Updated with full forge cmd
 
 **Next Steps**:
-1. **Implement**: Working mirror observe (Phase 1: Structural, 0 tokens)
-2. Continue agent consolidation
+1. **Commit**: F-gent × I-gent Forge View
+2. **Implement**: ALO format in F-gent
 
 ---
 
@@ -64,49 +66,46 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 | **L-gents** | ~85% | ✅ Phase 8 D-gent Vector DB complete (23 tests) |
 | **G-gents** | ~90% | Phase 7 done |
 | **O-gents** | ~95% | ✅ Phase 4 complete (177 tests), W-gent integration |
-| **I-gents** | ~70% | ✅ Stigmergic Field (69 tests), forge/timeline pending |
-| **F-gents** | ~40% | Forge loop, ALO format |
+| **I-gents** | ~85% | ✅ Stigmergic Field + Forge View (138 tests) |
+| **F-gents** | ~55% | ✅ Forge View (69 tests), ALO format pending |
 | **M/N/psi** | 0% | Missing |
 
 ---
 
 ## Current Session
 
-### Session: L-gent Phase 8 - D-gent Vector DB (2025-12-09)
+### Session: F-gent × I-gent Forge View (2025-12-09)
 
-**Status**: ✅ COMPLETE - Tight D-gent integration for vector search
+**Status**: ✅ COMPLETE - Pipeline composition UI for I-gent
 
 **New Files**:
-- `impl/claude/agents/l/vector_db.py` - D-gent Vector DB integration
-- `impl/claude/agents/l/_tests/test_vector_db.py` - 23 tests
+- `impl/claude/agents/i/forge_view.py` - Forge View implementation (~700 lines)
+- `impl/claude/agents/i/_tests/test_forge_view.py` - 69 tests
 
 **Key Components**:
-1. **DgentVectorBackend**: VectorBackend protocol using D-gent's VectorAgent
-2. **VectorCatalog**: Unified catalog + vector DB with auto-sync
-3. **D-gent Semantic Features**: curvature_at, find_void, cluster_centers
-4. **Migration Utilities**: migrate_to_dgent_backend
+1. **Archetype**: Agent template from L-gent catalog (id, symbol, level, types)
+2. **Pipeline**: Composition chain (A >> B >> C) with type checking
+3. **ForgeViewState**: Inventory + pipeline + cursor/selection state
+4. **ForgeViewRenderer**: Two-panel TUI (inventory | pipeline)
+5. **L-gent Integration**: `archetype_from_catalog_entry()`, `load_archetypes_from_entries()`
 
-**Architecture**:
-```
-┌─────────────────────────────────────────────────────────────┐
-│                       VectorCatalog                          │
-│    (Unified view: metadata via Registry, vectors via D-gent) │
-├─────────────────────────────────────────────────────────────┤
-│   PersistentRegistry              DgentVectorBackend         │
-│   (D-gent: PersistentAgent)       (D-gent: VectorAgent)      │
-└─────────────────────────────────────────────────────────────┘
-```
+**CLI**: `kgents garden forge` - Interactive pipeline builder
 
-**Tests**: 23 (all skip gracefully when numpy not installed)
+**I-gent Tests**: 138 total (69 Forge View + 69 Field/TUI)
 
 ---
 
 ## Recent Sessions
 
-### Session: O-gent Phase 4 - W-gent Integration (2025-12-09) ✅ COMPLETE
+### Session: L-gent Phase 8 - D-gent Vector DB (2025-12-09) ✅ COMMITTED
+
+- `vector_db.py`: D-gent VectorBackend, VectorCatalog, migration utilities
+- 23 tests, commit: `6bd9b63`
+
+### Session: O-gent Phase 4 - W-gent Integration (2025-12-09) ✅ COMMITTED
 
 - `observable_panopticon.py`: WireObservable mixin, TUI dashboard
-- 40 tests, O-gent total now 177 tests
+- 40 tests, commit: `dd153d3`
 
 ### Session: I-gent Stigmergic Field (2025-12-09) ✅ COMMITTED
 
@@ -114,10 +113,10 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 - `tui.py`: FieldRenderer with sparklines, TUIApplication
 - Commit: `8f51bbc` - 69 tests (37 field + 32 TUI)
 
-### Session: O-gent Phase 3 - Panopticon Integration (2025-12-09)
+---
 
-- `panopticon.py`: Unified dashboard with 3D + Bootstrap observers
-- 50 tests, real-time streaming via async generator
+<details>
+<summary>📦 Archive: Older Sessions (click to expand)</summary>
 
 ### Session: D-gent Phase 5 - SQL/Redis Backends (2025-12-09) ✅ COMMITTED
 

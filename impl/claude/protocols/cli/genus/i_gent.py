@@ -185,29 +185,105 @@ def _cmd_field(
 
 def _cmd_forge(args: list[str], width: int, height: int, use_color: bool) -> int:
     """Launch forge (composition) view."""
+    try:
+        from agents.i.forge_view import (
+            ForgeViewState,
+            ForgeViewRenderer,
+            ForgeViewKeyHandler,
+            create_demo_forge_state,
+            DEFAULT_ARCHETYPES,
+        )
+    except ImportError as e:
+        print(f"Error: Could not import Forge View modules: {e}")
+        print("Make sure you're in the kgents project directory.")
+        return 1
+
+    # Check for --demo or --empty
+    demo_mode = "--demo" in args or not any(a.startswith("-") for a in args)
+    empty_mode = "--empty" in args
+
+    # Create state
+    if empty_mode:
+        state = ForgeViewState(inventory=DEFAULT_ARCHETYPES.copy())
+    else:
+        state = create_demo_forge_state()
+
+    renderer = ForgeViewRenderer(state, use_color=use_color)
+    handler = ForgeViewKeyHandler(state)
+
+    # Set up handlers
+    running = True
+    pipeline_executed = False
+
+    def on_exit():
+        nonlocal running
+        running = False
+
+    def on_execute(pipeline):
+        nonlocal pipeline_executed
+        pipeline_executed = True
+        print(f"\n  Executing pipeline: {pipeline.composition_string}")
+        print(f"  Token budget: {pipeline.total_token_cost:,} tokens")
+        errors = pipeline.type_check()
+        if errors:
+            print("  ⚠ Type errors detected:")
+            for err in errors:
+                print(f"    ✗ {err}")
+        else:
+            print("  ✓ Pipeline type-checks successfully")
+        print()
+
+    handler.set_exit_handler(on_exit)
+    handler.set_execute_handler(on_execute)
+
     print()
-    print("  ┌─ FORGE ─────────────────────────────────────────────┐")
-    print("  │                                                     │")
-    print("  │  MODE: COMPOSITION                                  │")
-    print("  │                                                     │")
-    print("  │  ┌─ Inventory ─────┐    ┌─ Pipeline ──────────────┐ │")
-    print("  │  │                 │    │                         │ │")
-    print("  │  │ [A] Architect   │    │ [ Ground ]              │ │")
-    print("  │  │ [B] Builder     │    │     ↓                   │ │")
-    print("  │  │ [V] Validator   │    │ K-Gent (Persona)        │ │")
-    print("  │  │                 │    │     ↓                   │ │")
-    print("  │  │ DRAG TO PIPELINE│    │ + Add Component         │ │")
-    print("  │  │                 │    │     ↓                   │ │")
-    print("  │  └─────────────────┘    │ Judge (Taste)           │ │")
-    print("  │                         │                         │ │")
-    print("  │                         │ Budget: 12,040 tokens   │ │")
-    print("  │                         └─────────────────────────┘ │")
-    print("  │                                                     │")
-    print("  │  [Tab]SWITCH [Enter]ADD [d]DELETE [r]RUN [q]QUIT    │")
-    print("  └─────────────────────────────────────────────────────┘")
+    print("  Starting Forge View...")
+    print("  Use j/k to navigate, Tab to switch panels")
+    print("  Enter to add, d to delete, x to execute, q to quit")
     print()
-    print("  Note: Forge view is a placeholder. Full implementation pending.")
+
+    # Simple render loop (non-interactive for now, shows one frame)
+    # Full TUI would need terminal raw mode like field view
+    import sys
+    import select
+
+    try:
+        # Check if we can do interactive mode
+        if sys.stdin.isatty():
+            import termios
+            import tty
+
+            old_settings = termios.tcgetattr(sys.stdin)
+            try:
+                tty.setraw(sys.stdin.fileno())
+
+                while running:
+                    # Clear and render
+                    print("\033[2J\033[H", end="")
+                    print(renderer.render())
+
+                    # Non-blocking input
+                    if select.select([sys.stdin], [], [], 0.1)[0]:
+                        key = sys.stdin.read(1)
+                        handler.handle(key)
+
+            finally:
+                termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
+                print("\033[2J\033[H", end="")
+
+        else:
+            # Non-interactive: just print once
+            print(renderer.render())
+
+    except KeyboardInterrupt:
+        pass
+
+    if pipeline_executed:
+        print("  Pipeline executed.")
+    else:
+        print("  Forge view ended.")
     print()
+
     return 0
 
 

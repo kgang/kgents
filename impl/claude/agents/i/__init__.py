@@ -67,6 +67,10 @@ from .forge_view import (
     DEFAULT_ARCHETYPES,
     create_demo_forge_state,
     render_forge_view_once,
+    archetype_from_catalog_entry,
+    load_archetypes_from_registry,
+    create_forge_state_from_registry,
+    load_archetypes_from_entries,
 )
 
 # New stigmergic field types
@@ -116,6 +120,10 @@ __all__ = [
     "DEFAULT_ARCHETYPES",
     "create_demo_forge_state",
     "render_forge_view_once",
+    "archetype_from_catalog_entry",
+    "load_archetypes_from_registry",
+    "create_forge_state_from_registry",
+    "load_archetypes_from_entries",
     # Stigmergic Field (new)
     "Entity",
     "EntityType",

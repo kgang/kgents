@@ -578,3 +578,115 @@ def render_forge_view_once(state: ForgeViewState, use_color: bool = True) -> str
     """Render a Forge View state once (for export or testing)."""
     renderer = ForgeViewRenderer(state, use_color)
     return renderer.render()
+
+
+def archetype_from_catalog_entry(entry: "CatalogEntry") -> Archetype:
+    """
+    Convert an L-gent CatalogEntry to a Forge View Archetype.
+
+    This bridges the L-gent catalog with the I-gent Forge View,
+    enabling visualization of cataloged agents as composable archetypes.
+
+    Args:
+        entry: A CatalogEntry from the L-gent registry
+
+    Returns:
+        An Archetype suitable for the Forge View inventory
+    """
+    # Determine level based on usage/health
+    if entry.usage_count > 100 and entry.success_rate > 0.9:
+        level = ArchetypeLevel.MASTER
+    elif entry.usage_count > 50 and entry.success_rate > 0.8:
+        level = ArchetypeLevel.EXPERT
+    elif entry.usage_count > 10:
+        level = ArchetypeLevel.JOURNEYMAN
+    elif entry.usage_count > 0:
+        level = ArchetypeLevel.APPRENTICE
+    else:
+        level = ArchetypeLevel.NOVICE
+
+    # Extract symbol from name (first char, uppercase)
+    symbol = entry.name[0].upper() if entry.name else "?"
+
+    # Estimate token cost based on type
+    token_costs = {
+        "agent": 150,
+        "contract": 50,
+        "template": 200,
+        "pattern": 100,
+    }
+    token_cost = token_costs.get(entry.entity_type.value, 100)
+
+    return Archetype(
+        id=entry.id,
+        name=entry.name,
+        symbol=symbol,
+        level=level,
+        input_type=entry.input_type or "Any",
+        output_type=entry.output_type or "Any",
+        description=entry.description,
+        tags=entry.keywords,
+        token_cost=token_cost,
+        entropy_cost=0.1 * (level.value / 3),  # Higher level = more entropy
+    )
+
+
+async def load_archetypes_from_registry(registry: "Registry") -> list[Archetype]:
+    """
+    Load all agent archetypes from an L-gent Registry.
+
+    Filters to only active agents and converts them to Archetypes.
+
+    Args:
+        registry: An L-gent Registry instance
+
+    Returns:
+        List of Archetypes for the Forge View inventory
+    """
+    archetypes = []
+
+    entries = await registry.list_all()
+    for entry in entries:
+        # Only include active agents
+        if entry.entity_type.value == "agent" and entry.status.value == "active":
+            archetypes.append(archetype_from_catalog_entry(entry))
+
+    return archetypes
+
+
+async def create_forge_state_from_registry(registry: "Registry") -> ForgeViewState:
+    """
+    Create a ForgeViewState populated from an L-gent Registry.
+
+    Args:
+        registry: An L-gent Registry instance
+
+    Returns:
+        A ForgeViewState with inventory loaded from the catalog
+    """
+    archetypes = await load_archetypes_from_registry(registry)
+
+    # If registry is empty, use defaults
+    if not archetypes:
+        archetypes = DEFAULT_ARCHETYPES.copy()
+
+    return ForgeViewState(inventory=archetypes)
+
+
+def load_archetypes_from_entries(entries: list["CatalogEntry"]) -> list[Archetype]:
+    """
+    Load archetypes from a list of CatalogEntry objects (sync version).
+
+    This is useful when you already have the entries loaded.
+
+    Args:
+        entries: A list of CatalogEntry objects
+
+    Returns:
+        List of Archetypes for the Forge View inventory
+    """
+    archetypes = []
+    for entry in entries:
+        if entry.entity_type.value == "agent" and entry.status.value == "active":
+            archetypes.append(archetype_from_catalog_entry(entry))
+    return archetypes
