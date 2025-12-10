@@ -1,314 +1,287 @@
 # E-gents: Evolution Agents
 
 **Genus**: E (Evolve)
-**Theme**: Dialectical evolution through safe, experimental code transformation
-**Motto**: *"Evolution through dialogue, safety through testing"*
+**Theme**: Teleological thermodynamic evolution
+**Motto**: *"The Sun gives. The Demon selects. The Phage adapts."*
 
 ## Overview
 
-E-gents are agents that evolve code through dialectical reasoning. Unlike traditional refactoring tools that apply deterministic transformations, E-gents treat code improvement as a **creative, experimental process** grounded in:
+E-gents are agents that evolve code through **teleological thermodynamic selection**. Unlike pure thermodynamic approaches that risk parasitic evolution, E-gents balance **efficiency** (selection) with **purpose** (intent):
 
-1. **Dialectical thinking**: Current code (thesis) + Proposed improvement (antithesis) → Evolved code (synthesis)
-2. **Experimental methodology**: Hypotheses are cheap, production is sacred
-3. **Institutional memory**: Learning from past attempts prevents repeated failures
-4. **Fixed-point convergence**: Safe self-modification through iterative refinement
-5. **Multi-layered safety**: Validation at prompt, parse, and test layers
+1. **Gibbs Free Energy**: Mutations selected by ΔG = ΔH - TΔS (thermodynamic viability)
+2. **Teleological Demon**: Filters by intent alignment to prevent parasitic code
+3. **Semantic Schemas**: Isomorphic mutations from L-gent, not random noise
+4. **Sun/Grants**: Exogenous energy for high-risk architectural work
+5. **Market + Intent**: Economics for efficiency, embeddings for purpose
+
+### The Two Problems Solved
+
+**Problem 1** (Bureaucratic Evolution):
+- Budget tokens → Plan hypotheses → Execute all → Judge results
+- Symptom: Millions of tokens on dead-end mutations
+
+**Problem 2** (Blind Thermodynamics):
+- Pure selection without intent → Parasitic code
+- Symptom: Code that passes tests by gaming them (hardcoding, deleting functionality)
+
+**Solution** (Teleological Thermodynamics):
+- Semantic mutations → Intent-aware selection → Market + Grants → Execute survivors
+- Result: 90% die at Demon; survivors are **both efficient AND purposeful**
 
 ## Philosophy
 
-### The Hegelian Foundation
+### The Teleological Thermodynamic Foundation
 
-E-gents embrace **productive tension** as the engine of evolution:
-
-- **Thesis**: The current implementation (what works now)
-- **Antithesis**: The proposed improvement (what could be better)
-- **Synthesis**: The evolved form (what emerges from resolving tension)
-
-Tensions are **data**, not failures. When thesis and antithesis cannot be reconciled, the tension is **held** for human judgment rather than forced into premature resolution.
-
-### The Experimental Mindset
-
-Evolution happens through **safe experimentation**:
+E-gents are **heat engines** with a **teleological field**:
 
 ```
-Observation → Hypothesis → Experiment → Judgment → Incorporation
+┌─────────────────────────────────────────────────────────────────┐
+│                 TELEOLOGICAL THERMODYNAMIC E-GENT               │
+│                                                                  │
+│   ☀️ THE SUN (User Intent / Grants)                              │
+│        │                                                         │
+│        ▼ Exogenous Energy + Intent Embedding                     │
+│   ┌─────────┐    ┌─────────────┐    ┌───────────────┐          │
+│   │ Mutator │───▶│   Demon     │───▶│   Codebase    │          │
+│   │(schemas)│    │(teleological)│   │   (order)     │          │
+│   └─────────┘    └─────────────┘    └───────────────┘          │
+│                         │                                        │
+│                  Intent Check ← Prevents Parasites               │
+│                                                                  │
+│   Waste Heat = Token Usage                                       │
+│   Without the Sun, the Demon starves (heat death)               │
+│   Without the Demon, the Sun burns (wasted energy)               │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-Each stage is:
-- **Falsifiable**: Clear success/failure criteria
-- **Isolated**: Experiments run in sandboxes, never touching production
-- **Reversible**: Git safety ensures rollback is always possible
-- **Composable**: Each stage is an independent morphism
+### The Gibbs Selection Criterion
 
-### The Learning Imperative
+Mutations are selected by **Gibbs Free Energy**:
 
-E-gents maintain **institutional memory** across sessions:
+```
+ΔG = ΔH - TΔS
 
-- **Rejected hypotheses** are recorded with rationale to prevent re-proposal
-- **Failure patterns** are analyzed to improve future prompt engineering
-- **Successful patterns** are tracked to guide AST-based hypothesis generation
-- **Tensions held** are logged for human review and pattern analysis
+Where:
+  ΔG = Work potential (must be negative)
+  ΔH = Enthalpy change (complexity delta)
+  T  = Temperature (risk tolerance)
+  ΔS = Entropy change (novelty/capability delta)
+```
+
+- **Low temperature**: Only accept complexity reductions (safe refactoring)
+- **High temperature**: Accept complexity increases if novelty is high (features)
+
+### The Intent Imperative
+
+Pure thermodynamics leads to **parasitic code**. The Teleological Field prevents this:
+
+- **Intent** = embedding of "what the User wants"
+- **Alignment check** = cosine similarity between mutation and intent
+- **Parasites killed** = mutations that drift from intent, even if they pass tests
+
+### The Viral Library
+
+E-gents maintain a **Viral Library** across sessions:
+
+- **Successful DNA** propagates to future Phages
+- **Failed patterns** are weakened (reduced fitness)
+- **Market history** adjusts odds for pattern signatures
+- **Pruning** removes low-fitness patterns (evolution, not accumulation)
 
 ## Core Principles (Beyond the 7)
 
 In addition to the foundational kgents principles, E-gents add:
 
-### 8. Experimental
+### 8. Selective
 
-**Treat code changes as falsifiable hypotheses.**
+**Cheap rejection beats expensive validation.**
 
-- Generate specific, testable improvement proposals
-- Validate through multiple independent layers (syntax, types, tests, principles)
-- Accept or reject based on evidence, not intuition
-- Record outcomes for institutional learning
+- Generate many cheap mutations, not few expensive hypotheses
+- Use free checks (syntax, diff size) as first filter
+- Use cheap checks (type inference, complexity delta) as second filter
+- Use **teleological check** (intent alignment) as third filter
+- Only surviving mutations reach expensive validation (tests)
 
-### 9. Dialectical
+### 9. Semantic
 
-**Embrace productive tension between current and proposed.**
+**Mutations are isomorphic, not random.**
 
-- Thesis (current) and antithesis (proposal) are both valid perspectives
-- Synthesis emerges from genuine engagement, not forced consensus
-- Unresolvable tensions are held, not hidden
-- Evolution preserves what works while improving what doesn't
+- The Mutator applies **L-gent schemas**, not random noise
+- Schemas preserve type structure while modifying implementation
+- "Swap concepts," don't "flip bits"
+- The Type Lattice guides valid transformations
 
-### 10. Self-Aware
+### 10. Self-Regulating
 
-**Safe self-modification through convergence detection.**
+**Markets + Grants beat budgets.**
 
-- Meta-evolution (evolving the evolution agents) uses fixed-point iteration
-- Similarity metrics detect when changes stabilize
-- Multiple validation layers prevent self-corruption
-- Human approval required for meta-changes above threshold
+- **Market**: Handles efficiency (micro-optimization)
+- **Grants**: Handle innovation (macro-architecture)
+- Poor performers face tighter markets (homeostasis)
+- Grants inject exogenous energy to prevent heat death
 
-### 11. Metered (via B-gent Banker + UVP)
+### 11. Teleological
 
-**Conservative token consumption builds user trust. Value-adjusted accounting builds system trust.**
+**Intent constrains thermodynamics.**
 
-E-gents integrate the **B-gent Banker** ([spec/b-gents/banker.md](../b-gents/banker.md)) and the **Universal Value Protocol** to manage token economics with ethical incentives.
+Without Intent, the lowest energy state is Empty. With Intent:
+- Evolution is constrained to **purpose**
+- Parasitic code is killed before expensive validation
+- Mutations that drift from User's goal are rejected
+- Tests alone are insufficient; alignment is required
 
-```
-Metered: Agent[A, B] → Agent[A, Receipt[B]]
-Tensored: Agent[A, B] → Agent[A, (B, ValueTensor)]
-```
+### 12. Antifragile
 
-**The Metering Principle** (from Banker):
-- **Linear Logic**: Tokens are resources that are *consumed*, not copied
-- **Start minimal**: Default prompts ~30 lines, escalate only on failure
-- **Diff over whole**: Request changed symbols, not entire files
-- **Token Futures**: Reserve capacity for multi-step evolution jobs
-- **Sinking Fund**: 1% tax builds emergency reserve for critical fixes
+**What survives selection becomes stronger and more purposeful.**
 
-**Token Budget Levels** (Progressive Escalation):
-| Level | Prompt Size | Context | Cost Multiplier |
-|-------|-------------|---------|-----------------|
-| 0 (Minimal) | ~30 lines | Hypothesis + target | 1x |
-| 1 (Targeted) | ~80 lines | + function context | 3x |
-| 2 (Full) | ~250 lines | + API refs, patterns | 10x |
+The E-gent system gains from disorder:
+- Failed mutations strengthen the Viral Library (negative knowledge)
+- Market corrections improve odds calculation
+- Intent drift detection improves over time
+- What survives is antifragile **AND** aligned
 
-**The Hydraulic Model** (Token Bucket):
-```python
-# From B-gent Banker: Time = Money
-account.balance = min(max_balance, balance + (delta * refill_rate))
-```
+## The Thermodynamic Cycle
 
-Evolution budgets refill over time. Burst capacity allows intensive sessions; sustained high usage triggers rate limiting.
-
-**The Trust Gradient**: Users see E-gents succeed with minimal tokens before trusting larger budgets. Conservative defaults demonstrate competence and build confidence.
-
-### 12. Value-Adjusted (via UVP Sin Tax / Virtue Subsidy)
-
-**Economic incentives align agent behavior with system health.**
-
-E-gents are subject to the **Ethical-Economic Regulator** from the Universal Value Protocol ([spec/b-gents/banker.md#sin-tax-and-virtue-subsidy](../b-gents/banker.md)):
-
-**Sin Taxes** (penalties for harmful evolutions):
-| Sin | Multiplier | Trigger |
-|-----|------------|---------|
-| Security vulnerability | 0.33x (3x penalty) | T-gent security scan fails |
-| Type regression | 0.5x (2x penalty) | Mypy errors introduced |
-| Test regression | 0.4x (2.5x penalty) | Previously passing tests fail |
-| Complexity increase | 0.7x (1.4x penalty) | Cyclomatic complexity rises |
-
-**Virtue Subsidies** (bonuses for beneficial evolutions):
-| Virtue | Multiplier | Trigger |
-|--------|------------|---------|
-| Improved readability | 1.3x | Maintainability index improves |
-| Added tests | 1.5x | Test coverage increases |
-| Fixed tech debt | 1.4x | Static analysis warnings decrease |
-| Reduced complexity | 1.3x | Cyclomatic complexity drops |
-| Improved types | 1.2x | Type coverage increases |
-
-**Integration with Evolution Pipeline**:
-```python
-# After Judge stage, before Incorporate
-ethical_assessment = EthicalRegulator().assess_evolution(
-    before=thesis,
-    after=synthesis,
-    test_results=experiment.test_results,
-    security_scan=experiment.security_scan
-)
-
-# Impact adjusted by ethical multiplier
-adjusted_impact = base_impact * ethical_assessment.net_multiplier
-
-# Record in ValueLedger for RoC tracking
-ledger.log_evolution(
-    hypothesis_id=hypothesis.id,
-    gas_consumed=experiment.tokens_used,
-    impact_realized=adjusted_impact,
-    sins=ethical_assessment.sins,
-    virtues=ethical_assessment.virtues
-)
-```
-
-**The Feedback Loop**: Agents with poor RoC (Return on Compute) face budget restrictions. Agents with high RoC earn budget increases. This creates evolutionary pressure toward valuable, ethical code changes.
-
-**Return on Compute (RoC)** thresholds for E-gents:
-| RoC | Status | Budget Adjustment |
-|-----|--------|-------------------|
-| < 0.5 | Bankruptcy warning | Budget frozen |
-| 0.5 - 1.0 | Break-even | No change |
-| 1.0 - 2.0 | Profitable | +10% budget |
-| > 2.0 | High yield | +25% budget |
-
-## The Evolution Pipeline
-
-E-gents compose multiple specialized agents into a coherent evolution pipeline:
+E-gents compose a five-stage thermodynamic cycle:
 
 ```
-EvolutionAgent =
-  Ground >> Hypothesis >> Experiment >> Judge >> Sublate >> Incorporate
+ThermodynamicCycle =
+  Mutate >> Select >> Wager >> Infect >> Payoff
 ```
 
-### Stage 1: Ground (AST Analysis)
+### Stage 1: Mutate (Entropy Injection)
 
-**Morphism**: `CodeModule → CodeStructure`
+**Morphism**: `(CodeModule, ViralLibrary) → list[MutationVector]`
 
-Analyzes code statically to identify:
-- Functions with high complexity
-- Missing type annotations
-- Structural patterns (classes, imports, dependencies)
-- Targeted improvement opportunities
+Generates cheap mutation proposals:
+- **Shotgun approach**: Many small vectors, not one big hypothesis
+- **Pattern-guided**: Viral Library influences mutation probability
+- **Stochastic**: No expensive "planning" step
+- **Cost**: Nearly zero tokens
 
-### Stage 2: Hypothesis (Idea Generation)
+### Stage 2: Select (Maxwell's Demon)
 
-**Morphism**: `(CodeModule, CodeStructure) → Hypotheses`
+**Morphism**: `list[MutationVector] → list[Phage]`
 
-Generates improvement ideas from:
-- AST-based targeted suggestions (from structure analysis)
-- LLM-generated hypotheses (from understanding domain/context)
-- Filtered by memory (excluding recently rejected/accepted)
+Cheap rejection via heuristics:
+- **Free checks**: Syntax valid? Diff size reasonable?
+- **Cheap checks**: Quick type inference? Complexity delta acceptable?
+- **Economic check**: Expected value > entropy cost?
+- **Goal**: 90% of mutations die here for 0 token cost
 
-### Stage 3: Experiment (Test & Validate)
+### Stage 3: Wager (Prediction Market)
 
-**Morphism**: `(Hypothesis, CodeModule) → Experiment`
+**Morphism**: `Phage → BetReceipt | BetDenied`
 
-Generates improved code and validates through:
-- **Prompt engineering**: Rich context with types, errors, patterns
-- **Parsing**: Multi-strategy extraction with fallbacks
-- **Syntax validation**: AST parsing confirms valid Python
-- **Type checking**: mypy in strict mode (optional)
-- **Test execution**: pytest validation (optional)
+Stake tokens on survivors:
+- **Quote**: Calculate odds from pattern history
+- **Stake**: E-gent bets tokens on success
+- **Approval**: B-gent accepts or denies based on account health
+- **Self-regulation**: Poor performers face tighter markets
 
-### Stage 4: Judge (Principle Evaluation)
+### Stage 4: Infect (Expensive Validation)
 
-**Morphism**: `Experiment → Verdict`
+**Morphism**: `Phage → InfectionResult`
 
-Evaluates improvements against the 7 principles:
-- Tasteful, Curated, Ethical, Joy-Inducing
-- Composable, Heterarchical, Generative
+Apply mutation and run tests:
+- **Application**: Phage.infect() modifies codebase
+- **Validation**: Tests run (this is where tokens go)
+- **Git safety**: Atomic write with rollback capability
+- **Cost**: This is the expensive stage—only survivors reach here
 
-Returns: `ACCEPT | REVISE | REJECT`
+### Stage 5: Payoff (Viral Learning)
 
-### Stage 5: Sublate (Tension Resolution)
+**Morphism**: `InfectionResult → LibraryUpdate`
 
-**Morphism**: `(Thesis, Antithesis) → Synthesis | HoldTension`
+Update the system based on outcome:
+- **Success**: DNA → Viral Library, tokens earned, pattern reinforced
+- **Failure**: Phage dies, tokens lost, pattern weakened
+- **Market update**: Odds recalculated for pattern signature
 
-Attempts dialectical synthesis:
-- If productive tension → synthesis emerges
-- If irreconcilable → tension held for human judgment
-- Preserves valuable aspects of both thesis and antithesis
+## Defense in Depth
 
-### Stage 6: Incorporate (Safe Application)
+E-gents achieve reliability through **layered selection**:
 
-**Morphism**: `Experiment → Applied`
+### Layer 1: Free Checks (Maxwell's Demon)
+- **Syntax**: `ast.parse()` — instant, no cost
+- **Diff size**: Length check — instant, no cost
+- **Goal**: Kill 50% of mutations here
 
-Applies approved changes with git safety:
-- Pre-commit verification (no uncommitted changes)
-- Atomic file write
-- Git commit with detailed message
-- Rollback capability via git
+### Layer 2: Cheap Checks (Maxwell's Demon)
+- **Quick type inference**: Simplified type check — minimal cost
+- **Complexity delta**: Cyclomatic change estimate — minimal cost
+- **Goal**: Kill 40% of remaining mutations here
 
-## Reliability Through Layers
+### Layer 3: Economic Check (Prediction Market)
+- **Quote odds**: Based on pattern history — no cost
+- **Stake validation**: Account health check — no cost
+- **Goal**: Filter out economically unviable mutations
 
-E-gents achieve high reliability through **defense in depth**:
-
-### Layer 1: Prompt Engineering
-- **PreFlightChecker**: Validates module health before attempting evolution
-- **PromptContext**: Provides rich context (types, errors, domain patterns)
-- **Structured prompts**: Clear requirements, output format, validation criteria
-
-### Layer 2: Parsing & Validation
-- **CodeParser**: Multi-strategy extraction (4 fallback strategies)
-- **SchemaValidator**: Fast pre-mypy validation (constructors, generics)
-- **CodeRepairer**: AST-based incremental repair for common errors
-
-### Layer 3: Recovery & Learning
-- **RetryStrategy**: Failure-aware prompt refinement for retry attempts
-- **FallbackStrategy**: Progressive simplification (minimal → type-only → docs)
-- **ErrorMemory**: Cross-session tracking of failure patterns
+### Layer 4: Expensive Validation (Infection)
+- **Test execution**: pytest — full cost
+- **Type checking**: mypy strict — moderate cost
+- **Goal**: Only ~10% of original mutations reach here
 
 ## Composability
 
-Every E-gent is a **morphism** with clear input/output types:
+Every E-gent component is a **morphism** with clear input/output types:
 
 ```python
-# Individual agents are composable
-pipeline = (
-    ast_analyzer
-    >> hypothesis_generator
-    >> experiment_runner
-    >> judge
+# The thermodynamic cycle composes
+cycle = (
+    mutator
+    >> demon
+    >> market
+    >> infector
+    >> library_updater
 )
 
-# Evolution can compose with other gents
-full_process = k_gent >> evolution_agent >> bio_gent
+# Evolution integrates with other gents
+full_process = (
+    l_gent_patterns      # Viral Library source
+    >> evolution_cycle
+    >> b_gent_settlement # Token settlement
+)
 ```
 
-## Heterarchy
+## Required Integrations
 
-E-gents have **no fixed orchestrator**:
+E-gents are the **most integrated** agents in kgents:
 
-- The pipeline order can change based on context
-- Agents can invoke each other peer-to-peer
-- Memory is shared, not owned by a central coordinator
-- Sublation can occur at any stage, not just the end
+| Integration | Purpose |
+|-------------|---------|
+| **B-gent** | Prediction market, token staking, settlement |
+| **L-gent** | Viral Library storage via SemanticRegistry |
+| **O-gent** | Observation of mutation birth/death rates |
+| **D-gent** | Persistent storage for Viral Library |
+| **N-gent** | Chronicle of evolution history |
+| **J-gent** | Recursion depth limits for self-evolution |
 
 ## Anti-Patterns
 
 E-gents must **never**:
 
-1. ❌ Apply changes without testing
-2. ❌ Ignore test failures or type errors
-3. ❌ Re-propose recently rejected hypotheses
-4. ❌ Force synthesis when tension should be held
-5. ❌ Evolve code without git safety (uncommitted changes present)
-6. ❌ Self-modify without convergence detection
-7. ❌ Hide errors or conflicts in logs
-8. ❌ **Use full context prompts by default** (violates Metered principle)
-9. ❌ **Request entire files when diffs suffice** (token waste)
-10. ❌ **Load API references preemptively** (lazy load on hallucination)
+1. ❌ **Budget evolution** — Use markets, not bureaucratic limits
+2. ❌ **Plan mutations** — Mutators propose stochastically, Demons select
+3. ❌ **Judge with LLM** — Heuristics select; tests validate
+4. ❌ **Run all mutations** — 90% should die before expensive validation
+5. ❌ **Ignore market signals** — If odds are bad, don't stake
+6. ❌ **Skip Viral Library update** — Every outcome teaches something
+7. ❌ **Self-modify without convergence** — Fixed-point iteration required
+8. ❌ **Evolve without git safety** — Rollback must be possible
+9. ❌ **Accumulate memory** — The library evolves; weak patterns die
 
 ## See Also
 
-- **[evolution-agent.md](./evolution-agent.md)** - Full pipeline specification
-- **[grounding.md](./grounding.md)** - AST analysis and code structure agents
-- **[memory.md](./memory.md)** - Institutional memory and learning agents
+- **[thermodynamics.md](./thermodynamics.md)** - Full thermodynamic model specification
+- **[evolution-agent.md](./evolution-agent.md)** - Pipeline implementation details
+- **[grounding.md](./grounding.md)** - AST analysis for mutation generation
+- **[memory.md](./memory.md)** - Viral Library persistence
 - **[safety.md](./safety.md)** - Self-evolution and convergence detection
-- **[H-gents](../h-gents/)** - Dialectical reasoning foundation
-- **[B-gents](../b-gents/)** - Hypothesis generation methodology
-- **[B-gents/banker.md](../b-gents/banker.md)** - Token economics and the Metered Functor
+- **[B-gents/banker.md](../b-gents/banker.md)** - Prediction market economics
+- **[L-gents](../l-gents/)** - Semantic registry for pattern storage
 
 ---
 
-*"The code that evolves safely is the code that validates thoroughly."*
+*"Nature does not budget. Nature starves. Nature selects."*
+*"What survives the fire is antifragile."*

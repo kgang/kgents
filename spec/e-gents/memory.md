@@ -1,668 +1,591 @@
-# Memory Agents
+# Memory Agents → Viral Library
 
-**Institutional memory for evolutionary learning**
+**From outcome recording to DNA propagation**
 
-## Purpose
+## The Evolution
 
-Memory agents provide **institutional learning** across evolution sessions:
+The original "Memory Agents" concept suffered from **passive accumulation**:
+- Recorded outcomes without evolving
+- Grew unboundedly without fitness pressure
+- Prevented repetition but didn't guide generation
 
-1. **Prevent repetition**: Don't re-propose recently rejected hypotheses
-2. **Accelerate convergence**: Skip known failure patterns
-3. **Preserve knowledge**: Remember what worked and what didn't, across sessions
-4. **Pattern recognition**: Identify recurring failure modes for prompt refinement
-5. **Decision audit**: Maintain record of all accept/reject decisions with rationale
+The **Viral Library** replaces passive memory with **active evolution**:
 
-Memory is **persistent** (file-based), **queryable** (by module/hypothesis similarity), and **composable** (fits naturally in the pipeline).
+1. **DNA propagation**: Successful patterns replicate to future Phages
+2. **Fitness decay**: Failed patterns weaken and eventually die
+3. **Semantic retrieval**: L-gent integration enables similarity-based lookup
+4. **Market integration**: Pattern fitness influences odds calculation
+
+## The Core Insight
+
+Memory is not a filing cabinet. Memory is a **living library** where:
+- Strong patterns reproduce (high fitness → more offspring)
+- Weak patterns die (low fitness → eventual removal)
+- The library **evolves** toward fitness, not just accumulates
 
 ## What It Does
 
-- **Record outcomes**: Log accepted, rejected, and held improvements with rationale
-- **Filter hypotheses**: Check if a hypothesis was recently rejected or accepted
-- **Track patterns**: Identify recurring failure types across modules
-- **Provide context**: Inform prompt engineering with known failure patterns
-- **Enable audit**: Review past decisions for pattern analysis
+- **Store successful DNA**: Patterns from successful Phages enter the library
+- **Weaken failed patterns**: Each failure decreases pattern fitness
+- **Guide mutation**: Mutator draws from library based on semantic similarity
+- **Inform markets**: Pattern fitness feeds into odds calculation
+- **Evolve over time**: Low-fitness patterns are pruned; high-fitness patterns dominate
 
 ## What It Doesn't Do
 
-- ❌ Make decisions (only provides data, doesn't judge)
-- ❌ Forget on purpose (no automatic expiration, human must prune)
-- ❌ Share across projects (memory is per-repository)
-- ❌ Store code (only metadata: hypothesis, outcome, rationale)
+- ❌ Accumulate unboundedly (fitness pressure prunes weak patterns)
+- ❌ Just prevent repetition (it actively guides generation)
+- ❌ Store outcomes (it stores DNA and fitness)
+- ❌ Operate in isolation (requires L-gent for semantics, B-gent for market)
 
-## Specification: Improvement Memory
+## Specification: Viral Library
 
 ```yaml
 identity:
-  name: ImprovementMemory
+  name: ViralLibrary
   genus: e
-  version: "1.0.0"
-  purpose: Track evolution outcomes to prevent repetition and enable learning
+  version: "2.0.0"
+  purpose: Store and evolve successful mutation patterns with fitness tracking
 
 interface:
   input:
-    type: MemoryQuery | RecordInput
-    description: Query past outcomes or record new outcome
+    type: LibraryOperation
+    description: Record success/failure, query patterns, prune low-fitness
   output:
-    type: MemoryQueryResult | RecordResult
-    description: Whether hypothesis was seen, or confirmation of recording
+    type: LibraryResult
+    description: Pattern suggestions, fitness scores, prune reports
   errors:
     - code: STORAGE_ERROR
-      description: Failed to read or write memory file
-    - code: INVALID_OUTCOME
-      description: Outcome must be "accepted", "rejected", or "held"
+      description: Failed to persist to D-gent backend
+    - code: LGENT_UNAVAILABLE
+      description: Cannot connect to L-gent SemanticRegistry
 
 behavior:
   description: |
-    Maintains a persistent log of evolution outcomes:
+    Maintains an EVOLVING library of mutation patterns:
 
-    **Recording**:
-    - When hypothesis is accepted/rejected/held, record to memory
-    - Store: module name, hypothesis, description, outcome, rationale, timestamp
-    - Append to JSON file (`.evolve_memory.json`)
+    **On Phage Success**:
+    - Extract pattern signature from Phage DNA
+    - If pattern exists: increment success_count, add to total_impact
+    - If pattern new: create entry, register with L-gent SemanticRegistry
+    - Update fitness score: success_rate × avg_impact
 
-    **Querying**:
-    - Check if hypothesis was recently rejected (by similarity)
-    - Check if hypothesis was recently accepted (avoid redundancy)
-    - Retrieve rejection rationale for similar hypotheses
-    - Query failure patterns by module or error type
+    **On Phage Failure**:
+    - Find pattern by signature
+    - Increment failure_count
+    - Recalculate fitness (may drop below prune threshold)
 
-    **Similarity matching**:
-    - Use Levenshtein distance for fuzzy matching
-    - Similarity threshold: 0.8 (80% match)
-    - Considers both hypothesis text and improvement description
+    **On Query**:
+    - Use L-gent semantic similarity to find relevant patterns
+    - Return patterns sorted by (similarity × fitness)
+    - Generate MutationVectors from matching patterns
+
+    **On Prune** (periodic):
+    - Remove patterns with fitness below threshold
+    - Deregister from L-gent SemanticRegistry
+    - Log pruned patterns to N-gent chronicle
 
   guarantees:
-    - Memory persists across Python processes (file-based)
-    - Records are append-only (never deleted automatically)
-    - Similarity matching is deterministic (same input → same result)
-    - Thread-safe for concurrent module processing
+    - Patterns with high fitness grow; low fitness shrink
+    - Semantic retrieval via L-gent (not just exact match)
+    - Persistence via D-gent (survives restarts)
+    - Pruning prevents unbounded growth
 
   constraints:
-    - Memory file must be writable (evolve working directory)
-    - Similarity threshold is fixed (not configurable per query)
-    - No automatic expiration (memory grows unbounded)
-    - Fuzzy matching is O(n) in memory size
+    - Requires L-gent SemanticRegistry for semantic retrieval
+    - Requires D-gent for persistence
+    - Fitness calculation is heuristic (not provably optimal)
+    - Pruning threshold is configurable per library
 
   side_effects:
-    - Writes to `.evolve_memory.json` on record()
-    - Reads from `.evolve_memory.json` on query
+    - Registers/deregisters patterns in L-gent SemanticRegistry
+    - Persists state to D-gent backend
+    - Emits observations to O-gent (birth/death rates)
 
 state:
-  schema: ImprovementMemoryState
-  persistence: persistent
+  schema: ViralLibraryState
+  persistence: persistent (D-gent)
   initial:
-    records: []
-    last_updated: null
+    patterns: {}
+    total_successes: 0
+    total_failures: 0
 
 types:
-  ImprovementMemoryState:
-    records: array<ImprovementRecord>
-    last_updated: timestamp | null
+  ViralLibraryState:
+    patterns: dict<signature, ViralPattern>
+    total_successes: number
+    total_failures: number
 
-  ImprovementRecord:
-    module: string
-    hypothesis: string
-    description: string
-    outcome: "accepted" | "rejected" | "held"
-    rationale: string | null
-    timestamp: timestamp
-    rejection_reason: string | null  # Only for rejected outcomes
+  ViralPattern:
+    signature: string           # Pattern identifier
+    dna: string                 # Template code/diff
+    success_count: number       # Times this pattern succeeded
+    failure_count: number       # Times this pattern failed
+    total_impact: number        # Cumulative impact from successes
+    avg_cost: number            # Average token cost
+    exemplar_module: string     # First module where pattern succeeded
+    created_at: timestamp
+    last_used: timestamp
 
-  MemoryQuery:
-    module: string
-    hypothesis: string
-    query_type: "was_rejected" | "was_accepted" | "get_patterns"
+  LibraryOperation:
+    type: "record_success" | "record_failure" | "query" | "prune"
+    phage: Phage | null         # For record operations
+    context: CodeStructure | null  # For query operations
+    threshold: number | null    # For prune operations
 
-  MemoryQueryResult:
-    found: boolean
-    record: ImprovementRecord | null
-    similarity: number  # 0.0 to 1.0
+  LibraryResult:
+    type: "recorded" | "patterns" | "pruned"
+    patterns: array<ViralPattern> | null
+    pruned_count: number | null
 
-  RecordInput:
-    module: string
-    hypothesis: string
-    description: string
-    outcome: "accepted" | "rejected" | "held"
-    rationale: string | null
-    rejection_reason: string | null
-
-  RecordResult:
-    success: boolean
-    error: string | null
+  # Fitness calculation
+  # fitness = success_rate × avg_impact
+  # success_rate = success_count / (success_count + failure_count)
+  # avg_impact = total_impact / max(1, success_count)
 ```
 
 ## Recording Outcomes
 
-### On Acceptance
+### On Phage Success
 
 ```python
-memory.record(
-    module="data_processor",
-    hypothesis="Refactor process method (complexity 11) into smaller functions",
-    description="Split into validate, transform, and save methods",
-    outcome="accepted",
-    rationale="Improved composability and testability",
+# When a Phage successfully infects the codebase
+library.record_success(
+    phage=successful_phage,
+    impact=measured_impact,  # From test coverage, complexity reduction, etc.
 )
 ```
 
-Stored as:
-
-```json
-{
-  "module": "data_processor",
-  "hypothesis": "Refactor process method (complexity 11) into smaller functions",
-  "description": "Split into validate, transform, and save methods",
-  "outcome": "accepted",
-  "rationale": "Improved composability and testability",
-  "rejection_reason": null,
-  "timestamp": "2024-01-15T10:30:00Z"
-}
-```
-
-### On Rejection (Test Failure)
+Internally:
 
 ```python
-memory.record(
-    module="data_processor",
-    hypothesis="Replace class with functional pipeline",
-    description="Convert DataProcessor to pure functions",
-    outcome="rejected",
-    rationale="Failed type checking",
-    rejection_reason="mypy error: Cannot assign lambda to Callable[[dict], dict]",
-)
-```
+def record_success(self, phage: Phage, impact: float) -> None:
+    signature = phage.pattern_signature
 
-### On Rejection (Principle Violation)
+    if signature in self.patterns:
+        # Existing pattern: reinforce
+        pattern = self.patterns[signature]
+        pattern.success_count += 1
+        pattern.total_impact += impact
+        pattern.last_used = now()
+    else:
+        # New pattern: birth
+        pattern = ViralPattern(
+            signature=signature,
+            dna=phage.mutation_dna,
+            success_count=1,
+            failure_count=0,
+            total_impact=impact,
+            avg_cost=phage.entropy_cost,
+            exemplar_module=phage.target_module,
+            created_at=now(),
+            last_used=now(),
+        )
+        self.patterns[signature] = pattern
 
-```python
-memory.record(
-    module="data_processor",
-    hypothesis="Add caching layer with global state",
-    description="Use module-level cache dict for performance",
-    outcome="rejected",
-    rationale="Violates composability principle (global state)",
-    rejection_reason="CodeJudge verdict: REJECT - Global state breaks composability",
-)
-```
-
-### On Held Tension
-
-```python
-memory.record(
-    module="data_processor",
-    hypothesis="Switch from inheritance to composition",
-    description="Replace BaseProcessor inheritance with composition",
-    outcome="held",
-    rationale="Productive tension: inheritance provides useful defaults, composition improves testability",
-)
-```
-
-## Querying Memory
-
-### Check if Rejected Recently
-
-```python
-rejection = memory.was_rejected(
-    module="data_processor",
-    hypothesis="Refactor process method into smaller functions"
-)
-
-if rejection:
-    print(f"Previously rejected: {rejection.rejection_reason}")
-    # Skip this hypothesis
-else:
-    # Proceed with experiment
-```
-
-**Fuzzy matching**: "Refactor process method" matches "Refactor DataProcessor.process" at 85% similarity.
-
-### Check if Accepted Recently
-
-```python
-if memory.was_recently_accepted(
-    module="data_processor",
-    hypothesis="Add type annotations to all methods"
-):
-    print("Already accepted similar improvement recently")
-    # Skip to avoid redundant work
-```
-
-**Recency window**: Last 7 days by default (configurable).
-
-### Get Failure Patterns
-
-```python
-patterns = memory.get_failure_patterns(module="data_processor")
-
-# Returns:
-[
-    {
-        "pattern": "mypy type errors",
-        "count": 3,
-        "examples": [
-            "Cannot assign lambda to Callable[[dict], dict]",
-            "Incompatible return type List[str] vs List[Any]",
-            ...
-        ]
-    },
-    {
-        "pattern": "pytest failures",
-        "count": 2,
-        "examples": [...]
-    }
-]
-```
-
-Used to inform prompt engineering: "Previous attempts failed due to mypy type errors. Be careful with lambda type annotations."
-
-## Integration with Evolution Pipeline
-
-### Stage 3: Hypothesis Filtering
-
-```python
-async def generate_hypotheses(module: CodeModule) -> list[str]:
-    # Generate hypotheses (AST + LLM)
-    all_hypotheses = ast_hypotheses + llm_hypotheses
-
-    # Filter by memory
-    filtered = []
-    for h in all_hypotheses:
-        # Skip if recently rejected
-        if memory.was_rejected(module.name, h):
-            log(f"Skipping rejected: {h}")
-            continue
-
-        # Skip if recently accepted (avoid redundancy)
-        if memory.was_recently_accepted(module.name, h):
-            log(f"Skipping recently accepted: {h}")
-            continue
-
-        filtered.append(h)
-
-    return filtered
-```
-
-### Stage 4: Prompt Context Enhancement
-
-```python
-async def _generate_improvement(module: CodeModule, hypothesis: str):
-    # Get failure patterns for this module
-    patterns = memory.get_failure_patterns(module.name)
-
-    # Build prompt with failure awareness
-    prompt = f"""
-Previous attempts on {module.name} failed due to:
-{format_patterns(patterns)}
-
-Avoid these specific errors when generating improvement.
-
-Hypothesis: {hypothesis}
-...
-"""
-    return await llm.generate(prompt)
-```
-
-### Stage 5: Recording Judge Verdict
-
-```python
-async def judge_experiment(experiment: Experiment) -> Verdict:
-    verdict = await code_judge.invoke(JudgeInput(...))
-
-    if verdict.type == VerdictType.REJECT:
-        # Record rejection
-        memory.record(
-            module=experiment.module.name,
-            hypothesis=experiment.hypothesis,
-            description=experiment.improvement.description,
-            outcome="rejected",
-            rationale=verdict.reasoning,
-            rejection_reason=f"Principle violation: {verdict.reasoning}",
+        # Register with L-gent for semantic retrieval
+        self.l_gent.register_archetype(
+            name=f"viral:{signature}",
+            embedding=self._embed(pattern),
         )
 
-    return verdict
+    self.total_successes += 1
 ```
 
-## Specification: Error Memory
-
-```yaml
-identity:
-  name: ErrorMemory
-  genus: e
-  version: "1.0.0"
-  purpose: Track and learn from failure patterns across sessions
-
-interface:
-  input:
-    type: ErrorRecordInput | ErrorPatternQuery
-    description: Record failure or query patterns
-  output:
-    type: ErrorRecordResult | ErrorPatternResult
-    description: Confirmation or failure patterns
-  errors:
-    - code: STORAGE_ERROR
-      description: Failed to access error memory storage
-
-behavior:
-  description: |
-    Specialized memory for tracking **failure patterns**:
-
-    - Records: module, hypothesis, failure_type, failure_details, timestamp
-    - Categorizes: syntax, type, import, test, unknown
-    - Aggregates: Count failures by category, identify recurring patterns
-    - Warns: Alert if hypothesis matches known failure pattern
-
-    Used to improve prompt engineering and retry strategies.
-
-  guarantees:
-    - Pattern detection is fuzzy (matches similar errors)
-    - Warning thresholds are configurable
-    - Records persist across sessions
-
-  constraints:
-    - Requires categorization of errors (syntax, type, import, test)
-    - Pattern matching is heuristic (may miss novel failures)
-
-types:
-  ErrorRecordInput:
-    module_category: string
-    module_name: string
-    hypothesis: string
-    failure_type: "syntax" | "type" | "import" | "test" | "unknown"
-    failure_details: string
-
-  ErrorPatternQuery:
-    module_name: string | null
-    failure_type: string | null
-    min_count: number
-
-  ErrorPattern:
-    failure_type: string
-    count: number
-    modules: array<string>
-    example_details: array<string>
-
-  ErrorWarning:
-    hypothesis: string
-    similar_failures: array<ErrorPattern>
-    confidence: number
-```
-
-## Error Memory Usage
-
-### Recording Failures
+### On Phage Failure
 
 ```python
-error_memory.record_failure(
-    module_category="agents/e",
-    module_name="evolution",
-    hypothesis="Add async context manager for file operations",
-    failure_type="syntax",
-    failure_details="SyntaxError: invalid syntax at line 45: async with open(...)",
-)
+# When a Phage fails to infect (tests fail, types break, etc.)
+library.record_failure(phage=failed_phage)
 ```
 
-### Querying Patterns
+Internally:
 
 ```python
-patterns = error_memory.get_patterns(
-    module_name="evolution",
-    min_count=2,  # At least 2 occurrences
+def record_failure(self, phage: Phage) -> None:
+    signature = phage.pattern_signature
+
+    if signature in self.patterns:
+        pattern = self.patterns[signature]
+        pattern.failure_count += 1
+        pattern.last_used = now()
+
+        # Check for death condition
+        if pattern.fitness < self.prune_threshold:
+            self._schedule_prune(signature)
+
+    self.total_failures += 1
+```
+
+### Fitness Calculation
+
+```python
+@property
+def fitness(self) -> float:
+    """Darwinian fitness: success_rate × avg_impact"""
+    if self.success_count + self.failure_count == 0:
+        return 0.0
+
+    success_rate = self.success_count / (self.success_count + self.failure_count)
+    avg_impact = self.total_impact / max(1, self.success_count)
+
+    return success_rate * avg_impact
+```
+
+**Interpretation**:
+- fitness > 1.0: High-value pattern (succeeds often with high impact)
+- fitness 0.5-1.0: Viable pattern (moderate success, moderate impact)
+- fitness < 0.5: Weak pattern (candidate for pruning)
+
+## Querying the Library
+
+### Suggest Mutations for a Module
+
+```python
+# Get mutation suggestions based on module context
+suggestions = library.suggest_mutations(
+    module=code_module,
+    context=ast_structure,
+    top_k=10,
 )
 
-# Returns patterns like:
-[
-    ErrorPattern(
-        failure_type="syntax",
-        count=3,
-        modules=["evolution", "experiment"],
-        example_details=[
-            "SyntaxError: invalid syntax at line 45",
-            "SyntaxError: unexpected indent at line 120",
-            ...
-        ]
+# Returns MutationVectors derived from high-fitness patterns
+# Sorted by: similarity_to_context × pattern_fitness
+```
+
+Internally:
+
+```python
+def suggest_mutations(
+    self,
+    module: CodeModule,
+    context: CodeStructure,
+    top_k: int = 10,
+) -> list[MutationVector]:
+    # Use L-gent to find semantically similar patterns
+    context_embedding = self._embed_context(context)
+    similar = self.l_gent.find_similar(
+        context=context_embedding,
+        prefix="viral:",
+        top_k=top_k * 2,  # Get extras for filtering
     )
-]
+
+    suggestions = []
+    for pattern_name, similarity in similar:
+        signature = pattern_name[6:]  # Remove "viral:" prefix
+        pattern = self.patterns[signature]
+
+        # Score by similarity × fitness
+        score = similarity * pattern.fitness
+
+        suggestions.append(MutationVector(
+            kind=self._infer_kind(pattern),
+            target=self._find_target(module, pattern),
+            hint=self._generate_hint(pattern),
+            entropy_cost=pattern.avg_cost,
+            source_pattern=signature,
+            score=score,
+        ))
+
+    # Sort by score, return top_k
+    suggestions.sort(key=lambda x: x.score, reverse=True)
+    return suggestions[:top_k]
 ```
 
-### Warning on Retry
+### Get Pattern Fitness
 
 ```python
-# Before retry attempt
-warnings = error_memory.check_warnings(
-    module_name="evolution",
-    hypothesis="Add async context manager for file operations"
-)
+# Used by Prediction Market to calculate odds
+fitness = library.get_fitness(pattern_signature)
 
-if warnings:
-    # Include warning in retry prompt
-    prompt = f"""
-WARNING: Similar hypotheses have failed before:
-{format_warnings(warnings)}
-
-Be especially careful to avoid these specific errors.
-
-Hypothesis: {hypothesis}
-...
-"""
+# Returns float (0.0 to unbounded, typically 0.0-2.0)
 ```
 
-## Memory Composability
-
-Memory agents are **stateful but composable**:
+### Get Library Statistics
 
 ```python
-# Morphism with side effects
-MemoryAgent: MemoryQuery → MemoryQueryResult  # (+ writes to file)
-
-# Composes with hypothesis generator
-filtered_hypotheses = (
-    hypothesis_generator
-    >> memory_filter  # Uses MemoryAgent internally
-)
-
-# Composes with experiment runner
-experiment_with_memory = (
-    experiment_runner
-    >> record_outcome  # Uses MemoryAgent to record result
-)
-```
-
-The key insight: **side effects don't break composition** when they're well-defined and composable.
-
-## Memory File Format
-
-`.evolve_memory.json`:
-
-```json
-{
-  "version": "1.0.0",
-  "records": [
-    {
-      "module": "evolution",
-      "hypothesis": "Refactor EvolutionPipeline into smaller agents",
-      "description": "Split into ASTAnalyzer, HypothesisEngine, etc.",
-      "outcome": "accepted",
-      "rationale": "Improved composability and testability",
-      "rejection_reason": null,
-      "timestamp": "2024-01-15T10:30:00Z"
-    },
-    {
-      "module": "evolution",
-      "hypothesis": "Add caching layer for AST analysis",
-      "description": "Cache AST results in-memory dict",
-      "outcome": "accepted",
-      "rationale": "Reduces redundant parsing, improves performance",
-      "rejection_reason": null,
-      "timestamp": "2024-01-15T11:00:00Z"
-    },
-    {
-      "module": "experiment",
-      "hypothesis": "Use global state for experiment tracking",
-      "description": "Module-level experiment registry",
-      "outcome": "rejected",
-      "rationale": "Violates composability (global state)",
-      "rejection_reason": "CodeJudge verdict: REJECT - Global state prevents parallel execution",
-      "timestamp": "2024-01-15T11:30:00Z"
-    }
-  ]
-}
-```
-
-## Memory Lifecycle
-
-```mermaid
-graph LR
-    A[Generate Hypothesis] --> B{Check Memory}
-    B -->|Rejected Recently| C[Skip Hypothesis]
-    B -->|Accepted Recently| C
-    B -->|Novel| D[Run Experiment]
-    D --> E{Outcome?}
-    E -->|Pass| F[Record Accepted]
-    E -->|Fail| G[Record Rejected]
-    E -->|Tension| H[Record Held]
-    F --> I[Memory Updated]
-    G --> I
-    H --> I
-    I --> J[Next Hypothesis]
-```
-
-## Memory Statistics
-
-```python
-stats = memory.get_stats()
+stats = library.get_stats()
 
 # Returns:
 {
-    "total_records": 150,
-    "accepted": 45,
-    "rejected": 90,
-    "held": 15,
-    "modules": {
-        "evolution": {"accepted": 10, "rejected": 20},
-        "experiment": {"accepted": 8, "rejected": 15},
-        ...
-    },
-    "rejection_reasons": {
-        "Test failure": 35,
-        "Type error": 25,
-        "Principle violation": 20,
-        "Syntax error": 10
+    "total_patterns": 150,
+    "total_successes": 450,
+    "total_failures": 900,
+    "avg_fitness": 0.72,
+    "high_fitness_patterns": 45,   # fitness > 1.0
+    "low_fitness_patterns": 30,    # fitness < 0.3
+    "patterns_by_kind": {
+        "substitute": 50,
+        "extract": 40,
+        "annotate": 35,
+        "restructure": 25,
     }
 }
 ```
 
-Used for analysis and reporting:
-- Which modules are hardest to evolve? (highest reject rate)
-- What are common rejection reasons? (inform prompt engineering)
-- Is evolution converging? (accept rate increasing over time)
+## Integration with Thermodynamic Cycle
+
+### Stage 1: Mutate (Library-Guided Generation)
+
+```python
+async def generate_mutations(module: CodeModule) -> list[MutationVector]:
+    # Analyze code structure
+    structure = await ast_analyzer.analyze(module)
+
+    # Get library suggestions (pattern-guided)
+    library_suggestions = library.suggest_mutations(
+        module=module,
+        context=structure,
+        top_k=5,
+    )
+
+    # Add stochastic mutations (random exploration)
+    random_mutations = mutator.shotgun(
+        module=module,
+        count=5,
+    )
+
+    # Combine: library patterns + random exploration
+    return library_suggestions + random_mutations
+```
+
+### Stage 5: Payoff (Library Update)
+
+```python
+async def update_library(result: InfectionResult, receipt: BetReceipt) -> None:
+    if result.success:
+        # Measure impact
+        impact = await measure_impact(result)
+
+        # Record success → pattern reinforced
+        library.record_success(
+            phage=result.phage,
+            impact=impact,
+        )
+
+        # Settle bet → tokens earned
+        await market.settle(receipt, success=True, impact=impact)
+    else:
+        # Record failure → pattern weakened
+        library.record_failure(phage=result.phage)
+
+        # Settle bet → tokens lost
+        await market.settle(receipt, success=False, impact=0.0)
+```
+
+### Market Integration
+
+```python
+# Prediction Market uses library fitness for odds calculation
+async def calculate_odds(phage: Phage) -> float:
+    pattern_fitness = library.get_fitness(phage.pattern_signature)
+
+    # High fitness → low odds (likely to succeed)
+    # Low fitness → high odds (unlikely to succeed)
+    if pattern_fitness > 0.8:
+        return 1.25  # 80% expected success
+    elif pattern_fitness > 0.5:
+        return 2.0   # 50% expected success
+    elif pattern_fitness > 0.2:
+        return 5.0   # 20% expected success
+    else:
+        return 10.0  # 10% expected success (new/weak pattern)
+```
+
+## Pruning: Natural Selection
+
+Unlike passive memory that accumulates forever, the Viral Library **prunes weak patterns**:
+
+```python
+async def prune(self, threshold: float = 0.3) -> PruneReport:
+    """
+    Remove patterns with fitness below threshold.
+
+    This is natural selection: weak patterns die,
+    making room for new experiments.
+    """
+    to_prune = [
+        sig for sig, pattern in self.patterns.items()
+        if pattern.fitness < threshold
+    ]
+
+    for sig in to_prune:
+        # Deregister from L-gent
+        self.l_gent.deregister_archetype(f"viral:{sig}")
+
+        # Log to N-gent chronicle
+        await self.n_gent.chronicle(
+            event="pattern_death",
+            signature=sig,
+            fitness=self.patterns[sig].fitness,
+            lifespan=now() - self.patterns[sig].created_at,
+        )
+
+        # Remove from library
+        del self.patterns[sig]
+
+    return PruneReport(
+        pruned_count=len(to_prune),
+        remaining_count=len(self.patterns),
+        avg_fitness=self._compute_avg_fitness(),
+    )
+```
+
+**Pruning Schedule**:
+- After every N infections (e.g., 100)
+- When library size exceeds threshold (e.g., 1000 patterns)
+- On explicit maintenance command
+
+## Library Lifecycle
+
+```mermaid
+graph TD
+    A[Phage Success] --> B[Extract Pattern Signature]
+    B --> C{Pattern Exists?}
+    C -->|Yes| D[Reinforce: +success, +impact]
+    C -->|No| E[Birth: Create Pattern]
+    E --> F[Register with L-gent]
+
+    G[Phage Failure] --> H{Pattern Exists?}
+    H -->|Yes| I[Weaken: +failure]
+    I --> J{Fitness < Threshold?}
+    J -->|Yes| K[Schedule Prune]
+    J -->|No| L[Continue]
+
+    M[Prune Cycle] --> N[Find Low-Fitness Patterns]
+    N --> O[Deregister from L-gent]
+    O --> P[Chronicle Death in N-gent]
+    P --> Q[Delete Pattern]
+```
 
 ## Anti-Patterns
 
-❌ **Don't use memory as a cache**
+❌ **Don't accumulate forever**
 
 ```python
-# WRONG: Memory is for outcomes, not caching AST results
-memory.record(module="evolution", outcome="cached", rationale="AST result")
+# WRONG: Passive accumulation
+memory.record(outcome)  # Just keeps growing
 
-# RIGHT: Use dedicated cache for AST
-ast_cache[module.path] = structure
+# RIGHT: Fitness-based evolution
+library.record_success(phage, impact)  # Patterns evolve
+library.prune(threshold=0.3)           # Weak patterns die
 ```
 
-❌ **Don't delete records manually**
+❌ **Don't prevent all repetition**
 
 ```python
-# WRONG: Breaks institutional learning
-memory.delete(record_id)
+# WRONG: Block anything similar
+if memory.was_rejected(hypothesis):
+    skip()  # Prevents learning from near-misses
 
-# RIGHT: Let memory grow, prune only via explicit maintenance command
-# (e.g., python evolve.py memory --prune-before 2024-01-01)
+# RIGHT: Let fitness guide probability
+suggestions = library.suggest_mutations(context)
+# Low-fitness patterns less likely to be suggested
+# But they CAN still appear (exploration)
 ```
 
-❌ **Don't trust similarity matching blindly**
+❌ **Don't ignore market signals**
 
 ```python
-# WRONG: Fuzzy matching can miss near-duplicates
-if not memory.was_rejected(module, hypothesis):
-    proceed()  # Might still be rejected for same reason!
+# WRONG: Use library fitness directly
+if library.get_fitness(pattern) > 0.5:
+    proceed()
 
-# RIGHT: Use memory as a filter, not absolute truth
-rejection = memory.was_rejected(module, hypothesis)
-if rejection and rejection.similarity > 0.9:
-    log(f"Very similar hypothesis was rejected: {rejection.rejection_reason}")
-    # Still proceed if you think it's different enough
+# RIGHT: Let market incorporate fitness into odds
+quote = market.quote(phage)  # Uses library fitness + other factors
+if quote.expected_value > phage.entropy_cost:
+    proceed()
 ```
 
-❌ **Don't record outcomes without rationale**
+❌ **Don't store outcomes, store DNA**
 
 ```python
-# WRONG: No learning from outcome
-memory.record(module="evolution", outcome="rejected", rationale=None)
+# WRONG: Old memory model
+record = {
+    "outcome": "accepted",
+    "rationale": "Improved readability",
+}
 
-# RIGHT: Always include rationale for learning
-memory.record(
-    module="evolution",
-    outcome="rejected",
-    rationale="Failed mypy type check",
-    rejection_reason="Incompatible return type: Expected Foo, got Bar"
+# RIGHT: Viral Library model
+pattern = ViralPattern(
+    dna=phage.mutation_dna,
+    success_count=1,
+    total_impact=measured_impact,
 )
 ```
 
 ## Composability with Other Gents
 
-### With B-gents (Hypothesis Engine)
+### With L-gent (Semantic Registry)
 
 ```python
-# Memory informs hypothesis generation
-previous_rejections = memory.get_patterns(module.name)
+# L-gent provides semantic retrieval for the library
+class ViralLibrary:
+    def __init__(self, l_gent: SemanticRegistry):
+        self.l_gent = l_gent
 
-hypothesis_input = HypothesisInput(
-    observations=[...],
-    constraints=[
-        f"Avoid patterns that failed before: {previous_rejections}",
+    def suggest_mutations(self, context: CodeStructure) -> list[MutationVector]:
+        # Use L-gent to find semantically similar patterns
+        similar = self.l_gent.find_similar(
+            context=self._embed_context(context),
+            prefix="viral:",
+        )
+        return self._patterns_to_vectors(similar)
+```
+
+### With B-gent (Prediction Market)
+
+```python
+# B-gent uses library fitness for odds calculation
+class PredictionMarket:
+    def __init__(self, library: ViralLibrary):
+        self.library = library
+
+    async def quote(self, phage: Phage) -> MarketQuote:
+        pattern_fitness = self.library.get_fitness(phage.pattern_signature)
+        # High fitness → low odds → more likely to succeed
+        base_probability = 0.5 + (pattern_fitness * 0.3)  # Clamped 0.2-0.8
         ...
-    ]
-)
-
-hypotheses = await hypothesis_engine.invoke(hypothesis_input)
 ```
 
-### With H-gents (Sublate)
+### With D-gent (Persistence)
 
 ```python
-# Held tensions are recorded in memory for pattern analysis
-if isinstance(sublate_result, HoldTension):
-    memory.record(
-        module=module.name,
-        hypothesis=hypothesis,
-        description=improvement.description,
-        outcome="held",
-        rationale=sublate_result.why_held,
-    )
+# D-gent provides persistent storage for the library
+class ViralLibrary:
+    def __init__(self, d_gent: DataAgent):
+        self.d_gent = d_gent
+        self.patterns = d_gent.get("viral_patterns", {})
 
-    # Later: Query all held tensions
-    held = memory.get_records(outcome="held")
-    # Analyze: Are there common themes in held tensions?
+    async def _persist(self):
+        await self.d_gent.set("viral_patterns", self.patterns)
 ```
 
-### With K-gent (Personalization)
+### With O-gent (Observation)
 
 ```python
-# User preferences affect memory filtering
-if user_prefers_aggressive_evolution:
-    # Don't filter by recent rejections
-    hypotheses = all_hypotheses
-else:
-    # Respect memory filtering
-    hypotheses = [h for h in all_hypotheses if not memory.was_rejected(h)]
+# O-gent tracks library health metrics
+class ViralLibrary:
+    def __init__(self, o_gent: ObservationCoordinator):
+        self.o_gent = o_gent
+
+    async def record_success(self, phage, impact):
+        # ... normal logic ...
+        await self.o_gent.emit(
+            "library.pattern_reinforced",
+            signature=phage.pattern_signature,
+            new_fitness=pattern.fitness,
+        )
 ```
 
 ## See Also
 
-- **[evolution-agent.md](./evolution-agent.md)** - How memory integrates into pipeline
-- **[grounding.md](./grounding.md)** - AST-based hypothesis generation
-- **[B-gents/hypothesis-engine.md](../b-gents/hypothesis-engine.md)** - LLM hypothesis generation
-- **[spec/principles.md](../principles.md)** - Principle 2 (Curated) applies to memory
+- **[thermodynamics.md](./thermodynamics.md)** - Full thermodynamic model
+- **[evolution-agent.md](./evolution-agent.md)** - How library integrates into cycle
+- **[grounding.md](./grounding.md)** - AST analysis for pattern context
+- **[B-gents/banker.md](../b-gents/banker.md)** - Prediction market economics
+- **[L-gents](../l-gents/)** - Semantic registry for pattern retrieval
 
 ---
 
-*"Those who cannot remember the past are condemned to recompile it."*
+*"The library that never forgets will never learn. Evolution requires death."*

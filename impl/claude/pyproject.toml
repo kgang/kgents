@@ -21,6 +21,7 @@ dependencies = [
 dev = [
     "pytest>=7.0",
     "pytest-asyncio>=0.21",
+    "hypothesis>=6.100",
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -31,7 +32,7 @@ kgents = "protocols.cli.hollow:main"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-testpaths = ["tests"]
+testpaths = ["."]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
@@ -43,4 +44,15 @@ addopts = [
 # Suppress PytestCollectionWarning for dataclass/enum classes that start with "Test" or similar
 filterwarnings = [
     "ignore::pytest.PytestCollectionWarning",
+]
+# Custom markers for test categorization (Phase 2: Laws as First-Class Citizens)
+markers = [
+    "law(name): mark test as category law verification",
+    "law_identity: tests identity law (Id >> f == f == f >> Id)",
+    "law_associativity: tests associativity ((f >> g) >> h == f >> (g >> h))",
+    "law_functor_identity: tests functor identity (fmap id == id)",
+    "law_functor_composition: tests functor composition (fmap (g.f) == fmap g . fmap f)",
+    "slow: mark test as slow-running",
+    "accursed_share: mark test as exploratory/chaos (Phase 5)",
+    "property: mark test as property-based (Phase 3)",
 ]

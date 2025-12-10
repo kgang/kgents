@@ -270,20 +270,48 @@ async def handle_speak(domain: str, level: str = "COMMAND") -> MCPToolResult:
     Maps to: kgents speak "<domain>" --level=<schema|command|recursive>
     """
     try:
-        from agents.g import create_tongue
+        from agents.g import Grammarian, GrammarLevel
 
-        tongue = create_tongue(domain, level)
+        # Map level string to GrammarLevel enum
+        level_map = {
+            "SCHEMA": GrammarLevel.SCHEMA,
+            "COMMAND": GrammarLevel.COMMAND,
+            "RECURSIVE": GrammarLevel.RECURSIVE,
+        }
+        grammar_level = level_map.get(level.upper(), GrammarLevel.COMMAND)
 
-        return MCPToolResult(
-            success=True,
-            content=f"Created tongue for '{domain}' at level {level}",
-            content_type="application/json",
-            metadata={"domain": domain, "level": level, "tongue": tongue.to_dict()},
+        # Create tongue via Grammarian (async call with required constraints)
+        grammarian = Grammarian()
+        tongue = await grammarian.reify(
+            domain=domain,
+            constraints=[],  # Empty constraints for basic creation
+            level=grammar_level,
+            examples=[],  # Empty examples for quick creation
         )
-    except ImportError:
+
+        # Format output
+        output = f"Created tongue for '{domain}' at level {level}\n\n"
+        output += f"Name: {tongue.name}\n"
+        output += f"Level: {tongue.level.name}\n"
+        output += f"Format: {tongue.format.name}\n"
+        if tongue.grammar:
+            output += f"\nGrammar:\n{tongue.grammar[:500]}{'...' if len(tongue.grammar) > 500 else ''}"
+
         return MCPToolResult(
             success=True,
-            content=f"Creating tongue for: {domain} (level={level})",
+            content=output,
+            content_type="text/plain",
+            metadata={"domain": domain, "level": level, "tongue_name": tongue.name},
+        )
+    except ImportError as e:
+        return MCPToolResult(
+            success=True,
+            content=f"Creating tongue for: {domain} (level={level})\n[G-gent not available: {e}]",
+        )
+    except Exception as e:
+        return MCPToolResult(
+            success=False,
+            content=f"Failed to create tongue: {e}",
         )
 
 
@@ -294,23 +322,83 @@ async def handle_find(query: str, limit: int = 10) -> MCPToolResult:
     Maps to: kgents find "<query>" --limit=<n>
     """
     try:
-        from agents.l import search_catalog
+        from agents.l import Registry, EntityType, CatalogEntry, Status, Search
 
-        results = search_catalog(query, limit=limit)
+        # Create a registry with standard agents pre-registered
+        registry = Registry()
+
+        standard_agents = [
+            ("A-gent", "Abstract architectures and creative agents", EntityType.AGENT),
+            ("B-gent", "Bio/Scientific discovery and economics", EntityType.AGENT),
+            ("C-gent", "Category theory composition", EntityType.AGENT),
+            ("D-gent", "Data agents - state, memory, persistence", EntityType.AGENT),
+            (
+                "E-gent",
+                "Evolutionary agents - thermodynamic evolution",
+                EntityType.AGENT,
+            ),
+            ("F-gent", "Forge - artifact creation", EntityType.AGENT),
+            ("G-gent", "Grammarian - DSL synthesis", EntityType.AGENT),
+            ("H-gent", "Shadow/ethical agents", EntityType.AGENT),
+            ("I-gent", "Interface agents - TUI/interaction", EntityType.AGENT),
+            ("J-gent", "JIT compilation and optimization", EntityType.AGENT),
+            ("K-gent", "Kent simulacra persona", EntityType.AGENT),
+            ("L-gent", "Librarian - semantic search and catalogs", EntityType.AGENT),
+            ("M-gent", "Memory - holographic recall", EntityType.AGENT),
+            ("N-gent", "Narrator - storytelling and tracing", EntityType.AGENT),
+            ("O-gent", "Observer - telemetry and monitoring", EntityType.AGENT),
+            ("P-gent", "Parser - error repair", EntityType.AGENT),
+            (
+                "Psi-gent",
+                "Psychopomp - metaphor-based problem solving",
+                EntityType.AGENT,
+            ),
+            ("T-gent", "Tester - fuzzing and property testing", EntityType.AGENT),
+            ("W-gent", "Wire - communication protocol", EntityType.AGENT),
+        ]
+
+        for name, desc, etype in standard_agents:
+            entry = CatalogEntry(
+                id=name.lower(),
+                name=name,
+                description=desc,
+                entity_type=etype,
+                version="1.0.0",
+                status=Status.ACTIVE,  # Use ACTIVE not STABLE
+            )
+            registry.register(entry)
+
+        # Perform keyword search
+        search = Search(registry)
+        results = search.search(query, limit=limit)
+
+        if not results:
+            return MCPToolResult(
+                success=True,
+                content=f"No results found for '{query}'",
+                metadata={"query": query, "count": 0},
+            )
 
         formatted = f"Search results for '{query}':\n\n"
         for r in results:
-            formatted += f"- {r.name}: {r.description}\n"
+            formatted += f"- **{r.entry.name}** ({r.entry.entity_type.name})\n"
+            formatted += f"  {r.entry.description}\n"
+            formatted += f"  Score: {r.score:.2f}\n\n"
 
         return MCPToolResult(
             success=True,
             content=formatted,
             metadata={"query": query, "count": len(results)},
         )
-    except ImportError:
+    except ImportError as e:
         return MCPToolResult(
             success=True,
-            content=f"Searching for: {query} (limit={limit})",
+            content=f"Searching for: {query} (limit={limit})\n[L-gent not available: {e}]",
+        )
+    except Exception as e:
+        return MCPToolResult(
+            success=False,
+            content=f"Search failed: {e}",
         )
 
 
@@ -395,6 +483,79 @@ async def handle_principles() -> MCPToolResult:
         success=True,
         content="\n".join(principles),
     )
+
+
+async def handle_psi(problem: str, domain: str = "general") -> MCPToolResult:
+    """
+    Solve a problem using metaphor-based reasoning (Psi-gent).
+
+    Maps to: kgents psi "<problem>" --domain=<domain>
+    """
+    try:
+        from agents.psi import (
+            PsychopompAgent,
+            Novel,
+            create_standard_library,
+        )
+
+        # Create the problem specification
+        novel = Novel(
+            problem_id=f"mcp_{hash(problem) % 10000:04d}",
+            description=problem,
+            domain=domain,
+        )
+
+        # Create psychopomp agent with standard metaphor library
+        library = create_standard_library()
+        agent = PsychopompAgent(library=library)
+
+        # Solve the problem (synchronous call)
+        result = agent.solve(novel)
+
+        # Format output
+        output = f"Problem: {problem}\n"
+        output += f"Domain: {domain}\n\n"
+
+        if result.success:
+            output += "✅ Solution Found!\n\n"
+            if result.metaphor_used:
+                output += f"Metaphor Used: {result.metaphor_used.name}\n"
+                output += f"Metaphor Domain: {result.metaphor_used.domain}\n"
+
+            if result.reified_solution:
+                output += (
+                    f"\nSolution:\n{result.reified_solution.solution_description}\n"
+                )
+
+            if result.distortion:
+                output += f"\nDistortion: {result.distortion.total:.2f}\n"
+        else:
+            output += "❌ No solution found\n"
+            output += f"Reason: {result.failure_reason or 'Unknown'}\n"
+            output += f"\nCandidates tried: {result.candidates_tried}\n"
+
+        return MCPToolResult(
+            success=result.success,
+            content=output,
+            metadata={
+                "problem": problem,
+                "domain": domain,
+                "metaphor_used": result.metaphor_used.name
+                if result.metaphor_used
+                else None,
+                "iterations": result.iterations,
+            },
+        )
+    except ImportError as e:
+        return MCPToolResult(
+            success=True,
+            content=f"Solving problem via metaphor: {problem}\n[Psi-gent not available: {e}]",
+        )
+    except Exception as e:
+        return MCPToolResult(
+            success=False,
+            content=f"Psi-gent failed: {e}",
+        )
 
 
 # =============================================================================
@@ -530,6 +691,25 @@ KGENTS_TOOLS: list[MCPTool] = [
         description="Display the 7 design principles: tasteful, curated, ethical, joy-inducing, composable, heterarchical, generative.",
         parameters=(),
         handler=handle_principles,
+    ),
+    MCPTool(
+        name="kgents_psi",
+        description="Solve a problem using metaphor-based reasoning (Psi-gent). Projects problems through metaphors to find solutions.",
+        parameters=(
+            MCPToolParameter(
+                "problem",
+                "string",
+                "Problem description to solve via metaphor",
+            ),
+            MCPToolParameter(
+                "domain",
+                "string",
+                "Problem domain (e.g., 'organization', 'software', 'design')",
+                required=False,
+                default="general",
+            ),
+        ),
+        handler=handle_psi,
     ),
 ]
 

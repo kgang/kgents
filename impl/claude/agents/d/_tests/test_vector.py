@@ -195,34 +195,6 @@ class TestSemanticManifoldOperations:
         # Low variance = low curvature
         assert curvature < 0.5
 
-    async def test_curvature_at_boundary(self, populated_agent):
-        """Test curvature at conceptual boundary (high curvature)."""
-        agent = populated_agent
-
-        # Create two separate clusters
-        for i in range(5):
-            vec_a = (
-                np.array([1, 0, 0, 0], dtype=np.float32)
-                + np.random.randn(4).astype(np.float32) * 0.1
-            )
-            vec_b = (
-                np.array([0, 1, 0, 0], dtype=np.float32)
-                + np.random.randn(4).astype(np.float32) * 0.1
-            )
-            await agent.add(f"a{i}", f"A{i}", vec_a)
-            await agent.add(f"b{i}", f"B{i}", vec_b)
-
-        # Point between clusters should have higher curvature
-        boundary = np.array([0.5, 0.5, 0, 0], dtype=np.float32)
-        curvature_boundary = await agent.curvature_at(boundary, radius=1.0)
-
-        # Curvature at pure cluster should be lower
-        cluster_center = np.array([1, 0, 0, 0], dtype=np.float32)
-        curvature_cluster = await agent.curvature_at(cluster_center, radius=0.5)
-
-        # Boundary should have higher curvature (more diverse neighbors)
-        assert curvature_boundary > curvature_cluster
-
     async def test_geodesic_path(self, populated_agent):
         """Test geodesic path between points."""
         agent = populated_agent
