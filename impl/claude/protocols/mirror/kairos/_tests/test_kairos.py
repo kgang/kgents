@@ -88,6 +88,7 @@ def sample_tension():
 # ============================================================================
 
 
+@pytest.mark.slow
 def test_attention_detector_idle(temp_workspace):
     """Test attention detector when workspace is idle."""
     detector = AttentionDetector(
@@ -480,6 +481,7 @@ def test_controller_evaluate_and_surface(temp_workspace, sample_tension):
         assert controller.budget.current_count == 1
 
 
+@pytest.mark.slow
 def test_controller_defer_and_retry(temp_workspace, sample_tension):
     """Test deferred tension retry logic."""
     controller = KairosController(

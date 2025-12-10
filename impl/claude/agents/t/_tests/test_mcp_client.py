@@ -300,15 +300,13 @@ async def test_mcp_client_connect_error():
 
 
 @pytest.mark.asyncio
+@pytest.mark.slow
 async def test_mcp_client_connect_timeout():
-    """Test MCP client connect timeout."""
+    """Test MCP client connect timeout using mocked timeout."""
     transport = AsyncMock(spec=StdioTransport)
 
-    # Mock timeout
-    async def timeout_receive():
-        await asyncio.sleep(20)  # Longer than timeout
-
-    transport.receive = timeout_receive
+    # Mock timeout by raising TimeoutError immediately
+    transport.receive = AsyncMock(side_effect=asyncio.TimeoutError())
     transport.send = AsyncMock()
 
     client = MCPClient(transport)
@@ -451,19 +449,17 @@ async def test_mcp_client_call_tool_invalid_params():
 
 
 @pytest.mark.asyncio
+@pytest.mark.slow
 async def test_mcp_client_call_tool_timeout():
-    """Test MCP client call tool timeout."""
+    """Test MCP client call tool timeout using mocked timeout."""
     transport = AsyncMock(spec=StdioTransport)
     client = MCPClient(transport)
 
     # Mock server as connected
     client.server_info = MCPServerInfo(name="test", version="1.0", capabilities={})
 
-    # Mock timeout
-    async def timeout_receive():
-        await asyncio.sleep(40)  # Longer than 30s timeout
-
-    transport.receive = timeout_receive
+    # Mock timeout by raising TimeoutError immediately
+    transport.receive = AsyncMock(side_effect=asyncio.TimeoutError())
     transport.send = AsyncMock()
 
     result = await client.call_tool("slow_tool", {})

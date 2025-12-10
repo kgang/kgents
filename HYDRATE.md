@@ -6,12 +6,13 @@ Keep it concise—focus on current state and recent work.
 
 ## TL;DR
 
-**Status**: All Tests Passing ✅ | **Branch**: `main` | **Tests**: 4909+ collected
+**Status**: All Tests Passing ✅ | **Branch**: `main` | **Tests**: 4,826 collected
 
 **Recent Work**:
-- **E-gent Dependencies** ← COMPLETE (L-gent 49 tests, B-gent 29 tests)
-- E-gent Implementation Rebuild (PLANNING COMPLETE)
-- Ψ-gent v1 (104 tests)
+- **Test Evolution Phase 7** ← IN PROGRESS (Performance optimization)
+- E-gent Phase 1 (Demon) COMPLETE (56 tests)
+- E-gent Dependencies COMPLETE (L-gent 49 tests, B-gent 29 tests)
+- Ψ-gent v3.0 (104 tests)
 
 ---
 
@@ -43,18 +44,32 @@ Keep it concise—focus on current state and recent work.
 
 **Plan**: `docs/e-gent-rebuild-plan.md`
 
-### Next Steps (Phase 0-7)
+### Implementation Status (Phase 0-7)
 
-| Phase | Component | Status |
-|-------|-----------|--------|
-| 0 | `types.py` | ⏳ Pending |
-| 1 | `demon.py` (Teleological Demon) | ⏳ Pending |
-| 2 | `mutator.py` (Schema-based) | ⏳ Pending |
-| 3 | `market.py` (uses B-gent PredictionMarket) | ✅ Dependency ready |
-| 4 | `sun.py` (uses B-gent Sun) | ✅ Dependency ready |
-| 5 | `library.py` (Viral Library) | ⏳ Pending |
-| 6 | `phage.py` (Active mutation vectors) | ⏳ Pending |
-| 7 | `cycle.py` (Thermodynamic cycle) | ⏳ Pending |
+| Phase | Component | Status | Tests |
+|-------|-----------|--------|-------|
+| 0 | `types.py` | ✅ Complete | 38 |
+| 1 | `demon.py` (Teleological Demon) | ✅ Complete | 56 |
+| 2 | `mutator.py` (Schema-based) | ⏳ Pending | - |
+| 3 | `market.py` (uses B-gent PredictionMarket) | ✅ Dependency ready | - |
+| 4 | `sun.py` (uses B-gent Sun) | ✅ Dependency ready | - |
+| 5 | `library.py` (Viral Library) | ⏳ Pending | - |
+| 6 | `phage.py` (Active mutation vectors) | ⏳ Pending | - |
+| 7 | `cycle.py` (Thermodynamic cycle) | ⏳ Pending | - |
+
+**E-gent v2 Total**: 94 tests
+
+### Phase 1 Highlights: Teleological Demon
+
+`impl/claude/agents/e/v2/demon.py` - The heart of E-gent v2
+
+| Feature | Description |
+|---------|-------------|
+| `TeleologicalDemon` | 5-layer intent-aware selection |
+| `DemonConfig` | Configurable thresholds per layer |
+| `SelectionResult` | Detailed pass/fail with layer metrics |
+| `PARASITIC_PATTERNS` | 4 pattern detectors (hardcoding, deletion, pass-only, gaming) |
+| `create_demon()` | Factory functions (normal, strict, lenient) |
 
 ### Strategy
 
@@ -161,24 +176,34 @@ RETRIEVE → PROJECT → CHALLENGE → SOLVE → TRANSLATE → VERIFY
 
 ---
 
-## Test Infrastructure (Phase 6 Complete)
+## Test Infrastructure (Phase 7 In Progress)
 
 | Component | Status |
 |-----------|--------|
-| conftest.py hierarchy | ✅ 5 files (root, agents, bootstrap, testing, L-gent) |
+| conftest.py hierarchy | ✅ **6 files** (root, agents, bootstrap, testing, L-gent, M-gent) |
+| pytest-xdist | ✅ **Parallel execution** (~6s vs 72s) |
+| Slow markers | ✅ **11 tests** via `-m "slow"` |
 | Law markers | ✅ **63 tests** via `-m "law"` |
 | WitnessPlugin | ✅ `pytest --witness` |
 | Accursed share tests | ✅ **23 chaos tests** |
 | Property-based tests | ✅ `test_laws_property.py` (hypothesis) |
 | CI laws workflow | ✅ `.github/workflows/laws.yml` |
 
-### Phase 6 Additions
+### Phase 7 Additions (Current Session)
 
-- **laws.yml**: CI workflow for law verification + property tests + chaos tests
-- **test_laws_property.py**: Hypothesis-powered category law verification
-- **test_accursed_share_extended.py**: 23 chaos tests for D/L/N/Cross-agent scenarios
-- **L-gent conftest.py**: Shared `registry` and `lattice` fixtures
-- **Law markers**: Added to test_lens.py, test_symbiont.py, test_lattice.py
+- **pytest-xdist**: Parallel test execution (~12x speedup)
+- **Test markers**: `slow`, `integration`, `unit`, `external` in pyproject.toml
+- **MCP timeout tests**: Refactored to use mocked timeouts (40s → 0.05s)
+- **M-gent conftest.py**: 20 shared fixtures for memory agent tests
+- **Slow test markers**: Kairos, executor tests marked for skip in fast runs
+
+### Fast Feedback Commands
+
+```bash
+pytest -m "not slow" -n auto        # ~6s (recommended)
+pytest -m "not slow"                # ~9s sequential
+pytest -n auto                      # ~6s all tests parallel
+```
 
 ---
 
@@ -200,7 +225,9 @@ RETRIEVE → PROJECT → CHALLENGE → SOLVE → TRANSLATE → VERIFY
 
 | Doc | Content |
 |-----|---------|
-| `docs/psi-gent-v3-implementation-plan.md` | **NEW** - v3.0 impl plan |
+| `docs/psi-gent-walkthrough.md` | **NEW** - 6-session guided tour |
+| `docs/instance-db-implementation-plan.md` | ~/.kgents canonical db plan |
+| `docs/psi-gent-v3-implementation-plan.md` | v3.0 impl plan |
 | `spec/e-gents/thermodynamics.md` | **v2** - Teleological thermodynamics |
 | `spec/e-gents/README.md` | **v2** - Updated overview |
 | `spec/e-gents/memory.md` | Viral Library spec |

@@ -225,6 +225,7 @@ async def test_circuit_breaker_opens_after_failures():
 
 
 @pytest.mark.asyncio
+@pytest.mark.slow
 async def test_circuit_breaker_half_open_after_timeout():
     """Test circuit breaker transitions to HALF_OPEN after timeout."""
     tool = FailingTool(fail_count=3, error_type=ToolErrorType.NETWORK)
@@ -248,6 +249,7 @@ async def test_circuit_breaker_half_open_after_timeout():
 
 
 @pytest.mark.asyncio
+@pytest.mark.slow
 async def test_circuit_breaker_closes_after_successes():
     """Test circuit breaker closes after success threshold in HALF_OPEN."""
     tool = FailingTool(fail_count=3, error_type=ToolErrorType.NETWORK)
