@@ -80,6 +80,23 @@ from .mutator import (
     create_exploratory_mutator,
 )
 
+from .library import (
+    # Viral Library
+    ViralLibrary,
+    ViralLibraryConfig,
+    ViralPattern,
+    LibraryStats,
+    MutationSuggestion,
+    PruneReport,
+    # Factory functions
+    create_library,
+    create_strict_library,
+    create_exploratory_library,
+    # Market integration
+    fitness_to_odds,
+    odds_from_library,
+)
+
 __all__ = [
     # Core types
     "Phage",
@@ -123,4 +140,16 @@ __all__ = [
     "create_mutator",
     "create_conservative_mutator",
     "create_exploratory_mutator",
+    # Viral Library
+    "ViralLibrary",
+    "ViralLibraryConfig",
+    "ViralPattern",
+    "LibraryStats",
+    "MutationSuggestion",
+    "PruneReport",
+    "create_library",
+    "create_strict_library",
+    "create_exploratory_library",
+    "fitness_to_odds",
+    "odds_from_library",
 ]

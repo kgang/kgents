@@ -6,15 +6,17 @@ Keep it concise—focus on current state and recent work.
 
 ## TL;DR
 
-**Status**: All Tests Passing ✅ | **Branch**: `main` | **Tests**: ~4,950+
+**Status**: All Tests Passing ✅ | **Branch**: `main` | **Tests**: ~5,000+
 
 **Recent Work**:
-- **E-gent Phase 2** ← COMPLETE (Mutator - 47 tests)
-  - `mutator.py`: Schema-based semantic mutation generator
-  - Hot spot detection (complexity, entropy analysis)
-  - 4 schema applicators: loop_to_comprehension, extract_constant, flatten_nesting, inline_single_use
-  - Gibbs pre-filtering, temperature-aware schema selection
-  - Integration with Demon for selection pipeline
+- **E-gent Phase 5** ← COMPLETE (Viral Library - 49 tests)
+  - `library.py`: Fitness-based evolutionary memory
+  - ViralPattern with Darwinian fitness (success_rate × avg_impact)
+  - record_success/record_failure for pattern evolution
+  - suggest_mutations via L-gent semantic retrieval
+  - Natural selection prune operation
+  - B-gent market integration (fitness_to_odds)
+- E-gent Phase 2 (Mutator) COMPLETE (47 tests)
 - E-gent Phase 1 (Demon) COMPLETE (56 tests)
 - Ψ-gent v3.0 (104 tests)
 
@@ -57,11 +59,11 @@ Keep it concise—focus on current state and recent work.
 | 2 | `mutator.py` (Schema-based) | ✅ Complete | 47 |
 | 3 | `market.py` (uses B-gent PredictionMarket) | ✅ Dependency ready | - |
 | 4 | `sun.py` (uses B-gent Sun) | ✅ Dependency ready | - |
-| 5 | `library.py` (Viral Library) | ⏳ Pending | - |
+| 5 | `library.py` (Viral Library) | ✅ Complete | 49 |
 | 6 | `phage.py` (Active mutation vectors) | ⏳ Pending | - |
 | 7 | `cycle.py` (Thermodynamic cycle) | ⏳ Pending | - |
 
-**E-gent v2 Total**: 141 tests
+**E-gent v2 Total**: 190 tests
 
 ### Phase 1 Highlights: Teleological Demon
 
@@ -88,6 +90,21 @@ Keep it concise—focus on current state and recent work.
 | `SchemaApplicator` | Protocol for AST-transforming schemas |
 | 4 standard schemas | loop_to_comprehension, extract_constant, flatten_nesting, inline_single_use |
 | `mutate_to_phages()` | Generate Phages ready for Demon selection |
+
+### Phase 5 Highlights: Viral Library
+
+`impl/claude/agents/e/v2/library.py` - Fitness-based evolutionary memory
+
+| Feature | Description |
+|---------|-------------|
+| `ViralLibrary` | Living library where patterns evolve |
+| `ViralPattern` | DNA with fitness = success_rate × avg_impact |
+| `record_success()` | Reinforce pattern, register with L-gent |
+| `record_failure()` | Weaken pattern (may trigger prune) |
+| `suggest_mutations()` | L-gent semantic retrieval (similarity × fitness) |
+| `prune()` | Natural selection (remove low-fitness patterns) |
+| `fitness_to_odds()` | B-gent market integration |
+| Auto-prune | Periodic cleanup after N operations |
 
 ### Strategy
 
@@ -212,61 +229,29 @@ pytest -m "not slow" -n auto  # ~6s (4891 tests)
 
 ---
 
-## Integration Test Opportunities (Phase 8)
+## Cortex Assurance System (Phase 8)
 
-**Problem**: 30+ integration classes (~2000 LOC) hand-written. Patterns ad-hoc.
+**Full Plan**: `docs/cortex-assurance-system.md`
 
-### Novel Ideas (First Principles)
+From static testing to generative assurance. Four components:
 
-#### 1. **Morphism Test Matrix** (C-gent Theory)
-Generate integration tests from type signatures:
-```python
-@morphism_test(agents=["J", "F", "T", "L", "B"])
-def test_compositions():
-    for (f, g) in composable_pairs(REGISTRY):
-        assert (f >> g).invoke(sample(f.input_type))
+| Component | Agent | Purpose |
+|-----------|-------|---------|
+| **Weaver** | C-gent | Walk type topology, fuzz compositions |
+| **Historian** | N×O | Witness tests, mine failure patterns |
+| **Banker** | B-gent | Economic scheduling, ROI prioritization |
+| **Demon** | E-gent | Adversarial mutation, audit test quality |
+
+### Key Insight
+
+Tests are not chores—they are **Adversarial Agents** and **Economic Transactions**.
+
 ```
-*Derive tests, don't write them.*
-
-#### 2. **Witnessed Tests** (N×O)
-Record all test runs via Historian. Mine for:
-- Which compositions fail together?
-- Regression patterns?
-```python
-@witnessed  # → MemoryCrystalStore
-async def test_m_x_d(): ...
+Weaver      → Discovers failure paths we never imagined
+Historian   → Reveals patterns in failures we've seen
+Banker      → Spends testing budget wisely
+Demon       → Proves tests are strong enough
 ```
-
-#### 3. **Test Budget** (B-gent Economics)
-```python
-@pytest.mark.cost(tokens=100)  # Expensive
-@pytest.mark.cost(tokens=1)    # Cheap
-# CI prioritizes high-ROI until budget exhausted
-```
-
-#### 4. **Test Demon** (E-gent v2)
-Apply Teleological Demon to tests:
-- Detect gaming (always pass)
-- Detect deletion (no assertions)
-- Detect hardcoding (`assert True`)
-
-### Current Integration Files
-```
-agents/_tests/
-├── test_cross_agent_integration.py   (P×J×T)
-├── test_factory_pipeline.py          (J×F×T×L×B)
-├── test_memory_pipeline.py           (M×D×L×B×N)
-└── test_parser_pipeline.py           (P×G×F)
-```
-
-### Next Steps
-
-| Priority | Task | Agent |
-|----------|------|-------|
-| 1 | `testing/morphism_matrix.py` | C-gent |
-| 2 | `@witnessed` decorator | N×O |
-| 3 | Test cost markers | B-gent |
-| 4 | Test audit Demon | E-gent |
 
 ---
 
@@ -323,11 +308,9 @@ Error messages that help, not just fail:
 
 | Doc | Content |
 |-----|---------|
-| `docs/psi-gent-walkthrough.md` | **NEW** - 6-session guided tour |
-| `docs/instance-db-implementation-plan.md` | ~/.kgents canonical db plan |
-| `docs/psi-gent-v3-implementation-plan.md` | v3.0 impl plan |
-| `spec/e-gents/thermodynamics.md` | **v2** - Teleological thermodynamics |
-| `spec/e-gents/README.md` | **v2** - Updated overview |
-| `spec/e-gents/memory.md` | Viral Library spec |
-| `spec/psi-gents/*.md` | v3.0 Morphic Engine spec (10 files) |
+| `docs/cortex-assurance-system.md` | **NEW** - Phase 8 test intelligence |
+| `docs/e-gent-rebuild-plan.md` | E-gent v2 phases |
+| `docs/instance-db-implementation-plan.md` | ~/.kgents canonical db |
+| `docs/psi-gent-walkthrough.md` | Ψ-gent guided tour |
+| `spec/e-gents/thermodynamics.md` | Teleological thermodynamics |
 | `docs/plans-synthesis.md` | Consolidated architecture |
