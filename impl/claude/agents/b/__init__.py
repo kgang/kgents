@@ -1,19 +1,32 @@
 """
-B-gents: Scientific Discovery Agents
+B-gents: Scientific Discovery + Banker Economics
 
-Agents for scientific reasoning, hypothesis generation, and empirical inquiry.
+Dual nature:
+1. Bio/Scientific Discovery: Hypothesis generation, falsifiability, empirical inquiry
+2. Banker Economics: Resource metering, value accounting, economic constraints
 
 Core themes:
 - Falsifiability (Popperian epistemology)
 - Epistemic humility
 - Transparent reasoning
-- Composition with other agent genera
+- Resource-constrained systems (metabolic control)
+- Linear Logic (tokens consumed, not copied)
+- Value Tensor (multi-dimensional accounting)
 
 Currently implemented:
+
+**Bio/Scientific Discovery:**
 - HypothesisEngine: Transforms observations into testable hypotheses
 - Robin: Personalized scientific companion (composes K-gent + Hypothesis + Hegel)
 - PersistentHypothesisStorage: D-gent backed hypothesis persistence with lineage
 - Catalog Integration: L-gent registration and discovery for hypotheses
+
+**Banker Economics (Phase 3):**
+- Value Tensor: Multi-dimensional resource ontology (Physical, Semantic, Economic, Ethical)
+- Metered Functor: Agent[A, B] → Agent[A, Receipt[B]]
+- Central Bank: Token accounting with hydraulic refill
+- Value Ledger: Universal Value Protocol (UVP) implementation
+- RoC Monitor: Return on Compute tracking
 """
 
 from .hypothesis import (
@@ -63,6 +76,74 @@ from .catalog_integration import (
     mark_hypothesis_falsified,
 )
 
+# Banker Economics (Phase 3)
+from .value_tensor import (
+    # Dimensions
+    PhysicalDimension,
+    SemanticDimension,
+    EconomicDimension,
+    EthicalDimension,
+    ImpactTier,
+    # Exchange
+    ExchangeRate,
+    ExchangeMatrix,
+    create_standard_exchange_rates,
+    # Conservation
+    ConservationLaw,
+    Anomaly,
+    AntiDelusionChecker,
+    # Tensor
+    ValueTensor,
+    TensorAlgebra,
+)
+
+from .metered_functor import (
+    # Currency types
+    Gas,
+    Impact,
+    Receipt,
+    # Token accounting
+    TokenBucket,
+    SinkingFund,
+    Loan,
+    Denial,
+    TokenFuture,
+    FuturesMarket,
+    # Auction
+    Bid,
+    Allocation,
+    priority_auction,
+    # Central Bank
+    CentralBank,
+    InsufficientFundsError,
+    # Budgets
+    EntropyBudget,
+    DualBudget,
+    # Functor
+    Metered,
+    meter,
+    metered_invoke,
+)
+
+from .value_ledger import (
+    # Oracles
+    ComplexityOracle,
+    ValueOracle,
+    # Output types
+    SimpleOutput,
+    # Regulation
+    EthicalRegulator,
+    # Accounting
+    Treasury,
+    BalanceSheet,
+    TransactionReceipt,
+    ValueLedger,
+    # Monitoring
+    RoCThresholds,
+    RoCAssessment,
+    RoCMonitor,
+)
+
 __all__ = [
     # HypothesisEngine
     "HypothesisEngine",
@@ -98,4 +179,50 @@ __all__ = [
     "get_hypothesis_lineage",
     "update_hypothesis_metrics",
     "mark_hypothesis_falsified",
+    # Value Tensor (Phase 3)
+    "PhysicalDimension",
+    "SemanticDimension",
+    "EconomicDimension",
+    "EthicalDimension",
+    "ImpactTier",
+    "ExchangeRate",
+    "ExchangeMatrix",
+    "create_standard_exchange_rates",
+    "ConservationLaw",
+    "Anomaly",
+    "AntiDelusionChecker",
+    "ValueTensor",
+    "TensorAlgebra",
+    # Metered Functor (Phase 3)
+    "Gas",
+    "Impact",
+    "Receipt",
+    "TokenBucket",
+    "SinkingFund",
+    "Loan",
+    "Denial",
+    "TokenFuture",
+    "FuturesMarket",
+    "Bid",
+    "Allocation",
+    "priority_auction",
+    "CentralBank",
+    "InsufficientFundsError",
+    "EntropyBudget",
+    "DualBudget",
+    "Metered",
+    "meter",
+    "metered_invoke",
+    # Value Ledger (Phase 3)
+    "ComplexityOracle",
+    "ValueOracle",
+    "SimpleOutput",
+    "EthicalRegulator",
+    "Treasury",
+    "BalanceSheet",
+    "TransactionReceipt",
+    "ValueLedger",
+    "RoCThresholds",
+    "RoCAssessment",
+    "RoCMonitor",
 ]

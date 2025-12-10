@@ -212,3 +212,4 @@ __marimo__/
 # kgents - Error memory and evolution logs
 impl/claude/.memory/
 impl/claude/.evolve_logs/
+.memory/

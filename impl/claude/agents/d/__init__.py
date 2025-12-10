@@ -11,6 +11,12 @@ This package provides the core abstractions for state management in kgents:
 - StreamAgent[E,S]: Event-sourced state with time-travel (Noosphere)
 - Symbiont[I,O,S]: Fuses pure logic with stateful memory
 
+Phase 3 Extended Protocols:
+- TransactionalDataAgent[S]: ACID transactions with savepoints (time-travel debugging)
+- QueryableDataAgent[S]: Structured queries over state
+- ObservableDataAgent[S]: Reactive subscriptions and change notifications
+- UnifiedMemory[S]: Compose all memory modes through a single interface
+
 State management philosophy:
 - Pure logic should be stateless
 - D-gents contain the complexity of memory
@@ -98,6 +104,54 @@ from .stream import (
     Vector,
 )
 
+# Phase 3: Extended Protocols
+from .transactional import (
+    TransactionalDataAgent,
+    Transaction,
+    Savepoint,
+    TransactionState,
+    TransactionError,
+    SavepointError,
+    RollbackError,
+)
+from .queryable import (
+    QueryableDataAgent,
+    Query,
+    QueryResult,
+    Predicate,
+    Operator,
+    QueryError,
+    PathNotFoundError,
+    # Predicate helpers
+    eq,
+    ne,
+    lt,
+    le,
+    gt,
+    ge,
+    contains,
+    matches,
+    exists,
+    in_list,
+)
+from .observable import (
+    ObservableDataAgent,
+    Change,
+    ChangeType,
+    Subscription,
+    ObservableError,
+)
+from .unified import (
+    UnifiedMemory,
+    MemoryConfig,
+    MemoryLayer,
+    MemoryEntry,
+    LensedUnifiedMemory,
+    UnifiedMemoryError,
+    LayerNotAvailableError,
+    create_unified_memory,
+)
+
 __all__ = [
     # Protocol
     "DataAgent",
@@ -151,4 +205,45 @@ __all__ = [
     "focused",
     # Convenience functions
     "entropy_constrained",
+    # Phase 3: Transactional
+    "TransactionalDataAgent",
+    "Transaction",
+    "Savepoint",
+    "TransactionState",
+    "TransactionError",
+    "SavepointError",
+    "RollbackError",
+    # Phase 3: Queryable
+    "QueryableDataAgent",
+    "Query",
+    "QueryResult",
+    "Predicate",
+    "Operator",
+    "QueryError",
+    "PathNotFoundError",
+    "eq",
+    "ne",
+    "lt",
+    "le",
+    "gt",
+    "ge",
+    "contains",
+    "matches",
+    "exists",
+    "in_list",
+    # Phase 3: Observable
+    "ObservableDataAgent",
+    "Change",
+    "ChangeType",
+    "Subscription",
+    "ObservableError",
+    # Phase 3: UnifiedMemory
+    "UnifiedMemory",
+    "MemoryConfig",
+    "MemoryLayer",
+    "MemoryEntry",
+    "LensedUnifiedMemory",
+    "UnifiedMemoryError",
+    "LayerNotAvailableError",
+    "create_unified_memory",
 ]
