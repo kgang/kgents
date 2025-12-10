@@ -255,6 +255,41 @@ from .garden import (
     GardenStats,
 )
 
+# Phase 5: Database Backends (optional dependencies)
+try:
+    from .sql_agent import (
+        SQLAgent,
+        SQLBackend,
+        SQLiteBackend,
+        PostgreSQLBackend,
+        create_sqlite_agent,
+        create_postgres_agent,
+    )
+
+    _SQL_AVAILABLE = True
+except ImportError:
+    _SQL_AVAILABLE = False
+    SQLAgent = None  # type: ignore
+    SQLBackend = None  # type: ignore
+    SQLiteBackend = None  # type: ignore
+    PostgreSQLBackend = None  # type: ignore
+    create_sqlite_agent = None  # type: ignore
+    create_postgres_agent = None  # type: ignore
+
+try:
+    from .redis_agent import (
+        RedisAgent,
+        create_redis_agent,
+        create_valkey_agent,
+    )
+
+    _REDIS_AVAILABLE = True
+except ImportError:
+    _REDIS_AVAILABLE = False
+    RedisAgent = None  # type: ignore
+    create_redis_agent = None  # type: ignore
+    create_valkey_agent = None  # type: ignore
+
 __all__ = [
     # Protocol
     "DataAgent",
@@ -418,4 +453,15 @@ __all__ = [
     "Insight",
     "Nutrients",
     "GardenStats",
+    # Phase 5: SQL Backends
+    "SQLAgent",
+    "SQLBackend",
+    "SQLiteBackend",
+    "PostgreSQLBackend",
+    "create_sqlite_agent",
+    "create_postgres_agent",
+    # Phase 5: Redis/Valkey Backends
+    "RedisAgent",
+    "create_redis_agent",
+    "create_valkey_agent",
 ]
