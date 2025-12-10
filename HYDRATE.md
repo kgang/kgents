@@ -31,22 +31,29 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 ## TL;DR
 
-**Status**: D-gent Phase 4 + B×G Phase 1 COMMITTED ✅
+**Status**: B-gent Phase 4 (VoI Economics) COMPLETE ✅
 **Branch**: `main`
-**Latest Commit**: 9f7b636
+**Latest Commit**: uncommitted (B-gent Phase 4 VoI)
 **Current State**:
-  - **D-gent Phase 4**: ✅ COMPLETE (SemanticManifold, TemporalWitness, RelationalLattice, MemoryGarden) - 31 tests
+  - **B-gent Phase 4**: ✅ COMPLETE - VoI Economics for O-gent observation (51 new tests, 289 B-gent total)
+    - EpistemicCapital: Third currency for knowledge-about-the-system
+    - VoILedger: Observation economics tracking
+    - VoIOptimizer: Observation budget allocation (risk × consequence × observability)
+    - AdaptiveObserver: Dynamic observation frequency
+    - UnifiedValueAccounting: UVP + VoI integration with system health reporting
+  - **D-gent Finalization**: ✅ COMPLETE - Lenses + Persistence + Integration (49 new tests, 271 total)
+  - **D-gent Phase 4**: ✅ COMPLETE (SemanticManifold, TemporalWitness, RelationalLattice, MemoryGarden)
   - **B×G Phase 1**: ✅ COMPLETE (Compression Economy / Semantic Zipper) - 48 tests
   - **B-gent Phase 3**: ✅ COMPLETE (Value Tensor, Metered Functor, UVP) - 74 tests
-  - **D-gent Phase 3**: ✅ COMPLETE (Transactional, Queryable, Observable, UnifiedMemory) - 51 tests
-  - **L-gent Phases 1-6**: ✅ COMPLETE (Registry, Persistence, Lineage, Lattice, Semantic, Embedders)
+  - **D-gent Phase 3**: ✅ COMPLETE (Transactional, Queryable, Observable, UnifiedMemory)
+  - **L-gent Phases 1-7**: ✅ COMPLETE (Registry, Persistence, Lineage, Lattice, Semantic, Embedders, Three-Brain Hybrid)
   - G-gent Phases 1-7: ✅ COMPLETE (incl. W-gent Pattern Inference)
-  - **Tests: 173 passed (B+D tests), 0 failures** ✅
+  - **B-gent Tests: 289 passed** ✅
 
 **Next Steps**:
 1. **B×G Phase 2**: Fiscal Constitution (LedgerTongue, ConstitutionalBanker)
 2. **B×G Phase 3**: Syntax Tax (Chomsky-based pricing)
-3. **CLI Phase 3**: Flow Engine (composition backbone)
+3. **O-gent Phase 1**: Implement O-gent using VoI economics
 
 ---
 
@@ -93,8 +100,8 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 | Agent | Spec | Impl | Gap | Blocker For |
 |-------|------|------|-----|-------------|
 | **I-gents** | 1,200+ lines | ~10% | TUI, evolve.py, sessions, CLI | Operational interface |
-| **D-gents** | 3,500+ lines | ~20% | 6 agent types, lens, time-travel | Persistent memory |
-| **L-gents** | 2,500+ lines | ~40% | 3-brain search, lattice ops | Agent discovery/compose |
+| **D-gents** | 3,500+ lines | ~80% | Minor gaps in SQL/Redis backends | Mostly complete ✅ |
+| **L-gents** | 2,500+ lines | ~70% | Vector DB integration | Agent discovery/compose |
 | **F-gents** | 2,000+ lines | ~40% | Forge loop, ALO format | Artifact creation |
 
 ### Missing Implementations (No code)
@@ -112,6 +119,99 @@ G-gents (Phase 7 done - pattern inference), H-gents (needs 3-tradition), J-gents
 ---
 
 ## Recent Sessions
+
+### Session: B-gent Phase 4 - VoI Economics (2025-12-09)
+
+**Status**: ✅ COMPLETE - Value of Information for O-gent observation economics
+
+**Spec Reference**: `spec/b-gents/banker.md` Part III (VoI)
+
+**New Files Created** (~600 lines):
+- `impl/claude/agents/b/voi_economics.py` (~500 lines): VoI implementation
+  - `ObservationDepth` enum: TELEMETRY_ONLY, SEMANTIC_SPOT, SEMANTIC_FULL, AXIOLOGICAL
+  - `FindingType` enum: ANOMALY_DETECTED, HEALTH_CONFIRMED, FALSE_POSITIVE, INCONCLUSIVE
+  - `EpistemicCapital`: Third currency for knowledge-about-the-system
+    - Tracks: observations, anomalies_detected, disasters_prevented, false_positives
+    - Properties: net_epistemic_value, signal_to_noise_ratio, rovi (Return on VoI)
+  - `VoILedger`: Observation economics tracking
+    - `log_observation()`: Record observation with VoI calculation
+    - `calculate_voi()`: VoI = P(disaster) × Cost(disaster) × P(detection)
+    - Disaster cost categories: security_breach (1000), data_corruption (500), etc.
+  - `VoIOptimizer`: Observation budget allocation
+    - `compute_observation_priority()`: Risk × Consequence × Observability
+    - `allocate_observation_budget()`: Distribute budget across agents
+    - `select_observation_depth()`: Choose depth based on budget
+  - `AdaptiveObserver`: Dynamic observation frequency
+    - `compute_observation_interval()`: High risk → short interval
+    - `should_observe()`: Time-based observation scheduling
+    - `get_observation_schedule()`: View current schedule
+  - `UnifiedValueAccounting`: UVP + VoI integration
+    - `system_health()`: Combined RoC + RoVI health report
+    - `generate_recommendations()`: Optimization suggestions
+    - `get_currency_summary()`: Three-currency summary (Gas, Impact, EpistemicCapital)
+- `impl/claude/agents/b/_tests/test_voi_economics.py` (~500 lines): 51 comprehensive tests
+
+**Modified Files**:
+- `impl/claude/agents/b/__init__.py`: Added VoI exports (20 new types/functions)
+
+**Core Capabilities** (Part III of banker.md):
+1. **Epistemic Capital**: Third currency alongside Gas and Impact
+2. **VoI Calculation**: Value what observation *prevents*, not what it produces
+3. **Budget Allocation**: Risk × Consequence × Observability prioritization
+4. **Adaptive Observation**: Thermostat pattern (observe more when risky)
+5. **Unified Accounting**: Combined RoC + RoVI system health
+
+**Key Insight**: Standard UVP fails for observation because O-gent produces no artifacts.
+VoI recognizes that observation value is in what it *prevents*, not what it produces.
+
+**VoI Formula**: `VoI = E[Value with Information] - E[Value without Information]`
+
+**Test Coverage** (51 tests, 100% pass):
+- Types: ObservationDepth, FindingType, ObservationFinding (5)
+- EpistemicCapital: net_value, SNR, rovi (6)
+- VoILedger: log observation, calculate VoI, interventions, stats (14)
+- VoIOptimizer: reliability, observability, priority, allocation (11)
+- AdaptiveObserver: intervals, scheduling (6)
+- UnifiedValueAccounting: health, recommendations, currency summary (6)
+- Integration: full workflow, adaptive schedule, anti-patterns (4)
+
+**B-gent Total**: 289 tests passed
+
+**Next**: B×G Phase 2 (Fiscal Constitution) or O-gent Phase 1 using VoI
+
+---
+
+### Session: D-gent Finalization (2025-12-09)
+
+**Status**: ✅ COMPLETE - Lenses + Persistence + Integration
+
+**New Files Created** (~650 lines):
+- `impl/claude/agents/d/persistence_ext.py` (~350 lines): Persistence extensions
+  - Schema versioning: `SchemaVersion`, `Migration`, `MigrationRegistry`, `VersionedPersistentAgent`
+  - Backup/restore: `BackupMetadata`, `BackupManager`
+  - Compression: `CompressionLevel`, `CompressionConfig`, `CompressedPersistentAgent`
+- `impl/claude/agents/d/_tests/test_d_gent_finalization.py` (~300 lines): 49 comprehensive tests
+
+**Modified Files**:
+- `impl/claude/agents/d/lens.py` (~300 lines added): Lens enhancements
+  - `Prism`: Optional/partial lens for missing fields
+  - `Traversal`: Multi-target lens for collections (lists, dict values/keys/items)
+  - `LensValidation`, `validate_composed_lens()`: Composed lens law verification
+  - `verify_prism_laws()`, `verify_traversal_laws()`: Law verification
+- `impl/claude/agents/d/__init__.py`: Exported 30+ new types
+
+**Test Coverage** (49 tests, all pass):
+- Prism: 8 tests (optional dict keys, indices, fields)
+- Traversal: 10 tests (lists, dicts, composition, filtering)
+- Composed validation: 5 tests (nested lenses, dataclasses)
+- Schema versioning: 8 tests (migrations, legacy format)
+- Backup/restore: 7 tests (rotation, labels, verification)
+- Compression: 6 tests (gzip, stats, levels)
+- Cross-agent: 5 tests (J-gent entropy, Observable × Traversal, Queryable × Prism)
+
+**D-gent Total**: 271 tests passed, 9 skipped
+
+---
 
 ### Session: D-gent Phase 4 - The Noosphere (2025-12-09)
 
@@ -236,7 +336,7 @@ if roi.recommended:
 |----------------|-------------|-------|-------|
 | **Part I: Metered Functor** | ✅ 100% | `metered_functor.py` | All concepts implemented |
 | **Part II: UVP** | ✅ 100% | `value_ledger.py` | ValueOracle, ComplexityOracle, RoCMonitor |
-| **Part III: VoI** | ❌ 0% | Not implemented | ~400 lines spec remaining |
+| **Part III: VoI** | ✅ 100% | `voi_economics.py` | EpistemicCapital, VoILedger, VoIOptimizer, AdaptiveObserver, UnifiedValueAccounting |
 | **Part IV: B×G Integration** | ⏳ 40% | `compression_economy.py`, E-gent has `MeteredPromptBuilder` | Phase 1 (Semantic Zipper) done, Phases 2-5 remain |
 | **Value Tensor** | ✅ 100% | `value_tensor.py` | All 4 dimensions, exchange matrix, anti-delusion |
 
@@ -245,13 +345,11 @@ if roi.recommended:
 - `metered_functor.py`: Gas, Impact, Receipt, TokenBucket, SinkingFund, Loan/Denial, TokenFuture, FuturesMarket, Vickrey Auction, CentralBank, EntropyBudget, DualBudget, Metered functor
 - `value_ledger.py`: ComplexityOracle, ValueOracle, EthicalRegulator, Treasury, BalanceSheet, TransactionReceipt, ValueLedger, RoCMonitor
 
-**Not Yet Implemented (Phase 4+)**:
-1. **VoI (Value of Information)**: ~400 lines in spec/b-gents/banker.md Part III
-   - `EpistemicCapital`: Knowledge-about-the-system currency
-   - `VoILedger`: Observation economics tracking
-   - `VoIOptimizer`: Observation budget allocation
-   - `AdaptiveObserver`: Dynamic observation frequency
-2. **B×G Integration (Structural Economics)**: spec/b-gents/banker.md Part IV
+**Implemented (Phase 4 - 51 tests)**:
+- `voi_economics.py`: EpistemicCapital, VoILedger, VoIOptimizer, AdaptiveObserver, UnifiedValueAccounting
+
+**Not Yet Implemented (Phase 5+)**:
+1. **B×G Integration (Structural Economics)**: spec/b-gents/banker.md Part IV
    - ✅ Semantic Zipper (Phase 1 - `compression_economy.py`) - 48 tests
    - ❌ Fiscal Constitution (Phase 2 - LedgerTongue, ConstitutionalBanker)
    - ❌ Syntax Tax (Phase 3 - Chomsky-based pricing)
@@ -269,9 +367,9 @@ if roi.recommended:
 | **O-gent** | VoI designed FOR O-gent observation | Generative | High |
 | **W-gent** | Value Dashboard visualization | Joy-Inducing | Medium |
 
-**Recommendation**: B-gent Phase 3 is complete. Phase 4 priorities:
-1. Implement VoI for O-gent observation economics
-2. Implement B×G Structural Economics (enables token compression via G-gent)
+**Recommendation**: B-gent Phase 4 (VoI) is complete. Phase 5 priorities:
+1. Implement B×G Phase 2: Fiscal Constitution (LedgerTongue, ConstitutionalBanker)
+2. Implement O-gent using VoI economics
 3. Wire J-gent to use shared EntropyBudget from B-gent (dedup)
 
 ---
@@ -1705,7 +1803,8 @@ tongue = await reify_command(
 ## Quick Reference
 
 ### Current Test Status
-- **Total**: 168+ tests passing
+- **Total**: 375+ tests passing
+- L-gents: 207 tests (Phase 7 complete)
 - Mirror Protocol: 46 tests
 - CLI Protocol: 59 tests
 - EventStream: 63 tests (includes prior work)
@@ -1725,5 +1824,71 @@ tongue = await reify_command(
 ---
 
 *Last Updated: 2025-12-09*
-*Current Session: CLI Phase 2 (Bootstrap & Laws)*
+*Current Session: L-gent Phase 7 (Three-Brain Hybrid Search) - COMPLETE*
 *Hydrate sessions should be concise—archive old work, focus on now.*
+
+
+## L-gent Phase 7: Three-Brain Hybrid Search - COMPLETE ✅
+
+**Date**: 2025-12-09
+
+**Summary**: Completed the three-brain search architecture combining keyword (BM25), semantic (embeddings), and graph (relationships) strategies with intelligent fusion.
+
+**New Files** (~1,200 lines):
+- `graph_search.py` (~490 lines): GraphBrain with relationship-aware discovery  
+- `fusion.py` (~380 lines): QueryFusion layer with RRF and adaptive weighting
+- `semantic_vector.py` (~230 lines): VectorBackend integration for SemanticBrain
+- `test_phase7.py` (~530 lines): 19 comprehensive tests
+
+**Key Features**:
+- **GraphBrain**: find_compatible(), find_path(), lineage traversal (ancestors/descendants/dependents)
+- **QueryFusion**: Query type classification, parallel search, RRF fusion, serendipity generation  
+- **VectorSemanticBrain**: Scalable semantic search with ChromaDB/FAISS backends
+- **Full three-brain workflow** with adaptive weighting based on query type
+
+**Test Results**: 207 L-gent tests passing (19 new Phase 7 tests, 2 skipped for optional deps)
+
+
+
+---
+
+## L-gent Phase 7: Three-Brain Hybrid Search
+
+**Date**: 2025-12-09  
+**Commit**: c87331a
+
+<details>
+<summary>Three-brain search architecture with intelligent fusion</summary>
+
+**Implementation**:
+- **GraphBrain** (`graph_search.py`, ~490 lines): Relationship-aware search
+  - Composition planning: `find_compatible()`, `find_path()`  
+  - Lineage exploration: `get_ancestors()`, `get_descendants()`, `get_dependents()`
+  - Type compatibility using TypeLattice
+  
+- **QueryFusion** (`fusion.py`, ~380 lines): Unified search across all three brains
+  - Query type classification: EXACT_NAME, SEMANTIC_INTENT, TYPE_QUERY, RELATIONSHIP
+  - Adaptive weighting based on query type
+  - Reciprocal Rank Fusion (RRF) algorithm  
+  - Serendipity generation (unexpected but useful connections)
+  - Parallel execution via asyncio.gather
+  
+- **VectorSemanticBrain** (`semantic_vector.py`, ~230 lines): Scalable semantic search
+  - VectorBackend integration (ChromaDB/FAISS)
+  - Automatic backend selection based on catalog size
+  - Persistent indices, metadata filtering
+
+**Test Coverage** (`test_phase7.py`, ~530 lines):
+- 19 new tests (207 total L-gent tests passing)
+- Classes: TestGraphBrain, TestQueryFusion, TestVectorSemanticBrain, TestPhase7Integration, TestPhase7EdgeCases
+- 2 skipped tests for optional vector backend dependencies
+
+**Design Highlights**:
+- Leverages existing L-gent infrastructure (LineageGraph, TypeLattice, Registry)
+- Composable: Each brain works independently and in fusion
+- Explainable: Results include interpretation and reasoning
+- Joy-inducing: Surfaces serendipitous discoveries
+
+**Files Modified**: `__init__.py` (added Phase 7 exports + Search export)
+</details>
+
