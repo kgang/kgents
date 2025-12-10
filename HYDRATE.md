@@ -31,30 +31,22 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 ## TL;DR
 
-**Status**: D-gent Phase 3 COMPLETE ✅ (Extended Protocols: Transactional, Queryable, Observable, UnifiedMemory)
+**Status**: B-gent Phase 3 + D-gent Phase 3 + L-gent Phase 6 COMMITTED ✅
 **Branch**: `main`
-**Latest Commit**: d0f044c (pending new commit)
+**Latest Commit**: e5411a1
 **Current State**:
-  - **D-gent Phase 3**: ✅ COMPLETE (TransactionalDataAgent, QueryableDataAgent, ObservableDataAgent, UnifiedMemory) - 51 tests
-  - **L-gent Phases 1-5**: ✅ COMPLETE (Registry, Persistence, Lineage, Lattice, Semantic)
   - **B-gent Phase 3**: ✅ COMPLETE (Value Tensor, Metered Functor, UVP) - 74 tests
+  - **D-gent Phase 3**: ✅ COMPLETE (Transactional, Queryable, Observable, UnifiedMemory) - 51 tests
+  - **L-gent Phases 1-6**: ✅ COMPLETE (Registry, Persistence, Lineage, Lattice, Semantic, Embedders)
   - G-gent Phases 1-7: ✅ COMPLETE (incl. W-gent Pattern Inference)
   - CLI Phase 2: ✅ COMPLETE (Bootstrap & Laws commands)
-  - D-gent Phase 2: ✅ COMPLETE (VectorAgent, GraphAgent, StreamAgent)
-  - **Tests: 191 D-gent (51 new Phase 3), 177 L-gent, 323+ G/B-gent, 0 failures** ✅
-
-**Uncommitted Work (Ready to Commit)**:
-- **D-gent Phase 3**: transactional.py, queryable.py, observable.py, unified.py + 51 tests (NEW)
-- **L-gent Phase 5**: semantic.py, semantic_registry.py + 34 tests
-- **B-gent Phase 3**: value_tensor.py, metered_functor.py, value_ledger.py + 74 tests
-- G-gent Phase 7: pattern_inference.py + test_pattern_inference.py
-- CLI Phase 2: Bootstrap package (laws.py, principles.py + 48 tests)
+  - **Tests: 125 new in commit, 0 failures** ✅
 
 **Next Steps**:
-1. **Commit all uncommitted work** (D-gent Phase 3 + L-gent Phase 5 + B-gent Phase 3 + G-gent Phase 7 + CLI Phase 2)
-2. **D-gent Phase 4**: The Noosphere (SemanticManifold, TemporalWitness, RelationalLattice, MemoryGarden)
-3. **L-gent Phase 6**: Advanced embeddings (sentence-transformers, OpenAI), vector DB
-4. **B-gent Phase 4**: VoI (Value of Information) for observation economics
+1. **D-gent Phase 4**: The Noosphere (SemanticManifold, TemporalWitness, RelationalLattice, MemoryGarden)
+2. **L-gent Phase 6**: Complete advanced embedders with tests
+3. **B-gent Phase 4**: VoI (Value of Information) for observation economics
+4. **CLI Phase 3**: Flow Engine (composition backbone)
 
 ---
 
@@ -120,6 +112,18 @@ G-gents (Phase 7 done - pattern inference), H-gents (needs 3-tradition), J-gents
 ---
 
 ## Recent Sessions
+
+### Session: Commit B-gent Phase 3 + D-gent Phase 3 + L-gent Phase 6 (2025-12-09)
+
+**Status**: ✅ COMMITTED - e5411a1
+
+**Commit Summary** (6,990 insertions, 1,537 deletions):
+- **B-gent Phase 3**: value_tensor.py, metered_functor.py, value_ledger.py + 74 tests
+- **D-gent Phase 3**: transactional.py, queryable.py, observable.py, unified.py + 51 tests
+- **L-gent Phase 6**: embedders.py (SentenceTransformer, OpenAI, Cached - placeholder)
+- **Cleanup**: Removed obsolete docs, added .memory/ to .gitignore
+
+---
 
 ### Session: D-gent Phase 3 - Extended Protocols (2025-12-09)
 
