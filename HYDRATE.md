@@ -9,15 +9,14 @@ Keep it concise—focus on current state and recent work.
 **Status**: All Tests Passing ✅ | **Branch**: `main` | **Tests**: ~5,234+
 
 **Recent Work**:
-- **CLI Auto-Bootstrap** ← NOW OPERATIONAL
-  - Cortex auto-initializes on every `kgents` command
-  - Instance registration + telemetry on startup/shutdown
-  - `--no-bootstrap` flag for degraded mode
-- E-gent Phase 8: Safety & Guardrails COMPLETE (68 tests)
-- E-gent v2 COMPLETE (353 tests total)
+- **Integration Tests Phase 2 COMPLETE** ← 74 tests passing
+  - Economics Stack (B×G, B×J, B×M, B×O, B×L)
+  - Narrative Stack (N×M, N×K, N×O)
+  - Observation Stack (O×W, O×I, O×B, O×N)
+- CLI Auto-Bootstrap NOW OPERATIONAL
+- E-gent v2 COMPLETE (353 tests)
 - M-gent Holographic Cartography COMPLETE (114 tests)
 - Cortex Assurance v2.0 COMPLETE (73 tests)
-- Instance DB Phase 1 COMPLETE (85 tests)
 - Ψ-gent v3.0 (104 tests)
 
 ---
@@ -208,10 +207,41 @@ await manager.shutdown()
 
 ---
 
-## E-gent v2 COMPLETE ✅
+## E-gent v2 QA VERIFIED ✅
 
-**Status**: All phases complete. 353 tests passing.
+**Status**: All phases complete. 353 tests passing in **1.23s**.
+**QA Demo**: `impl/claude/agents/e/_tests/qa_demonstration.py` - 7/7 demos pass
 **Cleanup**: Legacy `_legacy/` and `evolve.py` removed. v2 is the only API.
+
+### Performance Metrics
+
+| Metric | Value |
+|--------|-------|
+| **Tests** | 353 passing |
+| **Test runtime** | 1.23s (286 tests/second) |
+| **Implementation LOC** | ~7,100 lines |
+| **Test LOC** | ~7,400 lines |
+| **Test:Impl ratio** | ~1.04:1 (excellent coverage) |
+
+### QA Demonstration Results (2025-12-10)
+
+| Demo | Status | Key Finding |
+|------|--------|-------------|
+| Gibbs Free Energy | ✓ | ΔG = ΔH - TΔS correctly guides mutation viability |
+| Parasitic Detection | ✓ | 5/5 patterns correctly identified (hardcoding, deletion, pass-only, gaming, legitimate) |
+| Five-Layer Selection | ✓ | Demon kills 75% of mutations before expensive validation |
+| Hot Spot Analysis | ✓ | Correctly prioritizes complex functions (deeply_nested: 7.0, complex_function: 6.0) |
+| Viral Library | ✓ | Patterns evolve with fitness = success_rate × avg_impact |
+| Safety System | ✓ | Atomic rollback, rate limiting, audit logging, sandbox all functional |
+| Thermodynamic Cycle | ✓ | Full SUN→MUTATE→SELECT→WAGER→INFECT→PAYOFF pipeline operational |
+
+### Key Insights from QA
+
+1. **Gibbs Free Energy** correctly filters mutations: negative ΔG = favorable
+2. **Parasitic pattern detection** prevents test-gaming mutations (hardcoding returns, deleting functionality)
+3. **Five-layer selection** achieves ~75% rejection rate BEFORE expensive test execution
+4. **Hot spot analysis** finds mutation targets via complexity/entropy scoring
+5. **Defense-in-depth safety** provides atomic rollback, rate limiting, audit trails, sandboxing
 
 ### L-gent Integration (`agents/l/egent_integration.py`) - 49 tests
 
@@ -473,7 +503,7 @@ RETRIEVE → PROJECT → CHALLENGE → SOLVE → TRANSLATE → VERIFY
 
 ---
 
-## Integration Test Plan (Phase 2) - IN PROGRESS
+## Integration Test Plan (Phase 2) - COMPLETE ✅
 
 **Plan**: `docs/integration-test-plan.md`
 
@@ -482,19 +512,27 @@ RETRIEVE → PROJECT → CHALLENGE → SOLVE → TRANSLATE → VERIFY
 | Phase | Files | Status | Tests |
 |-------|-------|--------|-------|
 | **1: Core Pipelines** | 5 files | ✅ Complete | 281 |
-| **2: Cross-Domain** | 3 files | 🔄 Created | ~74 |
+| **2: Cross-Domain** | 3 files | ✅ Complete | 74 |
 | **3: End-to-End** | 2 of 3 | ⚠️ Partial | - |
 | **4: Gap Coverage** | - | ⏳ Pending | - |
 
-### Phase 2 Files Created
+### Phase 2 Files (74 tests passing)
 
-| File | Integration | Status |
-|------|-------------|--------|
-| `test_observation_stack_integration.py` | O×W, O×I, O×B, O×N | ✅ 23 passing |
-| `test_narrative_stack_integration.py` | N×M, N×K, N×O | ⚠️ 12 passing |
-| `test_economics_stack_integration.py` | B×G, B×J, B×M, B×O, B×L | ⚠️ 8 passing |
+| File | Integration | Tests |
+|------|-------------|-------|
+| `test_economics_stack_integration.py` | B×G, B×J, B×M, B×O, B×L | 27 |
+| `test_narrative_stack_integration.py` | N×M, N×K, N×O | 21 |
+| `test_observation_stack_integration.py` | O×W, O×I, O×B, O×N | 26 |
 
-**Note**: Some tests have API mismatches that need fixing (SimpleLLMProvider, EntropyBudget, etc.).
+**Reconciled APIs** (2025-12-10):
+- CentralBank: uses `max_balance`, not `initial_tokens`
+- EntropyBudget: uses `initial/remaining`, not `max_depth`
+- Verbosity: uses `TERSE/NORMAL/VERBOSE`, not `CONCISE/NORMAL/DETAILED`
+- Chronicle: uses `get_agent_crystals()`, not `get_traces()`
+- HolographicMemory: uses `retrieve()`, not `recall()`
+- Gas: takes `tokens: int`, not cost float
+- ParseEvent: needs `input_hash`, `duration_ms` (not `tokens_consumed`)
+- HedgeStrategy: uses `FALLBACK/REDUNDANT/VERSIONED/ENSEMBLE`
 
 ---
 
