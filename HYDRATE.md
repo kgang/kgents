@@ -31,28 +31,29 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 ## TL;DR
 
-**Status**: L-gent Phase 5 COMPLETE ✅ (Semantic Search with TF-IDF)
+**Status**: D-gent Phase 3 COMPLETE ✅ (Extended Protocols: Transactional, Queryable, Observable, UnifiedMemory)
 **Branch**: `main`
 **Latest Commit**: d0f044c (pending new commit)
 **Current State**:
-  - **L-gent Phases 1-5**: ✅ COMPLETE (Registry, Persistence, Lineage, Lattice, **Semantic**)
+  - **D-gent Phase 3**: ✅ COMPLETE (TransactionalDataAgent, QueryableDataAgent, ObservableDataAgent, UnifiedMemory) - 51 tests
+  - **L-gent Phases 1-5**: ✅ COMPLETE (Registry, Persistence, Lineage, Lattice, Semantic)
   - **B-gent Phase 3**: ✅ COMPLETE (Value Tensor, Metered Functor, UVP) - 74 tests
   - G-gent Phases 1-7: ✅ COMPLETE (incl. W-gent Pattern Inference)
   - CLI Phase 2: ✅ COMPLETE (Bootstrap & Laws commands)
   - D-gent Phase 2: ✅ COMPLETE (VectorAgent, GraphAgent, StreamAgent)
-  - B-gent Phase 2: ✅ COMPLETE (D-gent + L-gent integration)
-  - **Tests: 177 L-gent (34 new Semantic), 323+ G/B-gent, 0 failures** ✅
+  - **Tests: 191 D-gent (51 new Phase 3), 177 L-gent, 323+ G/B-gent, 0 failures** ✅
 
 **Uncommitted Work (Ready to Commit)**:
-- **L-gent Phase 5**: semantic.py, semantic_registry.py + 34 tests (NEW - 177 total L-gent)
+- **D-gent Phase 3**: transactional.py, queryable.py, observable.py, unified.py + 51 tests (NEW)
+- **L-gent Phase 5**: semantic.py, semantic_registry.py + 34 tests
 - **B-gent Phase 3**: value_tensor.py, metered_functor.py, value_ledger.py + 74 tests
 - G-gent Phase 7: pattern_inference.py + test_pattern_inference.py
 - CLI Phase 2: Bootstrap package (laws.py, principles.py + 48 tests)
 
 **Next Steps**:
-1. **Commit all uncommitted work** (L-gent Phase 5 + B-gent Phase 3 + G-gent Phase 7 + CLI Phase 2)
-2. **L-gent Phase 6**: Advanced embeddings (sentence-transformers, OpenAI), vector DB
-3. **D-gent Phase 3**: Time-travel debugging
+1. **Commit all uncommitted work** (D-gent Phase 3 + L-gent Phase 5 + B-gent Phase 3 + G-gent Phase 7 + CLI Phase 2)
+2. **D-gent Phase 4**: The Noosphere (SemanticManifold, TemporalWitness, RelationalLattice, MemoryGarden)
+3. **L-gent Phase 6**: Advanced embeddings (sentence-transformers, OpenAI), vector DB
 4. **B-gent Phase 4**: VoI (Value of Information) for observation economics
 
 ---
@@ -119,6 +120,65 @@ G-gents (Phase 7 done - pattern inference), H-gents (needs 3-tradition), J-gents
 ---
 
 ## Recent Sessions
+
+### Session: D-gent Phase 3 - Extended Protocols (2025-12-09)
+
+**Status**: ✅ COMPLETE - TransactionalDataAgent, QueryableDataAgent, ObservableDataAgent, UnifiedMemory
+
+**New Files Created** (~1,600 lines):
+- `impl/claude/agents/d/transactional.py` (~350 lines): ACID transactions with time-travel
+  - `TransactionalDataAgent`: Wrap any D-gent with transactions
+  - `Transaction`: Active transaction context with pending state
+  - `Savepoint`: Named checkpoints for partial rollback
+  - `transaction()` context manager: auto-commit/rollback on exception
+  - `savepoint()` / `rollback_to()`: Time-travel debugging
+  - `savepoint_diff()`: Compare state between savepoints
+- `impl/claude/agents/d/queryable.py` (~450 lines): Structured queries over state
+  - `QueryableDataAgent`: Path-based access and queries
+  - `Query`: Structured query with select/where/order/limit
+  - `Predicate`: Filter conditions with operators (eq, ne, lt, gt, contains, matches, exists)
+  - `get()` / `set()`: Path-based access (JSONPath-like: "user.items[0].name")
+  - Aggregations: `count()`, `sum()`, `avg()`, `min_value()`, `max_value()`, `distinct()`, `group_by()`
+  - `find()` / `find_one()`: Predicate-based search
+- `impl/claude/agents/d/observable.py` (~400 lines): Reactive subscriptions
+  - `ObservableDataAgent`: Change notifications
+  - `Change`: Recorded state change with type, path, old/new values
+  - `subscribe()` / `subscribe_path()`: Register for changes
+  - Debouncing support for batched notifications
+  - `batch_start()` / `batch_end()`: Collect changes before notifying
+  - `diff()`: Compute state differences
+  - `change_history()`: Query recent changes
+- `impl/claude/agents/d/unified.py` (~400 lines): Compose all memory modes
+  - `UnifiedMemory`: Single interface to all D-gent capabilities
+  - `MemoryConfig`: Configure which layers are enabled
+  - `MemoryLayer`: IMMEDIATE, DURABLE, SEMANTIC, TEMPORAL, RELATIONAL
+  - Semantic: `associate()`, `recall()`, `semantic_neighbors()`
+  - Temporal: `witness()`, `replay()`, `timeline()`
+  - Relational: `relate()`, `trace()`, `ancestors()`, `descendants()`
+  - Lineage tracking across saves
+  - Lens composition: `memory >> lens` for focused access
+- `impl/claude/agents/d/_tests/test_phase3.py` (~700 lines): 51 comprehensive tests
+
+**Modified Files**:
+- `impl/claude/agents/d/__init__.py`: Exported 40+ new types and functions
+
+**Test Coverage** (51 tests, 191 total D-gent tests, 100% pass):
+- TransactionalDataAgent: begin/commit/rollback, savepoints, diff (12)
+- QueryableDataAgent: path access, predicates, aggregations, group_by (16)
+- ObservableDataAgent: subscriptions, batching, history, diff (7)
+- UnifiedMemory: semantic/temporal/relational layers, lineage, stats (13)
+- Integration: transactional+observable, queryable+unified, full workflow (3)
+
+**Implementation Highlights**:
+- Time-travel debugging via savepoints (debug_at_savepoint, savepoint_diff)
+- JSONPath-like path access with array indices ("users[0].name")
+- Debounced reactive notifications with path filtering
+- UnifiedMemory composes semantic, temporal, relational layers
+- All protocols wrap any base D-gent (decorator pattern)
+
+**Next**: D-gent Phase 4 (Noosphere: SemanticManifold, TemporalWitness, RelationalLattice, MemoryGarden)
+
+---
 
 ### Session: L-gent Phase 5 - Semantic Search (2025-12-09)
 
