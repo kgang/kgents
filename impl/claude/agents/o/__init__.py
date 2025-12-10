@@ -172,6 +172,36 @@ try:
 except ImportError:
     pass  # Already defined in voi_observer.py
 
+# Panopticon Integration (O-gent Phase 3)
+from .panopticon import (
+    # Status enums
+    SystemStatus,
+    AlertSeverity,
+    # Alert type
+    PanopticonAlert,
+    # Dimension status types
+    TelemetryStatus,
+    SemanticStatus,
+    AxiologicalStatus,
+    BootstrapStatus,
+    VoIStatus,
+    # Unified status
+    UnifiedPanopticonStatus,
+    # Integrated Panopticon
+    IntegratedPanopticon,
+    # Observer wrapper
+    PanopticonObserver,
+    # Rendering functions
+    render_unified_dashboard,
+    render_compact_status,
+    render_dimensions_summary,
+    # Factory functions
+    create_integrated_panopticon,
+    create_minimal_panopticon,
+    create_verified_panopticon,
+    create_panopticon_observer,
+)
+
 # Bootstrap Witness (O-gent Phase 2)
 from .bootstrap_witness import (
     # Verdict types
@@ -339,4 +369,31 @@ __all__ = [
     "verify_identity_laws",
     "verify_composition_laws",
     "render_verification_dashboard",
+    # === Panopticon Integration (O-gent Phase 3) ===
+    # Status enums
+    "SystemStatus",
+    "AlertSeverity",
+    # Alert type
+    "PanopticonAlert",
+    # Dimension status types
+    "TelemetryStatus",
+    "SemanticStatus",
+    "AxiologicalStatus",
+    "BootstrapStatus",
+    "VoIStatus",
+    # Unified status
+    "UnifiedPanopticonStatus",
+    # Integrated Panopticon
+    "IntegratedPanopticon",
+    # Observer wrapper
+    "PanopticonObserver",
+    # Rendering functions
+    "render_unified_dashboard",
+    "render_compact_status",
+    "render_dimensions_summary",
+    # Factory functions
+    "create_integrated_panopticon",
+    "create_minimal_panopticon",
+    "create_verified_panopticon",
+    "create_panopticon_observer",
 ]

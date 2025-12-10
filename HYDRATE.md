@@ -18,30 +18,26 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 ## TL;DR
 
-**Status**: O-gent Phase 2 (BootstrapWitness) COMMITTED ✅
+**Status**: D-gent Phase 5 (SQL/Redis Backends) ✅
 **Branch**: `main`
-**Latest Commit**: `8c1a062` feat(o-gent): Add BootstrapWitness integration (Phase 2)
+**Latest Commit**: `ce5dd8d` feat(b-gent): B×G Phase 5 - Grammar Insurance + JIT Efficiency
 
 **Current State**:
-- **O-gent Phase 2**: ✅ COMMITTED - BootstrapWitness (87 tests) - `agents/o/bootstrap_witness.py`
-  - IdentityAgent, ComposedAgent, category law verification
-  - CLI laws.py integration for runtime verification
+- **D-gent Phase 5**: ✅ NEW - SQL/Redis backends (41 tests, 36 skipped when deps missing)
+  - `sql_agent.py`: SQLite + PostgreSQL with versioned state
+  - `redis_agent.py`: Redis/Valkey with TTL, pub/sub, history
+- **O-gent Phase 3**: ✅ COMPLETE - Panopticon Integration (137 tests)
 - **CLI Phase 6**: ✅ COMMITTED - Intent Layer (94 tests)
-- **CLI Phases 1-5**: ✅ COMPLETE (321 tests)
-- **B×G Phases 1-5**: ✅ COMPLETE
-- D-gent, L-gent, G-gent: ✅ COMPLETE
+- **B×G Phases 1-6**: ✅ COMPLETE (575 tests)
+- D-gent (276 tests), L-gent, G-gent: ✅ COMPLETE
 
-**Uncommitted (from prior sessions)**:
-- B×G Phase 5: `grammar_insurance.py` modifications + tests
-- **B×G Phase 6**: ✅ `jit_efficiency.py` + 84 tests (ready to commit)
-  - JIT Compilers: Regex, JumpTable, Bytecode
-  - LatencyBenchmark, ProfitSharingLedger (30/30/40)
-  - HFTongueBuilder: Bid, Tick, Order tongues
+**Uncommitted**:
+- **D-gent Phase 5**: `sql_agent.py`, `redis_agent.py` + tests
 
 **Next Steps**:
-1. **Commit**: B×G Phase 5-6 uncommitted work
+1. **Commit**: D-gent Phase 5 + O-gent Phase 3
 2. **CLI Phase 7**: TUI Dashboard (Textual-based DVR)
-3. **O-gent Phase 3**: Panopticon Integration with BootstrapWitness dashboard
+3. **O-gent Phase 4**: W-gent integration for visualization
 
 ---
 
@@ -71,7 +67,7 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 | **D-gents** | ~80% | Minor SQL/Redis backends |
 | **L-gents** | ~70% | Vector DB integration |
 | **G-gents** | ~90% | Phase 7 done |
-| **O-gents** | ~80% | Phase 2 complete (87 tests), Panopticon integration next |
+| **O-gents** | ~90% | ✅ Phase 3 complete (137 tests), W-gent viz next |
 | **I-gents** | ~10% | TUI, evolve.py, sessions |
 | **F-gents** | ~40% | Forge loop, ALO format |
 | **M/N/psi** | 0% | Missing |
@@ -80,51 +76,51 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 ## Current Session
 
-### Session: B×G Phase 6 - JIT Efficiency (2025-12-09)
+### Session: O-gent Phase 3 - Panopticon Integration (2025-12-09)
 
-**Status**: ✅ COMPLETE - G+J+B Trio for High-Frequency Trading
+**Status**: ✅ COMPLETE - Unified Observation Dashboard
 
-**Spec Reference**: `docs/structural_economics_bg_integration.md` (Pattern 4: JIT Efficiency)
+**Spec Reference**: `spec/o-gents/README.md` (The Panopticon Dashboard)
 
-**New Files Created** (~1,300 lines):
-- `impl/claude/agents/b/jit_efficiency.py` (~1,000 lines): JIT Efficiency implementation
-  - `JITCompilationTarget`: BYTECODE, REGEX, JUMP_TABLE, C, LLVM
-  - `LatencyMeasurement`, `LatencyReport`: Benchmark results and value projection
-  - `RegexJITCompiler`, `JumpTableJITCompiler`, `BytecodeJITCompiler`: Fast parsers
-  - `CompiledTongue`: JIT-compiled grammar artifact
-  - `LatencyBenchmark`: Compare baseline vs JIT with warmup
-  - `ProfitShare`, `ProfitSharingLedger`: 30% G-gent, 30% J-gent, 40% System
-  - `JITEfficiencyMonitor`: Identify opportunities, compile, credit agents
-  - `HFTongueBuilder`: Build Bid, Tick, Order tongues for HFT
-- `impl/claude/agents/b/_tests/test_jit_efficiency.py` (~900 lines): 84 tests
+**New Files Created** (~700 lines):
+- `impl/claude/agents/o/panopticon.py` (~600 lines): Panopticon Integration
+  - `SystemStatus`, `AlertSeverity`: Status enums
+  - `PanopticonAlert`: Alert management with severity/source/details
+  - `TelemetryStatus`, `SemanticStatus`, `AxiologicalStatus`, `BootstrapStatus`, `VoIStatus`: Dimension status types
+  - `UnifiedPanopticonStatus`: Complete aggregated status
+  - `IntegratedPanopticon`: Main dashboard class with all observers
+  - `PanopticonObserver`: Observer wrapper feeding into Panopticon
+  - `render_unified_dashboard()`, `render_compact_status()`, `render_dimensions_summary()`
+  - `create_integrated_panopticon()`, `create_minimal_panopticon()`, `create_verified_panopticon()`
+  - Real-time streaming via `stream_status()` async generator
 
 **Core Concepts**:
-- **G+J+B Trio**: G-gent defines grammar → J-gent compiles → B-gent measures value
-- **Value Formula**: `Value = LatencyReduction × TransactionCount × TimeValuePerMs`
-- **Profit Sharing**: 30% G-gent, 30% J-gent, 40% System (from latency gains)
-- **HF Tongues**: BidTongue, TickTongue, OrderTongue for real-time parsing
+- **3 Dimensions + Bootstrap**: X (Telemetry), Y (Semantics), Z (Axiology), B (Bootstrap)
+- **Unified Dashboard**: Spec-compliant ASCII rendering
+- **Alert Management**: Severity levels, callbacks, max limit
+- **Bootstrap Integration**: Automatic verification at configurable intervals
+- **Real-time Streaming**: Async status updates for live monitoring
 
-**Test Coverage** (84 tests, 100% pass):
-- Targets: 3, Latency: 7, Compilation: 10, Compilers: 18
-- Benchmarking: 3, Profit: 10, Monitor: 12, HF Tongue: 9, Integration: 12
-
-**B-gent Tests Total**: 575 passed (84 new)
+**Test Coverage** (50 new tests, 137 total O-gent):
+- Status Enums: 2, Alerts: 3, Dimension Status: 12, Unified Status: 4
+- IntegratedPanopticon: 7, Bootstrap Integration: 4, Streaming: 2
+- Dashboard Rendering: 6, PanopticonObserver: 6, System Status: 2, Integration: 4
 
 ---
 
 ## Recent Sessions
+
+### Session: B×G Phase 6 - JIT Efficiency (2025-12-09) ✅ COMMITTED
+
+- `jit_efficiency.py`: JIT compilers (Regex, JumpTable, Bytecode)
+- Commit: `ce5dd8d` - 84 tests, HFTongueBuilder
 
 ### Session: O-gent Phase 2 - BootstrapWitness (2025-12-09) ✅ COMMITTED
 
 - `bootstrap_witness.py`: Id/Compose agents, category law verification
 - Commit: `8c1a062` - 25 new tests (87 total O-gent)
 
-### Session: B×G Phase 5 - Grammar Insurance (2025-12-09)
-
-- `grammar_insurance.py`: Volatility monitoring, hedge strategies, premium calculation
-- 64 tests
-
-### Session: CLI Phase 6 - Intent Layer (2025-12-09)
+### Session: CLI Phase 6 - Intent Layer (2025-12-09) ✅ COMMITTED
 
 - `protocols/cli/intent/`: 10 core verbs, intent router, risk assessment
 - 94 tests
@@ -198,10 +194,10 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 | Module | Tests | Status |
 |--------|-------|--------|
-| B-gent | 575 | ✅ (+84 JIT) |
+| B-gent | 575 | ✅ |
 | D-gent | 271 | ✅ (9 skipped) |
 | G-gent | 200+ | ✅ |
 | L-gent | 177 | ✅ |
-| O-gent | 87 | ✅ |
+| O-gent | 137 | ✅ (+50 Phase 3) |
 | CLI | 415 | ✅ |
-| **Total** | 2400+ | ✅ |
+| **Total** | 2450+ | ✅ |

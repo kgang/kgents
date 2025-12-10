@@ -1327,5 +1327,621 @@ class TestEdgeCases:
         assert len(observer.observations) == 0
 
 
+# =============================================================================
+# Panopticon Integration Tests (O-gent Phase 3)
+# =============================================================================
+
+
+from ..panopticon import (
+    # Status enums
+    SystemStatus,
+    AlertSeverity,
+    # Alert type
+    PanopticonAlert,
+    # Dimension status types
+    TelemetryStatus,
+    SemanticStatus,
+    AxiologicalStatus,
+    BootstrapStatus,
+    VoIStatus,
+    # Unified status
+    UnifiedPanopticonStatus,
+    # Integrated Panopticon
+    IntegratedPanopticon,
+    # Observer wrapper
+    render_unified_dashboard,
+    render_compact_status,
+    render_dimensions_summary,
+    # Factory functions
+    create_integrated_panopticon,
+    create_minimal_panopticon,
+    create_verified_panopticon,
+    create_panopticon_observer,
+)
+
+
+class TestSystemStatus:
+    """Tests for SystemStatus enum."""
+
+    def test_system_status_values(self):
+        """Test all status values exist."""
+        assert SystemStatus.HOMEOSTATIC == "HOMEOSTATIC"
+        assert SystemStatus.DEGRADED == "DEGRADED"
+        assert SystemStatus.CRITICAL == "CRITICAL"
+        assert SystemStatus.UNKNOWN == "UNKNOWN"
+
+
+class TestAlertSeverity:
+    """Tests for AlertSeverity enum."""
+
+    def test_alert_severity_values(self):
+        """Test all severity levels exist."""
+        assert AlertSeverity.INFO == "INFO"
+        assert AlertSeverity.WARN == "WARN"
+        assert AlertSeverity.ERROR == "ERROR"
+        assert AlertSeverity.CRITICAL == "CRITICAL"
+
+
+class TestPanopticonAlert:
+    """Tests for PanopticonAlert."""
+
+    def test_alert_creation(self):
+        """Test creating an alert."""
+        alert = PanopticonAlert(
+            severity=AlertSeverity.WARN,
+            source="telemetry",
+            message="High latency detected",
+        )
+        assert alert.severity == AlertSeverity.WARN
+        assert alert.source == "telemetry"
+        assert alert.message == "High latency detected"
+        assert alert.timestamp is not None
+
+    def test_alert_str(self):
+        """Test alert string representation."""
+        alert = PanopticonAlert(
+            severity=AlertSeverity.ERROR,
+            source="bootstrap",
+            message="Identity laws broken",
+        )
+        result = str(alert)
+        assert "[ERROR]" in result
+        assert "bootstrap" in result
+        assert "Identity laws broken" in result
+
+    def test_alert_with_details(self):
+        """Test alert with details."""
+        alert = PanopticonAlert(
+            severity=AlertSeverity.CRITICAL,
+            source="axiological",
+            message="RoC below threshold",
+            details={"roc": 0.3, "threshold": 0.5},
+        )
+        assert alert.details["roc"] == 0.3
+        assert alert.details["threshold"] == 0.5
+
+
+class TestDimensionStatusTypes:
+    """Tests for dimension status types."""
+
+    def test_telemetry_status_defaults(self):
+        """Test TelemetryStatus default values."""
+        status = TelemetryStatus()
+        assert status.ops_per_second == 0.0
+        assert status.latency_p95_ms == 0.0
+        assert status.error_rate == 0.0
+        assert status.healthy is True  # Low error rate is healthy
+
+    def test_telemetry_status_unhealthy(self):
+        """Test unhealthy TelemetryStatus."""
+        status = TelemetryStatus(error_rate=0.10)  # 10% errors
+        assert status.healthy is False
+
+    def test_semantic_status_defaults(self):
+        """Test SemanticStatus default values."""
+        status = SemanticStatus()
+        assert status.drift_score == 0.0
+        assert status.knots_intact_pct == 100.0
+        assert status.healthy is True
+
+    def test_semantic_status_unhealthy(self):
+        """Test unhealthy SemanticStatus."""
+        status = SemanticStatus(drift_score=0.5)  # High drift
+        assert status.healthy is False
+
+    def test_axiological_status_defaults(self):
+        """Test AxiologicalStatus default values."""
+        status = AxiologicalStatus()
+        assert status.system_gdp == 0.0
+        assert status.net_roc == 0.0
+        assert status.healthy is False  # 0 RoC is not healthy
+
+    def test_axiological_status_healthy(self):
+        """Test healthy AxiologicalStatus."""
+        status = AxiologicalStatus(net_roc=1.5)
+        assert status.healthy is True
+
+    def test_bootstrap_status_defaults(self):
+        """Test BootstrapStatus default values."""
+        status = BootstrapStatus()
+        assert status.all_agents_exist is True
+        assert status.identity_laws_hold is True
+        assert status.kernel_intact is True
+        assert status.healthy is True
+
+    def test_bootstrap_status_unhealthy(self):
+        """Test unhealthy BootstrapStatus."""
+        status = BootstrapStatus(kernel_intact=False)
+        assert status.healthy is False
+
+    def test_voi_status_defaults(self):
+        """Test VoIStatus default values."""
+        status = VoIStatus()
+        assert status.total_observations == 0
+        assert status.rovi == 0.0
+
+    def test_voi_status_healthy(self):
+        """Test healthy VoIStatus."""
+        status = VoIStatus(rovi=2.0, observation_fraction=0.05)
+        assert status.healthy is True
+
+
+class TestUnifiedPanopticonStatus:
+    """Tests for UnifiedPanopticonStatus."""
+
+    def test_unified_status_defaults(self):
+        """Test UnifiedPanopticonStatus default values."""
+        status = UnifiedPanopticonStatus()
+        assert status.status == SystemStatus.HOMEOSTATIC
+        assert status.uptime_seconds == 0.0
+        assert len(status.alerts) == 0
+
+    def test_all_dimensions_healthy(self):
+        """Test all_dimensions_healthy property."""
+        status = UnifiedPanopticonStatus(
+            telemetry=TelemetryStatus(error_rate=0.01),
+            semantic=SemanticStatus(drift_score=0.1),
+            axiological=AxiologicalStatus(net_roc=2.0),
+            bootstrap=BootstrapStatus(kernel_intact=True),
+        )
+        assert status.all_dimensions_healthy is True
+
+    def test_not_all_dimensions_healthy(self):
+        """Test when not all dimensions are healthy."""
+        status = UnifiedPanopticonStatus(
+            telemetry=TelemetryStatus(error_rate=0.20),  # Unhealthy
+            semantic=SemanticStatus(drift_score=0.1),
+            axiological=AxiologicalStatus(net_roc=2.0),
+            bootstrap=BootstrapStatus(kernel_intact=True),
+        )
+        assert status.all_dimensions_healthy is False
+
+    def test_critical_alerts(self):
+        """Test critical_alerts property."""
+        alerts = [
+            PanopticonAlert(AlertSeverity.INFO, "test", "info"),
+            PanopticonAlert(AlertSeverity.CRITICAL, "test", "critical1"),
+            PanopticonAlert(AlertSeverity.WARN, "test", "warn"),
+            PanopticonAlert(AlertSeverity.CRITICAL, "test", "critical2"),
+        ]
+        status = UnifiedPanopticonStatus(alerts=alerts)
+        critical = status.critical_alerts
+        assert len(critical) == 2
+        assert all(a.severity == AlertSeverity.CRITICAL for a in critical)
+
+
+class TestIntegratedPanopticon:
+    """Tests for IntegratedPanopticon."""
+
+    def test_creation_default(self):
+        """Test creating IntegratedPanopticon with defaults."""
+        panopticon = create_integrated_panopticon()
+        assert panopticon is not None
+        assert panopticon.telemetry is not None
+        assert panopticon.bootstrap_observer is not None
+
+    def test_creation_minimal(self):
+        """Test creating minimal Panopticon."""
+        panopticon = create_minimal_panopticon()
+        assert panopticon is not None
+        assert panopticon.telemetry is not None
+
+    def test_alert_management(self):
+        """Test adding and clearing alerts."""
+        panopticon = create_integrated_panopticon()
+
+        alert = panopticon.add_alert(
+            AlertSeverity.WARN,
+            "telemetry",
+            "Test alert",
+        )
+
+        assert len(panopticon.alerts) == 1
+        assert panopticon.alerts[0] == alert
+
+        panopticon.clear_alerts()
+        assert len(panopticon.alerts) == 0
+
+    def test_get_alerts_by_severity(self):
+        """Test filtering alerts by severity."""
+        panopticon = create_integrated_panopticon()
+
+        panopticon.add_alert(AlertSeverity.INFO, "test", "info")
+        panopticon.add_alert(AlertSeverity.WARN, "test", "warn1")
+        panopticon.add_alert(AlertSeverity.WARN, "test", "warn2")
+        panopticon.add_alert(AlertSeverity.ERROR, "test", "error")
+
+        warns = panopticon.get_alerts_by_severity(AlertSeverity.WARN)
+        assert len(warns) == 2
+
+    def test_get_status(self):
+        """Test getting unified status."""
+        panopticon = create_integrated_panopticon()
+        status = panopticon.get_status()
+
+        assert isinstance(status, UnifiedPanopticonStatus)
+        assert status.uptime_seconds >= 0
+        assert status.telemetry is not None
+        assert status.bootstrap is not None
+
+    def test_max_alerts_limit(self):
+        """Test that alerts are limited to max_alerts."""
+        panopticon = IntegratedPanopticon(max_alerts=5)
+
+        for i in range(10):
+            panopticon.add_alert(AlertSeverity.INFO, "test", f"alert_{i}")
+
+        assert len(panopticon.alerts) == 5
+        # Should keep the most recent 5
+        assert panopticon.alerts[-1].message == "alert_9"
+
+    def test_alert_callback(self):
+        """Test alert callback is called."""
+        alerts_received = []
+
+        def callback(alert):
+            alerts_received.append(alert)
+
+        panopticon = IntegratedPanopticon(alert_callback=callback)
+        panopticon.add_alert(AlertSeverity.WARN, "test", "callback test")
+
+        assert len(alerts_received) == 1
+        assert alerts_received[0].message == "callback test"
+
+
+class TestIntegratedPanopticonBootstrap:
+    """Tests for Panopticon bootstrap integration."""
+
+    @pytest.mark.asyncio
+    async def test_verify_bootstrap(self):
+        """Test bootstrap verification."""
+        panopticon = create_integrated_panopticon()
+        result = await panopticon.verify_bootstrap()
+
+        assert isinstance(result, BootstrapVerificationResult)
+        assert result.overall_verdict == Verdict.PASS
+
+    @pytest.mark.asyncio
+    async def test_maybe_verify_bootstrap_first_call(self):
+        """Test maybe_verify_bootstrap on first call."""
+        panopticon = create_integrated_panopticon()
+        result = await panopticon.maybe_verify_bootstrap()
+
+        assert result is not None
+        assert result.kernel_intact is True
+
+    @pytest.mark.asyncio
+    async def test_maybe_verify_bootstrap_cached(self):
+        """Test that maybe_verify_bootstrap respects interval."""
+        panopticon = create_integrated_panopticon(
+            bootstrap_check_interval_s=60.0  # 60 second interval
+        )
+
+        # First call should verify
+        result1 = await panopticon.maybe_verify_bootstrap()
+        assert result1 is not None
+
+        # Immediate second call should return cached
+        result2 = await panopticon.maybe_verify_bootstrap()
+        assert result2 is result1  # Same object
+
+    @pytest.mark.asyncio
+    async def test_create_verified_panopticon(self):
+        """Test create_verified_panopticon factory."""
+        panopticon, result = await create_verified_panopticon()
+
+        assert isinstance(panopticon, IntegratedPanopticon)
+        assert isinstance(result, BootstrapVerificationResult)
+        assert result.kernel_intact is True
+
+
+class TestIntegratedPanopticonStreaming:
+    """Tests for real-time streaming."""
+
+    @pytest.mark.asyncio
+    async def test_stream_status(self):
+        """Test streaming status updates."""
+        panopticon = create_integrated_panopticon()
+
+        updates = []
+        async for status in panopticon.stream_status(interval_s=0.1):
+            updates.append(status)
+            if len(updates) >= 3:
+                panopticon.stop_streaming()
+                break
+
+        assert len(updates) >= 3
+        assert all(isinstance(u, UnifiedPanopticonStatus) for u in updates)
+
+    def test_stop_streaming(self):
+        """Test stop_streaming method."""
+        panopticon = create_integrated_panopticon()
+        panopticon._streaming = True
+
+        panopticon.stop_streaming()
+        assert panopticon._streaming is False
+
+
+class TestDashboardRendering:
+    """Tests for dashboard rendering functions."""
+
+    def test_render_unified_dashboard(self):
+        """Test unified dashboard rendering."""
+        status = UnifiedPanopticonStatus(
+            status=SystemStatus.HOMEOSTATIC,
+            uptime_seconds=1234,
+            telemetry=TelemetryStatus(latency_p95_ms=100),
+            semantic=SemanticStatus(drift_score=0.1),
+            axiological=AxiologicalStatus(net_roc=2.0, system_gdp=100.0),
+            bootstrap=BootstrapStatus(kernel_intact=True),
+        )
+
+        dashboard = render_unified_dashboard(status)
+
+        assert "SYSTEM PROPRIOCEPTION" in dashboard
+        assert "HOMEOSTATIC" in dashboard
+        assert "TELEMETRY" in dashboard
+        assert "SEMANTICS" in dashboard
+        assert "AXIOLOGY" in dashboard
+        assert "BOOTSTRAP" in dashboard
+        assert "VERIFIED" in dashboard
+
+    def test_render_unified_dashboard_with_alerts(self):
+        """Test dashboard rendering with alerts."""
+        status = UnifiedPanopticonStatus(
+            alerts=[
+                PanopticonAlert(AlertSeverity.WARN, "test", "Test warning"),
+                PanopticonAlert(AlertSeverity.ERROR, "test", "Test error"),
+            ]
+        )
+
+        dashboard = render_unified_dashboard(status)
+        assert "ALERTS" in dashboard
+        assert "Test warning" in dashboard or "WARN" in dashboard
+
+    def test_render_compact_status(self):
+        """Test compact status rendering."""
+        status = UnifiedPanopticonStatus(
+            status=SystemStatus.HOMEOSTATIC,
+            telemetry=TelemetryStatus(latency_p95_ms=100),
+            semantic=SemanticStatus(drift_score=0.1),
+            axiological=AxiologicalStatus(net_roc=2.0),
+            bootstrap=BootstrapStatus(kernel_intact=True),
+        )
+
+        compact = render_compact_status(status)
+
+        assert "[O]" in compact
+        assert "HOMEOSTATIC" in compact
+        assert "✓" in compact or "!" in compact
+
+    def test_render_dimensions_summary(self):
+        """Test dimensions summary rendering."""
+        status = UnifiedPanopticonStatus(
+            telemetry=TelemetryStatus(latency_p95_ms=100, error_rate=0.01),
+            semantic=SemanticStatus(drift_score=0.1, drift_severity="LOW"),
+            axiological=AxiologicalStatus(net_roc=2.0, system_gdp=100.0),
+            bootstrap=BootstrapStatus(kernel_intact=True),
+        )
+
+        summary = render_dimensions_summary(status)
+
+        assert "DIMENSION SUMMARY" in summary
+        assert "[X] Telemetry" in summary
+        assert "[Y] Semantics" in summary
+        assert "[Z] Axiology" in summary
+        assert "[B] Bootstrap" in summary
+
+    def test_panopticon_render_dashboard(self):
+        """Test Panopticon's render_dashboard method."""
+        panopticon = create_integrated_panopticon()
+        dashboard = panopticon.render_dashboard()
+
+        assert "SYSTEM PROPRIOCEPTION" in dashboard
+        assert len(dashboard) > 100  # Should be a substantial dashboard
+
+    def test_panopticon_render_compact_dashboard(self):
+        """Test Panopticon's render_compact_dashboard method."""
+        panopticon = create_integrated_panopticon()
+        compact = panopticon.render_compact_dashboard()
+
+        assert "[O]" in compact
+        assert len(compact) < 200  # Should be compact
+
+
+class TestPanopticonObserver:
+    """Tests for PanopticonObserver wrapper."""
+
+    def test_creation(self):
+        """Test creating PanopticonObserver."""
+        observer = create_panopticon_observer()
+        assert observer is not None
+        assert observer.panopticon is not None
+
+    def test_creation_with_panopticon(self):
+        """Test creating PanopticonObserver with existing Panopticon."""
+        panopticon = create_integrated_panopticon()
+        observer = create_panopticon_observer(panopticon=panopticon)
+
+        assert observer.panopticon is panopticon
+
+    def test_pre_invoke(self):
+        """Test pre_invoke hook."""
+        observer = create_panopticon_observer()
+        agent = MockAgent()
+
+        ctx = observer.pre_invoke(agent, "test input")
+
+        assert ctx is not None
+        assert ctx.agent_name == "MockAgent"
+
+    @pytest.mark.asyncio
+    async def test_post_invoke(self):
+        """Test post_invoke hook."""
+        observer = create_panopticon_observer()
+        agent = MockAgent()
+
+        ctx = observer.pre_invoke(agent, "test input")
+        result = await observer.post_invoke(ctx, "result", 50.0)
+
+        assert result is not None
+
+    @pytest.mark.asyncio
+    async def test_slow_invocation_alert(self):
+        """Test that slow invocations generate alerts."""
+        observer = create_panopticon_observer()
+        agent = MockAgent()
+
+        ctx = observer.pre_invoke(agent, "test input")
+        await observer.post_invoke(ctx, "result", 1500.0)  # 1.5s
+
+        alerts = observer.panopticon.get_alerts_by_severity(AlertSeverity.WARN)
+        assert len(alerts) >= 1
+        assert any("Slow invocation" in a.message for a in alerts)
+
+    def test_record_entropy(self):
+        """Test recording entropy generates alert."""
+        observer = create_panopticon_observer()
+        agent = MockAgent()
+
+        ctx = observer.pre_invoke(agent, "test input")
+        observer.record_entropy(ctx, ValueError("Test error"))
+
+        alerts = observer.panopticon.get_alerts_by_severity(AlertSeverity.ERROR)
+        assert len(alerts) >= 1
+        assert any("ValueError" in a.message for a in alerts)
+
+
+class TestSystemStatusDetermination:
+    """Tests for system status determination logic."""
+
+    def test_status_critical_bootstrap_broken(self):
+        """Test CRITICAL status when bootstrap is broken."""
+        panopticon = create_integrated_panopticon()
+
+        # Simulate broken bootstrap
+        panopticon.bootstrap_observer._verification_history.append(
+            BootstrapVerificationResult(
+                all_agents_exist=True,
+                identity_laws_hold=False,
+                composition_laws_hold=True,
+            )
+        )
+
+        status = panopticon.get_status()
+        assert status.status == SystemStatus.CRITICAL
+
+    @pytest.mark.asyncio
+    async def test_status_homeostatic_all_healthy(self):
+        """Test HOMEOSTATIC status when all is healthy."""
+        panopticon = create_integrated_panopticon()
+
+        # Run a successful bootstrap verification
+        await panopticon.verify_bootstrap()
+
+        # Add some economic activity so net_roc > 0.5
+        if panopticon.axiological:
+            panopticon.axiological.ledger.record_transaction(
+                "test", gas=100, impact=200
+            )
+
+        status = panopticon.get_status()
+        # Should be HOMEOSTATIC now with economic activity
+        assert status.status == SystemStatus.HOMEOSTATIC
+
+
+class TestPanopticonPhase3Integration:
+    """Integration tests for Phase 3 Panopticon."""
+
+    @pytest.mark.asyncio
+    async def test_full_observation_flow(self):
+        """Test complete observation flow through Panopticon."""
+        panopticon = create_integrated_panopticon()
+        observer = create_panopticon_observer(panopticon)
+
+        # Simulate several agent invocations
+        for i in range(5):
+            agent = MockAgent(id=f"agent_{i}", name=f"Agent{i}")
+            ctx = observer.pre_invoke(agent, f"input_{i}")
+            await observer.post_invoke(ctx, f"result_{i}", 50.0 + i * 10)
+
+        # Add economic activity so status is HOMEOSTATIC
+        if panopticon.axiological:
+            panopticon.axiological.ledger.record_transaction(
+                "test", gas=100, impact=200
+            )
+
+        # Get status
+        status = panopticon.get_status()
+
+        # Should have tracked the 5 agents in topology
+        assert status.telemetry.active_agents == 5
+        assert status.status == SystemStatus.HOMEOSTATIC
+
+    @pytest.mark.asyncio
+    async def test_bootstrap_integration(self):
+        """Test bootstrap verification integration."""
+        panopticon = create_integrated_panopticon()
+
+        # Verify bootstrap
+        result = await panopticon.verify_bootstrap()
+
+        # Check status includes bootstrap
+        status = panopticon.get_status()
+
+        assert status.bootstrap.kernel_intact == result.kernel_intact
+        assert status.bootstrap.identity_laws_hold == result.identity_laws_hold
+
+    @pytest.mark.asyncio
+    async def test_alert_generation_flow(self):
+        """Test alert generation through observation."""
+        panopticon = create_integrated_panopticon()
+        observer = create_panopticon_observer(panopticon)
+
+        # Trigger slow invocation alert
+        agent = MockAgent()
+        ctx = observer.pre_invoke(agent, "input")
+        await observer.post_invoke(ctx, "result", 2000.0)  # Very slow
+
+        # Trigger error alert
+        ctx2 = observer.pre_invoke(agent, "input2")
+        observer.record_entropy(ctx2, RuntimeError("Test failure"))
+
+        # Check alerts in status
+        status = panopticon.get_status()
+        assert len(status.alerts) >= 2
+
+    def test_dashboard_with_all_dimensions(self):
+        """Test dashboard includes all dimensions."""
+        panopticon = create_integrated_panopticon()
+        dashboard = panopticon.render_dashboard()
+
+        # Should have all dimension sections
+        assert "[X] TELEMETRY" in dashboard
+        assert "[Y] SEMANTICS" in dashboard
+        assert "[Z] AXIOLOGY" in dashboard
+        assert "BOOTSTRAP" in dashboard
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
