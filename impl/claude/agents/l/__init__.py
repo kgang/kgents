@@ -31,9 +31,17 @@ Phase 5 Implementation (Semantic Search):
 - Hybrid search: Combine keyword + semantic results
 - Embedder protocol: Pluggable embedding backends
 
+Phase 6 Implementation (Advanced Embeddings & Vector DBs):
+- SentenceTransformerEmbedder: Transformer-based embeddings (all-MiniLM-L6-v2, etc.)
+- OpenAIEmbedder: OpenAI embedding API (text-embedding-3-small/large)
+- CachedEmbedder: D-gent caching wrapper for API cost reduction
+- ChromaDBBackend: Persistent vector DB (SQLite + vectors)
+- FAISSBackend: High-performance in-memory index
+- VectorBackend protocol: Pluggable vector database interface
+
 Future Phases:
-- Advanced embeddings (sentence-transformers, OpenAI)
-- Vector database integration (for large catalogs)
+- Graph search (Brain 3: relational traversal)
+- Three-brain hybrid (keyword + semantic + graph)
 """
 
 from .registry import Registry
@@ -83,6 +91,31 @@ from .semantic_registry import (
     SemanticRegistry,
     create_semantic_registry,
 )
+from .embedders import (
+    EmbeddingMetadata,
+    CachedEmbedder,
+    create_best_available_embedder,
+    compare_embedders,
+    SENTENCE_TRANSFORMERS_AVAILABLE,
+    OPENAI_AVAILABLE,
+)
+from .vector_backend import (
+    VectorBackend,
+    VectorSearchResult,
+    create_vector_backend,
+    CHROMADB_AVAILABLE,
+    FAISS_AVAILABLE,
+)
+
+# Conditional imports for optional dependencies
+if SENTENCE_TRANSFORMERS_AVAILABLE:
+    from .embedders import SentenceTransformerEmbedder
+if OPENAI_AVAILABLE:
+    from .embedders import OpenAIEmbedder
+if CHROMADB_AVAILABLE:
+    from .vector_backend import ChromaDBBackend
+if FAISS_AVAILABLE:
+    from .vector_backend import FAISSBackend
 
 __all__ = [
     # Core types
@@ -126,4 +159,27 @@ __all__ = [
     "create_semantic_brain",
     "SemanticRegistry",
     "create_semantic_registry",
+    # Advanced Embedders (Phase 6)
+    "EmbeddingMetadata",
+    "CachedEmbedder",
+    "create_best_available_embedder",
+    "compare_embedders",
+    "SENTENCE_TRANSFORMERS_AVAILABLE",
+    "OPENAI_AVAILABLE",
+    # Vector Backends (Phase 6)
+    "VectorBackend",
+    "VectorSearchResult",
+    "create_vector_backend",
+    "CHROMADB_AVAILABLE",
+    "FAISS_AVAILABLE",
 ]
+
+# Add conditional exports
+if SENTENCE_TRANSFORMERS_AVAILABLE:
+    __all__.append("SentenceTransformerEmbedder")
+if OPENAI_AVAILABLE:
+    __all__.append("OpenAIEmbedder")
+if CHROMADB_AVAILABLE:
+    __all__.append("ChromaDBBackend")
+if FAISS_AVAILABLE:
+    __all__.append("FAISSBackend")

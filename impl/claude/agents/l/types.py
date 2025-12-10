@@ -115,6 +115,18 @@ class CatalogEntry:
     tongue_level: str | None = None  # SCHEMA, COMMAND, RECURSIVE
     tongue_format: str | None = None  # PYDANTIC, BNF, EBNF, LARK
 
+    # Pidgin-specific metadata (for inter-agent compressed tongues)
+    pidgin_agent_pair: list[str] | None = None  # [agent_a, agent_b] for pidgins
+    pidgin_compression_ratio: float | None = None  # 0.1 = 90% reduction
+    pidgin_synthesis_cost_tokens: int | None = None  # Cost to synthesize
+    pidgin_projected_savings_30day: int | None = None  # Token savings projection
+    pidgin_actual_savings: int | None = None  # Actual savings to date
+
+    @property
+    def is_pidgin(self) -> bool:
+        """Check if this tongue is a pidgin (inter-agent compressed language)."""
+        return self.pidgin_agent_pair is not None
+
     @property
     def improvement_percentage(self) -> float | None:
         """Compute improvement from optimization."""
@@ -167,6 +179,11 @@ class CatalogEntry:
             "tongue_constraints": self.tongue_constraints,
             "tongue_level": self.tongue_level,
             "tongue_format": self.tongue_format,
+            "pidgin_agent_pair": self.pidgin_agent_pair,
+            "pidgin_compression_ratio": self.pidgin_compression_ratio,
+            "pidgin_synthesis_cost_tokens": self.pidgin_synthesis_cost_tokens,
+            "pidgin_projected_savings_30day": self.pidgin_projected_savings_30day,
+            "pidgin_actual_savings": self.pidgin_actual_savings,
         }
 
     @classmethod
@@ -219,6 +236,11 @@ class CatalogEntry:
             tongue_constraints=data.get("tongue_constraints", []),
             tongue_level=data.get("tongue_level"),
             tongue_format=data.get("tongue_format"),
+            pidgin_agent_pair=data.get("pidgin_agent_pair"),
+            pidgin_compression_ratio=data.get("pidgin_compression_ratio"),
+            pidgin_synthesis_cost_tokens=data.get("pidgin_synthesis_cost_tokens"),
+            pidgin_projected_savings_30day=data.get("pidgin_projected_savings_30day"),
+            pidgin_actual_savings=data.get("pidgin_actual_savings"),
         )
 
 
