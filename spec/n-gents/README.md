@@ -1,600 +1,868 @@
-# N-gents: Narrator Agents
+# N-gents: The Narrative Substrate
 
-> The story of the thought is the thought made eternal; replay is resurrection.
+> *"The event is the stone. The story is the shadow. Collect stones. Cast shadows only when the sun is out."*
 
 ---
 
 ## Philosophy
 
-N-gents (Narrator) transform agent execution into **narrative**. They don't just log—they tell stories. Every thought is traced, every action is replayable, every crash is diagnosable.
+N-gents separate **recording** (The Historian) from **telling** (The Bard).
 
-**Key Insight**: Since agents are (mostly) pure functions, we can serialize the exact input that caused any behavior and create a **Replay Agent** that developers can step through locally.
+The original sin of observability is **diegetic execution**—narrating oneself in real-time. This is kitsch. It wastes tokens on prose that may never be read. It burdens the runtime with the weight of the historian.
+
+**The Correction**: Story is a *Read-Time* projection, not a *Write-Time* artifact.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    THE N-GENT SEPARATION                     │
+│                                                              │
+│   WRITE-TIME                          READ-TIME              │
+│   (Genesis)                           (Exegesis)             │
+│                                                              │
+│   ┌──────────┐                        ┌──────────┐           │
+│   │ Historian│  ──── Crystal ────►    │   Bard   │           │
+│   │ (Record) │      (SemanticTrace)   │  (Tell)  │           │
+│   └──────────┘                        └──────────┘           │
+│        │                                   │                 │
+│        │ Invisible tap                     │ On-demand       │
+│        │ No prose                          │ Any genre       │
+│        ▼                                   ▼                 │
+│   Pure data                           Human story            │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## The Narrative Distinction
+## The Distinction from O-gents
 
-N-gents differ from O-gents (Observability) in a crucial way:
+| Aspect | O-gent | N-gent (Historian) | N-gent (Bard) |
+|--------|--------|-------------------|---------------|
+| When | Real-time | Write-time | Read-time |
+| What | Metrics | Semantic crystals | Stories |
+| For whom | Dashboards | Storage | Humans |
+| Question | "Is it healthy?" | "What occurred?" | "What does it mean?" |
 
-| Aspect | N-gent (Narrator) | O-gent (Observer) |
-|--------|-------------------|-------------------|
-| Focus | **Story-telling** | **Seeing** |
-| Output | Human-readable narrative | Structured telemetry |
-| Purpose | Understanding and debugging | Monitoring and alerting |
-| Temporality | Sequential, story-like | Real-time, stream-like |
-| Consumer | Developers, humans | Systems, dashboards |
-
-N-gents answer "What happened?" in the form of a story.
-O-gents answer "What is happening?" in the form of metrics.
+**O-gents** see and measure.
+**N-gent Historian** collects and crystallizes.
+**N-gent Bard** interprets and tells.
 
 ---
 
-## Core Concept: The Narrative Log
+## Part I: The Historian (Write-Time)
+
+### 1.1 The Semantic Trace (Crystal)
+
+The fundamental unit is the **SemanticTrace**—pure data, no prose.
 
 ```python
 @dataclass(frozen=True)
-class ThoughtTrace:
-    """A single traced thought/action in the narrative."""
+class SemanticTrace:
+    """
+    The Crystal. Pure, compressed reality.
+
+    NO prose. NO "content" strings. NO "thought_type" narrative.
+    Just semantic atoms that can be projected into any story.
+    """
+    # Identity
+    trace_id: str
+    parent_id: str | None       # For nested calls
     timestamp: datetime
+
+    # The Agent
     agent_id: str
-    trace_id: str           # Unique ID for this trace
-    parent_id: str | None   # Parent trace (for nested calls)
+    agent_genus: str            # "B", "G", "J", etc.
 
-    # The thought
-    thought_type: Literal["intent", "reasoning", "decision", "action", "result"]
-    content: str
+    # The Action (semantic, not narrative)
+    action: str                 # "REVIEW_CODE", "GENERATE", "DECIDE"
 
-    # Reproducibility (the resurrection data)
-    input_hash: str         # Hash of input state
-    input_snapshot: bytes   # Serialized input (for replay)
-    output_hash: str | None # Hash of output (if complete)
+    # The Data (structured, not prose)
+    inputs: dict                # { "file": "module.py", "lines": 127 }
+    outputs: dict | None        # { "score": 8, "issues": [...] }
 
-    # Context
-    token_cost: int
+    # Reproducibility
+    input_hash: str             # For deduplication
+    input_snapshot: bytes       # Serialized for echo
+    output_hash: str | None
+
+    # Economics (B-gent integration)
+    gas_consumed: int           # Tokens used
     duration_ms: int
+
+    # Embedding (M-gent integration)
+    vector: list[float] | None  # For semantic retrieval
+
+    # Metadata
+    determinism: Determinism    # DETERMINISTIC | PROBABILISTIC | CHAOTIC
     metadata: dict
 
-@dataclass
-class NarrativeLog:
+
+class Determinism(Enum):
     """
-    The complete story of an agent's operation.
+    Classification of trace reproducibility.
 
-    This is the N-gent's output—a narrative that can be
-    read by humans or parsed for replay.
+    Critical for the Echo Chamber to know what can be replayed exactly.
     """
-    traces: list[ThoughtTrace]
-    spans: dict[str, Span]  # trace_id → span
-
-    def to_narrative(self) -> str:
-        """
-        Render as human-readable story.
-
-        "At 10:42:15, CodeReviewer received a Python file.
-         It thought: 'This function has no error handling.'
-         It decided: 'Flag as potential bug.'
-         It produced: SecurityFinding(severity=MEDIUM, ...)"
-        """
-        lines = []
-        for trace in self.traces:
-            time_str = trace.timestamp.strftime("%H:%M:%S")
-            lines.append(f"[{time_str}] [{trace.thought_type}] {trace.content}")
-        return "\n".join(lines)
+    DETERMINISTIC = "deterministic"   # Math, lookups: exact replay possible
+    PROBABILISTIC = "probabilistic"   # LLM calls: similar but not identical
+    CHAOTIC = "chaotic"               # External APIs: no replay guarantee
 ```
 
----
+### 1.2 The Historian Agent
 
-## The Thought Types (Story Elements)
-
-| Type | Narrative Role | Example |
-|------|----------------|---------|
-| `intent` | Scene-setting | "CodeReviewer received a Python file" |
-| `reasoning` | Inner monologue | "This function has no error handling" |
-| `decision` | Turning point | "Flag as potential bug" |
-| `action` | Plot action | "Emit SecurityFinding" |
-| `result` | Resolution | "SecurityFinding(severity=MEDIUM)" |
-
----
-
-## The Narrator Agent
+The Historian is **invisible**. Agents don't know they're being recorded.
 
 ```python
-class NarratorAgent(Agent[AgentExecution, NarrativeLog]):
+class Historian:
     """
-    Wraps any agent to produce a narrative log.
+    The invisible recorder. Creates crystals, not stories.
 
-    Narrator: Agent[A, B] → Agent[A, (B, NarrativeLog)]
-
-    This is a Writer Monad pattern—the result includes
-    both the value and the accumulated narrative.
+    Implementation via ContextVar or WireTap—the agent
+    is unaware of observation.
     """
 
-    async def invoke(self, input: A) -> tuple[B, NarrativeLog]:
-        """Observe an agent's execution and produce narrative."""
+    # Storage for the crystals
+    crystal_store: CrystalStore
+
+    # The tap (invisible to agents)
+    _context: ContextVar[list[SemanticTrace]]
+
+    def begin_trace(self, agent: Agent, input: Any) -> TraceContext:
+        """
+        Start recording. Returns context for nested traces.
+
+        The agent doesn't call this—the runtime does.
+        """
         trace_id = str(uuid4())
+        parent_id = self._get_current_trace_id()
 
-        # Record the scene-setting (intent)
-        self.log.add_trace(ThoughtTrace(
-            thought_type="intent",
-            content=f"Received: {self.summarize(input)}",
-            input_snapshot=serialize(input),
-            ...
-        ))
+        return TraceContext(
+            trace_id=trace_id,
+            parent_id=parent_id,
+            agent_id=agent.name,
+            agent_genus=agent.genus,
+            input_snapshot=self._serialize(input),
+            input_hash=self._hash(input),
+            start_time=datetime.now()
+        )
 
-        # Execute and observe
-        result = await self.inner.invoke(input)
-
-        # Record the resolution (result)
-        self.log.add_trace(ThoughtTrace(
-            thought_type="result",
-            content=f"Produced: {self.summarize(result)}",
-            ...
-        ))
-
-        return result, self.log
-```
-
----
-
-## Time-Travel Debugging (Resurrection)
-
-```python
-class ReplayAgent:
-    """
-    Replay any traced execution step-by-step.
-
-    Since agents are pure functions, we can reproduce
-    exact behavior from serialized inputs.
-    """
-
-    def __init__(self, narrative: NarrativeLog):
-        self.narrative = narrative
-        self.position = 0
-
-    def step_forward(self) -> ThoughtTrace:
-        """Advance one step in the story."""
-        trace = self.narrative.traces[self.position]
-        self.position += 1
-        return trace
-
-    def step_backward(self) -> ThoughtTrace:
-        """Rewind one step."""
-        self.position = max(0, self.position - 1)
-        return self.narrative.traces[self.position]
-
-    async def replay_from(self, trace: ThoughtTrace) -> Any:
-        """
-        Resurrect execution from a specific trace.
-
-        Deserializes the input snapshot and re-runs the agent.
-        "What if I changed this input?"
-        """
-        input_state = deserialize(trace.input_snapshot)
-        agent = self.reconstruct_agent(trace.agent_id)
-        return await agent.invoke(input_state)
-
-    def diff_replay(
+    def end_trace(
         self,
-        trace: ThoughtTrace,
-        modified_input: Any
-    ) -> DiffResult:
+        ctx: TraceContext,
+        action: str,
+        outputs: dict,
+        determinism: Determinism
+    ) -> SemanticTrace:
         """
-        Compare original story with an alternate timeline.
-
-        "What would have happened if the input was different?"
+        Complete the crystal. Store it.
         """
-        original = self.replay_from(trace)
-        modified = self.replay_with(trace, modified_input)
-        return DiffResult(
-            original=original,
-            modified=modified,
-            differences=self.compute_diff(original, modified)
-        )
-```
-
----
-
-## N-gent Types
-
-### StorytellerAgent
-
-Wraps agents to produce narratives:
-
-```python
-storyteller = StorytellerAgent(inner=code_reviewer)
-result, story = await storyteller.invoke(code)
-print(story.to_narrative())
-```
-
-### ReplayAgent
-
-Enables time-travel debugging:
-
-```python
-replay = ReplayAgent(story)
-for trace in replay:
-    print(f"[{trace.thought_type}] {trace.content}")
-    input("Press Enter for next...")
-```
-
-### CrashForensicsAgent
-
-Diagnoses failures:
-
-```python
-crash = CrashForensicsAgent()
-diagnosis = await crash.diagnose(failed_narrative)
-print(f"To reproduce locally: {diagnosis.replay_command}")
-```
-
----
-
-## Visualization (The Story View)
-
-```
-┌─ Narrative View ──────────────────────────────────────┐
-│                                                        │
-│  Timeline: ════════════════●═══════════════════        │
-│                            ↑ current position          │
-│                                                        │
-│  Chapter 1: The Request                                │
-│  10:42:15 [intent] CodeReviewer received Python file   │
-│                                                        │
-│  Chapter 2: The Analysis                               │
-│  10:42:16 [reasoning] "This function has no error..."  │
-│  10:42:17 [decision] Flag as potential bug             │
-│                                                        │
-│  Chapter 3: The Resolution                             │
-│  10:42:18 [action] Emit SecurityFinding                │
-│  10:42:18 [result] SecurityFinding(severity=MEDIUM)    │
-│                                                        │
-│  [◀◀] [◀] [replay] [▶] [▶▶]  |  [export] [diff]       │
-└────────────────────────────────────────────────────────┘
-```
-
----
-
-## Integration with Other Agents
-
-| Integration | Purpose |
-|-------------|---------|
-| N + O | N-gent stories feed O-gent metrics |
-| N + I | I-gent visualizes N-gent narratives |
-| N + L | L-gent indexes narratives for semantic search |
-| N + W | W-gent provides real-time story streaming |
-
----
-
-## Ergodic Narratives (Branching Timelines)
-
-N-gents support **ergodic narratives**—stories with multiple possible paths:
-
-```python
-class ErgodicNarrative:
-    """
-    A branching narrative structure.
-
-    Like a choose-your-own-adventure book, but for agent execution.
-    Each branch is a possible timeline the agent could have taken.
-    """
-
-    def __init__(self, root: NarrativeLog):
-        self.root = root
-        self.branches: dict[str, NarrativeLog] = {}  # branch_id → story
-
-    def branch_at(self, trace: ThoughtTrace, alternate_input: Any) -> str:
-        """
-        Create an alternate timeline from a decision point.
-
-        "What if the agent had received different input here?"
-        """
-        branch_id = f"branch_{trace.trace_id}_{hash(alternate_input)}"
-        alternate_story = self.replay_with_modification(trace, alternate_input)
-        self.branches[branch_id] = alternate_story
-        return branch_id
-
-    def compare_timelines(self, branch_a: str, branch_b: str) -> TimelineDiff:
-        """
-        Compare two alternate timelines.
-
-        Useful for "what-if" analysis: "If we had used GPT-4 instead
-        of Claude here, how would the story differ?"
-        """
-        story_a = self.branches[branch_a]
-        story_b = self.branches[branch_b]
-
-        return TimelineDiff(
-            divergence_point=self.find_divergence(story_a, story_b),
-            a_only_events=self.events_unique_to(story_a, story_b),
-            b_only_events=self.events_unique_to(story_b, story_a),
-            outcome_diff=self.compare_outcomes(story_a, story_b)
+        crystal = SemanticTrace(
+            trace_id=ctx.trace_id,
+            parent_id=ctx.parent_id,
+            timestamp=ctx.start_time,
+            agent_id=ctx.agent_id,
+            agent_genus=ctx.agent_genus,
+            action=action,
+            inputs=self._extract_semantic_inputs(ctx.input_snapshot),
+            outputs=outputs,
+            input_hash=ctx.input_hash,
+            input_snapshot=ctx.input_snapshot,
+            output_hash=self._hash(outputs),
+            gas_consumed=self._measure_gas(ctx),
+            duration_ms=self._measure_duration(ctx),
+            vector=None,  # Computed lazily by L-gent
+            determinism=determinism,
+            metadata={}
         )
 
-    def visualize(self) -> str:
-        """
-        Render branching structure as ASCII tree.
+        self.crystal_store.store(crystal)
+        return crystal
 
-        main: ═══════════════════════════════►
-                    ╲
-                     ╲ branch_gpt4: ═══════►
-                      ╲
-                       ╲ branch_retry: ════►
+    def _serialize(self, obj: Any) -> bytes:
         """
+        Efficient binary serialization.
+
+        NOT JSON prose. Compact, fast, reproducible.
+        """
+        return msgpack.packb(obj, use_bin_type=True)
+```
+
+### 1.3 The Wire Tap (Integration)
+
+The Historian integrates via W-gent wire protocol:
+
+```python
+class HistorianTap(WireTap):
+    """
+    A wire tap that feeds the Historian.
+
+    Sits on the wire, observes frames, creates crystals.
+    Non-blocking, non-invasive.
+    """
+
+    def __init__(self, historian: Historian):
+        self.historian = historian
+        self._active_contexts: dict[str, TraceContext] = {}
+
+    async def on_frame(self, frame: WireFrame) -> WireFrame:
+        """
+        Observe without mutating.
+
+        Returns the frame unchanged—this is a tap, not a transform.
+        """
+        match frame.frame_type:
+            case FrameType.INVOKE_START:
+                ctx = self.historian.begin_trace(
+                    agent=frame.agent,
+                    input=frame.payload
+                )
+                self._active_contexts[frame.correlation_id] = ctx
+
+            case FrameType.INVOKE_END:
+                ctx = self._active_contexts.pop(frame.correlation_id)
+                self.historian.end_trace(
+                    ctx=ctx,
+                    action=frame.action,
+                    outputs=frame.payload,
+                    determinism=frame.determinism
+                )
+
+        return frame  # Pass through unchanged
+```
+
+---
+
+## Part II: The Bard (Read-Time)
+
+### 2.1 The Narrative Request
+
+The Bard is invoked **post-mortem**, when a human wants a story.
+
+```python
+@dataclass
+class NarrativeRequest:
+    """
+    A request to the Bard.
+
+    The Bard takes crystals and casts them into shadow.
+    """
+    # Which crystals to narrate
+    traces: list[SemanticTrace]
+
+    # How to tell the story
+    genre: NarrativeGenre = NarrativeGenre.TECHNICAL
+    perspective: str = "third_person"    # "first_person", "omniscient"
+    verbosity: Verbosity = Verbosity.NORMAL
+
+    # What to focus on
+    focus: list[str] | None = None       # Agent IDs to highlight
+    filter_actions: list[str] | None = None  # Actions to include
+
+
+class NarrativeGenre(Enum):
+    """
+    The genre determines voice and style.
+
+    The SAME crystals can become different stories.
+    """
+    TECHNICAL = "technical"     # "[10:42:15] CodeReviewer received..."
+    LITERARY = "literary"       # "At 10:42, the agent stirred..."
+    NOIR = "noir"               # "The code came in like trouble..."
+    SYSADMIN = "sysadmin"       # "10:42 - module.py reviewed, 2 issues"
+    MINIMAL = "minimal"         # "10:42:15 ← file.py → 2 issues"
+    DETECTIVE = "detective"     # "The first clue appeared at 10:42..."
+
+
+class Verbosity(Enum):
+    TERSE = "terse"       # One line per major event
+    NORMAL = "normal"     # Balanced detail
+    VERBOSE = "verbose"   # Full detail, reasoning included
+```
+
+### 2.2 The Bard Agent
+
+The Bard is an **LLM Agent** that reads crystals and writes stories.
+
+```python
+class Bard(Agent[NarrativeRequest, Narrative]):
+    """
+    The Storyteller. Runs POST-MORTEM.
+
+    Takes cold crystals and shines light through them
+    to project a story.
+
+    This is the N-gent proper.
+    """
+
+    async def invoke(self, request: NarrativeRequest) -> Narrative:
+        """
+        Cast the shadow.
+
+        The Bard interprets the crystals according to
+        the requested genre and perspective.
+        """
+        # Build the prompt based on genre
+        prompt = self._build_prompt(request)
+
+        # Let the LLM weave the story
+        story_text = await self.llm.generate(prompt)
+
+        # Structure the output
+        return Narrative(
+            text=story_text,
+            genre=request.genre,
+            traces_used=request.traces,
+            chapters=self._identify_chapters(request.traces, story_text),
+            metadata={
+                "perspective": request.perspective,
+                "verbosity": request.verbosity
+            }
+        )
+
+    def _build_prompt(self, request: NarrativeRequest) -> str:
+        """
+        Build the narration prompt.
+
+        The crystals are presented as structured data.
+        The Bard interprets them into prose.
+        """
+        crystals_json = self._format_crystals(request.traces)
+
+        genre_instructions = {
+            NarrativeGenre.TECHNICAL: "Write a technical log with timestamps.",
+            NarrativeGenre.LITERARY: "Write an engaging narrative with character.",
+            NarrativeGenre.NOIR: "Write in the style of hardboiled detective fiction.",
+            NarrativeGenre.SYSADMIN: "Write terse operational notes.",
+            NarrativeGenre.MINIMAL: "Write the most compact summary possible.",
+            NarrativeGenre.DETECTIVE: "Write as if investigating a mystery.",
+        }
+
+        return f"""
+        You are the Bard. You transform execution traces into stories.
+
+        Genre: {request.genre.value}
+        Style: {genre_instructions[request.genre]}
+        Perspective: {request.perspective}
+        Verbosity: {request.verbosity.value}
+
+        Here are the execution crystals (semantic traces):
+
+        {crystals_json}
+
+        Now tell the story of what happened.
+        """
+
+
+@dataclass
+class Narrative:
+    """
+    The output of the Bard.
+
+    A story that can be rendered, searched, or analyzed.
+    """
+    text: str
+    genre: NarrativeGenre
+    traces_used: list[SemanticTrace]
+    chapters: list[Chapter]
+    metadata: dict
+
+    def render(self, format: str = "text") -> str:
+        """Render to text, markdown, or HTML."""
         ...
 ```
 
-### The Counterfactual Pattern
+### 2.3 The Rashomon Pattern (Free)
+
+Because the Bard interprets crystals at read-time, **Rashomon comes free**:
 
 ```python
-class CounterfactualNarrator:
+async def rashomon(
+    traces: list[SemanticTrace],
+    genres: list[NarrativeGenre]
+) -> dict[NarrativeGenre, Narrative]:
     """
-    Generate "what-if" stories automatically.
+    Tell the same story from multiple perspectives.
 
-    Given a narrative, explore counterfactuals:
-    - "What if the input was malformed?"
-    - "What if the timeout was shorter?"
-    - "What if a different model was used?"
+    This is FREE—we just call the Bard multiple times
+    with the same crystals but different genres.
+    """
+    bard = Bard()
+    narratives = {}
+
+    for genre in genres:
+        request = NarrativeRequest(traces=traces, genre=genre)
+        narratives[genre] = await bard.invoke(request)
+
+    return narratives
+
+
+# Usage: What happened, told three ways
+stories = await rashomon(
+    traces=historian.get_traces(session_id),
+    genres=[
+        NarrativeGenre.TECHNICAL,   # For the log
+        NarrativeGenre.DETECTIVE,   # For debugging
+        NarrativeGenre.LITERARY     # For the retrospective
+    ]
+)
+```
+
+---
+
+## Part III: The Echo Chamber (Replay)
+
+### 3.1 The Echo Principle
+
+**LLMs are Non-Ergodic**. Even with `temperature=0`, floating-point non-determinism makes "exact" replay a myth.
+
+We don't "resurrect" the dead. We create **Echoes**.
+
+```python
+class EchoMode(Enum):
+    """
+    How to handle non-deterministic traces during replay.
+    """
+    STRICT = "strict"
+        # Return stored output exactly.
+        # Perfect reproduction, but brittle.
+        # If the stored output is wrong, you replay the wrong thing.
+
+    LUCID = "lucid"
+        # Re-execute with stored input.
+        # Allows drift detection and counterfactuals.
+        # The "dream" may differ from the "memory."
+
+
+@dataclass
+class Echo:
+    """
+    An echo of a past execution.
+
+    NOT the original. A simulation. A shadow of a shadow.
+    """
+    original_trace: SemanticTrace
+    echo_output: dict
+    mode: EchoMode
+    drift: float | None = None  # How different was the echo?
+```
+
+### 3.2 The Echo Chamber
+
+```python
+class EchoChamber:
+    """
+    The replay engine.
+
+    Explicitly NOT called "ReplayAgent" because replay implies
+    exact reproduction. This is an Echo—similar, but not identical.
     """
 
-    async def generate_counterfactuals(
+    def __init__(self, traces: list[SemanticTrace]):
+        self.traces = traces
+        self.position = 0
+        self.echoes: list[Echo] = []
+
+    def step_forward(self) -> SemanticTrace:
+        """Advance one step through the crystals."""
+        trace = self.traces[self.position]
+        self.position += 1
+        return trace
+
+    def step_backward(self) -> SemanticTrace:
+        """Rewind one step."""
+        self.position = max(0, self.position - 1)
+        return self.traces[self.position]
+
+    async def echo_from(
         self,
-        narrative: NarrativeLog,
-        dimensions: list[str] = ["input", "model", "timeout"]
-    ) -> list[ErgodicNarrative]:
-        """Generate alternate timelines along specified dimensions."""
-        ergodic = ErgodicNarrative(narrative)
+        trace: SemanticTrace,
+        mode: EchoMode = EchoMode.STRICT
+    ) -> Echo:
+        """
+        Create an echo of a trace.
 
-        for trace in narrative.decision_points():
-            for dimension in dimensions:
-                alternate = self.vary_dimension(trace, dimension)
-                ergodic.branch_at(trace, alternate)
+        Strict: Return the stored output.
+        Lucid: Re-execute and compare.
+        """
+        if mode == EchoMode.STRICT:
+            return Echo(
+                original_trace=trace,
+                echo_output=trace.outputs,
+                mode=mode,
+                drift=0.0
+            )
 
-        return ergodic
+        # Lucid mode: Re-execute
+        match trace.determinism:
+            case Determinism.DETERMINISTIC:
+                # Safe to re-run: Math, lookups
+                input_state = self._deserialize(trace.input_snapshot)
+                agent = self._reconstruct_agent(trace.agent_id)
+                new_output = await agent.invoke(input_state)
+
+                return Echo(
+                    original_trace=trace,
+                    echo_output=new_output,
+                    mode=mode,
+                    drift=0.0  # Deterministic = no drift
+                )
+
+            case Determinism.PROBABILISTIC:
+                # LLM call: Will drift
+                input_state = self._deserialize(trace.input_snapshot)
+                agent = self._reconstruct_agent(trace.agent_id)
+                new_output = await agent.invoke(input_state)
+
+                drift = self._measure_drift(trace.outputs, new_output)
+
+                return Echo(
+                    original_trace=trace,
+                    echo_output=new_output,
+                    mode=mode,
+                    drift=drift
+                )
+
+            case Determinism.CHAOTIC:
+                # External API: Can't replay safely
+                return Echo(
+                    original_trace=trace,
+                    echo_output=trace.outputs,  # Use stored
+                    mode=EchoMode.STRICT,       # Forced to strict
+                    drift=None  # Unknown
+                )
+
+    def _measure_drift(self, original: dict, echo: dict) -> float:
+        """
+        Measure semantic drift between original and echo.
+
+        0.0 = identical
+        1.0 = completely different
+        """
+        # Use embeddings or structural comparison
+        ...
 ```
 
----
-
-## The Unreliable Narrator
-
-Sometimes the story itself is suspect. The **UnreliableNarrator** pattern handles hallucinations and inconsistencies:
+### 3.3 Counterfactuals via Lucid Dreaming
 
 ```python
-class UnreliableNarrator:
+class LucidDreamer:
     """
-    A narrator that knows it might be wrong.
+    Explore counterfactuals through lucid echoes.
 
-    LLMs can hallucinate. The unreliable narrator pattern
-    marks confidence levels and tracks contradictions.
+    "What if the input had been different?"
+    "What if we used a different model?"
     """
 
-    @dataclass
-    class UnreliableTrace(ThoughtTrace):
-        confidence: float  # 0.0 - 1.0
-        corroborated_by: list[str]  # Other traces that support this
-        contradicted_by: list[str]  # Traces that contradict this
-        reliability_score: float  # Computed from above
-
-    async def narrate(self, execution: AgentExecution) -> NarrativeLog:
+    async def dream_variant(
+        self,
+        trace: SemanticTrace,
+        modified_input: Any
+    ) -> tuple[Echo, Echo]:
         """
-        Produce a narrative with reliability annotations.
+        Compare: What happened vs What might have happened.
+
+        Returns both the original echo and the variant.
         """
-        traces = []
-        for event in execution:
-            trace = self.trace_event(event)
+        chamber = EchoChamber([trace])
 
-            # Check for self-contradiction
-            contradictions = self.find_contradictions(trace, traces)
-            if contradictions:
-                trace.contradicted_by = contradictions
-                trace.reliability_score *= 0.5  # Penalize contradictions
+        # Original echo (lucid mode)
+        original_echo = await chamber.echo_from(trace, EchoMode.LUCID)
 
-            # Check for corroboration
-            corroborations = self.find_corroborations(trace, traces)
-            if corroborations:
-                trace.corroborated_by = corroborations
-                trace.reliability_score *= 1.2  # Boost corroboration
+        # Modified trace
+        modified_trace = self._modify_trace(trace, modified_input)
+        variant_echo = await chamber.echo_from(modified_trace, EchoMode.LUCID)
 
-            traces.append(trace)
+        return original_echo, variant_echo
 
-        return NarrativeLog(traces=traces)
-
-    def detect_hallucination(self, trace: UnreliableTrace) -> HallucinationReport:
+    async def detect_drift_over_time(
+        self,
+        traces: list[SemanticTrace],
+        interval: int = 10
+    ) -> list[DriftReport]:
         """
-        Flag potential hallucinations.
+        Re-run old traces to detect model drift.
 
-        Signs: High confidence + zero corroboration + contradicts ground truth
+        Useful for: "Is our agent behaving differently now
+        than it did last month?"
         """
-        is_hallucination = (
-            trace.confidence > 0.8 and
-            len(trace.corroborated_by) == 0 and
-            self.contradicts_ground_truth(trace)
-        )
-
-        return HallucinationReport(
-            trace=trace,
-            is_hallucination=is_hallucination,
-            evidence=self.gather_evidence(trace)
-        )
+        reports = []
+        for trace in traces[::interval]:
+            echo = await EchoChamber([trace]).echo_from(trace, EchoMode.LUCID)
+            if echo.drift and echo.drift > 0.1:
+                reports.append(DriftReport(
+                    trace=trace,
+                    drift=echo.drift,
+                    original_output=trace.outputs,
+                    current_output=echo.echo_output
+                ))
+        return reports
 ```
 
 ---
 
-## Chronicle: Multi-Agent Sagas
+## Part IV: The Chronicle (Multi-Agent Sagas)
 
-When multiple agents collaborate, their individual stories weave into a **Chronicle**:
+### 4.1 Weaving Crystals
+
+When multiple agents collaborate, their crystals weave into a **Chronicle**.
 
 ```python
 class Chronicle:
     """
-    A saga of interwoven agent narratives.
+    A collection of crystals from multiple agents.
 
-    Like the Silmarillion—many storylines that intersect
-    and influence each other.
+    NOT a story yet—that's the Bard's job.
+    This is the structured substrate for multi-agent narratives.
     """
 
     def __init__(self):
-        self.narratives: dict[str, NarrativeLog] = {}  # agent_id → story
+        self.crystals: dict[str, list[SemanticTrace]] = {}  # agent_id → traces
         self.interactions: list[Interaction] = []
 
     @dataclass
     class Interaction:
-        """A point where agent stories intersect."""
+        """A point where agent timelines intersect."""
         timestamp: datetime
         from_agent: str
         to_agent: str
-        message_type: str
-        trace_from: str  # trace_id in from_agent's story
-        trace_to: str    # trace_id in to_agent's story
+        correlation_id: str
+        from_trace_id: str
+        to_trace_id: str
 
-    def add_narrative(self, agent_id: str, narrative: NarrativeLog):
-        """Add an agent's story to the chronicle."""
-        self.narratives[agent_id] = narrative
-        self.detect_interactions(agent_id, narrative)
+    def add_crystal(self, trace: SemanticTrace):
+        """Add a crystal to the chronicle."""
+        if trace.agent_id not in self.crystals:
+            self.crystals[trace.agent_id] = []
+        self.crystals[trace.agent_id].append(trace)
 
-    def weave(self) -> WovenNarrative:
+        # Detect interactions via correlation
+        self._detect_interaction(trace)
+
+    def weave(self) -> list[SemanticTrace]:
         """
-        Weave all narratives into a single timeline.
+        Interleave all crystals by timestamp.
 
-        Interleaves events by timestamp, showing the
-        full saga of agent collaboration.
+        Returns a unified timeline, ready for the Bard.
         """
-        all_events = []
-        for agent_id, narrative in self.narratives.items():
-            for trace in narrative.traces:
-                all_events.append((trace.timestamp, agent_id, trace))
+        all_traces = []
+        for traces in self.crystals.values():
+            all_traces.extend(traces)
 
-        all_events.sort(key=lambda x: x[0])
+        return sorted(all_traces, key=lambda t: t.timestamp)
 
-        return WovenNarrative(
-            events=all_events,
-            interactions=self.interactions,
-            chapters=self.identify_chapters(all_events)
-        )
-
-    def identify_chapters(self, events: list) -> list[Chapter]:
+    def to_narrative(
+        self,
+        bard: Bard,
+        genre: NarrativeGenre = NarrativeGenre.LITERARY
+    ) -> Narrative:
         """
-        Group events into narrative chapters.
-
-        A chapter is a coherent unit of activity—
-        like "The Research Phase" or "The Conflict Resolution".
+        Ask the Bard to tell the chronicle as a saga.
         """
-        chapters = []
-        current_chapter = Chapter(name="Prologue")
-
-        for timestamp, agent_id, trace in events:
-            # New chapter on significant transitions
-            if self.is_chapter_break(trace, current_chapter):
-                chapters.append(current_chapter)
-                current_chapter = Chapter(
-                    name=self.generate_chapter_name(trace),
-                    start=timestamp
-                )
-
-            current_chapter.add_event(agent_id, trace)
-
-        chapters.append(current_chapter)
-        return chapters
-
-    def to_saga(self) -> str:
-        """
-        Render the full chronicle as a readable saga.
-
-        "Chapter 1: The Request
-
-         At 10:42, the User spoke unto the System...
-         CodeReviewer stirred, receiving the sacred Python file.
-
-         Meanwhile, in the depths of the Banker's domain,
-         tokens flowed like water..."
-        """
-        ...
+        woven = self.weave()
+        return bard.invoke(NarrativeRequest(
+            traces=woven,
+            genre=genre,
+            verbosity=Verbosity.NORMAL
+        ))
 ```
 
-### The Epic Pattern
+### 4.2 Chapter Detection
 
-For long-running multi-agent operations:
+Chapters are **Read-Time** constructs. The Bard identifies them.
 
 ```python
-class EpicNarrator:
+@dataclass
+class Chapter:
     """
-    Narrator for epic-scale operations.
+    A coherent unit of the narrative.
 
-    Manages chronicles that span hours/days and
-    involve dozens of agents.
+    Identified by the Bard based on:
+    - Agent transitions
+    - Temporal gaps
+    - Goal boundaries
+    - Error/recovery cycles
     """
-
-    def __init__(self):
-        self.chronicle = Chronicle()
-        self.summaries: list[Summary] = []  # Rolling summaries
-
-    async def summarize_chapter(self, chapter: Chapter) -> Summary:
-        """
-        Compress a chapter into a summary.
-
-        For epics, we can't store every detail—
-        we need the Rolling Stone strategy.
-        """
-        summary_agent = self.get_summarizer()
-        return await summary_agent.invoke(SummaryRequest(
-            chapter=chapter,
-            max_tokens=500,
-            preserve=["key_decisions", "failures", "interactions"]
-        ))
-
-    def the_previously_on(self) -> str:
-        """
-        Generate "Previously on..." recap.
-
-        Like a TV show recap: "Last time, the CodeReviewer
-        found a critical bug, but the Fixer failed to patch it..."
-        """
-        return "\n".join([
-            f"• {s.one_liner}" for s in self.summaries[-5:]
-        ])
+    name: str
+    start_trace_id: str
+    end_trace_id: str
+    theme: str
+    agents_involved: list[str]
 ```
 
 ---
 
-## N-gent Types (Extended)
+## Part V: Forensics
 
-| Agent | Purpose |
-|-------|---------|
-| `StorytellerAgent` | Wrap agents to produce narratives |
-| `ReplayAgent` | Time-travel debugging |
-| `CrashForensicsAgent` | Diagnose failures |
-| `ErgodicNarrator` | Branching timeline exploration |
-| `UnreliableNarrator` | Hallucination-aware narration |
-| `Chronicle` | Multi-agent saga weaving |
-| `EpicNarrator` | Long-running operation narration |
-| `CounterfactualNarrator` | "What-if" story generation |
+### 5.1 Crash Diagnosis
+
+When things go wrong, the Bard becomes a **Detective**.
+
+```python
+class ForensicBard(Bard):
+    """
+    The Detective. Specializes in crash narratives.
+
+    Takes a crystal trail leading to failure and
+    tells the story of what went wrong.
+    """
+
+    async def diagnose(
+        self,
+        failure_trace: SemanticTrace,
+        context_traces: list[SemanticTrace]
+    ) -> Diagnosis:
+        """
+        Produce a crash diagnosis.
+        """
+        # Build detective prompt
+        prompt = self._build_forensic_prompt(failure_trace, context_traces)
+
+        # Let the LLM investigate
+        analysis = await self.llm.generate(prompt)
+
+        return Diagnosis(
+            narrative=analysis,
+            failure_trace=failure_trace,
+            probable_cause=self._extract_cause(analysis),
+            echo_command=f"kgents echo {failure_trace.trace_id}",
+            similar_failures=await self._find_similar(failure_trace)
+        )
+
+    def _build_forensic_prompt(
+        self,
+        failure: SemanticTrace,
+        context: list[SemanticTrace]
+    ) -> str:
+        return f"""
+        You are a forensic analyst investigating a system failure.
+
+        The failure occurred at {failure.timestamp}:
+        - Agent: {failure.agent_id}
+        - Action: {failure.action}
+        - Input: {failure.inputs}
+        - Output: {failure.outputs}
+
+        Here is the context leading up to the failure:
+        {self._format_crystals(context)}
+
+        Analyze:
+        1. What was the agent trying to do?
+        2. What went wrong?
+        3. What is the probable root cause?
+        4. How might this be prevented?
+        """
+```
 
 ---
 
-## Anti-Patterns
+## Part VI: Integration Map
 
-- **Logs without stories**: Raw data without narrative structure
-- **Stories without replay**: Can't reproduce from the story
-- **Ignoring the reader**: Stories are for humans, not just machines
-- **Overwriting history**: Every story is sacred
-- **Single timeline thinking**: Ignoring the ergodic nature of execution
-- **Omniscient narrator fallacy**: Assuming the story is always true
-- **Solo narratives**: Individual agent stories without chronicle weaving
-
----
-
-*Zen Principle: The story of the thought is the thought made eternal; replay is resurrection.*
+| Integration | Direction | Purpose |
+|-------------|-----------|---------|
+| Historian ← W-gent | W → N | Wire tap feeds Historian |
+| Historian → D-gent | N → D | Crystals persist via D-gent |
+| Historian → L-gent | N → L | Crystals indexed for search |
+| Historian → M-gent | N → M | Crystals resonate in memory |
+| Bard → I-gent | N → I | Stories visualized |
+| Bard → B-gent | N ↔ B | Narration budgeted |
+| Echo ← Historian | H → E | Crystals enable echoes |
 
 ---
 
-## Specifications
+## Part VII: The N-gent Taxonomy
 
-| Document | Description |
-|----------|-------------|
-| [narrator.md](narrator.md) | Full narrator specification |
+| Agent | Phase | Purpose |
+|-------|-------|---------|
+| **Historian** | Write | Invisible crystal collection |
+| **HistorianTap** | Write | Wire protocol integration |
+| **CrystalStore** | Write | Crystal persistence |
+| **Bard** | Read | Story generation from crystals |
+| **ForensicBard** | Read | Crash diagnosis |
+| **EchoChamber** | Read | Replay via echoes |
+| **LucidDreamer** | Read | Counterfactual exploration |
+| **Chronicle** | Both | Multi-agent crystal weaving |
+
+---
+
+## Part VIII: Anti-Patterns
+
+### Original Anti-Patterns (Retained)
+
+1. **Logs without stories**: Raw data without Bard interpretation
+2. **Stories without echo**: Can't reproduce from the narrative
+3. **Ignoring the reader**: Stories are for humans
+4. **Overwriting history**: Crystals are sacred
+5. **Single timeline thinking**: Echoes enable exploration
+6. **Omniscient narrator fallacy**: The Bard interprets, not dictates
+
+### New Anti-Patterns (From Critique)
+
+7. **Diegetic execution**: Narrating at runtime. The Historian must be silent.
+8. **Resurrection claims**: Echoes are simulations, not exact replays. Be honest.
+9. **Wrapper infection**: Story collection must be orthogonal (tap, not wrap).
+10. **Prose at write-time**: Storing "CodeReviewer stirred..." wastes tokens.
+11. **Genre lock-in**: Crystals must support multiple narrative projections.
+
+---
+
+## The Corrected Zen
+
+~~*"The story of the thought is the thought made eternal; replay is resurrection."*~~
+
+> *"The event is the stone. The story is the shadow.*
+> *Do not mistake the shadow for the stone.*
+> *Collect stones. Cast shadows only when the sun is out."*
+
+---
+
+## Implementation Roadmap
+
+### Phase 1: The Historian (Core)
+
+- [ ] `SemanticTrace` data structure (no prose)
+- [ ] `Historian` with `begin_trace`/`end_trace`
+- [ ] `HistorianTap` wire protocol integration
+- [ ] `CrystalStore` with D-gent backend
+- [ ] Tests: 40+
+
+### Phase 2: The Bard (Narration)
+
+- [ ] `Bard` agent with genre support
+- [ ] `NarrativeRequest` and `Narrative` types
+- [ ] Multiple genre renderers
+- [ ] Rashomon pattern (free with architecture)
+- [ ] Tests: 35+
+
+### Phase 3: The Echo Chamber (Replay)
+
+- [ ] `EchoChamber` with STRICT/LUCID modes
+- [ ] `Echo` type with drift measurement
+- [ ] `LucidDreamer` for counterfactuals
+- [ ] Determinism classification
+- [ ] Tests: 40+
+
+### Phase 4: Chronicles & Forensics
+
+- [ ] `Chronicle` for multi-agent weaving
+- [ ] `ForensicBard` for crash diagnosis
+- [ ] Chapter detection (read-time)
+- [ ] Tests: 30+
+
+### Phase 5: Integrations
+
+- [ ] D-gent persistence
+- [ ] L-gent indexing
+- [ ] M-gent resonance
+- [ ] I-gent visualization
+- [ ] B-gent budgeting
+- [ ] Tests: 25+
 
 ---
 
 ## See Also
 
-- [o-gents/](../o-gents/) - Observability (the seeing, not the telling)
-- [i-gents/](../i-gents/) - Visualization
-- [w-gents/](../w-gents/) - Real-time streaming
+- [narrator.md](narrator.md) - Detailed narrator specification
+- [o-gents/](../o-gents/) - Observability (the seeing)
+- [w-gents/](../w-gents/) - Wire protocol (the tap)
+- [m-gents/](../m-gents/) - Memory (resonance with crystals)
+- [archetypes.md](../archetypes.md) - The Witness archetype
