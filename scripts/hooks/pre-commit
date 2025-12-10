@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+#
+# kgents pre-commit hook (LIGHT)
+#
+# Philosophy: Fast feedback on actively touched files.
+# Heavy tests run on pre-push.
+#
+# Checks:
+#   1. Ruff format (auto-fix, re-stage)
+#   2. Ruff lint (auto-fix, re-stage)
+#   3. Mypy (relaxed, non-blocking)
+#
+# Does NOT run:
+#   - Full test suite (see pre-push)
+#   - Integration tests
+#   - Law verification
+#   - Property tests
+#
+
+set -e
+
+# Source library (resolve symlinks to find actual script location)
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")")" && pwd)"
+source "$SCRIPT_DIR/lib.sh"
+
+REPO_ROOT=$(get_repo_root)
+cd "$REPO_ROOT"
+
+echo -e "${BOLD}pre-commit${NC} ${CYAN}(light checks on staged files)${NC}"
+echo ""
+
+# Check dependencies
+require_uv
+
+# Get staged files
+STAGED_PY=$(get_staged_python_files)
+
+if [ -z "$STAGED_PY" ]; then
+    success "No Python files staged. Skipping."
+    exit 0
+fi
+
+echo -e "Staged files:"
+echo "$STAGED_PY" | sed 's/^/  /'
+echo ""
+
+TOTAL_STEPS=3
+
+# =============================================================================
+# Step 1: Format
+# =============================================================================
+section "Ruff format (auto-fix)" 1 $TOTAL_STEPS
+
+run_ruff_format "$STAGED_PY"
+success "Format complete"
+echo ""
+
+# =============================================================================
+# Step 2: Lint
+# =============================================================================
+section "Ruff lint (auto-fix)" 2 $TOTAL_STEPS
+
+if run_ruff_lint "$STAGED_PY" "false"; then
+    success "Lint passed"
+else
+    warn "Lint issues found (review above)"
+fi
+echo ""
+
+# =============================================================================
+# Step 3: Type check (non-blocking)
+# =============================================================================
+section "Mypy (relaxed)" 3 $TOTAL_STEPS
+
+IMPL_FILES=$(filter_impl_claude "$STAGED_PY")
+if [ -n "$IMPL_FILES" ]; then
+    DIRS=$(echo "$IMPL_FILES" | xargs -n1 dirname | sort -u | sed 's|impl/claude/||g')
+    if run_mypy "$DIRS" "false"; then
+        success "Type check passed"
+    else
+        warn "Type issues found (non-blocking)"
+    fi
+else
+    info "No impl/claude files to check"
+fi
+echo ""
+
+# =============================================================================
+# Done
+# =============================================================================
+hr
+success "pre-commit complete"
+info "Heavy tests will run on push (pre-push hook)"
+hr
+
+exit 0

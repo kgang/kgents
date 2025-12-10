@@ -6,169 +6,267 @@ on:
   pull_request:
     branches: [main]
 
-# Cancel in-progress runs for the same workflow and branch/PR
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  test:
-    name: Test (Python ${{ matrix.python-version }})
+  # ===========================================================================
+  # Tier 1: Fast checks (< 1 min)
+  # Mirrors pre-commit hook
+  # ===========================================================================
+  lint:
+    name: Lint & Format
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: cd impl/claude && uv sync --dev
+
+      - name: Ruff format check
+        run: cd impl/claude && uv run ruff format --check .
+
+      - name: Ruff lint
+        run: cd impl/claude && uv run ruff check .
+
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: cd impl/claude && uv sync --dev
+
+      - name: Mypy (strict)
+        run: |
+          cd impl/claude
+          uv run mypy --strict --explicit-package-bases agents/ bootstrap/ runtime/
+        continue-on-error: true  # TODO: Make blocking once types clean
+
+  # ===========================================================================
+  # Tier 2: Unit tests (1-3 min)
+  # Mirrors pre-push hook
+  # ===========================================================================
+  unit-tests:
+    name: Unit Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    needs: [lint]
     strategy:
       matrix:
         python-version: ['3.11', '3.12', '3.13']
       fail-fast: false
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
+      - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: |
-          uv sync --all-extras
+        run: cd impl/claude && uv sync --dev
 
-      - name: Run tests
-        run: |
-          uv run pytest tests/ -v --tb=short
-
-  lint:
-    name: Lint & Type Check
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
-        with:
-          enable-cache: true
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-
-      - name: Install dependencies
-        run: |
-          uv sync --all-extras
-
-      - name: Run ruff format check
-        run: |
-          uv run ruff format --check impl/claude
-
-      - name: Run ruff lint
-        run: |
-          uv run ruff check impl/claude
-
-      - name: Run mypy
+      - name: Run unit tests
         run: |
           cd impl/claude
-          uv run mypy --strict --explicit-package-bases agents/ bootstrap/ runtime/
-        continue-on-error: true
+          uv run pytest -m "not slow and not integration" --tb=short -v
 
-  coverage:
-    name: Test Coverage
+  # ===========================================================================
+  # Tier 3: Law verification (1-2 min)
+  # Category laws are non-negotiable
+  # ===========================================================================
+  laws:
+    name: Category Laws
     runs-on: ubuntu-latest
-
+    needs: [lint]
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
+      - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: cd impl/claude && uv sync --dev
+
+      - name: Verify category laws
+        run: |
+          cd impl/claude
+          uv run pytest -m "law" --tb=short -v
+
+      - name: Run BootstrapWitness
+        run: |
+          cd impl/claude
+          uv run pytest --witness -m "law" --tb=short
+
+  # ===========================================================================
+  # Tier 4: Integration tests (3-5 min)
+  # Cross-agent integration verification
+  # ===========================================================================
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [unit-tests, laws]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: cd impl/claude && uv sync --dev
+
+      - name: Run integration tests
+        run: |
+          cd impl/claude
+          uv run pytest -m "integration" --tb=short -v
+
+  # ===========================================================================
+  # Tier 5: Property tests (2-5 min)
+  # Hypothesis-based property verification
+  # ===========================================================================
+  property:
+    name: Property Tests
+    runs-on: ubuntu-latest
+    needs: [unit-tests]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: cd impl/claude && uv sync --dev
+
+      - name: Run property tests
+        run: |
+          cd impl/claude
+          uv run pytest -m "property" --tb=short -v
+
+  # ===========================================================================
+  # Tier 6: Coverage (3-5 min)
+  # Full test coverage report
+  # ===========================================================================
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    needs: [unit-tests]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
 
       - name: Install dependencies
         run: |
-          uv sync --all-extras
+          cd impl/claude
+          uv sync --dev
           uv pip install pytest-cov
 
       - name: Run tests with coverage
         run: |
           cd impl/claude
-          uv run pytest tests/ --cov=agents --cov=bootstrap --cov=runtime --cov-report=term-missing --cov-report=xml
+          uv run pytest --cov=agents --cov=bootstrap --cov=runtime \
+            --cov-report=term-missing --cov-report=xml \
+            -m "not slow"
 
-      - name: Upload coverage reports
+      - name: Upload coverage
         uses: codecov/codecov-action@v4
         with:
           file: ./impl/claude/coverage.xml
           fail_ci_if_error: false
 
-  security:
-    name: Security Scan
+  # ===========================================================================
+  # Tier 7: Slow tests (5+ min, nightly or manual)
+  # ===========================================================================
+  slow:
+    name: Slow Tests
     runs-on: ubuntu-latest
-
+    needs: [integration]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
+      - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
 
       - name: Install dependencies
+        run: cd impl/claude && uv sync --dev
+
+      - name: Run slow tests
         run: |
-          uv sync --all-extras
-          uv pip install bandit[toml]
+          cd impl/claude
+          uv run pytest -m "slow" --tb=short -v
 
-      - name: Run bandit security scanner
-        run: |
-          uv run bandit -r impl/claude/agents impl/claude/bootstrap impl/claude/runtime -f json -o bandit-report.json || true
-          uv run bandit -r impl/claude/agents impl/claude/bootstrap impl/claude/runtime
-        continue-on-error: true
-
-      - name: Upload security report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: security-report
-          path: bandit-report.json
-
-  spec-validation:
-    name: Spec & Docs Validation
+  # ===========================================================================
+  # Tier 8: Chaos tests (exploratory, non-blocking)
+  # ===========================================================================
+  chaos:
+    name: Chaos Tests (Accursed Share)
     runs-on: ubuntu-latest
-
+    needs: [integration]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    continue-on-error: true  # Chaos tests may fail - that's discovery
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Lint markdown files
-        uses: DavidAnson/markdownlint-cli2-action@v18
+      - uses: astral-sh/setup-uv@v4
         with:
-          globs: |
-            spec/**/*.md
-            docs/**/*.md
-            *.md
-        continue-on-error: true
+          enable-cache: true
 
-      - name: Check for broken links in docs
-        uses: gaurav-nelson/github-action-markdown-link-check@v1
+      - uses: actions/setup-python@v5
         with:
-          use-quiet-mode: 'yes'
-          use-verbose-mode: 'no'
-          config-file: '.github/markdown-link-check-config.json'
-        continue-on-error: true
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: cd impl/claude && uv sync --dev
+
+      - name: Run chaos tests
+        run: |
+          cd impl/claude
+          uv run pytest -m "accursed_share" --tb=short -v

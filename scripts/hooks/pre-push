@@ -1,0 +1,169 @@
+#!/usr/bin/env bash
+#
+# kgents pre-push hook (HEAVY)
+#
+# Philosophy: Gate pushes with rigorous verification.
+# This is the last line of defense before CI.
+#
+# Checks:
+#   1. Ruff lint (strict, blocking)
+#   2. Mypy (strict, blocking)
+#   3. Unit tests (fast, blocking)
+#   4. Category laws (blocking)
+#   5. Integration tests (full suite, blocking)
+#
+# Optional (can skip with KGENTS_SKIP_HEAVY=1):
+#   - Property tests
+#   - Chaos tests (accursed share)
+#
+
+set -e
+
+# Source library (resolve symlinks to find actual script location)
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")")" && pwd)"
+source "$SCRIPT_DIR/lib.sh"
+
+REPO_ROOT=$(get_repo_root)
+cd "$REPO_ROOT"
+
+# Parse push info
+REMOTE="$1"
+URL="$2"
+
+echo -e "${BOLD}pre-push${NC} ${CYAN}(heavy verification before push to ${REMOTE})${NC}"
+echo ""
+
+# Check for skip flag
+if [ "${KGENTS_SKIP_HEAVY:-0}" = "1" ]; then
+    warn "KGENTS_SKIP_HEAVY=1 detected. Skipping heavy tests."
+    warn "Use with caution - CI will still run these tests."
+    exit 0
+fi
+
+# Check dependencies
+require_uv
+
+TOTAL_STEPS=5
+FAILED=0
+
+# =============================================================================
+# Step 1: Lint (strict)
+# =============================================================================
+section "Ruff lint (strict)" 1 $TOTAL_STEPS
+
+cd "$REPO_ROOT/impl/claude"
+if uv run ruff check agents/ bootstrap/ runtime/ protocols/ testing/ 2>&1; then
+    success "Lint passed"
+else
+    error "Lint failed"
+    FAILED=1
+fi
+cd "$REPO_ROOT"
+echo ""
+
+# =============================================================================
+# Step 2: Type check (strict)
+# =============================================================================
+section "Mypy (strict)" 2 $TOTAL_STEPS
+
+cd "$REPO_ROOT/impl/claude"
+if uv run mypy --strict --explicit-package-bases agents/ bootstrap/ runtime/ 2>&1; then
+    success "Type check passed"
+else
+    warn "Type check issues (non-blocking for now)"
+    # TODO: Make this blocking once types are clean
+fi
+cd "$REPO_ROOT"
+echo ""
+
+# =============================================================================
+# Step 3: Unit tests (fast)
+# =============================================================================
+section "Unit tests (not slow, not integration)" 3 $TOTAL_STEPS
+
+cd "$REPO_ROOT/impl/claude"
+if uv run pytest -m "not slow and not integration" --tb=short -q 2>&1; then
+    success "Unit tests passed"
+else
+    error "Unit tests failed"
+    FAILED=1
+fi
+cd "$REPO_ROOT"
+echo ""
+
+# =============================================================================
+# Step 4: Category laws
+# =============================================================================
+section "Category law verification" 4 $TOTAL_STEPS
+
+cd "$REPO_ROOT/impl/claude"
+if uv run pytest -m "law" --tb=short -q 2>&1; then
+    success "Category laws verified"
+else
+    error "Category law violations detected"
+    FAILED=1
+fi
+cd "$REPO_ROOT"
+echo ""
+
+# =============================================================================
+# Step 5: Integration tests
+# =============================================================================
+section "Integration tests" 5 $TOTAL_STEPS
+
+cd "$REPO_ROOT/impl/claude"
+if uv run pytest -m "integration" --tb=short -q 2>&1; then
+    success "Integration tests passed"
+else
+    error "Integration tests failed"
+    FAILED=1
+fi
+cd "$REPO_ROOT"
+echo ""
+
+# =============================================================================
+# Optional: Property tests (if not skipped)
+# =============================================================================
+if [ "${KGENTS_SKIP_PROPERTY:-0}" != "1" ]; then
+    info "Running property tests..."
+    cd "$REPO_ROOT/impl/claude"
+    if uv run pytest -m "property" --tb=short -q 2>&1; then
+        success "Property tests passed"
+    else
+        warn "Property tests failed (non-blocking)"
+    fi
+    cd "$REPO_ROOT"
+    echo ""
+fi
+
+# =============================================================================
+# Optional: Chaos tests (accursed share)
+# =============================================================================
+if [ "${KGENTS_RUN_CHAOS:-0}" = "1" ]; then
+    info "Running chaos tests (accursed share)..."
+    cd "$REPO_ROOT/impl/claude"
+    if uv run pytest -m "accursed_share" --tb=short -q 2>&1; then
+        success "Chaos tests passed"
+    else
+        info "Chaos tests discovered issues (expected)"
+    fi
+    cd "$REPO_ROOT"
+    echo ""
+fi
+
+# =============================================================================
+# Summary
+# =============================================================================
+hr
+if [ $FAILED -eq 0 ]; then
+    success "pre-push complete. All checks passed."
+    hr
+    exit 0
+else
+    error "pre-push FAILED. Fix issues before pushing."
+    echo ""
+    info "To bypass (not recommended):"
+    info "  KGENTS_SKIP_HEAVY=1 git push"
+    hr
+    exit 1
+fi

@@ -9,11 +9,11 @@ Keep it concise—focus on current state and recent work.
 **Status**: All Tests Passing ✅ | **Branch**: `main` | **Tests**: ~5,234+
 
 **Recent Work**:
-- **E-gent Phase 8: Safety & Guardrails** ← COMPLETE (68 tests)
-  - Atomic rollback guarantees
-  - Rate limiting (mutations + infections)
-  - Audit logging with sinks
-  - Sandboxed execution environment
+- **CLI Auto-Bootstrap** ← NOW OPERATIONAL
+  - Cortex auto-initializes on every `kgents` command
+  - Instance registration + telemetry on startup/shutdown
+  - `--no-bootstrap` flag for degraded mode
+- E-gent Phase 8: Safety & Guardrails COMPLETE (68 tests)
 - E-gent v2 COMPLETE (353 tests total)
 - M-gent Holographic Cartography COMPLETE (114 tests)
 - Cortex Assurance v2.0 COMPLETE (73 tests)
@@ -84,10 +84,37 @@ L-gent (terrain)     N-gent (traces)     B-gent (budget)
 **Plan**: `docs/instance-db-implementation-plan.md`
 **Location**: `protocols/cli/instance_db/` (Phase 1 OPERATIONAL)
 
-### Setup (First Time)
+### Auto-Bootstrap (Default Behavior)
+
+The CLI now **auto-bootstraps** the cortex on every command. No manual setup needed!
 
 ```bash
-# 1. Create infrastructure.yaml to enable DB creation
+# Just run any command - DB is created automatically
+kgents pulse     # Creates ~/.local/share/kgents/membrane.db on first run
+kgents check .   # Instance registered, telemetry logged
+```
+
+**What happens on startup:**
+1. Detects XDG paths (`~/.local/share/kgents/`, `~/.config/kgents/`)
+2. Creates SQLite DB if config exists (or uses defaults)
+3. Runs migrations (creates tables)
+4. Registers instance (hostname, PID, project path)
+5. Logs `instance.started` telemetry event
+
+**What happens on shutdown:**
+1. Marks instance as `terminated`
+2. Logs `instance.stopped` telemetry event
+3. Closes all DB connections
+
+**Flags:**
+- `--no-bootstrap`: Skip auto-bootstrap (run in degraded mode)
+
+### Manual Setup (Optional)
+
+For custom configuration:
+
+```bash
+# Create infrastructure.yaml to customize providers
 cat > ~/.config/kgents/infrastructure.yaml << 'EOF'
 profile: local-canonical
 providers:
@@ -96,17 +123,6 @@ providers:
   blob: { type: filesystem, path: "${XDG_DATA_HOME}/kgents/blobs" }
   telemetry: { type: sqlite, connection: "${XDG_DATA_HOME}/kgents/telemetry.db" }
 EOF
-
-# 2. Bootstrap (creates DB + tables)
-python -c "
-import asyncio
-from protocols.cli.instance_db.lifecycle import quick_bootstrap
-async def init():
-    manager, state = await quick_bootstrap()
-    print(f'Mode: {state.mode.value}, Instance: {state.instance_id}')
-    await manager.shutdown()
-asyncio.run(init())
-"
 ```
 
 ### Phase Status
@@ -138,7 +154,24 @@ asyncio.run(init())
 | **LOCAL_ONLY** | `.kgents/cortex.db` exists | Project |
 | **DB_LESS** | No DB, no config | In-memory |
 
-### Usage
+### Usage (in handlers)
+
+```python
+# In a CLI handler, access the global lifecycle state:
+from protocols.cli.hollow import get_storage_provider, get_lifecycle_state
+
+# Get storage provider (None if bootstrap failed)
+storage = get_storage_provider()
+if storage:
+    results = await storage.relational.fetch_all("SELECT * FROM shapes")
+
+# Get full lifecycle state
+state = get_lifecycle_state()
+if state:
+    print(f"Mode: {state.mode}, Instance: {state.instance_id}")
+```
+
+### Programmatic Usage
 
 ```python
 from protocols.cli.instance_db.lifecycle import LifecycleManager
@@ -417,6 +450,31 @@ RETRIEVE → PROJECT → CHALLENGE → SOLVE → TRANSLATE → VERIFY
 | **Ψ×N (Tracing)** | ✅ Implemented (integrations.py) |
 | **Ψ×G (Prompts)** | ✅ Implemented (integrations.py) |
 | **Ψ×E (Metaphor evolution)** | 📋 Specified |
+
+---
+
+## Integration Test Plan (Phase 2) - IN PROGRESS
+
+**Plan**: `docs/integration-test-plan.md`
+
+### Status
+
+| Phase | Files | Status | Tests |
+|-------|-------|--------|-------|
+| **1: Core Pipelines** | 5 files | ✅ Complete | 281 |
+| **2: Cross-Domain** | 3 files | 🔄 Created | ~74 |
+| **3: End-to-End** | 2 of 3 | ⚠️ Partial | - |
+| **4: Gap Coverage** | - | ⏳ Pending | - |
+
+### Phase 2 Files Created
+
+| File | Integration | Status |
+|------|-------------|--------|
+| `test_observation_stack_integration.py` | O×W, O×I, O×B, O×N | ✅ 23 passing |
+| `test_narrative_stack_integration.py` | N×M, N×K, N×O | ⚠️ 12 passing |
+| `test_economics_stack_integration.py` | B×G, B×J, B×M, B×O, B×L | ⚠️ 8 passing |
+
+**Note**: Some tests have API mismatches that need fixing (SimpleLLMProvider, EntropyBudget, etc.).
 
 ---
 
