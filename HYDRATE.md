@@ -20,7 +20,7 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 **Status**: B×G Phase 4 (Semantic Inflation) COMPLETE ✅
 **Branch**: `main`
-**Latest Commit**: uncommitted (B×G Phase 4 - Semantic Inflation)
+**Latest Commit**: `d8babc1` - Linter fixes + O-gent test setup
 
 **Current State**:
 - **B×G Phase 4**: ✅ Semantic Inflation (78 tests) - `agents/b/semantic_inflation.py`
@@ -33,8 +33,8 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 - **B-gent Total**: 427 tests passed
 
 **Next Steps**:
-1. **Commit**: Stage and commit B×G Phase 4 work
-2. **B×G Phase 5**: Grammar Insurance (volatility hedging) or JIT Efficiency
+1. **B×G Phase 5**: Grammar Insurance (volatility hedging) or JIT Efficiency
+2. **O-gent Phase 2**: BootstrapWitness integration (tests scaffolded)
 3. **CLI Phase 5**: Big 5 Genera (`genus/*.py`)
 
 ---
@@ -65,9 +65,10 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 | **D-gents** | ~80% | Minor SQL/Redis backends |
 | **L-gents** | ~70% | Vector DB integration |
 | **G-gents** | ~90% | Phase 7 done |
+| **O-gents** | ~30% | Phase 1 scaffolded, Phase 2+ needed |
 | **I-gents** | ~10% | TUI, evolve.py, sessions |
 | **F-gents** | ~40% | Forge loop, ALO format |
-| **M/N/O/psi** | 0% | Missing |
+| **M/N/psi** | 0% | Missing |
 
 ---
 
