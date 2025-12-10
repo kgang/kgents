@@ -339,6 +339,68 @@ Memory has costs: storage, retrieval, consolidation. Integrates with B-gent econ
 
 ---
 
+## Cartographic Primitives
+
+### CartographerAgent
+
+See [holographic.md#the-cartography-layer](holographic.md#the-cartography-layer).
+
+```python
+CartographerAgent: (ContextVector, Resolution) → HoloMap
+```
+
+The Cartographer projects high-dimensional memory space into navigable topology.
+
+**Integrations**:
+- L-gent: Provides embedding space (terrain)
+- N-gent: Provides SemanticTraces (desire lines)
+- B-gent: Constrains resolution via token budget
+
+### PathfinderAgent
+
+```python
+PathfinderAgent: Goal → NavigationPlan
+```
+
+Navigates via desire lines (historical paths) rather than inventing new routes.
+
+Two modes:
+1. **Desire Line Navigation**: Follow historical paths (safe, high confidence)
+2. **Bushwhacking**: No history, must explore (risky, low confidence)
+
+### ContextInjector
+
+```python
+ContextInjector: (AgentState, Task) → OptimalContext
+```
+
+Produces optimal, budget-constrained, foveated context for any turn.
+
+**The answer to**: "What is the most perfect context injection for any given turn?"
+
+---
+
+## Integration Map (Updated)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      M-gent (Cognitive)                      │
+│    RecollectionAgent, ConsolidationAgent, ProspectiveAgent   │
+│    CartographerAgent, PathfinderAgent, ContextInjector       │
+├─────────────────────────────────────────────────────────────┤
+│           ↕ terrain              ↕ traces                    │
+│    ┌─────────────┐         ┌─────────────┐                  │
+│    │   L-gent    │         │   N-gent    │                  │
+│    │ (embeddings)│         │  (history)  │                  │
+│    └─────────────┘         └─────────────┘                  │
+├─────────────────────────────────────────────────────────────┤
+│                      D-gent (Storage)                        │
+│    VolatileAgent, PersistentAgent, UnifiedMemory, VectorAgent│
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## See Also
 
 - [holographic.md](holographic.md) - Architecture details

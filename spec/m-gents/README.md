@@ -354,6 +354,42 @@ hypnagogic_knowledge = HypnagogicSymbiont(
 
 ---
 
+## Memory as Orientation
+
+M-gents evolved beyond retrieval ("What do I know about X?") to **orientation** ("Where is X in relation to Y, and how do I get there?").
+
+### The Cartography Layer
+
+| Agent | Purpose |
+|-------|---------|
+| **CartographerAgent** | Generate HoloMaps from memory space |
+| **PathfinderAgent** | Navigate via desire lines |
+| **ContextInjector** | Produce optimal context for any turn |
+
+### Key Concepts
+
+| Concept | Definition |
+|---------|------------|
+| **Landmark** | Dense memory cluster (Attractor) |
+| **Desire Line** | Historical transition probability (from N-gent traces) |
+| **Void** | Unexplored region ("Here be dragons") |
+| **Horizon** | Progressive disclosure boundary |
+| **Foveation** | Budget-constrained detail rendering |
+
+### The Answer to Context Injection
+
+> "What is the most perfect context injection for any given turn?"
+
+The `ContextInjector` produces a foveated view of the agent's memory space:
+- **Focal zone**: Full detail for current position and goal
+- **Blur zone**: Summaries for adjacent but not immediately relevant areas
+- **Horizon**: Boundary beyond which lies unexplored territory
+- **Desire lines**: Navigation hints based on historical paths
+
+This replaces "dump everything relevant" with "show a map of the territory."
+
+---
+
 ## See Also
 
 - [anatomy.md](../anatomy.md) - Symbiont and Hypnagogic patterns

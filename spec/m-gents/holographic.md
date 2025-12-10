@@ -148,6 +148,60 @@ graph TD
 
 ---
 
+## The Cartography Layer
+
+M-gents do not just store points; they understand the topology between them.
+
+### From Points to Maps
+
+Traditional M-gent operations:
+- `store(key, value)` → Add a point
+- `retrieve(key)` → Find nearest points
+
+Cartographic M-gent operations:
+- `map(context)` → Generate topology of nearby space
+- `navigate(from, to)` → Find path via desire lines
+- `inject(state, goal)` → Produce optimal context
+
+### Key Abstractions
+
+| Concept | Definition | Integration |
+|:--------|:-----------|:------------|
+| **Landmark** | A dense cluster of resonant memories | L-gent clustering |
+| **Desire Line** | A transition probability derived from traces | N-gent SemanticTrace |
+| **Void** | Sparse regions of latent space | Density analysis |
+| **Horizon** | The boundary of progressive disclosure | B-gent budget |
+
+### The Foveation Principle
+
+Human vision is foveated: high resolution at the center, low at the periphery. M-gent context injection follows the same principle:
+
+```
+┌──────────────────────────────────────────────────────┐
+│                    CONTEXT BUDGET                     │
+│                                                       │
+│     ┌─────────────────────────────────┐              │
+│     │      BLUR ZONE (summaries)       │              │
+│     │   ┌───────────────────────┐     │              │
+│     │   │    FOCAL ZONE         │     │              │
+│     │   │   (full detail)       │     │              │
+│     │   │      ◉ YOU            │     │              │
+│     │   │      ARE              │     │              │
+│     │   │      HERE             │     │              │
+│     │   └───────────────────────┘     │              │
+│     │                                  │              │
+│     └─────────────────────────────────┘              │
+│                                                       │
+│     ░░░░░░░░░░ HORIZON (fog) ░░░░░░░░░░              │
+└──────────────────────────────────────────────────────┘
+```
+
+- **Focal zone**: Full memories, complete detail
+- **Blur zone**: Landmark labels, summary sentences
+- **Beyond horizon**: Invisible (not in context)
+
+---
+
 ## See Also
 
 - [primitives.md](primitives.md) - M-gent agent types

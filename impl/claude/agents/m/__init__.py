@@ -27,9 +27,19 @@ Phase 4 - L-gent + B-gent Integration:
 - ResolutionBudget: Resolution as economic resource
 - MemoryEconomicsDashboard: Budget monitoring
 
+Phase 5 - Holographic Cartography:
+- CartographerAgent: Generate HoloMaps from memory space
+- PathfinderAgent: Navigate via desire lines
+- ContextInjector: Produce optimal context for any turn
+- HoloMap: Fuzzy isomorphism of knowledge state
+- Attractor: Dense memory cluster (landmark)
+- WeightedEdge: Desire line (historical path)
+- Horizon: Progressive disclosure boundary
+
 Integration:
 - D-gent: Storage layer (UnifiedMemory, VectorAgent)
 - L-gent: Embedding space (VectorBackend, Embedder)
+- N-gent: Semantic traces (desire lines)
 - B-gent: Memory economics (token budget)
 """
 
@@ -117,6 +127,56 @@ from .memory_budget import (
     create_mock_bank,
 )
 
+# Phase 5: Holographic Cartography
+from .cartography import (
+    # Core types
+    HoloMap,
+    Attractor,
+    WeightedEdge,
+    ContextVector,
+    Horizon,
+    Region,
+    Void,
+    Resolution,
+    # Navigation types
+    Goal,
+    NavigationPlan,
+    # Context injection types
+    FoveatedView,
+    InjectionRequest,
+    OptimalContext,
+    # Factory functions
+    create_empty_holomap,
+    create_context_vector,
+    create_attractor,
+    create_desire_line,
+)
+from .cartographer import (
+    CartographerAgent,
+    CartographerConfig,
+    DesireLineComputer,
+    # Mock implementations
+    MockVectorSearch,
+    MockTraceStore,
+    MockTrace,
+    # Factory functions
+    create_cartographer,
+    create_mock_cartographer,
+)
+from .pathfinder import (
+    PathfinderAgent,
+    PathfinderConfig,
+    PathAnalysis,
+    analyze_path,
+    create_pathfinder,
+)
+from .context_injector import (
+    ContextInjector,
+    InjectorConfig,
+    inject_context,
+    create_context_injector,
+)
+
 __all__ = [
     # Core
     "HolographicMemory",
@@ -189,4 +249,42 @@ __all__ = [
     "InsufficientBudgetError",
     "create_budgeted_memory",
     "create_mock_bank",
+    # Phase 5: Holographic Cartography
+    "HoloMap",
+    "Attractor",
+    "WeightedEdge",
+    "ContextVector",
+    "Horizon",
+    "Region",
+    "Void",
+    "Resolution",
+    "Goal",
+    "NavigationPlan",
+    "FoveatedView",
+    "InjectionRequest",
+    "OptimalContext",
+    "create_empty_holomap",
+    "create_context_vector",
+    "create_attractor",
+    "create_desire_line",
+    # Cartographer
+    "CartographerAgent",
+    "CartographerConfig",
+    "DesireLineComputer",
+    "MockVectorSearch",
+    "MockTraceStore",
+    "MockTrace",
+    "create_cartographer",
+    "create_mock_cartographer",
+    # Pathfinder
+    "PathfinderAgent",
+    "PathfinderConfig",
+    "PathAnalysis",
+    "analyze_path",
+    "create_pathfinder",
+    # Context Injector
+    "ContextInjector",
+    "InjectorConfig",
+    "inject_context",
+    "create_context_injector",
 ]
