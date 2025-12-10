@@ -27,10 +27,26 @@ Phase 2 Components (Read-Time):
 - Bard: The storyteller agent
 - ForensicBard: Crash diagnosis specialist
 
-Future Phases:
-- Phase 3: EchoChamber (replay simulation)
-- Phase 4: Chronicle (multi-agent weaving)
-- Phase 5: Integrations (D/L/M/I/B-gent)
+Phase 3 Components (Replay):
+- EchoMode: STRICT vs LUCID replay modes
+- Echo: Simulation of a past trace
+- EchoChamber: Replay engine with navigation
+- LucidDreamer: Counterfactual exploration
+- DriftReport: Model drift detection
+
+Phase 4 Components (Multi-Agent):
+- Interaction: Point where agent timelines intersect
+- Chronicle: Multi-agent crystal weaving
+- ChronicleBuilder: Fluent API for chronicles
+- TimelineView: Single agent's timeline view
+- CorrelationDetector: Interaction detection
+
+Phase 5 Components (Integrations):
+- IndexedCrystalStore: L-gent semantic indexing
+- ResonantCrystalStore: M-gent holographic memory
+- VisualizableBard: I-gent visualization support
+- BudgetedBard: B-gent token budgeting
+- NarrativeOrchestrator: Unified integration layer
 
 Example (Phase 1 - Recording):
     >>> from agents.n import Historian, MemoryCrystalStore, SemanticTrace
@@ -118,6 +134,40 @@ from .bard import (
     Verbosity,
 )
 
+# Echo Chamber (Phase 3 - Replay)
+from .echo_chamber import (
+    CounterfactualResult,
+    DriftReport,
+    Echo,
+    EchoChamber,
+    EchoMode,
+    LucidDreamer,
+    SimpleDriftMeasurer,
+    quick_drift_check,
+)
+
+# Chronicle (Phase 4 - Multi-Agent)
+from .chronicle import (
+    Chronicle,
+    ChronicleBuilder,
+    CorrelationDetector,
+    Interaction,
+    TimelineView,
+)
+
+# Integrations (Phase 5 - D/L/M/I/B-gent)
+from .integrations import (
+    BudgetedBard,
+    CrystalMemoryPattern,
+    IndexedCrystalStore,
+    InsufficientBudgetError,
+    NarrationCost,
+    NarrativeOrchestrator,
+    NarrativeVisualization,
+    ResonantCrystalStore,
+    VisualizableBard,
+)
+
 __all__ = [
     # Core Types
     "Action",
@@ -153,4 +203,29 @@ __all__ = [
     "Perspective",
     "SimpleLLMProvider",
     "Verbosity",
+    # Echo Chamber (Phase 3)
+    "CounterfactualResult",
+    "DriftReport",
+    "Echo",
+    "EchoChamber",
+    "EchoMode",
+    "LucidDreamer",
+    "SimpleDriftMeasurer",
+    "quick_drift_check",
+    # Chronicle (Phase 4)
+    "Chronicle",
+    "ChronicleBuilder",
+    "CorrelationDetector",
+    "Interaction",
+    "TimelineView",
+    # Integrations (Phase 5)
+    "BudgetedBard",
+    "CrystalMemoryPattern",
+    "IndexedCrystalStore",
+    "InsufficientBudgetError",
+    "NarrationCost",
+    "NarrativeOrchestrator",
+    "NarrativeVisualization",
+    "ResonantCrystalStore",
+    "VisualizableBard",
 ]

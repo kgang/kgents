@@ -6,17 +6,16 @@ Keep it concise—focus on current state and recent work.
 
 ## TL;DR
 
-**Status**: All committed ✅ | **Branch**: `main` | **Latest**: `6152774`
+**Status**: N-gent Phase 5 COMPLETE ✅ | **Branch**: `main` | **Latest**: `89f831f`
 
 **Recent Commits**:
-- `6152774` fix: Lint fixes
-- `95a2424` docs: N-gent + Ψ-gent specs
 - `89f831f` feat(n-gent): Phase 1 Historian (146 tests)
 - `26dc88a` feat(m-gent): Phase 2-4 (148 tests)
 - `da0a3f1` feat(f-gent): Gravity (50 tests)
-- `5de13e0` feat(bootstrap): DNA + Umwelt (84 tests)
 
-**Next Steps**: N-gent Phase 3 (EchoChamber) | Ψ-gent Phase 1 | DNA migration
+**Uncommitted**: N-gent Phases 3-5 (echo_chamber.py, chronicle.py, integrations.py) - 107 new tests
+
+**Next Steps**: Commit N-gent | Ψ-gent Phase 1 | DNA migration
 
 ---
 
@@ -32,7 +31,7 @@ Keep it concise—focus on current state and recent work.
 | I | 85 | 138 | ✅ Stigmergic |
 | F | 65 | 119 | ✅ Gravity |
 | M | 95 | 148 | ✅ Phase 4 |
-| N | 60 | 146 | ✅ Phase 1-2 |
+| N | 90 | 253 | ✅ Phase 1-5 |
 | Ψ | 5 | - | Spec only |
 | **Total** | - | **2800+** | ✅ |
 
@@ -41,9 +40,11 @@ Keep it concise—focus on current state and recent work.
 ## Current Focus
 
 ### N-gent: Narrative Agents
-- **Phase 1** ✅: Historian, CrystalStore, HistorianTap (81 tests)
-- **Phase 2** ✅: Bard, ForensicBard, Narrative (65 tests)
-- **Phase 3**: EchoChamber, LucidDreamer (pending)
+- **Phase 1** ✅: Historian, CrystalStore, HistorianTap
+- **Phase 2** ✅: Bard, ForensicBard, Narrative
+- **Phase 3** ✅: EchoChamber, LucidDreamer, DriftReport
+- **Phase 4** ✅: Chronicle, ChronicleBuilder, CorrelationDetector
+- **Phase 5** ✅: IndexedCrystalStore, ResonantCrystalStore, BudgetedBard, VisualizableBard
 
 ### M-gent: Memory Agents
 - **Phase 2** ✅: D-gent backend, AssociativeWeb, TemporalMemory
@@ -79,4 +80,8 @@ Keep it concise—focus on current state and recent work.
 | D×M UnifiedMemory | ✅ |
 | M×L VectorHolographic | ✅ |
 | M×B BudgetedMemory | ✅ |
+| N×L IndexedCrystalStore | ✅ |
+| N×M ResonantCrystalStore | ✅ |
+| N×I VisualizableBard | ✅ |
+| N×B BudgetedBard | ✅ |
 | O×W Panopticon | ✅ |
