@@ -137,15 +137,15 @@ if [ "${KGENTS_SKIP_PROPERTY:-0}" != "1" ]; then
 fi
 
 # =============================================================================
-# Optional: Chaos tests (accursed share)
+# Chaos tests (accursed share) - run by default, skip with KGENTS_SKIP_CHAOS=1
 # =============================================================================
-if [ "${KGENTS_RUN_CHAOS:-0}" = "1" ]; then
+if [ "${KGENTS_SKIP_CHAOS:-0}" != "1" ]; then
     info "Running chaos tests (accursed share)..."
     cd "$REPO_ROOT/impl/claude"
     if uv run pytest -m "accursed_share" --tb=short -q 2>&1; then
         success "Chaos tests passed"
     else
-        info "Chaos tests discovered issues (expected)"
+        info "Chaos tests discovered issues (expected, non-blocking)"
     fi
     cd "$REPO_ROOT"
     echo ""
