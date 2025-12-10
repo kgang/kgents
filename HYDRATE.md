@@ -6,31 +6,103 @@ Keep it concise—focus on current state and recent work.
 
 ## TL;DR
 
-**Status**: All Tests Passing ✅ | **Branch**: `main` | **Tests**: 4722 collected, 4613 passed, 110 skipped
+**Status**: All Tests Passing ✅ | **Branch**: `main` | **Tests**: 4909+ collected
 
 **Recent Work**:
-- **Ψ-gent v3.0 Spec Rewrite** ← CURRENT
-- E-gent Thermodynamic Reconceptualization
-- Test evolution plan EXECUTED (all 5 phases)
+- **E-gent Dependencies** ← COMPLETE (L-gent 49 tests, B-gent 29 tests)
+- E-gent Implementation Rebuild (PLANNING COMPLETE)
+- Ψ-gent v1 (104 tests)
 
 ---
 
-## Ψ-gent v3.0 Spec (NEW)
+## E-gent Dependencies (COMPLETE)
 
-Complete rewrite of `spec/psi-gents/` based on first-principles analysis.
+### L-gent Integration (`agents/l/egent_integration.py`) - 49 tests
 
-### Key Changes
+| Feature | Purpose |
+|---------|---------|
+| `MutationSchema` | Isomorphic transformation patterns with Gibbs ΔG |
+| `STANDARD_SCHEMAS` | 14 schemas (substitute, extract, inline, annotate, restructure) |
+| `CodeIntent` | Teleological field (embedding + source + confidence) |
+| `infer_types()` | Static type inference for semantic stability |
+| `types_compatible()` | Check mutation preserves type structure |
+| `EgentSemanticRegistry` | Extended registry with archetype management |
 
-| v2.0 | v3.0 | Why |
-|------|------|-----|
-| MHC 15 levels | `abstraction: 0.0-1.0` | Cargo cult → continuous |
-| Jungian Shadow | CHALLENGE stage | String manipulation → adversarial testing |
-| Lacanian RSI | VERIFY structural checks | Ceremonial → measurable |
-| 5 value dimensions | 3 distortion metrics | Aspirational → computable |
-| MetaphorUmwelt/DNA | Removed | Over-specified → learn from data |
-| PsychopompAgent | MetaphorEngine | 4-axis tensor → 6-stage pipeline |
+### B-gent Integration (`agents/b/egent_integration.py`) - 29 tests
 
-### New Architecture
+| Feature | Purpose |
+|---------|---------|
+| `PredictionMarket` | Betting on mutation success with AMM-style odds |
+| `Sun` | Grant system for exogenous energy |
+| `StakingPool` | Skin-in-the-game for infect operations |
+| `EvolutionEconomics` | Combined system (bank + market + sun + staking) |
+
+---
+
+## E-gent Rebuild Plan
+
+**Plan**: `docs/e-gent-rebuild-plan.md`
+
+### Next Steps (Phase 0-7)
+
+| Phase | Component | Status |
+|-------|-----------|--------|
+| 0 | `types.py` | ⏳ Pending |
+| 1 | `demon.py` (Teleological Demon) | ⏳ Pending |
+| 2 | `mutator.py` (Schema-based) | ⏳ Pending |
+| 3 | `market.py` (uses B-gent PredictionMarket) | ✅ Dependency ready |
+| 4 | `sun.py` (uses B-gent Sun) | ✅ Dependency ready |
+| 5 | `library.py` (Viral Library) | ⏳ Pending |
+| 6 | `phage.py` (Active mutation vectors) | ⏳ Pending |
+| 7 | `cycle.py` (Thermodynamic cycle) | ⏳ Pending |
+
+### Strategy
+
+Build in `agents/e/v2/` parallel to existing, then cutover.
+
+---
+
+## E-gent Teleological Thermodynamics (v2)
+
+Refined from v1 based on critique of "Blind Watchmaker Paradox":
+
+### Key Additions
+
+| Concept | Purpose |
+|---------|---------|
+| **Gibbs Free Energy** | ΔG = ΔH - TΔS selection criterion |
+| **Teleological Demon** | Intent alignment check (prevents parasites) |
+| **The Sun (Grants)** | Exogenous energy for high-risk work |
+| **Semantic Schemas** | L-gent isomorphic mutations (not random) |
+| **Four Laws** | Added Fourth Law: Teleology constrains thermodynamics |
+
+### The Refined Motto
+
+> *"The Sun gives (Energy/Intent). The Demon selects (Efficiency). The Phage adapts (Structure)."*
+> *"Without the Sun, the Demon starves. Without the Demon, the Sun burns."*
+
+### Five-Layer Selection
+
+1. Syntactic viability (FREE)
+2. Semantic stability (CHEAP) - L-gent type lattice
+3. **Teleological alignment (CHEAP-ISH)** ← Prevents parasites
+4. Thermodynamic viability (FREE) - Gibbs check
+5. Economic viability (FREE) - Market quote
+
+### Key Insight: Parasitic Code Prevention
+
+Pure thermodynamics leads to parasitic code (lowest energy = empty/hardcoded).
+The Teleological Field (Intent embedding) constrains evolution to PURPOSE.
+
+---
+
+## Ψ-gent v3.0 Implementation (NEW)
+
+**Location**: `impl/claude/agents/psi/v3/`
+**Plan**: `docs/psi-gent-v3-implementation-plan.md`
+**Tests**: 104 passed
+
+### Architecture
 
 ```
 RETRIEVE → PROJECT → CHALLENGE → SOLVE → TRANSLATE → VERIFY
@@ -38,27 +110,35 @@ RETRIEVE → PROJECT → CHALLENGE → SOLVE → TRANSLATE → VERIFY
     └──────────┴──────────── LEARN ←─────────┘
 ```
 
-### New Spec Files
+### Files (~1500 lines total)
 
-| File | Content |
-|------|---------|
-| `README.md` | Philosophy, overview, migration guide |
-| `types.md` | Minimal, measurable types |
-| `retrieval.md` | Embedding + learning-based retrieval |
-| `projection.md` | LLM-mediated concept mapping |
-| `challenge.md` | Adversarial testing (4 challenge types) |
-| `solving.md` | Executable operations with state tracking |
-| `translation.md` | Reverse mapping with constraint verification |
-| `verification.md` | 3-dimensional distortion measurement |
-| `learning.md` | Contextual bandits for metaphor selection |
-| `integration.md` | L/B/D/N/G/E-gent integration |
+| File | Purpose | Tests |
+|------|---------|-------|
+| `types.py` | Core types (Problem, Metaphor, Distortion) | 30 |
+| `corpus.py` | Standard metaphors (Plumbing, Ecosystem, etc.) | 20 |
+| `engine.py` | Six-stage pipeline with backtracking | 33 |
+| `learning.py` | Thompson sampling for retrieval | 21 |
+| `integrations.py` | L/B/D/N/G-gent adapters | - |
 
-### Core Improvements
+### Key Improvements Over v2.0
 
-1. **LLM-in-the-loop**: All semantic operations use LLM
-2. **Real search**: Backtracking on failure, not linear iteration
-3. **Measurable distortion**: structural_loss + round_trip_error + prediction_failures
-4. **Learning**: Thompson sampling for retrieval, abstraction learning
+| v2.0 | v3.0 | Benefit |
+|------|------|---------|
+| MHC 15 levels | `abstraction: 0.0-1.0` | Measurable |
+| 4-axis tensor | 3 distortion metrics | Computable |
+| PsychopompAgent | MetaphorEngine | 6-stage pipeline |
+| String shadows | CHALLENGE stage | Adversarial testing |
+| MetaphorUmwelt/DNA | Learning | Data-driven |
+
+### Standard Corpus
+
+6 metaphors with 3-5 operations each:
+1. **Plumbing**: flow, constriction, reservoir, bypass
+2. **Ecosystem**: niches, symbiosis, invasive species
+3. **Traffic**: bottlenecks, lanes, signals, routing
+4. **Medicine**: diagnosis, treatment, monitoring
+5. **Architecture**: foundations, load-bearing, renovation
+6. **Gardening**: growth, pruning, weeding
 
 ---
 
@@ -70,24 +150,35 @@ RETRIEVE → PROJECT → CHALLENGE → SOLVE → TRANSLATE → VERIFY
 | D×L, D×M, M×L, M×B | ✅ |
 | N×L, N×M, N×I, N×B | ✅ |
 | O×W Panopticon | ✅ |
-| E×B (PredictionMarket) | 📋 Specified |
-| **Ψ×L (Embeddings)** | 📋 Specified |
-| **Ψ×B (Budgets)** | 📋 Specified |
-| **Ψ×D (Learning persistence)** | 📋 Specified |
-| **Ψ×N (Tracing)** | 📋 Specified |
-| **Ψ×G (Prompts)** | 📋 Specified |
+| **E×B (Market+Grants)** | 📋 Specified (v2) |
+| **E×L (Schemas+Intent)** | 📋 Specified (v2) |
+| **Ψ×L (Embeddings)** | ✅ Implemented (integrations.py) |
+| **Ψ×B (Budgets)** | ✅ Implemented (integrations.py) |
+| **Ψ×D (Learning persistence)** | ✅ Implemented (integrations.py) |
+| **Ψ×N (Tracing)** | ✅ Implemented (integrations.py) |
+| **Ψ×G (Prompts)** | ✅ Implemented (integrations.py) |
 | **Ψ×E (Metaphor evolution)** | 📋 Specified |
 
 ---
 
-## Test Infrastructure
+## Test Infrastructure (Phase 6 Complete)
 
 | Component | Status |
 |-----------|--------|
-| conftest.py hierarchy | ✅ 4 files |
-| Law markers | ✅ 22 tests via `-m "law"` |
+| conftest.py hierarchy | ✅ 5 files (root, agents, bootstrap, testing, L-gent) |
+| Law markers | ✅ **63 tests** via `-m "law"` |
 | WitnessPlugin | ✅ `pytest --witness` |
-| Accursed share tests | ✅ 6 chaos tests |
+| Accursed share tests | ✅ **23 chaos tests** |
+| Property-based tests | ✅ `test_laws_property.py` (hypothesis) |
+| CI laws workflow | ✅ `.github/workflows/laws.yml` |
+
+### Phase 6 Additions
+
+- **laws.yml**: CI workflow for law verification + property tests + chaos tests
+- **test_laws_property.py**: Hypothesis-powered category law verification
+- **test_accursed_share_extended.py**: 23 chaos tests for D/L/N/Cross-agent scenarios
+- **L-gent conftest.py**: Shared `registry` and `lattice` fixtures
+- **Law markers**: Added to test_lens.py, test_symbiont.py, test_lattice.py
 
 ---
 
@@ -109,7 +200,9 @@ RETRIEVE → PROJECT → CHALLENGE → SOLVE → TRANSLATE → VERIFY
 
 | Doc | Content |
 |-----|---------|
+| `docs/psi-gent-v3-implementation-plan.md` | **NEW** - v3.0 impl plan |
+| `spec/e-gents/thermodynamics.md` | **v2** - Teleological thermodynamics |
+| `spec/e-gents/README.md` | **v2** - Updated overview |
+| `spec/e-gents/memory.md` | Viral Library spec |
 | `spec/psi-gents/*.md` | v3.0 Morphic Engine spec (10 files) |
-| `spec/e-gents/thermodynamics.md` | Thermodynamic evolution model |
-| `docs/plans-synthesis.md` | Consolidated architecture (7 docs → 150 lines) |
-| `docs/test-evolution-plan.md` | 5-phase test strategy (EXECUTED) |
+| `docs/plans-synthesis.md` | Consolidated architecture |

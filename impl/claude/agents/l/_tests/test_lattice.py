@@ -2,6 +2,14 @@
 Tests for L-gent Lattice Layer (Phase 4)
 
 Tests type compatibility, composition verification, and composition planning.
+
+Lattice Laws:
+- Reflexivity: A ≤ A
+- Transitivity: A ≤ B and B ≤ C implies A ≤ C
+- Antisymmetry: A ≤ B and B ≤ A implies A = B (prevents cycles)
+
+Meet/Join Laws:
+- Commutativity: meet(A,B) = meet(B,A), join(A,B) = join(B,A)
 """
 
 import pytest
@@ -13,20 +21,10 @@ from agents.l.lattice import (
     TypeNode,
     create_lattice,
 )
-from agents.l.registry import Registry
 from agents.l.types import CatalogEntry, EntityType
 
 
-@pytest.fixture
-def registry():
-    """Create a fresh registry for each test."""
-    return Registry()
-
-
-@pytest.fixture
-def lattice(registry):
-    """Create a lattice with a registry."""
-    return create_lattice(registry)
+# registry and lattice fixtures imported from conftest.py
 
 
 # ─────────────────────────────────────────────────────────────
@@ -93,104 +91,106 @@ def test_never_is_subtype_of_all(lattice):
 
 
 # ─────────────────────────────────────────────────────────────
-# Subtype Checking Tests
+# Subtype Checking Tests (Law Verification)
 # ─────────────────────────────────────────────────────────────
 
 
-def test_is_subtype_reflexive(lattice):
-    """Test reflexivity: A ≤ A."""
-    assert lattice.is_subtype("str", "str")
-    assert lattice.is_subtype("int", "int")
+@pytest.mark.law("lattice")
+class TestSubtypeLaws:
+    """Tests for lattice subtype ordering laws."""
 
+    def test_is_subtype_reflexive(self, lattice):
+        """Test reflexivity law: A ≤ A."""
+        assert lattice.is_subtype("str", "str")
+        assert lattice.is_subtype("int", "int")
 
-def test_is_subtype_transitive(lattice):
-    """Test transitivity: If A ≤ B and B ≤ C then A ≤ C."""
-    # Register types: SpecialInt ≤ int ≤ Any
-    lattice.register_type(
-        TypeNode(id="SpecialInt", kind=TypeKind.PRIMITIVE, name="Special Integer")
-    )
-    lattice.add_subtype_edge(
-        SubtypeEdge(
-            subtype_id="SpecialInt", supertype_id="int", reason="refinement of int"
+    def test_is_subtype_transitive(self, lattice):
+        """Test transitivity law: If A ≤ B and B ≤ C then A ≤ C."""
+        # Register types: SpecialInt ≤ int ≤ Any
+        lattice.register_type(
+            TypeNode(id="SpecialInt", kind=TypeKind.PRIMITIVE, name="Special Integer")
         )
-    )
-
-    # Transitivity: SpecialInt ≤ int ≤ Any
-    assert lattice.is_subtype("SpecialInt", "int")
-    assert lattice.is_subtype("int", "Any")
-    assert lattice.is_subtype("SpecialInt", "Any")  # Transitive
-
-
-def test_is_subtype_direct_edge(lattice):
-    """Test direct edge detection."""
-    lattice.register_type(TypeNode(id="JSON", kind=TypeKind.RECORD, name="JSON Object"))
-    lattice.add_subtype_edge(
-        SubtypeEdge(
-            subtype_id="JSON", supertype_id="str", reason="JSON is string-based"
-        )
-    )
-
-    assert lattice.is_subtype("JSON", "str")
-
-
-def test_is_subtype_prevents_cycles(lattice):
-    """Test that adding a cycle is prevented."""
-    lattice.register_type(TypeNode(id="A", kind=TypeKind.PRIMITIVE, name="Type A"))
-    lattice.register_type(TypeNode(id="B", kind=TypeKind.PRIMITIVE, name="Type B"))
-
-    # Add A ≤ B
-    lattice.add_subtype_edge(
-        SubtypeEdge(subtype_id="A", supertype_id="B", reason="test")
-    )
-
-    # Try to add B ≤ A (would create cycle)
-    with pytest.raises(ValueError, match="would create cycle"):
         lattice.add_subtype_edge(
-            SubtypeEdge(subtype_id="B", supertype_id="A", reason="test")
+            SubtypeEdge(
+                subtype_id="SpecialInt", supertype_id="int", reason="refinement of int"
+            )
         )
 
+        # Transitivity: SpecialInt ≤ int ≤ Any
+        assert lattice.is_subtype("SpecialInt", "int")
+        assert lattice.is_subtype("int", "Any")
+        assert lattice.is_subtype("SpecialInt", "Any")  # Transitive
+
+    def test_is_subtype_direct_edge(self, lattice):
+        """Test direct edge detection."""
+        lattice.register_type(
+            TypeNode(id="JSON", kind=TypeKind.RECORD, name="JSON Object")
+        )
+        lattice.add_subtype_edge(
+            SubtypeEdge(
+                subtype_id="JSON", supertype_id="str", reason="JSON is string-based"
+            )
+        )
+
+        assert lattice.is_subtype("JSON", "str")
+
+    def test_is_subtype_prevents_cycles(self, lattice):
+        """Test antisymmetry law enforcement: A ≤ B and B ≤ A implies A = B (prevents cycles)."""
+        lattice.register_type(TypeNode(id="A", kind=TypeKind.PRIMITIVE, name="Type A"))
+        lattice.register_type(TypeNode(id="B", kind=TypeKind.PRIMITIVE, name="Type B"))
+
+        # Add A ≤ B
+        lattice.add_subtype_edge(
+            SubtypeEdge(subtype_id="A", supertype_id="B", reason="test")
+        )
+
+        # Try to add B ≤ A (would create cycle)
+        with pytest.raises(ValueError, match="would create cycle"):
+            lattice.add_subtype_edge(
+                SubtypeEdge(subtype_id="B", supertype_id="A", reason="test")
+            )
+
 
 # ─────────────────────────────────────────────────────────────
-# Meet/Join Tests
+# Meet/Join Tests (Law Verification)
 # ─────────────────────────────────────────────────────────────
 
 
-def test_meet_when_one_is_subtype(lattice):
-    """Test meet when A ≤ B: meet(A, B) = A."""
-    assert lattice.meet("int", "Any") == "int"
-    assert lattice.meet("str", "Any") == "str"
+@pytest.mark.law("lattice")
+class TestMeetJoinLaws:
+    """Tests for meet/join lattice laws."""
 
+    def test_meet_when_one_is_subtype(self, lattice):
+        """Test meet when A ≤ B: meet(A, B) = A."""
+        assert lattice.meet("int", "Any") == "int"
+        assert lattice.meet("str", "Any") == "str"
 
-def test_meet_symmetric(lattice):
-    """Test that meet is symmetric: meet(A, B) = meet(B, A)."""
-    result1 = lattice.meet("int", "str")
-    result2 = lattice.meet("str", "int")
-    assert result1 == result2
+    def test_meet_symmetric(self, lattice):
+        """Test commutativity law: meet(A, B) = meet(B, A)."""
+        result1 = lattice.meet("int", "str")
+        result2 = lattice.meet("str", "int")
+        assert result1 == result2
 
+    def test_meet_no_common_subtype(self, lattice):
+        """Test meet when no common subtype exists: meet(A, B) = Never."""
+        # int and str have no common subtype except Never
+        assert lattice.meet("int", "str") == "Never"
 
-def test_meet_no_common_subtype(lattice):
-    """Test meet when no common subtype exists: meet(A, B) = Never."""
-    # int and str have no common subtype except Never
-    assert lattice.meet("int", "str") == "Never"
+    def test_join_when_one_is_subtype(self, lattice):
+        """Test join when A ≤ B: join(A, B) = B."""
+        assert lattice.join("int", "Any") == "Any"
+        assert lattice.join("str", "Any") == "Any"
 
+    def test_join_symmetric(self, lattice):
+        """Test commutativity law: join(A, B) = join(B, A)."""
+        result1 = lattice.join("int", "str")
+        result2 = lattice.join("str", "int")
+        assert result1 == result2
 
-def test_join_when_one_is_subtype(lattice):
-    """Test join when A ≤ B: join(A, B) = B."""
-    assert lattice.join("int", "Any") == "Any"
-    assert lattice.join("str", "Any") == "Any"
-
-
-def test_join_symmetric(lattice):
-    """Test that join is symmetric: join(A, B) = join(B, A)."""
-    result1 = lattice.join("int", "str")
-    result2 = lattice.join("str", "int")
-    assert result1 == result2
-
-
-def test_join_unrelated_types(lattice):
-    """Test join of unrelated types: join(A, B) = Any."""
-    # int and str have Any as common supertype
-    assert lattice.join("int", "str") == "Any"
+    def test_join_unrelated_types(self, lattice):
+        """Test join of unrelated types: join(A, B) = Any."""
+        # int and str have Any as common supertype
+        assert lattice.join("int", "str") == "Any"
 
 
 # ─────────────────────────────────────────────────────────────

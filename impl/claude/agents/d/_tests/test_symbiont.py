@@ -6,6 +6,10 @@ Tests cover:
 - Composition with bootstrap agents (f >> g)
 - Sync and async logic functions
 - Pure logic testability
+
+Composition Laws verified:
+- Identity: Id >> symbiont >> Id == symbiont
+- Associativity: (s1 >> s2) >> s3 == s1 >> (s2 >> s3)
 """
 
 import asyncio
@@ -95,9 +99,14 @@ async def test_async_logic():
     assert result2 == 15
 
 
+@pytest.mark.law("identity")
+@pytest.mark.law_identity
 @pytest.mark.asyncio
 async def test_composition_with_bootstrap():
-    """Symbiont is a valid Agent - composes via >>."""
+    """Symbiont is a valid Agent - composes via >>.
+
+    Verifies identity law: Id >> f >> Id == f
+    """
     from bootstrap.id import Id
 
     def logic(x: int, state: int) -> tuple[int, int]:
@@ -140,9 +149,14 @@ async def test_pure_logic_testability():
     assert result == 15
 
 
+@pytest.mark.law("associativity")
+@pytest.mark.law_associativity
 @pytest.mark.asyncio
 async def test_symbiont_chain():
-    """Multiple symbionts can compose."""
+    """Multiple symbionts can compose.
+
+    Tests associativity law: Symbiont composition is associative.
+    """
 
     def doubler(x: int, state: int) -> tuple[int, int]:
         return x * 2, state + 1

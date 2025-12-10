@@ -11,13 +11,9 @@ from agents.l.advanced_lattice import (
     create_cached_lattice,
 )
 from agents.l.lattice import SubtypeEdge, TypeKind, TypeNode
-from agents.l.registry import Registry
 
 
-@pytest.fixture
-def registry():
-    """Create test registry."""
-    return Registry()
+# registry fixture imported from conftest.py
 
 
 @pytest.fixture
@@ -108,7 +104,8 @@ class TestCachedLattice:
         result1 = cached_lattice.is_subtype("str", "Any")
         result2 = cached_lattice.is_subtype("str", "Any")
 
-        assert result1 == result2 == True
+        assert result1 == result2
+        assert result1 is True
         assert ("str", "Any") in cached_lattice._subtype_cache
 
     def test_meet_cached(self, cached_lattice):

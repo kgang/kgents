@@ -1,4 +1,14 @@
-"""Tests for Lens infrastructure."""
+"""
+Tests for Lens infrastructure.
+
+Lens Laws (from category theory):
+- GetPut: set(s, get(s)) == s
+- PutGet: get(set(s, v)) == v
+- PutPut: set(set(s, v1), v2) == set(s, v2)
+
+Composition Laws:
+- Associativity: (l1 >> l2) >> l3 == l1 >> (l2 >> l3)
+"""
 
 import pytest
 from dataclasses import dataclass
@@ -133,6 +143,8 @@ def test_lens_composition_dataclass():
     assert state.user.address.city == "NYC"  # Original unchanged
 
 
+@pytest.mark.law("associativity")
+@pytest.mark.law_associativity
 def test_lens_composition_associativity():
     """Lens composition is associative: (a >> b) >> c = a >> (b >> c)"""
     l1 = key_lens("a")
@@ -151,88 +163,93 @@ def test_lens_composition_associativity():
 # === Lens Law Tests ===
 
 
-def test_key_lens_laws():
-    """key_lens satisfies all three lens laws."""
-    lens = key_lens("name")
-    state = {"name": "Alice", "age": 30}
+@pytest.mark.law("lens")
+class TestLensLaws:
+    """Lens laws verification tests."""
 
-    laws = verify_lens_laws(lens, state, "Bob", "Carol")
+    def test_key_lens_laws(self):
+        """key_lens satisfies all three lens laws."""
+        lens = key_lens("name")
+        state = {"name": "Alice", "age": 30}
 
-    assert laws["get_put"], "GetPut law violated"
-    assert laws["put_get"], "PutGet law violated"
-    assert laws["put_put"], "PutPut law violated"
+        laws = verify_lens_laws(lens, state, "Bob", "Carol")
 
+        assert laws["get_put"], "GetPut law violated"
+        assert laws["put_get"], "PutGet law violated"
+        assert laws["put_put"], "PutPut law violated"
 
-def test_field_lens_laws():
-    """field_lens satisfies all three lens laws."""
-    lens = field_lens("name")
-    user = User(name="Alice", address=Address(city="NYC", zip="10001"))
+    def test_field_lens_laws(self):
+        """field_lens satisfies all three lens laws."""
+        lens = field_lens("name")
+        user = User(name="Alice", address=Address(city="NYC", zip="10001"))
 
-    laws = verify_lens_laws(lens, user, "Bob", "Carol")
+        laws = verify_lens_laws(lens, user, "Bob", "Carol")
 
-    assert laws["get_put"], "GetPut law violated"
-    assert laws["put_get"], "PutGet law violated"
-    assert laws["put_put"], "PutPut law violated"
+        assert laws["get_put"], "GetPut law violated"
+        assert laws["put_get"], "PutGet law violated"
+        assert laws["put_put"], "PutPut law violated"
 
+    def test_index_lens_laws(self):
+        """index_lens satisfies all three lens laws."""
+        lens = index_lens(1)
+        state = [1, 2, 3]
 
-def test_index_lens_laws():
-    """index_lens satisfies all three lens laws."""
-    lens = index_lens(1)
-    state = [1, 2, 3]
+        laws = verify_lens_laws(lens, state, 20, 30)
 
-    laws = verify_lens_laws(lens, state, 20, 30)
+        assert laws["get_put"], "GetPut law violated"
+        assert laws["put_get"], "PutGet law violated"
+        assert laws["put_put"], "PutPut law violated"
 
-    assert laws["get_put"], "GetPut law violated"
-    assert laws["put_get"], "PutGet law violated"
-    assert laws["put_put"], "PutPut law violated"
+    def test_composed_lens_laws(self):
+        """Composed lenses preserve lens laws."""
+        user_lens = key_lens("user")
+        name_lens = key_lens("name")
+        composed = user_lens >> name_lens
 
+        state = {"user": {"name": "Alice", "age": 30}, "count": 5}
 
-def test_composed_lens_laws():
-    """Composed lenses preserve lens laws."""
-    user_lens = key_lens("user")
-    name_lens = key_lens("name")
-    composed = user_lens >> name_lens
+        laws = verify_lens_laws(composed, state, "Bob", "Carol")
 
-    state = {"user": {"name": "Alice", "age": 30}, "count": 5}
-
-    laws = verify_lens_laws(composed, state, "Bob", "Carol")
-
-    assert laws["get_put"], "GetPut law violated for composition"
-    assert laws["put_get"], "PutGet law violated for composition"
-    assert laws["put_put"], "PutPut law violated for composition"
+        assert laws["get_put"], "GetPut law violated for composition"
+        assert laws["put_get"], "PutGet law violated for composition"
+        assert laws["put_put"], "PutPut law violated for composition"
 
 
 # === Property-Based Tests ===
 
 
-@pytest.mark.parametrize(
-    "state,value1,value2",
-    [
-        ({"a": 1, "b": 2}, 10, 20),
-        ({"a": "hello", "b": "world"}, "foo", "bar"),
-        ({"a": [1, 2, 3], "b": [4, 5]}, [10], [20, 30]),
-    ],
-)
-def test_key_lens_laws_property_based(state, value1, value2):
-    """Property test: key_lens laws hold for various types."""
-    lens = key_lens("a")
-    laws = verify_lens_laws(lens, state, value1, value2)
+@pytest.mark.law("lens")
+@pytest.mark.property
+class TestLensLawsPropertyBased:
+    """Property-based lens law tests."""
 
-    assert all(laws.values()), f"Laws violated: {laws}"
+    @pytest.mark.parametrize(
+        "state,value1,value2",
+        [
+            ({"a": 1, "b": 2}, 10, 20),
+            ({"a": "hello", "b": "world"}, "foo", "bar"),
+            ({"a": [1, 2, 3], "b": [4, 5]}, [10], [20, 30]),
+        ],
+    )
+    def test_key_lens_laws_property_based(self, state, value1, value2):
+        """Property test: key_lens laws hold for various types."""
+        lens = key_lens("a")
+        laws = verify_lens_laws(lens, state, value1, value2)
 
+        assert all(laws.values()), f"Laws violated: {laws}"
 
-@pytest.mark.parametrize(
-    "items,index,v1,v2",
-    [
-        ([1, 2, 3], 0, 10, 20),
-        ([1, 2, 3], 1, 10, 20),
-        ([1, 2, 3], 2, 10, 20),
-        (["a", "b", "c"], 1, "x", "y"),
-    ],
-)
-def test_index_lens_laws_property_based(items, index, v1, v2):
-    """Property test: index_lens laws hold for various indices."""
-    lens = index_lens(index)
-    laws = verify_lens_laws(lens, items, v1, v2)
+    @pytest.mark.parametrize(
+        "items,index,v1,v2",
+        [
+            ([1, 2, 3], 0, 10, 20),
+            ([1, 2, 3], 1, 10, 20),
+            ([1, 2, 3], 2, 10, 20),
+            (["a", "b", "c"], 1, "x", "y"),
+        ],
+    )
+    def test_index_lens_laws_property_based(self, items, index, v1, v2):
+        """Property test: index_lens laws hold for various indices."""
+        lens = index_lens(index)
+        laws = verify_lens_laws(lens, items, v1, v2)
 
-    assert all(laws.values()), f"Laws violated for index {index}: {laws}"
+        assert all(laws.values()), f"Laws violated for index {index}: {laws}"
