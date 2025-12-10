@@ -18,24 +18,27 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 ## TL;DR
 
-**Status**: B×G Phase 4 (Semantic Inflation) COMPLETE ✅
+**Status**: CLI Phase 5 (Genus Layer) COMPLETE ✅
 **Branch**: `main`
-**Latest Commit**: `d8babc1` - Linter fixes + O-gent test setup
+**Latest Commit**: uncommitted (CLI Phase 5 - Genus Layer)
 
 **Current State**:
-- **B×G Phase 4**: ✅ Semantic Inflation (78 tests) - `agents/b/semantic_inflation.py`
-- **B×G Phase 3**: ✅ Syntax Tax (60 tests) - `agents/b/syntax_tax.py`
-- **B-gent Phase 4**: ✅ VoI Economics (51 tests) - `agents/b/voi_economics.py`
-- **CLI Phase 4**: ✅ MCP Server (42 tests) - `protocols/cli/mcp/`
+- **CLI Phase 5**: ✅ Genus Layer (50 tests) - `protocols/cli/genus/`
+  - G-gent (grammar): reify, parse, evolve, list, show, validate, infer
+  - J-gent (jit): compile, classify, defer, execute, stability, budget
+  - P-gent (parse): extract, repair, validate, stream, compose
+  - L-gent (library): catalog, discover, register, show, lineage, compose
+  - W-gent (witness): watch, fidelity, sample, serve, dashboard, log
+- **CLI Phases 1-4**: ✅ COMPLETE (271 tests)
+- **B×G Phases 1-4**: ✅ COMPLETE (Compression, Fiscal, Syntax Tax, Inflation)
 - D-gent Phase 4 (Noosphere): ✅ COMPLETE
 - L-gent Phases 1-7: ✅ COMPLETE
 - G-gent Phases 1-7: ✅ COMPLETE
-- **B-gent Total**: 427 tests passed
 
 **Next Steps**:
-1. **B×G Phase 5**: Grammar Insurance (volatility hedging) or JIT Efficiency
-2. **O-gent Phase 2**: BootstrapWitness integration (tests scaffolded)
-3. **CLI Phase 5**: Big 5 Genera (`genus/*.py`)
+1. **CLI Phase 6**: Intent Layer (10 verbs: new, run, check, think, watch, find, fix, speak, judge, do)
+2. **CLI Phase 7**: TUI Dashboard (Textual-based DVR)
+3. **B×G Phase 5**: Grammar Insurance or JIT Efficiency
 
 ---
 
@@ -49,8 +52,8 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 | 2 | Bootstrap & Laws | ✅ DONE |
 | 3 | Flow Engine | ✅ DONE |
 | 4 | MCP Server | ✅ DONE (42 tests) |
-| 5 | Big 5 Genera (J, P, A, G, T) | ⏳ NEXT |
-| 6 | Intent Layer (10 verbs) | ⏳ PENDING |
+| 5 | Big 5 Genera (G, J, P, L, W) | ✅ DONE (50 tests) |
+| 6 | Intent Layer (10 verbs) | ⏳ NEXT |
 | 7 | TUI Dashboard | ⏳ PENDING |
 
 **Key Features**: 10 Intent Verbs, Flowfiles (YAML), Sympathetic Errors, MCP Bidirectional
@@ -65,7 +68,7 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 | **D-gents** | ~80% | Minor SQL/Redis backends |
 | **L-gents** | ~70% | Vector DB integration |
 | **G-gents** | ~90% | Phase 7 done |
-| **O-gents** | ~30% | Phase 1 scaffolded, Phase 2+ needed |
+| **O-gents** | ~70% | Phase 1 complete (62 tests), BootstrapWitness integration |
 | **I-gents** | ~10% | TUI, evolve.py, sessions |
 | **F-gents** | ~40% | Forge loop, ALO format |
 | **M/N/psi** | 0% | Missing |
@@ -74,52 +77,88 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 ## Current Session
 
-### Session: B×G Phase 4 - Semantic Inflation (2025-12-09)
+### Session: CLI Phase 5 - Genus Layer (2025-12-09)
 
-**Status**: ✅ COMPLETE - Complexity → Verbosity Pressure Economics
+**Status**: ✅ COMPLETE - Big 5 Genera CLI Commands
 
-**Spec Reference**: New concept extending `docs/structural_economics_bg_integration.md`
+**Spec Reference**: `docs/cli-integration-plan.md` Part 6 (Genus Layer)
 
-**New Files Created** (~900 lines):
-- `impl/claude/agents/b/semantic_inflation.py` (~750 lines): Semantic Inflation implementation
-  - `ComplexityVector`: Multi-dimensional complexity (structural, temporal, conceptual, relational, novelty, risk)
-  - `AudienceProfile`: Audience gap calculation (Expert → Layperson)
-  - `InflationPressure`: Verbosity pressure = Complexity × Audience_Gap × Risk_Amplifier
-  - `InflationBudget`: Token allocation between content and explanation
-  - `DeflationNegotiator`: 6 compression strategies (COMPRESS, SUMMARIZE, DEFER, REFERENCE, AUDIENCE_SHIFT, CHUNK)
-  - `ComplexityAnalyzer`: Heuristic code/text complexity analysis
-  - `SemanticCPIMonitor`: System-wide inflation tracking (like economic CPI)
-- `impl/claude/agents/b/_tests/test_semantic_inflation.py` (~550 lines): 78 comprehensive tests
+**New Files Created** (~2,200 lines):
+- `impl/claude/protocols/cli/genus/__init__.py`: Module exports with lazy loading
+- `impl/claude/protocols/cli/genus/g_gent.py` (~750 lines): Grammar/DSL CLI
+  - Subcommands: reify, parse, evolve, list, show, validate, infer
+- `impl/claude/protocols/cli/genus/j_gent.py` (~620 lines): JIT Intelligence CLI
+  - Subcommands: compile, classify, defer, execute, stability, budget
+- `impl/claude/protocols/cli/genus/p_gent.py` (~580 lines): Parser CLI
+  - Subcommands: extract, repair, validate, stream, compose
+- `impl/claude/protocols/cli/genus/l_gent.py` (~720 lines): Library/Catalog CLI
+  - Subcommands: catalog, discover, register, show, lineage, compose, types, stats
+- `impl/claude/protocols/cli/genus/w_gent.py` (~640 lines): Witness/Wire CLI
+  - Subcommands: watch, fidelity, sample, serve, dashboard, log
+- `impl/claude/protocols/cli/genus/_tests/test_genus.py` (~700 lines): 50 tests
 
-**Modified Files**:
-- `impl/claude/agents/b/__init__.py`: Added 25 new exports for Semantic Inflation
+**Test Coverage** (50 tests, 100% pass):
+- G-gent: 8 tests, J-gent: 10 tests, P-gent: 8 tests, L-gent: 10 tests, W-gent: 9 tests
+- Module imports: 2 tests, Integration: 3 tests
 
-**Core Concepts**:
-- **Inflation Formula**: `Pressure = Complexity × Audience_Gap × (1 + Risk)`
-- **Token Allocation**: Content tokens + Explanation tokens + Buffer
-- **Deflation Strategies**: Compress (70%), Summarize (50%), Defer (40%), Reference (30%)
-- **CPI Monitoring**: Track system-wide inflation trends (DEFLATIONARY → HYPERINFLATION)
-- **Risk Floor**: High-risk operations (>0.7) require minimum 30% explanation ratio
-
-**Test Coverage** (78 tests, 100% pass):
-- ComplexityVector: 9 tests (magnitude, clamping, weighted sum)
-- AudienceProfile: 7 tests (gap calculation, tolerance)
-- InflationPressure: 6 tests (pressure score, tokens, risk amplification)
-- InflationCategory: 5 tests (thresholds)
-- InflationReport: 4 tests (warnings, recommendations)
-- InflationBudget: 8 tests (evaluation, deflation, CPI tracking)
-- DeflationNegotiator: 6 tests (proposals, constraints, high-risk exclusions)
-- ComplexityAnalyzer: 6 tests (code, text, risky code)
-- SemanticCPIMonitor: 6 tests (CPI, breakdown, snapshots)
-- Convenience functions: 7 tests
-- Integration: 4 tests (workflow, audience scaling)
-- Edge cases: 6 tests
-
-**B-gent Total**: 427 tests passed (78 new)
+**CLI Tests Total**: 321 passed (50 new)
 
 ---
 
 ## Recent Sessions
+
+### Session: O-gent Phase 1 - VoI-Based Observation (2025-12-09)
+
+**Status**: ✅ COMPLETE - Full O-gent implementation using VoI Economics
+
+**Spec Reference**: `spec/o-gents/README.md` (The Epistemic Substrate)
+
+**New Files Created** (~2,400 lines):
+- `impl/claude/agents/o/observer.py` (~600 lines): Core observer functor
+  - `ObserverFunctor`: O: Agent[A,B] → Agent[A,B] (lifts agents into observation)
+  - `ProprioceptiveWrapper`: Transparent wrapper that observes without mutating
+  - `ObserverHierarchy`: Stratified observation (prevents "who watches watchers" regress)
+- `impl/claude/agents/o/telemetry.py` (~550 lines): Dimension X (The Body)
+  - `MetricsCollector`: Counter, Gauge, Histogram (OpenTelemetry-compatible)
+  - `TelemetryObserver`: Latency, errors, throughput tracking
+  - `TopologyMapper`: Agent composition graph, hot paths, bottlenecks
+- `impl/claude/agents/o/semantic.py` (~700 lines): Dimension Y (The Mind)
+  - `DriftDetector`: Semantic drift (Noether's theorem for agents)
+  - `BorromeanObserver`: Lacanian RSI health (Symbolic/Real/Imaginary)
+  - `HallucinationDetector`: Grounding failure detection
+- `impl/claude/agents/o/axiological.py` (~720 lines): Dimension Z (The Soul)
+  - `ValueLedgerObserver`: System GDP, agent rankings by RoC
+  - `RoCMonitor`: Real-time Return on Compute monitoring
+  - `LedgerAuditor`: Bankruptcy detection, suspicious activity
+- `impl/claude/agents/o/voi_observer.py` (~600 lines): VoI Integration
+  - `VoIAwareObserver`: Budget-aware observation depth selection
+  - `Panopticon`: Unified 3-dimension dashboard (ASCII render)
+- `impl/claude/agents/o/_tests/test_o_gent.py` (~1,000 lines): 62 comprehensive tests
+
+**Core Concepts**:
+- **Three Dimensions**: Telemetry (running?), Semantic (meaningful?), Axiological (profitable?)
+- **Observer Functor**: O(f) ≅ f (observation invisible to observed)
+- **VoI Integration**: Each observation must justify its cost
+- **Heisenberg Constraint**: Observation consumes tokens → optimize VoI
+
+**Test Coverage** (62 tests, 100% pass):
+- Core Observer: 13 tests (functor, hierarchy, composite)
+- Telemetry (X): 11 tests (metrics, topology)
+- Semantics (Y): 11 tests (drift, Borromean, hallucination)
+- Axiology (Z): 12 tests (ledger, RoC, auditing)
+- VoI Integration: 8 tests (budget, depth selection, stats)
+- Integration/Edge: 7 tests
+
+**O-gent Total**: 62 tests passed
+
+---
+
+## Recent Sessions
+
+### Session: B×G Phase 4 - Semantic Inflation (2025-12-09)
+
+- `semantic_inflation.py`: Complexity → Verbosity, DeflationNegotiator, SemanticCPIMonitor
+- 78 tests
 
 ### Session: B×G Phase 3 - Syntax Tax (2025-12-09)
 

@@ -25,7 +25,6 @@ See: spec/w-gents/wire.md
 from __future__ import annotations
 
 import json
-import sys
 from typing import Any
 
 HELP_TEXT = """\
@@ -148,7 +147,7 @@ EXAMPLES:
     else:
         print()
         print(f"  WATCH COMPLETED: {target}")
-        print(f"  " + "-" * 40)
+        print("  " + "-" * 40)
         print(f"  Events observed: {result['event_count']}")
         print(f"  Duration:        {result['duration']}s")
         print(f"  Fidelity:        {result['fidelity']}")
@@ -179,7 +178,7 @@ async def _watch_agent(
 
     print()
     print(f"  Watching: {target} [{fidelity}]")
-    print(f"  " + "-" * 40)
+    print("  " + "-" * 40)
     print()
 
     # Simulate watching (in real impl, would read from WireObservable)
@@ -254,7 +253,7 @@ EXAMPLES:
     else:
         print()
         print(f"  FIDELITY CHECK: {output_path}")
-        print(f"  " + "-" * 40)
+        print("  " + "-" * 40)
         print(f"  Detected:   {result['fidelity']}")
         print(f"  Confidence: {result['confidence']:.1%}")
         print(f"  Reason:     {result['reason']}")
@@ -348,7 +347,7 @@ EXAMPLES:
     else:
         print()
         print(f"  SAMPLED: {stream}")
-        print(f"  " + "-" * 40)
+        print("  " + "-" * 40)
         print(f"  Rate:    {rate} events/sec")
         print(f"  Samples: {len(result['samples'])}")
         print()
@@ -416,7 +415,7 @@ EXAMPLES:
 
     print()
     print(f"  Starting Wire server for: {agent}")
-    print(f"  " + "-" * 40)
+    print("  " + "-" * 40)
     print(f"  Host: {host}")
     print(f"  Port: {port}")
     print(f"  URL:  http://{host}:{port}")
@@ -634,7 +633,7 @@ EXAMPLES:
     else:
         print()
         print(f"  EVENT LOG: {target}")
-        print(f"  " + "-" * 50)
+        print("  " + "-" * 50)
         for e in log_entries[:lines]:
             level_color = {
                 "DEBUG": "",
