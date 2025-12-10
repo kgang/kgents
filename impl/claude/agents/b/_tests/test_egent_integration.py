@@ -202,7 +202,7 @@ class TestPredictionMarket:
         market = PredictionMarket(bank)
 
         # Initial rate is 0.5 (default)
-        initial_quote = market.quote(
+        _initial_quote = market.quote(
             "phage_001", schema_signature="schema_test", schema_confidence=0.5
         )
 
@@ -523,7 +523,7 @@ class TestEvolutionEconomics:
         assert quote.implied_success_probability > 0
 
         # 3. Agent places bet on mutation success
-        bet = await econ.market.place_bet(
+        _bet = await econ.market.place_bet(
             bettor_id="evolution_agent",
             phage_id="phage_refactor_001",
             stake=100,
@@ -538,7 +538,7 @@ class TestEvolutionEconomics:
         )
 
         # 5. Consume grant for the mutation work
-        consumption = await econ.sun.consume_grant(
+        _consumption = await econ.sun.consume_grant(
             grant_id=grant.id,
             phage_id="phage_refactor_001",
             tokens=500,
@@ -562,7 +562,7 @@ class TestEvolutionEconomics:
         econ = create_evolution_economics(initial_balance=100000)
 
         # Place bet and stake
-        bet = await econ.market.place_bet(
+        _bet = await econ.market.place_bet(
             bettor_id="agent",
             phage_id="phage_fail",
             stake=100,

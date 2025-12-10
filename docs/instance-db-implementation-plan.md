@@ -1,388 +1,470 @@
-# Instance DB Implementation Plan v2.0
+# Instance DB Implementation Plan v3.0: The Bicameral Engine
 
-## The Unified Cortex: Infrastructure × Semantics
+## The Unified Cortex: Infrastructure × Semantics × Nervous System
 
-**Status:** Design Document v2.0
+**Status:** Design Document v3.0
 **Date:** 2025-12-10
-**Location:** `impl/claude/infra/` (Infrastructure) + `agents/d/` (Semantics)
+**Location:** `protocols/cli/instance_db/` (Phase 1 OPERATIONAL) → `impl/claude/infra/` (Future)
 
 ---
 
 ## Executive Summary
 
-This document specifies the **Unified Cortex**—a marriage of Infrastructure (Instance DB) with Semantics (D-gents). The result is not a "File System" model of memory, but an "Operating System" model that **predicts**, **forgets**, and **dreams**.
+This document specifies the **Bicameral Engine**—an evolution of the Unified Cortex that addresses three critical risks identified in architectural review:
 
-From the critique:
+1. **Split-Brain Consistency Risk** → Coherency Protocol
+2. **Synapse Latency Trap** → Spinal Cord (Reflex Layer)
+3. **Interrupt Problem in Dreaming** → Lucid Dreaming + Interruptible Maintenance
+
+The Bicameral Engine introduces:
+- **Spinal Cord**: Fast-path for low-value signals (bypass the brain)
+- **Hippocampus**: Short-term consolidation before long-term storage
+- **Coherency Protocol**: Cross-hemisphere validation preventing Ghost Memories
+- **Lucid Dreaming**: Interactive optimization that asks clarifying questions
+- **Schema Neurogenesis**: Database schema that grows from experience
+
+From the original critique:
 > "A cortex doesn't just store; it predicts, forgets, and hallucinates."
 
-We address three critical gaps:
-1. **UnifiedMemory Monolith Risk** → Hemispheric separation (Left/Right/Corpus Callosum)
-2. **Compost Implementation Gap** → Cryptographic Amnesia (Lethe Protocol)
-3. **Transaction Boundary Problem** → Synapse Event Bus + Eventual Consistency
+We now add:
+> "A cortex also has reflexes, short-term memory, and learns new structures."
 
 ---
 
-## Part I: Architectural Overview
+## Part I: Current State (Phase 1 OPERATIONAL)
 
-### 1.1 The Three Hemispheres
+### 1.1 What's Already Working
+
+**Location**: `protocols/cli/instance_db/` (85 tests passing)
+
+| Component | File | Status | Tests |
+|-----------|------|--------|-------|
+| Interfaces | `interfaces.py` | ✅ Operational | 16 |
+| Storage Provider | `storage.py` | ✅ Operational | 16 |
+| Lifecycle Manager | `lifecycle.py` | ✅ Operational | 20 |
+| SQLite Provider | `providers/sqlite.py` | ✅ Operational | 33 |
+
+**CLI Integration** (AUTO-BOOTSTRAP):
+- `kgents <command>` auto-bootstraps cortex on startup
+- Instance registration + telemetry logging
+- Graceful shutdown with `--no-bootstrap` escape hatch
+- First-run messaging (Transparent Infrastructure principle)
+- Wipe command with confirmation (`kgents wipe local|global|all`)
+
+### 1.2 Architecture Diagram (Current)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                           THE UNIFIED CORTEX                                 │
+│                           THE UNIFIED CORTEX v2.0                           │
 ├──────────────────────────┬─────────────────┬────────────────────────────────┤
 │     LEFT HEMISPHERE      │ CORPUS CALLOSUM │       RIGHT HEMISPHERE          │
 │     (The Bookkeeper)     │   (Synapse)     │       (The Poet)                │
 ├──────────────────────────┼─────────────────┼────────────────────────────────┤
 │  • ACID transactions     │ • Signal routing│  • Approximate similarity       │
-│  • Exact queries         │ • Active Inference│ • Semantic voids              │
-│  • Relational schema     │ • Surprise detection│ • Geodesics (paths)         │
-│  • Instance tracking     │ • Backpressure  │  • Memory Garden               │
+│  • Exact queries         │ • (PLANNED)     │  • Semantic voids              │
+│  • Relational schema     │                 │  • Geodesics (paths)           │
+│  • Instance tracking     │                 │  • Memory Garden               │
 ├──────────────────────────┼─────────────────┼────────────────────────────────┤
-│  impl/claude/infra/      │ infra/synapse.py│  agents/d/                     │
-│  └── storage.py          │                 │  └── unified.py                │
-│  └── lifecycle.py        │                 │  └── manifold.py               │
-│  └── providers/          │                 │  └── garden.py                 │
+│  protocols/cli/          │ (Phase 2)       │  agents/d/                     │
+│  instance_db/            │                 │  └── unified.py                │
+│  └── storage.py          │                 │  └── manifold.py               │
+│  └── lifecycle.py        │                 │  └── garden.py                 │
 └──────────────────────────┴─────────────────┴────────────────────────────────┘
 ```
 
-### 1.2 Layer Responsibilities
-
-| Layer | Location | Responsibility | Examples |
-|-------|----------|----------------|----------|
-| **Infrastructure** | `infra/` | Bytes, rows, lifecycle | SQLite, XDG paths, heartbeat |
-| **Synapse** | `infra/synapse.py` | Signal routing, prediction | Active Inference, surprise |
-| **Semantics** | `agents/d/` | Meaning, memory modes | VectorAgent, MemoryGarden |
-| **Application** | `**/` | User-facing features | CLI, MCP, agents |
-
-### 1.3 The Synapse Event Bus
-
-From the critique:
-> "Instead of direct method calls between D-gents and Storage, introduce a lightweight signal layer."
-
-```python
-class Synapse:
-    async def fire(self, signal: Signal) -> None:
-        # 1. Active Inference: Calculate Surprise
-        surprise = self.predictive_model.evaluate(signal)
-
-        # 2. Routing: High surprise → Fast path
-        #             Low surprise  → Batch path
-        if surprise > threshold:
-            await self.fast_path.emit(signal)
-        else:
-            await self.garden.queue(signal)
-```
-
-**Benefits:**
-- Decouples agent intent from storage mechanism
-- Enables smart batching (low-surprise signals are batched)
-- Provides observability (all signals are traceable)
-- Implements backpressure (buffer overflow → graceful degradation)
-
 ---
 
-## Part II: Infrastructure Layer (`impl/claude/infra/`)
+## Part II: The Bicameral Engine (v3.0 Enhancements)
 
-### 2.1 Module Structure
+### 2.1 Architecture Overview
 
 ```
-impl/claude/infra/
-├── __init__.py          # Public API
-├── ground.py            # Ground bootstrap agent (XDG, config)
-├── lifecycle.py         # LifecycleManager (bootstrap, shutdown)
-├── storage.py           # StorageProvider (Left Hemisphere)
-├── synapse.py           # Synapse event bus (Corpus Callosum)
-└── providers/
-    └── __init__.py      # Provider factory + SQLite implementations
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        THE BICAMERAL ENGINE v3.0                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  ┌──────────────┐                                                           │
+│  │   SIGNALS    │                                                           │
+│  │  (All Input) │                                                           │
+│  └──────┬───────┘                                                           │
+│         │                                                                    │
+│         ▼                                                                    │
+│  ┌──────────────────────────────────────────────────────────────────┐       │
+│  │                    SPINAL CORD (Reflex Layer)                     │       │
+│  │  • Heartbeats → Fast Store (bypass brain)                        │       │
+│  │  • Raw I/O    → Fast Store (bypass brain)                        │       │
+│  │  • CPU metrics → Fast Store (bypass brain)                       │       │
+│  │  • Semantic signals → ↓ Ascending pathway to Cortex              │       │
+│  └──────────────────────────────────────┬───────────────────────────┘       │
+│                                          │                                   │
+│         ┌────────────────────────────────▼────────────────────────────┐     │
+│         │                        HIPPOCAMPUS                           │     │
+│         │              (Short-Term Consolidation)                      │     │
+│         │  • Session context (in-memory/Redis)                        │     │
+│         │  • "Day log" - holds recent memories                        │     │
+│         │  • Flushes to Cortex during Dreaming                        │     │
+│         └────────────────────────────────┬────────────────────────────┘     │
+│                                          │                                   │
+│  ┌───────────────────────────────────────▼──────────────────────────────┐   │
+│  │                           SYNAPSE (Event Bus)                         │   │
+│  │                                                                       │   │
+│  │  • Active Inference: surprise = |actual - predicted|                 │   │
+│  │  • High surprise → Fast path (immediate dispatch)                    │   │
+│  │  • Low surprise  → Batch path (garden queue)                         │   │
+│  │  • Flashbulb threshold → Priority persistence                        │   │
+│  └───────────────────────┬───────────────────────────┬──────────────────┘   │
+│                          │                           │                       │
+│         ┌────────────────▼────────┐     ┌───────────▼─────────────────┐    │
+│         │    LEFT HEMISPHERE      │     │     RIGHT HEMISPHERE         │    │
+│         │    (The Bookkeeper)     │◄───►│     (The Poet)               │    │
+│         ├─────────────────────────┤     ├─────────────────────────────┤    │
+│         │ • SQLite (ACID)         │     │ • Vector Store (Semantic)   │    │
+│         │ • Instance tracking     │  C  │ • Embedding search          │    │
+│         │ • Schema (rigid)        │  O  │ • Fuzzy matching            │    │
+│         │                         │  H  │                              │    │
+│         │ • Source of truth for   │  E  │ • Pointers to Left          │    │
+│         │   "what exists"         │  R  │ • Ghost detection           │    │
+│         │                         │  E  │                              │    │
+│         │                         │  N  │                              │    │
+│         │                         │  C  │                              │    │
+│         │                         │  Y  │                              │    │
+│         └─────────────────────────┘     └─────────────────────────────┘    │
+│                                                                              │
+│  ┌──────────────────────────────────────────────────────────────────────┐   │
+│  │                        LUCID DREAMER                                  │   │
+│  │  • Interruptible maintenance (yields to High Surprise)               │   │
+│  │  • Ambiguity resolution → Morning Briefing queue                     │   │
+│  │  • Schema Neurogenesis → Proposes new columns from patterns          │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 2.2 Ground: The Bootstrap Seed
+### 2.2 Critical Risk Mitigations
 
-From spec/bootstrap.md:
-> `Ground: Void → Facts`
+#### Risk 1: Split-Brain Consistency
+
+**Problem:** Left Hemisphere (SQL) and Right Hemisphere (Vector) can diverge.
+**Failure Mode:** Vector search returns pointer to deleted/changed SQL row.
+
+**Solution: Coherency Protocol**
 
 ```python
-@dataclass
-class Ground:
-    paths: XDGPaths              # ~/.config/kgents, ~/.local/share/kgents
-    config: InfrastructureConfig # infrastructure.yaml
-    platform: str                # darwin, linux, windows
-    hostname: str
-    pid: int
-    env: dict[str, str]          # KGENTS_* variables
+class BicameralMemory:
+    """
+    Cross-hemisphere recall with coherency validation.
+    """
+
+    async def recall(self, query: str) -> list[Fact]:
+        # 1. Right Hemisphere finds relevant IDs (semantic search)
+        vector_results = await self.right_hemi.search(query)
+        ids = [r.id for r in vector_results]
+
+        # 2. Left Hemisphere validates reality (source of truth)
+        rows = await self.left_hemi.fetch_by_ids(ids)
+
+        valid_memories = []
+        for vec_result in vector_results:
+            row = rows.get(vec_result.id)
+
+            if row is None:
+                # Ghost Memory: Exists in Vector, deleted in SQL
+                # Self-healing: Remove stale vector entry
+                await self._heal_ghost(vec_result.id)
+                continue
+
+            # 3. Staleness Check: Has the row changed since embedding?
+            if row.content_hash != vec_result.metadata.get('content_hash'):
+                # Flag for re-embedding (don't block recall)
+                self._flag_for_reembedding(row.id)
+
+            valid_memories.append(row)
+
+        return valid_memories
+
+    async def _heal_ghost(self, ghost_id: str) -> None:
+        """Remove orphaned vector entry (self-healing)."""
+        await self.right_hemi.delete(ghost_id)
+        await self.telemetry.log("memory.ghost_healed", {"id": ghost_id})
 ```
 
-### 2.3 Storage Protocols
+#### Risk 2: Synapse Latency Trap
 
-Four protocols define the Left Hemisphere interface:
+**Problem:** Running `predictive_model.evaluate()` on every signal creates bottleneck.
+**Failure Mode:** 10,000 telemetry signals × 1ms each = 10 seconds blocking.
 
-| Protocol | Purpose | Implementation |
-|----------|---------|----------------|
-| `IRelationalStore` | SQL operations | SQLiteRelationalStore |
-| `IVectorStore` | Embedding storage | NumpyVectorStore |
-| `IBlobStore` | Large binary data | FilesystemBlobStore |
-| `ITelemetryStore` | Event logging | SQLiteTelemetryStore |
-
-### 2.4 Lifecycle States
+**Solution: Spinal Cord (Reflex Layer)**
 
 ```python
-class OperationMode(Enum):
-    FULL = "full"           # Global + Project DB
-    GLOBAL_ONLY = "global"  # ~/.local/share/kgents/membrane.db only
-    LOCAL_ONLY = "local"    # .kgents/cortex.db only
-    DB_LESS = "db_less"     # In-memory fallback (ephemeral)
+class NervousSystem:
+    """
+    Two-tier signal routing: Reflexes vs. Cortical processing.
+    """
+
+    # Signals that bypass the brain entirely (O(1) routing)
+    REFLEX_PATTERNS = {
+        "telemetry.heartbeat",
+        "io.raw.read",
+        "io.raw.write",
+        "system.cpu_metrics",
+        "system.memory_metrics",
+    }
+
+    async def transmit(self, signal: Signal) -> None:
+        # 1. Spinal Reflex: Pattern match (O(1))
+        if signal.type in self.REFLEX_PATTERNS:
+            # Bypass cortex, go straight to fast store
+            return await self.fast_store.append(signal)
+
+        # 2. Ascending Pathway: Send to Synapse for cortical processing
+        return await self.cortex.synapse.fire(signal)
 ```
 
-**Graceful Degradation:**
-- System ALWAYS works
-- Capabilities scale with available infrastructure
-- No hard failures—only reduced features
+**Configuration:**
 
----
-
-## Part III: Critical Enhancements from Critique
-
-### 3.1 Active Inference (Surprise-Based Routing)
-
-From the critique:
-> "D-gents shouldn't just *store* data; they should generate *Predictions*."
-
-**Implementation:**
-
-```python
-@dataclass
-class PredictiveModel:
-    alpha: float = 0.3  # Exponential smoothing factor
-    predictions: dict[str, float]
-
-    def predict(self, key: str) -> float:
-        return self.predictions.get(key, 0.5)
-
-    def update(self, key: str, actual: float) -> float:
-        predicted = self.predict(key)
-        surprise = abs(actual - predicted)
-        self.predictions[key] = self.alpha * actual + (1 - self.alpha) * predicted
-        return surprise
+```yaml
+# infrastructure.yaml
+nervous_system:
+  spinal_reflexes:
+    - "telemetry.heartbeat"
+    - "io.raw.read"
+    - "io.raw.write"
+    - "system.cpu_metrics"
+    - "system.memory_metrics"
 ```
 
-**Routing Logic:**
-- **Low Surprise (expected):** Batch to Garden queue
-- **High Surprise (novel):** Immediate dispatch + W-gent alert
-- **Flashbulb Threshold:** Priority persistence for extreme surprise
+#### Risk 3: Interrupt Problem in Dreaming
 
-### 3.2 Cryptographic Amnesia (Lethe Protocol)
+**Problem:** Maintenance at 3 AM blocks if user starts urgent session at 3:05 AM.
+**Failure Mode:** Database locked during re-indexing; system unresponsive.
 
-From the critique:
-> "Encrypt distinct memory 'epochs' with ephemeral keys. To 'compost' the raw data, simply delete the key."
-
-**The Problem:** GDPR "Right to be Forgotten" conflicts with append-only event stores.
-
-**The Solution:**
+**Solution: Interruptible Lucid Dreaming**
 
 ```python
-@dataclass
-class LetheEpoch:
-    epoch_id: str
-    key: bytes              # Ephemeral encryption key
-    start_time: datetime
-    end_time: datetime | None
-    status: Literal["active", "sealed", "composted"]
-
-class LetheStore:
+class LucidDreamer:
     """
-    Cryptographic amnesia implementation.
-
-    - Events encrypted per-epoch
-    - Composting = delete key (data becomes noise)
-    - Statistics preserved via sketching
+    Interruptible maintenance with ambiguity resolution.
     """
 
-    async def compost(self, epoch_id: str) -> CompostResult:
-        epoch = self.epochs[epoch_id]
-
-        # 1. Extract statistics via sketching
-        stats = await self._sketch_epoch(epoch_id)
-
-        # 2. Delete the encryption key
-        del epoch.key
-        epoch.status = "composted"
-
-        # 3. Raw data is now high-entropy noise (unrecoverable)
-        return CompostResult(
-            epoch_id=epoch_id,
-            stats_preserved=stats,
-            bytes_forgotten=epoch.size,
-        )
-```
-
-**Joy-Inducing Interpretation:**
-> "You don't 'delete' the memory; you 'release the spirit' (the key) back into the void, leaving the 'body' (ciphertext) as compost."
-
-### 3.3 Probabilistic Composting (Sketching)
-
-From the critique:
-> "Use Count-Min Sketch and T-Digest algorithms to compress raw events into statistical summaries."
-
-```python
-class CompostBin:
-    """
-    Sketching-based composting.
-
-    Raw Logs (1GB) → Histogram + Quantiles (10KB)
-    """
-
-    async def compost(self, raw_events: list[Event]) -> NutrientBlock:
-        sketch = CountMinSketch()
-        digest = TDigest()
-
-        for event in raw_events:
-            sketch.add(event.semantic_hash)
-            digest.add(event.numeric_value)
-
-        return NutrientBlock(
-            period=(raw_events[0].timestamp, raw_events[-1].timestamp),
-            frequency_sketch=sketch.serialize(),
-            quantile_digest=digest.serialize(),
-            event_count=len(raw_events),
-        )
-```
-
-### 3.4 The Dreaming Interface
-
-From the critique:
-> "Database optimization is not 'maintenance'; it is *Dreaming*."
-
-```python
-class IDreamer(Protocol):
-    """
-    Runs during system idle time (Hypnagogic state).
-    """
+    def __init__(self, synapse: Synapse, interrupt_check_ms: int = 100):
+        self._synapse = synapse
+        self._interrupt_check_ms = interrupt_check_ms
+        self._morning_briefing: list[Question] = []
 
     async def rem_cycle(self) -> DreamReport:
         """
-        REM cycle operations:
-        1. Re-index HNSW graphs (optimize vector search)
-        2. Merge LSM tree segments (optimize relational storage)
-        3. Propagate compost (Lifecycle management)
-        4. Run predictive model retraining
+        REM cycle with interrupt checks.
         """
+        report = DreamReport()
+
+        # 1. Interruptible re-indexing (chunked)
+        async for chunk in self._chunked_reindex():
+            # Check for high-surprise signal (user activity)
+            if await self._should_interrupt():
+                report.interrupted = True
+                report.reason = "High-surprise signal detected"
+                return report
+
+            await self._process_chunk(chunk)
+            report.chunks_processed += 1
+
+        # 2. Lucid phase: Identify ambiguities
+        clusters = await self._find_ambiguous_clusters()
+        for cluster in clusters:
+            question = self._formulate_question(cluster)
+            self._morning_briefing.append(question)
+
+        # 3. Schema Neurogenesis: Detect recurring patterns
+        migrations = await self._propose_schema_migrations()
+        report.proposed_migrations = migrations
+
+        return report
+
+    async def _should_interrupt(self) -> bool:
+        """Check if high-surprise signal arrived."""
+        recent = await self._synapse.peek_recent(
+            window_ms=self._interrupt_check_ms
+        )
+        return any(s.surprise > self._flashbulb_threshold for s in recent)
+
+    async def _chunked_reindex(self):
+        """Yield index chunks for interruptible processing."""
+        # Use PRAGMA incremental_vacuum instead of blocking VACUUM
+        # Chunk vector re-indexing into small batches
         ...
 ```
 
-**Scheduling:**
-```yaml
-# infrastructure.yaml
-dreaming:
-  interval_hours: 24
-  time_utc: "03:00"  # 3 AM UTC (low activity)
+### 2.3 The Hippocampus (Short-Term Consolidation)
+
+**Problem:** Jumping from Synapse directly to Long-Term Storage loses session context.
+**Solution:** High-speed ephemeral layer that holds the "Day Log."
+
+```python
+class Hippocampus:
+    """
+    Short-term memory consolidation.
+
+    Holds current session context before encoding to long-term storage.
+    Flushes to Cortex during Dreaming.
+    """
+
+    def __init__(self, backend: str = "memory"):
+        # In-memory by default, Redis for distributed
+        self._store = self._create_backend(backend)
+        self._current_epoch: LetheEpoch | None = None
+
+    async def remember(self, signal: Signal) -> None:
+        """Store in short-term memory."""
+        await self._store.append(signal)
+
+    async def flush_to_cortex(self, cortex: Cortex) -> FlushResult:
+        """
+        Transfer short-term memories to long-term storage.
+        Called during Dreaming.
+        """
+        signals = await self._store.drain()
+
+        for signal in signals:
+            await cortex.synapse.fire(signal, bypass_hippocampus=True)
+
+        # Create Lethe Epoch for this day's memories
+        self._current_epoch = await cortex.lethe.seal_epoch()
+
+        return FlushResult(
+            signals_transferred=len(signals),
+            epoch_id=self._current_epoch.epoch_id,
+        )
+```
+
+### 2.4 Schema Neurogenesis
+
+**Concept:** The database schema should grow based on the agent's experiences.
+
+```python
+class SchemaNeurogenesis:
+    """
+    Propose schema migrations based on detected patterns.
+    """
+
+    async def analyze_blobs(self) -> list[MigrationProposal]:
+        """
+        Find JSON blobs with recurring structure and propose columns.
+        """
+        proposals = []
+
+        # Find all JSON columns
+        json_columns = await self._find_json_columns()
+
+        for table, column in json_columns:
+            # Sample recent rows
+            samples = await self._sample_json_values(table, column, limit=100)
+
+            # Detect common keys
+            key_frequency = Counter()
+            for sample in samples:
+                for key in sample.keys():
+                    key_frequency[key] += 1
+
+            # If key appears in >80% of samples, propose column
+            for key, count in key_frequency.items():
+                if count / len(samples) > 0.8:
+                    proposals.append(MigrationProposal(
+                        table=table,
+                        action="add_column",
+                        column_name=key,
+                        column_type=self._infer_type(samples, key),
+                        confidence=count / len(samples),
+                    ))
+
+        return proposals
 ```
 
 ---
 
-## Part IV: D-gent Integration
-
-### 4.1 Backend Adapters
-
-D-gents use Infrastructure via adapters:
-
-```python
-class InstanceDBVectorBackend:
-    """
-    D-gent VectorAgent backend using infra/IVectorStore.
-    """
-
-    def __init__(self, store: IVectorStore, embedder: Callable):
-        self._store = store
-        self._embedder = embedder
-
-    async def add(self, id: str, state: S) -> None:
-        embedding = self._embedder(state)
-        await self._store.upsert(id, embedding, {"state": serialize(state)})
-
-    async def search(self, query: S, limit: int) -> list[tuple[str, S, float]]:
-        embedding = self._embedder(query)
-        results = await self._store.search(embedding, limit)
-        return [(r.id, deserialize(r.metadata["state"]), r.distance) for r in results]
-```
-
-### 4.2 UnifiedMemory.from_cortex()
-
-```python
-class UnifiedMemory(Generic[S]):
-    @classmethod
-    def from_cortex(
-        cls,
-        state: LifecycleState,
-        config: MemoryConfig,
-        namespace: str = "unified",
-        embedder: Callable | None = None,
-    ) -> UnifiedMemory[S]:
-        """
-        Create UnifiedMemory backed by Cortex infrastructure.
-
-        This is the bridge between Infrastructure and Semantics.
-        """
-        memory = cls(VolatileAgent(_state=None), config)
-
-        if state.storage_provider:
-            memory._semantic_backend = InstanceDBVectorBackend(
-                store=state.storage_provider.vector,
-                embedder=embedder,
-            )
-            memory._temporal_backend = InstanceDBStreamBackend(
-                store=state.storage_provider.telemetry,
-            )
-
-        return memory
-```
-
----
-
-## Part V: Implementation Phases
+## Part III: Implementation Phases (Revised)
 
 ### Phase 1: Core Infrastructure ✅ COMPLETE (85 tests)
 
-**What was implemented:**
-- `protocols/cli/instance_db/interfaces.py` - Protocol definitions
-- `protocols/cli/instance_db/storage.py` - StorageProvider + XDGPaths
-- `protocols/cli/instance_db/lifecycle.py` - LifecycleManager
-- `protocols/cli/instance_db/providers/sqlite.py` - SQLite implementations
+**Status:** OPERATIONAL
+**Location:** `protocols/cli/instance_db/`
 
-**⚠️ REWORK REQUIRED for v2.0:**
+Already implemented:
+- `interfaces.py` - IRelationalStore, IVectorStore, IBlobStore, ITelemetryStore
+- `storage.py` - StorageProvider, XDGPaths, InfrastructureConfig
+- `lifecycle.py` - LifecycleManager, OperationMode, quick_bootstrap
+- `providers/sqlite.py` - SQLite + Numpy + Filesystem implementations
 
-| Component | Current State | Rework Needed |
-|-----------|---------------|---------------|
-| Location | `protocols/cli/instance_db/` | Move to `impl/claude/infra/` |
-| Synapse | Not implemented | Add `synapse.py` with Active Inference |
-| Ground | Implicit in storage.py | Extract to `ground.py` as bootstrap agent |
-| Prediction | Not implemented | Add to Synapse |
-| Composting | Basic pruning only | Add sketching + Lethe protocol |
+CLI Integration:
+- Auto-bootstrap on `kgents` command start
+- `kgents wipe local|global|all` with confirmation
+- Transparent Infrastructure messaging (first-run, verbose, degraded mode)
 
-### Phase 2: Synapse + Active Inference (~40 tests)
+### Phase 1.5: Spinal Cord ✅ COMPLETE (31 tests)
+
+**Status:** OPERATIONAL
+**Location:** `protocols/cli/instance_db/nervous.py`
+
+Implemented:
+- `NervousSystem` class - Two-tier routing (reflex vs cortical)
+- `Signal`, `SignalPriority` - Signal types and priority levels
+- `NervousSystemConfig` - Configurable reflex/flashbulb patterns
+- O(1) pattern matching using set membership
+- Batch processing for efficient telemetry
+- Metrics tracking (reflex/cortical/dropped counts)
+- Dynamic configuration (add/remove patterns at runtime)
+- `ISynapse` protocol for Phase 2 integration
+
+### Phase 2: Synapse + Active Inference ✅ COMPLETE (46 tests)
+
+**Status:** OPERATIONAL
+**Location:** `protocols/cli/instance_db/synapse.py`
+
+Implemented:
+- `PredictiveModel` - O(1) exponential smoothing (no heavy ML)
+  - `predict()` / `update()` / `surprise_for()` - Core prediction API
+  - Variance tracking for surprise normalization
+  - Per-signal-type learning
+- `Synapse` class - Event bus with surprise-based routing
+  - Three routes: flashbulb (>0.9), fast (>0.5), batch (<0.5)
+  - Handler registration: `on_flashbulb()`, `on_fast_path()`, `on_batch_path()`
+  - Automatic batching with configurable size/interval
+  - `flush_batch()` for manual flush
+  - `peek_recent()` / `has_flashbulb_pending()` for interrupt checking
+- `SynapseConfig` - Configurable thresholds and parameters
+- `SurpriseMetrics` - Signal counts, surprise distribution
+- Factory: `create_synapse(telemetry_store, config_dict)`
+
+### Phase 2.5: Hippocampus ✅ COMPLETE (37 tests)
+
+**Status:** OPERATIONAL
+**Location:** `protocols/cli/instance_db/hippocampus.py`
+
+Implemented:
+- `Hippocampus` class - Short-term memory consolidation
+  - `remember()` / `remember_batch()` - Store signals
+  - `flush_to_cortex()` - Transfer to long-term storage
+  - `peek()` / `recall_by_type()` - Non-destructive access
+- `MemoryBackend` - In-memory storage with max size
+- `LetheEpoch` - Sealed memory boundaries for forgetting
+  - `get_epoch()` / `forget_epoch()` - Epoch management
+- `HippocampusConfig` - flush_strategy: on_sleep, on_size, on_age, manual
+- `SynapseHippocampusIntegration` - Wires synapse handlers to hippocampus
+- Factory: `create_hippocampus(cortex, config_dict)`
+
+### Phase 3: D-gent Backend Adapters + Coherency (~70 tests)
 
 | Task | Description | Tests |
 |------|-------------|-------|
-| `Synapse` class | Event bus with signal routing | 15 |
-| `PredictiveModel` | Exponential smoothing predictor | 10 |
-| Active Inference routing | High/low surprise paths | 10 |
-| Metrics collection | Signal counts, surprise distribution | 5 |
-
-**Deliverables:**
-- `infra/synapse.py` (already created in v2.0 skeleton)
-- Tests: `infra/_tests/test_synapse.py`
-
-### Phase 3: D-gent Backend Adapters (~55 tests)
-
-| Task | Description | Tests |
-|------|-------------|-------|
-| `InstanceDBRelationalBackend` | Wrap IRelationalStore for SQLAgent | 15 |
-| `InstanceDBVectorBackend` | Wrap IVectorStore for VectorAgent | 15 |
-| `InstanceDBStreamBackend` | Wrap ITelemetryStore for StreamAgent | 15 |
+| `InstanceDBVectorBackend` | Wrap IVectorStore | 15 |
+| `InstanceDBRelationalBackend` | Wrap IRelationalStore | 15 |
+| `BicameralMemory` | Cross-hemisphere recall | 15 |
+| **Coherency Protocol** | Ghost detection + healing | 15 |
 | `UnifiedMemory.from_cortex()` | Factory method | 10 |
+
+**Critical:** Implement Ghost Memory detection and self-healing.
 
 **Deliverables:**
 - `agents/d/infra_backends.py`
-- Updates to `agents/d/unified.py`
+- `agents/d/bicameral.py`
 
 ### Phase 4: Composting + Lethe Protocol (~45 tests)
 
@@ -394,20 +476,22 @@ class UnifiedMemory(Generic[S]):
 | Integration with MemoryGarden | Lifecycle mapping | 5 |
 
 **Deliverables:**
-- `infra/compost.py`
-- `infra/lethe.py`
+- `protocols/cli/instance_db/compost.py`
+- `protocols/cli/instance_db/lethe.py`
 
-### Phase 5: Dreaming + Maintenance (~30 tests)
+### Phase 5: Lucid Dreaming + Neurogenesis (~50 tests)
 
 | Task | Description | Tests |
 |------|-------------|-------|
-| `IDreamer` protocol | Maintenance interface | 5 |
-| `NightWatch` scheduler | REM cycle scheduling | 10 |
-| Index optimization | HNSW reindexing | 5 |
-| Compost propagation | Lifecycle transitions | 10 |
+| `LucidDreamer` | Interruptible maintenance | 15 |
+| Interrupt checking | Yield to high-surprise | 10 |
+| Ambiguity resolution | Morning Briefing queue | 10 |
+| `SchemaNeurogenesis` | Propose schema migrations | 10 |
+| `NightWatch` scheduler | REM cycle scheduling | 5 |
 
 **Deliverables:**
-- `infra/dreamer.py`
+- `protocols/cli/instance_db/dreamer.py`
+- `protocols/cli/instance_db/neurogenesis.py`
 
 ### Phase 6: Observability + Dashboard (~35 tests)
 
@@ -423,65 +507,50 @@ class UnifiedMemory(Generic[S]):
 
 ---
 
-## Part VI: Migration Path
+## Part IV: Configuration (Infrastructure-as-Code)
 
-### 6.1 Phase 1 Rework Checklist
-
-The following changes are needed to align Phase 1 with v2.0 architecture:
-
-```
-[ ] Create impl/claude/infra/ directory structure
-    [x] __init__.py
-    [x] ground.py (extract from storage.py)
-    [x] synapse.py (new)
-    [x] storage.py (adapt from protocols/cli/instance_db/storage.py)
-    [x] lifecycle.py (adapt from protocols/cli/instance_db/lifecycle.py)
-    [x] providers/__init__.py (bridge to existing providers)
-
-[ ] Update imports across codebase
-    [ ] protocols/cli/ should import from infra/
-    [ ] agents/d/ adapters should use infra/ interfaces
-
-[ ] Deprecate protocols/cli/instance_db/
-    [ ] Keep as compatibility shim (imports from infra/)
-    [ ] Add deprecation warnings
-    [ ] Remove in next major version
-
-[ ] Add missing functionality
-    [ ] Synapse Active Inference (DONE in skeleton)
-    [ ] Ground bootstrap agent (DONE in skeleton)
-    [ ] Surprise threshold in config (DONE in skeleton)
-```
-
-### 6.2 Backward Compatibility
-
-```python
-# protocols/cli/instance_db/__init__.py (FUTURE)
-"""
-DEPRECATED: Use impl/claude/infra/ instead.
-
-This module is a compatibility shim that will be removed in v3.0.
-"""
-import warnings
-warnings.warn(
-    "protocols/cli/instance_db is deprecated. Use impl/claude/infra/ instead.",
-    DeprecationWarning,
-    stacklevel=2,
-)
-
-from infra import *
-```
-
----
-
-## Part VII: Configuration (Infrastructure-as-Code)
-
-### 7.1 Default Configuration
+### 4.1 Full Configuration Schema
 
 ```yaml
 # ~/.config/kgents/infrastructure.yaml
 profile: local-canonical
 
+# === NERVOUS SYSTEM (Phase 1.5) ===
+nervous_system:
+  spinal_reflexes:
+    - "telemetry.heartbeat"
+    - "io.raw.read"
+    - "io.raw.write"
+    - "system.cpu_metrics"
+    - "system.memory_metrics"
+
+# === HIPPOCAMPUS (Phase 2.5) ===
+hippocampus:
+  type: "memory"  # or "redis" for distributed
+  flush_strategy: "on_sleep"  # Flush to disk when session ends
+  max_size_mb: 100
+
+# === SYNAPSE (Phase 2) ===
+synapse:
+  buffer_size: 1000
+  batch_interval_ms: 100
+
+# === ACTIVE INFERENCE (Phase 2) ===
+inference:
+  surprise_threshold: 0.5
+  flashbulb_threshold: 0.9
+  model: exponential_smoothing
+  # CONSTRAINT: Must be O(1) - no heavy ML models here
+
+# === DREAMING (Phase 5) ===
+dreaming:
+  mode: "lucid"  # Enable interactive ambiguity resolution
+  neurogenesis: true  # Allow suggesting schema changes
+  interruption_check_ms: 100  # Check for user activity during maintenance
+  interval_hours: 24
+  time_utc: "03:00"
+
+# === PROVIDERS (Phase 1 - OPERATIONAL) ===
 providers:
   relational:
     type: sqlite
@@ -493,7 +562,7 @@ providers:
     path: "${XDG_DATA_HOME}/kgents/vectors.json"
     dimensions: 384
     fallback: numpy-cosine
-    threshold: 1000
+    threshold: 1000  # Switch to sqlite-vec above this
 
   blob:
     type: filesystem
@@ -507,96 +576,145 @@ providers:
       warm_days: 365
       compost_strategy: sketch
 
-synapse:
-  buffer_size: 1000
-  batch_interval_ms: 100
-
-inference:
-  surprise_threshold: 0.5
-  model: exponential_smoothing
-
-dreaming:
-  interval_hours: 24
-  time_utc: "03:00"
-```
-
-### 7.2 Team/Cloud Configuration
-
-```yaml
-# infrastructure.yaml (team deployment)
-profile: team-cloud
-
-providers:
-  relational:
-    type: postgres
-    connection: "${DATABASE_URL}"
-
-  vector:
-    type: qdrant
-    connection: "${QDRANT_URL}"
-    dimensions: 1536  # OpenAI embedding size
-
-  blob:
-    type: s3
-    bucket: "${S3_BUCKET}"
-    prefix: "kgents/"
-
-  telemetry:
-    type: clickhouse
-    connection: "${CLICKHOUSE_URL}"
+# === COHERENCY (Phase 3) ===
+coherency:
+  ghost_healing: true  # Auto-remove orphaned vectors
+  staleness_check: true  # Flag stale embeddings for refresh
+  content_hash_field: "content_hash"
 ```
 
 ---
 
-## Part VIII: Open Questions (Resolved)
-
-### 8.1 Transaction Boundaries → Eventual Consistency
-
-From the critique:
-> "You cannot have ACID across the Unified Cortex. You need Sagas or Eventual Consistency by design."
-
-**Resolution:** Accept eventual consistency. The Synapse provides ordering guarantees within a single signal, but cross-signal consistency is eventual.
-
-### 8.2 Namespace Collision → Prefixed Isolation
-
-**Resolution:** All D-gent operations include namespace prefix:
-- Tables: `{namespace}_shapes`, `{namespace}_dreams`
-- Vectors: `{namespace}:{id}`
-- Events: `dgent.{namespace}.{event_type}`
-
-### 8.3 Performance → Batching + Caching
-
-**Resolution:**
-- Low-surprise signals are batched (Synapse)
-- Hot data uses `CachedAgent` pattern (D-gent)
-- Cold data uses async fire-and-forget
-
----
-
-## Appendix A: Test Summary
+## Part V: Test Summary
 
 | Phase | Tests | Status |
 |-------|-------|--------|
-| 1. Core Infrastructure | 85 | ✅ Complete (needs migration) |
-| 2. Synapse + Active Inference | ~40 | ⏳ Pending |
-| 3. D-gent Backend Adapters | ~55 | ⏳ Pending |
+| 1. Core Infrastructure | 85 | ✅ Complete |
+| 1.5 Spinal Cord | 31 | ✅ Complete |
+| 2. Synapse + Active Inference | 46 | ✅ Complete |
+| 2.5 Hippocampus | 37 | ✅ Complete |
+| 3. D-gent Adapters + Coherency | ~70 | ⏳ Pending |
 | 4. Composting + Lethe | ~45 | ⏳ Pending |
-| 5. Dreaming + Maintenance | ~30 | ⏳ Pending |
+| 5. Lucid Dreaming + Neurogenesis | ~50 | ⏳ Pending |
 | 6. Observability + Dashboard | ~35 | ⏳ Pending |
-| **Total** | **~290** | |
+| **Total** | **~399** | 199 complete |
 
 ---
 
-## Appendix B: The Cortical Vision
+## Part VI: Migration Path from Current State
+
+### 6.1 Immediate Actions (No Breaking Changes)
+
+These can be implemented without modifying existing code:
+
+1. **Add `nervous.py`** - Spinal Cord layer wraps existing lifecycle
+2. **Add `hippocampus.py`** - In-memory session context
+3. **Add config sections** - New YAML keys are ignored by existing code
+
+### 6.2 Phase 3 Breaking Changes
+
+When implementing Coherency Protocol:
+
+1. **Vector metadata must include `content_hash`**
+   - Migration: Backfill existing vectors with null hash (skip staleness check)
+
+2. **Ghost healing requires vector delete capability**
+   - Already implemented in `NumpyVectorStore.delete()`
+
+### 6.3 Future Location Migration
+
+Eventually move from `protocols/cli/instance_db/` to `impl/claude/infra/`:
+
+```python
+# protocols/cli/instance_db/__init__.py (FUTURE)
+"""
+DEPRECATED: Use impl/claude/infra/ instead.
+"""
+import warnings
+warnings.warn(
+    "protocols/cli/instance_db is deprecated. Use impl/claude/infra/ instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+from infra import *
+```
+
+---
+
+## Part VII: The Bicameral Vision
 
 ```
-                    ┌─────────────────────────────────────────┐
-                    │           THE UNIFIED CORTEX            │
-                    │                                         │
-                    │  "One memory, many modes, infinite joy" │
-                    │                                         │
-                    │    Predicts · Forgets · Dreams          │
-                    └─────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        THE BICAMERAL ENGINE v3.0                            │
+│                                                                              │
+│     "I dreamt about our project last night, and I realized                  │
+│      I'm confused about X. Can you help me understand?"                     │
+│                                                                              │
+│     Reflexes · Remembers · Forgets · Dreams · Learns · Grows                │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
+
+**The Spinal Cord** keeps the system responsive by routing noise away from the brain.
+
+**The Hippocampus** holds the day's memories, ready for consolidation.
+
+**The Synapse** routes signals based on surprise—novel information gets priority.
+
+**The Coherency Protocol** ensures the two hemispheres stay synchronized.
+
+**The Lucid Dreamer** doesn't just maintain—it reflects, questions, and proposes new structures.
 
 *"The cortex remembers. The cortex forgets. The cortex dreams. The cortex grows."*
+
+---
+
+## Appendix A: Key Algorithms
+
+### A.1 Exponential Smoothing (O(1))
+
+```python
+def update(self, key: str, actual: float) -> float:
+    """O(1) prediction update."""
+    predicted = self.predictions.get(key, 0.5)
+    surprise = abs(actual - predicted)
+    self.predictions[key] = self.alpha * actual + (1 - self.alpha) * predicted
+    return surprise
+```
+
+### A.2 T-Digest for Quantiles
+
+Use `tdigest` library for streaming quantile estimation:
+
+```python
+from tdigest import TDigest
+
+digest = TDigest()
+for value in stream:
+    digest.update(value)
+
+p50 = digest.percentile(50)
+p99 = digest.percentile(99)
+```
+
+### A.3 Count-Min Sketch for Frequency
+
+Use `probables` or similar for frequency estimation:
+
+```python
+from probables import CountMinSketch
+
+sketch = CountMinSketch(width=1000, depth=5)
+for item in stream:
+    sketch.add(item)
+
+count = sketch.check(item)  # Approximate frequency
+```
+
+---
+
+## Appendix B: References
+
+1. **Active Inference**: Friston, K. (2010). "The free-energy principle: a unified brain theory?"
+2. **Cryptographic Amnesia**: "Cryptographic Deletion" in secure data systems
+3. **T-Digest**: Dunning, T. & Ertl, O. (2019). "Computing Extremely Accurate Quantiles Using t-Digests"
+4. **Count-Min Sketch**: Cormode, G. & Muthukrishnan, S. (2005). "An improved data stream summary: the count-min sketch"

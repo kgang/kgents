@@ -184,24 +184,74 @@ class InfrastructureConfig:
         )
 
 
-def _expand_env_vars(value: str) -> str:
-    """Expand ${env:VAR} and ${VAR} patterns in strings."""
+class EnvVarNotSetError(ValueError):
+    """Raised when a required environment variable is not set."""
+
+    pass
+
+
+def _expand_env_vars(value: str, strict: bool = True) -> str:
+    """
+    Expand ${env:VAR} and ${VAR} patterns in strings.
+
+    Args:
+        value: String potentially containing env var references
+        strict: If True, raise EnvVarNotSetError for unset vars.
+                If False, use XDG defaults for known vars, fail on others.
+
+    Raises:
+        EnvVarNotSetError: If strict=True and an env var is not set,
+                          or if strict=False and an unknown var is not set.
+    """
     if not isinstance(value, str):
         return value
 
     import re
 
+    # XDG defaults for non-strict mode
+    xdg_defaults = {
+        "XDG_DATA_HOME": str(Path.home() / ".local" / "share"),
+        "XDG_CONFIG_HOME": str(Path.home() / ".config"),
+        "XDG_CACHE_HOME": str(Path.home() / ".cache"),
+    }
+
     # Handle ${env:VAR} pattern
     def replace_env(match):
         var_name = match.group(1)
-        return os.environ.get(var_name, match.group(0))
+        env_value = os.environ.get(var_name)
+        if env_value is None:
+            if strict:
+                raise EnvVarNotSetError(
+                    f"Environment variable '{var_name}' is not set. "
+                    f"Set it in your shell config (e.g., export {var_name}=...)"
+                )
+            # For non-strict, check XDG defaults
+            if var_name in xdg_defaults:
+                return xdg_defaults[var_name]
+            raise EnvVarNotSetError(
+                f"Environment variable '{var_name}' is not set and has no default."
+            )
+        return env_value
 
     value = re.sub(r"\$\{env:(\w+)\}", replace_env, value)
 
     # Handle ${VAR} pattern (XDG vars)
     def replace_xdg(match):
         var_name = match.group(1)
-        return os.environ.get(var_name, match.group(0))
+        env_value = os.environ.get(var_name)
+        if env_value is None:
+            if strict:
+                raise EnvVarNotSetError(
+                    f"Environment variable '{var_name}' is not set. "
+                    f"Set it in your shell config (e.g., export {var_name}=...)"
+                )
+            # For non-strict, check XDG defaults
+            if var_name in xdg_defaults:
+                return xdg_defaults[var_name]
+            raise EnvVarNotSetError(
+                f"Environment variable '{var_name}' is not set and has no default."
+            )
+        return env_value
 
     value = re.sub(r"\$\{(\w+)\}", replace_xdg, value)
 
@@ -301,7 +351,8 @@ class StorageProvider:
     async def _create_relational(cls, config: ProviderConfig) -> IRelationalStore:
         """Create relational store from config."""
         if config.type == "sqlite":
-            connection = _expand_env_vars(config.connection or "")
+            # Use strict=False to gracefully use XDG defaults if env vars unset
+            connection = _expand_env_vars(config.connection or "", strict=False)
             store = SQLiteRelationalStore(connection, wal_mode=config.wal_mode)
             # Ensure connection is established
             await store._ensure_connection()
@@ -315,7 +366,7 @@ class StorageProvider:
     async def _create_vector(cls, config: ProviderConfig) -> IVectorStore:
         """Create vector store from config."""
         if config.type in ("numpy", "numpy-cosine"):
-            path = _expand_env_vars(config.path or "")
+            path = _expand_env_vars(config.path or "", strict=False)
             store = NumpyVectorStore(path, dimensions=config.dimensions)
             await store.initialize()
             return store
@@ -323,7 +374,7 @@ class StorageProvider:
             return InMemoryVectorStore(dimensions=config.dimensions)
         else:
             # Default to numpy for unknown types
-            path = _expand_env_vars(config.path or "")
+            path = _expand_env_vars(config.path or "", strict=False)
             store = NumpyVectorStore(path, dimensions=config.dimensions)
             await store.initialize()
             return store
@@ -332,7 +383,7 @@ class StorageProvider:
     async def _create_blob(cls, config: ProviderConfig) -> IBlobStore:
         """Create blob store from config."""
         if config.type == "filesystem":
-            path = _expand_env_vars(config.path or "")
+            path = _expand_env_vars(config.path or "", strict=False)
             return FilesystemBlobStore(path)
         elif config.type == "memory":
             return InMemoryBlobStore()
@@ -343,7 +394,7 @@ class StorageProvider:
     async def _create_telemetry(cls, config: ProviderConfig) -> ITelemetryStore:
         """Create telemetry store from config."""
         if config.type == "sqlite":
-            connection = _expand_env_vars(config.connection or "")
+            connection = _expand_env_vars(config.connection or "", strict=False)
             return SQLiteTelemetryStore(connection)
         elif config.type == "memory":
             return InMemoryTelemetryStore()

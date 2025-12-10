@@ -8,7 +8,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from .hypothesis import Hypothesis, HypothesisOutput, NoveltyLevel
+from .hypothesis import HypothesisOutput
+from .hypothesis_parser import Hypothesis, NoveltyLevel
 
 if TYPE_CHECKING:
     from .robin import RobinInput
@@ -36,7 +37,7 @@ def generate_fallback_hypotheses(input: Any, hypothesis_count: int) -> Hypothesi
             novelty=NoveltyLevel.INCREMENTAL,
             falsifiable_by=[
                 f"Measure structural variance in {input.domain}",
-                f"Compare against systems without constraint",
+                "Compare against systems without constraint",
             ],
             supporting_observations=[],
             assumptions=[
@@ -49,7 +50,7 @@ def generate_fallback_hypotheses(input: Any, hypothesis_count: int) -> Hypothesi
             confidence=0.5,
             novelty=NoveltyLevel.EXPLORATORY,
             falsifiable_by=[
-                f"Test if variation follows optimization gradients",
+                "Test if variation follows optimization gradients",
                 f"Look for local optima in {input.domain}",
             ],
             supporting_observations=[],

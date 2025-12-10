@@ -267,7 +267,7 @@ class MembraneCLI:
 
         # For now, we detect shapes from the current directory structure
         # In full implementation, this would integrate with:
-        # - Obsidian vault analysis (via mirror protocol)
+        # - L-gent semantic analysis
         # - Git history (commit patterns)
         # - Code structure (module dependencies)
 
@@ -751,7 +751,6 @@ def format_membrane_observe_rich(result: MembraneObserveResult) -> str:
     ]
 
     for shape in result.shapes:
-        shape_type = type(shape).__name__.replace("Semantic", "").lower()
         if isinstance(shape, SemanticVoid):
             lines.append(
                 f"  {shape.shape_id}   {', '.join(shape.boundary[:3])} -- {shape.interpretation}"

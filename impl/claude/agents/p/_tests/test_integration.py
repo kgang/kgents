@@ -7,10 +7,10 @@ Tests E-gent, B-gent, and F-gent parsers conforming to P-gents Parser[A].
 import pytest
 
 
+@pytest.mark.skip(reason="E-gent parser module was refactored - needs update")
 class TestEgentIntegration:
     """Test E-gent parser integration."""
 
-    @pytest.mark.skip(reason="agents.e.parser.p_integration not yet implemented")
     def test_code_parser_structured_format(self):
         """Test E-gent code parser with structured format."""
         from agents.e.parser.p_integration import code_parser
@@ -37,7 +37,6 @@ def hello():
         assert result.confidence > 0.5
         assert "e-gent" in result.strategy
 
-    @pytest.mark.skip(reason="agents.e.parser.p_integration not yet implemented")
     def test_code_parser_pure_code_block(self):
         """Test E-gent code parser with pure code block."""
         from agents.e.parser.p_integration import code_parser
@@ -56,7 +55,6 @@ def test():
         assert result.value is not None
         assert "def test():" in result.value.code
 
-    @pytest.mark.skip(reason="agents.e.parser.p_integration not yet implemented")
     def test_code_parser_failure(self):
         """Test E-gent code parser with invalid input."""
         from agents.e.parser.p_integration import code_parser
@@ -205,10 +203,10 @@ def invoke(input: str) -> str:
         assert result.confidence == 0.0
 
 
+@pytest.mark.skip(reason="E-gent parser module was refactored - needs update")
 class TestComposition:
     """Test composition of different parsers."""
 
-    @pytest.mark.skip(reason="agents.e.parser.p_integration not yet implemented")
     def test_fallback_composition(self):
         """Test fallback composition of E-gent and B-gent parsers."""
         from agents.e.parser.p_integration import code_parser

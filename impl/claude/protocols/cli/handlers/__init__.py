@@ -5,11 +5,10 @@ This package contains handlers for the Hollow Shell architecture.
 Each handler is only imported when its command is invoked.
 
 Structure:
-- companions.py: Daily companion commands (pulse, ground, breathe, entropy)
-- scientific.py: Scientific core commands (falsify, conjecture, rival, sublate, shadow)
-- mirror.py: Mirror Protocol commands
-- membrane.py: Membrane Protocol commands
+- membrane.py: Membrane Protocol commands (topological perception)
 - igent.py: I-gent integration (garden, whisper)
+- init.py: Workspace initialization
+- wipe.py: Database cleanup commands
 - debug.py: Debug utilities
 
 All handlers follow the signature:

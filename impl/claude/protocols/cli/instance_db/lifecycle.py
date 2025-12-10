@@ -155,6 +155,9 @@ class LifecycleManager:
             # Stage 5: Run migrations
             try:
                 await storage.run_migrations()
+                # First-run messaging: tell user we created the DB
+                if not initial_global_db_exists:
+                    self._signal_first_run(self._paths)
             except Exception as e:
                 errors.append(f"Migration failed: {e}")
                 # Try recovery
@@ -238,6 +241,22 @@ class LifecycleManager:
         print(
             "\033[33m[kgents]\033[0m Running in DB-less mode. "
             "Database will be created on first shape observation.",
+            file=sys.stderr,
+        )
+
+    def _signal_first_run(self, paths: XDGPaths) -> None:
+        """
+        Signal to user that this is first run and DB was created.
+
+        Principle: Infrastructure work should communicate what's happening.
+        First-run is special - users should know where their data lives.
+        """
+        print(
+            f"\033[32m[kgents]\033[0m First run! Created cortex at {paths.data}/",
+            file=sys.stderr,
+        )
+        print(
+            "\033[90m         Data will persist across sessions.\033[0m",
             file=sys.stderr,
         )
 

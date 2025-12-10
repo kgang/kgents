@@ -558,8 +558,6 @@ class LedgerTongueParser:
 
     def parse_query(self, text: str) -> ParseResult:
         """Parse QUERY command."""
-        upper_text = text.upper()
-
         # QUERY BALANCE OF <account> IN <currency>
         balance_pattern = re.compile(
             r"QUERY\s+BALANCE\s+OF\s+([a-zA-Z][a-zA-Z0-9_]*)\s+IN\s+([A-Z]{3,6})\s*$",

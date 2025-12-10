@@ -52,25 +52,12 @@ INTENT LAYER (learn these 10 verbs):
   do        Natural language intent router
 
 PROTOCOLS:
-  mirror    Mirror Protocol - dialectical introspection
   membrane  Membrane Protocol - topological perception
   flow      Flowfile engine for composition
 
-COMPANIONS (0 tokens):
-  pulse     1-line project health
-  ground    Parse & reflect statement structure
-  breathe   Contemplative pause
-  entropy   Show session chaos budget
-
-SCIENTIFIC (0 tokens):
-  falsify   Find counterexamples to hypothesis
-  conjecture Generate hypotheses from patterns
-  rival     Steel-man opposing views
-  sublate   Synthesize contradictions
-  shadow    Surface suppressed concerns
-
 WORKSPACE:
   init      Initialize .kgents workspace
+  wipe      Remove local/global/all databases (with confirmation)
 
 BOOTSTRAP:
   laws      Display/verify category laws
@@ -107,23 +94,12 @@ COMMAND_REGISTRY: dict[str, str] = {
     "judge": "protocols.cli.intent.commands:cmd_judge",
     "do": "protocols.cli.intent.router:cmd_do",
     # Protocols (existing)
-    "mirror": "protocols.cli.handlers.mirror:cmd_mirror",
     "membrane": "protocols.cli.handlers.membrane:cmd_membrane",
     # Flow Engine (Phase 3)
     "flow": "protocols.cli.flow.commands:cmd_flow",
-    # Companions (existing - Tier 1)
-    "pulse": "protocols.cli.handlers.companions:cmd_pulse",
-    "ground": "protocols.cli.handlers.companions:cmd_ground",
-    "breathe": "protocols.cli.handlers.companions:cmd_breathe",
-    "entropy": "protocols.cli.handlers.companions:cmd_entropy",
-    # Scientific (existing - Tier 2)
-    "falsify": "protocols.cli.handlers.scientific:cmd_falsify",
-    "conjecture": "protocols.cli.handlers.scientific:cmd_conjecture",
-    "rival": "protocols.cli.handlers.scientific:cmd_rival",
-    "sublate": "protocols.cli.handlers.scientific:cmd_sublate",
-    "shadow": "protocols.cli.handlers.scientific:cmd_shadow",
     # Bootstrap (Phase 2)
     "init": "protocols.cli.handlers.init:cmd_init",
+    "wipe": "protocols.cli.handlers.wipe:cmd_wipe",
     "laws": "protocols.cli.bootstrap.laws:cmd_laws",
     "principles": "protocols.cli.bootstrap.principles:cmd_principles",
     # Genus Layer (Power User)
@@ -148,9 +124,6 @@ COMMAND_REGISTRY: dict[str, str] = {
     # TUI Dashboard (Phase 7)
     "dash": "protocols.cli.tui.dashboard:cmd_dash",
 }
-
-# Commands that still need legacy fallback (deprecated - migrate these)
-LEGACY_COMMANDS: set[str] = set()  # All migrated to hollow shell handlers
 
 
 # =============================================================================
@@ -328,7 +301,7 @@ def load_context() -> dict:
 
     # Lazy import yaml only if config exists
     try:
-        import yaml
+        import yaml  # type: ignore
 
         with open(config_path) as f:
             return yaml.safe_load(f) or {}
@@ -414,31 +387,64 @@ NO_BOOTSTRAP_COMMANDS = {
 }
 
 
-def _sync_bootstrap(project_path: Path | None = None):
+def _sync_bootstrap(project_path: Path | None = None, verbose: bool = False):
     """
     Bootstrap the cortex synchronously.
 
     Uses asyncio.run() to run the async bootstrap in a fresh event loop.
     This must be called BEFORE any handler that might create its own event loop.
+
+    Principle: Infrastructure work should always communicate what's happening.
+    Users should never wonder "what is this doing?" during startup.
     """
     import asyncio
 
     try:
-        return asyncio.run(_bootstrap_cortex(project_path))
+        state = asyncio.run(_bootstrap_cortex(project_path))
+
+        # User-facing messaging: tell the user what happened
+        if state is not None:
+            if verbose:
+                # Verbose mode: full details
+                mode_desc = {
+                    "db_less": "in-memory (no persistence)",
+                    "local": "project-local DB",
+                    "global": "global DB (~/.local/share/kgents/)",
+                    "full": "global + project DB",
+                }
+                mode_str = mode_desc.get(state.mode.value, state.mode.value)
+                print(
+                    f"\033[90m[cortex]\033[0m Initialized: {mode_str} "
+                    f"| instance={state.instance_id[:8] if state.instance_id else 'none'}",
+                    file=sys.stderr,
+                )
+            elif state.mode.value == "db_less":
+                # Always warn about DB-less mode (already handled in lifecycle.py)
+                pass
+            # Normal mode: silent success (no noise)
+
+        return state
     except Exception as e:
         print(f"\033[33m[kgents]\033[0m Bootstrap warning: {e}", file=sys.stderr)
         return None
 
 
-def _sync_shutdown():
+def _sync_shutdown(verbose: bool = False):
     """
     Shutdown the cortex synchronously.
 
     Uses asyncio.run() to run the async shutdown.
+
+    Principle: Infrastructure work should always communicate what's happening.
     """
     import asyncio
 
     try:
+        if verbose and _lifecycle_state and _lifecycle_state.instance_id:
+            print(
+                f"\033[90m[cortex]\033[0m Shutdown: instance={_lifecycle_state.instance_id[:8]}",
+                file=sys.stderr,
+            )
         asyncio.run(_shutdown_cortex())
     except Exception:
         pass  # Best effort
@@ -503,12 +509,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         print_suggestions(command)
         return 1
 
+    # Check for verbose mode
+    verbose = "--verbose" in command_args or "-v" in command_args
+
     # Auto-bootstrap cortex (unless --no-bootstrap flag is set)
     # This initializes DB persistence and telemetry
     # Runs synchronously BEFORE handler to avoid nested event loop issues
     if not flags.get("no_bootstrap"):
         project_root = find_kgents_root()
-        _sync_bootstrap(project_root)
+        _sync_bootstrap(project_root, verbose=verbose)
 
     # Execute handler
     try:
@@ -521,14 +530,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         try:
             from protocols.cli.errors import handle_exception
 
-            verbose = "--verbose" in command_args or "-v" in command_args
             print(handle_exception(e, verbose=verbose))
         except ImportError:
             print(f"Error: {e}")
         return 1
     finally:
         # Graceful shutdown
-        _sync_shutdown()
+        _sync_shutdown(verbose=verbose)
 
 
 if __name__ == "__main__":

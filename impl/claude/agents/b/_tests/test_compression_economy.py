@@ -491,9 +491,8 @@ class TestCompressionEconomyMonitor:
 
         opportunities = await monitor.check_all_pairs()
         # High traffic pair may be recommended
-        pairs = [p for p, roi in opportunities]
-        # At least the high-traffic pair should be in opportunities
-        # (if ROI is positive)
+        # At least some opportunities should be returned (if ROI is positive)
+        _ = opportunities  # Verify it returns without error
 
     def test_get_pidgin(self, monitor):
         """Test retrieving pidgin for pair."""
@@ -797,7 +796,7 @@ class TestIntegration:
         assert roi.message_count == 30
 
         # Check for opportunities
-        opportunities = await monitor.check_all_pairs()
+        _ = await monitor.check_all_pairs()
         # May or may not have opportunities depending on regularity
 
     @pytest.mark.asyncio
