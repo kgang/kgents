@@ -8,7 +8,6 @@ Coverage:
 - Metrics collection
 """
 
-
 import pytest
 
 from ..synapse import (

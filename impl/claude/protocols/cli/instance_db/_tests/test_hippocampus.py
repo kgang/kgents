@@ -9,7 +9,6 @@ Coverage:
 - Synapse integration
 """
 
-
 import pytest
 
 from ..hippocampus import (
