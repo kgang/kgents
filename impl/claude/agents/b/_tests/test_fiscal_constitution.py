@@ -19,7 +19,6 @@ from agents.b.fiscal_constitution import (
     # Types
     ParseError,
     ParseSuccess,
-    OperationType,
     AccountBalance,
     Account,
     LedgerState,
@@ -35,8 +34,6 @@ from agents.b.fiscal_constitution import (
     ExecutionResult,
     # Banker
     ConstitutionalBanker,
-    TransactionResult,
-    # Convenience functions
     create_ledger_tongue,
     create_constitutional_banker,
     create_fiscal_constitution,

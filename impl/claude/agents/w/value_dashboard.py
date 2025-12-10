@@ -51,7 +51,7 @@ from enum import Enum
 from typing import Any, Optional
 
 # Import W-gent wire protocol
-from .protocol import WireObservable, WireState, WireMetrics
+from .protocol import WireObservable, WireState
 
 # Import B-gent value accounting (optional - graceful degradation)
 try:

@@ -213,3 +213,4 @@ __marimo__/
 impl/claude/.memory/
 impl/claude/.evolve_logs/
 .memory/
+.wire/

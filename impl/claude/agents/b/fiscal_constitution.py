@@ -26,9 +26,9 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
-from .metered_functor import Gas, CentralBank, Receipt
+from .metered_functor import Gas, CentralBank
 
 
 # =============================================================================
@@ -482,7 +482,7 @@ class LedgerTongueParser:
             return self.parse_release(text)
         else:
             return ParseError(
-                error=f"Unknown command. Valid commands: TRANSFER, QUERY, RESERVE, RELEASE",
+                error="Unknown command. Valid commands: TRANSFER, QUERY, RESERVE, RELEASE",
                 context=text[:20],
             )
 

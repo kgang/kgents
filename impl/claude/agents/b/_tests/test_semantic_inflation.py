@@ -29,11 +29,8 @@ from agents.b.semantic_inflation import (
     InflationCategory,
     InflationReport,
     TokenAllocation,
-    AllocationDecision,
     DeflationStrategy,
     DeflationProposal,
-    CPISnapshot,
-    # Classes
     InflationBudget,
     DeflationNegotiator,
     ComplexityAnalyzer,
@@ -45,7 +42,6 @@ from agents.b.semantic_inflation import (
     get_deflation_recommendations,
     estimate_explanation_tokens,
 )
-from agents.b.metered_functor import CentralBank
 
 
 # =============================================================================

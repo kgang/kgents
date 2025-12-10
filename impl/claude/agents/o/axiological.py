@@ -19,14 +19,12 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 from .observer import (
     BaseObserver,
-    EntropyEvent,
     ObservationContext,
     ObservationResult,
-    ObservationStatus,
 )
 
 # Note: We import B-gent types conditionally to avoid circular imports
