@@ -108,6 +108,26 @@ kgents check .   # Instance registered, telemetry logged
 
 **Flags:**
 - `--no-bootstrap`: Skip auto-bootstrap (run in degraded mode)
+- `-v/--verbose`: Show bootstrap/shutdown details
+
+**Messaging Hierarchy** (see `spec/principles.md` - Transparent Infrastructure):
+- First run: Green message showing where data lives
+- Degraded mode: Yellow warning
+- Verbose mode: Gray details (instance ID, mode)
+- Normal: Silent success
+
+### Wipe Command
+
+Remove databases with confirmation:
+
+```bash
+kgents wipe local          # Remove project DB (.kgents/) - requires confirmation
+kgents wipe global         # Remove global DB (~/.local/share/kgents/) - requires confirmation
+kgents wipe all            # Remove both - requires confirmation
+
+kgents wipe global --force # Skip confirmation (use with caution!)
+kgents wipe all --dry-run  # Show what would be deleted without deleting
+```
 
 ### Manual Setup (Optional)
 
