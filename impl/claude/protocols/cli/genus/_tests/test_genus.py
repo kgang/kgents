@@ -10,7 +10,6 @@ Tests the Big 5 Genera CLI handlers:
 """
 
 import json
-import pytest
 from io import StringIO
 import sys
 
