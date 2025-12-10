@@ -6,12 +6,15 @@ Keep it concise—focus on current state and recent work.
 
 ## TL;DR
 
-**Status**: All Tests Passing ✅ | **Branch**: `main` | **Tests**: ~5,166+
+**Status**: All Tests Passing ✅ | **Branch**: `main` | **Tests**: ~5,234+
 
 **Recent Work**:
-- **E-gent Cleanup** ← COMPLETE (285 tests)
-  - Deleted legacy v1 (`_legacy/`, `evolve.py`)
-  - v2 is now the only `agents.e` API
+- **E-gent Phase 8: Safety & Guardrails** ← COMPLETE (68 tests)
+  - Atomic rollback guarantees
+  - Rate limiting (mutations + infections)
+  - Audit logging with sinks
+  - Sandboxed execution environment
+- E-gent v2 COMPLETE (353 tests total)
 - M-gent Holographic Cartography COMPLETE (114 tests)
 - Cortex Assurance v2.0 COMPLETE (73 tests)
 - Instance DB Phase 1 COMPLETE (85 tests)
@@ -79,60 +82,83 @@ L-gent (terrain)     N-gent (traces)     B-gent (budget)
 ## Unified Cortex: Infrastructure Layer v2.0
 
 **Plan**: `docs/instance-db-implementation-plan.md`
-**Location**: `impl/claude/infra/` (new) + `protocols/cli/instance_db/` (Phase 1)
+**Location**: `protocols/cli/instance_db/` (Phase 1 OPERATIONAL)
 
-### The Three Hemispheres
+### Setup (First Time)
 
-```
-┌─────────────────────────┬─────────────────┬─────────────────────────┐
-│   LEFT HEMISPHERE       │ CORPUS CALLOSUM │    RIGHT HEMISPHERE     │
-│   (The Bookkeeper)      │   (Synapse)     │    (The Poet)           │
-├─────────────────────────┼─────────────────┼─────────────────────────┤
-│ impl/claude/infra/      │ infra/synapse.py│ agents/d/unified.py     │
-│ ACID, exact, relational │ Active Inference│ Semantic, approximate   │
-└─────────────────────────┴─────────────────┴─────────────────────────┘
+```bash
+# 1. Create infrastructure.yaml to enable DB creation
+cat > ~/.config/kgents/infrastructure.yaml << 'EOF'
+profile: local-canonical
+providers:
+  relational: { type: sqlite, connection: "${XDG_DATA_HOME}/kgents/membrane.db" }
+  vector: { type: numpy, path: "${XDG_DATA_HOME}/kgents/vectors.json", dimensions: 384 }
+  blob: { type: filesystem, path: "${XDG_DATA_HOME}/kgents/blobs" }
+  telemetry: { type: sqlite, connection: "${XDG_DATA_HOME}/kgents/telemetry.db" }
+EOF
+
+# 2. Bootstrap (creates DB + tables)
+python -c "
+import asyncio
+from protocols.cli.instance_db.lifecycle import quick_bootstrap
+async def init():
+    manager, state = await quick_bootstrap()
+    print(f'Mode: {state.mode.value}, Instance: {state.instance_id}')
+    await manager.shutdown()
+asyncio.run(init())
+"
 ```
 
 ### Phase Status
 
 | Phase | Description | Status | Tests |
 |-------|-------------|--------|-------|
-| 1 | Core Infrastructure + Lifecycle | ✅ Complete | 85 |
+| 1 | Core Infrastructure + Lifecycle | ✅ OPERATIONAL | 85 |
 | 2 | Synapse + Active Inference | ⏳ Skeleton | ~40 |
 | 3 | D-gent Backend Adapters | ⏳ Pending | ~55 |
 | 4 | Composting + Lethe Protocol | ⏳ Pending | ~45 |
 | 5 | Dreaming + Maintenance | ⏳ Pending | ~30 |
 | 6 | Observability + Dashboard | ⏳ Pending | ~35 |
 
-### New infra/ Structure
+### File Structure (`protocols/cli/instance_db/`)
 
 | File | Purpose |
 |------|---------|
-| `ground.py` | Bootstrap agent (XDG, config, environment) |
-| `synapse.py` | Event bus with Active Inference |
-| `storage.py` | Left Hemisphere (4 protocols) |
-| `lifecycle.py` | Bootstrap sequence, mode detection |
-| `providers/` | SQLite/Numpy/Filesystem implementations |
-
-### Key Concepts (from critique)
-
-| Concept | Description |
-|---------|-------------|
-| **Active Inference** | Predict before store; route by surprise |
-| **Lethe Protocol** | Cryptographic amnesia (compost = delete key) |
-| **Synapse** | Event bus decoupling intent from storage |
-| **Dreaming** | Maintenance as REM cycles (3 AM optimization) |
+| `interfaces.py` | IRelationalStore, IVectorStore, IBlobStore, ITelemetryStore |
+| `storage.py` | XDGPaths, StorageProvider, InfrastructureConfig |
+| `lifecycle.py` | LifecycleManager, OperationMode, quick_bootstrap |
+| `providers/sqlite.py` | SQLite + Numpy + Filesystem implementations |
 
 ### Graceful Degradation
 
-- **FULL**: Global + Project DB
-- **GLOBAL_ONLY**: ~/.local/share/kgents/membrane.db
-- **LOCAL_ONLY**: .kgents/cortex.db
-- **DB_LESS**: In-memory (ephemeral)
+| Mode | Condition | Storage |
+|------|-----------|---------|
+| **FULL** | Global + Project DB exist | Both |
+| **GLOBAL_ONLY** | `~/.local/share/kgents/membrane.db` exists | Global |
+| **LOCAL_ONLY** | `.kgents/cortex.db` exists | Project |
+| **DB_LESS** | No DB, no config | In-memory |
+
+### Usage
+
+```python
+from protocols.cli.instance_db.lifecycle import LifecycleManager
+
+manager = LifecycleManager()
+state = await manager.bootstrap(project_path="/path/to/project")
+
+# state.mode → OperationMode.GLOBAL_ONLY
+# state.storage_provider.relational.execute(...)
+# state.storage_provider.vector.search(...)
+
+await manager.shutdown()
+```
 
 ---
 
-## E-gent Dependencies (COMPLETE)
+## E-gent v2 COMPLETE ✅
+
+**Status**: All phases complete. 353 tests passing.
+**Cleanup**: Legacy `_legacy/` and `evolve.py` removed. v2 is the only API.
 
 ### L-gent Integration (`agents/l/egent_integration.py`) - 49 tests
 
@@ -141,9 +167,19 @@ L-gent (terrain)     N-gent (traces)     B-gent (budget)
 | `MutationSchema` | Isomorphic transformation patterns with Gibbs ΔG |
 | `STANDARD_SCHEMAS` | 14 schemas (substitute, extract, inline, annotate, restructure) |
 | `CodeIntent` | Teleological field (embedding + source + confidence) |
-| `infer_types()` | Static type inference for semantic stability |
+| `infer_types()` | AST-based static type inference for semantic stability |
 | `types_compatible()` | Check mutation preserves type structure |
 | `EgentSemanticRegistry` | Extended registry with archetype management |
+
+### L-gent Embedders (`agents/l/embedders.py`) - Production-grade
+
+| Embedder | Backend | Notes |
+|----------|---------|-------|
+| `SentenceTransformerEmbedder` | Local | all-MiniLM-L6-v2 (384-dim), mpnet (768-dim) |
+| `OpenAIEmbedder` | API | text-embedding-3-small/large |
+| `CachedEmbedder` | D-gent | Disk-persistent cache wrapper |
+| `SimpleEmbedder` | TF-IDF | Fallback, no dependencies |
+| `create_best_available_embedder()` | Auto | Graceful degradation |
 
 ### B-gent Integration (`agents/b/egent_integration.py`) - 29 tests
 
@@ -171,8 +207,9 @@ L-gent (terrain)     N-gent (traces)     B-gent (budget)
 | `library.py` | Viral Library (fitness-evolving patterns) | 49 |
 | `phage.py` | Phage infection operations | 50 |
 | `cycle.py` | ThermodynamicCycle (complete pipeline) | 45 |
+| `safety.py` | Safety & Guardrails (Phase 8) | 68 |
 
-**E-gent Total**: 285 tests
+**E-gent Total**: 353 tests
 
 ### Teleological Demon
 
@@ -244,6 +281,29 @@ L-gent (terrain)     N-gent (traces)     B-gent (budget)
 | Protocol integrations | `SunProtocol`, `PredictionMarketProtocol`, `StakingPoolProtocol`, `SemanticRegistryProtocol` |
 | Temperature control | Auto-adjust based on success rate (cool on success, heat on failure) |
 | Factory functions | `create_cycle()`, `create_conservative_cycle()`, `create_exploratory_cycle()`, `create_full_cycle()` |
+
+### Safety & Guardrails (Phase 8) ✅ NEW
+
+`impl/claude/agents/e/safety.py` - Defense in depth for evolution
+
+| Component | Description |
+|-----------|-------------|
+| `AtomicCheckpoint` | Multi-file checkpointing with commit/rollback |
+| `AtomicMutationManager` | Context manager for atomic mutations |
+| `RateLimiter` | Sliding window rate limiting (minute/hour/day) |
+| `RateLimitExceeded` | Exception with retry_after and exponential backoff |
+| `AuditLogger` | Structured logging with InMemory/File sinks |
+| `AuditEvent` | 15 event types (mutation, infection, checkpoint, sandbox) |
+| `Sandbox` | Isolated execution with resource limits |
+| `SandboxConfig` | Memory, CPU, file, network, subprocess controls |
+| `SafetySystem` | Unified coordinator for all guardrails |
+| `create_safety_system()` | Factory with strict/default modes |
+
+**Key Principles**:
+- **ATOMIC**: Mutations succeed completely or not at all
+- **AUDITABLE**: Every infection leaves a trace
+- **BOUNDED**: Rate limits prevent runaway evolution
+- **SANDBOXED**: Untrusted mutations run in isolation
 
 ### Usage
 
@@ -349,8 +409,8 @@ RETRIEVE → PROJECT → CHALLENGE → SOLVE → TRANSLATE → VERIFY
 | D×L, D×M, M×L, M×B | ✅ |
 | N×L, N×M, N×I, N×B | ✅ |
 | O×W Panopticon | ✅ |
-| **E×B (Market+Grants)** | 📋 Specified (v2) |
-| **E×L (Schemas+Intent)** | 📋 Specified (v2) |
+| **E×B (Market+Grants+Staking)** | ✅ Implemented (egent_integration.py) |
+| **E×L (Schemas+Intent+Types)** | ✅ Implemented (egent_integration.py) |
 | **Ψ×L (Embeddings)** | ✅ Implemented (integrations.py) |
 | **Ψ×B (Budgets)** | ✅ Implemented (integrations.py) |
 | **Ψ×D (Learning persistence)** | ✅ Implemented (integrations.py) |
@@ -512,6 +572,7 @@ Error messages that help, not just fail:
 
 | Doc | Content |
 |-----|---------|
+| `docs/agent-cross-pollination-final-proposal.md` | **ACTIVE** - Field-based integration architecture |
 | `docs/instance-db-implementation-plan.md` | **v2.0** - Unified Cortex (Infrastructure × Semantics) |
 | `docs/m-gent-cartography-enhancement-plan.md` | Holographic Cartography |
 | `docs/cortex-assurance-system.md` | Phase 8 test intelligence |

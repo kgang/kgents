@@ -22,8 +22,6 @@ Key principles:
 - Fitness-evolving patterns (living library)
 - Phage-based mutation vectors (active, not passive)
 
-Legacy v1 API is available in agents.e._legacy for backward compatibility.
-
 Spec Reference: spec/e-gents/
 """
 
@@ -137,6 +135,34 @@ from .cycle import (
     create_full_cycle,
 )
 
+from .safety import (
+    # Rollback
+    AtomicCheckpoint,
+    AtomicMutationManager,
+    FileCheckpoint,
+    RollbackStatus,
+    # Rate limiting
+    RateLimiter,
+    RateLimitConfig,
+    RateLimitExceeded,
+    # Audit logging
+    AuditEvent,
+    AuditEventType,
+    AuditLogger,
+    InMemoryAuditSink,
+    FileAuditSink,
+    # Sandbox
+    Sandbox,
+    SandboxConfig,
+    SandboxResult,
+    SandboxViolation,
+    # Unified
+    SafetySystem,
+    SafetyConfig,
+    create_safety_system,
+    create_test_safety_system,
+)
+
 __all__ = [
     # Core types
     "Phage",
@@ -218,4 +244,25 @@ __all__ = [
     "create_exploratory_cycle",
     "create_grant_funded_cycle",
     "create_full_cycle",
+    # Safety
+    "AtomicCheckpoint",
+    "AtomicMutationManager",
+    "FileCheckpoint",
+    "RollbackStatus",
+    "RateLimiter",
+    "RateLimitConfig",
+    "RateLimitExceeded",
+    "AuditEvent",
+    "AuditEventType",
+    "AuditLogger",
+    "InMemoryAuditSink",
+    "FileAuditSink",
+    "Sandbox",
+    "SandboxConfig",
+    "SandboxResult",
+    "SandboxViolation",
+    "SafetySystem",
+    "SafetyConfig",
+    "create_safety_system",
+    "create_test_safety_system",
 ]
