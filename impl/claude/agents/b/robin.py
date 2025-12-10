@@ -17,10 +17,10 @@ The "composition" is at the conceptual level:
 """
 
 from dataclasses import dataclass, field
-from typing import Optional, Any
+from typing import Optional
 
 from bootstrap.types import Agent
-from runtime.base import LLMAgent, AgentContext, Runtime, AgentResult
+from runtime.base import Runtime, AgentResult
 from agents.a.skeleton import AgentMeta, AgentIdentity, AgentInterface, AgentBehavior
 from agents.k import (
     PersonaSeed,
@@ -32,23 +32,18 @@ from agents.k import (
     DialogueOutput,
     KgentAgent,
     PersonaQueryAgent,
-    kgent,
-    query_persona,
-)
+)  # kgent, query_persona intentionally not imported (available via agents.k)
 from agents.h import (
     HegelAgent,
     DialecticInput,
     DialecticOutput,
-    hegel,
 )
 from .hypothesis import (
     HypothesisEngine,
     HypothesisInput,
     HypothesisOutput,
-    Hypothesis,
-    NoveltyLevel,
-    hypothesis_engine,
 )
+from .hypothesis_parser import Hypothesis
 
 
 @dataclass
@@ -58,12 +53,13 @@ class RobinInput:
 
     Combines a scientific query with optional personalization.
     """
-    query: str                              # The scientific question or topic
+
+    query: str  # The scientific question or topic
     observations: list[str] = field(default_factory=list)  # Supporting observations
-    domain: str = "general science"         # Scientific domain
+    domain: str = "general science"  # Scientific domain
     dialogue_mode: DialogueMode = DialogueMode.EXPLORE  # How K-gent engages
     constraints: list[str] = field(default_factory=list)  # Known constraints
-    apply_dialectic: bool = True            # Whether to dialectically refine
+    apply_dialectic: bool = True  # Whether to dialectically refine
 
 
 @dataclass
@@ -73,6 +69,7 @@ class RobinOutput:
 
     Includes personalization, hypotheses, and dialectic analysis.
     """
+
     # From K-gent
     personalization: PersonaResponse
     kgent_reflection: DialogueOutput
@@ -86,7 +83,7 @@ class RobinOutput:
     dialectic: Optional[DialecticOutput] = None
 
     # Robin's synthesis
-    synthesis_narrative: str = ""           # Combines all three perspectives
+    synthesis_narrative: str = ""  # Combines all three perspectives
     next_questions: list[str] = field(default_factory=list)  # What to explore next
 
     def __str__(self) -> str:
@@ -94,15 +91,19 @@ class RobinOutput:
 
         # Personalization
         lines.append("\n📌 PERSONALIZATION:")
-        lines.append(f"  Style hints: {', '.join(self.personalization.suggested_style)}")
+        lines.append(
+            f"  Style hints: {', '.join(self.personalization.suggested_style)}"
+        )
         lines.append(f"  K-gent reflection: {self.kgent_reflection.response[:200]}...")
 
         # Hypotheses
         lines.append(f"\n🔬 HYPOTHESES ({len(self.hypotheses)}):")
         for i, h in enumerate(self.hypotheses, 1):
             lines.append(f"\n  {i}. {h.statement}")
-            lines.append(f"     Confidence: {h.confidence:.0%} | Novelty: {h.novelty.value}")
-            lines.append(f"     Falsifiable by:")
+            lines.append(
+                f"     Confidence: {h.confidence:.0%} | Novelty: {h.novelty.value}"
+            )
+            lines.append("     Falsifiable by:")
             for f in h.falsifiable_by[:2]:
                 lines.append(f"       - {f}")
 
@@ -134,13 +135,13 @@ class RobinOutput:
         return "\n".join(lines)
 
 
-from .robin_morphisms import (
+from .robin_morphisms import (  # noqa: E402
     SynthesisInput,
     NarrativeSynthesizer,
     QuestionInput,
     NextQuestionGenerator,
 )
-from .robin_helpers import generate_fallback_hypotheses
+from .robin_helpers import generate_fallback_hypotheses  # noqa: E402
 
 
 class RobinAgent(Agent[RobinInput, RobinOutput]):
@@ -164,7 +165,7 @@ class RobinAgent(Agent[RobinInput, RobinOutput]):
             name="Robin",
             genus="b",
             version="0.1.0",
-            purpose="Personalized scientific companion for dialogic inquiry"
+            purpose="Personalized scientific companion for dialogic inquiry",
         ),
         interface=AgentInterface(
             input_type=RobinInput,
@@ -174,7 +175,7 @@ class RobinAgent(Agent[RobinInput, RobinOutput]):
             error_codes=[
                 ("MISSING_RUNTIME", "Runtime required for hypothesis generation"),
                 ("EMPTY_QUERY", "Query cannot be empty"),
-            ]
+            ],
         ),
         behavior=AgentBehavior(
             description="Orchestrates persona, hypothesis, and dialectic agents",
@@ -188,7 +189,7 @@ class RobinAgent(Agent[RobinInput, RobinOutput]):
                 "Does not diagnose, prescribe, or make medical claims",
                 "System-introspective, not therapeutic",
             ],
-        )
+        ),
     )
 
     def __init__(
@@ -235,8 +236,9 @@ class RobinAgent(Agent[RobinInput, RobinOutput]):
             fallback_mode=self._fallback_mode,
         )
 
-
-    async def invoke(self, input: RobinInput, runtime: Optional[Runtime] = None) -> RobinOutput:
+    async def invoke(
+        self, input: RobinInput, runtime: Optional[Runtime] = None
+    ) -> RobinOutput:
         """
         Execute Robin's scientific companion workflow.
 
@@ -272,11 +274,15 @@ class RobinAgent(Agent[RobinInput, RobinOutput]):
         # Step 3: Generate hypotheses
         if effective_runtime is None or self._fallback_mode:
             # Fallback mode: Generate deterministic placeholder hypotheses for testing
-            hypothesis_output = generate_fallback_hypotheses(input, self._hypothesis_count)
+            hypothesis_output = generate_fallback_hypotheses(
+                input, self._hypothesis_count
+            )
         else:
             # Build hypothesis input
             hyp_input = HypothesisInput(
-                observations=input.observations if input.observations else [input.query],
+                observations=input.observations
+                if input.observations
+                else [input.query],
                 domain=input.domain,
                 question=input.query,
                 constraints=input.constraints,
@@ -301,7 +307,7 @@ class RobinAgent(Agent[RobinInput, RobinOutput]):
                     context={
                         "domain": input.domain,
                         "query": input.query,
-                    }
+                    },
                 )
             )
         elif input.apply_dialectic and len(hypothesis_output.hypotheses) == 1:
@@ -347,6 +353,7 @@ class RobinAgent(Agent[RobinInput, RobinOutput]):
 
 
 # Convenience functions
+
 
 def robin(
     persona_state: Optional[PersonaState] = None,

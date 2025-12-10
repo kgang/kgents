@@ -82,11 +82,14 @@ from .hypothesis import (
     HypothesisEngine,
     HypothesisInput,
     HypothesisOutput,
-    Hypothesis,
-    NoveltyLevel,
     hypothesis_engine,
     rigorous_engine,
     exploratory_engine,
+)
+
+from .hypothesis_parser import (
+    Hypothesis,
+    NoveltyLevel,
 )
 
 from .robin import (

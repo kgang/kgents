@@ -12,7 +12,6 @@ Core principles (Popperian):
 """
 
 from dataclasses import dataclass, field
-from enum import Enum
 from typing import Any, Optional, Union
 
 from runtime.base import LLMAgent, AgentContext
@@ -20,20 +19,24 @@ from agents.a.skeleton import AgentMeta, AgentIdentity, AgentInterface, AgentBeh
 
 # Parser extraction (Phase D - H14)
 from .hypothesis_parser import (
-    Hypothesis,
-    NoveltyLevel,
     ParsedHypothesisResponse,
     parse_hypothesis_response,
 )
+
+# Re-export for backwards compatibility
+__all__ = ["ParsedHypothesisResponse", "parse_hypothesis_response"]
 
 
 @dataclass
 class HypothesisInput:
     """Input for the Hypothesis Engine."""
-    observations: list[str]               # Raw observations or data summaries
-    domain: str                           # Scientific domain (e.g., "molecular biology")
-    question: Optional[str] = None        # Optional guiding research question
-    constraints: list[str] = field(default_factory=list)  # Known constraints or established facts
+
+    observations: list[str]  # Raw observations or data summaries
+    domain: str  # Scientific domain (e.g., "molecular biology")
+    question: Optional[str] = None  # Optional guiding research question
+    constraints: list[str] = field(
+        default_factory=list
+    )  # Known constraints or established facts
 
 
 # Re-export ParsedHypothesisResponse as HypothesisOutput for backward compatibility
@@ -43,9 +46,10 @@ HypothesisOutput = ParsedHypothesisResponse
 @dataclass
 class HypothesisError:
     """Structured error from Hypothesis Engine, enabling composable error handling."""
-    code: str                             # Error code from meta.interface.error_codes
-    message: str                          # Human-readable description
-    recoverable: bool                     # Whether retry/Fix pattern could help
+
+    code: str  # Error code from meta.interface.error_codes
+    message: str  # Human-readable description
+    recoverable: bool  # Whether retry/Fix pattern could help
     context: dict[str, Any] = field(default_factory=dict)  # Additional error context
 
     def __str__(self) -> str:
@@ -152,7 +156,7 @@ class HypothesisEngine(LLMAgent[HypothesisInput, AgentResult]):
             name="Hypothesis Engine",
             genus="b",
             version="0.2.0",
-            purpose="Generates falsifiable hypotheses from scientific observations"
+            purpose="Generates falsifiable hypotheses from scientific observations",
         ),
         interface=AgentInterface(
             input_type=HypothesisInput,
@@ -162,7 +166,7 @@ class HypothesisEngine(LLMAgent[HypothesisInput, AgentResult]):
             error_codes=[
                 ("INSUFFICIENT_OBSERVATIONS", "Not enough data to generate hypotheses"),
                 ("UNFAMILIAR_DOMAIN", "Domain outside agent's competence"),
-            ]
+            ],
         ),
         behavior=AgentBehavior(
             description="Analyzes observations to generate testable hypotheses",
@@ -177,7 +181,7 @@ class HypothesisEngine(LLMAgent[HypothesisInput, AgentResult]):
                 "Does not fabricate observations",
                 "Acknowledges domain limitations",
             ],
-        )
+        ),
     )
 
     def __init__(
@@ -203,7 +207,7 @@ class HypothesisEngine(LLMAgent[HypothesisInput, AgentResult]):
                 code="INSUFFICIENT_OBSERVATIONS",
                 message=f"Need at least 2 observations, got {len(input.observations)}",
                 recoverable=False,
-                context={"observation_count": len(input.observations)}
+                context={"observation_count": len(input.observations)},
             )
         else:
             self._input_error = None
@@ -267,6 +271,7 @@ class HypothesisEngine(LLMAgent[HypothesisInput, AgentResult]):
 
 
 # Convenience functions
+
 
 def hypothesis_engine(
     hypothesis_count: int = 3,

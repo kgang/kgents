@@ -69,14 +69,14 @@ class Hypothesis:
             f"Hypothesis: {self.statement}",
             f"  Confidence: {self.confidence:.0%}",
             f"  Novelty: {self.novelty.value}",
-            f"  Falsifiable by:",
+            "  Falsifiable by:",
         ]
-        for f in self.falsifiable_by:
-            lines.append(f"    - {f}")
+        for falsifiable in self.falsifiable_by:
+            lines.append(f"    - {falsifiable}")
         if self.assumptions:
-            lines.append(f"  Assumptions:")
-            for a in self.assumptions:
-                lines.append(f"    - {a}")
+            lines.append("  Assumptions:")
+            for assumption in self.assumptions:
+                lines.append(f"    - {assumption}")
         return "\n".join(lines)
 
 
@@ -235,9 +235,7 @@ class HypothesisResponseParser:
 
         return current
 
-    def _parse_reasoning_line(
-        self, line: str, reasoning_chain: list[str]
-    ) -> list[str]:
+    def _parse_reasoning_line(self, line: str, reasoning_chain: list[str]) -> list[str]:
         """Parse a line in the reasoning chain section."""
         if line[0].isdigit():
             text = line.lstrip("0123456789.-) ").strip()

@@ -603,11 +603,19 @@ class CentralBank:
             "total_refilled": self.bucket.total_refilled,
             "sinking_fund_reserve": self.sinking_fund.reserve,
             "outstanding_loans": len(
-                [l for l in self.sinking_fund.outstanding_loans if not l.repaid]
+                [
+                    loan
+                    for loan in self.sinking_fund.outstanding_loans
+                    if not loan.repaid
+                ]
             ),
             "active_futures": len(self.futures_market.futures),
             "active_leases": len(
-                [l for l in self.leases.values() if not l.settled and not l.voided]
+                [
+                    lease
+                    for lease in self.leases.values()
+                    if not lease.settled and not lease.voided
+                ]
             ),
         }
 

@@ -992,7 +992,7 @@ class TestEdgeCases:
 
         # Calculate exact need - need to account for min_explanation_ratio (10%)
         # With 100 base tokens and 10% min, we need at least 110 tokens
-        pressure = budget.calculate_pressure(complexity, base_tokens=100)
+        _pressure = budget.calculate_pressure(complexity, base_tokens=100)
         min_explanation = int(100 * budget.min_explanation_ratio)
         exact_budget = 100 + min_explanation
 

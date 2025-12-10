@@ -682,7 +682,8 @@ class AdaptiveObserver:
         self._running = True
 
         while self._running:
-            now = datetime.now()
+            # Timestamp for potential future use in scheduling logic
+            _now = datetime.now()
 
             for agent_id in agents:
                 if self.should_observe(agent_id):

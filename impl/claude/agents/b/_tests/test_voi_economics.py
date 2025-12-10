@@ -286,7 +286,7 @@ class TestVoILedger:
             anomaly="service_outage",
         )
         gas = Gas(tokens=100)
-        receipt = ledger.log_observation(
+        _receipt = ledger.log_observation(
             observer_id="observer1",
             target_id="agent1",
             gas_consumed=gas,
@@ -901,7 +901,7 @@ class TestVoIIntegration:
         """Test detection of VoI anti-patterns."""
         value_ledger = ValueLedger()
         voi_ledger = create_voi_ledger(value_ledger)
-        accounting = UnifiedValueAccounting(value_ledger, voi_ledger)
+        _accounting = UnifiedValueAccounting(value_ledger, voi_ledger)
 
         # Pattern: The Paranoid Observer (too many observations, high gas)
         # Each observation costs significant gas but only confirms health

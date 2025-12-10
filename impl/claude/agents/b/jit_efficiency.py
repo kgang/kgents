@@ -431,8 +431,8 @@ class JumpTableJITCompiler:
             fields.append((name, position, width))
             position += width + 1  # +1 for delimiter
 
-        # Build jump table
-        jump_table = {name: (start, width) for name, start, width in fields}
+        # Build jump table (not used directly, but could be for optimization)
+        _jump_table = {name: (start, width) for name, start, width in fields}
 
         def parse_fn(text: str) -> dict[str, str]:
             result = {}
