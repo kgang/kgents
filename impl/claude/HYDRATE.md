@@ -1,6 +1,6 @@
 # impl/claude HYDRATE
 
-**Last Updated:** 2025-12-08 (I-gent & W-gent specs enhanced)
+**Last Updated:** 2025-12-09 (B×G Phase 2 - Fiscal Constitution)
 
 ## Quick Start
 
@@ -322,3 +322,208 @@ python evolve.py meta --safe-mode --dry-run
 1. **Commit**: Capture spec enhancements
 2. **Implement**: Begin I-gent core (types, renderers, breath cycle)
 3. **Implement**: Begin W-gent core (WireObservable, fidelity, server)
+
+---
+
+### CLI Phase 3: Flow Engine (2025-12-09) ✅
+
+**Objective**: Implement the Flowfile engine from `docs/cli-integration-plan.md` Part 4 - the composition backbone for agent pipelines.
+
+**Implementation** (5 new files, ~1,800 lines):
+
+- **`protocols/cli/flow/types.py`** (~350 lines):
+  - FlowStep: id, genus, operation, input, args, condition, on_error, debug
+  - Flowfile: version, name, input/output schema, variables, steps, hooks, on_error
+  - FlowResult/StepResult: execution status, timing, snapshots
+  - FlowStatus/StepStatus enums: PENDING/RUNNING/COMPLETED/FAILED/SKIPPED
+  - Error types: FlowValidationError, FlowExecutionError
+
+- **`protocols/cli/flow/parser.py`** (~400 lines):
+  - YAML parsing with PyYAML
+  - Jinja2-compatible template rendering (regex-based, no dependency)
+  - Variable expansion: `{{ var | default('value') }}`
+  - Validation: step IDs, references, genera, error strategies
+  - Dependency graph building with word-boundary matching
+  - Topological sort with Kahn's algorithm
+  - Visualization: ASCII pipeline diagrams
+  - explain_flow(): human-readable flow descriptions
+
+- **`protocols/cli/flow/engine.py`** (~400 lines):
+  - FlowEngine: step execution, input passing, condition evaluation
+  - Genus executors for P-gent, J-gent, G-gent, Bootstrap, W-gent, R-gent, L-gent, T-gent
+  - Condition evaluation: `step.field == 'value'`, `not step.success`
+  - Debug snapshots: saved to `.kgents/debug/`
+  - Pre/post hooks: shell command execution
+  - Error handling: halt, continue, retry strategies
+  - execute_flow() convenience function
+
+- **`protocols/cli/flow/commands.py`** (~350 lines):
+  - `flow run <file> [input]`: Execute flowfile with progress output
+  - `flow validate <file>`: Check syntax and references
+  - `flow explain <file>`: Human-readable explanation
+  - `flow visualize <file>`: ASCII graph
+  - `flow new "<intent>"`: Generate flowfile from natural language
+  - `flow list`: List saved flows in `.kgents/flows/`
+  - `flow save <file> --name=<id>`: Save to registry
+  - Rich terminal output with box-drawing characters
+
+- **`protocols/cli/flow/_tests/test_flow.py`** (~600 lines):
+  - 47 tests covering types, parsing, validation, engine, visualization
+  - All tests passing (2 skipped for optional PyYAML)
+
+**Key Design Decisions**:
+1. **No Jinja2 dependency**: Simple regex rendering for `{{ var | default('value') }}`
+2. **Word-boundary matching**: Dependency detection uses `\bstep_id\.` to avoid false positives
+3. **Set-based dependencies**: Deduplicated to avoid topological sort issues
+4. **Lazy loading**: Flow module only imported when `kgents flow` invoked
+
+**CLI Integration**:
+- hollow.py already has: `"flow": "protocols.cli.flow.commands:cmd_flow"`
+- Help text updated with Flow Engine section
+
+**Example Usage**:
+```yaml
+# review.yaml
+version: "1.0"
+name: "Code Review Pipeline"
+input:
+  type: file
+  extensions: [.py, .js]
+variables:
+  strictness: "{{ strictness | default('high') }}"
+steps:
+  - id: parse
+    genus: P-gent
+    operation: extract
+  - id: judge
+    genus: Bootstrap
+    operation: judge
+    input: "from:parse"
+    args:
+      strictness: "{{ strictness }}"
+  - id: refine
+    genus: R-gent
+    operation: optimize
+    input: "from:judge"
+    condition: "judge.verdict != 'APPROVED'"
+```
+
+```bash
+kgents flow run review.yaml src/main.py --var strictness=medium
+kgents flow explain review.yaml
+```
+
+**Status**: ✅ Complete - Ready for Phases 4+ (MCP Protocol, Intent Router, etc.)
+
+**Next CLI Phases**:
+- Phase 4: MCP Protocol server (`kgents mcp serve`)
+- Phase 5: Intent Router (`kgents check`, `kgents think`)
+- Phase 6: Genus Surface (`kgents grammar`, `kgents jit`)
+- Phase 7: TUI Dashboard (`kgents dash`)
+
+---
+
+### B×G Phase 2: Fiscal Constitution (2025-12-09) ✅
+
+**Objective**: Implement grammar-based financial safety where bankruptcy is grammatically impossible - not runtime validation, but structural impossibility.
+
+**Implementation** (`agents/b/fiscal_constitution.py` ~900 lines):
+
+**Core Insight**: Parse errors prevent illegal operations. If `parse(operation) → Success`, then `execute(operation)` is constitutionally sound.
+
+**Key Components**:
+
+1. **LedgerState** (~200 lines):
+   - Multi-currency account management
+   - Double-entry bookkeeping with transaction log
+   - Supply invariant verification
+   - Reserve/release operations for escrow patterns
+   - `mint_initial()` only at setup (no minting after constitution active)
+
+2. **LedgerTongueParser** (~250 lines):
+   - Constitutional grammar with parse-time balance checking
+   - Commands: TRANSFER, QUERY, RESERVE, RELEASE
+   - Note: No MINT, DELETE, FORGE, DESTROY verbs exist in grammar
+   - Insufficient funds → ParseError (not runtime error)
+   - Double-spend prevention at parse time
+
+3. **LedgerTongue** (~150 lines):
+   - Complete tongue combining parsing + execution
+   - `run()` method: parse → execute (guaranteed safe if parse succeeds)
+   - Query support: balance, history, supply
+
+4. **ConstitutionalBanker** (~200 lines):
+   - Grammar-based enforcement with metering integration
+   - `execute_sync()`: Synchronous execution for testing
+   - `execute_financial_operation()`: Async with gas metering
+   - `verify_constitution()`: Check all invariants hold
+
+**Grammar Example**:
+```
+COMMAND ::= TRANSFER | QUERY | RESERVE | RELEASE
+
+TRANSFER ::= "TRANSFER" <Amount> <Currency> "FROM" <Account> "TO" <Account> ["MEMO" <String>]
+  WHERE Account(FROM).balance >= Amount  // Enforced at parse time
+
+QUERY ::= "QUERY" ("BALANCE" "OF" <Account> "IN" <Currency>
+                 | "HISTORY" "OF" <Account>
+                 | "SUPPLY" "OF" <Currency>)
+
+# Note: No MINT, DELETE, FORGE verbs exist
+```
+
+**Constitutional Invariants**:
+1. **Total supply constant**: No money created or destroyed after initial mint
+2. **No negative balances**: Transfer/reserve impossible if insufficient funds
+3. **Double-entry**: Every transfer has matching debit and credit
+4. **Atomic transactions**: Failed operations don't leave partial state
+
+**Example Usage**:
+```python
+from agents.b import create_fiscal_constitution, LedgerTongue
+
+# Create constitution with initial supply
+banker = create_fiscal_constitution(
+    initial_supply={"USD": 10000.0, "EUR": 5000.0},
+    treasury_account="treasury"
+)
+
+# Constitutional execution
+result = banker.execute_sync("TRANSFER 100 USD FROM treasury TO alice")
+# → TransactionResult(success=True, type="CONSTITUTIONAL_EXECUTION")
+
+# Attempt to overspend → ParseError (not runtime error!)
+result = banker.execute_sync("TRANSFER 50000 USD FROM alice TO bob")
+# → TransactionResult(success=False, type="GRAMMAR_REJECTION",
+#                     reason="Constitutional violation: Insufficient funds...")
+
+# Verify constitution holds
+invariants = banker.verify_constitution()
+# → {"supply_USD": True, "supply_EUR": True, "no_negative_balances": True, "double_entry": True}
+```
+
+**Tests** (`agents/b/_tests/test_fiscal_constitution.py` ~84 tests):
+- AccountBalance, Account, LedgerState operations
+- Parser syntax and constitutional balance checking
+- Double-spend prevention at parse time
+- LedgerTongue execution
+- ConstitutionalBanker sync and async operations
+- Edge cases and fuzz-like testing
+- Constitutional invariant stress tests (500 random transfers)
+- Integration tests (escrow workflow, multi-currency, audit trail)
+
+**Success Criteria Met**:
+- ✅ 0 runtime financial safety errors (caught at parse-time)
+- ✅ No minting possible (MINT verb doesn't exist)
+- ✅ No deletion possible (DELETE verb doesn't exist)
+- ✅ Double-spend prevented at parse time
+- ✅ Supply invariant maintained under stress testing
+
+**Files Created/Modified**:
+- `agents/b/fiscal_constitution.py`: New file, ~900 lines
+- `agents/b/_tests/test_fiscal_constitution.py`: New file, ~84 tests
+- `agents/b/__init__.py`: Updated exports
+
+**Next B×G Phases**:
+- Phase 3: Syntax Tax (Chomsky-based pricing)
+- Phase 4: JIT Efficiency (G+J+B performance trio)

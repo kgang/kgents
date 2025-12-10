@@ -39,12 +39,16 @@ Phase 6 Implementation (Advanced Embeddings & Vector DBs):
 - FAISSBackend: High-performance in-memory index
 - VectorBackend protocol: Pluggable vector database interface
 
-Future Phases:
-- Graph search (Brain 3: relational traversal)
-- Three-brain hybrid (keyword + semantic + graph)
+Phase 7 Implementation (Three-Brain Hybrid):
+- GraphBrain: Graph search using LineageGraph + TypeLattice (Brain 3)
+- QueryFusion: Three-brain fusion layer (keyword + semantic + graph)
+- VectorSemanticBrain: SemanticBrain with VectorBackend support
+- Adaptive weighting based on query type classification
+- Serendipity suggestions for unexpected discoveries
 """
 
 from .registry import Registry
+from .search import Search
 from .types import (
     Catalog,
     CatalogEntry,
@@ -106,6 +110,24 @@ from .vector_backend import (
     CHROMADB_AVAILABLE,
     FAISS_AVAILABLE,
 )
+from .graph_search import (
+    GraphBrain,
+    GraphResult,
+    SearchDirection,
+    create_graph_brain,
+)
+from .fusion import (
+    QueryFusion,
+    FusedResult,
+    QueryResponse,
+    QueryType,
+    create_query_fusion,
+)
+from .semantic_vector import (
+    VectorSemanticBrain,
+    create_vector_semantic_brain,
+    create_best_semantic_brain,
+)
 
 # Conditional imports for optional dependencies
 if SENTENCE_TRANSFORMERS_AVAILABLE:
@@ -127,6 +149,7 @@ __all__ = [
     "CompatibilityReport",
     # Registry (in-memory)
     "Registry",
+    "Search",
     # Persistent Registry (D-gent integration)
     "PersistentRegistry",
     "PersistenceConfig",
@@ -172,6 +195,21 @@ __all__ = [
     "create_vector_backend",
     "CHROMADB_AVAILABLE",
     "FAISS_AVAILABLE",
+    # Graph Search (Phase 7)
+    "GraphBrain",
+    "GraphResult",
+    "SearchDirection",
+    "create_graph_brain",
+    # Fusion Layer (Phase 7)
+    "QueryFusion",
+    "FusedResult",
+    "QueryResponse",
+    "QueryType",
+    "create_query_fusion",
+    # Vector Semantic (Phase 7)
+    "VectorSemanticBrain",
+    "create_vector_semantic_brain",
+    "create_best_semantic_brain",
 ]
 
 # Add conditional exports
