@@ -139,10 +139,13 @@ protocols/cli/instance_db/
 ## Commands
 
 ```bash
-pytest -m "not slow" -n auto   # Fast (~6s)
+pytest -m "not slow" -q        # Fast, quiet output
+pytest -m "not slow" -v        # Fast, verbose (local debugging only)
 pytest protocols/cli/instance_db/_tests/ -v  # Instance DB tests
 kgents check .                 # Validate (auto-bootstraps DB)
 ```
+
+**CI Note**: CI uses `-q` (quiet) to reduce log verbosity. Use `-v` locally for debugging.
 
 ## API Notes
 

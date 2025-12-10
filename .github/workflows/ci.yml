@@ -90,7 +90,7 @@ jobs:
       - name: Run unit tests
         run: |
           cd impl/claude
-          uv run pytest -m "not slow and not integration" --tb=short -v
+          uv run pytest -m "not slow and not integration" --tb=short -q
 
   # ===========================================================================
   # Tier 3: Law verification (1-2 min)
@@ -117,7 +117,7 @@ jobs:
       - name: Verify category laws
         run: |
           cd impl/claude
-          uv run pytest -m "law" --tb=short -v
+          uv run pytest -m "law" --tb=short -q
 
       - name: Run BootstrapWitness
         run: |
@@ -149,7 +149,7 @@ jobs:
       - name: Run integration tests
         run: |
           cd impl/claude
-          uv run pytest -m "integration" --tb=short -v
+          uv run pytest -m "integration" --tb=short -q
 
   # ===========================================================================
   # Tier 5: Property tests (2-5 min)
@@ -176,7 +176,7 @@ jobs:
       - name: Run property tests
         run: |
           cd impl/claude
-          uv run pytest -m "property" --tb=short -v
+          uv run pytest -m "property" --tb=short -q
 
   # ===========================================================================
   # Tier 6: Coverage (3-5 min)
@@ -241,7 +241,7 @@ jobs:
       - name: Run slow tests
         run: |
           cd impl/claude
-          uv run pytest -m "slow" --tb=short -v
+          uv run pytest -m "slow" --tb=short -q
 
   # ===========================================================================
   # Tier 8: Chaos tests (exploratory, non-blocking)
@@ -269,4 +269,4 @@ jobs:
       - name: Run chaos tests
         run: |
           cd impl/claude
-          uv run pytest -m "accursed_share" --tb=short -v
+          uv run pytest -m "accursed_share" --tb=short -q
