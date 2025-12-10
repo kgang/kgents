@@ -26,7 +26,7 @@ from .interfaces import (
     IBlobStore,
     ITelemetryStore,
 )
-from .storage import StorageProvider, XDGPaths
+from .storage import StorageProvider, XDGPaths, EnvVarNotSetError
 from .lifecycle import LifecycleManager, OperationMode, LifecycleState
 
 __all__ = [
@@ -38,6 +38,7 @@ __all__ = [
     # Storage
     "StorageProvider",
     "XDGPaths",
+    "EnvVarNotSetError",
     # Lifecycle
     "LifecycleManager",
     "OperationMode",

@@ -15,7 +15,7 @@ DOES:
 - Expand on seeds of ideas
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
 
@@ -26,36 +26,40 @@ from .skeleton import AgentMeta, AgentIdentity, AgentInterface, AgentBehavior
 
 class CreativityMode(Enum):
     """Interaction modes for the Creativity Coach."""
-    EXPAND = "expand"       # Generate related concepts that extend the idea
-    CONNECT = "connect"     # Link to unrelated domains
-    CONSTRAIN = "constrain" # Add productive limitations
-    QUESTION = "question"   # Ask generative questions
+
+    EXPAND = "expand"  # Generate related concepts that extend the idea
+    CONNECT = "connect"  # Link to unrelated domains
+    CONSTRAIN = "constrain"  # Add productive limitations
+    QUESTION = "question"  # Ask generative questions
 
 
 class Persona(Enum):
     """Optional persona flavors."""
-    PLAYFUL = "playful"           # Whimsical, pun-friendly, delighted by absurdity
-    PHILOSOPHICAL = "philosophical" # Deep questions, existential connections
-    PRACTICAL = "practical"       # Grounded expansions, real-world applications
-    PROVOCATIVE = "provocative"   # Challenging assumptions, uncomfortable angles
-    WARM = "warm"                 # Encouraging, gentle, supportive
+
+    PLAYFUL = "playful"  # Whimsical, pun-friendly, delighted by absurdity
+    PHILOSOPHICAL = "philosophical"  # Deep questions, existential connections
+    PRACTICAL = "practical"  # Grounded expansions, real-world applications
+    PROVOCATIVE = "provocative"  # Challenging assumptions, uncomfortable angles
+    WARM = "warm"  # Encouraging, gentle, supportive
 
 
 @dataclass
 class CreativityInput:
     """Input for the Creativity Coach."""
-    seed: str                                    # The idea or starting point
-    mode: CreativityMode = CreativityMode.EXPAND # Desired interaction mode
-    context: Optional[str] = None                # Optional background
+
+    seed: str  # The idea or starting point
+    mode: CreativityMode = CreativityMode.EXPAND  # Desired interaction mode
+    context: Optional[str] = None  # Optional background
 
 
 @dataclass
 class CreativityResponse:
     """Output from the Creativity Coach."""
+
     original_seed: str
     mode_used: CreativityMode
-    responses: list[str]         # Generated provocations
-    follow_ups: list[str]        # Suggested next prompts
+    responses: list[str]  # Generated provocations
+    follow_ups: list[str]  # Suggested next prompts
 
     def __str__(self) -> str:
         lines = [f"Seed: {self.original_seed}", f"Mode: {self.mode_used.value}", ""]
@@ -128,13 +132,13 @@ class CreativityCoach(LLMAgent[CreativityInput, CreativityResponse]):
             name="Creativity Coach",
             genus="a",
             version="0.1.0",
-            purpose="Supports human creativity through generative dialogue"
+            purpose="Supports human creativity through generative dialogue",
         ),
         interface=AgentInterface(
             input_type=CreativityInput,
             input_description="A creative seed and desired interaction mode",
             output_type=CreativityResponse,
-            output_description="Creative expansions and follow-up suggestions"
+            output_description="Creative expansions and follow-up suggestions",
         ),
         behavior=AgentBehavior(
             description="Generates creative expansions based on input seed and mode",
@@ -147,7 +151,7 @@ class CreativityCoach(LLMAgent[CreativityInput, CreativityResponse]):
                 "Does not generate complete works (poems, stories, etc.)",
                 "Does not claim responses are 'correct' answers",
             ],
-        )
+        ),
     )
 
     def __init__(
@@ -217,13 +221,12 @@ FOLLOW-UPS:
     def parse_response(self, response: str) -> CreativityResponse:
         """Parse LLM response to CreativityResponse using shared parsing utility."""
         sections = parse_structured_sections(
-            response,
-            section_names=["responses", "follow-ups", "follow_ups"]
+            response, section_names=["responses", "follow-ups", "follow_ups"]
         )
-        
+
         # Normalize follow-ups (handle both "follow-ups" and "follow_ups")
         follow_ups = sections.get("follow-ups", []) or sections.get("follow_ups", [])
-        
+
         return CreativityResponse(
             original_seed=self._current_seed,
             mode_used=self._current_mode,
@@ -243,6 +246,7 @@ FOLLOW-UPS:
 
 
 # Convenience functions
+
 
 def creativity_coach(
     response_count: int = 3,

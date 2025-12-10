@@ -7,6 +7,8 @@ Design Philosophy:
 1. Observable: Every field can be measured or computed
 2. Useful: No fields that exist "for completeness"
 3. Composable: Types compose without special cases
+
+TODO: Create metaphor collection + cultivation system
 """
 
 from __future__ import annotations

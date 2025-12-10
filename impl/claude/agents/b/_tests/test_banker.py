@@ -510,7 +510,6 @@ class TestCentralBank:
     async def test_void_on_failure(self):
         """Test voiding on failure."""
         bank = CentralBank(max_balance=10000, refill_rate=0.0)
-        initial = bank.get_balance()
         lease = await bank.authorize("agent1", 1000)
         after_auth = bank.get_balance()
         await bank.void(lease)

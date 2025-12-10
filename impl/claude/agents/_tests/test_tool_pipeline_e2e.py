@@ -134,8 +134,8 @@ class TestPrototypeToTool:
             "Create a tool that converts temperatures from Celsius to Fahrenheit"
         )
 
-        # Step 2: Synthesize contract
-        contract = synthesize_contract(intent, "TemperatureConverter")
+        # Step 2: Synthesize contract (verifies intent is valid)
+        _ = synthesize_contract(intent, "TemperatureConverter")
 
         # Step 3: Create source
         source = AgentSource(
@@ -267,7 +267,7 @@ class TestToolExecution:
 
         # May fail or succeed depending on retry config
         try:
-            result = await executor.execute("test")
+            _ = await executor.execute("test")
         except RuntimeError:
             pass  # Expected if max_retries < 2
         # Should have attempted at least once

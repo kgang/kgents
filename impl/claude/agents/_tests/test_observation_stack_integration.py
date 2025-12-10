@@ -602,6 +602,7 @@ class TestObservationStackFullIntegration:
         await asyncio.sleep(0.01)
 
         result = await wire_observer.post_invoke(context, {"value": 100}, 50.0)
+        assert result is not None  # Observation completed
 
         # 3. Record in VoI ledger
         finding = ObservationFinding(

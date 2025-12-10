@@ -6,12 +6,14 @@
 
 ## Recent Completions
 
+- **Mirror Protocol Cleanup**: Removed deprecated mirror protocol (spec + impl). Membrane CLI now standalone stubs pointing to new cortex architecture. Reason: No provable functionality, supplanted by D-gent + instance_db + L-gent.
+- **Instance DB Operationalization**: Auto-bootstrap + wipe command + Transparent Infrastructure principle
+- **Bicameral Engine v3.0 Plan**: Spinal Cord, Hippocampus, Coherency Protocol in `docs/instance-db-implementation-plan.md`
 - **Integration Tests Phase 3**: 65 E2E tests (Agent Creation, Tool Pipeline, Memory Recall)
 - **E-gent v2**: 353 tests, thermodynamic evolution with safety guardrails
 - **M-gent Cartography**: 114 tests, holographic maps for context injection
 - **Ψ-gent v3.0**: 104 tests, metaphor engine with 6-stage pipeline
 - **Cortex Assurance v2.0**: 73 tests, cybernetic immune system
-- **CLI Auto-Bootstrap**: No setup needed, auto-creates `~/.local/share/kgents/`
 
 ## Architecture Quick Reference
 
@@ -28,10 +30,11 @@
 ## CLI Commands
 
 ```bash
-kgents pulse          # Health check (auto-bootstraps DB)
-kgents check .        # Validate project
-kgents wipe global    # Remove global DB
-kgents mcp serve      # MCP server for Claude/Cursor
+kgents check .          # Validate project (auto-bootstraps DB)
+kgents wipe global      # Remove global DB (~/.local/share/kgents/)
+kgents wipe local       # Remove project DB (.kgents/)
+kgents wipe all --force # Remove both without confirmation
+kgents mcp serve        # MCP server for Claude/Cursor
 ```
 
 ## Test Commands

@@ -214,3 +214,6 @@ impl/claude/.memory/
 impl/claude/.evolve_logs/
 .memory/
 .wire/
+
+# macOS
+.DS_Store
