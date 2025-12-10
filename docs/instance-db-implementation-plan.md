@@ -2,9 +2,9 @@
 
 ## The Unified Cortex: Infrastructure × Semantics × Nervous System
 
-**Status:** Design Document v3.0
+**Status:** Design Document v3.0 (Phase 1-5 Operational, Phase 6 Design Complete)
 **Date:** 2025-12-10
-**Location:** `protocols/cli/instance_db/` (Phase 1 OPERATIONAL) → `impl/claude/infra/` (Future)
+**Location:** `protocols/cli/instance_db/` (Phases 1-5 OPERATIONAL) → `impl/claude/infra/` (Future)
 
 ---
 
@@ -22,12 +22,13 @@ The Bicameral Engine introduces:
 - **Coherency Protocol**: Cross-hemisphere validation preventing Ghost Memories
 - **Lucid Dreaming**: Interactive optimization that asks clarifying questions
 - **Schema Neurogenesis**: Database schema that grows from experience
+- **Cortex Observability**: O-gent/W-gent integration for real-time health monitoring
 
 From the original critique:
 > "A cortex doesn't just store; it predicts, forgets, and hallucinates."
 
 We now add:
-> "A cortex also has reflexes, short-term memory, and learns new structures."
+> "A cortex also has reflexes, short-term memory, learns new structures, and observes itself."
 
 ---
 
@@ -61,13 +62,13 @@ We now add:
 │     (The Bookkeeper)     │   (Synapse)     │       (The Poet)                │
 ├──────────────────────────┼─────────────────┼────────────────────────────────┤
 │  • ACID transactions     │ • Signal routing│  • Approximate similarity       │
-│  • Exact queries         │ • (PLANNED)     │  • Semantic voids              │
+│  • Exact queries         │ • ✅ OPERATIONAL│  • Semantic voids              │
 │  • Relational schema     │                 │  • Geodesics (paths)           │
 │  • Instance tracking     │                 │  • Memory Garden               │
 ├──────────────────────────┼─────────────────┼────────────────────────────────┤
-│  protocols/cli/          │ (Phase 2)       │  agents/d/                     │
-│  instance_db/            │                 │  └── unified.py                │
-│  └── storage.py          │                 │  └── manifold.py               │
+│  protocols/cli/          │ synapse.py      │  agents/d/                     │
+│  instance_db/            │ nervous.py      │  └── unified.py                │
+│  └── storage.py          │ hippocampus.py  │  └── manifold.py               │
 │  └── lifecycle.py        │                 │  └── garden.py                 │
 └──────────────────────────┴─────────────────┴────────────────────────────────┘
 ```
@@ -526,17 +527,244 @@ Implemented:
 - `ISchemaIntrospector` protocol - Database introspection interface
 - Factory functions: `create_lucid_dreamer()`, `create_schema_neurogenesis()`
 
-### Phase 6: Observability + Dashboard (~35 tests)
+### Phase 6: Observability + Dashboard (~40 tests)
 
-| Task | Description | Tests |
-|------|-------------|-------|
-| `DgentObserver` | O-gent wrapper for D-gent ops | 15 |
-| Panopticon integration | W-gent dashboard updates | 10 |
-| Metrics export | Prometheus/OpenTelemetry | 10 |
+**Status:** DESIGN COMPLETE
+**Location:** `agents/o/cortex_observer.py`, `agents/w/cortex_dashboard.py`
+
+Phase 6 integrates the Bicameral Engine with O-gent (Observability) and W-gent (Wire Protocol) to provide real-time visibility into cortex health.
+
+#### 6.1 Component Overview
+
+| Component | Description | Location | Tests |
+|-----------|-------------|----------|-------|
+| `CortexObserver` | O-gent observer wrapping Bicameral ops | `agents/o/cortex_observer.py` | 15 |
+| `CortexDashboard` | W-gent dashboard for cortex metrics | `agents/w/cortex_dashboard.py` | 12 |
+| `MetricsExporter` | Prometheus/OpenTelemetry bridge | `agents/o/metrics_export.py` | 8 |
+| `DreamReportRenderer` | I-gent rendering of dream reports | `agents/i/dream_view.py` | 5 |
+
+#### 6.2 CortexObserver (`agents/o/cortex_observer.py`)
+
+The `CortexObserver` provides systemic proprioception for the Bicameral Engine:
+
+```python
+from agents.o import CortexObserver, create_cortex_observer
+
+# Create observer wrapping bicameral memory
+observer = create_cortex_observer(
+    bicameral=bicameral_memory,
+    synapse=synapse,
+    hippocampus=hippocampus,
+    dreamer=lucid_dreamer,
+)
+
+# Observe dimension health
+health = observer.get_health()
+# → CortexHealth(
+#     left_hemisphere=LeftHemisphereStatus(...),
+#     right_hemisphere=RightHemisphereStatus(...),
+#     coherency=CoherencyStatus(ghost_count=0, stale_count=2),
+#     synapse=SynapseStatus(surprise_avg=0.3, flashbulb_rate=0.02),
+#     hippocampus=HippocampusStatus(memory_count=45, utilization=0.45),
+# )
+
+# Subscribe to health changes
+unsubscribe = observer.on_health_change(lambda h: print(f"Health: {h}"))
+
+# Get observation history
+history = observer.get_history(limit=100)
+```
+
+**Metrics Collected:**
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `cortex_coherency_rate` | Gauge | Cross-hemisphere validation success rate |
+| `cortex_ghost_healed_total` | Counter | Number of ghost memories auto-healed |
+| `cortex_stale_flagged_total` | Counter | Number of stale embeddings flagged |
+| `cortex_synapse_surprise_avg` | Gauge | Average surprise across signal types |
+| `cortex_synapse_flashbulb_rate` | Gauge | Rate of flashbulb (high-surprise) signals |
+| `cortex_hippocampus_size` | Gauge | Current short-term memory size |
+| `cortex_hippocampus_flush_total` | Counter | Number of hippocampus flushes |
+| `cortex_dream_cycles_total` | Counter | Number of REM cycles completed |
+| `cortex_dream_interrupted_total` | Counter | Number of interrupted dreams |
+| `cortex_neurogenesis_proposals` | Counter | Schema migration proposals generated |
+
+#### 6.3 CortexDashboard (`agents/w/cortex_dashboard.py`)
+
+Real-time dashboard using W-gent wire protocol:
+
+```python
+from agents.w import CortexDashboard, create_cortex_dashboard
+
+# Create dashboard observing cortex
+dashboard = create_cortex_dashboard(
+    observer=cortex_observer,
+    emission_interval=1.0,
+)
+
+# Start streaming to wire protocol
+await dashboard.start()
+# → Wire files at .wire/cortex-dashboard/
+# → state.json: Current cortex snapshot
+# → stream.log: Event log
+# → metrics.json: Performance metrics
+
+# Render compact status
+print(dashboard.render_compact())
+# → [CORTEX] ✓ COHERENT | L:45ms R:12ms | H:45/100 | S:0.3 | Dreams:12
+
+# Render full dashboard
+print(dashboard.render_full())
+# → ASCII dashboard with sparklines for synapse surprise, hippocampus utilization
+```
+
+**Dashboard Panels:**
+
+| Panel | Content | Update Rate |
+|-------|---------|-------------|
+| Hemisphere Status | Left/Right health, latency, error rate | 1s |
+| Coherency Monitor | Ghost count, stale count, validation rate | 1s |
+| Synapse Monitor | Surprise distribution, route breakdown | 1s |
+| Hippocampus Gauge | Size, utilization, time since last flush | 1s |
+| Dream Report | Last REM cycle summary, morning briefing | On change |
+| Neurogenesis Queue | Pending migration proposals | On change |
+
+#### 6.4 MetricsExporter (`agents/o/metrics_export.py`)
+
+Bridge to standard observability systems:
+
+```python
+from agents.o import MetricsExporter, create_metrics_exporter
+
+# Create exporter with Prometheus format
+exporter = create_metrics_exporter(
+    observer=cortex_observer,
+    format="prometheus",  # or "opentelemetry"
+)
+
+# Export metrics
+metrics_text = exporter.export()
+# → Prometheus-format metrics text
+
+# Serve metrics endpoint (for scraping)
+await exporter.serve(port=9090, path="/metrics")
+```
+
+**OpenTelemetry Integration:**
+
+```python
+from agents.o import create_otel_exporter
+
+# Create OpenTelemetry exporter
+otel = create_otel_exporter(
+    observer=cortex_observer,
+    service_name="kgents-cortex",
+    endpoint="http://localhost:4317",  # OTLP endpoint
+)
+
+# Start automatic export
+await otel.start()
+```
+
+#### 6.5 Dream Report Rendering (`agents/i/dream_view.py`)
+
+I-gent rendering of dream reports and morning briefings:
+
+```python
+from agents.i import render_dream_report, render_morning_briefing
+
+# Render dream report
+report = dreamer.last_report
+ascii_report = render_dream_report(report)
+# → ASCII visualization of REM phases, chunks processed, time taken
+
+# Render morning briefing (questions accumulated during dreaming)
+briefing = dreamer.morning_briefing
+ascii_briefing = render_morning_briefing(briefing)
+# → Interactive question list for human review
+```
+
+#### 6.6 Integration with Existing Panopticon
+
+The CortexObserver integrates with the existing O-gent Panopticon:
+
+```python
+from agents.o import (
+    create_integrated_panopticon,
+    create_cortex_observer,
+)
+
+# Create panopticon with cortex dimension
+panopticon = create_integrated_panopticon()
+cortex_observer = create_cortex_observer(bicameral=bicameral)
+
+# Register cortex as new dimension
+panopticon.register_dimension("cortex", cortex_observer)
+
+# Unified dashboard now includes cortex health
+status = panopticon.get_status()
+# → UnifiedPanopticonStatus with cortex dimension
+```
+
+**Panopticon Integration Points:**
+
+| Dimension | Source | Metrics |
+|-----------|--------|---------|
+| X (Telemetry) | Synapse | Latency, throughput, error rate |
+| Y (Semantics) | Right Hemisphere | Drift, embedding staleness |
+| Z (Axiology) | Hippocampus + Lethe | Memory cost, retention efficiency |
+| W (Cortex) | BicameralMemory | Coherency, ghost healing, dreams |
+
+#### 6.7 Configuration Schema Addition
+
+```yaml
+# ~/.config/kgents/infrastructure.yaml
+
+# === OBSERVABILITY (Phase 6) ===
+observability:
+  enabled: true
+
+  # CortexObserver settings
+  observer:
+    history_limit: 1000
+    health_check_interval_ms: 1000
+
+  # Dashboard settings
+  dashboard:
+    wire_agent_name: "cortex-dashboard"
+    emission_interval: 1.0
+    panels:
+      - hemisphere_status
+      - coherency_monitor
+      - synapse_monitor
+      - hippocampus_gauge
+      - dream_report
+      - neurogenesis_queue
+    compact_mode: false
+
+  # Metrics export
+  export:
+    format: "prometheus"  # or "opentelemetry"
+    port: 9090
+    path: "/metrics"
+    otel_endpoint: null  # Set to enable OTLP export
+```
+
+#### 6.8 Implementation Notes
+
+1. **Non-Blocking Observation**: All observation calls are async and non-blocking
+2. **VoI Awareness**: Observation cost is tracked; low-value observations are skipped under budget pressure
+3. **Graceful Degradation**: Dashboard works even if some components are unavailable
+4. **Wire Protocol**: All state emitted via WireObservable for renderer-agnostic visualization
 
 **Deliverables:**
-- Updates to `agents/o/`
-- Updates to `agents/w/value_dashboard.py`
+- `agents/o/cortex_observer.py` - CortexObserver + CortexHealth types
+- `agents/w/cortex_dashboard.py` - CortexDashboard + rendering
+- `agents/o/metrics_export.py` - Prometheus/OpenTelemetry exporters
+- `agents/i/dream_view.py` - Dream report ASCII rendering
+- Updates to `agents/o/__init__.py` - Export new types
+- Updates to `agents/w/__init__.py` - Export CortexDashboard
 
 ---
 
@@ -614,6 +842,21 @@ coherency:
   ghost_healing: true  # Auto-remove orphaned vectors
   staleness_check: true  # Flag stale embeddings for refresh
   content_hash_field: "content_hash"
+
+# === OBSERVABILITY (Phase 6) ===
+observability:
+  enabled: true
+  observer:
+    history_limit: 1000
+    health_check_interval_ms: 1000
+  dashboard:
+    wire_agent_name: "cortex-dashboard"
+    emission_interval: 1.0
+    compact_mode: false
+  export:
+    format: "prometheus"  # or "opentelemetry"
+    port: 9090
+    path: "/metrics"
 ```
 
 ---
@@ -629,8 +872,8 @@ coherency:
 | 3. D-gent Adapters + Coherency | 69 | ✅ Complete |
 | 4. Composting + Lethe | 73 | ✅ Complete |
 | 5. Lucid Dreaming + Neurogenesis | 74 | ✅ Complete |
-| 6. Observability + Dashboard | ~35 | ⏳ Pending |
-| **Total** | **~450** | 415 complete |
+| 6. Observability + Dashboard | 40 | ⏳ Design Complete |
+| **Total** | **455** | 415 complete, 40 designed |
 
 ---
 

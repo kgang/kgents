@@ -2,7 +2,64 @@
 
 **Status**: All Tests Passing | ~5,897 tests | Branch: `main`
 
-## Recent: Instance DB Phase 5 - Lucid Dreaming + Neurogenesis (✅ Complete)
+## Recent: Instance DB Phase 6 - Observability + Dashboard (Design Complete)
+
+Designed Phase 6 of the Bicameral Engine: O-gent/W-gent integration for real-time cortex health monitoring.
+
+| Component | Description | Location | Tests |
+|-----------|-------------|----------|-------|
+| `CortexObserver` | O-gent observer for Bicameral ops | `agents/o/cortex_observer.py` | 15 |
+| `CortexDashboard` | W-gent wire protocol dashboard | `agents/w/cortex_dashboard.py` | 12 |
+| `MetricsExporter` | Prometheus/OpenTelemetry bridge | `agents/o/metrics_export.py` | 8 |
+| `DreamReportRenderer` | I-gent rendering of dream reports | `agents/i/dream_view.py` | 5 |
+| **Total Designed** | | | **40** |
+
+### CortexObserver (`agents/o/cortex_observer.py`)
+
+```python
+from agents.o import CortexObserver, create_cortex_observer
+
+# Create observer wrapping bicameral memory
+observer = create_cortex_observer(
+    bicameral=bicameral_memory,
+    synapse=synapse,
+    hippocampus=hippocampus,
+    dreamer=lucid_dreamer,
+)
+
+# Observe dimension health
+health = observer.get_health()
+# → CortexHealth(coherency, synapse, hippocampus status)
+
+# Subscribe to health changes
+unsubscribe = observer.on_health_change(lambda h: print(f"Health: {h}"))
+```
+
+### CortexDashboard (`agents/w/cortex_dashboard.py`)
+
+```python
+from agents.w import CortexDashboard, create_cortex_dashboard
+
+dashboard = create_cortex_dashboard(observer=cortex_observer)
+await dashboard.start()
+# → Wire files at .wire/cortex-dashboard/
+
+print(dashboard.render_compact())
+# → [CORTEX] ✓ COHERENT | L:45ms R:12ms | H:45/100 | S:0.3 | Dreams:12
+```
+
+**Key Metrics:**
+- `cortex_coherency_rate` - Cross-hemisphere validation success rate
+- `cortex_ghost_healed_total` - Ghost memories auto-healed
+- `cortex_synapse_surprise_avg` - Average surprise across signals
+- `cortex_hippocampus_size` - Short-term memory utilization
+- `cortex_dream_cycles_total` - REM cycles completed
+
+**See:** `docs/instance-db-implementation-plan.md` Phase 6 for full specification.
+
+---
+
+## Previous: Instance DB Phase 5 - Lucid Dreaming + Neurogenesis (✅ Complete)
 
 Implemented Phase 5 of the Bicameral Engine: Interruptible maintenance and self-evolving schema.
 
@@ -462,9 +519,9 @@ See: `protocols/_tests/test_ecosystem_verification.py`
 
 ---
 
-## Instance DB - Bicameral Engine (Phase 1-5)
+## Instance DB - Bicameral Engine (Phase 1-6)
 
-Implemented the Bicameral Engine with Active Inference, short-term memory, D-gent adapters, memory compression, and lucid dreaming:
+Implemented the Bicameral Engine with Active Inference, short-term memory, D-gent adapters, memory compression, lucid dreaming, and observability:
 
 | Phase | Component | Tests | Status |
 |-------|-----------|-------|--------|
@@ -475,7 +532,8 @@ Implemented the Bicameral Engine with Active Inference, short-term memory, D-gen
 | 3 | D-gent Adapters + Bicameral | 69 | ✅ |
 | 4 | Composting + Lethe | 73 | ✅ |
 | 5 | Lucid Dreaming + Neurogenesis | 74 | ✅ |
-| **Total** | | **415** | |
+| 6 | Observability + Dashboard | 40 | ⏳ Design |
+| **Total** | | **455** | 415 impl, 40 design |
 
 ### Synapse (Active Inference Event Bus)
 
