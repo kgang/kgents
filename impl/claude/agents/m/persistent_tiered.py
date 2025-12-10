@@ -11,25 +11,21 @@ Integrates the three-tier memory architecture with D-gent storage:
 This is the complete memory hierarchy with D-gent backends.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, Dict, Generic, List, Optional, TypeVar
 
-from .holographic import HolographicMemory, MemoryPattern, CompressionLevel
+from .holographic import MemoryPattern
 from .tiered import (
-    TieredMemory,
     SensoryBuffer,
     SensoryEntry,
     WorkingMemory,
     WorkingMemoryChunk,
     AttentionFilter,
-    MemoryTier,
 )
 from .dgent_backend import (
     DgentBackedHolographicMemory,
     PersistenceConfig,
-    AssociativeWebMemory,
-    TemporalMemory,
 )
 
 T = TypeVar("T")

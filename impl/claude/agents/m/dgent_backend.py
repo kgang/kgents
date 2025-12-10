@@ -12,10 +12,9 @@ providing:
 This bridges M-gent's cognitive layer with D-gent's storage layer.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, Generic, List, Optional, Tuple, TypeVar
-import json
+from typing import Any, Dict, List, Optional, Tuple, TypeVar
 
 from .holographic import (
     HolographicMemory,

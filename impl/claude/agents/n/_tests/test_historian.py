@@ -1,10 +1,8 @@
 """Tests for the Historian: invisible crystal collector."""
 
-from datetime import datetime
-
 import pytest
 
-from ..historian import Historian, Traceable, TracingContext
+from ..historian import Historian, TracingContext
 from ..store import MemoryCrystalStore
 from ..types import Action, Determinism
 
