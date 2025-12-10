@@ -395,8 +395,8 @@ class TestPsiDgentIntegration:
         data_agent = MockDataAgent()
         engine = PersistentEngine(d_gent=data_agent)
 
-        # Solve problem
-        solution = engine.solve_problem(sample_problem)
+        # Solve problem (side effect: saves state)
+        engine.solve_problem(sample_problem)
 
         # State should be saved
         assert "psi/learning_model" in data_agent.store
@@ -481,7 +481,7 @@ class TestPsiGgentIntegration:
         grammar = MockGrammarEngine()
         metaphor = sample_metaphors[0]
 
-        prompt = project_with_grammar(
+        project_with_grammar(
             sample_problem,
             metaphor,
             abstraction=0.5,
@@ -609,7 +609,7 @@ class TestPsiLearningIntegration:
 
         # Solve multiple times to test learning
         for _ in range(3):
-            solution = engine.solve_problem(sample_problem)
+            engine.solve_problem(sample_problem)
 
         # Model should have some data
         assert isinstance(engine.retrieval_model, ThompsonSamplingModel)
@@ -617,7 +617,7 @@ class TestPsiLearningIntegration:
     def test_abstraction_model_integration(self, sample_problem):
         """Test abstraction model with solve."""
         engine = MetaphorEngine()
-        solution = engine.solve_problem(sample_problem)
+        engine.solve_problem(sample_problem)
 
         # Abstraction model should exist
         assert isinstance(engine.abstraction_model, AbstractionModel)
@@ -627,7 +627,7 @@ class TestPsiLearningIntegration:
         engine = MetaphorEngine()
 
         # Initial solve
-        solution = engine.solve_problem(sample_problem)
+        engine.solve_problem(sample_problem)
 
         # Check if update_from_feedback exists
         if hasattr(engine.retrieval_model, "update"):

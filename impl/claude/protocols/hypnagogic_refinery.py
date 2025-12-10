@@ -539,8 +539,8 @@ class HypnagogicRefinery:
         if memory.kind == "code":
             # Estimate based on size and comment density
             lines = memory.content.split("\n")
-            comment_lines = sum(1 for l in lines if l.strip().startswith("#"))
-            empty_lines = sum(1 for l in lines if not l.strip())
+            comment_lines = sum(1 for line in lines if line.strip().startswith("#"))
+            empty_lines = sum(1 for line in lines if not line.strip())
             total_lines = len(lines)
 
             if total_lines > 0:
