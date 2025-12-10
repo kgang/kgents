@@ -9,7 +9,6 @@ Tests:
 
 import asyncio
 import time
-from typing import Any
 
 from agents.t import (
     MockAgent,
@@ -22,9 +21,7 @@ from agents.t import (
     SpyAgent,
     PredicateAgent,
     not_empty,
-    is_positive,
     NoiseAgent,
-    NoiseType,
     LatencyAgent,
     FlakyAgent,
     CounterAgent,
@@ -136,9 +133,9 @@ async def test_failing_agent():
     for i in range(2):
         try:
             await failing.invoke("test")
-            assert False, f"Attempt {i+1} should have failed"
+            assert False, f"Attempt {i + 1} should have failed"
         except Exception as e:
-            print(f"✓ FailingAgent: Attempt {i+1} failed as expected: {e}")
+            print(f"✓ FailingAgent: Attempt {i + 1} failed as expected: {e}")
 
     # Third attempt should succeed
     result = await failing.invoke("test")
@@ -432,7 +429,7 @@ async def test_counter_agent():
     assert result2 == "data2"  # Identity
     assert counter.count == 2
 
-    result3 = await counter.invoke("data3")
+    await counter.invoke("data3")
     assert counter.count == 3
     print(f"✓ CounterAgent: Count = {counter.count} after 3 invocations")
 
@@ -466,16 +463,18 @@ async def test_metrics_agent():
     assert metrics.metrics.invocation_count == 1
     print(f"✓ MetricsAgent: Invocation 1, time = {metrics.metrics.total_time:.6f}s")
 
-    result2 = await metrics.invoke("data2")
+    await metrics.invoke("data2")
     assert metrics.metrics.invocation_count == 2
 
     # Test: min/max/avg
     assert metrics.metrics.min_time >= 0  # Can be zero for fast operations
     assert metrics.metrics.max_time >= metrics.metrics.min_time
     assert metrics.metrics.avg_time == metrics.metrics.total_time / 2
-    print(f"✓ MetricsAgent: avg={metrics.metrics.avg_time:.6f}s, "
-          f"min={metrics.metrics.min_time:.6f}s, "
-          f"max={metrics.metrics.max_time:.6f}s")
+    print(
+        f"✓ MetricsAgent: avg={metrics.metrics.avg_time:.6f}s, "
+        f"min={metrics.metrics.min_time:.6f}s, "
+        f"max={metrics.metrics.max_time:.6f}s"
+    )
 
     # Test: reset
     metrics.reset()
@@ -502,7 +501,7 @@ async def test_phase2_composition():
     for i in range(3):
         result = await pipeline.invoke(f"input_{i}")
         # Result may be perturbed
-        print(f"  Iteration {i+1}: '{f'input_{i}'}' -> '{result}'")
+        print(f"  Iteration {i + 1}: '{f'input_{i}'}' -> '{result}'")
 
     # Verify counter
     assert counter.count == 3
@@ -510,8 +509,10 @@ async def test_phase2_composition():
 
     # Verify metrics
     assert metrics.metrics.invocation_count == 3
-    print(f"✓ MetricsAgent: {metrics.metrics.invocation_count} invocations, "
-          f"avg={metrics.metrics.avg_time:.6f}s")
+    print(
+        f"✓ MetricsAgent: {metrics.metrics.invocation_count} invocations, "
+        f"avg={metrics.metrics.avg_time:.6f}s"
+    )
 
     print("✓ Composition: Counter >> Metrics >> Noise works")
 

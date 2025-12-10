@@ -67,7 +67,7 @@ class TestSimpleEmbedder:
             return dot / (mag1 * mag2) if mag1 > 0 and mag2 > 0 else 0.0
 
         sim_12 = cosine_sim(vec1, vec2)  # ML vs Neural (related)
-        sim_13 = cosine_sim(vec1, vec3)  # ML vs Database (less related)
+        cosine_sim(vec1, vec3)  # ML vs Database (less related)
 
         # With the corpus including the queries, similarities should be non-zero
         assert sim_12 >= 0.0  # At least some similarity

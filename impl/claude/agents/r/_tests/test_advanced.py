@@ -240,7 +240,7 @@ class TestTaskAnalyzer:
         analyzer = TaskAnalyzer()
 
         # Simple signature doesn't require structured output
-        result = analyzer._check_structured_output(simple_signature, small_dataset)
+        analyzer._check_structured_output(simple_signature, small_dataset)
         # Result depends on signature and examples content
 
     def test_check_reasoning_chain(self, complex_signature):

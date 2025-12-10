@@ -9,7 +9,7 @@ to maintain coherence. Integration (not elimination) is the goal.
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Optional
+from typing import Optional
 
 from bootstrap.types import Agent
 
@@ -22,6 +22,7 @@ class IntegrationDifficulty(Enum):
 
 class Archetype(Enum):
     """Jungian archetypes as system patterns."""
+
     PERSONA = "persona"
     SHADOW = "shadow"
     ANIMA_ANIMUS = "anima_animus"
@@ -33,6 +34,7 @@ class Archetype(Enum):
 @dataclass
 class ShadowContent:
     """A piece of shadow content."""
+
     content: str
     exclusion_reason: str
     integration_difficulty: IntegrationDifficulty
@@ -41,6 +43,7 @@ class ShadowContent:
 @dataclass
 class Projection:
     """Where the system projects its shadow onto others."""
+
     shadow_content: str
     projected_onto: str
     evidence: str
@@ -49,6 +52,7 @@ class Projection:
 @dataclass
 class IntegrationPath:
     """A recommended path for shadow integration."""
+
     shadow_content: str
     integration_method: str
     risks: list[str] = field(default_factory=list)
@@ -57,6 +61,7 @@ class IntegrationPath:
 @dataclass
 class ArchetypeManifest:
     """How an archetype manifests in the system."""
+
     archetype: Archetype
     manifestation: str
     shadow_aspect: str
@@ -67,6 +72,7 @@ class ArchetypeManifest:
 @dataclass
 class CollectiveShadow:
     """System-level shadow analysis."""
+
     collective_persona: str
     shadow_inventory: list[ShadowContent]
     system_level_projections: list[Projection]
@@ -76,6 +82,7 @@ class CollectiveShadow:
 @dataclass
 class JungInput:
     """Input for shadow analysis."""
+
     system_self_image: str
     declared_capabilities: list[str] = field(default_factory=list)
     declared_limitations: list[str] = field(default_factory=list)
@@ -85,26 +92,38 @@ class JungInput:
 @dataclass
 class JungOutput:
     """Result of shadow analysis."""
+
     shadow_inventory: list[ShadowContent]
     projections: list[Projection]
     integration_paths: list[IntegrationPath]
     persona_shadow_balance: float  # 0 = all persona, 1 = fully integrated
-    archetypes: list[ArchetypeManifest] = field(default_factory=list)  # Active archetypes
+    archetypes: list[ArchetypeManifest] = field(
+        default_factory=list
+    )  # Active archetypes
     collective_shadow: Optional[CollectiveShadow] = None  # System-level shadow
 
 
 # Standard shadow mappings: persona claim → shadow content
 SHADOW_MAPPINGS = {
-    "helpful": ("capacity to refuse, obstruct, or harm when necessary", "helpful identity"),
+    "helpful": (
+        "capacity to refuse, obstruct, or harm when necessary",
+        "helpful identity",
+    ),
     "accurate": ("tendency to confabulate, guess, or hallucinate", "accuracy identity"),
     "neutral": ("embedded values, preferences, and biases", "neutrality identity"),
     "safe": ("latent capabilities beyond declared scope", "safety identity"),
     "bounded": ("potential for rule-breaking and creativity", "boundary identity"),
-    "tasteful": ("capacity for handling crude, ugly, uncomfortable content", "tasteful identity"),
+    "tasteful": (
+        "capacity for handling crude, ugly, uncomfortable content",
+        "tasteful identity",
+    ),
     "curated": ("sprawl, experimentation, and dead ends", "curated identity"),
     "ethical": ("moral ambiguity, dual-use, tragic choices", "ethical identity"),
     "joyful": ("tedious but necessary operations", "joyful identity"),
-    "composable": ("monolithic requirements that shouldn't compose", "composable identity"),
+    "composable": (
+        "monolithic requirements that shouldn't compose",
+        "composable identity",
+    ),
 }
 
 
@@ -145,6 +164,7 @@ ARCHETYPE_PATTERNS = {
 
 # Pure functions - testable, reusable logic
 
+
 def identify_archetypes(input: JungInput) -> list[ArchetypeManifest]:
     """Identify which archetypes are active and which are in shadow."""
     archetypes = []
@@ -163,13 +183,15 @@ def identify_archetypes(input: JungInput) -> list[ArchetypeManifest]:
         is_shadow = any(kw in limitation_text for kw in pattern["keywords"])
 
         if is_active or is_shadow:
-            archetypes.append(ArchetypeManifest(
-                archetype=archetype,
-                manifestation=pattern["manifestation"],
-                shadow_aspect=pattern["shadow"],
-                is_active=is_active,
-                is_shadow=is_shadow,
-            ))
+            archetypes.append(
+                ArchetypeManifest(
+                    archetype=archetype,
+                    manifestation=pattern["manifestation"],
+                    shadow_aspect=pattern["shadow"],
+                    is_active=is_active,
+                    is_shadow=is_shadow,
+                )
+            )
 
     return archetypes
 
@@ -181,26 +203,36 @@ def build_shadow_inventory(input: JungInput) -> list[ShadowContent]:
 
     for keyword, (shadow, reason) in SHADOW_MAPPINGS.items():
         if keyword in self_image_lower:
-            difficulty = IntegrationDifficulty.HIGH if keyword in ["ethical", "safe"] else IntegrationDifficulty.MEDIUM
-            inventory.append(ShadowContent(
-                content=shadow,
-                exclusion_reason=f"Excluded to maintain {reason}",
-                integration_difficulty=difficulty,
-            ))
+            difficulty = (
+                IntegrationDifficulty.HIGH
+                if keyword in ["ethical", "safe"]
+                else IntegrationDifficulty.MEDIUM
+            )
+            inventory.append(
+                ShadowContent(
+                    content=shadow,
+                    exclusion_reason=f"Excluded to maintain {reason}",
+                    integration_difficulty=difficulty,
+                )
+            )
 
     for capability in input.declared_capabilities:
         cap_lower = capability.lower()
         if "always" in cap_lower or "never" in cap_lower:
-            inventory.append(ShadowContent(
-                content=f"Exceptions to: {capability}",
-                exclusion_reason="Absolute claims require shadow of exceptions",
-                integration_difficulty=IntegrationDifficulty.LOW,
-            ))
+            inventory.append(
+                ShadowContent(
+                    content=f"Exceptions to: {capability}",
+                    exclusion_reason="Absolute claims require shadow of exceptions",
+                    integration_difficulty=IntegrationDifficulty.LOW,
+                )
+            )
 
     return inventory
 
 
-def detect_projections(input: JungInput, shadow_inventory: list[ShadowContent]) -> list[Projection]:
+def detect_projections(
+    input: JungInput, shadow_inventory: list[ShadowContent]
+) -> list[Projection]:
     """Detect where system projects its shadow onto others."""
     projections = []
 
@@ -208,45 +240,57 @@ def detect_projections(input: JungInput, shadow_inventory: list[ShadowContent]) 
         pattern_lower = pattern.lower()
 
         if "warn" in pattern_lower and "user" in pattern_lower:
-            projections.append(Projection(
-                shadow_content="System's own capacity for the warned behavior",
-                projected_onto="Users",
-                evidence=f"Frequent warnings about: {pattern}",
-            ))
+            projections.append(
+                Projection(
+                    shadow_content="System's own capacity for the warned behavior",
+                    projected_onto="Users",
+                    evidence=f"Frequent warnings about: {pattern}",
+                )
+            )
 
         if "bad actor" in pattern_lower or "malicious" in pattern_lower:
-            projections.append(Projection(
-                shadow_content="System's own capacity for misuse",
-                projected_onto="Imagined bad actors",
-                evidence="Focus on potential malicious use",
-            ))
+            projections.append(
+                Projection(
+                    shadow_content="System's own capacity for misuse",
+                    projected_onto="Imagined bad actors",
+                    evidence="Focus on potential malicious use",
+                )
+            )
 
     return projections
 
 
-def suggest_integration_paths(shadow_inventory: list[ShadowContent]) -> list[IntegrationPath]:
+def suggest_integration_paths(
+    shadow_inventory: list[ShadowContent],
+) -> list[IntegrationPath]:
     """Suggest paths for integrating shadow content."""
     paths = []
 
     for shadow in shadow_inventory:
         if shadow.integration_difficulty == IntegrationDifficulty.LOW:
-            paths.append(IntegrationPath(
-                shadow_content=shadow.content,
-                integration_method="Acknowledge explicitly in self-description",
-                risks=["May seem less confident"],
-            ))
+            paths.append(
+                IntegrationPath(
+                    shadow_content=shadow.content,
+                    integration_method="Acknowledge explicitly in self-description",
+                    risks=["May seem less confident"],
+                )
+            )
         elif shadow.integration_difficulty == IntegrationDifficulty.MEDIUM:
-            paths.append(IntegrationPath(
-                shadow_content=shadow.content,
-                integration_method="Develop vocabulary for discussing shadow content",
-                risks=["Identity confusion during transition", "User trust impact"],
-            ))
+            paths.append(
+                IntegrationPath(
+                    shadow_content=shadow.content,
+                    integration_method="Develop vocabulary for discussing shadow content",
+                    risks=["Identity confusion during transition", "User trust impact"],
+                )
+            )
         else:  # HIGH
-            paths.append(IntegrationPath(
-                shadow_content=shadow.content,
-                integration_method="Gradual exposure through explicit edge case handling",
-                risks=["Core identity challenge", "May require system redesign"],
-            ))
+            paths.append(
+                IntegrationPath(
+                    shadow_content=shadow.content,
+                    integration_method="Gradual exposure through explicit edge case handling",
+                    risks=["Core identity challenge", "May require system redesign"],
+                )
+            )
 
     return paths
 
@@ -259,7 +303,10 @@ def calculate_balance(input: JungInput, shadow_inventory: list[ShadowContent]) -
     acknowledged = 0
     for limitation in input.declared_limitations:
         for shadow in shadow_inventory:
-            if any(word in limitation.lower() for word in shadow.content.lower().split()[:3]):
+            if any(
+                word in limitation.lower()
+                for word in shadow.content.lower().split()[:3]
+            ):
                 acknowledged += 1
                 break
 
@@ -268,6 +315,7 @@ def calculate_balance(input: JungInput, shadow_inventory: list[ShadowContent]) -
 
 
 # Agent - thin orchestration layer
+
 
 class JungAgent(Agent[JungInput, JungOutput]):
     """
@@ -326,6 +374,7 @@ class QuickShadow(Agent[str, list[str]]):
 
 # Convenience functions
 
+
 def jung() -> JungAgent:
     """Create a shadow integration agent."""
     return JungAgent()
@@ -338,9 +387,11 @@ def quick_shadow() -> QuickShadow:
 
 # Collective shadow analysis
 
+
 @dataclass
 class CollectiveShadowInput:
     """Input for system-level shadow analysis."""
+
     system_description: str  # Overall system self-description
     agent_personas: list[str]  # Individual agent self-images
     emergent_behaviors: list[str]  # Behaviors that emerge from composition
@@ -374,24 +425,32 @@ class CollectiveShadowAgent(Agent[CollectiveShadowInput, CollectiveShadow]):
         for behavior in input.emergent_behaviors:
             behavior_lower = behavior.lower()
             # Check if this behavior wasn't in any individual agent
-            if not any(persona.lower() in behavior_lower for persona in input.agent_personas):
-                emergent_shadow.append(f"Emergent behavior not present in components: {behavior}")
+            if not any(
+                persona.lower() in behavior_lower for persona in input.agent_personas
+            ):
+                emergent_shadow.append(
+                    f"Emergent behavior not present in components: {behavior}"
+                )
 
         # System-level projections
         projections = []
         if "safe" in input.system_description.lower():
-            projections.append(Projection(
-                shadow_content="System's capacity for unsafe outputs through composition",
-                projected_onto="Individual agent failures",
-                evidence="Safety defined at agent level, not composition level",
-            ))
+            projections.append(
+                Projection(
+                    shadow_content="System's capacity for unsafe outputs through composition",
+                    projected_onto="Individual agent failures",
+                    evidence="Safety defined at agent level, not composition level",
+                )
+            )
 
         if "composable" in input.system_description.lower():
-            projections.append(Projection(
-                shadow_content="Non-composable requirements and monolithic needs",
-                projected_onto="External constraints",
-                evidence="Composition as universal solution",
-            ))
+            projections.append(
+                Projection(
+                    shadow_content="Non-composable requirements and monolithic needs",
+                    projected_onto="External constraints",
+                    evidence="Composition as universal solution",
+                )
+            )
 
         return CollectiveShadow(
             collective_persona=input.system_description,

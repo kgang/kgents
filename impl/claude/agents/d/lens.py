@@ -5,7 +5,7 @@ Lenses enable focused, law-abiding access to nested state structures.
 They compose via >> to access deeply nested data with type safety.
 """
 
-from typing import TypeVar, Generic, Callable, Any
+from typing import TypeVar, Generic, Callable, Any, Optional, List
 from dataclasses import dataclass, replace
 
 S = TypeVar("S")  # Whole state
@@ -273,8 +273,6 @@ def verify_lens_laws(lens: Lens[S, A], state: S, value1: A, value2: A) -> dict:
 
 # === Prism: Optional/Partial Lens ===
 
-from typing import Optional
-
 
 @dataclass
 class Prism(Generic[S, A]):
@@ -407,8 +405,6 @@ def optional_index_prism(i: int) -> Prism[list, Any]:
 
 
 # === Traversal: Multi-Target Lens ===
-
-from typing import List
 
 
 @dataclass
@@ -718,11 +714,12 @@ def verify_traversal_laws(
         pass
 
     # Law 2: Fusion (f then g = g∘f in one pass)
+    def identity(x: Any) -> Any:
+        return x
+
     try:
-        f = lambda x: x  # Identity
-        g = lambda x: x  # Identity
-        two_pass = trav.modify(trav.modify(state, f), g)
-        one_pass = trav.modify(state, lambda x: g(f(x)))
+        two_pass = trav.modify(trav.modify(state, identity), identity)
+        one_pass = trav.modify(state, identity)
         results["fusion"] = two_pass == one_pass
     except Exception:
         pass

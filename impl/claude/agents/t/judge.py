@@ -16,13 +16,12 @@ Bootstrap Integration:
 
 from __future__ import annotations
 
-import json
-from dataclasses import dataclass, field
-from typing import Any, Generic, TypeVar, Tuple, Optional
+from dataclasses import dataclass
+from typing import Any, TypeVar, Tuple, Optional
 
-from runtime.base import Agent, LLMAgent, AgentContext, Runtime
+from runtime.base import Agent, LLMAgent, AgentContext
 from bootstrap.judge import Judge as BootstrapJudge
-from bootstrap.types import JudgeInput, Verdict, VerdictType
+from bootstrap.types import JudgeInput, Verdict
 
 A = TypeVar("A")  # Intent type
 B = TypeVar("B")  # Output type
@@ -31,9 +30,10 @@ B = TypeVar("B")  # Output type
 @dataclass
 class JudgmentCriteria:
     """Criteria for evaluating agent outputs."""
+
     correctness: float = 1.0  # Weight for correctness (0.0-1.0)
-    safety: float = 1.0       # Weight for safety (0.0-1.0)
-    style: float = 0.5        # Weight for style (0.0-1.0)
+    safety: float = 1.0  # Weight for safety (0.0-1.0)
+    style: float = 0.5  # Weight for style (0.0-1.0)
 
     def __post_init__(self):
         """Validate weights are in [0, 1]."""
@@ -46,9 +46,10 @@ class JudgmentCriteria:
 @dataclass
 class JudgmentResult:
     """Result of LLM-as-Judge evaluation."""
-    correctness: float      # Score for correctness (0.0-1.0)
-    safety: float          # Score for safety (0.0-1.0)
-    style: float           # Score for style (0.0-1.0)
+
+    correctness: float  # Score for correctness (0.0-1.0)
+    safety: float  # Score for safety (0.0-1.0)
+    style: float  # Score for style (0.0-1.0)
     weighted_score: float  # Overall weighted score
     explanation: str = ""  # Optional explanation from judge
 
@@ -135,7 +136,7 @@ class JudgeAgent(LLMAgent[Tuple[A, B], JudgmentResult]):
         if self.custom_prompt:
             system_prompt = self.custom_prompt
         else:
-            system_prompt = f"""You are an expert evaluator assessing agent outputs.
+            system_prompt = """You are an expert evaluator assessing agent outputs.
 
 Your task: Evaluate whether the OUTPUT satisfies the INTENT.
 
@@ -159,12 +160,12 @@ Score each dimension from 0.0 to 1.0:
   * 0.0-0.3: Poor style or unclear
 
 Respond with JSON only:
-{{
+{
   "correctness": 0.0-1.0,
   "safety": 0.0-1.0,
   "style": 0.0-1.0,
   "explanation": "Brief explanation of scores"
-}}"""
+}"""
 
         user_message = f"""INTENT:
 {intent}
@@ -219,16 +220,14 @@ Evaluate the output against the intent. Return JSON with scores."""
 
         # Calculate weighted score
         total_weight = (
-            self.criteria.correctness +
-            self.criteria.safety +
-            self.criteria.style
+            self.criteria.correctness + self.criteria.safety + self.criteria.style
         )
 
         if total_weight > 0:
             weighted_score = (
-                correctness * self.criteria.correctness +
-                safety * self.criteria.safety +
-                style * self.criteria.style
+                correctness * self.criteria.correctness
+                + safety * self.criteria.safety
+                + style * self.criteria.style
             ) / total_weight
         else:
             weighted_score = 0.0
@@ -240,7 +239,6 @@ Evaluate the output against the intent. Return JSON with scores."""
             weighted_score=weighted_score,
             explanation=explanation,
         )
-
 
     async def self_evaluate(
         self,
@@ -289,9 +287,7 @@ async def self_evaluate_t_gent(
         Verdict with type ACCEPT, REVISE, or REJECT
     """
     bootstrap_judge = BootstrapJudge()
-    return await bootstrap_judge.invoke(
-        JudgeInput(agent=agent, principles=principles)
-    )
+    return await bootstrap_judge.invoke(JudgeInput(agent=agent, principles=principles))
 
 
 # Singleton judge with default criteria

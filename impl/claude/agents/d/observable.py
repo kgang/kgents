@@ -513,7 +513,7 @@ class ObservableDataAgent(Generic[S]):
         """Recursively compute diff between two values."""
         diffs = []
 
-        if type(old) != type(new):
+        if type(old) is not type(new):
             diffs.append(
                 {
                     "path": path or ".",

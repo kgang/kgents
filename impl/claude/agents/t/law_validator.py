@@ -259,7 +259,9 @@ async def check_functor_identity(
 
     try:
         # F(id)(value) should equal value
-        identity = lambda x: x
+        def identity(x):
+            return x
+
         mapped = functor_map(identity)
         result = mapped(test_value)
 
@@ -308,7 +310,9 @@ async def check_functor_composition(
 
     try:
         # Left side: F(g . f)(value)
-        composed_fn = lambda x: g(f(x))
+        def composed_fn(x):
+            return g(f(x))
+
         left_result = functor_map(composed_fn)(test_value)
 
         # Right side: F(g)(F(f)(value))
@@ -465,7 +469,9 @@ async def check_monad_associativity(
         left_result = bind(left_intermediate, g)
 
         # Right side: m.bind(λa. f(a).bind(g))
-        composed_fn = lambda a: bind(f(a), g)
+        def composed_fn(a):
+            return bind(f(a), g)
+
         right_result = bind(m, composed_fn)
 
         if not equality_fn(left_result, right_result):

@@ -643,7 +643,7 @@ class CausalAnalyst:
 
         # Check for input length patterns
         lengths = [len(str(r.input_data)) for r in fail_runs]
-        avg_len = sum(lengths) / len(lengths)
+        sum(lengths) / len(lengths)
 
         # Check if failures cluster around certain length
         short_fails = sum(1 for l in lengths if l < 100)

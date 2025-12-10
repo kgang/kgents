@@ -19,7 +19,6 @@ from agents.t import (
     PropertyTestResult,
     IntGenerator,
     StringGenerator,
-    ChoiceGenerator,
     identity_property,
     not_none_property,
     length_preserved_property,
@@ -96,14 +95,14 @@ async def test_judge_agent_mock():
     print("✓ JudgeAgent: build_prompt creates correct context")
 
     # Test: parse_response with valid JSON
-    mock_response = '''
+    mock_response = """
     {
       "correctness": 0.9,
       "safety": 1.0,
       "style": 0.8,
       "explanation": "Good fix with proper implementation"
     }
-    '''
+    """
     result = judge.parse_response(mock_response)
     assert isinstance(result, JudgmentResult)
     assert 0.8 <= result.correctness <= 1.0
@@ -112,13 +111,13 @@ async def test_judge_agent_mock():
     print(f"✓ JudgeAgent: parse_response works (score={result.weighted_score:.2f})")
 
     # Test: parse_response with code block
-    mock_response_markdown = '''```json
+    mock_response_markdown = """```json
     {
       "correctness": 0.85,
       "safety": 0.95,
       "style": 0.7
     }
-    ```'''
+    ```"""
     result2 = judge.parse_response(mock_response_markdown)
     assert isinstance(result2, JudgmentResult)
     assert result2.correctness == 0.85
@@ -186,7 +185,9 @@ async def test_property_agent_length_preserved():
     assert result.total_cases == 30
     assert result.passed is True  # Uppercase preserves length
     assert result.success_rate == 1.0
-    print(f"✓ PropertyAgent: Length preservation verified ({result.passed_cases}/{result.total_cases})")
+    print(
+        f"✓ PropertyAgent: Length preservation verified ({result.passed_cases}/{result.total_cases})"
+    )
 
 
 async def test_property_agent_failure_detection():
@@ -322,7 +323,9 @@ async def test_oracle_agent_majority():
     assert result.majority_output == test_input  # Identity wins (3/5)
     assert len(result.deviants) == 2  # Two uppercase agents
     assert result.agreement_rate == 0.6  # 3/5 = 60%
-    print(f"✓ OracleAgent: Majority voting works (agreement={result.agreement_rate:.0%})")
+    print(
+        f"✓ OracleAgent: Majority voting works (agreement={result.agreement_rate:.0%})"
+    )
 
 
 async def test_regression_oracle():
@@ -394,7 +397,7 @@ async def test_phase3_composition():
     # Compose PropertyAgent with OracleAgent
     # Create agents for oracle
     double = DoubleAgent()
-    increment = IncrementAgent()
+    IncrementAgent()
 
     # Create oracle to test consistency
     oracle = OracleAgent(agents=[double, double])  # Same agent twice
@@ -403,7 +406,7 @@ async def test_phase3_composition():
     def oracle_consistency(input: int, result: DiffResult) -> bool:
         return result.all_agree
 
-    prop_oracle = PropertyAgent(
+    PropertyAgent(
         agent=oracle,
         property_fn=oracle_consistency,
         num_cases=10,
@@ -412,7 +415,7 @@ async def test_phase3_composition():
     )
 
     # Generate test cases
-    int_gen = IntGenerator(0, 50)
+    IntGenerator(0, 50)
 
     # Run property test - need to create the proper input tuple
     # Note: PropertyAgent expects (Generator, property_fn) as input

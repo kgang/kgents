@@ -17,8 +17,7 @@ See spec/bootstrap.md lines 166-178, spec/h-gents/hegel.md.
 
 from __future__ import annotations
 from dataclasses import dataclass
-from enum import Enum
-from typing import Any, Optional, Protocol, Sequence
+from typing import Optional, Protocol, Sequence
 
 from .types import (
     Agent,
@@ -86,7 +85,7 @@ class PreserveBothStrategy:
             return Synthesis(
                 resolution_type="preserve",
                 result=merged,
-                explanation=f"Merged both dicts, antithesis values take precedence",
+                explanation="Merged both dicts, antithesis values take precedence",
                 preserved_from_thesis=tuple(tension.thesis.keys()),
                 preserved_from_antithesis=tuple(tension.antithesis.keys()),
             )
@@ -129,7 +128,7 @@ class ElevateStrategy:
                 return Synthesis(
                     resolution_type="elevate",
                     result=f"{common_prefix}*",
-                    explanation=f"Elevated to common prefix pattern",
+                    explanation="Elevated to common prefix pattern",
                     preserved_from_thesis=(thesis,),
                     preserved_from_antithesis=(antithesis,),
                 )
@@ -169,8 +168,12 @@ class NegateStrategy:
                 resolution_type="negate",
                 result=winner,
                 explanation=f"Negated {loser}, boolean resolution",
-                preserved_from_thesis=() if loser == "thesis" else (str(tension.thesis),),
-                preserved_from_antithesis=() if loser == "antithesis" else (str(tension.antithesis),),
+                preserved_from_thesis=()
+                if loser == "thesis"
+                else (str(tension.thesis),),
+                preserved_from_antithesis=()
+                if loser == "antithesis"
+                else (str(tension.antithesis),),
             )
 
         return None

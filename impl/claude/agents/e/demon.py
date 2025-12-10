@@ -641,7 +641,7 @@ class TeleologicalDemon:
         if self.intent is not None:
             # We need the mutation's intent embedding
             # For now, use the mutation description as a proxy
-            mutation_text = mutation.description or mutation.mutated_code[:500]
+            mutation.description or mutation.mutated_code[:500]
 
             # Simple check: if Intent has embedding, check alignment
             # In production, this would call L-gent's embed_code_intent()

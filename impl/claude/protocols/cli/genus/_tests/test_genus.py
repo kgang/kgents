@@ -122,7 +122,7 @@ class TestGGentCLI:
         finally:
             sys.stdout = old_stdout
 
-        output = captured.getvalue()
+        captured.getvalue()
         assert result == 0
 
     def test_grammar_validate_help(self):
@@ -430,7 +430,7 @@ class TestJGentCLI:
         finally:
             sys.stdout = old_stdout
 
-        output = captured.getvalue()
+        captured.getvalue()
         assert result == 0
 
     def test_jit_budget_display(self):
@@ -669,7 +669,7 @@ class TestLGentCLI:
         finally:
             sys.stdout = old_stdout
 
-        output = captured.getvalue()
+        captured.getvalue()
         assert result == 0
 
     def test_library_discover_help(self):
@@ -719,7 +719,7 @@ class TestLGentCLI:
         finally:
             sys.stdout = old_stdout
 
-        output = captured.getvalue()
+        captured.getvalue()
         assert result == 0
 
     def test_library_lineage_help(self):
@@ -769,7 +769,7 @@ class TestLGentCLI:
         finally:
             sys.stdout = old_stdout
 
-        output = captured.getvalue()
+        captured.getvalue()
         assert result == 0
 
     def test_library_stats_help(self):
@@ -785,7 +785,7 @@ class TestLGentCLI:
         finally:
             sys.stdout = old_stdout
 
-        output = captured.getvalue()
+        captured.getvalue()
         assert result == 0
 
 

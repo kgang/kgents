@@ -15,7 +15,6 @@ from dataclasses import dataclass
 
 # Bootstrap imports
 from bootstrap import (
-    ID,
     compose,
     Result,
     Ok,
@@ -453,7 +452,6 @@ class TestBootstrapAgentComposition:
 
     def test_identity_composition(self):
         """Test Id >> f == f."""
-        identity = ID
 
         @dataclass
         class DoubleAgent:

@@ -111,7 +111,10 @@ class TestInterfaceTongue:
 
     def test_interface_tongue_with_handlers(self, sample_tongue: Tongue):
         """Test InterfaceTongue with bound handlers."""
-        handler = lambda noun, ctx: f"handled: {noun}"
+
+        def handler(noun, ctx):
+            return f"handled: {noun}"
+
         interface = InterfaceTongue(
             tongue=sample_tongue,
             artifact_name="TestAgent",
@@ -278,7 +281,10 @@ class TestBindHandlers:
 
     def test_bind_single_handler(self, sample_interface: InterfaceTongue):
         """Test binding a single handler."""
-        handler = lambda noun, ctx: f"handled: {noun}"
+
+        def handler(noun, ctx):
+            return f"handled: {noun}"
+
         result = bind_handlers(sample_interface, {"CHECK": handler})
 
         assert "CHECK" in result.handlers

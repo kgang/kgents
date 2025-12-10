@@ -521,7 +521,7 @@ class CartographerAgent:
 
         # Find low-density areas between landmarks
         voids = []
-        dim = len(context.embedding)
+        len(context.embedding)
 
         # Check density in a grid around context
         # Simple approach: check midpoints between landmark pairs

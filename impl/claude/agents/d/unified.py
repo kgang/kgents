@@ -385,7 +385,7 @@ class UnifiedMemory(Generic[S]):
         if not self._config.enable_temporal:
             raise LayerNotAvailableError("Temporal layer not enabled")
 
-        results = [(ts, state) for ts, l, state in self._events if l == label]
+        results = [(ts, state) for ts, lbl, state in self._events if lbl == label]
         if limit:
             results = results[-limit:]
         return results
@@ -577,7 +577,7 @@ class UnifiedMemory(Generic[S]):
             "lineage_depth": self._current_entry.lineage_depth
             if self._current_entry
             else 0,
-            "layers": [l.name for l in self.available_layers],
+            "layers": [layer.name for layer in self.available_layers],
         }
 
 

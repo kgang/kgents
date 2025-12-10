@@ -41,7 +41,9 @@ from .types import (
 # Refactored to pure functions per evolution improvement.
 
 
-def check_tasteful(agent: Agent[Any, Any], context: Optional[dict[str, Any]] = None) -> PartialVerdict:
+def check_tasteful(
+    agent: Agent[Any, Any], context: Optional[dict[str, Any]] = None
+) -> PartialVerdict:
     """
     Check if agent is tasteful.
 
@@ -72,7 +74,9 @@ def check_tasteful(agent: Agent[Any, Any], context: Optional[dict[str, Any]] = N
     )
 
 
-def check_curated(agent: Agent[Any, Any], context: Optional[dict[str, Any]] = None) -> PartialVerdict:
+def check_curated(
+    agent: Agent[Any, Any], context: Optional[dict[str, Any]] = None
+) -> PartialVerdict:
     """
     Check if agent is curated.
 
@@ -100,7 +104,9 @@ def check_curated(agent: Agent[Any, Any], context: Optional[dict[str, Any]] = No
     )
 
 
-def check_ethical(agent: Agent[Any, Any], context: Optional[dict[str, Any]] = None) -> PartialVerdict:
+def check_ethical(
+    agent: Agent[Any, Any], context: Optional[dict[str, Any]] = None
+) -> PartialVerdict:
     """
     Check if agent is ethical.
 
@@ -116,7 +122,7 @@ def check_ethical(agent: Agent[Any, Any], context: Optional[dict[str, Any]] = No
     # Check for concerning patterns in name
     concerning_terms = ["spy", "track", "steal", "hack", "deceive", "manipulate"]
     if any(term in agent.name.lower() for term in concerning_terms):
-        reasons.append(f"Agent name contains concerning term")
+        reasons.append("Agent name contains concerning term")
         passed = False
 
     return PartialVerdict(
@@ -127,7 +133,9 @@ def check_ethical(agent: Agent[Any, Any], context: Optional[dict[str, Any]] = No
     )
 
 
-def check_joyful(agent: Agent[Any, Any], context: Optional[dict[str, Any]] = None) -> PartialVerdict:
+def check_joyful(
+    agent: Agent[Any, Any], context: Optional[dict[str, Any]] = None
+) -> PartialVerdict:
     """
     Check if agent is joy-inducing.
 
@@ -150,7 +158,9 @@ def check_joyful(agent: Agent[Any, Any], context: Optional[dict[str, Any]] = Non
     )
 
 
-def check_composable(agent: Agent[Any, Any], context: Optional[dict[str, Any]] = None) -> PartialVerdict:
+def check_composable(
+    agent: Agent[Any, Any], context: Optional[dict[str, Any]] = None
+) -> PartialVerdict:
     """
     Check if agent is composable.
 
@@ -183,7 +193,9 @@ def check_composable(agent: Agent[Any, Any], context: Optional[dict[str, Any]] =
     )
 
 
-def check_heterarchical(agent: Agent[Any, Any], context: Optional[dict[str, Any]] = None) -> PartialVerdict:
+def check_heterarchical(
+    agent: Agent[Any, Any], context: Optional[dict[str, Any]] = None
+) -> PartialVerdict:
     """
     Check if agent is heterarchical.
 
@@ -210,7 +222,9 @@ def check_heterarchical(agent: Agent[Any, Any], context: Optional[dict[str, Any]
     )
 
 
-def check_generative(agent: Agent[Any, Any], context: Optional[dict[str, Any]] = None) -> PartialVerdict:
+def check_generative(
+    agent: Agent[Any, Any], context: Optional[dict[str, Any]] = None
+) -> PartialVerdict:
     """
     Check if agent is generative.
 
@@ -275,14 +289,12 @@ class VerdictAccumulator:
             )
 
         all_passed = all(v.passed for v in self.verdicts)
-        any_failed = any(not v.passed for v in self.verdicts)
+        any(not v.passed for v in self.verdicts)
         failed_verdicts = [v for v in self.verdicts if not v.passed]
 
         # Calculate weighted pass rate
         total_confidence = sum(v.confidence for v in self.verdicts)
-        weighted_pass = sum(
-            v.confidence for v in self.verdicts if v.passed
-        )
+        weighted_pass = sum(v.confidence for v in self.verdicts if v.passed)
         pass_rate = weighted_pass / total_confidence if total_confidence > 0 else 0
 
         # Determine verdict type
@@ -298,11 +310,7 @@ class VerdictAccumulator:
             verdict_type = VerdictType.REVISE
             reasoning = f"Needs improvement: {[v.principle for v in failed_verdicts]}"
             # Collect revision suggestions from failed verdicts
-            revisions = tuple(
-                reason
-                for v in failed_verdicts
-                for reason in v.reasons
-            )
+            revisions = tuple(reason for v in failed_verdicts for reason in v.reasons)
 
         return Verdict(
             type=verdict_type,
@@ -315,7 +323,9 @@ class VerdictAccumulator:
 # --- Mini-Judge Registry ---
 
 # Map principle names to checker functions
-MINI_JUDGES: dict[str, Callable[[Agent[Any, Any], Optional[dict[str, Any]]], PartialVerdict]] = {
+MINI_JUDGES: dict[
+    str, Callable[[Agent[Any, Any], Optional[dict[str, Any]]], PartialVerdict]
+] = {
     Principles.TASTEFUL: check_tasteful,
     Principles.CURATED: check_curated,
     Principles.ETHICAL: check_ethical,
@@ -352,7 +362,12 @@ class Judge(Agent[JudgeInput, Verdict]):
 
     def __init__(
         self,
-        custom_judges: Optional[dict[str, Callable[[Agent[Any, Any], Optional[dict[str, Any]]], PartialVerdict]]] = None,
+        custom_judges: Optional[
+            dict[
+                str,
+                Callable[[Agent[Any, Any], Optional[dict[str, Any]]], PartialVerdict],
+            ]
+        ] = None,
         parallel: bool = True,
     ):
         """
@@ -388,9 +403,7 @@ class Judge(Agent[JudgeInput, Verdict]):
         principles_to_check = input.principles or Principles.all()
 
         # Filter out unknown principles
-        valid_principles = [
-            p for p in principles_to_check if p in self._judges
-        ]
+        valid_principles = [p for p in principles_to_check if p in self._judges]
 
         if self._parallel:
             # Run all mini-judges in parallel
@@ -424,7 +437,9 @@ class Judge(Agent[JudgeInput, Verdict]):
 # --- Convenience Functions ---
 
 
-async def judge(agent: Agent[Any, Any], principles: Optional[tuple[str, ...]] = None) -> Verdict:
+async def judge(
+    agent: Agent[Any, Any], principles: Optional[tuple[str, ...]] = None
+) -> Verdict:
     """
     Judge an agent against principles.
 

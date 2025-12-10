@@ -14,7 +14,6 @@ See spec/bootstrap.md lines 98-142, spec/k-gent/persona.md.
 """
 
 from __future__ import annotations
-import os
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
@@ -167,7 +166,7 @@ class Ground(Agent[Void, Facts]):
             return None
 
         try:
-            content = self._persona_path.read_text()
+            self._persona_path.read_text()
             # Simple parsing could be added here
             # For now, we use hardcoded defaults that match the spec
             return None

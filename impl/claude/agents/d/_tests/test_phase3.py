@@ -471,7 +471,7 @@ class TestObservableDataAgent:
         sub1 = await obs.subscribe(lambda c: None)
         assert obs.subscription_count() == 1
 
-        sub2 = await obs.subscribe(lambda c: None)
+        await obs.subscribe(lambda c: None)
         assert obs.subscription_count() == 2
 
         await obs.unsubscribe(sub1)

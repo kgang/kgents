@@ -207,9 +207,7 @@ class TestSemanticRegistry:
         )
 
         # Semantic-heavy search (favor description match)
-        semantic_heavy = await registry.find_hybrid(
-            "exact matching", semantic_weight=0.8, limit=5
-        )
+        await registry.find_hybrid("exact matching", semantic_weight=0.8, limit=5)
 
         # Keyword-heavy should rank ExactMatchAgent higher
         if len(keyword_heavy) > 0:

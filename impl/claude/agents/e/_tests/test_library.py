@@ -326,7 +326,6 @@ class TestRecordSuccess:
         await library_with_lgent.record_success(sample_phage, impact=1.0)
 
         # Check archetype was registered
-        expected_name = f"viral:{sample_phage.mutation.signature}"
         assert any(name.startswith("viral:") for name in mock_registry.archetypes)
 
     @pytest.mark.asyncio

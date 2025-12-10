@@ -282,7 +282,7 @@ class TestCustomPrompts:
         }
 
         parser = StructuralDecouplingParser(schema, llm_capture)
-        result = parser.parse("my context")
+        parser.parse("my context")
 
         assert "Custom prompt" in captured_prompt
         assert "field" in captured_prompt

@@ -231,7 +231,7 @@ class TestCmdRun:
         assert result == 0
 
     def test_missing_intent(self, capsys):
-        result = cmd_run(["--format=json"])
+        cmd_run(["--format=json"])
         # With only options, no positional, should fail
         output = capsys.readouterr().out
         assert "requires an intent" in output or "run" in output
@@ -478,13 +478,13 @@ class TestCmdJudge:
         assert "Judgment" in capsys.readouterr().out
 
     def test_judge_json(self, capsys):
-        result = cmd_judge(["test input", "--format=json"])
+        cmd_judge(["test input", "--format=json"])
         output = json.loads(capsys.readouterr().out)
         assert "overall_verdict" in output["output"]
         assert "evaluations" in output["output"]
 
     def test_judge_specific_principle(self, capsys):
-        result = cmd_judge(["input", "--principle=Composable", "--format=json"])
+        cmd_judge(["input", "--principle=Composable", "--format=json"])
         output = json.loads(capsys.readouterr().out)
         # Should only evaluate one principle
         assert len(output["output"]["evaluations"]) == 1

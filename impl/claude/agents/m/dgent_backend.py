@@ -352,7 +352,6 @@ class DgentBackedHolographicMemory(HolographicMemory[T]):
             return results  # D-gent semantic uses text queries
 
         # Try semantic recall
-        namespaced_query = f"{self._namespace}:{query}"
 
         try:
             entries = await self._dgent_storage.recall(query, limit=limit)

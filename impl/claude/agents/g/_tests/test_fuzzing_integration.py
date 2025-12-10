@@ -179,7 +179,7 @@ class TestTongueInputGenerator:
 
         assert len(boundary) >= 1
         # Should include edge cases
-        texts = " ".join(boundary)
+        " ".join(boundary)
         assert any(len(b) > 100 for b in boundary) or any(b == "" for b in boundary)
 
     def test_generate_adversarial(self, command_tongue: Tongue):
@@ -663,7 +663,7 @@ class TestEdgeCases:
         )
 
         gen = TongueInputGenerator(empty_tongue, seed=42)
-        valid = gen.generate_valid(5)
+        gen.generate_valid(5)
 
         # Should handle gracefully (return examples or empty)
         # Implementation depends on how we handle empty grammars
@@ -702,7 +702,7 @@ class TestEdgeCases:
         boundary = gen.generate_boundary(20)
 
         # Should include unicode
-        has_unicode = any("日本語" in b or "emoji" in b for b in boundary)
+        any("日本語" in b or "emoji" in b for b in boundary)
         # Generator should include unicode in boundary cases
 
     def test_very_long_inputs(self, command_tongue: Tongue):

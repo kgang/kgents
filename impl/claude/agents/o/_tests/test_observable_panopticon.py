@@ -328,7 +328,7 @@ class TestEmissionModes:
         assert panopticon.should_emit(snapshot1) is True
 
         # Same status should not emit
-        snapshot2 = panopticon.collect_snapshot()
+        panopticon.collect_snapshot()
         snapshot2_same = WireStatusSnapshot(
             timestamp=datetime.now(),
             system_status=snapshot1.system_status,  # Same status
@@ -886,10 +886,10 @@ class TestIntegrationScenarios:
         # Simulate observation chain
         agent = MockAgent(name="ChainAgent")
 
-        context = observer.pre_invoke(agent, {"step": 1})
+        observer.pre_invoke(agent, {"step": 1})
         assert observer._observation_count == 1
 
-        context2 = observer.pre_invoke(agent, {"step": 2})
+        observer.pre_invoke(agent, {"step": 2})
         assert observer._observation_count == 2
 
         # Verify stream log has both observations

@@ -132,8 +132,12 @@ async def test_functor_composition():
     def list_map(f):
         return lambda xs: [f(x) for x in xs]
 
-    f = lambda x: x + 1
-    g = lambda x: x * 2
+    def f(x):
+        return x + 1
+
+    def g(x):
+        return x * 2
+
     test_value = [1, 2, 3]
 
     violation = await check_functor_composition(list_map, f, g, test_value)
@@ -149,9 +153,14 @@ async def test_monad_left_identity():
     """Test monad left identity: unit(a).bind(f) = f(a)."""
 
     # Simple list monad
-    unit = lambda a: [a]
-    bind = lambda m, f: [y for x in m for y in f(x)]
-    f = lambda x: [x, x + 1]
+    def unit(a):
+        return [a]
+
+    def bind(m, f):
+        return [y for x in m for y in f(x)]
+
+    def f(x):
+        return [x, x + 1]
 
     test_value = 5
 
@@ -164,8 +173,12 @@ async def test_monad_left_identity():
 async def test_monad_right_identity():
     """Test monad right identity: m.bind(unit) = m."""
 
-    unit = lambda a: [a]
-    bind = lambda m, f: [y for x in m for y in f(x)]
+    def unit(a):
+        return [a]
+
+    def bind(m, f):
+        return [y for x in m for y in f(x)]
+
     m = [1, 2, 3]
 
     violation = await check_monad_right_identity(unit, bind, m)
@@ -177,10 +190,16 @@ async def test_monad_right_identity():
 async def test_monad_associativity():
     """Test monad associativity: m.bind(f).bind(g) = m.bind(λa. f(a).bind(g))."""
 
-    bind = lambda m, f: [y for x in m for y in f(x)]
+    def bind(m, f):
+        return [y for x in m for y in f(x)]
+
     m = [1, 2]
-    f = lambda x: [x, x + 1]
-    g = lambda x: [x * 2]
+
+    def f(x):
+        return [x, x + 1]
+
+    def g(x):
+        return [x * 2]
 
     violation = await check_monad_associativity(bind, m, f, g)
 
