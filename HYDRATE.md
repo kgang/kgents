@@ -6,16 +6,16 @@ Keep it concise—focus on current state and recent work.
 
 ## TL;DR
 
-**Status**: Integration Tests Created ✅ | **Branch**: `main` | **Latest**: `08b00f5`
+**Status**: Ψ-gent + Integration Tests ✅ | **Branch**: `main` | **Latest**: `bac0baf`
 
 **This Session**:
-- ✅ Created comprehensive integration test suite from docs/integration-test-plan.md
-- ✅ 109 new integration tests passing (Phase 1-3 pipeline tests)
-- Key files: test_parser_pipeline_integration.py, test_factory_pipeline_integration.py, test_memory_pipeline_integration.py, test_agent_creation_e2e.py, test_tool_pipeline_e2e.py
+- ✅ Fixed all 45 Ψ-gent test failures (177 tests passing)
+- ✅ Integration tests Phase 1-3 (109 tests passing)
+- ✅ New features: F-gent reality_contracts, L-gent advanced_lattice, I-gent components
 
-**Uncommitted**: Integration test files + API fixes
+**Uncommitted**: 8 failing integration test files (API mismatches)
 
-**Next Steps**: Commit integration tests | Fix remaining Phase 2 API mismatches | Full test run
+**Next Steps**: Fix remaining integration test API mismatches (O×W, N×M, B×G)
 
 ---
 
@@ -78,15 +78,15 @@ The UnreliableNarrator and RashomonNarrator embody epistemic humility:
 | test_tool_pipeline_e2e.py | 19 | ✅ F→J→T→O→N |
 | **Phase 1-3 Total** | **109** | ✅ All passing |
 
-**Remaining (API mismatches)**:
-- test_observation_stack_integration.py - O×W×I×B×N (needs W-gent API fixes)
-- test_narrative_stack_integration.py - N×M×K×O (needs Historian API updates)
-- test_economics_stack_integration.py - B×G×J×M×O×L (needs B-gent API updates)
-- test_dna_lifecycle.py - Bootstrap DNA tests (needs Grounded/Fix API updates)
-- test_composition_laws.py - Category laws (needs C-gent API updates)
-- test_h_gent_integration.py - H-gent dialectic (needs H-gent API updates)
-- test_c_gent_integration.py - C-gent composition (needs C-gent API updates)
-- test_k_gent_integration.py - K-gent persona (needs K-gent API updates)
+**Uncommitted Tests (API mismatches - 65 failures)**:
+- test_observation_stack_integration.py - O×W: ObservationStatus, AlertSeverity, WireObservable
+- test_narrative_stack_integration.py - N×M: Historian.end_trace(output→outputs), Verbosity.BRIEF
+- test_economics_stack_integration.py - B×G: SharedEntropyBudget, BudgetedMemory, VoIOptimizer
+- test_dna_lifecycle.py - Bootstrap: Grounded/Fix API updates
+- test_composition_laws.py - C-gent: Category law APIs
+- test_h_gent_integration.py - H-gent: Dialectic APIs
+- test_c_gent_integration.py - C-gent: Composition APIs
+- test_k_gent_integration.py - K-gent: Persona APIs
 
 ---
 
