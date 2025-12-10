@@ -10,7 +10,6 @@ Tests cover:
 """
 
 
-
 # =============================================================================
 # Help & Version (Fast Path)
 # =============================================================================
@@ -130,9 +129,9 @@ class TestFuzzyMatching:
         print_suggestions("mirro")
         out = capsys.readouterr().out
 
-        assert "Unknown command: mirro" in out
-        assert "Did you mean?" in out
-        assert "mirror" in out
+        # Now uses sympathetic errors format
+        assert "'mirro' isn't a kgents command" in out
+        assert "mirror" in out  # Suggestion should appear
 
 
 # =============================================================================
@@ -215,7 +214,8 @@ class TestUnknownCommand:
         out = capsys.readouterr().out
 
         assert result == 1
-        assert "Unknown command: xyznonexistent" in out
+        # Now uses sympathetic errors format
+        assert "'xyznonexistent' isn't a kgents command" in out
         assert "kgents --help" in out
 
 

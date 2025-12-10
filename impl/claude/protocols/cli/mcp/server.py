@@ -321,85 +321,74 @@ async def handle_find(query: str, limit: int = 10) -> MCPToolResult:
 
     Maps to: kgents find "<query>" --limit=<n>
     """
-    try:
-        from agents.l import Registry, EntityType, CatalogEntry, Status, Search
+    # Built-in agent catalog for quick lookup
+    standard_agents = [
+        ("A-gent", "Abstract architectures and creative agents", "AGENT"),
+        ("B-gent", "Bio/Scientific discovery and economics", "AGENT"),
+        ("C-gent", "Category theory composition", "AGENT"),
+        ("D-gent", "Data agents - state, memory, persistence", "AGENT"),
+        ("E-gent", "Evolutionary agents - thermodynamic evolution", "AGENT"),
+        ("F-gent", "Forge - artifact creation", "AGENT"),
+        ("G-gent", "Grammarian - DSL synthesis", "AGENT"),
+        ("H-gent", "Shadow/ethical agents", "AGENT"),
+        ("I-gent", "Interface agents - TUI/interaction", "AGENT"),
+        ("J-gent", "JIT compilation and optimization", "AGENT"),
+        ("K-gent", "Kent simulacra persona", "AGENT"),
+        ("L-gent", "Librarian - semantic search and catalogs", "AGENT"),
+        ("M-gent", "Memory - holographic recall", "AGENT"),
+        ("N-gent", "Narrator - storytelling and tracing", "AGENT"),
+        ("O-gent", "Observer - telemetry and monitoring", "AGENT"),
+        ("P-gent", "Parser - error repair", "AGENT"),
+        ("Psi-gent", "Psychopomp - metaphor-based problem solving", "AGENT"),
+        ("T-gent", "Tester - fuzzing and property testing", "AGENT"),
+        ("W-gent", "Wire - communication protocol", "AGENT"),
+    ]
 
-        # Create a registry with standard agents pre-registered
-        registry = Registry()
+    # Simple keyword matching search
+    query_lower = query.lower()
+    results = []
 
-        standard_agents = [
-            ("A-gent", "Abstract architectures and creative agents", EntityType.AGENT),
-            ("B-gent", "Bio/Scientific discovery and economics", EntityType.AGENT),
-            ("C-gent", "Category theory composition", EntityType.AGENT),
-            ("D-gent", "Data agents - state, memory, persistence", EntityType.AGENT),
-            (
-                "E-gent",
-                "Evolutionary agents - thermodynamic evolution",
-                EntityType.AGENT,
-            ),
-            ("F-gent", "Forge - artifact creation", EntityType.AGENT),
-            ("G-gent", "Grammarian - DSL synthesis", EntityType.AGENT),
-            ("H-gent", "Shadow/ethical agents", EntityType.AGENT),
-            ("I-gent", "Interface agents - TUI/interaction", EntityType.AGENT),
-            ("J-gent", "JIT compilation and optimization", EntityType.AGENT),
-            ("K-gent", "Kent simulacra persona", EntityType.AGENT),
-            ("L-gent", "Librarian - semantic search and catalogs", EntityType.AGENT),
-            ("M-gent", "Memory - holographic recall", EntityType.AGENT),
-            ("N-gent", "Narrator - storytelling and tracing", EntityType.AGENT),
-            ("O-gent", "Observer - telemetry and monitoring", EntityType.AGENT),
-            ("P-gent", "Parser - error repair", EntityType.AGENT),
-            (
-                "Psi-gent",
-                "Psychopomp - metaphor-based problem solving",
-                EntityType.AGENT,
-            ),
-            ("T-gent", "Tester - fuzzing and property testing", EntityType.AGENT),
-            ("W-gent", "Wire - communication protocol", EntityType.AGENT),
-        ]
+    for name, desc, etype in standard_agents:
+        score = 0.0
 
-        for name, desc, etype in standard_agents:
-            entry = CatalogEntry(
-                id=name.lower(),
-                name=name,
-                description=desc,
-                entity_type=etype,
-                version="1.0.0",
-                status=Status.ACTIVE,  # Use ACTIVE not STABLE
-            )
-            registry.register(entry)
+        # Exact name match
+        if query_lower == name.lower():
+            score = 1.0
+        # Partial name match
+        elif query_lower in name.lower():
+            score = 0.7
+        # Description match
+        elif query_lower in desc.lower():
+            score = 0.5
+        # Word match in description
+        elif any(query_lower in word.lower() for word in desc.split()):
+            score = 0.3
 
-        # Perform keyword search
-        search = Search(registry)
-        results = search.search(query, limit=limit)
+        if score > 0:
+            results.append((name, desc, etype, score))
 
-        if not results:
-            return MCPToolResult(
-                success=True,
-                content=f"No results found for '{query}'",
-                metadata={"query": query, "count": 0},
-            )
+    # Sort by score descending
+    results.sort(key=lambda x: x[3], reverse=True)
+    results = results[:limit]
 
-        formatted = f"Search results for '{query}':\n\n"
-        for r in results:
-            formatted += f"- **{r.entry.name}** ({r.entry.entity_type.name})\n"
-            formatted += f"  {r.entry.description}\n"
-            formatted += f"  Score: {r.score:.2f}\n\n"
-
+    if not results:
         return MCPToolResult(
             success=True,
-            content=formatted,
-            metadata={"query": query, "count": len(results)},
+            content=f"No results found for '{query}'",
+            metadata={"query": query, "count": 0},
         )
-    except ImportError as e:
-        return MCPToolResult(
-            success=True,
-            content=f"Searching for: {query} (limit={limit})\n[L-gent not available: {e}]",
-        )
-    except Exception as e:
-        return MCPToolResult(
-            success=False,
-            content=f"Search failed: {e}",
-        )
+
+    formatted = f"Search results for '{query}':\n\n"
+    for name, desc, etype, score in results:
+        formatted += f"- **{name}** ({etype})\n"
+        formatted += f"  {desc}\n"
+        formatted += f"  Score: {score:.2f}\n\n"
+
+    return MCPToolResult(
+        success=True,
+        content=formatted,
+        metadata={"query": query, "count": len(results)},
+    )
 
 
 async def handle_flow_run(flowfile: str, input_data: str = "") -> MCPToolResult:
@@ -528,7 +517,7 @@ async def handle_psi(problem: str, domain: str = "general") -> MCPToolResult:
                 )
 
             if result.distortion:
-                output += f"\nDistortion: {result.distortion.total:.2f}\n"
+                output += f"\nDistortion: {result.distortion.delta:.2f}\n"
         else:
             output += "❌ No solution found\n"
             output += f"Reason: {result.failure_reason or 'Unknown'}\n"

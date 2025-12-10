@@ -1,0 +1,84 @@
+# tongue-create.flow.yaml
+# Create a Domain Specific Language (Tongue) from intent.
+#
+# Philosophy: "Constraint is Liberation."
+# A well-designed grammar makes forbidden operations impossible.
+
+version: "1.0"
+name: "Tongue Creation Pipeline"
+description: |
+  Transform domain description into a Tongue artifact.
+  Demonstrates: G-gent synthesis, L-gent registration, T-gent validation.
+
+input:
+  type: text
+  required: true
+
+output:
+  format: yaml
+  save_to: .kgents/tongues/
+
+variables:
+  level: "{{ level | default('command') }}"
+  constraints: "{{ constraints | default('') }}"
+
+steps:
+  # Step 1: Analyze domain intent
+  - id: analyze
+    genus: G-gent
+    operation: analyze_domain
+    args:
+      extract_entities: true
+      extract_operations: true
+      extract_constraints: true
+
+  # Step 2: Synthesize grammar
+  - id: synthesize
+    genus: G-gent
+    operation: synthesize
+    input: "from:analyze"
+    args:
+      level: "{{ level }}"
+      format: auto
+
+  # Step 3: Generate proofs (constraint verification)
+  - id: prove
+    genus: G-gent
+    operation: generate_proofs
+    input: "from:synthesize"
+    args:
+      verify_constraints: true
+
+  # Step 4: Validate with fuzzing
+  - id: fuzz
+    genus: T-gent
+    operation: fuzz
+    input: "from:synthesize"
+    args:
+      iterations: 100
+      coverage_target: 0.8
+    on_error: continue
+
+  # Step 5: Create Tongue artifact
+  - id: reify
+    genus: G-gent
+    operation: reify_tongue
+    input: "from:synthesize"
+    args:
+      include_proofs: true
+      include_examples: true
+
+  # Step 6: Register in catalog
+  - id: register
+    genus: L-gent
+    operation: register
+    input: "from:reify"
+    args:
+      entity_type: tongue
+      status: active
+
+hooks:
+  post: "echo 'Tongue created and registered.'"
+
+on_error:
+  strategy: halt

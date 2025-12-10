@@ -1,0 +1,68 @@
+# code-review.flow.yaml
+# A principled code review pipeline demonstrating Composable flows.
+#
+# Philosophy: "Parse first, judge second, repair if needed."
+# This flow embodies the three-step pattern common across kgents.
+
+version: "1.0"
+name: "Code Review Pipeline"
+description: |
+  Verify code against the 7 principles, then repair if issues found.
+  Demonstrates: Sequential composition, conditional execution, debug snapshots.
+
+input:
+  type: file
+  extensions: [.py, .js, .ts, .rs, .go]
+  required: true
+
+output:
+  format: rich
+  save_to: .kgents/reviews/
+
+variables:
+  strictness: "{{ strictness | default('high') }}"
+
+steps:
+  # Step 1: Parse and extract structure
+  - id: parse
+    genus: P-gent
+    operation: extract
+    args:
+      format: ast
+    debug: true  # Snapshot for TUI inspection
+
+  # Step 2: Judge against principles
+  - id: judge
+    genus: Bootstrap
+    operation: judge
+    input: "from:parse"
+    args:
+      principles: all
+      strictness: "{{ strictness }}"
+
+  # Step 3: Repair if issues found (conditional)
+  - id: repair
+    genus: P-gent
+    operation: repair
+    input: "from:judge"
+    condition: "{{ judge.output.verdict != 'ACCEPT' }}"
+    args:
+      strategy: gentle
+    on_error: continue
+
+  # Step 4: Re-judge after repair
+  - id: verify
+    genus: Bootstrap
+    operation: judge
+    input: "from:repair"
+    condition: "{{ repair.status == 'completed' }}"
+    args:
+      principles: all
+
+hooks:
+  pre: "echo 'Starting code review...'"
+  post: "echo 'Review complete.'"
+
+on_error:
+  strategy: continue
+  notify: false

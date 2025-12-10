@@ -194,16 +194,24 @@ def print_suggestions(command: str) -> None:
     """Print helpful suggestions for unknown command."""
     suggestions = suggest_similar(command)
 
-    print(f"Unknown command: {command}")
-    print()
+    # Try to use sympathetic errors if available
+    try:
+        from protocols.cli.errors import command_not_found
 
-    if suggestions:
-        print("Did you mean?")
-        for s in suggestions:
-            print(f"  kgents {s}")
+        err = command_not_found(command, suggestions)
+        print(err.render())
+    except ImportError:
+        # Fallback to simple output
+        print(f"Unknown command: {command}")
         print()
 
-    print("Run 'kgents --help' for available commands.")
+        if suggestions:
+            print("Did you mean?")
+            for s in suggestions:
+                print(f"  kgents {s}")
+            print()
+
+        print("Run 'kgents --help' for available commands.")
 
 
 # =============================================================================
@@ -391,12 +399,18 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         return handler(command_args)
     except KeyboardInterrupt:
-        print("\nInterrupted")
+        print("\n[...] Interrupted. No worries—nothing was left in a bad state.")
         return 130
     except Exception as e:
-        # Sympathetic error handling (Phase 8)
-        # For now, just print the error
-        print(f"Error: {e}")
+        # Sympathetic error handling
+        try:
+            from protocols.cli.errors import handle_exception
+
+            verbose = "--verbose" in command_args or "-v" in command_args
+            print(handle_exception(e, verbose=verbose))
+        except ImportError:
+            # Fallback if errors module not available
+            print(f"Error: {e}")
         return 1
 
 

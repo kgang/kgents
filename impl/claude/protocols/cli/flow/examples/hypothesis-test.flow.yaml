@@ -1,0 +1,71 @@
+# hypothesis-test.flow.yaml
+# Scientific method applied to code analysis.
+#
+# Philosophy: "Think first, test second, evolve always."
+# Embodies the B-gent scientific discovery pattern.
+
+version: "1.0"
+name: "Hypothesis Testing Pipeline"
+description: |
+  Generate hypotheses about code behavior, then test them.
+  Demonstrates: B-gent integration, falsification, iterative refinement.
+
+input:
+  type: any
+  required: true
+
+output:
+  format: json
+  save_to: .kgents/experiments/
+
+variables:
+  depth: "{{ depth | default('medium') }}"
+  max_hypotheses: "{{ max_hypotheses | default(5) }}"
+
+steps:
+  # Step 1: Generate hypotheses
+  - id: hypothesize
+    genus: B-gent
+    operation: think
+    args:
+      depth: "{{ depth }}"
+      limit: "{{ max_hypotheses }}"
+      include_falsification: true
+
+  # Step 2: Design experiments for each hypothesis
+  - id: design
+    genus: B-gent
+    operation: design_experiment
+    input: "from:hypothesize"
+    args:
+      coverage: full
+
+  # Step 3: Execute experiments (via T-gent)
+  - id: experiment
+    genus: T-gent
+    operation: execute
+    input: "from:design"
+    args:
+      mode: property_based
+    timeout_ms: 30000
+
+  # Step 4: Analyze results
+  - id: analyze
+    genus: B-gent
+    operation: analyze
+    input: "from:experiment"
+    args:
+      update_priors: true
+
+  # Step 5: Archive learnings (for future reference)
+  - id: archive
+    genus: L-gent
+    operation: register
+    input: "from:analyze"
+    args:
+      entity_type: hypothesis
+      status: tested
+
+on_error:
+  strategy: continue
+  max_retries: 2

@@ -111,6 +111,24 @@ from .semantic_registry import (
     SemanticRegistry,
     create_semantic_registry,
 )
+from .egent_integration import (
+    # Mutation schemas
+    MutationSchema,
+    SchemaCategory,
+    STANDARD_SCHEMAS,
+    # Code intent
+    CodeIntent,
+    extract_code_docstrings,
+    extract_code_names,
+    # Type inference
+    InferredType,
+    infer_types,
+    types_compatible,
+    # Extended registry
+    EgentSemanticRegistry,
+    cosine_similarity,
+    create_egent_registry,
+)
 from .embedders import (
     EmbeddingMetadata,
     CachedEmbedder,
@@ -224,6 +242,19 @@ __all__ = [
     "create_semantic_brain",
     "SemanticRegistry",
     "create_semantic_registry",
+    # E-gent Integration
+    "MutationSchema",
+    "SchemaCategory",
+    "STANDARD_SCHEMAS",
+    "CodeIntent",
+    "extract_code_docstrings",
+    "extract_code_names",
+    "InferredType",
+    "infer_types",
+    "types_compatible",
+    "EgentSemanticRegistry",
+    "cosine_similarity",
+    "create_egent_registry",
     # Advanced Embedders (Phase 6)
     "EmbeddingMetadata",
     "CachedEmbedder",

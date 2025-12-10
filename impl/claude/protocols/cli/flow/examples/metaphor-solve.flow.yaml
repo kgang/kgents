@@ -1,0 +1,77 @@
+# metaphor-solve.flow.yaml
+# Problem-solving through metaphor projection (Psi-gent).
+#
+# Philosophy: "To understand the mountain, become the river."
+# The Morphic Engine transforms unfamiliar into familiar.
+
+version: "1.0"
+name: "Metaphor-Based Problem Solving"
+description: |
+  Project a problem through metaphor space, solve, and reify back.
+  Demonstrates: Psi-gent 4-axis tensor, M-gent holographic recall.
+
+input:
+  type: text
+  required: true
+
+output:
+  format: rich
+
+variables:
+  domain: "{{ domain | default('general') }}"
+  abstraction: "{{ abstraction | default(0.5) }}"
+
+steps:
+  # Step 1: Analyze the novel problem
+  - id: analyze
+    genus: Psi-gent
+    operation: analyze_novel
+    args:
+      measure_complexity: true
+      extract_constraints: true
+
+  # Step 2: Search for fitting metaphor (holographic recall)
+  - id: recall
+    genus: Psi-gent
+    operation: recall_metaphor
+    input: "from:analyze"
+    args:
+      use_holographic: true
+      max_candidates: 5
+    debug: true  # See which metaphors were considered
+
+  # Step 3: Project problem into metaphor space
+  - id: project
+    genus: Psi-gent
+    operation: project
+    input: "from:recall"
+    args:
+      abstraction_level: "{{ abstraction }}"
+
+  # Step 4: Solve in metaphor space
+  - id: solve
+    genus: Psi-gent
+    operation: solve
+    input: "from:project"
+    args:
+      max_iterations: 10
+
+  # Step 5: Reify solution back to original domain
+  - id: reify
+    genus: Psi-gent
+    operation: reify
+    input: "from:solve"
+    args:
+      measure_distortion: true
+
+  # Step 6: Validate the reified solution
+  - id: validate
+    genus: Bootstrap
+    operation: judge
+    input: "from:reify"
+    args:
+      principles: [Tasteful, Ethical, Composable]
+
+on_error:
+  strategy: halt
+  notify: false

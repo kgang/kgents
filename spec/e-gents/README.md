@@ -140,43 +140,59 @@ The E-gent system gains from disorder:
 - Intent drift detection improves over time
 - What survives is antifragile **AND** aligned
 
-## The Thermodynamic Cycle
+## The Teleological Thermodynamic Cycle
 
-E-gents compose a five-stage thermodynamic cycle:
+E-gents compose a six-stage cycle with exogenous energy:
 
 ```
-ThermodynamicCycle =
-  Mutate >> Select >> Wager >> Infect >> Payoff
+Sun (Grants/Intent)
+  │
+  ▼
+Mutate >> Select >> Wager >> Infect >> Payoff
+              │
+              └── Teleological Check (Intent alignment)
 ```
 
-### Stage 1: Mutate (Entropy Injection)
+### Stage 0: Sun (Exogenous Energy)
 
-**Morphism**: `(CodeModule, ViralLibrary) → list[MutationVector]`
+**Morphism**: `UserRequest → Grant + Intent`
 
-Generates cheap mutation proposals:
-- **Shotgun approach**: Many small vectors, not one big hypothesis
-- **Pattern-guided**: Viral Library influences mutation probability
-- **Stochastic**: No expensive "planning" step
+User provides energy and purpose:
+- **Grants**: Token budget for high-risk architectural work
+- **Intent**: Embedding of what the User wants
+- **Temperature override**: Higher risk tolerance for grant-funded work
+
+### Stage 1: Mutate (Semantic Schema Application)
+
+**Morphism**: `(CodeModule, ViralLibrary, Temperature) → list[MutationVector]`
+
+Generates semantic mutation proposals:
+- **Schema-based**: Apply L-gent isomorphic transformations
+- **Gibbs-filtered**: Pre-filter by ΔG < 0 at current temperature
+- **Hot-spot targeted**: Focus on high-complexity code
 - **Cost**: Nearly zero tokens
 
-### Stage 2: Select (Maxwell's Demon)
+### Stage 2: Select (Teleological Demon)
 
 **Morphism**: `list[MutationVector] → list[Phage]`
 
-Cheap rejection via heuristics:
-- **Free checks**: Syntax valid? Diff size reasonable?
-- **Cheap checks**: Quick type inference? Complexity delta acceptable?
-- **Economic check**: Expected value > entropy cost?
-- **Goal**: 90% of mutations die here for 0 token cost
+Five-layer selection (ordered by cost):
+1. **Syntactic viability** (FREE): `ast.parse()`
+2. **Semantic stability** (CHEAP): Type lattice check
+3. **Teleological alignment** (CHEAP-ISH): Intent embedding distance ← KEY
+4. **Thermodynamic viability** (FREE): Gibbs check
+5. **Economic viability** (FREE): Market quote
 
-### Stage 3: Wager (Prediction Market)
+**Goal**: ~90% die by Layer 3, preventing parasites cheaply
+
+### Stage 3: Wager (Market + Grants)
 
 **Morphism**: `Phage → BetReceipt | BetDenied`
 
-Stake tokens on survivors:
-- **Quote**: Calculate odds from pattern history
-- **Stake**: E-gent bets tokens on success
-- **Approval**: B-gent accepts or denies based on account health
+Determine funding source:
+- **Check for Grant**: Does an active grant match this mutation's intent?
+- **If Grant**: Use grant funds, higher temperature allowed
+- **If Market**: Stake from account, normal temperature
 - **Self-regulation**: Poor performers face tighter markets
 
 ### Stage 4: Infect (Expensive Validation)
@@ -187,40 +203,45 @@ Apply mutation and run tests:
 - **Application**: Phage.infect() modifies codebase
 - **Validation**: Tests run (this is where tokens go)
 - **Git safety**: Atomic write with rollback capability
-- **Cost**: This is the expensive stage—only survivors reach here
+- **Cost**: This is the expensive stage—only ~10% reach here
 
 ### Stage 5: Payoff (Viral Learning)
 
 **Morphism**: `InfectionResult → LibraryUpdate`
 
 Update the system based on outcome:
-- **Success**: DNA → Viral Library, tokens earned, pattern reinforced
-- **Failure**: Phage dies, tokens lost, pattern weakened
+- **Success**: DNA → Viral Library, tokens earned, Grant ROI recorded
+- **Failure**: Phage dies, tokens lost, intent similarity logged
 - **Market update**: Odds recalculated for pattern signature
 
 ## Defense in Depth
 
-E-gents achieve reliability through **layered selection**:
+E-gents achieve reliability through **five-layer selection**:
 
-### Layer 1: Free Checks (Maxwell's Demon)
+### Layer 1: Syntactic Viability (FREE)
 - **Syntax**: `ast.parse()` — instant, no cost
 - **Diff size**: Length check — instant, no cost
-- **Goal**: Kill 50% of mutations here
+- **Goal**: Kill 30% of mutations here
 
-### Layer 2: Cheap Checks (Maxwell's Demon)
-- **Quick type inference**: Simplified type check — minimal cost
-- **Complexity delta**: Cyclomatic change estimate — minimal cost
-- **Goal**: Kill 40% of remaining mutations here
+### Layer 2: Semantic Stability (CHEAP)
+- **Type lattice**: L-gent compatibility check — minimal cost
+- **Structure preservation**: AST shape comparison — minimal cost
+- **Goal**: Kill 30% of remaining mutations here
 
-### Layer 3: Economic Check (Prediction Market)
-- **Quote odds**: Based on pattern history — no cost
-- **Stake validation**: Account health check — no cost
-- **Goal**: Filter out economically unviable mutations
+### Layer 3: Teleological Alignment (CHEAP-ISH) ← KEY
+- **Intent embedding**: Cosine similarity with User's Intent — embedding cost
+- **Purpose drift detection**: Kill mutations that game tests
+- **Goal**: Kill parasites before expensive validation
 
-### Layer 4: Expensive Validation (Infection)
-- **Test execution**: pytest — full cost
-- **Type checking**: mypy strict — moderate cost
-- **Goal**: Only ~10% of original mutations reach here
+### Layer 4: Thermodynamic Viability (FREE)
+- **Gibbs check**: ΔG < 0 at current temperature
+- **Enthalpy/Entropy balance**: Complexity vs novelty tradeoff
+- **Goal**: Filter thermodynamically unviable mutations
+
+### Layer 5: Economic Viability (FREE)
+- **Market quote**: Based on pattern history
+- **Grant check**: Active grant matching intent?
+- **Goal**: Only ~10% of original mutations proceed to infection
 
 ## Composability
 
@@ -261,27 +282,29 @@ E-gents are the **most integrated** agents in kgents:
 
 E-gents must **never**:
 
-1. ❌ **Budget evolution** — Use markets, not bureaucratic limits
-2. ❌ **Plan mutations** — Mutators propose stochastically, Demons select
-3. ❌ **Judge with LLM** — Heuristics select; tests validate
+1. ❌ **Budget evolution** — Use markets + grants, not bureaucratic limits
+2. ❌ **Random mutations** — Use L-gent schemas, not noise
+3. ❌ **Skip intent check** — Parasites will evolve without teleological filter
 4. ❌ **Run all mutations** — 90% should die before expensive validation
 5. ❌ **Ignore market signals** — If odds are bad, don't stake
 6. ❌ **Skip Viral Library update** — Every outcome teaches something
 7. ❌ **Self-modify without convergence** — Fixed-point iteration required
 8. ❌ **Evolve without git safety** — Rollback must be possible
-9. ❌ **Accumulate memory** — The library evolves; weak patterns die
+9. ❌ **Trust tests alone** — Tests + Intent alignment required
+10. ❌ **Let the market close** — Use Grants for high-risk architectural work
 
 ## See Also
 
-- **[thermodynamics.md](./thermodynamics.md)** - Full thermodynamic model specification
+- **[thermodynamics.md](./thermodynamics.md)** - Full teleological thermodynamic model
 - **[evolution-agent.md](./evolution-agent.md)** - Pipeline implementation details
-- **[grounding.md](./grounding.md)** - AST analysis for mutation generation
+- **[grounding.md](./grounding.md)** - AST analysis for hot spot detection
 - **[memory.md](./memory.md)** - Viral Library persistence
 - **[safety.md](./safety.md)** - Self-evolution and convergence detection
 - **[B-gents/banker.md](../b-gents/banker.md)** - Prediction market economics
-- **[L-gents](../l-gents/)** - Semantic registry for pattern storage
+- **[L-gents](../l-gents/)** - Semantic schemas and embeddings
 
 ---
 
-*"Nature does not budget. Nature starves. Nature selects."*
-*"What survives the fire is antifragile."*
+*"The Sun gives (Energy/Intent). The Demon selects (Efficiency). The Phage adapts (Structure)."*
+*"Without the Sun, the Demon starves. Without the Demon, the Sun burns."*
+*"Evolution without purpose is entropy. Purpose without selection is waste."*

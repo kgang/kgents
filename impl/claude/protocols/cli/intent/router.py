@@ -477,34 +477,112 @@ def _generate_single_category_step(
 # =============================================================================
 
 
-def execute_plan(plan: ExecutionPlan) -> dict:
+async def execute_plan_async(plan: ExecutionPlan) -> dict:
     """
-    Execute a plan, running each step.
+    Execute a plan, running each step via actual agent handlers.
 
     Returns execution results.
     """
+    from protocols.cli.mcp.server import (
+        handle_check,
+        handle_judge,
+        handle_think,
+        handle_fix,
+        handle_speak,
+        handle_find,
+    )
+
+    # Map commands to handlers
+    command_handlers = {
+        "check": lambda args: handle_check(args[0] if args else "."),
+        "judge": lambda args: handle_judge(args[0] if args else ""),
+        "think": lambda args: handle_think(args[0].strip('"') if args else ""),
+        "fix": lambda args: handle_fix(args[0] if args else ""),
+        "speak": lambda args: handle_speak(args[0].strip('"') if args else ""),
+        "find": lambda args: handle_find(args[0].strip('"') if args else ""),
+    }
+
     results = []
+    prev_result = None
 
     for step in plan.steps:
-        # Check condition
-        if step.condition:
-            # Simple condition evaluation (in real impl, check previous results)
-            pass
+        # Check condition (simple evaluation)
+        if step.condition and prev_result:
+            # Skip if condition references previous success but it failed
+            if (
+                "found issues" in step.condition
+                and prev_result.get("status") != "issues_found"
+            ):
+                results.append(
+                    {
+                        "step_id": step.id,
+                        "command": step.render_cli(),
+                        "status": "skipped",
+                        "output": f"Condition not met: {step.condition}",
+                    }
+                )
+                continue
 
-        # Execute step (simulated for now)
-        result = {
-            "step_id": step.id,
-            "command": step.render_cli(),
-            "status": "success",
-            "output": f"Executed: {step.description}",
-        }
+        # Execute step via actual handler
+        handler = command_handlers.get(step.command)
+        if handler:
+            try:
+                mcp_result = await handler(step.args)
+                result = {
+                    "step_id": step.id,
+                    "command": step.render_cli(),
+                    "status": "success" if mcp_result.success else "failed",
+                    "output": mcp_result.content[:500] if mcp_result.content else "",
+                }
+            except Exception as e:
+                result = {
+                    "step_id": step.id,
+                    "command": step.render_cli(),
+                    "status": "error",
+                    "output": f"Error: {e}",
+                }
+        else:
+            # Fallback for commands without handlers
+            result = {
+                "step_id": step.id,
+                "command": step.render_cli(),
+                "status": "pending",
+                "output": f"Handler not implemented for: {step.command}",
+            }
+
         results.append(result)
+        prev_result = result
 
     return {
         "plan": plan.to_dict(),
-        "executed": len(results),
+        "executed": len([r for r in results if r["status"] == "success"]),
+        "total": len(results),
         "results": results,
     }
+
+
+def execute_plan(plan: ExecutionPlan) -> dict:
+    """
+    Execute a plan synchronously (wrapper for async execution).
+
+    Returns execution results.
+    """
+    import asyncio
+
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            # If already in async context, create task
+            import concurrent.futures
+
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(asyncio.run, execute_plan_async(plan))
+                return future.result()
+        else:
+            return loop.run_until_complete(execute_plan_async(plan))
+    except RuntimeError:
+        # No event loop, create one
+        return asyncio.run(execute_plan_async(plan))
 
 
 # =============================================================================

@@ -359,6 +359,27 @@ from .grammar_insurance import (
     calculate_hedge_cost,
 )
 
+# E-gent Integration (Evolution Economics)
+from .egent_integration import (
+    # Prediction Market
+    BetOutcome,
+    MutationBet,
+    MarketQuote,
+    SettlementResult,
+    PredictionMarket,
+    # Grant System (Sun)
+    GrantStatus,
+    Grant,
+    GrantConsumption,
+    Sun,
+    # Staking
+    PhageStake,
+    StakingPool,
+    # Combined
+    EvolutionEconomics,
+    create_evolution_economics,
+)
+
 # JIT Efficiency (B×G Phase 6: High-Frequency Trading Optimization)
 from .jit_efficiency import (
     # Compilation targets
@@ -616,4 +637,18 @@ __all__ = [
     "benchmark_jit_speedup",
     "create_hf_tongue_builder",
     "estimate_jit_value",
+    # E-gent Integration (Evolution Economics)
+    "BetOutcome",
+    "MutationBet",
+    "MarketQuote",
+    "SettlementResult",
+    "PredictionMarket",
+    "GrantStatus",
+    "Grant",
+    "GrantConsumption",
+    "Sun",
+    "PhageStake",
+    "StakingPool",
+    "EvolutionEconomics",
+    "create_evolution_economics",
 ]

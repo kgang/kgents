@@ -6,12 +6,16 @@ Keep it concise—focus on current state and recent work.
 
 ## TL;DR
 
-**Status**: All Tests Passing ✅ | **Branch**: `main` | **Tests**: 4,826 collected
+**Status**: All Tests Passing ✅ | **Branch**: `main` | **Tests**: ~4,950+
 
 **Recent Work**:
-- **Test Evolution Phase 7** ← IN PROGRESS (Performance optimization)
+- **E-gent Phase 2** ← COMPLETE (Mutator - 47 tests)
+  - `mutator.py`: Schema-based semantic mutation generator
+  - Hot spot detection (complexity, entropy analysis)
+  - 4 schema applicators: loop_to_comprehension, extract_constant, flatten_nesting, inline_single_use
+  - Gibbs pre-filtering, temperature-aware schema selection
+  - Integration with Demon for selection pipeline
 - E-gent Phase 1 (Demon) COMPLETE (56 tests)
-- E-gent Dependencies COMPLETE (L-gent 49 tests, B-gent 29 tests)
 - Ψ-gent v3.0 (104 tests)
 
 ---
@@ -50,14 +54,14 @@ Keep it concise—focus on current state and recent work.
 |-------|-----------|--------|-------|
 | 0 | `types.py` | ✅ Complete | 38 |
 | 1 | `demon.py` (Teleological Demon) | ✅ Complete | 56 |
-| 2 | `mutator.py` (Schema-based) | ⏳ Pending | - |
+| 2 | `mutator.py` (Schema-based) | ✅ Complete | 47 |
 | 3 | `market.py` (uses B-gent PredictionMarket) | ✅ Dependency ready | - |
 | 4 | `sun.py` (uses B-gent Sun) | ✅ Dependency ready | - |
 | 5 | `library.py` (Viral Library) | ⏳ Pending | - |
 | 6 | `phage.py` (Active mutation vectors) | ⏳ Pending | - |
 | 7 | `cycle.py` (Thermodynamic cycle) | ⏳ Pending | - |
 
-**E-gent v2 Total**: 94 tests
+**E-gent v2 Total**: 141 tests
 
 ### Phase 1 Highlights: Teleological Demon
 
@@ -70,6 +74,20 @@ Keep it concise—focus on current state and recent work.
 | `SelectionResult` | Detailed pass/fail with layer metrics |
 | `PARASITIC_PATTERNS` | 4 pattern detectors (hardcoding, deletion, pass-only, gaming) |
 | `create_demon()` | Factory functions (normal, strict, lenient) |
+
+### Phase 2 Highlights: Mutator
+
+`impl/claude/agents/e/v2/mutator.py` - Schema-based semantic mutation generator
+
+| Feature | Description |
+|---------|-------------|
+| `Mutator` | Schema-driven mutation generation |
+| `MutatorConfig` | Temperature, Gibbs filtering, max mutations |
+| `CodeHotSpot` | Complexity/entropy analysis for targeting |
+| `analyze_hot_spots()` | Find high-priority mutation targets |
+| `SchemaApplicator` | Protocol for AST-transforming schemas |
+| 4 standard schemas | loop_to_comprehension, extract_constant, flatten_nesting, inline_single_use |
+| `mutate_to_phages()` | Generate Phages ready for Demon selection |
 
 ### Strategy
 
@@ -176,34 +194,79 @@ RETRIEVE → PROJECT → CHALLENGE → SOLVE → TRANSLATE → VERIFY
 
 ---
 
-## Test Infrastructure (Phase 7 In Progress)
+## Test Infrastructure (Phase 7 Complete)
 
-| Component | Status |
-|-----------|--------|
-| conftest.py hierarchy | ✅ **6 files** (root, agents, bootstrap, testing, L-gent, M-gent) |
-| pytest-xdist | ✅ **Parallel execution** (~6s vs 72s) |
-| Slow markers | ✅ **11 tests** via `-m "slow"` |
-| Law markers | ✅ **63 tests** via `-m "law"` |
-| WitnessPlugin | ✅ `pytest --witness` |
-| Accursed share tests | ✅ **23 chaos tests** |
-| Property-based tests | ✅ `test_laws_property.py` (hypothesis) |
-| CI laws workflow | ✅ `.github/workflows/laws.yml` |
-
-### Phase 7 Additions (Current Session)
-
-- **pytest-xdist**: Parallel test execution (~12x speedup)
-- **Test markers**: `slow`, `integration`, `unit`, `external` in pyproject.toml
-- **MCP timeout tests**: Refactored to use mocked timeouts (40s → 0.05s)
-- **M-gent conftest.py**: 20 shared fixtures for memory agent tests
-- **Slow test markers**: Kairos, executor tests marked for skip in fast runs
-
-### Fast Feedback Commands
+| Component | Status | Count |
+|-----------|--------|-------|
+| conftest.py | ✅ 6 files | - |
+| pytest-xdist | ✅ ~12x speedup | - |
+| Slow markers | ✅ `-m "slow"` | 11 |
+| Law markers | ✅ `-m "law"` | 63 |
+| Property tests | ✅ hypothesis | ~25 |
+| Chaos tests | ✅ accursed_share | 23 |
+| Integration | ✅ manual | ~2000 LOC |
 
 ```bash
-pytest -m "not slow" -n auto        # ~6s (recommended)
-pytest -m "not slow"                # ~9s sequential
-pytest -n auto                      # ~6s all tests parallel
+pytest -m "not slow" -n auto  # ~6s (4891 tests)
 ```
+
+---
+
+## Integration Test Opportunities (Phase 8)
+
+**Problem**: 30+ integration classes (~2000 LOC) hand-written. Patterns ad-hoc.
+
+### Novel Ideas (First Principles)
+
+#### 1. **Morphism Test Matrix** (C-gent Theory)
+Generate integration tests from type signatures:
+```python
+@morphism_test(agents=["J", "F", "T", "L", "B"])
+def test_compositions():
+    for (f, g) in composable_pairs(REGISTRY):
+        assert (f >> g).invoke(sample(f.input_type))
+```
+*Derive tests, don't write them.*
+
+#### 2. **Witnessed Tests** (N×O)
+Record all test runs via Historian. Mine for:
+- Which compositions fail together?
+- Regression patterns?
+```python
+@witnessed  # → MemoryCrystalStore
+async def test_m_x_d(): ...
+```
+
+#### 3. **Test Budget** (B-gent Economics)
+```python
+@pytest.mark.cost(tokens=100)  # Expensive
+@pytest.mark.cost(tokens=1)    # Cheap
+# CI prioritizes high-ROI until budget exhausted
+```
+
+#### 4. **Test Demon** (E-gent v2)
+Apply Teleological Demon to tests:
+- Detect gaming (always pass)
+- Detect deletion (no assertions)
+- Detect hardcoding (`assert True`)
+
+### Current Integration Files
+```
+agents/_tests/
+├── test_cross_agent_integration.py   (P×J×T)
+├── test_factory_pipeline.py          (J×F×T×L×B)
+├── test_memory_pipeline.py           (M×D×L×B×N)
+└── test_parser_pipeline.py           (P×G×F)
+```
+
+### Next Steps
+
+| Priority | Task | Agent |
+|----------|------|-------|
+| 1 | `testing/morphism_matrix.py` | C-gent |
+| 2 | `@witnessed` decorator | N×O |
+| 3 | Test cost markers | B-gent |
+| 4 | Test audit Demon | E-gent |
 
 ---
 
@@ -212,12 +275,47 @@ pytest -n auto                      # ~6s all tests parallel
 | Tool | Agent | Status |
 |------|-------|--------|
 | `kgents_speak` | G-gent | ✅ Wired to Grammarian |
-| `kgents_find` | L-gent | ✅ Wired to SemanticRegistry |
-| `kgents_psi` | Psi-gent | ✅ NEW - Metaphor solving |
+| `kgents_find` | L-gent | ✅ Catalog search |
+| `kgents_psi` | Psi-gent | ✅ Metaphor solving |
 | `kgents_check` | Bootstrap | ✅ Works |
 | `kgents_flow_run` | Flow | ✅ Works |
 
 **Usage**: `kgents mcp serve` → stdio server for Claude/Cursor
+
+---
+
+## CLI Enhancements (This Session)
+
+### Intent Router (`protocols/cli/intent/router.py`)
+- `execute_plan_async()` now wires to actual MCP handlers
+- Commands: check, judge, think, fix, speak, find
+
+### Flowfile Examples (`protocols/cli/flow/examples/`)
+| Flow | Pattern |
+|------|---------|
+| `code-review.flow.yaml` | Parse → Judge → Repair → Verify |
+| `hypothesis-test.flow.yaml` | Think → Design → Experiment → Analyze |
+| `metaphor-solve.flow.yaml` | Analyze → Recall → Project → Solve → Reify |
+| `tongue-create.flow.yaml` | Analyze → Synthesize → Prove → Fuzz → Register |
+
+### Sympathetic Errors (`protocols/cli/errors.py`)
+Error messages that help, not just fail:
+- `file_not_found()`, `agent_not_found()`, `command_not_found()`
+- `invalid_syntax()`, `missing_argument()`, `timeout_error()`
+- `principle_violation()`, `undecidable()`, `internal_error()`
+
+**Example output:**
+```
+[x] I couldn't find an agent named 'archimedes'
+
+    No agent with that name is registered in the catalog.
+
+    Try:
+      Search for similar: kgents find 'archimedes'
+      Create it: kgents new agent 'archimedes'
+
+    (Agents are like friends—sometimes we forget their exact names.)
+```
 
 ---
 
