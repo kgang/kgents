@@ -64,16 +64,58 @@ from .volatile import VolatileAgent
 from .persistent import PersistentAgent
 from .symbiont import Symbiont
 from .lens import (
+    # Core Lens
     Lens,
     key_lens,
     field_lens,
     index_lens,
     identity_lens,
+    attr_lens,
     verify_lens_laws,
+    verify_get_put_law,
+    verify_put_get_law,
+    verify_put_put_law,
+    # Prism (optional fields)
+    Prism,
+    optional_key_prism,
+    optional_field_prism,
+    optional_index_prism,
+    verify_prism_laws,
+    # Traversal (collections)
+    Traversal,
+    list_traversal,
+    dict_values_traversal,
+    dict_keys_traversal,
+    dict_items_traversal,
+    verify_traversal_laws,
+    # Composed lens validation
+    LensValidation,
+    validate_composed_lens,
 )
 from .lens_agent import LensAgent, focused
 from .cached import CachedAgent
 from .entropy import EntropyConstrainedAgent, entropy_constrained
+
+# Persistence Extensions: Versioning, Backup, Compression
+from .persistence_ext import (
+    # Schema versioning
+    SchemaVersion,
+    Migration,
+    MigrationRegistry,
+    MigrationDirection,
+    VersionedState,
+    VersionedPersistentAgent,
+    # Backup/restore
+    BackupMetadata,
+    BackupManager,
+    # Compression
+    CompressionLevel,
+    CompressionConfig,
+    CompressedPersistentAgent,
+    # Convenience functions
+    create_versioned_agent,
+    create_compressed_agent,
+)
 
 # Noosphere Layer: Advanced D-gent types
 # Vector requires numpy (optional dependency)
@@ -255,17 +297,53 @@ __all__ = [
     "DriftReport",
     "EventRecord",
     "Vector",
-    # Lenses
+    # Core Lenses
     "Lens",
     "key_lens",
     "field_lens",
     "index_lens",
     "identity_lens",
+    "attr_lens",
     "verify_lens_laws",
+    "verify_get_put_law",
+    "verify_put_get_law",
+    "verify_put_put_law",
     "LensAgent",
     "focused",
+    # Prism (optional fields)
+    "Prism",
+    "optional_key_prism",
+    "optional_field_prism",
+    "optional_index_prism",
+    "verify_prism_laws",
+    # Traversal (collections)
+    "Traversal",
+    "list_traversal",
+    "dict_values_traversal",
+    "dict_keys_traversal",
+    "dict_items_traversal",
+    "verify_traversal_laws",
+    # Composed lens validation
+    "LensValidation",
+    "validate_composed_lens",
     # Convenience functions
     "entropy_constrained",
+    # Persistence Extensions: Schema Versioning
+    "SchemaVersion",
+    "Migration",
+    "MigrationRegistry",
+    "MigrationDirection",
+    "VersionedState",
+    "VersionedPersistentAgent",
+    "create_versioned_agent",
+    # Persistence Extensions: Backup/Restore
+    "BackupMetadata",
+    "BackupManager",
+    # Persistence Extensions: Compression
+    "CompressionLevel",
+    "CompressionConfig",
+    "CompressedPersistentAgent",
+    "create_compressed_agent",
     # Phase 3: Transactional
     "TransactionalDataAgent",
     "Transaction",
