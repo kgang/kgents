@@ -1,526 +1,263 @@
-# CLI Meta-Architecture: The Command Surface
+# The CLI: Agent Composition at the Surface
 
-**Status:** Specification v1.0
-**Last Updated:** 2025-12-09
+**The CLI is not a protocol. It is an agent that composes agents.**
 
----
-
-## Philosophy
-
-> "The command line is where intention meets execution."
-
-The CLI is the **membrane** between human thought and agent action. Like a cell membrane, it is:
-
-- **Selectively permeable**: Admits valid intentions, rejects malformed ones
-- **Bidirectional**: Commands in, results out
-- **Active**: Transforms inputs through parsing, validation, enrichment
-- **Self-maintaining**: Provides its own documentation and discovery
+**Status:** Specification v2.0
+**Supersedes:** Previous cli.md
+**Philosophy:** The CLI is a C-gent operating at the boundary between human intent and agent execution.
 
 ---
 
-## The Three Dimensions of CLI Space
+## Core Insight
 
-```
-                    Z (Axiological)
-                    │    Cost awareness
-                    │    Ethical constraints
-                    │
-                    └────────────────── Y (Semantic)
-                   ╱                    Intent parsing
-                  ╱                     Context threading
-                 ╱
-               X (Telemetric)
-               Execution state
-               Progress reporting
-```
+Traditional CLIs are command dispatchers. They map strings to functions.
 
-**X-Dimension (Telemetric)**: Progress indicators, streaming output, exit codes, structured logs
+The kgents CLI is different: **it is an agent** (genus C) that:
+1. Parses human intent into structured form (P-gent-like)
+2. Selects and composes relevant agents (C-gent core)
+3. Executes the composition (J-gent-like)
+4. Renders output for human consumption (W-gent-like)
 
-**Y-Dimension (Semantic)**: Natural language parsing, context-aware completion, ambiguity resolution
-
-**Z-Dimension (Axiological)**: Entropy budgets, cost estimation, ethical constraints, value reporting
+This reframing is not just semantics. It means the CLI obeys the same laws as every other agent:
+- Identity: `Id >> CLI ≡ CLI ≡ CLI >> Id`
+- Associativity: Compositions through CLI are associative
 
 ---
 
-## The Grammar of Intention
+## The Three Laws of the Conscious Shell
 
-### Command Anatomy
+### Law 1: Agents All The Way Down
+
+Every CLI command is an agent composition. There is no "special protocol code" that lives outside the agent taxonomy.
 
 ```
-kgents <genus> <operation> [target] [--modifiers] [--constraints]
-       │       │           │        │             │
-       │       │           │        │             └─ Resource/ethical limits
-       │       │           │        └─ Mode, format, verbosity
-       │       │           └─ Target (path, query, agent)
-       │       └─ Action (morphism)
-       └─ Agent genus (A-Z)
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│   Human Intent   ───▶   CLI (C-gent)   ───▶   Agent Pipeline   │
+│                         │                                       │
+│                         ├── Parse (via P)                       │
+│                         ├── Compose (via C)                     │
+│                         ├── Execute (via J)                     │
+│                         └── Render (via W)                      │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-### Examples
+### Law 2: Minimal Surface, Maximum Composition
 
-```bash
-# Mirror Protocol: Observe vault for tensions
-kgents mirror observe ~/Documents/Vault --format=rich
+The CLI exposes exactly 10 intent verbs. Everything else composes from these:
 
-# JIT Compilation: Create ephemeral agent from intent
-kgents jit compile "summarize and critique" --budget=low
+| Verb | Semantics | Composition |
+|------|-----------|-------------|
+| `new` | Create | F-gent >> G-gent (forge + grammar) |
+| `run` | Execute | J-gent >> Pipeline |
+| `check` | Verify | W-gent >> H-gent (observe + contradict) |
+| `think` | Hypothesize | B-gent >> H-gent (scientific method) |
+| `watch` | Observe | W-gent (pure observation) |
+| `find` | Search | L-gent (library/catalog) |
+| `fix` | Repair | P-gent >> G-gent (parse + grammar) |
+| `speak` | Define | G-gent (create tongue) |
+| `judge` | Evaluate | H-gent >> O-gent (dialectic + observe) |
+| `do` | Natural language | P-gent >> route to appropriate verb |
 
-# Refinement: Optimize an agent's prompts
-kgents refine optimize my-agent --dataset=examples.json --strategy=mipro
+### Law 3: Zero Tokens By Default
 
-# Testing: Verify composition laws hold
-kgents test laws --agent=my-agent --adversarial
+The CLI is a **local agent**. It operates without LLM calls unless explicitly requested.
 
-# Observation: Three-dimensional system health
-kgents observe status --dimensions=xyz
-
-# Parsing: Extract structure from messy input
-kgents parse extract document.md --strategy=anchor --schema=article.json
-
-# Evolution: Synthesize improved agent variant
-kgents evolve iterate my-agent --generations=5 --selection=falsify
-
-# Memory: Query holographic associative memory
-kgents memory recall "similar to last week's decision"
-
-# Composition: Chain agents into pipeline
-kgents compose "parse >> judge >> refine" --save-as=my-pipeline
 ```
-
-### The Genus Namespace
-
-Each agent genus owns a command namespace:
-
-| Genus | Namespace | Primary Operations |
-|-------|-----------|-------------------|
-| **A** | `abstract` | `scaffold`, `template`, `coach` |
-| **B** | `bio`, `bank` | `hypothesize`, `allocate`, `metabolize` |
-| **C** | `compose` | `chain`, `verify`, `decompose` |
-| **D** | `data` | `persist`, `snapshot`, `migrate` |
-| **E** | `evolve` | `iterate`, `synthesize`, `select` |
-| **F** | `forge` | `create`, `prototype`, `crystallize` |
-| **H** | `dialectic` | `contradict`, `sublate`, `hold` |
-| **I** | `interface` | `render`, `garden`, `visualize` |
-| **J** | `jit` | `compile`, `defer`, `materialize` |
-| **K** | `persona` | `configure`, `lift`, `project` |
-| **L** | `library` | `catalog`, `discover`, `curate` |
-| **M** | `memory` | `store`, `recall`, `associate` |
-| **N** | `narrate` | `chronicle`, `debug`, `replay` |
-| **O** | `observe` | `status`, `trace`, `audit` |
-| **P** | `parse` | `extract`, `validate`, `repair` |
-| **R** | `refine` | `optimize`, `transfer`, `drift-check` |
-| **T** | `test` | `verify`, `fuzz`, `adversarial` |
-| **W** | `witness` | `watch`, `sample`, `correlate` |
-
-### Protocol Namespaces
-
-Cross-cutting protocols get their own namespace:
-
-| Protocol | Namespace | Primary Operations |
-|----------|-----------|-------------------|
-| **Mirror** | `mirror` | `observe`, `reflect`, `integrate` |
-| **Bootstrap** | `bootstrap` | `verify`, `derive`, `witness` |
-
----
-
-## The Two Modes: Heterarchy in Action
-
-### Functional Mode (Default)
-
-```bash
-kgents mirror observe ~/Vault  # Runs once, outputs report, exits
-```
-
-**Properties**: Synchronous, composable, stateless, bounded
-
-### Autonomous Mode
-
-```bash
-kgents mirror watch ~/Vault --autonomous  # Continuous, event-driven
-```
-
-**Properties**: Asynchronous, event-driven, stateful, entropy-bounded
-
-### Mode Transitions
-
-```bash
-# Start autonomous mode
-kgents <genus> <operation> --autonomous [--budget=<entropy>]
-
-# Check autonomous agents
-kgents daemon list
-
-# Interact with running agent
-kgents daemon send <agent-id> <command>
-
-# Stop autonomous mode
-kgents daemon stop <agent-id>
-
-# Promote functional to autonomous
-kgents daemon promote <command> --interval=<duration>
+Cost Hierarchy:
+  0 tokens  - Structure detection, local patterns, file operations
+  Low       - Small model calls for disambiguation
+  Medium    - Full model calls for generation
+  High      - Multi-agent autonomous loops
 ```
 
 ---
 
-## Composition at the Surface
+## Architecture
 
-### Unix Piping
+### The Hollow Shell
 
-```bash
-kgents parse extract docs/*.md --format=json | \
-kgents dialectic contradict - --principles=stated.json | \
-kgents refine optimize - --strategy=bootstrap
-```
-
-### Explicit Composition
-
-```bash
-# Define pipeline
-kgents compose define "parse extract --format=json >> dialectic contradict >> refine optimize" --name=my-pipeline
-
-# Execute
-kgents compose run my-pipeline docs/*.md
-
-# Verify laws
-kgents compose verify my-pipeline --laws=identity,associativity
-```
-
-### Agent Definition Language
-
-```yaml
-# my-agent.kgent.yaml
-name: thesis-extractor
-genus: parse
-version: 1.0.0
-
-pipeline:
-  - operation: extract
-    strategy: anchor
-    schema: thesis.json
-  - operation: validate
-    strictness: 0.8
-
-constraints:
-  max_tokens: 4000
-  timeout: 30s
-  budget: medium
-
-persona:
-  warmth: 0.7
-  formality: 0.5
-```
-
-```bash
-kgents run my-agent.kgent.yaml input.md
-kgents agent register my-agent.kgent.yaml
-kgents agent run thesis-extractor input.md
-```
-
----
-
-## Output Contracts
-
-### Output Hierarchy
-
-```
-Level 0: Exit Code Only (0 = success, non-zero = error)
-Level 1: Single Value (scalar)
-Level 2: Structured Record (JSON object)
-Level 3: Structured Stream (JSONL)
-Level 4: Rich Report (human-formatted + metadata)
-```
-
-### Format Selection
-
-```bash
---format=code      # Exit code only
---format=value     # Single value
---format=json      # Structured JSON
---format=jsonl     # Streaming JSONL
---format=rich      # Rich human output (default for TTY)
---format=markdown  # Markdown report
-```
-
-### Envelope Pattern
-
-```json
-{
-  "envelope": {
-    "version": "1.0",
-    "timestamp": "2025-12-09T10:30:00Z",
-    "agent": "mirror.observe",
-    "duration_ms": 1234,
-    "cost": {"tokens": 5000, "entropy_spent": 0.05}
-  },
-  "result": { ... },
-  "diagnostics": [ ... ]
-}
-```
-
----
-
-## Error Classification
-
-### Severity
-
-| Level | Name | Exit Code | Meaning |
-|-------|------|-----------|---------|
-| 0 | Success | 0 | Operation completed |
-| 1 | Warning | 0 + stderr | Completed with concerns |
-| 2 | Degraded | 1-9 | Partial success |
-| 3 | Failure | 10-99 | Operation failed |
-| 4 | Fatal | 100-127 | System failure |
-
-### Recoverability
-
-| Type | Action |
-|------|--------|
-| **Transient** | Wait and retry |
-| **Permanent** | Fix input |
-| **Resource** | Adjust constraints |
-| **Ethical** | Reconsider request |
-
-### Error Output
-
-```json
-{
-  "error": {
-    "type": "permanent",
-    "severity": 3,
-    "code": "PARSE_SCHEMA_MISMATCH",
-    "message": "Output does not match expected schema",
-    "details": {"expected": "Thesis", "received": "List[String]"},
-    "suggestions": ["Check input contains principles", "Try --strategy=lenient"]
-  }
-}
-```
-
----
-
-## Discovery and Help
-
-### Progressive Disclosure
-
-```bash
-kgents                          # Show genus list
-kgents mirror                   # Show operations
-kgents mirror observe --help    # Show details
-kgents mirror observe --explain # Show philosophical context
-```
-
-### Explain Flag
-
-```bash
-$ kgents mirror observe --explain
-
-MIRROR OBSERVE: The Witness Without Judgment
-
-Phase 1 extracts what is stated (Thesis) and observes what is done
-(Antithesis), without judgment. W-gent observation + P-gent extraction
-produce a tension report surfacing divergence.
-
-Category Theory: observe : Vault → (DeonticGraph × OnticGraph)
-
-See also: kgents mirror reflect, kgents mirror integrate
-```
-
-### Interactive Mode
-
-```bash
-$ kgents interactive
-
-kgents> mirror observe ~/Vault
-[Found 3 tensions]
-
-kgents> show tensions
-1. [0.75] "Daily reflection" vs 80% task-only notes
-2. [0.68] "Evergreen notes" vs 6-month staleness
-3. [0.52] "Connect ideas" vs 60% orphan notes
-
-kgents> dialectic hold 1 --reason="Productive tension"
-kgents> dialectic sublate 2 --strategy=revision
-[Generating synthesis...]
-```
-
----
-
-## Cross-Cutting Concerns
-
-### Budget Management
-
-```bash
-kgents budget status
-export KGENTS_BUDGET=medium
-kgents refine optimize agent --budget=high
-
-# Levels: minimal, low, medium (default), high, unlimited
-```
-
-### Persona Lifting
-
-```bash
-kgents persona configure --warmth=0.7 --formality=0.3
-kgents mirror observe ~/Vault --persona=clinical
-
-# Presets: warm, clinical, playful, minimal
-```
-
-### Provenance Tracking
-
-```bash
-kgents history
-kgents replay <operation-id>
-kgents explain <result-id>
-kgents export provenance --format=w3c-prov
-```
-
-### Sanctuary and Privacy
-
-```bash
-kgents sanctuary add ~/Private
-kgents sanctuary list
-kgents mirror observe ~/Vault --blind  # No content in logs
-```
-
----
-
-## Configuration Hierarchy
-
-```
-1. Defaults
-2. System (/etc/kgents/config.yaml)
-3. User (~/.config/kgents/config.yaml)
-4. Project (.kgents/config.yaml)
-5. Environment (KGENTS_*)
-6. CLI flags (highest priority)
-```
-
-### Configuration File
-
-```yaml
-# ~/.config/kgents/config.yaml
-budget: medium
-
-persona:
-  warmth: 0.6
-  formality: 0.4
-
-output:
-  format: rich
-  color: auto
-
-sanctuary:
-  - ~/Private
-  - ~/.ssh
-
-autonomous:
-  default_interval: 5m
-  max_interventions_per_hour: 3
-
-integrations:
-  obsidian:
-    vault_path: ~/Documents/Vault
-```
-
----
-
-## Extension Points
-
-### Custom Agents
-
-```bash
-kgents agent register my-agent.kgent.yaml
-kgents agent register my_agents:ThesisExtractor
-kgents agent list
-kgents agent run my-agent input.md
-```
-
-### Plugins
-
-```bash
-kgents plugin install kgents-obsidian
-kgents plugin list
-kgents obsidian sync  # Plugin-provided command
-```
-
-### Hooks
-
-```bash
-kgents hook add pre mirror.observe ./validate-vault.sh
-kgents hook add post mirror.observe ./notify-slack.sh
-kgents hook list
-```
-
----
-
-## The Meta-Command
-
-```bash
-# Self-documentation
-kgents meta docs          # Generate docs
-kgents meta graph         # Dependency graph
-kgents meta stats         # Usage stats
-
-# Self-modification
-kgents meta configure     # Interactive config
-kgents meta upgrade       # Check updates
-kgents meta health        # Health check
-
-# Philosophical
-kgents meta principles    # Seven principles
-kgents meta mirror        # Mirror kgents itself
-kgents meta accursed      # Exploration budget
-```
-
----
-
-## Implementation Notes
-
-### CLI as Agent
+The CLI loads instantly (<50ms) through lazy resolution:
 
 ```python
-CLIAgent: Intent → (Operation × Context) → Result
-CLIAgent = Parse >> Route >> Execute >> Format
+# Command registry maps names to module paths, not imports
+COMMAND_REGISTRY = {
+    "new": "protocols.cli.intent.commands:cmd_new",
+    "run": "protocols.cli.intent.commands:cmd_run",
+    # ...
+}
+
+def resolve_command(name: str) -> Callable | None:
+    """Import only the invoked command's module."""
+    module_path, func_name = COMMAND_REGISTRY[name].rsplit(":", 1)
+    module = importlib.import_module(module_path)
+    return getattr(module, func_name)
 ```
 
-### Statelessness and D-gent Integration
+### The Context System
+
+`.kgents/` is the project's cortex:
+
+```
+.kgents/
+├── config.yaml      # Project configuration
+├── tongues/         # G-gent domain languages
+├── flows/           # Composition pipelines (Flowfiles)
+└── state/           # D-gent persistent state
+```
+
+---
+
+## Command Surface
+
+### Primary (10 Intent Verbs)
 
 ```bash
-kgents session start --name=my-session
-kgents --session=my-session mirror observe ~/Vault
-kgents --session=my-session dialectic sublate tension-1
-kgents session end my-session
+# Creation
+kgents new agent MyAgent      # Create agent from template
+kgents new tongue math        # Create domain language
+
+# Execution
+kgents run flow/pipeline.yaml # Execute a Flowfile
+kgents run MyAgent input.json # Run single agent
+
+# Analysis
+kgents check principles       # Verify against 7 principles
+kgents check laws             # Verify category laws
+kgents think "hypothesis"     # Generate hypotheses
+kgents watch path/            # Observe without judgment
+
+# Search
+kgents find agent "fuzzy"     # Search agent catalog
+kgents find tongue "json"     # Search language catalog
+
+# Repair & Definition
+kgents fix input.json         # Parse and repair
+kgents speak "my DSL"         # Define new tongue
+
+# Evaluation
+kgents judge agent MyAgent    # Evaluate against principles
+kgents do "natural language"  # Route to appropriate verb
 ```
 
-### Authentication
+### Compound Commands
+
+Compound commands compose multiple agents:
 
 ```bash
-kgents auth status
-kgents refine optimize agent  # Prompts if needed
+# Mirror Protocol (composition)
+kgents mirror observe path/   # P >> W >> H >> O
+kgents mirror reflect         # H >> synthesis
+
+# Membrane Protocol (composition)
+kgents membrane observe       # W >> TDA >> render
+kgents membrane sense         # W (quick mode)
+
+# I-gent Garden (composition)
+kgents garden                 # I >> W (stigmergic field)
+kgents garden forge           # I >> F >> G (composition view)
 ```
 
 ---
 
-## Success Criteria
+## Implementation Contract
 
-1. **Tasteful**: Clear purpose, no bloat
-2. **Curated**: Essential operations, power via composition
-3. **Ethical**: Constraints enforced, sanctuary respected
-4. **Joy-Inducing**: Helpful errors, personality, fun discovery
-5. **Composable**: Pipelines work seamlessly
-6. **Heterarchical**: Functional and autonomous modes feel natural
-7. **Generative**: Spec smaller than implementation, regenerable
+### What The CLI Must Do
 
----
+1. **Parse intent deterministically** - No LLM for basic routing
+2. **Compose agents transparently** - Show the pipeline being executed
+3. **Respect entropy budget** - Track and report token usage
+4. **Fail sympathetically** - Errors include recovery suggestions
 
-## See Also
+### What The CLI Must Not Do
 
-- [principles.md](../principles.md) — The seven core principles
-- [c-gents/README.md](../c-gents/README.md) — Composition laws
-- [h-gents/kairos.md](../h-gents/kairos.md) — Timing of interventions
-- [b-gents/README.md](../b-gents/README.md) — Economic model
-- [../../docs/mirror-protocol-implementation.md](../../docs/mirror-protocol-implementation.md) — Mirror Protocol phases
+1. **Hide the composition** - User should know which agents run
+2. **Exceed budget silently** - Always explicit about costs
+3. **Break composition laws** - CLI itself obeys category laws
+4. **Couple to specific models** - Work with any J-gent backend
 
 ---
 
-*"The best interface is no interface—until you need one. Then the best interface is one that teaches you how to eventually not need it."*
+## The Flowfile Format
+
+Pipelines are YAML compositions:
+
+```yaml
+# flow/analyze.yaml
+name: analyze
+description: Full analysis pipeline
+
+pipeline:
+  - agent: P-gent
+    config: { source: "path" }
+  - agent: W-gent
+    config: { mode: "observe" }
+  - agent: H-gent
+    config: { detect: "tensions" }
+
+budget: medium
+```
+
+Execution:
+```bash
+kgents run flow/analyze.yaml --input ./src
+```
+
+---
+
+## Design Principles Applied
+
+| Principle | How CLI Embodies It |
+|-----------|---------------------|
+| **Tasteful** | 10 verbs, no more. Everything else composes. |
+| **Curated** | Only agents that earn their place appear in help. |
+| **Ethical** | Sanctuary paths, explicit costs, no hidden data. |
+| **Joy-Inducing** | Sympathetic errors, breathing prompts, personality in output. |
+| **Composable** | CLI is an agent. Commands are compositions. |
+| **Heterarchical** | CLI can be invoked or can invoke. No fixed hierarchy. |
+| **Generative** | This spec generates implementation. 60% compression target. |
+
+---
+
+## Anti-Patterns
+
+### What We Rejected
+
+1. **Protocol as Special Entity** - Protocols are compositions, not separate code
+2. **Placeholder Implementation** - If it's in the spec, it's implementable now
+3. **TDA/Homology as MVP** - Advanced math is extension, not core
+4. **Feature-Rich CLI** - 10 verbs beat 100 flags
+5. **Hidden Agent Orchestration** - Show the pipeline
+
+### The Placeholder Test
+
+> If a command prints "Not yet implemented", the spec failed.
+
+Every command in this spec has a concrete, implementable definition using existing agents.
+
+---
+
+## Migration Path
+
+From current implementation:
+1. `handlers/*.py` become thin wrappers that construct agent pipelines
+2. `mirror_cli.py`, `membrane_cli.py` become composition definitions
+3. `scientific.py`, `companions.py` become agent instances
+4. Complex protocols decompose into agent chains
+
+---
+
+## Success Metrics
+
+| Metric | Target |
+|--------|--------|
+| Commands with real implementation | 100% |
+| Lines of "Not implemented" | 0 |
+| Startup time | <50ms |
+| Help text comprehension | Non-technical user can understand |
+| Autopoiesis score | >60% (impl from spec) |
+
+---
+
+*"The CLI is not a dispatcher. It is a composer. The composition is the meaning."*

@@ -69,6 +69,10 @@ BOOTSTRAP:
   laws      Display/verify category laws
   principles Display/check 7 design principles
 
+VISUALIZATION:
+  garden    I-gent stigmergic field (TUI)
+  dash      TUI dashboard
+
 OPTIONS:
   --version     Show version
   --help, -h    Show this help
@@ -138,28 +142,8 @@ COMMAND_REGISTRY: dict[str, str] = {
     "dash": "protocols.cli.tui.dashboard:cmd_dash",
 }
 
-# Commands that exist in current main.py (legacy fallback)
-LEGACY_COMMANDS = {
-    "mirror",
-    "membrane",
-    "observe",
-    "sense",
-    "trace",
-    "touch",
-    "name",
-    "garden",
-    "whisper",
-    "pulse",
-    "ground",
-    "breathe",
-    "entropy",
-    "falsify",
-    "conjecture",
-    "rival",
-    "sublate",
-    "shadow",
-    "debug",
-}
+# Commands that still need legacy fallback (deprecated - migrate these)
+LEGACY_COMMANDS: set[str] = set()  # All migrated to hollow shell handlers
 
 
 # =============================================================================
@@ -184,32 +168,10 @@ def resolve_command(name: str) -> Callable | None:
     try:
         module = importlib.import_module(module_path)
         return getattr(module, func_name)
-    except (ImportError, AttributeError):
-        # Command registered but not implemented yet
-        # Fall back to legacy handler if available
-        if name in LEGACY_COMMANDS:
-            return _create_legacy_handler(name)
+    except (ImportError, AttributeError) as e:
+        # Command registered but handler not found
+        print(f"Error loading command '{name}': {e}")
         return None
-
-
-def _create_legacy_handler(command: str) -> Callable:
-    """
-    Create a handler that routes to the legacy main.py implementation.
-
-    This allows gradual migration: new commands use new handlers,
-    existing commands fall back to legacy until migrated.
-    """
-
-    def handler(args: list[str]) -> int:
-        # Late import of legacy main
-        from protocols.cli.main import async_main
-        import asyncio
-
-        # Reconstruct argv
-        full_args = [command] + args
-        return asyncio.run(async_main(full_args))
-
-    return handler
 
 
 # =============================================================================

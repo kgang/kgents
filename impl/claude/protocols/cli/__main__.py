@@ -1,8 +1,10 @@
 """
 Make protocols.cli runnable with python -m protocols.cli
+
+Uses the Hollow Shell pattern for fast startup.
 """
 
-from .main import main
+from .hollow import main
 import sys
 
 if __name__ == "__main__":

@@ -18,23 +18,24 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 ## TL;DR
 
-**Status**: D-gent Phase 5 COMMITTED ✅
+**Status**: O-gent Phase 4 W-gent Integration COMPLETE ✅
 **Branch**: `main`
-**Latest Commit**: `7e4fba1` feat(d-gent): Phase 5 - SQL/Redis backends (open source)
+**Latest Commit**: `8f51bbc` feat(i-gent): Stigmergic Field + TUI Renderer (37 tests, ~1,900 lines)
 
 **Current State**:
-- **D-gent Phase 5**: ✅ COMMITTED - SQL/Redis backends (41 tests, 36 skipped)
+- **O-gent Phase 4**: ✅ COMPLETE - W-gent integration (40 tests)
+- **I-gent Stigmergic Field**: ✅ COMPLETE - Full rewrite from first principles (69 tests)
+- **D-gent Phase 5**: ✅ COMMITTED - SQL/Redis backends (41 tests)
 - **O-gent Phase 3**: ✅ COMPLETE - Panopticon Integration (137 tests)
 - **B×G Phases 1-6**: ✅ COMPLETE (575 tests)
-- D-gent (276 tests), L-gent, G-gent: ✅ COMPLETE
 
 **Uncommitted**:
-- CLI TUI files in `impl/claude/protocols/cli/tui/`
-- O-gent Phase 3 panopticon files
+- `impl/claude/agents/o/observable_panopticon.py` - W-gent integration (NEW)
+- `impl/claude/agents/o/_tests/test_observable_panopticon.py` - Tests (40 tests)
 
 **Next Steps**:
-1. **Commit**: O-gent Phase 3 + CLI TUI
-2. **O-gent Phase 4**: W-gent integration for visualization
+1. **Commit**: O-gent Phase 4 W-gent integration
+2. Proceed to next agent phase or consolidation
 
 ---
 
@@ -64,8 +65,8 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 | **D-gents** | ~95% | ✅ Phase 5 SQL/Redis complete (276 tests) |
 | **L-gents** | ~70% | Vector DB integration |
 | **G-gents** | ~90% | Phase 7 done |
-| **O-gents** | ~90% | ✅ Phase 3 complete (137 tests), W-gent viz next |
-| **I-gents** | ~10% | TUI, evolve.py, sessions |
+| **O-gents** | ~95% | ✅ Phase 4 complete (177 tests), W-gent integration |
+| **I-gents** | ~70% | ✅ Stigmergic Field (69 tests), forge/timeline pending |
 | **F-gents** | ~40% | Forge loop, ALO format |
 | **M/N/psi** | 0% | Missing |
 
@@ -73,39 +74,48 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 ## Current Session
 
-### Session: O-gent Phase 3 - Panopticon Integration (2025-12-09)
+### Session: I-gent Stigmergic Field (2025-12-09)
 
-**Status**: ✅ COMPLETE - Unified Observation Dashboard
+**Status**: ✅ COMPLETE - Full rewrite from first principles
 
-**Spec Reference**: `spec/o-gents/README.md` (The Panopticon Dashboard)
+**Reference**: `~/git/kgents-garden-interface/` (demo frontend)
 
-**New Files Created** (~700 lines):
-- `impl/claude/agents/o/panopticon.py` (~600 lines): Panopticon Integration
-  - `SystemStatus`, `AlertSeverity`: Status enums
-  - `PanopticonAlert`: Alert management with severity/source/details
-  - `TelemetryStatus`, `SemanticStatus`, `AxiologicalStatus`, `BootstrapStatus`, `VoIStatus`: Dimension status types
-  - `UnifiedPanopticonStatus`: Complete aggregated status
-  - `IntegratedPanopticon`: Main dashboard class with all observers
-  - `PanopticonObserver`: Observer wrapper feeding into Panopticon
-  - `render_unified_dashboard()`, `render_compact_status()`, `render_dimensions_summary()`
-  - `create_integrated_panopticon()`, `create_minimal_panopticon()`, `create_verified_panopticon()`
-  - Real-time streaming via `stream_status()` async generator
+**Design Philosophy**: Stigmergic emergence—indirect coordination through shared environment
+- Traditional: "What is the state?" → Stigmergic: "What traces are being left?"
+- Three Layers: Physical (entities/positions), Topological (gravity/tension), Semantic (intent/values)
 
-**Core Concepts**:
-- **3 Dimensions + Bootstrap**: X (Telemetry), Y (Semantics), Z (Axiology), B (Bootstrap)
-- **Unified Dashboard**: Spec-compliant ASCII rendering
-- **Alert Management**: Severity levels, callbacks, max limit
-- **Bootstrap Integration**: Automatic verification at configurable intervals
-- **Real-time Streaming**: Async status updates for live monitoring
+**Spec** (`spec/i-gents/README.md`):
+- Stigmergic field substrate with pheromone traces
+- Bootstrap agents: I/C/G/J/X/S/F (from spec/bootstrap.md)
+- Task attractors: Tasks, Hypotheses, Artifacts
+- Dialectic phases: DORMANT → FLUX → TENSION → SUBLATE → FIX → COOLING
+- Field dynamics: Brownian motion, context gravity, tension repulsion
+- Compost Heap: Event log celebrating "accursed share"
+- W-gent integration via [observe] action
 
-**Test Coverage** (50 new tests, 137 total O-gent):
-- Status Enums: 2, Alerts: 3, Dimension Status: 12, Unified Status: 4
-- IntegratedPanopticon: 7, Bootstrap Integration: 4, Streaming: 2
-- Dashboard Rendering: 6, PanopticonObserver: 6, System Status: 2, Integration: 4
+**Implementation** (~1500 lines):
+- `impl/claude/agents/i/field.py`: Entity, Pheromone, FieldState, FieldSimulator
+- `impl/claude/agents/i/tui.py`: FieldRenderer, TUIApplication, KeyHandler
+- `impl/claude/protocols/cli/genus/i_gent.py`: Garden CLI commands
+
+**CLI Commands**:
+- `kgents garden` - Launch interactive field view
+- `kgents garden forge` - Composition pipeline view
+- `kgents garden export <file.md>` - Export to markdown
+- `kgents garden demo` - Run demo simulation
+
+**Test Coverage** (69 tests):
+- test_field.py: 37 tests (Entity, Pheromone, FieldState, Simulator)
+- test_tui.py: 32 tests (Renderer, Colors, KeyHandler, Edge cases)
 
 ---
 
 ## Recent Sessions
+
+### Session: O-gent Phase 3 - Panopticon Integration (2025-12-09)
+
+- `panopticon.py`: Unified dashboard with 3D + Bootstrap observers
+- 50 tests, real-time streaming via async generator
 
 ### Session: D-gent Phase 5 - SQL/Redis Backends (2025-12-09) ✅ COMMITTED
 
@@ -117,11 +127,6 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 - `jit_efficiency.py`: JIT compilers (Regex, JumpTable, Bytecode)
 - Commit: `ce5dd8d` - 84 tests, HFTongueBuilder
-
-### Session: O-gent Phase 2 - BootstrapWitness (2025-12-09) ✅ COMMITTED
-
-- `bootstrap_witness.py`: Id/Compose agents, category law verification
-- Commit: `8c1a062` - 25 new tests (87 total O-gent)
 
 ---
 
@@ -195,7 +200,8 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 | B-gent | 575 | ✅ |
 | D-gent | 271 | ✅ (9 skipped) |
 | G-gent | 200+ | ✅ |
+| I-gent | 69 | ✅ (Stigmergic Field) |
 | L-gent | 177 | ✅ |
 | O-gent | 137 | ✅ (+50 Phase 3) |
 | CLI | 415 | ✅ |
-| **Total** | 2450+ | ✅ |
+| **Total** | 2520+ | ✅ |
