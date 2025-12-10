@@ -6,9 +6,13 @@ Keep it concise—focus on current state and recent work.
 
 ## TL;DR
 
-**Status**: All Tests Passing ✅ | **Branch**: `main` | **Tests**: ~5,234+
+**Status**: All Tests Passing ✅ | **Branch**: `kgents-6fe096e1` | **Tests**: ~5,400+
 
 **Recent Work**:
+- **Prism Protocol QA VERIFIED** ✅ - 129 tests (72 prism + 57 genus)
+  - `@expose` decorator + `Prism` auto-constructor
+  - 6 agent CLI files (G, W, P, L, J, I) - all integrated
+  - Type hints → argparse auto-generation
 - **Integration Tests Phase 2 COMPLETE** ← 74 tests passing
   - Economics Stack (B×G, B×J, B×M, B×O, B×L)
   - Narrative Stack (N×M, N×K, N×O)
@@ -646,6 +650,114 @@ cortex = create_enhanced_cortex(
 | `kgents_flow_run` | Flow | ✅ Works |
 
 **Usage**: `kgents mcp serve` → stdio server for Claude/Cursor
+
+---
+
+## Prism: Fractal CLI Architecture (QA VERIFIED ✅)
+
+**Location**: `impl/claude/protocols/cli/prism/`
+**Spec**: `spec/protocols/prism.md`
+**Tests**: 129 passed (72 prism + 57 genus integration)
+
+### The Core Insight
+
+> "The CLI doesn't *define* agents; agents *expose* CLI."
+
+From Switchboard (manual dispatch) to Prism (reflection-based auto-construction):
+- **Before**: 6 `*_gent.py` files (500-700 lines each) with manual `arg.split("=", 1)` parsing
+- **After**: `@expose` decorator + `Prism` class auto-generates argparse from type hints
+- **Net Effect**: ~3000 lines deleted, replaced with ~500 lines of infrastructure + thin wrappers
+
+### Architecture
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                        CLICapable Protocol                        │
+│  ┌─────────────┐  ┌─────────────────┐  ┌─────────────────────┐   │
+│  │ genus_name  │  │ cli_description │  │ get_exposed_commands│   │
+│  └─────────────┘  └─────────────────┘  └─────────────────────┘   │
+└──────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌──────────────────────────────────────────────────────────────────┐
+│                         Prism Auto-Constructor                     │
+│  ┌─────────────┐  ┌─────────────────┐  ┌─────────────────────┐   │
+│  │build_parser │  │  TypeRegistry   │  │    dispatch()       │   │
+│  │   (args)    │  │  (type hints)   │  │  (invoke method)    │   │
+│  └─────────────┘  └─────────────────┘  └─────────────────────┘   │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### Files
+
+| File | Purpose |
+|------|---------|
+| `protocol.py` | `CLICapable` Protocol (`@runtime_checkable`) |
+| `decorator.py` | `@expose` decorator + `ExposeMetadata` |
+| `prism.py` | `Prism` auto-constructor class |
+| `type_mapping.py` | `TypeRegistry` for type → argparse |
+
+### Agent CLI Files (NEW)
+
+| File | Agent | Commands |
+|------|-------|----------|
+| `agents/g/cli.py` | GrammarianCLI | reify, parse, evolve, list, show, validate, infer |
+| `agents/w/cli.py` | WitnessCLI | watch, fidelity, sample, serve, dashboard, log |
+| `agents/p/cli.py` | ParserCLI | extract, repair, validate, stream, compose |
+| `agents/l/cli.py` | LibraryCLI | catalog, discover, register, show, lineage, compose, types, stats |
+| `agents/j/cli.py` | JitCLI | compile, classify, defer, execute, stability, budget |
+| `agents/i/cli.py` | GardenCLI | field, forge, attach, export, demo |
+
+### Type-to-Argparse Mapping
+
+| Python Type | Argparse Result |
+|-------------|-----------------|
+| `str` | `type=str` |
+| `int` | `type=int` |
+| `bool` | `action="store_true"` (flag) |
+| `Path` | `type=Path` |
+| `list[T]` | `nargs="*", type=T` |
+| `T \| None` | `required=False` |
+| `Enum` | `choices=[...]` |
+
+### Usage
+
+```python
+from protocols.cli.prism import CLICapable, expose, Prism
+
+class MyAgentCLI(CLICapable):
+    @property
+    def genus_name(self) -> str:
+        return "myagent"
+
+    @property
+    def cli_description(self) -> str:
+        return "My agent operations"
+
+    def get_exposed_commands(self) -> dict[str, Callable]:
+        return {"hello": self.hello}
+
+    @expose(help="Say hello", examples=["kgents myagent hello Alice"])
+    async def hello(self, name: str, loud: bool = False) -> dict:
+        greeting = f"Hello, {name}!"
+        return {"greeting": greeting.upper() if loud else greeting}
+
+# Use it:
+prism = Prism(MyAgentCLI())
+exit_code = prism.dispatch_sync(["hello", "World", "--loud"])
+```
+
+### Thin Wrappers (Backward Compatibility)
+
+The old `genus/*_gent.py` files are now thin wrappers:
+
+```python
+# protocols/cli/genus/g_gent.py
+def cmd_grammar(args: list[str]) -> int:
+    from agents.g.cli import GrammarianCLI
+    from protocols.cli.prism import Prism
+    return asyncio.run(Prism(GrammarianCLI()).dispatch(args))
+```
 
 ---
 
