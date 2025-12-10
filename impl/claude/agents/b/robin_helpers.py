@@ -8,7 +8,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from .hypothesis import Hypothesis, HypothesisOutput, NoveltyLevel
+from .hypothesis import HypothesisOutput
+from .hypothesis_parser import Hypothesis, NoveltyLevel
 
 if TYPE_CHECKING:
     from .robin import RobinInput
