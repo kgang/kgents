@@ -11,8 +11,6 @@ Tests cover:
 """
 
 import json
-import pytest
-from io import StringIO
 from unittest.mock import patch
 
 from ..commands import (
@@ -26,7 +24,6 @@ from ..commands import (
     cmd_speak,
     cmd_judge,
     IntentResult,
-    EntityType,
     _parse_args,
     _format_rich,
     _format_epilogue,
@@ -40,7 +37,6 @@ from ..router import (
     extract_targets,
     IntentCategory,
     RiskLevel,
-    ExecutionPlan,
     Step,
 )
 

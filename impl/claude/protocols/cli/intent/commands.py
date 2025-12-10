@@ -18,7 +18,6 @@ See: docs/cli-integration-plan.md Part 2 (Intent Layer Commands)
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import Any
@@ -685,7 +684,7 @@ def _generate_hypotheses(
             "statement": f"Hypothesis {i + 1} about {topic}",
             "evidence": ["Observation 1", "Observation 2"],
             "confidence": 0.8 - (i * 0.1),
-            "falsification": f"Check condition X to disprove" if falsify else None,
+            "falsification": "Check condition X to disprove" if falsify else None,
         }
         for i in range(min(limit, 3))
     ]
@@ -699,7 +698,7 @@ def _generate_hypotheses(
             "hypotheses": hypotheses,
         },
         next_steps=[
-            f'kgents falsify "H1"  # Test the top hypothesis',
+            'kgents falsify "H1"  # Test the top hypothesis',
             f'kgents think "{topic}" --depth=deep  # Go deeper',
         ],
     )
@@ -1103,7 +1102,7 @@ def _speak_create_tongue(
             "grammar": {
                 "verbs": verbs,
                 "nouns": nouns,
-                "syntax": f"<verb> <noun> [<modifier>...]",
+                "syntax": "<verb> <noun> [<modifier>...]",
             },
         },
         next_steps=[

@@ -493,10 +493,10 @@ class InsurancePolicy:
     # Coverage
     hedge: GrammarHedge
     coverage_limit_tokens: int  # Max tokens covered per claim
-    deductible_tokens: int = 0  # Tokens holder pays first
-
-    # Premium
     premium_tokens_per_day: int  # Daily premium cost
+
+    # Fields with defaults
+    deductible_tokens: int = 0  # Tokens holder pays first
     premium_paid_through: datetime = field(default_factory=datetime.now)
 
     # Policy terms

@@ -62,6 +62,20 @@ Currently implemented:
 - InflationBudget: Token allocation between content and explanation
 - DeflationNegotiator: Compression strategies when budget constrained
 - SemanticCPIMonitor: System-wide inflation tracking (like economic CPI)
+
+**Structural Economics B×G Phase 5 (Grammar Insurance):**
+- Grammar Volatility: Measure stability of grammar usage (parse failures, version changes)
+- Insurance Policies: Coverage for grammar failures with fallback strategies
+- Premium Pricing: Cost based on volatility, complexity, claims history
+- Hedging Strategies: Fallback, Redundant, Versioned, Ensemble, Graceful
+- Portfolio Analysis: Risk assessment for insured grammars
+
+**Structural Economics B×G Phase 6 (JIT Efficiency):**
+- G+J+B Trio: Grammar definition → JIT compilation → Latency value measurement
+- JIT Compilers: Regex, JumpTable, Bytecode targets for fast parsing
+- Latency Benchmarking: Compare baseline vs JIT with value projection
+- Profit Sharing: 30% G-gent, 30% J-gent, 40% System from latency gains
+- HF Tongues: High-Frequency Tongue builder for HFT scenarios
 """
 
 from .hypothesis import (
@@ -315,6 +329,75 @@ from .semantic_inflation import (
     estimate_explanation_tokens,
 )
 
+# Grammar Insurance (B×G Phase 5: Volatility Hedging)
+from .grammar_insurance import (
+    # Volatility types
+    VolatilityCategory,
+    ParseEvent,
+    VolatilityWindow,
+    VolatilityMetrics,
+    VolatilityMonitor,
+    # Hedge types
+    HedgeStrategy,
+    GrammarHedge,
+    # Insurance types
+    InsurancePolicy,
+    InsuranceClaim,
+    PremiumQuote,
+    PremiumCalculator,
+    ClaimResult,
+    # Main manager
+    GrammarInsurance,
+    # Portfolio analysis
+    PortfolioRisk,
+    PortfolioAnalyzer,
+    # Convenience functions
+    create_fallback_hedge,
+    create_versioned_hedge,
+    create_ensemble_hedge,
+    estimate_annual_premium,
+    calculate_hedge_cost,
+)
+
+# JIT Efficiency (B×G Phase 6: High-Frequency Trading Optimization)
+from .jit_efficiency import (
+    # Compilation targets
+    JITCompilationTarget,
+    OptimizationLevel,
+    # Latency types
+    LatencyMeasurement,
+    LatencyReport,
+    # Compilation types
+    CompilationConfig,
+    CompiledArtifact,
+    CompiledTongue,
+    # Compilers
+    RegexJITCompiler,
+    JumpTableJITCompiler,
+    BytecodeJITCompiler,
+    JITCompilerRegistry,
+    # Benchmarking
+    BenchmarkConfig,
+    LatencyBenchmark,
+    # Profit sharing
+    ProfitShare,
+    ProfitEntry,
+    ProfitSharingLedger,
+    # Monitor
+    JITOpportunity,
+    TongueUsageStats,
+    JITEfficiencyMonitor,
+    # HF Tongue
+    HFTongueSpec,
+    HFTongueBuilder,
+    # Convenience functions
+    create_jit_monitor,
+    compile_grammar_jit,
+    benchmark_jit_speedup,
+    create_hf_tongue_builder,
+    estimate_jit_value,
+)
+
 __all__ = [
     # HypothesisEngine
     "HypothesisEngine",
@@ -485,4 +568,52 @@ __all__ = [
     "calculate_inflation_pressure",
     "get_deflation_recommendations",
     "estimate_explanation_tokens",
+    # Grammar Insurance (B×G Phase 5)
+    "VolatilityCategory",
+    "ParseEvent",
+    "VolatilityWindow",
+    "VolatilityMetrics",
+    "VolatilityMonitor",
+    "HedgeStrategy",
+    "GrammarHedge",
+    "InsurancePolicy",
+    "InsuranceClaim",
+    "PremiumQuote",
+    "PremiumCalculator",
+    "ClaimResult",
+    "GrammarInsurance",
+    "PortfolioRisk",
+    "PortfolioAnalyzer",
+    "create_fallback_hedge",
+    "create_versioned_hedge",
+    "create_ensemble_hedge",
+    "estimate_annual_premium",
+    "calculate_hedge_cost",
+    # JIT Efficiency (B×G Phase 6)
+    "JITCompilationTarget",
+    "OptimizationLevel",
+    "LatencyMeasurement",
+    "LatencyReport",
+    "CompilationConfig",
+    "CompiledArtifact",
+    "CompiledTongue",
+    "RegexJITCompiler",
+    "JumpTableJITCompiler",
+    "BytecodeJITCompiler",
+    "JITCompilerRegistry",
+    "BenchmarkConfig",
+    "LatencyBenchmark",
+    "ProfitShare",
+    "ProfitEntry",
+    "ProfitSharingLedger",
+    "JITOpportunity",
+    "TongueUsageStats",
+    "JITEfficiencyMonitor",
+    "HFTongueSpec",
+    "HFTongueBuilder",
+    "create_jit_monitor",
+    "compile_grammar_jit",
+    "benchmark_jit_speedup",
+    "create_hf_tongue_builder",
+    "estimate_jit_value",
 ]
