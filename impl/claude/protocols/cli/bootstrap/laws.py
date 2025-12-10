@@ -312,11 +312,13 @@ async def verify_laws(agent_id: str | None = None) -> VerificationReport:
     """
     results: list[LawVerification] = []
 
-    # Try to import the bootstrap module for actual verification
+    # Try to import the O-gent BootstrapWitness
     try:
-        from bootstrap.witness import BootstrapWitness
+        from impl.claude.agents.o.bootstrap_witness import (
+            create_bootstrap_witness,
+        )
 
-        witness = BootstrapWitness()
+        witness = create_bootstrap_witness()
 
         # Verify identity laws
         id_result = await witness.verify_identity_laws()
@@ -324,14 +326,16 @@ async def verify_laws(agent_id: str | None = None) -> VerificationReport:
             LawVerification(
                 law=LawName.IDENTITY_LEFT,
                 verdict=Verdict.PASS if id_result.left_identity else Verdict.FAIL,
-                evidence=id_result.evidence if hasattr(id_result, "evidence") else "",
+                evidence=id_result.evidence if id_result.evidence else "",
+                duration_ms=0.0,
             )
         )
         results.append(
             LawVerification(
                 law=LawName.IDENTITY_RIGHT,
                 verdict=Verdict.PASS if id_result.right_identity else Verdict.FAIL,
-                evidence="",
+                evidence=id_result.evidence if not id_result.right_identity else "",
+                duration_ms=0.0,
             )
         )
 
@@ -341,14 +345,16 @@ async def verify_laws(agent_id: str | None = None) -> VerificationReport:
             LawVerification(
                 law=LawName.ASSOCIATIVITY,
                 verdict=Verdict.PASS if comp_result.associativity else Verdict.FAIL,
-                evidence="",
+                evidence=comp_result.evidence if not comp_result.associativity else "",
+                duration_ms=0.0,
             )
         )
         results.append(
             LawVerification(
                 law=LawName.COMPOSITION_CLOSURE,
                 verdict=Verdict.PASS if comp_result.closure else Verdict.FAIL,
-                evidence="",
+                evidence=comp_result.evidence if not comp_result.closure else "",
+                duration_ms=0.0,
             )
         )
 
@@ -376,13 +382,13 @@ async def verify_laws(agent_id: str | None = None) -> VerificationReport:
         )
 
     except ImportError:
-        # Bootstrap not available - mark core laws as unverifiable
+        # BootstrapWitness not available - mark core laws as unverifiable
         for law in CATEGORY_LAWS[:4]:
             results.append(
                 LawVerification(
                     law=law.name,
                     verdict=Verdict.SKIP,
-                    evidence="BootstrapWitness not available",
+                    evidence="BootstrapWitness not available (O-gent Phase 2)",
                 )
             )
         for law in CATEGORY_LAWS[4:]:

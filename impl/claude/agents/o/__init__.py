@@ -172,6 +172,32 @@ try:
 except ImportError:
     pass  # Already defined in voi_observer.py
 
+# Bootstrap Witness (O-gent Phase 2)
+from .bootstrap_witness import (
+    # Verdict types
+    Verdict,
+    BootstrapAgent,
+    # Result types
+    AgentExistenceResult,
+    IdentityLawResult,
+    CompositionLawResult,
+    BootstrapVerificationResult,
+    # Agents
+    IdentityAgent,
+    ComposedAgent,
+    TestAgent,
+    # Observers
+    BootstrapWitness,
+    BootstrapObserver,
+    # Convenience
+    create_bootstrap_witness,
+    create_bootstrap_observer,
+    verify_bootstrap,
+    verify_identity_laws,
+    verify_composition_laws,
+    render_verification_dashboard,
+)
+
 
 __all__ = [
     # === Core Observer ===
@@ -290,4 +316,27 @@ __all__ = [
     "create_voi_aware_observer",
     "create_panopticon",
     "create_full_observer_stack",
+    # === Bootstrap Witness (O-gent Phase 2) ===
+    # Verdict types
+    "Verdict",
+    "BootstrapAgent",
+    # Result types
+    "AgentExistenceResult",
+    "IdentityLawResult",
+    "CompositionLawResult",
+    "BootstrapVerificationResult",
+    # Agents
+    "IdentityAgent",
+    "ComposedAgent",
+    "TestAgent",
+    # Observers
+    "BootstrapWitness",
+    "BootstrapObserver",
+    # Bootstrap convenience
+    "create_bootstrap_witness",
+    "create_bootstrap_observer",
+    "verify_bootstrap",
+    "verify_identity_laws",
+    "verify_composition_laws",
+    "render_verification_dashboard",
 ]

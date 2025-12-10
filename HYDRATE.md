@@ -18,27 +18,27 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 ## TL;DR
 
-**Status**: Multi-agent Integration COMPLETE ✅
+**Status**: CLI Phase 6 (Intent Layer) COMMITTED ✅
 **Branch**: `main`
-**Latest Commit**: 5f0f7d5 (chore: Add grammar_insurance stub and genus tests)
+**Latest Commit**: b9aea9b feat(cli): Add Intent Layer (Phase 6) - 10 core verbs
 
 **Current State**:
-- **CLI Phase 5**: ✅ Genus Layer (50 tests) - `protocols/cli/genus/`
-  - G-gent (grammar): reify, parse, evolve, list, show, validate, infer
-  - J-gent (jit): compile, classify, defer, execute, stability, budget
-  - P-gent (parse): extract, repair, validate, stream, compose
-  - L-gent (library): catalog, discover, register, show, lineage, compose
-  - W-gent (witness): watch, fidelity, sample, serve, dashboard, log
-- **CLI Phases 1-4**: ✅ COMPLETE (271 tests)
-- **B×G Phases 1-4**: ✅ COMPLETE (Compression, Fiscal, Syntax Tax, Inflation)
-- D-gent Phase 4 (Noosphere): ✅ COMPLETE
-- L-gent Phases 1-7: ✅ COMPLETE
-- G-gent Phases 1-7: ✅ COMPLETE
+- **CLI Phase 6**: ✅ COMMITTED - Intent Layer (94 tests) - `protocols/cli/intent/`
+  - 10 core verbs: new, run, check, think, watch, find, fix, speak, judge, do
+  - Intent router with risk assessment and dry-run
+- **CLI Phases 1-5**: ✅ COMPLETE (321 tests)
+- **B×G Phases 1-5**: ✅ COMPLETE (Grammar Insurance, Syntax Tax, etc.)
+- D-gent, L-gent, G-gent: ✅ COMPLETE
+
+**Uncommitted (from prior sessions)**:
+- O-gent Phase 2: `bootstrap_witness.py` + tests
+- B×G Phase 5: `grammar_insurance.py` + tests
+- B×G Phase 6: `jit_efficiency.py` + tests
 
 **Next Steps**:
-1. **CLI Phase 6**: Intent Layer (10 verbs: new, run, check, think, watch, find, fix, speak, judge, do)
-2. **CLI Phase 7**: TUI Dashboard (Textual-based DVR)
-3. **B×G Phase 5**: Grammar Insurance or JIT Efficiency
+1. **CLI Phase 7**: TUI Dashboard (Textual-based DVR)
+2. **B×G Phase 6**: JIT Efficiency (G+J+B trio for high-frequency scenarios)
+3. **O-gent Phase 3**: Panopticon Integration with BootstrapWitness dashboard
 
 ---
 
@@ -53,8 +53,8 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 | 3 | Flow Engine | ✅ DONE |
 | 4 | MCP Server | ✅ DONE (42 tests) |
 | 5 | Big 5 Genera (G, J, P, L, W) | ✅ DONE (50 tests) |
-| 6 | Intent Layer (10 verbs) | ⏳ NEXT |
-| 7 | TUI Dashboard | ⏳ PENDING |
+| 6 | Intent Layer (10 verbs) | ✅ DONE (94 tests) |
+| 7 | TUI Dashboard | ⏳ NEXT |
 
 **Key Features**: 10 Intent Verbs, Flowfiles (YAML), Sympathetic Errors, MCP Bidirectional
 
@@ -64,11 +64,11 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 | Agent | Impl % | Key Gap |
 |-------|--------|---------|
-| **B-gents** | ~95% | B×G Phase 5 (JIT/Grammar Insurance) |
+| **B-gents** | ~98% | B×G Phase 6 (JIT Efficiency) |
 | **D-gents** | ~80% | Minor SQL/Redis backends |
 | **L-gents** | ~70% | Vector DB integration |
 | **G-gents** | ~90% | Phase 7 done |
-| **O-gents** | ~70% | Phase 1 complete (62 tests), BootstrapWitness integration |
+| **O-gents** | ~80% | Phase 2 complete (87 tests), Panopticon integration next |
 | **I-gents** | ~10% | TUI, evolve.py, sessions |
 | **F-gents** | ~40% | Forge loop, ALO format |
 | **M/N/psi** | 0% | Missing |
@@ -77,104 +77,54 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 ## Current Session
 
-### Session: CLI Phase 5 - Genus Layer (2025-12-09)
+### Session: O-gent Phase 2 - BootstrapWitness (2025-12-09)
 
-**Status**: ✅ COMPLETE - Big 5 Genera CLI Commands
+**Status**: ✅ COMPLETE - Bootstrap Integrity Verification
 
-**Spec Reference**: `docs/cli-integration-plan.md` Part 6 (Genus Layer)
+**Spec Reference**: `spec/bootstrap.md` (BootstrapWitness), `spec/o-gents/README.md`
 
-**New Files Created** (~2,200 lines):
-- `impl/claude/protocols/cli/genus/__init__.py`: Module exports with lazy loading
-- `impl/claude/protocols/cli/genus/g_gent.py` (~750 lines): Grammar/DSL CLI
-  - Subcommands: reify, parse, evolve, list, show, validate, infer
-- `impl/claude/protocols/cli/genus/j_gent.py` (~620 lines): JIT Intelligence CLI
-  - Subcommands: compile, classify, defer, execute, stability, budget
-- `impl/claude/protocols/cli/genus/p_gent.py` (~580 lines): Parser CLI
-  - Subcommands: extract, repair, validate, stream, compose
-- `impl/claude/protocols/cli/genus/l_gent.py` (~720 lines): Library/Catalog CLI
-  - Subcommands: catalog, discover, register, show, lineage, compose, types, stats
-- `impl/claude/protocols/cli/genus/w_gent.py` (~640 lines): Witness/Wire CLI
-  - Subcommands: watch, fidelity, sample, serve, dashboard, log
-- `impl/claude/protocols/cli/genus/_tests/test_genus.py` (~700 lines): 50 tests
+**New Files Created** (~500 lines):
+- `impl/claude/agents/o/bootstrap_witness.py` (~450 lines): BootstrapWitness implementation
+  - `IdentityAgent`: Id: A → A (unit of composition)
+  - `ComposedAgent`: (f >> g)(x) = g(f(x))
+  - `TestAgent`: Deterministic transform for law verification
+  - `BootstrapWitness`: Verifies identity + composition laws
+  - `BootstrapObserver`: Level 1 domain observer with history
+  - `render_verification_dashboard()`: ASCII output for Panopticon
 
-**Test Coverage** (50 tests, 100% pass):
-- G-gent: 8 tests, J-gent: 10 tests, P-gent: 8 tests, L-gent: 10 tests, W-gent: 9 tests
-- Module imports: 2 tests, Integration: 3 tests
+**Modified Files**:
+- `impl/claude/protocols/cli/bootstrap/laws.py`: Wired verify_laws() to BootstrapWitness
+- `impl/claude/agents/o/__init__.py`: Added 24 new exports
+- `impl/claude/agents/o/_tests/test_o_gent.py`: Added 25 new tests
 
-**CLI Tests Total**: 321 passed (50 new)
+**Core Concepts**:
+- **Identity Laws**: `Id >> f ≡ f` (left), `f >> Id ≡ f` (right)
+- **Composition Laws**: `(f >> g) >> h ≡ f >> (g >> h)` (associativity)
+- **Observer Hierarchy**: Level 0 (Concrete) → Level 1 (Domain) → Level 2 (System)
+- **Verdict System**: PASS, FAIL, SKIP, WARN
+
+**Test Coverage** (25 new, 87 total O-gent tests):
+- IdentityAgent: 3, ComposedAgent: 3, Identity Laws: 2, Associativity: 1
+- BootstrapWitness: 7, BootstrapObserver: 3, Dashboard: 2, Verdict: 4
 
 ---
 
 ## Recent Sessions
+
+### Session: B×G Phase 5 - Grammar Insurance (2025-12-09)
+
+- `grammar_insurance.py`: Volatility monitoring, hedge strategies, premium calculation
+- 64 tests
+
+### Session: CLI Phase 6 - Intent Layer (2025-12-09)
+
+- `protocols/cli/intent/`: 10 core verbs, intent router, risk assessment
+- 94 tests
 
 ### Session: O-gent Phase 1 - VoI-Based Observation (2025-12-09)
 
-**Status**: ✅ COMPLETE - Full O-gent implementation using VoI Economics
-
-**Spec Reference**: `spec/o-gents/README.md` (The Epistemic Substrate)
-
-**New Files Created** (~2,400 lines):
-- `impl/claude/agents/o/observer.py` (~600 lines): Core observer functor
-  - `ObserverFunctor`: O: Agent[A,B] → Agent[A,B] (lifts agents into observation)
-  - `ProprioceptiveWrapper`: Transparent wrapper that observes without mutating
-  - `ObserverHierarchy`: Stratified observation (prevents "who watches watchers" regress)
-- `impl/claude/agents/o/telemetry.py` (~550 lines): Dimension X (The Body)
-  - `MetricsCollector`: Counter, Gauge, Histogram (OpenTelemetry-compatible)
-  - `TelemetryObserver`: Latency, errors, throughput tracking
-  - `TopologyMapper`: Agent composition graph, hot paths, bottlenecks
-- `impl/claude/agents/o/semantic.py` (~700 lines): Dimension Y (The Mind)
-  - `DriftDetector`: Semantic drift (Noether's theorem for agents)
-  - `BorromeanObserver`: Lacanian RSI health (Symbolic/Real/Imaginary)
-  - `HallucinationDetector`: Grounding failure detection
-- `impl/claude/agents/o/axiological.py` (~720 lines): Dimension Z (The Soul)
-  - `ValueLedgerObserver`: System GDP, agent rankings by RoC
-  - `RoCMonitor`: Real-time Return on Compute monitoring
-  - `LedgerAuditor`: Bankruptcy detection, suspicious activity
-- `impl/claude/agents/o/voi_observer.py` (~600 lines): VoI Integration
-  - `VoIAwareObserver`: Budget-aware observation depth selection
-  - `Panopticon`: Unified 3-dimension dashboard (ASCII render)
-- `impl/claude/agents/o/_tests/test_o_gent.py` (~1,000 lines): 62 comprehensive tests
-
-**Core Concepts**:
-- **Three Dimensions**: Telemetry (running?), Semantic (meaningful?), Axiological (profitable?)
-- **Observer Functor**: O(f) ≅ f (observation invisible to observed)
-- **VoI Integration**: Each observation must justify its cost
-- **Heisenberg Constraint**: Observation consumes tokens → optimize VoI
-
-**Test Coverage** (62 tests, 100% pass):
-- Core Observer: 13 tests (functor, hierarchy, composite)
-- Telemetry (X): 11 tests (metrics, topology)
-- Semantics (Y): 11 tests (drift, Borromean, hallucination)
-- Axiology (Z): 12 tests (ledger, RoC, auditing)
-- VoI Integration: 8 tests (budget, depth selection, stats)
-- Integration/Edge: 7 tests
-
-**O-gent Total**: 62 tests passed
-
----
-
-## Recent Sessions
-
-### Session: B×G Phase 4 - Semantic Inflation (2025-12-09)
-
-- `semantic_inflation.py`: Complexity → Verbosity, DeflationNegotiator, SemanticCPIMonitor
-- 78 tests
-
-### Session: B×G Phase 3 - Syntax Tax (2025-12-09)
-
-- `syntax_tax.py`: Chomsky-based pricing (Type 0-3), GrammarClassifier, Escrow for Turing
-- 60 tests
-
-### Session: B-gent Phase 4 - VoI Economics (2025-12-09)
-
-- `voi_economics.py`: Value of Information, EpistemicCapital, VoIOptimizer, AdaptiveObserver
-- 51 tests
-
-### D-gent Finalization (2025-12-09) - Commit f6a35cc
-
-- Lenses: Prism, Traversal, LensValidation
-- Persistence: Schema versioning, Backup/restore
-- 49 tests
+- `agents/o/`: Observer functor, Telemetry, Semantic, Axiological, VoI integration
+- 62 tests
 
 ---
 
@@ -245,9 +195,10 @@ Hydrate context with this file. Keep it concise—focus on current state and rec
 
 | Module | Tests | Status |
 |--------|-------|--------|
-| B-gent | 349 | ✅ |
+| B-gent | 491 | ✅ |
 | D-gent | 271 | ✅ (9 skipped) |
 | G-gent | 200+ | ✅ |
 | L-gent | 177 | ✅ |
-| CLI | 271 | ✅ |
-| **Total** | 2000+ | ✅ |
+| O-gent | 87 | ✅ |
+| CLI | 415 | ✅ |
+| **Total** | 2300+ | ✅ |

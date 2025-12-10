@@ -70,6 +70,22 @@ from ..voi_observer import (
     create_full_observer_stack,
 )
 
+from ..bootstrap_witness import (
+    Verdict,
+    BootstrapAgent,
+    IdentityAgent,
+    TestAgent,
+    BootstrapWitness,
+    BootstrapObserver,
+    BootstrapVerificationResult,
+    IdentityLawResult,
+    CompositionLawResult,
+    create_bootstrap_witness,
+    create_bootstrap_observer,
+    verify_bootstrap,
+    render_verification_dashboard,
+)
+
 
 # =============================================================================
 # Test Fixtures: Mock Agents
@@ -961,6 +977,292 @@ class TestIntegration:
         assert report.system_roc > 0
         assert len(report.agent_rankings) == 2
         assert report.agent_rankings[0].agent_id == "efficient"  # Higher RoC
+
+
+# =============================================================================
+# BootstrapWitness Tests
+# =============================================================================
+
+
+class TestBootstrapWitness:
+    """Tests for BootstrapWitness integration."""
+
+    # --- Identity Agent Tests ---
+
+    @pytest.mark.asyncio
+    async def test_identity_agent_basic(self):
+        """Test IdentityAgent returns input unchanged."""
+        id_agent: IdentityAgent[int] = IdentityAgent()
+
+        result = await id_agent.invoke(42)
+        assert result == 42
+
+    @pytest.mark.asyncio
+    async def test_identity_agent_various_types(self):
+        """Test IdentityAgent with various types."""
+        id_str: IdentityAgent[str] = IdentityAgent()
+        id_list: IdentityAgent[list[int]] = IdentityAgent()
+        id_dict: IdentityAgent[dict[str, int]] = IdentityAgent()
+
+        assert await id_str.invoke("hello") == "hello"
+        assert await id_list.invoke([1, 2, 3]) == [1, 2, 3]
+        assert await id_dict.invoke({"a": 1}) == {"a": 1}
+
+    def test_identity_agent_name(self):
+        """Test IdentityAgent has correct name."""
+        id_agent = IdentityAgent()
+        assert id_agent.name == "Id"
+
+        custom_id = IdentityAgent(name="CustomId")
+        assert custom_id.name == "CustomId"
+
+    # --- Composed Agent Tests ---
+
+    @pytest.mark.asyncio
+    async def test_composed_agent_basic(self):
+        """Test ComposedAgent applies transforms in order."""
+        f = TestAgent[int, int]("f", lambda x: x + 1)
+        g = TestAgent[int, int]("g", lambda x: x * 2)
+
+        composed = f >> g
+        result = await composed.invoke(5)
+
+        # f(5) = 6, g(6) = 12
+        assert result == 12
+
+    @pytest.mark.asyncio
+    async def test_composed_agent_name(self):
+        """Test ComposedAgent has descriptive name."""
+        f = TestAgent[int, int]("f", lambda x: x + 1)
+        g = TestAgent[int, int]("g", lambda x: x * 2)
+
+        composed = f >> g
+        assert "(f >> g)" in composed.name
+
+    @pytest.mark.asyncio
+    async def test_triple_composition(self):
+        """Test composing three agents."""
+        f = TestAgent[int, int]("f", lambda x: x + 1)
+        g = TestAgent[int, int]("g", lambda x: x * 2)
+        h = TestAgent[int, int]("h", lambda x: x - 3)
+
+        composed = (f >> g) >> h
+        result = await composed.invoke(5)
+
+        # f(5) = 6, g(6) = 12, h(12) = 9
+        assert result == 9
+
+    # --- Identity Law Tests ---
+
+    @pytest.mark.asyncio
+    async def test_left_identity_law(self):
+        """Test left identity: Id >> f == f."""
+        id_agent: IdentityAgent[int] = IdentityAgent()
+        f = TestAgent[int, int]("f", lambda x: x * 2 + 1)
+
+        for test_input in [0, 1, 5, 10, -3]:
+            composed = id_agent >> f
+            result_composed = await composed.invoke(test_input)
+            result_direct = await f.invoke(test_input)
+            assert result_composed == result_direct
+
+    @pytest.mark.asyncio
+    async def test_right_identity_law(self):
+        """Test right identity: f >> Id == f."""
+        f = TestAgent[int, int]("f", lambda x: x * 2 + 1)
+        id_agent: IdentityAgent[int] = IdentityAgent()
+
+        for test_input in [0, 1, 5, 10, -3]:
+            composed = f >> id_agent
+            result_composed = await composed.invoke(test_input)
+            result_direct = await f.invoke(test_input)
+            assert result_composed == result_direct
+
+    # --- Associativity Law Tests ---
+
+    @pytest.mark.asyncio
+    async def test_associativity_law(self):
+        """Test associativity: (f >> g) >> h == f >> (g >> h)."""
+        f = TestAgent[int, int]("f", lambda x: x + 1)
+        g = TestAgent[int, int]("g", lambda x: x * 2)
+        h = TestAgent[int, int]("h", lambda x: x - 3)
+
+        for test_input in [0, 1, 5, 10, -3]:
+            left_assoc = (f >> g) >> h
+            right_assoc = f >> (g >> h)
+
+            result_left = await left_assoc.invoke(test_input)
+            result_right = await right_assoc.invoke(test_input)
+            assert result_left == result_right
+
+    # --- BootstrapWitness Tests ---
+
+    def test_create_bootstrap_witness(self):
+        """Test BootstrapWitness creation."""
+        witness = create_bootstrap_witness()
+        assert isinstance(witness, BootstrapWitness)
+        assert witness.test_iterations == 5
+
+    def test_create_bootstrap_witness_custom_iterations(self):
+        """Test BootstrapWitness with custom iterations."""
+        witness = create_bootstrap_witness(test_iterations=10)
+        assert witness.test_iterations == 10
+
+    @pytest.mark.asyncio
+    async def test_verify_existence(self):
+        """Test verifying bootstrap agent existence."""
+        witness = create_bootstrap_witness()
+        results = await witness.verify_existence()
+
+        # Should have 7 results (one per bootstrap agent)
+        assert len(results) == 7
+
+        # Id and Compose should be importable (implemented in bootstrap_witness.py)
+        id_result = next(r for r in results if r.agent == BootstrapAgent.ID)
+        assert id_result.exists is True
+        assert id_result.importable is True
+
+        compose_result = next(r for r in results if r.agent == BootstrapAgent.COMPOSE)
+        assert compose_result.exists is True
+        assert compose_result.importable is True
+
+    @pytest.mark.asyncio
+    async def test_verify_identity_laws_method(self):
+        """Test verify_identity_laws method."""
+        witness = create_bootstrap_witness()
+        result = await witness.verify_identity_laws()
+
+        assert isinstance(result, IdentityLawResult)
+        assert result.left_identity is True
+        assert result.right_identity is True
+        assert result.holds is True
+        assert result.test_cases_run > 0
+
+    @pytest.mark.asyncio
+    async def test_verify_composition_laws_method(self):
+        """Test verify_composition_laws method."""
+        witness = create_bootstrap_witness()
+        result = await witness.verify_composition_laws()
+
+        assert isinstance(result, CompositionLawResult)
+        assert result.associativity is True
+        assert result.closure is True
+        assert result.holds is True
+        assert result.test_cases_run > 0
+
+    @pytest.mark.asyncio
+    async def test_full_verification(self):
+        """Test complete bootstrap verification."""
+        witness = create_bootstrap_witness()
+        result = await witness.invoke()
+
+        assert isinstance(result, BootstrapVerificationResult)
+        assert result.all_agents_exist is True
+        assert result.identity_laws_hold is True
+        assert result.composition_laws_hold is True
+        assert result.kernel_intact is True
+        assert result.overall_verdict == Verdict.PASS
+
+    @pytest.mark.asyncio
+    async def test_verify_bootstrap_convenience(self):
+        """Test verify_bootstrap convenience function."""
+        result = await verify_bootstrap()
+
+        assert isinstance(result, BootstrapVerificationResult)
+        assert result.overall_verdict == Verdict.PASS
+
+    # --- BootstrapObserver Tests ---
+
+    def test_create_bootstrap_observer(self):
+        """Test BootstrapObserver creation."""
+        observer = create_bootstrap_observer()
+        assert isinstance(observer, BootstrapObserver)
+        assert isinstance(observer.witness, BootstrapWitness)
+
+    @pytest.mark.asyncio
+    async def test_verify_and_record(self):
+        """Test verify_and_record tracks history."""
+        observer = create_bootstrap_observer()
+
+        # Run two verifications
+        await observer.verify_and_record()
+        result2 = await observer.verify_and_record()
+
+        assert len(observer.verification_history) == 2
+        assert observer.last_verification == result2
+
+    @pytest.mark.asyncio
+    async def test_integrity_streak(self):
+        """Test integrity streak counting."""
+        observer = create_bootstrap_observer()
+
+        # Run 3 successful verifications
+        await observer.verify_and_record()
+        await observer.verify_and_record()
+        await observer.verify_and_record()
+
+        assert observer.integrity_streak == 3
+
+    # --- Dashboard Rendering Tests ---
+
+    @pytest.mark.asyncio
+    async def test_render_verification_dashboard(self):
+        """Test dashboard rendering."""
+        result = await verify_bootstrap()
+        dashboard = render_verification_dashboard(result)
+
+        assert "BOOTSTRAP" in dashboard
+        assert "Identity Laws:" in dashboard
+        assert "Composition Laws:" in dashboard
+        assert "HOLD" in dashboard or "VERIFIED" in dashboard
+
+    @pytest.mark.asyncio
+    async def test_dashboard_with_passing_laws(self):
+        """Test dashboard shows correct status for passing laws."""
+        result = await verify_bootstrap()
+        dashboard = render_verification_dashboard(result)
+
+        # Should show VERIFIED for intact kernel
+        assert "VERIFIED" in dashboard
+        assert "HOLD" in dashboard
+
+    # --- Verdict Synthesis Tests ---
+
+    def test_verdict_pass(self):
+        """Test verdict is PASS when all checks pass."""
+        result = BootstrapVerificationResult(
+            all_agents_exist=True,
+            identity_laws_hold=True,
+            composition_laws_hold=True,
+        )
+        assert result.overall_verdict == Verdict.PASS
+
+    def test_verdict_fail_no_agents(self):
+        """Test verdict is FAIL when agents don't exist."""
+        result = BootstrapVerificationResult(
+            all_agents_exist=False,
+            identity_laws_hold=True,
+            composition_laws_hold=True,
+        )
+        assert result.overall_verdict == Verdict.FAIL
+
+    def test_verdict_fail_identity_broken(self):
+        """Test verdict is FAIL when identity laws broken."""
+        result = BootstrapVerificationResult(
+            all_agents_exist=True,
+            identity_laws_hold=False,
+            composition_laws_hold=True,
+        )
+        assert result.overall_verdict == Verdict.FAIL
+
+    def test_verdict_fail_composition_broken(self):
+        """Test verdict is FAIL when composition laws broken."""
+        result = BootstrapVerificationResult(
+            all_agents_exist=True,
+            identity_laws_hold=True,
+            composition_laws_hold=False,
+        )
+        assert result.overall_verdict == Verdict.FAIL
 
 
 # =============================================================================
