@@ -25,7 +25,7 @@ hydrate.time.witness       → Temporal trace (git log, recent changes)
 | Note enablement | `hydrate.project.afford` | Announce what you enable |
 | Update shared | `hydrate.concept.refine` | Prefix `[STALE?]` if uncertain |
 
-**Status**: 7,080+ tests | Branch: `main` | Mypy: 3,639 baselined
+**Status**: 7,080+ tests | Branch: `main` | Mypy: **0 errors** (100% clean from 7,516 initial)
 #################################################################################
 
 ## hydrate.concept.manifest
@@ -84,6 +84,33 @@ kgents ghost [--daemon]          # Phase 2
 
 ---
 
+### world.context_sovereignty
+
+> *"The brain that watches itself grow heavy is already dying. Health must be felt, not thought."*
+
+**handle**: `plans/context-sovereignty.md` (v3.0)
+
+| Component | AGENTESE Path | Categorical Basis |
+|-----------|---------------|-------------------|
+| Context Comonad | `self.stream.*` | extract/extend/duplicate |
+| Linearity-Aware Compression | `self.stream.compress` | Affine/Linear/Relevant types |
+| Dual-Lane Pheromones | `time.trace.pulse` | Functor decomposition |
+| State Crystals | `self.memory.crystallize` | Comonad + Linear preservation |
+| Compost Protocol | `void.entropy.pour` | Affine consumption |
+
+**v3.0 enhancements** (over v2.0):
+- **Comonadic foundation**: Context window IS a comonad (extract/extend/duplicate)
+- **Linear types**: Observations=AFFINE, Reasoning=LINEAR, Focus=RELEVANT
+- **Incremental summarization**: Self-adjusting computation (Δ-output ∝ Δ-input)
+- **Adaptive thresholds**: ACON-style dynamic compression triggers
+
+**theoretical basis**: Contextads (2024) • From Linearity to Borrowing (2025) • Differential Execution (ECOOP 2025)
+**research synthesis**: ACON + JetBrains (52% cost reduction) + TME + Jane Street Incremental
+**afford**: Y-gent somatic topology • K-Terrarium controller • DevEx cyborg metacognition
+**block**: None
+
+---
+
 ## hydrate.self.manifest
 
 | Agent | Handle | Tests |
@@ -122,7 +149,7 @@ cd impl/claude && uv run mypy --strict --explicit-package-bases agents/ bootstra
 ## hydrate.void.witness
 
 **tech debt** (the accursed share—acknowledged, not ignored):
-- Mypy: 3,639 baselined (down from 7,516, up from 2,776 due to new files)
+- Mypy: **0 errors** (100% clean from 7,516 initial!) 🎉
 - TODOs: 74 across 33 files
 - Skipped tests: 56 (external deps)
 
