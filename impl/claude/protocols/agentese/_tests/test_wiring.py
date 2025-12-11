@@ -329,13 +329,12 @@ class TestLgentIntegration:
             "Test error",
         )
 
-    def test_graceful_degradation_without_registry(self):
+    @pytest.mark.asyncio
+    async def test_graceful_degradation_without_registry(self):
         """Test that missing L-gent doesn't break WiredLogos."""
         wired = create_wired_logos(lgent_registry=None)
         # Should not raise
-        asyncio.get_event_loop().run_until_complete(
-            wired._track_invocation("world.house.manifest", True)
-        )
+        await wired._track_invocation("world.house.manifest", True)
 
 
 # =============================================================================

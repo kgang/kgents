@@ -10,11 +10,10 @@ This implements Phase 1 of the test evolution plan:
 - BootstrapWitness integration
 
 Meta-Bootstrap: Test failures are algedonic signals.
-Every failure emits a "flinch" to .kgents/ghost/test_flinches.jsonl
+Phase 2: Flinches now route through FlinchStore (D-gent backed)
+with JSONL fallback for zero regression.
 """
 
-import json
-import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -22,13 +21,31 @@ from typing import Any
 import pytest
 
 # =============================================================================
-# Meta-Bootstrap: Test Flinch Logging
+# Meta-Bootstrap: Test Flinch Logging (Phase 2)
 # =============================================================================
 
 # Find project root (where .kgents/ lives)
 _PROJECT_ROOT = Path(__file__).parent.parent.parent  # impl/claude -> kgents
 _GHOST_DIR = _PROJECT_ROOT / ".kgents" / "ghost"
 _FLINCH_FILE = _GHOST_DIR / "test_flinches.jsonl"
+
+# Lazy-loaded FlinchStore (avoid import during pytest collection)
+_flinch_store = None
+
+
+def _get_flinch_store():
+    """Get or create the FlinchStore singleton with JSONL fallback."""
+    global _flinch_store
+    if _flinch_store is None:
+        try:
+            from protocols.cli.devex.flinch_store import Flinch, get_flinch_store
+
+            # Initialize with JSONL fallback (D-gent stores added lazily if available)
+            _flinch_store = get_flinch_store(jsonl_fallback=_FLINCH_FILE)
+        except ImportError:
+            # Fallback: FlinchStore not available, return None
+            _flinch_store = None
+    return _flinch_store
 
 
 def _emit_test_flinch(report) -> None:
@@ -37,22 +54,32 @@ def _emit_test_flinch(report) -> None:
 
     Flinches are algedonic signals - raw pain indicators that bypass
     semantic processing. They accumulate for pattern analysis.
+
+    Phase 2: Routes through FlinchStore for D-gent integration.
+    Falls back to direct JSONL write if FlinchStore unavailable.
     """
     try:
-        _GHOST_DIR.mkdir(parents=True, exist_ok=True)
+        store = _get_flinch_store()
+        if store is not None:
+            from protocols.cli.devex.flinch_store import Flinch
 
-        flinch = {
-            "ts": time.time(),
-            "test": report.nodeid,
-            "phase": report.when,  # setup, call, teardown
-            "duration": getattr(report, "duration", 0),
-            "outcome": report.outcome,
-        }
+            flinch = Flinch.from_report(report)
+            store.emit_sync(flinch)
+        else:
+            # Fallback: direct JSONL write (Phase 1 behavior)
+            import json
+            import time
 
-        # Append to JSONL (newline-delimited JSON)
-        with _FLINCH_FILE.open("a") as f:
-            f.write(json.dumps(flinch) + "\n")
-
+            _GHOST_DIR.mkdir(parents=True, exist_ok=True)
+            flinch = {
+                "ts": time.time(),
+                "test": report.nodeid,
+                "phase": report.when,
+                "duration": getattr(report, "duration", 0),
+                "outcome": report.outcome,
+            }
+            with _FLINCH_FILE.open("a") as f:
+                f.write(json.dumps(flinch) + "\n")
     except Exception:
         # Never let flinch logging break tests
         pass

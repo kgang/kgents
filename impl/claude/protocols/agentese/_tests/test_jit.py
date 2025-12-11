@@ -466,7 +466,8 @@ class TestLogosJITIntegration:
 
         assert node1 is node2
 
-    def test_jit_node_tracked_via_define(
+    @pytest.mark.asyncio
+    async def test_jit_node_tracked_via_define(
         self, tmp_path: Path, sample_spec: str
     ) -> None:
         """JIT nodes created via define_concept are tracked for promotion."""
@@ -474,25 +475,20 @@ class TestLogosJITIntegration:
 
         # Use an architect to define a new concept
         architect = MockUmwelt(dna=MockDNA(name="architect", archetype="architect"))
-        import asyncio
-
-        asyncio.get_event_loop().run_until_complete(
-            logos.define_concept("world.garden", sample_spec, architect)
-        )
+        await logos.define_concept("world.garden", sample_spec, architect)
 
         assert "world.garden" in logos._jit_nodes
 
-    def test_get_jit_status_via_define(self, tmp_path: Path, sample_spec: str) -> None:
+    @pytest.mark.asyncio
+    async def test_get_jit_status_via_define(
+        self, tmp_path: Path, sample_spec: str
+    ) -> None:
         """Get JIT node status for defined concept."""
         logos = create_logos(spec_root=tmp_path)
 
         # Use an architect to define a new concept
         architect = MockUmwelt(dna=MockDNA(name="architect", archetype="architect"))
-        import asyncio
-
-        asyncio.get_event_loop().run_until_complete(
-            logos.define_concept("world.garden", sample_spec, architect)
-        )
+        await logos.define_concept("world.garden", sample_spec, architect)
 
         status = logos.get_jit_status("world.garden")
 
@@ -500,17 +496,16 @@ class TestLogosJITIntegration:
         assert status["handle"] == "world.garden"
         assert status["usage_count"] >= 0
 
-    def test_list_jit_nodes_via_define(self, tmp_path: Path, sample_spec: str) -> None:
+    @pytest.mark.asyncio
+    async def test_list_jit_nodes_via_define(
+        self, tmp_path: Path, sample_spec: str
+    ) -> None:
         """List all JIT nodes after defining concepts."""
         logos = create_logos(spec_root=tmp_path)
 
         # Use an architect to define a new concept
         architect = MockUmwelt(dna=MockDNA(name="architect", archetype="architect"))
-        import asyncio
-
-        asyncio.get_event_loop().run_until_complete(
-            logos.define_concept("world.garden", sample_spec, architect)
-        )
+        await logos.define_concept("world.garden", sample_spec, architect)
 
         nodes = logos.list_jit_nodes()
 
@@ -667,40 +662,32 @@ class TestDefineConceptAutopoiesis:
 class TestPromoteConcept:
     """Tests for promote_concept()."""
 
-    @pytest.fixture
-    def ready_logos(self, tmp_path: Path, sample_spec: str) -> Logos:
-        """Create Logos with a JIT node ready for promotion."""
+    @pytest.mark.asyncio
+    async def test_promote_concept_success(
+        self,
+        tmp_path: Path,
+        sample_spec: str,
+    ) -> None:
+        """Successfully promote a JIT concept."""
         logos = create_logos(spec_root=tmp_path)
 
         # Define a concept to get a JIT node
         architect = MockUmwelt(dna=MockDNA(name="architect", archetype="architect"))
-        import asyncio
-
-        asyncio.get_event_loop().run_until_complete(
-            logos.define_concept("world.garden", sample_spec, architect)
-        )
+        await logos.define_concept("world.garden", sample_spec, architect)
 
         # Simulate usage to meet promotion criteria
         jit_node = logos._jit_nodes["world.garden"]
         jit_node.usage_count = 150
         jit_node.success_count = 140
 
-        return logos
-
-    @pytest.mark.asyncio
-    async def test_promote_concept_success(
-        self,
-        ready_logos: Logos,
-    ) -> None:
-        """Successfully promote a JIT concept."""
-        result = await ready_logos.promote_concept(
+        result = await logos.promote_concept(
             handle="world.garden",
             threshold=100,
             success_threshold=0.8,
         )
 
         assert result.success
-        assert "world.garden" not in ready_logos._jit_nodes
+        assert "world.garden" not in logos._jit_nodes
 
     @pytest.mark.asyncio
     async def test_promote_concept_not_jit(self, tmp_path: Path) -> None:

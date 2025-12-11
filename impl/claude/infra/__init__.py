@@ -46,6 +46,8 @@ Usage:
 from .ground import (
     Ground,
     InfrastructureConfig,
+    ProviderConfig,
+    RetentionConfig,
     XDGPaths,
     resolve_ground,
 )
@@ -57,8 +59,6 @@ from .lifecycle import (
     quick_bootstrap,
 )
 from .storage import (
-    ProviderConfig,
-    RetentionConfig,
     StorageProvider,
 )
 from .synapse import (

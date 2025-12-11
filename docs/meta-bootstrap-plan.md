@@ -129,4 +129,106 @@ Build the fancy stuff *after* you have data about how you actually work.
 
 ---
 
+## Phase 2: D-gent Migration (Complete ✅)
+
+Phase 1 loops used direct file I/O. Phase 2 migrates to D-gent infrastructure for:
+- Semantic search (find similar flinches via vector similarity)
+- Temporal queries (flinch patterns over time)
+- Cross-session coherency (CI signals accessible locally)
+
+**Implementation**: `impl/claude/protocols/cli/devex/flinch_store.py` (18 tests)
+
+### Migration Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Current (Phase 1)                            │
+│  conftest.py ──→ .kgents/ghost/test_flinches.jsonl (file I/O)  │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                    Target (Phase 2)                             │
+│  conftest.py ──→ ITelemetryStore ──→ SQLite + JSONL fallback   │
+│                         │                                       │
+│                         ↓                                       │
+│            InstanceDBRelationalBackend (D-gent adapter)         │
+│                         │                                       │
+│           ┌─────────────┴─────────────┐                        │
+│           ↓                           ↓                         │
+│   Left Hemisphere (SQL)     Right Hemisphere (Vector)           │
+│   - Flinch records         - Flinch embeddings                  │
+│   - Pattern queries        - Semantic similarity                │
+│   - Time-series data       - "Similar failures"                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### New Components
+
+**1. FlinchStore** (`protocols/cli/devex/flinch_store.py`)
+```python
+class FlinchStore:
+    """D-gent backed flinch storage with semantic capabilities."""
+
+    def __init__(self, telemetry: ITelemetryStore, vector: IVectorStore | None = None):
+        self._telemetry = telemetry
+        self._vector = vector
+
+    async def emit(self, flinch: Flinch) -> None:
+        """Emit flinch to both hemispheres."""
+        await self._telemetry.append([flinch.to_event()])
+        if self._vector:
+            await self._vector.upsert(flinch.id, flinch.embed(), flinch.metadata())
+
+    async def query_similar(self, test_name: str, limit: int = 5) -> list[Flinch]:
+        """Find semantically similar past flinches."""
+        ...
+
+    async def query_pattern(self, pattern: str, since: datetime) -> list[Flinch]:
+        """Query flinches matching pattern over time."""
+        ...
+```
+
+**2. Synchronous Fallback**
+
+Since pytest hooks are synchronous, Phase 2 needs:
+- Async queue with background worker
+- Or sync-safe D-gent wrapper (use threading)
+- Or keep JSONL fallback for non-critical path
+
+```python
+def pytest_runtest_logreport(report):
+    if report.failed:
+        flinch = Flinch.from_report(report)
+        # Try D-gent first, fall back to JSONL
+        if not _emit_flinch_dgent(flinch):
+            _emit_flinch_jsonl(flinch)
+```
+
+### Migration Steps
+
+1. **Create FlinchStore class** - D-gent adapter for flinch storage
+2. **Add async queue** - Buffer flinches for batch writes
+3. **Wire to ITelemetryStore** - Use existing infra protocol
+4. **Optional: Add embeddings** - Enable "similar flinches" queries
+5. **Migrate conftest.py** - Use FlinchStore with JSONL fallback
+
+### Success Criteria
+
+- [x] Flinches queryable via SQL (`SELECT * FROM flinches WHERE test LIKE '%synapse%'`)
+- [x] Pattern detection (`tests failing > 3x in 24h`) via `query_frequent_failures()`
+- [ ] Semantic search (`find tests similar to this failure`) - vector store optional
+- [x] Zero regression (JSONL fallback if D-gent unavailable)
+
+---
+
+## Phase 3: Semantic Search (Future)
+
+Optional enhancement: Enable "similar flinches" queries via vector embeddings.
+
+- Add embedder integration to FlinchStore
+- Populate IVectorStore with flinch embeddings
+- Query similar failures: "What tests failed like this before?"
+
+---
+
 *"Bootstrap the bootstrapper. Observe the observer. The recursive eye sees clearly."*

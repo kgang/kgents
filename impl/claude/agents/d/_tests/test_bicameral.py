@@ -12,6 +12,12 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+# Save original modules before mocking (for cleanup after import)
+_original_interfaces = sys.modules.get("protocols.cli.instance_db.interfaces")
+_original_nervous = sys.modules.get("protocols.cli.instance_db.nervous")
+_original_hippocampus = sys.modules.get("protocols.cli.instance_db.hippocampus")
+_original_synapse = sys.modules.get("protocols.cli.instance_db.synapse")
+
 # Create mock modules
 mock_interfaces = MagicMock()
 mock_nervous = MagicMock()
@@ -74,6 +80,21 @@ from ..bicameral import (
 from ..infra_backends import (
     ContentHash,
 )
+
+
+# CRITICAL: Restore original modules immediately after import
+# This prevents polluting the module cache for subsequent tests
+def _restore(name, original):
+    if original is not None:
+        sys.modules[name] = original
+    elif name in sys.modules:
+        del sys.modules[name]
+
+
+_restore("protocols.cli.instance_db.interfaces", _original_interfaces)
+_restore("protocols.cli.instance_db.nervous", _original_nervous)
+_restore("protocols.cli.instance_db.hippocampus", _original_hippocampus)
+_restore("protocols.cli.instance_db.synapse", _original_synapse)
 
 # ==============================================================================
 # Test Fixtures

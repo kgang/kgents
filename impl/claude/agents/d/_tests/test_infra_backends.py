@@ -12,6 +12,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+# Save original modules before mocking (for cleanup after import)
+_original_interfaces = sys.modules.get("protocols.cli.instance_db.interfaces")
+_original_nervous = sys.modules.get("protocols.cli.instance_db.nervous")
+
 # Create mock modules
 mock_interfaces = MagicMock()
 mock_nervous = MagicMock()
@@ -54,6 +58,18 @@ from ..infra_backends import (
     create_relational_backend,
     create_vector_backend,
 )
+
+# CRITICAL: Restore original modules immediately after import
+# This prevents polluting the module cache for subsequent tests
+if _original_interfaces is not None:
+    sys.modules["protocols.cli.instance_db.interfaces"] = _original_interfaces
+else:
+    del sys.modules["protocols.cli.instance_db.interfaces"]
+
+if _original_nervous is not None:
+    sys.modules["protocols.cli.instance_db.nervous"] = _original_nervous
+else:
+    del sys.modules["protocols.cli.instance_db.nervous"]
 
 # ==============================================================================
 # ContentHash Tests

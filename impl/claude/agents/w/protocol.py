@@ -100,7 +100,7 @@ class WireState:
 
     agent_id: str
     phase: str  # Moon phase: dormant, waking, active, waning, empty
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     # Optional fields
     current_task: Optional[str] = None

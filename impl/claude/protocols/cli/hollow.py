@@ -119,6 +119,15 @@ COMMAND_REGISTRY: dict[str, str] = {
     "whisper": "protocols.cli.handlers.igent:cmd_whisper",
     # Debug
     "debug": "protocols.cli.handlers.debug:cmd_debug",
+    # DevEx V4 Phase 1 - Foundation
+    "status": "protocols.cli.handlers.status:cmd_status",
+    "dream": "protocols.cli.handlers.dream:cmd_dream",
+    "map": "protocols.cli.handlers.map:cmd_map",
+    "signal": "protocols.cli.handlers.signal:cmd_signal",
+    # DevEx V4 Phase 2 - Sensorium
+    "ghost": "protocols.cli.handlers.ghost:cmd_ghost",
+    # K-Terrarium (Infrastructure)
+    "infra": "protocols.cli.handlers.infra:cmd_infra",
     # MCP (Phase 4)
     "mcp": "protocols.cli.mcp.server:cmd_mcp",
     # TUI Dashboard (Phase 7)

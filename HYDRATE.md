@@ -1,69 +1,85 @@
 # HYDRATE.md - kgents Session Context
 
-**Status**: ~6,683 tests passing | Branch: `main`
+**Status**: 6,800+ tests | Branch: `main`
 
-## Recent: New Agent Batch Refactoring (Complete)
+## Current: K-Terrarium Phase 1 (In Progress)
 
-Comprehensive review and refactoring of seven proposed agents (Q, S, U, V, X, Y, Z) against design principles and bootstrap derivability. **All changes executed.**
+Kubernetes-native agent isolation. Transform from Python processes → container boundaries.
 
-### Assessment Summary
+**K-Terrarium CLI** (coming soon):
+```bash
+kgents infra init       # Create Kind cluster (idempotent)
+kgents infra status     # Show cluster state
+kgents infra stop       # Pause cluster (docker pause)
+kgents infra start      # Resume cluster
+kgents infra destroy    # Remove cluster (--force to skip confirm)
+```
 
-| Agent | Status | Verdict | Key Issue |
-|-------|--------|---------|-----------|
-| **Q-gent** | Clean | KEEP | Cleanly derived (Ground + Contradict) |
-| **S-gent** | Clean | KEEP | Cleanly derived (Ground + Compose) |
-| **V-gent** | Clean | KEEP | Extends Judge bootstrap with user principles |
-| **U-gent** | Heavy | SIMPLIFY | Complex machinery, could be infrastructure |
-| **X-gent** | Infrastructure | RECONSIDER | MCP/OpenAPI is protocol, not agent genus |
-| **Y-gent** | Overlap | MERGE | Graph composition overlaps C-gent + Fix |
-| **Z-gent** | Overlap | MERGE | Context mgmt overlaps Cooled Functor + Lethe |
+**K-Terrarium Phase 1 Files** (in progress):
+- `infra/k8s/exceptions.py` - TerrariumError hierarchy (done)
+- `infra/k8s/detection.py` - Environment detection (done, 12 tests)
+- `infra/k8s/cluster.py` - Kind cluster lifecycle (done, 18 tests)
+- `infra/k8s/__init__.py` - Public API exports (done)
+- `protocols/cli/handlers/infra.py` - CLI handler (pending)
+- `impl/images/` - Docker images (pending)
 
-### Actions Completed
-
-| Action | Status | Output |
-|--------|--------|--------|
-| KEEP Q-gent | Done | `spec/q-gents/README.md` |
-| KEEP S-gent | Done | `spec/s-gents/README.md` |
-| KEEP V-gent | Done | `spec/v-gents/README.md` |
-| REFACTOR U-gent -> B-gent | Done | `spec/b-gents/distillation.md` |
-| DELETE X-gent -> Infrastructure | Done | `docs/infrastructure/mcp-integration.md` |
-| MERGE Y-gent -> C-gent | Done | `spec/c-gents/graph-composition.md` |
-| DISTRIBUTE Z-gent | Done | `spec/c-gents/context-management.md` |
+**K-Terrarium Phases**:
+| Phase | Focus | Status |
+|-------|-------|--------|
+| 1 | Foundation (Kind bootstrap, CLI) | In Progress |
+| 2 | Q-gent (disposable execution) | Pending |
+| 3 | Agent Operator (CRD-driven deploy) | Pending |
+| 4 | B-gent Integration (ResourceQuotas) | Pending |
 
 ---
 
-## Previous: Meta-Bootstrap Active
+## DevEx V4 (Complete through Phase 2)
 
-The system now observes itself during development. See `docs/meta-bootstrap-plan.md`.
+**CLI Commands**:
+```bash
+# Phase 1: Foundation
+kgents status           # Cortex health at a glance
+kgents dream            # LucidDreamer morning briefing
+kgents map              # M-gent HoloMap visualization
+kgents signal           # SemanticField state
 
-**Active Feedback Loops**:
+# Phase 2: Sensorium
+kgents ghost            # Project to .kgents/ghost/
+kgents ghost --daemon   # Background projection
+```
+
+**DevEx V4 Phases**:
+| Phase | Focus | Status |
+|-------|-------|--------|
+| 1 | Foundation (CLI entry points) | Complete |
+| 2 | Sensorium (.kgents/ghost/) | Complete |
+| 3 | Neural Link (keystroke dynamics) | Pending |
+| 4 | Shadow (speculative execution) | Pending |
+| 5 | Rituals (calibration/confessional) | Pending |
+
+**Phase 1 Files** (CLI handlers):
+- `protocols/cli/handlers/status.py` - CortexDashboard CLI
+- `protocols/cli/handlers/dream.py` - LucidDreamer CLI
+- `protocols/cli/handlers/map.py` - HoloMap CLI
+- `protocols/cli/handlers/signal.py` - SemanticField CLI
+
+**Phase 2 Files** (Sensorium):
+- `protocols/cli/devex/ghost_writer.py` - Living Filesystem projection
+- `protocols/cli/handlers/ghost.py` - Ghost CLI handler
+
+**Feedback Loops (Meta-Bootstrap)**:
 | Loop | Signal | Storage |
 |------|--------|---------|
-| Test Flinch | pytest failures | `.kgents/ghost/test_flinches.jsonl` |
-| CI Signals | GitHub Actions | `.kgents/ghost/ci_signals.jsonl` (artifact) |
-| HYDRATE Append | Key events | This file (bottom) |
-| Git Crystallization | git log/diff | Native git |
+| Test Flinch | pytest failures | `FlinchStore` → ITelemetryStore + JSONL |
+| CI Signals | GitHub Actions | `.kgents/ghost/ci_signals.jsonl` |
+| Git Crystal | git log/diff | Native git |
 
 **Quick Commands**:
 ```bash
-# Session narrative (last 8 hours)
-git log --oneline --since="8 hours ago"
-
-# Churn map (volatility)
-git diff --stat HEAD~10
-
-# Prior drift (CLAUDE.md evolution)
-git diff HEAD~5 CLAUDE.md
-
-# Recent flinches
-cat .kgents/ghost/test_flinches.jsonl | tail -5
+git log --oneline --since="8 hours ago"  # Session narrative
+git diff --stat HEAD~10                   # Churn map
+cat .kgents/ghost/test_flinches.jsonl | tail -5  # Recent flinches
 ```
-
-**DevEx V4 (Deferred to Post-Bootstrap)**:
-- `.kgents/ghost/` living filesystem
-- Keystroke dynamics, Shadow Diff
-- Morning Calibration, Evening Confessional
-- See `docs/devex-unified-plan.md`
 
 ---
 
@@ -94,7 +110,7 @@ dreamer = create_lucid_dreamer(synapse, hippocampus)
 report = await dreamer.rem_cycle()
 ```
 
-### Semantic Field (135 tests)
+### Semantic Field (71 tests)
 
 Stigmergic coordination via pheromones - agents emit/sense signals without direct imports.
 
@@ -108,74 +124,11 @@ Stigmergic coordination via pheromones - agents emit/sense signals without direc
 | N | NARRATIVE | NARRATIVE |
 | L | CAPABILITY | CAPABILITY |
 | O | - | All types |
-| **E** | **MUTATION** | **REFINEMENT** |
-| **H** | **SYNTHESIS** | **PRIOR** |
-| **K** | **PRIOR** | **SYNTHESIS** |
-| **R** | **REFINEMENT** | **MUTATION** |
-| **D** | **STATE** | **STATE** |
-| **T** | **TEST** | **TEST** |
-| **W** | **DISPATCH** | **DISPATCH** |
-
-**Phase 1 Complete (MUTATION, SYNTHESIS, PRIOR, REFINEMENT emitters)**
-**Phase 2 Complete (Supporting sensors for bidirectional coordination)**
-**Phase 3 Complete (D-gent STATE, T-gent TEST, W-gent DISPATCH)**
 
 ```python
 field = create_semantic_field()
 emitter = create_psi_emitter(field)
 emitter.emit_metaphor("source", "target", strength=0.85, position=pos)
-
-# Phase 1 emitters
-evolution = create_evolution_emitter(field)
-evolution.emit_mutation("mut_001", fitness_delta=0.3, generation=5, position=pos)
-
-hegel = create_hegel_emitter(field)
-hegel.emit_synthesis("thesis", "antithesis", "synthesis", confidence=0.85, position=pos)
-
-persona = create_persona_emitter(field)
-persona.emit_prior_change("risk_tolerance", 0.7, "kent", position=pos)
-
-refinery = create_refinery_emitter(field)
-refinery.emit_refinement("target_id", "optimization", improvement_ratio=1.3, position=pos)
-
-# Phase 2 sensors (bidirectional coordination)
-evolution_sensor = create_evolution_sensor(field)
-refinements = evolution_sensor.sense_refinements(pos)  # E-gent senses R-gent's improvements
-
-refinery_sensor = create_refinery_sensor(field)
-mutations = refinery_sensor.sense_mutations(pos)  # R-gent senses E-gent's discoveries
-
-persona_sensor = create_persona_sensor(field)
-syntheses = persona_sensor.sense_syntheses(pos)  # K-gent senses H-gent's insights
-
-hegel_sensor = create_hegel_sensor(field)
-priors = hegel_sensor.sense_priors(pos)  # H-gent senses K-gent's preferences
-
-# Phase 3 emitters (Infrastructure Agents)
-data = create_data_emitter(field)
-data.emit_created("entity_001", "users/kent", pos)  # D-gent state change
-data.emit_stale("entity_002", "old/key", "2024-01-01", 0.8, pos)  # Stale data
-
-test = create_test_emitter(field)
-test.emit_test_result("test_foo", "passed", pos, affected_agents=("d", "m"))
-test.emit_coverage_change(0.75, 0.82, pos)  # Coverage improvement
-
-wire = create_wire_emitter(field)
-wire.emit_dispatch("msg_001", "source", "target", pos, intercepted_by=("safety",))
-wire.emit_blocked("msg_002", "safety", "Policy violation", pos, severity="error")
-
-# Phase 3 sensors
-data_sensor = create_data_sensor(field)
-changes = data_sensor.sense_state_changes(pos)
-deletions = data_sensor.get_deletions(pos)
-
-test_sensor = create_test_sensor(field)
-failures = test_sensor.sense_failures(pos)
-regressions = test_sensor.get_coverage_regressions(pos)
-
-wire_sensor = create_wire_sensor(field)
-blocks = wire_sensor.sense_blocked(pos)
-blockers = wire_sensor.get_blockers(pos)
 ```
 
 ### M-gent Cartography (157 tests)
@@ -185,12 +138,12 @@ Memory-as-Orientation: HoloMap, Attractors, Desire Lines, Voids, Foveation.
 ```python
 cartographer = create_cartographer(vector_search, trace_store)
 holo_map = await cartographer.invoke(context_vector, Resolution.ADAPTIVE)
-# -> landmarks, desire_lines, voids, horizon
+# → landmarks, desire_lines, voids, horizon
 ```
 
 ### W-gent Interceptors (125 tests)
 
-Pipeline: Safety(50) -> Metering(100) -> Telemetry(200) -> Persona(300)
+Pipeline: Safety(50) → Metering(100) → Telemetry(200) → Persona(300)
 
 ---
 
@@ -231,3 +184,22 @@ kgents check .                       # Validate
 | Forward refs | `from __future__ import annotations` + `TYPE_CHECKING` |
 
 **Foundational agents** (can be imported anywhere): `shared`, `a`, `d`, `l`, `c`
+
+---
+
+## Tech Debt Inventory
+
+**74 TODOs** across 33 files. Key clusters:
+
+| Area | Count | Notes |
+|------|-------|-------|
+| J-gent templates | 8 | `templates.py` - placeholder implementations |
+| T-gent MCP | 6 | `mcp_client.py`, `permissions.py` - HTTP transport, D/W-gent integration |
+| CLI membrane | 3 | `membrane_cli.py` - history/persistence TODO |
+| Concept context | 1 | `concept.py:452` - core ops unimplemented |
+
+**56 skipped tests** (graceful): Redis/SQL backends, DSPy, external LLM deps.
+
+**Low-priority**:
+- ~289 `NotImplementedError`/`pass` stubs (many are intentional protocol placeholders)
+- J-gent `templates.py` generates TODOs by design (JIT compilation markers)
