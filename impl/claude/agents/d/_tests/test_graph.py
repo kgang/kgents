@@ -4,6 +4,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+import pytest_asyncio
 from agents.d.errors import NodeNotFoundError
 from agents.d.graph import (
     Edge,
@@ -81,7 +82,7 @@ class TestGraphAgentBasics:
 class TestGraphAgentEdges:
     """Edge operations."""
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def agent_with_nodes(self):
         """Create agent with test nodes."""
         agent = GraphAgent()
@@ -188,7 +189,7 @@ class TestGraphAgentEdges:
 class TestLatticeOperations:
     """Lattice operations: meet, join, entails."""
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def taxonomy(self):
         """Create a simple taxonomy (ontology).
 
@@ -291,7 +292,7 @@ class TestLatticeOperations:
 class TestProvenanceOperations:
     """Provenance tracking: lineage, descendants."""
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def derivation_chain(self):
         """Create a derivation chain.
 
@@ -343,7 +344,7 @@ class TestProvenanceOperations:
 class TestTraversalOperations:
     """Graph traversal operations."""
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def connected_graph(self):
         """Create a connected graph."""
         agent = GraphAgent()

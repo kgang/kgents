@@ -87,6 +87,7 @@ class TestAgentRegistry:
             "o",
             "p",
             "psi",
+            "q",
             "r",
             "t",
             "w",
@@ -168,7 +169,7 @@ class TestAgentContextResolver:
         assert "e" in agents
         assert "b" in agents
         assert "psi" in agents
-        assert len(agents) == 20
+        assert len(agents) == 21
 
 
 # === AgentListNode Tests ===
@@ -185,7 +186,7 @@ class TestAgentListNode:
         node = resolver.resolve("agent", [])
         rendering = await node.manifest(mock_umwelt)
         assert isinstance(rendering, BasicRendering)
-        assert "20 agents" in rendering.summary
+        assert "21 agents" in rendering.summary
         assert "E-gent" in rendering.content
 
     @pytest.mark.asyncio
@@ -196,7 +197,7 @@ class TestAgentListNode:
         node = resolver.resolve("agent", [])
         result = await node.invoke("list", mock_umwelt)
         assert isinstance(result, list)
-        assert len(result) == 20
+        assert len(result) == 21
         assert any(a["letter"] == "e" for a in result)
 
     @pytest.mark.asyncio
@@ -348,7 +349,7 @@ class TestFactoryFunctions:
     def test_create_agent_resolver(self) -> None:
         """create_agent_resolver with default registry."""
         resolver = create_agent_resolver()
-        assert len(resolver.list_agents()) == 20
+        assert len(resolver.list_agents()) == 21
 
     def test_create_agent_resolver_custom_registry(self) -> None:
         """create_agent_resolver with custom registry."""
@@ -384,7 +385,7 @@ class TestIntegration:
         # 1. List all agents
         list_node = resolver.resolve("agent", [])
         agents = await list_node.invoke("list", mock_umwelt)
-        assert len(agents) == 20
+        assert len(agents) == 21
 
         # 2. Search for evolution
         results = await list_node.invoke("search", mock_umwelt, query="evolution")

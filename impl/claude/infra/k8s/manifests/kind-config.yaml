@@ -1,0 +1,28 @@
+# Kind cluster configuration for K-Terrarium
+# Single-node cluster optimized for local development
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: kgents-local
+nodes:
+  - role: control-plane
+    # Expose ports for local access
+    extraPortMappings:
+      # NodePort range for testing
+      - containerPort: 30000
+        hostPort: 30000
+        protocol: TCP
+      - containerPort: 30001
+        hostPort: 30001
+        protocol: TCP
+    # Mount for persistent data (optional)
+    # extraMounts:
+    #   - hostPath: /tmp/kgents-data
+    #     containerPath: /data
+# Networking configuration
+networking:
+  # Disable default CNI to use kindnet (simpler for local dev)
+  disableDefaultCNI: false
+  # Pod subnet
+  podSubnet: "10.244.0.0/16"
+  # Service subnet
+  serviceSubnet: "10.96.0.0/12"

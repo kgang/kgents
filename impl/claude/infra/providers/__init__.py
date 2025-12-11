@@ -95,11 +95,11 @@ async def create_providers(
     if config.vector.type == "numpy":
         vector_path = config.vector.path or str(paths.data / "vectors.json")
         vector = NumpyVectorStore(
-            dimension=config.vector.dimensions,
-            persistence_path=Path(vector_path),
+            storage_path=Path(vector_path),
+            dimensions=config.vector.dimensions,
         )
     elif config.vector.type == "memory":
-        vector = InMemoryVectorStore(dimension=config.vector.dimensions)
+        vector = InMemoryVectorStore(dimensions=config.vector.dimensions)
     else:
         raise ValueError(f"Unknown vector provider: {config.vector.type}")
 

@@ -152,10 +152,10 @@ class TestAgentDiscovery:
     async def test_list_all_agents(
         self, agent_resolver: AgentContextResolver, developer_umwelt: MagicMock
     ) -> None:
-        """world.agent.list returns all 20 agents."""
+        """world.agent.list returns all 21 agents."""
         node = agent_resolver.resolve("agent", [])
         agents = await node.invoke("list", developer_umwelt)
-        assert len(agents) == 20
+        assert len(agents) == 21
         letters = {a["letter"] for a in agents}
         assert "e" in letters  # E-gent (evolution)
         assert "b" in letters  # B-gent (economics)

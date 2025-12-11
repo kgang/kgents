@@ -128,6 +128,8 @@ COMMAND_REGISTRY: dict[str, str] = {
     "ghost": "protocols.cli.handlers.ghost:cmd_ghost",
     # K-Terrarium (Infrastructure)
     "infra": "protocols.cli.handlers.infra:cmd_infra",
+    "exec": "protocols.cli.handlers.exec:cmd_exec",  # Q-gent execution
+    "dev": "protocols.cli.handlers.dev:cmd_dev",  # Live reload dev mode
     # MCP (Phase 4)
     "mcp": "protocols.cli.mcp.server:cmd_mcp",
     # TUI Dashboard (Phase 7)

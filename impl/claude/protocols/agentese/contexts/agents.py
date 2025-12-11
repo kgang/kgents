@@ -152,6 +152,12 @@ AGENT_REGISTRY: dict[str, dict[str, Any]] = {
         "status": "active",
         "description": "Test generation and adversarial probing",
     },
+    "q": {
+        "name": "Q-gent",
+        "theme": "Quartermaster (K8s disposable execution)",
+        "status": "active",
+        "description": "Disposable container execution via Kubernetes",
+    },
     "w": {
         "name": "W-gent",
         "theme": "Witness",

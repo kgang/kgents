@@ -74,7 +74,7 @@ class InterfaceTongue:
             return ExecutionResult(
                 success=False,
                 value=None,
-                errors=parse_result.errors,
+                error="; ".join(parse_result.errors) if parse_result.errors else None,
             )
 
         return execute_with_tongue(

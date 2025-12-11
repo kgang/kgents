@@ -97,8 +97,15 @@ class RedisAgent(Generic[S], DataAgent[S]):
         self.ttl = ttl
         self.max_history = max_history
         self.publish_channel = publish_channel
-        self._client = None
+        self._client: Any = None  # Type: redis.asyncio.Redis when connected
         self._connected = False
+
+    @property
+    def _require_client(self) -> Any:
+        """Get client, raising StorageError if not connected."""
+        if not self._connected or self._client is None:
+            raise StorageError("Not connected. Call connect() first.")
+        return self._client
 
     @property
     def _history_key(self) -> str:
@@ -144,10 +151,8 @@ class RedisAgent(Generic[S], DataAgent[S]):
             StateNotFoundError: If key doesn't exist
             StateCorruptionError: If stored data is invalid
         """
-        if not self._connected:
-            raise StorageError("Not connected. Call connect() first.")
-
-        data = await self._client.get(self.key)
+        client = self._require_client
+        data = await client.get(self.key)
 
         if data is None:
             raise StateNotFoundError(f"No state for key '{self.key}'")
@@ -170,30 +175,28 @@ class RedisAgent(Generic[S], DataAgent[S]):
             StateSerializationError: If state can't be serialized
             StorageError: If Redis write fails
         """
-        if not self._connected:
-            raise StorageError("Not connected. Call connect() first.")
-
+        client = self._require_client
         serialized = self._serialize(state)
         json_data = json.dumps(serialized)
 
         try:
             # Archive current state to history (if exists)
-            current = await self._client.get(self.key)
+            current = await client.get(self.key)
             if current is not None:
                 # Prepend to history list
-                await self._client.lpush(self._history_key, current)
+                await client.lpush(self._history_key, current)
                 # Trim to max_history
-                await self._client.ltrim(self._history_key, 0, self.max_history - 1)
+                await client.ltrim(self._history_key, 0, self.max_history - 1)
 
             # Set new state
             if self.ttl:
-                await self._client.setex(self.key, self.ttl, json_data)
+                await client.setex(self.key, self.ttl, json_data)
             else:
-                await self._client.set(self.key, json_data)
+                await client.set(self.key, json_data)
 
             # Publish notification if channel configured
             if self.publish_channel:
-                await self._client.publish(self.publish_channel, json_data)
+                await client.publish(self.publish_channel, json_data)
 
         except Exception as e:
             raise StorageError(f"Failed to save state to Redis: {e}")
@@ -208,11 +211,9 @@ class RedisAgent(Generic[S], DataAgent[S]):
         Returns:
             List of historical states
         """
-        if not self._connected:
-            raise StorageError("Not connected. Call connect() first.")
-
+        client = self._require_client
         end_idx = (limit - 1) if limit else (self.max_history - 1)
-        entries = await self._client.lrange(self._history_key, 0, end_idx)
+        entries = await client.lrange(self._history_key, 0, end_idx)
 
         states = []
         for entry in entries:
@@ -227,9 +228,9 @@ class RedisAgent(Generic[S], DataAgent[S]):
 
     async def exists(self) -> bool:
         """Check if state exists in Redis."""
-        if not self._connected:
-            raise StorageError("Not connected. Call connect() first.")
-        return await self._client.exists(self.key) > 0
+        client = self._require_client
+        result = await client.exists(self.key)
+        return bool(result > 0)
 
     async def delete(self) -> bool:
         """
@@ -238,11 +239,9 @@ class RedisAgent(Generic[S], DataAgent[S]):
         Returns:
             True if state existed and was deleted
         """
-        if not self._connected:
-            raise StorageError("Not connected. Call connect() first.")
-
-        result = await self._client.delete(self.key, self._history_key)
-        return result > 0
+        client = self._require_client
+        result = await client.delete(self.key, self._history_key)
+        return bool(result > 0)
 
     async def refresh_ttl(self) -> bool:
         """
@@ -254,8 +253,7 @@ class RedisAgent(Generic[S], DataAgent[S]):
         Raises:
             StateNotFoundError: If key doesn't exist
         """
-        if not self._connected:
-            raise StorageError("Not connected. Call connect() first.")
+        client = self._require_client
 
         if not self.ttl:
             return False
@@ -263,7 +261,7 @@ class RedisAgent(Generic[S], DataAgent[S]):
         if not await self.exists():
             raise StateNotFoundError(f"No state for key '{self.key}'")
 
-        await self._client.expire(self.key, self.ttl)
+        await client.expire(self.key, self.ttl)
         return True
 
     async def subscribe(self, callback: Callable[[S], Any]) -> None:
@@ -276,13 +274,12 @@ class RedisAgent(Generic[S], DataAgent[S]):
         Note:
             This is a blocking operation. Consider running in a task.
         """
-        if not self._connected:
-            raise StorageError("Not connected. Call connect() first.")
+        client = self._require_client
 
         if not self.publish_channel:
             raise StorageError("No publish_channel configured for this agent")
 
-        pubsub = self._client.pubsub()
+        pubsub = client.pubsub()
         await pubsub.subscribe(self.publish_channel)
 
         async for message in pubsub.listen():

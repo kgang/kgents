@@ -228,6 +228,24 @@ Evidence from codebase:
 **Metric**: Autopoiesis Score = (lines generated from spec) / (total lines)
 Target: >50% for mature implementations.
 
+### The Democratization Corollary
+
+> AI agents collapse the expertise barrier. What once required specialists is now within everyone's reach.
+
+K-Terrarium proves this: Kubernetes clusters—historically daunting, requiring weeks to learn—are now at everyone's fingertips. An AI agent that understands the spec can bootstrap a local cluster, deploy CRDs, write operators, and debug networking issues in a single session.
+
+This is not about AI replacing expertise. It's about AI **compressing the path to capability**:
+
+| Domain | Before AI Agents | After |
+|--------|------------------|-------|
+| Kubernetes | Weeks of study, YAML hell | `kgents infra init` |
+| Database ops | DBA knowledge required | Spec describes intent |
+| Distributed systems | Architecture expertise | Compositional primitives |
+
+**The Generative Principle amplified**: When specs are clear enough for AI to implement, they're clear enough for *anyone* to wield. The spec becomes not just compression of wisdom, but **democratization of capability**.
+
+*Zen Principle: The master's touch was always just compressed experience. Now we can share the compression.*
+
 ---
 
 ## The Meta-Principle: The Accursed Share
@@ -597,6 +615,46 @@ def infra_operation(self, verbose: bool = False):
 
 ---
 
+## Operational Principle: Graceful Degradation
+
+> When the full system is unavailable, degrade gracefully. Never fail completely.
+
+Systems should detect their environment and adapt. Q-gent exemplifies this: when Kubernetes is unavailable, it falls back to subprocess execution. The user's code still runs.
+
+- **Feature detection over configuration**: Don't require users to specify mode
+- **Transparent degradation**: Tell users when running in fallback mode
+- **Functional equivalence**: Fallback should produce same results (within limits)
+
+| System | Primary | Fallback |
+|--------|---------|----------|
+| Code execution | K8s Job | Subprocess |
+| Agent discovery | CoreDNS | In-process registry |
+| State persistence | D-gent sidecar | SQLite in-process |
+
+*Zen Principle: The stream finds a way around the boulder.*
+
+---
+
+## Operational Principle: Spec-Driven Infrastructure
+
+> YAML is generated, not written. The spec is the source of truth.
+
+Infrastructure manifests should be derived from specs, not hand-crafted. When `spec/agents/b-gent.md` changes, the CRD, Deployment, and Service regenerate automatically.
+
+```
+spec/agents/*.md  →  Generator  →  K8s Manifests  →  Running Pods
+```
+
+### Anti-Patterns
+
+- Hand-editing generated YAML (will be overwritten)
+- Deployment config that diverges from spec (spec rot)
+- Infrastructure that can't be regenerated from scratch
+
+*Zen Principle: Write the spec once, generate the infrastructure forever.*
+
+---
+
 ## Applying the Principles
 
 When designing or reviewing an agent, ask:
@@ -610,6 +668,8 @@ When designing or reviewing an agent, ask:
 | Composable | Can this work with other agents? (LLM agents: Does it return single outputs, or ask the prompt to combine?) |
 | Heterarchical | Can this agent both lead and follow? Does it avoid fixed hierarchy? |
 | Generative | Could this be regenerated from spec? Is the design compressed? |
-| **Transparent Infrastructure** | Does infrastructure communicate what's happening? |
+| Transparent Infrastructure | Does infrastructure communicate what's happening? |
+| Graceful Degradation | Does the system work (degraded) when dependencies are missing? |
+| Spec-Driven Infrastructure | Is the deployment derived from spec, or hand-written? |
 
 A "no" on any principle is a signal to reconsider.

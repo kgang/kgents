@@ -135,6 +135,7 @@ class TestNightWatch:
         watch = NightWatch(config)
         watch.trigger_now()
         old_next = watch.next_rem
+        assert old_next is not None  # trigger_now should set next_rem
         watch.mark_complete()
         assert watch.last_rem is not None
         # After completing, next_rem should be scheduled for tomorrow

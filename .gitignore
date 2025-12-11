@@ -1,6 +1,9 @@
 # Claude Code local settings
 .claude/
 
+# kgents local state
+.kgents/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

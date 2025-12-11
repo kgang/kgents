@@ -26,11 +26,17 @@ class BreathCycle:
     """
 
     period_seconds: float = 4.0
-    start_time: Optional[float] = None
+    _start_time: Optional[float] = None
 
-    def __post_init__(self):
-        if self.start_time is None:
-            self.start_time = time.time()
+    def __post_init__(self) -> None:
+        if self._start_time is None:
+            self._start_time = time.time()
+
+    @property
+    def start_time(self) -> float:
+        """Return the start time, guaranteed non-None after __post_init__."""
+        assert self._start_time is not None  # Always set in __post_init__
+        return self._start_time
 
     @property
     def position(self) -> float:
@@ -147,7 +153,7 @@ class BreathManager:
         """Get or create a breath cycle for a garden."""
         if garden_id not in self.cycles:
             start = self.global_start if self.synchronized else None
-            self.cycles[garden_id] = BreathCycle(start_time=start)
+            self.cycles[garden_id] = BreathCycle(_start_time=start)
         return self.cycles[garden_id]
 
     def render(self, garden_id: str, width: int = 12) -> str:

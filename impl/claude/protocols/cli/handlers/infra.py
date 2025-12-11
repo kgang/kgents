@@ -11,6 +11,14 @@ Usage:
     kgents infra start      # Resume cluster
     kgents infra destroy    # Remove cluster (--force to skip confirm)
     kgents infra deploy     # Deploy ping-agent POC (Phase 1)
+    kgents infra apply <agent>  # Deploy agent via CRD (Phase 3)
+    kgents infra crd        # Install Agent CRD definition
+    kgents infra cleanup    # Auto-cleanup failed deployments
+
+Apply Options:
+    kgents infra apply b-gent           # PLACEHOLDER mode (safe, no image needed)
+    kgents infra apply b-gent --dry-run # Preview manifests without deploying
+    kgents infra apply b-gent --full    # FULL mode (requires built image)
 
 Example:
     $ kgents infra init
@@ -26,6 +34,12 @@ Example:
     $ kgents infra stop
     Pausing cluster...
     Cluster paused.
+
+    $ kgents infra cleanup
+    Checking kgents-agents...
+    Cleaned up 2 deployment(s):
+      - b-gent
+      - q-gent
 """
 
 from __future__ import annotations
@@ -33,7 +47,10 @@ from __future__ import annotations
 import subprocess
 import sys
 from pathlib import Path
-from typing import Callable
+from typing import TYPE_CHECKING, Callable
+
+if TYPE_CHECKING:
+    from infra.k8s import DeployMode
 
 
 def cmd_infra(args: list[str]) -> int:
@@ -56,11 +73,16 @@ def cmd_infra(args: list[str]) -> int:
         "start": _cmd_start,
         "destroy": _cmd_destroy,
         "deploy": _cmd_deploy,
+        "apply": _cmd_apply,
+        "crd": _cmd_crd,
+        "cleanup": _cmd_cleanup,
     }
 
     if subcommand not in handlers:
         print(f"Unknown subcommand: {subcommand}")
-        print("Available: init, status, stop, start, destroy, deploy")
+        print(
+            "Available: init, status, stop, start, destroy, deploy, apply, crd, cleanup"
+        )
         return 1
 
     return handlers[subcommand](sub_args)
@@ -325,3 +347,327 @@ def _show_pods() -> None:
     if result.returncode == 0 and result.stdout.strip():
         print("\nPods in kgents-ephemeral:")
         print(result.stdout)
+
+
+def _cmd_crd(args: list[str]) -> int:
+    """Install the Agent CRD definition."""
+    from infra.k8s import ClusterStatus, KindCluster, create_operator
+
+    cluster = KindCluster()
+    if cluster.status() != ClusterStatus.RUNNING:
+        print("Cluster not running. Run 'kgents infra init' first.")
+        return 1
+
+    print("Installing Agent CRD...")
+
+    import asyncio
+
+    operator = create_operator()
+    success = asyncio.run(operator.apply_crd())
+
+    if success:
+        print("Agent CRD installed successfully.")
+        print("\nVerify with:")
+        print("  kubectl get crd agents.kgents.io")
+        return 0
+    else:
+        print("Failed to install Agent CRD.")
+        return 1
+
+
+def _cmd_apply(args: list[str]) -> int:
+    """
+    Deploy an agent via CRD.
+
+    Usage:
+        kgents infra apply b-gent              # Deploy B-gent (placeholder mode)
+        kgents infra apply b-gent --dry-run    # Preview without deploying
+        kgents infra apply b-gent --full       # Deploy with real agent code
+        kgents infra apply b-gent.yaml         # Deploy from file
+        kgents infra apply --all               # Deploy all from spec/agents/
+    """
+    import asyncio
+
+    from infra.k8s import (
+        ClusterStatus,
+        DeployMode,
+        KindCluster,
+        create_operator,
+    )
+
+    # Parse flags
+    dry_run = "--dry-run" in args
+    full_mode = "--full" in args
+    remaining_args = [a for a in args if not a.startswith("--")]
+
+    cluster = KindCluster()
+    if cluster.status() != ClusterStatus.RUNNING:
+        print("Cluster not running. Run 'kgents infra init' first.")
+        return 1
+
+    if not remaining_args:
+        print("Usage: kgents infra apply <agent|file|--all> [--dry-run] [--full]")
+        print()
+        print("Options:")
+        print("  --dry-run    Preview manifests without deploying")
+        print("  --full       Deploy with real agent code (requires built image)")
+        print("               Default is PLACEHOLDER mode (sleep container)")
+        print()
+        print("Examples:")
+        print("  kgents infra apply b-gent           # Placeholder mode (safe)")
+        print("  kgents infra apply b-gent --dry-run # Preview only")
+        print("  kgents infra apply b-gent --full    # Real agent (needs image)")
+        print("  kgents infra apply my-agent.yaml")
+        print("  kgents infra apply --all")
+        return 1
+
+    target = remaining_args[0]
+
+    # Determine deploy mode
+    if dry_run:
+        deploy_mode = DeployMode.DRY_RUN
+    elif full_mode:
+        deploy_mode = DeployMode.FULL
+    else:
+        deploy_mode = DeployMode.PLACEHOLDER
+
+    # Ensure CRD is installed first
+    operator = create_operator(on_progress=lambda msg: print(f"  {msg}"))
+    asyncio.run(operator.apply_crd())
+
+    if target == "--all":
+        # Generate and apply all agents from spec/
+        return _apply_all_agents(deploy_mode)
+    elif target.endswith(".yaml") or target.endswith(".yml"):
+        # Apply from file
+        return _apply_from_file(Path(target), deploy_mode)
+    else:
+        # Apply single agent by name
+        return _apply_agent_by_name(target, deploy_mode)
+
+
+def _apply_all_agents(deploy_mode: "DeployMode") -> int:
+    """Generate CRDs from specs and apply all."""
+    from infra.k8s import DeployMode, SpecToCRDGenerator
+
+    print("Generating CRDs from spec/agents/...")
+
+    generator = SpecToCRDGenerator()
+    result = generator.generate_all()
+
+    if not result.success:
+        print(f"Generation failed: {result.message}")
+        for error in result.errors:
+            print(f"  {error}")
+        return 1
+
+    if not result.generated:
+        print("No agent specs found in spec/agents/")
+        return 0
+
+    print(f"Generated {len(result.generated)} CRDs")
+
+    # Apply each generated CRD
+    for crd_path in result.generated:
+        print(f"\nApplying {crd_path.name}...")
+        apply_result = subprocess.run(
+            ["kubectl", "apply", "-f", str(crd_path)],
+            capture_output=True,
+            text=True,
+        )
+        if apply_result.returncode != 0:
+            print(f"  Failed: {apply_result.stderr}")
+        else:
+            print(f"  Applied: {apply_result.stdout.strip()}")
+
+    return 0
+
+
+def _apply_from_file(path: Path, deploy_mode: "DeployMode") -> int:
+    """Apply an Agent CRD from a YAML file."""
+    import asyncio
+
+    if not path.exists():
+        print(f"File not found: {path}")
+        return 1
+
+    print(f"Applying {path}...")
+    print(f"  Mode: {deploy_mode.value}")
+
+    from infra.k8s import apply_agent_from_file
+
+    # Note: apply_agent_from_file would need to be updated to accept deploy_mode
+    result = asyncio.run(apply_agent_from_file(path))
+
+    if result.success:
+        print(f"Success: {result.message}")
+        if result.created:
+            print(f"  Created: {', '.join(result.created)}")
+        if result.updated:
+            print(f"  Updated: {', '.join(result.updated)}")
+        return 0
+    else:
+        print(f"Failed: {result.message}")
+        return 1
+
+
+def _apply_agent_by_name(name: str, deploy_mode: "DeployMode") -> int:
+    """Apply an agent by genus name (e.g., 'b-gent' or 'B')."""
+    import asyncio
+
+    from infra.k8s import AgentSpec, DeployMode, create_operator
+
+    # Normalize name
+    if name.endswith("-gent"):
+        genus = name[:-5].upper()
+    elif name.endswith("gent"):
+        genus = name[:-4].upper()
+    else:
+        genus = name.upper()
+
+    # Handle special case
+    if genus.lower() == "psi":
+        genus = "Psi"
+
+    print(f"Deploying {genus}-gent...")
+    print(f"  Mode: {deploy_mode.value}")
+
+    # Create minimal spec with deploy mode
+    spec = AgentSpec(
+        name=f"{genus.lower()}-gent",
+        namespace="kgents-agents",
+        genus=genus,
+        deploy_mode=deploy_mode,
+    )
+
+    # Check for spec file with more details
+    spec_file = Path(f"spec/agents/{genus.lower()}-gent.md")
+    if spec_file.exists():
+        from infra.k8s import SpecParser
+
+        parser = SpecParser()
+        parsed = parser.parse_file(spec_file)
+        if parsed:
+            spec = AgentSpec(
+                name=f"{parsed.genus.lower()}-gent",
+                namespace="kgents-agents",
+                genus=parsed.genus,
+                image=parsed.image,
+                replicas=parsed.replicas,
+                cpu=parsed.cpu,
+                memory=parsed.memory,
+                sidecar_enabled=parsed.sidecar_enabled,
+                entrypoint=parsed.entrypoint,
+                config=parsed.config,
+                allow_egress=parsed.allow_egress,
+                allowed_peers=parsed.allowed_peers,
+                deploy_mode=deploy_mode,
+            )
+            print(f"  Loaded config from {spec_file}")
+
+    # Pre-deploy validation with warnings
+    validation = spec.validate(check_image=True)
+    if validation.warnings:
+        print("\nWarnings:")
+        for warning in validation.warnings:
+            print(f"  ⚠ {warning}")
+
+    if not validation.valid:
+        print("\nPre-deploy validation failed:")
+        for error in validation.errors:
+            print(f"  ✗ {error}")
+        print("\nHint: Use --dry-run to preview without deploying")
+        print("      Use PLACEHOLDER mode (default) to test infra without real images")
+        return 1
+
+    operator = create_operator(on_progress=lambda msg: print(f"  {msg}"))
+    result = asyncio.run(operator.reconcile_agent(spec))
+
+    if result.success:
+        print(f"\nSuccess: {result.message}")
+        if result.created:
+            print(f"  Created: {', '.join(result.created)}")
+        if result.updated:
+            print(f"  Updated: {', '.join(result.updated)}")
+
+        if deploy_mode == DeployMode.PLACEHOLDER:
+            print("\nNote: Deployed in PLACEHOLDER mode (sleep container)")
+            print("  Use --full to deploy with real agent code")
+
+        print("\nCheck status:")
+        print(f"  kubectl get pods -n kgents-agents -l kgents.io/genus={genus}")
+        return 0
+    else:
+        print(f"\nFailed: {result.message}")
+        # Suggest cleanup if deployment might be stuck
+        print("\nIf pods are stuck in CrashLoopBackOff, run:")
+        print("  kgents infra cleanup")
+        return 1
+
+
+def _cmd_cleanup(args: list[str]) -> int:
+    """
+    Cleanup failed deployments (CrashLoopBackOff, ImagePullBackOff).
+
+    Usage:
+        kgents infra cleanup              # Cleanup kgents-agents namespace
+        kgents infra cleanup --all        # Cleanup all kgents namespaces
+        kgents infra cleanup --dry-run    # Show what would be cleaned
+    """
+    import asyncio
+
+    from infra.k8s import ClusterStatus, KindCluster, create_operator
+
+    dry_run = "--dry-run" in args
+    all_ns = "--all" in args
+
+    cluster = KindCluster()
+    if cluster.status() != ClusterStatus.RUNNING:
+        print("Cluster not running.")
+        return 1
+
+    namespaces = ["kgents-agents"]
+    if all_ns:
+        namespaces.append("kgents-ephemeral")
+
+    print("K-Terrarium Cleanup")
+    print("=" * 40)
+
+    if dry_run:
+        print("(dry-run mode - no changes will be made)\n")
+
+    total_cleaned: list[str] = []
+
+    for ns in namespaces:
+        print(f"\nChecking {ns}...")
+        operator = create_operator(
+            namespace=ns, on_progress=lambda msg: print(f"  {msg}")
+        )
+
+        if dry_run:
+            # Just report, don't delete
+            import subprocess
+
+            result = subprocess.run(
+                ["kubectl", "get", "pods", "-n", ns, "-o", "wide"],
+                capture_output=True,
+                text=True,
+            )
+            if (
+                "CrashLoopBackOff" in result.stdout
+                or "ImagePullBackOff" in result.stdout
+            ):
+                print("  Would clean up pods in error state")
+        else:
+            cleaned = asyncio.run(operator.cleanup_failed_deployments())
+            total_cleaned.extend(cleaned)
+
+    if not dry_run:
+        if total_cleaned:
+            print(f"\nCleaned up {len(total_cleaned)} deployment(s):")
+            for name in total_cleaned:
+                print(f"  - {name}")
+        else:
+            print("\nNo failed deployments found.")
+
+    return 0

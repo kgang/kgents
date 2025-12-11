@@ -5,6 +5,7 @@ description = "kgents monorepo - tasteful, curated, ethical agents"
 requires-python = ">=3.11"
 dependencies = [
     "kgents-runtime",
+    "pyyaml",
 ]
 
 [tool.uv]
@@ -15,6 +16,7 @@ dev-dependencies = [
     "pytest-asyncio>=0.21",
     "ruff>=0.1.0",
     "mypy>=1.19.0",
+    "types-pyyaml",
 ]
 
 [tool.uv.workspace]
@@ -48,3 +50,4 @@ python_version = "3.11"
 warn_return_any = true
 warn_unused_ignores = true
 ignore_missing_imports = true  # Until all deps have stubs
+# Run mypy from impl/claude: cd impl/claude && uv run mypy .

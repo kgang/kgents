@@ -1,0 +1,54 @@
+# K-Terrarium Namespaces
+# kgents-agents: Persistent agent workloads
+# kgents-ephemeral: Disposable jobs (Q-gent)
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kgents-agents
+  labels:
+    app.kubernetes.io/part-of: kgents
+    kgents.io/tier: agents
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kgents-ephemeral
+  labels:
+    app.kubernetes.io/part-of: kgents
+    kgents.io/tier: ephemeral
+---
+# Default resource limits for kgents-agents namespace
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: default-limits
+  namespace: kgents-agents
+spec:
+  limits:
+    - default:
+        cpu: "100m"
+        memory: "256Mi"
+      defaultRequest:
+        cpu: "50m"
+        memory: "128Mi"
+      type: Container
+---
+# Stricter limits for ephemeral jobs
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: ephemeral-limits
+  namespace: kgents-ephemeral
+spec:
+  limits:
+    - default:
+        cpu: "100m"
+        memory: "128Mi"
+      defaultRequest:
+        cpu: "25m"
+        memory: "64Mi"
+      max:
+        cpu: "500m"
+        memory: "512Mi"
+      type: Container
