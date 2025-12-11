@@ -2,7 +2,324 @@
 
 **Status**: All Tests Passing | ~6,122 tests | Branch: `main`
 
-## Recent: Instance DB Phase 6 - Observability + Dashboard (✅ COMPLETE)
+## Recent: AGENTESE Deep Integration + Observability Dashboard
+
+**Status**: All Tests Passing ✅ | **Branch**: `main` | **Tests**: ~6,122+
+
+**Recent Work**:
+- **AGENTESE DEEPLY INTEGRATED** ← 617 tests total (was 559)
+  - **NEW**: Agent Discovery (`world.agent.*` namespace) - 34 tests
+    - `world.agent.manifest` → List all 20 agents
+    - `world.agent.egent.manifest` → E-gent capabilities
+    - `world.agent.search` → Search by theme/description
+  - **NEW**: Integration tests demonstrating cross-agent composition - 24 tests
+  - **NEW**: CLAUDE.md updated with AGENTESE as core protocol
+  - **NEW**: spec/principles.md updated with AGENTESE meta-principle
+  - Phase 8: Natural Language Adapter (`adapter.py`) - 71 tests
+  - Phase 7: WiredLogos production resolver - 44 tests
+  - Phase 6: Integration layer - 81 tests
+  - Phase 5: Composition & category laws - 80 tests
+  - Phase 4: JIT compilation - 39 tests
+  - Phase 3: Polymorphic affordances - 66 tests
+  - Phases 1-2: Foundation + Five Contexts - 178 tests
+- Instance DB Phase 6: O-gent/W-gent/I-gent Observability - 117 tests
+- AGENTESE Protocol SPEC COMPLETE (spec/protocols/agentese.md)
+- Integration Tests Phase 2 COMPLETE ← 74 tests passing
+- CLI Auto-Bootstrap NOW OPERATIONAL
+- E-gent v2 COMPLETE (353 tests)
+- M-gent Holographic Cartography COMPLETE (114 tests)
+- Cortex Assurance v2.0 COMPLETE (73 tests)
+- Ψ-gent v3.0 (104 tests)
+
+---
+
+## AGENTESE: The Verb-First Ontology (v2.0)
+
+**Spec**: `spec/protocols/agentese.md` (v2.0)
+**Impl**: `impl/claude/protocols/agentese/`
+**Plan**: `docs/agentese-implementation-plan.md`
+**Status**: DEEPLY INTEGRATED - 617 tests (Phase 9: Integration)
+
+### The Core Insight
+
+> *"The noun is a lie. There is only the rate of change."*
+
+Traditional systems: `world.house` returns a JSON object.
+AGENTESE: `world.house` returns a **handle**—a morphism that maps Observer → Interaction.
+
+**Key Refinements in v2.0**:
+- Renamed `chaos.*` → `void.*` (better Accursed Share alignment)
+- Handles are **functors** (strict category theory)
+- **No view from nowhere**: invoke() requires observer (hard error)
+- **Minimal Output Principle**: No array returns (breaks composition)
+- **Sympathetic errors**: All errors explain why + suggest fix
+
+### The Five Strict Contexts
+
+```
+world.*    - The External (Heterarchical)
+self.*     - The Internal (Ethical)
+concept.*  - The Abstract (Generative)
+void.*     - The Accursed Share (Meta-Principle)
+time.*     - The Temporal (Heterarchical)
+```
+
+**No sixth context allowed without spec change.**
+
+### Key Aspects
+
+| Aspect | Category | Meaning |
+|--------|----------|---------|
+| `manifest` | Perception | Collapse to observer's view |
+| `witness` | Perception | Show history (N-gent) |
+| `refine` | Generation | Dialectical challenge |
+| `sip` | Entropy | Draw from Accursed Share |
+| `tithe` | Entropy | Pay for order (gratitude noop) |
+| `lens` | Composition | Get composable agent |
+| `define` | Generation | Autopoiesis (create new) |
+
+### The Logos Resolver
+
+```
+H(Context) ──Logos──▶ Interaction
+
+Three-layer resolution:
+1. L-gent registry (known entities)
+2. spec/ directory (J-gent JIT compilation)
+3. PathNotFoundError (sympathetic)
+```
+
+### Category Laws (REQUIRED)
+
+```python
+# Identity
+Id >> path == path == path >> Id
+
+# Associativity
+(a >> b) >> c == a >> (b >> c)
+```
+
+### Implementation Phases
+
+| Phase | Focus | Status | Tests |
+|-------|-------|--------|-------|
+| 1 | Foundation | ✅ COMPLETE | 113 |
+| 2 | Five Contexts | ✅ COMPLETE | 178 |
+| 3 | Affordances | ✅ COMPLETE | 244 |
+| 4 | JIT | ✅ COMPLETE | 283 |
+| 5 | Composition | ✅ COMPLETE | 363 |
+| 6 | Integration | ✅ COMPLETE | 444 |
+| 7 | Wire to Logos | ✅ COMPLETE | 488 |
+| 8 | Adapter | ✅ COMPLETE | 559 |
+| 9 | Deep Integration | ✅ COMPLETE | 617 |
+
+### Phase 9: Deep Integration (NEW)
+
+**Files Created**:
+```
+impl/claude/protocols/agentese/contexts/
+└── agents.py           # world.agent.* namespace (450 lines)
+
+impl/claude/protocols/agentese/_tests/
+├── test_agents.py              # 34 tests - agent discovery
+└── test_agentese_integration.py # 24 tests - cross-context workflows
+```
+
+**Key Features**:
+- `AgentContextResolver`: Discovers all 20 agents via AGENTESE
+- `AgentNode`: Manifest agent capabilities per observer archetype
+- `AgentListNode`: List, search, and compose agents
+- Cross-context workflow tests (world → self → void)
+- Documentation examples verified as tests
+
+### Phase 1 Files (COMPLETE)
+
+```
+impl/claude/protocols/agentese/
+├── __init__.py       # Public API exports
+├── logos.py          # Logos resolver functor (113 lines)
+├── node.py           # LogosNode protocol + types (409 lines)
+├── exceptions.py     # Sympathetic errors (222 lines)
+└── contexts/
+    └── __init__.py   # VALID_CONTEXTS registry
+```
+
+### Phase 1 Test Files
+
+```
+impl/claude/protocols/agentese/_tests/
+├── conftest.py           # MockUmwelt, MockNode, fixtures
+├── test_exceptions.py    # 39 tests - sympathetic error patterns
+├── test_node.py          # 31 tests - protocol compliance, JIT
+└── test_logos.py         # 43 tests - resolver, caching, composition
+```
+
+### Phase 2 Files (COMPLETE)
+
+```
+impl/claude/protocols/agentese/contexts/
+├── __init__.py     # Exports + create_context_resolvers()
+├── world.py        # WorldNode, WorldContextResolver (287 lines)
+├── self_.py        # MemoryNode, CapabilitiesNode, StateNode, IdentityNode (268 lines)
+├── concept.py      # ConceptNode, ConceptContextResolver (dialectic, refine) (426 lines)
+├── void.py         # EntropyPool, EntropyNode, SerendipityNode, GratitudeNode (422 lines)
+└── time.py         # TraceNode, PastNode, FutureNode, ScheduleNode (424 lines)
+```
+
+### Phase 2 Test File
+
+```
+impl/claude/protocols/agentese/_tests/
+└── test_contexts.py   # 65 tests - all five contexts
+```
+
+### Phase 3 Files (COMPLETE)
+
+```
+impl/claude/protocols/agentese/
+├── affordances.py    # AffordanceRegistry, UmweltAdapter, ArchetypeDNA (560 lines)
+└── renderings.py     # 7 new rendering types, StandardRenderingFactory (320 lines)
+```
+
+**Key Features**:
+- `AffordanceRegistry`: Central registry for archetype → affordances mappings
+- `UmweltAdapter`: Extract affordance-relevant info from Umwelt
+- `ArchetypeDNA`: DNA type for archetype-based agent configuration
+- 7 new rendering types: Scientific, Developer, Admin, Philosopher, Memory, Entropy, Temporal
+- `StandardRenderingFactory`: Polymorphic rendering creation
+
+**Archetypes Defined**: architect, developer, scientist, admin, poet, philosopher, economist, inhabitant, default
+
+### Phase 3 Test File
+
+```
+impl/claude/protocols/agentese/_tests/
+└── test_affordances.py   # 66 tests - polymorphic affordances
+```
+
+### Phase 4 Files (COMPLETE)
+
+```
+impl/claude/protocols/agentese/
+└── jit.py            # SpecParser, SpecCompiler, JITCompiler, JITPromoter (600 lines)
+
+spec/world/
+├── README.md         # How JIT compilation works
+└── library.md        # Reference spec for world.library entity
+```
+
+**Key Features**:
+- `SpecParser`: Parse YAML front matter + markdown specs
+- `SpecCompiler`: Generate Python source from ParsedSpec
+- `JITCompiler`: Full pipeline (parse → compile → validate → JITLogosNode)
+- `JITPromoter`: Graduate nodes to impl/ when usage threshold met
+- `define_concept()`: Create new entities at runtime (autopoiesis)
+- `promote_concept()`: Graduate JIT nodes to permanent implementations
+
+### Phase 4 Test File
+
+```
+impl/claude/protocols/agentese/_tests/
+└── test_jit.py       # 39 tests - spec parsing, compilation, promotion
+```
+
+### Phase 5 Files (COMPLETE)
+
+```
+impl/claude/protocols/agentese/
+└── laws.py           # Category law verification, composition (450 lines)
+```
+
+**Key Features**:
+- `Identity` / `Id`: Identity morphism (Id >> f == f == f >> Id)
+- `Composed`: Composition of morphisms preserving associativity
+- `CategoryLawVerifier`: Runtime law verification (identity, associativity)
+- `is_single_logical_unit()`: Minimal Output Principle check
+- `enforce_minimal_output()`: Raises `CompositionViolationError` on arrays
+- `ComposedPath`: Enhanced with output enforcement, `lift_all()`, `without_enforcement()`
+- `IdentityPath`: Identity for AGENTESE path composition
+- `SimpleMorphism` + `@morphism` decorator: Test helpers
+
+### Phase 5 Test File
+
+```
+impl/claude/protocols/agentese/_tests/
+└── test_laws.py      # 80 tests - category laws, minimal output, composition
+```
+
+### Phase 6 Files (COMPLETE)
+
+```
+impl/claude/protocols/agentese/
+└── integration.py    # Integration layer (600 lines)
+```
+
+**Key Features**:
+- `UmweltIntegration`: Extract AgentMeta from Umwelt DNA, affordance checking
+- `MembraneAgenteseBridge`: CLI command → AGENTESE path mapping
+- `LgentIntegration`: Registry lookup, node registration, usage tracking
+- `GgentIntegration`: BNF grammar validation, path parsing
+- `AgentesIntegrations`: Unified container with graceful degradation
+
+**Membrane Command Mappings**:
+- `observe` → `world.project.manifest`
+- `sense` → `world.project.sense`
+- `trace` → `time.trace.witness`
+- `dream` → `self.memory.consolidate`
+
+### Phase 6 Test File
+
+```
+impl/claude/protocols/agentese/_tests/
+└── test_integration.py   # 81 tests - all four integrations
+```
+
+### Phase 7 Files (COMPLETE)
+
+```
+impl/claude/protocols/agentese/
+└── wiring.py         # WiredLogos + factory functions (400 lines)
+```
+
+**Key Features**:
+- `WiredLogos`: Production resolver with all integrations wired
+- G-gent path validation before resolve/invoke
+- L-gent usage tracking after invocations
+- UmweltIntegration for observer meta extraction
+- Membrane bridge for CLI command translation
+- Factory functions: `create_wired_logos()`, `wire_existing_logos()`, `create_minimal_wired_logos()`
+
+### Phase 7 Test File
+
+```
+impl/claude/protocols/agentese/_tests/
+└── test_wiring.py    # 44 tests - WiredLogos, integration wiring
+```
+
+### Phase 8 Files (COMPLETE)
+
+```
+impl/claude/protocols/agentese/
+└── adapter.py         # Natural language adapter (500 lines)
+```
+
+**Key Features**:
+- `TranslationResult`: Immutable result with path, confidence, source
+- `TranslationError`: Sympathetic error with suggestions
+- `PatternTranslator`: Fast path - 35+ rule-based patterns
+- `LLMTranslator`: Slow path - few-shot prompting fallback
+- `AgentesAdapter`: Unified orchestrator
+
+### Phase 8 Test File
+
+```
+impl/claude/protocols/agentese/_tests/
+└── test_adapter.py    # 71 tests - pattern translation, LLM, adapter
+```
+
+---
+
+## Instance DB Phase 6: Observability + Dashboard (✅ COMPLETE)
 
 Implemented Phase 6 of the Bicameral Engine: O-gent/W-gent/I-gent integration for real-time cortex health monitoring.
 
@@ -54,6 +371,160 @@ print(dashboard.render_compact())
 - `cortex_synapse_surprise_avg` - Average surprise across signals
 - `cortex_hippocampus_size` - Short-term memory utilization
 - `cortex_dream_cycles_total` - REM cycles completed
+
+---
+
+## M-gent Holographic Cartography (COMPLETE)
+
+**Location**: `impl/claude/agents/m/`
+**Plan**: `docs/m-gent-cartography-enhancement-plan.md`
+**Tests**: 114 passed
+
+### The Core Question
+
+> "What is the most perfect context injection that can be given to an agent for any given turn?"
+
+**Answer**: Not a search result—a *map* that shows position, adjacency, and horizon.
+
+### Architecture
+
+```
+L-gent (terrain)     N-gent (traces)     B-gent (budget)
+      ↓                    ↓                    ↓
+      └────────────────────┴────────────────────┘
+                           ↓
+                   CartographerAgent
+                           ↓
+                        HoloMap
+                           ↓
+              ┌────────────┴────────────┐
+              ↓                         ↓
+       PathfinderAgent          ContextInjector
+              ↓                         ↓
+       NavigationPlan            OptimalContext
+```
+
+### Files
+
+| File | Purpose | Tests |
+|------|---------|-------|
+| `cartography.py` | Core types (HoloMap, Attractor, WeightedEdge, Horizon) | 47 |
+| `cartographer.py` | CartographerAgent + DesireLineComputer | 42 |
+| `pathfinder.py` | PathfinderAgent + PathAnalysis | 11 |
+| `context_injector.py` | ContextInjector + foveation | 14 |
+
+### Key Concepts
+
+| Concept | Definition | Source |
+|---------|------------|--------|
+| **Landmark (Attractor)** | Dense cluster of memories | L-gent clustering |
+| **Desire Line** | Historical transition probability | N-gent traces |
+| **Void** | Unexplored region ("Here be dragons") | Density analysis |
+| **Horizon** | Progressive disclosure boundary | B-gent budget |
+| **Foveation** | Sharp center, blurry edges | Human vision model |
+
+### Integration Points
+
+- **L-gent**: Provides embedding space via `VectorSearchable` protocol
+- **N-gent**: Provides traces via `TraceQueryable` protocol
+- **B-gent**: Constrains resolution via token budget
+
+---
+
+## Unified Cortex: Infrastructure Layer v2.0
+
+**Plan**: `docs/instance-db-implementation-plan.md`
+**Location**: `protocols/cli/instance_db/` (Phase 1 OPERATIONAL)
+
+### Auto-Bootstrap (Default Behavior)
+
+The CLI now **auto-bootstraps** the cortex on every command. No manual setup needed!
+
+```bash
+# Just run any command - DB is created automatically
+kgents pulse     # Creates ~/.local/share/kgents/membrane.db on first run
+kgents check .   # Instance registered, telemetry logged
+```
+
+**What happens on startup:**
+1. Detects XDG paths (`~/.local/share/kgents/`, `~/.config/kgents/`)
+2. Creates SQLite DB if config exists (or uses defaults)
+3. Runs migrations (creates tables)
+4. Registers instance (hostname, PID, project path)
+5. Logs `instance.started` telemetry event
+
+**What happens on shutdown:**
+1. Marks instance as `terminated`
+2. Logs `instance.stopped` telemetry event
+3. Closes all DB connections
+
+**Flags:**
+- `--no-bootstrap`: Skip auto-bootstrap (run in degraded mode)
+- `-v/--verbose`: Show bootstrap/shutdown details
+
+**Messaging Hierarchy** (see `spec/principles.md` - Transparent Infrastructure):
+- First run: Green message showing where data lives
+- Degraded mode: Yellow warning
+- Verbose mode: Gray details (instance ID, mode)
+- Normal: Silent success
+
+### Wipe Command
+
+Remove databases with confirmation:
+
+```bash
+kgents wipe local          # Remove project DB (.kgents/) - requires confirmation
+kgents wipe global         # Remove global DB (~/.local/share/kgents/) - requires confirmation
+kgents wipe all            # Remove both - requires confirmation
+
+kgents wipe global --force # Skip confirmation (use with caution!)
+kgents wipe all --dry-run  # Show what would be deleted without deleting
+```
+
+### Manual Setup (Optional)
+
+For custom configuration:
+
+```bash
+# Create infrastructure.yaml to customize providers
+cat > ~/.config/kgents/infrastructure.yaml << 'EOF'
+profile: local-canonical
+providers:
+  relational: { type: sqlite, connection: "${XDG_DATA_HOME}/kgents/membrane.db" }
+  vector: { type: numpy, path: "${XDG_DATA_HOME}/kgents/vectors.json", dimensions: 384 }
+  blob: { type: filesystem, path: "${XDG_DATA_HOME}/kgents/blobs" }
+  telemetry: { type: sqlite, connection: "${XDG_DATA_HOME}/kgents/telemetry.db" }
+EOF
+```
+
+### Phase Status
+
+| Phase | Description | Status | Tests |
+|-------|-------------|--------|-------|
+| 1 | Core Infrastructure + Lifecycle | ✅ OPERATIONAL | 85 |
+| 2 | Synapse + Active Inference | ✅ COMPLETE | 46 |
+| 3 | D-gent Backend Adapters | ✅ COMPLETE | 69 |
+| 4 | Composting + Lethe Protocol | ✅ COMPLETE | 73 |
+| 5 | Dreaming + Maintenance | ✅ COMPLETE | 74 |
+| 6 | Observability + Dashboard | ✅ COMPLETE | 117 |
+
+### File Structure (`protocols/cli/instance_db/`)
+
+| File | Purpose |
+|------|---------|
+| `interfaces.py` | IRelationalStore, IVectorStore, IBlobStore, ITelemetryStore |
+| `storage.py` | XDGPaths, StorageProvider, InfrastructureConfig |
+| `lifecycle.py` | LifecycleManager, OperationMode, quick_bootstrap |
+| `providers/sqlite.py` | SQLite + Numpy + Filesystem implementations |
+
+### Graceful Degradation
+
+| Mode | Condition | Storage |
+|------|-----------|---------|
+| **FULL** | Global + Project DB exist | Both |
+| **GLOBAL_ONLY** | `~/.local/share/kgents/membrane.db` exists | Global |
+| **LOCAL_ONLY** | `.kgents/cortex.db` exists | Project |
+| **DB_LESS** | No DB, no config | In-memory |
 
 ---
 

@@ -37,7 +37,6 @@ from enum import Enum
 from typing import Any, Protocol, runtime_checkable
 
 
-
 class CompostingError(Exception):
     """Error during composting operation."""
 
