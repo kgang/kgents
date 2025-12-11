@@ -90,6 +90,24 @@ Agents form a category. These laws are not aspirational—they are **verified**:
 
 **Implication**: Any agent that breaks these laws is NOT a valid agent.
 
+### AGENTESE: Composition at the Path Level
+
+AGENTESE extends composition from Python code to semantic paths:
+
+```python
+# Traditional composition (Python)
+pipeline = AgentA >> AgentB >> AgentC
+
+# AGENTESE composition (paths)
+pipeline = (
+    logos.lift("world.document.manifest")
+    >> logos.lift("concept.summary.refine")
+    >> logos.lift("self.memory.engram")
+)
+```
+
+AGENTESE paths are composable morphisms. See `spec/protocols/agentese.md`.
+
 ### Orthogonality Principle
 
 Optional features MUST NOT break composition:
@@ -262,6 +280,70 @@ We do not resent the slop. We thank it for providing the raw material from which
 - Shame about waste (waste is sacred expenditure)
 
 *Zen Principle: The river that flows only downhill never discovers the mountain spring.*
+
+---
+
+## The Meta-Principle: AGENTESE (No View From Nowhere)
+
+> To observe is to act. There is no neutral reading, no view from nowhere.
+
+AGENTESE is the verb-first ontology that operationalizes this meta-principle. It transforms agent-world interaction from noun-based queries to observer-dependent invocations.
+
+### The Core Insight
+
+Traditional systems: `world.house` returns a JSON object.
+AGENTESE: `world.house` returns a **handle**—a morphism that maps Observer → Interaction.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         THE AGENTESE TRANSFORMATION                          │
+│                                                                              │
+│   Traditional:  get(entity) ────────────────────────────────▶ Static Data   │
+│                                                                              │
+│   AGENTESE:     handle(observer) ──Logos──▶ Interaction                     │
+│                     │                            │                           │
+│                     ▼                            ▼                           │
+│              Who is grasping?            What they perceive                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### The Five Contexts
+
+AGENTESE defines exactly five contexts (no kitchen-sink anti-pattern):
+
+| Context | Ontology | Principle |
+|---------|----------|-----------|
+| `world.*` | The External (entities, tools) | Heterarchical |
+| `self.*` | The Internal (memory, state) | Ethical |
+| `concept.*` | The Abstract (platonics) | Generative |
+| `void.*` | The Accursed Share (entropy) | Meta-Principle |
+| `time.*` | The Temporal (traces) | Heterarchical |
+
+### The Polymorphic Principle
+
+The same path yields different affordances to different observers:
+
+```python
+# Same path, different observers, different perceptions
+world.house.manifest  # Architect sees: Blueprint
+world.house.manifest  # Poet sees: Metaphor
+world.house.manifest  # Economist sees: Appraisal
+```
+
+### Connection to Other Principles
+
+| Principle | AGENTESE Manifestation |
+|-----------|------------------------|
+| Tasteful | Five contexts only—no sprawl |
+| Curated | Affordances are permission-based |
+| Ethical | Observer determines what is revealed |
+| Joy-Inducing | The projection IS the aesthetic |
+| Composable | Paths compose via >> operator |
+| Heterarchical | No fixed observer hierarchy |
+| Generative | JIT from spec to implementation |
+
+**Full Specification**: `spec/protocols/agentese.md`
+**Implementation**: `impl/claude/protocols/agentese/` (559 tests)
 
 ---
 
