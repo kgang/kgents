@@ -10,8 +10,8 @@ The breath is purely aesthetic—it carries no data. Its purpose is contemplativ
 reminding the operator that they are tending a garden, not debugging a machine.
 """
 
-import time
 import math
+import time
 from dataclasses import dataclass
 from typing import Optional
 

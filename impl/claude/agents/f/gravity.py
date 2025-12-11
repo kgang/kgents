@@ -13,6 +13,7 @@ A fact database asks "Is the sky blue?" Gravity says "You cannot say the sky is 
 """
 
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Callable, Generic, TypeVar

@@ -27,10 +27,9 @@ from typing import Protocol
 from .types import (
     MutationVector,
     Phage,
-    PhageStatus,
     PhageLineage,
+    PhageStatus,
 )
-
 
 # =============================================================================
 # Schema Types (from L-gent integration)

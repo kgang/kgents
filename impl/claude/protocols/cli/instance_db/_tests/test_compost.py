@@ -18,12 +18,11 @@ from ..compost import (
     CompostingStrategy,
     CountMinSketch,
     HyperLogLog,
-    TDigestSimplified,
     NutrientBlock,
+    TDigestSimplified,
     create_compost_bin,
     create_nutrient_block,
 )
-
 
 # === Test Fixtures ===
 

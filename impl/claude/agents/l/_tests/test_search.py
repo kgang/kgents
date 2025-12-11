@@ -2,10 +2,10 @@
 Tests for L-gent search functionality.
 """
 
-import pytest
-import tempfile
 import os
+import tempfile
 
+import pytest
 from agents.l.catalog import CatalogEntry, EntityType, Registry
 from agents.l.search import Search, SearchStrategy
 

@@ -1,9 +1,9 @@
 """Storage providers for Instance DB."""
 
 from .sqlite import (
-    SQLiteRelationalStore,
-    NumpyVectorStore,
     FilesystemBlobStore,
+    NumpyVectorStore,
+    SQLiteRelationalStore,
     SQLiteTelemetryStore,
 )
 

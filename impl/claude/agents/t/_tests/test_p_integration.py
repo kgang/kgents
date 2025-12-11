@@ -9,15 +9,16 @@ Tests P-gent parsers specialized for T-gent (Tool) workflows:
 """
 
 import json
+
 from agents.t.p_integration import (
-    SchemaParser,
+    ErrorParser,
     InputParser,
     OutputParser,
-    ErrorParser,
-    create_tgent_schema_parser,
+    SchemaParser,
+    create_tgent_error_parser,
     create_tgent_input_parser,
     create_tgent_output_parser,
-    create_tgent_error_parser,
+    create_tgent_schema_parser,
 )
 
 
@@ -470,7 +471,7 @@ class TestParserConfiguration:
         parser = InputParser(parameter_names=["test"])
         configured = parser.configure(allow_partial=False)
 
-        assert configured.config.allow_partial == False
+        assert not configured.config.allow_partial
         assert configured.parameter_names == ["test"]
 
     def test_output_parser_configure(self):
@@ -486,7 +487,7 @@ class TestParserConfiguration:
         parser = ErrorParser()
         configured = parser.configure(allow_partial=True)
 
-        assert configured.config.allow_partial == True
+        assert configured.config.allow_partial
 
 
 class TestRealWorldToolScenarios:

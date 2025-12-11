@@ -19,9 +19,8 @@ from ..hippocampus import (
     SynapseHippocampusIntegration,
     create_hippocampus,
 )
-from ..synapse import Synapse, SynapseConfig
 from ..nervous import Signal
-
+from ..synapse import Synapse, SynapseConfig
 
 # =============================================================================
 # Test Fixtures

@@ -12,10 +12,10 @@ Tests:
 
 import pytest
 from agents.p.strategies.lazy_validation import (
-    LazyValidationParser,
     LazyValidatedDict,
-    lazy_validation_parser,
+    LazyValidationParser,
     datetime_coercer,
+    lazy_validation_parser,
     list_of_strings_coercer,
 )
 

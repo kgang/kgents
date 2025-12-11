@@ -23,16 +23,15 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Callable, Optional, Protocol
 
+from .metered_functor import Gas, Impact
 from .value_tensor import (
-    ValueTensor,
-    PhysicalDimension,
-    SemanticDimension,
     EconomicDimension,
     EthicalDimension,
     ImpactTier,
+    PhysicalDimension,
+    SemanticDimension,
+    ValueTensor,
 )
-from .metered_functor import Gas, Impact
-
 
 # =============================================================================
 # Complexity Oracle (Kolmogorov Approximation)

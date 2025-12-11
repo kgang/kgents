@@ -8,31 +8,31 @@ Tests cover:
 - Client connections
 """
 
-import pytest
 import json
 
-from ..server import (
-    MCPServer,
-    MCPTool,
-    MCPToolParameter,
-    MCPToolResult,
-    MCPRequest,
-    MCPResponse,
-    KGENTS_TOOLS,
-    TOOL_REGISTRY,
-    create_tool_manifest,
-    handle_laws,
-    handle_principles,
-    handle_check,
-    handle_judge,
-    handle_think,
-    handle_fix,
-)
+import pytest
+
 from ..client import (
     MCPClient,
     MCPConnection,
 )
-
+from ..server import (
+    KGENTS_TOOLS,
+    TOOL_REGISTRY,
+    MCPRequest,
+    MCPResponse,
+    MCPServer,
+    MCPTool,
+    MCPToolParameter,
+    MCPToolResult,
+    create_tool_manifest,
+    handle_check,
+    handle_fix,
+    handle_judge,
+    handle_laws,
+    handle_principles,
+    handle_think,
+)
 
 # =============================================================================
 # Tool Definition Tests

@@ -25,13 +25,12 @@ from enum import Enum
 from typing import Any
 
 from agents.g.types import (
-    Tongue,
-    ParseResult,
-    GrammarLevel,
     ConstraintProof,
     CounterExample,
+    GrammarLevel,
+    ParseResult,
+    Tongue,
 )
-
 
 # ============================================================================
 # Fuzz Result Types

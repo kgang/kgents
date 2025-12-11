@@ -55,15 +55,15 @@ from .protocol import WireObservable, WireState
 
 # Import B-gent value accounting (optional - graceful degradation)
 try:
-    from agents.b.metered_functor import CentralBank, Gas, EntropyBudget, DualBudget
+    from agents.b.metered_functor import CentralBank, DualBudget, EntropyBudget, Gas
+    from agents.b.value_ledger import BalanceSheet, RoCMonitor, ValueLedger
     from agents.b.value_tensor import (
-        ValueTensor,
-        TensorAlgebra,
-        AntiDelusionChecker,
         Anomaly,
+        AntiDelusionChecker,
+        TensorAlgebra,
+        ValueTensor,
     )
-    from agents.b.value_ledger import ValueLedger, RoCMonitor, BalanceSheet
-    from agents.b.voi_economics import VoILedger, EpistemicCapital, AdaptiveObserver
+    from agents.b.voi_economics import AdaptiveObserver, EpistemicCapital, VoILedger
 
     HAS_BGENT = True
 except ImportError:

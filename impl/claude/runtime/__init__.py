@@ -20,26 +20,26 @@ Usage:
 """
 
 from .base import (
-    LLMAgent,
     AgentContext,
     AgentResult,
+    Error,
+    LLMAgent,
+    PermanentError,
+    Result,
     # Result types (Issue #6: Error handling transparency)
     Success,
-    Error,
-    Result,
-    success,
+    TransientError,
     error,
     result_from_exception,
-    TransientError,
-    PermanentError,
-)
-from .json_utils import (
-    robust_json_parse,
-    json_response_parser,
-    parse_structured_sections,
+    success,
 )
 from .claude import ClaudeRuntime
 from .cli import ClaudeCLIRuntime, ParseError
+from .json_utils import (
+    json_response_parser,
+    parse_structured_sections,
+    robust_json_parse,
+)
 from .openrouter import OpenRouterRuntime
 
 __all__ = [

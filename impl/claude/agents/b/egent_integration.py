@@ -23,7 +23,6 @@ from uuid import uuid4
 
 from .metered_functor import CentralBank
 
-
 # =============================================================================
 # Prediction Market for E-gent
 # =============================================================================

@@ -3,7 +3,7 @@ Tests for P-gents core types (ParseResult, Parser, ParserConfig, IdentityParser)
 """
 
 import pytest
-from agents.p.core import ParseResult, ParserConfig, IdentityParser
+from agents.p.core import IdentityParser, ParserConfig, ParseResult
 
 
 class TestParseResult:

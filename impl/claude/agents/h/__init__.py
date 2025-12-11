@@ -13,76 +13,75 @@ The three traditions:
 """
 
 # Hegel: Dialectic synthesis
+# Composition: H-gent pipelines
+from .composition import (
+    FullIntrospection,
+    HegelLacanPipeline,
+    IntrospectionInput,
+    IntrospectionOutput,
+    JungHegelPipeline,
+    LacanJungPipeline,
+    full_introspection,
+    hegel_to_lacan,
+    jung_to_hegel,
+    lacan_to_jung,
+)
 from .hegel import (
-    HegelAgent,
-    ContinuousDialectic,
     BackgroundDialectic,
+    ContinuousDialectic,
     DialecticInput,
     DialecticOutput,
     DialecticStep,
-    hegel,
-    continuous_dialectic,
+    HegelAgent,
     background_dialectic,
-)
-
-# Persistent Dialectic (DGent-backed)
-from .persistent_dialectic import (
-    PersistentDialecticAgent,
-    DialecticMemoryAgent,
-    DialecticHistory,
-    DialecticRecord,
-    persistent_dialectic_agent,
-    dialectic_memory_agent,
+    continuous_dialectic,
+    hegel,
 )
 
 # Jung: Shadow integration
 from .jung import (
-    JungAgent,
-    QuickShadow,
-    CollectiveShadowAgent,
-    JungInput,
-    JungOutput,
-    ShadowContent,
-    Projection,
-    IntegrationPath,
-    IntegrationDifficulty,
     Archetype,
     ArchetypeManifest,
     CollectiveShadow,
+    CollectiveShadowAgent,
     CollectiveShadowInput,
+    IntegrationDifficulty,
+    IntegrationPath,
+    JungAgent,
+    JungInput,
+    JungOutput,
+    Projection,
+    QuickShadow,
+    ShadowContent,
+    collective_shadow,
     jung,
     quick_shadow,
-    collective_shadow,
 )
 
 # Lacan: Register triangulation
 from .lacan import (
+    KnotStatus,
     LacanAgent,
-    QuickRegister,
+    LacanError,
     LacanInput,
     LacanOutput,
-    LacanError,
     LacanResult,
+    QuickRegister,
+    Register,
     RegisterLocation,
     Slippage,
-    Register,
-    KnotStatus,
     lacan,
     quick_register,
 )
 
-# Composition: H-gent pipelines
-from .composition import (
-    HegelLacanPipeline,
-    LacanJungPipeline,
-    JungHegelPipeline,
-    FullIntrospection,
-    IntrospectionInput,
-    IntrospectionOutput,
-    hegel_to_lacan,
-    lacan_to_jung,
-    jung_to_hegel,
-    full_introspection,
+# Persistent Dialectic (DGent-backed)
+from .persistent_dialectic import (
+    DialecticHistory,
+    DialecticMemoryAgent,
+    DialecticRecord,
+    PersistentDialecticAgent,
+    dialectic_memory_agent,
+    persistent_dialectic_agent,
 )
 
 __all__ = [

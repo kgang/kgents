@@ -12,23 +12,23 @@ Tests:
 
 import pytest
 from agents.i.semantic_field import (
+    FieldCoordinate,
+    IntentPayload,
+    MetaphorPayload,
+    OpportunityPayload,
     SemanticPheromone,
     SemanticPheromoneKind,
-    FieldCoordinate,
-    MetaphorPayload,
-    IntentPayload,
     WarningPayload,
-    OpportunityPayload,
-    create_semantic_field,
-    create_psi_emitter,
-    create_forge_sensor,
-    create_safety_emitter,
     create_economic_emitter,
+    create_forge_sensor,
     create_memory_emitter,
     create_memory_sensor,
     create_narrative_emitter,
     create_narrative_sensor,
     create_observer_sensor,
+    create_psi_emitter,
+    create_safety_emitter,
+    create_semantic_field,
 )
 
 

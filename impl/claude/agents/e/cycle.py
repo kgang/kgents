@@ -28,36 +28,35 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Protocol, Any
+from typing import Any, Protocol
 from uuid import uuid4
 
-from .types import (
-    Phage,
-    PhageStatus,
-    Intent,
-    GibbsEnergy,
-    ThermodynamicState,
-    InfectionResult,
-    InfectionStatus,
-)
 from .demon import (
-    TeleologicalDemon,
     DemonConfig,
-)
-from .mutator import (
-    Mutator,
-    MutatorConfig,
+    TeleologicalDemon,
 )
 from .library import (
     ViralLibrary,
     ViralLibraryConfig,
 )
-from .phage import (
-    infect,
-    InfectionEnvironment,
-    InfectionConfig,
+from .mutator import (
+    Mutator,
+    MutatorConfig,
 )
-
+from .phage import (
+    InfectionConfig,
+    InfectionEnvironment,
+    infect,
+)
+from .types import (
+    GibbsEnergy,
+    InfectionResult,
+    InfectionStatus,
+    Intent,
+    Phage,
+    PhageStatus,
+    ThermodynamicState,
+)
 
 # =============================================================================
 # Protocols for External Integration

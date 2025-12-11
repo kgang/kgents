@@ -1,20 +1,19 @@
 """Tests for shared AST utilities."""
 
 import ast
-import pytest
 
+import pytest
 from agents.shared.ast_utils import (
     ASTAnalysisKit,
-    extract_imports,
     calculate_cyclomatic_complexity,
     calculate_max_nesting,
     estimate_branching_factor,
     estimate_runtime_complexity,
-    has_unbounded_recursion,
-    extract_functions,
     extract_classes,
+    extract_functions,
+    extract_imports,
+    has_unbounded_recursion,
 )
-
 
 # --- Test Fixtures ---
 
@@ -66,33 +65,33 @@ def standalone_func(x: int, y: int) -> int:
 # It looks for functions that call themselves without a clear base case pattern
 # (an if statement with a return in the first 3 statements).
 # For this test, we use a function without any early return pattern.
-RECURSIVE_CODE = '''
+RECURSIVE_CODE = """
 def infinite_recurse(n):
     x = n + 1
     y = infinite_recurse(x)
     z = y + 1
     return z
-'''
+"""
 
-RECURSIVE_WITH_BASE = '''
+RECURSIVE_WITH_BASE = """
 def factorial(n):
     if n <= 1:
         return 1
     return n * factorial(n - 1)
-'''
+"""
 
-INFINITE_LOOP = '''
+INFINITE_LOOP = """
 def run():
     while True:
         pass
-'''
+"""
 
-LOOP_WITH_BREAK = '''
+LOOP_WITH_BREAK = """
 def run():
     while True:
         if should_stop():
             break
-'''
+"""
 
 
 # --- Test Import Extraction ---

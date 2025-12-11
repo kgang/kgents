@@ -17,7 +17,6 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 
 import pytest
-
 from agents.n.bard import (
     Bard,
     Chapter,
@@ -33,7 +32,6 @@ from agents.n.bard import (
     _truncate_dict,
 )
 from agents.n.types import Determinism, SemanticTrace
-
 
 # =============================================================================
 # Test Fixtures

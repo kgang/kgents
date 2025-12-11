@@ -33,12 +33,11 @@ from enum import Enum
 from typing import Any, Callable
 
 from .types import (
+    Intent,
+    MutationVector,
     Phage,
     PhageStatus,
-    MutationVector,
-    Intent,
 )
-
 
 # =============================================================================
 # Selection Layer Results

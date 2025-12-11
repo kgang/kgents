@@ -10,48 +10,46 @@ Tests the G+J+B trio for high-frequency trading optimization:
 """
 
 import time
-import pytest
 
+import pytest
 
 # ============================================================================
 # Import the module under test
 # ============================================================================
-
 from agents.b.jit_efficiency import (
-    # Enums
-    JITCompilationTarget,
-    OptimizationLevel,
-    # Latency types
-    LatencyMeasurement,
-    LatencyReport,
+    # Benchmarking
+    BenchmarkConfig,
+    BytecodeJITCompiler,
     # Compilation types
     CompilationConfig,
     CompiledTongue,
-    # Compilers
-    RegexJITCompiler,
-    JumpTableJITCompiler,
-    BytecodeJITCompiler,
+    HFTongueBuilder,
+    # HF Tongue
+    HFTongueSpec,
+    # Enums
+    JITCompilationTarget,
     JITCompilerRegistry,
-    # Benchmarking
-    BenchmarkConfig,
+    JITEfficiencyMonitor,
+    JumpTableJITCompiler,
     LatencyBenchmark,
+    # Latency types
+    LatencyMeasurement,
+    LatencyReport,
+    OptimizationLevel,
     # Profit sharing
     ProfitShare,
     ProfitSharingLedger,
+    # Compilers
+    RegexJITCompiler,
     # Monitor
     TongueUsageStats,
-    JITEfficiencyMonitor,
-    # HF Tongue
-    HFTongueSpec,
-    HFTongueBuilder,
+    benchmark_jit_speedup,
+    compile_grammar_jit,
+    create_hf_tongue_builder,
     # Convenience
     create_jit_monitor,
-    compile_grammar_jit,
-    benchmark_jit_speedup,
-    create_hf_tongue_builder,
     estimate_jit_value,
 )
-
 
 # ============================================================================
 # Test Fixtures

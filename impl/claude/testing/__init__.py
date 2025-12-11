@@ -21,94 +21,94 @@ Phase 8 (Cortex) Components:
 See docs/cortex-assurance-system.md for the full strategy.
 """
 
-from .strategies import (
-    simple_agents,
-    agent_chains,
-    valid_dna,
-    invalid_dna,
-    type_names,
-)
-from .pytest_witness import WitnessPlugin
-from .flaky_registry import FlakyPattern, FlakyRegistry
 from .accursed_share import Discovery, DiscoveryLog
-
-# Phase 8: Cortex Assurance System
-from .oracle import (
-    Oracle,
-    MetamorphicRelation,
-    RelationResult,
-    OracleValidation,
-    SubsetRelation,
-    IdempotencyRelation,
-    PermutationInvarianceRelation,
-    cosine_similarity,
-    format_validation_report,
-)
-from .topologist import (
-    Topologist,
-    TypeTopology,
-    AgentSignature,
-    NoiseFunctor,
-    CommutativityResult,
-    InvarianceResult,
-    TopologistReport,
-    format_topologist_report,
-)
 from .analyst import (
     CausalAnalyst,
-    WitnessStore,
-    TestWitness,
-    DeltaDebugResult,
-    CounterfactualResult,
     CausalGraph,
+    CounterfactualResult,
+    DeltaDebugResult,
     FlakinessDiagnosis,
+    TestWitness,
+    WitnessStore,
     format_analyst_report,
 )
-from .market import (
-    TestMarket,
-    BudgetManager,
-    TestAsset,
-    TestCost,
-    BudgetTier,
-    BUDGET_TIERS,
-    MarketReport,
-    format_market_report,
-)
-from .red_team import (
-    RedTeam,
-    AdversarialInput,
-    MutationScore,
-    Vulnerability,
-    RedTeamReport,
-    MUTATION_OPERATORS,
-    format_red_team_report,
-)
 from .cortex import (
-    Cortex,
     BriefingReport,
+    Cortex,
     format_briefing_report,
     format_full_report,
 )
+from .flaky_registry import FlakyPattern, FlakyRegistry
 
 # Phase 8: Integrations with kgents ecosystem
 from .integrations import (
+    BGENT_AVAILABLE,
+    DGENT_AVAILABLE,
+    EGENT_AVAILABLE,
+    LGENT_AVAILABLE,
+    NGENT_AVAILABLE,
+    OGENT_AVAILABLE,
+    BudgetedMarket,
     IntegrationStatus,
-    get_integration_status,
+    LatticeValidatedTopology,
+    ObservedCortex,
+    PersistentWitnessStore,
+    TeleologicalRedTeam,
+    create_enhanced_cortex,
     create_enhanced_oracle,
     create_persistent_analyst,
-    create_enhanced_cortex,
-    PersistentWitnessStore,
-    LatticeValidatedTopology,
-    BudgetedMarket,
-    TeleologicalRedTeam,
-    ObservedCortex,
     format_integration_report,
-    LGENT_AVAILABLE,
-    DGENT_AVAILABLE,
-    NGENT_AVAILABLE,
-    BGENT_AVAILABLE,
-    EGENT_AVAILABLE,
-    OGENT_AVAILABLE,
+    get_integration_status,
+)
+from .market import (
+    BUDGET_TIERS,
+    BudgetManager,
+    BudgetTier,
+    MarketReport,
+    TestAsset,
+    TestCost,
+    TestMarket,
+    format_market_report,
+)
+
+# Phase 8: Cortex Assurance System
+from .oracle import (
+    IdempotencyRelation,
+    MetamorphicRelation,
+    Oracle,
+    OracleValidation,
+    PermutationInvarianceRelation,
+    RelationResult,
+    SubsetRelation,
+    cosine_similarity,
+    format_validation_report,
+)
+from .pytest_witness import WitnessPlugin
+from .red_team import (
+    MUTATION_OPERATORS,
+    AdversarialInput,
+    MutationScore,
+    RedTeam,
+    RedTeamReport,
+    Vulnerability,
+    format_red_team_report,
+)
+from .strategies import (
+    agent_chains,
+    invalid_dna,
+    simple_agents,
+    type_names,
+    valid_dna,
+)
+from .topologist import (
+    AgentSignature,
+    CommutativityResult,
+    InvarianceResult,
+    NoiseFunctor,
+    Topologist,
+    TopologistReport,
+    TypeTopology,
+    format_topologist_report,
 )
 
 __all__ = [

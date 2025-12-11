@@ -12,24 +12,24 @@ These extensions work with any DataAgent backend.
 import gzip
 import json
 import shutil
-from dataclasses import dataclass, field, asdict, is_dataclass
+from dataclasses import asdict, dataclass, field, is_dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import (
-    TypeVar,
-    Generic,
-    Type,
+    Any,
     Callable,
+    Dict,
+    Generic,
     List,
     Optional,
-    Any,
-    Dict,
+    Type,
+    TypeVar,
 )
 
 from .errors import (
-    StateError,
     StateCorruptionError,
+    StateError,
     StorageError,
 )
 from .persistent import PersistentAgent

@@ -1,32 +1,30 @@
 """Tests for E-gent v2 Teleological Demon (5-layer selection)."""
 
 import pytest
-
 from agents.e.demon import (
-    # Main types
-    TeleologicalDemon,
     DemonConfig,
     DemonStats,
-    SelectionResult,
-    RejectionReason,
     # Parasitic patterns
     ParasiticPattern,
-    detect_hardcoding,
-    detect_functionality_deletion,
-    detect_pass_only_bodies,
-    detect_test_gaming,
+    RejectionReason,
+    SelectionResult,
+    # Main types
+    TeleologicalDemon,
     # Factory functions
     create_demon,
-    create_strict_demon,
     create_lenient_demon,
+    create_strict_demon,
+    detect_functionality_deletion,
+    detect_hardcoding,
+    detect_pass_only_bodies,
+    detect_test_gaming,
 )
 from agents.e.types import (
+    Intent,
+    MutationVector,
     Phage,
     PhageStatus,
-    MutationVector,
-    Intent,
 )
-
 
 # =============================================================================
 # Test Fixtures

@@ -31,7 +31,6 @@ from .bard import Bard, LLMProvider, Narrative, NarrativeRequest
 from .store import CrystalStore
 from .types import SemanticTrace
 
-
 # =============================================================================
 # L-gent Integration: Crystal Indexing
 # =============================================================================

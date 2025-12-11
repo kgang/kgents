@@ -12,29 +12,31 @@ Philosophy: Parsers are the syntactic membrane of the system.
 
 from typing import Any
 
-# P-gent imports
-from agents.p import (
-    ParserConfig,
-    FallbackParser,
-    FusionParser,
-    SwitchParser,
-    AnchorBasedParser,
-    StackBalancingParser,
-    ProbabilisticASTParser,
-)
-
-# G-gent imports
-from agents.g import (
-    GrammarLevel,
-    GrammarFormat,
-    ParserConfig as GParserConfig,
-)
-from agents.g.tongue import TongueBuilder
-
 # F-gent imports
 from agents.f import (
     parse_intent,
     synthesize_contract,
+)
+
+# G-gent imports
+from agents.g import (
+    GrammarFormat,
+    GrammarLevel,
+)
+from agents.g import (
+    ParserConfig as GParserConfig,
+)
+from agents.g.tongue import TongueBuilder
+
+# P-gent imports
+from agents.p import (
+    AnchorBasedParser,
+    FallbackParser,
+    FusionParser,
+    ParserConfig,
+    ProbabilisticASTParser,
+    StackBalancingParser,
+    SwitchParser,
 )
 
 # Shared fixtures

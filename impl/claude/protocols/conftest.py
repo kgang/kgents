@@ -8,9 +8,9 @@ This conftest provides:
 - Wire protocol helpers
 """
 
-import pytest
 from typing import Any
 
+import pytest
 
 # =============================================================================
 # Protocol Fixtures

@@ -22,10 +22,10 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
 
-from .lineage import LineageGraph, RelationshipType
 from .lattice import TypeLattice
-from .types import CatalogEntry, EntityType
+from .lineage import LineageGraph, RelationshipType
 from .registry import Registry
+from .types import CatalogEntry, EntityType
 
 
 class SearchDirection(Enum):

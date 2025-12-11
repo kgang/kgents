@@ -21,10 +21,10 @@ Use Cases:
 - B-gent hypothesis fields: Parser controls format, LLM fills statement/reasoning
 """
 
-from typing import Optional, Callable, Any, Literal
 from dataclasses import dataclass
+from typing import Any, Callable, Literal, Optional
 
-from agents.p.core import ParseResult, ParserConfig
+from agents.p.core import ParserConfig, ParseResult
 
 
 @dataclass

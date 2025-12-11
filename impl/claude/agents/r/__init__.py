@@ -17,117 +17,114 @@ The Endofunctor:
 See spec/r-gents/README.md for full specification.
 """
 
-from .types import (
-    # Core types
-    Signature,
-    FieldSpec,
-    Example,
-    # Optimization
-    TextualGradient,
-    OptimizationIteration,
-    OptimizationTrace,
-    OptimizedAgentMeta,
-    # Strategy
-    TeleprompterStrategy,
-    Teleprompter,
-    # Economics (B-gent integration)
-    OptimizationBudget,
-    ROIEstimate,
-    OptimizationDecision,
+# Phase 4: Advanced Features
+from .advanced import (
+    AdvancedRefinery,
+    # Part 5: Unified
+    AdvancedRefineryConfig,
+    AnthropicFinetunePreparer,
+    AutoTeleprompterSelector,
+    BootstrapFinetuneTeleprompter,
+    CrossModelTransferAnalyzer,
+    DatasetCharacteristics,
+    DriftDetectionMethod,
+    DriftReport,
+    FinetuneConfig,
+    FinetuneDataset,
+    FinetuneJob,
+    FinetunePreparer,
+    # Part 4: Fine-tuning
+    FinetuneStatus,
+    ModelDriftDetector,
+    # Part 3: Transfer analysis
+    ModelProfile,
+    OpenAIFinetunePreparer,
+    # Part 2: Drift detection
+    PerformanceSample,
+    ReoptimizationTrigger,
+    StrategyRecommendation,
+    TaskAnalysis,
+    TaskAnalyzer,
+    # Part 1: Auto-selection
+    TaskComplexity,
+    TransferPrediction,
 )
-
-from .refinery import (
-    # Teleprompters
-    BaseTeleprompter,
-    BootstrapFewShotTeleprompter,
-    TextGradTeleprompter,
-    MIPROv2Teleprompter,
-    OPROTeleprompter,
-    TeleprompterFactory,
-    # ROI
-    ROIOptimizer,
-    # Main interface
-    RefineryAgent,
-)
-
 from .dspy_backend import (
-    # DSPy availability
-    is_dspy_available,
     # DSPy-backed teleprompters (Phase 2)
     DSPyBootstrapFewShot,
-    DSPyMIPROv2,
-    # LLM-backed teleprompters (Phase 2)
-    LLMTextGrad,
-    LLMOpro,
-    # Factory
-    get_dspy_teleprompter,
-    # LLM function creators
-    create_openai_llm_func,
-    create_anthropic_llm_func,
     # DSPy utilities
     DSPyLLMConfig,
+    DSPyMIPROv2,
     DSPyModuleWrapper,
-    signature_to_dspy,
+    LLMOpro,
+    # LLM-backed teleprompters (Phase 2)
+    LLMTextGrad,
+    create_anthropic_llm_func,
+    # LLM function creators
+    create_openai_llm_func,
     example_to_dspy,
     examples_to_dspy,
+    # Factory
+    get_dspy_teleprompter,
+    # DSPy availability
+    is_dspy_available,
+    signature_to_dspy,
 )
 
 # Phase 3: Cross-Genus Integrations
 from .integrations import (
-    # F-gent integration
-    RefinePhase,
-    PrototypeRefinementRequest,
-    PrototypeRefinementResult,
-    FGentRefineryBridge,
-    # T-gent integration
-    MetricSignal,
-    TextualLossSignal,
-    TGentLossAdapter,
+    BGentBudgetProtocol,
+    BudgetConstrainedRefinery,
     # B-gent integration
     BudgetDenied,
     BudgetGrant,
     BudgetSpendReport,
-    BGentBudgetProtocol,
-    BudgetConstrainedRefinery,
+    FGentRefineryBridge,
+    LGentOptimizationIndex,
+    # T-gent integration
+    MetricSignal,
     # L-gent integration
     OptimizationCatalogEntry,
-    LGentOptimizationIndex,
+    PrototypeRefinementRequest,
+    PrototypeRefinementResult,
+    # F-gent integration
+    RefinePhase,
     # Unified hub
     RGentIntegrationConfig,
     RGentIntegrationHub,
+    TextualLossSignal,
+    TGentLossAdapter,
 )
-
-# Phase 4: Advanced Features
-from .advanced import (
-    # Part 1: Auto-selection
-    TaskComplexity,
-    DatasetCharacteristics,
-    TaskAnalysis,
-    StrategyRecommendation,
-    TaskAnalyzer,
-    AutoTeleprompterSelector,
-    # Part 2: Drift detection
-    PerformanceSample,
-    DriftReport,
-    DriftDetectionMethod,
-    ModelDriftDetector,
-    ReoptimizationTrigger,
-    # Part 3: Transfer analysis
-    ModelProfile,
-    TransferPrediction,
-    CrossModelTransferAnalyzer,
-    # Part 4: Fine-tuning
-    FinetuneStatus,
-    FinetuneJob,
-    FinetuneConfig,
-    FinetuneDataset,
-    FinetunePreparer,
-    OpenAIFinetunePreparer,
-    AnthropicFinetunePreparer,
-    BootstrapFinetuneTeleprompter,
-    # Part 5: Unified
-    AdvancedRefineryConfig,
-    AdvancedRefinery,
+from .refinery import (
+    # Teleprompters
+    BaseTeleprompter,
+    BootstrapFewShotTeleprompter,
+    MIPROv2Teleprompter,
+    OPROTeleprompter,
+    # Main interface
+    RefineryAgent,
+    # ROI
+    ROIOptimizer,
+    TeleprompterFactory,
+    TextGradTeleprompter,
+)
+from .types import (
+    Example,
+    FieldSpec,
+    # Economics (B-gent integration)
+    OptimizationBudget,
+    OptimizationDecision,
+    OptimizationIteration,
+    OptimizationTrace,
+    OptimizedAgentMeta,
+    ROIEstimate,
+    # Core types
+    Signature,
+    Teleprompter,
+    # Strategy
+    TeleprompterStrategy,
+    # Optimization
+    TextualGradient,
 )
 
 __all__ = [

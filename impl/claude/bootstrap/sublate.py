@@ -16,6 +16,7 @@ See spec/bootstrap.md lines 166-178, spec/h-gents/hegel.md.
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Optional, Protocol, Sequence
 
@@ -28,7 +29,6 @@ from .types import (
     Tension,
     TensionMode,
 )
-
 
 # --- Resolution Strategy Protocol ---
 

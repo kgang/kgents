@@ -18,9 +18,9 @@ Use Cases:
 
 import json
 from dataclasses import dataclass, field
-from typing import Iterator, Optional, Any, Literal
+from typing import Any, Iterator, Literal, Optional
 
-from agents.p.core import ParseResult, ParserConfig
+from agents.p.core import ParserConfig, ParseResult
 
 
 @dataclass

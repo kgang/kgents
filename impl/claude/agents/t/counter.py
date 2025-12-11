@@ -7,7 +7,8 @@ Type III Observer - Inspection without modification.
 """
 
 from __future__ import annotations
-from typing import Generic, TypeVar, TYPE_CHECKING
+
+from typing import TYPE_CHECKING, Generic, TypeVar
 
 if TYPE_CHECKING:
     from bootstrap.types import Agent, ComposedAgent

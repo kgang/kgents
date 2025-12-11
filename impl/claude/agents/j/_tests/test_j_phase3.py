@@ -14,15 +14,14 @@ from production agents.
 """
 
 import pytest
-
 from agents.j import (
     AgentSource,
     ArchitectConstraints,
     ArchitectInput,
     MetaArchitect,
     SandboxConfig,
-    SandboxResult,
     SandboxedNamespace,
+    SandboxResult,
     compile_agent,
     execute_in_sandbox,
     jit_compile_and_execute,
@@ -136,7 +135,9 @@ async def test_meta_architect_respects_constraints():
     constraints = ArchitectConstraints(
         entropy_budget=0.5,  # Reduced budget
         max_cyclomatic_complexity=10,
-        allowed_imports=frozenset({"re", "dataclasses", "typing"}),  # typing is always added
+        allowed_imports=frozenset(
+            {"re", "dataclasses", "typing"}
+        ),  # typing is always added
     )
 
     input_data = ArchitectInput(
@@ -513,7 +514,9 @@ async def test_compile_agent_with_constraints():
     constraints = ArchitectConstraints(
         entropy_budget=0.3,
         max_cyclomatic_complexity=5,
-        allowed_imports=frozenset({"re", "typing"}),  # typing is always added for type hints
+        allowed_imports=frozenset(
+            {"re", "typing"}
+        ),  # typing is always added for type hints
     )
 
     source = await compile_agent(

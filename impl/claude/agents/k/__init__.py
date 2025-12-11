@@ -12,43 +12,41 @@ K-gent is NOT Kent. It is a mirror for self-dialogue and a personalization
 layer for the entire kgents ecosystem.
 """
 
-from .persona import (
-    PersonaSeed,
-    PersonaState,
-    PersonaQuery,
-    PersonaResponse,
-    DialogueMode,
-    DialogueInput,
-    DialogueOutput,
-    KgentAgent,
-    PersonaQueryAgent,
-    kgent,
-    query_persona,
-)
-
 from .evolution import (
-    EvolutionInput,
-    EvolutionOutput,
-    ConfidenceLevel,
-    ChangeSource,
-    EvolutionAgent,
-    evolve_persona,
+    BootstrapConfig,
     # Bootstrap
     BootstrapMode,
-    BootstrapConfig,
-    bootstrap_persona,
-    bootstrap_clean_slate,
-    bootstrap_hybrid,
+    ChangeSource,
+    ConfidenceLevel,
     # Conflict detection
     ConflictData,
     ConflictDetector,
+    EvolutionAgent,
+    EvolutionInput,
+    EvolutionOutput,
+    bootstrap_clean_slate,
+    bootstrap_hybrid,
+    bootstrap_persona,
+    evolve_persona,
 )
-
 from .persistent_persona import (
     PersistentPersonaAgent,
     PersistentPersonaQueryAgent,
     persistent_kgent,
     persistent_query_persona,
+)
+from .persona import (
+    DialogueInput,
+    DialogueMode,
+    DialogueOutput,
+    KgentAgent,
+    PersonaQuery,
+    PersonaQueryAgent,
+    PersonaResponse,
+    PersonaSeed,
+    PersonaState,
+    kgent,
+    query_persona,
 )
 
 __all__ = [

@@ -5,9 +5,7 @@ Tests for the L-gent catalog registry implementation.
 """
 
 import pytest
-
-from agents.l import Registry, CatalogEntry, EntityType, Status
-
+from agents.l import CatalogEntry, EntityType, Registry, Status
 
 # ============================================================================
 # CatalogEntry Tests

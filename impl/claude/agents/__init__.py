@@ -9,10 +9,6 @@ Each letter represents a distinct agent genus:
 - K-gent: Kent simulacra
 """
 
-from . import a
-from . import b
-from . import c
-from . import h
-from . import k
+from . import a, b, c, h, k
 
 __all__ = ["a", "b", "c", "h", "k"]

@@ -6,7 +6,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-
 # Import risk scores (0.0 = safe, 1.0 = dangerous)
 IMPORT_RISK: dict[str, float] = {
     # Safe (0.0)
@@ -62,35 +61,39 @@ class StabilityConfig:
 
     # Import control
     allowed_imports: frozenset[str] = field(
-        default_factory=lambda: frozenset({
-            "typing",
-            "dataclasses",
-            "abc",
-            "enum",
-            "re",
-            "json",
-            "asyncio",
-            "functools",
-            "collections",
-            "itertools",
-            "operator",
-            "math",
-            "datetime",
-        })
+        default_factory=lambda: frozenset(
+            {
+                "typing",
+                "dataclasses",
+                "abc",
+                "enum",
+                "re",
+                "json",
+                "asyncio",
+                "functools",
+                "collections",
+                "itertools",
+                "operator",
+                "math",
+                "datetime",
+            }
+        )
     )
 
     forbidden_imports: frozenset[str] = field(
-        default_factory=lambda: frozenset({
-            "os",
-            "subprocess",
-            "sys",
-            "shutil",
-            "socket",
-            "requests",
-            "urllib",
-            "http",
-            "multiprocessing",
-        })
+        default_factory=lambda: frozenset(
+            {
+                "os",
+                "subprocess",
+                "sys",
+                "shutil",
+                "socket",
+                "requests",
+                "urllib",
+                "http",
+                "multiprocessing",
+            }
+        )
     )
 
 

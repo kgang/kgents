@@ -83,8 +83,8 @@ class WitnessCLI(CLICapable):
         }
         fidelity_level = fidelity_map.get(fidelity, Fidelity.DOCUMENTARIAN)
 
-        adapter = get_adapter(fidelity_level)
-        reader = WireReader(target)
+        _adapter = get_adapter(fidelity_level)  # noqa: F841 - reserved for future use
+        _reader = WireReader(target)  # noqa: F841 - reserved for future use
 
         print()
         print(f"  Watching: {target} [{fidelity}]")

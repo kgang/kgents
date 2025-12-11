@@ -43,89 +43,89 @@ Example:
     >>> await counter.invoke(5)  # Returns 6 (remembers previous state)
 """
 
-from .protocol import DataAgent
+from .cached import CachedAgent
+from .entropy import EntropyConstrainedAgent, entropy_constrained
 from .errors import (
-    StateError,
-    StateNotFoundError,
-    StateCorruptionError,
-    StateSerializationError,
-    StorageError,
+    DriftDetectionError,
+    EdgeNotFoundError,
+    LatticeError,
+    NodeNotFoundError,
     # Noosphere errors
     NoosphereError,
     SemanticError,
+    StateCorruptionError,
+    StateError,
+    StateNotFoundError,
+    StateSerializationError,
+    StorageError,
     TemporalError,
-    LatticeError,
     VoidNotFoundError,
-    DriftDetectionError,
-    NodeNotFoundError,
-    EdgeNotFoundError,
 )
-from .volatile import VolatileAgent
-from .persistent import PersistentAgent
-from .symbiont import Symbiont
 from .lens import (
     # Core Lens
     Lens,
-    key_lens,
-    field_lens,
-    index_lens,
-    identity_lens,
-    attr_lens,
-    verify_lens_laws,
-    verify_get_put_law,
-    verify_put_get_law,
-    verify_put_put_law,
-    # Prism (optional fields)
-    Prism,
-    optional_key_prism,
-    optional_field_prism,
-    optional_index_prism,
-    verify_prism_laws,
-    # Traversal (collections)
-    Traversal,
-    list_traversal,
-    dict_values_traversal,
-    dict_keys_traversal,
-    dict_items_traversal,
-    verify_traversal_laws,
     # Composed lens validation
     LensValidation,
+    # Prism (optional fields)
+    Prism,
+    # Traversal (collections)
+    Traversal,
+    attr_lens,
+    dict_items_traversal,
+    dict_keys_traversal,
+    dict_values_traversal,
+    field_lens,
+    identity_lens,
+    index_lens,
+    key_lens,
+    list_traversal,
+    optional_field_prism,
+    optional_index_prism,
+    optional_key_prism,
     validate_composed_lens,
+    verify_get_put_law,
+    verify_lens_laws,
+    verify_prism_laws,
+    verify_put_get_law,
+    verify_put_put_law,
+    verify_traversal_laws,
 )
 from .lens_agent import LensAgent, focused
-from .cached import CachedAgent
-from .entropy import EntropyConstrainedAgent, entropy_constrained
 
 # Persistence Extensions: Versioning, Backup, Compression
 from .persistence_ext import (
-    # Schema versioning
-    SchemaVersion,
-    Migration,
-    MigrationRegistry,
-    MigrationDirection,
-    VersionedState,
-    VersionedPersistentAgent,
+    BackupManager,
     # Backup/restore
     BackupMetadata,
-    BackupManager,
+    CompressedPersistentAgent,
+    CompressionConfig,
     # Compression
     CompressionLevel,
-    CompressionConfig,
-    CompressedPersistentAgent,
+    Migration,
+    MigrationDirection,
+    MigrationRegistry,
+    # Schema versioning
+    SchemaVersion,
+    VersionedPersistentAgent,
+    VersionedState,
+    create_compressed_agent,
     # Convenience functions
     create_versioned_agent,
-    create_compressed_agent,
 )
+from .persistent import PersistentAgent
+from .protocol import DataAgent
+from .symbiont import Symbiont
+from .volatile import VolatileAgent
 
 # Noosphere Layer: Advanced D-gent types
 # Vector requires numpy (optional dependency)
 try:
     from .vector import (
+        DistanceMetric,
+        Point,
         VectorAgent,
         VectorEntry,
-        Point,
         Void,
-        DistanceMetric,
     )
 
     _VECTOR_AVAILABLE = True
@@ -138,65 +138,65 @@ except ImportError:
     DistanceMetric = None  # type: ignore
 
 from .graph import (
+    Edge,
+    EdgeKind,
     GraphAgent,
     GraphNode,
-    Edge,
     Subgraph,
-    EdgeKind,
+)
+from .observable import (
+    Change,
+    ChangeType,
+    ObservableDataAgent,
+    ObservableError,
+    Subscription,
+)
+from .queryable import (
+    Operator,
+    PathNotFoundError,
+    Predicate,
+    Query,
+    QueryableDataAgent,
+    QueryError,
+    QueryResult,
+    contains,
+    # Predicate helpers
+    eq,
+    exists,
+    ge,
+    gt,
+    in_list,
+    le,
+    lt,
+    matches,
+    ne,
 )
 from .stream import (
-    StreamAgent,
-    WitnessReport,
     DriftReport,
     EventRecord,
+    StreamAgent,
     Vector,
+    WitnessReport,
 )
 
 # Phase 3: Extended Protocols
 from .transactional import (
-    TransactionalDataAgent,
-    Transaction,
-    Savepoint,
-    TransactionState,
-    TransactionError,
-    SavepointError,
     RollbackError,
-)
-from .queryable import (
-    QueryableDataAgent,
-    Query,
-    QueryResult,
-    Predicate,
-    Operator,
-    QueryError,
-    PathNotFoundError,
-    # Predicate helpers
-    eq,
-    ne,
-    lt,
-    le,
-    gt,
-    ge,
-    contains,
-    matches,
-    exists,
-    in_list,
-)
-from .observable import (
-    ObservableDataAgent,
-    Change,
-    ChangeType,
-    Subscription,
-    ObservableError,
+    Savepoint,
+    SavepointError,
+    Transaction,
+    TransactionalDataAgent,
+    TransactionError,
+    TransactionState,
 )
 from .unified import (
-    UnifiedMemory,
-    MemoryConfig,
-    MemoryLayer,
-    MemoryEntry,
-    LensedUnifiedMemory,
-    UnifiedMemoryError,
     LayerNotAvailableError,
+    LensedUnifiedMemory,
+    MemoryConfig,
+    MemoryEntry,
+    MemoryLayer,
+    UnifiedMemory,
+    UnifiedMemoryError,
     create_unified_memory,
 )
 
@@ -204,13 +204,13 @@ from .unified import (
 # SemanticManifold requires numpy (optional dependency)
 try:
     from .manifold import (
+        CurvatureRegion,
+        Geodesic,
+        ManifoldStats,
+        SemanticCluster,
         SemanticManifold,
         SemanticPoint,
         SemanticVoid,
-        Geodesic,
-        SemanticCluster,
-        ManifoldStats,
-        CurvatureRegion,
     )
 
     _MANIFOLD_AVAILABLE = True
@@ -224,46 +224,44 @@ except ImportError:
     ManifoldStats = None  # type: ignore
     CurvatureRegion = None  # type: ignore
 
-from .witness import (
-    TemporalWitness,
-    Trajectory,
-    WitnessContext,
-    TemporalSnapshot,
-    TimelineEntry,
-    DriftSeverity,
-    EntropyLevel,
-)
-
-from .lattice import (
-    RelationalLattice,
-    LatticeNode,
-    LatticeRelation,
-    MeetJoinResult,
-    EntailmentProof,
-    LatticeStats,
-)
-
 from .garden import (
-    MemoryGarden,
-    GardenEntry,
-    Lifecycle,
+    Contradiction,
     Evidence,
     EvidenceType,
-    Contradiction,
-    Insight,
-    Nutrients,
+    GardenEntry,
     GardenStats,
+    Insight,
+    Lifecycle,
+    MemoryGarden,
+    Nutrients,
+)
+from .lattice import (
+    EntailmentProof,
+    LatticeNode,
+    LatticeRelation,
+    LatticeStats,
+    MeetJoinResult,
+    RelationalLattice,
+)
+from .witness import (
+    DriftSeverity,
+    EntropyLevel,
+    TemporalSnapshot,
+    TemporalWitness,
+    TimelineEntry,
+    Trajectory,
+    WitnessContext,
 )
 
 # Phase 5: Database Backends (optional dependencies)
 try:
     from .sql_agent import (
+        PostgreSQLBackend,
         SQLAgent,
         SQLBackend,
         SQLiteBackend,
-        PostgreSQLBackend,
-        create_sqlite_agent,
         create_postgres_agent,
+        create_sqlite_agent,
     )
 
     _SQL_AVAILABLE = True
@@ -293,21 +291,21 @@ except ImportError:
 # Phase 3+: Infrastructure Backends (Instance DB Integration)
 try:
     from .infra_backends import (
-        InstanceDBVectorBackend,
-        InstanceDBVectorBackendConfig,
-        InstanceDBRelationalBackend,
-        InstanceDBRelationalBackendConfig,
+        ContentHash,
         CortexAdapter,
         CortexAdapterConfig,
-        ContentHash,
-        VectorMetadata,
-        RecallResult,
-        InfraBackendError,
         GhostMemoryError,
+        InfraBackendError,
+        InstanceDBRelationalBackend,
+        InstanceDBRelationalBackendConfig,
+        InstanceDBVectorBackend,
+        InstanceDBVectorBackendConfig,
+        RecallResult,
         StaleEmbeddingError,
-        create_vector_backend,
-        create_relational_backend,
+        VectorMetadata,
         create_cortex_adapter,
+        create_relational_backend,
+        create_vector_backend,
     )
 
     _INFRA_BACKENDS_AVAILABLE = True
@@ -332,17 +330,17 @@ except ImportError:
 # Phase 3+: Bicameral Memory (Ghost Detection + Self-Healing)
 try:
     from .bicameral import (
-        BicameralMemory,
         BicameralConfig,
         BicameralCortex,
         BicameralError,
+        BicameralMemory,
         CoherencyError,
         CoherencyReport,
         GhostRecord,
-        StaleRecord,
         HemisphereRole,
-        create_bicameral_memory,
+        StaleRecord,
         create_bicameral_cortex,
+        create_bicameral_memory,
     )
 
     _BICAMERAL_AVAILABLE = True

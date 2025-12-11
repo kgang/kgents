@@ -13,27 +13,26 @@ Tests cover:
 
 import pytest
 from agents.g.pattern_inference import (
-    # Types
-    PatternType,
-    ObservedPattern,
-    PatternCluster,
-    GrammarRule,
     GrammarHypothesis,
-    ValidationResult,
-    InferenceReport,
-    # Classes
-    PatternAnalyzer,
+    GrammarRule,
     GrammarSynthesizer,
     GrammarValidator,
+    InferenceReport,
+    ObservedPattern,
+    # Classes
+    PatternAnalyzer,
+    PatternCluster,
     PatternInferenceEngine,
+    # Types
+    PatternType,
+    ValidationResult,
+    extract_patterns,
+    hypothesize_grammar,
     # Convenience functions
     infer_grammar_from_observations,
     observe_and_infer,
-    extract_patterns,
-    hypothesize_grammar,
 )
 from agents.g.types import GrammarLevel
-
 
 # ============================================================================
 # ObservedPattern Tests

@@ -26,27 +26,25 @@ See spec/j-gents/jit.md and HYDRATE.md for full specification.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, TypeVar, Generic
-
-from bootstrap.types import Agent
+from typing import Any, Generic, TypeVar
 
 from agents.a.skeleton import (
-    AgentMeta,
+    AgentBehavior,
     AgentIdentity,
     AgentInterface,
-    AgentBehavior,
+    AgentMeta,
 )
+from bootstrap.types import Agent
 
+from .chaosmonger import StabilityConfig, analyze_stability
 from .meta_architect import (
     AgentSource,
     ArchitectConstraints,
-    MetaArchitect,
     ArchitectInput,
+    MetaArchitect,
     jit_safety_judge,
 )
-from .chaosmonger import analyze_stability, StabilityConfig
 from .sandbox import SandboxConfig, execute_in_sandbox
-
 
 # Type variables for agent generics
 A = TypeVar("A")

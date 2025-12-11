@@ -21,15 +21,14 @@ except ImportError:
     HAS_YAML = False
 
 from agents.g.types import (
-    Tongue,
-    GrammarLevel,
-    GrammarFormat,
-    ParserConfig,
-    InterpreterConfig,
-    Example,
     ConstraintProof,
+    Example,
+    GrammarFormat,
+    GrammarLevel,
+    InterpreterConfig,
+    ParserConfig,
+    Tongue,
 )
-
 
 # ============================================================================
 # Tongue Builder

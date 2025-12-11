@@ -70,13 +70,13 @@ def cmd_pulse(args: list[str]) -> int:
     path = Path(path_arg).expanduser().resolve() if path_arg else Path.cwd()
 
     # Late import - this is the lazy loading in action
-    from protocols.cli.companions import CompanionsCLI
     from protocols.cli.cli_types import (
-        CLIContext,
-        OutputFormat,
         BudgetLevel,
         BudgetStatus,
+        CLIContext,
+        OutputFormat,
     )
+    from protocols.cli.companions import CompanionsCLI
 
     async def run():
         ctx = CLIContext(
@@ -118,13 +118,13 @@ def cmd_ground(args: list[str]) -> int:
         print('Usage: kgents ground "<statement>"')
         return 1
 
-    from protocols.cli.companions import CompanionsCLI
     from protocols.cli.cli_types import (
-        CLIContext,
-        OutputFormat,
         BudgetLevel,
         BudgetStatus,
+        CLIContext,
+        OutputFormat,
     )
+    from protocols.cli.companions import CompanionsCLI
 
     async def run():
         ctx = CLIContext(
@@ -161,13 +161,13 @@ def cmd_breathe(args: list[str]) -> int:
         )
         return 0
 
-    from protocols.cli.companions import CompanionsCLI
     from protocols.cli.cli_types import (
-        CLIContext,
-        OutputFormat,
         BudgetLevel,
         BudgetStatus,
+        CLIContext,
+        OutputFormat,
     )
+    from protocols.cli.companions import CompanionsCLI
 
     async def run():
         ctx = CLIContext(
@@ -206,13 +206,13 @@ def cmd_entropy(args: list[str]) -> int:
 
     path = Path(path_arg).expanduser().resolve() if path_arg else Path.cwd()
 
-    from protocols.cli.companions import CompanionsCLI
     from protocols.cli.cli_types import (
-        CLIContext,
-        OutputFormat,
         BudgetLevel,
         BudgetStatus,
+        CLIContext,
+        OutputFormat,
     )
+    from protocols.cli.companions import CompanionsCLI
 
     async def run():
         ctx = CLIContext(

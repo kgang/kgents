@@ -72,7 +72,7 @@ class TestCommandResolution:
 
     def test_resolve_registered_command(self):
         """Registered commands resolve to handlers."""
-        from protocols.cli.hollow import resolve_command, COMMAND_REGISTRY
+        from protocols.cli.hollow import COMMAND_REGISTRY, resolve_command
 
         # All registered commands should be resolvable
         for cmd in ["membrane", "check", "find"]:

@@ -74,7 +74,7 @@ class GrammarianCLI(CLICapable):
         grammar complexity (schema, command, recursive). Constraints are
         comma-separated semantic boundaries.
         """
-        from agents.g import GrammarLevel, Grammarian
+        from agents.g import Grammarian, GrammarLevel
 
         # Map level string to enum
         level_map = {

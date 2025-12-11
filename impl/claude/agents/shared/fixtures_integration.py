@@ -14,16 +14,16 @@ Usage:
     )
 """
 
+from agents.f.contract import (
+    CompositionRule,
+    Contract,
+    Invariant,
+)
 from agents.f.intent import (
     Dependency,
     DependencyType,
     Example,
     Intent,
-)
-from agents.f.contract import (
-    CompositionRule,
-    Contract,
-    Invariant,
 )
 from agents.f.prototype import SourceCode
 

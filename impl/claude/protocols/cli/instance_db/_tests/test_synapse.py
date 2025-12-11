@@ -10,16 +10,15 @@ Coverage:
 
 import pytest
 
+from ..interfaces import TelemetryEvent
+from ..nervous import Signal, SignalPriority
 from ..synapse import (
     PredictiveModel,
+    SurpriseMetrics,
     Synapse,
     SynapseConfig,
-    SurpriseMetrics,
     create_synapse,
 )
-from ..nervous import Signal, SignalPriority
-from ..interfaces import TelemetryEvent
-
 
 # =============================================================================
 # Test Fixtures

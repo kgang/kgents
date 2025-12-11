@@ -9,11 +9,11 @@ Tests:
 - CorrelationDetector: Advanced correlation detection
 """
 
-import pytest
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from ..types import Determinism, SemanticTrace
+import pytest
+
 from ..bard import NarrativeGenre
 from ..chronicle import (
     Chronicle,
@@ -22,7 +22,7 @@ from ..chronicle import (
     Interaction,
     TimelineView,
 )
-
+from ..types import Determinism, SemanticTrace
 
 # =============================================================================
 # Fixtures

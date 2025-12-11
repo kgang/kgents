@@ -5,12 +5,12 @@ Provides foundation for the Temporal Witness concept from noosphere.md.
 Supports event sourcing, time-travel, drift detection, and momentum tracking.
 """
 
-from typing import TypeVar, Generic, List, Tuple, Callable, Optional, Any
+import json
+import statistics
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-import json
 from pathlib import Path
-import statistics
+from typing import Any, Callable, Generic, List, Optional, Tuple, TypeVar
 
 from .errors import (
     DriftDetectionError,

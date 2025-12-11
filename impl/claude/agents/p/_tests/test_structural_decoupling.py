@@ -14,10 +14,10 @@ import pytest
 from agents.p.strategies.structural_decoupling import (
     StructuralDecouplingParser,
     StructuredField,
-    structural_decoupling_parser,
-    simple_schema,
     field_with_prompt,
     mock_llm_generate,
+    simple_schema,
+    structural_decoupling_parser,
 )
 
 

@@ -10,6 +10,7 @@ Rendering is the inverse of parsing:
 """
 
 from typing import Any
+
 from agents.g.types import GrammarFormat, GrammarLevel
 
 

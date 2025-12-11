@@ -14,8 +14,8 @@ from typing import TypeVar
 
 # Hypothesis imports are optional
 try:
+    from hypothesis import assume, given, settings
     from hypothesis import strategies as st
-    from hypothesis import given, settings, assume
 
     HYPOTHESIS_AVAILABLE = True
 except ImportError:

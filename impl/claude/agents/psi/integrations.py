@@ -8,18 +8,17 @@ Graceful degradation when integrations are unavailable.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Protocol, Any
 from datetime import datetime
+from typing import Any, Protocol
 
-from .types import (
-    Problem,
-    Metaphor,
-    Solution,
-    Distortion,
-    Outcome,
-)
 from .engine import MetaphorEngine
-
+from .types import (
+    Distortion,
+    Metaphor,
+    Outcome,
+    Problem,
+    Solution,
+)
 
 # =============================================================================
 # L-gent Integration (Embeddings)
@@ -265,7 +264,7 @@ class PersistentEngine:
 
     def _load_state(self) -> None:
         """Load persisted state."""
-        from .learning import ThompsonSamplingModel, AbstractionModel
+        from .learning import AbstractionModel, ThompsonSamplingModel
 
         # Learning model
         learning_state = self.d_gent.get("psi/learning_model")

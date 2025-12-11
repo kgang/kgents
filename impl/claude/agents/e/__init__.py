@@ -25,142 +25,136 @@ Key principles:
 Spec Reference: spec/e-gents/
 """
 
-from .types import (
-    # Core types
-    Phage,
-    PhageStatus,
-    PhageLineage,
-    MutationVector,
-    InfectionResult,
-    InfectionStatus,
-    # Intent
-    Intent,
-    # Thermodynamics
-    ThermodynamicState,
-    GibbsEnergy,
-    # Evolution cycle
-    EvolutionCycleState,
+from .cycle import (
+    CycleConfig,
+    CyclePhase,
+    CycleResult,
+    # High-level agent
+    EvolutionAgent,
+    PhaseResult,
+    # Cycle
+    ThermodynamicCycle,
+    create_conservative_cycle,
+    # Factory functions
+    create_cycle,
+    create_exploratory_cycle,
+    create_full_cycle,
+    create_grant_funded_cycle,
 )
-
 from .demon import (
-    # Demon
-    TeleologicalDemon,
+    PARASITIC_PATTERNS,
     DemonConfig,
     DemonStats,
-    SelectionResult,
-    RejectionReason,
     # Parasitic patterns
     ParasiticPattern,
-    PARASITIC_PATTERNS,
+    RejectionReason,
+    SelectionResult,
+    # Demon
+    TeleologicalDemon,
     # Factory functions
     create_demon,
-    create_strict_demon,
     create_lenient_demon,
+    create_strict_demon,
 )
-
+from .library import (
+    LibraryStats,
+    MutationSuggestion,
+    PruneReport,
+    # Viral Library
+    ViralLibrary,
+    ViralLibraryConfig,
+    ViralPattern,
+    create_exploratory_library,
+    # Factory functions
+    create_library,
+    create_strict_library,
+    # Market integration
+    fitness_to_odds,
+    odds_from_library,
+)
 from .mutator import (
+    SCHEMA_EXTRACT_CONSTANT,
+    SCHEMA_FLATTEN_NESTING,
+    SCHEMA_INLINE_SINGLE_USE,
+    SCHEMA_LOOP_TO_COMPREHENSION,
+    # Standard schemas
+    STANDARD_SCHEMA_APPLICATORS,
+    ApplicationResult,
+    # Hot spots
+    CodeHotSpot,
+    MutationSchema,
     # Mutator
     Mutator,
     MutatorConfig,
     MutatorStats,
     # Schemas
     SchemaCategory,
-    MutationSchema,
-    # Hot spots
-    CodeHotSpot,
-    ApplicationResult,
     analyze_hot_spots,
-    # Standard schemas
-    STANDARD_SCHEMA_APPLICATORS,
-    SCHEMA_LOOP_TO_COMPREHENSION,
-    SCHEMA_EXTRACT_CONSTANT,
-    SCHEMA_FLATTEN_NESTING,
-    SCHEMA_INLINE_SINGLE_USE,
-    # Factory functions
-    create_mutator,
     create_conservative_mutator,
     create_exploratory_mutator,
-)
-
-from .library import (
-    # Viral Library
-    ViralLibrary,
-    ViralLibraryConfig,
-    ViralPattern,
-    LibraryStats,
-    MutationSuggestion,
-    PruneReport,
     # Factory functions
-    create_library,
-    create_strict_library,
-    create_exploratory_library,
-    # Market integration
-    fitness_to_odds,
-    odds_from_library,
+    create_mutator,
 )
-
 from .phage import (
-    # Phage operations
-    infect,
-    spawn_child,
-    get_lineage_chain,
-    calculate_lineage_fitness,
-    analyze_lineage,
-    infect_batch,
+    InfectionConfig,
     # Environment
     InfectionEnvironment,
-    InfectionConfig,
-    StakeRecord,
     LineageReport,
+    StakeRecord,
+    analyze_lineage,
+    calculate_lineage_fitness,
     # Factory functions
     create_infection_env,
-    create_test_only_env,
     create_production_env,
+    create_test_only_env,
+    get_lineage_chain,
+    # Phage operations
+    infect,
+    infect_batch,
+    spawn_child,
 )
-
-from .cycle import (
-    # Cycle
-    ThermodynamicCycle,
-    CycleConfig,
-    CyclePhase,
-    CycleResult,
-    PhaseResult,
-    # High-level agent
-    EvolutionAgent,
-    # Factory functions
-    create_cycle,
-    create_conservative_cycle,
-    create_exploratory_cycle,
-    create_grant_funded_cycle,
-    create_full_cycle,
-)
-
 from .safety import (
     # Rollback
     AtomicCheckpoint,
     AtomicMutationManager,
-    FileCheckpoint,
-    RollbackStatus,
-    # Rate limiting
-    RateLimiter,
-    RateLimitConfig,
-    RateLimitExceeded,
     # Audit logging
     AuditEvent,
     AuditEventType,
     AuditLogger,
-    InMemoryAuditSink,
     FileAuditSink,
+    FileCheckpoint,
+    InMemoryAuditSink,
+    RateLimitConfig,
+    # Rate limiting
+    RateLimiter,
+    RateLimitExceeded,
+    RollbackStatus,
+    SafetyConfig,
+    # Unified
+    SafetySystem,
     # Sandbox
     Sandbox,
     SandboxConfig,
     SandboxResult,
     SandboxViolation,
-    # Unified
-    SafetySystem,
-    SafetyConfig,
     create_safety_system,
     create_test_safety_system,
+)
+from .types import (
+    # Evolution cycle
+    EvolutionCycleState,
+    GibbsEnergy,
+    InfectionResult,
+    InfectionStatus,
+    # Intent
+    Intent,
+    MutationVector,
+    # Core types
+    Phage,
+    PhageLineage,
+    PhageStatus,
+    # Thermodynamics
+    ThermodynamicState,
 )
 
 __all__ = [

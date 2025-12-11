@@ -26,9 +26,9 @@ import asyncio
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Callable, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Callable
 
-from .metered_functor import Gas, CentralBank, Receipt
+from .metered_functor import CentralBank, Gas, Receipt
 
 if TYPE_CHECKING:
     pass

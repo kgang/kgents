@@ -12,13 +12,14 @@ from pathlib import Path
 from typing import Optional
 
 from agents.d import PersistentAgent
+
 from .persona import (
-    PersonaState,
-    PersonaSeed,
     DialogueInput,
     DialogueOutput,
     KgentAgent,
     PersonaQueryAgent,
+    PersonaSeed,
+    PersonaState,
 )
 
 

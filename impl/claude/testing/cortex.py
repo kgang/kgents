@@ -21,25 +21,24 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
 
-from .oracle import Oracle, OracleValidation, format_validation_report
-from .topologist import (
-    Topologist,
-    TypeTopology,
-    TopologistReport,
-    format_topologist_report,
-)
 from .analyst import (
     CausalAnalyst,
-    WitnessStore,
     TestWitness,
+    WitnessStore,
 )
 from .market import (
     BudgetManager,
     TestAsset,
     TestCost,
 )
+from .oracle import Oracle, OracleValidation, format_validation_report
 from .red_team import RedTeam, RedTeamReport, format_red_team_report
-
+from .topologist import (
+    Topologist,
+    TopologistReport,
+    TypeTopology,
+    format_topologist_report,
+)
 
 # =============================================================================
 # Morning Briefing Types

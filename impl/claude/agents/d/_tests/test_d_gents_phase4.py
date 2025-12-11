@@ -9,32 +9,33 @@ Tests the integration of D-gents with:
 """
 
 import asyncio
-import pytest
-from pathlib import Path
-import tempfile
 import shutil
+import tempfile
+from pathlib import Path
+
+import pytest
+
+# B-gents
+from agents.b import (
+    Hypothesis,
+    NoveltyLevel,
+    PersistentHypothesisStorage,
+)
+from agents.b.hypothesis_parser import ParsedHypothesisResponse
 
 # D-gents
 from agents.d import (
-    VolatileAgent,
     EntropyConstrainedAgent,
     StorageError,
+    VolatileAgent,
 )
 
 # K-gent
 from agents.k import (
-    PersistentPersonaAgent,
     DialogueInput,
     DialogueMode,
+    PersistentPersonaAgent,
 )
-
-# B-gents
-from agents.b import (
-    PersistentHypothesisStorage,
-    Hypothesis,
-    NoveltyLevel,
-)
-from agents.b.hypothesis_parser import ParsedHypothesisResponse
 
 # T-gents
 from agents.t import SpyAgent

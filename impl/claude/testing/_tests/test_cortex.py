@@ -9,48 +9,48 @@ Tests cover all five pillars:
 5. Red Team - Adversarial evolution
 """
 
-import pytest
 from dataclasses import dataclass
 from datetime import datetime
 
-# Import all components
-from testing.oracle import (
-    Oracle,
-    IdempotencyRelation,
-    cosine_similarity,
-    format_validation_report,
-)
-from testing.topologist import (
-    Topologist,
-    TypeTopology,
-    NoiseFunctor,
-    NoisyAgent,
-)
+import pytest
 from testing.analyst import (
     CausalAnalyst,
-    WitnessStore,
     TestWitness,
-)
-from testing.market import (
-    TestMarket,
-    TestAsset,
-    TestCost,
-    BUDGET_TIERS,
-    format_market_report,
-)
-from testing.red_team import (
-    RedTeam,
-    AdversarialInput,
-    MUTATION_OPERATORS,
-    HypnoticPrefixMutation,
-    UnicodeMutation,
-    format_red_team_report,
+    WitnessStore,
 )
 from testing.cortex import (
     Cortex,
     format_briefing_report,
 )
+from testing.market import (
+    BUDGET_TIERS,
+    TestAsset,
+    TestCost,
+    TestMarket,
+    format_market_report,
+)
 
+# Import all components
+from testing.oracle import (
+    IdempotencyRelation,
+    Oracle,
+    cosine_similarity,
+    format_validation_report,
+)
+from testing.red_team import (
+    MUTATION_OPERATORS,
+    AdversarialInput,
+    HypnoticPrefixMutation,
+    RedTeam,
+    UnicodeMutation,
+    format_red_team_report,
+)
+from testing.topologist import (
+    NoiseFunctor,
+    NoisyAgent,
+    Topologist,
+    TypeTopology,
+)
 
 # =============================================================================
 # Test Fixtures
@@ -689,8 +689,13 @@ class TestReportFormatting:
 
     def test_format_briefing_report(self):
         """Should format briefing report."""
-        from testing.cortex import BriefingReport, TopologistSummary, AnalystSummary
-        from testing.cortex import RedTeamSummary, OracleSummary
+        from testing.cortex import (
+            AnalystSummary,
+            BriefingReport,
+            OracleSummary,
+            RedTeamSummary,
+            TopologistSummary,
+        )
 
         briefing = BriefingReport(
             timestamp=datetime.now(),

@@ -8,8 +8,8 @@ This script verifies:
 3. Basic agent instantiation works
 """
 
-import sys
 import asyncio
+import sys
 from pathlib import Path
 
 # Add current dir to path
@@ -18,6 +18,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 # Avoid importing broken agents package by importing modules directly
 import importlib.util
 
+
 def load_module(name, path):
     """Load a module from a file path."""
     spec = importlib.util.spec_from_file_location(name, path)
@@ -25,6 +26,7 @@ def load_module(name, path):
     sys.modules[name] = module
     spec.loader.exec_module(module)
     return module
+
 
 # Load bootstrap types first
 bootstrap_types = load_module("bootstrap.types", "bootstrap/types.py")
@@ -134,7 +136,14 @@ try:
         print(f"      - {arch.value}")
 
     # Verify expected archetypes
-    expected = {'persona', 'shadow', 'anima_animus', 'self', 'trickster', 'wise_old_man'}
+    expected = {
+        "persona",
+        "shadow",
+        "anima_animus",
+        "self",
+        "trickster",
+        "wise_old_man",
+    }
     actual = {a.value for a in archetypes}
     assert expected == actual, f"Archetype mismatch: {expected} != {actual}"
 
@@ -144,38 +153,39 @@ except Exception as e:
 
 # Test 5: Basic async invocation
 print("\n5. Testing basic async invocation...")
+
+
 async def test_invocation():
     try:
         # Test Hegel
         h = hegel()
-        result = await h.invoke(DialecticInput(
-            thesis="Be fast",
-            antithesis="Be thorough"
-        ))
+        result = await h.invoke(
+            DialecticInput(thesis="Be fast", antithesis="Be thorough")
+        )
         print(f"   ✓ HegelAgent.invoke() returned: {type(result).__name__}")
 
         # Test Jung
         j = jung()
-        result = await j.invoke(JungInput(
-            system_self_image="helpful, accurate, safe"
-        ))
+        result = await j.invoke(JungInput(system_self_image="helpful, accurate, safe"))
         print(f"   ✓ JungAgent.invoke() returned: {type(result).__name__}")
         print(f"      - Shadow inventory: {len(result.shadow_inventory)} items")
         print(f"      - Archetypes: {len(result.archetypes)} detected")
 
         # Test Lacan
         l = lacan()
-        result = await l.invoke(LacanInput(
-            output="I understand your request completely"
-        ))
+        result = await l.invoke(
+            LacanInput(output="I understand your request completely")
+        )
         print(f"   ✓ LacanAgent.invoke() returned: {type(result).__name__}")
 
         return True
     except Exception as e:
         print(f"   ✗ FAILED: {e}")
         import traceback
+
         traceback.print_exc()
         return False
+
 
 success = asyncio.run(test_invocation())
 if not success:

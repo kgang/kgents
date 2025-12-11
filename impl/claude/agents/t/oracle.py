@@ -11,7 +11,7 @@ Maps (input, agents) to differential analysis results.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Generic, TypeVar, List, Tuple, Callable, Optional
+from typing import Any, Callable, Generic, List, Optional, Tuple, TypeVar
 
 from runtime.base import Agent
 
@@ -22,12 +22,13 @@ B = TypeVar("B")  # Output type
 @dataclass
 class DiffResult(Generic[B]):
     """Result of differential testing."""
-    input: Any                           # The input tested
-    outputs: List[Tuple[str, B]]         # List of (agent_name, output) pairs
-    all_agree: bool                      # Whether all outputs are equal
+
+    input: Any  # The input tested
+    outputs: List[Tuple[str, B]]  # List of (agent_name, output) pairs
+    all_agree: bool  # Whether all outputs are equal
     majority_output: Optional[B] = None  # Most common output (if exists)
     deviants: List[str] = field(default_factory=list)  # Agents with differing outputs
-    explanation: str = ""                # Optional explanation of differences
+    explanation: str = ""  # Optional explanation of differences
 
     @property
     def agreement_rate(self) -> float:
@@ -42,8 +43,7 @@ class DiffResult(Generic[B]):
             return 0.0
 
         matching = sum(
-            1 for _, output in self.outputs
-            if output == self.majority_output
+            1 for _, output in self.outputs if output == self.majority_output
         )
         return matching / len(self.outputs)
 
@@ -146,10 +146,7 @@ class OracleAgent(Agent[Tuple[A, List[Agent[A, B]]], DiffResult[B]], Generic[A, 
             )
 
         first_output = outputs[0][1]
-        all_agree = all(
-            self.equality_fn(first_output, output)
-            for _, output in outputs
-        )
+        all_agree = all(self.equality_fn(first_output, output) for _, output in outputs)
 
         if all_agree:
             return DiffResult(
@@ -196,7 +193,9 @@ class OracleAgent(Agent[Tuple[A, List[Agent[A, B]]], DiffResult[B]], Generic[A, 
             input=test_input,
             outputs=outputs,
             all_agree=False,
-            majority_output=majority_output if majority_proportion >= self.majority_threshold else None,
+            majority_output=majority_output
+            if majority_proportion >= self.majority_threshold
+            else None,
             deviants=deviants,
             explanation=explanation,
         )
@@ -277,7 +276,7 @@ def structural_equality(a: Any, b: Any) -> bool:
 
     Compares dictionaries, lists, and nested structures.
     """
-    if type(a) != type(b):
+    if type(a) is not type(b):
         return False
 
     if isinstance(a, dict) and isinstance(b, dict):

@@ -20,36 +20,36 @@ Strategies:
 - Composition: FallbackParser, FusionParser, SwitchParser
 """
 
-from agents.p.core import ParseResult, Parser, ParserConfig
+from agents.p.composition import FallbackParser, FusionParser, SwitchParser
+from agents.p.core import Parser, ParserConfig, ParseResult
 from agents.p.strategies.anchor import AnchorBasedParser
+from agents.p.strategies.diff_based import (
+    DiffBasedParser,
+    create_egent_diff_parser,
+    create_wgent_diff_parser,
+)
+from agents.p.strategies.evolving import (
+    DriftReport,
+    EvolvingParser,
+    FormatStats,
+    create_multi_format_parser,
+)
+from agents.p.strategies.probabilistic_ast import (
+    ProbabilisticASTNode,
+    ProbabilisticASTParser,
+    get_low_confidence_paths,
+    query_confident_fields,
+)
+from agents.p.strategies.reflection import (
+    ReflectionContext,
+    ReflectionParser,
+    create_reflection_parser_with_llm,
+)
 from agents.p.strategies.stack_balancing import (
     StackBalancingParser,
     html_stream_parser,
     json_stream_parser,
 )
-from agents.p.strategies.reflection import (
-    ReflectionParser,
-    create_reflection_parser_with_llm,
-    ReflectionContext,
-)
-from agents.p.strategies.diff_based import (
-    DiffBasedParser,
-    create_wgent_diff_parser,
-    create_egent_diff_parser,
-)
-from agents.p.strategies.probabilistic_ast import (
-    ProbabilisticASTParser,
-    ProbabilisticASTNode,
-    query_confident_fields,
-    get_low_confidence_paths,
-)
-from agents.p.strategies.evolving import (
-    EvolvingParser,
-    FormatStats,
-    DriftReport,
-    create_multi_format_parser,
-)
-from agents.p.composition import FallbackParser, FusionParser, SwitchParser
 
 __all__ = [
     # Core types

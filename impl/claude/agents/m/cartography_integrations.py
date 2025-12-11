@@ -17,12 +17,11 @@ from datetime import datetime, timedelta
 from typing import Any, Protocol, runtime_checkable
 
 from .cartography import (
-    HoloMap,
     Attractor,
-    WeightedEdge,
     ContextVector,
+    HoloMap,
+    WeightedEdge,
 )
-
 
 # ============================================================================
 # O-gent Integration: Cartographic Observer

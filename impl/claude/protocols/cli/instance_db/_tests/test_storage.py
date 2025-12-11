@@ -4,22 +4,23 @@ Tests for StorageProvider and XDGPaths.
 Tests configuration loading, provider creation, and path resolution.
 """
 
-import pytest
 from pathlib import Path
 
+import pytest
+
+from ..providers.sqlite import (
+    FilesystemBlobStore,
+    InMemoryRelationalStore,
+    NumpyVectorStore,
+    SQLiteRelationalStore,
+    SQLiteTelemetryStore,
+)
 from ..storage import (
-    StorageProvider,
-    XDGPaths,
     InfrastructureConfig,
     ProviderConfig,
     RetentionConfig,
-)
-from ..providers.sqlite import (
-    SQLiteRelationalStore,
-    NumpyVectorStore,
-    FilesystemBlobStore,
-    SQLiteTelemetryStore,
-    InMemoryRelationalStore,
+    StorageProvider,
+    XDGPaths,
 )
 
 

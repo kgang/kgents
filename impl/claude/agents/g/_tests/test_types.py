@@ -11,21 +11,21 @@ Tests cover:
 """
 
 import json
+
 import pytest
 from agents.g.types import (
-    GrammarLevel,
-    GrammarFormat,
-    ParseResult,
-    ExecutionResult,
-    ParserConfig,
-    InterpreterConfig,
     ConstraintProof,
     CounterExample,
     DomainAnalysis,
     Example,
+    ExecutionResult,
+    GrammarFormat,
+    GrammarLevel,
+    InterpreterConfig,
+    ParserConfig,
+    ParseResult,
     Tongue,
 )
-
 
 # ============================================================================
 # Enum Tests

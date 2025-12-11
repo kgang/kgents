@@ -17,11 +17,11 @@ Key Insight:
 - Ethical constraints are learned from experience, not hardcoded
 """
 
+import math
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, Generic, List, Optional, Tuple, TypeVar
 from enum import Enum, auto
-import math
+from typing import Any, Dict, Generic, List, Optional, Tuple, TypeVar
 
 from .holographic import (
     HolographicMemory,

@@ -54,8 +54,99 @@ Phase 8 Implementation (D-gent Vector DB Integration):
 - Tight L-gent + D-gent integration as per spec
 """
 
+from .advanced_lattice import (
+    AdvancedLattice,
+    CachedLattice,
+    IntersectionType,
+    TypePath,
+    UnionType,
+    create_advanced_lattice,
+    create_cached_lattice,
+)
+from .egent_integration import (
+    STANDARD_SCHEMAS,
+    # Code intent
+    CodeIntent,
+    # Extended registry
+    EgentSemanticRegistry,
+    # Type inference
+    InferredType,
+    # Mutation schemas
+    MutationSchema,
+    SchemaCategory,
+    cosine_similarity,
+    create_egent_registry,
+    extract_code_docstrings,
+    extract_code_names,
+    infer_types,
+    types_compatible,
+)
+from .embedders import (
+    OPENAI_AVAILABLE,
+    SENTENCE_TRANSFORMERS_AVAILABLE,
+    CachedEmbedder,
+    EmbeddingMetadata,
+    compare_embedders,
+    create_best_available_embedder,
+)
+from .fusion import (
+    FusedResult,
+    QueryFusion,
+    QueryResponse,
+    QueryType,
+    create_query_fusion,
+)
+from .graph_search import (
+    GraphBrain,
+    GraphResult,
+    SearchDirection,
+    create_graph_brain,
+)
+from .lattice import (
+    CompositionResult,
+    CompositionStage,
+    CompositionSuggestion,
+    PipelineVerification,
+    SubtypeEdge,
+    TypeKind,
+    TypeLattice,
+    TypeNode,
+    create_lattice,
+)
+from .lineage import (
+    LineageError,
+    LineageGraph,
+    Relationship,
+    RelationshipType,
+    record_dependency,
+    record_evolution,
+    record_fork,
+)
+from .persistence import (
+    PersistenceConfig,
+    PersistentRegistry,
+    SaveStrategy,
+    create_persistent_registry,
+    load_or_create_registry,
+)
 from .registry import Registry
 from .search import Search
+from .semantic import (
+    Embedder,
+    SemanticBrain,
+    SemanticResult,
+    SimpleEmbedder,
+    create_semantic_brain,
+)
+from .semantic_registry import (
+    SemanticRegistry,
+    create_semantic_registry,
+)
+from .semantic_vector import (
+    VectorSemanticBrain,
+    create_best_semantic_brain,
+    create_vector_semantic_brain,
+)
 from .types import (
     Catalog,
     CatalogEntry,
@@ -64,103 +155,12 @@ from .types import (
     SearchResult,
     Status,
 )
-from .persistence import (
-    PersistentRegistry,
-    PersistenceConfig,
-    SaveStrategy,
-    create_persistent_registry,
-    load_or_create_registry,
-)
-from .lineage import (
-    LineageGraph,
-    Relationship,
-    RelationshipType,
-    LineageError,
-    record_evolution,
-    record_fork,
-    record_dependency,
-)
-from .lattice import (
-    TypeLattice,
-    TypeNode,
-    TypeKind,
-    SubtypeEdge,
-    CompositionResult,
-    CompositionStage,
-    PipelineVerification,
-    CompositionSuggestion,
-    create_lattice,
-)
-from .advanced_lattice import (
-    AdvancedLattice,
-    CachedLattice,
-    UnionType,
-    IntersectionType,
-    TypePath,
-    create_advanced_lattice,
-    create_cached_lattice,
-)
-from .semantic import (
-    SemanticBrain,
-    SemanticResult,
-    Embedder,
-    SimpleEmbedder,
-    create_semantic_brain,
-)
-from .semantic_registry import (
-    SemanticRegistry,
-    create_semantic_registry,
-)
-from .egent_integration import (
-    # Mutation schemas
-    MutationSchema,
-    SchemaCategory,
-    STANDARD_SCHEMAS,
-    # Code intent
-    CodeIntent,
-    extract_code_docstrings,
-    extract_code_names,
-    # Type inference
-    InferredType,
-    infer_types,
-    types_compatible,
-    # Extended registry
-    EgentSemanticRegistry,
-    cosine_similarity,
-    create_egent_registry,
-)
-from .embedders import (
-    EmbeddingMetadata,
-    CachedEmbedder,
-    create_best_available_embedder,
-    compare_embedders,
-    SENTENCE_TRANSFORMERS_AVAILABLE,
-    OPENAI_AVAILABLE,
-)
 from .vector_backend import (
+    CHROMADB_AVAILABLE,
+    FAISS_AVAILABLE,
     VectorBackend,
     VectorSearchResult,
     create_vector_backend,
-    CHROMADB_AVAILABLE,
-    FAISS_AVAILABLE,
-)
-from .graph_search import (
-    GraphBrain,
-    GraphResult,
-    SearchDirection,
-    create_graph_brain,
-)
-from .fusion import (
-    QueryFusion,
-    FusedResult,
-    QueryResponse,
-    QueryType,
-    create_query_fusion,
-)
-from .semantic_vector import (
-    VectorSemanticBrain,
-    create_vector_semantic_brain,
-    create_best_semantic_brain,
 )
 
 # Check for D-gent VectorAgent availability

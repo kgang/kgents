@@ -9,20 +9,19 @@ Tests:
 - Summary generation
 """
 
-import pytest
 from datetime import datetime
 
+import pytest
 from agents.w.value_dashboard import (
     DashboardPanel,
-    TokenSnapshot,
-    TensorSnapshot,
-    VoISnapshot,
-    RoCSnapshot,
     DashboardState,
-    create_value_dashboard,
+    RoCSnapshot,
+    TensorSnapshot,
+    TokenSnapshot,
+    VoISnapshot,
     create_minimal_dashboard,
+    create_value_dashboard,
 )
-
 
 # =============================================================================
 # Snapshot Tests

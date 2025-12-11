@@ -8,38 +8,37 @@ This test suite validates:
 - Full three-brain workflow
 """
 
-import pytest
 from datetime import datetime
 
+import pytest
 from agents.l import (
-    # Core types
-    Registry,
-    CatalogEntry,
-    EntityType,
-    Status,
-    # Lineage & Lattice
-    LineageGraph,
-    TypeLattice,
-    TypeNode,
-    TypeKind,
-    RelationshipType,
-    # Search components
-    Search,
-    SemanticBrain,
-    SimpleEmbedder,
-    # Phase 7: Graph, Fusion, VectorSemantic
-    GraphBrain,
-    SearchDirection,
-    QueryFusion,
-    QueryType,
-    VectorSemanticBrain,
-    create_graph_brain,
-    create_query_fusion,
     # Vector backend
     CHROMADB_AVAILABLE,
     FAISS_AVAILABLE,
+    CatalogEntry,
+    EntityType,
+    # Phase 7: Graph, Fusion, VectorSemantic
+    GraphBrain,
+    # Lineage & Lattice
+    LineageGraph,
+    QueryFusion,
+    QueryType,
+    # Core types
+    Registry,
+    RelationshipType,
+    # Search components
+    Search,
+    SearchDirection,
+    SemanticBrain,
+    SimpleEmbedder,
+    Status,
+    TypeKind,
+    TypeLattice,
+    TypeNode,
+    VectorSemanticBrain,
+    create_graph_brain,
+    create_query_fusion,
 )
-
 
 # Test fixtures
 

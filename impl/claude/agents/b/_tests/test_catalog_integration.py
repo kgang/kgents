@@ -6,23 +6,21 @@ with the L-gent catalog system.
 """
 
 import pytest
-
-from agents.b.hypothesis_parser import Hypothesis, NoveltyLevel
 from agents.b.catalog_integration import (
-    register_hypothesis,
-    register_hypothesis_batch,
-    find_hypotheses,
-    find_related_hypotheses,
-    record_hypothesis_evolution,
-    record_hypothesis_fork,
-    get_hypothesis_lineage,
-    update_hypothesis_metrics,
-    mark_hypothesis_falsified,
     _extract_keywords,
     _generate_hypothesis_name,
+    find_hypotheses,
+    find_related_hypotheses,
+    get_hypothesis_lineage,
+    mark_hypothesis_falsified,
+    record_hypothesis_evolution,
+    record_hypothesis_fork,
+    register_hypothesis,
+    register_hypothesis_batch,
+    update_hypothesis_metrics,
 )
-from agents.l import Registry, LineageGraph, Status
-
+from agents.b.hypothesis_parser import Hypothesis, NoveltyLevel
+from agents.l import LineageGraph, Registry, Status
 
 # ─────────────────────────────────────────────────────────────────
 # Fixtures

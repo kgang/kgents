@@ -6,15 +6,15 @@ Philosophy: Laws must hold for ALL agents, not just handpicked examples.
 Phase 3/6 of test evolution plan: Hypothesis-powered law verification.
 """
 
-import pytest
 from functools import reduce
 
+import pytest
 from bootstrap import ID, compose
 
 # Optional hypothesis import with graceful fallback
 try:
-    from hypothesis import given, settings, assume
-    from testing.strategies import simple_agents, agent_chains
+    from hypothesis import assume, given, settings
+    from testing.strategies import agent_chains, simple_agents
 
     HYPOTHESIS_AVAILABLE = True
 except ImportError:

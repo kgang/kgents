@@ -57,22 +57,21 @@ Example:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, TypeVar, Generic
+from typing import Any, Generic, TypeVar
 
-from bootstrap.types import Result, ok, err
-
-from agents.t.tool import Tool, ToolMeta, ToolError, ToolErrorType
 from agents.t.permissions import ToolCapabilities
+from agents.t.tool import Tool, ToolError, ToolErrorType, ToolMeta
+from bootstrap.types import Result, err, ok
 
+from .chaosmonger import StabilityConfig, analyze_stability
+from .factory_integration import JITAgentMeta
 from .meta_architect import (
     AgentSource,
     ArchitectConstraints,
-    MetaArchitect,
     ArchitectInput,
+    MetaArchitect,
 )
-from .chaosmonger import analyze_stability, StabilityConfig
 from .sandbox import SandboxConfig, execute_in_sandbox
-from .factory_integration import JITAgentMeta
 
 # Type variables for tool generics
 A = TypeVar("A")

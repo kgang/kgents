@@ -19,15 +19,15 @@ The system ALWAYS works, just with different capabilities.
 from __future__ import annotations
 
 import hashlib
+import os
 import socket
 import sys
-import os
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Callable, Awaitable
+from typing import Awaitable, Callable
 
 from .ground import Ground, XDGPaths, resolve_ground
 from .storage import StorageProvider, TelemetryEvent

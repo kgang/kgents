@@ -15,8 +15,15 @@ Target: 30+ tests
 """
 
 from datetime import datetime, timedelta, timezone
-import pytest
 
+import pytest
+from agents.n.bard import (
+    Narrative,
+    NarrativeGenre,
+    NarrativeRequest,
+    Perspective,
+    SimpleLLMProvider,
+)
 from agents.n.epistemic import (
     ConfidenceLevel,
     Contradiction,
@@ -33,15 +40,7 @@ from agents.n.epistemic import (
     UnreliableNarrator,
     UnreliableTrace,
 )
-from agents.n.bard import (
-    Narrative,
-    NarrativeGenre,
-    NarrativeRequest,
-    Perspective,
-    SimpleLLMProvider,
-)
 from agents.n.types import Determinism, SemanticTrace
-
 
 # =============================================================================
 # Fixtures

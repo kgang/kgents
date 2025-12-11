@@ -15,10 +15,10 @@ Use Cases:
 - F-gent artifact updates: Patch .alo.md files for version bumps
 """
 
-from dataclasses import dataclass, field
 import re
+from dataclasses import dataclass, field
 
-from agents.p.core import ParseResult, Parser, ParserConfig
+from agents.p.core import Parser, ParserConfig, ParseResult
 
 
 @dataclass

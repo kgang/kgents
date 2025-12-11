@@ -1,24 +1,22 @@
 """Tests for E-gent v2 Core Types."""
 
 import pytest
-
 from agents.e.types import (
-    # Phage types
-    Phage,
-    PhageStatus,
-    PhageLineage,
-    MutationVector,
+    # Cycle
+    EvolutionCycleState,
+    GibbsEnergy,
     InfectionResult,
     InfectionStatus,
     # Intent
     Intent,
+    MutationVector,
+    # Phage types
+    Phage,
+    PhageLineage,
+    PhageStatus,
     # Thermodynamics
     ThermodynamicState,
-    GibbsEnergy,
-    # Cycle
-    EvolutionCycleState,
 )
-
 
 # =============================================================================
 # MutationVector Tests

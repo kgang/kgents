@@ -5,8 +5,8 @@ Lenses enable focused, law-abiding access to nested state structures.
 They compose via >> to access deeply nested data with type safety.
 """
 
-from typing import TypeVar, Generic, Callable, Any, Optional, List
 from dataclasses import dataclass, replace
+from typing import Any, Callable, Generic, List, Optional, TypeVar
 
 S = TypeVar("S")  # Whole state
 A = TypeVar("A")  # Sub-state (focus)

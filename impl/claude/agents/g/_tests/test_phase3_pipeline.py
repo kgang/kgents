@@ -9,12 +9,11 @@ Test the complete pipeline:
 
 import pytest
 from agents.g import (
-    create_schema_tongue,
     create_command_tongue,
     create_recursive_tongue,
+    create_schema_tongue,
 )
 from agents.g.renderer import validate_round_trip
-
 
 # ============================================================================
 # Level 1: Schema Parsing + Execution Tests

@@ -12,12 +12,12 @@ Functor Laws:
 2. Composition: F(g ∘ f) = F(g) ∘ F(f)
 """
 
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from typing import Generic, TypeVar, Callable, Any, Optional
 import asyncio
 import logging
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from datetime import datetime
+from typing import Any, Callable, Generic, Optional, TypeVar
 
 from bootstrap.types import Agent
 

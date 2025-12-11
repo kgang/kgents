@@ -40,6 +40,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Callable
 
+from .event_store import EventStore
 from .types import (
     AgentEntry,
     AgentStatus,
@@ -51,8 +52,6 @@ from .types import (
     SessionState,
     ThoughtEntry,
 )
-from .event_store import EventStore
-
 
 # =============================================================================
 # Try to import Textual (optional dependency)
@@ -60,22 +59,22 @@ from .event_store import EventStore
 
 TEXTUAL_AVAILABLE = False
 try:
+    from textual import events
     from textual.app import App, ComposeResult
+    from textual.binding import Binding
     from textual.containers import Container, Horizontal, Vertical
+    from textual.reactive import reactive
     from textual.widgets import (
-        Static,
-        Header,
         Footer,
+        Header,
         Input,
-        ListView,
-        ListItem,
         Label,
+        ListItem,
+        ListView,
         Log,
         ProgressBar,
+        Static,
     )
-    from textual.reactive import reactive
-    from textual.binding import Binding
-    from textual import events
 
     TEXTUAL_AVAILABLE = True
 except ImportError:

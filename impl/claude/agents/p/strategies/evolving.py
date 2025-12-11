@@ -15,12 +15,14 @@ Use Cases:
 - Cross-LLM compatibility: Different LLMs prefer different formats
 """
 
-from dataclasses import dataclass, field
-from typing import Optional
 import json
 import time
+from dataclasses import dataclass, field
+from typing import Generic, Optional, TypeVar
 
-from agents.p.core import ParseResult, Parser, ParserConfig
+from agents.p.core import Parser, ParserConfig, ParseResult
+
+A = TypeVar("A")
 
 
 @dataclass
@@ -84,7 +86,7 @@ class DriftReport:
 
 
 @dataclass
-class EvolvingParser[A](Parser[A]):
+class EvolvingParser(Generic[A], Parser[A]):
     """
     Parser that learns from observed formats over time.
 
@@ -292,7 +294,7 @@ class EvolvingParser[A](Parser[A]):
 
 
 def create_multi_format_parser(formats: dict[str, Parser]) -> EvolvingParser:
-    """
+    r"""
     Create an EvolvingParser that learns from multiple formats.
 
     Example:

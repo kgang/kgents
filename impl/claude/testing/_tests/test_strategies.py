@@ -9,18 +9,17 @@ Tests here verify the strategies themselves work correctly.
 
 import pytest
 
-
 # Skip all tests if hypothesis not available
 pytest.importorskip("hypothesis")
 
 
 from hypothesis import given, settings
 from testing.strategies import (
-    simple_agents,
     agent_chains,
-    valid_dna,
     invalid_dna,
+    simple_agents,
     type_names,
+    valid_dna,
 )
 
 
@@ -59,6 +58,7 @@ class TestAgentStrategies:
     async def test_agent_chains_composable(self, agents):
         """Agent chains should be composable."""
         from functools import reduce
+
         from bootstrap import compose
 
         composed = reduce(compose, agents)

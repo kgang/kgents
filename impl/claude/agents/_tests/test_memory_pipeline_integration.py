@@ -10,24 +10,16 @@ Tests integration between Memory, Data, Library, Banker, and Narrative agents:
 Philosophy: Memory is not storage—it is active reconstruction.
 """
 
-import pytest
 from dataclasses import dataclass
+
+import pytest
 
 # D-gent imports
 from agents.d import (
-    VolatileAgent,
-    UnifiedMemory,
     MemoryConfig,
     Symbiont,
-)
-
-# M-gent imports
-from agents.m import (
-    HolographicMemory,
-    DgentBackedHolographicMemory,
-    ProspectiveAgent,
-    Situation,
-    ActionHistory,
+    UnifiedMemory,
+    VolatileAgent,
 )
 
 # L-gent imports
@@ -38,14 +30,23 @@ from agents.l import (
     SimpleEmbedder,
 )
 
+# M-gent imports
+from agents.m import (
+    ActionHistory,
+    DgentBackedHolographicMemory,
+    HolographicMemory,
+    ProspectiveAgent,
+    Situation,
+)
+
 # N-gent imports
 from agents.n import (
+    Bard,
+    Determinism,
     Historian,
     MemoryCrystalStore,
-    Determinism,
-    Bard,
-    NarrativeRequest,
     NarrativeGenre,
+    NarrativeRequest,
     Verbosity,
 )
 

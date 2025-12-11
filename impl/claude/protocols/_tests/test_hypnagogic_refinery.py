@@ -11,17 +11,18 @@ Tests:
 - Rollback capability
 """
 
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
 from protocols.hypnagogic_refinery import (
     MemoryTemperature,
     OptimizationObjective,
     OptimizationStatus,
     RefineryReport,
+    create_memory,
     create_memory_store,
     create_optimization_engine,
     create_refinery,
-    create_memory,
 )
 
 

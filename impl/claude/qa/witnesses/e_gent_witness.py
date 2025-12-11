@@ -24,35 +24,35 @@ Aligned with spec/principles.md:
 """
 
 import asyncio
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 # E-gent imports
 from impl.claude.agents.e import (
-    # Core types
-    Phage,
-    MutationVector,
-    Intent,
-    GibbsEnergy,
-    create_demon,
     PARASITIC_PATTERNS,
-    # Mutator
-    analyze_hot_spots,
     STANDARD_SCHEMA_APPLICATORS,
-    # Library
-    create_library,
-    fitness_to_odds,
+    AtomicMutationManager,
+    AuditLogger,
     # Phage operations
     CycleConfig,
-    create_cycle,
-    AtomicMutationManager,
-    RateLimiter,
-    AuditLogger,
+    GibbsEnergy,
     InMemoryAuditSink,
+    Intent,
+    MutationVector,
+    # Core types
+    Phage,
+    RateLimiter,
     Sandbox,
     SandboxConfig,
+    # Mutator
+    analyze_hot_spots,
+    create_cycle,
+    create_demon,
+    # Library
+    create_library,
     create_test_safety_system,
+    fitness_to_odds,
 )
 
 

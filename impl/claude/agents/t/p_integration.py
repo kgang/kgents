@@ -14,7 +14,7 @@ P-gents ensure that data crossing tool boundaries is well-formed and type-safe.
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
-from agents.p.core import ParseResult, Parser, ParserConfig
+from agents.p.core import Parser, ParserConfig, ParseResult
 from agents.p.strategies.anchor import AnchorBasedParser
 from agents.p.strategies.probabilistic_ast import (
     ProbabilisticASTParser,

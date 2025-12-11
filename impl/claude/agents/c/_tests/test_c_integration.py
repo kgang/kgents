@@ -11,45 +11,44 @@ Philosophy: Agents are morphisms. Composition is primary.
 """
 
 import asyncio
-import pytest
 from typing import Any
 
-from bootstrap.types import Agent
+import pytest
 from agents.c import (
+    Either,
+    Just,
+    Left,
     # Functor types
     Maybe,
-    Just,
+    MaybeEither,
     Nothing,
-    maybe,
-    Either,
     Right,
-    Left,
-    either,
-    # Fix (retry)
-    fix,
-    # List functor
-    list_agent,
     # Async functor
     async_agent,
-    # Logged functor
-    logged,
-    # Law validation
-    check_identity_law,
-    check_composition_law,
-    # Parallel composition
-    parallel,
-    fan_out,
-    race,
     # Conditional composition
     branch,
-    switch,
+    check_composition_law,
+    # Law validation
+    check_identity_law,
+    either,
+    fan_out,
+    # Fix (retry)
+    fix,
     guarded,
+    # List functor
+    list_agent,
+    # Logged functor
+    logged,
+    maybe,
+    # Parallel composition
+    parallel,
+    pure_either,
     # Monad
     pure_maybe,
-    pure_either,
-    MaybeEither,
+    race,
+    switch,
 )
-
+from bootstrap.types import Agent
 
 # --- Helper Agents for Testing ---
 

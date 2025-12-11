@@ -33,9 +33,9 @@ See: spec/protocols/prism.md
 
 from __future__ import annotations
 
-from .protocol import CLICapable
-from .decorator import expose, is_exposed, get_expose_meta, ExposeMetadata
+from .decorator import ExposeMetadata, expose, get_expose_meta, is_exposed
 from .prism import Prism
+from .protocol import CLICapable
 from .type_mapping import TypeRegistry
 
 __all__ = [

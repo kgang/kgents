@@ -16,12 +16,17 @@ import re
 from typing import Iterator, Optional
 
 from agents.p.core import (
-    ParseResult as PParseResult,
     Parser,
+)
+from agents.p.core import (
     ParserConfig as PParserConfig,
 )
-from .crystallize import Artifact, ArtifactMetadata, Version, ArtifactStatus
+from agents.p.core import (
+    ParseResult as PParseResult,
+)
+
 from .contract import Contract
+from .crystallize import Artifact, ArtifactMetadata, ArtifactStatus, Version
 from .intent import Intent
 from .prototype import SourceCode, StaticAnalysisReport
 

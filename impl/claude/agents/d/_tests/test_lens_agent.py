@@ -1,10 +1,10 @@
 """Tests for LensAgent."""
 
-import pytest
 from dataclasses import dataclass
 
+import pytest
 from agents.d import VolatileAgent
-from agents.d.lens import key_lens, field_lens
+from agents.d.lens import field_lens, key_lens
 from agents.d.lens_agent import LensAgent, focused
 
 

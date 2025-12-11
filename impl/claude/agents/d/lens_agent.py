@@ -5,11 +5,11 @@ Wraps a parent D-gent and projects state through a lens,
 providing scoped access to sub-state.
 """
 
-from typing import TypeVar, Generic, List
 from dataclasses import dataclass
+from typing import Generic, List, TypeVar
 
-from .protocol import DataAgent
 from .lens import Lens
+from .protocol import DataAgent
 
 S = TypeVar("S")  # Parent state
 A = TypeVar("A")  # Sub-state (focus)

@@ -27,6 +27,8 @@ Integration Points:
 - D-gent VectorAgent (impl/claude/agents/d/vector.py)
 """
 
+# Import L-gent components
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Optional, TypeVar
@@ -36,9 +38,6 @@ from .holographic import (
     MemoryPattern,
     ResonanceResult,
 )
-
-# Import L-gent components
-import sys
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 

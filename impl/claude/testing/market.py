@@ -15,10 +15,9 @@ Phase 8.3 - Economics:
 - Budget tiers for different contexts
 """
 
-from dataclasses import dataclass
-from typing import Callable, Any
 import math
-
+from dataclasses import dataclass
+from typing import Any, Callable
 
 # =============================================================================
 # Core Types

@@ -18,9 +18,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Literal
 
-from .semantic_registry import SemanticRegistry
 from .semantic import Embedder
-
+from .semantic_registry import SemanticRegistry
 
 # =============================================================================
 # Mutation Schemas (for Mutator)

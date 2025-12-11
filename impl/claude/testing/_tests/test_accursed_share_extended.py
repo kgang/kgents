@@ -7,11 +7,11 @@ We cherish and express gratitude for slop.
 Phase 6 of test evolution plan: Expand chaos tests to 50.
 """
 
-import pytest
-import random
 import asyncio
+import random
 from dataclasses import dataclass
 
+import pytest
 
 # =============================================================================
 # D-gent Chaos Tests
@@ -118,7 +118,7 @@ class TestLGentChaos:
     @pytest.mark.asyncio
     async def test_near_duplicate_embeddings(self):
         """Store many near-identical embeddings."""
-        from agents.l import SemanticRegistry, CatalogEntry, EntityType
+        from agents.l import CatalogEntry, EntityType, SemanticRegistry
 
         registry = SemanticRegistry()
 
@@ -140,7 +140,7 @@ class TestLGentChaos:
     @pytest.mark.asyncio
     async def test_unicode_entity_names(self):
         """Register entities with unicode names."""
-        from agents.l import SemanticRegistry, CatalogEntry, EntityType
+        from agents.l import CatalogEntry, EntityType, SemanticRegistry
 
         registry = SemanticRegistry()
 
@@ -171,7 +171,7 @@ class TestLGentChaos:
     @pytest.mark.asyncio
     async def test_empty_and_whitespace_queries(self):
         """Test handling of edge-case queries."""
-        from agents.l import SemanticRegistry, CatalogEntry, EntityType
+        from agents.l import CatalogEntry, EntityType, SemanticRegistry
 
         registry = SemanticRegistry()
 
@@ -210,10 +210,11 @@ class TestNGentChaos:
     @pytest.mark.asyncio
     async def test_rapid_event_stream(self):
         """Emit many events rapidly."""
-        from agents.n import MemoryCrystalStore, SemanticTrace
-        from datetime import datetime, timezone
-        import uuid
         import hashlib
+        import uuid
+        from datetime import datetime, timezone
+
+        from agents.n import MemoryCrystalStore, SemanticTrace
 
         store = MemoryCrystalStore()
 
@@ -244,10 +245,11 @@ class TestNGentChaos:
     @pytest.mark.asyncio
     async def test_large_trace_data(self):
         """Store traces with large payloads."""
-        from agents.n import MemoryCrystalStore, SemanticTrace
-        from datetime import datetime, timezone
-        import uuid
         import hashlib
+        import uuid
+        from datetime import datetime, timezone
+
+        from agents.n import MemoryCrystalStore, SemanticTrace
 
         store = MemoryCrystalStore()
 
@@ -288,7 +290,7 @@ class TestCrossAgentChaos:
     async def test_d_to_l_pipeline(self):
         """Data flows from D-gent to L-gent."""
         from agents.d import VolatileAgent
-        from agents.l import SemanticRegistry, CatalogEntry, EntityType
+        from agents.l import CatalogEntry, EntityType, SemanticRegistry
 
         store: VolatileAgent[dict] = VolatileAgent(_state={})
         registry = SemanticRegistry()
@@ -342,7 +344,7 @@ class TestCrossAgentChaos:
     @pytest.mark.asyncio
     async def test_composition_with_stateful_agents(self):
         """Compose stateful D-gents with pure transforms."""
-        from agents.d import VolatileAgent, Symbiont
+        from agents.d import Symbiont, VolatileAgent
         from bootstrap import compose
 
         # Create a counter symbiont
@@ -515,8 +517,9 @@ class TestMemoryPressureChaos:
     @pytest.mark.asyncio
     async def test_long_chain_composition(self):
         """Very long composition chains."""
-        from bootstrap import compose
         from functools import reduce
+
+        from bootstrap import compose
 
         @dataclass
         class Increment:

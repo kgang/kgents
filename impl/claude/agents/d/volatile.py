@@ -4,10 +4,10 @@ VolatileAgent: In-memory state storage with bounded history.
 Fast, ephemeral state management for temporary context and caches.
 """
 
-from dataclasses import dataclass, field
-from typing import Generic, TypeVar, List, Callable, TYPE_CHECKING
-from collections import deque
 import copy
+from collections import deque
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Callable, Generic, List, TypeVar
 
 if TYPE_CHECKING:
     from .lens import Lens

@@ -11,22 +11,22 @@ The enlightened D-gent that unifies:
 All through compositional lenses.
 """
 
-from typing import (
-    TypeVar,
-    Generic,
-    List,
-    Optional,
-    Any,
-    Dict,
-    Tuple,
-)
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum, auto
+from typing import (
+    Any,
+    Dict,
+    Generic,
+    List,
+    Optional,
+    Tuple,
+    TypeVar,
+)
 
-from .protocol import DataAgent
 from .errors import NoosphereError
 from .lens import Lens
+from .protocol import DataAgent
 
 
 class UnifiedMemoryError(NoosphereError):

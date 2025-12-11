@@ -42,7 +42,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from agents.f import Contract, synthesize_contract
-from agents.j import (
+from agents.j.meta_architect import (
     AgentSource,
     ArchitectConstraints,
     MetaArchitect,

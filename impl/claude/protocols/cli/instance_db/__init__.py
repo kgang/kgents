@@ -25,26 +25,27 @@ Design Principles:
 - Active Inference: Signal routing based on surprise
 """
 
-from .interfaces import (
-    IRelationalStore,
-    IVectorStore,
-    IBlobStore,
-    ITelemetryStore,
+from .compost import (
+    CompostBin,
+    CompostConfig,
+    CompostingStrategy,
+    CountMinSketch,
+    HyperLogLog,
+    NutrientBlock,
+    TDigestSimplified,
+    create_compost_bin,
+    create_nutrient_block,
 )
-from .storage import StorageProvider, XDGPaths, EnvVarNotSetError
-from .lifecycle import LifecycleManager, OperationMode, LifecycleState
-from .nervous import (
-    NervousSystem,
-    NervousSystemConfig,
-    Signal,
-    SignalPriority,
-    create_nervous_system,
-)
-from .synapse import (
-    Synapse,
-    SynapseConfig,
-    PredictiveModel,
-    create_synapse,
+from .dreamer import (
+    DreamerConfig,
+    DreamPhase,
+    DreamReport,
+    LucidDreamer,
+    MaintenanceChunk,
+    MaintenanceTaskType,
+    NightWatch,
+    Question,
+    create_lucid_dreamer,
 )
 from .hippocampus import (
     Hippocampus,
@@ -52,50 +53,49 @@ from .hippocampus import (
     LetheEpoch,
     create_hippocampus,
 )
-from .compost import (
-    CompostBin,
-    CompostConfig,
-    CompostingStrategy,
-    NutrientBlock,
-    CountMinSketch,
-    HyperLogLog,
-    TDigestSimplified,
-    create_compost_bin,
-    create_nutrient_block,
+from .interfaces import (
+    IBlobStore,
+    IRelationalStore,
+    ITelemetryStore,
+    IVectorStore,
 )
 from .lethe import (
-    LetheStore,
+    ForgetProof,
     LetheGardener,
     LetheGardenerConfig,
     LetheRecord,
-    ForgetProof,
-    RetentionPolicy,
+    LetheStore,
     RetentionConfig,
-    create_lethe_store,
+    RetentionPolicy,
     create_lethe_gardener,
+    create_lethe_store,
 )
-from .dreamer import (
-    LucidDreamer,
-    DreamerConfig,
-    DreamPhase,
-    DreamReport,
-    NightWatch,
-    Question,
-    MaintenanceChunk,
-    MaintenanceTaskType,
-    create_lucid_dreamer,
+from .lifecycle import LifecycleManager, LifecycleState, OperationMode
+from .nervous import (
+    NervousSystem,
+    NervousSystemConfig,
+    Signal,
+    SignalPriority,
+    create_nervous_system,
 )
 from .neurogenesis import (
-    SchemaNeurogenesis,
-    NeurogenesisConfig,
-    MigrationProposal,
-    MigrationAction,
     ColumnType,
-    PatternCluster,
-    TypeInferrer,
-    MockSchemaIntrospector,
     ISchemaIntrospector,
+    MigrationAction,
+    MigrationProposal,
+    MockSchemaIntrospector,
+    NeurogenesisConfig,
+    PatternCluster,
+    SchemaNeurogenesis,
+    TypeInferrer,
     create_schema_neurogenesis,
+)
+from .storage import EnvVarNotSetError, StorageProvider, XDGPaths
+from .synapse import (
+    PredictiveModel,
+    Synapse,
+    SynapseConfig,
+    create_synapse,
 )
 
 __all__ = [

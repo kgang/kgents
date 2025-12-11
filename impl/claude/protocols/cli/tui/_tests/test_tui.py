@@ -14,21 +14,20 @@ from pathlib import Path
 
 import pytest
 
+from ..dashboard import DashboardController, cmd_dash
+from ..event_store import EventStore
 from ..types import (
-    DashboardEvent,
-    EventType,
-    AgentStatus,
     AgentEntry,
+    AgentStatus,
     ArtifactEntry,
+    DashboardEvent,
+    DashboardLayout,
+    EventType,
+    PlaybackState,
     Session,
     SessionState,
     ThoughtEntry,
-    DashboardLayout,
-    PlaybackState,
 )
-from ..event_store import EventStore
-from ..dashboard import DashboardController, cmd_dash
-
 
 # =============================================================================
 # Types Tests

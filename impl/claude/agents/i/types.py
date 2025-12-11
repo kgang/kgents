@@ -11,10 +11,11 @@ This module defines:
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
 
 
 class Phase(Enum):

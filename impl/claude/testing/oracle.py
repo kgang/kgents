@@ -13,10 +13,10 @@ Phase 8.1 - Foundation:
 - Agent validation via metamorphic relations
 """
 
-from dataclasses import dataclass, field
-from typing import Any, Protocol, Callable
 import math
 import random
+from dataclasses import dataclass, field
+from typing import Any, Callable, Protocol
 
 # Try relative import first, fall back to absolute
 try:

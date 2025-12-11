@@ -5,17 +5,17 @@ OpenRouter provides access to multiple LLM providers through a unified API.
 """
 
 import os
-from typing import Any, TypeVar, get_args, get_origin
 from dataclasses import dataclass
+from typing import Any, TypeVar, get_args, get_origin
 
 from .base import (
-    Runtime,
-    LLMAgent,
     AgentContext,
     AgentResult,
-    with_retry,
-    TransientError,
+    LLMAgent,
     PermanentError,
+    Runtime,
+    TransientError,
+    with_retry,
 )
 
 A = TypeVar("A")

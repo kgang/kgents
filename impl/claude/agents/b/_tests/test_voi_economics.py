@@ -9,31 +9,30 @@ Tests for:
 - UnifiedValueAccounting (UVP + VoI integration)
 """
 
-import pytest
 from datetime import timedelta
 
+import pytest
+
+from ..metered_functor import Gas
+from ..value_ledger import SimpleOutput, ValueLedger
 from ..voi_economics import (
-    # Types
-    ObservationDepth,
-    FindingType,
-    ObservationFinding,
-    EpistemicCapital,
-    InterventionOutcome,
-    UnifiedValueAccounting,
-    SystemHealthReport,
     # Constants
     ALERT_FATIGUE_COST,
     CONFIRMATION_VALUE,
+    EpistemicCapital,
+    FindingType,
+    InterventionOutcome,
+    # Types
+    ObservationDepth,
+    ObservationFinding,
+    SystemHealthReport,
+    UnifiedValueAccounting,
+    create_adaptive_observer,
+    create_unified_accounting,
     # Convenience functions
     create_voi_ledger,
     create_voi_optimizer,
-    create_adaptive_observer,
-    create_unified_accounting,
 )
-
-from ..metered_functor import Gas
-from ..value_ledger import ValueLedger, SimpleOutput
-
 
 # =============================================================================
 # ObservationDepth and FindingType Tests

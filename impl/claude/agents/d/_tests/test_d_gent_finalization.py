@@ -12,57 +12,58 @@ Test Coverage:
 """
 
 import json
-import pytest
-import tempfile
 import shutil
+import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional, List
+from typing import List, Optional
+
+import pytest
+
+# Import core D-gents
+from agents.d import (
+    EntropyConstrainedAgent,
+    PersistentAgent,
+    StorageError,
+    VolatileAgent,
+)
 
 # Import lens enhancements
 from agents.d.lens import (
-    # Basic lenses
-    key_lens,
+    dict_items_traversal,
+    dict_keys_traversal,
+    dict_values_traversal,
     field_lens,
     index_lens,
-    optional_key_prism,
-    optional_field_prism,
-    optional_index_prism,
-    verify_prism_laws,
+    # Basic lenses
+    key_lens,
     # Traversal
     list_traversal,
-    dict_values_traversal,
-    dict_keys_traversal,
-    dict_items_traversal,
-    verify_traversal_laws,
+    optional_field_prism,
+    optional_index_prism,
+    optional_key_prism,
     # Composed validation
     validate_composed_lens,
+    verify_prism_laws,
+    verify_traversal_laws,
 )
 
 # Import persistence enhancements
 from agents.d.persistence_ext import (
-    # Schema versioning
-    SchemaVersion,
-    Migration,
-    MigrationRegistry,
-    VersionedPersistentAgent,
     # Backup/restore
     BackupManager,
+    CompressedPersistentAgent,
+    CompressionConfig,
     # Compression
     CompressionLevel,
-    CompressionConfig,
-    CompressedPersistentAgent,
+    Migration,
+    MigrationRegistry,
+    # Schema versioning
+    SchemaVersion,
+    VersionedPersistentAgent,
+    create_compressed_agent,
     # Convenience
     create_versioned_agent,
-    create_compressed_agent,
-)
-
-# Import core D-gents
-from agents.d import (
-    PersistentAgent,
-    VolatileAgent,
-    EntropyConstrainedAgent,
-    StorageError,
 )
 
 

@@ -9,22 +9,21 @@ Tests the terminal UI rendering:
 - Keyboard handling
 """
 
-
 from agents.i.field import (
+    DialecticPhase,
     Entity,
     EntityType,
     FieldState,
-    DialecticPhase,
     create_demo_field,
 )
 from agents.i.tui import (
     Color,
-    RenderConfig,
     FieldRenderer,
     KeyHandler,
+    RenderConfig,
     get_entity_color,
-    get_phase_color,
     get_log_color,
+    get_phase_color,
     render_field_once,
 )
 

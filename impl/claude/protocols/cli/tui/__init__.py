@@ -14,17 +14,17 @@ just be a monitor; it should be a DVR."
 From docs/cli-integration-plan.md Part 7.
 """
 
+from .dashboard import cmd_dash
+from .event_store import EventStore
 from .types import (
+    AgentStatus,
+    ArtifactEntry,
     DashboardEvent,
     EventType,
-    AgentStatus,
     Session,
     SessionState,
     ThoughtEntry,
-    ArtifactEntry,
 )
-from .event_store import EventStore
-from .dashboard import cmd_dash
 
 __all__ = [
     "DashboardEvent",

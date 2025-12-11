@@ -2,11 +2,11 @@
 Tests for L-gent catalog (Registry and CatalogEntry).
 """
 
-import pytest
-import tempfile
 import os
+import tempfile
 
-from agents.l.catalog import CatalogEntry, EntityType, Status, Registry
+import pytest
+from agents.l.catalog import CatalogEntry, EntityType, Registry, Status
 
 
 @pytest.fixture

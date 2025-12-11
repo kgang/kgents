@@ -7,12 +7,11 @@ Validates:
 """
 
 import re
-from pathlib import Path
 from collections import defaultdict
+from pathlib import Path
 from typing import NamedTuple
 
 import pytest
-
 
 # =============================================================================
 # Part 1: Functor Composition Verification
@@ -92,7 +91,7 @@ class TestFunctorCompositionEcosystem:
     @pytest.mark.asyncio
     async def test_either_functor_identity_law(self):
         """Either functor: F(id) = id."""
-        from agents.c import Right, Left, either
+        from agents.c import Left, Right, either
         from bootstrap.types import Agent
 
         class IdAgent(Agent[str, str]):
@@ -575,12 +574,12 @@ class TestSemanticFieldUsage:
     def test_semantic_field_module_exists(self):
         """SemanticField should exist for integration-by-field pattern."""
         from agents.i.semantic_field import (
+            EconomicFieldEmitter,
+            ForgeFieldSensor,
+            PsiFieldEmitter,
+            SafetyFieldEmitter,
             SemanticField,
             SemanticPheromoneKind,
-            PsiFieldEmitter,
-            ForgeFieldSensor,
-            SafetyFieldEmitter,
-            EconomicFieldEmitter,
         )
 
         # All components should exist
@@ -611,11 +610,11 @@ class TestSemanticFieldUsage:
     def test_field_emitter_interfaces(self):
         """Each major agent should have a field interface."""
         from agents.i.semantic_field import (
-            create_semantic_field,
-            create_psi_emitter,
-            create_forge_sensor,
-            create_safety_emitter,
             create_economic_emitter,
+            create_forge_sensor,
+            create_psi_emitter,
+            create_safety_emitter,
+            create_semantic_field,
         )
 
         field = create_semantic_field()
@@ -638,10 +637,10 @@ class TestSemanticFieldUsage:
         This is the canonical example of integration-by-field.
         """
         from agents.i.semantic_field import (
-            create_semantic_field,
-            create_psi_emitter,
-            create_forge_sensor,
             FieldCoordinate,
+            create_forge_sensor,
+            create_psi_emitter,
+            create_semantic_field,
         )
 
         # Create shared field

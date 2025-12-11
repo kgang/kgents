@@ -9,15 +9,14 @@ Tests the core field dynamics:
 """
 
 import pytest
-
 from agents.i.field import (
+    DialecticPhase,
     Entity,
     EntityType,
-    FieldState,
     FieldSimulator,
+    FieldState,
     Pheromone,
     PheromoneType,
-    DialecticPhase,
     create_default_field,
     create_demo_field,
 )

@@ -12,10 +12,10 @@ Tests:
 
 import pytest
 from protocols.mirror_stage import (
-    SystemCondition,
     EgoIdeal,
-    HealingPlan,
     HealingAction,
+    HealingPlan,
+    SystemCondition,
     create_mirror_stage,
     create_telemetry,
 )

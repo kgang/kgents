@@ -26,6 +26,8 @@ Architecture:
 This is Phase 8 of L-gent: Full D-gent integration for production workloads.
 """
 
+# Import D-gent components
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
@@ -34,15 +36,12 @@ from .semantic import Embedder, SemanticResult
 from .types import Catalog, CatalogEntry, EntityType
 from .vector_backend import VectorBackend, VectorSearchResult
 
-# Import D-gent components
-import sys
-
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 # Check for numpy (required for D-gent VectorAgent)
 try:
     import numpy as np
-    from agents.d.vector import VectorAgent, DistanceMetric, NUMPY_AVAILABLE
+    from agents.d.vector import NUMPY_AVAILABLE, DistanceMetric, VectorAgent
 except ImportError:
     np = None  # type: ignore
     VectorAgent = None  # type: ignore

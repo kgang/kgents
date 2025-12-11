@@ -9,12 +9,11 @@ Foundational types for Domain Specific Language synthesis:
 - Proofs: Constraint verification tracking
 """
 
+import hashlib
+import json
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Callable, Protocol, TypeVar
-import hashlib
-import json
-
 
 # ============================================================================
 # Grammar Levels & Formats

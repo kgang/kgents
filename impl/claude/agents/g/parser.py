@@ -29,8 +29,7 @@ try:
 except ImportError:
     HAS_PYDANTIC = False
 
-from agents.g.types import ParseResult, ParserConfig, GrammarFormat
-
+from agents.g.types import GrammarFormat, ParserConfig, ParseResult
 
 # ============================================================================
 # Parser Strategy Protocol

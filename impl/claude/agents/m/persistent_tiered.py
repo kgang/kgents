@@ -15,17 +15,17 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, Dict, Generic, List, Optional, TypeVar
 
+from .dgent_backend import (
+    DgentBackedHolographicMemory,
+    PersistenceConfig,
+)
 from .holographic import MemoryPattern
 from .tiered import (
+    AttentionFilter,
     SensoryBuffer,
     SensoryEntry,
     WorkingMemory,
     WorkingMemoryChunk,
-    AttentionFilter,
-)
-from .dgent_backend import (
-    DgentBackedHolographicMemory,
-    PersistenceConfig,
 )
 
 T = TypeVar("T")

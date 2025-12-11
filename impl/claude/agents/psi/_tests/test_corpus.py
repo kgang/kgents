@@ -3,14 +3,13 @@
 import pytest
 
 from ..corpus import (
-    STANDARD_CORPUS,
-    PLUMBING,
     ECOSYSTEM,
+    PLUMBING,
+    STANDARD_CORPUS,
     create_standard_corpus,
     validate_generated_metaphor,
 )
 from ..types import Metaphor, Operation
-
 
 # =============================================================================
 # Standard Corpus Tests

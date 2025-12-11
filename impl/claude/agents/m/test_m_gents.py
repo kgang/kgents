@@ -18,32 +18,31 @@ import pytest
 # Add parent to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
-from agents.m.holographic import (
-    HolographicMemory,
-    MemoryPattern,
-    CompressionLevel,
-    ResonanceResult,
-)
-from agents.m.recollection import (
-    RecollectionAgent,
-    Cue,
-    Recollection,
-    SimpleReconstructor,
-    WeightedReconstructor,
-    ContextualRecollectionAgent,
-)
 from agents.m.consolidation import (
     ConsolidationAgent,
     ConsolidationMode,
     ForgettingCurveAgent,
 )
-from agents.m.tiered import (
-    TieredMemory,
-    SensoryBuffer,
-    WorkingMemory,
-    AttentionFilter,
+from agents.m.holographic import (
+    CompressionLevel,
+    HolographicMemory,
+    MemoryPattern,
+    ResonanceResult,
 )
-
+from agents.m.recollection import (
+    ContextualRecollectionAgent,
+    Cue,
+    Recollection,
+    RecollectionAgent,
+    SimpleReconstructor,
+    WeightedReconstructor,
+)
+from agents.m.tiered import (
+    AttentionFilter,
+    SensoryBuffer,
+    TieredMemory,
+    WorkingMemory,
+)
 
 # ========== HolographicMemory Tests ==========
 
@@ -752,16 +751,16 @@ class MockUnifiedMemory:
 
 # Import Phase 2 modules
 from agents.m.dgent_backend import (
-    DgentBackedHolographicMemory,
     AssociativeWebMemory,
-    TemporalMemory,
+    DgentBackedHolographicMemory,
     PersistenceConfig,
+    TemporalMemory,
     create_dgent_memory,
 )
 from agents.m.persistent_tiered import (
+    NarrativeMemory,
     PersistentTieredMemory,
     PersistentWorkingMemory,
-    NarrativeMemory,
     TierConfig,
     create_persistent_tiered_memory,
 )
@@ -1251,21 +1250,21 @@ class TestMGentDGentIntegration:
 # ========== Phase 3: Prospective & Ethical Tests ==========
 
 from agents.m.prospective import (
-    ProspectiveAgent,
-    Situation,
-    ActionRecord,
     ActionHistory,
-    PredictedAction,
-    EthicalGeometry,
-    EthicalGeometryAgent,
-    EthicalExperience,
-    EthicalPosition,
-    EthicalRegion,
     ActionProposal,
+    ActionRecord,
     ContextualQuery,
     ContextualRecallAgent,
-    create_prospective_agent,
+    EthicalExperience,
+    EthicalGeometry,
+    EthicalGeometryAgent,
+    EthicalPosition,
+    EthicalRegion,
+    PredictedAction,
+    ProspectiveAgent,
+    Situation,
     create_ethical_agent,
+    create_prospective_agent,
 )
 
 
@@ -1893,10 +1892,10 @@ class TestPhase3Integration:
 # ========== Phase 4: L-gent VectorHolographicMemory Tests ==========
 
 from agents.m.vector_holographic import (
+    ClusterInfo,
     VectorHolographicMemory,
     VectorMemoryConfig,
     VoidInfo,
-    ClusterInfo,
     create_simple_vector_memory,
 )
 
@@ -2040,11 +2039,11 @@ class TestVectorMemoryConfig:
 
 from agents.m.memory_budget import (
     BudgetedMemory,
+    InsufficientBudgetError,
     MemoryCostModel,
+    MemoryEconomicsDashboard,
     MemoryReceipt,
     ResolutionBudget,
-    MemoryEconomicsDashboard,
-    InsufficientBudgetError,
     create_budgeted_memory,
     create_mock_bank,
 )
@@ -2302,7 +2301,7 @@ class TestMemoryEconomicsDashboard:
         assert hasattr(report, "budget_utilization")
 
 
-class TestFactoryFunctions:
+class TestPhase4FactoryFunctions:
     """Tests for Phase 4 factory functions."""
 
     def test_create_simple_vector_memory(self):

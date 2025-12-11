@@ -11,21 +11,21 @@ import asyncio
 import time
 
 from agents.t import (
-    MockAgent,
-    MockConfig,
-    FixtureAgent,
-    FixtureConfig,
+    CounterAgent,
     FailingAgent,
     FailingConfig,
     FailureType,
-    SpyAgent,
-    PredicateAgent,
-    not_empty,
-    NoiseAgent,
-    LatencyAgent,
+    FixtureAgent,
+    FixtureConfig,
     FlakyAgent,
-    CounterAgent,
+    LatencyAgent,
     MetricsAgent,
+    MockAgent,
+    MockConfig,
+    NoiseAgent,
+    PredicateAgent,
+    SpyAgent,
+    not_empty,
 )
 
 

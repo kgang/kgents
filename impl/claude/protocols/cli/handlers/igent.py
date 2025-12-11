@@ -23,7 +23,7 @@ def cmd_garden(args: Sequence[str]) -> int:
 
 def cmd_whisper(args: Sequence[str]) -> int:
     """Handle whisper command - status for prompt integration."""
-    from protocols.cli.igent_synergy import get_whisper_for_prompt, StatusWhisper
+    from protocols.cli.igent_synergy import StatusWhisper, get_whisper_for_prompt
 
     # Parse args
     fmt = "prompt"

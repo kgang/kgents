@@ -5,16 +5,14 @@ Tests the main reify() capability and convenience functions.
 """
 
 import pytest
-
 from agents.g import (
     Grammarian,
     GrammarLevel,
     reify,
-    reify_schema,
     reify_command,
     reify_recursive,
+    reify_schema,
 )
-
 
 # ============================================================================
 # Grammarian Basic Tests

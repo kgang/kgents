@@ -4,13 +4,13 @@ Tests for D-gent Infrastructure Backends.
 Tests InstanceDBVectorBackend, InstanceDBRelationalBackend, and CortexAdapter.
 """
 
-import pytest
+# Mock the instance_db imports for testing
+import sys
 from dataclasses import dataclass
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
-# Mock the instance_db imports for testing
-import sys
+import pytest
 
 # Create mock modules
 mock_interfaces = MagicMock()
@@ -44,17 +44,16 @@ sys.modules["protocols.cli.instance_db.nervous"] = mock_nervous
 # Now import the module under test
 from ..infra_backends import (
     ContentHash,
-    VectorMetadata,
+    CortexAdapter,
+    InstanceDBRelationalBackend,
     InstanceDBVectorBackend,
     InstanceDBVectorBackendConfig,
-    InstanceDBRelationalBackend,
-    CortexAdapter,
     NullEmbeddingProvider,
-    create_vector_backend,
-    create_relational_backend,
+    VectorMetadata,
     create_cortex_adapter,
+    create_relational_backend,
+    create_vector_backend,
 )
-
 
 # ==============================================================================
 # ContentHash Tests

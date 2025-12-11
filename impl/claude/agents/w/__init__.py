@@ -32,77 +32,90 @@ Example:
     >>> # Browser opens to localhost:8000
 """
 
-from .protocol import (
-    WireObservable,
-    WireState,
-    WireEvent,
-    WireMetrics,
-    WireReader,
+# Middleware Bus (Phase 0 cross-pollination)
+from .bus import (
+    AgentRegistry,
+    BaseInterceptor,
+    BlockingInterceptor,
+    BusMessage,
+    DispatchResult,
+    Interceptor,
+    InterceptorResult,
+    LoggingInterceptor,
+    MessagePriority,
+    MiddlewareBus,
+    PassthroughInterceptor,
+    create_bus,
+)
+from .cortex_dashboard import (
+    CortexDashboard,
+    CortexDashboardConfig,
+    SparklineData,
+    create_cortex_dashboard,
+)
+
+# Cortex Dashboard (Instance DB Phase 6)
+from .cortex_dashboard import (
+    DashboardPanel as CortexDashboardPanel,
+)
+from .cortex_dashboard import (
+    create_minimal_dashboard as create_minimal_cortex_dashboard,
 )
 from .fidelity import (
+    DocumentarianAdapter,
     Fidelity,
     FidelityAdapter,
-    TeletypeAdapter,
-    DocumentarianAdapter,
     LiveWireAdapter,
+    TeletypeAdapter,
     detect_fidelity,
     get_adapter,
+)
+
+# Core Interceptors (Phase 1 cross-pollination)
+from .interceptors import (
+    CostOracle,
+    EntropyChecker,
+    InMemoryObservationSink,
+    InMemoryTreasury,
+    MeteringInterceptor,
+    # Telemetry (O-gent)
+    Observation,
+    ObservationSink,
+    PersonaInterceptor,
+    # Persona (K-gent)
+    PersonaPriors,
+    SafetyInterceptor,
+    # Safety (J-gent)
+    SafetyThresholds,
+    SimpleCostOracle,
+    SimpleEntropyChecker,
+    TelemetryInterceptor,
+    # Metering (B-gent)
+    TokenCost,
+    Treasury,
+    # Factory
+    create_standard_interceptors,
+)
+from .protocol import (
+    WireEvent,
+    WireMetrics,
+    WireObservable,
+    WireReader,
+    WireState,
 )
 from .server import WireServer, serve_agent
 
 # Value Dashboard (B-gent economics visualization)
 from .value_dashboard import (
     DashboardPanel,
-    TokenSnapshot,
-    TensorSnapshot,
-    VoISnapshot,
-    RoCSnapshot,
     DashboardState,
+    RoCSnapshot,
+    TensorSnapshot,
+    TokenSnapshot,
     ValueDashboard,
-    create_value_dashboard,
+    VoISnapshot,
     create_minimal_dashboard,
-)
-
-# Middleware Bus (Phase 0 cross-pollination)
-from .bus import (
-    BusMessage,
-    InterceptorResult,
-    Interceptor,
-    BaseInterceptor,
-    PassthroughInterceptor,
-    LoggingInterceptor,
-    BlockingInterceptor,
-    AgentRegistry,
-    DispatchResult,
-    MiddlewareBus,
-    MessagePriority,
-    create_bus,
-)
-
-# Core Interceptors (Phase 1 cross-pollination)
-from .interceptors import (
-    # Metering (B-gent)
-    TokenCost,
-    CostOracle,
-    Treasury,
-    InMemoryTreasury,
-    SimpleCostOracle,
-    MeteringInterceptor,
-    # Safety (J-gent)
-    SafetyThresholds,
-    EntropyChecker,
-    SimpleEntropyChecker,
-    SafetyInterceptor,
-    # Telemetry (O-gent)
-    Observation,
-    ObservationSink,
-    InMemoryObservationSink,
-    TelemetryInterceptor,
-    # Persona (K-gent)
-    PersonaPriors,
-    PersonaInterceptor,
-    # Factory
-    create_standard_interceptors,
+    create_value_dashboard,
 )
 
 __all__ = [
@@ -164,4 +177,11 @@ __all__ = [
     "PersonaPriors",
     "PersonaInterceptor",
     "create_standard_interceptors",
+    # Cortex Dashboard (Instance DB Phase 6)
+    "CortexDashboardPanel",
+    "SparklineData",
+    "CortexDashboardConfig",
+    "CortexDashboard",
+    "create_cortex_dashboard",
+    "create_minimal_cortex_dashboard",
 ]

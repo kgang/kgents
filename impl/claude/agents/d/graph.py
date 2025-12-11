@@ -5,12 +5,12 @@ Provides foundation for the Relational Lattice concept from noosphere.md.
 Supports relationships, provenance tracking, and lattice operations (meet, join).
 """
 
-from typing import TypeVar, Generic, List, Optional, Set, Dict, Any
+import json
+from collections import deque
 from dataclasses import dataclass, field
 from enum import Enum
-from collections import deque
-import json
 from pathlib import Path
+from typing import Any, Dict, Generic, List, Optional, Set, TypeVar
 
 from .errors import (
     NodeNotFoundError,

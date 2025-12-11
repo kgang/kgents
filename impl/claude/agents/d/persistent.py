@@ -6,23 +6,23 @@ atomic file operations, and append-only history (JSONL).
 """
 
 import json
+from dataclasses import asdict, is_dataclass
+from enum import Enum
 from pathlib import Path
 from typing import (
-    TypeVar,
-    Generic,
-    Type,
-    List,
     Any,
-    get_type_hints,
-    get_origin,
+    Generic,
+    List,
+    Type,
+    TypeVar,
     get_args,
+    get_origin,
+    get_type_hints,
 )
-from dataclasses import is_dataclass, asdict
-from enum import Enum
 
 from .errors import (
-    StateNotFoundError,
     StateCorruptionError,
+    StateNotFoundError,
     StateSerializationError,
     StorageError,
 )

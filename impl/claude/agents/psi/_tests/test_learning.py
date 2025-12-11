@@ -2,23 +2,22 @@
 
 import pytest
 
-from ..types import (
-    Problem,
-    ProblemFeatures,
-    Feedback,
-    Outcome,
-)
+from ..corpus import STANDARD_CORPUS
 from ..learning import (
-    outcome_to_reward,
-    extract_features,
+    AbstractionModel,
     FrequencyModel,
     ThompsonSamplingModel,
-    AbstractionModel,
-    retrieve_with_learning,
     cold_start_retrieval,
+    extract_features,
+    outcome_to_reward,
+    retrieve_with_learning,
 )
-from ..corpus import STANDARD_CORPUS
-
+from ..types import (
+    Feedback,
+    Outcome,
+    Problem,
+    ProblemFeatures,
+)
 
 # =============================================================================
 # Reward Mapping Tests

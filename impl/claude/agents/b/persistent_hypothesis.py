@@ -10,12 +10,13 @@ Provides durable storage for hypothesis history, enabling:
 - D-gent lineage support
 """
 
-from pathlib import Path
-from typing import Optional, Any
 from dataclasses import dataclass, field
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Optional
 
 from agents.d import PersistentAgent
+
 from .hypothesis_parser import Hypothesis, ParsedHypothesisResponse
 
 

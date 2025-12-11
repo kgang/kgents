@@ -12,9 +12,9 @@ This module validates that F-gent contracts satisfy categorical laws:
 - Composition compatibility (type matching)
 """
 
+import logging
 from dataclasses import dataclass
 from typing import Any
-import logging
 
 logger = logging.getLogger(__name__)
 

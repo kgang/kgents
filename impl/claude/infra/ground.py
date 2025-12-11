@@ -20,10 +20,10 @@ This module implements Ground as Infrastructure-as-Code.
 from __future__ import annotations
 
 import os
+import platform
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
-import platform
 
 import yaml
 

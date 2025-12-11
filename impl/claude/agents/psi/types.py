@@ -13,11 +13,10 @@ TODO: Create metaphor collection + cultivation system
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field, asdict
+import json
+from dataclasses import asdict, dataclass, field
 from enum import Enum
 from typing import Any, ClassVar
-import json
-
 
 # =============================================================================
 # Core Input/Output Types

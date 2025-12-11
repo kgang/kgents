@@ -20,13 +20,13 @@ See: docs/agent-cross-pollination-final-proposal.md (Phase 2)
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field as dataclass_field
+from dataclasses import dataclass
+from dataclasses import field as dataclass_field
 from datetime import datetime
 from enum import Enum
 from math import exp
 from typing import Any, Callable, Generic, TypeVar
 from uuid import uuid4
-
 
 A = TypeVar("A")  # Source type
 B = TypeVar("B")  # Target type
@@ -59,6 +59,9 @@ class SemanticPheromoneKind(Enum):
     # N-gent emissions
     NARRATIVE = "narrative"  # Story thread/crystal
 
+    # L-gent emissions (Phase 4)
+    CAPABILITY = "capability"  # Agent capability advertisement
+
     @property
     def decay_rate(self) -> float:
         """Decay rate per tick (0.0 to 1.0)."""
@@ -71,6 +74,7 @@ class SemanticPheromoneKind(Enum):
             SemanticPheromoneKind.SCARCITY: 0.25,  # Faster decay
             SemanticPheromoneKind.MEMORY: 0.08,  # Slow decay - memories persist
             SemanticPheromoneKind.NARRATIVE: 0.12,  # Moderate decay
+            SemanticPheromoneKind.CAPABILITY: 0.02,  # Very slow - capabilities are stable
         }[self]
 
     @property
@@ -85,6 +89,7 @@ class SemanticPheromoneKind(Enum):
             SemanticPheromoneKind.SCARCITY: 0.8,  # Wide awareness of scarcity
             SemanticPheromoneKind.MEMORY: 0.3,
             SemanticPheromoneKind.NARRATIVE: 0.4,
+            SemanticPheromoneKind.CAPABILITY: 1.0,  # Wide broadcast for discovery
         }[self]
 
 
@@ -226,6 +231,61 @@ class OpportunityPayload:
 
     # Time sensitivity
     expires_in_ticks: int = 10
+
+
+# =============================================================================
+# L-gent Capability Payloads (Phase 4)
+# =============================================================================
+
+
+@dataclass
+class CapabilityPayload:
+    """
+    Payload for CAPABILITY pheromones.
+
+    Represents an agent's advertised capability.
+    L-gent uses this for semantic service discovery.
+    """
+
+    agent_id: str
+    capability_name: str
+    input_type: str  # Expected input type (e.g., "str", "Functor[A,B]")
+    output_type: str  # Output type
+    cost_estimate: float = 0.0  # Estimated token/compute cost
+    tags: tuple[str, ...] = ()  # For tag-based filtering
+    description: str = ""  # Human-readable description
+    version: str = "1.0"  # Capability version
+
+
+@dataclass
+class CapabilityDeprecationPayload:
+    """
+    Payload for capability deprecation notices.
+
+    Emitted when an agent is retiring a capability.
+    """
+
+    agent_id: str
+    capability_name: str
+    reason: str
+    replacement: str | None = None  # Suggested replacement capability
+    deprecation_date: str = ""  # ISO format date
+
+
+@dataclass
+class CapabilityRequestPayload:
+    """
+    Payload for capability requests.
+
+    Emitted when an agent is looking for a capability.
+    """
+
+    requester_id: str
+    capability_pattern: str  # Pattern to match (e.g., "embed*", "parse_json")
+    urgency: float = 0.5  # 0.0 (low) to 1.0 (high)
+    input_type: str | None = None  # Required input type
+    output_type: str | None = None  # Required output type
+    tags: tuple[str, ...] = ()  # Required tags
 
 
 class SemanticField:
@@ -921,6 +981,305 @@ class ObserverFieldSensor:
 
 
 # =============================================================================
+# L-gent Field Interface (Catalog - Emitter + Sensor)
+# =============================================================================
+
+
+class CatalogFieldEmitter:
+    """
+    L-gent's interface for emitting capability signals.
+
+    Advertises agent capabilities to the semantic field for discovery.
+    Does NOT know about specific consumers of capabilities.
+    """
+
+    def __init__(self, field: SemanticField, agent_id: str = "catalog"):
+        self._field = field
+        self._agent_id = agent_id
+
+    def emit_capability_registered(
+        self,
+        agent_id: str,
+        capability_name: str,
+        input_type: str,
+        output_type: str,
+        position: FieldCoordinate,
+        cost_estimate: float = 0.0,
+        tags: tuple[str, ...] = (),
+        description: str = "",
+        version: str = "1.0",
+    ) -> str:
+        """
+        Emit a capability registration signal.
+
+        Called when an agent registers a new capability with the catalog.
+        """
+        payload = CapabilityPayload(
+            agent_id=agent_id,
+            capability_name=capability_name,
+            input_type=input_type,
+            output_type=output_type,
+            cost_estimate=cost_estimate,
+            tags=tags,
+            description=description,
+            version=version,
+        )
+
+        return self._field.emit(
+            emitter=self._agent_id,
+            kind=SemanticPheromoneKind.CAPABILITY,
+            payload=payload,
+            position=position,
+            intensity=1.0,  # Capabilities are full strength
+            metadata={
+                "agent_id": agent_id,
+                "capability_name": capability_name,
+                "tags": list(tags),
+            },
+        )
+
+    def emit_capability_deprecated(
+        self,
+        agent_id: str,
+        capability_name: str,
+        reason: str,
+        position: FieldCoordinate,
+        replacement: str | None = None,
+        deprecation_date: str = "",
+    ) -> str:
+        """
+        Emit a capability deprecation notice.
+
+        Called when an agent is retiring a capability.
+        """
+        payload = CapabilityDeprecationPayload(
+            agent_id=agent_id,
+            capability_name=capability_name,
+            reason=reason,
+            replacement=replacement,
+            deprecation_date=deprecation_date,
+        )
+
+        return self._field.emit(
+            emitter=self._agent_id,
+            kind=SemanticPheromoneKind.CAPABILITY,
+            payload=payload,
+            position=position,
+            intensity=0.8,  # Deprecations are important but not primary
+            metadata={
+                "agent_id": agent_id,
+                "capability_name": capability_name,
+                "deprecated": True,
+            },
+        )
+
+    def emit_capability_updated(
+        self,
+        agent_id: str,
+        capability_name: str,
+        changes: dict[str, Any],
+        position: FieldCoordinate,
+        new_version: str = "",
+    ) -> str:
+        """
+        Emit a capability update signal.
+
+        Called when a capability's metadata changes.
+        """
+        return self._field.emit(
+            emitter=self._agent_id,
+            kind=SemanticPheromoneKind.CAPABILITY,
+            payload={
+                "agent_id": agent_id,
+                "capability_name": capability_name,
+                "changes": changes,
+                "new_version": new_version,
+                "update_type": "modification",
+            },
+            position=position,
+            intensity=0.7,
+            metadata={
+                "agent_id": agent_id,
+                "capability_name": capability_name,
+                "update": True,
+            },
+        )
+
+    def emit_capability_request(
+        self,
+        requester_id: str,
+        capability_pattern: str,
+        urgency: float,
+        position: FieldCoordinate,
+        input_type: str | None = None,
+        output_type: str | None = None,
+        tags: tuple[str, ...] = (),
+    ) -> str:
+        """
+        Emit a capability request signal.
+
+        Called when an agent is looking for a capability.
+        """
+        payload = CapabilityRequestPayload(
+            requester_id=requester_id,
+            capability_pattern=capability_pattern,
+            urgency=urgency,
+            input_type=input_type,
+            output_type=output_type,
+            tags=tags,
+        )
+
+        return self._field.emit(
+            emitter=self._agent_id,
+            kind=SemanticPheromoneKind.CAPABILITY,
+            payload=payload,
+            position=position,
+            intensity=urgency,  # Urgency determines signal strength
+            metadata={
+                "requester_id": requester_id,
+                "pattern": capability_pattern,
+                "request": True,
+            },
+        )
+
+
+class CatalogFieldSensor:
+    """
+    L-gent's interface for sensing capability signals.
+
+    Discovers available capabilities in the semantic field.
+    Does NOT know about specific emitters of capabilities.
+    """
+
+    def __init__(self, field: SemanticField, agent_id: str = "catalog_sensor"):
+        self._field = field
+        self._agent_id = agent_id
+
+    def sense_capabilities(
+        self,
+        position: FieldCoordinate,
+        radius: float | None = None,
+    ) -> list[CapabilityPayload]:
+        """
+        Sense nearby capability signals.
+
+        Returns capability payloads sorted by intensity.
+        """
+        pheromones = self._field.sense(
+            position=position,
+            radius=radius,
+            kind=SemanticPheromoneKind.CAPABILITY,
+        )
+
+        return [
+            p.payload for p in pheromones if isinstance(p.payload, CapabilityPayload)
+        ]
+
+    def sense_by_tags(
+        self,
+        position: FieldCoordinate,
+        tags: tuple[str, ...],
+        radius: float | None = None,
+    ) -> list[CapabilityPayload]:
+        """
+        Sense capabilities filtered by tags.
+
+        Returns capabilities that have at least one matching tag.
+        """
+        capabilities = self.sense_capabilities(position, radius)
+        tag_set = set(tags)
+
+        return [cap for cap in capabilities if set(cap.tags) & tag_set]
+
+    def sense_deprecations(
+        self,
+        position: FieldCoordinate,
+        radius: float | None = None,
+    ) -> list[CapabilityDeprecationPayload]:
+        """
+        Sense deprecation notices.
+        """
+        pheromones = self._field.sense(
+            position=position,
+            radius=radius,
+            kind=SemanticPheromoneKind.CAPABILITY,
+        )
+
+        return [
+            p.payload
+            for p in pheromones
+            if isinstance(p.payload, CapabilityDeprecationPayload)
+        ]
+
+    def sense_capability_requests(
+        self,
+        position: FieldCoordinate,
+        radius: float | None = None,
+    ) -> list[CapabilityRequestPayload]:
+        """
+        Sense unfulfilled capability requests.
+        """
+        pheromones = self._field.sense(
+            position=position,
+            radius=radius,
+            kind=SemanticPheromoneKind.CAPABILITY,
+        )
+
+        return [
+            p.payload
+            for p in pheromones
+            if isinstance(p.payload, CapabilityRequestPayload)
+        ]
+
+    def find_capability(
+        self,
+        capability_name: str,
+        position: FieldCoordinate,
+        radius: float | None = None,
+    ) -> CapabilityPayload | None:
+        """
+        Find a specific capability by name.
+        """
+        capabilities = self.sense_capabilities(position, radius)
+        for cap in capabilities:
+            if cap.capability_name == capability_name:
+                return cap
+        return None
+
+    def get_agent_capabilities(
+        self,
+        agent_id: str,
+        position: FieldCoordinate,
+        radius: float | None = None,
+    ) -> list[CapabilityPayload]:
+        """
+        Get all capabilities from a specific agent.
+        """
+        capabilities = self.sense_capabilities(position, radius)
+        return [cap for cap in capabilities if cap.agent_id == agent_id]
+
+    def has_capability(
+        self,
+        capability_name: str,
+        position: FieldCoordinate,
+        radius: float | None = None,
+    ) -> bool:
+        """
+        Check if a capability exists in the field.
+        """
+        return self.find_capability(capability_name, position, radius) is not None
+
+    def get_capability_count(self) -> int:
+        """
+        Get total number of registered capabilities.
+        """
+        all_capabilities = self._field.get_all(SemanticPheromoneKind.CAPABILITY)
+        return len(
+            [p for p in all_capabilities if isinstance(p.payload, CapabilityPayload)]
+        )
+
+
+# =============================================================================
 # Factory Functions
 # =============================================================================
 
@@ -989,3 +1348,17 @@ def create_observer_sensor(
 ) -> ObserverFieldSensor:
     """Create an O-gent observer sensor."""
     return ObserverFieldSensor(field, agent_id)
+
+
+def create_catalog_emitter(
+    field: SemanticField, agent_id: str = "catalog"
+) -> CatalogFieldEmitter:
+    """Create an L-gent catalog emitter."""
+    return CatalogFieldEmitter(field, agent_id)
+
+
+def create_catalog_sensor(
+    field: SemanticField, agent_id: str = "catalog_sensor"
+) -> CatalogFieldSensor:
+    """Create an L-gent catalog sensor."""
+    return CatalogFieldSensor(field, agent_id)

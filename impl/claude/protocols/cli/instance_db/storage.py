@@ -29,20 +29,20 @@ except ImportError:
     yaml = None
 
 from .interfaces import (
-    IRelationalStore,
-    IVectorStore,
     IBlobStore,
+    IRelationalStore,
     ITelemetryStore,
+    IVectorStore,
 )
 from .providers.sqlite import (
-    SQLiteRelationalStore,
-    NumpyVectorStore,
     FilesystemBlobStore,
-    SQLiteTelemetryStore,
-    InMemoryRelationalStore,
-    InMemoryVectorStore,
     InMemoryBlobStore,
+    InMemoryRelationalStore,
     InMemoryTelemetryStore,
+    InMemoryVectorStore,
+    NumpyVectorStore,
+    SQLiteRelationalStore,
+    SQLiteTelemetryStore,
 )
 
 

@@ -5,9 +5,9 @@ Tests for AnchorBasedParser (Strategy 4.2 - Islands of Stability).
 import pytest
 from agents.p.strategies.anchor import (
     AnchorBasedParser,
-    hypothesis_parser,
     behavior_parser,
     constraint_parser,
+    hypothesis_parser,
 )
 
 

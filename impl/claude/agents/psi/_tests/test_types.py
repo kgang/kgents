@@ -3,24 +3,23 @@
 import pytest
 
 from ..types import (
-    Problem,
-    Metaphor,
-    Operation,
-    ConceptMapping,
-    Projection,
     ChallengeResult,
-    MetaphorSolution,
-    Solution,
+    ConceptMapping,
     Distortion,
-    SearchState,
+    Metaphor,
+    MetaphorSolution,
+    Operation,
     Outcome,
-    validate_distortion,
-    validate_projection,
-    validate_metaphor,
+    Problem,
+    Projection,
+    SearchState,
+    Solution,
     to_dict,
     to_json,
+    validate_distortion,
+    validate_metaphor,
+    validate_projection,
 )
-
 
 # =============================================================================
 # Problem Tests

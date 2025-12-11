@@ -15,31 +15,30 @@ Tests cover:
 from datetime import datetime, timedelta
 
 from ..grammar_insurance import (
-    # Volatility
-    VolatilityCategory,
-    ParseEvent,
-    VolatilityWindow,
-    VolatilityMetrics,
-    VolatilityMonitor,
+    GrammarHedge,
+    GrammarInsurance,
     # Hedging
     HedgeStrategy,
-    GrammarHedge,
+    InsuranceClaim,
     # Insurance
     InsurancePolicy,
-    InsuranceClaim,
-    PremiumQuote,
-    PremiumCalculator,
-    GrammarInsurance,
+    ParseEvent,
     PortfolioAnalyzer,
+    PremiumCalculator,
+    PremiumQuote,
+    # Volatility
+    VolatilityCategory,
+    VolatilityMetrics,
+    VolatilityMonitor,
+    VolatilityWindow,
+    calculate_hedge_cost,
+    create_ensemble_hedge,
     # Convenience
     create_fallback_hedge,
     create_versioned_hedge,
-    create_ensemble_hedge,
     estimate_annual_premium,
-    calculate_hedge_cost,
 )
 from ..syntax_tax import GrammarClassifier
-
 
 # =============================================================================
 # VolatilityCategory Tests

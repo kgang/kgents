@@ -1,38 +1,36 @@
 """Tests for E-gent v2 Mutator: Schema-based mutation generator."""
 
 import pytest
-
 from agents.e.mutator import (
-    # Types
-    SchemaCategory,
-    MutationSchema,
-    CodeHotSpot,
-    ApplicationResult,
-    MutatorConfig,
-    MutatorStats,
-    # Functions
-    analyze_hot_spots,
-    _calculate_complexity,
-    _count_line_changes,
-    # Applicators
-    apply_loop_to_comprehension,
-    apply_extract_constant,
-    apply_flatten_nesting,
-    apply_inline_single_use,
-    # Schemas
-    SCHEMA_LOOP_TO_COMPREHENSION,
     SCHEMA_EXTRACT_CONSTANT,
     SCHEMA_FLATTEN_NESTING,
     SCHEMA_INLINE_SINGLE_USE,
+    # Schemas
+    SCHEMA_LOOP_TO_COMPREHENSION,
     STANDARD_SCHEMA_APPLICATORS,
+    ApplicationResult,
+    CodeHotSpot,
+    MutationSchema,
     # Mutator
     Mutator,
-    create_mutator,
+    MutatorConfig,
+    MutatorStats,
+    # Types
+    SchemaCategory,
+    _calculate_complexity,
+    _count_line_changes,
+    # Functions
+    analyze_hot_spots,
+    apply_extract_constant,
+    apply_flatten_nesting,
+    apply_inline_single_use,
+    # Applicators
+    apply_loop_to_comprehension,
     create_conservative_mutator,
     create_exploratory_mutator,
+    create_mutator,
 )
 from agents.e.types import MutationVector, Phage, PhageStatus
-
 
 # =============================================================================
 # MutationSchema Tests

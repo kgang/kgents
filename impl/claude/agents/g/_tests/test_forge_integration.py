@@ -5,27 +5,25 @@ Tests the bridge between G-gent tongue synthesis and F-gent artifact forging.
 """
 
 import pytest
-
-from agents.g.types import (
-    Tongue,
-    GrammarLevel,
-    GrammarFormat,
-    ConstraintProof,
-    Example,
-    ParserConfig,
-    InterpreterConfig,
-)
 from agents.g.forge_integration import (
+    FGENT_AVAILABLE,
     InterfaceTongue,
     TongueEmbedding,
-    create_artifact_interface,
-    embed_tongue_in_contract,
-    create_invocation_handler,
     bind_handlers,
+    create_artifact_interface,
+    create_invocation_handler,
+    embed_tongue_in_contract,
     forge_with_interface,
-    FGENT_AVAILABLE,
 )
-
+from agents.g.types import (
+    ConstraintProof,
+    Example,
+    GrammarFormat,
+    GrammarLevel,
+    InterpreterConfig,
+    ParserConfig,
+    Tongue,
+)
 
 # =============================================================================
 # Fixtures

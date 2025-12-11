@@ -6,7 +6,6 @@ Phase 4: ContextInjector with foveation algorithm.
 """
 
 import pytest
-
 from agents.m.cartographer import (
     MockTrace,
     create_mock_cartographer,
@@ -34,7 +33,6 @@ from agents.m.pathfinder import (
     analyze_path,
     create_pathfinder,
 )
-
 
 # ============================================================================
 # Test Fixtures

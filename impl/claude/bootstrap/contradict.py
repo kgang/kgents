@@ -19,6 +19,7 @@ See spec/bootstrap.md lines 145-163.
 """
 
 from __future__ import annotations
+
 import asyncio
 from dataclasses import dataclass
 from typing import Any, Optional, Protocol, Sequence
@@ -30,7 +31,6 @@ from .types import (
     Tension,
     TensionMode,
 )
-
 
 # --- Tension Detector Protocol ---
 

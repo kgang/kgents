@@ -16,10 +16,11 @@ Aesthetic principles:
 """
 
 from typing import List
+
 from .types import (
-    Glyph,
     AgentState,
     GardenState,
+    Glyph,
     LibraryState,
 )
 

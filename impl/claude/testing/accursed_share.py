@@ -10,12 +10,11 @@ Phase 5 of test evolution plan:
 - Discovery feedback loop
 """
 
+import json
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
-import json
-
 
 # =============================================================================
 # Discovery Types

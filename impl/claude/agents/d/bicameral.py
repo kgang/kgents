@@ -40,15 +40,15 @@ from .infra_backends import (
 
 # Import from instance_db (protocols layer)
 try:
-    from protocols.cli.instance_db.interfaces import (
-        IRelationalStore,
-        IVectorStore,
-        VectorSearchResult,
-    )
     from protocols.cli.instance_db.hippocampus import (
         Hippocampus,
         ICortex,
         LetheEpoch,
+    )
+    from protocols.cli.instance_db.interfaces import (
+        IRelationalStore,
+        IVectorStore,
+        VectorSearchResult,
     )
     from protocols.cli.instance_db.nervous import Signal
     from protocols.cli.instance_db.synapse import Synapse

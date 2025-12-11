@@ -13,12 +13,11 @@ Phase 8.1 - Foundation:
 - Topologist: Commutativity and invariance verification
 """
 
+import random
 from dataclasses import dataclass, field
 from typing import Any, Callable
-import random
 
 from .oracle import Oracle
-
 
 # =============================================================================
 # Core Types

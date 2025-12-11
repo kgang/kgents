@@ -6,17 +6,15 @@ Tests tongue registration, discovery, and compatibility checking.
 """
 
 import pytest
-
-from agents.g import create_command_tongue, create_schema_tongue, GrammarLevel
+from agents.g import GrammarLevel, create_command_tongue, create_schema_tongue
 from agents.g.catalog_integration import (
-    register_tongue,
-    find_tongue,
     check_compatibility,
     find_composable,
+    find_tongue,
+    register_tongue,
     update_tongue_metrics,
 )
-from agents.l import Registry, EntityType
-
+from agents.l import EntityType, Registry
 
 # ============================================================================
 # Registration Tests

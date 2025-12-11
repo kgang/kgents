@@ -33,7 +33,6 @@ from typing import TYPE_CHECKING, Any
 
 from .metered_functor import CentralBank, Gas
 
-
 if TYPE_CHECKING:
     from agents.g.types import Tongue
 

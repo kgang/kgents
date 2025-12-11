@@ -5,7 +5,6 @@ Phase 2: CartographerAgent with L-gent/N-gent integration.
 """
 
 import pytest
-
 from agents.m.cartographer import (
     CartographerAgent,
     CartographerConfig,
@@ -22,7 +21,6 @@ from agents.m.cartography import (
     Resolution,
     create_context_vector,
 )
-
 
 # ============================================================================
 # Clustering Tests

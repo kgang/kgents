@@ -6,10 +6,10 @@ ensuring that state growth doesn't violate computational constraints.
 """
 
 import sys
-from typing import TypeVar, Generic, List
+from typing import Generic, List, TypeVar
 
-from .protocol import DataAgent
 from .errors import StorageError
+from .protocol import DataAgent
 
 S = TypeVar("S")
 

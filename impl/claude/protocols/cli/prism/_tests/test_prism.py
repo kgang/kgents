@@ -7,7 +7,6 @@ import sys
 from typing import Callable
 
 import pytest
-
 from protocols.cli.prism import CLICapable, Prism, expose
 
 

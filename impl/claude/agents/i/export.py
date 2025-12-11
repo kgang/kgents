@@ -9,8 +9,9 @@ This preserves the "paper trail" and enables:
 - Git versioning of garden state
 """
 
-from typing import List, Optional
 from datetime import datetime
+from typing import List, Optional
+
 from .types import (
     AgentState,
     GardenState,

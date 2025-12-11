@@ -11,81 +11,77 @@ Tests cover:
 """
 
 import asyncio
-import pytest
 from dataclasses import dataclass
 from typing import Any
 
-# Import O-gent modules
-from ..observer import (
-    ObservationStatus,
-    ObservationContext,
-    ObservationResult,
-    EntropyEvent,
-    ProprioceptiveWrapper,
-    ObserverLevel,
-    StratifiedObserver,
-    CompositeObserver,
-    create_observer,
-    create_functor,
-    observe,
-    create_hierarchy,
-    create_composite,
+import pytest
+
+from ..axiological import (
+    LedgerAuditor,
+    ValueLedgerObserver,
+    create_axiological_observer,
+    create_roc_monitor,
+    create_value_ledger,
+)
+from ..bootstrap_witness import (
+    BootstrapAgent,
+    BootstrapObserver,
+    BootstrapVerificationResult,
+    BootstrapWitness,
+    CompositionLawResult,
+    IdentityAgent,
+    IdentityLawResult,
+    TestAgent,
+    Verdict,
+    create_bootstrap_observer,
+    create_bootstrap_witness,
+    render_verification_dashboard,
+    verify_bootstrap,
 )
 
+# Import O-gent modules
+from ..observer import (
+    CompositeObserver,
+    EntropyEvent,
+    ObservationContext,
+    ObservationResult,
+    ObservationStatus,
+    ObserverLevel,
+    ProprioceptiveWrapper,
+    StratifiedObserver,
+    create_composite,
+    create_functor,
+    create_hierarchy,
+    create_observer,
+    observe,
+)
+from ..semantic import (
+    BorromeanObserver,
+    DriftAlert,
+    DriftSeverity,
+    ImaginaryHealth,
+    RealHealth,
+    SimpleDriftMeasurer,
+    SymbolicHealth,
+    create_borromean_observer,
+    create_drift_detector,
+    create_hallucination_detector,
+    create_semantic_observer,
+)
 from ..telemetry import (
     create_metrics_collector,
     create_telemetry_observer,
     create_topology_mapper,
 )
-
-from ..semantic import (
-    DriftSeverity,
-    DriftAlert,
-    SimpleDriftMeasurer,
-    SymbolicHealth,
-    RealHealth,
-    ImaginaryHealth,
-    BorromeanObserver,
-    create_drift_detector,
-    create_borromean_observer,
-    create_semantic_observer,
-    create_hallucination_detector,
-)
-
-from ..axiological import (
-    ValueLedgerObserver,
-    LedgerAuditor,
-    create_value_ledger,
-    create_roc_monitor,
-    create_axiological_observer,
-)
-
 from ..voi_observer import (
-    VoIObservationConfig,
+    ObservationDepth,
     Panopticon,
     PanopticonStatus,
-    ObservationDepth,
-    create_voi_aware_observer,
-    create_panopticon,
+    VoIObservationConfig,
     create_full_observer_stack,
+    create_panopticon,
+    create_voi_aware_observer,
 )
-
-from ..bootstrap_witness import (
-    Verdict,
-    BootstrapAgent,
-    IdentityAgent,
-    TestAgent,
-    BootstrapWitness,
-    BootstrapObserver,
-    BootstrapVerificationResult,
-    IdentityLawResult,
-    CompositionLawResult,
-    create_bootstrap_witness,
-    create_bootstrap_observer,
-    verify_bootstrap,
-    render_verification_dashboard,
-)
-
 
 # =============================================================================
 # Test Fixtures: Mock Agents
@@ -1333,30 +1329,30 @@ class TestEdgeCases:
 
 
 from ..panopticon import (
-    # Status enums
-    SystemStatus,
     AlertSeverity,
-    # Alert type
-    PanopticonAlert,
-    # Dimension status types
-    TelemetryStatus,
-    SemanticStatus,
     AxiologicalStatus,
     BootstrapStatus,
-    VoIStatus,
-    # Unified status
-    UnifiedPanopticonStatus,
     # Integrated Panopticon
     IntegratedPanopticon,
-    # Observer wrapper
-    render_unified_dashboard,
-    render_compact_status,
-    render_dimensions_summary,
+    # Alert type
+    PanopticonAlert,
+    SemanticStatus,
+    # Status enums
+    SystemStatus,
+    # Dimension status types
+    TelemetryStatus,
+    # Unified status
+    UnifiedPanopticonStatus,
+    VoIStatus,
     # Factory functions
     create_integrated_panopticon,
     create_minimal_panopticon,
-    create_verified_panopticon,
     create_panopticon_observer,
+    create_verified_panopticon,
+    render_compact_status,
+    render_dimensions_summary,
+    # Observer wrapper
+    render_unified_dashboard,
 )
 
 

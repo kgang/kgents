@@ -3,10 +3,9 @@ Tests for P-gents composition patterns (Fallback, Fusion, Switch).
 """
 
 import pytest
-from agents.p.core import ParseResult, IdentityParser
-from agents.p.strategies.anchor import AnchorBasedParser
 from agents.p.composition import FallbackParser, FusionParser, SwitchParser
-
+from agents.p.core import IdentityParser, ParseResult
+from agents.p.strategies.anchor import AnchorBasedParser
 
 # Mock parsers for testing
 

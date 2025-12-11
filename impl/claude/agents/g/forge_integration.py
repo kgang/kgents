@@ -18,20 +18,20 @@ Key Functions:
 from dataclasses import dataclass, field
 from typing import Any, Callable, Optional
 
-from agents.g.types import (
-    Tongue,
-    GrammarLevel,
-    GrammarFormat,
-    ParseResult,
-    ExecutionResult,
-)
 from agents.g.grammarian import Grammarian, reify_command, reify_schema
-from agents.g.parser import parse_with_tongue
 from agents.g.interpreter import execute_with_tongue
+from agents.g.parser import parse_with_tongue
+from agents.g.types import (
+    ExecutionResult,
+    GrammarFormat,
+    GrammarLevel,
+    ParseResult,
+    Tongue,
+)
 
 # F-gent imports (may not be available)
 try:
-    from agents.f.contract import Contract, Invariant, CompositionRule
+    from agents.f.contract import CompositionRule, Contract, Invariant
     from agents.f.intent import Intent
 
     FGENT_AVAILABLE = True
@@ -453,8 +453,8 @@ async def forge_with_interface(
             "F-gent is not available. Cannot create artifact with interface."
         )
 
-    from agents.f.intent import parse_intent
     from agents.f.contract import synthesize_contract
+    from agents.f.intent import parse_intent
 
     constraints = constraints or []
     operations = operations or {}

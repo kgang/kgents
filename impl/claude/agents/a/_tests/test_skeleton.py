@@ -8,33 +8,30 @@ Tests cover:
 """
 
 import pytest
-
-from bootstrap.types import Agent, VerdictType, VOID
-from bootstrap.id import Id
-
 from agents.a.skeleton import (
     # Existing
     AbstractAgent,
-    AgentMeta,
+    AgentBehavior,
     AgentIdentity,
     AgentInterface,
-    AgentBehavior,
-    has_meta,
-    get_meta,
-    check_composition,
+    AgentMeta,
+    AutopoieticAgent,
     # Phase 1: BootstrapWitness
     BootstrapVerificationResult,
     BootstrapWitness,
-    # Phase 2: Category-Theoretic Protocols
-    Morphism,
-    get_domain,
-    get_codomain,
-    verify_composition_types,
     # Phase 4: GroundedSkeleton
     GroundedSkeleton,
-    AutopoieticAgent,
+    # Phase 2: Category-Theoretic Protocols
+    Morphism,
+    check_composition,
+    get_codomain,
+    get_domain,
+    get_meta,
+    has_meta,
+    verify_composition_types,
 )
-
+from bootstrap.id import Id
+from bootstrap.types import VOID, Agent, VerdictType
 
 # =============================================================================
 # Test Fixtures
@@ -122,7 +119,7 @@ class TestBootstrapWitness:
     async def test_all_bootstrap_agents_exist(self):
         """All 7 bootstrap agents can be imported and instantiated."""
         # These should not raise ImportError
-        from bootstrap import Id, Compose, Judge, Ground, Contradict, Sublate, Fix
+        from bootstrap import Compose, Contradict, Fix, Ground, Id, Judge, Sublate
 
         # Verify they're agents
         assert hasattr(Id, "invoke") or callable(Id)

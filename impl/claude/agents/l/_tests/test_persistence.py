@@ -11,14 +11,13 @@ from pathlib import Path
 import pytest
 
 from ..persistence import (
-    PersistentRegistry,
     PersistenceConfig,
+    PersistentRegistry,
     SaveStrategy,
     create_persistent_registry,
     load_or_create_registry,
 )
 from ..types import CatalogEntry, EntityType, Status
-
 
 # ========== Fixtures ==========
 

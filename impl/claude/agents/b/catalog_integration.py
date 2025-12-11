@@ -22,14 +22,15 @@ from datetime import datetime
 from uuid import uuid4
 
 from agents.l import (
-    Registry,
     CatalogEntry,
     EntityType,
-    Status,
-    SearchResult,
     LineageGraph,
+    Registry,
     RelationshipType,
+    SearchResult,
+    Status,
 )
+
 from .hypothesis_parser import Hypothesis, NoveltyLevel
 
 

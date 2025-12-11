@@ -14,7 +14,6 @@ Tests are written to gracefully handle missing dependencies.
 import os
 
 import pytest
-
 from agents.l.embedders import (
     OPENAI_AVAILABLE,
     SENTENCE_TRANSFORMERS_AVAILABLE,
@@ -31,7 +30,6 @@ if OPENAI_AVAILABLE:
     from agents.l.embedders import OpenAIEmbedder
 
 from agents.l.semantic import SimpleEmbedder
-
 
 # ============================================================================
 # SentenceTransformerEmbedder Tests

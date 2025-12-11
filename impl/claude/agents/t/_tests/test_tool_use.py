@@ -9,18 +9,17 @@ Tests cover:
 - Type safety
 """
 
-import pytest
 from dataclasses import dataclass
 
+import pytest
 from agents.t import (
+    PassthroughTool,
     Tool,
-    ToolMeta,
     ToolError,
     ToolErrorType,
-    PassthroughTool,
+    ToolMeta,
     ToolRegistry,
 )
-
 
 # --- Test Fixtures ---
 

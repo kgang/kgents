@@ -16,12 +16,12 @@ Part of the Noosphere Layer (D-gent Phase 4).
 
 from __future__ import annotations
 
-from typing import TypeVar, Generic, List, Optional, Dict, Any
+import json
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-import json
 from pathlib import Path
+from typing import Any, Dict, Generic, List, Optional, TypeVar
 
 from .errors import NoosphereError
 

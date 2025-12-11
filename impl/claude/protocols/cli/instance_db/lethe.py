@@ -34,8 +34,8 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Protocol, runtime_checkable
 
+from .compost import CompostBin, CompostConfig, NutrientBlock
 from .hippocampus import LetheEpoch
-from .compost import NutrientBlock, CompostBin, CompostConfig
 
 
 class LetheError(Exception):
@@ -570,7 +570,7 @@ class LetheStore:
                 # Compress to statistics
                 signals = signals_by_epoch.get(epoch.epoch_id, [])
                 if signals:
-                    block = await self.compost(epoch, signals)
+                    await self.compost(epoch, signals)
                     records.append(self.get_record(epoch.epoch_id))  # type: ignore
 
             elif policy == RetentionPolicy.FORGET:

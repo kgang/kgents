@@ -8,16 +8,14 @@ Tests:
 - Child spawning mechanics
 """
 
-
+from agents.b.metered_functor import EntropyBudget as BgentEntropyBudget
 from agents.j.shared_budget import (
-    SharedEntropyBudget,
     DualEntropyBudget,
-    create_depth_based_budget,
+    SharedEntropyBudget,
     compute_depth_from_budget,
+    create_depth_based_budget,
     create_dual_budget,
 )
-from agents.b.metered_functor import EntropyBudget as BgentEntropyBudget
-
 
 # =============================================================================
 # SharedEntropyBudget Tests

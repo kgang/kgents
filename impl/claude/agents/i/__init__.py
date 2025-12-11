@@ -35,77 +35,96 @@ Legacy types (still available):
 See: spec/i-gents/README.md
 """
 
-from .types import (
-    Phase,
-    Glyph,
-    Scale,
-    MarginNote,
-    NoteSource,
-    AgentState,
-    GardenState,
-)
-from .renderers import (
-    GlyphRenderer,
-    CardRenderer,
-    PageRenderer,
-    GardenRenderer,
-    LibraryRenderer,
-)
-from .export import MarkdownExporter
 from .breath import BreathCycle, BreathManager
-from .observe import ObserveAction, GardenObserver
-
-# Forge View (composition mode)
-from .forge_view import (
-    Archetype,
-    ArchetypeLevel,
-    Pipeline,
-    PipelineSlot,
-    ForgeViewState,
-    ForgeViewRenderer,
-    ForgeViewKeyHandler,
-    DEFAULT_ARCHETYPES,
-    create_demo_forge_state,
-    render_forge_view_once,
-    archetype_from_catalog_entry,
-    load_archetypes_from_registry,
-    create_forge_state_from_registry,
-    load_archetypes_from_entries,
-)
-
-# New stigmergic field types
-from .field import (
-    Entity,
-    EntityType,
-    FieldState,
-    FieldSimulator,
-    Pheromone,
-    PheromoneType,
-    DialecticPhase,
-    create_default_field,
-    create_demo_field,
-)
 
 # UI Components
 from .components import (
+    BorderStyle,
     Color,
-    colorize,
+    DashboardPanel,
+    Meter,
+    MeterThreshold,
+    Panel,
     ProgressBar,
     ProgressBarStyle,
     Spinner,
     SpinnerStyle,
-    BorderStyle,
-    Panel,
-    Meter,
-    MeterThreshold,
-    StatusLine,
     StatusItem,
+    StatusLine,
     Table,
     TableColumn,
-    DashboardPanel,
-    create_progress_bar,
-    create_panel,
+    colorize,
     create_dashboard,
+    create_panel,
+    create_progress_bar,
+)
+
+# Dream Report Rendering (Instance DB Phase 6)
+from .dream_view import (
+    DreamPhase,
+    MaintenanceChunk,
+    MigrationProposal,
+    Question,
+    SimpleDreamReport,
+    create_mock_dream_report,
+    create_mock_questions,
+    render_briefing_question,
+    render_dream_report,
+    render_dream_report_compact,
+    render_migration_proposals,
+    render_migration_sql,
+    render_morning_briefing,
+    render_phase_bar,
+    render_phase_indicator,
+)
+from .export import MarkdownExporter
+
+# New stigmergic field types
+from .field import (
+    DialecticPhase,
+    Entity,
+    EntityType,
+    FieldSimulator,
+    FieldState,
+    Pheromone,
+    PheromoneType,
+    create_default_field,
+    create_demo_field,
+)
+
+# Forge View (composition mode)
+from .forge_view import (
+    DEFAULT_ARCHETYPES,
+    Archetype,
+    ArchetypeLevel,
+    ForgeViewKeyHandler,
+    ForgeViewRenderer,
+    ForgeViewState,
+    Pipeline,
+    PipelineSlot,
+    archetype_from_catalog_entry,
+    create_demo_forge_state,
+    create_forge_state_from_registry,
+    load_archetypes_from_entries,
+    load_archetypes_from_registry,
+    render_forge_view_once,
+)
+from .observe import GardenObserver, ObserveAction
+from .renderers import (
+    CardRenderer,
+    GardenRenderer,
+    GlyphRenderer,
+    LibraryRenderer,
+    PageRenderer,
+)
+from .types import (
+    AgentState,
+    GardenState,
+    Glyph,
+    MarginNote,
+    NoteSource,
+    Phase,
+    Scale,
 )
 
 __all__ = [
@@ -175,4 +194,20 @@ __all__ = [
     "create_progress_bar",
     "create_panel",
     "create_dashboard",
+    # Dream Report Rendering (Instance DB Phase 6)
+    "DreamPhase",
+    "Question",
+    "MaintenanceChunk",
+    "MigrationProposal",
+    "SimpleDreamReport",
+    "render_phase_indicator",
+    "render_phase_bar",
+    "render_dream_report",
+    "render_dream_report_compact",
+    "render_morning_briefing",
+    "render_briefing_question",
+    "render_migration_proposals",
+    "render_migration_sql",
+    "create_mock_dream_report",
+    "create_mock_questions",
 ]

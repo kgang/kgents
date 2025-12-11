@@ -14,8 +14,8 @@ Core principles (Popperian):
 from dataclasses import dataclass, field
 from typing import Any, Optional, Union
 
-from runtime.base import LLMAgent, AgentContext
-from agents.a.skeleton import AgentMeta, AgentIdentity, AgentInterface, AgentBehavior
+from agents.a.skeleton import AgentBehavior, AgentIdentity, AgentInterface, AgentMeta
+from runtime.base import AgentContext, LLMAgent
 
 # Parser extraction (Phase D - H14)
 from .hypothesis_parser import (

@@ -27,6 +27,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
+from .axiological import AxiologicalObserver
 from .observer import (
     Agent,
     BaseObserver,
@@ -34,27 +35,28 @@ from .observer import (
     ObservationContext,
     ObservationResult,
 )
-from .telemetry import TelemetryObserver
 from .semantic import SemanticObserver
-from .axiological import AxiologicalObserver
+from .telemetry import TelemetryObserver
 
 # Import B-gent VoI types
 try:
+    from ..b.metered_functor import Gas
+    from ..b.value_ledger import ValueLedger
     from ..b.voi_economics import (
-        ObservationDepth,
-        FindingType,
-        ObservationFinding,
+        AdaptiveObserver as BgentAdaptiveObserver,
+    )
+    from ..b.voi_economics import (
         EpistemicCapital,
+        FindingType,
+        ObservationDepth,
+        ObservationFinding,
+        UnifiedValueAccounting,
         VoILedger,
         VoIOptimizer,
-        AdaptiveObserver as BgentAdaptiveObserver,
-        UnifiedValueAccounting,
         VoIReceipt,
         create_voi_ledger,
         create_voi_optimizer,
     )
-    from ..b.metered_functor import Gas
-    from ..b.value_ledger import ValueLedger
 
     HAS_VOI = True
 except ImportError:

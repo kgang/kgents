@@ -16,33 +16,31 @@ import time
 from pathlib import Path
 
 import pytest
-
 from agents.e.safety import (
     # Rollback
     AtomicCheckpoint,
     AtomicMutationManager,
-    FileCheckpoint,
-    RollbackStatus,
-    # Rate limiting
-    RateLimiter,
-    RateLimitConfig,
-    RateLimitExceeded,
     # Audit logging
     AuditEvent,
     AuditEventType,
     AuditLogger,
     FileAuditSink,
+    FileCheckpoint,
     InMemoryAuditSink,
+    RateLimitConfig,
+    # Rate limiting
+    RateLimiter,
+    RateLimitExceeded,
+    RollbackStatus,
+    # Unified
+    SafetySystem,
     # Sandbox
     Sandbox,
     SandboxConfig,
     SandboxViolation,
-    # Unified
-    SafetySystem,
     create_safety_system,
     create_test_safety_system,
 )
-
 
 # =============================================================================
 # Fixtures

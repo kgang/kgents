@@ -17,26 +17,25 @@ Coverage:
 """
 
 import asyncio
-import pytest
 from dataclasses import dataclass
 
-from agents.t.tool import Tool, ToolMeta, ToolErrorType
+import pytest
 from agents.t.orchestration import (
-    SequentialOrchestrator,
+    CostBasedSelection,
+    DynamicToolSelector,
+    EnvironmentBasedSelection,
+    HandoffCondition,
+    HandoffPattern,
+    HandoffRule,
+    LatencyBasedSelection,
     ParallelOrchestrator,
     ParallelResult,
+    SelectionContext,
+    SequentialOrchestrator,
     SupervisorPattern,
     Task,
-    HandoffPattern,
-    HandoffCondition,
-    HandoffRule,
-    DynamicToolSelector,
-    SelectionContext,
-    CostBasedSelection,
-    LatencyBasedSelection,
-    EnvironmentBasedSelection,
 )
-
+from agents.t.tool import Tool, ToolErrorType, ToolMeta
 
 # =============================================================================
 # Test Fixtures: Simple Tools

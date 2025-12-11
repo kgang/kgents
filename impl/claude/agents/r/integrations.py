@@ -14,13 +14,15 @@ See spec/r-gents/README.md for full specification.
 """
 
 from __future__ import annotations
+
+import hashlib
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import Any, Callable, Optional, TypeVar
-import hashlib
-import uuid
 
+from .refinery import RefineryAgent, ROIOptimizer
 from .types import (
     Example,
     OptimizationDecision,
@@ -29,22 +31,21 @@ from .types import (
     Signature,
     TeleprompterStrategy,
 )
-from .refinery import RefineryAgent, ROIOptimizer
 
 # Optional imports - may not be available
 try:
-    from agents.f.crystallize import Artifact, ArtifactMetadata
-    from agents.f.prototype import SourceCode
-    from agents.f.intent import Intent
     from agents.f.contract import Contract
+    from agents.f.crystallize import Artifact, ArtifactMetadata
+    from agents.f.intent import Intent
+    from agents.f.prototype import SourceCode
 
     F_GENT_AVAILABLE = True
 except ImportError:
     F_GENT_AVAILABLE = False
 
 try:
-    from agents.t.tool import Tool, ToolMeta, ToolIdentity
     from agents.t.metrics import MetricObserver
+    from agents.t.tool import Tool, ToolIdentity, ToolMeta
 
     T_GENT_AVAILABLE = True
 except ImportError:

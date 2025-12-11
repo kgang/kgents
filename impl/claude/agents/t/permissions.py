@@ -23,14 +23,15 @@ References:
 """
 
 from __future__ import annotations
+
+import hashlib
+import secrets
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Optional, TypeVar, Callable
-import hashlib
-import secrets
+from typing import Callable, Optional, TypeVar
 
-from bootstrap.types import Result, ok, err
+from bootstrap.types import Result, err, ok
 
 # Type variables
 A = TypeVar("A")

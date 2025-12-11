@@ -1,8 +1,9 @@
 """Tests for VectorAgent - Semantic Manifold foundation."""
 
-import pytest
-from pathlib import Path
 import tempfile
+from pathlib import Path
+
+import pytest
 
 # Skip entire module if numpy not available
 try:
@@ -10,13 +11,13 @@ try:
 except ImportError:
     pytest.skip("numpy not installed", allow_module_level=True)
 
-from agents.d.vector import (
-    VectorAgent,
-    Point,
-    Void,
-    DistanceMetric,
-)
 from agents.d.errors import SemanticError, VoidNotFoundError
+from agents.d.vector import (
+    DistanceMetric,
+    Point,
+    VectorAgent,
+    Void,
+)
 
 
 class TestVectorAgentBasics:

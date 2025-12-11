@@ -12,10 +12,11 @@ and type-safe before execution.
 
 from dataclasses import dataclass
 from typing import Any, Callable, Optional
-from agents.p.core import ParseResult, Parser, ParserConfig
+
+from agents.p.core import Parser, ParserConfig, ParseResult
 from agents.p.strategies.anchor import AnchorBasedParser
-from agents.p.strategies.reflection import ReflectionParser
 from agents.p.strategies.probabilistic_ast import ProbabilisticASTParser
+from agents.p.strategies.reflection import ReflectionParser
 
 
 @dataclass

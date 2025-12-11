@@ -12,29 +12,29 @@ Tests cover:
 
 from __future__ import annotations
 
-import pytest
 from dataclasses import dataclass, field
-from typing import Any
 from pathlib import Path
+from typing import Any
+
+import pytest
 
 from ..library import (
-    ViralPattern,
+    PruneReport,
     ViralLibrary,
     ViralLibraryConfig,
-    PruneReport,
+    ViralPattern,
+    create_exploratory_library,
     create_library,
     create_strict_library,
-    create_exploratory_library,
     fitness_to_odds,
     odds_from_library,
 )
 from ..types import (
-    Phage,
-    PhageStatus,
     MutationVector,
+    Phage,
     PhageLineage,
+    PhageStatus,
 )
-
 
 # =============================================================================
 # Test Fixtures

@@ -9,7 +9,7 @@ This demonstrates D-gent composition: combining two D-gents to create
 a new D-gent with different performance characteristics.
 """
 
-from typing import TypeVar, Generic, List, TYPE_CHECKING
+from typing import TYPE_CHECKING, Generic, List, TypeVar
 
 from .protocol import DataAgent
 

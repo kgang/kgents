@@ -7,13 +7,21 @@ Supports two authentication methods:
    (Used by Claude Code CLI for delegated authentication)
 """
 
-import os
 import logging
+import os
 import time
 import uuid
-from typing import Any, TypeVar, Protocol
+from typing import Any, Protocol, TypeVar
 
-from .base import Runtime, LLMAgent, AgentContext, AgentResult, with_retry, TransientError, PermanentError
+from .base import (
+    AgentContext,
+    AgentResult,
+    LLMAgent,
+    PermanentError,
+    Runtime,
+    TransientError,
+    with_retry,
+)
 
 A = TypeVar("A")
 B = TypeVar("B")
@@ -23,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 class AsyncAnthropicClient(Protocol):
     """Protocol for Anthropic async clients to enable dependency injection."""
-    
+
     async def messages_create(
         self,
         *,
@@ -129,7 +137,10 @@ class ClaudeRuntime(Runtime):
             return True
 
         # Timeout errors - transient
-        if "timeout" in error_str or error_type in ("TimeoutError", "asyncio.TimeoutError"):
+        if "timeout" in error_str or error_type in (
+            "TimeoutError",
+            "asyncio.TimeoutError",
+        ):
             return True
 
         # Overloaded errors - transient
@@ -141,7 +152,10 @@ class ClaudeRuntime(Runtime):
             return True
 
         # Auth errors - permanent
-        if any(term in error_str for term in ["auth", "unauthorized", "forbidden", "401", "403"]):
+        if any(
+            term in error_str
+            for term in ["auth", "unauthorized", "forbidden", "401", "403"]
+        ):
             return False
 
         # Invalid request errors - permanent
@@ -195,7 +209,8 @@ class ClaudeRuntime(Runtime):
                 "usage": {
                     "input_tokens": response.usage.input_tokens,
                     "output_tokens": response.usage.output_tokens,
-                    "total_tokens": response.usage.input_tokens + response.usage.output_tokens,
+                    "total_tokens": response.usage.input_tokens
+                    + response.usage.output_tokens,
                 },
                 "stop_reason": response.stop_reason,
                 "trace_id": trace_id,

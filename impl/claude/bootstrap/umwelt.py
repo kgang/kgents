@@ -13,6 +13,7 @@ The key insight: agents don't receive the World—they receive a projection.
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 from typing import (
     Any,
@@ -21,7 +22,7 @@ from typing import (
     TypeVar,
 )
 
-from agents.d.lens import Lens, key_lens, identity_lens
+from agents.d.lens import Lens, identity_lens, key_lens
 from agents.d.protocol import DataAgent
 
 # Optional: try importing DNA, gracefully handle if not available

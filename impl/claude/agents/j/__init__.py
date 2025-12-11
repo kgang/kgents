@@ -30,6 +30,23 @@ from .chaosmonger import (
     check_stability,
     is_stable,
 )
+from .factory_integration import (
+    JITAgentMeta,
+    JITAgentWrapper,
+    compile_and_instantiate,
+    create_agent_from_source,
+    get_jit_meta,
+    is_jit_agent,
+)
+from .forge_integration import (
+    ForgeTemplate,
+    InstantiatedAgent,
+    TemplateParameters,
+    TemplateRegistry,
+    contract_to_template,
+    forge_and_instantiate,
+    instantiate_template,
+)
 from .jgent import (
     GeneratedTest,
     JGent,
@@ -67,49 +84,34 @@ from .reality import (
 )
 from .sandbox import (
     SandboxConfig,
-    SandboxResult,
     SandboxedNamespace,
+    SandboxResult,
     execute_in_sandbox,
     jit_compile_and_execute,
     type_check_source,
     validate_jit_safety,
 )
-from .forge_integration import (
-    ForgeTemplate,
-    TemplateParameters,
-    InstantiatedAgent,
-    TemplateRegistry,
-    contract_to_template,
-    instantiate_template,
-    forge_and_instantiate,
-)
-from .factory_integration import (
-    JITAgentMeta,
-    JITAgentWrapper,
-    create_agent_from_source,
-    compile_and_instantiate,
-    get_jit_meta,
-    is_jit_agent,
-)
-from .t_integration import (
-    ToolTemplate,
-    JITToolMeta,
-    JITToolWrapper as JITTool,
-    compile_tool_from_intent,
-    compile_tool_from_template,
-    create_tool_from_source,
-    JSON_FIELD_EXTRACTOR,
-    TEXT_TRANSFORMER,
-    FILTER_TEMPLATE,
-)
 
 # Shared Entropy Budget (J-gent × B-gent integration)
 from .shared_budget import (
-    SharedEntropyBudget,
     DualEntropyBudget,
-    create_depth_based_budget,
+    SharedEntropyBudget,
     compute_depth_from_budget,
+    create_depth_based_budget,
     create_dual_budget,
+)
+from .t_integration import (
+    FILTER_TEMPLATE,
+    JSON_FIELD_EXTRACTOR,
+    TEXT_TRANSFORMER,
+    JITToolMeta,
+    ToolTemplate,
+    compile_tool_from_intent,
+    compile_tool_from_template,
+    create_tool_from_source,
+)
+from .t_integration import (
+    JITToolWrapper as JITTool,
 )
 
 __all__ = [

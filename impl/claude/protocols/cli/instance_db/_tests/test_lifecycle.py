@@ -4,17 +4,18 @@ Tests for LifecycleManager.
 Tests bootstrap, shutdown, mode detection, and instance management.
 """
 
-import pytest
 import asyncio
 import os
 import socket
 from datetime import datetime, timedelta
 from pathlib import Path
 
+import pytest
+
 from ..lifecycle import (
     LifecycleManager,
-    OperationMode,
     LifecycleState,
+    OperationMode,
     quick_bootstrap,
 )
 
