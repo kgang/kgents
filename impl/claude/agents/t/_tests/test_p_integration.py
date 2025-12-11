@@ -419,7 +419,7 @@ class TestStreamingSupport:
         parser = SchemaParser()
 
         tokens = ['{"name":', ' "test",', ' "inputSchema":', ' {"type": "string"}}']
-        results = parser.parse_stream(tokens)
+        results = list(parser.parse_stream(iter(tokens)))
 
         assert len(results) == 1
         assert results[0].success
@@ -429,7 +429,7 @@ class TestStreamingSupport:
         parser = InputParser(parameter_names=["query"])
 
         tokens = ["###query:", " test query"]
-        results = parser.parse_stream(tokens)
+        results = list(parser.parse_stream(iter(tokens)))
 
         assert len(results) == 1
         assert results[0].success
@@ -439,7 +439,7 @@ class TestStreamingSupport:
         parser = OutputParser()
 
         tokens = ['{"result":', ' "success"}']
-        results = parser.parse_stream(tokens)
+        results = list(parser.parse_stream(iter(tokens)))
 
         assert len(results) == 1
         assert results[0].success
@@ -449,7 +449,7 @@ class TestStreamingSupport:
         parser = ErrorParser()
 
         tokens = ["Connection", " timeout"]
-        results = parser.parse_stream(tokens)
+        results = list(parser.parse_stream(iter(tokens)))
 
         assert len(results) == 1
         assert results[0].success
