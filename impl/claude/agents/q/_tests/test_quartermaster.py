@@ -25,7 +25,7 @@ from agents.q.quartermaster import (
 class TestQuartermasterConfig:
     """Tests for QuartermasterConfig."""
 
-    def test_default_values(self):
+    def test_default_values(self) -> None:
         """Default config has expected values."""
         config = QuartermasterConfig()
 
@@ -37,7 +37,7 @@ class TestQuartermasterConfig:
         assert config.fallback_to_subprocess is True
         assert config.dry_run is False
 
-    def test_custom_values(self):
+    def test_custom_values(self) -> None:
         """Custom config overrides defaults."""
         config = QuartermasterConfig(
             namespace="custom-namespace",
@@ -53,7 +53,7 @@ class TestQuartermasterConfig:
 class TestProvisionResult:
     """Tests for ProvisionResult."""
 
-    def test_success_result(self):
+    def test_success_result(self) -> None:
         """Success result structure."""
         result = ProvisionResult(
             success=True,
@@ -70,7 +70,7 @@ class TestProvisionResult:
         assert result.mode == ExecutionMode.SUBPROCESS
         assert result.output == "hello\n"
 
-    def test_to_execution_result(self):
+    def test_to_execution_result(self) -> None:
         """Convert to ExecutionResult."""
         result = ProvisionResult(
             success=True,
@@ -91,7 +91,7 @@ class TestProvisionResult:
 class TestExecutionMode:
     """Tests for ExecutionMode."""
 
-    def test_modes(self):
+    def test_modes(self) -> None:
         """All execution modes are available."""
         assert ExecutionMode.KUBERNETES.name == "KUBERNETES"
         assert ExecutionMode.SUBPROCESS.name == "SUBPROCESS"
@@ -101,14 +101,14 @@ class TestExecutionMode:
 class TestQuartermasterDetection:
     """Tests for execution mode detection."""
 
-    def test_dry_run_mode(self):
+    def test_dry_run_mode(self) -> None:
         """Dry run mode is detected first."""
         config = QuartermasterConfig(dry_run=True)
         q = Quartermaster(config=config)
 
         assert q.execution_mode == ExecutionMode.DRY_RUN
 
-    def test_subprocess_fallback(self):
+    def test_subprocess_fallback(self) -> None:
         """Falls back to subprocess when K8s unavailable."""
         config = QuartermasterConfig(fallback_to_subprocess=True)
 
@@ -118,7 +118,7 @@ class TestQuartermasterDetection:
 
             assert q.execution_mode == ExecutionMode.SUBPROCESS
 
-    def test_kubernetes_mode(self):
+    def test_kubernetes_mode(self) -> None:
         """Kubernetes mode when cluster available."""
         config = QuartermasterConfig()
 
@@ -128,7 +128,7 @@ class TestQuartermasterDetection:
 
             assert q.execution_mode == ExecutionMode.KUBERNETES
 
-    def test_no_fallback_raises(self):
+    def test_no_fallback_raises(self) -> None:
         """Raises when K8s unavailable and no fallback."""
         config = QuartermasterConfig(fallback_to_subprocess=False)
 
@@ -144,7 +144,7 @@ class TestQuartermasterDryRun:
     """Tests for dry run mode."""
 
     @pytest.mark.asyncio
-    async def test_dry_run_returns_spec(self):
+    async def test_dry_run_returns_spec(self) -> None:
         """Dry run returns job spec without execution."""
         q = create_quartermaster(dry_run=True)
 
@@ -165,7 +165,7 @@ class TestQuartermasterSubprocess:
     """
 
     @pytest.mark.asyncio
-    async def test_python_execution(self):
+    async def test_python_execution(self) -> None:
         """Execute Python code via subprocess."""
         # Force subprocess mode by setting it directly
         q = create_quartermaster(fallback=True)
@@ -180,7 +180,7 @@ class TestQuartermasterSubprocess:
         assert result.mode == ExecutionMode.SUBPROCESS
 
     @pytest.mark.asyncio
-    async def test_shell_execution(self):
+    async def test_shell_execution(self) -> None:
         """Execute shell code via subprocess."""
         q = create_quartermaster(fallback=True)
         q._execution_mode = ExecutionMode.SUBPROCESS
@@ -193,7 +193,7 @@ class TestQuartermasterSubprocess:
         assert result.mode == ExecutionMode.SUBPROCESS
 
     @pytest.mark.asyncio
-    async def test_execution_timeout(self):
+    async def test_execution_timeout(self) -> None:
         """Execution times out gracefully."""
         q = create_quartermaster(fallback=True)
         q._execution_mode = ExecutionMode.SUBPROCESS
@@ -209,7 +209,7 @@ class TestQuartermasterSubprocess:
         assert "timeout" in result.error.lower()
 
     @pytest.mark.asyncio
-    async def test_execution_error(self):
+    async def test_execution_error(self) -> None:
         """Execution errors are captured."""
         q = create_quartermaster(fallback=True)
         q._execution_mode = ExecutionMode.SUBPROCESS
@@ -223,7 +223,7 @@ class TestQuartermasterSubprocess:
         assert "test error" in combined
 
     @pytest.mark.asyncio
-    async def test_unsupported_language(self):
+    async def test_unsupported_language(self) -> None:
         """Unsupported language returns error."""
         q = create_quartermaster(fallback=True)
         q._execution_mode = ExecutionMode.SUBPROCESS
@@ -238,7 +238,7 @@ class TestQuartermasterSubprocess:
 class TestQuartermasterActiveJobs:
     """Tests for job tracking."""
 
-    def test_get_active_jobs_empty(self):
+    def test_get_active_jobs_empty(self) -> None:
         """No active jobs initially."""
         q = create_quartermaster()
 
@@ -248,7 +248,7 @@ class TestQuartermasterActiveJobs:
 class TestCreateQuartermaster:
     """Tests for factory function."""
 
-    def test_default_factory(self):
+    def test_default_factory(self) -> None:
         """Factory creates quartermaster with defaults."""
         q = create_quartermaster()
 
@@ -256,7 +256,7 @@ class TestCreateQuartermaster:
         assert q.config.fallback_to_subprocess is True
         assert q.config.dry_run is False
 
-    def test_factory_with_options(self):
+    def test_factory_with_options(self) -> None:
         """Factory accepts options."""
         progress_calls = []
 
@@ -281,7 +281,7 @@ class TestQuartermasterIntegration:
     """
 
     @pytest.mark.asyncio
-    async def test_multiline_python(self):
+    async def test_multiline_python(self) -> None:
         """Execute multiline Python code."""
         q = create_quartermaster(dry_run=False)
         # Force subprocess mode
@@ -301,7 +301,7 @@ print("Multiple lines work!")
         assert "Multiple lines work!" in result.output
 
     @pytest.mark.asyncio
-    async def test_environment_isolation(self):
+    async def test_environment_isolation(self) -> None:
         """Verify subprocess doesn't inherit env vars."""
         import os
 
@@ -325,7 +325,7 @@ print(f'VAR={val}')
         del os.environ["QGENT_TEST_VAR"]
 
     @pytest.mark.asyncio
-    async def test_shell_multiline(self):
+    async def test_shell_multiline(self) -> None:
         """Execute multiline shell script."""
         q = create_quartermaster(dry_run=False)
         q._execution_mode = ExecutionMode.SUBPROCESS

@@ -114,14 +114,14 @@ class MockAgent:
 class TestObserverCore:
     """Tests for core observer functionality."""
 
-    def test_base_observer_creation(self):
+    def test_base_observer_creation(self) -> None:
         """Test creating a base observer."""
         observer = create_observer("test")
         assert observer.observer_id == "test"
         assert len(observer.observations) == 0
         assert len(observer.entropy_events) == 0
 
-    def test_observation_context_creation(self):
+    def test_observation_context_creation(self) -> None:
         """Test creating observation context."""
         ctx = ObservationContext(
             agent_id="agent_1",
@@ -132,7 +132,7 @@ class TestObserverCore:
         assert ctx.agent_name == "TestAgent"
         assert ctx.observation_id.startswith("obs_agent_1_")
 
-    def test_observation_result_success_property(self):
+    def test_observation_result_success_property(self) -> None:
         """Test observation result success property."""
         ctx = ObservationContext(agent_id="1", agent_name="Test", input_data={})
 
@@ -156,7 +156,7 @@ class TestObserverCore:
         )
         assert failed_result.success is False
 
-    def test_entropy_event_creation(self):
+    def test_entropy_event_creation(self) -> None:
         """Test creating entropy events."""
         event = EntropyEvent(
             source_agent="TestAgent",
@@ -173,7 +173,7 @@ class TestObserverFunctor:
     """Tests for the Observer Functor."""
 
     @pytest.mark.asyncio
-    async def test_functor_lift_preserves_behavior(self):
+    async def test_functor_lift_preserves_behavior(self) -> None:
         """Test that lifted agent behaves identically to original."""
         agent = MockAgent(result="hello world")
         observer = create_observer()
@@ -188,7 +188,7 @@ class TestObserverFunctor:
         assert original_result == wrapped_result
 
     @pytest.mark.asyncio
-    async def test_functor_records_observations(self):
+    async def test_functor_records_observations(self) -> None:
         """Test that functor records observations."""
         agent = MockAgent(result="test result")
         observer = create_observer()
@@ -204,7 +204,7 @@ class TestObserverFunctor:
         assert observer.observations[0].status == ObservationStatus.COMPLETED
 
     @pytest.mark.asyncio
-    async def test_functor_records_entropy_on_error(self):
+    async def test_functor_records_entropy_on_error(self) -> None:
         """Test that functor records entropy on exceptions."""
         agent = MockAgent(should_fail=True)
         observer = create_observer()
@@ -218,7 +218,7 @@ class TestObserverFunctor:
         assert len(observer.entropy_events) == 1
         assert observer.entropy_events[0].event_type == "exception"
 
-    def test_observe_convenience_function(self):
+    def test_observe_convenience_function(self) -> None:
         """Test the observe() convenience function."""
         agent = MockAgent()
         wrapped = observe(agent)
@@ -231,13 +231,13 @@ class TestObserverFunctor:
 class TestObserverHierarchy:
     """Tests for observer hierarchy (stratification)."""
 
-    def test_hierarchy_level_ordering(self):
+    def test_hierarchy_level_ordering(self) -> None:
         """Test observer level ordering."""
         assert ObserverLevel.CONCRETE.value == 0
         assert ObserverLevel.DOMAIN.value == 1
         assert ObserverLevel.SYSTEM.value == 2
 
-    def test_stratified_observer_can_observe(self):
+    def test_stratified_observer_can_observe(self) -> None:
         """Test that stratified observers respect level constraints."""
         observer = create_observer()
 
@@ -257,7 +257,7 @@ class TestObserverHierarchy:
         # Concrete cannot observe anything
         assert concrete.can_observe(ObserverLevel.CONCRETE) is False
 
-    def test_hierarchy_registration(self):
+    def test_hierarchy_registration(self) -> None:
         """Test registering observers in hierarchy."""
         hierarchy = create_hierarchy()
 
@@ -281,7 +281,7 @@ class TestCompositeObserver:
     """Tests for composite observer."""
 
     @pytest.mark.asyncio
-    async def test_composite_delegates_to_children(self):
+    async def test_composite_delegates_to_children(self) -> None:
         """Test that composite observer delegates to all children."""
         child1 = create_observer("child1")
         child2 = create_observer("child2")
@@ -296,7 +296,7 @@ class TestCompositeObserver:
         assert ctx.metadata["observer_count"] == 2
 
     @pytest.mark.asyncio
-    async def test_composite_aggregates_post_invoke(self):
+    async def test_composite_aggregates_post_invoke(self) -> None:
         """Test that composite aggregates post_invoke results."""
         child1 = create_observer("child1")
         child2 = create_observer("child2")
@@ -317,7 +317,7 @@ class TestCompositeObserver:
 class TestMetricsCollector:
     """Tests for metrics collection."""
 
-    def test_counter_increment(self):
+    def test_counter_increment(self) -> None:
         """Test counter increments."""
         metrics = create_metrics_collector()
 
@@ -326,7 +326,7 @@ class TestMetricsCollector:
 
         assert metrics.get_counter("requests") == 2.0
 
-    def test_counter_with_labels(self):
+    def test_counter_with_labels(self) -> None:
         """Test counter with labels."""
         metrics = create_metrics_collector()
 
@@ -336,7 +336,7 @@ class TestMetricsCollector:
         assert metrics.get_counter("requests", labels={"status": "200"}) == 1.0
         assert metrics.get_counter("requests", labels={"status": "500"}) == 1.0
 
-    def test_gauge_set(self):
+    def test_gauge_set(self) -> None:
         """Test gauge values."""
         metrics = create_metrics_collector()
 
@@ -346,7 +346,7 @@ class TestMetricsCollector:
         metrics.gauge("active_agents", 3.0)
         assert metrics.get_gauge("active_agents") == 3.0
 
-    def test_histogram_observation(self):
+    def test_histogram_observation(self) -> None:
         """Test histogram observations."""
         metrics = create_metrics_collector()
 
@@ -364,7 +364,7 @@ class TestTelemetryObserver:
     """Tests for telemetry observer."""
 
     @pytest.mark.asyncio
-    async def test_telemetry_records_latency(self):
+    async def test_telemetry_records_latency(self) -> None:
         """Test that telemetry records latency."""
         observer = create_telemetry_observer()
         agent = MockAgent(delay_ms=50)
@@ -380,7 +380,7 @@ class TestTelemetryObserver:
         assert hist.count == 1
 
     @pytest.mark.asyncio
-    async def test_telemetry_counts_invocations(self):
+    async def test_telemetry_counts_invocations(self) -> None:
         """Test that telemetry counts invocations."""
         observer = create_telemetry_observer()
         agent = MockAgent()
@@ -393,7 +393,7 @@ class TestTelemetryObserver:
         )
         assert success_count == 1.0
 
-    def test_telemetry_tracks_errors(self):
+    def test_telemetry_tracks_errors(self) -> None:
         """Test that telemetry tracks errors."""
         observer = create_telemetry_observer()
         agent = MockAgent()
@@ -410,7 +410,7 @@ class TestTelemetryObserver:
 class TestTopologyMapper:
     """Tests for topology mapping."""
 
-    def test_topology_records_invocations(self):
+    def test_topology_records_invocations(self) -> None:
         """Test recording invocations."""
         mapper = create_topology_mapper()
 
@@ -422,7 +422,7 @@ class TestTopologyMapper:
         assert node_a is not None
         assert node_a.invocation_count == 2
 
-    def test_topology_records_compositions(self):
+    def test_topology_records_compositions(self) -> None:
         """Test recording compositions."""
         mapper = create_topology_mapper()
 
@@ -434,7 +434,7 @@ class TestTopologyMapper:
         assert edge is not None
         assert edge.count == 2
 
-    def test_topology_finds_hot_paths(self):
+    def test_topology_finds_hot_paths(self) -> None:
         """Test finding hot paths."""
         mapper = create_topology_mapper()
 
@@ -447,7 +447,7 @@ class TestTopologyMapper:
         assert len(graph.hot_paths) > 0
         assert ["Parser", "Validator"] in graph.hot_paths
 
-    def test_topology_finds_bottlenecks(self):
+    def test_topology_finds_bottlenecks(self) -> None:
         """Test finding bottlenecks."""
         mapper = create_topology_mapper()
 
@@ -469,7 +469,7 @@ class TestDriftDetection:
     """Tests for semantic drift detection."""
 
     @pytest.mark.asyncio
-    async def test_simple_drift_measurer(self):
+    async def test_simple_drift_measurer(self) -> None:
         """Test simple drift measurement."""
         measurer = SimpleDriftMeasurer()
 
@@ -486,7 +486,7 @@ class TestDriftDetection:
         assert drift > 0.5
 
     @pytest.mark.asyncio
-    async def test_drift_detector_within_bounds(self):
+    async def test_drift_detector_within_bounds(self) -> None:
         """Test drift detector within bounds."""
         # Use higher threshold to ensure passing
         detector = create_drift_detector(threshold=0.8)
@@ -503,7 +503,7 @@ class TestDriftDetection:
         # The threshold is for alerting, not for severity classification
 
     @pytest.mark.asyncio
-    async def test_drift_detector_alert_callback(self):
+    async def test_drift_detector_alert_callback(self) -> None:
         """Test drift detector alert callback."""
         alerts = []
 
@@ -521,7 +521,7 @@ class TestDriftDetection:
         assert len(alerts) == 1
         assert alerts[0].agent_id == "test_agent"
 
-    def test_drift_severity_classification(self):
+    def test_drift_severity_classification(self) -> None:
         """Test drift severity classification."""
         detector = create_drift_detector()
 
@@ -536,7 +536,7 @@ class TestBorromeanObserver:
     """Tests for Borromean knot observer."""
 
     @pytest.mark.asyncio
-    async def test_borromean_all_valid(self):
+    async def test_borromean_all_valid(self) -> None:
         """Test Borromean knot when all registers are valid."""
         observer = create_borromean_observer()
 
@@ -547,7 +547,7 @@ class TestBorromeanObserver:
         assert health.valid is True
 
     @pytest.mark.asyncio
-    async def test_borromean_broken_knot(self):
+    async def test_borromean_broken_knot(self) -> None:
         """Test Borromean knot when a register is invalid."""
         alerts = []
 
@@ -567,7 +567,7 @@ class TestBorromeanObserver:
         assert "symbolic" in health.psychosis_alert.rings_broken
         assert len(alerts) == 1
 
-    def test_register_health_properties(self):
+    def test_register_health_properties(self) -> None:
         """Test register health validity properties."""
         symbolic = SymbolicHealth(schema_valid=True, type_check_pass=False)
         assert symbolic.valid is False
@@ -583,7 +583,7 @@ class TestHallucinationDetector:
     """Tests for hallucination detection."""
 
     @pytest.mark.asyncio
-    async def test_hallucination_invented_numbers(self):
+    async def test_hallucination_invented_numbers(self) -> None:
         """Test detection of invented numbers."""
         detector = create_hallucination_detector(confidence_threshold=0.3)
 
@@ -597,7 +597,7 @@ class TestHallucinationDetector:
         assert any("Invented numbers" in i for i in report.indicators)
 
     @pytest.mark.asyncio
-    async def test_hallucination_confident_assertions(self):
+    async def test_hallucination_confident_assertions(self) -> None:
         """Test detection of unsupported confident assertions."""
         detector = create_hallucination_detector(confidence_threshold=0.3)
 
@@ -610,7 +610,7 @@ class TestHallucinationDetector:
         assert len(report.indicators) > 0
 
     @pytest.mark.asyncio
-    async def test_no_hallucination_grounded_output(self):
+    async def test_no_hallucination_grounded_output(self) -> None:
         """Test that grounded output passes."""
         detector = create_hallucination_detector()
 
@@ -631,7 +631,7 @@ class TestHallucinationDetector:
 class TestSimpleValueLedger:
     """Tests for simple value ledger."""
 
-    def test_ledger_records_transactions(self):
+    def test_ledger_records_transactions(self) -> None:
         """Test recording transactions."""
         ledger = create_value_ledger()
 
@@ -643,7 +643,7 @@ class TestSimpleValueLedger:
         assert sheet.assets == 225
         assert sheet.transactions == 2
 
-    def test_ledger_calculates_roc(self):
+    def test_ledger_calculates_roc(self) -> None:
         """Test Return on Compute calculation."""
         ledger = create_value_ledger()
 
@@ -652,7 +652,7 @@ class TestSimpleValueLedger:
         sheet = ledger.get_agent_balance_sheet("agent1")
         assert sheet.roc == 2.0  # 200 / 100
 
-    def test_ledger_system_roc(self):
+    def test_ledger_system_roc(self) -> None:
         """Test system-wide RoC."""
         ledger = create_value_ledger()
 
@@ -665,7 +665,7 @@ class TestSimpleValueLedger:
 class TestValueLedgerObserver:
     """Tests for value ledger observer."""
 
-    def test_observer_generates_health_report(self):
+    def test_observer_generates_health_report(self) -> None:
         """Test generating health report."""
         ledger = create_value_ledger()
         ledger.record_transaction("agent1", gas=100, impact=300)
@@ -679,7 +679,7 @@ class TestValueLedgerObserver:
         assert report.system_roc == 1.75
         assert len(report.agent_rankings) == 2
 
-    def test_observer_ranks_agents(self):
+    def test_observer_ranks_agents(self) -> None:
         """Test agent ranking by RoC."""
         ledger = create_value_ledger()
         ledger.record_transaction("good_agent", gas=100, impact=500)  # 5.0x
@@ -692,7 +692,7 @@ class TestValueLedgerObserver:
         assert report.agent_rankings[0].rank == 1
         assert report.agent_rankings[1].agent_id == "bad_agent"
 
-    def test_observer_detects_anomalies(self):
+    def test_observer_detects_anomalies(self) -> None:
         """Test anomaly detection."""
         ledger = create_value_ledger()
         ledger.record_transaction("burner", gas=2000, impact=100)  # RoC = 0.05
@@ -707,7 +707,7 @@ class TestValueLedgerObserver:
 class TestRoCMonitor:
     """Tests for RoC monitoring."""
 
-    def test_roc_snapshot(self):
+    def test_roc_snapshot(self) -> None:
         """Test taking RoC snapshots."""
         ledger = create_value_ledger()
         ledger.record_transaction("agent1", gas=100, impact=200)
@@ -719,7 +719,7 @@ class TestRoCMonitor:
         assert "agent1" in snapshot.agent_rocs
         assert snapshot.agent_rocs["agent1"] == 2.0
 
-    def test_roc_alerts(self):
+    def test_roc_alerts(self) -> None:
         """Test RoC alerts."""
         alerts = []
 
@@ -740,7 +740,7 @@ class TestRoCMonitor:
 class TestLedgerAuditor:
     """Tests for ledger auditing."""
 
-    def test_audit_passes_healthy_agent(self):
+    def test_audit_passes_healthy_agent(self) -> None:
         """Test audit passes for healthy agent."""
         ledger = create_value_ledger()
         ledger.record_transaction("healthy", gas=100, impact=200)
@@ -751,7 +751,7 @@ class TestLedgerAuditor:
         assert findings["pass"] is True
         assert len(findings["findings"]) == 0
 
-    def test_audit_flags_low_efficiency(self):
+    def test_audit_flags_low_efficiency(self) -> None:
         """Test audit flags low efficiency."""
         ledger = create_value_ledger()
         ledger.record_transaction("inefficient", gas=500, impact=100)
@@ -761,7 +761,7 @@ class TestLedgerAuditor:
 
         assert any(f["type"] == "low_efficiency" for f in findings["findings"])
 
-    def test_audit_all(self):
+    def test_audit_all(self) -> None:
         """Test auditing all agents."""
         ledger = create_value_ledger()
         ledger.record_transaction("agent1", gas=100, impact=200)
@@ -781,7 +781,7 @@ class TestLedgerAuditor:
 class TestVoIAwareObserver:
     """Tests for VoI-aware observer."""
 
-    def test_voi_observer_budget_management(self):
+    def test_voi_observer_budget_management(self) -> None:
         """Test VoI budget management."""
         observer = create_voi_aware_observer()
 
@@ -791,7 +791,7 @@ class TestVoIAwareObserver:
         observer.set_budget("agent1", 500)
         assert observer.get_remaining_budget("agent1") == 500
 
-    def test_voi_observer_should_observe_checks(self):
+    def test_voi_observer_should_observe_checks(self) -> None:
         """Test should_observe checks."""
         observer = create_voi_aware_observer()
 
@@ -806,7 +806,7 @@ class TestVoIAwareObserver:
         assert should is True
         assert reason is None
 
-    def test_voi_observer_depth_selection(self):
+    def test_voi_observer_depth_selection(self) -> None:
         """Test observation depth selection based on budget."""
         config = VoIObservationConfig(
             depth_costs={
@@ -831,7 +831,7 @@ class TestVoIAwareObserver:
         assert observer.select_depth("poor") == ObservationDepth.TELEMETRY_ONLY
 
     @pytest.mark.asyncio
-    async def test_voi_observer_tracks_stats(self):
+    async def test_voi_observer_tracks_stats(self) -> None:
         """Test VoI observer statistics tracking."""
         observer = create_voi_aware_observer()
         # Set budget for the mock agent's id
@@ -850,7 +850,7 @@ class TestVoIAwareObserver:
 class TestPanopticon:
     """Tests for Panopticon dashboard."""
 
-    def test_panopticon_status(self):
+    def test_panopticon_status(self) -> None:
         """Test Panopticon status generation."""
         panopticon = create_panopticon()
         status = panopticon.get_status()
@@ -859,7 +859,7 @@ class TestPanopticon:
         assert status.status in ["HOMEOSTATIC", "DEGRADED", "CRITICAL"]
         assert status.uptime_seconds >= 0
 
-    def test_panopticon_dashboard_render(self):
+    def test_panopticon_dashboard_render(self) -> None:
         """Test Panopticon dashboard rendering."""
         panopticon = create_panopticon()
         dashboard = panopticon.render_dashboard()
@@ -869,7 +869,7 @@ class TestPanopticon:
         assert "SEMANTICS" in dashboard
         assert "AXIOLOGY" in dashboard
 
-    def test_panopticon_alerts(self):
+    def test_panopticon_alerts(self) -> None:
         """Test Panopticon alert management."""
         panopticon = create_panopticon()
 
@@ -879,7 +879,7 @@ class TestPanopticon:
         status = panopticon.get_status()
         assert len(status.alerts) == 2
 
-    def test_full_observer_stack(self):
+    def test_full_observer_stack(self) -> None:
         """Test creating full observer stack."""
         composite, panopticon = create_full_observer_stack()
 
@@ -896,7 +896,7 @@ class TestIntegration:
     """Integration tests for O-gent."""
 
     @pytest.mark.asyncio
-    async def test_full_observation_pipeline(self):
+    async def test_full_observation_pipeline(self) -> None:
         """Test complete observation pipeline."""
         # Create agent
         agent = MockAgent(result="processed data")
@@ -922,7 +922,7 @@ class TestIntegration:
         assert len(telemetry.observations) == 1
 
     @pytest.mark.asyncio
-    async def test_voi_economic_observation(self):
+    async def test_voi_economic_observation(self) -> None:
         """Test VoI-integrated observation."""
         # Create VoI-aware observer
         voi_observer = create_voi_aware_observer()
@@ -941,7 +941,7 @@ class TestIntegration:
         assert result.budget_remaining < 5000
 
     @pytest.mark.asyncio
-    async def test_hierarchical_observation(self):
+    async def test_hierarchical_observation(self) -> None:
         """Test hierarchical observation."""
         hierarchy = create_hierarchy()
 
@@ -957,7 +957,7 @@ class TestIntegration:
         assert len(observers) == 1
         assert observers[0].level == ObserverLevel.DOMAIN
 
-    def test_economic_health_with_observation(self):
+    def test_economic_health_with_observation(self) -> None:
         """Test economic health tracking with observation."""
         # Create economic infrastructure
         ledger = create_value_ledger()
@@ -986,7 +986,7 @@ class TestBootstrapWitness:
     # --- Identity Agent Tests ---
 
     @pytest.mark.asyncio
-    async def test_identity_agent_basic(self):
+    async def test_identity_agent_basic(self) -> None:
         """Test IdentityAgent returns input unchanged."""
         id_agent: IdentityAgent[int] = IdentityAgent()
 
@@ -994,7 +994,7 @@ class TestBootstrapWitness:
         assert result == 42
 
     @pytest.mark.asyncio
-    async def test_identity_agent_various_types(self):
+    async def test_identity_agent_various_types(self) -> None:
         """Test IdentityAgent with various types."""
         id_str: IdentityAgent[str] = IdentityAgent()
         id_list: IdentityAgent[list[int]] = IdentityAgent()
@@ -1004,7 +1004,7 @@ class TestBootstrapWitness:
         assert await id_list.invoke([1, 2, 3]) == [1, 2, 3]
         assert await id_dict.invoke({"a": 1}) == {"a": 1}
 
-    def test_identity_agent_name(self):
+    def test_identity_agent_name(self) -> None:
         """Test IdentityAgent has correct name."""
         id_agent = IdentityAgent()
         assert id_agent.name == "Id"
@@ -1015,7 +1015,7 @@ class TestBootstrapWitness:
     # --- Composed Agent Tests ---
 
     @pytest.mark.asyncio
-    async def test_composed_agent_basic(self):
+    async def test_composed_agent_basic(self) -> None:
         """Test ComposedAgent applies transforms in order."""
         f = TestAgent[int, int]("f", lambda x: x + 1)
         g = TestAgent[int, int]("g", lambda x: x * 2)
@@ -1027,7 +1027,7 @@ class TestBootstrapWitness:
         assert result == 12
 
     @pytest.mark.asyncio
-    async def test_composed_agent_name(self):
+    async def test_composed_agent_name(self) -> None:
         """Test ComposedAgent has descriptive name."""
         f = TestAgent[int, int]("f", lambda x: x + 1)
         g = TestAgent[int, int]("g", lambda x: x * 2)
@@ -1036,7 +1036,7 @@ class TestBootstrapWitness:
         assert "(f >> g)" in composed.name
 
     @pytest.mark.asyncio
-    async def test_triple_composition(self):
+    async def test_triple_composition(self) -> None:
         """Test composing three agents."""
         f = TestAgent[int, int]("f", lambda x: x + 1)
         g = TestAgent[int, int]("g", lambda x: x * 2)
@@ -1051,7 +1051,7 @@ class TestBootstrapWitness:
     # --- Identity Law Tests ---
 
     @pytest.mark.asyncio
-    async def test_left_identity_law(self):
+    async def test_left_identity_law(self) -> None:
         """Test left identity: Id >> f == f."""
         id_agent: IdentityAgent[int] = IdentityAgent()
         f = TestAgent[int, int]("f", lambda x: x * 2 + 1)
@@ -1063,7 +1063,7 @@ class TestBootstrapWitness:
             assert result_composed == result_direct
 
     @pytest.mark.asyncio
-    async def test_right_identity_law(self):
+    async def test_right_identity_law(self) -> None:
         """Test right identity: f >> Id == f."""
         f = TestAgent[int, int]("f", lambda x: x * 2 + 1)
         id_agent: IdentityAgent[int] = IdentityAgent()
@@ -1077,7 +1077,7 @@ class TestBootstrapWitness:
     # --- Associativity Law Tests ---
 
     @pytest.mark.asyncio
-    async def test_associativity_law(self):
+    async def test_associativity_law(self) -> None:
         """Test associativity: (f >> g) >> h == f >> (g >> h)."""
         f = TestAgent[int, int]("f", lambda x: x + 1)
         g = TestAgent[int, int]("g", lambda x: x * 2)
@@ -1093,19 +1093,19 @@ class TestBootstrapWitness:
 
     # --- BootstrapWitness Tests ---
 
-    def test_create_bootstrap_witness(self):
+    def test_create_bootstrap_witness(self) -> None:
         """Test BootstrapWitness creation."""
         witness = create_bootstrap_witness()
         assert isinstance(witness, BootstrapWitness)
         assert witness.test_iterations == 5
 
-    def test_create_bootstrap_witness_custom_iterations(self):
+    def test_create_bootstrap_witness_custom_iterations(self) -> None:
         """Test BootstrapWitness with custom iterations."""
         witness = create_bootstrap_witness(test_iterations=10)
         assert witness.test_iterations == 10
 
     @pytest.mark.asyncio
-    async def test_verify_existence(self):
+    async def test_verify_existence(self) -> None:
         """Test verifying bootstrap agent existence."""
         witness = create_bootstrap_witness()
         results = await witness.verify_existence()
@@ -1123,7 +1123,7 @@ class TestBootstrapWitness:
         assert compose_result.importable is True
 
     @pytest.mark.asyncio
-    async def test_verify_identity_laws_method(self):
+    async def test_verify_identity_laws_method(self) -> None:
         """Test verify_identity_laws method."""
         witness = create_bootstrap_witness()
         result = await witness.verify_identity_laws()
@@ -1135,7 +1135,7 @@ class TestBootstrapWitness:
         assert result.test_cases_run > 0
 
     @pytest.mark.asyncio
-    async def test_verify_composition_laws_method(self):
+    async def test_verify_composition_laws_method(self) -> None:
         """Test verify_composition_laws method."""
         witness = create_bootstrap_witness()
         result = await witness.verify_composition_laws()
@@ -1147,7 +1147,7 @@ class TestBootstrapWitness:
         assert result.test_cases_run > 0
 
     @pytest.mark.asyncio
-    async def test_full_verification(self):
+    async def test_full_verification(self) -> None:
         """Test complete bootstrap verification."""
         witness = create_bootstrap_witness()
         result = await witness.invoke()
@@ -1160,7 +1160,7 @@ class TestBootstrapWitness:
         assert result.overall_verdict == Verdict.PASS
 
     @pytest.mark.asyncio
-    async def test_verify_bootstrap_convenience(self):
+    async def test_verify_bootstrap_convenience(self) -> None:
         """Test verify_bootstrap convenience function."""
         result = await verify_bootstrap()
 
@@ -1169,14 +1169,14 @@ class TestBootstrapWitness:
 
     # --- BootstrapObserver Tests ---
 
-    def test_create_bootstrap_observer(self):
+    def test_create_bootstrap_observer(self) -> None:
         """Test BootstrapObserver creation."""
         observer = create_bootstrap_observer()
         assert isinstance(observer, BootstrapObserver)
         assert isinstance(observer.witness, BootstrapWitness)
 
     @pytest.mark.asyncio
-    async def test_verify_and_record(self):
+    async def test_verify_and_record(self) -> None:
         """Test verify_and_record tracks history."""
         observer = create_bootstrap_observer()
 
@@ -1188,7 +1188,7 @@ class TestBootstrapWitness:
         assert observer.last_verification == result2
 
     @pytest.mark.asyncio
-    async def test_integrity_streak(self):
+    async def test_integrity_streak(self) -> None:
         """Test integrity streak counting."""
         observer = create_bootstrap_observer()
 
@@ -1202,7 +1202,7 @@ class TestBootstrapWitness:
     # --- Dashboard Rendering Tests ---
 
     @pytest.mark.asyncio
-    async def test_render_verification_dashboard(self):
+    async def test_render_verification_dashboard(self) -> None:
         """Test dashboard rendering."""
         result = await verify_bootstrap()
         dashboard = render_verification_dashboard(result)
@@ -1213,7 +1213,7 @@ class TestBootstrapWitness:
         assert "HOLD" in dashboard or "VERIFIED" in dashboard
 
     @pytest.mark.asyncio
-    async def test_dashboard_with_passing_laws(self):
+    async def test_dashboard_with_passing_laws(self) -> None:
         """Test dashboard shows correct status for passing laws."""
         result = await verify_bootstrap()
         dashboard = render_verification_dashboard(result)
@@ -1224,7 +1224,7 @@ class TestBootstrapWitness:
 
     # --- Verdict Synthesis Tests ---
 
-    def test_verdict_pass(self):
+    def test_verdict_pass(self) -> None:
         """Test verdict is PASS when all checks pass."""
         result = BootstrapVerificationResult(
             all_agents_exist=True,
@@ -1233,7 +1233,7 @@ class TestBootstrapWitness:
         )
         assert result.overall_verdict == Verdict.PASS
 
-    def test_verdict_fail_no_agents(self):
+    def test_verdict_fail_no_agents(self) -> None:
         """Test verdict is FAIL when agents don't exist."""
         result = BootstrapVerificationResult(
             all_agents_exist=False,
@@ -1242,7 +1242,7 @@ class TestBootstrapWitness:
         )
         assert result.overall_verdict == Verdict.FAIL
 
-    def test_verdict_fail_identity_broken(self):
+    def test_verdict_fail_identity_broken(self) -> None:
         """Test verdict is FAIL when identity laws broken."""
         result = BootstrapVerificationResult(
             all_agents_exist=True,
@@ -1251,7 +1251,7 @@ class TestBootstrapWitness:
         )
         assert result.overall_verdict == Verdict.FAIL
 
-    def test_verdict_fail_composition_broken(self):
+    def test_verdict_fail_composition_broken(self) -> None:
         """Test verdict is FAIL when composition laws broken."""
         result = BootstrapVerificationResult(
             all_agents_exist=True,
@@ -1269,7 +1269,7 @@ class TestBootstrapWitness:
 class TestEdgeCases:
     """Tests for edge cases."""
 
-    def test_empty_metrics(self):
+    def test_empty_metrics(self) -> None:
         """Test handling empty metrics."""
         metrics = create_metrics_collector()
 
@@ -1277,7 +1277,7 @@ class TestEdgeCases:
         assert metrics.get_gauge("nonexistent") is None
         assert metrics.get_histogram("nonexistent") is None
 
-    def test_empty_topology(self):
+    def test_empty_topology(self) -> None:
         """Test handling empty topology."""
         mapper = create_topology_mapper()
         graph = mapper.get_topology()
@@ -1287,7 +1287,7 @@ class TestEdgeCases:
         assert len(graph.hot_paths) == 0
 
     @pytest.mark.asyncio
-    async def test_drift_empty_text(self):
+    async def test_drift_empty_text(self) -> None:
         """Test drift detection with empty text."""
         measurer = SimpleDriftMeasurer()
 
@@ -1299,7 +1299,7 @@ class TestEdgeCases:
         drift = await measurer.measure("content", "")
         assert drift == 1.0
 
-    def test_ledger_zero_gas(self):
+    def test_ledger_zero_gas(self) -> None:
         """Test ledger with zero gas."""
         ledger = create_value_ledger()
         ledger.record_transaction("zero_gas", gas=0, impact=100)
@@ -1307,7 +1307,7 @@ class TestEdgeCases:
         sheet = ledger.get_agent_balance_sheet("zero_gas")
         assert sheet.roc == 0.0  # Avoid division by zero
 
-    def test_observer_clear(self):
+    def test_observer_clear(self) -> None:
         """Test clearing observers."""
         observer = create_observer()
 
@@ -1359,7 +1359,7 @@ from ..panopticon import (
 class TestSystemStatus:
     """Tests for SystemStatus enum."""
 
-    def test_system_status_values(self):
+    def test_system_status_values(self) -> None:
         """Test all status values exist."""
         assert SystemStatus.HOMEOSTATIC == "HOMEOSTATIC"
         assert SystemStatus.DEGRADED == "DEGRADED"
@@ -1370,7 +1370,7 @@ class TestSystemStatus:
 class TestAlertSeverity:
     """Tests for AlertSeverity enum."""
 
-    def test_alert_severity_values(self):
+    def test_alert_severity_values(self) -> None:
         """Test all severity levels exist."""
         assert AlertSeverity.INFO == "INFO"
         assert AlertSeverity.WARN == "WARN"
@@ -1381,7 +1381,7 @@ class TestAlertSeverity:
 class TestPanopticonAlert:
     """Tests for PanopticonAlert."""
 
-    def test_alert_creation(self):
+    def test_alert_creation(self) -> None:
         """Test creating an alert."""
         alert = PanopticonAlert(
             severity=AlertSeverity.WARN,
@@ -1393,7 +1393,7 @@ class TestPanopticonAlert:
         assert alert.message == "High latency detected"
         assert alert.timestamp is not None
 
-    def test_alert_str(self):
+    def test_alert_str(self) -> None:
         """Test alert string representation."""
         alert = PanopticonAlert(
             severity=AlertSeverity.ERROR,
@@ -1405,7 +1405,7 @@ class TestPanopticonAlert:
         assert "bootstrap" in result
         assert "Identity laws broken" in result
 
-    def test_alert_with_details(self):
+    def test_alert_with_details(self) -> None:
         """Test alert with details."""
         alert = PanopticonAlert(
             severity=AlertSeverity.CRITICAL,
@@ -1420,7 +1420,7 @@ class TestPanopticonAlert:
 class TestDimensionStatusTypes:
     """Tests for dimension status types."""
 
-    def test_telemetry_status_defaults(self):
+    def test_telemetry_status_defaults(self) -> None:
         """Test TelemetryStatus default values."""
         status = TelemetryStatus()
         assert status.ops_per_second == 0.0
@@ -1428,36 +1428,36 @@ class TestDimensionStatusTypes:
         assert status.error_rate == 0.0
         assert status.healthy is True  # Low error rate is healthy
 
-    def test_telemetry_status_unhealthy(self):
+    def test_telemetry_status_unhealthy(self) -> None:
         """Test unhealthy TelemetryStatus."""
         status = TelemetryStatus(error_rate=0.10)  # 10% errors
         assert status.healthy is False
 
-    def test_semantic_status_defaults(self):
+    def test_semantic_status_defaults(self) -> None:
         """Test SemanticStatus default values."""
         status = SemanticStatus()
         assert status.drift_score == 0.0
         assert status.knots_intact_pct == 100.0
         assert status.healthy is True
 
-    def test_semantic_status_unhealthy(self):
+    def test_semantic_status_unhealthy(self) -> None:
         """Test unhealthy SemanticStatus."""
         status = SemanticStatus(drift_score=0.5)  # High drift
         assert status.healthy is False
 
-    def test_axiological_status_defaults(self):
+    def test_axiological_status_defaults(self) -> None:
         """Test AxiologicalStatus default values."""
         status = AxiologicalStatus()
         assert status.system_gdp == 0.0
         assert status.net_roc == 0.0
         assert status.healthy is False  # 0 RoC is not healthy
 
-    def test_axiological_status_healthy(self):
+    def test_axiological_status_healthy(self) -> None:
         """Test healthy AxiologicalStatus."""
         status = AxiologicalStatus(net_roc=1.5)
         assert status.healthy is True
 
-    def test_bootstrap_status_defaults(self):
+    def test_bootstrap_status_defaults(self) -> None:
         """Test BootstrapStatus default values."""
         status = BootstrapStatus()
         assert status.all_agents_exist is True
@@ -1465,18 +1465,18 @@ class TestDimensionStatusTypes:
         assert status.kernel_intact is True
         assert status.healthy is True
 
-    def test_bootstrap_status_unhealthy(self):
+    def test_bootstrap_status_unhealthy(self) -> None:
         """Test unhealthy BootstrapStatus."""
         status = BootstrapStatus(kernel_intact=False)
         assert status.healthy is False
 
-    def test_voi_status_defaults(self):
+    def test_voi_status_defaults(self) -> None:
         """Test VoIStatus default values."""
         status = VoIStatus()
         assert status.total_observations == 0
         assert status.rovi == 0.0
 
-    def test_voi_status_healthy(self):
+    def test_voi_status_healthy(self) -> None:
         """Test healthy VoIStatus."""
         status = VoIStatus(rovi=2.0, observation_fraction=0.05)
         assert status.healthy is True
@@ -1485,14 +1485,14 @@ class TestDimensionStatusTypes:
 class TestUnifiedPanopticonStatus:
     """Tests for UnifiedPanopticonStatus."""
 
-    def test_unified_status_defaults(self):
+    def test_unified_status_defaults(self) -> None:
         """Test UnifiedPanopticonStatus default values."""
         status = UnifiedPanopticonStatus()
         assert status.status == SystemStatus.HOMEOSTATIC
         assert status.uptime_seconds == 0.0
         assert len(status.alerts) == 0
 
-    def test_all_dimensions_healthy(self):
+    def test_all_dimensions_healthy(self) -> None:
         """Test all_dimensions_healthy property."""
         status = UnifiedPanopticonStatus(
             telemetry=TelemetryStatus(error_rate=0.01),
@@ -1502,7 +1502,7 @@ class TestUnifiedPanopticonStatus:
         )
         assert status.all_dimensions_healthy is True
 
-    def test_not_all_dimensions_healthy(self):
+    def test_not_all_dimensions_healthy(self) -> None:
         """Test when not all dimensions are healthy."""
         status = UnifiedPanopticonStatus(
             telemetry=TelemetryStatus(error_rate=0.20),  # Unhealthy
@@ -1512,7 +1512,7 @@ class TestUnifiedPanopticonStatus:
         )
         assert status.all_dimensions_healthy is False
 
-    def test_critical_alerts(self):
+    def test_critical_alerts(self) -> None:
         """Test critical_alerts property."""
         alerts = [
             PanopticonAlert(AlertSeverity.INFO, "test", "info"),
@@ -1529,20 +1529,20 @@ class TestUnifiedPanopticonStatus:
 class TestIntegratedPanopticon:
     """Tests for IntegratedPanopticon."""
 
-    def test_creation_default(self):
+    def test_creation_default(self) -> None:
         """Test creating IntegratedPanopticon with defaults."""
         panopticon = create_integrated_panopticon()
         assert panopticon is not None
         assert panopticon.telemetry is not None
         assert panopticon.bootstrap_observer is not None
 
-    def test_creation_minimal(self):
+    def test_creation_minimal(self) -> None:
         """Test creating minimal Panopticon."""
         panopticon = create_minimal_panopticon()
         assert panopticon is not None
         assert panopticon.telemetry is not None
 
-    def test_alert_management(self):
+    def test_alert_management(self) -> None:
         """Test adding and clearing alerts."""
         panopticon = create_integrated_panopticon()
 
@@ -1558,7 +1558,7 @@ class TestIntegratedPanopticon:
         panopticon.clear_alerts()
         assert len(panopticon.alerts) == 0
 
-    def test_get_alerts_by_severity(self):
+    def test_get_alerts_by_severity(self) -> None:
         """Test filtering alerts by severity."""
         panopticon = create_integrated_panopticon()
 
@@ -1570,7 +1570,7 @@ class TestIntegratedPanopticon:
         warns = panopticon.get_alerts_by_severity(AlertSeverity.WARN)
         assert len(warns) == 2
 
-    def test_get_status(self):
+    def test_get_status(self) -> None:
         """Test getting unified status."""
         panopticon = create_integrated_panopticon()
         status = panopticon.get_status()
@@ -1580,7 +1580,7 @@ class TestIntegratedPanopticon:
         assert status.telemetry is not None
         assert status.bootstrap is not None
 
-    def test_max_alerts_limit(self):
+    def test_max_alerts_limit(self) -> None:
         """Test that alerts are limited to max_alerts."""
         panopticon = IntegratedPanopticon(max_alerts=5)
 
@@ -1591,7 +1591,7 @@ class TestIntegratedPanopticon:
         # Should keep the most recent 5
         assert panopticon.alerts[-1].message == "alert_9"
 
-    def test_alert_callback(self):
+    def test_alert_callback(self) -> None:
         """Test alert callback is called."""
         alerts_received = []
 
@@ -1609,7 +1609,7 @@ class TestIntegratedPanopticonBootstrap:
     """Tests for Panopticon bootstrap integration."""
 
     @pytest.mark.asyncio
-    async def test_verify_bootstrap(self):
+    async def test_verify_bootstrap(self) -> None:
         """Test bootstrap verification."""
         panopticon = create_integrated_panopticon()
         result = await panopticon.verify_bootstrap()
@@ -1618,7 +1618,7 @@ class TestIntegratedPanopticonBootstrap:
         assert result.overall_verdict == Verdict.PASS
 
     @pytest.mark.asyncio
-    async def test_maybe_verify_bootstrap_first_call(self):
+    async def test_maybe_verify_bootstrap_first_call(self) -> None:
         """Test maybe_verify_bootstrap on first call."""
         panopticon = create_integrated_panopticon()
         result = await panopticon.maybe_verify_bootstrap()
@@ -1627,7 +1627,7 @@ class TestIntegratedPanopticonBootstrap:
         assert result.kernel_intact is True
 
     @pytest.mark.asyncio
-    async def test_maybe_verify_bootstrap_cached(self):
+    async def test_maybe_verify_bootstrap_cached(self) -> None:
         """Test that maybe_verify_bootstrap respects interval."""
         panopticon = create_integrated_panopticon(
             bootstrap_check_interval_s=60.0  # 60 second interval
@@ -1642,7 +1642,7 @@ class TestIntegratedPanopticonBootstrap:
         assert result2 is result1  # Same object
 
     @pytest.mark.asyncio
-    async def test_create_verified_panopticon(self):
+    async def test_create_verified_panopticon(self) -> None:
         """Test create_verified_panopticon factory."""
         panopticon, result = await create_verified_panopticon()
 
@@ -1655,7 +1655,7 @@ class TestIntegratedPanopticonStreaming:
     """Tests for real-time streaming."""
 
     @pytest.mark.asyncio
-    async def test_stream_status(self):
+    async def test_stream_status(self) -> None:
         """Test streaming status updates."""
         panopticon = create_integrated_panopticon()
 
@@ -1669,7 +1669,7 @@ class TestIntegratedPanopticonStreaming:
         assert len(updates) >= 3
         assert all(isinstance(u, UnifiedPanopticonStatus) for u in updates)
 
-    def test_stop_streaming(self):
+    def test_stop_streaming(self) -> None:
         """Test stop_streaming method."""
         panopticon = create_integrated_panopticon()
         panopticon._streaming = True
@@ -1681,7 +1681,7 @@ class TestIntegratedPanopticonStreaming:
 class TestDashboardRendering:
     """Tests for dashboard rendering functions."""
 
-    def test_render_unified_dashboard(self):
+    def test_render_unified_dashboard(self) -> None:
         """Test unified dashboard rendering."""
         status = UnifiedPanopticonStatus(
             status=SystemStatus.HOMEOSTATIC,
@@ -1702,7 +1702,7 @@ class TestDashboardRendering:
         assert "BOOTSTRAP" in dashboard
         assert "VERIFIED" in dashboard
 
-    def test_render_unified_dashboard_with_alerts(self):
+    def test_render_unified_dashboard_with_alerts(self) -> None:
         """Test dashboard rendering with alerts."""
         status = UnifiedPanopticonStatus(
             alerts=[
@@ -1715,7 +1715,7 @@ class TestDashboardRendering:
         assert "ALERTS" in dashboard
         assert "Test warning" in dashboard or "WARN" in dashboard
 
-    def test_render_compact_status(self):
+    def test_render_compact_status(self) -> None:
         """Test compact status rendering."""
         status = UnifiedPanopticonStatus(
             status=SystemStatus.HOMEOSTATIC,
@@ -1731,7 +1731,7 @@ class TestDashboardRendering:
         assert "HOMEOSTATIC" in compact
         assert "✓" in compact or "!" in compact
 
-    def test_render_dimensions_summary(self):
+    def test_render_dimensions_summary(self) -> None:
         """Test dimensions summary rendering."""
         status = UnifiedPanopticonStatus(
             telemetry=TelemetryStatus(latency_p95_ms=100, error_rate=0.01),
@@ -1748,7 +1748,7 @@ class TestDashboardRendering:
         assert "[Z] Axiology" in summary
         assert "[B] Bootstrap" in summary
 
-    def test_panopticon_render_dashboard(self):
+    def test_panopticon_render_dashboard(self) -> None:
         """Test Panopticon's render_dashboard method."""
         panopticon = create_integrated_panopticon()
         dashboard = panopticon.render_dashboard()
@@ -1756,7 +1756,7 @@ class TestDashboardRendering:
         assert "SYSTEM PROPRIOCEPTION" in dashboard
         assert len(dashboard) > 100  # Should be a substantial dashboard
 
-    def test_panopticon_render_compact_dashboard(self):
+    def test_panopticon_render_compact_dashboard(self) -> None:
         """Test Panopticon's render_compact_dashboard method."""
         panopticon = create_integrated_panopticon()
         compact = panopticon.render_compact_dashboard()
@@ -1768,20 +1768,20 @@ class TestDashboardRendering:
 class TestPanopticonObserver:
     """Tests for PanopticonObserver wrapper."""
 
-    def test_creation(self):
+    def test_creation(self) -> None:
         """Test creating PanopticonObserver."""
         observer = create_panopticon_observer()
         assert observer is not None
         assert observer.panopticon is not None
 
-    def test_creation_with_panopticon(self):
+    def test_creation_with_panopticon(self) -> None:
         """Test creating PanopticonObserver with existing Panopticon."""
         panopticon = create_integrated_panopticon()
         observer = create_panopticon_observer(panopticon=panopticon)
 
         assert observer.panopticon is panopticon
 
-    def test_pre_invoke(self):
+    def test_pre_invoke(self) -> None:
         """Test pre_invoke hook."""
         observer = create_panopticon_observer()
         agent = MockAgent()
@@ -1792,7 +1792,7 @@ class TestPanopticonObserver:
         assert ctx.agent_name == "MockAgent"
 
     @pytest.mark.asyncio
-    async def test_post_invoke(self):
+    async def test_post_invoke(self) -> None:
         """Test post_invoke hook."""
         observer = create_panopticon_observer()
         agent = MockAgent()
@@ -1803,7 +1803,7 @@ class TestPanopticonObserver:
         assert result is not None
 
     @pytest.mark.asyncio
-    async def test_slow_invocation_alert(self):
+    async def test_slow_invocation_alert(self) -> None:
         """Test that slow invocations generate alerts."""
         observer = create_panopticon_observer()
         agent = MockAgent()
@@ -1815,7 +1815,7 @@ class TestPanopticonObserver:
         assert len(alerts) >= 1
         assert any("Slow invocation" in a.message for a in alerts)
 
-    def test_record_entropy(self):
+    def test_record_entropy(self) -> None:
         """Test recording entropy generates alert."""
         observer = create_panopticon_observer()
         agent = MockAgent()
@@ -1831,7 +1831,7 @@ class TestPanopticonObserver:
 class TestSystemStatusDetermination:
     """Tests for system status determination logic."""
 
-    def test_status_critical_bootstrap_broken(self):
+    def test_status_critical_bootstrap_broken(self) -> None:
         """Test CRITICAL status when bootstrap is broken."""
         panopticon = create_integrated_panopticon()
 
@@ -1848,7 +1848,7 @@ class TestSystemStatusDetermination:
         assert status.status == SystemStatus.CRITICAL
 
     @pytest.mark.asyncio
-    async def test_status_homeostatic_all_healthy(self):
+    async def test_status_homeostatic_all_healthy(self) -> None:
         """Test HOMEOSTATIC status when all is healthy."""
         panopticon = create_integrated_panopticon()
 
@@ -1870,7 +1870,7 @@ class TestPanopticonPhase3Integration:
     """Integration tests for Phase 3 Panopticon."""
 
     @pytest.mark.asyncio
-    async def test_full_observation_flow(self):
+    async def test_full_observation_flow(self) -> None:
         """Test complete observation flow through Panopticon."""
         panopticon = create_integrated_panopticon()
         observer = create_panopticon_observer(panopticon)
@@ -1895,7 +1895,7 @@ class TestPanopticonPhase3Integration:
         assert status.status == SystemStatus.HOMEOSTATIC
 
     @pytest.mark.asyncio
-    async def test_bootstrap_integration(self):
+    async def test_bootstrap_integration(self) -> None:
         """Test bootstrap verification integration."""
         panopticon = create_integrated_panopticon()
 
@@ -1909,7 +1909,7 @@ class TestPanopticonPhase3Integration:
         assert status.bootstrap.identity_laws_hold == result.identity_laws_hold
 
     @pytest.mark.asyncio
-    async def test_alert_generation_flow(self):
+    async def test_alert_generation_flow(self) -> None:
         """Test alert generation through observation."""
         panopticon = create_integrated_panopticon()
         observer = create_panopticon_observer(panopticon)
@@ -1927,7 +1927,7 @@ class TestPanopticonPhase3Integration:
         status = panopticon.get_status()
         assert len(status.alerts) >= 2
 
-    def test_dashboard_with_all_dimensions(self):
+    def test_dashboard_with_all_dimensions(self) -> None:
         """Test dashboard includes all dimensions."""
         panopticon = create_integrated_panopticon()
         dashboard = panopticon.render_dashboard()

@@ -27,24 +27,24 @@ from ..types import (
 class TestRewardMapping:
     """Tests for outcome to reward conversion."""
 
-    def test_success_is_positive(self):
+    def test_success_is_positive(self) -> None:
         """Success outcomes yield positive reward."""
         reward = outcome_to_reward(Outcome.SUCCESS, None)
         assert reward > 0
 
-    def test_success_with_low_distortion_bonus(self):
+    def test_success_with_low_distortion_bonus(self) -> None:
         """Low distortion gives bonus reward."""
         base = outcome_to_reward(Outcome.SUCCESS, None)
         with_bonus = outcome_to_reward(Outcome.SUCCESS, 0.1)  # Low distortion
         assert with_bonus > base
 
-    def test_failure_is_negative(self):
+    def test_failure_is_negative(self) -> None:
         """Failure outcomes yield negative reward."""
         for outcome in [Outcome.CHALLENGE_FAILED, Outcome.PROJECTION_FAILED]:
             reward = outcome_to_reward(outcome, None)
             assert reward < 0
 
-    def test_partial_is_small_positive(self):
+    def test_partial_is_small_positive(self) -> None:
         """Partial success is small positive."""
         reward = outcome_to_reward(Outcome.PARTIAL, None)
         assert 0 < reward < outcome_to_reward(Outcome.SUCCESS, None)
@@ -58,7 +58,7 @@ class TestRewardMapping:
 class TestFeatureExtraction:
     """Tests for problem feature extraction."""
 
-    def test_extract_features_basic(self):
+    def test_extract_features_basic(self) -> None:
         """Can extract features from problem."""
         problem = Problem(
             id="1",
@@ -73,7 +73,7 @@ class TestFeatureExtraction:
         assert features.description_length > 0
         assert 0 <= features.complexity <= 1
 
-    def test_extract_features_with_embedding(self):
+    def test_extract_features_with_embedding(self) -> None:
         """Features reflect embedding status."""
         without = Problem(id="1", description="Test", domain="test")
         with_emb = without.with_embedding((0.1, 0.2, 0.3))
@@ -85,7 +85,7 @@ class TestFeatureExtraction:
         assert f2.has_embedding
         assert f2.embedding_cluster is not None
 
-    def test_domain_cluster_deterministic(self):
+    def test_domain_cluster_deterministic(self) -> None:
         """Same domain gives same cluster."""
         p1 = Problem(id="1", description="Test 1", domain="software")
         p2 = Problem(id="2", description="Test 2", domain="software")
@@ -105,12 +105,12 @@ class TestFrequencyModel:
     """Tests for simple frequency-based model."""
 
     @pytest.fixture
-    def model(self):
+    def model(self) -> FrequencyModel:
         """Create a fresh model."""
         return FrequencyModel()
 
     @pytest.fixture
-    def features(self):
+    def features(self) -> ProblemFeatures:
         """Create test features."""
         return ProblemFeatures(
             domain="software",
@@ -121,12 +121,12 @@ class TestFrequencyModel:
             has_embedding=False,
         )
 
-    def test_predict_unknown_is_uncertain(self, model, features):
+    def test_predict_unknown_is_uncertain(self, model, features) -> None:
         """Unknown pairs return 0.5 (uncertain)."""
         score = model.predict(features, "unknown_metaphor")
         assert score == 0.5
 
-    def test_update_changes_prediction(self, model, features):
+    def test_update_changes_prediction(self, model, features) -> None:
         """Updates change future predictions."""
         # Record some successes
         for _ in range(10):
@@ -143,7 +143,7 @@ class TestFrequencyModel:
         score = model.predict(features, "plumbing")
         assert score > 0.5
 
-    def test_is_trained_requires_data(self, model, features):
+    def test_is_trained_requires_data(self, model, features) -> None:
         """Model is not trained without sufficient data."""
         assert not model.is_trained
 
@@ -159,7 +159,7 @@ class TestFrequencyModel:
 
         assert model.is_trained
 
-    def test_uncertainty_with_few_samples(self, model, features):
+    def test_uncertainty_with_few_samples(self, model, features) -> None:
         """Uncertainty is high with few samples."""
         # Add just 2 samples
         for _ in range(2):
@@ -185,12 +185,12 @@ class TestThompsonSamplingModel:
     """Tests for Thompson sampling model."""
 
     @pytest.fixture
-    def model(self):
+    def model(self) -> ThompsonSamplingModel:
         """Create a fresh model."""
         return ThompsonSamplingModel()
 
     @pytest.fixture
-    def features(self):
+    def features(self) -> ProblemFeatures:
         """Create test features."""
         return ProblemFeatures(
             domain="software",
@@ -201,18 +201,18 @@ class TestThompsonSamplingModel:
             has_embedding=False,
         )
 
-    def test_predict_unknown_uses_prior(self, model, features):
+    def test_predict_unknown_uses_prior(self, model, features) -> None:
         """Unknown pairs use prior (alpha=1, beta=1 -> mean=0.5)."""
         score = model.predict(features, "unknown")
         assert score == 0.5
 
-    def test_sample_varies(self, model, features):
+    def test_sample_varies(self, model, features) -> None:
         """Samples vary (Thompson sampling property)."""
         samples = [model.sample(features, "test") for _ in range(100)]
         # Should have some variation
         assert max(samples) - min(samples) > 0.1
 
-    def test_update_shifts_distribution(self, model, features):
+    def test_update_shifts_distribution(self, model, features) -> None:
         """Successful updates shift distribution up."""
         initial = model.predict(features, "plumbing")
 
@@ -229,7 +229,7 @@ class TestThompsonSamplingModel:
         after = model.predict(features, "plumbing")
         assert after > initial
 
-    def test_failures_shift_distribution_down(self, model, features):
+    def test_failures_shift_distribution_down(self, model, features) -> None:
         """Failed updates shift distribution down."""
         initial = model.predict(features, "plumbing")
 
@@ -246,7 +246,7 @@ class TestThompsonSamplingModel:
         after = model.predict(features, "plumbing")
         assert after < initial
 
-    def test_decay_moves_toward_prior(self, model, features):
+    def test_decay_moves_toward_prior(self, model, features) -> None:
         """Decay moves parameters toward prior."""
         # Add many successes
         for _ in range(50):
@@ -278,12 +278,12 @@ class TestAbstractionModel:
     """Tests for abstraction learning model."""
 
     @pytest.fixture
-    def model(self):
+    def model(self) -> AbstractionModel:
         """Create a fresh model."""
         return AbstractionModel()
 
     @pytest.fixture
-    def features(self):
+    def features(self) -> ProblemFeatures:
         """Create test features."""
         return ProblemFeatures(
             domain="software",
@@ -294,7 +294,7 @@ class TestAbstractionModel:
             has_embedding=False,
         )
 
-    def test_suggest_default_scales_with_complexity(self, model):
+    def test_suggest_default_scales_with_complexity(self, model) -> None:
         """Default suggestion scales with complexity."""
         low_complexity = ProblemFeatures(
             domain="test",
@@ -318,7 +318,7 @@ class TestAbstractionModel:
 
         assert high_abs > low_abs
 
-    def test_learns_from_success(self, model, features):
+    def test_learns_from_success(self, model, features) -> None:
         """Model learns successful abstraction levels."""
         # Record successes at abstraction=0.7
         for _ in range(10):
@@ -335,7 +335,7 @@ class TestAbstractionModel:
         # Should be close to 0.7
         assert 0.6 < suggested < 0.8
 
-    def test_ignores_failures(self, model, features):
+    def test_ignores_failures(self, model, features) -> None:
         """Model ignores failed attempts."""
         # Record failures at various levels
         for abs_level in [0.1, 0.3, 0.5, 0.9]:
@@ -387,7 +387,7 @@ class TestRetrievalIntegration:
 
         return model
 
-    def test_retrieve_with_learning_uses_model(self, trained_model):
+    def test_retrieve_with_learning_uses_model(self, trained_model) -> None:
         """Learning retrieval uses model predictions."""
         problem = Problem(
             id="1",
@@ -406,7 +406,7 @@ class TestRetrievalIntegration:
         top_ids = [m.id for m, _ in results[:3]]
         assert "plumbing" in top_ids
 
-    def test_cold_start_retrieval(self):
+    def test_cold_start_retrieval(self) -> None:
         """Cold start retrieval works without model."""
         problem = Problem(
             id="1",
@@ -433,7 +433,7 @@ class TestLearningLaws:
     """Law tests for learning system."""
 
     @pytest.mark.law
-    def test_thompson_sampling_explores(self):
+    def test_thompson_sampling_explores(self) -> None:
         """Thompson sampling explores uncertain options."""
         model = ThompsonSamplingModel()
         features = ProblemFeatures(
@@ -457,7 +457,7 @@ class TestLearningLaws:
             assert max(vals) - min(vals) > 0.1, f"{metaphor_id} didn't explore"
 
     @pytest.mark.law
-    def test_success_increases_probability(self):
+    def test_success_increases_probability(self) -> None:
         """Successful feedback increases selection probability."""
         model = ThompsonSamplingModel()
         features = ProblemFeatures(

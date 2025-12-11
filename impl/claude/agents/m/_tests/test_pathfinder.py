@@ -145,13 +145,13 @@ class TestPathfinderAgent:
     """Tests for PathfinderAgent."""
 
     @pytest.mark.asyncio
-    async def test_create_pathfinder(self):
+    async def test_create_pathfinder(self) -> None:
         """Create pathfinder with factory."""
         pathfinder = create_pathfinder()
         assert pathfinder is not None
 
     @pytest.mark.asyncio
-    async def test_invoke_no_map_no_cartographer(self):
+    async def test_invoke_no_map_no_cartographer(self) -> None:
         """Invoke without map or cartographer returns failure."""
         pathfinder = PathfinderAgent()
         goal = Goal(
@@ -165,7 +165,7 @@ class TestPathfinderAgent:
         assert "No map" in plan.warning
 
     @pytest.mark.asyncio
-    async def test_invoke_with_map(self, simple_map):
+    async def test_invoke_with_map(self, simple_map) -> None:
         """Invoke with provided map."""
         pathfinder = PathfinderAgent()
         goal = Goal(
@@ -178,7 +178,7 @@ class TestPathfinderAgent:
         assert plan.mode == "desire_line"
 
     @pytest.mark.asyncio
-    async def test_path_prefers_desire_lines(self, simple_map):
+    async def test_path_prefers_desire_lines(self, simple_map) -> None:
         """Pathfinder prefers historical paths."""
         pathfinder = PathfinderAgent()
         goal = Goal(
@@ -192,7 +192,7 @@ class TestPathfinderAgent:
         assert plan.confidence > 0.3
 
     @pytest.mark.asyncio
-    async def test_bushwhack_when_no_path(self, simple_map):
+    async def test_bushwhack_when_no_path(self, simple_map) -> None:
         """Bushwhack mode when no desire line path exists."""
         # Create a map with disconnected landmarks
         isolated_map = HoloMap(
@@ -222,7 +222,7 @@ class TestPathfinderAgent:
         assert plan.confidence <= 0.3
 
     @pytest.mark.asyncio
-    async def test_void_crossing_reduces_confidence(self, map_with_void):
+    async def test_void_crossing_reduces_confidence(self, map_with_void) -> None:
         """Path crossing void has reduced confidence."""
         pathfinder = PathfinderAgent()
         goal = Goal(
@@ -240,14 +240,14 @@ class TestPathfinderAgent:
 class TestPathfinderConfig:
     """Tests for PathfinderConfig."""
 
-    def test_default_config(self):
+    def test_default_config(self) -> None:
         """Default config has sensible values."""
         config = PathfinderConfig()
         assert config.max_path_length > 0
         assert config.allow_exploration is True
 
     @pytest.mark.asyncio
-    async def test_disable_exploration(self, simple_map):
+    async def test_disable_exploration(self, simple_map) -> None:
         """Can disable exploration mode."""
         config = PathfinderConfig(allow_exploration=False)
         pathfinder = PathfinderAgent(config=config)
@@ -282,7 +282,7 @@ class TestPathfinderConfig:
 class TestPathAnalysis:
     """Tests for path analysis."""
 
-    def test_analyze_empty_path(self, simple_map):
+    def test_analyze_empty_path(self, simple_map) -> None:
         """Analyze empty path."""
         from agents.m.cartography import NavigationPlan
 
@@ -296,7 +296,7 @@ class TestPathAnalysis:
         assert analysis.total_distance == 0.0
         assert analysis.void_crossings == 0
 
-    def test_analyze_single_waypoint(self, simple_map):
+    def test_analyze_single_waypoint(self, simple_map) -> None:
         """Analyze single waypoint path."""
         from agents.m.cartography import NavigationPlan
 
@@ -310,7 +310,7 @@ class TestPathAnalysis:
 
         assert analysis.total_distance == 0.0
 
-    def test_analyze_multi_waypoint(self, simple_map):
+    def test_analyze_multi_waypoint(self, simple_map) -> None:
         """Analyze multi-waypoint path."""
         from agents.m.cartography import NavigationPlan
 
@@ -337,13 +337,13 @@ class TestContextInjector:
     """Tests for ContextInjector."""
 
     @pytest.mark.asyncio
-    async def test_create_injector(self):
+    async def test_create_injector(self) -> None:
         """Create injector with factory."""
         injector = create_context_injector()
         assert injector is not None
 
     @pytest.mark.asyncio
-    async def test_invoke_no_map_no_cartographer(self):
+    async def test_invoke_no_map_no_cartographer(self) -> None:
         """Invoke without map or cartographer returns minimal context."""
         injector = ContextInjector()
         request = InjectionRequest(
@@ -359,7 +359,7 @@ class TestContextInjector:
         assert result.tokens_remaining == 4000
 
     @pytest.mark.asyncio
-    async def test_invoke_with_map(self, simple_map):
+    async def test_invoke_with_map(self, simple_map) -> None:
         """Invoke with provided map."""
         injector = ContextInjector()
         request = InjectionRequest(
@@ -374,7 +374,7 @@ class TestContextInjector:
         assert result.tokens_used <= 4000
 
     @pytest.mark.asyncio
-    async def test_focal_zone_populated(self, simple_map):
+    async def test_focal_zone_populated(self, simple_map) -> None:
         """Focal zone has nearby landmarks."""
         injector = ContextInjector()
         request = InjectionRequest(
@@ -387,7 +387,7 @@ class TestContextInjector:
         assert len(result.focal_memories) >= 0  # May be 0 if budget tight
 
     @pytest.mark.asyncio
-    async def test_budget_constraint(self, simple_map):
+    async def test_budget_constraint(self, simple_map) -> None:
         """Small budget limits output."""
         injector = ContextInjector()
 
@@ -412,7 +412,7 @@ class TestContextInjector:
         )
 
     @pytest.mark.asyncio
-    async def test_void_warnings_included(self, map_with_void):
+    async def test_void_warnings_included(self, map_with_void) -> None:
         """Void warnings are included in output."""
         injector = ContextInjector()
         request = InjectionRequest(
@@ -425,7 +425,7 @@ class TestContextInjector:
         assert len(result.void_warnings) >= 1
 
     @pytest.mark.asyncio
-    async def test_desire_lines_included(self, simple_map):
+    async def test_desire_lines_included(self, simple_map) -> None:
         """Desire lines are included in output."""
         injector = ContextInjector()
         request = InjectionRequest(
@@ -443,14 +443,14 @@ class TestContextInjector:
 class TestInjectorConfig:
     """Tests for InjectorConfig."""
 
-    def test_default_config(self):
+    def test_default_config(self) -> None:
         """Default config has sensible values."""
         config = InjectorConfig()
         assert config.focal_threshold > config.blur_threshold
         assert config.tokens_per_landmark_full > config.tokens_per_landmark_blur
 
     @pytest.mark.asyncio
-    async def test_custom_config_no_focal(self, simple_map):
+    async def test_custom_config_no_focal(self, simple_map) -> None:
         """Can disable focal zone."""
         config = InjectorConfig(include_focal=False)
         injector = ContextInjector(config=config)
@@ -467,7 +467,7 @@ class TestContextString:
     """Tests for context string generation."""
 
     @pytest.mark.asyncio
-    async def test_to_context_string(self, simple_map):
+    async def test_to_context_string(self, simple_map) -> None:
         """OptimalContext renders to string."""
         injector = ContextInjector()
         request = InjectionRequest(
@@ -490,7 +490,7 @@ class TestPathfinderInjectorIntegration:
     """Integration tests for Pathfinder + ContextInjector."""
 
     @pytest.mark.asyncio
-    async def test_injector_with_pathfinder(self, simple_map):
+    async def test_injector_with_pathfinder(self, simple_map) -> None:
         """ContextInjector uses pathfinder for goal-directed context."""
         pathfinder = PathfinderAgent()
         injector = ContextInjector(pathfinder=pathfinder)
@@ -506,7 +506,7 @@ class TestPathfinderInjectorIntegration:
         assert result.position != ""
 
     @pytest.mark.asyncio
-    async def test_full_pipeline_with_cartographer(self):
+    async def test_full_pipeline_with_cartographer(self) -> None:
         """Full pipeline: Cartographer -> Pathfinder -> Injector."""
         # Create mock cartographer
         cartographer = create_mock_cartographer(
@@ -540,7 +540,7 @@ class TestInjectContextConvenience:
     """Tests for inject_context convenience function."""
 
     @pytest.mark.asyncio
-    async def test_inject_context_minimal(self):
+    async def test_inject_context_minimal(self) -> None:
         """inject_context works with minimal arguments."""
         context = create_context_vector([0.0, 0.0])
         result = await inject_context(context)
@@ -548,7 +548,7 @@ class TestInjectContextConvenience:
         assert isinstance(result, str)
 
     @pytest.mark.asyncio
-    async def test_inject_context_with_budget(self):
+    async def test_inject_context_with_budget(self) -> None:
         """inject_context respects budget."""
         context = create_context_vector([0.0, 0.0])
         result = await inject_context(context, budget=100)

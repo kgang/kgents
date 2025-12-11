@@ -25,7 +25,7 @@ from agents.w.cortex_dashboard import (
 class TestDashboardPanel:
     """Tests for DashboardPanel enum."""
 
-    def test_panel_values(self):
+    def test_panel_values(self) -> None:
         """Test panel enum values."""
         assert DashboardPanel.HEMISPHERE_STATUS.value == "hemisphere_status"
         assert DashboardPanel.COHERENCY_MONITOR.value == "coherency_monitor"
@@ -35,7 +35,7 @@ class TestDashboardPanel:
 class TestSparklineData:
     """Tests for SparklineData."""
 
-    def test_add_values(self):
+    def test_add_values(self) -> None:
         """Test adding values."""
         sparkline = SparklineData()
         sparkline.add(0.5)
@@ -44,7 +44,7 @@ class TestSparklineData:
         assert len(sparkline.values) == 2
         assert sparkline.values[-1] == 0.7
 
-    def test_max_size_limit(self):
+    def test_max_size_limit(self) -> None:
         """Test max size limit."""
         sparkline = SparklineData(max_size=5)
 
@@ -54,7 +54,7 @@ class TestSparklineData:
         assert len(sparkline.values) == 5
         assert sparkline.values[0] == 5.0  # Oldest kept
 
-    def test_render_empty(self):
+    def test_render_empty(self) -> None:
         """Test rendering empty sparkline."""
         sparkline = SparklineData()
         result = sparkline.render(width=10)
@@ -62,7 +62,7 @@ class TestSparklineData:
         assert len(result) == 10
         assert result == " " * 10
 
-    def test_render_with_values(self):
+    def test_render_with_values(self) -> None:
         """Test rendering sparkline with values."""
         sparkline = SparklineData()
         sparkline.add(0.0)
@@ -75,7 +75,7 @@ class TestSparklineData:
         # Should contain sparkline characters
         assert any(c in result for c in "▁▂▃▄▅▆▇█")
 
-    def test_render_constant_values(self):
+    def test_render_constant_values(self) -> None:
         """Test rendering with constant values."""
         sparkline = SparklineData()
         for _ in range(5):
@@ -89,7 +89,7 @@ class TestSparklineData:
 class TestCortexDashboardConfig:
     """Tests for CortexDashboardConfig."""
 
-    def test_defaults(self):
+    def test_defaults(self) -> None:
         """Test default configuration."""
         config = CortexDashboardConfig()
 
@@ -98,7 +98,7 @@ class TestCortexDashboardConfig:
         assert len(config.panels) > 0
         assert config.compact_mode is False
 
-    def test_from_dict(self):
+    def test_from_dict(self) -> None:
         """Test creating config from dict."""
         config = CortexDashboardConfig.from_dict(
             {
@@ -112,7 +112,7 @@ class TestCortexDashboardConfig:
         assert config.emission_interval == 2.0
         assert config.compact_mode is True
 
-    def test_from_dict_with_panels(self):
+    def test_from_dict_with_panels(self) -> None:
         """Test creating config with panel list."""
         config = CortexDashboardConfig.from_dict(
             {
@@ -127,7 +127,7 @@ class TestCortexDashboardConfig:
 class TestCortexDashboard:
     """Tests for CortexDashboard."""
 
-    def test_create_dashboard(self):
+    def test_create_dashboard(self) -> None:
         """Test creating dashboard."""
         observer = create_mock_cortex_observer()
         dashboard = CortexDashboard(observer)
@@ -135,7 +135,7 @@ class TestCortexDashboard:
         assert dashboard._observer is observer
         assert dashboard._running is False
 
-    def test_render_compact(self):
+    def test_render_compact(self) -> None:
         """Test compact rendering."""
         observer = create_mock_cortex_observer()
         dashboard = CortexDashboard(observer)
@@ -146,7 +146,7 @@ class TestCortexDashboard:
         # When no components available, may just show status
         # When components available, sections separated by |
 
-    def test_render_compact_includes_status(self):
+    def test_render_compact_includes_status(self) -> None:
         """Test compact includes health status."""
         observer = create_mock_cortex_observer()
         dashboard = CortexDashboard(observer)
@@ -157,7 +157,7 @@ class TestCortexDashboard:
         statuses = ["HEALTHY", "DEGRADED", "CRITICAL", "UNKNOWN"]
         assert any(s in compact for s in statuses)
 
-    def test_render_full(self):
+    def test_render_full(self) -> None:
         """Test full dashboard rendering."""
         observer = create_mock_cortex_observer()
         dashboard = CortexDashboard(observer)
@@ -169,7 +169,7 @@ class TestCortexDashboard:
         # Should have section separators
         assert "==" in full
 
-    def test_render_full_has_panels(self):
+    def test_render_full_has_panels(self) -> None:
         """Test full dashboard has panels."""
         observer = create_mock_cortex_observer()
         dashboard = CortexDashboard(observer)
@@ -179,7 +179,7 @@ class TestCortexDashboard:
         # Check for panel headers
         assert "Hemisphere Status" in full or "hemisphere" in full.lower()
 
-    def test_get_wire_state(self):
+    def test_get_wire_state(self) -> None:
         """Test wire state export."""
         observer = create_mock_cortex_observer()
         dashboard = CortexDashboard(observer)
@@ -190,7 +190,7 @@ class TestCortexDashboard:
         assert "timestamp" in state or state.get("status") == "initializing"
         assert "compact" in state or state.get("status") == "initializing"
 
-    def test_to_json(self):
+    def test_to_json(self) -> None:
         """Test JSON export."""
         observer = create_mock_cortex_observer()
         dashboard = CortexDashboard(observer)
@@ -200,7 +200,7 @@ class TestCortexDashboard:
 
         assert isinstance(data, dict)
 
-    def test_sparkline_updates(self):
+    def test_sparkline_updates(self) -> None:
         """Test sparklines update with observations."""
         observer = create_mock_cortex_observer()
         dashboard = CortexDashboard(observer)
@@ -216,7 +216,7 @@ class TestCortexDashboard:
 class TestDashboardPanels:
     """Tests for individual dashboard panels."""
 
-    def test_hemisphere_panel(self):
+    def test_hemisphere_panel(self) -> None:
         """Test hemisphere panel rendering."""
         observer = create_mock_cortex_observer()
         dashboard = CortexDashboard(observer)
@@ -232,7 +232,7 @@ class TestDashboardPanels:
         assert any("Left" in line for line in lines)
         assert any("Right" in line for line in lines)
 
-    def test_coherency_panel(self):
+    def test_coherency_panel(self) -> None:
         """Test coherency panel rendering."""
         observer = create_mock_cortex_observer()
         dashboard = CortexDashboard(observer)
@@ -246,7 +246,7 @@ class TestDashboardPanels:
         # Should have progress bar
         assert any("█" in line or "░" in line for line in lines)
 
-    def test_synapse_panel(self):
+    def test_synapse_panel(self) -> None:
         """Test synapse panel rendering."""
         observer = create_mock_cortex_observer()
         dashboard = CortexDashboard(observer)
@@ -258,7 +258,7 @@ class TestDashboardPanels:
         assert len(lines) > 0
         assert any("Synapse" in line for line in lines)
 
-    def test_hippocampus_panel(self):
+    def test_hippocampus_panel(self) -> None:
         """Test hippocampus panel rendering."""
         observer = create_mock_cortex_observer()
         dashboard = CortexDashboard(observer)
@@ -270,7 +270,7 @@ class TestDashboardPanels:
         assert len(lines) > 0
         assert any("Hippocampus" in line for line in lines)
 
-    def test_dream_panel(self):
+    def test_dream_panel(self) -> None:
         """Test dream panel rendering."""
         observer = create_mock_cortex_observer()
         dashboard = CortexDashboard(observer)
@@ -286,14 +286,14 @@ class TestDashboardPanels:
 class TestFactoryFunctions:
     """Tests for factory functions."""
 
-    def test_create_cortex_dashboard(self):
+    def test_create_cortex_dashboard(self) -> None:
         """Test factory function."""
         observer = create_mock_cortex_observer()
         dashboard = create_cortex_dashboard(observer)
 
         assert isinstance(dashboard, CortexDashboard)
 
-    def test_create_cortex_dashboard_with_config(self):
+    def test_create_cortex_dashboard_with_config(self) -> None:
         """Test factory with config."""
         observer = create_mock_cortex_observer()
         dashboard = create_cortex_dashboard(
@@ -303,7 +303,7 @@ class TestFactoryFunctions:
 
         assert dashboard._config.emission_interval == 5.0
 
-    def test_create_minimal_dashboard(self):
+    def test_create_minimal_dashboard(self) -> None:
         """Test minimal dashboard factory."""
         observer = create_mock_cortex_observer()
         dashboard = create_minimal_dashboard(observer)

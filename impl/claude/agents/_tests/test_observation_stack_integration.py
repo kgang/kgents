@@ -148,14 +148,14 @@ def voi_ledger():
 class TestObservationWirePipeline:
     """O × W: Observations flow through wire protocol."""
 
-    def test_observable_panopticon_creation(self):
+    def test_observable_panopticon_creation(self) -> None:
         """Test ObservablePanopticon creates successfully."""
         panopticon = create_observable_panopticon()
         assert panopticon is not None
         assert isinstance(panopticon, ObservablePanopticon)
         assert isinstance(panopticon, WireObservable)
 
-    def test_observable_panopticon_collects_snapshot(self, panopticon):
+    def test_observable_panopticon_collects_snapshot(self, panopticon) -> None:
         """Test ObservablePanopticon collects status snapshots."""
         obs_panopticon = ObservablePanopticon(panopticon=panopticon)
         snapshot = obs_panopticon.collect_snapshot()
@@ -172,7 +172,7 @@ class TestObservationWirePipeline:
         assert isinstance(snapshot.semantic_healthy, bool)
         assert isinstance(snapshot.economic_healthy, bool)
 
-    def test_snapshot_converts_to_dict(self, panopticon):
+    def test_snapshot_converts_to_dict(self, panopticon) -> None:
         """Test WireStatusSnapshot serializes for wire protocol."""
         obs_panopticon = ObservablePanopticon(panopticon=panopticon)
         snapshot = obs_panopticon.collect_snapshot()
@@ -191,7 +191,7 @@ class TestObservationWirePipeline:
         assert "healthy" in wire_dict["telemetry"]
         assert "latency_p95" in wire_dict["telemetry"]
 
-    def test_wire_observer_creates_context(self, mock_agent):
+    def test_wire_observer_creates_context(self, mock_agent) -> None:
         """Test WireObserver creates observation context."""
         observer = create_wire_observer()
         context = observer.pre_invoke(mock_agent, {"input": "test"})
@@ -202,7 +202,7 @@ class TestObservationWirePipeline:
         assert "input_preview" in context.metadata
 
     @pytest.mark.asyncio
-    async def test_wire_observer_records_completion(self, mock_agent):
+    async def test_wire_observer_records_completion(self, mock_agent) -> None:
         """Test WireObserver records observation completion."""
         observer = create_wire_observer()
         context = observer.pre_invoke(mock_agent, {"input": "test"})
@@ -214,7 +214,7 @@ class TestObservationWirePipeline:
         assert result.duration_ms == 42.5
         assert result.output_data == {"output": "done"}
 
-    def test_wire_observer_records_entropy(self, mock_agent):
+    def test_wire_observer_records_entropy(self, mock_agent) -> None:
         """Test WireObserver records error events."""
         observer = create_wire_observer()
         context = observer.pre_invoke(mock_agent, {"input": "test"})
@@ -226,7 +226,7 @@ class TestObservationWirePipeline:
         assert stats["observations"] == 1
         assert stats["errors"] == 1
 
-    def test_emission_modes(self, panopticon):
+    def test_emission_modes(self, panopticon) -> None:
         """Test different emission modes for ObservablePanopticon."""
         for mode in EmissionMode:
             obs_panopticon = ObservablePanopticon(
@@ -234,7 +234,7 @@ class TestObservationWirePipeline:
             )
             assert obs_panopticon.emission_mode == mode
 
-    def test_should_emit_continuous_mode(self, panopticon):
+    def test_should_emit_continuous_mode(self, panopticon) -> None:
         """Test CONTINUOUS mode always emits."""
         obs_panopticon = ObservablePanopticon(
             panopticon=panopticon, emission_mode=EmissionMode.CONTINUOUS
@@ -242,7 +242,7 @@ class TestObservationWirePipeline:
         snapshot = obs_panopticon.collect_snapshot()
         assert obs_panopticon.should_emit(snapshot) is True
 
-    def test_should_emit_on_change_mode(self, panopticon):
+    def test_should_emit_on_change_mode(self, panopticon) -> None:
         """Test ON_CHANGE mode emits only when status changes."""
         obs_panopticon = ObservablePanopticon(
             panopticon=panopticon, emission_mode=EmissionMode.ON_CHANGE
@@ -255,7 +255,7 @@ class TestObservationWirePipeline:
         # Same status, should not emit
         assert obs_panopticon.should_emit(snapshot2) is False
 
-    def test_wire_metrics_update(self):
+    def test_wire_metrics_update(self) -> None:
         """Test wire metrics are tracked."""
         obs_panopticon = create_observable_panopticon()
 
@@ -275,7 +275,7 @@ class TestObservationWirePipeline:
 class TestObservationDashboardIntegration:
     """O × I: Observations displayed via I-gent components."""
 
-    def test_panopticon_renders_compact(self):
+    def test_panopticon_renders_compact(self) -> None:
         """Test Panopticon renders compact status line."""
         dashboard = create_panopticon_dashboard()
         compact = dashboard.render_compact()
@@ -283,7 +283,7 @@ class TestObservationDashboardIntegration:
         assert "[O]" in compact  # O-gent marker
         assert "Alerts:" in compact
 
-    def test_panopticon_renders_dimensions(self):
+    def test_panopticon_renders_dimensions(self) -> None:
         """Test Panopticon renders dimension panels."""
         dashboard = create_panopticon_dashboard()
         dimensions = dashboard.render_dimensions()
@@ -295,7 +295,7 @@ class TestObservationDashboardIntegration:
         assert "Drift" in dimensions
         assert "RoC" in dimensions
 
-    def test_dashboard_wire_data_format(self):
+    def test_dashboard_wire_data_format(self) -> None:
         """Test dashboard produces wire-compatible data."""
         dashboard = create_panopticon_dashboard()
         wire_data = dashboard.get_wire_data()
@@ -310,7 +310,7 @@ class TestObservationDashboardIntegration:
         assert "roc" in wire_data["sparklines"]
         assert "drift" in wire_data["sparklines"]
 
-    def test_i_gent_meter_for_metrics(self, panopticon):
+    def test_i_gent_meter_for_metrics(self, panopticon) -> None:
         """Test I-gent Meter displays observation metrics."""
         status = panopticon.get_status()
 
@@ -324,7 +324,7 @@ class TestObservationDashboardIntegration:
 
         assert "Drift" in rendered
 
-    def test_colorized_health_status(self, panopticon):
+    def test_colorized_health_status(self, panopticon) -> None:
         """Test health status uses appropriate colors."""
         status = panopticon.get_status()
 
@@ -335,7 +335,7 @@ class TestObservationDashboardIntegration:
             colored = colorize("DEGRADED", Color.YELLOW)
             assert "\033[33m" in colored  # Yellow ANSI code
 
-    def test_unified_dashboard_render(self, panopticon):
+    def test_unified_dashboard_render(self, panopticon) -> None:
         """Test unified dashboard rendering."""
         status = panopticon.get_status()
         dashboard = render_unified_dashboard(status)
@@ -352,12 +352,12 @@ class TestObservationDashboardIntegration:
 class TestObservationEconomicsIntegration:
     """O × B: Observations subject to VoI economics."""
 
-    def test_voi_ledger_creation(self, voi_ledger):
+    def test_voi_ledger_creation(self, voi_ledger) -> None:
         """Test VoI ledger creates successfully."""
         assert voi_ledger is not None
         assert isinstance(voi_ledger, VoILedger)
 
-    def test_voi_ledger_records_observation(self, voi_ledger):
+    def test_voi_ledger_records_observation(self, voi_ledger) -> None:
         """Test VoI ledger records observation costs."""
         finding = ObservationFinding(
             type=FindingType.HEALTH_CONFIRMED,
@@ -375,7 +375,7 @@ class TestObservationEconomicsIntegration:
         assert receipt is not None
         assert receipt.voi >= 0  # Value of information calculated
 
-    def test_voi_anomaly_detection_value(self, voi_ledger):
+    def test_voi_anomaly_detection_value(self, voi_ledger) -> None:
         """Test anomaly detection has high VoI."""
         finding = ObservationFinding(
             type=FindingType.ANOMALY_DETECTED,
@@ -394,7 +394,7 @@ class TestObservationEconomicsIntegration:
         # Anomalies should have positive VoI
         assert receipt.voi > 0
 
-    def test_epistemic_capital_accumulates(self, voi_ledger):
+    def test_epistemic_capital_accumulates(self, voi_ledger) -> None:
         """Test epistemic capital accumulates across observations."""
         # Multiple observations
         for i in range(5):
@@ -414,7 +414,7 @@ class TestObservationEconomicsIntegration:
         assert capital.observations == 5
         assert capital.confirmations == 5
 
-    def test_observation_depth_affects_gas(self, voi_ledger):
+    def test_observation_depth_affects_gas(self, voi_ledger) -> None:
         """Test different depths have different costs."""
         # Gas takes tokens (int), not cost directly
         depths = [
@@ -445,7 +445,7 @@ class TestObservationEconomicsIntegration:
 class TestObservationNarrativeIntegration:
     """O × N: Observations feed into narrative."""
 
-    def test_historian_records_observation_trace(self, historian):
+    def test_historian_records_observation_trace(self, historian) -> None:
         """Test Historian records observation as trace."""
         trace = create_test_trace(
             trace_id="obs-trace-001",
@@ -463,7 +463,7 @@ class TestObservationNarrativeIntegration:
         assert retrieved.agent_genus == "O"
         assert retrieved.inputs["observed_agent"] == "test-agent"
 
-    def test_observation_creates_semantic_trace(self, historian, mock_agent):
+    def test_observation_creates_semantic_trace(self, historian, mock_agent) -> None:
         """Test observation creates semantic trace for N-gent."""
         trace = create_test_trace(
             trace_id=f"obs-{mock_agent.id}-001",
@@ -480,7 +480,7 @@ class TestObservationNarrativeIntegration:
         assert len(all_traces) >= 1
         assert any(t.agent_genus == "O" for t in all_traces)
 
-    def test_observation_lineage_traceable(self, historian, mock_agent):
+    def test_observation_lineage_traceable(self, historian, mock_agent) -> None:
         """Test observation lineage can be traced."""
         # Parent observation
         parent_trace = create_test_trace(
@@ -508,7 +508,7 @@ class TestObservationNarrativeIntegration:
         assert child is not None
         assert child.parent_id == "parent-obs-001"
 
-    def test_panopticon_status_to_narrative(self, historian, panopticon):
+    def test_panopticon_status_to_narrative(self, historian, panopticon) -> None:
         """Test Panopticon status converts to narrative trace."""
         status = panopticon.get_status()
 
@@ -541,7 +541,9 @@ class TestObservationStackFullIntegration:
     """Test complete observation stack flow."""
 
     @pytest.mark.asyncio
-    async def test_observe_emit_display_record_flow(self, historian, mock_agent):
+    async def test_observe_emit_display_record_flow(
+        self, historian, mock_agent
+    ) -> None:
         """Test O-gent observe → W-gent emit → I-gent display → N-gent record."""
         # 1. Create observation infrastructure
         obs_panopticon = create_observable_panopticon()

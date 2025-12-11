@@ -15,7 +15,7 @@ from agents.p.strategies.stack_balancing import (
 class TestStackBalancingJSON:
     """Test JSON bracket/brace balancing."""
 
-    def test_balanced_json(self):
+    def test_balanced_json(self) -> None:
         """Already balanced JSON should have confidence=1.0"""
         parser = StackBalancingParser(mode="json")
         result = parser.parse('{"key": "value"}')
@@ -25,7 +25,7 @@ class TestStackBalancingJSON:
         assert result.confidence == 1.0
         assert len(result.repairs) == 0
 
-    def test_unclosed_brace(self):
+    def test_unclosed_brace(self) -> None:
         """Unclosed brace should auto-close with confidence penalty"""
         parser = StackBalancingParser(mode="json")
         result = parser.parse('{"key": "value"')
@@ -37,7 +37,7 @@ class TestStackBalancingJSON:
         assert len(result.repairs) == 1
         assert "Auto-closed" in result.repairs[0]
 
-    def test_unclosed_bracket(self):
+    def test_unclosed_bracket(self) -> None:
         """Unclosed bracket should auto-close"""
         parser = StackBalancingParser(mode="json")
         result = parser.parse("[1, 2, 3")
@@ -47,7 +47,7 @@ class TestStackBalancingJSON:
         assert result.confidence < 1.0
         assert len(result.repairs) == 1
 
-    def test_nested_unclosed(self):
+    def test_nested_unclosed(self) -> None:
         """Multiple unclosed delimiters should all auto-close"""
         parser = StackBalancingParser(mode="json")
         result = parser.parse('{"outer": {"inner": [1, 2')
@@ -57,7 +57,7 @@ class TestStackBalancingJSON:
         assert result.confidence < 1.0
         assert result.metadata["unclosed_delimiters"] == 3  # { { [
 
-    def test_mismatched_closer(self):
+    def test_mismatched_closer(self) -> None:
         """Mismatched closer should be ignored"""
         parser = StackBalancingParser(mode="json")
         result = parser.parse('{"key": ]')
@@ -67,7 +67,7 @@ class TestStackBalancingJSON:
         assert result.value == '{"key": ]}'
         assert "mismatched" in result.repairs[0].lower()
 
-    def test_multiple_unclosed_penalty(self):
+    def test_multiple_unclosed_penalty(self) -> None:
         """More unclosed delimiters = lower confidence"""
         parser = StackBalancingParser(mode="json")
 
@@ -80,7 +80,7 @@ class TestStackBalancingJSON:
 class TestStackBalancingHTML:
     """Test HTML tag balancing."""
 
-    def test_balanced_html(self):
+    def test_balanced_html(self) -> None:
         """Already balanced HTML should have confidence=1.0"""
         parser = StackBalancingParser(mode="html")
         result = parser.parse("<div>Hello</div>")
@@ -90,7 +90,7 @@ class TestStackBalancingHTML:
         assert result.confidence == 1.0
         assert len(result.repairs) == 0
 
-    def test_unclosed_div(self):
+    def test_unclosed_div(self) -> None:
         """Unclosed div should auto-close"""
         parser = StackBalancingParser(mode="html")
         result = parser.parse("<div>Hello")
@@ -101,7 +101,7 @@ class TestStackBalancingHTML:
         assert len(result.repairs) == 1
         assert "div" in result.repairs[0]
 
-    def test_nested_unclosed_tags(self):
+    def test_nested_unclosed_tags(self) -> None:
         """Multiple unclosed tags should all auto-close in reverse order"""
         parser = StackBalancingParser(mode="html")
         result = parser.parse("<div><p><span>Text")
@@ -112,7 +112,7 @@ class TestStackBalancingHTML:
         # Stack is LIFO: most recent tag first
         assert result.metadata["tags_in_stack"] == ["span", "p", "div"]
 
-    def test_self_closing_tags_ignored(self):
+    def test_self_closing_tags_ignored(self) -> None:
         """Self-closing tags (br, hr, img) should not be tracked"""
         parser = StackBalancingParser(mode="html")
         result = parser.parse("<div>Hello<br>World</div>")
@@ -121,7 +121,7 @@ class TestStackBalancingHTML:
         assert result.value == "<div>Hello<br>World</div>"
         assert result.confidence == 1.0
 
-    def test_img_tag_self_closing(self):
+    def test_img_tag_self_closing(self) -> None:
         """Image tags should be treated as self-closing"""
         parser = StackBalancingParser(mode="html")
         result = parser.parse('<div><img src="test.jpg"><p>Text')
@@ -131,7 +131,7 @@ class TestStackBalancingHTML:
         # Only div and p should be in stack (not img)
         assert result.metadata["unclosed_tags"] == 2
 
-    def test_mismatched_closing_tag(self):
+    def test_mismatched_closing_tag(self) -> None:
         """Mismatched closing tag should be ignored"""
         parser = StackBalancingParser(mode="html")
         result = parser.parse("<div></span>")
@@ -139,7 +139,7 @@ class TestStackBalancingHTML:
         assert result.success
         assert "mismatched" in result.repairs[0].lower()
 
-    def test_case_insensitive_tags(self):
+    def test_case_insensitive_tags(self) -> None:
         """HTML tags should be case-insensitive"""
         parser = StackBalancingParser(mode="html")
         result = parser.parse("<DIV>Text")
@@ -151,7 +151,7 @@ class TestStackBalancingHTML:
 class TestStreamingJSON:
     """Test streaming JSON parsing."""
 
-    def test_stream_builds_progressively(self):
+    def test_stream_builds_progressively(self) -> None:
         """Stream should yield progressive balanced results"""
         parser = StackBalancingParser(mode="json")
         tokens = ["{", '"key"', ":", '"val']
@@ -169,7 +169,7 @@ class TestStreamingJSON:
         # Final result should not be partial
         assert not results[-1].partial
 
-    def test_stream_auto_closes_at_each_step(self):
+    def test_stream_auto_closes_at_each_step(self) -> None:
         """Each streaming step should have balanced output"""
         parser = StackBalancingParser(mode="json")
         tokens = ["{", '"a"', ":", "[", "1"]
@@ -183,7 +183,7 @@ class TestStreamingJSON:
             if result.metadata["unclosed_delimiters"] > 0:
                 assert len(result.repairs) > 0
 
-    def test_stream_final_complete(self):
+    def test_stream_final_complete(self) -> None:
         """Final streaming result should be complete"""
         parser = StackBalancingParser(mode="json")
         tokens = ["{", '"key"', ":", '"value"', "}"]
@@ -200,7 +200,7 @@ class TestStreamingJSON:
 class TestStreamingHTML:
     """Test streaming HTML parsing."""
 
-    def test_html_stream_progressive_closing(self):
+    def test_html_stream_progressive_closing(self) -> None:
         """HTML stream should progressively auto-close tags"""
         parser = StackBalancingParser(mode="html")
         tokens = ["<div>", "<p>", "Text"]
@@ -214,7 +214,7 @@ class TestStreamingHTML:
             assert result.success
             assert result.partial
 
-    def test_html_stream_opens_and_closes(self):
+    def test_html_stream_opens_and_closes(self) -> None:
         """HTML stream should handle tags opening and closing"""
         parser = StackBalancingParser(mode="html")
         tokens = ["<div>", "Hello", "</div>"]
@@ -226,7 +226,7 @@ class TestStreamingHTML:
         assert "<div>Hello</div>" in final.value
         assert final.confidence == 1.0
 
-    def test_html_stream_unclosed_at_end(self):
+    def test_html_stream_unclosed_at_end(self) -> None:
         """HTML stream with unclosed tags at end should auto-close"""
         parser = StackBalancingParser(mode="html")
         tokens = ["<div>", "<p>", "Text"]
@@ -242,7 +242,7 @@ class TestStreamingHTML:
 class TestConvenienceFunctions:
     """Test convenience constructor functions."""
 
-    def test_html_stream_parser(self):
+    def test_html_stream_parser(self) -> None:
         """html_stream_parser should create HTML mode parser"""
         parser = html_stream_parser()
         result = parser.parse("<div>Test")
@@ -250,7 +250,7 @@ class TestConvenienceFunctions:
         assert result.success
         assert result.value == "<div>Test</div>"
 
-    def test_json_stream_parser(self):
+    def test_json_stream_parser(self) -> None:
         """json_stream_parser should create JSON mode parser"""
         parser = json_stream_parser()
         result = parser.parse('{"key"')
@@ -262,7 +262,7 @@ class TestConvenienceFunctions:
 class TestConfiguration:
     """Test parser configuration."""
 
-    def test_configure_returns_new_instance(self):
+    def test_configure_returns_new_instance(self) -> None:
         """configure() should return new parser instance"""
         parser1 = StackBalancingParser(mode="json")
         parser2 = parser1.configure(min_confidence=0.8)
@@ -270,14 +270,14 @@ class TestConfiguration:
         assert parser1 is not parser2
         assert parser1.config.min_confidence != parser2.config.min_confidence
 
-    def test_configure_validation(self):
+    def test_configure_validation(self) -> None:
         """configure() should validate new configuration"""
         parser = StackBalancingParser(mode="json")
 
         with pytest.raises(ValueError):
             parser.configure(min_confidence=1.5)  # Out of range
 
-    def test_invalid_mode_raises(self):
+    def test_invalid_mode_raises(self) -> None:
         """Invalid mode should raise ValueError"""
         with pytest.raises(ValueError, match="Unsupported mode"):
             StackBalancingParser(mode="xml")
@@ -286,7 +286,7 @@ class TestConfiguration:
 class TestRealWorldScenarios:
     """Test real-world use cases."""
 
-    def test_wgent_streaming_html(self):
+    def test_wgent_streaming_html(self) -> None:
         """
         W-gent scenario: Stream HTML dashboard from LLM.
         LLM generates HTML in chunks, may not close all tags.
@@ -318,7 +318,7 @@ class TestRealWorldScenarios:
         assert "</body>" in final.value
         assert "</html>" in final.value
 
-    def test_json_api_response_streaming(self):
+    def test_json_api_response_streaming(self) -> None:
         """
         Streaming JSON API response that may be incomplete.
         """
@@ -344,7 +344,7 @@ class TestRealWorldScenarios:
         assert final.value.count("{") == final.value.count("}")
         assert final.value.count("[") == final.value.count("]")
 
-    def test_confidence_degrades_with_repairs(self):
+    def test_confidence_degrades_with_repairs(self) -> None:
         """
         More auto-closures = lower confidence.
         User can decide if confidence is acceptable.

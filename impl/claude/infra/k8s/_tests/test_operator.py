@@ -18,7 +18,7 @@ from ..operator import (
 class TestAgentSpec:
     """Tests for AgentSpec parsing and generation."""
 
-    def test_from_crd_minimal(self):
+    def test_from_crd_minimal(self) -> None:
         """Parse minimal CRD."""
         manifest = {
             "metadata": {"name": "test-agent", "namespace": "kgents-agents"},
@@ -36,7 +36,7 @@ class TestAgentSpec:
         assert spec.memory == "256Mi"
         assert spec.sidecar_enabled is True
 
-    def test_from_crd_full(self):
+    def test_from_crd_full(self) -> None:
         """Parse full CRD with all options."""
         manifest = {
             "metadata": {"name": "b-gent", "namespace": "kgents-agents"},
@@ -68,7 +68,7 @@ class TestAgentSpec:
         assert spec.allow_egress is True
         assert spec.allowed_peers == ["L", "F"]
 
-    def test_to_deployment_basic(self):
+    def test_to_deployment_basic(self) -> None:
         """Generate basic Deployment."""
         spec = AgentSpec(
             name="b-gent",
@@ -97,7 +97,7 @@ class TestAgentSpec:
         assert logic["securityContext"]["runAsNonRoot"] is True
         assert logic["securityContext"]["allowPrivilegeEscalation"] is False
 
-    def test_to_deployment_no_sidecar(self):
+    def test_to_deployment_no_sidecar(self) -> None:
         """Generate Deployment without sidecar."""
         spec = AgentSpec(
             name="b-gent",
@@ -112,7 +112,7 @@ class TestAgentSpec:
         assert len(containers) == 1
         assert containers[0]["name"] == "logic"
 
-    def test_to_deployment_labels(self):
+    def test_to_deployment_labels(self) -> None:
         """Verify labels are set correctly."""
         spec = AgentSpec(
             name="b-gent",
@@ -127,7 +127,7 @@ class TestAgentSpec:
         assert labels["app.kubernetes.io/part-of"] == "kgents"
         assert labels["kgents.io/genus"] == "B"
 
-    def test_to_service(self):
+    def test_to_service(self) -> None:
         """Generate Service."""
         spec = AgentSpec(
             name="b-gent",
@@ -143,7 +143,7 @@ class TestAgentSpec:
         assert service["spec"]["type"] == "ClusterIP"
         assert service["spec"]["ports"][0]["port"] == 8080
 
-    def test_to_network_policy_default(self):
+    def test_to_network_policy_default(self) -> None:
         """No NetworkPolicy needed by default."""
         spec = AgentSpec(
             name="b-gent",
@@ -158,7 +158,7 @@ class TestAgentSpec:
         assert policy["spec"]["policyTypes"] == ["Egress"]
         assert policy["spec"]["egress"] == []
 
-    def test_to_network_policy_allow_egress(self):
+    def test_to_network_policy_allow_egress(self) -> None:
         """NetworkPolicy with egress allowed."""
         spec = AgentSpec(
             name="b-gent",
@@ -172,7 +172,7 @@ class TestAgentSpec:
         # Full egress returns None (no policy needed)
         assert policy is None
 
-    def test_to_network_policy_peers(self):
+    def test_to_network_policy_peers(self) -> None:
         """NetworkPolicy with specific peers."""
         spec = AgentSpec(
             name="b-gent",
@@ -189,7 +189,7 @@ class TestAgentSpec:
         # Should have podSelector for each peer
         assert len(egress[0]["to"]) == 2
 
-    def test_halve_resource_millicores(self):
+    def test_halve_resource_millicores(self) -> None:
         """Halve CPU millicores."""
         spec = AgentSpec(
             name="test",
@@ -201,7 +201,7 @@ class TestAgentSpec:
         assert spec._halve_resource("200m") == "100m"
         assert spec._halve_resource("50m") == "25m"
 
-    def test_halve_resource_memory(self):
+    def test_halve_resource_memory(self) -> None:
         """Halve memory values."""
         spec = AgentSpec(
             name="test",
@@ -212,7 +212,7 @@ class TestAgentSpec:
         assert spec._halve_resource("256Mi") == "128Mi"
         assert spec._halve_resource("1Gi") == "512Mi"
 
-    def test_build_env(self):
+    def test_build_env(self) -> None:
         """Build environment variables."""
         spec = AgentSpec(
             name="b-gent",
@@ -233,19 +233,19 @@ class TestAgentSpec:
 class TestAgentOperator:
     """Tests for AgentOperator."""
 
-    def test_create_operator(self):
+    def test_create_operator(self) -> None:
         """Create operator with defaults."""
         operator = create_operator()
 
         assert operator.namespace == "kgents-agents"
 
-    def test_create_operator_custom_namespace(self):
+    def test_create_operator_custom_namespace(self) -> None:
         """Create operator with custom namespace."""
         operator = create_operator(namespace="custom")
 
         assert operator.namespace == "custom"
 
-    def test_progress_callback(self):
+    def test_progress_callback(self) -> None:
         """Progress callback is called."""
         messages: list[str] = []
         operator = create_operator(on_progress=messages.append)
@@ -258,7 +258,7 @@ class TestAgentOperator:
 class TestAgentPhase:
     """Tests for AgentPhase enum."""
 
-    def test_phases(self):
+    def test_phases(self) -> None:
         """Verify phase values."""
         assert AgentPhase.PENDING.value == "Pending"
         assert AgentPhase.RUNNING.value == "Running"
@@ -269,7 +269,7 @@ class TestAgentPhase:
 class TestReconcileResult:
     """Tests for ReconcileResult."""
 
-    def test_success_result(self):
+    def test_success_result(self) -> None:
         """Successful reconcile result."""
         result = ReconcileResult(
             success=True,
@@ -282,7 +282,7 @@ class TestReconcileResult:
         assert result.phase == AgentPhase.RUNNING
         assert "deployment/b-gent" in result.created
 
-    def test_failure_result(self):
+    def test_failure_result(self) -> None:
         """Failed reconcile result."""
         result = ReconcileResult(
             success=False,

@@ -50,15 +50,15 @@ from .conftest import MockUmwelt
 class TestValidContexts:
     """Test that only five contexts are allowed."""
 
-    def test_exactly_five_contexts(self):
+    def test_exactly_five_contexts(self) -> None:
         """There are exactly five valid contexts."""
         assert len(VALID_CONTEXTS) == 5
 
-    def test_context_names(self):
+    def test_context_names(self) -> None:
         """The five contexts have the correct names."""
         assert VALID_CONTEXTS == frozenset({"world", "self", "concept", "void", "time"})
 
-    def test_contexts_immutable(self):
+    def test_contexts_immutable(self) -> None:
         """VALID_CONTEXTS is a frozenset (immutable)."""
         assert isinstance(VALID_CONTEXTS, frozenset)
 
@@ -72,7 +72,7 @@ class TestWorldNode:
     """Tests for WorldNode."""
 
     @pytest.fixture
-    def world_node(self):
+    def world_node(self) -> "LogosNode":
         return create_world_node(
             name="house",
             description="A beautiful house",
@@ -84,14 +84,14 @@ class TestWorldNode:
         )
 
     @pytest.fixture
-    def observer(self):
+    def observer(self) -> MockUmwelt:
         return MockUmwelt(archetype="default")
 
-    def test_handle(self, world_node):
+    def test_handle(self, world_node) -> None:
         """Node has correct handle."""
         assert world_node.handle == "world.house"
 
-    def test_base_affordances(self, world_node, observer):
+    def test_base_affordances(self, world_node, observer) -> None:
         """All nodes have base affordances."""
         meta = AgentMeta(name="test", archetype="default")
         affordances = world_node.affordances(meta)
@@ -99,7 +99,7 @@ class TestWorldNode:
         assert "witness" in affordances
         assert "affordances" in affordances
 
-    def test_architect_affordances(self, world_node):
+    def test_architect_affordances(self, world_node) -> None:
         """Architect archetype has extra affordances."""
         meta = AgentMeta(name="test", archetype="architect")
         affordances = world_node.affordances(meta)
@@ -107,7 +107,7 @@ class TestWorldNode:
         assert "blueprint" in affordances
         assert "demolish" in affordances
 
-    def test_poet_affordances(self, world_node):
+    def test_poet_affordances(self, world_node) -> None:
         """Poet archetype has different affordances."""
         meta = AgentMeta(name="test", archetype="poet")
         affordances = world_node.affordances(meta)
@@ -117,14 +117,14 @@ class TestWorldNode:
         assert "renovate" not in affordances  # Not an architect
 
     @pytest.mark.asyncio
-    async def test_manifest_default(self, world_node, observer):
+    async def test_manifest_default(self, world_node, observer) -> None:
         """Default manifest returns BasicRendering."""
         result = await world_node.manifest(observer)
         assert isinstance(result, BasicRendering)
         assert "house" in result.summary.lower()
 
     @pytest.mark.asyncio
-    async def test_manifest_architect(self, world_node):
+    async def test_manifest_architect(self, world_node) -> None:
         """Architect sees BlueprintRendering."""
         observer = MockUmwelt(archetype="architect")
         result = await world_node.manifest(observer)
@@ -132,7 +132,7 @@ class TestWorldNode:
         assert hasattr(result, "dimensions") or "blueprint" in str(type(result)).lower()
 
     @pytest.mark.asyncio
-    async def test_invoke_witness(self, world_node, observer):
+    async def test_invoke_witness(self, world_node, observer) -> None:
         """Witness aspect returns history."""
         result = await world_node.invoke("witness", observer)
         assert "handle" in result or "history" in result
@@ -142,22 +142,22 @@ class TestWorldContextResolver:
     """Tests for WorldContextResolver."""
 
     @pytest.fixture
-    def resolver(self):
+    def resolver(self) -> "Resolver":
         return create_world_resolver()
 
-    def test_resolve_creates_node(self, resolver):
+    def test_resolve_creates_node(self, resolver) -> None:
         """Resolver creates a node for unknown holons."""
         node = resolver.resolve("house", [])
         assert node.handle == "world.house"
         assert isinstance(node, WorldNode)
 
-    def test_resolve_caches_node(self, resolver):
+    def test_resolve_caches_node(self, resolver) -> None:
         """Resolved nodes are cached."""
         node1 = resolver.resolve("house", [])
         node2 = resolver.resolve("house", [])
         assert node1 is node2
 
-    def test_list_handles(self, resolver):
+    def test_list_handles(self, resolver) -> None:
         """List handles returns cached handles."""
         resolver.resolve("house", [])
         resolver.resolve("server", [])
@@ -175,18 +175,18 @@ class TestMemoryNode:
     """Tests for MemoryNode."""
 
     @pytest.fixture
-    def memory_node(self):
+    def memory_node(self) -> MemoryNode:
         return MemoryNode()
 
     @pytest.fixture
-    def observer(self):
+    def observer(self) -> MockUmwelt:
         return MockUmwelt(archetype="default")
 
-    def test_handle(self, memory_node):
+    def test_handle(self, memory_node) -> None:
         """Memory node has correct handle."""
         assert memory_node.handle == "self.memory"
 
-    def test_affordances(self, memory_node):
+    def test_affordances(self, memory_node) -> None:
         """Memory node has memory affordances."""
         meta = AgentMeta(name="test", archetype="default")
         affordances = memory_node.affordances(meta)
@@ -196,7 +196,7 @@ class TestMemoryNode:
         assert "recall" in affordances
 
     @pytest.mark.asyncio
-    async def test_checkpoint_creates_snapshot(self, memory_node, observer):
+    async def test_checkpoint_creates_snapshot(self, memory_node, observer) -> None:
         """Checkpoint creates a memory snapshot."""
         result = await memory_node.invoke(
             "checkpoint", observer, label="test_checkpoint"
@@ -205,7 +205,7 @@ class TestMemoryNode:
         assert "timestamp" in result
 
     @pytest.mark.asyncio
-    async def test_consolidate(self, memory_node, observer):
+    async def test_consolidate(self, memory_node, observer) -> None:
         """Consolidate processes temporary memories."""
         memory_node._memories["test"] = {"temporary": True, "data": "value"}
         result = await memory_node.invoke("consolidate", observer)
@@ -218,15 +218,15 @@ class TestCapabilitiesNode:
     """Tests for CapabilitiesNode."""
 
     @pytest.fixture
-    def capabilities_node(self):
+    def capabilities_node(self) -> CapabilitiesNode:
         return CapabilitiesNode()
 
     @pytest.fixture
-    def observer(self):
+    def observer(self) -> MockUmwelt:
         return MockUmwelt(archetype="default")
 
     @pytest.mark.asyncio
-    async def test_acquire_capability(self, capabilities_node, observer):
+    async def test_acquire_capability(self, capabilities_node, observer) -> None:
         """Can acquire new capabilities."""
         result = await capabilities_node.invoke(
             "acquire", observer, capability="flying"
@@ -235,7 +235,7 @@ class TestCapabilitiesNode:
         assert "flying" in capabilities_node._capabilities
 
     @pytest.mark.asyncio
-    async def test_release_capability(self, capabilities_node, observer):
+    async def test_release_capability(self, capabilities_node, observer) -> None:
         """Can release capabilities."""
         capabilities_node._capabilities.add("flying")
         result = await capabilities_node.invoke(
@@ -249,25 +249,25 @@ class TestSelfContextResolver:
     """Tests for SelfContextResolver."""
 
     @pytest.fixture
-    def resolver(self):
+    def resolver(self) -> "Resolver":
         return create_self_resolver()
 
-    def test_resolve_memory(self, resolver):
+    def test_resolve_memory(self, resolver) -> None:
         """Resolves self.memory."""
         node = resolver.resolve("memory", [])
         assert isinstance(node, MemoryNode)
 
-    def test_resolve_capabilities(self, resolver):
+    def test_resolve_capabilities(self, resolver) -> None:
         """Resolves self.capabilities."""
         node = resolver.resolve("capabilities", [])
         assert isinstance(node, CapabilitiesNode)
 
-    def test_resolve_state(self, resolver):
+    def test_resolve_state(self, resolver) -> None:
         """Resolves self.state."""
         node = resolver.resolve("state", [])
         assert isinstance(node, StateNode)
 
-    def test_resolve_identity(self, resolver):
+    def test_resolve_identity(self, resolver) -> None:
         """Resolves self.identity."""
         node = resolver.resolve("identity", [])
         assert isinstance(node, IdentityNode)
@@ -282,7 +282,7 @@ class TestConceptNode:
     """Tests for ConceptNode."""
 
     @pytest.fixture
-    def concept_node(self):
+    def concept_node(self) -> "LogosNode":
         return create_concept_node(
             name="justice",
             definition="The quality of being fair and reasonable",
@@ -292,14 +292,14 @@ class TestConceptNode:
         )
 
     @pytest.fixture
-    def observer(self):
+    def observer(self) -> MockUmwelt:
         return MockUmwelt(archetype="default")
 
-    def test_handle(self, concept_node):
+    def test_handle(self, concept_node) -> None:
         """Concept has correct handle."""
         assert concept_node.handle == "concept.justice"
 
-    def test_philosopher_affordances(self, concept_node):
+    def test_philosopher_affordances(self, concept_node) -> None:
         """Philosopher has dialectical affordances."""
         meta = AgentMeta(name="test", archetype="philosopher")
         affordances = concept_node.affordances(meta)
@@ -308,7 +308,7 @@ class TestConceptNode:
         assert "synthesize" in affordances
         assert "critique" in affordances
 
-    def test_scientist_affordances(self, concept_node):
+    def test_scientist_affordances(self, concept_node) -> None:
         """Scientist has empirical affordances."""
         meta = AgentMeta(name="test", archetype="scientist")
         affordances = concept_node.affordances(meta)
@@ -316,7 +316,7 @@ class TestConceptNode:
         assert "validate" in affordances
 
     @pytest.mark.asyncio
-    async def test_refine(self, concept_node, observer):
+    async def test_refine(self, concept_node, observer) -> None:
         """Refine challenges the concept definition."""
         result = await concept_node.invoke(
             "refine", observer, challenge="What are the limits of justice?"
@@ -325,7 +325,7 @@ class TestConceptNode:
         assert "challenge" in result
 
     @pytest.mark.asyncio
-    async def test_dialectic(self, concept_node, observer):
+    async def test_dialectic(self, concept_node, observer) -> None:
         """Dialectic generates thesis/antithesis/synthesis."""
         result = await concept_node.invoke("dialectic", observer)
         assert "thesis" in result
@@ -333,7 +333,7 @@ class TestConceptNode:
         assert "synthesis" in result
 
     @pytest.mark.asyncio
-    async def test_relate(self, concept_node, observer):
+    async def test_relate(self, concept_node, observer) -> None:
         """Relate finds concept connections."""
         result = await concept_node.invoke("relate", observer, target="fairness")
         assert result["target"] == "fairness"
@@ -344,16 +344,16 @@ class TestConceptContextResolver:
     """Tests for ConceptContextResolver."""
 
     @pytest.fixture
-    def resolver(self):
+    def resolver(self) -> "Resolver":
         return create_concept_resolver()
 
-    def test_resolve_creates_concept(self, resolver):
+    def test_resolve_creates_concept(self, resolver) -> None:
         """Resolver creates concept for unknown names."""
         node = resolver.resolve("recursion", [])
         assert node.handle == "concept.recursion"
         assert isinstance(node, ConceptNode)
 
-    def test_resolve_caches_concept(self, resolver):
+    def test_resolve_caches_concept(self, resolver) -> None:
         """Resolved concepts are cached."""
         node1 = resolver.resolve("recursion", [])
         node2 = resolver.resolve("recursion", [])
@@ -369,25 +369,25 @@ class TestEntropyPool:
     """Tests for EntropyPool (Accursed Share)."""
 
     @pytest.fixture
-    def pool(self):
+    def pool(self) -> "EntropyPool":
         return create_entropy_pool(initial_budget=100.0)
 
-    def test_initial_budget(self, pool):
+    def test_initial_budget(self, pool) -> None:
         """Pool starts with full budget."""
         assert pool.remaining == 100.0
 
-    def test_sip_reduces_budget(self, pool):
+    def test_sip_reduces_budget(self, pool) -> None:
         """Sip reduces entropy budget."""
         pool.sip(10.0)
         assert pool.remaining == 90.0
 
-    def test_sip_returns_seed(self, pool):
+    def test_sip_returns_seed(self, pool) -> None:
         """Sip returns randomness."""
         result = pool.sip(1.0)
         assert "seed" in result
         assert 0.0 <= result["seed"] <= 1.0
 
-    def test_sip_budget_exhausted(self, pool):
+    def test_sip_budget_exhausted(self, pool) -> None:
         """Sip raises when budget exhausted."""
         from ..exceptions import BudgetExhaustedError
 
@@ -395,14 +395,14 @@ class TestEntropyPool:
         with pytest.raises(BudgetExhaustedError):
             pool.sip(10.0)
 
-    def test_pour_recovers_partial(self, pool):
+    def test_pour_recovers_partial(self, pool) -> None:
         """Pour recovers partial entropy."""
         pool.remaining = 50.0
         result = pool.pour(20.0, recovery_rate=0.5)
         assert result["recovered"] == 10.0
         assert pool.remaining == 60.0
 
-    def test_tithe_regenerates(self, pool):
+    def test_tithe_regenerates(self, pool) -> None:
         """Tithe regenerates some entropy."""
         pool.remaining = 50.0
         result = pool.tithe()
@@ -414,11 +414,11 @@ class TestVoidNodes:
     """Tests for void context nodes."""
 
     @pytest.fixture
-    def observer(self):
+    def observer(self) -> MockUmwelt:
         return MockUmwelt(archetype="default")
 
     @pytest.mark.asyncio
-    async def test_entropy_sip(self, observer):
+    async def test_entropy_sip(self, observer) -> None:
         """Entropy node can sip randomness."""
         node = EntropyNode()
         result = await node.invoke("sip", observer, amount=1.0)
@@ -426,7 +426,7 @@ class TestVoidNodes:
         assert "amount" in result
 
     @pytest.mark.asyncio
-    async def test_serendipity_tangent(self, observer):
+    async def test_serendipity_tangent(self, observer) -> None:
         """Serendipity generates tangents."""
         node = SerendipityNode()
         result = await node.invoke("sip", observer, context="testing")
@@ -434,14 +434,14 @@ class TestVoidNodes:
         assert len(result["tangent"]) > 0
 
     @pytest.mark.asyncio
-    async def test_gratitude_tithe(self, observer):
+    async def test_gratitude_tithe(self, observer) -> None:
         """Gratitude accepts tithes."""
         node = GratitudeNode()
         result = await node.invoke("tithe", observer)
         assert "gratitude" in result
 
     @pytest.mark.asyncio
-    async def test_gratitude_thank(self, observer):
+    async def test_gratitude_thank(self, observer) -> None:
         """Gratitude accepts thanks."""
         node = GratitudeNode()
         result = await node.invoke("thank", observer, target="the universe")
@@ -452,25 +452,25 @@ class TestVoidContextResolver:
     """Tests for VoidContextResolver."""
 
     @pytest.fixture
-    def resolver(self):
+    def resolver(self) -> "Resolver":
         return create_void_resolver(initial_budget=100.0)
 
-    def test_resolve_entropy(self, resolver):
+    def test_resolve_entropy(self, resolver) -> None:
         """Resolves void.entropy."""
         node = resolver.resolve("entropy", [])
         assert isinstance(node, EntropyNode)
 
-    def test_resolve_serendipity(self, resolver):
+    def test_resolve_serendipity(self, resolver) -> None:
         """Resolves void.serendipity."""
         node = resolver.resolve("serendipity", [])
         assert isinstance(node, SerendipityNode)
 
-    def test_resolve_gratitude(self, resolver):
+    def test_resolve_gratitude(self, resolver) -> None:
         """Resolves void.gratitude."""
         node = resolver.resolve("gratitude", [])
         assert isinstance(node, GratitudeNode)
 
-    def test_shared_entropy_pool(self, resolver):
+    def test_shared_entropy_pool(self, resolver) -> None:
         """All void nodes share the same entropy pool."""
         entropy = resolver.resolve("entropy", [])
         serendipity = resolver.resolve("serendipity", [])
@@ -488,7 +488,7 @@ class TestTraceNode:
     """Tests for TraceNode."""
 
     @pytest.fixture
-    def trace_node(self):
+    def trace_node(self) -> "LogosNode":
         node = TraceNode()
         # Add some test traces
         node.record({"event": "created", "data": "test1"})
@@ -496,18 +496,18 @@ class TestTraceNode:
         return node
 
     @pytest.fixture
-    def observer(self):
+    def observer(self) -> MockUmwelt:
         return MockUmwelt(archetype="default")
 
     @pytest.mark.asyncio
-    async def test_witness(self, trace_node, observer):
+    async def test_witness(self, trace_node, observer) -> None:
         """Witness returns traces."""
         result = await trace_node.invoke("witness", observer, limit=10)
         assert "traces" in result
         assert len(result["traces"]) == 2
 
     @pytest.mark.asyncio
-    async def test_query(self, trace_node, observer):
+    async def test_query(self, trace_node, observer) -> None:
         """Query filters traces."""
         result = await trace_node.invoke("query", observer, query="created")
         assert len(result["results"]) == 1
@@ -518,15 +518,15 @@ class TestScheduleNode:
     """Tests for ScheduleNode."""
 
     @pytest.fixture
-    def schedule_node(self):
+    def schedule_node(self) -> ScheduleNode:
         return ScheduleNode()
 
     @pytest.fixture
-    def observer(self):
+    def observer(self) -> MockUmwelt:
         return MockUmwelt(archetype="default")
 
     @pytest.mark.asyncio
-    async def test_defer_with_delay(self, schedule_node, observer):
+    async def test_defer_with_delay(self, schedule_node, observer) -> None:
         """Defer schedules action with delay."""
         result = await schedule_node.invoke(
             "defer",
@@ -539,7 +539,7 @@ class TestScheduleNode:
         assert result["path"] == "world.task.execute"
 
     @pytest.mark.asyncio
-    async def test_defer_with_at(self, schedule_node, observer):
+    async def test_defer_with_at(self, schedule_node, observer) -> None:
         """Defer schedules action at specific time."""
         future_time = datetime.now() + timedelta(hours=1)
         result = await schedule_node.invoke(
@@ -552,7 +552,7 @@ class TestScheduleNode:
         assert result["status"] == "scheduled"
 
     @pytest.mark.asyncio
-    async def test_cancel(self, schedule_node, observer):
+    async def test_cancel(self, schedule_node, observer) -> None:
         """Cancel removes scheduled action."""
         # First schedule
         defer_result = await schedule_node.invoke(
@@ -572,7 +572,7 @@ class TestScheduleNode:
         assert cancel_result["status"] == "cancelled"
 
     @pytest.mark.asyncio
-    async def test_list(self, schedule_node, observer):
+    async def test_list(self, schedule_node, observer) -> None:
         """List returns scheduled actions."""
         # Schedule some actions
         await schedule_node.invoke("defer", observer, path="task1", delay=60)
@@ -586,15 +586,15 @@ class TestFutureNode:
     """Tests for FutureNode."""
 
     @pytest.fixture
-    def future_node(self):
+    def future_node(self) -> FutureNode:
         return FutureNode()
 
     @pytest.fixture
-    def observer(self):
+    def observer(self) -> MockUmwelt:
         return MockUmwelt(archetype="default")
 
     @pytest.mark.asyncio
-    async def test_forecast(self, future_node, observer):
+    async def test_forecast(self, future_node, observer) -> None:
         """Forecast returns probabilistic prediction."""
         result = await future_node.invoke(
             "forecast",
@@ -606,7 +606,7 @@ class TestFutureNode:
         assert "scenarios" in result["forecast"]
 
     @pytest.mark.asyncio
-    async def test_simulate(self, future_node, observer):
+    async def test_simulate(self, future_node, observer) -> None:
         """Simulate returns simulation steps."""
         result = await future_node.invoke(
             "simulate",
@@ -622,25 +622,25 @@ class TestTimeContextResolver:
     """Tests for TimeContextResolver."""
 
     @pytest.fixture
-    def resolver(self):
+    def resolver(self) -> "Resolver":
         return create_time_resolver()
 
-    def test_resolve_trace(self, resolver):
+    def test_resolve_trace(self, resolver) -> None:
         """Resolves time.trace."""
         node = resolver.resolve("trace", [])
         assert isinstance(node, TraceNode)
 
-    def test_resolve_past(self, resolver):
+    def test_resolve_past(self, resolver) -> None:
         """Resolves time.past."""
         node = resolver.resolve("past", [])
         assert isinstance(node, PastNode)
 
-    def test_resolve_future(self, resolver):
+    def test_resolve_future(self, resolver) -> None:
         """Resolves time.future."""
         node = resolver.resolve("future", [])
         assert isinstance(node, FutureNode)
 
-    def test_resolve_schedule(self, resolver):
+    def test_resolve_schedule(self, resolver) -> None:
         """Resolves time.schedule."""
         node = resolver.resolve("schedule", [])
         assert isinstance(node, ScheduleNode)
@@ -655,16 +655,16 @@ class TestLogosContextIntegration:
     """Test context resolvers integrated with Logos."""
 
     @pytest.fixture
-    def logos(self):
+    def logos(self) -> "Logos":
         from ..logos import create_logos
 
         return create_logos()
 
     @pytest.fixture
-    def observer(self):
+    def observer(self) -> MockUmwelt:
         return MockUmwelt(archetype="default")
 
-    def test_logos_has_five_resolvers(self, logos):
+    def test_logos_has_five_resolvers(self, logos) -> None:
         """Logos initializes with five context resolvers."""
         assert len(logos._context_resolvers) == 5
         assert "world" in logos._context_resolvers
@@ -673,39 +673,39 @@ class TestLogosContextIntegration:
         assert "void" in logos._context_resolvers
         assert "time" in logos._context_resolvers
 
-    def test_resolve_world_path(self, logos):
+    def test_resolve_world_path(self, logos) -> None:
         """Logos resolves world.* paths."""
         node = logos.resolve("world.house")
         assert node.handle == "world.house"
 
-    def test_resolve_self_path(self, logos):
+    def test_resolve_self_path(self, logos) -> None:
         """Logos resolves self.* paths."""
         node = logos.resolve("self.memory")
         assert node.handle == "self.memory"
 
-    def test_resolve_concept_path(self, logos):
+    def test_resolve_concept_path(self, logos) -> None:
         """Logos resolves concept.* paths."""
         node = logos.resolve("concept.justice")
         assert node.handle == "concept.justice"
 
-    def test_resolve_void_path(self, logos):
+    def test_resolve_void_path(self, logos) -> None:
         """Logos resolves void.* paths."""
         node = logos.resolve("void.entropy")
         assert node.handle == "void.entropy"
 
-    def test_resolve_time_path(self, logos):
+    def test_resolve_time_path(self, logos) -> None:
         """Logos resolves time.* paths."""
         node = logos.resolve("time.trace")
         assert node.handle == "time.trace"
 
     @pytest.mark.asyncio
-    async def test_invoke_world_manifest(self, logos, observer):
+    async def test_invoke_world_manifest(self, logos, observer) -> None:
         """Invoke world.*.manifest through Logos."""
         result = await logos.invoke("world.house.manifest", observer)
         assert result is not None
 
     @pytest.mark.asyncio
-    async def test_invoke_void_sip(self, logos, observer):
+    async def test_invoke_void_sip(self, logos, observer) -> None:
         """Invoke void.entropy.sip through Logos."""
         result = await logos.invoke("void.entropy.sip", observer, amount=1.0)
         assert "seed" in result

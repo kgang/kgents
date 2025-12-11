@@ -85,7 +85,7 @@ class TestDNA(BaseDNA):
 class TestUmwelt:
     """Test Umwelt type."""
 
-    def test_umwelt_creation(self):
+    def test_umwelt_creation(self) -> None:
         """Umwelt can be created with state, dna, gravity."""
         lens = key_lens("test")
         dna = TestDNA.germinate(name="test_agent")
@@ -100,7 +100,7 @@ class TestUmwelt:
         assert umwelt.dna.name == "test_agent"
         assert len(umwelt.gravity) == 1
 
-    def test_umwelt_is_grounded_passes(self):
+    def test_umwelt_is_grounded_passes(self) -> None:
         """is_grounded returns True when all contracts pass."""
         umwelt = Umwelt(
             state=identity_lens(),
@@ -110,7 +110,7 @@ class TestUmwelt:
 
         assert umwelt.is_grounded("any output") is True
 
-    def test_umwelt_is_grounded_fails(self):
+    def test_umwelt_is_grounded_fails(self) -> None:
         """is_grounded returns False when any contract fails."""
         umwelt = Umwelt(
             state=identity_lens(),
@@ -123,7 +123,7 @@ class TestUmwelt:
 
         assert umwelt.is_grounded("any output") is False
 
-    def test_umwelt_check_grounding_returns_violations(self):
+    def test_umwelt_check_grounding_returns_violations(self) -> None:
         """check_grounding returns list of violations."""
         umwelt = Umwelt(
             state=identity_lens(),
@@ -140,7 +140,7 @@ class TestUmwelt:
         assert any("Fail1" in v for v in violations)
         assert any("Fail2" in v for v in violations)
 
-    def test_umwelt_with_no_numbers_contract(self):
+    def test_umwelt_with_no_numbers_contract(self) -> None:
         """NoNumbers contract rejects numeric output."""
         umwelt = Umwelt(
             state=identity_lens(),
@@ -152,7 +152,7 @@ class TestUmwelt:
         assert umwelt.is_grounded("hello 123") is False
 
     @pytest.mark.asyncio
-    async def test_umwelt_get_without_storage_raises(self):
+    async def test_umwelt_get_without_storage_raises(self) -> None:
         """get() raises if storage not connected."""
         umwelt = Umwelt(
             state=identity_lens(),
@@ -164,7 +164,7 @@ class TestUmwelt:
             await umwelt.get()
 
     @pytest.mark.asyncio
-    async def test_umwelt_set_without_storage_raises(self):
+    async def test_umwelt_set_without_storage_raises(self) -> None:
         """set() raises if storage not connected."""
         umwelt = Umwelt(
             state=identity_lens(),
@@ -185,7 +185,7 @@ class TestLightweightUmwelt:
     """Test LightweightUmwelt for direct storage access."""
 
     @pytest.mark.asyncio
-    async def test_lightweight_get(self):
+    async def test_lightweight_get(self) -> None:
         """LightweightUmwelt.get() returns storage state."""
         storage = VolatileAgent(_state={"key": "value"})
         umwelt = LightweightUmwelt(
@@ -198,7 +198,7 @@ class TestLightweightUmwelt:
         assert state == {"key": "value"}
 
     @pytest.mark.asyncio
-    async def test_lightweight_set(self):
+    async def test_lightweight_set(self) -> None:
         """LightweightUmwelt.set() updates storage."""
         storage = VolatileAgent(_state={})
         umwelt = LightweightUmwelt(
@@ -211,7 +211,7 @@ class TestLightweightUmwelt:
         state = await umwelt.get()
         assert state == {"new": "state"}
 
-    def test_lightweight_is_grounded(self):
+    def test_lightweight_is_grounded(self) -> None:
         """LightweightUmwelt.is_grounded() checks contracts."""
         storage = VolatileAgent(_state={})
         umwelt = LightweightUmwelt(
@@ -233,7 +233,7 @@ class TestProjector:
     """Test Projector for creating Umwelts."""
 
     @pytest.mark.asyncio
-    async def test_projector_basic(self):
+    async def test_projector_basic(self) -> None:
         """Projector creates Umwelt with lens and DNA."""
         root = VolatileAgent(
             _state={
@@ -254,7 +254,7 @@ class TestProjector:
         assert state == {"persona": "curious"}
 
     @pytest.mark.asyncio
-    async def test_projector_custom_path(self):
+    async def test_projector_custom_path(self) -> None:
         """Projector accepts custom lens path."""
         root = VolatileAgent(
             _state={
@@ -277,7 +277,7 @@ class TestProjector:
         assert state == {"data": "test_data"}
 
     @pytest.mark.asyncio
-    async def test_projector_with_gravity(self):
+    async def test_projector_with_gravity(self) -> None:
         """Projector attaches gravity contracts."""
         root = VolatileAgent(_state={"agents": {"test": {}}})
         projector = Projector(root)
@@ -293,7 +293,7 @@ class TestProjector:
         assert umwelt.gravity[0].name == "NoNumbers"
 
     @pytest.mark.asyncio
-    async def test_projector_register_gravity(self):
+    async def test_projector_register_gravity(self) -> None:
         """Projector can register default gravity for agent types."""
         root = VolatileAgent(_state={"agents": {}})
         projector = Projector(root)
@@ -309,7 +309,7 @@ class TestProjector:
         assert len(umwelt.gravity) == 1
         assert umwelt.gravity[0].name == "KDefault"
 
-    def test_projector_validates_dna(self):
+    def test_projector_validates_dna(self) -> None:
         """Projector validates DNA constraints."""
         root = VolatileAgent(_state={})
         projector = Projector(root)
@@ -326,7 +326,7 @@ class TestProjector:
             projector.project(agent_id="test", dna=invalid_dna)
 
     @pytest.mark.asyncio
-    async def test_projector_state_write_through_lens(self):
+    async def test_projector_state_write_through_lens(self) -> None:
         """Umwelt state writes propagate through lens."""
         root = VolatileAgent(
             _state={
@@ -350,7 +350,7 @@ class TestProjector:
         assert root_state["agents"]["k"]["value"] == "updated"
 
     @pytest.mark.asyncio
-    async def test_projector_isolation(self):
+    async def test_projector_isolation(self) -> None:
         """Different agents have isolated views."""
         root = VolatileAgent(
             _state={
@@ -386,7 +386,7 @@ class TestProjectorLightweight:
     """Test Projector.project_lightweight()."""
 
     @pytest.mark.asyncio
-    async def test_project_lightweight(self):
+    async def test_project_lightweight(self) -> None:
         """project_lightweight creates LightweightUmwelt."""
         root = VolatileAgent(_state={})
         projector = Projector(root)
@@ -413,7 +413,7 @@ class TestHypotheticalProjector:
     """Test HypotheticalProjector for counter-factual worlds."""
 
     @pytest.mark.asyncio
-    async def test_hypothetical_from_snapshot(self):
+    async def test_hypothetical_from_snapshot(self) -> None:
         """HypotheticalProjector clones real world state."""
         real_root = VolatileAgent(
             _state={
@@ -439,7 +439,7 @@ class TestHypotheticalProjector:
         assert state == {"hypothesis": "original"}
 
     @pytest.mark.asyncio
-    async def test_hypothetical_isolated_from_real(self):
+    async def test_hypothetical_isolated_from_real(self) -> None:
         """Hypothetical modifications don't affect real world."""
         real_root = VolatileAgent(
             _state={
@@ -462,7 +462,7 @@ class TestHypotheticalProjector:
         assert real_state["agents"]["b"]["value"] == "real"
 
     @pytest.mark.asyncio
-    async def test_multiple_hypothetical_worlds(self):
+    async def test_multiple_hypothetical_worlds(self) -> None:
         """Can create multiple independent hypothetical worlds."""
         real_root = VolatileAgent(
             _state={
@@ -501,7 +501,7 @@ class TestLensComposition:
     """Test that Projector correctly composes lenses."""
 
     @pytest.mark.asyncio
-    async def test_deep_lens_path(self):
+    async def test_deep_lens_path(self) -> None:
         """Projector handles deep lens paths."""
         root = VolatileAgent(
             _state={
@@ -526,7 +526,7 @@ class TestLensComposition:
         assert state == {"deep_value": 42}
 
     @pytest.mark.asyncio
-    async def test_lens_write_deep(self):
+    async def test_lens_write_deep(self) -> None:
         """Deep lens writes propagate correctly."""
         root = VolatileAgent(
             _state={
@@ -559,7 +559,7 @@ class TestLensComposition:
 class TestContractIntegration:
     """Test contracts work correctly with Umwelt."""
 
-    def test_multiple_contracts_all_pass(self):
+    def test_multiple_contracts_all_pass(self) -> None:
         """Multiple passing contracts → grounded."""
         umwelt = Umwelt(
             state=identity_lens(),
@@ -574,7 +574,7 @@ class TestContractIntegration:
         assert umwelt.is_grounded("output") is True
         assert umwelt.check_grounding("output") == []
 
-    def test_one_contract_fails(self):
+    def test_one_contract_fails(self) -> None:
         """One failing contract → not grounded."""
         umwelt = Umwelt(
             state=identity_lens(),
@@ -591,7 +591,7 @@ class TestContractIntegration:
         assert len(violations) == 1
         assert "B" in violations[0]
 
-    def test_empty_gravity_always_grounded(self):
+    def test_empty_gravity_always_grounded(self) -> None:
         """No contracts → always grounded."""
         umwelt = Umwelt(
             state=identity_lens(),

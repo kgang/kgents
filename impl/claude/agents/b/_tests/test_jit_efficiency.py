@@ -92,7 +92,7 @@ def jump_table_input():
 class TestJITCompilationTarget:
     """Tests for JITCompilationTarget enum."""
 
-    def test_target_values(self):
+    def test_target_values(self) -> None:
         """Test all target values exist."""
         assert JITCompilationTarget.BYTECODE.value == "bytecode"
         assert JITCompilationTarget.REGEX.value == "regex"
@@ -100,7 +100,7 @@ class TestJITCompilationTarget:
         assert JITCompilationTarget.C.value == "c"
         assert JITCompilationTarget.LLVM.value == "llvm"
 
-    def test_all_targets_unique(self):
+    def test_all_targets_unique(self) -> None:
         """Test all target values are unique."""
         values = [t.value for t in JITCompilationTarget]
         assert len(values) == len(set(values))
@@ -109,7 +109,7 @@ class TestJITCompilationTarget:
 class TestOptimizationLevel:
     """Tests for OptimizationLevel enum."""
 
-    def test_level_values(self):
+    def test_level_values(self) -> None:
         """Test all level values exist."""
         assert OptimizationLevel.NONE.value == "none"
         assert OptimizationLevel.BASIC.value == "basic"
@@ -124,7 +124,7 @@ class TestOptimizationLevel:
 class TestLatencyMeasurement:
     """Tests for LatencyMeasurement dataclass."""
 
-    def test_create_measurement(self):
+    def test_create_measurement(self) -> None:
         """Test creating a measurement."""
         m = LatencyMeasurement(
             parse_time_ns=1_000_000,
@@ -137,7 +137,7 @@ class TestLatencyMeasurement:
         assert m.total_time_ns == 1_500_000
         assert m.input_size_bytes == 32
 
-    def test_parse_time_ms(self):
+    def test_parse_time_ms(self) -> None:
         """Test parse_time_ms property."""
         m = LatencyMeasurement(
             parse_time_ns=1_500_000,
@@ -147,7 +147,7 @@ class TestLatencyMeasurement:
         )
         assert m.parse_time_ms == 1.5
 
-    def test_total_time_ms(self):
+    def test_total_time_ms(self) -> None:
         """Test total_time_ms property."""
         m = LatencyMeasurement(
             parse_time_ns=1_000_000,
@@ -166,7 +166,7 @@ class TestLatencyMeasurement:
 class TestLatencyReport:
     """Tests for LatencyReport dataclass."""
 
-    def test_create_report(self):
+    def test_create_report(self) -> None:
         """Test creating a report."""
         report = LatencyReport(
             baseline_ms=10.0,
@@ -183,7 +183,7 @@ class TestLatencyReport:
         assert report.jit_ms == 1.0
         assert report.speedup_factor == 10.0
 
-    def test_from_benchmarks(self):
+    def test_from_benchmarks(self) -> None:
         """Test creating report from measurements."""
         baseline = [
             LatencyMeasurement(10_000_000, 0, 10_000_000, 10),
@@ -203,12 +203,12 @@ class TestLatencyReport:
         assert report.reduction_ms == pytest.approx(9.9, abs=0.01)
         assert report.speedup_factor == pytest.approx(10.0, abs=0.5)
 
-    def test_from_benchmarks_empty_raises(self):
+    def test_from_benchmarks_empty_raises(self) -> None:
         """Test that empty measurements raise error."""
         with pytest.raises(ValueError, match="Need at least one"):
             LatencyReport.from_benchmarks([], [], JITCompilationTarget.REGEX)
 
-    def test_to_dict(self):
+    def test_to_dict(self) -> None:
         """Test serialization to dict."""
         report = LatencyReport(
             baseline_ms=10.0,
@@ -234,7 +234,7 @@ class TestLatencyReport:
 class TestCompilationConfig:
     """Tests for CompilationConfig dataclass."""
 
-    def test_default_config(self):
+    def test_default_config(self) -> None:
         """Test default configuration."""
         config = CompilationConfig()
         assert config.target == JITCompilationTarget.REGEX
@@ -242,7 +242,7 @@ class TestCompilationConfig:
         assert config.inline_semantics is True
         assert config.cache_enabled is True
 
-    def test_custom_config(self):
+    def test_custom_config(self) -> None:
         """Test custom configuration."""
         config = CompilationConfig(
             target=JITCompilationTarget.BYTECODE,
@@ -262,7 +262,7 @@ class TestCompilationConfig:
 class TestRegexJITCompiler:
     """Tests for RegexJITCompiler."""
 
-    def test_compile_simple_regex(self):
+    def test_compile_simple_regex(self) -> None:
         """Test compiling a simple regex."""
         compiler = RegexJITCompiler()
         config = CompilationConfig(target=JITCompilationTarget.REGEX)
@@ -273,7 +273,7 @@ class TestRegexJITCompiler:
         assert artifact.compilation_time_ms >= 0
         assert artifact.parse_fn is not None
 
-    def test_compiled_parse_success(self, bid_grammar, bid_inputs):
+    def test_compiled_parse_success(self, bid_grammar, bid_inputs) -> None:
         """Test that compiled parser works correctly."""
         compiler = RegexJITCompiler()
         config = CompilationConfig()
@@ -286,7 +286,7 @@ class TestRegexJITCompiler:
         assert result["price"] == "100.50"
         assert result["timestamp"] == "1234567890"
 
-    def test_compiled_parse_failure(self, bid_grammar):
+    def test_compiled_parse_failure(self, bid_grammar) -> None:
         """Test that compiled parser returns None on failure."""
         compiler = RegexJITCompiler()
         config = CompilationConfig()
@@ -296,7 +296,7 @@ class TestRegexJITCompiler:
 
         assert result is None
 
-    def test_cache_hit(self):
+    def test_cache_hit(self) -> None:
         """Test that caching works."""
         compiler = RegexJITCompiler()
         config = CompilationConfig(cache_enabled=True)
@@ -307,7 +307,7 @@ class TestRegexJITCompiler:
         # Same artifact returned from cache
         assert artifact1 is artifact2
 
-    def test_cache_disabled(self):
+    def test_cache_disabled(self) -> None:
         """Test that caching can be disabled."""
         compiler = RegexJITCompiler()
         config = CompilationConfig(cache_enabled=False)
@@ -318,7 +318,7 @@ class TestRegexJITCompiler:
         # Different artifacts
         assert artifact1 is not artifact2
 
-    def test_supports_grammar_level(self):
+    def test_supports_grammar_level(self) -> None:
         """Test grammar level support."""
         compiler = RegexJITCompiler()
         assert compiler.supports_grammar_level("schema") is True
@@ -334,7 +334,7 @@ class TestRegexJITCompiler:
 class TestJumpTableJITCompiler:
     """Tests for JumpTableJITCompiler."""
 
-    def test_compile_jump_table(self, jump_table_grammar):
+    def test_compile_jump_table(self, jump_table_grammar) -> None:
         """Test compiling a jump table spec."""
         compiler = JumpTableJITCompiler()
         config = CompilationConfig(target=JITCompilationTarget.JUMP_TABLE)
@@ -344,7 +344,7 @@ class TestJumpTableJITCompiler:
         assert artifact.target == JITCompilationTarget.JUMP_TABLE
         assert artifact.parse_fn is not None
 
-    def test_compiled_parse_success(self, jump_table_grammar, jump_table_input):
+    def test_compiled_parse_success(self, jump_table_grammar, jump_table_input) -> None:
         """Test that jump table parser works."""
         compiler = JumpTableJITCompiler()
         config = CompilationConfig()
@@ -357,7 +357,7 @@ class TestJumpTableJITCompiler:
         assert "price" in result
         assert "timestamp" in result
 
-    def test_invalid_field_spec(self):
+    def test_invalid_field_spec(self) -> None:
         """Test that invalid spec raises error."""
         compiler = JumpTableJITCompiler()
         config = CompilationConfig()
@@ -365,7 +365,7 @@ class TestJumpTableJITCompiler:
         with pytest.raises(ValueError, match="Invalid field spec"):
             compiler.compile("invalid", config)
 
-    def test_supports_grammar_level(self):
+    def test_supports_grammar_level(self) -> None:
         """Test grammar level support."""
         compiler = JumpTableJITCompiler()
         assert compiler.supports_grammar_level("schema") is True
@@ -381,7 +381,7 @@ class TestJumpTableJITCompiler:
 class TestBytecodeJITCompiler:
     """Tests for BytecodeJITCompiler."""
 
-    def test_compile_bytecode(self, bid_grammar):
+    def test_compile_bytecode(self, bid_grammar) -> None:
         """Test compiling to bytecode."""
         compiler = BytecodeJITCompiler()
         config = CompilationConfig(target=JITCompilationTarget.BYTECODE)
@@ -391,7 +391,7 @@ class TestBytecodeJITCompiler:
         assert artifact.target == JITCompilationTarget.BYTECODE
         assert artifact.parse_fn is not None
 
-    def test_compiled_parse_success(self, bid_grammar, bid_inputs):
+    def test_compiled_parse_success(self, bid_grammar, bid_inputs) -> None:
         """Test that bytecode parser works."""
         compiler = BytecodeJITCompiler()
         config = CompilationConfig()
@@ -402,7 +402,7 @@ class TestBytecodeJITCompiler:
         assert result is not None
         assert result["agent_id"] == "abc12345"
 
-    def test_supports_grammar_level(self):
+    def test_supports_grammar_level(self) -> None:
         """Test grammar level support."""
         compiler = BytecodeJITCompiler()
         assert compiler.supports_grammar_level("schema") is True
@@ -418,31 +418,31 @@ class TestBytecodeJITCompiler:
 class TestJITCompilerRegistry:
     """Tests for JITCompilerRegistry."""
 
-    def test_get_regex_compiler(self):
+    def test_get_regex_compiler(self) -> None:
         """Test getting regex compiler."""
         registry = JITCompilerRegistry()
         compiler = registry.get_compiler(JITCompilationTarget.REGEX)
         assert isinstance(compiler, RegexJITCompiler)
 
-    def test_get_jump_table_compiler(self):
+    def test_get_jump_table_compiler(self) -> None:
         """Test getting jump table compiler."""
         registry = JITCompilerRegistry()
         compiler = registry.get_compiler(JITCompilationTarget.JUMP_TABLE)
         assert isinstance(compiler, JumpTableJITCompiler)
 
-    def test_get_bytecode_compiler(self):
+    def test_get_bytecode_compiler(self) -> None:
         """Test getting bytecode compiler."""
         registry = JITCompilerRegistry()
         compiler = registry.get_compiler(JITCompilationTarget.BYTECODE)
         assert isinstance(compiler, BytecodeJITCompiler)
 
-    def test_unavailable_target_raises(self):
+    def test_unavailable_target_raises(self) -> None:
         """Test that unavailable target raises error."""
         registry = JITCompilerRegistry()
         with pytest.raises(ValueError, match="No compiler"):
             registry.get_compiler(JITCompilationTarget.C)
 
-    def test_register_custom_compiler(self):
+    def test_register_custom_compiler(self) -> None:
         """Test registering a custom compiler."""
         registry = JITCompilerRegistry()
 
@@ -458,7 +458,7 @@ class TestJITCompilerRegistry:
         compiler = registry.get_compiler(JITCompilationTarget.C)
         assert isinstance(compiler, MockCompiler)
 
-    def test_available_targets(self):
+    def test_available_targets(self) -> None:
         """Test listing available targets."""
         registry = JITCompilerRegistry()
         targets = registry.available_targets
@@ -475,7 +475,7 @@ class TestJITCompilerRegistry:
 class TestCompiledTongue:
     """Tests for CompiledTongue."""
 
-    def test_create_compiled_tongue(self, bid_grammar):
+    def test_create_compiled_tongue(self, bid_grammar) -> None:
         """Test creating a compiled tongue."""
         compiler = RegexJITCompiler()
         config = CompilationConfig()
@@ -492,7 +492,7 @@ class TestCompiledTongue:
         assert tongue.tongue_version == "1.0.0"
         assert tongue.usage_count == 0
 
-    def test_parse_increments_usage(self, bid_grammar, bid_inputs):
+    def test_parse_increments_usage(self, bid_grammar, bid_inputs) -> None:
         """Test that parse increments usage count."""
         compiler = RegexJITCompiler()
         config = CompilationConfig()
@@ -511,7 +511,7 @@ class TestCompiledTongue:
         tongue.parse(bid_inputs[1])
         assert tongue.usage_count == 2
 
-    def test_parse_returns_dict(self, bid_grammar, bid_inputs):
+    def test_parse_returns_dict(self, bid_grammar, bid_inputs) -> None:
         """Test parse returns proper dict."""
         compiler = RegexJITCompiler()
         config = CompilationConfig()
@@ -529,7 +529,7 @@ class TestCompiledTongue:
         assert result["ast"] is not None
         assert result["error"] is None
 
-    def test_parse_failure(self, bid_grammar):
+    def test_parse_failure(self, bid_grammar) -> None:
         """Test parse failure returns proper dict."""
         compiler = RegexJITCompiler()
         config = CompilationConfig()
@@ -547,7 +547,7 @@ class TestCompiledTongue:
         # so success is True but ast is None
         assert result["ast"] is None
 
-    def test_compiled_key(self, bid_grammar):
+    def test_compiled_key(self, bid_grammar) -> None:
         """Test compiled_key property."""
         compiler = RegexJITCompiler()
         config = CompilationConfig(target=JITCompilationTarget.REGEX)
@@ -571,7 +571,7 @@ class TestCompiledTongue:
 class TestLatencyBenchmark:
     """Tests for LatencyBenchmark."""
 
-    def test_measure_single(self, bid_grammar, bid_inputs):
+    def test_measure_single(self, bid_grammar, bid_inputs) -> None:
         """Test single measurement."""
         compiler = RegexJITCompiler()
         config = CompilationConfig()
@@ -584,7 +584,7 @@ class TestLatencyBenchmark:
         assert measurement.total_time_ns > 0
         assert measurement.input_size_bytes > 0
 
-    def test_benchmark_parser(self, bid_grammar, bid_inputs):
+    def test_benchmark_parser(self, bid_grammar, bid_inputs) -> None:
         """Test benchmarking a parser."""
         compiler = RegexJITCompiler()
         config = CompilationConfig()
@@ -601,7 +601,7 @@ class TestLatencyBenchmark:
         assert len(measurements) > 0
         assert all(m.parse_time_ns > 0 for m in measurements)
 
-    def test_compare_parsers(self, bid_grammar, bid_inputs):
+    def test_compare_parsers(self, bid_grammar, bid_inputs) -> None:
         """Test comparing baseline and JIT parsers."""
         import re
 
@@ -643,14 +643,14 @@ class TestLatencyBenchmark:
 class TestProfitShare:
     """Tests for ProfitShare."""
 
-    def test_default_shares(self):
+    def test_default_shares(self) -> None:
         """Test default profit shares."""
         share = ProfitShare()
         assert share.g_gent_share == 0.30
         assert share.j_gent_share == 0.30
         assert share.system_share == 0.40
 
-    def test_custom_shares(self):
+    def test_custom_shares(self) -> None:
         """Test custom profit shares."""
         share = ProfitShare(
             g_gent_share=0.40,
@@ -659,12 +659,12 @@ class TestProfitShare:
         )
         assert share.g_gent_share == 0.40
 
-    def test_invalid_shares_raises(self):
+    def test_invalid_shares_raises(self) -> None:
         """Test that invalid shares raise error."""
         with pytest.raises(ValueError, match="sum to 1.0"):
             ProfitShare(g_gent_share=0.5, j_gent_share=0.5, system_share=0.5)
 
-    def test_allocate(self):
+    def test_allocate(self) -> None:
         """Test profit allocation."""
         share = ProfitShare()
         allocation = share.allocate(1000.0)
@@ -682,14 +682,14 @@ class TestProfitShare:
 class TestProfitSharingLedger:
     """Tests for ProfitSharingLedger."""
 
-    def test_create_ledger(self):
+    def test_create_ledger(self) -> None:
         """Test creating a ledger."""
         ledger = ProfitSharingLedger()
         assert ledger.get_balance("g_gent") == 0.0
         assert ledger.get_balance("j_gent") == 0.0
         assert ledger.get_balance("system") == 0.0
 
-    def test_record_profit(self):
+    def test_record_profit(self) -> None:
         """Test recording profit."""
         ledger = ProfitSharingLedger()
         report = LatencyReport(
@@ -711,7 +711,7 @@ class TestProfitSharingLedger:
         assert entry.j_gent_credit == 300.0  # 30%
         assert entry.system_credit == 400.0  # 40%
 
-    def test_balances_updated(self):
+    def test_balances_updated(self) -> None:
         """Test that balances are updated after recording."""
         ledger = ProfitSharingLedger()
         report = LatencyReport(
@@ -732,7 +732,7 @@ class TestProfitSharingLedger:
         assert ledger.get_balance("j_gent") == 300.0
         assert ledger.get_balance("system") == 400.0
 
-    def test_multiple_entries(self):
+    def test_multiple_entries(self) -> None:
         """Test multiple profit entries."""
         ledger = ProfitSharingLedger()
         report = LatencyReport(
@@ -753,7 +753,7 @@ class TestProfitSharingLedger:
         assert ledger.get_total_value_created() == 2000.0
         assert ledger.get_balance("g_gent") == 600.0
 
-    def test_get_entries_for_tongue(self):
+    def test_get_entries_for_tongue(self) -> None:
         """Test getting entries for specific tongue."""
         ledger = ProfitSharingLedger()
         report = LatencyReport(
@@ -775,7 +775,7 @@ class TestProfitSharingLedger:
         entries = ledger.get_entries_for_tongue("Tongue1")
         assert len(entries) == 2
 
-    def test_get_summary(self):
+    def test_get_summary(self) -> None:
         """Test getting ledger summary."""
         ledger = ProfitSharingLedger()
         report = LatencyReport(
@@ -806,13 +806,13 @@ class TestProfitSharingLedger:
 class TestTongueUsageStats:
     """Tests for TongueUsageStats."""
 
-    def test_create_stats(self):
+    def test_create_stats(self) -> None:
         """Test creating usage stats."""
         stats = TongueUsageStats(tongue_name="TestTongue")
         assert stats.parse_count == 0
         assert stats.avg_latency_ns == 0.0
 
-    def test_record_parse(self):
+    def test_record_parse(self) -> None:
         """Test recording parse operations."""
         stats = TongueUsageStats(tongue_name="TestTongue")
         stats.record_parse(1_000_000)
@@ -824,7 +824,7 @@ class TestTongueUsageStats:
         assert stats.max_latency_ns == 2_000_000
         assert stats.min_latency_ns == 1_000_000
 
-    def test_avg_latency_ms(self):
+    def test_avg_latency_ms(self) -> None:
         """Test avg_latency_ms property."""
         stats = TongueUsageStats(tongue_name="TestTongue")
         stats.record_parse(1_500_000)  # 1.5ms
@@ -840,13 +840,13 @@ class TestTongueUsageStats:
 class TestJITEfficiencyMonitor:
     """Tests for JITEfficiencyMonitor."""
 
-    def test_create_monitor(self):
+    def test_create_monitor(self) -> None:
         """Test creating a monitor."""
         monitor = JITEfficiencyMonitor()
         assert monitor.latency_threshold_ms == 1.0
         assert monitor.usage_threshold == 100
 
-    def test_custom_thresholds(self):
+    def test_custom_thresholds(self) -> None:
         """Test custom thresholds."""
         monitor = JITEfficiencyMonitor(
             latency_threshold_ms=0.5,
@@ -855,7 +855,7 @@ class TestJITEfficiencyMonitor:
         assert monitor.latency_threshold_ms == 0.5
         assert monitor.usage_threshold == 50
 
-    def test_record_parse(self):
+    def test_record_parse(self) -> None:
         """Test recording parse operations."""
         monitor = JITEfficiencyMonitor()
         monitor.record_parse("TestTongue", 1_000_000)
@@ -865,7 +865,7 @@ class TestJITEfficiencyMonitor:
         assert stats is not None
         assert stats.parse_count == 2
 
-    def test_identify_opportunities(self):
+    def test_identify_opportunities(self) -> None:
         """Test identifying JIT opportunities."""
         monitor = JITEfficiencyMonitor(
             latency_threshold_ms=1.0,
@@ -880,7 +880,7 @@ class TestJITEfficiencyMonitor:
         assert len(opportunities) == 1
         assert opportunities[0].tongue_name == "SlowTongue"
 
-    def test_no_opportunities_below_threshold(self):
+    def test_no_opportunities_below_threshold(self) -> None:
         """Test that tongues below thresholds are not identified."""
         monitor = JITEfficiencyMonitor(
             latency_threshold_ms=1.0,
@@ -894,7 +894,7 @@ class TestJITEfficiencyMonitor:
         opportunities = monitor.identify_opportunities()
         assert len(opportunities) == 0
 
-    def test_compile_tongue(self, bid_grammar):
+    def test_compile_tongue(self, bid_grammar) -> None:
         """Test compiling a tongue."""
         monitor = JITEfficiencyMonitor()
         compiled = monitor.compile_tongue(
@@ -906,7 +906,7 @@ class TestJITEfficiencyMonitor:
         assert compiled.tongue_name == "BidTongue"
         assert compiled.tongue_version == "1.0.0"
 
-    def test_get_compiled_tongue(self, bid_grammar):
+    def test_get_compiled_tongue(self, bid_grammar) -> None:
         """Test getting a compiled tongue."""
         monitor = JITEfficiencyMonitor()
         monitor.compile_tongue("BidTongue", "1.0.0", bid_grammar)
@@ -915,7 +915,7 @@ class TestJITEfficiencyMonitor:
         assert compiled is not None
         assert compiled.tongue_name == "BidTongue"
 
-    def test_benchmark_and_credit(self, bid_grammar, bid_inputs):
+    def test_benchmark_and_credit(self, bid_grammar, bid_inputs) -> None:
         """Test benchmarking and crediting."""
         import re
 
@@ -936,7 +936,7 @@ class TestJITEfficiencyMonitor:
         assert report.sample_count > 0
         assert entry.tongue_name == "BidTongue"
 
-    def test_get_summary(self, bid_grammar):
+    def test_get_summary(self, bid_grammar) -> None:
         """Test getting monitor summary."""
         monitor = JITEfficiencyMonitor()
         monitor.record_parse("TestTongue", 1_000_000)
@@ -955,7 +955,7 @@ class TestJITEfficiencyMonitor:
 class TestHFTongueSpec:
     """Tests for HFTongueSpec."""
 
-    def test_create_spec(self):
+    def test_create_spec(self) -> None:
         """Test creating a spec."""
         spec = HFTongueSpec(
             domain="Test",
@@ -964,7 +964,7 @@ class TestHFTongueSpec:
         assert spec.domain == "Test"
         assert len(spec.fields) == 2
 
-    def test_to_regex(self):
+    def test_to_regex(self) -> None:
         """Test converting to regex."""
         spec = HFTongueSpec(
             domain="Test",
@@ -976,7 +976,7 @@ class TestHFTongueSpec:
         assert "(?P<num>[0-9]+)" in regex
         assert ":" in regex
 
-    def test_to_jump_table_spec(self):
+    def test_to_jump_table_spec(self) -> None:
         """Test converting to jump table spec."""
         spec = HFTongueSpec(
             domain="Test",
@@ -995,12 +995,12 @@ class TestHFTongueSpec:
 class TestHFTongueBuilder:
     """Tests for HFTongueBuilder."""
 
-    def test_create_builder(self):
+    def test_create_builder(self) -> None:
         """Test creating a builder."""
         builder = HFTongueBuilder()
         assert builder.monitor is not None
 
-    def test_build_from_spec(self):
+    def test_build_from_spec(self) -> None:
         """Test building from spec."""
         spec = HFTongueSpec(
             domain="Test",
@@ -1011,7 +1011,7 @@ class TestHFTongueBuilder:
 
         assert compiled.tongue_name == "Test"
 
-    def test_build_bid_tongue(self):
+    def test_build_bid_tongue(self) -> None:
         """Test building standard bid tongue."""
         builder = HFTongueBuilder()
         compiled = builder.build_bid_tongue()
@@ -1020,7 +1020,7 @@ class TestHFTongueBuilder:
         result = compiled.parse("abc12345:100.50:1234567890")
         assert result["success"] is True
 
-    def test_build_tick_tongue(self):
+    def test_build_tick_tongue(self) -> None:
         """Test building tick tongue."""
         builder = HFTongueBuilder()
         compiled = builder.build_tick_tongue()
@@ -1029,7 +1029,7 @@ class TestHFTongueBuilder:
         result = compiled.parse("AAPL:100.1234:10000:1234567890123")
         assert result["success"] is True
 
-    def test_build_order_tongue(self):
+    def test_build_order_tongue(self) -> None:
         """Test building order tongue."""
         builder = HFTongueBuilder()
         compiled = builder.build_order_tongue()
@@ -1047,7 +1047,7 @@ class TestHFTongueBuilder:
 class TestConvenienceFunctions:
     """Tests for convenience functions."""
 
-    def test_create_jit_monitor(self):
+    def test_create_jit_monitor(self) -> None:
         """Test create_jit_monitor."""
         monitor = create_jit_monitor(
             latency_threshold_ms=0.5,
@@ -1056,7 +1056,7 @@ class TestConvenienceFunctions:
         assert monitor.latency_threshold_ms == 0.5
         assert monitor.usage_threshold == 50
 
-    def test_compile_grammar_jit(self):
+    def test_compile_grammar_jit(self) -> None:
         """Test compile_grammar_jit."""
         compiled = compile_grammar_jit(
             grammar=r"(?P<x>[a-z]+)",
@@ -1067,7 +1067,7 @@ class TestConvenienceFunctions:
         result = compiled.parse("hello")
         assert result["success"] is True
 
-    def test_benchmark_jit_speedup(self):
+    def test_benchmark_jit_speedup(self) -> None:
         """Test benchmark_jit_speedup."""
         import re
 
@@ -1088,12 +1088,12 @@ class TestConvenienceFunctions:
 
         assert report.sample_count > 0
 
-    def test_create_hf_tongue_builder(self):
+    def test_create_hf_tongue_builder(self) -> None:
         """Test create_hf_tongue_builder."""
         builder = create_hf_tongue_builder()
         assert isinstance(builder, HFTongueBuilder)
 
-    def test_estimate_jit_value(self):
+    def test_estimate_jit_value(self) -> None:
         """Test estimate_jit_value."""
         estimate = estimate_jit_value(
             current_latency_ms=10.0,
@@ -1116,7 +1116,7 @@ class TestConvenienceFunctions:
 class TestIntegration:
     """Integration tests for the full JIT efficiency pipeline."""
 
-    def test_full_pipeline(self, bid_grammar, bid_inputs):
+    def test_full_pipeline(self, bid_grammar, bid_inputs) -> None:
         """Test full JIT efficiency pipeline."""
         import re
 
@@ -1167,7 +1167,7 @@ class TestIntegration:
         # Total value created recorded
         assert isinstance(monitor.ledger.get_total_value_created(), float)
 
-    def test_hf_tongue_end_to_end(self):
+    def test_hf_tongue_end_to_end(self) -> None:
         """Test HF tongue creation end-to-end."""
         # Create builder with monitor
         monitor = create_jit_monitor()
@@ -1202,7 +1202,7 @@ class TestIntegration:
 class TestEdgeCases:
     """Tests for edge cases and error handling."""
 
-    def test_zero_latency_report(self):
+    def test_zero_latency_report(self) -> None:
         """Test report with zero latency."""
         measurements = [
             LatencyMeasurement(0, 0, 0, 10),
@@ -1214,7 +1214,7 @@ class TestEdgeCases:
         )
         assert report.speedup_factor == float("inf") or report.speedup_factor == 1.0
 
-    def test_empty_test_inputs(self):
+    def test_empty_test_inputs(self) -> None:
         """Test benchmarking with empty inputs."""
         import re
 
@@ -1229,7 +1229,7 @@ class TestEdgeCases:
         measurements = benchmark.benchmark_parser(baseline, [])
         assert len(measurements) == 0
 
-    def test_malformed_jump_table_input(self):
+    def test_malformed_jump_table_input(self) -> None:
         """Test jump table parser with malformed input."""
         compiler = JumpTableJITCompiler()
         config = CompilationConfig()
@@ -1238,17 +1238,17 @@ class TestEdgeCases:
         result = artifact.parse_fn("")  # Empty input
         assert result == {} or len(result) == 0
 
-    def test_negative_profit_share_invalid(self):
+    def test_negative_profit_share_invalid(self) -> None:
         """Test that negative profit shares are rejected."""
         with pytest.raises(ValueError):
             ProfitShare(g_gent_share=-0.1, j_gent_share=0.5, system_share=0.6)
 
-    def test_unknown_agent_balance(self):
+    def test_unknown_agent_balance(self) -> None:
         """Test getting balance for unknown agent."""
         ledger = ProfitSharingLedger()
         assert ledger.get_balance("unknown_agent") == 0.0
 
-    def test_compiled_tongue_timestamp(self, bid_grammar):
+    def test_compiled_tongue_timestamp(self, bid_grammar) -> None:
         """Test that compiled tongue has timestamp."""
         monitor = JITEfficiencyMonitor()
         compiled = monitor.compile_tongue("Test", "1.0", bid_grammar)
@@ -1266,7 +1266,7 @@ class TestEdgeCases:
 class TestPerformance:
     """Performance tests (marked slow for selective running)."""
 
-    def test_jit_speedup_measurable(self, bid_grammar, bid_inputs):
+    def test_jit_speedup_measurable(self, bid_grammar, bid_inputs) -> None:
         """Test that JIT provides measurable speedup."""
         import re
 
@@ -1300,7 +1300,7 @@ class TestPerformance:
         # JIT should be at least comparable (within 10x)
         assert report.speedup_factor > 0.1
 
-    def test_many_tongue_compilations(self):
+    def test_many_tongue_compilations(self) -> None:
         """Test compiling many tongues."""
         monitor = JITEfficiencyMonitor()
 

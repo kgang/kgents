@@ -11,7 +11,7 @@ from agents.p.strategies.probabilistic_ast import (
 class TestDirectParsing:
     """Test parsing valid JSON with high confidence."""
 
-    def test_parse_valid_json(self):
+    def test_parse_valid_json(self) -> None:
         """Test parsing valid JSON gets confidence=1.0."""
         parser = ProbabilisticASTParser()
         result = parser.parse('{"name": "test", "count": 42}')
@@ -20,7 +20,7 @@ class TestDirectParsing:
         assert result.confidence == 1.0
         assert result.value.type == "object"
 
-    def test_parse_array(self):
+    def test_parse_array(self) -> None:
         """Test parsing JSON array."""
         parser = ProbabilisticASTParser()
         result = parser.parse("[1, 2, 3]")
@@ -29,7 +29,7 @@ class TestDirectParsing:
         assert result.value.type == "array"
         assert len(result.value.children) == 3
 
-    def test_parse_nested_structure(self):
+    def test_parse_nested_structure(self) -> None:
         """Test parsing nested JSON."""
         parser = ProbabilisticASTParser()
         result = parser.parse('{"data": {"items": [1, 2]}}')
@@ -42,7 +42,7 @@ class TestDirectParsing:
 class TestRepairedParsing:
     """Test parsing malformed JSON with repairs."""
 
-    def test_parse_trailing_comma(self):
+    def test_parse_trailing_comma(self) -> None:
         """Test repair of trailing comma."""
         parser = ProbabilisticASTParser()
         result = parser.parse('{"name": "test",}')
@@ -51,7 +51,7 @@ class TestRepairedParsing:
         assert result.confidence < 1.0  # Reduced due to repair
         assert "trailing comma" in result.repairs[0].lower()
 
-    def test_parse_unclosed_brace(self):
+    def test_parse_unclosed_brace(self) -> None:
         """Test repair of unclosed brace."""
         parser = ProbabilisticASTParser()
         result = parser.parse('{"name": "test"')
@@ -60,7 +60,7 @@ class TestRepairedParsing:
         assert result.confidence < 1.0
         assert any("brace" in r.lower() for r in result.repairs)
 
-    def test_parse_unclosed_bracket(self):
+    def test_parse_unclosed_bracket(self) -> None:
         """Test repair of unclosed bracket."""
         parser = ProbabilisticASTParser()
         result = parser.parse("[1, 2, 3")
@@ -72,7 +72,7 @@ class TestRepairedParsing:
 class TestHeuristicExtraction:
     """Test fallback heuristic extraction."""
 
-    def test_extract_key_value_pairs(self):
+    def test_extract_key_value_pairs(self) -> None:
         """Test heuristic extraction of key-value pairs."""
         parser = ProbabilisticASTParser()
         text = """
@@ -92,7 +92,7 @@ class TestHeuristicExtraction:
 class TestConfidenceScoring:
     """Test per-node confidence scoring."""
 
-    def test_valid_parse_has_high_confidence(self):
+    def test_valid_parse_has_high_confidence(self) -> None:
         """Test valid parse has confidence=1.0."""
         parser = ProbabilisticASTParser()
         result = parser.parse('{"x": 1}')
@@ -102,7 +102,7 @@ class TestConfidenceScoring:
         for child in result.value.children:
             assert child.confidence == 1.0
 
-    def test_repaired_parse_has_lower_confidence(self):
+    def test_repaired_parse_has_lower_confidence(self) -> None:
         """Test repaired parse has reduced confidence."""
         parser = ProbabilisticASTParser()
         result = parser.parse('{"x": 1,}')  # Trailing comma
@@ -111,7 +111,7 @@ class TestConfidenceScoring:
         assert result.value.confidence < 1.0
         assert result.value.confidence >= 0.5  # Still reasonable
 
-    def test_children_inherit_confidence(self):
+    def test_children_inherit_confidence(self) -> None:
         """Test child nodes inherit parent confidence."""
         parser = ProbabilisticASTParser()
         result = parser.parse('{"a": 1}')  # Trailing comma
@@ -125,7 +125,7 @@ class TestConfidenceScoring:
 class TestNodeMethods:
     """Test ProbabilisticASTNode methods."""
 
-    def test_node_to_dict(self):
+    def test_node_to_dict(self) -> None:
         """Test node serialization to dict."""
         node = ProbabilisticASTNode(
             type="string", value="test", confidence=0.9, path="root.name"
@@ -137,7 +137,7 @@ class TestNodeMethods:
         assert d["confidence"] == 0.9
         assert d["path"] == "root.name"
 
-    def test_get_confident_value_above_threshold(self):
+    def test_get_confident_value_above_threshold(self) -> None:
         """Test extracting value above confidence threshold."""
         node = ProbabilisticASTNode(
             type="string", value="test", confidence=0.9, path="root.name"
@@ -146,7 +146,7 @@ class TestNodeMethods:
         val = node.get_confident_value(min_confidence=0.8)
         assert val == "test"
 
-    def test_get_confident_value_below_threshold(self):
+    def test_get_confident_value_below_threshold(self) -> None:
         """Test value below threshold returns None."""
         node = ProbabilisticASTNode(
             type="string", value="test", confidence=0.5, path="root.name"
@@ -159,7 +159,7 @@ class TestNodeMethods:
 class TestQueryConfidentFields:
     """Test querying only high-confidence fields."""
 
-    def test_query_all_confident(self):
+    def test_query_all_confident(self) -> None:
         """Test querying when all fields confident."""
         parser = ProbabilisticASTParser()
         result = parser.parse('{"name": "test", "count": 42}')
@@ -168,7 +168,7 @@ class TestQueryConfidentFields:
         assert confident is not None
         assert "name" in confident or isinstance(confident, dict)
 
-    def test_query_filters_low_confidence(self):
+    def test_query_filters_low_confidence(self) -> None:
         """Test low-confidence fields are filtered."""
         parser = ProbabilisticASTParser()
         result = parser.parse('{"name": "test",}')  # Will be repaired
@@ -182,7 +182,7 @@ class TestQueryConfidentFields:
 class TestLowConfidencePaths:
     """Test finding low-confidence paths."""
 
-    def test_find_low_confidence_paths(self):
+    def test_find_low_confidence_paths(self) -> None:
         """Test finding paths with low confidence."""
         parser = ProbabilisticASTParser()
         result = parser.parse('{"name": "test",}')  # Repaired
@@ -192,7 +192,7 @@ class TestLowConfidencePaths:
         if result.value.confidence <= 0.7:
             assert "root" in paths
 
-    def test_no_low_confidence_in_valid_parse(self):
+    def test_no_low_confidence_in_valid_parse(self) -> None:
         """Test no low-confidence paths in valid parse."""
         parser = ProbabilisticASTParser()
         result = parser.parse('{"name": "test"}')
@@ -205,7 +205,7 @@ class TestLowConfidencePaths:
 class TestRepairTracking:
     """Test tracking what repairs were applied."""
 
-    def test_repairs_logged(self):
+    def test_repairs_logged(self) -> None:
         """Test repairs are logged in result."""
         parser = ProbabilisticASTParser()
         result = parser.parse('{"x": 1,}')
@@ -213,7 +213,7 @@ class TestRepairTracking:
         assert len(result.repairs) > 0
         assert any("comma" in r.lower() for r in result.repairs)
 
-    def test_repairs_in_node_metadata(self):
+    def test_repairs_in_node_metadata(self) -> None:
         """Test repairs stored in node."""
         parser = ProbabilisticASTParser()
         result = parser.parse('{"x": 1,}')
@@ -226,7 +226,7 @@ class TestRepairTracking:
 class TestConfiguration:
     """Test parser configuration."""
 
-    def test_configure_returns_new_parser(self):
+    def test_configure_returns_new_parser(self) -> None:
         """Test configure returns new instance."""
         parser1 = ProbabilisticASTParser()
         parser2 = parser1.configure(min_confidence=0.9)
@@ -238,7 +238,7 @@ class TestConfiguration:
 class TestStreamParsing:
     """Test stream parsing."""
 
-    def test_stream_buffers_tokens(self):
+    def test_stream_buffers_tokens(self) -> None:
         """Test stream parsing buffers tokens."""
         parser = ProbabilisticASTParser()
         tokens = ['{"', "name", '": "', "test", '"}']
@@ -251,7 +251,7 @@ class TestStreamParsing:
 class TestRealWorldScenarios:
     """Test real-world use cases."""
 
-    def test_egent_code_with_repairs(self):
+    def test_egent_code_with_repairs(self) -> None:
         """Test E-gent code validation with repairs."""
         parser = ProbabilisticASTParser()
         # Simulated E-gent output (malformed JSON)
@@ -269,7 +269,7 @@ class TestRealWorldScenarios:
         confident = query_confident_fields(result.value, min_confidence=0.5)
         assert confident is not None
 
-    def test_bgent_hypothesis_with_inference(self):
+    def test_bgent_hypothesis_with_inference(self) -> None:
         """Test B-gent hypothesis with inferred fields."""
         parser = ProbabilisticASTParser()
         hypothesis = """
@@ -288,7 +288,7 @@ class TestRealWorldScenarios:
         root = result.value
         assert root.type == "object"
 
-    def test_lgent_catalog_with_optional_fields(self):
+    def test_lgent_catalog_with_optional_fields(self) -> None:
         """Test L-gent catalog with optional metadata."""
         parser = ProbabilisticASTParser()
         catalog = """

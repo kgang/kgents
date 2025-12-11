@@ -41,7 +41,7 @@ class TestFgentIntegration:
     """Tests for F-gent integration methods."""
 
     @pytest.mark.asyncio
-    async def test_find_for_forging_basic(self, sample_json_parser):
+    async def test_find_for_forging_basic(self, sample_json_parser) -> None:
         """Test finding artifacts before forging."""
         registry = await create_semantic_registry()
         await registry.register(sample_json_parser)
@@ -59,7 +59,7 @@ class TestFgentIntegration:
         assert any("JSON" in r.entry.name for r in results)
 
     @pytest.mark.asyncio
-    async def test_find_for_forging_high_threshold(self, sample_json_parser):
+    async def test_find_for_forging_high_threshold(self, sample_json_parser) -> None:
         """Test that high threshold returns fewer results."""
         registry = await create_semantic_registry()
         await registry.register(sample_json_parser)
@@ -73,7 +73,7 @@ class TestFgentIntegration:
         assert isinstance(results, list)
 
     @pytest.mark.asyncio
-    async def test_register_forged_artifact(self):
+    async def test_register_forged_artifact(self) -> None:
         """Test registering a newly forged artifact."""
         registry = await create_semantic_registry()
 
@@ -105,7 +105,7 @@ class TestJgentIntegration:
     """Tests for J-gent integration methods."""
 
     @pytest.mark.asyncio
-    async def test_find_for_jit_selection(self, sample_json_parser):
+    async def test_find_for_jit_selection(self, sample_json_parser) -> None:
         """Test finding agents for JIT runtime selection."""
         registry = await create_semantic_registry()
         await registry.register(sample_json_parser)
@@ -120,7 +120,7 @@ class TestJgentIntegration:
         assert all(c.entry.entity_type == EntityType.AGENT for c in candidates)
 
     @pytest.mark.asyncio
-    async def test_find_for_jit_selection_with_constraints(self):
+    async def test_find_for_jit_selection_with_constraints(self) -> None:
         """Test JIT selection with runtime constraints."""
         registry = await create_semantic_registry()
 
@@ -159,7 +159,7 @@ class TestJgentIntegration:
         assert all(c.entry.status == Status.ACTIVE for c in candidates)
 
     @pytest.mark.asyncio
-    async def test_register_jit_execution(self, sample_json_parser):
+    async def test_register_jit_execution(self, sample_json_parser) -> None:
         """Test recording JIT execution."""
         registry = await create_semantic_registry()
         await registry.register(sample_json_parser)
@@ -190,7 +190,7 @@ class TestIntegrationWorkflows:
     """Tests for complete F-gent and J-gent workflows."""
 
     @pytest.mark.asyncio
-    async def test_fgent_workflow(self, sample_json_parser):
+    async def test_fgent_workflow(self, sample_json_parser) -> None:
         """Test complete F-gent workflow."""
         registry = await create_semantic_registry()
         await registry.register(sample_json_parser)
@@ -224,7 +224,7 @@ class TestIntegrationWorkflows:
         assert len(all_parsers) >= 2
 
     @pytest.mark.asyncio
-    async def test_jgent_workflow(self):
+    async def test_jgent_workflow(self) -> None:
         """Test complete J-gent workflow."""
         registry = await create_semantic_registry()
 

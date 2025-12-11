@@ -39,7 +39,7 @@ def _make_source(code: str, is_valid: bool = True) -> SourceCode:
 # ============================================================================
 
 
-def test_sandbox_simple():
+def test_sandbox_simple() -> None:
     """Test sandbox execution of simple agent."""
     code = """
 class DoublerAgent:
@@ -50,14 +50,14 @@ class DoublerAgent:
     assert result == 10
 
 
-def test_sandbox_missing_class():
+def test_sandbox_missing_class() -> None:
     """Test sandbox with missing class."""
     code = "class Foo: pass"
     with pytest.raises(SandboxExecutionError, match="not found"):
         _execute_in_sandbox(code, 5, "Bar")
 
 
-def test_sandbox_runtime_error():
+def test_sandbox_runtime_error() -> None:
     """Test sandbox with runtime error."""
     code = """
 class BuggyAgent:
@@ -73,7 +73,7 @@ class BuggyAgent:
 # ============================================================================
 
 
-def test_run_test_passing():
+def test_run_test_passing() -> None:
     """Test run_test with passing test."""
     source = _make_source("""
 class Agent:
@@ -85,7 +85,7 @@ class Agent:
     assert result.status == TestResultStatus.PASS
 
 
-def test_run_test_failing():
+def test_run_test_failing() -> None:
     """Test run_test with failing test."""
     source = _make_source("""
 class Agent:
@@ -102,7 +102,7 @@ class Agent:
 # ============================================================================
 
 
-def test_verify_invariant_deterministic():
+def test_verify_invariant_deterministic() -> None:
     """Test deterministic invariant."""
     inv = Invariant("deterministic", "f(x) == f(x)", "behavioral")
     source = _make_source("pass")
@@ -110,7 +110,7 @@ def test_verify_invariant_deterministic():
     assert result.passed
 
 
-def test_verify_invariant_length_pass():
+def test_verify_invariant_length_pass() -> None:
     """Test length constraint (passing)."""
     inv = Invariant("concise", "len(output) < 100", "performance")
     source = _make_source("pass")
@@ -119,7 +119,7 @@ def test_verify_invariant_length_pass():
     assert result.passed
 
 
-def test_verify_invariant_length_fail():
+def test_verify_invariant_length_fail() -> None:
     """Test length constraint (failing)."""
     inv = Invariant("concise", "len(output) < 10", "performance")
     source = _make_source("pass")
@@ -140,7 +140,7 @@ def test_verify_invariant_length_fail():
 # ============================================================================
 
 
-def test_validate_all_passing():
+def test_validate_all_passing() -> None:
     """Test validate with all passing."""
     source = _make_source("""
 class Agent:
@@ -160,7 +160,7 @@ class Agent:
     assert report.verdict == VerdictStatus.PASS
 
 
-def test_validate_test_failure():
+def test_validate_test_failure() -> None:
     """Test validate with test failure."""
     source = _make_source("""
 class Agent:
@@ -186,7 +186,7 @@ class Agent:
 
 
 @pytest.mark.asyncio
-async def test_self_healing_success():
+async def test_self_healing_success() -> None:
     """Test self-healing succeeds on retry."""
     buggy = _make_source("""
 class Agent:
@@ -212,7 +212,7 @@ class Agent:
 
 
 @pytest.mark.asyncio
-async def test_self_healing_max_attempts():
+async def test_self_healing_max_attempts() -> None:
     """Test self-healing reaches max attempts or convergence."""
     buggy = _make_source("""
 class Agent:
@@ -246,14 +246,14 @@ class Agent:
 # ============================================================================
 
 
-def test_code_similarity_identical():
+def test_code_similarity_identical() -> None:
     """Test identical codes."""
     c1 = "def foo(): return 42"
     c2 = "def foo(): return 42"
     assert _compute_code_similarity([c1, c2]) == 1.0
 
 
-def test_code_similarity_different():
+def test_code_similarity_different() -> None:
     """Test different codes."""
     c1 = "def foo(): return 42"
     c2 = "class Bar: pass"

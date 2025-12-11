@@ -18,7 +18,7 @@ from infra.k8s.detection import (
 class TestTerrariumDetection:
     """Tests for the TerrariumDetection dataclass."""
 
-    def test_can_create_cluster_when_kind_available(self):
+    def test_can_create_cluster_when_kind_available(self) -> None:
         """KIND_AVAILABLE capability allows cluster creation."""
         detection = TerrariumDetection(
             capability=TerrariumCapability.KIND_AVAILABLE,
@@ -28,7 +28,7 @@ class TestTerrariumDetection:
         assert detection.can_create_cluster is True
         assert detection.has_running_cluster is False
 
-    def test_can_create_cluster_when_running(self):
+    def test_can_create_cluster_when_running(self) -> None:
         """CLUSTER_RUNNING capability allows cluster creation (idempotent)."""
         detection = TerrariumDetection(
             capability=TerrariumCapability.CLUSTER_RUNNING,
@@ -39,7 +39,7 @@ class TestTerrariumDetection:
         assert detection.can_create_cluster is True
         assert detection.has_running_cluster is True
 
-    def test_cannot_create_cluster_when_none(self):
+    def test_cannot_create_cluster_when_none(self) -> None:
         """NONE capability prevents cluster creation."""
         detection = TerrariumDetection(
             capability=TerrariumCapability.NONE,
@@ -53,7 +53,7 @@ class TestTerrariumDetection:
 class TestDetectTerrariumMode:
     """Tests for the detect_terrarium_mode function."""
 
-    def test_no_docker_returns_none_capability(self, mock_docker_unavailable):
+    def test_no_docker_returns_none_capability(self, mock_docker_unavailable) -> None:
         """When Docker is not running, capability is NONE."""
         result = detect_terrarium_mode()
 
@@ -110,11 +110,11 @@ class TestDetectTerrariumMode:
 class TestGetClusterContainerName:
     """Tests for container name generation."""
 
-    def test_default_cluster_name(self):
+    def test_default_cluster_name(self) -> None:
         """Default cluster generates expected container name."""
         assert get_cluster_container_name() == "kgents-local-control-plane"
 
-    def test_custom_cluster_name(self):
+    def test_custom_cluster_name(self) -> None:
         """Custom cluster name generates expected container name."""
         assert get_cluster_container_name("my-cluster") == "my-cluster-control-plane"
 
@@ -122,13 +122,13 @@ class TestGetClusterContainerName:
 class TestTerrariumCapabilityEnum:
     """Tests for the capability enum values."""
 
-    def test_enum_values_exist(self):
+    def test_enum_values_exist(self) -> None:
         """All expected capability values exist."""
         assert TerrariumCapability.NONE is not None
         assert TerrariumCapability.KIND_AVAILABLE is not None
         assert TerrariumCapability.CLUSTER_RUNNING is not None
 
-    def test_enum_ordering(self):
+    def test_enum_ordering(self) -> None:
         """Capabilities can be compared (for upgrade paths)."""
         # NONE < KIND_AVAILABLE < CLUSTER_RUNNING
         assert TerrariumCapability.NONE.value < TerrariumCapability.KIND_AVAILABLE.value

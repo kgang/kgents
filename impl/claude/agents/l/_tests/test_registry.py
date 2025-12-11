@@ -12,7 +12,7 @@ from agents.l import CatalogEntry, EntityType, Registry, Status
 # ============================================================================
 
 
-def test_catalog_entry_creation():
+def test_catalog_entry_creation() -> None:
     """Test creating a catalog entry."""
     entry = CatalogEntry(
         id="test:example:1.0.0",
@@ -30,7 +30,7 @@ def test_catalog_entry_creation():
     assert entry.status == Status.ACTIVE  # Default
 
 
-def test_catalog_entry_tongue_metadata():
+def test_catalog_entry_tongue_metadata() -> None:
     """Test tongue-specific metadata fields."""
     entry = CatalogEntry(
         id="tongue:calendar:1.0.0",
@@ -51,7 +51,7 @@ def test_catalog_entry_tongue_metadata():
     assert entry.tongue_format == "bnf"
 
 
-def test_catalog_entry_serialization():
+def test_catalog_entry_serialization() -> None:
     """Test entry to_dict and from_dict round-trip."""
     entry = CatalogEntry(
         id="test:serialization:1.0.0",
@@ -82,7 +82,7 @@ def test_catalog_entry_serialization():
 
 
 @pytest.mark.asyncio
-async def test_registry_register_and_get():
+async def test_registry_register_and_get() -> None:
     """Test registering and retrieving entries."""
     registry = Registry()
 
@@ -106,7 +106,7 @@ async def test_registry_register_and_get():
 
 
 @pytest.mark.asyncio
-async def test_registry_exists():
+async def test_registry_exists() -> None:
     """Test exists check."""
     registry = Registry()
 
@@ -129,7 +129,7 @@ async def test_registry_exists():
 
 
 @pytest.mark.asyncio
-async def test_registry_list_with_filters():
+async def test_registry_list_with_filters() -> None:
     """Test listing entries with filters."""
     registry = Registry()
 
@@ -167,7 +167,7 @@ async def test_registry_list_with_filters():
 
 
 @pytest.mark.asyncio
-async def test_registry_find():
+async def test_registry_find() -> None:
     """Test finding entries by search."""
     registry = Registry()
 
@@ -214,7 +214,7 @@ async def test_registry_find():
 
 
 @pytest.mark.asyncio
-async def test_registry_update_usage():
+async def test_registry_update_usage() -> None:
     """Test updating usage metrics."""
     registry = Registry()
 
@@ -248,7 +248,7 @@ async def test_registry_update_usage():
 
 
 @pytest.mark.asyncio
-async def test_registry_deprecate():
+async def test_registry_deprecate() -> None:
     """Test deprecating an entry."""
     registry = Registry()
 
@@ -278,7 +278,7 @@ async def test_registry_deprecate():
 
 
 @pytest.mark.asyncio
-async def test_registry_relationships():
+async def test_registry_relationships() -> None:
     """Test adding and finding relationships."""
     registry = Registry()
 
@@ -317,7 +317,7 @@ async def test_registry_relationships():
 
 
 @pytest.mark.asyncio
-async def test_registry_delete():
+async def test_registry_delete() -> None:
     """Test deleting an entry."""
     registry = Registry()
 
@@ -343,7 +343,7 @@ async def test_registry_delete():
 
 
 @pytest.mark.asyncio
-async def test_registry_serialization():
+async def test_registry_serialization() -> None:
     """Test catalog serialization."""
     registry = Registry()
 

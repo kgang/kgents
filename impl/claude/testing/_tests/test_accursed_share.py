@@ -29,7 +29,7 @@ class TestDiscoveryLog:
         with TemporaryDirectory() as tmpdir:
             yield DiscoveryLog(Path(tmpdir) / "discoveries.json")
 
-    def test_record_discovery(self, temp_log):
+    def test_record_discovery(self, temp_log) -> None:
         """Test recording a discovery."""
         discovery = Discovery(
             test_name="test_example",
@@ -41,7 +41,7 @@ class TestDiscoveryLog:
         assert len(temp_log.discoveries) == 1
         assert temp_log.discoveries[0].test_name == "test_example"
 
-    def test_composition_success_recording(self, temp_log):
+    def test_composition_success_recording(self, temp_log) -> None:
         """Test recording a composition success."""
         discovery = temp_log.record_composition_success(
             test_name="test_compose",
@@ -53,7 +53,7 @@ class TestDiscoveryLog:
         assert discovery.discovery_type == "composition_success"
         assert "AgentA >> AgentB >> AgentC" in discovery.description
 
-    def test_boundary_case_recording(self, temp_log):
+    def test_boundary_case_recording(self, temp_log) -> None:
         """Test recording a boundary case."""
         discovery = temp_log.record_boundary_case(
             test_name="test_boundary",
@@ -65,7 +65,7 @@ class TestDiscoveryLog:
         assert discovery.discovery_type == "boundary_case"
         assert discovery.actionable is True
 
-    def test_persistence(self, temp_log):
+    def test_persistence(self, temp_log) -> None:
         """Test that discoveries persist across instances."""
         temp_log.record(
             Discovery(
@@ -81,7 +81,7 @@ class TestDiscoveryLog:
         assert len(new_log.discoveries) == 1
         assert new_log.discoveries[0].test_name == "test_persist"
 
-    def test_get_actionable(self, temp_log):
+    def test_get_actionable(self, temp_log) -> None:
         """Test filtering actionable discoveries."""
         temp_log.record(
             Discovery(
@@ -104,7 +104,7 @@ class TestDiscoveryLog:
         assert len(actionable) == 1
         assert actionable[0].test_name == "actionable"
 
-    def test_summary(self, temp_log):
+    def test_summary(self, temp_log) -> None:
         """Test summary statistics."""
         temp_log.record(
             Discovery(
@@ -139,14 +139,14 @@ class TestDiscoveryLog:
 class TestWeirdInputs:
     """Tests using weird inputs for boundary exploration."""
 
-    def test_weird_inputs_not_empty(self):
+    def test_weird_inputs_not_empty(self) -> None:
         """Verify weird inputs generator works."""
         inputs = generate_weird_inputs()
         assert len(inputs) > 0
 
     @pytest.mark.accursed_share
     @pytest.mark.asyncio
-    async def test_id_handles_weird_inputs(self):
+    async def test_id_handles_weird_inputs(self) -> None:
         """
         Test that ID agent handles weird inputs.
 
@@ -177,7 +177,7 @@ class TestChaoticComposition:
     """Chaotic composition tests for discovery."""
 
     @pytest.mark.asyncio
-    async def test_random_agent_composition(self):
+    async def test_random_agent_composition(self) -> None:
         """
         Pick random agents, compose, observe.
 
@@ -209,7 +209,7 @@ class TestChaoticComposition:
             print(f"FAILURE: {' >> '.join(names)}: {e}")
 
     @pytest.mark.asyncio
-    async def test_deep_composition_chain(self):
+    async def test_deep_composition_chain(self) -> None:
         """Test very deep composition chains."""
         from functools import reduce
 
@@ -227,7 +227,7 @@ class TestChaoticComposition:
 
     @pytest.mark.asyncio
     @pytest.mark.slow
-    async def test_concurrent_composition(self):
+    async def test_concurrent_composition(self) -> None:
         """Test concurrent agent invocations."""
         import asyncio
 
@@ -249,7 +249,7 @@ class TestSerendipitousDiscovery:
     """Tests designed for serendipitous discoveries."""
 
     @pytest.mark.asyncio
-    async def test_type_coercion_chain(self):
+    async def test_type_coercion_chain(self) -> None:
         """
         Test chains with type-changing transforms.
 
@@ -272,7 +272,7 @@ class TestSerendipitousDiscovery:
         assert result == {"value": ["42"]}
 
     @pytest.mark.asyncio
-    async def test_error_propagation(self):
+    async def test_error_propagation(self) -> None:
         """
         Test how errors propagate through composition.
 

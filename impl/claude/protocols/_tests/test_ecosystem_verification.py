@@ -27,7 +27,7 @@ class TestFunctorCompositionEcosystem:
     """
 
     @pytest.mark.asyncio
-    async def test_maybe_functor_identity_law(self):
+    async def test_maybe_functor_identity_law(self) -> None:
         """Maybe functor: F(id) = id."""
         from agents.c import Just, Nothing, maybe
         from bootstrap.types import Agent
@@ -52,7 +52,7 @@ class TestFunctorCompositionEcosystem:
         assert result.is_nothing()
 
     @pytest.mark.asyncio
-    async def test_maybe_functor_composition_law(self):
+    async def test_maybe_functor_composition_law(self) -> None:
         """Maybe functor: F(g ∘ f) = F(g) ∘ F(f)."""
         from agents.c import Just, maybe
         from bootstrap.types import Agent
@@ -89,7 +89,7 @@ class TestFunctorCompositionEcosystem:
         assert left.value == right.value == 20
 
     @pytest.mark.asyncio
-    async def test_either_functor_identity_law(self):
+    async def test_either_functor_identity_law(self) -> None:
         """Either functor: F(id) = id."""
         from agents.c import Left, Right, either
         from bootstrap.types import Agent
@@ -115,7 +115,7 @@ class TestFunctorCompositionEcosystem:
         assert result.error == "error"
 
     @pytest.mark.asyncio
-    async def test_either_functor_composition_law(self):
+    async def test_either_functor_composition_law(self) -> None:
         """Either functor: F(g ∘ f) = F(g) ∘ F(f)."""
         from agents.c import Right, either
         from bootstrap.types import Agent
@@ -148,7 +148,7 @@ class TestFunctorCompositionEcosystem:
         assert left.value == right.value == "HELLO!"
 
     @pytest.mark.asyncio
-    async def test_list_functor_identity_law(self):
+    async def test_list_functor_identity_law(self) -> None:
         """List functor: F(id) = id."""
         from agents.c import list_agent
         from bootstrap.types import Agent
@@ -166,7 +166,7 @@ class TestFunctorCompositionEcosystem:
         assert result == [1, 2, 3]
 
     @pytest.mark.asyncio
-    async def test_list_functor_composition_law(self):
+    async def test_list_functor_composition_law(self) -> None:
         """List functor: F(g ∘ f) = F(g) ∘ F(f)."""
         from agents.c import list_agent
         from bootstrap.types import Agent
@@ -203,7 +203,7 @@ class TestFunctorCompositionEcosystem:
 class TestMonadLawsEcosystem:
     """Verify monad laws across the ecosystem."""
 
-    def test_maybe_monad_left_identity(self):
+    def test_maybe_monad_left_identity(self) -> None:
         """Maybe monad: pure(a).bind(f) = f(a)."""
         from agents.c import Just, pure_maybe
 
@@ -216,7 +216,7 @@ class TestMonadLawsEcosystem:
 
         assert left.value == right.value == 42
 
-    def test_maybe_monad_right_identity(self):
+    def test_maybe_monad_right_identity(self) -> None:
         """Maybe monad: m.bind(pure) = m."""
         from agents.c import Just, pure_maybe
 
@@ -224,7 +224,7 @@ class TestMonadLawsEcosystem:
         result = m.flat_map(pure_maybe)
         assert result.value == 42
 
-    def test_maybe_monad_associativity(self):
+    def test_maybe_monad_associativity(self) -> None:
         """Maybe monad: m.bind(f).bind(g) = m.bind(λa. f(a).bind(g))."""
         from agents.c import Just
 
@@ -249,7 +249,7 @@ class TestCategoryLawsEcosystem:
     """Verify category laws (associativity and identity)."""
 
     @pytest.mark.asyncio
-    async def test_composition_associativity(self):
+    async def test_composition_associativity(self) -> None:
         """Category: (f >> g) >> h = f >> (g >> h)."""
         from bootstrap.types import Agent
 
@@ -289,7 +289,7 @@ class TestCategoryLawsEcosystem:
         assert left == right == "7.5"
 
     @pytest.mark.asyncio
-    async def test_identity_left(self):
+    async def test_identity_left(self) -> None:
         """Category: id >> f = f."""
         from bootstrap.types import Agent
 
@@ -318,7 +318,7 @@ class TestCategoryLawsEcosystem:
         assert composed == direct == 10
 
     @pytest.mark.asyncio
-    async def test_identity_right(self):
+    async def test_identity_right(self) -> None:
         """Category: f >> id = f."""
         from bootstrap.types import Agent
 
@@ -472,7 +472,7 @@ class TestImportAudit:
         """Get the agents directory."""
         return Path(__file__).parent.parent.parent / "agents"
 
-    def test_audit_runs_successfully(self, agents_dir: Path):
+    def test_audit_runs_successfully(self, agents_dir: Path) -> None:
         """Import audit should complete without error."""
         result = audit_imports(agents_dir)
 
@@ -485,7 +485,7 @@ class TestImportAudit:
         print(f"  Acceptable: {len(result.acceptable)}")
         print(f"  Violations: {len(result.violations)}")
 
-    def test_foundational_agents_are_acceptable(self, agents_dir: Path):
+    def test_foundational_agents_are_acceptable(self, agents_dir: Path) -> None:
         """Imports from foundational agents (D, L, C, shared) should be acceptable."""
         result = audit_imports(agents_dir)
 
@@ -499,7 +499,7 @@ class TestImportAudit:
                 f"in {ci.file_path} doesn't match criteria"
             )
 
-    def test_integration_files_are_explicit(self, agents_dir: Path):
+    def test_integration_files_are_explicit(self, agents_dir: Path) -> None:
         """
         Non-foundational cross-imports should be in explicit integration files.
 
@@ -530,7 +530,7 @@ class TestImportAudit:
             print("   1. Rename file to *_integration.py if intentional coupling")
             print("   2. Refactor to use SemanticField for decoupled coordination")
 
-    def test_document_current_violations(self, agents_dir: Path):
+    def test_document_current_violations(self, agents_dir: Path) -> None:
         """
         Document current violations for tracking purposes.
 
@@ -571,7 +571,7 @@ class TestImportAudit:
 class TestSemanticFieldUsage:
     """Verify agents are using the semantic field for coordination."""
 
-    def test_semantic_field_module_exists(self):
+    def test_semantic_field_module_exists(self) -> None:
         """SemanticField should exist for integration-by-field pattern."""
         from agents.i.semantic_field import (
             EconomicFieldEmitter,
@@ -590,7 +590,7 @@ class TestSemanticFieldUsage:
         assert SafetyFieldEmitter is not None
         assert EconomicFieldEmitter is not None
 
-    def test_pheromone_kinds_cover_agents(self):
+    def test_pheromone_kinds_cover_agents(self) -> None:
         """Pheromone kinds should cover major agent interactions."""
         from agents.i.semantic_field import SemanticPheromoneKind
 
@@ -607,7 +607,7 @@ class TestSemanticFieldUsage:
         }
         assert expected.issubset(kinds), f"Missing pheromone kinds: {expected - kinds}"
 
-    def test_field_emitter_interfaces(self):
+    def test_field_emitter_interfaces(self) -> None:
         """Each major agent should have a field interface."""
         from agents.i.semantic_field import (
             create_economic_emitter,
@@ -630,7 +630,7 @@ class TestSemanticFieldUsage:
         assert safety is not None
         assert economic is not None
 
-    def test_field_based_psi_forge_integration(self):
+    def test_field_based_psi_forge_integration(self) -> None:
         """
         Psi and Forge can coordinate without direct imports.
 

@@ -48,7 +48,7 @@ from ..syntax_tax import GrammarClassifier
 class TestVolatilityCategory:
     """Tests for VolatilityCategory enum."""
 
-    def test_risk_multipliers(self):
+    def test_risk_multipliers(self) -> None:
         """Each category has appropriate risk multiplier."""
         assert VolatilityCategory.STABLE.risk_multiplier == 0.5
         assert VolatilityCategory.LOW.risk_multiplier == 1.0
@@ -56,7 +56,7 @@ class TestVolatilityCategory:
         assert VolatilityCategory.HIGH.risk_multiplier == 4.0
         assert VolatilityCategory.EXTREME.risk_multiplier == 10.0
 
-    def test_requires_hedge(self):
+    def test_requires_hedge(self) -> None:
         """High and extreme volatility require hedging."""
         assert not VolatilityCategory.STABLE.requires_hedge
         assert not VolatilityCategory.LOW.requires_hedge
@@ -73,7 +73,7 @@ class TestVolatilityCategory:
 class TestParseEvent:
     """Tests for ParseEvent dataclass."""
 
-    def test_success_event(self):
+    def test_success_event(self) -> None:
         """Create a successful parse event."""
         event = ParseEvent.success_event(
             grammar_id="test_grammar",
@@ -89,7 +89,7 @@ class TestParseEvent:
         assert event.error_type is None
         assert len(event.input_hash) == 16  # Truncated hash
 
-    def test_failure_event(self):
+    def test_failure_event(self) -> None:
         """Create a failed parse event."""
         event = ParseEvent.failure_event(
             grammar_id="test_grammar",
@@ -104,7 +104,7 @@ class TestParseEvent:
         assert event.error_type == "SyntaxError"
         assert event.fallback_used == "simple_grammar"
 
-    def test_input_hash_privacy(self):
+    def test_input_hash_privacy(self) -> None:
         """Input is hashed for privacy."""
         event1 = ParseEvent.success_event("g", "secret data", 1.0)
         event2 = ParseEvent.success_event("g", "secret data", 1.0)
@@ -124,14 +124,14 @@ class TestParseEvent:
 class TestVolatilityWindow:
     """Tests for VolatilityWindow sliding window."""
 
-    def test_empty_window(self):
+    def test_empty_window(self) -> None:
         """Empty window has zero failure rate."""
         window = VolatilityWindow()
         assert window.failure_rate == 0.0
         assert window.event_count == 0
         assert window.avg_duration_ms == 0.0
 
-    def test_add_events(self):
+    def test_add_events(self) -> None:
         """Adding events updates statistics."""
         window = VolatilityWindow()
 
@@ -148,7 +148,7 @@ class TestVolatilityWindow:
         assert window.event_count == 10
         assert window.failure_rate == 0.2  # 2/10
 
-    def test_max_events_limit(self):
+    def test_max_events_limit(self) -> None:
         """Window respects max events limit."""
         window = VolatilityWindow(max_events=5)
 
@@ -158,7 +158,7 @@ class TestVolatilityWindow:
 
         assert window.event_count == 5
 
-    def test_avg_duration(self):
+    def test_avg_duration(self) -> None:
         """Average duration is calculated correctly."""
         window = VolatilityWindow()
 
@@ -177,7 +177,7 @@ class TestVolatilityWindow:
 class TestVolatilityMetrics:
     """Tests for VolatilityMetrics calculation."""
 
-    def test_volatility_score_stable(self):
+    def test_volatility_score_stable(self) -> None:
         """Low failure rate = stable."""
         metrics = VolatilityMetrics(
             grammar_id="test",
@@ -197,7 +197,7 @@ class TestVolatilityMetrics:
         assert metrics.volatility_score < 0.1
         assert metrics.category == VolatilityCategory.STABLE
 
-    def test_volatility_score_extreme(self):
+    def test_volatility_score_extreme(self) -> None:
         """High failure rate with degrading trend = extreme."""
         metrics = VolatilityMetrics(
             grammar_id="test",
@@ -217,7 +217,7 @@ class TestVolatilityMetrics:
         assert metrics.volatility_score >= 0.6
         assert metrics.category == VolatilityCategory.EXTREME
 
-    def test_category_thresholds(self):
+    def test_category_thresholds(self) -> None:
         """Test category threshold boundaries."""
         # Create metrics with specific volatility scores
         base_metrics = {
@@ -263,7 +263,7 @@ class TestVolatilityMetrics:
 class TestVolatilityMonitor:
     """Tests for VolatilityMonitor."""
 
-    def test_record_parse(self):
+    def test_record_parse(self) -> None:
         """Recording parses updates statistics."""
         monitor = VolatilityMonitor()
 
@@ -277,7 +277,7 @@ class TestVolatilityMonitor:
         assert metrics.failure_rate == 0.0
         assert metrics.event_count == 10
 
-    def test_multiple_grammars(self):
+    def test_multiple_grammars(self) -> None:
         """Monitor tracks multiple grammars independently."""
         monitor = VolatilityMonitor()
 
@@ -295,7 +295,7 @@ class TestVolatilityMonitor:
         assert m1.failure_rate == 0.0
         assert m2.failure_rate == 1.0
 
-    def test_alerts_triggered(self):
+    def test_alerts_triggered(self) -> None:
         """High failure rate triggers alerts."""
         monitor = VolatilityMonitor(alert_threshold=0.3)
 
@@ -310,7 +310,7 @@ class TestVolatilityMonitor:
         assert len(alerts) > 0
         assert alerts[0]["grammar_id"] == "g"
 
-    def test_trend_detection(self):
+    def test_trend_detection(self) -> None:
         """Trend is detected from historical data."""
         monitor = VolatilityMonitor()
 
@@ -336,7 +336,7 @@ class TestVolatilityMonitor:
 class TestHedgeStrategy:
     """Tests for HedgeStrategy enum."""
 
-    def test_cost_multipliers(self):
+    def test_cost_multipliers(self) -> None:
         """Each strategy has appropriate cost multiplier."""
         assert HedgeStrategy.FALLBACK.cost_multiplier == 1.2
         assert HedgeStrategy.REDUNDANT.cost_multiplier == 2.0
@@ -344,7 +344,7 @@ class TestHedgeStrategy:
         assert HedgeStrategy.ENSEMBLE.cost_multiplier == 3.0
         assert HedgeStrategy.GRACEFUL.cost_multiplier == 1.1
 
-    def test_coverage_factors(self):
+    def test_coverage_factors(self) -> None:
         """Each strategy has appropriate coverage factor."""
         assert HedgeStrategy.FALLBACK.coverage_factor == 0.7
         assert HedgeStrategy.REDUNDANT.coverage_factor == 0.9
@@ -360,7 +360,7 @@ class TestHedgeStrategy:
 class TestGrammarHedge:
     """Tests for GrammarHedge configuration."""
 
-    def test_fallback_configuration(self):
+    def test_fallback_configuration(self) -> None:
         """Fallback hedge requires fallback grammars."""
         hedge = GrammarHedge(
             grammar_id="main",
@@ -376,7 +376,7 @@ class TestGrammarHedge:
         )
         assert hedge_unconfigured.is_configured is False
 
-    def test_ensemble_configuration(self):
+    def test_ensemble_configuration(self) -> None:
         """Ensemble hedge requires 3+ grammars."""
         hedge = GrammarHedge(
             grammar_id="main",
@@ -392,7 +392,7 @@ class TestGrammarHedge:
         )
         assert hedge_insufficient.is_configured is False
 
-    def test_versioned_configuration(self):
+    def test_versioned_configuration(self) -> None:
         """Versioned hedge requires 2+ versions."""
         hedge = GrammarHedge(
             grammar_id="main",
@@ -401,7 +401,7 @@ class TestGrammarHedge:
         )
         assert hedge.is_configured is True
 
-    def test_graceful_always_configured(self):
+    def test_graceful_always_configured(self) -> None:
         """Graceful degradation is always configured."""
         hedge = GrammarHedge(
             grammar_id="main",
@@ -418,7 +418,7 @@ class TestGrammarHedge:
 class TestInsurancePolicy:
     """Tests for InsurancePolicy lifecycle."""
 
-    def test_policy_validity(self):
+    def test_policy_validity(self) -> None:
         """Policy validity checks work."""
         hedge = GrammarHedge("g", HedgeStrategy.GRACEFUL)
 
@@ -434,7 +434,7 @@ class TestInsurancePolicy:
 
         assert policy.is_valid is True
 
-    def test_policy_expired(self):
+    def test_policy_expired(self) -> None:
         """Expired policy is not valid."""
         hedge = GrammarHedge("g", HedgeStrategy.GRACEFUL)
 
@@ -450,7 +450,7 @@ class TestInsurancePolicy:
 
         assert policy.is_valid is False
 
-    def test_policy_inactive(self):
+    def test_policy_inactive(self) -> None:
         """Inactive policy is not valid."""
         hedge = GrammarHedge("g", HedgeStrategy.GRACEFUL)
 
@@ -467,7 +467,7 @@ class TestInsurancePolicy:
 
         assert policy.is_valid is False
 
-    def test_remaining_coverage(self):
+    def test_remaining_coverage(self) -> None:
         """Remaining coverage decreases with claims."""
         hedge = GrammarHedge("g", HedgeStrategy.GRACEFUL)
 
@@ -493,7 +493,7 @@ class TestInsurancePolicy:
 class TestInsuranceClaim:
     """Tests for InsuranceClaim."""
 
-    def test_claim_resolution_status(self):
+    def test_claim_resolution_status(self) -> None:
         """Claim resolution status is tracked."""
         claim = InsuranceClaim(
             claim_id="CLM-001",
@@ -521,7 +521,7 @@ class TestInsuranceClaim:
 class TestPremiumCalculator:
     """Tests for PremiumCalculator."""
 
-    def test_base_rates_by_complexity(self):
+    def test_base_rates_by_complexity(self) -> None:
         """Regular grammars have lower base rates than Turing-complete."""
         monitor = VolatilityMonitor()
         classifier = GrammarClassifier()
@@ -548,7 +548,7 @@ class TestPremiumCalculator:
         assert regular_quote.complexity_multiplier < turing_quote.complexity_multiplier
         assert regular_quote.daily_premium_tokens < turing_quote.daily_premium_tokens
 
-    def test_volatility_affects_premium(self):
+    def test_volatility_affects_premium(self) -> None:
         """Higher volatility = higher premium."""
         monitor = VolatilityMonitor()
         classifier = GrammarClassifier()
@@ -583,7 +583,7 @@ class TestPremiumCalculator:
         assert volatile_quote.volatility_multiplier > stable_quote.volatility_multiplier
         assert volatile_quote.daily_premium_tokens > stable_quote.daily_premium_tokens
 
-    def test_strategy_affects_premium(self):
+    def test_strategy_affects_premium(self) -> None:
         """More comprehensive strategies cost more."""
         monitor = VolatilityMonitor()
         classifier = GrammarClassifier()
@@ -608,7 +608,7 @@ class TestPremiumCalculator:
         assert ensemble_quote.strategy_multiplier > fallback_quote.strategy_multiplier
         assert ensemble_quote.daily_premium_tokens > fallback_quote.daily_premium_tokens
 
-    def test_reserve_discount(self):
+    def test_reserve_discount(self) -> None:
         """Having reserves provides discount."""
         monitor = VolatilityMonitor()
         classifier = GrammarClassifier()
@@ -635,7 +635,7 @@ class TestPremiumCalculator:
         assert with_reserve.reserve_discount > no_reserve.reserve_discount
         assert with_reserve.daily_premium_tokens <= no_reserve.daily_premium_tokens
 
-    def test_volume_discount(self):
+    def test_volume_discount(self) -> None:
         """High coverage gets volume discount."""
         monitor = VolatilityMonitor()
         classifier = GrammarClassifier()
@@ -659,7 +659,7 @@ class TestPremiumCalculator:
 
         assert large.volume_discount > small.volume_discount
 
-    def test_effective_rate(self):
+    def test_effective_rate(self) -> None:
         """Effective rate is calculated correctly."""
         quote = PremiumQuote(
             grammar_id="g",
@@ -690,7 +690,7 @@ class TestPremiumCalculator:
 class TestGrammarInsurance:
     """Tests for GrammarInsurance manager."""
 
-    def test_create_hedge(self):
+    def test_create_hedge(self) -> None:
         """Creating a hedge stores configuration."""
         insurance = GrammarInsurance()
 
@@ -705,7 +705,7 @@ class TestGrammarInsurance:
         assert "simple_grammar" in hedge.fallback_grammar_ids
         assert "test_grammar" in insurance.hedges
 
-    def test_create_policy(self):
+    def test_create_policy(self) -> None:
         """Creating a policy returns valid policy."""
         insurance = GrammarInsurance()
 
@@ -725,7 +725,7 @@ class TestGrammarInsurance:
         assert policy.is_valid is True
         assert policy.policy_id in insurance.policies
 
-    def test_file_claim(self):
+    def test_file_claim(self) -> None:
         """Filing a claim creates pending claim."""
         insurance = GrammarInsurance()
 
@@ -748,7 +748,7 @@ class TestGrammarInsurance:
         assert claim.status == "pending"
         assert claim.claim_id in insurance.claims
 
-    def test_file_claim_invalid_policy(self):
+    def test_file_claim_invalid_policy(self) -> None:
         """Filing claim against invalid policy fails."""
         insurance = GrammarInsurance()
 
@@ -760,7 +760,7 @@ class TestGrammarInsurance:
 
         assert claim is None
 
-    def test_process_claim_no_fallback(self):
+    def test_process_claim_no_fallback(self) -> None:
         """Processing claim without fallback pays coverage."""
         insurance = GrammarInsurance()
 
@@ -784,7 +784,7 @@ class TestGrammarInsurance:
         assert result.tokens_paid > 0
         assert result.claim.status == "paid"
 
-    def test_process_claim_with_fallback(self):
+    def test_process_claim_with_fallback(self) -> None:
         """Processing claim with successful fallback uses it."""
         insurance = GrammarInsurance()
 
@@ -821,7 +821,7 @@ class TestGrammarInsurance:
         assert result.fallback_grammar_id == "simple_grammar"
         assert result.claim.fallback_used == "simple_grammar"
 
-    def test_deductible_applied(self):
+    def test_deductible_applied(self) -> None:
         """Deductible is subtracted from payout."""
         insurance = GrammarInsurance()
 
@@ -845,7 +845,7 @@ class TestGrammarInsurance:
         # Payout should be reduced by deductible
         assert result.tokens_paid == 10000 - 1000
 
-    def test_renew_policy(self):
+    def test_renew_policy(self) -> None:
         """Renewing a policy extends validity."""
         insurance = GrammarInsurance()
 
@@ -865,7 +865,7 @@ class TestGrammarInsurance:
         assert success is True
         assert policy.premium_paid_through > original_expiry
 
-    def test_cancel_policy(self):
+    def test_cancel_policy(self) -> None:
         """Canceling a policy makes it inactive."""
         insurance = GrammarInsurance()
 
@@ -885,7 +885,7 @@ class TestGrammarInsurance:
         assert policy.active is False
         assert policy.is_valid is False
 
-    def test_get_policies_for_grammar(self):
+    def test_get_policies_for_grammar(self) -> None:
         """Can retrieve all policies for a grammar."""
         insurance = GrammarInsurance()
 
@@ -899,7 +899,7 @@ class TestGrammarInsurance:
         assert len(policies) == 2
         assert all(p.grammar_id == "g1" for p in policies)
 
-    def test_get_policies_for_holder(self):
+    def test_get_policies_for_holder(self) -> None:
         """Can retrieve all policies for a holder."""
         insurance = GrammarInsurance()
 
@@ -921,7 +921,7 @@ class TestGrammarInsurance:
 class TestPortfolioAnalyzer:
     """Tests for PortfolioAnalyzer."""
 
-    def test_empty_portfolio(self):
+    def test_empty_portfolio(self) -> None:
         """Empty portfolio has zero metrics."""
         insurance = GrammarInsurance()
         analyzer = PortfolioAnalyzer(insurance)
@@ -932,7 +932,7 @@ class TestPortfolioAnalyzer:
         assert risk.total_coverage_tokens == 0
         assert risk.diversification_score == 0.0
 
-    def test_single_policy_portfolio(self):
+    def test_single_policy_portfolio(self) -> None:
         """Single policy has max concentration risk."""
         insurance = GrammarInsurance()
 
@@ -951,7 +951,7 @@ class TestPortfolioAnalyzer:
         assert risk.total_coverage_tokens == 10000
         assert risk.concentration_risk == 1.0  # All eggs in one basket
 
-    def test_diversified_portfolio(self):
+    def test_diversified_portfolio(self) -> None:
         """Multiple policies improve diversification."""
         insurance = GrammarInsurance()
 
@@ -973,7 +973,7 @@ class TestPortfolioAnalyzer:
         assert risk.diversification_score > 0.5  # More diversified
         assert risk.concentration_risk == 0.2  # 20% max concentration
 
-    def test_coverage_by_complexity(self):
+    def test_coverage_by_complexity(self) -> None:
         """Coverage is classified by grammar complexity."""
         insurance = GrammarInsurance()
 
@@ -1000,7 +1000,7 @@ class TestPortfolioAnalyzer:
         assert risk.context_free_coverage > 0 or risk.regular_coverage > 0
         assert risk.turing_coverage > 0
 
-    def test_profitability(self):
+    def test_profitability(self) -> None:
         """Portfolio profitability is calculated."""
         insurance = GrammarInsurance()
 
@@ -1017,7 +1017,7 @@ class TestPortfolioAnalyzer:
         # Expected payout exists
         assert risk.expected_daily_payout >= 0
 
-    def test_reserve_recommendation(self):
+    def test_reserve_recommendation(self) -> None:
         """Reserve recommendation is reasonable."""
         insurance = GrammarInsurance()
 
@@ -1040,7 +1040,7 @@ class TestPortfolioAnalyzer:
 class TestConvenienceFunctions:
     """Tests for convenience functions."""
 
-    def test_create_fallback_hedge(self):
+    def test_create_fallback_hedge(self) -> None:
         """create_fallback_hedge creates proper hedge."""
         hedge = create_fallback_hedge("main", ["simple", "basic"])
 
@@ -1049,7 +1049,7 @@ class TestConvenienceFunctions:
         assert "simple" in hedge.fallback_grammar_ids
         assert "basic" in hedge.fallback_grammar_ids
 
-    def test_create_versioned_hedge(self):
+    def test_create_versioned_hedge(self) -> None:
         """create_versioned_hedge creates proper hedge."""
         hedge = create_versioned_hedge("main", versions_to_keep=5)
 
@@ -1057,7 +1057,7 @@ class TestConvenienceFunctions:
         assert hedge.strategy == HedgeStrategy.VERSIONED
         assert hedge.versions_to_keep == 5
 
-    def test_create_ensemble_hedge(self):
+    def test_create_ensemble_hedge(self) -> None:
         """create_ensemble_hedge creates proper hedge."""
         hedge = create_ensemble_hedge("main", ["g1", "g2", "g3"], vote_threshold=0.67)
 
@@ -1066,7 +1066,7 @@ class TestConvenienceFunctions:
         assert len(hedge.ensemble_grammar_ids) == 3
         assert hedge.vote_threshold == 0.67
 
-    def test_estimate_annual_premium(self):
+    def test_estimate_annual_premium(self) -> None:
         """estimate_annual_premium gives reasonable estimate."""
         # Regular grammar should be cheap
         regular_premium = estimate_annual_premium(
@@ -1085,7 +1085,7 @@ class TestConvenienceFunctions:
         assert regular_premium > 0
         assert turing_premium > regular_premium
 
-    def test_calculate_hedge_cost(self):
+    def test_calculate_hedge_cost(self) -> None:
         """calculate_hedge_cost returns overhead."""
         base_cost = 100
 
@@ -1107,7 +1107,7 @@ class TestConvenienceFunctions:
 class TestIntegration:
     """Integration tests for complete workflows."""
 
-    def test_full_insurance_lifecycle(self):
+    def test_full_insurance_lifecycle(self) -> None:
         """Test complete insurance workflow."""
         insurance = GrammarInsurance()
 
@@ -1159,7 +1159,7 @@ class TestIntegration:
         assert result.fallback_grammar_id == "simple_json"
         assert policy.claims_count == 1
 
-    def test_volatility_monitoring_with_insurance(self):
+    def test_volatility_monitoring_with_insurance(self) -> None:
         """Volatility monitoring affects insurance pricing."""
         monitor = VolatilityMonitor()
         insurance = GrammarInsurance(volatility_monitor=monitor)
@@ -1197,7 +1197,7 @@ class TestIntegration:
         assert volatile_quote.volatility_multiplier > stable_quote.volatility_multiplier
         assert volatile_quote.daily_premium_tokens > stable_quote.daily_premium_tokens
 
-    def test_portfolio_risk_management(self):
+    def test_portfolio_risk_management(self) -> None:
         """Portfolio analyzer helps manage risk."""
         insurance = GrammarInsurance()
 
@@ -1235,7 +1235,7 @@ class TestIntegration:
 class TestEdgeCases:
     """Tests for edge cases and error handling."""
 
-    def test_claim_nonexistent_claim(self):
+    def test_claim_nonexistent_claim(self) -> None:
         """Processing nonexistent claim fails gracefully."""
         insurance = GrammarInsurance()
 
@@ -1244,7 +1244,7 @@ class TestEdgeCases:
         assert result.success is False
         assert "not found" in result.message.lower()
 
-    def test_claim_expired_policy(self):
+    def test_claim_expired_policy(self) -> None:
         """Claim against expired policy is denied."""
         insurance = GrammarInsurance()
 
@@ -1269,7 +1269,7 @@ class TestEdgeCases:
         # Claim should be None for invalid policy
         assert claim is None
 
-    def test_coverage_exhausted(self):
+    def test_coverage_exhausted(self) -> None:
         """Claims stop when coverage exhausted."""
         insurance = GrammarInsurance()
 
@@ -1286,7 +1286,7 @@ class TestEdgeCases:
 
         assert policy.remaining_coverage == 0
 
-    def test_empty_volatility_metrics(self):
+    def test_empty_volatility_metrics(self) -> None:
         """Volatility metrics handle no data gracefully."""
         monitor = VolatilityMonitor()
 
@@ -1294,7 +1294,7 @@ class TestEdgeCases:
 
         assert metrics is None
 
-    def test_zero_coverage_quote(self):
+    def test_zero_coverage_quote(self) -> None:
         """Quote with zero coverage works."""
         insurance = GrammarInsurance()
 
@@ -1308,7 +1308,7 @@ class TestEdgeCases:
 
         assert quote.daily_premium_tokens >= 0
 
-    def test_very_high_coverage(self):
+    def test_very_high_coverage(self) -> None:
         """Very high coverage gets volume discount."""
         insurance = GrammarInsurance()
 

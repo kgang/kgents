@@ -78,7 +78,7 @@ from bootstrap.umwelt import (
 class TestSpecToAgent:
     """Test spec → agent lifecycle."""
 
-    def test_parse_natural_language_intent(self):
+    def test_parse_natural_language_intent(self) -> None:
         """Test parsing natural language into structured Intent."""
         intent = parse_intent(
             "Create an agent that validates JSON schemas and returns "
@@ -89,7 +89,7 @@ class TestSpecToAgent:
         assert len(intent.behavior) >= 0  # May or may not extract behaviors
         assert isinstance(intent.constraints, list)
 
-    def test_intent_to_contract(self):
+    def test_intent_to_contract(self) -> None:
         """Test Intent → Contract transformation."""
         intent = make_sample_intent(
             purpose="Validate email addresses",
@@ -102,7 +102,7 @@ class TestSpecToAgent:
         assert contract.input_type is not None
         assert contract.output_type is not None
 
-    def test_contract_has_invariants(self):
+    def test_contract_has_invariants(self) -> None:
         """Test synthesized contract includes invariants."""
         intent = Intent(
             purpose="Calculate tax amounts",
@@ -122,7 +122,7 @@ class TestSpecToAgent:
 class TestDNAFromSpec:
     """Test DNA creation from spec constraints."""
 
-    def test_constraints_become_dna(self):
+    def test_constraints_become_dna(self) -> None:
         """Test spec constraints translate to DNA constraints."""
         # Define spec-level constraints
         spec_constraints = [
@@ -152,7 +152,7 @@ class TestDNAFromSpec:
 
         assert len(dna_constraints) == len(spec_constraints)
 
-    def test_dna_validation_against_spec(self):
+    def test_dna_validation_against_spec(self) -> None:
         """Test DNA validates against spec requirements."""
 
         @dataclass(frozen=True)
@@ -173,7 +173,7 @@ class TestImplementationFromDNA:
     """Test implementation building from DNA."""
 
     @pytest.mark.asyncio
-    async def test_jit_compiles_from_source(self):
+    async def test_jit_compiles_from_source(self) -> None:
         """Test JIT compiles agent from source."""
         source = AgentSource(
             source="""
@@ -193,7 +193,7 @@ class ImplementedAgent:
         assert result["status"] == "ok"
 
     @pytest.mark.asyncio
-    async def test_agent_respects_dna_constraints(self):
+    async def test_agent_respects_dna_constraints(self) -> None:
         """Test compiled agent respects DNA constraints."""
 
         @dataclass(frozen=True)
@@ -226,7 +226,7 @@ class ConstrainedAgent:
 class TestUmweltCreation:
     """Test Umwelt creation for agent."""
 
-    def test_umwelt_provides_projected_state(self):
+    def test_umwelt_provides_projected_state(self) -> None:
         """Test Umwelt provides agent-specific state view."""
         full_state = {
             "global_config": {"version": "1.0"},
@@ -248,7 +248,7 @@ class TestUmweltCreation:
         assert "agent_b_state" not in agent_a_umwelt.state
 
     @pytest.mark.asyncio
-    async def test_symbiont_with_umwelt_state(self):
+    async def test_symbiont_with_umwelt_state(self) -> None:
         """Test Symbiont agent operates on Umwelt state."""
 
         def increment_logic(amount: int, state: dict) -> tuple[dict, dict]:
@@ -271,7 +271,7 @@ class TestAgentExecution:
     """Test agent execution and validation."""
 
     @pytest.mark.asyncio
-    async def test_agent_produces_valid_output(self):
+    async def test_agent_produces_valid_output(self) -> None:
         """Test agent produces output matching contract."""
         source = AgentSource(
             source="""
@@ -294,7 +294,7 @@ class ValidatingAgent:
         assert "Hello, Alice!" in result["greeting"]
 
     @pytest.mark.asyncio
-    async def test_observed_agent_execution(self):
+    async def test_observed_agent_execution(self) -> None:
         """Test agent execution with observation."""
         source = AgentSource(
             source="""
@@ -319,7 +319,7 @@ class TestAgentRegistration:
     """Test agent registration in catalog."""
 
     @pytest.mark.asyncio
-    async def test_register_created_agent(self):
+    async def test_register_created_agent(self) -> None:
         """Test registering newly created agent."""
         registry = Registry()
 
@@ -341,7 +341,7 @@ class TestAgentRegistration:
         assert retrieved.name == "CreatedAgent"
 
     @pytest.mark.asyncio
-    async def test_register_with_artifact_metadata(self):
+    async def test_register_with_artifact_metadata(self) -> None:
         """Test registering agent with artifact metadata."""
         registry = Registry()
 
@@ -376,7 +376,7 @@ class TestAgentEvolution:
     """Test agent evolution lifecycle."""
 
     @pytest.mark.asyncio
-    async def test_version_bump_on_change(self):
+    async def test_version_bump_on_change(self) -> None:
         """Test version bumps appropriately on changes."""
         from agents.f import VersionBump, determine_version_bump
 
@@ -405,7 +405,7 @@ class TestAgentEvolution:
         assert bump in [VersionBump.MINOR, VersionBump.PATCH]
 
     @pytest.mark.asyncio
-    async def test_breaking_change_major_bump(self):
+    async def test_breaking_change_major_bump(self) -> None:
         """Test breaking changes require major bump."""
         from agents.f import VersionBump, determine_version_bump
 
@@ -430,7 +430,7 @@ class TestFullLifecycle:
     """Test complete spec → execution lifecycle."""
 
     @pytest.mark.asyncio
-    async def test_complete_lifecycle(self):
+    async def test_complete_lifecycle(self) -> None:
         """Test complete agent lifecycle from intent to execution."""
         # Step 1: Parse intent
         intent = parse_intent("Create an agent that greets users by name")
@@ -478,7 +478,7 @@ class GreeterAgent:
         assert retrieved.name == "GreeterAgent"
 
     @pytest.mark.asyncio
-    async def test_lifecycle_with_observation(self):
+    async def test_lifecycle_with_observation(self) -> None:
         """Test lifecycle with observation throughout."""
         observer = BaseObserver(observer_id="lifecycle-observer")
         registry = Registry()
@@ -522,7 +522,7 @@ class TestLifecycleWithState:
     """Test lifecycle with stateful agents."""
 
     @pytest.mark.asyncio
-    async def test_stateful_agent_lifecycle(self):
+    async def test_stateful_agent_lifecycle(self) -> None:
         """Test lifecycle with D-gent backed state."""
 
         # Create stateful agent
@@ -547,7 +547,7 @@ class TestLifecycleWithState:
         assert state == 9
 
     @pytest.mark.asyncio
-    async def test_unified_memory_lifecycle(self):
+    async def test_unified_memory_lifecycle(self) -> None:
         """Test lifecycle with UnifiedMemory."""
         volatile = VolatileAgent(_state={"version": 1})
         config = MemoryConfig(

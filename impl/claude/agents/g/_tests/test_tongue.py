@@ -42,7 +42,7 @@ from agents.g.types import (
 # ============================================================================
 
 
-def test_tongue_builder_minimal():
+def test_tongue_builder_minimal() -> None:
     """Test TongueBuilder with minimal required fields."""
     tongue = (
         TongueBuilder("TestTongue", "1.0.0")
@@ -58,21 +58,21 @@ def test_tongue_builder_minimal():
     assert tongue.level == GrammarLevel.COMMAND  # default
 
 
-def test_tongue_builder_missing_grammar():
+def test_tongue_builder_missing_grammar() -> None:
     """Test TongueBuilder raises error without grammar."""
     builder = TongueBuilder("TestTongue", "1.0.0").with_domain("Testing")
     with pytest.raises(ValueError, match="Grammar is required"):
         builder.build()
 
 
-def test_tongue_builder_missing_domain():
+def test_tongue_builder_missing_domain() -> None:
     """Test TongueBuilder raises error without domain."""
     builder = TongueBuilder("TestTongue", "1.0.0").with_grammar("TEST")
     with pytest.raises(ValueError, match="Domain is required"):
         builder.build()
 
 
-def test_tongue_builder_full():
+def test_tongue_builder_full() -> None:
     """Test TongueBuilder with all fields."""
     tongue = (
         TongueBuilder("CalendarTongue", "1.0.0")
@@ -113,7 +113,7 @@ def test_tongue_builder_full():
     assert tongue.validated is True
 
 
-def test_tongue_builder_fluent_interface():
+def test_tongue_builder_fluent_interface() -> None:
     """Test that TongueBuilder supports method chaining."""
     builder = TongueBuilder("Test", "1.0.0")
     assert builder.with_domain("Test") is builder
@@ -121,7 +121,7 @@ def test_tongue_builder_fluent_interface():
     assert builder.with_level(GrammarLevel.SCHEMA) is builder
 
 
-def test_tongue_builder_infer_parser_strategy():
+def test_tongue_builder_infer_parser_strategy() -> None:
     """Test that parser strategy is inferred correctly."""
     # PYDANTIC format -> pydantic strategy
     tongue1 = (
@@ -159,7 +159,7 @@ def test_tongue_builder_infer_parser_strategy():
 # ============================================================================
 
 
-def test_validate_tongue_success():
+def test_validate_tongue_success() -> None:
     """Test validation of a valid Tongue."""
     tongue = (
         TongueBuilder("ValidTongue", "1.0.0")
@@ -180,7 +180,7 @@ def test_validate_tongue_success():
     assert len(errors) == 0
 
 
-def test_validate_tongue_empty_grammar():
+def test_validate_tongue_empty_grammar() -> None:
     """Test validation fails for empty grammar."""
     # Builder will catch this, but let's test validate_tongue directly
     # by bypassing the builder
@@ -196,7 +196,7 @@ def test_validate_tongue_empty_grammar():
     assert any("Grammar cannot be empty" in error for error in errors)
 
 
-def test_validate_tongue_empty_domain():
+def test_validate_tongue_empty_domain() -> None:
     """Test validation fails for empty domain."""
     # Builder will catch this, but let's test validate_tongue directly
     # by bypassing the builder
@@ -212,7 +212,7 @@ def test_validate_tongue_empty_domain():
     assert any("Domain cannot be empty" in error for error in errors)
 
 
-def test_validate_tongue_constraints_without_proofs():
+def test_validate_tongue_constraints_without_proofs() -> None:
     """Test validation fails for constraints without proofs."""
     tongue = (
         TongueBuilder("InvalidTongue", "1.0.0")
@@ -228,7 +228,7 @@ def test_validate_tongue_constraints_without_proofs():
     assert any("no proofs provided" in error for error in errors)
 
 
-def test_validate_tongue_non_structural_constraint():
+def test_validate_tongue_non_structural_constraint() -> None:
     """Test validation fails for non-structural constraints."""
     tongue = (
         TongueBuilder("InvalidTongue", "1.0.0")
@@ -249,7 +249,7 @@ def test_validate_tongue_non_structural_constraint():
     assert any("not structurally enforced" in error for error in errors)
 
 
-def test_validate_tongue_format_strategy_mismatch():
+def test_validate_tongue_format_strategy_mismatch() -> None:
     """Test validation fails for PYDANTIC format with wrong strategy."""
     tongue = (
         TongueBuilder("InvalidTongue", "1.0.0")
@@ -278,7 +278,7 @@ def test_validate_tongue_format_strategy_mismatch():
 # ============================================================================
 
 
-def test_save_load_json():
+def test_save_load_json() -> None:
     """Test saving and loading Tongue from JSON."""
     tongue = (
         TongueBuilder("TestTongue", "1.0.0")
@@ -303,7 +303,7 @@ def test_save_load_json():
 
 
 @pytest.mark.skipif(not HAS_YAML, reason="PyYAML not installed")
-def test_save_load_yaml():
+def test_save_load_yaml() -> None:
     """Test saving and loading Tongue from YAML."""
     tongue = (
         TongueBuilder("TestTongue", "1.0.0")
@@ -333,7 +333,7 @@ def test_save_load_yaml():
 # ============================================================================
 
 
-def test_create_schema_tongue():
+def test_create_schema_tongue() -> None:
     """Test creating a SCHEMA-level tongue."""
     pydantic_model = """
     from pydantic import BaseModel
@@ -357,7 +357,7 @@ def test_create_schema_tongue():
     assert tongue.interpreter_config.pure_functions_only is True
 
 
-def test_create_command_tongue():
+def test_create_command_tongue() -> None:
     """Test creating a COMMAND-level tongue."""
     bnf_grammar = 'CMD ::= "CHECK" | "ADD"'
     constraints = ["No DELETE operations", "No overwrites"]
@@ -377,7 +377,7 @@ def test_create_command_tongue():
     assert len(tongue.constraints) == 2
 
 
-def test_create_recursive_tongue():
+def test_create_recursive_tongue() -> None:
     """Test creating a RECURSIVE-level tongue."""
     lark_grammar = """
     expr: atom | "(" op expr+ ")"
@@ -404,7 +404,7 @@ def test_create_recursive_tongue():
 # ============================================================================
 
 
-def test_evolve_tongue_version():
+def test_evolve_tongue_version() -> None:
     """Test evolving a Tongue with new version."""
     tongue_v1 = (
         TongueBuilder("TestTongue", "1.0.0")
@@ -420,7 +420,7 @@ def test_evolve_tongue_version():
     assert tongue_v2.grammar == tongue_v1.grammar
 
 
-def test_evolve_tongue_grammar():
+def test_evolve_tongue_grammar() -> None:
     """Test evolving a Tongue with new grammar."""
     tongue_v1 = (
         TongueBuilder("TestTongue", "1.0.0")
@@ -442,7 +442,7 @@ def test_evolve_tongue_grammar():
     assert tongue_v2.validated is False
 
 
-def test_evolve_tongue_constraints():
+def test_evolve_tongue_constraints() -> None:
     """Test evolving a Tongue with new constraints."""
     tongue_v1 = (
         TongueBuilder("TestTongue", "1.0.0")
@@ -459,7 +459,7 @@ def test_evolve_tongue_constraints():
     assert len(tongue_v2.constraints) == 2
 
 
-def test_evolve_tongue_immutability():
+def test_evolve_tongue_immutability() -> None:
     """Test that evolving creates a new Tongue (immutable)."""
     tongue_v1 = (
         TongueBuilder("TestTongue", "1.0.0")
@@ -483,7 +483,7 @@ def test_evolve_tongue_immutability():
 # ============================================================================
 
 
-def test_builder_validation_integration():
+def test_builder_validation_integration() -> None:
     """Test that built Tongue passes validation."""
     tongue = (
         TongueBuilder("ValidTongue", "1.0.0")
@@ -504,7 +504,7 @@ def test_builder_validation_integration():
     assert is_valid, f"Validation failed: {errors}"
 
 
-def test_template_validation_integration():
+def test_template_validation_integration() -> None:
     """Test that template-created Tongues pass validation."""
     tongue = create_command_tongue(
         name="SafeQuery",
@@ -520,7 +520,7 @@ def test_template_validation_integration():
     assert any("no proofs provided" in error for error in errors)
 
 
-def test_serialization_round_trip_integration():
+def test_serialization_round_trip_integration() -> None:
     """Test full round-trip: build -> save -> load -> validate."""
     tongue = (
         TongueBuilder("RoundTripTongue", "1.0.0")

@@ -35,7 +35,7 @@ from agents.t.tool import ToolError, ToolErrorType
 # --- JSON-RPC Tests ---
 
 
-def test_jsonrpc_request_serialization():
+def test_jsonrpc_request_serialization() -> None:
     """Test JSON-RPC request serialization to JSON."""
     request = JsonRpcRequest(id=1, method="tools/list", params={})
 
@@ -48,7 +48,7 @@ def test_jsonrpc_request_serialization():
     assert data["params"] == {}
 
 
-def test_jsonrpc_request_notification():
+def test_jsonrpc_request_notification() -> None:
     """Test JSON-RPC notification (no id) serialization."""
     request = JsonRpcRequest(method="notifications/initialized", params={})
 
@@ -60,7 +60,7 @@ def test_jsonrpc_request_notification():
     assert data["method"] == "notifications/initialized"
 
 
-def test_jsonrpc_response_deserialization_success():
+def test_jsonrpc_response_deserialization_success() -> None:
     """Test JSON-RPC success response deserialization."""
     json_str = json.dumps({"jsonrpc": "2.0", "id": 1, "result": {"tools": []}})
 
@@ -73,7 +73,7 @@ def test_jsonrpc_response_deserialization_success():
     assert not response.is_error()
 
 
-def test_jsonrpc_response_deserialization_error():
+def test_jsonrpc_response_deserialization_error() -> None:
     """Test JSON-RPC error response deserialization."""
     json_str = json.dumps(
         {
@@ -92,7 +92,7 @@ def test_jsonrpc_response_deserialization_error():
     assert response.is_error()
 
 
-def test_jsonrpc_error_codes():
+def test_jsonrpc_error_codes() -> None:
     """Test JSON-RPC standard error codes."""
     assert JsonRpcError.PARSE_ERROR == -32700
     assert JsonRpcError.INVALID_REQUEST == -32600
@@ -105,7 +105,7 @@ def test_jsonrpc_error_codes():
 
 
 @pytest.mark.asyncio
-async def test_stdio_transport_initialization():
+async def test_stdio_transport_initialization() -> None:
     """Test stdio transport initialization."""
     transport = StdioTransport(command=["echo", "test"])
 
@@ -115,7 +115,7 @@ async def test_stdio_transport_initialization():
 
 
 @pytest.mark.asyncio
-async def test_stdio_transport_connect():
+async def test_stdio_transport_connect() -> None:
     """Test stdio transport process spawn."""
     # Use echo command that terminates immediately
     transport = StdioTransport(command=["echo", "test"])
@@ -132,7 +132,7 @@ async def test_stdio_transport_connect():
 
 @pytest.mark.asyncio
 @pytest.mark.skip(reason="Test hangs with cat - needs mock server implementation")
-async def test_stdio_transport_send_receive():
+async def test_stdio_transport_send_receive() -> None:
     """Test stdio transport send/receive with mock process."""
     transport = StdioTransport(command=["cat"])
 
@@ -172,7 +172,7 @@ async def test_stdio_transport_send_receive():
 
 @pytest.mark.asyncio
 @pytest.mark.skip(reason="Test hangs with cat - needs mock server implementation")
-async def test_stdio_transport_close():
+async def test_stdio_transport_close() -> None:
     """Test stdio transport cleanup."""
     transport = StdioTransport(command=["cat"])
     await transport.connect()
@@ -189,7 +189,7 @@ async def test_stdio_transport_close():
 # --- HTTP/SSE Transport Tests ---
 
 
-def test_http_sse_transport_initialization():
+def test_http_sse_transport_initialization() -> None:
     """Test HTTP/SSE transport initialization."""
     transport = HttpSseTransport(
         base_url="https://api.example.com/mcp", auth_token="token123"
@@ -200,7 +200,7 @@ def test_http_sse_transport_initialization():
 
 
 @pytest.mark.asyncio
-async def test_http_sse_transport_not_implemented():
+async def test_http_sse_transport_not_implemented() -> None:
     """Test HTTP/SSE transport raises NotImplementedError."""
     transport = HttpSseTransport(base_url="https://api.example.com/mcp")
 
@@ -215,7 +215,7 @@ async def test_http_sse_transport_not_implemented():
 
 
 @pytest.mark.asyncio
-async def test_mcp_client_initialization():
+async def test_mcp_client_initialization() -> None:
     """Test MCP client initialization."""
     transport = StdioTransport(command=["echo"])
     client = MCPClient(transport)
@@ -226,7 +226,7 @@ async def test_mcp_client_initialization():
 
 
 @pytest.mark.asyncio
-async def test_mcp_client_request_id_generation():
+async def test_mcp_client_request_id_generation() -> None:
     """Test unique request ID generation."""
     transport = StdioTransport(command=["echo"])
     client = MCPClient(transport)
@@ -241,7 +241,7 @@ async def test_mcp_client_request_id_generation():
 
 
 @pytest.mark.asyncio
-async def test_mcp_client_connect_success():
+async def test_mcp_client_connect_success() -> None:
     """Test MCP client connect with successful initialize."""
     transport = AsyncMock(spec=StdioTransport)
 
@@ -274,7 +274,7 @@ async def test_mcp_client_connect_success():
 
 
 @pytest.mark.asyncio
-async def test_mcp_client_connect_error():
+async def test_mcp_client_connect_error() -> None:
     """Test MCP client connect with initialize error."""
     transport = AsyncMock(spec=StdioTransport)
 
@@ -299,7 +299,7 @@ async def test_mcp_client_connect_error():
 
 @pytest.mark.asyncio
 @pytest.mark.slow
-async def test_mcp_client_connect_timeout():
+async def test_mcp_client_connect_timeout() -> None:
     """Test MCP client connect timeout using mocked timeout."""
     transport = AsyncMock(spec=StdioTransport)
 
@@ -317,7 +317,7 @@ async def test_mcp_client_connect_timeout():
 
 
 @pytest.mark.asyncio
-async def test_mcp_client_list_tools_success():
+async def test_mcp_client_list_tools_success() -> None:
     """Test MCP client list tools."""
     transport = AsyncMock(spec=StdioTransport)
     client = MCPClient(transport)
@@ -357,7 +357,7 @@ async def test_mcp_client_list_tools_success():
 
 
 @pytest.mark.asyncio
-async def test_mcp_client_list_tools_not_connected():
+async def test_mcp_client_list_tools_not_connected() -> None:
     """Test MCP client list tools when not connected."""
     transport = AsyncMock(spec=StdioTransport)
     client = MCPClient(transport)
@@ -374,7 +374,7 @@ async def test_mcp_client_list_tools_not_connected():
 
 
 @pytest.mark.asyncio
-async def test_mcp_client_call_tool_success():
+async def test_mcp_client_call_tool_success() -> None:
     """Test MCP client call tool."""
     transport = AsyncMock(spec=StdioTransport)
     client = MCPClient(transport)
@@ -399,7 +399,7 @@ async def test_mcp_client_call_tool_success():
 
 
 @pytest.mark.asyncio
-async def test_mcp_client_call_tool_method_not_found():
+async def test_mcp_client_call_tool_method_not_found() -> None:
     """Test MCP client call tool with method not found error."""
     transport = AsyncMock(spec=StdioTransport)
     client = MCPClient(transport)
@@ -423,7 +423,7 @@ async def test_mcp_client_call_tool_method_not_found():
 
 
 @pytest.mark.asyncio
-async def test_mcp_client_call_tool_invalid_params():
+async def test_mcp_client_call_tool_invalid_params() -> None:
     """Test MCP client call tool with invalid params error."""
     transport = AsyncMock(spec=StdioTransport)
     client = MCPClient(transport)
@@ -448,7 +448,7 @@ async def test_mcp_client_call_tool_invalid_params():
 
 @pytest.mark.asyncio
 @pytest.mark.slow
-async def test_mcp_client_call_tool_timeout():
+async def test_mcp_client_call_tool_timeout() -> None:
     """Test MCP client call tool timeout using mocked timeout."""
     transport = AsyncMock(spec=StdioTransport)
     client = MCPClient(transport)
@@ -468,7 +468,7 @@ async def test_mcp_client_call_tool_timeout():
 
 
 @pytest.mark.asyncio
-async def test_mcp_client_list_resources_success():
+async def test_mcp_client_list_resources_success() -> None:
     """Test MCP client list resources."""
     transport = AsyncMock(spec=StdioTransport)
     client = MCPClient(transport)
@@ -510,7 +510,7 @@ async def test_mcp_client_list_resources_success():
 
 
 @pytest.mark.asyncio
-async def test_mcp_client_disconnect():
+async def test_mcp_client_disconnect() -> None:
     """Test MCP client disconnect."""
     transport = AsyncMock(spec=StdioTransport)
     client = MCPClient(transport)
@@ -529,7 +529,7 @@ async def test_mcp_client_disconnect():
 
 
 @pytest.mark.asyncio
-async def test_mcp_tool_initialization():
+async def test_mcp_tool_initialization() -> None:
     """Test MCPTool initialization from schema."""
     schema = MCPToolSchema(
         name="web_search",
@@ -553,7 +553,7 @@ async def test_mcp_tool_initialization():
 
 
 @pytest.mark.asyncio
-async def test_mcp_tool_invoke_success():
+async def test_mcp_tool_invoke_success() -> None:
     """Test MCPTool invoke with successful result."""
     schema = MCPToolSchema(
         name="web_search",
@@ -579,7 +579,7 @@ async def test_mcp_tool_invoke_success():
 
 
 @pytest.mark.asyncio
-async def test_mcp_tool_invoke_error():
+async def test_mcp_tool_invoke_error() -> None:
     """Test MCPTool invoke with error result."""
     schema = MCPToolSchema(
         name="web_search",
@@ -617,7 +617,7 @@ async def test_mcp_tool_invoke_error():
 
 
 @pytest.mark.asyncio
-async def test_mcp_full_lifecycle():
+async def test_mcp_full_lifecycle() -> None:
     """Test full MCP client lifecycle: connect → list → call → disconnect."""
     transport = AsyncMock(spec=StdioTransport)
     client = MCPClient(transport)
@@ -673,7 +673,7 @@ async def test_mcp_full_lifecycle():
 
 
 @pytest.mark.asyncio
-async def test_mcp_tool_composition():
+async def test_mcp_tool_composition() -> None:
     """Test MCPTool composition with other agents."""
     # Create mock schema and client
     schema = MCPToolSchema(

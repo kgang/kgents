@@ -23,14 +23,14 @@ from ..lifecycle import (
 class TestOperationMode:
     """Tests for OperationMode enum."""
 
-    def test_mode_values(self):
+    def test_mode_values(self) -> None:
         """Should have expected mode values."""
         assert OperationMode.DB_LESS.value == "db_less"
         assert OperationMode.LOCAL_ONLY.value == "local"
         assert OperationMode.GLOBAL_ONLY.value == "global"
         assert OperationMode.FULL.value == "full"
 
-    def test_mode_string_comparison(self):
+    def test_mode_string_comparison(self) -> None:
         """Modes should compare as strings."""
         assert OperationMode.DB_LESS == "db_less"
         assert OperationMode.GLOBAL_ONLY == "global"
@@ -39,7 +39,7 @@ class TestOperationMode:
 class TestLifecycleState:
     """Tests for LifecycleState dataclass."""
 
-    def test_create_minimal_state(self):
+    def test_create_minimal_state(self) -> None:
         """Should create state with minimal fields."""
         state = LifecycleState(
             mode=OperationMode.DB_LESS,
@@ -53,7 +53,7 @@ class TestLifecycleState:
         assert state.storage_provider is None
         assert state.errors == []
 
-    def test_create_full_state(self):
+    def test_create_full_state(self) -> None:
         """Should create state with all fields."""
         state = LifecycleState(
             mode=OperationMode.FULL,
@@ -76,7 +76,7 @@ class TestLifecycleManagerModeDetection:
     """Tests for mode detection logic."""
 
     @pytest.mark.asyncio
-    async def test_db_less_mode_no_files(self, tmp_path, monkeypatch):
+    async def test_db_less_mode_no_files(self, tmp_path, monkeypatch) -> None:
         """Should detect DB-less mode when nothing exists."""
         # Set up empty XDG paths
         monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
@@ -90,7 +90,7 @@ class TestLifecycleManagerModeDetection:
         assert state.storage_provider is None
 
     @pytest.mark.asyncio
-    async def test_global_mode_when_db_exists(self, tmp_path, monkeypatch):
+    async def test_global_mode_when_db_exists(self, tmp_path, monkeypatch) -> None:
         """Should detect global mode when only global DB exists."""
         data_dir = tmp_path / "data" / "kgents"
         data_dir.mkdir(parents=True)
@@ -110,7 +110,7 @@ class TestLifecycleManagerModeDetection:
         await manager.shutdown()
 
     @pytest.mark.asyncio
-    async def test_local_mode_when_project_db_only(self, tmp_path, monkeypatch):
+    async def test_local_mode_when_project_db_only(self, tmp_path, monkeypatch) -> None:
         """Should detect local mode when only project DB exists."""
         project_path = tmp_path / "project"
         project_path.mkdir()
@@ -131,7 +131,7 @@ class TestLifecycleManagerModeDetection:
         await manager.shutdown()
 
     @pytest.mark.asyncio
-    async def test_full_mode_when_both_exist(self, tmp_path, monkeypatch):
+    async def test_full_mode_when_both_exist(self, tmp_path, monkeypatch) -> None:
         """Should detect full mode when both DBs exist."""
         # Global DB
         data_dir = tmp_path / "data" / "kgents"
@@ -162,7 +162,7 @@ class TestLifecycleManagerBootstrap:
     """Tests for bootstrap sequence."""
 
     @pytest.mark.asyncio
-    async def test_bootstrap_creates_directories(self, tmp_path, monkeypatch):
+    async def test_bootstrap_creates_directories(self, tmp_path, monkeypatch) -> None:
         """Should create XDG directories during bootstrap."""
         monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
         monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
@@ -182,7 +182,7 @@ class TestLifecycleManagerBootstrap:
         await manager.shutdown()
 
     @pytest.mark.asyncio
-    async def test_bootstrap_registers_instance(self, tmp_path, monkeypatch):
+    async def test_bootstrap_registers_instance(self, tmp_path, monkeypatch) -> None:
         """Should register instance in database."""
         data_dir = tmp_path / "data" / "kgents"
         data_dir.mkdir(parents=True)
@@ -211,7 +211,7 @@ class TestLifecycleManagerBootstrap:
         await manager.shutdown()
 
     @pytest.mark.asyncio
-    async def test_bootstrap_computes_project_hash(self, tmp_path, monkeypatch):
+    async def test_bootstrap_computes_project_hash(self, tmp_path, monkeypatch) -> None:
         """Should compute stable project hash."""
         data_dir = tmp_path / "data" / "kgents"
         data_dir.mkdir(parents=True)
@@ -233,7 +233,7 @@ class TestLifecycleManagerBootstrap:
         await manager.shutdown()
 
     @pytest.mark.asyncio
-    async def test_bootstrap_logs_startup_event(self, tmp_path, monkeypatch):
+    async def test_bootstrap_logs_startup_event(self, tmp_path, monkeypatch) -> None:
         """Should log startup telemetry event."""
         data_dir = tmp_path / "data" / "kgents"
         data_dir.mkdir(parents=True)
@@ -259,7 +259,9 @@ class TestLifecycleManagerShutdown:
     """Tests for shutdown sequence."""
 
     @pytest.mark.asyncio
-    async def test_shutdown_marks_instance_terminated(self, tmp_path, monkeypatch):
+    async def test_shutdown_marks_instance_terminated(
+        self, tmp_path, monkeypatch
+    ) -> None:
         """Should mark instance as terminated on shutdown."""
         data_dir = tmp_path / "data" / "kgents"
         data_dir.mkdir(parents=True)
@@ -290,7 +292,7 @@ class TestLifecycleManagerShutdown:
         await store.close()
 
     @pytest.mark.asyncio
-    async def test_shutdown_logs_event(self, tmp_path, monkeypatch):
+    async def test_shutdown_logs_event(self, tmp_path, monkeypatch) -> None:
         """Should log shutdown telemetry event."""
         data_dir = tmp_path / "data" / "kgents"
         data_dir.mkdir(parents=True)
@@ -313,7 +315,7 @@ class TestLifecycleManagerShutdown:
         await store.close()
 
     @pytest.mark.asyncio
-    async def test_shutdown_runs_handlers(self, tmp_path, monkeypatch):
+    async def test_shutdown_runs_handlers(self, tmp_path, monkeypatch) -> None:
         """Should run registered shutdown handlers."""
         data_dir = tmp_path / "data" / "kgents"
         data_dir.mkdir(parents=True)
@@ -336,7 +338,7 @@ class TestLifecycleManagerShutdown:
         assert handler_called == [True]
 
     @pytest.mark.asyncio
-    async def test_shutdown_safe_when_not_bootstrapped(self):
+    async def test_shutdown_safe_when_not_bootstrapped(self) -> None:
         """Should not raise when shutting down without bootstrap."""
         manager = LifecycleManager()
         await manager.shutdown()  # Should not raise
@@ -346,7 +348,7 @@ class TestLifecycleManagerHeartbeat:
     """Tests for heartbeat functionality."""
 
     @pytest.mark.asyncio
-    async def test_heartbeat_updates_timestamp(self, tmp_path, monkeypatch):
+    async def test_heartbeat_updates_timestamp(self, tmp_path, monkeypatch) -> None:
         """Should update last_heartbeat timestamp."""
         data_dir = tmp_path / "data" / "kgents"
         data_dir.mkdir(parents=True)
@@ -382,7 +384,7 @@ class TestLifecycleManagerHeartbeat:
         await manager.shutdown()
 
     @pytest.mark.asyncio
-    async def test_heartbeat_safe_when_not_bootstrapped(self):
+    async def test_heartbeat_safe_when_not_bootstrapped(self) -> None:
         """Should not raise when heartbeat called without bootstrap."""
         manager = LifecycleManager()
         await manager.heartbeat()  # Should not raise
@@ -392,7 +394,7 @@ class TestLifecycleManagerCleanup:
     """Tests for stale instance cleanup."""
 
     @pytest.mark.asyncio
-    async def test_cleanup_stale_instances(self, tmp_path, monkeypatch):
+    async def test_cleanup_stale_instances(self, tmp_path, monkeypatch) -> None:
         """Should mark stale instances."""
         data_dir = tmp_path / "data" / "kgents"
         data_dir.mkdir(parents=True)
@@ -440,7 +442,7 @@ class TestQuickBootstrap:
     """Tests for quick_bootstrap convenience function."""
 
     @pytest.mark.asyncio
-    async def test_quick_bootstrap(self, tmp_path, monkeypatch):
+    async def test_quick_bootstrap(self, tmp_path, monkeypatch) -> None:
         """Should return manager and state tuple."""
         data_dir = tmp_path / "data" / "kgents"
         data_dir.mkdir(parents=True)

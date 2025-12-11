@@ -34,7 +34,7 @@ class TestParsersWithJITAgents:
     """Test P-gent parsers validating J-gent outputs."""
 
     @pytest.mark.asyncio
-    async def test_jit_agent_output_parsed_by_pgent(self):
+    async def test_jit_agent_output_parsed_by_pgent(self) -> None:
         """Test P-gent parsing output from JIT agent."""
         # Create JIT agent that returns JSON-like string manually
         # Note: JIT sandbox doesn't support imports, so we build JSON manually
@@ -66,7 +66,7 @@ class JSONProducer:
         assert parse_result.confidence > 0.7
 
     @pytest.mark.asyncio
-    async def test_jit_agent_with_anchor_output(self):
+    async def test_jit_agent_with_anchor_output(self) -> None:
         """Test JIT agent using anchor markers parsed by P-gent."""
         source = AgentSource(
             source="""
@@ -102,7 +102,7 @@ class AnchorProducer:
         assert "0.95" in confidence_parsed.value[0]
 
     @pytest.mark.asyncio
-    async def test_jit_agent_composition_with_parser(self):
+    async def test_jit_agent_composition_with_parser(self) -> None:
         """Test composing JIT agent with parser validation."""
         # Create JIT agent (manually construct JSON due to sandbox limitations)
         source = AgentSource(
@@ -135,7 +135,7 @@ class DataGenerator:
 class TestToolsWithParserIntegration:
     """Test T-gents using P-gent parsers for tool I/O."""
 
-    def test_tool_schema_parsing_workflow(self):
+    def test_tool_schema_parsing_workflow(self) -> None:
         """Test complete tool schema parsing workflow."""
         # Define tool schema (as if from MCP)
         tool_schema = {
@@ -170,7 +170,7 @@ class TestToolsWithParserIntegration:
         assert result.value["input_schema"] == tool_schema["inputSchema"]
         assert result.value["output_schema"] == tool_schema["outputSchema"]
 
-    def test_tool_error_classification_workflow(self):
+    def test_tool_error_classification_workflow(self) -> None:
         """Test tool error parsing and recovery strategy."""
         error_parser = create_tgent_error_parser()
 
@@ -189,7 +189,7 @@ class TestToolsWithParserIntegration:
             assert result.value["error_type"] == expected_type
             assert result.value["recovery"] == expected_recovery
 
-    def test_tool_output_validation_with_parser(self):
+    def test_tool_output_validation_with_parser(self) -> None:
         """Test validating tool outputs against schema."""
         # Tool output
         tool_output = json.dumps(
@@ -210,7 +210,7 @@ class TestJITToolsIntegration:
     """Test JIT-generated Tools (J × T integration)."""
 
     @pytest.mark.asyncio
-    async def test_jit_generated_tool_agent(self):
+    async def test_jit_generated_tool_agent(self) -> None:
         """Test creating a Tool via JIT compilation."""
         # JIT source for a simple Tool-like agent
         source = AgentSource(
@@ -242,7 +242,7 @@ class SimpleToolAgent:
         assert result["metadata"]["jit_compiled"] is True
 
     @pytest.mark.asyncio
-    async def test_jit_tool_with_error_handling(self):
+    async def test_jit_tool_with_error_handling(self) -> None:
         """Test JIT tool with error handling."""
         source = AgentSource(
             source="""
@@ -284,7 +284,7 @@ class TestCompleteWorkflow:
     """Test complete P × J × T workflows."""
 
     @pytest.mark.asyncio
-    async def test_jit_tool_with_parsed_io(self):
+    async def test_jit_tool_with_parsed_io(self) -> None:
         """Test JIT Tool with P-gent parsing for both I/O."""
         # Simplified version without JSON module (sandbox limitation)
         # Note: Real tools would use proper JSON, but JIT sandbox restricts imports
@@ -319,7 +319,7 @@ class DataProcessorTool:
         assert parsed_output.value["result"] == 15
 
     @pytest.mark.asyncio
-    async def test_tool_pipeline_with_parsers(self):
+    async def test_tool_pipeline_with_parsers(self) -> None:
         """Test pipeline of tools with parser validation at each step."""
         # Simplified pipeline (sandbox limitations prevent JSON imports)
         # Tool 1: Data extractor (JIT)
@@ -381,7 +381,7 @@ class Calculator:
         assert step2_parsed.value["count"] == 3
 
     @pytest.mark.asyncio
-    async def test_tool_with_fallback_parsing(self):
+    async def test_tool_with_fallback_parsing(self) -> None:
         """Test tool with multiple parser strategies (P-gent strength)."""
         # Create JIT tool with potentially malformed output
         source = AgentSource(
@@ -428,7 +428,7 @@ class TestMetadataAndProvenance:
     """Test metadata and provenance tracking across integrations."""
 
     @pytest.mark.asyncio
-    async def test_jit_tool_provenance_preserved(self):
+    async def test_jit_tool_provenance_preserved(self) -> None:
         """Test that JIT tool provenance is preserved through parsing."""
         source = AgentSource(
             source="""
@@ -459,7 +459,7 @@ class ProvenanceTool:
         assert parsed.value["tool_version"] == "jit-v1.0"
         assert "compilation_timestamp" in parsed.value
 
-    def test_parser_metadata_tracking(self):
+    def test_parser_metadata_tracking(self) -> None:
         """Test that P-gent parser metadata is tracked."""
         parser = create_tgent_output_parser(expected_type="TestOutput")
 

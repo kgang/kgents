@@ -51,7 +51,7 @@ class MockContract:
 # --- Test: Type Compatibility ---
 
 
-def test_type_compatibility_valid():
+def test_type_compatibility_valid() -> None:
     """Test validation of valid type morphism."""
     contract = MockContract(
         agent_name="TestAgent",
@@ -66,7 +66,7 @@ def test_type_compatibility_valid():
     assert "Type Morphism Existence" in report.laws_checked
 
 
-def test_type_compatibility_missing_types():
+def test_type_compatibility_missing_types() -> None:
     """Test detection of missing type definitions."""
     contract = MockContract(
         agent_name="TestAgent",
@@ -81,7 +81,7 @@ def test_type_compatibility_missing_types():
     assert any("Type Morphism" in v.law_name for v in report.violations)
 
 
-def test_type_compatibility_degenerate():
+def test_type_compatibility_degenerate() -> None:
     """Test warning for degenerate morphism (None → None)."""
     contract = MockContract(
         agent_name="TestAgent",
@@ -100,7 +100,7 @@ def test_type_compatibility_degenerate():
 # --- Test: Composition Laws ---
 
 
-def test_composition_sequential_no_side_effects():
+def test_composition_sequential_no_side_effects() -> None:
     """Test sequential composition without side effects."""
     contract = MockContract(
         agent_name="PureAgent",
@@ -120,7 +120,7 @@ def test_composition_sequential_no_side_effects():
     assert "Composition Associativity" in report.laws_checked
 
 
-def test_composition_sequential_with_side_effects():
+def test_composition_sequential_with_side_effects() -> None:
     """Test warning for sequential composition with side effects."""
     contract = MockContract(
         agent_name="StatefulAgent",
@@ -148,7 +148,7 @@ def test_composition_sequential_with_side_effects():
     assert any("associative" in w.description.lower() for w in report.warnings)
 
 
-def test_composition_no_rules_warning():
+def test_composition_no_rules_warning() -> None:
     """Test warning when no composition rules specified."""
     contract = MockContract(
         agent_name="NoRules",
@@ -166,7 +166,7 @@ def test_composition_no_rules_warning():
 # --- Test: Invariant Laws ---
 
 
-def test_identity_invariant_valid():
+def test_identity_invariant_valid() -> None:
     """Test validation of identity invariant with matching types."""
     contract = MockContract(
         agent_name="IdentityAgent",
@@ -187,7 +187,7 @@ def test_identity_invariant_valid():
     assert report.passed is True
 
 
-def test_identity_invariant_invalid():
+def test_identity_invariant_invalid() -> None:
     """Test detection of invalid identity claim (type mismatch)."""
     contract = MockContract(
         agent_name="FakeIdentity",
@@ -209,7 +209,7 @@ def test_identity_invariant_invalid():
     assert any("Identity Law" in v.law_name for v in report.violations)
 
 
-def test_idempotence_invariant():
+def test_idempotence_invariant() -> None:
     """Test recognition of idempotence invariant."""
     contract = MockContract(
         agent_name="IdempotentAgent",
@@ -234,7 +234,7 @@ def test_idempotence_invariant():
 # --- Test: Functor Pattern ---
 
 
-def test_functor_pattern_complete():
+def test_functor_pattern_complete() -> None:
     """Test functor pattern with all required laws."""
     contract = MockContract(
         agent_name="MapAgent",
@@ -267,7 +267,7 @@ def test_functor_pattern_complete():
     assert "Functor Pattern" in report.laws_checked
 
 
-def test_functor_pattern_missing_laws():
+def test_functor_pattern_missing_laws() -> None:
     """Test warning for functor pattern without required laws."""
     contract = MockContract(
         agent_name="IncompleteMap",
@@ -293,7 +293,7 @@ def test_functor_pattern_missing_laws():
 # --- Test: Monad Pattern ---
 
 
-def test_monad_pattern_complete():
+def test_monad_pattern_complete() -> None:
     """Test monad pattern with all required laws."""
     contract = MockContract(
         agent_name="BindAgent",
@@ -331,7 +331,7 @@ def test_monad_pattern_complete():
     assert "Monad Pattern" in report.laws_checked
 
 
-def test_monad_pattern_missing_laws():
+def test_monad_pattern_missing_laws() -> None:
     """Test warning for monad pattern without all laws."""
     contract = MockContract(
         agent_name="IncompleteBind",
@@ -365,7 +365,7 @@ def test_monad_pattern_missing_laws():
 # --- Test: validate_contract_laws (convenience function) ---
 
 
-def test_validate_contract_laws():
+def test_validate_contract_laws() -> None:
     """Test the convenience function for contract validation."""
     contract = MockContract(
         agent_name="SimpleAgent",
@@ -382,7 +382,7 @@ def test_validate_contract_laws():
 # --- Test: validate_composition_compatibility ---
 
 
-def test_composition_compatibility_valid():
+def test_composition_compatibility_valid() -> None:
     """Test composition compatibility for matching types."""
     contract1 = MockContract(
         agent_name="Agent1",
@@ -405,7 +405,7 @@ def test_composition_compatibility_valid():
     assert "Compatible" in reason
 
 
-def test_composition_compatibility_type_mismatch():
+def test_composition_compatibility_type_mismatch() -> None:
     """Test detection of type incompatibility."""
     contract1 = MockContract(
         agent_name="Agent1",
@@ -425,7 +425,7 @@ def test_composition_compatibility_type_mismatch():
     assert "Type mismatch" in reason
 
 
-def test_composition_compatibility_fuzzy_match():
+def test_composition_compatibility_fuzzy_match() -> None:
     """Test fuzzy type matching (str vs string)."""
     contract1 = MockContract(
         agent_name="Agent1",
@@ -444,7 +444,7 @@ def test_composition_compatibility_fuzzy_match():
     assert compatible is True
 
 
-def test_composition_compatibility_no_sequential_rule():
+def test_composition_compatibility_no_sequential_rule() -> None:
     """Test detection when contract doesn't support sequential composition."""
     contract1 = MockContract(
         agent_name="Agent1",
@@ -470,7 +470,7 @@ def test_composition_compatibility_no_sequential_rule():
 # --- Test: suggest_contract_improvements ---
 
 
-def test_suggest_improvements_functor():
+def test_suggest_improvements_functor() -> None:
     """Test improvement suggestions for functor pattern."""
     report = ContractValidationReport(
         contract_name="TestAgent",
@@ -495,7 +495,7 @@ def test_suggest_improvements_functor():
     assert any("F(id) = id" in s for s in suggestions)
 
 
-def test_suggest_improvements_monad():
+def test_suggest_improvements_monad() -> None:
     """Test improvement suggestions for monad pattern."""
     report = ContractValidationReport(
         contract_name="TestAgent",
@@ -519,7 +519,7 @@ def test_suggest_improvements_monad():
     assert any("monad" in s.lower() for s in suggestions)
 
 
-def test_suggest_improvements_type_error():
+def test_suggest_improvements_type_error() -> None:
     """Test improvement suggestions for type errors."""
     report = ContractValidationReport(
         contract_name="TestAgent",
@@ -545,7 +545,7 @@ def test_suggest_improvements_type_error():
 # --- Test: Report string representation ---
 
 
-def test_contract_violation_str():
+def test_contract_violation_str() -> None:
     """Test ContractLawViolation string representation."""
     violation = ContractLawViolation(
         law_name="Functor Identity",
@@ -560,7 +560,7 @@ def test_contract_violation_str():
     assert "MapAgent" in str_rep
 
 
-def test_contract_report_str():
+def test_contract_report_str() -> None:
     """Test ContractValidationReport string representation."""
     report = ContractValidationReport(
         contract_name="TestAgent",

@@ -34,19 +34,19 @@ from ..node import (
 class TestSimpleRegistry:
     """Tests for SimpleRegistry."""
 
-    def test_empty_registry(self):
+    def test_empty_registry(self) -> None:
         """Empty registry returns None for any handle."""
         registry = SimpleRegistry()
         assert registry.get("world.house") is None
 
-    def test_register_and_get(self):
+    def test_register_and_get(self) -> None:
         """Can register and retrieve nodes."""
         registry = SimpleRegistry()
         node = PlaceholderNode(handle="world.house")
         registry.register("world.house", node)
         assert registry.get("world.house") is node
 
-    def test_list_handles(self):
+    def test_list_handles(self) -> None:
         """Can list all handles."""
         registry = SimpleRegistry()
         registry.register("world.house", PlaceholderNode(handle="world.house"))
@@ -57,7 +57,7 @@ class TestSimpleRegistry:
         assert len(all_handles) == 3
         assert "world.house" in all_handles
 
-    def test_list_handles_with_prefix(self):
+    def test_list_handles_with_prefix(self) -> None:
         """Can filter handles by prefix."""
         registry = SimpleRegistry()
         registry.register("world.house", PlaceholderNode(handle="world.house"))
@@ -73,18 +73,18 @@ class TestSimpleRegistry:
 class TestPathParsing:
     """Tests for AGENTESE path parsing."""
 
-    def test_valid_two_part_path(self, logos_with_nodes):
+    def test_valid_two_part_path(self, logos_with_nodes) -> None:
         """Two-part path (context.holon) is valid."""
         node = logos_with_nodes.resolve("world.house")
         assert node.handle == "world.house"
 
-    def test_single_part_path_fails(self, logos):
+    def test_single_part_path_fails(self, logos) -> None:
         """Single-part path raises PathSyntaxError."""
         with pytest.raises(PathSyntaxError) as exc:
             logos.resolve("world")
         assert "incomplete" in str(exc.value)
 
-    def test_empty_path_fails(self, logos):
+    def test_empty_path_fails(self, logos) -> None:
         """Empty path raises PathSyntaxError."""
         with pytest.raises(PathSyntaxError):
             logos.resolve("")
@@ -94,7 +94,7 @@ class TestContextValidation:
     """Tests for five strict contexts."""
 
     @pytest.mark.parametrize("context", ["world", "self", "concept", "void", "time"])
-    def test_valid_contexts_accepted(self, context, populated_registry):
+    def test_valid_contexts_accepted(self, context, populated_registry) -> None:
         """All five contexts are accepted."""
         logos = Logos(registry=populated_registry)
         # Register a node for each context
@@ -103,14 +103,14 @@ class TestContextValidation:
         node = logos.resolve(f"{context}.test")
         assert node.handle == f"{context}.test"
 
-    def test_invalid_context_rejected(self, logos):
+    def test_invalid_context_rejected(self, logos) -> None:
         """Invalid context raises PathNotFoundError."""
         with pytest.raises(PathNotFoundError) as exc:
             logos.resolve("invalid.house")
         assert "Unknown context" in str(exc.value)
         assert "valid contexts" in str(exc.value).lower()
 
-    def test_sixth_context_rejected(self, logos):
+    def test_sixth_context_rejected(self, logos) -> None:
         """No sixth context allowed."""
         for invalid in ["system", "meta", "admin", "root", "global"]:
             with pytest.raises(PathNotFoundError):
@@ -121,19 +121,21 @@ class TestObserverRequirement:
     """Tests for observer enforcement."""
 
     @pytest.mark.asyncio
-    async def test_invoke_without_observer_fails(self, logos_with_nodes):
+    async def test_invoke_without_observer_fails(self, logos_with_nodes) -> None:
         """invoke() without observer raises ObserverRequiredError."""
         with pytest.raises(ObserverRequiredError) as exc:
             await logos_with_nodes.invoke("world.house.manifest", None)
         assert "no view from nowhere" in str(exc.value)
 
     @pytest.mark.asyncio
-    async def test_invoke_with_observer_succeeds(self, logos_with_nodes, mock_umwelt):
+    async def test_invoke_with_observer_succeeds(
+        self, logos_with_nodes, mock_umwelt
+    ) -> None:
         """invoke() with observer works."""
         result = await logos_with_nodes.invoke("world.house.manifest", mock_umwelt)
         assert result is not None
 
-    def test_resolve_works_without_observer(self, logos_with_nodes):
+    def test_resolve_works_without_observer(self, logos_with_nodes) -> None:
         """resolve() doesn't require observer (affordance check is on invoke)."""
         node = logos_with_nodes.resolve("world.house")
         assert node is not None
@@ -143,7 +145,7 @@ class TestAffordanceEnforcement:
     """Tests for affordance checking on invoke."""
 
     @pytest.mark.asyncio
-    async def test_allowed_affordance_succeeds(self, mock_umwelt):
+    async def test_allowed_affordance_succeeds(self, mock_umwelt) -> None:
         """Can invoke affordances available to observer."""
         registry = SimpleRegistry()
         registry.register(
@@ -160,7 +162,7 @@ class TestAffordanceEnforcement:
         assert result is not None
 
     @pytest.mark.asyncio
-    async def test_denied_affordance_fails(self, mock_umwelt):
+    async def test_denied_affordance_fails(self, mock_umwelt) -> None:
         """Cannot invoke affordances not available to observer."""
         registry = SimpleRegistry()
         registry.register(
@@ -179,7 +181,7 @@ class TestAffordanceEnforcement:
         assert "default" in str(exc.value)  # observer archetype
 
     @pytest.mark.asyncio
-    async def test_affordance_error_lists_available(self, mock_umwelt):
+    async def test_affordance_error_lists_available(self, mock_umwelt) -> None:
         """AffordanceError shows what IS available."""
         registry = SimpleRegistry()
         registry.register(
@@ -197,19 +199,19 @@ class TestAffordanceEnforcement:
 class TestCaching:
     """Tests for resolution cache behavior."""
 
-    def test_resolved_node_is_cached(self, logos_with_nodes):
+    def test_resolved_node_is_cached(self, logos_with_nodes) -> None:
         """Resolved nodes are cached."""
         node1 = logos_with_nodes.resolve("world.house")
         node2 = logos_with_nodes.resolve("world.house")
         assert node1 is node2  # Same object
 
-    def test_is_resolved_check(self, logos_with_nodes):
+    def test_is_resolved_check(self, logos_with_nodes) -> None:
         """Can check if path is cached."""
         assert not logos_with_nodes.is_resolved("world.house")
         logos_with_nodes.resolve("world.house")
         assert logos_with_nodes.is_resolved("world.house")
 
-    def test_clear_cache(self, logos_with_nodes):
+    def test_clear_cache(self, logos_with_nodes) -> None:
         """Can clear the cache."""
         logos_with_nodes.resolve("world.house")
         assert logos_with_nodes.is_resolved("world.house")
@@ -221,7 +223,7 @@ class TestCaching:
 class TestJITGeneration:
     """Tests for spec-based JIT generation."""
 
-    def test_generates_from_spec(self, logos_with_specs):
+    def test_generates_from_spec(self, logos_with_specs) -> None:
         """Node is generated when spec exists."""
         # Note: In Phase 2, context resolvers create placeholder nodes
         # JIT generation from spec happens at the resolver level
@@ -229,14 +231,14 @@ class TestJITGeneration:
         assert node.handle == "world.library"
         # WorldNode created by resolver (JIT happens in Phase 4)
 
-    def test_unknown_holon_creates_placeholder(self, logos):
+    def test_unknown_holon_creates_placeholder(self, logos) -> None:
         """Phase 2: Unknown holons create placeholder nodes for exploration."""
         # In Phase 2, context resolvers create explorable nodes
         node = logos.resolve("world.nonexistent")
         assert node.handle == "world.nonexistent"
         # Can still be explored via manifest, witness, etc.
 
-    def test_placeholder_has_base_affordances(self, logos):
+    def test_placeholder_has_base_affordances(self, logos) -> None:
         """Placeholder nodes have base affordances for exploration."""
         node = logos.resolve("world.castle")
         meta = AgentMeta(name="test", archetype="default")
@@ -248,20 +250,20 @@ class TestJITGeneration:
 class TestLift:
     """Tests for lift() method."""
 
-    def test_lift_requires_aspect(self, logos_with_nodes):
+    def test_lift_requires_aspect(self, logos_with_nodes) -> None:
         """lift() requires full path with aspect."""
         with pytest.raises(PathSyntaxError) as exc:
             logos_with_nodes.lift("world.house")
         assert "requires aspect" in str(exc.value)
 
-    def test_lift_returns_agent(self, logos_with_nodes):
+    def test_lift_returns_agent(self, logos_with_nodes) -> None:
         """lift() returns composable agent."""
         agent = logos_with_nodes.lift("world.house.manifest")
         assert agent is not None
         assert hasattr(agent, "invoke")
 
     @pytest.mark.asyncio
-    async def test_lifted_agent_invokes(self, logos_with_nodes, mock_umwelt):
+    async def test_lifted_agent_invokes(self, logos_with_nodes, mock_umwelt) -> None:
         """Lifted agent can be invoked with Umwelt."""
         agent = logos_with_nodes.lift("world.house.manifest")
         result = await agent.invoke(mock_umwelt)
@@ -271,7 +273,7 @@ class TestLift:
 class TestComposition:
     """Tests for path composition."""
 
-    def test_compose_creates_composed_path(self, logos_with_nodes):
+    def test_compose_creates_composed_path(self, logos_with_nodes) -> None:
         """compose() creates ComposedPath."""
         path = logos_with_nodes.compose(
             "world.house.manifest",
@@ -280,7 +282,7 @@ class TestComposition:
         assert isinstance(path, ComposedPath)
         assert len(path.paths) == 2
 
-    def test_composed_path_name(self, logos_with_nodes):
+    def test_composed_path_name(self, logos_with_nodes) -> None:
         """ComposedPath has readable name."""
         path = logos_with_nodes.compose(
             "world.house.manifest",
@@ -289,14 +291,14 @@ class TestComposition:
         assert "world.house.manifest" in path.name
         assert ">>" in path.name
 
-    def test_composed_path_rshift(self, logos_with_nodes):
+    def test_composed_path_rshift(self, logos_with_nodes) -> None:
         """ComposedPath can be extended with >>."""
         path = logos_with_nodes.compose("world.house.manifest")
         extended = path >> "concept.justice.manifest"
         assert len(extended.paths) == 2
 
     @pytest.mark.asyncio
-    async def test_composed_path_invokes(self, logos_with_nodes, mock_umwelt):
+    async def test_composed_path_invokes(self, logos_with_nodes, mock_umwelt) -> None:
         """ComposedPath can be invoked as pipeline."""
         # Register a simple node that accepts any input
         logos_with_nodes.register(
@@ -314,14 +316,14 @@ class TestComposition:
 class TestListHandles:
     """Tests for handle listing."""
 
-    def test_list_all_handles(self, logos_with_nodes):
+    def test_list_all_handles(self, logos_with_nodes) -> None:
         """Can list all registered handles."""
         handles = logos_with_nodes.list_handles()
         assert "world.house" in handles
         assert "world.garden" in handles
         assert "concept.justice" in handles
 
-    def test_list_handles_by_context(self, logos_with_nodes):
+    def test_list_handles_by_context(self, logos_with_nodes) -> None:
         """Can filter handles by context."""
         world_handles = logos_with_nodes.list_handles("world")
         assert "world.house" in world_handles
@@ -332,18 +334,18 @@ class TestListHandles:
 class TestFactoryFunction:
     """Tests for create_logos factory."""
 
-    def test_creates_with_defaults(self):
+    def test_creates_with_defaults(self) -> None:
         """Factory creates logos with defaults."""
         logos = create_logos()
         assert logos is not None
         assert isinstance(logos.registry, SimpleRegistry)
 
-    def test_creates_with_custom_spec_root(self, temp_spec_dir):
+    def test_creates_with_custom_spec_root(self, temp_spec_dir) -> None:
         """Factory accepts custom spec root."""
         logos = create_logos(spec_root=temp_spec_dir)
         assert logos.spec_root == temp_spec_dir
 
-    def test_creates_with_registry(self):
+    def test_creates_with_registry(self) -> None:
         """Factory accepts pre-populated registry."""
         registry = SimpleRegistry()
         registry.register("world.house", PlaceholderNode(handle="world.house"))
@@ -356,14 +358,14 @@ class TestFactoryFunction:
 class TestSympatheticErrors:
     """Tests ensuring all errors are sympathetic."""
 
-    def test_unknown_holon_creates_explorable_node(self, logos):
+    def test_unknown_holon_creates_explorable_node(self, logos) -> None:
         """Phase 2: Unknown holons create nodes for exploration (not errors)."""
         # In Phase 2, context resolvers create explorable placeholder nodes
         node = logos.resolve("world.mysterious")
         assert node.handle == "world.mysterious"
         # The node is explorable via standard affordances
 
-    def test_invalid_context_suggests_valid_ones(self, logos):
+    def test_invalid_context_suggests_valid_ones(self, logos) -> None:
         """Invalid context error lists valid contexts."""
         with pytest.raises(PathNotFoundError) as exc:
             logos.resolve("bogus.thing")
@@ -372,7 +374,9 @@ class TestSympatheticErrors:
         assert "self" in error
 
     @pytest.mark.asyncio
-    async def test_affordance_error_is_helpful(self, logos_with_nodes, mock_umwelt):
+    async def test_affordance_error_is_helpful(
+        self, logos_with_nodes, mock_umwelt
+    ) -> None:
         """AffordanceError lists available alternatives."""
         with pytest.raises(AffordanceError) as exc:
             await logos_with_nodes.invoke("world.house.demolish", mock_umwelt)
@@ -384,7 +388,7 @@ class TestSympatheticErrors:
 class TestPlaceholderNode:
     """Tests for PlaceholderNode helper."""
 
-    def test_placeholder_basic(self):
+    def test_placeholder_basic(self) -> None:
         """PlaceholderNode works for testing."""
         node = PlaceholderNode(handle="test.node")
         meta = AgentMeta(name="test", archetype="default")
@@ -392,7 +396,7 @@ class TestPlaceholderNode:
         affs = node.affordances(meta)
         assert "manifest" in affs
 
-    def test_placeholder_with_archetype_affordances(self):
+    def test_placeholder_with_archetype_affordances(self) -> None:
         """PlaceholderNode supports archetype-specific affordances."""
         node = PlaceholderNode(
             handle="test.node",
@@ -413,7 +417,7 @@ class TestPlaceholderNode:
         assert "delete" not in user_affs
 
     @pytest.mark.asyncio
-    async def test_placeholder_manifest(self, mock_umwelt):
+    async def test_placeholder_manifest(self, mock_umwelt) -> None:
         """PlaceholderNode returns BasicRendering on manifest."""
         node = PlaceholderNode(handle="test.placeholder")
         result = await node.manifest(mock_umwelt)

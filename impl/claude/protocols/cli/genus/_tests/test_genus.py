@@ -22,7 +22,7 @@ from io import StringIO
 class TestGGentCLI:
     """Tests for G-gent grammar CLI commands."""
 
-    def test_grammar_help(self):
+    def test_grammar_help(self) -> None:
         """Test grammar help display."""
         from protocols.cli.genus.g_gent import cmd_grammar
 
@@ -41,7 +41,7 @@ class TestGGentCLI:
         assert "grammar" in output.lower()
         assert "reify" in output.lower()
 
-    def test_grammar_unknown_subcommand(self):
+    def test_grammar_unknown_subcommand(self) -> None:
         """Test unknown subcommand handling."""
         from protocols.cli.genus.g_gent import cmd_grammar
 
@@ -57,7 +57,7 @@ class TestGGentCLI:
         # Prism uses argparse which returns exit code 2 for errors
         assert result == 2
 
-    def test_grammar_reify_help(self):
+    def test_grammar_reify_help(self) -> None:
         """Test reify subcommand help."""
         from protocols.cli.genus.g_gent import cmd_grammar
 
@@ -75,7 +75,7 @@ class TestGGentCLI:
         assert "reify" in output.lower()
         assert "domain" in output.lower()
 
-    def test_grammar_reify_no_domain(self):
+    def test_grammar_reify_no_domain(self) -> None:
         """Test reify without domain fails."""
         from protocols.cli.genus.g_gent import cmd_grammar
 
@@ -91,7 +91,7 @@ class TestGGentCLI:
         # Prism/argparse returns 2 for missing required arguments
         assert result == 2
 
-    def test_grammar_parse_help(self):
+    def test_grammar_parse_help(self) -> None:
         """Test parse subcommand help."""
         from protocols.cli.genus.g_gent import cmd_grammar
 
@@ -108,7 +108,7 @@ class TestGGentCLI:
         assert result == 0
         assert "parse" in output.lower()
 
-    def test_grammar_list_help(self):
+    def test_grammar_list_help(self) -> None:
         """Test list subcommand help."""
         from protocols.cli.genus.g_gent import cmd_grammar
 
@@ -124,7 +124,7 @@ class TestGGentCLI:
         captured.getvalue()
         assert result == 0
 
-    def test_grammar_validate_help(self):
+    def test_grammar_validate_help(self) -> None:
         """Test validate subcommand help."""
         from protocols.cli.genus.g_gent import cmd_grammar
 
@@ -141,7 +141,7 @@ class TestGGentCLI:
         assert result == 0
         assert "validate" in output.lower()
 
-    def test_grammar_infer_help(self):
+    def test_grammar_infer_help(self) -> None:
         """Test infer subcommand help."""
         from protocols.cli.genus.g_gent import cmd_grammar
 
@@ -167,7 +167,7 @@ class TestGGentCLI:
 class TestIGentCLI:
     """Tests for I-gent garden CLI commands."""
 
-    def test_garden_help(self):
+    def test_garden_help(self) -> None:
         """Test garden help display."""
         from protocols.cli.genus.i_gent import cmd_garden
 
@@ -185,7 +185,7 @@ class TestIGentCLI:
         assert "garden" in output.lower()
         assert "field" in output.lower()
 
-    def test_garden_unknown_subcommand(self):
+    def test_garden_unknown_subcommand(self) -> None:
         """Test unknown subcommand handling."""
         from protocols.cli.genus.i_gent import cmd_garden
 
@@ -201,7 +201,7 @@ class TestIGentCLI:
         # Prism uses argparse which returns exit code 2 for errors
         assert result == 2
 
-    def test_garden_field_help(self):
+    def test_garden_field_help(self) -> None:
         """Test field subcommand help."""
         from protocols.cli.genus.i_gent import cmd_garden
 
@@ -218,7 +218,7 @@ class TestIGentCLI:
         assert result == 0
         assert "field" in output.lower()
 
-    def test_garden_forge_help(self):
+    def test_garden_forge_help(self) -> None:
         """Test forge subcommand help."""
         from protocols.cli.genus.i_gent import cmd_garden
 
@@ -235,7 +235,7 @@ class TestIGentCLI:
         assert result == 0
         assert "forge" in output.lower()
 
-    def test_garden_attach_help(self):
+    def test_garden_attach_help(self) -> None:
         """Test attach subcommand help."""
         from protocols.cli.genus.i_gent import cmd_garden
 
@@ -252,7 +252,7 @@ class TestIGentCLI:
         assert result == 0
         assert "attach" in output.lower()
 
-    def test_garden_export_help(self):
+    def test_garden_export_help(self) -> None:
         """Test export subcommand help."""
         from protocols.cli.genus.i_gent import cmd_garden
 
@@ -269,7 +269,7 @@ class TestIGentCLI:
         assert result == 0
         assert "export" in output.lower()
 
-    def test_garden_demo_help(self):
+    def test_garden_demo_help(self) -> None:
         """Test demo subcommand help."""
         from protocols.cli.genus.i_gent import cmd_garden
 
@@ -295,7 +295,7 @@ class TestIGentCLI:
 class TestJGentCLI:
     """Tests for J-gent JIT CLI commands."""
 
-    def test_jit_help(self):
+    def test_jit_help(self) -> None:
         """Test jit help display."""
         from protocols.cli.genus.j_gent import cmd_jit
 
@@ -314,7 +314,7 @@ class TestJGentCLI:
         assert "compile" in output.lower()
         assert "classify" in output.lower()
 
-    def test_jit_unknown_subcommand(self):
+    def test_jit_unknown_subcommand(self) -> None:
         """Test unknown subcommand handling."""
         from protocols.cli.genus.j_gent import cmd_jit
 
@@ -330,7 +330,7 @@ class TestJGentCLI:
         # Prism uses argparse which returns exit code 2 for errors
         assert result == 2
 
-    def test_jit_compile_help(self):
+    def test_jit_compile_help(self) -> None:
         """Test compile subcommand help."""
         from protocols.cli.genus.j_gent import cmd_jit
 
@@ -347,7 +347,7 @@ class TestJGentCLI:
         assert result == 0
         assert "compile" in output.lower()
 
-    def test_jit_classify_help(self):
+    def test_jit_classify_help(self) -> None:
         """Test classify subcommand help."""
         from protocols.cli.genus.j_gent import cmd_jit
 
@@ -365,7 +365,7 @@ class TestJGentCLI:
         assert "classify" in output.lower()
         assert "DETERMINISTIC" in output
 
-    def test_jit_defer_help(self):
+    def test_jit_defer_help(self) -> None:
         """Test defer subcommand help."""
         from protocols.cli.genus.j_gent import cmd_jit
 
@@ -382,7 +382,7 @@ class TestJGentCLI:
         assert result == 0
         assert "defer" in output.lower()
 
-    def test_jit_execute_help(self):
+    def test_jit_execute_help(self) -> None:
         """Test execute subcommand help."""
         from protocols.cli.genus.j_gent import cmd_jit
 
@@ -399,7 +399,7 @@ class TestJGentCLI:
         assert result == 0
         assert "execute" in output.lower()
 
-    def test_jit_stability_help(self):
+    def test_jit_stability_help(self) -> None:
         """Test stability subcommand help."""
         from protocols.cli.genus.j_gent import cmd_jit
 
@@ -416,7 +416,7 @@ class TestJGentCLI:
         assert result == 0
         assert "stability" in output.lower()
 
-    def test_jit_budget_help(self):
+    def test_jit_budget_help(self) -> None:
         """Test budget subcommand help."""
         from protocols.cli.genus.j_gent import cmd_jit
 
@@ -432,7 +432,7 @@ class TestJGentCLI:
         captured.getvalue()
         assert result == 0
 
-    def test_jit_budget_display(self):
+    def test_jit_budget_display(self) -> None:
         """Test budget display."""
         from protocols.cli.genus.j_gent import cmd_jit
 
@@ -450,7 +450,7 @@ class TestJGentCLI:
         # Prism outputs structured data with keys like "total", "remaining"
         assert "total" in output or "remaining" in output
 
-    def test_jit_defer_creates_promise(self):
+    def test_jit_defer_creates_promise(self) -> None:
         """Test defer creates promise info."""
         from protocols.cli.genus.j_gent import cmd_jit
 
@@ -476,7 +476,7 @@ class TestJGentCLI:
 class TestPGentCLI:
     """Tests for P-gent parser CLI commands."""
 
-    def test_parse_help(self):
+    def test_parse_help(self) -> None:
         """Test parse help display."""
         from protocols.cli.genus.p_gent import cmd_parse
 
@@ -494,7 +494,7 @@ class TestPGentCLI:
         assert "parse" in output.lower()
         assert "extract" in output.lower()
 
-    def test_parse_unknown_subcommand(self):
+    def test_parse_unknown_subcommand(self) -> None:
         """Test unknown subcommand handling."""
         from protocols.cli.genus.p_gent import cmd_parse
 
@@ -510,7 +510,7 @@ class TestPGentCLI:
         # Prism uses argparse which returns exit code 2 for errors
         assert result == 2
 
-    def test_parse_extract_help(self):
+    def test_parse_extract_help(self) -> None:
         """Test extract subcommand help."""
         from protocols.cli.genus.p_gent import cmd_parse
 
@@ -527,7 +527,7 @@ class TestPGentCLI:
         assert result == 0
         assert "extract" in output.lower()
 
-    def test_parse_repair_help(self):
+    def test_parse_repair_help(self) -> None:
         """Test repair subcommand help."""
         from protocols.cli.genus.p_gent import cmd_parse
 
@@ -544,7 +544,7 @@ class TestPGentCLI:
         assert result == 0
         assert "repair" in output.lower()
 
-    def test_parse_validate_help(self):
+    def test_parse_validate_help(self) -> None:
         """Test validate subcommand help."""
         from protocols.cli.genus.p_gent import cmd_parse
 
@@ -561,7 +561,7 @@ class TestPGentCLI:
         assert result == 0
         assert "validate" in output.lower()
 
-    def test_parse_stream_help(self):
+    def test_parse_stream_help(self) -> None:
         """Test stream subcommand help."""
         from protocols.cli.genus.p_gent import cmd_parse
 
@@ -578,7 +578,7 @@ class TestPGentCLI:
         assert result == 0
         assert "stream" in output.lower()
 
-    def test_parse_compose_help(self):
+    def test_parse_compose_help(self) -> None:
         """Test compose subcommand help."""
         from protocols.cli.genus.p_gent import cmd_parse
 
@@ -595,7 +595,7 @@ class TestPGentCLI:
         assert result == 0
         assert "compose" in output.lower()
 
-    def test_parse_compose_fallback(self):
+    def test_parse_compose_fallback(self) -> None:
         """Test compose fallback mode."""
         from protocols.cli.genus.p_gent import cmd_parse
 
@@ -621,7 +621,7 @@ class TestPGentCLI:
 class TestLGentCLI:
     """Tests for L-gent library CLI commands."""
 
-    def test_library_help(self):
+    def test_library_help(self) -> None:
         """Test library help display."""
         from protocols.cli.genus.l_gent import cmd_library
 
@@ -639,7 +639,7 @@ class TestLGentCLI:
         assert "library" in output.lower()
         assert "catalog" in output.lower()
 
-    def test_library_unknown_subcommand(self):
+    def test_library_unknown_subcommand(self) -> None:
         """Test unknown subcommand handling."""
         from protocols.cli.genus.l_gent import cmd_library
 
@@ -655,7 +655,7 @@ class TestLGentCLI:
         # Prism uses argparse which returns exit code 2 for errors
         assert result == 2
 
-    def test_library_catalog_help(self):
+    def test_library_catalog_help(self) -> None:
         """Test catalog subcommand help."""
         from protocols.cli.genus.l_gent import cmd_library
 
@@ -671,7 +671,7 @@ class TestLGentCLI:
         captured.getvalue()
         assert result == 0
 
-    def test_library_discover_help(self):
+    def test_library_discover_help(self) -> None:
         """Test discover subcommand help."""
         from protocols.cli.genus.l_gent import cmd_library
 
@@ -688,7 +688,7 @@ class TestLGentCLI:
         assert result == 0
         assert "discover" in output.lower()
 
-    def test_library_register_help(self):
+    def test_library_register_help(self) -> None:
         """Test register subcommand help."""
         from protocols.cli.genus.l_gent import cmd_library
 
@@ -705,7 +705,7 @@ class TestLGentCLI:
         assert result == 0
         assert "register" in output.lower()
 
-    def test_library_show_help(self):
+    def test_library_show_help(self) -> None:
         """Test show subcommand help."""
         from protocols.cli.genus.l_gent import cmd_library
 
@@ -721,7 +721,7 @@ class TestLGentCLI:
         captured.getvalue()
         assert result == 0
 
-    def test_library_lineage_help(self):
+    def test_library_lineage_help(self) -> None:
         """Test lineage subcommand help."""
         from protocols.cli.genus.l_gent import cmd_library
 
@@ -738,7 +738,7 @@ class TestLGentCLI:
         assert result == 0
         assert "lineage" in output.lower()
 
-    def test_library_compose_help(self):
+    def test_library_compose_help(self) -> None:
         """Test compose subcommand help."""
         from protocols.cli.genus.l_gent import cmd_library
 
@@ -755,7 +755,7 @@ class TestLGentCLI:
         assert result == 0
         assert "compose" in output.lower()
 
-    def test_library_types_help(self):
+    def test_library_types_help(self) -> None:
         """Test types subcommand help."""
         from protocols.cli.genus.l_gent import cmd_library
 
@@ -771,7 +771,7 @@ class TestLGentCLI:
         captured.getvalue()
         assert result == 0
 
-    def test_library_stats_help(self):
+    def test_library_stats_help(self) -> None:
         """Test stats subcommand help."""
         from protocols.cli.genus.l_gent import cmd_library
 
@@ -796,7 +796,7 @@ class TestLGentCLI:
 class TestWGentCLI:
     """Tests for W-gent witness CLI commands."""
 
-    def test_witness_help(self):
+    def test_witness_help(self) -> None:
         """Test witness help display."""
         from protocols.cli.genus.w_gent import cmd_witness
 
@@ -814,7 +814,7 @@ class TestWGentCLI:
         assert "witness" in output.lower()
         assert "watch" in output.lower()
 
-    def test_witness_unknown_subcommand(self):
+    def test_witness_unknown_subcommand(self) -> None:
         """Test unknown subcommand handling."""
         from protocols.cli.genus.w_gent import cmd_witness
 
@@ -830,7 +830,7 @@ class TestWGentCLI:
         # Prism uses argparse which returns exit code 2 for errors
         assert result == 2
 
-    def test_witness_watch_help(self):
+    def test_witness_watch_help(self) -> None:
         """Test watch subcommand help."""
         from protocols.cli.genus.w_gent import cmd_witness
 
@@ -847,7 +847,7 @@ class TestWGentCLI:
         assert result == 0
         assert "watch" in output.lower()
 
-    def test_witness_fidelity_help(self):
+    def test_witness_fidelity_help(self) -> None:
         """Test fidelity subcommand help."""
         from protocols.cli.genus.w_gent import cmd_witness
 
@@ -864,7 +864,7 @@ class TestWGentCLI:
         assert result == 0
         assert "fidelity" in output.lower()
 
-    def test_witness_sample_help(self):
+    def test_witness_sample_help(self) -> None:
         """Test sample subcommand help."""
         from protocols.cli.genus.w_gent import cmd_witness
 
@@ -881,7 +881,7 @@ class TestWGentCLI:
         assert result == 0
         assert "sample" in output.lower()
 
-    def test_witness_serve_help(self):
+    def test_witness_serve_help(self) -> None:
         """Test serve subcommand help."""
         from protocols.cli.genus.w_gent import cmd_witness
 
@@ -898,7 +898,7 @@ class TestWGentCLI:
         assert result == 0
         assert "serve" in output.lower()
 
-    def test_witness_dashboard_help(self):
+    def test_witness_dashboard_help(self) -> None:
         """Test dashboard subcommand help."""
         from protocols.cli.genus.w_gent import cmd_witness
 
@@ -915,7 +915,7 @@ class TestWGentCLI:
         assert result == 0
         assert "dashboard" in output.lower()
 
-    def test_witness_log_help(self):
+    def test_witness_log_help(self) -> None:
         """Test log subcommand help."""
         from protocols.cli.genus.w_gent import cmd_witness
 
@@ -932,7 +932,7 @@ class TestWGentCLI:
         assert result == 0
         assert "log" in output.lower()
 
-    def test_witness_log_display(self):
+    def test_witness_log_display(self) -> None:
         """Test log display."""
         from protocols.cli.genus.w_gent import cmd_witness
 
@@ -959,7 +959,7 @@ class TestWGentCLI:
 class TestGenusModuleImports:
     """Test that genus module exports are correct."""
 
-    def test_genus_init_imports(self):
+    def test_genus_init_imports(self) -> None:
         """Test genus __init__.py imports work."""
         from protocols.cli.genus import (
             cmd_garden,
@@ -977,7 +977,7 @@ class TestGenusModuleImports:
         assert callable(cmd_library)
         assert callable(cmd_witness)
 
-    def test_individual_module_imports(self):
+    def test_individual_module_imports(self) -> None:
         """Test individual module imports."""
         from protocols.cli.genus.g_gent import cmd_grammar
         from protocols.cli.genus.i_gent import cmd_garden
@@ -1002,7 +1002,7 @@ class TestGenusModuleImports:
 class TestGenusIntegration:
     """Integration tests for genus layer."""
 
-    def test_all_genera_have_help(self):
+    def test_all_genera_have_help(self) -> None:
         """All genera should have --help support."""
         from protocols.cli.genus import (
             cmd_garden,
@@ -1033,7 +1033,7 @@ class TestGenusIntegration:
             assert result == 0, f"{cmd.__name__} --help failed"
             assert len(captured.getvalue()) > 100, f"{cmd.__name__} help too short"
 
-    def test_all_genera_handle_unknown(self):
+    def test_all_genera_handle_unknown(self) -> None:
         """All genera should handle unknown subcommands gracefully."""
         from protocols.cli.genus import (
             cmd_garden,
@@ -1064,7 +1064,7 @@ class TestGenusIntegration:
             # Prism uses argparse which returns exit code 2 for errors
             assert result == 2, f"{cmd.__name__} should fail on unknown subcommand"
 
-    def test_genus_json_output_format(self):
+    def test_genus_json_output_format(self) -> None:
         """Test that JSON format flag works."""
         from protocols.cli.genus.j_gent import cmd_jit
 

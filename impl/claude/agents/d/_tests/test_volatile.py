@@ -13,7 +13,7 @@ from agents.d import VolatileAgent
 
 
 @pytest.mark.asyncio
-async def test_round_trip():
+async def test_round_trip() -> None:
     """State survives save/load cycle without corruption."""
     dgent = VolatileAgent[dict](_state={"initial": "state"})
 
@@ -26,7 +26,7 @@ async def test_round_trip():
 
 
 @pytest.mark.asyncio
-async def test_isolation():
+async def test_isolation() -> None:
     """Loaded state is independent copy, not reference."""
     dgent = VolatileAgent[dict](_state={"value": 1})
 
@@ -42,7 +42,7 @@ async def test_isolation():
 
 
 @pytest.mark.asyncio
-async def test_history_ordering():
+async def test_history_ordering() -> None:
     """History returns states newest-first, excluding current."""
     dgent = VolatileAgent[int](_state=0)
 
@@ -56,7 +56,7 @@ async def test_history_ordering():
 
 
 @pytest.mark.asyncio
-async def test_history_limit():
+async def test_history_limit() -> None:
     """History respects limit parameter."""
     dgent = VolatileAgent[int](_state=0)
 
@@ -73,7 +73,7 @@ async def test_history_limit():
 
 
 @pytest.mark.asyncio
-async def test_bounded_history():
+async def test_bounded_history() -> None:
     """History is bounded to prevent unbounded growth."""
     dgent = VolatileAgent[int](_state=0, _max_history=3)
 
@@ -88,7 +88,7 @@ async def test_bounded_history():
 
 
 @pytest.mark.asyncio
-async def test_snapshot_non_async():
+async def test_snapshot_non_async() -> None:
     """Snapshot provides non-async access for testing."""
     dgent = VolatileAgent[str](_state="initial")
 
@@ -100,7 +100,7 @@ async def test_snapshot_non_async():
 
 
 @pytest.mark.asyncio
-async def test_complex_state():
+async def test_complex_state() -> None:
     """Works with complex nested structures."""
     dgent = VolatileAgent[dict](_state={})
 
@@ -125,7 +125,7 @@ async def test_complex_state():
 
 
 @pytest.mark.asyncio
-async def test_dataclass_state():
+async def test_dataclass_state() -> None:
     """Works with dataclass state types."""
     from dataclasses import dataclass
 

@@ -22,7 +22,7 @@ from infra.k8s.detection import TerrariumCapability, TerrariumDetection
 class TestClusterConfig:
     """Tests for ClusterConfig defaults."""
 
-    def test_default_values(self):
+    def test_default_values(self) -> None:
         """Default config has expected values."""
         config = ClusterConfig()
 
@@ -32,7 +32,7 @@ class TestClusterConfig:
         assert "kgents-agents" in config.namespaces
         assert "kgents-ephemeral" in config.namespaces
 
-    def test_custom_values(self):
+    def test_custom_values(self) -> None:
         """Custom config overrides defaults."""
         config = ClusterConfig(
             name="my-cluster",
@@ -50,7 +50,7 @@ class TestClusterConfig:
 class TestClusterResult:
     """Tests for ClusterResult structure."""
 
-    def test_success_result(self):
+    def test_success_result(self) -> None:
         """Success result has expected fields."""
         result = ClusterResult(
             success=True,
@@ -64,7 +64,7 @@ class TestClusterResult:
         assert result.message == "Cluster created"
         assert result.elapsed_seconds == 45.2
 
-    def test_failure_result(self):
+    def test_failure_result(self) -> None:
         """Failure result has expected fields."""
         result = ClusterResult(
             success=False,
@@ -80,7 +80,7 @@ class TestClusterResult:
 class TestKindClusterCreate:
     """Tests for KindCluster.create()."""
 
-    def test_create_fails_without_docker(self):
+    def test_create_fails_without_docker(self) -> None:
         """Create fails gracefully when Docker unavailable."""
         mock_detection = TerrariumDetection(
             capability=TerrariumCapability.NONE,
@@ -98,7 +98,7 @@ class TestKindClusterCreate:
         assert result.status == ClusterStatus.ERROR
         assert "Docker" in result.message
 
-    def test_create_fails_without_kind(self):
+    def test_create_fails_without_kind(self) -> None:
         """Create fails gracefully when Kind not installed."""
         mock_detection = TerrariumDetection(
             capability=TerrariumCapability.NONE,
@@ -117,7 +117,7 @@ class TestKindClusterCreate:
         assert result.status == ClusterStatus.ERROR
         assert "Kind" in result.message
 
-    def test_create_idempotent_when_exists(self):
+    def test_create_idempotent_when_exists(self) -> None:
         """Create returns success if cluster already exists."""
         mock_detection = TerrariumDetection(
             capability=TerrariumCapability.CLUSTER_RUNNING,
@@ -136,7 +136,7 @@ class TestKindClusterCreate:
         assert result.status == ClusterStatus.RUNNING
         assert "already" in result.message.lower()
 
-    def test_create_calls_kind_with_config(self):
+    def test_create_calls_kind_with_config(self) -> None:
         """Create invokes kind CLI with correct arguments."""
         mock_detection = TerrariumDetection(
             capability=TerrariumCapability.KIND_AVAILABLE,
@@ -172,7 +172,7 @@ class TestKindClusterCreate:
                 assert "--name" in args
                 assert "test-cluster" in args
 
-    def test_progress_callback_called(self):
+    def test_progress_callback_called(self) -> None:
         """Progress callback is invoked during create."""
         mock_detection = TerrariumDetection(
             capability=TerrariumCapability.CLUSTER_RUNNING,
@@ -195,7 +195,7 @@ class TestKindClusterCreate:
 class TestKindClusterDestroy:
     """Tests for KindCluster.destroy()."""
 
-    def test_destroy_idempotent_when_not_exists(self):
+    def test_destroy_idempotent_when_not_exists(self) -> None:
         """Destroy returns success if cluster doesn't exist."""
         mock_detection = TerrariumDetection(
             capability=TerrariumCapability.KIND_AVAILABLE,
@@ -213,7 +213,7 @@ class TestKindClusterDestroy:
         assert result.status == ClusterStatus.NOT_FOUND
         assert "not found" in result.message.lower()
 
-    def test_destroy_calls_kind_delete(self):
+    def test_destroy_calls_kind_delete(self) -> None:
         """Destroy invokes kind delete cluster."""
         mock_detection = TerrariumDetection(
             capability=TerrariumCapability.CLUSTER_RUNNING,
@@ -240,7 +240,7 @@ class TestKindClusterDestroy:
 class TestKindClusterPauseUnpause:
     """Tests for pause/unpause operations."""
 
-    def test_pause_when_already_paused(self):
+    def test_pause_when_already_paused(self) -> None:
         """Pause returns success if already paused."""
         with patch("infra.k8s.cluster.is_cluster_container_paused", return_value=True):
             cluster = KindCluster()
@@ -249,7 +249,7 @@ class TestKindClusterPauseUnpause:
         assert result.success is True
         assert result.status == ClusterStatus.PAUSED
 
-    def test_pause_fails_when_not_running(self):
+    def test_pause_fails_when_not_running(self) -> None:
         """Pause fails if cluster not running."""
         with patch("infra.k8s.cluster.is_cluster_container_paused", return_value=False):
             with patch(
@@ -260,7 +260,7 @@ class TestKindClusterPauseUnpause:
 
         assert result.success is False
 
-    def test_unpause_when_already_running(self):
+    def test_unpause_when_already_running(self) -> None:
         """Unpause returns success if already running."""
         with patch("infra.k8s.cluster.is_cluster_container_running", return_value=True):
             cluster = KindCluster()
@@ -273,7 +273,7 @@ class TestKindClusterPauseUnpause:
 class TestKindClusterStatus:
     """Tests for status() method."""
 
-    def test_status_not_found(self):
+    def test_status_not_found(self) -> None:
         """Status returns NOT_FOUND when cluster doesn't exist."""
         mock_detection = TerrariumDetection(
             capability=TerrariumCapability.KIND_AVAILABLE,
@@ -289,7 +289,7 @@ class TestKindClusterStatus:
 
         assert status == ClusterStatus.NOT_FOUND
 
-    def test_status_running(self):
+    def test_status_running(self) -> None:
         """Status returns RUNNING when cluster is active."""
         mock_detection = TerrariumDetection(
             capability=TerrariumCapability.CLUSTER_RUNNING,
@@ -312,7 +312,7 @@ class TestKindClusterStatus:
 
         assert status == ClusterStatus.RUNNING
 
-    def test_status_paused(self):
+    def test_status_paused(self) -> None:
         """Status returns PAUSED when cluster container is paused."""
         mock_detection = TerrariumDetection(
             capability=TerrariumCapability.CLUSTER_RUNNING,
@@ -336,7 +336,7 @@ class TestKindClusterStatus:
 class TestClusterStatusEnum:
     """Tests for ClusterStatus enum."""
 
-    def test_all_statuses_exist(self):
+    def test_all_statuses_exist(self) -> None:
         """All expected status values exist."""
         assert ClusterStatus.NOT_FOUND is not None
         assert ClusterStatus.RUNNING is not None

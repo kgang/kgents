@@ -32,48 +32,48 @@ from ..cartography import (
 class TestContextVector:
     """Tests for ContextVector."""
 
-    def test_create_context_vector(self):
+    def test_create_context_vector(self) -> None:
         """Create a basic context vector."""
         cv = create_context_vector([1.0, 0.0, 0.0], label="test")
         assert cv.dimension == 3
         assert cv.label == "test"
 
-    def test_distance_to_same(self):
+    def test_distance_to_same(self) -> None:
         """Distance to self is zero."""
         cv = ContextVector(embedding=[1.0, 2.0, 3.0])
         assert cv.distance_to(cv) == 0.0
 
-    def test_distance_to_orthogonal(self):
+    def test_distance_to_orthogonal(self) -> None:
         """Distance between orthogonal unit vectors."""
         cv1 = ContextVector(embedding=[1.0, 0.0, 0.0])
         cv2 = ContextVector(embedding=[0.0, 1.0, 0.0])
         assert abs(cv1.distance_to(cv2) - math.sqrt(2)) < 1e-10
 
-    def test_distance_dimension_mismatch(self):
+    def test_distance_dimension_mismatch(self) -> None:
         """Mismatched dimensions raise error."""
         cv1 = ContextVector(embedding=[1.0, 0.0])
         cv2 = ContextVector(embedding=[1.0, 0.0, 0.0])
         with pytest.raises(ValueError):
             cv1.distance_to(cv2)
 
-    def test_cosine_similarity_identical(self):
+    def test_cosine_similarity_identical(self) -> None:
         """Identical vectors have similarity 1.0."""
         cv = ContextVector(embedding=[1.0, 2.0, 3.0])
         assert abs(cv.cosine_similarity(cv) - 1.0) < 1e-10
 
-    def test_cosine_similarity_orthogonal(self):
+    def test_cosine_similarity_orthogonal(self) -> None:
         """Orthogonal vectors have similarity 0.0."""
         cv1 = ContextVector(embedding=[1.0, 0.0, 0.0])
         cv2 = ContextVector(embedding=[0.0, 1.0, 0.0])
         assert abs(cv1.cosine_similarity(cv2)) < 1e-10
 
-    def test_cosine_similarity_opposite(self):
+    def test_cosine_similarity_opposite(self) -> None:
         """Opposite vectors have similarity -1.0."""
         cv1 = ContextVector(embedding=[1.0, 0.0, 0.0])
         cv2 = ContextVector(embedding=[-1.0, 0.0, 0.0])
         assert abs(cv1.cosine_similarity(cv2) + 1.0) < 1e-10
 
-    def test_cosine_similarity_zero_vector(self):
+    def test_cosine_similarity_zero_vector(self) -> None:
         """Zero vector has similarity 0.0."""
         cv1 = ContextVector(embedding=[0.0, 0.0, 0.0])
         cv2 = ContextVector(embedding=[1.0, 0.0, 0.0])
@@ -88,7 +88,7 @@ class TestContextVector:
 class TestAttractor:
     """Tests for Attractor (landmarks)."""
 
-    def test_create_attractor(self):
+    def test_create_attractor(self) -> None:
         """Create a basic attractor."""
         attr = create_attractor(
             id="auth",
@@ -102,7 +102,7 @@ class TestAttractor:
         assert attr.member_count == 2
         assert attr.density == 0.9
 
-    def test_attractor_distance(self):
+    def test_attractor_distance(self) -> None:
         """Distance from attractor centroid."""
         attr = Attractor(
             id="test",
@@ -114,7 +114,7 @@ class TestAttractor:
         assert attr.distance_to([1.0, 0.0, 0.0]) == 1.0
         assert attr.distance_to([0.0, 0.0, 0.0]) == 0.0
 
-    def test_attractor_is_hot(self):
+    def test_attractor_is_hot(self) -> None:
         """High visit count indicates hot attractor."""
         attr = Attractor(
             id="test",
@@ -129,7 +129,7 @@ class TestAttractor:
         attr.visit_count = 15
         assert attr.is_hot
 
-    def test_attractor_is_drifting(self):
+    def test_attractor_is_drifting(self) -> None:
         """Semantic drift detection."""
         attr = Attractor(
             id="test",
@@ -155,7 +155,7 @@ class TestAttractor:
 class TestWeightedEdge:
     """Tests for WeightedEdge (desire lines)."""
 
-    def test_create_desire_line(self):
+    def test_create_desire_line(self) -> None:
         """Create a basic desire line."""
         edge = create_desire_line(
             source="auth",
@@ -167,7 +167,7 @@ class TestWeightedEdge:
         assert edge.weight == 0.8
         assert edge.bidirectional
 
-    def test_edge_cost(self):
+    def test_edge_cost(self) -> None:
         """Cost is inverse of weight."""
         edge = WeightedEdge(source="a", target="b", weight=0.5)
         assert edge.cost() == 2.0
@@ -175,12 +175,12 @@ class TestWeightedEdge:
         edge.weight = 1.0
         assert edge.cost() == 1.0
 
-    def test_edge_cost_zero_weight(self):
+    def test_edge_cost_zero_weight(self) -> None:
         """Zero weight has infinite cost."""
         edge = WeightedEdge(source="a", target="b", weight=0.0)
         assert edge.cost() == float("inf")
 
-    def test_edge_is_well_trodden(self):
+    def test_edge_is_well_trodden(self) -> None:
         """High-traffic detection."""
         edge = WeightedEdge(source="a", target="b", weight=0.3)
         assert not edge.is_well_trodden
@@ -192,7 +192,7 @@ class TestWeightedEdge:
         edge.transition_count = 25
         assert edge.is_well_trodden
 
-    def test_edge_is_reliable(self):
+    def test_edge_is_reliable(self) -> None:
         """Low error rate means reliable."""
         edge = WeightedEdge(source="a", target="b", weight=0.5)
         assert edge.is_reliable  # None = reliable
@@ -212,7 +212,7 @@ class TestWeightedEdge:
 class TestHorizon:
     """Tests for Horizon (progressive disclosure boundary)."""
 
-    def test_horizon_resolution_at_center(self):
+    def test_horizon_resolution_at_center(self) -> None:
         """Full resolution at center."""
         h = Horizon(
             center=[0.0, 0.0],
@@ -222,7 +222,7 @@ class TestHorizon:
         assert h.resolution_at(0.0) == 1.0
         assert h.resolution_at(0.2) == 1.0
 
-    def test_horizon_resolution_in_blur_zone(self):
+    def test_horizon_resolution_in_blur_zone(self) -> None:
         """Partial resolution in blur zone."""
         h = Horizon(
             center=[0.0, 0.0],
@@ -233,7 +233,7 @@ class TestHorizon:
         resolution = h.resolution_at(0.65)
         assert 0.0 < resolution < 1.0
 
-    def test_horizon_resolution_beyond(self):
+    def test_horizon_resolution_beyond(self) -> None:
         """Zero resolution beyond horizon."""
         h = Horizon(
             center=[0.0, 0.0],
@@ -242,7 +242,7 @@ class TestHorizon:
         )
         assert h.resolution_at(1.5) == 0.0
 
-    def test_horizon_from_budget(self):
+    def test_horizon_from_budget(self) -> None:
         """Create horizon scaled by budget."""
         h = Horizon.from_budget(
             center=[0.0, 0.0],
@@ -252,7 +252,7 @@ class TestHorizon:
         assert h.inner_radius > 0
         assert h.outer_radius > h.inner_radius
 
-    def test_horizon_token_spending(self):
+    def test_horizon_token_spending(self) -> None:
         """Token budget management."""
         h = Horizon(
             center=[0.0, 0.0],
@@ -277,7 +277,7 @@ class TestHorizon:
 class TestRegion:
     """Tests for Region."""
 
-    def test_region_contains(self):
+    def test_region_contains(self) -> None:
         """Point containment check."""
         r = Region(
             id="r1",
@@ -292,7 +292,7 @@ class TestRegion:
 class TestVoid:
     """Tests for Void (unexplored regions)."""
 
-    def test_void_is_dangerous(self):
+    def test_void_is_dangerous(self) -> None:
         """Dangerous void detection."""
         v = Void(
             id="v1",
@@ -369,14 +369,14 @@ class TestHoloMap:
             ),
         )
 
-    def test_create_empty_holomap(self):
+    def test_create_empty_holomap(self) -> None:
         """Create an empty map."""
         origin = create_context_vector([0.0, 0.0])
         hm = create_empty_holomap(origin)
         assert hm.landmark_count == 0
         assert hm.edge_count == 0
 
-    def test_get_landmark(self, sample_map):
+    def test_get_landmark(self, sample_map) -> None:
         """Get landmark by ID."""
         auth = sample_map.get_landmark("auth")
         assert auth is not None
@@ -385,7 +385,7 @@ class TestHoloMap:
         missing = sample_map.get_landmark("nonexistent")
         assert missing is None
 
-    def test_nearest_landmark(self, sample_map):
+    def test_nearest_landmark(self, sample_map) -> None:
         """Find nearest landmark."""
         # Nearest to origin
         nearest = sample_map.nearest_landmark([0.0, 0.0])
@@ -397,32 +397,32 @@ class TestHoloMap:
         nearest = sample_map.nearest_landmark([1.0, 0.0])
         assert nearest.id == "auth"
 
-    def test_landmarks_within(self, sample_map):
+    def test_landmarks_within(self, sample_map) -> None:
         """Find landmarks within radius."""
         within = sample_map.landmarks_within([0.0, 0.0], radius=1.5)
         assert len(within) >= 2  # auth and logging at least
 
-    def test_has_path_direct(self, sample_map):
+    def test_has_path_direct(self, sample_map) -> None:
         """Check path existence for connected landmarks."""
         assert sample_map.has_path([1.0, 0.0], [1.5, 0.5])  # auth -> retry
 
-    def test_has_path_indirect(self, sample_map):
+    def test_has_path_indirect(self, sample_map) -> None:
         """Check path existence through intermediates."""
         # auth -> retry -> error
         assert sample_map.has_path([1.0, 0.0], [2.0, 0.0])
 
-    def test_has_path_same_landmark(self, sample_map):
+    def test_has_path_same_landmark(self, sample_map) -> None:
         """Path to self always exists."""
         assert sample_map.has_path([1.0, 0.0], [1.0, 0.0])
 
-    def test_get_paved_path(self, sample_map):
+    def test_get_paved_path(self, sample_map) -> None:
         """Get desire-line path between landmarks."""
         path = sample_map.get_paved_path([1.0, 0.0], [2.0, 0.0])
         assert len(path) >= 2
         assert path[0].id == "auth"
         assert path[-1].id == "error"
 
-    def test_get_paved_path_prefers_high_weight(self, sample_map):
+    def test_get_paved_path_prefers_high_weight(self, sample_map) -> None:
         """Path should prefer high-weight edges."""
         # auth -> retry (0.8) -> error (0.6) = cost 1.25 + 1.67 = 2.92
         # auth -> error (0.3) = cost 3.33
@@ -432,7 +432,7 @@ class TestHoloMap:
         labels = [p.label for p in path]
         assert "Retry Logic" in labels or len(path) == 2
 
-    def test_adjacent_to(self, sample_map):
+    def test_adjacent_to(self, sample_map) -> None:
         """Get adjacent landmarks."""
         adjacent = sample_map.adjacent_to([1.0, 0.0])  # auth
         adjacent_ids = {a.id for a in adjacent}
@@ -440,12 +440,12 @@ class TestHoloMap:
         assert "retry" in adjacent_ids
         assert "error" in adjacent_ids
 
-    def test_edges_from(self, sample_map):
+    def test_edges_from(self, sample_map) -> None:
         """Get edges from a landmark."""
         edges = sample_map.edges_from("auth")
         assert len(edges) >= 3  # retry, error, logging (+ reverses)
 
-    def test_resolution_at(self, sample_map):
+    def test_resolution_at(self, sample_map) -> None:
         """Get resolution at different distances."""
         # At origin (center) - full resolution
         res = sample_map.resolution_at([0.0, 0.0])
@@ -455,14 +455,14 @@ class TestHoloMap:
         res = sample_map.resolution_at([10.0, 0.0])
         assert res == 0.0
 
-    def test_get_focal_landmarks(self, sample_map):
+    def test_get_focal_landmarks(self, sample_map) -> None:
         """Get landmarks in focal zone."""
         focal = sample_map.get_focal_landmarks()
         # auth and logging are within inner_radius=1.0
         focal_ids = {l.id for l in focal}
         assert "auth" in focal_ids or "logging" in focal_ids
 
-    def test_coverage(self, sample_map):
+    def test_coverage(self, sample_map) -> None:
         """Coverage estimate."""
         coverage = sample_map.coverage
         assert 0.0 <= coverage <= 1.0
@@ -506,13 +506,13 @@ class TestHoloMapWithVoids:
             ),
         )
 
-    def test_is_in_void(self, map_with_void):
+    def test_is_in_void(self, map_with_void) -> None:
         """Check if point is in void."""
         assert map_with_void.is_in_void([5.0, 5.0])
         assert map_with_void.is_in_void([5.5, 5.5])
         assert not map_with_void.is_in_void([0.0, 0.0])
 
-    def test_get_void_at(self, map_with_void):
+    def test_get_void_at(self, map_with_void) -> None:
         """Get void at a point."""
         void = map_with_void.get_void_at([5.0, 5.0])
         assert void is not None
@@ -530,7 +530,7 @@ class TestHoloMapWithVoids:
 class TestNavigationPlan:
     """Tests for NavigationPlan."""
 
-    def test_navigation_plan_safe(self):
+    def test_navigation_plan_safe(self) -> None:
         """Safe navigation detection."""
         plan = NavigationPlan(
             waypoints=[],
@@ -539,7 +539,7 @@ class TestNavigationPlan:
         )
         assert plan.is_safe
 
-    def test_navigation_plan_unsafe_low_confidence(self):
+    def test_navigation_plan_unsafe_low_confidence(self) -> None:
         """Low confidence is unsafe."""
         plan = NavigationPlan(
             waypoints=[],
@@ -548,7 +548,7 @@ class TestNavigationPlan:
         )
         assert not plan.is_safe
 
-    def test_navigation_plan_unsafe_exploration(self):
+    def test_navigation_plan_unsafe_exploration(self) -> None:
         """Exploration mode is unsafe."""
         plan = NavigationPlan(
             waypoints=[],
@@ -566,7 +566,7 @@ class TestNavigationPlan:
 class TestOptimalContext:
     """Tests for OptimalContext."""
 
-    def test_to_context_string(self):
+    def test_to_context_string(self) -> None:
         """Render context to string."""
         ctx = OptimalContext(
             position="At: Authentication Module",
@@ -593,7 +593,7 @@ class TestOptimalContext:
 class TestEdgeCases:
     """Edge case tests."""
 
-    def test_empty_map_operations(self):
+    def test_empty_map_operations(self) -> None:
         """Operations on empty map."""
         origin = create_context_vector([0.0, 0.0])
         hm = create_empty_holomap(origin)
@@ -605,7 +605,7 @@ class TestEdgeCases:
         assert hm.adjacent_to([0.0, 0.0]) == []
         assert hm.coverage == 0.0
 
-    def test_single_landmark_map(self):
+    def test_single_landmark_map(self) -> None:
         """Map with one landmark."""
         origin = create_context_vector([0.0, 0.0])
         hm = HoloMap(
@@ -635,7 +635,7 @@ class TestEdgeCases:
         assert hm.has_path([0.0, 0.0], [5.0, 0.0])  # Both map to "only"
         assert hm.adjacent_to([1.0, 0.0]) == []  # No connections
 
-    def test_high_dimensional_vectors(self):
+    def test_high_dimensional_vectors(self) -> None:
         """Works with high-dimensional embeddings."""
         dim = 768  # Typical embedding dimension
         embedding = [0.0] * dim

@@ -104,7 +104,7 @@ def test_memory_get_by_domain(
     assert len(neuro_hyps) == 1
 
 
-def test_memory_get_recent(memory: HypothesisMemory):
+def test_memory_get_recent(memory: HypothesisMemory) -> None:
     """Test getting recent hypotheses."""
     for i in range(5):
         response = ParsedHypothesisResponse(
@@ -128,7 +128,7 @@ def test_memory_get_recent(memory: HypothesisMemory):
     assert recent[0].statement == "Hypothesis 2"  # Oldest of the 3 most recent
 
 
-def test_memory_find_similar(memory: HypothesisMemory):
+def test_memory_find_similar(memory: HypothesisMemory) -> None:
     """Test finding similar hypotheses."""
     response = ParsedHypothesisResponse(
         hypotheses=[
@@ -387,7 +387,7 @@ async def test_storage_evolution_history(
 # ─────────────────────────────────────────────────────────────────
 
 
-def test_persistent_hypothesis_storage_factory():
+def test_persistent_hypothesis_storage_factory() -> None:
     """Test factory function creates storage correctly."""
     storage = persistent_hypothesis_storage("test_path.json")
     assert isinstance(storage, PersistentHypothesisStorage)

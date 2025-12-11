@@ -159,7 +159,7 @@ def minimal_wired_logos() -> WiredLogos:
 class TestWiredLogosCreation:
     """Tests for WiredLogos factory functions."""
 
-    def test_create_wired_logos_basic(self):
+    def test_create_wired_logos_basic(self) -> None:
         """Test creating a basic WiredLogos."""
         wired = create_wired_logos()
         assert isinstance(wired, WiredLogos)
@@ -179,20 +179,20 @@ class TestWiredLogosCreation:
         assert wired.integrations.lgent.registry is not None
         assert wired.integrations.ggent.grammarian is not None
 
-    def test_create_minimal_wired_logos(self):
+    def test_create_minimal_wired_logos(self) -> None:
         """Test creating minimal WiredLogos."""
         wired = create_minimal_wired_logos()
         assert wired.validate_paths is True
         assert wired.track_usage is False
 
-    def test_wire_existing_logos(self, mock_lgent_registry: MockLgentRegistry):
+    def test_wire_existing_logos(self, mock_lgent_registry: MockLgentRegistry) -> None:
         """Test wiring integrations to existing Logos."""
         logos = create_logos()
         wired = wire_existing_logos(logos, lgent_registry=mock_lgent_registry)
         assert wired.logos is logos
         assert wired.integrations.lgent.registry is not None
 
-    def test_membrane_bridge_auto_created(self):
+    def test_membrane_bridge_auto_created(self) -> None:
         """Test that membrane bridge is auto-created."""
         wired = create_wired_logos()
         assert wired.integrations.membrane is not None
@@ -209,7 +209,7 @@ class TestWiredLogosCreation:
 class TestPathValidation:
     """Tests for G-gent path validation."""
 
-    def test_valid_path_passes_validation(self, wired_logos: WiredLogos):
+    def test_valid_path_passes_validation(self, wired_logos: WiredLogos) -> None:
         """Test that valid paths pass validation."""
         # These should not raise
         wired_logos._validate_path("world.house")
@@ -219,19 +219,19 @@ class TestPathValidation:
         wired_logos._validate_path("void.entropy.sip")
         wired_logos._validate_path("time.trace.witness")
 
-    def test_invalid_context_raises_error(self, wired_logos: WiredLogos):
+    def test_invalid_context_raises_error(self, wired_logos: WiredLogos) -> None:
         """Test that invalid context raises PathSyntaxError."""
         with pytest.raises(PathSyntaxError) as exc_info:
             wired_logos._validate_path("invalid.house.manifest")
         assert "Invalid context" in str(exc_info.value)
 
-    def test_incomplete_path_raises_error(self, wired_logos: WiredLogos):
+    def test_incomplete_path_raises_error(self, wired_logos: WiredLogos) -> None:
         """Test that incomplete path raises PathSyntaxError."""
         with pytest.raises(PathSyntaxError) as exc_info:
             wired_logos._validate_path("world")
         assert "at least context.holon" in str(exc_info.value)
 
-    def test_invalid_identifier_raises_error(self, wired_logos: WiredLogos):
+    def test_invalid_identifier_raises_error(self, wired_logos: WiredLogos) -> None:
         """Test that invalid identifiers raise PathSyntaxError."""
         with pytest.raises(PathSyntaxError):
             wired_logos._validate_path("world.UPPERCASE.manifest")
@@ -239,7 +239,7 @@ class TestPathValidation:
         with pytest.raises(PathSyntaxError):
             wired_logos._validate_path("world.123invalid.manifest")
 
-    def test_validation_can_be_disabled(self):
+    def test_validation_can_be_disabled(self) -> None:
         """Test that validation can be disabled."""
         wired = create_wired_logos(validate_paths=False)
         # This would normally fail validation but shouldn't raise
@@ -330,7 +330,7 @@ class TestLgentIntegration:
         )
 
     @pytest.mark.asyncio
-    async def test_graceful_degradation_without_registry(self):
+    async def test_graceful_degradation_without_registry(self) -> None:
         """Test that missing L-gent doesn't break WiredLogos."""
         wired = create_wired_logos(lgent_registry=None)
         # Should not raise
@@ -345,7 +345,7 @@ class TestLgentIntegration:
 class TestMembraneBridge:
     """Tests for Membrane-AGENTESE bridge."""
 
-    def test_get_agentese_path(self, wired_logos: WiredLogos):
+    def test_get_agentese_path(self, wired_logos: WiredLogos) -> None:
         """Test getting AGENTESE path from Membrane command."""
         assert wired_logos.get_agentese_path("observe") == "world.project.manifest"
         assert wired_logos.get_agentese_path("sense") == "world.project.sense"
@@ -353,7 +353,7 @@ class TestMembraneBridge:
         assert wired_logos.get_agentese_path("dream") == "self.memory.consolidate"
         assert wired_logos.get_agentese_path("sip") == "void.entropy.sip"
 
-    def test_unknown_command_returns_none(self, wired_logos: WiredLogos):
+    def test_unknown_command_returns_none(self, wired_logos: WiredLogos) -> None:
         """Test that unknown commands return None."""
         assert wired_logos.get_agentese_path("unknown_command") is None
 
@@ -405,7 +405,7 @@ class TestIntegrationStatus:
         assert status["ggent"] is True
         assert status["membrane"] is True
 
-    def test_minimal_integration_status(self):
+    def test_minimal_integration_status(self) -> None:
         """Test status with minimal integrations."""
         wired = create_minimal_wired_logos()
         status = wired.integration_status()
@@ -423,7 +423,7 @@ class TestIntegrationStatus:
 class TestComposition:
     """Tests for path composition with validation."""
 
-    def test_compose_with_validation(self, wired_logos: WiredLogos):
+    def test_compose_with_validation(self, wired_logos: WiredLogos) -> None:
         """Test that compose validates all paths."""
         composed = wired_logos.compose(
             "world.house.manifest",
@@ -431,7 +431,7 @@ class TestComposition:
         )
         assert len(composed) == 2
 
-    def test_compose_invalid_path_raises(self, wired_logos: WiredLogos):
+    def test_compose_invalid_path_raises(self, wired_logos: WiredLogos) -> None:
         """Test that compose fails on invalid path."""
         with pytest.raises(PathSyntaxError):
             wired_logos.compose(
@@ -439,7 +439,7 @@ class TestComposition:
                 "invalid.path",  # Invalid context
             )
 
-    def test_compose_validation_disabled(self):
+    def test_compose_validation_disabled(self) -> None:
         """Test compose without validation."""
         wired = create_wired_logos(validate_paths=False)
         # Should not raise even with invalid path
@@ -449,12 +449,12 @@ class TestComposition:
         )
         assert len(composed) == 2
 
-    def test_identity(self, wired_logos: WiredLogos):
+    def test_identity(self, wired_logos: WiredLogos) -> None:
         """Test identity morphism."""
         identity = wired_logos.identity()
         assert identity.name == "Id"
 
-    def test_path_creates_composed(self, wired_logos: WiredLogos):
+    def test_path_creates_composed(self, wired_logos: WiredLogos) -> None:
         """Test path() creates ComposedPath."""
         composed = wired_logos.path("world.house.manifest")
         assert len(composed) == 1
@@ -535,12 +535,12 @@ A beautiful garden.
 class TestResolve:
     """Tests for resolve() with integrations."""
 
-    def test_resolve_validates_path(self, wired_logos: WiredLogos):
+    def test_resolve_validates_path(self, wired_logos: WiredLogos) -> None:
         """Test that resolve validates path first."""
         with pytest.raises(PathSyntaxError):
             wired_logos.resolve("invalid.path")
 
-    def test_resolve_with_validation_disabled(self):
+    def test_resolve_with_validation_disabled(self) -> None:
         """Test resolve without validation."""
         wired = create_wired_logos(validate_paths=False)
         # Should fail on context, not validation
@@ -557,7 +557,7 @@ class TestInvoke:
     """Tests for invoke() with integrations."""
 
     @pytest.mark.asyncio
-    async def test_invoke_requires_observer(self, wired_logos: WiredLogos):
+    async def test_invoke_requires_observer(self, wired_logos: WiredLogos) -> None:
         """Test that invoke requires observer."""
         with pytest.raises(ObserverRequiredError):
             await wired_logos.invoke("world.house.manifest", None)
@@ -665,12 +665,12 @@ class TestInvoke:
 class TestConvenienceMethods:
     """Tests for convenience methods."""
 
-    def test_list_handles(self, wired_logos: WiredLogos):
+    def test_list_handles(self, wired_logos: WiredLogos) -> None:
         """Test listing handles."""
         handles = wired_logos.list_handles()
         assert isinstance(handles, list)
 
-    def test_is_resolved(self, wired_logos: WiredLogos):
+    def test_is_resolved(self, wired_logos: WiredLogos) -> None:
         """Test is_resolved check."""
         assert not wired_logos.is_resolved("world.house")
 
@@ -687,12 +687,12 @@ class TestConvenienceMethods:
 
         assert len(wired_logos.integrations.lgent._cache) == 0
 
-    def test_get_jit_status(self, wired_logos: WiredLogos):
+    def test_get_jit_status(self, wired_logos: WiredLogos) -> None:
         """Test get_jit_status."""
         status = wired_logos.get_jit_status("world.house")
         assert status is None  # Not a JIT node
 
-    def test_list_jit_nodes(self, wired_logos: WiredLogos):
+    def test_list_jit_nodes(self, wired_logos: WiredLogos) -> None:
         """Test list_jit_nodes."""
         nodes = wired_logos.list_jit_nodes()
         assert isinstance(nodes, list)
@@ -706,21 +706,21 @@ class TestConvenienceMethods:
 class TestEdgeCases:
     """Tests for edge cases and error handling."""
 
-    def test_hydrate_lgent_entry_returns_none(self, wired_logos: WiredLogos):
+    def test_hydrate_lgent_entry_returns_none(self, wired_logos: WiredLogos) -> None:
         """Test that L-gent entries are hydrated via Logos."""
         result = wired_logos._hydrate_lgent_entry(
             MockLgentEntry("test", "test"), "test"
         )
         assert result is None  # Falls back to Logos
 
-    def test_sync_lgent_lookup_no_registry(self):
+    def test_sync_lgent_lookup_no_registry(self) -> None:
         """Test sync lookup without registry returns None."""
         wired = create_minimal_wired_logos()
         result = wired._sync_lgent_lookup("world.house")
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_execute_membrane_without_bridge(self):
+    async def test_execute_membrane_without_bridge(self) -> None:
         """Test execute_membrane raises without bridge."""
         wired = create_wired_logos()
         # Remove membrane for test

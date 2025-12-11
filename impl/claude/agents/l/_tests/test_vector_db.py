@@ -77,7 +77,7 @@ class TestDgentVectorBackend:
     """Tests for DgentVectorBackend."""
 
     @pytest.mark.asyncio
-    async def test_add_and_search(self, tmp_path):
+    async def test_add_and_search(self, tmp_path) -> None:
         """Test basic add and search."""
         from agents.l.vector_db import DgentVectorBackend
 
@@ -100,7 +100,7 @@ class TestDgentVectorBackend:
         assert isinstance(results[0].similarity, float)
 
     @pytest.mark.asyncio
-    async def test_dimension_property(self, tmp_path):
+    async def test_dimension_property(self, tmp_path) -> None:
         """Test dimension property."""
         from agents.l.vector_db import DgentVectorBackend
 
@@ -108,7 +108,7 @@ class TestDgentVectorBackend:
         assert backend.dimension == 128
 
     @pytest.mark.asyncio
-    async def test_metadata_filtering(self, tmp_path):
+    async def test_metadata_filtering(self, tmp_path) -> None:
         """Test search with metadata filters."""
         from agents.l.vector_db import DgentVectorBackend
 
@@ -125,7 +125,7 @@ class TestDgentVectorBackend:
         assert results[0].id == "agent1"
 
     @pytest.mark.asyncio
-    async def test_threshold_filtering(self, tmp_path):
+    async def test_threshold_filtering(self, tmp_path) -> None:
         """Test search with similarity threshold."""
         from agents.l.vector_db import DgentVectorBackend
 
@@ -146,7 +146,7 @@ class TestDgentVectorBackend:
             assert results[0].id == "similar"
 
     @pytest.mark.asyncio
-    async def test_remove(self, tmp_path):
+    async def test_remove(self, tmp_path) -> None:
         """Test removing entries."""
         from agents.l.vector_db import DgentVectorBackend
 
@@ -166,7 +166,7 @@ class TestDgentVectorBackend:
         assert "id2" in ids
 
     @pytest.mark.asyncio
-    async def test_clear(self, tmp_path):
+    async def test_clear(self, tmp_path) -> None:
         """Test clearing all entries."""
         from agents.l.vector_db import DgentVectorBackend
 
@@ -184,7 +184,7 @@ class TestDgentVectorBackend:
         assert count == 0
 
     @pytest.mark.asyncio
-    async def test_count(self, tmp_path):
+    async def test_count(self, tmp_path) -> None:
         """Test counting entries."""
         from agents.l.vector_db import DgentVectorBackend
 
@@ -200,7 +200,7 @@ class TestDgentVectorBackend:
         assert await backend.count() == 2
 
     @pytest.mark.asyncio
-    async def test_add_batch(self, tmp_path):
+    async def test_add_batch(self, tmp_path) -> None:
         """Test batch adding."""
         from agents.l.vector_db import DgentVectorBackend
 
@@ -215,7 +215,7 @@ class TestDgentVectorBackend:
         assert await backend.count() == 3
 
     @pytest.mark.asyncio
-    async def test_persistence(self, tmp_path):
+    async def test_persistence(self, tmp_path) -> None:
         """Test that data persists across instances."""
         from agents.l.vector_db import DgentVectorBackend
 
@@ -235,7 +235,7 @@ class TestDgentVectorBackend:
         assert results[0].id == "id1"
 
     @pytest.mark.asyncio
-    async def test_curvature(self, tmp_path):
+    async def test_curvature(self, tmp_path) -> None:
         """Test curvature estimation."""
         from agents.l.vector_db import DgentVectorBackend
 
@@ -252,7 +252,7 @@ class TestDgentVectorBackend:
         assert isinstance(curvature, float)
 
     @pytest.mark.asyncio
-    async def test_cluster_centers(self, tmp_path):
+    async def test_cluster_centers(self, tmp_path) -> None:
         """Test cluster center finding."""
         from agents.l.vector_db import DgentVectorBackend
 
@@ -279,7 +279,7 @@ class TestVectorCatalog:
     """Tests for VectorCatalog unified interface."""
 
     @pytest.mark.asyncio
-    async def test_create_empty(self, embedder, tmp_path):
+    async def test_create_empty(self, embedder, tmp_path) -> None:
         """Test creating empty catalog."""
         from agents.l.vector_db import VectorCatalog
 
@@ -293,7 +293,7 @@ class TestVectorCatalog:
         assert state.indexed_entries == 0
 
     @pytest.mark.asyncio
-    async def test_register_and_search(self, embedder, sample_entry, tmp_path):
+    async def test_register_and_search(self, embedder, sample_entry, tmp_path) -> None:
         """Test registering and searching."""
         from agents.l.vector_db import VectorCatalog
 
@@ -314,7 +314,7 @@ class TestVectorCatalog:
         assert any(r.id == sample_entry.id for r in results)
 
     @pytest.mark.asyncio
-    async def test_get(self, embedder, sample_entry, tmp_path):
+    async def test_get(self, embedder, sample_entry, tmp_path) -> None:
         """Test getting entry by ID."""
         from agents.l.vector_db import VectorCatalog
 
@@ -336,7 +336,7 @@ class TestVectorCatalog:
         assert missing is None
 
     @pytest.mark.asyncio
-    async def test_delete(self, embedder, sample_entry, tmp_path):
+    async def test_delete(self, embedder, sample_entry, tmp_path) -> None:
         """Test deleting entries."""
         from agents.l.vector_db import VectorCatalog
 
@@ -360,7 +360,7 @@ class TestVectorCatalog:
         assert deleted is False
 
     @pytest.mark.asyncio
-    async def test_multiple_entries(self, embedder, sample_entries, tmp_path):
+    async def test_multiple_entries(self, embedder, sample_entries, tmp_path) -> None:
         """Test with multiple entries."""
         from agents.l.vector_db import VectorCatalog
 
@@ -379,7 +379,7 @@ class TestVectorCatalog:
         assert state.indexed_entries == 5
 
     @pytest.mark.asyncio
-    async def test_search_with_entity_filter(self, embedder, tmp_path):
+    async def test_search_with_entity_filter(self, embedder, tmp_path) -> None:
         """Test search with entity type filter."""
         from agents.l.vector_db import VectorCatalog
 
@@ -426,7 +426,7 @@ class TestVectorCatalog:
             assert r.entry.entity_type == EntityType.AGENT
 
     @pytest.mark.asyncio
-    async def test_cluster_analysis(self, embedder, sample_entries, tmp_path):
+    async def test_cluster_analysis(self, embedder, sample_entries, tmp_path) -> None:
         """Test cluster analysis."""
         from agents.l.vector_db import VectorCatalog
 
@@ -456,7 +456,7 @@ class TestUtilityFunctions:
     """Tests for utility functions."""
 
     @pytest.mark.asyncio
-    async def test_create_dgent_vector_backend(self, tmp_path):
+    async def test_create_dgent_vector_backend(self, tmp_path) -> None:
         """Test create_dgent_vector_backend convenience function."""
         from agents.l.vector_db import create_dgent_vector_backend
 
@@ -468,7 +468,7 @@ class TestUtilityFunctions:
         assert backend.dimension == 128
 
     @pytest.mark.asyncio
-    async def test_create_vector_catalog(self, embedder, tmp_path):
+    async def test_create_vector_catalog(self, embedder, tmp_path) -> None:
         """Test create_vector_catalog convenience function."""
         from agents.l.vector_db import create_vector_catalog
 
@@ -485,7 +485,9 @@ class TestMigration:
     """Tests for migration utilities."""
 
     @pytest.mark.asyncio
-    async def test_migrate_to_dgent_backend(self, embedder, sample_entries, tmp_path):
+    async def test_migrate_to_dgent_backend(
+        self, embedder, sample_entries, tmp_path
+    ) -> None:
         """Test migrating entries to D-gent backend."""
         from agents.l.vector_db import migrate_to_dgent_backend
 
@@ -517,7 +519,7 @@ class TestIntegration:
     """Integration tests for the full vector DB workflow."""
 
     @pytest.mark.asyncio
-    async def test_full_workflow(self, embedder, tmp_path):
+    async def test_full_workflow(self, embedder, tmp_path) -> None:
         """Test complete workflow: create, add, search, delete."""
         from agents.l.vector_db import VectorCatalog
 
@@ -591,7 +593,7 @@ class TestIntegration:
         assert state.total_entries == 2
 
     @pytest.mark.asyncio
-    async def test_similarity_ranking(self, embedder, tmp_path):
+    async def test_similarity_ranking(self, embedder, tmp_path) -> None:
         """Test that results are ranked by similarity."""
         from agents.l.vector_db import VectorCatalog
 

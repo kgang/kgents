@@ -51,12 +51,12 @@ class MockAgent:
 class TestIntegrationStatus:
     """Tests for IntegrationStatus."""
 
-    def test_get_status(self):
+    def test_get_status(self) -> None:
         """Should return IntegrationStatus."""
         status = get_integration_status()
         assert isinstance(status, IntegrationStatus)
 
-    def test_status_attributes(self):
+    def test_status_attributes(self) -> None:
         """Should have all expected attributes."""
         status = get_integration_status()
         assert hasattr(status, "lgent_embeddings")
@@ -66,7 +66,7 @@ class TestIntegrationStatus:
         assert hasattr(status, "egent_evolution")
         assert hasattr(status, "ogent_observation")
 
-    def test_status_repr(self):
+    def test_status_repr(self) -> None:
         """Should have readable repr."""
         status = get_integration_status()
         repr_str = repr(status)
@@ -77,7 +77,7 @@ class TestIntegrationStatus:
 class TestFormatIntegrationReport:
     """Tests for integration report formatting."""
 
-    def test_format_report(self):
+    def test_format_report(self) -> None:
         """Should format report with status indicators."""
         report = format_integration_report()
         assert "CORTEX INTEGRATION STATUS" in report
@@ -92,18 +92,18 @@ class TestFormatIntegrationReport:
 class TestEnhancedOracle:
     """Tests for Oracle × L-gent integration."""
 
-    def test_create_with_simple(self):
+    def test_create_with_simple(self) -> None:
         """Should create Oracle with simple embedder."""
         oracle = create_enhanced_oracle(embedder_backend="simple")
         assert isinstance(oracle, Oracle)
 
-    def test_create_with_auto(self):
+    def test_create_with_auto(self) -> None:
         """Should create Oracle with auto-selected embedder."""
         oracle = create_enhanced_oracle(embedder_backend="auto")
         assert isinstance(oracle, Oracle)
 
     @pytest.mark.asyncio
-    async def test_enhanced_similarity(self):
+    async def test_enhanced_similarity(self) -> None:
         """Should compute similarity with enhanced embedder."""
         oracle = create_enhanced_oracle()
         sim = await oracle.similarity("hello", "world")
@@ -118,12 +118,12 @@ class TestEnhancedOracle:
 class TestPersistentWitnessStore:
     """Tests for Analyst × D-gent integration."""
 
-    def test_create_store(self, tmp_path):
+    def test_create_store(self, tmp_path) -> None:
         """Should create persistent store."""
         store = PersistentWitnessStore(str(tmp_path / "witnesses.json"))
         assert len(store) == 0
 
-    def test_record_witness(self, tmp_path):
+    def test_record_witness(self, tmp_path) -> None:
         """Should record witness."""
         store = PersistentWitnessStore(str(tmp_path / "witnesses.json"))
         witness = TestWitness(
@@ -136,7 +136,7 @@ class TestPersistentWitnessStore:
         assert len(store) == 1
 
     @pytest.mark.asyncio
-    async def test_query_witnesses(self, tmp_path):
+    async def test_query_witnesses(self, tmp_path) -> None:
         """Should query witnesses."""
         store = PersistentWitnessStore(str(tmp_path / "witnesses.json"))
 
@@ -156,7 +156,7 @@ class TestPersistentWitnessStore:
 class TestPersistentAnalyst:
     """Tests for create_persistent_analyst."""
 
-    def test_create_analyst(self, tmp_path):
+    def test_create_analyst(self, tmp_path) -> None:
         """Should create analyst with persistent store."""
         analyst = create_persistent_analyst(str(tmp_path / "witnesses.json"))
         assert isinstance(analyst, CausalAnalyst)
@@ -170,7 +170,7 @@ class TestPersistentAnalyst:
 class TestLatticeValidatedTopology:
     """Tests for Topologist × L-gent integration."""
 
-    def test_wrap_topology(self):
+    def test_wrap_topology(self) -> None:
         """Should wrap base topology."""
         base = TypeTopology()
         base.add_agent("A", "str", "str")
@@ -179,7 +179,7 @@ class TestLatticeValidatedTopology:
         wrapped = LatticeValidatedTopology(base)
         assert wrapped.base == base
 
-    def test_validate_path_without_lattice(self):
+    def test_validate_path_without_lattice(self) -> None:
         """Should return True when lattice unavailable."""
         base = TypeTopology()
         base.add_agent("A", "str", "str")
@@ -189,7 +189,7 @@ class TestLatticeValidatedTopology:
         # Without lattice, all paths are considered valid
         assert wrapped.validate_path(["A", "B"]) is True
 
-    def test_equivalent_paths(self):
+    def test_equivalent_paths(self) -> None:
         """Should find equivalent paths."""
         base = TypeTopology()
         base.add_agent("A", "str", "str")
@@ -208,14 +208,14 @@ class TestLatticeValidatedTopology:
 class TestBudgetedMarket:
     """Tests for Market × B-gent integration."""
 
-    def test_wrap_market(self):
+    def test_wrap_market(self) -> None:
         """Should wrap base market."""
         base = TestMarket()
         wrapped = BudgetedMarket(base, initial_budget=1000.0)
         assert wrapped.base == base
 
     @pytest.mark.asyncio
-    async def test_allocate_with_budget(self):
+    async def test_allocate_with_budget(self) -> None:
         """Should allocate with B-gent budgeting."""
         base = TestMarket()
         wrapped = BudgetedMarket(base)
@@ -236,14 +236,14 @@ class TestBudgetedMarket:
 class TestTeleologicalRedTeam:
     """Tests for RedTeam × E-gent integration."""
 
-    def test_wrap_red_team(self):
+    def test_wrap_red_team(self) -> None:
         """Should wrap base red team."""
         base = RedTeam(population_size=10, generations=2)
         wrapped = TeleologicalRedTeam(base)
         assert wrapped.base == base
 
     @pytest.mark.asyncio
-    async def test_evolve_without_egent(self):
+    async def test_evolve_without_egent(self) -> None:
         """Should fall back to base evolution without E-gent."""
         base = RedTeam(population_size=5, generations=2)
         wrapped = TeleologicalRedTeam(base)
@@ -264,13 +264,13 @@ class TestTeleologicalRedTeam:
 class TestObservedCortex:
     """Tests for Cortex × O-gent integration."""
 
-    def test_wrap_cortex(self):
+    def test_wrap_cortex(self) -> None:
         """Should wrap base cortex."""
         base = Cortex()
         wrapped = ObservedCortex(base)
         assert wrapped.base == base
 
-    def test_register_agent(self):
+    def test_register_agent(self) -> None:
         """Should register agent with observation."""
         base = Cortex()
         wrapped = ObservedCortex(base)
@@ -281,7 +281,7 @@ class TestObservedCortex:
         # Agent should be registered in base
         assert len(base._agents) >= 0  # May or may not be wrapped
 
-    def test_get_telemetry_none(self):
+    def test_get_telemetry_none(self) -> None:
         """Should return None for unobserved agents."""
         base = Cortex()
         wrapped = ObservedCortex(base)
@@ -293,7 +293,7 @@ class TestObservedCortex:
 class TestEnhancedCortex:
     """Tests for create_enhanced_cortex factory."""
 
-    def test_create_enhanced_cortex(self):
+    def test_create_enhanced_cortex(self) -> None:
         """Should create enhanced cortex."""
         cortex = create_enhanced_cortex(
             embedder_backend="simple",
@@ -302,7 +302,7 @@ class TestEnhancedCortex:
         # Should return either Cortex or ObservedCortex
         assert cortex is not None
 
-    def test_create_with_all_options(self, tmp_path):
+    def test_create_with_all_options(self, tmp_path) -> None:
         """Should create with all options."""
         cortex = create_enhanced_cortex(
             embedder_backend="auto",
@@ -323,19 +323,19 @@ class TestEnhancedCortex:
 class TestGracefulDegradation:
     """Tests for graceful degradation when dependencies unavailable."""
 
-    def test_oracle_without_lgent(self):
+    def test_oracle_without_lgent(self) -> None:
         """Oracle should work without L-gent embeddings."""
         oracle = create_enhanced_oracle(embedder_backend="simple")
         # Should use fallback embedder
         assert oracle.embedder is not None
 
-    def test_analyst_without_dgent(self, tmp_path):
+    def test_analyst_without_dgent(self, tmp_path) -> None:
         """Analyst should work without D-gent persistence."""
         analyst = create_persistent_analyst(str(tmp_path / "witnesses.json"))
         # Should still work, just without persistence
         assert analyst is not None
 
-    def test_cortex_minimal(self):
+    def test_cortex_minimal(self) -> None:
         """Cortex should work with minimal dependencies."""
         cortex = create_enhanced_cortex(
             embedder_backend="simple",
@@ -347,7 +347,7 @@ class TestGracefulDegradation:
         assert cortex is not None
 
     @pytest.mark.asyncio
-    async def test_full_pipeline_without_deps(self):
+    async def test_full_pipeline_without_deps(self) -> None:
         """Full pipeline should work without external dependencies."""
         cortex = create_enhanced_cortex(
             embedder_backend="simple",

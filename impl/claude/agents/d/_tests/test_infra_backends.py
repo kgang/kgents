@@ -79,7 +79,7 @@ else:
 class TestContentHash:
     """Tests for ContentHash."""
 
-    def test_compute_basic(self):
+    def test_compute_basic(self) -> None:
         """Compute hash for simple dict."""
         data = {"key": "value"}
         hash1 = ContentHash.compute(data)
@@ -88,7 +88,7 @@ class TestContentHash:
         assert len(hash1.hash_value) == 16  # Truncated to 16 chars
         assert hash1.computed_at is not None
 
-    def test_compute_deterministic(self):
+    def test_compute_deterministic(self) -> None:
         """Same data produces same hash."""
         data = {"key": "value", "count": 42}
 
@@ -97,21 +97,21 @@ class TestContentHash:
 
         assert hash1.hash_value == hash2.hash_value
 
-    def test_compute_different_data(self):
+    def test_compute_different_data(self) -> None:
         """Different data produces different hash."""
         hash1 = ContentHash.compute({"a": 1})
         hash2 = ContentHash.compute({"a": 2})
 
         assert hash1.hash_value != hash2.hash_value
 
-    def test_compute_order_independent(self):
+    def test_compute_order_independent(self) -> None:
         """Key order doesn't affect hash (sorted keys)."""
         hash1 = ContentHash.compute({"a": 1, "b": 2})
         hash2 = ContentHash.compute({"b": 2, "a": 1})
 
         assert hash1.hash_value == hash2.hash_value
 
-    def test_compute_nested(self):
+    def test_compute_nested(self) -> None:
         """Handles nested dicts."""
         data = {"outer": {"inner": "value"}}
         hash1 = ContentHash.compute(data)
@@ -127,7 +127,7 @@ class TestContentHash:
 class TestVectorMetadata:
     """Tests for VectorMetadata."""
 
-    def test_to_dict(self):
+    def test_to_dict(self) -> None:
         """Convert to dict for storage."""
         metadata = VectorMetadata(
             relational_id="shape-001",
@@ -145,7 +145,7 @@ class TestVectorMetadata:
         assert d["table"] == "shapes"
         assert d["custom"] == "field"
 
-    def test_from_dict(self):
+    def test_from_dict(self) -> None:
         """Create from stored dict."""
         d = {
             "relational_id": "shape-002",
@@ -163,7 +163,7 @@ class TestVectorMetadata:
         assert metadata.table == "memories"
         assert metadata.extra["extra_field"] == "extra_value"
 
-    def test_roundtrip(self):
+    def test_roundtrip(self) -> None:
         """to_dict and from_dict are inverse."""
         original = VectorMetadata(
             relational_id="test-123",
@@ -189,12 +189,12 @@ class TestVectorMetadata:
 class TestNullEmbeddingProvider:
     """Tests for NullEmbeddingProvider."""
 
-    def test_dimensions(self):
+    def test_dimensions(self) -> None:
         """Returns configured dimensions."""
         provider = NullEmbeddingProvider(dimensions=512)
         assert provider.dimensions == 512
 
-    def test_embed_returns_zeros(self):
+    def test_embed_returns_zeros(self) -> None:
         """Embed returns zero vector."""
         provider = NullEmbeddingProvider(dimensions=384)
         vector = provider.embed("test text")
@@ -202,7 +202,7 @@ class TestNullEmbeddingProvider:
         assert len(vector) == 384
         assert all(v == 0.0 for v in vector)
 
-    def test_embed_different_text_same_vector(self):
+    def test_embed_different_text_same_vector(self) -> None:
         """Different text produces same zero vector."""
         provider = NullEmbeddingProvider()
         v1 = provider.embed("text one")
@@ -219,7 +219,7 @@ class TestNullEmbeddingProvider:
 class TestInstanceDBVectorBackendConfig:
     """Tests for InstanceDBVectorBackendConfig."""
 
-    def test_defaults(self):
+    def test_defaults(self) -> None:
         """Default configuration values."""
         config = InstanceDBVectorBackendConfig()
 
@@ -228,7 +228,7 @@ class TestInstanceDBVectorBackendConfig:
         assert config.auto_heal_ghosts is True
         assert config.flag_stale_on_recall is True
 
-    def test_custom_values(self):
+    def test_custom_values(self) -> None:
         """Custom configuration values."""
         config = InstanceDBVectorBackendConfig(
             table="memories",
@@ -248,7 +248,7 @@ class TestInstanceDBVectorBackend:
     """Tests for InstanceDBVectorBackend."""
 
     @pytest.fixture
-    def mock_vector_store(self):
+    def mock_vector_store(self) -> AsyncMock:
         """Create mock vector store."""
         store = AsyncMock()
         store.dimensions = 384
@@ -259,7 +259,7 @@ class TestInstanceDBVectorBackend:
         return store
 
     @pytest.fixture
-    def mock_relational_store(self):
+    def mock_relational_store(self) -> AsyncMock:
         """Create mock relational store."""
         store = AsyncMock()
         store.fetch_all = AsyncMock(return_value=[])
@@ -273,12 +273,12 @@ class TestInstanceDBVectorBackend:
             relational_store=mock_relational_store,
         )
 
-    def test_dimensions(self, backend, mock_vector_store):
+    def test_dimensions(self, backend, mock_vector_store) -> None:
         """Returns vector store dimensions."""
         assert backend.dimensions == 384
 
     @pytest.mark.asyncio
-    async def test_upsert(self, backend, mock_vector_store):
+    async def test_upsert(self, backend, mock_vector_store) -> None:
         """Upsert stores vector with metadata."""
         content = {"type": "insight", "text": "test"}
 
@@ -293,7 +293,7 @@ class TestInstanceDBVectorBackend:
         mock_vector_store.upsert.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_search_no_coherency(self, backend, mock_vector_store):
+    async def test_search_no_coherency(self, backend, mock_vector_store) -> None:
         """Search without coherency check."""
         mock_vector_store.search.return_value = [
             MockVectorSearchResult(
@@ -381,14 +381,14 @@ class TestInstanceDBVectorBackend:
         mock_vector_store.delete.assert_called_with("ghost-001")
 
     @pytest.mark.asyncio
-    async def test_delete(self, backend, mock_vector_store):
+    async def test_delete(self, backend, mock_vector_store) -> None:
         """Delete removes vector."""
         result = await backend.delete("test-001")
 
         assert result is True
         mock_vector_store.delete.assert_called_with("test-001")
 
-    def test_stats(self, backend):
+    def test_stats(self, backend) -> None:
         """Stats returns backend statistics."""
         stats = backend.stats()
 
@@ -406,7 +406,7 @@ class TestInstanceDBRelationalBackend:
     """Tests for InstanceDBRelationalBackend."""
 
     @pytest.fixture
-    def mock_store(self):
+    def mock_store(self) -> AsyncMock:
         """Create mock relational store."""
         store = AsyncMock()
         store.execute = AsyncMock(return_value=1)
@@ -423,7 +423,7 @@ class TestInstanceDBRelationalBackend:
         )
 
     @pytest.mark.asyncio
-    async def test_save(self, backend, mock_store):
+    async def test_save(self, backend, mock_store) -> None:
         """Save stores state with versioning."""
         # First call for version query, second returns None for prune
         mock_store.fetch_one.side_effect = [
@@ -437,7 +437,7 @@ class TestInstanceDBRelationalBackend:
         assert mock_store.execute.call_count >= 2
 
     @pytest.mark.asyncio
-    async def test_load_not_found(self, backend, mock_store):
+    async def test_load_not_found(self, backend, mock_store) -> None:
         """Load raises error when no state exists."""
         mock_store.fetch_one.return_value = None
 
@@ -447,7 +447,7 @@ class TestInstanceDBRelationalBackend:
             await backend.load()
 
     @pytest.mark.asyncio
-    async def test_load_returns_state(self, backend, mock_store):
+    async def test_load_returns_state(self, backend, mock_store) -> None:
         """Load returns deserialized state."""
         # Skip table initialization and mock the load query
         backend._initialized = True
@@ -458,7 +458,7 @@ class TestInstanceDBRelationalBackend:
         assert state == {"count": 42}
 
     @pytest.mark.asyncio
-    async def test_history(self, backend, mock_store):
+    async def test_history(self, backend, mock_store) -> None:
         """History returns past states."""
         mock_store.fetch_all.return_value = [
             {"state": '{"count": 3}'},  # Current
@@ -474,7 +474,7 @@ class TestInstanceDBRelationalBackend:
         assert history[1] == {"count": 1}
 
     @pytest.mark.asyncio
-    async def test_exists(self, backend, mock_store):
+    async def test_exists(self, backend, mock_store) -> None:
         """Exists checks if state exists."""
         mock_store.fetch_one.return_value = {"1": 1}
 
@@ -493,7 +493,7 @@ class TestCortexAdapter:
     """Tests for CortexAdapter."""
 
     @pytest.fixture
-    def mock_relational(self):
+    def mock_relational(self) -> AsyncMock:
         """Create mock relational store."""
         store = AsyncMock()
         store.execute = AsyncMock(return_value=1)
@@ -502,7 +502,7 @@ class TestCortexAdapter:
         return store
 
     @pytest.fixture
-    def mock_vector(self):
+    def mock_vector(self) -> AsyncMock:
         """Create mock vector store."""
         store = AsyncMock()
         store.dimensions = 384
@@ -520,23 +520,23 @@ class TestCortexAdapter:
             vector_store=mock_vector,
         )
 
-    def test_has_semantic_true(self, adapter):
+    def test_has_semantic_true(self, adapter) -> None:
         """has_semantic True when vector store provided."""
         assert adapter.has_semantic is True
 
-    def test_has_semantic_false(self, mock_relational):
+    def test_has_semantic_false(self, mock_relational) -> None:
         """has_semantic False when no vector store."""
         adapter = CortexAdapter(relational_store=mock_relational)
         assert adapter.has_semantic is False
 
-    def test_create_agent(self, adapter):
+    def test_create_agent(self, adapter) -> None:
         """create_agent returns InstanceDBRelationalBackend."""
         agent = adapter.create_agent("test-key")
 
         assert isinstance(agent, InstanceDBRelationalBackend)
 
     @pytest.mark.asyncio
-    async def test_store(self, adapter, mock_relational, mock_vector):
+    async def test_store(self, adapter, mock_relational, mock_vector) -> None:
         """Store saves to both hemispheres."""
         await adapter.store("test-001", {"type": "insight"})
 
@@ -544,7 +544,7 @@ class TestCortexAdapter:
         mock_vector.upsert.assert_called()
 
     @pytest.mark.asyncio
-    async def test_fetch(self, adapter, mock_relational):
+    async def test_fetch(self, adapter, mock_relational) -> None:
         """Fetch retrieves from relational store."""
         mock_relational.fetch_one.return_value = {
             "id": "test-001",
@@ -557,7 +557,7 @@ class TestCortexAdapter:
         assert result["id"] == "test-001"
 
     @pytest.mark.asyncio
-    async def test_delete(self, adapter, mock_relational, mock_vector):
+    async def test_delete(self, adapter, mock_relational, mock_vector) -> None:
         """Delete removes from both hemispheres."""
         result = await adapter.delete("test-001")
 
@@ -565,7 +565,7 @@ class TestCortexAdapter:
         mock_relational.execute.assert_called()
         mock_vector.delete.assert_called()
 
-    def test_stats(self, adapter):
+    def test_stats(self, adapter) -> None:
         """Stats returns adapter statistics."""
         stats = adapter.stats()
 
@@ -582,16 +582,18 @@ class TestFactoryFunctions:
     """Tests for factory functions."""
 
     @pytest.fixture
-    def mock_vector_store(self):
+    def mock_vector_store(self) -> AsyncMock:
         store = AsyncMock()
         store.dimensions = 384
         return store
 
     @pytest.fixture
-    def mock_relational_store(self):
+    def mock_relational_store(self) -> AsyncMock:
         return AsyncMock()
 
-    def test_create_vector_backend(self, mock_vector_store, mock_relational_store):
+    def test_create_vector_backend(
+        self, mock_vector_store, mock_relational_store
+    ) -> None:
         """create_vector_backend creates backend."""
         backend = create_vector_backend(
             vector_store=mock_vector_store,
@@ -602,7 +604,7 @@ class TestFactoryFunctions:
         assert isinstance(backend, InstanceDBVectorBackend)
         assert backend._config.table == "custom_table"
 
-    def test_create_relational_backend(self, mock_relational_store):
+    def test_create_relational_backend(self, mock_relational_store) -> None:
         """create_relational_backend creates backend."""
         backend = create_relational_backend(
             store=mock_relational_store,
@@ -613,7 +615,9 @@ class TestFactoryFunctions:
         assert isinstance(backend, InstanceDBRelationalBackend)
         assert backend._config.max_history == 50
 
-    def test_create_cortex_adapter(self, mock_relational_store, mock_vector_store):
+    def test_create_cortex_adapter(
+        self, mock_relational_store, mock_vector_store
+    ) -> None:
         """create_cortex_adapter creates adapter."""
         adapter = create_cortex_adapter(
             relational_store=mock_relational_store,

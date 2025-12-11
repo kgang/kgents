@@ -65,12 +65,12 @@ class DoubleAgent:
 class TestTokenCost:
     """Tests for TokenCost dataclass."""
 
-    def test_total_computation(self):
+    def test_total_computation(self) -> None:
         """Test total property."""
         cost = TokenCost(input_tokens=100, output_tokens=200, compute_tokens=50)
         assert cost.total == 350
 
-    def test_default_values(self):
+    def test_default_values(self) -> None:
         """Test default values are zero."""
         cost = TokenCost()
         assert cost.total == 0
@@ -83,31 +83,31 @@ class TestInMemoryTreasury:
     """Tests for InMemoryTreasury."""
 
     @pytest.fixture
-    def treasury(self):
+    def treasury(self) -> InMemoryTreasury:
         return InMemoryTreasury(default_balance=1000)
 
-    def test_can_afford_with_default(self, treasury):
+    def test_can_afford_with_default(self, treasury) -> None:
         """Test affordability with default balance."""
         cost = TokenCost(input_tokens=500)
         assert treasury.can_afford("agent-1", cost)
 
-    def test_can_afford_exact(self, treasury):
+    def test_can_afford_exact(self, treasury) -> None:
         """Test affordability at exact balance."""
         cost = TokenCost(input_tokens=1000)
         assert treasury.can_afford("agent-1", cost)
 
-    def test_cannot_afford_exceeds(self, treasury):
+    def test_cannot_afford_exceeds(self, treasury) -> None:
         """Test cannot afford when exceeds balance."""
         cost = TokenCost(input_tokens=1001)
         assert not treasury.can_afford("agent-1", cost)
 
-    def test_debit_updates_balance(self, treasury):
+    def test_debit_updates_balance(self, treasury) -> None:
         """Test debit reduces balance."""
         cost = TokenCost(input_tokens=300)
         assert treasury.debit("agent-1", cost)
         assert treasury.get_balance("agent-1") == 700
 
-    def test_debit_fails_insufficient(self, treasury):
+    def test_debit_fails_insufficient(self, treasury) -> None:
         """Test debit fails when insufficient funds."""
         treasury.balances["agent-1"] = 100
         cost = TokenCost(input_tokens=500)
@@ -122,7 +122,7 @@ class TestMeteringInterceptor:
     """Tests for MeteringInterceptor."""
 
     @pytest.fixture
-    def metering(self):
+    def metering(self) -> MeteringInterceptor:
         treasury = InMemoryTreasury(default_balance=1000)
         oracle = SimpleCostOracle(default_cost=TokenCost(100, 100, 0))
         return MeteringInterceptor(
@@ -132,7 +132,7 @@ class TestMeteringInterceptor:
         )
 
     @pytest.mark.asyncio
-    async def test_debit_on_dispatch(self, metering):
+    async def test_debit_on_dispatch(self, metering) -> None:
         """Test tokens debited on successful dispatch."""
         msg = BusMessage(source="cli", target="echo", payload="test")
         await metering.before(msg)
@@ -141,7 +141,7 @@ class TestMeteringInterceptor:
         assert metering.treasury.get_balance("cli") == 800  # 1000 - 200
 
     @pytest.mark.asyncio
-    async def test_block_on_insufficient(self, metering):
+    async def test_block_on_insufficient(self, metering) -> None:
         """Test message blocked when insufficient tokens."""
         metering.treasury.balances["cli"] = 50
         msg = BusMessage(source="cli", target="echo", payload="test")
@@ -151,7 +151,7 @@ class TestMeteringInterceptor:
         assert "Insufficient tokens" in msg.block_reason
 
     @pytest.mark.asyncio
-    async def test_context_contains_cost(self, metering):
+    async def test_context_contains_cost(self, metering) -> None:
         """Test cost added to message context."""
         msg = BusMessage(source="cli", target="echo", payload="test")
         await metering.before(msg)
@@ -161,7 +161,7 @@ class TestMeteringInterceptor:
         assert cost.total == 200
 
     @pytest.mark.asyncio
-    async def test_latency_policy_logs_deficit(self):
+    async def test_latency_policy_logs_deficit(self) -> None:
         """Test latency policy logs deficit instead of blocking."""
         treasury = InMemoryTreasury(default_balance=0)
         metering = MeteringInterceptor(
@@ -183,7 +183,7 @@ class TestMeteringInterceptor:
 class TestSafetyThresholds:
     """Tests for SafetyThresholds."""
 
-    def test_default_values(self):
+    def test_default_values(self) -> None:
         """Test sensible defaults."""
         thresholds = SafetyThresholds()
         assert thresholds.max_entropy == 0.8
@@ -198,13 +198,13 @@ class TestSafetyInterceptor:
     """Tests for SafetyInterceptor."""
 
     @pytest.fixture
-    def safety(self):
+    def safety(self) -> SafetyInterceptor:
         return SafetyInterceptor(
             thresholds=SafetyThresholds(max_entropy=0.5),
         )
 
     @pytest.mark.asyncio
-    async def test_low_entropy_passes(self, safety):
+    async def test_low_entropy_passes(self, safety) -> None:
         """Test low entropy message passes."""
         msg = BusMessage(source="cli", target="echo", payload="test")
         await safety.before(msg)
@@ -212,7 +212,7 @@ class TestSafetyInterceptor:
         assert not msg.blocked
 
     @pytest.mark.asyncio
-    async def test_high_entropy_blocked(self, safety):
+    async def test_high_entropy_blocked(self, safety) -> None:
         """Test high entropy message blocked."""
         # "psi" target has entropy 0.7 in SimpleEntropyChecker
         msg = BusMessage(source="cli", target="psi", payload="creative task")
@@ -222,7 +222,7 @@ class TestSafetyInterceptor:
         assert "Entropy too high" in msg.block_reason
 
     @pytest.mark.asyncio
-    async def test_custom_entropy_checker(self):
+    async def test_custom_entropy_checker(self) -> None:
         """Test with custom entropy checker."""
 
         class AlwaysHighEntropy:
@@ -239,7 +239,7 @@ class TestSafetyInterceptor:
         assert msg.blocked
 
     @pytest.mark.asyncio
-    async def test_recursion_depth_tracking(self, safety):
+    async def test_recursion_depth_tracking(self, safety) -> None:
         """Test recursion depth is tracked."""
         safety.thresholds.max_depth = 2
 
@@ -256,7 +256,7 @@ class TestSafetyInterceptor:
         assert "Recursion depth exceeded" in msg.block_reason
 
     @pytest.mark.asyncio
-    async def test_recursion_depth_decremented_after(self, safety):
+    async def test_recursion_depth_decremented_after(self, safety) -> None:
         """Test recursion depth decremented in after hook."""
         msg = BusMessage(source="cli", target="echo", payload="test")
         await safety.before(msg)
@@ -274,7 +274,7 @@ class TestTelemetryInterceptor:
     """Tests for TelemetryInterceptor."""
 
     @pytest.fixture
-    def sink(self):
+    def sink(self) -> InMemoryObservationSink:
         return InMemoryObservationSink()
 
     @pytest.fixture
@@ -282,7 +282,7 @@ class TestTelemetryInterceptor:
         return TelemetryInterceptor(sink=sink)
 
     @pytest.mark.asyncio
-    async def test_emits_before_observation(self, telemetry, sink):
+    async def test_emits_before_observation(self, telemetry, sink) -> None:
         """Test observation emitted in before hook."""
         msg = BusMessage(source="cli", target="echo", payload="test")
         await telemetry.before(msg)
@@ -294,7 +294,7 @@ class TestTelemetryInterceptor:
         assert obs.target == "echo"
 
     @pytest.mark.asyncio
-    async def test_emits_after_observation(self, telemetry, sink):
+    async def test_emits_after_observation(self, telemetry, sink) -> None:
         """Test observation emitted in after hook."""
         msg = BusMessage(source="cli", target="echo", payload="test")
         await telemetry.before(msg)
@@ -306,7 +306,7 @@ class TestTelemetryInterceptor:
         assert obs.duration_ms >= 0
 
     @pytest.mark.asyncio
-    async def test_tracks_duration(self, telemetry, sink):
+    async def test_tracks_duration(self, telemetry, sink) -> None:
         """Test duration is calculated."""
         msg = BusMessage(source="cli", target="echo", payload="test")
         await telemetry.before(msg)
@@ -321,7 +321,7 @@ class TestTelemetryInterceptor:
         obs = sink.observations[1]
         assert obs.duration_ms >= 10  # At least 10ms
 
-    def test_sink_max_observations(self):
+    def test_sink_max_observations(self) -> None:
         """Test sink respects max observations."""
         sink = InMemoryObservationSink(max_observations=5)
         for i in range(10):
@@ -346,14 +346,14 @@ class TestTelemetryInterceptor:
 class TestPersonaPriors:
     """Tests for PersonaPriors."""
 
-    def test_default_values(self):
+    def test_default_values(self) -> None:
         """Test sensible defaults."""
         priors = PersonaPriors()
         assert priors.discount_rate == 0.9
         assert priors.risk_tolerance == 0.5
         assert priors.formality == 0.5
 
-    def test_custom_values(self):
+    def test_custom_values(self) -> None:
         """Test custom prior configuration."""
         priors = PersonaPriors(
             discount_rate=0.7,
@@ -371,7 +371,7 @@ class TestPersonaInterceptor:
     """Tests for PersonaInterceptor."""
 
     @pytest.fixture
-    def persona(self):
+    def persona(self) -> PersonaInterceptor:
         return PersonaInterceptor(
             priors=PersonaPriors(
                 risk_tolerance=0.3,
@@ -380,7 +380,7 @@ class TestPersonaInterceptor:
         )
 
     @pytest.mark.asyncio
-    async def test_injects_priors(self, persona):
+    async def test_injects_priors(self, persona) -> None:
         """Test priors injected into message context."""
         msg = BusMessage(source="cli", target="echo", payload="test")
         await persona.before(msg)
@@ -390,7 +390,7 @@ class TestPersonaInterceptor:
         assert priors.risk_tolerance == 0.3
 
     @pytest.mark.asyncio
-    async def test_sets_entropy_threshold(self, persona):
+    async def test_sets_entropy_threshold(self, persona) -> None:
         """Test entropy threshold set from persona."""
         msg = BusMessage(source="cli", target="echo", payload="test")
         await persona.before(msg)
@@ -399,7 +399,7 @@ class TestPersonaInterceptor:
         assert threshold == 0.4
 
     @pytest.mark.asyncio
-    async def test_risk_profile_injected(self, persona):
+    async def test_risk_profile_injected(self, persona) -> None:
         """Test risk profile injected."""
         msg = BusMessage(source="cli", target="echo", payload="test")
         await persona.before(msg)
@@ -409,7 +409,7 @@ class TestPersonaInterceptor:
         assert profile["risk_tolerance"] == 0.3
 
     @pytest.mark.asyncio
-    async def test_after_adds_metadata(self, persona):
+    async def test_after_adds_metadata(self, persona) -> None:
         """Test after hook adds persona metadata."""
         msg = BusMessage(source="cli", target="echo", payload="test")
         await persona.before(msg)
@@ -424,12 +424,12 @@ class TestPersonaInterceptor:
 class TestCreateStandardInterceptors:
     """Tests for create_standard_interceptors factory."""
 
-    def test_creates_four_interceptors(self):
+    def test_creates_four_interceptors(self) -> None:
         """Test creates all four standard interceptors."""
         interceptors = create_standard_interceptors()
         assert len(interceptors) == 4
 
-    def test_correct_order(self):
+    def test_correct_order(self) -> None:
         """Test interceptors are in correct order."""
         interceptors = create_standard_interceptors()
         orders = [i.order for i in interceptors]
@@ -441,7 +441,7 @@ class TestCreateStandardInterceptors:
         assert interceptors[2].name == "telemetry"  # 200
         assert interceptors[3].name == "persona"  # 300
 
-    def test_custom_components(self):
+    def test_custom_components(self) -> None:
         """Test with custom components."""
         treasury = InMemoryTreasury(default_balance=5000)
         priors = PersonaPriors(risk_tolerance=0.1)
@@ -467,7 +467,7 @@ class TestInterceptorsIntegration:
     """Integration tests with full bus."""
 
     @pytest.mark.asyncio
-    async def test_full_interceptor_stack(self):
+    async def test_full_interceptor_stack(self) -> None:
         """Test all interceptors working together."""
         # Create bus with standard interceptors
         interceptors = create_standard_interceptors()
@@ -487,7 +487,7 @@ class TestInterceptorsIntegration:
         assert "persona_applied" in result.metadata
 
     @pytest.mark.asyncio
-    async def test_safety_blocks_before_metering(self):
+    async def test_safety_blocks_before_metering(self) -> None:
         """Test safety blocks before metering debits tokens."""
         treasury = InMemoryTreasury(default_balance=1000)
 
@@ -508,7 +508,7 @@ class TestInterceptorsIntegration:
         assert treasury.get_balance("cli") == 1000
 
     @pytest.mark.asyncio
-    async def test_telemetry_records_blocked(self):
+    async def test_telemetry_records_blocked(self) -> None:
         """Test telemetry records messages even when later blocked."""
         sink = InMemoryObservationSink()
 
@@ -532,7 +532,7 @@ class TestInterceptorsIntegration:
         assert len(before_obs) >= 1
 
     @pytest.mark.asyncio
-    async def test_persona_priors_available_to_agent(self):
+    async def test_persona_priors_available_to_agent(self) -> None:
         """Test persona priors are available in message context."""
         priors = PersonaPriors(risk_tolerance=0.2)
         interceptors = create_standard_interceptors(priors=priors)

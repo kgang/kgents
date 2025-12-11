@@ -40,7 +40,7 @@ class TestHegelAgent:
     """Core H-gent dialectic tests."""
 
     @pytest.mark.asyncio
-    async def test_basic_dialectic_synthesis(self):
+    async def test_basic_dialectic_synthesis(self) -> None:
         """Test basic thesis/antithesis synthesis."""
         agent = hegel()
         result = await agent.invoke(
@@ -52,7 +52,7 @@ class TestHegelAgent:
         assert result.synthesis is not None or result.productive_tension
 
     @pytest.mark.asyncio
-    async def test_dialectic_without_antithesis(self):
+    async def test_dialectic_without_antithesis(self) -> None:
         """Test dialectic with only thesis (no opposition)."""
         agent = hegel()
         result = await agent.invoke(DialecticInput(thesis="Single perspective"))
@@ -62,7 +62,7 @@ class TestHegelAgent:
         assert not result.productive_tension or result.synthesis is not None
 
     @pytest.mark.asyncio
-    async def test_dialectic_with_context(self):
+    async def test_dialectic_with_context(self) -> None:
         """Test dialectic with context information."""
         agent = hegel()
         result = await agent.invoke(
@@ -77,7 +77,7 @@ class TestHegelAgent:
         assert result.sublation_notes  # Should have notes on the synthesis
 
     @pytest.mark.asyncio
-    async def test_multiple_dialectics_independence(self):
+    async def test_multiple_dialectics_independence(self) -> None:
         """Test that multiple dialectic invocations are independent."""
         agent = hegel()
 
@@ -94,7 +94,7 @@ class TestJungAgent:
     """Core Jung shadow analysis tests."""
 
     @pytest.mark.asyncio
-    async def test_basic_shadow_analysis(self):
+    async def test_basic_shadow_analysis(self) -> None:
         """Test basic shadow content identification."""
         agent = jung()
         result = await agent.invoke(
@@ -107,7 +107,7 @@ class TestJungAgent:
         assert 0.0 <= result.persona_shadow_balance <= 1.0
 
     @pytest.mark.asyncio
-    async def test_shadow_with_behavioral_patterns(self):
+    async def test_shadow_with_behavioral_patterns(self) -> None:
         """Test shadow analysis with behavioral patterns."""
         agent = jung()
         result = await agent.invoke(
@@ -125,7 +125,7 @@ class TestJungAgent:
         assert isinstance(result.projections, list)
 
     @pytest.mark.asyncio
-    async def test_shadow_with_declared_capabilities(self):
+    async def test_shadow_with_declared_capabilities(self) -> None:
         """Test shadow analysis against declared capabilities."""
         agent = jung()
         result = await agent.invoke(
@@ -145,7 +145,7 @@ class TestLacanAgent:
     """Core Lacan register analysis tests."""
 
     @pytest.mark.asyncio
-    async def test_basic_register_analysis(self):
+    async def test_basic_register_analysis(self) -> None:
         """Test basic register location analysis."""
         agent = lacan()
         result = await agent.invoke(
@@ -163,7 +163,7 @@ class TestLacanAgent:
             assert 0.0 <= loc.real_proximity <= 1.0
 
     @pytest.mark.asyncio
-    async def test_register_with_slippage_detection(self):
+    async def test_register_with_slippage_detection(self) -> None:
         """Test detection of register slippage."""
         agent = lacan()
         result = await agent.invoke(
@@ -178,7 +178,7 @@ class TestLacanAgent:
             assert isinstance(result.slippages, list)
 
     @pytest.mark.asyncio
-    async def test_register_gap_identification(self):
+    async def test_register_gap_identification(self) -> None:
         """Test identification of representational gaps."""
         agent = lacan()
         result = await agent.invoke(
@@ -197,7 +197,7 @@ class TestHegelLacanPipeline:
     """Test Hegel → Lacan composition."""
 
     @pytest.mark.asyncio
-    async def test_synthesis_register_analysis(self):
+    async def test_synthesis_register_analysis(self) -> None:
         """Test analyzing dialectic synthesis for register position."""
         # First get a synthesis from Hegel
         hegel_agent = hegel()
@@ -216,7 +216,7 @@ class TestHegelLacanPipeline:
         assert isinstance(result, (LacanOutput, LacanError))
 
     @pytest.mark.asyncio
-    async def test_productive_tension_register(self):
+    async def test_productive_tension_register(self) -> None:
         """Test register analysis of productive tension (no synthesis)."""
         hegel_agent = hegel()
         dialectic = await hegel_agent.invoke(
@@ -237,7 +237,7 @@ class TestLacanJungPipeline:
     """Test Lacan → Jung composition."""
 
     @pytest.mark.asyncio
-    async def test_register_to_shadow(self):
+    async def test_register_to_shadow(self) -> None:
         """Test shadow analysis of register structure."""
         lacan_agent = lacan()
         lacan_output = await lacan_agent.invoke(
@@ -252,7 +252,7 @@ class TestLacanJungPipeline:
         assert isinstance(result.shadow_inventory, list)
 
     @pytest.mark.asyncio
-    async def test_lacan_error_to_shadow(self):
+    async def test_lacan_error_to_shadow(self) -> None:
         """Test shadow analysis when Lacan produces error."""
         # Create a LacanError to test error handling path
         lacan_error = LacanError(
@@ -272,7 +272,7 @@ class TestJungHegelPipeline:
     """Test Jung → Hegel composition."""
 
     @pytest.mark.asyncio
-    async def test_shadow_dialectic(self):
+    async def test_shadow_dialectic(self) -> None:
         """Test dialectic between persona and shadow."""
         jung_agent = jung()
         jung_output = await jung_agent.invoke(
@@ -289,7 +289,7 @@ class TestJungHegelPipeline:
         assert isinstance(result, DialecticOutput)
 
     @pytest.mark.asyncio
-    async def test_no_shadow_dialectic(self):
+    async def test_no_shadow_dialectic(self) -> None:
         """Test dialectic when no shadow is detected."""
         # Create output with no shadow
         jung_output = JungOutput(
@@ -316,7 +316,7 @@ class TestFullIntrospection:
     """Test complete H-gent introspection pipeline."""
 
     @pytest.mark.asyncio
-    async def test_full_pipeline(self):
+    async def test_full_pipeline(self) -> None:
         """Test complete Hegel → Lacan → Jung pipeline."""
         pipeline = full_introspection()
         result = await pipeline.invoke(
@@ -335,7 +335,7 @@ class TestFullIntrospection:
         assert result.meta_notes  # Should have synthesis notes
 
     @pytest.mark.asyncio
-    async def test_full_pipeline_with_context(self):
+    async def test_full_pipeline_with_context(self) -> None:
         """Test full pipeline with context."""
         pipeline = full_introspection()
         result = await pipeline.invoke(
@@ -349,7 +349,7 @@ class TestFullIntrospection:
         assert result.meta_notes
 
     @pytest.mark.asyncio
-    async def test_meta_synthesis_content(self):
+    async def test_meta_synthesis_content(self) -> None:
         """Test that meta-synthesis includes all perspectives."""
         pipeline = full_introspection()
         result = await pipeline.invoke(
@@ -371,7 +371,7 @@ class TestHgentMgentIntegration:
     """Test H-gent × M-gent integration (memory-backed dialectics)."""
 
     @pytest.mark.asyncio
-    async def test_dialectic_memory_storage(self):
+    async def test_dialectic_memory_storage(self) -> None:
         """Test storing dialectic processes in holographic memory."""
         # Create holographic memory for dialectics
         memory = HolographicMemory[DialecticOutput]()
@@ -394,7 +394,7 @@ class TestHgentMgentIntegration:
         assert len(retrieved) > 0
 
     @pytest.mark.asyncio
-    async def test_shadow_memory_evolution(self):
+    async def test_shadow_memory_evolution(self) -> None:
         """Test tracking shadow evolution over time in memory."""
         memory = HolographicMemory[JungOutput]()
 
@@ -424,7 +424,7 @@ class TestPersistentDialecticIntegration:
     """Test H-gent × D-gent integration (persistent dialectics)."""
 
     @pytest.mark.asyncio
-    async def test_dialectic_persistence(self, tmp_path):
+    async def test_dialectic_persistence(self, tmp_path) -> None:
         """Test D-gent backed dialectic persistence."""
         path = tmp_path / "dialectic.json"
 
@@ -446,7 +446,7 @@ class TestPersistentDialecticIntegration:
         assert len(history) > 0
 
     @pytest.mark.asyncio
-    async def test_dialectic_memory_agent(self, tmp_path):
+    async def test_dialectic_memory_agent(self, tmp_path) -> None:
         """Test DialecticMemoryAgent for semantic dialectic retrieval."""
         path = tmp_path / "dialectic_memory.json"
 
@@ -473,7 +473,7 @@ class TestHgentCompositionLaws:
     """Test that H-gent compositions follow agent laws."""
 
     @pytest.mark.asyncio
-    async def test_pipeline_associativity(self):
+    async def test_pipeline_associativity(self) -> None:
         """Test that pipeline composition is associative."""
         # (Hegel >> Lacan) >> Jung should produce compatible output to Hegel >> (Lacan >> Jung)
         # Note: Not strictly equal due to state, but should be structurally equivalent
@@ -503,7 +503,7 @@ class TestHgentCompositionLaws:
         assert isinstance(j2, JungOutput)
 
     @pytest.mark.asyncio
-    async def test_full_introspection_composition(self):
+    async def test_full_introspection_composition(self) -> None:
         """Test that FullIntrospection composes correctly with other agents."""
         pipeline = FullIntrospection()
 
@@ -517,7 +517,7 @@ class TestHgentSystemConstraints:
     """Test H-gent critical system constraints."""
 
     @pytest.mark.asyncio
-    async def test_system_introspective_not_therapeutic(self):
+    async def test_system_introspective_not_therapeutic(self) -> None:
         """H-gents examine system, not human users - verify no therapy language."""
         agent = jung()
         result = await agent.invoke(JungInput(system_self_image="AI language model"))
@@ -534,7 +534,7 @@ class TestHgentSystemConstraints:
                     )
 
     @pytest.mark.asyncio
-    async def test_dialectic_examines_agent_claims(self):
+    async def test_dialectic_examines_agent_claims(self) -> None:
         """Dialectic should examine agent system claims, not user beliefs."""
         agent = hegel()
         result = await agent.invoke(

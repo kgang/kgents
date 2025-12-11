@@ -25,7 +25,7 @@ def temp_project():
 class TestAppendHydrateSignal:
     """Tests for append_hydrate_signal."""
 
-    def test_appends_signal_to_empty_section(self, temp_project):
+    def test_appends_signal_to_empty_section(self, temp_project) -> None:
         """First signal creates the section."""
         result = append_hydrate_signal(
             HydrateEvent.SESSION_START,
@@ -40,7 +40,7 @@ class TestAppendHydrateSignal:
         assert "[session]" in content
         assert "focus: agents/m/" in content
 
-    def test_appends_multiple_signals(self, temp_project):
+    def test_appends_multiple_signals(self, temp_project) -> None:
         """Multiple signals accumulate."""
         append_hydrate_signal(
             HydrateEvent.SESSION_START, "first", project_root=temp_project
@@ -55,14 +55,14 @@ class TestAppendHydrateSignal:
         assert content.count("[tests]") == 1
         assert content.count("[note]") == 1
 
-    def test_signal_without_detail(self, temp_project):
+    def test_signal_without_detail(self, temp_project) -> None:
         """Signal can be emitted without detail."""
         append_hydrate_signal(HydrateEvent.SESSION_END, project_root=temp_project)
 
         content = (temp_project / "HYDRATE.md").read_text()
         assert "[session_end]" in content
 
-    def test_returns_false_for_missing_file(self, temp_project):
+    def test_returns_false_for_missing_file(self, temp_project) -> None:
         """Returns False if HYDRATE.md doesn't exist."""
         (temp_project / "HYDRATE.md").unlink()
 
@@ -77,12 +77,12 @@ class TestAppendHydrateSignal:
 class TestGetRecentSignals:
     """Tests for get_recent_signals."""
 
-    def test_returns_empty_for_no_signals(self, temp_project):
+    def test_returns_empty_for_no_signals(self, temp_project) -> None:
         """Returns empty list when no signals exist."""
         signals = get_recent_signals(project_root=temp_project)
         assert signals == []
 
-    def test_returns_recent_signals(self, temp_project):
+    def test_returns_recent_signals(self, temp_project) -> None:
         """Returns signals in reverse chronological order."""
         append_hydrate_signal(
             HydrateEvent.SESSION_START, "first", project_root=temp_project
@@ -100,7 +100,7 @@ class TestGetRecentSignals:
         assert "[tests]" in signals[1]
         assert "[session]" in signals[2]
 
-    def test_respects_limit(self, temp_project):
+    def test_respects_limit(self, temp_project) -> None:
         """Respects the limit parameter."""
         for i in range(5):
             append_hydrate_signal(

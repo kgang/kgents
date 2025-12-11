@@ -143,7 +143,7 @@ class FallbackTool(Tool[NumberInput, NumberOutput]):
 
 
 @pytest.mark.asyncio
-async def test_sequential_basic():
+async def test_sequential_basic() -> None:
     """Test basic sequential execution."""
     tools = [AddOneTool(), MultiplyByTwoTool(), SquareTool()]
     orchestrator = SequentialOrchestrator(tools)
@@ -156,7 +156,7 @@ async def test_sequential_basic():
 
 
 @pytest.mark.asyncio
-async def test_sequential_single_tool():
+async def test_sequential_single_tool() -> None:
     """Test sequential with single tool."""
     orchestrator = SequentialOrchestrator([AddOneTool()])
 
@@ -167,7 +167,7 @@ async def test_sequential_single_tool():
 
 
 @pytest.mark.asyncio
-async def test_sequential_stops_on_error():
+async def test_sequential_stops_on_error() -> None:
     """Test sequential stops on first error."""
     tools = [AddOneTool(), FailingTool(), SquareTool()]
     orchestrator = SequentialOrchestrator(tools)
@@ -181,7 +181,7 @@ async def test_sequential_stops_on_error():
 
 
 @pytest.mark.asyncio
-async def test_sequential_empty_tools():
+async def test_sequential_empty_tools() -> None:
     """Test sequential requires at least one tool."""
     with pytest.raises(ValueError, match="at least one tool"):
         SequentialOrchestrator([])
@@ -193,7 +193,7 @@ async def test_sequential_empty_tools():
 
 
 @pytest.mark.asyncio
-async def test_parallel_basic():
+async def test_parallel_basic() -> None:
     """Test basic parallel execution."""
     tools = [AddOneTool(), MultiplyByTwoTool(), SquareTool()]
     orchestrator = ParallelOrchestrator(tools)
@@ -211,7 +211,7 @@ async def test_parallel_basic():
 
 
 @pytest.mark.asyncio
-async def test_parallel_indexing():
+async def test_parallel_indexing() -> None:
     """Test parallel result can be indexed."""
     tools = [AddOneTool(), MultiplyByTwoTool()]
     orchestrator = ParallelOrchestrator(tools)
@@ -225,7 +225,7 @@ async def test_parallel_indexing():
 
 
 @pytest.mark.asyncio
-async def test_parallel_faster_than_sequential():
+async def test_parallel_faster_than_sequential() -> None:
     """Test parallel execution is faster than sequential."""
     tools = [SlowTool(), SlowTool(), SlowTool()]
 
@@ -241,7 +241,7 @@ async def test_parallel_faster_than_sequential():
 
 
 @pytest.mark.asyncio
-async def test_parallel_fails_if_any_fails():
+async def test_parallel_fails_if_any_fails() -> None:
     """Test parallel fails if any tool fails."""
     tools = [AddOneTool(), FailingTool(), SquareTool()]
     orchestrator = ParallelOrchestrator(tools)
@@ -252,14 +252,14 @@ async def test_parallel_fails_if_any_fails():
 
 
 @pytest.mark.asyncio
-async def test_parallel_empty_tools():
+async def test_parallel_empty_tools() -> None:
     """Test parallel requires at least one tool."""
     with pytest.raises(ValueError, match="at least one tool"):
         ParallelOrchestrator([])
 
 
 @pytest.mark.asyncio
-async def test_parallel_single_tool():
+async def test_parallel_single_tool() -> None:
     """Test parallel with single tool."""
     orchestrator = ParallelOrchestrator([AddOneTool()])
 
@@ -275,7 +275,7 @@ async def test_parallel_single_tool():
 
 
 @pytest.mark.asyncio
-async def test_supervisor_basic():
+async def test_supervisor_basic() -> None:
     """Test basic supervisor delegation."""
     workers = [AddOneTool(), MultiplyByTwoTool(), SquareTool()]
     supervisor = SupervisorPattern(workers)
@@ -288,7 +288,7 @@ async def test_supervisor_basic():
 
 
 @pytest.mark.asyncio
-async def test_supervisor_round_robin():
+async def test_supervisor_round_robin() -> None:
     """Test supervisor round-robin worker selection."""
     workers = [AddOneTool(), MultiplyByTwoTool(), SquareTool()]
     supervisor = SupervisorPattern(workers)
@@ -319,7 +319,7 @@ async def test_supervisor_round_robin():
 
 
 @pytest.mark.asyncio
-async def test_supervisor_custom_selector():
+async def test_supervisor_custom_selector() -> None:
     """Test supervisor with custom selector."""
 
     def always_square(task, workers):
@@ -337,7 +337,7 @@ async def test_supervisor_custom_selector():
 
 
 @pytest.mark.asyncio
-async def test_supervisor_worker_stats():
+async def test_supervisor_worker_stats() -> None:
     """Test supervisor tracks worker statistics."""
     workers = [AddOneTool(), MultiplyByTwoTool()]
     supervisor = SupervisorPattern(workers)
@@ -355,7 +355,7 @@ async def test_supervisor_worker_stats():
 
 
 @pytest.mark.asyncio
-async def test_supervisor_handles_worker_failure():
+async def test_supervisor_handles_worker_failure() -> None:
     """Test supervisor handles worker failures."""
     workers = [FailingTool(), AddOneTool()]
     supervisor = SupervisorPattern(workers)
@@ -371,7 +371,7 @@ async def test_supervisor_handles_worker_failure():
 
 
 @pytest.mark.asyncio
-async def test_supervisor_empty_workers():
+async def test_supervisor_empty_workers() -> None:
     """Test supervisor requires at least one worker."""
     with pytest.raises(ValueError, match="at least one worker"):
         SupervisorPattern([])
@@ -383,7 +383,7 @@ async def test_supervisor_empty_workers():
 
 
 @pytest.mark.asyncio
-async def test_handoff_no_handoff_on_success():
+async def test_handoff_no_handoff_on_success() -> None:
     """Test handoff doesn't trigger on success by default."""
     primary = AddOneTool()
     handoff = HandoffPattern(primary, rules=[])
@@ -395,7 +395,7 @@ async def test_handoff_no_handoff_on_success():
 
 
 @pytest.mark.asyncio
-async def test_handoff_on_failure():
+async def test_handoff_on_failure() -> None:
     """Test handoff on failure condition."""
     primary = FailingTool()
     fallback = FallbackTool()
@@ -416,7 +416,7 @@ async def test_handoff_on_failure():
 
 
 @pytest.mark.asyncio
-async def test_handoff_on_success():
+async def test_handoff_on_success() -> None:
     """Test handoff on success condition."""
     primary = AddOneTool()
     followup = MultiplyByTwoTool()
@@ -438,7 +438,7 @@ async def test_handoff_on_success():
 
 
 @pytest.mark.asyncio
-async def test_handoff_always():
+async def test_handoff_always() -> None:
     """Test unconditional handoff."""
     primary = AddOneTool()
     always_tool = SquareTool()
@@ -460,7 +460,7 @@ async def test_handoff_always():
 
 
 @pytest.mark.asyncio
-async def test_handoff_with_transform():
+async def test_handoff_with_transform() -> None:
     """Test handoff with transformation."""
     primary = AddOneTool()
     followup = SquareTool()
@@ -486,7 +486,7 @@ async def test_handoff_with_transform():
 
 
 @pytest.mark.asyncio
-async def test_handoff_multiple_rules():
+async def test_handoff_multiple_rules() -> None:
     """Test handoff with multiple rules."""
     primary = FailingTool()
     fallback1 = FallbackTool()
@@ -518,7 +518,7 @@ async def test_handoff_multiple_rules():
 
 
 @pytest.mark.asyncio
-async def test_dynamic_cost_based():
+async def test_dynamic_cost_based() -> None:
     """Test cost-based tool selection."""
     tools = [AddOneTool(), MultiplyByTwoTool(), SquareTool()]
     selector = DynamicToolSelector(tools, CostBasedSelection())
@@ -534,7 +534,7 @@ async def test_dynamic_cost_based():
 
 
 @pytest.mark.asyncio
-async def test_dynamic_latency_based():
+async def test_dynamic_latency_based() -> None:
     """Test latency-based tool selection."""
     tools = [AddOneTool(), MultiplyByTwoTool(), SquareTool()]
     selector = DynamicToolSelector(tools, LatencyBasedSelection())
@@ -549,7 +549,7 @@ async def test_dynamic_latency_based():
 
 
 @pytest.mark.asyncio
-async def test_dynamic_environment_based():
+async def test_dynamic_environment_based() -> None:
     """Test environment-based tool selection."""
     dev_tool = AddOneTool()
     prod_tool = MultiplyByTwoTool()
@@ -580,7 +580,7 @@ async def test_dynamic_environment_based():
 
 
 @pytest.mark.asyncio
-async def test_dynamic_execute():
+async def test_dynamic_execute() -> None:
     """Test dynamic selector execute method."""
     tools = [AddOneTool(), MultiplyByTwoTool()]
     selector = DynamicToolSelector(tools, CostBasedSelection())
@@ -595,7 +595,7 @@ async def test_dynamic_execute():
 
 
 @pytest.mark.asyncio
-async def test_dynamic_empty_tools():
+async def test_dynamic_empty_tools() -> None:
     """Test dynamic selector requires at least one tool."""
     with pytest.raises(ValueError, match="at least one tool"):
         DynamicToolSelector([], CostBasedSelection())
@@ -607,7 +607,7 @@ async def test_dynamic_empty_tools():
 
 
 @pytest.mark.asyncio
-async def test_integration_sequential_then_parallel():
+async def test_integration_sequential_then_parallel() -> None:
     """Test combining sequential and parallel patterns."""
     # First: sequential (add 1, then multiply by 2)
     sequential = SequentialOrchestrator([AddOneTool(), MultiplyByTwoTool()])
@@ -625,7 +625,7 @@ async def test_integration_sequential_then_parallel():
 
 
 @pytest.mark.asyncio
-async def test_integration_supervisor_with_handoff():
+async def test_integration_supervisor_with_handoff() -> None:
     """Test supervisor delegates to handoff patterns."""
     # Create handoff pattern (primary with fallback)
     primary = FailingTool()
@@ -651,7 +651,7 @@ async def test_integration_supervisor_with_handoff():
 
 
 @pytest.mark.asyncio
-async def test_integration_dynamic_selects_from_parallel():
+async def test_integration_dynamic_selects_from_parallel() -> None:
     """Test dynamic selector choosing from parallel results."""
     # This is more conceptual - in practice you'd have complex logic
     tools = [AddOneTool(), MultiplyByTwoTool(), SquareTool()]

@@ -26,7 +26,7 @@ class TestAgentLawTemplate:
     """
 
     @pytest.fixture
-    def sample_agent(self):
+    def sample_agent(self) -> "TestAgent":
         """
         Create the agent under test.
 
@@ -37,7 +37,7 @@ class TestAgentLawTemplate:
         return TestAgent(name="sample", transform=lambda x: x * 2)
 
     @pytest.fixture
-    def test_inputs(self):
+    def test_inputs(self) -> None:
         """Standard test inputs for law verification."""
         return [0, 1, -1, 42, 1000]
 
@@ -48,7 +48,7 @@ class TestAgentLawTemplate:
     @pytest.mark.law("identity")
     @pytest.mark.law_identity
     @pytest.mark.asyncio
-    async def test_left_identity(self, sample_agent, test_inputs):
+    async def test_left_identity(self, sample_agent, test_inputs) -> None:
         """
         Test left identity law: Id >> f == f.
 
@@ -69,7 +69,7 @@ class TestAgentLawTemplate:
     @pytest.mark.law("identity")
     @pytest.mark.law_identity
     @pytest.mark.asyncio
-    async def test_right_identity(self, sample_agent, test_inputs):
+    async def test_right_identity(self, sample_agent, test_inputs) -> None:
         """
         Test right identity law: f >> Id == f.
 
@@ -94,7 +94,7 @@ class TestAgentLawTemplate:
     @pytest.mark.law("associativity")
     @pytest.mark.law_associativity
     @pytest.mark.asyncio
-    async def test_associativity(self, sample_agent, test_inputs):
+    async def test_associativity(self, sample_agent, test_inputs) -> None:
         """
         Test associativity law: (f >> g) >> h == f >> (g >> h).
 
@@ -125,7 +125,7 @@ class TestAgentLawTemplate:
 
     @pytest.mark.law("closure")
     @pytest.mark.asyncio
-    async def test_composition_closure(self, sample_agent):
+    async def test_composition_closure(self, sample_agent) -> None:
         """
         Test that composition produces a valid agent.
 
@@ -151,7 +151,7 @@ class TestIdAgent:
 
     @pytest.mark.law("identity")
     @pytest.mark.asyncio
-    async def test_id_is_transparent(self):
+    async def test_id_is_transparent(self) -> None:
         """ID should pass through any value unchanged."""
         test_values = [
             None,
@@ -170,7 +170,7 @@ class TestIdAgent:
 
     @pytest.mark.law("identity")
     @pytest.mark.asyncio
-    async def test_id_self_composition(self):
+    async def test_id_self_composition(self) -> None:
         """Id >> Id == Id."""
         composed = compose(ID, ID)
 

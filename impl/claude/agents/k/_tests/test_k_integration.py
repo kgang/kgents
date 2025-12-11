@@ -37,7 +37,7 @@ class TestKgentDialogue:
     """Core K-gent dialogue tests."""
 
     @pytest.mark.asyncio
-    async def test_reflect_mode(self):
+    async def test_reflect_mode(self) -> None:
         """Test reflect dialogue mode."""
         agent = kgent()
         result = await agent.invoke(
@@ -52,7 +52,7 @@ class TestKgentDialogue:
         assert result.response  # Should have reflection response
 
     @pytest.mark.asyncio
-    async def test_advise_mode(self):
+    async def test_advise_mode(self) -> None:
         """Test advise dialogue mode."""
         agent = kgent()
         result = await agent.invoke(
@@ -67,7 +67,7 @@ class TestKgentDialogue:
         assert result.response
 
     @pytest.mark.asyncio
-    async def test_challenge_mode(self):
+    async def test_challenge_mode(self) -> None:
         """Test challenge dialogue mode."""
         agent = kgent()
         result = await agent.invoke(
@@ -83,7 +83,7 @@ class TestKgentDialogue:
         assert result.response
 
     @pytest.mark.asyncio
-    async def test_explore_mode(self):
+    async def test_explore_mode(self) -> None:
         """Test explore dialogue mode."""
         agent = kgent()
         result = await agent.invoke(
@@ -98,7 +98,7 @@ class TestKgentDialogue:
         assert result.response
 
     @pytest.mark.asyncio
-    async def test_preference_reference(self):
+    async def test_preference_reference(self) -> None:
         """Test that dialogue references relevant preferences."""
         # Create persona with specific preferences
         state = PersonaState(
@@ -132,7 +132,7 @@ class TestPersonaQuery:
     """Test PersonaQueryAgent."""
 
     @pytest.mark.asyncio
-    async def test_query_all_preferences(self):
+    async def test_query_all_preferences(self) -> None:
         """Test querying all preferences."""
         agent = query_persona()
         result = await agent.invoke(PersonaQuery(aspect="preference"))
@@ -142,7 +142,7 @@ class TestPersonaQuery:
         assert result.confidence > 0
 
     @pytest.mark.asyncio
-    async def test_query_patterns(self):
+    async def test_query_patterns(self) -> None:
         """Test querying patterns."""
         agent = query_persona()
         result = await agent.invoke(PersonaQuery(aspect="pattern"))
@@ -151,7 +151,7 @@ class TestPersonaQuery:
         assert result.patterns  # Should have some patterns
 
     @pytest.mark.asyncio
-    async def test_query_topic_filter(self):
+    async def test_query_topic_filter(self) -> None:
         """Test querying with topic filter."""
         agent = query_persona()
         result = await agent.invoke(PersonaQuery(aspect="all", topic="communication"))
@@ -160,7 +160,7 @@ class TestPersonaQuery:
         # Should filter to communication-related items
 
     @pytest.mark.asyncio
-    async def test_query_for_agent(self):
+    async def test_query_for_agent(self) -> None:
         """Test querying with for_agent context."""
         agent = query_persona()
         result = await agent.invoke(PersonaQuery(aspect="all", for_agent="robin"))
@@ -170,7 +170,7 @@ class TestPersonaQuery:
         assert result.suggested_style
 
     @pytest.mark.asyncio
-    async def test_invoke_safe(self):
+    async def test_invoke_safe(self) -> None:
         """Test safe query method that returns Maybe."""
         agent = query_persona()
         maybe_result = agent.invoke_safe(PersonaQuery(aspect="all"))
@@ -185,7 +185,7 @@ class TestKgentMemoryIntegration:
     """Test K-gent × M-gent integration."""
 
     @pytest.mark.asyncio
-    async def test_dialogue_history_storage(self):
+    async def test_dialogue_history_storage(self) -> None:
         """Test storing dialogue history in holographic memory."""
         memory = HolographicMemory[DialogueOutput]()
         agent = kgent()
@@ -211,7 +211,7 @@ class TestKgentMemoryIntegration:
         assert len(retrieved) > 0
 
     @pytest.mark.asyncio
-    async def test_preference_memory(self):
+    async def test_preference_memory(self) -> None:
         """Test storing preference updates in memory."""
         memory = HolographicMemory[PersonaResponse]()
         agent = query_persona()
@@ -261,7 +261,7 @@ class TestKgentNarrativeIntegration:
     """Test K-gent × N-gent integration."""
 
     @pytest.mark.asyncio
-    async def test_dialogue_tracing(self):
+    async def test_dialogue_tracing(self) -> None:
         """Test tracing K-gent dialogues with N-gent Chronicle."""
         chronicle = Chronicle()
         agent = kgent()
@@ -288,7 +288,7 @@ class TestKgentNarrativeIntegration:
         assert timeline[0].agent_id == "K-gent"
 
     @pytest.mark.asyncio
-    async def test_multi_mode_dialogue_chronicle(self):
+    async def test_multi_mode_dialogue_chronicle(self) -> None:
         """Test chronicling dialogues across multiple modes."""
         chronicle = Chronicle()
         agent = kgent()
@@ -311,7 +311,7 @@ class TestKgentNarrativeIntegration:
         assert len(chronicle.get_agent_crystals("K-gent")) == 4
 
     @pytest.mark.asyncio
-    async def test_query_tracing(self):
+    async def test_query_tracing(self) -> None:
         """Test tracing persona queries."""
         chronicle = Chronicle()
         agent = query_persona()
@@ -338,7 +338,7 @@ class TestPersistentPersona:
     """Test K-gent × D-gent integration (persistent persona)."""
 
     @pytest.mark.asyncio
-    async def test_persona_persistence(self, tmp_path):
+    async def test_persona_persistence(self, tmp_path) -> None:
         """Test persistent persona state."""
         path = tmp_path / "persona.json"
 
@@ -367,7 +367,7 @@ class TestPersistentPersona:
         assert agent2.state.current_focus == "testing"
 
     @pytest.mark.asyncio
-    async def test_preference_evolution(self, tmp_path):
+    async def test_preference_evolution(self, tmp_path) -> None:
         """Test tracking preference changes over time."""
         path = tmp_path / "persona_evolution.json"
 
@@ -395,7 +395,7 @@ class TestKgentCrossAgentIntegration:
     """Test K-gent integration with other agents."""
 
     @pytest.mark.asyncio
-    async def test_kgent_provides_personalization(self):
+    async def test_kgent_provides_personalization(self) -> None:
         """Test that K-gent provides personalization for other agents."""
         query_agent = query_persona()
 
@@ -412,7 +412,7 @@ class TestKgentCrossAgentIntegration:
         )
 
     @pytest.mark.asyncio
-    async def test_kgent_state_access(self):
+    async def test_kgent_state_access(self) -> None:
         """Test that K-gent state is accessible."""
         state = PersonaState(
             seed=PersonaSeed(
@@ -434,7 +434,7 @@ class TestKgentCrossAgentIntegration:
 class TestKgentMaybe:
     """Test K-gent's Maybe monad for graceful degradation."""
 
-    def test_maybe_just(self):
+    def test_maybe_just(self) -> None:
         """Test Maybe.just creation and value extraction."""
         from agents.k.persona import Maybe
 
@@ -443,7 +443,7 @@ class TestKgentMaybe:
         assert not maybe.is_nothing
         assert maybe.value_or(0) == 42
 
-    def test_maybe_nothing(self):
+    def test_maybe_nothing(self) -> None:
         """Test Maybe.nothing creation."""
         from agents.k.persona import Maybe
 
@@ -453,7 +453,7 @@ class TestKgentMaybe:
         assert maybe.value_or(0) == 0
         assert maybe.error == "No value available"
 
-    def test_maybe_map(self):
+    def test_maybe_map(self) -> None:
         """Test Maybe.map for transformation."""
         from agents.k.persona import Maybe
 
@@ -462,7 +462,7 @@ class TestKgentMaybe:
         assert result.is_just
         assert result.value_or(0) == 42
 
-    def test_maybe_map_nothing(self):
+    def test_maybe_map_nothing(self) -> None:
         """Test Maybe.map on Nothing propagates."""
         from agents.k.persona import Maybe
 
@@ -471,7 +471,7 @@ class TestKgentMaybe:
         assert result.is_nothing
 
     @pytest.mark.asyncio
-    async def test_safe_query_failure(self):
+    async def test_safe_query_failure(self) -> None:
         """Test safe query with uninitialized state."""
         # Create agent with minimal state
         agent = PersonaQueryAgent(state=None)
@@ -484,7 +484,7 @@ class TestKgentComposition:
     """Test K-gent composition patterns."""
 
     @pytest.mark.asyncio
-    async def test_kgent_as_morphism(self):
+    async def test_kgent_as_morphism(self) -> None:
         """Test K-gent follows agent morphism pattern."""
         agent = kgent()
 
@@ -499,7 +499,7 @@ class TestKgentComposition:
         assert isinstance(result, DialogueOutput)
 
     @pytest.mark.asyncio
-    async def test_query_agent_as_morphism(self):
+    async def test_query_agent_as_morphism(self) -> None:
         """Test PersonaQueryAgent follows agent morphism pattern."""
         agent = query_persona()
 
@@ -511,7 +511,7 @@ class TestKgentComposition:
         assert isinstance(result, PersonaResponse)
 
     @pytest.mark.asyncio
-    async def test_dialogue_modes_complete(self):
+    async def test_dialogue_modes_complete(self) -> None:
         """Test all dialogue modes are implemented."""
         agent = kgent()
 

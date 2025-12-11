@@ -67,7 +67,7 @@ def flinch_store(telemetry_store, temp_dir):
 class TestFlinch:
     """Tests for the Flinch dataclass."""
 
-    def test_create_flinch_minimal(self):
+    def test_create_flinch_minimal(self) -> None:
         """Create flinch with minimal required fields."""
         flinch = Flinch(
             test_id="test_foo.py::test_bar",
@@ -83,7 +83,7 @@ class TestFlinch:
         assert flinch.id.startswith("FLINCH-")
         assert flinch.timestamp  # Auto-generated
 
-    def test_create_flinch_with_error_info(self):
+    def test_create_flinch_with_error_info(self) -> None:
         """Create flinch with error information."""
         flinch = Flinch(
             test_id="test_foo.py::test_bar",
@@ -97,7 +97,7 @@ class TestFlinch:
         assert flinch.error_type == "AssertionError"
         assert flinch.error_message == "expected 1, got 2"
 
-    def test_from_report(self, mock_report):
+    def test_from_report(self, mock_report) -> None:
         """Create flinch from pytest report."""
         flinch = Flinch.from_report(mock_report)
 
@@ -109,7 +109,7 @@ class TestFlinch:
         assert flinch.function_name == "test_bar"
         assert flinch.error_type == "AssertionError"
 
-    def test_to_event(self):
+    def test_to_event(self) -> None:
         """Convert flinch to TelemetryEvent."""
         flinch = Flinch(
             test_id="test_foo.py::test_bar",
@@ -126,7 +126,7 @@ class TestFlinch:
         assert event.data["test_id"] == "test_foo.py::test_bar"
         assert event.data["error_type"] == "ValueError"
 
-    def test_to_jsonl_dict(self):
+    def test_to_jsonl_dict(self) -> None:
         """Convert flinch to JSONL-compatible dict (Phase 1 format)."""
         flinch = Flinch(
             test_id="test_foo.py::test_bar",
@@ -143,7 +143,7 @@ class TestFlinch:
         assert jsonl["duration"] == 0.5
         assert jsonl["outcome"] == "failed"
 
-    def test_embed_text(self):
+    def test_embed_text(self) -> None:
         """Generate text for embedding."""
         flinch = Flinch(
             test_id="test_foo.py::test_bar",
@@ -171,7 +171,7 @@ class TestFlinchStoreAsync:
     """Tests for async FlinchStore operations."""
 
     @pytest.mark.asyncio
-    async def test_emit_to_telemetry(self, flinch_store, telemetry_store):
+    async def test_emit_to_telemetry(self, flinch_store, telemetry_store) -> None:
         """Emit flinch writes to telemetry store."""
         flinch = Flinch(
             test_id="test_foo.py::test_bar",
@@ -191,7 +191,7 @@ class TestFlinchStoreAsync:
         assert events[0].data["test_id"] == "test_foo.py::test_bar"
 
     @pytest.mark.asyncio
-    async def test_emit_writes_jsonl(self, flinch_store, temp_dir):
+    async def test_emit_writes_jsonl(self, flinch_store, temp_dir) -> None:
         """Emit flinch writes to JSONL fallback."""
         flinch = Flinch(
             test_id="test_foo.py::test_bar",
@@ -208,7 +208,7 @@ class TestFlinchStoreAsync:
         assert "test_foo.py::test_bar" in content
 
     @pytest.mark.asyncio
-    async def test_query_by_type(self, flinch_store, telemetry_store):
+    async def test_query_by_type(self, flinch_store, telemetry_store) -> None:
         """Query flinches by error type."""
         # Emit flinches with different error types
         await flinch_store.emit(
@@ -246,7 +246,7 @@ class TestFlinchStoreAsync:
         assert all(f.error_type == "AssertionError" for f in results)
 
     @pytest.mark.asyncio
-    async def test_query_frequent_failures(self, flinch_store):
+    async def test_query_frequent_failures(self, flinch_store) -> None:
         """Find frequently failing tests."""
         # Emit multiple failures for the same test
         for i in range(5):
@@ -277,7 +277,7 @@ class TestFlinchStoreAsync:
         assert "test_stable.py::test_one_off" not in frequent
 
     @pytest.mark.asyncio
-    async def test_count(self, flinch_store):
+    async def test_count(self, flinch_store) -> None:
         """Count total flinches."""
         for i in range(3):
             await flinch_store.emit(
@@ -296,7 +296,7 @@ class TestFlinchStoreAsync:
 class TestFlinchStoreSync:
     """Tests for sync FlinchStore operations (for pytest hooks)."""
 
-    def test_emit_sync_writes_jsonl_immediately(self, temp_dir):
+    def test_emit_sync_writes_jsonl_immediately(self, temp_dir) -> None:
         """emit_sync writes to JSONL immediately."""
         store = FlinchStore(jsonl_fallback=temp_dir / "flinches.jsonl")
         flinch = Flinch(
@@ -314,7 +314,7 @@ class TestFlinchStoreSync:
         content = jsonl_path.read_text()
         assert "test_foo.py::test_bar" in content
 
-    def test_emit_sync_queues_for_telemetry(self, telemetry_store, temp_dir):
+    def test_emit_sync_queues_for_telemetry(self, telemetry_store, temp_dir) -> None:
         """emit_sync queues flinch for async telemetry processing."""
         store = FlinchStore(
             telemetry=telemetry_store,
@@ -336,7 +336,7 @@ class TestFlinchStoreSync:
         count = asyncio.run(telemetry_store.count("test_flinch"))
         assert count == 1
 
-    def test_emit_sync_multiple_flinches(self, temp_dir):
+    def test_emit_sync_multiple_flinches(self, temp_dir) -> None:
         """emit_sync handles multiple flinches."""
         store = FlinchStore(jsonl_fallback=temp_dir / "flinches.jsonl")
 
@@ -358,7 +358,7 @@ class TestFlinchStoreSync:
 class TestFlinchStoreJSONLFallback:
     """Tests for JSONL-only mode (D-gent unavailable)."""
 
-    def test_jsonl_only_mode(self, temp_dir):
+    def test_jsonl_only_mode(self, temp_dir) -> None:
         """FlinchStore works with only JSONL fallback."""
         store = FlinchStore(jsonl_fallback=temp_dir / "flinches.jsonl")
 
@@ -375,7 +375,7 @@ class TestFlinchStoreJSONLFallback:
         assert jsonl_path.exists()
 
     @pytest.mark.asyncio
-    async def test_no_telemetry_graceful(self, temp_dir):
+    async def test_no_telemetry_graceful(self, temp_dir) -> None:
         """Store works gracefully without telemetry."""
         store = FlinchStore(jsonl_fallback=temp_dir / "flinches.jsonl")
 
@@ -402,7 +402,7 @@ class TestFlinchStoreJSONLFallback:
 class TestGetFlinchStore:
     """Tests for the singleton factory."""
 
-    def test_get_flinch_store_creates_singleton(self, temp_dir):
+    def test_get_flinch_store_creates_singleton(self, temp_dir) -> None:
         """get_flinch_store returns same instance."""
         store1 = get_flinch_store(
             jsonl_fallback=temp_dir / "flinches.jsonl", reinit=True
@@ -411,7 +411,7 @@ class TestGetFlinchStore:
 
         assert store1 is store2
 
-    def test_get_flinch_store_reinit(self, temp_dir):
+    def test_get_flinch_store_reinit(self, temp_dir) -> None:
         """reinit=True creates new instance."""
         store1 = get_flinch_store(
             jsonl_fallback=temp_dir / "flinches1.jsonl", reinit=True

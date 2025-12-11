@@ -65,6 +65,6 @@ def mock_cluster_not_exists():
 
 
 @pytest.fixture
-def test_cluster_name():
+def test_cluster_name() -> None:
     """Unique cluster name for testing."""
     return "kgents-test-cluster"

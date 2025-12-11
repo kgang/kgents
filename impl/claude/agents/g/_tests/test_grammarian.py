@@ -19,13 +19,13 @@ from agents.g import (
 # ============================================================================
 
 
-def test_grammarian_instantiation():
+def test_grammarian_instantiation() -> None:
     """Test Grammarian can be instantiated."""
     g_gent = Grammarian()
     assert g_gent.name == "G-gent"
 
 
-def test_grammarian_custom_name():
+def test_grammarian_custom_name() -> None:
     """Test Grammarian with custom name."""
     g_gent = Grammarian(name="CustomGent")
     assert g_gent.name == "CustomGent"
@@ -37,7 +37,7 @@ def test_grammarian_custom_name():
 
 
 @pytest.mark.asyncio
-async def test_reify_command_level():
+async def test_reify_command_level() -> None:
     """Test reify() creates a COMMAND-level Tongue."""
     g_gent = Grammarian()
 
@@ -55,7 +55,7 @@ async def test_reify_command_level():
 
 
 @pytest.mark.asyncio
-async def test_reify_schema_level():
+async def test_reify_schema_level() -> None:
     """Test reify() creates a SCHEMA-level Tongue."""
     g_gent = Grammarian()
 
@@ -70,7 +70,7 @@ async def test_reify_schema_level():
 
 
 @pytest.mark.asyncio
-async def test_reify_recursive_level():
+async def test_reify_recursive_level() -> None:
     """Test reify() creates a RECURSIVE-level Tongue."""
     g_gent = Grammarian()
 
@@ -85,7 +85,7 @@ async def test_reify_recursive_level():
 
 
 @pytest.mark.asyncio
-async def test_reify_encodes_constraints():
+async def test_reify_encodes_constraints() -> None:
     """Test reify() structurally encodes constraints."""
     g_gent = Grammarian()
 
@@ -100,7 +100,7 @@ async def test_reify_encodes_constraints():
 
 
 @pytest.mark.asyncio
-async def test_reify_generates_examples():
+async def test_reify_generates_examples() -> None:
     """Test reify() includes examples in Tongue."""
     g_gent = Grammarian()
     examples = ["READ file.txt", "LIST directory"]
@@ -117,7 +117,7 @@ async def test_reify_generates_examples():
 
 
 @pytest.mark.asyncio
-async def test_reify_generates_proofs():
+async def test_reify_generates_proofs() -> None:
     """Test reify() generates constraint proofs."""
     g_gent = Grammarian()
 
@@ -134,7 +134,7 @@ async def test_reify_generates_proofs():
 
 
 @pytest.mark.asyncio
-async def test_reify_custom_name():
+async def test_reify_custom_name() -> None:
     """Test reify() with custom Tongue name."""
     g_gent = Grammarian()
 
@@ -149,7 +149,7 @@ async def test_reify_custom_name():
 
 
 @pytest.mark.asyncio
-async def test_reify_custom_version():
+async def test_reify_custom_version() -> None:
     """Test reify() with custom version."""
     g_gent = Grammarian()
 
@@ -164,7 +164,7 @@ async def test_reify_custom_version():
 
 
 @pytest.mark.asyncio
-async def test_reify_validation():
+async def test_reify_validation() -> None:
     """Test reify() validates Tongue when requested."""
     g_gent = Grammarian()
 
@@ -179,7 +179,7 @@ async def test_reify_validation():
 
 
 @pytest.mark.asyncio
-async def test_reify_no_validation():
+async def test_reify_no_validation() -> None:
     """Test reify() can skip validation."""
     g_gent = Grammarian()
 
@@ -200,7 +200,7 @@ async def test_reify_no_validation():
 
 
 @pytest.mark.asyncio
-async def test_refine_increments_version():
+async def test_refine_increments_version() -> None:
     """Test refine() increments version."""
     g_gent = Grammarian()
 
@@ -217,7 +217,7 @@ async def test_refine_increments_version():
 
 
 @pytest.mark.asyncio
-async def test_refine_resets_validation():
+async def test_refine_resets_validation() -> None:
     """Test refine() resets validation flag."""
     g_gent = Grammarian()
 
@@ -239,7 +239,7 @@ async def test_refine_resets_validation():
 
 
 @pytest.mark.asyncio
-async def test_reify_convenience_function():
+async def test_reify_convenience_function() -> None:
     """Test reify() convenience function."""
     tongue = await reify(
         domain="Test Domain",
@@ -252,7 +252,7 @@ async def test_reify_convenience_function():
 
 
 @pytest.mark.asyncio
-async def test_reify_schema_convenience():
+async def test_reify_schema_convenience() -> None:
     """Test reify_schema() convenience function."""
     tongue = await reify_schema(
         domain="User Profile",
@@ -264,7 +264,7 @@ async def test_reify_schema_convenience():
 
 
 @pytest.mark.asyncio
-async def test_reify_command_convenience():
+async def test_reify_command_convenience() -> None:
     """Test reify_command() convenience function."""
     tongue = await reify_command(
         domain="File Operations",
@@ -277,7 +277,7 @@ async def test_reify_command_convenience():
 
 
 @pytest.mark.asyncio
-async def test_reify_recursive_convenience():
+async def test_reify_recursive_convenience() -> None:
     """Test reify_recursive() convenience function."""
     tongue = await reify_recursive(
         domain="Query Language",
@@ -294,7 +294,7 @@ async def test_reify_recursive_convenience():
 
 
 @pytest.mark.asyncio
-async def test_calendar_use_case():
+async def test_calendar_use_case() -> None:
     """Test realistic calendar management use case."""
     tongue = await reify_command(
         domain="Calendar Management",
@@ -314,7 +314,7 @@ async def test_calendar_use_case():
 
 
 @pytest.mark.asyncio
-async def test_database_query_use_case():
+async def test_database_query_use_case() -> None:
     """Test realistic database query use case."""
     tongue = await reify_command(
         domain="Database Queries",
@@ -329,7 +329,7 @@ async def test_database_query_use_case():
 
 
 @pytest.mark.asyncio
-async def test_file_operations_use_case():
+async def test_file_operations_use_case() -> None:
     """Test realistic file operations use case."""
     tongue = await reify_command(
         domain="Safe File Operations",
@@ -347,7 +347,7 @@ async def test_file_operations_use_case():
 
 
 @pytest.mark.asyncio
-async def test_citation_exchange_use_case():
+async def test_citation_exchange_use_case() -> None:
     """Test citation exchange schema use case."""
     tongue = await reify_schema(
         domain="Citation Exchange",
@@ -366,7 +366,7 @@ async def test_citation_exchange_use_case():
 
 
 @pytest.mark.asyncio
-async def test_reify_empty_constraints():
+async def test_reify_empty_constraints() -> None:
     """Test reify() with empty constraints."""
     tongue = await reify(
         domain="Test",
@@ -379,7 +379,7 @@ async def test_reify_empty_constraints():
 
 
 @pytest.mark.asyncio
-async def test_reify_no_examples():
+async def test_reify_no_examples() -> None:
     """Test reify() without examples."""
     tongue = await reify(
         domain="Test",
@@ -392,7 +392,7 @@ async def test_reify_no_examples():
 
 
 @pytest.mark.asyncio
-async def test_generate_tongue_name():
+async def test_generate_tongue_name() -> None:
     """Test Tongue name generation."""
     g_gent = Grammarian()
 
@@ -403,7 +403,7 @@ async def test_generate_tongue_name():
     assert name == "SimpleTongue"
 
 
-def test_increment_version():
+def test_increment_version() -> None:
     """Test version increment logic."""
     g_gent = Grammarian()
 

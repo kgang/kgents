@@ -97,7 +97,7 @@ def make_traces(count: int, base_time: datetime | None = None) -> list[SemanticT
 class TestConfidenceLevel:
     """Tests for ConfidenceLevel enum."""
 
-    def test_all_levels_defined(self):
+    def test_all_levels_defined(self) -> None:
         """All confidence levels should be defined."""
         levels = [
             ConfidenceLevel.CERTAIN,
@@ -108,31 +108,31 @@ class TestConfidenceLevel:
         ]
         assert len(levels) == 5
 
-    def test_from_score_certain(self):
+    def test_from_score_certain(self) -> None:
         """Score >= 0.95 should be CERTAIN."""
         assert ConfidenceLevel.from_score(1.0) == ConfidenceLevel.CERTAIN
         assert ConfidenceLevel.from_score(0.95) == ConfidenceLevel.CERTAIN
         assert ConfidenceLevel.from_score(0.99) == ConfidenceLevel.CERTAIN
 
-    def test_from_score_high(self):
+    def test_from_score_high(self) -> None:
         """Score 0.8-0.95 should be HIGH."""
         assert ConfidenceLevel.from_score(0.94) == ConfidenceLevel.HIGH
         assert ConfidenceLevel.from_score(0.8) == ConfidenceLevel.HIGH
         assert ConfidenceLevel.from_score(0.85) == ConfidenceLevel.HIGH
 
-    def test_from_score_moderate(self):
+    def test_from_score_moderate(self) -> None:
         """Score 0.5-0.8 should be MODERATE."""
         assert ConfidenceLevel.from_score(0.79) == ConfidenceLevel.MODERATE
         assert ConfidenceLevel.from_score(0.5) == ConfidenceLevel.MODERATE
         assert ConfidenceLevel.from_score(0.6) == ConfidenceLevel.MODERATE
 
-    def test_from_score_low(self):
+    def test_from_score_low(self) -> None:
         """Score 0.2-0.5 should be LOW."""
         assert ConfidenceLevel.from_score(0.49) == ConfidenceLevel.LOW
         assert ConfidenceLevel.from_score(0.2) == ConfidenceLevel.LOW
         assert ConfidenceLevel.from_score(0.35) == ConfidenceLevel.LOW
 
-    def test_from_score_uncertain(self):
+    def test_from_score_uncertain(self) -> None:
         """Score < 0.2 should be UNCERTAIN."""
         assert ConfidenceLevel.from_score(0.19) == ConfidenceLevel.UNCERTAIN
         assert ConfidenceLevel.from_score(0.0) == ConfidenceLevel.UNCERTAIN
@@ -147,7 +147,7 @@ class TestConfidenceLevel:
 class TestReliabilityAnnotation:
     """Tests for ReliabilityAnnotation."""
 
-    def test_creation_basic(self):
+    def test_creation_basic(self) -> None:
         """Should create annotation with basic fields."""
         annotation = ReliabilityAnnotation(confidence=0.8)
         assert annotation.confidence == 0.8
@@ -155,17 +155,17 @@ class TestReliabilityAnnotation:
         assert annotation.contradicted_by == []
         assert annotation.source_reliability == 1.0
 
-    def test_level_property(self):
+    def test_level_property(self) -> None:
         """Should return correct confidence level."""
         annotation = ReliabilityAnnotation(confidence=0.9)
         assert annotation.level == ConfidenceLevel.HIGH
 
-    def test_adjusted_confidence_no_modifiers(self):
+    def test_adjusted_confidence_no_modifiers(self) -> None:
         """Adjusted confidence should equal base without modifiers."""
         annotation = ReliabilityAnnotation(confidence=0.8)
         assert annotation.adjusted_confidence == 0.8
 
-    def test_adjusted_confidence_with_corroboration(self):
+    def test_adjusted_confidence_with_corroboration(self) -> None:
         """Corroboration should boost confidence."""
         annotation = ReliabilityAnnotation(
             confidence=0.7,
@@ -174,7 +174,7 @@ class TestReliabilityAnnotation:
         # +5% per corroborating trace = +10%
         assert annotation.adjusted_confidence == pytest.approx(0.8)
 
-    def test_adjusted_confidence_with_contradiction(self):
+    def test_adjusted_confidence_with_contradiction(self) -> None:
         """Contradiction should penalize confidence."""
         annotation = ReliabilityAnnotation(
             confidence=0.8,
@@ -183,7 +183,7 @@ class TestReliabilityAnnotation:
         # -15% per contradicting trace
         assert annotation.adjusted_confidence == pytest.approx(0.65)
 
-    def test_adjusted_confidence_capped(self):
+    def test_adjusted_confidence_capped(self) -> None:
         """Adjusted confidence should be capped at 0-1."""
         annotation = ReliabilityAnnotation(
             confidence=0.95,
@@ -191,7 +191,7 @@ class TestReliabilityAnnotation:
         )
         assert annotation.adjusted_confidence <= 1.0
 
-    def test_is_contested(self):
+    def test_is_contested(self) -> None:
         """Should detect contested annotations."""
         not_contested = ReliabilityAnnotation(confidence=0.8)
         contested = ReliabilityAnnotation(
@@ -201,7 +201,7 @@ class TestReliabilityAnnotation:
         assert not not_contested.is_contested
         assert contested.is_contested
 
-    def test_source_reliability_factor(self):
+    def test_source_reliability_factor(self) -> None:
         """Source reliability should factor into adjusted confidence."""
         annotation = ReliabilityAnnotation(
             confidence=0.8,
@@ -218,7 +218,7 @@ class TestReliabilityAnnotation:
 class TestUnreliableTrace:
     """Tests for UnreliableTrace."""
 
-    def test_creation(self):
+    def test_creation(self) -> None:
         """Should create unreliable trace from semantic trace."""
         trace = make_trace()
         reliability = ReliabilityAnnotation(confidence=0.8)
@@ -232,7 +232,7 @@ class TestUnreliableTrace:
         assert unreliable.agent_id == "Agent"
         assert unreliable.confidence == 0.8
 
-    def test_confidence_uses_adjusted(self):
+    def test_confidence_uses_adjusted(self) -> None:
         """Confidence property should use adjusted confidence."""
         trace = make_trace()
         reliability = ReliabilityAnnotation(
@@ -244,7 +244,7 @@ class TestUnreliableTrace:
         # 0.7 + 0.05 (corroboration) = 0.75
         assert unreliable.confidence == 0.75
 
-    def test_level_property(self):
+    def test_level_property(self) -> None:
         """Level should map to confidence level."""
         trace = make_trace()
         reliability = ReliabilityAnnotation(confidence=0.9)
@@ -261,7 +261,7 @@ class TestUnreliableTrace:
 class TestHallucinationType:
     """Tests for HallucinationType enum."""
 
-    def test_all_types_defined(self):
+    def test_all_types_defined(self) -> None:
         """All hallucination types should be defined."""
         types = [
             HallucinationType.CONFABULATION,
@@ -282,7 +282,7 @@ class TestHallucinationType:
 class TestHallucinationIndicator:
     """Tests for HallucinationIndicator."""
 
-    def test_creation(self):
+    def test_creation(self) -> None:
         """Should create indicator with all fields."""
         indicator = HallucinationIndicator(
             type=HallucinationType.OVERCONFIDENCE,
@@ -296,7 +296,7 @@ class TestHallucinationIndicator:
         assert indicator.severity == 0.5
         assert len(indicator.affected_traces) == 1
 
-    def test_is_severe(self):
+    def test_is_severe(self) -> None:
         """Should detect severe indicators."""
         mild = HallucinationIndicator(
             type=HallucinationType.OVERCONFIDENCE,
@@ -314,7 +314,7 @@ class TestHallucinationIndicator:
         assert not mild.is_severe
         assert severe.is_severe
 
-    def test_to_dict(self):
+    def test_to_dict(self) -> None:
         """Should convert to dictionary."""
         indicator = HallucinationIndicator(
             type=HallucinationType.TEMPORAL,
@@ -337,7 +337,7 @@ class TestHallucinationIndicator:
 class TestHallucinationDetector:
     """Tests for HallucinationDetector."""
 
-    def test_detect_overconfidence(self):
+    def test_detect_overconfidence(self) -> None:
         """Should detect overconfidence pattern."""
         detector = HallucinationDetector()
         trace = make_trace()
@@ -355,7 +355,7 @@ class TestHallucinationDetector:
         assert len(indicators) > 0
         assert any(i.type == HallucinationType.OVERCONFIDENCE for i in indicators)
 
-    def test_detect_contradiction(self):
+    def test_detect_contradiction(self) -> None:
         """Should detect contradictions."""
         detector = HallucinationDetector()
         trace = make_trace(agent_id="AgentA")
@@ -381,7 +381,7 @@ class TestHallucinationDetector:
         # Should detect the contradiction
         assert any(i.type == HallucinationType.CONTRADICTION for i in indicators)
 
-    def test_check_ground_truth(self):
+    def test_check_ground_truth(self) -> None:
         """Should check against ground truth."""
         detector = HallucinationDetector()
         trace = make_trace(trace_id="t1")
@@ -403,7 +403,7 @@ class TestHallucinationDetector:
 
         assert any(i.type == HallucinationType.CONFABULATION for i in indicators)
 
-    def test_no_issues_detected(self):
+    def test_no_issues_detected(self) -> None:
         """Should return empty for clean traces."""
         detector = HallucinationDetector()
         trace = make_trace()
@@ -433,7 +433,7 @@ class TestHallucinationDetector:
 class TestUnreliableNarrative:
     """Tests for UnreliableNarrative."""
 
-    def test_overall_confidence(self):
+    def test_overall_confidence(self) -> None:
         """Should calculate overall confidence."""
         narrative = Narrative(
             text="Story",
@@ -462,7 +462,7 @@ class TestUnreliableNarrative:
         # Average of 0.8 and 0.6
         assert unreliable_narrative.overall_confidence == pytest.approx(0.7)
 
-    def test_confidence_level(self):
+    def test_confidence_level(self) -> None:
         """Should map to confidence level."""
         narrative = Narrative(
             text="Story",
@@ -486,7 +486,7 @@ class TestUnreliableNarrative:
 
         assert unreliable_narrative.confidence_level == ConfidenceLevel.HIGH
 
-    def test_has_hallucination_warnings(self):
+    def test_has_hallucination_warnings(self) -> None:
         """Should detect hallucination warnings."""
         narrative = Narrative(
             text="Story",
@@ -517,7 +517,7 @@ class TestUnreliableNarrative:
         assert not no_warnings.has_hallucination_warnings
         assert with_warnings.has_hallucination_warnings
 
-    def test_contested_traces(self):
+    def test_contested_traces(self) -> None:
         """Should identify contested traces."""
         narrative = Narrative(
             text="Story",
@@ -560,7 +560,7 @@ class TestUnreliableNarrator:
     """Tests for UnreliableNarrator."""
 
     @pytest.mark.asyncio
-    async def test_narrate_produces_unreliable_narrative(self):
+    async def test_narrate_produces_unreliable_narrative(self) -> None:
         """Should produce UnreliableNarrative."""
         narrator = UnreliableNarrator(SimpleLLMProvider())
         traces = make_traces(3)
@@ -572,7 +572,7 @@ class TestUnreliableNarrator:
         assert len(result.annotated_traces) == 3
 
     @pytest.mark.asyncio
-    async def test_narrate_adds_confidence(self):
+    async def test_narrate_adds_confidence(self) -> None:
         """Should add confidence annotations."""
         narrator = UnreliableNarrator(SimpleLLMProvider(), base_confidence=0.7)
         traces = [make_trace()]
@@ -585,7 +585,7 @@ class TestUnreliableNarrator:
             assert t.reliability.confidence > 0
 
     @pytest.mark.asyncio
-    async def test_narrate_with_ground_truth(self):
+    async def test_narrate_with_ground_truth(self) -> None:
         """Should check against ground truth when provided."""
         narrator = UnreliableNarrator(SimpleLLMProvider())
         trace = make_trace(trace_id="t1")
@@ -603,7 +603,7 @@ class TestUnreliableNarrator:
         assert result.metadata["ground_truth_provided"] is True
 
     @pytest.mark.asyncio
-    async def test_deterministic_traces_higher_confidence(self):
+    async def test_deterministic_traces_higher_confidence(self) -> None:
         """Deterministic traces should have higher confidence."""
         narrator = UnreliableNarrator(SimpleLLMProvider(), base_confidence=0.7)
 
@@ -631,7 +631,7 @@ class TestUnreliableNarrator:
 class TestPerspectiveSpec:
     """Tests for PerspectiveSpec."""
 
-    def test_creation(self):
+    def test_creation(self) -> None:
         """Should create perspective spec."""
         spec = PerspectiveSpec(
             narrator_id="tech",
@@ -643,7 +643,7 @@ class TestPerspectiveSpec:
         assert spec.genre == NarrativeGenre.TECHNICAL
         assert spec.reliability == 0.9
 
-    def test_defaults(self):
+    def test_defaults(self) -> None:
         """Should have sensible defaults."""
         spec = PerspectiveSpec(
             narrator_id="test",
@@ -663,7 +663,7 @@ class TestPerspectiveSpec:
 class TestContradiction:
     """Tests for Contradiction."""
 
-    def test_creation(self):
+    def test_creation(self) -> None:
         """Should create contradiction."""
         contradiction = Contradiction(
             trace_id="t1",
@@ -678,7 +678,7 @@ class TestContradiction:
         assert len(contradiction.perspectives) == 2
         assert contradiction.severity == 0.5
 
-    def test_narrator_ids(self):
+    def test_narrator_ids(self) -> None:
         """Should list narrator IDs."""
         contradiction = Contradiction(
             trace_id="t1",
@@ -688,7 +688,7 @@ class TestContradiction:
 
         assert set(contradiction.narrator_ids) == {"a", "b", "c"}
 
-    def test_to_dict(self):
+    def test_to_dict(self) -> None:
         """Should convert to dict."""
         contradiction = Contradiction(
             trace_id="t1",
@@ -732,7 +732,7 @@ class TestRashomonNarrative:
             hallucination_indicators=[],
         )
 
-    def test_weighted_confidence(self):
+    def test_weighted_confidence(self) -> None:
         """Should calculate weighted confidence."""
         perspectives = {
             "high": self._make_narrative("high", 0.9),
@@ -752,7 +752,7 @@ class TestRashomonNarrative:
         # Weighted: (0.9 * 1.0 + 0.5 * 0.5) / (1.0 + 0.5) = 1.15 / 1.5 = 0.767
         assert rashomon.weighted_confidence() == pytest.approx(0.767, rel=0.01)
 
-    def test_consensus_similar_confidence(self):
+    def test_consensus_similar_confidence(self) -> None:
         """Should find consensus traces."""
         trace = make_trace(trace_id="t1")
 
@@ -788,7 +788,7 @@ class TestRashomonNarrative:
         consensus = rashomon.consensus
         assert len(consensus) == 1
 
-    def test_contradictions_different_confidence(self):
+    def test_contradictions_different_confidence(self) -> None:
         """Should find contradictions when confidence differs significantly."""
         trace = make_trace(trace_id="t1")
 
@@ -839,7 +839,7 @@ class TestRashomonNarrator:
     """Tests for RashomonNarrator."""
 
     @pytest.mark.asyncio
-    async def test_narrate_produces_multiple_perspectives(self):
+    async def test_narrate_produces_multiple_perspectives(self) -> None:
         """Should produce narratives from all perspectives."""
         specs = [
             PerspectiveSpec("tech", NarrativeGenre.TECHNICAL),
@@ -857,7 +857,7 @@ class TestRashomonNarrator:
         assert "noir" in result.perspectives
 
     @pytest.mark.asyncio
-    async def test_add_perspective(self):
+    async def test_add_perspective(self) -> None:
         """Should add new perspective."""
         narrator = RashomonNarrator(SimpleLLMProvider())
 
@@ -867,7 +867,7 @@ class TestRashomonNarrator:
         assert "new" in narrator.narrators
 
     @pytest.mark.asyncio
-    async def test_each_perspective_uses_its_genre(self):
+    async def test_each_perspective_uses_its_genre(self) -> None:
         """Each perspective should use its configured genre."""
         specs = [
             PerspectiveSpec("tech", NarrativeGenre.TECHNICAL),
@@ -892,7 +892,7 @@ class TestRashomonNarrator:
 class TestGroundTruth:
     """Tests for GroundTruth."""
 
-    def test_creation(self):
+    def test_creation(self) -> None:
         """Should create ground truth."""
         gt = GroundTruth(
             trace_id="t1",
@@ -904,7 +904,7 @@ class TestGroundTruth:
         assert gt.verified_interpretation == "The truth"
         assert gt.confidence == 1.0
 
-    def test_to_dict(self):
+    def test_to_dict(self) -> None:
         """Should convert to dict."""
         gt = GroundTruth(
             trace_id="t1",
@@ -924,7 +924,7 @@ class TestGroundTruth:
 class TestGroundTruthReconciler:
     """Tests for GroundTruthReconciler."""
 
-    def test_reconcile_perfect_match(self):
+    def test_reconcile_perfect_match(self) -> None:
         """Should identify matches."""
         reconciler = GroundTruthReconciler(
             [
@@ -950,7 +950,7 @@ class TestGroundTruthReconciler:
         assert len(result.mismatches) == 0
         assert result.accuracy == 1.0
 
-    def test_reconcile_mismatch(self):
+    def test_reconcile_mismatch(self) -> None:
         """Should identify mismatches."""
         reconciler = GroundTruthReconciler(
             [
@@ -976,7 +976,7 @@ class TestGroundTruthReconciler:
         assert len(result.mismatches) == 1
         assert result.accuracy == 0.0
 
-    def test_reconcile_unverified(self):
+    def test_reconcile_unverified(self) -> None:
         """Should track unverified traces."""
         reconciler = GroundTruthReconciler([])  # No ground truth
 
@@ -996,14 +996,14 @@ class TestGroundTruthReconciler:
         assert len(result.unverified) == 1
         assert "t1" in result.unverified
 
-    def test_add_ground_truth(self):
+    def test_add_ground_truth(self) -> None:
         """Should add ground truth dynamically."""
         reconciler = GroundTruthReconciler()
         reconciler.add_ground_truth(GroundTruth("t1", "Truth"))
 
         assert "t1" in reconciler.ground_truths
 
-    def test_partial_match_similar(self):
+    def test_partial_match_similar(self) -> None:
         """Should match similar interpretations."""
         reconciler = GroundTruthReconciler(
             [

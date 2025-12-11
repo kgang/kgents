@@ -31,7 +31,7 @@ from agents.i.tui import (
 class TestColors:
     """Tests for color functions."""
 
-    def test_entity_colors(self):
+    def test_entity_colors(self) -> None:
         """Test entity color mapping."""
         # ID and Compose are cyan
         id_entity = Entity(id="i", entity_type=EntityType.ID, x=0, y=0)
@@ -56,7 +56,7 @@ class TestColors:
         fix_entity = Entity(id="f", entity_type=EntityType.FIX, x=0, y=0)
         assert Color.BLUE.value in get_entity_color(fix_entity)
 
-    def test_phase_colors(self):
+    def test_phase_colors(self) -> None:
         """Test dialectic phase color mapping."""
         assert Color.DIM.value in get_phase_color(DialecticPhase.DORMANT)
         assert Color.GREEN.value in get_phase_color(DialecticPhase.FLUX)
@@ -65,7 +65,7 @@ class TestColors:
         assert Color.BLUE.value in get_phase_color(DialecticPhase.FIX)
         assert Color.CYAN.value in get_phase_color(DialecticPhase.COOLING)
 
-    def test_log_colors(self):
+    def test_log_colors(self) -> None:
         """Test log level color mapping."""
         assert Color.DIM.value in get_log_color("info")
         assert Color.GREEN.value in get_log_color("success")
@@ -77,7 +77,7 @@ class TestColors:
 class TestRenderConfig:
     """Tests for RenderConfig."""
 
-    def test_default_config(self):
+    def test_default_config(self) -> None:
         """Test default configuration."""
         config = RenderConfig()
         assert config.use_color is True
@@ -87,7 +87,7 @@ class TestRenderConfig:
         assert config.compost_lines == 5
         assert config.field_padding == 2
 
-    def test_custom_config(self):
+    def test_custom_config(self) -> None:
         """Test custom configuration."""
         config = RenderConfig(
             use_color=False,
@@ -102,14 +102,14 @@ class TestRenderConfig:
 class TestFieldRenderer:
     """Tests for FieldRenderer."""
 
-    def test_renderer_creation(self):
+    def test_renderer_creation(self) -> None:
         """Test renderer creation."""
         state = FieldState(width=60, height=20)
         renderer = FieldRenderer(state)
         assert renderer.state == state
         assert renderer.config is not None
 
-    def test_render_returns_string(self):
+    def test_render_returns_string(self) -> None:
         """Test render returns a string."""
         state = FieldState(width=60, height=20)
         renderer = FieldRenderer(state)
@@ -117,7 +117,7 @@ class TestFieldRenderer:
         assert isinstance(output, str)
         assert len(output) > 0
 
-    def test_render_contains_header(self):
+    def test_render_contains_header(self) -> None:
         """Test rendered output contains header."""
         state = FieldState(width=60, height=20)
         renderer = FieldRenderer(state, RenderConfig(use_color=False))
@@ -126,7 +126,7 @@ class TestFieldRenderer:
         assert "KGENTS" in output
         assert "t:" in output  # Time indicator
 
-    def test_render_contains_metrics(self):
+    def test_render_contains_metrics(self) -> None:
         """Test rendered output contains metrics."""
         state = FieldState(width=60, height=20)
         state.entropy = 75
@@ -139,7 +139,7 @@ class TestFieldRenderer:
         assert "ENTROPY" in output
         assert "HEAT" in output
 
-    def test_render_contains_entities(self):
+    def test_render_contains_entities(self) -> None:
         """Test rendered output contains entities."""
         state = FieldState(width=60, height=20)
         state.add_entity(
@@ -153,7 +153,7 @@ class TestFieldRenderer:
         # Should contain Judge symbol
         assert "J" in output
 
-    def test_render_contains_phase(self):
+    def test_render_contains_phase(self) -> None:
         """Test rendered output contains phase."""
         state = FieldState(width=60, height=20)
         state.dialectic_phase = DialecticPhase.TENSION
@@ -165,7 +165,7 @@ class TestFieldRenderer:
         assert "PHASE:" in output
         assert "TENSION" in output
 
-    def test_render_contains_focus(self):
+    def test_render_contains_focus(self) -> None:
         """Test rendered output contains focus indicator."""
         state = FieldState(width=60, height=20)
         state.add_entity(Entity(id="focused", entity_type=EntityType.JUDGE, x=30, y=10))
@@ -178,7 +178,7 @@ class TestFieldRenderer:
         assert "FOCUS:" in output
         assert "focused" in output
 
-    def test_render_contains_help(self):
+    def test_render_contains_help(self) -> None:
         """Test rendered output contains help bar."""
         state = FieldState(width=60, height=20)
 
@@ -189,7 +189,7 @@ class TestFieldRenderer:
         assert "[q]QUIT" in output
         assert "[o]OBSERVE" in output
 
-    def test_render_without_help(self):
+    def test_render_without_help(self) -> None:
         """Test rendered output without help bar."""
         state = FieldState(width=60, height=20)
 
@@ -199,7 +199,7 @@ class TestFieldRenderer:
 
         assert "[q]QUIT" not in output
 
-    def test_render_contains_compost(self):
+    def test_render_contains_compost(self) -> None:
         """Test rendered output contains compost heap."""
         state = FieldState(width=60, height=20)
         state.log_event("test", "source", "Test event message")
@@ -210,7 +210,7 @@ class TestFieldRenderer:
 
         assert "Test event message" in output
 
-    def test_render_without_compost(self):
+    def test_render_without_compost(self) -> None:
         """Test rendered output without compost heap."""
         state = FieldState(width=60, height=20)
         state.log_event("test", "source", "Test event message")
@@ -221,7 +221,7 @@ class TestFieldRenderer:
 
         assert "Test event message" not in output
 
-    def test_color_application(self):
+    def test_color_application(self) -> None:
         """Test colors are applied when enabled."""
         state = FieldState(width=60, height=20)
         state.dialectic_phase = DialecticPhase.FLUX
@@ -233,7 +233,7 @@ class TestFieldRenderer:
         # Should contain ANSI escape codes
         assert "\033[" in output
 
-    def test_no_color_application(self):
+    def test_no_color_application(self) -> None:
         """Test colors are not applied when disabled."""
         state = FieldState(width=60, height=20)
         state.dialectic_phase = DialecticPhase.FLUX
@@ -246,7 +246,7 @@ class TestFieldRenderer:
         # Note: May still contain box-drawing characters
         assert "\033[3" not in output  # No color codes
 
-    def test_focused_entity_highlighted(self):
+    def test_focused_entity_highlighted(self) -> None:
         """Test focused entity is highlighted differently."""
         state = FieldState(width=60, height=20)
         state.add_entity(Entity(id="focused", entity_type=EntityType.JUDGE, x=30, y=10))
@@ -263,7 +263,7 @@ class TestFieldRenderer:
 class TestRenderFieldOnce:
     """Tests for render_field_once function."""
 
-    def test_renders_state(self):
+    def test_renders_state(self) -> None:
         """Test render_field_once produces output."""
         state = create_demo_field()
         output = render_field_once(state)
@@ -272,7 +272,7 @@ class TestRenderFieldOnce:
         assert len(output) > 0
         assert "KGENTS" in output
 
-    def test_respects_config(self):
+    def test_respects_config(self) -> None:
         """Test render_field_once respects configuration."""
         state = create_demo_field()
         config = RenderConfig(use_color=False, show_help=False)
@@ -284,7 +284,7 @@ class TestRenderFieldOnce:
 class TestKeyHandler:
     """Tests for KeyHandler."""
 
-    def test_register_handler(self):
+    def test_register_handler(self) -> None:
         """Test registering a handler."""
         handler = KeyHandler()
         called = []
@@ -294,14 +294,14 @@ class TestKeyHandler:
 
         assert called == ["x"]
 
-    def test_unregistered_key(self):
+    def test_unregistered_key(self) -> None:
         """Test handling unregistered key."""
         handler = KeyHandler()
 
         result = handler.handle("y")
         assert result is False
 
-    def test_registered_key_returns_true(self):
+    def test_registered_key_returns_true(self) -> None:
         """Test registered key returns True."""
         handler = KeyHandler()
         handler.register("z", lambda: None)
@@ -309,7 +309,7 @@ class TestKeyHandler:
         result = handler.handle("z")
         assert result is True
 
-    def test_multiple_handlers(self):
+    def test_multiple_handlers(self) -> None:
         """Test multiple handlers."""
         handler = KeyHandler()
         called = []
@@ -327,7 +327,7 @@ class TestKeyHandler:
 class TestRendererEdgeCases:
     """Tests for renderer edge cases."""
 
-    def test_empty_field(self):
+    def test_empty_field(self) -> None:
         """Test rendering empty field."""
         state = FieldState(width=60, height=20)
         config = RenderConfig(use_color=False)
@@ -337,7 +337,7 @@ class TestRendererEdgeCases:
         assert isinstance(output, str)
         assert "DORMANT" in output  # Default phase
 
-    def test_small_field(self):
+    def test_small_field(self) -> None:
         """Test rendering small field."""
         state = FieldState(width=20, height=5)
         config = RenderConfig(use_color=False)
@@ -346,7 +346,7 @@ class TestRendererEdgeCases:
         output = renderer.render()
         assert isinstance(output, str)
 
-    def test_large_field(self):
+    def test_large_field(self) -> None:
         """Test rendering large field."""
         state = FieldState(width=200, height=50)
         config = RenderConfig(use_color=False)
@@ -355,7 +355,7 @@ class TestRendererEdgeCases:
         output = renderer.render()
         assert isinstance(output, str)
 
-    def test_many_entities(self):
+    def test_many_entities(self) -> None:
         """Test rendering many entities."""
         state = FieldState(width=60, height=20)
 
@@ -376,7 +376,7 @@ class TestRendererEdgeCases:
         output = renderer.render()
         assert isinstance(output, str)
 
-    def test_entity_at_boundary(self):
+    def test_entity_at_boundary(self) -> None:
         """Test entity at field boundary."""
         state = FieldState(width=60, height=20)
         state.add_entity(Entity(id="corner", entity_type=EntityType.JUDGE, x=59, y=19))
@@ -387,7 +387,7 @@ class TestRendererEdgeCases:
         output = renderer.render()
         assert "J" in output
 
-    def test_overlapping_entities(self):
+    def test_overlapping_entities(self) -> None:
         """Test overlapping entities."""
         state = FieldState(width=60, height=20)
         state.add_entity(Entity(id="e1", entity_type=EntityType.JUDGE, x=30, y=10))
@@ -400,7 +400,7 @@ class TestRendererEdgeCases:
         # One should be visible (last added wins)
         assert isinstance(output, str)
 
-    def test_long_event_message(self):
+    def test_long_event_message(self) -> None:
         """Test truncation of long event messages."""
         state = FieldState(width=40, height=10)
         long_message = "A" * 100

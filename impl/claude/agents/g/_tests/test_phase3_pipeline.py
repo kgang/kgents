@@ -20,7 +20,7 @@ from agents.g.renderer import validate_round_trip
 # ============================================================================
 
 
-def test_schema_tongue_parse():
+def test_schema_tongue_parse() -> None:
     """Test parsing with Pydantic schema tongue."""
     tongue = create_schema_tongue(
         name="TestSchema",
@@ -43,7 +43,7 @@ class TestModel(BaseModel):
     assert result.confidence > 0.8
 
 
-def test_schema_tongue_execute():
+def test_schema_tongue_execute() -> None:
     """Test execution with schema tongue (pure validation)."""
     tongue = create_schema_tongue(
         name="TestSchema",
@@ -67,7 +67,7 @@ class TestModel(BaseModel):
     assert exec_result.value == parse_result.ast
 
 
-def test_schema_tongue_render():
+def test_schema_tongue_render() -> None:
     """Test rendering with schema tongue."""
     tongue = create_schema_tongue(
         name="TestSchema",
@@ -96,7 +96,7 @@ class TestModel(BaseModel):
 # ============================================================================
 
 
-def test_command_tongue_parse():
+def test_command_tongue_parse() -> None:
     """Test parsing with BNF command tongue."""
     tongue = create_command_tongue(
         name="CalendarCommands",
@@ -116,7 +116,7 @@ def test_command_tongue_parse():
     assert "2024-12-15" in result.ast["noun"]
 
 
-def test_command_tongue_parse_invalid():
+def test_command_tongue_parse_invalid() -> None:
     """Test parsing invalid command (forbidden DELETE)."""
     tongue = create_command_tongue(
         name="CalendarCommands",
@@ -135,7 +135,7 @@ def test_command_tongue_parse_invalid():
     assert "DELETE" not in result.error or "No valid command" in result.error
 
 
-def test_command_tongue_execute_with_handlers():
+def test_command_tongue_execute_with_handlers() -> None:
     """Test execution with command handlers."""
     tongue = create_command_tongue(
         name="CalendarCommands",
@@ -166,7 +166,7 @@ def test_command_tongue_execute_with_handlers():
     assert exec_result.value["date"] == "2024-12-15"
 
 
-def test_command_tongue_execute_no_handler():
+def test_command_tongue_execute_no_handler() -> None:
     """Test execution without handler (intent-only result)."""
     tongue = create_command_tongue(
         name="CalendarCommands",
@@ -188,7 +188,7 @@ def test_command_tongue_execute_no_handler():
     assert "CHECK" in exec_result.value["intent"]
 
 
-def test_command_tongue_render():
+def test_command_tongue_render() -> None:
     """Test rendering command AST."""
     tongue = create_command_tongue(
         name="CalendarCommands",
@@ -205,7 +205,7 @@ def test_command_tongue_render():
     assert rendered == "CHECK 2024-12-15"
 
 
-def test_command_round_trip():
+def test_command_round_trip() -> None:
     """Test round-trip: parse → render → parse."""
     tongue = create_command_tongue(
         name="CalendarCommands",
@@ -229,7 +229,7 @@ def test_command_round_trip():
 @pytest.mark.skipif(
     True, reason="Lark optional - Phase 3 focuses on Schema + Command levels"
 )
-def test_recursive_tongue_parse():
+def test_recursive_tongue_parse() -> None:
     """Test parsing with Lark recursive tongue."""
     tongue = create_recursive_tongue(
         name="SExpressions",
@@ -254,7 +254,7 @@ SYMBOL: /[a-z]+/
 # ============================================================================
 
 
-def test_full_pipeline_schema():
+def test_full_pipeline_schema() -> None:
     """Test complete pipeline: create → parse → execute → render."""
     # Create tongue
     tongue = create_schema_tongue(
@@ -292,7 +292,7 @@ class UserProfile(BaseModel):
     # but structural equality should hold
 
 
-def test_full_pipeline_command():
+def test_full_pipeline_command() -> None:
     """Test complete pipeline for command tongue."""
     # Create tongue
     tongue = create_command_tongue(
@@ -331,7 +331,7 @@ def test_full_pipeline_command():
     assert success, message
 
 
-def test_constraint_enforcement_parse_blocks():
+def test_constraint_enforcement_parse_blocks() -> None:
     """Test that constraints prevent parsing forbidden operations."""
     # Create tongue without DELETE
     tongue = create_command_tongue(
@@ -352,7 +352,7 @@ def test_constraint_enforcement_parse_blocks():
     assert not result_delete.success
 
 
-def test_context_passing():
+def test_context_passing() -> None:
     """Test passing execution context through pipeline."""
     tongue = create_command_tongue(
         name="ContextCommands",
@@ -382,7 +382,7 @@ def test_context_passing():
     assert exec_result.value["value"] == "alice"
 
 
-def test_parse_error_handling():
+def test_parse_error_handling() -> None:
     """Test error handling in parsing."""
     tongue = create_command_tongue(
         name="TestCommands",
@@ -400,7 +400,7 @@ def test_parse_error_handling():
     assert result.confidence == 0.0
 
 
-def test_execute_error_handling():
+def test_execute_error_handling() -> None:
     """Test error handling in execution."""
     tongue = create_command_tongue(
         name="TestCommands",
@@ -432,7 +432,7 @@ def test_execute_error_handling():
 # ============================================================================
 
 
-def test_confidence_scoring():
+def test_confidence_scoring() -> None:
     """Test that confidence scores are reasonable."""
     tongue = create_command_tongue(
         name="TestCommands",
@@ -449,7 +449,7 @@ def test_confidence_scoring():
     assert result.confidence > 0.7
 
 
-def test_side_effects_tracking():
+def test_side_effects_tracking() -> None:
     """Test that execution tracks side effects."""
     tongue = create_command_tongue(
         name="TestCommands",
@@ -460,7 +460,7 @@ def test_side_effects_tracking():
     )
 
     # Handler with side effects
-    def test_handler(noun, context):
+    def test_handler(noun, context) -> None:
         context["called"] = True
         return {"result": "ok"}
 

@@ -185,7 +185,7 @@ class MockTokenBudget:
 class TestCrystalMemoryPattern:
     """Tests for CrystalMemoryPattern."""
 
-    def test_from_crystal(self):
+    def test_from_crystal(self) -> None:
         """Test creating pattern from crystal."""
         trace = make_trace(vector=(0.1, 0.2, 0.3))
         pattern = CrystalMemoryPattern.from_crystal(trace)
@@ -195,7 +195,7 @@ class TestCrystalMemoryPattern:
         assert pattern.action == trace.action
         assert pattern.vector == [0.1, 0.2, 0.3]
 
-    def test_from_crystal_with_custom_vector(self):
+    def test_from_crystal_with_custom_vector(self) -> None:
         """Test creating pattern with custom vector."""
         trace = make_trace()
         custom_vector = [1.0, 2.0, 3.0]
@@ -203,7 +203,7 @@ class TestCrystalMemoryPattern:
 
         assert pattern.vector == custom_vector
 
-    def test_to_dict(self):
+    def test_to_dict(self) -> None:
         """Test serialization."""
         trace = make_trace()
         pattern = CrystalMemoryPattern.from_crystal(trace, [0.1, 0.2])
@@ -224,7 +224,7 @@ class TestCrystalMemoryPattern:
 class TestIndexedCrystalStore:
     """Tests for IndexedCrystalStore."""
 
-    def test_store(self):
+    def test_store(self) -> None:
         """Test storing a crystal."""
         base = MemoryCrystalStore()
         embedder = MockEmbedder()
@@ -238,7 +238,7 @@ class TestIndexedCrystalStore:
         assert base.count() == 1
 
     @pytest.mark.asyncio
-    async def test_store_and_index(self):
+    async def test_store_and_index(self) -> None:
         """Test storing and indexing a crystal."""
         base = MemoryCrystalStore()
         embedder = MockEmbedder()
@@ -254,7 +254,7 @@ class TestIndexedCrystalStore:
         assert embedder.call_count == 1
 
     @pytest.mark.asyncio
-    async def test_search_semantic(self):
+    async def test_search_semantic(self) -> None:
         """Test semantic search."""
         base = MemoryCrystalStore()
         embedder = MockEmbedder()
@@ -274,7 +274,7 @@ class TestIndexedCrystalStore:
         assert all(isinstance(r[0], SemanticTrace) for r in results)
         assert all(isinstance(r[1], float) for r in results)
 
-    def test_get(self):
+    def test_get(self) -> None:
         """Test getting a crystal."""
         base = MemoryCrystalStore()
         store = IndexedCrystalStore(base, MockEmbedder(), MockVectorIndex())
@@ -286,7 +286,7 @@ class TestIndexedCrystalStore:
         assert result is not None
         assert result.trace_id == "t-1"
 
-    def test_query(self):
+    def test_query(self) -> None:
         """Test querying crystals."""
         base = MemoryCrystalStore()
         store = IndexedCrystalStore(base, MockEmbedder(), MockVectorIndex())
@@ -298,7 +298,7 @@ class TestIndexedCrystalStore:
         results = store.query(agent_id="Agent0")
         assert all(t.agent_id == "Agent0" for t in results)
 
-    def test_count(self):
+    def test_count(self) -> None:
         """Test counting crystals."""
         base = MemoryCrystalStore()
         store = IndexedCrystalStore(base, MockEmbedder(), MockVectorIndex())
@@ -319,7 +319,7 @@ class TestResonantCrystalStore:
     """Tests for ResonantCrystalStore."""
 
     @pytest.mark.asyncio
-    async def test_store(self):
+    async def test_store(self) -> None:
         """Test storing a crystal creates memory pattern."""
         base = MemoryCrystalStore()
         memory = MockHolographicMemory()
@@ -334,7 +334,7 @@ class TestResonantCrystalStore:
         assert len(memory._patterns) == 1
 
     @pytest.mark.asyncio
-    async def test_resonate_query(self):
+    async def test_resonate_query(self) -> None:
         """Test resonance query."""
         base = MemoryCrystalStore()
         memory = MockHolographicMemory()
@@ -351,7 +351,7 @@ class TestResonantCrystalStore:
 
         assert len(results) <= 10
 
-    def test_get(self):
+    def test_get(self) -> None:
         """Test getting a crystal."""
         base = MemoryCrystalStore()
         memory = MockHolographicMemory()
@@ -363,7 +363,7 @@ class TestResonantCrystalStore:
         assert result is not None
 
     @pytest.mark.asyncio
-    async def test_get_pattern(self):
+    async def test_get_pattern(self) -> None:
         """Test getting the memory pattern for a crystal."""
         base = MemoryCrystalStore()
         memory = MockHolographicMemory()
@@ -388,7 +388,7 @@ class TestVisualizableBard:
     """Tests for VisualizableBard."""
 
     @pytest.mark.asyncio
-    async def test_invoke_with_viz(self):
+    async def test_invoke_with_viz(self) -> None:
         """Test generating narrative with visualization."""
         bard = VisualizableBard()
         traces = make_trace_sequence(5)
@@ -401,7 +401,7 @@ class TestVisualizableBard:
         assert len(result.timeline_events) == 5
 
     @pytest.mark.asyncio
-    async def test_timeline_data(self):
+    async def test_timeline_data(self) -> None:
         """Test timeline visualization data."""
         bard = VisualizableBard()
         traces = make_trace_sequence(3)
@@ -415,7 +415,7 @@ class TestVisualizableBard:
         assert all("agent" in event for event in timeline)
 
     @pytest.mark.asyncio
-    async def test_swimlane_data(self):
+    async def test_swimlane_data(self) -> None:
         """Test swimlane visualization data."""
         bard = VisualizableBard()
         traces = make_trace_sequence(5)
@@ -429,7 +429,7 @@ class TestVisualizableBard:
         assert len(swimlanes["agents"]) == 2  # Agent0 and Agent1
 
     @pytest.mark.asyncio
-    async def test_graph_data(self):
+    async def test_graph_data(self) -> None:
         """Test graph visualization data."""
         bard = VisualizableBard()
         # Create traces with parent-child relationships
@@ -452,7 +452,7 @@ class TestVisualizableBard:
         assert "edges" in graph
 
     @pytest.mark.asyncio
-    async def test_summary_stats(self):
+    async def test_summary_stats(self) -> None:
         """Test summary statistics."""
         bard = VisualizableBard()
         traces = make_trace_sequence(5)
@@ -473,7 +473,7 @@ class TestVisualizableBard:
 class TestBudgetedBard:
     """Tests for BudgetedBard."""
 
-    def test_estimate_cost(self):
+    def test_estimate_cost(self) -> None:
         """Test cost estimation."""
         bard = BudgetedBard()
         traces = make_trace_sequence(5)
@@ -489,7 +489,7 @@ class TestBudgetedBard:
             == cost.estimated_input_tokens + cost.estimated_output_tokens
         )
 
-    def test_estimate_cost_verbosity(self):
+    def test_estimate_cost_verbosity(self) -> None:
         """Test cost varies with verbosity."""
         bard = BudgetedBard()
         traces = make_trace_sequence(5)
@@ -503,7 +503,7 @@ class TestBudgetedBard:
         assert terse_cost.estimated_output_tokens < verbose_cost.estimated_output_tokens
 
     @pytest.mark.asyncio
-    async def test_invoke_with_budget(self):
+    async def test_invoke_with_budget(self) -> None:
         """Test invoking with sufficient budget."""
         budget = MockTokenBudget(max_balance=10000, initial=10000)
         bard = BudgetedBard(budget=budget)
@@ -517,7 +517,7 @@ class TestBudgetedBard:
         assert budget.available < 10000  # Some tokens consumed
 
     @pytest.mark.asyncio
-    async def test_invoke_insufficient_budget(self):
+    async def test_invoke_insufficient_budget(self) -> None:
         """Test invoking with insufficient budget."""
         budget = MockTokenBudget(max_balance=100, initial=10)  # Very low budget
         bard = BudgetedBard(budget=budget)
@@ -528,7 +528,7 @@ class TestBudgetedBard:
             await bard.invoke(request)
 
     @pytest.mark.asyncio
-    async def test_invoke_if_affordable_success(self):
+    async def test_invoke_if_affordable_success(self) -> None:
         """Test invoke_if_affordable with sufficient budget."""
         budget = MockTokenBudget(max_balance=10000, initial=10000)
         bard = BudgetedBard(budget=budget)
@@ -540,7 +540,7 @@ class TestBudgetedBard:
         assert narrative is not None
 
     @pytest.mark.asyncio
-    async def test_invoke_if_affordable_insufficient(self):
+    async def test_invoke_if_affordable_insufficient(self) -> None:
         """Test invoke_if_affordable with insufficient budget."""
         budget = MockTokenBudget(max_balance=100, initial=10)
         bard = BudgetedBard(budget=budget)
@@ -555,7 +555,7 @@ class TestBudgetedBard:
 class TestNarrationCost:
     """Tests for NarrationCost."""
 
-    def test_estimate_property(self):
+    def test_estimate_property(self) -> None:
         """Test estimate property."""
         cost = NarrationCost(
             estimated_input_tokens=100,
@@ -565,7 +565,7 @@ class TestNarrationCost:
 
         assert cost.estimate == 300
 
-    def test_with_actual(self):
+    def test_with_actual(self) -> None:
         """Test with_actual method."""
         cost = NarrationCost(
             estimated_input_tokens=100,
@@ -587,7 +587,7 @@ class TestNarrationCost:
 class TestNarrativeOrchestrator:
     """Tests for NarrativeOrchestrator."""
 
-    def test_creation(self):
+    def test_creation(self) -> None:
         """Test creating an orchestrator."""
         store = MemoryCrystalStore()
         orchestrator = NarrativeOrchestrator(store=store)
@@ -595,7 +595,7 @@ class TestNarrativeOrchestrator:
         assert orchestrator.store == store
         assert orchestrator.bard is not None
 
-    def test_creation_with_budget(self):
+    def test_creation_with_budget(self) -> None:
         """Test creating with budget creates BudgetedBard."""
         store = MemoryCrystalStore()
         budget = MockTokenBudget()
@@ -604,7 +604,7 @@ class TestNarrativeOrchestrator:
         assert isinstance(orchestrator.bard, BudgetedBard)
 
     @pytest.mark.asyncio
-    async def test_record(self):
+    async def test_record(self) -> None:
         """Test recording a crystal."""
         store = MemoryCrystalStore()
         orchestrator = NarrativeOrchestrator(store=store)
@@ -615,7 +615,7 @@ class TestNarrativeOrchestrator:
         assert store.count() == 1
 
     @pytest.mark.asyncio
-    async def test_record_with_memory(self):
+    async def test_record_with_memory(self) -> None:
         """Test recording with M-gent memory."""
         store = MemoryCrystalStore()
         memory = MockHolographicMemory()
@@ -633,7 +633,7 @@ class TestNarrativeOrchestrator:
         assert len(memory._patterns) == 1
 
     @pytest.mark.asyncio
-    async def test_record_many(self):
+    async def test_record_many(self) -> None:
         """Test recording multiple crystals."""
         store = MemoryCrystalStore()
         orchestrator = NarrativeOrchestrator(store=store)
@@ -644,7 +644,7 @@ class TestNarrativeOrchestrator:
         assert store.count() == 5
 
     @pytest.mark.asyncio
-    async def test_narrate(self):
+    async def test_narrate(self) -> None:
         """Test generating a narrative."""
         store = MemoryCrystalStore()
         orchestrator = NarrativeOrchestrator(store=store)
@@ -661,7 +661,7 @@ class TestNarrativeOrchestrator:
         assert narrative is not None
         assert len(narrative.traces_used) == 3
 
-    def test_get_stats(self):
+    def test_get_stats(self) -> None:
         """Test getting statistics."""
         store = MemoryCrystalStore()
         orchestrator = NarrativeOrchestrator(store=store)

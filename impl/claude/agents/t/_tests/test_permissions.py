@@ -98,25 +98,25 @@ def audit_logger():
 class TestPermissionClassifier:
     """Test ABAC permission classification."""
 
-    def test_basic_permission_allowed(self, classifier, basic_context):
+    def test_basic_permission_allowed(self, classifier, basic_context) -> None:
         """Test basic permission grant."""
         caps = ToolCapabilities(requires_network=False)
         permission = classifier.classify(caps, basic_context)
         assert permission == PermissionLevel.ALLOWED_AUDITED
 
-    def test_network_permission_allowed(self, classifier, basic_context):
+    def test_network_permission_allowed(self, classifier, basic_context) -> None:
         """Test network permission when allowed."""
         caps = ToolCapabilities(requires_network=True)
         permission = classifier.classify(caps, basic_context)
         assert permission == PermissionLevel.ALLOWED_AUDITED
 
-    def test_network_permission_denied(self, classifier, high_security_context):
+    def test_network_permission_denied(self, classifier, high_security_context) -> None:
         """Test network permission denied in high security."""
         caps = ToolCapabilities(requires_network=True)
         permission = classifier.classify(caps, high_security_context)
         assert permission == PermissionLevel.DENIED
 
-    def test_file_write_denied_without_access(self, classifier):
+    def test_file_write_denied_without_access(self, classifier) -> None:
         """Test file write denied when context forbids it."""
         caps = ToolCapabilities(requires_file_write=True)
         context = AgentContext(
@@ -126,13 +126,15 @@ class TestPermissionClassifier:
         permission = classifier.classify(caps, context)
         assert permission == PermissionLevel.DENIED
 
-    def test_pii_access_denied_without_authorization(self, classifier, basic_context):
+    def test_pii_access_denied_without_authorization(
+        self, classifier, basic_context
+    ) -> None:
         """Test PII access denied without authorization."""
         caps = ToolCapabilities(accesses_pii=True)
         permission = classifier.classify(caps, basic_context)
         assert permission == PermissionLevel.DENIED
 
-    def test_pii_access_allowed_with_authorization(self, classifier):
+    def test_pii_access_allowed_with_authorization(self, classifier) -> None:
         """Test PII access allowed when authorized."""
         caps = ToolCapabilities(accesses_pii=True)
         context = AgentContext(
@@ -142,14 +144,14 @@ class TestPermissionClassifier:
         permission = classifier.classify(caps, context)
         assert permission == PermissionLevel.ALLOWED_AUDITED
 
-    def test_cost_budget_exceeded(self, classifier, basic_context):
+    def test_cost_budget_exceeded(self, classifier, basic_context) -> None:
         """Test permission denied when cost exceeds budget."""
         caps = ToolCapabilities(max_cost_usd=10.0)
         basic_context.max_cost_usd = 1.0
         permission = classifier.classify(caps, basic_context)
         assert permission == PermissionLevel.DENIED
 
-    def test_user_approval_required(self, classifier):
+    def test_user_approval_required(self, classifier) -> None:
         """Test restricted permission when user approval needed."""
         caps = ToolCapabilities(requires_user_approval=True)
         context = AgentContext(
@@ -159,7 +161,7 @@ class TestPermissionClassifier:
         permission = classifier.classify(caps, context)
         assert permission == PermissionLevel.RESTRICTED
 
-    def test_production_environment_always_audited(self, classifier):
+    def test_production_environment_always_audited(self, classifier) -> None:
         """Test production environment forces audit."""
         caps = ToolCapabilities()
         context = AgentContext(
@@ -169,7 +171,7 @@ class TestPermissionClassifier:
         permission = classifier.classify(caps, context)
         assert permission == PermissionLevel.ALLOWED_AUDITED
 
-    def test_critical_security_blocks_risky_operations(self, classifier):
+    def test_critical_security_blocks_risky_operations(self, classifier) -> None:
         """Test critical security blocks network/code execution."""
         caps = ToolCapabilities(requires_code_execution=True)
         context = AgentContext(
@@ -186,7 +188,7 @@ class TestPermissionClassifier:
 class TestCustomPermissionRules:
     """Test custom permission rule addition."""
 
-    def test_custom_rule_override(self, classifier, basic_context):
+    def test_custom_rule_override(self, classifier, basic_context) -> None:
         """Test custom rule can override default classification."""
 
         def allow_all_in_dev(caps, ctx):
@@ -203,7 +205,7 @@ class TestCustomPermissionRules:
         # Custom rule should return ALLOWED (not ALLOWED_AUDITED)
         assert permission == PermissionLevel.ALLOWED
 
-    def test_multiple_custom_rules(self, classifier, basic_context):
+    def test_multiple_custom_rules(self, classifier, basic_context) -> None:
         """Test multiple custom rules checked in order."""
 
         def deny_expensive(caps, ctx):
@@ -236,7 +238,7 @@ class TestCustomPermissionRules:
 class TestTemporaryToken:
     """Test short-lived token generation and validation."""
 
-    def test_token_generation(self, classifier, basic_context):
+    def test_token_generation(self, classifier, basic_context) -> None:
         """Test token generation for allowed permission."""
         caps = ToolCapabilities()
         result = classifier.grant_temporary(
@@ -266,7 +268,7 @@ class TestTemporaryToken:
         assert result.is_err()
         assert "denied" in result.message.lower()
 
-    def test_token_expiration(self, classifier, basic_context):
+    def test_token_expiration(self, classifier, basic_context) -> None:
         """Test token expires after duration."""
         caps = ToolCapabilities()
         result = classifier.grant_temporary(
@@ -286,7 +288,7 @@ class TestTemporaryToken:
 
         assert not token.is_valid()
 
-    def test_token_use_tracking(self, classifier, basic_context):
+    def test_token_use_tracking(self, classifier, basic_context) -> None:
         """Test token use count tracking."""
         caps = ToolCapabilities()
         result = classifier.grant_temporary(
@@ -308,7 +310,7 @@ class TestTemporaryToken:
         assert use_result.is_ok()
         assert token.uses == 2
 
-    def test_token_revocation(self, classifier, basic_context):
+    def test_token_revocation(self, classifier, basic_context) -> None:
         """Test token can be revoked."""
         caps = ToolCapabilities()
         result = classifier.grant_temporary(
@@ -331,7 +333,7 @@ class TestTemporaryToken:
         assert use_result.is_err()
         assert "revoked" in use_result.message.lower()
 
-    def test_expired_token_use(self, classifier, basic_context):
+    def test_expired_token_use(self, classifier, basic_context) -> None:
         """Test cannot use expired token."""
         caps = ToolCapabilities()
         result = classifier.grant_temporary(
@@ -354,7 +356,7 @@ class TestAuditLogger:
     """Test audit logging functionality."""
 
     @pytest.mark.asyncio
-    async def test_permission_check_logging(self, audit_logger, basic_context):
+    async def test_permission_check_logging(self, audit_logger, basic_context) -> None:
         """Test logging of permission checks."""
         await audit_logger.log_permission_check(
             tool_id="test_tool",
@@ -369,7 +371,7 @@ class TestAuditLogger:
         assert logs[0].permission == PermissionLevel.ALLOWED_AUDITED
 
     @pytest.mark.asyncio
-    async def test_execution_logging(self, audit_logger, basic_context):
+    async def test_execution_logging(self, audit_logger, basic_context) -> None:
         """Test logging of tool executions."""
         await audit_logger.log_execution(
             tool_id="test_tool",
@@ -391,7 +393,7 @@ class TestAuditLogger:
         assert log.duration_ms == 150.0
 
     @pytest.mark.asyncio
-    async def test_failure_logging(self, audit_logger, basic_context):
+    async def test_failure_logging(self, audit_logger, basic_context) -> None:
         """Test logging of failed executions."""
         await audit_logger.log_execution(
             tool_id="test_tool",
@@ -411,7 +413,9 @@ class TestAuditLogger:
         assert log.flagged  # Should be flagged for review
 
     @pytest.mark.asyncio
-    async def test_restricted_permission_flagged(self, audit_logger, basic_context):
+    async def test_restricted_permission_flagged(
+        self, audit_logger, basic_context
+    ) -> None:
         """Test restricted permissions are flagged."""
         await audit_logger.log_execution(
             tool_id="test_tool",
@@ -428,7 +432,7 @@ class TestAuditLogger:
         assert "restricted" in logs[0].flag_reason.lower()
 
     @pytest.mark.asyncio
-    async def test_log_filtering_by_tool(self, audit_logger, basic_context):
+    async def test_log_filtering_by_tool(self, audit_logger, basic_context) -> None:
         """Test filtering logs by tool ID."""
         await audit_logger.log_execution(
             tool_id="tool_a",
@@ -453,7 +457,7 @@ class TestAuditLogger:
         assert tool_a_logs[0].tool_id == "tool_a"
 
     @pytest.mark.asyncio
-    async def test_log_filtering_by_context(self, audit_logger):
+    async def test_log_filtering_by_context(self, audit_logger) -> None:
         """Test filtering logs by context ID."""
         context_a = AgentContext(agent_id="agent_a")
         context_b = AgentContext(agent_id="agent_b")
@@ -488,7 +492,7 @@ class TestSecureToolExecutor:
     """Test secure tool executor with permissions."""
 
     @pytest.mark.asyncio
-    async def test_execute_with_permission(self, basic_context):
+    async def test_execute_with_permission(self, basic_context) -> None:
         """Test successful execution with permission."""
         tool = SimpleStringTool()
         caps = ToolCapabilities()
@@ -504,7 +508,9 @@ class TestSecureToolExecutor:
         assert result.value == "Echo: test input"
 
     @pytest.mark.asyncio
-    async def test_execute_denied_without_permission(self, high_security_context):
+    async def test_execute_denied_without_permission(
+        self, high_security_context
+    ) -> None:
         """Test execution denied without permission."""
         tool = NetworkTool()
         caps = ToolCapabilities(requires_network=True)
@@ -521,7 +527,7 @@ class TestSecureToolExecutor:
         assert "denied" in result.error.message.lower()
 
     @pytest.mark.asyncio
-    async def test_execute_with_token(self, basic_context):
+    async def test_execute_with_token(self, basic_context) -> None:
         """Test execution using short-lived token."""
         tool = SimpleStringTool()
         caps = ToolCapabilities()
@@ -545,7 +551,7 @@ class TestSecureToolExecutor:
         assert executor.token.uses == 1
 
     @pytest.mark.asyncio
-    async def test_execute_with_expired_token(self, basic_context):
+    async def test_execute_with_expired_token(self, basic_context) -> None:
         """Test execution fails with expired token."""
         tool = SimpleStringTool()
         caps = ToolCapabilities()
@@ -571,7 +577,7 @@ class TestSecureToolExecutor:
         assert "expired" in result.error.message.lower()
 
     @pytest.mark.asyncio
-    async def test_audit_log_created(self, basic_context):
+    async def test_audit_log_created(self, basic_context) -> None:
         """Test audit log created for execution."""
         tool = SimpleStringTool()
         caps = ToolCapabilities()
@@ -592,7 +598,7 @@ class TestSecureToolExecutor:
         assert logs[-1].success
 
     @pytest.mark.asyncio
-    async def test_permission_status(self, basic_context):
+    async def test_permission_status(self, basic_context) -> None:
         """Test getting permission status."""
         tool = SimpleStringTool()
         caps = ToolCapabilities()
@@ -622,7 +628,7 @@ class TestSecurityIntegration:
     """Test full security integration scenarios."""
 
     @pytest.mark.asyncio
-    async def test_production_workflow_with_audit(self):
+    async def test_production_workflow_with_audit(self) -> None:
         """Test complete production workflow with auditing."""
         tool = SimpleStringTool()
         caps = ToolCapabilities()
@@ -655,7 +661,7 @@ class TestSecurityIntegration:
         assert all(log.context_id == "prod_agent" for log in logs)
 
     @pytest.mark.asyncio
-    async def test_security_escalation_scenario(self, basic_context):
+    async def test_security_escalation_scenario(self, basic_context) -> None:
         """Test security context change mid-execution."""
         tool = NetworkTool()
         caps = ToolCapabilities(requires_network=True)

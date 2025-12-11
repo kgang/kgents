@@ -146,7 +146,7 @@ def sample_holomap():
 class TestEdgeHealth:
     """Tests for EdgeHealth dataclass."""
 
-    def test_healthy_edge(self):
+    def test_healthy_edge(self) -> None:
         """Edge with low latency and error rate is healthy."""
         health = EdgeHealth(
             edge_id="a->b",
@@ -157,7 +157,7 @@ class TestEdgeHealth:
         assert health.is_healthy
         assert not health.is_stale
 
-    def test_unhealthy_high_latency(self):
+    def test_unhealthy_high_latency(self) -> None:
         """Edge with high latency is unhealthy."""
         health = EdgeHealth(
             edge_id="a->b",
@@ -166,7 +166,7 @@ class TestEdgeHealth:
         )
         assert not health.is_healthy
 
-    def test_unhealthy_high_error_rate(self):
+    def test_unhealthy_high_error_rate(self) -> None:
         """Edge with high error rate is unhealthy."""
         health = EdgeHealth(
             edge_id="a->b",
@@ -175,7 +175,7 @@ class TestEdgeHealth:
         )
         assert not health.is_healthy
 
-    def test_stale_edge(self):
+    def test_stale_edge(self) -> None:
         """Edge not traversed recently is stale."""
         health = EdgeHealth(
             edge_id="a->b",
@@ -183,7 +183,7 @@ class TestEdgeHealth:
         )
         assert health.is_stale
 
-    def test_fresh_edge(self):
+    def test_fresh_edge(self) -> None:
         """Edge traversed recently is fresh."""
         health = EdgeHealth(
             edge_id="a->b",
@@ -195,7 +195,7 @@ class TestEdgeHealth:
 class TestLandmarkHealth:
     """Tests for LandmarkHealth dataclass."""
 
-    def test_healthy_landmark(self):
+    def test_healthy_landmark(self) -> None:
         """Landmark with low drift and high coherency is healthy."""
         health = LandmarkHealth(
             landmark_id="test",
@@ -205,7 +205,7 @@ class TestLandmarkHealth:
         assert health.is_healthy
         assert not health.is_drifting
 
-    def test_drifting_landmark(self):
+    def test_drifting_landmark(self) -> None:
         """Landmark with high drift is marked as drifting."""
         health = LandmarkHealth(
             landmark_id="test",
@@ -218,7 +218,7 @@ class TestLandmarkHealth:
 class TestMapHealth:
     """Tests for MapHealth dataclass."""
 
-    def test_health_rates(self):
+    def test_health_rates(self) -> None:
         """Health rates are calculated correctly."""
         health = MapHealth(
             total_landmarks=10,
@@ -229,7 +229,7 @@ class TestMapHealth:
         assert health.landmark_health_rate == 0.8
         assert health.edge_health_rate == 0.8
 
-    def test_empty_map_health(self):
+    def test_empty_map_health(self) -> None:
         """Empty map has perfect health rates."""
         health = MapHealth()
         assert health.landmark_health_rate == 1.0
@@ -239,12 +239,12 @@ class TestMapHealth:
 class TestCartographicObserver:
     """Tests for CartographicObserver."""
 
-    def test_create_observer(self):
+    def test_create_observer(self) -> None:
         """Can create observer without stores."""
         observer = create_cartographic_observer()
         assert observer is not None
 
-    def test_annotate_map(self, sample_holomap):
+    def test_annotate_map(self, sample_holomap) -> None:
         """Annotate map adds health metadata."""
         observer = CartographicObserver()
         annotated = observer.annotate_map(sample_holomap)
@@ -253,7 +253,7 @@ class TestCartographicObserver:
         assert len(annotated.landmarks) == len(sample_holomap.landmarks)
         assert len(annotated.desire_lines) == len(sample_holomap.desire_lines)
 
-    def test_annotate_preserves_drift(self, sample_holomap):
+    def test_annotate_preserves_drift(self, sample_holomap) -> None:
         """Annotation preserves existing drift values."""
         observer = CartographicObserver()
         annotated = observer.annotate_map(sample_holomap)
@@ -262,7 +262,7 @@ class TestCartographicObserver:
         api_landmark = next(l for l in annotated.landmarks if l.id == "api")
         assert api_landmark.semantic_drift == 0.35
 
-    def test_assess_health(self, sample_holomap):
+    def test_assess_health(self, sample_holomap) -> None:
         """Assess health returns comprehensive report."""
         observer = CartographicObserver()
         health = observer.assess_health(sample_holomap)
@@ -273,14 +273,14 @@ class TestCartographicObserver:
         assert 0.0 <= health.void_coverage <= 1.0
         assert 0.0 <= health.overall_health <= 1.0
 
-    def test_assess_health_detects_drifting(self, sample_holomap):
+    def test_assess_health_detects_drifting(self, sample_holomap) -> None:
         """Health assessment detects drifting landmarks."""
         observer = CartographicObserver()
         health = observer.assess_health(sample_holomap)
 
         assert health.drifting_landmarks >= 1  # api landmark is drifting
 
-    def test_cache_clearing(self, sample_holomap):
+    def test_cache_clearing(self, sample_holomap) -> None:
         """Clear cache removes cached health data."""
         observer = CartographicObserver()
         observer.assess_health(sample_holomap)
@@ -327,7 +327,7 @@ class MockTelemetryStore:
 class TestCartographicObserverWithTelemetry:
     """Tests with mock telemetry store."""
 
-    def test_annotate_with_telemetry(self, sample_holomap):
+    def test_annotate_with_telemetry(self, sample_holomap) -> None:
         """Telemetry data is added to annotations."""
         store = MockTelemetryStore()
         store.set_latency("auth", "db", 0.95, 0.8)
@@ -351,7 +351,7 @@ class TestCartographicObserverWithTelemetry:
 class TestMetaphorMatch:
     """Tests for MetaphorMatch dataclass."""
 
-    def test_create_match(self):
+    def test_create_match(self) -> None:
         """Can create a metaphor match."""
         match = MetaphorMatch(
             metaphor_id="met1",
@@ -369,7 +369,7 @@ class TestMetaphorMatch:
 class TestMetaphorNeighborhood:
     """Tests for MetaphorNeighborhood dataclass."""
 
-    def test_empty_neighborhood(self):
+    def test_empty_neighborhood(self) -> None:
         """Empty neighborhood has no matches."""
         hood = MetaphorNeighborhood(
             problem_position=[0.0, 0.0],
@@ -379,7 +379,7 @@ class TestMetaphorNeighborhood:
         assert hood.match_count == 0
         assert hood.best_match is None
 
-    def test_best_match(self):
+    def test_best_match(self) -> None:
         """Best match returns highest relevance."""
         matches = [
             MetaphorMatch("a", "A", "l1", 0.3, 0.5, "", []),
@@ -396,12 +396,12 @@ class TestMetaphorNeighborhood:
 class TestMetaphorLocator:
     """Tests for MetaphorLocator."""
 
-    def test_create_locator(self):
+    def test_create_locator(self) -> None:
         """Can create locator without registry."""
         locator = create_metaphor_locator()
         assert locator is not None
 
-    def test_find_metaphor_neighborhood(self, sample_holomap):
+    def test_find_metaphor_neighborhood(self, sample_holomap) -> None:
         """Find metaphors near a position."""
         locator = MetaphorLocator()
         position = [0.15, 0.15, 0.0]  # Near metaphor_cache
@@ -412,7 +412,7 @@ class TestMetaphorLocator:
         # Should find the metaphor_cache landmark
         assert any(m.landmark_id == "metaphor_cache" for m in hood.matches)
 
-    def test_find_with_context_vector(self, sample_holomap):
+    def test_find_with_context_vector(self, sample_holomap) -> None:
         """Can use ContextVector as position."""
         locator = MetaphorLocator()
         position = create_context_vector([0.15, 0.15, 0.0])
@@ -421,7 +421,7 @@ class TestMetaphorLocator:
 
         assert hood.problem_position == [0.15, 0.15, 0.0]
 
-    def test_relevance_threshold(self, sample_holomap):
+    def test_relevance_threshold(self, sample_holomap) -> None:
         """Relevance threshold filters matches."""
         # High threshold should filter out distant matches
         locator = MetaphorLocator(relevance_threshold=0.9)
@@ -432,7 +432,7 @@ class TestMetaphorLocator:
         # Should have few or no matches at high threshold
         assert hood.match_count <= 1
 
-    def test_no_metaphors_in_area(self, sample_holomap):
+    def test_no_metaphors_in_area(self, sample_holomap) -> None:
         """Returns empty when no metaphors nearby."""
         locator = MetaphorLocator()
         position = [0.9, 0.9, 0.0]  # Far from everything
@@ -450,7 +450,7 @@ class TestMetaphorLocator:
 class TestMapRenderConfig:
     """Tests for MapRenderConfig."""
 
-    def test_default_config(self):
+    def test_default_config(self) -> None:
         """Default config has sensible values."""
         config = MapRenderConfig()
         assert config.width == 60
@@ -462,18 +462,18 @@ class TestMapRenderConfig:
 class TestMapRenderer:
     """Tests for MapRenderer."""
 
-    def test_create_renderer(self):
+    def test_create_renderer(self) -> None:
         """Can create renderer with default config."""
         renderer = create_map_renderer()
         assert renderer is not None
 
-    def test_create_with_config(self):
+    def test_create_with_config(self) -> None:
         """Can create renderer with custom config."""
         config = MapRenderConfig(width=40, height=10)
         renderer = MapRenderer(config=config)
         assert renderer.config.width == 40
 
-    def test_render_ascii(self, sample_holomap):
+    def test_render_ascii(self, sample_holomap) -> None:
         """Render produces ASCII map."""
         renderer = MapRenderer()
         output = renderer.render_ascii(sample_holomap)
@@ -486,7 +486,7 @@ class TestMapRenderer:
         # Should have landmarks (origin may be overwritten by nearby landmark)
         assert "◉" in output or "⚠" in output or "★" in output
 
-    def test_render_summary(self, sample_holomap):
+    def test_render_summary(self, sample_holomap) -> None:
         """Render summary produces text report."""
         renderer = MapRenderer()
         output = renderer.render_summary(sample_holomap)
@@ -496,14 +496,14 @@ class TestMapRenderer:
         assert "Landmarks:" in output
         assert "4" in output  # 4 landmarks
 
-    def test_render_summary_shows_voids(self, sample_holomap):
+    def test_render_summary_shows_voids(self, sample_holomap) -> None:
         """Summary shows void warnings."""
         renderer = MapRenderer()
         output = renderer.render_summary(sample_holomap)
 
         assert "Caution" in output or "Unexplored" in output
 
-    def test_render_health_panel(self):
+    def test_render_health_panel(self) -> None:
         """Render health panel produces status display."""
         renderer = MapRenderer()
         health = MapHealth(
@@ -522,7 +522,7 @@ class TestMapRenderer:
         assert "8/10" in output  # healthy/total landmarks
         assert "drifting" in output.lower()
 
-    def test_render_health_panel_critical(self):
+    def test_render_health_panel_critical(self) -> None:
         """Health panel shows CRITICAL for low health."""
         renderer = MapRenderer()
         health = MapHealth(overall_health=0.2)
@@ -531,7 +531,7 @@ class TestMapRenderer:
 
         assert "CRITICAL" in output
 
-    def test_render_health_panel_healthy(self):
+    def test_render_health_panel_healthy(self) -> None:
         """Health panel shows HEALTHY for good health."""
         renderer = MapRenderer()
         health = MapHealth(overall_health=0.9)
@@ -544,7 +544,7 @@ class TestMapRenderer:
 class TestAsciiMapDetails:
     """Detailed tests for ASCII map rendering."""
 
-    def test_small_map(self):
+    def test_small_map(self) -> None:
         """Render small map correctly."""
         config = MapRenderConfig(width=20, height=10)
         renderer = MapRenderer(config=config)
@@ -564,7 +564,7 @@ class TestAsciiMapDetails:
         # Should have correct dimensions (height + 2 for borders)
         assert len(lines) == 12
 
-    def test_landmarks_visible(self, sample_holomap):
+    def test_landmarks_visible(self, sample_holomap) -> None:
         """Landmarks appear on map."""
         renderer = MapRenderer()
         output = renderer.render_ascii(sample_holomap)
@@ -572,7 +572,7 @@ class TestAsciiMapDetails:
         # Should have landmark characters
         assert "◉" in output
 
-    def test_voids_visible(self, sample_holomap):
+    def test_voids_visible(self, sample_holomap) -> None:
         """Voids appear on map."""
         config = MapRenderConfig(show_voids=True)
         renderer = MapRenderer(config=config)
@@ -581,7 +581,7 @@ class TestAsciiMapDetails:
         # Should have void characters
         assert "░" in output
 
-    def test_voids_can_be_hidden(self, sample_holomap):
+    def test_voids_can_be_hidden(self, sample_holomap) -> None:
         """Voids can be hidden."""
         config = MapRenderConfig(show_voids=False)
         renderer = MapRenderer(config=config)
@@ -595,7 +595,7 @@ class TestAsciiMapDetails:
 class TestAnnotateAndRender:
     """Tests for convenience function."""
 
-    def test_annotate_and_render(self, sample_holomap):
+    def test_annotate_and_render(self, sample_holomap) -> None:
         """Convenience function returns all outputs."""
         annotated, summary, health = annotate_and_render(sample_holomap)
 
@@ -603,7 +603,7 @@ class TestAnnotateAndRender:
         assert isinstance(summary, str)
         assert isinstance(health, MapHealth)
 
-    def test_annotate_and_render_with_telemetry(self, sample_holomap):
+    def test_annotate_and_render_with_telemetry(self, sample_holomap) -> None:
         """Works with telemetry store."""
         store = MockTelemetryStore()
         store.set_latency("auth", "db", 0.95, 1.5)
@@ -625,7 +625,7 @@ class TestAnnotateAndRender:
 class TestEdgeCases:
     """Tests for edge cases."""
 
-    def test_empty_map_rendering(self):
+    def test_empty_map_rendering(self) -> None:
         """Can render empty map."""
         origin = create_context_vector([0.0, 0.0, 0.0])
         holomap = HoloMap(
@@ -641,7 +641,7 @@ class TestEdgeCases:
 
         assert "★" in output  # Origin still shown
 
-    def test_empty_map_health(self):
+    def test_empty_map_health(self) -> None:
         """Health assessment for empty map."""
         origin = create_context_vector([0.0, 0.0, 0.0])
         holomap = HoloMap(
@@ -660,7 +660,7 @@ class TestEdgeCases:
         assert health.total_landmarks == 0
         assert health.total_edges == 0
 
-    def test_single_dimension_embedding(self):
+    def test_single_dimension_embedding(self) -> None:
         """Handle 1D embeddings gracefully."""
         origin = create_context_vector([0.5])
         holomap = HoloMap(
@@ -677,7 +677,7 @@ class TestEdgeCases:
         # Should not crash
         assert isinstance(output, str)
 
-    def test_high_dimension_embedding(self):
+    def test_high_dimension_embedding(self) -> None:
         """Handle high-dimensional embeddings."""
         dim = 768  # Like BERT
         origin = create_context_vector([0.0] * dim)

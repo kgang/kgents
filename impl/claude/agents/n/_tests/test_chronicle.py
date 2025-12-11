@@ -101,7 +101,7 @@ def make_multi_agent_traces() -> list[SemanticTrace]:
 class TestInteraction:
     """Tests for Interaction dataclass."""
 
-    def test_interaction_creation(self):
+    def test_interaction_creation(self) -> None:
         """Test creating an interaction."""
         interaction = Interaction(
             timestamp=datetime.now(timezone.utc),
@@ -116,7 +116,7 @@ class TestInteraction:
         assert interaction.to_agent == "AgentB"
         assert interaction.interaction_type == "call"
 
-    def test_interaction_agents_property(self):
+    def test_interaction_agents_property(self) -> None:
         """Test agents property."""
         interaction = Interaction(
             timestamp=datetime.now(timezone.utc),
@@ -129,7 +129,7 @@ class TestInteraction:
 
         assert interaction.agents == ("AgentA", "AgentB")
 
-    def test_interaction_with_correlation_id(self):
+    def test_interaction_with_correlation_id(self) -> None:
         """Test interaction with correlation ID."""
         interaction = Interaction(
             timestamp=datetime.now(timezone.utc),
@@ -152,7 +152,7 @@ class TestInteraction:
 class TestTimelineView:
     """Tests for TimelineView."""
 
-    def test_timeline_view_creation(self):
+    def test_timeline_view_creation(self) -> None:
         """Test creating a timeline view."""
         traces = [make_trace("t-1"), make_trace("t-2")]
         view = TimelineView(
@@ -165,7 +165,7 @@ class TestTimelineView:
         assert view.agent_id == "AgentA"
         assert view.trace_count == 2
 
-    def test_timeline_view_duration(self):
+    def test_timeline_view_duration(self) -> None:
         """Test duration property."""
         base_time = datetime.now(timezone.utc)
         traces = [
@@ -182,7 +182,7 @@ class TestTimelineView:
         assert view.duration is not None
         assert view.duration.total_seconds() == 5
 
-    def test_timeline_view_total_gas(self):
+    def test_timeline_view_total_gas(self) -> None:
         """Test total_gas property."""
         traces = [
             make_trace("t-1"),  # 100 gas each
@@ -197,7 +197,7 @@ class TestTimelineView:
 
         assert view.total_gas == 200
 
-    def test_timeline_view_collaborators(self):
+    def test_timeline_view_collaborators(self) -> None:
         """Test collaborators property."""
         traces = [make_trace("t-1")]
         outgoing = [
@@ -230,7 +230,7 @@ class TestTimelineView:
 
         assert view.collaborators == {"AgentB", "AgentC"}
 
-    def test_timeline_view_errors(self):
+    def test_timeline_view_errors(self) -> None:
         """Test errors method."""
         traces = [
             make_trace("t-1", action="INVOKE"),
@@ -257,7 +257,7 @@ class TestTimelineView:
 class TestChronicle:
     """Tests for Chronicle multi-agent weaving."""
 
-    def test_chronicle_creation(self):
+    def test_chronicle_creation(self) -> None:
         """Test creating a chronicle."""
         chronicle = Chronicle()
 
@@ -265,7 +265,7 @@ class TestChronicle:
         assert chronicle.total_traces == 0
         assert chronicle.agent_count == 0
 
-    def test_add_crystal(self):
+    def test_add_crystal(self) -> None:
         """Test adding a crystal."""
         chronicle = Chronicle()
         trace = make_trace("t-1", "AgentA")
@@ -275,7 +275,7 @@ class TestChronicle:
         assert chronicle.total_traces == 1
         assert "AgentA" in chronicle.agent_ids
 
-    def test_add_crystals(self):
+    def test_add_crystals(self) -> None:
         """Test adding multiple crystals."""
         chronicle = Chronicle()
         traces = make_multi_agent_traces()
@@ -285,7 +285,7 @@ class TestChronicle:
         assert chronicle.total_traces == 5
         assert chronicle.agent_count == 3
 
-    def test_get_crystal(self):
+    def test_get_crystal(self) -> None:
         """Test getting a crystal by ID."""
         chronicle = Chronicle()
         trace = make_trace("t-1", "AgentA")
@@ -295,14 +295,14 @@ class TestChronicle:
         assert result is not None
         assert result.trace_id == "t-1"
 
-    def test_get_crystal_not_found(self):
+    def test_get_crystal_not_found(self) -> None:
         """Test getting a non-existent crystal."""
         chronicle = Chronicle()
 
         result = chronicle.get_crystal("nonexistent")
         assert result is None
 
-    def test_get_agent_crystals(self):
+    def test_get_agent_crystals(self) -> None:
         """Test getting crystals for an agent."""
         chronicle = Chronicle()
         traces = make_multi_agent_traces()
@@ -311,7 +311,7 @@ class TestChronicle:
         agent_a_crystals = chronicle.get_agent_crystals("AgentA")
         assert len(agent_a_crystals) == 2
 
-    def test_weave(self):
+    def test_weave(self) -> None:
         """Test weaving crystals into timeline."""
         chronicle = Chronicle()
         traces = make_multi_agent_traces()
@@ -324,7 +324,7 @@ class TestChronicle:
         for i in range(len(woven) - 1):
             assert woven[i].timestamp <= woven[i + 1].timestamp
 
-    def test_weave_around(self):
+    def test_weave_around(self) -> None:
         """Test weaving around a specific trace."""
         chronicle = Chronicle()
         base_time = datetime.now(timezone.utc)
@@ -340,7 +340,7 @@ class TestChronicle:
 
         assert len(nearby) == 2  # t-1 and t-2
 
-    def test_filter_by_agents(self):
+    def test_filter_by_agents(self) -> None:
         """Test filtering by agents."""
         chronicle = Chronicle()
         traces = make_multi_agent_traces()
@@ -351,7 +351,7 @@ class TestChronicle:
         assert all(t.agent_id in ["AgentA", "AgentB"] for t in filtered)
         assert len(filtered) == 4
 
-    def test_filter_by_time(self):
+    def test_filter_by_time(self) -> None:
         """Test filtering by time range."""
         chronicle = Chronicle()
         base_time = datetime.now(timezone.utc)
@@ -370,7 +370,7 @@ class TestChronicle:
         assert len(filtered) == 1
         assert filtered[0].trace_id == "t-2"
 
-    def test_get_agent_timeline(self):
+    def test_get_agent_timeline(self) -> None:
         """Test getting agent timeline view."""
         chronicle = Chronicle()
         traces = make_multi_agent_traces()
@@ -382,14 +382,14 @@ class TestChronicle:
         assert view.agent_id == "AgentA"
         assert view.trace_count == 2
 
-    def test_get_agent_timeline_not_found(self):
+    def test_get_agent_timeline_not_found(self) -> None:
         """Test getting timeline for non-existent agent."""
         chronicle = Chronicle()
 
         view = chronicle.get_agent_timeline("NonexistentAgent")
         assert view is None
 
-    def test_time_span(self):
+    def test_time_span(self) -> None:
         """Test time_span property."""
         chronicle = Chronicle()
         base_time = datetime.now(timezone.utc)
@@ -403,7 +403,7 @@ class TestChronicle:
         assert span is not None
         assert span.total_seconds() == 10
 
-    def test_interaction_detection(self):
+    def test_interaction_detection(self) -> None:
         """Test automatic interaction detection."""
         chronicle = Chronicle(correlation_window_ms=100)
         traces = make_multi_agent_traces()
@@ -414,7 +414,7 @@ class TestChronicle:
         # Should detect parent-child interactions
         assert len(interactions) > 0
 
-    def test_interaction_detection_disabled(self):
+    def test_interaction_detection_disabled(self) -> None:
         """Test with interaction detection disabled."""
         chronicle = Chronicle(detect_interactions=False)
         traces = make_multi_agent_traces()
@@ -423,7 +423,7 @@ class TestChronicle:
         interactions = chronicle.interactions
         assert len(interactions) == 0
 
-    def test_get_collaboration_graph(self):
+    def test_get_collaboration_graph(self) -> None:
         """Test getting collaboration graph."""
         chronicle = Chronicle()
         traces = make_multi_agent_traces()
@@ -436,7 +436,7 @@ class TestChronicle:
         assert "AgentC" in graph
 
     @pytest.mark.asyncio
-    async def test_to_narrative(self):
+    async def test_to_narrative(self) -> None:
         """Test generating narrative from chronicle."""
         chronicle = Chronicle()
         traces = make_multi_agent_traces()
@@ -447,7 +447,7 @@ class TestChronicle:
         assert narrative is not None
         assert len(narrative.traces_used) == 5
 
-    def test_to_dict(self):
+    def test_to_dict(self) -> None:
         """Test chronicle serialization."""
         chronicle = Chronicle()
         traces = [make_trace("t-1", "AgentA")]
@@ -459,7 +459,7 @@ class TestChronicle:
         assert "total_traces" in data
         assert data["total_traces"] == 1
 
-    def test_iter_interactions(self):
+    def test_iter_interactions(self) -> None:
         """Test iterating over interactions."""
         chronicle = Chronicle()
         traces = make_multi_agent_traces()
@@ -491,7 +491,7 @@ class TestChronicle:
 class TestChronicleBuilder:
     """Tests for ChronicleBuilder fluent API."""
 
-    def test_builder_basic(self):
+    def test_builder_basic(self) -> None:
         """Test basic builder usage."""
         traces = make_multi_agent_traces()
 
@@ -499,7 +499,7 @@ class TestChronicleBuilder:
 
         assert chronicle.total_traces == 5
 
-    def test_builder_with_correlation_window(self):
+    def test_builder_with_correlation_window(self) -> None:
         """Test setting correlation window."""
         traces = make_multi_agent_traces()
 
@@ -509,7 +509,7 @@ class TestChronicleBuilder:
 
         assert chronicle.total_traces == 5
 
-    def test_builder_without_interaction_detection(self):
+    def test_builder_without_interaction_detection(self) -> None:
         """Test disabling interaction detection."""
         traces = make_multi_agent_traces()
 
@@ -522,7 +522,7 @@ class TestChronicleBuilder:
 
         assert len(chronicle.interactions) == 0
 
-    def test_builder_add_single_trace(self):
+    def test_builder_add_single_trace(self) -> None:
         """Test adding single trace."""
         trace = make_trace("t-1")
 
@@ -530,7 +530,7 @@ class TestChronicleBuilder:
 
         assert chronicle.total_traces == 1
 
-    def test_builder_add_manual_interaction(self):
+    def test_builder_add_manual_interaction(self) -> None:
         """Test adding manual interaction."""
         trace = make_trace("t-1")
         interaction = Interaction(
@@ -557,7 +557,7 @@ class TestChronicleBuilder:
 class TestCorrelationDetector:
     """Tests for CorrelationDetector."""
 
-    def test_detector_creation(self):
+    def test_detector_creation(self) -> None:
         """Test creating a detector."""
         detector = CorrelationDetector(
             temporal_window_ms=200,
@@ -567,7 +567,7 @@ class TestCorrelationDetector:
         assert detector.temporal_window.total_seconds() == 0.2
         assert detector.semantic_threshold == 0.9
 
-    def test_detect_all(self):
+    def test_detect_all(self) -> None:
         """Test detecting all correlations."""
         detector = CorrelationDetector(temporal_window_ms=100)
         traces = make_multi_agent_traces()
@@ -577,7 +577,7 @@ class TestCorrelationDetector:
         # Should detect parent-child and temporal correlations
         assert len(interactions) > 0
 
-    def test_detect_parent_child(self):
+    def test_detect_parent_child(self) -> None:
         """Test detecting parent-child correlations."""
         detector = CorrelationDetector(
             temporal_window_ms=50
@@ -604,7 +604,7 @@ class TestCorrelationDetector:
             for i in interactions
         )
 
-    def test_detect_temporal_correlation(self):
+    def test_detect_temporal_correlation(self) -> None:
         """Test detecting temporal correlations."""
         detector = CorrelationDetector(temporal_window_ms=100)
         base_time = datetime.now(timezone.utc)
@@ -621,7 +621,7 @@ class TestCorrelationDetector:
         # Should find temporal correlation
         assert len(interactions) >= 1
 
-    def test_no_correlation_outside_window(self):
+    def test_no_correlation_outside_window(self) -> None:
         """Test no correlation for traces outside window."""
         detector = CorrelationDetector(temporal_window_ms=100)
         base_time = datetime.now(timezone.utc)
@@ -637,7 +637,7 @@ class TestCorrelationDetector:
         temporal = [i for i in interactions if i.interaction_type == "temporal"]
         assert len(temporal) == 0
 
-    def test_same_agent_no_correlation(self):
+    def test_same_agent_no_correlation(self) -> None:
         """Test no correlation between same agent's traces."""
         detector = CorrelationDetector()
         base_time = datetime.now(timezone.utc)

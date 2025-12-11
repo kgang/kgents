@@ -49,7 +49,7 @@ from agents.shared.fixtures_integration import (
 class TestParserGrammarIntegration:
     """P × G: Parser uses G-gent grammars (tongues)."""
 
-    def test_tongue_provides_parser_config(self):
+    def test_tongue_provides_parser_config(self) -> None:
         """Test that G-gent Tongue provides parser configuration."""
         # Build a simple tongue
         tongue = (
@@ -75,7 +75,7 @@ class TestParserGrammarIntegration:
         assert tongue.parser_config.confidence_threshold == 0.7
         assert tongue.level == GrammarLevel.COMMAND
 
-    def test_tongue_lexicon_constrains_parsing(self):
+    def test_tongue_lexicon_constrains_parsing(self) -> None:
         """Test that tongue lexicon constrains what can be parsed."""
         # Build tongue with constrained lexicon
         tongue = (
@@ -96,7 +96,7 @@ class TestParserGrammarIntegration:
         assert "DELETE" not in tongue.lexicon
         assert "hacking" not in tongue.lexicon
 
-    def test_tongue_with_constraint_proofs(self):
+    def test_tongue_with_constraint_proofs(self) -> None:
         """Test tongue with semantic constraints and proofs."""
 
         # Build tongue with constraints
@@ -115,7 +115,7 @@ class TestParserGrammarIntegration:
         assert "No destructive operations" in tongue.constraints
         assert "Read-only by default" in tongue.constraints
 
-    def test_parser_fallback_chain_with_tongue_context(self):
+    def test_parser_fallback_chain_with_tongue_context(self) -> None:
         """Test fallback parser chain uses tongue-aware strategies."""
         # Create parser chain
         parser = FallbackParser(
@@ -130,7 +130,7 @@ class TestParserGrammarIntegration:
         assert result.success
         assert result.confidence >= 0.5
 
-    def test_fusion_parser_merges_multiple_strategies(self):
+    def test_fusion_parser_merges_multiple_strategies(self) -> None:
         """Test fusion parser combines results from multiple strategies."""
 
         def merge_values(values: list[Any]) -> Any:
@@ -159,7 +159,7 @@ class TestParserGrammarIntegration:
 class TestParserForgeIntegration:
     """P × F: Parser validates F-gent prototypes and contracts."""
 
-    def test_parse_intent_produces_valid_structure(self):
+    def test_parse_intent_produces_valid_structure(self) -> None:
         """Test that parse_intent produces well-structured Intent."""
         intent = parse_intent(
             "Create an agent that validates email addresses and returns structured results"
@@ -169,7 +169,7 @@ class TestParserForgeIntegration:
         assert isinstance(intent.behavior, list)
         assert isinstance(intent.constraints, list)
 
-    def test_contract_input_output_types_parseable(self):
+    def test_contract_input_output_types_parseable(self) -> None:
         """Test that contract types can be parsed for composition."""
         intent = make_sample_intent()
         contract = synthesize_contract(intent, "TestAgent")
@@ -179,7 +179,7 @@ class TestParserForgeIntegration:
         assert contract.output_type
         assert contract.agent_name == "TestAgent"
 
-    def test_source_code_syntax_validation(self):
+    def test_source_code_syntax_validation(self) -> None:
         """Test that generated source code passes syntax validation."""
         source = make_sample_source_code("ValidAgent", valid=True)
 
@@ -187,7 +187,7 @@ class TestParserForgeIntegration:
         assert source.is_valid
         assert source.analysis_report.passed
 
-    def test_invalid_source_detected(self):
+    def test_invalid_source_detected(self) -> None:
         """Test that invalid source code is detected."""
         source = make_sample_source_code("InvalidAgent", valid=False)
 
@@ -195,7 +195,7 @@ class TestParserForgeIntegration:
         assert not source.is_valid
         assert not source.analysis_report.passed
 
-    def test_parser_validates_json_output_schema(self):
+    def test_parser_validates_json_output_schema(self) -> None:
         """Test parser can validate JSON against expected schema."""
         parser = ProbabilisticASTParser(config=ParserConfig())
 
@@ -213,7 +213,7 @@ class TestParserForgeIntegration:
 class TestParserErrorRecovery:
     """P × E: Parser with error recovery strategies."""
 
-    def test_anchor_parser_extracts_labeled_content(self):
+    def test_anchor_parser_extracts_labeled_content(self) -> None:
         """Test anchor parser extracts content after markers."""
         parser = AnchorBasedParser(anchor="###RESULT:")
 
@@ -227,7 +227,7 @@ class TestParserErrorRecovery:
         assert result.success
         assert "The actual result value" in result.value[0]
 
-    def test_stack_balancing_repairs_brackets(self):
+    def test_stack_balancing_repairs_brackets(self) -> None:
         """Test stack balancer handles unbalanced brackets."""
         parser = StackBalancingParser()
 
@@ -235,7 +235,7 @@ class TestParserErrorRecovery:
         result = parser.parse('{"array": [1, 2, {"nested": true}]}')
         assert result.success
 
-    def test_fallback_chain_tries_multiple_strategies(self):
+    def test_fallback_chain_tries_multiple_strategies(self) -> None:
         """Test fallback tries strategies in order until success."""
         # First parser that will fail on plain text
         json_parser = ProbabilisticASTParser(config=ParserConfig())
@@ -253,7 +253,7 @@ class TestParserErrorRecovery:
         result = fallback.parse("RESULT: success value")
         assert result.success
 
-    def test_parser_provides_repair_transparency(self):
+    def test_parser_provides_repair_transparency(self) -> None:
         """Test parser reports what repairs were applied."""
         parser = ProbabilisticASTParser(config=ParserConfig(enable_repair=True))
 
@@ -267,7 +267,7 @@ class TestParserErrorRecovery:
 class TestParserStreamProcessing:
     """Test streaming parser capabilities."""
 
-    def test_parser_handles_chunked_input(self):
+    def test_parser_handles_chunked_input(self) -> None:
         """Test parser can process input in chunks."""
         parser = ProbabilisticASTParser(config=ParserConfig())
 
@@ -278,7 +278,7 @@ class TestParserStreamProcessing:
         assert result.success
         assert result.value.value["meta"]["count"] == 3
 
-    def test_parser_tracks_stream_position(self):
+    def test_parser_tracks_stream_position(self) -> None:
         """Test parser tracks position in stream."""
         parser = ProbabilisticASTParser(config=ParserConfig())
 
@@ -291,7 +291,7 @@ class TestParserStreamProcessing:
 class TestParserComposition:
     """Test parser composition patterns."""
 
-    def test_switch_parser_routes_by_format(self):
+    def test_switch_parser_routes_by_format(self) -> None:
         """Test switch parser routes to correct parser by format."""
 
         def is_json(text: str) -> bool:
@@ -319,7 +319,7 @@ class TestParserComposition:
         anchor_result = switch.parse("###RESULT: anchored content")
         assert anchor_result.success
 
-    def test_parser_preserves_metadata_through_composition(self):
+    def test_parser_preserves_metadata_through_composition(self) -> None:
         """Test metadata flows through composed parsers."""
         parser = ProbabilisticASTParser(config=ParserConfig())
 
@@ -332,7 +332,7 @@ class TestParserComposition:
 class TestParserConfidenceScoring:
     """Test parser confidence scoring."""
 
-    def test_well_formed_input_high_confidence(self):
+    def test_well_formed_input_high_confidence(self) -> None:
         """Test well-formed input gets high confidence."""
         parser = ProbabilisticASTParser(config=ParserConfig())
 
@@ -340,7 +340,7 @@ class TestParserConfidenceScoring:
         assert result.success
         assert result.confidence >= 0.7
 
-    def test_ambiguous_input_lower_confidence(self):
+    def test_ambiguous_input_lower_confidence(self) -> None:
         """Test ambiguous input gets lower confidence."""
         parser = ProbabilisticASTParser(config=ParserConfig())
 
@@ -350,7 +350,7 @@ class TestParserConfidenceScoring:
         # Simple valid JSON should still have decent confidence
         assert result.confidence >= 0.5
 
-    def test_confidence_threshold_filtering(self):
+    def test_confidence_threshold_filtering(self) -> None:
         """Test min_confidence filters low-confidence results."""
         config = ParserConfig(min_confidence=0.9)
         parser = ProbabilisticASTParser(config=config)

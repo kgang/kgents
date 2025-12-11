@@ -11,7 +11,7 @@ from protocols.cli.prism import CLICapable
 class TestCLICapableProtocol:
     """Tests for CLICapable structural typing."""
 
-    def test_isinstance_detection_valid(self):
+    def test_isinstance_detection_valid(self) -> None:
         """CLICapable detection works via isinstance."""
 
         class ValidAgent:
@@ -29,7 +29,7 @@ class TestCLICapableProtocol:
         agent = ValidAgent()
         assert isinstance(agent, CLICapable)
 
-    def test_isinstance_detection_missing_genus(self):
+    def test_isinstance_detection_missing_genus(self) -> None:
         """Missing genus_name fails isinstance check."""
 
         class InvalidAgent:
@@ -43,7 +43,7 @@ class TestCLICapableProtocol:
         agent = InvalidAgent()
         assert not isinstance(agent, CLICapable)
 
-    def test_isinstance_detection_missing_description(self):
+    def test_isinstance_detection_missing_description(self) -> None:
         """Missing cli_description fails isinstance check."""
 
         class InvalidAgent:
@@ -57,7 +57,7 @@ class TestCLICapableProtocol:
         agent = InvalidAgent()
         assert not isinstance(agent, CLICapable)
 
-    def test_isinstance_detection_missing_commands(self):
+    def test_isinstance_detection_missing_commands(self) -> None:
         """Missing get_exposed_commands fails isinstance check."""
 
         class InvalidAgent:
@@ -72,7 +72,7 @@ class TestCLICapableProtocol:
         agent = InvalidAgent()
         assert not isinstance(agent, CLICapable)
 
-    def test_genus_name_property(self):
+    def test_genus_name_property(self) -> None:
         """genus_name returns the correct value."""
 
         class TestAgent:
@@ -90,7 +90,7 @@ class TestCLICapableProtocol:
         agent = TestAgent()
         assert agent.genus_name == "grammar"
 
-    def test_cli_description_property(self):
+    def test_cli_description_property(self) -> None:
         """cli_description returns the correct value."""
 
         class TestAgent:
@@ -108,7 +108,7 @@ class TestCLICapableProtocol:
         agent = TestAgent()
         assert agent.cli_description == "G-gent Grammar/DSL operations"
 
-    def test_get_exposed_commands_returns_dict(self):
+    def test_get_exposed_commands_returns_dict(self) -> None:
         """get_exposed_commands returns a command mapping."""
 
         def cmd_reify():
@@ -137,7 +137,7 @@ class TestCLICapableProtocol:
         assert "parse" in commands
         assert commands["reify"] is cmd_reify
 
-    def test_protocol_is_runtime_checkable(self):
+    def test_protocol_is_runtime_checkable(self) -> None:
         """CLICapable can be used with isinstance at runtime."""
         # This test verifies the @runtime_checkable decorator is applied
 

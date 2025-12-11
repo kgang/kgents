@@ -14,7 +14,7 @@ import pytest
 class TestInfraApplyCommand:
     """Tests for kgents infra apply command."""
 
-    def test_apply_requires_argument(self):
+    def test_apply_requires_argument(self) -> None:
         """apply without argument shows usage."""
         # Simulate what the CLI handler does
         from protocols.cli.handlers.infra import _cmd_apply
@@ -32,7 +32,7 @@ class TestInfraApplyCommand:
             result = _cmd_apply([])
             assert result == 1
 
-    def test_apply_agent_by_name_parses_correctly(self):
+    def test_apply_agent_by_name_parses_correctly(self) -> None:
         """Agent name is normalized correctly."""
         # Test the name normalization logic
         test_cases = [
@@ -64,7 +64,7 @@ class TestInfraApplyCommand:
 class TestOperatorErrorHandling:
     """Tests for operator error handling."""
 
-    def test_cluster_operation_error_has_two_args(self):
+    def test_cluster_operation_error_has_two_args(self) -> None:
         """ClusterOperationError requires operation and detail."""
         from infra.k8s.exceptions import ClusterOperationError
 
@@ -74,7 +74,7 @@ class TestOperatorErrorHandling:
         assert err.operation == "apply"
         assert err.detail == "resource not found"
 
-    def test_reconcile_handles_kubectl_failure_gracefully(self):
+    def test_reconcile_handles_kubectl_failure_gracefully(self) -> None:
         """reconcile_agent catches exceptions and returns failure result."""
         import asyncio
 
@@ -104,7 +104,7 @@ class TestOperatorErrorHandling:
 class TestAgentSpecGeneration:
     """Tests for AgentSpec manifest generation."""
 
-    def test_deployment_has_required_fields(self):
+    def test_deployment_has_required_fields(self) -> None:
         """Generated deployment has all required K8s fields."""
         from infra.k8s import AgentSpec
 
@@ -137,7 +137,7 @@ class TestAgentSpecGeneration:
         assert len(containers) >= 1
         assert containers[0]["name"] == "logic"
 
-    def test_service_has_required_fields(self):
+    def test_service_has_required_fields(self) -> None:
         """Generated service has all required K8s fields."""
         from infra.k8s import AgentSpec
 

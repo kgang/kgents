@@ -91,7 +91,7 @@ class TestSQLiteBasicOperations:
     """Tests for basic CRUD operations with SQLite."""
 
     @pytest.mark.asyncio
-    async def test_save_and_load(self, sqlite_agent):
+    async def test_save_and_load(self, sqlite_agent) -> None:
         """State round-trips correctly."""
         state = SimpleState(value=42, name="test")
         await sqlite_agent.save(state)
@@ -101,13 +101,13 @@ class TestSQLiteBasicOperations:
         assert loaded.name == "test"
 
     @pytest.mark.asyncio
-    async def test_load_without_state_raises(self, sqlite_agent):
+    async def test_load_without_state_raises(self, sqlite_agent) -> None:
         """Loading non-existent state raises StateNotFoundError."""
         with pytest.raises(StateNotFoundError):
             await sqlite_agent.load()
 
     @pytest.mark.asyncio
-    async def test_multiple_saves(self, sqlite_agent):
+    async def test_multiple_saves(self, sqlite_agent) -> None:
         """Multiple saves create versions, load returns latest."""
         await sqlite_agent.save(SimpleState(value=1, name="v1"))
         await sqlite_agent.save(SimpleState(value=2, name="v2"))
@@ -118,7 +118,7 @@ class TestSQLiteBasicOperations:
         assert loaded.name == "v3"
 
     @pytest.mark.asyncio
-    async def test_context_manager(self, temp_db):
+    async def test_context_manager(self, temp_db) -> None:
         """Agent works as async context manager."""
         agent = create_sqlite_agent(
             db_path=temp_db,
@@ -138,7 +138,7 @@ class TestSQLiteHistory:
     """Tests for history functionality."""
 
     @pytest.mark.asyncio
-    async def test_history_returns_previous_states(self, sqlite_agent):
+    async def test_history_returns_previous_states(self, sqlite_agent) -> None:
         """History contains previous states, not current."""
         await sqlite_agent.save(SimpleState(value=1, name="first"))
         await sqlite_agent.save(SimpleState(value=2, name="second"))
@@ -150,7 +150,7 @@ class TestSQLiteHistory:
         assert history[1].value == 1  # Oldest
 
     @pytest.mark.asyncio
-    async def test_history_with_limit(self, sqlite_agent):
+    async def test_history_with_limit(self, sqlite_agent) -> None:
         """History respects limit parameter."""
         for i in range(5):
             await sqlite_agent.save(SimpleState(value=i, name=f"v{i}"))
@@ -161,13 +161,13 @@ class TestSQLiteHistory:
         assert history[1].value == 2
 
     @pytest.mark.asyncio
-    async def test_history_empty_initially(self, sqlite_agent):
+    async def test_history_empty_initially(self, sqlite_agent) -> None:
         """Empty history for new agent."""
         history = await sqlite_agent.history()
         assert history == []
 
     @pytest.mark.asyncio
-    async def test_max_history_enforced(self, temp_db):
+    async def test_max_history_enforced(self, temp_db) -> None:
         """Old versions are pruned when max_history exceeded."""
         agent = create_sqlite_agent(
             db_path=temp_db,
@@ -193,7 +193,7 @@ class TestSQLiteComplexTypes:
     """Tests for nested dataclasses and enums."""
 
     @pytest.mark.asyncio
-    async def test_nested_dataclass(self, temp_db):
+    async def test_nested_dataclass(self, temp_db) -> None:
         """Nested dataclasses serialize and deserialize correctly."""
         agent = create_sqlite_agent(
             db_path=temp_db,
@@ -216,7 +216,7 @@ class TestSQLiteComplexTypes:
         await agent.close()
 
     @pytest.mark.asyncio
-    async def test_enum_serialization(self, temp_db):
+    async def test_enum_serialization(self, temp_db) -> None:
         """Enums serialize to values and deserialize back."""
         agent = create_sqlite_agent(
             db_path=temp_db,
@@ -241,7 +241,7 @@ class TestSQLiteMultipleKeys:
     """Tests for multiple keys in same table."""
 
     @pytest.mark.asyncio
-    async def test_different_keys_isolated(self, temp_db):
+    async def test_different_keys_isolated(self, temp_db) -> None:
         """Different keys maintain separate state."""
         agent1 = create_sqlite_agent(
             db_path=temp_db,
@@ -277,7 +277,7 @@ class TestSQLiteErrors:
     """Tests for error handling."""
 
     @pytest.mark.asyncio
-    async def test_not_connected_error(self, temp_db):
+    async def test_not_connected_error(self, temp_db) -> None:
         """Operations fail if not connected."""
         agent = create_sqlite_agent(
             db_path=temp_db,
@@ -290,7 +290,7 @@ class TestSQLiteErrors:
             await agent.load()
 
     @pytest.mark.asyncio
-    async def test_primitive_types(self, temp_db):
+    async def test_primitive_types(self, temp_db) -> None:
         """Agent works with primitive types."""
         agent: SQLAgent[dict] = SQLAgent(
             backend=SQLiteBackend(temp_db),
@@ -311,7 +311,7 @@ class TestPostgreSQLBackend:
     """Tests for PostgreSQL backend (skip if not available)."""
 
     @pytest.mark.asyncio
-    async def test_placeholder_conversion(self):
+    async def test_placeholder_conversion(self) -> None:
         """PostgreSQL placeholder conversion works."""
         backend = PostgreSQLBackend("postgresql://localhost/test")
 
@@ -320,7 +320,7 @@ class TestPostgreSQLBackend:
         assert converted == "SELECT * FROM t WHERE a = $1 AND b = $2 AND c = $3"
 
     @pytest.mark.asyncio
-    async def test_no_placeholders(self):
+    async def test_no_placeholders(self) -> None:
         """Queries without placeholders are unchanged."""
         backend = PostgreSQLBackend("postgresql://localhost/test")
 
@@ -334,7 +334,7 @@ class TestSQLiteBackend:
     """Tests for SQLiteBackend internals."""
 
     @pytest.mark.asyncio
-    async def test_backend_lifecycle(self, temp_db):
+    async def test_backend_lifecycle(self, temp_db) -> None:
         """Backend connects and closes properly."""
         backend = SQLiteBackend(temp_db)
 
@@ -345,7 +345,7 @@ class TestSQLiteBackend:
         assert backend._conn is None
 
     @pytest.mark.asyncio
-    async def test_execute_and_fetch(self, temp_db):
+    async def test_execute_and_fetch(self, temp_db) -> None:
         """Direct execute and fetch operations work."""
         backend = SQLiteBackend(temp_db)
         await backend.connect()
@@ -370,7 +370,7 @@ class TestSQLitePersistence:
     """Test that state persists across connections."""
 
     @pytest.mark.asyncio
-    async def test_state_survives_reconnect(self, temp_db):
+    async def test_state_survives_reconnect(self, temp_db) -> None:
         """State persists when agent reconnects."""
         # First connection: save state
         agent1 = create_sqlite_agent(

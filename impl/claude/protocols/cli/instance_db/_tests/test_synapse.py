@@ -65,37 +65,37 @@ class FailingHandler:
 class TestPredictiveModel:
     """Test the O(1) predictive model."""
 
-    def test_create_model(self):
+    def test_create_model(self) -> None:
         """Test model creation."""
         model = PredictiveModel()
         assert model._alpha == 0.3
         assert model._prior == 0.5
 
-    def test_create_with_custom_params(self):
+    def test_create_with_custom_params(self) -> None:
         """Test model with custom parameters."""
         model = PredictiveModel(alpha=0.5, prior=0.3)
         assert model._alpha == 0.5
         assert model._prior == 0.3
 
-    def test_invalid_alpha(self):
+    def test_invalid_alpha(self) -> None:
         """Test that invalid alpha raises."""
         with pytest.raises(ValueError):
             PredictiveModel(alpha=0)
         with pytest.raises(ValueError):
             PredictiveModel(alpha=1.5)
 
-    def test_predict_unknown_type(self):
+    def test_predict_unknown_type(self) -> None:
         """Test prediction for unknown signal type returns prior."""
         model = PredictiveModel(prior=0.5)
         assert model.predict("unknown") == 0.5
 
-    def test_update_returns_surprise(self):
+    def test_update_returns_surprise(self) -> None:
         """Test update returns surprise value."""
         model = PredictiveModel()
         surprise = model.update("test.signal")
         assert 0.0 <= surprise <= 1.0
 
-    def test_update_reduces_surprise(self):
+    def test_update_reduces_surprise(self) -> None:
         """Test repeated signals reduce surprise."""
         model = PredictiveModel()
 
@@ -111,7 +111,7 @@ class TestPredictiveModel:
         # The model learns the pattern, reducing surprise
         assert surprise_final <= surprise1
 
-    def test_new_signal_type_high_surprise(self):
+    def test_new_signal_type_high_surprise(self) -> None:
         """Test new signal type has high surprise."""
         model = PredictiveModel()
 
@@ -123,7 +123,7 @@ class TestPredictiveModel:
         surprise = model.update("unexpected.signal")
         assert surprise > 0.1  # Non-trivial surprise
 
-    def test_surprise_for_without_update(self):
+    def test_surprise_for_without_update(self) -> None:
         """Test surprise_for doesn't modify model."""
         model = PredictiveModel()
         model.update("test", 1.0)
@@ -135,7 +135,7 @@ class TestPredictiveModel:
         # Prediction unchanged
         assert model.predict("test") == pred_before
 
-    def test_reset_clears_predictions(self):
+    def test_reset_clears_predictions(self) -> None:
         """Test reset clears all state."""
         model = PredictiveModel()
         model.update("signal.a")
@@ -146,7 +146,7 @@ class TestPredictiveModel:
         assert model.predict("signal.a") == model._prior
         assert len(model.known_types) == 0
 
-    def test_known_types(self):
+    def test_known_types(self) -> None:
         """Test known_types returns seen signal types."""
         model = PredictiveModel()
         model.update("type.a")
@@ -155,7 +155,7 @@ class TestPredictiveModel:
 
         assert model.known_types == {"type.a", "type.b"}
 
-    def test_stats(self):
+    def test_stats(self) -> None:
         """Test stats returns model state."""
         model = PredictiveModel(alpha=0.3, prior=0.5)
         model.update("test")
@@ -175,7 +175,7 @@ class TestPredictiveModel:
 class TestSynapseConfig:
     """Test Synapse configuration."""
 
-    def test_default_config(self):
+    def test_default_config(self) -> None:
         """Test default configuration values."""
         config = SynapseConfig()
         assert config.surprise_threshold == 0.5
@@ -183,7 +183,7 @@ class TestSynapseConfig:
         assert config.smoothing_alpha == 0.3
         assert config.batch_size == 100
 
-    def test_from_dict(self):
+    def test_from_dict(self) -> None:
         """Test config from dict."""
         data = {
             "surprise_threshold": 0.6,
@@ -195,7 +195,7 @@ class TestSynapseConfig:
         assert config.flashbulb_threshold == 0.95
         assert config.batch_size == 50
 
-    def test_from_empty_dict(self):
+    def test_from_empty_dict(self) -> None:
         """Test config from empty dict uses defaults."""
         config = SynapseConfig.from_dict({})
         assert config.surprise_threshold == 0.5
@@ -209,7 +209,7 @@ class TestSynapseConfig:
 class TestSurpriseMetrics:
     """Test surprise metrics tracking."""
 
-    def test_initial_metrics(self):
+    def test_initial_metrics(self) -> None:
         """Test initial metrics are zero."""
         metrics = SurpriseMetrics()
         assert metrics.high_surprise_count == 0
@@ -217,12 +217,12 @@ class TestSurpriseMetrics:
         assert metrics.flashbulb_count == 0
         assert metrics.batched_count == 0
 
-    def test_avg_surprise_empty(self):
+    def test_avg_surprise_empty(self) -> None:
         """Test avg_surprise for unknown type."""
         metrics = SurpriseMetrics()
         assert metrics.avg_surprise("unknown") == 0.5  # Prior
 
-    def test_avg_surprise_with_data(self):
+    def test_avg_surprise_with_data(self) -> None:
         """Test avg_surprise calculation."""
         metrics = SurpriseMetrics()
         metrics.type_counts["test"] = 2
@@ -238,24 +238,24 @@ class TestSurpriseMetrics:
 class TestSynapseCreation:
     """Test Synapse creation and configuration."""
 
-    def test_create_synapse(self):
+    def test_create_synapse(self) -> None:
         """Test basic synapse creation."""
         synapse = Synapse()
         assert synapse.config.surprise_threshold == 0.5
 
-    def test_create_with_store(self):
+    def test_create_with_store(self) -> None:
         """Test synapse with telemetry store."""
         store = MockTelemetryStore()
         synapse = Synapse(telemetry_store=store)
         assert synapse._store == store
 
-    def test_create_with_config(self):
+    def test_create_with_config(self) -> None:
         """Test synapse with custom config."""
         config = SynapseConfig(surprise_threshold=0.7)
         synapse = Synapse(config=config)
         assert synapse.config.surprise_threshold == 0.7
 
-    def test_factory_function(self):
+    def test_factory_function(self) -> None:
         """Test create_synapse factory."""
         synapse = create_synapse(config_dict={"surprise_threshold": 0.6})
         assert synapse.config.surprise_threshold == 0.6
@@ -270,7 +270,7 @@ class TestSynapseRouting:
     """Test signal routing based on surprise."""
 
     @pytest.mark.asyncio
-    async def test_fire_computes_surprise(self):
+    async def test_fire_computes_surprise(self) -> None:
         """Test fire() computes and sets surprise."""
         synapse = Synapse()
         signal = Signal(signal_type="test.signal", data={})
@@ -281,7 +281,7 @@ class TestSynapseRouting:
         assert result.surprise == signal.surprise
 
     @pytest.mark.asyncio
-    async def test_high_surprise_fast_path(self):
+    async def test_high_surprise_fast_path(self) -> None:
         """Test high surprise routes to fast path."""
         config = SynapseConfig(surprise_threshold=0.0)  # Everything is high surprise
         synapse = Synapse(config=config)
@@ -293,7 +293,7 @@ class TestSynapseRouting:
         assert not result.queued
 
     @pytest.mark.asyncio
-    async def test_low_surprise_batch_path(self):
+    async def test_low_surprise_batch_path(self) -> None:
         """Test low surprise routes to batch path."""
         config = SynapseConfig(surprise_threshold=1.0)  # Everything is low surprise
         synapse = Synapse(config=config)
@@ -305,7 +305,7 @@ class TestSynapseRouting:
         assert result.queued
 
     @pytest.mark.asyncio
-    async def test_flashbulb_immediate(self):
+    async def test_flashbulb_immediate(self) -> None:
         """Test flashbulb threshold triggers immediate dispatch."""
         config = SynapseConfig(flashbulb_threshold=0.0)  # Everything is flashbulb
         synapse = Synapse(config=config)
@@ -317,7 +317,7 @@ class TestSynapseRouting:
         assert signal.priority == SignalPriority.FLASHBULB
 
     @pytest.mark.asyncio
-    async def test_bypass_model(self):
+    async def test_bypass_model(self) -> None:
         """Test bypass_model uses signal's existing surprise."""
         synapse = Synapse()
         signal = Signal(signal_type="test", data={}, surprise=0.99)
@@ -336,7 +336,7 @@ class TestSynapseHandlers:
     """Test handler registration and dispatch."""
 
     @pytest.mark.asyncio
-    async def test_fast_handler_called(self):
+    async def test_fast_handler_called(self) -> None:
         """Test fast path handler is called."""
         config = SynapseConfig(surprise_threshold=0.0)
         synapse = Synapse(config=config)
@@ -350,7 +350,7 @@ class TestSynapseHandlers:
         assert handler.signals[0] == signal
 
     @pytest.mark.asyncio
-    async def test_flashbulb_handler_called(self):
+    async def test_flashbulb_handler_called(self) -> None:
         """Test flashbulb handler is called."""
         config = SynapseConfig(flashbulb_threshold=0.0)
         synapse = Synapse(config=config)
@@ -363,7 +363,7 @@ class TestSynapseHandlers:
         assert len(handler.signals) == 1
 
     @pytest.mark.asyncio
-    async def test_flashbulb_also_calls_fast(self):
+    async def test_flashbulb_also_calls_fast(self) -> None:
         """Test flashbulb also dispatches to fast handlers."""
         config = SynapseConfig(flashbulb_threshold=0.0)
         synapse = Synapse(config=config)
@@ -379,7 +379,7 @@ class TestSynapseHandlers:
         assert len(fast_handler.signals) == 1
 
     @pytest.mark.asyncio
-    async def test_batch_handler_on_flush(self):
+    async def test_batch_handler_on_flush(self) -> None:
         """Test batch handlers called on flush."""
         config = SynapseConfig(surprise_threshold=1.0)  # All batch
         synapse = Synapse(config=config)
@@ -398,7 +398,7 @@ class TestSynapseHandlers:
         assert len(handler.signals) == 1
 
     @pytest.mark.asyncio
-    async def test_callable_handler(self):
+    async def test_callable_handler(self) -> None:
         """Test callable (function) as handler."""
         config = SynapseConfig(surprise_threshold=0.0)
         synapse = Synapse(config=config)
@@ -415,7 +415,7 @@ class TestSynapseHandlers:
         assert len(received) == 1
 
     @pytest.mark.asyncio
-    async def test_handler_error_captured(self):
+    async def test_handler_error_captured(self) -> None:
         """Test handler errors are captured in result."""
         config = SynapseConfig(surprise_threshold=0.0)
         synapse = Synapse(config=config)
@@ -437,7 +437,7 @@ class TestSynapseBatching:
     """Test batch path functionality."""
 
     @pytest.mark.asyncio
-    async def test_batch_queue_grows(self):
+    async def test_batch_queue_grows(self) -> None:
         """Test signals queue in batch path."""
         config = SynapseConfig(surprise_threshold=1.0, batch_size=10)
         synapse = Synapse(config=config)
@@ -449,7 +449,7 @@ class TestSynapseBatching:
         assert synapse.batch_size == 5
 
     @pytest.mark.asyncio
-    async def test_batch_auto_flush(self):
+    async def test_batch_auto_flush(self) -> None:
         """Test batch auto-flushes at batch_size."""
         config = SynapseConfig(surprise_threshold=1.0, batch_size=3)
         synapse = Synapse(config=config)
@@ -465,7 +465,7 @@ class TestSynapseBatching:
         assert len(handler.signals) == 3
 
     @pytest.mark.asyncio
-    async def test_flush_batch_returns_count(self):
+    async def test_flush_batch_returns_count(self) -> None:
         """Test flush_batch returns number of signals."""
         config = SynapseConfig(surprise_threshold=1.0)
         synapse = Synapse(config=config)
@@ -478,7 +478,7 @@ class TestSynapseBatching:
         assert count == 5
 
     @pytest.mark.asyncio
-    async def test_flush_empty_batch(self):
+    async def test_flush_empty_batch(self) -> None:
         """Test flushing empty batch returns 0."""
         synapse = Synapse()
         count = await synapse.flush_batch()
@@ -494,7 +494,7 @@ class TestSynapseTelemetry:
     """Test telemetry logging."""
 
     @pytest.mark.asyncio
-    async def test_fast_path_logs(self):
+    async def test_fast_path_logs(self) -> None:
         """Test fast path logs to telemetry."""
         store = MockTelemetryStore()
         config = SynapseConfig(surprise_threshold=0.0)
@@ -508,7 +508,7 @@ class TestSynapseTelemetry:
         assert store.events[0].event_type == "test"
 
     @pytest.mark.asyncio
-    async def test_batch_logs_on_flush(self):
+    async def test_batch_logs_on_flush(self) -> None:
         """Test batch path logs on flush."""
         store = MockTelemetryStore()
         config = SynapseConfig(surprise_threshold=1.0)
@@ -525,7 +525,7 @@ class TestSynapseTelemetry:
         assert len(store.events) == 3
 
     @pytest.mark.asyncio
-    async def test_store_failure_handled(self):
+    async def test_store_failure_handled(self) -> None:
         """Test store failure doesn't crash."""
         store = MockTelemetryStore()
         store.fail_next = True
@@ -547,7 +547,7 @@ class TestSynapseMetrics:
     """Test metrics collection."""
 
     @pytest.mark.asyncio
-    async def test_metrics_count_routes(self):
+    async def test_metrics_count_routes(self) -> None:
         """Test metrics track route counts."""
         config = SynapseConfig(surprise_threshold=0.5)
         synapse = Synapse(config=config)
@@ -566,7 +566,7 @@ class TestSynapseMetrics:
         assert total == 10
 
     @pytest.mark.asyncio
-    async def test_reset_metrics(self):
+    async def test_reset_metrics(self) -> None:
         """Test metrics reset."""
         synapse = Synapse()
         signal = Signal(signal_type="test", data={})
@@ -588,7 +588,7 @@ class TestSynapsePeek:
     """Test peek and interrupt detection."""
 
     @pytest.mark.asyncio
-    async def test_peek_recent(self):
+    async def test_peek_recent(self) -> None:
         """Test peek_recent returns recent signals."""
         synapse = Synapse()
 
@@ -599,7 +599,7 @@ class TestSynapsePeek:
         assert len(recent) == 1
 
     @pytest.mark.asyncio
-    async def test_peek_recent_filters_by_surprise(self):
+    async def test_peek_recent_filters_by_surprise(self) -> None:
         """Test peek_recent filters by min_surprise."""
         synapse = Synapse()
 
@@ -612,7 +612,7 @@ class TestSynapsePeek:
         assert isinstance(recent, list)
 
     @pytest.mark.asyncio
-    async def test_has_flashbulb_pending(self):
+    async def test_has_flashbulb_pending(self) -> None:
         """Test flashbulb detection."""
         config = SynapseConfig(flashbulb_threshold=0.0)  # All flashbulb
         synapse = Synapse(config=config)
@@ -622,14 +622,14 @@ class TestSynapsePeek:
 
         assert synapse.has_flashbulb_pending(window_ms=1000)
 
-    def test_surprise_stats_empty(self):
+    def test_surprise_stats_empty(self) -> None:
         """Test surprise_stats with no data."""
         synapse = Synapse()
         stats = synapse.surprise_stats()
         assert stats["avg_surprise"] == 0.5
 
     @pytest.mark.asyncio
-    async def test_surprise_stats_with_data(self):
+    async def test_surprise_stats_with_data(self) -> None:
         """Test surprise_stats with signals."""
         synapse = Synapse()
 

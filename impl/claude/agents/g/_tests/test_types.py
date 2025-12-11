@@ -32,14 +32,14 @@ from agents.g.types import (
 # ============================================================================
 
 
-def test_grammar_level_enum():
+def test_grammar_level_enum() -> None:
     """Test GrammarLevel enum values."""
     assert GrammarLevel.SCHEMA.value == "schema"
     assert GrammarLevel.COMMAND.value == "command"
     assert GrammarLevel.RECURSIVE.value == "recursive"
 
 
-def test_grammar_format_enum():
+def test_grammar_format_enum() -> None:
     """Test GrammarFormat enum values."""
     assert GrammarFormat.PYDANTIC.value == "pydantic"
     assert GrammarFormat.BNF.value == "bnf"
@@ -52,7 +52,7 @@ def test_grammar_format_enum():
 # ============================================================================
 
 
-def test_parse_result_success():
+def test_parse_result_success() -> None:
     """Test successful ParseResult."""
     result = ParseResult(success=True, ast={"type": "command"}, confidence=0.95)
     assert result.success
@@ -62,7 +62,7 @@ def test_parse_result_success():
     assert result.error is None
 
 
-def test_parse_result_failure():
+def test_parse_result_failure() -> None:
     """Test failed ParseResult."""
     result = ParseResult(success=False, error="Syntax error at line 1")
     assert not result.success
@@ -71,7 +71,7 @@ def test_parse_result_failure():
     assert result.error == "Syntax error at line 1"
 
 
-def test_execution_result_success():
+def test_execution_result_success() -> None:
     """Test successful ExecutionResult."""
     result = ExecutionResult(success=True, value=42, side_effects=["logged execution"])
     assert result.success
@@ -80,7 +80,7 @@ def test_execution_result_success():
     assert result.side_effects == ["logged execution"]
 
 
-def test_execution_result_failure():
+def test_execution_result_failure() -> None:
     """Test failed ExecutionResult."""
     result = ExecutionResult(success=False, error="Runtime error: division by zero")
     assert not result.success
@@ -93,7 +93,7 @@ def test_execution_result_failure():
 # ============================================================================
 
 
-def test_parser_config_defaults():
+def test_parser_config_defaults() -> None:
     """Test ParserConfig with defaults."""
     config = ParserConfig(
         strategy="regex",
@@ -106,7 +106,7 @@ def test_parser_config_defaults():
     assert config.case_sensitive is True
 
 
-def test_parser_config_validation():
+def test_parser_config_validation() -> None:
     """Test ParserConfig validation."""
     with pytest.raises(ValueError, match="confidence_threshold must be in"):
         ParserConfig(
@@ -116,7 +116,7 @@ def test_parser_config_validation():
         )
 
 
-def test_interpreter_config_defaults():
+def test_interpreter_config_defaults() -> None:
     """Test InterpreterConfig with defaults."""
     config = InterpreterConfig(runtime="python")
     assert config.runtime == "python"
@@ -125,7 +125,7 @@ def test_interpreter_config_defaults():
     assert config.timeout_ms == 5000
 
 
-def test_interpreter_config_validation():
+def test_interpreter_config_validation() -> None:
     """Test InterpreterConfig validation."""
     with pytest.raises(ValueError, match="timeout_ms must be positive"):
         InterpreterConfig(
@@ -139,7 +139,7 @@ def test_interpreter_config_validation():
 # ============================================================================
 
 
-def test_constraint_proof_structural():
+def test_constraint_proof_structural() -> None:
     """Test structural constraint proof detection."""
     proof = ConstraintProof(
         constraint="No DELETE operations",
@@ -148,7 +148,7 @@ def test_constraint_proof_structural():
     assert proof.is_structural()
 
 
-def test_constraint_proof_non_structural():
+def test_constraint_proof_non_structural() -> None:
     """Test non-structural constraint proof detection."""
     proof = ConstraintProof(
         constraint="No operations on Sundays",
@@ -157,7 +157,7 @@ def test_constraint_proof_non_structural():
     assert not proof.is_structural()
 
 
-def test_constraint_proof_with_counter_examples():
+def test_constraint_proof_with_counter_examples() -> None:
     """Test constraint proof with counter examples."""
     proof = ConstraintProof(
         constraint="No DELETE operations",
@@ -179,7 +179,7 @@ def test_constraint_proof_with_counter_examples():
 # ============================================================================
 
 
-def test_domain_analysis_empty():
+def test_domain_analysis_empty() -> None:
     """Test empty DomainAnalysis."""
     analysis = DomainAnalysis()
     assert analysis.entities == set()
@@ -189,7 +189,7 @@ def test_domain_analysis_empty():
     assert analysis.lexicon == set()
 
 
-def test_domain_analysis_populated():
+def test_domain_analysis_populated() -> None:
     """Test populated DomainAnalysis."""
     analysis = DomainAnalysis(
         entities={"Meeting", "Calendar"},
@@ -246,13 +246,13 @@ def sample_tongue():
     )
 
 
-def test_tongue_immutability(sample_tongue):
+def test_tongue_immutability(sample_tongue) -> None:
     """Test that Tongue is immutable (frozen)."""
     with pytest.raises(Exception):  # FrozenInstanceError
         sample_tongue.name = "NewName"
 
 
-def test_tongue_hashable(sample_tongue):
+def test_tongue_hashable(sample_tongue) -> None:
     """Test that Tongue is hashable."""
     hash_value = hash(sample_tongue)
     assert isinstance(hash_value, int)
@@ -277,7 +277,7 @@ def test_tongue_hashable(sample_tongue):
     assert hash(sample_tongue) == hash(tongue2)
 
 
-def test_tongue_parse_implemented(sample_tongue):
+def test_tongue_parse_implemented(sample_tongue) -> None:
     """Test that parse() works with BNF grammar (Phase 3 implemented)."""
     result = sample_tongue.parse("CHECK 2024-12-15")
     assert result.success
@@ -285,7 +285,7 @@ def test_tongue_parse_implemented(sample_tongue):
     assert result.ast["noun"] == "2024-12-15"
 
 
-def test_tongue_execute_implemented(sample_tongue):
+def test_tongue_execute_implemented(sample_tongue) -> None:
     """Test that execute() works with parsed AST (Phase 3 implemented)."""
     result = sample_tongue.execute({"verb": "CHECK", "noun": "2024-12-15"})
     assert result.success
@@ -293,12 +293,12 @@ def test_tongue_execute_implemented(sample_tongue):
     assert result.value["executed"] is False
 
 
-def test_tongue_validate(sample_tongue):
+def test_tongue_validate(sample_tongue) -> None:
     """Test that validate() returns validated status."""
     assert sample_tongue.validate() is True
 
 
-def test_tongue_render_implemented(sample_tongue):
+def test_tongue_render_implemented(sample_tongue) -> None:
     """Test that render() works with AST (Phase 3 implemented)."""
     rendered = sample_tongue.render({"verb": "CHECK", "noun": "2024-12-15"})
     assert rendered == "CHECK 2024-12-15"
@@ -309,7 +309,7 @@ def test_tongue_render_implemented(sample_tongue):
 # ============================================================================
 
 
-def test_tongue_to_dict(sample_tongue):
+def test_tongue_to_dict(sample_tongue) -> None:
     """Test Tongue serialization to dict."""
     data = sample_tongue.to_dict()
     assert data["name"] == "CalendarTongue"
@@ -322,7 +322,7 @@ def test_tongue_to_dict(sample_tongue):
     assert len(data["constraint_proofs"]) == 1
 
 
-def test_tongue_to_json(sample_tongue):
+def test_tongue_to_json(sample_tongue) -> None:
     """Test Tongue serialization to JSON."""
     json_str = sample_tongue.to_json()
     data = json.loads(json_str)
@@ -330,7 +330,7 @@ def test_tongue_to_json(sample_tongue):
     assert data["domain"] == "Calendar Management"
 
 
-def test_tongue_from_dict(sample_tongue):
+def test_tongue_from_dict(sample_tongue) -> None:
     """Test Tongue deserialization from dict."""
     data = sample_tongue.to_dict()
     tongue = Tongue.from_dict(data)
@@ -344,7 +344,7 @@ def test_tongue_from_dict(sample_tongue):
     assert len(tongue.examples) == len(sample_tongue.examples)
 
 
-def test_tongue_from_json(sample_tongue):
+def test_tongue_from_json(sample_tongue) -> None:
     """Test Tongue deserialization from JSON."""
     json_str = sample_tongue.to_json()
     tongue = Tongue.from_json(json_str)
@@ -353,7 +353,7 @@ def test_tongue_from_json(sample_tongue):
     assert tongue.version == sample_tongue.version
 
 
-def test_tongue_serialization_round_trip(sample_tongue):
+def test_tongue_serialization_round_trip(sample_tongue) -> None:
     """Test that serialization is a round-trip."""
     # JSON round-trip
     json_str = sample_tongue.to_json()
@@ -376,7 +376,7 @@ def test_tongue_serialization_round_trip(sample_tongue):
 # ============================================================================
 
 
-def test_example_creation():
+def test_example_creation() -> None:
     """Test Example creation."""
     ex = Example(
         text="CHECK 2024-12-15",
@@ -388,7 +388,7 @@ def test_example_creation():
     assert ex.description == "Check calendar on specific date"
 
 
-def test_counter_example_creation():
+def test_counter_example_creation() -> None:
     """Test CounterExample creation."""
     ce = CounterExample(
         text="DELETE meeting",

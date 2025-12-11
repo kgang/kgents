@@ -76,7 +76,7 @@ class IncrementAgent:
         return input_data + 1
 
 
-async def test_judge_agent_mock():
+async def test_judge_agent_mock() -> None:
     """Test JudgeAgent with mock runtime (no actual LLM calls)."""
     print("\n=== Testing JudgeAgent (Mock) ===")
 
@@ -128,7 +128,7 @@ async def test_judge_agent_mock():
     print("✓ JudgeAgent: __is_test__ = True")
 
 
-async def test_property_agent_identity():
+async def test_property_agent_identity() -> None:
     """Test PropertyAgent with identity property."""
     print("\n=== Testing PropertyAgent (Identity) ===")
 
@@ -161,7 +161,7 @@ async def test_property_agent_identity():
     print("✓ PropertyAgent: __is_test__ = True")
 
 
-async def test_property_agent_length_preserved():
+async def test_property_agent_length_preserved() -> None:
     """Test PropertyAgent with length preservation."""
     print("\n=== Testing PropertyAgent (Length Preserved) ===")
 
@@ -190,7 +190,7 @@ async def test_property_agent_length_preserved():
     )
 
 
-async def test_property_agent_failure_detection():
+async def test_property_agent_failure_detection() -> None:
     """Test PropertyAgent detects property violations."""
     print("\n=== Testing PropertyAgent (Failure Detection) ===")
 
@@ -217,7 +217,7 @@ async def test_property_agent_failure_detection():
     print(f"✓ PropertyAgent: Detected {result.failed_cases} violations (as expected)")
 
 
-async def test_property_agent_not_none():
+async def test_property_agent_not_none() -> None:
     """Test PropertyAgent with not_none property."""
     print("\n=== Testing PropertyAgent (Not None) ===")
 
@@ -242,7 +242,7 @@ async def test_property_agent_not_none():
     print("✓ PropertyAgent: not_none property verified")
 
 
-async def test_oracle_agent_agreement():
+async def test_oracle_agent_agreement() -> None:
     """Test OracleAgent with agents that agree."""
     print("\n=== Testing OracleAgent (Agreement) ===")
 
@@ -270,7 +270,7 @@ async def test_oracle_agent_agreement():
     print("✓ OracleAgent: __is_test__ = True")
 
 
-async def test_oracle_agent_disagreement():
+async def test_oracle_agent_disagreement() -> None:
     """Test OracleAgent with agents that disagree."""
     print("\n=== Testing OracleAgent (Disagreement) ===")
 
@@ -296,7 +296,7 @@ async def test_oracle_agent_disagreement():
     print(f"  Outputs: {[(name, output) for name, output in result.outputs]}")
 
 
-async def test_oracle_agent_majority():
+async def test_oracle_agent_majority() -> None:
     """Test OracleAgent with majority voting."""
     print("\n=== Testing OracleAgent (Majority) ===")
 
@@ -328,7 +328,7 @@ async def test_oracle_agent_majority():
     )
 
 
-async def test_regression_oracle():
+async def test_regression_oracle() -> None:
     """Test RegressionOracle for comparing implementations."""
     print("\n=== Testing RegressionOracle ===")
 
@@ -359,7 +359,7 @@ async def test_regression_oracle():
     print("✓ RegressionOracle: Detects agreement when appropriate")
 
 
-async def test_semantic_equality():
+async def test_semantic_equality() -> None:
     """Test semantic equality function."""
     print("\n=== Testing Semantic Equality ===")
 
@@ -379,7 +379,7 @@ async def test_semantic_equality():
     print("✓ semantic_equality: Case-insensitive, whitespace-normalized")
 
 
-async def test_numeric_equality():
+async def test_numeric_equality() -> None:
     """Test numeric equality function."""
     print("\n=== Testing Numeric Equality ===")
 
@@ -390,7 +390,7 @@ async def test_numeric_equality():
     print("✓ numeric_equality: Epsilon tolerance works")
 
 
-async def test_phase3_composition():
+async def test_phase3_composition() -> None:
     """Test Phase 3 agent composition."""
     print("\n=== Testing Phase 3 Composition ===")
 

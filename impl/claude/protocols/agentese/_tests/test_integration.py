@@ -152,14 +152,14 @@ def mock_registry():
 class TestUmweltIntegration:
     """Tests for Umwelt integration."""
 
-    def test_create_integration(self):
+    def test_create_integration(self) -> None:
         """Test integration creation."""
         integration = create_umwelt_integration()
         assert integration is not None
         assert integration.adapter is not None
         assert integration.registry is not None
 
-    def test_extract_meta_default(self, mock_umwelt):
+    def test_extract_meta_default(self, mock_umwelt) -> None:
         """Test extracting meta from default DNA."""
         integration = create_umwelt_integration()
         meta = integration.extract_meta(mock_umwelt)
@@ -168,14 +168,14 @@ class TestUmweltIntegration:
         assert meta.archetype == "default"
         assert meta.capabilities == ()
 
-    def test_extract_meta_architect(self, architect_umwelt):
+    def test_extract_meta_architect(self, architect_umwelt) -> None:
         """Test extracting meta from architect DNA."""
         integration = create_umwelt_integration()
         meta = integration.extract_meta(architect_umwelt)
 
         assert meta.archetype == "architect"
 
-    def test_extract_meta_archetype_dna(self):
+    def test_extract_meta_archetype_dna(self) -> None:
         """Test extracting meta from ArchetypeDNA."""
         integration = create_umwelt_integration()
         dna = ArchetypeDNA(
@@ -190,7 +190,7 @@ class TestUmweltIntegration:
         assert meta.archetype == "scientist"
         assert "experiment" in meta.capabilities
 
-    def test_get_affordances_default(self, mock_umwelt):
+    def test_get_affordances_default(self, mock_umwelt) -> None:
         """Test getting affordances for default archetype."""
         integration = create_umwelt_integration()
         affordances = integration.get_affordances(mock_umwelt)
@@ -200,7 +200,7 @@ class TestUmweltIntegration:
         assert "witness" in affordances
         assert "affordances" in affordances
 
-    def test_get_affordances_architect(self, architect_umwelt):
+    def test_get_affordances_architect(self, architect_umwelt) -> None:
         """Test getting affordances for architect archetype."""
         integration = create_umwelt_integration()
         affordances = integration.get_affordances(architect_umwelt)
@@ -210,21 +210,21 @@ class TestUmweltIntegration:
         assert "measure" in affordances
         assert "blueprint" in affordances
 
-    def test_can_invoke_core_aspect(self, mock_umwelt):
+    def test_can_invoke_core_aspect(self, mock_umwelt) -> None:
         """Test can_invoke for core aspects."""
         integration = create_umwelt_integration()
 
         assert integration.can_invoke(mock_umwelt, "manifest") is True
         assert integration.can_invoke(mock_umwelt, "witness") is True
 
-    def test_can_invoke_archetype_aspect(self, architect_umwelt):
+    def test_can_invoke_archetype_aspect(self, architect_umwelt) -> None:
         """Test can_invoke for archetype-specific aspects."""
         integration = create_umwelt_integration()
 
         # Architect can renovate
         assert integration.can_invoke(architect_umwelt, "renovate") is True
 
-    def test_cannot_invoke_restricted_aspect(self, mock_umwelt):
+    def test_cannot_invoke_restricted_aspect(self, mock_umwelt) -> None:
         """Test that default cannot invoke restricted aspects."""
         integration = create_umwelt_integration()
 
@@ -232,7 +232,7 @@ class TestUmweltIntegration:
         assert integration.can_invoke(mock_umwelt, "demolish") is False
 
     @pytest.mark.parametrize("archetype", list(ARCHETYPE_AFFORDANCES.keys()))
-    def test_all_archetypes_have_affordances(self, archetype):
+    def test_all_archetypes_have_affordances(self, archetype) -> None:
         """Test that all standard archetypes return affordances."""
         integration = create_umwelt_integration()
         umwelt = MockUmwelt(dna=MockDNA(archetype=archetype))
@@ -251,37 +251,37 @@ class TestUmweltIntegration:
 class TestMembraneIntegration:
     """Tests for Membrane CLI integration."""
 
-    def test_membrane_map_exists(self):
+    def test_membrane_map_exists(self) -> None:
         """Test that membrane command map is populated."""
         assert len(MEMBRANE_AGENTESE_MAP) > 0
         assert "observe" in MEMBRANE_AGENTESE_MAP
         assert "sense" in MEMBRANE_AGENTESE_MAP
         assert "dream" in MEMBRANE_AGENTESE_MAP
 
-    def test_observe_maps_to_world_project_manifest(self):
+    def test_observe_maps_to_world_project_manifest(self) -> None:
         """Test observe command mapping."""
         assert MEMBRANE_AGENTESE_MAP["observe"] == "world.project.manifest"
 
-    def test_sense_maps_to_world_project_sense(self):
+    def test_sense_maps_to_world_project_sense(self) -> None:
         """Test sense command mapping."""
         assert MEMBRANE_AGENTESE_MAP["sense"] == "world.project.sense"
 
-    def test_trace_maps_to_time_trace_witness(self):
+    def test_trace_maps_to_time_trace_witness(self) -> None:
         """Test trace command mapping."""
         assert MEMBRANE_AGENTESE_MAP["trace"] == "time.trace.witness"
 
-    def test_dream_maps_to_self_memory_consolidate(self):
+    def test_dream_maps_to_self_memory_consolidate(self) -> None:
         """Test dream command mapping."""
         assert MEMBRANE_AGENTESE_MAP["dream"] == "self.memory.consolidate"
 
-    def test_create_bridge(self, mock_logos):
+    def test_create_bridge(self, mock_logos) -> None:
         """Test bridge creation."""
         bridge = create_membrane_bridge(mock_logos)
         assert bridge is not None
         assert bridge.logos is mock_logos
 
     @pytest.mark.asyncio
-    async def test_execute_observe(self, mock_logos, mock_umwelt):
+    async def test_execute_observe(self, mock_logos, mock_umwelt) -> None:
         """Test executing observe command."""
         bridge = create_membrane_bridge(mock_logos)
         result = await bridge.execute("observe", mock_umwelt)
@@ -291,7 +291,7 @@ class TestMembraneIntegration:
         assert path == "world.project.manifest"
 
     @pytest.mark.asyncio
-    async def test_execute_trace_with_topic(self, mock_logos, mock_umwelt):
+    async def test_execute_trace_with_topic(self, mock_logos, mock_umwelt) -> None:
         """Test executing trace command with topic."""
         bridge = create_membrane_bridge(mock_logos)
         result = await bridge.execute("trace", mock_umwelt, topic="authentication")
@@ -301,7 +301,9 @@ class TestMembraneIntegration:
         assert kwargs["topic"] == "authentication"
 
     @pytest.mark.asyncio
-    async def test_execute_unknown_command_raises(self, mock_logos, mock_umwelt):
+    async def test_execute_unknown_command_raises(
+        self, mock_logos, mock_umwelt
+    ) -> None:
         """Test that unknown command raises error."""
         bridge = create_membrane_bridge(mock_logos)
 
@@ -310,14 +312,14 @@ class TestMembraneIntegration:
 
         assert "nonexistent" in str(exc_info.value)
 
-    def test_register_custom_command(self, mock_logos):
+    def test_register_custom_command(self, mock_logos) -> None:
         """Test registering custom command."""
         bridge = create_membrane_bridge(mock_logos)
         bridge.register_command("custom", "concept.custom.manifest")
 
         assert bridge.get_path("custom") == "concept.custom.manifest"
 
-    def test_list_commands(self, mock_logos):
+    def test_list_commands(self, mock_logos) -> None:
         """Test listing commands."""
         bridge = create_membrane_bridge(mock_logos)
         commands = bridge.list_commands()
@@ -325,13 +327,13 @@ class TestMembraneIntegration:
         assert len(commands) > 0
         assert any(cmd == "observe" for cmd, path in commands)
 
-    def test_get_path_returns_none_for_unknown(self, mock_logos):
+    def test_get_path_returns_none_for_unknown(self, mock_logos) -> None:
         """Test get_path returns None for unknown command."""
         bridge = create_membrane_bridge(mock_logos)
         assert bridge.get_path("nonexistent") is None
 
     @pytest.mark.asyncio
-    async def test_parameterized_path(self, mock_logos, mock_umwelt):
+    async def test_parameterized_path(self, mock_logos, mock_umwelt) -> None:
         """Test parameterized path resolution."""
         bridge = create_membrane_bridge(mock_logos)
         result = await bridge.execute("define", mock_umwelt, entity="garden")
@@ -348,32 +350,32 @@ class TestMembraneIntegration:
 class TestLgentIntegration:
     """Tests for L-gent registry integration."""
 
-    def test_create_integration_without_registry(self):
+    def test_create_integration_without_registry(self) -> None:
         """Test creating integration without registry."""
         integration = create_lgent_integration()
         assert integration.registry is None
 
-    def test_create_integration_with_registry(self, mock_registry):
+    def test_create_integration_with_registry(self, mock_registry) -> None:
         """Test creating integration with registry."""
         integration = create_lgent_integration(mock_registry)
         assert integration.registry is mock_registry
 
     @pytest.mark.asyncio
-    async def test_lookup_without_registry(self):
+    async def test_lookup_without_registry(self) -> None:
         """Test lookup returns None without registry."""
         integration = create_lgent_integration()
         result = await integration.lookup("world.house")
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_lookup_not_found(self, mock_registry):
+    async def test_lookup_not_found(self, mock_registry) -> None:
         """Test lookup returns None when not found."""
         integration = create_lgent_integration(mock_registry)
         result = await integration.lookup("world.nonexistent")
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_lookup_found(self, mock_registry):
+    async def test_lookup_found(self, mock_registry) -> None:
         """Test lookup returns entry when found."""
         entry = MockCatalogEntry(id="world.house", name="house")
         mock_registry._entries["world.house"] = entry
@@ -385,7 +387,7 @@ class TestLgentIntegration:
         assert result.id == "world.house"
 
     @pytest.mark.asyncio
-    async def test_lookup_caches_result(self, mock_registry):
+    async def test_lookup_caches_result(self, mock_registry) -> None:
         """Test that lookup caches results."""
         entry = MockCatalogEntry(id="world.house", name="house")
         mock_registry._entries["world.house"] = entry
@@ -405,14 +407,14 @@ class TestLgentIntegration:
         assert result2.id == "world.house"
 
     @pytest.mark.asyncio
-    async def test_record_invocation_without_registry(self):
+    async def test_record_invocation_without_registry(self) -> None:
         """Test record_invocation is no-op without registry."""
         integration = create_lgent_integration()
         # Should not raise
         await integration.record_invocation("world.house", success=True)
 
     @pytest.mark.asyncio
-    async def test_record_invocation_with_registry(self, mock_registry):
+    async def test_record_invocation_with_registry(self, mock_registry) -> None:
         """Test record_invocation logs to registry."""
         entry = MockCatalogEntry(id="world.house", name="house")
         mock_registry._entries["world.house"] = entry
@@ -424,7 +426,7 @@ class TestLgentIntegration:
         assert mock_registry._usage_log[0] == ("world.house", True, None)
 
     @pytest.mark.asyncio
-    async def test_record_invocation_failure(self, mock_registry):
+    async def test_record_invocation_failure(self, mock_registry) -> None:
         """Test record_invocation with failure."""
         entry = MockCatalogEntry(id="world.house", name="house")
         mock_registry._entries["world.house"] = entry
@@ -440,14 +442,14 @@ class TestLgentIntegration:
         assert mock_registry._usage_log[0][2] == "Test error"
 
     @pytest.mark.asyncio
-    async def test_list_handles_without_registry(self):
+    async def test_list_handles_without_registry(self) -> None:
         """Test list_handles returns empty without registry."""
         integration = create_lgent_integration()
         handles = await integration.list_handles()
         assert handles == []
 
     @pytest.mark.asyncio
-    async def test_list_handles_with_context(self, mock_registry):
+    async def test_list_handles_with_context(self, mock_registry) -> None:
         """Test list_handles filters by context."""
         mock_registry._entries["world.house"] = MockCatalogEntry(id="world.house")
         mock_registry._entries["world.garden"] = MockCatalogEntry(id="world.garden")
@@ -460,7 +462,7 @@ class TestLgentIntegration:
         assert "world.garden" in handles
         assert "self.memory" not in handles
 
-    def test_clear_cache(self, mock_registry):
+    def test_clear_cache(self, mock_registry) -> None:
         """Test clearing the cache."""
         integration = create_lgent_integration(mock_registry)
         integration._cache["test"] = MockCatalogEntry(id="test")
@@ -477,28 +479,28 @@ class TestLgentIntegration:
 class TestGgentIntegration:
     """Tests for G-gent grammar integration."""
 
-    def test_bnf_exists(self):
+    def test_bnf_exists(self) -> None:
         """Test that BNF grammar is defined."""
         assert len(AGENTESE_BNF) > 0
         assert "PATH" in AGENTESE_BNF
         assert "CONTEXT" in AGENTESE_BNF
 
-    def test_constraints_exist(self):
+    def test_constraints_exist(self) -> None:
         """Test that constraints are defined."""
         assert len(AGENTESE_CONSTRAINTS) > 0
         assert any("five contexts" in c.lower() for c in AGENTESE_CONSTRAINTS)
 
-    def test_examples_exist(self):
+    def test_examples_exist(self) -> None:
         """Test that examples are defined."""
         assert len(AGENTESE_EXAMPLES) > 0
         assert "world.house.manifest" in AGENTESE_EXAMPLES
 
-    def test_create_integration_without_grammarian(self):
+    def test_create_integration_without_grammarian(self) -> None:
         """Test creating integration without grammarian."""
         integration = create_ggent_integration()
         assert integration.grammarian is None
 
-    def test_validate_path_valid(self):
+    def test_validate_path_valid(self) -> None:
         """Test validating valid paths."""
         integration = create_ggent_integration()
 
@@ -506,7 +508,7 @@ class TestGgentIntegration:
         assert is_valid is True
         assert error is None
 
-    def test_validate_path_valid_without_aspect(self):
+    def test_validate_path_valid_without_aspect(self) -> None:
         """Test validating path without aspect."""
         integration = create_ggent_integration()
 
@@ -514,13 +516,13 @@ class TestGgentIntegration:
         assert is_valid is True
 
     @pytest.mark.parametrize("path", AGENTESE_EXAMPLES)
-    def test_validate_all_examples(self, path):
+    def test_validate_all_examples(self, path) -> None:
         """Test that all example paths are valid."""
         integration = create_ggent_integration()
         is_valid, error = integration.validate_path(path)
         assert is_valid is True, f"Example path '{path}' should be valid: {error}"
 
-    def test_validate_path_invalid_context(self):
+    def test_validate_path_invalid_context(self) -> None:
         """Test validating path with invalid context."""
         integration = create_ggent_integration()
 
@@ -528,7 +530,7 @@ class TestGgentIntegration:
         assert is_valid is False
         assert "context" in error.lower()
 
-    def test_validate_path_too_short(self):
+    def test_validate_path_too_short(self) -> None:
         """Test validating path that's too short."""
         integration = create_ggent_integration()
 
@@ -536,7 +538,7 @@ class TestGgentIntegration:
         assert is_valid is False
         assert "at least" in error.lower()
 
-    def test_validate_path_invalid_identifier(self):
+    def test_validate_path_invalid_identifier(self) -> None:
         """Test validating path with invalid identifier."""
         integration = create_ggent_integration()
 
@@ -544,14 +546,14 @@ class TestGgentIntegration:
         assert is_valid is False
         assert "invalid" in error.lower()
 
-    def test_validate_path_numeric_identifier(self):
+    def test_validate_path_numeric_identifier(self) -> None:
         """Test validating path with numeric identifier."""
         integration = create_ggent_integration()
 
         is_valid, error = integration.validate_path("world.123.manifest")
         assert is_valid is False
 
-    def test_parse_path_valid(self):
+    def test_parse_path_valid(self) -> None:
         """Test parsing valid path."""
         integration = create_ggent_integration()
         parsed = integration.parse_path("world.house.manifest")
@@ -560,7 +562,7 @@ class TestGgentIntegration:
         assert parsed["holon"] == "house"
         assert parsed["aspect"] == "manifest"
 
-    def test_parse_path_without_aspect(self):
+    def test_parse_path_without_aspect(self) -> None:
         """Test parsing path without aspect."""
         integration = create_ggent_integration()
         parsed = integration.parse_path("world.house")
@@ -569,14 +571,14 @@ class TestGgentIntegration:
         assert parsed["holon"] == "house"
         assert parsed["aspect"] is None
 
-    def test_parse_path_invalid_raises(self):
+    def test_parse_path_invalid_raises(self) -> None:
         """Test parsing invalid path raises error."""
         integration = create_ggent_integration()
 
         with pytest.raises(PathSyntaxError):
             integration.parse_path("invalid.path")
 
-    def test_get_bnf(self):
+    def test_get_bnf(self) -> None:
         """Test getting BNF grammar."""
         integration = create_ggent_integration()
         bnf = integration.get_bnf()
@@ -584,7 +586,7 @@ class TestGgentIntegration:
         assert "PATH" in bnf
         assert "CONTEXT" in bnf
 
-    def test_get_constraints(self):
+    def test_get_constraints(self) -> None:
         """Test getting constraints."""
         integration = create_ggent_integration()
         constraints = integration.get_constraints()
@@ -594,7 +596,7 @@ class TestGgentIntegration:
         constraints.append("new constraint")
         assert len(integration.get_constraints()) == len(AGENTESE_CONSTRAINTS)
 
-    def test_get_examples(self):
+    def test_get_examples(self) -> None:
         """Test getting examples."""
         integration = create_ggent_integration()
         examples = integration.get_examples()
@@ -605,7 +607,7 @@ class TestGgentIntegration:
         assert len(integration.get_examples()) == len(AGENTESE_EXAMPLES)
 
     @pytest.mark.asyncio
-    async def test_reify_without_grammarian_raises(self):
+    async def test_reify_without_grammarian_raises(self) -> None:
         """Test that reify raises without grammarian."""
         integration = create_ggent_integration()
 
@@ -623,7 +625,7 @@ class TestGgentIntegration:
 class TestUnifiedIntegrations:
     """Tests for unified AgentesIntegrations."""
 
-    def test_create_minimal(self):
+    def test_create_minimal(self) -> None:
         """Test creating minimal integrations."""
         integrations = create_agentese_integrations()
 
@@ -632,20 +634,20 @@ class TestUnifiedIntegrations:
         assert integrations.lgent is not None
         assert integrations.ggent is not None
 
-    def test_create_with_logos(self, mock_logos):
+    def test_create_with_logos(self, mock_logos) -> None:
         """Test creating with Logos for Membrane."""
         integrations = create_agentese_integrations(logos=mock_logos)
 
         assert integrations.membrane is not None
         assert integrations.membrane.logos is mock_logos
 
-    def test_create_with_registry(self, mock_registry):
+    def test_create_with_registry(self, mock_registry) -> None:
         """Test creating with L-gent registry."""
         integrations = create_agentese_integrations(lgent_registry=mock_registry)
 
         assert integrations.lgent.registry is mock_registry
 
-    def test_create_full(self, mock_logos, mock_registry):
+    def test_create_full(self, mock_logos, mock_registry) -> None:
         """Test creating with all components."""
         integrations = create_agentese_integrations(
             logos=mock_logos,
@@ -655,12 +657,12 @@ class TestUnifiedIntegrations:
         assert integrations.membrane is not None
         assert integrations.lgent.registry is not None
 
-    def test_is_fully_integrated_false(self):
+    def test_is_fully_integrated_false(self) -> None:
         """Test is_fully_integrated returns False when missing components."""
         integrations = create_agentese_integrations()
         assert integrations.is_fully_integrated() is False
 
-    def test_is_fully_integrated_true(self, mock_logos, mock_registry):
+    def test_is_fully_integrated_true(self, mock_logos, mock_registry) -> None:
         """Test is_fully_integrated returns True when all present."""
 
         # Mock grammarian
@@ -674,7 +676,7 @@ class TestUnifiedIntegrations:
         )
         assert integrations.is_fully_integrated() is True
 
-    def test_available_integrations_minimal(self):
+    def test_available_integrations_minimal(self) -> None:
         """Test available_integrations with minimal setup."""
         integrations = create_agentese_integrations()
         available = integrations.available_integrations()
@@ -682,7 +684,7 @@ class TestUnifiedIntegrations:
         assert "umwelt" in available
         assert "membrane" not in available
 
-    def test_available_integrations_full(self, mock_logos, mock_registry):
+    def test_available_integrations_full(self, mock_logos, mock_registry) -> None:
         """Test available_integrations with full setup."""
 
         class MockGrammarian:
@@ -735,7 +737,7 @@ class TestCrossIntegration:
         await integrations.lgent.record_invocation("world.project", success=True)
         assert mock_registry._usage_log[0][0] == "world.project"
 
-    def test_umwelt_extract_for_affordance_check(self, architect_umwelt):
+    def test_umwelt_extract_for_affordance_check(self, architect_umwelt) -> None:
         """Test extracting meta for affordance checking."""
         integrations = create_agentese_integrations()
 
@@ -759,7 +761,7 @@ class TestCrossIntegration:
             assert can_invoke is True
 
     @pytest.mark.asyncio
-    async def test_graceful_degradation(self, mock_umwelt):
+    async def test_graceful_degradation(self, mock_umwelt) -> None:
         """Test that integrations work even with missing components."""
         # Create with only Umwelt (minimal)
         integrations = create_agentese_integrations()

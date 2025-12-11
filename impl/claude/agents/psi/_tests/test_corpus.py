@@ -6,6 +6,7 @@ from ..corpus import (
     ECOSYSTEM,
     PLUMBING,
     STANDARD_CORPUS,
+    MetaphorCorpus,
     create_standard_corpus,
     validate_generated_metaphor,
 )
@@ -19,22 +20,22 @@ from ..types import Metaphor, Operation
 class TestStandardCorpus:
     """Tests for the standard metaphor corpus."""
 
-    def test_corpus_not_empty(self):
+    def test_corpus_not_empty(self) -> None:
         """Standard corpus has metaphors."""
         assert len(STANDARD_CORPUS) >= 6
 
-    def test_all_metaphors_have_operations(self):
+    def test_all_metaphors_have_operations(self) -> None:
         """Every metaphor has at least 2 operations."""
         for m in STANDARD_CORPUS:
             assert len(m.operations) >= 2, f"{m.name} has too few operations"
 
-    def test_all_operations_have_effects(self):
+    def test_all_operations_have_effects(self) -> None:
         """Every operation has effects."""
         for m in STANDARD_CORPUS:
             for op in m.operations:
                 assert op.effects, f"{m.name}.{op.name} has no effects"
 
-    def test_plumbing_metaphor(self):
+    def test_plumbing_metaphor(self) -> None:
         """Plumbing metaphor is well-formed."""
         assert PLUMBING.id == "plumbing"
         assert PLUMBING.name == "Plumbing"
@@ -44,13 +45,13 @@ class TestStandardCorpus:
         assert "locate_constriction" in op_names
         assert "widen_pipe" in op_names
 
-    def test_ecosystem_metaphor(self):
+    def test_ecosystem_metaphor(self) -> None:
         """Ecosystem metaphor is well-formed."""
         assert ECOSYSTEM.id == "ecosystem"
         op_names = {op.name for op in ECOSYSTEM.operations}
         assert "strengthen_symbiosis" in op_names or "remove_invasive" in op_names
 
-    def test_metaphors_have_examples(self):
+    def test_metaphors_have_examples(self) -> None:
         """At least some metaphors have examples."""
         with_examples = [m for m in STANDARD_CORPUS if m.examples]
         assert len(with_examples) >= 3
@@ -65,21 +66,21 @@ class TestMetaphorCorpus:
     """Tests for MetaphorCorpus management."""
 
     @pytest.fixture
-    def corpus(self):
+    def corpus(self) -> MetaphorCorpus:
         """Create a test corpus."""
         return create_standard_corpus()
 
-    def test_create_standard_corpus(self, corpus):
+    def test_create_standard_corpus(self, corpus) -> None:
         """create_standard_corpus returns populated corpus."""
         assert len(corpus) == len(STANDARD_CORPUS)
 
-    def test_iterate_corpus(self, corpus):
+    def test_iterate_corpus(self, corpus) -> None:
         """Can iterate over corpus."""
         metaphors = list(corpus)
         assert len(metaphors) == len(STANDARD_CORPUS)
         assert all(isinstance(m, Metaphor) for m in metaphors)
 
-    def test_get_by_id(self, corpus):
+    def test_get_by_id(self, corpus) -> None:
         """Get metaphor by ID."""
         plumbing = corpus.get("plumbing")
         assert plumbing is not None
@@ -88,13 +89,13 @@ class TestMetaphorCorpus:
         missing = corpus.get("nonexistent")
         assert missing is None
 
-    def test_all_ids(self, corpus):
+    def test_all_ids(self, corpus) -> None:
         """all_ids returns set of IDs."""
         ids = corpus.all_ids
         assert "plumbing" in ids
         assert "ecosystem" in ids
 
-    def test_add_valid_metaphor(self, corpus):
+    def test_add_valid_metaphor(self, corpus) -> None:
         """Can add a valid metaphor."""
         new_metaphor = Metaphor(
             id="chess",
@@ -120,12 +121,12 @@ class TestMetaphorCorpus:
         assert len(corpus) == initial_count + 1
         assert corpus.get("chess") is not None
 
-    def test_add_duplicate_fails(self, corpus):
+    def test_add_duplicate_fails(self, corpus) -> None:
         """Cannot add metaphor with existing ID."""
         with pytest.raises(ValueError, match="already exists"):
             corpus.add(PLUMBING)
 
-    def test_add_invalid_fails(self, corpus):
+    def test_add_invalid_fails(self, corpus) -> None:
         """Cannot add invalid metaphor."""
         invalid = Metaphor(
             id="bad",
@@ -137,7 +138,7 @@ class TestMetaphorCorpus:
         with pytest.raises(ValueError, match="Invalid"):
             corpus.add(invalid)
 
-    def test_remove_dynamic(self, corpus):
+    def test_remove_dynamic(self, corpus) -> None:
         """Can remove dynamic metaphors."""
         new_metaphor = Metaphor(
             id="temp",
@@ -156,7 +157,7 @@ class TestMetaphorCorpus:
         assert removed
         assert corpus.get("temp") is None
 
-    def test_remove_static_fails(self, corpus):
+    def test_remove_static_fails(self, corpus) -> None:
         """Cannot remove static metaphors."""
         removed = corpus.remove("plumbing")
         assert not removed
@@ -171,7 +172,7 @@ class TestMetaphorCorpus:
 class TestValidation:
     """Tests for metaphor validation."""
 
-    def test_validate_valid_metaphor(self):
+    def test_validate_valid_metaphor(self) -> None:
         """Valid metaphor passes validation."""
         valid = Metaphor(
             id="valid",
@@ -188,7 +189,7 @@ class TestValidation:
         # May have minor issues (like no examples) but should be valid
         assert not any("Too few operations" in i for i in issues)
 
-    def test_validate_too_few_operations(self):
+    def test_validate_too_few_operations(self) -> None:
         """Metaphor with < 2 operations fails."""
         invalid = Metaphor(
             id="invalid",
@@ -201,7 +202,7 @@ class TestValidation:
         assert not is_valid
         assert any("Too few operations" in i for i in issues)
 
-    def test_validate_operation_without_effects(self):
+    def test_validate_operation_without_effects(self) -> None:
         """Operation without effects causes warning."""
         invalid = Metaphor(
             id="invalid",
@@ -226,7 +227,7 @@ class TestValidation:
 class TestCorpusIntegration:
     """Integration tests for corpus with other components."""
 
-    def test_corpus_metaphors_serialize(self):
+    def test_corpus_metaphors_serialize(self) -> None:
         """All corpus metaphors can be serialized."""
         from ..types import to_dict
 
@@ -235,7 +236,7 @@ class TestCorpusIntegration:
             assert d["id"] == m.id
             assert len(d["operations"]) == len(m.operations)
 
-    def test_corpus_coverage_all_domains(self):
+    def test_corpus_coverage_all_domains(self) -> None:
         """Corpus covers diverse domains."""
         domains = {m.domain for m in STANDARD_CORPUS}
         # Should have at least 4 different domains

@@ -29,7 +29,7 @@ from agents.t import (
 )
 
 
-async def test_mock_agent():
+async def test_mock_agent() -> None:
     """Test MockAgent - constant morphism."""
     print("\n=== Testing MockAgent ===")
 
@@ -55,7 +55,7 @@ async def test_mock_agent():
     print("✓ MockAgent: __is_test__ = True")
 
 
-async def test_fixture_agent():
+async def test_fixture_agent() -> None:
     """Test FixtureAgent - deterministic lookup."""
     print("\n=== Testing FixtureAgent ===")
 
@@ -96,7 +96,7 @@ async def test_fixture_agent():
         print(f"✓ FixtureAgent: strict mode raises KeyError: {e}")
 
 
-async def test_fixture_agent_default():
+async def test_fixture_agent_default() -> None:
     """Test FixtureAgent with default fallback."""
     print("\n=== Testing FixtureAgent (with default) ===")
 
@@ -116,7 +116,7 @@ async def test_fixture_agent_default():
     print("✓ FixtureAgent: default fallback works")
 
 
-async def test_failing_agent():
+async def test_failing_agent() -> None:
     """Test FailingAgent - controlled failures."""
     print("\n=== Testing FailingAgent ===")
 
@@ -154,7 +154,7 @@ async def test_failing_agent():
         print("✓ FailingAgent: reset() works")
 
 
-async def test_failing_agent_always_fails():
+async def test_failing_agent_always_fails() -> None:
     """Test FailingAgent - always fails."""
     print("\n=== Testing FailingAgent (always fails) ===")
 
@@ -173,7 +173,7 @@ async def test_failing_agent_always_fails():
     print("✓ FailingAgent: Always fails when fail_count=-1")
 
 
-async def test_spy_agent():
+async def test_spy_agent() -> None:
     """Test SpyAgent - identity with observation."""
     print("\n=== Testing SpyAgent ===")
 
@@ -210,7 +210,7 @@ async def test_spy_agent():
     print("✓ SpyAgent: Identity + observation verified")
 
 
-async def test_predicate_agent():
+async def test_predicate_agent() -> None:
     """Test PredicateAgent - runtime validation gate."""
     print("\n=== Testing PredicateAgent ===")
 
@@ -234,7 +234,7 @@ async def test_predicate_agent():
     assert validator.__is_test__ is True
 
 
-async def test_predicate_agent_custom():
+async def test_predicate_agent_custom() -> None:
     """Test PredicateAgent with custom predicate."""
     print("\n=== Testing PredicateAgent (custom) ===")
 
@@ -257,7 +257,7 @@ async def test_predicate_agent_custom():
     print("✓ PredicateAgent: Custom predicate works")
 
 
-async def test_composition():
+async def test_composition() -> None:
     """Test T-gent composition."""
     print("\n=== Testing T-gent Composition ===")
 
@@ -280,7 +280,7 @@ async def test_composition():
     print(f"  Pipeline name: {pipeline.name}")
 
 
-async def test_associativity():
+async def test_associativity() -> None:
     """Test associativity law: (f >> g) >> h ≡ f >> (g >> h)."""
     print("\n=== Testing Associativity Law ===")
 
@@ -313,7 +313,7 @@ async def test_associativity():
     print("✓ Associativity: (f >> g) >> h ≡ f >> (g >> h)")
 
 
-async def test_noise_agent():
+async def test_noise_agent() -> None:
     """Test NoiseAgent - semantic perturbation."""
     print("\n=== Testing NoiseAgent ===")
 
@@ -342,7 +342,7 @@ async def test_noise_agent():
     print("✓ NoiseAgent: __is_test__ = True")
 
 
-async def test_latency_agent():
+async def test_latency_agent() -> None:
     """Test LatencyAgent - temporal delay."""
     print("\n=== Testing LatencyAgent ===")
 
@@ -370,7 +370,7 @@ async def test_latency_agent():
     print("✓ LatencyAgent: __is_test__ = True")
 
 
-async def test_flaky_agent():
+async def test_flaky_agent() -> None:
     """Test FlakyAgent - probabilistic failure."""
     print("\n=== Testing FlakyAgent ===")
 
@@ -411,7 +411,7 @@ async def test_flaky_agent():
     print("✓ FlakyAgent: __is_test__ = True")
 
 
-async def test_counter_agent():
+async def test_counter_agent() -> None:
     """Test CounterAgent - invocation tracking."""
     print("\n=== Testing CounterAgent ===")
 
@@ -447,7 +447,7 @@ async def test_counter_agent():
     print("✓ CounterAgent: __is_test__ = True")
 
 
-async def test_metrics_agent():
+async def test_metrics_agent() -> None:
     """Test MetricsAgent - performance profiling."""
     print("\n=== Testing MetricsAgent ===")
 
@@ -486,7 +486,7 @@ async def test_metrics_agent():
     print("✓ MetricsAgent: __is_test__ = True")
 
 
-async def test_phase2_composition():
+async def test_phase2_composition() -> None:
     """Test Phase 2 T-gent composition."""
     print("\n=== Testing Phase 2 Composition ===")
 

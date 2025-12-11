@@ -105,7 +105,7 @@ class Profile:
 class TestPrism:
     """Tests for Prism optic for optional fields."""
 
-    def test_optional_key_prism_preview_existing(self):
+    def test_optional_key_prism_preview_existing(self) -> None:
         """Preview returns value when key exists."""
         prism = optional_key_prism("name")
         state = {"name": "Alice", "age": 30}
@@ -114,7 +114,7 @@ class TestPrism:
 
         assert result == "Alice"
 
-    def test_optional_key_prism_preview_missing(self):
+    def test_optional_key_prism_preview_missing(self) -> None:
         """Preview returns None when key doesn't exist."""
         prism = optional_key_prism("email")
         state = {"name": "Alice"}
@@ -123,7 +123,7 @@ class TestPrism:
 
         assert result is None
 
-    def test_optional_key_prism_set_if_present(self):
+    def test_optional_key_prism_set_if_present(self) -> None:
         """Set only modifies when key exists."""
         prism = optional_key_prism("name")
         state = {"name": "Alice"}
@@ -132,7 +132,7 @@ class TestPrism:
 
         assert result == {"name": "Bob"}
 
-    def test_optional_key_prism_set_if_missing(self):
+    def test_optional_key_prism_set_if_missing(self) -> None:
         """Set preserves state when key doesn't exist."""
         prism = optional_key_prism("email")
         state = {"name": "Alice"}
@@ -141,7 +141,7 @@ class TestPrism:
 
         assert result == {"name": "Alice"}  # Unchanged
 
-    def test_optional_index_prism_valid_index(self):
+    def test_optional_index_prism_valid_index(self) -> None:
         """Prism focuses on valid list index."""
         prism = optional_index_prism(1)
         items = [10, 20, 30]
@@ -151,7 +151,7 @@ class TestPrism:
         result = prism.set_if_present(items, 99)
         assert result == [10, 99, 30]
 
-    def test_optional_index_prism_out_of_bounds(self):
+    def test_optional_index_prism_out_of_bounds(self) -> None:
         """Prism returns None for out of bounds index."""
         prism = optional_index_prism(10)
         items = [1, 2, 3]
@@ -161,7 +161,7 @@ class TestPrism:
         result = prism.set_if_present(items, 99)
         assert result == [1, 2, 3]  # Unchanged
 
-    def test_optional_field_prism_none_field(self):
+    def test_optional_field_prism_none_field(self) -> None:
         """Prism handles None dataclass fields."""
         prism = optional_field_prism("email")
         user = User(name="Alice", age=30, email=None)
@@ -171,7 +171,7 @@ class TestPrism:
         result = prism.set_if_present(user, "alice@example.com")
         assert result.email is None  # Unchanged because was None
 
-    def test_prism_laws(self):
+    def test_prism_laws(self) -> None:
         """Verify prism satisfies its laws."""
         prism = optional_key_prism("name")
         state_with = {"name": "Alice"}
@@ -190,7 +190,7 @@ class TestPrism:
 class TestTraversal:
     """Tests for Traversal optic for collections."""
 
-    def test_list_traversal_get_all(self):
+    def test_list_traversal_get_all(self) -> None:
         """Get all elements from list."""
         trav = list_traversal()
         items = [1, 2, 3, 4, 5]
@@ -199,7 +199,7 @@ class TestTraversal:
 
         assert result == [1, 2, 3, 4, 5]
 
-    def test_list_traversal_modify(self):
+    def test_list_traversal_modify(self) -> None:
         """Modify all elements in list."""
         trav = list_traversal()
         items = [1, 2, 3]
@@ -208,7 +208,7 @@ class TestTraversal:
 
         assert result == [2, 4, 6]
 
-    def test_list_traversal_set_all(self):
+    def test_list_traversal_set_all(self) -> None:
         """Set all elements to same value."""
         trav = list_traversal()
         items = [1, 2, 3]
@@ -217,7 +217,7 @@ class TestTraversal:
 
         assert result == [0, 0, 0]
 
-    def test_dict_values_traversal(self):
+    def test_dict_values_traversal(self) -> None:
         """Traverse dictionary values."""
         trav = dict_values_traversal()
         d = {"a": 1, "b": 2, "c": 3}
@@ -228,7 +228,7 @@ class TestTraversal:
         doubled = trav.modify(d, lambda x: x * 2)
         assert doubled == {"a": 2, "b": 4, "c": 6}
 
-    def test_dict_keys_traversal(self):
+    def test_dict_keys_traversal(self) -> None:
         """Traverse dictionary keys."""
         trav = dict_keys_traversal()
         d = {"a": 1, "b": 2}
@@ -239,7 +239,7 @@ class TestTraversal:
         upper = trav.modify(d, str.upper)
         assert upper == {"A": 1, "B": 2}
 
-    def test_dict_items_traversal(self):
+    def test_dict_items_traversal(self) -> None:
         """Traverse dictionary items."""
         trav = dict_items_traversal()
         d = {"a": 1, "b": 2}
@@ -247,7 +247,7 @@ class TestTraversal:
         items = trav.get_all(d)
         assert sorted(items) == [("a", 1), ("b", 2)]
 
-    def test_traversal_filter(self):
+    def test_traversal_filter(self) -> None:
         """Filter traversal targets."""
         trav = list_traversal().filter(lambda x: x > 2)
         items = [1, 2, 3, 4, 5]
@@ -259,7 +259,7 @@ class TestTraversal:
         result = trav.modify(items, lambda x: x * 10)
         assert result == [1, 2, 30, 40, 50]
 
-    def test_traversal_composition(self):
+    def test_traversal_composition(self) -> None:
         """Compose traversals for nested structures."""
         outer = list_traversal()
         inner = list_traversal()
@@ -273,7 +273,7 @@ class TestTraversal:
         doubled = composed.modify(nested, lambda x: x * 2)
         assert doubled == [[2, 4], [6, 8], [10, 12]]
 
-    def test_traversal_empty(self):
+    def test_traversal_empty(self) -> None:
         """Traversal handles empty collections."""
         trav = list_traversal()
         empty: List[int] = []
@@ -281,7 +281,7 @@ class TestTraversal:
         assert trav.get_all(empty) == []
         assert trav.modify(empty, lambda x: x * 2) == []
 
-    def test_traversal_laws(self):
+    def test_traversal_laws(self) -> None:
         """Verify traversal satisfies its laws."""
         trav = list_traversal()
         items = [1, 2, 3]
@@ -298,7 +298,7 @@ class TestTraversal:
 class TestComposedLensValidation:
     """Tests for composed lens validation."""
 
-    def test_composed_lens_valid(self):
+    def test_composed_lens_valid(self) -> None:
         """Composed lens satisfies all laws."""
         user_lens = key_lens("user")
         name_lens = key_lens("name")
@@ -312,7 +312,7 @@ class TestComposedLensValidation:
         assert result.put_put is True
         assert len(result.errors) == 0
 
-    def test_composed_lens_deep_nesting(self):
+    def test_composed_lens_deep_nesting(self) -> None:
         """Validate deeply nested lens composition."""
         lens1 = key_lens("a")
         lens2 = key_lens("b")
@@ -322,7 +322,7 @@ class TestComposedLensValidation:
 
         assert result.is_valid is True
 
-    def test_composed_lens_with_dataclass(self):
+    def test_composed_lens_with_dataclass(self) -> None:
         """Validate lens composition with dataclass fields."""
         user_lens = field_lens("user")
         name_lens = field_lens("name")
@@ -336,7 +336,7 @@ class TestComposedLensValidation:
 
         assert result.is_valid is True
 
-    def test_composed_lens_index(self):
+    def test_composed_lens_index(self) -> None:
         """Validate lens with index."""
         users_lens = key_lens("users")
         first_lens = index_lens(0)
@@ -346,7 +346,7 @@ class TestComposedLensValidation:
 
         assert result.is_valid is True
 
-    def test_lens_validation_detailed_results(self):
+    def test_lens_validation_detailed_results(self) -> None:
         """Validation provides detailed law results."""
         lens1 = key_lens("x")
         lens2 = key_lens("y")
@@ -367,7 +367,7 @@ class TestComposedLensValidation:
 class TestSchemaVersioning:
     """Tests for schema versioning and migration."""
 
-    def test_schema_version_ordering(self):
+    def test_schema_version_ordering(self) -> None:
         """Schema versions compare correctly."""
         v1 = SchemaVersion("1.0.0")
         v2 = SchemaVersion("1.1.0")
@@ -377,7 +377,7 @@ class TestSchemaVersioning:
         assert v2 < v3
         assert v1 < v3
 
-    def test_migration_registry_single(self):
+    def test_migration_registry_single(self) -> None:
         """Register and retrieve single migration."""
         registry = MigrationRegistry()
         migration = Migration(
@@ -392,7 +392,7 @@ class TestSchemaVersioning:
         assert len(path) == 1
         assert path[0].to_version == "1.1.0"
 
-    def test_migration_registry_chain(self):
+    def test_migration_registry_chain(self) -> None:
         """Find migration chain across multiple versions."""
         registry = MigrationRegistry()
         registry.register(Migration("1.0.0", "1.1.0", lambda d: d))
@@ -404,7 +404,7 @@ class TestSchemaVersioning:
         assert len(path) == 3
         assert path[-1].to_version == "2.0.0"
 
-    def test_migration_registry_no_path(self):
+    def test_migration_registry_no_path(self) -> None:
         """Raise error when no migration path exists."""
         from agents.d.errors import StateError
 
@@ -415,7 +415,7 @@ class TestSchemaVersioning:
             registry.get_migration_path("1.0.0", "3.0.0")
 
     @pytest.mark.asyncio
-    async def test_versioned_agent_save_load(self, temp_dir):
+    async def test_versioned_agent_save_load(self, temp_dir) -> None:
         """Versioned agent saves and loads with version."""
         path = temp_dir / "versioned.json"
 
@@ -431,7 +431,7 @@ class TestSchemaVersioning:
         assert loaded == {"name": "Alice"}
 
     @pytest.mark.asyncio
-    async def test_versioned_agent_migration(self, temp_dir):
+    async def test_versioned_agent_migration(self, temp_dir) -> None:
         """Versioned agent migrates old data on load."""
         path = temp_dir / "migrate.json"
 
@@ -468,7 +468,7 @@ class TestSchemaVersioning:
         assert loaded["migrated"] is True
 
     @pytest.mark.asyncio
-    async def test_create_versioned_agent_helper(self, temp_dir):
+    async def test_create_versioned_agent_helper(self, temp_dir) -> None:
         """Convenience function creates versioned agent."""
         path = temp_dir / "helper.json"
 
@@ -489,7 +489,7 @@ class TestSchemaVersioning:
         assert loaded["test"] is True
 
     @pytest.mark.asyncio
-    async def test_versioned_agent_legacy_format(self, temp_dir):
+    async def test_versioned_agent_legacy_format(self, temp_dir) -> None:
         """Versioned agent handles legacy (unversioned) data."""
         path = temp_dir / "legacy.json"
 
@@ -516,7 +516,7 @@ class TestBackupRestore:
     """Tests for backup and restore utilities."""
 
     @pytest.mark.asyncio
-    async def test_backup_creates_file(self, temp_dir):
+    async def test_backup_creates_file(self, temp_dir) -> None:
         """Backup creates a backup file."""
         state_path = temp_dir / "state.json"
         backup_dir = temp_dir / "backups"
@@ -533,7 +533,7 @@ class TestBackupRestore:
         assert metadata.size_bytes > 0
 
     @pytest.mark.asyncio
-    async def test_restore_from_backup(self, temp_dir):
+    async def test_restore_from_backup(self, temp_dir) -> None:
         """Restore recovers state from backup."""
         state_path = temp_dir / "state.json"
         backup_dir = temp_dir / "backups"
@@ -557,7 +557,7 @@ class TestBackupRestore:
         assert restored["version"] == 1
 
     @pytest.mark.asyncio
-    async def test_backup_rotation(self, temp_dir):
+    async def test_backup_rotation(self, temp_dir) -> None:
         """Old backups are rotated out."""
 
         state_path = temp_dir / "state.json"
@@ -576,7 +576,7 @@ class TestBackupRestore:
         assert len(backups) == 3
 
     @pytest.mark.asyncio
-    async def test_backup_with_label(self, temp_dir):
+    async def test_backup_with_label(self, temp_dir) -> None:
         """Backup can have custom label."""
         state_path = temp_dir / "state.json"
         backup_dir = temp_dir / "backups"
@@ -591,7 +591,7 @@ class TestBackupRestore:
         assert any("pre_migration" in str(b) for b in backups)
 
     @pytest.mark.asyncio
-    async def test_list_backups_sorted(self, temp_dir):
+    async def test_list_backups_sorted(self, temp_dir) -> None:
         """Backups are listed newest first."""
         state_path = temp_dir / "state.json"
         backup_dir = temp_dir / "backups"
@@ -610,7 +610,7 @@ class TestBackupRestore:
         assert mtimes == sorted(mtimes, reverse=True)
 
     @pytest.mark.asyncio
-    async def test_verify_backup(self, temp_dir):
+    async def test_verify_backup(self, temp_dir) -> None:
         """Verify backup integrity."""
         state_path = temp_dir / "state.json"
         backup_dir = temp_dir / "backups"
@@ -627,7 +627,7 @@ class TestBackupRestore:
         assert is_valid is True
 
     @pytest.mark.asyncio
-    async def test_backup_nonexistent_file(self, temp_dir):
+    async def test_backup_nonexistent_file(self, temp_dir) -> None:
         """Backup raises error for nonexistent file."""
         state_path = temp_dir / "nonexistent.json"
         backup_dir = temp_dir / "backups"
@@ -646,7 +646,7 @@ class TestCompression:
     """Tests for compression strategies."""
 
     @pytest.mark.asyncio
-    async def test_compressed_agent_save_load(self, temp_dir):
+    async def test_compressed_agent_save_load(self, temp_dir) -> None:
         """Compressed agent saves and loads correctly."""
         path = temp_dir / "state.json"
 
@@ -665,7 +665,7 @@ class TestCompression:
         assert loaded == {"key": "value"}
 
     @pytest.mark.asyncio
-    async def test_compressed_agent_creates_gz(self, temp_dir):
+    async def test_compressed_agent_creates_gz(self, temp_dir) -> None:
         """Compressed agent creates .gz file."""
         path = temp_dir / "state.json"
 
@@ -684,7 +684,7 @@ class TestCompression:
         assert not path.exists()  # Original not created
 
     @pytest.mark.asyncio
-    async def test_compressed_agent_skips_small(self, temp_dir):
+    async def test_compressed_agent_skips_small(self, temp_dir) -> None:
         """Compressed agent skips compression for small data."""
         path = temp_dir / "state.json"
 
@@ -703,7 +703,7 @@ class TestCompression:
         assert not path.with_suffix(".json.gz").exists()
 
     @pytest.mark.asyncio
-    async def test_compression_stats(self, temp_dir):
+    async def test_compression_stats(self, temp_dir) -> None:
         """Get compression statistics."""
         path = temp_dir / "state.json"
 
@@ -727,7 +727,7 @@ class TestCompression:
         assert stats["compression_ratio"] > 1.0
 
     @pytest.mark.asyncio
-    async def test_compression_levels(self, temp_dir):
+    async def test_compression_levels(self, temp_dir) -> None:
         """Different compression levels produce different sizes."""
         data = {"data": "x" * 10000}
         sizes = {}
@@ -748,7 +748,7 @@ class TestCompression:
         assert sizes[CompressionLevel.BEST] <= sizes[CompressionLevel.FAST]
 
     @pytest.mark.asyncio
-    async def test_create_compressed_agent_helper(self, temp_dir):
+    async def test_create_compressed_agent_helper(self, temp_dir) -> None:
         """Convenience function creates compressed agent."""
         path = temp_dir / "helper.json"
 
@@ -772,7 +772,7 @@ class TestCrossAgentIntegration:
     """Tests for cross-agent integration (J-gent × D-gent)."""
 
     @pytest.mark.asyncio
-    async def test_jgent_entropy_with_versioned_agent(self, temp_dir):
+    async def test_jgent_entropy_with_versioned_agent(self, temp_dir) -> None:
         """J-gent entropy constraint with versioned persistence."""
         path = temp_dir / "entropy_versioned.json"
 
@@ -800,7 +800,7 @@ class TestCrossAgentIntegration:
         assert loaded["constrained"] is True
 
     @pytest.mark.asyncio
-    async def test_lens_with_persistent_agent(self, temp_dir):
+    async def test_lens_with_persistent_agent(self, temp_dir) -> None:
         """Lens composition with persistent D-gent."""
         from agents.d import LensAgent
 
@@ -829,7 +829,7 @@ class TestCrossAgentIntegration:
         assert reloaded["users"]["alice"]["score"] == 150
 
     @pytest.mark.asyncio
-    async def test_traversal_with_observable(self, temp_dir):
+    async def test_traversal_with_observable(self, temp_dir) -> None:
         """Traversal with observable D-gent for batch updates."""
         from agents.d import ObservableDataAgent
 
@@ -852,7 +852,7 @@ class TestCrossAgentIntegration:
         assert changes[0].new_value["items"] == [2, 4, 6, 8, 10]
 
     @pytest.mark.asyncio
-    async def test_prism_with_queryable(self, temp_dir):
+    async def test_prism_with_queryable(self, temp_dir) -> None:
         """Prism with queryable D-gent for optional field access."""
         from agents.d import QueryableDataAgent
 
@@ -881,7 +881,7 @@ class TestCrossAgentIntegration:
         assert bob_email is None
 
     @pytest.mark.asyncio
-    async def test_compression_with_unified_memory(self, temp_dir):
+    async def test_compression_with_unified_memory(self, temp_dir) -> None:
         """Compression strategy with unified memory."""
         path = temp_dir / "unified_compressed.json"
 

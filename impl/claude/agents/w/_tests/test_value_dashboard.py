@@ -31,7 +31,7 @@ from agents.w.value_dashboard import (
 class TestTokenSnapshot:
     """Tests for TokenSnapshot."""
 
-    def test_creation(self):
+    def test_creation(self) -> None:
         """TokenSnapshot can be created."""
         now = datetime.now()
         snap = TokenSnapshot(
@@ -53,7 +53,7 @@ class TestTokenSnapshot:
 class TestTensorSnapshot:
     """Tests for TensorSnapshot."""
 
-    def test_creation(self):
+    def test_creation(self) -> None:
         """TensorSnapshot can be created."""
         now = datetime.now()
         snap = TensorSnapshot(
@@ -74,7 +74,7 @@ class TestTensorSnapshot:
 class TestVoISnapshot:
     """Tests for VoISnapshot."""
 
-    def test_creation(self):
+    def test_creation(self) -> None:
         """VoISnapshot can be created."""
         now = datetime.now()
         snap = VoISnapshot(
@@ -97,7 +97,7 @@ class TestVoISnapshot:
 class TestRoCSnapshot:
     """Tests for RoCSnapshot."""
 
-    def test_creation(self):
+    def test_creation(self) -> None:
         """RoCSnapshot can be created."""
         now = datetime.now()
         snap = RoCSnapshot(
@@ -122,7 +122,7 @@ class TestRoCSnapshot:
 class TestDashboardState:
     """Tests for DashboardState."""
 
-    def test_creation(self):
+    def test_creation(self) -> None:
         """DashboardState can be created."""
         state = DashboardState(agent_id="test-dashboard")
 
@@ -130,7 +130,7 @@ class TestDashboardState:
         assert len(state.panels_enabled) == 0
         assert len(state.token_history) == 0
 
-    def test_history_limit(self):
+    def test_history_limit(self) -> None:
         """DashboardState respects history limit."""
         state = DashboardState(
             agent_id="test-dashboard",
@@ -143,7 +143,7 @@ class TestDashboardState:
 class TestDashboardPanel:
     """Tests for DashboardPanel enum."""
 
-    def test_all_panels_exist(self):
+    def test_all_panels_exist(self) -> None:
         """All expected panels exist."""
         assert DashboardPanel.TOKEN_ECONOMICS.value == "token_economics"
         assert DashboardPanel.VALUE_TENSOR.value == "value_tensor"
@@ -161,7 +161,7 @@ class TestDashboardPanel:
 class TestValueDashboard:
     """Tests for ValueDashboard."""
 
-    def test_create_minimal(self):
+    def test_create_minimal(self) -> None:
         """Minimal dashboard can be created."""
         dashboard = create_minimal_dashboard()
 
@@ -169,19 +169,19 @@ class TestValueDashboard:
         assert dashboard.bank is None
         assert dashboard.value_ledger is None
 
-    def test_create_with_agent_id(self):
+    def test_create_with_agent_id(self) -> None:
         """Dashboard can be created with custom agent_id."""
         dashboard = create_value_dashboard(agent_id="my-dashboard")
 
         assert dashboard._state.agent_id == "my-dashboard"
 
-    def test_system_health_always_enabled(self):
+    def test_system_health_always_enabled(self) -> None:
         """System health panel is always enabled."""
         dashboard = create_minimal_dashboard()
 
         assert DashboardPanel.SYSTEM_HEALTH in dashboard._state.panels_enabled
 
-    def test_panels_detected_from_sources(self):
+    def test_panels_detected_from_sources(self) -> None:
         """Panels are detected based on data sources."""
 
         # Create mock bank
@@ -196,7 +196,7 @@ class TestValueDashboard:
 class TestValueDashboardHistory:
     """Tests for history management."""
 
-    def test_append_history_respects_limit(self):
+    def test_append_history_respects_limit(self) -> None:
         """History respects limit."""
         dashboard = create_minimal_dashboard()
         dashboard.history_limit = 5
@@ -220,7 +220,7 @@ class TestValueDashboardHistory:
         # Should have latest (oldest trimmed)
         assert dashboard._state.token_history[-1].gas_available == 900
 
-    def test_get_token_history(self):
+    def test_get_token_history(self) -> None:
         """get_token_history returns history."""
         dashboard = create_minimal_dashboard()
 
@@ -244,7 +244,7 @@ class TestValueDashboardHistory:
 class TestValueDashboardSummary:
     """Tests for summary generation."""
 
-    def test_get_summary_empty(self):
+    def test_get_summary_empty(self) -> None:
         """Summary works with no data."""
         dashboard = create_minimal_dashboard()
 
@@ -253,7 +253,7 @@ class TestValueDashboardSummary:
         assert "Value Dashboard" in summary
         assert dashboard._state.agent_id in summary
 
-    def test_get_summary_with_token_data(self):
+    def test_get_summary_with_token_data(self) -> None:
         """Summary includes token data when available."""
         dashboard = create_minimal_dashboard()
 
@@ -274,7 +274,7 @@ class TestValueDashboardSummary:
         assert "Token Economics" in summary
         assert "1,000" in summary  # gas_available
 
-    def test_get_summary_with_voi_data(self):
+    def test_get_summary_with_voi_data(self) -> None:
         """Summary includes VoI data when available."""
         dashboard = create_minimal_dashboard()
 
@@ -300,7 +300,7 @@ class TestValueDashboardSummary:
 class TestValueDashboardState:
     """Tests for state management."""
 
-    def test_get_current_state(self):
+    def test_get_current_state(self) -> None:
         """get_current_state returns wire data."""
         dashboard = create_minimal_dashboard()
 
@@ -311,7 +311,7 @@ class TestValueDashboardState:
         assert "voi_metrics" in state
         assert "anomalies" in state
 
-    def test_to_wire_data_format(self):
+    def test_to_wire_data_format(self) -> None:
         """_to_wire_data produces correct format."""
         dashboard = create_minimal_dashboard()
 
@@ -330,7 +330,7 @@ class TestValueDashboardState:
 class TestFactoryFunctions:
     """Tests for factory functions."""
 
-    def test_create_value_dashboard(self):
+    def test_create_value_dashboard(self) -> None:
         """create_value_dashboard creates dashboard."""
         dashboard = create_value_dashboard(
             agent_id="factory-test",
@@ -340,7 +340,7 @@ class TestFactoryFunctions:
         assert dashboard._state.agent_id == "factory-test"
         assert dashboard.history_limit == 50
 
-    def test_create_minimal_dashboard(self):
+    def test_create_minimal_dashboard(self) -> None:
         """create_minimal_dashboard creates minimal dashboard."""
         dashboard = create_minimal_dashboard("minimal-test")
 
@@ -358,7 +358,7 @@ class TestIntegration:
     """Integration tests."""
 
     @pytest.mark.asyncio
-    async def test_start_stop(self):
+    async def test_start_stop(self) -> None:
         """Dashboard can start and stop."""
         dashboard = create_minimal_dashboard()
 
@@ -370,7 +370,7 @@ class TestIntegration:
         await dashboard.stop()
         assert dashboard._running is False
 
-    def test_collect_metrics_no_sources(self):
+    def test_collect_metrics_no_sources(self) -> None:
         """Collecting metrics with no sources produces empty snapshots."""
         dashboard = create_minimal_dashboard()
 
@@ -381,7 +381,7 @@ class TestIntegration:
         assert token_snap.gas_available == 0
         assert token_snap.gas_consumed == 0
 
-    def test_multiple_panels_enabled(self):
+    def test_multiple_panels_enabled(self) -> None:
         """Multiple panels can be enabled."""
 
         # Create mock sources
@@ -408,7 +408,7 @@ class TestIntegration:
 class TestEdgeCases:
     """Edge case tests."""
 
-    def test_empty_history_limit(self):
+    def test_empty_history_limit(self) -> None:
         """History with limit 0 stays empty."""
         dashboard = create_minimal_dashboard()
         dashboard.history_limit = 0
@@ -427,7 +427,7 @@ class TestEdgeCases:
 
         assert len(dashboard._state.token_history) == 0
 
-    def test_large_history(self):
+    def test_large_history(self) -> None:
         """Large history is truncated correctly."""
         dashboard = create_minimal_dashboard()
         dashboard.history_limit = 1000
@@ -449,7 +449,7 @@ class TestEdgeCases:
         # Should have 1000-1999
         assert dashboard._state.token_history[0].gas_available == 1000
 
-    def test_summary_with_anomalies(self):
+    def test_summary_with_anomalies(self) -> None:
         """Summary shows anomalies."""
         dashboard = create_minimal_dashboard()
 

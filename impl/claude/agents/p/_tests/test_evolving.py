@@ -34,14 +34,14 @@ class MockParser:
 class TestFormatStats:
     """Test FormatStats tracking."""
 
-    def test_format_stats_initialization(self):
+    def test_format_stats_initialization(self) -> None:
         """Test format stats initialization."""
         stats = FormatStats(name="json")
         assert stats.name == "json"
         assert stats.success_count == 0
         assert stats.failure_count == 0
 
-    def test_success_rate_calculation(self):
+    def test_success_rate_calculation(self) -> None:
         """Test success rate calculation."""
         stats = FormatStats(name="json")
         stats.success_count = 7
@@ -49,12 +49,12 @@ class TestFormatStats:
 
         assert stats.success_rate == 0.7
 
-    def test_success_rate_with_no_data(self):
+    def test_success_rate_with_no_data(self) -> None:
         """Test success rate with no data."""
         stats = FormatStats(name="json")
         assert stats.success_rate == 0.0
 
-    def test_avg_parse_time(self):
+    def test_avg_parse_time(self) -> None:
         """Test average parse time calculation."""
         stats = FormatStats(name="json")
         stats.success_count = 2
@@ -62,7 +62,7 @@ class TestFormatStats:
 
         assert stats.avg_parse_time_ms == 100.0
 
-    def test_to_dict(self):
+    def test_to_dict(self) -> None:
         """Test serialization to dict."""
         stats = FormatStats(name="json")
         stats.success_count = 5
@@ -77,7 +77,7 @@ class TestFormatStats:
 class TestEvolvingParserBasics:
     """Test basic EvolvingParser functionality."""
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         """Test parser initialization."""
         parser = EvolvingParser(
             strategies={
@@ -90,7 +90,7 @@ class TestEvolvingParserBasics:
         assert "format_a" in parser._stats
         assert "format_b" in parser._stats
 
-    def test_parse_success(self):
+    def test_parse_success(self) -> None:
         """Test successful parsing."""
         parser = EvolvingParser(
             strategies={
@@ -103,7 +103,7 @@ class TestEvolvingParserBasics:
         assert result.value == "result_a"
         assert result.metadata["format"] == "format_a"
 
-    def test_parse_tracks_success(self):
+    def test_parse_tracks_success(self) -> None:
         """Test parsing tracks successful format."""
         parser = EvolvingParser(
             strategies={
@@ -115,7 +115,7 @@ class TestEvolvingParserBasics:
         assert parser._stats["format_a"].success_count == 1
         assert parser._total_parses == 1
 
-    def test_parse_tracks_failure(self):
+    def test_parse_tracks_failure(self) -> None:
         """Test parsing tracks failed format."""
         parser = EvolvingParser(
             strategies={
@@ -133,7 +133,7 @@ class TestEvolvingParserBasics:
 class TestStrategyRanking:
     """Test strategy ranking by success rate."""
 
-    def test_ranks_by_success_rate(self):
+    def test_ranks_by_success_rate(self) -> None:
         """Test strategies ranked by success rate."""
         parser = EvolvingParser(
             strategies={
@@ -150,7 +150,7 @@ class TestStrategyRanking:
         ranked = parser._get_ranked_strategies()
         assert ranked[0][0] == "good"
 
-    def test_adapts_to_changing_formats(self):
+    def test_adapts_to_changing_formats(self) -> None:
         """Test parser adapts when format distribution changes."""
         format_a_parser = MockParser(success=True, value="a")
         format_b_parser = MockParser(success=True, value="b")
@@ -179,7 +179,7 @@ class TestStrategyRanking:
 class TestDriftDetection:
     """Test drift detection."""
 
-    def test_report_drift_no_parses(self):
+    def test_report_drift_no_parses(self) -> None:
         """Test drift report with no parses."""
         parser = EvolvingParser(
             strategies={
@@ -191,7 +191,7 @@ class TestDriftDetection:
         assert report.total_parses == 0
         assert not report.drift_detected
 
-    def test_report_drift_identifies_dominant(self):
+    def test_report_drift_identifies_dominant(self) -> None:
         """Test drift report identifies dominant format."""
         parser = EvolvingParser(
             strategies={
@@ -206,7 +206,7 @@ class TestDriftDetection:
         report = parser.report_drift()
         assert report.current_dominant == "format_a"
 
-    def test_drift_detected_on_format_change(self):
+    def test_drift_detected_on_format_change(self) -> None:
         """Test drift detected when dominant format changes."""
         parser = EvolvingParser(
             strategies={
@@ -239,7 +239,7 @@ class TestDriftDetection:
 class TestStatsExportImport:
     """Test statistics export/import."""
 
-    def test_export_stats(self):
+    def test_export_stats(self) -> None:
         """Test exporting stats to file."""
         parser = EvolvingParser(
             strategies={
@@ -269,7 +269,7 @@ class TestStatsExportImport:
             if os.path.exists(filepath):
                 os.unlink(filepath)
 
-    def test_import_stats(self):
+    def test_import_stats(self) -> None:
         """Test importing stats from file."""
         parser = EvolvingParser(
             strategies={
@@ -310,7 +310,7 @@ class TestStatsExportImport:
 class TestConfiguration:
     """Test parser configuration."""
 
-    def test_configure_returns_new_parser(self):
+    def test_configure_returns_new_parser(self) -> None:
         """Test configure returns new instance."""
         parser1 = EvolvingParser(
             strategies={
@@ -326,7 +326,7 @@ class TestConfiguration:
 class TestStreamParsing:
     """Test stream parsing."""
 
-    def test_stream_buffers_tokens(self):
+    def test_stream_buffers_tokens(self) -> None:
         """Test stream parsing buffers tokens."""
         parser = EvolvingParser(
             strategies={
@@ -342,7 +342,7 @@ class TestStreamParsing:
 class TestConvenienceFunction:
     """Test convenience parser constructor."""
 
-    def test_create_multi_format_parser(self):
+    def test_create_multi_format_parser(self) -> None:
         """Test creating multi-format parser."""
         parser = create_multi_format_parser(
             {
@@ -359,7 +359,7 @@ class TestConvenienceFunction:
 class TestRealWorldScenarios:
     """Test real-world use cases."""
 
-    def test_bgent_hypothesis_format_evolution(self):
+    def test_bgent_hypothesis_format_evolution(self) -> None:
         """Test B-gent hypothesis format changes over time."""
         # Simulate hypothesis format tracking
         parser = EvolvingParser(
@@ -386,7 +386,7 @@ class TestRealWorldScenarios:
         assert parser._stats["anchor_format"].success_count > 0
         assert parser._stats["json_format"].success_count > 0
 
-    def test_cross_llm_compatibility(self):
+    def test_cross_llm_compatibility(self) -> None:
         """Test parser handles different LLM output styles."""
         parser = EvolvingParser(
             strategies={
@@ -409,7 +409,7 @@ class TestRealWorldScenarios:
 class TestDriftReportSerialization:
     """Test DriftReport serialization."""
 
-    def test_drift_report_to_dict(self):
+    def test_drift_report_to_dict(self) -> None:
         """Test DriftReport serialization."""
         stats = {
             "format_a": FormatStats(name="format_a"),

@@ -30,19 +30,19 @@ from agents.m.cartography import (
 class TestSimpleClustering:
     """Tests for simple clustering algorithm."""
 
-    def test_empty_items(self):
+    def test_empty_items(self) -> None:
         """Empty input returns empty clusters."""
         clusters = simple_cluster([])
         assert clusters == []
 
-    def test_single_item(self):
+    def test_single_item(self) -> None:
         """Single item forms single cluster."""
         items = [("a", [1.0, 0.0])]
         clusters = simple_cluster(items)
         assert len(clusters) == 1
         assert len(clusters[0].members) == 1
 
-    def test_two_nearby_items(self):
+    def test_two_nearby_items(self) -> None:
         """Nearby items cluster together."""
         items = [
             ("a", [1.0, 0.0]),
@@ -52,7 +52,7 @@ class TestSimpleClustering:
         assert len(clusters) == 1
         assert len(clusters[0].members) == 2
 
-    def test_two_distant_items(self):
+    def test_two_distant_items(self) -> None:
         """Distant items form separate clusters."""
         items = [
             ("a", [0.0, 0.0]),
@@ -61,7 +61,7 @@ class TestSimpleClustering:
         clusters = simple_cluster(items, threshold=0.5)
         assert len(clusters) == 2
 
-    def test_three_clusters(self):
+    def test_three_clusters(self) -> None:
         """Multiple distinct clusters."""
         items = [
             ("a1", [0.0, 0.0]),
@@ -73,7 +73,7 @@ class TestSimpleClustering:
         clusters = simple_cluster(items, threshold=0.5)
         assert len(clusters) == 3
 
-    def test_centroid_computation(self):
+    def test_centroid_computation(self) -> None:
         """Centroid is computed correctly."""
         items = [
             ("a", [0.0, 0.0]),
@@ -88,7 +88,7 @@ class TestSimpleClustering:
         assert abs(centroid[0] - 1.0) < 0.01
         assert abs(centroid[1] - 0.0) < 0.01
 
-    def test_cluster_density(self):
+    def test_cluster_density(self) -> None:
         """Cluster density is computed."""
         items = [("a", [0.0, 0.0])]
         clusters = simple_cluster(items)
@@ -103,7 +103,7 @@ class TestSimpleClustering:
 class TestDesireLineComputer:
     """Tests for DesireLineComputer."""
 
-    def test_empty_traces(self):
+    def test_empty_traces(self) -> None:
         """Empty traces returns empty edges."""
         computer = DesireLineComputer()
         landmarks = [
@@ -112,14 +112,14 @@ class TestDesireLineComputer:
         edges = computer.compute_from_traces([], landmarks)
         assert edges == []
 
-    def test_empty_landmarks(self):
+    def test_empty_landmarks(self) -> None:
         """Empty landmarks returns empty edges."""
         computer = DesireLineComputer()
         traces = [MockTrace(trace_id="t1", vector=[0.0, 0.0])]
         edges = computer.compute_from_traces(traces, [])
         assert edges == []
 
-    def test_single_trace(self):
+    def test_single_trace(self) -> None:
         """Single trace produces no edges (need two)."""
         computer = DesireLineComputer()
         landmarks = [
@@ -129,7 +129,7 @@ class TestDesireLineComputer:
         edges = computer.compute_from_traces(traces, landmarks)
         assert edges == []
 
-    def test_two_traces_same_landmark(self):
+    def test_two_traces_same_landmark(self) -> None:
         """Two traces at same landmark produce no edge."""
         computer = DesireLineComputer()
         landmarks = [
@@ -142,7 +142,7 @@ class TestDesireLineComputer:
         edges = computer.compute_from_traces(traces, landmarks)
         assert edges == []
 
-    def test_two_traces_different_landmarks(self):
+    def test_two_traces_different_landmarks(self) -> None:
         """Two traces at different landmarks produce edge."""
         computer = DesireLineComputer()
         landmarks = [
@@ -159,7 +159,7 @@ class TestDesireLineComputer:
         assert edges[0].target == "b"
         assert edges[0].weight == 1.0
 
-    def test_multiple_transitions(self):
+    def test_multiple_transitions(self) -> None:
         """Multiple transitions increase weight."""
         computer = DesireLineComputer()
         landmarks = [
@@ -182,7 +182,7 @@ class TestDesireLineComputer:
         assert ab_edge is not None
         assert ab_edge.transition_count == 2
 
-    def test_bidirectional_detection(self):
+    def test_bidirectional_detection(self) -> None:
         """Bidirectional edges detected."""
         computer = DesireLineComputer()
         landmarks = [
@@ -201,7 +201,7 @@ class TestDesireLineComputer:
         assert ab_edge is not None
         assert ab_edge.bidirectional is True
 
-    def test_traces_without_vectors_skipped(self):
+    def test_traces_without_vectors_skipped(self) -> None:
         """Traces without vectors are skipped."""
         computer = DesireLineComputer()
         landmarks = [
@@ -224,14 +224,14 @@ class TestMockVectorSearch:
     """Tests for MockVectorSearch."""
 
     @pytest.mark.asyncio
-    async def test_empty_search(self):
+    async def test_empty_search(self) -> None:
         """Empty search returns nothing."""
         search = MockVectorSearch([])
         results = await search.find_similar([0.0, 0.0])
         assert results == []
 
     @pytest.mark.asyncio
-    async def test_find_similar(self):
+    async def test_find_similar(self) -> None:
         """Find similar items."""
         search = MockVectorSearch(
             [
@@ -246,7 +246,7 @@ class TestMockVectorSearch:
         assert results[0][0] == "a"  # Closest first
 
     @pytest.mark.asyncio
-    async def test_limit_respected(self):
+    async def test_limit_respected(self) -> None:
         """Limit parameter respected."""
         search = MockVectorSearch(
             [
@@ -267,13 +267,13 @@ class TestMockVectorSearch:
 class TestMockTraceStore:
     """Tests for MockTraceStore."""
 
-    def test_empty_query(self):
+    def test_empty_query(self) -> None:
         """Empty store returns empty."""
         store = MockTraceStore([])
         results = store.query()
         assert results == []
 
-    def test_add_and_query(self):
+    def test_add_and_query(self) -> None:
         """Add traces and query."""
         store = MockTraceStore()
         store.add_trace(MockTrace(trace_id="t1"))
@@ -281,7 +281,7 @@ class TestMockTraceStore:
         results = store.query()
         assert len(results) == 2
 
-    def test_filter_by_agent_id(self):
+    def test_filter_by_agent_id(self) -> None:
         """Filter by agent_id."""
         store = MockTraceStore(
             [
@@ -293,7 +293,7 @@ class TestMockTraceStore:
         assert len(results) == 1
         assert results[0].trace_id == "t1"
 
-    def test_limit_and_offset(self):
+    def test_limit_and_offset(self) -> None:
         """Limit and offset work."""
         store = MockTraceStore(
             [
@@ -316,13 +316,13 @@ class TestCartographerAgent:
     """Tests for CartographerAgent."""
 
     @pytest.mark.asyncio
-    async def test_create_cartographer(self):
+    async def test_create_cartographer(self) -> None:
         """Create cartographer with factory."""
         cartographer = create_cartographer()
         assert cartographer is not None
 
     @pytest.mark.asyncio
-    async def test_invoke_empty_backends(self):
+    async def test_invoke_empty_backends(self) -> None:
         """Invoke with no backends returns minimal map."""
         cartographer = CartographerAgent()
         context = create_context_vector([0.0, 0.0], label="origin")
@@ -336,7 +336,7 @@ class TestCartographerAgent:
         assert holomap.void_count >= 1
 
     @pytest.mark.asyncio
-    async def test_invoke_with_vector_search(self):
+    async def test_invoke_with_vector_search(self) -> None:
         """Invoke with vector search finds landmarks."""
         search = MockVectorSearch(
             [
@@ -353,7 +353,7 @@ class TestCartographerAgent:
         assert holomap.landmark_count >= 1  # At least one cluster
 
     @pytest.mark.asyncio
-    async def test_invoke_with_traces(self):
+    async def test_invoke_with_traces(self) -> None:
         """Invoke with traces computes desire lines."""
         search = MockVectorSearch(
             [
@@ -378,7 +378,7 @@ class TestCartographerAgent:
         assert holomap.landmark_count >= 1
 
     @pytest.mark.asyncio
-    async def test_invoke_with_mock_cartographer(self):
+    async def test_invoke_with_mock_cartographer(self) -> None:
         """Use factory for mock cartographer."""
         cartographer = create_mock_cartographer(
             items=[
@@ -395,7 +395,7 @@ class TestCartographerAgent:
         assert holomap is not None
 
     @pytest.mark.asyncio
-    async def test_resolution_affects_horizon(self):
+    async def test_resolution_affects_horizon(self) -> None:
         """Different resolutions produce different horizons."""
         cartographer = CartographerAgent()
         context = create_context_vector([0.0, 0.0])
@@ -407,7 +407,7 @@ class TestCartographerAgent:
         assert high_res.horizon.outer_radius > low_res.horizon.outer_radius
 
     @pytest.mark.asyncio
-    async def test_budget_affects_horizon(self):
+    async def test_budget_affects_horizon(self) -> None:
         """Token budget affects horizon size."""
         cartographer = CartographerAgent()
         context = create_context_vector([0.0, 0.0])
@@ -423,7 +423,7 @@ class TestCartographerAgent:
 class TestCartographerConfig:
     """Tests for CartographerConfig."""
 
-    def test_default_config(self):
+    def test_default_config(self) -> None:
         """Default config has sensible values."""
         config = CartographerConfig()
         assert config.cluster_threshold > 0
@@ -431,7 +431,7 @@ class TestCartographerConfig:
         assert config.default_budget > 0
 
     @pytest.mark.asyncio
-    async def test_custom_config(self):
+    async def test_custom_config(self) -> None:
         """Custom config is used."""
         config = CartographerConfig(
             cluster_threshold=0.1,
@@ -453,7 +453,7 @@ class TestFindAttractors:
     """Tests for find_attractors method."""
 
     @pytest.mark.asyncio
-    async def test_no_vector_search(self):
+    async def test_no_vector_search(self) -> None:
         """No vector search returns empty."""
         cartographer = CartographerAgent()
         context = create_context_vector([0.0, 0.0])
@@ -461,7 +461,7 @@ class TestFindAttractors:
         assert attractors == []
 
     @pytest.mark.asyncio
-    async def test_single_cluster(self):
+    async def test_single_cluster(self) -> None:
         """Nearby items form single attractor."""
         search = MockVectorSearch(
             [
@@ -478,7 +478,7 @@ class TestFindAttractors:
         assert len(attractors) >= 1
 
     @pytest.mark.asyncio
-    async def test_attractor_has_members(self):
+    async def test_attractor_has_members(self) -> None:
         """Attractors track their members."""
         search = MockVectorSearch(
             [
@@ -494,7 +494,7 @@ class TestFindAttractors:
         assert attractors[0].member_count >= 1
 
     @pytest.mark.asyncio
-    async def test_attractor_label_generated(self):
+    async def test_attractor_label_generated(self) -> None:
         """Attractors get human-readable labels."""
         search = MockVectorSearch(
             [
@@ -518,7 +518,7 @@ class TestComputeDesireLines:
     """Tests for compute_desire_lines method."""
 
     @pytest.mark.asyncio
-    async def test_no_trace_store(self):
+    async def test_no_trace_store(self) -> None:
         """No trace store returns empty."""
         cartographer = CartographerAgent()
         landmarks = [
@@ -528,7 +528,7 @@ class TestComputeDesireLines:
         assert edges == []
 
     @pytest.mark.asyncio
-    async def test_no_landmarks(self):
+    async def test_no_landmarks(self) -> None:
         """No landmarks returns empty."""
         store = MockTraceStore([MockTrace(trace_id="t1")])
         cartographer = CartographerAgent(trace_store=store)
@@ -536,7 +536,7 @@ class TestComputeDesireLines:
         assert edges == []
 
     @pytest.mark.asyncio
-    async def test_desire_lines_from_traces(self):
+    async def test_desire_lines_from_traces(self) -> None:
         """Traces produce desire lines."""
         landmarks = [
             Attractor(id="a", centroid=[0.0, 0.0], members=[], label="A", density=1.0),
@@ -562,7 +562,7 @@ class TestVoidDetection:
     """Tests for void detection."""
 
     @pytest.mark.asyncio
-    async def test_total_void_when_no_landmarks(self):
+    async def test_total_void_when_no_landmarks(self) -> None:
         """No landmarks = total void."""
         cartographer = CartographerAgent()
         context = create_context_vector([0.0, 0.0])
@@ -572,7 +572,7 @@ class TestVoidDetection:
         assert holomap.voids[0].reason == "no_landmarks"
 
     @pytest.mark.asyncio
-    async def test_void_between_distant_landmarks(self):
+    async def test_void_between_distant_landmarks(self) -> None:
         """Voids detected between distant landmarks."""
         search = MockVectorSearch(
             [
@@ -599,7 +599,7 @@ class TestCartographerIntegration:
     """Integration tests for CartographerAgent."""
 
     @pytest.mark.asyncio
-    async def test_full_pipeline(self):
+    async def test_full_pipeline(self) -> None:
         """Full pipeline: search -> cluster -> desire lines -> map."""
         # Setup vector search with distinct clusters
         search = MockVectorSearch(
@@ -641,7 +641,7 @@ class TestCartographerIntegration:
         assert holomap.horizon.max_tokens > 0
 
     @pytest.mark.asyncio
-    async def test_navigation_after_map(self):
+    async def test_navigation_after_map(self) -> None:
         """Can navigate the generated map."""
         search = MockVectorSearch(
             [

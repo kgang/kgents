@@ -138,7 +138,7 @@ def adapter_no_llm(mock_logos: MockLogos) -> AgentesAdapter:
 class TestTranslationResult:
     """Tests for TranslationResult dataclass."""
 
-    def test_basic_result(self):
+    def test_basic_result(self) -> None:
         """Test creating a basic translation result."""
         result = TranslationResult(
             path="world.house.manifest",
@@ -150,7 +150,7 @@ class TestTranslationResult:
         assert result.confidence == 0.9
         assert result.source == "pattern"
 
-    def test_result_with_entities(self):
+    def test_result_with_entities(self) -> None:
         """Test result with extracted entities."""
         result = TranslationResult(
             path="world.house.manifest",
@@ -162,7 +162,7 @@ class TestTranslationResult:
         )
         assert result.extracted_entities["entity"] == "house"
 
-    def test_result_is_frozen(self):
+    def test_result_is_frozen(self) -> None:
         """Test that TranslationResult is immutable."""
         result = TranslationResult(
             path="world.house.manifest",
@@ -182,7 +182,7 @@ class TestTranslationResult:
 class TestTranslationError:
     """Tests for TranslationError."""
 
-    def test_error_message(self):
+    def test_error_message(self) -> None:
         """Test error message formatting."""
         error = TranslationError(
             input="blorp the florp",
@@ -194,7 +194,7 @@ class TestTranslationError:
         assert "No matching pattern" in msg
         assert "show me the <entity>" in msg
 
-    def test_error_with_no_suggestions(self):
+    def test_error_with_no_suggestions(self) -> None:
         """Test error without suggestions."""
         error = TranslationError(
             input="test",
@@ -215,32 +215,32 @@ class TestPatternTranslator:
 
     # === Perception Patterns ===
 
-    def test_show_me_pattern(self, pattern_translator: PatternTranslator):
+    def test_show_me_pattern(self, pattern_translator: PatternTranslator) -> None:
         """Test 'show me the X' pattern."""
         result = pattern_translator.translate("show me the house")
         assert result is not None
         assert result.path == "world.house.manifest"
         assert result.confidence >= 0.85
 
-    def test_get_pattern(self, pattern_translator: PatternTranslator):
+    def test_get_pattern(self, pattern_translator: PatternTranslator) -> None:
         """Test 'get X' pattern."""
         result = pattern_translator.translate("get the status")
         assert result is not None
         assert result.path == "world.status.manifest"
 
-    def test_view_pattern(self, pattern_translator: PatternTranslator):
+    def test_view_pattern(self, pattern_translator: PatternTranslator) -> None:
         """Test 'view X' pattern."""
         result = pattern_translator.translate("view the project")
         assert result is not None
         assert result.path == "world.project.manifest"
 
-    def test_what_is_pattern(self, pattern_translator: PatternTranslator):
+    def test_what_is_pattern(self, pattern_translator: PatternTranslator) -> None:
         """Test 'what is X' pattern."""
         result = pattern_translator.translate("what is the garden?")
         assert result is not None
         assert result.path == "world.garden.manifest"
 
-    def test_describe_pattern(self, pattern_translator: PatternTranslator):
+    def test_describe_pattern(self, pattern_translator: PatternTranslator) -> None:
         """Test 'describe X' pattern."""
         result = pattern_translator.translate("describe the library")
         assert result is not None
@@ -248,25 +248,25 @@ class TestPatternTranslator:
 
     # === History Patterns ===
 
-    def test_what_happened_pattern(self, pattern_translator: PatternTranslator):
+    def test_what_happened_pattern(self, pattern_translator: PatternTranslator) -> None:
         """Test 'what happened to X' pattern."""
         result = pattern_translator.translate("what happened to the house?")
         assert result is not None
         assert result.path == "world.house.witness"
 
-    def test_history_pattern(self, pattern_translator: PatternTranslator):
+    def test_history_pattern(self, pattern_translator: PatternTranslator) -> None:
         """Test 'history of X' pattern."""
         result = pattern_translator.translate("history of the project")
         assert result is not None
         assert result.path == "world.project.witness"
 
-    def test_trace_pattern(self, pattern_translator: PatternTranslator):
+    def test_trace_pattern(self, pattern_translator: PatternTranslator) -> None:
         """Test 'trace' pattern."""
         result = pattern_translator.translate("trace the logs")
         assert result is not None
         assert result.path == "time.trace.witness"
 
-    def test_show_logs_pattern(self, pattern_translator: PatternTranslator):
+    def test_show_logs_pattern(self, pattern_translator: PatternTranslator) -> None:
         """Test 'show logs' pattern."""
         result = pattern_translator.translate("show me the logs")
         assert result is not None
@@ -274,25 +274,25 @@ class TestPatternTranslator:
 
     # === Memory Patterns ===
 
-    def test_memory_pattern(self, pattern_translator: PatternTranslator):
+    def test_memory_pattern(self, pattern_translator: PatternTranslator) -> None:
         """Test 'show memory' pattern."""
         result = pattern_translator.translate("show my memory")
         assert result is not None
         assert result.path == "self.memory.manifest"
 
-    def test_dream_pattern(self, pattern_translator: PatternTranslator):
+    def test_dream_pattern(self, pattern_translator: PatternTranslator) -> None:
         """Test 'dream' pattern."""
         result = pattern_translator.translate("dream")
         assert result is not None
         assert result.path == "self.memory.consolidate"
 
-    def test_sort_thoughts_pattern(self, pattern_translator: PatternTranslator):
+    def test_sort_thoughts_pattern(self, pattern_translator: PatternTranslator) -> None:
         """Test 'sort my thoughts' pattern."""
         result = pattern_translator.translate("sort my thoughts")
         assert result is not None
         assert result.path == "self.memory.consolidate"
 
-    def test_capabilities_pattern(self, pattern_translator: PatternTranslator):
+    def test_capabilities_pattern(self, pattern_translator: PatternTranslator) -> None:
         """Test 'what can I do' pattern."""
         result = pattern_translator.translate("what can I do?")
         assert result is not None
@@ -300,25 +300,27 @@ class TestPatternTranslator:
 
     # === Concept Patterns ===
 
-    def test_think_about_pattern(self, pattern_translator: PatternTranslator):
+    def test_think_about_pattern(self, pattern_translator: PatternTranslator) -> None:
         """Test 'think about X' pattern."""
         result = pattern_translator.translate("think about justice")
         assert result is not None
         assert result.path == "concept.justice.refine"
 
-    def test_refine_pattern(self, pattern_translator: PatternTranslator):
+    def test_refine_pattern(self, pattern_translator: PatternTranslator) -> None:
         """Test 'refine X' pattern."""
         result = pattern_translator.translate("refine fairness")
         assert result is not None
         assert result.path == "concept.fairness.refine"
 
-    def test_challenge_pattern(self, pattern_translator: PatternTranslator):
+    def test_challenge_pattern(self, pattern_translator: PatternTranslator) -> None:
         """Test 'challenge X' pattern."""
         result = pattern_translator.translate("challenge the idea of freedom")
         assert result is not None
         assert result.path == "concept.freedom.refine"
 
-    def test_define_concept_pattern(self, pattern_translator: PatternTranslator):
+    def test_define_concept_pattern(
+        self, pattern_translator: PatternTranslator
+    ) -> None:
         """Test 'define X' pattern."""
         result = pattern_translator.translate("define love")
         assert result is not None
@@ -326,31 +328,31 @@ class TestPatternTranslator:
 
     # === Entropy Patterns ===
 
-    def test_random_pattern(self, pattern_translator: PatternTranslator):
+    def test_random_pattern(self, pattern_translator: PatternTranslator) -> None:
         """Test 'give me randomness' pattern."""
         result = pattern_translator.translate("give me some randomness")
         assert result is not None
         assert result.path == "void.entropy.sip"
 
-    def test_sip_pattern(self, pattern_translator: PatternTranslator):
+    def test_sip_pattern(self, pattern_translator: PatternTranslator) -> None:
         """Test 'sip from void' pattern."""
         result = pattern_translator.translate("sip from the void")
         assert result is not None
         assert result.path == "void.entropy.sip"
 
-    def test_surprise_pattern(self, pattern_translator: PatternTranslator):
+    def test_surprise_pattern(self, pattern_translator: PatternTranslator) -> None:
         """Test 'surprise me' pattern."""
         result = pattern_translator.translate("surprise me")
         assert result is not None
         assert result.path == "void.serendipity.sip"
 
-    def test_tithe_pattern(self, pattern_translator: PatternTranslator):
+    def test_tithe_pattern(self, pattern_translator: PatternTranslator) -> None:
         """Test 'tithe' pattern."""
         result = pattern_translator.translate("tithe")
         assert result is not None
         assert result.path == "void.gratitude.tithe"
 
-    def test_thanks_pattern(self, pattern_translator: PatternTranslator):
+    def test_thanks_pattern(self, pattern_translator: PatternTranslator) -> None:
         """Test 'thanks' pattern."""
         result = pattern_translator.translate("thanks")
         assert result is not None
@@ -358,19 +360,19 @@ class TestPatternTranslator:
 
     # === Temporal Patterns ===
 
-    def test_forecast_pattern(self, pattern_translator: PatternTranslator):
+    def test_forecast_pattern(self, pattern_translator: PatternTranslator) -> None:
         """Test 'forecast' pattern."""
         result = pattern_translator.translate("forecast the weather")
         assert result is not None
         assert result.path == "time.future.forecast"
 
-    def test_predict_pattern(self, pattern_translator: PatternTranslator):
+    def test_predict_pattern(self, pattern_translator: PatternTranslator) -> None:
         """Test 'predict' pattern."""
         result = pattern_translator.translate("predict the future")
         assert result is not None
         assert result.path == "time.future.forecast"
 
-    def test_schedule_pattern(self, pattern_translator: PatternTranslator):
+    def test_schedule_pattern(self, pattern_translator: PatternTranslator) -> None:
         """Test 'schedule' pattern."""
         result = pattern_translator.translate("schedule a meeting")
         assert result is not None
@@ -378,13 +380,13 @@ class TestPatternTranslator:
 
     # === Server/System Patterns ===
 
-    def test_server_status_pattern(self, pattern_translator: PatternTranslator):
+    def test_server_status_pattern(self, pattern_translator: PatternTranslator) -> None:
         """Test 'server status' pattern."""
         result = pattern_translator.translate("get server status")
         assert result is not None
         assert result.path == "world.server.manifest"
 
-    def test_system_health_pattern(self, pattern_translator: PatternTranslator):
+    def test_system_health_pattern(self, pattern_translator: PatternTranslator) -> None:
         """Test 'system health' pattern."""
         result = pattern_translator.translate("check system health")
         assert result is not None
@@ -392,13 +394,13 @@ class TestPatternTranslator:
 
     # === Creation Patterns ===
 
-    def test_create_pattern(self, pattern_translator: PatternTranslator):
+    def test_create_pattern(self, pattern_translator: PatternTranslator) -> None:
         """Test 'create X' pattern."""
         result = pattern_translator.translate("create a new garden")
         assert result is not None
         assert result.path == "world.garden.define"
 
-    def test_add_pattern(self, pattern_translator: PatternTranslator):
+    def test_add_pattern(self, pattern_translator: PatternTranslator) -> None:
         """Test 'add X' pattern."""
         result = pattern_translator.translate("add a user")
         assert result is not None
@@ -406,24 +408,24 @@ class TestPatternTranslator:
 
     # === Edge Cases ===
 
-    def test_no_match_returns_none(self, pattern_translator: PatternTranslator):
+    def test_no_match_returns_none(self, pattern_translator: PatternTranslator) -> None:
         """Test that non-matching input returns None."""
         result = pattern_translator.translate("blorp the florp")
         assert result is None
 
-    def test_case_insensitive(self, pattern_translator: PatternTranslator):
+    def test_case_insensitive(self, pattern_translator: PatternTranslator) -> None:
         """Test that patterns are case insensitive."""
         result = pattern_translator.translate("SHOW ME THE HOUSE")
         assert result is not None
         assert result.path == "world.house.manifest"
 
-    def test_whitespace_handling(self, pattern_translator: PatternTranslator):
+    def test_whitespace_handling(self, pattern_translator: PatternTranslator) -> None:
         """Test that whitespace is handled."""
         result = pattern_translator.translate("  show me the house  ")
         assert result is not None
         assert result.path == "world.house.manifest"
 
-    def test_add_custom_pattern(self, pattern_translator: PatternTranslator):
+    def test_add_custom_pattern(self, pattern_translator: PatternTranslator) -> None:
         """Test adding a custom pattern."""
         pattern_translator.add_pattern(
             r"^flip\s+(\w+)$",
@@ -457,14 +459,14 @@ class TestLLMTranslator:
         assert result.confidence == 0.7  # LLM confidence
 
     @pytest.mark.asyncio
-    async def test_no_llm_returns_none(self):
+    async def test_no_llm_returns_none(self) -> None:
         """Test that missing LLM returns None."""
         translator = LLMTranslator(llm=None)
         result = await translator.translate("test")
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_invalid_path_returns_none(self, mock_llm: MockLLM):
+    async def test_invalid_path_returns_none(self, mock_llm: MockLLM) -> None:
         """Test that invalid LLM output returns None."""
         mock_llm._responses["bad query"] = "invalid path without dots"
         translator = LLMTranslator(llm=mock_llm)
@@ -482,7 +484,7 @@ class TestLLMTranslator:
         assert "AGENTESE" in prompt
         assert "test input" in prompt
 
-    def test_add_example(self, llm_translator: LLMTranslator):
+    def test_add_example(self, llm_translator: LLMTranslator) -> None:
         """Test adding training examples."""
         initial_count = len(llm_translator.examples)
         llm_translator.add_example("flip pancake", "world.pancake.flip")
@@ -498,14 +500,16 @@ class TestAgentesAdapter:
     """Tests for the unified adapter."""
 
     @pytest.mark.asyncio
-    async def test_pattern_translation_first(self, adapter: AgentesAdapter):
+    async def test_pattern_translation_first(self, adapter: AgentesAdapter) -> None:
         """Test that pattern translation is tried first."""
         result = await adapter.translate("show me the house")
         assert result.source == "pattern"
         assert result.path == "world.house.manifest"
 
     @pytest.mark.asyncio
-    async def test_llm_fallback(self, adapter: AgentesAdapter, mock_llm: MockLLM):
+    async def test_llm_fallback(
+        self, adapter: AgentesAdapter, mock_llm: MockLLM
+    ) -> None:
         """Test that LLM is used when patterns fail."""
         mock_llm._responses["complex query"] = "world.complex.manifest"
         result = await adapter.translate("complex query that doesn't match patterns")
@@ -513,7 +517,7 @@ class TestAgentesAdapter:
         assert result.source in ("llm", "pattern")
 
     @pytest.mark.asyncio
-    async def test_direct_agentese_passthrough(self, adapter: AgentesAdapter):
+    async def test_direct_agentese_passthrough(self, adapter: AgentesAdapter) -> None:
         """Test that valid AGENTESE passes through."""
         result = await adapter.translate("world.house.manifest")
         assert result.source == "direct"
@@ -521,14 +525,16 @@ class TestAgentesAdapter:
         assert result.confidence == 1.0
 
     @pytest.mark.asyncio
-    async def test_translation_error_on_failure(self, adapter_no_llm: AgentesAdapter):
+    async def test_translation_error_on_failure(
+        self, adapter_no_llm: AgentesAdapter
+    ) -> None:
         """Test that TranslationError is raised when all translators fail."""
         with pytest.raises(TranslationError) as exc_info:
             await adapter_no_llm.translate("blorp the florp completely")
         assert "blorp the florp" in str(exc_info.value)
 
     @pytest.mark.asyncio
-    async def test_error_has_suggestions(self, adapter_no_llm: AgentesAdapter):
+    async def test_error_has_suggestions(self, adapter_no_llm: AgentesAdapter) -> None:
         """Test that TranslationError has helpful suggestions."""
         with pytest.raises(TranslationError) as exc_info:
             await adapter_no_llm.translate("blorp the florp utterly")
@@ -562,14 +568,14 @@ class TestAgentesAdapter:
         assert path == "concept.justice.refine"
 
     @pytest.mark.asyncio
-    async def test_min_confidence_filter(self, adapter: AgentesAdapter):
+    async def test_min_confidence_filter(self, adapter: AgentesAdapter) -> None:
         """Test that low confidence results are filtered."""
         adapter.min_confidence = 0.99  # Very high threshold
         with pytest.raises(TranslationError):
             await adapter.translate("show me the house")  # 0.9 confidence
 
     @pytest.mark.asyncio
-    async def test_llm_disabled(self, adapter_no_llm: AgentesAdapter):
+    async def test_llm_disabled(self, adapter_no_llm: AgentesAdapter) -> None:
         """Test adapter without LLM fallback."""
         # Pattern match should still work
         result = await adapter_no_llm.translate("show me the house")
@@ -588,23 +594,23 @@ class TestAgentesAdapter:
 class TestFactoryFunctions:
     """Tests for factory functions."""
 
-    def test_create_adapter_basic(self):
+    def test_create_adapter_basic(self) -> None:
         """Test creating basic adapter."""
         adapter = create_adapter()
         assert isinstance(adapter, AgentesAdapter)
         assert adapter.logos is None  # Not set
 
-    def test_create_adapter_with_logos(self, mock_logos: MockLogos):
+    def test_create_adapter_with_logos(self, mock_logos: MockLogos) -> None:
         """Test creating adapter with logos."""
         adapter = create_adapter(logos=mock_logos)
         assert adapter.logos is mock_logos
 
-    def test_create_adapter_with_llm(self, mock_llm: MockLLM):
+    def test_create_adapter_with_llm(self, mock_llm: MockLLM) -> None:
         """Test creating adapter with LLM."""
         adapter = create_adapter(llm=mock_llm)
         assert adapter.llm_translator.llm is mock_llm
 
-    def test_create_adapter_with_config(self):
+    def test_create_adapter_with_config(self) -> None:
         """Test creating adapter with configuration."""
         adapter = create_adapter(
             min_confidence=0.8,
@@ -613,13 +619,13 @@ class TestFactoryFunctions:
         assert adapter.min_confidence == 0.8
         assert adapter.use_llm_fallback is False
 
-    def test_create_pattern_translator_basic(self):
+    def test_create_pattern_translator_basic(self) -> None:
         """Test creating basic pattern translator."""
         translator = create_pattern_translator()
         assert isinstance(translator, PatternTranslator)
         assert len(translator.patterns) == len(TRANSLATION_PATTERNS)
 
-    def test_create_pattern_translator_with_extra(self):
+    def test_create_pattern_translator_with_extra(self) -> None:
         """Test creating translator with extra patterns."""
         translator = create_pattern_translator(
             extra_patterns=[
@@ -637,7 +643,7 @@ class TestFactoryFunctions:
 class TestPromptBuilding:
     """Tests for LLM prompt construction."""
 
-    def test_prompt_contains_contexts(self):
+    def test_prompt_contains_contexts(self) -> None:
         """Test that prompt explains contexts."""
         prompt = build_translation_prompt("test input")
         assert "world" in prompt
@@ -646,17 +652,17 @@ class TestPromptBuilding:
         assert "void" in prompt
         assert "time" in prompt
 
-    def test_prompt_contains_examples(self):
+    def test_prompt_contains_examples(self) -> None:
         """Test that prompt contains examples."""
         prompt = build_translation_prompt("test input")
         assert "show me the house" in prompt or "world.house.manifest" in prompt
 
-    def test_prompt_contains_input(self):
+    def test_prompt_contains_input(self) -> None:
         """Test that prompt contains the input."""
         prompt = build_translation_prompt("my specific query")
         assert "my specific query" in prompt
 
-    def test_prompt_with_context(self):
+    def test_prompt_with_context(self) -> None:
         """Test prompt with additional context."""
         prompt = build_translation_prompt(
             "test input",
@@ -664,7 +670,7 @@ class TestPromptBuilding:
         )
         assert "previous_path" in prompt or "world.house.manifest" in prompt
 
-    def test_prompt_limits_examples(self):
+    def test_prompt_limits_examples(self) -> None:
         """Test that examples are limited."""
         many_examples = [(f"input{i}", f"path{i}.manifest") for i in range(50)]
         prompt = build_translation_prompt("test", examples=many_examples)
@@ -681,12 +687,12 @@ class TestPromptBuilding:
 class TestConstants:
     """Tests for module constants."""
 
-    def test_patterns_are_valid_regex(self):
+    def test_patterns_are_valid_regex(self) -> None:
         """Test that all patterns compile."""
         for pattern, template, aspect, confidence in TRANSLATION_PATTERNS:
             assert hasattr(pattern, "match")  # Is compiled regex
 
-    def test_patterns_have_valid_templates(self):
+    def test_patterns_have_valid_templates(self) -> None:
         """Test that templates are valid AGENTESE."""
         validator = GgentIntegration()
         for pattern, template, aspect, confidence in TRANSLATION_PATTERNS:
@@ -695,14 +701,14 @@ class TestConstants:
             is_valid, error = validator.validate_path(test_template)
             assert is_valid, f"Invalid template: {template} -> {error}"
 
-    def test_examples_are_valid_agentese(self):
+    def test_examples_are_valid_agentese(self) -> None:
         """Test that all examples have valid AGENTESE paths."""
         validator = GgentIntegration()
         for nl, agentese in LLM_TRANSLATION_EXAMPLES:
             is_valid, error = validator.validate_path(agentese)
             assert is_valid, f"Invalid example path: {agentese} -> {error}"
 
-    def test_patterns_cover_all_contexts(self):
+    def test_patterns_cover_all_contexts(self) -> None:
         """Test that patterns exist for all five contexts."""
         contexts_found = set()
         for pattern, template, aspect, confidence in TRANSLATION_PATTERNS:

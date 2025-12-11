@@ -11,7 +11,7 @@ import pytest
 class TestEgentIntegration:
     """Test E-gent parser integration."""
 
-    def test_code_parser_structured_format(self):
+    def test_code_parser_structured_format(self) -> None:
         """Test E-gent code parser with structured format."""
         from agents.e.parser.p_integration import code_parser
 
@@ -37,7 +37,7 @@ def hello():
         assert result.confidence > 0.5
         assert "e-gent" in result.strategy
 
-    def test_code_parser_pure_code_block(self):
+    def test_code_parser_pure_code_block(self) -> None:
         """Test E-gent code parser with pure code block."""
         from agents.e.parser.p_integration import code_parser
 
@@ -55,7 +55,7 @@ def test():
         assert result.value is not None
         assert "def test():" in result.value.code
 
-    def test_code_parser_failure(self):
+    def test_code_parser_failure(self) -> None:
         """Test E-gent code parser with invalid input."""
         from agents.e.parser.p_integration import code_parser
 
@@ -72,7 +72,7 @@ def test():
 class TestBgentIntegration:
     """Test B-gent hypothesis parser integration."""
 
-    def test_hypothesis_parser_complete(self):
+    def test_hypothesis_parser_complete(self) -> None:
         """Test B-gent hypothesis parser with complete response."""
         from agents.b.p_integration import hypothesis_parser
 
@@ -108,7 +108,7 @@ SUGGESTED_TESTS:
         assert result.confidence > 0.5
         assert "b-gent" in result.strategy
 
-    def test_hypothesis_parser_failure(self):
+    def test_hypothesis_parser_failure(self) -> None:
         """Test B-gent hypothesis parser with invalid input."""
         from agents.b.p_integration import hypothesis_parser
 
@@ -125,7 +125,7 @@ SUGGESTED_TESTS:
 class TestFgentIntegration:
     """Test F-gent artifact parser integration."""
 
-    def test_artifact_parser_complete(self):
+    def test_artifact_parser_complete(self) -> None:
         """Test F-gent artifact parser with complete .alo.md."""
         from agents.f.p_integration import artifact_parser
 
@@ -189,7 +189,7 @@ def invoke(input: str) -> str:
         assert result.confidence > 0.5
         assert "f-gent" in result.strategy
 
-    def test_artifact_parser_failure(self):
+    def test_artifact_parser_failure(self) -> None:
         """Test F-gent artifact parser with invalid input."""
         from agents.f.p_integration import artifact_parser
 
@@ -207,7 +207,7 @@ def invoke(input: str) -> str:
 class TestComposition:
     """Test composition of different parsers."""
 
-    def test_fallback_composition(self):
+    def test_fallback_composition(self) -> None:
         """Test fallback composition of E-gent and B-gent parsers."""
         from agents.b.p_integration import hypothesis_parser
         from agents.e.parser.p_integration import code_parser

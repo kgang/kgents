@@ -18,7 +18,7 @@ Tests cover:
 class TestHelpAndVersion:
     """Test fast path for --help and --version."""
 
-    def test_help_no_args(self, capsys):
+    def test_help_no_args(self, capsys) -> None:
         """kgents (no args) prints help."""
         from protocols.cli.hollow import main
 
@@ -31,7 +31,7 @@ class TestHelpAndVersion:
         assert "new" in out
         assert "run" in out
 
-    def test_help_flag(self, capsys):
+    def test_help_flag(self, capsys) -> None:
         """kgents --help prints help."""
         from protocols.cli.hollow import main
 
@@ -41,7 +41,7 @@ class TestHelpAndVersion:
         assert result == 0
         assert "kgents - Kent's Agents CLI" in out
 
-    def test_help_short_flag(self, capsys):
+    def test_help_short_flag(self, capsys) -> None:
         """kgents -h prints help."""
         from protocols.cli.hollow import main
 
@@ -51,7 +51,7 @@ class TestHelpAndVersion:
         assert result == 0
         assert "kgents - Kent's Agents CLI" in out
 
-    def test_version(self, capsys):
+    def test_version(self, capsys) -> None:
         """kgents --version prints version."""
         from protocols.cli.hollow import main
 
@@ -70,7 +70,7 @@ class TestHelpAndVersion:
 class TestCommandResolution:
     """Test lazy command resolution."""
 
-    def test_resolve_registered_command(self):
+    def test_resolve_registered_command(self) -> None:
         """Registered commands resolve to handlers."""
         from protocols.cli.hollow import COMMAND_REGISTRY, resolve_command
 
@@ -80,14 +80,14 @@ class TestCommandResolution:
                 handler = resolve_command(cmd)
                 assert handler is not None, f"Failed to resolve: {cmd}"
 
-    def test_resolve_unknown_command(self):
+    def test_resolve_unknown_command(self) -> None:
         """Unknown commands return None."""
         from protocols.cli.hollow import resolve_command
 
         handler = resolve_command("nonexistent_command_xyz")
         assert handler is None
 
-    def test_membrane_resolves(self):
+    def test_membrane_resolves(self) -> None:
         """Membrane command resolves to handler."""
         from protocols.cli.hollow import resolve_command
 
@@ -103,7 +103,7 @@ class TestCommandResolution:
 class TestFuzzyMatching:
     """Test typo suggestions."""
 
-    def test_suggest_close_match(self):
+    def test_suggest_close_match(self) -> None:
         """Close typos get suggestions."""
         from protocols.cli.hollow import suggest_similar
 
@@ -111,14 +111,14 @@ class TestFuzzyMatching:
         suggestions = suggest_similar("membran")
         assert "membrane" in suggestions
 
-    def test_suggest_no_match(self):
+    def test_suggest_no_match(self) -> None:
         """Completely wrong input gets no suggestions."""
         from protocols.cli.hollow import suggest_similar
 
         suggestions = suggest_similar("xyzabc123")
         assert len(suggestions) == 0
 
-    def test_print_suggestions(self, capsys):
+    def test_print_suggestions(self, capsys) -> None:
         """print_suggestions shows helpful output."""
         from protocols.cli.hollow import print_suggestions
 
@@ -138,7 +138,7 @@ class TestFuzzyMatching:
 class TestFlagParsing:
     """Test lightweight flag parsing."""
 
-    def test_parse_help_flag(self):
+    def test_parse_help_flag(self) -> None:
         """--help flag is parsed."""
         from protocols.cli.hollow import parse_global_flags
 
@@ -146,7 +146,7 @@ class TestFlagParsing:
         assert flags["help"] is True
         assert len(remaining) == 0
 
-    def test_parse_format_equals(self):
+    def test_parse_format_equals(self) -> None:
         """--format=json is parsed."""
         from protocols.cli.hollow import parse_global_flags
 
@@ -154,7 +154,7 @@ class TestFlagParsing:
         assert flags["format"] == "json"
         assert remaining == ["pulse"]
 
-    def test_parse_format_space(self):
+    def test_parse_format_space(self) -> None:
         """--format json is parsed."""
         from protocols.cli.hollow import parse_global_flags
 
@@ -162,7 +162,7 @@ class TestFlagParsing:
         assert flags["format"] == "json"
         assert remaining == ["pulse"]
 
-    def test_parse_budget(self):
+    def test_parse_budget(self) -> None:
         """--budget=high is parsed."""
         from protocols.cli.hollow import parse_global_flags
 
@@ -170,7 +170,7 @@ class TestFlagParsing:
         assert flags["budget"] == "high"
         assert remaining == ["check"]
 
-    def test_parse_explain(self):
+    def test_parse_explain(self) -> None:
         """--explain flag is parsed."""
         from protocols.cli.hollow import parse_global_flags
 
@@ -178,7 +178,7 @@ class TestFlagParsing:
         assert flags["explain"] is True
         assert remaining == ["membrane"]
 
-    def test_parse_no_metrics(self):
+    def test_parse_no_metrics(self) -> None:
         """--no-metrics flag is parsed."""
         from protocols.cli.hollow import parse_global_flags
 
@@ -186,7 +186,7 @@ class TestFlagParsing:
         assert flags["no_metrics"] is True
         assert remaining == ["pulse"]
 
-    def test_remaining_preserved(self):
+    def test_remaining_preserved(self) -> None:
         """Command and args are preserved in remaining."""
         from protocols.cli.hollow import parse_global_flags
 
@@ -202,7 +202,7 @@ class TestFlagParsing:
 class TestUnknownCommand:
     """Test handling of unknown commands."""
 
-    def test_unknown_command_exits_with_error(self, capsys):
+    def test_unknown_command_exits_with_error(self, capsys) -> None:
         """Unknown command prints error and exits 1."""
         from protocols.cli.hollow import main
 
@@ -223,7 +223,7 @@ class TestUnknownCommand:
 class TestIntegration:
     """Integration tests for full command flow."""
 
-    def test_command_help_delegation(self, capsys):
+    def test_command_help_delegation(self, capsys) -> None:
         """Command-level --help delegates to handler."""
         from protocols.cli.hollow import main
 
@@ -235,7 +235,7 @@ class TestIntegration:
         assert "wipe" in out
         assert "help" in out.lower() or "USAGE" in out
 
-    def test_full_command_execution(self, tmp_path, monkeypatch):
+    def test_full_command_execution(self, tmp_path, monkeypatch) -> None:
         """Full command execution path works."""
         from protocols.cli.hollow import main
 

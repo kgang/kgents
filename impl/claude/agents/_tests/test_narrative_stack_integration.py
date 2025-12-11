@@ -162,7 +162,7 @@ def mock_llm_provider():
 class TestNarrativeMemoryIntegration:
     """N × M: Narrative crystals persist in holographic memory."""
 
-    def test_historian_stores_trace(self, historian, sample_traces):
+    def test_historian_stores_trace(self, historian, sample_traces) -> None:
         """Test Historian stores traces."""
         for trace in sample_traces:
             historian.store.store(trace)
@@ -198,7 +198,7 @@ class TestNarrativeMemoryIntegration:
         stats = holographic_memory.stats()
         assert stats.get("total_patterns", 0) >= 1
 
-    def test_crystal_store_query_by_genus(self, crystal_store, sample_traces):
+    def test_crystal_store_query_by_genus(self, crystal_store, sample_traces) -> None:
         """Test querying crystals by genus."""
         for trace in sample_traces:
             crystal_store.store(trace)
@@ -209,7 +209,7 @@ class TestNarrativeMemoryIntegration:
         assert len(p_traces) == 2  # Two P-gent traces
         assert len(j_traces) == 1  # One J-gent trace
 
-    def test_crystal_lineage_preserved(self, crystal_store, sample_traces):
+    def test_crystal_lineage_preserved(self, crystal_store, sample_traces) -> None:
         """Test trace lineage is preserved."""
         for trace in sample_traces:
             crystal_store.store(trace)
@@ -220,7 +220,7 @@ class TestNarrativeMemoryIntegration:
         parent = crystal_store.get(child.parent_id)
         assert parent.parent_id == "trace-001"
 
-    def test_resonant_crystal_store_concept(self, crystal_store, sample_traces):
+    def test_resonant_crystal_store_concept(self, crystal_store, sample_traces) -> None:
         """Test ResonantCrystalStore integrates with M-gent (conceptual)."""
         # Store traces
         for trace in sample_traces:
@@ -241,7 +241,7 @@ class TestNarrativeMemoryIntegration:
         score = bridge.resonate(sample_traces[0])
         assert 0.0 <= score <= 1.0
 
-    def test_tiered_memory_with_crystals(self, sample_traces):
+    def test_tiered_memory_with_crystals(self, sample_traces) -> None:
         """Test TieredMemory hierarchy with crystal content."""
         from agents.m import TieredMemory
 
@@ -270,18 +270,18 @@ class TestNarrativeMemoryIntegration:
 class TestNarrativePersonaIntegration:
     """N × K: Narrative includes K-gent persona."""
 
-    def test_persona_seed_creation(self, persona_seed):
+    def test_persona_seed_creation(self, persona_seed) -> None:
         """Test PersonaSeed creates successfully."""
         assert persona_seed.name == "Test Persona"
         assert "preferences" in dir(persona_seed)
 
-    def test_persona_state_from_seed(self, persona_seed):
+    def test_persona_state_from_seed(self, persona_seed) -> None:
         """Test PersonaState from seed."""
         state = PersonaState(seed=persona_seed)
 
         assert state.seed.name == "Test Persona"
 
-    def test_persona_in_narrative_genre(self, persona_seed):
+    def test_persona_in_narrative_genre(self, persona_seed) -> None:
         """Test persona influences narrative genre."""
         state = PersonaState(seed=persona_seed)
 
@@ -291,7 +291,7 @@ class TestNarrativePersonaIntegration:
         assert state.seed.name == "Test Persona"
         assert preferred_genre == NarrativeGenre.TECHNICAL
 
-    def test_persona_verbosity_preference(self, persona_seed):
+    def test_persona_verbosity_preference(self, persona_seed) -> None:
         """Test persona verbosity maps to Bard verbosity."""
         state = PersonaState(seed=persona_seed)
 
@@ -318,7 +318,7 @@ class TestNarrativePersonaIntegration:
             Verbosity.VERBOSE,
         )
 
-    def test_dialogue_mode_affects_narrative(self, persona_seed):
+    def test_dialogue_mode_affects_narrative(self, persona_seed) -> None:
         """Test dialogue mode influences narrative style."""
         # Different dialogue modes
         modes = [
@@ -332,7 +332,7 @@ class TestNarrativePersonaIntegration:
             # Mode would influence how Bard tells the story
             assert mode.value in ["reflect", "advise", "challenge", "explore"]
 
-    def test_persona_constraints_in_narration(self, persona_seed):
+    def test_persona_constraints_in_narration(self, persona_seed) -> None:
         """Test persona constraints affect narration."""
         state = PersonaState(seed=persona_seed)
 
@@ -350,7 +350,9 @@ class TestNarrativePersonaIntegration:
             # In real implementation, Bard would include these
             assert len(hedging_phrases) > 0
 
-    def test_chronicle_with_persona_perspective(self, sample_traces, persona_seed):
+    def test_chronicle_with_persona_perspective(
+        self, sample_traces, persona_seed
+    ) -> None:
         """Test Chronicle can include persona perspective."""
         # Build chronicle
         builder = ChronicleBuilder()
@@ -387,7 +389,7 @@ class TestNarrativePersonaIntegration:
 class TestNarrativeObservationIntegration:
     """N × O: Narrative records observations."""
 
-    def test_observation_creates_trace(self, historian):
+    def test_observation_creates_trace(self, historian) -> None:
         """Test O-gent observation creates N-gent trace."""
         # Simulate observation data
         observation = ObservationResult(
@@ -424,7 +426,7 @@ class TestNarrativeObservationIntegration:
         assert retrieved.agent_genus == "O"
         assert retrieved.outputs["duration_ms"] == 42.5
 
-    def test_panopticon_status_to_chronicle(self, historian):
+    def test_panopticon_status_to_chronicle(self, historian) -> None:
         """Test Panopticon status converts to chronicle entry."""
         # Simulate Panopticon status
         status_data = {
@@ -450,7 +452,7 @@ class TestNarrativeObservationIntegration:
         status_traces = list(historian.store.query(agent_id="panopticon"))
         assert len(status_traces) >= 1
 
-    def test_observation_hierarchy_in_narrative(self, historian):
+    def test_observation_hierarchy_in_narrative(self, historian) -> None:
         """Test observation hierarchy (telemetry → semantic → axiological)."""
         # Telemetry observation
         telemetry_trace = create_test_trace(
@@ -545,7 +547,7 @@ class TestNarrativeStackFullIntegration:
         assert request.traces == sample_traces
         assert request.genre == NarrativeGenre.TECHNICAL
 
-    def test_observation_to_crystal_to_bard(self, historian, mock_llm_provider):
+    def test_observation_to_crystal_to_bard(self, historian, mock_llm_provider) -> None:
         """Test O-gent observation → N-gent crystal → Bard narrative."""
         # 1. Simulate observation
         obs_trace = create_test_trace(
@@ -628,7 +630,7 @@ class TestNarrativeStackFullIntegration:
         assert len(request.traces) == 1
         assert request.traces[0].inputs["level"] == "semantic"
 
-    def test_multi_agent_chronicle_with_o_gent(self, historian, sample_traces):
+    def test_multi_agent_chronicle_with_o_gent(self, historian, sample_traces) -> None:
         """Test Chronicle weaves O-gent observations with other agents."""
         # Store original traces
         for trace in sample_traces:

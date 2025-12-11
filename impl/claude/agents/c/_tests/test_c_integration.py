@@ -141,7 +141,7 @@ class TestFunctorIdentityLaw:
     """Test Functor Identity Law: F(id_A) = id_F(A)"""
 
     @pytest.mark.asyncio
-    async def test_maybe_identity_law_just(self):
+    async def test_maybe_identity_law_just(self) -> None:
         """Maybe functor preserves identity on Just."""
         identity = IdentityAgent()
         lifted = maybe(identity)
@@ -153,7 +153,7 @@ class TestFunctorIdentityLaw:
         assert result.value == 42
 
     @pytest.mark.asyncio
-    async def test_maybe_identity_law_nothing(self):
+    async def test_maybe_identity_law_nothing(self) -> None:
         """Maybe functor preserves identity on Nothing."""
         identity = IdentityAgent()
         lifted = maybe(identity)
@@ -163,7 +163,7 @@ class TestFunctorIdentityLaw:
         assert result.is_nothing()
 
     @pytest.mark.asyncio
-    async def test_either_identity_law_right(self):
+    async def test_either_identity_law_right(self) -> None:
         """Either functor preserves identity on Right."""
         identity = IdentityAgent()
         lifted = either(identity)
@@ -175,7 +175,7 @@ class TestFunctorIdentityLaw:
         assert result.value == 42
 
     @pytest.mark.asyncio
-    async def test_either_identity_law_left(self):
+    async def test_either_identity_law_left(self) -> None:
         """Either functor preserves identity on Left."""
         identity = IdentityAgent()
         lifted = either(identity)
@@ -187,7 +187,7 @@ class TestFunctorIdentityLaw:
         assert result.error == "error"
 
     @pytest.mark.asyncio
-    async def test_list_identity_law(self):
+    async def test_list_identity_law(self) -> None:
         """List functor preserves identity."""
         identity = IdentityAgent()
         lifted = list_agent(identity)
@@ -198,7 +198,7 @@ class TestFunctorIdentityLaw:
         assert result == [1, 2, 3]
 
     @pytest.mark.asyncio
-    async def test_identity_law_via_helper(self):
+    async def test_identity_law_via_helper(self) -> None:
         """Test identity law using check_identity_law helper."""
         identity = IdentityAgent()
         result = await check_identity_law(maybe, identity, Just(42))
@@ -209,7 +209,7 @@ class TestFunctorCompositionLaw:
     """Test Functor Composition Law: F(g . f) = F(g) . F(f)"""
 
     @pytest.mark.asyncio
-    async def test_maybe_composition_law(self):
+    async def test_maybe_composition_law(self) -> None:
         """Maybe functor preserves composition."""
         double = DoubleAgent()
         add_ten = AddTenAgent()
@@ -231,7 +231,7 @@ class TestFunctorCompositionLaw:
         assert result_left.value == result_right.value == 20
 
     @pytest.mark.asyncio
-    async def test_either_composition_law(self):
+    async def test_either_composition_law(self) -> None:
         """Either functor preserves composition."""
         double = DoubleAgent()
         add_ten = AddTenAgent()
@@ -250,7 +250,7 @@ class TestFunctorCompositionLaw:
         assert result_left.value == result_right.value == 20
 
     @pytest.mark.asyncio
-    async def test_list_composition_law(self):
+    async def test_list_composition_law(self) -> None:
         """List functor preserves composition."""
         double = DoubleAgent()
         add_ten = AddTenAgent()
@@ -268,7 +268,7 @@ class TestFunctorCompositionLaw:
         assert result_left == result_right == [12, 14, 16]
 
     @pytest.mark.asyncio
-    async def test_composition_law_via_helper(self):
+    async def test_composition_law_via_helper(self) -> None:
         """Test composition law using check_composition_law helper."""
         double = DoubleAgent()
         add_ten = AddTenAgent()
@@ -280,7 +280,7 @@ class TestFunctorCompositionLaw:
 class TestMonadLaws:
     """Test Monad Laws."""
 
-    def test_left_identity_maybe(self):
+    def test_left_identity_maybe(self) -> None:
         """Left identity: unit(a).bind(f) = f(a)"""
 
         # f: int -> Maybe[int]
@@ -299,7 +299,7 @@ class TestMonadLaws:
         assert isinstance(right, Just)
         assert left.value == right.value == 42
 
-    def test_right_identity_maybe(self):
+    def test_right_identity_maybe(self) -> None:
         """Right identity: m.bind(unit) = m"""
         m = Just(42)
 
@@ -309,7 +309,7 @@ class TestMonadLaws:
         assert isinstance(result, Just)
         assert result.value == 42
 
-    def test_associativity_maybe(self):
+    def test_associativity_maybe(self) -> None:
         """Associativity: m.bind(f).bind(g) = m.bind(λa. f(a).bind(g))"""
 
         def f(x: int) -> Maybe[int]:
@@ -331,7 +331,7 @@ class TestMonadLaws:
         assert isinstance(right, Just)
         assert left.value == right.value == 20
 
-    def test_left_identity_either(self):
+    def test_left_identity_either(self) -> None:
         """Left identity for Either monad."""
 
         def f(x: int) -> Either[str, int]:
@@ -346,7 +346,7 @@ class TestMonadLaws:
         assert isinstance(right, Right)
         assert left.value == right.value == 42
 
-    def test_maybe_either_monad_transformer(self):
+    def test_maybe_either_monad_transformer(self) -> None:
         """Test MaybeEither monad transformer."""
 
         def double(x: int) -> MaybeEither[int]:
@@ -360,7 +360,7 @@ class TestMonadLaws:
         assert isinstance(inner.value, Right)
         assert inner.value.value == 42
 
-    def test_maybe_either_short_circuit_nothing(self):
+    def test_maybe_either_short_circuit_nothing(self) -> None:
         """MaybeEither short-circuits on Nothing."""
         m = MaybeEither.fail_nothing()
 
@@ -370,7 +370,7 @@ class TestMonadLaws:
         result = m.bind(f)
         assert result.run().is_nothing()
 
-    def test_maybe_either_short_circuit_left(self):
+    def test_maybe_either_short_circuit_left(self) -> None:
         """MaybeEither short-circuits on Left."""
         m = MaybeEither.fail_left("error")
 
@@ -387,7 +387,7 @@ class TestCategoryLaws:
     """Test Category Laws for Agent composition."""
 
     @pytest.mark.asyncio
-    async def test_associativity(self):
+    async def test_associativity(self) -> None:
         """Test (f >> g) >> h = f >> (g >> h)"""
         f = StrToIntAgent()
         g = DoubleAgent()
@@ -410,7 +410,7 @@ class TestCategoryLaws:
         assert result_left == result_right == "10"
 
     @pytest.mark.asyncio
-    async def test_identity_left(self):
+    async def test_identity_left(self) -> None:
         """Test id >> f = f"""
         identity = IdentityAgent()
         double = DoubleAgent()
@@ -423,7 +423,7 @@ class TestCategoryLaws:
         assert result_composed == result_direct == 10
 
     @pytest.mark.asyncio
-    async def test_identity_right(self):
+    async def test_identity_right(self) -> None:
         """Test f >> id = f"""
         double = DoubleAgent()
         identity = IdentityAgent()
@@ -440,7 +440,7 @@ class TestFixPattern:
     """Test Fix pattern (retry with exponential backoff)."""
 
     @pytest.mark.asyncio
-    async def test_fix_recovers_from_transient_failure(self):
+    async def test_fix_recovers_from_transient_failure(self) -> None:
         """Fix pattern recovers from transient failures."""
         flakey = FlakeyAgent()
         resilient = fix(flakey, max_attempts=5, base_delay=0.01)
@@ -451,7 +451,7 @@ class TestFixPattern:
         assert flakey.attempts == 2  # Failed once, succeeded on second
 
     @pytest.mark.asyncio
-    async def test_fix_propagates_permanent_failure(self):
+    async def test_fix_propagates_permanent_failure(self) -> None:
         """Fix pattern propagates non-transient failures."""
         always_fails = AlwaysFailsAgent()
         resilient = fix(always_fails, max_attempts=3, base_delay=0.01)
@@ -460,7 +460,7 @@ class TestFixPattern:
             await resilient.invoke(5)
 
     @pytest.mark.asyncio
-    async def test_fix_with_custom_is_transient(self):
+    async def test_fix_with_custom_is_transient(self) -> None:
         """Fix pattern uses custom is_transient predicate."""
 
         def is_value_error(e: Exception) -> bool:
@@ -482,7 +482,7 @@ class TestListFunctor:
     """Test List functor for parallel processing."""
 
     @pytest.mark.asyncio
-    async def test_list_parallel_processing(self):
+    async def test_list_parallel_processing(self) -> None:
         """List functor processes elements in parallel."""
         double = DoubleAgent()
         lifted = list_agent(double, parallel=True)
@@ -492,7 +492,7 @@ class TestListFunctor:
         assert result == [2, 4, 6, 8, 10]
 
     @pytest.mark.asyncio
-    async def test_list_sequential_processing(self):
+    async def test_list_sequential_processing(self) -> None:
         """List functor can process elements sequentially."""
         double = DoubleAgent()
         lifted = list_agent(double, parallel=False)
@@ -502,7 +502,7 @@ class TestListFunctor:
         assert result == [2, 4, 6]
 
     @pytest.mark.asyncio
-    async def test_list_empty_input(self):
+    async def test_list_empty_input(self) -> None:
         """List functor handles empty input."""
         double = DoubleAgent()
         lifted = list_agent(double)
@@ -516,7 +516,7 @@ class TestAsyncFunctor:
     """Test Async functor for non-blocking execution."""
 
     @pytest.mark.asyncio
-    async def test_async_returns_future(self):
+    async def test_async_returns_future(self) -> None:
         """Async functor returns a future immediately."""
         double = DoubleAgent()
         async_double = async_agent(double)
@@ -532,7 +532,7 @@ class TestLoggedFunctor:
     """Test Logged functor for observability."""
 
     @pytest.mark.asyncio
-    async def test_logged_records_invocations(self):
+    async def test_logged_records_invocations(self) -> None:
         """Logged functor records all invocations."""
         double = DoubleAgent()
         logged_double = logged(double)
@@ -545,7 +545,7 @@ class TestLoggedFunctor:
         assert logged_double.history[1].input_repr == "10"
 
     @pytest.mark.asyncio
-    async def test_logged_records_errors(self):
+    async def test_logged_records_errors(self) -> None:
         """Logged functor records errors."""
         always_fails = AlwaysFailsAgent()
         logged_fails = logged(always_fails)
@@ -562,7 +562,7 @@ class TestParallelComposition:
     """Test parallel composition patterns."""
 
     @pytest.mark.asyncio
-    async def test_parallel_agents(self):
+    async def test_parallel_agents(self) -> None:
         """Parallel composition runs agents concurrently."""
         double = DoubleAgent()
         add_ten = AddTenAgent()
@@ -574,7 +574,7 @@ class TestParallelComposition:
         assert result == [10, 15]
 
     @pytest.mark.asyncio
-    async def test_fan_out(self):
+    async def test_fan_out(self) -> None:
         """Fan-out broadcasts to multiple agents."""
         double = DoubleAgent()
         add_ten = AddTenAgent()
@@ -586,7 +586,7 @@ class TestParallelComposition:
         assert results == (10, 15)
 
     @pytest.mark.asyncio
-    async def test_race(self):
+    async def test_race(self) -> None:
         """Race returns first completed result."""
 
         class SlowAgent(Agent[int, int]):
@@ -612,7 +612,7 @@ class TestConditionalComposition:
     """Test conditional composition patterns."""
 
     @pytest.mark.asyncio
-    async def test_branch(self):
+    async def test_branch(self) -> None:
         """Branch selects agent based on condition."""
         double = DoubleAgent()
         add_ten = AddTenAgent()
@@ -633,7 +633,7 @@ class TestConditionalComposition:
         assert result_low == 10
 
     @pytest.mark.asyncio
-    async def test_switch(self):
+    async def test_switch(self) -> None:
         """Switch dispatches based on key function."""
         double = DoubleAgent()
         add_ten = AddTenAgent()
@@ -655,7 +655,7 @@ class TestConditionalComposition:
         assert result_high == 25
 
     @pytest.mark.asyncio
-    async def test_guarded(self):
+    async def test_guarded(self) -> None:
         """Guarded agent only runs if guard passes."""
         double = DoubleAgent()
 
@@ -679,7 +679,7 @@ class TestFunctorLiftedComposition:
     """Test that lifted agents compose correctly."""
 
     @pytest.mark.asyncio
-    async def test_lifted_composition_short_circuits(self):
+    async def test_lifted_composition_short_circuits(self) -> None:
         """Lifted agents short-circuit on failure."""
         double = DoubleAgent()
         add_ten = AddTenAgent()
@@ -699,7 +699,7 @@ class TestFunctorLiftedComposition:
         assert result_just.value == 20
 
     @pytest.mark.asyncio
-    async def test_either_composition_propagates_left(self):
+    async def test_either_composition_propagates_left(self) -> None:
         """Either composition propagates Left."""
         double = DoubleAgent()
         add_ten = AddTenAgent()

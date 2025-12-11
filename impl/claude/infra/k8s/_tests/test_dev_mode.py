@@ -307,12 +307,12 @@ class TestDevModeIntegration:
     """Integration tests that require a running Kind cluster."""
 
     @pytest.fixture
-    def dev(self):
+    def dev(self) -> create_dev_mode:
         """Create DevMode instance."""
         return create_dev_mode()
 
     @pytest.fixture
-    def has_cluster(self):
+    def has_cluster(self) -> result.returncode == 0:
         """Check if Kind cluster is available."""
         import subprocess
 

@@ -38,7 +38,7 @@ MetaArchitect.__is_test__ = True
 
 
 @pytest.mark.asyncio
-async def test_meta_architect_basic():
+async def test_meta_architect_basic() -> None:
     """Test basic MetaArchitect agent generation."""
     architect = MetaArchitect()
 
@@ -57,7 +57,7 @@ async def test_meta_architect_basic():
 
 
 @pytest.mark.asyncio
-async def test_meta_architect_parser_pattern():
+async def test_meta_architect_parser_pattern() -> None:
     """Test MetaArchitect generates parser-type agents."""
     architect = MetaArchitect()
 
@@ -77,7 +77,7 @@ async def test_meta_architect_parser_pattern():
 
 
 @pytest.mark.asyncio
-async def test_meta_architect_filter_pattern():
+async def test_meta_architect_filter_pattern() -> None:
     """Test MetaArchitect generates filter-type agents."""
     architect = MetaArchitect()
 
@@ -94,7 +94,7 @@ async def test_meta_architect_filter_pattern():
 
 
 @pytest.mark.asyncio
-async def test_meta_architect_analyzer_pattern():
+async def test_meta_architect_analyzer_pattern() -> None:
     """Test MetaArchitect generates analyzer-type agents."""
     architect = MetaArchitect()
 
@@ -111,7 +111,7 @@ async def test_meta_architect_analyzer_pattern():
 
 
 @pytest.mark.asyncio
-async def test_meta_architect_validator_pattern():
+async def test_meta_architect_validator_pattern() -> None:
     """Test MetaArchitect generates validator-type agents."""
     architect = MetaArchitect()
 
@@ -128,7 +128,7 @@ async def test_meta_architect_validator_pattern():
 
 
 @pytest.mark.asyncio
-async def test_meta_architect_respects_constraints():
+async def test_meta_architect_respects_constraints() -> None:
     """Test MetaArchitect respects entropy budget constraints."""
     architect = MetaArchitect()
 
@@ -155,7 +155,7 @@ async def test_meta_architect_respects_constraints():
 # --- Sandbox Tests ---
 
 
-def test_sandboxed_namespace_safe_builtins():
+def test_sandboxed_namespace_safe_builtins() -> None:
     """Test sandboxed namespace blocks dangerous builtins."""
     allowed_imports = frozenset({"re", "json"})
     sandbox = SandboxedNamespace(allowed_imports)
@@ -175,7 +175,7 @@ def test_sandboxed_namespace_safe_builtins():
     assert "open" not in ns["__builtins__"]
 
 
-def test_sandboxed_namespace_whitelisted_imports():
+def test_sandboxed_namespace_whitelisted_imports() -> None:
     """Test sandboxed namespace only includes whitelisted imports."""
     allowed_imports = frozenset({"re", "json"})
     sandbox = SandboxedNamespace(allowed_imports)
@@ -192,7 +192,7 @@ def test_sandboxed_namespace_whitelisted_imports():
 
 
 @pytest.mark.asyncio
-async def test_type_check_source_valid():
+async def test_type_check_source_valid() -> None:
     """Test type checking accepts valid Python code."""
     valid_source = """
 def hello(name: str) -> str:
@@ -204,7 +204,7 @@ def hello(name: str) -> str:
 
 
 @pytest.mark.asyncio
-async def test_type_check_source_invalid():
+async def test_type_check_source_invalid() -> None:
     """Test type checking rejects invalid Python code."""
     invalid_source = """
 def hello(name: str) -> str:
@@ -216,7 +216,7 @@ def hello(name: str) -> str:
 
 
 @pytest.mark.asyncio
-async def test_execute_in_sandbox_success():
+async def test_execute_in_sandbox_success() -> None:
     """Test successful execution in sandbox."""
     source = AgentSource(
         source="""
@@ -244,7 +244,7 @@ class SimpleAgent:
 
 
 @pytest.mark.asyncio
-async def test_execute_in_sandbox_timeout():
+async def test_execute_in_sandbox_timeout() -> None:
     """Test sandbox enforces timeout."""
     source = AgentSource(
         source="""
@@ -276,7 +276,7 @@ class SlowAgent:
 
 
 @pytest.mark.asyncio
-async def test_execute_in_sandbox_blocks_forbidden_operations():
+async def test_execute_in_sandbox_blocks_forbidden_operations() -> None:
     """Test sandbox blocks forbidden operations like eval."""
     source = AgentSource(
         source="""
@@ -306,7 +306,7 @@ class MaliciousAgent:
 # --- Safety Validation Tests ---
 
 
-def test_validate_source_safety_passes():
+def test_validate_source_safety_passes() -> None:
     """Test safety validation passes for safe code."""
     source = AgentSource(
         source="""
@@ -332,7 +332,7 @@ class SafeAgent:
     assert is_safe
 
 
-def test_validate_source_safety_rejects_complexity():
+def test_validate_source_safety_rejects_complexity() -> None:
     """Test safety validation rejects overly complex code."""
     source = AgentSource(
         source="complex code",
@@ -352,7 +352,7 @@ def test_validate_source_safety_rejects_complexity():
     assert "complexity" in reason.lower()
 
 
-def test_validate_source_safety_rejects_forbidden_imports():
+def test_validate_source_safety_rejects_forbidden_imports() -> None:
     """Test safety validation rejects forbidden imports."""
     source = AgentSource(
         source="import os",
@@ -372,7 +372,7 @@ def test_validate_source_safety_rejects_forbidden_imports():
     assert "os" in reason
 
 
-def test_validate_source_safety_rejects_forbidden_patterns():
+def test_validate_source_safety_rejects_forbidden_patterns() -> None:
     """Test safety validation rejects forbidden patterns like eval."""
     source = AgentSource(
         source='eval("malicious code")',
@@ -396,7 +396,7 @@ def test_validate_source_safety_rejects_forbidden_patterns():
 
 
 @pytest.mark.asyncio
-async def test_jit_compile_and_execute_e2e():
+async def test_jit_compile_and_execute_e2e() -> None:
     """Test end-to-end JIT compilation and execution."""
     # Generate agent
     source = await compile_agent(
@@ -430,7 +430,7 @@ class UppercaseAgent:
 
 
 @pytest.mark.asyncio
-async def test_jit_safety_validation_e2e():
+async def test_jit_safety_validation_e2e() -> None:
     """Test end-to-end safety validation prevents unsafe execution."""
     # Generate agent with forbidden pattern
     source = AgentSource(
@@ -456,7 +456,7 @@ class UnsafeAgent:
 
 
 @pytest.mark.asyncio
-async def test_jit_with_chaosmonger_integration():
+async def test_jit_with_chaosmonger_integration() -> None:
     """Test JIT compilation integrates with Chaosmonger stability checks."""
     # Generate complex agent that should fail Chaosmonger
     source = AgentSource(
@@ -495,7 +495,7 @@ class ComplexAgent:
 
 
 @pytest.mark.asyncio
-async def test_compile_agent_convenience():
+async def test_compile_agent_convenience() -> None:
     """Test compile_agent convenience function."""
     source = await compile_agent(
         intent="Filter numbers greater than 10",
@@ -509,7 +509,7 @@ async def test_compile_agent_convenience():
 
 
 @pytest.mark.asyncio
-async def test_compile_agent_with_constraints():
+async def test_compile_agent_with_constraints() -> None:
     """Test compile_agent respects custom constraints."""
     constraints = ArchitectConstraints(
         entropy_budget=0.3,

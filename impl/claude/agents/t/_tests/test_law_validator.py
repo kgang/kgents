@@ -39,7 +39,7 @@ class SimpleAgent:
 
 
 @pytest.mark.asyncio
-async def test_associativity_holds():
+async def test_associativity_holds() -> None:
     """Test that associativity law holds for composition."""
     # Create three simple agents: f(x) = x + 1, g(x) = x * 2, h(x) = x - 3
     f = SimpleAgent("f", lambda x: x + 1)
@@ -54,7 +54,7 @@ async def test_associativity_holds():
 
 
 @pytest.mark.asyncio
-async def test_associativity_violation():
+async def test_associativity_violation() -> None:
     """Test detection of associativity violations."""
     # Create agents where order matters due to side effects
     state = {"count": 0}
@@ -85,7 +85,7 @@ async def test_associativity_violation():
 
 
 @pytest.mark.asyncio
-async def test_left_identity_holds():
+async def test_left_identity_holds() -> None:
     """Test that left identity law holds."""
     agent = SimpleAgent("agent", lambda x: x * 2)
     test_input = 10
@@ -96,7 +96,7 @@ async def test_left_identity_holds():
 
 
 @pytest.mark.asyncio
-async def test_right_identity_holds():
+async def test_right_identity_holds() -> None:
     """Test that right identity law holds."""
     agent = SimpleAgent("agent", lambda x: x + 5)
     test_input = 15
@@ -110,7 +110,7 @@ async def test_right_identity_holds():
 
 
 @pytest.mark.asyncio
-async def test_functor_identity():
+async def test_functor_identity() -> None:
     """Test functor identity law: F(id) = id."""
 
     def list_map(f):
@@ -125,7 +125,7 @@ async def test_functor_identity():
 
 
 @pytest.mark.asyncio
-async def test_functor_composition():
+async def test_functor_composition() -> None:
     """Test functor composition law: F(g . f) = F(g) . F(f)."""
 
     def list_map(f):
@@ -148,7 +148,7 @@ async def test_functor_composition():
 
 
 @pytest.mark.asyncio
-async def test_monad_left_identity():
+async def test_monad_left_identity() -> None:
     """Test monad left identity: unit(a).bind(f) = f(a)."""
 
     # Simple list monad
@@ -169,7 +169,7 @@ async def test_monad_left_identity():
 
 
 @pytest.mark.asyncio
-async def test_monad_right_identity():
+async def test_monad_right_identity() -> None:
     """Test monad right identity: m.bind(unit) = m."""
 
     def unit(a):
@@ -186,7 +186,7 @@ async def test_monad_right_identity():
 
 
 @pytest.mark.asyncio
-async def test_monad_associativity():
+async def test_monad_associativity() -> None:
     """Test monad associativity: m.bind(f).bind(g) = m.bind(λa. f(a).bind(g))."""
 
     def bind(m, f):
@@ -209,7 +209,7 @@ async def test_monad_associativity():
 
 
 @pytest.mark.asyncio
-async def test_law_validator_pipeline():
+async def test_law_validator_pipeline() -> None:
     """Test LawValidator for a complete pipeline."""
     validator = LawValidator()
 
@@ -235,7 +235,7 @@ async def test_law_validator_pipeline():
 
 
 @pytest.mark.asyncio
-async def test_law_validator_reset():
+async def test_law_validator_reset() -> None:
     """Test that validator resets correctly."""
     validator = LawValidator()
 
@@ -258,7 +258,7 @@ async def test_law_validator_reset():
     assert len(validator.laws_checked) == 0
 
 
-def test_law_violation_str():
+def test_law_violation_str() -> None:
     """Test LawViolation string representation."""
     violation = LawViolation(
         law_name="Associativity",
@@ -273,7 +273,7 @@ def test_law_violation_str():
     assert "violation" in str_rep
 
 
-def test_law_validation_report_str():
+def test_law_validation_report_str() -> None:
     """Test LawValidationReport string representation."""
     report = LawValidationReport(
         laws_checked=["Associativity", "Left Identity"],
@@ -286,7 +286,7 @@ def test_law_validation_report_str():
     assert "2/2" in str_rep
 
 
-def test_law_validation_report_with_violations():
+def test_law_validation_report_with_violations() -> None:
     """Test LawValidationReport with violations."""
     violation = LawViolation(
         law_name="Associativity",
@@ -312,7 +312,7 @@ def test_law_validation_report_with_violations():
 
 
 @pytest.mark.asyncio
-async def test_validate_evolution_pipeline_mock():
+async def test_validate_evolution_pipeline_mock() -> None:
     """Test validation with mock E-gent stages."""
     from pathlib import Path
 

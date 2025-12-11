@@ -64,7 +64,7 @@ def make_signal(signal_type: str = "test", **kwargs) -> Signal:
 class TestLetheEpoch:
     """Test LetheEpoch data structure."""
 
-    def test_create_epoch(self):
+    def test_create_epoch(self) -> None:
         """Test epoch creation."""
         epoch = LetheEpoch(
             epoch_id="test-123",
@@ -77,7 +77,7 @@ class TestLetheEpoch:
         assert epoch.signal_count == 100
         assert len(epoch.signal_types) == 2
 
-    def test_duration_hours(self):
+    def test_duration_hours(self) -> None:
         """Test duration calculation."""
         epoch = LetheEpoch(
             epoch_id="test",
@@ -97,7 +97,7 @@ class TestLetheEpoch:
 class TestHippocampusConfig:
     """Test Hippocampus configuration."""
 
-    def test_default_config(self):
+    def test_default_config(self) -> None:
         """Test default configuration values."""
         config = HippocampusConfig()
         assert config.backend == "memory"
@@ -105,7 +105,7 @@ class TestHippocampusConfig:
         assert config.flush_strategy == "on_sleep"
         assert config.create_epochs is True
 
-    def test_from_dict(self):
+    def test_from_dict(self) -> None:
         """Test config from dict."""
         data = {
             "backend": "redis",
@@ -117,7 +117,7 @@ class TestHippocampusConfig:
         assert config.max_size == 5000
         assert config.flush_strategy == "on_size"
 
-    def test_from_empty_dict(self):
+    def test_from_empty_dict(self) -> None:
         """Test config from empty dict uses defaults."""
         config = HippocampusConfig.from_dict({})
         assert config.backend == "memory"
@@ -132,7 +132,7 @@ class TestMemoryBackend:
     """Test in-memory storage backend."""
 
     @pytest.mark.asyncio
-    async def test_append_and_size(self):
+    async def test_append_and_size(self) -> None:
         """Test appending signals."""
         backend = MemoryBackend()
         signal = make_signal("test")
@@ -142,7 +142,7 @@ class TestMemoryBackend:
         assert backend.size == 1
 
     @pytest.mark.asyncio
-    async def test_signal_types_tracked(self):
+    async def test_signal_types_tracked(self) -> None:
         """Test signal types are tracked."""
         backend = MemoryBackend()
 
@@ -153,7 +153,7 @@ class TestMemoryBackend:
         assert backend.signal_types == {"type.a", "type.b"}
 
     @pytest.mark.asyncio
-    async def test_drain_clears(self):
+    async def test_drain_clears(self) -> None:
         """Test drain returns and clears signals."""
         backend = MemoryBackend()
 
@@ -167,7 +167,7 @@ class TestMemoryBackend:
         assert len(backend.signal_types) == 0
 
     @pytest.mark.asyncio
-    async def test_peek_non_destructive(self):
+    async def test_peek_non_destructive(self) -> None:
         """Test peek doesn't remove signals."""
         backend = MemoryBackend()
 
@@ -178,7 +178,7 @@ class TestMemoryBackend:
         assert backend.size == 1  # Still there
 
     @pytest.mark.asyncio
-    async def test_max_size_enforced(self):
+    async def test_max_size_enforced(self) -> None:
         """Test max_size limits queue."""
         backend = MemoryBackend(max_size=5)
 
@@ -196,24 +196,24 @@ class TestMemoryBackend:
 class TestHippocampusCreation:
     """Test Hippocampus creation."""
 
-    def test_create_hippocampus(self):
+    def test_create_hippocampus(self) -> None:
         """Test basic creation."""
         hippocampus = Hippocampus()
         assert hippocampus.size == 0
 
-    def test_create_with_cortex(self):
+    def test_create_with_cortex(self) -> None:
         """Test creation with cortex."""
         cortex = MockCortex()
         hippocampus = Hippocampus(cortex=cortex)
         assert hippocampus._cortex == cortex
 
-    def test_create_with_config(self):
+    def test_create_with_config(self) -> None:
         """Test creation with config."""
         config = HippocampusConfig(max_size=500)
         hippocampus = Hippocampus(config=config)
         assert hippocampus.config.max_size == 500
 
-    def test_factory_function(self):
+    def test_factory_function(self) -> None:
         """Test create_hippocampus factory."""
         hippocampus = create_hippocampus(config_dict={"max_size": 100})
         assert hippocampus.config.max_size == 100
@@ -223,7 +223,7 @@ class TestHippocampusRemember:
     """Test remembering signals."""
 
     @pytest.mark.asyncio
-    async def test_remember_signal(self):
+    async def test_remember_signal(self) -> None:
         """Test remembering a single signal."""
         hippocampus = Hippocampus()
         signal = make_signal("test")
@@ -234,7 +234,7 @@ class TestHippocampusRemember:
         assert hippocampus.size == 1
 
     @pytest.mark.asyncio
-    async def test_remember_batch(self):
+    async def test_remember_batch(self) -> None:
         """Test remembering multiple signals."""
         hippocampus = Hippocampus()
         signals = [make_signal(f"test.{i}") for i in range(5)]
@@ -245,7 +245,7 @@ class TestHippocampusRemember:
         assert hippocampus.size == 5
 
     @pytest.mark.asyncio
-    async def test_signal_types_property(self):
+    async def test_signal_types_property(self) -> None:
         """Test signal_types property."""
         hippocampus = Hippocampus()
 
@@ -259,7 +259,7 @@ class TestHippocampusFlush:
     """Test flushing to cortex."""
 
     @pytest.mark.asyncio
-    async def test_flush_transfers_signals(self):
+    async def test_flush_transfers_signals(self) -> None:
         """Test flush transfers signals to cortex."""
         cortex = MockCortex()
         hippocampus = Hippocampus(cortex=cortex)
@@ -274,7 +274,7 @@ class TestHippocampusFlush:
         assert hippocampus.size == 0
 
     @pytest.mark.asyncio
-    async def test_flush_creates_epoch(self):
+    async def test_flush_creates_epoch(self) -> None:
         """Test flush creates LetheEpoch."""
         hippocampus = Hippocampus()
 
@@ -288,7 +288,7 @@ class TestHippocampusFlush:
         assert epoch.signal_count == 1
 
     @pytest.mark.asyncio
-    async def test_flush_empty_returns_zero(self):
+    async def test_flush_empty_returns_zero(self) -> None:
         """Test flushing empty hippocampus."""
         hippocampus = Hippocampus()
 
@@ -298,7 +298,7 @@ class TestHippocampusFlush:
         assert result.epoch_id is None
 
     @pytest.mark.asyncio
-    async def test_flush_with_cortex_override(self):
+    async def test_flush_with_cortex_override(self) -> None:
         """Test flush with cortex override."""
         default_cortex = MockCortex()
         override_cortex = MockCortex()
@@ -311,7 +311,7 @@ class TestHippocampusFlush:
         assert len(override_cortex.signals) == 1
 
     @pytest.mark.asyncio
-    async def test_flush_handles_cortex_error(self):
+    async def test_flush_handles_cortex_error(self) -> None:
         """Test flush handles cortex errors."""
         cortex = MockCortex()
         cortex.fail_next = True
@@ -324,7 +324,7 @@ class TestHippocampusFlush:
         assert "Cortex batch failure" in result.errors[0]
 
     @pytest.mark.asyncio
-    async def test_flush_no_epoch_when_disabled(self):
+    async def test_flush_no_epoch_when_disabled(self) -> None:
         """Test flush doesn't create epoch when disabled."""
         config = HippocampusConfig(create_epochs=False)
         hippocampus = Hippocampus(config=config)
@@ -340,7 +340,7 @@ class TestHippocampusPeek:
     """Test peeking at memories."""
 
     @pytest.mark.asyncio
-    async def test_peek(self):
+    async def test_peek(self) -> None:
         """Test peeking at signals."""
         hippocampus = Hippocampus()
 
@@ -352,7 +352,7 @@ class TestHippocampusPeek:
         assert hippocampus.size == 1  # Still there
 
     @pytest.mark.asyncio
-    async def test_peek_with_limit(self):
+    async def test_peek_with_limit(self) -> None:
         """Test peek respects limit."""
         hippocampus = Hippocampus()
 
@@ -364,7 +364,7 @@ class TestHippocampusPeek:
         assert len(signals) == 3
 
     @pytest.mark.asyncio
-    async def test_recall_by_type(self):
+    async def test_recall_by_type(self) -> None:
         """Test recalling by signal type."""
         hippocampus = Hippocampus()
 
@@ -387,7 +387,7 @@ class TestEpochManagement:
     """Test Lethe epoch management."""
 
     @pytest.mark.asyncio
-    async def test_get_epoch(self):
+    async def test_get_epoch(self) -> None:
         """Test getting epoch by ID."""
         hippocampus = Hippocampus()
 
@@ -400,7 +400,7 @@ class TestEpochManagement:
         assert epoch.epoch_id == result.epoch_id
 
     @pytest.mark.asyncio
-    async def test_get_epoch_not_found(self):
+    async def test_get_epoch_not_found(self) -> None:
         """Test getting non-existent epoch."""
         hippocampus = Hippocampus()
 
@@ -409,7 +409,7 @@ class TestEpochManagement:
         assert epoch is None
 
     @pytest.mark.asyncio
-    async def test_forget_epoch(self):
+    async def test_forget_epoch(self) -> None:
         """Test forgetting an epoch."""
         hippocampus = Hippocampus()
 
@@ -422,7 +422,7 @@ class TestEpochManagement:
         assert len(hippocampus.epochs) == 0
 
     @pytest.mark.asyncio
-    async def test_forget_nonexistent_epoch(self):
+    async def test_forget_nonexistent_epoch(self) -> None:
         """Test forgetting non-existent epoch."""
         hippocampus = Hippocampus()
 
@@ -440,7 +440,7 @@ class TestAutoFlush:
     """Test auto-flush strategies."""
 
     @pytest.mark.asyncio
-    async def test_auto_flush_on_size(self):
+    async def test_auto_flush_on_size(self) -> None:
         """Test auto-flush when size threshold reached."""
         config = HippocampusConfig(max_size=5, flush_strategy="on_size")
         cortex = MockCortex()
@@ -455,7 +455,7 @@ class TestAutoFlush:
         assert hippocampus.size == 0
 
     @pytest.mark.asyncio
-    async def test_no_auto_flush_manual(self):
+    async def test_no_auto_flush_manual(self) -> None:
         """Test manual strategy doesn't auto-flush."""
         config = HippocampusConfig(max_size=5, flush_strategy="manual")
         cortex = MockCortex()
@@ -477,7 +477,7 @@ class TestHippocampusStats:
     """Test statistics collection."""
 
     @pytest.mark.asyncio
-    async def test_age_seconds(self):
+    async def test_age_seconds(self) -> None:
         """Test age calculation."""
         hippocampus = Hippocampus()
 
@@ -487,7 +487,7 @@ class TestHippocampusStats:
         assert age < 1  # Should be less than 1 second
 
     @pytest.mark.asyncio
-    async def test_stats(self):
+    async def test_stats(self) -> None:
         """Test stats method."""
         hippocampus = Hippocampus()
 
@@ -511,7 +511,7 @@ class TestSynapseIntegration:
     """Test Synapse-Hippocampus integration."""
 
     @pytest.mark.asyncio
-    async def test_integration_wiring(self):
+    async def test_integration_wiring(self) -> None:
         """Test integration wires up correctly."""
         synapse = Synapse()
         hippocampus = Hippocampus()
@@ -522,7 +522,7 @@ class TestSynapseIntegration:
         assert integration.hippocampus == hippocampus
 
     @pytest.mark.asyncio
-    async def test_fast_path_remembered(self):
+    async def test_fast_path_remembered(self) -> None:
         """Test fast path signals are remembered."""
         config = SynapseConfig(surprise_threshold=0.0)  # All fast
         synapse = Synapse(config=config)
@@ -536,7 +536,7 @@ class TestSynapseIntegration:
         assert hippocampus.size == 1
 
     @pytest.mark.asyncio
-    async def test_batch_path_remembered(self):
+    async def test_batch_path_remembered(self) -> None:
         """Test batch path signals are remembered on flush."""
         config = SynapseConfig(surprise_threshold=1.0)  # All batch
         synapse = Synapse(config=config)

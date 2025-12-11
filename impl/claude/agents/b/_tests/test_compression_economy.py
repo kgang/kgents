@@ -41,7 +41,7 @@ from agents.b.metered_functor import CentralBank, Gas
 class TestCommunicationLog:
     """Tests for CommunicationLog dataclass."""
 
-    def test_create_log(self):
+    def test_create_log(self) -> None:
         """Test basic log creation."""
         log = CommunicationLog(
             sender="agent_a",
@@ -56,7 +56,7 @@ class TestCommunicationLog:
         assert log.domain is None
         assert log.using_pidgin is None
 
-    def test_agent_pair_canonical(self):
+    def test_agent_pair_canonical(self) -> None:
         """Test that agent_pair is canonically sorted."""
         log1 = CommunicationLog(
             sender="agent_b",
@@ -73,7 +73,7 @@ class TestCommunicationLog:
         assert log1.agent_pair == log2.agent_pair
         assert log1.agent_pair == ("agent_a", "agent_b")
 
-    def test_log_with_domain(self):
+    def test_log_with_domain(self) -> None:
         """Test log with domain metadata."""
         log = CommunicationLog(
             sender="researcher",
@@ -95,7 +95,7 @@ class TestCommunicationLog:
 class TestCompressionROI:
     """Tests for CompressionROI dataclass."""
 
-    def test_create_roi(self):
+    def test_create_roi(self) -> None:
         """Test ROI creation."""
         roi = CompressionROI(
             current_cost_tokens=10000,
@@ -113,7 +113,7 @@ class TestCompressionROI:
         assert roi.recommended
         assert roi.roi == 23.0
 
-    def test_roi_to_dict(self):
+    def test_roi_to_dict(self) -> None:
         """Test ROI serialization."""
         roi = CompressionROI(
             current_cost_tokens=5000,
@@ -143,7 +143,7 @@ class TestCompressionROI:
 class TestPidginMetadata:
     """Tests for PidginMetadata dataclass."""
 
-    def test_create_pidgin(self):
+    def test_create_pidgin(self) -> None:
         """Test pidgin metadata creation."""
         pidgin = PidginMetadata(
             name="CitationPidgin",
@@ -154,7 +154,7 @@ class TestPidginMetadata:
         assert pidgin.status == AdoptionStatus.PROPOSED
         assert pidgin.is_active
 
-    def test_agent_pair_canonical(self):
+    def test_agent_pair_canonical(self) -> None:
         """Test canonical agent pair."""
         pidgin = PidginMetadata(
             name="TestPidgin",
@@ -163,7 +163,7 @@ class TestPidginMetadata:
         )
         assert pidgin.agent_pair == ("alpha", "zeta")
 
-    def test_update_adoption_rate(self):
+    def test_update_adoption_rate(self) -> None:
         """Test adoption rate calculation."""
         pidgin = PidginMetadata(
             name="TestPidgin",
@@ -177,7 +177,7 @@ class TestPidginMetadata:
         assert pidgin.adoption_rate == 0.8
         assert pidgin.status == AdoptionStatus.ADOPTED
 
-    def test_adoption_progression(self):
+    def test_adoption_progression(self) -> None:
         """Test adoption status progression."""
         pidgin = PidginMetadata(
             name="TestPidgin",
@@ -200,7 +200,7 @@ class TestPidginMetadata:
         assert pidgin.status == AdoptionStatus.ADOPTED
         assert pidgin.adoption_rate == 0.85
 
-    def test_is_active_status(self):
+    def test_is_active_status(self) -> None:
         """Test is_active property for various statuses."""
         for status in [
             AdoptionStatus.PROPOSED,
@@ -223,7 +223,7 @@ class TestPidginMetadata:
 class TestCommunicationTracker:
     """Tests for CommunicationTracker class."""
 
-    def test_log_communication(self):
+    def test_log_communication(self) -> None:
         """Test logging a communication."""
         tracker = CommunicationTracker()
         log = tracker.log_communication(
@@ -235,7 +235,7 @@ class TestCommunicationTracker:
         assert log.sender == "a"
         assert log.receiver == "b"
 
-    def test_get_logs(self):
+    def test_get_logs(self) -> None:
         """Test retrieving logs for an agent pair."""
         tracker = CommunicationTracker()
         tracker.log_communication("a", "b", "Hello", 10)
@@ -251,7 +251,7 @@ class TestCommunicationTracker:
         logs = tracker.get_logs("c", "d")
         assert len(logs) == 1
 
-    def test_get_all_pairs(self):
+    def test_get_all_pairs(self) -> None:
         """Test getting all agent pairs."""
         tracker = CommunicationTracker()
         tracker.log_communication("a", "b", "Hello", 10)
@@ -262,7 +262,7 @@ class TestCommunicationTracker:
         assert ("a", "b") in pairs
         assert ("c", "d") in pairs
 
-    def test_prune_old_logs(self):
+    def test_prune_old_logs(self) -> None:
         """Test pruning old logs."""
         tracker = CommunicationTracker(window_days=7)
 
@@ -284,7 +284,7 @@ class TestCommunicationTracker:
         assert ("a", "b") not in tracker.logs
         assert ("c", "d") in tracker.logs
 
-    def test_get_statistics(self):
+    def test_get_statistics(self) -> None:
         """Test statistics calculation."""
         tracker = CommunicationTracker()
         tracker.log_communication("a", "b", "Hello", 10)
@@ -307,14 +307,14 @@ class TestCommunicationTracker:
 class TestCompressionROICalculator:
     """Tests for CompressionROICalculator class."""
 
-    def test_empty_logs(self):
+    def test_empty_logs(self) -> None:
         """Test ROI calculation with no logs."""
         calc = CompressionROICalculator()
         roi = calc.calculate_roi([])
         assert roi.message_count == 0
         assert roi.recommended is False
 
-    def test_basic_roi_calculation(self):
+    def test_basic_roi_calculation(self) -> None:
         """Test basic ROI calculation."""
         calc = CompressionROICalculator(
             synthesis_cost_tokens=10000,
@@ -340,7 +340,7 @@ class TestCompressionROICalculator:
         assert roi.estimated_compression_ratio > 0
         assert roi.estimated_compression_ratio < 1.0
 
-    def test_regularity_detection(self):
+    def test_regularity_detection(self) -> None:
         """Test message regularity detection."""
         calc = CompressionROICalculator()
 
@@ -372,7 +372,7 @@ class TestCompressionROICalculator:
 
         assert high_roi.regularity_score > low_roi.regularity_score
 
-    def test_recommendation_threshold(self):
+    def test_recommendation_threshold(self) -> None:
         """Test that recommendation respects threshold."""
         calc = CompressionROICalculator(
             synthesis_cost_tokens=10000,
@@ -394,7 +394,7 @@ class TestCompressionROICalculator:
         roi = calc.calculate_roi(few_logs)
         assert not roi.recommended  # Below min_message_count
 
-    def test_projection_days(self):
+    def test_projection_days(self) -> None:
         """Test different projection periods."""
         calc = CompressionROICalculator()
 
@@ -423,7 +423,7 @@ class TestCompressionEconomyMonitor:
     """Tests for CompressionEconomyMonitor class."""
 
     @pytest.fixture
-    def bank(self):
+    def bank(self) -> CentralBank:
         """Create a CentralBank for testing."""
         return CentralBank(max_balance=100000)
 
@@ -437,7 +437,7 @@ class TestCompressionEconomyMonitor:
             roi_threshold=2.0,
         )
 
-    def test_log_communication(self, monitor):
+    def test_log_communication(self, monitor) -> None:
         """Test logging communication through monitor."""
         log = monitor.log_communication(
             sender="a",
@@ -450,7 +450,7 @@ class TestCompressionEconomyMonitor:
         assert log.tokens == 10
 
     @pytest.mark.asyncio
-    async def test_analyze_pair(self, monitor):
+    async def test_analyze_pair(self, monitor) -> None:
         """Test analyzing a single pair."""
         # Log some communications
         for i in range(15):
@@ -467,7 +467,7 @@ class TestCompressionEconomyMonitor:
         assert roi.avg_tokens_per_message == 50.0
 
     @pytest.mark.asyncio
-    async def test_check_all_pairs(self, monitor):
+    async def test_check_all_pairs(self, monitor) -> None:
         """Test checking all pairs for opportunities."""
         # Create high-traffic pair
         for i in range(20):
@@ -493,7 +493,7 @@ class TestCompressionEconomyMonitor:
         # At least some opportunities should be returned (if ROI is positive)
         _ = opportunities  # Verify it returns without error
 
-    def test_get_pidgin(self, monitor):
+    def test_get_pidgin(self, monitor) -> None:
         """Test retrieving pidgin for pair."""
         # No pidgin initially
         assert monitor.get_pidgin("a", "b") is None
@@ -515,7 +515,7 @@ class TestCompressionEconomyMonitor:
         found = monitor.get_pidgin("b", "a")
         assert found is not None
 
-    def test_callback_registration(self, monitor):
+    def test_callback_registration(self, monitor) -> None:
         """Test pidgin availability callback."""
         received = []
 
@@ -536,7 +536,7 @@ class TestCompressionEconomyMonitor:
         assert len(received) == 1
         assert received[0][0].pidgin_name == "TestPidgin"
 
-    def test_get_statistics(self, monitor):
+    def test_get_statistics(self, monitor) -> None:
         """Test getting overall statistics."""
         # Add some communications
         monitor.log_communication("a", "b", "Test", 10)
@@ -567,7 +567,7 @@ class TestSemanticZipperBudget:
     """Tests for SemanticZipperBudget class."""
 
     @pytest.fixture
-    def bank(self):
+    def bank(self) -> CentralBank:
         """Create a CentralBank for testing."""
         return CentralBank(max_balance=100000)
 
@@ -585,7 +585,7 @@ class TestSemanticZipperBudget:
             tax_rate=0.20,
         )
 
-    def test_evaluate_no_pidgin(self, budget):
+    def test_evaluate_no_pidgin(self, budget) -> None:
         """Test evaluation when no pidgin exists."""
         cost = Gas(tokens=1000)
         decision = budget.evaluate_communication(
@@ -598,7 +598,7 @@ class TestSemanticZipperBudget:
         assert decision.actual_cost.tokens == 1000
         assert decision.natural_language_tax is None
 
-    def test_evaluate_with_pidgin_using_natural_language(self, budget, monitor):
+    def test_evaluate_with_pidgin_using_natural_language(self, budget, monitor) -> None:
         """Test evaluation with pidgin available but not using it."""
         # Add pidgin
         pidgin = PidginMetadata(
@@ -623,7 +623,7 @@ class TestSemanticZipperBudget:
         assert decision.natural_language_tax.tokens == 200
         assert "TestPidgin" in decision.recommendation
 
-    def test_evaluate_with_pidgin_using_pidgin(self, budget, monitor):
+    def test_evaluate_with_pidgin_using_pidgin(self, budget, monitor) -> None:
         """Test evaluation when using available pidgin."""
         # Add pidgin
         pidgin = PidginMetadata(
@@ -646,7 +646,7 @@ class TestSemanticZipperBudget:
         assert decision.actual_cost.tokens == 1000  # No tax
         assert decision.natural_language_tax is None
 
-    def test_evaluate_insufficient_funds(self, budget):
+    def test_evaluate_insufficient_funds(self, budget) -> None:
         """Test evaluation with insufficient funds."""
         cost = Gas(tokens=200000)  # More than bank balance
         decision = budget.evaluate_communication(
@@ -658,7 +658,7 @@ class TestSemanticZipperBudget:
         assert not decision.approved
         assert "Insufficient" in decision.reason
 
-    def test_evaluate_insufficient_funds_with_tax(self, budget, monitor):
+    def test_evaluate_insufficient_funds_with_tax(self, budget, monitor) -> None:
         """Test evaluation with insufficient funds after tax."""
         # Add pidgin
         pidgin = PidginMetadata(
@@ -684,7 +684,7 @@ class TestSemanticZipperBudget:
         assert "tax" in decision.reason.lower()
 
     @pytest.mark.asyncio
-    async def test_metered_communication(self, budget):
+    async def test_metered_communication(self, budget) -> None:
         """Test metered communication execution."""
         receipt = await budget.metered_communication(
             sender="a",
@@ -697,7 +697,7 @@ class TestSemanticZipperBudget:
         assert receipt.gas.tokens > 0
 
     @pytest.mark.asyncio
-    async def test_metered_communication_rejected(self, budget):
+    async def test_metered_communication_rejected(self, budget) -> None:
         """Test metered communication rejection."""
         budget.bank.bucket.balance = 50  # Low balance
 
@@ -718,13 +718,13 @@ class TestSemanticZipperBudget:
 class TestConvenienceFunctions:
     """Tests for convenience functions."""
 
-    def test_create_compression_monitor(self):
+    def test_create_compression_monitor(self) -> None:
         """Test creating a compression monitor."""
         monitor = create_compression_monitor()
         assert monitor.bank is not None
         assert monitor.roi_threshold == 2.0
 
-    def test_create_compression_monitor_with_params(self):
+    def test_create_compression_monitor_with_params(self) -> None:
         """Test creating monitor with custom parameters."""
         bank = CentralBank(max_balance=50000)
         monitor = create_compression_monitor(
@@ -734,7 +734,7 @@ class TestConvenienceFunctions:
         assert monitor.bank is bank
         assert monitor.roi_threshold == 3.0
 
-    def test_create_zipper_budget(self):
+    def test_create_zipper_budget(self) -> None:
         """Test creating a zipper budget."""
         bank = CentralBank()
         monitor = create_compression_monitor(bank=bank)
@@ -742,7 +742,7 @@ class TestConvenienceFunctions:
         assert budget.tax_rate == 0.25
 
     @pytest.mark.asyncio
-    async def test_analyze_compression_opportunity(self):
+    async def test_analyze_compression_opportunity(self) -> None:
         """Test standalone ROI analysis."""
         logs = [
             CommunicationLog(
@@ -774,7 +774,7 @@ class TestIntegration:
     """Integration tests for compression economy."""
 
     @pytest.mark.asyncio
-    async def test_full_workflow_without_grammarian(self):
+    async def test_full_workflow_without_grammarian(self) -> None:
         """Test full workflow without actual G-gent."""
         bank = CentralBank(max_balance=100000)
         monitor = create_compression_monitor(bank=bank, roi_threshold=1.0)
@@ -799,7 +799,7 @@ class TestIntegration:
         # May or may not have opportunities depending on regularity
 
     @pytest.mark.asyncio
-    async def test_pidgin_adoption_tracking(self):
+    async def test_pidgin_adoption_tracking(self) -> None:
         """Test tracking pidgin adoption over time."""
         # Test the adoption status progression directly on PidginMetadata
         pidgin = PidginMetadata(
@@ -830,7 +830,7 @@ class TestIntegration:
         assert pidgin.adopted_at is not None
 
     @pytest.mark.asyncio
-    async def test_statistics_aggregation(self):
+    async def test_statistics_aggregation(self) -> None:
         """Test statistics aggregation across multiple pidgins."""
         bank = CentralBank()
         monitor = create_compression_monitor(bank=bank)
@@ -861,13 +861,13 @@ class TestIntegration:
 class TestEdgeCases:
     """Tests for edge cases and error handling."""
 
-    def test_empty_tracker(self):
+    def test_empty_tracker(self) -> None:
         """Test tracker with no logs."""
         tracker = CommunicationTracker()
         assert tracker.get_all_pairs() == []
         assert tracker.get_logs("a", "b") == []
 
-    def test_single_message_roi(self):
+    def test_single_message_roi(self) -> None:
         """Test ROI with single message."""
         calc = CompressionROICalculator()
         logs = [CommunicationLog(sender="a", receiver="b", message="Test", tokens=100)]
@@ -875,7 +875,7 @@ class TestEdgeCases:
         assert roi.message_count == 1
         assert not roi.recommended  # Below min_message_count
 
-    def test_zero_token_messages(self):
+    def test_zero_token_messages(self) -> None:
         """Test handling of zero-token messages."""
         calc = CompressionROICalculator()
         logs = [
@@ -885,7 +885,7 @@ class TestEdgeCases:
         roi = calc.calculate_roi(logs)
         assert roi.avg_tokens_per_message == 0.0
 
-    def test_deprecated_pidgin(self):
+    def test_deprecated_pidgin(self) -> None:
         """Test that deprecated pidgins are not active."""
         pidgin = PidginMetadata(
             name="OldPidgin",
@@ -893,13 +893,13 @@ class TestEdgeCases:
         )
         assert not pidgin.is_active
 
-    def test_same_agent_pair(self):
+    def test_same_agent_pair(self) -> None:
         """Test communication between same agent (edge case)."""
         tracker = CommunicationTracker()
         log = tracker.log_communication("a", "a", "Self-talk", 10)
         assert log.agent_pair == ("a", "a")
 
-    def test_unicode_messages(self):
+    def test_unicode_messages(self) -> None:
         """Test handling of unicode messages."""
         tracker = CommunicationTracker()
         log = tracker.log_communication(
@@ -911,7 +911,7 @@ class TestEdgeCases:
         assert "こんにちは" in log.message
 
     @pytest.mark.asyncio
-    async def test_commission_without_grammarian(self):
+    async def test_commission_without_grammarian(self) -> None:
         """Test commissioning when no grammarian available."""
         bank = CentralBank()
         monitor = CompressionEconomyMonitor(
@@ -922,7 +922,7 @@ class TestEdgeCases:
         result = await monitor.commission_pidgin("a", "b")
         assert result is None  # Graceful handling
 
-    def test_budget_decision_types(self):
+    def test_budget_decision_types(self) -> None:
         """Test BudgetDecision with various configurations."""
         # Approved without tax
         decision = BudgetDecision(

@@ -33,14 +33,14 @@ def make_frame(
 class TestWireFrame:
     """Tests for WireFrame data class."""
 
-    def test_frame_creation(self):
+    def test_frame_creation(self) -> None:
         """Can create a wire frame."""
         frame = make_frame(FrameType.INVOKE_START)
         assert frame.frame_type == FrameType.INVOKE_START
         assert frame.correlation_id == "corr-123"
         assert frame.agent_id == "test-agent"
 
-    def test_frame_action_from_metadata(self):
+    def test_frame_action_from_metadata(self) -> None:
         """Action extracted from metadata."""
         frame = make_frame(
             FrameType.INVOKE_END,
@@ -48,12 +48,12 @@ class TestWireFrame:
         )
         assert frame.action == "GENERATE"
 
-    def test_frame_action_default(self):
+    def test_frame_action_default(self) -> None:
         """Action defaults to INVOKE."""
         frame = make_frame(FrameType.INVOKE_END)
         assert frame.action == Action.INVOKE
 
-    def test_frame_determinism_hint_llm(self):
+    def test_frame_determinism_hint_llm(self) -> None:
         """Determinism hint for LLM calls."""
         frame = make_frame(
             FrameType.INVOKE_END,
@@ -61,7 +61,7 @@ class TestWireFrame:
         )
         assert frame.determinism_hint == Determinism.PROBABILISTIC
 
-    def test_frame_determinism_hint_api(self):
+    def test_frame_determinism_hint_api(self) -> None:
         """Determinism hint for external APIs."""
         frame = make_frame(
             FrameType.INVOKE_END,
@@ -69,7 +69,7 @@ class TestWireFrame:
         )
         assert frame.determinism_hint == Determinism.CHAOTIC
 
-    def test_frame_determinism_hint_explicit(self):
+    def test_frame_determinism_hint_explicit(self) -> None:
         """Explicit determinism in metadata."""
         frame = make_frame(
             FrameType.INVOKE_END,
@@ -95,21 +95,21 @@ class TestHistorianTap:
     def tap(self, historian) -> HistorianTap:
         return HistorianTap(historian)
 
-    def test_tap_creation(self, historian):
+    def test_tap_creation(self, historian) -> None:
         """Can create a tap."""
         tap = HistorianTap(historian)
         assert tap.historian is historian
         assert tap.active_traces == 0
 
     @pytest.mark.asyncio
-    async def test_tap_passes_through(self, tap):
+    async def test_tap_passes_through(self, tap) -> None:
         """Tap returns frame unchanged."""
         frame = make_frame(FrameType.LOG_EVENT)
         result = await tap.on_frame(frame)
         assert result is frame
 
     @pytest.mark.asyncio
-    async def test_invoke_start_begins_trace(self, tap, store):
+    async def test_invoke_start_begins_trace(self, tap, store) -> None:
         """INVOKE_START begins a trace."""
         frame = make_frame(
             FrameType.INVOKE_START,
@@ -121,7 +121,7 @@ class TestHistorianTap:
         assert "corr-123" in tap.get_pending_trace_ids()
 
     @pytest.mark.asyncio
-    async def test_invoke_end_completes_trace(self, tap, store):
+    async def test_invoke_end_completes_trace(self, tap, store) -> None:
         """INVOKE_END completes the trace."""
         start = make_frame(
             FrameType.INVOKE_START,
@@ -144,7 +144,7 @@ class TestHistorianTap:
         assert crystal.outputs == {"output": "result"}
 
     @pytest.mark.asyncio
-    async def test_error_aborts_trace(self, tap, store):
+    async def test_error_aborts_trace(self, tap, store) -> None:
         """ERROR aborts the trace."""
         start = make_frame(FrameType.INVOKE_START)
         await tap.on_frame(start)
@@ -162,7 +162,7 @@ class TestHistorianTap:
         assert crystal.action == Action.ERROR
 
     @pytest.mark.asyncio
-    async def test_error_with_dict_payload(self, tap, store):
+    async def test_error_with_dict_payload(self, tap, store) -> None:
         """ERROR can have dict payload with error key."""
         start = make_frame(FrameType.INVOKE_START)
         await tap.on_frame(start)
@@ -177,7 +177,7 @@ class TestHistorianTap:
         assert "Something failed" in str(crystal.outputs)
 
     @pytest.mark.asyncio
-    async def test_multiple_concurrent_traces(self, tap, store):
+    async def test_multiple_concurrent_traces(self, tap, store) -> None:
         """Can handle multiple concurrent traces."""
         # Start two traces
         start1 = make_frame(FrameType.INVOKE_START, correlation_id="c1")
@@ -197,7 +197,7 @@ class TestHistorianTap:
         assert store.count() == 2
 
     @pytest.mark.asyncio
-    async def test_orphan_end_ignored(self, tap, store):
+    async def test_orphan_end_ignored(self, tap, store) -> None:
         """INVOKE_END without matching START is ignored."""
         end = make_frame(
             FrameType.INVOKE_END,
@@ -209,7 +209,7 @@ class TestHistorianTap:
         assert store.count() == 0
 
     @pytest.mark.asyncio
-    async def test_action_from_metadata(self, tap, store):
+    async def test_action_from_metadata(self, tap, store) -> None:
         """Action is extracted from frame metadata."""
         start = make_frame(FrameType.INVOKE_START)
         await tap.on_frame(start)
@@ -224,7 +224,7 @@ class TestHistorianTap:
         assert crystal.action == "GENERATE"
 
     @pytest.mark.asyncio
-    async def test_determinism_from_metadata(self, tap, store):
+    async def test_determinism_from_metadata(self, tap, store) -> None:
         """Determinism hint from frame metadata."""
         start = make_frame(FrameType.INVOKE_START)
         await tap.on_frame(start)
@@ -238,7 +238,7 @@ class TestHistorianTap:
         crystal = list(store.iter_all())[0]
         assert crystal.determinism == Determinism.PROBABILISTIC
 
-    def test_sync_version(self, tap, store):
+    def test_sync_version(self, tap, store) -> None:
         """Sync version works for non-async contexts."""
         start = make_frame(FrameType.INVOKE_START)
         tap.on_frame_sync(start)
@@ -267,7 +267,7 @@ class TestWireIntegration:
     def wire(self, historian) -> WireIntegration:
         return WireIntegration(historian)
 
-    def test_create_start_frame(self, wire):
+    def test_create_start_frame(self, wire) -> None:
         """Can create start frame."""
         frame = wire.create_start_frame(
             correlation_id="c1",
@@ -280,7 +280,7 @@ class TestWireIntegration:
         assert frame.correlation_id == "c1"
         assert frame.payload == {"test": True}
 
-    def test_create_end_frame(self, wire):
+    def test_create_end_frame(self, wire) -> None:
         """Can create end frame."""
         frame = wire.create_end_frame(
             correlation_id="c1",
@@ -294,7 +294,7 @@ class TestWireIntegration:
         assert frame.payload == {"result": 42}
         assert frame.determinism_hint == Determinism.DETERMINISTIC
 
-    def test_create_error_frame(self, wire):
+    def test_create_error_frame(self, wire) -> None:
         """Can create error frame."""
         error = ValueError("test")
         frame = wire.create_error_frame(
@@ -308,7 +308,7 @@ class TestWireIntegration:
         assert frame.payload is error
 
     @pytest.mark.asyncio
-    async def test_trace_callable_success(self, wire, store):
+    async def test_trace_callable_success(self, wire, store) -> None:
         """Decorator traces successful calls."""
 
         @wire.trace_callable("my-agent", "B", "GENERATE")
@@ -324,7 +324,7 @@ class TestWireIntegration:
         assert crystal.action == "GENERATE"
 
     @pytest.mark.asyncio
-    async def test_trace_callable_error(self, wire, store):
+    async def test_trace_callable_error(self, wire, store) -> None:
         """Decorator traces failed calls."""
 
         @wire.trace_callable("my-agent", "B")

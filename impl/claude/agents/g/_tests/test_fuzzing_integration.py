@@ -145,7 +145,7 @@ def constrained_tongue() -> Tongue:
 class TestTongueInputGenerator:
     """Tests for input generation."""
 
-    def test_generate_valid_commands(self, command_tongue: Tongue):
+    def test_generate_valid_commands(self, command_tongue: Tongue) -> None:
         """Test generating valid command inputs."""
         gen = TongueInputGenerator(command_tongue, seed=42)
         valid = gen.generate_valid(10)
@@ -158,7 +158,7 @@ class TestTongueInputGenerator:
             assert len(parts) >= 1
             assert parts[0] in verbs
 
-    def test_generate_invalid(self, command_tongue: Tongue):
+    def test_generate_invalid(self, command_tongue: Tongue) -> None:
         """Test generating invalid inputs."""
         gen = TongueInputGenerator(command_tongue, seed=42)
         invalid = gen.generate_invalid(10)
@@ -171,7 +171,7 @@ class TestTongueInputGenerator:
             or any("BLARG" in i or "ZZZZ" in i for i in invalid)
         )
 
-    def test_generate_boundary(self, command_tongue: Tongue):
+    def test_generate_boundary(self, command_tongue: Tongue) -> None:
         """Test generating boundary inputs."""
         gen = TongueInputGenerator(command_tongue, seed=42)
         boundary = gen.generate_boundary(10)
@@ -181,7 +181,7 @@ class TestTongueInputGenerator:
         " ".join(boundary)
         assert any(len(b) > 100 for b in boundary) or any(b == "" for b in boundary)
 
-    def test_generate_adversarial(self, command_tongue: Tongue):
+    def test_generate_adversarial(self, command_tongue: Tongue) -> None:
         """Test generating adversarial inputs."""
         gen = TongueInputGenerator(command_tongue, seed=42)
         adversarial = gen.generate_adversarial(10)
@@ -191,7 +191,7 @@ class TestTongueInputGenerator:
         texts = " ".join(adversarial)
         assert "DROP" in texts or "rm -rf" in texts or "script" in texts.lower()
 
-    def test_generate_mutated(self, command_tongue: Tongue):
+    def test_generate_mutated(self, command_tongue: Tongue) -> None:
         """Test generating mutated inputs."""
         gen = TongueInputGenerator(command_tongue, seed=42)
         valid = gen.generate_valid(5)
@@ -201,7 +201,7 @@ class TestTongueInputGenerator:
         # Mutated should be different from originals (mostly)
         # Some might be the same due to random mutations
 
-    def test_deterministic_with_seed(self, command_tongue: Tongue):
+    def test_deterministic_with_seed(self, command_tongue: Tongue) -> None:
         """Test that same seed produces same outputs."""
         gen1 = TongueInputGenerator(command_tongue, seed=42)
         gen2 = TongueInputGenerator(command_tongue, seed=42)
@@ -220,7 +220,7 @@ class TestTongueInputGenerator:
 class TestTongueFuzzer:
     """Tests for fuzz testing."""
 
-    def test_fuzz_basic(self, command_tongue: Tongue):
+    def test_fuzz_basic(self, command_tongue: Tongue) -> None:
         """Test basic fuzzing."""
         fuzzer = TongueFuzzer(
             command_tongue,
@@ -238,7 +238,7 @@ class TestTongueFuzzer:
         assert report.total_tests > 0
         assert report.duration_ms > 0
 
-    def test_fuzz_report_counts(self, command_tongue: Tongue):
+    def test_fuzz_report_counts(self, command_tongue: Tongue) -> None:
         """Test that fuzz report has correct counts."""
         fuzzer = TongueFuzzer(
             command_tongue,
@@ -257,7 +257,7 @@ class TestTongueFuzzer:
         assert report.adversarial_count == 5
         assert report.total_tests == 25
 
-    def test_fuzz_pass_rate(self, command_tongue: Tongue):
+    def test_fuzz_pass_rate(self, command_tongue: Tongue) -> None:
         """Test pass rate calculation."""
         fuzzer = TongueFuzzer(
             command_tongue,
@@ -273,7 +273,7 @@ class TestTongueFuzzer:
         assert 0.0 <= report.pass_rate <= 1.0
         assert report.passed_tests + report.failed_tests == report.total_tests
 
-    def test_fuzz_results_tracked(self, command_tongue: Tongue):
+    def test_fuzz_results_tracked(self, command_tongue: Tongue) -> None:
         """Test that individual results are tracked."""
         fuzzer = TongueFuzzer(
             command_tongue,
@@ -291,7 +291,7 @@ class TestTongueFuzzer:
             assert isinstance(result, FuzzResult)
             assert result.input_type in FuzzInputType
 
-    def test_fuzz_summary(self, command_tongue: Tongue):
+    def test_fuzz_summary(self, command_tongue: Tongue) -> None:
         """Test report summary generation."""
         fuzzer = TongueFuzzer(command_tongue, seed=42, valid_count=5)
         report = fuzzer.fuzz()
@@ -310,7 +310,7 @@ class TestTongueFuzzer:
 class TestTonguePropertyTester:
     """Tests for property-based testing."""
 
-    def test_property_tester_all(self, command_tongue: Tongue):
+    def test_property_tester_all(self, command_tongue: Tongue) -> None:
         """Test running all property tests."""
         tester = TonguePropertyTester(
             command_tongue,
@@ -325,7 +325,7 @@ class TestTonguePropertyTester:
         assert report.total_properties == 5  # 5 properties tested
         assert len(report.results) == 5
 
-    def test_round_trip_property(self, command_tongue: Tongue):
+    def test_round_trip_property(self, command_tongue: Tongue) -> None:
         """Test round-trip property."""
         tester = TonguePropertyTester(command_tongue, seed=42, cases_per_property=10)
         result = tester.test_round_trip()
@@ -335,7 +335,7 @@ class TestTonguePropertyTester:
         assert result.total_cases >= 0
         assert result.duration_ms >= 0
 
-    def test_idempotence_property(self, command_tongue: Tongue):
+    def test_idempotence_property(self, command_tongue: Tongue) -> None:
         """Test idempotence property."""
         tester = TonguePropertyTester(command_tongue, seed=42, cases_per_property=10)
         result = tester.test_idempotence()
@@ -343,7 +343,7 @@ class TestTonguePropertyTester:
         assert result.property_type == PropertyType.IDEMPOTENCE
         assert result.total_cases >= 0
 
-    def test_constraint_property(self, constrained_tongue: Tongue):
+    def test_constraint_property(self, constrained_tongue: Tongue) -> None:
         """Test constraint encoding property."""
         tester = TonguePropertyTester(constrained_tongue, seed=42)
         result = tester.test_constraint_encoding()
@@ -351,7 +351,7 @@ class TestTonguePropertyTester:
         assert result.property_type == PropertyType.CONSTRAINT
         # Should test constraint violations
 
-    def test_determinism_property(self, command_tongue: Tongue):
+    def test_determinism_property(self, command_tongue: Tongue) -> None:
         """Test determinism property."""
         tester = TonguePropertyTester(command_tongue, seed=42, cases_per_property=5)
         result = tester.test_determinism()
@@ -360,7 +360,7 @@ class TestTonguePropertyTester:
         # Determinism should generally pass
         assert result.pass_rate >= 0.0
 
-    def test_completeness_property(self, command_tongue: Tongue):
+    def test_completeness_property(self, command_tongue: Tongue) -> None:
         """Test completeness property."""
         tester = TonguePropertyTester(command_tongue, seed=42)
         result = tester.test_completeness()
@@ -368,7 +368,7 @@ class TestTonguePropertyTester:
         assert result.property_type == PropertyType.COMPLETENESS
         # All examples should parse
 
-    def test_property_report_summary(self, command_tongue: Tongue):
+    def test_property_report_summary(self, command_tongue: Tongue) -> None:
         """Test property report summary."""
         tester = TonguePropertyTester(command_tongue, seed=42, cases_per_property=5)
         report = tester.test_all_properties()
@@ -386,7 +386,7 @@ class TestTonguePropertyTester:
 class TestFuzzResult:
     """Tests for FuzzResult dataclass."""
 
-    def test_passed_when_expected_matches_actual(self):
+    def test_passed_when_expected_matches_actual(self) -> None:
         """Test passed property when expectations match."""
         result = FuzzResult(
             input_text="CHECK item",
@@ -396,7 +396,7 @@ class TestFuzzResult:
         )
         assert result.passed is True
 
-    def test_failed_when_expected_differs(self):
+    def test_failed_when_expected_differs(self) -> None:
         """Test passed property when expectations differ."""
         result = FuzzResult(
             input_text="INVALID cmd",
@@ -406,7 +406,7 @@ class TestFuzzResult:
         )
         assert result.passed is False
 
-    def test_result_with_parse_result(self):
+    def test_result_with_parse_result(self) -> None:
         """Test result with parse result attached."""
         from agents.g.types import ParseResult
 
@@ -430,7 +430,7 @@ class TestFuzzResult:
 class TestFuzzReport:
     """Tests for FuzzReport dataclass."""
 
-    def test_pass_rate_empty(self):
+    def test_pass_rate_empty(self) -> None:
         """Test pass rate with no tests."""
         report = FuzzReport(
             tongue_name="Empty",
@@ -440,7 +440,7 @@ class TestFuzzReport:
         )
         assert report.pass_rate == 0.0
 
-    def test_pass_rate_calculation(self):
+    def test_pass_rate_calculation(self) -> None:
         """Test pass rate calculation."""
         report = FuzzReport(
             tongue_name="Test",
@@ -450,7 +450,7 @@ class TestFuzzReport:
         )
         assert report.pass_rate == 0.75
 
-    def test_all_passed(self):
+    def test_all_passed(self) -> None:
         """Test all_passed property."""
         report = FuzzReport(
             tongue_name="Test",
@@ -460,7 +460,7 @@ class TestFuzzReport:
         )
         assert report.all_passed is True
 
-    def test_not_all_passed(self):
+    def test_not_all_passed(self) -> None:
         """Test all_passed when some fail."""
         report = FuzzReport(
             tongue_name="Test",
@@ -479,7 +479,7 @@ class TestFuzzReport:
 class TestPropertyResult:
     """Tests for PropertyResult dataclass."""
 
-    def test_pass_rate_empty(self):
+    def test_pass_rate_empty(self) -> None:
         """Test pass rate with no cases."""
         result = PropertyResult(
             property_type=PropertyType.ROUND_TRIP,
@@ -491,7 +491,7 @@ class TestPropertyResult:
         )
         assert result.pass_rate == 0.0
 
-    def test_pass_rate_calculation(self):
+    def test_pass_rate_calculation(self) -> None:
         """Test pass rate calculation."""
         result = PropertyResult(
             property_type=PropertyType.ROUND_TRIP,
@@ -513,7 +513,7 @@ class TestConvenienceFunctions:
     """Tests for convenience functions."""
 
     @pytest.mark.asyncio
-    async def test_fuzz_tongue(self, command_tongue: Tongue):
+    async def test_fuzz_tongue(self, command_tongue: Tongue) -> None:
         """Test fuzz_tongue convenience function."""
         report = await fuzz_tongue(command_tongue, seed=42, n=50)
 
@@ -522,7 +522,7 @@ class TestConvenienceFunctions:
         assert report.valid_count > 0
 
     @pytest.mark.asyncio
-    async def test_property_test_tongue(self, command_tongue: Tongue):
+    async def test_property_test_tongue(self, command_tongue: Tongue) -> None:
         """Test property_test_tongue convenience function."""
         report = await property_test_tongue(
             command_tongue, seed=42, cases_per_property=10
@@ -532,7 +532,7 @@ class TestConvenienceFunctions:
         assert report.total_properties == 5
 
     @pytest.mark.asyncio
-    async def test_validate_tongue_with_t_gent(self, command_tongue: Tongue):
+    async def test_validate_tongue_with_t_gent(self, command_tongue: Tongue) -> None:
         """Test full T-gent validation."""
         fuzz_report, prop_report = await validate_tongue_with_t_gent(
             command_tongue, seed=42
@@ -541,7 +541,7 @@ class TestConvenienceFunctions:
         assert isinstance(fuzz_report, FuzzReport)
         assert isinstance(prop_report, PropertyTestReport)
 
-    def test_generate_constraint_proofs(self, constrained_tongue: Tongue):
+    def test_generate_constraint_proofs(self, constrained_tongue: Tongue) -> None:
         """Test constraint proof generation."""
         proofs = generate_constraint_proofs(constrained_tongue, seed=42)
 
@@ -565,7 +565,7 @@ class TestIntegration:
     """Integration tests for full fuzzing workflow."""
 
     @pytest.mark.asyncio
-    async def test_full_workflow(self, command_tongue: Tongue):
+    async def test_full_workflow(self, command_tongue: Tongue) -> None:
         """Test complete fuzzing workflow."""
         # Step 1: Fuzz test
         fuzz_report = await fuzz_tongue(command_tongue, seed=42, n=25)
@@ -579,7 +579,7 @@ class TestIntegration:
 
         # Both should complete without errors
 
-    def test_fuzzer_finds_issues(self):
+    def test_fuzzer_finds_issues(self) -> None:
         """Test that fuzzer can detect grammar issues."""
         # Create a tongue with issues
         bad_tongue = Tongue(
@@ -608,7 +608,7 @@ class TestIntegration:
         # Should detect that example doesn't parse
         assert result.failed_cases > 0
 
-    def test_reproducibility_with_seed(self, command_tongue: Tongue):
+    def test_reproducibility_with_seed(self, command_tongue: Tongue) -> None:
         """Test that fuzzing is reproducible with seed."""
         fuzzer1 = TongueFuzzer(command_tongue, seed=42, valid_count=10)
         fuzzer2 = TongueFuzzer(command_tongue, seed=42, valid_count=10)
@@ -625,7 +625,7 @@ class TestIntegration:
             assert r1.input_text == r2.input_text
 
     @pytest.mark.asyncio
-    async def test_schema_tongue_fuzzing(self, schema_tongue: Tongue):
+    async def test_schema_tongue_fuzzing(self, schema_tongue: Tongue) -> None:
         """Test fuzzing works for schema-level tongues."""
         report = await fuzz_tongue(schema_tongue, seed=42, n=20)
 
@@ -641,7 +641,7 @@ class TestIntegration:
 class TestEdgeCases:
     """Edge case tests."""
 
-    def test_empty_grammar(self):
+    def test_empty_grammar(self) -> None:
         """Test handling of empty grammar."""
         empty_tongue = Tongue(
             name="Empty",
@@ -667,7 +667,7 @@ class TestEdgeCases:
         # Should handle gracefully (return examples or empty)
         # Implementation depends on how we handle empty grammars
 
-    def test_no_examples(self):
+    def test_no_examples(self) -> None:
         """Test tongue with no examples."""
         tongue = Tongue(
             name="NoExamples",
@@ -695,7 +695,7 @@ class TestEdgeCases:
         assert result.passed is True
         assert result.total_cases == 0
 
-    def test_unicode_inputs(self, command_tongue: Tongue):
+    def test_unicode_inputs(self, command_tongue: Tongue) -> None:
         """Test handling of unicode inputs."""
         gen = TongueInputGenerator(command_tongue, seed=42)
         boundary = gen.generate_boundary(20)
@@ -704,7 +704,7 @@ class TestEdgeCases:
         any("日本語" in b or "emoji" in b for b in boundary)
         # Generator should include unicode in boundary cases
 
-    def test_very_long_inputs(self, command_tongue: Tongue):
+    def test_very_long_inputs(self, command_tongue: Tongue) -> None:
         """Test handling of very long inputs."""
         gen = TongueInputGenerator(command_tongue, seed=42)
         adversarial = gen.generate_adversarial(15)

@@ -55,7 +55,7 @@ class MockRuntime:
 # ============================================================================
 
 
-def test_code_generator_builds_prompt_with_intent():
+def test_code_generator_builds_prompt_with_intent() -> None:
     """Verify prompt includes intent details."""
     intent = Intent(
         purpose="Create a doubler agent",
@@ -96,7 +96,7 @@ def test_code_generator_builds_prompt_with_intent():
     assert "Deterministic" in user_message
 
 
-def test_code_generator_includes_examples_in_prompt():
+def test_code_generator_includes_examples_in_prompt() -> None:
     """Verify examples appear in prompt."""
     intent = Intent(
         purpose="Echo agent",
@@ -123,7 +123,7 @@ def test_code_generator_includes_examples_in_prompt():
     assert "world" in user_message
 
 
-def test_code_generator_includes_previous_failures():
+def test_code_generator_includes_previous_failures() -> None:
     """Verify iteration feedback appears in prompt."""
     intent = Intent(purpose="Test agent", behavior=["Test"])
     contract = Contract(agent_name="TestAgent", input_type="str", output_type="str")
@@ -153,7 +153,7 @@ def test_code_generator_includes_previous_failures():
 # ============================================================================
 
 
-def test_parse_response_extracts_code_from_markdown():
+def test_parse_response_extracts_code_from_markdown() -> None:
     """Parse code from markdown blocks."""
     generator = CodeGeneratorAgent()
 
@@ -170,7 +170,7 @@ class TestAgent:
     assert "```" not in code  # Markdown removed
 
 
-def test_parse_response_handles_generic_code_blocks():
+def test_parse_response_handles_generic_code_blocks() -> None:
     """Parse code from ``` blocks without language tag."""
     generator = CodeGeneratorAgent()
 
@@ -185,7 +185,7 @@ class TestAgent:
     assert "```" not in code
 
 
-def test_parse_response_removes_explanation_text():
+def test_parse_response_removes_explanation_text() -> None:
     """Remove explanatory text before code."""
     generator = CodeGeneratorAgent()
 
@@ -200,7 +200,7 @@ class TestAgent:
     assert "Here's the implementation" not in code
 
 
-def test_parse_response_preserves_docstrings():
+def test_parse_response_preserves_docstrings() -> None:
     """Keep module and class docstrings."""
     generator = CodeGeneratorAgent()
 
@@ -223,7 +223,7 @@ class TestAgent:
 
 
 @pytest.mark.asyncio
-async def test_generate_prototype_async_with_llm():
+async def test_generate_prototype_async_with_llm() -> None:
     """Integration test: generate_prototype_async with mock LLM."""
     intent = Intent(
         purpose="Double numbers",
@@ -256,7 +256,7 @@ async def test_generate_prototype_async_with_llm():
 
 
 @pytest.mark.asyncio
-async def test_generate_prototype_async_iterates_on_failure():
+async def test_generate_prototype_async_iterates_on_failure() -> None:
     """Verify iteration when LLM generates invalid code."""
     intent = Intent(purpose="Test", behavior=["Test"])
     contract = Contract(agent_name="TestAgent", input_type="str", output_type="str")
@@ -297,7 +297,7 @@ async def test_generate_prototype_async_iterates_on_failure():
 
 
 @pytest.mark.asyncio
-async def test_generate_prototype_async_respects_max_attempts():
+async def test_generate_prototype_async_respects_max_attempts() -> None:
     """Verify max_attempts bound is honored."""
     intent = Intent(purpose="Test", behavior=["Test"])
     contract = Contract(agent_name="TestAgent", input_type="str", output_type="str")
@@ -323,7 +323,7 @@ async def test_generate_prototype_async_respects_max_attempts():
 
 
 @pytest.mark.asyncio
-async def test_generate_code_with_llm():
+async def test_generate_code_with_llm() -> None:
     """Test standalone code generation function."""
     intent = Intent(purpose="Echo", behavior=["Return input"])
     contract = Contract(agent_name="EchoAgent", input_type="str", output_type="str")
@@ -341,7 +341,7 @@ async def test_generate_code_with_llm():
 
 
 @pytest.mark.asyncio
-async def test_generate_code_with_llm_with_failures():
+async def test_generate_code_with_llm_with_failures() -> None:
     """Test code generation with previous failures."""
     intent = Intent(purpose="Test", behavior=["Test"])
     contract = Contract(agent_name="TestAgent", input_type="str", output_type="str")
@@ -370,7 +370,7 @@ async def test_generate_code_with_llm_with_failures():
 
 
 @pytest.mark.asyncio
-async def test_generate_prototype_async_requires_runtime_when_use_llm():
+async def test_generate_prototype_async_requires_runtime_when_use_llm() -> None:
     """Verify error when use_llm=True but runtime not provided."""
     intent = Intent(purpose="Test", behavior=["Test"])
     contract = Contract(agent_name="TestAgent", input_type="str", output_type="str")
@@ -386,7 +386,7 @@ async def test_generate_prototype_async_requires_runtime_when_use_llm():
 # ============================================================================
 
 
-def test_code_generator_uses_zero_temperature():
+def test_code_generator_uses_zero_temperature() -> None:
     """Verify deterministic generation (temperature=0)."""
     intent = Intent(purpose="Test", behavior=["Test"])
     contract = Contract(agent_name="TestAgent", input_type="str", output_type="str")
@@ -399,7 +399,7 @@ def test_code_generator_uses_zero_temperature():
     assert context.temperature == 0.0
 
 
-def test_code_generator_sets_max_tokens():
+def test_code_generator_sets_max_tokens() -> None:
     """Verify max_tokens is configured."""
     intent = Intent(purpose="Test", behavior=["Test"])
     contract = Contract(agent_name="TestAgent", input_type="str", output_type="str")
@@ -419,7 +419,7 @@ def test_code_generator_sets_max_tokens():
 
 @pytest.mark.skip(reason="Requires API key and makes real API call")
 @pytest.mark.asyncio
-async def test_generate_with_real_claude():
+async def test_generate_with_real_claude() -> None:
     """
     Integration test with real Claude API.
 

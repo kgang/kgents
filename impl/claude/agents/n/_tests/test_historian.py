@@ -46,12 +46,12 @@ class TestHistorian:
         """Create a mock agent."""
         return MockAgent()
 
-    def test_historian_creation(self, store):
+    def test_historian_creation(self, store) -> None:
         """Can create historian with store."""
         historian = Historian(store)
         assert historian.store is store
 
-    def test_begin_trace(self, historian, agent):
+    def test_begin_trace(self, historian, agent) -> None:
         """Begin trace creates context."""
         ctx = historian.begin_trace(agent, {"question": "test"})
 
@@ -61,12 +61,12 @@ class TestHistorian:
         assert ctx.input_hash is not None
         assert len(ctx.input_snapshot) > 0
 
-    def test_begin_trace_sets_current(self, historian, agent):
+    def test_begin_trace_sets_current(self, historian, agent) -> None:
         """Begin trace sets current trace ID."""
         ctx = historian.begin_trace(agent, {})
         assert historian.get_current_trace_id() == ctx.trace_id
 
-    def test_end_trace_creates_crystal(self, historian, agent, store):
+    def test_end_trace_creates_crystal(self, historian, agent, store) -> None:
         """End trace creates and stores crystal."""
         ctx = historian.begin_trace(agent, {"input": "data"})
         crystal = historian.end_trace(ctx, Action.INVOKE, {"output": "result"})
@@ -81,7 +81,7 @@ class TestHistorian:
         assert stored is not None
         assert stored.trace_id == crystal.trace_id
 
-    def test_end_trace_restores_parent(self, historian, agent):
+    def test_end_trace_restores_parent(self, historian, agent) -> None:
         """End trace restores parent trace context."""
         # No parent initially
         assert historian.get_current_trace_id() is None
@@ -92,7 +92,7 @@ class TestHistorian:
         historian.end_trace(ctx, Action.INVOKE, {})
         assert historian.get_current_trace_id() is None
 
-    def test_nested_traces(self, historian, agent):
+    def test_nested_traces(self, historian, agent) -> None:
         """Nested traces track parent-child relationship."""
         outer = historian.begin_trace(agent, {"level": "outer"})
         inner = historian.begin_trace(agent, {"level": "inner"})
@@ -106,7 +106,7 @@ class TestHistorian:
         historian.end_trace(outer, Action.INVOKE, {})
         assert historian.get_current_trace_id() is None
 
-    def test_abort_trace_records_error(self, historian, agent, store):
+    def test_abort_trace_records_error(self, historian, agent, store) -> None:
         """Abort trace records error crystal."""
         ctx = historian.begin_trace(agent, {"input": "will fail"})
 
@@ -121,7 +121,7 @@ class TestHistorian:
         stored = store.get(crystal.trace_id)
         assert stored is not None
 
-    def test_abort_with_string_error(self, historian, agent):
+    def test_abort_with_string_error(self, historian, agent) -> None:
         """Can abort with string error message."""
         ctx = historian.begin_trace(agent, {})
         crystal = historian.abort_trace(ctx, "Manual error message")
@@ -129,7 +129,7 @@ class TestHistorian:
         assert crystal.outputs["error"] == "Manual error message"
         assert crystal.outputs["type"] == "Error"
 
-    def test_duration_recorded(self, historian, agent):
+    def test_duration_recorded(self, historian, agent) -> None:
         """Duration is recorded in milliseconds."""
         import time
 
@@ -139,7 +139,7 @@ class TestHistorian:
 
         assert crystal.duration_ms >= 10
 
-    def test_gas_estimation(self, historian, agent):
+    def test_gas_estimation(self, historian, agent) -> None:
         """Gas is estimated from input/output size."""
         ctx = historian.begin_trace(agent, {"large": "x" * 1000})
         crystal = historian.end_trace(ctx, Action.INVOKE, {"result": "y" * 500})
@@ -147,7 +147,7 @@ class TestHistorian:
         # Rough estimate: 4 bytes per token
         assert crystal.gas_consumed > 0
 
-    def test_determinism_auto_detected(self, historian, agent):
+    def test_determinism_auto_detected(self, historian, agent) -> None:
         """Determinism is auto-detected from action."""
         ctx = historian.begin_trace(agent, {})
 
@@ -162,7 +162,7 @@ class TestHistorian:
         api = historian.end_trace(ctx, Action.CALL_API, {})
         assert api.determinism == Determinism.CHAOTIC
 
-    def test_determinism_override(self, historian, agent):
+    def test_determinism_override(self, historian, agent) -> None:
         """Can override auto-detected determinism."""
         ctx = historian.begin_trace(agent, {})
         crystal = historian.end_trace(
@@ -171,7 +171,7 @@ class TestHistorian:
 
         assert crystal.determinism == Determinism.DETERMINISTIC
 
-    def test_input_hash_consistent(self, historian, agent):
+    def test_input_hash_consistent(self, historian, agent) -> None:
         """Same input produces same hash."""
         input_data = {"key": "value", "number": 42}
 
@@ -180,14 +180,14 @@ class TestHistorian:
 
         assert ctx1.input_hash == ctx2.input_hash
 
-    def test_different_input_different_hash(self, historian, agent):
+    def test_different_input_different_hash(self, historian, agent) -> None:
         """Different input produces different hash."""
         ctx1 = historian.begin_trace(agent, {"a": 1})
         ctx2 = historian.begin_trace(agent, {"b": 2})
 
         assert ctx1.input_hash != ctx2.input_hash
 
-    def test_non_traceable_agent(self, historian):
+    def test_non_traceable_agent(self, historian) -> None:
         """Works with non-Traceable agents via fallback."""
 
         class PlainAgent:
@@ -217,7 +217,7 @@ class TestTracingContext:
     def agent(self) -> MockAgent:
         return MockAgent()
 
-    def test_context_manager_success(self, historian, agent, store):
+    def test_context_manager_success(self, historian, agent, store) -> None:
         """Context manager records successful trace."""
         with TracingContext(historian, agent, {"test": "input"}) as ctx:
             ctx.set_result({"output": "success"})
@@ -227,7 +227,7 @@ class TestTracingContext:
         assert crystal.action == Action.INVOKE
         assert crystal.outputs == {"output": "success"}
 
-    def test_context_manager_exception(self, historian, agent, store):
+    def test_context_manager_exception(self, historian, agent, store) -> None:
         """Context manager records failed trace on exception."""
         with pytest.raises(ValueError):
             with TracingContext(historian, agent, {}):
@@ -238,13 +238,13 @@ class TestTracingContext:
         assert crystal.action == Action.ERROR
         assert "test error" in crystal.outputs["error"]
 
-    def test_context_manager_trace_id(self, historian, agent):
+    def test_context_manager_trace_id(self, historian, agent) -> None:
         """Can access trace ID during execution."""
         with TracingContext(historian, agent, {}) as ctx:
             assert ctx.trace_id is not None
 
     @pytest.mark.asyncio
-    async def test_async_context_manager(self, historian, agent, store):
+    async def test_async_context_manager(self, historian, agent, store) -> None:
         """Async context manager works correctly."""
         async with TracingContext(historian, agent, {}) as ctx:
             ctx.set_result({"async": True})

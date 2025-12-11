@@ -29,7 +29,7 @@ from ..nervous import (
 class TestSignal:
     """Tests for Signal dataclass."""
 
-    def test_create_signal_minimal(self):
+    def test_create_signal_minimal(self) -> None:
         """Signal can be created with just type and data."""
         signal = Signal(signal_type="test.signal", data={"value": 42})
 
@@ -38,7 +38,7 @@ class TestSignal:
         assert signal.timestamp is not None
         assert signal.priority == SignalPriority.CORTICAL
 
-    def test_create_signal_full(self):
+    def test_create_signal_full(self) -> None:
         """Signal can be created with all fields."""
         ts = datetime.now().isoformat()
         signal = Signal(
@@ -62,7 +62,7 @@ class TestSignal:
 class TestSignalPriority:
     """Tests for SignalPriority enum."""
 
-    def test_priority_values(self):
+    def test_priority_values(self) -> None:
         """All priority levels exist."""
         assert SignalPriority.REFLEX.value == "reflex"
         assert SignalPriority.CORTICAL.value == "cortical"
@@ -72,7 +72,7 @@ class TestSignalPriority:
 class TestNervousSystemConfig:
     """Tests for NervousSystemConfig."""
 
-    def test_default_config(self):
+    def test_default_config(self) -> None:
         """Default config has expected reflex patterns."""
         config = NervousSystemConfig()
 
@@ -81,7 +81,7 @@ class TestNervousSystemConfig:
         assert "system.cpu_metrics" in config.spinal_reflexes
         assert config.log_reflexes is True
 
-    def test_default_flashbulb_patterns(self):
+    def test_default_flashbulb_patterns(self) -> None:
         """Default config has expected flashbulb patterns."""
         config = NervousSystemConfig()
 
@@ -89,7 +89,7 @@ class TestNervousSystemConfig:
         assert "error.critical" in config.flashbulb_patterns
         assert "security.alert" in config.flashbulb_patterns
 
-    def test_config_from_dict(self):
+    def test_config_from_dict(self) -> None:
         """Config can be created from dict."""
         config = NervousSystemConfig.from_dict(
             {
@@ -103,7 +103,7 @@ class TestNervousSystemConfig:
         assert config.flashbulb_patterns == {"custom.flash"}
         assert config.log_reflexes is False
 
-    def test_config_from_empty_dict(self):
+    def test_config_from_empty_dict(self) -> None:
         """Empty dict gives default config."""
         config = NervousSystemConfig.from_dict({})
 
@@ -115,7 +115,7 @@ class TestNullSynapse:
     """Tests for NullSynapse."""
 
     @pytest.mark.asyncio
-    async def test_null_synapse_drops_signals(self):
+    async def test_null_synapse_drops_signals(self) -> None:
         """NullSynapse accepts signals without error."""
         synapse = NullSynapse()
         signal = Signal(signal_type="test", data={})
@@ -127,7 +127,7 @@ class TestNullSynapse:
 class TestNervousSystemClassification:
     """Tests for signal classification."""
 
-    def test_classify_reflex_signal(self):
+    def test_classify_reflex_signal(self) -> None:
         """Reflex signals are classified as REFLEX."""
         nervous = NervousSystem()
         signal = Signal(signal_type="telemetry.heartbeat", data={})
@@ -136,7 +136,7 @@ class TestNervousSystemClassification:
 
         assert priority == SignalPriority.REFLEX
 
-    def test_classify_cortical_signal(self):
+    def test_classify_cortical_signal(self) -> None:
         """Unknown signals are classified as CORTICAL."""
         nervous = NervousSystem()
         signal = Signal(signal_type="shape.observed", data={})
@@ -145,7 +145,7 @@ class TestNervousSystemClassification:
 
         assert priority == SignalPriority.CORTICAL
 
-    def test_classify_flashbulb_signal(self):
+    def test_classify_flashbulb_signal(self) -> None:
         """Flashbulb signals are classified as FLASHBULB."""
         nervous = NervousSystem()
         signal = Signal(signal_type="user.input", data={})
@@ -154,7 +154,7 @@ class TestNervousSystemClassification:
 
         assert priority == SignalPriority.FLASHBULB
 
-    def test_flashbulb_takes_precedence(self):
+    def test_flashbulb_takes_precedence(self) -> None:
         """Flashbulb patterns override reflex patterns."""
         config = NervousSystemConfig(
             spinal_reflexes={"priority.test"},
@@ -168,7 +168,7 @@ class TestNervousSystemClassification:
 
         assert priority == SignalPriority.FLASHBULB
 
-    def test_is_reflex_helper(self):
+    def test_is_reflex_helper(self) -> None:
         """is_reflex helper works correctly."""
         nervous = NervousSystem()
 
@@ -181,7 +181,7 @@ class TestNervousSystemRouting:
     """Tests for signal routing."""
 
     @pytest.mark.asyncio
-    async def test_reflex_routes_to_fast_store(self):
+    async def test_reflex_routes_to_fast_store(self) -> None:
         """Reflex signals go to fast store."""
         mock_store = AsyncMock()
         nervous = NervousSystem(fast_store=mock_store)
@@ -194,7 +194,7 @@ class TestNervousSystemRouting:
         mock_store.append.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_cortical_routes_to_synapse(self):
+    async def test_cortical_routes_to_synapse(self) -> None:
         """Cortical signals go to Synapse."""
         mock_synapse = AsyncMock(spec=ISynapse)
         nervous = NervousSystem(synapse=mock_synapse)
@@ -206,7 +206,7 @@ class TestNervousSystemRouting:
         mock_synapse.fire.assert_called_once_with(signal)
 
     @pytest.mark.asyncio
-    async def test_reflex_without_store(self):
+    async def test_reflex_without_store(self) -> None:
         """Reflex signals work without store (not logged)."""
         nervous = NervousSystem()
 
@@ -217,7 +217,7 @@ class TestNervousSystemRouting:
         assert result.logged is False
 
     @pytest.mark.asyncio
-    async def test_reflex_with_logging_disabled(self):
+    async def test_reflex_with_logging_disabled(self) -> None:
         """Reflex signals can skip logging."""
         mock_store = AsyncMock()
         config = NervousSystemConfig(log_reflexes=False)
@@ -231,7 +231,7 @@ class TestNervousSystemRouting:
         mock_store.append.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_synapse_error_marks_dropped(self):
+    async def test_synapse_error_marks_dropped(self) -> None:
         """Synapse errors mark signal as dropped."""
         mock_synapse = AsyncMock(spec=ISynapse)
         mock_synapse.fire.side_effect = RuntimeError("Synapse error")
@@ -248,7 +248,7 @@ class TestNervousSystemBatch:
     """Tests for batch transmission."""
 
     @pytest.mark.asyncio
-    async def test_batch_reflex_signals(self):
+    async def test_batch_reflex_signals(self) -> None:
         """Batch reflex signals use single append."""
         mock_store = AsyncMock()
         nervous = NervousSystem(fast_store=mock_store)
@@ -266,7 +266,7 @@ class TestNervousSystemBatch:
         assert all(r.routed_to == "reflex" for r in results)
 
     @pytest.mark.asyncio
-    async def test_batch_mixed_signals(self):
+    async def test_batch_mixed_signals(self) -> None:
         """Batch handles mixed reflex and cortical signals."""
         mock_store = AsyncMock()
         mock_synapse = AsyncMock(spec=ISynapse)
@@ -289,7 +289,7 @@ class TestNervousSystemMetrics:
     """Tests for metrics tracking."""
 
     @pytest.mark.asyncio
-    async def test_metrics_track_reflex(self):
+    async def test_metrics_track_reflex(self) -> None:
         """Metrics track reflex signals."""
         nervous = NervousSystem()
 
@@ -302,7 +302,7 @@ class TestNervousSystemMetrics:
         assert metrics["total"] == 2
 
     @pytest.mark.asyncio
-    async def test_metrics_track_cortical(self):
+    async def test_metrics_track_cortical(self) -> None:
         """Metrics track cortical signals."""
         nervous = NervousSystem()
 
@@ -313,7 +313,7 @@ class TestNervousSystemMetrics:
         assert metrics["reflex_count"] == 0
 
     @pytest.mark.asyncio
-    async def test_metrics_reset(self):
+    async def test_metrics_reset(self) -> None:
         """Metrics can be reset."""
         nervous = NervousSystem()
 
@@ -329,7 +329,7 @@ class TestNervousSystemMetrics:
 class TestNervousSystemDynamic:
     """Tests for dynamic configuration."""
 
-    def test_add_reflex_pattern(self):
+    def test_add_reflex_pattern(self) -> None:
         """Can add reflex patterns dynamically."""
         nervous = NervousSystem()
 
@@ -337,7 +337,7 @@ class TestNervousSystemDynamic:
 
         assert nervous.is_reflex("custom.signal") is True
 
-    def test_remove_reflex_pattern(self):
+    def test_remove_reflex_pattern(self) -> None:
         """Can remove reflex patterns dynamically."""
         nervous = NervousSystem()
 
@@ -345,7 +345,7 @@ class TestNervousSystemDynamic:
 
         assert nervous.is_reflex("telemetry.heartbeat") is False
 
-    def test_add_flashbulb_pattern(self):
+    def test_add_flashbulb_pattern(self) -> None:
         """Can add flashbulb patterns dynamically."""
         nervous = NervousSystem()
         nervous.add_flashbulb_pattern("custom.urgent")
@@ -355,7 +355,7 @@ class TestNervousSystemDynamic:
 
         assert priority == SignalPriority.FLASHBULB
 
-    def test_set_synapse(self):
+    def test_set_synapse(self) -> None:
         """Can set synapse after construction."""
         nervous = NervousSystem()
         mock_synapse = AsyncMock(spec=ISynapse)
@@ -364,7 +364,7 @@ class TestNervousSystemDynamic:
 
         assert nervous._synapse == mock_synapse
 
-    def test_set_fast_store(self):
+    def test_set_fast_store(self) -> None:
         """Can set fast store after construction."""
         nervous = NervousSystem()
         mock_store = AsyncMock()
@@ -377,14 +377,14 @@ class TestNervousSystemDynamic:
 class TestCreateNervousSystem:
     """Tests for factory function."""
 
-    def test_create_with_defaults(self):
+    def test_create_with_defaults(self) -> None:
         """Factory creates system with defaults."""
         nervous = create_nervous_system()
 
         assert nervous.is_reflex("telemetry.heartbeat") is True
         assert nervous.config.log_reflexes is True
 
-    def test_create_with_config(self):
+    def test_create_with_config(self) -> None:
         """Factory accepts config dict."""
         nervous = create_nervous_system(
             config_dict={
@@ -397,7 +397,7 @@ class TestCreateNervousSystem:
         assert nervous.is_reflex("telemetry.heartbeat") is False
         assert nervous.config.log_reflexes is False
 
-    def test_create_with_store(self):
+    def test_create_with_store(self) -> None:
         """Factory accepts telemetry store."""
         mock_store = MagicMock()
         nervous = create_nervous_system(telemetry_store=mock_store)

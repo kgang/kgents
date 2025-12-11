@@ -105,7 +105,7 @@ class TestIdentityLaw:
     """Test identity law: id >> f == f == f >> id."""
 
     @pytest.mark.asyncio
-    async def test_left_identity(self):
+    async def test_left_identity(self) -> None:
         """Test id >> f == f."""
         f = AddOne()
 
@@ -120,7 +120,7 @@ class TestIdentityLaw:
         assert f_result == composed_result == 6
 
     @pytest.mark.asyncio
-    async def test_right_identity(self):
+    async def test_right_identity(self) -> None:
         """Test f >> id == f."""
         f = Double()
 
@@ -134,7 +134,7 @@ class TestIdentityLaw:
         assert f_result == composed_result == 14
 
     @pytest.mark.asyncio
-    async def test_identity_both_sides(self):
+    async def test_identity_both_sides(self) -> None:
         """Test id >> f >> id == f."""
         f = Square()
 
@@ -154,7 +154,7 @@ class TestAssociativityLaw:
     """Test associativity: (f >> g) >> h == f >> (g >> h)."""
 
     @pytest.mark.asyncio
-    async def test_associativity_left_grouping(self):
+    async def test_associativity_left_grouping(self) -> None:
         """Test (f >> g) >> h."""
         f = AddOne()
         g = Double()
@@ -171,7 +171,7 @@ class TestAssociativityLaw:
         assert result == 64
 
     @pytest.mark.asyncio
-    async def test_associativity_right_grouping(self):
+    async def test_associativity_right_grouping(self) -> None:
         """Test f >> (g >> h)."""
         f = AddOne()
         g = Double()
@@ -188,7 +188,7 @@ class TestAssociativityLaw:
         assert result == 64
 
     @pytest.mark.asyncio
-    async def test_associativity_equivalence(self):
+    async def test_associativity_equivalence(self) -> None:
         """Test (f >> g) >> h == f >> (g >> h)."""
         f = AddOne()
         g = Double()
@@ -214,7 +214,7 @@ class TestPipelineFunction:
     """Test pipeline() for chaining multiple agents via compose."""
 
     @pytest.mark.asyncio
-    async def test_pipeline_three_agents(self):
+    async def test_pipeline_three_agents(self) -> None:
         """Test pipeline with three agents using compose."""
         # Compose manually: add >> double >> square
         p = compose(compose(AddOne(), Double()), Square())
@@ -224,7 +224,7 @@ class TestPipelineFunction:
         assert result == 36
 
     @pytest.mark.asyncio
-    async def test_pipeline_single_agent(self):
+    async def test_pipeline_single_agent(self) -> None:
         """Test single agent (compose is identity for single)."""
         p = Double()
 
@@ -232,7 +232,7 @@ class TestPipelineFunction:
         assert result == 10
 
     @pytest.mark.asyncio
-    async def test_pipeline_many_agents(self):
+    async def test_pipeline_many_agents(self) -> None:
         """Test many agents via compose chain."""
         # Chain 5 AddOne agents
         from functools import reduce
@@ -250,18 +250,18 @@ class TestPipelineFunction:
 class TestMaybeFunctor:
     """Test Maybe functor laws."""
 
-    def test_maybe_just_creation(self):
+    def test_maybe_just_creation(self) -> None:
         """Test Just creation."""
         j = Just(42)
         assert j.value == 42
         assert j.is_just()
 
-    def test_maybe_nothing_creation(self):
+    def test_maybe_nothing_creation(self) -> None:
         """Test Nothing creation."""
         n = Nothing
         assert n.is_nothing()
 
-    def test_maybe_functor_identity(self):
+    def test_maybe_functor_identity(self) -> None:
         """Test fmap id == id for Maybe."""
         j = Just(10)
 
@@ -270,7 +270,7 @@ class TestMaybeFunctor:
 
         assert mapped.value == j.value
 
-    def test_maybe_functor_composition(self):
+    def test_maybe_functor_composition(self) -> None:
         """Test fmap (g . f) == fmap g . fmap f for Maybe."""
         j = Just(5)
 
@@ -288,7 +288,7 @@ class TestMaybeFunctor:
 
         assert composed.value == chained.value == 12
 
-    def test_maybe_nothing_propagates(self):
+    def test_maybe_nothing_propagates(self) -> None:
         """Test Nothing propagates through fmap."""
         n = Nothing
 
@@ -303,19 +303,19 @@ class TestMaybeFunctor:
 class TestEitherFunctor:
     """Test Either functor laws."""
 
-    def test_either_right_creation(self):
+    def test_either_right_creation(self) -> None:
         """Test Right creation."""
         r = Right(42)
         assert r.value == 42
         assert r.is_right()
 
-    def test_either_left_creation(self):
+    def test_either_left_creation(self) -> None:
         """Test Left creation."""
         l = Left("error")
         assert l.error == "error"
         assert l.is_left()
 
-    def test_either_functor_identity(self):
+    def test_either_functor_identity(self) -> None:
         """Test fmap id == id for Either."""
         r = Right(10)
 
@@ -323,7 +323,7 @@ class TestEitherFunctor:
 
         assert mapped.value == r.value
 
-    def test_either_functor_composition(self):
+    def test_either_functor_composition(self) -> None:
         """Test fmap (g . f) == fmap g . fmap f for Either."""
         r = Right(3)
 
@@ -338,7 +338,7 @@ class TestEitherFunctor:
 
         assert composed.value == chained.value == 15
 
-    def test_either_left_propagates(self):
+    def test_either_left_propagates(self) -> None:
         """Test Left propagates through fmap."""
         l = Left("error occurred")
 
@@ -352,7 +352,7 @@ class TestMaybeAgent:
     """Test MaybeAgent wrapper (functor lifting)."""
 
     @pytest.mark.asyncio
-    async def test_maybe_agent_success(self):
+    async def test_maybe_agent_success(self) -> None:
         """Test MaybeAgent with Just input."""
         agent = AddOne()
         maybe_agent = maybe(agent)
@@ -364,7 +364,7 @@ class TestMaybeAgent:
         assert result.value == 6
 
     @pytest.mark.asyncio
-    async def test_maybe_agent_nothing_passthrough(self):
+    async def test_maybe_agent_nothing_passthrough(self) -> None:
         """Test MaybeAgent short-circuits on Nothing input."""
         agent = AddOne()
         maybe_agent = maybe(agent)
@@ -379,7 +379,7 @@ class TestEitherAgent:
     """Test EitherAgent wrapper (functor lifting)."""
 
     @pytest.mark.asyncio
-    async def test_either_agent_success(self):
+    async def test_either_agent_success(self) -> None:
         """Test EitherAgent with Right input."""
         agent = Double()
         either_agent = either(agent)
@@ -391,7 +391,7 @@ class TestEitherAgent:
         assert result.value == 14
 
     @pytest.mark.asyncio
-    async def test_either_agent_left_passthrough(self):
+    async def test_either_agent_left_passthrough(self) -> None:
         """Test EitherAgent short-circuits on Left input."""
         agent = Double()
         either_agent = either(agent)
@@ -407,7 +407,7 @@ class TestLoggedAgent:
     """Test LoggedAgent functor."""
 
     @pytest.mark.asyncio
-    async def test_logged_agent_records_entries(self):
+    async def test_logged_agent_records_entries(self) -> None:
         """Test LoggedAgent records log entries in history."""
         agent = AddOne()
         logged_agent = logged(agent)
@@ -419,7 +419,7 @@ class TestLoggedAgent:
         assert len(logged_agent.history) >= 1
 
     @pytest.mark.asyncio
-    async def test_logged_agent_multiple_calls(self):
+    async def test_logged_agent_multiple_calls(self) -> None:
         """Test logged agent accumulates history across calls."""
         agent = AddOne()
         logged_agent = logged(agent)
@@ -435,7 +435,7 @@ class TestParallelComposition:
     """Test parallel composition patterns."""
 
     @pytest.mark.asyncio
-    async def test_fan_out_executes_all(self):
+    async def test_fan_out_executes_all(self) -> None:
         """Test fan_out runs all agents on same input."""
         agents = [AddOne(), Double(), Square()]
         fanned = fan_out(*agents)
@@ -448,7 +448,7 @@ class TestParallelComposition:
         assert 9 in results  # Square: 3^2
 
     @pytest.mark.asyncio
-    async def test_parallel_same_result_as_sequential(self):
+    async def test_parallel_same_result_as_sequential(self) -> None:
         """Test parallel execution matches sequential for independent agents."""
         # Independent operations should produce same results
         agents = [Double(), Square()]
@@ -469,7 +469,7 @@ class TestConditionalComposition:
     """Test conditional composition patterns."""
 
     @pytest.mark.asyncio
-    async def test_branch_selects_correct_path(self):
+    async def test_branch_selects_correct_path(self) -> None:
         """Test branch selects based on predicate."""
         branched = branch(
             predicate=lambda x: x > 0,
@@ -486,7 +486,7 @@ class TestConditionalComposition:
         assert neg_result == 9
 
     @pytest.mark.asyncio
-    async def test_switch_selects_by_key(self):
+    async def test_switch_selects_by_key(self) -> None:
         """Test switch selects agent by key."""
 
         # Agents that extract value and transform
@@ -530,7 +530,7 @@ class TestLawVerification:
     """Test law verification utilities."""
 
     @pytest.mark.asyncio
-    async def test_check_identity_law(self):
+    async def test_check_identity_law(self) -> None:
         """Test identity law verification utility."""
         # check_identity_law takes: functor_lift, identity_agent, test_input
         # Verify the identity law: F(id_A) behaves like id_F(A)
@@ -542,7 +542,7 @@ class TestLawVerification:
         assert passed
 
     @pytest.mark.asyncio
-    async def test_check_composition_law(self):
+    async def test_check_composition_law(self) -> None:
         """Test composition law verification utility."""
         # check_composition_law takes: functor_lift, f, g, test_input
         # The functor lift verifies F(g ∘ f) = F(g) ∘ F(f)
@@ -561,19 +561,19 @@ class TestLawVerification:
 class TestResultMonad:
     """Test Result monad operations."""
 
-    def test_ok_creation(self):
+    def test_ok_creation(self) -> None:
         """Test Ok creation."""
         ok = Ok(42)
         assert ok.is_ok()
         assert ok.unwrap() == 42
 
-    def test_err_creation(self):
+    def test_err_creation(self) -> None:
         """Test Err creation."""
         err = Err("error message")
         assert err.is_err()
         assert err.error == "error message"
 
-    def test_result_map(self):
+    def test_result_map(self) -> None:
         """Test Result.map preserves structure."""
         ok = Ok(5)
         err = Err("oops")
@@ -586,12 +586,12 @@ class TestResultMonad:
         mapped_err = err.map(lambda x: x * 2)
         assert mapped_err.is_err()
 
-    def test_result_unwrap_ok(self):
+    def test_result_unwrap_ok(self) -> None:
         """Test unwrap extracts Ok value."""
         ok = Ok(10)
         assert ok.unwrap() == 10
 
-    def test_result_unwrap_or_err(self):
+    def test_result_unwrap_or_err(self) -> None:
         """Test unwrap_or returns default for Err."""
         err = Err("error")
         assert err.unwrap_or(42) == 42
@@ -601,7 +601,7 @@ class TestAgentCategoryProperties:
     """Test that agents form a proper category."""
 
     @pytest.mark.asyncio
-    async def test_closure_under_composition(self):
+    async def test_closure_under_composition(self) -> None:
         """Test composition produces another agent."""
         f = AddOne()
         g = Double()
@@ -613,7 +613,7 @@ class TestAgentCategoryProperties:
         assert isinstance(result, int)
 
     @pytest.mark.asyncio
-    async def test_identity_exists(self):
+    async def test_identity_exists(self) -> None:
         """Test identity morphism exists."""
         # ID is the identity
         result = await ID.invoke(42)
@@ -623,7 +623,7 @@ class TestAgentCategoryProperties:
         assert result == "string"
 
     @pytest.mark.asyncio
-    async def test_composition_is_deterministic(self):
+    async def test_composition_is_deterministic(self) -> None:
         """Test same composition always gives same result."""
         f = AddOne()
         g = Double()

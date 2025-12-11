@@ -110,13 +110,13 @@ class AgentWithMeta(Agent[str, str]):
 class TestBootstrapWitness:
     """Tests for bootstrap integrity verification."""
 
-    def test_required_agents_list(self):
+    def test_required_agents_list(self) -> None:
         """BootstrapWitness lists all 7 required agents."""
         expected = ["Id", "Compose", "Judge", "Ground", "Contradict", "Sublate", "Fix"]
         assert BootstrapWitness.REQUIRED_AGENTS == expected
 
     @pytest.mark.asyncio
-    async def test_all_bootstrap_agents_exist(self):
+    async def test_all_bootstrap_agents_exist(self) -> None:
         """All 7 bootstrap agents can be imported and instantiated."""
         # These should not raise ImportError
         from bootstrap import Compose, Contradict, Fix, Ground, Id, Judge, Sublate
@@ -131,7 +131,7 @@ class TestBootstrapWitness:
         assert hasattr(Fix, "invoke")
 
     @pytest.mark.asyncio
-    async def test_identity_left_law(self):
+    async def test_identity_left_law(self) -> None:
         """Id >> f ≡ f (left identity law)."""
         f = SimpleAgent()
         id_agent = Id()
@@ -146,7 +146,7 @@ class TestBootstrapWitness:
         assert result_composed == result_direct
 
     @pytest.mark.asyncio
-    async def test_identity_right_law(self):
+    async def test_identity_right_law(self) -> None:
         """f >> Id ≡ f (right identity law)."""
         f = SimpleAgent()
         id_agent = Id()
@@ -161,7 +161,7 @@ class TestBootstrapWitness:
         assert result_composed == result_direct
 
     @pytest.mark.asyncio
-    async def test_composition_associativity(self):
+    async def test_composition_associativity(self) -> None:
         """(f >> g) >> h ≡ f >> (g >> h) (associativity law)."""
         f = SimpleAgent()  # str -> int (len)
         g = DoubleAgent()  # int -> int (*2)
@@ -178,14 +178,14 @@ class TestBootstrapWitness:
         assert left_result == right_result == 16
 
     @pytest.mark.asyncio
-    async def test_verify_identity_laws(self):
+    async def test_verify_identity_laws(self) -> None:
         """BootstrapWitness.verify_identity_laws() passes for valid agents."""
         f = SimpleAgent()
         result = await BootstrapWitness.verify_identity_laws(f, "test")
         assert result is True
 
     @pytest.mark.asyncio
-    async def test_verify_composition_laws(self):
+    async def test_verify_composition_laws(self) -> None:
         """BootstrapWitness.verify_composition_laws() passes for valid agents."""
         f = SimpleAgent()
         g = DoubleAgent()
@@ -195,7 +195,7 @@ class TestBootstrapWitness:
         assert result is True
 
     @pytest.mark.asyncio
-    async def test_verify_bootstrap_returns_result(self):
+    async def test_verify_bootstrap_returns_result(self) -> None:
         """BootstrapWitness.verify_bootstrap() returns BootstrapVerificationResult."""
         result = await BootstrapWitness.verify_bootstrap()
 
@@ -203,7 +203,7 @@ class TestBootstrapWitness:
         assert result.all_agents_exist is True
 
     @pytest.mark.asyncio
-    async def test_verify_bootstrap_passes(self):
+    async def test_verify_bootstrap_passes(self) -> None:
         """Full bootstrap verification returns success."""
         result = await BootstrapWitness.verify_bootstrap()
 
@@ -221,7 +221,7 @@ class TestBootstrapWitness:
 class TestMorphismProtocol:
     """Tests for Morphism protocol."""
 
-    def test_agent_satisfies_morphism_protocol(self):
+    def test_agent_satisfies_morphism_protocol(self) -> None:
         """Agent[A, B] satisfies Morphism protocol structurally."""
         agent = SimpleAgent()
 
@@ -231,7 +231,7 @@ class TestMorphismProtocol:
         assert callable(agent.invoke)
         assert callable(agent.__rshift__)
 
-    def test_id_is_morphism(self):
+    def test_id_is_morphism(self) -> None:
         """Id agent is a valid morphism."""
         id_agent = Id()
         assert isinstance(id_agent, Morphism)
@@ -240,21 +240,21 @@ class TestMorphismProtocol:
 class TestDomainCodomain:
     """Tests for domain/codomain extraction."""
 
-    def test_get_domain_extracts_input_type(self):
+    def test_get_domain_extracts_input_type(self) -> None:
         """get_domain() extracts input type from agent."""
         agent = SimpleAgent()
         domain = get_domain(agent)
         # Should be str
         assert domain is str
 
-    def test_get_codomain_extracts_output_type(self):
+    def test_get_codomain_extracts_output_type(self) -> None:
         """get_codomain() extracts output type from agent."""
         agent = SimpleAgent()
         codomain = get_codomain(agent)
         # Should be int
         assert codomain is int
 
-    def test_get_domain_returns_none_for_untyped(self):
+    def test_get_domain_returns_none_for_untyped(self) -> None:
         """get_domain() returns None if no type hints available."""
 
         class UntypedAgent(Agent):
@@ -275,7 +275,7 @@ class TestDomainCodomain:
 class TestCompositionTypeVerification:
     """Tests for composition type verification."""
 
-    def test_verify_compatible_composition(self):
+    def test_verify_compatible_composition(self) -> None:
         """verify_composition_types() accepts compatible types."""
         f = SimpleAgent()  # str -> int
         g = DoubleAgent()  # int -> int
@@ -283,7 +283,7 @@ class TestCompositionTypeVerification:
         is_valid, explanation = verify_composition_types(f, g)
         assert is_valid is True
 
-    def test_verify_incompatible_composition(self):
+    def test_verify_incompatible_composition(self) -> None:
         """verify_composition_types() rejects incompatible types."""
         f = DoubleAgent()  # int -> int
         g = SimpleAgent()  # str -> int (expects str, not int)
@@ -304,7 +304,7 @@ class TestGroundedSkeleton:
     """Tests for self-describing agents via Ground."""
 
     @pytest.mark.asyncio
-    async def test_describe_returns_agent_meta(self):
+    async def test_describe_returns_agent_meta(self) -> None:
         """GroundedSkeleton.describe() returns AgentMeta."""
         agent = SimpleAgent()
         meta = await GroundedSkeleton.describe(agent)
@@ -313,7 +313,7 @@ class TestGroundedSkeleton:
         assert meta.identity.name == "SimpleAgent"
 
     @pytest.mark.asyncio
-    async def test_describe_preserves_existing_meta(self):
+    async def test_describe_preserves_existing_meta(self) -> None:
         """Agent with existing meta gets it preserved."""
         agent = AgentWithMeta()
         meta = await GroundedSkeleton.describe(agent)
@@ -322,7 +322,7 @@ class TestGroundedSkeleton:
         assert meta.identity.version == "1.0.0"
 
     @pytest.mark.asyncio
-    async def test_describe_infers_from_docstring(self):
+    async def test_describe_infers_from_docstring(self) -> None:
         """Agent without meta gets purpose inferred from docstring."""
         agent = SimpleAgent()
         meta = await GroundedSkeleton.describe(agent)
@@ -331,7 +331,7 @@ class TestGroundedSkeleton:
         assert "count" in meta.identity.purpose.lower() or meta.identity.purpose != ""
 
     @pytest.mark.asyncio
-    async def test_grounded_skeleton_invoke(self):
+    async def test_grounded_skeleton_invoke(self) -> None:
         """GroundedSkeleton as agent works correctly."""
         skeleton = GroundedSkeleton(SimpleAgent())
         meta = await skeleton.invoke(VOID)
@@ -340,7 +340,7 @@ class TestGroundedSkeleton:
         assert meta.identity.name == "SimpleAgent"
 
     @pytest.mark.asyncio
-    async def test_grounded_skeleton_name(self):
+    async def test_grounded_skeleton_name(self) -> None:
         """GroundedSkeleton has descriptive name."""
         skeleton = GroundedSkeleton(SimpleAgent())
         assert "SimpleAgent" in skeleton.name
@@ -350,7 +350,7 @@ class TestAutopoieticAgent:
     """Tests for AutopoieticAgent mixin."""
 
     @pytest.mark.asyncio
-    async def test_describe_self(self):
+    async def test_describe_self(self) -> None:
         """AutopoieticAgent.describe_self() returns valid meta."""
 
         class MyAutopoieticAgent(AutopoieticAgent[str, int]):
@@ -378,40 +378,40 @@ class TestAutopoieticAgent:
 class TestExistingFunctionality:
     """Tests to ensure existing skeleton functionality still works."""
 
-    def test_abstract_agent_is_agent(self):
+    def test_abstract_agent_is_agent(self) -> None:
         """AbstractAgent is alias for Agent."""
         assert AbstractAgent is Agent
 
-    def test_agent_meta_creation(self):
+    def test_agent_meta_creation(self) -> None:
         """AgentMeta can be created."""
         meta = AgentMeta.minimal("Test", "a", "Test purpose")
         assert meta.identity.name == "Test"
         assert meta.identity.genus == "a"
 
-    def test_has_meta_returns_true(self):
+    def test_has_meta_returns_true(self) -> None:
         """has_meta() returns True for agent with meta."""
         agent = AgentWithMeta()
         assert has_meta(agent) is True
 
-    def test_has_meta_returns_false(self):
+    def test_has_meta_returns_false(self) -> None:
         """has_meta() returns False for agent without meta."""
         agent = SimpleAgent()
         assert has_meta(agent) is False
 
-    def test_get_meta_returns_meta(self):
+    def test_get_meta_returns_meta(self) -> None:
         """get_meta() returns meta for agent with meta."""
         agent = AgentWithMeta()
         meta = get_meta(agent)
         assert meta is not None
         assert meta.identity.name == "AgentWithMeta"
 
-    def test_get_meta_returns_none(self):
+    def test_get_meta_returns_none(self) -> None:
         """get_meta() returns None for agent without meta."""
         agent = SimpleAgent()
         meta = get_meta(agent)
         assert meta is None
 
-    def test_check_composition_with_meta(self):
+    def test_check_composition_with_meta(self) -> None:
         """check_composition() works with metadata."""
         agent_a = AgentWithMeta()
         agent_b = AgentWithMeta()

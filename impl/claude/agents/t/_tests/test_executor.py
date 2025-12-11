@@ -132,7 +132,7 @@ class SlowTool(Tool[str, str]):
 
 
 @pytest.mark.asyncio
-async def test_tool_executor_success():
+async def test_tool_executor_success() -> None:
     """Test ToolExecutor with successful tool."""
     tool = SuccessTool()
     executor = ToolExecutor(tool)
@@ -145,7 +145,7 @@ async def test_tool_executor_success():
 
 
 @pytest.mark.asyncio
-async def test_tool_executor_failure():
+async def test_tool_executor_failure() -> None:
     """Test ToolExecutor with failing tool."""
     tool = AlwaysFailingTool(ToolErrorType.NETWORK)
     executor = ToolExecutor(tool)
@@ -159,7 +159,7 @@ async def test_tool_executor_failure():
 
 
 @pytest.mark.asyncio
-async def test_tool_executor_timeout():
+async def test_tool_executor_timeout() -> None:
     """Test ToolExecutor with timeout."""
     tool = SlowTool(delay_ms=500)
     executor = ToolExecutor(tool)
@@ -172,7 +172,7 @@ async def test_tool_executor_timeout():
 
 
 @pytest.mark.asyncio
-async def test_tool_executor_timeout_success():
+async def test_tool_executor_timeout_success() -> None:
     """Test ToolExecutor timeout with fast enough tool."""
     tool = SlowTool(delay_ms=50)
     executor = ToolExecutor(tool)
@@ -187,7 +187,7 @@ async def test_tool_executor_timeout_success():
 
 
 @pytest.mark.asyncio
-async def test_circuit_breaker_closed_state():
+async def test_circuit_breaker_closed_state() -> None:
     """Test circuit breaker in CLOSED state (normal operation)."""
     tool = SuccessTool()
     config = CircuitBreakerConfig(failure_threshold=3)
@@ -201,7 +201,7 @@ async def test_circuit_breaker_closed_state():
 
 
 @pytest.mark.asyncio
-async def test_circuit_breaker_opens_after_failures():
+async def test_circuit_breaker_opens_after_failures() -> None:
     """Test circuit breaker opens after threshold failures."""
     tool = AlwaysFailingTool(ToolErrorType.NETWORK)
     config = CircuitBreakerConfig(failure_threshold=3)
@@ -225,7 +225,7 @@ async def test_circuit_breaker_opens_after_failures():
 
 @pytest.mark.asyncio
 @pytest.mark.slow
-async def test_circuit_breaker_half_open_after_timeout():
+async def test_circuit_breaker_half_open_after_timeout() -> None:
     """Test circuit breaker transitions to HALF_OPEN after timeout."""
     tool = FailingTool(fail_count=3, error_type=ToolErrorType.NETWORK)
     config = CircuitBreakerConfig(failure_threshold=3, timeout_seconds=1)
@@ -249,7 +249,7 @@ async def test_circuit_breaker_half_open_after_timeout():
 
 @pytest.mark.asyncio
 @pytest.mark.slow
-async def test_circuit_breaker_closes_after_successes():
+async def test_circuit_breaker_closes_after_successes() -> None:
     """Test circuit breaker closes after success threshold in HALF_OPEN."""
     tool = FailingTool(fail_count=3, error_type=ToolErrorType.NETWORK)
     config = CircuitBreakerConfig(
@@ -277,7 +277,7 @@ async def test_circuit_breaker_closes_after_successes():
 
 
 @pytest.mark.asyncio
-async def test_circuit_breaker_ignores_non_monitored_errors():
+async def test_circuit_breaker_ignores_non_monitored_errors() -> None:
     """Test circuit breaker doesn't trip on non-monitored errors."""
     tool = AlwaysFailingTool(ToolErrorType.VALIDATION)
     config = CircuitBreakerConfig(
@@ -297,7 +297,7 @@ async def test_circuit_breaker_ignores_non_monitored_errors():
 
 
 @pytest.mark.asyncio
-async def test_circuit_breaker_manual_reset():
+async def test_circuit_breaker_manual_reset() -> None:
     """Test manual circuit breaker reset."""
     tool = AlwaysFailingTool(ToolErrorType.NETWORK)
     config = CircuitBreakerConfig(failure_threshold=3)
@@ -321,7 +321,7 @@ async def test_circuit_breaker_manual_reset():
 
 
 @pytest.mark.asyncio
-async def test_retry_executor_success_first_try():
+async def test_retry_executor_success_first_try() -> None:
     """Test RetryExecutor with immediate success."""
     tool = SuccessTool()
     config = RetryConfig(max_attempts=3)
@@ -335,7 +335,7 @@ async def test_retry_executor_success_first_try():
 
 
 @pytest.mark.asyncio
-async def test_retry_executor_eventual_success():
+async def test_retry_executor_eventual_success() -> None:
     """Test RetryExecutor retries until success."""
     tool = FailingTool(fail_count=2, error_type=ToolErrorType.NETWORK)
     config = RetryConfig(max_attempts=5, initial_delay_ms=10)
@@ -352,7 +352,7 @@ async def test_retry_executor_eventual_success():
 
 
 @pytest.mark.asyncio
-async def test_retry_executor_max_attempts_exceeded():
+async def test_retry_executor_max_attempts_exceeded() -> None:
     """Test RetryExecutor gives up after max attempts."""
     tool = AlwaysFailingTool(ToolErrorType.NETWORK)
     config = RetryConfig(max_attempts=3, initial_delay_ms=10)
@@ -366,7 +366,7 @@ async def test_retry_executor_max_attempts_exceeded():
 
 
 @pytest.mark.asyncio
-async def test_retry_executor_no_retry_on_non_recoverable():
+async def test_retry_executor_no_retry_on_non_recoverable() -> None:
     """Test RetryExecutor doesn't retry non-recoverable errors."""
     tool = AlwaysFailingTool(ToolErrorType.VALIDATION)
     config = RetryConfig(max_attempts=5)
@@ -380,7 +380,7 @@ async def test_retry_executor_no_retry_on_non_recoverable():
 
 
 @pytest.mark.asyncio
-async def test_retry_executor_exponential_backoff():
+async def test_retry_executor_exponential_backoff() -> None:
     """Test RetryExecutor uses exponential backoff."""
     tool = AlwaysFailingTool(ToolErrorType.NETWORK)
     config = RetryConfig(
@@ -399,7 +399,7 @@ async def test_retry_executor_exponential_backoff():
 
 
 @pytest.mark.asyncio
-async def test_retry_executor_respects_retry_after():
+async def test_retry_executor_respects_retry_after() -> None:
     """Test RetryExecutor respects retry_after_ms from rate limits."""
 
     class RateLimitTool(Tool[str, str]):
@@ -434,7 +434,7 @@ async def test_retry_executor_respects_retry_after():
 
 
 @pytest.mark.asyncio
-async def test_robust_executor_success():
+async def test_robust_executor_success() -> None:
     """Test RobustToolExecutor with successful tool."""
     tool = SuccessTool()
     executor = RobustToolExecutor(tool)
@@ -446,7 +446,7 @@ async def test_robust_executor_success():
 
 
 @pytest.mark.asyncio
-async def test_robust_executor_retry_then_success():
+async def test_robust_executor_retry_then_success() -> None:
     """Test RobustToolExecutor retries transient failures."""
     tool = FailingTool(fail_count=2, error_type=ToolErrorType.NETWORK)
     executor = RobustToolExecutor(
@@ -462,7 +462,7 @@ async def test_robust_executor_retry_then_success():
 
 
 @pytest.mark.asyncio
-async def test_robust_executor_circuit_breaker_opens():
+async def test_robust_executor_circuit_breaker_opens() -> None:
     """Test RobustToolExecutor opens circuit after repeated failures."""
     tool = AlwaysFailingTool(ToolErrorType.NETWORK)
     executor = RobustToolExecutor(
@@ -493,7 +493,7 @@ async def test_robust_executor_circuit_breaker_opens():
 
 
 @pytest.mark.asyncio
-async def test_robust_executor_manual_reset():
+async def test_robust_executor_manual_reset() -> None:
     """Test RobustToolExecutor manual circuit reset."""
     tool = AlwaysFailingTool(ToolErrorType.NETWORK)
     executor = RobustToolExecutor(
@@ -520,7 +520,7 @@ async def test_robust_executor_manual_reset():
 
 
 @pytest.mark.asyncio
-async def test_integration_full_stack():
+async def test_integration_full_stack() -> None:
     """Test full integration of executor components."""
     # Tool that fails 3 times, then succeeds
     tool = FailingTool(fail_count=3, error_type=ToolErrorType.NETWORK)
@@ -542,7 +542,7 @@ async def test_integration_full_stack():
 
 
 @pytest.mark.asyncio
-async def test_integration_circuit_prevents_retry_spam():
+async def test_integration_circuit_prevents_retry_spam() -> None:
     """Test circuit breaker prevents excessive retry attempts."""
     tool = AlwaysFailingTool(ToolErrorType.NETWORK)
 

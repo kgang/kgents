@@ -26,7 +26,7 @@ from agents.i.types import Phase
 class TestEntity:
     """Tests for Entity class."""
 
-    def test_entity_creation(self):
+    def test_entity_creation(self) -> None:
         """Test basic entity creation."""
         entity = Entity(
             id="test-agent",
@@ -42,18 +42,18 @@ class TestEntity:
         assert entity.phase == Phase.ACTIVE
         assert entity.symbol == "J"
 
-    def test_entity_position(self):
+    def test_entity_position(self) -> None:
         """Test position property."""
         entity = Entity(id="e", entity_type=EntityType.ID, x=3, y=7)
         assert entity.position == (3, 7)
 
-    def test_entity_distance(self):
+    def test_entity_distance(self) -> None:
         """Test distance calculation."""
         e1 = Entity(id="e1", entity_type=EntityType.ID, x=0, y=0)
         e2 = Entity(id="e2", entity_type=EntityType.ID, x=3, y=4)
         assert e1.distance_to(e2) == 5.0  # 3-4-5 triangle
 
-    def test_entity_move(self):
+    def test_entity_move(self) -> None:
         """Test entity movement with bounds."""
         entity = Entity(id="e", entity_type=EntityType.ID, x=5, y=5)
         bounds = (10, 10)
@@ -70,7 +70,7 @@ class TestEntity:
         entity.move(-20, -20, bounds)
         assert entity.position == (0, 0)  # Clamped to zero
 
-    def test_entity_type_properties(self):
+    def test_entity_type_properties(self) -> None:
         """Test entity type classification."""
         assert EntityType.JUDGE.is_agent
         assert EntityType.COMPOSE.is_agent
@@ -84,7 +84,7 @@ class TestEntity:
 class TestPheromone:
     """Tests for Pheromone class."""
 
-    def test_pheromone_creation(self):
+    def test_pheromone_creation(self) -> None:
         """Test pheromone creation."""
         p = Pheromone(
             ptype=PheromoneType.PROGRESS,
@@ -96,7 +96,7 @@ class TestPheromone:
         assert p.ptype == PheromoneType.PROGRESS
         assert p.intensity == 1.0
 
-    def test_pheromone_decay(self):
+    def test_pheromone_decay(self) -> None:
         """Test pheromone decay over time."""
         p = Pheromone(
             ptype=PheromoneType.PROGRESS,  # decay_rate = 5
@@ -116,7 +116,7 @@ class TestPheromone:
         assert p.decay(5) == 0.0
         assert p.decay(10) == 0.0
 
-    def test_pheromone_decay_rates(self):
+    def test_pheromone_decay_rates(self) -> None:
         """Test different decay rates by type."""
         assert PheromoneType.PROGRESS.decay_rate == 5
         assert PheromoneType.CONFLICT.decay_rate == 2
@@ -127,7 +127,7 @@ class TestPheromone:
 class TestFieldState:
     """Tests for FieldState class."""
 
-    def test_field_creation(self):
+    def test_field_creation(self) -> None:
         """Test field state creation."""
         state = FieldState(width=60, height=20)
         assert state.width == 60
@@ -137,7 +137,7 @@ class TestFieldState:
         assert state.heat == 0.0
         assert state.dialectic_phase == DialecticPhase.DORMANT
 
-    def test_add_entity(self):
+    def test_add_entity(self) -> None:
         """Test adding entities to field."""
         state = FieldState(width=60, height=20)
         entity = Entity(id="test", entity_type=EntityType.JUDGE, x=10, y=10)
@@ -146,7 +146,7 @@ class TestFieldState:
         assert "test" in state.entities
         assert state.get_entity("test") == entity
 
-    def test_remove_entity(self):
+    def test_remove_entity(self) -> None:
         """Test removing entities."""
         state = FieldState(width=60, height=20)
         entity = Entity(id="test", entity_type=EntityType.JUDGE, x=10, y=10)
@@ -156,7 +156,7 @@ class TestFieldState:
         assert removed == entity
         assert "test" not in state.entities
 
-    def test_emit_pheromone(self):
+    def test_emit_pheromone(self) -> None:
         """Test pheromone emission."""
         state = FieldState(width=60, height=20)
         state.tick = 5
@@ -168,7 +168,7 @@ class TestFieldState:
         assert p.birth_tick == 5
         assert len(state.pheromones) == 1
 
-    def test_get_pheromones_at(self):
+    def test_get_pheromones_at(self) -> None:
         """Test getting pheromones at location."""
         state = FieldState(width=60, height=20)
         state.emit_pheromone(PheromoneType.PROGRESS, 5, 5)
@@ -181,7 +181,7 @@ class TestFieldState:
         at_10_10 = state.get_pheromones_at(10, 10)
         assert len(at_10_10) == 1
 
-    def test_decay_pheromones(self):
+    def test_decay_pheromones(self) -> None:
         """Test pheromone decay cleanup."""
         state = FieldState(width=60, height=20)
         state.emit_pheromone(PheromoneType.ERROR, 5, 5)  # decay_rate = 1
@@ -192,7 +192,7 @@ class TestFieldState:
         assert removed == 1
         assert len(state.pheromones) == 0
 
-    def test_log_event(self):
+    def test_log_event(self) -> None:
         """Test event logging."""
         state = FieldState(width=60, height=20)
         state.log_event("test", "source", "Test message", "info")
@@ -203,7 +203,7 @@ class TestFieldState:
         assert events[0]["source"] == "source"
         assert events[0]["message"] == "Test message"
 
-    def test_log_event_limit(self):
+    def test_log_event_limit(self) -> None:
         """Test event log limit."""
         state = FieldState(width=60, height=20)
 
@@ -215,7 +215,7 @@ class TestFieldState:
         # Should keep most recent
         assert state.events[-1]["message"] == "Message 149"
 
-    def test_entities_at(self):
+    def test_entities_at(self) -> None:
         """Test getting entities at position."""
         state = FieldState(width=60, height=20)
         e1 = Entity(id="e1", entity_type=EntityType.ID, x=5, y=5)
@@ -232,7 +232,7 @@ class TestFieldState:
         at_10_10 = state.entities_at(10, 10)
         assert len(at_10_10) == 1
 
-    def test_get_attractors(self):
+    def test_get_attractors(self) -> None:
         """Test getting task attractors."""
         state = FieldState(width=60, height=20)
         state.add_entity(Entity(id="j", entity_type=EntityType.JUDGE, x=5, y=5))
@@ -243,7 +243,7 @@ class TestFieldState:
         assert len(attractors) == 2
         assert all(a.entity_type.is_attractor for a in attractors)
 
-    def test_get_agents(self):
+    def test_get_agents(self) -> None:
         """Test getting bootstrap agents."""
         state = FieldState(width=60, height=20)
         state.add_entity(Entity(id="j", entity_type=EntityType.JUDGE, x=5, y=5))
@@ -258,14 +258,14 @@ class TestFieldState:
 class TestFieldSimulator:
     """Tests for FieldSimulator class."""
 
-    def test_simulator_creation(self):
+    def test_simulator_creation(self) -> None:
         """Test simulator creation."""
         state = FieldState(width=60, height=20)
         sim = FieldSimulator(state)
         assert sim.state == state
         assert not sim.is_paused
 
-    def test_pause_resume(self):
+    def test_pause_resume(self) -> None:
         """Test simulation pause and resume."""
         state = FieldState(width=60, height=20)
         sim = FieldSimulator(state)
@@ -276,7 +276,7 @@ class TestFieldSimulator:
         sim.resume()
         assert not sim.is_paused
 
-    def test_tick_advances_time(self):
+    def test_tick_advances_time(self) -> None:
         """Test that tick advances simulation time."""
         state = FieldState(width=60, height=20)
         sim = FieldSimulator(state)
@@ -285,7 +285,7 @@ class TestFieldSimulator:
         sim.tick()
         assert state.tick == initial_tick + 1
 
-    def test_tick_paused(self):
+    def test_tick_paused(self) -> None:
         """Test that tick does nothing when paused."""
         state = FieldState(width=60, height=20)
         sim = FieldSimulator(state)
@@ -295,7 +295,7 @@ class TestFieldSimulator:
         sim.tick()
         assert state.tick == initial_tick  # No change
 
-    def test_entities_move(self):
+    def test_entities_move(self) -> None:
         """Test that entities move during simulation."""
         state = FieldState(width=60, height=20)
         entity = Entity(id="test", entity_type=EntityType.JUDGE, x=30, y=10)
@@ -311,7 +311,7 @@ class TestFieldSimulator:
         # Can't assert exact position due to randomness
         assert state.tick == 100
 
-    def test_dialectic_phase_updates(self):
+    def test_dialectic_phase_updates(self) -> None:
         """Test dialectic phase transitions."""
         state = FieldState(width=60, height=20)
 
@@ -326,7 +326,7 @@ class TestFieldSimulator:
         # Should be in FLUX with active agents
         assert state.dialectic_phase == DialecticPhase.FLUX
 
-    def test_dialectic_tension(self):
+    def test_dialectic_tension(self) -> None:
         """Test tension phase when contradiction is active."""
         state = FieldState(width=60, height=20)
 
@@ -346,7 +346,7 @@ class TestFieldSimulator:
 
         assert state.dialectic_phase == DialecticPhase.TENSION
 
-    def test_dialectic_sublate(self):
+    def test_dialectic_sublate(self) -> None:
         """Test sublate phase when synthesis is active."""
         state = FieldState(width=60, height=20)
 
@@ -362,7 +362,7 @@ class TestFieldSimulator:
 
         assert state.dialectic_phase == DialecticPhase.SUBLATE
 
-    def test_heat_accumulation(self):
+    def test_heat_accumulation(self) -> None:
         """Test heat accumulation from active agents."""
         state = FieldState(width=60, height=20)
         state.heat = 0
@@ -379,7 +379,7 @@ class TestFieldSimulator:
 
         assert state.heat > 0
 
-    def test_cooling_trigger(self):
+    def test_cooling_trigger(self) -> None:
         """Test cooling phase triggers at high heat."""
         state = FieldState(width=60, height=20)
         state.heat = 95  # Above threshold
@@ -395,7 +395,7 @@ class TestFieldSimulator:
         assert state.heat < 95
         assert state.dialectic_phase == DialecticPhase.COOLING
 
-    def test_synthesize(self):
+    def test_synthesize(self) -> None:
         """Test synthesis operation."""
         state = FieldState(width=60, height=20)
         state.entropy = 50
@@ -416,7 +416,7 @@ class TestFieldSimulator:
         # Entropy should have increased
         assert state.entropy > 50
 
-    def test_synthesize_fails_with_single_entity(self):
+    def test_synthesize_fails_with_single_entity(self) -> None:
         """Test synthesis requires multiple entities."""
         state = FieldState(width=60, height=20)
         state.add_entity(Entity(id="a", entity_type=EntityType.ID, x=10, y=10))
@@ -426,7 +426,7 @@ class TestFieldSimulator:
 
         assert result is None
 
-    def test_pheromone_decay_during_tick(self):
+    def test_pheromone_decay_during_tick(self) -> None:
         """Test pheromones decay during simulation."""
         state = FieldState(width=60, height=20)
         state.emit_pheromone(PheromoneType.ERROR, 5, 5)  # Fast decay
@@ -444,7 +444,7 @@ class TestFieldSimulator:
 class TestCreateFunctions:
     """Tests for field creation functions."""
 
-    def test_create_default_field(self):
+    def test_create_default_field(self) -> None:
         """Test default field creation."""
         state = create_default_field()
 
@@ -455,13 +455,13 @@ class TestCreateFunctions:
         # All should be agents
         assert all(e.entity_type.is_agent for e in state.entities.values())
 
-    def test_create_default_field_custom_size(self):
+    def test_create_default_field_custom_size(self) -> None:
         """Test default field with custom size."""
         state = create_default_field(width=100, height=50)
         assert state.width == 100
         assert state.height == 50
 
-    def test_create_demo_field(self):
+    def test_create_demo_field(self) -> None:
         """Test demo field creation."""
         state = create_demo_field()
 
@@ -477,7 +477,7 @@ class TestCreateFunctions:
 class TestDialecticPhase:
     """Tests for DialecticPhase enum."""
 
-    def test_all_phases_exist(self):
+    def test_all_phases_exist(self) -> None:
         """Test all expected phases exist."""
         phases = [
             DialecticPhase.DORMANT,
@@ -489,7 +489,7 @@ class TestDialecticPhase:
         ]
         assert len(phases) == 6
 
-    def test_phase_values(self):
+    def test_phase_values(self) -> None:
         """Test phase string values."""
         assert DialecticPhase.DORMANT.value == "dormant"
         assert DialecticPhase.FLUX.value == "flux"

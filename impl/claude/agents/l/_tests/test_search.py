@@ -88,7 +88,7 @@ async def populated_registry(temp_storage):
 
 
 @pytest.mark.asyncio
-async def test_keyword_search_by_name(populated_registry):
+async def test_keyword_search_by_name(populated_registry) -> None:
     """Test searching by agent name."""
     search = Search(populated_registry)
 
@@ -100,7 +100,7 @@ async def test_keyword_search_by_name(populated_registry):
 
 
 @pytest.mark.asyncio
-async def test_keyword_search_by_keyword(populated_registry):
+async def test_keyword_search_by_keyword(populated_registry) -> None:
     """Test searching by keywords."""
     search = Search(populated_registry)
 
@@ -112,7 +112,7 @@ async def test_keyword_search_by_keyword(populated_registry):
 
 
 @pytest.mark.asyncio
-async def test_keyword_search_by_description(populated_registry):
+async def test_keyword_search_by_description(populated_registry) -> None:
     """Test searching within descriptions."""
     search = Search(populated_registry)
 
@@ -123,7 +123,7 @@ async def test_keyword_search_by_description(populated_registry):
 
 
 @pytest.mark.asyncio
-async def test_search_with_filters(populated_registry):
+async def test_search_with_filters(populated_registry) -> None:
     """Test search with type filters."""
     search = Search(populated_registry)
 
@@ -139,7 +139,7 @@ async def test_search_with_filters(populated_registry):
 
 
 @pytest.mark.asyncio
-async def test_search_with_author_filter(populated_registry):
+async def test_search_with_author_filter(populated_registry) -> None:
     """Test filtering by author."""
     search = Search(populated_registry)
 
@@ -151,7 +151,7 @@ async def test_search_with_author_filter(populated_registry):
 
 
 @pytest.mark.asyncio
-async def test_search_result_ordering(populated_registry):
+async def test_search_result_ordering(populated_registry) -> None:
     """Test that results are ordered by relevance score."""
     search = Search(populated_registry)
 
@@ -163,7 +163,7 @@ async def test_search_result_ordering(populated_registry):
 
 
 @pytest.mark.asyncio
-async def test_search_limit(populated_registry):
+async def test_search_limit(populated_registry) -> None:
     """Test search result limit."""
     search = Search(populated_registry)
 
@@ -173,7 +173,7 @@ async def test_search_limit(populated_registry):
 
 
 @pytest.mark.asyncio
-async def test_find_by_type_signature(populated_registry):
+async def test_find_by_type_signature(populated_registry) -> None:
     """Test finding agents by type signature."""
     search = Search(populated_registry)
 
@@ -186,7 +186,7 @@ async def test_find_by_type_signature(populated_registry):
 
 
 @pytest.mark.asyncio
-async def test_find_by_type_signature_partial(populated_registry):
+async def test_find_by_type_signature_partial(populated_registry) -> None:
     """Test finding agents by partial type signature."""
     search = Search(populated_registry)
 
@@ -198,7 +198,7 @@ async def test_find_by_type_signature_partial(populated_registry):
 
 
 @pytest.mark.asyncio
-async def test_find_similar(populated_registry):
+async def test_find_similar(populated_registry) -> None:
     """Test finding similar entries."""
     search = Search(populated_registry)
 
@@ -213,7 +213,7 @@ async def test_find_similar(populated_registry):
 
 
 @pytest.mark.asyncio
-async def test_search_no_results(populated_registry):
+async def test_search_no_results(populated_registry) -> None:
     """Test search with no matching results."""
     search = Search(populated_registry)
 
@@ -223,7 +223,7 @@ async def test_search_no_results(populated_registry):
 
 
 @pytest.mark.asyncio
-async def test_semantic_search_not_implemented(populated_registry):
+async def test_semantic_search_not_implemented(populated_registry) -> None:
     """Test that semantic search raises NotImplementedError."""
     search = Search(populated_registry)
 
@@ -232,7 +232,7 @@ async def test_semantic_search_not_implemented(populated_registry):
 
 
 @pytest.mark.asyncio
-async def test_graph_search_not_implemented(populated_registry):
+async def test_graph_search_not_implemented(populated_registry) -> None:
     """Test that graph search raises NotImplementedError."""
     search = Search(populated_registry)
 

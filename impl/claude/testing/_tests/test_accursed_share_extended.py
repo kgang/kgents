@@ -23,7 +23,7 @@ class TestDGentChaos:
     """Chaos tests for D-gent (Data agents)."""
 
     @pytest.mark.asyncio
-    async def test_rapid_state_updates(self):
+    async def test_rapid_state_updates(self) -> None:
         """Rapid state updates."""
         from agents.d import VolatileAgent
 
@@ -44,7 +44,7 @@ class TestDGentChaos:
         print(f"D-gent churn: {len(final)} keys surviving")
 
     @pytest.mark.asyncio
-    async def test_large_value_storage(self):
+    async def test_large_value_storage(self) -> None:
         """Store very large values."""
         from agents.d import VolatileAgent
 
@@ -57,7 +57,7 @@ class TestDGentChaos:
         print(f"D-gent large: Stored and retrieved {len(large_value)} bytes")
 
     @pytest.mark.asyncio
-    async def test_concurrent_reads_writes(self):
+    async def test_concurrent_reads_writes(self) -> None:
         """Concurrent reads and writes to same store."""
         from agents.d import VolatileAgent
 
@@ -88,7 +88,7 @@ class TestDGentChaos:
         print("D-gent concurrent: No deadlocks detected")
 
     @pytest.mark.asyncio
-    async def test_nested_dict_storage(self):
+    async def test_nested_dict_storage(self) -> None:
         """Store deeply nested dictionaries."""
         from agents.d import VolatileAgent
 
@@ -116,7 +116,7 @@ class TestLGentChaos:
     """Chaos tests for L-gent (Lattice/embeddings)."""
 
     @pytest.mark.asyncio
-    async def test_near_duplicate_embeddings(self):
+    async def test_near_duplicate_embeddings(self) -> None:
         """Store many near-identical embeddings."""
         from agents.l import CatalogEntry, EntityType, SemanticRegistry
 
@@ -138,7 +138,7 @@ class TestLGentChaos:
         print(f"L-gent near-dupes: Found {len(results)} results")
 
     @pytest.mark.asyncio
-    async def test_unicode_entity_names(self):
+    async def test_unicode_entity_names(self) -> None:
         """Register entities with unicode names."""
         from agents.l import CatalogEntry, EntityType, SemanticRegistry
 
@@ -169,7 +169,7 @@ class TestLGentChaos:
         print(f"L-gent unicode: Registered {len(names)} unicode names")
 
     @pytest.mark.asyncio
-    async def test_empty_and_whitespace_queries(self):
+    async def test_empty_and_whitespace_queries(self) -> None:
         """Test handling of edge-case queries."""
         from agents.l import CatalogEntry, EntityType, SemanticRegistry
 
@@ -208,7 +208,7 @@ class TestNGentChaos:
     """Chaos tests for N-gent (Narrative)."""
 
     @pytest.mark.asyncio
-    async def test_rapid_event_stream(self):
+    async def test_rapid_event_stream(self) -> None:
         """Emit many events rapidly."""
         import hashlib
         import uuid
@@ -243,7 +243,7 @@ class TestNGentChaos:
         print(f"N-gent rapid: Stored {count} traces")
 
     @pytest.mark.asyncio
-    async def test_large_trace_data(self):
+    async def test_large_trace_data(self) -> None:
         """Store traces with large payloads."""
         import hashlib
         import uuid
@@ -287,7 +287,7 @@ class TestCrossAgentChaos:
     """Chaos tests spanning multiple agent types."""
 
     @pytest.mark.asyncio
-    async def test_d_to_l_pipeline(self):
+    async def test_d_to_l_pipeline(self) -> None:
         """Data flows from D-gent to L-gent."""
         from agents.d import VolatileAgent
         from agents.l import CatalogEntry, EntityType, SemanticRegistry
@@ -317,7 +317,7 @@ class TestCrossAgentChaos:
         print(f"D→L pipeline: {len(results)} results from cross-agent query")
 
     @pytest.mark.asyncio
-    async def test_concurrent_multi_agent(self):
+    async def test_concurrent_multi_agent(self) -> None:
         """Concurrent operations across multiple D-gent instances."""
         from agents.d import VolatileAgent
 
@@ -342,7 +342,7 @@ class TestCrossAgentChaos:
         assert total_keys == 500  # 5 stores * 100 keys
 
     @pytest.mark.asyncio
-    async def test_composition_with_stateful_agents(self):
+    async def test_composition_with_stateful_agents(self) -> None:
         """Compose stateful D-gents with pure transforms."""
         from agents.d import Symbiont, VolatileAgent
         from bootstrap import compose
@@ -386,7 +386,7 @@ class TestCompositionBoundaryChaos:
     """Chaos tests for composition edge cases."""
 
     @pytest.mark.asyncio
-    async def test_type_coercion_pipeline(self):
+    async def test_type_coercion_pipeline(self) -> None:
         """Pipeline with aggressive type coercions."""
         from bootstrap import compose
 
@@ -426,7 +426,7 @@ class TestCompositionBoundaryChaos:
         print(f"Type coercion pipeline: 12345 -> {result}")
 
     @pytest.mark.asyncio
-    async def test_exception_in_middle_of_chain(self):
+    async def test_exception_in_middle_of_chain(self) -> None:
         """Exception handling in the middle of a chain."""
         from bootstrap import compose
 
@@ -458,7 +458,7 @@ class TestCompositionBoundaryChaos:
                 print(f"Chain({i}) = {result}")
 
     @pytest.mark.asyncio
-    async def test_none_propagation(self):
+    async def test_none_propagation(self) -> None:
         """How None propagates through composition."""
         from bootstrap import compose
 
@@ -497,7 +497,7 @@ class TestMemoryPressureChaos:
     """Chaos tests for memory pressure scenarios."""
 
     @pytest.mark.asyncio
-    async def test_many_small_agents(self):
+    async def test_many_small_agents(self) -> None:
         """Create many small agent instances."""
         from agents.d import VolatileAgent
 
@@ -515,7 +515,7 @@ class TestMemoryPressureChaos:
         print(f"Memory pressure: Created {len(agents)} agents")
 
     @pytest.mark.asyncio
-    async def test_long_chain_composition(self):
+    async def test_long_chain_composition(self) -> None:
         """Very long composition chains."""
         from functools import reduce
 

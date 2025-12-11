@@ -155,7 +155,7 @@ except Exception as e:
 print("\n5. Testing basic async invocation...")
 
 
-async def test_invocation():
+async def test_invocation() -> None:
     try:
         # Test Hegel
         h = hegel()

@@ -132,13 +132,13 @@ class WeatherFetcher:
 # ==================== Version Tests ====================
 
 
-def test_version_string_format():
+def test_version_string_format() -> None:
     """Version formats as MAJOR.MINOR.PATCH."""
     v = Version(1, 2, 3)
     assert str(v) == "1.2.3"
 
 
-def test_version_parse_valid():
+def test_version_parse_valid() -> None:
     """Version.parse handles valid strings."""
     v = Version.parse("2.5.13")
     assert v.major == 2
@@ -146,7 +146,7 @@ def test_version_parse_valid():
     assert v.patch == 13
 
 
-def test_version_parse_invalid():
+def test_version_parse_invalid() -> None:
     """Version.parse rejects invalid strings."""
     with pytest.raises(ValueError, match="Invalid version string"):
         Version.parse("1.0")
@@ -158,21 +158,21 @@ def test_version_parse_invalid():
         Version.parse("not-a-version")
 
 
-def test_version_bump_patch():
+def test_version_bump_patch() -> None:
     """Version.bump(PATCH) increments patch number."""
     v = Version(1, 0, 0)
     v2 = v.bump(VersionBump.PATCH)
     assert str(v2) == "1.0.1"
 
 
-def test_version_bump_minor():
+def test_version_bump_minor() -> None:
     """Version.bump(MINOR) increments minor, resets patch."""
     v = Version(1, 0, 5)
     v2 = v.bump(VersionBump.MINOR)
     assert str(v2) == "1.1.0"
 
 
-def test_version_bump_major():
+def test_version_bump_major() -> None:
     """Version.bump(MAJOR) increments major, resets minor and patch."""
     v = Version(1, 3, 7)
     v2 = v.bump(VersionBump.MAJOR)
@@ -182,7 +182,7 @@ def test_version_bump_major():
 # ==================== Metadata Tests ====================
 
 
-def test_artifact_metadata_defaults():
+def test_artifact_metadata_defaults() -> None:
     """ArtifactMetadata has sensible defaults."""
     meta = ArtifactMetadata(id="test_agent_v1")
     assert meta.artifact_type == "f_gent_artifact"
@@ -194,7 +194,7 @@ def test_artifact_metadata_defaults():
     assert meta.dependencies == []
 
 
-def test_artifact_metadata_to_yaml():
+def test_artifact_metadata_to_yaml() -> None:
     """ArtifactMetadata.to_yaml generates valid YAML."""
     meta = ArtifactMetadata(
         id="weather_fetcher_v1_0_0",
@@ -217,7 +217,7 @@ def test_artifact_metadata_to_yaml():
     assert '"requests"' in yaml
 
 
-def test_artifact_metadata_yaml_parent_version():
+def test_artifact_metadata_yaml_parent_version() -> None:
     """Metadata includes parent_version for re-forged artifacts."""
     meta = ArtifactMetadata(
         id="agent_v2", version=Version(2, 0, 0), parent_version="1.0.0"
@@ -230,7 +230,7 @@ def test_artifact_metadata_yaml_parent_version():
 # ==================== Tag Extraction Tests ====================
 
 
-def test_extract_tags_from_purpose():
+def test_extract_tags_from_purpose() -> None:
     """extract_tags_from_intent extracts keywords from purpose."""
     intent = Intent(
         purpose="Summarize technical papers for executive reading",
@@ -243,7 +243,7 @@ def test_extract_tags_from_purpose():
     assert "summarize" in tags or "technical" in tags or "papers" in tags
 
 
-def test_extract_tags_includes_tone():
+def test_extract_tags_includes_tone() -> None:
     """extract_tags_from_intent includes tone descriptors."""
     intent = Intent(
         purpose="Process data",
@@ -258,7 +258,7 @@ def test_extract_tags_includes_tone():
     assert tone_related
 
 
-def test_extract_tags_limits_count():
+def test_extract_tags_limits_count() -> None:
     """extract_tags_from_intent limits to 10 tags."""
     intent = Intent(
         purpose=" ".join([f"word{i}" for i in range(20)]),  # 20 words
@@ -273,7 +273,7 @@ def test_extract_tags_limits_count():
 # ==================== Version Bump Determination Tests ====================
 
 
-def test_determine_version_bump_new_artifact():
+def test_determine_version_bump_new_artifact() -> None:
     """determine_version_bump returns MAJOR for new artifacts."""
     contract = Contract(
         agent_name="NewAgent",
@@ -287,7 +287,7 @@ def test_determine_version_bump_new_artifact():
     assert bump == VersionBump.MAJOR
 
 
-def test_determine_version_bump_breaking_input_type():
+def test_determine_version_bump_breaking_input_type() -> None:
     """determine_version_bump detects input type changes as MAJOR."""
     old = Contract(
         agent_name="Agent",
@@ -308,7 +308,7 @@ def test_determine_version_bump_breaking_input_type():
     assert bump == VersionBump.MAJOR
 
 
-def test_determine_version_bump_breaking_output_type():
+def test_determine_version_bump_breaking_output_type() -> None:
     """determine_version_bump detects output type changes as MAJOR."""
     old = Contract(
         agent_name="Agent",
@@ -329,7 +329,7 @@ def test_determine_version_bump_breaking_output_type():
     assert bump == VersionBump.MAJOR
 
 
-def test_determine_version_bump_added_invariants():
+def test_determine_version_bump_added_invariants() -> None:
     """determine_version_bump detects new invariants as MINOR."""
     old = Contract(
         agent_name="Agent",
@@ -352,7 +352,7 @@ def test_determine_version_bump_added_invariants():
     assert bump == VersionBump.MINOR
 
 
-def test_determine_version_bump_no_contract_change():
+def test_determine_version_bump_no_contract_change() -> None:
     """determine_version_bump returns PATCH if contract unchanged."""
     contract = Contract(
         agent_name="Agent",
@@ -616,7 +616,9 @@ def test_artifact_hash_excludes_hash_field(
 # ==================== File Saving Tests ====================
 
 
-def test_save_artifact_creates_file(sample_intent, sample_contract, sample_source_code):
+def test_save_artifact_creates_file(
+    sample_intent, sample_contract, sample_source_code
+) -> None:
     """save_artifact creates .alo.md file."""
     with tempfile.TemporaryDirectory() as tmpdir:
         output_dir = Path(tmpdir)
@@ -840,7 +842,7 @@ async def test_crystallize_re_forging_scenario(
 # ==================== Edge Cases ====================
 
 
-def test_artifact_with_no_examples(sample_contract, sample_source_code):
+def test_artifact_with_no_examples(sample_contract, sample_source_code) -> None:
     """Artifact handles intent with no examples."""
     intent_no_examples = Intent(
         purpose="Simple agent",
@@ -860,7 +862,7 @@ def test_artifact_with_no_examples(sample_contract, sample_source_code):
     assert "No examples provided" in markdown
 
 
-def test_artifact_with_no_dependencies(sample_contract, sample_source_code):
+def test_artifact_with_no_dependencies(sample_contract, sample_source_code) -> None:
     """Artifact handles intent with no dependencies."""
     intent_no_deps = Intent(
         purpose="Self-contained agent",
@@ -878,7 +880,9 @@ def test_artifact_with_no_dependencies(sample_contract, sample_source_code):
     assert artifact.metadata.dependencies == []
 
 
-def test_artifact_changelog_default(sample_intent, sample_contract, sample_source_code):
+def test_artifact_changelog_default(
+    sample_intent, sample_contract, sample_source_code
+) -> None:
     """Artifact includes default changelog for v1.0.0."""
     artifact = assemble_artifact(
         intent=sample_intent,

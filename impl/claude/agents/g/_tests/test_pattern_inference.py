@@ -42,7 +42,7 @@ from agents.g.types import GrammarLevel
 class TestObservedPattern:
     """Tests for ObservedPattern dataclass."""
 
-    def test_create_pattern(self):
+    def test_create_pattern(self) -> None:
         """Can create pattern with valid data."""
         pattern = ObservedPattern(
             pattern="CHECK <date>",
@@ -54,7 +54,7 @@ class TestObservedPattern:
         assert pattern.frequency == 0.8
         assert len(pattern.examples) == 1
 
-    def test_pattern_frequency_bounds(self):
+    def test_pattern_frequency_bounds(self) -> None:
         """Frequency must be between 0 and 1."""
         with pytest.raises(ValueError, match="Frequency must be 0.0-1.0"):
             ObservedPattern(
@@ -70,7 +70,7 @@ class TestObservedPattern:
                 frequency=-0.1,
             )
 
-    def test_pattern_with_metadata(self):
+    def test_pattern_with_metadata(self) -> None:
         """Pattern can include metadata."""
         pattern = ObservedPattern(
             pattern="<verb> <noun>",
@@ -85,7 +85,7 @@ class TestObservedPattern:
 class TestPatternCluster:
     """Tests for PatternCluster dataclass."""
 
-    def test_create_cluster(self):
+    def test_create_cluster(self) -> None:
         """Can create cluster with patterns."""
         p1 = ObservedPattern("A", PatternType.TOKEN, 0.6)
         p2 = ObservedPattern("B", PatternType.TOKEN, 0.4)
@@ -99,7 +99,7 @@ class TestPatternCluster:
         assert len(cluster.patterns) == 2
         assert cluster.coverage == 0.8
 
-    def test_primary_pattern(self):
+    def test_primary_pattern(self) -> None:
         """Primary pattern is most frequent."""
         p1 = ObservedPattern("A", PatternType.TOKEN, 0.3)
         p2 = ObservedPattern("B", PatternType.TOKEN, 0.7)
@@ -111,7 +111,7 @@ class TestPatternCluster:
         )
         assert cluster.primary_pattern.pattern == "B"
 
-    def test_empty_cluster_primary(self):
+    def test_empty_cluster_primary(self) -> None:
         """Empty cluster has no primary pattern."""
         cluster = PatternCluster(
             name="empty",
@@ -130,7 +130,7 @@ class TestPatternCluster:
 class TestGrammarRule:
     """Tests for GrammarRule dataclass."""
 
-    def test_create_terminal_rule(self):
+    def test_create_terminal_rule(self) -> None:
         """Can create terminal rule."""
         rule = GrammarRule(
             name="verb",
@@ -140,7 +140,7 @@ class TestGrammarRule:
         assert rule.is_terminal
         assert len(rule.productions) == 3
 
-    def test_to_bnf_terminal(self):
+    def test_to_bnf_terminal(self) -> None:
         """Terminal rule converts to quoted BNF."""
         rule = GrammarRule(
             name="verb",
@@ -150,7 +150,7 @@ class TestGrammarRule:
         bnf = rule.to_bnf()
         assert '<verb> ::= "CHECK" | "ADD"' == bnf
 
-    def test_to_bnf_nonterminal(self):
+    def test_to_bnf_nonterminal(self) -> None:
         """Non-terminal rule converts to bracketed BNF."""
         rule = GrammarRule(
             name="command",
@@ -164,7 +164,7 @@ class TestGrammarRule:
 class TestGrammarHypothesis:
     """Tests for GrammarHypothesis dataclass."""
 
-    def test_create_hypothesis(self):
+    def test_create_hypothesis(self) -> None:
         """Can create grammar hypothesis."""
         rules = [
             GrammarRule("verb", ["CHECK", "ADD"], is_terminal=True),
@@ -179,7 +179,7 @@ class TestGrammarHypothesis:
         assert hypothesis.confidence == 0.85
         assert hypothesis.level == GrammarLevel.COMMAND
 
-    def test_to_bnf(self):
+    def test_to_bnf(self) -> None:
         """Hypothesis converts to multi-line BNF."""
         rules = [
             GrammarRule("verb", ["CHECK"], is_terminal=True),
@@ -195,7 +195,7 @@ class TestGrammarHypothesis:
         assert "<verb>" in bnf
         assert "<command>" in bnf
 
-    def test_grammar_string_alias(self):
+    def test_grammar_string_alias(self) -> None:
         """grammar_string is alias for to_bnf."""
         rules = [GrammarRule("test", ["A"], is_terminal=True)]
         hypothesis = GrammarHypothesis(
@@ -215,13 +215,13 @@ class TestGrammarHypothesis:
 class TestPatternAnalyzer:
     """Tests for PatternAnalyzer."""
 
-    def test_analyze_empty(self):
+    def test_analyze_empty(self) -> None:
         """Empty observations return empty patterns."""
         analyzer = PatternAnalyzer()
         patterns = analyzer.analyze([])
         assert patterns == []
 
-    def test_analyze_verb_noun_patterns(self):
+    def test_analyze_verb_noun_patterns(self) -> None:
         """Analyzes VERB NOUN patterns correctly."""
         analyzer = PatternAnalyzer()
         observations = [
@@ -240,7 +240,7 @@ class TestPatternAnalyzer:
                 verbs_found.update(p.metadata["verbs"])
         assert "CHECK" in verbs_found or any("CHECK" in p.pattern for p in patterns)
 
-    def test_analyze_function_call_patterns(self):
+    def test_analyze_function_call_patterns(self) -> None:
         """Analyzes function call patterns correctly."""
         analyzer = PatternAnalyzer()
         observations = [
@@ -257,7 +257,7 @@ class TestPatternAnalyzer:
         )
         assert has_func_pattern
 
-    def test_analyze_mixed_patterns(self):
+    def test_analyze_mixed_patterns(self) -> None:
         """Handles mixed pattern types."""
         analyzer = PatternAnalyzer()
         observations = [
@@ -268,7 +268,7 @@ class TestPatternAnalyzer:
         patterns = analyzer.analyze(observations)
         assert len(patterns) > 0
 
-    def test_cluster_patterns(self):
+    def test_cluster_patterns(self) -> None:
         """Clusters patterns by type."""
         analyzer = PatternAnalyzer()
         patterns = [
@@ -282,7 +282,7 @@ class TestPatternAnalyzer:
         # Token cluster should have higher coverage
         assert clusters[0].dominant_type == PatternType.TOKEN
 
-    def test_cluster_empty_patterns(self):
+    def test_cluster_empty_patterns(self) -> None:
         """Empty patterns produce empty clusters."""
         analyzer = PatternAnalyzer()
         clusters = analyzer.cluster_patterns([])
@@ -297,7 +297,7 @@ class TestPatternAnalyzer:
 class TestGrammarSynthesizer:
     """Tests for GrammarSynthesizer."""
 
-    def test_hypothesize_empty(self):
+    def test_hypothesize_empty(self) -> None:
         """Empty patterns produce empty grammar."""
         synthesizer = GrammarSynthesizer()
         hypothesis = synthesizer.hypothesize([])
@@ -305,7 +305,7 @@ class TestGrammarSynthesizer:
         assert hypothesis.rules == []
         assert hypothesis.confidence == 0.0
 
-    def test_hypothesize_command_grammar(self):
+    def test_hypothesize_command_grammar(self) -> None:
         """Synthesizes command grammar from verb patterns."""
         synthesizer = GrammarSynthesizer()
         patterns = [
@@ -322,7 +322,7 @@ class TestGrammarSynthesizer:
         assert len(hypothesis.rules) > 0
         assert hypothesis.confidence > 0
 
-    def test_hypothesize_recursive_grammar(self):
+    def test_hypothesize_recursive_grammar(self) -> None:
         """Synthesizes recursive grammar from structure patterns."""
         synthesizer = GrammarSynthesizer()
         patterns = [
@@ -338,7 +338,7 @@ class TestGrammarSynthesizer:
         assert hypothesis.level == GrammarLevel.RECURSIVE
         assert len(hypothesis.rules) > 0
 
-    def test_refine_with_failures(self):
+    def test_refine_with_failures(self) -> None:
         """Refines grammar based on failures."""
         synthesizer = GrammarSynthesizer()
         initial_patterns = [
@@ -357,7 +357,7 @@ class TestGrammarSynthesizer:
         # Should incorporate new patterns
         assert refined.source_patterns != hypothesis.source_patterns
 
-    def test_refine_no_failures(self):
+    def test_refine_no_failures(self) -> None:
         """Refine with no failures returns same hypothesis."""
         synthesizer = GrammarSynthesizer()
         patterns = [ObservedPattern("test", PatternType.TOKEN, 0.9)]
@@ -375,7 +375,7 @@ class TestGrammarSynthesizer:
 class TestGrammarValidator:
     """Tests for GrammarValidator."""
 
-    def test_validate_empty_observations(self):
+    def test_validate_empty_observations(self) -> None:
         """Empty observations always validate."""
         validator = GrammarValidator()
         hypothesis = GrammarHypothesis(
@@ -389,7 +389,7 @@ class TestGrammarValidator:
         assert result.success
         assert result.coverage == 1.0
 
-    def test_validate_matching_grammar(self):
+    def test_validate_matching_grammar(self) -> None:
         """Grammar matches observations."""
         validator = GrammarValidator()
         hypothesis = GrammarHypothesis(
@@ -405,7 +405,7 @@ class TestGrammarValidator:
 
         assert result.coverage > 0.5
 
-    def test_validate_non_matching_grammar(self):
+    def test_validate_non_matching_grammar(self) -> None:
         """Reports failures for non-matching inputs."""
         validator = GrammarValidator()
         hypothesis = GrammarHypothesis(
@@ -422,7 +422,7 @@ class TestGrammarValidator:
         assert len(result.failed_inputs) > 0
         assert "DELETE item" in result.failed_inputs
 
-    def test_validation_suggestions(self):
+    def test_validation_suggestions(self) -> None:
         """Generates suggestions for failures."""
         validator = GrammarValidator()
         hypothesis = GrammarHypothesis(
@@ -438,7 +438,7 @@ class TestGrammarValidator:
         # Should suggest adding the missing verb
         assert len(result.failed_inputs) == 3
 
-    def test_needs_refinement(self):
+    def test_needs_refinement(self) -> None:
         """needs_refinement indicates when to refine."""
         result_good = ValidationResult(success=True, coverage=0.98)
         assert not result_good.needs_refinement
@@ -459,7 +459,7 @@ class TestPatternInferenceEngine:
     """Tests for PatternInferenceEngine."""
 
     @pytest.mark.asyncio
-    async def test_infer_empty_observations(self):
+    async def test_infer_empty_observations(self) -> None:
         """Empty observations produce failed report."""
         engine = PatternInferenceEngine()
         report = await engine.infer_grammar([])
@@ -468,7 +468,7 @@ class TestPatternInferenceEngine:
         assert report.tongue is None
 
     @pytest.mark.asyncio
-    async def test_infer_simple_command_grammar(self):
+    async def test_infer_simple_command_grammar(self) -> None:
         """Infers simple command grammar."""
         engine = PatternInferenceEngine(min_coverage=0.5)
         observations = [
@@ -485,7 +485,7 @@ class TestPatternInferenceEngine:
         assert report.initial_hypothesis is not None
 
     @pytest.mark.asyncio
-    async def test_infer_with_refinement(self):
+    async def test_infer_with_refinement(self) -> None:
         """Inference refines grammar iteratively."""
         engine = PatternInferenceEngine(max_iterations=3, min_coverage=0.5)
         observations = [
@@ -501,7 +501,7 @@ class TestPatternInferenceEngine:
         assert len(report.validation_history) >= 1
 
     @pytest.mark.asyncio
-    async def test_crystallize_to_tongue(self):
+    async def test_crystallize_to_tongue(self) -> None:
         """Crystallizes hypothesis to Tongue."""
         engine = PatternInferenceEngine()
         hypothesis = GrammarHypothesis(
@@ -526,7 +526,7 @@ class TestPatternInferenceEngine:
         assert "TestDomainTongue" in tongue.name
 
     @pytest.mark.asyncio
-    async def test_inference_report_contains_diagnostics(self):
+    async def test_inference_report_contains_diagnostics(self) -> None:
         """Report contains full diagnostics."""
         engine = PatternInferenceEngine(max_iterations=2)
         observations = ["CHECK a", "CHECK b", "ADD c"]
@@ -546,7 +546,7 @@ class TestConvenienceFunctions:
     """Tests for convenience functions."""
 
     @pytest.mark.asyncio
-    async def test_infer_grammar_from_observations(self):
+    async def test_infer_grammar_from_observations(self) -> None:
         """Convenience function returns tongue or None."""
         observations = ["CHECK date", "CHECK time", "ADD event"]
         # May or may not succeed depending on coverage
@@ -557,7 +557,7 @@ class TestConvenienceFunctions:
         assert result is None or hasattr(result, "grammar")
 
     @pytest.mark.asyncio
-    async def test_observe_and_infer(self):
+    async def test_observe_and_infer(self) -> None:
         """observe_and_infer returns full report."""
         observations = ["CHECK a", "ADD b"]
         report = await observe_and_infer(observations, domain="Test")
@@ -565,7 +565,7 @@ class TestConvenienceFunctions:
         assert isinstance(report, InferenceReport)
         assert report.iterations >= 0
 
-    def test_extract_patterns(self):
+    def test_extract_patterns(self) -> None:
         """extract_patterns returns pattern list."""
         observations = ["CHECK date", "ADD event"]
         patterns = extract_patterns(observations)
@@ -573,7 +573,7 @@ class TestConvenienceFunctions:
         assert isinstance(patterns, list)
         # May be empty or have patterns
 
-    def test_hypothesize_grammar(self):
+    def test_hypothesize_grammar(self) -> None:
         """hypothesize_grammar returns hypothesis."""
         patterns = [
             ObservedPattern(
@@ -598,7 +598,7 @@ class TestIntegration:
     """Integration tests for full inference pipeline."""
 
     @pytest.mark.asyncio
-    async def test_full_calendar_inference(self):
+    async def test_full_calendar_inference(self) -> None:
         """Full inference for calendar-like commands."""
         observations = [
             "CHECK 2024-12-15",
@@ -624,7 +624,7 @@ class TestIntegration:
             assert last_validation.coverage >= 0.0
 
     @pytest.mark.asyncio
-    async def test_full_citation_inference(self):
+    async def test_full_citation_inference(self) -> None:
         """Full inference for citation-like patterns."""
         observations = [
             "ref(Smith, 2024)",
@@ -646,7 +646,7 @@ class TestIntegration:
             ]
 
     @pytest.mark.asyncio
-    async def test_inference_with_noise(self):
+    async def test_inference_with_noise(self) -> None:
         """Handles noisy observations gracefully."""
         observations = [
             "CHECK date",
@@ -674,13 +674,13 @@ class TestIntegration:
 class TestEdgeCases:
     """Edge case tests."""
 
-    def test_pattern_type_enum_values(self):
+    def test_pattern_type_enum_values(self) -> None:
         """All pattern types have string values."""
         for pt in PatternType:
             assert isinstance(pt.value, str)
 
     @pytest.mark.asyncio
-    async def test_single_observation(self):
+    async def test_single_observation(self) -> None:
         """Handles single observation."""
         engine = PatternInferenceEngine(min_coverage=0.5)
         report = await engine.infer_grammar(["CHECK date"])
@@ -688,7 +688,7 @@ class TestEdgeCases:
         assert report is not None
 
     @pytest.mark.asyncio
-    async def test_identical_observations(self):
+    async def test_identical_observations(self) -> None:
         """Handles identical observations."""
         engine = PatternInferenceEngine(min_coverage=0.5)
         observations = ["CHECK date"] * 10
@@ -699,7 +699,7 @@ class TestEdgeCases:
             assert report.initial_hypothesis.confidence > 0
 
     @pytest.mark.asyncio
-    async def test_very_long_observation(self):
+    async def test_very_long_observation(self) -> None:
         """Handles very long observation strings."""
         long_text = "CHECK " + "x" * 1000
         engine = PatternInferenceEngine()
@@ -707,7 +707,7 @@ class TestEdgeCases:
 
         assert report is not None
 
-    def test_pattern_analyzer_special_chars(self):
+    def test_pattern_analyzer_special_chars(self) -> None:
         """Analyzer handles special characters."""
         analyzer = PatternAnalyzer()
         observations = [
@@ -719,7 +719,7 @@ class TestEdgeCases:
         # Should not crash
         assert isinstance(patterns, list)
 
-    def test_grammar_rule_empty_productions(self):
+    def test_grammar_rule_empty_productions(self) -> None:
         """Grammar rule with empty productions."""
         rule = GrammarRule(name="empty", productions=[], is_terminal=True)
         bnf = rule.to_bnf()

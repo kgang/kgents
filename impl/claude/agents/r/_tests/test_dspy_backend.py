@@ -120,7 +120,7 @@ def partial_match_metric(pred, label) -> float:
 class TestDSPyAvailability:
     """Tests for DSPy availability checking."""
 
-    def test_is_dspy_available_returns_bool(self):
+    def test_is_dspy_available_returns_bool(self) -> None:
         """Test that is_dspy_available returns a boolean."""
         result = is_dspy_available()
         assert isinstance(result, bool)
@@ -133,7 +133,7 @@ class TestSignatureConversion:
     """Tests for Signature <-> DSPy conversion."""
 
     @pytest.mark.skipif(not is_dspy_available(), reason="DSPy not installed")
-    def test_signature_to_dspy_simple(self, simple_signature):
+    def test_signature_to_dspy_simple(self, simple_signature) -> None:
         """Test converting simple signature to DSPy."""
         dspy_sig = signature_to_dspy(simple_signature)
         assert dspy_sig is not None
@@ -141,7 +141,7 @@ class TestSignatureConversion:
         assert "Answer the question" in dspy_sig.__doc__
 
     @pytest.mark.skipif(not is_dspy_available(), reason="DSPy not installed")
-    def test_signature_to_dspy_multi_field(self, multi_field_signature):
+    def test_signature_to_dspy_multi_field(self, multi_field_signature) -> None:
         """Test converting multi-field signature to DSPy."""
         dspy_sig = signature_to_dspy(multi_field_signature)
         assert dspy_sig is not None
@@ -154,14 +154,14 @@ class TestExampleConversion:
     """Tests for Example <-> DSPy conversion."""
 
     @pytest.mark.skipif(not is_dspy_available(), reason="DSPy not installed")
-    def test_example_to_dspy(self, simple_examples):
+    def test_example_to_dspy(self, simple_examples) -> None:
         """Test converting single example to DSPy."""
         dspy_ex = example_to_dspy(simple_examples[0])
         assert dspy_ex is not None
         assert dspy_ex.question == "What is 2+2?"
 
     @pytest.mark.skipif(not is_dspy_available(), reason="DSPy not installed")
-    def test_examples_to_dspy_batch(self, simple_examples):
+    def test_examples_to_dspy_batch(self, simple_examples) -> None:
         """Test converting batch of examples to DSPy."""
         dspy_examples = examples_to_dspy(simple_examples)
         assert len(dspy_examples) == len(simple_examples)
@@ -173,17 +173,17 @@ class TestExampleConversion:
 class TestLLMTextGrad:
     """Tests for LLM-backed TextGrad optimizer."""
 
-    def test_init_without_llm_func(self):
+    def test_init_without_llm_func(self) -> None:
         """Test initialization without LLM function."""
         optimizer = LLMTextGrad()
         assert optimizer.llm_func is None
 
-    def test_init_with_llm_func(self, mock_llm_func):
+    def test_init_with_llm_func(self, mock_llm_func) -> None:
         """Test initialization with LLM function."""
         optimizer = LLMTextGrad(llm_func=mock_llm_func)
         assert optimizer.llm_func is not None
 
-    def test_config_options(self):
+    def test_config_options(self) -> None:
         """Test configurable options."""
         optimizer = LLMTextGrad(
             learning_rate=0.5,
@@ -195,7 +195,9 @@ class TestLLMTextGrad:
         assert optimizer.max_failed_examples == 3
 
     @pytest.mark.asyncio
-    async def test_compile_without_llm_func(self, simple_signature, simple_examples):
+    async def test_compile_without_llm_func(
+        self, simple_signature, simple_examples
+    ) -> None:
         """Test compile without LLM function returns early."""
         optimizer = LLMTextGrad()
 
@@ -296,17 +298,17 @@ class TestLLMTextGrad:
 class TestLLMOpro:
     """Tests for LLM-backed OPRO optimizer."""
 
-    def test_init_without_llm_func(self):
+    def test_init_without_llm_func(self) -> None:
         """Test initialization without LLM function."""
         optimizer = LLMOpro()
         assert optimizer.llm_func is None
 
-    def test_init_with_llm_func(self, mock_llm_func):
+    def test_init_with_llm_func(self, mock_llm_func) -> None:
         """Test initialization with LLM function."""
         optimizer = LLMOpro(llm_func=mock_llm_func)
         assert optimizer.llm_func is not None
 
-    def test_config_options(self):
+    def test_config_options(self) -> None:
         """Test configurable options."""
         optimizer = LLMOpro(
             num_candidates_per_iteration=5,
@@ -316,7 +318,9 @@ class TestLLMOpro:
         assert optimizer.keep_top_k == 10
 
     @pytest.mark.asyncio
-    async def test_compile_without_llm_func(self, simple_signature, simple_examples):
+    async def test_compile_without_llm_func(
+        self, simple_signature, simple_examples
+    ) -> None:
         """Test compile without LLM function returns early."""
         optimizer = LLMOpro()
 
@@ -434,13 +438,13 @@ class TestLLMOpro:
 class TestGetDspyTeleprompter:
     """Tests for get_dspy_teleprompter factory function."""
 
-    def test_get_textgrad_without_llm_func(self):
+    def test_get_textgrad_without_llm_func(self) -> None:
         """Test getting TextGrad without LLM function."""
         optimizer = get_dspy_teleprompter(TeleprompterStrategy.TEXTGRAD)
         assert isinstance(optimizer, LLMTextGrad)
         assert optimizer.llm_func is None
 
-    def test_get_textgrad_with_llm_func(self, mock_llm_func):
+    def test_get_textgrad_with_llm_func(self, mock_llm_func) -> None:
         """Test getting TextGrad with LLM function."""
         optimizer = get_dspy_teleprompter(
             TeleprompterStrategy.TEXTGRAD,
@@ -449,13 +453,13 @@ class TestGetDspyTeleprompter:
         assert isinstance(optimizer, LLMTextGrad)
         assert optimizer.llm_func is not None
 
-    def test_get_opro_without_llm_func(self):
+    def test_get_opro_without_llm_func(self) -> None:
         """Test getting OPRO without LLM function."""
         optimizer = get_dspy_teleprompter(TeleprompterStrategy.OPRO)
         assert isinstance(optimizer, LLMOpro)
         assert optimizer.llm_func is None
 
-    def test_get_opro_with_llm_func(self, mock_llm_func):
+    def test_get_opro_with_llm_func(self, mock_llm_func) -> None:
         """Test getting OPRO with LLM function."""
         optimizer = get_dspy_teleprompter(
             TeleprompterStrategy.OPRO,
@@ -464,14 +468,14 @@ class TestGetDspyTeleprompter:
         assert isinstance(optimizer, LLMOpro)
         assert optimizer.llm_func is not None
 
-    def test_get_bootstrap_fewshot_fallback(self):
+    def test_get_bootstrap_fewshot_fallback(self) -> None:
         """Test getting BootstrapFewShot (may use fallback)."""
         optimizer = get_dspy_teleprompter(TeleprompterStrategy.BOOTSTRAP_FEWSHOT)
         assert optimizer is not None
         # Either DSPy-backed or fallback
         assert hasattr(optimizer, "compile")
 
-    def test_get_miprov2_fallback(self):
+    def test_get_miprov2_fallback(self) -> None:
         """Test getting MIPROv2 (may use fallback)."""
         optimizer = get_dspy_teleprompter(TeleprompterStrategy.MIPRO_V2)
         assert optimizer is not None
@@ -582,7 +586,9 @@ class TestDSPyBackendIntegration:
             assert all(isinstance(g, TextualGradient) for g in gradients)
 
     @pytest.mark.asyncio
-    async def test_textgrad_gradient_application(self, simple_signature, mock_llm_func):
+    async def test_textgrad_gradient_application(
+        self, simple_signature, mock_llm_func
+    ) -> None:
         """Test TextGrad gradient application."""
         optimizer = LLMTextGrad(llm_func=mock_llm_func)
 
@@ -611,7 +617,9 @@ class TestEdgeCases:
     """Tests for edge cases and error handling."""
 
     @pytest.mark.asyncio
-    async def test_empty_examples_textgrad(self, simple_signature, mock_llm_func):
+    async def test_empty_examples_textgrad(
+        self, simple_signature, mock_llm_func
+    ) -> None:
         """Test TextGrad with empty examples."""
         optimizer = LLMTextGrad(llm_func=mock_llm_func)
 
@@ -624,7 +632,7 @@ class TestEdgeCases:
         assert trace is not None
 
     @pytest.mark.asyncio
-    async def test_empty_examples_opro(self, simple_signature, mock_llm_func):
+    async def test_empty_examples_opro(self, simple_signature, mock_llm_func) -> None:
         """Test OPRO with empty examples."""
         optimizer = LLMOpro(llm_func=mock_llm_func)
 
@@ -637,7 +645,7 @@ class TestEdgeCases:
         assert trace is not None
 
     @pytest.mark.asyncio
-    async def test_single_example(self, simple_signature, mock_llm_func):
+    async def test_single_example(self, simple_signature, mock_llm_func) -> None:
         """Test optimization with single example."""
         examples = [
             Example(inputs={"question": "What is 2+2?"}, outputs={"answer": "4"}),
@@ -656,7 +664,9 @@ class TestEdgeCases:
         assert trace.total_examples == 1
 
     @pytest.mark.asyncio
-    async def test_llm_func_exception_handling(self, simple_signature, simple_examples):
+    async def test_llm_func_exception_handling(
+        self, simple_signature, simple_examples
+    ) -> None:
         """Test handling of LLM function exceptions."""
 
         def failing_llm_func(prompt: str) -> str:
@@ -695,7 +705,7 @@ class TestEdgeCases:
         # Should handle exception gracefully
         assert trace is not None
 
-    def test_signature_with_empty_instructions(self):
+    def test_signature_with_empty_instructions(self) -> None:
         """Test signature with empty instructions."""
         Signature(
             input_fields=(FieldSpec(name="input", field_type=str),),
@@ -735,7 +745,9 @@ class TestPerformance:
         assert duration is None or duration >= 0
 
     @pytest.mark.asyncio
-    async def test_opro_timing(self, simple_signature, simple_examples, mock_llm_func):
+    async def test_opro_timing(
+        self, simple_signature, simple_examples, mock_llm_func
+    ) -> None:
         """Test that timing is recorded correctly for OPRO."""
         optimizer = LLMOpro(
             llm_func=mock_llm_func,

@@ -44,7 +44,7 @@ class SimpleJsonParser:
 class TestReflectionBasics:
     """Test basic reflection parser functionality."""
 
-    def test_first_try_success_no_reflection(self):
+    def test_first_try_success_no_reflection(self) -> None:
         """If base parser succeeds first try, no reflection needed."""
         base = SimpleJsonParser()
         parser = ReflectionParser(
@@ -60,7 +60,7 @@ class TestReflectionBasics:
         assert not result.metadata["reflection_fixed"]
         assert result.confidence > 0.9  # Minimal penalty
 
-    def test_one_reflection_success(self):
+    def test_one_reflection_success(self) -> None:
         """If first try fails, reflect and fix."""
         base = SimpleJsonParser()
         parser = ReflectionParser(
@@ -80,7 +80,7 @@ class TestReflectionBasics:
         assert "reflection" in result.repairs[0].lower()
         assert result.confidence < 0.9  # Penalty for reflection
 
-    def test_multiple_reflections(self):
+    def test_multiple_reflections(self) -> None:
         """Multiple errors require multiple reflections."""
         base = SimpleJsonParser()
 
@@ -110,7 +110,7 @@ class TestReflectionBasics:
         assert result.metadata["reflection_attempts"] == 2
         assert call_count[0] == 2
 
-    def test_reflection_exhausted(self):
+    def test_reflection_exhausted(self) -> None:
         """If max retries exhausted, return failure."""
         base = SimpleJsonParser()
 
@@ -131,7 +131,7 @@ class TestReflectionBasics:
         assert result.metadata["reflection_attempts"] == 3  # 0, 1, 2 = 3 attempts
         assert len(result.metadata["reflection_errors"]) == 3
 
-    def test_llm_error_handling(self):
+    def test_llm_error_handling(self) -> None:
         """If LLM raises exception, return failure."""
         base = SimpleJsonParser()
 
@@ -152,7 +152,7 @@ class TestReflectionBasics:
 class TestConfidenceScoring:
     """Test confidence degradation with retries."""
 
-    def test_confidence_degrades_with_retries(self):
+    def test_confidence_degrades_with_retries(self) -> None:
         """More retries = lower confidence."""
         base = SimpleJsonParser()
 
@@ -186,7 +186,7 @@ class TestConfidenceScoring:
         confidences = [conf for _, conf in results]
         assert confidences == sorted(confidences, reverse=True)
 
-    def test_zero_retries_high_confidence(self):
+    def test_zero_retries_high_confidence(self) -> None:
         """Zero retries (first try success) should have high confidence."""
         base = SimpleJsonParser()
         parser = ReflectionParser(base_parser=base, llm_fix_fn=mock_llm_fix_json)
@@ -200,7 +200,7 @@ class TestConfidenceScoring:
 class TestReflectionContext:
     """Test reflection context tracking."""
 
-    def test_context_tracks_errors(self):
+    def test_context_tracks_errors(self) -> None:
         """Reflection context should track all previous errors."""
         base = SimpleJsonParser()
 
@@ -240,7 +240,7 @@ class TestReflectionContext:
         assert contexts[1].attempt == 1
         assert len(contexts[1].previous_errors) >= 2  # Accumulated errors
 
-    def test_context_original_input_preserved(self):
+    def test_context_original_input_preserved(self) -> None:
         """Original input should be preserved in context."""
         base = SimpleJsonParser()
 
@@ -264,7 +264,7 @@ class TestReflectionContext:
 class TestHelperFunctions:
     """Test helper functions."""
 
-    def test_simple_reflection_prompt_format(self):
+    def test_simple_reflection_prompt_format(self) -> None:
         """simple_reflection_prompt should format correctly."""
         context = ReflectionContext(
             original_input='{"test": 1',
@@ -285,7 +285,7 @@ class TestHelperFunctions:
         assert "Error 2" in prompt
         assert "Previous attempts (1)" in prompt
 
-    def test_create_reflection_parser_with_llm(self):
+    def test_create_reflection_parser_with_llm(self) -> None:
         """create_reflection_parser_with_llm should wire up correctly."""
         base = SimpleJsonParser()
 
@@ -310,7 +310,7 @@ class TestHelperFunctions:
 class TestMockLLMFix:
     """Test mock LLM fixer."""
 
-    def test_mock_fixes_unclosed_brace(self):
+    def test_mock_fixes_unclosed_brace(self) -> None:
         """Mock LLM should fix unclosed braces."""
         fixed = mock_llm_fix_json(
             '{"key": "value"',
@@ -320,7 +320,7 @@ class TestMockLLMFix:
 
         assert fixed == '{"key": "value"}'
 
-    def test_mock_fixes_unclosed_bracket(self):
+    def test_mock_fixes_unclosed_bracket(self) -> None:
         """Mock LLM should fix unclosed brackets."""
         fixed = mock_llm_fix_json(
             "[1, 2, 3",
@@ -330,7 +330,7 @@ class TestMockLLMFix:
 
         assert fixed == "[1, 2, 3]"
 
-    def test_mock_fixes_trailing_comma(self):
+    def test_mock_fixes_trailing_comma(self) -> None:
         """Mock LLM should fix trailing commas."""
         fixed = mock_llm_fix_json(
             '{"key": "value",}',
@@ -344,7 +344,7 @@ class TestMockLLMFix:
 class TestConfiguration:
     """Test parser configuration."""
 
-    def test_configure_returns_new_instance(self):
+    def test_configure_returns_new_instance(self) -> None:
         """configure() should return new parser instance."""
         base = SimpleJsonParser()
         parser1 = ReflectionParser(base_parser=base, llm_fix_fn=mock_llm_fix_json)
@@ -356,7 +356,7 @@ class TestConfiguration:
             != parser2.config.max_reflection_retries
         )
 
-    def test_max_reflection_retries_respected(self):
+    def test_max_reflection_retries_respected(self) -> None:
         """Parser should respect max_reflection_retries setting."""
         base = SimpleJsonParser()
 
@@ -380,7 +380,7 @@ class TestConfiguration:
 class TestRealWorldScenarios:
     """Test real-world use cases."""
 
-    def test_egent_code_repair(self):
+    def test_egent_code_repair(self) -> None:
         """
         E-gent scenario: Generated code has unclosed bracket.
         Reflection fixes it.
@@ -408,7 +408,7 @@ class TestRealWorldScenarios:
         assert result.value["name"] == "sort_fn"
         assert result.metadata["reflection_fixed"]
 
-    def test_multiple_error_cascade(self):
+    def test_multiple_error_cascade(self) -> None:
         """
         Multiple errors require cascading reflections.
         """
@@ -438,7 +438,7 @@ class TestRealWorldScenarios:
         # Should succeed via reflection
         assert result.metadata["reflection_fixed"]
 
-    def test_confidence_signals_quality(self):
+    def test_confidence_signals_quality(self) -> None:
         """
         Lower confidence after reflection signals lower quality parse.
         User can decide if acceptable.

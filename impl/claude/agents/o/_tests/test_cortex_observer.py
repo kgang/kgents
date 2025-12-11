@@ -26,7 +26,7 @@ from agents.o.cortex_observer import (
 class TestCortexHealth:
     """Tests for health status enums."""
 
-    def test_health_enum_values(self):
+    def test_health_enum_values(self) -> None:
         """Test health enum has expected values."""
         assert CortexHealth.HEALTHY.value == "healthy"
         assert CortexHealth.DEGRADED.value == "degraded"
@@ -37,22 +37,22 @@ class TestCortexHealth:
 class TestLeftHemisphereStatus:
     """Tests for Left Hemisphere status."""
 
-    def test_error_rate_zero_queries(self):
+    def test_error_rate_zero_queries(self) -> None:
         """Test error rate with zero queries."""
         status = LeftHemisphereStatus(queries_total=0, errors_total=0)
         assert status.error_rate == 0.0
 
-    def test_error_rate_calculation(self):
+    def test_error_rate_calculation(self) -> None:
         """Test error rate calculation."""
         status = LeftHemisphereStatus(queries_total=100, errors_total=5)
         assert status.error_rate == 0.05
 
-    def test_health_unavailable(self):
+    def test_health_unavailable(self) -> None:
         """Test health when unavailable."""
         status = LeftHemisphereStatus(available=False)
         assert status.health == CortexHealth.CRITICAL
 
-    def test_health_healthy(self):
+    def test_health_healthy(self) -> None:
         """Test health when all good."""
         status = LeftHemisphereStatus(
             available=True,
@@ -62,7 +62,7 @@ class TestLeftHemisphereStatus:
         )
         assert status.health == CortexHealth.HEALTHY
 
-    def test_health_degraded_latency(self):
+    def test_health_degraded_latency(self) -> None:
         """Test health degrades with high latency."""
         status = LeftHemisphereStatus(
             available=True,
@@ -72,7 +72,7 @@ class TestLeftHemisphereStatus:
         )
         assert status.health == CortexHealth.DEGRADED
 
-    def test_health_critical_error_rate(self):
+    def test_health_critical_error_rate(self) -> None:
         """Test health critical with high error rate."""
         status = LeftHemisphereStatus(
             available=True,
@@ -85,17 +85,17 @@ class TestLeftHemisphereStatus:
 class TestCoherencyStatus:
     """Tests for Coherency status."""
 
-    def test_health_healthy(self):
+    def test_health_healthy(self) -> None:
         """Test coherency health when good."""
         status = CoherencyStatus(coherency_rate=0.98, ghost_count=0)
         assert status.health == CortexHealth.HEALTHY
 
-    def test_health_degraded(self):
+    def test_health_degraded(self) -> None:
         """Test coherency health when degraded."""
         status = CoherencyStatus(coherency_rate=0.92, ghost_count=15)
         assert status.health == CortexHealth.DEGRADED
 
-    def test_health_critical(self):
+    def test_health_critical(self) -> None:
         """Test coherency health when critical."""
         status = CoherencyStatus(coherency_rate=0.85)
         assert status.health == CortexHealth.CRITICAL
@@ -104,17 +104,17 @@ class TestCoherencyStatus:
 class TestSynapseStatus:
     """Tests for Synapse status."""
 
-    def test_health_unavailable(self):
+    def test_health_unavailable(self) -> None:
         """Test health when synapse unavailable."""
         status = SynapseStatus(available=False)
         assert status.health == CortexHealth.CRITICAL
 
-    def test_health_healthy(self):
+    def test_health_healthy(self) -> None:
         """Test health when healthy."""
         status = SynapseStatus(available=True, flashbulb_rate=0.1)
         assert status.health == CortexHealth.HEALTHY
 
-    def test_health_degraded_flashbulb(self):
+    def test_health_degraded_flashbulb(self) -> None:
         """Test health degrades with high flashbulb rate."""
         status = SynapseStatus(available=True, flashbulb_rate=0.6)
         assert status.health == CortexHealth.DEGRADED
@@ -123,7 +123,7 @@ class TestSynapseStatus:
 class TestCortexHealthSnapshot:
     """Tests for CortexHealthSnapshot."""
 
-    def test_to_dict(self):
+    def test_to_dict(self) -> None:
         """Test snapshot serialization."""
         snapshot = CortexHealthSnapshot(
             timestamp="2024-01-01T00:00:00",
@@ -147,13 +147,13 @@ class TestCortexHealthSnapshot:
 class TestCortexObserverConfig:
     """Tests for CortexObserverConfig."""
 
-    def test_defaults(self):
+    def test_defaults(self) -> None:
         """Test default configuration."""
         config = CortexObserverConfig()
         assert config.history_limit == 1000
         assert config.health_check_interval_ms == 1000
 
-    def test_from_dict(self):
+    def test_from_dict(self) -> None:
         """Test creating config from dict."""
         config = CortexObserverConfig.from_dict(
             {
@@ -168,7 +168,7 @@ class TestCortexObserverConfig:
 class TestCortexObserver:
     """Tests for CortexObserver."""
 
-    def test_create_without_components(self):
+    def test_create_without_components(self) -> None:
         """Test creating observer without components."""
         observer = CortexObserver()
         health = observer.get_health()
@@ -176,7 +176,7 @@ class TestCortexObserver:
         assert health.overall == CortexHealth.CRITICAL
         assert health.left_hemisphere.available is False
 
-    def test_get_health_returns_snapshot(self):
+    def test_get_health_returns_snapshot(self) -> None:
         """Test get_health returns valid snapshot."""
         observer = create_mock_cortex_observer()
         health = observer.get_health()
@@ -184,7 +184,7 @@ class TestCortexObserver:
         assert isinstance(health, CortexHealthSnapshot)
         assert health.timestamp is not None
 
-    def test_history_tracking(self):
+    def test_history_tracking(self) -> None:
         """Test history is tracked."""
         observer = CortexObserver()
 
@@ -195,7 +195,7 @@ class TestCortexObserver:
         history = observer.get_history(limit=10)
         assert len(history) == 5
 
-    def test_history_limit(self):
+    def test_history_limit(self) -> None:
         """Test history respects limit."""
         config = CortexObserverConfig(history_limit=3)
         observer = CortexObserver(config=config)
@@ -207,7 +207,7 @@ class TestCortexObserver:
         history = observer.get_history()
         assert len(history) == 3
 
-    def test_health_change_callback(self):
+    def test_health_change_callback(self) -> None:
         """Test health change callbacks."""
         observer = CortexObserver()
         callbacks_called = []
@@ -224,7 +224,7 @@ class TestCortexObserver:
         unsubscribe()
         assert on_change not in observer._callbacks
 
-    def test_render_compact(self):
+    def test_render_compact(self) -> None:
         """Test compact rendering."""
         observer = create_mock_cortex_observer()
         compact = observer.render_compact()
@@ -232,7 +232,7 @@ class TestCortexObserver:
         assert "[CORTEX]" in compact
         assert "CRITICAL" in compact or "HEALTHY" in compact or "DEGRADED" in compact
 
-    def test_stats(self):
+    def test_stats(self) -> None:
         """Test statistics collection."""
         observer = CortexObserver()
         observer.get_health()
@@ -246,7 +246,7 @@ class TestCortexObserver:
 class TestCortexObserverWithMocks:
     """Tests with mock components."""
 
-    def test_observe_bicameral(self):
+    def test_observe_bicameral(self) -> None:
         """Test observing bicameral memory."""
         mock_bicameral = MagicMock()
         mock_bicameral.stats.return_value = {
@@ -265,7 +265,7 @@ class TestCortexObserverWithMocks:
         assert health.left_hemisphere.available is True
         assert health.left_hemisphere.queries_total == 100
 
-    def test_observe_synapse(self):
+    def test_observe_synapse(self) -> None:
         """Test observing synapse."""
         mock_synapse = MagicMock()
         mock_metrics = MagicMock()
@@ -284,7 +284,7 @@ class TestCortexObserverWithMocks:
         assert health.synapse.available is True
         assert health.synapse.signals_total == 100
 
-    def test_observe_hippocampus(self):
+    def test_observe_hippocampus(self) -> None:
         """Test observing hippocampus."""
         mock_hippocampus = MagicMock()
         mock_hippocampus.get_stats.return_value = {
@@ -305,17 +305,17 @@ class TestCortexObserverWithMocks:
 class TestFactoryFunctions:
     """Tests for factory functions."""
 
-    def test_create_cortex_observer(self):
+    def test_create_cortex_observer(self) -> None:
         """Test factory function."""
         observer = create_cortex_observer()
         assert isinstance(observer, CortexObserver)
 
-    def test_create_cortex_observer_with_config(self):
+    def test_create_cortex_observer_with_config(self) -> None:
         """Test factory function with config."""
         observer = create_cortex_observer(config_dict={"history_limit": 500})
         assert observer._config.history_limit == 500
 
-    def test_create_mock_cortex_observer(self):
+    def test_create_mock_cortex_observer(self) -> None:
         """Test mock factory function."""
         observer = create_mock_cortex_observer()
         assert isinstance(observer, CortexObserver)

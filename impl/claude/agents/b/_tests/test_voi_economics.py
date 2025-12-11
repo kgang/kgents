@@ -42,14 +42,14 @@ from ..voi_economics import (
 class TestObservationDepth:
     """Tests for ObservationDepth enum."""
 
-    def test_depth_levels(self):
+    def test_depth_levels(self) -> None:
         """Test all depth levels exist."""
         assert ObservationDepth.TELEMETRY_ONLY.value == "telemetry_only"
         assert ObservationDepth.SEMANTIC_SPOT.value == "semantic_spot"
         assert ObservationDepth.SEMANTIC_FULL.value == "semantic_full"
         assert ObservationDepth.AXIOLOGICAL.value == "axiological"
 
-    def test_depth_ordering(self):
+    def test_depth_ordering(self) -> None:
         """Test depths can be compared."""
         depths = list(ObservationDepth)
         assert len(depths) == 4
@@ -58,7 +58,7 @@ class TestObservationDepth:
 class TestFindingType:
     """Tests for FindingType enum."""
 
-    def test_finding_types(self):
+    def test_finding_types(self) -> None:
         """Test all finding types exist."""
         assert FindingType.ANOMALY_DETECTED.value == "anomaly_detected"
         assert FindingType.HEALTH_CONFIRMED.value == "health_confirmed"
@@ -69,7 +69,7 @@ class TestFindingType:
 class TestObservationFinding:
     """Tests for ObservationFinding."""
 
-    def test_creation(self):
+    def test_creation(self) -> None:
         """Test basic creation."""
         finding = ObservationFinding(
             type=FindingType.ANOMALY_DETECTED,
@@ -80,7 +80,7 @@ class TestObservationFinding:
         assert finding.confidence == 0.9
         assert finding.anomaly == "Memory leak detected"
 
-    def test_default_values(self):
+    def test_default_values(self) -> None:
         """Test default values."""
         finding = ObservationFinding(type=FindingType.HEALTH_CONFIRMED)
         assert finding.confidence == 0.5
@@ -96,7 +96,7 @@ class TestObservationFinding:
 class TestEpistemicCapital:
     """Tests for EpistemicCapital."""
 
-    def test_creation(self):
+    def test_creation(self) -> None:
         """Test basic creation."""
         capital = EpistemicCapital()
         assert capital.observations == 0
@@ -104,7 +104,7 @@ class TestEpistemicCapital:
         assert capital.disasters_prevented == 0.0
         assert capital.false_positives == 0
 
-    def test_net_epistemic_value(self):
+    def test_net_epistemic_value(self) -> None:
         """Test net value calculation."""
         capital = EpistemicCapital(
             anomalies_detected=5,
@@ -116,7 +116,7 @@ class TestEpistemicCapital:
         expected = 100.0 + 10 * CONFIRMATION_VALUE - 2 * ALERT_FATIGUE_COST
         assert capital.net_epistemic_value == expected
 
-    def test_signal_to_noise_ratio(self):
+    def test_signal_to_noise_ratio(self) -> None:
         """Test signal to noise calculation."""
         capital = EpistemicCapital(
             anomalies_detected=8,
@@ -126,7 +126,7 @@ class TestEpistemicCapital:
         # (8 + 12) / 4 = 5.0
         assert capital.signal_to_noise_ratio == 5.0
 
-    def test_signal_to_noise_no_false_positives(self):
+    def test_signal_to_noise_no_false_positives(self) -> None:
         """Test SNR with no false positives."""
         capital = EpistemicCapital(
             anomalies_detected=5,
@@ -135,7 +135,7 @@ class TestEpistemicCapital:
         )
         assert capital.signal_to_noise_ratio == float("inf")
 
-    def test_rovi(self):
+    def test_rovi(self) -> None:
         """Test RoVI calculation."""
         capital = EpistemicCapital(
             total_voi_generated=10.0,
@@ -143,7 +143,7 @@ class TestEpistemicCapital:
         )
         assert capital.rovi == 2.0
 
-    def test_rovi_zero_gas(self):
+    def test_rovi_zero_gas(self) -> None:
         """Test RoVI with zero gas."""
         capital = EpistemicCapital(
             total_voi_generated=10.0,
@@ -160,19 +160,19 @@ class TestEpistemicCapital:
 class TestVoILedger:
     """Tests for VoILedger."""
 
-    def test_creation(self):
+    def test_creation(self) -> None:
         """Test basic creation."""
         ledger = create_voi_ledger()
         assert ledger.observations == {}
         assert ledger.interventions == []
 
-    def test_creation_with_value_ledger(self):
+    def test_creation_with_value_ledger(self) -> None:
         """Test creation with value ledger."""
         value_ledger = ValueLedger()
         ledger = create_voi_ledger(value_ledger)
         assert ledger.main_ledger is value_ledger
 
-    def test_log_observation_anomaly(self):
+    def test_log_observation_anomaly(self) -> None:
         """Test logging anomaly observation."""
         ledger = create_voi_ledger()
         finding = ObservationFinding(
@@ -194,7 +194,7 @@ class TestVoILedger:
         assert capital.anomalies_detected == 1
         assert capital.disasters_prevented > 0
 
-    def test_log_observation_health_confirmed(self):
+    def test_log_observation_health_confirmed(self) -> None:
         """Test logging health confirmation."""
         ledger = create_voi_ledger()
         finding = ObservationFinding(
@@ -214,7 +214,7 @@ class TestVoILedger:
         capital = ledger.get_epistemic_capital("observer1")
         assert capital.confirmations == 1
 
-    def test_log_observation_false_positive(self):
+    def test_log_observation_false_positive(self) -> None:
         """Test logging false positive."""
         ledger = create_voi_ledger()
         finding = ObservationFinding(type=FindingType.FALSE_POSITIVE)
@@ -231,7 +231,7 @@ class TestVoILedger:
         capital = ledger.get_epistemic_capital("observer1")
         assert capital.false_positives == 1
 
-    def test_calculate_voi_security_breach(self):
+    def test_calculate_voi_security_breach(self) -> None:
         """Test VoI calculation for security breach."""
         ledger = create_voi_ledger()
         finding = ObservationFinding(
@@ -242,7 +242,7 @@ class TestVoILedger:
         voi = ledger.calculate_voi(finding)
         assert voi == 1000.0  # Full disaster cost
 
-    def test_calculate_voi_partial_confidence(self):
+    def test_calculate_voi_partial_confidence(self) -> None:
         """Test VoI calculation with partial confidence."""
         ledger = create_voi_ledger()
         finding = ObservationFinding(
@@ -253,7 +253,7 @@ class TestVoILedger:
         voi = ledger.calculate_voi(finding)
         assert voi == 100.0  # 200 * 0.5
 
-    def test_disaster_cost_categories(self):
+    def test_disaster_cost_categories(self) -> None:
         """Test disaster cost by category."""
         ledger = create_voi_ledger()
 
@@ -274,7 +274,7 @@ class TestVoILedger:
             voi = ledger.calculate_voi(finding)
             assert voi == expected_cost, f"Failed for {category}"
 
-    def test_log_intervention(self):
+    def test_log_intervention(self) -> None:
         """Test logging intervention."""
         ledger = create_voi_ledger()
 
@@ -307,7 +307,7 @@ class TestVoILedger:
         assert len(ledger.interventions) == 1
         assert ledger.interventions[0].outcome.value_saved == 250.0
 
-    def test_get_observer_rovi(self):
+    def test_get_observer_rovi(self) -> None:
         """Test RoVI for specific observer."""
         ledger = create_voi_ledger()
 
@@ -329,7 +329,7 @@ class TestVoILedger:
         rovi = ledger.get_observer_rovi("observer1")
         assert rovi > 0
 
-    def test_get_observer_stats(self):
+    def test_get_observer_stats(self) -> None:
         """Test getting observer statistics."""
         ledger = create_voi_ledger()
 
@@ -356,7 +356,7 @@ class TestVoILedger:
         assert stats["confirmations"] == 1
         assert stats["false_positives"] == 1
 
-    def test_system_rovi(self):
+    def test_system_rovi(self) -> None:
         """Test system-wide RoVI."""
         ledger = create_voi_ledger()
 
@@ -378,7 +378,7 @@ class TestVoILedger:
         system_rovi = ledger.system_rovi()
         assert system_rovi > 0
 
-    def test_false_positive_rate(self):
+    def test_false_positive_rate(self) -> None:
         """Test false positive rate calculation."""
         ledger = create_voi_ledger()
 
@@ -409,13 +409,13 @@ class TestVoILedger:
 class TestVoIOptimizer:
     """Tests for VoIOptimizer."""
 
-    def test_creation(self):
+    def test_creation(self) -> None:
         """Test basic creation."""
         value_ledger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
         assert optimizer.ledger is value_ledger
 
-    def test_record_reliability(self):
+    def test_record_reliability(self) -> None:
         """Test recording reliability."""
         value_ledger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
@@ -428,7 +428,7 @@ class TestVoIOptimizer:
         reliability = optimizer.get_reliability("agent1")
         assert reliability == pytest.approx(2 / 3)
 
-    def test_reliability_unknown_agent(self):
+    def test_reliability_unknown_agent(self) -> None:
         """Test reliability for unknown agent."""
         value_ledger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
@@ -436,7 +436,7 @@ class TestVoIOptimizer:
         reliability = optimizer.get_reliability("unknown_agent")
         assert reliability == 0.5  # Default
 
-    def test_reliability_history_limit(self):
+    def test_reliability_history_limit(self) -> None:
         """Test reliability history is limited."""
         value_ledger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
@@ -447,7 +447,7 @@ class TestVoIOptimizer:
 
         assert len(optimizer._reliability["agent1"]) == 100
 
-    def test_observability_score(self):
+    def test_observability_score(self) -> None:
         """Test observability score."""
         value_ledger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
@@ -455,7 +455,7 @@ class TestVoIOptimizer:
         optimizer.set_observability("agent1", 0.9)
         assert optimizer.get_observability_score("agent1") == 0.9
 
-    def test_observability_clamped(self):
+    def test_observability_clamped(self) -> None:
         """Test observability is clamped to 0-1."""
         value_ledger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
@@ -466,7 +466,7 @@ class TestVoIOptimizer:
         optimizer.set_observability("agent2", -0.5)
         assert optimizer.get_observability_score("agent2") == 0.0
 
-    def test_compute_observation_priority(self):
+    def test_compute_observation_priority(self) -> None:
         """Test priority computation."""
         value_ledger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
@@ -483,7 +483,7 @@ class TestVoIOptimizer:
         priority = optimizer.compute_observation_priority("agent1")
         assert priority > 0
 
-    def test_allocate_observation_budget(self):
+    def test_allocate_observation_budget(self) -> None:
         """Test budget allocation."""
         value_ledger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
@@ -504,7 +504,7 @@ class TestVoIOptimizer:
         # High risk should get more budget (higher priority)
         assert allocations["high_risk"].tokens >= allocations["low_risk"].tokens
 
-    def test_allocate_empty_agents(self):
+    def test_allocate_empty_agents(self) -> None:
         """Test allocation with no agents."""
         value_ledger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
@@ -512,7 +512,7 @@ class TestVoIOptimizer:
         allocations = optimizer.allocate_observation_budget(Gas(tokens=1000), [])
         assert allocations == {}
 
-    def test_select_observation_depth(self):
+    def test_select_observation_depth(self) -> None:
         """Test depth selection based on budget."""
         value_ledger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
@@ -525,7 +525,7 @@ class TestVoIOptimizer:
         depth = optimizer.select_observation_depth("agent1", Gas(tokens=5))
         assert depth == ObservationDepth.TELEMETRY_ONLY
 
-    def test_get_observation_recommendations(self):
+    def test_get_observation_recommendations(self) -> None:
         """Test getting recommendations."""
         value_ledger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
@@ -556,7 +556,7 @@ class TestVoIOptimizer:
 class TestAdaptiveObserver:
     """Tests for AdaptiveObserver."""
 
-    def test_creation(self):
+    def test_creation(self) -> None:
         """Test basic creation."""
         value_ledger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
@@ -566,7 +566,7 @@ class TestAdaptiveObserver:
         assert observer.min_interval == timedelta(seconds=5)
         assert observer.max_interval == timedelta(seconds=600)
 
-    def test_compute_observation_interval_high_priority(self):
+    def test_compute_observation_interval_high_priority(self) -> None:
         """Test interval for high priority agent."""
         value_ledger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
@@ -584,7 +584,7 @@ class TestAdaptiveObserver:
         # High priority should get short interval
         assert interval <= observer.base_interval
 
-    def test_compute_observation_interval_low_priority(self):
+    def test_compute_observation_interval_low_priority(self) -> None:
         """Test interval for low priority agent."""
         value_ledger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
@@ -599,7 +599,7 @@ class TestAdaptiveObserver:
         # Low priority should get longer interval
         assert interval >= observer.base_interval
 
-    def test_should_observe(self):
+    def test_should_observe(self) -> None:
         """Test should_observe check."""
         value_ledger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
@@ -615,7 +615,7 @@ class TestAdaptiveObserver:
         observer.mark_observed("agent1")
         assert not observer.should_observe("agent1")
 
-    def test_register_and_observe(self):
+    def test_register_and_observe(self) -> None:
         """Test registering observer function."""
         value_ledger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
@@ -637,7 +637,7 @@ class TestAdaptiveObserver:
         assert result == "Observed agent1"
         assert "agent1" in observed
 
-    def test_get_observation_schedule(self):
+    def test_get_observation_schedule(self) -> None:
         """Test getting observation schedule."""
         value_ledger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
@@ -662,13 +662,13 @@ class TestAdaptiveObserver:
 class TestUnifiedValueAccounting:
     """Tests for UnifiedValueAccounting."""
 
-    def test_creation(self):
+    def test_creation(self) -> None:
         """Test basic creation."""
         value_ledger = ValueLedger()
         accounting = create_unified_accounting(value_ledger)
         assert accounting.value is value_ledger
 
-    def test_system_health_empty(self):
+    def test_system_health_empty(self) -> None:
         """Test system health with no data."""
         value_ledger = ValueLedger()
         accounting = create_unified_accounting(value_ledger)
@@ -678,7 +678,7 @@ class TestUnifiedValueAccounting:
         assert health.production_roc == 0.0
         assert health.observation_rovi == 0.0
 
-    def test_system_health_healthy(self):
+    def test_system_health_healthy(self) -> None:
         """Test healthy system status."""
         value_ledger = ValueLedger()
         voi_ledger = create_voi_ledger(value_ledger)
@@ -711,7 +711,7 @@ class TestUnifiedValueAccounting:
         assert health.production_roc > 0
         assert health.observation_rovi > 0
 
-    def test_generate_recommendations_low_roc(self):
+    def test_generate_recommendations_low_roc(self) -> None:
         """Test recommendations for low RoC."""
         value_ledger = ValueLedger()
         accounting = create_unified_accounting(value_ledger)
@@ -724,7 +724,7 @@ class TestUnifiedValueAccounting:
         health = accounting.system_health()
         assert any("Production RoC" in rec for rec in health.recommendations)
 
-    def test_generate_recommendations_high_false_positives(self):
+    def test_generate_recommendations_high_false_positives(self) -> None:
         """Test recommendations for high false positive rate."""
         value_ledger = ValueLedger()
         voi_ledger = create_voi_ledger(value_ledger)
@@ -742,7 +742,7 @@ class TestUnifiedValueAccounting:
         health = accounting.system_health()
         assert any("False positive" in rec for rec in health.recommendations)
 
-    def test_get_currency_summary(self):
+    def test_get_currency_summary(self) -> None:
         """Test getting currency summary."""
         value_ledger = ValueLedger()
         voi_ledger = create_voi_ledger(value_ledger)
@@ -780,7 +780,7 @@ class TestUnifiedValueAccounting:
 class TestVoIIntegration:
     """Integration tests for VoI economics system."""
 
-    def test_full_observation_workflow(self):
+    def test_full_observation_workflow(self) -> None:
         """Test complete observation workflow."""
         # Set up ledgers
         value_ledger = ValueLedger()
@@ -850,7 +850,7 @@ class TestVoIIntegration:
         assert health.production_roc > 0
         assert health.observation_rovi > 0
 
-    def test_adaptive_observation_schedule(self):
+    def test_adaptive_observation_schedule(self) -> None:
         """Test adaptive observation scheduling."""
         value_ledger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
@@ -896,7 +896,7 @@ class TestVoIIntegration:
         assert intervals["high_risk"] <= intervals["medium_risk"]
         assert intervals["medium_risk"] <= intervals["low_risk"]
 
-    def test_voi_anti_patterns_detection(self):
+    def test_voi_anti_patterns_detection(self) -> None:
         """Test detection of VoI anti-patterns."""
         value_ledger = ValueLedger()
         voi_ledger = create_voi_ledger(value_ledger)
@@ -925,7 +925,7 @@ class TestVoIIntegration:
         # So RoVI should be around 0.05 / 0.075 = 0.67
         assert rovi < 1.0  # Not profitable
 
-    def test_epistemic_capital_accumulation(self):
+    def test_epistemic_capital_accumulation(self) -> None:
         """Test epistemic capital accumulates correctly."""
         voi_ledger = create_voi_ledger()
 

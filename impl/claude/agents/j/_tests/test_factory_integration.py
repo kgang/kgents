@@ -100,7 +100,9 @@ class JITComplexAgent:
 
 
 @pytest.mark.asyncio
-async def test_create_agent_from_source_basic(simple_parser_source: AgentSource):
+async def test_create_agent_from_source_basic(
+    simple_parser_source: AgentSource,
+) -> None:
     """Test basic agent creation from source."""
     agent = await create_agent_from_source(
         source=simple_parser_source,
@@ -112,7 +114,9 @@ async def test_create_agent_from_source_basic(simple_parser_source: AgentSource)
 
 
 @pytest.mark.asyncio
-async def test_create_agent_from_source_with_meta(simple_parser_source: AgentSource):
+async def test_create_agent_from_source_with_meta(
+    simple_parser_source: AgentSource,
+) -> None:
     """Test that created agent has proper AgentMeta."""
     agent = await create_agent_from_source(
         source=simple_parser_source,
@@ -151,7 +155,9 @@ async def test_create_agent_from_source_with_jit_meta(
 
 
 @pytest.mark.asyncio
-async def test_create_agent_from_source_execution(simple_parser_source: AgentSource):
+async def test_create_agent_from_source_execution(
+    simple_parser_source: AgentSource,
+) -> None:
     """Test that created agent can execute."""
     agent = await create_agent_from_source(
         source=simple_parser_source,
@@ -184,7 +190,7 @@ async def test_create_agent_from_source_with_validation(
 
 
 @pytest.mark.asyncio
-async def test_jit_agent_composition(simple_parser_source: AgentSource):
+async def test_jit_agent_composition(simple_parser_source: AgentSource) -> None:
     """Test that JIT agents can compose with other agents via >>."""
 
     # Create a simple downstream agent
@@ -220,7 +226,7 @@ async def test_jit_agent_composition(simple_parser_source: AgentSource):
 # --- Introspection Tests ---
 
 
-def test_get_jit_meta_returns_meta():
+def test_get_jit_meta_returns_meta() -> None:
     """Test get_jit_meta utility function."""
     # Create a mock JITAgentWrapper
     from agents.a.skeleton import AgentMeta
@@ -246,7 +252,7 @@ def test_get_jit_meta_returns_meta():
     assert result is mock_jit_meta
 
 
-def test_get_jit_meta_returns_none_for_non_jit():
+def test_get_jit_meta_returns_none_for_non_jit() -> None:
     """Test get_jit_meta returns None for non-JIT agents."""
 
     class RegularAgent(Agent[str, str]):
@@ -262,7 +268,7 @@ def test_get_jit_meta_returns_none_for_non_jit():
     assert result is None
 
 
-def test_is_jit_agent_true():
+def test_is_jit_agent_true() -> None:
     """Test is_jit_agent returns True for JIT agents."""
     from agents.a.skeleton import AgentMeta
 
@@ -285,7 +291,7 @@ def test_is_jit_agent_true():
     assert is_jit_agent(wrapper) is True
 
 
-def test_is_jit_agent_false():
+def test_is_jit_agent_false() -> None:
     """Test is_jit_agent returns False for non-JIT agents."""
 
     class RegularAgent(Agent[str, str]):
@@ -304,7 +310,7 @@ def test_is_jit_agent_false():
 
 
 @pytest.mark.asyncio
-async def test_compile_and_instantiate_basic():
+async def test_compile_and_instantiate_basic() -> None:
     """Test compile_and_instantiate convenience function."""
     agent = await compile_and_instantiate(
         intent="Parse JSON logs",
@@ -317,7 +323,7 @@ async def test_compile_and_instantiate_basic():
 
 
 @pytest.mark.asyncio
-async def test_compile_and_instantiate_with_context():
+async def test_compile_and_instantiate_with_context() -> None:
     """Test compile_and_instantiate with context."""
     agent = await compile_and_instantiate(
         intent="Parse JSON logs and extract errors",
@@ -336,7 +342,7 @@ async def test_compile_and_instantiate_with_context():
 
 
 @pytest.mark.asyncio
-async def test_compile_and_instantiate_with_constraints():
+async def test_compile_and_instantiate_with_constraints() -> None:
     """Test compile_and_instantiate with custom constraints."""
     constraints = ArchitectConstraints(
         entropy_budget=0.5,
@@ -358,7 +364,7 @@ async def test_compile_and_instantiate_with_constraints():
 
 
 @pytest.mark.asyncio
-async def test_create_agent_execution_failure():
+async def test_create_agent_execution_failure() -> None:
     """Test that execution failures are properly reported."""
     # Create source with syntax that will fail at runtime
     source = AgentSource(
@@ -383,7 +389,7 @@ class JITBroken:
 
 
 @pytest.mark.asyncio
-async def test_agent_behavior_metadata(simple_parser_source: AgentSource):
+async def test_agent_behavior_metadata(simple_parser_source: AgentSource) -> None:
     """Test that behavior metadata is properly set."""
     constraints = ArchitectConstraints(
         entropy_budget=0.7,
@@ -414,7 +420,7 @@ async def test_agent_behavior_metadata(simple_parser_source: AgentSource):
 
 
 @pytest.mark.asyncio
-async def test_sandbox_prevents_forbidden_operations():
+async def test_sandbox_prevents_forbidden_operations() -> None:
     """Test that sandbox blocks forbidden operations like eval/exec."""
     # Create source that attempts forbidden operations
     source = AgentSource(
@@ -438,7 +444,7 @@ class JITMalicious:
 
 
 @pytest.mark.asyncio
-async def test_sandbox_isolates_multiple_executions():
+async def test_sandbox_isolates_multiple_executions() -> None:
     """Test that sandbox isolates each execution (no state leakage)."""
     source = AgentSource(
         source="""
@@ -468,7 +474,7 @@ class JITStateful:
 
 
 @pytest.mark.asyncio
-async def test_custom_sandbox_config():
+async def test_custom_sandbox_config() -> None:
     """Test that custom SandboxConfig is applied."""
     from agents.j.sandbox import SandboxConfig
 
@@ -507,7 +513,9 @@ class JITSimple:
 
 
 @pytest.mark.asyncio
-async def test_stability_score_for_simple_agent(simple_parser_source: AgentSource):
+async def test_stability_score_for_simple_agent(
+    simple_parser_source: AgentSource,
+) -> None:
     """Test that simple agents get high stability scores."""
     agent = await create_agent_from_source(
         source=simple_parser_source,
@@ -519,7 +527,9 @@ async def test_stability_score_for_simple_agent(simple_parser_source: AgentSourc
 
 
 @pytest.mark.asyncio
-async def test_stability_score_for_complex_agent(high_complexity_source: AgentSource):
+async def test_stability_score_for_complex_agent(
+    high_complexity_source: AgentSource,
+) -> None:
     """Test that complex agents get lower stability scores."""
     # Use high max_complexity to avoid rejection, just test scoring
     constraints = ArchitectConstraints(max_cyclomatic_complexity=100)
@@ -540,7 +550,7 @@ async def test_stability_score_for_complex_agent(high_complexity_source: AgentSo
 
 
 @pytest.mark.asyncio
-async def test_validation_with_constraints():
+async def test_validation_with_constraints() -> None:
     """Test that validation works with constraints."""
     # Create source with excessive complexity
     complex_source = AgentSource(
@@ -587,7 +597,9 @@ class JITComplex:
 
 
 @pytest.mark.asyncio
-async def test_validation_accepts_safe_source(simple_parser_source: AgentSource):
+async def test_validation_accepts_safe_source(
+    simple_parser_source: AgentSource,
+) -> None:
     """Test that validation accepts safe source code."""
     # Should not raise any errors
     agent = await create_agent_from_source(
@@ -602,7 +614,7 @@ async def test_validation_accepts_safe_source(simple_parser_source: AgentSource)
 
 
 @pytest.mark.asyncio
-async def test_compose_two_jit_agents():
+async def test_compose_two_jit_agents() -> None:
     """Test composing two JIT agents together."""
     # First agent: parse JSON
     parser_source = AgentSource(
@@ -642,7 +654,7 @@ class JITExtractor:
 
 
 @pytest.mark.asyncio
-async def test_compose_jit_with_normal_agent_both_directions():
+async def test_compose_jit_with_normal_agent_both_directions() -> None:
     """Test composition works in both directions: JIT>>Normal and Normal>>JIT."""
 
     # Normal agent
@@ -687,7 +699,9 @@ class JITUpper:
 
 
 @pytest.mark.asyncio
-async def test_jit_meta_preserves_full_provenance(simple_parser_source: AgentSource):
+async def test_jit_meta_preserves_full_provenance(
+    simple_parser_source: AgentSource,
+) -> None:
     """Test that JITAgentMeta preserves complete provenance chain."""
     constraints = ArchitectConstraints(
         entropy_budget=0.6,
@@ -715,7 +729,9 @@ async def test_jit_meta_preserves_full_provenance(simple_parser_source: AgentSou
 
 
 @pytest.mark.asyncio
-async def test_agent_meta_reflects_jit_nature(simple_parser_source: AgentSource):
+async def test_agent_meta_reflects_jit_nature(
+    simple_parser_source: AgentSource,
+) -> None:
     """Test that AgentMeta clearly indicates JIT nature of agent."""
     agent = await create_agent_from_source(
         source=simple_parser_source,
@@ -738,7 +754,7 @@ async def test_agent_meta_reflects_jit_nature(simple_parser_source: AgentSource)
 
 
 @pytest.mark.asyncio
-async def test_agent_with_no_imports():
+async def test_agent_with_no_imports() -> None:
     """Test creating agent with no imports."""
     source = AgentSource(
         source="""
@@ -758,7 +774,7 @@ class JITNoImports:
 
 
 @pytest.mark.asyncio
-async def test_agent_with_simple_class():
+async def test_agent_with_simple_class() -> None:
     """Test agent that uses simple classes (no dataclasses needed)."""
     source = AgentSource(
         source="""
@@ -784,7 +800,7 @@ class JITSimpleClass:
 
 
 @pytest.mark.asyncio
-async def test_compile_and_instantiate_full_pipeline():
+async def test_compile_and_instantiate_full_pipeline() -> None:
     """Test that compile_and_instantiate runs complete pipeline end-to-end."""
     # This tests the MetaArchitect integration
     agent = await compile_and_instantiate(

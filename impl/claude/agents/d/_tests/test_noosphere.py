@@ -69,14 +69,14 @@ class TestSemanticManifold:
     """Tests for SemanticManifold."""
 
     @pytest.fixture
-    def manifold(self):
+    def manifold(self) -> "SemanticManifold":
         """Create a semantic manifold."""
         from agents.d.manifold import SemanticManifold
 
         return SemanticManifold(dimension=4)
 
     @pytest.mark.asyncio
-    async def test_add_and_get(self, manifold):
+    async def test_add_and_get(self, manifold) -> None:
         """Test adding and retrieving entries."""
         embedding = np.array([1.0, 0.0, 0.0, 0.0])
         point = await manifold.add("doc1", {"text": "Hello"}, embedding)
@@ -90,7 +90,7 @@ class TestSemanticManifold:
         assert state == {"text": "Hello"}
 
     @pytest.mark.asyncio
-    async def test_neighbors(self, manifold):
+    async def test_neighbors(self, manifold) -> None:
         """Test k-nearest neighbor search."""
         # Add entries
         await manifold.add("doc1", "A", np.array([1.0, 0.0, 0.0, 0.0]))
@@ -107,7 +107,7 @@ class TestSemanticManifold:
         assert "B" in states
 
     @pytest.mark.asyncio
-    async def test_curvature_at(self, manifold):
+    async def test_curvature_at(self, manifold) -> None:
         """Test curvature estimation."""
         # Add clustered entries (low curvature)
         await manifold.add("doc1", "A", np.array([1.0, 0.0, 0.0, 0.0]))
@@ -119,7 +119,7 @@ class TestSemanticManifold:
         assert curvature >= 0.0
 
     @pytest.mark.asyncio
-    async def test_geodesic(self, manifold):
+    async def test_geodesic(self, manifold) -> None:
         """Test geodesic path computation."""
         await manifold.add("start", "A", np.array([1.0, 0.0, 0.0, 0.0]))
         await manifold.add("end", "B", np.array([0.0, 1.0, 0.0, 0.0]))
@@ -132,7 +132,7 @@ class TestSemanticManifold:
         assert geodesic.total_length > 0
 
     @pytest.mark.asyncio
-    async def test_void_nearby(self, manifold):
+    async def test_void_nearby(self, manifold) -> None:
         """Test void detection."""
         # Add entries in one corner
         await manifold.add("doc1", "A", np.array([1.0, 0.0, 0.0, 0.0]))
@@ -148,7 +148,7 @@ class TestSemanticManifold:
         assert void.radius > 0
 
     @pytest.mark.asyncio
-    async def test_cluster_centers(self, manifold):
+    async def test_cluster_centers(self, manifold) -> None:
         """Test cluster center detection."""
         # Add two clusters
         await manifold.add("a1", "A1", np.array([1.0, 0.0, 0.0, 0.0]))
@@ -160,7 +160,7 @@ class TestSemanticManifold:
         assert len(clusters) == 2
 
     @pytest.mark.asyncio
-    async def test_stats(self, manifold):
+    async def test_stats(self, manifold) -> None:
         """Test manifold statistics."""
         await manifold.add("doc1", "A", np.array([1.0, 0.0, 0.0, 0.0]))
         await manifold.add("doc2", "B", np.array([0.0, 1.0, 0.0, 0.0]))
@@ -188,7 +188,7 @@ class TestTemporalWitness:
         return TemporalWitness(fold=fold, initial={"value": 0})
 
     @pytest.mark.asyncio
-    async def test_observe_and_load(self, witness):
+    async def test_observe_and_load(self, witness) -> None:
         """Test observing events and loading state."""
         await witness.observe(
             {"value": 10}, WitnessReport(observer_id="test", confidence=0.9)
@@ -198,7 +198,7 @@ class TestTemporalWitness:
         assert state["value"] == 10
 
     @pytest.mark.asyncio
-    async def test_trajectory_tracking(self, witness):
+    async def test_trajectory_tracking(self, witness) -> None:
         """Test adding and checking trajectories."""
         witness.add_trajectory(
             "value", lambda s: s.get("value", 0), "Track value changes"
@@ -220,7 +220,7 @@ class TestTemporalWitness:
         assert trajectory.current_value == 15
 
     @pytest.mark.asyncio
-    async def test_drift_detection(self, witness):
+    async def test_drift_detection(self, witness) -> None:
         """Test drift detection in trajectories."""
         witness.add_trajectory("value", lambda s: s.get("value", 0))
 
@@ -243,7 +243,7 @@ class TestTemporalWitness:
         # Note: May or may not detect drift depending on data volume
 
     @pytest.mark.asyncio
-    async def test_entropy(self, witness):
+    async def test_entropy(self, witness) -> None:
         """Test entropy calculation."""
         # Add some events
         for i in range(5):
@@ -255,7 +255,7 @@ class TestTemporalWitness:
         assert 0.0 <= entropy <= 1.0
 
     @pytest.mark.asyncio
-    async def test_entropy_classification(self, witness):
+    async def test_entropy_classification(self, witness) -> None:
         """Test entropy level classification."""
         assert witness.classify_entropy(0.1) == EntropyLevel.CALM
         assert witness.classify_entropy(0.3) == EntropyLevel.STABLE
@@ -264,7 +264,7 @@ class TestTemporalWitness:
         assert witness.classify_entropy(0.9) == EntropyLevel.CHAOTIC
 
     @pytest.mark.asyncio
-    async def test_drift_classification(self, witness):
+    async def test_drift_classification(self, witness) -> None:
         """Test drift severity classification."""
         assert (
             witness.classify_drift(DriftReport(trajectory="t", drift_detected=False))
@@ -296,7 +296,7 @@ class TestTemporalWitness:
         )
 
     @pytest.mark.asyncio
-    async def test_replay(self, witness):
+    async def test_replay(self, witness) -> None:
         """Test time-travel replay."""
         start_time = datetime.now()
 
@@ -315,7 +315,7 @@ class TestTemporalWitness:
         assert state["value"] == 2
 
     @pytest.mark.asyncio
-    async def test_is_stable(self, witness):
+    async def test_is_stable(self, witness) -> None:
         """Test stability check."""
         # With few events, should be stable
         is_stable = await witness.is_stable(threshold=0.5)
@@ -331,12 +331,12 @@ class TestRelationalLattice:
     """Tests for RelationalLattice."""
 
     @pytest.fixture
-    def lattice(self):
+    def lattice(self) -> RelationalLattice:
         """Create a relational lattice."""
         return RelationalLattice()
 
     @pytest.mark.asyncio
-    async def test_add_and_get(self, lattice):
+    async def test_add_and_get(self, lattice) -> None:
         """Test adding and retrieving nodes."""
         node = await lattice.add("concept1", {"name": "Testing"})
 
@@ -348,7 +348,7 @@ class TestRelationalLattice:
         assert retrieved.state == {"name": "Testing"}
 
     @pytest.mark.asyncio
-    async def test_relate(self, lattice):
+    async def test_relate(self, lattice) -> None:
         """Test establishing relationships."""
         await lattice.add("animal", {"name": "Animal"})
         await lattice.add("mammal", {"name": "Mammal"})
@@ -360,7 +360,7 @@ class TestRelationalLattice:
         assert any(e.target == "animal" for e in edges)
 
     @pytest.mark.asyncio
-    async def test_meet(self, lattice):
+    async def test_meet(self, lattice) -> None:
         """Test greatest lower bound (meet)."""
         await lattice.add("animal", {"name": "Animal"})
         await lattice.add("mammal", {"name": "Mammal"})
@@ -379,7 +379,7 @@ class TestRelationalLattice:
         assert result.node_id in ("mammal", "animal")
 
     @pytest.mark.asyncio
-    async def test_meet_same_node(self, lattice):
+    async def test_meet_same_node(self, lattice) -> None:
         """Test meet of a node with itself."""
         await lattice.add("concept", {"name": "Concept"})
 
@@ -388,7 +388,7 @@ class TestRelationalLattice:
         assert result.node_id == "concept"
 
     @pytest.mark.asyncio
-    async def test_entails(self, lattice):
+    async def test_entails(self, lattice) -> None:
         """Test entailment checking."""
         await lattice.add("animal", {"name": "Animal"})
         await lattice.add("mammal", {"name": "Mammal"})
@@ -403,7 +403,7 @@ class TestRelationalLattice:
         assert len(proof.path) > 0
 
     @pytest.mark.asyncio
-    async def test_compare(self, lattice):
+    async def test_compare(self, lattice) -> None:
         """Test node comparison."""
         await lattice.add("a", {"name": "A"})
         await lattice.add("b", {"name": "B"})
@@ -414,7 +414,7 @@ class TestRelationalLattice:
         assert result == LatticeRelation.BELOW
 
     @pytest.mark.asyncio
-    async def test_lineage(self, lattice):
+    async def test_lineage(self, lattice) -> None:
         """Test provenance tracking."""
         await lattice.add("v1", {"version": 1})
         await lattice.add("v2", {"version": 2}, derived_from="v1")
@@ -428,7 +428,7 @@ class TestRelationalLattice:
         assert "v1" in lineage
 
     @pytest.mark.asyncio
-    async def test_record_contradiction(self, lattice):
+    async def test_record_contradiction(self, lattice) -> None:
         """Test H-gent contradiction recording."""
         await lattice.add("thesis", {"statement": "X is true"})
         await lattice.add("antithesis", {"statement": "X is false"})
@@ -439,7 +439,7 @@ class TestRelationalLattice:
         assert "antithesis" in contradictions
 
     @pytest.mark.asyncio
-    async def test_record_synthesis(self, lattice):
+    async def test_record_synthesis(self, lattice) -> None:
         """Test H-gent synthesis recording."""
         await lattice.add("thesis", {"statement": "Speed is important"})
         await lattice.add("antithesis", {"statement": "Quality is important"})
@@ -460,12 +460,12 @@ class TestMemoryGarden:
     """Tests for MemoryGarden."""
 
     @pytest.fixture
-    def garden(self):
+    def garden(self) -> MemoryGarden:
         """Create a memory garden."""
         return MemoryGarden()
 
     @pytest.mark.asyncio
-    async def test_plant(self, garden):
+    async def test_plant(self, garden) -> None:
         """Test planting a seed."""
         entry = await garden.plant(
             {"idea": "Composable agents"},
@@ -479,7 +479,7 @@ class TestMemoryGarden:
         assert entry.hypothesis == "Composition leads to maintainability"
 
     @pytest.mark.asyncio
-    async def test_nurture_with_supporting_evidence(self, garden):
+    async def test_nurture_with_supporting_evidence(self, garden) -> None:
         """Test nurturing with supporting evidence."""
         entry = await garden.plant({"idea": "Test"})
 
@@ -498,7 +498,7 @@ class TestMemoryGarden:
         assert len(updated.evidence) == 1
 
     @pytest.mark.asyncio
-    async def test_nurture_with_contradicting_evidence(self, garden):
+    async def test_nurture_with_contradicting_evidence(self, garden) -> None:
         """Test nurturing with contradicting evidence."""
         entry = await garden.plant({"idea": "Test"}, initial_trust=0.5)
 
@@ -516,7 +516,7 @@ class TestMemoryGarden:
         assert updated.trust < 0.5
 
     @pytest.mark.asyncio
-    async def test_lifecycle_progression(self, garden):
+    async def test_lifecycle_progression(self, garden) -> None:
         """Test lifecycle auto-progression based on trust."""
         # Start with very low trust to ensure SEED
         entry = await garden.plant({"idea": "Test"}, initial_trust=0.1)
@@ -539,7 +539,7 @@ class TestMemoryGarden:
         assert entry.lifecycle in (Lifecycle.SAPLING, Lifecycle.TREE, Lifecycle.FLOWER)
 
     @pytest.mark.asyncio
-    async def test_harvest(self, garden):
+    async def test_harvest(self, garden) -> None:
         """Test harvesting a flower."""
         # Create a high-trust entry
         entry = await garden.plant({"idea": "Insight"}, initial_trust=0.85)
@@ -560,7 +560,7 @@ class TestMemoryGarden:
         assert entry.lifecycle == Lifecycle.TREE
 
     @pytest.mark.asyncio
-    async def test_compost(self, garden):
+    async def test_compost(self, garden) -> None:
         """Test composting a deprecated entry."""
         entry = await garden.plant(
             {"idea": "Old approach"}, tags=["legacy", "deprecated"]
@@ -577,7 +577,7 @@ class TestMemoryGarden:
         assert entry.lifecycle == Lifecycle.COMPOST
 
     @pytest.mark.asyncio
-    async def test_mycelium_connections(self, garden):
+    async def test_mycelium_connections(self, garden) -> None:
         """Test mycelium (hidden connections)."""
         entry1 = await garden.plant({"idea": "Idea 1"})
         entry2 = await garden.plant({"idea": "Idea 2"})
@@ -593,7 +593,7 @@ class TestMemoryGarden:
         assert len(connected) >= 2
 
     @pytest.mark.asyncio
-    async def test_add_contradiction(self, garden):
+    async def test_add_contradiction(self, garden) -> None:
         """Test adding a contradiction."""
         entry = await garden.plant({"idea": "Test"}, initial_trust=0.5)
 
@@ -607,7 +607,7 @@ class TestMemoryGarden:
         assert entry.trust < 0.5
 
     @pytest.mark.asyncio
-    async def test_resolve_contradiction(self, garden):
+    async def test_resolve_contradiction(self, garden) -> None:
         """Test resolving a contradiction."""
         entry = await garden.plant({"idea": "Test"}, initial_trust=0.5)
         contradiction = await garden.add_contradiction(entry.id, "Issue", severity=0.3)
@@ -621,7 +621,7 @@ class TestMemoryGarden:
         assert entry.contradictions[0].resolution is not None
 
     @pytest.mark.asyncio
-    async def test_wilting_detection(self, garden):
+    async def test_wilting_detection(self, garden) -> None:
         """Test wilting entry detection."""
         # Create entry with old nurture time
         entry = await garden.plant({"idea": "Old"})
@@ -634,7 +634,7 @@ class TestMemoryGarden:
         assert len(wilting) > 0
 
     @pytest.mark.asyncio
-    async def test_stats(self, garden):
+    async def test_stats(self, garden) -> None:
         """Test garden statistics."""
         await garden.plant({"idea": "A"}, initial_trust=0.2)
         await garden.plant({"idea": "B"}, initial_trust=0.5)
@@ -651,7 +651,7 @@ class TestMemoryGarden:
         )
 
     @pytest.mark.asyncio
-    async def test_persistence(self, temp_dir):
+    async def test_persistence(self, temp_dir) -> None:
         """Test garden persistence."""
         path = temp_dir / "garden.json"
 
@@ -679,7 +679,7 @@ class TestNoosphereIntegration:
 
     @pytest.mark.asyncio
     @pytest.mark.skipif(not NUMPY_AVAILABLE, reason="numpy not available")
-    async def test_manifold_and_lattice_integration(self):
+    async def test_manifold_and_lattice_integration(self) -> None:
         """Test using manifold for semantic search with lattice for relationships."""
         from agents.d.manifold import SemanticManifold
 
@@ -703,7 +703,7 @@ class TestNoosphereIntegration:
         assert entailment.holds
 
     @pytest.mark.asyncio
-    async def test_witness_and_garden_integration(self):
+    async def test_witness_and_garden_integration(self) -> None:
         """Test using witness for temporal tracking with garden for trust."""
 
         def fold(state, event):
@@ -752,7 +752,7 @@ class TestNoosphereIntegration:
         assert entry.trust > 0.3
 
     @pytest.mark.asyncio
-    async def test_full_noosphere_workflow(self):
+    async def test_full_noosphere_workflow(self) -> None:
         """Test complete Noosphere workflow."""
 
         # 1. Create components

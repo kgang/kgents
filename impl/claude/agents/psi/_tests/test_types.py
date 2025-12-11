@@ -29,7 +29,7 @@ from ..types import (
 class TestProblem:
     """Tests for Problem type."""
 
-    def test_create_minimal(self):
+    def test_create_minimal(self) -> None:
         """Create problem with minimal fields."""
         p = Problem(id="test", description="Test problem", domain="test")
         assert p.id == "test"
@@ -37,7 +37,7 @@ class TestProblem:
         assert p.constraints == ()
         assert p.embedding is None
 
-    def test_create_full(self):
+    def test_create_full(self) -> None:
         """Create problem with all fields."""
         p = Problem(
             id="full",
@@ -51,13 +51,13 @@ class TestProblem:
         assert p.context["priority"] == "high"
         assert p.embedding == (0.1, 0.2, 0.3)
 
-    def test_complexity_scales_with_description(self):
+    def test_complexity_scales_with_description(self) -> None:
         """Complexity increases with description length."""
         short = Problem(id="1", description="Short", domain="test")
         long = Problem(id="2", description="A" * 500, domain="test")
         assert long.complexity > short.complexity
 
-    def test_complexity_scales_with_constraints(self):
+    def test_complexity_scales_with_constraints(self) -> None:
         """Complexity increases with constraint count."""
         few = Problem(id="1", description="Test", domain="test", constraints=("one",))
         many = Problem(
@@ -68,7 +68,7 @@ class TestProblem:
         )
         assert many.complexity > few.complexity
 
-    def test_complexity_bounded(self):
+    def test_complexity_bounded(self) -> None:
         """Complexity is bounded to [0, 1]."""
         p = Problem(
             id="1",
@@ -78,7 +78,7 @@ class TestProblem:
         )
         assert 0.0 <= p.complexity <= 1.0
 
-    def test_with_embedding(self):
+    def test_with_embedding(self) -> None:
         """with_embedding creates new instance."""
         p1 = Problem(id="1", description="Test", domain="test")
         p2 = p1.with_embedding((0.5, 0.5))
@@ -86,7 +86,7 @@ class TestProblem:
         assert p2.embedding == (0.5, 0.5)
         assert p1.id == p2.id
 
-    def test_frozen(self):
+    def test_frozen(self) -> None:
         """Problem is immutable."""
         p = Problem(id="1", description="Test", domain="test")
         with pytest.raises(AttributeError):
@@ -101,7 +101,7 @@ class TestProblem:
 class TestMetaphor:
     """Tests for Metaphor type."""
 
-    def test_create_minimal(self):
+    def test_create_minimal(self) -> None:
         """Create metaphor with minimal fields."""
         m = Metaphor(
             id="test",
@@ -113,7 +113,7 @@ class TestMetaphor:
         assert m.id == "test"
         assert m.tractability == 0.0  # No operations
 
-    def test_tractability_scales_with_operations(self):
+    def test_tractability_scales_with_operations(self) -> None:
         """Tractability increases with operation count."""
         ops = tuple(
             Operation(name=f"op{i}", description=f"Op {i}", effects=(f"effect{i}",))
@@ -128,7 +128,7 @@ class TestMetaphor:
         )
         assert m.tractability == 1.0  # 5 operations = max
 
-    def test_with_embedding(self):
+    def test_with_embedding(self) -> None:
         """with_embedding creates new instance."""
         m1 = Metaphor(
             id="1", name="Test", domain="test", description="Test", operations=()
@@ -146,27 +146,27 @@ class TestMetaphor:
 class TestDistortion:
     """Tests for Distortion type."""
 
-    def test_total_combines_weighted(self):
+    def test_total_combines_weighted(self) -> None:
         """Total distortion combines dimensions with weights."""
         d = Distortion(structural_loss=0.5, round_trip_error=0.5, prediction_failures=0)
         # 0.5 * 0.3 + 0.5 * 0.4 + 0 * 0.3 = 0.15 + 0.2 = 0.35
         assert 0.34 < d.total < 0.36
 
-    def test_acceptable_threshold(self):
+    def test_acceptable_threshold(self) -> None:
         """Acceptable means total < 0.5."""
         low = Distortion(0.1, 0.1, 0)
         high = Distortion(0.9, 0.9, 5)
         assert low.acceptable
         assert not high.acceptable
 
-    def test_prediction_failures_contribute(self):
+    def test_prediction_failures_contribute(self) -> None:
         """Prediction failures add to distortion."""
         d0 = Distortion(0, 0, 0)
         d3 = Distortion(0, 0, 3)
         assert d3.total > d0.total
 
     @pytest.mark.law
-    def test_distortion_invariants(self):
+    def test_distortion_invariants(self) -> None:
         """Distortion components must be valid."""
         valid = Distortion(0.5, 0.5, 2)
         assert validate_distortion(valid) == []
@@ -189,7 +189,7 @@ class TestProjection:
     """Tests for Projection type."""
 
     @pytest.fixture
-    def sample_projection(self):
+    def sample_projection(self) -> Projection:
         """Create a sample projection."""
         problem = Problem(id="1", description="Test", domain="test")
         metaphor = Metaphor(
@@ -207,12 +207,12 @@ class TestProjection:
             gaps=("c",),
         )
 
-    def test_coverage(self, sample_projection):
+    def test_coverage(self, sample_projection) -> None:
         """Coverage is mappings / (mappings + gaps)."""
         # 2 mappings, 1 gap = 2/3
         assert 0.66 < sample_projection.coverage < 0.67
 
-    def test_coverage_empty(self):
+    def test_coverage_empty(self) -> None:
         """Coverage is 0 with no mappings."""
         p = Projection(
             problem=Problem(id="1", description="Test", domain="test"),
@@ -225,7 +225,7 @@ class TestProjection:
         assert p.coverage == 0.0
 
     @pytest.mark.law
-    def test_projection_invariants(self, sample_projection):
+    def test_projection_invariants(self, sample_projection) -> None:
         """Projection invariants must hold."""
         assert validate_projection(sample_projection) == []
 
@@ -248,12 +248,12 @@ class TestProjection:
 class TestChallengeResult:
     """Tests for ChallengeResult type."""
 
-    def test_robustness(self):
+    def test_robustness(self) -> None:
         """Robustness is passed / total."""
         cr = ChallengeResult(survives=True, challenges_passed=3, challenges_total=4)
         assert cr.robustness == 0.75
 
-    def test_robustness_no_tests(self):
+    def test_robustness_no_tests(self) -> None:
         """Robustness is 0.5 with no tests."""
         cr = ChallengeResult(survives=True, challenges_passed=0, challenges_total=0)
         assert cr.robustness == 0.5
@@ -267,14 +267,14 @@ class TestChallengeResult:
 class TestSearchState:
     """Tests for SearchState type."""
 
-    def test_mutable(self):
+    def test_mutable(self) -> None:
         """SearchState is mutable."""
         problem = Problem(id="1", description="Test", domain="test")
         state = SearchState(problem)
         state.iteration = 5
         assert state.iteration == 5
 
-    def test_record_attempt(self):
+    def test_record_attempt(self) -> None:
         """record_attempt updates state."""
         problem = Problem(id="1", description="Test", domain="test")
         state = SearchState(problem)
@@ -283,7 +283,7 @@ class TestSearchState:
         assert "metaphor1" in state.candidates_tried
         assert state.iteration == 1
 
-    def test_update_best(self):
+    def test_update_best(self) -> None:
         """update_best tracks best solution."""
         problem = Problem(id="1", description="Test", domain="test")
         state = SearchState(problem)
@@ -329,19 +329,19 @@ class TestSearchState:
 class TestSerialization:
     """Tests for serialization utilities."""
 
-    def test_to_dict_problem(self):
+    def test_to_dict_problem(self) -> None:
         """Problem serializes to dict."""
         p = Problem(id="1", description="Test", domain="test", constraints=("a", "b"))
         d = to_dict(p)
         assert d["id"] == "1"
         assert d["constraints"] == ["a", "b"]
 
-    def test_to_dict_outcome(self):
+    def test_to_dict_outcome(self) -> None:
         """Enum serializes to value."""
         d = to_dict(Outcome.SUCCESS)
         assert d == "success"
 
-    def test_to_json(self):
+    def test_to_json(self) -> None:
         """to_json produces valid JSON."""
         p = Problem(id="1", description="Test", domain="test")
         json_str = to_json(p)
@@ -357,7 +357,7 @@ class TestValidation:
     """Tests for validation functions."""
 
     @pytest.mark.law
-    def test_validate_metaphor_needs_operations(self):
+    def test_validate_metaphor_needs_operations(self) -> None:
         """Non-null metaphor needs operations."""
         m = Metaphor(
             id="test",
@@ -369,7 +369,7 @@ class TestValidation:
         errors = validate_metaphor(m)
         assert any("no operations" in e for e in errors)
 
-    def test_validate_metaphor_operations_need_effects(self):
+    def test_validate_metaphor_operations_need_effects(self) -> None:
         """Operations need effects."""
         op = Operation(name="test", description="Test op")  # No effects
         m = Metaphor(
@@ -382,7 +382,7 @@ class TestValidation:
         errors = validate_metaphor(m)
         assert any("no effects" in e for e in errors)
 
-    def test_validate_metaphor_valid(self):
+    def test_validate_metaphor_valid(self) -> None:
         """Valid metaphor passes validation."""
         op = Operation(name="test", description="Test op", effects=("something",))
         m = Metaphor(

@@ -81,11 +81,11 @@ def make_trace_sequence(count: int = 5) -> list[SemanticTrace]:
 class TestEchoMode:
     """Tests for EchoMode enum."""
 
-    def test_strict_mode_value(self):
+    def test_strict_mode_value(self) -> None:
         """Test STRICT mode value."""
         assert EchoMode.STRICT.value == "strict"
 
-    def test_lucid_mode_value(self):
+    def test_lucid_mode_value(self) -> None:
         """Test LUCID mode value."""
         assert EchoMode.LUCID.value == "lucid"
 
@@ -98,7 +98,7 @@ class TestEchoMode:
 class TestEcho:
     """Tests for Echo dataclass."""
 
-    def test_echo_creation(self):
+    def test_echo_creation(self) -> None:
         """Test creating an echo."""
         trace = make_trace()
         echo = Echo(
@@ -113,7 +113,7 @@ class TestEcho:
         assert echo.mode == EchoMode.STRICT
         assert echo.drift == 0.0
 
-    def test_echo_is_identical_true(self):
+    def test_echo_is_identical_true(self) -> None:
         """Test is_identical when outputs match."""
         trace = make_trace(outputs={"result": "success"})
         echo = Echo(
@@ -124,7 +124,7 @@ class TestEcho:
 
         assert echo.is_identical is True
 
-    def test_echo_is_identical_false(self):
+    def test_echo_is_identical_false(self) -> None:
         """Test is_identical when outputs differ."""
         trace = make_trace(outputs={"result": "success"})
         echo = Echo(
@@ -136,7 +136,7 @@ class TestEcho:
 
         assert echo.is_identical is False
 
-    def test_echo_drifted_low(self):
+    def test_echo_drifted_low(self) -> None:
         """Test drifted property with low drift."""
         trace = make_trace()
         echo = Echo(
@@ -148,7 +148,7 @@ class TestEcho:
 
         assert echo.drifted is False
 
-    def test_echo_drifted_high(self):
+    def test_echo_drifted_high(self) -> None:
         """Test drifted property with high drift."""
         trace = make_trace()
         echo = Echo(
@@ -160,7 +160,7 @@ class TestEcho:
 
         assert echo.drifted is True
 
-    def test_echo_to_dict(self):
+    def test_echo_to_dict(self) -> None:
         """Test echo serialization."""
         trace = make_trace()
         echo = Echo(
@@ -185,7 +185,7 @@ class TestEcho:
 class TestEchoChamber:
     """Tests for EchoChamber replay engine."""
 
-    def test_chamber_creation(self):
+    def test_chamber_creation(self) -> None:
         """Test creating an echo chamber."""
         traces = make_trace_sequence(5)
         chamber = EchoChamber(traces)
@@ -194,14 +194,14 @@ class TestEchoChamber:
         assert chamber.position == 0
         assert chamber.echoes == []
 
-    def test_chamber_current_trace(self):
+    def test_chamber_current_trace(self) -> None:
         """Test getting current trace."""
         traces = make_trace_sequence(3)
         chamber = EchoChamber(traces)
 
         assert chamber.current_trace == traces[0]
 
-    def test_chamber_step_forward(self):
+    def test_chamber_step_forward(self) -> None:
         """Test stepping forward."""
         traces = make_trace_sequence(3)
         chamber = EchoChamber(traces)
@@ -214,7 +214,7 @@ class TestEchoChamber:
         assert trace2 == traces[1]
         assert chamber.position == 2
 
-    def test_chamber_step_backward(self):
+    def test_chamber_step_backward(self) -> None:
         """Test stepping backward."""
         traces = make_trace_sequence(3)
         chamber = EchoChamber(traces)
@@ -224,7 +224,7 @@ class TestEchoChamber:
         assert trace == traces[1]
         assert chamber.position == 1
 
-    def test_chamber_step_backward_at_start(self):
+    def test_chamber_step_backward_at_start(self) -> None:
         """Test stepping backward at start stays at 0."""
         traces = make_trace_sequence(3)
         chamber = EchoChamber(traces)
@@ -233,7 +233,7 @@ class TestEchoChamber:
         assert trace == traces[0]
         assert chamber.position == 0
 
-    def test_chamber_at_start(self):
+    def test_chamber_at_start(self) -> None:
         """Test at_start property."""
         traces = make_trace_sequence(3)
         chamber = EchoChamber(traces)
@@ -242,7 +242,7 @@ class TestEchoChamber:
         chamber.step_forward()
         assert chamber.at_start is False
 
-    def test_chamber_at_end(self):
+    def test_chamber_at_end(self) -> None:
         """Test at_end property."""
         traces = make_trace_sequence(3)
         chamber = EchoChamber(traces)
@@ -251,7 +251,7 @@ class TestEchoChamber:
         chamber.position = 2
         assert chamber.at_end is True
 
-    def test_chamber_progress(self):
+    def test_chamber_progress(self) -> None:
         """Test progress property."""
         traces = make_trace_sequence(5)
         chamber = EchoChamber(traces)
@@ -262,7 +262,7 @@ class TestEchoChamber:
         chamber.position = 5
         assert chamber.progress == 1.0
 
-    def test_chamber_seek(self):
+    def test_chamber_seek(self) -> None:
         """Test seek to position."""
         traces = make_trace_sequence(5)
         chamber = EchoChamber(traces)
@@ -271,7 +271,7 @@ class TestEchoChamber:
         assert chamber.position == 3
         assert trace == traces[3]
 
-    def test_chamber_seek_to_trace(self):
+    def test_chamber_seek_to_trace(self) -> None:
         """Test seek to specific trace by ID."""
         traces = make_trace_sequence(5)
         chamber = EchoChamber(traces)
@@ -281,7 +281,7 @@ class TestEchoChamber:
         assert trace.trace_id == "trace-3"
         assert chamber.position == 3
 
-    def test_chamber_seek_to_trace_not_found(self):
+    def test_chamber_seek_to_trace_not_found(self) -> None:
         """Test seek to non-existent trace."""
         traces = make_trace_sequence(5)
         chamber = EchoChamber(traces)
@@ -290,7 +290,7 @@ class TestEchoChamber:
         assert trace is None
         assert chamber.position == 0  # Unchanged
 
-    def test_chamber_reset(self):
+    def test_chamber_reset(self) -> None:
         """Test reset."""
         traces = make_trace_sequence(5)
         chamber = EchoChamber(traces)
@@ -302,7 +302,7 @@ class TestEchoChamber:
         assert chamber.echoes == []
 
     @pytest.mark.asyncio
-    async def test_chamber_echo_strict(self):
+    async def test_chamber_echo_strict(self) -> None:
         """Test strict echo returns stored output."""
         trace = make_trace(outputs={"result": "original"})
         chamber = EchoChamber([trace])
@@ -314,7 +314,7 @@ class TestEchoChamber:
         assert echo.drift == 0.0
 
     @pytest.mark.asyncio
-    async def test_chamber_echo_lucid_deterministic(self):
+    async def test_chamber_echo_lucid_deterministic(self) -> None:
         """Test lucid echo with deterministic trace."""
         trace = make_trace(
             determinism=Determinism.DETERMINISTIC,
@@ -328,7 +328,7 @@ class TestEchoChamber:
         assert echo.drift == 0.0  # Deterministic = no drift
 
     @pytest.mark.asyncio
-    async def test_chamber_echo_lucid_chaotic(self):
+    async def test_chamber_echo_lucid_chaotic(self) -> None:
         """Test lucid echo with chaotic trace falls back to strict."""
         trace = make_trace(
             determinism=Determinism.CHAOTIC,
@@ -343,7 +343,7 @@ class TestEchoChamber:
         assert echo.drift is None
 
     @pytest.mark.asyncio
-    async def test_chamber_replay_all(self):
+    async def test_chamber_replay_all(self) -> None:
         """Test replaying all traces."""
         traces = make_trace_sequence(3)
         chamber = EchoChamber(traces)
@@ -362,19 +362,19 @@ class TestEchoChamber:
 class TestSimpleDriftMeasurer:
     """Tests for SimpleDriftMeasurer."""
 
-    def test_identical_outputs(self):
+    def test_identical_outputs(self) -> None:
         """Test drift is 0 for identical outputs."""
         measurer = SimpleDriftMeasurer()
         drift = measurer.measure({"a": 1}, {"a": 1})
         assert drift == 0.0
 
-    def test_different_outputs(self):
+    def test_different_outputs(self) -> None:
         """Test drift is non-zero for different outputs."""
         measurer = SimpleDriftMeasurer()
         drift = measurer.measure({"a": 1}, {"b": 2})
         assert drift > 0.0
 
-    def test_completely_different(self):
+    def test_completely_different(self) -> None:
         """Test high drift for very different outputs."""
         measurer = SimpleDriftMeasurer()
         drift = measurer.measure(
@@ -392,14 +392,14 @@ class TestSimpleDriftMeasurer:
 class TestLucidDreamer:
     """Tests for LucidDreamer counterfactual exploration."""
 
-    def test_dreamer_creation(self):
+    def test_dreamer_creation(self) -> None:
         """Test creating a lucid dreamer."""
         dreamer = LucidDreamer()
         assert dreamer.agent_registry is None
         assert dreamer.drift_measurer is not None
 
     @pytest.mark.asyncio
-    async def test_dream_variant(self):
+    async def test_dream_variant(self) -> None:
         """Test dreaming a variant."""
         trace = make_trace(
             inputs={"prompt": "original"},
@@ -418,7 +418,7 @@ class TestLucidDreamer:
         assert result.variant_echo is not None
 
     @pytest.mark.asyncio
-    async def test_detect_drift_over_time(self):
+    async def test_detect_drift_over_time(self) -> None:
         """Test drift detection over time."""
         traces = make_trace_sequence(10)
         dreamer = LucidDreamer()
@@ -433,7 +433,7 @@ class TestLucidDreamer:
         assert len(reports) <= 5
 
     @pytest.mark.asyncio
-    async def test_sensitivity_analysis(self):
+    async def test_sensitivity_analysis(self) -> None:
         """Test sensitivity analysis with multiple variations."""
         trace = make_trace()
         dreamer = LucidDreamer()
@@ -453,7 +453,7 @@ class TestLucidDreamer:
 class TestCounterfactualResult:
     """Tests for CounterfactualResult."""
 
-    def test_outcomes_similar(self):
+    def test_outcomes_similar(self) -> None:
         """Test outcomes_similar property."""
         trace = make_trace()
         original_echo = Echo(trace, {"result": "a"}, EchoMode.LUCID)
@@ -469,7 +469,7 @@ class TestCounterfactualResult:
         assert result.outcomes_similar is True
         assert result.outcomes_divergent is False
 
-    def test_outcomes_divergent(self):
+    def test_outcomes_divergent(self) -> None:
         """Test outcomes_divergent property."""
         trace = make_trace()
         original_echo = Echo(trace, {"result": "a"}, EchoMode.LUCID)
@@ -489,7 +489,7 @@ class TestCounterfactualResult:
 class TestDriftReport:
     """Tests for DriftReport."""
 
-    def test_significant_drift(self):
+    def test_significant_drift(self) -> None:
         """Test significant property."""
         trace = make_trace()
         report = DriftReport(
@@ -502,7 +502,7 @@ class TestDriftReport:
         assert report.significant is True
         assert report.critical is False
 
-    def test_critical_drift(self):
+    def test_critical_drift(self) -> None:
         """Test critical property."""
         trace = make_trace()
         report = DriftReport(
@@ -525,7 +525,7 @@ class TestQuickDriftCheck:
     """Tests for quick_drift_check utility."""
 
     @pytest.mark.asyncio
-    async def test_quick_drift_check(self):
+    async def test_quick_drift_check(self) -> None:
         """Test quick drift check utility."""
         traces = make_trace_sequence(5)
 

@@ -22,7 +22,7 @@ class TestSimpleEmbedder:
     """Test TF-IDF based embedder."""
 
     @pytest.mark.asyncio
-    async def test_embed_single_document(self):
+    async def test_embed_single_document(self) -> None:
         """Test embedding a single document."""
         embedder = SimpleEmbedder(dimension=128)
 
@@ -39,7 +39,7 @@ class TestSimpleEmbedder:
         assert abs(magnitude - 1.0) < 0.01
 
     @pytest.mark.asyncio
-    async def test_similar_texts_have_high_similarity(self):
+    async def test_similar_texts_have_high_similarity(self) -> None:
         """Test that similar texts have measurable cosine similarity."""
         embedder = SimpleEmbedder(dimension=128)
 
@@ -74,7 +74,7 @@ class TestSimpleEmbedder:
         # but embeddings should be computed
 
     @pytest.mark.asyncio
-    async def test_dimension_property(self):
+    async def test_dimension_property(self) -> None:
         """Test dimension property."""
         embedder = SimpleEmbedder(dimension=64)
         assert embedder.dimension == 64
@@ -120,7 +120,7 @@ class TestSemanticBrain:
         }
 
     @pytest.mark.asyncio
-    async def test_search_by_intent(self, sample_entries):
+    async def test_search_by_intent(self, sample_entries) -> None:
         """Test searching by natural language intent."""
         brain = await create_semantic_brain(sample_entries)
 
@@ -133,7 +133,7 @@ class TestSemanticBrain:
         assert results[0].entry.name == "SentimentAnalyzer"
 
     @pytest.mark.asyncio
-    async def test_search_with_threshold(self, sample_entries):
+    async def test_search_with_threshold(self, sample_entries) -> None:
         """Test threshold filtering."""
         brain = await create_semantic_brain(sample_entries)
 
@@ -148,7 +148,7 @@ class TestSemanticBrain:
         assert len(results_high) <= len(results_low)
 
     @pytest.mark.asyncio
-    async def test_search_with_filters(self, sample_entries):
+    async def test_search_with_filters(self, sample_entries) -> None:
         """Test search with entity type filtering."""
         # Add a contract entry
         sample_entries["contract1"] = CatalogEntry(
@@ -172,7 +172,7 @@ class TestSemanticBrain:
         assert all(r.entry.entity_type == EntityType.AGENT for r in results)
 
     @pytest.mark.asyncio
-    async def test_search_with_status_filter(self, sample_entries):
+    async def test_search_with_status_filter(self, sample_entries) -> None:
         """Test search with status filtering."""
         # Deprecate one entry
         sample_entries["agent3"].status = Status.DEPRECATED
@@ -189,7 +189,7 @@ class TestSemanticBrain:
         assert all(r.entry.status != Status.DEPRECATED for r in results)
 
     @pytest.mark.asyncio
-    async def test_add_entry_after_fit(self, sample_entries):
+    async def test_add_entry_after_fit(self, sample_entries) -> None:
         """Test adding entries after initial fit."""
         brain = await create_semantic_brain(sample_entries)
 
@@ -212,7 +212,7 @@ class TestSemanticBrain:
         assert any(r.entry.id == "agent4" for r in results)
 
     @pytest.mark.asyncio
-    async def test_remove_entry(self, sample_entries):
+    async def test_remove_entry(self, sample_entries) -> None:
         """Test removing entries from index."""
         brain = await create_semantic_brain(sample_entries)
 
@@ -224,7 +224,7 @@ class TestSemanticBrain:
         assert not any(r.entry.id == "agent1" for r in results)
 
     @pytest.mark.asyncio
-    async def test_similarity_scores(self, sample_entries):
+    async def test_similarity_scores(self, sample_entries) -> None:
         """Test that similarity scores are in valid range."""
         brain = await create_semantic_brain(sample_entries)
 
@@ -234,7 +234,7 @@ class TestSemanticBrain:
             assert 0.0 <= result.similarity <= 1.0
 
     @pytest.mark.asyncio
-    async def test_ranking_by_similarity(self, sample_entries):
+    async def test_ranking_by_similarity(self, sample_entries) -> None:
         """Test that results are ranked by similarity (descending)."""
         brain = await create_semantic_brain(sample_entries)
 
@@ -246,7 +246,7 @@ class TestSemanticBrain:
                 assert results[i].similarity >= results[i + 1].similarity
 
     @pytest.mark.asyncio
-    async def test_limit_parameter(self, sample_entries):
+    async def test_limit_parameter(self, sample_entries) -> None:
         """Test limit parameter."""
         brain = await create_semantic_brain(sample_entries)
 
@@ -255,7 +255,7 @@ class TestSemanticBrain:
         assert len(results) <= 2
 
     @pytest.mark.asyncio
-    async def test_empty_search(self):
+    async def test_empty_search(self) -> None:
         """Test search on empty index."""
         brain = await create_semantic_brain()
 
@@ -264,7 +264,7 @@ class TestSemanticBrain:
         assert len(results) == 0
 
     @pytest.mark.asyncio
-    async def test_searchable_text_includes_types(self, sample_entries):
+    async def test_searchable_text_includes_types(self, sample_entries) -> None:
         """Test that searchable text includes input/output types."""
         brain = await create_semantic_brain(sample_entries)
 
@@ -275,7 +275,7 @@ class TestSemanticBrain:
         assert any(r.entry.name == "PDFParser" for r in results)
 
     @pytest.mark.asyncio
-    async def test_explanation_field(self, sample_entries):
+    async def test_explanation_field(self, sample_entries) -> None:
         """Test that results include explanation."""
         brain = await create_semantic_brain(sample_entries)
 
@@ -290,7 +290,7 @@ class TestSemanticIntegration:
     """Test semantic search integration patterns."""
 
     @pytest.mark.asyncio
-    async def test_create_semantic_brain_convenience(self):
+    async def test_create_semantic_brain_convenience(self) -> None:
         """Test convenience function for creating brain."""
         entries = {
             "test1": CatalogEntry(
@@ -311,7 +311,7 @@ class TestSemanticIntegration:
         assert len(results) > 0
 
     @pytest.mark.asyncio
-    async def test_custom_embedder(self):
+    async def test_custom_embedder(self) -> None:
         """Test using custom embedder."""
         custom_embedder = SimpleEmbedder(dimension=64)
 
@@ -333,7 +333,7 @@ class TestSemanticIntegration:
         assert len(results) > 0
 
     @pytest.mark.asyncio
-    async def test_domain_specific_search(self):
+    async def test_domain_specific_search(self) -> None:
         """Test search for domain-specific artifacts (e.g., tongues)."""
         entries = {
             "tongue1": CatalogEntry(
@@ -365,7 +365,7 @@ class TestSemanticIntegration:
         assert any(r.entry.name == "CalendarTongue" for r in results)
 
     @pytest.mark.asyncio
-    async def test_multi_word_query(self):
+    async def test_multi_word_query(self) -> None:
         """Test multi-word semantic query."""
         entries = {
             "agent1": CatalogEntry(

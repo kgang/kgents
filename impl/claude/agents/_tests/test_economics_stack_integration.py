@@ -137,7 +137,7 @@ def semantic_registry():
 class TestEconomicsGrammarIntegration:
     """B × G: Grammar operations have costs."""
 
-    def test_grammar_classification(self):
+    def test_grammar_classification(self) -> None:
         """Test G-gent grammars are classified by Chomsky level."""
         # Simple regex pattern - Type 3 (Regular)
         regex_grammar = "^[a-z]+$"
@@ -151,7 +151,7 @@ class TestEconomicsGrammarIntegration:
             ChomskyLevel.TURING_COMPLETE,
         )
 
-    def test_syntax_tax_schedule(self):
+    def test_syntax_tax_schedule(self) -> None:
         """Test syntax tax varies by Chomsky level."""
         schedule = SyntaxTaxSchedule()
 
@@ -164,14 +164,14 @@ class TestEconomicsGrammarIntegration:
         # Regular grammars should be cheapest
         assert regular_cost <= cf_cost <= cs_cost <= turing_cost
 
-    def test_syntax_tax_budget_creation(self):
+    def test_syntax_tax_budget_creation(self) -> None:
         """Test creating syntax tax budget from bank."""
         # create_syntax_tax_budget takes central_bank and schedule (optional)
         budget = create_syntax_tax_budget()
 
         assert budget is not None
 
-    def test_grammar_operation_costs_tokens(self):
+    def test_grammar_operation_costs_tokens(self) -> None:
         """Test grammar operations deduct from budget."""
         # calculate_syntax_tax: (grammar, estimated_tokens, schedule) -> (Gas, ChomskyLevel)
         gas, level = calculate_syntax_tax(
@@ -181,7 +181,7 @@ class TestEconomicsGrammarIntegration:
 
         assert gas.cost_usd > 0
 
-    def test_semantic_inflation_pressure(self):
+    def test_semantic_inflation_pressure(self) -> None:
         """Test semantic inflation affects grammar verbosity."""
         complexity = ComplexityVector(
             structural=0.7,
@@ -195,7 +195,7 @@ class TestEconomicsGrammarIntegration:
         # Higher complexity = more explanation needed
         assert pressure.explanation_ratio > 0
 
-    def test_grammar_insurance_policy(self, sample_tongue):
+    def test_grammar_insurance_policy(self, sample_tongue) -> None:
         """Test grammar insurance protects against parse failures."""
         insurance = GrammarInsurance()
 
@@ -214,7 +214,7 @@ class TestEconomicsGrammarIntegration:
         assert policy is not None
         assert policy.coverage_limit_tokens == 1000
 
-    def test_grammar_volatility_monitoring(self):
+    def test_grammar_volatility_monitoring(self) -> None:
         """Test grammar volatility affects insurance premiums."""
         from datetime import datetime
 
@@ -247,20 +247,20 @@ class TestEconomicsGrammarIntegration:
 class TestEconomicsJITIntegration:
     """B × J: JIT compilation with budget constraints."""
 
-    def test_entropy_budget_creation(self, entropy_budget):
+    def test_entropy_budget_creation(self, entropy_budget) -> None:
         """Test EntropyBudget tracks remaining entropy."""
         # EntropyBudget uses initial/remaining (not max_depth/tokens_per_level)
         assert entropy_budget.initial == 1.0
         assert entropy_budget.remaining == 1.0
 
-    def test_entropy_budget_consumption(self, entropy_budget):
+    def test_entropy_budget_consumption(self, entropy_budget) -> None:
         """Test EntropyBudget consume/afford functionality."""
         assert entropy_budget.can_afford(0.5)
         new_budget = entropy_budget.consume(0.5)
         assert new_budget.remaining == 0.5
         assert not new_budget.can_afford(0.6)  # Can't afford more than remaining
 
-    def test_promise_creation(self):
+    def test_promise_creation(self) -> None:
         """Test Promise tracks budget consumption."""
         # Use promise() factory function (not Promise.defer)
         p = promise(intent="deferred computation", ground="fallback")
@@ -269,7 +269,7 @@ class TestEconomicsJITIntegration:
         assert p.intent == "deferred computation"
         assert p.ground == "fallback"
 
-    def test_reality_classification_types(self):
+    def test_reality_classification_types(self) -> None:
         """Test reality classification categories."""
         # All reality types should be valid
         realities = [Reality.DETERMINISTIC, Reality.PROBABILISTIC, Reality.CHAOTIC]
@@ -278,7 +278,7 @@ class TestEconomicsJITIntegration:
             assert reality.value in ["deterministic", "probabilistic", "chaotic"]
 
     @pytest.mark.asyncio
-    async def test_central_bank_authorize(self, central_bank):
+    async def test_central_bank_authorize(self, central_bank) -> None:
         """Test central bank token authorization."""
         # CentralBank.authorize is async and takes account_id + estimated_tokens
         lease = await central_bank.authorize("test-account", 50)
@@ -295,7 +295,7 @@ class TestEconomicsJITIntegration:
 class TestEconomicsMemoryIntegration:
     """B × M: Memory operations have costs."""
 
-    def test_budgeted_memory_creation(self):
+    def test_budgeted_memory_creation(self) -> None:
         """Test BudgetedMemory wraps holographic memory with costs."""
         # create_mock_bank uses max_balance (not initial_tokens)
         bank = create_mock_bank(max_balance=1000)
@@ -309,7 +309,7 @@ class TestEconomicsMemoryIntegration:
         assert isinstance(memory, BudgetedMemory)
 
     @pytest.mark.asyncio
-    async def test_memory_store_costs_tokens(self):
+    async def test_memory_store_costs_tokens(self) -> None:
         """Test storing patterns costs tokens."""
         # Use larger balance to avoid InsufficientBudgetError
         bank = create_mock_bank(max_balance=100000)
@@ -328,7 +328,7 @@ class TestEconomicsMemoryIntegration:
         # Should return receipt with cost info
         assert receipt is not None
 
-    def test_resolution_budget_allocation(self):
+    def test_resolution_budget_allocation(self) -> None:
         """Test resolution budget allocates memory fidelity."""
         # ResolutionBudget uses: cost_model, max_resolution_budget
         budget = ResolutionBudget(
@@ -349,12 +349,12 @@ class TestEconomicsMemoryIntegration:
 class TestEconomicsObservationIntegration:
     """B × O: Observations subject to VoI economics."""
 
-    def test_voi_ledger_creation(self, voi_ledger):
+    def test_voi_ledger_creation(self, voi_ledger) -> None:
         """Test VoI ledger creates successfully."""
         assert voi_ledger is not None
         assert isinstance(voi_ledger, VoILedger)
 
-    def test_voi_ledger_records_observation(self, voi_ledger):
+    def test_voi_ledger_records_observation(self, voi_ledger) -> None:
         """Test VoI ledger records observation costs."""
         finding = ObservationFinding(
             type=FindingType.HEALTH_CONFIRMED,
@@ -372,14 +372,14 @@ class TestEconomicsObservationIntegration:
         assert receipt is not None
         assert receipt.voi >= 0
 
-    def test_voi_optimizer_creation(self, voi_ledger):
+    def test_voi_optimizer_creation(self, voi_ledger) -> None:
         """Test VoI optimizer creates successfully."""
         optimizer = create_voi_optimizer(voi_ledger)
 
         assert optimizer is not None
         assert isinstance(optimizer, VoIOptimizer)
 
-    def test_voi_anomaly_detection_value(self, voi_ledger):
+    def test_voi_anomaly_detection_value(self, voi_ledger) -> None:
         """Test anomaly detection has high VoI."""
         finding = ObservationFinding(
             type=FindingType.ANOMALY_DETECTED,
@@ -398,7 +398,7 @@ class TestEconomicsObservationIntegration:
         # Anomalies should have positive VoI
         assert receipt.voi > 0
 
-    def test_epistemic_capital_accumulates(self, voi_ledger):
+    def test_epistemic_capital_accumulates(self, voi_ledger) -> None:
         """Test epistemic capital accumulates across observations."""
         # Multiple observations
         for i in range(5):
@@ -418,7 +418,7 @@ class TestEconomicsObservationIntegration:
         assert capital.observations == 5
         assert capital.confirmations == 5
 
-    def test_unified_accounting_creation(self, voi_ledger):
+    def test_unified_accounting_creation(self, voi_ledger) -> None:
         """Test unified accounting combines token and VoI economics."""
         # create_unified_accounting uses: value_ledger, voi_ledger
         accounting = create_unified_accounting(
@@ -438,7 +438,7 @@ class TestEconomicsCatalogIntegration:
     """B × L: Catalog operations have economic implications."""
 
     @pytest.mark.asyncio
-    async def test_catalog_registration(self, semantic_registry):
+    async def test_catalog_registration(self, semantic_registry) -> None:
         """Test registering items in catalog."""
         # CatalogEntry needs: id, entity_type, name, version, description
         entry = CatalogEntry(
@@ -458,7 +458,7 @@ class TestEconomicsCatalogIntegration:
         assert result is not None
         assert result.name == "Test Entry"
 
-    def test_roc_monitor_for_catalog_items(self, value_ledger):
+    def test_roc_monitor_for_catalog_items(self, value_ledger) -> None:
         """Test RoC monitor tracks catalog item value."""
         # RoCMonitor takes ledger (not thresholds)
         # RoCThresholds uses: bankruptcy, break_even, healthy (not warning/critical)
@@ -480,7 +480,7 @@ class TestEconomicsCatalogIntegration:
 class TestEconomicsStackFullIntegration:
     """Test complete economics stack flow."""
 
-    def test_value_tensor_across_agents(self):
+    def test_value_tensor_across_agents(self) -> None:
         """Test ValueTensor tracks value across agent dimensions."""
         # Create tensor for an operation using actual field names
         tensor = ValueTensor(
@@ -505,7 +505,7 @@ class TestEconomicsStackFullIntegration:
         assert tensor.economic.gas_cost_usd == 10.0
         assert tensor.ethical.security_risk == 0.05
 
-    def test_grammar_to_budget_flow(self):
+    def test_grammar_to_budget_flow(self) -> None:
         """Test G-gent grammar → B-gent budget flow."""
         # 1. Classify grammar
         grammar = "^[a-zA-Z0-9_]+$"
@@ -519,7 +519,7 @@ class TestEconomicsStackFullIntegration:
         assert gas.cost_usd >= 0
         assert level is not None
 
-    def test_observation_economics_flow(self, voi_ledger):
+    def test_observation_economics_flow(self, voi_ledger) -> None:
         """Test O-gent observation with B-gent economics."""
         # 1. Record multiple observations
         for i in range(3):
@@ -542,7 +542,7 @@ class TestEconomicsStackFullIntegration:
         assert capital.total_gas_consumed > 0
 
     @pytest.mark.asyncio
-    async def test_memory_economics_flow(self):
+    async def test_memory_economics_flow(self) -> None:
         """Test M-gent memory with B-gent economics."""
         # 1. Create budgeted memory with correct API (larger balance)
         bank = create_mock_bank(max_balance=100000)

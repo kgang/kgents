@@ -116,7 +116,7 @@ def exact_match_metric() -> Callable[[Any, Any], float]:
 class TestPrototypeRefinementRequest:
     """Tests for PrototypeRefinementRequest."""
 
-    def test_request_creation(self, sample_source_code: str):
+    def test_request_creation(self, sample_source_code: str) -> None:
         """Test creating a refinement request."""
         request = PrototypeRefinementRequest(
             source_code=sample_source_code,
@@ -144,7 +144,7 @@ class TestPrototypeRefinementRequest:
         assert len(request.examples) == 3
         assert not request.generate_examples
 
-    def test_request_with_custom_strategy(self, sample_source_code: str):
+    def test_request_with_custom_strategy(self, sample_source_code: str) -> None:
         """Test request with custom optimization strategy."""
         request = PrototypeRefinementRequest(
             source_code=sample_source_code,
@@ -160,7 +160,7 @@ class TestPrototypeRefinementRequest:
 class TestPrototypeRefinementResult:
     """Tests for PrototypeRefinementResult."""
 
-    def test_result_creation(self, sample_source_code: str):
+    def test_result_creation(self, sample_source_code: str) -> None:
         """Test creating a refinement result."""
         request = PrototypeRefinementRequest(
             source_code=sample_source_code,
@@ -176,7 +176,7 @@ class TestPrototypeRefinementResult:
         assert result.success
         assert result.improvement_percentage is None  # No trace yet
 
-    def test_result_with_trace(self, sample_source_code: str):
+    def test_result_with_trace(self, sample_source_code: str) -> None:
         """Test result with optimization trace."""
         request = PrototypeRefinementRequest(
             source_code=sample_source_code,
@@ -203,13 +203,13 @@ class TestPrototypeRefinementResult:
 class TestFGentRefineryBridge:
     """Tests for FGentRefineryBridge."""
 
-    def test_bridge_creation(self):
+    def test_bridge_creation(self) -> None:
         """Test creating a bridge."""
         bridge = FGentRefineryBridge()
         assert bridge.refinery is not None
         assert bridge.roi_optimizer is not None
 
-    def test_extract_signature_from_source(self, sample_source_code: str):
+    def test_extract_signature_from_source(self, sample_source_code: str) -> None:
         """Test extracting signature from source code."""
         bridge = FGentRefineryBridge()
         signature = bridge.extract_signature_from_source(
@@ -223,7 +223,7 @@ class TestFGentRefineryBridge:
         assert signature.input_fields[0].field_type is str
         assert signature.output_fields[0].field_type is str
 
-    def test_extract_signature_from_invalid_source(self):
+    def test_extract_signature_from_invalid_source(self) -> None:
         """Test extracting signature from invalid source."""
         bridge = FGentRefineryBridge()
         signature = bridge.extract_signature_from_source(
@@ -236,7 +236,7 @@ class TestFGentRefineryBridge:
         assert signature is not None
         assert signature.instructions == "Test intent"
 
-    def test_type_from_name(self):
+    def test_type_from_name(self) -> None:
         """Test type name to Python type conversion."""
         bridge = FGentRefineryBridge()
 
@@ -247,7 +247,9 @@ class TestFGentRefineryBridge:
         assert bridge._type_from_name("Unknown") is str  # Default
 
     @pytest.mark.asyncio
-    async def test_generate_synthetic_examples(self, sample_signature: Signature):
+    async def test_generate_synthetic_examples(
+        self, sample_signature: Signature
+    ) -> None:
         """Test generating synthetic examples."""
         bridge = FGentRefineryBridge()
         examples = await bridge.generate_synthetic_examples(
@@ -259,7 +261,7 @@ class TestFGentRefineryBridge:
         assert all(isinstance(e, Example) for e in examples)
 
     @pytest.mark.asyncio
-    async def test_refine_basic(self, sample_source_code: str):
+    async def test_refine_basic(self, sample_source_code: str) -> None:
         """Test basic refinement pipeline."""
         bridge = FGentRefineryBridge()
         request = PrototypeRefinementRequest(
@@ -275,7 +277,7 @@ class TestFGentRefineryBridge:
         assert result.original_signature is not None
 
     @pytest.mark.asyncio
-    async def test_refine_with_roi_skip(self, sample_source_code: str):
+    async def test_refine_with_roi_skip(self, sample_source_code: str) -> None:
         """Test refinement skipped due to low ROI."""
         bridge = FGentRefineryBridge()
         request = PrototypeRefinementRequest(
@@ -300,7 +302,7 @@ class TestFGentRefineryBridge:
 class TestMetricSignal:
     """Tests for MetricSignal."""
 
-    def test_metric_signal_creation(self):
+    def test_metric_signal_creation(self) -> None:
         """Test creating a metric signal."""
         signal = MetricSignal(
             score=0.85,
@@ -316,7 +318,7 @@ class TestMetricSignal:
 class TestTextualLossSignal:
     """Tests for TextualLossSignal."""
 
-    def test_loss_signal_creation(self):
+    def test_loss_signal_creation(self) -> None:
         """Test creating a loss signal."""
         signal = TextualLossSignal(
             score=0.5,
@@ -334,12 +336,12 @@ class TestTextualLossSignal:
 class TestTGentLossAdapter:
     """Tests for TGentLossAdapter."""
 
-    def test_adapter_creation(self):
+    def test_adapter_creation(self) -> None:
         """Test creating an adapter."""
         adapter = TGentLossAdapter()
         assert adapter.feedback_generator is not None
 
-    def test_adapter_with_custom_feedback(self):
+    def test_adapter_with_custom_feedback(self) -> None:
         """Test adapter with custom feedback generator."""
 
         def custom_feedback(pred: Any, expected: Any) -> str:
@@ -354,7 +356,7 @@ class TestTGentLossAdapter:
 
         assert "CUSTOM" in signal.feedback
 
-    def test_compute_loss_signal_success(self, exact_match_metric: Callable):
+    def test_compute_loss_signal_success(self, exact_match_metric: Callable) -> None:
         """Test computing loss signal for success case."""
         adapter = TGentLossAdapter()
         signal = adapter.compute_loss_signal(
@@ -366,7 +368,7 @@ class TestTGentLossAdapter:
         assert signal.score == 1.0
         assert signal.feedback == ""  # No feedback for success
 
-    def test_compute_loss_signal_failure(self, exact_match_metric: Callable):
+    def test_compute_loss_signal_failure(self, exact_match_metric: Callable) -> None:
         """Test computing loss signal for failure case."""
         adapter = TGentLossAdapter()
         signal = adapter.compute_loss_signal(
@@ -378,7 +380,7 @@ class TestTGentLossAdapter:
         assert signal.score == 0.0
         assert signal.feedback != ""  # Should have feedback
 
-    def test_batch_operations(self, exact_match_metric: Callable):
+    def test_batch_operations(self, exact_match_metric: Callable) -> None:
         """Test batch signal operations."""
         adapter = TGentLossAdapter()
 
@@ -398,7 +400,7 @@ class TestTGentLossAdapter:
         signals = adapter.complete_batch()
         assert len(signals) == 3
 
-    def test_aggregate_batch_feedback(self, exact_match_metric: Callable):
+    def test_aggregate_batch_feedback(self, exact_match_metric: Callable) -> None:
         """Test aggregating batch feedback."""
         adapter = TGentLossAdapter()
         adapter.start_batch()
@@ -420,7 +422,7 @@ class TestTGentLossAdapter:
 class TestBudgetGrant:
     """Tests for BudgetGrant."""
 
-    def test_grant_creation_approved(self):
+    def test_grant_creation_approved(self) -> None:
         """Test creating an approved grant."""
         grant = BudgetGrant(
             approved=True,
@@ -432,7 +434,7 @@ class TestBudgetGrant:
         assert grant.amount_usd == 10.0
         assert grant.grant_id != ""
 
-    def test_grant_creation_denied(self):
+    def test_grant_creation_denied(self) -> None:
         """Test creating a denied grant."""
         grant = BudgetGrant(
             approved=False,
@@ -447,7 +449,7 @@ class TestBudgetGrant:
 class TestBudgetSpendReport:
     """Tests for BudgetSpendReport."""
 
-    def test_spend_report_creation(self):
+    def test_spend_report_creation(self) -> None:
         """Test creating a spend report."""
         report = BudgetSpendReport(
             grant_id="test123",
@@ -467,13 +469,13 @@ class TestBudgetSpendReport:
 class TestBGentBudgetProtocol:
     """Tests for BGentBudgetProtocol."""
 
-    def test_protocol_creation(self):
+    def test_protocol_creation(self) -> None:
         """Test creating a budget protocol."""
         protocol = BGentBudgetProtocol()
         assert protocol.default_budget == 10.0
         assert protocol.min_roi_threshold == 2.0
 
-    def test_protocol_custom_settings(self):
+    def test_protocol_custom_settings(self) -> None:
         """Test protocol with custom settings."""
         protocol = BGentBudgetProtocol(
             default_budget_usd=20.0,
@@ -482,7 +484,7 @@ class TestBGentBudgetProtocol:
         assert protocol.default_budget == 20.0
         assert protocol.min_roi_threshold == 3.0
 
-    def test_request_grant_approved(self):
+    def test_request_grant_approved(self) -> None:
         """Test requesting a grant that gets approved."""
         protocol = BGentBudgetProtocol()
         grant = protocol.request_grant(
@@ -494,7 +496,7 @@ class TestBGentBudgetProtocol:
         assert grant.approved
         assert grant.amount_usd > 0
 
-    def test_request_grant_denied_low_roi(self):
+    def test_request_grant_denied_low_roi(self) -> None:
         """Test requesting a grant denied due to low ROI."""
         protocol = BGentBudgetProtocol(min_roi_threshold=5.0)
         grant = protocol.request_grant(
@@ -506,7 +508,7 @@ class TestBGentBudgetProtocol:
         assert not grant.approved
         assert "ROI" in grant.reason
 
-    def test_report_spend(self):
+    def test_report_spend(self) -> None:
         """Test reporting spend."""
         protocol = BGentBudgetProtocol()
         grant = protocol.request_grant(
@@ -529,7 +531,7 @@ class TestBGentBudgetProtocol:
 
         assert protocol.get_spend_report(grant.grant_id) == report
 
-    def test_total_granted_and_spent(self):
+    def test_total_granted_and_spent(self) -> None:
         """Test tracking total granted and spent."""
         protocol = BGentBudgetProtocol()
 
@@ -558,7 +560,7 @@ class TestBGentBudgetProtocol:
 class TestBudgetConstrainedRefinery:
     """Tests for BudgetConstrainedRefinery."""
 
-    def test_constrained_refinery_creation(self):
+    def test_constrained_refinery_creation(self) -> None:
         """Test creating a constrained refinery."""
         protocol = BGentBudgetProtocol()
         refinery = BudgetConstrainedRefinery(budget_protocol=protocol)
@@ -615,7 +617,7 @@ class TestBudgetConstrainedRefinery:
 class TestOptimizationCatalogEntry:
     """Tests for OptimizationCatalogEntry."""
 
-    def test_entry_creation(self):
+    def test_entry_creation(self) -> None:
         """Test creating an entry."""
         entry = OptimizationCatalogEntry(
             entry_id="test-123",
@@ -631,7 +633,7 @@ class TestOptimizationCatalogEntry:
         assert entry.is_optimized
         assert entry.improvement_percentage == pytest.approx(70.0)
 
-    def test_entry_not_optimized(self):
+    def test_entry_not_optimized(self) -> None:
         """Test entry without optimization."""
         entry = OptimizationCatalogEntry(
             entry_id="test-456",
@@ -647,13 +649,13 @@ class TestOptimizationCatalogEntry:
 class TestLGentOptimizationIndex:
     """Tests for LGentOptimizationIndex."""
 
-    def test_index_creation(self):
+    def test_index_creation(self) -> None:
         """Test creating an index."""
         index = LGentOptimizationIndex()
         assert index._entries == {}
         assert index._trace_storage == {}
 
-    def test_index_optimization_result(self, sample_signature: Signature):
+    def test_index_optimization_result(self, sample_signature: Signature) -> None:
         """Test indexing an optimization result."""
         index = LGentOptimizationIndex()
 
@@ -675,7 +677,7 @@ class TestLGentOptimizationIndex:
         assert entry.optimization_baseline == 0.5
         assert entry.optimization_trace_id is not None
 
-    def test_find_optimized(self, sample_signature: Signature):
+    def test_find_optimized(self, sample_signature: Signature) -> None:
         """Test finding optimized entries."""
         index = LGentOptimizationIndex()
 
@@ -701,7 +703,7 @@ class TestLGentOptimizationIndex:
         for entry in results:
             assert entry.optimization_score >= 0.7
 
-    def test_find_optimized_by_method(self, sample_signature: Signature):
+    def test_find_optimized_by_method(self, sample_signature: Signature) -> None:
         """Test finding optimized entries by method."""
         index = LGentOptimizationIndex()
 
@@ -724,7 +726,7 @@ class TestLGentOptimizationIndex:
         assert len(results) == 1
         assert results[0].optimization_method == "textgrad"
 
-    def test_get_trace(self, sample_signature: Signature):
+    def test_get_trace(self, sample_signature: Signature) -> None:
         """Test retrieving stored trace."""
         index = LGentOptimizationIndex()
 
@@ -752,7 +754,7 @@ class TestLGentOptimizationIndex:
 class TestRGentIntegrationConfig:
     """Tests for RGentIntegrationConfig."""
 
-    def test_default_config(self):
+    def test_default_config(self) -> None:
         """Test default configuration."""
         config = RGentIntegrationConfig()
 
@@ -762,7 +764,7 @@ class TestRGentIntegrationConfig:
         assert config.enable_l_gent
         assert config.default_budget_usd == 10.0
 
-    def test_custom_config(self):
+    def test_custom_config(self) -> None:
         """Test custom configuration."""
         config = RGentIntegrationConfig(
             enable_f_gent=False,
@@ -778,7 +780,7 @@ class TestRGentIntegrationConfig:
 class TestRGentIntegrationHub:
     """Tests for RGentIntegrationHub."""
 
-    def test_hub_creation_default(self):
+    def test_hub_creation_default(self) -> None:
         """Test creating hub with defaults."""
         hub = RGentIntegrationHub()
 
@@ -788,7 +790,7 @@ class TestRGentIntegrationHub:
         assert hub.budget_protocol is not None
         assert hub.optimization_index is not None
 
-    def test_hub_creation_selective(self):
+    def test_hub_creation_selective(self) -> None:
         """Test creating hub with selective integrations."""
         config = RGentIntegrationConfig(
             enable_f_gent=True,
@@ -804,7 +806,7 @@ class TestRGentIntegrationHub:
         assert hub.optimization_index is not None
 
     @pytest.mark.asyncio
-    async def test_refine_prototype(self, sample_source_code: str):
+    async def test_refine_prototype(self, sample_source_code: str) -> None:
         """Test refining a prototype through the hub."""
         hub = RGentIntegrationHub()
 
@@ -821,7 +823,9 @@ class TestRGentIntegrationHub:
         assert result.original_signature is not None
 
     @pytest.mark.asyncio
-    async def test_refine_prototype_f_gent_disabled(self, sample_source_code: str):
+    async def test_refine_prototype_f_gent_disabled(
+        self, sample_source_code: str
+    ) -> None:
         """Test refining prototype with F-gent disabled."""
         config = RGentIntegrationConfig(enable_f_gent=False)
         hub = RGentIntegrationHub(config)
@@ -834,7 +838,7 @@ class TestRGentIntegrationHub:
         with pytest.raises(RuntimeError, match="F-gent integration not enabled"):
             await hub.refine_prototype(request)
 
-    def test_compute_loss_signal(self, exact_match_metric: Callable):
+    def test_compute_loss_signal(self, exact_match_metric: Callable) -> None:
         """Test computing loss signal through hub."""
         hub = RGentIntegrationHub()
 
@@ -847,7 +851,9 @@ class TestRGentIntegrationHub:
         assert signal.score == 0.0
         assert signal.feedback != ""
 
-    def test_compute_loss_signal_t_gent_disabled(self, exact_match_metric: Callable):
+    def test_compute_loss_signal_t_gent_disabled(
+        self, exact_match_metric: Callable
+    ) -> None:
         """Test computing loss signal with T-gent disabled."""
         config = RGentIntegrationConfig(enable_t_gent=False)
         hub = RGentIntegrationHub(config)
@@ -855,7 +861,7 @@ class TestRGentIntegrationHub:
         with pytest.raises(RuntimeError, match="T-gent integration not enabled"):
             hub.compute_loss_signal("a", "b", exact_match_metric)
 
-    def test_find_optimized_agents(self):
+    def test_find_optimized_agents(self) -> None:
         """Test finding optimized agents through hub."""
         hub = RGentIntegrationHub()
 
@@ -875,7 +881,7 @@ class TestRGentIntegrationHub:
         results = hub.find_optimized_agents(min_score=0.8)
         assert len(results) >= 1
 
-    def test_find_optimized_agents_l_gent_disabled(self):
+    def test_find_optimized_agents_l_gent_disabled(self) -> None:
         """Test finding optimized agents with L-gent disabled."""
         config = RGentIntegrationConfig(enable_l_gent=False)
         hub = RGentIntegrationHub(config)
@@ -893,7 +899,7 @@ class TestFullIntegrationPipeline:
     """Integration tests for the complete pipeline."""
 
     @pytest.mark.asyncio
-    async def test_f_to_r_to_l_pipeline(self, sample_source_code: str):
+    async def test_f_to_r_to_l_pipeline(self, sample_source_code: str) -> None:
         """Test full F → R → L pipeline."""
         hub = RGentIntegrationHub(
             RGentIntegrationConfig(
@@ -921,7 +927,7 @@ class TestFullIntegrationPipeline:
             # At least the just-indexed entry should be found
             assert len(entries) >= 0  # May be 0 if no actual optimization happened
 
-    def test_t_gent_loss_to_batch(self, exact_match_metric: Callable):
+    def test_t_gent_loss_to_batch(self, exact_match_metric: Callable) -> None:
         """Test T-gent loss signal batching."""
         hub = RGentIntegrationHub()
 
@@ -982,7 +988,7 @@ class TestFullIntegrationPipeline:
 class TestEdgeCases:
     """Tests for edge cases and error handling."""
 
-    def test_empty_source_code(self):
+    def test_empty_source_code(self) -> None:
         """Test handling empty source code."""
         bridge = FGentRefineryBridge()
         signature = bridge.extract_signature_from_source(
@@ -995,7 +1001,7 @@ class TestEdgeCases:
         assert signature is not None
         assert signature.instructions == "Empty test"
 
-    def test_empty_examples(self):
+    def test_empty_examples(self) -> None:
         """Test handling empty examples."""
         adapter = TGentLossAdapter()
         adapter.start_batch()
@@ -1005,7 +1011,7 @@ class TestEdgeCases:
         assert signals == []
         assert adapter.batch_score == 0.0
 
-    def test_budget_unknown_grant(self):
+    def test_budget_unknown_grant(self) -> None:
         """Test reporting spend for unknown grant."""
         protocol = BGentBudgetProtocol()
 
@@ -1022,7 +1028,7 @@ class TestEdgeCases:
         with pytest.raises(ValueError, match="Unknown grant ID"):
             protocol.report_spend(report)
 
-    def test_index_duplicate_entry(self, sample_signature: Signature):
+    def test_index_duplicate_entry(self, sample_signature: Signature) -> None:
         """Test indexing duplicate entry (should overwrite)."""
         index = LGentOptimizationIndex()
 
@@ -1054,7 +1060,7 @@ class TestEdgeCases:
         assert entry.name == "Agent2"
         assert entry.optimization_method == "method2"
 
-    def test_improvement_percentage_zero_baseline(self):
+    def test_improvement_percentage_zero_baseline(self) -> None:
         """Test improvement percentage with zero baseline."""
         entry = OptimizationCatalogEntry(
             entry_id="zero-baseline",

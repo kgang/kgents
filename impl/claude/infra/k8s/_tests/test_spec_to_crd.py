@@ -18,7 +18,7 @@ from ..spec_to_crd import (
 class TestAgentSpecDefinition:
     """Tests for AgentSpecDefinition."""
 
-    def test_defaults(self):
+    def test_defaults(self) -> None:
         """Default values are set."""
         spec = AgentSpecDefinition(genus="B", name="B-gent")
 
@@ -32,7 +32,7 @@ class TestAgentSpecDefinition:
         assert spec.entrypoint is None
         assert spec.config == {}
 
-    def test_to_crd_manifest_minimal(self):
+    def test_to_crd_manifest_minimal(self) -> None:
         """Generate minimal CRD manifest."""
         spec = AgentSpecDefinition(genus="B", name="B-gent")
 
@@ -45,7 +45,7 @@ class TestAgentSpecDefinition:
         assert manifest["spec"]["genus"] == "B"
         assert manifest["spec"]["replicas"] == 1
 
-    def test_to_crd_manifest_full(self):
+    def test_to_crd_manifest_full(self) -> None:
         """Generate full CRD manifest with all options."""
         spec = AgentSpecDefinition(
             genus="B",
@@ -72,7 +72,7 @@ class TestAgentSpecDefinition:
         assert manifest["spec"]["networkPolicy"]["allowEgress"] is True
         assert manifest["spec"]["networkPolicy"]["allowedPeers"] == ["L", "F"]
 
-    def test_manifest_labels(self):
+    def test_manifest_labels(self) -> None:
         """Labels are set correctly."""
         spec = AgentSpecDefinition(genus="B", name="B-gent")
 
@@ -86,7 +86,7 @@ class TestAgentSpecDefinition:
 class TestSpecParser:
     """Tests for SpecParser."""
 
-    def test_parse_frontmatter(self, tmp_path: Path):
+    def test_parse_frontmatter(self, tmp_path: Path) -> None:
         """Parse YAML frontmatter from markdown."""
         spec_file = tmp_path / "b-gent.md"
         spec_file.write_text(
@@ -116,7 +116,7 @@ class TestSpecParser:
         assert spec.cpu == "200m"
         assert spec.memory == "512Mi"
 
-    def test_parse_frontmatter_full(self, tmp_path: Path):
+    def test_parse_frontmatter_full(self, tmp_path: Path) -> None:
         """Parse frontmatter with all options."""
         spec_file = tmp_path / "l-gent.md"
         spec_file.write_text(
@@ -161,7 +161,7 @@ class TestSpecParser:
         assert spec.config["max_results"] == 100
         assert spec.allowed_peers == ["B", "F"]
 
-    def test_parse_no_frontmatter_fallback(self, tmp_path: Path):
+    def test_parse_no_frontmatter_fallback(self, tmp_path: Path) -> None:
         """Fall back to parsing from filename."""
         spec_file = tmp_path / "f-gent.md"
         spec_file.write_text(
@@ -181,7 +181,7 @@ class TestSpecParser:
         assert spec.genus == "F"
         assert spec.name == "F-gent"
 
-    def test_parse_psi_gent(self, tmp_path: Path):
+    def test_parse_psi_gent(self, tmp_path: Path) -> None:
         """Parse Psi-gent (special case)."""
         spec_file = tmp_path / "psi-gent.md"
         spec_file.write_text(
@@ -205,7 +205,7 @@ class TestSpecParser:
         assert spec is not None
         assert spec.genus == "Psi"
 
-    def test_genus_from_path_single_letter(self, tmp_path: Path):
+    def test_genus_from_path_single_letter(self, tmp_path: Path) -> None:
         """Extract single-letter genus from path."""
         parser = SpecParser()
 
@@ -213,7 +213,7 @@ class TestSpecParser:
         assert parser._genus_from_path(Path("bgent.md")) == "B"
         assert parser._genus_from_path(Path("l-gent.md")) == "L"
 
-    def test_genus_from_path_psi(self, tmp_path: Path):
+    def test_genus_from_path_psi(self, tmp_path: Path) -> None:
         """Extract Psi genus from path."""
         parser = SpecParser()
 
@@ -224,7 +224,7 @@ class TestSpecParser:
 class TestSpecToCRDGenerator:
     """Tests for SpecToCRDGenerator."""
 
-    def test_generate_one(self, tmp_path: Path):
+    def test_generate_one(self, tmp_path: Path) -> None:
         """Generate CRD for single spec file."""
         spec_dir = tmp_path / "spec" / "agents"
         spec_dir.mkdir(parents=True)
@@ -257,7 +257,7 @@ class TestSpecToCRDGenerator:
         assert result.generated[0].name == "b-gent.yaml"
         assert result.generated[0].exists()
 
-    def test_generate_all(self, tmp_path: Path):
+    def test_generate_all(self, tmp_path: Path) -> None:
         """Generate CRDs for all spec files."""
         spec_dir = tmp_path / "spec" / "agents"
         spec_dir.mkdir(parents=True)
@@ -291,7 +291,7 @@ class TestSpecToCRDGenerator:
         assert len(result.generated) == 3
         assert result.errors == []
 
-    def test_generate_nonexistent_spec(self, tmp_path: Path):
+    def test_generate_nonexistent_spec(self, tmp_path: Path) -> None:
         """Handle nonexistent spec file."""
         generator = SpecToCRDGenerator(
             spec_dir=tmp_path / "nonexistent",
@@ -303,7 +303,7 @@ class TestSpecToCRDGenerator:
         assert result.success is False
         assert "not found" in result.message.lower()
 
-    def test_generate_nonexistent_dir(self, tmp_path: Path):
+    def test_generate_nonexistent_dir(self, tmp_path: Path) -> None:
         """Handle nonexistent spec directory."""
         generator = SpecToCRDGenerator(
             spec_dir=tmp_path / "nonexistent",
@@ -315,7 +315,7 @@ class TestSpecToCRDGenerator:
         assert result.success is False
         assert "not found" in result.message.lower()
 
-    def test_generated_crd_content(self, tmp_path: Path):
+    def test_generated_crd_content(self, tmp_path: Path) -> None:
         """Verify generated CRD file content."""
         spec_dir = tmp_path / "spec" / "agents"
         spec_dir.mkdir(parents=True)

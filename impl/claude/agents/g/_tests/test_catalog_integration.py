@@ -22,7 +22,7 @@ from agents.l import EntityType, Registry
 
 
 @pytest.mark.asyncio
-async def test_register_tongue():
+async def test_register_tongue() -> None:
     """Test registering a tongue with L-gent."""
     registry = Registry()
 
@@ -50,7 +50,7 @@ async def test_register_tongue():
 
 
 @pytest.mark.asyncio
-async def test_register_multiple_tongues():
+async def test_register_multiple_tongues() -> None:
     """Test registering multiple tongues."""
     registry = Registry()
 
@@ -81,7 +81,7 @@ async def test_register_multiple_tongues():
 
 
 @pytest.mark.asyncio
-async def test_find_tongue_by_domain():
+async def test_find_tongue_by_domain() -> None:
     """Test finding tongues by domain."""
     registry = Registry()
 
@@ -112,7 +112,7 @@ async def test_find_tongue_by_domain():
 
 
 @pytest.mark.asyncio
-async def test_find_tongue_by_constraints():
+async def test_find_tongue_by_constraints() -> None:
     """Test finding tongues by constraints."""
     registry = Registry()
 
@@ -142,7 +142,7 @@ async def test_find_tongue_by_constraints():
 
 
 @pytest.mark.asyncio
-async def test_find_tongue_by_level():
+async def test_find_tongue_by_level() -> None:
     """Test finding tongues by grammar level."""
     registry = Registry()
 
@@ -173,7 +173,7 @@ async def test_find_tongue_by_level():
 
 
 @pytest.mark.asyncio
-async def test_check_compatibility_same_domain():
+async def test_check_compatibility_same_domain() -> None:
     """Test compatibility check for tongues with same domain."""
     tongue_a = create_command_tongue(
         name="CalendarA",
@@ -196,7 +196,7 @@ async def test_check_compatibility_same_domain():
 
 
 @pytest.mark.asyncio
-async def test_check_compatibility_different_domains():
+async def test_check_compatibility_different_domains() -> None:
     """Test compatibility for tongues with different domains."""
     calendar_tongue = create_command_tongue(
         name="Calendar",
@@ -220,7 +220,7 @@ async def test_check_compatibility_different_domains():
 
 
 @pytest.mark.asyncio
-async def test_check_compatibility_constraint_conflicts():
+async def test_check_compatibility_constraint_conflicts() -> None:
     """Test compatibility with conflicting constraints."""
     # This is a simplified test - real conflict detection would be more sophisticated
     tongue_a = create_command_tongue(
@@ -250,7 +250,7 @@ async def test_check_compatibility_constraint_conflicts():
 
 
 @pytest.mark.asyncio
-async def test_find_composable():
+async def test_find_composable() -> None:
     """Test finding composable tongues."""
     registry = Registry()
 
@@ -294,7 +294,7 @@ async def test_find_composable():
 
 
 @pytest.mark.asyncio
-async def test_update_tongue_metrics():
+async def test_update_tongue_metrics() -> None:
     """Test updating usage metrics for tongues."""
     registry = Registry()
 
@@ -333,7 +333,7 @@ async def test_update_tongue_metrics():
 
 
 @pytest.mark.asyncio
-async def test_full_workflow():
+async def test_full_workflow() -> None:
     """Test complete workflow: register, find, check compatibility."""
     registry = Registry()
 

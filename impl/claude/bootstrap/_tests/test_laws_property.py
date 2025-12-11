@@ -57,7 +57,7 @@ class TestIdentityLawProperty:
     @given(agent=simple_agents())
     @settings(max_examples=100)
     @pytest.mark.asyncio
-    async def test_left_identity_property(self, agent):
+    async def test_left_identity_property(self, agent) -> None:
         """For all f: Id >> f == f."""
         composed = compose(ID, agent)
 
@@ -70,7 +70,7 @@ class TestIdentityLawProperty:
     @given(agent=simple_agents())
     @settings(max_examples=100)
     @pytest.mark.asyncio
-    async def test_right_identity_property(self, agent):
+    async def test_right_identity_property(self, agent) -> None:
         """For all f: f >> Id == f."""
         composed = compose(agent, ID)
 
@@ -83,7 +83,7 @@ class TestIdentityLawProperty:
     @given(agent=simple_agents())
     @settings(max_examples=50)
     @pytest.mark.asyncio
-    async def test_identity_both_sides_property(self, agent):
+    async def test_identity_both_sides_property(self, agent) -> None:
         """For all f: Id >> f >> Id == f."""
         composed = compose(compose(ID, agent), ID)
 
@@ -105,7 +105,7 @@ class TestAssociativityProperty:
     @given(agents=agent_chains(min_length=3, max_length=3))
     @settings(max_examples=50)
     @pytest.mark.asyncio
-    async def test_associativity_property(self, agents):
+    async def test_associativity_property(self, agents) -> None:
         """For all f, g, h: (f >> g) >> h == f >> (g >> h)."""
         f, g, h = agents
 
@@ -125,7 +125,7 @@ class TestAssociativityProperty:
     @given(agents=agent_chains(min_length=2, max_length=8))
     @settings(max_examples=25)
     @pytest.mark.asyncio
-    async def test_arbitrary_chain_length(self, agents):
+    async def test_arbitrary_chain_length(self, agents) -> None:
         """Composition works for arbitrary chain lengths."""
         composed = reduce(compose, agents)
 
@@ -137,7 +137,7 @@ class TestAssociativityProperty:
     @given(agents=agent_chains(min_length=4, max_length=4))
     @settings(max_examples=25)
     @pytest.mark.asyncio
-    async def test_four_way_associativity(self, agents):
+    async def test_four_way_associativity(self, agents) -> None:
         """Verify all groupings of 4 agents are equivalent.
 
         For a, b, c, d: All of these must be equal:
@@ -175,7 +175,7 @@ class TestCategoryProperties:
     @given(agent=simple_agents())
     @settings(max_examples=50)
     @pytest.mark.asyncio
-    async def test_compose_returns_agent(self, agent):
+    async def test_compose_returns_agent(self, agent) -> None:
         """Composition produces another agent (closure)."""
         composed = compose(agent, ID)
 
@@ -189,7 +189,7 @@ class TestCategoryProperties:
     @given(agents=agent_chains(min_length=2, max_length=2))
     @settings(max_examples=50)
     @pytest.mark.asyncio
-    async def test_composition_determinism(self, agents):
+    async def test_composition_determinism(self, agents) -> None:
         """Same composition always gives same result."""
         f, g = agents
 
@@ -204,7 +204,7 @@ class TestCategoryProperties:
         assert r1 == r2, f"Non-deterministic composition: {f.name} >> {g.name}"
 
     @pytest.mark.asyncio
-    async def test_identity_is_neutral_element(self):
+    async def test_identity_is_neutral_element(self) -> None:
         """ID is the neutral element of composition."""
         # ID >> ID == ID
         composed = compose(ID, ID)

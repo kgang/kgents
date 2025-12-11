@@ -143,7 +143,7 @@ class MetadataInterceptor(BaseInterceptor):
 class TestBusMessage:
     """Tests for BusMessage dataclass."""
 
-    def test_create_basic_message(self):
+    def test_create_basic_message(self) -> None:
         """Test basic message creation."""
         msg = BusMessage(source="cli", target="psi", payload="hello")
 
@@ -154,7 +154,7 @@ class TestBusMessage:
         assert msg.block_reason is None
         assert msg.priority == MessagePriority.NORMAL
 
-    def test_message_blocking(self):
+    def test_message_blocking(self) -> None:
         """Test message blocking mechanism."""
         msg = BusMessage(source="cli", target="psi", payload="data")
 
@@ -163,7 +163,7 @@ class TestBusMessage:
         assert msg.blocked
         assert msg.block_reason == "Rate limited"
 
-    def test_message_context(self):
+    def test_message_context(self) -> None:
         """Test context setting and getting."""
         msg = BusMessage(source="a", target="b", payload=42)
 
@@ -175,7 +175,7 @@ class TestBusMessage:
         assert msg.get_context("missing") is None
         assert msg.get_context("missing", "default") == "default"
 
-    def test_message_priority(self):
+    def test_message_priority(self) -> None:
         """Test priority levels."""
         low = BusMessage(
             source="a", target="b", payload=1, priority=MessagePriority.LOW
@@ -189,7 +189,7 @@ class TestBusMessage:
 
         assert low.priority.value < high.priority.value < critical.priority.value
 
-    def test_message_unique_id(self):
+    def test_message_unique_id(self) -> None:
         """Test that each message gets a unique ID."""
         msg1 = BusMessage(source="a", target="b", payload=1)
         msg2 = BusMessage(source="a", target="b", payload=1)
@@ -205,10 +205,10 @@ class TestAgentRegistry:
     """Tests for AgentRegistry."""
 
     @pytest.fixture
-    def registry(self):
+    def registry(self) -> AgentRegistry:
         return AgentRegistry()
 
-    def test_register_agent(self, registry):
+    def test_register_agent(self, registry) -> None:
         """Test agent registration."""
         echo = EchoAgent()
         registry.register("echo", echo)
@@ -216,7 +216,7 @@ class TestAgentRegistry:
         assert registry.get("echo") is echo
         assert "echo" in registry.list_agents()
 
-    def test_unregister_agent(self, registry):
+    def test_unregister_agent(self, registry) -> None:
         """Test agent unregistration."""
         registry.register("echo", EchoAgent())
 
@@ -224,12 +224,12 @@ class TestAgentRegistry:
         assert registry.get("echo") is None
         assert "echo" not in registry.list_agents()
 
-    def test_unregister_nonexistent(self, registry):
+    def test_unregister_nonexistent(self, registry) -> None:
         """Test unregistering non-existent agent."""
         assert not registry.unregister("nonexistent")
 
     @pytest.mark.asyncio
-    async def test_invoke_agent(self, registry):
+    async def test_invoke_agent(self, registry) -> None:
         """Test invoking registered agent."""
         registry.register("double", DoubleAgent())
 
@@ -238,7 +238,7 @@ class TestAgentRegistry:
         assert result == 10
 
     @pytest.mark.asyncio
-    async def test_invoke_nonexistent(self, registry):
+    async def test_invoke_nonexistent(self, registry) -> None:
         """Test invoking non-existent agent raises KeyError."""
         with pytest.raises(KeyError, match="Agent not found"):
             await registry.invoke("nonexistent", "data")
@@ -251,7 +251,7 @@ class TestBaseInterceptor:
     """Tests for BaseInterceptor."""
 
     @pytest.mark.asyncio
-    async def test_passthrough_before(self):
+    async def test_passthrough_before(self) -> None:
         """Test default before passes through."""
         interceptor = PassthroughInterceptor()
         msg = BusMessage(source="a", target="b", payload="test")
@@ -262,7 +262,7 @@ class TestBaseInterceptor:
         assert result.payload == "test"
 
     @pytest.mark.asyncio
-    async def test_passthrough_after(self):
+    async def test_passthrough_after(self) -> None:
         """Test default after wraps unchanged."""
         interceptor = PassthroughInterceptor()
         msg = BusMessage(source="a", target="b", payload="test")
@@ -280,7 +280,7 @@ class TestMiddlewareBus:
     """Tests for MiddlewareBus."""
 
     @pytest.fixture
-    def bus(self):
+    def bus(self) -> MiddlewareBus:
         bus = MiddlewareBus()
         bus.registry.register("echo", EchoAgent())
         bus.registry.register("double", DoubleAgent())
@@ -288,7 +288,7 @@ class TestMiddlewareBus:
         return bus
 
     @pytest.mark.asyncio
-    async def test_basic_dispatch(self, bus):
+    async def test_basic_dispatch(self, bus) -> None:
         """Test basic message dispatch."""
         result = await bus.send("cli", "echo", "hello")
 
@@ -296,7 +296,7 @@ class TestMiddlewareBus:
         assert not result.blocked
 
     @pytest.mark.asyncio
-    async def test_dispatch_with_transform(self, bus):
+    async def test_dispatch_with_transform(self, bus) -> None:
         """Test dispatch with computation."""
         result = await bus.send("cli", "double", 7)
 
@@ -304,7 +304,7 @@ class TestMiddlewareBus:
         assert not result.blocked
 
     @pytest.mark.asyncio
-    async def test_dispatch_to_unknown_target(self, bus):
+    async def test_dispatch_to_unknown_target(self, bus) -> None:
         """Test dispatch to non-existent target."""
         result = await bus.send("cli", "nonexistent", "data")
 
@@ -312,7 +312,7 @@ class TestMiddlewareBus:
         assert "not found" in result.block_reason.lower()
 
     @pytest.mark.asyncio
-    async def test_dispatch_with_failing_agent(self, bus):
+    async def test_dispatch_with_failing_agent(self, bus) -> None:
         """Test dispatch when agent throws."""
         result = await bus.send("cli", "failing", "data")
 
@@ -321,7 +321,7 @@ class TestMiddlewareBus:
         assert "error" in result.metadata
 
     @pytest.mark.asyncio
-    async def test_interceptor_ordering(self, bus):
+    async def test_interceptor_ordering(self, bus) -> None:
         """Test interceptors run in order."""
         order_log = []
 
@@ -350,7 +350,7 @@ class TestMiddlewareBus:
         assert order_log[3:] == ["third:after", "second:after", "first:after"]
 
     @pytest.mark.asyncio
-    async def test_blocking_interceptor(self, bus):
+    async def test_blocking_interceptor(self, bus) -> None:
         """Test interceptor blocking message."""
         blocker = BlockingInterceptor(
             name="blocker",
@@ -367,7 +367,7 @@ class TestMiddlewareBus:
         assert result.value is None
 
     @pytest.mark.asyncio
-    async def test_fallback_on_block(self, bus):
+    async def test_fallback_on_block(self, bus) -> None:
         """Test fallback handler when message is blocked."""
         blocker = BlockingInterceptor(
             name="blocker",
@@ -383,7 +383,7 @@ class TestMiddlewareBus:
         assert result.value == "fallback_value"
 
     @pytest.mark.asyncio
-    async def test_payload_transformation(self, bus):
+    async def test_payload_transformation(self, bus) -> None:
         """Test interceptor transforming payload."""
         transformer = TransformInterceptor(
             transform_fn=lambda x: x * 2,
@@ -398,7 +398,7 @@ class TestMiddlewareBus:
         assert result.value == 20
 
     @pytest.mark.asyncio
-    async def test_result_transformation(self, bus):
+    async def test_result_transformation(self, bus) -> None:
         """Test interceptor transforming result."""
         transformer = ResultTransformInterceptor(
             transform_fn=lambda x: x + 100,
@@ -413,7 +413,7 @@ class TestMiddlewareBus:
         assert result.value == 110
 
     @pytest.mark.asyncio
-    async def test_metadata_collection(self, bus):
+    async def test_metadata_collection(self, bus) -> None:
         """Test metadata collected from interceptors."""
         meta1 = MetadataInterceptor({"token_cost": 50}, name="cost", order=100)
         meta2 = MetadataInterceptor({"safety_score": 0.95}, name="safety", order=200)
@@ -427,7 +427,7 @@ class TestMiddlewareBus:
         assert result.metadata["safety_score"] == 0.95
 
     @pytest.mark.asyncio
-    async def test_unregister_interceptor(self, bus):
+    async def test_unregister_interceptor(self, bus) -> None:
         """Test removing an interceptor."""
         counter = CountingInterceptor("counter")
         bus.register_interceptor(counter)
@@ -441,14 +441,14 @@ class TestMiddlewareBus:
         assert counter.before_count == 1  # Not incremented
 
     @pytest.mark.asyncio
-    async def test_dispatch_timing(self, bus):
+    async def test_dispatch_timing(self, bus) -> None:
         """Test dispatch records duration."""
         result = await bus.send("cli", "echo", "test")
 
         assert result.duration_ms >= 0
 
     @pytest.mark.asyncio
-    async def test_interceptors_run_list(self, bus):
+    async def test_interceptors_run_list(self, bus) -> None:
         """Test tracking which interceptors ran."""
         bus.register_interceptor(CountingInterceptor("counter1", order=100))
         bus.register_interceptor(CountingInterceptor("counter2", order=200))
@@ -460,7 +460,7 @@ class TestMiddlewareBus:
         assert "counter1:after" in result.interceptors_run
         assert "counter2:after" in result.interceptors_run
 
-    def test_list_interceptors(self, bus):
+    def test_list_interceptors(self, bus) -> None:
         """Test listing interceptors in order."""
         bus.register_interceptor(CountingInterceptor("third", order=300))
         bus.register_interceptor(CountingInterceptor("first", order=100))
@@ -478,7 +478,7 @@ class TestLoggingInterceptor:
     """Tests for LoggingInterceptor."""
 
     @pytest.mark.asyncio
-    async def test_logging_records_messages(self):
+    async def test_logging_records_messages(self) -> None:
         """Test logging interceptor records all messages."""
         bus = MiddlewareBus()
         bus.registry.register("echo", EchoAgent())
@@ -507,7 +507,7 @@ class TestCreateBus:
     """Tests for create_bus factory."""
 
     @pytest.mark.asyncio
-    async def test_create_with_interceptors(self):
+    async def test_create_with_interceptors(self) -> None:
         """Test creating bus with interceptors."""
         counter1 = CountingInterceptor("c1", order=100)
         counter2 = CountingInterceptor("c2", order=200)
@@ -528,7 +528,7 @@ class TestBusIntegration:
     """Integration tests for the full bus flow."""
 
     @pytest.mark.asyncio
-    async def test_multiple_agents_chain(self):
+    async def test_multiple_agents_chain(self) -> None:
         """Test dispatching to multiple agents in sequence."""
         bus = MiddlewareBus()
         bus.registry.register("prefix", AddPrefixAgent(prefix="["))
@@ -543,7 +543,7 @@ class TestBusIntegration:
         assert result2.value == "][hello"
 
     @pytest.mark.asyncio
-    async def test_context_propagation(self):
+    async def test_context_propagation(self) -> None:
         """Test context flows through interceptors."""
         bus = MiddlewareBus()
         bus.registry.register("echo", EchoAgent())
@@ -573,7 +573,7 @@ class TestBusIntegration:
         assert reader.read_context == "ContextWriter"
 
     @pytest.mark.asyncio
-    async def test_full_interceptor_chain(self):
+    async def test_full_interceptor_chain(self) -> None:
         """Test complete interceptor chain with all features."""
         bus = MiddlewareBus()
         bus.registry.register("double", DoubleAgent())

@@ -136,7 +136,7 @@ async def test_register_hypothesis_with_metadata(
 
 
 @pytest.mark.asyncio
-async def test_register_hypothesis_batch(registry: Registry):
+async def test_register_hypothesis_batch(registry: Registry) -> None:
     """Test batch registration of hypotheses."""
     hypotheses = [
         Hypothesis(
@@ -190,7 +190,7 @@ async def test_find_hypotheses_by_domain(
 
 
 @pytest.mark.asyncio
-async def test_find_hypotheses_by_novelty(registry: Registry):
+async def test_find_hypotheses_by_novelty(registry: Registry) -> None:
     """Test finding hypotheses by novelty level."""
     # Register hypotheses with different novelty levels
     incremental = Hypothesis(
@@ -220,7 +220,7 @@ async def test_find_hypotheses_by_novelty(registry: Registry):
 
 
 @pytest.mark.asyncio
-async def test_find_hypotheses_by_min_confidence(registry: Registry):
+async def test_find_hypotheses_by_min_confidence(registry: Registry) -> None:
     """Test finding hypotheses by minimum confidence."""
     low_conf = Hypothesis(
         statement="Low confidence",
@@ -445,7 +445,7 @@ async def test_mark_hypothesis_falsified(
 # ─────────────────────────────────────────────────────────────────
 
 
-def test_extract_keywords():
+def test_extract_keywords() -> None:
     """Test keyword extraction from hypothesis."""
     hyp = Hypothesis(
         statement="Protein aggregation causes disease progression",
@@ -463,7 +463,7 @@ def test_extract_keywords():
     assert any("protein" in k.lower() for k in keywords)
 
 
-def test_generate_hypothesis_name():
+def test_generate_hypothesis_name() -> None:
     """Test hypothesis name generation."""
     short_hyp = Hypothesis(
         statement="Short statement",

@@ -26,7 +26,7 @@ from protocols.tongue_parser import (
 class TestBasicParsing:
     """Tests for basic .tongue parsing."""
 
-    def test_parse_minimal_integration(self):
+    def test_parse_minimal_integration(self) -> None:
         """Test parsing minimal integration."""
         content = """
 integration test_integration {
@@ -44,7 +44,7 @@ integration test_integration {
         assert integration.receiver == "forge"
         assert integration.pheromone == "METAPHOR"
 
-    def test_parse_with_properties(self):
+    def test_parse_with_properties(self) -> None:
         """Test parsing with additional properties."""
         content = """
 integration full_integration {
@@ -65,7 +65,7 @@ integration full_integration {
         assert integration.intensity == 0.9
         assert integration.description == "Psi emits metaphors for Forge to sense"
 
-    def test_parse_multiple_integrations(self):
+    def test_parse_multiple_integrations(self) -> None:
         """Test parsing multiple integrations."""
         content = """
 integration psi_forge {
@@ -86,7 +86,7 @@ integration judge_all {
         assert doc.integrations[0].name == "psi_forge"
         assert doc.integrations[1].name == "judge_all"
 
-    def test_parse_with_comments(self):
+    def test_parse_with_comments(self) -> None:
         """Test parsing with comments."""
         content = """
 # This is a header comment
@@ -104,7 +104,7 @@ integration commented {
         assert len(doc.integrations) == 1
         assert doc.integrations[0].emitter == "psi"
 
-    def test_parse_version(self):
+    def test_parse_version(self) -> None:
         """Test parsing version directive."""
         content = """
 version: "2.0"
@@ -123,7 +123,7 @@ integration test {
 class TestContextBlock:
     """Tests for context block parsing."""
 
-    def test_parse_context_block(self):
+    def test_parse_context_block(self) -> None:
         """Test parsing context block."""
         content = """
 integration with_context {
@@ -145,7 +145,7 @@ integration with_context {
         assert integration.context.tags == ("problem-solving", "creative")
         assert integration.context.embedding_dim == 128
 
-    def test_parse_context_single_tag(self):
+    def test_parse_context_single_tag(self) -> None:
         """Test parsing context with single tag."""
         content = """
 integration single_tag {
@@ -162,7 +162,7 @@ integration single_tag {
 
         assert doc.integrations[0].context.tags == ("single",)
 
-    def test_parse_context_no_tags(self):
+    def test_parse_context_no_tags(self) -> None:
         """Test parsing context without tags."""
         content = """
 integration no_tags {
@@ -184,7 +184,7 @@ integration no_tags {
 class TestTriggerBlock:
     """Tests for trigger block parsing."""
 
-    def test_parse_event_trigger(self):
+    def test_parse_event_trigger(self) -> None:
         """Test parsing event trigger."""
         content = """
 integration with_trigger {
@@ -206,7 +206,7 @@ integration with_trigger {
         assert trigger.on == "metaphor_discovered"
         assert trigger.condition == "confidence > 0.7"
 
-    def test_parse_schedule_trigger(self):
+    def test_parse_schedule_trigger(self) -> None:
         """Test parsing schedule trigger."""
         content = """
 integration scheduled {
@@ -226,7 +226,7 @@ integration scheduled {
         assert trigger.trigger_type == TriggerType.SCHEDULE
         assert trigger.interval_ticks == 100
 
-    def test_parse_threshold_trigger(self):
+    def test_parse_threshold_trigger(self) -> None:
         """Test parsing threshold trigger."""
         content = """
 integration threshold_based {
@@ -252,7 +252,7 @@ integration threshold_based {
 class TestValidation:
     """Tests for document validation."""
 
-    def test_validate_valid_document(self):
+    def test_validate_valid_document(self) -> None:
         """Test validation of valid document."""
         doc = TongueDocument(
             integrations=[
@@ -268,7 +268,7 @@ class TestValidation:
         errors = validate_document(doc)
         assert len(errors) == 0
 
-    def test_validate_missing_emitter(self):
+    def test_validate_missing_emitter(self) -> None:
         """Test validation catches missing emitter."""
         doc = TongueDocument(
             integrations=[
@@ -285,7 +285,7 @@ class TestValidation:
         assert len(errors) == 1
         assert errors[0].field == "emitter"
 
-    def test_validate_missing_receiver(self):
+    def test_validate_missing_receiver(self) -> None:
         """Test validation catches missing receiver."""
         doc = TongueDocument(
             integrations=[
@@ -302,7 +302,7 @@ class TestValidation:
         assert len(errors) == 1
         assert errors[0].field == "receiver"
 
-    def test_validate_missing_pheromone(self):
+    def test_validate_missing_pheromone(self) -> None:
         """Test validation catches missing pheromone."""
         doc = TongueDocument(
             integrations=[
@@ -319,7 +319,7 @@ class TestValidation:
         assert len(errors) == 1
         assert errors[0].field == "pheromone"
 
-    def test_validate_invalid_decay(self):
+    def test_validate_invalid_decay(self) -> None:
         """Test validation catches invalid decay."""
         doc = TongueDocument(
             integrations=[
@@ -337,7 +337,7 @@ class TestValidation:
         assert len(errors) == 1
         assert errors[0].field == "decay"
 
-    def test_validate_invalid_radius(self):
+    def test_validate_invalid_radius(self) -> None:
         """Test validation catches invalid radius."""
         doc = TongueDocument(
             integrations=[
@@ -355,7 +355,7 @@ class TestValidation:
         assert len(errors) == 1
         assert errors[0].field == "radius"
 
-    def test_validate_multiple_errors(self):
+    def test_validate_multiple_errors(self) -> None:
         """Test validation catches multiple errors."""
         doc = TongueDocument(
             integrations=[
@@ -376,7 +376,7 @@ class TestValidation:
 class TestCodeGeneration:
     """Tests for code generation."""
 
-    def test_generate_basic_code(self):
+    def test_generate_basic_code(self) -> None:
         """Test basic code generation."""
         integration = TongueIntegration(
             name="psi_forge",
@@ -393,7 +393,7 @@ class TestCodeGeneration:
         assert 'emitter="psi"' in code
         assert "SemanticPheromoneKind.METAPHOR" in code
 
-    def test_generate_code_with_context(self):
+    def test_generate_code_with_context(self) -> None:
         """Test code generation with context."""
         integration = TongueIntegration(
             name="test",
@@ -411,7 +411,7 @@ class TestCodeGeneration:
         assert 'domain="software"' in code
         assert "creative" in code
 
-    def test_generate_code_with_parameters(self):
+    def test_generate_code_with_parameters(self) -> None:
         """Test code generation with custom parameters."""
         integration = TongueIntegration(
             name="custom",
@@ -432,7 +432,7 @@ class TestCodeGeneration:
 class TestParseErrors:
     """Tests for parse error handling."""
 
-    def test_error_invalid_property(self):
+    def test_error_invalid_property(self) -> None:
         """Test error on invalid property syntax."""
         content = """
 integration bad {
@@ -442,7 +442,7 @@ integration bad {
         with pytest.raises(TongueParseError):
             parse_tongue(content)
 
-    def test_error_missing_brace(self):
+    def test_error_missing_brace(self) -> None:
         """Test error on missing closing brace."""
         content = """
 integration unclosed {
@@ -455,7 +455,7 @@ integration unclosed {
         except TongueParseError:
             pass  # Expected
 
-    def test_error_unexpected_token(self):
+    def test_error_unexpected_token(self) -> None:
         """Test error on unexpected token."""
         content = """
 unexpected_keyword value
@@ -467,7 +467,7 @@ unexpected_keyword value
 class TestIntegration:
     """Integration tests for full parsing flow."""
 
-    def test_full_tongue_file(self):
+    def test_full_tongue_file(self) -> None:
         """Test parsing a complete .tongue file."""
         content = """
 # Kgents Cross-Pollination Integrations
@@ -543,7 +543,7 @@ integration judge_broadcast {
         errors = validate_document(doc)
         assert len(errors) == 0
 
-    def test_roundtrip_validation(self):
+    def test_roundtrip_validation(self) -> None:
         """Test that parsed documents validate."""
         content = """
 integration valid {
@@ -559,7 +559,7 @@ integration valid {
 
         assert len(errors) == 0
 
-    def test_code_generation_compiles(self):
+    def test_code_generation_compiles(self) -> None:
         """Test that generated code is valid Python."""
         integration = TongueIntegration(
             name="test_integration",

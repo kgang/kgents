@@ -90,18 +90,20 @@ def simple_metric(pred, label) -> float:
 class TestBootstrapFewShotTeleprompter:
     """Tests for BootstrapFewShot optimizer."""
 
-    def test_strategy_property(self):
+    def test_strategy_property(self) -> None:
         """Test strategy property."""
         tp = BootstrapFewShotTeleprompter()
         assert tp.strategy == TeleprompterStrategy.BOOTSTRAP_FEWSHOT
 
-    def test_num_demos_config(self):
+    def test_num_demos_config(self) -> None:
         """Test configurable number of demos."""
         tp = BootstrapFewShotTeleprompter(num_demos=2)
         assert tp.num_demos == 2
 
     @pytest.mark.asyncio
-    async def test_compile_returns_trace(self, simple_signature, scored_examples):
+    async def test_compile_returns_trace(
+        self, simple_signature, scored_examples
+    ) -> None:
         """Test that compile returns an OptimizationTrace."""
         tp = BootstrapFewShotTeleprompter(num_demos=2)
 
@@ -118,7 +120,9 @@ class TestBootstrapFewShotTeleprompter:
         assert len(trace.iterations) > 0
 
     @pytest.mark.asyncio
-    async def test_compile_selects_best_demos(self, simple_signature, scored_examples):
+    async def test_compile_selects_best_demos(
+        self, simple_signature, scored_examples
+    ) -> None:
         """Test that best scoring examples are selected."""
         tp = BootstrapFewShotTeleprompter(num_demos=2)
 
@@ -133,7 +137,9 @@ class TestBootstrapFewShotTeleprompter:
         assert "top 2 demos" in trace.convergence_reason.lower()
 
     @pytest.mark.asyncio
-    async def test_compile_tracks_timing(self, simple_signature, scored_examples):
+    async def test_compile_tracks_timing(
+        self, simple_signature, scored_examples
+    ) -> None:
         """Test that timing is tracked."""
         tp = BootstrapFewShotTeleprompter()
 
@@ -154,23 +160,25 @@ class TestBootstrapFewShotTeleprompter:
 class TestTextGradTeleprompter:
     """Tests for TextGrad optimizer."""
 
-    def test_strategy_property(self):
+    def test_strategy_property(self) -> None:
         """Test strategy property."""
         tp = TextGradTeleprompter()
         assert tp.strategy == TeleprompterStrategy.TEXTGRAD
 
-    def test_learning_rate_config(self):
+    def test_learning_rate_config(self) -> None:
         """Test configurable learning rate."""
         tp = TextGradTeleprompter(learning_rate=0.5)
         assert tp.learning_rate == 0.5
 
-    def test_convergence_threshold_config(self):
+    def test_convergence_threshold_config(self) -> None:
         """Test configurable convergence threshold."""
         tp = TextGradTeleprompter(convergence_threshold=0.001)
         assert tp.convergence_threshold == 0.001
 
     @pytest.mark.asyncio
-    async def test_compile_returns_trace(self, simple_signature, simple_examples):
+    async def test_compile_returns_trace(
+        self, simple_signature, simple_examples
+    ) -> None:
         """Test that compile returns an OptimizationTrace."""
         tp = TextGradTeleprompter()
 
@@ -209,13 +217,15 @@ class TestTextGradTeleprompter:
 class TestMIPROv2Teleprompter:
     """Tests for MIPROv2 optimizer stub."""
 
-    def test_strategy_property(self):
+    def test_strategy_property(self) -> None:
         """Test strategy property."""
         tp = MIPROv2Teleprompter()
         assert tp.strategy == TeleprompterStrategy.MIPRO_V2
 
     @pytest.mark.asyncio
-    async def test_compile_returns_stub_trace(self, simple_signature, simple_examples):
+    async def test_compile_returns_stub_trace(
+        self, simple_signature, simple_examples
+    ) -> None:
         """Test that stub returns appropriate trace."""
         tp = MIPROv2Teleprompter()
 
@@ -233,13 +243,15 @@ class TestMIPROv2Teleprompter:
 class TestOPROTeleprompter:
     """Tests for OPRO optimizer stub."""
 
-    def test_strategy_property(self):
+    def test_strategy_property(self) -> None:
         """Test strategy property."""
         tp = OPROTeleprompter()
         assert tp.strategy == TeleprompterStrategy.OPRO
 
     @pytest.mark.asyncio
-    async def test_compile_returns_stub_trace(self, simple_signature, simple_examples):
+    async def test_compile_returns_stub_trace(
+        self, simple_signature, simple_examples
+    ) -> None:
         """Test that stub returns appropriate trace."""
         tp = OPROTeleprompter()
 
@@ -260,32 +272,32 @@ class TestOPROTeleprompter:
 class TestTeleprompterFactory:
     """Tests for TeleprompterFactory."""
 
-    def test_get_bootstrap_fewshot(self):
+    def test_get_bootstrap_fewshot(self) -> None:
         """Test getting BootstrapFewShot teleprompter."""
         tp = TeleprompterFactory.get(TeleprompterStrategy.BOOTSTRAP_FEWSHOT)
         assert isinstance(tp, BootstrapFewShotTeleprompter)
 
-    def test_get_textgrad(self):
+    def test_get_textgrad(self) -> None:
         """Test getting TextGrad teleprompter."""
         tp = TeleprompterFactory.get(TeleprompterStrategy.TEXTGRAD)
         assert isinstance(tp, TextGradTeleprompter)
 
-    def test_get_miprov2(self):
+    def test_get_miprov2(self) -> None:
         """Test getting MIPROv2 teleprompter."""
         tp = TeleprompterFactory.get(TeleprompterStrategy.MIPRO_V2)
         assert isinstance(tp, MIPROv2Teleprompter)
 
-    def test_get_opro(self):
+    def test_get_opro(self) -> None:
         """Test getting OPRO teleprompter."""
         tp = TeleprompterFactory.get(TeleprompterStrategy.OPRO)
         assert isinstance(tp, OPROTeleprompter)
 
-    def test_get_by_string(self):
+    def test_get_by_string(self) -> None:
         """Test getting teleprompter by string value."""
         tp = TeleprompterFactory.get("mipro_v2")
         assert isinstance(tp, MIPROv2Teleprompter)
 
-    def test_get_unknown_raises(self):
+    def test_get_unknown_raises(self) -> None:
         """Test that unknown strategy raises ValueError."""
         with pytest.raises(ValueError):
             TeleprompterFactory.get("nonexistent_strategy")
@@ -297,20 +309,20 @@ class TestTeleprompterFactory:
 class TestROIOptimizer:
     """Tests for ROI optimization."""
 
-    def test_estimate_cost_bootstrap(self):
+    def test_estimate_cost_bootstrap(self) -> None:
         """Test cost estimation for bootstrap."""
         opt = ROIOptimizer()
         cost = opt.estimate_cost(TeleprompterStrategy.BOOTSTRAP_FEWSHOT, 10)
         assert cost == 0.50
 
-    def test_estimate_cost_mipro(self):
+    def test_estimate_cost_mipro(self) -> None:
         """Test cost estimation for MIPROv2."""
         opt = ROIOptimizer()
         cost = opt.estimate_cost(TeleprompterStrategy.MIPRO_V2, 100)
         # 5.00 + 100 * 0.05 = 10.00
         assert cost == 10.0
 
-    def test_should_optimize_positive_roi(self):
+    def test_should_optimize_positive_roi(self) -> None:
         """Test positive ROI decision."""
         opt = ROIOptimizer()
 
@@ -324,7 +336,7 @@ class TestROIOptimizer:
         assert decision.proceed
         assert "Positive ROI" in decision.reason
 
-    def test_should_optimize_negative_roi(self):
+    def test_should_optimize_negative_roi(self) -> None:
         """Test negative ROI decision."""
         opt = ROIOptimizer()
 
@@ -338,7 +350,7 @@ class TestROIOptimizer:
         assert not decision.proceed
         assert "Negative ROI" in decision.reason
 
-    def test_should_optimize_recommends_cheaper(self):
+    def test_should_optimize_recommends_cheaper(self) -> None:
         """Test that marginal ROI recommends cheaper method."""
         opt = ROIOptimizer()
 
@@ -357,7 +369,7 @@ class TestROIOptimizer:
                     == TeleprompterStrategy.BOOTSTRAP_FEWSHOT
                 )
 
-    def test_custom_value_per_call(self):
+    def test_custom_value_per_call(self) -> None:
         """Test with custom value per call."""
         opt = ROIOptimizer()
 
@@ -379,23 +391,25 @@ class TestROIOptimizer:
 class TestRefineryAgent:
     """Tests for RefineryAgent main interface."""
 
-    def test_default_strategy(self):
+    def test_default_strategy(self) -> None:
         """Test default strategy is bootstrap few-shot."""
         agent = RefineryAgent()
         assert agent.strategy == TeleprompterStrategy.BOOTSTRAP_FEWSHOT
 
-    def test_custom_strategy(self):
+    def test_custom_strategy(self) -> None:
         """Test custom strategy configuration."""
         agent = RefineryAgent(strategy=TeleprompterStrategy.TEXTGRAD)
         assert agent.strategy == TeleprompterStrategy.TEXTGRAD
 
-    def test_has_roi_optimizer(self):
+    def test_has_roi_optimizer(self) -> None:
         """Test that ROI optimizer is created."""
         agent = RefineryAgent()
         assert agent.roi_optimizer is not None
 
     @pytest.mark.asyncio
-    async def test_refine_returns_trace(self, simple_signature, scored_examples):
+    async def test_refine_returns_trace(
+        self, simple_signature, scored_examples
+    ) -> None:
         """Test that refine returns an OptimizationTrace."""
         agent = RefineryAgent()
 
@@ -410,7 +424,9 @@ class TestRefineryAgent:
         assert len(trace.iterations) > 0
 
     @pytest.mark.asyncio
-    async def test_refine_with_roi_check(self, simple_signature, scored_examples):
+    async def test_refine_with_roi_check(
+        self, simple_signature, scored_examples
+    ) -> None:
         """Test refine with ROI checking enabled."""
         agent = RefineryAgent()
 
@@ -444,7 +460,7 @@ class TestRefineryAgent:
         assert trace.method == "skipped"
         assert "skipped" in trace.convergence_reason.lower()
 
-    def test_select_strategy_simple_small(self):
+    def test_select_strategy_simple_small(self) -> None:
         """Test strategy selection for simple small task."""
         agent = RefineryAgent()
 
@@ -456,7 +472,7 @@ class TestRefineryAgent:
 
         assert strategy == TeleprompterStrategy.BOOTSTRAP_FEWSHOT
 
-    def test_select_strategy_complex(self):
+    def test_select_strategy_complex(self) -> None:
         """Test strategy selection for complex task."""
         agent = RefineryAgent()
 
@@ -468,7 +484,7 @@ class TestRefineryAgent:
 
         assert strategy == TeleprompterStrategy.MIPRO_V2
 
-    def test_select_strategy_low_budget(self):
+    def test_select_strategy_low_budget(self) -> None:
         """Test strategy selection with low budget."""
         agent = RefineryAgent()
 
@@ -480,7 +496,7 @@ class TestRefineryAgent:
 
         assert strategy == TeleprompterStrategy.OPRO
 
-    def test_select_strategy_large_production(self):
+    def test_select_strategy_large_production(self) -> None:
         """Test strategy selection for large production dataset."""
         agent = RefineryAgent()
 
@@ -500,7 +516,9 @@ class TestRefineryIntegration:
     """Integration tests for the full refinement flow."""
 
     @pytest.mark.asyncio
-    async def test_full_optimization_flow(self, simple_signature, scored_examples):
+    async def test_full_optimization_flow(
+        self, simple_signature, scored_examples
+    ) -> None:
         """Test complete optimization flow."""
         # 1. Create refinery agent
         agent = RefineryAgent(strategy=TeleprompterStrategy.BOOTSTRAP_FEWSHOT)
@@ -522,7 +540,9 @@ class TestRefineryIntegration:
         assert trace.total_examples == len(scored_examples)
 
     @pytest.mark.asyncio
-    async def test_strategy_switch_on_roi(self, simple_signature, scored_examples):
+    async def test_strategy_switch_on_roi(
+        self, simple_signature, scored_examples
+    ) -> None:
         """Test that strategy can be switched based on ROI."""
         # Start with expensive strategy
         agent = RefineryAgent(strategy=TeleprompterStrategy.MIPRO_V2)

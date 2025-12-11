@@ -42,7 +42,7 @@ from ..server import (
 class TestMCPToolParameter:
     """Test tool parameter definitions."""
 
-    def test_create_required(self):
+    def test_create_required(self) -> None:
         param = MCPToolParameter(
             name="target",
             type="string",
@@ -52,7 +52,7 @@ class TestMCPToolParameter:
         assert param.type == "string"
         assert param.required is True
 
-    def test_create_optional_with_default(self):
+    def test_create_optional_with_default(self) -> None:
         param = MCPToolParameter(
             name="budget",
             type="string",
@@ -63,7 +63,7 @@ class TestMCPToolParameter:
         assert param.required is False
         assert param.default == "medium"
 
-    def test_create_with_enum(self):
+    def test_create_with_enum(self) -> None:
         param = MCPToolParameter(
             name="level",
             type="string",
@@ -72,7 +72,7 @@ class TestMCPToolParameter:
         )
         assert param.enum == ("low", "medium", "high")
 
-    def test_to_dict(self):
+    def test_to_dict(self) -> None:
         param = MCPToolParameter(
             name="query",
             type="string",
@@ -88,7 +88,7 @@ class TestMCPToolParameter:
 class TestMCPTool:
     """Test tool definitions."""
 
-    def test_create_minimal(self):
+    def test_create_minimal(self) -> None:
         tool = MCPTool(
             name="test_tool",
             description="A test tool",
@@ -97,7 +97,7 @@ class TestMCPTool:
         assert tool.parameters == ()
         assert tool.handler is None
 
-    def test_create_with_parameters(self):
+    def test_create_with_parameters(self) -> None:
         tool = MCPTool(
             name="kgents_check",
             description="Check code",
@@ -105,7 +105,7 @@ class TestMCPTool:
         )
         assert len(tool.parameters) == 1
 
-    def test_to_dict(self):
+    def test_to_dict(self) -> None:
         tool = MCPTool(
             name="kgents_check",
             description="Verify code against principles",
@@ -129,7 +129,7 @@ class TestMCPTool:
 class TestMCPToolResult:
     """Test tool results."""
 
-    def test_success_result(self):
+    def test_success_result(self) -> None:
         result = MCPToolResult(
             success=True,
             content="Operation completed",
@@ -137,7 +137,7 @@ class TestMCPToolResult:
         assert result.success is True
         assert result.content_type == "text/plain"
 
-    def test_to_dict(self):
+    def test_to_dict(self) -> None:
         result = MCPToolResult(
             success=True,
             content="Hello, world!",
@@ -155,12 +155,12 @@ class TestMCPToolResult:
 class TestToolRegistry:
     """Test the tool registry."""
 
-    def test_all_tools_registered(self):
+    def test_all_tools_registered(self) -> None:
         """All KGENTS_TOOLS should be in the registry."""
         for tool in KGENTS_TOOLS:
             assert tool.name in TOOL_REGISTRY
 
-    def test_expected_tools_exist(self):
+    def test_expected_tools_exist(self) -> None:
         """Check expected tools are present."""
         expected = [
             "kgents_check",
@@ -176,7 +176,7 @@ class TestToolRegistry:
         for name in expected:
             assert name in TOOL_REGISTRY, f"Missing tool: {name}"
 
-    def test_all_tools_have_handlers(self):
+    def test_all_tools_have_handlers(self) -> None:
         """All tools should have handlers."""
         for tool in KGENTS_TOOLS:
             assert tool.handler is not None, f"Tool {tool.name} missing handler"
@@ -185,7 +185,7 @@ class TestToolRegistry:
 class TestToolManifest:
     """Test manifest generation."""
 
-    def test_create_manifest(self):
+    def test_create_manifest(self) -> None:
         manifest = create_tool_manifest()
 
         assert manifest["name"] == "kgents"
@@ -193,7 +193,7 @@ class TestToolManifest:
         assert "tools" in manifest
         assert len(manifest["tools"]) == len(KGENTS_TOOLS)
 
-    def test_manifest_is_valid_json(self):
+    def test_manifest_is_valid_json(self) -> None:
         manifest = create_tool_manifest()
         json_str = json.dumps(manifest)
         parsed = json.loads(json_str)
@@ -208,7 +208,7 @@ class TestToolManifest:
 class TestMCPRequest:
     """Test MCP request handling."""
 
-    def test_from_dict(self):
+    def test_from_dict(self) -> None:
         data = {
             "jsonrpc": "2.0",
             "id": 1,
@@ -218,7 +218,7 @@ class TestMCPRequest:
         assert request.id == 1
         assert request.method == "tools/list"
 
-    def test_from_dict_with_params(self):
+    def test_from_dict_with_params(self) -> None:
         data = {
             "jsonrpc": "2.0",
             "id": 2,
@@ -235,7 +235,7 @@ class TestMCPRequest:
 class TestMCPResponse:
     """Test MCP response handling."""
 
-    def test_success_response(self):
+    def test_success_response(self) -> None:
         response = MCPResponse(
             id=1,
             result={"tools": []},
@@ -245,7 +245,7 @@ class TestMCPResponse:
         assert d["result"] == {"tools": []}
         assert "error" not in d
 
-    def test_error_response(self):
+    def test_error_response(self) -> None:
         response = MCPResponse(
             id=1,
             error={"code": -32601, "message": "Method not found"},
@@ -264,38 +264,38 @@ class TestToolHandlers:
     """Test individual tool handlers."""
 
     @pytest.mark.asyncio
-    async def test_handle_laws(self):
+    async def test_handle_laws(self) -> None:
         result = await handle_laws()
         assert result.success is True
         assert "IDENTITY" in result.content  # Laws are displayed in UPPERCASE
 
     @pytest.mark.asyncio
-    async def test_handle_principles(self):
+    async def test_handle_principles(self) -> None:
         result = await handle_principles()
         assert result.success is True
         assert "TASTEFUL" in result.content
         assert "COMPOSABLE" in result.content
 
     @pytest.mark.asyncio
-    async def test_handle_check_placeholder(self):
+    async def test_handle_check_placeholder(self) -> None:
         """Check handler returns reasonable result."""
         result = await handle_check("test.py", "spec/principles.md")
         assert result.success is True
 
     @pytest.mark.asyncio
-    async def test_handle_judge_placeholder(self):
+    async def test_handle_judge_placeholder(self) -> None:
         """Judge handler returns reasonable result."""
         result = await handle_judge("Some code to judge", "high")
         assert result.success is True
 
     @pytest.mark.asyncio
-    async def test_handle_think_placeholder(self):
+    async def test_handle_think_placeholder(self) -> None:
         """Think handler returns reasonable result."""
         result = await handle_think("optimization strategies", "medium")
         assert result.success is True
 
     @pytest.mark.asyncio
-    async def test_handle_fix_with_string(self):
+    async def test_handle_fix_with_string(self) -> None:
         """Fix handler with string input."""
         result = await handle_fix("  malformed input  ", "anchor")
         assert result.success is True
@@ -310,18 +310,18 @@ class TestToolHandlers:
 class TestMCPServer:
     """Test MCP server."""
 
-    def test_create_server(self):
+    def test_create_server(self) -> None:
         server = MCPServer()
         assert server.name == "kgents"
         assert len(server.tools) > 0
 
-    def test_custom_name(self):
+    def test_custom_name(self) -> None:
         server = MCPServer(name="custom", version="1.0.0")
         assert server.name == "custom"
         assert server.version == "1.0.0"
 
     @pytest.mark.asyncio
-    async def test_handle_initialize(self):
+    async def test_handle_initialize(self) -> None:
         server = MCPServer()
         request = MCPRequest(
             jsonrpc="2.0",
@@ -333,7 +333,7 @@ class TestMCPServer:
         assert "capabilities" in response.result
 
     @pytest.mark.asyncio
-    async def test_handle_tools_list(self):
+    async def test_handle_tools_list(self) -> None:
         server = MCPServer()
         request = MCPRequest(
             jsonrpc="2.0",
@@ -346,7 +346,7 @@ class TestMCPServer:
         assert len(response.result["tools"]) > 0
 
     @pytest.mark.asyncio
-    async def test_handle_tools_call(self):
+    async def test_handle_tools_call(self) -> None:
         server = MCPServer()
         request = MCPRequest(
             jsonrpc="2.0",
@@ -363,7 +363,7 @@ class TestMCPServer:
         assert response.result["isError"] is False
 
     @pytest.mark.asyncio
-    async def test_handle_unknown_method(self):
+    async def test_handle_unknown_method(self) -> None:
         server = MCPServer()
         request = MCPRequest(
             jsonrpc="2.0",
@@ -375,7 +375,7 @@ class TestMCPServer:
         assert response.error["code"] == -32601
 
     @pytest.mark.asyncio
-    async def test_handle_unknown_tool(self):
+    async def test_handle_unknown_tool(self) -> None:
         server = MCPServer()
         request = MCPRequest(
             jsonrpc="2.0",
@@ -389,7 +389,7 @@ class TestMCPServer:
         response = await server.handle_request(request)
         assert response.result["isError"] is True
 
-    def test_register_custom_tool(self):
+    def test_register_custom_tool(self) -> None:
         server = MCPServer()
         custom = MCPTool(
             name="custom_tool",
@@ -408,7 +408,7 @@ class TestMCPServer:
 class TestMCPConnection:
     """Test MCP connection objects."""
 
-    def test_create_connection(self):
+    def test_create_connection(self) -> None:
         conn = MCPConnection(
             name="test",
             command="echo",
@@ -418,7 +418,7 @@ class TestMCPConnection:
         assert conn.process is None
         assert conn._initialized is False
 
-    def test_to_dict(self):
+    def test_to_dict(self) -> None:
         conn = MCPConnection(
             name="filesystem",
             command="npx",
@@ -429,7 +429,7 @@ class TestMCPConnection:
         assert d["connected"] is False
         assert d["tools"] == 0
 
-    def test_from_dict(self):
+    def test_from_dict(self) -> None:
         data = {
             "name": "test",
             "command": "python",
@@ -443,11 +443,11 @@ class TestMCPConnection:
 class TestMCPClient:
     """Test MCP client."""
 
-    def test_create_client(self):
+    def test_create_client(self) -> None:
         client = MCPClient()
         assert len(client.connections) == 0
 
-    def test_save_and_load_config(self, tmp_path):
+    def test_save_and_load_config(self, tmp_path) -> None:
         config_path = tmp_path / ".kgents" / "mcp.json"
         client = MCPClient(config_path=config_path)
 
@@ -464,18 +464,18 @@ class TestMCPClient:
         client2.load_config()
         assert "test" in client2.connections
 
-    def test_list_connections_empty(self):
+    def test_list_connections_empty(self) -> None:
         client = MCPClient()
         assert client.list_connections() == []
 
-    def test_list_connections(self):
+    def test_list_connections(self) -> None:
         client = MCPClient()
         client.connections["test"] = MCPConnection(name="test", command="echo")
         conns = client.list_connections()
         assert len(conns) == 1
         assert conns[0]["name"] == "test"
 
-    def test_list_tools_no_connections(self):
+    def test_list_tools_no_connections(self) -> None:
         client = MCPClient()
         assert client.list_tools() == []
 
@@ -489,7 +489,7 @@ class TestIntegration:
     """Integration tests for MCP."""
 
     @pytest.mark.asyncio
-    async def test_full_server_flow(self):
+    async def test_full_server_flow(self) -> None:
         """Test a full request/response cycle."""
         server = MCPServer()
 
@@ -513,7 +513,7 @@ class TestIntegration:
         call_resp = await server.handle_request(call_req)
         assert call_resp.result["isError"] is False
 
-    def test_manifest_matches_tools(self):
+    def test_manifest_matches_tools(self) -> None:
         """Manifest should have all registered tools."""
         manifest = create_tool_manifest()
         manifest_names = {t["name"] for t in manifest["tools"]}

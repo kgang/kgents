@@ -94,7 +94,7 @@ def calendar_handlers() -> dict:
 class TestInterfaceTongue:
     """Tests for InterfaceTongue class."""
 
-    def test_interface_tongue_creation(self, sample_tongue: Tongue):
+    def test_interface_tongue_creation(self, sample_tongue: Tongue) -> None:
         """Test creating an InterfaceTongue."""
         interface = InterfaceTongue(
             tongue=sample_tongue,
@@ -107,7 +107,7 @@ class TestInterfaceTongue:
         assert "TEST" in interface.operations
         assert interface.handlers == {}
 
-    def test_interface_tongue_with_handlers(self, sample_tongue: Tongue):
+    def test_interface_tongue_with_handlers(self, sample_tongue: Tongue) -> None:
         """Test InterfaceTongue with bound handlers."""
 
         def handler(noun, ctx):
@@ -123,7 +123,7 @@ class TestInterfaceTongue:
         assert "CHECK" in interface.handlers
         assert interface.handlers["CHECK"]("test", {}) == "handled: test"
 
-    def test_interface_tongue_examples(self, sample_interface: InterfaceTongue):
+    def test_interface_tongue_examples(self, sample_interface: InterfaceTongue) -> None:
         """Test that examples are preserved."""
         assert len(sample_interface.examples) == 2
         assert "CHECK 2024-12-15" in sample_interface.examples
@@ -137,7 +137,7 @@ class TestInterfaceTongue:
 class TestTongueEmbedding:
     """Tests for TongueEmbedding serialization."""
 
-    def test_embedding_from_tongue(self, sample_tongue: Tongue):
+    def test_embedding_from_tongue(self, sample_tongue: Tongue) -> None:
         """Test creating embedding from tongue."""
         embedding = TongueEmbedding.from_tongue(sample_tongue)
 
@@ -147,7 +147,7 @@ class TestTongueEmbedding:
         assert embedding.tongue_format == "BNF"
         assert "No deletes" in embedding.constraints
 
-    def test_embedding_to_dict(self, sample_tongue: Tongue):
+    def test_embedding_to_dict(self, sample_tongue: Tongue) -> None:
         """Test serializing embedding to dict."""
         embedding = TongueEmbedding.from_tongue(sample_tongue)
         data = embedding.to_dict()
@@ -157,7 +157,7 @@ class TestTongueEmbedding:
         assert data["tongue_domain"] == "Calendar Management"
         assert "grammar_spec" in data
 
-    def test_embedding_from_dict(self, sample_tongue: Tongue):
+    def test_embedding_from_dict(self, sample_tongue: Tongue) -> None:
         """Test deserializing embedding from dict."""
         embedding = TongueEmbedding.from_tongue(sample_tongue)
         data = embedding.to_dict()
@@ -168,7 +168,7 @@ class TestTongueEmbedding:
         assert restored.tongue_level == embedding.tongue_level
         assert restored.constraints == embedding.constraints
 
-    def test_embedding_round_trip(self, sample_tongue: Tongue):
+    def test_embedding_round_trip(self, sample_tongue: Tongue) -> None:
         """Test round-trip serialization."""
         original = TongueEmbedding.from_tongue(sample_tongue)
         data = original.to_dict()
@@ -178,14 +178,14 @@ class TestTongueEmbedding:
         assert original.grammar_spec == restored.grammar_spec
         assert original.operations == restored.operations
 
-    def test_embedding_extracts_operations(self, sample_tongue: Tongue):
+    def test_embedding_extracts_operations(self, sample_tongue: Tongue) -> None:
         """Test that operations are extracted from BNF grammar."""
         embedding = TongueEmbedding.from_tongue(sample_tongue)
 
         # Should extract CHECK and ADD from the grammar
         assert "CHECK" in embedding.operations or "ADD" in embedding.operations
 
-    def test_embedding_extracts_examples(self, sample_tongue: Tongue):
+    def test_embedding_extracts_examples(self, sample_tongue: Tongue) -> None:
         """Test that examples are extracted from tongue."""
         embedding = TongueEmbedding.from_tongue(sample_tongue)
 
@@ -202,7 +202,7 @@ class TestCreateArtifactInterface:
     """Tests for create_artifact_interface function."""
 
     @pytest.mark.asyncio
-    async def test_create_basic_interface(self):
+    async def test_create_basic_interface(self) -> None:
         """Test creating a basic artifact interface."""
         interface = await create_artifact_interface(
             domain="File Operations",
@@ -214,7 +214,7 @@ class TestCreateArtifactInterface:
         assert interface.artifact_name is not None
 
     @pytest.mark.asyncio
-    async def test_create_interface_with_operations(self):
+    async def test_create_interface_with_operations(self) -> None:
         """Test creating interface with explicit operations."""
         interface = await create_artifact_interface(
             domain="Task Management",
@@ -224,7 +224,7 @@ class TestCreateArtifactInterface:
         assert "CREATE" in interface.operations or "LIST" in interface.operations
 
     @pytest.mark.asyncio
-    async def test_create_interface_with_constraints(self):
+    async def test_create_interface_with_constraints(self) -> None:
         """Test that constraints are passed to tongue."""
         interface = await create_artifact_interface(
             domain="Database",
@@ -238,7 +238,7 @@ class TestCreateArtifactInterface:
         )
 
     @pytest.mark.asyncio
-    async def test_create_interface_with_examples(self):
+    async def test_create_interface_with_examples(self) -> None:
         """Test creating interface with example commands."""
         examples = ["GET user/123", "LIST users"]
         interface = await create_artifact_interface(
@@ -249,7 +249,7 @@ class TestCreateArtifactInterface:
         assert interface.examples == examples
 
     @pytest.mark.asyncio
-    async def test_create_interface_custom_artifact_name(self):
+    async def test_create_interface_custom_artifact_name(self) -> None:
         """Test specifying custom artifact name."""
         interface = await create_artifact_interface(
             domain="Weather",
@@ -259,7 +259,7 @@ class TestCreateArtifactInterface:
         assert interface.artifact_name == "WeatherBot"
 
     @pytest.mark.asyncio
-    async def test_create_schema_interface(self):
+    async def test_create_schema_interface(self) -> None:
         """Test creating a schema-level interface."""
         interface = await create_artifact_interface(
             domain="User Profile",
@@ -277,7 +277,7 @@ class TestCreateArtifactInterface:
 class TestBindHandlers:
     """Tests for bind_handlers function."""
 
-    def test_bind_single_handler(self, sample_interface: InterfaceTongue):
+    def test_bind_single_handler(self, sample_interface: InterfaceTongue) -> None:
         """Test binding a single handler."""
 
         def handler(noun, ctx):
@@ -288,7 +288,7 @@ class TestBindHandlers:
         assert "CHECK" in result.handlers
         assert result.handlers["CHECK"]("test", {}) == "handled: test"
 
-    def test_bind_multiple_handlers(self, sample_interface: InterfaceTongue):
+    def test_bind_multiple_handlers(self, sample_interface: InterfaceTongue) -> None:
         """Test binding multiple handlers."""
         handlers = {
             "CHECK": lambda noun, ctx: f"checked: {noun}",
@@ -343,7 +343,9 @@ class TestCreateInvocationHandler:
 class TestEmbedTongueInContract:
     """Tests for embed_tongue_in_contract function."""
 
-    def test_embed_creates_new_contract(self, sample_interface: InterfaceTongue):
+    def test_embed_creates_new_contract(
+        self, sample_interface: InterfaceTongue
+    ) -> None:
         """Test that embedding creates a new contract."""
         from agents.f.contract import Contract
 
@@ -359,7 +361,9 @@ class TestEmbedTongueInContract:
         assert result is not original
         assert result.agent_name == original.agent_name
 
-    def test_embed_sets_interface_tongue(self, sample_interface: InterfaceTongue):
+    def test_embed_sets_interface_tongue(
+        self, sample_interface: InterfaceTongue
+    ) -> None:
         """Test that embedding sets interface_tongue field."""
         from agents.f.contract import Contract
 
@@ -375,7 +379,7 @@ class TestEmbedTongueInContract:
         assert isinstance(result.interface_tongue, dict)
         assert result.interface_tongue["tongue_name"] == "CalendarTongue"
 
-    def test_embed_updates_input_type(self, sample_interface: InterfaceTongue):
+    def test_embed_updates_input_type(self, sample_interface: InterfaceTongue) -> None:
         """Test that embedding updates input type to DSL."""
         from agents.f.contract import Contract
 
@@ -390,7 +394,9 @@ class TestEmbedTongueInContract:
         assert "DSL<" in result.input_type
         assert sample_interface.tongue.domain in result.input_type
 
-    def test_embed_adds_tongue_invariants(self, sample_interface: InterfaceTongue):
+    def test_embed_adds_tongue_invariants(
+        self, sample_interface: InterfaceTongue
+    ) -> None:
         """Test that embedding adds tongue-related invariants."""
         from agents.f.contract import Contract
 
@@ -448,7 +454,7 @@ class TestForgeWithInterface:
     """Tests for forge_with_interface function."""
 
     @pytest.mark.asyncio
-    async def test_forge_returns_contract_and_interface(self):
+    async def test_forge_returns_contract_and_interface(self) -> None:
         """Test that forge returns both contract and interface."""
         contract, interface = await forge_with_interface(
             intent_text="Create a calendar agent that can check and add events",
@@ -459,7 +465,7 @@ class TestForgeWithInterface:
         assert interface is not None
 
     @pytest.mark.asyncio
-    async def test_forge_contract_has_tongue(self):
+    async def test_forge_contract_has_tongue(self) -> None:
         """Test that forged contract has interface tongue."""
         contract, interface = await forge_with_interface(
             intent_text="Create a task manager",
@@ -469,7 +475,7 @@ class TestForgeWithInterface:
         assert contract.interface_tongue is not None
 
     @pytest.mark.asyncio
-    async def test_forge_with_constraints(self):
+    async def test_forge_with_constraints(self) -> None:
         """Test forging with constraints."""
         contract, interface = await forge_with_interface(
             intent_text="Create a read-only database viewer",
@@ -484,7 +490,7 @@ class TestForgeWithInterface:
         )
 
     @pytest.mark.asyncio
-    async def test_forge_with_handlers(self, calendar_handlers: dict):
+    async def test_forge_with_handlers(self, calendar_handlers: dict) -> None:
         """Test forging with bound handlers."""
         contract, interface = await forge_with_interface(
             intent_text="Create a calendar assistant",
@@ -504,7 +510,7 @@ class TestIntegration:
     """End-to-end integration tests."""
 
     @pytest.mark.asyncio
-    async def test_full_workflow(self):
+    async def test_full_workflow(self) -> None:
         """Test complete workflow from interface creation to execution."""
         # 1. Create interface
         interface = await create_artifact_interface(
@@ -526,7 +532,7 @@ class TestIntegration:
         assert callable(invoke)
 
     @pytest.mark.asyncio
-    async def test_embedding_round_trip(self, sample_tongue: Tongue):
+    async def test_embedding_round_trip(self, sample_tongue: Tongue) -> None:
         """Test that tongue embedding can be restored."""
         # Create embedding
         embedding = TongueEmbedding.from_tongue(sample_tongue)
@@ -544,7 +550,7 @@ class TestIntegration:
 
     @pytest.mark.skipif(not FGENT_AVAILABLE, reason="F-gent not available")
     @pytest.mark.asyncio
-    async def test_artifact_with_interface_workflow(self):
+    async def test_artifact_with_interface_workflow(self) -> None:
         """Test complete artifact creation with interface workflow."""
         from agents.f.contract import Contract
 
@@ -583,7 +589,7 @@ class TestEdgeCases:
     """Tests for edge cases and error handling."""
 
     @pytest.mark.asyncio
-    async def test_empty_constraints(self):
+    async def test_empty_constraints(self) -> None:
         """Test interface with no constraints."""
         interface = await create_artifact_interface(
             domain="Unconstrained",
@@ -593,7 +599,7 @@ class TestEdgeCases:
         assert interface.tongue is not None
 
     @pytest.mark.asyncio
-    async def test_empty_operations(self):
+    async def test_empty_operations(self) -> None:
         """Test interface with no explicit operations."""
         interface = await create_artifact_interface(
             domain="Simple",
@@ -603,7 +609,7 @@ class TestEdgeCases:
         # Should still have tongue
         assert interface.tongue is not None
 
-    def test_embedding_missing_fields(self):
+    def test_embedding_missing_fields(self) -> None:
         """Test deserializing embedding with minimal fields."""
         minimal_data = {
             "tongue_name": "Test",
@@ -619,7 +625,7 @@ class TestEdgeCases:
         assert embedding.operations == []
         assert embedding.examples == []
 
-    def test_interface_tongue_without_handlers(self, sample_tongue: Tongue):
+    def test_interface_tongue_without_handlers(self, sample_tongue: Tongue) -> None:
         """Test InterfaceTongue without any handlers."""
         interface = InterfaceTongue(
             tongue=sample_tongue,

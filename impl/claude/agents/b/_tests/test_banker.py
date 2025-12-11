@@ -64,7 +64,7 @@ from ..value_tensor import (
 class TestPhysicalDimension:
     """Tests for PhysicalDimension."""
 
-    def test_creation(self):
+    def test_creation(self) -> None:
         """Test basic creation."""
         phys = PhysicalDimension(
             input_tokens=100,
@@ -76,14 +76,14 @@ class TestPhysicalDimension:
         assert phys.total_tokens == 300
         assert phys.normalized_tokens == 4500.0  # 300 * 15
 
-    def test_addition(self):
+    def test_addition(self) -> None:
         """Test adding two physical dimensions."""
         a = PhysicalDimension(input_tokens=100, output_tokens=100)
         b = PhysicalDimension(input_tokens=50, output_tokens=50)
         c = a + b
         assert c.total_tokens == 300
 
-    def test_default_values(self):
+    def test_default_values(self) -> None:
         """Test default initialization."""
         phys = PhysicalDimension()
         assert phys.total_tokens == 0
@@ -94,7 +94,7 @@ class TestPhysicalDimension:
 class TestSemanticDimension:
     """Tests for SemanticDimension."""
 
-    def test_quality_score(self):
+    def test_quality_score(self) -> None:
         """Test quality score calculation."""
         sem = SemanticDimension(
             compression_ratio=0.3,
@@ -105,7 +105,7 @@ class TestSemanticDimension:
         # (1 - 0.3) * 0.3 + 0.8 * 0.4 + 0.7 * 0.3 = 0.21 + 0.32 + 0.21 = 0.74
         assert abs(sem.quality_score - 0.74) < 0.01
 
-    def test_from_compression(self):
+    def test_from_compression(self) -> None:
         """Test compression-based heuristic."""
         # Structured text compresses well
         structured = "def foo():\n    return 42\n" * 10
@@ -113,13 +113,13 @@ class TestSemanticDimension:
         assert sem.compression_ratio < 0.5  # Should compress well
         assert sem.measurement_method == "compression_heuristic"
 
-    def test_from_compression_empty(self):
+    def test_from_compression_empty(self) -> None:
         """Test empty text handling."""
         sem = SemanticDimension.from_compression("")
         assert sem.compression_ratio == 1.0
         assert sem.confidence == 0.1
 
-    def test_from_validation(self):
+    def test_from_validation(self) -> None:
         """Test validation-based heuristic."""
         validators = [
             lambda x: "def" in x,  # Has function
@@ -134,7 +134,7 @@ class TestSemanticDimension:
 class TestEconomicDimension:
     """Tests for EconomicDimension."""
 
-    def test_profit_calculation(self):
+    def test_profit_calculation(self) -> None:
         """Test profit/loss calculation."""
         econ = EconomicDimension(
             gas_cost_usd=1.0,
@@ -143,7 +143,7 @@ class TestEconomicDimension:
         assert econ.profit_usd == 1.0
         assert econ.roc == 2.0
 
-    def test_loss_scenario(self):
+    def test_loss_scenario(self) -> None:
         """Test loss scenario."""
         econ = EconomicDimension(
             gas_cost_usd=2.0,
@@ -152,7 +152,7 @@ class TestEconomicDimension:
         assert econ.profit_usd == -1.0
         assert econ.roc == 0.5
 
-    def test_impact_tiers(self):
+    def test_impact_tiers(self) -> None:
         """Test impact tier values."""
         assert ImpactTier.SYNTACTIC.value == "syntactic"
         assert ImpactTier.DEPLOYMENT.value == "deployment"
@@ -161,12 +161,12 @@ class TestEconomicDimension:
 class TestEthicalDimension:
     """Tests for EthicalDimension."""
 
-    def test_sin_tax_high_risk(self):
+    def test_sin_tax_high_risk(self) -> None:
         """Test sin tax with high security risk."""
         eth = EthicalDimension(security_risk=0.8)
         assert eth.sin_tax_multiplier < 0.5  # Should be penalized
 
-    def test_virtue_subsidy(self):
+    def test_virtue_subsidy(self) -> None:
         """Test virtue subsidy bonus."""
         eth = EthicalDimension(
             maintainability_improvement=0.5,
@@ -174,12 +174,12 @@ class TestEthicalDimension:
         )
         assert eth.virtue_subsidy_multiplier > 1.0
 
-    def test_net_multiplier(self):
+    def test_net_multiplier(self) -> None:
         """Test combined ethical multiplier."""
         eth = EthicalDimension()  # Default: no risks, no virtues
         assert 0.9 < eth.net_ethical_multiplier <= 1.0
 
-    def test_license_violation_penalty(self):
+    def test_license_violation_penalty(self) -> None:
         """Test license violation penalty."""
         eth = EthicalDimension(license_compliant=False)
         assert eth.net_ethical_multiplier == pytest.approx(0.2, rel=0.1)
@@ -188,14 +188,14 @@ class TestEthicalDimension:
 class TestExchangeMatrix:
     """Tests for ExchangeMatrix."""
 
-    def test_standard_rates(self):
+    def test_standard_rates(self) -> None:
         """Test standard exchange rates."""
         matrix = create_standard_exchange_rates()
         rate = matrix.get_rate("physical.tokens", "economic.gas_cost_usd")
         assert rate.rate > 0
         assert rate.confidence > 0.9
 
-    def test_conversion(self):
+    def test_conversion(self) -> None:
         """Test value conversion."""
         matrix = create_standard_exchange_rates()
         converted, loss = matrix.convert(
@@ -204,7 +204,7 @@ class TestExchangeMatrix:
         assert converted > 0
         assert loss == 0  # Direct conversion, no loss
 
-    def test_undefined_rate(self):
+    def test_undefined_rate(self) -> None:
         """Test undefined rate handling."""
         matrix = ExchangeMatrix()
         rate = matrix.get_rate("foo", "bar")
@@ -214,7 +214,7 @@ class TestExchangeMatrix:
 class TestAntiDelusionChecker:
     """Tests for AntiDelusionChecker."""
 
-    def test_impact_quality_mismatch(self):
+    def test_impact_quality_mismatch(self) -> None:
         """Test detection of high impact with low quality."""
         tensor = ValueTensor(
             semantic=SemanticDimension(
@@ -229,7 +229,7 @@ class TestAntiDelusionChecker:
         anomalies = checker.check_consistency(tensor)
         assert any(a.type == "impact_quality_mismatch" for a in anomalies)
 
-    def test_suspicious_roc(self):
+    def test_suspicious_roc(self) -> None:
         """Test detection of suspicious RoC."""
         tensor = ValueTensor(
             economic=EconomicDimension(
@@ -241,7 +241,7 @@ class TestAntiDelusionChecker:
         anomalies = checker.check_consistency(tensor)
         assert any(a.type == "suspicious_roc" for a in anomalies)
 
-    def test_free_lunch(self):
+    def test_free_lunch(self) -> None:
         """Test detection of free lunch."""
         tensor = ValueTensor(
             economic=EconomicDimension(
@@ -257,13 +257,13 @@ class TestAntiDelusionChecker:
 class TestValueTensor:
     """Tests for ValueTensor."""
 
-    def test_creation(self):
+    def test_creation(self) -> None:
         """Test basic creation."""
         tensor = ValueTensor.initial()
         assert tensor.physical.total_tokens == 0
         assert tensor.economic.gas_cost_usd == 0.0
 
-    def test_copy(self):
+    def test_copy(self) -> None:
         """Test deep copy."""
         tensor = ValueTensor(
             physical=PhysicalDimension(input_tokens=100),
@@ -272,7 +272,7 @@ class TestValueTensor:
         copied.physical.input_tokens = 200
         assert tensor.physical.input_tokens == 100
 
-    def test_serialization(self):
+    def test_serialization(self) -> None:
         """Test to_dict/from_dict."""
         tensor = ValueTensor(
             physical=PhysicalDimension(input_tokens=100, output_tokens=200),
@@ -283,13 +283,13 @@ class TestValueTensor:
         assert restored.physical.input_tokens == 100
         assert restored.economic.gas_cost_usd == 0.5
 
-    def test_validate(self):
+    def test_validate(self) -> None:
         """Test validation."""
         tensor = ValueTensor.initial()
         anomalies = tensor.validate()
         assert isinstance(anomalies, list)
 
-    def test_project_to_usd(self):
+    def test_project_to_usd(self) -> None:
         """Test USD projection."""
         tensor = ValueTensor(
             economic=EconomicDimension(
@@ -305,7 +305,7 @@ class TestValueTensor:
 class TestTensorAlgebra:
     """Tests for TensorAlgebra."""
 
-    def test_add(self):
+    def test_add(self) -> None:
         """Test tensor addition."""
         a = ValueTensor(
             physical=PhysicalDimension(input_tokens=100),
@@ -319,7 +319,7 @@ class TestTensorAlgebra:
         assert c.physical.input_tokens == 200
         assert c.economic.gas_cost_usd == 2.0
 
-    def test_scale(self):
+    def test_scale(self) -> None:
         """Test tensor scaling."""
         tensor = ValueTensor(
             physical=PhysicalDimension(input_tokens=100),
@@ -329,7 +329,7 @@ class TestTensorAlgebra:
         assert scaled.physical.input_tokens == 200
         assert scaled.economic.gas_cost_usd == 2.0
 
-    def test_project(self):
+    def test_project(self) -> None:
         """Test dimension projection."""
         tensor = ValueTensor(
             physical=PhysicalDimension(input_tokens=1000),
@@ -346,12 +346,12 @@ class TestTensorAlgebra:
 class TestGas:
     """Tests for Gas."""
 
-    def test_cost_calculation(self):
+    def test_cost_calculation(self) -> None:
         """Test cost calculation."""
         gas = Gas(tokens=1000, model_multiplier=1.0)
         assert gas.cost_usd == pytest.approx(0.01, rel=0.01)
 
-    def test_addition(self):
+    def test_addition(self) -> None:
         """Test gas addition."""
         a = Gas(tokens=100, time_ms=50)
         b = Gas(tokens=100, time_ms=50)
@@ -363,7 +363,7 @@ class TestGas:
 class TestImpact:
     """Tests for Impact."""
 
-    def test_realized_value(self):
+    def test_realized_value(self) -> None:
         """Test realized value with multipliers."""
         impact = Impact(
             base_value=100,
@@ -375,24 +375,24 @@ class TestImpact:
 class TestTokenBucket:
     """Tests for TokenBucket."""
 
-    def test_initial_balance(self):
+    def test_initial_balance(self) -> None:
         """Test initial balance."""
         bucket = TokenBucket(max_balance=1000, balance=1000)
         assert bucket.available == 1000
 
-    def test_consume(self):
+    def test_consume(self) -> None:
         """Test token consumption."""
         bucket = TokenBucket(max_balance=1000, balance=1000, refill_rate=0.0)
         assert bucket.consume(500)
         assert bucket.available == 500
 
-    def test_insufficient_balance(self):
+    def test_insufficient_balance(self) -> None:
         """Test insufficient balance rejection."""
         bucket = TokenBucket(max_balance=100, balance=100, refill_rate=0.0)
         assert not bucket.consume(200)  # Should fail
         assert bucket.available == 100  # Balance unchanged
 
-    def test_can_afford(self):
+    def test_can_afford(self) -> None:
         """Test can_afford check."""
         bucket = TokenBucket(max_balance=100, balance=50, refill_rate=0.0)
         assert bucket.can_afford(50)
@@ -402,14 +402,14 @@ class TestTokenBucket:
 class TestSinkingFund:
     """Tests for SinkingFund."""
 
-    def test_tax_collection(self):
+    def test_tax_collection(self) -> None:
         """Test tax collection."""
         fund = SinkingFund(tax_rate=0.01)
         remaining = fund.tax(1000)
         assert remaining == 990
         assert fund.reserve == 10
 
-    def test_emergency_loan(self):
+    def test_emergency_loan(self) -> None:
         """Test emergency loan."""
         fund = SinkingFund(reserve=100.0)
         result = fund.emergency_loan("agent1", 50)
@@ -417,13 +417,13 @@ class TestSinkingFund:
         assert result.amount == 50
         assert fund.reserve == 50.0
 
-    def test_loan_denial(self):
+    def test_loan_denial(self) -> None:
         """Test loan denial."""
         fund = SinkingFund(reserve=10.0)
         result = fund.emergency_loan("agent1", 100)
         assert isinstance(result, Denial)
 
-    def test_loan_repayment(self):
+    def test_loan_repayment(self) -> None:
         """Test loan repayment."""
         fund = SinkingFund(reserve=100.0)
         loan = fund.emergency_loan("agent1", 50)
@@ -436,7 +436,7 @@ class TestSinkingFund:
 class TestTokenFuture:
     """Tests for TokenFuture."""
 
-    def test_validity(self):
+    def test_validity(self) -> None:
         """Test validity check."""
         future = TokenFuture(
             reserved_tokens=1000,
@@ -445,7 +445,7 @@ class TestTokenFuture:
         )
         assert future.is_valid
 
-    def test_expired(self):
+    def test_expired(self) -> None:
         """Test expired future."""
         future = TokenFuture(
             reserved_tokens=1000,
@@ -459,7 +459,7 @@ class TestPriorityAuction:
     """Tests for priority auction."""
 
     @pytest.mark.asyncio
-    async def test_single_bidder(self):
+    async def test_single_bidder(self) -> None:
         """Test auction with single bidder."""
         bids = [
             Bid(agent_id="a1", requested_tokens=100, confidence=0.8, criticality=0.9)
@@ -470,7 +470,7 @@ class TestPriorityAuction:
         assert allocations[0].clearing_price == 0.0  # No runner-up
 
     @pytest.mark.asyncio
-    async def test_vickrey_pricing(self):
+    async def test_vickrey_pricing(self) -> None:
         """Test Vickrey (second-price) rule."""
         bids = [
             Bid(agent_id="a1", requested_tokens=100, confidence=0.9, criticality=0.9),
@@ -481,7 +481,7 @@ class TestPriorityAuction:
         assert allocations[0].clearing_price == 0.25  # a2's bid value
 
     @pytest.mark.asyncio
-    async def test_limited_capacity(self):
+    async def test_limited_capacity(self) -> None:
         """Test limited capacity allocation."""
         bids = [
             Bid(agent_id="a1", requested_tokens=600, confidence=0.9, criticality=0.9),
@@ -497,7 +497,7 @@ class TestCentralBank:
     """Tests for CentralBank."""
 
     @pytest.mark.asyncio
-    async def test_authorize_and_settle(self):
+    async def test_authorize_and_settle(self) -> None:
         """Test authorization and settlement flow."""
         bank = CentralBank(max_balance=10000, refill_rate=0.0)
         lease = await bank.authorize("agent1", 1000)
@@ -507,7 +507,7 @@ class TestCentralBank:
         assert gas.tokens == 1000
 
     @pytest.mark.asyncio
-    async def test_void_on_failure(self):
+    async def test_void_on_failure(self) -> None:
         """Test voiding on failure."""
         bank = CentralBank(max_balance=10000, refill_rate=0.0)
         lease = await bank.authorize("agent1", 1000)
@@ -517,7 +517,7 @@ class TestCentralBank:
         assert after_void > after_auth  # Tokens returned
 
     @pytest.mark.asyncio
-    async def test_insufficient_funds(self):
+    async def test_insufficient_funds(self) -> None:
         """Test insufficient funds error."""
         bank = CentralBank(max_balance=100, refill_rate=0.0)
         with pytest.raises(InsufficientFundsError):
@@ -527,7 +527,7 @@ class TestCentralBank:
 class TestDualBudget:
     """Tests for DualBudget."""
 
-    def test_can_proceed(self):
+    def test_can_proceed(self) -> None:
         """Test can_proceed check."""
         budget = DualBudget(
             entropy=EntropyBudget(remaining=1.0),
@@ -537,7 +537,7 @@ class TestDualBudget:
         assert not budget.can_proceed(2.0, 500)  # Entropy exceeded
         assert not budget.can_proceed(0.5, 2000)  # Economic exceeded
 
-    def test_spend(self):
+    def test_spend(self) -> None:
         """Test spending from both budgets."""
         budget = DualBudget(
             entropy=EntropyBudget(remaining=1.0),
@@ -552,7 +552,7 @@ class TestMeteredFunctor:
     """Tests for Metered functor."""
 
     @pytest.mark.asyncio
-    async def test_metered_invoke(self):
+    async def test_metered_invoke(self) -> None:
         """Test metered invocation."""
 
         class SimpleAgent:
@@ -571,7 +571,7 @@ class TestMeteredFunctor:
         assert receipt.gas.tokens == 100
 
     @pytest.mark.asyncio
-    async def test_metered_failure_rollback(self):
+    async def test_metered_failure_rollback(self) -> None:
         """Test rollback on failure."""
 
         class FailingAgent:
@@ -602,7 +602,7 @@ class TestMeteredFunctor:
 class TestComplexityOracle:
     """Tests for ComplexityOracle."""
 
-    def test_structured_text(self):
+    def test_structured_text(self) -> None:
         """Test structured text assessment."""
         oracle = ComplexityOracle()
         # Repetitive, structured code
@@ -610,7 +610,7 @@ class TestComplexityOracle:
         complexity = oracle.assess(code)
         assert complexity > 0.3  # Should detect structure
 
-    def test_random_text(self):
+    def test_random_text(self) -> None:
         """Test random text assessment."""
         oracle = ComplexityOracle()
         import random
@@ -620,7 +620,7 @@ class TestComplexityOracle:
         complexity = oracle.assess(random_text)
         assert complexity < 0.3  # Random = low complexity (0.2-0.25 typical)
 
-    def test_information_joule(self):
+    def test_information_joule(self) -> None:
         """Test information joule calculation."""
         oracle = ComplexityOracle()
         code = "def foo():\n    return 42\n" * 10
@@ -631,7 +631,7 @@ class TestComplexityOracle:
 class TestValueOracle:
     """Tests for ValueOracle."""
 
-    def test_syntactic_tier(self):
+    def test_syntactic_tier(self) -> None:
         """Test syntactic tier assignment."""
         oracle = ValueOracle()
         output = SimpleOutput(content="def foo(): pass", _valid_syntax=True)
@@ -639,7 +639,7 @@ class TestValueOracle:
         assert impact.base_value >= 10
         assert impact.tier == "syntactic"
 
-    def test_functional_tier(self):
+    def test_functional_tier(self) -> None:
         """Test functional tier assignment."""
         oracle = ValueOracle()
         output = SimpleOutput(
@@ -651,7 +651,7 @@ class TestValueOracle:
         assert impact.base_value >= 100
         assert impact.tier == "functional"
 
-    def test_sin_tax(self):
+    def test_sin_tax(self) -> None:
         """Test sin tax application."""
         oracle = ValueOracle()
         output = SimpleOutput(
@@ -667,7 +667,7 @@ class TestValueOracle:
 class TestEthicalRegulator:
     """Tests for EthicalRegulator."""
 
-    def test_sin_tax_application(self):
+    def test_sin_tax_application(self) -> None:
         """Test sin tax application."""
         regulator = EthicalRegulator()
         base = Impact(base_value=100)
@@ -676,7 +676,7 @@ class TestEthicalRegulator:
         )
         assert "sin:security_vulnerability" in adjusted.multipliers
 
-    def test_virtue_subsidy_application(self):
+    def test_virtue_subsidy_application(self) -> None:
         """Test virtue subsidy application."""
         regulator = EthicalRegulator()
         base = Impact(base_value=100)
@@ -688,20 +688,20 @@ class TestEthicalRegulator:
 class TestTreasury:
     """Tests for Treasury."""
 
-    def test_gas_tracking(self):
+    def test_gas_tracking(self) -> None:
         """Test gas tracking."""
         treasury = Treasury()
         treasury.deduct_gas("agent1", Gas(tokens=1000))
         assert treasury.get_gas_consumed("agent1") > 0
         assert treasury.get_transaction_count("agent1") == 1
 
-    def test_impact_minting(self):
+    def test_impact_minting(self) -> None:
         """Test impact minting."""
         treasury = Treasury()
         treasury.mint_impact("agent1", 100.0)
         assert treasury.get_impact("agent1") == 100.0
 
-    def test_debt_recording(self):
+    def test_debt_recording(self) -> None:
         """Test debt recording."""
         treasury = Treasury()
         treasury.record_debt("agent1", 50.0)
@@ -711,7 +711,7 @@ class TestTreasury:
 class TestValueLedger:
     """Tests for ValueLedger."""
 
-    def test_log_profitable_transaction(self):
+    def test_log_profitable_transaction(self) -> None:
         """Test logging a profitable transaction."""
         ledger = ValueLedger()
         output = SimpleOutput(
@@ -725,7 +725,7 @@ class TestValueLedger:
         assert receipt.status == "profitable"
         assert receipt.roc > 1.0
 
-    def test_log_debt_transaction(self):
+    def test_log_debt_transaction(self) -> None:
         """Test logging a debt-incurring transaction."""
         ledger = ValueLedger()
         output = SimpleOutput(
@@ -737,7 +737,7 @@ class TestValueLedger:
 
         assert receipt.status == "debt"
 
-    def test_balance_sheet(self):
+    def test_balance_sheet(self) -> None:
         """Test balance sheet generation."""
         ledger = ValueLedger()
         output = SimpleOutput(content="def foo(): pass", _valid_syntax=True)
@@ -747,7 +747,7 @@ class TestValueLedger:
         sheet = ledger.get_agent_balance_sheet("agent1")
         assert sheet.transaction_count == 1
 
-    def test_system_stats(self):
+    def test_system_stats(self) -> None:
         """Test system statistics."""
         ledger = ValueLedger()
         output = SimpleOutput(content="def foo(): pass", _valid_syntax=True)
@@ -761,14 +761,14 @@ class TestValueLedger:
 class TestRoCMonitor:
     """Tests for RoCMonitor."""
 
-    def test_new_agent(self):
+    def test_new_agent(self) -> None:
         """Test assessment of new agent."""
         ledger = ValueLedger()
         monitor = RoCMonitor(ledger)
         assessment = monitor.assess_agent("new_agent")
         assert assessment.status == "new"
 
-    def test_profitable_agent(self):
+    def test_profitable_agent(self) -> None:
         """Test assessment of profitable agent."""
         ledger = ValueLedger()
         output = SimpleOutput(
@@ -783,7 +783,7 @@ class TestRoCMonitor:
         assessment = monitor.assess_agent("agent1")
         assert assessment.status in ["profitable", "high_yield"]
 
-    def test_leaderboard(self):
+    def test_leaderboard(self) -> None:
         """Test leaderboard generation."""
         ledger = ValueLedger()
         # Create some transactions
@@ -809,7 +809,7 @@ class TestBankerIntegration:
     """Integration tests for the Banker economics system."""
 
     @pytest.mark.asyncio
-    async def test_full_metered_workflow(self):
+    async def test_full_metered_workflow(self) -> None:
         """Test complete metered workflow with value tracking."""
 
         class ProductiveAgent:
@@ -834,7 +834,7 @@ class TestBankerIntegration:
         assert tx.roc > 0
 
     @pytest.mark.asyncio
-    async def test_budget_exhaustion(self):
+    async def test_budget_exhaustion(self) -> None:
         """Test behavior when budget is exhausted."""
         bank = CentralBank(max_balance=100, refill_rate=0.0)
 
@@ -851,7 +851,7 @@ class TestBankerIntegration:
         with pytest.raises(InsufficientFundsError):
             await metered_agent.invoke(1)
 
-    def test_tensor_conservation_laws(self):
+    def test_tensor_conservation_laws(self) -> None:
         """Test conservation law enforcement."""
         before = ValueTensor(
             physical=PhysicalDimension(input_tokens=100, wall_clock_ms=100),
@@ -870,7 +870,7 @@ class TestBankerIntegration:
         critical = [a for a in anomalies if a.severity == "critical"]
         assert len(critical) == 0
 
-    def test_ethical_multiplier_chain(self):
+    def test_ethical_multiplier_chain(self) -> None:
         """Test ethical multiplier through the full chain."""
         ledger = ValueLedger()
 
@@ -893,7 +893,7 @@ class TestBankerIntegration:
         assert tx.tensor.ethical.net_ethical_multiplier > 1.0
         assert "virtue:improved_readability" in tx.impact.multipliers
 
-    def test_dual_budget_enforcement(self):
+    def test_dual_budget_enforcement(self) -> None:
         """Test dual budget (entropy + economic) enforcement."""
         budget = DualBudget(
             entropy=EntropyBudget(remaining=0.5),

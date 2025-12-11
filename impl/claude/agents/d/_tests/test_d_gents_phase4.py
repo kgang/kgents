@@ -53,7 +53,7 @@ def temp_dir():
 
 
 @pytest.mark.asyncio
-async def test_kgent_persistent_persona_integration(temp_dir):
+async def test_kgent_persistent_persona_integration(temp_dir) -> None:
     """Test K-gent with PersistentAgent for persona continuity."""
     path = temp_dir / "persona.json"
 
@@ -87,7 +87,7 @@ async def test_kgent_persistent_persona_integration(temp_dir):
 
 
 @pytest.mark.asyncio
-async def test_bgents_hypothesis_storage_integration(temp_dir):
+async def test_bgents_hypothesis_storage_integration(temp_dir) -> None:
     """Test B-gents with PersistentAgent for hypothesis memory."""
     path = temp_dir / "hypotheses.json"
 
@@ -134,7 +134,7 @@ async def test_bgents_hypothesis_storage_integration(temp_dir):
 
 
 @pytest.mark.asyncio
-async def test_jgents_entropy_constraint_integration():
+async def test_jgents_entropy_constraint_integration() -> None:
     """Test J-gent entropy constraints with EntropyConstrainedAgent."""
 
     # Simulate depth 0 in promise tree (full budget)
@@ -172,7 +172,7 @@ async def test_jgents_entropy_constraint_integration():
 
 
 @pytest.mark.asyncio
-async def test_tgents_spy_volatile_integration():
+async def test_tgents_spy_volatile_integration() -> None:
     """Test T-gent SpyAgent with VolatileAgent backend."""
 
     spy = SpyAgent[int](label="TestSpy")
@@ -207,7 +207,7 @@ async def test_tgents_spy_volatile_integration():
 
 
 @pytest.mark.asyncio
-async def test_cross_genus_integration_kgent_bgents(temp_dir):
+async def test_cross_genus_integration_kgent_bgents(temp_dir) -> None:
     """Test K-gent + B-gents integration for personalized science."""
     persona_path = temp_dir / "persona.json"
     hyp_path = temp_dir / "hypotheses.json"
@@ -266,7 +266,7 @@ async def test_cross_genus_integration_kgent_bgents(temp_dir):
 
 
 @pytest.mark.asyncio
-async def test_full_phase4_integration(temp_dir):
+async def test_full_phase4_integration(temp_dir) -> None:
     """
     Full Phase 4 integration test demonstrating all 4 integrations.
 

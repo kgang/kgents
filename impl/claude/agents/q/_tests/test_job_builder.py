@@ -28,7 +28,7 @@ from agents.q.job_builder import (
 class TestResourceLimits:
     """Tests for ResourceLimits."""
 
-    def test_default_values(self):
+    def test_default_values(self) -> None:
         """Default limits are conservative."""
         limits = ResourceLimits()
 
@@ -36,7 +36,7 @@ class TestResourceLimits:
         assert limits.memory == "128Mi"
         assert limits.ephemeral_storage == "100Mi"
 
-    def test_to_k8s_dict(self):
+    def test_to_k8s_dict(self) -> None:
         """Converts to K8s resource dict."""
         limits = ResourceLimits(cpu="200m", memory="256Mi")
 
@@ -46,7 +46,7 @@ class TestResourceLimits:
         assert k8s_dict["memory"] == "256Mi"
         assert "ephemeral-storage" in k8s_dict
 
-    def test_default_resource_limits_factory(self):
+    def test_default_resource_limits_factory(self) -> None:
         """Factory returns default limits."""
         limits = default_resource_limits()
 
@@ -57,7 +57,7 @@ class TestResourceLimits:
 class TestImageSpec:
     """Tests for ImageSpec."""
 
-    def test_default_values(self):
+    def test_default_values(self) -> None:
         """Default pull policy is IfNotPresent."""
         image = ImageSpec(name="python:3.12-slim")
 
@@ -66,7 +66,7 @@ class TestImageSpec:
         assert image.command is None
         assert image.args is None
 
-    def test_sandbox_images(self):
+    def test_sandbox_images(self) -> None:
         """Pre-defined sandbox images are correct."""
         assert SANDBOX_PYTHON.name == "python:3.12-slim"
         assert SANDBOX_PYTHON.command == ["python", "-c"]
@@ -78,7 +78,7 @@ class TestImageSpec:
 class TestJobConfig:
     """Tests for JobConfig."""
 
-    def test_default_values(self):
+    def test_default_values(self) -> None:
         """Default config is safe for untrusted code."""
         config = JobConfig()
 
@@ -91,7 +91,7 @@ class TestJobConfig:
 class TestJobSpec:
     """Tests for JobSpec."""
 
-    def test_create_spec(self):
+    def test_create_spec(self) -> None:
         """Create a basic job spec."""
         spec = JobSpec(
             name="test-job",
@@ -106,7 +106,7 @@ class TestJobSpec:
         assert spec.namespace == "kgents-ephemeral"
         assert spec.code == "print('hello')"
 
-    def test_to_k8s_manifest(self):
+    def test_to_k8s_manifest(self) -> None:
         """Convert spec to K8s manifest."""
         spec = JobSpec(
             name="test-job",
@@ -151,7 +151,7 @@ class TestJobSpec:
         assert sec["readOnlyRootFilesystem"] is True
         assert sec["allowPrivilegeEscalation"] is False
 
-    def test_manifest_with_labels_and_annotations(self):
+    def test_manifest_with_labels_and_annotations(self) -> None:
         """Custom labels and annotations are included."""
         spec = JobSpec(
             name="test-job",
@@ -173,7 +173,7 @@ class TestJobSpec:
 class TestJobStatus:
     """Tests for JobStatus."""
 
-    def test_phases(self):
+    def test_phases(self) -> None:
         """All job phases are available."""
         assert JobPhase.PENDING.name == "PENDING"
         assert JobPhase.RUNNING.name == "RUNNING"
@@ -181,7 +181,7 @@ class TestJobStatus:
         assert JobPhase.FAILED.name == "FAILED"
         assert JobPhase.UNKNOWN.name == "UNKNOWN"
 
-    def test_status_fields(self):
+    def test_status_fields(self) -> None:
         """Status has expected fields."""
         status = JobStatus(
             name="test-job",
@@ -199,7 +199,7 @@ class TestJobStatus:
 class TestExecutionRequest:
     """Tests for ExecutionRequest."""
 
-    def test_default_values(self):
+    def test_default_values(self) -> None:
         """Default request is safe."""
         req = ExecutionRequest(code="print('hi')")
 
@@ -214,7 +214,7 @@ class TestExecutionRequest:
 class TestExecutionResult:
     """Tests for ExecutionResult."""
 
-    def test_success_result(self):
+    def test_success_result(self) -> None:
         """Success result structure."""
         result = ExecutionResult(
             success=True,
@@ -228,7 +228,7 @@ class TestExecutionResult:
         assert result.error is None
         assert result.duration_seconds == 0.5
 
-    def test_failure_result(self):
+    def test_failure_result(self) -> None:
         """Failure result structure."""
         result = ExecutionResult(
             success=False,
@@ -244,7 +244,7 @@ class TestExecutionResult:
 class TestJobBuilder:
     """Tests for JobBuilder."""
 
-    def test_build_basic_job(self):
+    def test_build_basic_job(self) -> None:
         """Build a basic job with defaults."""
         spec = JobBuilder("test").with_code("print('hi')").build()
 
@@ -253,7 +253,7 @@ class TestJobBuilder:
         assert spec.code == "print('hi')"
         assert spec.image == SANDBOX_PYTHON
 
-    def test_build_with_limits(self):
+    def test_build_with_limits(self) -> None:
         """Build job with custom limits."""
         spec = (
             JobBuilder("test")
@@ -265,31 +265,31 @@ class TestJobBuilder:
         assert spec.limits.cpu == "200m"
         assert spec.limits.memory == "256Mi"
 
-    def test_build_with_timeout(self):
+    def test_build_with_timeout(self) -> None:
         """Build job with custom timeout."""
         spec = JobBuilder("test").with_code("x").with_timeout(60).build()
 
         assert spec.config.timeout_seconds == 60
 
-    def test_build_with_ttl(self):
+    def test_build_with_ttl(self) -> None:
         """Build job with custom TTL."""
         spec = JobBuilder("test").with_code("x").with_ttl(120).build()
 
         assert spec.config.ttl_seconds_after_finished == 120
 
-    def test_build_with_network(self):
+    def test_build_with_network(self) -> None:
         """Build job with network access."""
         spec = JobBuilder("test").with_code("x").with_network(True).build()
 
         assert spec.config.network_access is True
 
-    def test_build_with_shell_image(self):
+    def test_build_with_shell_image(self) -> None:
         """Build job with shell image."""
         spec = JobBuilder("test").with_code("echo hi").with_image(SANDBOX_SHELL).build()
 
         assert spec.image == SANDBOX_SHELL
 
-    def test_build_with_labels(self):
+    def test_build_with_labels(self) -> None:
         """Build job with custom labels."""
         spec = (
             JobBuilder("test")
@@ -302,7 +302,7 @@ class TestJobBuilder:
         assert spec.labels["env"] == "test"
         assert spec.labels["team"] == "platform"
 
-    def test_build_with_annotation(self):
+    def test_build_with_annotation(self) -> None:
         """Build job with custom annotation."""
         spec = (
             JobBuilder("test")
@@ -313,19 +313,19 @@ class TestJobBuilder:
 
         assert spec.annotations["description"] == "Test job"
 
-    def test_code_hash_annotation(self):
+    def test_code_hash_annotation(self) -> None:
         """Code hash annotation is added."""
         spec = JobBuilder("test").with_code("print('hello')").build()
 
         assert "kgents.io/code-hash" in spec.annotations
         assert len(spec.annotations["kgents.io/code-hash"]) == 16  # SHA256[:16]
 
-    def test_build_without_code_raises(self):
+    def test_build_without_code_raises(self) -> None:
         """Building without code raises ValueError."""
         with pytest.raises(ValueError, match="Code is required"):
             JobBuilder("test").build()
 
-    def test_fluent_api(self):
+    def test_fluent_api(self) -> None:
         """All builder methods return self for chaining."""
         builder = JobBuilder("test")
 
@@ -344,7 +344,7 @@ class TestJobBuilder:
 class TestConvenienceFunctions:
     """Tests for convenience functions."""
 
-    def test_create_python_job(self):
+    def test_create_python_job(self) -> None:
         """Create Python job with defaults."""
         spec = create_python_job("print('hello')")
 
@@ -352,7 +352,7 @@ class TestConvenienceFunctions:
         assert spec.image == SANDBOX_PYTHON
         assert spec.code == "print('hello')"
 
-    def test_create_python_job_with_options(self):
+    def test_create_python_job_with_options(self) -> None:
         """Create Python job with custom options."""
         spec = create_python_job(
             "print('hello')",
@@ -367,7 +367,7 @@ class TestConvenienceFunctions:
         assert spec.limits.memory == "256Mi"
         assert spec.config.network_access is True
 
-    def test_create_shell_job(self):
+    def test_create_shell_job(self) -> None:
         """Create shell job with defaults."""
         spec = create_shell_job("echo hello")
 
@@ -375,7 +375,7 @@ class TestConvenienceFunctions:
         assert spec.image == SANDBOX_SHELL
         assert spec.code == "echo hello"
 
-    def test_create_shell_job_with_options(self):
+    def test_create_shell_job_with_options(self) -> None:
         """Create shell job with custom options."""
         spec = create_shell_job(
             "echo hello",

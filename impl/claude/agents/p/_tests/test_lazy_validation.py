@@ -23,7 +23,7 @@ from agents.p.strategies.lazy_validation import (
 class TestLazyValidatedDict:
     """Test LazyValidatedDict core functionality."""
 
-    def test_basic_access(self):
+    def test_basic_access(self) -> None:
         raw = {"name": "Alice", "age": "30"}
         schema = {"name": str, "age": int}
 
@@ -33,7 +33,7 @@ class TestLazyValidatedDict:
         assert lazy["name"] == "Alice"
         assert lazy["age"] == 30  # Coerced from string
 
-    def test_lazy_validation_deferred(self):
+    def test_lazy_validation_deferred(self) -> None:
         raw = {"valid": "ok", "invalid": "not_a_number"}
         schema = {"valid": str, "invalid": int}
 
@@ -46,7 +46,7 @@ class TestLazyValidatedDict:
         with pytest.raises(KeyError, match="validation failed"):
             _ = lazy["invalid"]
 
-    def test_type_coercion(self):
+    def test_type_coercion(self) -> None:
         raw = {
             "as_float": "3.14",
             "as_int": "42",
@@ -67,7 +67,7 @@ class TestLazyValidatedDict:
         assert lazy["as_bool_true"] is True
         assert lazy["as_bool_false"] is False
 
-    def test_get_with_default(self):
+    def test_get_with_default(self) -> None:
         raw = {"exists": "value"}
         schema = {"exists": str, "missing": str}
 
@@ -77,7 +77,7 @@ class TestLazyValidatedDict:
         assert lazy.get("missing") is None
         assert lazy.get("missing", "default") == "default"
 
-    def test_contains(self):
+    def test_contains(self) -> None:
         raw = {"exists": "value"}
         schema = {"exists": str, "missing": str}
 
@@ -86,7 +86,7 @@ class TestLazyValidatedDict:
         assert "exists" in lazy
         assert "missing" not in lazy
 
-    def test_keys(self):
+    def test_keys(self) -> None:
         raw = {"a": 1, "b": 2, "c": 3}
         schema = {"a": int, "b": int, "c": int}
 
@@ -97,7 +97,7 @@ class TestLazyValidatedDict:
         assert "b" in keys
         assert "c" in keys
 
-    def test_caching(self):
+    def test_caching(self) -> None:
         raw = {"field": "42"}
         schema = {"field": int}
 
@@ -110,7 +110,7 @@ class TestLazyValidatedDict:
 
         assert val1 == val2 == 42
 
-    def test_access_log(self):
+    def test_access_log(self) -> None:
         raw = {"a": 1, "b": 2, "c": 3}
         schema = {"a": int, "b": int, "c": int}
 
@@ -124,7 +124,7 @@ class TestLazyValidatedDict:
         log = lazy.access_log()
         assert log == ["a", "b", "a"]
 
-    def test_to_dict(self):
+    def test_to_dict(self) -> None:
         raw = {"name": "Alice", "age": "30"}
         schema = {"name": str, "age": int}
 
@@ -140,7 +140,7 @@ class TestLazyValidatedDict:
 class TestLazyValidatedDictCoercers:
     """Test custom coercers."""
 
-    def test_custom_coercer(self):
+    def test_custom_coercer(self) -> None:
         raw = {"doubled": "21"}
 
         def double_coercer(value):
@@ -154,7 +154,7 @@ class TestLazyValidatedDictCoercers:
 
         assert lazy["doubled"] == 42
 
-    def test_datetime_coercer(self):
+    def test_datetime_coercer(self) -> None:
         raw = {"date": "2025-12-09"}
         schema = {"date": str}  # Type hint is str, but coercer handles datetime
 
@@ -172,7 +172,7 @@ class TestLazyValidatedDictCoercers:
         assert result.month == 12
         assert result.day == 9
 
-    def test_list_of_strings_coercer_from_list(self):
+    def test_list_of_strings_coercer_from_list(self) -> None:
         raw = {"items": [1, 2, 3]}
         schema = {"items": list}
 
@@ -184,7 +184,7 @@ class TestLazyValidatedDictCoercers:
 
         assert lazy["items"] == ["1", "2", "3"]
 
-    def test_list_of_strings_coercer_from_csv(self):
+    def test_list_of_strings_coercer_from_csv(self) -> None:
         raw = {"items": "a, b, c"}
         schema = {"items": list}
 
@@ -200,7 +200,7 @@ class TestLazyValidatedDictCoercers:
 class TestLazyValidationParser:
     """Test LazyValidationParser."""
 
-    def test_parse_valid_json(self):
+    def test_parse_valid_json(self) -> None:
         schema = {"name": str, "age": int}
         parser = LazyValidationParser(schema)
 
@@ -211,7 +211,7 @@ class TestLazyValidationParser:
         assert result.value["name"] == "Alice"
         assert result.value["age"] == 30
 
-    def test_parse_with_extra_fields(self):
+    def test_parse_with_extra_fields(self) -> None:
         schema = {"name": str}
         parser = LazyValidationParser(schema)
 
@@ -222,7 +222,7 @@ class TestLazyValidationParser:
         assert "extra" in result.repairs[0].lower()
         assert result.metadata["extra_fields"] == 1
 
-    def test_parse_with_missing_fields(self):
+    def test_parse_with_missing_fields(self) -> None:
         schema = {"name": str, "age": int}
         parser = LazyValidationParser(schema)
 
@@ -236,7 +236,7 @@ class TestLazyValidationParser:
         with pytest.raises(KeyError):
             _ = result.value["age"]
 
-    def test_parse_invalid_json(self):
+    def test_parse_invalid_json(self) -> None:
         schema = {"name": str}
         parser = LazyValidationParser(schema)
 
@@ -245,7 +245,7 @@ class TestLazyValidationParser:
         assert not result.success
         assert "JSON parse error" in result.error
 
-    def test_parse_non_object(self):
+    def test_parse_non_object(self) -> None:
         schema = {"name": str}
         parser = LazyValidationParser(schema)
 
@@ -254,7 +254,7 @@ class TestLazyValidationParser:
         assert not result.success
         assert "Expected JSON object" in result.error
 
-    def test_confidence_based_on_field_coverage(self):
+    def test_confidence_based_on_field_coverage(self) -> None:
         schema = {"a": int, "b": int, "c": int}
         parser = LazyValidationParser(schema)
 
@@ -271,7 +271,7 @@ class TestLazyValidationParser:
 class TestLazyValidationParserConfiguration:
     """Test parser configuration."""
 
-    def test_configure_returns_new_parser(self):
+    def test_configure_returns_new_parser(self) -> None:
         schema = {"name": str}
         parser = LazyValidationParser(schema)
         new_parser = parser.configure(min_confidence=0.8)
@@ -279,7 +279,7 @@ class TestLazyValidationParserConfiguration:
         assert isinstance(new_parser, LazyValidationParser)
         assert new_parser is not parser
 
-    def test_convenience_constructor(self):
+    def test_convenience_constructor(self) -> None:
         schema = {"name": str, "age": int}
         parser = lazy_validation_parser(schema)
 
@@ -291,7 +291,7 @@ class TestLazyValidationParserConfiguration:
 class TestLazyValidationParserMetadata:
     """Test metadata tracking."""
 
-    def test_metadata_field_counts(self):
+    def test_metadata_field_counts(self) -> None:
         schema = {"required": str}
         parser = LazyValidationParser(schema)
 
@@ -302,7 +302,7 @@ class TestLazyValidationParserMetadata:
         assert result.metadata["extra_fields"] == 2
         assert result.metadata["missing_fields"] == 0
 
-    def test_metadata_field_coverage(self):
+    def test_metadata_field_coverage(self) -> None:
         schema = {"a": int, "b": int}
         parser = LazyValidationParser(schema)
 
@@ -314,7 +314,7 @@ class TestLazyValidationParserMetadata:
 class TestLazyValidationParserEdgeCases:
     """Test edge cases."""
 
-    def test_empty_schema(self):
+    def test_empty_schema(self) -> None:
         schema = {}
         parser = LazyValidationParser(schema)
 
@@ -323,7 +323,7 @@ class TestLazyValidationParserEdgeCases:
         assert result.success
         # No schema fields to validate
 
-    def test_empty_data(self):
+    def test_empty_data(self) -> None:
         schema = {"required": str}
         parser = LazyValidationParser(schema)
 
@@ -332,7 +332,7 @@ class TestLazyValidationParserEdgeCases:
         assert result.success
         assert result.metadata["missing_fields"] == 1
 
-    def test_null_values(self):
+    def test_null_values(self) -> None:
         schema = {"nullable": str}
         parser = LazyValidationParser(schema)
 
@@ -343,7 +343,7 @@ class TestLazyValidationParserEdgeCases:
         with pytest.raises(KeyError, match="validation failed"):
             _ = result.value["nullable"]
 
-    def test_nested_objects_not_deeply_validated(self):
+    def test_nested_objects_not_deeply_validated(self) -> None:
         schema = {"user": dict}
         parser = LazyValidationParser(schema)
 
@@ -358,7 +358,7 @@ class TestLazyValidationParserEdgeCases:
 class TestLazyValidationParserRepairs:
     """Test repair tracking."""
 
-    def test_repairs_for_extra_fields(self):
+    def test_repairs_for_extra_fields(self) -> None:
         schema = {"expected": str}
         parser = LazyValidationParser(schema)
 
@@ -367,7 +367,7 @@ class TestLazyValidationParserRepairs:
         assert len(result.repairs) > 0
         assert any("extra" in r.lower() for r in result.repairs)
 
-    def test_repairs_for_missing_fields(self):
+    def test_repairs_for_missing_fields(self) -> None:
         schema = {"required": str}
         parser = LazyValidationParser(schema)
 
@@ -380,7 +380,7 @@ class TestLazyValidationParserRepairs:
 class TestLazyValidationParserStream:
     """Test stream parsing."""
 
-    def test_parse_stream_buffers_and_parses(self):
+    def test_parse_stream_buffers_and_parses(self) -> None:
         schema = {"name": str}
         parser = LazyValidationParser(schema)
 

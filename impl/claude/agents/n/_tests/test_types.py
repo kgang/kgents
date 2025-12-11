@@ -10,13 +10,13 @@ from ..types import Action, Determinism, SemanticTrace, TraceContext
 class TestDeterminism:
     """Tests for Determinism enum."""
 
-    def test_determinism_values(self):
+    def test_determinism_values(self) -> None:
         """Verify enum values."""
         assert Determinism.DETERMINISTIC.value == "deterministic"
         assert Determinism.PROBABILISTIC.value == "probabilistic"
         assert Determinism.CHAOTIC.value == "chaotic"
 
-    def test_determinism_from_string(self):
+    def test_determinism_from_string(self) -> None:
         """Can create from string value."""
         assert Determinism("deterministic") == Determinism.DETERMINISTIC
         assert Determinism("probabilistic") == Determinism.PROBABILISTIC
@@ -26,14 +26,14 @@ class TestDeterminism:
 class TestAction:
     """Tests for Action constants and classification."""
 
-    def test_action_constants(self):
+    def test_action_constants(self) -> None:
         """Verify action constants exist."""
         assert Action.INVOKE == "INVOKE"
         assert Action.GENERATE == "GENERATE"
         assert Action.ERROR == "ERROR"
         assert Action.LOOKUP == "LOOKUP"
 
-    def test_classify_deterministic(self):
+    def test_classify_deterministic(self) -> None:
         """Deterministic actions classified correctly."""
         assert Action.classify_determinism(Action.LOOKUP) == Determinism.DETERMINISTIC
         assert (
@@ -42,13 +42,13 @@ class TestAction:
         assert Action.classify_determinism(Action.PARSE) == Determinism.DETERMINISTIC
         assert Action.classify_determinism(Action.VALIDATE) == Determinism.DETERMINISTIC
 
-    def test_classify_chaotic(self):
+    def test_classify_chaotic(self) -> None:
         """Chaotic actions classified correctly."""
         assert Action.classify_determinism(Action.CALL_API) == Determinism.CHAOTIC
         assert Action.classify_determinism(Action.CALL_TOOL) == Determinism.CHAOTIC
         assert Action.classify_determinism(Action.ERROR) == Determinism.CHAOTIC
 
-    def test_classify_probabilistic(self):
+    def test_classify_probabilistic(self) -> None:
         """Default actions are probabilistic."""
         assert Action.classify_determinism(Action.INVOKE) == Determinism.PROBABILISTIC
         assert Action.classify_determinism(Action.GENERATE) == Determinism.PROBABILISTIC
@@ -81,12 +81,12 @@ class TestSemanticTrace:
             metadata={"test": True},
         )
 
-    def test_trace_is_frozen(self, sample_trace):
+    def test_trace_is_frozen(self, sample_trace) -> None:
         """SemanticTrace is immutable."""
         with pytest.raises(AttributeError):
             sample_trace.agent_id = "new-agent"
 
-    def test_trace_has_required_fields(self, sample_trace):
+    def test_trace_has_required_fields(self, sample_trace) -> None:
         """Verify all required fields are present."""
         assert sample_trace.trace_id == "test-123"
         assert sample_trace.agent_id == "test-agent"
@@ -95,7 +95,7 @@ class TestSemanticTrace:
         assert sample_trace.inputs == {"question": "What is the answer?"}
         assert sample_trace.outputs == {"answer": 42}
 
-    def test_trace_parent_id_optional(self, sample_trace):
+    def test_trace_parent_id_optional(self, sample_trace) -> None:
         """Parent ID can be None for root traces."""
         assert sample_trace.parent_id is None
 
@@ -116,11 +116,11 @@ class TestSemanticTrace:
         )
         assert nested.parent_id == "test-123"
 
-    def test_trace_vector_optional(self, sample_trace):
+    def test_trace_vector_optional(self, sample_trace) -> None:
         """Vector is optional (computed later by L-gent)."""
         assert sample_trace.vector is None
 
-    def test_trace_with_vector(self, sample_trace):
+    def test_trace_with_vector(self, sample_trace) -> None:
         """Can create new trace with vector."""
         vector = [0.1, 0.2, 0.3, 0.4]
         with_vector = sample_trace.with_vector(vector)
@@ -129,7 +129,7 @@ class TestSemanticTrace:
         assert with_vector.trace_id == sample_trace.trace_id
         assert sample_trace.vector is None  # Original unchanged
 
-    def test_trace_to_dict(self, sample_trace):
+    def test_trace_to_dict(self, sample_trace) -> None:
         """Conversion to dict for serialization."""
         data = sample_trace.to_dict()
 
@@ -142,7 +142,7 @@ class TestSemanticTrace:
         assert data["determinism"] == "probabilistic"
         assert "timestamp" in data
 
-    def test_trace_from_dict(self, sample_trace):
+    def test_trace_from_dict(self, sample_trace) -> None:
         """Reconstruction from dict."""
         data = sample_trace.to_dict()
         restored = SemanticTrace.from_dict(
@@ -154,7 +154,7 @@ class TestSemanticTrace:
         assert restored.action == sample_trace.action
         assert restored.determinism == sample_trace.determinism
 
-    def test_trace_roundtrip(self, sample_trace):
+    def test_trace_roundtrip(self, sample_trace) -> None:
         """Dict conversion roundtrip preserves data."""
         data = sample_trace.to_dict()
         restored = SemanticTrace.from_dict(
@@ -169,7 +169,7 @@ class TestSemanticTrace:
 class TestTraceContext:
     """Tests for TraceContext."""
 
-    def test_context_creation(self):
+    def test_context_creation(self) -> None:
         """Can create trace context."""
         ctx = TraceContext(
             trace_id="ctx-123",
@@ -185,7 +185,7 @@ class TestTraceContext:
         assert ctx.agent_id == "test-agent"
         assert ctx.parent_id is None
 
-    def test_context_with_parent(self):
+    def test_context_with_parent(self) -> None:
         """Context can have parent for nested calls."""
         ctx = TraceContext(
             trace_id="child-456",

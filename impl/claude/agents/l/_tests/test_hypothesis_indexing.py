@@ -18,7 +18,7 @@ from agents.l.hypothesis_indexing import (
 # --- Test: HypothesisRecord Creation ---
 
 
-def test_hypothesis_record_creation():
+def test_hypothesis_record_creation() -> None:
     """Test creating a hypothesis record."""
     record = HypothesisRecord(
         id="hyp-001",
@@ -35,7 +35,7 @@ def test_hypothesis_record_creation():
     assert record.domain == "climate_science"
 
 
-def test_hypothesis_record_with_outcome():
+def test_hypothesis_record_with_outcome() -> None:
     """Test hypothesis record with outcome."""
     record = HypothesisRecord(
         id="hyp-002",
@@ -58,7 +58,7 @@ def test_hypothesis_record_with_outcome():
 # --- Test: HypothesisIndex Basic Operations ---
 
 
-def test_index_creation():
+def test_index_creation() -> None:
     """Test creating hypothesis index."""
     index = HypothesisIndex()
 
@@ -66,7 +66,7 @@ def test_index_creation():
     assert len(index.domain_index) == 0
 
 
-def test_index_hypothesis():
+def test_index_hypothesis() -> None:
     """Test indexing a hypothesis."""
     index = HypothesisIndex()
 
@@ -89,7 +89,7 @@ def test_index_hypothesis():
     assert "gravity" in index.keyword_index
 
 
-def test_index_multiple_hypotheses():
+def test_index_multiple_hypotheses() -> None:
     """Test indexing multiple hypotheses."""
     index = HypothesisIndex()
 
@@ -113,7 +113,7 @@ def test_index_multiple_hypotheses():
 # --- Test: Outcome Updates ---
 
 
-def test_update_outcome():
+def test_update_outcome() -> None:
     """Test updating hypothesis outcome."""
     index = HypothesisIndex()
 
@@ -147,7 +147,7 @@ def test_update_outcome():
     assert len(index.outcome_index[HypothesisOutcome.PENDING]) == 0
 
 
-def test_update_outcome_nonexistent():
+def test_update_outcome_nonexistent() -> None:
     """Test updating outcome for nonexistent hypothesis."""
     index = HypothesisIndex()
 
@@ -158,7 +158,7 @@ def test_update_outcome_nonexistent():
 # --- Test: Search ---
 
 
-def test_search_by_domain():
+def test_search_by_domain() -> None:
     """Test searching hypotheses by domain."""
     index = HypothesisIndex()
 
@@ -197,7 +197,7 @@ def test_search_by_domain():
     assert all(r.record.domain == "biology" for r in results)
 
 
-def test_search_by_outcome():
+def test_search_by_outcome() -> None:
     """Test searching hypotheses by outcome."""
     index = HypothesisIndex()
 
@@ -236,7 +236,7 @@ def test_search_by_outcome():
     assert all(r.record.outcome == HypothesisOutcome.CONFIRMED for r in results)
 
 
-def test_search_by_confidence():
+def test_search_by_confidence() -> None:
     """Test searching by minimum confidence."""
     index = HypothesisIndex()
 
@@ -261,7 +261,7 @@ def test_search_by_confidence():
     assert all(r.record.confidence >= 0.75 for r in results)
 
 
-def test_search_by_keywords():
+def test_search_by_keywords() -> None:
     """Test searching by keywords."""
     index = HypothesisIndex()
 
@@ -299,7 +299,7 @@ def test_search_by_keywords():
     assert any("gravity" in r.record.keywords for r in results)
 
 
-def test_search_combined_filters():
+def test_search_combined_filters() -> None:
     """Test search with multiple filters."""
     index = HypothesisIndex()
 
@@ -336,7 +336,7 @@ def test_search_combined_filters():
 # --- Test: Pattern Analysis ---
 
 
-def test_analyze_domain_patterns_empty():
+def test_analyze_domain_patterns_empty() -> None:
     """Test pattern analysis for domain with no hypotheses."""
     index = HypothesisIndex()
 
@@ -347,7 +347,7 @@ def test_analyze_domain_patterns_empty():
     assert analysis.success_rate == 0.0
 
 
-def test_analyze_domain_patterns_basic():
+def test_analyze_domain_patterns_basic() -> None:
     """Test basic pattern analysis."""
     index = HypothesisIndex()
 
@@ -403,7 +403,7 @@ def test_analyze_domain_patterns_basic():
     assert analysis.success_rate == pytest.approx(5 / 8)  # 5 confirmed out of 8 tested
 
 
-def test_analyze_novelty_patterns():
+def test_analyze_novelty_patterns() -> None:
     """Test novelty pattern analysis."""
     index = HypothesisIndex()
 
@@ -442,7 +442,7 @@ def test_analyze_novelty_patterns():
     assert analysis.most_successful_novelty == "incremental"
 
 
-def test_analyze_confidence_patterns():
+def test_analyze_confidence_patterns() -> None:
     """Test confidence pattern analysis."""
     index = HypothesisIndex()
 
@@ -481,7 +481,7 @@ def test_analyze_confidence_patterns():
     assert analysis.avg_confidence_when_confirmed > analysis.avg_confidence_when_refuted
 
 
-def test_analyze_recommendations():
+def test_analyze_recommendations() -> None:
     """Test that analysis generates recommendations."""
     index = HypothesisIndex()
 
@@ -508,7 +508,7 @@ def test_analyze_recommendations():
 # --- Test: Statistics ---
 
 
-def test_get_statistics():
+def test_get_statistics() -> None:
     """Test getting index statistics."""
     index = HypothesisIndex()
 
@@ -556,7 +556,7 @@ def test_get_statistics():
 # --- Test: B-gent Integration ---
 
 
-def test_bgent_hypothesis_to_record():
+def test_bgent_hypothesis_to_record() -> None:
     """Test converting B-gent Hypothesis to HypothesisRecord."""
 
     # Mock B-gent Hypothesis

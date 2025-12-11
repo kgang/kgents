@@ -123,7 +123,7 @@ class FailingCountTool(Tool[TextInput, NumberOutput]):
 
 
 @pytest.mark.asyncio
-async def test_tool_basic_invocation():
+async def test_tool_basic_invocation() -> None:
     """Test basic tool invocation."""
     tool = CountTool()
     input_data = TextInput(text="hello")
@@ -134,7 +134,7 @@ async def test_tool_basic_invocation():
 
 
 @pytest.mark.asyncio
-async def test_passthrough_tool():
+async def test_passthrough_tool() -> None:
     """Test identity tool (passthrough)."""
     tool = PassthroughTool[str]()
     output = await tool.invoke("test")
@@ -146,7 +146,7 @@ async def test_passthrough_tool():
 
 
 @pytest.mark.asyncio
-async def test_tool_composition_sequential():
+async def test_tool_composition_sequential() -> None:
     """Test sequential composition: f >> g."""
     count_tool = CountTool()
     double_tool = DoubleTool()
@@ -163,7 +163,7 @@ async def test_tool_composition_sequential():
 
 
 @pytest.mark.asyncio
-async def test_composition_associativity():
+async def test_composition_associativity() -> None:
     """
     Test categorical law: (f >> g) >> h ≡ f >> (g >> h).
 
@@ -189,7 +189,7 @@ async def test_composition_associativity():
 
 
 @pytest.mark.asyncio
-async def test_composition_identity():
+async def test_composition_identity() -> None:
     """
     Test categorical law: Id >> f ≡ f ≡ f >> Id.
 
@@ -217,7 +217,7 @@ async def test_composition_identity():
 
 
 @pytest.mark.asyncio
-async def test_registry_register_and_get():
+async def test_registry_register_and_get() -> None:
     """Test tool registration and retrieval."""
     registry = ToolRegistry()
     tool = CountTool()
@@ -235,7 +235,7 @@ async def test_registry_register_and_get():
 
 
 @pytest.mark.asyncio
-async def test_registry_find_by_name():
+async def test_registry_find_by_name() -> None:
     """Test finding tools by name."""
     registry = ToolRegistry()
     tool = CountTool()
@@ -250,7 +250,7 @@ async def test_registry_find_by_name():
 
 
 @pytest.mark.asyncio
-async def test_registry_find_by_signature():
+async def test_registry_find_by_signature() -> None:
     """Test finding tools by type signature."""
     registry = ToolRegistry()
 
@@ -272,7 +272,7 @@ async def test_registry_find_by_signature():
 
 
 @pytest.mark.asyncio
-async def test_registry_search():
+async def test_registry_search() -> None:
     """Test semantic search."""
     registry = ToolRegistry()
 
@@ -294,7 +294,7 @@ async def test_registry_search():
 
 
 @pytest.mark.asyncio
-async def test_registry_composition_path():
+async def test_registry_composition_path() -> None:
     """Test finding composition paths."""
     registry = ToolRegistry()
 
@@ -318,7 +318,7 @@ async def test_registry_composition_path():
 
 
 @pytest.mark.asyncio
-async def test_traced_tool():
+async def test_traced_tool() -> None:
     """Test tool tracing wrapper."""
     tool = CountTool()
     traced = tool.with_trace()
@@ -331,7 +331,7 @@ async def test_traced_tool():
 
 
 @pytest.mark.asyncio
-async def test_cached_tool():
+async def test_cached_tool() -> None:
     """Test tool caching wrapper."""
     tool = CountTool()
     cached = tool.with_cache(ttl_seconds=60)
@@ -352,7 +352,7 @@ async def test_cached_tool():
 
 
 @pytest.mark.asyncio
-async def test_retry_tool_success():
+async def test_retry_tool_success() -> None:
     """Test retry wrapper with recoverable errors."""
     tool = FailingCountTool(fail_count=2)
     retry_tool = tool.with_retry(max_attempts=5)
@@ -366,7 +366,7 @@ async def test_retry_tool_success():
 
 
 @pytest.mark.asyncio
-async def test_retry_tool_exhausted():
+async def test_retry_tool_exhausted() -> None:
     """Test retry wrapper when all attempts fail."""
     tool = FailingCountTool(fail_count=10)  # Fail 10 times
     retry_tool = tool.with_retry(max_attempts=3)
@@ -384,7 +384,7 @@ async def test_retry_tool_exhausted():
 # --- Type Safety Tests ---
 
 
-def test_tool_type_annotations():
+def test_tool_type_annotations() -> None:
     """Test that tools preserve type information."""
     count = CountTool()
 
@@ -397,7 +397,7 @@ def test_tool_type_annotations():
 
 
 @pytest.mark.asyncio
-async def test_full_pipeline():
+async def test_full_pipeline() -> None:
     """Test complete tool pipeline with all features."""
     # Create registry
     registry = ToolRegistry()

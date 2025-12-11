@@ -72,7 +72,7 @@ class MockTraceable:
 class TestToolCreation:
     """Test tool creation from prototype."""
 
-    def test_tool_meta_creation(self):
+    def test_tool_meta_creation(self) -> None:
         """Test ToolMeta creation."""
         meta = ToolMeta.minimal(
             name="calculator",
@@ -83,7 +83,7 @@ class TestToolCreation:
 
         assert meta.identity.name == "calculator"
 
-    def test_tool_identity(self):
+    def test_tool_identity(self) -> None:
         """Test ToolIdentity properties."""
         identity = ToolIdentity(
             name="data_processor",
@@ -95,7 +95,7 @@ class TestToolCreation:
         assert identity.version == "1.0.0"
 
     @pytest.mark.asyncio
-    async def test_create_tool_class(self):
+    async def test_create_tool_class(self) -> None:
         """Test creating a tool class."""
 
         class CalculatorTool(Tool[dict, dict]):
@@ -128,7 +128,7 @@ class TestPrototypeToTool:
     """Test F-gent → T-gent pipeline."""
 
     @pytest.mark.asyncio
-    async def test_intent_to_tool(self):
+    async def test_intent_to_tool(self) -> None:
         """Test transforming intent into executable tool."""
         # Step 1: Parse intent
         intent = parse_intent(
@@ -165,7 +165,7 @@ class TestJITCompilation:
     """Test J-gent compilation for tools."""
 
     @pytest.mark.asyncio
-    async def test_jit_tool_compilation(self):
+    async def test_jit_tool_compilation(self) -> None:
         """Test JIT compilation produces executable tool."""
         source = AgentSource(
             source="""
@@ -186,7 +186,7 @@ class StringTool:
         assert result == "HELLO"
 
     @pytest.mark.asyncio
-    async def test_jit_preserves_tool_behavior(self):
+    async def test_jit_preserves_tool_behavior(self) -> None:
         """Test JIT compilation preserves intended behavior."""
         source = AgentSource(
             source="""
@@ -218,7 +218,7 @@ class TestToolExecution:
     """Test T-gent tool execution."""
 
     @pytest.mark.asyncio
-    async def test_tool_executor_basic(self):
+    async def test_tool_executor_basic(self) -> None:
         """Test basic tool executor."""
 
         class SimpleTool(Tool[str, str]):
@@ -241,7 +241,7 @@ class TestToolExecution:
         assert "Result: test" in result.unwrap()
 
     @pytest.mark.asyncio
-    async def test_robust_executor_retry(self):
+    async def test_robust_executor_retry(self) -> None:
         """Test robust executor with retry."""
 
         # Tool that fails first time but succeeds second
@@ -279,7 +279,7 @@ class TestToolRegistry:
     """Test tool registry operations."""
 
     @pytest.mark.asyncio
-    async def test_register_tool(self):
+    async def test_register_tool(self) -> None:
         """Test registering a tool."""
         registry = ToolRegistry()
 
@@ -301,7 +301,7 @@ class TestToolRegistry:
         assert found is not None
 
     @pytest.mark.asyncio
-    async def test_find_tool_by_signature(self):
+    async def test_find_tool_by_signature(self) -> None:
         """Test finding tools by type signature."""
         registry = ToolRegistry()
 
@@ -331,7 +331,7 @@ class TestToolObservation:
     """Test O-gent observation of tools."""
 
     @pytest.mark.asyncio
-    async def test_observed_tool_execution(self):
+    async def test_observed_tool_execution(self) -> None:
         """Test observing tool execution."""
 
         class ObservedTool(Tool[str, str]):
@@ -352,7 +352,7 @@ class TestToolObservation:
         assert len(observer.observations) == 1
 
     @pytest.mark.asyncio
-    async def test_tool_error_observation(self):
+    async def test_tool_error_observation(self) -> None:
         """Test observing tool errors."""
 
         class ErrorTool(Tool[str, str]):
@@ -377,7 +377,7 @@ class TestToolNarrative:
     """Test N-gent narrative of tool execution."""
 
     @pytest.mark.asyncio
-    async def test_tool_execution_recorded(self):
+    async def test_tool_execution_recorded(self) -> None:
         """Test tool execution is recorded as trace."""
         store = MemoryCrystalStore()
         historian = Historian(store)
@@ -398,7 +398,7 @@ class TestToolNarrative:
         assert trace.agent_id == "TestTool"
 
     @pytest.mark.asyncio
-    async def test_tool_narrative_generation(self):
+    async def test_tool_narrative_generation(self) -> None:
         """Test narrative generated from tool traces."""
         store = MemoryCrystalStore()
         historian = Historian(store)
@@ -427,7 +427,7 @@ class TestMockTools:
     """Test mock tools for testing."""
 
     @pytest.mark.asyncio
-    async def test_mock_agent_returns_configured_output(self):
+    async def test_mock_agent_returns_configured_output(self) -> None:
         """Test MockAgent returns configured output."""
         mock = MockAgent(MockConfig(output="mocked result"))
 
@@ -435,7 +435,7 @@ class TestMockTools:
         assert result == "mocked result"
 
     @pytest.mark.asyncio
-    async def test_spy_agent_records_calls(self):
+    async def test_spy_agent_records_calls(self) -> None:
         """Test SpyAgent records all calls."""
         spy = SpyAgent(label="test-spy")
 
@@ -449,7 +449,7 @@ class TestMockTools:
         assert "second" in spy.history
 
     @pytest.mark.asyncio
-    async def test_failing_agent_simulates_failure(self):
+    async def test_failing_agent_simulates_failure(self) -> None:
         """Test FailingAgent simulates configured failures."""
         failing = FailingAgent(
             FailingConfig(
@@ -474,7 +474,7 @@ class TestFullToolPipeline:
     """Test complete tool pipeline."""
 
     @pytest.mark.asyncio
-    async def test_complete_pipeline(self):
+    async def test_complete_pipeline(self) -> None:
         """Test prototype → compile → execute → observe → narrate."""
         # 1. Create prototype (F-gent)
         source = AgentSource(
@@ -547,7 +547,7 @@ class DataProcessor:
         assert narrative is not None
 
     @pytest.mark.asyncio
-    async def test_pipeline_with_error_handling(self):
+    async def test_pipeline_with_error_handling(self) -> None:
         """Test pipeline handles errors gracefully."""
         source = AgentSource(
             source="""
@@ -581,7 +581,7 @@ class TestToolComposition:
     """Test tool composition patterns."""
 
     @pytest.mark.asyncio
-    async def test_sequential_tool_composition(self):
+    async def test_sequential_tool_composition(self) -> None:
         """Test sequential tool execution."""
         source1 = AgentSource(
             source="""

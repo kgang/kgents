@@ -61,7 +61,7 @@ class TestPrototypeToToolPipeline:
     """J × F × T: Full prototype-to-tool pipeline."""
 
     @pytest.mark.asyncio
-    async def test_intent_to_contract_to_source(self):
+    async def test_intent_to_contract_to_source(self) -> None:
         """Test F-gent pipeline: intent → contract → source."""
         # Step 1: Parse intent
         intent = parse_intent(
@@ -80,7 +80,7 @@ class TestPrototypeToToolPipeline:
         assert source.is_valid
 
     @pytest.mark.asyncio
-    async def test_jit_compile_simple_agent(self):
+    async def test_jit_compile_simple_agent(self) -> None:
         """Test J-gent compiles simple agent source."""
         source = AgentSource(
             source="""
@@ -104,7 +104,7 @@ class SimpleAgent:
         assert "Processed: test" in result
 
     @pytest.mark.asyncio
-    async def test_jit_agent_with_computation(self):
+    async def test_jit_agent_with_computation(self) -> None:
         """Test J-gent compiles agent with actual computation."""
         source = AgentSource(
             source="""
@@ -132,7 +132,7 @@ class MathAgent:
         assert result["difference"] == 5
 
     @pytest.mark.asyncio
-    async def test_jit_preserves_metadata(self):
+    async def test_jit_preserves_metadata(self) -> None:
         """Test JIT wrapper preserves compilation metadata."""
         source = AgentSource(
             source="""
@@ -158,7 +158,7 @@ class TestRealityClassification:
     """Test J-gent Reality classification system."""
 
     @pytest.mark.asyncio
-    async def test_deterministic_classification(self):
+    async def test_deterministic_classification(self) -> None:
         """Test deterministic tasks are classified correctly."""
         classifier = RealityClassifier()
 
@@ -174,7 +174,7 @@ class TestRealityClassification:
         assert result.confidence > 0
 
     @pytest.mark.asyncio
-    async def test_chaotic_classification(self):
+    async def test_chaotic_classification(self) -> None:
         """Test chaotic tasks are classified correctly."""
         classifier = RealityClassifier()
 
@@ -189,7 +189,7 @@ class TestRealityClassification:
         assert result.reality in [Reality.CHAOTIC, Reality.PROBABILISTIC]
 
     @pytest.mark.asyncio
-    async def test_entropy_budget_affects_classification(self):
+    async def test_entropy_budget_affects_classification(self) -> None:
         """Test entropy budget affects reality classification."""
         classifier = RealityClassifier()
 
@@ -217,7 +217,7 @@ class TestRealityClassification:
 class TestPromiseSystem:
     """Test J-gent Promise system."""
 
-    def test_promise_creation(self):
+    def test_promise_creation(self) -> None:
         """Test Promise creation with ground value."""
         promise = Promise(
             intent="Calculate sum",
@@ -229,7 +229,7 @@ class TestPromiseSystem:
         assert promise.ground == 0
         assert promise.intent == "Calculate sum"
 
-    def test_promise_entropy_budget(self):
+    def test_promise_entropy_budget(self) -> None:
         """Test entropy budget decreases with depth."""
         root = Promise(intent="Root", ground=None, depth=0)
         child = Promise(intent="Child", ground=None, depth=1)
@@ -239,7 +239,7 @@ class TestPromiseSystem:
         assert child.entropy_budget == 0.5  # 1/(1+1)
         assert grandchild.entropy_budget == pytest.approx(0.333, rel=0.01)
 
-    def test_promise_state_transitions(self):
+    def test_promise_state_transitions(self) -> None:
         """Test Promise state transitions."""
         promise = Promise(intent="Test", ground="fallback")
 
@@ -255,7 +255,7 @@ class TestPromiseSystem:
         assert promise.state == PromiseState.RESOLVED
         assert promise.resolved_value == "actual value"
 
-    def test_promise_collapse_to_ground(self):
+    def test_promise_collapse_to_ground(self) -> None:
         """Test Promise collapses to ground on failure."""
         promise = Promise(intent="Test", ground="fallback")
 
@@ -264,7 +264,7 @@ class TestPromiseSystem:
         assert promise.state == PromiseState.COLLAPSED
         assert promise.value_or_ground() == "fallback"
 
-    def test_promise_tree_structure(self):
+    def test_promise_tree_structure(self) -> None:
         """Test Promise parent-child relationships."""
         parent = Promise(intent="Parent", ground=None)
         child1 = Promise(intent="Child1", ground=None, parent=parent)
@@ -283,7 +283,7 @@ class TestSourceRegistration:
     """J × L: Source registration in catalog."""
 
     @pytest.mark.asyncio
-    async def test_register_compiled_agent(self):
+    async def test_register_compiled_agent(self) -> None:
         """Test registering compiled agent in L-gent catalog."""
         registry = Registry()
 
@@ -311,7 +311,7 @@ class TestSourceRegistration:
         assert "jit" in retrieved.keywords
 
     @pytest.mark.asyncio
-    async def test_register_with_provenance(self):
+    async def test_register_with_provenance(self) -> None:
         """Test registration preserves provenance information."""
         registry = Registry()
 
@@ -335,7 +335,7 @@ class TestSourceRegistration:
         assert retrieved.forged_from == "intent://validate-email"
 
     @pytest.mark.asyncio
-    async def test_list_agents_by_type(self):
+    async def test_list_agents_by_type(self) -> None:
         """Test listing agents by entity type."""
         registry = Registry()
 
@@ -377,7 +377,7 @@ class TestSourceRegistration:
 class TestBudgetConstrainedCompilation:
     """J × B: Budget-constrained compilation."""
 
-    def test_jgent_config_budget_settings(self):
+    def test_jgent_config_budget_settings(self) -> None:
         """Test JGent respects budget configuration."""
         config = JGentConfig(
             max_depth=2,
@@ -389,7 +389,7 @@ class TestBudgetConstrainedCompilation:
         assert config.entropy_threshold == 0.2
         assert config.max_cyclomatic_complexity == 10
 
-    def test_architect_constraints(self):
+    def test_architect_constraints(self) -> None:
         """Test MetaArchitect respects constraints."""
         # ArchitectConstraints uses max_cyclomatic_complexity, not max_complexity
         constraints = ArchitectConstraints(
@@ -403,7 +403,7 @@ class TestBudgetConstrainedCompilation:
         assert "json" in constraints.allowed_imports
 
     @pytest.mark.asyncio
-    async def test_jgent_with_ground_fallback(self):
+    async def test_jgent_with_ground_fallback(self) -> None:
         """Test JGent falls back to ground on budget exhaustion."""
         config = JGentConfig(
             max_depth=1,  # Shallow depth
@@ -429,7 +429,7 @@ class TestBudgetConstrainedCompilation:
 class TestArtifactCrystallization:
     """F × L: Artifact registration and crystallization."""
 
-    def test_artifact_metadata_creation(self):
+    def test_artifact_metadata_creation(self) -> None:
         """Test artifact metadata creation."""
         metadata = ArtifactMetadata(
             id="artifact-001",
@@ -443,7 +443,7 @@ class TestArtifactCrystallization:
         assert str(metadata.version) == "1.0.0"
         assert metadata.status == ArtifactStatus.EXPERIMENTAL
 
-    def test_version_bumping(self):
+    def test_version_bumping(self) -> None:
         """Test version bump logic."""
         from agents.f import VersionBump
 
@@ -461,7 +461,7 @@ class TestArtifactCrystallization:
         v1_major = v1.bump(VersionBump.MAJOR)
         assert str(v1_major) == "2.0.0"
 
-    def test_artifact_assembly(self):
+    def test_artifact_assembly(self) -> None:
         """Test artifact assembly from components."""
         intent = make_sample_intent()
         contract = make_sample_contract()
@@ -484,7 +484,7 @@ class TestArtifactCrystallization:
         assert artifact.source_code.code
 
     @pytest.mark.asyncio
-    async def test_artifact_to_catalog_entry(self):
+    async def test_artifact_to_catalog_entry(self) -> None:
         """Test converting artifact to catalog entry."""
         registry = Registry()
 
@@ -513,7 +513,7 @@ class TestArtifactCrystallization:
 class TestSandboxExecution:
     """Test sandbox execution safety."""
 
-    def test_sandbox_config_defaults(self):
+    def test_sandbox_config_defaults(self) -> None:
         """Test sandbox configuration defaults."""
         config = SandboxConfig()
 
@@ -522,7 +522,7 @@ class TestSandboxExecution:
         assert "json" in config.allowed_imports
         assert "re" in config.allowed_imports
 
-    def test_sandbox_config_custom(self):
+    def test_sandbox_config_custom(self) -> None:
         """Test custom sandbox configuration."""
         config = SandboxConfig(
             timeout_seconds=10.0,
@@ -536,7 +536,7 @@ class TestSandboxExecution:
 class TestContractInvariantValidation:
     """Test contract invariant handling."""
 
-    def test_invariant_creation(self):
+    def test_invariant_creation(self) -> None:
         """Test invariant creation."""
         invariant = Invariant(
             description="Response time < 5s",
@@ -547,7 +547,7 @@ class TestContractInvariantValidation:
         assert invariant.description == "Response time < 5s"
         assert invariant.category == "performance"
 
-    def test_contract_with_invariants(self):
+    def test_contract_with_invariants(self) -> None:
         """Test contract with multiple invariants."""
         contract = Contract(
             agent_name="StrictAgent",

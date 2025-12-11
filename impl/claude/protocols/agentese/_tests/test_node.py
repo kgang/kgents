@@ -30,19 +30,19 @@ from ..node import (
 class TestAgentMeta:
     """Tests for AgentMeta type."""
 
-    def test_creation(self):
+    def test_creation(self) -> None:
         """AgentMeta can be created with minimal args."""
         meta = AgentMeta(name="test")
         assert meta.name == "test"
         assert meta.archetype == "default"
         assert meta.capabilities == ()
 
-    def test_with_archetype(self):
+    def test_with_archetype(self) -> None:
         """AgentMeta with custom archetype."""
         meta = AgentMeta(name="arch", archetype="architect")
         assert meta.archetype == "architect"
 
-    def test_with_capabilities(self):
+    def test_with_capabilities(self) -> None:
         """AgentMeta with capabilities."""
         meta = AgentMeta(
             name="builder",
@@ -51,7 +51,7 @@ class TestAgentMeta:
         )
         assert "design" in meta.capabilities
 
-    def test_immutable(self):
+    def test_immutable(self) -> None:
         """AgentMeta is frozen."""
         meta = AgentMeta(name="test")
         with pytest.raises(Exception):  # FrozenInstanceError
@@ -61,7 +61,7 @@ class TestAgentMeta:
 class TestAffordanceSet:
     """Tests for AffordanceSet type."""
 
-    def test_creation(self):
+    def test_creation(self) -> None:
         """AffordanceSet can be created."""
         aff = AffordanceSet(
             handle="world.house",
@@ -71,7 +71,7 @@ class TestAffordanceSet:
         assert aff.handle == "world.house"
         assert aff.observer_archetype == "default"
 
-    def test_contains_verb(self):
+    def test_contains_verb(self) -> None:
         """Can check if verb is in set."""
         aff = AffordanceSet(
             handle="test",
@@ -81,7 +81,7 @@ class TestAffordanceSet:
         assert "manifest" in aff
         assert "demolish" not in aff
 
-    def test_iteration(self):
+    def test_iteration(self) -> None:
         """Can iterate over verbs."""
         aff = AffordanceSet(
             handle="test",
@@ -94,7 +94,7 @@ class TestAffordanceSet:
 class TestRenderable:
     """Tests for Renderable protocol and implementations."""
 
-    def test_basic_rendering(self):
+    def test_basic_rendering(self) -> None:
         """BasicRendering implements Renderable."""
         r = BasicRendering(summary="Test", content="Content here")
         assert r.to_text() == "Test\n\nContent here"
@@ -104,12 +104,12 @@ class TestRenderable:
             "metadata": {},
         }
 
-    def test_basic_rendering_no_content(self):
+    def test_basic_rendering_no_content(self) -> None:
         """BasicRendering without content."""
         r = BasicRendering(summary="Just summary")
         assert r.to_text() == "Just summary"
 
-    def test_blueprint_rendering(self):
+    def test_blueprint_rendering(self) -> None:
         """BlueprintRendering for architects."""
         r = BlueprintRendering(
             dimensions={"width": 10.0, "height": 20.0},
@@ -120,7 +120,7 @@ class TestRenderable:
         assert d["dimensions"]["width"] == 10.0
         assert "brick" in d["materials"]
 
-    def test_poetic_rendering(self):
+    def test_poetic_rendering(self) -> None:
         """PoeticRendering for poets."""
         r = PoeticRendering(
             description="A house of memories",
@@ -132,7 +132,7 @@ class TestRenderable:
         assert d["mood"] == "melancholic"
         assert "shelter from storms" in d["metaphors"]
 
-    def test_economic_rendering(self):
+    def test_economic_rendering(self) -> None:
         """EconomicRendering for economists."""
         r = EconomicRendering(
             market_value=500000.0,
@@ -147,35 +147,35 @@ class TestRenderable:
 class TestLogosNodeProtocol:
     """Tests for LogosNode protocol compliance."""
 
-    def test_mock_node_is_protocol_compliant(self, mock_node):
+    def test_mock_node_is_protocol_compliant(self, mock_node) -> None:
         """MockNode satisfies LogosNode protocol."""
         # Runtime checkable protocol
         assert isinstance(mock_node, LogosNode)
 
-    def test_protocol_has_handle(self, mock_node):
+    def test_protocol_has_handle(self, mock_node) -> None:
         """LogosNode must have handle property."""
         assert hasattr(mock_node, "handle")
         assert mock_node.handle == "test.mock"
 
-    def test_protocol_has_affordances(self, mock_node, agent_meta):
+    def test_protocol_has_affordances(self, mock_node, agent_meta) -> None:
         """LogosNode must have affordances method."""
         affs = mock_node.affordances(agent_meta)
         assert isinstance(affs, list)
         assert "manifest" in affs  # Base affordance
 
-    def test_protocol_has_lens(self, mock_node):
+    def test_protocol_has_lens(self, mock_node) -> None:
         """LogosNode must have lens method."""
         agent = mock_node.lens("manifest")
         assert agent is not None
 
     @pytest.mark.asyncio
-    async def test_protocol_has_manifest(self, mock_node, mock_umwelt):
+    async def test_protocol_has_manifest(self, mock_node, mock_umwelt) -> None:
         """LogosNode must have manifest method."""
         result = await mock_node.manifest(mock_umwelt)
         assert isinstance(result, Renderable)
 
     @pytest.mark.asyncio
-    async def test_protocol_has_invoke(self, mock_node, mock_umwelt):
+    async def test_protocol_has_invoke(self, mock_node, mock_umwelt) -> None:
         """LogosNode must have invoke method."""
         result = await mock_node.invoke("manifest", mock_umwelt)
         assert result is not None
@@ -184,7 +184,9 @@ class TestLogosNodeProtocol:
 class TestPolymorphicAffordances:
     """Tests for observer-dependent affordances."""
 
-    def test_different_archetypes_get_different_affordances(self, polymorphic_node):
+    def test_different_archetypes_get_different_affordances(
+        self, polymorphic_node
+    ) -> None:
         """Same node, different observers, different affordances."""
         architect_meta = AgentMeta(name="a", archetype="architect")
         poet_meta = AgentMeta(name="p", archetype="poet")
@@ -213,7 +215,7 @@ class TestPolymorphicAffordances:
         assert "renovate" not in default_affs
         assert "describe" not in default_affs
 
-    def test_archetype_specific_affordances_only(self, polymorphic_node):
+    def test_archetype_specific_affordances_only(self, polymorphic_node) -> None:
         """Architect shouldn't have poet affordances and vice versa."""
         architect_meta = AgentMeta(name="a", archetype="architect")
         poet_meta = AgentMeta(name="p", archetype="poet")
@@ -233,7 +235,7 @@ class TestPolymorphicAffordances:
 class TestJITLogosNode:
     """Tests for JIT-generated nodes."""
 
-    def test_jit_node_creation(self):
+    def test_jit_node_creation(self) -> None:
         """JITLogosNode can be created."""
         node = JITLogosNode(
             handle="world.library",
@@ -243,7 +245,7 @@ class TestJITLogosNode:
         assert node.handle == "world.library"
         assert node.usage_count == 0
 
-    def test_jit_node_tracks_usage(self):
+    def test_jit_node_tracks_usage(self) -> None:
         """JITLogosNode increments usage on access."""
         node = JITLogosNode(handle="test", source="", spec="")
         meta = AgentMeta(name="test")
@@ -255,7 +257,7 @@ class TestJITLogosNode:
         assert node.usage_count == 2
 
     @pytest.mark.asyncio
-    async def test_jit_node_tracks_success(self, mock_umwelt):
+    async def test_jit_node_tracks_success(self, mock_umwelt) -> None:
         """JITLogosNode tracks success rate."""
         node = JITLogosNode(handle="test", source="", spec="Test spec")
 
@@ -267,7 +269,7 @@ class TestJITLogosNode:
         assert node.success_rate == 0.5  # 1/2 since manifest also counts
 
     @pytest.mark.asyncio
-    async def test_jit_node_fallback_manifest(self, mock_umwelt):
+    async def test_jit_node_fallback_manifest(self, mock_umwelt) -> None:
         """JITLogosNode returns spec as fallback manifest."""
         node = JITLogosNode(
             handle="test.node",
@@ -280,7 +282,7 @@ class TestJITLogosNode:
         assert "JIT node" in result.summary
         assert "# Test Node" in result.content
 
-    def test_promotion_decision(self):
+    def test_promotion_decision(self) -> None:
         """JITLogosNode knows when to promote."""
         node = JITLogosNode(handle="test", source="", spec="")
 
@@ -303,19 +305,19 @@ class TestJITLogosNode:
 class TestAspectAgent:
     """Tests for AspectAgent wrapper."""
 
-    def test_aspect_agent_creation(self, mock_node):
+    def test_aspect_agent_creation(self, mock_node) -> None:
         """AspectAgent wraps node + aspect."""
         agent = AspectAgent(node=mock_node, aspect="manifest")
         assert agent.name == "test.mock.manifest"
 
     @pytest.mark.asyncio
-    async def test_aspect_agent_invoke(self, mock_node, mock_umwelt):
+    async def test_aspect_agent_invoke(self, mock_node, mock_umwelt) -> None:
         """AspectAgent invokes node with Umwelt."""
         agent = AspectAgent(node=mock_node, aspect="manifest")
         result = await agent.invoke(mock_umwelt)
         assert isinstance(result, Renderable)
 
-    def test_aspect_agent_composition(self, mock_node):
+    def test_aspect_agent_composition(self, mock_node) -> None:
         """AspectAgent can be composed with >>."""
         agent1 = AspectAgent(node=mock_node, aspect="manifest")
         agent2 = AspectAgent(node=mock_node, aspect="witness")
@@ -328,12 +330,12 @@ class TestAspectAgent:
 class TestBaseLogosNode:
     """Tests for BaseLogosNode abstract class."""
 
-    def test_cannot_instantiate_directly(self):
+    def test_cannot_instantiate_directly(self) -> None:
         """BaseLogosNode is abstract."""
         with pytest.raises(TypeError):
             BaseLogosNode()
 
-    def test_concrete_implementation(self, mock_umwelt):
+    def test_concrete_implementation(self, mock_umwelt) -> None:
         """Concrete implementation works."""
 
         class ConcreteNode(BaseLogosNode):

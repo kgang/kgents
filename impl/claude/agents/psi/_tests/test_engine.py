@@ -59,19 +59,19 @@ def team_problem():
 class TestRetrieveStage:
     """Tests for the RETRIEVE stage."""
 
-    def test_retrieve_returns_candidates(self, engine, api_problem):
+    def test_retrieve_returns_candidates(self, engine, api_problem) -> None:
         """Retrieve returns metaphor candidates."""
         candidates = engine.retrieve(api_problem, limit=3)
         assert len(candidates) > 0
         assert len(candidates) <= 3
         assert all(isinstance(m, Metaphor) for m, _ in candidates)
 
-    def test_retrieve_returns_scores(self, engine, api_problem):
+    def test_retrieve_returns_scores(self, engine, api_problem) -> None:
         """Retrieve returns scores with candidates."""
         candidates = engine.retrieve(api_problem)
         assert all(isinstance(s, (int, float)) for _, s in candidates)
 
-    def test_retrieve_respects_exclude(self, engine, api_problem):
+    def test_retrieve_respects_exclude(self, engine, api_problem) -> None:
         """Retrieve excludes specified metaphors."""
         all_candidates = engine.retrieve(api_problem, limit=10)
         first_id = all_candidates[0][0].id
@@ -79,7 +79,7 @@ class TestRetrieveStage:
         filtered = engine.retrieve(api_problem, limit=10, exclude=[first_id])
         assert all(m.id != first_id for m, _ in filtered)
 
-    def test_retrieve_empty_when_all_excluded(self, engine, api_problem):
+    def test_retrieve_empty_when_all_excluded(self, engine, api_problem) -> None:
         """Retrieve returns empty when all excluded."""
         all_ids = [m.id for m in engine.corpus]
         candidates = engine.retrieve(api_problem, exclude=all_ids)
@@ -94,7 +94,7 @@ class TestRetrieveStage:
 class TestProjectStage:
     """Tests for the PROJECT stage."""
 
-    def test_project_creates_projection(self, engine, api_problem):
+    def test_project_creates_projection(self, engine, api_problem) -> None:
         """Project creates a valid projection."""
         projection = engine.project(api_problem, PLUMBING, abstraction=0.5)
 
@@ -103,14 +103,14 @@ class TestProjectStage:
         assert projection.metaphor == PLUMBING
         assert 0 <= projection.abstraction <= 1
 
-    def test_project_creates_mappings(self, engine, api_problem):
+    def test_project_creates_mappings(self, engine, api_problem) -> None:
         """Project creates concept mappings."""
         projection = engine.project(api_problem, PLUMBING, abstraction=0.5)
 
         # Should have some mappings
         assert len(projection.mappings) > 0 or len(projection.gaps) > 0
 
-    def test_project_abstraction_affects_mappings(self, engine, api_problem):
+    def test_project_abstraction_affects_mappings(self, engine, api_problem) -> None:
         """Higher abstraction creates more lenient mappings."""
         low_abs = engine.project(api_problem, PLUMBING, abstraction=0.1)
         high_abs = engine.project(api_problem, PLUMBING, abstraction=0.9)
@@ -120,12 +120,12 @@ class TestProjectStage:
         # This is a soft test - may not always hold
         assert high_abs.coverage >= low_abs.coverage or True  # Allow both
 
-    def test_project_coverage_bounded(self, engine, api_problem):
+    def test_project_coverage_bounded(self, engine, api_problem) -> None:
         """Coverage is bounded to [0, 1]."""
         projection = engine.project(api_problem, PLUMBING, abstraction=0.5)
         assert 0 <= projection.coverage <= 1
 
-    def test_project_confidence_bounded(self, engine, api_problem):
+    def test_project_confidence_bounded(self, engine, api_problem) -> None:
         """Confidence is bounded to [0, 1]."""
         projection = engine.project(api_problem, PLUMBING, abstraction=0.5)
         assert 0 <= projection.confidence <= 1
@@ -144,12 +144,12 @@ class TestChallengeStage:
         """Create a projection likely to pass challenge."""
         return engine.project(api_problem, PLUMBING, abstraction=0.6)
 
-    def test_challenge_returns_result(self, engine, good_projection):
+    def test_challenge_returns_result(self, engine, good_projection) -> None:
         """Challenge returns a ChallengeResult."""
         result = engine.challenge(good_projection)
         assert isinstance(result, ChallengeResult)
 
-    def test_challenge_checks_coverage(self, engine, api_problem):
+    def test_challenge_checks_coverage(self, engine, api_problem) -> None:
         """Challenge fails low-coverage projections."""
         # Create a projection with very low abstraction (harder to map)
         projection = engine.project(api_problem, PLUMBING, abstraction=0.0)
@@ -159,12 +159,12 @@ class TestChallengeStage:
         if projection.coverage < 0.5:
             assert not result.survives or len(result.caveats) > 0
 
-    def test_challenge_robustness_bounded(self, engine, good_projection):
+    def test_challenge_robustness_bounded(self, engine, good_projection) -> None:
         """Robustness is bounded to [0, 1]."""
         result = engine.challenge(good_projection)
         assert 0 <= result.robustness <= 1
 
-    def test_challenge_passes_good_projection(self, engine, good_projection):
+    def test_challenge_passes_good_projection(self, engine, good_projection) -> None:
         """Good projections should generally pass."""
         result = engine.challenge(good_projection)
         # At least some tests should pass
@@ -184,23 +184,23 @@ class TestSolveStage:
         """Create a projection that can be solved."""
         return engine.project(api_problem, PLUMBING, abstraction=0.5)
 
-    def test_solve_returns_solution(self, engine, solvable_projection):
+    def test_solve_returns_solution(self, engine, solvable_projection) -> None:
         """Solve returns a MetaphorSolution."""
         result = engine.solve(solvable_projection)
         assert isinstance(result, MetaphorSolution)
 
-    def test_solve_includes_reasoning(self, engine, solvable_projection):
+    def test_solve_includes_reasoning(self, engine, solvable_projection) -> None:
         """Solve includes reasoning chain."""
         result = engine.solve(solvable_projection)
         assert result.reasoning  # Non-empty
 
-    def test_solve_applies_operations(self, engine, solvable_projection):
+    def test_solve_applies_operations(self, engine, solvable_projection) -> None:
         """Solve applies metaphor operations."""
         result = engine.solve(solvable_projection)
         # May or may not have operations depending on applicability
         assert isinstance(result.operations_applied, tuple)
 
-    def test_solve_produces_conclusion(self, engine, solvable_projection):
+    def test_solve_produces_conclusion(self, engine, solvable_projection) -> None:
         """Solve produces a conclusion."""
         result = engine.solve(solvable_projection)
         assert result.conclusion  # Non-empty
@@ -220,7 +220,9 @@ class TestTranslateStage:
         projection = engine.project(api_problem, PLUMBING, abstraction=0.5)
         return engine.solve(projection)
 
-    def test_translate_returns_tuple(self, engine, metaphor_solution, api_problem):
+    def test_translate_returns_tuple(
+        self, engine, metaphor_solution, api_problem
+    ) -> None:
         """Translate returns (answer, actions, confidence)."""
         result = engine.translate(metaphor_solution, api_problem)
         assert len(result) == 3
@@ -229,7 +231,9 @@ class TestTranslateStage:
         assert isinstance(actions, tuple)
         assert isinstance(confidence, float)
 
-    def test_translate_confidence_bounded(self, engine, metaphor_solution, api_problem):
+    def test_translate_confidence_bounded(
+        self, engine, metaphor_solution, api_problem
+    ) -> None:
         """Translation confidence is bounded."""
         _, _, confidence = engine.translate(metaphor_solution, api_problem)
         assert 0 <= confidence <= 1
@@ -269,7 +273,9 @@ class TestVerifyStage:
         assert isinstance(verified, bool)
 
     @pytest.mark.law
-    def test_verify_distortion_bounded(self, engine, full_solution, api_problem):
+    def test_verify_distortion_bounded(
+        self, engine, full_solution, api_problem
+    ) -> None:
         """Distortion components are bounded."""
         distortion, _ = engine.verify(full_solution, api_problem)
         assert 0 <= distortion.structural_loss <= 1
@@ -285,22 +291,22 @@ class TestVerifyStage:
 class TestFullPipeline:
     """Tests for the complete solve_problem pipeline."""
 
-    def test_solve_problem_returns_solution(self, engine, api_problem):
+    def test_solve_problem_returns_solution(self, engine, api_problem) -> None:
         """solve_problem returns a Solution."""
         solution = engine.solve_problem(api_problem)
         assert isinstance(solution, Solution)
 
-    def test_solve_problem_addresses_problem(self, engine, api_problem):
+    def test_solve_problem_addresses_problem(self, engine, api_problem) -> None:
         """Solution addresses the original problem."""
         solution = engine.solve_problem(api_problem)
         assert solution.problem == api_problem
 
-    def test_solve_problem_has_distortion(self, engine, api_problem):
+    def test_solve_problem_has_distortion(self, engine, api_problem) -> None:
         """Solution includes distortion metrics."""
         solution = engine.solve_problem(api_problem)
         assert isinstance(solution.distortion, Distortion)
 
-    def test_solve_problem_respects_max_iterations(self, api_problem):
+    def test_solve_problem_respects_max_iterations(self, api_problem) -> None:
         """solve_problem respects iteration limit."""
         config = EngineConfig(max_iterations=2)
         engine = MetaphorEngine(config=config)
@@ -309,7 +315,9 @@ class TestFullPipeline:
         solution = engine.solve_problem(api_problem)
         assert solution is not None
 
-    def test_solve_problem_different_problems(self, engine, api_problem, team_problem):
+    def test_solve_problem_different_problems(
+        self, engine, api_problem, team_problem
+    ) -> None:
         """Can solve different types of problems."""
         api_solution = engine.solve_problem(api_problem)
         team_solution = engine.solve_problem(team_problem)
@@ -324,7 +332,7 @@ class TestFullPipeline:
         assert isinstance(team_solution.distortion, Distortion)
 
     @pytest.mark.law
-    def test_solve_always_returns_solution(self, engine):
+    def test_solve_always_returns_solution(self, engine) -> None:
         """solve_problem always returns a Solution, never None."""
         # Even with an unusual problem
         weird_problem = Problem(
@@ -345,7 +353,7 @@ class TestFullPipeline:
 class TestBacktracking:
     """Tests for search backtracking behavior."""
 
-    def test_backtrack_on_challenge_failure(self, api_problem):
+    def test_backtrack_on_challenge_failure(self, api_problem) -> None:
         """Engine backtracks when challenge fails."""
         engine = MetaphorEngine()
 
@@ -365,7 +373,7 @@ class TestBacktracking:
         assert len(iterations) >= 1
 
     @pytest.mark.law
-    def test_backtrack_excludes_tried_metaphors(self):
+    def test_backtrack_excludes_tried_metaphors(self) -> None:
         """Each backtrack excludes previously tried metaphors."""
         # This is tested implicitly through SearchState
         # The candidates_tried list should grow with each iteration
@@ -390,7 +398,7 @@ class TestBacktracking:
 class TestLearningIntegration:
     """Tests for learning integration with engine."""
 
-    def test_learning_updates_on_success(self, api_problem):
+    def test_learning_updates_on_success(self, api_problem) -> None:
         """Model updates on successful solve."""
         engine = MetaphorEngine(config=EngineConfig(enable_learning=True))
 
@@ -401,7 +409,7 @@ class TestLearningIntegration:
         # (Weak test - just verifies no crash)
         assert True
 
-    def test_learning_disabled(self, api_problem):
+    def test_learning_disabled(self, api_problem) -> None:
         """Can disable learning."""
         engine = MetaphorEngine(config=EngineConfig(enable_learning=False))
         solution = engine.solve_problem(api_problem)
@@ -416,7 +424,7 @@ class TestLearningIntegration:
 class TestStageCallbacks:
     """Tests for stage completion callbacks."""
 
-    def test_callback_called_for_stages(self, api_problem):
+    def test_callback_called_for_stages(self, api_problem) -> None:
         """Callbacks are called for each stage."""
         engine = MetaphorEngine()
         stages_called: list[str] = []
@@ -432,7 +440,7 @@ class TestStageCallbacks:
         # At minimum: retrieve, project, challenge
         assert "retrieve" in stages_called
 
-    def test_callback_receives_data(self, api_problem):
+    def test_callback_receives_data(self, api_problem) -> None:
         """Callbacks receive stage data."""
         engine = MetaphorEngine()
         stage_data: dict[str, dict] = {}

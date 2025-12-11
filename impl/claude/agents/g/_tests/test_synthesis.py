@@ -26,7 +26,7 @@ from agents.g.types import GrammarFormat, GrammarLevel
 
 
 @pytest.mark.asyncio
-async def test_analyze_domain_extracts_entities():
+async def test_analyze_domain_extracts_entities() -> None:
     """Test entity extraction from intent."""
     intent = "Manage Calendar events and tasks for users"
     constraints = []
@@ -39,7 +39,7 @@ async def test_analyze_domain_extracts_entities():
 
 
 @pytest.mark.asyncio
-async def test_analyze_domain_extracts_operations():
+async def test_analyze_domain_extracts_operations() -> None:
     """Test operation extraction from intent."""
     intent = "Read and write files, but never delete them"
     constraints = []
@@ -52,7 +52,7 @@ async def test_analyze_domain_extracts_operations():
 
 
 @pytest.mark.asyncio
-async def test_analyze_domain_applies_constraints():
+async def test_analyze_domain_applies_constraints() -> None:
     """Test constraint application filters operations."""
     intent = "Read, write, and delete files"
     constraints = ["No deletes"]
@@ -64,7 +64,7 @@ async def test_analyze_domain_applies_constraints():
 
 
 @pytest.mark.asyncio
-async def test_analyze_domain_with_examples():
+async def test_analyze_domain_with_examples() -> None:
     """Test domain analysis with example inputs."""
     intent = "Command language for file operations"
     constraints = ["No deletes"]
@@ -77,7 +77,7 @@ async def test_analyze_domain_with_examples():
     assert "file" in analysis.entities or "directory" in analysis.entities
 
 
-def test_extract_entities_from_intent():
+def test_extract_entities_from_intent() -> None:
     """Test entity extraction heuristics."""
     intent = "Manage Event and Task items in the system"
     examples = []
@@ -88,7 +88,7 @@ def test_extract_entities_from_intent():
     assert len(entities) > 0
 
 
-def test_extract_operations_from_intent():
+def test_extract_operations_from_intent() -> None:
     """Test operation extraction heuristics."""
     intent = "Users can read, write, create, and delete resources"
     examples = []
@@ -99,7 +99,7 @@ def test_extract_operations_from_intent():
     assert any(op in ["READ", "WRITE", "CREATE", "DELETE"] for op in operations)
 
 
-def test_apply_constraints_no_deletes():
+def test_apply_constraints_no_deletes() -> None:
     """Test 'No deletes' constraint filtering."""
     operations = ["READ", "WRITE", "DELETE", "LIST"]
     constraints = ["No deletes"]
@@ -110,7 +110,7 @@ def test_apply_constraints_no_deletes():
     assert "READ" in filtered
 
 
-def test_apply_constraints_read_only():
+def test_apply_constraints_read_only() -> None:
     """Test 'Read-only' constraint filtering."""
     operations = ["READ", "WRITE", "DELETE", "LIST", "GET"]
     constraints = ["Read-only"]
@@ -127,7 +127,7 @@ def test_apply_constraints_read_only():
 
 
 @pytest.mark.asyncio
-async def test_synthesize_schema_grammar():
+async def test_synthesize_schema_grammar() -> None:
     """Test SCHEMA level grammar generation (Pydantic)."""
     analysis = await analyze_domain(
         intent="User profile with name and email",
@@ -143,7 +143,7 @@ async def test_synthesize_schema_grammar():
 
 
 @pytest.mark.asyncio
-async def test_synthesize_command_grammar():
+async def test_synthesize_command_grammar() -> None:
     """Test COMMAND level grammar generation (BNF)."""
     analysis = await analyze_domain(
         intent="File operations: read, write, list",
@@ -161,7 +161,7 @@ async def test_synthesize_command_grammar():
 
 
 @pytest.mark.asyncio
-async def test_synthesize_recursive_grammar():
+async def test_synthesize_recursive_grammar() -> None:
     """Test RECURSIVE level grammar generation (Lark)."""
     analysis = await analyze_domain(
         intent="Query language with filter, map, reduce",
@@ -178,7 +178,7 @@ async def test_synthesize_recursive_grammar():
 
 
 @pytest.mark.asyncio
-async def test_command_grammar_encodes_constraints():
+async def test_command_grammar_encodes_constraints() -> None:
     """Test that constraints are structurally encoded in grammar."""
     analysis = await analyze_domain(
         intent="Calendar commands",
@@ -192,7 +192,7 @@ async def test_command_grammar_encodes_constraints():
 
 
 @pytest.mark.asyncio
-async def test_schema_grammar_has_valid_pydantic():
+async def test_schema_grammar_has_valid_pydantic() -> None:
     """Test that SCHEMA grammar is valid Pydantic."""
     analysis = await analyze_domain(
         intent="Simple data model",
@@ -211,7 +211,7 @@ async def test_schema_grammar_has_valid_pydantic():
 # ============================================================================
 
 
-def test_generate_parser_config_schema():
+def test_generate_parser_config_schema() -> None:
     """Test parser config for SCHEMA level."""
     config = generate_parser_config("", GrammarLevel.SCHEMA, GrammarFormat.PYDANTIC)
 
@@ -220,7 +220,7 @@ def test_generate_parser_config_schema():
     assert config.confidence_threshold == 1.0  # Binary validation
 
 
-def test_generate_parser_config_command():
+def test_generate_parser_config_command() -> None:
     """Test parser config for COMMAND level."""
     config = generate_parser_config("", GrammarLevel.COMMAND, GrammarFormat.BNF)
 
@@ -229,7 +229,7 @@ def test_generate_parser_config_command():
     assert config.repair_strategy == "best_effort"
 
 
-def test_generate_parser_config_recursive():
+def test_generate_parser_config_recursive() -> None:
     """Test parser config for RECURSIVE level."""
     config = generate_parser_config("", GrammarLevel.RECURSIVE, GrammarFormat.LARK)
 
@@ -237,7 +237,7 @@ def test_generate_parser_config_recursive():
     assert config.grammar_format == GrammarFormat.LARK
 
 
-def test_generate_interpreter_config_schema():
+def test_generate_interpreter_config_schema() -> None:
     """Test interpreter config for SCHEMA level."""
     config = generate_interpreter_config(GrammarLevel.SCHEMA)
 
@@ -246,7 +246,7 @@ def test_generate_interpreter_config_schema():
     assert config.timeout_ms == 1000  # Fast
 
 
-def test_generate_interpreter_config_command():
+def test_generate_interpreter_config_command() -> None:
     """Test interpreter config for COMMAND level."""
     config = generate_interpreter_config(GrammarLevel.COMMAND)
 
@@ -254,7 +254,7 @@ def test_generate_interpreter_config_command():
     assert config.pure_functions_only is False  # Commands may have side effects
 
 
-def test_generate_interpreter_config_recursive():
+def test_generate_interpreter_config_recursive() -> None:
     """Test interpreter config for RECURSIVE level."""
     config = generate_interpreter_config(GrammarLevel.RECURSIVE)
 
@@ -269,7 +269,7 @@ def test_generate_interpreter_config_recursive():
 
 
 @pytest.mark.asyncio
-async def test_full_synthesis_pipeline_command():
+async def test_full_synthesis_pipeline_command() -> None:
     """Test complete synthesis pipeline for COMMAND level."""
     # Analyze
     analysis = await analyze_domain(
@@ -296,7 +296,7 @@ async def test_full_synthesis_pipeline_command():
 
 
 @pytest.mark.asyncio
-async def test_full_synthesis_pipeline_schema():
+async def test_full_synthesis_pipeline_schema() -> None:
     """Test complete synthesis pipeline for SCHEMA level."""
     # Analyze
     analysis = await analyze_domain(
@@ -320,7 +320,7 @@ async def test_full_synthesis_pipeline_schema():
 
 
 @pytest.mark.asyncio
-async def test_constraint_no_deletes_encoded_structurally():
+async def test_constraint_no_deletes_encoded_structurally() -> None:
     """Test 'No deletes' constraint is structurally encoded."""
     analysis = await analyze_domain(
         intent="Database queries",
@@ -337,7 +337,7 @@ async def test_constraint_no_deletes_encoded_structurally():
 
 
 @pytest.mark.asyncio
-async def test_constraint_read_only_encoded_structurally():
+async def test_constraint_read_only_encoded_structurally() -> None:
     """Test 'Read-only' constraint is structurally encoded."""
     analysis = await analyze_domain(
         intent="Query interface",

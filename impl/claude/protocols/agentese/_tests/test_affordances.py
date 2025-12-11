@@ -59,7 +59,7 @@ from .conftest import MockUmwelt
 class TestAspectCategory:
     """Tests for AspectCategory enum."""
 
-    def test_all_categories_exist(self):
+    def test_all_categories_exist(self) -> None:
         """All six aspect categories exist."""
         categories = [
             AspectCategory.PERCEPTION,
@@ -71,7 +71,7 @@ class TestAspectCategory:
         ]
         assert len(categories) == 6
 
-    def test_categories_are_distinct(self):
+    def test_categories_are_distinct(self) -> None:
         """Each category is distinct."""
         assert AspectCategory.PERCEPTION != AspectCategory.MUTATION
         assert AspectCategory.MUTATION != AspectCategory.ENTROPY
@@ -80,7 +80,7 @@ class TestAspectCategory:
 class TestAspect:
     """Tests for Aspect dataclass."""
 
-    def test_aspect_creation(self):
+    def test_aspect_creation(self) -> None:
         """Can create an aspect."""
         aspect = Aspect(
             name="test",
@@ -93,7 +93,7 @@ class TestAspect:
         assert aspect.requires_archetype == ()
         assert aspect.side_effects is False
 
-    def test_aspect_with_archetype_requirement(self):
+    def test_aspect_with_archetype_requirement(self) -> None:
         """Aspect can require specific archetypes."""
         aspect = Aspect(
             name="renovate",
@@ -104,7 +104,7 @@ class TestAspect:
         assert "architect" in aspect.requires_archetype
         assert aspect.side_effects is True
 
-    def test_standard_aspects_exist(self):
+    def test_standard_aspects_exist(self) -> None:
         """Standard aspects are defined."""
         assert "manifest" in STANDARD_ASPECTS
         assert "witness" in STANDARD_ASPECTS
@@ -112,12 +112,12 @@ class TestAspect:
         assert "refine" in STANDARD_ASPECTS
         assert "sip" in STANDARD_ASPECTS
 
-    def test_manifest_is_perception(self):
+    def test_manifest_is_perception(self) -> None:
         """manifest is a perception aspect."""
         manifest = STANDARD_ASPECTS["manifest"]
         assert manifest.category == AspectCategory.PERCEPTION
 
-    def test_renovate_requires_architect(self):
+    def test_renovate_requires_architect(self) -> None:
         """renovate requires architect archetype."""
         renovate = STANDARD_ASPECTS["renovate"]
         assert "architect" in renovate.requires_archetype
@@ -133,17 +133,17 @@ class TestAffordanceRegistry:
     """Tests for AffordanceRegistry."""
 
     @pytest.fixture
-    def registry(self):
+    def registry(self) -> create_affordance_registry:
         return create_affordance_registry()
 
-    def test_core_affordances_for_default(self, registry):
+    def test_core_affordances_for_default(self, registry) -> None:
         """Default archetype gets core affordances."""
         affordances = registry.get_affordances("default")
         assert "manifest" in affordances
         assert "witness" in affordances
         assert "affordances" in affordances
 
-    def test_architect_gets_extra_affordances(self, registry):
+    def test_architect_gets_extra_affordances(self, registry) -> None:
         """Architect archetype gets extra affordances."""
         affordances = registry.get_affordances("architect")
         assert "manifest" in affordances  # Core
@@ -151,7 +151,7 @@ class TestAffordanceRegistry:
         assert "blueprint" in affordances
         assert "demolish" in affordances
 
-    def test_poet_gets_different_affordances(self, registry):
+    def test_poet_gets_different_affordances(self, registry) -> None:
         """Poet archetype gets different affordances than architect."""
         architect = set(registry.get_affordances("architect"))
         poet = set(registry.get_affordances("poet"))
@@ -168,14 +168,14 @@ class TestAffordanceRegistry:
         assert "metaphorize" in poet
         assert "metaphorize" not in architect
 
-    def test_has_affordance(self, registry):
+    def test_has_affordance(self, registry) -> None:
         """has_affordance checks correctly."""
         assert registry.has_affordance("architect", "manifest")
         assert registry.has_affordance("architect", "renovate")
         assert not registry.has_affordance("poet", "renovate")
         assert registry.has_affordance("poet", "metaphorize")
 
-    def test_register_new_archetype(self, registry):
+    def test_register_new_archetype(self, registry) -> None:
         """Can register a new archetype."""
         registry.register(
             "senior_architect", parents=("architect",), additional=("manage",)
@@ -186,14 +186,14 @@ class TestAffordanceRegistry:
         assert "renovate" in affordances  # Inherited from architect
         assert "manage" in affordances  # Additional
 
-    def test_extend_archetype(self, registry):
+    def test_extend_archetype(self, registry) -> None:
         """Can extend existing archetype."""
         registry.extend("architect", ("levitate",))
 
         affordances = registry.get_affordances("architect")
         assert "levitate" in affordances
 
-    def test_list_archetypes(self, registry):
+    def test_list_archetypes(self, registry) -> None:
         """Can list all archetypes."""
         archetypes = registry.list_archetypes()
         assert "architect" in archetypes
@@ -201,7 +201,7 @@ class TestAffordanceRegistry:
         assert "scientist" in archetypes
         assert "default" in archetypes
 
-    def test_get_aspect_info(self, registry):
+    def test_get_aspect_info(self, registry) -> None:
         """Can get aspect information."""
         aspect = registry.get_aspect_info("manifest")
         assert aspect is not None
@@ -221,16 +221,16 @@ class TestStandardAffordanceMatcher:
     """Tests for StandardAffordanceMatcher."""
 
     @pytest.fixture
-    def matcher(self):
+    def matcher(self) -> StandardAffordanceMatcher:
         return StandardAffordanceMatcher()
 
-    def test_matches_core_affordances(self, matcher):
+    def test_matches_core_affordances(self, matcher) -> None:
         """Core affordances match for any archetype."""
         assert matcher.matches("default", "manifest")
         assert matcher.matches("architect", "manifest")
         assert matcher.matches("poet", "manifest")
 
-    def test_matches_archetype_specific(self, matcher):
+    def test_matches_archetype_specific(self, matcher) -> None:
         """Archetype-specific affordances match correctly."""
         assert matcher.matches("architect", "renovate")
         assert not matcher.matches("poet", "renovate")
@@ -241,7 +241,7 @@ class TestCapabilityAffordanceMatcher:
     """Tests for CapabilityAffordanceMatcher."""
 
     @pytest.fixture
-    def matcher(self):
+    def matcher(self) -> CapabilityAffordanceMatcher:
         return CapabilityAffordanceMatcher(
             capability_grants={
                 "admin_access": ("configure", "provision"),
@@ -249,11 +249,11 @@ class TestCapabilityAffordanceMatcher:
             }
         )
 
-    def test_matches_archetype_affordances(self, matcher):
+    def test_matches_archetype_affordances(self, matcher) -> None:
         """Still matches archetype affordances."""
         assert matcher.matches("architect", "renovate")
 
-    def test_matches_capability_grants(self, matcher):
+    def test_matches_capability_grants(self, matcher) -> None:
         """Matches capability-granted affordances."""
         # Default archetype doesn't have configure
         assert not matcher.matches("default", "configure", capabilities=())
@@ -261,7 +261,7 @@ class TestCapabilityAffordanceMatcher:
         # But with admin_access capability, they do
         assert matcher.matches("default", "configure", capabilities=("admin_access",))
 
-    def test_capability_overrides_archetype(self, matcher):
+    def test_capability_overrides_archetype(self, matcher) -> None:
         """Capability can grant affordances regardless of archetype."""
         # Architect normally can't metaphorize
         assert not matcher.matches("architect", "metaphorize", capabilities=())
@@ -278,14 +278,14 @@ class TestCapabilityAffordanceMatcher:
 class TestArchetypeDNA:
     """Tests for ArchetypeDNA."""
 
-    def test_default_dna(self):
+    def test_default_dna(self) -> None:
         """Default DNA has default archetype."""
         dna = ArchetypeDNA()
         assert dna.name == "agent"
         assert dna.archetype == "default"
         assert dna.capabilities == ()
 
-    def test_custom_dna(self):
+    def test_custom_dna(self) -> None:
         """Can create DNA with custom archetype."""
         dna = ArchetypeDNA(
             name="claude",
@@ -296,7 +296,7 @@ class TestArchetypeDNA:
         assert dna.archetype == "developer"
         assert "test" in dna.capabilities
 
-    def test_germinate(self):
+    def test_germinate(self) -> None:
         """Can germinate DNA."""
         dna = ArchetypeDNA.germinate(
             name="claude",
@@ -304,7 +304,7 @@ class TestArchetypeDNA:
         )
         assert dna.archetype == "scientist"
 
-    def test_exploration_budget(self):
+    def test_exploration_budget(self) -> None:
         """DNA has exploration budget (Accursed Share)."""
         dna = ArchetypeDNA()
         assert dna.exploration_budget == 0.1
@@ -322,24 +322,24 @@ class TestUmweltAdapter:
     """Tests for UmweltAdapter."""
 
     @pytest.fixture
-    def adapter(self):
+    def adapter(self) -> create_umwelt_adapter:
         return create_umwelt_adapter()
 
     @pytest.fixture
-    def architect_umwelt(self):
+    def architect_umwelt(self) -> MockUmwelt:
         return MockUmwelt(archetype="architect")
 
     @pytest.fixture
-    def poet_umwelt(self):
+    def poet_umwelt(self) -> MockUmwelt:
         return MockUmwelt(archetype="poet")
 
-    def test_extract_meta(self, adapter, architect_umwelt):
+    def test_extract_meta(self, adapter, architect_umwelt) -> None:
         """Can extract AgentMeta from Umwelt."""
         meta = adapter.extract_meta(architect_umwelt)
         assert isinstance(meta, AgentMeta)
         assert meta.archetype == "architect"
 
-    def test_get_affordances(self, adapter, architect_umwelt, poet_umwelt):
+    def test_get_affordances(self, adapter, architect_umwelt, poet_umwelt) -> None:
         """Gets correct affordances for different umwelts."""
         architect_affs = adapter.get_affordances(architect_umwelt)
         poet_affs = adapter.get_affordances(poet_umwelt)
@@ -349,7 +349,7 @@ class TestUmweltAdapter:
         assert "metaphorize" in poet_affs
         assert "metaphorize" not in architect_affs
 
-    def test_can_invoke(self, adapter, architect_umwelt, poet_umwelt):
+    def test_can_invoke(self, adapter, architect_umwelt, poet_umwelt) -> None:
         """can_invoke checks correctly."""
         assert adapter.can_invoke(architect_umwelt, "renovate")
         assert not adapter.can_invoke(poet_umwelt, "renovate")
@@ -360,7 +360,7 @@ class TestUmweltAdapter:
         assert adapter.can_invoke(architect_umwelt, "manifest")
         assert adapter.can_invoke(poet_umwelt, "manifest")
 
-    def test_filter_affordances(self, adapter, architect_umwelt):
+    def test_filter_affordances(self, adapter, architect_umwelt) -> None:
         """Can filter affordances to those available."""
         available = ["manifest", "renovate", "metaphorize", "sip"]
         filtered = adapter.filter_affordances(architect_umwelt, available)
@@ -378,14 +378,14 @@ class TestUmweltAdapter:
 class TestContextAffordanceSet:
     """Tests for ContextAffordanceSet."""
 
-    def test_world_affordance_set(self):
+    def test_world_affordance_set(self) -> None:
         """World affordance set has correct base."""
         affs = WORLD_AFFORDANCE_SET.get_for_archetype("default")
         assert "manifest" in affs
         assert "witness" in affs
         assert "define" in affs
 
-    def test_void_affordance_set_universal(self):
+    def test_void_affordance_set_universal(self) -> None:
         """Void affordances are the same for all archetypes."""
         architect = VOID_AFFORDANCE_SET.get_for_archetype("architect")
         poet = VOID_AFFORDANCE_SET.get_for_archetype("poet")
@@ -398,7 +398,7 @@ class TestContextAffordanceSet:
             assert "tithe" in affs
             assert "thank" in affs
 
-    def test_concept_philosopher_affordances(self):
+    def test_concept_philosopher_affordances(self) -> None:
         """Philosopher gets dialectical affordances for concepts."""
         affs = CONCEPT_AFFORDANCE_SET.get_for_archetype("philosopher")
         assert "refine" in affs
@@ -406,7 +406,7 @@ class TestContextAffordanceSet:
         assert "synthesize" in affs
         assert "critique" in affs
 
-    def test_get_context_affordance_set(self):
+    def test_get_context_affordance_set(self) -> None:
         """Can get affordance set by context name."""
         world_set = get_context_affordance_set("world")
         assert world_set is WORLD_AFFORDANCE_SET
@@ -423,14 +423,14 @@ class TestContextAffordanceSet:
 class TestRenderings:
     """Tests for polymorphic renderings."""
 
-    def test_basic_rendering(self):
+    def test_basic_rendering(self) -> None:
         """BasicRendering works."""
         r = BasicRendering(summary="Test", content="Content")
         assert r.summary == "Test"
         assert "Test" in r.to_text()
         assert r.to_dict()["summary"] == "Test"
 
-    def test_blueprint_rendering(self):
+    def test_blueprint_rendering(self) -> None:
         """BlueprintRendering for architects."""
         r = BlueprintRendering(
             dimensions={"width": 10, "height": 8},
@@ -439,7 +439,7 @@ class TestRenderings:
         assert "BLUEPRINT" in r.to_text()
         assert r.to_dict()["type"] == "blueprint"
 
-    def test_poetic_rendering(self):
+    def test_poetic_rendering(self) -> None:
         """PoeticRendering for poets."""
         r = PoeticRendering(
             description="A shelter against the storm",
@@ -449,7 +449,7 @@ class TestRenderings:
         assert r.mood == "wistful"
         assert "wistful" in r.to_text().lower()
 
-    def test_economic_rendering(self):
+    def test_economic_rendering(self) -> None:
         """EconomicRendering for economists."""
         r = EconomicRendering(
             market_value=500000.0,
@@ -458,7 +458,7 @@ class TestRenderings:
         assert "$500,000" in r.to_text()
         assert r.to_dict()["market_value"] == 500000.0
 
-    def test_scientific_rendering(self):
+    def test_scientific_rendering(self) -> None:
         """ScientificRendering for scientists."""
         r = ScientificRendering(
             entity="house",
@@ -469,7 +469,7 @@ class TestRenderings:
         assert "SCIENTIFIC ANALYSIS" in r.to_text()
         assert "85" in r.to_text()  # Could be "85.00%" or "85%"
 
-    def test_developer_rendering(self):
+    def test_developer_rendering(self) -> None:
         """DeveloperRendering for developers."""
         r = DeveloperRendering(
             entity="app",
@@ -480,7 +480,7 @@ class TestRenderings:
         assert "TECHNICAL" in r.to_text()
         assert "python" in r.to_text().lower()
 
-    def test_admin_rendering(self):
+    def test_admin_rendering(self) -> None:
         """AdminRendering for admins."""
         r = AdminRendering(
             entity="server",
@@ -491,7 +491,7 @@ class TestRenderings:
         assert "SYSTEM" in r.to_text()
         assert "healthy" in r.to_text()
 
-    def test_philosopher_rendering(self):
+    def test_philosopher_rendering(self) -> None:
         """PhilosopherRendering for philosophers."""
         r = PhilosopherRendering(
             concept="justice",
@@ -505,7 +505,7 @@ class TestRenderings:
         assert "justice" in r.to_text().lower()
         assert "thesis" in r.to_text().lower()
 
-    def test_memory_rendering(self):
+    def test_memory_rendering(self) -> None:
         """MemoryRendering for self.memory."""
         r = MemoryRendering(
             memory_count=100,
@@ -516,7 +516,7 @@ class TestRenderings:
         assert "MEMORY STATE" in r.to_text()
         assert "100" in r.to_text()
 
-    def test_entropy_rendering(self):
+    def test_entropy_rendering(self) -> None:
         """EntropyRendering for void.entropy."""
         r = EntropyRendering(
             remaining=75.0,
@@ -526,7 +526,7 @@ class TestRenderings:
         assert "ACCURSED SHARE" in r.to_text()
         assert "75" in r.to_text()
 
-    def test_temporal_rendering(self):
+    def test_temporal_rendering(self) -> None:
         """TemporalRendering for time.trace."""
         r = TemporalRendering(
             trace_count=50,
@@ -540,50 +540,50 @@ class TestStandardRenderingFactory:
     """Tests for StandardRenderingFactory."""
 
     @pytest.fixture
-    def factory(self):
+    def factory(self) -> create_rendering_factory:
         return create_rendering_factory()
 
-    def test_creates_blueprint_for_architect(self, factory):
+    def test_creates_blueprint_for_architect(self, factory) -> None:
         """Creates BlueprintRendering for architect."""
         r = factory.create("architect", "house", {"dimensions": {"w": 10}})
         assert isinstance(r, BlueprintRendering)
 
-    def test_creates_poetic_for_poet(self, factory):
+    def test_creates_poetic_for_poet(self, factory) -> None:
         """Creates PoeticRendering for poet."""
         r = factory.create("poet", "house", {})
         assert isinstance(r, PoeticRendering)
 
-    def test_creates_economic_for_economist(self, factory):
+    def test_creates_economic_for_economist(self, factory) -> None:
         """Creates EconomicRendering for economist."""
         r = factory.create("economist", "house", {"value": 500000})
         assert isinstance(r, EconomicRendering)
 
-    def test_creates_scientific_for_scientist(self, factory):
+    def test_creates_scientific_for_scientist(self, factory) -> None:
         """Creates ScientificRendering for scientist."""
         r = factory.create("scientist", "house", {})
         assert isinstance(r, ScientificRendering)
 
-    def test_creates_developer_for_developer(self, factory):
+    def test_creates_developer_for_developer(self, factory) -> None:
         """Creates DeveloperRendering for developer."""
         r = factory.create("developer", "app", {})
         assert isinstance(r, DeveloperRendering)
 
-    def test_creates_admin_for_admin(self, factory):
+    def test_creates_admin_for_admin(self, factory) -> None:
         """Creates AdminRendering for admin."""
         r = factory.create("admin", "server", {})
         assert isinstance(r, AdminRendering)
 
-    def test_creates_philosopher_for_philosopher(self, factory):
+    def test_creates_philosopher_for_philosopher(self, factory) -> None:
         """Creates PhilosopherRendering for philosopher."""
         r = factory.create("philosopher", "justice", {})
         assert isinstance(r, PhilosopherRendering)
 
-    def test_creates_basic_for_unknown(self, factory):
+    def test_creates_basic_for_unknown(self, factory) -> None:
         """Creates BasicRendering for unknown archetype."""
         r = factory.create("unknown_archetype", "entity", {})
         assert isinstance(r, BasicRendering)
 
-    def test_render_for_archetype_helper(self):
+    def test_render_for_archetype_helper(self) -> None:
         """render_for_archetype helper works."""
         r = render_for_archetype("poet", "sunset", {})
         assert isinstance(r, PoeticRendering)
@@ -598,7 +598,7 @@ class TestPolymorphicManifest:
     """Integration tests for polymorphic manifest()."""
 
     @pytest.mark.asyncio
-    async def test_world_node_architect_manifest(self):
+    async def test_world_node_architect_manifest(self) -> None:
         """WorldNode.manifest returns BlueprintRendering for architect."""
         from ..contexts.world import create_world_node
 
@@ -612,7 +612,7 @@ class TestPolymorphicManifest:
         assert isinstance(result, BlueprintRendering)
 
     @pytest.mark.asyncio
-    async def test_world_node_poet_manifest(self):
+    async def test_world_node_poet_manifest(self) -> None:
         """WorldNode.manifest returns PoeticRendering for poet."""
         from ..contexts.world import create_world_node
 
@@ -623,7 +623,7 @@ class TestPolymorphicManifest:
         assert isinstance(result, PoeticRendering)
 
     @pytest.mark.asyncio
-    async def test_world_node_economist_manifest(self):
+    async def test_world_node_economist_manifest(self) -> None:
         """WorldNode.manifest returns EconomicRendering for economist."""
         from ..contexts.world import create_world_node
 
@@ -637,7 +637,7 @@ class TestPolymorphicManifest:
         assert isinstance(result, EconomicRendering)
 
     @pytest.mark.asyncio
-    async def test_world_node_scientist_manifest(self):
+    async def test_world_node_scientist_manifest(self) -> None:
         """WorldNode.manifest returns ScientificRendering for scientist."""
         from ..contexts.world import create_world_node
 
@@ -648,7 +648,7 @@ class TestPolymorphicManifest:
         assert isinstance(result, ScientificRendering)
 
     @pytest.mark.asyncio
-    async def test_world_node_developer_manifest(self):
+    async def test_world_node_developer_manifest(self) -> None:
         """WorldNode.manifest returns DeveloperRendering for developer."""
         from ..contexts.world import create_world_node
 
@@ -659,7 +659,7 @@ class TestPolymorphicManifest:
         assert isinstance(result, DeveloperRendering)
 
     @pytest.mark.asyncio
-    async def test_world_node_admin_manifest(self):
+    async def test_world_node_admin_manifest(self) -> None:
         """WorldNode.manifest returns AdminRendering for admin."""
         from ..contexts.world import create_world_node
 
@@ -670,7 +670,7 @@ class TestPolymorphicManifest:
         assert isinstance(result, AdminRendering)
 
     @pytest.mark.asyncio
-    async def test_world_node_default_manifest(self):
+    async def test_world_node_default_manifest(self) -> None:
         """WorldNode.manifest returns BasicRendering for default."""
         from ..contexts.world import create_world_node
 
@@ -681,7 +681,7 @@ class TestPolymorphicManifest:
         assert isinstance(result, BasicRendering)
 
     @pytest.mark.asyncio
-    async def test_concept_node_philosopher_manifest(self):
+    async def test_concept_node_philosopher_manifest(self) -> None:
         """ConceptNode.manifest returns PhilosopherRendering for philosopher."""
         from ..contexts.concept import create_concept_node
 
@@ -696,7 +696,7 @@ class TestPolymorphicManifest:
         assert "justice" in result.concept
 
     @pytest.mark.asyncio
-    async def test_concept_node_scientist_manifest(self):
+    async def test_concept_node_scientist_manifest(self) -> None:
         """ConceptNode.manifest returns ScientificRendering for scientist."""
         from ..contexts.concept import create_concept_node
 
@@ -716,7 +716,7 @@ class TestAffordanceErrors:
     """Tests for affordance error handling."""
 
     @pytest.mark.asyncio
-    async def test_logos_rejects_unavailable_affordance(self):
+    async def test_logos_rejects_unavailable_affordance(self) -> None:
         """Logos.invoke raises AffordanceError for unavailable aspects."""
         from ..logos import create_logos
         from ..exceptions import AffordanceError
@@ -734,7 +734,7 @@ class TestAffordanceErrors:
         assert "poet" in str(error).lower() or "Your affordances" in str(error)
 
     @pytest.mark.asyncio
-    async def test_affordance_error_suggests_alternatives(self):
+    async def test_affordance_error_suggests_alternatives(self) -> None:
         """AffordanceError suggests what the observer can do."""
         from ..exceptions import AffordanceError
 
@@ -760,13 +760,13 @@ class TestLogosWithAffordances:
     """Integration tests for Logos with affordance filtering."""
 
     @pytest.fixture
-    def logos(self):
+    def logos(self) -> "Logos":
         from ..logos import create_logos
 
         return create_logos()
 
     @pytest.mark.asyncio
-    async def test_same_path_different_observer_different_result(self, logos):
+    async def test_same_path_different_observer_different_result(self, logos) -> None:
         """Same path yields different results for different observers."""
         architect = MockUmwelt(archetype="architect")
         poet = MockUmwelt(archetype="poet")
@@ -779,7 +779,7 @@ class TestLogosWithAffordances:
         assert isinstance(poet_result, PoeticRendering)
 
     @pytest.mark.asyncio
-    async def test_architect_can_renovate(self, logos):
+    async def test_architect_can_renovate(self, logos) -> None:
         """Architect can invoke renovate aspect."""
         architect = MockUmwelt(archetype="architect")
 
@@ -790,7 +790,7 @@ class TestLogosWithAffordances:
         assert "transformed" in result
 
     @pytest.mark.asyncio
-    async def test_void_available_to_all(self, logos):
+    async def test_void_available_to_all(self, logos) -> None:
         """Void aspects are available to all archetypes."""
         archetypes = ["default", "architect", "poet", "scientist"]
 

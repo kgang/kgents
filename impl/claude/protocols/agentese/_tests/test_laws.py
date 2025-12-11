@@ -119,45 +119,45 @@ class TestIdentity:
     """Tests for the Identity morphism."""
 
     @pytest.mark.asyncio
-    async def test_identity_returns_input_unchanged(self):
+    async def test_identity_returns_input_unchanged(self) -> None:
         """Identity morphism returns input unchanged."""
         result = await Id.invoke(42)
         assert result == 42
 
     @pytest.mark.asyncio
-    async def test_identity_with_string(self):
+    async def test_identity_with_string(self) -> None:
         """Identity works with strings."""
         result = await Id.invoke("hello")
         assert result == "hello"
 
     @pytest.mark.asyncio
-    async def test_identity_with_dict(self):
+    async def test_identity_with_dict(self) -> None:
         """Identity works with dicts."""
         data = {"key": "value"}
         result = await Id.invoke(data)
         assert result == data
 
     @pytest.mark.asyncio
-    async def test_identity_with_none(self):
+    async def test_identity_with_none(self) -> None:
         """Identity works with None."""
         result = await Id.invoke(None)
         assert result is None
 
-    def test_identity_name(self):
+    def test_identity_name(self) -> None:
         """Identity has name 'Id'."""
         assert Id.name == "Id"
 
-    def test_identity_singleton(self):
+    def test_identity_singleton(self) -> None:
         """IDENTITY constant is the same as Id."""
         assert IDENTITY is Id
 
-    def test_left_identity_composition(self):
+    def test_left_identity_composition(self) -> None:
         """Id >> f returns f."""
         f = IncrementMorphism()
         composed = Id >> f
         assert composed is f
 
-    def test_right_identity_composition(self):
+    def test_right_identity_composition(self) -> None:
         """f >> Id returns f (via __rrshift__)."""
         f = IncrementMorphism()
         # Since IncrementMorphism doesn't implement __rrshift__,
@@ -174,7 +174,7 @@ class TestComposed:
     """Tests for the Composed morphism."""
 
     @pytest.mark.asyncio
-    async def test_composed_executes_in_order(self):
+    async def test_composed_executes_in_order(self) -> None:
         """Composed morphisms execute left-to-right."""
         inc = IncrementMorphism()
         dbl = DoubleMorphism()
@@ -184,7 +184,7 @@ class TestComposed:
         assert result == 12  # (5 + 1) * 2 = 12
 
     @pytest.mark.asyncio
-    async def test_composed_name(self):
+    async def test_composed_name(self) -> None:
         """Composed morphism has descriptive name."""
         inc = IncrementMorphism()
         dbl = DoubleMorphism()
@@ -192,7 +192,7 @@ class TestComposed:
         assert composed.name == "(increment >> double)"
 
     @pytest.mark.asyncio
-    async def test_triple_composition(self):
+    async def test_triple_composition(self) -> None:
         """Three morphisms can be composed."""
         inc = IncrementMorphism()
         dbl = DoubleMorphism()
@@ -203,7 +203,7 @@ class TestComposed:
         assert result == 144  # ((5 + 1) * 2) ^ 2 = 12^2 = 144
 
     @pytest.mark.asyncio
-    async def test_composed_preserves_associativity_structurally(self):
+    async def test_composed_preserves_associativity_structurally(self) -> None:
         """Right-association preserves structural associativity."""
         inc = IncrementMorphism()
         dbl = DoubleMorphism()
@@ -243,7 +243,7 @@ class TestCategoryLawVerifier:
         return SquareMorphism()
 
     @pytest.mark.asyncio
-    async def test_verify_left_identity_passes(self, verifier, inc):
+    async def test_verify_left_identity_passes(self, verifier, inc) -> None:
         """Left identity law passes for well-behaved morphism."""
         result = await verifier.verify_left_identity(inc, 5)
         assert result.passed
@@ -252,21 +252,21 @@ class TestCategoryLawVerifier:
         assert result.right_result == 6  # inc(5) = 6
 
     @pytest.mark.asyncio
-    async def test_verify_right_identity_passes(self, verifier, inc):
+    async def test_verify_right_identity_passes(self, verifier, inc) -> None:
         """Right identity law passes for well-behaved morphism."""
         result = await verifier.verify_right_identity(inc, 5)
         assert result.passed
         assert result.law == "right_identity"
 
     @pytest.mark.asyncio
-    async def test_verify_identity_passes(self, verifier, inc):
+    async def test_verify_identity_passes(self, verifier, inc) -> None:
         """Full identity law verification passes."""
         result = await verifier.verify_identity(inc, 5)
         assert result.passed
         assert result.law == "identity"
 
     @pytest.mark.asyncio
-    async def test_verify_associativity_passes(self, verifier, inc, dbl, sqr):
+    async def test_verify_associativity_passes(self, verifier, inc, dbl, sqr) -> None:
         """Associativity law passes for well-behaved morphisms."""
         result = await verifier.verify_associativity(inc, dbl, sqr, 5)
         assert result.passed
@@ -276,7 +276,7 @@ class TestCategoryLawVerifier:
         assert result.right_result == 144
 
     @pytest.mark.asyncio
-    async def test_verify_all(self, verifier, inc, dbl, sqr):
+    async def test_verify_all(self, verifier, inc, dbl, sqr) -> None:
         """verify_all checks all laws."""
         results = await verifier.verify_all(inc, dbl, sqr, 5)
         assert len(results) == 3
@@ -288,13 +288,13 @@ class TestCategoryLawVerifier:
         }
 
     @pytest.mark.asyncio
-    async def test_result_is_boolean(self, verifier, inc):
+    async def test_result_is_boolean(self, verifier, inc) -> None:
         """LawVerificationResult can be used as boolean."""
         result = await verifier.verify_left_identity(inc, 5)
         assert bool(result) is True
 
     @pytest.mark.asyncio
-    async def test_custom_comparator(self):
+    async def test_custom_comparator(self) -> None:
         """Custom comparator for result equality."""
 
         # Use approximate comparison
@@ -312,43 +312,43 @@ class TestCategoryLawVerifier:
 class TestMinimalOutputPrinciple:
     """Tests for the Minimal Output Principle."""
 
-    def test_single_value_is_allowed(self):
+    def test_single_value_is_allowed(self) -> None:
         """Single values are valid returns."""
         assert is_single_logical_unit(42) is True
         assert is_single_logical_unit("hello") is True
         assert is_single_logical_unit({"key": "value"}) is True
 
-    def test_renderable_is_allowed(self):
+    def test_renderable_is_allowed(self) -> None:
         """Renderable objects are valid returns."""
         rendering = BasicRendering(summary="test")
         assert is_single_logical_unit(rendering) is True
 
-    def test_list_is_forbidden(self):
+    def test_list_is_forbidden(self) -> None:
         """Lists are forbidden returns."""
         assert is_single_logical_unit([1, 2, 3]) is False
 
-    def test_tuple_is_forbidden(self):
+    def test_tuple_is_forbidden(self) -> None:
         """Tuples are forbidden returns."""
         assert is_single_logical_unit((1, 2, 3)) is False
 
-    def test_set_is_forbidden(self):
+    def test_set_is_forbidden(self) -> None:
         """Sets are forbidden returns."""
         assert is_single_logical_unit({1, 2, 3}) is False
 
-    def test_empty_list_is_forbidden(self):
+    def test_empty_list_is_forbidden(self) -> None:
         """Even empty lists are forbidden."""
         assert is_single_logical_unit([]) is False
 
-    def test_generator_is_allowed(self):
+    def test_generator_is_allowed(self) -> None:
         """Generators (lazy sequences) are allowed."""
         gen = (x for x in range(10))
         assert is_single_logical_unit(gen) is True
 
-    def test_none_is_allowed(self):
+    def test_none_is_allowed(self) -> None:
         """None is a valid single unit."""
         assert is_single_logical_unit(None) is True
 
-    def test_dataclass_is_allowed(self):
+    def test_dataclass_is_allowed(self) -> None:
         """Dataclasses are valid single units."""
 
         @dataclass
@@ -358,7 +358,7 @@ class TestMinimalOutputPrinciple:
 
         assert is_single_logical_unit(Point(1, 2)) is True
 
-    def test_enforce_raises_on_list(self):
+    def test_enforce_raises_on_list(self) -> None:
         """enforce_minimal_output raises on list."""
         with pytest.raises(CompositionViolationError) as exc_info:
             enforce_minimal_output([1, 2, 3])
@@ -367,13 +367,13 @@ class TestMinimalOutputPrinciple:
         assert "Array return" in str(error)
         assert error.law_violated == "minimal_output"
 
-    def test_enforce_returns_valid_value(self):
+    def test_enforce_returns_valid_value(self) -> None:
         """enforce_minimal_output returns valid values unchanged."""
         value = {"key": "value"}
         result = enforce_minimal_output(value)
         assert result == value
 
-    def test_enforce_with_context(self):
+    def test_enforce_with_context(self) -> None:
         """enforce_minimal_output includes context in error."""
         with pytest.raises(CompositionViolationError) as exc_info:
             enforce_minimal_output([1, 2], "world.users.manifest")
@@ -389,14 +389,14 @@ class TestComposeHelper:
     """Tests for the compose() helper function."""
 
     @pytest.mark.asyncio
-    async def test_compose_two(self):
+    async def test_compose_two(self) -> None:
         """compose() works with two morphisms."""
         composed = compose(IncrementMorphism(), DoubleMorphism())
         result = await composed.invoke(5)
         assert result == 12
 
     @pytest.mark.asyncio
-    async def test_compose_three(self):
+    async def test_compose_three(self) -> None:
         """compose() works with three morphisms."""
         composed = compose(
             IncrementMorphism(),
@@ -406,13 +406,13 @@ class TestComposeHelper:
         result = await composed.invoke(5)
         assert result == 144
 
-    def test_compose_single_returns_itself(self):
+    def test_compose_single_returns_itself(self) -> None:
         """compose() with single morphism returns it."""
         f = IncrementMorphism()
         composed = compose(f)
         assert composed is f
 
-    def test_compose_requires_at_least_one(self):
+    def test_compose_requires_at_least_one(self) -> None:
         """compose() requires at least one morphism."""
         with pytest.raises(ValueError):
             compose()
@@ -422,13 +422,13 @@ class TestPipeHelper:
     """Tests for the pipe() helper function."""
 
     @pytest.mark.asyncio
-    async def test_pipe_single(self):
+    async def test_pipe_single(self) -> None:
         """pipe() works with single morphism."""
         result = await pipe(5, IncrementMorphism())
         assert result == 6
 
     @pytest.mark.asyncio
-    async def test_pipe_multiple(self):
+    async def test_pipe_multiple(self) -> None:
         """pipe() works with multiple morphisms."""
         result = await pipe(
             5,
@@ -439,7 +439,7 @@ class TestPipeHelper:
         assert result == 144
 
     @pytest.mark.asyncio
-    async def test_pipe_empty(self):
+    async def test_pipe_empty(self) -> None:
         """pipe() with no morphisms returns input."""
         result = await pipe(42)
         assert result == 42
@@ -452,14 +452,14 @@ class TestSimpleMorphism:
     """Tests for SimpleMorphism helper."""
 
     @pytest.mark.asyncio
-    async def test_simple_morphism_sync(self):
+    async def test_simple_morphism_sync(self) -> None:
         """SimpleMorphism wraps sync functions."""
         m = SimpleMorphism("add_one", lambda x: x + 1)
         result = await m.invoke(5)
         assert result == 6
 
     @pytest.mark.asyncio
-    async def test_simple_morphism_async(self):
+    async def test_simple_morphism_async(self) -> None:
         """SimpleMorphism wraps async functions."""
 
         async def async_add(x):
@@ -469,7 +469,7 @@ class TestSimpleMorphism:
         result = await m.invoke(5)
         assert result == 6
 
-    def test_simple_morphism_composition(self):
+    def test_simple_morphism_composition(self) -> None:
         """SimpleMorphism can be composed."""
         add = SimpleMorphism("add", lambda x: x + 1)
         mul = SimpleMorphism("mul", lambda x: x * 2)
@@ -480,7 +480,7 @@ class TestSimpleMorphism:
 class TestMorphismDecorator:
     """Tests for @morphism decorator."""
 
-    def test_morphism_decorator(self):
+    def test_morphism_decorator(self) -> None:
         """@morphism creates SimpleMorphism."""
 
         @morphism("double")
@@ -491,7 +491,7 @@ class TestMorphismDecorator:
         assert double.name == "double"
 
     @pytest.mark.asyncio
-    async def test_decorated_morphism_invokes(self):
+    async def test_decorated_morphism_invokes(self) -> None:
         """Decorated morphism can be invoked."""
 
         @morphism("triple")
@@ -509,7 +509,7 @@ class TestLawEnforcingComposition:
     """Tests for LawEnforcingComposition."""
 
     @pytest.mark.asyncio
-    async def test_enforcing_composition_invokes(self):
+    async def test_enforcing_composition_invokes(self) -> None:
         """LawEnforcingComposition invokes correctly."""
         composed = Composed(IncrementMorphism(), DoubleMorphism())
         enforcing = LawEnforcingComposition(composed)
@@ -517,21 +517,21 @@ class TestLawEnforcingComposition:
         assert result == 12
 
     @pytest.mark.asyncio
-    async def test_enforcing_composition_checks_output(self):
+    async def test_enforcing_composition_checks_output(self) -> None:
         """LawEnforcingComposition enforces minimal output."""
         composed = Composed(IncrementMorphism(), ListMorphism())
         enforcing = LawEnforcingComposition(composed)
         with pytest.raises(CompositionViolationError):
             await enforcing.invoke(5)
 
-    def test_enforcing_composition_name(self):
+    def test_enforcing_composition_name(self) -> None:
         """LawEnforcingComposition has descriptive name."""
         composed = Composed(IncrementMorphism(), DoubleMorphism())
         enforcing = LawEnforcingComposition(composed)
         assert "Verified" in enforcing.name
         assert "increment" in enforcing.name
 
-    def test_enforcing_composition_chains(self):
+    def test_enforcing_composition_chains(self) -> None:
         """LawEnforcingComposition can be chained."""
         composed = Composed(IncrementMorphism(), DoubleMorphism())
         enforcing = LawEnforcingComposition(composed)
@@ -563,30 +563,30 @@ class TestComposedPath:
     def observer(self) -> MockUmwelt:
         return MockUmwelt()
 
-    def test_composed_path_len(self, logos):
+    def test_composed_path_len(self, logos) -> None:
         """ComposedPath has length."""
         path = logos.compose("a.b.c", "d.e.f")
         assert len(path) == 2
 
-    def test_composed_path_iter(self, logos):
+    def test_composed_path_iter(self, logos) -> None:
         """ComposedPath is iterable."""
         path = logos.compose("a.b.c", "d.e.f", "g.h.i")
         paths = list(path)
         assert paths == ["a.b.c", "d.e.f", "g.h.i"]
 
-    def test_composed_path_name(self, logos):
+    def test_composed_path_name(self, logos) -> None:
         """ComposedPath has readable name."""
         path = logos.compose("a.b.c", "d.e.f")
         assert path.name == "a.b.c >> d.e.f"
 
-    def test_composed_path_rshift_string(self, logos):
+    def test_composed_path_rshift_string(self, logos) -> None:
         """ComposedPath >> string appends path."""
         path = logos.compose("a.b.c")
         extended = path >> "d.e.f"
         assert len(extended) == 2
         assert list(extended) == ["a.b.c", "d.e.f"]
 
-    def test_composed_path_rshift_composed(self, logos):
+    def test_composed_path_rshift_composed(self, logos) -> None:
         """ComposedPath >> ComposedPath combines paths."""
         path1 = logos.compose("a.b.c")
         path2 = logos.compose("d.e.f", "g.h.i")
@@ -594,7 +594,7 @@ class TestComposedPath:
         assert len(combined) == 3
         assert list(combined) == ["a.b.c", "d.e.f", "g.h.i"]
 
-    def test_composed_path_equality(self, logos):
+    def test_composed_path_equality(self, logos) -> None:
         """ComposedPath equality based on paths."""
         path1 = logos.compose("a.b.c", "d.e.f")
         path2 = logos.compose("a.b.c", "d.e.f")
@@ -602,7 +602,7 @@ class TestComposedPath:
         assert path1 == path2
         assert path1 != path3
 
-    def test_without_enforcement(self, logos):
+    def test_without_enforcement(self, logos) -> None:
         """without_enforcement creates version without output checks."""
         path = logos.compose("a.b.c")
         assert path._enforce_minimal_output is True
@@ -621,26 +621,26 @@ class TestIdentityPath:
     def observer(self) -> MockUmwelt:
         return MockUmwelt()
 
-    def test_identity_path_name(self, logos):
+    def test_identity_path_name(self, logos) -> None:
         """IdentityPath has name 'Id'."""
         id_path = logos.identity()
         assert id_path.name == "Id"
 
     @pytest.mark.asyncio
-    async def test_identity_path_invoke(self, logos, observer):
+    async def test_identity_path_invoke(self, logos, observer) -> None:
         """IdentityPath invoke returns input unchanged."""
         id_path = logos.identity()
         result = await id_path.invoke(observer, initial_input="test")
         assert result == "test"
 
-    def test_identity_path_rshift_string(self, logos):
+    def test_identity_path_rshift_string(self, logos) -> None:
         """IdentityPath >> string creates ComposedPath."""
         id_path = logos.identity()
         path = id_path >> "world.house.manifest"
         assert isinstance(path, ComposedPath)
         assert list(path) == ["world.house.manifest"]
 
-    def test_identity_path_rshift_composed(self, logos):
+    def test_identity_path_rshift_composed(self, logos) -> None:
         """IdentityPath >> ComposedPath returns ComposedPath unchanged."""
         id_path = logos.identity()
         composed = logos.compose("a.b.c", "d.e.f")
@@ -655,13 +655,13 @@ class TestLogosPath:
     def logos(self) -> Logos:
         return Logos()
 
-    def test_path_creates_composed(self, logos):
+    def test_path_creates_composed(self, logos) -> None:
         """logos.path() creates single-path ComposedPath."""
         path = logos.path("world.house.manifest")
         assert isinstance(path, ComposedPath)
         assert len(path) == 1
 
-    def test_path_chainable(self, logos):
+    def test_path_chainable(self, logos) -> None:
         """logos.path() result is chainable."""
         path = logos.path("a.b.c") >> "d.e.f" >> "g.h.i"
         assert len(path) == 3
@@ -676,7 +676,7 @@ class TestCategoryLaws:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("input_value", [0, 1, -1, 100, -100])
-    async def test_identity_law_left(self, input_value):
+    async def test_identity_law_left(self, input_value) -> None:
         """Id >> f == f for all inputs."""
         f = IncrementMorphism()
         verifier = CategoryLawVerifier()
@@ -685,7 +685,7 @@ class TestCategoryLaws:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("input_value", [0, 1, -1, 100, -100])
-    async def test_identity_law_right(self, input_value):
+    async def test_identity_law_right(self, input_value) -> None:
         """f >> Id == f for all inputs."""
         f = IncrementMorphism()
         verifier = CategoryLawVerifier()
@@ -694,7 +694,7 @@ class TestCategoryLaws:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("input_value", [0, 1, 2, 5, 10])
-    async def test_associativity_law(self, input_value):
+    async def test_associativity_law(self, input_value) -> None:
         """(f >> g) >> h == f >> (g >> h) for all inputs."""
         f = IncrementMorphism()
         g = DoubleMorphism()
@@ -704,7 +704,7 @@ class TestCategoryLaws:
         assert result.passed, f"Associativity failed for input {input_value}"
 
     @pytest.mark.asyncio
-    async def test_composition_is_closed(self):
+    async def test_composition_is_closed(self) -> None:
         """Composition of composables is composable."""
         f = IncrementMorphism()
         g = DoubleMorphism()
@@ -722,17 +722,17 @@ class TestCategoryLaws:
 class TestFactoryFunctions:
     """Tests for factory functions."""
 
-    def test_create_verifier_default(self):
+    def test_create_verifier_default(self) -> None:
         """create_verifier() returns default verifier."""
         verifier = create_verifier()
         assert isinstance(verifier, CategoryLawVerifier)
 
-    def test_create_verifier_custom_comparator(self):
+    def test_create_verifier_custom_comparator(self) -> None:
         """create_verifier() accepts custom comparator."""
         verifier = create_verifier(comparator=lambda a, b: True)
         assert verifier.comparator(1, 2) is True
 
-    def test_create_enforcing_composition_multiple(self):
+    def test_create_enforcing_composition_multiple(self) -> None:
         """create_enforcing_composition() with multiple morphisms."""
         ec = create_enforcing_composition(
             IncrementMorphism(),
@@ -740,7 +740,7 @@ class TestFactoryFunctions:
         )
         assert isinstance(ec, LawEnforcingComposition)
 
-    def test_create_enforcing_composition_single(self):
+    def test_create_enforcing_composition_single(self) -> None:
         """create_enforcing_composition() with single morphism."""
         ec = create_enforcing_composition(IncrementMorphism())
         assert isinstance(ec, LawEnforcingComposition)

@@ -19,7 +19,7 @@ from agents.d import Symbiont, VolatileAgent
 
 
 @pytest.mark.asyncio
-async def test_basic_stateful_computation():
+async def test_basic_stateful_computation() -> None:
     """Symbiont threads state through invocations."""
 
     def counter_logic(increment: int, count: int) -> tuple[int, int]:
@@ -44,7 +44,7 @@ async def test_basic_stateful_computation():
 
 
 @pytest.mark.asyncio
-async def test_conversational_context():
+async def test_conversational_context() -> None:
     """Symbiont maintains conversation history."""
     from dataclasses import dataclass, field
     from typing import List
@@ -80,7 +80,7 @@ async def test_conversational_context():
 
 
 @pytest.mark.asyncio
-async def test_async_logic():
+async def test_async_logic() -> None:
     """Symbiont supports async logic functions."""
 
     async def async_logic(value: int, state: int) -> tuple[int, int]:
@@ -103,7 +103,7 @@ async def test_async_logic():
 @pytest.mark.law("identity")
 @pytest.mark.law_identity
 @pytest.mark.asyncio
-async def test_composition_with_bootstrap():
+async def test_composition_with_bootstrap() -> None:
     """Symbiont is a valid Agent - composes via >>.
 
     Verifies identity law: Id >> f >> Id == f
@@ -127,7 +127,7 @@ async def test_composition_with_bootstrap():
 
 
 @pytest.mark.asyncio
-async def test_pure_logic_testability():
+async def test_pure_logic_testability() -> None:
     """Logic function can be tested independently."""
 
     def accumulator_logic(value: int, total: int) -> tuple[int, int]:
@@ -153,7 +153,7 @@ async def test_pure_logic_testability():
 @pytest.mark.law("associativity")
 @pytest.mark.law_associativity
 @pytest.mark.asyncio
-async def test_symbiont_chain():
+async def test_symbiont_chain() -> None:
     """Multiple symbionts can compose.
 
     Tests associativity law: Symbiont composition is associative.
@@ -184,7 +184,7 @@ async def test_symbiont_chain():
 
 
 @pytest.mark.asyncio
-async def test_state_independence():
+async def test_state_independence() -> None:
     """Each Symbiont maintains independent state."""
 
     def incrementer(x: int, state: int) -> tuple[int, int]:

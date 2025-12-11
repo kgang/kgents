@@ -19,7 +19,7 @@ class TestSemanticRegistry:
     """Test SemanticRegistry with auto-indexing."""
 
     @pytest.mark.asyncio
-    async def test_initialization(self):
+    async def test_initialization(self) -> None:
         """Test creating SemanticRegistry."""
         registry = SemanticRegistry()
 
@@ -28,7 +28,7 @@ class TestSemanticRegistry:
         assert registry._fitted is False
 
     @pytest.mark.asyncio
-    async def test_register_auto_indexes(self):
+    async def test_register_auto_indexes(self) -> None:
         """Test that register() auto-indexes entries."""
         registry = SemanticRegistry()
 
@@ -52,7 +52,7 @@ class TestSemanticRegistry:
         assert results[0].entry.id == "test1"
 
     @pytest.mark.asyncio
-    async def test_delete_removes_from_index(self):
+    async def test_delete_removes_from_index(self) -> None:
         """Test that delete() removes entries from semantic index."""
         registry = SemanticRegistry()
 
@@ -73,7 +73,7 @@ class TestSemanticRegistry:
         assert len(results) == 0
 
     @pytest.mark.asyncio
-    async def test_find_semantic_with_filters(self):
+    async def test_find_semantic_with_filters(self) -> None:
         """Test semantic search with entity type filtering."""
         registry = SemanticRegistry()
 
@@ -111,7 +111,7 @@ class TestSemanticRegistry:
         assert all(r.entry.entity_type == EntityType.AGENT for r in results)
 
     @pytest.mark.asyncio
-    async def test_find_semantic_with_threshold(self):
+    async def test_find_semantic_with_threshold(self) -> None:
         """Test semantic search threshold filtering."""
         registry = SemanticRegistry()
 
@@ -139,7 +139,7 @@ class TestSemanticRegistry:
         assert len(results_high) <= len(results_low)
 
     @pytest.mark.asyncio
-    async def test_hybrid_search_combines_results(self):
+    async def test_hybrid_search_combines_results(self) -> None:
         """Test that hybrid search combines keyword + semantic."""
         registry = SemanticRegistry()
 
@@ -174,7 +174,7 @@ class TestSemanticRegistry:
         assert all(r.match_type == "hybrid" for r in results)
 
     @pytest.mark.asyncio
-    async def test_hybrid_search_weights(self):
+    async def test_hybrid_search_weights(self) -> None:
         """Test hybrid search weighting."""
         registry = SemanticRegistry()
 
@@ -213,7 +213,7 @@ class TestSemanticRegistry:
             assert keyword_heavy[0].entry.id == "exact_match"
 
     @pytest.mark.asyncio
-    async def test_hybrid_search_invalid_weight(self):
+    async def test_hybrid_search_invalid_weight(self) -> None:
         """Test that invalid weights raise ValueError."""
         registry = SemanticRegistry()
 
@@ -224,7 +224,7 @@ class TestSemanticRegistry:
             await registry.find_hybrid("query", semantic_weight=-0.1)
 
     @pytest.mark.asyncio
-    async def test_manual_fit(self):
+    async def test_manual_fit(self) -> None:
         """Test manual fitting when auto_index=False."""
         registry = SemanticRegistry(auto_index=False)
 
@@ -250,7 +250,7 @@ class TestSemanticRegistry:
         assert len(results) > 0
 
     @pytest.mark.asyncio
-    async def test_maintains_registry_functionality(self):
+    async def test_maintains_registry_functionality(self) -> None:
         """Test that SemanticRegistry maintains parent Registry features."""
         registry = SemanticRegistry()
 
@@ -294,7 +294,7 @@ class TestSemanticRegistry:
         assert deprecated.status == Status.DEPRECATED
 
     @pytest.mark.asyncio
-    async def test_incremental_indexing(self):
+    async def test_incremental_indexing(self) -> None:
         """Test incremental indexing on multiple registrations."""
         registry = SemanticRegistry()
 
@@ -331,14 +331,14 @@ class TestSemanticRegistryConvenience:
     """Test convenience functions."""
 
     @pytest.mark.asyncio
-    async def test_create_semantic_registry(self):
+    async def test_create_semantic_registry(self) -> None:
         """Test convenience function for creating registry."""
         registry = await create_semantic_registry()
 
         assert isinstance(registry, SemanticRegistry)
 
     @pytest.mark.asyncio
-    async def test_create_with_existing_catalog(self):
+    async def test_create_with_existing_catalog(self) -> None:
         """Test creating registry with existing catalog."""
         # Create first registry
         registry1 = SemanticRegistry()
@@ -371,7 +371,7 @@ class TestSemanticRegistryIntegration:
     """Test integration scenarios."""
 
     @pytest.mark.asyncio
-    async def test_real_world_agent_discovery(self):
+    async def test_real_world_agent_discovery(self) -> None:
         """Test realistic agent discovery scenario."""
         registry = SemanticRegistry()
 
@@ -424,7 +424,7 @@ class TestSemanticRegistryIntegration:
         assert "document_summarizer" in found_ids
 
     @pytest.mark.asyncio
-    async def test_tongue_discovery(self):
+    async def test_tongue_discovery(self) -> None:
         """Test discovering tongues by domain."""
         registry = SemanticRegistry()
 

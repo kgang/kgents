@@ -31,7 +31,7 @@ from agents.r.types import (
 class TestSignature:
     """Tests for Signature type."""
 
-    def test_simple_factory(self):
+    def test_simple_factory(self) -> None:
         """Test simple single-field signature creation."""
         sig = Signature.simple(
             input_name="question",
@@ -47,7 +47,7 @@ class TestSignature:
         assert sig.output_fields[0].name == "answer"
         assert "concisely" in sig.instructions
 
-    def test_multi_field_signature(self):
+    def test_multi_field_signature(self) -> None:
         """Test signature with multiple fields."""
         sig = Signature(
             input_fields=(
@@ -68,7 +68,7 @@ class TestSignature:
         assert sig.input_names == ("context", "question")
         assert sig.output_names == ("answer", "confidence")
 
-    def test_signature_with_demos(self):
+    def test_signature_with_demos(self) -> None:
         """Test signature with few-shot examples."""
         sig = Signature(
             input_fields=(FieldSpec(name="x", field_type=int),),
@@ -83,7 +83,7 @@ class TestSignature:
         assert len(sig.demos) == 2
         assert sig.demos[0]["outputs"]["y"] == 4
 
-    def test_signature_immutability(self):
+    def test_signature_immutability(self) -> None:
         """Test that signatures are frozen/immutable."""
         sig = Signature.simple("a", str, "b", str, "test")
 
@@ -94,7 +94,7 @@ class TestSignature:
 class TestFieldSpec:
     """Tests for FieldSpec type."""
 
-    def test_basic_field(self):
+    def test_basic_field(self) -> None:
         """Test basic field specification."""
         field = FieldSpec(name="input", field_type=str)
 
@@ -103,7 +103,7 @@ class TestFieldSpec:
         assert field.required is True
         assert field.default is None
 
-    def test_optional_field(self):
+    def test_optional_field(self) -> None:
         """Test optional field with default."""
         field = FieldSpec(
             name="temperature",
@@ -124,14 +124,14 @@ class TestFieldSpec:
 class TestExample:
     """Tests for Example type."""
 
-    def test_simple_factory(self):
+    def test_simple_factory(self) -> None:
         """Test simple example creation."""
         ex = Example.simple("What is 2+2?", "4")
 
         assert ex.inputs == {"input": "What is 2+2?"}
         assert ex.outputs == {"output": "4"}
 
-    def test_multi_field_example(self):
+    def test_multi_field_example(self) -> None:
         """Test example with multiple fields."""
         ex = Example(
             inputs={"context": "Math class", "question": "2+2?"},
@@ -143,7 +143,7 @@ class TestExample:
         assert ex.outputs["confidence"] == 0.99
         assert ex.metadata["source"] == "training_set_v1"
 
-    def test_example_immutability(self):
+    def test_example_immutability(self) -> None:
         """Test that examples are frozen/immutable."""
         ex = Example.simple("a", "b")
 
@@ -157,7 +157,7 @@ class TestExample:
 class TestTextualGradient:
     """Tests for TextualGradient type."""
 
-    def test_basic_gradient(self):
+    def test_basic_gradient(self) -> None:
         """Test basic gradient creation."""
         grad = TextualGradient(
             feedback="The answer was too verbose. Be more concise.",
@@ -169,7 +169,7 @@ class TestTextualGradient:
         assert grad.magnitude == 0.8
         assert grad.aspect == "style"
 
-    def test_gradient_with_source(self):
+    def test_gradient_with_source(self) -> None:
         """Test gradient linked to source example."""
         ex = Example.simple("What is 2+2?", "4")
         grad = TextualGradient(
@@ -180,7 +180,7 @@ class TestTextualGradient:
         assert grad.source_example is ex
         assert grad.magnitude == 1.0  # default
 
-    def test_gradient_immutability(self):
+    def test_gradient_immutability(self) -> None:
         """Test that gradients are frozen."""
         grad = TextualGradient(feedback="test")
 
@@ -194,7 +194,7 @@ class TestTextualGradient:
 class TestOptimizationTrace:
     """Tests for OptimizationTrace type."""
 
-    def test_empty_trace(self):
+    def test_empty_trace(self) -> None:
         """Test empty trace creation."""
         trace = OptimizationTrace(initial_prompt="Test prompt")
 
@@ -203,7 +203,7 @@ class TestOptimizationTrace:
         assert not trace.converged
         assert trace.baseline_score is None
 
-    def test_add_iteration(self):
+    def test_add_iteration(self) -> None:
         """Test adding iterations to trace."""
         trace = OptimizationTrace(initial_prompt="v1")
         trace.add_iteration("v1", 0.5)
@@ -215,7 +215,7 @@ class TestOptimizationTrace:
         assert trace.final_score == 0.85
         assert trace.improvement == 0.35
 
-    def test_improvement_percentage(self):
+    def test_improvement_percentage(self) -> None:
         """Test improvement percentage calculation."""
         trace = OptimizationTrace(initial_prompt="test")
         trace.add_iteration("v1", 0.5)
@@ -223,7 +223,7 @@ class TestOptimizationTrace:
 
         assert trace.improvement_percentage == 50.0  # 50% improvement
 
-    def test_improvement_from_zero(self):
+    def test_improvement_from_zero(self) -> None:
         """Test improvement when baseline is zero."""
         trace = OptimizationTrace(initial_prompt="test")
         trace.add_iteration("v1", 0.0)
@@ -232,7 +232,7 @@ class TestOptimizationTrace:
         # Division by zero should be handled
         assert trace.improvement_percentage is None
 
-    def test_duration_tracking(self):
+    def test_duration_tracking(self) -> None:
         """Test duration calculation."""
         trace = OptimizationTrace(initial_prompt="test")
         trace.started_at = datetime.now()
@@ -240,14 +240,14 @@ class TestOptimizationTrace:
 
         assert trace.duration_seconds == 30.0
 
-    def test_iteration_has_timestamp(self):
+    def test_iteration_has_timestamp(self) -> None:
         """Test that iterations have timestamps."""
         trace = OptimizationTrace(initial_prompt="test")
         trace.add_iteration("v1", 0.5)
 
         assert trace.iterations[0].timestamp is not None
 
-    def test_iteration_prompt_hash(self):
+    def test_iteration_prompt_hash(self) -> None:
         """Test that iterations have unique prompt hashes."""
         trace = OptimizationTrace(initial_prompt="test")
         trace.add_iteration("prompt version 1", 0.5)
@@ -255,7 +255,7 @@ class TestOptimizationTrace:
 
         assert trace.iterations[0].prompt_hash != trace.iterations[1].prompt_hash
 
-    def test_same_prompt_same_hash(self):
+    def test_same_prompt_same_hash(self) -> None:
         """Test that same prompt produces same hash."""
         trace = OptimizationTrace(initial_prompt="test")
         trace.add_iteration("identical prompt", 0.5)
@@ -270,7 +270,7 @@ class TestOptimizationTrace:
 class TestROIEstimate:
     """Tests for ROI estimation types."""
 
-    def test_positive_roi(self):
+    def test_positive_roi(self) -> None:
         """Test positive ROI calculation."""
         roi = ROIEstimate(
             expected_improvement=0.20,
@@ -285,7 +285,7 @@ class TestROIEstimate:
         assert roi.roi == 4.0
         assert roi.is_positive
 
-    def test_negative_roi(self):
+    def test_negative_roi(self) -> None:
         """Test negative ROI detection."""
         roi = ROIEstimate(
             expected_improvement=0.05,
@@ -300,7 +300,7 @@ class TestROIEstimate:
         assert roi.roi == 0.05
         assert not roi.is_positive
 
-    def test_zero_cost_roi(self):
+    def test_zero_cost_roi(self) -> None:
         """Test ROI with zero cost."""
         roi = ROIEstimate(
             expected_improvement=0.10,
@@ -312,7 +312,7 @@ class TestROIEstimate:
         assert roi.roi == float("inf")
         assert roi.is_positive
 
-    def test_zero_value_roi(self):
+    def test_zero_value_roi(self) -> None:
         """Test ROI with zero projected value."""
         roi = ROIEstimate(
             expected_improvement=0.0,
@@ -329,7 +329,7 @@ class TestROIEstimate:
 class TestOptimizationBudget:
     """Tests for OptimizationBudget type."""
 
-    def test_budget_creation(self):
+    def test_budget_creation(self) -> None:
         """Test budget creation."""
         budget = OptimizationBudget(
             max_cost_usd=10.0,
@@ -343,7 +343,7 @@ class TestOptimizationBudget:
         assert budget.max_duration_seconds == 1800.0
         assert budget.min_improvement_threshold == 0.10
 
-    def test_budget_defaults(self):
+    def test_budget_defaults(self) -> None:
         """Test budget default values."""
         budget = OptimizationBudget(max_cost_usd=5.0, max_iterations=10)
 
@@ -354,7 +354,7 @@ class TestOptimizationBudget:
 class TestOptimizationDecision:
     """Tests for OptimizationDecision type."""
 
-    def test_proceed_decision(self):
+    def test_proceed_decision(self) -> None:
         """Test decision to proceed."""
         decision = OptimizationDecision(
             proceed=True,
@@ -365,7 +365,7 @@ class TestOptimizationDecision:
         assert decision.proceed
         assert decision.recommended_method == TeleprompterStrategy.MIPRO_V2
 
-    def test_skip_decision(self):
+    def test_skip_decision(self) -> None:
         """Test decision to skip."""
         decision = OptimizationDecision(
             proceed=False,
@@ -383,7 +383,7 @@ class TestOptimizationDecision:
 class TestTeleprompterStrategy:
     """Tests for TeleprompterStrategy enum."""
 
-    def test_all_strategies_exist(self):
+    def test_all_strategies_exist(self) -> None:
         """Test that all documented strategies exist."""
         strategies = [
             TeleprompterStrategy.BOOTSTRAP_FEWSHOT,
@@ -396,13 +396,13 @@ class TestTeleprompterStrategy:
 
         assert len(strategies) == 6
 
-    def test_strategy_values(self):
+    def test_strategy_values(self) -> None:
         """Test strategy string values."""
         assert TeleprompterStrategy.BOOTSTRAP_FEWSHOT.value == "bootstrap_fewshot"
         assert TeleprompterStrategy.MIPRO_V2.value == "mipro_v2"
         assert TeleprompterStrategy.TEXTGRAD.value == "textgrad"
 
-    def test_strategy_from_string(self):
+    def test_strategy_from_string(self) -> None:
         """Test creating strategy from string value."""
         strategy = TeleprompterStrategy("mipro_v2")
         assert strategy == TeleprompterStrategy.MIPRO_V2
@@ -414,7 +414,7 @@ class TestTeleprompterStrategy:
 class TestTypesIntegration:
     """Integration tests across R-gent types."""
 
-    def test_optimization_flow_types(self):
+    def test_optimization_flow_types(self) -> None:
         """Test that types compose correctly for optimization flow."""
         # 1. Define signature
         sig = Signature.simple("question", str, "answer", str, "Answer questions.")
@@ -437,7 +437,7 @@ class TestTypesIntegration:
         assert trace.final_score == 0.8
         assert abs(trace.improvement - 0.3) < 0.001  # Float comparison
 
-    def test_gradient_in_trace(self):
+    def test_gradient_in_trace(self) -> None:
         """Test that gradients can be recorded in iterations."""
         trace = OptimizationTrace(initial_prompt="test")
 

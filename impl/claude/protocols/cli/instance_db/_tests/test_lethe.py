@@ -76,7 +76,7 @@ def create_test_signals(count: int = 10) -> list[MockSignal]:
 class TestForgetProof:
     """Tests for ForgetProof."""
 
-    def test_proof_creation(self):
+    def test_proof_creation(self) -> None:
         """Test creating a forget proof."""
         proof = ForgetProof(
             epoch_id="test-epoch",
@@ -89,7 +89,7 @@ class TestForgetProof:
         assert proof.algorithm == "sha256"
 
     @pytest.mark.asyncio
-    async def test_proof_verification_valid(self):
+    async def test_proof_verification_valid(self) -> None:
         """Test verifying a valid proof."""
         secret_key = secrets.token_bytes(32)
         store = LetheStore(secret_key=secret_key)
@@ -103,7 +103,7 @@ class TestForgetProof:
         assert proof.verify(secret_key)
 
     @pytest.mark.asyncio
-    async def test_proof_verification_invalid(self):
+    async def test_proof_verification_invalid(self) -> None:
         """Test that wrong key fails verification."""
         secret_key = secrets.token_bytes(32)
         wrong_key = secrets.token_bytes(32)
@@ -116,7 +116,7 @@ class TestForgetProof:
         # Verify with wrong key should fail
         assert not proof.verify(wrong_key)
 
-    def test_proof_serialization(self):
+    def test_proof_serialization(self) -> None:
         """Test proof dict serialization."""
         proof = ForgetProof(
             epoch_id="test",
@@ -140,7 +140,7 @@ class TestForgetProof:
 class TestRetentionPolicy:
     """Tests for retention policy checking."""
 
-    def test_hot_tier(self):
+    def test_hot_tier(self) -> None:
         """Test that recent epochs are HOT."""
         store = LetheStore(retention_config=RetentionConfig(hot_days=30))
 
@@ -149,7 +149,7 @@ class TestRetentionPolicy:
 
         assert policy == RetentionPolicy.HOT
 
-    def test_warm_tier(self):
+    def test_warm_tier(self) -> None:
         """Test that older epochs are WARM."""
         store = LetheStore(retention_config=RetentionConfig(hot_days=30, warm_days=365))
 
@@ -158,7 +158,7 @@ class TestRetentionPolicy:
 
         assert policy == RetentionPolicy.WARM
 
-    def test_compost_tier(self):
+    def test_compost_tier(self) -> None:
         """Test that old epochs are COMPOST."""
         store = LetheStore(
             retention_config=RetentionConfig(
@@ -173,7 +173,7 @@ class TestRetentionPolicy:
 
         assert policy == RetentionPolicy.COMPOST
 
-    def test_forget_tier(self):
+    def test_forget_tier(self) -> None:
         """Test that very old epochs are FORGET."""
         store = LetheStore(
             retention_config=RetentionConfig(
@@ -196,7 +196,7 @@ class TestLetheStore:
     """Tests for LetheStore operations."""
 
     @pytest.mark.asyncio
-    async def test_forget_creates_proof(self):
+    async def test_forget_creates_proof(self) -> None:
         """Test that forget creates a valid proof."""
         store = LetheStore()
         epoch = create_test_epoch()
@@ -209,7 +209,7 @@ class TestLetheStore:
         assert store.verify_proof(proof)
 
     @pytest.mark.asyncio
-    async def test_forget_records_operation(self):
+    async def test_forget_records_operation(self) -> None:
         """Test that forget records the operation."""
         store = LetheStore()
         epoch = create_test_epoch()
@@ -222,7 +222,7 @@ class TestLetheStore:
         assert record.proof is not None
 
     @pytest.mark.asyncio
-    async def test_compost_creates_block(self):
+    async def test_compost_creates_block(self) -> None:
         """Test that compost creates a nutrient block."""
         store = LetheStore()
         epoch = create_test_epoch()
@@ -235,7 +235,7 @@ class TestLetheStore:
         assert store.get_nutrient_block(epoch.epoch_id) is not None
 
     @pytest.mark.asyncio
-    async def test_compost_then_forget(self):
+    async def test_compost_then_forget(self) -> None:
         """Test composting then forgetting."""
         store = LetheStore()
         epoch = create_test_epoch()
@@ -254,7 +254,7 @@ class TestLetheStore:
         assert records[1].operation == "forget"
 
     @pytest.mark.asyncio
-    async def test_retain_records_operation(self):
+    async def test_retain_records_operation(self) -> None:
         """Test that retain records the operation."""
         store = LetheStore()
         epoch = create_test_epoch()
@@ -265,7 +265,7 @@ class TestLetheStore:
         assert record.metadata["reason"] == "manual_keep"
 
     @pytest.mark.asyncio
-    async def test_audit_log(self):
+    async def test_audit_log(self) -> None:
         """Test audit logging."""
         store = LetheStore(retention_config=RetentionConfig(audit_log=True))
         epoch = create_test_epoch()
@@ -278,7 +278,7 @@ class TestLetheStore:
         assert log[0]["epoch_id"] == epoch.epoch_id
 
     @pytest.mark.asyncio
-    async def test_audit_log_filtering(self):
+    async def test_audit_log_filtering(self) -> None:
         """Test audit log filtering."""
         store = LetheStore()
 
@@ -294,7 +294,7 @@ class TestLetheStore:
         forgets = store.get_audit_log(operation="forget")
         assert len(forgets) == 1
 
-    def test_stats(self):
+    def test_stats(self) -> None:
         """Test statistics reporting."""
         store = LetheStore()
 
@@ -313,7 +313,7 @@ class TestNullStorageBackend:
     """Tests for NullStorageBackend."""
 
     @pytest.mark.asyncio
-    async def test_store_and_retrieve(self):
+    async def test_store_and_retrieve(self) -> None:
         """Test storing and retrieving content."""
         backend = NullStorageBackend()
 
@@ -323,7 +323,7 @@ class TestNullStorageBackend:
         assert content == b"test content"
 
     @pytest.mark.asyncio
-    async def test_delete(self):
+    async def test_delete(self) -> None:
         """Test deletion."""
         backend = NullStorageBackend()
         await backend.store_epoch("epoch-1", b"test")
@@ -335,7 +335,7 @@ class TestNullStorageBackend:
         assert exists is False
 
     @pytest.mark.asyncio
-    async def test_delete_nonexistent(self):
+    async def test_delete_nonexistent(self) -> None:
         """Test deleting nonexistent epoch."""
         backend = NullStorageBackend()
 
@@ -350,7 +350,7 @@ class TestRetentionPolicyApplication:
     """Tests for applying retention policies."""
 
     @pytest.mark.asyncio
-    async def test_apply_policy_hot(self):
+    async def test_apply_policy_hot(self) -> None:
         """Test that HOT epochs are not processed."""
         store = LetheStore()
 
@@ -361,7 +361,7 @@ class TestRetentionPolicyApplication:
         assert len(records) == 0
 
     @pytest.mark.asyncio
-    async def test_apply_policy_warm(self):
+    async def test_apply_policy_warm(self) -> None:
         """Test that WARM epochs are retained."""
         store = LetheStore(retention_config=RetentionConfig(hot_days=30))
 
@@ -372,7 +372,7 @@ class TestRetentionPolicyApplication:
         assert records[0].operation == "retain"
 
     @pytest.mark.asyncio
-    async def test_apply_policy_compost(self):
+    async def test_apply_policy_compost(self) -> None:
         """Test that COMPOST epochs are composted."""
         store = LetheStore(
             retention_config=RetentionConfig(
@@ -393,7 +393,7 @@ class TestRetentionPolicyApplication:
         assert records[0].operation == "compost"
 
     @pytest.mark.asyncio
-    async def test_apply_policy_forget(self):
+    async def test_apply_policy_forget(self) -> None:
         """Test that FORGET epochs are deleted."""
         store = LetheStore(
             retention_config=RetentionConfig(
@@ -419,7 +419,7 @@ class TestLetheGardener:
     """Tests for LetheGardener."""
 
     @pytest.mark.asyncio
-    async def test_run_once(self):
+    async def test_run_once(self) -> None:
         """Test running the gardener once."""
         store = LetheStore()
         gardener = LetheGardener(store)
@@ -435,7 +435,7 @@ class TestLetheGardener:
         assert len(records) == 1
         assert gardener.last_run is not None
 
-    def test_gardener_stats(self):
+    def test_gardener_stats(self) -> None:
         """Test gardener statistics."""
         store = LetheStore()
         gardener = LetheGardener(store)
@@ -453,13 +453,13 @@ class TestLetheGardener:
 class TestFactoryFunctions:
     """Tests for factory functions."""
 
-    def test_create_lethe_store(self):
+    def test_create_lethe_store(self) -> None:
         """Test create_lethe_store factory."""
         store = create_lethe_store()
         assert store is not None
         assert store.secret_key is not None
 
-    def test_create_lethe_store_with_config(self):
+    def test_create_lethe_store_with_config(self) -> None:
         """Test create_lethe_store with config."""
         store = create_lethe_store(
             retention_config={
@@ -470,14 +470,14 @@ class TestFactoryFunctions:
         assert store.retention_config.hot_days == 7
         assert store.retention_config.warm_days == 30
 
-    def test_create_lethe_gardener(self):
+    def test_create_lethe_gardener(self) -> None:
         """Test create_lethe_gardener factory."""
         store = create_lethe_store()
         gardener = create_lethe_gardener(store)
 
         assert gardener is not None
 
-    def test_create_lethe_gardener_with_config(self):
+    def test_create_lethe_gardener_with_config(self) -> None:
         """Test create_lethe_gardener with config."""
         store = create_lethe_store()
         gardener = create_lethe_gardener(
@@ -499,7 +499,7 @@ class TestLetheIntegration:
     """Integration tests for Lethe workflow."""
 
     @pytest.mark.asyncio
-    async def test_full_lifecycle(self):
+    async def test_full_lifecycle(self) -> None:
         """Test full data lifecycle through Lethe."""
         store = LetheStore(
             retention_config=RetentionConfig(
@@ -536,7 +536,7 @@ class TestLetheIntegration:
         assert len(log) == 2  # compost + forget
 
     @pytest.mark.asyncio
-    async def test_multiple_epochs_lifecycle(self):
+    async def test_multiple_epochs_lifecycle(self) -> None:
         """Test processing multiple epochs."""
         store = LetheStore(
             retention_config=RetentionConfig(

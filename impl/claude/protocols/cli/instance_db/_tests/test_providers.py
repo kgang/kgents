@@ -26,7 +26,7 @@ class TestSQLiteRelationalStore:
         return tmp_path / "test.db"
 
     @pytest.mark.asyncio
-    async def test_create_and_connect(self, temp_db):
+    async def test_create_and_connect(self, temp_db) -> None:
         """Should create database on first use."""
         store = SQLiteRelationalStore(temp_db)
         await store.execute("SELECT 1")
@@ -34,7 +34,7 @@ class TestSQLiteRelationalStore:
         await store.close()
 
     @pytest.mark.asyncio
-    async def test_execute_create_table(self, temp_db):
+    async def test_execute_create_table(self, temp_db) -> None:
         """Should execute DDL statements."""
         store = SQLiteRelationalStore(temp_db)
         await store.execute("""
@@ -44,7 +44,7 @@ class TestSQLiteRelationalStore:
         await store.close()
 
     @pytest.mark.asyncio
-    async def test_execute_insert_with_params(self, temp_db):
+    async def test_execute_insert_with_params(self, temp_db) -> None:
         """Should handle named parameters correctly."""
         store = SQLiteRelationalStore(temp_db)
         await store.execute("CREATE TABLE test (id TEXT, value INTEGER)")
@@ -58,7 +58,7 @@ class TestSQLiteRelationalStore:
         await store.close()
 
     @pytest.mark.asyncio
-    async def test_fetch_one(self, temp_db):
+    async def test_fetch_one(self, temp_db) -> None:
         """Should fetch single row as dict."""
         store = SQLiteRelationalStore(temp_db)
         await store.execute("CREATE TABLE test (id TEXT, value INTEGER)")
@@ -75,7 +75,7 @@ class TestSQLiteRelationalStore:
         await store.close()
 
     @pytest.mark.asyncio
-    async def test_fetch_one_not_found(self, temp_db):
+    async def test_fetch_one_not_found(self, temp_db) -> None:
         """Should return None when row not found."""
         store = SQLiteRelationalStore(temp_db)
         await store.execute("CREATE TABLE test (id TEXT)")
@@ -86,7 +86,7 @@ class TestSQLiteRelationalStore:
         await store.close()
 
     @pytest.mark.asyncio
-    async def test_fetch_all(self, temp_db):
+    async def test_fetch_all(self, temp_db) -> None:
         """Should fetch all rows as list of dicts."""
         store = SQLiteRelationalStore(temp_db)
         await store.execute("CREATE TABLE test (id TEXT, value INTEGER)")
@@ -102,7 +102,7 @@ class TestSQLiteRelationalStore:
         await store.close()
 
     @pytest.mark.asyncio
-    async def test_executemany(self, temp_db):
+    async def test_executemany(self, temp_db) -> None:
         """Should batch insert multiple rows."""
         store = SQLiteRelationalStore(temp_db)
         await store.execute("CREATE TABLE test (id TEXT, value INTEGER)")
@@ -124,7 +124,7 @@ class TestSQLiteRelationalStore:
         await store.close()
 
     @pytest.mark.asyncio
-    async def test_transaction_commit(self, temp_db):
+    async def test_transaction_commit(self, temp_db) -> None:
         """Should commit transaction on success."""
         store = SQLiteRelationalStore(temp_db)
         await store.execute("CREATE TABLE test (id TEXT)")
@@ -139,7 +139,7 @@ class TestSQLiteRelationalStore:
         await store.close()
 
     @pytest.mark.asyncio
-    async def test_transaction_rollback(self, temp_db):
+    async def test_transaction_rollback(self, temp_db) -> None:
         """Should rollback transaction on error."""
         store = SQLiteRelationalStore(temp_db)
         await store.execute("CREATE TABLE test (id TEXT PRIMARY KEY)")
@@ -159,7 +159,7 @@ class TestSQLiteRelationalStore:
         await store.close()
 
     @pytest.mark.asyncio
-    async def test_wal_mode_enabled(self, temp_db):
+    async def test_wal_mode_enabled(self, temp_db) -> None:
         """Should use WAL mode by default."""
         store = SQLiteRelationalStore(temp_db, wal_mode=True)
         await store.execute("SELECT 1")
@@ -179,7 +179,7 @@ class TestNumpyVectorStore:
         return tmp_path / "vectors.json"
 
     @pytest.mark.asyncio
-    async def test_upsert_and_count(self, temp_storage):
+    async def test_upsert_and_count(self, temp_storage) -> None:
         """Should store vectors and count them."""
         store = NumpyVectorStore(temp_storage, dimensions=4)
         await store.initialize()
@@ -193,7 +193,7 @@ class TestNumpyVectorStore:
         await store.close()
 
     @pytest.mark.asyncio
-    async def test_upsert_overwrites(self, temp_storage):
+    async def test_upsert_overwrites(self, temp_storage) -> None:
         """Should overwrite existing vector on upsert."""
         store = NumpyVectorStore(temp_storage, dimensions=4)
         await store.initialize()
@@ -207,7 +207,7 @@ class TestNumpyVectorStore:
         await store.close()
 
     @pytest.mark.asyncio
-    async def test_search_cosine_similarity(self, temp_storage):
+    async def test_search_cosine_similarity(self, temp_storage) -> None:
         """Should find similar vectors using cosine similarity."""
         store = NumpyVectorStore(temp_storage, dimensions=4)
         await store.initialize()
@@ -227,7 +227,7 @@ class TestNumpyVectorStore:
         await store.close()
 
     @pytest.mark.asyncio
-    async def test_search_with_filter(self, temp_storage):
+    async def test_search_with_filter(self, temp_storage) -> None:
         """Should filter search results by metadata."""
         store = NumpyVectorStore(temp_storage, dimensions=4)
         await store.initialize()
@@ -246,7 +246,7 @@ class TestNumpyVectorStore:
         await store.close()
 
     @pytest.mark.asyncio
-    async def test_search_limit(self, temp_storage):
+    async def test_search_limit(self, temp_storage) -> None:
         """Should respect limit parameter."""
         store = NumpyVectorStore(temp_storage, dimensions=4)
         await store.initialize()
@@ -260,7 +260,7 @@ class TestNumpyVectorStore:
         await store.close()
 
     @pytest.mark.asyncio
-    async def test_delete(self, temp_storage):
+    async def test_delete(self, temp_storage) -> None:
         """Should delete vectors by ID."""
         store = NumpyVectorStore(temp_storage, dimensions=4)
         await store.initialize()
@@ -278,7 +278,7 @@ class TestNumpyVectorStore:
         await store.close()
 
     @pytest.mark.asyncio
-    async def test_persistence(self, temp_storage):
+    async def test_persistence(self, temp_storage) -> None:
         """Should persist vectors to disk."""
         # Create and populate store
         store1 = NumpyVectorStore(temp_storage, dimensions=4)
@@ -301,7 +301,7 @@ class TestNumpyVectorStore:
         await store2.close()
 
     @pytest.mark.asyncio
-    async def test_dimensions_property(self, temp_storage):
+    async def test_dimensions_property(self, temp_storage) -> None:
         """Should expose dimensions property."""
         store = NumpyVectorStore(temp_storage, dimensions=128)
         assert store.dimensions == 128
@@ -317,7 +317,7 @@ class TestFilesystemBlobStore:
         return tmp_path / "blobs"
 
     @pytest.mark.asyncio
-    async def test_put_and_get(self, temp_blobs):
+    async def test_put_and_get(self, temp_blobs) -> None:
         """Should store and retrieve blobs."""
         store = FilesystemBlobStore(temp_blobs)
 
@@ -330,7 +330,7 @@ class TestFilesystemBlobStore:
         await store.close()
 
     @pytest.mark.asyncio
-    async def test_put_creates_directories(self, temp_blobs):
+    async def test_put_creates_directories(self, temp_blobs) -> None:
         """Should create parent directories."""
         store = FilesystemBlobStore(temp_blobs)
 
@@ -341,7 +341,7 @@ class TestFilesystemBlobStore:
         await store.close()
 
     @pytest.mark.asyncio
-    async def test_get_not_found(self, temp_blobs):
+    async def test_get_not_found(self, temp_blobs) -> None:
         """Should return None for missing keys."""
         store = FilesystemBlobStore(temp_blobs)
 
@@ -351,7 +351,7 @@ class TestFilesystemBlobStore:
         await store.close()
 
     @pytest.mark.asyncio
-    async def test_delete(self, temp_blobs):
+    async def test_delete(self, temp_blobs) -> None:
         """Should delete blobs."""
         store = FilesystemBlobStore(temp_blobs)
 
@@ -368,7 +368,7 @@ class TestFilesystemBlobStore:
         await store.close()
 
     @pytest.mark.asyncio
-    async def test_list_with_prefix(self, temp_blobs):
+    async def test_list_with_prefix(self, temp_blobs) -> None:
         """Should list keys with prefix."""
         store = FilesystemBlobStore(temp_blobs)
 
@@ -386,7 +386,7 @@ class TestFilesystemBlobStore:
         await store.close()
 
     @pytest.mark.asyncio
-    async def test_exists(self, temp_blobs):
+    async def test_exists(self, temp_blobs) -> None:
         """Should check existence."""
         store = FilesystemBlobStore(temp_blobs)
 
@@ -397,7 +397,7 @@ class TestFilesystemBlobStore:
         await store.close()
 
     @pytest.mark.asyncio
-    async def test_binary_data(self, temp_blobs):
+    async def test_binary_data(self, temp_blobs) -> None:
         """Should handle binary data correctly."""
         store = FilesystemBlobStore(temp_blobs)
 
@@ -420,7 +420,7 @@ class TestSQLiteTelemetryStore:
         return tmp_path / "telemetry.db"
 
     @pytest.mark.asyncio
-    async def test_append_and_query(self, temp_db):
+    async def test_append_and_query(self, temp_db) -> None:
         """Should append events and query them."""
         store = SQLiteTelemetryStore(temp_db)
 
@@ -439,7 +439,7 @@ class TestSQLiteTelemetryStore:
         await store.close()
 
     @pytest.mark.asyncio
-    async def test_query_by_type(self, temp_db):
+    async def test_query_by_type(self, temp_db) -> None:
         """Should filter by event type."""
         store = SQLiteTelemetryStore(temp_db)
 
@@ -458,7 +458,7 @@ class TestSQLiteTelemetryStore:
         await store.close()
 
     @pytest.mark.asyncio
-    async def test_query_time_range(self, temp_db):
+    async def test_query_time_range(self, temp_db) -> None:
         """Should filter by time range."""
         store = SQLiteTelemetryStore(temp_db)
 
@@ -480,7 +480,7 @@ class TestSQLiteTelemetryStore:
         await store.close()
 
     @pytest.mark.asyncio
-    async def test_query_by_instance(self, temp_db):
+    async def test_query_by_instance(self, temp_db) -> None:
         """Should filter by instance ID."""
         store = SQLiteTelemetryStore(temp_db)
 
@@ -498,7 +498,7 @@ class TestSQLiteTelemetryStore:
         await store.close()
 
     @pytest.mark.asyncio
-    async def test_query_limit(self, temp_db):
+    async def test_query_limit(self, temp_db) -> None:
         """Should respect limit."""
         store = SQLiteTelemetryStore(temp_db)
 
@@ -514,7 +514,7 @@ class TestSQLiteTelemetryStore:
         await store.close()
 
     @pytest.mark.asyncio
-    async def test_prune(self, temp_db):
+    async def test_prune(self, temp_db) -> None:
         """Should delete old events."""
         store = SQLiteTelemetryStore(temp_db)
 
@@ -539,7 +539,7 @@ class TestSQLiteTelemetryStore:
         await store.close()
 
     @pytest.mark.asyncio
-    async def test_count(self, temp_db):
+    async def test_count(self, temp_db) -> None:
         """Should count events."""
         store = SQLiteTelemetryStore(temp_db)
 
@@ -560,7 +560,7 @@ class TestSQLiteTelemetryStore:
         await store.close()
 
     @pytest.mark.asyncio
-    async def test_event_with_complex_data(self, temp_db):
+    async def test_event_with_complex_data(self, temp_db) -> None:
         """Should handle complex JSON data."""
         store = SQLiteTelemetryStore(temp_db)
 

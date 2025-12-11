@@ -119,7 +119,7 @@ async def complex_graph():
 
 
 @pytest.mark.asyncio
-async def test_add_relationship(graph):
+async def test_add_relationship(graph) -> None:
     """Test adding a basic relationship."""
     rel = await graph.add_relationship(
         source_id="v2.0",
@@ -138,7 +138,7 @@ async def test_add_relationship(graph):
 
 
 @pytest.mark.asyncio
-async def test_add_relationship_with_string_type(graph):
+async def test_add_relationship_with_string_type(graph) -> None:
     """Test adding relationship with string relationship type."""
     rel = await graph.add_relationship(
         source_id="v2.0",
@@ -151,7 +151,7 @@ async def test_add_relationship_with_string_type(graph):
 
 
 @pytest.mark.asyncio
-async def test_has_edge(simple_graph):
+async def test_has_edge(simple_graph) -> None:
     """Test checking if edge exists."""
     assert await simple_graph.has_edge("v2.0", "v1.0", RelationshipType.SUCCESSOR_TO)
     assert await simple_graph.has_edge("v3.0", "v2.0", "successor_to")  # String variant
@@ -161,7 +161,7 @@ async def test_has_edge(simple_graph):
 
 
 @pytest.mark.asyncio
-async def test_all_nodes(simple_graph):
+async def test_all_nodes(simple_graph) -> None:
     """Test getting all nodes."""
     nodes = await simple_graph.all_nodes()
     assert set(nodes) == {"v1.0", "v2.0", "v3.0"}
@@ -173,7 +173,7 @@ async def test_all_nodes(simple_graph):
 
 
 @pytest.mark.asyncio
-async def test_cycle_detection_simple(graph):
+async def test_cycle_detection_simple(graph) -> None:
     """Test that adding a cycle is prevented."""
     # Create chain: A → B → C
     await graph.add_relationship("B", "A", RelationshipType.SUCCESSOR_TO)
@@ -185,14 +185,14 @@ async def test_cycle_detection_simple(graph):
 
 
 @pytest.mark.asyncio
-async def test_cycle_detection_self_loop(graph):
+async def test_cycle_detection_self_loop(graph) -> None:
     """Test that self-loops are prevented."""
     with pytest.raises(LineageError, match="would create cycle"):
         await graph.add_relationship("A", "A", RelationshipType.SUCCESSOR_TO)
 
 
 @pytest.mark.asyncio
-async def test_cycle_detection_transitive(graph):
+async def test_cycle_detection_transitive(graph) -> None:
     """Test cycle detection across multiple hops."""
     # Create chain: A → B → C → D
     await graph.add_relationship("B", "A", RelationshipType.SUCCESSOR_TO)
@@ -210,7 +210,7 @@ async def test_cycle_detection_transitive(graph):
 
 
 @pytest.mark.asyncio
-async def test_get_relationships_by_source(complex_graph):
+async def test_get_relationships_by_source(complex_graph) -> None:
     """Test filtering relationships by source."""
     rels = await complex_graph.get_relationships(source_id="NewsScraper_v1.0")
     assert len(rels) == 3  # forked_from, depends_on, tested_by
@@ -224,7 +224,7 @@ async def test_get_relationships_by_source(complex_graph):
 
 
 @pytest.mark.asyncio
-async def test_get_relationships_by_target(complex_graph):
+async def test_get_relationships_by_target(complex_graph) -> None:
     """Test filtering relationships by target."""
     rels = await complex_graph.get_relationships(target_id="BaseScraper_v1.0")
     assert len(rels) == 1
@@ -233,7 +233,7 @@ async def test_get_relationships_by_target(complex_graph):
 
 
 @pytest.mark.asyncio
-async def test_get_relationships_by_type(complex_graph):
+async def test_get_relationships_by_type(complex_graph) -> None:
     """Test filtering relationships by type."""
     rels = await complex_graph.get_relationships(
         relationship_type=RelationshipType.FORKED_FROM
@@ -244,7 +244,7 @@ async def test_get_relationships_by_type(complex_graph):
 
 
 @pytest.mark.asyncio
-async def test_get_relationships_combined_filters(complex_graph):
+async def test_get_relationships_combined_filters(complex_graph) -> None:
     """Test combining multiple filters."""
     rels = await complex_graph.get_relationships(
         source_id="NewsScraper_v1.0",
@@ -260,14 +260,14 @@ async def test_get_relationships_combined_filters(complex_graph):
 
 
 @pytest.mark.asyncio
-async def test_get_ancestors_simple(simple_graph):
+async def test_get_ancestors_simple(simple_graph) -> None:
     """Test getting ancestors in a linear chain."""
     ancestors = await simple_graph.get_ancestors("v3.0")
     assert set(ancestors) == {"v2.0", "v1.0"}
 
 
 @pytest.mark.asyncio
-async def test_get_ancestors_with_type_filter(complex_graph):
+async def test_get_ancestors_with_type_filter(complex_graph) -> None:
     """Test getting ancestors filtered by relationship type."""
     ancestors = await complex_graph.get_ancestors(
         "NewsScraper_v1.0",
@@ -277,28 +277,28 @@ async def test_get_ancestors_with_type_filter(complex_graph):
 
 
 @pytest.mark.asyncio
-async def test_get_ancestors_with_max_depth(simple_graph):
+async def test_get_ancestors_with_max_depth(simple_graph) -> None:
     """Test limiting ancestor traversal depth."""
     ancestors = await simple_graph.get_ancestors("v3.0", max_depth=1)
     assert ancestors == ["v2.0"]  # Only 1 hop
 
 
 @pytest.mark.asyncio
-async def test_get_descendants_simple(simple_graph):
+async def test_get_descendants_simple(simple_graph) -> None:
     """Test getting descendants in a linear chain."""
     descendants = await simple_graph.get_descendants("v1.0")
     assert set(descendants) == {"v2.0", "v3.0"}
 
 
 @pytest.mark.asyncio
-async def test_get_descendants_fork(fork_graph):
+async def test_get_descendants_fork(fork_graph) -> None:
     """Test getting descendants in a fork."""
     descendants = await fork_graph.get_descendants("base_v1.0")
     assert set(descendants) == {"fork_a_v1.0", "fork_b_v1.0"}
 
 
 @pytest.mark.asyncio
-async def test_get_descendants_with_max_depth(simple_graph):
+async def test_get_descendants_with_max_depth(simple_graph) -> None:
     """Test limiting descendant traversal depth."""
     descendants = await simple_graph.get_descendants("v1.0", max_depth=1)
     assert descendants == ["v2.0"]  # Only 1 hop
@@ -310,21 +310,21 @@ async def test_get_descendants_with_max_depth(simple_graph):
 
 
 @pytest.mark.asyncio
-async def test_get_path_exists(simple_graph):
+async def test_get_path_exists(simple_graph) -> None:
     """Test finding a path that exists."""
     path = await simple_graph.get_path("v1.0", "v3.0")
     assert path == ["v1.0", "v2.0", "v3.0"]
 
 
 @pytest.mark.asyncio
-async def test_get_path_not_exists(simple_graph):
+async def test_get_path_not_exists(simple_graph) -> None:
     """Test path finding when no path exists."""
     path = await simple_graph.get_path("v3.0", "v1.0")  # Reversed direction
     assert path is None
 
 
 @pytest.mark.asyncio
-async def test_get_path_with_type_filter(complex_graph):
+async def test_get_path_with_type_filter(complex_graph) -> None:
     """Test path finding with relationship type filter."""
     # Path exists via successor_to → forked_from
     path = await complex_graph.get_path("BaseScraper_v1.0", "NewsScraper_v1.0")
@@ -340,7 +340,7 @@ async def test_get_path_with_type_filter(complex_graph):
 
 
 @pytest.mark.asyncio
-async def test_get_path_self(graph):
+async def test_get_path_self(graph) -> None:
     """Test path from node to itself."""
     await graph.add_relationship("A", "B", RelationshipType.SUCCESSOR_TO)
     path = await graph.get_path("A", "A")
@@ -353,7 +353,7 @@ async def test_get_path_self(graph):
 
 
 @pytest.mark.asyncio
-async def test_deprecate_relationship(simple_graph):
+async def test_deprecate_relationship(simple_graph) -> None:
     """Test deprecating a relationship."""
     success = await simple_graph.deprecate_relationship(
         source_id="v2.0",
@@ -375,7 +375,7 @@ async def test_deprecate_relationship(simple_graph):
 
 
 @pytest.mark.asyncio
-async def test_deprecate_relationship_not_found(graph):
+async def test_deprecate_relationship_not_found(graph) -> None:
     """Test deprecating a non-existent relationship."""
     success = await graph.deprecate_relationship(
         source_id="A",
@@ -387,7 +387,7 @@ async def test_deprecate_relationship_not_found(graph):
 
 
 @pytest.mark.asyncio
-async def test_deprecated_relationships_excluded_by_default(simple_graph):
+async def test_deprecated_relationships_excluded_by_default(simple_graph) -> None:
     """Test that deprecated relationships are excluded by default."""
     await simple_graph.deprecate_relationship(
         "v2.0", "v1.0", RelationshipType.SUCCESSOR_TO, "test"
@@ -411,7 +411,7 @@ async def test_deprecated_relationships_excluded_by_default(simple_graph):
 
 
 @pytest.mark.asyncio
-async def test_relationship_serialization():
+async def test_relationship_serialization() -> None:
     """Test Relationship to_dict/from_dict round-trip."""
     rel = Relationship(
         source_id="A",
@@ -432,7 +432,7 @@ async def test_relationship_serialization():
 
 
 @pytest.mark.asyncio
-async def test_lineage_graph_serialization(complex_graph):
+async def test_lineage_graph_serialization(complex_graph) -> None:
     """Test LineageGraph to_dict/from_dict round-trip."""
     data = complex_graph.to_dict()
 
@@ -462,7 +462,7 @@ async def test_lineage_graph_serialization(complex_graph):
 
 
 @pytest.mark.asyncio
-async def test_record_evolution(graph):
+async def test_record_evolution(graph) -> None:
     """Test record_evolution convenience function."""
     rel = await record_evolution(
         graph=graph,
@@ -480,7 +480,7 @@ async def test_record_evolution(graph):
 
 
 @pytest.mark.asyncio
-async def test_record_fork(graph):
+async def test_record_fork(graph) -> None:
     """Test record_fork convenience function."""
     rel = await record_fork(
         graph=graph,
@@ -498,7 +498,7 @@ async def test_record_fork(graph):
 
 
 @pytest.mark.asyncio
-async def test_record_dependency(graph):
+async def test_record_dependency(graph) -> None:
     """Test record_dependency convenience function."""
     rel = await record_dependency(
         graph=graph,
@@ -514,7 +514,7 @@ async def test_record_dependency(graph):
 
 
 @pytest.mark.asyncio
-async def test_record_dependency_no_version(graph):
+async def test_record_dependency_no_version(graph) -> None:
     """Test record_dependency without version constraint."""
     rel = await record_dependency(
         graph=graph,
@@ -534,7 +534,7 @@ async def test_record_dependency_no_version(graph):
 
 
 @pytest.mark.asyncio
-async def test_multi_generation_evolution():
+async def test_multi_generation_evolution() -> None:
     """Test tracking multiple generations of evolution."""
     g = LineageGraph()
 
@@ -553,7 +553,7 @@ async def test_multi_generation_evolution():
 
 
 @pytest.mark.asyncio
-async def test_dependency_tree():
+async def test_dependency_tree() -> None:
     """Test building and querying dependency trees."""
     g = LineageGraph()
 
@@ -576,7 +576,7 @@ async def test_dependency_tree():
 
 
 @pytest.mark.asyncio
-async def test_impact_analysis():
+async def test_impact_analysis() -> None:
     """Test finding impacted artifacts when deprecating."""
     g = LineageGraph()
 

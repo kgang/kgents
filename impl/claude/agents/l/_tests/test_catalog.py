@@ -35,7 +35,7 @@ def sample_entry():
 
 
 @pytest.mark.asyncio
-async def test_catalog_entry_serialization(sample_entry):
+async def test_catalog_entry_serialization(sample_entry) -> None:
     """Test CatalogEntry can be serialized and deserialized."""
     # Serialize
     data = sample_entry.to_dict()
@@ -56,7 +56,7 @@ async def test_catalog_entry_serialization(sample_entry):
 
 
 @pytest.mark.asyncio
-async def test_registry_register_and_get(temp_storage, sample_entry):
+async def test_registry_register_and_get(temp_storage, sample_entry) -> None:
     """Test registering and retrieving entries."""
     registry = Registry(storage_path=temp_storage)
 
@@ -72,7 +72,7 @@ async def test_registry_register_and_get(temp_storage, sample_entry):
 
 
 @pytest.mark.asyncio
-async def test_registry_persistence(temp_storage, sample_entry):
+async def test_registry_persistence(temp_storage, sample_entry) -> None:
     """Test that registry persists across instances."""
     # First instance - register entry
     registry1 = Registry(storage_path=temp_storage)
@@ -88,7 +88,7 @@ async def test_registry_persistence(temp_storage, sample_entry):
 
 
 @pytest.mark.asyncio
-async def test_registry_list_by_type(temp_storage):
+async def test_registry_list_by_type(temp_storage) -> None:
     """Test filtering entries by type."""
     registry = Registry(storage_path=temp_storage)
 
@@ -132,7 +132,7 @@ async def test_registry_list_by_type(temp_storage):
 
 
 @pytest.mark.asyncio
-async def test_registry_deprecate(temp_storage, sample_entry):
+async def test_registry_deprecate(temp_storage, sample_entry) -> None:
     """Test deprecating an entry."""
     registry = Registry(storage_path=temp_storage)
 
@@ -164,7 +164,7 @@ async def test_registry_deprecate(temp_storage, sample_entry):
 
 
 @pytest.mark.asyncio
-async def test_registry_record_usage(temp_storage, sample_entry):
+async def test_registry_record_usage(temp_storage, sample_entry) -> None:
     """Test recording usage statistics."""
     registry = Registry(storage_path=temp_storage)
 
@@ -188,7 +188,7 @@ async def test_registry_record_usage(temp_storage, sample_entry):
 
 
 @pytest.mark.asyncio
-async def test_registry_find_by_keyword(temp_storage):
+async def test_registry_find_by_keyword(temp_storage) -> None:
     """Test finding entries by keyword."""
     registry = Registry(storage_path=temp_storage)
 

@@ -27,7 +27,7 @@ from ..storage import (
 class TestXDGPaths:
     """Tests for XDG path resolution."""
 
-    def test_default_paths(self, monkeypatch):
+    def test_default_paths(self, monkeypatch) -> None:
         """Should use default paths when env vars not set."""
         # Clear XDG env vars
         monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
@@ -41,7 +41,7 @@ class TestXDGPaths:
         assert paths.data == home / ".local" / "share" / "kgents"
         assert paths.cache == home / ".cache" / "kgents"
 
-    def test_custom_paths_from_env(self, monkeypatch):
+    def test_custom_paths_from_env(self, monkeypatch) -> None:
         """Should use paths from environment variables."""
         monkeypatch.setenv("XDG_CONFIG_HOME", "/custom/config")
         monkeypatch.setenv("XDG_DATA_HOME", "/custom/data")
@@ -53,7 +53,7 @@ class TestXDGPaths:
         assert paths.data == Path("/custom/data/kgents")
         assert paths.cache == Path("/custom/cache/kgents")
 
-    def test_ensure_dirs(self, tmp_path, monkeypatch):
+    def test_ensure_dirs(self, tmp_path, monkeypatch) -> None:
         """Should create directories."""
         monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
         monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
@@ -70,14 +70,14 @@ class TestXDGPaths:
 class TestRetentionConfig:
     """Tests for retention configuration."""
 
-    def test_default_values(self):
+    def test_default_values(self) -> None:
         """Should have sensible defaults."""
         config = RetentionConfig()
         assert config.hot_days == 30
         assert config.warm_days == 365
         assert config.cold_days is None
 
-    def test_custom_values(self):
+    def test_custom_values(self) -> None:
         """Should accept custom values."""
         config = RetentionConfig(hot_days=7, warm_days=90, cold_days=365)
         assert config.hot_days == 7
@@ -88,13 +88,13 @@ class TestRetentionConfig:
 class TestProviderConfig:
     """Tests for provider configuration."""
 
-    def test_from_dict_minimal(self):
+    def test_from_dict_minimal(self) -> None:
         """Should create from minimal dict."""
         config = ProviderConfig.from_dict({"type": "sqlite"})
         assert config.type == "sqlite"
         assert config.wal_mode is True  # default
 
-    def test_from_dict_full(self):
+    def test_from_dict_full(self) -> None:
         """Should create from full dict."""
         config = ProviderConfig.from_dict(
             {
@@ -119,7 +119,7 @@ class TestProviderConfig:
 class TestInfrastructureConfig:
     """Tests for infrastructure configuration."""
 
-    def test_from_dict(self):
+    def test_from_dict(self) -> None:
         """Should create from YAML-like dict."""
         data = {
             "profile": "test-profile",
@@ -138,7 +138,7 @@ class TestInfrastructureConfig:
         assert config.vector.dimensions == 256
         assert config.blob.path == "/tmp/blobs"
 
-    def test_default_config(self, tmp_path, monkeypatch):
+    def test_default_config(self, tmp_path, monkeypatch) -> None:
         """Should create default local-first config."""
         monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
         paths = XDGPaths.resolve()
@@ -155,7 +155,7 @@ class TestStorageProvider:
     """Tests for StorageProvider."""
 
     @pytest.mark.asyncio
-    async def test_from_config_dict(self, tmp_path):
+    async def test_from_config_dict(self, tmp_path) -> None:
         """Should create provider from config dict."""
         config = {
             "profile": "test",
@@ -195,7 +195,7 @@ class TestStorageProvider:
         await provider.close()
 
     @pytest.mark.asyncio
-    async def test_create_minimal(self):
+    async def test_create_minimal(self) -> None:
         """Should create minimal in-memory provider."""
         provider = await StorageProvider.create_minimal()
 
@@ -205,7 +205,7 @@ class TestStorageProvider:
         await provider.close()
 
     @pytest.mark.asyncio
-    async def test_run_migrations(self, tmp_path):
+    async def test_run_migrations(self, tmp_path) -> None:
         """Should run migrations to create schema."""
         config = {
             "profile": "test",
@@ -244,7 +244,7 @@ class TestStorageProvider:
         await provider.close()
 
     @pytest.mark.asyncio
-    async def test_env_var_expansion(self, tmp_path, monkeypatch):
+    async def test_env_var_expansion(self, tmp_path, monkeypatch) -> None:
         """Should expand environment variables in config."""
         monkeypatch.setenv("TEST_DB_PATH", str(tmp_path / "from_env.db"))
 
@@ -276,7 +276,7 @@ class TestStorageProvider:
         await provider.close()
 
     @pytest.mark.asyncio
-    async def test_close_all_providers(self, tmp_path):
+    async def test_close_all_providers(self, tmp_path) -> None:
         """Should close all providers."""
         config = {
             "profile": "test",
@@ -319,7 +319,7 @@ class TestStorageProviderFromFile:
     """Tests for loading config from file."""
 
     @pytest.mark.asyncio
-    async def test_from_config_file(self, tmp_path):
+    async def test_from_config_file(self, tmp_path) -> None:
         """Should load config from JSON file."""
         import json
 
@@ -371,7 +371,7 @@ class TestStorageProviderFromFile:
         await provider.close()
 
     @pytest.mark.asyncio
-    async def test_fallback_when_no_config(self, tmp_path):
+    async def test_fallback_when_no_config(self, tmp_path) -> None:
         """Should use defaults when no config file exists."""
         paths = XDGPaths(
             config=tmp_path / "config" / "kgents",

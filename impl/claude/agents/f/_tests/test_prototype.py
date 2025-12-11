@@ -30,7 +30,7 @@ from agents.f.prototype import (
 class TestValidationDataclasses:
     """Test Phase 3 dataclasses."""
 
-    def test_validation_result_creation(self):
+    def test_validation_result_creation(self) -> None:
         """Test creating ValidationResult."""
         result = ValidationResult(
             category=ValidationCategory.PARSE,
@@ -43,7 +43,7 @@ class TestValidationDataclasses:
         assert result.message == "Code parses successfully"
         assert result.details == {}
 
-    def test_static_analysis_report_add_result(self):
+    def test_static_analysis_report_add_result(self) -> None:
         """Test adding results to StaticAnalysisReport."""
         report = StaticAnalysisReport()
 
@@ -72,7 +72,7 @@ class TestValidationDataclasses:
         assert len(report.results) == 2
         assert report.passed is False  # One failure means overall fail
 
-    def test_static_analysis_report_get_failures(self):
+    def test_static_analysis_report_get_failures(self) -> None:
         """Test getting failures from report."""
         report = StaticAnalysisReport()
 
@@ -93,7 +93,7 @@ class TestValidationDataclasses:
         assert len(failures) == 1
         assert failures[0].category == ValidationCategory.LINT
 
-    def test_static_analysis_report_failure_summary(self):
+    def test_static_analysis_report_failure_summary(self) -> None:
         """Test generating failure summary."""
         report = StaticAnalysisReport()
 
@@ -116,7 +116,7 @@ class TestValidationDataclasses:
         assert "[parse] Syntax error" in summary
         assert "[lint] Too long" in summary
 
-    def test_source_code_is_valid(self):
+    def test_source_code_is_valid(self) -> None:
         """Test SourceCode.is_valid property."""
         # Valid source
         report_pass = StaticAnalysisReport()
@@ -157,7 +157,7 @@ class TestValidationDataclasses:
 class TestParseValidator:
     """Test parse validation."""
 
-    def test_valid_python_passes(self):
+    def test_valid_python_passes(self) -> None:
         """Test that valid Python code passes parse check."""
         code = """
 class Agent:
@@ -170,7 +170,7 @@ class Agent:
         assert result.status == ValidationStatus.PASS
         assert "parses successfully" in result.message
 
-    def test_invalid_python_fails(self):
+    def test_invalid_python_fails(self) -> None:
         """Test that invalid Python fails parse check."""
         code = "def bad syntax:"
 
@@ -181,7 +181,7 @@ class Agent:
         assert "Syntax error" in result.message
         assert result.details.get("lineno") is not None
 
-    def test_complex_valid_code(self):
+    def test_complex_valid_code(self) -> None:
         """Test parsing complex but valid code."""
         code = """
 import json
@@ -205,7 +205,7 @@ class WeatherAgent:
 class TestImportValidator:
     """Test import safety validation."""
 
-    def test_safe_imports_pass(self):
+    def test_safe_imports_pass(self) -> None:
         """Test that safe imports pass validation."""
         code = """
 import json
@@ -221,7 +221,7 @@ class Agent:
         assert result.status == ValidationStatus.PASS
         assert "safe" in result.message
 
-    def test_forbidden_imports_fail(self):
+    def test_forbidden_imports_fail(self) -> None:
         """Test that dangerous imports fail validation."""
         code = """
 import os.system
@@ -238,7 +238,7 @@ class Agent:
         assert "os.system" in result.details["violations"]
         assert "subprocess" in result.details["violations"]
 
-    def test_eval_exec_forbidden(self):
+    def test_eval_exec_forbidden(self) -> None:
         """Test that eval/exec are forbidden."""
         code = """
 import eval
@@ -250,7 +250,7 @@ class Agent:
         result = validate_imports(code)
         assert result.status == ValidationStatus.FAIL
 
-    def test_import_from_forbidden_module(self):
+    def test_import_from_forbidden_module(self) -> None:
         """Test detecting forbidden imports in 'from X import Y' form."""
         code = """
 from subprocess import run
@@ -271,7 +271,7 @@ class Agent:
 class TestLintValidator:
     """Test basic code quality validation."""
 
-    def test_clean_code_passes(self):
+    def test_clean_code_passes(self) -> None:
         """Test that clean code passes lint checks."""
         code = """
 class Agent:
@@ -283,7 +283,7 @@ class Agent:
         assert result.category == ValidationCategory.LINT
         assert result.status == ValidationStatus.PASS
 
-    def test_long_lines_fail(self):
+    def test_long_lines_fail(self) -> None:
         """Test that excessively long lines fail."""
         # Create a line longer than 120 characters
         long_line = "x = " + "1" * 130
@@ -294,7 +294,7 @@ class Agent:
         assert result.status == ValidationStatus.FAIL
         assert "exceeds 120 characters" in result.details["issues"][0]
 
-    def test_todo_comments_fail(self):
+    def test_todo_comments_fail(self) -> None:
         """Test that TODO comments indicate incomplete implementation."""
         code = """
 class Agent:
@@ -310,7 +310,7 @@ class Agent:
             "TODO" in issue for issue in result.details.get("issues", [])
         )
 
-    def test_fixme_comments_fail(self):
+    def test_fixme_comments_fail(self) -> None:
         """Test that FIXME comments are detected."""
         code = """
 class Agent:
@@ -324,7 +324,7 @@ class Agent:
 class TestStaticAnalysis:
     """Test integrated static analysis."""
 
-    def test_valid_code_passes_all_checks(self):
+    def test_valid_code_passes_all_checks(self) -> None:
         """Test that valid code passes all validators."""
         code = """
 import json
@@ -339,7 +339,7 @@ class WeatherAgent:
         assert len(report.results) == 3  # parse, import, lint
         assert all(r.status == ValidationStatus.PASS for r in report.results)
 
-    def test_parse_failure_stops_pipeline(self):
+    def test_parse_failure_stops_pipeline(self) -> None:
         """Test that parse failure prevents running other validators."""
         code = "def bad syntax:"
 
@@ -350,7 +350,7 @@ class WeatherAgent:
         assert len(report.results) == 1
         assert report.results[0].category == ValidationCategory.PARSE
 
-    def test_multiple_failures_reported(self):
+    def test_multiple_failures_reported(self) -> None:
         """Test that multiple validation failures are all reported."""
         # Code with forbidden import AND excessively long line
         long_suffix = "x" * 130
@@ -381,7 +381,7 @@ def process(data):
 class TestPrototypeGeneration:
     """Test main prototype generation morphism."""
 
-    def test_simple_agent_generation(self):
+    def test_simple_agent_generation(self) -> None:
         """Test generating code for a simple agent."""
         intent = parse_intent("Create an agent that doubles numbers")
         contract = synthesize_contract(intent, "DoublerAgent")
@@ -397,7 +397,7 @@ class TestPrototypeGeneration:
         # Should be parseable
         ast.parse(source.code)
 
-    def test_weather_agent_generation(self):
+    def test_weather_agent_generation(self) -> None:
         """Test generating a weather agent from spec example."""
         intent = Intent(
             purpose="Fetch current weather for a location",
@@ -441,7 +441,7 @@ class TestPrototypeGeneration:
         assert "WeatherAgent" in source.code
         assert "invoke" in source.code
 
-    def test_configuration_max_attempts(self):
+    def test_configuration_max_attempts(self) -> None:
         """Test that configuration respects max_attempts."""
         intent = parse_intent("Create a simple agent")
         contract = synthesize_contract(intent, "SimpleAgent")
@@ -452,7 +452,7 @@ class TestPrototypeGeneration:
         # Should succeed within 3 attempts (stub generation always succeeds first try)
         assert source.generation_attempt <= 3
 
-    def test_generation_attempt_tracking(self):
+    def test_generation_attempt_tracking(self) -> None:
         """Test that generation_attempt is tracked correctly."""
         intent = parse_intent("Create an agent")
         contract = synthesize_contract(intent, "Agent")
@@ -462,7 +462,7 @@ class TestPrototypeGeneration:
         assert source.generation_attempt >= 1
         assert isinstance(source.generation_attempt, int)
 
-    def test_analysis_report_included(self):
+    def test_analysis_report_included(self) -> None:
         """Test that SourceCode includes analysis report."""
         intent = parse_intent("Create an agent")
         contract = synthesize_contract(intent, "Agent")
@@ -476,7 +476,7 @@ class TestPrototypeGeneration:
 class TestIntegrationWithPreviousPhases:
     """Test full pipeline integration: Intent → Contract → Prototype."""
 
-    def test_full_pipeline_natural_language_to_code(self):
+    def test_full_pipeline_natural_language_to_code(self) -> None:
         """Test complete pipeline from natural language to source code."""
         # Phase 1: Parse intent
         nl_input = "Create an idempotent agent that summarizes text to under 100 chars"
@@ -500,7 +500,7 @@ class TestIntegrationWithPreviousPhases:
         assert "SummarizerAgent" in source.code
         assert "invoke" in source.code
 
-    def test_pipeline_with_examples(self):
+    def test_pipeline_with_examples(self) -> None:
         """Test pipeline preserves and uses examples."""
         nl_input = "Agent that converts Celsius to Fahrenheit"
         intent = parse_intent(nl_input)
@@ -518,7 +518,7 @@ class TestIntegrationWithPreviousPhases:
         # Examples should influence generation (visible in docstring or comments)
         # For stub generation, just verify it doesn't crash
 
-    def test_pipeline_with_dependencies(self):
+    def test_pipeline_with_dependencies(self) -> None:
         """Test pipeline handles dependencies correctly."""
         intent = Intent(
             purpose="Fetch data from API",
@@ -546,7 +546,7 @@ class TestIntegrationWithPreviousPhases:
 class TestEdgeCases:
     """Test edge cases and error conditions."""
 
-    def test_empty_intent(self):
+    def test_empty_intent(self) -> None:
         """Test handling minimal intent."""
         intent = Intent(
             purpose="Do something",
@@ -564,7 +564,7 @@ class TestEdgeCases:
         # Should still generate valid code
         assert source.is_valid is True
 
-    def test_complex_type_signatures(self):
+    def test_complex_type_signatures(self) -> None:
         """Test handling complex type signatures."""
         intent = Intent(
             purpose="Transform data",
@@ -583,7 +583,7 @@ class TestEdgeCases:
         assert source.is_valid is True
         assert "list[dict]" in source.code or "dict[str, int]" in source.code
 
-    def test_multiple_invariants(self):
+    def test_multiple_invariants(self) -> None:
         """Test handling multiple invariants."""
         # Parse from natural language to ensure invariants are extracted
         nl_input = "Create an idempotent, deterministic, pure agent that processes data"
@@ -596,7 +596,7 @@ class TestEdgeCases:
         source = generate_prototype(intent, contract)
         assert source.is_valid is True
 
-    def test_all_output_types(self):
+    def test_all_output_types(self) -> None:
         """Test generation handles all common output types."""
         output_types = ["str", "dict", "list", "int", "bool", "CustomType"]
 
@@ -622,7 +622,7 @@ class TestEdgeCases:
 class TestRealWorldExamples:
     """Test with examples from spec/f-gents/forge.md."""
 
-    def test_summarizer_agent(self):
+    def test_summarizer_agent(self) -> None:
         """Test summarizer from spec Phase 2 example."""
         intent = Intent(
             purpose="Summarize academic papers to JSON",
@@ -655,7 +655,7 @@ class TestRealWorldExamples:
         # Check that invariants are documented
         assert "concise" in source.code.lower() or "500" in source.code
 
-    def test_pipeline_composition_agent(self):
+    def test_pipeline_composition_agent(self) -> None:
         """Test agent designed for composition."""
         intent = Intent(
             purpose="Transform data through stages",
@@ -689,7 +689,7 @@ class TestRealWorldExamples:
 class TestStubGeneration:
     """Test stub generation (pre-LLM implementation)."""
 
-    def test_stub_includes_docstring(self):
+    def test_stub_includes_docstring(self) -> None:
         """Test that stub includes proper docstring."""
         intent = Intent(
             purpose="Test agent",
@@ -708,7 +708,7 @@ class TestStubGeneration:
         assert '"""' in source.code
         assert "Test agent" in source.code
 
-    def test_stub_includes_behavior_in_docs(self):
+    def test_stub_includes_behavior_in_docs(self) -> None:
         """Test that stub documents behaviors."""
         intent = Intent(
             purpose="Multi-behavior agent",
@@ -728,7 +728,7 @@ class TestStubGeneration:
         assert "Behavior B" in source.code
         assert "Behavior C" in source.code
 
-    def test_stub_includes_invariants_in_docs(self):
+    def test_stub_includes_invariants_in_docs(self) -> None:
         """Test that stub documents invariants."""
         # Use parse_intent to ensure constraints are extracted as invariants
         nl_input = "Create an idempotent agent with guarantees"

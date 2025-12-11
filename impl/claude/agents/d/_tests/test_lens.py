@@ -37,14 +37,14 @@ class User:
 # === Basic Lens Tests ===
 
 
-def test_key_lens_get():
+def test_key_lens_get() -> None:
     """key_lens extracts dictionary value."""
     lens = key_lens("name")
     state = {"name": "Alice", "age": 30}
     assert lens.get(state) == "Alice"
 
 
-def test_key_lens_set():
+def test_key_lens_set() -> None:
     """key_lens updates dictionary value."""
     lens = key_lens("name")
     state = {"name": "Alice", "age": 30}
@@ -55,14 +55,14 @@ def test_key_lens_set():
     assert state["name"] == "Alice"  # Original unchanged
 
 
-def test_field_lens_get():
+def test_field_lens_get() -> None:
     """field_lens extracts dataclass field."""
     lens = field_lens("name")
     user = User(name="Alice", address=Address(city="NYC", zip="10001"))
     assert lens.get(user) == "Alice"
 
 
-def test_field_lens_set():
+def test_field_lens_set() -> None:
     """field_lens updates dataclass field."""
     lens = field_lens("name")
     user = User(name="Alice", address=Address(city="NYC", zip="10001"))
@@ -73,14 +73,14 @@ def test_field_lens_set():
     assert new_user.address == user.address  # Other fields unchanged
 
 
-def test_index_lens_get():
+def test_index_lens_get() -> None:
     """index_lens extracts list element."""
     lens = index_lens(0)
     items = [1, 2, 3]
     assert lens.get(items) == 1
 
 
-def test_index_lens_set():
+def test_index_lens_set() -> None:
     """index_lens updates list element."""
     lens = index_lens(1)
     items = [1, 2, 3]
@@ -90,7 +90,7 @@ def test_index_lens_set():
     assert items == [1, 2, 3]  # Original unchanged
 
 
-def test_identity_lens():
+def test_identity_lens() -> None:
     """identity_lens returns state unchanged."""
     lens = identity_lens()
     state = {"name": "Alice"}
@@ -102,7 +102,7 @@ def test_identity_lens():
 # === Composition Tests ===
 
 
-def test_lens_composition_dict():
+def test_lens_composition_dict() -> None:
     """Lenses compose to access nested dict."""
     user_lens = key_lens("user")
     name_lens = key_lens("name")
@@ -118,7 +118,7 @@ def test_lens_composition_dict():
     assert new_state["count"] == 5
 
 
-def test_lens_composition_dataclass():
+def test_lens_composition_dataclass() -> None:
     """Lenses compose to access nested dataclass."""
     user_lens = field_lens("user")
     address_lens = field_lens("address")
@@ -145,7 +145,7 @@ def test_lens_composition_dataclass():
 
 @pytest.mark.law("associativity")
 @pytest.mark.law_associativity
-def test_lens_composition_associativity():
+def test_lens_composition_associativity() -> None:
     """Lens composition is associative: (a >> b) >> c = a >> (b >> c)"""
     l1 = key_lens("a")
     l2 = key_lens("b")
@@ -167,7 +167,7 @@ def test_lens_composition_associativity():
 class TestLensLaws:
     """Lens laws verification tests."""
 
-    def test_key_lens_laws(self):
+    def test_key_lens_laws(self) -> None:
         """key_lens satisfies all three lens laws."""
         lens = key_lens("name")
         state = {"name": "Alice", "age": 30}
@@ -178,7 +178,7 @@ class TestLensLaws:
         assert laws["put_get"], "PutGet law violated"
         assert laws["put_put"], "PutPut law violated"
 
-    def test_field_lens_laws(self):
+    def test_field_lens_laws(self) -> None:
         """field_lens satisfies all three lens laws."""
         lens = field_lens("name")
         user = User(name="Alice", address=Address(city="NYC", zip="10001"))
@@ -189,7 +189,7 @@ class TestLensLaws:
         assert laws["put_get"], "PutGet law violated"
         assert laws["put_put"], "PutPut law violated"
 
-    def test_index_lens_laws(self):
+    def test_index_lens_laws(self) -> None:
         """index_lens satisfies all three lens laws."""
         lens = index_lens(1)
         state = [1, 2, 3]
@@ -200,7 +200,7 @@ class TestLensLaws:
         assert laws["put_get"], "PutGet law violated"
         assert laws["put_put"], "PutPut law violated"
 
-    def test_composed_lens_laws(self):
+    def test_composed_lens_laws(self) -> None:
         """Composed lenses preserve lens laws."""
         user_lens = key_lens("user")
         name_lens = key_lens("name")
@@ -231,7 +231,7 @@ class TestLensLawsPropertyBased:
             ({"a": [1, 2, 3], "b": [4, 5]}, [10], [20, 30]),
         ],
     )
-    def test_key_lens_laws_property_based(self, state, value1, value2):
+    def test_key_lens_laws_property_based(self, state, value1, value2) -> None:
         """Property test: key_lens laws hold for various types."""
         lens = key_lens("a")
         laws = verify_lens_laws(lens, state, value1, value2)
@@ -247,7 +247,7 @@ class TestLensLawsPropertyBased:
             (["a", "b", "c"], 1, "x", "y"),
         ],
     )
-    def test_index_lens_laws_property_based(self, items, index, v1, v2):
+    def test_index_lens_laws_property_based(self, items, index, v1, v2) -> None:
         """Property test: index_lens laws hold for various indices."""
         lens = index_lens(index)
         laws = verify_lens_laws(lens, items, v1, v2)

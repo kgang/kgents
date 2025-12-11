@@ -190,7 +190,9 @@ class TestGraphBrain:
         ids = [r.id for r in results]
         assert "parser_1" in ids  # HTMLParser outputs StructuredData
 
-    async def test_find_path(self, sample_registry, sample_lineage, sample_lattice):
+    async def test_find_path(
+        self, sample_registry, sample_lineage, sample_lattice
+    ) -> None:
         """Test finding composition path from source to target type."""
         brain = GraphBrain(sample_registry, sample_lineage, sample_lattice)
 
@@ -216,7 +218,9 @@ class TestGraphBrain:
         ids = [r.id for r in dependents]
         assert "summarizer_1" in ids
 
-    async def test_get_ancestors(self, sample_registry, sample_lineage, sample_lattice):
+    async def test_get_ancestors(
+        self, sample_registry, sample_lineage, sample_lattice
+    ) -> None:
         """Test finding ancestors."""
         brain = GraphBrain(sample_registry, sample_lineage, sample_lattice)
 
@@ -353,7 +357,7 @@ class TestQueryFusion:
 class TestVectorSemanticBrain:
     """Test VectorSemanticBrain functionality."""
 
-    async def test_add_and_search(self, sample_registry):
+    async def test_add_and_search(self, sample_registry) -> None:
         """Test adding entries and searching."""
         from agents.l import create_vector_backend
 
@@ -372,7 +376,7 @@ class TestVectorSemanticBrain:
         # Should find HTMLParser
         assert any("parse" in r.entry.description.lower() for r in results)
 
-    async def test_remove_entry(self, sample_registry):
+    async def test_remove_entry(self, sample_registry) -> None:
         """Test removing entries."""
         from agents.l import create_vector_backend
 
@@ -399,7 +403,9 @@ class TestVectorSemanticBrain:
 class TestPhase7Integration:
     """Test full three-brain hybrid workflow."""
 
-    async def test_full_workflow(self, sample_registry, sample_lineage, sample_lattice):
+    async def test_full_workflow(
+        self, sample_registry, sample_lineage, sample_lattice
+    ) -> None:
         """Test complete three-brain search workflow."""
         # Setup all three brains
         keyword = Search(sample_registry)
@@ -445,7 +451,9 @@ class TestPhase7Integration:
 class TestPhase7EdgeCases:
     """Test edge cases and error handling."""
 
-    async def test_empty_search(self, sample_registry, sample_lineage, sample_lattice):
+    async def test_empty_search(
+        self, sample_registry, sample_lineage, sample_lattice
+    ) -> None:
         """Test search with no results."""
         keyword = Search(sample_registry)
         semantic = SemanticBrain(SimpleEmbedder())

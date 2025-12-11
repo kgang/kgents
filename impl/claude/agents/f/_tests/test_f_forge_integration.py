@@ -79,7 +79,7 @@ async def populated_registry(temp_registry):
 
 
 @pytest.mark.asyncio
-async def test_search_before_forge_no_matches(temp_registry):
+async def test_search_before_forge_no_matches(temp_registry) -> None:
     """When no similar artifacts exist, recommend forging new."""
     result = await search_before_forge(
         intent_text="Create an agent that validates email addresses",
@@ -99,7 +99,7 @@ async def test_search_before_forge_no_matches(temp_registry):
 
 
 @pytest.mark.asyncio
-async def test_search_before_forge_exact_match(populated_registry):
+async def test_search_before_forge_exact_match(populated_registry) -> None:
     """When similar artifact exists, recommend reuse."""
     result = await search_before_forge(
         intent_text="Create an agent that summarizes papers",
@@ -123,7 +123,7 @@ async def test_search_before_forge_exact_match(populated_registry):
 
 
 @pytest.mark.asyncio
-async def test_search_before_forge_partial_match(populated_registry):
+async def test_search_before_forge_partial_match(populated_registry) -> None:
     """Keyword overlap should surface related artifacts."""
     result = await search_before_forge(
         intent_text="Create an agent that fetches weather forecasts",
@@ -143,7 +143,7 @@ async def test_search_before_forge_partial_match(populated_registry):
 
 
 @pytest.mark.asyncio
-async def test_forge_with_registration_new_artifact(temp_registry):
+async def test_forge_with_registration_new_artifact(temp_registry) -> None:
     """Complete workflow: search → forge → register."""
     contract, search_result = await forge_with_registration(
         intent_text="Create an agent that validates JSON schemas",
@@ -177,7 +177,7 @@ async def test_forge_with_registration_new_artifact(temp_registry):
 
 
 @pytest.mark.asyncio
-async def test_forge_with_registration_duplicate_detection(populated_registry):
+async def test_forge_with_registration_duplicate_detection(populated_registry) -> None:
     """Attempting to forge similar artifact should trigger recommendation."""
     contract, search_result = await forge_with_registration(
         intent_text="Create an agent that summarizes research papers",
@@ -202,7 +202,7 @@ async def test_forge_with_registration_duplicate_detection(populated_registry):
 
 
 @pytest.mark.asyncio
-async def test_register_forged_artifact(temp_registry):
+async def test_register_forged_artifact(temp_registry) -> None:
     """Test standalone registration of a contract."""
     contract = Contract(
         agent_name="DataParser",
@@ -252,7 +252,7 @@ async def test_register_forged_artifact(temp_registry):
 
 
 @pytest.mark.asyncio
-async def test_register_artifact_auto_keywords(temp_registry):
+async def test_register_artifact_auto_keywords(temp_registry) -> None:
     """Keywords should default to invariant descriptions."""
     from agents.f.contract import Invariant
 
@@ -326,7 +326,7 @@ async def test_similarity_threshold_tuning(
 
 
 @pytest.mark.asyncio
-async def test_curated_principle_duplicate_prevention(populated_registry):
+async def test_curated_principle_duplicate_prevention(populated_registry) -> None:
     """Verify that search-before-forge embodies Curated principle."""
     # Attempt to forge duplicate weather agent
     result = await search_before_forge(
@@ -355,7 +355,7 @@ async def test_curated_principle_duplicate_prevention(populated_registry):
 
 
 @pytest.mark.asyncio
-async def test_type_signature_consideration(temp_registry):
+async def test_type_signature_consideration(temp_registry) -> None:
     """Test that type signatures are preserved in registration."""
     # Register agent with specific type signature
     contract, _ = await forge_with_registration(
@@ -381,7 +381,7 @@ async def test_type_signature_consideration(temp_registry):
 
 
 @pytest.mark.asyncio
-async def test_integration_with_intent_parser(temp_registry):
+async def test_integration_with_intent_parser(temp_registry) -> None:
     """Verify integration with F-gent intent parsing."""
     # Complex intent with dependencies and constraints
     complex_intent = """

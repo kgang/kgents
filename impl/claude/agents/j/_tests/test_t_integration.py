@@ -117,7 +117,7 @@ class CustomEcho:
 class TestToolTemplate:
     """Tests for ToolTemplate dataclass."""
 
-    def test_template_creation(self):
+    def test_template_creation(self) -> None:
         """Test basic template creation."""
         template = ToolTemplate(
             name="Test Template",
@@ -130,7 +130,7 @@ class TestToolTemplate:
         assert template.description == "A test template"
         assert template.parameters == {"key": "value"}
 
-    def test_template_with_capabilities(self):
+    def test_template_with_capabilities(self) -> None:
         """Test template with custom capabilities."""
         caps = ToolCapabilities(
             requires_network=True,
@@ -147,7 +147,7 @@ class TestToolTemplate:
         assert template.capabilities.requires_network is True
         assert template.capabilities.requires_internet is True
 
-    def test_template_immutability(self):
+    def test_template_immutability(self) -> None:
         """Test that template is frozen (immutable)."""
         template = ToolTemplate(
             name="Frozen",
@@ -166,7 +166,7 @@ class TestToolTemplate:
 class TestJITToolMeta:
     """Tests for JITToolMeta dataclass."""
 
-    def test_jit_tool_meta_creation(self, simple_tool_source: AgentSource):
+    def test_jit_tool_meta_creation(self, simple_tool_source: AgentSource) -> None:
         """Test basic JITToolMeta creation."""
         jit_meta = JITAgentMeta(
             source=simple_tool_source,
@@ -214,7 +214,7 @@ class TestJITToolWrapper:
     """Tests for JITToolWrapper class."""
 
     @pytest.mark.asyncio
-    async def test_wrapper_creation(self, simple_tool_source: AgentSource):
+    async def test_wrapper_creation(self, simple_tool_source: AgentSource) -> None:
         """Test basic wrapper creation."""
         tool = await create_tool_from_source(
             source=simple_tool_source,
@@ -226,7 +226,9 @@ class TestJITToolWrapper:
         assert tool.name == "simple"
 
     @pytest.mark.asyncio
-    async def test_wrapper_invoke_success(self, simple_tool_source: AgentSource):
+    async def test_wrapper_invoke_success(
+        self, simple_tool_source: AgentSource
+    ) -> None:
         """Test wrapper invocation returns Result.Ok on success."""
         tool = await create_tool_from_source(
             source=simple_tool_source,
@@ -240,7 +242,7 @@ class TestJITToolWrapper:
         assert result.unwrap() == "HELLO"
 
     @pytest.mark.asyncio
-    async def test_wrapper_invoke_error(self):
+    async def test_wrapper_invoke_error(self) -> None:
         """Test wrapper invocation returns Result.Err on failure."""
         # Source that will fail
         source = AgentSource(
@@ -269,7 +271,7 @@ class FailingTool:
         assert error.error_type == ToolErrorType.FATAL
 
     @pytest.mark.asyncio
-    async def test_wrapper_meta_property(self, simple_tool_source: AgentSource):
+    async def test_wrapper_meta_property(self, simple_tool_source: AgentSource) -> None:
         """Test wrapper meta property."""
         tool_meta = make_tool_meta("test", "Test description")
         tool = await create_tool_from_source(
@@ -304,7 +306,7 @@ class TestCreateToolFromSource:
     """Tests for create_tool_from_source function."""
 
     @pytest.mark.asyncio
-    async def test_basic_creation(self, simple_tool_source: AgentSource):
+    async def test_basic_creation(self, simple_tool_source: AgentSource) -> None:
         """Test basic tool creation from source."""
         tool = await create_tool_from_source(
             source=simple_tool_source,
@@ -316,7 +318,9 @@ class TestCreateToolFromSource:
         assert tool.name == "basic"
 
     @pytest.mark.asyncio
-    async def test_creation_with_custom_sandbox(self, simple_tool_source: AgentSource):
+    async def test_creation_with_custom_sandbox(
+        self, simple_tool_source: AgentSource
+    ) -> None:
         """Test tool creation with custom sandbox config."""
         custom_config = SandboxConfig(
             timeout_seconds=5.0,
@@ -333,7 +337,9 @@ class TestCreateToolFromSource:
         assert tool.jit_tool_meta.jit_meta.sandbox_config == custom_config
 
     @pytest.mark.asyncio
-    async def test_stability_score_computed(self, simple_tool_source: AgentSource):
+    async def test_stability_score_computed(
+        self, simple_tool_source: AgentSource
+    ) -> None:
         """Test that stability score is computed."""
         tool = await create_tool_from_source(
             source=simple_tool_source,
@@ -354,7 +360,9 @@ class TestCompileToolFromTemplate:
     """Tests for compile_tool_from_template function."""
 
     @pytest.mark.asyncio
-    async def test_basic_template_compilation(self, custom_template: ToolTemplate):
+    async def test_basic_template_compilation(
+        self, custom_template: ToolTemplate
+    ) -> None:
         """Test basic template compilation."""
         tool = await compile_tool_from_template(custom_template)
 
@@ -362,7 +370,9 @@ class TestCompileToolFromTemplate:
         assert tool.jit_tool_meta.template == custom_template
 
     @pytest.mark.asyncio
-    async def test_template_with_parameters(self, custom_template: ToolTemplate):
+    async def test_template_with_parameters(
+        self, custom_template: ToolTemplate
+    ) -> None:
         """Test template compilation with custom parameters."""
         tool = await compile_tool_from_template(
             custom_template,
@@ -374,7 +384,9 @@ class TestCompileToolFromTemplate:
         assert result.unwrap() == "CUSTOM: test"
 
     @pytest.mark.asyncio
-    async def test_template_default_parameters(self, custom_template: ToolTemplate):
+    async def test_template_default_parameters(
+        self, custom_template: ToolTemplate
+    ) -> None:
         """Test template uses default parameters."""
         tool = await compile_tool_from_template(custom_template)
 
@@ -383,7 +395,7 @@ class TestCompileToolFromTemplate:
         assert result.unwrap() == "ECHO: hello"
 
     @pytest.mark.asyncio
-    async def test_json_field_extractor_template(self):
+    async def test_json_field_extractor_template(self) -> None:
         """Test built-in JSON_FIELD_EXTRACTOR template."""
         tool = await compile_tool_from_template(JSON_FIELD_EXTRACTOR)
 
@@ -392,7 +404,7 @@ class TestCompileToolFromTemplate:
         assert result.unwrap() == "Something went wrong"
 
     @pytest.mark.asyncio
-    async def test_json_field_extractor_custom_field(self):
+    async def test_json_field_extractor_custom_field(self) -> None:
         """Test JSON_FIELD_EXTRACTOR with custom field."""
         tool = await compile_tool_from_template(
             JSON_FIELD_EXTRACTOR,
@@ -404,7 +416,7 @@ class TestCompileToolFromTemplate:
         assert result.unwrap() == "Hello"
 
     @pytest.mark.asyncio
-    async def test_json_field_extractor_missing_field(self):
+    async def test_json_field_extractor_missing_field(self) -> None:
         """Test JSON_FIELD_EXTRACTOR with missing field returns empty."""
         tool = await compile_tool_from_template(JSON_FIELD_EXTRACTOR)
 
@@ -413,7 +425,7 @@ class TestCompileToolFromTemplate:
         assert result.unwrap() == ""
 
     @pytest.mark.asyncio
-    async def test_json_field_extractor_invalid_json(self):
+    async def test_json_field_extractor_invalid_json(self) -> None:
         """Test JSON_FIELD_EXTRACTOR with invalid JSON."""
         tool = await compile_tool_from_template(JSON_FIELD_EXTRACTOR)
 
@@ -422,7 +434,7 @@ class TestCompileToolFromTemplate:
         assert result.unwrap() == ""  # Returns empty on error
 
     @pytest.mark.asyncio
-    async def test_text_transformer_template(self):
+    async def test_text_transformer_template(self) -> None:
         """Test built-in TEXT_TRANSFORMER template."""
         tool = await compile_tool_from_template(TEXT_TRANSFORMER)
 
@@ -431,7 +443,7 @@ class TestCompileToolFromTemplate:
         assert result.unwrap() == "HELLO WORLD"
 
     @pytest.mark.asyncio
-    async def test_text_transformer_custom_method(self):
+    async def test_text_transformer_custom_method(self) -> None:
         """Test TEXT_TRANSFORMER with custom method."""
         tool = await compile_tool_from_template(
             TEXT_TRANSFORMER,
@@ -446,7 +458,7 @@ class TestCompileToolFromTemplate:
         assert result.unwrap() == "hello world"
 
     @pytest.mark.asyncio
-    async def test_text_transformer_strip(self):
+    async def test_text_transformer_strip(self) -> None:
         """Test TEXT_TRANSFORMER with strip method."""
         tool = await compile_tool_from_template(
             TEXT_TRANSFORMER,
@@ -461,7 +473,7 @@ class TestCompileToolFromTemplate:
         assert result.unwrap() == "hello"
 
     @pytest.mark.asyncio
-    async def test_filter_template(self):
+    async def test_filter_template(self) -> None:
         """Test built-in FILTER_TEMPLATE."""
         tool = await compile_tool_from_template(FILTER_TEMPLATE)
 
@@ -470,7 +482,7 @@ class TestCompileToolFromTemplate:
         assert result.unwrap() == [1, 2, 3]
 
     @pytest.mark.asyncio
-    async def test_filter_template_custom_condition(self):
+    async def test_filter_template_custom_condition(self) -> None:
         """Test FILTER_TEMPLATE with custom condition."""
         tool = await compile_tool_from_template(
             FILTER_TEMPLATE,
@@ -492,7 +504,7 @@ class TestCompileToolFromIntent:
     """Tests for compile_tool_from_intent function."""
 
     @pytest.mark.asyncio
-    async def test_basic_intent_compilation(self):
+    async def test_basic_intent_compilation(self) -> None:
         """Test basic tool compilation from intent."""
         tool = await compile_tool_from_intent(
             intent="Convert text to uppercase",
@@ -504,7 +516,7 @@ class TestCompileToolFromIntent:
         assert tool.name.startswith("jit_")
 
     @pytest.mark.asyncio
-    async def test_intent_with_capabilities(self):
+    async def test_intent_with_capabilities(self) -> None:
         """Test intent compilation with capabilities."""
         caps = ToolCapabilities(requires_network=False)
         tool = await compile_tool_from_intent(
@@ -517,7 +529,7 @@ class TestCompileToolFromIntent:
         assert isinstance(tool, JITToolWrapper)
 
     @pytest.mark.asyncio
-    async def test_intent_with_constraints(self):
+    async def test_intent_with_constraints(self) -> None:
         """Test intent compilation with custom constraints."""
         constraints = ArchitectConstraints(
             max_cyclomatic_complexity=10,
@@ -549,7 +561,7 @@ class TestToolComposition:
     """
 
     @pytest.mark.asyncio
-    async def test_jit_tool_execution(self):
+    async def test_jit_tool_execution(self) -> None:
         """Test that JIT tools execute and return Results."""
         tool = await compile_tool_from_template(TEXT_TRANSFORMER)
 
@@ -559,7 +571,7 @@ class TestToolComposition:
         assert result.unwrap() == "HELLO"
 
     @pytest.mark.asyncio
-    async def test_jit_tool_chain_via_unwrap(self):
+    async def test_jit_tool_chain_via_unwrap(self) -> None:
         """Test chaining JIT tools by unwrapping Results."""
         # First tool: uppercase
         upper_tool = await compile_tool_from_template(TEXT_TRANSFORMER)
@@ -586,7 +598,7 @@ class PrefixAdder:
         assert result2.unwrap() == "PREFIX: HELLO"
 
     @pytest.mark.asyncio
-    async def test_jit_tool_with_wrapper_agent(self):
+    async def test_jit_tool_with_wrapper_agent(self) -> None:
         """Test composing JIT tool with an adapter agent."""
 
         # Create adapter that unwraps Result then processes
@@ -616,7 +628,7 @@ class PrefixAdder:
         assert result == 5
 
     @pytest.mark.asyncio
-    async def test_agent_then_jit_tool(self):
+    async def test_agent_then_jit_tool(self) -> None:
         """Test composing regular Agent then JIT tool."""
 
         class PrependAgent(Agent[str, str]):
@@ -644,7 +656,7 @@ class PrefixAdder:
         assert result.unwrap() == "START: HELLO"
 
     @pytest.mark.asyncio
-    async def test_three_step_pipeline_via_sequential(self):
+    async def test_three_step_pipeline_via_sequential(self) -> None:
         """Test three-step JIT pipeline with sequential execution."""
         # Tool 1: Strip whitespace
         strip_tool = await compile_tool_from_template(
@@ -692,7 +704,7 @@ class TestErrorHandling:
     """Tests for error handling in J+T integration."""
 
     @pytest.mark.asyncio
-    async def test_sandbox_blocks_forbidden_operations(self):
+    async def test_sandbox_blocks_forbidden_operations(self) -> None:
         """Test that sandbox blocks dangerous operations."""
         # Source that tries to use eval
         source = AgentSource(
@@ -720,7 +732,7 @@ class MaliciousTool:
         assert result.error.error_type == ToolErrorType.FATAL
 
     @pytest.mark.asyncio
-    async def test_sandbox_isolation(self):
+    async def test_sandbox_isolation(self) -> None:
         """Test that each invocation is isolated (no state leakage)."""
         # Stateful tool
         source = AgentSource(
@@ -756,7 +768,7 @@ class StatefulTool:
         assert result2.unwrap() == 1
 
     @pytest.mark.asyncio
-    async def test_tool_error_details(self):
+    async def test_tool_error_details(self) -> None:
         """Test that tool errors include useful details."""
         source = AgentSource(
             source="""
@@ -790,7 +802,9 @@ class TestMetadataProvenance:
     """Tests for metadata and provenance tracking."""
 
     @pytest.mark.asyncio
-    async def test_template_preserved_in_meta(self, custom_template: ToolTemplate):
+    async def test_template_preserved_in_meta(
+        self, custom_template: ToolTemplate
+    ) -> None:
         """Test that template is preserved in JITToolMeta."""
         tool = await compile_tool_from_template(custom_template)
 
@@ -798,7 +812,9 @@ class TestMetadataProvenance:
         assert tool.jit_tool_meta.template.name == "Custom Echo"
 
     @pytest.mark.asyncio
-    async def test_source_preserved_in_meta(self, simple_tool_source: AgentSource):
+    async def test_source_preserved_in_meta(
+        self, simple_tool_source: AgentSource
+    ) -> None:
         """Test that source is preserved in metadata chain."""
         tool = await create_tool_from_source(
             source=simple_tool_source,
@@ -811,7 +827,7 @@ class TestMetadataProvenance:
         assert jit_meta.source.class_name == "SimpleUppercase"
 
     @pytest.mark.asyncio
-    async def test_constraints_preserved(self, simple_tool_source: AgentSource):
+    async def test_constraints_preserved(self, simple_tool_source: AgentSource) -> None:
         """Test that constraints are preserved."""
         constraints = ArchitectConstraints(
             max_cyclomatic_complexity=20,
@@ -834,7 +850,7 @@ class TestBuiltInTemplateEdgeCases:
     """Edge case tests for built-in templates."""
 
     @pytest.mark.asyncio
-    async def test_json_extractor_nested_field(self):
+    async def test_json_extractor_nested_field(self) -> None:
         """Test JSON extractor handles simple nested access via get."""
         tool = await compile_tool_from_template(
             JSON_FIELD_EXTRACTOR,
@@ -848,7 +864,7 @@ class TestBuiltInTemplateEdgeCases:
         assert "nested" in result.unwrap()
 
     @pytest.mark.asyncio
-    async def test_text_transformer_empty_string(self):
+    async def test_text_transformer_empty_string(self) -> None:
         """Test text transformer with empty string."""
         tool = await compile_tool_from_template(TEXT_TRANSFORMER)
 
@@ -857,7 +873,7 @@ class TestBuiltInTemplateEdgeCases:
         assert result.unwrap() == ""
 
     @pytest.mark.asyncio
-    async def test_filter_empty_list(self):
+    async def test_filter_empty_list(self) -> None:
         """Test filter with empty list."""
         tool = await compile_tool_from_template(FILTER_TEMPLATE)
 
@@ -866,7 +882,7 @@ class TestBuiltInTemplateEdgeCases:
         assert result.unwrap() == []
 
     @pytest.mark.asyncio
-    async def test_filter_all_filtered_out(self):
+    async def test_filter_all_filtered_out(self) -> None:
         """Test filter where all items are filtered."""
         tool = await compile_tool_from_template(FILTER_TEMPLATE)
 
@@ -882,7 +898,9 @@ class TestTGentsTypeIntegration:
     """Tests for integration with T-gents type system."""
 
     @pytest.mark.asyncio
-    async def test_tool_returns_result_monad(self, simple_tool_source: AgentSource):
+    async def test_tool_returns_result_monad(
+        self, simple_tool_source: AgentSource
+    ) -> None:
         """Test that JIT tools return Result monad."""
         tool = await create_tool_from_source(
             source=simple_tool_source,
@@ -898,7 +916,7 @@ class TestTGentsTypeIntegration:
         assert hasattr(result, "unwrap")
 
     @pytest.mark.asyncio
-    async def test_tool_error_type_correct(self):
+    async def test_tool_error_type_correct(self) -> None:
         """Test that tool errors have correct ToolErrorType."""
         source = AgentSource(
             source="""
@@ -926,7 +944,7 @@ class ErrorTypeTool:
         assert error.error_type == ToolErrorType.FATAL
 
     @pytest.mark.asyncio
-    async def test_tool_meta_minimal_factory(self):
+    async def test_tool_meta_minimal_factory(self) -> None:
         """Test ToolMeta.minimal factory method works with JIT tools."""
         meta = make_tool_meta("factory_test", "Testing minimal factory")
 

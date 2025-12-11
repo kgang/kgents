@@ -10,7 +10,7 @@ from agents.p.strategies.diff_based import (
 class TestUnifiedDiff:
     """Test unified diff format parsing."""
 
-    def test_simple_unified_diff(self):
+    def test_simple_unified_diff(self) -> None:
         """Test basic unified diff application."""
         base = "line1\nline2\nline3"
         parser = DiffBasedParser(base_template=base)
@@ -29,7 +29,7 @@ class TestUnifiedDiff:
         assert "LINE2" in result.value
         assert result.confidence >= 0.8
 
-    def test_unified_diff_with_context(self):
+    def test_unified_diff_with_context(self) -> None:
         """Test unified diff with context lines."""
         base = "a\nb\nc\nd"
         parser = DiffBasedParser(base_template=base)
@@ -48,7 +48,7 @@ class TestUnifiedDiff:
         assert result.success
         assert "B" in result.value
 
-    def test_unified_diff_not_present(self):
+    def test_unified_diff_not_present(self) -> None:
         """Test non-unified diff fails gracefully."""
         parser = DiffBasedParser(base_template="hello")
         result = parser.parse("not a diff")
@@ -58,7 +58,7 @@ class TestUnifiedDiff:
 class TestSimpleReplacement:
     """Test sed-style replacements."""
 
-    def test_sed_format(self):
+    def test_sed_format(self) -> None:
         """Test s/old/new/ format."""
         parser = DiffBasedParser(base_template="Hello World")
         diff = "s/World/Universe/"
@@ -69,7 +69,7 @@ class TestSimpleReplacement:
         assert result.confidence >= 0.85
         assert "sed-replacement" in result.strategy
 
-    def test_replace_with_format(self):
+    def test_replace_with_format(self) -> None:
         """Test 'Replace X with Y' format."""
         parser = DiffBasedParser(base_template="foo bar baz")
         diff = 'Replace "bar" with "BAR"'
@@ -79,7 +79,7 @@ class TestSimpleReplacement:
         assert "BAR" in result.value
         assert result.confidence >= 0.8
 
-    def test_arrow_notation(self):
+    def test_arrow_notation(self) -> None:
         """Test old -> new notation."""
         parser = DiffBasedParser(base_template="<div>test</div>")
         diff = "test -> TEST"
@@ -88,7 +88,7 @@ class TestSimpleReplacement:
         assert result.success
         assert "TEST" in result.value
 
-    def test_replacement_not_found(self):
+    def test_replacement_not_found(self) -> None:
         """Test replacement when target not in base."""
         parser = DiffBasedParser(base_template="hello")
         diff = "s/goodbye/bye/"
@@ -101,7 +101,7 @@ class TestSimpleReplacement:
 class TestLinePatch:
     """Test line-based patches."""
 
-    def test_replace_line_with(self):
+    def test_replace_line_with(self) -> None:
         """Test 'Replace line N with: X' format."""
         base = "line1\nline2\nline3"
         parser = DiffBasedParser(base_template=base)
@@ -113,7 +113,7 @@ class TestLinePatch:
         lines = result.value.split("\n")
         assert lines[1] == "LINE2"
 
-    def test_line_notation(self):
+    def test_line_notation(self) -> None:
         """Test 'Line N: X' format."""
         base = "a\nb\nc"
         parser = DiffBasedParser(base_template=base)
@@ -123,7 +123,7 @@ class TestLinePatch:
         assert result.success
         assert "B" in result.value
 
-    def test_at_notation(self):
+    def test_at_notation(self) -> None:
         """Test '@N: X' format."""
         base = "one\ntwo\nthree"
         parser = DiffBasedParser(base_template=base)
@@ -133,7 +133,7 @@ class TestLinePatch:
         assert result.success
         assert "TWO" in result.value
 
-    def test_line_out_of_range(self):
+    def test_line_out_of_range(self) -> None:
         """Test line number out of range."""
         parser = DiffBasedParser(base_template="a\nb")
         diff = "Replace line 5 with: X"
@@ -146,7 +146,7 @@ class TestLinePatch:
 class TestFallbackChain:
     """Test that parser tries multiple formats."""
 
-    def test_tries_all_formats(self):
+    def test_tries_all_formats(self) -> None:
         """Test parser falls back through formats."""
         parser = DiffBasedParser(base_template="hello world")
 
@@ -157,7 +157,7 @@ class TestFallbackChain:
         assert result.success
         assert "universe" in result.value
 
-    def test_failure_after_all_attempts(self):
+    def test_failure_after_all_attempts(self) -> None:
         """Test that unrecognized format fails."""
         parser = DiffBasedParser(base_template="test")
         diff = "completely invalid diff format xyz"
@@ -170,7 +170,7 @@ class TestFallbackChain:
 class TestConfiguration:
     """Test parser configuration."""
 
-    def test_configure_returns_new_parser(self):
+    def test_configure_returns_new_parser(self) -> None:
         """Test configure returns new instance."""
         parser1 = DiffBasedParser(base_template="test")
         parser2 = parser1.configure(min_confidence=0.9)
@@ -178,7 +178,7 @@ class TestConfiguration:
         assert parser1 is not parser2
         assert parser2.config.min_confidence == 0.9
 
-    def test_fuzz_factor(self):
+    def test_fuzz_factor(self) -> None:
         """Test fuzz factor configuration."""
         parser = DiffBasedParser(base_template="test", fuzz_factor=5)
         assert parser.fuzz_factor == 5
@@ -187,7 +187,7 @@ class TestConfiguration:
 class TestConvenienceFunctions:
     """Test convenience parser constructors."""
 
-    def test_wgent_diff_parser(self):
+    def test_wgent_diff_parser(self) -> None:
         """Test W-gent HTML diff parser."""
         html = '<html><body><div id="main">Hello</div></body></html>'
         parser = create_wgent_diff_parser(html)
@@ -199,7 +199,7 @@ class TestConvenienceFunctions:
         assert "Hello World" in result.value
         assert parser.fuzz_factor == 3  # Configured for HTML
 
-    def test_egent_diff_parser(self):
+    def test_egent_diff_parser(self) -> None:
         """Test E-gent code diff parser."""
         code = "def foo():\n    pass"
         parser = create_egent_diff_parser(code)
@@ -215,7 +215,7 @@ class TestConvenienceFunctions:
 class TestStreamParsing:
     """Test stream parsing (should buffer)."""
 
-    def test_stream_buffers_and_parses(self):
+    def test_stream_buffers_and_parses(self) -> None:
         """Test stream parsing buffers tokens."""
         parser = DiffBasedParser(base_template="hello")
         tokens = ["s/", "hello", "/", "world", "/"]
@@ -229,7 +229,7 @@ class TestStreamParsing:
 class TestRepairTracking:
     """Test that repairs are tracked."""
 
-    def test_repairs_tracked_in_result(self):
+    def test_repairs_tracked_in_result(self) -> None:
         """Test repairs are logged."""
         parser = DiffBasedParser(base_template="test")
         diff = "s/test/TEST/"
@@ -239,7 +239,7 @@ class TestRepairTracking:
         assert len(result.repairs) > 0
         assert "sed replacement" in result.repairs[0].lower()
 
-    def test_multiple_repairs_logged(self):
+    def test_multiple_repairs_logged(self) -> None:
         """Test multiple repair steps logged."""
         base = "line1\nline2\nline3"
         parser = DiffBasedParser(base_template=base)
@@ -253,7 +253,7 @@ class TestRepairTracking:
 class TestRealWorldScenarios:
     """Test real-world use cases."""
 
-    def test_wgent_html_update(self):
+    def test_wgent_html_update(self) -> None:
         """Test W-gent HTML incremental update."""
         base = """
 <html>
@@ -271,7 +271,7 @@ class TestRealWorldScenarios:
         assert "Status: Running" in result.value
         assert "Loading..." not in result.value
 
-    def test_egent_code_evolution(self):
+    def test_egent_code_evolution(self) -> None:
         """Test E-gent code evolution via diff."""
         base = """
 def process(data):

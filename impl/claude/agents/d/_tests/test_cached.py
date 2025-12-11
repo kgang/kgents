@@ -30,7 +30,7 @@ class TestState:
 
 
 @pytest.mark.asyncio
-async def test_load_from_cache():
+async def test_load_from_cache() -> None:
     """Load reads from fast cache, not backend."""
     cache = VolatileAgent(_state=TestState(value=42, label="cached"))
     backend = VolatileAgent(_state=TestState(value=99, label="backend"))
@@ -44,7 +44,7 @@ async def test_load_from_cache():
 
 
 @pytest.mark.asyncio
-async def test_save_write_through():
+async def test_save_write_through() -> None:
     """Save updates BOTH cache and backend."""
     cache = VolatileAgent(_state=TestState(value=1, label="old"))
     backend = VolatileAgent(_state=TestState(value=1, label="old"))
@@ -66,7 +66,7 @@ async def test_save_write_through():
 
 
 @pytest.mark.asyncio
-async def test_history_from_backend():
+async def test_history_from_backend() -> None:
     """History delegates to backend, not cache."""
     cache = VolatileAgent(_state=TestState(value=1, label="cache"))
     backend = VolatileAgent(_state=TestState(value=1, label="backend"))
@@ -91,7 +91,7 @@ async def test_history_from_backend():
 
 
 @pytest.mark.asyncio
-async def test_warm_cache_from_backend():
+async def test_warm_cache_from_backend() -> None:
     """warm_cache() populates cache from backend."""
     with tempfile.TemporaryDirectory() as tmpdir:
         path = Path(tmpdir) / "state.json"
@@ -119,7 +119,7 @@ async def test_warm_cache_from_backend():
 
 
 @pytest.mark.asyncio
-async def test_invalidate_cache():
+async def test_invalidate_cache() -> None:
     """invalidate_cache() forces fresh read from backend."""
     with tempfile.TemporaryDirectory() as tmpdir:
         path = Path(tmpdir) / "state.json"
@@ -153,7 +153,7 @@ async def test_invalidate_cache():
 
 
 @pytest.mark.asyncio
-async def test_cache_hit_performance():
+async def test_cache_hit_performance() -> None:
     """Cache reads should be faster than backend reads."""
     import time
 
@@ -191,7 +191,7 @@ async def test_cache_hit_performance():
 
 
 @pytest.mark.asyncio
-async def test_cached_agent_with_persistent_backend():
+async def test_cached_agent_with_persistent_backend() -> None:
     """Full integration: VolatileAgent cache + PersistentAgent backend."""
     with tempfile.TemporaryDirectory() as tmpdir:
         path = Path(tmpdir) / "data.json"
@@ -229,7 +229,7 @@ async def test_cached_agent_with_persistent_backend():
 
 
 @pytest.mark.asyncio
-async def test_backend_write_failure_preserves_cache():
+async def test_backend_write_failure_preserves_cache() -> None:
     """If backend write fails, cache should NOT be updated."""
 
     # Create a backend that will fail on save
@@ -264,7 +264,7 @@ async def test_backend_write_failure_preserves_cache():
 
 
 @pytest.mark.asyncio
-async def test_history_limit():
+async def test_history_limit() -> None:
     """History respects limit parameter."""
     cache = VolatileAgent(_state=TestState(value=0, label="v0"))
     backend = VolatileAgent(_state=TestState(value=0, label="v0"))
@@ -284,7 +284,7 @@ async def test_history_limit():
 
 
 @pytest.mark.asyncio
-async def test_empty_history():
+async def test_empty_history() -> None:
     """History returns empty list if no history exists."""
     cache = VolatileAgent(_state=TestState(value=1, label="only"))
     backend = VolatileAgent(_state=TestState(value=1, label="only"))
@@ -302,7 +302,7 @@ async def test_empty_history():
 
 
 @pytest.mark.asyncio
-async def test_cached_agent_isolation():
+async def test_cached_agent_isolation() -> None:
     """Mutations to loaded state don't affect cache or backend."""
     cache = VolatileAgent(_state=TestState(value=10, label="original"))
     backend = VolatileAgent(_state=TestState(value=10, label="original"))

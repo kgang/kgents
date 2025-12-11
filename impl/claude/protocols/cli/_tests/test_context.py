@@ -77,7 +77,7 @@ registry:
 class TestWorkspaceDetection:
     """Test find_workspace_root."""
 
-    def test_find_workspace_in_cwd(self, workspace, monkeypatch):
+    def test_find_workspace_in_cwd(self, workspace, monkeypatch) -> None:
         """Find workspace when in root directory."""
         monkeypatch.chdir(workspace)
 
@@ -87,7 +87,7 @@ class TestWorkspaceDetection:
         # Compare resolved paths (macOS /var -> /private/var symlink)
         assert root.resolve() == workspace.resolve()
 
-    def test_find_workspace_in_subdirectory(self, workspace, monkeypatch):
+    def test_find_workspace_in_subdirectory(self, workspace, monkeypatch) -> None:
         """Find workspace when in subdirectory."""
         subdir = workspace / "src" / "components"
         subdir.mkdir(parents=True)
@@ -99,7 +99,7 @@ class TestWorkspaceDetection:
         # Compare resolved paths (macOS /var -> /private/var symlink)
         assert root.resolve() == workspace.resolve()
 
-    def test_no_workspace_returns_none(self, temp_dir, monkeypatch):
+    def test_no_workspace_returns_none(self, temp_dir, monkeypatch) -> None:
         """Return None when no .kgents found."""
         monkeypatch.chdir(temp_dir)
 
@@ -118,7 +118,7 @@ class TestConfigLoading:
     """Test load_config."""
 
     @requires_yaml
-    def test_load_existing_config(self, workspace):
+    def test_load_existing_config(self, workspace) -> None:
         """Load config from existing file."""
         from protocols.cli.context import load_config
 
@@ -131,7 +131,7 @@ class TestConfigLoading:
         assert config.default_budget == "high"
         assert config.default_output == "json"
 
-    def test_missing_config_uses_defaults(self, temp_dir):
+    def test_missing_config_uses_defaults(self, temp_dir) -> None:
         """Missing config file uses defaults."""
         # Create .kgents dir without config
         (temp_dir / ".kgents").mkdir()
@@ -145,7 +145,7 @@ class TestConfigLoading:
         assert config.default_budget == "medium"
         assert config.default_output == "rich"
 
-    def test_invalid_yaml_uses_defaults(self, temp_dir):
+    def test_invalid_yaml_uses_defaults(self, temp_dir) -> None:
         """Invalid YAML uses defaults."""
         kgents_dir = temp_dir / ".kgents"
         kgents_dir.mkdir()
@@ -167,7 +167,7 @@ class TestConfigLoading:
 class TestKgentsConfig:
     """Test KgentsConfig dataclass."""
 
-    def test_from_dict_full(self):
+    def test_from_dict_full(self) -> None:
         """Create config from complete dict."""
         from protocols.cli.context import KgentsConfig
 
@@ -197,7 +197,7 @@ class TestKgentsConfig:
         assert config.registry_path == "custom/catalog.json"
         assert config.history_enabled is False
 
-    def test_from_dict_partial(self):
+    def test_from_dict_partial(self) -> None:
         """Create config from partial dict."""
         from protocols.cli.context import KgentsConfig
 
@@ -219,7 +219,7 @@ class TestWorkspaceContext:
     """Test WorkspaceContext."""
 
     @requires_yaml
-    def test_effective_values_no_override(self, workspace):
+    def test_effective_values_no_override(self, workspace) -> None:
         """effective_* returns config values when no override."""
         from protocols.cli.context import WorkspaceContext, load_config
 
@@ -230,7 +230,7 @@ class TestWorkspaceContext:
         assert ctx.effective_budget == "high"  # from config
         assert ctx.effective_target == "src/"  # from config
 
-    def test_effective_values_with_override(self, workspace):
+    def test_effective_values_with_override(self, workspace) -> None:
         """effective_* returns override when provided."""
         from protocols.cli.context import WorkspaceContext, load_config
 
@@ -248,7 +248,7 @@ class TestWorkspaceContext:
         assert ctx.effective_budget == "low"  # override wins
         assert ctx.effective_target == "test/"  # override wins
 
-    def test_resolve_path_absolute(self, workspace):
+    def test_resolve_path_absolute(self, workspace) -> None:
         """resolve_path returns absolute paths unchanged."""
         from protocols.cli.context import WorkspaceContext, load_config
 
@@ -260,7 +260,7 @@ class TestWorkspaceContext:
 
         assert resolved == abs_path
 
-    def test_resolve_path_relative_in_workspace(self, workspace):
+    def test_resolve_path_relative_in_workspace(self, workspace) -> None:
         """resolve_path resolves relative paths from workspace root."""
         from protocols.cli.context import WorkspaceContext, load_config
 
@@ -280,7 +280,7 @@ class TestWorkspaceContext:
 class TestGetContext:
     """Test get_context helper."""
 
-    def test_get_context_in_workspace(self, workspace, monkeypatch):
+    def test_get_context_in_workspace(self, workspace, monkeypatch) -> None:
         """get_context finds workspace and loads config."""
         monkeypatch.chdir(workspace)
 
@@ -295,7 +295,7 @@ class TestGetContext:
         if HAS_YAML:
             assert ctx.config.project_name == "test-project"
 
-    def test_get_context_outside_workspace(self, temp_dir, monkeypatch):
+    def test_get_context_outside_workspace(self, temp_dir, monkeypatch) -> None:
         """get_context works outside workspace with defaults."""
         monkeypatch.chdir(temp_dir)
 
@@ -307,7 +307,7 @@ class TestGetContext:
         assert ctx.root is None
         assert ctx.effective_budget == "medium"
 
-    def test_get_context_with_overrides(self, workspace, monkeypatch):
+    def test_get_context_with_overrides(self, workspace, monkeypatch) -> None:
         """get_context applies overrides."""
         monkeypatch.chdir(workspace)
 
@@ -327,7 +327,7 @@ class TestGetContext:
 class TestWorkspaceInit:
     """Test init_workspace."""
 
-    def test_init_creates_directory_structure(self, temp_dir):
+    def test_init_creates_directory_structure(self, temp_dir) -> None:
         """init_workspace creates .kgents/ with config."""
         from protocols.cli.context import init_workspace
 
@@ -339,7 +339,7 @@ class TestWorkspaceInit:
         assert (temp_dir / ".kgents" / "catalog.json").exists()
 
     @requires_yaml
-    def test_init_creates_default_config(self, temp_dir):
+    def test_init_creates_default_config(self, temp_dir) -> None:
         """init_workspace creates valid default config."""
         from protocols.cli.context import init_workspace, load_config
 
@@ -350,7 +350,7 @@ class TestWorkspaceInit:
         assert config.project_name == temp_dir.name
         assert config.default_budget == "medium"
 
-    def test_init_preserves_existing_config(self, workspace):
+    def test_init_preserves_existing_config(self, workspace) -> None:
         """init_workspace doesn't overwrite existing config."""
         original_content = (workspace / ".kgents" / "config.yaml").read_text()
 
@@ -361,7 +361,7 @@ class TestWorkspaceInit:
         new_content = (workspace / ".kgents" / "config.yaml").read_text()
         assert new_content == original_content
 
-    def test_init_uses_cwd_if_no_path(self, temp_dir, monkeypatch):
+    def test_init_uses_cwd_if_no_path(self, temp_dir, monkeypatch) -> None:
         """init_workspace uses cwd if no path provided."""
         monkeypatch.chdir(temp_dir)
 

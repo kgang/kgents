@@ -33,14 +33,14 @@ def dgent(temp_dir):
 
 
 @pytest.mark.asyncio
-async def test_load_nonexistent_raises(dgent):
+async def test_load_nonexistent_raises(dgent) -> None:
     """Loading from nonexistent file raises StateNotFoundError."""
     with pytest.raises(StateNotFoundError):
         await dgent.load()
 
 
 @pytest.mark.asyncio
-async def test_save_and_load_round_trip(dgent):
+async def test_save_and_load_round_trip(dgent) -> None:
     """State survives save → load cycle."""
     original = UserProfile(name="Alice", age=30)
 
@@ -53,7 +53,7 @@ async def test_save_and_load_round_trip(dgent):
 
 
 @pytest.mark.asyncio
-async def test_multiple_saves_updates_state(dgent):
+async def test_multiple_saves_updates_state(dgent) -> None:
     """Multiple saves update state correctly."""
     await dgent.save(UserProfile(name="Alice", age=30))
     await dgent.save(UserProfile(name="Bob", age=25))
@@ -65,7 +65,7 @@ async def test_multiple_saves_updates_state(dgent):
 
 
 @pytest.mark.asyncio
-async def test_crash_recovery(temp_dir):
+async def test_crash_recovery(temp_dir) -> None:
     """State persists across D-gent instances (simulated crash)."""
     path = temp_dir / "state.json"
     original = UserProfile(name="Alice", age=30)
@@ -85,7 +85,7 @@ async def test_crash_recovery(temp_dir):
 
 
 @pytest.mark.asyncio
-async def test_history_tracks_states(dgent):
+async def test_history_tracks_states(dgent) -> None:
     """History records past states."""
     await dgent.save(UserProfile(name="Alice", age=30))
     await dgent.save(UserProfile(name="Bob", age=25))
@@ -101,7 +101,7 @@ async def test_history_tracks_states(dgent):
 
 
 @pytest.mark.asyncio
-async def test_history_limit(dgent):
+async def test_history_limit(dgent) -> None:
     """History respects limit parameter."""
     for i in range(10):
         await dgent.save(UserProfile(name=f"User{i}", age=20 + i))
@@ -111,7 +111,7 @@ async def test_history_limit(dgent):
 
 
 @pytest.mark.asyncio
-async def test_history_bounded(temp_dir):
+async def test_history_bounded(temp_dir) -> None:
     """History is bounded by max_history."""
     dgent = PersistentAgent(
         path=temp_dir / "state.json", schema=UserProfile, max_history=5
@@ -128,7 +128,7 @@ async def test_history_bounded(temp_dir):
 
 
 @pytest.mark.asyncio
-async def test_empty_history_before_saves(dgent):
+async def test_empty_history_before_saves(dgent) -> None:
     """History is empty before any saves."""
     # Save initial state (no history yet)
     await dgent.save(UserProfile(name="Alice", age=30))
@@ -139,7 +139,7 @@ async def test_empty_history_before_saves(dgent):
 
 
 @pytest.mark.asyncio
-async def test_isolation_deepcopy(dgent):
+async def test_isolation_deepcopy(dgent) -> None:
     """Loaded state is independent copy (mutations don't affect storage)."""
     original = UserProfile(name="Alice", age=30)
     await dgent.save(original)
@@ -154,7 +154,7 @@ async def test_isolation_deepcopy(dgent):
 
 
 @pytest.mark.asyncio
-async def test_atomic_write_leaves_no_temp_files(dgent):
+async def test_atomic_write_leaves_no_temp_files(dgent) -> None:
     """Atomic writes clean up temporary files."""
     await dgent.save(UserProfile(name="Alice", age=30))
 
@@ -164,7 +164,7 @@ async def test_atomic_write_leaves_no_temp_files(dgent):
 
 
 @pytest.mark.asyncio
-async def test_corrupted_json_raises(dgent, temp_dir):
+async def test_corrupted_json_raises(dgent, temp_dir) -> None:
     """Corrupted JSON raises StateCorruptionError."""
     # Write invalid JSON
     with open(dgent.path, "w") as f:
@@ -175,7 +175,7 @@ async def test_corrupted_json_raises(dgent, temp_dir):
 
 
 @pytest.mark.asyncio
-async def test_primitive_state(temp_dir):
+async def test_primitive_state(temp_dir) -> None:
     """PersistentAgent works with primitive types (not just dataclasses)."""
     dgent = PersistentAgent(path=temp_dir / "state.json", schema=dict)
 
@@ -187,7 +187,7 @@ async def test_primitive_state(temp_dir):
 
 
 @pytest.mark.asyncio
-async def test_list_state(temp_dir):
+async def test_list_state(temp_dir) -> None:
     """PersistentAgent works with list states."""
     dgent = PersistentAgent(path=temp_dir / "state.json", schema=list)
 

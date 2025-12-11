@@ -49,7 +49,7 @@ class AlwaysFailParser:
 class TestFallbackParser:
     """Test sequential fallback composition."""
 
-    def test_first_strategy_succeeds(self):
+    def test_first_strategy_succeeds(self) -> None:
         """First strategy succeeds, no fallback needed."""
         parser = FallbackParser(
             AlwaysSuccessParser("first", 0.9, "first"),
@@ -63,7 +63,7 @@ class TestFallbackParser:
         assert result.confidence == 0.9  # No penalty for first strategy
         assert result.metadata["fallback_depth"] == 0
 
-    def test_fallback_to_second_strategy(self):
+    def test_fallback_to_second_strategy(self) -> None:
         """First fails, second succeeds."""
         parser = FallbackParser(
             AlwaysFailParser("error1", "first"),
@@ -77,7 +77,7 @@ class TestFallbackParser:
         assert result.confidence == 0.9 * 0.9  # Penalty for depth=1
         assert result.metadata["fallback_depth"] == 1
 
-    def test_fallback_confidence_penalty(self):
+    def test_fallback_confidence_penalty(self) -> None:
         """Confidence penalized by fallback depth."""
         parser = FallbackParser(
             AlwaysFailParser("error1", "first"),
@@ -91,7 +91,7 @@ class TestFallbackParser:
         assert result.confidence == 1.0 * 0.8  # Penalty for depth=2
         assert result.metadata["fallback_depth"] == 2
 
-    def test_all_strategies_fail(self):
+    def test_all_strategies_fail(self) -> None:
         """All strategies fail, aggregated error."""
         parser = FallbackParser(
             AlwaysFailParser("error1", "first"),
@@ -107,12 +107,12 @@ class TestFallbackParser:
         assert "error3" in result.error
         assert result.metadata["strategies_tried"] == 3
 
-    def test_no_strategies_raises(self):
+    def test_no_strategies_raises(self) -> None:
         """FallbackParser requires at least one strategy."""
         with pytest.raises(ValueError, match="at least one strategy"):
             FallbackParser()
 
-    def test_real_world_anchor_fallback(self):
+    def test_real_world_anchor_fallback(self) -> None:
         """Real-world example: Anchor parser with fallback."""
         parser = FallbackParser(
             AnchorBasedParser(anchor="###ITEM:"),
@@ -142,7 +142,7 @@ class TestFallbackParser:
 class TestFusionParser:
     """Test parallel fusion composition."""
 
-    def test_simple_fusion(self):
+    def test_simple_fusion(self) -> None:
         """Fuse two parsers with simple merge."""
         parser = FusionParser(
             AlwaysSuccessParser("first", 0.8, "first"),
@@ -157,7 +157,7 @@ class TestFusionParser:
         assert result.confidence == (0.8 + 0.9) / 2
         assert result.metadata["parsers_succeeded"] == 2
 
-    def test_fusion_with_one_failure(self):
+    def test_fusion_with_one_failure(self) -> None:
         """Fusion succeeds if at least one parser succeeds."""
         parser = FusionParser(
             AlwaysSuccessParser("success", 0.9, "success"),
@@ -172,7 +172,7 @@ class TestFusionParser:
         assert result.metadata["parsers_succeeded"] == 1
         assert result.metadata["parsers_total"] == 2
 
-    def test_fusion_all_fail(self):
+    def test_fusion_all_fail(self) -> None:
         """Fusion fails if all parsers fail."""
         parser = FusionParser(
             AlwaysFailParser("error1", "first"),
@@ -186,7 +186,7 @@ class TestFusionParser:
         assert "error1" in result.error
         assert "error2" in result.error
 
-    def test_merge_function_error(self):
+    def test_merge_function_error(self) -> None:
         """Fusion handles merge function errors."""
 
         def bad_merge(values):
@@ -203,7 +203,7 @@ class TestFusionParser:
         assert not result.success
         assert "Merge function failed" in result.error
 
-    def test_no_parsers_raises(self):
+    def test_no_parsers_raises(self) -> None:
         """FusionParser requires at least one parser."""
         with pytest.raises(ValueError, match="at least one parser"):
             FusionParser(merge_fn=lambda x: x)
@@ -212,7 +212,7 @@ class TestFusionParser:
 class TestSwitchParser:
     """Test conditional switch composition."""
 
-    def test_switch_on_prefix(self):
+    def test_switch_on_prefix(self) -> None:
         """Switch based on text prefix."""
         routes = {
             lambda t: t.startswith("{"): AlwaysSuccessParser("json", 0.9, "json"),
@@ -236,7 +236,7 @@ class TestSwitchParser:
         assert result3.success
         assert result3.value == "default"
 
-    def test_switch_no_match(self):
+    def test_switch_no_match(self) -> None:
         """Switch fails if no condition matches."""
         routes = {
             lambda t: t.startswith("{"): AlwaysSuccessParser("json", 0.9, "json"),
@@ -248,7 +248,7 @@ class TestSwitchParser:
         assert not result.success
         assert "No matching parser" in result.error
 
-    def test_switch_condition_error(self):
+    def test_switch_condition_error(self) -> None:
         """Switch handles condition evaluation errors."""
 
         def bad_condition(text):
@@ -266,12 +266,12 @@ class TestSwitchParser:
         assert result.success
         assert result.value == "fallback"
 
-    def test_no_routes_raises(self):
+    def test_no_routes_raises(self) -> None:
         """SwitchParser requires at least one route."""
         with pytest.raises(ValueError, match="at least one route"):
             SwitchParser({})
 
-    def test_real_world_format_detection(self):
+    def test_real_world_format_detection(self) -> None:
         """Real-world example: Format detection."""
         routes = {
             lambda t: t.strip().startswith("{"): AlwaysSuccessParser(
@@ -301,7 +301,7 @@ class TestSwitchParser:
 class TestCompositionNesting:
     """Test nested composition patterns."""
 
-    def test_fallback_of_fusions(self):
+    def test_fallback_of_fusions(self) -> None:
         """Fallback where each strategy is a fusion."""
         fusion1 = FusionParser(
             AlwaysSuccessParser("a", 0.9, "a"),
@@ -323,7 +323,7 @@ class TestCompositionNesting:
         # fusion1 succeeds, so use that
         assert result.value == "a+b"
 
-    def test_switch_of_fallbacks(self):
+    def test_switch_of_fallbacks(self) -> None:
         """Switch where each route is a fallback."""
         fallback_json = FallbackParser(
             AlwaysSuccessParser("strict-json", 0.95, "strict"),

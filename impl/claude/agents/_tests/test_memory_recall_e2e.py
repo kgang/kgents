@@ -69,7 +69,7 @@ class TestMemoryStoreExperience:
     """Test M-gent experience storage."""
 
     @pytest.mark.asyncio
-    async def test_store_simple_experience(self):
+    async def test_store_simple_experience(self) -> None:
         """Test storing a simple experience in holographic memory."""
         memory = HolographicMemory()
 
@@ -84,7 +84,7 @@ class TestMemoryStoreExperience:
         assert "python" in pattern.concepts
 
     @pytest.mark.asyncio
-    async def test_store_multiple_related_experiences(self):
+    async def test_store_multiple_related_experiences(self) -> None:
         """Test storing multiple related experiences."""
         memory = HolographicMemory()
 
@@ -107,7 +107,7 @@ class TestMemoryStoreExperience:
         assert len(results) >= 1
 
     @pytest.mark.asyncio
-    async def test_store_with_embedding(self):
+    async def test_store_with_embedding(self) -> None:
         """Test storing experience with embedding vector."""
         embedder = SimpleEmbedder(dimension=128)
         memory = HolographicMemory(embedder=embedder)
@@ -128,7 +128,7 @@ class TestDgentPersistence:
     """Test D-gent backend persistence."""
 
     @pytest.mark.asyncio
-    async def test_persist_to_volatile_backend(self):
+    async def test_persist_to_volatile_backend(self) -> None:
         """Test persisting memory to D-gent VolatileAgent."""
         volatile = VolatileAgent(_state={})
         config = MemoryConfig(
@@ -157,7 +157,7 @@ class TestDgentPersistence:
         assert state is not None
 
     @pytest.mark.asyncio
-    async def test_unified_memory_layers(self):
+    async def test_unified_memory_layers(self) -> None:
         """Test D-gent UnifiedMemory with all layers."""
         volatile = VolatileAgent(_state={"initial": "data"})
         config = MemoryConfig(
@@ -186,7 +186,7 @@ class TestDgentPersistence:
         assert current["version"] == 2
 
     @pytest.mark.asyncio
-    async def test_memory_survives_simulated_restart(self):
+    async def test_memory_survives_simulated_restart(self) -> None:
         """Test memory persists through simulated restart."""
         shared_state = {}  # Simulate persistent storage
 
@@ -232,7 +232,7 @@ class TestLgentIndexing:
     """Test L-gent semantic indexing for search."""
 
     @pytest.mark.asyncio
-    async def test_register_memory_entry(self):
+    async def test_register_memory_entry(self) -> None:
         """Test registering memory as catalog entry."""
         registry = Registry()
 
@@ -252,7 +252,7 @@ class TestLgentIndexing:
         assert retrieved.name == "DebuggingExperience"
 
     @pytest.mark.asyncio
-    async def test_semantic_search_for_memory(self):
+    async def test_semantic_search_for_memory(self) -> None:
         """Test semantic search finds relevant memories."""
         embedder = SimpleEmbedder(dimension=128)
         registry = SemanticRegistry(embedder=embedder)
@@ -297,7 +297,7 @@ class TestLgentIndexing:
         assert isinstance(results, list)
 
     @pytest.mark.asyncio
-    async def test_keyword_and_semantic_hybrid(self):
+    async def test_keyword_and_semantic_hybrid(self) -> None:
         """Test hybrid keyword + semantic search."""
         embedder = SimpleEmbedder(dimension=128)
         registry = SemanticRegistry(embedder=embedder)
@@ -330,7 +330,7 @@ class TestHolographicRecall:
     """Test M-gent holographic recall."""
 
     @pytest.mark.asyncio
-    async def test_retrieve_by_concept(self):
+    async def test_retrieve_by_concept(self) -> None:
         """Test retrieving memories by concept."""
         memory = HolographicMemory()
 
@@ -352,7 +352,7 @@ class TestHolographicRecall:
             assert hasattr(result, "pattern")
 
     @pytest.mark.asyncio
-    async def test_retrieve_with_similarity_threshold(self):
+    async def test_retrieve_with_similarity_threshold(self) -> None:
         """Test retrieval with similarity filtering."""
         embedder = SimpleEmbedder(dimension=128)
         memory = HolographicMemory(embedder=embedder)
@@ -372,7 +372,7 @@ class TestHolographicRecall:
         assert isinstance(results, list)
 
     @pytest.mark.asyncio
-    async def test_recollection_agent_reconstruction(self):
+    async def test_recollection_agent_reconstruction(self) -> None:
         """Test RecollectionAgent reconstructs from cue."""
         memory = HolographicMemory()
         agent = RecollectionAgent(memory=memory)
@@ -400,7 +400,7 @@ class TestHolographicRecall:
         assert hasattr(recollection, "sources")
 
     @pytest.mark.asyncio
-    async def test_tiered_memory_promotion(self):
+    async def test_tiered_memory_promotion(self) -> None:
         """Test TieredMemory promotes accessed memories."""
         embedder = SimpleEmbedder(dimension=128)
         memory = TieredMemory(embedder=embedder, working_capacity=7)
@@ -419,7 +419,7 @@ class TestNarrativeGeneration:
     """Test N-gent Bard narrative creation."""
 
     @pytest.mark.asyncio
-    async def test_bard_from_single_trace(self):
+    async def test_bard_from_single_trace(self) -> None:
         """Test Bard creates narrative from single trace."""
         store = MemoryCrystalStore()
         historian = Historian(store)
@@ -449,7 +449,7 @@ class TestNarrativeGeneration:
         assert hasattr(narrative, "render")
 
     @pytest.mark.asyncio
-    async def test_bard_from_multiple_traces(self):
+    async def test_bard_from_multiple_traces(self) -> None:
         """Test Bard creates narrative from trace sequence."""
         store = MemoryCrystalStore()
         historian = Historian(store)
@@ -481,7 +481,7 @@ class TestNarrativeGeneration:
         assert narrative is not None
 
     @pytest.mark.asyncio
-    async def test_bard_different_genres(self):
+    async def test_bard_different_genres(self) -> None:
         """Test Bard adapts to different genres."""
         store = MemoryCrystalStore()
         historian = Historian(store)
@@ -514,7 +514,7 @@ class TestFullRecallLifecycle:
     """Test complete store → persist → index → recall → narrate lifecycle."""
 
     @pytest.mark.asyncio
-    async def test_complete_lifecycle(self):
+    async def test_complete_lifecycle(self) -> None:
         """Test full memory lifecycle from store to narrative."""
         # 1. M-gent stores experience
         volatile = VolatileAgent(_state={})
@@ -583,7 +583,7 @@ class TestFullRecallLifecycle:
         assert isinstance(rendered, str)
 
     @pytest.mark.asyncio
-    async def test_lifecycle_with_multiple_agents(self):
+    async def test_lifecycle_with_multiple_agents(self) -> None:
         """Test lifecycle involving multiple agent traces."""
         # Setup - DgentBackedHolographicMemory requires temporal layer
         volatile = VolatileAgent(_state={})
@@ -650,7 +650,7 @@ class TestFullRecallLifecycle:
         assert narrative is not None
 
     @pytest.mark.asyncio
-    async def test_lifecycle_with_prospective_memory(self):
+    async def test_lifecycle_with_prospective_memory(self) -> None:
         """Test lifecycle including prospective (predictive) memory."""
         # Setup prospective agent
         memory = HolographicMemory()
@@ -725,7 +725,7 @@ class TestEdgeCases:
     """Test edge cases in memory recall lifecycle."""
 
     @pytest.mark.asyncio
-    async def test_empty_memory_recall(self):
+    async def test_empty_memory_recall(self) -> None:
         """Test recalling from empty memory."""
         memory = HolographicMemory()
 
@@ -733,7 +733,7 @@ class TestEdgeCases:
         assert results == []
 
     @pytest.mark.asyncio
-    async def test_recall_with_no_matching_concepts(self):
+    async def test_recall_with_no_matching_concepts(self) -> None:
         """Test recall when no concepts match."""
         memory = HolographicMemory()
 
@@ -746,7 +746,7 @@ class TestEdgeCases:
         )
 
     @pytest.mark.asyncio
-    async def test_narrative_from_empty_traces(self):
+    async def test_narrative_from_empty_traces(self) -> None:
         """Test Bard handles empty trace list gracefully."""
         bard = Bard()
 
@@ -761,7 +761,7 @@ class TestEdgeCases:
         assert narrative is not None
 
     @pytest.mark.asyncio
-    async def test_memory_compression_after_many_stores(self):
+    async def test_memory_compression_after_many_stores(self) -> None:
         """Test memory compression after storing many experiences."""
         memory = HolographicMemory()
 
@@ -786,7 +786,7 @@ class TestIntegrationResilience:
     """Test resilience across integration boundaries."""
 
     @pytest.mark.asyncio
-    async def test_dgent_failure_recovery(self):
+    async def test_dgent_failure_recovery(self) -> None:
         """Test memory operates when D-gent backend is unavailable."""
         # Start with working memory
         memory = HolographicMemory()
@@ -798,7 +798,7 @@ class TestIntegrationResilience:
         assert len(results) >= 1
 
     @pytest.mark.asyncio
-    async def test_lgent_search_fallback(self):
+    async def test_lgent_search_fallback(self) -> None:
         """Test search works with fallback when semantic index unavailable."""
         registry = Registry()  # Basic registry without semantic
 
@@ -818,7 +818,7 @@ class TestIntegrationResilience:
         assert len(results) >= 1
 
     @pytest.mark.asyncio
-    async def test_narrative_without_llm(self):
+    async def test_narrative_without_llm(self) -> None:
         """Test Bard produces narrative without real LLM."""
         # Bard should use SimpleLLMProvider by default (template-based)
         bard = Bard()

@@ -111,7 +111,7 @@ def create_test_epoch_from_entry(entry: MockGardenEntry) -> LetheEpoch:
 class TestGardenToCompost:
     """Tests for converting garden entries to compost."""
 
-    def test_entry_to_signals(self):
+    def test_entry_to_signals(self) -> None:
         """Test converting entry to signals."""
         entry = MockGardenEntry(
             id="entry-001",
@@ -129,7 +129,7 @@ class TestGardenToCompost:
         assert signals[0].data["trust"] == 0.8
         assert signals[1].signal_type == "garden.evidence"
 
-    def test_compost_garden_entries(self):
+    def test_compost_garden_entries(self) -> None:
         """Test composting multiple garden entries."""
         entries = [
             MockGardenEntry(
@@ -166,7 +166,7 @@ class TestGardenToLethe:
     """Tests for garden lifecycle through Lethe."""
 
     @pytest.mark.asyncio
-    async def test_compost_lifecycle_entry(self):
+    async def test_compost_lifecycle_entry(self) -> None:
         """Test composting a COMPOST lifecycle entry."""
         store = LetheStore()
 
@@ -187,7 +187,7 @@ class TestGardenToLethe:
         assert store.get_nutrient_block(epoch.epoch_id) is not None
 
     @pytest.mark.asyncio
-    async def test_forget_composted_entry(self):
+    async def test_forget_composted_entry(self) -> None:
         """Test forgetting after composting."""
         store = LetheStore()
 
@@ -217,7 +217,7 @@ class TestGardenToLethe:
 class TestNutrientFeedback:
     """Tests for nutrients feeding back into new entries."""
 
-    def test_nutrients_provide_context(self):
+    def test_nutrients_provide_context(self) -> None:
         """Test that nutrients from old entries provide context for new ones."""
         # First batch: original entries
         old_entries = [
@@ -262,7 +262,7 @@ class TestNutrientFeedback:
         # Tags should include category-theory
         assert "category-theory" in combined.tags or "composition" in combined.tags
 
-    def test_nutrient_concepts_extraction(self):
+    def test_nutrient_concepts_extraction(self) -> None:
         """Test that concepts are extracted from composted entries."""
         entries = [
             MockGardenEntry(
@@ -301,7 +301,7 @@ class TestFullLifecycle:
     """End-to-end lifecycle tests."""
 
     @pytest.mark.asyncio
-    async def test_seed_to_compost_to_forget(self):
+    async def test_seed_to_compost_to_forget(self) -> None:
         """Test full lifecycle from seed to forgetting."""
         store = LetheStore(
             retention_config=RetentionConfig(
@@ -348,7 +348,7 @@ class TestFullLifecycle:
         assert "forget" in operations
 
     @pytest.mark.asyncio
-    async def test_batch_garden_retention(self):
+    async def test_batch_garden_retention(self) -> None:
         """Test retention policy on multiple garden entries."""
         store = LetheStore(
             retention_config=RetentionConfig(

@@ -30,7 +30,7 @@ from agents.l.types import CatalogEntry, EntityType
 # ─────────────────────────────────────────────────────────────
 
 
-def test_type_node_creation():
+def test_type_node_creation() -> None:
     """Test creating a TypeNode."""
     node = TypeNode(
         id="UserRecord",
@@ -44,7 +44,7 @@ def test_type_node_creation():
     assert node.fields == {"name": "str", "age": "int"}
 
 
-def test_type_node_serialization():
+def test_type_node_serialization() -> None:
     """Test TypeNode to_dict/from_dict round-trip."""
     node = TypeNode(
         id="ListInt",
@@ -66,7 +66,7 @@ def test_type_node_serialization():
 # ─────────────────────────────────────────────────────────────
 
 
-def test_lattice_has_builtin_types(lattice):
+def test_lattice_has_builtin_types(lattice) -> None:
     """Test that lattice initializes with built-in types."""
     assert "Any" in lattice.types
     assert "Never" in lattice.types
@@ -74,14 +74,14 @@ def test_lattice_has_builtin_types(lattice):
     assert "int" in lattice.types
 
 
-def test_builtin_types_have_edges_to_any(lattice):
+def test_builtin_types_have_edges_to_any(lattice) -> None:
     """Test that primitives are subtypes of Any."""
     assert lattice.is_subtype("str", "Any")
     assert lattice.is_subtype("int", "Any")
     assert lattice.is_subtype("float", "Any")
 
 
-def test_never_is_subtype_of_all(lattice):
+def test_never_is_subtype_of_all(lattice) -> None:
     """Test that Never is subtype of all types."""
     assert lattice.is_subtype("Never", "str")
     assert lattice.is_subtype("Never", "int")
@@ -97,12 +97,12 @@ def test_never_is_subtype_of_all(lattice):
 class TestSubtypeLaws:
     """Tests for lattice subtype ordering laws."""
 
-    def test_is_subtype_reflexive(self, lattice):
+    def test_is_subtype_reflexive(self, lattice) -> None:
         """Test reflexivity law: A ≤ A."""
         assert lattice.is_subtype("str", "str")
         assert lattice.is_subtype("int", "int")
 
-    def test_is_subtype_transitive(self, lattice):
+    def test_is_subtype_transitive(self, lattice) -> None:
         """Test transitivity law: If A ≤ B and B ≤ C then A ≤ C."""
         # Register types: SpecialInt ≤ int ≤ Any
         lattice.register_type(
@@ -119,7 +119,7 @@ class TestSubtypeLaws:
         assert lattice.is_subtype("int", "Any")
         assert lattice.is_subtype("SpecialInt", "Any")  # Transitive
 
-    def test_is_subtype_direct_edge(self, lattice):
+    def test_is_subtype_direct_edge(self, lattice) -> None:
         """Test direct edge detection."""
         lattice.register_type(
             TypeNode(id="JSON", kind=TypeKind.RECORD, name="JSON Object")
@@ -132,7 +132,7 @@ class TestSubtypeLaws:
 
         assert lattice.is_subtype("JSON", "str")
 
-    def test_is_subtype_prevents_cycles(self, lattice):
+    def test_is_subtype_prevents_cycles(self, lattice) -> None:
         """Test antisymmetry law enforcement: A ≤ B and B ≤ A implies A = B (prevents cycles)."""
         lattice.register_type(TypeNode(id="A", kind=TypeKind.PRIMITIVE, name="Type A"))
         lattice.register_type(TypeNode(id="B", kind=TypeKind.PRIMITIVE, name="Type B"))
@@ -158,34 +158,34 @@ class TestSubtypeLaws:
 class TestMeetJoinLaws:
     """Tests for meet/join lattice laws."""
 
-    def test_meet_when_one_is_subtype(self, lattice):
+    def test_meet_when_one_is_subtype(self, lattice) -> None:
         """Test meet when A ≤ B: meet(A, B) = A."""
         assert lattice.meet("int", "Any") == "int"
         assert lattice.meet("str", "Any") == "str"
 
-    def test_meet_symmetric(self, lattice):
+    def test_meet_symmetric(self, lattice) -> None:
         """Test commutativity law: meet(A, B) = meet(B, A)."""
         result1 = lattice.meet("int", "str")
         result2 = lattice.meet("str", "int")
         assert result1 == result2
 
-    def test_meet_no_common_subtype(self, lattice):
+    def test_meet_no_common_subtype(self, lattice) -> None:
         """Test meet when no common subtype exists: meet(A, B) = Never."""
         # int and str have no common subtype except Never
         assert lattice.meet("int", "str") == "Never"
 
-    def test_join_when_one_is_subtype(self, lattice):
+    def test_join_when_one_is_subtype(self, lattice) -> None:
         """Test join when A ≤ B: join(A, B) = B."""
         assert lattice.join("int", "Any") == "Any"
         assert lattice.join("str", "Any") == "Any"
 
-    def test_join_symmetric(self, lattice):
+    def test_join_symmetric(self, lattice) -> None:
         """Test commutativity law: join(A, B) = join(B, A)."""
         result1 = lattice.join("int", "str")
         result2 = lattice.join("str", "int")
         assert result1 == result2
 
-    def test_join_unrelated_types(self, lattice):
+    def test_join_unrelated_types(self, lattice) -> None:
         """Test join of unrelated types: join(A, B) = Any."""
         # int and str have Any as common supertype
         assert lattice.join("int", "str") == "Any"
@@ -197,7 +197,7 @@ class TestMeetJoinLaws:
 
 
 @pytest.mark.asyncio
-async def test_can_compose_compatible_types(registry, lattice):
+async def test_can_compose_compatible_types(registry, lattice) -> None:
     """Test composition of compatible agents."""
     # Register agents
     await registry.register(
@@ -230,7 +230,7 @@ async def test_can_compose_compatible_types(registry, lattice):
 
 
 @pytest.mark.asyncio
-async def test_can_compose_incompatible_types(registry, lattice):
+async def test_can_compose_incompatible_types(registry, lattice) -> None:
     """Test composition of incompatible agents."""
     await registry.register(
         CatalogEntry(
@@ -263,7 +263,7 @@ async def test_can_compose_incompatible_types(registry, lattice):
 
 
 @pytest.mark.asyncio
-async def test_can_compose_missing_type_info(registry, lattice):
+async def test_can_compose_missing_type_info(registry, lattice) -> None:
     """Test composition when type info is missing."""
     await registry.register(
         CatalogEntry(
@@ -283,7 +283,7 @@ async def test_can_compose_missing_type_info(registry, lattice):
 
 
 @pytest.mark.asyncio
-async def test_verify_pipeline_all_compatible(registry, lattice):
+async def test_verify_pipeline_all_compatible(registry, lattice) -> None:
     """Test pipeline verification when all stages are compatible."""
     # Create chain: str → str → int
     await registry.register(
@@ -317,7 +317,7 @@ async def test_verify_pipeline_all_compatible(registry, lattice):
 
 
 @pytest.mark.asyncio
-async def test_verify_pipeline_has_incompatible_stage(registry, lattice):
+async def test_verify_pipeline_has_incompatible_stage(registry, lattice) -> None:
     """Test pipeline verification when a stage is incompatible."""
     await registry.register(
         CatalogEntry(
@@ -350,7 +350,7 @@ async def test_verify_pipeline_has_incompatible_stage(registry, lattice):
 
 
 @pytest.mark.asyncio
-async def test_verify_pipeline_empty(lattice):
+async def test_verify_pipeline_empty(lattice) -> None:
     """Test pipeline verification with less than 2 agents."""
     verification = await lattice.verify_pipeline([])
     assert verification.valid is True
@@ -367,14 +367,14 @@ async def test_verify_pipeline_empty(lattice):
 
 
 @pytest.mark.asyncio
-async def test_find_path_direct_compatibility(lattice):
+async def test_find_path_direct_compatibility(lattice) -> None:
     """Test find_path when types are directly compatible."""
     paths = await lattice.find_path("str", "Any")
     assert paths == [[]]  # No agents needed, direct subtype
 
 
 @pytest.mark.asyncio
-async def test_find_path_via_agents(registry, lattice):
+async def test_find_path_via_agents(registry, lattice) -> None:
     """Test find_path through a chain of agents."""
     # Create chain: TypeA → TypeB → TypeC
     lattice.register_type(TypeNode(id="TypeA", kind=TypeKind.PRIMITIVE, name="Type A"))
@@ -412,7 +412,7 @@ async def test_find_path_via_agents(registry, lattice):
 
 
 @pytest.mark.asyncio
-async def test_find_path_no_path_exists(lattice):
+async def test_find_path_no_path_exists(lattice) -> None:
     """Test find_path when no path exists."""
     lattice.register_type(
         TypeNode(id="IsolatedA", kind=TypeKind.PRIMITIVE, name="Isolated A")
@@ -426,7 +426,7 @@ async def test_find_path_no_path_exists(lattice):
 
 
 @pytest.mark.asyncio
-async def test_suggest_composition_valid_pipeline(registry, lattice):
+async def test_suggest_composition_valid_pipeline(registry, lattice) -> None:
     """Test suggest_composition finds valid compositions."""
     # Register types
     lattice.register_type(TypeNode(id="HTML", kind=TypeKind.PRIMITIVE, name="HTML"))
@@ -470,7 +470,7 @@ async def test_suggest_composition_valid_pipeline(registry, lattice):
 
 
 @pytest.mark.asyncio
-async def test_suggest_composition_no_valid_composition(registry, lattice):
+async def test_suggest_composition_no_valid_composition(registry, lattice) -> None:
     """Test suggest_composition when no valid composition exists."""
     lattice.register_type(TypeNode(id="X", kind=TypeKind.PRIMITIVE, name="X"))
     lattice.register_type(TypeNode(id="Y", kind=TypeKind.PRIMITIVE, name="Y"))
@@ -496,7 +496,7 @@ async def test_suggest_composition_no_valid_composition(registry, lattice):
 
 
 @pytest.mark.asyncio
-async def test_suggest_composition_prefers_shorter_pipelines(registry, lattice):
+async def test_suggest_composition_prefers_shorter_pipelines(registry, lattice) -> None:
     """Test that suggest_composition prefers shorter pipelines."""
     # Create two paths: direct (1 agent) and indirect (2 agents)
     lattice.register_type(TypeNode(id="Start", kind=TypeKind.PRIMITIVE, name="Start"))
@@ -554,7 +554,7 @@ async def test_suggest_composition_prefers_shorter_pipelines(registry, lattice):
 # ─────────────────────────────────────────────────────────────
 
 
-def test_register_type_creates_edges_to_any(lattice):
+def test_register_type_creates_edges_to_any(lattice) -> None:
     """Test that registering a type creates edges to Any."""
     lattice.register_type(
         TypeNode(id="CustomType", kind=TypeKind.RECORD, name="Custom Type")
@@ -563,7 +563,7 @@ def test_register_type_creates_edges_to_any(lattice):
     assert lattice.is_subtype("CustomType", "Any")
 
 
-def test_register_type_creates_edges_from_never(lattice):
+def test_register_type_creates_edges_from_never(lattice) -> None:
     """Test that registering a type creates edges from Never."""
     lattice.register_type(
         TypeNode(id="CustomType", kind=TypeKind.RECORD, name="Custom Type")
@@ -572,7 +572,7 @@ def test_register_type_creates_edges_from_never(lattice):
     assert lattice.is_subtype("Never", "CustomType")
 
 
-def test_add_subtype_edge_nonexistent_types(lattice):
+def test_add_subtype_edge_nonexistent_types(lattice) -> None:
     """Test that adding edge with nonexistent types raises error."""
     with pytest.raises(ValueError, match="not registered"):
         lattice.add_subtype_edge(
@@ -585,7 +585,7 @@ def test_add_subtype_edge_nonexistent_types(lattice):
 
 
 @pytest.mark.asyncio
-async def test_agents_accepting_finds_compatible_agents(registry, lattice):
+async def test_agents_accepting_finds_compatible_agents(registry, lattice) -> None:
     """Test _agents_accepting finds agents with compatible input types."""
     lattice.register_type(
         TypeNode(id="SpecialStr", kind=TypeKind.PRIMITIVE, name="Special String")
@@ -620,7 +620,7 @@ async def test_agents_accepting_finds_compatible_agents(registry, lattice):
 
 
 @pytest.mark.asyncio
-async def test_full_pipeline_planning_workflow(registry, lattice):
+async def test_full_pipeline_planning_workflow(registry, lattice) -> None:
     """Test complete workflow: define types, register agents, plan pipeline."""
     # 1. Define custom types
     lattice.register_type(
@@ -678,7 +678,7 @@ async def test_full_pipeline_planning_workflow(registry, lattice):
     assert suggestions[0].artifacts == ["cleaner", "sentiment"]
 
 
-def test_create_lattice_convenience_function(registry):
+def test_create_lattice_convenience_function(registry) -> None:
     """Test create_lattice convenience function."""
     lattice = create_lattice(registry)
     assert isinstance(lattice, TypeLattice)

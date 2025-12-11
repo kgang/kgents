@@ -29,14 +29,14 @@ def advanced_lattice(registry):
 class TestUnionType:
     """Tests for UnionType."""
 
-    def test_create_from_types(self):
+    def test_create_from_types(self) -> None:
         """Create union from type IDs."""
         union = UnionType.from_types("str", "int")
 
         assert "str" in union.members
         assert "int" in union.members
 
-    def test_canonical_id(self):
+    def test_canonical_id(self) -> None:
         """Union ID is canonical (sorted)."""
         u1 = UnionType.from_types("str", "int")
         u2 = UnionType.from_types("int", "str")
@@ -44,13 +44,13 @@ class TestUnionType:
         assert u1.id == u2.id
         assert u1.id == "int | str"
 
-    def test_flatten_nested(self):
+    def test_flatten_nested(self) -> None:
         """Nested unions are flattened."""
         union = UnionType.from_types("str | int", "float")
 
         assert set(union.members) == {"str", "int", "float"}
 
-    def test_contains(self):
+    def test_contains(self) -> None:
         """Check if type is member of union."""
         union = UnionType.from_types("str", "int")
 
@@ -58,7 +58,7 @@ class TestUnionType:
         assert union.contains("int")
         assert not union.contains("float")
 
-    def test_hashable(self):
+    def test_hashable(self) -> None:
         """Union types are hashable."""
         u1 = UnionType.from_types("str", "int")
         u2 = UnionType.from_types("int", "str")
@@ -70,21 +70,21 @@ class TestUnionType:
 class TestIntersectionType:
     """Tests for IntersectionType."""
 
-    def test_create_from_types(self):
+    def test_create_from_types(self) -> None:
         """Create intersection from type IDs."""
         inter = IntersectionType.from_types("Comparable", "Hashable")
 
         assert "Comparable" in inter.members
         assert "Hashable" in inter.members
 
-    def test_canonical_id(self):
+    def test_canonical_id(self) -> None:
         """Intersection ID is canonical."""
         i1 = IntersectionType.from_types("A", "B")
         i2 = IntersectionType.from_types("B", "A")
 
         assert i1.id == i2.id
 
-    def test_requires_all(self):
+    def test_requires_all(self) -> None:
         """Check if intersection requires all types."""
         inter = IntersectionType.from_types("A", "B", "C")
 
@@ -96,7 +96,7 @@ class TestIntersectionType:
 class TestCachedLattice:
     """Tests for CachedLattice."""
 
-    def test_subtype_cached(self, cached_lattice):
+    def test_subtype_cached(self, cached_lattice) -> None:
         """Subtype queries are cached."""
         # First call populates cache
         result1 = cached_lattice.is_subtype("str", "Any")
@@ -106,21 +106,21 @@ class TestCachedLattice:
         assert result1 is True
         assert ("str", "Any") in cached_lattice._subtype_cache
 
-    def test_meet_cached(self, cached_lattice):
+    def test_meet_cached(self, cached_lattice) -> None:
         """Meet computations are cached."""
         result1 = cached_lattice.meet("str", "str")
         result2 = cached_lattice.meet("str", "str")
 
         assert result1 == result2
 
-    def test_join_cached(self, cached_lattice):
+    def test_join_cached(self, cached_lattice) -> None:
         """Join computations are cached."""
         result1 = cached_lattice.join("str", "int")
         result2 = cached_lattice.join("str", "int")
 
         assert result1 == result2
 
-    def test_cache_invalidation(self, cached_lattice):
+    def test_cache_invalidation(self, cached_lattice) -> None:
         """Cache is invalidated on modification."""
         cached_lattice.is_subtype("str", "Any")  # Populate cache
 
@@ -130,7 +130,7 @@ class TestCachedLattice:
 
         assert len(cached_lattice._subtype_cache) == 0
 
-    def test_cache_eviction(self, registry):
+    def test_cache_eviction(self, registry) -> None:
         """Cache evicts old entries when full."""
         lattice = CachedLattice(registry, cache_size=10)
 
@@ -145,21 +145,21 @@ class TestCachedLattice:
 class TestAdvancedLatticeUnions:
     """Tests for union operations in AdvancedLattice."""
 
-    def test_create_union(self, advanced_lattice):
+    def test_create_union(self, advanced_lattice) -> None:
         """Create union type."""
         union_id = advanced_lattice.create_union("str", "int")
 
         assert " | " in union_id
         assert union_id in advanced_lattice.types
 
-    def test_decompose_union(self, advanced_lattice):
+    def test_decompose_union(self, advanced_lattice) -> None:
         """Decompose union into members."""
         union_id = advanced_lattice.create_union("str", "int")
         members = advanced_lattice.decompose_union(union_id)
 
         assert set(members) == {"str", "int"}
 
-    def test_union_subtyping_member(self, advanced_lattice):
+    def test_union_subtyping_member(self, advanced_lattice) -> None:
         """Members are subtypes of their union."""
         union_id = advanced_lattice.create_union("str", "int")
 
@@ -167,7 +167,7 @@ class TestAdvancedLatticeUnions:
         assert advanced_lattice.is_subtype("int", union_id)
         assert not advanced_lattice.is_subtype("float", union_id)
 
-    def test_is_union_subtype_to_union(self, advanced_lattice):
+    def test_is_union_subtype_to_union(self, advanced_lattice) -> None:
         """Union A | B ≤ Union A | B | C."""
         small = advanced_lattice.create_union("str", "int")
         large = advanced_lattice.create_union("str", "int", "float")
@@ -179,7 +179,7 @@ class TestAdvancedLatticeUnions:
 class TestAdvancedLatticeIntersections:
     """Tests for intersection operations in AdvancedLattice."""
 
-    def test_create_intersection(self, advanced_lattice):
+    def test_create_intersection(self, advanced_lattice) -> None:
         """Create intersection type."""
         # First register member types
         advanced_lattice.register_type(
@@ -194,14 +194,14 @@ class TestAdvancedLatticeIntersections:
         assert " & " in inter_id
         assert inter_id in advanced_lattice.types
 
-    def test_decompose_intersection(self, advanced_lattice):
+    def test_decompose_intersection(self, advanced_lattice) -> None:
         """Decompose intersection into members."""
         inter_id = advanced_lattice.create_intersection("A", "B")
         members = advanced_lattice.decompose_intersection(inter_id)
 
         assert set(members) == {"A", "B"}
 
-    def test_intersection_subtyping(self, advanced_lattice):
+    def test_intersection_subtyping(self, advanced_lattice) -> None:
         """Intersection is subtype of each member."""
         advanced_lattice.register_type(
             TypeNode(id="A", kind=TypeKind.CONTRACT, name="A")
@@ -219,25 +219,25 @@ class TestAdvancedLatticeIntersections:
 class TestNormalization:
     """Tests for type normalization."""
 
-    def test_normalize_union_removes_never(self, advanced_lattice):
+    def test_normalize_union_removes_never(self, advanced_lattice) -> None:
         """Never is removed from unions."""
         result = advanced_lattice.normalize("str | Never")
 
         assert result == "str"
 
-    def test_normalize_intersection_removes_any(self, advanced_lattice):
+    def test_normalize_intersection_removes_any(self, advanced_lattice) -> None:
         """Any is removed from intersections."""
         result = advanced_lattice.normalize("str & Any")
 
         assert result == "str"
 
-    def test_normalize_sorts_members(self, advanced_lattice):
+    def test_normalize_sorts_members(self, advanced_lattice) -> None:
         """Members are sorted for canonical form."""
         result = advanced_lattice.normalize("z | a | m")
 
         assert result == "a | m | z"
 
-    def test_normalize_flattens(self, advanced_lattice):
+    def test_normalize_flattens(self, advanced_lattice) -> None:
         """Nested types are flattened."""
         # Note: This tests the normalization string processing
         result = advanced_lattice.normalize("a | b | c")
@@ -248,7 +248,7 @@ class TestNormalization:
 class TestVarianceChecking:
     """Tests for variance checking."""
 
-    def test_covariant(self, advanced_lattice):
+    def test_covariant(self, advanced_lattice) -> None:
         """Covariant position allows subtyping."""
         advanced_lattice.register_type(
             TypeNode(id="Animal", kind=TypeKind.RECORD, name="Animal")
@@ -262,7 +262,7 @@ class TestVarianceChecking:
 
         assert advanced_lattice.check_variance("list", "Cat", "Animal", "covariant")
 
-    def test_contravariant(self, advanced_lattice):
+    def test_contravariant(self, advanced_lattice) -> None:
         """Contravariant position reverses subtyping."""
         advanced_lattice.register_type(
             TypeNode(id="Animal", kind=TypeKind.RECORD, name="Animal")
@@ -279,7 +279,7 @@ class TestVarianceChecking:
             "Callable", "Animal", "Cat", "contravariant"
         )
 
-    def test_invariant(self, advanced_lattice):
+    def test_invariant(self, advanced_lattice) -> None:
         """Invariant position requires exact match."""
         assert advanced_lattice.check_variance("dict", "str", "str", "invariant")
         assert not advanced_lattice.check_variance("dict", "str", "int", "invariant")
@@ -288,7 +288,7 @@ class TestVarianceChecking:
 class TestStructuralSubtyping:
     """Tests for structural subtyping."""
 
-    def test_record_subtype_has_all_fields(self, advanced_lattice):
+    def test_record_subtype_has_all_fields(self, advanced_lattice) -> None:
         """Record subtype must have all fields."""
         advanced_lattice.register_type(
             TypeNode(
@@ -312,7 +312,7 @@ class TestStructuralSubtyping:
         # Point doesn't have z, so it's not a subtype of Point3D
         assert not advanced_lattice.is_structural_subtype("Point", "Point3D")
 
-    def test_record_subtype_field_types(self, advanced_lattice):
+    def test_record_subtype_field_types(self, advanced_lattice) -> None:
         """Record subtype fields must have compatible types."""
         advanced_lattice.register_type(
             TypeNode(
@@ -338,14 +338,14 @@ class TestStructuralSubtyping:
 class TestMeetJoinWithUnions:
     """Tests for meet/join with union types."""
 
-    def test_join_creates_union(self, advanced_lattice):
+    def test_join_creates_union(self, advanced_lattice) -> None:
         """Join creates union when no common supertype."""
         result = advanced_lattice.join_with_union("str", "int")
 
         # Should create union since no common supertype (except Any)
         assert " | " in result or result == "Any"
 
-    def test_meet_with_union_distributes(self, advanced_lattice):
+    def test_meet_with_union_distributes(self, advanced_lattice) -> None:
         """Meet distributes over union."""
         # Create union
         union = advanced_lattice.create_union("str", "int")
@@ -359,19 +359,19 @@ class TestMeetJoinWithUnions:
 class TestFactoryFunctions:
     """Tests for factory functions."""
 
-    def test_create_advanced_lattice(self, registry):
+    def test_create_advanced_lattice(self, registry) -> None:
         """create_advanced_lattice returns AdvancedLattice."""
         lattice = create_advanced_lattice(registry)
 
         assert isinstance(lattice, AdvancedLattice)
 
-    def test_create_cached_lattice(self, registry):
+    def test_create_cached_lattice(self, registry) -> None:
         """create_cached_lattice returns CachedLattice."""
         lattice = create_cached_lattice(registry)
 
         assert isinstance(lattice, CachedLattice)
 
-    def test_create_cached_with_size(self, registry):
+    def test_create_cached_with_size(self, registry) -> None:
         """create_cached_lattice accepts cache size."""
         lattice = create_cached_lattice(registry, cache_size=500)
 

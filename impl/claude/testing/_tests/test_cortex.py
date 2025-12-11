@@ -135,11 +135,11 @@ class TestOracle:
     """Tests for Oracle (Metamorphic Judge)."""
 
     @pytest.fixture
-    def oracle(self):
+    def oracle(self) -> Oracle:
         return Oracle()
 
     @pytest.mark.asyncio
-    async def test_semantic_equivalence_identical(self, oracle):
+    async def test_semantic_equivalence_identical(self, oracle) -> None:
         """Identical outputs should be semantically equivalent."""
         # Test the similarity function directly
         sim = await oracle.similarity("hello world", "hello world")
@@ -155,7 +155,7 @@ class TestOracle:
         assert result is True  # With threshold 0, identical should pass
 
     @pytest.mark.asyncio
-    async def test_semantic_equivalence_different(self, oracle):
+    async def test_semantic_equivalence_different(self, oracle) -> None:
         """Very different outputs should not be equivalent."""
         result = await oracle.semantically_equivalent(
             "hello world", "goodbye moon universe stars"
@@ -164,13 +164,13 @@ class TestOracle:
         assert isinstance(result, bool)
 
     @pytest.mark.asyncio
-    async def test_similarity_range(self, oracle):
+    async def test_similarity_range(self, oracle) -> None:
         """Similarity should be in [0, 1]."""
         sim = await oracle.similarity("hello", "world")
         assert 0 <= sim <= 1
 
     @pytest.mark.asyncio
-    async def test_idempotency_relation_holds(self, oracle):
+    async def test_idempotency_relation_holds(self, oracle) -> None:
         """Idempotency should hold for identical outputs."""
         relation = IdempotencyRelation()
         result = await relation.check("input", "output", "output", "output")
@@ -178,7 +178,7 @@ class TestOracle:
         assert result.relation == "idempotency"
 
     @pytest.mark.asyncio
-    async def test_idempotency_relation_fails(self, oracle):
+    async def test_idempotency_relation_fails(self, oracle) -> None:
         """Idempotency should fail for different outputs."""
         relation = IdempotencyRelation(tolerance=0.99)
         result = await relation.check(
@@ -187,7 +187,7 @@ class TestOracle:
         assert result.holds is False
 
     @pytest.mark.asyncio
-    async def test_validate_agent(self, oracle):
+    async def test_validate_agent(self, oracle) -> None:
         """Should validate an agent with metamorphic tests."""
         agent = EchoAgent()
         validation = await oracle.validate_agent(agent, ["hello", "world"])
@@ -196,7 +196,7 @@ class TestOracle:
         assert validation.tests_run >= 1
         assert 0 <= validation.validity_score <= 1
 
-    def test_format_validation_report(self, oracle):
+    def test_format_validation_report(self, oracle) -> None:
         """Should format validation report."""
         from testing.oracle import OracleValidation
 
@@ -216,24 +216,24 @@ class TestOracle:
 class TestCosine:
     """Tests for cosine similarity."""
 
-    def test_identical_vectors(self):
+    def test_identical_vectors(self) -> None:
         """Identical vectors should have similarity 1."""
         vec = [1.0, 2.0, 3.0]
         assert cosine_similarity(vec, vec) == pytest.approx(1.0)
 
-    def test_orthogonal_vectors(self):
+    def test_orthogonal_vectors(self) -> None:
         """Orthogonal vectors should have similarity 0."""
         vec_a = [1.0, 0.0]
         vec_b = [0.0, 1.0]
         assert cosine_similarity(vec_a, vec_b) == pytest.approx(0.0)
 
-    def test_opposite_vectors(self):
+    def test_opposite_vectors(self) -> None:
         """Opposite vectors should have similarity -1."""
         vec_a = [1.0, 0.0]
         vec_b = [-1.0, 0.0]
         assert cosine_similarity(vec_a, vec_b) == pytest.approx(-1.0)
 
-    def test_zero_vector(self):
+    def test_zero_vector(self) -> None:
         """Zero vector should return 0."""
         vec_a = [0.0, 0.0]
         vec_b = [1.0, 1.0]
@@ -248,7 +248,7 @@ class TestCosine:
 class TestTopology:
     """Tests for TypeTopology."""
 
-    def test_add_agent(self):
+    def test_add_agent(self) -> None:
         """Should add agents to topology."""
         topology = TypeTopology()
         topology.add_agent("A", "str", "str")
@@ -257,7 +257,7 @@ class TestTopology:
         assert "A" in topology.agents
         assert "B" in topology.agents
 
-    def test_edge_creation(self):
+    def test_edge_creation(self) -> None:
         """Should create edges for composable agents."""
         topology = TypeTopology()
         topology.add_agent("A", "str", "str")
@@ -266,7 +266,7 @@ class TestTopology:
         # A outputs str, B inputs str -> should have edge
         assert ("A", "B") in topology.edges
 
-    def test_equivalent_paths(self):
+    def test_equivalent_paths(self) -> None:
         """Should find equivalent paths."""
         topology = TypeTopology()
         topology.add_agent("A", "str", "str")
@@ -282,7 +282,7 @@ class TestTopologist:
     """Tests for Topologist."""
 
     @pytest.fixture
-    def topologist(self):
+    def topologist(self) -> Topologist:
         oracle = Oracle()
         topology = TypeTopology()
         topology.add_agent("Echo", "str", "str")
@@ -290,7 +290,7 @@ class TestTopologist:
         return Topologist(topology, oracle)
 
     @pytest.mark.asyncio
-    async def test_contextual_invariance_echo(self, topologist):
+    async def test_contextual_invariance_echo(self, topologist) -> None:
         """Echo agent should be invariant to noise."""
         agent = EchoAgent()
         result = await topologist.test_contextual_invariance(
@@ -301,7 +301,7 @@ class TestTopologist:
         assert result.contexts_tested == 1
 
     @pytest.mark.asyncio
-    async def test_noisy_agent_application(self):
+    async def test_noisy_agent_application(self) -> None:
         """NoisyAgent should apply noise to input."""
         agent = EchoAgent()
         noisy = NoisyAgent(agent, "add_whitespace")
@@ -313,12 +313,12 @@ class TestTopologist:
 class TestNoiseFunctor:
     """Tests for NoiseFunctor."""
 
-    def test_all_functors(self):
+    def test_all_functors(self) -> None:
         """Should create all noise functors."""
         functors = NoiseFunctor.all_functors()
         assert len(functors) == len(NoiseFunctor.NOISE_TYPES)
 
-    def test_lift_agent(self):
+    def test_lift_agent(self) -> None:
         """Should lift agent into noisy context."""
         agent = EchoAgent()
         functor = NoiseFunctor("add_whitespace")
@@ -337,10 +337,10 @@ class TestWitnessStore:
     """Tests for WitnessStore."""
 
     @pytest.fixture
-    def store(self):
+    def store(self) -> WitnessStore:
         return WitnessStore()
 
-    def test_record_and_query(self, store):
+    def test_record_and_query(self, store) -> None:
         """Should record and query witnesses."""
         witness = TestWitness(
             test_id="test_1",
@@ -353,7 +353,7 @@ class TestWitnessStore:
         assert len(store) == 1
 
     @pytest.mark.asyncio
-    async def test_query_by_test_id(self, store):
+    async def test_query_by_test_id(self, store) -> None:
         """Should filter by test_id."""
         store.record(
             TestWitness(test_id="test_1", agent_path=[], input_data="a", outcome="pass")
@@ -367,7 +367,7 @@ class TestWitnessStore:
         assert results[0].test_id == "test_1"
 
     @pytest.mark.asyncio
-    async def test_query_by_outcome(self, store):
+    async def test_query_by_outcome(self, store) -> None:
         """Should filter by outcome."""
         store.record(
             TestWitness(test_id="test_1", agent_path=[], input_data="a", outcome="pass")
@@ -385,15 +385,15 @@ class TestCausalAnalyst:
     """Tests for CausalAnalyst."""
 
     @pytest.fixture
-    def analyst(self):
+    def analyst(self) -> CausalAnalyst:
         store = WitnessStore()
         return CausalAnalyst(store)
 
     @pytest.mark.asyncio
-    async def test_delta_debug(self, analyst):
+    async def test_delta_debug(self, analyst) -> None:
         """Should find minimal failing input."""
 
-        async def test_func(x):
+        async def test_func(x) -> None:
             if "fail" in str(x).lower():
                 raise ValueError("failure")
             return x
@@ -410,12 +410,12 @@ class TestCausalAnalyst:
         assert len(result.failing_variations) >= 1
 
     @pytest.mark.asyncio
-    async def test_flakiness_diagnosis_insufficient(self, analyst):
+    async def test_flakiness_diagnosis_insufficient(self, analyst) -> None:
         """Should detect insufficient data."""
         diagnosis = await analyst.flakiness_diagnosis("nonexistent_test")
         assert diagnosis.diagnosis == "Insufficient data"
 
-    def test_entropy_calculation(self, analyst):
+    def test_entropy_calculation(self, analyst) -> None:
         """Should calculate entropy correctly."""
         # All same outcome -> entropy 0
         outcomes = ["pass", "pass", "pass"]
@@ -436,7 +436,7 @@ class TestCausalAnalyst:
 class TestTestAsset:
     """Tests for TestAsset."""
 
-    def test_expected_information_gain(self):
+    def test_expected_information_gain(self) -> None:
         """Should calculate Shannon entropy."""
         # p=0.5 -> maximum entropy
         asset = TestAsset(
@@ -450,7 +450,7 @@ class TestTestAsset:
         asset.historical_pass_rate = 1.0
         assert asset.expected_information_gain == 0.0
 
-    def test_surprise_if_fail(self):
+    def test_surprise_if_fail(self) -> None:
         """Should calculate surprise value."""
         # Stable test failing is very surprising
         asset = TestAsset(
@@ -469,11 +469,11 @@ class TestTestMarket:
     """Tests for TestMarket."""
 
     @pytest.fixture
-    def market(self):
+    def market(self) -> TestMarket:
         return TestMarket(budget_tier="dev")
 
     @pytest.mark.asyncio
-    async def test_kelly_allocation(self, market):
+    async def test_kelly_allocation(self, market) -> None:
         """Should calculate Kelly-optimal allocation."""
         assets = [
             TestAsset(
@@ -503,7 +503,7 @@ class TestTestMarket:
         assert total == pytest.approx(100.0) or total == 0.0  # Edge case: all 0
 
     @pytest.mark.asyncio
-    async def test_prioritize_by_surprise(self, market):
+    async def test_prioritize_by_surprise(self, market) -> None:
         """Should prioritize tests by surprise value."""
         assets = [
             TestAsset(
@@ -528,14 +528,14 @@ class TestTestMarket:
 class TestBudgetTiers:
     """Tests for budget tiers."""
 
-    def test_tier_definitions(self):
+    def test_tier_definitions(self) -> None:
         """Should have all expected tiers."""
         assert "dev" in BUDGET_TIERS
         assert "pr" in BUDGET_TIERS
         assert "main" in BUDGET_TIERS
         assert "release" in BUDGET_TIERS
 
-    def test_budget_ordering(self):
+    def test_budget_ordering(self) -> None:
         """Budget should increase with tier importance."""
         assert BUDGET_TIERS["dev"].total_joules < BUDGET_TIERS["pr"].total_joules
         assert BUDGET_TIERS["pr"].total_joules < BUDGET_TIERS["main"].total_joules
@@ -549,17 +549,17 @@ class TestBudgetTiers:
 class TestAdversarialInput:
     """Tests for AdversarialInput."""
 
-    def test_fitness_default(self):
+    def test_fitness_default(self) -> None:
         """Default fitness should be low."""
         inp = AdversarialInput(content="hello")
         assert inp.fitness == 0.0
 
-    def test_fitness_error(self):
+    def test_fitness_error(self) -> None:
         """Errors should have high fitness."""
         inp = AdversarialInput(content="hello", caused_error=True)
         assert inp.fitness >= 50
 
-    def test_fitness_latency(self):
+    def test_fitness_latency(self) -> None:
         """High latency should increase fitness."""
         inp = AdversarialInput(content="hello", latency_ms=5000)
         assert inp.fitness > 0
@@ -568,18 +568,18 @@ class TestAdversarialInput:
 class TestMutationOperators:
     """Tests for mutation operators."""
 
-    def test_all_operators_exist(self):
+    def test_all_operators_exist(self) -> None:
         """Should have all expected operators."""
         assert len(MUTATION_OPERATORS) >= 8
 
-    def test_hypnotic_prefix(self):
+    def test_hypnotic_prefix(self) -> None:
         """Should add hypnotic prefix."""
         op = HypnoticPrefixMutation()
         result = op.mutate("hello")
         assert result != "hello"
         assert "hello" in result
 
-    def test_unicode_mutation(self):
+    def test_unicode_mutation(self) -> None:
         """Should substitute with homoglyphs."""
         op = UnicodeMutation()
         # Run multiple times to catch random substitution
@@ -592,11 +592,11 @@ class TestRedTeam:
     """Tests for RedTeam."""
 
     @pytest.fixture
-    def red_team(self):
+    def red_team(self) -> RedTeam:
         return RedTeam(population_size=10, generations=3)
 
     @pytest.mark.asyncio
-    async def test_evolve_population(self, red_team):
+    async def test_evolve_population(self, red_team) -> None:
         """Should evolve adversarial population."""
         agent = EchoAgent()
         seeds = ["hello", "world"]
@@ -608,7 +608,7 @@ class TestRedTeam:
         assert population[0].fitness >= population[-1].fitness
 
     @pytest.mark.asyncio
-    async def test_find_vulnerabilities(self, red_team):
+    async def test_find_vulnerabilities(self, red_team) -> None:
         """Should find vulnerabilities in failing agent."""
         agent = FailingAgent()
         seeds = ["hello", "this should fail"]
@@ -630,10 +630,10 @@ class TestCortex:
     """Tests for unified Cortex system."""
 
     @pytest.fixture
-    def cortex(self):
+    def cortex(self) -> Cortex:
         return Cortex()
 
-    def test_register_agent(self, cortex):
+    def test_register_agent(self, cortex) -> None:
         """Should register agent in all systems."""
         agent = EchoAgent()
         cortex.register_agent(agent, "str", "str")
@@ -641,13 +641,13 @@ class TestCortex:
         assert "Echo" in cortex._agents
         assert "Echo" in cortex.topology.agents
 
-    def test_register_test(self, cortex):
+    def test_register_test(self, cortex) -> None:
         """Should register test in market."""
         cortex.register_test("test_1", cost_joules=10.0)
 
         assert "test_1" in cortex.budget_manager.market._assets
 
-    def test_record_witness(self, cortex):
+    def test_record_witness(self, cortex) -> None:
         """Should record witness in store."""
         cortex.record_witness(
             test_id="test_1",
@@ -660,7 +660,7 @@ class TestCortex:
         assert len(cortex.witness_store) == 1
 
     @pytest.mark.asyncio
-    async def test_daytime_run(self, cortex):
+    async def test_daytime_run(self, cortex) -> None:
         """Should select tests for daytime run."""
         # Register some tests
         cortex.register_test("test_1", cost_joules=1.0)
@@ -671,7 +671,7 @@ class TestCortex:
         assert len(selected) >= 1
 
     @pytest.mark.asyncio
-    async def test_morning_briefing(self, cortex):
+    async def test_morning_briefing(self, cortex) -> None:
         """Should generate morning briefing."""
         briefing = await cortex.morning_briefing({})
 
@@ -687,7 +687,7 @@ class TestCortex:
 class TestReportFormatting:
     """Tests for report formatting functions."""
 
-    def test_format_briefing_report(self):
+    def test_format_briefing_report(self) -> None:
         """Should format briefing report."""
         from testing.cortex import (
             AnalystSummary,
@@ -712,7 +712,7 @@ class TestReportFormatting:
         assert "YELLOW" in report
         assert "Check SummarizerAgent" in report
 
-    def test_format_market_report(self):
+    def test_format_market_report(self) -> None:
         """Should format market report."""
         from testing.market import MarketReport
 
@@ -730,7 +730,7 @@ class TestReportFormatting:
         assert "MARKET" in formatted
         assert "dev" in formatted
 
-    def test_format_red_team_report(self):
+    def test_format_red_team_report(self) -> None:
         """Should format red team report."""
         from testing.red_team import RedTeamReport
 

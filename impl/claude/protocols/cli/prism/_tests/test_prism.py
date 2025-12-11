@@ -56,7 +56,7 @@ class MockAgent:
 class TestPrismInit:
     """Tests for Prism initialization."""
 
-    def test_init_with_cli_capable(self):
+    def test_init_with_cli_capable(self) -> None:
         """Prism accepts CLICapable agent."""
         agent = MockAgent()
         prism = Prism(agent)
@@ -64,7 +64,7 @@ class TestPrismInit:
         assert prism.agent is agent
         assert prism._parser is None
 
-    def test_isinstance_check(self):
+    def test_isinstance_check(self) -> None:
         """MockAgent satisfies CLICapable."""
         agent = MockAgent()
         assert isinstance(agent, CLICapable)
@@ -73,7 +73,7 @@ class TestPrismInit:
 class TestPrismBuildParser:
     """Tests for build_parser method."""
 
-    def test_build_parser_creates_parser(self):
+    def test_build_parser_creates_parser(self) -> None:
         """build_parser creates an ArgumentParser."""
         prism = Prism(MockAgent())
         parser = prism.build_parser()
@@ -81,7 +81,7 @@ class TestPrismBuildParser:
         assert parser is not None
         assert parser.prog == "kgents mock"
 
-    def test_build_parser_cached(self):
+    def test_build_parser_cached(self) -> None:
         """build_parser returns same parser on subsequent calls."""
         prism = Prism(MockAgent())
         parser1 = prism.build_parser()
@@ -89,7 +89,7 @@ class TestPrismBuildParser:
 
         assert parser1 is parser2
 
-    def test_parser_has_format_option(self):
+    def test_parser_has_format_option(self) -> None:
         """Parser includes --format option."""
         prism = Prism(MockAgent())
         parser = prism.build_parser()
@@ -98,7 +98,7 @@ class TestPrismBuildParser:
         args = parser.parse_args(["greet", "Alice", "--format", "json"])
         assert args.format == "json"
 
-    def test_parser_has_subcommands(self):
+    def test_parser_has_subcommands(self) -> None:
         """Parser has subcommands for exposed methods."""
         prism = Prism(MockAgent())
         parser = prism.build_parser()
@@ -114,7 +114,7 @@ class TestPrismBuildParser:
 class TestPrismArgumentGeneration:
     """Tests for argument generation from type hints."""
 
-    def test_positional_required_arg(self):
+    def test_positional_required_arg(self) -> None:
         """Required args become positional."""
         prism = Prism(MockAgent())
         parser = prism.build_parser()
@@ -123,7 +123,7 @@ class TestPrismArgumentGeneration:
         args = parser.parse_args(["greet", "World"])
         assert args.name == "World"
 
-    def test_optional_arg_with_default(self):
+    def test_optional_arg_with_default(self) -> None:
         """Args with defaults become --options."""
         prism = Prism(MockAgent())
         parser = prism.build_parser()
@@ -135,7 +135,7 @@ class TestPrismArgumentGeneration:
         args = parser.parse_args(["greet", "Alice", "--loud"])
         assert args.loud is True
 
-    def test_int_type_conversion(self):
+    def test_int_type_conversion(self) -> None:
         """int type hints convert argument."""
         prism = Prism(MockAgent())
         parser = prism.build_parser()
@@ -149,7 +149,7 @@ class TestPrismDispatch:
     """Tests for dispatch method."""
 
     @pytest.mark.asyncio
-    async def test_dispatch_sync_command(self):
+    async def test_dispatch_sync_command(self) -> None:
         """dispatch calls sync methods correctly."""
         prism = Prism(MockAgent())
         exit_code = await prism.dispatch(["greet", "Alice", "--format", "json"])
@@ -157,7 +157,7 @@ class TestPrismDispatch:
         assert exit_code == 0
 
     @pytest.mark.asyncio
-    async def test_dispatch_async_command(self):
+    async def test_dispatch_async_command(self) -> None:
         """dispatch calls async methods correctly."""
         prism = Prism(MockAgent())
         exit_code = await prism.dispatch(["async_cmd", "test", "--format", "json"])
@@ -165,7 +165,7 @@ class TestPrismDispatch:
         assert exit_code == 0
 
     @pytest.mark.asyncio
-    async def test_dispatch_help(self):
+    async def test_dispatch_help(self) -> None:
         """dispatch shows help for --help."""
         prism = Prism(MockAgent())
 
@@ -184,7 +184,7 @@ class TestPrismDispatch:
         assert "mock" in output.lower()
 
     @pytest.mark.asyncio
-    async def test_dispatch_empty_args(self):
+    async def test_dispatch_empty_args(self) -> None:
         """dispatch shows help for empty args."""
         prism = Prism(MockAgent())
 
@@ -200,7 +200,7 @@ class TestPrismDispatch:
         assert exit_code == 0
 
     @pytest.mark.asyncio
-    async def test_dispatch_unknown_command(self):
+    async def test_dispatch_unknown_command(self) -> None:
         """dispatch returns error for unknown command."""
         prism = Prism(MockAgent())
 
@@ -212,7 +212,7 @@ class TestPrismDispatch:
 class TestPrismDispatchSync:
     """Tests for dispatch_sync method."""
 
-    def test_dispatch_sync_wrapper(self):
+    def test_dispatch_sync_wrapper(self) -> None:
         """dispatch_sync wraps async dispatch."""
         prism = Prism(MockAgent())
 
@@ -225,7 +225,7 @@ class TestPrismOutput:
     """Tests for output formatting."""
 
     @pytest.mark.asyncio
-    async def test_json_output(self):
+    async def test_json_output(self) -> None:
         """--format=json produces JSON output."""
         prism = Prism(MockAgent())
 
@@ -243,7 +243,7 @@ class TestPrismOutput:
         assert "Alice" in output
 
     @pytest.mark.asyncio
-    async def test_rich_output(self):
+    async def test_rich_output(self) -> None:
         """--format=rich produces formatted output."""
         prism = Prism(MockAgent())
 
@@ -264,7 +264,7 @@ class TestPrismOutput:
 class TestPrismEdgeCases:
     """Tests for edge cases."""
 
-    def test_agent_without_commands(self):
+    def test_agent_without_commands(self) -> None:
         """Prism works with agent with no commands."""
 
         class EmptyAgent:
@@ -283,7 +283,7 @@ class TestPrismEdgeCases:
         parser = prism.build_parser()
         assert parser is not None
 
-    def test_method_without_expose(self):
+    def test_method_without_expose(self) -> None:
         """Methods without @expose still work."""
 
         class PartialAgent:
@@ -311,7 +311,7 @@ class TestPrismEdgeCases:
 class TestPrismAliases:
     """Tests for command aliases."""
 
-    def test_command_with_aliases(self):
+    def test_command_with_aliases(self) -> None:
         """Commands with aliases are accessible."""
 
         class AliasAgent:

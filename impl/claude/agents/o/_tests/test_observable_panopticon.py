@@ -95,7 +95,7 @@ class MockAgent:
 class TestWireStatusSnapshot:
     """Tests for WireStatusSnapshot."""
 
-    def test_create_snapshot(self):
+    def test_create_snapshot(self) -> None:
         """Test creating a status snapshot."""
         snapshot = WireStatusSnapshot(
             timestamp=datetime.now(),
@@ -120,7 +120,7 @@ class TestWireStatusSnapshot:
         assert snapshot.telemetry_healthy is True
         assert snapshot.economic_roc == 1.5
 
-    def test_to_dict(self):
+    def test_to_dict(self) -> None:
         """Test converting snapshot to dict."""
         snapshot = WireStatusSnapshot(
             timestamp=datetime(2025, 1, 1, 12, 0, 0),
@@ -151,7 +151,7 @@ class TestWireStatusSnapshot:
         assert data["bootstrap"]["intact"] is True
         assert data["alerts"]["count"] == 3
 
-    def test_from_panopticon_status(self, mock_panopticon_status):
+    def test_from_panopticon_status(self, mock_panopticon_status) -> None:
         """Test creating snapshot from UnifiedPanopticonStatus."""
         snapshot = WireStatusSnapshot.from_panopticon_status(mock_panopticon_status)
 
@@ -170,7 +170,7 @@ class TestWireStatusSnapshot:
 class TestObservablePanopticon:
     """Tests for ObservablePanopticon."""
 
-    def test_create_observable_panopticon(self, temp_wire_dir):
+    def test_create_observable_panopticon(self, temp_wire_dir) -> None:
         """Test creating ObservablePanopticon."""
         panopticon = ObservablePanopticon(
             agent_name="test-panopticon",
@@ -180,7 +180,7 @@ class TestObservablePanopticon:
         assert panopticon.agent_name == "test-panopticon"
         assert panopticon.emission_mode == EmissionMode.BATCHED
 
-    def test_collect_snapshot(self, temp_wire_dir):
+    def test_collect_snapshot(self, temp_wire_dir) -> None:
         """Test collecting status snapshot."""
         panopticon = ObservablePanopticon(
             agent_name="test-panopticon",
@@ -197,7 +197,7 @@ class TestObservablePanopticon:
             "UNKNOWN",
         ]
 
-    def test_emit_snapshot(self, temp_wire_dir):
+    def test_emit_snapshot(self, temp_wire_dir) -> None:
         """Test emitting snapshot via wire protocol."""
         wire_dir = temp_wire_dir / "test-panopticon"
         panopticon = ObservablePanopticon(
@@ -219,7 +219,7 @@ class TestObservablePanopticon:
         snapshot_data = metadata.get("snapshot", {})
         assert "system_status" in snapshot_data
 
-    def test_emit_alert(self, temp_wire_dir):
+    def test_emit_alert(self, temp_wire_dir) -> None:
         """Test emitting alert via wire protocol."""
         wire_dir = temp_wire_dir / "test-panopticon"
         panopticon = ObservablePanopticon(
@@ -243,7 +243,7 @@ class TestObservablePanopticon:
         assert "WARN" in content
         assert "test" in content
 
-    def test_history_management(self, temp_wire_dir):
+    def test_history_management(self, temp_wire_dir) -> None:
         """Test history limit is respected."""
         panopticon = ObservablePanopticon(
             agent_name="test-panopticon",
@@ -257,7 +257,7 @@ class TestObservablePanopticon:
 
         assert len(panopticon._history) == 5
 
-    def test_get_history(self, temp_wire_dir):
+    def test_get_history(self, temp_wire_dir) -> None:
         """Test getting history snapshots."""
         panopticon = ObservablePanopticon(
             agent_name="test-panopticon",
@@ -270,7 +270,7 @@ class TestObservablePanopticon:
         history = panopticon.get_history(limit=3)
         assert len(history) == 3
 
-    def test_get_summary(self, temp_wire_dir):
+    def test_get_summary(self, temp_wire_dir) -> None:
         """Test getting human-readable summary."""
         panopticon = ObservablePanopticon(
             agent_name="test-panopticon",
@@ -293,7 +293,7 @@ class TestObservablePanopticon:
 class TestEmissionModes:
     """Tests for different emission modes."""
 
-    def test_continuous_mode(self, temp_wire_dir):
+    def test_continuous_mode(self, temp_wire_dir) -> None:
         """Test continuous emission mode always emits."""
         panopticon = ObservablePanopticon(
             agent_name="test-panopticon",
@@ -304,7 +304,7 @@ class TestEmissionModes:
         snapshot = panopticon.collect_snapshot()
         assert panopticon.should_emit(snapshot) is True
 
-    def test_batched_mode(self, temp_wire_dir):
+    def test_batched_mode(self, temp_wire_dir) -> None:
         """Test batched emission mode."""
         panopticon = ObservablePanopticon(
             agent_name="test-panopticon",
@@ -315,7 +315,7 @@ class TestEmissionModes:
         snapshot = panopticon.collect_snapshot()
         assert panopticon.should_emit(snapshot) is True
 
-    def test_on_change_mode(self, temp_wire_dir):
+    def test_on_change_mode(self, temp_wire_dir) -> None:
         """Test on_change emission mode only emits on status change."""
         panopticon = ObservablePanopticon(
             agent_name="test-panopticon",
@@ -349,7 +349,7 @@ class TestEmissionModes:
         )
         assert panopticon.should_emit(snapshot2_same) is False
 
-    def test_on_alert_mode(self, temp_wire_dir):
+    def test_on_alert_mode(self, temp_wire_dir) -> None:
         """Test on_alert emission mode only emits on new alerts."""
         panopticon = ObservablePanopticon(
             agent_name="test-panopticon",
@@ -409,7 +409,7 @@ class TestEmissionModes:
 class TestCallbacks:
     """Tests for callback subscriptions."""
 
-    def test_on_status_change_callback(self, temp_wire_dir):
+    def test_on_status_change_callback(self, temp_wire_dir) -> None:
         """Test registering and triggering status change callback."""
         panopticon = ObservablePanopticon(
             agent_name="test-panopticon",
@@ -434,7 +434,7 @@ class TestCallbacks:
         unsubscribe()
         assert len(panopticon._on_status_change) == 0
 
-    def test_on_alert_callback(self, temp_wire_dir):
+    def test_on_alert_callback(self, temp_wire_dir) -> None:
         """Test registering and triggering alert callback."""
         panopticon = ObservablePanopticon(
             agent_name="test-panopticon",
@@ -473,7 +473,7 @@ class TestStreaming:
     """Tests for async streaming."""
 
     @pytest.mark.asyncio
-    async def test_start_stop_streaming(self, temp_wire_dir):
+    async def test_start_stop_streaming(self, temp_wire_dir) -> None:
         """Test starting and stopping streaming."""
         panopticon = ObservablePanopticon(
             agent_name="test-panopticon",
@@ -490,7 +490,7 @@ class TestStreaming:
         assert panopticon._streaming is False
 
     @pytest.mark.asyncio
-    async def test_stream_snapshots_generator(self, temp_wire_dir):
+    async def test_stream_snapshots_generator(self, temp_wire_dir) -> None:
         """Test async generator for streaming snapshots."""
         panopticon = ObservablePanopticon(
             agent_name="test-panopticon",
@@ -511,7 +511,7 @@ class TestStreaming:
             assert isinstance(s, WireStatusSnapshot)
 
     @pytest.mark.asyncio
-    async def test_create_streaming_panopticon(self, temp_wire_dir):
+    async def test_create_streaming_panopticon(self, temp_wire_dir) -> None:
         """Test factory function for streaming panopticon."""
         panopticon = await create_streaming_panopticon(
             agent_name="test-streaming",
@@ -531,7 +531,7 @@ class TestStreaming:
 class TestWireObserver:
     """Tests for WireObserver."""
 
-    def test_create_wire_observer(self, temp_wire_dir):
+    def test_create_wire_observer(self, temp_wire_dir) -> None:
         """Test creating WireObserver."""
         observer = WireObserver(
             observer_id="test-observer",
@@ -543,7 +543,7 @@ class TestWireObserver:
         assert observer._emit_results is True
         assert observer._emit_entropy is True
 
-    def test_pre_invoke(self, temp_wire_dir):
+    def test_pre_invoke(self, temp_wire_dir) -> None:
         """Test pre_invoke creates observation context."""
         observer = WireObserver(
             observer_id="test-observer",
@@ -557,7 +557,7 @@ class TestWireObserver:
         assert observer._observation_count == 1
 
     @pytest.mark.asyncio
-    async def test_post_invoke(self, temp_wire_dir):
+    async def test_post_invoke(self, temp_wire_dir) -> None:
         """Test post_invoke records observation result."""
         observer = WireObserver(
             observer_id="test-observer",
@@ -572,7 +572,7 @@ class TestWireObserver:
         assert result.status == ObservationStatus.COMPLETED
         assert result.duration_ms == 100.0
 
-    def test_record_entropy(self, temp_wire_dir):
+    def test_record_entropy(self, temp_wire_dir) -> None:
         """Test recording entropy (errors)."""
         observer = WireObserver(
             observer_id="test-observer",
@@ -594,7 +594,7 @@ class TestWireObserver:
         assert "ERROR" in content
         assert "ValueError" in content
 
-    def test_get_stats(self, temp_wire_dir):
+    def test_get_stats(self, temp_wire_dir) -> None:
         """Test getting observation statistics."""
         observer = WireObserver(
             observer_id="test-observer",
@@ -609,7 +609,7 @@ class TestWireObserver:
         assert stats["observations"] == 5
         assert stats["errors"] == 0
 
-    def test_wire_property(self, temp_wire_dir):
+    def test_wire_property(self, temp_wire_dir) -> None:
         """Test accessing underlying WireObservable."""
         observer = WireObserver(
             observer_id="test-observer",
@@ -629,7 +629,7 @@ class TestWireObserver:
 class TestPanopticonDashboard:
     """Tests for PanopticonDashboard."""
 
-    def test_create_dashboard(self, temp_wire_dir):
+    def test_create_dashboard(self, temp_wire_dir) -> None:
         """Test creating dashboard."""
         panopticon = ObservablePanopticon(
             agent_name="test-panopticon",
@@ -641,7 +641,7 @@ class TestPanopticonDashboard:
         assert dashboard.panopticon is panopticon
         assert dashboard.config.update_interval == 1.0
 
-    def test_dashboard_config(self):
+    def test_dashboard_config(self) -> None:
         """Test dashboard configuration."""
         config = DashboardConfig(
             update_interval=0.5,
@@ -653,7 +653,7 @@ class TestPanopticonDashboard:
         assert config.history_depth == 30
         assert config.compact_mode is True
 
-    def test_render_compact(self, temp_wire_dir):
+    def test_render_compact(self, temp_wire_dir) -> None:
         """Test rendering compact status line."""
         panopticon = ObservablePanopticon(
             agent_name="test-panopticon",
@@ -667,7 +667,7 @@ class TestPanopticonDashboard:
         assert "[O]" in compact
         assert "Alerts:" in compact
 
-    def test_render_dimensions(self, temp_wire_dir):
+    def test_render_dimensions(self, temp_wire_dir) -> None:
         """Test rendering dimension panels."""
         panopticon = ObservablePanopticon(
             agent_name="test-panopticon",
@@ -682,7 +682,7 @@ class TestPanopticonDashboard:
         assert "SEMANTICS" in dimensions
         assert "ECONOMICS" in dimensions
 
-    def test_render_sparklines(self, temp_wire_dir):
+    def test_render_sparklines(self, temp_wire_dir) -> None:
         """Test rendering sparklines."""
         panopticon = ObservablePanopticon(
             agent_name="test-panopticon",
@@ -703,7 +703,7 @@ class TestPanopticonDashboard:
         assert "RoC" in sparklines
         assert "Drift" in sparklines
 
-    def test_get_wire_data(self, temp_wire_dir):
+    def test_get_wire_data(self, temp_wire_dir) -> None:
         """Test getting wire-formatted data."""
         panopticon = ObservablePanopticon(
             agent_name="test-panopticon",
@@ -719,7 +719,7 @@ class TestPanopticonDashboard:
         assert "compact" in data
         assert "dimensions" in data
 
-    def test_history_collection(self, temp_wire_dir):
+    def test_history_collection(self, temp_wire_dir) -> None:
         """Test history collection via callback."""
         panopticon = ObservablePanopticon(
             agent_name="test-panopticon",
@@ -767,7 +767,7 @@ class TestPanopticonDashboard:
 class TestFactoryFunctions:
     """Tests for factory functions."""
 
-    def test_create_observable_panopticon(self, temp_wire_dir):
+    def test_create_observable_panopticon(self, temp_wire_dir) -> None:
         """Test create_observable_panopticon factory."""
         panopticon = create_observable_panopticon(
             agent_name="factory-test",
@@ -779,7 +779,7 @@ class TestFactoryFunctions:
         assert panopticon.emission_mode == EmissionMode.CONTINUOUS
         assert panopticon.emission_interval == 0.5
 
-    def test_create_wire_observer(self, temp_wire_dir):
+    def test_create_wire_observer(self, temp_wire_dir) -> None:
         """Test create_wire_observer factory."""
         observer = create_wire_observer(
             observer_id="factory-observer",
@@ -790,7 +790,7 @@ class TestFactoryFunctions:
         assert observer._emit_context is True
         assert observer._emit_results is True
 
-    def test_create_wire_observer_minimal(self, temp_wire_dir):
+    def test_create_wire_observer_minimal(self, temp_wire_dir) -> None:
         """Test create_wire_observer with minimal emission."""
         observer = create_wire_observer(
             observer_id="minimal-observer",
@@ -801,7 +801,7 @@ class TestFactoryFunctions:
         assert observer._emit_results is False
         assert observer._emit_entropy is True  # Always emits errors
 
-    def test_create_panopticon_dashboard(self, temp_wire_dir):
+    def test_create_panopticon_dashboard(self, temp_wire_dir) -> None:
         """Test create_panopticon_dashboard factory."""
         dashboard = create_panopticon_dashboard(
             compact=True,
@@ -821,7 +821,7 @@ class TestIntegrationScenarios:
     """Integration tests for common scenarios."""
 
     @pytest.mark.asyncio
-    async def test_full_observation_flow(self, temp_wire_dir):
+    async def test_full_observation_flow(self, temp_wire_dir) -> None:
         """Test full flow: observe → emit → read."""
         wire_dir = temp_wire_dir / "integration-test"
 
@@ -853,7 +853,7 @@ class TestIntegrationScenarios:
         assert len(panopticon._history) == 2
 
     @pytest.mark.asyncio
-    async def test_dashboard_with_streaming(self, temp_wire_dir):
+    async def test_dashboard_with_streaming(self, temp_wire_dir) -> None:
         """Test dashboard with streaming panopticon."""
         panopticon = ObservablePanopticon(
             agent_name="dashboard-stream-test",
@@ -876,7 +876,7 @@ class TestIntegrationScenarios:
         # Stop
         await dashboard.stop()
 
-    def test_observer_chain(self, temp_wire_dir):
+    def test_observer_chain(self, temp_wire_dir) -> None:
         """Test chaining WireObserver with other observers."""
         observer = WireObserver(
             observer_id="chain-test",
@@ -896,7 +896,7 @@ class TestIntegrationScenarios:
         stream_file = temp_wire_dir / "chain-test" / "stream.log"
         assert stream_file.exists()
 
-    def test_multiple_panopticons(self, temp_wire_dir):
+    def test_multiple_panopticons(self, temp_wire_dir) -> None:
         """Test multiple panopticons with different wire directories."""
         p1 = ObservablePanopticon(
             agent_name="panopticon-1",

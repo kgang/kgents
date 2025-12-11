@@ -284,7 +284,7 @@ class MockLGent:
 class TestCycleConfig:
     """Tests for CycleConfig."""
 
-    def test_default_config(self):
+    def test_default_config(self) -> None:
         """Test default configuration values."""
         config = CycleConfig()
 
@@ -295,7 +295,7 @@ class TestCycleConfig:
         assert config.run_tests is True
         assert config.auto_rollback is True
 
-    def test_custom_config(self):
+    def test_custom_config(self) -> None:
         """Test custom configuration."""
         config = CycleConfig(
             agent_id="custom-agent",
@@ -309,7 +309,7 @@ class TestCycleConfig:
         assert config.max_mutations_per_cycle == 5
         assert config.min_intent_alignment == 0.5
 
-    def test_temperature_bounds(self):
+    def test_temperature_bounds(self) -> None:
         """Test temperature bound configuration."""
         config = CycleConfig(
             min_temperature=0.5,
@@ -328,7 +328,7 @@ class TestCycleConfig:
 class TestCycleInitialization:
     """Tests for cycle initialization."""
 
-    def test_default_initialization(self):
+    def test_default_initialization(self) -> None:
         """Test creating cycle with defaults."""
         cycle = ThermodynamicCycle()
 
@@ -338,14 +338,14 @@ class TestCycleInitialization:
         assert cycle.demon is not None
         assert cycle.library is not None
 
-    def test_custom_config_initialization(self, basic_config: CycleConfig):
+    def test_custom_config_initialization(self, basic_config: CycleConfig) -> None:
         """Test creating cycle with custom config."""
         cycle = ThermodynamicCycle(config=basic_config)
 
         assert cycle.temperature == basic_config.initial_temperature
         assert cycle.config.agent_id == "test-agent"
 
-    def test_injected_components(self):
+    def test_injected_components(self) -> None:
         """Test creating cycle with injected components."""
         mutator = Mutator(MutatorConfig(default_temperature=2.0))
         demon = TeleologicalDemon(DemonConfig(min_intent_alignment=0.6))
@@ -361,7 +361,7 @@ class TestCycleInitialization:
         assert cycle.demon is demon
         assert cycle.library is library
 
-    def test_external_integrations(self):
+    def test_external_integrations(self) -> None:
         """Test creating cycle with external integrations."""
         sun = MockSun(has_grant=True)
         market = MockMarket()
@@ -389,7 +389,7 @@ class TestCycleInitialization:
 class TestTemperatureControl:
     """Tests for temperature control."""
 
-    def test_temperature_setter_clamping(self):
+    def test_temperature_setter_clamping(self) -> None:
         """Test that temperature is clamped to bounds."""
         config = CycleConfig(min_temperature=0.1, max_temperature=5.0)
         cycle = ThermodynamicCycle(config=config)
@@ -403,7 +403,7 @@ class TestTemperatureControl:
         cycle.temperature = 2.5
         assert cycle.temperature == 2.5
 
-    def test_temperature_affects_mutator(self):
+    def test_temperature_affects_mutator(self) -> None:
         """Test that cycle temperature syncs with mutator."""
         cycle = ThermodynamicCycle()
         cycle.temperature = 2.0
@@ -411,7 +411,7 @@ class TestTemperatureControl:
         # Mutator should use cycle temperature during mutation
         assert cycle.mutator is not None
 
-    def test_thermo_state_tracking(self):
+    def test_thermo_state_tracking(self) -> None:
         """Test thermodynamic state tracking."""
         cycle = ThermodynamicCycle()
 
@@ -431,7 +431,7 @@ class TestTemperatureControl:
 class TestIntent:
     """Tests for Intent management."""
 
-    def test_set_intent(self, intent: Intent):
+    def test_set_intent(self, intent: Intent) -> None:
         """Test setting Intent."""
         cycle = ThermodynamicCycle()
         cycle.set_intent(intent)
@@ -440,7 +440,7 @@ class TestIntent:
         assert cycle.demon.intent is intent
 
     @pytest.mark.asyncio
-    async def test_infer_intent_without_lgent(self):
+    async def test_infer_intent_without_lgent(self) -> None:
         """Test Intent inference without L-gent."""
         cycle = ThermodynamicCycle()
 
@@ -455,7 +455,7 @@ class TestIntent:
         assert intent.embedding == []  # No L-gent
 
     @pytest.mark.asyncio
-    async def test_infer_intent_with_lgent(self):
+    async def test_infer_intent_with_lgent(self) -> None:
         """Test Intent inference with L-gent."""
         l_gent = MockLGent()
         cycle = ThermodynamicCycle(l_gent=l_gent)
@@ -477,7 +477,7 @@ class TestSunPhase:
     """Tests for SUN phase."""
 
     @pytest.mark.asyncio
-    async def test_sun_phase_no_grant(self):
+    async def test_sun_phase_no_grant(self) -> None:
         """Test SUN phase without grant system."""
         cycle = ThermodynamicCycle()
         result = await cycle._phase_sun(grant_id=None)
@@ -487,7 +487,7 @@ class TestSunPhase:
         assert result.details["has_grant"] is False
 
     @pytest.mark.asyncio
-    async def test_sun_phase_with_grant(self):
+    async def test_sun_phase_with_grant(self) -> None:
         """Test SUN phase with active grant."""
         sun = MockSun(has_grant=True, budget=10000)
         cycle = ThermodynamicCycle(sun=sun)
@@ -506,7 +506,7 @@ class TestMutatePhase:
     """Tests for MUTATE phase."""
 
     @pytest.mark.asyncio
-    async def test_mutate_phase_basic(self, simple_code: str, temp_file: Path):
+    async def test_mutate_phase_basic(self, simple_code: str, temp_file: Path) -> None:
         """Test basic mutation generation."""
         cycle = ThermodynamicCycle()
         result, phages = await cycle._phase_mutate(simple_code, temp_file)
@@ -534,7 +534,7 @@ class TestSelectPhase:
     """Tests for SELECT phase."""
 
     @pytest.mark.asyncio
-    async def test_select_phase_filters_phages(self, intent: Intent):
+    async def test_select_phase_filters_phages(self, intent: Intent) -> None:
         """Test that selection filters phages."""
         cycle = ThermodynamicCycle()
         cycle.set_intent(intent)
@@ -563,7 +563,7 @@ class TestSelectPhase:
         assert "selection_rate" in result.details
 
     @pytest.mark.asyncio
-    async def test_select_phase_rejection_reasons(self):
+    async def test_select_phase_rejection_reasons(self) -> None:
         """Test that rejection reasons are tracked."""
         config = CycleConfig(min_intent_alignment=0.9)  # High threshold
         cycle = ThermodynamicCycle(config=config)
@@ -593,7 +593,7 @@ class TestWagerPhase:
     """Tests for WAGER phase."""
 
     @pytest.mark.asyncio
-    async def test_wager_phase_with_staking(self):
+    async def test_wager_phase_with_staking(self) -> None:
         """Test wager phase with staking pool."""
         staking = MockStaking()
         cycle = ThermodynamicCycle(staking=staking)
@@ -617,7 +617,7 @@ class TestWagerPhase:
         assert result.details["total_staked"] > 0
 
     @pytest.mark.asyncio
-    async def test_wager_phase_with_market(self):
+    async def test_wager_phase_with_market(self) -> None:
         """Test wager phase with market quotes."""
         market = MockMarket(base_odds=1.5)
         cycle = ThermodynamicCycle(market=market)
@@ -644,7 +644,7 @@ class TestInfectPhase:
     """Tests for INFECT phase."""
 
     @pytest.mark.asyncio
-    async def test_infect_phase_basic(self, temp_file: Path):
+    async def test_infect_phase_basic(self, temp_file: Path) -> None:
         """Test basic infection phase."""
         config = CycleConfig(
             run_tests=False,
@@ -678,7 +678,7 @@ class TestPayoffPhase:
     """Tests for PAYOFF phase."""
 
     @pytest.mark.asyncio
-    async def test_payoff_phase_success(self):
+    async def test_payoff_phase_success(self) -> None:
         """Test payoff phase with successful mutation."""
         staking = MockStaking()
         market = MockMarket()
@@ -718,7 +718,7 @@ class TestPayoffPhase:
         assert len(market.settlements) == 1
 
     @pytest.mark.asyncio
-    async def test_payoff_phase_failure(self):
+    async def test_payoff_phase_failure(self) -> None:
         """Test payoff phase with failed mutation."""
         staking = MockStaking()
         cycle = ThermodynamicCycle(staking=staking)
@@ -839,7 +839,7 @@ class TestFullCycle:
 class TestCycleResult:
     """Tests for CycleResult."""
 
-    def test_success_rate_calculation(self):
+    def test_success_rate_calculation(self) -> None:
         """Test success rate calculation."""
         result = CycleResult(
             cycle_id="test",
@@ -853,7 +853,7 @@ class TestCycleResult:
 
         assert result.success_rate == 0.7
 
-    def test_success_rate_empty(self):
+    def test_success_rate_empty(self) -> None:
         """Test success rate with no mutations."""
         result = CycleResult(
             cycle_id="test",
@@ -865,7 +865,7 @@ class TestCycleResult:
 
         assert result.success_rate == 0.0
 
-    def test_roi_calculation(self):
+    def test_roi_calculation(self) -> None:
         """Test ROI calculation."""
         result = CycleResult(
             cycle_id="test",
@@ -880,7 +880,7 @@ class TestCycleResult:
 
         assert result.roi == 1.2  # (150-30)/100
 
-    def test_roi_no_stake(self):
+    def test_roi_no_stake(self) -> None:
         """Test ROI with no stake."""
         result = CycleResult(
             cycle_id="test",
@@ -901,12 +901,12 @@ class TestCycleResult:
 class TestFactoryFunctions:
     """Tests for factory functions."""
 
-    def test_create_cycle(self):
+    def test_create_cycle(self) -> None:
         """Test create_cycle factory."""
         cycle = create_cycle(temperature=2.0)
         assert cycle.temperature == 2.0
 
-    def test_create_conservative_cycle(self):
+    def test_create_conservative_cycle(self) -> None:
         """Test create_conservative_cycle factory."""
         cycle = create_conservative_cycle()
 
@@ -914,7 +914,7 @@ class TestFactoryFunctions:
         assert cycle.config.cooling_rate == 0.1
         assert cycle.config.min_intent_alignment == 0.5
 
-    def test_create_exploratory_cycle(self):
+    def test_create_exploratory_cycle(self) -> None:
         """Test create_exploratory_cycle factory."""
         cycle = create_exploratory_cycle()
 
@@ -922,7 +922,7 @@ class TestFactoryFunctions:
         assert cycle.config.max_mutations_per_cycle == 20
         assert cycle.config.require_gibbs_viable is False
 
-    def test_create_full_cycle(self):
+    def test_create_full_cycle(self) -> None:
         """Test create_full_cycle factory."""
         sun = MockSun()
         market = MockMarket()
@@ -954,7 +954,7 @@ class TestEvolutionAgent:
     """Tests for EvolutionAgent wrapper."""
 
     @pytest.mark.asyncio
-    async def test_agent_evolve(self, temp_file: Path):
+    async def test_agent_evolve(self, temp_file: Path) -> None:
         """Test agent evolve method."""
         config = CycleConfig(
             run_tests=False,
@@ -972,7 +972,7 @@ class TestEvolutionAgent:
         assert isinstance(results[0], CycleResult)
 
     @pytest.mark.asyncio
-    async def test_agent_suggest(self, simple_code: str):
+    async def test_agent_suggest(self, simple_code: str) -> None:
         """Test agent suggest method."""
         agent = EvolutionAgent()
 
@@ -984,14 +984,14 @@ class TestEvolutionAgent:
         assert isinstance(suggestions, list)
         # May or may not have suggestions depending on code analysis
 
-    def test_agent_cycle_access(self):
+    def test_agent_cycle_access(self) -> None:
         """Test agent provides access to cycle."""
         agent = EvolutionAgent()
 
         assert isinstance(agent.cycle, ThermodynamicCycle)
 
     @pytest.mark.asyncio
-    async def test_agent_multiple_cycles(self, temp_file: Path):
+    async def test_agent_multiple_cycles(self, temp_file: Path) -> None:
         """Test running multiple cycles."""
         config = CycleConfig(
             run_tests=False,
@@ -1017,7 +1017,7 @@ class TestCycleIntegration:
     """Integration tests for cycle with all components."""
 
     @pytest.mark.asyncio
-    async def test_library_updates(self, simple_code: str, temp_file: Path):
+    async def test_library_updates(self, simple_code: str, temp_file: Path) -> None:
         """Test that library is updated during cycle."""
         library = ViralLibrary()
         config = CycleConfig(
@@ -1039,7 +1039,7 @@ class TestCycleIntegration:
         assert library.total_patterns >= initial_patterns
 
     @pytest.mark.asyncio
-    async def test_demon_stats_updated(self, simple_code: str, temp_file: Path):
+    async def test_demon_stats_updated(self, simple_code: str, temp_file: Path) -> None:
         """Test that demon stats are updated during cycle."""
         demon = TeleologicalDemon()
         cycle = ThermodynamicCycle(demon=demon)
@@ -1064,7 +1064,7 @@ class TestErrorHandling:
     """Tests for error handling."""
 
     @pytest.mark.asyncio
-    async def test_invalid_code_handling(self, temp_file: Path):
+    async def test_invalid_code_handling(self, temp_file: Path) -> None:
         """Test handling of invalid Python code."""
         cycle = ThermodynamicCycle()
 
@@ -1079,7 +1079,7 @@ class TestErrorHandling:
         assert isinstance(result, CycleResult)
 
     @pytest.mark.asyncio
-    async def test_nonexistent_file_handling(self):
+    async def test_nonexistent_file_handling(self) -> None:
         """Test handling of nonexistent target file."""
         cycle = ThermodynamicCycle(
             config=CycleConfig(run_tests=False, run_type_check=False)
@@ -1109,7 +1109,7 @@ try:
 
         @given(temperature=st.floats(min_value=0.0, max_value=10.0))
         @settings(max_examples=20)
-        def test_temperature_bounds_property(self, temperature: float):
+        def test_temperature_bounds_property(self, temperature: float) -> None:
             """Test temperature is always within bounds."""
             config = CycleConfig(
                 min_temperature=0.1,
@@ -1125,7 +1125,7 @@ try:
             failures=st.integers(min_value=0, max_value=100),
         )
         @settings(max_examples=20)
-        def test_success_rate_property(self, successes: int, failures: int):
+        def test_success_rate_property(self, successes: int, failures: int) -> None:
             """Test success rate is always valid."""
             result = CycleResult(
                 cycle_id="test",

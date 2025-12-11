@@ -24,7 +24,7 @@ class User:
 
 
 @pytest.mark.asyncio
-async def test_lens_agent_focused_load():
+async def test_lens_agent_focused_load() -> None:
     """LensAgent loads sub-state through lens."""
     parent = VolatileAgent(_state={"users": {"alice": "data"}, "products": {}})
     lens_dgent = LensAgent(parent=parent, lens=key_lens("users"))
@@ -34,7 +34,7 @@ async def test_lens_agent_focused_load():
 
 
 @pytest.mark.asyncio
-async def test_lens_agent_focused_save():
+async def test_lens_agent_focused_save() -> None:
     """LensAgent saves sub-state, updates parent."""
     parent = VolatileAgent(_state={"users": {}, "products": {}})
     lens_dgent = LensAgent(parent=parent, lens=key_lens("users"))
@@ -52,7 +52,7 @@ async def test_lens_agent_focused_save():
 
 
 @pytest.mark.asyncio
-async def test_lens_agent_isolation():
+async def test_lens_agent_isolation() -> None:
     """LensAgent sees only sub-state, not full state."""
     parent = VolatileAgent(
         _state={
@@ -72,7 +72,7 @@ async def test_lens_agent_isolation():
 
 
 @pytest.mark.asyncio
-async def test_lens_agent_history():
+async def test_lens_agent_history() -> None:
     """LensAgent projects history through lens."""
     parent = VolatileAgent(_state={"count": 0, "other": "data"})
     lens_dgent = LensAgent(parent=parent, lens=key_lens("count"))
@@ -95,7 +95,7 @@ async def test_lens_agent_history():
 
 
 @pytest.mark.asyncio
-async def test_multiple_lens_agents_shared_parent():
+async def test_multiple_lens_agents_shared_parent() -> None:
     """Multiple LensAgents can share parent with different lenses."""
     parent = VolatileAgent(_state={"users": {}, "products": {}, "orders": {}})
 
@@ -126,7 +126,7 @@ async def test_multiple_lens_agents_shared_parent():
 
 
 @pytest.mark.asyncio
-async def test_lens_agent_with_composed_lens():
+async def test_lens_agent_with_composed_lens() -> None:
     """LensAgent works with composed lenses for deep access."""
     user_lens = key_lens("user")
     address_lens = key_lens("address")
@@ -161,7 +161,7 @@ async def test_lens_agent_with_composed_lens():
 
 
 @pytest.mark.asyncio
-async def test_lens_agent_with_dataclass():
+async def test_lens_agent_with_dataclass() -> None:
     """LensAgent works with dataclass states."""
     parent = VolatileAgent(
         _state=User(name="Alice", address=Address(city="NYC", zip="10001"))
@@ -190,7 +190,7 @@ async def test_lens_agent_with_dataclass():
 
 
 @pytest.mark.asyncio
-async def test_focused_convenience_function():
+async def test_focused_convenience_function() -> None:
     """focused() creates LensAgent correctly."""
     parent = VolatileAgent(_state={"a": 1, "b": 2})
     lens_dgent = focused(parent, key_lens("a"))
@@ -206,7 +206,7 @@ async def test_focused_convenience_function():
 
 
 @pytest.mark.asyncio
-async def test_lens_agent_none_value():
+async def test_lens_agent_none_value() -> None:
     """LensAgent handles None values correctly."""
     parent = VolatileAgent(_state={"value": None, "other": "data"})
     lens_dgent = LensAgent(parent=parent, lens=key_lens("value"))
@@ -219,7 +219,7 @@ async def test_lens_agent_none_value():
 
 
 @pytest.mark.asyncio
-async def test_lens_agent_empty_history():
+async def test_lens_agent_empty_history() -> None:
     """LensAgent handles empty history gracefully."""
     parent = VolatileAgent(_state={"count": 0})
     lens_dgent = LensAgent(parent=parent, lens=key_lens("count"))

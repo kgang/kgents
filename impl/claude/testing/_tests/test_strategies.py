@@ -29,7 +29,7 @@ class TestAgentStrategies:
     @pytest.mark.property
     @given(agent=simple_agents())
     @settings(max_examples=20)
-    def test_generated_agent_has_name(self, agent):
+    def test_generated_agent_has_name(self, agent) -> None:
         """Generated agents should have a name attribute."""
         assert hasattr(agent, "name")
         assert agent.name.startswith("Agent_")
@@ -38,7 +38,7 @@ class TestAgentStrategies:
     @given(agent=simple_agents())
     @settings(max_examples=20)
     @pytest.mark.asyncio
-    async def test_generated_agent_is_invokable(self, agent):
+    async def test_generated_agent_is_invokable(self, agent) -> None:
         """Generated agents should have invoke method."""
         assert hasattr(agent, "invoke")
         result = await agent.invoke(0)
@@ -47,7 +47,7 @@ class TestAgentStrategies:
     @pytest.mark.property
     @given(agents=agent_chains(min_length=2, max_length=5))
     @settings(max_examples=10)
-    def test_agent_chains_length(self, agents):
+    def test_agent_chains_length(self, agents) -> None:
         """Agent chains should have correct length."""
         assert 2 <= len(agents) <= 5
 
@@ -55,7 +55,7 @@ class TestAgentStrategies:
     @given(agents=agent_chains(min_length=2, max_length=5))
     @settings(max_examples=10)
     @pytest.mark.asyncio
-    async def test_agent_chains_composable(self, agents):
+    async def test_agent_chains_composable(self, agents) -> None:
         """Agent chains should be composable."""
         from functools import reduce
 
@@ -74,14 +74,14 @@ class TestDNAStrategies:
     @pytest.mark.property
     @given(dna=valid_dna())
     @settings(max_examples=30)
-    def test_valid_dna_passes_constraints(self, dna):
+    def test_valid_dna_passes_constraints(self, dna) -> None:
         """Valid DNA should pass all constraints."""
         assert 0 < dna.exploration_budget <= 0.5
 
     @pytest.mark.property
     @given(dna=invalid_dna())
     @settings(max_examples=30)
-    def test_invalid_dna_fails_constraints(self, dna):
+    def test_invalid_dna_fails_constraints(self, dna) -> None:
         """Invalid DNA should violate constraints."""
         # Either too low or too high
         assert dna.exploration_budget <= 0 or dna.exploration_budget > 0.5
@@ -93,7 +93,7 @@ class TestTypeStrategies:
     @pytest.mark.property
     @given(type_name=type_names())
     @settings(max_examples=50)
-    def test_type_names_are_strings(self, type_name):
+    def test_type_names_are_strings(self, type_name) -> None:
         """Generated type names should be strings."""
         assert isinstance(type_name, str)
         assert len(type_name) > 0
@@ -101,7 +101,7 @@ class TestTypeStrategies:
     @pytest.mark.property
     @given(type_name=type_names())
     @settings(max_examples=50)
-    def test_type_names_valid_format(self, type_name):
+    def test_type_names_valid_format(self, type_name) -> None:
         """Generated type names should have valid format."""
         # Either a base type or Generic[Base]
         base_types = ["int", "str", "float", "bool", "None", "Any"]

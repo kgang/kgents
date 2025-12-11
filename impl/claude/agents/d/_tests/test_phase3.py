@@ -45,7 +45,7 @@ class TestTransactionalDataAgent:
     """Tests for TransactionalDataAgent."""
 
     @pytest.fixture
-    def memory(self):
+    def memory(self) -> VolatileAgent:
         return VolatileAgent(_state={"count": 0})
 
     @pytest.fixture
@@ -53,20 +53,20 @@ class TestTransactionalDataAgent:
         return TransactionalDataAgent(memory)
 
     @pytest.mark.asyncio
-    async def test_load_without_transaction(self, txn_agent):
+    async def test_load_without_transaction(self, txn_agent) -> None:
         """Load returns underlying state when not in transaction."""
         state = await txn_agent.load()
         assert state == {"count": 0}
 
     @pytest.mark.asyncio
-    async def test_save_without_transaction(self, txn_agent):
+    async def test_save_without_transaction(self, txn_agent) -> None:
         """Save persists directly when not in transaction."""
         await txn_agent.save({"count": 5})
         state = await txn_agent.load()
         assert state == {"count": 5}
 
     @pytest.mark.asyncio
-    async def test_basic_transaction_commit(self, txn_agent):
+    async def test_basic_transaction_commit(self, txn_agent) -> None:
         """Transaction commits pending changes."""
         async with txn_agent.transaction():
             await txn_agent.save({"count": 10})
@@ -75,7 +75,7 @@ class TestTransactionalDataAgent:
         assert state == {"count": 10}
 
     @pytest.mark.asyncio
-    async def test_transaction_rollback_on_exception(self, txn_agent):
+    async def test_transaction_rollback_on_exception(self, txn_agent) -> None:
         """Transaction rolls back on exception."""
         with pytest.raises(ValueError):
             async with txn_agent.transaction():
@@ -87,7 +87,7 @@ class TestTransactionalDataAgent:
         assert state == {"count": 0}
 
     @pytest.mark.asyncio
-    async def test_explicit_rollback(self, txn_agent):
+    async def test_explicit_rollback(self, txn_agent) -> None:
         """Explicit rollback discards changes."""
         await txn_agent.begin()
         await txn_agent.save({"count": 10})
@@ -97,7 +97,7 @@ class TestTransactionalDataAgent:
         assert state == {"count": 0}
 
     @pytest.mark.asyncio
-    async def test_savepoint_create_and_rollback(self, txn_agent):
+    async def test_savepoint_create_and_rollback(self, txn_agent) -> None:
         """Savepoints allow partial rollback."""
         await txn_agent.begin()
         await txn_agent.save({"count": 5})
@@ -114,7 +114,7 @@ class TestTransactionalDataAgent:
         assert state == {"count": 5}
 
     @pytest.mark.asyncio
-    async def test_multiple_savepoints(self, txn_agent):
+    async def test_multiple_savepoints(self, txn_agent) -> None:
         """Multiple savepoints work correctly."""
         await txn_agent.begin()
         txn_agent.savepoint("sp1")
@@ -132,7 +132,7 @@ class TestTransactionalDataAgent:
         await txn_agent.commit()
 
     @pytest.mark.asyncio
-    async def test_savepoint_not_found(self, txn_agent):
+    async def test_savepoint_not_found(self, txn_agent) -> None:
         """Rollback to nonexistent savepoint raises error."""
         await txn_agent.begin()
         with pytest.raises(RollbackError):
@@ -140,7 +140,7 @@ class TestTransactionalDataAgent:
         await txn_agent.rollback()
 
     @pytest.mark.asyncio
-    async def test_nested_transactions_not_allowed(self, txn_agent):
+    async def test_nested_transactions_not_allowed(self, txn_agent) -> None:
         """Nested transactions raise error."""
         await txn_agent.begin()
         with pytest.raises(TransactionError):
@@ -148,7 +148,7 @@ class TestTransactionalDataAgent:
         await txn_agent.rollback()
 
     @pytest.mark.asyncio
-    async def test_transaction_log(self, txn_agent):
+    async def test_transaction_log(self, txn_agent) -> None:
         """Transaction operations are logged."""
         await txn_agent.begin()
         await txn_agent.save({"count": 1})
@@ -164,7 +164,7 @@ class TestTransactionalDataAgent:
         await txn_agent.rollback()
 
     @pytest.mark.asyncio
-    async def test_in_transaction_property(self, txn_agent):
+    async def test_in_transaction_property(self, txn_agent) -> None:
         """in_transaction property reflects transaction state."""
         assert not txn_agent.in_transaction
 
@@ -175,7 +175,7 @@ class TestTransactionalDataAgent:
         assert not txn_agent.in_transaction
 
     @pytest.mark.asyncio
-    async def test_savepoint_diff(self, txn_agent):
+    async def test_savepoint_diff(self, txn_agent) -> None:
         """Savepoint diff shows state changes."""
         await txn_agent.begin()
         await txn_agent.save({"count": 1})
@@ -200,7 +200,7 @@ class TestQueryableDataAgent:
     """Tests for QueryableDataAgent."""
 
     @pytest.fixture
-    def memory(self):
+    def memory(self) -> VolatileAgent:
         return VolatileAgent(
             _state={
                 "users": [
@@ -217,42 +217,42 @@ class TestQueryableDataAgent:
         return QueryableDataAgent(memory)
 
     @pytest.mark.asyncio
-    async def test_get_simple_path(self, qa):
+    async def test_get_simple_path(self, qa) -> None:
         """Get value at simple path."""
         debug = await qa.get("config.debug")
         assert debug is True
 
     @pytest.mark.asyncio
-    async def test_get_array_index(self, qa):
+    async def test_get_array_index(self, qa) -> None:
         """Get value at array index."""
         name = await qa.get("users[0].name")
         assert name == "Alice"
 
     @pytest.mark.asyncio
-    async def test_get_with_default(self, qa):
+    async def test_get_with_default(self, qa) -> None:
         """Get returns default for missing path."""
         value = await qa.get("nonexistent.path", default="default")
         assert value == "default"
 
     @pytest.mark.asyncio
-    async def test_exists_true(self, qa):
+    async def test_exists_true(self, qa) -> None:
         """Exists returns True for existing path."""
         assert await qa.exists("config.debug") is True
 
     @pytest.mark.asyncio
-    async def test_exists_false(self, qa):
+    async def test_exists_false(self, qa) -> None:
         """Exists returns False for missing path."""
         assert await qa.exists("config.nonexistent") is False
 
     @pytest.mark.asyncio
-    async def test_set_path(self, qa):
+    async def test_set_path(self, qa) -> None:
         """Set creates/updates path."""
         await qa.set("config.new_field", "new_value")
         value = await qa.get("config.new_field")
         assert value == "new_value"
 
     @pytest.mark.asyncio
-    async def test_query_with_filter(self, qa):
+    async def test_query_with_filter(self, qa) -> None:
         """Query filters results."""
         result = await qa.query(
             Query(
@@ -263,7 +263,7 @@ class TestQueryableDataAgent:
         assert result.count >= 0
 
     @pytest.mark.asyncio
-    async def test_find_with_predicate(self, qa):
+    async def test_find_with_predicate(self, qa) -> None:
         """Find returns matching items."""
         results = await qa.find("users", lambda u: u["age"] > 28)
         names = [r["name"] for r in results]
@@ -272,32 +272,32 @@ class TestQueryableDataAgent:
         assert "Bob" not in names
 
     @pytest.mark.asyncio
-    async def test_find_one(self, qa):
+    async def test_find_one(self, qa) -> None:
         """Find one returns first match."""
         result = await qa.find_one("users", lambda u: u["name"] == "Bob")
         assert result["name"] == "Bob"
         assert result["age"] == 25
 
     @pytest.mark.asyncio
-    async def test_count(self, qa):
+    async def test_count(self, qa) -> None:
         """Count returns collection size."""
         count = await qa.count("users")
         assert count == 3
 
     @pytest.mark.asyncio
-    async def test_sum(self, qa):
+    async def test_sum(self, qa) -> None:
         """Sum aggregates numeric values."""
         total = await qa.sum("users", "age")
         assert total == 90  # 30 + 25 + 35
 
     @pytest.mark.asyncio
-    async def test_avg(self, qa):
+    async def test_avg(self, qa) -> None:
         """Avg computes average."""
         avg = await qa.avg("users", "age")
         assert avg == 30.0
 
     @pytest.mark.asyncio
-    async def test_min_max(self, qa):
+    async def test_min_max(self, qa) -> None:
         """Min/max find extremes."""
         min_age = await qa.min_value("users", "age")
         max_age = await qa.max_value("users", "age")
@@ -305,20 +305,20 @@ class TestQueryableDataAgent:
         assert max_age == 35
 
     @pytest.mark.asyncio
-    async def test_distinct(self, qa):
+    async def test_distinct(self, qa) -> None:
         """Distinct returns unique values."""
         roles = await qa.distinct("users", "role")
         assert set(roles) == {"admin", "user"}
 
     @pytest.mark.asyncio
-    async def test_group_by(self, qa):
+    async def test_group_by(self, qa) -> None:
         """Group by creates groups."""
         groups = await qa.group_by("users", "role")
         assert len(groups["admin"]) == 1
         assert len(groups["user"]) == 2
 
     @pytest.mark.asyncio
-    async def test_predicate_helpers(self, qa):
+    async def test_predicate_helpers(self, qa) -> None:
         """Predicate helper functions work."""
         # Test eq predicate
         p = eq("name", "Alice")
@@ -350,7 +350,7 @@ class TestObservableDataAgent:
     """Tests for ObservableDataAgent."""
 
     @pytest.fixture
-    def memory(self):
+    def memory(self) -> VolatileAgent:
         return VolatileAgent(_state={"count": 0})
 
     @pytest.fixture
@@ -358,7 +358,7 @@ class TestObservableDataAgent:
         return ObservableDataAgent(memory)
 
     @pytest.mark.asyncio
-    async def test_subscribe_and_notify(self, obs):
+    async def test_subscribe_and_notify(self, obs) -> None:
         """Subscribers receive change notifications."""
         received = []
 
@@ -376,7 +376,7 @@ class TestObservableDataAgent:
         await obs.unsubscribe(sub_id)
 
     @pytest.mark.asyncio
-    async def test_unsubscribe(self, obs):
+    async def test_unsubscribe(self, obs) -> None:
         """Unsubscribed callbacks don't receive notifications."""
         received = []
 
@@ -393,7 +393,7 @@ class TestObservableDataAgent:
         assert len(received) == 1  # No new notifications
 
     @pytest.mark.asyncio
-    async def test_path_subscription(self, obs):
+    async def test_path_subscription(self, obs) -> None:
         """Path subscriptions only notify for matching paths."""
         received = []
 
@@ -411,7 +411,7 @@ class TestObservableDataAgent:
         await obs.unsubscribe(sub_id)
 
     @pytest.mark.asyncio
-    async def test_batch_mode(self, obs):
+    async def test_batch_mode(self, obs) -> None:
         """Batch mode collects changes and notifies at end."""
         received = []
 
@@ -435,7 +435,7 @@ class TestObservableDataAgent:
         assert len(received) == 3
 
     @pytest.mark.asyncio
-    async def test_change_history(self, obs):
+    async def test_change_history(self, obs) -> None:
         """Change history is recorded."""
         await obs.load()
         await obs.save({"count": 1})
@@ -447,7 +447,7 @@ class TestObservableDataAgent:
         assert history[1].new_value == {"count": 1}
 
     @pytest.mark.asyncio
-    async def test_diff(self, obs):
+    async def test_diff(self, obs) -> None:
         """Diff computes state differences."""
         old = {"a": 1, "b": 2}
         new = {"a": 1, "b": 3, "c": 4}
@@ -464,7 +464,7 @@ class TestObservableDataAgent:
         assert "c" in paths
 
     @pytest.mark.asyncio
-    async def test_subscription_count(self, obs):
+    async def test_subscription_count(self, obs) -> None:
         """Subscription count is accurate."""
         assert obs.subscription_count() == 0
 
@@ -487,7 +487,7 @@ class TestUnifiedMemory:
     """Tests for UnifiedMemory."""
 
     @pytest.fixture
-    def memory(self):
+    def memory(self) -> VolatileAgent:
         return VolatileAgent(_state={"data": "initial"})
 
     @pytest.fixture
@@ -500,7 +500,7 @@ class TestUnifiedMemory:
         return UnifiedMemory(memory, config)
 
     @pytest.mark.asyncio
-    async def test_basic_load_save(self, unified):
+    async def test_basic_load_save(self, unified) -> None:
         """Basic load/save works."""
         state = await unified.load()
         assert state == {"data": "initial"}
@@ -510,7 +510,7 @@ class TestUnifiedMemory:
         assert state == {"data": "updated"}
 
     @pytest.mark.asyncio
-    async def test_semantic_associate_recall(self, unified):
+    async def test_semantic_associate_recall(self, unified) -> None:
         """Semantic association and recall work."""
         state = {"user": "alice"}
         await unified.save(state)
@@ -521,7 +521,7 @@ class TestUnifiedMemory:
         assert results[0][1] == 1.0  # Exact match has score 1.0
 
     @pytest.mark.asyncio
-    async def test_semantic_partial_recall(self, unified):
+    async def test_semantic_partial_recall(self, unified) -> None:
         """Partial semantic recall works."""
         state = {"data": "test"}
         await unified.save(state)
@@ -532,7 +532,7 @@ class TestUnifiedMemory:
         assert results[0][1] < 1.0  # Partial match has lower score
 
     @pytest.mark.asyncio
-    async def test_temporal_witness_replay(self, unified):
+    async def test_temporal_witness_replay(self, unified) -> None:
         """Temporal witness and replay work."""
         state1 = {"count": 1}
         state2 = {"count": 2}
@@ -547,7 +547,7 @@ class TestUnifiedMemory:
         assert timeline[1][2] == state2
 
     @pytest.mark.asyncio
-    async def test_temporal_events_by_label(self, unified):
+    async def test_temporal_events_by_label(self, unified) -> None:
         """Events can be filtered by label."""
         await unified.witness("login", {"user": "alice"})
         await unified.witness("logout", {"user": "alice"})
@@ -557,7 +557,7 @@ class TestUnifiedMemory:
         assert len(logins) == 2
 
     @pytest.mark.asyncio
-    async def test_relational_relate_and_query(self, unified):
+    async def test_relational_relate_and_query(self, unified) -> None:
         """Relational layer works."""
         await unified.relate("user-1", "owns", "doc-1")
         await unified.relate("user-1", "owns", "doc-2")
@@ -574,7 +574,7 @@ class TestUnifiedMemory:
         assert len(all_rels) == 3
 
     @pytest.mark.asyncio
-    async def test_relational_reverse_query(self, unified):
+    async def test_relational_reverse_query(self, unified) -> None:
         """Reverse relational query works."""
         await unified.relate("user-1", "owns", "doc-1")
 
@@ -584,7 +584,7 @@ class TestUnifiedMemory:
         assert ("owns", "user-1") in owners
 
     @pytest.mark.asyncio
-    async def test_trace_graph(self, unified):
+    async def test_trace_graph(self, unified) -> None:
         """Graph trace works."""
         await unified.relate("a", "to", "b")
         await unified.relate("b", "to", "c")
@@ -597,7 +597,7 @@ class TestUnifiedMemory:
         assert len(graph["edges"]) == 3
 
     @pytest.mark.asyncio
-    async def test_lineage_tracking(self, unified):
+    async def test_lineage_tracking(self, unified) -> None:
         """Lineage is tracked across saves."""
         id1 = await unified.save({"v": 1})
         id2 = await unified.save({"v": 2})
@@ -608,7 +608,7 @@ class TestUnifiedMemory:
         assert id1 in ancestors
 
     @pytest.mark.asyncio
-    async def test_layer_not_available_error(self, memory):
+    async def test_layer_not_available_error(self, memory) -> None:
         """Disabled layers raise LayerNotAvailableError."""
         config = MemoryConfig(enable_semantic=False)
         unified = UnifiedMemory(memory, config)
@@ -617,7 +617,7 @@ class TestUnifiedMemory:
             await unified.associate({}, "concept")
 
     @pytest.mark.asyncio
-    async def test_available_layers(self, unified):
+    async def test_available_layers(self, unified) -> None:
         """Available layers reflects config."""
         layers = unified.available_layers
         assert MemoryLayer.IMMEDIATE in layers
@@ -626,7 +626,7 @@ class TestUnifiedMemory:
         assert MemoryLayer.RELATIONAL in layers
 
     @pytest.mark.asyncio
-    async def test_stats(self, unified):
+    async def test_stats(self, unified) -> None:
         """Stats returns memory statistics."""
         await unified.save({"v": 1})
         await unified.associate({"v": 1}, "test")
@@ -640,7 +640,7 @@ class TestUnifiedMemory:
         assert stats["relationship_count"] >= 1
 
     @pytest.mark.asyncio
-    async def test_create_unified_memory_helper(self, memory):
+    async def test_create_unified_memory_helper(self, memory) -> None:
         """Factory function works."""
         unified = create_unified_memory(memory, enable_all=True)
         assert MemoryLayer.SEMANTIC in unified.available_layers
@@ -657,7 +657,7 @@ class TestPhase3Integration:
     """Integration tests combining multiple Phase 3 components."""
 
     @pytest.mark.asyncio
-    async def test_transactional_with_observable(self):
+    async def test_transactional_with_observable(self) -> None:
         """Transactional changes notify observers."""
         memory = VolatileAgent(_state={"count": 0})
         obs = ObservableDataAgent(memory)
@@ -679,7 +679,7 @@ class TestPhase3Integration:
         assert received[0].new_value == {"count": 5}
 
     @pytest.mark.asyncio
-    async def test_queryable_with_unified(self):
+    async def test_queryable_with_unified(self) -> None:
         """Queryable works on UnifiedMemory."""
         memory = VolatileAgent(
             _state={
@@ -697,7 +697,7 @@ class TestPhase3Integration:
         assert active[0]["name"] == "Alice"
 
     @pytest.mark.asyncio
-    async def test_full_stack_workflow(self):
+    async def test_full_stack_workflow(self) -> None:
         """Full workflow using all Phase 3 components."""
         # Setup
         base = VolatileAgent(_state={"items": []})

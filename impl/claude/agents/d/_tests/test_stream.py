@@ -29,7 +29,7 @@ class TestStreamAgentBasics:
         return StreamAgent(fold=fold, initial=0)
 
     @pytest.fixture
-    def witness(self):
+    def witness(self) -> WitnessReport:
         """Create a test witness report."""
         return WitnessReport(
             observer_id="test",
@@ -37,14 +37,14 @@ class TestStreamAgentBasics:
             context={"test": True},
         )
 
-    async def test_append_and_load(self, counter_agent, witness):
+    async def test_append_and_load(self, counter_agent, witness) -> None:
         """Test appending events and loading state."""
         await counter_agent.append({"type": "increment", "amount": 5}, witness)
 
         state = await counter_agent.load()
         assert state == 5
 
-    async def test_multiple_events(self, counter_agent, witness):
+    async def test_multiple_events(self, counter_agent, witness) -> None:
         """Test multiple events fold correctly."""
         await counter_agent.append({"type": "increment", "amount": 5}, witness)
         await counter_agent.append({"type": "increment", "amount": 3}, witness)
@@ -53,7 +53,7 @@ class TestStreamAgentBasics:
         state = await counter_agent.load()
         assert state == 6  # 5 + 3 - 2
 
-    async def test_history_returns_states(self, counter_agent, witness):
+    async def test_history_returns_states(self, counter_agent, witness) -> None:
         """Test history returns historical states."""
         await counter_agent.append({"type": "increment", "amount": 1}, witness)
         await counter_agent.append({"type": "increment", "amount": 2}, witness)
@@ -63,7 +63,7 @@ class TestStreamAgentBasics:
         # States after each event: 1, 3, 6
         assert history == [6, 3, 1]  # Newest first
 
-    async def test_history_limit(self, counter_agent, witness):
+    async def test_history_limit(self, counter_agent, witness) -> None:
         """Test history respects limit."""
         for i in range(10):
             await counter_agent.append({"type": "increment", "amount": 1}, witness)
@@ -71,7 +71,7 @@ class TestStreamAgentBasics:
         history = await counter_agent.history(limit=3)
         assert len(history) == 3
 
-    async def test_event_count(self, counter_agent, witness):
+    async def test_event_count(self, counter_agent, witness) -> None:
         """Test event count."""
         assert await counter_agent.event_count() == 0
 
@@ -93,7 +93,7 @@ class TestTimeTravel:
 
         return StreamAgent(fold=fold, initial=[])
 
-    async def test_replay_to_timestamp(self, agent_with_events):
+    async def test_replay_to_timestamp(self, agent_with_events) -> None:
         """Test replaying to specific timestamp."""
         agent = agent_with_events
         witness = WitnessReport(observer_id="test", confidence=1.0)
@@ -111,7 +111,7 @@ class TestTimeTravel:
         # Due to timing, this may include event1 or event1+event2
         assert "event1" in state or len(state) >= 1
 
-    async def test_replay_range(self, agent_with_events):
+    async def test_replay_range(self, agent_with_events) -> None:
         """Test replaying a time range."""
         agent = agent_with_events
         witness = WitnessReport(observer_id="test", confidence=1.0)
@@ -124,7 +124,7 @@ class TestTimeTravel:
         state = await agent.replay(before, after)
         assert state == ["event1", "event2"]
 
-    async def test_replay_with_witnesses(self, agent_with_events):
+    async def test_replay_with_witnesses(self, agent_with_events) -> None:
         """Test replay returns witness reports."""
         agent = agent_with_events
         witness = WitnessReport(observer_id="observer1", confidence=0.8)
@@ -154,7 +154,7 @@ class TestDriftDetection:
 
         return StreamAgent(fold=fold, initial={"value": 50})
 
-    async def test_detect_drift_numeric(self, numeric_agent):
+    async def test_detect_drift_numeric(self, numeric_agent) -> None:
         """Test drift detection on numeric values."""
         agent = numeric_agent
         witness = WitnessReport(observer_id="test", confidence=1.0)
@@ -177,7 +177,7 @@ class TestDriftDetection:
         assert report.drift_detected is True
         assert report.drift_magnitude > 0.5
 
-    async def test_detect_drift_stable(self, numeric_agent):
+    async def test_detect_drift_stable(self, numeric_agent) -> None:
         """Test drift detection when stable."""
         agent = numeric_agent
         witness = WitnessReport(observer_id="test", confidence=1.0)
@@ -195,7 +195,7 @@ class TestDriftDetection:
         assert report.drift_detected is False
         assert report.drift_magnitude < 0.3
 
-    async def test_detect_drift_insufficient_data(self):
+    async def test_detect_drift_insufficient_data(self) -> None:
         """Test drift detection with insufficient data."""
 
         def fold(state, event):
@@ -227,7 +227,7 @@ class TestMomentumTracking:
 
         return StreamAgent(fold=fold, initial=0.0)
 
-    async def test_momentum_increasing(self, momentum_agent):
+    async def test_momentum_increasing(self, momentum_agent) -> None:
         """Test momentum when increasing."""
         agent = momentum_agent
         witness = WitnessReport(observer_id="test", confidence=0.9)
@@ -245,7 +245,7 @@ class TestMomentumTracking:
         assert momentum.magnitude > 0
         assert momentum.confidence > 0.8
 
-    async def test_momentum_decreasing(self, momentum_agent):
+    async def test_momentum_decreasing(self, momentum_agent) -> None:
         """Test momentum when decreasing."""
         agent = momentum_agent
         witness = WitnessReport(observer_id="test", confidence=0.9)
@@ -262,7 +262,7 @@ class TestMomentumTracking:
         assert momentum.direction == "decreasing"
         assert momentum.magnitude > 0
 
-    async def test_momentum_stable(self, momentum_agent):
+    async def test_momentum_stable(self, momentum_agent) -> None:
         """Test momentum when stable."""
         agent = momentum_agent
         witness = WitnessReport(observer_id="test", confidence=0.9)
@@ -283,7 +283,7 @@ class TestMomentumTracking:
 class TestEntropyMeasurement:
     """Entropy (chaos vs stability) measurement."""
 
-    async def test_entropy_high(self):
+    async def test_entropy_high(self) -> None:
         """Test high entropy (rapid change)."""
 
         def fold(state, event):
@@ -307,7 +307,7 @@ class TestEntropyMeasurement:
         # Entropy should be meaningful (anomaly contributes 0.32)
         assert entropy > 0.3
 
-    async def test_entropy_low(self):
+    async def test_entropy_low(self) -> None:
         """Test low entropy (stable)."""
 
         def fold(state, event):
@@ -326,7 +326,7 @@ class TestEntropyMeasurement:
         entropy = await agent.entropy(window=timedelta(hours=1))
         assert entropy < 0.5
 
-    async def test_entropy_empty(self):
+    async def test_entropy_empty(self) -> None:
         """Test entropy when no events."""
 
         def fold(state, event):
@@ -341,7 +341,7 @@ class TestEntropyMeasurement:
 class TestEventHistory:
     """Event history queries."""
 
-    async def test_event_history_filter(self):
+    async def test_event_history_filter(self) -> None:
         """Test filtering event history."""
 
         def fold(state, event):
@@ -359,7 +359,7 @@ class TestEventHistory:
         assert len(history) == 2
         assert all(e["type"] == "a" for _, e, _ in history)
 
-    async def test_events_since(self):
+    async def test_events_since(self) -> None:
         """Test getting events since timestamp."""
 
         def fold(state, event):
@@ -381,7 +381,7 @@ class TestEventHistory:
 class TestWitnessReport:
     """Tests for WitnessReport dataclass."""
 
-    def test_witness_report_valid(self):
+    def test_witness_report_valid(self) -> None:
         """Test valid witness report."""
         report = WitnessReport(
             observer_id="test",
@@ -395,7 +395,7 @@ class TestWitnessReport:
         assert report.context == {"key": "value"}
         assert report.anomaly_score == 0.2
 
-    def test_witness_report_invalid_confidence(self):
+    def test_witness_report_invalid_confidence(self) -> None:
         """Test invalid confidence raises error."""
         with pytest.raises(ValueError, match="Confidence"):
             WitnessReport(observer_id="test", confidence=1.5)
@@ -407,7 +407,7 @@ class TestWitnessReport:
 class TestStreamAgentPersistence:
     """Persistence tests."""
 
-    async def test_persistence_round_trip(self):
+    async def test_persistence_round_trip(self) -> None:
         """Test save and load from disk."""
         with tempfile.TemporaryDirectory() as tmpdir:
             path = Path(tmpdir) / "stream.json"
@@ -433,7 +433,7 @@ class TestStreamAgentPersistence:
             count = await agent2.event_count()
             assert count == 2
 
-    async def test_persistence_preserves_witnesses(self):
+    async def test_persistence_preserves_witnesses(self) -> None:
         """Test that witness reports are preserved."""
         with tempfile.TemporaryDirectory() as tmpdir:
             path = Path(tmpdir) / "stream.json"
@@ -464,7 +464,7 @@ class TestStreamAgentPersistence:
 class TestBoundedEventLog:
     """Test bounded event log (max_events)."""
 
-    async def test_max_events_enforced(self):
+    async def test_max_events_enforced(self) -> None:
         """Test that max_events limit is enforced."""
 
         def fold(state, event):
@@ -484,7 +484,7 @@ class TestBoundedEventLog:
 class TestSaveMethod:
     """Test save() method (DataAgent protocol compatibility)."""
 
-    async def test_save_creates_synthetic_event(self):
+    async def test_save_creates_synthetic_event(self) -> None:
         """Test save() creates synthetic state_set event."""
 
         def fold(state, event):

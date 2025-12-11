@@ -31,7 +31,7 @@ from agents.l.catalog import EntityType as LEntityType
 class TestArchetype:
     """Tests for Archetype data structure."""
 
-    def test_create_archetype(self):
+    def test_create_archetype(self) -> None:
         """Test basic archetype creation."""
         arch = Archetype(
             id="test",
@@ -44,7 +44,7 @@ class TestArchetype:
         assert arch.symbol == "T"
         assert arch.level == ArchetypeLevel.EXPERT
 
-    def test_archetype_defaults(self):
+    def test_archetype_defaults(self) -> None:
         """Test archetype default values."""
         arch = Archetype(id="x", name="X", symbol="X")
         assert arch.level == ArchetypeLevel.JOURNEYMAN
@@ -53,7 +53,7 @@ class TestArchetype:
         assert arch.token_cost == 100
         assert arch.entropy_cost == 0.1
 
-    def test_level_display(self):
+    def test_level_display(self) -> None:
         """Test level display string."""
         arch = Archetype(
             id="x",
@@ -63,14 +63,14 @@ class TestArchetype:
         )
         assert arch.level_display == "lvl.5"
 
-    def test_archetype_levels(self):
+    def test_archetype_levels(self) -> None:
         """Test all archetype levels."""
         levels = list(ArchetypeLevel)
         assert len(levels) == 5
         assert ArchetypeLevel.NOVICE.value == 1
         assert ArchetypeLevel.MASTER.value == 5
 
-    def test_default_archetypes(self):
+    def test_default_archetypes(self) -> None:
         """Test that default archetypes are valid."""
         assert len(DEFAULT_ARCHETYPES) >= 5
         for arch in DEFAULT_ARCHETYPES:
@@ -83,14 +83,14 @@ class TestArchetype:
 class TestPipelineSlot:
     """Tests for PipelineSlot."""
 
-    def test_empty_slot(self):
+    def test_empty_slot(self) -> None:
         """Test empty slot."""
         slot = PipelineSlot()
         assert slot.is_empty
         assert slot.symbol == "·"
         assert slot.name == "(empty)"
 
-    def test_slot_with_archetype(self):
+    def test_slot_with_archetype(self) -> None:
         """Test slot with archetype."""
         arch = Archetype(id="x", name="XAgent", symbol="X")
         slot = PipelineSlot(archetype=arch)
@@ -98,7 +98,7 @@ class TestPipelineSlot:
         assert slot.symbol == "X"
         assert slot.name == "XAgent"
 
-    def test_slot_rune(self):
+    def test_slot_rune(self) -> None:
         """Test slot rune (placeholder)."""
         slot = PipelineSlot(is_rune=True)
         assert not slot.is_empty
@@ -109,7 +109,7 @@ class TestPipelineSlot:
 class TestPipeline:
     """Tests for Pipeline composition."""
 
-    def test_empty_pipeline(self):
+    def test_empty_pipeline(self) -> None:
         """Test empty pipeline."""
         pipe = Pipeline()
         assert len(pipe.slots) == 0
@@ -117,7 +117,7 @@ class TestPipeline:
         assert pipe.total_entropy_cost == 0
         assert pipe.composition_string == "(empty)"
 
-    def test_add_archetype(self):
+    def test_add_archetype(self) -> None:
         """Test adding archetype to pipeline."""
         pipe = Pipeline()
         arch = Archetype(id="x", name="X", symbol="X", token_cost=150)
@@ -126,14 +126,14 @@ class TestPipeline:
         assert pipe.slots[0].archetype == arch
         assert pipe.total_token_cost == 150
 
-    def test_add_rune(self):
+    def test_add_rune(self) -> None:
         """Test adding slot rune."""
         pipe = Pipeline()
         pipe.add_rune()
         assert len(pipe.slots) == 1
         assert pipe.slots[0].is_rune
 
-    def test_remove_slot(self):
+    def test_remove_slot(self) -> None:
         """Test removing slot."""
         pipe = Pipeline()
         arch = Archetype(id="x", name="X", symbol="X")
@@ -145,14 +145,14 @@ class TestPipeline:
         assert removed.archetype == arch
         assert len(pipe.slots) == 1
 
-    def test_remove_invalid_index(self):
+    def test_remove_invalid_index(self) -> None:
         """Test removing from invalid index."""
         pipe = Pipeline()
         assert pipe.remove(0) is None
         assert pipe.remove(-1) is None
         assert pipe.remove(10) is None
 
-    def test_clear_pipeline(self):
+    def test_clear_pipeline(self) -> None:
         """Test clearing pipeline."""
         pipe = Pipeline()
         pipe.add(Archetype(id="a", name="A", symbol="A"))
@@ -160,7 +160,7 @@ class TestPipeline:
         pipe.clear()
         assert len(pipe.slots) == 0
 
-    def test_composition_string(self):
+    def test_composition_string(self) -> None:
         """Test composition string generation."""
         pipe = Pipeline()
         pipe.add(Archetype(id="a", name="Foo", symbol="F"))
@@ -169,7 +169,7 @@ class TestPipeline:
 
         assert pipe.composition_string == "Foo >> Bar >> Baz"
 
-    def test_composition_string_with_runes(self):
+    def test_composition_string_with_runes(self) -> None:
         """Test composition string with slot runes."""
         pipe = Pipeline()
         pipe.add(Archetype(id="a", name="Foo", symbol="F"))
@@ -178,7 +178,7 @@ class TestPipeline:
 
         assert pipe.composition_string == "Foo >> ? >> Bar"
 
-    def test_total_costs(self):
+    def test_total_costs(self) -> None:
         """Test total cost calculation."""
         pipe = Pipeline()
         pipe.add(
@@ -196,20 +196,20 @@ class TestPipeline:
 class TestPipelineTypeCheck:
     """Tests for pipeline type checking."""
 
-    def test_type_check_empty(self):
+    def test_type_check_empty(self) -> None:
         """Test type checking empty pipeline."""
         pipe = Pipeline()
         errors = pipe.type_check()
         assert errors == []
 
-    def test_type_check_single(self):
+    def test_type_check_single(self) -> None:
         """Test type checking single-slot pipeline."""
         pipe = Pipeline()
         pipe.add(Archetype(id="a", name="A", symbol="A"))
         errors = pipe.type_check()
         assert errors == []
 
-    def test_type_check_any_compatible(self):
+    def test_type_check_any_compatible(self) -> None:
         """Test that Any type is compatible with anything."""
         pipe = Pipeline()
         pipe.add(Archetype(id="a", name="A", symbol="A", output_type="Foo"))
@@ -217,7 +217,7 @@ class TestPipelineTypeCheck:
         errors = pipe.type_check()
         assert errors == []
 
-    def test_type_check_matching_types(self):
+    def test_type_check_matching_types(self) -> None:
         """Test matching types are compatible."""
         pipe = Pipeline()
         pipe.add(Archetype(id="a", name="A", symbol="A", output_type="Data"))
@@ -225,7 +225,7 @@ class TestPipelineTypeCheck:
         errors = pipe.type_check()
         assert errors == []
 
-    def test_type_check_mismatch(self):
+    def test_type_check_mismatch(self) -> None:
         """Test type mismatch detection."""
         pipe = Pipeline()
         pipe.add(Archetype(id="a", name="Foo", symbol="F", output_type="String"))
@@ -236,7 +236,7 @@ class TestPipelineTypeCheck:
         assert "Foo" in errors[0]
         assert "Bar" in errors[0]
 
-    def test_type_check_multiple_errors(self):
+    def test_type_check_multiple_errors(self) -> None:
         """Test multiple type mismatches."""
         pipe = Pipeline()
         pipe.add(Archetype(id="a", name="A", symbol="A", output_type="X"))
@@ -251,7 +251,7 @@ class TestPipelineTypeCheck:
 class TestForgeViewState:
     """Tests for ForgeViewState."""
 
-    def test_initial_state(self):
+    def test_initial_state(self) -> None:
         """Test initial state."""
         state = ForgeViewState()
         assert state.inventory == []
@@ -260,13 +260,13 @@ class TestForgeViewState:
         assert state.pipeline_cursor == 0
         assert state.active_panel == "inventory"
 
-    def test_state_with_inventory(self):
+    def test_state_with_inventory(self) -> None:
         """Test state with inventory."""
         archs = [Archetype(id="a", name="A", symbol="A")]
         state = ForgeViewState(inventory=archs)
         assert len(state.inventory) == 1
 
-    def test_move_cursor_inventory(self):
+    def test_move_cursor_inventory(self) -> None:
         """Test moving cursor in inventory."""
         archs = [
             Archetype(id="a", name="A", symbol="A"),
@@ -294,7 +294,7 @@ class TestForgeViewState:
         state.move_cursor(-1)
         assert state.inventory_cursor == 0
 
-    def test_move_cursor_pipeline(self):
+    def test_move_cursor_pipeline(self) -> None:
         """Test moving cursor in pipeline."""
         state = ForgeViewState()
         state.active_panel = "pipeline"
@@ -304,7 +304,7 @@ class TestForgeViewState:
         state.move_cursor(1)
         assert state.pipeline_cursor == 1
 
-    def test_switch_panel(self):
+    def test_switch_panel(self) -> None:
         """Test switching between panels."""
         state = ForgeViewState()
         assert state.active_panel == "inventory"
@@ -315,7 +315,7 @@ class TestForgeViewState:
         state.switch_panel()
         assert state.active_panel == "inventory"
 
-    def test_add_selected_to_pipeline(self):
+    def test_add_selected_to_pipeline(self) -> None:
         """Test adding selected archetype to pipeline."""
         archs = [
             Archetype(id="a", name="A", symbol="A"),
@@ -329,20 +329,20 @@ class TestForgeViewState:
         assert len(state.pipeline.slots) == 1
         assert state.pipeline.slots[0].archetype.id == "b"
 
-    def test_add_from_empty_inventory(self):
+    def test_add_from_empty_inventory(self) -> None:
         """Test adding from empty inventory."""
         state = ForgeViewState()
         result = state.add_selected_to_pipeline()
         assert result is False
 
-    def test_add_from_pipeline_panel(self):
+    def test_add_from_pipeline_panel(self) -> None:
         """Test adding when pipeline panel is active (should fail)."""
         state = ForgeViewState(inventory=[Archetype(id="a", name="A", symbol="A")])
         state.active_panel = "pipeline"
         result = state.add_selected_to_pipeline()
         assert result is False
 
-    def test_remove_from_pipeline(self):
+    def test_remove_from_pipeline(self) -> None:
         """Test removing from pipeline."""
         state = ForgeViewState()
         state.active_panel = "pipeline"
@@ -353,7 +353,7 @@ class TestForgeViewState:
         assert result is True
         assert len(state.pipeline.slots) == 1
 
-    def test_remove_updates_cursor(self):
+    def test_remove_updates_cursor(self) -> None:
         """Test that removing updates cursor position."""
         state = ForgeViewState()
         state.active_panel = "pipeline"
@@ -367,7 +367,7 @@ class TestForgeViewState:
 class TestForgeViewRenderer:
     """Tests for ForgeViewRenderer."""
 
-    def test_render_empty_state(self):
+    def test_render_empty_state(self) -> None:
         """Test rendering empty state."""
         state = ForgeViewState()
         renderer = ForgeViewRenderer(state, use_color=False)
@@ -377,7 +377,7 @@ class TestForgeViewRenderer:
         assert "Inventory" in output
         assert "Pipeline" in output
 
-    def test_render_with_inventory(self):
+    def test_render_with_inventory(self) -> None:
         """Test rendering with inventory."""
         state = ForgeViewState(inventory=DEFAULT_ARCHETYPES[:3])
         renderer = ForgeViewRenderer(state, use_color=False)
@@ -387,7 +387,7 @@ class TestForgeViewRenderer:
         assert "Architect" in output
         assert "Builder" in output
 
-    def test_render_with_pipeline(self):
+    def test_render_with_pipeline(self) -> None:
         """Test rendering with pipeline."""
         state = create_demo_forge_state()
         renderer = ForgeViewRenderer(state, use_color=False)
@@ -397,7 +397,7 @@ class TestForgeViewRenderer:
         assert "tokens" in output
         assert "Entropy" in output
 
-    def test_render_type_errors(self):
+    def test_render_type_errors(self) -> None:
         """Test rendering type errors."""
         state = ForgeViewState()
         state.pipeline.add(Archetype(id="a", name="A", symbol="A", output_type="X"))
@@ -408,7 +408,7 @@ class TestForgeViewRenderer:
 
         assert "Type" in output or "mismatch" in output.lower()
 
-    def test_render_valid_pipeline(self):
+    def test_render_valid_pipeline(self) -> None:
         """Test rendering valid pipeline shows checkmark."""
         state = ForgeViewState()
         state.pipeline.add(Archetype(id="a", name="A", symbol="A", output_type="Any"))
@@ -419,7 +419,7 @@ class TestForgeViewRenderer:
 
         assert "type-checks" in output or "✓" in output
 
-    def test_render_color_disabled(self):
+    def test_render_color_disabled(self) -> None:
         """Test rendering without color codes."""
         state = create_demo_forge_state()
         renderer = ForgeViewRenderer(state, use_color=False)
@@ -428,7 +428,7 @@ class TestForgeViewRenderer:
         # Should not contain ANSI escape codes
         assert "\033[" not in output
 
-    def test_render_color_enabled(self):
+    def test_render_color_enabled(self) -> None:
         """Test rendering with color codes."""
         state = create_demo_forge_state()
         renderer = ForgeViewRenderer(state, use_color=True)
@@ -441,7 +441,7 @@ class TestForgeViewRenderer:
 class TestForgeViewKeyHandler:
     """Tests for ForgeViewKeyHandler."""
 
-    def test_move_up(self):
+    def test_move_up(self) -> None:
         """Test move up key."""
         state = ForgeViewState(inventory=DEFAULT_ARCHETYPES[:3])
         state.inventory_cursor = 1
@@ -451,7 +451,7 @@ class TestForgeViewKeyHandler:
         assert handled is True
         assert state.inventory_cursor == 0
 
-    def test_move_down(self):
+    def test_move_down(self) -> None:
         """Test move down key."""
         state = ForgeViewState(inventory=DEFAULT_ARCHETYPES[:3])
         handler = ForgeViewKeyHandler(state)
@@ -460,7 +460,7 @@ class TestForgeViewKeyHandler:
         assert handled is True
         assert state.inventory_cursor == 1
 
-    def test_switch_panel(self):
+    def test_switch_panel(self) -> None:
         """Test tab switches panel."""
         state = ForgeViewState()
         handler = ForgeViewKeyHandler(state)
@@ -469,7 +469,7 @@ class TestForgeViewKeyHandler:
         assert handled is True
         assert state.active_panel == "pipeline"
 
-    def test_add_to_pipeline(self):
+    def test_add_to_pipeline(self) -> None:
         """Test enter adds to pipeline."""
         state = ForgeViewState(inventory=DEFAULT_ARCHETYPES[:1])
         handler = ForgeViewKeyHandler(state)
@@ -477,7 +477,7 @@ class TestForgeViewKeyHandler:
         handler.handle("\r")
         assert len(state.pipeline.slots) == 1
 
-    def test_delete_from_pipeline(self):
+    def test_delete_from_pipeline(self) -> None:
         """Test d deletes from pipeline."""
         state = ForgeViewState()
         state.pipeline.add(Archetype(id="a", name="A", symbol="A"))
@@ -487,7 +487,7 @@ class TestForgeViewKeyHandler:
         handler.handle("d")
         assert len(state.pipeline.slots) == 0
 
-    def test_add_rune(self):
+    def test_add_rune(self) -> None:
         """Test + adds rune."""
         state = ForgeViewState()
         handler = ForgeViewKeyHandler(state)
@@ -496,7 +496,7 @@ class TestForgeViewKeyHandler:
         assert len(state.pipeline.slots) == 1
         assert state.pipeline.slots[0].is_rune
 
-    def test_clear_pipeline(self):
+    def test_clear_pipeline(self) -> None:
         """Test c clears pipeline."""
         state = ForgeViewState()
         state.pipeline.add(Archetype(id="a", name="A", symbol="A"))
@@ -506,7 +506,7 @@ class TestForgeViewKeyHandler:
         handler.handle("c")
         assert len(state.pipeline.slots) == 0
 
-    def test_execute_handler(self):
+    def test_execute_handler(self) -> None:
         """Test execute handler is called."""
         state = ForgeViewState()
         state.pipeline.add(Archetype(id="a", name="A", symbol="A"))
@@ -524,7 +524,7 @@ class TestForgeViewKeyHandler:
         assert executed_pipeline is not None
         assert executed_pipeline == state.pipeline
 
-    def test_exit_handler(self):
+    def test_exit_handler(self) -> None:
         """Test exit handler is called."""
         state = ForgeViewState()
         handler = ForgeViewKeyHandler(state)
@@ -540,7 +540,7 @@ class TestForgeViewKeyHandler:
 
         assert exited is True
 
-    def test_unknown_key(self):
+    def test_unknown_key(self) -> None:
         """Test unknown key is not handled."""
         state = ForgeViewState()
         handler = ForgeViewKeyHandler(state)
@@ -552,14 +552,14 @@ class TestForgeViewKeyHandler:
 class TestHelperFunctions:
     """Tests for helper functions."""
 
-    def test_create_demo_forge_state(self):
+    def test_create_demo_forge_state(self) -> None:
         """Test demo state creation."""
         state = create_demo_forge_state()
 
         assert len(state.inventory) > 0
         assert len(state.pipeline.slots) > 0
 
-    def test_render_forge_view_once(self):
+    def test_render_forge_view_once(self) -> None:
         """Test one-shot rendering."""
         state = create_demo_forge_state()
         output = render_forge_view_once(state, use_color=False)
@@ -568,7 +568,7 @@ class TestHelperFunctions:
         assert len(output) > 0
         assert "Inventory" in output
 
-    def test_render_forge_view_with_color(self):
+    def test_render_forge_view_with_color(self) -> None:
         """Test one-shot rendering with color."""
         state = create_demo_forge_state()
         output = render_forge_view_once(state, use_color=True)
@@ -579,7 +579,7 @@ class TestHelperFunctions:
 class TestIntegrationScenarios:
     """Integration tests for common use cases."""
 
-    def test_build_complete_pipeline(self):
+    def test_build_complete_pipeline(self) -> None:
         """Test building a complete pipeline from scratch."""
         state = ForgeViewState(inventory=DEFAULT_ARCHETYPES)
         handler = ForgeViewKeyHandler(state)
@@ -603,7 +603,7 @@ class TestIntegrationScenarios:
         assert "Ground" in state.pipeline.composition_string
         assert "Judge" in state.pipeline.composition_string
 
-    def test_edit_pipeline(self):
+    def test_edit_pipeline(self) -> None:
         """Test editing an existing pipeline."""
         state = create_demo_forge_state()
         original_count = len(state.pipeline.slots)
@@ -621,7 +621,7 @@ class TestIntegrationScenarios:
         handler.handle("+")
         assert state.pipeline.slots[-1].is_rune
 
-    def test_type_safe_pipeline(self):
+    def test_type_safe_pipeline(self) -> None:
         """Test building a type-safe pipeline."""
         ground = Archetype(
             id="ground",
@@ -657,7 +657,7 @@ class TestIntegrationScenarios:
         errors = state.pipeline.type_check()
         assert errors == []
 
-    def test_type_unsafe_pipeline(self):
+    def test_type_unsafe_pipeline(self) -> None:
         """Test detecting type errors in pipeline."""
         producer = Archetype(
             id="prod",
@@ -687,7 +687,7 @@ class TestIntegrationScenarios:
 class TestLgentIntegration:
     """Tests for L-gent catalog integration."""
 
-    def test_archetype_from_catalog_entry_novice(self):
+    def test_archetype_from_catalog_entry_novice(self) -> None:
         """Test converting a new catalog entry (novice level)."""
         entry = CatalogEntry(
             id="test-agent",
@@ -712,7 +712,7 @@ class TestLgentIntegration:
         assert arch.output_type == "Number"
         assert "test" in arch.tags
 
-    def test_archetype_from_catalog_entry_master(self):
+    def test_archetype_from_catalog_entry_master(self) -> None:
         """Test converting a well-used catalog entry (master level)."""
         entry = CatalogEntry(
             id="master-agent",
@@ -729,7 +729,7 @@ class TestLgentIntegration:
 
         assert arch.level == ArchetypeLevel.MASTER
 
-    def test_archetype_from_catalog_entry_expert(self):
+    def test_archetype_from_catalog_entry_expert(self) -> None:
         """Test expert level threshold."""
         entry = CatalogEntry(
             id="expert-agent",
@@ -746,7 +746,7 @@ class TestLgentIntegration:
 
         assert arch.level == ArchetypeLevel.EXPERT
 
-    def test_archetype_from_catalog_entry_journeyman(self):
+    def test_archetype_from_catalog_entry_journeyman(self) -> None:
         """Test journeyman level threshold."""
         entry = CatalogEntry(
             id="journey-agent",
@@ -763,7 +763,7 @@ class TestLgentIntegration:
 
         assert arch.level == ArchetypeLevel.JOURNEYMAN
 
-    def test_archetype_from_catalog_entry_apprentice(self):
+    def test_archetype_from_catalog_entry_apprentice(self) -> None:
         """Test apprentice level threshold."""
         entry = CatalogEntry(
             id="app-agent",
@@ -780,7 +780,7 @@ class TestLgentIntegration:
 
         assert arch.level == ArchetypeLevel.APPRENTICE
 
-    def test_archetype_default_types(self):
+    def test_archetype_default_types(self) -> None:
         """Test that missing types default to Any."""
         entry = CatalogEntry(
             id="any-agent",
@@ -798,7 +798,7 @@ class TestLgentIntegration:
         assert arch.input_type == "Any"
         assert arch.output_type == "Any"
 
-    def test_load_archetypes_from_entries(self):
+    def test_load_archetypes_from_entries(self) -> None:
         """Test loading archetypes from a list of entries (sync)."""
         entries = [
             CatalogEntry(
@@ -850,12 +850,12 @@ class TestLgentIntegration:
         assert "contract-1" not in ids
         assert "old-agent" not in ids
 
-    def test_load_archetypes_from_entries_empty(self):
+    def test_load_archetypes_from_entries_empty(self) -> None:
         """Test loading from empty list."""
         archetypes = load_archetypes_from_entries([])
         assert archetypes == []
 
-    def test_create_forge_state_from_entries(self):
+    def test_create_forge_state_from_entries(self) -> None:
         """Test creating ForgeViewState from entries."""
         entries = [
             CatalogEntry(
@@ -875,7 +875,7 @@ class TestLgentIntegration:
         assert len(state.inventory) == 1
         assert state.inventory[0].id == "agent-1"
 
-    def test_forge_state_empty_entries_with_defaults(self):
+    def test_forge_state_empty_entries_with_defaults(self) -> None:
         """Test that empty entries can use defaults."""
         archetypes = load_archetypes_from_entries([])
 
@@ -888,7 +888,7 @@ class TestLgentIntegration:
         # Should use DEFAULT_ARCHETYPES
         assert len(state.inventory) == len(DEFAULT_ARCHETYPES)
 
-    def test_token_cost_by_entity_type(self):
+    def test_token_cost_by_entity_type(self) -> None:
         """Test that different entity types get different token costs."""
         agent_entry = CatalogEntry(
             id="agent",
@@ -913,7 +913,7 @@ class TestLgentIntegration:
         assert agent_arch.token_cost == 150
         assert template_arch.token_cost == 200
 
-    def test_entropy_cost_scales_with_level(self):
+    def test_entropy_cost_scales_with_level(self) -> None:
         """Test that entropy cost increases with level."""
         novice_entry = CatalogEntry(
             id="novice",

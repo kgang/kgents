@@ -68,7 +68,7 @@ class TestDNA:
 class TestDNABasics:
     """Test DNA basic operations."""
 
-    def test_dna_creation(self):
+    def test_dna_creation(self) -> None:
         """Test DNA creation with defaults."""
         dna = TestDNA(agent_name="TestAgent")
 
@@ -76,7 +76,7 @@ class TestDNABasics:
         assert dna.confidence_threshold == 0.8
         assert dna.max_retries == 3
 
-    def test_dna_immutability(self):
+    def test_dna_immutability(self) -> None:
         """Test DNA is immutable after creation."""
         dna = TestDNA(agent_name="Immutable")
 
@@ -84,7 +84,7 @@ class TestDNABasics:
         with pytest.raises(Exception):  # FrozenInstanceError
             dna.agent_name = "Modified"  # type: ignore
 
-    def test_dna_validation(self):
+    def test_dna_validation(self) -> None:
         """Test DNA validation catches errors."""
         # Valid DNA
         valid = TestDNA(agent_name="Valid", confidence_threshold=0.5)
@@ -99,7 +99,7 @@ class TestDNABasics:
 class TestConstraintSystem:
     """Test Constraint validation system."""
 
-    def test_constraint_creation(self):
+    def test_constraint_creation(self) -> None:
         """Test Constraint creation."""
         constraint = Constraint(
             name="epistemic_humility",
@@ -109,7 +109,7 @@ class TestConstraintSystem:
 
         assert constraint.name == "epistemic_humility"
 
-    def test_constraint_validation_pass(self):
+    def test_constraint_validation_pass(self) -> None:
         """Test constraint passes valid DNA."""
         constraint = Constraint(
             name="humility",
@@ -123,7 +123,7 @@ class TestConstraintSystem:
         assert passed is True
         assert message == ""
 
-    def test_constraint_validation_fail(self):
+    def test_constraint_validation_fail(self) -> None:
         """Test constraint fails invalid DNA."""
         constraint = Constraint(
             name="humility",
@@ -137,7 +137,7 @@ class TestConstraintSystem:
         assert passed is False
         assert "Too confident" in message
 
-    def test_multiple_constraints(self):
+    def test_multiple_constraints(self) -> None:
         """Test multiple constraints are all checked."""
         constraints = [
             Constraint(
@@ -167,7 +167,7 @@ class TestConstraintSystem:
 class TestGerminationPattern:
     """Test DNA germination (validated construction)."""
 
-    def test_germination_with_validation(self):
+    def test_germination_with_validation(self) -> None:
         """Test germination validates before creating agent."""
 
         def germinate(dna: TestDNA) -> Result[TestDNA, str]:
@@ -186,7 +186,7 @@ class TestGerminationPattern:
         result = germinate(invalid)
         assert isinstance(result, Err)
 
-    def test_germination_with_constraints(self):
+    def test_germination_with_constraints(self) -> None:
         """Test germination applies constraint system."""
         constraints = [
             Constraint(
@@ -215,7 +215,7 @@ class TestGerminationPattern:
 class TestTraitExpression:
     """Test trait expression from DNA."""
 
-    def test_trait_derivation(self):
+    def test_trait_derivation(self) -> None:
         """Test derived traits from base DNA values."""
 
         @dataclass(frozen=True)
@@ -236,7 +236,7 @@ class TestTraitExpression:
         assert dna.first_retry_timeout == 4.0
         assert dna.second_retry_timeout == 8.0
 
-    def test_trait_composition(self):
+    def test_trait_composition(self) -> None:
         """Test traits compose from multiple DNA properties."""
 
         @dataclass(frozen=True)
@@ -264,7 +264,7 @@ class TestTraitExpression:
 class TestUmweltProjection:
     """Test Umwelt (agent world projection)."""
 
-    def test_umwelt_creation(self):
+    def test_umwelt_creation(self) -> None:
         """Test Umwelt creation with state and DNA."""
         umwelt = Umwelt(
             state={"key": "value"},
@@ -274,7 +274,7 @@ class TestUmweltProjection:
         assert umwelt.state["key"] == "value"
         assert umwelt.dna.agent_name == "UmweltAgent"
 
-    def test_umwelt_state_projection(self):
+    def test_umwelt_state_projection(self) -> None:
         """Test Umwelt projects subset of world state."""
         full_state = {
             "public": "visible",
@@ -296,7 +296,7 @@ class TestUmweltProjection:
 class TestGravityContracts:
     """Test Gravity (ground constraints) system."""
 
-    def test_gravity_contract_creation(self):
+    def test_gravity_contract_creation(self) -> None:
         """Test creating a gravity contract."""
 
         class NoNullsContract(GravityContract):
@@ -312,7 +312,7 @@ class TestGravityContracts:
         contract = NoNullsContract()
         assert contract.name == "no_nulls"
 
-    def test_gravity_contract_check_pass(self):
+    def test_gravity_contract_check_pass(self) -> None:
         """Test gravity contract passes valid output."""
 
         class PositiveContract(GravityContract):
@@ -335,7 +335,7 @@ class TestGravityContracts:
         assert contract.check(-1) is not None
         assert contract.check(0) is not None
 
-    def test_gravity_contract_composition(self):
+    def test_gravity_contract_composition(self) -> None:
         """Test composing multiple gravity contracts."""
 
         class NonEmptyContract(GravityContract):
@@ -372,7 +372,7 @@ class TestGravityContracts:
 class TestGroundedWrapper:
     """Test Grounded agent wrapper."""
 
-    def test_grounded_wrapper_creation(self):
+    def test_grounded_wrapper_creation(self) -> None:
         """Test creating a Grounded wrapper."""
 
         class SimpleAgent:
@@ -396,7 +396,7 @@ class TestGroundedWrapper:
         assert grounded.name is not None
 
     @pytest.mark.asyncio
-    async def test_grounded_passes_valid_output(self):
+    async def test_grounded_passes_valid_output(self) -> None:
         """Test Grounded passes valid outputs through."""
 
         class EchoAgent:
@@ -423,7 +423,7 @@ class TestGroundedWrapper:
         assert "Echo: test" in result
 
     @pytest.mark.asyncio
-    async def test_grounded_rejects_invalid_output(self):
+    async def test_grounded_rejects_invalid_output(self) -> None:
         """Test Grounded rejects outputs that violate contract."""
 
         class BadAgent:
@@ -453,7 +453,7 @@ class TestGroundedWrapper:
 class TestBootstrapAgentComposition:
     """Test bootstrap agent composition."""
 
-    def test_identity_composition(self):
+    def test_identity_composition(self) -> None:
         """Test Id >> f == f."""
 
         @dataclass
@@ -464,7 +464,7 @@ class TestBootstrapAgentComposition:
         # Id composition should be transparent
         # (conceptual test - actual composition depends on implementation)
 
-    def test_compose_function(self):
+    def test_compose_function(self) -> None:
         """Test compose() function."""
 
         @dataclass
@@ -484,7 +484,7 @@ class TestBootstrapAgentComposition:
         composed = compose(add, double)
         assert composed is not None
 
-    def test_judge_verdict(self):
+    def test_judge_verdict(self) -> None:
         """Test Judge produces verdicts."""
         # Judge evaluates against principles
         # This is a conceptual test of the verdict system
@@ -501,7 +501,7 @@ class TestBootstrapAgentComposition:
 class TestTensionDetection:
     """Test Contradict (tension detection)."""
 
-    def test_tension_creation(self):
+    def test_tension_creation(self) -> None:
         """Test Tension creation."""
         tension = Tension(
             thesis="Agent should be fast",
@@ -515,7 +515,7 @@ class TestTensionDetection:
         assert tension.antithesis == "Agent should be thorough"
         assert tension.mode == TensionMode.PRAGMATIC
 
-    def test_tension_modes(self):
+    def test_tension_modes(self) -> None:
         """Test different tension modes."""
         # Logical: contradictions that must be resolved
         logical = Tension(
@@ -542,7 +542,7 @@ class TestTensionDetection:
 class TestSublation:
     """Test Sublate (Hegelian synthesis)."""
 
-    def test_sublation_resolves_tension(self):
+    def test_sublation_resolves_tension(self) -> None:
         """Test sublation synthesizes thesis and antithesis."""
         from bootstrap import Synthesis
 
@@ -563,7 +563,7 @@ class TestSublation:
 class TestFixedPoint:
     """Test Fix (fixed-point iteration)."""
 
-    def test_fix_config(self):
+    def test_fix_config(self) -> None:
         """Test Fix configuration."""
         from bootstrap import FixConfig
 
@@ -578,7 +578,7 @@ class TestFixedPoint:
         assert config.max_iterations == 100
 
     @pytest.mark.asyncio
-    async def test_fix_reaches_stability(self):
+    async def test_fix_reaches_stability(self) -> None:
         """Test Fix iterates until stable."""
         from bootstrap import iterate_until_stable
 

@@ -55,7 +55,7 @@ class TestMemoryDgentBackend:
     """M × D: Memory with D-gent persistence."""
 
     @pytest.mark.asyncio
-    async def test_holographic_memory_basic_operations(self):
+    async def test_holographic_memory_basic_operations(self) -> None:
         """Test basic HolographicMemory store/retrieve."""
         memory = HolographicMemory()
 
@@ -71,7 +71,7 @@ class TestMemoryDgentBackend:
         assert "sky" in pattern.concepts
 
     @pytest.mark.asyncio
-    async def test_holographic_memory_retrieval(self):
+    async def test_holographic_memory_retrieval(self) -> None:
         """Test HolographicMemory retrieval by cue."""
         memory = HolographicMemory()
 
@@ -91,7 +91,7 @@ class TestMemoryDgentBackend:
         assert len(results) >= 1  # Should find at least one python-related memory
 
     @pytest.mark.asyncio
-    async def test_dgent_backed_memory_persistence(self):
+    async def test_dgent_backed_memory_persistence(self) -> None:
         """Test DgentBackedHolographicMemory with D-gent storage."""
         # Create D-gent storage layer
         volatile = VolatileAgent(_state={})
@@ -124,7 +124,7 @@ class TestMemoryDgentBackend:
         assert state is not None
 
     @pytest.mark.asyncio
-    async def test_memory_compression(self):
+    async def test_memory_compression(self) -> None:
         """Test memory compression reduces storage."""
         memory = HolographicMemory()
 
@@ -143,7 +143,7 @@ class TestMemoryDgentBackend:
         assert compressed_count >= 0
 
     @pytest.mark.asyncio
-    async def test_memory_consolidation(self):
+    async def test_memory_consolidation(self) -> None:
         """Test memory consolidation organizes patterns."""
         memory = HolographicMemory()
 
@@ -162,7 +162,7 @@ class TestSymbiontIntegration:
     """Test Symbiont fusion of logic and state."""
 
     @pytest.mark.asyncio
-    async def test_symbiont_basic_operation(self):
+    async def test_symbiont_basic_operation(self) -> None:
         """Test Symbiont fuses stateless logic with stateful memory."""
 
         def counter_logic(increment: int, count: int) -> tuple[int, int]:
@@ -185,7 +185,7 @@ class TestSymbiontIntegration:
         assert state == 6
 
     @pytest.mark.asyncio
-    async def test_symbiont_with_history(self):
+    async def test_symbiont_with_history(self) -> None:
         """Test Symbiont maintains history."""
 
         def append_logic(item: str, items: list) -> tuple[list, list]:
@@ -208,7 +208,7 @@ class TestUnifiedMemoryLayers:
     """Test UnifiedMemory multi-layer architecture."""
 
     @pytest.mark.asyncio
-    async def test_unified_memory_semantic_layer(self):
+    async def test_unified_memory_semantic_layer(self) -> None:
         """Test UnifiedMemory semantic associate/recall."""
         volatile = VolatileAgent(_state={"initial": "state"})
         config = MemoryConfig(
@@ -225,7 +225,7 @@ class TestUnifiedMemoryLayers:
         assert len(results) >= 0  # May or may not find depending on implementation
 
     @pytest.mark.asyncio
-    async def test_unified_memory_temporal_layer(self):
+    async def test_unified_memory_temporal_layer(self) -> None:
         """Test UnifiedMemory temporal witness/replay."""
         volatile = VolatileAgent(_state={"version": 1})
         config = MemoryConfig(enable_temporal=True)
@@ -241,7 +241,7 @@ class TestUnifiedMemoryLayers:
         assert state["version"] == 2
 
     @pytest.mark.asyncio
-    async def test_unified_memory_relational_layer(self):
+    async def test_unified_memory_relational_layer(self) -> None:
         """Test UnifiedMemory relational edges."""
         volatile = VolatileAgent(_state={})
         config = MemoryConfig(
@@ -264,7 +264,7 @@ class TestProspectiveMemory:
     """Test prospective (predictive) memory."""
 
     @pytest.mark.asyncio
-    async def test_prospective_agent_prediction(self):
+    async def test_prospective_agent_prediction(self) -> None:
         """Test ProspectiveAgent predicts actions from situations."""
         # Create memory and action history
         memory = HolographicMemory()
@@ -304,7 +304,7 @@ class TestProspectiveMemory:
         assert isinstance(predictions, list)
 
     @pytest.mark.asyncio
-    async def test_prospective_learns_from_outcomes(self):
+    async def test_prospective_learns_from_outcomes(self) -> None:
         """Test ProspectiveAgent learns from action outcomes."""
         memory = HolographicMemory()
         history = ActionHistory()
@@ -331,7 +331,7 @@ class TestMemoryVectorIntegration:
     """M × L: Memory with L-gent vector operations."""
 
     @pytest.mark.asyncio
-    async def test_semantic_registry_search(self):
+    async def test_semantic_registry_search(self) -> None:
         """Test SemanticRegistry finds similar entries."""
         embedder = SimpleEmbedder(dimension=128)
         registry = SemanticRegistry(embedder=embedder)
@@ -368,7 +368,7 @@ class TestMemoryVectorIntegration:
         assert isinstance(results, list)
 
     @pytest.mark.asyncio
-    async def test_memory_with_embeddings(self):
+    async def test_memory_with_embeddings(self) -> None:
         """Test memory stores and retrieves by embedding similarity."""
         embedder = SimpleEmbedder(dimension=128)
         memory = HolographicMemory(embedder=embedder)
@@ -391,7 +391,7 @@ class TestBudgetedMemory:
     """M × B: Budgeted memory operations."""
 
     @pytest.mark.asyncio
-    async def test_memory_respects_storage_limits(self):
+    async def test_memory_respects_storage_limits(self) -> None:
         """Test memory operations respect configured limits."""
         memory = HolographicMemory(
             hot_threshold=0.7,
@@ -411,7 +411,7 @@ class TestBudgetedMemory:
         # (implementation may compress or evict)
 
     @pytest.mark.asyncio
-    async def test_memory_pattern_strength_decay(self):
+    async def test_memory_pattern_strength_decay(self) -> None:
         """Test memory pattern strength decays over time."""
         memory = HolographicMemory()
 
@@ -432,7 +432,7 @@ class TestMemoryNarrativeIntegration:
     """M × N: Memory → narrative crystallization."""
 
     @pytest.mark.asyncio
-    async def test_historian_records_traces(self):
+    async def test_historian_records_traces(self) -> None:
         """Test Historian records semantic traces."""
         store = MemoryCrystalStore()
         historian = Historian(store)
@@ -462,7 +462,7 @@ class TestMemoryNarrativeIntegration:
         assert trace.action == "INVOKE"
 
     @pytest.mark.asyncio
-    async def test_crystal_store_query(self):
+    async def test_crystal_store_query(self) -> None:
         """Test crystal store can be queried."""
         store = MemoryCrystalStore()
         historian = Historian(store)
@@ -484,7 +484,7 @@ class TestMemoryNarrativeIntegration:
         assert len(traces) == 3
 
     @pytest.mark.asyncio
-    async def test_bard_creates_narrative(self):
+    async def test_bard_creates_narrative(self) -> None:
         """Test Bard creates narrative from traces."""
         store = MemoryCrystalStore()
         historian = Historian(store)
@@ -520,7 +520,7 @@ class TestMemoryPatternAccess:
     """Test memory pattern access and modification."""
 
     @pytest.mark.asyncio
-    async def test_pattern_access_updates_metadata(self):
+    async def test_pattern_access_updates_metadata(self) -> None:
         """Test accessing pattern updates access metadata."""
         memory = HolographicMemory()
 
@@ -535,7 +535,7 @@ class TestMemoryPatternAccess:
         assert hasattr(pattern, "access_count")
 
     @pytest.mark.asyncio
-    async def test_resonance_result_scoring(self):
+    async def test_resonance_result_scoring(self) -> None:
         """Test resonance results include similarity scores."""
         memory = HolographicMemory()
 
@@ -556,7 +556,7 @@ class TestMemoryLinkingAssociation:
     """Test memory linking and association features."""
 
     @pytest.mark.asyncio
-    async def test_dgent_memory_linking(self):
+    async def test_dgent_memory_linking(self) -> None:
         """Test AssociativeWebMemory link creation."""
         from agents.m import AssociativeWebMemory
 
@@ -589,7 +589,7 @@ class TestMemoryLinkingAssociation:
         assert isinstance(related, list)
 
     @pytest.mark.asyncio
-    async def test_spread_activation(self):
+    async def test_spread_activation(self) -> None:
         """Test spread activation through memory network."""
         from agents.m import AssociativeWebMemory
 

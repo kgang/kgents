@@ -32,7 +32,7 @@ def temp_dir():
 
 
 @pytest.mark.asyncio
-async def test_persistent_persona_saves_state(temp_dir):
+async def test_persistent_persona_saves_state(temp_dir) -> None:
     """Test that persona state is saved after dialogue."""
     path = temp_dir / "persona.json"
 
@@ -47,7 +47,7 @@ async def test_persistent_persona_saves_state(temp_dir):
 
 
 @pytest.mark.asyncio
-async def test_persistent_persona_loads_state(temp_dir):
+async def test_persistent_persona_loads_state(temp_dir) -> None:
     """Test that persona state is restored across sessions."""
     path = temp_dir / "persona.json"
 
@@ -66,7 +66,7 @@ async def test_persistent_persona_loads_state(temp_dir):
 
 
 @pytest.mark.asyncio
-async def test_persistent_persona_evolution_history(temp_dir):
+async def test_persistent_persona_evolution_history(temp_dir) -> None:
     """Test that persona evolution is tracked in history."""
     path = temp_dir / "persona.json"
 
@@ -84,7 +84,7 @@ async def test_persistent_persona_evolution_history(temp_dir):
 
 
 @pytest.mark.asyncio
-async def test_persistent_persona_auto_save(temp_dir):
+async def test_persistent_persona_auto_save(temp_dir) -> None:
     """Test that auto_save persists state after each dialogue."""
     path = temp_dir / "persona.json"
 
@@ -101,7 +101,7 @@ async def test_persistent_persona_auto_save(temp_dir):
 
 
 @pytest.mark.asyncio
-async def test_persistent_persona_no_auto_save(temp_dir):
+async def test_persistent_persona_no_auto_save(temp_dir) -> None:
     """Test that auto_save=False requires manual save."""
     path = temp_dir / "persona.json"
 
@@ -117,7 +117,7 @@ async def test_persistent_persona_no_auto_save(temp_dir):
 
 
 @pytest.mark.asyncio
-async def test_persistent_query_agent_loads_state(temp_dir):
+async def test_persistent_query_agent_loads_state(temp_dir) -> None:
     """Test that query agent can load persisted state."""
     path = temp_dir / "persona.json"
 
@@ -138,7 +138,7 @@ async def test_persistent_query_agent_loads_state(temp_dir):
 
 
 @pytest.mark.asyncio
-async def test_persistent_kgent_convenience_function(temp_dir):
+async def test_persistent_kgent_convenience_function(temp_dir) -> None:
     """Test convenience function for creating persistent K-gent."""
     path = temp_dir / "persona.json"
 
@@ -148,7 +148,7 @@ async def test_persistent_kgent_convenience_function(temp_dir):
 
 
 @pytest.mark.asyncio
-async def test_persistent_query_persona_convenience_function(temp_dir):
+async def test_persistent_query_persona_convenience_function(temp_dir) -> None:
     """Test convenience function for creating persistent query agent."""
     path = temp_dir / "persona.json"
 
@@ -157,7 +157,7 @@ async def test_persistent_query_persona_convenience_function(temp_dir):
 
 
 @pytest.mark.asyncio
-async def test_persistent_persona_with_initial_state(temp_dir):
+async def test_persistent_persona_with_initial_state(temp_dir) -> None:
     """Test providing initial state for new persona."""
     path = temp_dir / "persona.json"
 
@@ -176,7 +176,7 @@ async def test_persistent_persona_with_initial_state(temp_dir):
 
 
 @pytest.mark.asyncio
-async def test_persistent_persona_preference_tracking(temp_dir):
+async def test_persistent_persona_preference_tracking(temp_dir) -> None:
     """Test that preference updates track confidence and source."""
     path = temp_dir / "persona.json"
 

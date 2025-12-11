@@ -127,7 +127,7 @@ def error_trace() -> SemanticTrace:
 class TestNarrativeGenre:
     """Tests for NarrativeGenre enum."""
 
-    def test_all_genres_defined(self):
+    def test_all_genres_defined(self) -> None:
         """All expected genres should be defined."""
         assert NarrativeGenre.TECHNICAL.value == "technical"
         assert NarrativeGenre.LITERARY.value == "literary"
@@ -136,7 +136,7 @@ class TestNarrativeGenre:
         assert NarrativeGenre.MINIMAL.value == "minimal"
         assert NarrativeGenre.DETECTIVE.value == "detective"
 
-    def test_genre_count(self):
+    def test_genre_count(self) -> None:
         """Should have 6 genres."""
         assert len(NarrativeGenre) == 6
 
@@ -144,13 +144,13 @@ class TestNarrativeGenre:
 class TestVerbosity:
     """Tests for Verbosity enum."""
 
-    def test_all_verbosity_levels(self):
+    def test_all_verbosity_levels(self) -> None:
         """All verbosity levels should be defined."""
         assert Verbosity.TERSE.value == "terse"
         assert Verbosity.NORMAL.value == "normal"
         assert Verbosity.VERBOSE.value == "verbose"
 
-    def test_verbosity_count(self):
+    def test_verbosity_count(self) -> None:
         """Should have 3 verbosity levels."""
         assert len(Verbosity) == 3
 
@@ -158,13 +158,13 @@ class TestVerbosity:
 class TestPerspective:
     """Tests for Perspective enum."""
 
-    def test_all_perspectives(self):
+    def test_all_perspectives(self) -> None:
         """All perspectives should be defined."""
         assert Perspective.FIRST_PERSON.value == "first_person"
         assert Perspective.SECOND_PERSON.value == "second_person"
         assert Perspective.THIRD_PERSON.value == "third_person"
 
-    def test_perspective_count(self):
+    def test_perspective_count(self) -> None:
         """Should have 3 perspectives."""
         assert len(Perspective) == 3
 
@@ -177,7 +177,7 @@ class TestPerspective:
 class TestChapter:
     """Tests for Chapter dataclass."""
 
-    def test_chapter_creation(self):
+    def test_chapter_creation(self) -> None:
         """Can create a chapter with all fields."""
         chapter = Chapter(
             name="Chapter 1",
@@ -197,7 +197,7 @@ class TestChapter:
         assert chapter.trace_count == 5
         assert chapter.duration_ms == 500
 
-    def test_chapter_defaults(self):
+    def test_chapter_defaults(self) -> None:
         """Chapter has sensible defaults."""
         chapter = Chapter(
             name="Ch 1",
@@ -210,7 +210,7 @@ class TestChapter:
         assert chapter.trace_count == 0
         assert chapter.duration_ms == 0
 
-    def test_chapter_converts_set_to_list(self):
+    def test_chapter_converts_set_to_list(self) -> None:
         """Chapter.agents_involved converts set to list."""
         chapter = Chapter(
             name="Ch 1",
@@ -232,7 +232,7 @@ class TestChapter:
 class TestNarrativeRequest:
     """Tests for NarrativeRequest dataclass."""
 
-    def test_request_creation(self, sample_traces):
+    def test_request_creation(self, sample_traces) -> None:
         """Can create a narrative request."""
         request = NarrativeRequest(
             traces=sample_traces,
@@ -246,7 +246,7 @@ class TestNarrativeRequest:
         assert request.perspective == Perspective.FIRST_PERSON
         assert request.verbosity == Verbosity.VERBOSE
 
-    def test_request_defaults(self, sample_traces):
+    def test_request_defaults(self, sample_traces) -> None:
         """Request has sensible defaults."""
         request = NarrativeRequest(traces=sample_traces)
 
@@ -257,7 +257,7 @@ class TestNarrativeRequest:
         assert request.filter_actions is None
         assert request.exclude_actions is None
 
-    def test_filter_by_agent(self, sample_traces):
+    def test_filter_by_agent(self, sample_traces) -> None:
         """Can filter traces by agent."""
         request = NarrativeRequest(
             traces=sample_traces,
@@ -268,7 +268,7 @@ class TestNarrativeRequest:
         assert len(filtered) == 2
         assert all(t.agent_id == "parser" for t in filtered)
 
-    def test_filter_by_action(self, sample_traces):
+    def test_filter_by_action(self, sample_traces) -> None:
         """Can filter traces by action."""
         request = NarrativeRequest(
             traces=sample_traces,
@@ -279,7 +279,7 @@ class TestNarrativeRequest:
         assert len(filtered) == 1
         assert filtered[0].action == "GENERATE"
 
-    def test_exclude_actions(self, sample_traces):
+    def test_exclude_actions(self, sample_traces) -> None:
         """Can exclude traces by action."""
         request = NarrativeRequest(
             traces=sample_traces,
@@ -290,7 +290,7 @@ class TestNarrativeRequest:
         assert len(filtered) == 2
         assert all(t.action != "VALIDATE" for t in filtered)
 
-    def test_combined_filters(self, sample_traces):
+    def test_combined_filters(self, sample_traces) -> None:
         """Can combine multiple filters."""
         request = NarrativeRequest(
             traces=sample_traces,
@@ -312,7 +312,7 @@ class TestNarrativeRequest:
 class TestNarrative:
     """Tests for Narrative dataclass."""
 
-    def test_narrative_creation(self, sample_traces):
+    def test_narrative_creation(self, sample_traces) -> None:
         """Can create a narrative."""
         chapters = [
             Chapter(
@@ -337,7 +337,7 @@ class TestNarrative:
         assert len(narrative.traces_used) == 3
         assert len(narrative.chapters) == 1
 
-    def test_narrative_title(self, sample_traces):
+    def test_narrative_title(self, sample_traces) -> None:
         """Narrative.title returns metadata title or default."""
         # With title
         n1 = Narrative(
@@ -358,7 +358,7 @@ class TestNarrative:
         )
         assert n2.title == "Untitled Narrative"
 
-    def test_narrative_total_duration(self, sample_traces):
+    def test_narrative_total_duration(self, sample_traces) -> None:
         """Narrative.total_duration_ms sums trace durations."""
         narrative = Narrative(
             text="test",
@@ -370,7 +370,7 @@ class TestNarrative:
         # Each sample trace has duration_ms=100
         assert narrative.total_duration_ms == 300
 
-    def test_narrative_total_gas(self, sample_traces):
+    def test_narrative_total_gas(self, sample_traces) -> None:
         """Narrative.total_gas sums gas consumed."""
         narrative = Narrative(
             text="test",
@@ -382,7 +382,7 @@ class TestNarrative:
         # Each sample trace has gas_consumed=50
         assert narrative.total_gas == 150
 
-    def test_narrative_agent_count(self, sample_traces):
+    def test_narrative_agent_count(self, sample_traces) -> None:
         """Narrative.agent_count returns unique agent count."""
         narrative = Narrative(
             text="test",
@@ -394,7 +394,7 @@ class TestNarrative:
         # Sample traces have 2 unique agents: parser, generator
         assert narrative.agent_count == 2
 
-    def test_render_text(self, sample_traces):
+    def test_render_text(self, sample_traces) -> None:
         """Narrative.render('text') returns plain text."""
         narrative = Narrative(
             text="The story goes...",
@@ -405,7 +405,7 @@ class TestNarrative:
 
         assert narrative.render("text") == "The story goes..."
 
-    def test_render_markdown(self, sample_traces):
+    def test_render_markdown(self, sample_traces) -> None:
         """Narrative.render('markdown') returns markdown."""
         chapters = [
             Chapter(
@@ -430,7 +430,7 @@ class TestNarrative:
         assert "## Chapter 1" in md
         assert "*Theme: Processing" in md
 
-    def test_render_html(self, sample_traces):
+    def test_render_html(self, sample_traces) -> None:
         """Narrative.render('html') returns HTML."""
         narrative = Narrative(
             text="The story...",
@@ -455,7 +455,7 @@ class TestSimpleLLMProvider:
     """Tests for SimpleLLMProvider."""
 
     @pytest.mark.asyncio
-    async def test_default_response(self):
+    async def test_default_response(self) -> None:
         """Provider generates default response."""
         provider = SimpleLLMProvider()
         response = await provider.generate("test prompt")
@@ -465,7 +465,7 @@ class TestSimpleLLMProvider:
         assert provider.last_prompt == "test prompt"
 
     @pytest.mark.asyncio
-    async def test_custom_response(self):
+    async def test_custom_response(self) -> None:
         """Provider returns custom response."""
         provider = SimpleLLMProvider(response="Custom story")
         response = await provider.generate("test prompt")
@@ -473,7 +473,7 @@ class TestSimpleLLMProvider:
         assert response == "Custom story"
 
     @pytest.mark.asyncio
-    async def test_call_counting(self):
+    async def test_call_counting(self) -> None:
         """Provider tracks call count."""
         provider = SimpleLLMProvider()
 
@@ -483,7 +483,7 @@ class TestSimpleLLMProvider:
 
         assert provider.call_count == 3
 
-    def test_llm_provider_protocol(self):
+    def test_llm_provider_protocol(self) -> None:
         """SimpleLLMProvider conforms to LLMProvider protocol."""
         provider = SimpleLLMProvider()
         assert isinstance(provider, LLMProvider)
@@ -498,7 +498,7 @@ class TestBard:
     """Tests for Bard storyteller agent."""
 
     @pytest.mark.asyncio
-    async def test_invoke_empty_traces(self):
+    async def test_invoke_empty_traces(self) -> None:
         """Bard handles empty trace list."""
         bard = Bard()
         request = NarrativeRequest(traces=[])
@@ -510,7 +510,7 @@ class TestBard:
         assert len(narrative.chapters) == 0
 
     @pytest.mark.asyncio
-    async def test_invoke_with_traces(self, sample_traces):
+    async def test_invoke_with_traces(self, sample_traces) -> None:
         """Bard generates narrative from traces."""
         llm = SimpleLLMProvider(response="A tale of parsing and generation.")
         bard = Bard(llm=llm)
@@ -523,7 +523,7 @@ class TestBard:
         assert llm.call_count == 1
 
     @pytest.mark.asyncio
-    async def test_invoke_respects_genre(self, sample_traces):
+    async def test_invoke_respects_genre(self, sample_traces) -> None:
         """Bard includes genre in prompt."""
         llm = SimpleLLMProvider()
         bard = Bard(llm=llm)
@@ -536,7 +536,7 @@ class TestBard:
             assert f"GENRE: {genre.value}" in llm.last_prompt
 
     @pytest.mark.asyncio
-    async def test_invoke_respects_verbosity(self, sample_traces):
+    async def test_invoke_respects_verbosity(self, sample_traces) -> None:
         """Bard includes verbosity in prompt."""
         llm = SimpleLLMProvider()
         bard = Bard(llm=llm)
@@ -548,7 +548,7 @@ class TestBard:
             assert f"VERBOSITY: {verbosity.value}" in llm.last_prompt
 
     @pytest.mark.asyncio
-    async def test_invoke_respects_perspective(self, sample_traces):
+    async def test_invoke_respects_perspective(self, sample_traces) -> None:
         """Bard includes perspective in prompt."""
         llm = SimpleLLMProvider()
         bard = Bard(llm=llm)
@@ -560,7 +560,7 @@ class TestBard:
             assert f"PERSPECTIVE: {perspective.value}" in llm.last_prompt
 
     @pytest.mark.asyncio
-    async def test_invoke_custom_prompt(self, sample_traces):
+    async def test_invoke_custom_prompt(self, sample_traces) -> None:
         """Bard includes custom prompt."""
         llm = SimpleLLMProvider()
         bard = Bard(llm=llm)
@@ -574,7 +574,7 @@ class TestBard:
         assert "Focus on errors only." in llm.last_prompt
 
     @pytest.mark.asyncio
-    async def test_invoke_with_title(self, sample_traces):
+    async def test_invoke_with_title(self, sample_traces) -> None:
         """Bard uses provided title."""
         bard = Bard()
         request = NarrativeRequest(traces=sample_traces, title="Custom Title")
@@ -584,7 +584,7 @@ class TestBard:
         assert narrative.title == "Custom Title"
 
     @pytest.mark.asyncio
-    async def test_invoke_generates_title(self, sample_traces):
+    async def test_invoke_generates_title(self, sample_traces) -> None:
         """Bard generates title from traces."""
         bard = Bard()
         request = NarrativeRequest(traces=sample_traces)
@@ -597,7 +597,7 @@ class TestBard:
             or "generator" in narrative.title.lower()
         )
 
-    def test_chapter_detection_agent_change(self):
+    def test_chapter_detection_agent_change(self) -> None:
         """Bard detects chapters on agent changes."""
         bard = Bard()
         base_time = datetime.now()
@@ -621,7 +621,7 @@ class TestBard:
         assert "a1" in chapters[0].agents_involved
         assert "a2" in chapters[1].agents_involved
 
-    def test_chapter_detection_temporal_gap(self):
+    def test_chapter_detection_temporal_gap(self) -> None:
         """Bard detects chapters on temporal gaps."""
         bard = Bard()
         base_time = datetime.now()
@@ -639,7 +639,7 @@ class TestBard:
 
         assert len(chapters) == 2
 
-    def test_chapter_detection_error(self):
+    def test_chapter_detection_error(self) -> None:
         """Bard detects chapters on error traces."""
         bard = Bard()
         base_time = datetime.now()
@@ -667,7 +667,7 @@ class TestBard:
         # Error should trigger new chapter
         assert len(chapters) >= 2
 
-    def test_theme_inference(self):
+    def test_theme_inference(self) -> None:
         """Bard infers themes from actions."""
         bard = Bard()
 
@@ -691,7 +691,7 @@ class TestBard:
         other_traces = [make_trace(action="OTHER")]
         assert bard._infer_theme(other_traces) == "Processing"
 
-    def test_title_generation_single_agent(self):
+    def test_title_generation_single_agent(self) -> None:
         """Bard generates title for single agent."""
         bard = Bard()
         traces = [make_trace(agent_id="parser")]
@@ -699,7 +699,7 @@ class TestBard:
         title = bard._generate_title(traces)
         assert "parser" in title.lower()
 
-    def test_title_generation_multiple_agents(self):
+    def test_title_generation_multiple_agents(self) -> None:
         """Bard generates title for multiple agents."""
         bard = Bard()
         traces = [
@@ -710,7 +710,7 @@ class TestBard:
         title = bard._generate_title(traces)
         assert "Collaboration" in title or "parser" in title.lower()
 
-    def test_title_generation_many_agents(self):
+    def test_title_generation_many_agents(self) -> None:
         """Bard generates title for many agents."""
         bard = Bard()
         traces = [make_trace(agent_id=f"agent-{i}") for i in range(5)]
@@ -718,7 +718,7 @@ class TestBard:
         title = bard._generate_title(traces)
         assert "5 agents" in title.lower()
 
-    def test_format_crystals(self, sample_traces):
+    def test_format_crystals(self, sample_traces) -> None:
         """Bard formats crystals for prompt."""
         bard = Bard()
         formatted = bard._format_crystals(sample_traces)
@@ -738,7 +738,7 @@ class TestForensicBard:
     """Tests for ForensicBard crash analyst."""
 
     @pytest.mark.asyncio
-    async def test_diagnose_basic(self, error_trace):
+    async def test_diagnose_basic(self, error_trace) -> None:
         """ForensicBard produces diagnosis."""
         llm = SimpleLLMProvider(
             response="Root cause: Invalid input data. The validator received malformed data."
@@ -754,7 +754,7 @@ class TestForensicBard:
         )
 
     @pytest.mark.asyncio
-    async def test_diagnose_with_context(self, error_trace, sample_traces):
+    async def test_diagnose_with_context(self, error_trace, sample_traces) -> None:
         """ForensicBard uses context traces."""
         llm = SimpleLLMProvider()
         forensic = ForensicBard(llm=llm)
@@ -769,7 +769,7 @@ class TestForensicBard:
         assert "parser" in llm.last_prompt.lower() or "CONTEXT" in llm.last_prompt
 
     @pytest.mark.asyncio
-    async def test_diagnose_with_similar_failures(self, error_trace):
+    async def test_diagnose_with_similar_failures(self, error_trace) -> None:
         """ForensicBard includes similar failures."""
         similar = [
             make_trace(
@@ -790,7 +790,7 @@ class TestForensicBard:
         assert "SIMILAR" in llm.last_prompt or "Similar error" in llm.last_prompt
 
     @pytest.mark.asyncio
-    async def test_echo_command(self, error_trace):
+    async def test_echo_command(self, error_trace) -> None:
         """Diagnosis includes echo command."""
         forensic = ForensicBard()
         diagnosis = await forensic.diagnose(error_trace)
@@ -798,7 +798,7 @@ class TestForensicBard:
         assert f"kgents echo {error_trace.trace_id}" == diagnosis.echo_command
 
     @pytest.mark.asyncio
-    async def test_severity_critical_cascade(self):
+    async def test_severity_critical_cascade(self) -> None:
         """Severity is critical for cascade failures."""
         forensic = ForensicBard()
         failure = make_trace(action="ERROR")
@@ -809,7 +809,7 @@ class TestForensicBard:
         assert diagnosis.severity == "critical"
 
     @pytest.mark.asyncio
-    async def test_severity_high_chaotic(self):
+    async def test_severity_high_chaotic(self) -> None:
         """Severity is high for chaotic failures."""
         forensic = ForensicBard()
         failure = make_trace(action="ERROR", determinism=Determinism.CHAOTIC)
@@ -819,7 +819,7 @@ class TestForensicBard:
         assert diagnosis.severity == "high"
 
     @pytest.mark.asyncio
-    async def test_severity_medium_slow(self):
+    async def test_severity_medium_slow(self) -> None:
         """Severity is medium for slow operations."""
         forensic = ForensicBard()
         failure = make_trace(
@@ -833,7 +833,7 @@ class TestForensicBard:
         assert diagnosis.severity == "medium"
 
     @pytest.mark.asyncio
-    async def test_severity_low_default(self):
+    async def test_severity_low_default(self) -> None:
         """Default severity is low."""
         forensic = ForensicBard()
         failure = make_trace(
@@ -846,7 +846,7 @@ class TestForensicBard:
 
         assert diagnosis.severity == "low"
 
-    def test_diagnosis_is_deterministic(self, error_trace):
+    def test_diagnosis_is_deterministic(self, error_trace) -> None:
         """Diagnosis.is_deterministic reflects trace determinism."""
         diag1 = Diagnosis(
             narrative="test",
@@ -864,7 +864,7 @@ class TestForensicBard:
         )
         assert diag2.is_deterministic is False
 
-    def test_diagnosis_agent_history(self, error_trace, sample_traces):
+    def test_diagnosis_agent_history(self, error_trace, sample_traces) -> None:
         """Diagnosis.agent_history returns agent sequence."""
         diag = Diagnosis(
             narrative="test",
@@ -878,7 +878,7 @@ class TestForensicBard:
         assert history[-1] == error_trace.agent_id
         assert len(history) == len(sample_traces) + 1
 
-    def test_extract_cause_root_cause(self):
+    def test_extract_cause_root_cause(self) -> None:
         """ForensicBard extracts root cause from analysis."""
         forensic = ForensicBard()
 
@@ -890,7 +890,7 @@ This could be prevented by validation."""
         cause = forensic._extract_cause(analysis)
         assert "Invalid configuration" in cause
 
-    def test_extract_cause_because(self):
+    def test_extract_cause_because(self) -> None:
         """ForensicBard extracts cause from 'because' statements."""
         forensic = ForensicBard()
 
@@ -899,7 +899,7 @@ This could be prevented by validation."""
         cause = forensic._extract_cause(analysis)
         assert "because" in cause.lower() or "memory" in cause.lower()
 
-    def test_extract_cause_fallback(self):
+    def test_extract_cause_fallback(self) -> None:
         """ForensicBard falls back to first line."""
         forensic = ForensicBard()
 
@@ -918,17 +918,17 @@ More details follow."""
 class TestTruncateDict:
     """Tests for _truncate_dict utility."""
 
-    def test_truncate_none(self):
+    def test_truncate_none(self) -> None:
         """Returns 'None' for None input."""
         assert _truncate_dict(None, 100) == "None"
 
-    def test_truncate_short(self):
+    def test_truncate_short(self) -> None:
         """Returns full string for short dicts."""
         d = {"a": 1}
         result = _truncate_dict(d, 100)
         assert result == str(d)
 
-    def test_truncate_long(self):
+    def test_truncate_long(self) -> None:
         """Truncates long dicts with ellipsis."""
         d = {"a": "x" * 100, "b": "y" * 100}
         result = _truncate_dict(d, 50)
@@ -946,7 +946,7 @@ class TestBardIntegration:
     """Integration tests for Bard workflow."""
 
     @pytest.mark.asyncio
-    async def test_full_workflow(self):
+    async def test_full_workflow(self) -> None:
         """Test complete Bard workflow from traces to narrative."""
         # Create a sequence of traces simulating an execution
         base_time = datetime.now()
@@ -1007,7 +1007,7 @@ The formatter transformed the user data into JSON format."""
         assert "# API Request Handling" in md
 
     @pytest.mark.asyncio
-    async def test_forensic_workflow(self):
+    async def test_forensic_workflow(self) -> None:
         """Test ForensicBard crash analysis workflow."""
         base_time = datetime.now()
 
@@ -1070,7 +1070,7 @@ class TestEdgeCases:
     """Tests for edge cases and error handling."""
 
     @pytest.mark.asyncio
-    async def test_single_trace(self):
+    async def test_single_trace(self) -> None:
         """Bard handles single trace."""
         bard = Bard()
         traces = [make_trace()]
@@ -1082,7 +1082,7 @@ class TestEdgeCases:
         assert len(narrative.chapters) == 1
 
     @pytest.mark.asyncio
-    async def test_all_filtered_out(self, sample_traces):
+    async def test_all_filtered_out(self, sample_traces) -> None:
         """Bard handles all traces filtered out."""
         bard = Bard()
         request = NarrativeRequest(
@@ -1094,14 +1094,14 @@ class TestEdgeCases:
 
         assert narrative.text == "No events to narrate."
 
-    def test_empty_chapters(self):
+    def test_empty_chapters(self) -> None:
         """Bard handles empty trace list for chapters."""
         bard = Bard()
         chapters = bard._identify_chapters([])
 
         assert chapters == []
 
-    def test_large_input_truncation(self):
+    def test_large_input_truncation(self) -> None:
         """Large inputs are truncated in prompt."""
         bard = Bard()
         trace = make_trace(inputs={"large": "x" * 10000})

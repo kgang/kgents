@@ -52,7 +52,7 @@ from agents.i.semantic_field import (
 class TestFieldCoordinate:
     """Tests for FieldCoordinate."""
 
-    def test_embedding_distance(self):
+    def test_embedding_distance(self) -> None:
         """Test distance in embedding space."""
         c1 = FieldCoordinate(embedding=(0.0, 0.0, 0.0))
         c2 = FieldCoordinate(embedding=(3.0, 4.0, 0.0))
@@ -60,28 +60,28 @@ class TestFieldCoordinate:
         # 3-4-5 triangle
         assert c1.distance_to(c2) == pytest.approx(5.0)
 
-    def test_embedding_distance_mismatched_dims(self):
+    def test_embedding_distance_mismatched_dims(self) -> None:
         """Test distance returns inf for mismatched dimensions."""
         c1 = FieldCoordinate(embedding=(0.0, 0.0))
         c2 = FieldCoordinate(embedding=(1.0, 1.0, 1.0))
 
         assert c1.distance_to(c2) == float("inf")
 
-    def test_domain_distance_same(self):
+    def test_domain_distance_same(self) -> None:
         """Test domain distance for same domain."""
         c1 = FieldCoordinate(domain="software")
         c2 = FieldCoordinate(domain="software")
 
         assert c1.distance_to(c2) == 0.0
 
-    def test_domain_distance_different(self):
+    def test_domain_distance_different(self) -> None:
         """Test domain distance for different domains."""
         c1 = FieldCoordinate(domain="software")
         c2 = FieldCoordinate(domain="biology")
 
         assert c1.distance_to(c2) == 1.0
 
-    def test_tag_distance(self):
+    def test_tag_distance(self) -> None:
         """Test tag-based distance."""
         c1 = FieldCoordinate(tags=("python", "async", "api"))
         c2 = FieldCoordinate(tags=("python", "sync", "cli"))
@@ -89,14 +89,14 @@ class TestFieldCoordinate:
         # Jaccard: 1 common / 5 total = 0.2, distance = 0.8
         assert c1.distance_to(c2) == pytest.approx(0.8)
 
-    def test_tag_distance_identical(self):
+    def test_tag_distance_identical(self) -> None:
         """Test tag distance for identical tags."""
         c1 = FieldCoordinate(tags=("a", "b", "c"))
         c2 = FieldCoordinate(tags=("a", "b", "c"))
 
         assert c1.distance_to(c2) == 0.0
 
-    def test_default_distance(self):
+    def test_default_distance(self) -> None:
         """Test default distance when no coords available."""
         c1 = FieldCoordinate()
         c2 = FieldCoordinate()
@@ -107,7 +107,7 @@ class TestFieldCoordinate:
 class TestSemanticPheromone:
     """Tests for SemanticPheromone."""
 
-    def test_pheromone_creation(self):
+    def test_pheromone_creation(self) -> None:
         """Test basic pheromone creation."""
         payload = MetaphorPayload(
             source_domain="database",
@@ -129,7 +129,7 @@ class TestSemanticPheromone:
         assert pheromone.intensity == 0.8
         assert pheromone.is_active
 
-    def test_pheromone_decay(self):
+    def test_pheromone_decay(self) -> None:
         """Test pheromone decay over time."""
         pheromone = SemanticPheromone(
             id="test-1",
@@ -145,7 +145,7 @@ class TestSemanticPheromone:
         assert new_intensity < 1.0
         assert pheromone.intensity == new_intensity
 
-    def test_pheromone_expires(self):
+    def test_pheromone_expires(self) -> None:
         """Test pheromone expiration after many decays."""
         pheromone = SemanticPheromone(
             id="test-1",
@@ -166,13 +166,13 @@ class TestSemanticPheromone:
 class TestSemanticField:
     """Tests for SemanticField."""
 
-    def test_field_creation(self):
+    def test_field_creation(self) -> None:
         """Test field creation."""
         field = create_semantic_field()
         assert field.pheromone_count == 0
         assert field.current_tick == 0
 
-    def test_emit_and_count(self):
+    def test_emit_and_count(self) -> None:
         """Test emitting pheromones."""
         field = create_semantic_field()
 
@@ -186,7 +186,7 @@ class TestSemanticField:
         assert phero_id.startswith("phero-")
         assert field.pheromone_count == 1
 
-    def test_sense_by_kind(self):
+    def test_sense_by_kind(self) -> None:
         """Test sensing pheromones by kind."""
         field = create_semantic_field()
         position = FieldCoordinate(domain="software")
@@ -201,7 +201,7 @@ class TestSemanticField:
         assert len(metaphors) == 1
         assert metaphors[0].kind == SemanticPheromoneKind.METAPHOR
 
-    def test_sense_by_radius(self):
+    def test_sense_by_radius(self) -> None:
         """Test sensing by radius."""
         field = create_semantic_field()
 
@@ -234,7 +234,7 @@ class TestSemanticField:
 
         assert len(results) == 2  # Only nearby ones
 
-    def test_sense_sorted_by_intensity(self):
+    def test_sense_sorted_by_intensity(self) -> None:
         """Test sensing returns results sorted by intensity."""
         field = create_semantic_field()
         position = FieldCoordinate(domain="software")
@@ -251,7 +251,7 @@ class TestSemanticField:
         assert results[1].intensity == 0.5
         assert results[2].intensity == 0.3
 
-    def test_sense_strongest(self):
+    def test_sense_strongest(self) -> None:
         """Test sensing strongest pheromone."""
         field = create_semantic_field()
         position = FieldCoordinate(domain="software")
@@ -276,7 +276,7 @@ class TestSemanticField:
         assert strongest is not None
         assert strongest.payload["id"] == "strong"
 
-    def test_tick_decay(self):
+    def test_tick_decay(self) -> None:
         """Test tick advances time and decays pheromones."""
         field = create_semantic_field()
 
@@ -297,7 +297,7 @@ class TestSemanticField:
 
         assert field.pheromone_count == 0
 
-    def test_clear(self):
+    def test_clear(self) -> None:
         """Test clearing the field."""
         field = create_semantic_field()
 
@@ -310,7 +310,7 @@ class TestSemanticField:
         assert count == 2
         assert field.pheromone_count == 0
 
-    def test_get_all(self):
+    def test_get_all(self) -> None:
         """Test getting all pheromones."""
         field = create_semantic_field()
 
@@ -323,7 +323,7 @@ class TestSemanticField:
         metaphors_only = field.get_all(SemanticPheromoneKind.METAPHOR)
         assert len(metaphors_only) == 1
 
-    def test_deposit_callback(self):
+    def test_deposit_callback(self) -> None:
         """Test deposit callback is called."""
         field = create_semantic_field()
         deposits = []
@@ -339,7 +339,7 @@ class TestSemanticField:
 class TestPsiFieldEmitter:
     """Tests for PsiFieldEmitter."""
 
-    def test_emit_metaphor(self):
+    def test_emit_metaphor(self) -> None:
         """Test emitting a metaphor."""
         field = create_semantic_field()
         emitter = create_psi_emitter(field)
@@ -368,7 +368,7 @@ class TestPsiFieldEmitter:
 class TestForgeFieldSensor:
     """Tests for ForgeFieldSensor."""
 
-    def test_sense_metaphors(self):
+    def test_sense_metaphors(self) -> None:
         """Test sensing metaphors."""
         field = create_semantic_field()
         emitter = create_psi_emitter(field)
@@ -398,7 +398,7 @@ class TestForgeFieldSensor:
         assert metaphors[0].confidence == 0.9
         assert metaphors[1].confidence == 0.7
 
-    def test_get_strongest_metaphor(self):
+    def test_get_strongest_metaphor(self) -> None:
         """Test getting strongest metaphor."""
         field = create_semantic_field()
         emitter = create_psi_emitter(field)
@@ -414,7 +414,7 @@ class TestForgeFieldSensor:
         assert strongest is not None
         assert strongest.target_domain == "memory"
 
-    def test_emit_intent(self):
+    def test_emit_intent(self) -> None:
         """Test emitting intent from F-gent."""
         field = create_semantic_field()
         sensor = create_forge_sensor(field)
@@ -445,7 +445,7 @@ class TestPsiForgeIntegration:
     They coordinate through the shared field.
     """
 
-    def test_psi_emits_forge_senses(self):
+    def test_psi_emits_forge_senses(self) -> None:
         """Test Psi emitting metaphor, F sensing it."""
         field = create_semantic_field()
         psi_emitter = create_psi_emitter(field)
@@ -471,7 +471,7 @@ class TestPsiForgeIntegration:
         assert metaphors[0].target_domain == "topological_sort"
         assert metaphors[0].transferable_operations == ("kahns_algorithm",)
 
-    def test_multiple_metaphors_strongest_wins(self):
+    def test_multiple_metaphors_strongest_wins(self) -> None:
         """Test that F-gent can select strongest metaphor."""
         field = create_semantic_field()
         psi = create_psi_emitter(field)
@@ -490,7 +490,7 @@ class TestPsiForgeIntegration:
         assert best is not None
         assert best.target_domain == "architecture"
 
-    def test_metaphor_decay_affects_sensing(self):
+    def test_metaphor_decay_affects_sensing(self) -> None:
         """Test that metaphor decay affects what F senses."""
         field = create_semantic_field()
         psi = create_psi_emitter(field)
@@ -515,7 +515,7 @@ class TestPsiForgeIntegration:
 class TestSafetyFieldEmitter:
     """Tests for SafetyFieldEmitter."""
 
-    def test_emit_warning(self):
+    def test_emit_warning(self) -> None:
         """Test emitting a safety warning."""
         field = create_semantic_field()
         emitter = create_safety_emitter(field)
@@ -539,7 +539,7 @@ class TestSafetyFieldEmitter:
         assert payload.severity == "error"
         assert "psi" in payload.affected_agents
 
-    def test_warning_intensity_by_severity(self):
+    def test_warning_intensity_by_severity(self) -> None:
         """Test warning intensity varies by severity."""
         field = create_semantic_field()
         emitter = create_safety_emitter(field)
@@ -561,7 +561,7 @@ class TestSafetyFieldEmitter:
 class TestEconomicFieldEmitter:
     """Tests for EconomicFieldEmitter."""
 
-    def test_emit_opportunity(self):
+    def test_emit_opportunity(self) -> None:
         """Test emitting an economic opportunity."""
         field = create_semantic_field()
         emitter = create_economic_emitter(field)
@@ -584,7 +584,7 @@ class TestEconomicFieldEmitter:
         assert payload.signal_type == "surplus"
         assert payload.value == 50.0
 
-    def test_emit_scarcity(self):
+    def test_emit_scarcity(self) -> None:
         """Test emitting a scarcity signal."""
         field = create_semantic_field()
         emitter = create_economic_emitter(field)
@@ -605,7 +605,7 @@ class TestEconomicFieldEmitter:
 class TestMemoryFieldEmitterSensor:
     """Tests for MemoryFieldEmitter and MemoryFieldSensor."""
 
-    def test_emit_consolidation(self):
+    def test_emit_consolidation(self) -> None:
         """Test emitting a memory consolidation signal."""
         field = create_semantic_field()
         emitter = create_memory_emitter(field)
@@ -629,7 +629,7 @@ class TestMemoryFieldEmitterSensor:
         assert payload.importance == 0.8
         assert "user_preference" in payload.context_tags
 
-    def test_sense_memories_by_importance(self):
+    def test_sense_memories_by_importance(self) -> None:
         """Test sensing memories with importance threshold."""
         field = create_semantic_field()
         emitter = create_memory_emitter(field)
@@ -654,7 +654,7 @@ class TestMemoryFieldEmitterSensor:
 class TestNarrativeFieldEmitterSensor:
     """Tests for NarrativeFieldEmitter and NarrativeFieldSensor."""
 
-    def test_emit_story_event(self):
+    def test_emit_story_event(self) -> None:
         """Test emitting a narrative event."""
         field = create_semantic_field()
         emitter = create_narrative_emitter(field)
@@ -678,7 +678,7 @@ class TestNarrativeFieldEmitterSensor:
         assert payload.event_type == "beginning"
         assert "user" in payload.actors
 
-    def test_climax_has_highest_intensity(self):
+    def test_climax_has_highest_intensity(self) -> None:
         """Test climax events have highest intensity."""
         field = create_semantic_field()
         emitter = create_narrative_emitter(field)
@@ -695,7 +695,7 @@ class TestNarrativeFieldEmitterSensor:
         assert intensities["climax"] == 1.0
         assert intensities["beginning"] < intensities["climax"]
 
-    def test_sense_narratives_by_thread(self):
+    def test_sense_narratives_by_thread(self) -> None:
         """Test filtering narratives by thread ID."""
         field = create_semantic_field()
         emitter = create_narrative_emitter(field)
@@ -715,7 +715,7 @@ class TestNarrativeFieldEmitterSensor:
 class TestObserverFieldSensor:
     """Tests for ObserverFieldSensor."""
 
-    def test_observe_all_kinds(self):
+    def test_observe_all_kinds(self) -> None:
         """Test observer can see all pheromone types."""
         field = create_semantic_field()
         observer = create_observer_sensor(field)
@@ -732,7 +732,7 @@ class TestObserverFieldSensor:
         assert SemanticPheromoneKind.WARNING.value in observed
         assert SemanticPheromoneKind.MEMORY.value in observed
 
-    def test_observe_warnings_by_severity(self):
+    def test_observe_warnings_by_severity(self) -> None:
         """Test filtering warnings by severity."""
         field = create_semantic_field()
         observer = create_observer_sensor(field)
@@ -747,7 +747,7 @@ class TestObserverFieldSensor:
         assert len(warnings) == 1
         assert warnings[0].severity == "error"
 
-    def test_field_summary(self):
+    def test_field_summary(self) -> None:
         """Test field summary counts pheromones by type."""
         field = create_semantic_field()
         observer = create_observer_sensor(field)
@@ -767,28 +767,28 @@ class TestObserverFieldSensor:
 class TestPheromoneKindProperties:
     """Tests for SemanticPheromoneKind properties."""
 
-    def test_all_kinds_have_decay_rate(self):
+    def test_all_kinds_have_decay_rate(self) -> None:
         """Test all kinds have a decay rate."""
         for kind in SemanticPheromoneKind:
             assert 0.0 < kind.decay_rate <= 1.0
 
-    def test_all_kinds_have_default_radius(self):
+    def test_all_kinds_have_default_radius(self) -> None:
         """Test all kinds have a default radius."""
         for kind in SemanticPheromoneKind:
             assert kind.default_radius > 0
 
-    def test_warning_decays_fast(self):
+    def test_warning_decays_fast(self) -> None:
         """Warnings should decay faster than metaphors."""
         assert (
             SemanticPheromoneKind.WARNING.decay_rate
             > SemanticPheromoneKind.METAPHOR.decay_rate
         )
 
-    def test_warning_has_wide_radius(self):
+    def test_warning_has_wide_radius(self) -> None:
         """Warnings should broadcast widely."""
         assert SemanticPheromoneKind.WARNING.default_radius >= 1.0
 
-    def test_phase1_kinds_have_properties(self):
+    def test_phase1_kinds_have_properties(self) -> None:
         """Test Phase 1 pheromone kinds have decay and radius."""
         phase1_kinds = [
             SemanticPheromoneKind.MUTATION,
@@ -800,14 +800,14 @@ class TestPheromoneKindProperties:
             assert 0.0 < kind.decay_rate <= 1.0
             assert kind.default_radius > 0
 
-    def test_prior_decays_slowly(self):
+    def test_prior_decays_slowly(self) -> None:
         """Priors should decay slowly (persona is stable)."""
         assert (
             SemanticPheromoneKind.PRIOR.decay_rate
             < SemanticPheromoneKind.MUTATION.decay_rate
         )
 
-    def test_prior_has_wide_radius(self):
+    def test_prior_has_wide_radius(self) -> None:
         """Priors should broadcast widely to affect all agents."""
         assert SemanticPheromoneKind.PRIOR.default_radius >= 1.0
 
@@ -820,7 +820,7 @@ class TestPheromoneKindProperties:
 class TestEvolutionFieldEmitter:
     """Tests for E-gent EvolutionFieldEmitter (MUTATION signals)."""
 
-    def test_emit_mutation(self):
+    def test_emit_mutation(self) -> None:
         """Test emitting a mutation signal."""
         field = create_semantic_field()
         emitter = create_evolution_emitter(field)
@@ -850,7 +850,7 @@ class TestEvolutionFieldEmitter:
         assert payload.mutation_type == "point"
         assert payload.gibbs_energy == -0.5
 
-    def test_mutation_intensity_scales_with_fitness(self):
+    def test_mutation_intensity_scales_with_fitness(self) -> None:
         """Higher fitness delta should produce higher intensity."""
         field = create_semantic_field()
         emitter = create_evolution_emitter(field)
@@ -867,7 +867,7 @@ class TestEvolutionFieldEmitter:
         # Higher fitness delta should have higher intensity
         assert intensities[0] < intensities[1]
 
-    def test_emit_fitness_change(self):
+    def test_emit_fitness_change(self) -> None:
         """Test emitting a fitness change signal."""
         field = create_semantic_field()
         emitter = create_evolution_emitter(field)
@@ -891,7 +891,7 @@ class TestEvolutionFieldEmitter:
         assert payload.old_fitness == 0.5
         assert payload.new_fitness == 0.8
 
-    def test_emit_cycle_complete(self):
+    def test_emit_cycle_complete(self) -> None:
         """Test emitting cycle completion signal."""
         field = create_semantic_field()
         emitter = create_evolution_emitter(field)
@@ -928,7 +928,7 @@ class TestEvolutionFieldEmitter:
 class TestHegelFieldEmitter:
     """Tests for H-gent HegelFieldEmitter (SYNTHESIS signals)."""
 
-    def test_emit_synthesis(self):
+    def test_emit_synthesis(self) -> None:
         """Test emitting a synthesis signal."""
         field = create_semantic_field()
         emitter = create_hegel_emitter(field)
@@ -956,7 +956,7 @@ class TestHegelFieldEmitter:
         assert payload.confidence == 0.85
         assert payload.resolution_type == "elevate"
 
-    def test_synthesis_intensity_matches_confidence(self):
+    def test_synthesis_intensity_matches_confidence(self) -> None:
         """Synthesis intensity should match confidence."""
         field = create_semantic_field()
         emitter = create_hegel_emitter(field)
@@ -967,7 +967,7 @@ class TestHegelFieldEmitter:
         pheromones = field.get_all(SemanticPheromoneKind.SYNTHESIS)
         assert pheromones[0].intensity == 0.9
 
-    def test_emit_contradiction(self):
+    def test_emit_contradiction(self) -> None:
         """Test emitting a contradiction signal."""
         field = create_semantic_field()
         emitter = create_hegel_emitter(field)
@@ -993,7 +993,7 @@ class TestHegelFieldEmitter:
         assert payload.severity == 0.8
         assert payload.tension_mode == "logical"
 
-    def test_emit_productive_tension(self):
+    def test_emit_productive_tension(self) -> None:
         """Test emitting productive tension signal."""
         field = create_semantic_field()
         emitter = create_hegel_emitter(field)
@@ -1021,7 +1021,7 @@ class TestHegelFieldEmitter:
 class TestPersonaFieldEmitter:
     """Tests for K-gent PersonaFieldEmitter (PRIOR signals)."""
 
-    def test_emit_prior_change(self):
+    def test_emit_prior_change(self) -> None:
         """Test emitting a prior change signal."""
         field = create_semantic_field()
         emitter = create_persona_emitter(field)
@@ -1047,7 +1047,7 @@ class TestPersonaFieldEmitter:
         assert payload.persona_id == "kent"
         assert payload.confidence == 0.9
 
-    def test_prior_intensity_matches_confidence(self):
+    def test_prior_intensity_matches_confidence(self) -> None:
         """Prior intensity should match confidence."""
         field = create_semantic_field()
         emitter = create_persona_emitter(field)
@@ -1058,7 +1058,7 @@ class TestPersonaFieldEmitter:
         pheromones = field.get_all(SemanticPheromoneKind.PRIOR)
         assert pheromones[0].intensity == 0.75
 
-    def test_emit_persona_shift(self):
+    def test_emit_persona_shift(self) -> None:
         """Test emitting a persona shift signal."""
         field = create_semantic_field()
         emitter = create_persona_emitter(field)
@@ -1082,7 +1082,7 @@ class TestPersonaFieldEmitter:
         assert payload.old_persona == "researcher"
         assert payload.new_persona == "creator"
 
-    def test_emit_preference(self):
+    def test_emit_preference(self) -> None:
         """Test emitting a general preference signal."""
         field = create_semantic_field()
         emitter = create_persona_emitter(field)
@@ -1110,7 +1110,7 @@ class TestPersonaFieldEmitter:
 class TestRefineryFieldEmitter:
     """Tests for R-gent RefineryFieldEmitter (REFINEMENT signals)."""
 
-    def test_emit_refinement(self):
+    def test_emit_refinement(self) -> None:
         """Test emitting a refinement signal."""
         field = create_semantic_field()
         emitter = create_refinery_emitter(field)
@@ -1137,7 +1137,7 @@ class TestRefineryFieldEmitter:
         assert payload.before_metrics["score"] == 0.7
         assert payload.after_metrics["score"] == 0.91
 
-    def test_refinement_intensity_scales_with_improvement(self):
+    def test_refinement_intensity_scales_with_improvement(self) -> None:
         """Higher improvement ratio should produce higher intensity."""
         field = create_semantic_field()
         emitter = create_refinery_emitter(field)
@@ -1154,7 +1154,7 @@ class TestRefineryFieldEmitter:
         # Higher improvement should have higher intensity
         assert intensities[0] < intensities[1]
 
-    def test_emit_opportunity(self):
+    def test_emit_opportunity(self) -> None:
         """Test emitting a refinement opportunity signal."""
         field = create_semantic_field()
         emitter = create_refinery_emitter(field)
@@ -1179,7 +1179,7 @@ class TestRefineryFieldEmitter:
         assert payload.strategy == "mipro_v2"
         assert payload.cost_estimate == 5.0
 
-    def test_emit_optimization_trace(self):
+    def test_emit_optimization_trace(self) -> None:
         """Test emitting optimization trace signal."""
         field = create_semantic_field()
         emitter = create_refinery_emitter(field)
@@ -1209,7 +1209,7 @@ class TestRefineryFieldEmitter:
 class TestPhase1Integration:
     """Integration tests for Phase 1 emitters working together."""
 
-    def test_evolution_and_refinement_coordination(self):
+    def test_evolution_and_refinement_coordination(self) -> None:
         """Test E-gent and R-gent can coordinate via field."""
         field = create_semantic_field()
         evolution = create_evolution_emitter(field)
@@ -1229,7 +1229,7 @@ class TestPhase1Integration:
         assert SemanticPheromoneKind.MUTATION.value in observed
         assert SemanticPheromoneKind.REFINEMENT.value in observed
 
-    def test_persona_affects_all_agents(self):
+    def test_persona_affects_all_agents(self) -> None:
         """Test K-gent priors are visible to observer."""
         field = create_semantic_field()
         persona = create_persona_emitter(field)
@@ -1249,7 +1249,7 @@ class TestPhase1Integration:
         priors = observed[SemanticPheromoneKind.PRIOR.value]
         assert len(priors) == 1
 
-    def test_hegel_synthesis_visible_to_psi(self):
+    def test_hegel_synthesis_visible_to_psi(self) -> None:
         """Test H-gent synthesis can be observed by other agents."""
         field = create_semantic_field()
         hegel = create_hegel_emitter(field)
@@ -1271,7 +1271,7 @@ class TestPhase1Integration:
         assert len(synthesis_signals) == 1
         assert len(metaphor_signals) == 1
 
-    def test_field_summary_includes_phase1(self):
+    def test_field_summary_includes_phase1(self) -> None:
         """Test field summary counts Phase 1 pheromones."""
         field = create_semantic_field()
         observer = create_observer_sensor(field)
@@ -1299,7 +1299,7 @@ class TestPhase1Integration:
 class TestEvolutionFieldSensor:
     """Tests for E-gent EvolutionFieldSensor (senses REFINEMENT)."""
 
-    def test_sense_refinements(self):
+    def test_sense_refinements(self) -> None:
         """Test sensing refinement signals."""
         field = create_semantic_field()
         refinery_emitter = create_refinery_emitter(field)
@@ -1323,7 +1323,7 @@ class TestEvolutionFieldSensor:
         assert refinements[0].target_id == "target_001"
         assert refinements[0].improvement_ratio == 1.3
 
-    def test_sense_opportunities(self):
+    def test_sense_opportunities(self) -> None:
         """Test sensing refinement opportunity signals."""
         field = create_semantic_field()
         refinery_emitter = create_refinery_emitter(field)
@@ -1345,7 +1345,7 @@ class TestEvolutionFieldSensor:
         assert opportunities[0].target_id == "target_002"
         assert opportunities[0].strategy == "mipro_v2"
 
-    def test_sense_by_target(self):
+    def test_sense_by_target(self) -> None:
         """Test filtering refinements by target ID."""
         field = create_semantic_field()
         refinery_emitter = create_refinery_emitter(field)
@@ -1363,7 +1363,7 @@ class TestEvolutionFieldSensor:
         assert len(agent_a_refinements) == 2
         assert all(r.target_id == "agent_a" for r in agent_a_refinements)
 
-    def test_get_best_refinement(self):
+    def test_get_best_refinement(self) -> None:
         """Test getting the highest-improvement refinement."""
         field = create_semantic_field()
         refinery_emitter = create_refinery_emitter(field)
@@ -1381,7 +1381,7 @@ class TestEvolutionFieldSensor:
         assert best.target_id == "b"
         assert best.improvement_ratio == 1.8
 
-    def test_get_best_refinement_by_type(self):
+    def test_get_best_refinement_by_type(self) -> None:
         """Test getting best refinement filtered by type."""
         field = create_semantic_field()
         refinery_emitter = create_refinery_emitter(field)
@@ -1400,7 +1400,7 @@ class TestEvolutionFieldSensor:
         assert best_opt.target_id == "a"
         assert best_opt.improvement_ratio == 1.5
 
-    def test_sense_empty_field(self):
+    def test_sense_empty_field(self) -> None:
         """Test sensing when no refinements exist."""
         field = create_semantic_field()
         evolution_sensor = create_evolution_sensor(field)
@@ -1416,7 +1416,7 @@ class TestEvolutionFieldSensor:
 class TestRefineryFieldSensor:
     """Tests for R-gent RefineryFieldSensor (senses MUTATION)."""
 
-    def test_sense_mutations(self):
+    def test_sense_mutations(self) -> None:
         """Test sensing mutation signals."""
         field = create_semantic_field()
         evolution_emitter = create_evolution_emitter(field)
@@ -1439,7 +1439,7 @@ class TestRefineryFieldSensor:
         assert mutations[0].mutation_id == "mut_001"
         assert mutations[0].fitness_delta == 0.25
 
-    def test_sense_fitness_changes(self):
+    def test_sense_fitness_changes(self) -> None:
         """Test sensing fitness change signals."""
         field = create_semantic_field()
         evolution_emitter = create_evolution_emitter(field)
@@ -1462,7 +1462,7 @@ class TestRefineryFieldSensor:
         assert fitness_changes[0].entity_id == "entity_001"
         assert fitness_changes[0].new_fitness == 0.8
 
-    def test_sense_cycle_completions(self):
+    def test_sense_cycle_completions(self) -> None:
         """Test sensing cycle completion signals."""
         field = create_semantic_field()
         evolution_emitter = create_evolution_emitter(field)
@@ -1486,7 +1486,7 @@ class TestRefineryFieldSensor:
         assert cycles[0].generation == 10
         assert cycles[0].best_fitness == 0.95
 
-    def test_sense_positive_mutations(self):
+    def test_sense_positive_mutations(self) -> None:
         """Test filtering for positive fitness delta mutations."""
         field = create_semantic_field()
         evolution_emitter = create_evolution_emitter(field)
@@ -1506,7 +1506,7 @@ class TestRefineryFieldSensor:
         assert len(positive) == 2
         assert all(m.fitness_delta >= 0.1 for m in positive)
 
-    def test_get_strongest_mutation(self):
+    def test_get_strongest_mutation(self) -> None:
         """Test getting mutation with highest fitness delta."""
         field = create_semantic_field()
         evolution_emitter = create_evolution_emitter(field)
@@ -1527,7 +1527,7 @@ class TestRefineryFieldSensor:
 class TestPersonaFieldSensor:
     """Tests for K-gent PersonaFieldSensor (senses SYNTHESIS)."""
 
-    def test_sense_syntheses(self):
+    def test_sense_syntheses(self) -> None:
         """Test sensing synthesis signals."""
         field = create_semantic_field()
         hegel_emitter = create_hegel_emitter(field)
@@ -1551,7 +1551,7 @@ class TestPersonaFieldSensor:
         assert syntheses[0].synthesis == "Liberal democracy"
         assert syntheses[0].confidence == 0.85
 
-    def test_sense_contradictions(self):
+    def test_sense_contradictions(self) -> None:
         """Test sensing contradiction signals."""
         field = create_semantic_field()
         hegel_emitter = create_hegel_emitter(field)
@@ -1574,7 +1574,7 @@ class TestPersonaFieldSensor:
         assert contradictions[0].severity == 0.9
         assert contradictions[0].tension_mode == "logical"
 
-    def test_sense_by_domain(self):
+    def test_sense_by_domain(self) -> None:
         """Test filtering syntheses by domain."""
         field = create_semantic_field()
         hegel_emitter = create_hegel_emitter(field)
@@ -1590,7 +1590,7 @@ class TestPersonaFieldSensor:
         assert len(ethics_syntheses) == 2
         assert all(s.domain == "ethics" for s in ethics_syntheses)
 
-    def test_get_high_confidence_syntheses(self):
+    def test_get_high_confidence_syntheses(self) -> None:
         """Test filtering syntheses by confidence threshold."""
         field = create_semantic_field()
         hegel_emitter = create_hegel_emitter(field)
@@ -1608,7 +1608,7 @@ class TestPersonaFieldSensor:
         assert len(high_conf) == 2
         assert all(s.confidence >= 0.7 for s in high_conf)
 
-    def test_get_strongest_synthesis(self):
+    def test_get_strongest_synthesis(self) -> None:
         """Test getting synthesis with highest confidence."""
         field = create_semantic_field()
         hegel_emitter = create_hegel_emitter(field)
@@ -1629,7 +1629,7 @@ class TestPersonaFieldSensor:
 class TestHegelFieldSensor:
     """Tests for H-gent HegelFieldSensor (senses PRIOR)."""
 
-    def test_sense_priors(self):
+    def test_sense_priors(self) -> None:
         """Test sensing prior signals."""
         field = create_semantic_field()
         persona_emitter = create_persona_emitter(field)
@@ -1652,7 +1652,7 @@ class TestHegelFieldSensor:
         assert priors[0].prior_type == "risk_tolerance"
         assert priors[0].value == 0.7
 
-    def test_sense_persona_shifts(self):
+    def test_sense_persona_shifts(self) -> None:
         """Test sensing persona shift signals."""
         field = create_semantic_field()
         persona_emitter = create_persona_emitter(field)
@@ -1674,7 +1674,7 @@ class TestHegelFieldSensor:
         assert shifts[0].old_persona == "researcher"
         assert shifts[0].new_persona == "creator"
 
-    def test_sense_by_prior_type(self):
+    def test_sense_by_prior_type(self) -> None:
         """Test filtering priors by type."""
         field = create_semantic_field()
         persona_emitter = create_persona_emitter(field)
@@ -1690,7 +1690,7 @@ class TestHegelFieldSensor:
         assert len(risk_priors) == 2
         assert all(p.prior_type == "risk_tolerance" for p in risk_priors)
 
-    def test_sense_by_persona(self):
+    def test_sense_by_persona(self) -> None:
         """Test filtering priors by persona ID."""
         field = create_semantic_field()
         persona_emitter = create_persona_emitter(field)
@@ -1706,7 +1706,7 @@ class TestHegelFieldSensor:
         assert len(kent_priors) == 2
         assert all(p.persona_id == "kent" for p in kent_priors)
 
-    def test_get_active_persona(self):
+    def test_get_active_persona(self) -> None:
         """Test getting the active persona from shifts."""
         field = create_semantic_field()
         persona_emitter = create_persona_emitter(field)
@@ -1719,7 +1719,7 @@ class TestHegelFieldSensor:
 
         assert active == "mode2"
 
-    def test_get_active_persona_none(self):
+    def test_get_active_persona_none(self) -> None:
         """Test getting active persona when no shifts exist."""
         field = create_semantic_field()
         hegel_sensor = create_hegel_sensor(field)
@@ -1729,7 +1729,7 @@ class TestHegelFieldSensor:
 
         assert active is None
 
-    def test_get_prior_value(self):
+    def test_get_prior_value(self) -> None:
         """Test getting specific prior value."""
         field = create_semantic_field()
         persona_emitter = create_persona_emitter(field)
@@ -1744,7 +1744,7 @@ class TestHegelFieldSensor:
 
         assert value == 0.75
 
-    def test_get_prior_value_default(self):
+    def test_get_prior_value_default(self) -> None:
         """Test getting prior value returns default when not found."""
         field = create_semantic_field()
         hegel_sensor = create_hegel_sensor(field)
@@ -1763,7 +1763,7 @@ class TestHegelFieldSensor:
 class TestPhase2Integration:
     """Integration tests for Phase 2 sensor bidirectional coordination."""
 
-    def test_evolution_refinement_bidirectional(self):
+    def test_evolution_refinement_bidirectional(self) -> None:
         """Test E-gent ↔ R-gent bidirectional coordination."""
         field = create_semantic_field()
         evolution_emitter = create_evolution_emitter(field)
@@ -1783,7 +1783,7 @@ class TestPhase2Integration:
         assert len(refinements) == 1
         assert refinements[0].target_id == "mut_001"
 
-    def test_persona_hegel_bidirectional(self):
+    def test_persona_hegel_bidirectional(self) -> None:
         """Test K-gent ↔ H-gent bidirectional coordination."""
         field = create_semantic_field()
         persona_emitter = create_persona_emitter(field)
@@ -1810,7 +1810,7 @@ class TestPhase2Integration:
         assert len(syntheses) == 1
         assert syntheses[0].synthesis == "Calculated risk-taking"
 
-    def test_full_stigmergic_loop(self):
+    def test_full_stigmergic_loop(self) -> None:
         """Test complete stigmergic coordination loop."""
         field = create_semantic_field()
         position = FieldCoordinate(domain="shared")
@@ -1863,7 +1863,7 @@ class TestPhase2Integration:
         assert len(refinements) == 1
         assert refinements[0].improvement_ratio == 1.5
 
-    def test_sensors_do_not_cross_contaminate(self):
+    def test_sensors_do_not_cross_contaminate(self) -> None:
         """Test that sensors only sense their designated signal types."""
         field = create_semantic_field()
         position = FieldCoordinate(domain="shared")
@@ -1898,7 +1898,7 @@ class TestPhase2Integration:
 class TestDataFieldEmitter:
     """Tests for D-gent DataFieldEmitter (STATE signals)."""
 
-    def test_emit_state_change(self):
+    def test_emit_state_change(self) -> None:
         """Test emitting a state change signal."""
         field = create_semantic_field()
         emitter = create_data_emitter(field)
@@ -1924,7 +1924,7 @@ class TestDataFieldEmitter:
         assert payload.key == "users/kent"
         assert payload.new_value_hash == "abc123"
 
-    def test_emit_created_convenience(self):
+    def test_emit_created_convenience(self) -> None:
         """Test convenience method for entity creation."""
         field = create_semantic_field()
         emitter = create_data_emitter(field)
@@ -1938,7 +1938,7 @@ class TestDataFieldEmitter:
         payload = pheromones[0].payload
         assert payload.state_type == "created"
 
-    def test_emit_updated_convenience(self):
+    def test_emit_updated_convenience(self) -> None:
         """Test convenience method for entity updates."""
         field = create_semantic_field()
         emitter = create_data_emitter(field)
@@ -1956,7 +1956,7 @@ class TestDataFieldEmitter:
         assert payload.old_value_hash == "old"
         assert payload.new_value_hash == "new"
 
-    def test_emit_deleted_convenience(self):
+    def test_emit_deleted_convenience(self) -> None:
         """Test convenience method for entity deletion."""
         field = create_semantic_field()
         emitter = create_data_emitter(field)
@@ -1970,7 +1970,7 @@ class TestDataFieldEmitter:
         payload = pheromones[0].payload
         assert payload.state_type == "deleted"
 
-    def test_delete_has_highest_intensity(self):
+    def test_delete_has_highest_intensity(self) -> None:
         """Test that delete events have higher intensity than creates."""
         field = create_semantic_field()
         emitter = create_data_emitter(field)
@@ -1984,7 +1984,7 @@ class TestDataFieldEmitter:
 
         assert intensities["deleted"] > intensities["created"]
 
-    def test_emit_stale(self):
+    def test_emit_stale(self) -> None:
         """Test emitting a stale data signal."""
         field = create_semantic_field()
         emitter = create_data_emitter(field)
@@ -2009,7 +2009,7 @@ class TestDataFieldEmitter:
 class TestDataFieldSensor:
     """Tests for D-gent DataFieldSensor."""
 
-    def test_sense_state_changes(self):
+    def test_sense_state_changes(self) -> None:
         """Test sensing state change signals."""
         field = create_semantic_field()
         emitter = create_data_emitter(field)
@@ -2023,7 +2023,7 @@ class TestDataFieldSensor:
 
         assert len(changes) == 2
 
-    def test_sense_by_state_type(self):
+    def test_sense_by_state_type(self) -> None:
         """Test filtering by state type."""
         field = create_semantic_field()
         emitter = create_data_emitter(field)
@@ -2040,7 +2040,7 @@ class TestDataFieldSensor:
         assert len(creates) == 2
         assert len(deletes) == 1
 
-    def test_sense_by_entity(self):
+    def test_sense_by_entity(self) -> None:
         """Test filtering by entity ID."""
         field = create_semantic_field()
         emitter = create_data_emitter(field)
@@ -2056,7 +2056,7 @@ class TestDataFieldSensor:
         assert len(entity_a_changes) == 2
         assert all(c.entity_id == "entity_a" for c in entity_a_changes)
 
-    def test_sense_stale(self):
+    def test_sense_stale(self) -> None:
         """Test sensing stale data signals."""
         field = create_semantic_field()
         emitter = create_data_emitter(field)
@@ -2073,7 +2073,7 @@ class TestDataFieldSensor:
         assert len(high_stale) == 1
         assert high_stale[0].staleness_score == 0.8
 
-    def test_get_deletions(self):
+    def test_get_deletions(self) -> None:
         """Test getting deletion events."""
         field = create_semantic_field()
         emitter = create_data_emitter(field)
@@ -2098,7 +2098,7 @@ class TestDataFieldSensor:
 class TestTestFieldEmitter:
     """Tests for T-gent TestFieldEmitter (TEST signals)."""
 
-    def test_emit_test_result(self):
+    def test_emit_test_result(self) -> None:
         """Test emitting a test result signal."""
         field = create_semantic_field()
         emitter = create_test_emitter(field)
@@ -2124,7 +2124,7 @@ class TestTestFieldEmitter:
         assert payload.duration_ms == 150.5
         assert "d" in payload.affected_agents
 
-    def test_failure_has_higher_intensity(self):
+    def test_failure_has_higher_intensity(self) -> None:
         """Test that failures have higher intensity than passes."""
         field = create_semantic_field()
         emitter = create_test_emitter(field)
@@ -2139,7 +2139,7 @@ class TestTestFieldEmitter:
 
         assert intensities["t3"] > intensities["t2"] > intensities["t1"]
 
-    def test_emit_coverage_change(self):
+    def test_emit_coverage_change(self) -> None:
         """Test emitting coverage change signal."""
         field = create_semantic_field()
         emitter = create_test_emitter(field)
@@ -2158,7 +2158,7 @@ class TestTestFieldEmitter:
         assert len(pheromones) == 1
         assert pheromones[0].payload.delta == pytest.approx(0.07)
 
-    def test_emit_test_suite_complete(self):
+    def test_emit_test_suite_complete(self) -> None:
         """Test emitting test suite completion signal."""
         field = create_semantic_field()
         emitter = create_test_emitter(field)
@@ -2183,7 +2183,7 @@ class TestTestFieldEmitter:
 class TestTestFieldSensor:
     """Tests for T-gent TestFieldSensor."""
 
-    def test_sense_test_results(self):
+    def test_sense_test_results(self) -> None:
         """Test sensing test result signals."""
         field = create_semantic_field()
         emitter = create_test_emitter(field)
@@ -2197,7 +2197,7 @@ class TestTestFieldSensor:
 
         assert len(results) == 2
 
-    def test_sense_failures(self):
+    def test_sense_failures(self) -> None:
         """Test sensing failure signals specifically."""
         field = create_semantic_field()
         emitter = create_test_emitter(field)
@@ -2214,7 +2214,7 @@ class TestTestFieldSensor:
         assert len(failures) == 2
         assert all(f.result in ("failed", "error") for f in failures)
 
-    def test_sense_by_affected_agent(self):
+    def test_sense_by_affected_agent(self) -> None:
         """Test filtering by affected agent."""
         field = create_semantic_field()
         emitter = create_test_emitter(field)
@@ -2230,7 +2230,7 @@ class TestTestFieldSensor:
         assert len(d_tests) == 2
         assert all("d" in t.affected_agents for t in d_tests)
 
-    def test_sense_coverage_changes(self):
+    def test_sense_coverage_changes(self) -> None:
         """Test sensing coverage change signals."""
         field = create_semantic_field()
         emitter = create_test_emitter(field)
@@ -2244,7 +2244,7 @@ class TestTestFieldSensor:
 
         assert len(changes) == 2
 
-    def test_get_coverage_regressions(self):
+    def test_get_coverage_regressions(self) -> None:
         """Test getting coverage regressions."""
         field = create_semantic_field()
         emitter = create_test_emitter(field)
@@ -2260,7 +2260,7 @@ class TestTestFieldSensor:
         assert len(regressions) == 2
         assert all(r.delta < 0 for r in regressions)
 
-    def test_has_failures(self):
+    def test_has_failures(self) -> None:
         """Test checking for failures."""
         field = create_semantic_field()
         emitter = create_test_emitter(field)
@@ -2285,7 +2285,7 @@ class TestTestFieldSensor:
 class TestWireFieldEmitter:
     """Tests for W-gent WireFieldEmitter (DISPATCH signals)."""
 
-    def test_emit_dispatch(self):
+    def test_emit_dispatch(self) -> None:
         """Test emitting a dispatch signal."""
         field = create_semantic_field()
         emitter = create_wire_emitter(field)
@@ -2312,7 +2312,7 @@ class TestWireFieldEmitter:
         assert payload.target == "agent_b"
         assert "safety" in payload.intercepted_by
 
-    def test_interceptors_increase_intensity(self):
+    def test_interceptors_increase_intensity(self) -> None:
         """Test that more interceptors increase intensity."""
         field = create_semantic_field()
         emitter = create_wire_emitter(field)
@@ -2328,7 +2328,7 @@ class TestWireFieldEmitter:
 
         assert intensities["m2"] > intensities["m1"]
 
-    def test_emit_blocked(self):
+    def test_emit_blocked(self) -> None:
         """Test emitting a blocked message signal."""
         field = create_semantic_field()
         emitter = create_wire_emitter(field)
@@ -2350,7 +2350,7 @@ class TestWireFieldEmitter:
         assert len(pheromones) == 1
         assert pheromones[0].metadata.get("signal_type") == "blocked"
 
-    def test_blocked_severity_affects_intensity(self):
+    def test_blocked_severity_affects_intensity(self) -> None:
         """Test that block severity affects intensity."""
         field = create_semantic_field()
         emitter = create_wire_emitter(field)
@@ -2364,7 +2364,7 @@ class TestWireFieldEmitter:
 
         assert intensities["m2"] > intensities["m1"]
 
-    def test_emit_routing_latency(self):
+    def test_emit_routing_latency(self) -> None:
         """Test emitting routing latency signal."""
         field = create_semantic_field()
         emitter = create_wire_emitter(field)
@@ -2389,7 +2389,7 @@ class TestWireFieldEmitter:
 class TestWireFieldSensor:
     """Tests for W-gent WireFieldSensor."""
 
-    def test_sense_dispatches(self):
+    def test_sense_dispatches(self) -> None:
         """Test sensing dispatch signals."""
         field = create_semantic_field()
         emitter = create_wire_emitter(field)
@@ -2403,7 +2403,7 @@ class TestWireFieldSensor:
 
         assert len(dispatches) == 2
 
-    def test_sense_blocked(self):
+    def test_sense_blocked(self) -> None:
         """Test sensing blocked message signals."""
         field = create_semantic_field()
         emitter = create_wire_emitter(field)
@@ -2418,7 +2418,7 @@ class TestWireFieldSensor:
         assert len(blocked) == 1
         assert blocked[0].blocker == "blocker"
 
-    def test_sense_by_source(self):
+    def test_sense_by_source(self) -> None:
         """Test filtering dispatches by source."""
         field = create_semantic_field()
         emitter = create_wire_emitter(field)
@@ -2434,7 +2434,7 @@ class TestWireFieldSensor:
         assert len(from_a) == 2
         assert all(d.source == "agent_a" for d in from_a)
 
-    def test_sense_by_target(self):
+    def test_sense_by_target(self) -> None:
         """Test filtering dispatches by target."""
         field = create_semantic_field()
         emitter = create_wire_emitter(field)
@@ -2450,7 +2450,7 @@ class TestWireFieldSensor:
         assert len(to_a) == 2
         assert all(d.target == "target_a" for d in to_a)
 
-    def test_sense_intercepted(self):
+    def test_sense_intercepted(self) -> None:
         """Test sensing intercepted messages."""
         field = create_semantic_field()
         emitter = create_wire_emitter(field)
@@ -2466,7 +2466,7 @@ class TestWireFieldSensor:
         assert len(intercepted) == 2
         assert all(d.intercepted_by for d in intercepted)
 
-    def test_get_blockers(self):
+    def test_get_blockers(self) -> None:
         """Test getting unique blockers."""
         field = create_semantic_field()
         emitter = create_wire_emitter(field)
@@ -2481,7 +2481,7 @@ class TestWireFieldSensor:
 
         assert blockers == {"safety", "meter"}
 
-    def test_has_blocks(self):
+    def test_has_blocks(self) -> None:
         """Test checking for blocked messages."""
         field = create_semantic_field()
         emitter = create_wire_emitter(field)
@@ -2505,7 +2505,7 @@ class TestWireFieldSensor:
 class TestPhase3PheromoneKindProperties:
     """Tests for Phase 3 pheromone kind properties."""
 
-    def test_phase3_kinds_have_decay_rate(self):
+    def test_phase3_kinds_have_decay_rate(self) -> None:
         """Test Phase 3 pheromone kinds have decay rates."""
         phase3_kinds = [
             SemanticPheromoneKind.STATE,
@@ -2515,7 +2515,7 @@ class TestPhase3PheromoneKindProperties:
         for kind in phase3_kinds:
             assert 0.0 < kind.decay_rate <= 1.0
 
-    def test_phase3_kinds_have_default_radius(self):
+    def test_phase3_kinds_have_default_radius(self) -> None:
         """Test Phase 3 pheromone kinds have default radii."""
         phase3_kinds = [
             SemanticPheromoneKind.STATE,
@@ -2525,7 +2525,7 @@ class TestPhase3PheromoneKindProperties:
         for kind in phase3_kinds:
             assert kind.default_radius > 0
 
-    def test_dispatch_decays_fastest(self):
+    def test_dispatch_decays_fastest(self) -> None:
         """Test DISPATCH decays fastest (operational signals)."""
         assert (
             SemanticPheromoneKind.DISPATCH.decay_rate
@@ -2536,7 +2536,7 @@ class TestPhase3PheromoneKindProperties:
             > SemanticPheromoneKind.TEST.decay_rate
         )
 
-    def test_test_has_wide_radius(self):
+    def test_test_has_wide_radius(self) -> None:
         """Test TEST signals have wide radius (many care about test results)."""
         assert SemanticPheromoneKind.TEST.default_radius >= 0.8
 
@@ -2549,7 +2549,7 @@ class TestPhase3PheromoneKindProperties:
 class TestPhase3Integration:
     """Integration tests for Phase 3 infrastructure agents."""
 
-    def test_data_test_coordination(self):
+    def test_data_test_coordination(self) -> None:
         """Test D-gent and T-gent can coordinate via field."""
         field = create_semantic_field()
         data = create_data_emitter(field)
@@ -2571,7 +2571,7 @@ class TestPhase3Integration:
         assert SemanticPheromoneKind.STATE.value in observed
         assert SemanticPheromoneKind.TEST.value in observed
 
-    def test_wire_safety_coordination(self):
+    def test_wire_safety_coordination(self) -> None:
         """Test W-gent blocking triggers safety awareness."""
         field = create_semantic_field()
         wire = create_wire_emitter(field)
@@ -2597,7 +2597,7 @@ class TestPhase3Integration:
         assert SemanticPheromoneKind.DISPATCH.value in observed
         assert SemanticPheromoneKind.WARNING.value in observed
 
-    def test_field_summary_includes_phase3(self):
+    def test_field_summary_includes_phase3(self) -> None:
         """Test field summary counts Phase 3 pheromones."""
         field = create_semantic_field()
         observer = create_observer_sensor(field)
@@ -2614,7 +2614,7 @@ class TestPhase3Integration:
         assert summary[SemanticPheromoneKind.TEST.value] == 1
         assert summary[SemanticPheromoneKind.DISPATCH.value] == 1
 
-    def test_full_infrastructure_loop(self):
+    def test_full_infrastructure_loop(self) -> None:
         """Test complete infrastructure coordination loop."""
         field = create_semantic_field()
         position = FieldCoordinate(domain="infra")
