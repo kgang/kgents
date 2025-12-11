@@ -64,7 +64,7 @@ dreamer = create_lucid_dreamer(synapse, hippocampus)
 report = await dreamer.rem_cycle()
 ```
 
-### Semantic Field (66 tests)
+### Semantic Field (135 tests)
 
 Stigmergic coordination via pheromones - agents emit/sense signals without direct imports.
 
@@ -78,12 +78,17 @@ Stigmergic coordination via pheromones - agents emit/sense signals without direc
 | N | NARRATIVE | NARRATIVE |
 | L | CAPABILITY | CAPABILITY |
 | O | - | All types |
-| **E** | **MUTATION** | - |
-| **H** | **SYNTHESIS** | - |
-| **K** | **PRIOR** | - |
-| **R** | **REFINEMENT** | - |
+| **E** | **MUTATION** | **REFINEMENT** |
+| **H** | **SYNTHESIS** | **PRIOR** |
+| **K** | **PRIOR** | **SYNTHESIS** |
+| **R** | **REFINEMENT** | **MUTATION** |
+| **D** | **STATE** | **STATE** |
+| **T** | **TEST** | **TEST** |
+| **W** | **DISPATCH** | **DISPATCH** |
 
-**Phase 1 Complete (MUTATION, SYNTHESIS, PRIOR, REFINEMENT pheromones)**
+**Phase 1 Complete (MUTATION, SYNTHESIS, PRIOR, REFINEMENT emitters)**
+**Phase 2 Complete (Supporting sensors for bidirectional coordination)**
+**Phase 3 Complete (D-gent STATE, T-gent TEST, W-gent DISPATCH)**
 
 ```python
 field = create_semantic_field()
@@ -102,6 +107,45 @@ persona.emit_prior_change("risk_tolerance", 0.7, "kent", position=pos)
 
 refinery = create_refinery_emitter(field)
 refinery.emit_refinement("target_id", "optimization", improvement_ratio=1.3, position=pos)
+
+# Phase 2 sensors (bidirectional coordination)
+evolution_sensor = create_evolution_sensor(field)
+refinements = evolution_sensor.sense_refinements(pos)  # E-gent senses R-gent's improvements
+
+refinery_sensor = create_refinery_sensor(field)
+mutations = refinery_sensor.sense_mutations(pos)  # R-gent senses E-gent's discoveries
+
+persona_sensor = create_persona_sensor(field)
+syntheses = persona_sensor.sense_syntheses(pos)  # K-gent senses H-gent's insights
+
+hegel_sensor = create_hegel_sensor(field)
+priors = hegel_sensor.sense_priors(pos)  # H-gent senses K-gent's preferences
+
+# Phase 3 emitters (Infrastructure Agents)
+data = create_data_emitter(field)
+data.emit_created("entity_001", "users/kent", pos)  # D-gent state change
+data.emit_stale("entity_002", "old/key", "2024-01-01", 0.8, pos)  # Stale data
+
+test = create_test_emitter(field)
+test.emit_test_result("test_foo", "passed", pos, affected_agents=("d", "m"))
+test.emit_coverage_change(0.75, 0.82, pos)  # Coverage improvement
+
+wire = create_wire_emitter(field)
+wire.emit_dispatch("msg_001", "source", "target", pos, intercepted_by=("safety",))
+wire.emit_blocked("msg_002", "safety", "Policy violation", pos, severity="error")
+
+# Phase 3 sensors
+data_sensor = create_data_sensor(field)
+changes = data_sensor.sense_state_changes(pos)
+deletions = data_sensor.get_deletions(pos)
+
+test_sensor = create_test_sensor(field)
+failures = test_sensor.sense_failures(pos)
+regressions = test_sensor.get_coverage_regressions(pos)
+
+wire_sensor = create_wire_sensor(field)
+blocks = wire_sensor.sense_blocked(pos)
+blockers = wire_sensor.get_blockers(pos)
 ```
 
 ### M-gent Cartography (157 tests)
