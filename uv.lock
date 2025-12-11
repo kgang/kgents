@@ -300,6 +300,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "mypy" },
+    { name = "mypy-baseline" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "ruff" },
@@ -315,6 +316,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "mypy", specifier = ">=1.19.0" },
+    { name = "mypy-baseline", specifier = ">=0.7.0" },
     { name = "pytest", specifier = ">=7.0" },
     { name = "pytest-asyncio", specifier = ">=0.21" },
     { name = "ruff", specifier = ">=0.1.0" },
@@ -421,6 +423,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/97/6d/ffaf5f01f5e284d9033de1267e6c1b8f3783f2cf784465378a86122e884b/mypy-1.19.0-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:63ea6a00e4bd6822adbfc75b02ab3653a17c02c4347f5bb0cf1d5b9df3a05835", size = 13799132 },
     { url = "https://files.pythonhosted.org/packages/fe/b0/c33921e73aaa0106224e5a34822411bea38046188eb781637f5a5b07e269/mypy-1.19.0-cp314-cp314-win_amd64.whl", hash = "sha256:3ad925b14a0bb99821ff6f734553294aa6a3440a8cb082fe1f5b84dfb662afb1", size = 10269832 },
     { url = "https://files.pythonhosted.org/packages/09/0e/fe228ed5aeab470c6f4eb82481837fadb642a5aa95cc8215fd2214822c10/mypy-1.19.0-py3-none-any.whl", hash = "sha256:0c01c99d626380752e527d5ce8e69ffbba2046eb8a060db0329690849cf9b6f9", size = 2469714 },
+]
+
+[[package]]
+name = "mypy-baseline"
+version = "0.7.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/65/2a/03288dab6d5f24d187ba0c223f6b3035d9a29de3dd31a3e105a0d4f1b5da/mypy_baseline-0.7.3.tar.gz", hash = "sha256:325f0695310eb8f5c0f10fa7af36ee1b3785a9d26b886a61c07b4a8eddb28d29", size = 319108 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1f/93/7780302b206a8e8e767ce763ef06159725d1323acbe55e46a1cd1ffd109d/mypy_baseline-0.7.3-py3-none-any.whl", hash = "sha256:bd7fa899e687d75af2e3f392a9d6d1790e65dae3d31fe12525cc14f26d866b74", size = 17868 },
 ]
 
 [[package]]

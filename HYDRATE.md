@@ -246,7 +246,7 @@ Pipeline: Safety(50) → Metering(100) → Telemetry(200) → Persona(300)
 pytest -m "not slow" -q              # Fast tests, quiet
 pytest impl/claude/agents/d/ -v      # Specific agent
 kgents check .                       # Validate
-cd impl/claude && uv run mypy .      # Type check (~766 errors, gradual cleanup)
+cd impl/claude && uv run mypy --strict --explicit-package-bases agents/ bootstrap/ runtime/ 2>&1 | uv run mypy-baseline filter
 ```
 
 ---
@@ -265,10 +265,14 @@ cd impl/claude && uv run mypy .      # Type check (~766 errors, gradual cleanup)
 
 ## Tech Debt Inventory
 
-**Mypy**: ~766 type errors (run `cd impl/claude && uv run mypy .`). Most are annotation issues, not runtime bugs. Critical fixes done:
-- None access in `redis_agent.py` - added `_require_client` property
-- Operator error in `breath.py` - fixed Optional handling
-- Wrong parameter names in `infra/providers/__init__.py`
+**Mypy**: 7,516 strict errors baselined in `mypy-baseline.txt`. CI enforces **no new errors** on push.
+```bash
+# Check for new errors (CI blocks on any new errors)
+cd impl/claude && uv run mypy --strict --explicit-package-bases agents/ bootstrap/ runtime/ 2>&1 | uv run mypy-baseline filter
+
+# Re-sync baseline after fixing errors
+cd impl/claude && uv run mypy --strict --explicit-package-bases agents/ bootstrap/ runtime/ 2>&1 | uv run mypy-baseline sync
+```
 
 **74 TODOs** across 33 files. Key clusters:
 
