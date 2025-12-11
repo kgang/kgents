@@ -61,11 +61,11 @@ jobs:
       - name: Install dependencies
         run: cd impl/claude && uv sync --dev
 
-      - name: Mypy (strict, baseline)
+      - name: Mypy (strict)
         run: |
           cd impl/claude
-          uv run mypy --strict --explicit-package-bases agents/ bootstrap/ runtime/ 2>&1 | uv run mypy-baseline filter
-        # Fails on NEW type errors only. Existing errors tracked in mypy-baseline.txt
+          uv run mypy --strict --explicit-package-bases agents/ bootstrap/ runtime/
+        # Fully strict - zero tolerance for type errors!
 
   # ===========================================================================
   # Tier 2: Unit tests (1-3 min)
