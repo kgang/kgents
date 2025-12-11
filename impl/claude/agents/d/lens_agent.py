@@ -5,6 +5,8 @@ Wraps a parent D-gent and projects state through a lens,
 providing scoped access to sub-state.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Generic, List, TypeVar
 
