@@ -8,12 +8,61 @@ This implements Phase 1 of the test evolution plan:
 - Centralized fixtures hierarchy
 - Custom markers for law verification
 - BootstrapWitness integration
+
+Meta-Bootstrap: Test failures are algedonic signals.
+Every failure emits a "flinch" to .kgents/ghost/test_flinches.jsonl
 """
 
+import json
+import time
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import pytest
+
+# =============================================================================
+# Meta-Bootstrap: Test Flinch Logging
+# =============================================================================
+
+# Find project root (where .kgents/ lives)
+_PROJECT_ROOT = Path(__file__).parent.parent.parent  # impl/claude -> kgents
+_GHOST_DIR = _PROJECT_ROOT / ".kgents" / "ghost"
+_FLINCH_FILE = _GHOST_DIR / "test_flinches.jsonl"
+
+
+def _emit_test_flinch(report) -> None:
+    """
+    Emit a flinch signal for a failing test.
+
+    Flinches are algedonic signals - raw pain indicators that bypass
+    semantic processing. They accumulate for pattern analysis.
+    """
+    try:
+        _GHOST_DIR.mkdir(parents=True, exist_ok=True)
+
+        flinch = {
+            "ts": time.time(),
+            "test": report.nodeid,
+            "phase": report.when,  # setup, call, teardown
+            "duration": getattr(report, "duration", 0),
+            "outcome": report.outcome,
+        }
+
+        # Append to JSONL (newline-delimited JSON)
+        with _FLINCH_FILE.open("a") as f:
+            f.write(json.dumps(flinch) + "\n")
+
+    except Exception:
+        # Never let flinch logging break tests
+        pass
+
+
+def pytest_runtest_logreport(report):
+    """Pytest hook: log failures as flinch signals."""
+    if report.failed:
+        _emit_test_flinch(report)
+
 
 # =============================================================================
 # Core Agent Fixtures

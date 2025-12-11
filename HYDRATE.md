@@ -1,18 +1,39 @@
 # HYDRATE.md - kgents Session Context
 
-**Status**: ~6,122 tests passing | Branch: `main`
+**Status**: ~6,683 tests passing | Branch: `main`
 
-## Current: DevEx Bootstrap Plan v2 (📋 PLANNING)
+## Current: Meta-Bootstrap Active (🔄 EXECUTING)
 
-See `docs/devex-bootstrap-plan.md` - MCP sidecar architecture for developer-system metacognition.
+The system now observes itself during development. See `docs/meta-bootstrap-plan.md`.
 
-**Key Points**:
-- MCP sidecar (not middleware) - Claude *perceives* kgents via `kgents://` resources
-- Pre-computed context via background daemons (<50ms latency)
-- K-gent Mirror + Coach modes (prevents echo chamber)
-- `kgents wake` / `kgents sleep` rituals
+**Active Feedback Loops**:
+| Loop | Signal | Storage |
+|------|--------|---------|
+| Test Flinch | pytest failures | `.kgents/ghost/test_flinches.jsonl` |
+| CI Signals | GitHub Actions | `.kgents/ghost/ci_signals.jsonl` (artifact) |
+| HYDRATE Append | Key events | This file (bottom) |
+| Git Crystallization | git log/diff | Native git |
 
-**Next**: Kent reviews plan → Phase 1 MCP implementation.
+**Quick Commands**:
+```bash
+# Session narrative (last 8 hours)
+git log --oneline --since="8 hours ago"
+
+# Churn map (volatility)
+git diff --stat HEAD~10
+
+# Prior drift (CLAUDE.md evolution)
+git diff HEAD~5 CLAUDE.md
+
+# Recent flinches
+cat .kgents/ghost/test_flinches.jsonl | tail -5
+```
+
+**DevEx V4 (Deferred to Post-Bootstrap)**:
+- `.kgents/ghost/` living filesystem
+- Keystroke dynamics, Shadow Diff
+- Morning Calibration, Evening Confessional
+- See `docs/devex-unified-plan.md`
 
 ---
 

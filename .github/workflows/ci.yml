@@ -10,6 +10,12 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# =============================================================================
+# Meta-Bootstrap: CI emits semantic field signals
+# Signals are written to .kgents/ghost/ci_signals.jsonl
+# This closes the cross-session feedback loop
+# =============================================================================
+
 jobs:
   # ===========================================================================
   # Tier 1: Fast checks (< 1 min)
@@ -270,3 +276,40 @@ jobs:
         run: |
           cd impl/claude
           uv run pytest -m "accursed_share" --tb=short -q
+
+  # ===========================================================================
+  # Meta-Bootstrap: Emit CI signals
+  # Runs after all tests to emit success/failure signals
+  # ===========================================================================
+  emit-signal:
+    name: Emit CI Signal
+    runs-on: ubuntu-latest
+    needs: [unit-tests, laws, integration]
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Emit success signal
+        if: needs.unit-tests.result == 'success' && needs.laws.result == 'success'
+        run: |
+          mkdir -p .kgents/ghost
+          echo "{\"ts\": $(date +%s), \"type\": \"CI_SUCCESS\", \"sha\": \"${{ github.sha }}\", \"ref\": \"${{ github.ref }}\", \"tests\": \"unit,laws,integration\"}" >> .kgents/ghost/ci_signals.jsonl
+          echo "CI Signal: SUCCESS emitted"
+
+      - name: Emit failure signal
+        if: needs.unit-tests.result == 'failure' || needs.laws.result == 'failure' || needs.integration.result == 'failure'
+        run: |
+          mkdir -p .kgents/ghost
+          FAILED=""
+          [ "${{ needs.unit-tests.result }}" == "failure" ] && FAILED="${FAILED}unit,"
+          [ "${{ needs.laws.result }}" == "failure" ] && FAILED="${FAILED}laws,"
+          [ "${{ needs.integration.result }}" == "failure" ] && FAILED="${FAILED}integration,"
+          echo "{\"ts\": $(date +%s), \"type\": \"CI_FAILURE\", \"sha\": \"${{ github.sha }}\", \"ref\": \"${{ github.ref }}\", \"failed\": \"${FAILED%,}\"}" >> .kgents/ghost/ci_signals.jsonl
+          echo "CI Signal: FAILURE emitted (${FAILED%,})"
+
+      - name: Upload signal artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-signals
+          path: .kgents/ghost/ci_signals.jsonl
+          retention-days: 30
