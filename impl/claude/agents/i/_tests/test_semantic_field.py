@@ -19,6 +19,9 @@ from agents.i.semantic_field import (
     IntentPayload,
     WarningPayload,
     OpportunityPayload,
+    CapabilityPayload,
+    CapabilityDeprecationPayload,
+    CapabilityRequestPayload,
     create_semantic_field,
     create_psi_emitter,
     create_forge_sensor,
@@ -29,6 +32,8 @@ from agents.i.semantic_field import (
     create_narrative_emitter,
     create_narrative_sensor,
     create_observer_sensor,
+    create_catalog_emitter,
+    create_catalog_sensor,
 )
 
 
@@ -770,3 +775,576 @@ class TestPheromoneKindProperties:
     def test_warning_has_wide_radius(self):
         """Warnings should broadcast widely."""
         assert SemanticPheromoneKind.WARNING.default_radius >= 1.0
+
+    def test_capability_has_wide_radius(self):
+        """Capabilities should broadcast widely for discovery."""
+        assert SemanticPheromoneKind.CAPABILITY.default_radius >= 1.0
+
+    def test_capability_decays_slowly(self):
+        """Capabilities should decay very slowly (stable)."""
+        assert SemanticPheromoneKind.CAPABILITY.decay_rate <= 0.05
+
+
+# =============================================================================
+# L-gent Catalog Field Tests (Phase 4)
+# =============================================================================
+
+
+class TestCapabilityPayloads:
+    """Tests for capability payload dataclasses."""
+
+    def test_capability_payload_creation(self):
+        """Test creating a CapabilityPayload."""
+        payload = CapabilityPayload(
+            agent_id="l-gent",
+            capability_name="embed_text",
+            input_type="str",
+            output_type="list[float]",
+            cost_estimate=0.001,
+            tags=("embedding", "semantic"),
+            description="Embed text into vector space",
+            version="2.0",
+        )
+
+        assert payload.agent_id == "l-gent"
+        assert payload.capability_name == "embed_text"
+        assert payload.input_type == "str"
+        assert payload.output_type == "list[float]"
+        assert payload.cost_estimate == 0.001
+        assert "embedding" in payload.tags
+        assert payload.version == "2.0"
+
+    def test_capability_payload_defaults(self):
+        """Test CapabilityPayload default values."""
+        payload = CapabilityPayload(
+            agent_id="test",
+            capability_name="test_cap",
+            input_type="str",
+            output_type="str",
+        )
+
+        assert payload.cost_estimate == 0.0
+        assert payload.tags == ()
+        assert payload.description == ""
+        assert payload.version == "1.0"
+
+    def test_deprecation_payload_creation(self):
+        """Test creating a CapabilityDeprecationPayload."""
+        payload = CapabilityDeprecationPayload(
+            agent_id="l-gent",
+            capability_name="old_embed",
+            reason="Superseded by embed_v2",
+            replacement="embed_v2",
+            deprecation_date="2025-01-15",
+        )
+
+        assert payload.agent_id == "l-gent"
+        assert payload.capability_name == "old_embed"
+        assert payload.reason == "Superseded by embed_v2"
+        assert payload.replacement == "embed_v2"
+
+    def test_request_payload_creation(self):
+        """Test creating a CapabilityRequestPayload."""
+        payload = CapabilityRequestPayload(
+            requester_id="f-gent",
+            capability_pattern="embed*",
+            urgency=0.8,
+            input_type="str",
+            output_type="list[float]",
+            tags=("semantic",),
+        )
+
+        assert payload.requester_id == "f-gent"
+        assert payload.capability_pattern == "embed*"
+        assert payload.urgency == 0.8
+        assert payload.input_type == "str"
+
+
+class TestCatalogFieldEmitter:
+    """Tests for CatalogFieldEmitter."""
+
+    def test_emit_capability_registered(self):
+        """Test emitting a capability registration."""
+        field = create_semantic_field()
+        emitter = create_catalog_emitter(field)
+
+        position = FieldCoordinate(domain="semantic")
+
+        phero_id = emitter.emit_capability_registered(
+            agent_id="psi-gent",
+            capability_name="discover_metaphor",
+            input_type="ProblemSpace",
+            output_type="Functor[P,K]",
+            position=position,
+            cost_estimate=0.05,
+            tags=("metaphor", "discovery"),
+            description="Discover metaphors for problem spaces",
+            version="1.2",
+        )
+
+        assert phero_id.startswith("phero-")
+        assert field.pheromone_count == 1
+
+        pheromones = field.get_all(SemanticPheromoneKind.CAPABILITY)
+        assert len(pheromones) == 1
+
+        payload = pheromones[0].payload
+        assert isinstance(payload, CapabilityPayload)
+        assert payload.agent_id == "psi-gent"
+        assert payload.capability_name == "discover_metaphor"
+
+    def test_emit_capability_full_intensity(self):
+        """Test capability registration has full intensity."""
+        field = create_semantic_field()
+        emitter = create_catalog_emitter(field)
+        position = FieldCoordinate()
+
+        emitter.emit_capability_registered(
+            agent_id="test",
+            capability_name="test_cap",
+            input_type="str",
+            output_type="str",
+            position=position,
+        )
+
+        pheromones = field.get_all(SemanticPheromoneKind.CAPABILITY)
+        assert pheromones[0].intensity == 1.0
+
+    def test_emit_capability_deprecated(self):
+        """Test emitting a capability deprecation."""
+        field = create_semantic_field()
+        emitter = create_catalog_emitter(field)
+        position = FieldCoordinate(domain="semantic")
+
+        emitter.emit_capability_deprecated(
+            agent_id="l-gent",
+            capability_name="old_embed",
+            reason="Use embed_v2 instead",
+            position=position,
+            replacement="embed_v2",
+            deprecation_date="2025-01-15",
+        )
+
+        pheromones = field.get_all(SemanticPheromoneKind.CAPABILITY)
+        assert len(pheromones) == 1
+
+        payload = pheromones[0].payload
+        assert isinstance(payload, CapabilityDeprecationPayload)
+        assert payload.capability_name == "old_embed"
+        assert payload.replacement == "embed_v2"
+
+    def test_deprecation_has_lower_intensity(self):
+        """Test deprecations have lower intensity than registrations."""
+        field = create_semantic_field()
+        emitter = create_catalog_emitter(field)
+        position = FieldCoordinate()
+
+        emitter.emit_capability_registered("test", "cap1", "str", "str", position)
+        emitter.emit_capability_deprecated("test", "cap2", "reason", position)
+
+        pheromones = field.get_all(SemanticPheromoneKind.CAPABILITY)
+        intensities = [p.intensity for p in pheromones]
+
+        assert 1.0 in intensities  # Registration
+        assert 0.8 in intensities  # Deprecation
+
+    def test_emit_capability_updated(self):
+        """Test emitting a capability update."""
+        field = create_semantic_field()
+        emitter = create_catalog_emitter(field)
+        position = FieldCoordinate()
+
+        emitter.emit_capability_updated(
+            agent_id="test",
+            capability_name="test_cap",
+            changes={"cost_estimate": 0.02, "version": "1.1"},
+            position=position,
+            new_version="1.1",
+        )
+
+        pheromones = field.get_all(SemanticPheromoneKind.CAPABILITY)
+        assert len(pheromones) == 1
+
+        # Update has dict payload, not CapabilityPayload
+        payload = pheromones[0].payload
+        assert payload["update_type"] == "modification"
+        assert payload["new_version"] == "1.1"
+
+    def test_emit_capability_request(self):
+        """Test emitting a capability request."""
+        field = create_semantic_field()
+        emitter = create_catalog_emitter(field)
+        position = FieldCoordinate(domain="semantic")
+
+        emitter.emit_capability_request(
+            requester_id="f-gent",
+            capability_pattern="embed*",
+            urgency=0.9,
+            position=position,
+            input_type="str",
+            tags=("semantic", "vector"),
+        )
+
+        pheromones = field.get_all(SemanticPheromoneKind.CAPABILITY)
+        assert len(pheromones) == 1
+
+        payload = pheromones[0].payload
+        assert isinstance(payload, CapabilityRequestPayload)
+        assert payload.requester_id == "f-gent"
+        assert payload.capability_pattern == "embed*"
+
+    def test_request_urgency_determines_intensity(self):
+        """Test request urgency determines signal intensity."""
+        field = create_semantic_field()
+        emitter = create_catalog_emitter(field)
+        position = FieldCoordinate()
+
+        emitter.emit_capability_request("req1", "cap*", 0.3, position)
+        emitter.emit_capability_request("req2", "cap*", 0.9, position)
+
+        pheromones = field.get_all(SemanticPheromoneKind.CAPABILITY)
+        intensities = sorted([p.intensity for p in pheromones])
+
+        assert intensities == [0.3, 0.9]
+
+
+class TestCatalogFieldSensor:
+    """Tests for CatalogFieldSensor."""
+
+    def test_sense_capabilities(self):
+        """Test sensing capabilities."""
+        field = create_semantic_field()
+        emitter = create_catalog_emitter(field)
+        sensor = create_catalog_sensor(field)
+
+        position = FieldCoordinate(domain="semantic")
+
+        emitter.emit_capability_registered("agent_a", "cap_a", "str", "str", position)
+        emitter.emit_capability_registered("agent_b", "cap_b", "int", "int", position)
+
+        capabilities = sensor.sense_capabilities(position)
+
+        assert len(capabilities) == 2
+        names = {c.capability_name for c in capabilities}
+        assert names == {"cap_a", "cap_b"}
+
+    def test_sense_by_tags(self):
+        """Test sensing capabilities by tags."""
+        field = create_semantic_field()
+        emitter = create_catalog_emitter(field)
+        sensor = create_catalog_sensor(field)
+
+        position = FieldCoordinate(domain="semantic")
+
+        emitter.emit_capability_registered(
+            "agent_a",
+            "embed",
+            "str",
+            "list[float]",
+            position,
+            tags=("embedding", "semantic"),
+        )
+        emitter.emit_capability_registered(
+            "agent_b",
+            "parse",
+            "str",
+            "dict",
+            position,
+            tags=("parsing", "json"),
+        )
+
+        # Sense by embedding tag
+        results = sensor.sense_by_tags(position, ("embedding",))
+        assert len(results) == 1
+        assert results[0].capability_name == "embed"
+
+        # Sense by non-matching tag
+        empty = sensor.sense_by_tags(position, ("nonexistent",))
+        assert len(empty) == 0
+
+    def test_sense_by_tags_partial_match(self):
+        """Test sensing by tags with partial matches."""
+        field = create_semantic_field()
+        emitter = create_catalog_emitter(field)
+        sensor = create_catalog_sensor(field)
+
+        position = FieldCoordinate(domain="semantic")
+
+        emitter.emit_capability_registered(
+            "a", "cap_a", "str", "str", position, tags=("x", "y")
+        )
+        emitter.emit_capability_registered(
+            "b", "cap_b", "str", "str", position, tags=("y", "z")
+        )
+
+        # Tag "y" matches both
+        results = sensor.sense_by_tags(position, ("y",))
+        assert len(results) == 2
+
+    def test_sense_deprecations(self):
+        """Test sensing deprecation notices."""
+        field = create_semantic_field()
+        emitter = create_catalog_emitter(field)
+        sensor = create_catalog_sensor(field)
+
+        position = FieldCoordinate(domain="semantic")
+
+        emitter.emit_capability_registered("a", "new_cap", "str", "str", position)
+        emitter.emit_capability_deprecated("a", "old_cap", "Retired", position)
+
+        deprecations = sensor.sense_deprecations(position)
+
+        assert len(deprecations) == 1
+        assert deprecations[0].capability_name == "old_cap"
+
+    def test_sense_capability_requests(self):
+        """Test sensing capability requests."""
+        field = create_semantic_field()
+        emitter = create_catalog_emitter(field)
+        sensor = create_catalog_sensor(field)
+
+        position = FieldCoordinate(domain="semantic")
+
+        emitter.emit_capability_registered("a", "cap", "str", "str", position)
+        emitter.emit_capability_request("requester", "need_*", 0.8, position)
+
+        requests = sensor.sense_capability_requests(position)
+
+        assert len(requests) == 1
+        assert requests[0].requester_id == "requester"
+        assert requests[0].capability_pattern == "need_*"
+
+    def test_find_capability(self):
+        """Test finding a specific capability by name."""
+        field = create_semantic_field()
+        emitter = create_catalog_emitter(field)
+        sensor = create_catalog_sensor(field)
+
+        position = FieldCoordinate(domain="semantic")
+
+        emitter.emit_capability_registered("a", "cap_a", "str", "str", position)
+        emitter.emit_capability_registered("b", "cap_b", "int", "int", position)
+
+        found = sensor.find_capability("cap_b", position)
+        assert found is not None
+        assert found.capability_name == "cap_b"
+        assert found.agent_id == "b"
+
+        not_found = sensor.find_capability("nonexistent", position)
+        assert not_found is None
+
+    def test_get_agent_capabilities(self):
+        """Test getting all capabilities from a specific agent."""
+        field = create_semantic_field()
+        emitter = create_catalog_emitter(field)
+        sensor = create_catalog_sensor(field)
+
+        position = FieldCoordinate(domain="semantic")
+
+        emitter.emit_capability_registered("psi", "cap1", "str", "str", position)
+        emitter.emit_capability_registered("psi", "cap2", "int", "int", position)
+        emitter.emit_capability_registered("forge", "cap3", "str", "dict", position)
+
+        psi_caps = sensor.get_agent_capabilities("psi", position)
+
+        assert len(psi_caps) == 2
+        names = {c.capability_name for c in psi_caps}
+        assert names == {"cap1", "cap2"}
+
+    def test_has_capability(self):
+        """Test checking if a capability exists."""
+        field = create_semantic_field()
+        emitter = create_catalog_emitter(field)
+        sensor = create_catalog_sensor(field)
+
+        position = FieldCoordinate(domain="semantic")
+
+        emitter.emit_capability_registered("a", "exists", "str", "str", position)
+
+        assert sensor.has_capability("exists", position) is True
+        assert sensor.has_capability("not_exists", position) is False
+
+    def test_get_capability_count(self):
+        """Test getting total capability count."""
+        field = create_semantic_field()
+        emitter = create_catalog_emitter(field)
+        sensor = create_catalog_sensor(field)
+
+        position = FieldCoordinate(domain="semantic")
+
+        assert sensor.get_capability_count() == 0
+
+        emitter.emit_capability_registered("a", "cap1", "str", "str", position)
+        emitter.emit_capability_registered("b", "cap2", "int", "int", position)
+
+        assert sensor.get_capability_count() == 2
+
+    def test_capability_count_excludes_non_capabilities(self):
+        """Test capability count only counts CapabilityPayload."""
+        field = create_semantic_field()
+        emitter = create_catalog_emitter(field)
+        sensor = create_catalog_sensor(field)
+
+        position = FieldCoordinate(domain="semantic")
+
+        # Mix of payload types
+        emitter.emit_capability_registered("a", "cap", "str", "str", position)
+        emitter.emit_capability_deprecated("a", "old", "reason", position)
+        emitter.emit_capability_request("req", "pattern", 0.5, position)
+
+        # Only counts CapabilityPayload, not deprecations or requests
+        assert sensor.get_capability_count() == 1
+
+
+class TestCatalogIntegration:
+    """Integration tests for L-gent catalog field coordination."""
+
+    def test_emitter_sensor_roundtrip(self):
+        """Test complete emitter→sensor roundtrip."""
+        field = create_semantic_field()
+        emitter = create_catalog_emitter(field, agent_id="l-gent")
+        sensor = create_catalog_sensor(field, agent_id="discovery")
+
+        position = FieldCoordinate(domain="semantic")
+
+        # L-gent registers capabilities
+        emitter.emit_capability_registered(
+            agent_id="psi-gent",
+            capability_name="metaphor_discovery",
+            input_type="ProblemSpace",
+            output_type="Functor[P,K]",
+            position=position,
+            tags=("metaphor", "category-theory"),
+            description="Discover metaphorical mappings",
+        )
+
+        # Other agent discovers it
+        capabilities = sensor.sense_capabilities(position)
+        assert len(capabilities) == 1
+        assert capabilities[0].capability_name == "metaphor_discovery"
+        assert "metaphor" in capabilities[0].tags
+
+    def test_capability_discovery_workflow(self):
+        """Test full capability discovery workflow."""
+        field = create_semantic_field()
+        emitter = create_catalog_emitter(field)
+        sensor = create_catalog_sensor(field)
+
+        position = FieldCoordinate(domain="semantic")
+
+        # 1. Agent requests a capability
+        emitter.emit_capability_request(
+            requester_id="f-gent",
+            capability_pattern="embed*",
+            urgency=0.9,
+            position=position,
+            tags=("semantic",),
+        )
+
+        # 2. Check unfulfilled requests
+        requests = sensor.sense_capability_requests(position)
+        assert len(requests) == 1
+
+        # 3. L-gent registers matching capability
+        emitter.emit_capability_registered(
+            agent_id="l-gent",
+            capability_name="embed_text",
+            input_type="str",
+            output_type="list[float]",
+            position=position,
+            tags=("semantic", "embedding"),
+        )
+
+        # 4. Requester can now find it
+        found = sensor.find_capability("embed_text", position)
+        assert found is not None
+        assert found.agent_id == "l-gent"
+
+    def test_capability_lifecycle(self):
+        """Test capability registration → update → deprecation."""
+        field = create_semantic_field()
+        emitter = create_catalog_emitter(field)
+        sensor = create_catalog_sensor(field)
+
+        position = FieldCoordinate(domain="semantic")
+
+        # 1. Register
+        emitter.emit_capability_registered(
+            "agent",
+            "capability_v1",
+            "str",
+            "str",
+            position,
+            version="1.0",
+        )
+        assert sensor.get_capability_count() == 1
+
+        # 2. Update (new emission, doesn't replace old)
+        emitter.emit_capability_updated(
+            "agent",
+            "capability_v1",
+            changes={"version": "1.1"},
+            position=position,
+            new_version="1.1",
+        )
+
+        # 3. Deprecate
+        emitter.emit_capability_deprecated(
+            "agent",
+            "capability_v1",
+            reason="Replaced by v2",
+            position=position,
+            replacement="capability_v2",
+        )
+
+        deprecations = sensor.sense_deprecations(position)
+        assert len(deprecations) == 1
+        assert deprecations[0].replacement == "capability_v2"
+
+    def test_decoupled_agents_via_field(self):
+        """Test agents discover each other via field without direct coupling."""
+        field = create_semantic_field()
+        position = FieldCoordinate(domain="semantic")
+
+        # Agent A registers capability (doesn't know B)
+        emitter_a = create_catalog_emitter(field, agent_id="agent_a")
+        emitter_a.emit_capability_registered(
+            agent_id="agent_a",
+            capability_name="transform_data",
+            input_type="RawData",
+            output_type="CleanData",
+            position=position,
+            tags=("data", "transformation"),
+        )
+
+        # Agent B senses capability (doesn't know A)
+        sensor_b = create_catalog_sensor(field, agent_id="agent_b")
+        capabilities = sensor_b.sense_by_tags(position, ("transformation",))
+
+        assert len(capabilities) == 1
+        assert capabilities[0].agent_id == "agent_a"
+
+    def test_capability_decay_affects_discovery(self):
+        """Test capability decay affects discoverability."""
+        field = create_semantic_field()
+        emitter = create_catalog_emitter(field)
+        sensor = create_catalog_sensor(field)
+
+        position = FieldCoordinate(domain="semantic")
+
+        emitter.emit_capability_registered("agent", "test_cap", "str", "str", position)
+
+        # Initially discoverable
+        assert sensor.has_capability("test_cap", position)
+
+        # CAPABILITY has very slow decay (0.02), needs many ticks
+        # Decay formula: intensity *= exp(-0.02 * dt)
+        # Need intensity < 0.01 to expire
+        # 1.0 * exp(-0.02 * t) < 0.01
+        # exp(-0.02 * t) < 0.01
+        # -0.02 * t < ln(0.01) ≈ -4.6
+        # t > 230
+        for _ in range(300):
+            field.tick(1.0)
+
+        assert not sensor.has_capability("test_cap", position)
