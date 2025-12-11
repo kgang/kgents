@@ -1,290 +1,130 @@
-# HYDRATE.md - kgents Session Context
+# HYDRATE.md - kgents META CONTEXT
 
-**Status**: 7,025+ tests | Branch: `main`
+> *"To read is to invoke. There is no view from nowhere."*
 
-## Current: K-Terrarium Phase 4 (Live Reload Dev Mode)
+This document is an AGENTESE coordination surface. Projects are **holons**—grasping one yields affordances that depend on who is grasping.
 
-Kubernetes-native agent isolation with live reload development experience.
+## hydrate.protocol
 
-**K-Terrarium CLI** (working):
-```bash
-kgents infra init            # Create Kind cluster (idempotent) ~45s
-kgents infra status          # Show cluster state + pods
-kgents infra stop            # Pause cluster (docker pause)
-kgents infra start           # Resume cluster
-kgents infra destroy         # Remove cluster (--force to skip confirm)
-kgents infra deploy          # Deploy ping-agent POC
-kgents infra crd             # Install Agent CRD
-kgents infra apply <agent>   # Deploy agent via CRD
-kgents infra cleanup         # Auto-cleanup failed deployments
-kgents exec --code "..."     # Q-gent disposable execution
-kgents dev <agent>           # Live reload development mode
-kgents dev <agent> --attach  # Attach for interactive debugging
-kgents dev --status          # Show dev mode status
-kgents dev --stop            # Stop all dev pods
+```
+hydrate.project.manifest   → View project status (observer-dependent)
+hydrate.project.afford     → What can I do here? (synergies)
+hydrate.project.block      → What blocks me? (blockers)
+hydrate.concept.manifest   → Shared abstractions (principles, gotchas)
+hydrate.void.sip           → Exploration budget, slop, tangents
+hydrate.time.witness       → Temporal trace (git log, recent changes)
 ```
 
-**Phase 4: Live Reload Dev Mode** (NEW - 23 tests):
-- `infra/k8s/dev_mode.py` - DevMode, DevPodSpec, file watcher integration
-- `protocols/cli/handlers/dev.py` - `kgents dev` CLI handler
-- Volume mounting source code into containers
-- Automatic reload on file changes
-- Streaming logs to terminal
-- Interactive debugging with `--attach`
+**Editing = Invocation**: When you edit, you disturb the field. Your edit carries your observer context.
 
-**Phase 3: Agent Operator** (33 tests):
-- `infra/k8s/manifests/agent-crd.yaml` - Agent CRD (kgents.io/v1)
-- `infra/k8s/operator.py` - Reconciliation loop (AgentSpec → Deployment + Service)
-- `infra/k8s/spec_to_crd.py` - Spec-to-CRD generator + git hook support
-- `protocols/cli/handlers/infra.py` - Extended with `apply` and `crd` commands
+| Action | AGENTESE Analog | Protocol |
+|--------|-----------------|----------|
+| Add project | `hydrate.world.define` | Insert alphabetically; include `afford`/`block` |
+| Update status | `hydrate.project.manifest` | Touch only your section |
+| Note dependency | `hydrate.project.block` | Announce what blocks you |
+| Note enablement | `hydrate.project.afford` | Announce what you enable |
+| Update shared | `hydrate.concept.refine` | Prefix `[STALE?]` if uncertain |
 
-**Agent CRD Features**:
-- **Spec-Driven**: Define agents in `spec/agents/*.md` with YAML frontmatter
-- **Auto-Deploy**: `kgents infra apply b-gent` creates Deployment + Service
-- **D-gent Sidecar**: Optional sidecar container for state management
-- **NetworkPolicy**: Configurable peer-to-peer communication
-- **In-Cluster Operator**: Mirrors K8s control plane pattern
-- **Pre-Deploy Validation**: Image existence + entrypoint checks (prevents CrashLoopBackOff)
-- **Auto-Cleanup**: `kgents infra cleanup` removes failed deployments
+**Status**: 7,080+ tests | Branch: `main` | Mypy: 3,639 baselined
+#################################################################################
 
-```bash
-# Deploy single agent (PLACEHOLDER mode - safe, no image needed)
-kgents infra apply b-gent
+## hydrate.concept.manifest
 
-# Preview manifests without deploying
-kgents infra apply b-gent --dry-run
+**Principles**: Tasteful • Curated • Ethical • Joy-Inducing • Composable • Heterarchical • Generative
 
-# Deploy with real agent code (requires built image)
-kgents infra apply b-gent --full
+**Meta**: AGENTESE (no view from nowhere) • Accursed Share (slop → curate → cherish) • Personality Space
 
-# Cleanup failed deployments (CrashLoopBackOff, ImagePullBackOff)
-kgents infra cleanup
-
-# Deploy from YAML file
-kgents infra apply my-agent.yaml
-
-# Deploy all agents from spec/
-kgents infra apply --all
-
-# Install git hook for auto-generation
-python -m impl.claude.infra.k8s.spec_to_crd --install-hook
-```
-
-**Spec Frontmatter Format** (`spec/agents/b-gent.md`):
-```yaml
----
-genus: B
-name: B-gent
-resources:
-  cpu: 100m
-  memory: 256Mi
-sidecar: true
-entrypoint: agents.b.main
-networkPolicy:
-  allowedPeers: [L, F]
----
-```
-
-**K-Terrarium Phases**:
-| Phase | Focus | Status |
-|-------|-------|--------|
-| 1 | Foundation (Kind bootstrap, CLI, POC agent) | Complete |
-| 2 | Q-gent (disposable execution) | Complete |
-| 3 | Agent Operator (CRD-driven deploy) | Complete |
-| 4 | Live Reload Dev Mode | **Complete** |
-| 5 | Conversation Loop (chat with agents) | Pending |
-| 6 | Feedback Loop (O-gent observation) | Pending |
-
-**Quick Demo**:
-```bash
-kgents infra init          # Create cluster
-kgents infra crd           # Install Agent CRD
-kgents infra apply b-gent  # Deploy B-gent (placeholder mode)
-kgents dev b-gent          # Start B-gent with live reload
-# Edit impl/claude/agents/b/main.py -> changes auto-reload
-kgents dev --stop          # Stop dev mode
-```
+**Ops**: Transparent Infrastructure • Graceful Degradation • Spec-Driven Infrastructure
 
 ---
 
-## DevEx V4 (Complete through Phase 2)
+## hydrate.world.manifest
 
-**CLI Commands**:
-```bash
-# Phase 1: Foundation
-kgents status           # Cortex health at a glance
-kgents dream            # LucidDreamer morning briefing
-kgents map              # M-gent HoloMap visualization
-kgents signal           # SemanticField state
+Projects are holons. Grasping yields observer-dependent affordances.
 
-# Phase 2: Sensorium
-kgents ghost            # Project to .kgents/ghost/
-kgents ghost --daemon   # Background projection
-```
+### world.k8gents
 
-**DevEx V4 Phases**:
-| Phase | Focus | Status |
-|-------|-------|--------|
-| 1 | Foundation (CLI entry points) | Complete |
-| 2 | Sensorium (.kgents/ghost/) | Complete |
-| 3 | Neural Link (keystroke dynamics) | Pending |
-| 4 | Shadow (speculative execution) | Pending |
-| 5 | Rituals (calibration/confessional) | Pending |
+> *"K8s primitives ARE agent primitives—a structural isomorphism."*
 
-**Phase 1 Files** (CLI handlers):
-- `protocols/cli/handlers/status.py` - CortexDashboard CLI
-- `protocols/cli/handlers/dream.py` - LucidDreamer CLI
-- `protocols/cli/handlers/map.py` - HoloMap CLI
-- `protocols/cli/handlers/signal.py` - SemanticField CLI
+**handle**: `spec/k8-gents/` (README + 02-03)
 
-**Phase 2 Files** (Sensorium):
-- `protocols/cli/devex/ghost_writer.py` - Living Filesystem projection
-- `protocols/cli/handlers/ghost.py` - Ghost CLI handler
+| CRD | Purpose |
+|-----|---------|
+| Agent | Deployment + Service + NetworkPolicy |
+| Pheromone | Decaying stigmergic signal |
+| Memory | PVC + retention policy |
+| Umwelt | Observer context + slop budget |
+| Proposal | Safe autopoiesis via dry-run |
 
-**Feedback Loops (Meta-Bootstrap)**:
-| Loop | Signal | Storage |
-|------|--------|---------|
-| Test Flinch | pytest failures | `FlinchStore` → ITelemetryStore + JSONL |
-| CI Signals | GitHub Actions | `.kgents/ghost/ci_signals.jsonl` |
-| Git Crystal | git log/diff | Native git |
+**v4.0 manifest**: Five CRDs • Categorical composition • Workload classification • Trust gates
+**simplified from v3.1**: Removed semantic routing (deferred), removed surprise metrics (→ workload classification), moved horizon to research/
 
-**Quick Commands**:
-```bash
-git log --oneline --since="8 hours ago"  # Session narrative
-git diff --stat HEAD~10                   # Churn map
-cat .kgents/ghost/test_flinches.jsonl | tail -5  # Recent flinches
-```
+**spec structure**:
+- `README.md`: Core thesis, CRDs, anatomy
+- `02_evolution.md`: Proposal CRD, trust gates
+- `03_interface.md`: Ghost, Tether, MCP
+- `research/`: Speculative (not spec)
+
+**afford**: DevEx • W-gent wire • O-gent observability
+**block**: None
 
 ---
 
-## Completed Systems
+### world.devex
 
-### Instance DB - Bicameral Engine (532 tests)
-
-| Phase | Component | Key Files |
-|-------|-----------|-----------|
-| 1-2 | Core + Synapse + Hippocampus | `instance_db/{synapse,hippocampus}.py` |
-| 3 | D-gent Adapters + Bicameral | `agents/d/{bicameral,infra_backends}.py` |
-| 4 | Composting + Lethe | `instance_db/{compost,lethe}.py` |
-| 5 | Lucid Dreaming + Neurogenesis | `instance_db/{dreamer,neurogenesis}.py` |
-| 6 | Observability + Dashboard | `agents/o/cortex_observer.py`, `agents/w/cortex_dashboard.py` |
-
-**Quick Start**:
-```python
-# Bicameral Memory (Left=relational, Right=vector)
-bicameral = create_bicameral_memory(relational, vector, embedder, auto_heal_ghosts=True)
-results = await bicameral.recall("query")  # Ghost memories auto-healed
-
-# Synapse (Active Inference)
-synapse = Synapse(store, SynapseConfig(surprise_threshold=0.5, flashbulb_threshold=0.9))
-await synapse.fire(signal)  # Routes: flashbulb (>0.9), fast (>0.5), batch (<0.5)
-
-# LucidDreamer (Interruptible maintenance)
-dreamer = create_lucid_dreamer(synapse, hippocampus)
-report = await dreamer.rem_cycle()
+```
+kgents status/dream/map/signal   # Phase 1
+kgents ghost [--daemon]          # Phase 2
 ```
 
-### Semantic Field (71 tests)
-
-Stigmergic coordination via pheromones - agents emit/sense signals without direct imports.
-
-| Agent | Emits | Senses |
-|-------|-------|--------|
-| Psi | METAPHOR | - |
-| F | INTENT | METAPHOR |
-| J | WARNING | - |
-| B | OPPORTUNITY, SCARCITY | - |
-| M | MEMORY | MEMORY |
-| N | NARRATIVE | NARRATIVE |
-| L | CAPABILITY | CAPABILITY |
-| O | - | All types |
-
-```python
-field = create_semantic_field()
-emitter = create_psi_emitter(field)
-emitter.emit_metaphor("source", "target", strength=0.85, position=pos)
-```
-
-### M-gent Cartography (157 tests)
-
-Memory-as-Orientation: HoloMap, Attractors, Desire Lines, Voids, Foveation.
-
-```python
-cartographer = create_cartographer(vector_search, trace_store)
-holo_map = await cartographer.invoke(context_vector, Resolution.ADAPTIVE)
-# → landmarks, desire_lines, voids, horizon
-```
-
-### W-gent Interceptors (125 tests)
-
-Pipeline: Safety(50) → Metering(100) → Telemetry(200) → Persona(300)
+**manifest**: Phases 1-2 complete
+**pending**: Neural Link • Shadow • Rituals (Phases 3-5)
+**afford**: K8-gents Cortex Daemon (ghost feeds) • M-gent cartography (map uses)
+**block**: None
 
 ---
 
-## Agent Quick Reference
+## hydrate.self.manifest
 
-| Agent | Purpose | Key File |
-|-------|---------|----------|
-| B | Token economics | `agents/b/metered_functor.py` |
-| D | State/Memory | `agents/d/bicameral.py` |
-| E | Thermodynamic evolution | `agents/e/cycle.py` |
-| I | Interface/TUI | `agents/i/semantic_field.py` |
-| K | Kent simulacra | `agents/k/persona.py` |
-| L | Semantic search | `agents/l/semantic_registry.py` |
-| M | Context cartography | `agents/m/cartographer.py` |
-| N | Narrative traces | `agents/n/chronicle.py` |
-| O | Observation | `agents/o/observer.py` |
-| Psi | Metaphor solving | `agents/psi/engine.py` |
-| Q | Quartermaster (K8s exec) | `agents/q/quartermaster.py` |
-| W | Wire protocol | `agents/w/bus.py` |
+| Agent | Handle | Tests |
+|-------|--------|-------|
+| Bicameral | `self.memory` | 532 |
+| SemanticField | `world.pheromone` | 71 |
+| Cartography | `self.map` | 157 |
+| Interceptors | `world.wire` | 125 |
+
+| Letter | Holon | Handle |
+|--------|-------|--------|
+| B | economics | `agents/b/metered_functor.py` |
+| D | memory | `agents/d/bicameral.py` |
+| L | registry | `agents/l/semantic_registry.py` |
+| M | cartography | `agents/m/cartographer.py` |
+| N | narrative | `agents/n/chronicle.py` |
+| Psi | metaphor | `agents/psi/engine.py` |
 
 ---
 
-## Commands
+## hydrate.concept.refine
 
-```bash
-pytest -m "not slow" -q              # Fast tests, quiet
-pytest impl/claude/agents/d/ -v      # Specific agent
-kgents check .                       # Validate
+**commands**:
+```
+pytest -m "not slow" -q
 cd impl/claude && uv run mypy --strict --explicit-package-bases agents/ bootstrap/ runtime/ 2>&1 | uv run mypy-baseline filter
 ```
 
----
-
-## Coding Gotchas
-
-| Issue | Fix |
-|-------|-----|
-| Python 3.12 syntax | Use `Generic[A]` + `TypeVar`, not `class Foo[A]:` |
-| Cross-agent imports | Use `*_integration.py` files or SemanticField |
-| Forward refs | `from __future__ import annotations` + `TYPE_CHECKING` |
-
-**Foundational agents** (can be imported anywhere): `shared`, `a`, `d`, `l`, `c`
+**gotchas**:
+- Python 3.12: `Generic[A]` + `TypeVar`, not `class Foo[A]:`
+- Cross-agent: `*_integration.py` or SemanticField
+- Foundational: `shared`, `a`, `d`, `l`, `c`
 
 ---
 
-## Tech Debt Inventory
+## hydrate.void.witness
 
-**Mypy**: ~3,974 strict errors baselined in `mypy-baseline.txt` (reduced from 7,516). CI enforces **no new errors** on push.
-```bash
-# Check for new errors (CI blocks on any new errors)
-cd impl/claude && uv run mypy --strict --explicit-package-bases agents/ bootstrap/ runtime/ 2>&1 | uv run mypy-baseline filter
+**tech debt** (the accursed share—acknowledged, not ignored):
+- Mypy: 3,639 baselined (down from 7,516, up from 2,776 due to new files)
+- TODOs: 74 across 33 files
+- Skipped tests: 56 (external deps)
 
-# Re-sync baseline after fixing errors
-cd impl/claude && uv run mypy --strict --explicit-package-bases agents/ bootstrap/ runtime/ 2>&1 | uv run mypy-baseline sync
-```
-
-**74 TODOs** across 33 files. Key clusters:
-
-| Area | Count | Notes |
-|------|-------|-------|
-| J-gent templates | 8 | `templates.py` - placeholder implementations |
-| T-gent MCP | 6 | `mcp_client.py`, `permissions.py` - HTTP transport, D/W-gent integration |
-| CLI membrane | 3 | `membrane_cli.py` - history/persistence TODO |
-| Concept context | 1 | `concept.py:452` - core ops unimplemented |
-
-**56 skipped tests** (graceful): Redis/SQL backends, DSPy, external LLM deps.
-
-**Low-priority**:
-- ~289 `NotImplementedError`/`pass` stubs (many are intentional protocol placeholders)
-- J-gent `templates.py` generates TODOs by design (JIT compilation markers)
+################################################################################
+*To read is to invoke. To edit is to disturb. There is no view from nowhere.*
