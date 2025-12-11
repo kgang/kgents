@@ -1,8 +1,25 @@
-# Knowledge Distillation
+# Knowledge Distillation: The Understudy Pattern
 
-> *"Budget through distillation."*
+> *"Genius is expensive. Routine should be cheap."*
 
 This document extends B-gent's economic management to include **knowledge distillation**—training cheaper "student" models to replicate expensive "teacher" agent behavior for budget optimization.
+
+> **Note**: This spec incorporates content from the former U-gent "Understudy" specification. The Understudy pattern belongs in B-gent because its primary value is *economic*—the ROI formula is the decision criterion.
+
+---
+
+## The Intelligence-Cost Paradox
+
+| Agent | Capability | Cost/Call | Use Case |
+|-------|------------|-----------|----------|
+| Teacher (GPT-4, Claude) | High | $0.03+ | Complex reasoning |
+| Student (Llama-8B, GPT-4o-mini) | Medium | $0.0002 | Routine tasks |
+
+**Paradox**: The most capable agents are too expensive for infinite loops; the cheapest lack judgment.
+
+**Solution**: Capture Teacher reasoning, distill it into Students.
+
+---
 
 ## Derivation from Bootstrap
 
@@ -330,6 +347,60 @@ async def detect_drift(
 | Rare, high-stakes | ❌ No | Not enough examples |
 | Format conversion | ✅ Yes | Pattern-learnable |
 | Creative generation | ⚠️ Maybe | Depends on constraints |
+
+## The ROI Formula
+
+```
+         (Cost_T - Cost_S) × N_calls - Cost_Training
+ROI = ─────────────────────────────────────────────────
+                     Cost_Training
+
+Break-Even Point:
+              Cost_Training
+BEP_calls = ─────────────────
+            Cost_T - Cost_S
+```
+
+**Decision Rule**: If BEP < 1 week of projected volume, B-gent authorizes training investment.
+
+## Implementation Phases (The Understudy Journey)
+
+### Phase 1: The "Hitchhiker" (Passive Shadowing)
+Wrapper on `Agent.invoke` that logs inputs/outputs to D-gent store. Does NOT train.
+```python
+shadowed_agent = distiller.shadow(teacher)
+# All teacher calls now logged to corpus.jsonl
+```
+
+### Phase 2: The "Imposter" (Evaluation Mode)
+Student runs in background for every request (fire-and-forget).
+**Metric**: `AgreementRate`—How often does `Student(x) == Teacher(x)`?
+When `AgreementRate > 95%` on validation set, enable the Switch.
+
+### Phase 3: The "Switch" (Active Routing)
+Router deployed. Traffic directed to Student, escalating only on high uncertainty.
+System now saves money.
+
+### Phase 4: The "Dreamer" (Synthetic Augmentation)
+Teacher runs during off-peak hours to generate synthetic edge cases,
+preemptively closing knowledge gaps before users encounter them.
+
+## Technical Stack
+
+| Component | Recommendation | Rationale |
+|-----------|---------------|-----------|
+| Student Model | Llama-3-8B-Instruct (4-bit) | Edge deployment, low cost |
+| API Student | GPT-4o-mini | API-based distillation |
+| Training | Unsloth or Torchtune | 2x faster training |
+| Adapter Strategy | LoRA | Hot-swap skills instantly |
+
+**LoRA Adapter Pattern**:
+```
+Base Model: Frozen Llama-3-8B
+├── Skill A (SQL Generation): LoRA Adapter A
+├── Skill B (Summarization):  LoRA Adapter B
+└── Skill C (Code Review):    LoRA Adapter C
+```
 
 ## Anti-Patterns
 

@@ -2,6 +2,8 @@
 
 The letter **T** represents **Testing** agents—morphisms designed to verify, perturb, observe, and judge the behavior of other agents through rigorous Category Theory principles.
 
+> **Note**: Tool Use has been migrated to **U-gents** (Utility agents). See [U-gents](../u-gents/) for the Tool Use framework.
+
 ---
 
 ## Philosophy
@@ -56,7 +58,15 @@ Semantic stability under noise—T-gents inject perturbations to verify.
 
 ## The Taxonomy of T-gents
 
-T-gents are categorized by their effect on the computational stream.
+T-gents are categorized by their effect on the computational stream into **five types**.
+
+| Type | Name | Purpose |
+|------|------|---------|
+| I | Nullifiers | MockAgent, FixtureAgent (constant/lookup morphisms) |
+| II | Saboteurs | FailingAgent, NoiseAgent (perturbation & chaos) |
+| III | Observers | SpyAgent, PredicateAgent (identity with side effects) |
+| IV | Critics | JudgeAgent, PropertyAgent (LLM evaluators) |
+| V | Adversarial | AdversarialGym, StressCoordinate (chaos engineering) |
 
 ### Type I: The Nullifiers (Stubs & Mocks)
 *Replace computation with constants or lookups.*
@@ -118,6 +128,25 @@ T-gents are categorized by their effect on the computational stream.
 - Semantic correctness beyond syntax
 - Ethical and safety validation
 - User intent alignment testing
+
+### Type V: The Adversarial (Chaos Engineering)
+*Automated stress testing through compositional chaos.*
+
+| T-gent | Signature | Purpose |
+|--------|-----------|---------|
+| **AdversarialGym** | `Agent → GymReport` | Monte Carlo stress testing via T-gent composition |
+| **StressCoordinate** | `(noise, failure, latency, drift)` | Point in stress-test space |
+| **MultiDimensionalGym** | `Agent → Dict[Coord, Report]` | Grid search across stress dimensions |
+
+**Use Cases**:
+- Discover unknown failure modes before production
+- Regression testing: verify resilience after refactors
+- Property discovery: empirically find algebraic properties
+- Evolution fitness: Gym as fitness function for E-gents
+
+**The Gym Principle**: Testing is not validation—it's discovery. The Adversarial Gym discovers what breaks agents before production does.
+
+See [adversarial.md](adversarial.md) for full specification.
 
 ---
 
@@ -272,8 +301,10 @@ T-gents are the **quality assurance layer** for all agent genera.
 | Document | Description |
 |----------|-------------|
 | [algebra.md](algebra.md) | Category Theory foundations & laws |
-| [taxonomy.md](taxonomy.md) | Detailed specifications for each T-gent type |
-| [adversarial.md](adversarial.md) | Adversarial Gym & chaos engineering |
+| [taxonomy.md](taxonomy.md) | Detailed specifications for Types I-IV |
+| [adversarial.md](adversarial.md) | Type V: Adversarial Gym & chaos engineering |
+
+> **Looking for Tool Use?** See [U-gents](../u-gents/) for the Tool Use framework (Types I-VI).
 
 ---
 
@@ -330,8 +361,9 @@ async def test_evolution_pipeline():
 ## See Also
 
 - [algebra.md](algebra.md) - Mathematical foundations
-- [taxonomy.md](taxonomy.md) - T-gent type specifications
-- [adversarial.md](adversarial.md) - Chaos engineering vision
+- [taxonomy.md](taxonomy.md) - T-gent type specifications (Types I-IV)
+- [adversarial.md](adversarial.md) - Type V: Chaos engineering
+- [../u-gents/](../u-gents/) - U-gents: Tool Use framework
 - [../c-gents/](../c-gents/) - Category Theory basis
 - [../j-gents/stability.md](../j-gents/stability.md) - Entropy & collapse
 - [../bootstrap.md](../bootstrap.md) - The irreducible kernel
