@@ -1,6 +1,6 @@
 # HYDRATE.md - kgents Session Context
 
-**Status**: ~6,122 tests passing | Branch: `main`
+**Status**: ~6,683 tests passing | Branch: `main`
 
 ## Recent: New Agent Batch Refactoring (Complete)
 
@@ -10,176 +10,60 @@ Comprehensive review and refactoring of seven proposed agents (Q, S, U, V, X, Y,
 
 | Agent | Status | Verdict | Key Issue |
 |-------|--------|---------|-----------|
-| **Q-gent** | ✅ Clean | KEEP | Cleanly derived (Ground + Contradict) |
-| **S-gent** | ✅ Clean | KEEP | Cleanly derived (Ground + Compose) |
-| **V-gent** | ✅ Clean | KEEP | Extends Judge bootstrap with user principles |
-| **U-gent** | ⚠️ Heavy | SIMPLIFY | Complex machinery, could be infrastructure |
-| **X-gent** | ⚠️ Infrastructure | RECONSIDER | MCP/OpenAPI is protocol, not agent genus |
-| **Y-gent** | ⚠️ Overlap | MERGE | Graph composition overlaps C-gent + Fix |
-| **Z-gent** | ⚠️ Overlap | MERGE | Context mgmt overlaps Cooled Functor + Lethe |
-
-### Detailed Analysis
-
-#### Agents That Pass (Clean Derivation)
-
-**Q-gent v2.0 (Questioner)** ✅
-- **Derivation**: `Ground + Contradict` → surfaces what could contradict plans
-- **Morphism**: `Context → Questions`
-- **Unique Value**: Pre-execution inquiry fills a gap no other agent owns
-- **Verdict**: KEEP AS-IS
-
-**S-gent v2.0 (Scribe)** ✅
-- **Derivation**: `Ground + Compose` → records events into structured context
-- **Morphism**: `Event → SessionContext`
-- **Unique Value**: Session-scoped working memory distinct from M-gent (long-term) and D-gent (raw)
-- **Verdict**: KEEP AS-IS
-
-**V-gent (Validator)** ✅
-- **Derivation**: Extends `Judge` bootstrap with user/domain principles
-- **Morphism**: `(Output, Constitution) → Verdict`
-- **Unique Value**: Constitutional AI pattern for ethical/semantic validation
-- **Integration**: Clean separation from T-gent (functional) and P-gent (parsing)
-- **Verdict**: KEEP AS-IS
-
-#### Agents Requiring Simplification
-
-**U-gent (Understudy)** ⚠️
-- **Issue 1**: Heavy machinery (ShadowObserver, StudentTrainer, StudentRouter, DriftDetector)
-- **Issue 2**: Knowledge distillation is infrastructure, not agent genus
-- **Issue 3**: Overlaps with B-gent (economics) and E-gent (evolution)
-- **Bootstrap Gap**: No clean derivation from seven bootstrap agents
-- **Recommendation**: Refactor as **B-gent Extension** ("Budget through Distillation")
-  - Move ShadowObserver → O-gent telemetry integration
-  - Move StudentRouter → C-gent conditional composition
-  - Move DriftDetector → existing O-gent + V-gent pattern
-  - Keep only "distill this agent to cheaper model" as B-gent operation
-
-**X-gent (Xenolinguist)** ⚠️
-- **Issue 1**: MCP/OpenAPI are protocols, not reasoning patterns
-- **Issue 2**: "Protocol adapter" is infrastructure, not cognitive capability
-- **Issue 3**: Already covered: L-gent (catalog), P-gent (parsing), W-gent (middleware)
-- **Bootstrap Gap**: No derivation from bootstrap agents
-- **Recommendation**: Refactor as **Infrastructure Layer**
-  - MCP Client → `protocols/mcp/` (not agent genus)
-  - Puppet Factory → L-gent's registration mechanism
-  - External data → D-gent backends
-  - **Delete X-gent as genus**; promote patterns to infrastructure docs
-
-**Y-gent (Y-Combinator)** ⚠️
-- **Issue 1**: Graph composition is C-gent extended, not new primitive
-- **Issue 2**: Y-combinator IS Fix bootstrap with explicit recursion
-- **Issue 3**: Branch/merge patterns exist in C-gent parallel.md
-- **Bootstrap Gap**: `Y = Fix + Compose + Branch` - all exist
-- **Recommendation**: Merge into **C-gent Extensions**
-  - ThoughtGraph → `spec/c-gents/graph_composition.md`
-  - YCombinator → Already is Fix with `max_depth`
-  - Branch/Merge → Extend `spec/c-gents/parallel.md`
-  - **Delete Y-gent as genus**; this is C-gent feature, not new letter
-
-**Z-gent (Zero)** ⚠️
-- **Issue 1**: Sliding window IS Cooled Functor (bootstrap idiom 3.2)
-- **Issue 2**: Strategic forgetting IS Lethe (D-gent Phase 4)
-- **Issue 3**: Unask/Mu operator is Judge + Contradict (premise checking)
-- **Bootstrap Gap**: `Z = Cooled + Lethe + Judge` - all exist
-- **Recommendation**: Merge into **Existing Components**
-  - SlidingWindow → Cooled Functor formalization
-  - SalienceScorer → M-gent's cartographer scoring
-  - Forgetting cycles → Lethe integration in D-gent
-  - Mu operator → V-gent premise validation
-  - **Delete Z-gent as genus**; distribute to existing owners
-
-### Generativity Assessment (Inter-Agent Compatibility)
-
-| Combination | Current | After Simplification |
-|-------------|---------|----------------------|
-| Q + V | ✅ Q surfaces questions, V validates answers | Same |
-| Q + S | ✅ Q reads session context from S | Same |
-| U + B | ⚠️ Heavy overlap | ✅ B owns economics including distillation |
-| X + L | ⚠️ Both register agents | ✅ L is sole registrar, X is infra |
-| Y + C | ⚠️ Both compose agents | ✅ C owns all composition including graphs |
-| Z + Lethe | ⚠️ Both manage forgetting | ✅ Lethe owns forgetting |
-
-### Derivation Cleanliness Score
-
-Post-simplification derivation map:
-
-| Agent | Bootstrap Derivation | Clean? |
-|-------|---------------------|--------|
-| Q-gent | Ground + Contradict | ✅ |
-| S-gent | Ground + Compose | ✅ |
-| V-gent | Judge + Ground (extension) | ✅ |
-| U→B extension | Compose + Judge (already exists) | ✅ |
-| X→infra | N/A (infrastructure) | ✅ |
-| Y→C extension | Fix + Compose (already exists) | ✅ |
-| Z→distributed | Cooled + Lethe (already exist) | ✅ |
+| **Q-gent** | Clean | KEEP | Cleanly derived (Ground + Contradict) |
+| **S-gent** | Clean | KEEP | Cleanly derived (Ground + Compose) |
+| **V-gent** | Clean | KEEP | Extends Judge bootstrap with user principles |
+| **U-gent** | Heavy | SIMPLIFY | Complex machinery, could be infrastructure |
+| **X-gent** | Infrastructure | RECONSIDER | MCP/OpenAPI is protocol, not agent genus |
+| **Y-gent** | Overlap | MERGE | Graph composition overlaps C-gent + Fix |
+| **Z-gent** | Overlap | MERGE | Context mgmt overlaps Cooled Functor + Lethe |
 
 ### Actions Completed
 
 | Action | Status | Output |
 |--------|--------|--------|
-| KEEP Q-gent | ✅ | `spec/q-gents/README.md` |
-| KEEP S-gent | ✅ | `spec/s-gents/README.md` |
-| KEEP V-gent | ✅ | `spec/v-gents/README.md` |
-| REFACTOR U-gent → B-gent | ✅ | `spec/b-gents/distillation.md` |
-| DELETE X-gent → Infrastructure | ✅ | `docs/infrastructure/mcp-integration.md` |
-| MERGE Y-gent → C-gent | ✅ | `spec/c-gents/graph-composition.md` |
-| DISTRIBUTE Z-gent | ✅ | `spec/c-gents/context-management.md` |
-
-Full summary: `docs/agent-refactoring-summary.md`
-
-### Principle Alignment Rationale
-
-- **Tasteful**: 3 agents pass, 4 fail "does this need to exist as distinct genus?"
-- **Curated**: 7 genera bloats the alphabet; 3 additions is curated
-- **Composable**: Merging Y→C improves composition, not adds complexity
-- **Generative**: Clean derivation = regenerable from bootstrap
-- **Heterarchical**: Distributed Z avoids "entropy god-agent" pattern
+| KEEP Q-gent | Done | `spec/q-gents/README.md` |
+| KEEP S-gent | Done | `spec/s-gents/README.md` |
+| KEEP V-gent | Done | `spec/v-gents/README.md` |
+| REFACTOR U-gent -> B-gent | Done | `spec/b-gents/distillation.md` |
+| DELETE X-gent -> Infrastructure | Done | `docs/infrastructure/mcp-integration.md` |
+| MERGE Y-gent -> C-gent | Done | `spec/c-gents/graph-composition.md` |
+| DISTRIBUTE Z-gent | Done | `spec/c-gents/context-management.md` |
 
 ---
 
-## Previous: DevEx Bootstrap Plan v2 (📋 PLANNING)
+## Previous: Meta-Bootstrap Active
 
-See `docs/devex-bootstrap-plan.md` - MCP sidecar architecture for developer-system metacognition.
+The system now observes itself during development. See `docs/meta-bootstrap-plan.md`.
 
-**Key Points**:
-- MCP sidecar (not middleware) - Claude *perceives* kgents via `kgents://` resources
-- Pre-computed context via background daemons (<50ms latency)
-- K-gent Mirror + Coach modes (prevents echo chamber)
-- `kgents wake` / `kgents sleep` rituals
+**Active Feedback Loops**:
+| Loop | Signal | Storage |
+|------|--------|---------|
+| Test Flinch | pytest failures | `.kgents/ghost/test_flinches.jsonl` |
+| CI Signals | GitHub Actions | `.kgents/ghost/ci_signals.jsonl` (artifact) |
+| HYDRATE Append | Key events | This file (bottom) |
+| Git Crystallization | git log/diff | Native git |
 
-**Next**: Kent reviews plan → Phase 1 MCP implementation.
+**Quick Commands**:
+```bash
+# Session narrative (last 8 hours)
+git log --oneline --since="8 hours ago"
 
----
+# Churn map (volatility)
+git diff --stat HEAD~10
 
-## Previous: Q-gent and S-gent v2.0 Revisions (Complete)
+# Prior drift (CLAUDE.md evolution)
+git diff HEAD~5 CLAUDE.md
 
-Revised Q-gent and S-gent specifications for pragmatism and harmony with design principles.
+# Recent flinches
+cat .kgents/ghost/test_flinches.jsonl | tail -5
+```
 
-| Agent | V1.0 | V2.0 | Key Change |
-|-------|------|------|------------|
-| **Q-gent** | Quartermaster (gadgets) | Questioner (inquiry) | Removed W-gent overlap; now surfaces questions before action |
-| **S-gent** | Sentinel (security) | Scribe (session memory) | Removed god-agent pattern; now provides structured session context |
-
-### Why the Revisions?
-
-**Q-gent v1.0 (Quartermaster) Issues:**
-- Gadgets heavily overlapped with W-gent interceptors
-- Laboratory duplicated W-gent registry patterns
-- Not cleanly derivable from bootstrap
-
-**S-gent v1.0 (Sentinel) Issues:**
-- Overlapped with T-gent, V-gent, P-gent
-- God-agent anti-pattern (wanted to wrap all agents)
-- Security is a cross-cutting concern, not a genus
-
-### Security Note
-Security concerns from S-gent v1.0 should be distributed:
-- Input sanitization → P-gent
-- Sandboxing → J-gent/W-gent
-- Monitoring → O-gent
-- Ethics → V-gent
-
-Proposed addition to `spec/principles.md`: "Defense in Depth" operational principle.
+**DevEx V4 (Deferred to Post-Bootstrap)**:
+- `.kgents/ghost/` living filesystem
+- Keystroke dynamics, Shadow Diff
+- Morning Calibration, Evening Confessional
+- See `docs/devex-unified-plan.md`
 
 ---
 
@@ -210,7 +94,7 @@ dreamer = create_lucid_dreamer(synapse, hippocampus)
 report = await dreamer.rem_cycle()
 ```
 
-### Semantic Field (71 tests)
+### Semantic Field (135 tests)
 
 Stigmergic coordination via pheromones - agents emit/sense signals without direct imports.
 
@@ -224,11 +108,74 @@ Stigmergic coordination via pheromones - agents emit/sense signals without direc
 | N | NARRATIVE | NARRATIVE |
 | L | CAPABILITY | CAPABILITY |
 | O | - | All types |
+| **E** | **MUTATION** | **REFINEMENT** |
+| **H** | **SYNTHESIS** | **PRIOR** |
+| **K** | **PRIOR** | **SYNTHESIS** |
+| **R** | **REFINEMENT** | **MUTATION** |
+| **D** | **STATE** | **STATE** |
+| **T** | **TEST** | **TEST** |
+| **W** | **DISPATCH** | **DISPATCH** |
+
+**Phase 1 Complete (MUTATION, SYNTHESIS, PRIOR, REFINEMENT emitters)**
+**Phase 2 Complete (Supporting sensors for bidirectional coordination)**
+**Phase 3 Complete (D-gent STATE, T-gent TEST, W-gent DISPATCH)**
 
 ```python
 field = create_semantic_field()
 emitter = create_psi_emitter(field)
 emitter.emit_metaphor("source", "target", strength=0.85, position=pos)
+
+# Phase 1 emitters
+evolution = create_evolution_emitter(field)
+evolution.emit_mutation("mut_001", fitness_delta=0.3, generation=5, position=pos)
+
+hegel = create_hegel_emitter(field)
+hegel.emit_synthesis("thesis", "antithesis", "synthesis", confidence=0.85, position=pos)
+
+persona = create_persona_emitter(field)
+persona.emit_prior_change("risk_tolerance", 0.7, "kent", position=pos)
+
+refinery = create_refinery_emitter(field)
+refinery.emit_refinement("target_id", "optimization", improvement_ratio=1.3, position=pos)
+
+# Phase 2 sensors (bidirectional coordination)
+evolution_sensor = create_evolution_sensor(field)
+refinements = evolution_sensor.sense_refinements(pos)  # E-gent senses R-gent's improvements
+
+refinery_sensor = create_refinery_sensor(field)
+mutations = refinery_sensor.sense_mutations(pos)  # R-gent senses E-gent's discoveries
+
+persona_sensor = create_persona_sensor(field)
+syntheses = persona_sensor.sense_syntheses(pos)  # K-gent senses H-gent's insights
+
+hegel_sensor = create_hegel_sensor(field)
+priors = hegel_sensor.sense_priors(pos)  # H-gent senses K-gent's preferences
+
+# Phase 3 emitters (Infrastructure Agents)
+data = create_data_emitter(field)
+data.emit_created("entity_001", "users/kent", pos)  # D-gent state change
+data.emit_stale("entity_002", "old/key", "2024-01-01", 0.8, pos)  # Stale data
+
+test = create_test_emitter(field)
+test.emit_test_result("test_foo", "passed", pos, affected_agents=("d", "m"))
+test.emit_coverage_change(0.75, 0.82, pos)  # Coverage improvement
+
+wire = create_wire_emitter(field)
+wire.emit_dispatch("msg_001", "source", "target", pos, intercepted_by=("safety",))
+wire.emit_blocked("msg_002", "safety", "Policy violation", pos, severity="error")
+
+# Phase 3 sensors
+data_sensor = create_data_sensor(field)
+changes = data_sensor.sense_state_changes(pos)
+deletions = data_sensor.get_deletions(pos)
+
+test_sensor = create_test_sensor(field)
+failures = test_sensor.sense_failures(pos)
+regressions = test_sensor.get_coverage_regressions(pos)
+
+wire_sensor = create_wire_sensor(field)
+blocks = wire_sensor.sense_blocked(pos)
+blockers = wire_sensor.get_blockers(pos)
 ```
 
 ### M-gent Cartography (157 tests)
@@ -238,12 +185,12 @@ Memory-as-Orientation: HoloMap, Attractors, Desire Lines, Voids, Foveation.
 ```python
 cartographer = create_cartographer(vector_search, trace_store)
 holo_map = await cartographer.invoke(context_vector, Resolution.ADAPTIVE)
-# → landmarks, desire_lines, voids, horizon
+# -> landmarks, desire_lines, voids, horizon
 ```
 
 ### W-gent Interceptors (125 tests)
 
-Pipeline: Safety(50) → Metering(100) → Telemetry(200) → Persona(300)
+Pipeline: Safety(50) -> Metering(100) -> Telemetry(200) -> Persona(300)
 
 ---
 
