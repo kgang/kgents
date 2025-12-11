@@ -219,11 +219,11 @@ class TestStreamParsing:
         """Test stream parsing buffers tokens."""
         parser = DiffBasedParser(base_template="hello")
         tokens = ["s/", "hello", "/", "world", "/"]
-        results = parser.parse_stream(tokens)
+        results = list(parser.parse_stream(iter(tokens)))
 
         assert len(results) == 1
         assert results[0].success
-        assert "world" in results[0].value
+        assert results[0].value is not None and "world" in results[0].value
 
 
 class TestRepairTracking:

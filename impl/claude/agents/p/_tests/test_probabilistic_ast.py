@@ -242,7 +242,7 @@ class TestStreamParsing:
         """Test stream parsing buffers tokens."""
         parser = ProbabilisticASTParser()
         tokens = ['{"', "name", '": "', "test", '"}']
-        results = parser.parse_stream(tokens)
+        results = list(parser.parse_stream(iter(tokens)))
 
         assert len(results) == 1
         assert results[0].success

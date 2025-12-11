@@ -334,7 +334,7 @@ class TestStreamParsing:
             }
         )
 
-        results = parser.parse_stream(["hello", " ", "world"])
+        results = list(parser.parse_stream(iter(["hello", " ", "world"])))
         assert len(results) == 1
         assert results[0].success
 
