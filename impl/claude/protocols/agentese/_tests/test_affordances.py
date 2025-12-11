@@ -13,43 +13,42 @@ The key invariants tested:
 import pytest
 
 from ..affordances import (
-    # Types
-    AspectCategory,
-    Aspect,
+    CONCEPT_AFFORDANCE_SET,
     # Constants
     STANDARD_ASPECTS,
-    create_affordance_registry,
-    # Matcher
-    StandardAffordanceMatcher,
-    CapabilityAffordanceMatcher,
-    # DNA
-    ArchetypeDNA,
-    # Adapter
-    create_umwelt_adapter,
+    VOID_AFFORDANCE_SET,
     # Context sets
     WORLD_AFFORDANCE_SET,
-    CONCEPT_AFFORDANCE_SET,
-    VOID_AFFORDANCE_SET,
+    # DNA
+    ArchetypeDNA,
+    Aspect,
+    # Types
+    AspectCategory,
+    CapabilityAffordanceMatcher,
+    # Matcher
+    StandardAffordanceMatcher,
+    create_affordance_registry,
+    # Adapter
+    create_umwelt_adapter,
     get_context_affordance_set,
 )
+from ..node import AgentMeta
 from ..renderings import (
+    AdminRendering,
     BasicRendering,
     BlueprintRendering,
-    PoeticRendering,
-    EconomicRendering,
-    ScientificRendering,
     DeveloperRendering,
-    AdminRendering,
-    PhilosopherRendering,
-    MemoryRendering,
+    EconomicRendering,
     EntropyRendering,
+    MemoryRendering,
+    PhilosopherRendering,
+    PoeticRendering,
+    ScientificRendering,
     TemporalRendering,
     create_rendering_factory,
     render_for_archetype,
 )
-from ..node import AgentMeta
 from .conftest import MockUmwelt
-
 
 # ============================================================
 # ASPECT CATEGORY TESTS
@@ -718,8 +717,8 @@ class TestAffordanceErrors:
     @pytest.mark.asyncio
     async def test_logos_rejects_unavailable_affordance(self) -> None:
         """Logos.invoke raises AffordanceError for unavailable aspects."""
-        from ..logos import create_logos
         from ..exceptions import AffordanceError
+        from ..logos import create_logos
 
         logos = create_logos()
         poet_umwelt = MockUmwelt(archetype="poet")

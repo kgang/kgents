@@ -1,0 +1,162 @@
+# L-Gent Deployment
+# The Librarian agent - semantic registry backed by PostgreSQL
+#
+# Key learning points:
+#   - Init containers: wait for dependencies before starting
+#   - Service discovery: l-gent-postgres.kgents-agents.svc.cluster.local
+#   - No local fallback: LGENT_MODE=cluster means crash if DB unavailable
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: l-gent-config
+  namespace: kgents-agents
+  labels:
+    app.kubernetes.io/name: l-gent
+    app.kubernetes.io/component: application
+    app.kubernetes.io/part-of: kgents
+data:
+  LGENT_MODE: "cluster"  # No fallback to local/in-memory
+  LGENT_LOG_LEVEL: "INFO"
+  LGENT_GRPC_PORT: "50051"
+  LGENT_HTTP_PORT: "8080"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: l-gent
+  namespace: kgents-agents
+  labels:
+    app.kubernetes.io/name: l-gent
+    app.kubernetes.io/component: application
+    app.kubernetes.io/part-of: kgents
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: l-gent
+  template:
+    metadata:
+      labels:
+        app: l-gent
+        app.kubernetes.io/name: l-gent
+        app.kubernetes.io/component: application
+    spec:
+      initContainers:
+      # Wait for PostgreSQL to be ready before starting L-Gent
+      - name: wait-for-db
+        image: busybox:1.36
+        command:
+        - 'sh'
+        - '-c'
+        - |
+          echo "Waiting for PostgreSQL at l-gent-postgres:5432..."
+          until nc -z l-gent-postgres 5432; do
+            echo "PostgreSQL not ready, sleeping 2s..."
+            sleep 2
+          done
+          echo "PostgreSQL is ready!"
+        resources:
+          requests:
+            cpu: "10m"
+            memory: "16Mi"
+          limits:
+            cpu: "50m"
+            memory: "32Mi"
+
+      containers:
+      - name: l-gent
+        # Placeholder image - we'll build the real one later
+        # For now, this creates the deployment structure
+        image: python:3.12-slim
+        command:
+        - 'python'
+        - '-c'
+        - |
+          import http.server
+          import socketserver
+          import os
+
+          print("L-Gent placeholder starting...")
+          print(f"DATABASE_URL: postgresql://lgent:***@l-gent-postgres:5432/lgent")
+          print(f"LGENT_MODE: {os.environ.get('LGENT_MODE', 'unknown')}")
+          print()
+          print("This is a placeholder. To run the real L-Gent:")
+          print("  1. Build: docker build -t kgents/l-gent:latest -f impl/claude/agents/l/Dockerfile .")
+          print("  2. Load: kind load docker-image kgents/l-gent:latest --name kgents")
+          print("  3. Apply: kubectl apply -f impl/claude/infra/k8s/manifests/l-gent-deployment.yaml")
+          print()
+          print("Starting HTTP health endpoint on :8080...")
+
+          class HealthHandler(http.server.BaseHTTPRequestHandler):
+              def do_GET(self):
+                  self.send_response(200)
+                  self.send_header("Content-type", "text/plain")
+                  self.end_headers()
+                  self.wfile.write(b"L-Gent placeholder healthy\n")
+              def log_message(self, format, *args):
+                  pass  # Suppress request logging
+
+          with socketserver.TCPServer(("", 8080), HealthHandler) as httpd:
+              print("Health server running on :8080")
+              httpd.serve_forever()
+        ports:
+        - containerPort: 50051
+          name: grpc
+          protocol: TCP
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        envFrom:
+        - configMapRef:
+            name: l-gent-config
+        - secretRef:
+            name: l-gent-postgres
+        env:
+        # Build DATABASE_URL from individual secret values
+        - name: DATABASE_URL
+          value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@l-gent-postgres:5432/$(POSTGRES_DB)"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "50m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        readinessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+        livenessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: l-gent
+  namespace: kgents-agents
+  labels:
+    app.kubernetes.io/name: l-gent
+    app.kubernetes.io/component: application
+    app.kubernetes.io/part-of: kgents
+spec:
+  type: ClusterIP
+  ports:
+  - port: 50051
+    targetPort: 50051
+    name: grpc
+    protocol: TCP
+  - port: 8080
+    targetPort: 8080
+    name: http
+    protocol: TCP
+  selector:
+    app: l-gent
