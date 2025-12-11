@@ -9,6 +9,8 @@ Tests for:
 - UnifiedValueAccounting (UVP + VoI integration)
 """
 
+from __future__ import annotations
+
 from datetime import timedelta
 
 import pytest
@@ -168,7 +170,7 @@ class TestVoILedger:
 
     def test_creation_with_value_ledger(self) -> None:
         """Test creation with value ledger."""
-        value_ledger = ValueLedger()
+        value_ledger: ValueLedger = ValueLedger()
         ledger = create_voi_ledger(value_ledger)
         assert ledger.main_ledger is value_ledger
 
@@ -411,13 +413,13 @@ class TestVoIOptimizer:
 
     def test_creation(self) -> None:
         """Test basic creation."""
-        value_ledger = ValueLedger()
+        value_ledger: ValueLedger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
         assert optimizer.ledger is value_ledger
 
     def test_record_reliability(self) -> None:
         """Test recording reliability."""
-        value_ledger = ValueLedger()
+        value_ledger: ValueLedger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
 
         # Record some successes and failures
@@ -430,7 +432,7 @@ class TestVoIOptimizer:
 
     def test_reliability_unknown_agent(self) -> None:
         """Test reliability for unknown agent."""
-        value_ledger = ValueLedger()
+        value_ledger: ValueLedger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
 
         reliability = optimizer.get_reliability("unknown_agent")
@@ -438,7 +440,7 @@ class TestVoIOptimizer:
 
     def test_reliability_history_limit(self) -> None:
         """Test reliability history is limited."""
-        value_ledger = ValueLedger()
+        value_ledger: ValueLedger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
 
         # Record 150 successes (should be limited to 100)
@@ -449,7 +451,7 @@ class TestVoIOptimizer:
 
     def test_observability_score(self) -> None:
         """Test observability score."""
-        value_ledger = ValueLedger()
+        value_ledger: ValueLedger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
 
         optimizer.set_observability("agent1", 0.9)
@@ -457,7 +459,7 @@ class TestVoIOptimizer:
 
     def test_observability_clamped(self) -> None:
         """Test observability is clamped to 0-1."""
-        value_ledger = ValueLedger()
+        value_ledger: ValueLedger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
 
         optimizer.set_observability("agent1", 1.5)
@@ -468,7 +470,7 @@ class TestVoIOptimizer:
 
     def test_compute_observation_priority(self) -> None:
         """Test priority computation."""
-        value_ledger = ValueLedger()
+        value_ledger: ValueLedger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
 
         # Set up agent with known values
@@ -485,7 +487,7 @@ class TestVoIOptimizer:
 
     def test_allocate_observation_budget(self) -> None:
         """Test budget allocation."""
-        value_ledger = ValueLedger()
+        value_ledger: ValueLedger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
 
         # Set different priorities
@@ -506,7 +508,7 @@ class TestVoIOptimizer:
 
     def test_allocate_empty_agents(self) -> None:
         """Test allocation with no agents."""
-        value_ledger = ValueLedger()
+        value_ledger: ValueLedger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
 
         allocations = optimizer.allocate_observation_budget(Gas(tokens=1000), [])
@@ -514,7 +516,7 @@ class TestVoIOptimizer:
 
     def test_select_observation_depth(self) -> None:
         """Test depth selection based on budget."""
-        value_ledger = ValueLedger()
+        value_ledger: ValueLedger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
 
         # Large budget -> deepest
@@ -527,7 +529,7 @@ class TestVoIOptimizer:
 
     def test_get_observation_recommendations(self) -> None:
         """Test getting recommendations."""
-        value_ledger = ValueLedger()
+        value_ledger: ValueLedger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
 
         # Set up agents
@@ -558,7 +560,7 @@ class TestAdaptiveObserver:
 
     def test_creation(self) -> None:
         """Test basic creation."""
-        value_ledger = ValueLedger()
+        value_ledger: ValueLedger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
         observer = create_adaptive_observer(optimizer)
 
@@ -568,7 +570,7 @@ class TestAdaptiveObserver:
 
     def test_compute_observation_interval_high_priority(self) -> None:
         """Test interval for high priority agent."""
-        value_ledger = ValueLedger()
+        value_ledger: ValueLedger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
         observer = create_adaptive_observer(optimizer)
 
@@ -586,7 +588,7 @@ class TestAdaptiveObserver:
 
     def test_compute_observation_interval_low_priority(self) -> None:
         """Test interval for low priority agent."""
-        value_ledger = ValueLedger()
+        value_ledger: ValueLedger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
         observer = create_adaptive_observer(optimizer)
 
@@ -601,7 +603,7 @@ class TestAdaptiveObserver:
 
     def test_should_observe(self) -> None:
         """Test should_observe check."""
-        value_ledger = ValueLedger()
+        value_ledger: ValueLedger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
         observer = create_adaptive_observer(
             optimizer,
@@ -617,7 +619,7 @@ class TestAdaptiveObserver:
 
     def test_register_and_observe(self) -> None:
         """Test registering observer function."""
-        value_ledger = ValueLedger()
+        value_ledger: ValueLedger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
         observer = create_adaptive_observer(optimizer)
 
@@ -639,7 +641,7 @@ class TestAdaptiveObserver:
 
     def test_get_observation_schedule(self) -> None:
         """Test getting observation schedule."""
-        value_ledger = ValueLedger()
+        value_ledger: ValueLedger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
         observer = create_adaptive_observer(optimizer)
 
@@ -664,13 +666,13 @@ class TestUnifiedValueAccounting:
 
     def test_creation(self) -> None:
         """Test basic creation."""
-        value_ledger = ValueLedger()
+        value_ledger: ValueLedger = ValueLedger()
         accounting = create_unified_accounting(value_ledger)
         assert accounting.value is value_ledger
 
     def test_system_health_empty(self) -> None:
         """Test system health with no data."""
-        value_ledger = ValueLedger()
+        value_ledger: ValueLedger = ValueLedger()
         accounting = create_unified_accounting(value_ledger)
 
         health = accounting.system_health()
@@ -680,7 +682,7 @@ class TestUnifiedValueAccounting:
 
     def test_system_health_healthy(self) -> None:
         """Test healthy system status."""
-        value_ledger = ValueLedger()
+        value_ledger: ValueLedger = ValueLedger()
         voi_ledger = create_voi_ledger(value_ledger)
         accounting = UnifiedValueAccounting(value_ledger, voi_ledger)
 
@@ -713,7 +715,7 @@ class TestUnifiedValueAccounting:
 
     def test_generate_recommendations_low_roc(self) -> None:
         """Test recommendations for low RoC."""
-        value_ledger = ValueLedger()
+        value_ledger: ValueLedger = ValueLedger()
         accounting = create_unified_accounting(value_ledger)
 
         # Log unprofitable production
@@ -726,7 +728,7 @@ class TestUnifiedValueAccounting:
 
     def test_generate_recommendations_high_false_positives(self) -> None:
         """Test recommendations for high false positive rate."""
-        value_ledger = ValueLedger()
+        value_ledger: ValueLedger = ValueLedger()
         voi_ledger = create_voi_ledger(value_ledger)
         accounting = UnifiedValueAccounting(value_ledger, voi_ledger)
 
@@ -744,7 +746,7 @@ class TestUnifiedValueAccounting:
 
     def test_get_currency_summary(self) -> None:
         """Test getting currency summary."""
-        value_ledger = ValueLedger()
+        value_ledger: ValueLedger = ValueLedger()
         voi_ledger = create_voi_ledger(value_ledger)
         accounting = UnifiedValueAccounting(value_ledger, voi_ledger)
 
@@ -783,7 +785,7 @@ class TestVoIIntegration:
     def test_full_observation_workflow(self) -> None:
         """Test complete observation workflow."""
         # Set up ledgers
-        value_ledger = ValueLedger()
+        value_ledger: ValueLedger = ValueLedger()
         voi_ledger = create_voi_ledger(value_ledger)
 
         # Set up optimizer
@@ -852,7 +854,7 @@ class TestVoIIntegration:
 
     def test_adaptive_observation_schedule(self) -> None:
         """Test adaptive observation scheduling."""
-        value_ledger = ValueLedger()
+        value_ledger: ValueLedger = ValueLedger()
         optimizer = create_voi_optimizer(value_ledger)
         observer = create_adaptive_observer(
             optimizer,
@@ -898,7 +900,7 @@ class TestVoIIntegration:
 
     def test_voi_anti_patterns_detection(self) -> None:
         """Test detection of VoI anti-patterns."""
-        value_ledger = ValueLedger()
+        value_ledger: ValueLedger = ValueLedger()
         voi_ledger = create_voi_ledger(value_ledger)
         _accounting = UnifiedValueAccounting(value_ledger, voi_ledger)
 

@@ -66,7 +66,7 @@ def memory() -> HypothesisMemory:
 
 def test_memory_add_response(
     memory: HypothesisMemory, sample_response: ParsedHypothesisResponse
-):
+) -> None:
     """Test adding response to memory."""
     indices = memory.add_response(sample_response, domain="test")
 
@@ -79,7 +79,7 @@ def test_memory_add_response(
 
 def test_memory_add_response_with_session(
     memory: HypothesisMemory, sample_response: ParsedHypothesisResponse
-):
+) -> None:
     """Test adding response with session tracking."""
     _indices = memory.add_response(
         sample_response, domain="test", session_id="session-1"
@@ -92,7 +92,7 @@ def test_memory_add_response_with_session(
 
 def test_memory_get_by_domain(
     memory: HypothesisMemory, sample_response: ParsedHypothesisResponse
-):
+) -> None:
     """Test getting hypotheses by domain."""
     memory.add_response(sample_response, domain="biochem")
     memory.add_response(sample_response, domain="neuro")
@@ -159,7 +159,7 @@ def test_memory_find_similar(memory: HypothesisMemory) -> None:
 
 def test_memory_add_lineage(
     memory: HypothesisMemory, sample_response: ParsedHypothesisResponse
-):
+) -> None:
     """Test adding lineage edge."""
     # Add two hypotheses
     memory.add_response(sample_response, domain="test")
@@ -181,7 +181,7 @@ def test_memory_add_lineage(
 
 def test_memory_get_ancestors(
     memory: HypothesisMemory, sample_response: ParsedHypothesisResponse
-):
+) -> None:
     """Test getting ancestor hypotheses."""
     # Create chain: 0 -> 1 -> 2
     for _ in range(3):
@@ -199,7 +199,7 @@ def test_memory_get_ancestors(
 
 def test_memory_get_ancestors_with_depth(
     memory: HypothesisMemory, sample_response: ParsedHypothesisResponse
-):
+) -> None:
     """Test getting ancestors with depth limit."""
     # Create chain: 0 -> 1 -> 2 -> 3
     for _ in range(4):
@@ -217,7 +217,7 @@ def test_memory_get_ancestors_with_depth(
 
 def test_memory_get_descendants(
     memory: HypothesisMemory, sample_response: ParsedHypothesisResponse
-):
+) -> None:
     """Test getting descendant hypotheses."""
     # Create tree: 0 -> [1, 2]
     for _ in range(3):
@@ -235,7 +235,7 @@ def test_memory_get_descendants(
 
 def test_memory_catalog_id_tracking(
     memory: HypothesisMemory, sample_response: ParsedHypothesisResponse
-):
+) -> None:
     """Test L-gent catalog ID tracking."""
     memory.add_response(sample_response, domain="test")
 
@@ -258,7 +258,7 @@ def test_memory_catalog_id_tracking(
 @pytest.mark.asyncio
 async def test_storage_create_and_save(
     temp_storage_path: Path, sample_response: ParsedHypothesisResponse
-):
+) -> None:
     """Test creating and saving storage."""
     storage = PersistentHypothesisStorage(path=temp_storage_path)
     await storage.load()
@@ -272,7 +272,7 @@ async def test_storage_create_and_save(
 @pytest.mark.asyncio
 async def test_storage_load_existing(
     temp_storage_path: Path, sample_response: ParsedHypothesisResponse
-):
+) -> None:
     """Test loading existing storage."""
     # First save
     storage1 = PersistentHypothesisStorage(path=temp_storage_path)
@@ -291,7 +291,7 @@ async def test_storage_load_existing(
 @pytest.mark.asyncio
 async def test_storage_lineage_methods(
     temp_storage_path: Path, sample_response: ParsedHypothesisResponse
-):
+) -> None:
     """Test storage lineage methods."""
     storage = PersistentHypothesisStorage(path=temp_storage_path)
     await storage.load()
@@ -312,7 +312,7 @@ async def test_storage_lineage_methods(
 @pytest.mark.asyncio
 async def test_storage_catalog_id_persistence(
     temp_storage_path: Path, sample_response: ParsedHypothesisResponse
-):
+) -> None:
     """Test catalog ID persists across reloads."""
     # Save with catalog ID
     storage1 = PersistentHypothesisStorage(path=temp_storage_path)
@@ -330,7 +330,7 @@ async def test_storage_catalog_id_persistence(
 @pytest.mark.asyncio
 async def test_storage_session_tracking(
     temp_storage_path: Path, sample_response: ParsedHypothesisResponse
-):
+) -> None:
     """Test session tracking in storage."""
     storage = PersistentHypothesisStorage(path=temp_storage_path)
     await storage.load()
@@ -350,7 +350,7 @@ async def test_storage_session_tracking(
 @pytest.mark.asyncio
 async def test_storage_get_hypothesis_by_idx(
     temp_storage_path: Path, sample_response: ParsedHypothesisResponse
-):
+) -> None:
     """Test getting hypothesis by index."""
     storage = PersistentHypothesisStorage(path=temp_storage_path)
     await storage.load()
@@ -368,7 +368,7 @@ async def test_storage_get_hypothesis_by_idx(
 @pytest.mark.asyncio
 async def test_storage_evolution_history(
     temp_storage_path: Path, sample_response: ParsedHypothesisResponse
-):
+) -> None:
     """Test evolution history tracking."""
     storage = PersistentHypothesisStorage(path=temp_storage_path)
     await storage.load()

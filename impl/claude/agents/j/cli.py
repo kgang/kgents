@@ -81,9 +81,8 @@ class JitCLI(CLICapable):
             constraint_list = [c.strip() for c in constraints.split(",")]
 
         arch_constraints = ArchitectConstraints(
-            max_complexity=10,
+            max_cyclomatic_complexity=10,
             allowed_imports=frozenset({"re", "json", "math", "datetime"}),
-            custom_constraints=constraint_list,
         )
 
         source = await compile_agent(intent, constraints=arch_constraints)
@@ -91,8 +90,8 @@ class JitCLI(CLICapable):
         return {
             "success": source is not None,
             "intent": intent,
-            "source": source.code if source else None,
-            "name": source.name if source else None,
+            "source": source.source if source else None,
+            "name": source.class_name if source else None,
             "error": None if source else "Compilation failed",
         }
 
@@ -118,12 +117,16 @@ class JitCLI(CLICapable):
         """
         from agents.j import classify_intent
 
-        result = await classify_intent(input)
+        result = classify_intent(
+            intent=input,
+            context={},
+            entropy_budget=1.0,
+        )
 
         return {
             "reality": result.reality.value,
             "confidence": result.confidence,
-            "reasoning": result.reasoning or "Heuristic classification",
+            "reasoning": result.reasoning,
             "recommendation": self._get_recommendation(result.reality.value),
         }
 
@@ -187,7 +190,7 @@ class JitCLI(CLICapable):
 
         Budget levels: low, medium, high
         """
-        from agents.j import JGentConfig, JGentInput, jgent
+        from agents.j import JGentConfig, JGentResult, jgent
 
         # Parse ground value
         ground_value = None
@@ -212,13 +215,13 @@ class JitCLI(CLICapable):
         entropy = budget_map.get(budget, 0.10)
 
         config = JGentConfig(entropy_threshold=entropy)
-        jgent_input = JGentInput(
+
+        result: JGentResult[Any] = await jgent(
             intent=intent,
             ground=ground_value,
             context=context_dict,
+            config=config,
         )
-
-        result = await jgent(jgent_input, config=config)
 
         return {
             "success": result.success,
@@ -262,17 +265,25 @@ class JitCLI(CLICapable):
                 return {"error": f"File not found: {target}"}
             code = target_path.read_text()
 
-        input_data = StabilityInput(code=code, name="cli_input")
-        result = await analyze_stability(input_data)
+        input_data = StabilityInput(
+            source_code=code,
+            entropy_budget=1.0,
+        )
+        result = analyze_stability(
+            source_code=input_data.source_code,
+            entropy_budget=input_data.entropy_budget,
+            config=input_data.config,
+        )
 
         return {
             "stable": result.is_stable,
-            "score": result.metrics.overall_score if result.metrics else 0.0,
-            "complexity": result.metrics.cyclomatic_complexity if result.metrics else 0,
-            "branching": result.metrics.branching_factor if result.metrics else 0,
-            "recursion": result.metrics.max_recursion_depth if result.metrics else 0,
-            "side_effects": result.metrics.side_effect_count if result.metrics else 0,
-            "warnings": result.warnings if hasattr(result, "warnings") else [],
+            "import_risk": result.metrics.import_risk,
+            "complexity": result.metrics.cyclomatic_complexity,
+            "branching": result.metrics.branching_factor,
+            "nesting": result.metrics.max_nesting_depth,
+            "unbounded_recursion": result.metrics.has_unbounded_recursion,
+            "estimated_runtime": result.metrics.estimated_runtime,
+            "violations": list(result.violations),
         }
 
     @expose(

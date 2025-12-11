@@ -48,7 +48,7 @@ if NUMPY_AVAILABLE:
         """A point in semantic space."""
 
         coordinates: np.ndarray
-        metadata: dict = field(default_factory=dict)
+        metadata: dict[str, Any] = field(default_factory=dict)
 
         def __eq__(self, other: object) -> bool:
             if not isinstance(other, Point):
@@ -70,7 +70,7 @@ if NUMPY_AVAILABLE:
         id: str
         state: S
         embedding: np.ndarray
-        metadata: dict = field(default_factory=dict)
+        metadata: dict[str, Any] = field(default_factory=dict)
 
     class VectorAgent(Generic[S]):
         """
@@ -132,7 +132,7 @@ if NUMPY_AVAILABLE:
             entry_id: str,
             state: S,
             embedding: np.ndarray,
-            metadata: Optional[dict] = None,
+            metadata: Optional[dict[str, Any]] = None,
         ) -> None:
             """Add state with explicit embedding."""
             if embedding.shape[0] != self.dimension:

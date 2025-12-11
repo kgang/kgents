@@ -10,7 +10,8 @@ Philosophy: Agents are morphisms in a category; laws ensure predictable composit
 """
 
 from dataclasses import dataclass
-from typing import Any, TypeVar
+from functools import reduce
+from typing import Any, TypeVar, cast
 
 import pytest
 
@@ -38,62 +39,71 @@ from agents.c import (
 
 # Bootstrap imports
 from bootstrap import (
-    ID,
     Err,
     Ok,
     compose,
 )
+from bootstrap.id import Id
+from bootstrap.types import Agent
+
+# Create typed identity for int operations
+ID: Id[int] = Id()
 
 A = TypeVar("A")
 B = TypeVar("B")
 C = TypeVar("C")
 
 
-@dataclass
-class AddOne:
+class AddOne(Agent[int, int]):
     """Agent that adds one."""
 
-    name: str = "AddOne"
+    @property
+    def name(self) -> str:
+        return "AddOne"
 
     async def invoke(self, x: int) -> int:
         return x + 1
 
 
-@dataclass
-class Double:
+class Double(Agent[int, int]):
     """Agent that doubles."""
 
-    name: str = "Double"
+    @property
+    def name(self) -> str:
+        return "Double"
 
     async def invoke(self, x: int) -> int:
         return x * 2
 
 
-@dataclass
-class Square:
+class Square(Agent[int, int]):
     """Agent that squares."""
 
-    name: str = "Square"
+    @property
+    def name(self) -> str:
+        return "Square"
 
     async def invoke(self, x: int) -> int:
         return x * x
 
 
-@dataclass
-class ToString:
+class ToString(Agent[Any, str]):
     """Agent that converts to string."""
 
-    name: str = "ToString"
+    @property
+    def name(self) -> str:
+        return "ToString"
 
     async def invoke(self, x: Any) -> str:
         return str(x)
 
 
-@dataclass
-class ParseInt:
+class ParseInt(Agent[str, int]):
     """Agent that parses int."""
 
-    name: str = "ParseInt"
+    @property
+    def name(self) -> str:
+        return "ParseInt"
 
     async def invoke(self, x: str) -> int:
         return int(x)
@@ -109,8 +119,8 @@ class TestIdentityLaw:
         """Test id >> f == f."""
         f = AddOne()
 
-        # id >> f should equal f
-        composed = compose(ID, f)
+        # id >> f should equal f (using >> operator)
+        composed = ID >> f
 
         # Both should produce same result
         input_val = 5
@@ -124,8 +134,8 @@ class TestIdentityLaw:
         """Test f >> id == f."""
         f = Double()
 
-        # f >> id should equal f
-        composed = compose(f, ID)
+        # f >> id should equal f (using >> operator)
+        composed = f >> ID
 
         input_val = 7
         f_result = await f.invoke(input_val)
@@ -138,8 +148,8 @@ class TestIdentityLaw:
         """Test id >> f >> id == f."""
         f = Square()
 
-        # id >> f >> id should equal f
-        composed = compose(compose(ID, f), ID)
+        # id >> f >> id should equal f (using >> operator)
+        composed = ID >> f >> ID
 
         input_val = 4
         f_result = await f.invoke(input_val)
@@ -234,11 +244,12 @@ class TestPipelineFunction:
     @pytest.mark.asyncio
     async def test_pipeline_many_agents(self) -> None:
         """Test many agents via compose chain."""
-        # Chain 5 AddOne agents
-        from functools import reduce
-
+        # Chain 5 AddOne agents using >> operator
         agents = [AddOne() for _ in range(5)]
-        p = reduce(compose, agents)
+        # Use >> operator to chain
+        p: Agent[int, int] = agents[0]
+        for a in agents[1:]:
+            p = p >> a
 
         result = await p.invoke(0)
         assert result == 5
@@ -268,16 +279,17 @@ class TestMaybeFunctor:
         # fmap id
         mapped = j.map(lambda x: x)
 
+        assert isinstance(mapped, Just)
         assert mapped.value == j.value
 
     def test_maybe_functor_composition(self) -> None:
         """Test fmap (g . f) == fmap g . fmap f for Maybe."""
         j = Just(5)
 
-        def f(x):
+        def f(x: int) -> int:
             return x + 1
 
-        def g(x):
+        def g(x: int) -> int:
             return x * 2
 
         # fmap (g . f)
@@ -286,6 +298,8 @@ class TestMaybeFunctor:
         # fmap g . fmap f
         chained = j.map(f).map(g)
 
+        assert isinstance(composed, Just)
+        assert isinstance(chained, Just)
         assert composed.value == chained.value == 12
 
     def test_maybe_nothing_propagates(self) -> None:
@@ -321,30 +335,33 @@ class TestEitherFunctor:
 
         mapped = r.map(lambda x: x)
 
+        assert isinstance(mapped, Right)
         assert mapped.value == r.value
 
     def test_either_functor_composition(self) -> None:
         """Test fmap (g . f) == fmap g . fmap f for Either."""
         r = Right(3)
 
-        def f(x):
+        def f(x: int) -> int:
             return x + 2
 
-        def g(x):
+        def g(x: int) -> int:
             return x * 3
 
         composed = r.map(lambda x: g(f(x)))
         chained = r.map(f).map(g)
 
+        assert isinstance(composed, Right)
+        assert isinstance(chained, Right)
         assert composed.value == chained.value == 15
 
     def test_either_left_propagates(self) -> None:
         """Test Left propagates through fmap."""
-        l = Left("error occurred")
+        left = Left("error occurred")
 
-        mapped = l.map(lambda x: x * 2)
+        mapped = left.map(lambda x: x * 2)
 
-        assert mapped.is_left()
+        assert isinstance(mapped, Left)
         assert mapped.error == "error occurred"
 
 
@@ -490,26 +507,29 @@ class TestConditionalComposition:
         """Test switch selects agent by key."""
 
         # Agents that extract value and transform
-        @dataclass
-        class AddOneDict:
-            name: str = "AddOneDict"
+        class AddOneDict(Agent[dict[str, Any], int]):
+            @property
+            def name(self) -> str:
+                return "AddOneDict"
 
-            async def invoke(self, x: dict) -> int:
-                return x["value"] + 1
+            async def invoke(self, x: dict[str, Any]) -> int:
+                return cast(int, x["value"]) + 1
 
-        @dataclass
-        class DoubleDict:
-            name: str = "DoubleDict"
+        class DoubleDict(Agent[dict[str, Any], int]):
+            @property
+            def name(self) -> str:
+                return "DoubleDict"
 
-            async def invoke(self, x: dict) -> int:
-                return x["value"] * 2
+            async def invoke(self, x: dict[str, Any]) -> int:
+                return cast(int, x["value"]) * 2
 
-        @dataclass
-        class IdentityDict:
-            name: str = "IdentityDict"
+        class IdentityDict(Agent[dict[str, Any], int]):
+            @property
+            def name(self) -> str:
+                return "IdentityDict"
 
-            async def invoke(self, x: dict) -> int:
-                return x["value"]
+            async def invoke(self, x: dict[str, Any]) -> int:
+                return cast(int, x["value"])
 
         switched = switch(
             key_fn=lambda x: x["key"],
@@ -615,12 +635,14 @@ class TestAgentCategoryProperties:
     @pytest.mark.asyncio
     async def test_identity_exists(self) -> None:
         """Test identity morphism exists."""
-        # ID is the identity
+        # ID is the identity (typed for int)
         result = await ID.invoke(42)
         assert result == 42
 
-        result = await ID.invoke("string")
-        assert result == "string"
+        # Create a string-typed identity for this test
+        str_id: Id[str] = Id()
+        str_result = await str_id.invoke("string")
+        assert str_result == "string"
 
     @pytest.mark.asyncio
     async def test_composition_is_deterministic(self) -> None:

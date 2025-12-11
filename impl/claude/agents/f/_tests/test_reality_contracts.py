@@ -208,8 +208,13 @@ class TestIntentFilter:
 
     def test_predicate_exception_fails_closed(self) -> None:
         """Exception in predicate results in rejection."""
+
+        def bad_predicate(i: str) -> bool:
+            1 / 0  # Will raise ZeroDivisionError
+            return True  # Never reached
+
         bad_filter = IntentFilter(
-            predicate=lambda i: 1 / 0,  # Will raise
+            predicate=bad_predicate,
             description="Bad filter",
         )
 

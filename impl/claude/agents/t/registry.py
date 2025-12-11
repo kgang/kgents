@@ -127,10 +127,10 @@ class ToolRegistry:
         # → [parse, search, extract, synthesize]
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         # In-memory catalog (will be replaced with L-gent integration)
         self._catalog: dict[str, ToolEntry] = {}
-        self._tools: dict[str, Tool] = {}  # Loaded tool instances
+        self._tools: dict[str, Tool[Any, Any]] = {}  # Loaded tool instances
         self._next_id = 0
 
     def _generate_id(self) -> str:
@@ -138,7 +138,7 @@ class ToolRegistry:
         self._next_id += 1
         return f"tool_{self._next_id:04d}"
 
-    async def register(self, tool: Tool) -> ToolEntry:
+    async def register(self, tool: Tool[Any, Any]) -> ToolEntry:
         """
         Register tool in catalog.
 
@@ -162,7 +162,7 @@ class ToolRegistry:
 
         return entry
 
-    async def get(self, tool_id: str) -> Optional[Tool]:
+    async def get(self, tool_id: str) -> Optional[Tool[Any, Any]]:
         """
         Retrieve tool by ID.
 
@@ -174,7 +174,7 @@ class ToolRegistry:
         """
         return self._tools.get(tool_id)
 
-    async def find_by_name(self, name: str) -> Optional[Tool]:
+    async def find_by_name(self, name: str) -> Optional[Tool[Any, Any]]:
         """
         Find tool by name.
 
@@ -193,7 +193,7 @@ class ToolRegistry:
         self,
         input_type: Type[Any],
         output_type: Type[Any],
-    ) -> list[Tool]:
+    ) -> list[Tool[Any, Any]]:
         """
         Find tools matching type signature.
 
@@ -207,7 +207,7 @@ class ToolRegistry:
         Returns:
             List of tools matching signature (may be empty)
         """
-        matching_tools: list[Tool] = []
+        matching_tools: list[Tool[Any, Any]] = []
 
         for entry in self._catalog.values():
             # Exact type match (future: use subtype compatibility)
@@ -218,7 +218,7 @@ class ToolRegistry:
 
         return matching_tools
 
-    async def find_by_tags(self, tags: list[str]) -> list[Tool]:
+    async def find_by_tags(self, tags: list[str]) -> list[Tool[Any, Any]]:
         """
         Find tools by tags (semantic search).
 
@@ -228,7 +228,7 @@ class ToolRegistry:
         Returns:
             List of tools matching any tag
         """
-        matching_tools: list[Tool] = []
+        matching_tools: list[Tool[Any, Any]] = []
 
         for entry in self._catalog.values():
             # Tool matches if it has any of the search tags
@@ -239,7 +239,7 @@ class ToolRegistry:
 
         return matching_tools
 
-    async def search(self, query: str) -> list[Tool]:
+    async def search(self, query: str) -> list[Tool[Any, Any]]:
         """
         Semantic search for tools.
 
@@ -252,7 +252,7 @@ class ToolRegistry:
             List of matching tools (ranked by relevance)
         """
         query_lower = query.lower()
-        matching_tools: list[tuple[Tool, float]] = []  # (tool, score)
+        matching_tools: list[tuple[Tool[Any, Any], float]] = []  # (tool, score)
 
         for entry in self._catalog.values():
             score = 0.0
@@ -285,7 +285,7 @@ class ToolRegistry:
         source_type: Type[Any],
         target_type: Type[Any],
         max_depth: int = 5,
-    ) -> Optional[list[Tool]]:
+    ) -> Optional[list[Tool[Any, Any]]]:
         """
         Find sequence of tools composing source → target.
 
@@ -315,7 +315,9 @@ class ToolRegistry:
         from collections import deque
 
         # Queue: (current_type, path_so_far)
-        queue: deque[tuple[Type[Any], list[Tool]]] = deque([(source_type, [])])
+        queue: deque[tuple[Type[Any], list[Tool[Any, Any]]]] = deque(
+            [(source_type, [])]
+        )
         visited: set[Type[Any]] = {source_type}
 
         while queue:
@@ -343,9 +345,11 @@ class ToolRegistry:
         # No path found
         return None
 
-    async def _find_tools_with_input(self, input_type: Type[Any]) -> list[Tool]:
+    async def _find_tools_with_input(
+        self, input_type: Type[Any]
+    ) -> list[Tool[Any, Any]]:
         """Find all tools that accept given input type."""
-        matching_tools: list[Tool] = []
+        matching_tools: list[Tool[Any, Any]] = []
 
         for entry in self._catalog.values():
             if entry.input_schema == input_type:

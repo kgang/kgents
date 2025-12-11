@@ -49,7 +49,7 @@ class EntropyLevel(Enum):
 
 
 @dataclass
-class Trajectory:
+class Trajectory(Generic[S]):
     """
     A tracked aspect of state evolution.
 
@@ -152,7 +152,7 @@ class TemporalWitness(Generic[E, S]):
         max_events: int = 10000,
         drift_window: timedelta = timedelta(days=7),
         entropy_window: timedelta = timedelta(hours=1),
-    ):
+    ) -> None:
         """
         Initialize temporal witness.
 
@@ -177,7 +177,7 @@ class TemporalWitness(Generic[E, S]):
         self.entropy_window = entropy_window
 
         # Trajectory tracking
-        self._trajectories: dict[str, Trajectory] = {}
+        self._trajectories: dict[str, Trajectory[S]] = {}
 
         # Caches
         self._entropy_cache: Optional[Tuple[datetime, float]] = None
@@ -194,7 +194,7 @@ class TemporalWitness(Generic[E, S]):
         self,
         event: E,
         witness: WitnessReport,
-        context: Optional[dict] = None,
+        context: Optional[dict[str, Any]] = None,
     ) -> S:
         """
         Observe and record an event with witness metadata.
@@ -263,7 +263,7 @@ class TemporalWitness(Generic[E, S]):
         """List all tracked trajectory names."""
         return list(self._trajectories.keys())
 
-    def get_trajectory(self, name: str) -> Optional[Trajectory]:
+    def get_trajectory(self, name: str) -> Optional[Trajectory[S]]:
         """Get trajectory by name."""
         return self._trajectories.get(name)
 

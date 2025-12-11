@@ -4,6 +4,8 @@ Tests for Bicameral Memory.
 Tests BicameralMemory, Ghost Detection, Self-Healing, and Coherency Protocol.
 """
 
+from __future__ import annotations
+
 # Mock the instance_db imports for testing
 import sys
 from dataclasses import dataclass
@@ -84,7 +86,7 @@ from ..infra_backends import (
 
 # CRITICAL: Restore original modules immediately after import
 # This prevents polluting the module cache for subsequent tests
-def _restore(name, original):
+def _restore(name: str, original: Any) -> None:
     if original is not None:
         sys.modules[name] = original
     elif name in sys.modules:
@@ -121,8 +123,8 @@ class MockEmbeddingProvider:
 class MockTelemetryLogger:
     """Mock telemetry logger that records events."""
 
-    def __init__(self):
-        self.events: list[tuple[str, dict]] = []
+    def __init__(self) -> None:
+        self.events: list[tuple[str, dict[str, Any]]] = []
 
     async def log(self, event_type: str, data: dict[str, Any]) -> None:
         self.events.append((event_type, data))
@@ -306,7 +308,13 @@ class TestBicameralMemory:
         return MockTelemetryLogger()
 
     @pytest.fixture
-    def bicameral(self, mock_left, mock_right, embedder, telemetry):
+    def bicameral(
+        self,
+        mock_left: AsyncMock,
+        mock_right: AsyncMock,
+        embedder: MockEmbeddingProvider,
+        telemetry: MockTelemetryLogger,
+    ) -> BicameralMemory:
         """Create BicameralMemory with mocks."""
         return BicameralMemory(
             left_hemisphere=mock_left,
@@ -317,11 +325,11 @@ class TestBicameralMemory:
 
     # --- Basic Tests ---
 
-    def test_has_semantic_true(self, bicameral) -> None:
+    def test_has_semantic_true(self, bicameral: BicameralMemory) -> None:
         """has_semantic True when Right Hemisphere provided."""
         assert bicameral.has_semantic is True
 
-    def test_has_semantic_false(self, mock_left) -> None:
+    def test_has_semantic_false(self, mock_left: AsyncMock) -> None:
         """has_semantic False without Right Hemisphere."""
         bicameral = BicameralMemory(left_hemisphere=mock_left)
         assert bicameral.has_semantic is False
@@ -330,7 +338,7 @@ class TestBicameralMemory:
 
     @pytest.mark.asyncio
     async def test_store_both_hemispheres(
-        self, bicameral, mock_left, mock_right
+        self, bicameral: BicameralMemory, mock_left: AsyncMock, mock_right: AsyncMock
     ) -> None:
         """Store saves to both hemispheres."""
         result = await bicameral.store(
@@ -343,7 +351,7 @@ class TestBicameralMemory:
         mock_right.upsert.assert_called()
 
     @pytest.mark.asyncio
-    async def test_store_left_only(self, mock_left) -> None:
+    async def test_store_left_only(self, mock_left: AsyncMock) -> None:
         """Store saves to Left only when no Right."""
         bicameral = BicameralMemory(left_hemisphere=mock_left)
 
@@ -356,7 +364,9 @@ class TestBicameralMemory:
         mock_left.execute.assert_called()
 
     @pytest.mark.asyncio
-    async def test_store_with_embed_field(self, bicameral, mock_right) -> None:
+    async def test_store_with_embed_field(
+        self, bicameral: BicameralMemory, mock_right: AsyncMock
+    ) -> None:
         """Store uses specific field for embedding."""
         await bicameral.store(
             id="insight-001",
@@ -369,7 +379,9 @@ class TestBicameralMemory:
     # --- Fetch Tests ---
 
     @pytest.mark.asyncio
-    async def test_fetch_returns_data(self, bicameral, mock_left) -> None:
+    async def test_fetch_returns_data(
+        self, bicameral: BicameralMemory, mock_left: AsyncMock
+    ) -> None:
         """Fetch returns data from Left Hemisphere."""
         mock_left.fetch_one.return_value = {
             "id": "insight-001",
@@ -382,7 +394,9 @@ class TestBicameralMemory:
         assert result["id"] == "insight-001"
 
     @pytest.mark.asyncio
-    async def test_fetch_not_found(self, bicameral, mock_left) -> None:
+    async def test_fetch_not_found(
+        self, bicameral: BicameralMemory, mock_left: AsyncMock
+    ) -> None:
         """Fetch returns None when not found."""
         mock_left.fetch_one.return_value = None
 
@@ -391,7 +405,9 @@ class TestBicameralMemory:
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_fetch_parses_json(self, bicameral, mock_left) -> None:
+    async def test_fetch_parses_json(
+        self, bicameral: BicameralMemory, mock_left: AsyncMock
+    ) -> None:
         """Fetch parses JSON data field."""
         mock_left.fetch_one.return_value = {
             "id": "insight-001",
@@ -400,13 +416,14 @@ class TestBicameralMemory:
 
         result = await bicameral.fetch("insight-001")
 
+        assert result is not None
         assert result["data"]["nested"]["key"] == "value"
 
     # --- Delete Tests ---
 
     @pytest.mark.asyncio
     async def test_delete_both_hemispheres(
-        self, bicameral, mock_left, mock_right
+        self, bicameral: BicameralMemory, mock_left: AsyncMock, mock_right: AsyncMock
     ) -> None:
         """Delete removes from both hemispheres."""
         result = await bicameral.delete("insight-001")
@@ -418,7 +435,7 @@ class TestBicameralMemory:
     # --- Recall Tests ---
 
     @pytest.mark.asyncio
-    async def test_recall_requires_semantic(self, mock_left) -> None:
+    async def test_recall_requires_semantic(self, mock_left: AsyncMock) -> None:
         """Recall raises error without semantic capability."""
         bicameral = BicameralMemory(left_hemisphere=mock_left)
 
@@ -426,7 +443,9 @@ class TestBicameralMemory:
             await bicameral.recall("test query")
 
     @pytest.mark.asyncio
-    async def test_recall_empty_results(self, bicameral, mock_right) -> None:
+    async def test_recall_empty_results(
+        self, bicameral: BicameralMemory, mock_right: AsyncMock
+    ) -> None:
         """Recall returns empty list when no matches."""
         mock_right.search.return_value = []
 
@@ -436,7 +455,7 @@ class TestBicameralMemory:
 
     @pytest.mark.asyncio
     async def test_recall_with_valid_results(
-        self, bicameral, mock_left, mock_right
+        self, bicameral: BicameralMemory, mock_left: AsyncMock, mock_right: AsyncMock
     ) -> None:
         """Recall returns validated results."""
         content_hash = ContentHash.compute({"type": "insight"}).hash_value
@@ -472,8 +491,12 @@ class TestBicameralMemory:
 
     @pytest.mark.asyncio
     async def test_recall_detects_ghost(
-        self, bicameral, mock_left, mock_right, telemetry
-    ):
+        self,
+        bicameral: BicameralMemory,
+        mock_left: AsyncMock,
+        mock_right: AsyncMock,
+        telemetry: MockTelemetryLogger,
+    ) -> None:
         """Recall detects ghost memory."""
         mock_right.search.return_value = [
             MockVectorSearchResult(
@@ -502,7 +525,9 @@ class TestBicameralMemory:
         assert len(healing_events) > 0
 
     @pytest.mark.asyncio
-    async def test_recall_heals_ghost(self, bicameral, mock_left, mock_right) -> None:
+    async def test_recall_heals_ghost(
+        self, bicameral: BicameralMemory, mock_left: AsyncMock, mock_right: AsyncMock
+    ) -> None:
         """Recall heals ghost memory."""
         mock_right.search.return_value = [
             MockVectorSearchResult(
@@ -527,7 +552,10 @@ class TestBicameralMemory:
 
     @pytest.mark.asyncio
     async def test_recall_no_heal_when_disabled(
-        self, mock_left, mock_right, embedder
+        self,
+        mock_left: AsyncMock,
+        mock_right: AsyncMock,
+        embedder: MockEmbeddingProvider,
     ) -> None:
         """Recall doesn't heal ghosts when disabled."""
         config = BicameralConfig(auto_heal_ghosts=False)
@@ -562,7 +590,9 @@ class TestBicameralMemory:
     # --- Staleness Detection Tests ---
 
     @pytest.mark.asyncio
-    async def test_recall_detects_stale(self, bicameral, mock_left, mock_right) -> None:
+    async def test_recall_detects_stale(
+        self, bicameral: BicameralMemory, mock_left: AsyncMock, mock_right: AsyncMock
+    ) -> None:
         """Recall detects stale embedding."""
         old_hash = "old_hash_123"
         new_hash = "new_hash_456"
@@ -597,7 +627,9 @@ class TestBicameralMemory:
     # --- Coherency Check Tests ---
 
     @pytest.mark.asyncio
-    async def test_coherency_check_empty(self, bicameral, mock_right) -> None:
+    async def test_coherency_check_empty(
+        self, bicameral: BicameralMemory, mock_right: AsyncMock
+    ) -> None:
         """Coherency check handles empty vector store."""
         mock_right.count.return_value = 0
 
@@ -608,7 +640,7 @@ class TestBicameralMemory:
 
     @pytest.mark.asyncio
     async def test_coherency_check_all_valid(
-        self, bicameral, mock_left, mock_right
+        self, bicameral: BicameralMemory, mock_left: AsyncMock, mock_right: AsyncMock
     ) -> None:
         """Coherency check with all valid entries."""
         content_hash = ContentHash.compute({"type": "test"}).hash_value
@@ -641,13 +673,13 @@ class TestBicameralMemory:
 
     # --- Ghost Log Tests ---
 
-    def test_ghost_log_empty_initially(self, bicameral) -> None:
+    def test_ghost_log_empty_initially(self, bicameral: BicameralMemory) -> None:
         """Ghost log starts empty."""
         assert len(bicameral.ghost_log) == 0
 
     @pytest.mark.asyncio
     async def test_ghost_log_records_healed(
-        self, bicameral, mock_left, mock_right
+        self, bicameral: BicameralMemory, mock_left: AsyncMock, mock_right: AsyncMock
     ) -> None:
         """Ghost log records healed ghosts."""
         mock_right.search.return_value = [
@@ -673,7 +705,7 @@ class TestBicameralMemory:
 
     # --- Statistics Tests ---
 
-    def test_stats_initial(self, bicameral) -> None:
+    def test_stats_initial(self, bicameral: BicameralMemory) -> None:
         """Initial stats are zero."""
         stats = bicameral.stats()
 
@@ -682,7 +714,9 @@ class TestBicameralMemory:
         assert stats["has_semantic"] is True
 
     @pytest.mark.asyncio
-    async def test_stats_after_recall(self, bicameral, mock_left, mock_right) -> None:
+    async def test_stats_after_recall(
+        self, bicameral: BicameralMemory, mock_left: AsyncMock, mock_right: AsyncMock
+    ) -> None:
         """Stats updated after recall."""
         mock_right.search.return_value = []
 
@@ -709,15 +743,17 @@ class TestBicameralCortex:
         return store
 
     @pytest.fixture
-    def bicameral(self, mock_left):
+    def bicameral(self, mock_left: AsyncMock) -> BicameralMemory:
         return BicameralMemory(left_hemisphere=mock_left)
 
     @pytest.fixture
-    def cortex(self, bicameral):
+    def cortex(self, bicameral: BicameralMemory) -> BicameralCortex:
         return BicameralCortex(bicameral=bicameral)
 
     @pytest.mark.asyncio
-    async def test_store_signal(self, cortex, mock_left) -> None:
+    async def test_store_signal(
+        self, cortex: BicameralCortex, mock_left: AsyncMock
+    ) -> None:
         """store_signal stores signal in BicameralMemory."""
         signal = MockSignal(
             signal_type="test.signal",
@@ -725,13 +761,15 @@ class TestBicameralCortex:
             timestamp="2025-01-01T00:00:00",
         )
 
-        result = await cortex.store_signal(signal)
+        result = await cortex.store_signal(signal)  # type: ignore[arg-type]
 
         assert result is True
         mock_left.execute.assert_called()
 
     @pytest.mark.asyncio
-    async def test_store_batch(self, cortex, mock_left) -> None:
+    async def test_store_batch(
+        self, cortex: BicameralCortex, mock_left: AsyncMock
+    ) -> None:
         """store_batch stores multiple signals."""
         signals = [
             MockSignal(
@@ -742,7 +780,7 @@ class TestBicameralCortex:
             for i in range(3)
         ]
 
-        count = await cortex.store_batch(signals)
+        count = await cortex.store_batch(signals)  # type: ignore[arg-type]
 
         assert count == 3
 
@@ -765,7 +803,9 @@ class TestFactoryFunctions:
         store.dimensions = 384
         return store
 
-    def test_create_bicameral_memory(self, mock_left, mock_right) -> None:
+    def test_create_bicameral_memory(
+        self, mock_left: AsyncMock, mock_right: AsyncMock
+    ) -> None:
         """create_bicameral_memory creates instance."""
         bicameral = create_bicameral_memory(
             relational_store=mock_left,
@@ -776,7 +816,7 @@ class TestFactoryFunctions:
         assert isinstance(bicameral, BicameralMemory)
         assert bicameral._config.auto_heal_ghosts is False
 
-    def test_create_bicameral_cortex(self, mock_left) -> None:
+    def test_create_bicameral_cortex(self, mock_left: AsyncMock) -> None:
         """create_bicameral_cortex creates instance."""
         bicameral = BicameralMemory(left_hemisphere=mock_left)
         cortex = create_bicameral_cortex(

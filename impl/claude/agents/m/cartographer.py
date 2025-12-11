@@ -20,7 +20,7 @@ from __future__ import annotations
 import math
 from collections import Counter
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Protocol, cast, runtime_checkable
 from uuid import uuid4
 
 from .cartography import (
@@ -283,9 +283,9 @@ class DesireLineComputer:
     def _get_vector(self, trace: Any) -> list[float] | None:
         """Extract vector from trace."""
         if hasattr(trace, "vector") and trace.vector is not None:
-            return trace.vector
+            return cast(list[float], trace.vector)
         if hasattr(trace, "embedding"):
-            return trace.embedding
+            return cast(list[float] | None, trace.embedding)
         return None
 
     def _nearest_landmark(
@@ -520,7 +520,7 @@ class CartographerAgent:
             ]
 
         # Find low-density areas between landmarks
-        voids = []
+        voids: list[Void] = []
         len(context.embedding)
 
         # Check density in a grid around context

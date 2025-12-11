@@ -29,7 +29,7 @@ from agents.g.types import GrammarFormat, GrammarLevel
 async def test_analyze_domain_extracts_entities() -> None:
     """Test entity extraction from intent."""
     intent = "Manage Calendar events and tasks for users"
-    constraints = []
+    constraints: list[str] = []
 
     analysis = await analyze_domain(intent, constraints)
 
@@ -42,7 +42,7 @@ async def test_analyze_domain_extracts_entities() -> None:
 async def test_analyze_domain_extracts_operations() -> None:
     """Test operation extraction from intent."""
     intent = "Read and write files, but never delete them"
-    constraints = []
+    constraints: list[str] = []
 
     analysis = await analyze_domain(intent, constraints)
 
@@ -80,7 +80,7 @@ async def test_analyze_domain_with_examples() -> None:
 def test_extract_entities_from_intent() -> None:
     """Test entity extraction heuristics."""
     intent = "Manage Event and Task items in the system"
-    examples = []
+    examples: list[str] = []
 
     entities = _extract_entities(intent, examples)
 
@@ -91,7 +91,7 @@ def test_extract_entities_from_intent() -> None:
 def test_extract_operations_from_intent() -> None:
     """Test operation extraction heuristics."""
     intent = "Users can read, write, create, and delete resources"
-    examples = []
+    examples: list[str] = []
 
     operations = _extract_operations(intent, examples)
 

@@ -61,7 +61,7 @@ class IRelationalStore(Protocol):
 
     async def fetch_all(
         self, query: str, params: dict[str, Any] | None = None
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         """
         Fetch all rows as list of dicts.
 

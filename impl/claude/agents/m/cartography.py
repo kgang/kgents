@@ -111,7 +111,7 @@ class Attractor:
     artifact_type: str | None = None  # Type of artifacts in cluster
     metadata: dict[str, Any] = field(default_factory=dict)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.member_count == 0:
             self.member_count = len(self.members)
 
@@ -351,7 +351,7 @@ class HoloMap:
     _landmark_index: dict[str, Attractor] = field(default_factory=dict, repr=False)
     _edge_index: dict[str, list[WeightedEdge]] = field(default_factory=dict, repr=False)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Build indices for efficient lookup."""
         self._build_indices()
 

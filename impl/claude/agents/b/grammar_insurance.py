@@ -334,7 +334,9 @@ class VolatilityMonitor:
         errors = [e.error_type for e in window.events if e.error_type]
         unique_errors = len(set(errors))
         most_common = max(set(errors), key=errors.count) if errors else None
-        error_concentration = errors.count(most_common) / len(errors) if errors else 0.0
+        error_concentration = (
+            errors.count(most_common) / len(errors) if errors and most_common else 0.0
+        )
 
         # Calculate latency variance
         durations = [e.duration_ms for e in window.events]

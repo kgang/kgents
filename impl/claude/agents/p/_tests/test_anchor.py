@@ -2,6 +2,8 @@
 Tests for AnchorBasedParser (Strategy 4.2 - Islands of Stability).
 """
 
+from __future__ import annotations
+
 import pytest
 from agents.p.strategies.anchor import (
     AnchorBasedParser,
@@ -16,7 +18,7 @@ class TestAnchorBasedParser:
 
     def test_simple_anchored_list(self) -> None:
         """Parse simple anchored list."""
-        parser = AnchorBasedParser(anchor="###ITEM:")
+        parser: AnchorBasedParser[str] = AnchorBasedParser(anchor="###ITEM:")
         text = """
         ###ITEM: First item
         ###ITEM: Second item
@@ -33,7 +35,7 @@ class TestAnchorBasedParser:
 
     def test_ignores_conversational_filler(self) -> None:
         """Anchor parser ignores conversational filler."""
-        parser = AnchorBasedParser(anchor="###ITEM:")
+        parser: AnchorBasedParser[str] = AnchorBasedParser(anchor="###ITEM:")
         text = """
         Sure, here's your list! Let me format it nicely:
 
@@ -55,7 +57,7 @@ class TestAnchorBasedParser:
 
     def test_ignores_malformed_structure(self) -> None:
         """Anchor parser ignores malformed JSON/XML."""
-        parser = AnchorBasedParser(anchor="###ITEM:")
+        parser: AnchorBasedParser[str] = AnchorBasedParser(anchor="###ITEM:")
         text = """
         {
           "items": [  // Malformed JSON starts here
@@ -79,17 +81,18 @@ class TestAnchorBasedParser:
 
     def test_no_anchors_found(self) -> None:
         """Failure when no anchors found."""
-        parser = AnchorBasedParser(anchor="###ITEM:")
+        parser: AnchorBasedParser[str] = AnchorBasedParser(anchor="###ITEM:")
         text = "This text has no anchors"
 
         result = parser.parse(text)
 
         assert not result.success
+        assert result.error is not None
         assert "No anchors" in result.error
 
     def test_empty_items_filtered(self) -> None:
         """Empty items are filtered out."""
-        parser = AnchorBasedParser(anchor="###ITEM:")
+        parser: AnchorBasedParser[str] = AnchorBasedParser(anchor="###ITEM:")
         text = """
         ###ITEM: First item
         ###ITEM:
@@ -108,7 +111,9 @@ class TestAnchorBasedParser:
         def extract_int(text: str) -> int:
             return int(text.strip())
 
-        parser = AnchorBasedParser(anchor="###NUM:", extractor=extract_int)
+        parser: AnchorBasedParser[int] = AnchorBasedParser(
+            anchor="###NUM:", extractor=extract_int
+        )
         text = """
         ###NUM: 42
         ###NUM: 100
@@ -126,7 +131,9 @@ class TestAnchorBasedParser:
         def extract_int(text: str) -> int:
             return int(text.strip())
 
-        parser = AnchorBasedParser(anchor="###NUM:", extractor=extract_int)
+        parser: AnchorBasedParser[int] = AnchorBasedParser(
+            anchor="###NUM:", extractor=extract_int
+        )
         text = """
         ###NUM: not a number
         """
@@ -134,12 +141,13 @@ class TestAnchorBasedParser:
         result = parser.parse(text)
 
         assert not result.success
+        assert result.error is not None
         assert "Extractor failed" in result.error
         assert "not a number" in result.metadata["raw_items"][0]
 
     def test_stream_parsing(self) -> None:
         """Anchor parser supports streaming."""
-        parser = AnchorBasedParser(anchor="###ITEM:")
+        parser: AnchorBasedParser[str] = AnchorBasedParser(anchor="###ITEM:")
 
         tokens = [
             "###ITEM: First item\n",
@@ -155,12 +163,13 @@ class TestAnchorBasedParser:
         # Final result should have all items
         final = results[-1]
         assert final.success
+        assert final.value is not None
         assert len(final.value) == 3
         assert not final.partial
 
     def test_stream_parsing_incomplete(self) -> None:
         """Stream parsing handles incomplete items."""
-        parser = AnchorBasedParser(anchor="###ITEM:")
+        parser: AnchorBasedParser[str] = AnchorBasedParser(anchor="###ITEM:")
 
         tokens = [
             "###ITEM: Complete item\n",
@@ -175,6 +184,7 @@ class TestAnchorBasedParser:
         # Last result should have complete items only
         final = results[-1]
         if final.success:
+            assert final.value is not None
             assert "Complete item" in final.value
 
 
@@ -183,7 +193,7 @@ class TestConvenienceParsers:
 
     def test_hypothesis_parser(self) -> None:
         """Hypothesis parser uses correct anchor."""
-        parser = hypothesis_parser()
+        parser: AnchorBasedParser[str] = hypothesis_parser()
         text = """
         ###HYPOTHESIS: The system exhibits chaotic behavior
         ###HYPOTHESIS: Load increases with user count
@@ -192,12 +202,13 @@ class TestConvenienceParsers:
         result = parser.parse(text)
 
         assert result.success
+        assert result.value is not None
         assert len(result.value) == 2
         assert "chaotic behavior" in result.value[0]
 
     def test_behavior_parser(self) -> None:
         """Behavior parser uses correct anchor."""
-        parser = behavior_parser()
+        parser: AnchorBasedParser[str] = behavior_parser()
         text = """
         ###BEHAVIOR: Sorts list in ascending order
         ###BEHAVIOR: Returns empty list for empty input
@@ -206,12 +217,13 @@ class TestConvenienceParsers:
         result = parser.parse(text)
 
         assert result.success
+        assert result.value is not None
         assert len(result.value) == 2
         assert "Sorts list" in result.value[0]
 
     def test_constraint_parser(self) -> None:
         """Constraint parser uses correct anchor."""
-        parser = constraint_parser()
+        parser: AnchorBasedParser[str] = constraint_parser()
         text = """
         ###CONSTRAINT: Input must be non-negative
         ###CONSTRAINT: Output must be deterministic
@@ -220,6 +232,7 @@ class TestConvenienceParsers:
         result = parser.parse(text)
 
         assert result.success
+        assert result.value is not None
         assert len(result.value) == 2
         assert "non-negative" in result.value[0]
 
@@ -229,7 +242,7 @@ class TestAnchorParserConfiguration:
 
     def test_configure_returns_new_instance(self) -> None:
         """Configure returns new parser instance."""
-        parser = AnchorBasedParser(anchor="###ITEM:")
+        parser: AnchorBasedParser[str] = AnchorBasedParser(anchor="###ITEM:")
         new_parser = parser.configure(min_confidence=0.9)
 
         assert new_parser.config.min_confidence == 0.9
@@ -237,14 +250,14 @@ class TestAnchorParserConfiguration:
 
     def test_configure_validation(self) -> None:
         """Configure validates new config."""
-        parser = AnchorBasedParser(anchor="###ITEM:")
+        parser: AnchorBasedParser[str] = AnchorBasedParser(anchor="###ITEM:")
 
         with pytest.raises(ValueError, match="min_confidence must be in"):
             parser.configure(min_confidence=2.0)
 
     def test_configured_parser_works(self) -> None:
         """Configured parser still works correctly."""
-        parser = AnchorBasedParser(anchor="###ITEM:")
+        parser: AnchorBasedParser[str] = AnchorBasedParser(anchor="###ITEM:")
         parser = parser.configure(min_confidence=0.95, allow_partial=False)
 
         text = "###ITEM: Test item"

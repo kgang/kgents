@@ -11,12 +11,14 @@ Test Coverage:
 7. Cross-agent integration (J-gent × D-gent) - 5 tests
 """
 
+from __future__ import annotations
+
 import json
 import shutil
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, Generator, List, Optional
 
 import pytest
 
@@ -30,6 +32,7 @@ from agents.d import (
 
 # Import lens enhancements
 from agents.d.lens import (
+    Traversal,
     dict_items_traversal,
     dict_keys_traversal,
     dict_values_traversal,
@@ -68,7 +71,7 @@ from agents.d.persistence_ext import (
 
 
 @pytest.fixture
-def temp_dir():
+def temp_dir() -> Generator[Path, None, None]:
     """Create temporary directory for test files."""
     tmpdir = Path(tempfile.mkdtemp())
     yield tmpdir
@@ -169,6 +172,7 @@ class TestPrism:
         assert prism.preview(user) is None
 
         result = prism.set_if_present(user, "alice@example.com")
+        assert result is not None
         assert result.email is None  # Unchanged because was None
 
     def test_prism_laws(self) -> None:
@@ -192,7 +196,7 @@ class TestTraversal:
 
     def test_list_traversal_get_all(self) -> None:
         """Get all elements from list."""
-        trav = list_traversal()
+        trav: Traversal[list[int], int] = list_traversal()
         items = [1, 2, 3, 4, 5]
 
         result = trav.get_all(items)
@@ -201,7 +205,7 @@ class TestTraversal:
 
     def test_list_traversal_modify(self) -> None:
         """Modify all elements in list."""
-        trav = list_traversal()
+        trav: Traversal[list[int], int] = list_traversal()
         items = [1, 2, 3]
 
         result = trav.modify(items, lambda x: x * 2)
@@ -210,7 +214,7 @@ class TestTraversal:
 
     def test_list_traversal_set_all(self) -> None:
         """Set all elements to same value."""
-        trav = list_traversal()
+        trav: Traversal[list[int], int] = list_traversal()
         items = [1, 2, 3]
 
         result = trav.set_all(items, 0)
@@ -249,7 +253,8 @@ class TestTraversal:
 
     def test_traversal_filter(self) -> None:
         """Filter traversal targets."""
-        trav = list_traversal().filter(lambda x: x > 2)
+        base_trav: Traversal[list[int], int] = list_traversal()
+        trav = base_trav.filter(lambda x: x > 2)
         items = [1, 2, 3, 4, 5]
 
         filtered = trav.get_all(items)
@@ -261,8 +266,8 @@ class TestTraversal:
 
     def test_traversal_composition(self) -> None:
         """Compose traversals for nested structures."""
-        outer = list_traversal()
-        inner = list_traversal()
+        outer: Traversal[list[list[int]], list[int]] = list_traversal()
+        inner: Traversal[list[int], int] = list_traversal()
         composed = outer >> inner
 
         nested = [[1, 2], [3, 4], [5, 6]]
@@ -275,7 +280,7 @@ class TestTraversal:
 
     def test_traversal_empty(self) -> None:
         """Traversal handles empty collections."""
-        trav = list_traversal()
+        trav: Traversal[list[int], int] = list_traversal()
         empty: List[int] = []
 
         assert trav.get_all(empty) == []
@@ -283,7 +288,7 @@ class TestTraversal:
 
     def test_traversal_laws(self) -> None:
         """Verify traversal satisfies its laws."""
-        trav = list_traversal()
+        trav: Traversal[list[int], int] = list_traversal()
         items = [1, 2, 3]
 
         laws = verify_traversal_laws(trav, items, 10)
@@ -379,7 +384,7 @@ class TestSchemaVersioning:
 
     def test_migration_registry_single(self) -> None:
         """Register and retrieve single migration."""
-        registry = MigrationRegistry()
+        registry: MigrationRegistry = MigrationRegistry()
         migration = Migration(
             from_version="1.0.0",
             to_version="1.1.0",
@@ -394,7 +399,7 @@ class TestSchemaVersioning:
 
     def test_migration_registry_chain(self) -> None:
         """Find migration chain across multiple versions."""
-        registry = MigrationRegistry()
+        registry: MigrationRegistry = MigrationRegistry()
         registry.register(Migration("1.0.0", "1.1.0", lambda d: d))
         registry.register(Migration("1.1.0", "1.2.0", lambda d: d))
         registry.register(Migration("1.2.0", "2.0.0", lambda d: d))
@@ -408,14 +413,14 @@ class TestSchemaVersioning:
         """Raise error when no migration path exists."""
         from agents.d.errors import StateError
 
-        registry = MigrationRegistry()
+        registry: MigrationRegistry = MigrationRegistry()
         registry.register(Migration("1.0.0", "1.1.0", lambda d: d))
 
         with pytest.raises(StateError, match="No migration path"):
             registry.get_migration_path("1.0.0", "3.0.0")
 
     @pytest.mark.asyncio
-    async def test_versioned_agent_save_load(self, temp_dir) -> None:
+    async def test_versioned_agent_save_load(self, temp_dir: Path) -> None:
         """Versioned agent saves and loads with version."""
         path = temp_dir / "versioned.json"
 
@@ -431,7 +436,7 @@ class TestSchemaVersioning:
         assert loaded == {"name": "Alice"}
 
     @pytest.mark.asyncio
-    async def test_versioned_agent_migration(self, temp_dir) -> None:
+    async def test_versioned_agent_migration(self, temp_dir: Path) -> None:
         """Versioned agent migrates old data on load."""
         path = temp_dir / "migrate.json"
 
@@ -446,7 +451,7 @@ class TestSchemaVersioning:
             )
 
         # Create agent with v1.1.0 and migration
-        registry = MigrationRegistry()
+        registry: MigrationRegistry = MigrationRegistry()
         registry.register(
             Migration(
                 from_version="1.0.0",
@@ -463,12 +468,13 @@ class TestSchemaVersioning:
         )
 
         loaded = await agent.load()
+        assert loaded is not None
 
         assert loaded["name"] == "Alice"
         assert loaded["migrated"] is True
 
     @pytest.mark.asyncio
-    async def test_create_versioned_agent_helper(self, temp_dir) -> None:
+    async def test_create_versioned_agent_helper(self, temp_dir: Path) -> None:
         """Convenience function creates versioned agent."""
         path = temp_dir / "helper.json"
 
@@ -489,7 +495,7 @@ class TestSchemaVersioning:
         assert loaded["test"] is True
 
     @pytest.mark.asyncio
-    async def test_versioned_agent_legacy_format(self, temp_dir) -> None:
+    async def test_versioned_agent_legacy_format(self, temp_dir: Path) -> None:
         """Versioned agent handles legacy (unversioned) data."""
         path = temp_dir / "legacy.json"
 
@@ -516,7 +522,7 @@ class TestBackupRestore:
     """Tests for backup and restore utilities."""
 
     @pytest.mark.asyncio
-    async def test_backup_creates_file(self, temp_dir) -> None:
+    async def test_backup_creates_file(self, temp_dir: Path) -> None:
         """Backup creates a backup file."""
         state_path = temp_dir / "state.json"
         backup_dir = temp_dir / "backups"
@@ -530,10 +536,11 @@ class TestBackupRestore:
         # Verify backup was created
         backups = await manager.list_backups("state")
         assert len(backups) == 1
+        assert metadata is not None
         assert metadata.size_bytes > 0
 
     @pytest.mark.asyncio
-    async def test_restore_from_backup(self, temp_dir) -> None:
+    async def test_restore_from_backup(self, temp_dir: Path) -> None:
         """Restore recovers state from backup."""
         state_path = temp_dir / "state.json"
         backup_dir = temp_dir / "backups"
@@ -548,16 +555,18 @@ class TestBackupRestore:
         # Modify state
         await agent.save({"version": 2})
         current = await agent.load()
+        assert current is not None
         assert current["version"] == 2
 
         # Restore from backup
         await manager.restore(agent)
         restored = await agent.load()
+        assert restored is not None
 
         assert restored["version"] == 1
 
     @pytest.mark.asyncio
-    async def test_backup_rotation(self, temp_dir) -> None:
+    async def test_backup_rotation(self, temp_dir: Path) -> None:
         """Old backups are rotated out."""
 
         state_path = temp_dir / "state.json"
@@ -576,7 +585,7 @@ class TestBackupRestore:
         assert len(backups) == 3
 
     @pytest.mark.asyncio
-    async def test_backup_with_label(self, temp_dir) -> None:
+    async def test_backup_with_label(self, temp_dir: Path) -> None:
         """Backup can have custom label."""
         state_path = temp_dir / "state.json"
         backup_dir = temp_dir / "backups"
@@ -591,7 +600,7 @@ class TestBackupRestore:
         assert any("pre_migration" in str(b) for b in backups)
 
     @pytest.mark.asyncio
-    async def test_list_backups_sorted(self, temp_dir) -> None:
+    async def test_list_backups_sorted(self, temp_dir: Path) -> None:
         """Backups are listed newest first."""
         state_path = temp_dir / "state.json"
         backup_dir = temp_dir / "backups"
@@ -610,7 +619,7 @@ class TestBackupRestore:
         assert mtimes == sorted(mtimes, reverse=True)
 
     @pytest.mark.asyncio
-    async def test_verify_backup(self, temp_dir) -> None:
+    async def test_verify_backup(self, temp_dir: Path) -> None:
         """Verify backup integrity."""
         state_path = temp_dir / "state.json"
         backup_dir = temp_dir / "backups"
@@ -622,12 +631,13 @@ class TestBackupRestore:
         await manager.backup(agent)
 
         backups = await manager.list_backups("state")
+        assert len(backups) > 0
         is_valid = await manager.verify_backup(backups[0])
 
         assert is_valid is True
 
     @pytest.mark.asyncio
-    async def test_backup_nonexistent_file(self, temp_dir) -> None:
+    async def test_backup_nonexistent_file(self, temp_dir: Path) -> None:
         """Backup raises error for nonexistent file."""
         state_path = temp_dir / "nonexistent.json"
         backup_dir = temp_dir / "backups"
@@ -646,7 +656,7 @@ class TestCompression:
     """Tests for compression strategies."""
 
     @pytest.mark.asyncio
-    async def test_compressed_agent_save_load(self, temp_dir) -> None:
+    async def test_compressed_agent_save_load(self, temp_dir: Path) -> None:
         """Compressed agent saves and loads correctly."""
         path = temp_dir / "state.json"
 
@@ -665,7 +675,7 @@ class TestCompression:
         assert loaded == {"key": "value"}
 
     @pytest.mark.asyncio
-    async def test_compressed_agent_creates_gz(self, temp_dir) -> None:
+    async def test_compressed_agent_creates_gz(self, temp_dir: Path) -> None:
         """Compressed agent creates .gz file."""
         path = temp_dir / "state.json"
 
@@ -684,7 +694,7 @@ class TestCompression:
         assert not path.exists()  # Original not created
 
     @pytest.mark.asyncio
-    async def test_compressed_agent_skips_small(self, temp_dir) -> None:
+    async def test_compressed_agent_skips_small(self, temp_dir: Path) -> None:
         """Compressed agent skips compression for small data."""
         path = temp_dir / "state.json"
 
@@ -703,7 +713,7 @@ class TestCompression:
         assert not path.with_suffix(".json.gz").exists()
 
     @pytest.mark.asyncio
-    async def test_compression_stats(self, temp_dir) -> None:
+    async def test_compression_stats(self, temp_dir: Path) -> None:
         """Get compression statistics."""
         path = temp_dir / "state.json"
 
@@ -721,13 +731,14 @@ class TestCompression:
         await agent.save(large_data)
 
         stats = await agent.get_compression_stats()
+        assert stats is not None
 
         assert stats["is_compressed"] is True
         assert stats["compressed_size"] > 0
         assert stats["compression_ratio"] > 1.0
 
     @pytest.mark.asyncio
-    async def test_compression_levels(self, temp_dir) -> None:
+    async def test_compression_levels(self, temp_dir: Path) -> None:
         """Different compression levels produce different sizes."""
         data = {"data": "x" * 10000}
         sizes = {}
@@ -742,13 +753,14 @@ class TestCompression:
             await agent.save(data)
 
             stats = await agent.get_compression_stats()
+            assert stats is not None
             sizes[level] = stats["compressed_size"]
 
         # BEST should be smaller or equal to FAST
         assert sizes[CompressionLevel.BEST] <= sizes[CompressionLevel.FAST]
 
     @pytest.mark.asyncio
-    async def test_create_compressed_agent_helper(self, temp_dir) -> None:
+    async def test_create_compressed_agent_helper(self, temp_dir: Path) -> None:
         """Convenience function creates compressed agent."""
         path = temp_dir / "helper.json"
 
@@ -772,7 +784,7 @@ class TestCrossAgentIntegration:
     """Tests for cross-agent integration (J-gent × D-gent)."""
 
     @pytest.mark.asyncio
-    async def test_jgent_entropy_with_versioned_agent(self, temp_dir) -> None:
+    async def test_jgent_entropy_with_versioned_agent(self, temp_dir: Path) -> None:
         """J-gent entropy constraint with versioned persistence."""
         path = temp_dir / "entropy_versioned.json"
 
@@ -786,7 +798,7 @@ class TestCrossAgentIntegration:
         # Wrap with entropy constraint
 
         # Use a volatile backend for entropy constraint
-        volatile = VolatileAgent(_state={})
+        volatile: VolatileAgent[dict[str, Any]] = VolatileAgent(_state={})
         entropy = EntropyConstrainedAgent.from_depth(
             backend=volatile,
             depth=0,
@@ -796,11 +808,12 @@ class TestCrossAgentIntegration:
         # Save via entropy-constrained agent
         await entropy.save({"constrained": True})
         loaded = await entropy.load()
+        assert loaded is not None
 
         assert loaded["constrained"] is True
 
     @pytest.mark.asyncio
-    async def test_lens_with_persistent_agent(self, temp_dir) -> None:
+    async def test_lens_with_persistent_agent(self, temp_dir: Path) -> None:
         """Lens composition with persistent D-gent."""
         from agents.d import LensAgent
 
@@ -826,24 +839,31 @@ class TestCrossAgentIntegration:
         # Write through lens
         await focused.save(150)
         reloaded = await persistent.load()
+        assert reloaded is not None
         assert reloaded["users"]["alice"]["score"] == 150
 
     @pytest.mark.asyncio
-    async def test_traversal_with_observable(self, temp_dir) -> None:
+    async def test_traversal_with_observable(self, temp_dir: Path) -> None:
         """Traversal with observable D-gent for batch updates."""
         from agents.d import ObservableDataAgent
+        from agents.d.observable import Change
 
         # Create observable volatile agent
         volatile = VolatileAgent(_state={"items": [1, 2, 3, 4, 5]})
         observable = ObservableDataAgent(underlying=volatile)
 
         # Track changes
-        changes = []
-        await observable.subscribe(lambda c: changes.append(c))
+        changes: list[Change[Any]] = []
+
+        async def append_change(c: Change[Any]) -> None:
+            changes.append(c)
+
+        await observable.subscribe(append_change)
 
         # Use traversal to modify items
-        trav = list_traversal()
+        trav: Traversal[list[int], int] = list_traversal()
         state = await observable.load()
+        assert state is not None
         new_items = trav.modify(state["items"], lambda x: x * 2)
         await observable.save({"items": new_items})
 
@@ -852,7 +872,7 @@ class TestCrossAgentIntegration:
         assert changes[0].new_value["items"] == [2, 4, 6, 8, 10]
 
     @pytest.mark.asyncio
-    async def test_prism_with_queryable(self, temp_dir) -> None:
+    async def test_prism_with_queryable(self, temp_dir: Path) -> None:
         """Prism with queryable D-gent for optional field access."""
         from agents.d import QueryableDataAgent
 
@@ -869,6 +889,7 @@ class TestCrossAgentIntegration:
 
         # Query users
         users = await queryable.get("users")
+        assert users is not None
         assert len(users) == 2
 
         # Use prism to safely access optional email
@@ -881,7 +902,7 @@ class TestCrossAgentIntegration:
         assert bob_email is None
 
     @pytest.mark.asyncio
-    async def test_compression_with_unified_memory(self, temp_dir) -> None:
+    async def test_compression_with_unified_memory(self, temp_dir: Path) -> None:
         """Compression strategy with unified memory."""
         path = temp_dir / "unified_compressed.json"
 
@@ -904,11 +925,13 @@ class TestCrossAgentIntegration:
 
         # Verify compression
         stats = await compressed.get_compression_stats()
+        assert stats is not None
         assert stats["is_compressed"] is True
         assert stats["compression_ratio"] > 1.0
 
         # Load and verify
         loaded = await compressed.load()
+        assert loaded is not None
         assert loaded["metadata"]["count"] == 100
         assert len(loaded["memories"]) == 100
 

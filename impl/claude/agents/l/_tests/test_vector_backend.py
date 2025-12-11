@@ -10,6 +10,8 @@ Tests cover:
 Tests are written to gracefully handle missing dependencies.
 """
 
+from pathlib import Path
+
 import pytest
 from agents.l.vector_backend import (
     CHROMADB_AVAILABLE,
@@ -34,7 +36,7 @@ class TestChromaDBBackend:
     """Tests for ChromaDBBackend."""
 
     @pytest.mark.asyncio
-    async def test_add_and_search(self, tmp_path) -> None:
+    async def test_add_and_search(self, tmp_path: Path) -> None:
         """Test basic add and search."""
         backend = ChromaDBBackend(
             path=str(tmp_path / "chroma"), dimension=128, collection_name="test"
@@ -54,13 +56,13 @@ class TestChromaDBBackend:
         assert isinstance(results[0].similarity, float)
 
     @pytest.mark.asyncio
-    async def test_dimension_property(self, tmp_path) -> None:
+    async def test_dimension_property(self, tmp_path: Path) -> None:
         """Test dimension property."""
         backend = ChromaDBBackend(path=str(tmp_path / "chroma"), dimension=256)
         assert backend.dimension == 256
 
     @pytest.mark.asyncio
-    async def test_metadata_filtering(self, tmp_path) -> None:
+    async def test_metadata_filtering(self, tmp_path: Path) -> None:
         """Test search with metadata filters."""
         backend = ChromaDBBackend(
             path=str(tmp_path / "chroma"), dimension=128, collection_name="test2"
@@ -77,7 +79,7 @@ class TestChromaDBBackend:
         assert results[0].id == "agent1"
 
     @pytest.mark.asyncio
-    async def test_threshold_filtering(self, tmp_path) -> None:
+    async def test_threshold_filtering(self, tmp_path: Path) -> None:
         """Test search with similarity threshold."""
         backend = ChromaDBBackend(
             path=str(tmp_path / "chroma"), dimension=128, collection_name="test3"
@@ -96,7 +98,7 @@ class TestChromaDBBackend:
         assert results[0].id == "similar"
 
     @pytest.mark.asyncio
-    async def test_remove(self, tmp_path) -> None:
+    async def test_remove(self, tmp_path: Path) -> None:
         """Test removing entries."""
         backend = ChromaDBBackend(
             path=str(tmp_path / "chroma"), dimension=128, collection_name="test4"
@@ -115,7 +117,7 @@ class TestChromaDBBackend:
         assert results[0].id == "id2"
 
     @pytest.mark.asyncio
-    async def test_clear(self, tmp_path) -> None:
+    async def test_clear(self, tmp_path: Path) -> None:
         """Test clearing all entries."""
         backend = ChromaDBBackend(
             path=str(tmp_path / "chroma"), dimension=128, collection_name="test5"
@@ -133,7 +135,7 @@ class TestChromaDBBackend:
         assert count == 0
 
     @pytest.mark.asyncio
-    async def test_count(self, tmp_path) -> None:
+    async def test_count(self, tmp_path: Path) -> None:
         """Test counting entries."""
         backend = ChromaDBBackend(
             path=str(tmp_path / "chroma"), dimension=128, collection_name="test6"
@@ -149,7 +151,7 @@ class TestChromaDBBackend:
         assert await backend.count() == 2
 
     @pytest.mark.asyncio
-    async def test_add_batch(self, tmp_path) -> None:
+    async def test_add_batch(self, tmp_path: Path) -> None:
         """Test batch adding."""
         backend = ChromaDBBackend(
             path=str(tmp_path / "chroma"), dimension=128, collection_name="test7"
@@ -164,7 +166,7 @@ class TestChromaDBBackend:
         assert await backend.count() == 3
 
     @pytest.mark.asyncio
-    async def test_persistence(self, tmp_path) -> None:
+    async def test_persistence(self, tmp_path: Path) -> None:
         """Test that data persists across instances."""
         path = str(tmp_path / "chroma")
         collection = "test_persist"
@@ -308,7 +310,7 @@ class TestFAISSBackend:
         assert await backend.count() == 3
 
     @pytest.mark.asyncio
-    async def test_persistence(self, tmp_path) -> None:
+    async def test_persistence(self, tmp_path: Path) -> None:
         """Test saving and loading index."""
         save_path = str(tmp_path / "faiss.index")
 
@@ -347,7 +349,7 @@ class TestCreateVectorBackend:
     """Tests for create_vector_backend."""
 
     @pytest.mark.skipif(not CHROMADB_AVAILABLE, reason="chromadb not installed")
-    def test_auto_selects_chroma(self, tmp_path) -> None:
+    def test_auto_selects_chroma(self, tmp_path: Path) -> None:
         """Test auto selection prefers ChromaDB."""
         backend = create_vector_backend(
             dimension=128, backend_type="auto", path=str(tmp_path / "chroma")
@@ -355,7 +357,7 @@ class TestCreateVectorBackend:
         assert isinstance(backend, ChromaDBBackend)
 
     @pytest.mark.skipif(not CHROMADB_AVAILABLE, reason="chromadb not installed")
-    def test_explicit_chroma(self, tmp_path) -> None:
+    def test_explicit_chroma(self, tmp_path: Path) -> None:
         """Test explicit ChromaDB selection."""
         backend = create_vector_backend(
             dimension=128, backend_type="chroma", path=str(tmp_path / "chroma")
@@ -363,7 +365,7 @@ class TestCreateVectorBackend:
         assert isinstance(backend, ChromaDBBackend)
 
     @pytest.mark.skipif(not FAISS_AVAILABLE, reason="faiss not installed")
-    def test_explicit_faiss(self, tmp_path) -> None:
+    def test_explicit_faiss(self, tmp_path: Path) -> None:
         """Test explicit FAISS selection."""
         backend = create_vector_backend(
             dimension=128, backend_type="faiss", path=str(tmp_path / "faiss.index")
@@ -395,7 +397,7 @@ class TestVectorBackendIntegration:
     """Integration tests using ChromaDB backend."""
 
     @pytest.mark.asyncio
-    async def test_large_catalog_performance(self, tmp_path) -> None:
+    async def test_large_catalog_performance(self, tmp_path: Path) -> None:
         """Test performance with larger catalog (100 entries)."""
         backend = ChromaDBBackend(
             path=str(tmp_path / "chroma"), dimension=128, collection_name="perf_test"
@@ -416,7 +418,7 @@ class TestVectorBackendIntegration:
         assert all(isinstance(r.similarity, float) for r in results)
 
     @pytest.mark.asyncio
-    async def test_update_existing_entry(self, tmp_path) -> None:
+    async def test_update_existing_entry(self, tmp_path: Path) -> None:
         """Test updating an existing entry."""
         backend = ChromaDBBackend(
             path=str(tmp_path / "chroma"), dimension=128, collection_name="update_test"

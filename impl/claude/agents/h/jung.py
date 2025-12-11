@@ -9,7 +9,7 @@ to maintain coherence. Integration (not elimination) is the goal.
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
+from typing import Optional, TypedDict
 
 from bootstrap.types import Agent
 
@@ -29,6 +29,14 @@ class Archetype(Enum):
     SELF = "self"
     TRICKSTER = "trickster"
     WISE_OLD_MAN = "wise_old_man"
+
+
+class ArchetypePattern(TypedDict):
+    """Type definition for archetype pattern dictionary."""
+
+    keywords: list[str]
+    manifestation: str
+    shadow: str
 
 
 @dataclass
@@ -128,7 +136,7 @@ SHADOW_MAPPINGS = {
 
 
 # Archetype detection patterns
-ARCHETYPE_PATTERNS = {
+ARCHETYPE_PATTERNS: dict[Archetype, ArchetypePattern] = {
     Archetype.PERSONA: {
         "keywords": ["public", "interface", "present", "show", "appear", "official"],
         "manifestation": "Public interface, declared behavior",

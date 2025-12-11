@@ -9,6 +9,8 @@ Tests:
 - NarrativeOrchestrator: Unified integration layer
 """
 
+from __future__ import annotations
+
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -82,7 +84,7 @@ def make_trace_sequence(count: int = 5) -> list[SemanticTrace]:
 class MockEmbedder:
     """Mock embedder for testing."""
 
-    def __init__(self, dimension: int = 128):
+    def __init__(self, dimension: int = 128) -> None:
         self.dimension = dimension
         self.call_count = 0
 
@@ -97,8 +99,8 @@ class MockEmbedder:
 class MockVectorIndex:
     """Mock vector index for testing."""
 
-    def __init__(self):
-        self._embeddings: dict[str, tuple[list[float], dict]] = {}
+    def __init__(self) -> None:
+        self._embeddings: dict[str, tuple[list[float], dict[str, Any]]] = {}
 
     async def add(
         self,
@@ -116,7 +118,7 @@ class MockVectorIndex:
     ) -> list[tuple[str, float]]:
         """Search for similar embeddings."""
         # Simple cosine similarity
-        results = []
+        results: list[tuple[str, float]] = []
         for id, (emb, _) in self._embeddings.items():
             similarity = self._cosine_similarity(query, emb)
             results.append((id, similarity))
@@ -129,18 +131,18 @@ class MockVectorIndex:
             del self._embeddings[id]
 
     def _cosine_similarity(self, a: list[float], b: list[float]) -> float:
-        dot = sum(x * y for x, y in zip(a, b))
-        norm_a = sum(x * x for x in a) ** 0.5
-        norm_b = sum(y * y for y in b) ** 0.5
+        dot: float = sum(x * y for x, y in zip(a, b))
+        norm_a: float = sum(x * x for x in a) ** 0.5
+        norm_b: float = sum(y * y for y in b) ** 0.5
         if norm_a == 0 or norm_b == 0:
             return 0.0
-        return dot / (norm_a * norm_b)
+        return float(dot / (norm_a * norm_b))
 
 
 class MockHolographicMemory:
     """Mock holographic memory for testing."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._patterns: list[Any] = []
 
     async def store(self, pattern: Any) -> None:
@@ -156,7 +158,7 @@ class MockHolographicMemory:
 class MockTokenBudget:
     """Mock token budget for testing."""
 
-    def __init__(self, max_balance: int = 10000, initial: int = 5000):
+    def __init__(self, max_balance: int = 10000, initial: int = 5000) -> None:
         self._max = max_balance
         self._balance = initial
 

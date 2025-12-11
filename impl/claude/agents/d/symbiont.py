@@ -5,9 +5,11 @@ The Symbiont pattern embodies endosymbiotic composition where pure logic
 (the "host") gains memory through integration with a D-gent (the "organelle").
 """
 
+from __future__ import annotations
+
 import asyncio
 from dataclasses import dataclass
-from typing import Awaitable, Callable, Generic, TypeVar, Union
+from typing import Awaitable, Callable, Generic, TypeVar, Union, cast
 
 from bootstrap.types import Agent
 
@@ -67,10 +69,15 @@ class Symbiont(Agent[In, Out], Generic[In, Out, S]):
         current_state = await self.memory.load()
 
         # 2. Pure computation (detect sync vs async)
+        result: tuple[Out, S]
         if asyncio.iscoroutinefunction(self.logic):
-            output, new_state = await self.logic(input_data, current_state)
+            result = await self.logic(input_data, current_state)
         else:
-            output, new_state = self.logic(input_data, current_state)
+            # Type narrowing: we know logic is sync here
+            sync_logic = cast(Callable[[In, S], tuple[Out, S]], self.logic)
+            result = sync_logic(input_data, current_state)
+
+        output, new_state = result
 
         # 3. Persist side effects
         await self.memory.save(new_state)

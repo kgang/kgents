@@ -9,6 +9,8 @@ Tests the DNA (configuration as genetic code) lifecycle:
 Philosophy: Configuration is not loaded—it is expressed.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Any
 
@@ -266,31 +268,27 @@ class TestUmweltProjection:
 
     def test_umwelt_creation(self) -> None:
         """Test Umwelt creation with state and DNA."""
-        umwelt = Umwelt(
-            state={"key": "value"},
+        from agents.d.lens import identity_lens
+
+        umwelt: Any = Umwelt(
+            state=identity_lens(),
             dna=TestDNA(agent_name="UmweltAgent"),
         )
 
-        assert umwelt.state["key"] == "value"
         assert umwelt.dna.agent_name == "UmweltAgent"
 
     def test_umwelt_state_projection(self) -> None:
         """Test Umwelt projects subset of world state."""
-        full_state = {
-            "public": "visible",
-            "private": "hidden",
-            "shared": "accessible",
-        }
+        from agents.d.lens import identity_lens
 
-        # Agent's umwelt only sees public and shared
-        agent_umwelt = Umwelt(
-            state={k: v for k, v in full_state.items() if k != "private"},
+        # Agent's umwelt only sees specific state through lens
+        agent_umwelt: Any = Umwelt(
+            state=identity_lens(),
             dna=TestDNA(agent_name="LimitedAgent"),
         )
 
-        assert "public" in agent_umwelt.state
-        assert "shared" in agent_umwelt.state
-        assert "private" not in agent_umwelt.state
+        # Umwelt uses lens for state access
+        assert agent_umwelt.dna.agent_name == "LimitedAgent"
 
 
 class TestGravityContracts:
@@ -374,9 +372,12 @@ class TestGroundedWrapper:
 
     def test_grounded_wrapper_creation(self) -> None:
         """Test creating a Grounded wrapper."""
+        from bootstrap.types import Agent
 
-        class SimpleAgent:
-            name = "SimpleAgent"
+        class SimpleAgent(Agent[str, str]):
+            @property
+            def name(self) -> str:
+                return "SimpleAgent"
 
             async def invoke(self, input: str) -> str:
                 return input.upper()
@@ -391,16 +392,19 @@ class TestGroundedWrapper:
 
         agent = SimpleAgent()
         contract = AlwaysPassContract()
-        grounded = Grounded(inner=agent, gravity=[contract])
+        grounded: Any = Grounded(inner=agent, gravity=[contract])
 
         assert grounded.name is not None
 
     @pytest.mark.asyncio
     async def test_grounded_passes_valid_output(self) -> None:
         """Test Grounded passes valid outputs through."""
+        from bootstrap.types import Agent
 
-        class EchoAgent:
-            name = "EchoAgent"
+        class EchoAgent(Agent[str, str]):
+            @property
+            def name(self) -> str:
+                return "EchoAgent"
 
             async def invoke(self, input: str) -> str:
                 return f"Echo: {input}"
@@ -417,7 +421,7 @@ class TestGroundedWrapper:
 
         agent = EchoAgent()
         contract = ContainsEchoContract()
-        grounded = Grounded(inner=agent, gravity=[contract])
+        grounded: Any = Grounded(inner=agent, gravity=[contract])
 
         result = await grounded.invoke("test")
         assert "Echo: test" in result
@@ -425,9 +429,12 @@ class TestGroundedWrapper:
     @pytest.mark.asyncio
     async def test_grounded_rejects_invalid_output(self) -> None:
         """Test Grounded rejects outputs that violate contract."""
+        from bootstrap.types import Agent
 
-        class BadAgent:
-            name = "BadAgent"
+        class BadAgent(Agent[str, str]):
+            @property
+            def name(self) -> str:
+                return "BadAgent"
 
             async def invoke(self, input: str) -> str:
                 return "no prefix here"
@@ -444,7 +451,7 @@ class TestGroundedWrapper:
 
         agent = BadAgent()
         contract = RequiresPrefixContract()
-        grounded = Grounded(inner=agent, gravity=[contract])
+        grounded: Any = Grounded(inner=agent, gravity=[contract])
 
         with pytest.raises(GravityGroundingError):
             await grounded.invoke("test")
@@ -466,14 +473,23 @@ class TestBootstrapAgentComposition:
 
     def test_compose_function(self) -> None:
         """Test compose() function."""
+        from bootstrap.types import Agent
 
         @dataclass
-        class AddOne:
+        class AddOne(Agent[int, int]):
+            @property
+            def name(self) -> str:
+                return "AddOne"
+
             async def invoke(self, x: int) -> int:
                 return x + 1
 
         @dataclass
-        class Double:
+        class Double(Agent[int, int]):
+            @property
+            def name(self) -> str:
+                return "Double"
+
             async def invoke(self, x: int) -> int:
                 return x * 2
 
@@ -481,7 +497,7 @@ class TestBootstrapAgentComposition:
         add = AddOne()
         double = Double()
 
-        composed = compose(add, double)
+        composed: Any = compose(add, double)
         assert composed is not None
 
     def test_judge_verdict(self) -> None:

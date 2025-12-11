@@ -4,6 +4,8 @@ Tests for L-gent F-gent and J-gent integration methods.
 Phase: J-gent Phase 2 (L-gent Integration)
 """
 
+from __future__ import annotations
+
 import pytest
 from agents.l.semantic_registry import create_semantic_registry
 from agents.l.types import CatalogEntry, EntityType, Status
@@ -41,7 +43,9 @@ class TestFgentIntegration:
     """Tests for F-gent integration methods."""
 
     @pytest.mark.asyncio
-    async def test_find_for_forging_basic(self, sample_json_parser) -> None:
+    async def test_find_for_forging_basic(
+        self, sample_json_parser: CatalogEntry
+    ) -> None:
         """Test finding artifacts before forging."""
         registry = await create_semantic_registry()
         await registry.register(sample_json_parser)
@@ -59,7 +63,9 @@ class TestFgentIntegration:
         assert any("JSON" in r.entry.name for r in results)
 
     @pytest.mark.asyncio
-    async def test_find_for_forging_high_threshold(self, sample_json_parser) -> None:
+    async def test_find_for_forging_high_threshold(
+        self, sample_json_parser: CatalogEntry
+    ) -> None:
         """Test that high threshold returns fewer results."""
         registry = await create_semantic_registry()
         await registry.register(sample_json_parser)
@@ -105,7 +111,9 @@ class TestJgentIntegration:
     """Tests for J-gent integration methods."""
 
     @pytest.mark.asyncio
-    async def test_find_for_jit_selection(self, sample_json_parser) -> None:
+    async def test_find_for_jit_selection(
+        self, sample_json_parser: CatalogEntry
+    ) -> None:
         """Test finding agents for JIT runtime selection."""
         registry = await create_semantic_registry()
         await registry.register(sample_json_parser)
@@ -159,7 +167,9 @@ class TestJgentIntegration:
         assert all(c.entry.status == Status.ACTIVE for c in candidates)
 
     @pytest.mark.asyncio
-    async def test_register_jit_execution(self, sample_json_parser) -> None:
+    async def test_register_jit_execution(
+        self, sample_json_parser: CatalogEntry
+    ) -> None:
         """Test recording JIT execution."""
         registry = await create_semantic_registry()
         await registry.register(sample_json_parser)
@@ -175,6 +185,7 @@ class TestJgentIntegration:
 
         # Verify metrics updated
         updated = await registry.get(agent_id)
+        assert updated is not None
         assert updated.usage_count == 1
 
         # Verify intent tracking
@@ -183,14 +194,15 @@ class TestJgentIntegration:
 
         # Verify entropy tracking
         assert "entropy_history" in updated.relationships
-        assert 0.05 in updated.relationships["entropy_history"]
+        # Note: entropy_history contains floats, but type system expects list[str]
+        assert 0.05 in updated.relationships["entropy_history"]  # type: ignore[comparison-overlap]
 
 
 class TestIntegrationWorkflows:
     """Tests for complete F-gent and J-gent workflows."""
 
     @pytest.mark.asyncio
-    async def test_fgent_workflow(self, sample_json_parser) -> None:
+    async def test_fgent_workflow(self, sample_json_parser: CatalogEntry) -> None:
         """Test complete F-gent workflow."""
         registry = await create_semantic_registry()
         await registry.register(sample_json_parser)
@@ -271,5 +283,6 @@ class TestIntegrationWorkflows:
 
         # Verify feedback recorded
         updated = await registry.get(selected.entry.id)
+        assert updated is not None
         assert updated.usage_count == 1
         assert "handled_intents" in updated.relationships

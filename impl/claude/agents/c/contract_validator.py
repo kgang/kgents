@@ -89,7 +89,7 @@ class ContractValidator:
     4. Monad laws (if contract defines bind-like operations)
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.violations: list[ContractLawViolation] = []
         self.warnings: list[ContractLawViolation] = []
         self.laws_checked: list[str] = []

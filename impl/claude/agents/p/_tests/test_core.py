@@ -33,7 +33,7 @@ class TestParseResult:
 
     def test_valid_success_result(self) -> None:
         """Valid success result."""
-        result = ParseResult(
+        result: ParseResult[str] = ParseResult(
             success=True,
             value="data",
             confidence=0.8,
@@ -46,7 +46,7 @@ class TestParseResult:
 
     def test_valid_failure_result(self) -> None:
         """Valid failure result."""
-        result = ParseResult(
+        result: ParseResult[str] = ParseResult(
             success=False,
             error="Parse failed",
             strategy="test",
@@ -57,7 +57,7 @@ class TestParseResult:
 
     def test_partial_parse_result(self) -> None:
         """Partial parse with low confidence."""
-        result = ParseResult(
+        result: ParseResult[str] = ParseResult(
             success=True,
             value="partial data",
             confidence=0.5,
@@ -71,7 +71,7 @@ class TestParseResult:
 
     def test_metadata_field(self) -> None:
         """Metadata field stores strategy-specific info."""
-        result = ParseResult(
+        result: ParseResult[str] = ParseResult(
             success=True,
             value="data",
             confidence=0.9,
@@ -135,7 +135,7 @@ class TestIdentityParser:
 
     def test_identity_parse(self) -> None:
         """Identity parser returns text as-is."""
-        parser = IdentityParser()
+        parser: IdentityParser[str] = IdentityParser()
         result = parser.parse("hello world")
 
         assert result.success
@@ -145,7 +145,7 @@ class TestIdentityParser:
 
     def test_identity_stream(self) -> None:
         """Identity parser streams tokens as-is."""
-        parser = IdentityParser()
+        parser: IdentityParser[str] = IdentityParser()
         tokens = ["hello", " ", "world"]
         results = list(parser.parse_stream(iter(tokens)))
 
@@ -159,7 +159,7 @@ class TestIdentityParser:
 
     def test_identity_configure(self) -> None:
         """Identity parser can be configured."""
-        parser = IdentityParser()
+        parser: IdentityParser[str] = IdentityParser()
         new_parser = parser.configure(min_confidence=0.9)
 
         assert new_parser.config.min_confidence == 0.9
@@ -167,7 +167,7 @@ class TestIdentityParser:
 
     def test_identity_configure_validation(self) -> None:
         """Configure validates new config."""
-        parser = IdentityParser()
+        parser: IdentityParser[str] = IdentityParser()
 
         with pytest.raises(ValueError, match="min_confidence must be in"):
             parser.configure(min_confidence=2.0)

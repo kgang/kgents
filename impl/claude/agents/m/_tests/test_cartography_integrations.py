@@ -4,6 +4,8 @@ Tests for M-gent Cartography Integrations.
 Phase 5 Polish: O-gent, Ψ-gent, and I-gent integration tests.
 """
 
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 
 import pytest
@@ -43,7 +45,7 @@ from ..cartography_integrations import (
 
 
 @pytest.fixture
-def sample_holomap():
+def sample_holomap() -> HoloMap:
     """Create a sample HoloMap for testing."""
     origin = create_context_vector([0.0, 0.0, 0.0], label="origin")
 
@@ -244,7 +246,7 @@ class TestCartographicObserver:
         observer = create_cartographic_observer()
         assert observer is not None
 
-    def test_annotate_map(self, sample_holomap) -> None:
+    def test_annotate_map(self, sample_holomap: HoloMap) -> None:
         """Annotate map adds health metadata."""
         observer = CartographicObserver()
         annotated = observer.annotate_map(sample_holomap)
@@ -253,7 +255,7 @@ class TestCartographicObserver:
         assert len(annotated.landmarks) == len(sample_holomap.landmarks)
         assert len(annotated.desire_lines) == len(sample_holomap.desire_lines)
 
-    def test_annotate_preserves_drift(self, sample_holomap) -> None:
+    def test_annotate_preserves_drift(self, sample_holomap: HoloMap) -> None:
         """Annotation preserves existing drift values."""
         observer = CartographicObserver()
         annotated = observer.annotate_map(sample_holomap)
@@ -262,7 +264,7 @@ class TestCartographicObserver:
         api_landmark = next(l for l in annotated.landmarks if l.id == "api")
         assert api_landmark.semantic_drift == 0.35
 
-    def test_assess_health(self, sample_holomap) -> None:
+    def test_assess_health(self, sample_holomap: HoloMap) -> None:
         """Assess health returns comprehensive report."""
         observer = CartographicObserver()
         health = observer.assess_health(sample_holomap)
@@ -273,14 +275,14 @@ class TestCartographicObserver:
         assert 0.0 <= health.void_coverage <= 1.0
         assert 0.0 <= health.overall_health <= 1.0
 
-    def test_assess_health_detects_drifting(self, sample_holomap) -> None:
+    def test_assess_health_detects_drifting(self, sample_holomap: HoloMap) -> None:
         """Health assessment detects drifting landmarks."""
         observer = CartographicObserver()
         health = observer.assess_health(sample_holomap)
 
         assert health.drifting_landmarks >= 1  # api landmark is drifting
 
-    def test_cache_clearing(self, sample_holomap) -> None:
+    def test_cache_clearing(self, sample_holomap: HoloMap) -> None:
         """Clear cache removes cached health data."""
         observer = CartographicObserver()
         observer.assess_health(sample_holomap)
@@ -298,18 +300,20 @@ class TestCartographicObserver:
 class MockTelemetryStore:
     """Mock telemetry store for testing."""
 
-    def __init__(self):
-        self.latencies = {}
-        self.error_rates = {}
-        self.throughputs = {}
+    def __init__(self) -> None:
+        self.latencies: dict[tuple[str, str, float], float] = {}
+        self.error_rates: dict[tuple[str, str], float] = {}
+        self.throughputs: dict[tuple[str, str], float] = {}
 
-    def set_latency(self, source: str, target: str, percentile: float, value: float):
+    def set_latency(
+        self, source: str, target: str, percentile: float, value: float
+    ) -> None:
         self.latencies[(source, target, percentile)] = value
 
-    def set_error_rate(self, source: str, target: str, value: float):
+    def set_error_rate(self, source: str, target: str, value: float) -> None:
         self.error_rates[(source, target)] = value
 
-    def set_throughput(self, source: str, target: str, value: float):
+    def set_throughput(self, source: str, target: str, value: float) -> None:
         self.throughputs[(source, target)] = value
 
     def get_latency_percentile(
@@ -327,7 +331,7 @@ class MockTelemetryStore:
 class TestCartographicObserverWithTelemetry:
     """Tests with mock telemetry store."""
 
-    def test_annotate_with_telemetry(self, sample_holomap) -> None:
+    def test_annotate_with_telemetry(self, sample_holomap: HoloMap) -> None:
         """Telemetry data is added to annotations."""
         store = MockTelemetryStore()
         store.set_latency("auth", "db", 0.95, 0.8)
@@ -401,7 +405,7 @@ class TestMetaphorLocator:
         locator = create_metaphor_locator()
         assert locator is not None
 
-    def test_find_metaphor_neighborhood(self, sample_holomap) -> None:
+    def test_find_metaphor_neighborhood(self, sample_holomap: HoloMap) -> None:
         """Find metaphors near a position."""
         locator = MetaphorLocator()
         position = [0.15, 0.15, 0.0]  # Near metaphor_cache
@@ -412,7 +416,7 @@ class TestMetaphorLocator:
         # Should find the metaphor_cache landmark
         assert any(m.landmark_id == "metaphor_cache" for m in hood.matches)
 
-    def test_find_with_context_vector(self, sample_holomap) -> None:
+    def test_find_with_context_vector(self, sample_holomap: HoloMap) -> None:
         """Can use ContextVector as position."""
         locator = MetaphorLocator()
         position = create_context_vector([0.15, 0.15, 0.0])
@@ -421,7 +425,7 @@ class TestMetaphorLocator:
 
         assert hood.problem_position == [0.15, 0.15, 0.0]
 
-    def test_relevance_threshold(self, sample_holomap) -> None:
+    def test_relevance_threshold(self, sample_holomap: HoloMap) -> None:
         """Relevance threshold filters matches."""
         # High threshold should filter out distant matches
         locator = MetaphorLocator(relevance_threshold=0.9)
@@ -432,7 +436,7 @@ class TestMetaphorLocator:
         # Should have few or no matches at high threshold
         assert hood.match_count <= 1
 
-    def test_no_metaphors_in_area(self, sample_holomap) -> None:
+    def test_no_metaphors_in_area(self, sample_holomap: HoloMap) -> None:
         """Returns empty when no metaphors nearby."""
         locator = MetaphorLocator()
         position = [0.9, 0.9, 0.0]  # Far from everything
@@ -473,7 +477,7 @@ class TestMapRenderer:
         renderer = MapRenderer(config=config)
         assert renderer.config.width == 40
 
-    def test_render_ascii(self, sample_holomap) -> None:
+    def test_render_ascii(self, sample_holomap: HoloMap) -> None:
         """Render produces ASCII map."""
         renderer = MapRenderer()
         output = renderer.render_ascii(sample_holomap)
@@ -486,7 +490,7 @@ class TestMapRenderer:
         # Should have landmarks (origin may be overwritten by nearby landmark)
         assert "◉" in output or "⚠" in output or "★" in output
 
-    def test_render_summary(self, sample_holomap) -> None:
+    def test_render_summary(self, sample_holomap: HoloMap) -> None:
         """Render summary produces text report."""
         renderer = MapRenderer()
         output = renderer.render_summary(sample_holomap)
@@ -496,7 +500,7 @@ class TestMapRenderer:
         assert "Landmarks:" in output
         assert "4" in output  # 4 landmarks
 
-    def test_render_summary_shows_voids(self, sample_holomap) -> None:
+    def test_render_summary_shows_voids(self, sample_holomap: HoloMap) -> None:
         """Summary shows void warnings."""
         renderer = MapRenderer()
         output = renderer.render_summary(sample_holomap)
@@ -564,7 +568,7 @@ class TestAsciiMapDetails:
         # Should have correct dimensions (height + 2 for borders)
         assert len(lines) == 12
 
-    def test_landmarks_visible(self, sample_holomap) -> None:
+    def test_landmarks_visible(self, sample_holomap: HoloMap) -> None:
         """Landmarks appear on map."""
         renderer = MapRenderer()
         output = renderer.render_ascii(sample_holomap)
@@ -572,7 +576,7 @@ class TestAsciiMapDetails:
         # Should have landmark characters
         assert "◉" in output
 
-    def test_voids_visible(self, sample_holomap) -> None:
+    def test_voids_visible(self, sample_holomap: HoloMap) -> None:
         """Voids appear on map."""
         config = MapRenderConfig(show_voids=True)
         renderer = MapRenderer(config=config)
@@ -581,7 +585,7 @@ class TestAsciiMapDetails:
         # Should have void characters
         assert "░" in output
 
-    def test_voids_can_be_hidden(self, sample_holomap) -> None:
+    def test_voids_can_be_hidden(self, sample_holomap: HoloMap) -> None:
         """Voids can be hidden."""
         config = MapRenderConfig(show_voids=False)
         renderer = MapRenderer(config=config)
@@ -595,7 +599,7 @@ class TestAsciiMapDetails:
 class TestAnnotateAndRender:
     """Tests for convenience function."""
 
-    def test_annotate_and_render(self, sample_holomap) -> None:
+    def test_annotate_and_render(self, sample_holomap: HoloMap) -> None:
         """Convenience function returns all outputs."""
         annotated, summary, health = annotate_and_render(sample_holomap)
 
@@ -603,7 +607,7 @@ class TestAnnotateAndRender:
         assert isinstance(summary, str)
         assert isinstance(health, MapHealth)
 
-    def test_annotate_and_render_with_telemetry(self, sample_holomap) -> None:
+    def test_annotate_and_render_with_telemetry(self, sample_holomap: HoloMap) -> None:
         """Works with telemetry store."""
         store = MockTelemetryStore()
         store.set_latency("auth", "db", 0.95, 1.5)

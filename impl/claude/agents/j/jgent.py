@@ -77,7 +77,7 @@ class JGentConfig(JGentDNA):
     )
 
     @classmethod
-    def from_dna(cls, dna: JGentDNA, **runtime_config) -> "JGentConfig":
+    def from_dna(cls, dna: JGentDNA, **runtime_config: Any) -> JGentConfig:
         """
         Create config from DNA with runtime overrides.
 
@@ -564,7 +564,7 @@ async def jgent(
         ... )
         >>> print(result.value)
     """
-    coordinator = JGent(config=config or JGentConfig())
+    coordinator: JGent[T] = JGent(config=config or JGentConfig())
     return await coordinator.invoke(
         JGentInput(
             intent=intent,

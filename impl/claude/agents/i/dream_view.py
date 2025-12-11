@@ -359,11 +359,17 @@ def render_morning_briefing(
             priority = q.get("priority", 0)
             answered = q.get("answered", False)
             answer = q.get("answer")
-        else:
+        elif isinstance(q, Question):
             text = q.question_text
             priority = q.priority
             answered = q.answered
             answer = q.answer
+        else:
+            # Should not happen with proper types, but handle gracefully
+            text = ""
+            priority = 0
+            answered = False
+            answer = None
 
         # Priority indicator
         priority_str = "!" * min(3, max(1, priority)) if priority > 0 else " "
@@ -467,7 +473,7 @@ def render_migration_proposals(
             confidence = p.get("confidence", 0.0)
             approved = p.get("approved", False)
             rejected = p.get("rejected", False)
-        else:
+        elif isinstance(p, MigrationProposal):
             pid = p.proposal_id[:8]
             table = p.table
             action = p.action
@@ -476,6 +482,16 @@ def render_migration_proposals(
             confidence = p.confidence
             approved = p.approved
             rejected = p.rejected
+        else:
+            # Should not happen with proper types, but handle gracefully
+            pid = "?"
+            table = "?"
+            action = "?"
+            column = "?"
+            col_type = "?"
+            confidence = 0.0
+            approved = False
+            rejected = False
 
         # Status
         if approved:

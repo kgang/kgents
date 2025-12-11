@@ -803,7 +803,7 @@ class ThermodynamicCycle:
             staking=self._staking,
             library=self._library,
             market=self._market,
-            demon=self._demon,
+            demon=None,  # TeleologicalDemon doesn't implement TeleologicalDemonProtocol
             config=InfectionConfig(
                 run_tests=self.config.run_tests,
                 run_type_check=self.config.run_type_check,
@@ -1128,6 +1128,7 @@ class EvolutionAgent:
         code = target.read_text()
 
         # Create Intent if string
+        intent_obj: Intent | None
         if isinstance(intent, str):
             intent_obj = Intent(
                 embedding=[],

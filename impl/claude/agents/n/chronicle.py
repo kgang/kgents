@@ -127,7 +127,7 @@ class Chronicle:
         self,
         correlation_window_ms: int = 100,
         detect_interactions: bool = True,
-    ):
+    ) -> None:
         """
         Initialize the Chronicle.
 
@@ -451,7 +451,7 @@ class ChronicleBuilder:
         )
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._correlation_window_ms = 100
         self._detect_interactions = True
         self._traces: list[SemanticTrace] = []
@@ -513,7 +513,7 @@ class CorrelationDetector:
         self,
         temporal_window_ms: int = 100,
         semantic_threshold: float = 0.8,
-    ):
+    ) -> None:
         """
         Initialize the detector.
 
@@ -645,4 +645,4 @@ class CorrelationDetector:
         if norm_a == 0 or norm_b == 0:
             return 0.0
 
-        return dot / (norm_a * norm_b)
+        return float(dot / (norm_a * norm_b))

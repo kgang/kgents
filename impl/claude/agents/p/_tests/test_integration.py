@@ -35,6 +35,7 @@ def hello():
         assert result.value is not None
         assert "def hello():" in result.value.code
         assert result.confidence > 0.5
+        assert result.strategy is not None
         assert "e-gent" in result.strategy
 
     def test_code_parser_pure_code_block(self) -> None:
@@ -106,6 +107,7 @@ SUGGESTED_TESTS:
         assert len(result.value.reasoning_chain) == 2
         assert len(result.value.suggested_tests) == 1
         assert result.confidence > 0.5
+        assert result.strategy is not None
         assert "b-gent" in result.strategy
 
     def test_hypothesis_parser_failure(self) -> None:
@@ -187,6 +189,7 @@ def invoke(input: str) -> str:
         assert result.value.contract.output_type == "str"
         assert "def invoke" in result.value.source_code.code
         assert result.confidence > 0.5
+        assert result.strategy is not None
         assert "f-gent" in result.strategy
 
     def test_artifact_parser_failure(self) -> None:

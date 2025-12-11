@@ -103,7 +103,7 @@ class MetricsCollector:
     OpenTelemetry-compatible interface for metrics collection.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._counters: dict[str, float] = defaultdict(float)
         self._gauges: dict[str, float] = {}
         self._histograms: dict[str, HistogramValue] = {}
@@ -243,9 +243,9 @@ class TelemetryObserver(BaseObserver):
         self,
         observer_id: str = "telemetry",
         metrics: MetricsCollector | None = None,
-    ):
+    ) -> None:
         super().__init__(observer_id=observer_id)
-        self.metrics = metrics or MetricsCollector()
+        self.metrics = metrics if metrics is not None else MetricsCollector()
         self._active_agents: set[str] = set()
 
     def pre_invoke(
@@ -410,7 +410,7 @@ class TopologyMapper:
     - Where are the bottlenecks?
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._nodes: dict[str, TopologyNode] = {}
         self._edges: dict[tuple[str, str], CompositionEdge] = {}
 
@@ -571,9 +571,9 @@ class TopologyObserver(BaseObserver):
         self,
         observer_id: str = "topology",
         mapper: TopologyMapper | None = None,
-    ):
+    ) -> None:
         super().__init__(observer_id=observer_id)
-        self.mapper = mapper or TopologyMapper()
+        self.mapper = mapper if mapper is not None else TopologyMapper()
         self._last_agent: str | None = None
 
     def pre_invoke(
@@ -625,7 +625,8 @@ class TopologyObserver(BaseObserver):
 
 def create_metrics_collector() -> MetricsCollector:
     """Create a new metrics collector."""
-    return MetricsCollector()
+    collector: MetricsCollector = MetricsCollector()
+    return collector
 
 
 def create_telemetry_observer(
@@ -638,7 +639,8 @@ def create_telemetry_observer(
 
 def create_topology_mapper() -> TopologyMapper:
     """Create a new topology mapper."""
-    return TopologyMapper()
+    mapper: TopologyMapper = TopologyMapper()
+    return mapper
 
 
 def create_topology_observer(

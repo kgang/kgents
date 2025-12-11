@@ -6,7 +6,10 @@ Philosophy: Laws must hold for ALL agents, not just handpicked examples.
 Phase 3/6 of test evolution plan: Hypothesis-powered law verification.
 """
 
+from __future__ import annotations
+
 from functools import reduce
+from typing import Any, Callable
 
 import pytest
 from bootstrap import ID, compose
@@ -21,22 +24,26 @@ except ImportError:
     HYPOTHESIS_AVAILABLE = False
 
     # Create dummy decorators so module can be imported
-    def given(*args, **kwargs):
-        def decorator(func):
+    def given(
+        *args: Any, **kwargs: Any
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+        def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
             return func
 
         return decorator
 
-    def settings(*args, **kwargs):
-        def decorator(func):
+    def settings(
+        *args: Any, **kwargs: Any
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+        def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
             return func
 
         return decorator
 
-    def simple_agents():
+    def simple_agents() -> None:
         return None
 
-    def agent_chains(*args, **kwargs):
+    def agent_chains(*args: Any, **kwargs: Any) -> None:
         return None
 
 
@@ -54,10 +61,10 @@ class TestIdentityLawProperty:
     Identity law: For all f, Id >> f == f == f >> Id
     """
 
-    @given(agent=simple_agents())
-    @settings(max_examples=100)
+    @given(agent=simple_agents())  # type: ignore[untyped-decorator]
+    @settings(max_examples=100)  # type: ignore[untyped-decorator]
     @pytest.mark.asyncio
-    async def test_left_identity_property(self, agent) -> None:
+    async def test_left_identity_property(self, agent: Any) -> None:
         """For all f: Id >> f == f."""
         composed = compose(ID, agent)
 
@@ -67,10 +74,10 @@ class TestIdentityLawProperty:
 
         assert direct == via_id, f"Left identity failed: {agent.name}"
 
-    @given(agent=simple_agents())
-    @settings(max_examples=100)
+    @given(agent=simple_agents())  # type: ignore[untyped-decorator]
+    @settings(max_examples=100)  # type: ignore[untyped-decorator]
     @pytest.mark.asyncio
-    async def test_right_identity_property(self, agent) -> None:
+    async def test_right_identity_property(self, agent: Any) -> None:
         """For all f: f >> Id == f."""
         composed = compose(agent, ID)
 
@@ -80,10 +87,10 @@ class TestIdentityLawProperty:
 
         assert direct == via_id, f"Right identity failed: {agent.name}"
 
-    @given(agent=simple_agents())
-    @settings(max_examples=50)
+    @given(agent=simple_agents())  # type: ignore[untyped-decorator]
+    @settings(max_examples=50)  # type: ignore[untyped-decorator]
     @pytest.mark.asyncio
-    async def test_identity_both_sides_property(self, agent) -> None:
+    async def test_identity_both_sides_property(self, agent: Any) -> None:
         """For all f: Id >> f >> Id == f."""
         composed = compose(compose(ID, agent), ID)
 
@@ -102,10 +109,10 @@ class TestAssociativityProperty:
     Associativity law: For all f, g, h: (f >> g) >> h == f >> (g >> h)
     """
 
-    @given(agents=agent_chains(min_length=3, max_length=3))
-    @settings(max_examples=50)
+    @given(agents=agent_chains(min_length=3, max_length=3))  # type: ignore[untyped-decorator]
+    @settings(max_examples=50)  # type: ignore[untyped-decorator]
     @pytest.mark.asyncio
-    async def test_associativity_property(self, agents) -> None:
+    async def test_associativity_property(self, agents: Any) -> None:
         """For all f, g, h: (f >> g) >> h == f >> (g >> h)."""
         f, g, h = agents
 
@@ -122,10 +129,10 @@ class TestAssociativityProperty:
             f"!= {f.name} >> ({g.name} >> {h.name})"
         )
 
-    @given(agents=agent_chains(min_length=2, max_length=8))
-    @settings(max_examples=25)
+    @given(agents=agent_chains(min_length=2, max_length=8))  # type: ignore[untyped-decorator]
+    @settings(max_examples=25)  # type: ignore[untyped-decorator]
     @pytest.mark.asyncio
-    async def test_arbitrary_chain_length(self, agents) -> None:
+    async def test_arbitrary_chain_length(self, agents: Any) -> None:
         """Composition works for arbitrary chain lengths."""
         composed = reduce(compose, agents)
 
@@ -134,10 +141,10 @@ class TestAssociativityProperty:
         # Verify it's an integer (all our test agents are int -> int)
         assert isinstance(result, int), f"Expected int, got {type(result)}"
 
-    @given(agents=agent_chains(min_length=4, max_length=4))
-    @settings(max_examples=25)
+    @given(agents=agent_chains(min_length=4, max_length=4))  # type: ignore[untyped-decorator]
+    @settings(max_examples=25)  # type: ignore[untyped-decorator]
     @pytest.mark.asyncio
-    async def test_four_way_associativity(self, agents) -> None:
+    async def test_four_way_associativity(self, agents: Any) -> None:
         """Verify all groupings of 4 agents are equivalent.
 
         For a, b, c, d: All of these must be equal:
@@ -172,10 +179,10 @@ class TestAssociativityProperty:
 class TestCategoryProperties:
     """Property tests for general category properties."""
 
-    @given(agent=simple_agents())
-    @settings(max_examples=50)
+    @given(agent=simple_agents())  # type: ignore[untyped-decorator]
+    @settings(max_examples=50)  # type: ignore[untyped-decorator]
     @pytest.mark.asyncio
-    async def test_compose_returns_agent(self, agent) -> None:
+    async def test_compose_returns_agent(self, agent: Any) -> None:
         """Composition produces another agent (closure)."""
         composed = compose(agent, ID)
 
@@ -186,10 +193,10 @@ class TestCategoryProperties:
         result = await composed.invoke(0)
         assert result is not None or result == 0  # Allow 0 as valid result
 
-    @given(agents=agent_chains(min_length=2, max_length=2))
-    @settings(max_examples=50)
+    @given(agents=agent_chains(min_length=2, max_length=2))  # type: ignore[untyped-decorator]
+    @settings(max_examples=50)  # type: ignore[untyped-decorator]
     @pytest.mark.asyncio
-    async def test_composition_determinism(self, agents) -> None:
+    async def test_composition_determinism(self, agents: Any) -> None:
         """Same composition always gives same result."""
         f, g = agents
 

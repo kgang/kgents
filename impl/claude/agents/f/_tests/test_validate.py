@@ -199,7 +199,7 @@ class Agent:
         return x * 2
 """)
 
-    async def regenerate(failures):
+    async def regenerate(failures: list[str]) -> SourceCode:
         return fixed
 
     intent = Intent("double", ["multiply by 2"], [], examples=[Example(5, 10)])
@@ -220,7 +220,7 @@ class Agent:
         return x * 3
 """)
 
-    async def regenerate(failures):
+    async def regenerate(failures: list[str]) -> SourceCode:
         return buggy
 
     intent = Intent("double", ["multiply by 2"], [], examples=[Example(5, 10)])

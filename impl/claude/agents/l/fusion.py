@@ -276,34 +276,38 @@ class QueryFusion:
             scores[entry_id]["explanations"].append(f"Keyword: {result.explanation}")
 
         # Add semantic scores
-        for rank, result in enumerate(semantic_results, start=1):
-            entry_id = result.id
+        for rank, sem_result in enumerate(semantic_results, start=1):
+            entry_id = sem_result.id
             if entry_id not in scores:
                 scores[entry_id] = {
-                    "entry": result.entry,
+                    "entry": sem_result.entry,
                     "score": 0.0,
                     "sources": {},
                     "explanations": [],
                 }
             rrf_score = semantic_weight / (k + rank)
             scores[entry_id]["score"] += rrf_score
-            scores[entry_id]["sources"]["semantic"] = result.similarity
-            scores[entry_id]["explanations"].append(f"Semantic: {result.explanation}")
+            scores[entry_id]["sources"]["semantic"] = sem_result.similarity
+            scores[entry_id]["explanations"].append(
+                f"Semantic: {sem_result.explanation}"
+            )
 
         # Add graph scores
-        for rank, result in enumerate(graph_results, start=1):
-            entry_id = result.id
+        for rank, graph_result in enumerate(graph_results, start=1):
+            entry_id = graph_result.id
             if entry_id not in scores:
                 scores[entry_id] = {
-                    "entry": result.entry,
+                    "entry": graph_result.entry,
                     "score": 0.0,
                     "sources": {},
                     "explanations": [],
                 }
             rrf_score = graph_weight / (k + rank)
             scores[entry_id]["score"] += rrf_score
-            scores[entry_id]["sources"]["graph"] = 1.0 / result.path_length
-            scores[entry_id]["explanations"].append(f"Graph: {result.explanation}")
+            scores[entry_id]["sources"]["graph"] = 1.0 / graph_result.path_length
+            scores[entry_id]["explanations"].append(
+                f"Graph: {graph_result.explanation}"
+            )
 
         # Convert to FusedResult and sort
         fused: list[FusedResult] = []
@@ -324,8 +328,8 @@ class QueryFusion:
         fused.sort(key=lambda r: r.score, reverse=True)
 
         # Assign ranks
-        for rank, result in enumerate(fused, start=1):
-            result.rank = rank
+        for rank, fused_result in enumerate(fused, start=1):
+            fused_result.rank = rank
 
         return fused
 

@@ -4,6 +4,8 @@ Tests for Stack-Balancing Parser (Strategy 2.1)
 Tests both HTML and JSON modes, streaming and non-streaming.
 """
 
+from __future__ import annotations
+
 import pytest
 from agents.p.strategies.stack_balancing import (
     StackBalancingParser,
@@ -145,6 +147,7 @@ class TestStackBalancingHTML:
         result = parser.parse("<DIV>Text")
 
         assert result.success
+        assert result.value is not None
         assert "</div>" in result.value.lower()
 
 
@@ -223,6 +226,7 @@ class TestStreamingHTML:
 
         final = results[-1]
         assert final.success
+        assert final.value is not None
         assert "<div>Hello</div>" in final.value
         assert final.confidence == 1.0
 
@@ -235,6 +239,7 @@ class TestStreamingHTML:
 
         final = results[-1]
         assert final.success
+        assert final.value is not None
         assert "</p></div>" in final.value
         assert final.metadata["unclosed_tags"] == 2
 
@@ -280,7 +285,7 @@ class TestConfiguration:
     def test_invalid_mode_raises(self) -> None:
         """Invalid mode should raise ValueError"""
         with pytest.raises(ValueError, match="Unsupported mode"):
-            StackBalancingParser(mode="xml")
+            StackBalancingParser(mode="xml")  # type: ignore[arg-type]
 
 
 class TestRealWorldScenarios:
@@ -310,10 +315,12 @@ class TestRealWorldScenarios:
         for result in results:
             assert result.success
             # Each result should have balanced HTML
+            assert result.value is not None
             assert result.value.count("<") >= result.value.count(">")
 
         # Final result should auto-close all tags
         final = results[-1]
+        assert final.value is not None
         assert "</div>" in final.value
         assert "</body>" in final.value
         assert "</html>" in final.value
@@ -341,6 +348,7 @@ class TestRealWorldScenarios:
 
         # Final should auto-close everything
         final = results[-1]
+        assert final.value is not None
         assert final.value.count("{") == final.value.count("}")
         assert final.value.count("[") == final.value.count("]")
 

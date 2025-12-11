@@ -12,6 +12,7 @@ Philosophy: Tools are agents at the boundary of the system.
 """
 
 from dataclasses import dataclass
+from typing import Any
 
 import pytest
 
@@ -77,8 +78,8 @@ class TestToolCreation:
         meta = ToolMeta.minimal(
             name="calculator",
             description="Performs calculations",
-            input_schema=dict,
-            output_schema=dict,
+            input_schema=dict[str, Any],
+            output_schema=dict[str, Any],
         )
 
         assert meta.identity.name == "calculator"
@@ -98,7 +99,7 @@ class TestToolCreation:
     async def test_create_tool_class(self) -> None:
         """Test creating a tool class."""
 
-        class CalculatorTool(Tool[dict, dict]):
+        class CalculatorTool(Tool[dict[str, Any], dict[str, Any]]):
             meta = ToolMeta.minimal(
                 name="calculator",
                 description="Basic math operations",
@@ -106,7 +107,7 @@ class TestToolCreation:
                 output_schema=dict,
             )
 
-            async def invoke(self, input: dict) -> dict:
+            async def invoke(self, input: dict[str, Any]) -> dict[str, Any]:
                 op = input.get("operation", "add")
                 a = input.get("a", 0)
                 b = input.get("b", 0)
@@ -410,7 +411,7 @@ class TestToolNarrative:
         traces = []
         for i, action in enumerate(["VALIDATE", "TRANSFORM", "OUTPUT"]):
             ctx = historian.begin_trace(traceable, f"step-{i}")
-            traces.append(historian.end_trace(ctx, action, f"result-{i}"))
+            traces.append(historian.end_trace(ctx, action, {"result": f"result-{i}"}))
 
         # Generate narrative
         request = NarrativeRequest(
@@ -429,7 +430,7 @@ class TestMockTools:
     @pytest.mark.asyncio
     async def test_mock_agent_returns_configured_output(self) -> None:
         """Test MockAgent returns configured output."""
-        mock = MockAgent(MockConfig(output="mocked result"))
+        mock: MockAgent[Any, Any] = MockAgent(MockConfig(output="mocked result"))
 
         result = await mock.invoke("any input")
         assert result == "mocked result"
@@ -437,7 +438,7 @@ class TestMockTools:
     @pytest.mark.asyncio
     async def test_spy_agent_records_calls(self) -> None:
         """Test SpyAgent records all calls."""
-        spy = SpyAgent(label="test-spy")
+        spy: SpyAgent[Any] = SpyAgent(label="test-spy")
 
         await spy.invoke("first")
         await spy.invoke("second")
@@ -451,7 +452,7 @@ class TestMockTools:
     @pytest.mark.asyncio
     async def test_failing_agent_simulates_failure(self) -> None:
         """Test FailingAgent simulates configured failures."""
-        failing = FailingAgent(
+        failing: FailingAgent[Any, Any] = FailingAgent(
             FailingConfig(
                 error_type=FailureType.NETWORK,
                 fail_count=2,

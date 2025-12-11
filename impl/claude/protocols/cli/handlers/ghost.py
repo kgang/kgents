@@ -1,13 +1,15 @@
 """
-Ghost Handler: Living Filesystem projection.
+Ghost Handler: Living Filesystem projection with REAL data.
 
-DevEx V4 Phase 2 - The Sensorium.
+DevEx V4 Phase 2 - The Sensorium (Trust Loop Integration).
 
 Projects system state to .kgents/ghost/ for peripheral awareness.
 Open thought_stream.md in a split pane to watch the system think.
 
+NEW: Now uses real collectors (git, flinch, infra) instead of placeholders!
+
 Usage:
-    kgents ghost              # One-shot projection
+    kgents ghost              # One-shot projection with real data
     kgents ghost --daemon     # Start background daemon (3-min interval)
     kgents ghost --show       # Show current ghost state
     kgents ghost --thought    # Add manual thought to stream
@@ -15,15 +17,14 @@ Usage:
 Files in .kgents/ghost/:
     thought_stream.md   - System narrative / inner monologue
     tension_map.json    - Spec/impl mismatches, volatility
-    health.status       - One-line status for IDE
+    health.status       - One-line status for IDE (NOW WITH REAL DATA)
     context.json        - Current context summary
+    flinch_summary.json - Test failure analysis
 
 Example:
     $ kgents ghost
     [GHOST] Projected to .kgents/ghost/
-      thought_stream.md  (3 entries)
-      tension_map.json   (0 tensions)
-      health.status      cortex:healthy surprise:0.23
+      health.status      cortex:healthy | branch:main dirty:3 | flinch:0h/5d
 
     # Then open in split pane:
     $ code .kgents/ghost/thought_stream.md
@@ -45,12 +46,14 @@ def cmd_ghost(args: list[str]) -> int:
     Project system state to .kgents/ghost/ files.
 
     Creates a Living Filesystem for peripheral awareness.
+    NOW WITH REAL DATA from git, flinch, and infra collectors!
     """
     # Parse args
     help_mode = "--help" in args or "-h" in args
     daemon_mode = "--daemon" in args
     show_mode = "--show" in args
     thought_mode = "--thought" in args
+    legacy_mode = "--legacy" in args  # Use old ghost_writer
 
     if help_mode:
         print(__doc__)
@@ -64,17 +67,94 @@ def cmd_ghost(args: list[str]) -> int:
         project_root = Path.cwd()
 
     if daemon_mode:
-        return _run_daemon(project_root)
+        if legacy_mode:
+            return _run_daemon_legacy(project_root)
+        return _run_daemon_new(project_root)
     elif show_mode:
         return _show_ghost(project_root)
     elif thought_mode:
         return _add_thought(project_root, args)
     else:
-        return asyncio.run(_project_once(project_root))
+        if legacy_mode:
+            return asyncio.run(_project_once_legacy(project_root))
+        return asyncio.run(_project_once_new(project_root))
 
 
-async def _project_once(project_root: Path) -> int:
-    """One-shot projection."""
+async def _project_once_new(project_root: Path) -> int:
+    """One-shot projection using new ghost daemon with real collectors."""
+    from infra.ghost import create_ghost_daemon
+
+    def on_progress(msg: str) -> None:
+        print(f"  {msg}")
+
+    daemon = create_ghost_daemon(
+        project_root=project_root,
+        on_progress=on_progress,
+    )
+
+    # Add a projection thought
+    daemon.add_thought(
+        "Manual projection triggered via CLI",
+        source="cli",
+        tags=["projection"],
+    )
+
+    result = await daemon.project_once()
+
+    # Output
+    ghost_dir = project_root / ".kgents" / "ghost"
+    print(f"[GHOST] Projected to {ghost_dir}/")
+    print(f"  Files: {', '.join(result.files_written)}")
+    print(f"  Health: {result.health.to_status_line()}")
+    if result.errors:
+        print(f"  Errors: {len(result.errors)}")
+        for err in result.errors:
+            print(f"    - {err}")
+    print()
+    print("Open thought_stream.md in a split pane for peripheral awareness.")
+
+    return 0
+
+
+def _run_daemon_new(project_root: Path) -> int:
+    """Run new daemon with real collectors in foreground."""
+    from infra.ghost import create_ghost_daemon
+
+    def on_progress(msg: str) -> None:
+        print(f"[GHOST] {msg}")
+
+    daemon = create_ghost_daemon(
+        project_root=project_root,
+        interval_seconds=180.0,
+        on_progress=on_progress,
+    )
+
+    print("[GHOST] Starting daemon with REAL collectors (Ctrl+C to stop)")
+    print("  Collectors: git, flinch, infra")
+    print("  Interval: 3 minutes")
+    print(f"  Directory: {project_root / '.kgents' / 'ghost'}")
+    print()
+
+    daemon.add_thought(
+        "Daemon started with real collectors",
+        source="ghost",
+        tags=["lifecycle", "trust-loop"],
+    )
+
+    try:
+        asyncio.run(daemon.run_foreground())
+    except KeyboardInterrupt:
+        print("\n[GHOST] Daemon stopped")
+        return 0
+
+    return 0
+
+
+# === Legacy implementation (for --legacy flag) ===
+
+
+async def _project_once_legacy(project_root: Path) -> int:
+    """One-shot projection using legacy ghost_writer."""
     from protocols.cli.devex.ghost_writer import create_ghost_writer
 
     writer = create_ghost_writer(project_root)
@@ -84,16 +164,16 @@ async def _project_once(project_root: Path) -> int:
 
     # Add a projection thought
     writer.add_thought(
-        "Manual projection triggered via CLI",
+        "Manual projection triggered via CLI (legacy mode)",
         source="cli",
-        tags=["projection"],
+        tags=["projection", "legacy"],
     )
 
     projection = await writer.project()
 
     # Output
     ghost_dir = project_root / ".kgents" / "ghost"
-    print(f"[GHOST] Projected to {ghost_dir}/")
+    print(f"[GHOST] Projected to {ghost_dir}/ (legacy mode)")
     print(f"  thought_stream.md  ({len(projection.thoughts)} entries)")
     print(f"  tension_map.json   ({len(projection.tensions)} tensions)")
     print(f"  health.status      {projection.health_line}")
@@ -103,26 +183,26 @@ async def _project_once(project_root: Path) -> int:
     return 0
 
 
-def _run_daemon(project_root: Path) -> int:
-    """Run daemon in foreground."""
+def _run_daemon_legacy(project_root: Path) -> int:
+    """Run legacy daemon in foreground."""
     from protocols.cli.devex.ghost_writer import create_ghost_writer
 
     writer = create_ghost_writer(project_root, interval_seconds=180.0)
     _configure_writer(writer)
 
-    print("[GHOST] Starting daemon (Ctrl+C to stop)")
+    print("[GHOST] Starting daemon (legacy mode, Ctrl+C to stop)")
     print("  Interval: 3 minutes")
     print(f"  Directory: {project_root / '.kgents' / 'ghost'}")
     print()
 
     writer.add_thought(
-        "Daemon started",
+        "Daemon started (legacy)",
         source="ghost",
         tags=["lifecycle"],
     )
 
     try:
-        asyncio.run(_daemon_main(writer))
+        asyncio.run(_daemon_main_legacy(writer))
     except KeyboardInterrupt:
         print("\n[GHOST] Daemon stopped")
         return 0
@@ -130,8 +210,8 @@ def _run_daemon(project_root: Path) -> int:
     return 0
 
 
-async def _daemon_main(writer) -> None:
-    """Async daemon main loop."""
+async def _daemon_main_legacy(writer) -> None:
+    """Async daemon main loop for legacy writer."""
     # Initial projection
     await writer.project()
     print("[GHOST] Initial projection complete")

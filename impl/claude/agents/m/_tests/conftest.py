@@ -8,7 +8,10 @@ Shared fixtures for M-gent test suites:
 - BudgetedMemory: B-gent integration
 """
 
+from __future__ import annotations
+
 from datetime import datetime, timedelta
+from typing import Any
 
 import pytest
 from agents.m.consolidation import ConsolidationAgent, ForgettingCurveAgent
@@ -20,19 +23,19 @@ from agents.m.tiered import TieredMemory
 
 
 @pytest.fixture
-def holographic_memory():
+def holographic_memory() -> HolographicMemory[str]:
     """Create a fresh HolographicMemory for testing."""
     return HolographicMemory[str]()
 
 
 @pytest.fixture
-def tiered_memory():
+def tiered_memory() -> TieredMemory[str]:
     """Create a fresh TieredMemory for testing."""
     return TieredMemory[str]()
 
 
 @pytest.fixture
-def sample_pattern():
+def sample_pattern() -> MemoryPattern[str]:
     """Create a sample memory pattern for testing."""
     return MemoryPattern(
         id="test-pattern",
@@ -44,7 +47,7 @@ def sample_pattern():
 
 
 @pytest.fixture
-def hot_pattern():
+def hot_pattern() -> MemoryPattern[str]:
     """Create a frequently accessed (hot) pattern."""
     pattern = MemoryPattern(
         id="hot-pattern",
@@ -57,7 +60,7 @@ def hot_pattern():
 
 
 @pytest.fixture
-def cold_pattern():
+def cold_pattern() -> MemoryPattern[str]:
     """Create a rarely accessed (cold) pattern."""
     pattern = MemoryPattern(
         id="cold-pattern",
@@ -75,19 +78,25 @@ def cold_pattern():
 
 
 @pytest.fixture
-def recollection_agent(holographic_memory):
+def recollection_agent(
+    holographic_memory: HolographicMemory[str],
+) -> RecollectionAgent[str]:
     """Create a RecollectionAgent with HolographicMemory."""
     return RecollectionAgent(holographic_memory)
 
 
 @pytest.fixture
-def consolidation_agent(holographic_memory):
+def consolidation_agent(
+    holographic_memory: HolographicMemory[str],
+) -> ConsolidationAgent[str]:
     """Create a ConsolidationAgent with HolographicMemory."""
     return ConsolidationAgent(holographic_memory)
 
 
 @pytest.fixture
-def forgetting_curve_agent(holographic_memory):
+def forgetting_curve_agent(
+    holographic_memory: HolographicMemory[str],
+) -> ForgettingCurveAgent[str]:
     """Create a ForgettingCurveAgent with HolographicMemory."""
     return ForgettingCurveAgent(holographic_memory)
 
@@ -98,20 +107,20 @@ def forgetting_curve_agent(holographic_memory):
 class MockUnifiedMemory:
     """Mock D-gent UnifiedMemory for testing M-gent integrations."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._concepts: dict[str, list[str]] = {}
-        self._events: list[tuple] = []
+        self._events: list[tuple[datetime, str, dict[str, Any]]] = []
         self._relationships: dict[str, list[tuple[str, str]]] = {}
-        self._current_state: dict = {}
+        self._current_state: dict[str, Any] = {}
 
-    async def save(self, state: dict) -> str:
+    async def save(self, state: dict[str, Any]) -> str:
         self._current_state = state
         return f"entry-{len(self._events)}"
 
-    async def load(self) -> dict:
+    async def load(self) -> dict[str, Any]:
         return self._current_state
 
-    async def associate(self, state: dict, concept: str) -> None:
+    async def associate(self, state: dict[str, Any], concept: str) -> None:
         if concept not in self._concepts:
             self._concepts[concept] = []
         entry_id = state.get("id", "unknown")
@@ -126,19 +135,26 @@ class MockUnifiedMemory:
                     results.append((entry_id, 0.8))
         return results[:limit]
 
-    async def witness(self, event_label: str, state: dict) -> None:
+    async def witness(self, event_label: str, state: dict[str, Any]) -> None:
         self._events.append((datetime.now(), event_label, state))
 
-    async def replay(self, timestamp) -> dict | None:
+    async def replay(self, timestamp: datetime) -> dict[str, Any] | None:
         for ts, _, state in reversed(self._events):
             if ts <= timestamp:
                 return state
         return None
 
-    async def timeline(self, start=None, end=None, limit=None) -> list:
+    async def timeline(
+        self,
+        start: datetime | None = None,
+        end: datetime | None = None,
+        limit: int | None = None,
+    ) -> list[tuple[datetime, str, dict[str, Any]]]:
         return self._events[:limit] if limit else self._events
 
-    async def events_by_label(self, label: str, limit: int = 10) -> list:
+    async def events_by_label(
+        self, label: str, limit: int = 10
+    ) -> list[tuple[datetime, dict[str, Any]]]:
         results = [(ts, state) for ts, l, state in self._events if l == label]
         return results[:limit]
 
@@ -147,13 +163,17 @@ class MockUnifiedMemory:
             self._relationships[source] = []
         self._relationships[source].append((relation, target))
 
-    async def related_to(self, entity_id: str, relation: str = None) -> list:
+    async def related_to(
+        self, entity_id: str, relation: str | None = None
+    ) -> list[tuple[str, str]]:
         rels = self._relationships.get(entity_id, [])
         if relation:
             rels = [(r, t) for r, t in rels if r == relation]
         return rels
 
-    async def related_from(self, entity_id: str, relation: str = None) -> list:
+    async def related_from(
+        self, entity_id: str, relation: str | None = None
+    ) -> list[tuple[str, str]]:
         results = []
         for source, rels in self._relationships.items():
             for rel, target in rels:
@@ -161,11 +181,11 @@ class MockUnifiedMemory:
                     results.append((rel, source))
         return results
 
-    async def trace(self, start: str, max_depth: int = 3) -> dict:
-        visited = set()
-        edges = []
+    async def trace(self, start: str, max_depth: int = 3) -> dict[str, Any]:
+        visited: set[str] = set()
+        edges: list[dict[str, str]] = []
 
-        def dfs(node: str, depth: int):
+        def dfs(node: str, depth: int) -> None:
             if depth > max_depth or node in visited:
                 return
             visited.add(node)
@@ -176,7 +196,7 @@ class MockUnifiedMemory:
         dfs(start, 0)
         return {"nodes": list(visited), "edges": edges, "depth": max_depth}
 
-    def stats(self) -> dict:
+    def stats(self) -> dict[str, int]:
         return {
             "concept_count": len(self._concepts),
             "event_count": len(self._events),
@@ -185,7 +205,7 @@ class MockUnifiedMemory:
 
 
 @pytest.fixture
-def mock_unified_memory():
+def mock_unified_memory() -> MockUnifiedMemory:
     """Create a mock D-gent UnifiedMemory for testing."""
     return MockUnifiedMemory()
 
@@ -194,7 +214,7 @@ def mock_unified_memory():
 
 
 @pytest.fixture
-def mock_bank():
+def mock_bank() -> Any:
     """Create a mock B-gent bank for testing."""
     from agents.m.memory_budget import create_mock_bank
 
@@ -202,7 +222,7 @@ def mock_bank():
 
 
 @pytest.fixture
-def budgeted_memory(holographic_memory, mock_bank):
+def budgeted_memory(holographic_memory: HolographicMemory[str], mock_bank: Any) -> Any:
     """Create a BudgetedMemory with mock bank."""
     from agents.m.memory_budget import BudgetedMemory
 
@@ -217,7 +237,7 @@ def budgeted_memory(holographic_memory, mock_bank):
 
 
 @pytest.fixture
-def dgent_backed_memory(mock_unified_memory):
+def dgent_backed_memory(mock_unified_memory: MockUnifiedMemory) -> Any:
     """Create a D-gent backed HolographicMemory."""
     from agents.m.dgent_backend import DgentBackedHolographicMemory
 
@@ -228,7 +248,7 @@ def dgent_backed_memory(mock_unified_memory):
 
 
 @pytest.fixture
-def persistent_tiered_memory(mock_unified_memory):
+def persistent_tiered_memory(mock_unified_memory: MockUnifiedMemory) -> Any:
     """Create a PersistentTieredMemory with mock D-gent storage."""
     from agents.m.persistent_tiered import PersistentTieredMemory
 
@@ -239,7 +259,7 @@ def persistent_tiered_memory(mock_unified_memory):
 
 
 @pytest.fixture
-def action_history():
+def action_history() -> Any:
     """Create an ActionHistory for testing prospective memory."""
     from agents.m.prospective import ActionHistory
 
@@ -247,7 +267,7 @@ def action_history():
 
 
 @pytest.fixture
-def ethical_geometry():
+def ethical_geometry() -> Any:
     """Create an EthicalGeometry for testing."""
     from agents.m.prospective import EthicalGeometry
 
@@ -255,7 +275,9 @@ def ethical_geometry():
 
 
 @pytest.fixture
-def prospective_agent(holographic_memory, action_history):
+def prospective_agent(
+    holographic_memory: HolographicMemory[str], action_history: Any
+) -> Any:
     """Create a ProspectiveAgent for testing."""
     from agents.m.prospective import ProspectiveAgent
 
@@ -263,7 +285,7 @@ def prospective_agent(holographic_memory, action_history):
 
 
 @pytest.fixture
-def ethical_agent(ethical_geometry):
+def ethical_agent(ethical_geometry: Any) -> Any:
     """Create an EthicalGeometryAgent for testing."""
     from agents.m.prospective import EthicalGeometryAgent
 
@@ -274,7 +296,7 @@ def ethical_agent(ethical_geometry):
 
 
 @pytest.fixture
-def vector_memory():
+def vector_memory() -> Any:
     """Create a VectorHolographicMemory for testing."""
     from agents.m.vector_holographic import create_simple_vector_memory
 

@@ -838,7 +838,7 @@ def create_test_only_env(**config_kwargs: Any) -> InfectionEnvironment:
     Useful for dry-run testing without staking.
     """
     # Set defaults that can be overridden
-    defaults = {
+    defaults: dict[str, Any] = {
         "require_stake": False,
         "run_tests": True,
         "run_type_check": True,

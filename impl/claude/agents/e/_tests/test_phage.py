@@ -14,7 +14,7 @@ from __future__ import annotations
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Generator
 
 import pytest
 
@@ -160,7 +160,7 @@ class MockDemon:
 
 
 @pytest.fixture
-def temp_dir():
+def temp_dir() -> Generator[Path, None, None]:
     """Create a temporary directory for test files."""
     with tempfile.TemporaryDirectory() as tmpdir:
         yield Path(tmpdir)
@@ -531,6 +531,7 @@ class TestInfect:
         result = await infect(sample_phage, target, test_only_env)
 
         assert result.status == InfectionStatus.SUCCESS
+        assert sample_phage.mutation is not None
         assert target.read_text() == sample_phage.mutation.mutated_code
 
     @pytest.mark.asyncio
@@ -1113,6 +1114,7 @@ class TestFullIntegration:
         assert result1.status == InfectionStatus.SUCCESS
 
         # Spawn child with new mutation
+        assert sample_phage.mutation is not None
         new_mutation = MutationVector(
             schema_signature="extract_constant",
             original_code=sample_phage.mutation.mutated_code,

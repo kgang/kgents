@@ -10,10 +10,9 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Generic, TypeVar
+from typing import Generic, TypeVar
 
-if TYPE_CHECKING:
-    from bootstrap.types import Agent, ComposedAgent
+from bootstrap.types import Agent, ComposedAgent
 
 A = TypeVar("A")
 B = TypeVar("B")
@@ -51,7 +50,7 @@ class PerformanceMetrics:
         )
 
 
-class MetricsAgent(Generic[A]):
+class MetricsAgent(Agent[A, A], Generic[A]):
     """Identity morphism with performance metrics M.
 
     Category Theory:
@@ -72,16 +71,21 @@ class MetricsAgent(Generic[A]):
         >>> print(f"Max latency: {metrics.metrics.max_time:.3f}s")
     """
 
-    def __init__(self, label: str):
+    def __init__(self, label: str) -> None:
         """Initialize MetricsAgent.
 
         Args:
             label: Human-readable label for this profiler
         """
-        self.name = f"Metrics({label})"
+        self._name = f"Metrics({label})"
         self.label = label
         self.metrics = PerformanceMetrics()
         self.__is_test__ = True
+
+    @property
+    def name(self) -> str:
+        """Return the agent name."""
+        return self._name
 
     async def invoke(self, input_data: A) -> A:
         """Record timing and pass through.
@@ -120,16 +124,3 @@ class MetricsAgent(Generic[A]):
         print(f"  Avg time:    {self.metrics.avg_time:.4f}s")
         print(f"  Min time:    {self.metrics.min_time:.4f}s")
         print(f"  Max time:    {self.metrics.max_time:.4f}s")
-
-    def __rshift__(self, other: Agent[A, B]) -> ComposedAgent[A, A, B]:
-        """Composition operator: self >> other.
-
-        Args:
-            other: Agent to compose with
-
-        Returns:
-            Composed agent
-        """
-        from bootstrap.types import ComposedAgent
-
-        return ComposedAgent(self, other)

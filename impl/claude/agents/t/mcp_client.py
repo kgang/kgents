@@ -35,7 +35,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional, TypeVar, Union
 
-from bootstrap.types import Result, err, ok
+from bootstrap.types import Err, Result, err, ok
 
 from .tool import Tool, ToolError, ToolErrorType, ToolMeta
 
@@ -62,7 +62,7 @@ class JsonRpcRequest:
 
     def to_json(self) -> str:
         """Serialize to JSON string."""
-        data = {"jsonrpc": self.jsonrpc, "method": self.method}
+        data: Dict[str, Any] = {"jsonrpc": self.jsonrpc, "method": self.method}
 
         if self.id is not None:
             data["id"] = self.id
@@ -232,8 +232,8 @@ class StdioTransport(MCPTransport):
         """
         self.command = command
         self.process: Optional[asyncio.subprocess.Process] = None
-        self._response_queue: asyncio.Queue = asyncio.Queue()
-        self._reader_task: Optional[asyncio.Task] = None
+        self._response_queue: asyncio.Queue[JsonRpcResponse] = asyncio.Queue()
+        self._reader_task: Optional[asyncio.Task[None]] = None
 
     async def connect(self) -> None:
         """Spawn server process and start reading responses."""
@@ -280,7 +280,8 @@ class StdioTransport(MCPTransport):
 
     async def receive(self) -> JsonRpcResponse:
         """Receive JSON-RPC response from stdout."""
-        return await self._response_queue.get()
+        response: JsonRpcResponse = await self._response_queue.get()
+        return response
 
     async def close(self) -> None:
         """Close connection and terminate process."""
@@ -397,7 +398,7 @@ class MCPClient:
         self.transport = transport
         self.server_info: Optional[MCPServerInfo] = None
         self._request_id_counter = 0
-        self._pending_requests: Dict[Union[str, int], asyncio.Future] = {}
+        self._pending_requests: Dict[Union[str, int], asyncio.Future[Any]] = {}
 
     def _next_request_id(self) -> int:
         """Generate unique request ID."""
@@ -812,6 +813,8 @@ class MCPTool(Tool[Dict[str, Any], Any]):
         # Unwrap Result - raise ToolError if failed
         # (Agent[A, B] expects exceptions, not Result directly)
         if result.is_err():
+            # Type narrowing - result must be Err[ToolError]
+            assert isinstance(result, Err)
             raise result.error
 
         return result.unwrap()

@@ -206,6 +206,7 @@ class TestQuartermasterSubprocess:
         result = await q.provision_job(request)
 
         assert result.success is False
+        assert result.error is not None
         assert "timeout" in result.error.lower()
 
     @pytest.mark.asyncio

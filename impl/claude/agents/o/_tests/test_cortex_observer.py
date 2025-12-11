@@ -212,7 +212,7 @@ class TestCortexObserver:
         observer = CortexObserver()
         callbacks_called = []
 
-        def on_change(snapshot: CortexHealthSnapshot):
+        def on_change(snapshot: CortexHealthSnapshot) -> None:
             callbacks_called.append(snapshot)
 
         unsubscribe = observer.on_health_change(on_change)

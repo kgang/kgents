@@ -15,7 +15,9 @@ Integration Pattern:
     result = await resolve_promise(promise, computation)
 """
 
-from typing import Callable, Optional, TypeVar
+from __future__ import annotations
+
+from typing import Awaitable, Callable, Optional, TypeVar, Union
 
 from agents.j.promise import Promise as JPromise
 from bootstrap.types import Agent
@@ -50,7 +52,9 @@ class PromiseAgent(Agent[A, JPromise[B]]):
         result = await resolve_promise(promise)
     """
 
-    def __init__(self, inner: Agent[A, B], ground: B, intent: Optional[str] = None):
+    def __init__(
+        self, inner: Agent[A, B], ground: B, intent: Optional[str] = None
+    ) -> None:
         """
         Args:
             inner: The agent to wrap as a promise
@@ -76,13 +80,16 @@ class PromiseAgent(Agent[A, JPromise[B]]):
         )
 
 
-async def resolve_promise(promise: JPromise[T], computation: Callable[[], T]) -> T:
+async def resolve_promise(
+    promise: JPromise[T],
+    computation: Union[Callable[[], T], Callable[[], Awaitable[T]]],
+) -> T:
     """
     Resolve a promise by executing its computation.
 
     Args:
         promise: The promise to resolve
-        computation: The deferred computation to execute
+        computation: The deferred computation to execute (can be sync or async)
 
     Returns:
         The computed value on success, or ground value on failure
@@ -92,7 +99,12 @@ async def resolve_promise(promise: JPromise[T], computation: Callable[[], T]) ->
 
     try:
         promise.mark_resolving()
-        result = await computation()
+        result_or_awaitable = computation()
+        # Check if the result is awaitable
+        if hasattr(result_or_awaitable, "__await__"):
+            result = await result_or_awaitable
+        else:
+            result = result_or_awaitable
         promise.mark_resolved(result)
         return result
     except Exception as e:

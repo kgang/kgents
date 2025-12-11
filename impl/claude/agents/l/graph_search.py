@@ -18,6 +18,8 @@ Design Philosophy:
 - Composable: Works alongside keyword and semantic search
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
@@ -64,7 +66,9 @@ class GraphBrain:
         # Returns: agents that can receive NewsParser's output
     """
 
-    def __init__(self, registry: Registry, lineage: LineageGraph, lattice: TypeLattice):
+    def __init__(
+        self, registry: Registry, lineage: LineageGraph, lattice: TypeLattice
+    ) -> None:
         """Initialize graph search brain.
 
         Args:
@@ -141,7 +145,7 @@ class GraphBrain:
                 continue
 
             # Find all agents that accept current_type as input
-            all_agents = await self.registry.list()
+            all_agents = await self.registry.list_entries()
             candidates = [
                 a
                 for a in all_agents
@@ -156,14 +160,13 @@ class GraphBrain:
                     return new_path
 
                 # Check if output_type is a subtype of target
-                try:
-                    result = await self.lattice.is_subtype(
-                        agent.output_type, target_type
-                    )
-                    if result:
-                        return new_path
-                except Exception:
-                    pass
+                if agent.output_type:
+                    try:
+                        result = self.lattice.is_subtype(agent.output_type, target_type)
+                        if result:
+                            return new_path
+                    except Exception:
+                        pass
 
                 # Continue search
                 if agent.output_type and agent.output_type not in visited:
@@ -344,7 +347,7 @@ class GraphBrain:
             return []
 
         results: list[GraphResult] = []
-        all_agents = await self.registry.list()
+        all_agents = await self.registry.list_entries()
 
         for candidate in all_agents:
             if candidate.entity_type != EntityType.AGENT or candidate.id == entry.id:
@@ -391,7 +394,7 @@ class GraphBrain:
             return []
 
         results: list[GraphResult] = []
-        all_agents = await self.registry.list()
+        all_agents = await self.registry.list_entries()
 
         for candidate in all_agents:
             if candidate.entity_type != EntityType.AGENT or candidate.id == entry.id:

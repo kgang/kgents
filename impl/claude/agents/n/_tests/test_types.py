@@ -81,12 +81,12 @@ class TestSemanticTrace:
             metadata={"test": True},
         )
 
-    def test_trace_is_frozen(self, sample_trace) -> None:
+    def test_trace_is_frozen(self, sample_trace: SemanticTrace) -> None:
         """SemanticTrace is immutable."""
         with pytest.raises(AttributeError):
-            sample_trace.agent_id = "new-agent"
+            sample_trace.agent_id = "new-agent"  # type: ignore[misc]
 
-    def test_trace_has_required_fields(self, sample_trace) -> None:
+    def test_trace_has_required_fields(self, sample_trace: SemanticTrace) -> None:
         """Verify all required fields are present."""
         assert sample_trace.trace_id == "test-123"
         assert sample_trace.agent_id == "test-agent"
@@ -95,7 +95,7 @@ class TestSemanticTrace:
         assert sample_trace.inputs == {"question": "What is the answer?"}
         assert sample_trace.outputs == {"answer": 42}
 
-    def test_trace_parent_id_optional(self, sample_trace) -> None:
+    def test_trace_parent_id_optional(self, sample_trace: SemanticTrace) -> None:
         """Parent ID can be None for root traces."""
         assert sample_trace.parent_id is None
 
@@ -116,11 +116,11 @@ class TestSemanticTrace:
         )
         assert nested.parent_id == "test-123"
 
-    def test_trace_vector_optional(self, sample_trace) -> None:
+    def test_trace_vector_optional(self, sample_trace: SemanticTrace) -> None:
         """Vector is optional (computed later by L-gent)."""
         assert sample_trace.vector is None
 
-    def test_trace_with_vector(self, sample_trace) -> None:
+    def test_trace_with_vector(self, sample_trace: SemanticTrace) -> None:
         """Can create new trace with vector."""
         vector = [0.1, 0.2, 0.3, 0.4]
         with_vector = sample_trace.with_vector(vector)
@@ -129,7 +129,7 @@ class TestSemanticTrace:
         assert with_vector.trace_id == sample_trace.trace_id
         assert sample_trace.vector is None  # Original unchanged
 
-    def test_trace_to_dict(self, sample_trace) -> None:
+    def test_trace_to_dict(self, sample_trace: SemanticTrace) -> None:
         """Conversion to dict for serialization."""
         data = sample_trace.to_dict()
 
@@ -142,7 +142,7 @@ class TestSemanticTrace:
         assert data["determinism"] == "probabilistic"
         assert "timestamp" in data
 
-    def test_trace_from_dict(self, sample_trace) -> None:
+    def test_trace_from_dict(self, sample_trace: SemanticTrace) -> None:
         """Reconstruction from dict."""
         data = sample_trace.to_dict()
         restored = SemanticTrace.from_dict(
@@ -154,7 +154,7 @@ class TestSemanticTrace:
         assert restored.action == sample_trace.action
         assert restored.determinism == sample_trace.determinism
 
-    def test_trace_roundtrip(self, sample_trace) -> None:
+    def test_trace_roundtrip(self, sample_trace: SemanticTrace) -> None:
         """Dict conversion roundtrip preserves data."""
         data = sample_trace.to_dict()
         restored = SemanticTrace.from_dict(

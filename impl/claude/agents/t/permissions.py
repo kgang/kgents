@@ -235,13 +235,11 @@ class TemporaryToken:
         if not self.is_valid():
             if self.revoked:
                 return err(
-                    None,
                     f"Token revoked: {self.revocation_reason}",
                     recoverable=False,
                 )
             else:
                 return err(
-                    None,
                     f"Token expired at {self.expires_at}",
                     recoverable=False,
                 )
@@ -436,14 +434,12 @@ class PermissionClassifier:
 
         if permission == PermissionLevel.DENIED:
             return err(
-                None,
                 f"Permission denied for tool '{tool_id}' in context {context.agent_id}",
                 recoverable=False,
             )
 
         if permission == PermissionLevel.RESTRICTED:
             return err(
-                None,
                 f"Tool '{tool_id}' requires additional approval",
                 recoverable=True,
             )
@@ -532,7 +528,7 @@ class AuditLogger:
         )
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize audit logger."""
         self.logs: list[AuditLog] = []  # In-memory buffer
         # TODO: Integrate with D-gent for persistent storage

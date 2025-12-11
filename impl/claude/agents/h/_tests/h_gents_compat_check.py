@@ -8,9 +8,12 @@ This script verifies:
 3. Basic agent instantiation works
 """
 
+from __future__ import annotations
+
 import asyncio
 import sys
 from pathlib import Path
+from types import ModuleType
 
 # Add current dir to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -19,11 +22,13 @@ sys.path.insert(0, str(Path(__file__).parent))
 import importlib.util
 
 
-def load_module(name, path):
+def load_module(name: str, path: str) -> ModuleType:
     """Load a module from a file path."""
     spec = importlib.util.spec_from_file_location(name, path)
+    assert spec is not None
     module = importlib.util.module_from_spec(spec)
     sys.modules[name] = module
+    assert spec.loader is not None
     spec.loader.exec_module(module)
     return module
 
@@ -155,7 +160,7 @@ except Exception as e:
 print("\n5. Testing basic async invocation...")
 
 
-async def test_invocation() -> None:
+async def test_invocation() -> bool:
     try:
         # Test Hegel
         h = hegel()

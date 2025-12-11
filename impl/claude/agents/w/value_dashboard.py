@@ -48,7 +48,7 @@ import asyncio
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 # Import W-gent wire protocol
 from .protocol import WireObservable, WireState
@@ -206,7 +206,7 @@ class ValueDashboard(WireObservable):
         self._detect_panels()
 
         self._running = False
-        self._update_task: Optional[asyncio.Task] = None
+        self._update_task: Optional[asyncio.Task[None]] = None
 
     def _detect_panels(self) -> None:
         """Detect which panels to enable based on data sources."""
@@ -264,23 +264,23 @@ class ValueDashboard(WireObservable):
 
         # Token Economics
         if DashboardPanel.TOKEN_ECONOMICS in self._state.panels_enabled:
-            snapshot = self._collect_token_snapshot(now)
-            self._append_history(self._state.token_history, snapshot)
+            token_snapshot = self._collect_token_snapshot(now)
+            self._append_history(self._state.token_history, token_snapshot)
 
         # Value Tensor
         if DashboardPanel.VALUE_TENSOR in self._state.panels_enabled:
-            snapshot = self._collect_tensor_snapshot(now)
-            self._append_history(self._state.tensor_history, snapshot)
+            tensor_snapshot = self._collect_tensor_snapshot(now)
+            self._append_history(self._state.tensor_history, tensor_snapshot)
 
         # VoI Metrics
         if DashboardPanel.VOI_METRICS in self._state.panels_enabled:
-            snapshot = self._collect_voi_snapshot(now)
-            self._append_history(self._state.voi_history, snapshot)
+            voi_snapshot = self._collect_voi_snapshot(now)
+            self._append_history(self._state.voi_history, voi_snapshot)
 
         # RoC Monitor
         if DashboardPanel.ROC_MONITOR in self._state.panels_enabled:
-            snapshot = self._collect_roc_snapshot(now)
-            self._append_history(self._state.roc_history, snapshot)
+            roc_snapshot = self._collect_roc_snapshot(now)
+            self._append_history(self._state.roc_history, roc_snapshot)
 
         # Anomalies
         if DashboardPanel.ANOMALY_ALERTS in self._state.panels_enabled:
@@ -453,14 +453,6 @@ class ValueDashboard(WireObservable):
     async def _emit_state(self) -> None:
         """Emit current state through wire protocol."""
         self._state.timestamp = datetime.now()
-
-        # Convert to WireState format
-        WireState(
-            agent_id=self._state.agent_id,
-            phase="observing",
-            data=self._to_wire_data(),
-            timestamp=self._state.timestamp,
-        )
 
         # Use WireObservable's update_state
         self.update_state(

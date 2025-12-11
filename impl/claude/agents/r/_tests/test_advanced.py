@@ -9,7 +9,10 @@ Tests cover:
 5. Unified AdvancedRefinery
 """
 
+from __future__ import annotations
+
 from datetime import datetime, timedelta
+from typing import Any
 
 import pytest
 from agents.r.advanced import (
@@ -54,7 +57,7 @@ from agents.r.types import (
 
 
 @pytest.fixture
-def simple_signature():
+def simple_signature() -> Signature:
     """Simple signature for testing."""
     return Signature.simple(
         input_name="text",
@@ -66,7 +69,7 @@ def simple_signature():
 
 
 @pytest.fixture
-def complex_signature():
+def complex_signature() -> Signature:
     """Complex signature for testing."""
     return Signature.simple(
         input_name="document",
@@ -78,19 +81,19 @@ def complex_signature():
 
 
 @pytest.fixture
-def small_dataset():
+def small_dataset() -> list[Example]:
     """Small dataset for testing."""
     return [Example.simple(f"text {i}", f"label {i % 3}") for i in range(15)]
 
 
 @pytest.fixture
-def large_dataset():
+def large_dataset() -> list[Example]:
     """Large dataset for testing."""
     return [Example.simple(f"document {i}", f"analysis {i}") for i in range(250)]
 
 
 @pytest.fixture
-def optimization_trace():
+def optimization_trace() -> OptimizationTrace:
     """Sample optimization trace."""
     trace = OptimizationTrace(
         initial_prompt="Original prompt",
@@ -105,7 +108,7 @@ def optimization_trace():
 
 
 @pytest.fixture
-def gpt4_model():
+def gpt4_model() -> ModelProfile:
     """GPT-4 model profile."""
     return ModelProfile(
         model_id="gpt-4-turbo",
@@ -118,7 +121,7 @@ def gpt4_model():
 
 
 @pytest.fixture
-def claude3_model():
+def claude3_model() -> ModelProfile:
     """Claude 3 model profile."""
     return ModelProfile(
         model_id="claude-3-opus",
@@ -190,7 +193,9 @@ class TestTaskAnalyzer:
         analyzer = TaskAnalyzer()
         assert analyzer.complexity_keywords is not None
 
-    def test_analyze_simple_task(self, simple_signature, small_dataset) -> None:
+    def test_analyze_simple_task(
+        self, simple_signature: Signature, small_dataset: list[Example]
+    ) -> None:
         """Test analysis of simple task."""
         analyzer = TaskAnalyzer()
         analysis = analyzer.analyze(simple_signature, small_dataset)
@@ -199,7 +204,9 @@ class TestTaskAnalyzer:
         assert analysis.dataset_size == 15
         assert analysis.dataset_characteristic == DatasetCharacteristics.SMALL
 
-    def test_analyze_complex_task(self, complex_signature, large_dataset) -> None:
+    def test_analyze_complex_task(
+        self, complex_signature: Signature, large_dataset: list[Example]
+    ) -> None:
         """Test analysis of complex task."""
         analyzer = TaskAnalyzer()
         analysis = analyzer.analyze(complex_signature, large_dataset)
@@ -234,7 +241,9 @@ class TestTaskAnalyzer:
         assert analyzer._classify_dataset_size(500) == DatasetCharacteristics.LARGE
         assert analyzer._classify_dataset_size(2000) == DatasetCharacteristics.MASSIVE
 
-    def test_check_structured_output(self, simple_signature, small_dataset) -> None:
+    def test_check_structured_output(
+        self, simple_signature: Signature, small_dataset: list[Example]
+    ) -> None:
         """Test structured output detection."""
         analyzer = TaskAnalyzer()
 
@@ -242,7 +251,7 @@ class TestTaskAnalyzer:
         analyzer._check_structured_output(simple_signature, small_dataset)
         # Result depends on signature and examples content
 
-    def test_check_reasoning_chain(self, complex_signature) -> None:
+    def test_check_reasoning_chain(self, complex_signature: Signature) -> None:
         """Test reasoning chain detection."""
         analyzer = TaskAnalyzer()
         result = analyzer._check_reasoning_chain(complex_signature)
@@ -290,7 +299,9 @@ class TestAutoTeleprompterSelector:
         )
         assert selector.cost_weight == 0.5
 
-    def test_select_simple_task(self, simple_signature, small_dataset) -> None:
+    def test_select_simple_task(
+        self, simple_signature: Signature, small_dataset: list[Example]
+    ) -> None:
         """Test selection for simple task."""
         selector = AutoTeleprompterSelector()
         rec = selector.select(simple_signature, small_dataset, budget_usd=5.0)
@@ -304,7 +315,9 @@ class TestAutoTeleprompterSelector:
             TeleprompterStrategy.OPRO,
         )
 
-    def test_select_complex_task(self, complex_signature, large_dataset) -> None:
+    def test_select_complex_task(
+        self, complex_signature: Signature, large_dataset: list[Example]
+    ) -> None:
         """Test selection for complex task."""
         selector = AutoTeleprompterSelector()
         rec = selector.select(complex_signature, large_dataset, budget_usd=50.0)
@@ -316,7 +329,9 @@ class TestAutoTeleprompterSelector:
             TeleprompterStrategy.BOOTSTRAP_FINETUNE,
         )
 
-    def test_select_low_budget(self, complex_signature, large_dataset) -> None:
+    def test_select_low_budget(
+        self, complex_signature: Signature, large_dataset: list[Example]
+    ) -> None:
         """Test selection with low budget."""
         selector = AutoTeleprompterSelector()
         rec = selector.select(complex_signature, large_dataset, budget_usd=2.0)
@@ -356,7 +371,7 @@ class TestAutoTeleprompterSelector:
         assert duration_fewshot < duration_finetune
 
     def test_recommendation_has_reasoning(
-        self, simple_signature, small_dataset
+        self, simple_signature: Signature, small_dataset: list[Example]
     ) -> None:
         """Test that recommendations include reasoning."""
         selector = AutoTeleprompterSelector()
@@ -366,7 +381,7 @@ class TestAutoTeleprompterSelector:
         assert len(rec.reasoning) > 10
 
     def test_recommendation_has_alternatives(
-        self, simple_signature, small_dataset
+        self, simple_signature: Signature, small_dataset: list[Example]
     ) -> None:
         """Test that recommendations include alternatives."""
         selector = AutoTeleprompterSelector()
@@ -671,7 +686,7 @@ class TestReoptimizationTrigger:
 class TestModelProfile:
     """Tests for ModelProfile."""
 
-    def test_profile_creation(self, gpt4_model) -> None:
+    def test_profile_creation(self, gpt4_model: ModelProfile) -> None:
         """Test profile creation."""
         assert gpt4_model.model_id == "gpt-4-turbo"
         assert gpt4_model.provider == "openai"
@@ -681,7 +696,9 @@ class TestModelProfile:
 class TestTransferPrediction:
     """Tests for TransferPrediction."""
 
-    def test_prediction_creation(self, gpt4_model, claude3_model) -> None:
+    def test_prediction_creation(
+        self, gpt4_model: ModelProfile, claude3_model: ModelProfile
+    ) -> None:
         """Test prediction creation."""
         pred = TransferPrediction(
             source_model=gpt4_model,
@@ -708,7 +725,9 @@ class TestCrossModelTransferAnalyzer:
         analyzer = CrossModelTransferAnalyzer()
         assert analyzer._transfer_matrix is not None
 
-    def test_analyze_same_family(self, gpt4_model, optimization_trace) -> None:
+    def test_analyze_same_family(
+        self, gpt4_model: ModelProfile, optimization_trace: OptimizationTrace
+    ) -> None:
         """Test transfer within same family."""
         analyzer = CrossModelTransferAnalyzer()
 
@@ -728,8 +747,11 @@ class TestCrossModelTransferAnalyzer:
         assert pred.should_transfer is True
 
     def test_analyze_different_family(
-        self, gpt4_model, claude3_model, optimization_trace
-    ):
+        self,
+        gpt4_model: ModelProfile,
+        claude3_model: ModelProfile,
+        optimization_trace: OptimizationTrace,
+    ) -> None:
         """Test transfer between families."""
         analyzer = CrossModelTransferAnalyzer()
 
@@ -739,7 +761,9 @@ class TestCrossModelTransferAnalyzer:
         assert 0.5 <= pred.transfer_efficiency <= 0.9
         assert pred.should_transfer is True  # Should still transfer
 
-    def test_analyze_transfer_to_weaker(self, gpt4_model, optimization_trace) -> None:
+    def test_analyze_transfer_to_weaker(
+        self, gpt4_model: ModelProfile, optimization_trace: OptimizationTrace
+    ) -> None:
         """Test transfer to weaker model."""
         analyzer = CrossModelTransferAnalyzer()
 
@@ -755,9 +779,12 @@ class TestCrossModelTransferAnalyzer:
         pred = analyzer.analyze_transfer(gpt4_model, weaker, optimization_trace)
 
         # Transfer to weaker model should work but less efficiently
+        assert optimization_trace.final_score is not None
         assert pred.predicted_score <= optimization_trace.final_score
 
-    def test_recommend_target_models(self, gpt4_model, optimization_trace) -> None:
+    def test_recommend_target_models(
+        self, gpt4_model: ModelProfile, optimization_trace: OptimizationTrace
+    ) -> None:
         """Test recommending target models."""
         analyzer = CrossModelTransferAnalyzer()
 
@@ -854,7 +881,7 @@ class TestOpenAIFinetunePreparer:
         preparer = OpenAIFinetunePreparer()
         assert preparer is not None
 
-    def test_prepare_dataset_valid(self, simple_signature) -> None:
+    def test_prepare_dataset_valid(self, simple_signature: Signature) -> None:
         """Test preparing valid dataset."""
         preparer = OpenAIFinetunePreparer()
         config = FinetuneConfig(min_examples=10)
@@ -868,7 +895,9 @@ class TestOpenAIFinetunePreparer:
         assert len(dataset.validation_examples) > 0
         assert dataset.total_tokens > 0
 
-    def test_prepare_dataset_too_few_examples(self, simple_signature) -> None:
+    def test_prepare_dataset_too_few_examples(
+        self, simple_signature: Signature
+    ) -> None:
         """Test preparing dataset with too few examples."""
         preparer = OpenAIFinetunePreparer()
         config = FinetuneConfig(min_examples=100)
@@ -880,7 +909,7 @@ class TestOpenAIFinetunePreparer:
         assert dataset.is_valid is False
         assert len(dataset.validation_errors) > 0
 
-    def test_openai_format(self, simple_signature) -> None:
+    def test_openai_format(self, simple_signature: Signature) -> None:
         """Test OpenAI format compliance."""
         preparer = OpenAIFinetunePreparer()
         config = FinetuneConfig(min_examples=5)
@@ -899,7 +928,7 @@ class TestOpenAIFinetunePreparer:
             assert messages[1]["role"] == "user"
             assert messages[2]["role"] == "assistant"
 
-    def test_estimate_cost(self, simple_signature) -> None:
+    def test_estimate_cost(self, simple_signature: Signature) -> None:
         """Test cost estimation."""
         preparer = OpenAIFinetunePreparer()
         config = FinetuneConfig(min_examples=5)
@@ -921,7 +950,7 @@ class TestAnthropicFinetunePreparer:
         preparer = AnthropicFinetunePreparer()
         assert preparer is not None
 
-    def test_prepare_dataset(self, simple_signature) -> None:
+    def test_prepare_dataset(self, simple_signature: Signature) -> None:
         """Test preparing dataset."""
         preparer = AnthropicFinetunePreparer()
         config = FinetuneConfig(min_examples=5)
@@ -932,7 +961,7 @@ class TestAnthropicFinetunePreparer:
 
         assert dataset.is_valid is True
 
-    def test_anthropic_format(self, simple_signature) -> None:
+    def test_anthropic_format(self, simple_signature: Signature) -> None:
         """Test Anthropic format compliance."""
         preparer = AnthropicFinetunePreparer()
         config = FinetuneConfig(min_examples=5)
@@ -955,18 +984,24 @@ class TestBootstrapFinetuneTeleprompter:
 
     def test_teleprompter_creation(self) -> None:
         """Test teleprompter creation."""
-        teleprompter = BootstrapFinetuneTeleprompter()
+        teleprompter: BootstrapFinetuneTeleprompter[Any, Any] = (
+            BootstrapFinetuneTeleprompter()
+        )
         assert teleprompter.strategy == TeleprompterStrategy.BOOTSTRAP_FINETUNE
 
     def test_strategy_property(self) -> None:
         """Test strategy property."""
-        teleprompter = BootstrapFinetuneTeleprompter()
+        teleprompter: BootstrapFinetuneTeleprompter[Any, Any] = (
+            BootstrapFinetuneTeleprompter()
+        )
         assert teleprompter.strategy == TeleprompterStrategy.BOOTSTRAP_FINETUNE
 
     @pytest.mark.asyncio
-    async def test_compile_insufficient_data(self, simple_signature) -> None:
+    async def test_compile_insufficient_data(self, simple_signature: Signature) -> None:
         """Test compile with insufficient data."""
-        teleprompter = BootstrapFinetuneTeleprompter()
+        teleprompter: BootstrapFinetuneTeleprompter[Any, Any] = (
+            BootstrapFinetuneTeleprompter()
+        )
         examples = [Example.simple("input", "output") for _ in range(10)]
 
         trace = await teleprompter.compile(
@@ -979,9 +1014,11 @@ class TestBootstrapFinetuneTeleprompter:
         assert "invalid" in trace.convergence_reason.lower()
 
     @pytest.mark.asyncio
-    async def test_compile_sufficient_data(self, simple_signature) -> None:
+    async def test_compile_sufficient_data(self, simple_signature: Signature) -> None:
         """Test compile with sufficient data."""
-        teleprompter = BootstrapFinetuneTeleprompter()
+        teleprompter: BootstrapFinetuneTeleprompter[Any, Any] = (
+            BootstrapFinetuneTeleprompter()
+        )
         examples = [Example.simple(f"input {i}", f"output {i}") for i in range(100)]
 
         trace = await teleprompter.compile(
@@ -994,10 +1031,12 @@ class TestBootstrapFinetuneTeleprompter:
         assert "prepared" in trace.convergence_reason.lower()
 
     @pytest.mark.asyncio
-    async def test_compile_over_budget(self, simple_signature) -> None:
+    async def test_compile_over_budget(self, simple_signature: Signature) -> None:
         """Test compile over budget."""
         config = FinetuneConfig(min_examples=10)
-        teleprompter = BootstrapFinetuneTeleprompter(config=config)
+        teleprompter: BootstrapFinetuneTeleprompter[Any, Any] = (
+            BootstrapFinetuneTeleprompter(config=config)
+        )
         examples = [
             Example.simple(f"input {i}", f"output {i}")
             for i in range(1000)  # Large dataset
@@ -1013,9 +1052,11 @@ class TestBootstrapFinetuneTeleprompter:
         assert trace.converged is False
         assert "budget" in trace.convergence_reason.lower()
 
-    def test_prepare_only(self, simple_signature) -> None:
+    def test_prepare_only(self, simple_signature: Signature) -> None:
         """Test prepare_only method."""
-        teleprompter = BootstrapFinetuneTeleprompter()
+        teleprompter: BootstrapFinetuneTeleprompter[Any, Any] = (
+            BootstrapFinetuneTeleprompter()
+        )
         examples = [Example.simple(f"input {i}", f"output {i}") for i in range(100)]
 
         dataset = teleprompter.prepare_only(simple_signature, examples)
@@ -1023,9 +1064,11 @@ class TestBootstrapFinetuneTeleprompter:
         assert dataset.is_valid is True
         assert dataset.estimated_cost_usd > 0
 
-    def test_estimate_cost(self, simple_signature) -> None:
+    def test_estimate_cost(self, simple_signature: Signature) -> None:
         """Test cost estimation."""
-        teleprompter = BootstrapFinetuneTeleprompter()
+        teleprompter: BootstrapFinetuneTeleprompter[Any, Any] = (
+            BootstrapFinetuneTeleprompter()
+        )
         examples = [Example.simple(f"input {i}", f"output {i}") for i in range(100)]
 
         cost = teleprompter.estimate_cost(simple_signature, examples)
@@ -1064,7 +1107,7 @@ class TestAdvancedRefinery:
 
     def test_refinery_creation(self) -> None:
         """Test refinery creation."""
-        refinery = AdvancedRefinery()
+        refinery: AdvancedRefinery[Any, Any] = AdvancedRefinery()
         assert refinery._selector is not None
         assert refinery._drift_detector is not None
         assert refinery._transfer_analyzer is not None
@@ -1076,21 +1119,25 @@ class TestAdvancedRefinery:
             quality_weight=0.3,
             speed_weight=0.1,
         )
-        refinery = AdvancedRefinery(config)
+        refinery: AdvancedRefinery[Any, Any] = AdvancedRefinery(config)
         assert refinery._selector.cost_weight == 0.6
 
-    def test_recommend_strategy(self, simple_signature, small_dataset) -> None:
+    def test_recommend_strategy(
+        self, simple_signature: Signature, small_dataset: list[Example]
+    ) -> None:
         """Test strategy recommendation."""
-        refinery = AdvancedRefinery()
+        refinery: AdvancedRefinery[Any, Any] = AdvancedRefinery()
         rec = refinery.recommend_strategy(simple_signature, small_dataset)
 
         assert isinstance(rec, StrategyRecommendation)
         assert rec.strategy is not None
 
-    def test_recommend_strategy_disabled(self, simple_signature, small_dataset) -> None:
+    def test_recommend_strategy_disabled(
+        self, simple_signature: Signature, small_dataset: list[Example]
+    ) -> None:
         """Test recommendation when disabled."""
         config = AdvancedRefineryConfig(enable_auto_selection=False)
-        refinery = AdvancedRefinery(config)
+        refinery: AdvancedRefinery[Any, Any] = AdvancedRefinery(config)
 
         rec = refinery.recommend_strategy(simple_signature, small_dataset)
 
@@ -1099,7 +1146,7 @@ class TestAdvancedRefinery:
 
     def test_record_performance(self) -> None:
         """Test recording performance."""
-        refinery = AdvancedRefinery()
+        refinery: AdvancedRefinery[Any, Any] = AdvancedRefinery()
         refinery.record_performance(0.85)
         refinery.record_performance(0.82)
 
@@ -1107,7 +1154,7 @@ class TestAdvancedRefinery:
 
     def test_check_drift(self) -> None:
         """Test drift checking."""
-        refinery = AdvancedRefinery()
+        refinery: AdvancedRefinery[Any, Any] = AdvancedRefinery()
 
         # Record some samples
         for i in range(15):
@@ -1119,7 +1166,7 @@ class TestAdvancedRefinery:
     def test_check_drift_disabled(self) -> None:
         """Test drift checking when disabled."""
         config = AdvancedRefineryConfig(enable_drift_detection=False)
-        refinery = AdvancedRefinery(config)
+        refinery: AdvancedRefinery[Any, Any] = AdvancedRefinery(config)
 
         report = refinery.check_drift()
         assert report.is_drifting is False
@@ -1127,7 +1174,7 @@ class TestAdvancedRefinery:
 
     def test_should_reoptimize(self) -> None:
         """Test re-optimization decision."""
-        refinery = AdvancedRefinery()
+        refinery: AdvancedRefinery[Any, Any] = AdvancedRefinery()
 
         # Record degrading performance
         for i in range(20):
@@ -1139,10 +1186,13 @@ class TestAdvancedRefinery:
         assert len(reason) > 0
 
     def test_analyze_transfer(
-        self, gpt4_model, claude3_model, optimization_trace
+        self,
+        gpt4_model: ModelProfile,
+        claude3_model: ModelProfile,
+        optimization_trace: OptimizationTrace,
     ) -> None:
         """Test transfer analysis."""
-        refinery = AdvancedRefinery()
+        refinery: AdvancedRefinery[Any, Any] = AdvancedRefinery()
 
         pred = refinery.analyze_transfer(gpt4_model, claude3_model, optimization_trace)
 
@@ -1150,32 +1200,41 @@ class TestAdvancedRefinery:
         assert pred.transfer_efficiency > 0
 
     def test_analyze_transfer_disabled(
-        self, gpt4_model, claude3_model, optimization_trace
-    ):
+        self,
+        gpt4_model: ModelProfile,
+        claude3_model: ModelProfile,
+        optimization_trace: OptimizationTrace,
+    ) -> None:
         """Test transfer analysis when disabled."""
         config = AdvancedRefineryConfig(enable_transfer_analysis=False)
-        refinery = AdvancedRefinery(config)
+        refinery: AdvancedRefinery[Any, Any] = AdvancedRefinery(config)
 
         pred = refinery.analyze_transfer(gpt4_model, claude3_model, optimization_trace)
 
         assert "disabled" in pred.reasoning.lower()
 
-    def test_prepare_finetune(self, simple_signature, large_dataset) -> None:
+    def test_prepare_finetune(
+        self, simple_signature: Signature, large_dataset: list[Example]
+    ) -> None:
         """Test fine-tune preparation."""
         config = AdvancedRefineryConfig(
             enable_finetuning=True,
             finetune_min_examples=100,
         )
-        refinery = AdvancedRefinery(config)
+        refinery: AdvancedRefinery[Any, Any] = AdvancedRefinery(config)
 
         dataset = refinery.prepare_finetune(simple_signature, large_dataset)
 
         assert isinstance(dataset, FinetuneDataset)
         assert dataset.is_valid is True
 
-    def test_prepare_finetune_disabled(self, simple_signature, large_dataset) -> None:
+    def test_prepare_finetune_disabled(
+        self, simple_signature: Signature, large_dataset: list[Example]
+    ) -> None:
         """Test fine-tune preparation when disabled."""
-        refinery = AdvancedRefinery()  # Default has finetuning disabled
+        refinery: AdvancedRefinery[Any, Any] = (
+            AdvancedRefinery()
+        )  # Default has finetuning disabled
 
         dataset = refinery.prepare_finetune(simple_signature, large_dataset)
 
@@ -1183,24 +1242,26 @@ class TestAdvancedRefinery:
         assert "disabled" in dataset.validation_errors[0].lower()
 
     def test_prepare_finetune_insufficient_examples(
-        self, simple_signature, small_dataset
-    ):
+        self, simple_signature: Signature, small_dataset: list[Example]
+    ) -> None:
         """Test fine-tune with insufficient examples."""
         config = AdvancedRefineryConfig(
             enable_finetuning=True,
             finetune_min_examples=100,
         )
-        refinery = AdvancedRefinery(config)
+        refinery: AdvancedRefinery[Any, Any] = AdvancedRefinery(config)
 
         dataset = refinery.prepare_finetune(simple_signature, small_dataset)
 
         assert dataset.is_valid is False
 
     @pytest.mark.asyncio
-    async def test_compile_with_finetune(self, simple_signature, large_dataset) -> None:
+    async def test_compile_with_finetune(
+        self, simple_signature: Signature, large_dataset: list[Example]
+    ) -> None:
         """Test compile with fine-tuning."""
         config = AdvancedRefineryConfig(enable_finetuning=True)
-        refinery = AdvancedRefinery(config)
+        refinery: AdvancedRefinery[Any, Any] = AdvancedRefinery(config)
 
         trace = await refinery.compile_with_finetune(
             simple_signature,
@@ -1213,7 +1274,7 @@ class TestAdvancedRefinery:
 
     def test_update_baseline(self) -> None:
         """Test updating baseline."""
-        refinery = AdvancedRefinery()
+        refinery: AdvancedRefinery[Any, Any] = AdvancedRefinery()
 
         # Record some samples
         for _ in range(5):
@@ -1225,7 +1286,7 @@ class TestAdvancedRefinery:
 
     def test_clear_drift_history(self) -> None:
         """Test clearing drift history."""
-        refinery = AdvancedRefinery()
+        refinery: AdvancedRefinery[Any, Any] = AdvancedRefinery()
 
         # Record some samples
         for _ in range(5):
@@ -1245,10 +1306,10 @@ class TestPhase4Integration:
     """Integration tests for Phase 4 features."""
 
     def test_full_auto_selection_pipeline(
-        self, complex_signature, large_dataset
+        self, complex_signature: Signature, large_dataset: list[Example]
     ) -> None:
         """Test full auto-selection pipeline."""
-        refinery = AdvancedRefinery()
+        refinery: AdvancedRefinery[Any, Any] = AdvancedRefinery()
 
         # Get recommendation
         rec = refinery.recommend_strategy(
@@ -1268,7 +1329,7 @@ class TestPhase4Integration:
 
     def test_drift_to_reoptimization_flow(self) -> None:
         """Test drift detection to re-optimization flow."""
-        refinery = AdvancedRefinery()
+        refinery: AdvancedRefinery[Any, Any] = AdvancedRefinery()
 
         # Simulate degrading performance
         for i in range(30):
@@ -1284,10 +1345,13 @@ class TestPhase4Integration:
         assert drift.trend_direction == "degrading"
 
     def test_transfer_analysis_workflow(
-        self, gpt4_model, claude3_model, optimization_trace
-    ):
+        self,
+        gpt4_model: ModelProfile,
+        claude3_model: ModelProfile,
+        optimization_trace: OptimizationTrace,
+    ) -> None:
         """Test transfer analysis workflow."""
-        refinery = AdvancedRefinery()
+        refinery: AdvancedRefinery[Any, Any] = AdvancedRefinery()
 
         # Analyze transfer
         pred = refinery.analyze_transfer(gpt4_model, claude3_model, optimization_trace)
@@ -1301,13 +1365,13 @@ class TestPhase4Integration:
             assert pred.estimated_reoptimization_cost_usd >= 0
 
     @pytest.mark.asyncio
-    async def test_finetune_workflow(self, simple_signature) -> None:
+    async def test_finetune_workflow(self, simple_signature: Signature) -> None:
         """Test fine-tuning workflow."""
         config = AdvancedRefineryConfig(
             enable_finetuning=True,
             finetune_min_examples=50,
         )
-        refinery = AdvancedRefinery(config)
+        refinery: AdvancedRefinery[Any, Any] = AdvancedRefinery(config)
 
         # Create large dataset
         examples = [Example.simple(f"input {i}", f"output {i}") for i in range(200)]
@@ -1328,18 +1392,18 @@ class TestPhase4Integration:
 class TestEdgeCases:
     """Edge case tests."""
 
-    def test_empty_examples(self, simple_signature) -> None:
+    def test_empty_examples(self, simple_signature: Signature) -> None:
         """Test with empty examples."""
-        refinery = AdvancedRefinery()
+        refinery: AdvancedRefinery[Any, Any] = AdvancedRefinery()
 
         rec = refinery.recommend_strategy(simple_signature, [])
 
         # Should handle gracefully
         assert rec.strategy is not None
 
-    def test_single_example(self, simple_signature) -> None:
+    def test_single_example(self, simple_signature: Signature) -> None:
         """Test with single example."""
-        refinery = AdvancedRefinery()
+        refinery: AdvancedRefinery[Any, Any] = AdvancedRefinery()
 
         rec = refinery.recommend_strategy(
             simple_signature,
@@ -1354,14 +1418,16 @@ class TestEdgeCases:
 
     def test_drift_no_samples(self) -> None:
         """Test drift detection with no samples."""
-        refinery = AdvancedRefinery()
+        refinery: AdvancedRefinery[Any, Any] = AdvancedRefinery()
 
         drift = refinery.check_drift()
 
         assert drift.is_drifting is False
         assert drift.samples_analyzed == 0
 
-    def test_transfer_same_model(self, gpt4_model, optimization_trace) -> None:
+    def test_transfer_same_model(
+        self, gpt4_model: ModelProfile, optimization_trace: OptimizationTrace
+    ) -> None:
         """Test transfer to same model."""
         analyzer = CrossModelTransferAnalyzer()
 

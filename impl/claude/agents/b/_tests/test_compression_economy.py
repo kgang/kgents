@@ -10,6 +10,8 @@ Tests cover:
 4. SemanticZipperBudget: Budget evaluation with natural language tax
 """
 
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 
 import pytest
@@ -197,7 +199,7 @@ class TestPidginMetadata:
         pidgin.messages_using_pidgin = 85
         pidgin.messages_using_natural_language = 15
         pidgin.update_adoption_rate()
-        assert pidgin.status == AdoptionStatus.ADOPTED
+        assert pidgin.status == AdoptionStatus.ADOPTED  # type: ignore[comparison-overlap]
         assert pidgin.adoption_rate == 0.85
 
     def test_is_active_status(self) -> None:
@@ -428,7 +430,7 @@ class TestCompressionEconomyMonitor:
         return CentralBank(max_balance=100000)
 
     @pytest.fixture
-    def monitor(self, bank):
+    def monitor(self, bank: CentralBank) -> CompressionEconomyMonitor:
         """Create a CompressionEconomyMonitor for testing."""
         return CompressionEconomyMonitor(
             bank=bank,
@@ -437,7 +439,7 @@ class TestCompressionEconomyMonitor:
             roi_threshold=2.0,
         )
 
-    def test_log_communication(self, monitor) -> None:
+    def test_log_communication(self, monitor: CompressionEconomyMonitor) -> None:
         """Test logging communication through monitor."""
         log = monitor.log_communication(
             sender="a",
@@ -450,7 +452,7 @@ class TestCompressionEconomyMonitor:
         assert log.tokens == 10
 
     @pytest.mark.asyncio
-    async def test_analyze_pair(self, monitor) -> None:
+    async def test_analyze_pair(self, monitor: CompressionEconomyMonitor) -> None:
         """Test analyzing a single pair."""
         # Log some communications
         for i in range(15):
@@ -467,7 +469,7 @@ class TestCompressionEconomyMonitor:
         assert roi.avg_tokens_per_message == 50.0
 
     @pytest.mark.asyncio
-    async def test_check_all_pairs(self, monitor) -> None:
+    async def test_check_all_pairs(self, monitor: CompressionEconomyMonitor) -> None:
         """Test checking all pairs for opportunities."""
         # Create high-traffic pair
         for i in range(20):
@@ -493,7 +495,7 @@ class TestCompressionEconomyMonitor:
         # At least some opportunities should be returned (if ROI is positive)
         _ = opportunities  # Verify it returns without error
 
-    def test_get_pidgin(self, monitor) -> None:
+    def test_get_pidgin(self, monitor: CompressionEconomyMonitor) -> None:
         """Test retrieving pidgin for pair."""
         # No pidgin initially
         assert monitor.get_pidgin("a", "b") is None
@@ -515,11 +517,11 @@ class TestCompressionEconomyMonitor:
         found = monitor.get_pidgin("b", "a")
         assert found is not None
 
-    def test_callback_registration(self, monitor) -> None:
+    def test_callback_registration(self, monitor: CompressionEconomyMonitor) -> None:
         """Test pidgin availability callback."""
-        received = []
+        received: list[tuple[PidginAvailable, str, str]] = []
 
-        def callback(notification, agent_a, agent_b):
+        def callback(notification: PidginAvailable, agent_a: str, agent_b: str) -> None:
             received.append((notification, agent_a, agent_b))
 
         monitor.on_pidgin_available(callback)
@@ -536,7 +538,7 @@ class TestCompressionEconomyMonitor:
         assert len(received) == 1
         assert received[0][0].pidgin_name == "TestPidgin"
 
-    def test_get_statistics(self, monitor) -> None:
+    def test_get_statistics(self, monitor: CompressionEconomyMonitor) -> None:
         """Test getting overall statistics."""
         # Add some communications
         monitor.log_communication("a", "b", "Test", 10)
@@ -572,12 +574,14 @@ class TestSemanticZipperBudget:
         return CentralBank(max_balance=100000)
 
     @pytest.fixture
-    def monitor(self, bank):
+    def monitor(self, bank: CentralBank) -> CompressionEconomyMonitor:
         """Create a monitor for testing."""
         return CompressionEconomyMonitor(bank=bank)
 
     @pytest.fixture
-    def budget(self, bank, monitor):
+    def budget(
+        self, bank: CentralBank, monitor: CompressionEconomyMonitor
+    ) -> SemanticZipperBudget:
         """Create a SemanticZipperBudget for testing."""
         return SemanticZipperBudget(
             bank=bank,
@@ -585,7 +589,7 @@ class TestSemanticZipperBudget:
             tax_rate=0.20,
         )
 
-    def test_evaluate_no_pidgin(self, budget) -> None:
+    def test_evaluate_no_pidgin(self, budget: SemanticZipperBudget) -> None:
         """Test evaluation when no pidgin exists."""
         cost = Gas(tokens=1000)
         decision = budget.evaluate_communication(
@@ -598,7 +602,9 @@ class TestSemanticZipperBudget:
         assert decision.actual_cost.tokens == 1000
         assert decision.natural_language_tax is None
 
-    def test_evaluate_with_pidgin_using_natural_language(self, budget, monitor) -> None:
+    def test_evaluate_with_pidgin_using_natural_language(
+        self, budget: SemanticZipperBudget, monitor: CompressionEconomyMonitor
+    ) -> None:
         """Test evaluation with pidgin available but not using it."""
         # Add pidgin
         pidgin = PidginMetadata(
@@ -620,10 +626,14 @@ class TestSemanticZipperBudget:
         assert decision.approved
         assert decision.actual_cost.tokens == 1200  # 1000 + 20% tax
         assert decision.natural_language_tax is not None
-        assert decision.natural_language_tax.tokens == 200
+        tax = decision.natural_language_tax
+        assert tax.tokens == 200
+        assert decision.recommendation is not None
         assert "TestPidgin" in decision.recommendation
 
-    def test_evaluate_with_pidgin_using_pidgin(self, budget, monitor) -> None:
+    def test_evaluate_with_pidgin_using_pidgin(
+        self, budget: SemanticZipperBudget, monitor: CompressionEconomyMonitor
+    ) -> None:
         """Test evaluation when using available pidgin."""
         # Add pidgin
         pidgin = PidginMetadata(
@@ -646,7 +656,7 @@ class TestSemanticZipperBudget:
         assert decision.actual_cost.tokens == 1000  # No tax
         assert decision.natural_language_tax is None
 
-    def test_evaluate_insufficient_funds(self, budget) -> None:
+    def test_evaluate_insufficient_funds(self, budget: SemanticZipperBudget) -> None:
         """Test evaluation with insufficient funds."""
         cost = Gas(tokens=200000)  # More than bank balance
         decision = budget.evaluate_communication(
@@ -658,7 +668,9 @@ class TestSemanticZipperBudget:
         assert not decision.approved
         assert "Insufficient" in decision.reason
 
-    def test_evaluate_insufficient_funds_with_tax(self, budget, monitor) -> None:
+    def test_evaluate_insufficient_funds_with_tax(
+        self, budget: SemanticZipperBudget, monitor: CompressionEconomyMonitor
+    ) -> None:
         """Test evaluation with insufficient funds after tax."""
         # Add pidgin
         pidgin = PidginMetadata(
@@ -684,7 +696,7 @@ class TestSemanticZipperBudget:
         assert "tax" in decision.reason.lower()
 
     @pytest.mark.asyncio
-    async def test_metered_communication(self, budget) -> None:
+    async def test_metered_communication(self, budget: SemanticZipperBudget) -> None:
         """Test metered communication execution."""
         receipt = await budget.metered_communication(
             sender="a",
@@ -697,7 +709,9 @@ class TestSemanticZipperBudget:
         assert receipt.gas.tokens > 0
 
     @pytest.mark.asyncio
-    async def test_metered_communication_rejected(self, budget) -> None:
+    async def test_metered_communication_rejected(
+        self, budget: SemanticZipperBudget
+    ) -> None:
         """Test metered communication rejection."""
         budget.bank.bucket.balance = 50  # Low balance
 
@@ -820,7 +834,7 @@ class TestIntegration:
         pidgin.messages_using_pidgin = 1
         pidgin.update_adoption_rate()
         assert pidgin.adoption_rate > 0.0
-        assert pidgin.status == AdoptionStatus.PARTIAL
+        assert pidgin.status == AdoptionStatus.PARTIAL  # type: ignore[comparison-overlap]
 
         # More adoption - should transition to ADOPTED at 80%+
         pidgin.messages_using_pidgin = 20
@@ -941,7 +955,9 @@ class TestEdgeCases:
             natural_language_tax=Gas(tokens=20),
             recommendation="Use pidgin",
         )
-        assert decision.natural_language_tax.tokens == 20
+        tax = decision.natural_language_tax
+        assert tax is not None
+        assert tax.tokens == 20
 
         # Rejected
         decision = BudgetDecision(

@@ -5,8 +5,11 @@ Tests the PersistentRegistry implementation which wraps
 Registry with PersistentAgent for durable storage.
 """
 
+from __future__ import annotations
+
 import tempfile
 from pathlib import Path
+from typing import Iterator
 
 import pytest
 
@@ -23,7 +26,7 @@ from ..types import CatalogEntry, EntityType, Status
 
 
 @pytest.fixture
-def temp_dir():
+def temp_dir() -> Iterator[Path]:
     """Create a temporary directory for test files."""
     with tempfile.TemporaryDirectory() as tmpdir:
         yield Path(tmpdir)
@@ -68,7 +71,7 @@ class TestPersistentRegistryCreation:
     """Tests for PersistentRegistry creation and initialization."""
 
     @pytest.mark.asyncio
-    async def test_create_new_registry(self, temp_dir) -> None:
+    async def test_create_new_registry(self, temp_dir: Path) -> None:
         """Creating a new persistent registry should work."""
         path = temp_dir / "catalog.json"
 
@@ -79,7 +82,9 @@ class TestPersistentRegistryCreation:
         assert registry.catalog.entries == {}
 
     @pytest.mark.asyncio
-    async def test_create_loads_existing(self, temp_dir, sample_entry) -> None:
+    async def test_create_loads_existing(
+        self, temp_dir: Path, sample_entry: CatalogEntry
+    ) -> None:
         """Creating registry should load existing catalog from disk."""
         path = temp_dir / "catalog.json"
 
@@ -96,7 +101,7 @@ class TestPersistentRegistryCreation:
         assert entry.name == "TestAgent"
 
     @pytest.mark.asyncio
-    async def test_create_with_custom_config(self, temp_dir) -> None:
+    async def test_create_with_custom_config(self, temp_dir: Path) -> None:
         """Custom configuration should be respected."""
         path = temp_dir / "catalog.json"
         config = PersistenceConfig(
@@ -110,7 +115,9 @@ class TestPersistentRegistryCreation:
         assert registry.config.max_history == 100
 
     @pytest.mark.asyncio
-    async def test_create_fails_if_missing_and_not_allowed(self, temp_dir) -> None:
+    async def test_create_fails_if_missing_and_not_allowed(
+        self, temp_dir: Path
+    ) -> None:
         """Should fail if catalog doesn't exist and create_if_missing=False."""
         path = temp_dir / "nonexistent.json"
         config = PersistenceConfig(create_if_missing=False)
@@ -123,7 +130,9 @@ class TestPersistentRegistryOperations:
     """Tests for registry operations with persistence."""
 
     @pytest.mark.asyncio
-    async def test_register_auto_saves(self, temp_dir, sample_entry) -> None:
+    async def test_register_auto_saves(
+        self, temp_dir: Path, sample_entry: CatalogEntry
+    ) -> None:
         """Register should auto-save when strategy is ON_WRITE."""
         path = temp_dir / "catalog.json"
         registry = await PersistentRegistry.create(path=path)
@@ -139,7 +148,9 @@ class TestPersistentRegistryOperations:
         assert entry is not None
 
     @pytest.mark.asyncio
-    async def test_register_manual_save(self, temp_dir, sample_entry) -> None:
+    async def test_register_manual_save(
+        self, temp_dir: Path, sample_entry: CatalogEntry
+    ) -> None:
         """Register should NOT auto-save when strategy is MANUAL."""
         path = temp_dir / "catalog.json"
         config = PersistenceConfig(save_strategy=SaveStrategy.MANUAL)
@@ -163,7 +174,9 @@ class TestPersistentRegistryOperations:
         assert entry is not None
 
     @pytest.mark.asyncio
-    async def test_delete_persists(self, temp_dir, sample_entry) -> None:
+    async def test_delete_persists(
+        self, temp_dir: Path, sample_entry: CatalogEntry
+    ) -> None:
         """Delete should persist changes."""
         path = temp_dir / "catalog.json"
         registry = await PersistentRegistry.create(path=path)
@@ -177,7 +190,9 @@ class TestPersistentRegistryOperations:
         assert entry is None
 
     @pytest.mark.asyncio
-    async def test_update_usage_persists(self, temp_dir, sample_entry) -> None:
+    async def test_update_usage_persists(
+        self, temp_dir: Path, sample_entry: CatalogEntry
+    ) -> None:
         """Update usage should persist metrics."""
         path = temp_dir / "catalog.json"
         registry = await PersistentRegistry.create(path=path)
@@ -196,7 +211,9 @@ class TestPersistentRegistryOperations:
         assert entry.last_error == "Test error"
 
     @pytest.mark.asyncio
-    async def test_deprecate_persists(self, temp_dir, sample_entry) -> None:
+    async def test_deprecate_persists(
+        self, temp_dir: Path, sample_entry: CatalogEntry
+    ) -> None:
         """Deprecation should persist."""
         path = temp_dir / "catalog.json"
         registry = await PersistentRegistry.create(path=path)
@@ -212,7 +229,9 @@ class TestPersistentRegistryOperations:
         assert entry.deprecation_reason == "Superseded by v2"
 
     @pytest.mark.asyncio
-    async def test_add_relationship_persists(self, temp_dir, sample_entry) -> None:
+    async def test_add_relationship_persists(
+        self, temp_dir: Path, sample_entry: CatalogEntry
+    ) -> None:
         """Relationships should persist."""
         path = temp_dir / "catalog.json"
         registry = await PersistentRegistry.create(path=path)
@@ -236,6 +255,7 @@ class TestPersistentRegistryOperations:
         # Verify persisted
         registry2 = await PersistentRegistry.create(path=path)
         related = await registry2.find_related("test-agent-001", "depends_on")
+        assert related is not None
         assert len(related) == 1
         assert related[0].id == "test-agent-002"
 
@@ -244,7 +264,9 @@ class TestPersistentRegistryReload:
     """Tests for reload functionality."""
 
     @pytest.mark.asyncio
-    async def test_reload_discards_changes(self, temp_dir, sample_entry) -> None:
+    async def test_reload_discards_changes(
+        self, temp_dir: Path, sample_entry: CatalogEntry
+    ) -> None:
         """Reload should discard in-memory changes."""
         path = temp_dir / "catalog.json"
         config = PersistenceConfig(save_strategy=SaveStrategy.MANUAL)
@@ -275,7 +297,9 @@ class TestCatalogHistory:
     """Tests for catalog history tracking."""
 
     @pytest.mark.asyncio
-    async def test_history_tracks_changes(self, temp_dir, sample_entry) -> None:
+    async def test_history_tracks_changes(
+        self, temp_dir: Path, sample_entry: CatalogEntry
+    ) -> None:
         """Catalog history should track saves."""
         path = temp_dir / "catalog.json"
         registry = await PersistentRegistry.create(path=path)
@@ -313,7 +337,9 @@ class TestCatalogHistory:
         assert len(history[2].entries) == 1  # 1 entry
 
     @pytest.mark.asyncio
-    async def test_history_respects_limit(self, temp_dir, sample_entry) -> None:
+    async def test_history_respects_limit(
+        self, temp_dir: Path, sample_entry: CatalogEntry
+    ) -> None:
         """History should respect limit parameter."""
         path = temp_dir / "catalog.json"
         registry = await PersistentRegistry.create(path=path)
@@ -339,7 +365,7 @@ class TestTonguePersistence:
 
     @pytest.mark.asyncio
     async def test_tongue_metadata_persists(
-        self, temp_dir, sample_tongue_entry
+        self, temp_dir: Path, sample_tongue_entry: CatalogEntry
     ) -> None:
         """Tongue-specific metadata should persist correctly."""
         path = temp_dir / "catalog.json"
@@ -360,7 +386,7 @@ class TestTonguePersistence:
 
     @pytest.mark.asyncio
     async def test_tongue_search_after_reload(
-        self, temp_dir, sample_tongue_entry
+        self, temp_dir: Path, sample_tongue_entry: CatalogEntry
     ) -> None:
         """Search should work correctly after reload."""
         path = temp_dir / "catalog.json"
@@ -372,6 +398,7 @@ class TestTonguePersistence:
         registry2 = await PersistentRegistry.create(path=path)
         results = await registry2.find(query="Calendar", entity_type=EntityType.TONGUE)
 
+        assert results is not None
         assert len(results) >= 1
         assert results[0].entry.id == "test-tongue-001"
 
@@ -380,7 +407,9 @@ class TestConvenienceFunctions:
     """Tests for convenience functions."""
 
     @pytest.mark.asyncio
-    async def test_create_persistent_registry(self, temp_dir, sample_entry) -> None:
+    async def test_create_persistent_registry(
+        self, temp_dir: Path, sample_entry: CatalogEntry
+    ) -> None:
         """create_persistent_registry should work with defaults."""
         path = temp_dir / "catalog.json"
 
@@ -394,8 +423,8 @@ class TestConvenienceFunctions:
 
     @pytest.mark.asyncio
     async def test_create_persistent_registry_no_auto_save(
-        self, temp_dir, sample_entry
-    ):
+        self, temp_dir: Path, sample_entry: CatalogEntry
+    ) -> None:
         """create_persistent_registry with auto_save=False."""
         path = temp_dir / "catalog.json"
 
@@ -404,7 +433,7 @@ class TestConvenienceFunctions:
         assert registry.config.save_strategy == SaveStrategy.MANUAL
 
     @pytest.mark.asyncio
-    async def test_load_or_create_registry_new(self, temp_dir) -> None:
+    async def test_load_or_create_registry_new(self, temp_dir: Path) -> None:
         """load_or_create_registry should create new catalog."""
         path = temp_dir / "catalog.json"
 
@@ -415,7 +444,7 @@ class TestConvenienceFunctions:
 
     @pytest.mark.asyncio
     async def test_load_or_create_registry_existing(
-        self, temp_dir, sample_entry
+        self, temp_dir: Path, sample_entry: CatalogEntry
     ) -> None:
         """load_or_create_registry should load existing catalog."""
         path = temp_dir / "catalog.json"
@@ -434,7 +463,7 @@ class TestEdgeCases:
     """Tests for edge cases and error handling."""
 
     @pytest.mark.asyncio
-    async def test_concurrent_registrations(self, temp_dir) -> None:
+    async def test_concurrent_registrations(self, temp_dir: Path) -> None:
         """Multiple registrations should not corrupt data."""
         path = temp_dir / "catalog.json"
         registry = await PersistentRegistry.create(path=path)
@@ -459,7 +488,7 @@ class TestEdgeCases:
         assert len(registry2.catalog.entries) == 20
 
     @pytest.mark.asyncio
-    async def test_unicode_content(self, temp_dir) -> None:
+    async def test_unicode_content(self, temp_dir: Path) -> None:
         """Unicode content should persist correctly."""
         path = temp_dir / "catalog.json"
         registry = await PersistentRegistry.create(path=path)
@@ -483,7 +512,7 @@ class TestEdgeCases:
         assert "テスト" in loaded.keywords
 
     @pytest.mark.asyncio
-    async def test_empty_fields(self, temp_dir) -> None:
+    async def test_empty_fields(self, temp_dir: Path) -> None:
         """Entries with minimal fields should work."""
         path = temp_dir / "catalog.json"
         registry = await PersistentRegistry.create(path=path)
@@ -504,7 +533,9 @@ class TestEdgeCases:
         assert loaded.contracts_implemented == []
 
     @pytest.mark.asyncio
-    async def test_close_saves_on_exit(self, temp_dir, sample_entry) -> None:
+    async def test_close_saves_on_exit(
+        self, temp_dir: Path, sample_entry: CatalogEntry
+    ) -> None:
         """close() should save when strategy is ON_EXIT."""
         path = temp_dir / "catalog.json"
         config = PersistenceConfig(save_strategy=SaveStrategy.ON_EXIT)
@@ -530,7 +561,9 @@ class TestDGentIntegration:
     """Tests verifying D-gent behavior through L-gent interface."""
 
     @pytest.mark.asyncio
-    async def test_atomic_writes(self, temp_dir, sample_entry) -> None:
+    async def test_atomic_writes(
+        self, temp_dir: Path, sample_entry: CatalogEntry
+    ) -> None:
         """Saves should be atomic (no corruption on partial writes)."""
         path = temp_dir / "catalog.json"
         registry = await PersistentRegistry.create(path=path)
@@ -547,7 +580,9 @@ class TestDGentIntegration:
         assert "test-agent-001" in data["entries"]
 
     @pytest.mark.asyncio
-    async def test_history_file_created(self, temp_dir, sample_entry) -> None:
+    async def test_history_file_created(
+        self, temp_dir: Path, sample_entry: CatalogEntry
+    ) -> None:
         """JSONL history file should be created."""
         path = temp_dir / "catalog.json"
         history_path = path.with_suffix(".json.jsonl")
@@ -559,7 +594,9 @@ class TestDGentIntegration:
         assert history_path.exists()
 
     @pytest.mark.asyncio
-    async def test_parent_directory_created(self, temp_dir, sample_entry) -> None:
+    async def test_parent_directory_created(
+        self, temp_dir: Path, sample_entry: CatalogEntry
+    ) -> None:
         """Parent directories should be created if missing."""
         path = temp_dir / "nested" / "deep" / "catalog.json"
 

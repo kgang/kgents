@@ -4,7 +4,10 @@ Tests for Reflection Parser (Strategy 3.1)
 Tests LLM-based self-repair with reflection loop.
 """
 
+from __future__ import annotations
+
 import json
+from typing import Any, Iterator
 
 from agents.p.core import ParserConfig, ParseResult
 from agents.p.strategies.reflection import (
@@ -20,7 +23,7 @@ from agents.p.strategies.reflection import (
 class SimpleJsonParser:
     """Simple JSON parser for testing reflection."""
 
-    def parse(self, text: str) -> ParseResult[dict]:
+    def parse(self, text: str) -> ParseResult[dict[str, Any]]:
         """Parse JSON, return error on failure."""
         try:
             value = json.loads(text)
@@ -37,7 +40,13 @@ class SimpleJsonParser:
                 strategy="simple-json",
             )
 
-    def configure(self, **config):
+    def parse_stream(
+        self, tokens: Iterator[str]
+    ) -> Iterator[ParseResult[dict[str, Any]]]:
+        """Parse stream (not implemented for testing)."""
+        raise NotImplementedError("Stream parsing not needed for tests")
+
+    def configure(self, **config: Any) -> SimpleJsonParser:
         return self
 
 
@@ -47,7 +56,7 @@ class TestReflectionBasics:
     def test_first_try_success_no_reflection(self) -> None:
         """If base parser succeeds first try, no reflection needed."""
         base = SimpleJsonParser()
-        parser = ReflectionParser(
+        parser: ReflectionParser[dict[str, Any]] = ReflectionParser(
             base_parser=base,
             llm_fix_fn=mock_llm_fix_json,
         )
@@ -63,7 +72,7 @@ class TestReflectionBasics:
     def test_one_reflection_success(self) -> None:
         """If first try fails, reflect and fix."""
         base = SimpleJsonParser()
-        parser = ReflectionParser(
+        parser: ReflectionParser[dict[str, Any]] = ReflectionParser(
             base_parser=base,
             llm_fix_fn=mock_llm_fix_json,
             config=ParserConfig(max_reflection_retries=3),
@@ -98,7 +107,7 @@ class TestReflectionBasics:
                 return '{"key": "value"}'
             return text
 
-        parser = ReflectionParser(
+        parser: ReflectionParser[dict[str, Any]] = ReflectionParser(
             base_parser=base,
             llm_fix_fn=counting_fix,
             config=ParserConfig(max_reflection_retries=3),
@@ -118,7 +127,7 @@ class TestReflectionBasics:
         def bad_fix(text: str, error: str, context: ReflectionContext) -> str:
             return text  # Return unchanged
 
-        parser = ReflectionParser(
+        parser: ReflectionParser[dict[str, Any]] = ReflectionParser(
             base_parser=base,
             llm_fix_fn=bad_fix,
             config=ParserConfig(max_reflection_retries=2),
@@ -127,7 +136,7 @@ class TestReflectionBasics:
         result = parser.parse('{"broken')
 
         assert not result.success
-        assert "failed after" in result.error.lower()
+        assert result.error is not None and "failed after" in result.error.lower()
         assert result.metadata["reflection_attempts"] == 3  # 0, 1, 2 = 3 attempts
         assert len(result.metadata["reflection_errors"]) == 3
 
@@ -138,7 +147,7 @@ class TestReflectionBasics:
         def exploding_fix(text: str, error: str, context: ReflectionContext) -> str:
             raise ValueError("LLM API error")
 
-        parser = ReflectionParser(
+        parser: ReflectionParser[dict[str, Any]] = ReflectionParser(
             base_parser=base,
             llm_fix_fn=exploding_fix,
         )
@@ -146,7 +155,7 @@ class TestReflectionBasics:
         result = parser.parse('{"broken')
 
         assert not result.success
-        assert "llm" in result.error.lower()
+        assert result.error is not None and "llm" in result.error.lower()
 
 
 class TestConfidenceScoring:
@@ -156,7 +165,7 @@ class TestConfidenceScoring:
         """More retries = lower confidence."""
         base = SimpleJsonParser()
 
-        results = []
+        results: list[tuple[int, float]] = []
 
         for retry_count in [0, 1, 2, 3]:
             # Create parser that succeeds after N retries
@@ -168,7 +177,7 @@ class TestConfidenceScoring:
                     return '{"key": "value"}'
                 return text  # Not fixed yet
 
-            parser = ReflectionParser(
+            parser: ReflectionParser[dict[str, Any]] = ReflectionParser(
                 base_parser=base,
                 llm_fix_fn=delayed_fix,
                 config=ParserConfig(max_reflection_retries=5),
@@ -189,7 +198,9 @@ class TestConfidenceScoring:
     def test_zero_retries_high_confidence(self) -> None:
         """Zero retries (first try success) should have high confidence."""
         base = SimpleJsonParser()
-        parser = ReflectionParser(base_parser=base, llm_fix_fn=mock_llm_fix_json)
+        parser: ReflectionParser[dict[str, Any]] = ReflectionParser(
+            base_parser=base, llm_fix_fn=mock_llm_fix_json
+        )
 
         result = parser.parse('{"key": "value"}')
 
@@ -204,7 +215,7 @@ class TestReflectionContext:
         """Reflection context should track all previous errors."""
         base = SimpleJsonParser()
 
-        contexts = []
+        contexts: list[ReflectionContext] = []
 
         def capturing_fix(text: str, error: str, context: ReflectionContext) -> str:
             # Make a copy to avoid mutation
@@ -221,7 +232,7 @@ class TestReflectionContext:
                 return '{"key": "value"}'
             return '{"still broken'  # Still broken for first reflection
 
-        parser = ReflectionParser(
+        parser: ReflectionParser[dict[str, Any]] = ReflectionParser(
             base_parser=base,
             llm_fix_fn=capturing_fix,
             config=ParserConfig(max_reflection_retries=5),
@@ -244,13 +255,13 @@ class TestReflectionContext:
         """Original input should be preserved in context."""
         base = SimpleJsonParser()
 
-        captured_context = []
+        captured_context: list[ReflectionContext] = []
 
         def capturing_fix(text: str, error: str, context: ReflectionContext) -> str:
             captured_context.append(context)
             return '{"key": "value"}'
 
-        parser = ReflectionParser(
+        parser: ReflectionParser[dict[str, Any]] = ReflectionParser(
             base_parser=base,
             llm_fix_fn=capturing_fix,
         )
@@ -289,13 +300,13 @@ class TestHelperFunctions:
         """create_reflection_parser_with_llm should wire up correctly."""
         base = SimpleJsonParser()
 
-        call_log = []
+        call_log: list[str] = []
 
         def mock_llm(prompt: str) -> str:
             call_log.append(prompt)
             return '{"fixed": true}'
 
-        parser = create_reflection_parser_with_llm(
+        parser: ReflectionParser[dict[str, Any]] = create_reflection_parser_with_llm(
             base_parser=base,
             llm_callable=mock_llm,
         )
@@ -347,7 +358,9 @@ class TestConfiguration:
     def test_configure_returns_new_instance(self) -> None:
         """configure() should return new parser instance."""
         base = SimpleJsonParser()
-        parser1 = ReflectionParser(base_parser=base, llm_fix_fn=mock_llm_fix_json)
+        parser1: ReflectionParser[dict[str, Any]] = ReflectionParser(
+            base_parser=base, llm_fix_fn=mock_llm_fix_json
+        )
         parser2 = parser1.configure(max_reflection_retries=5)
 
         assert parser1 is not parser2
@@ -364,7 +377,7 @@ class TestConfiguration:
         def no_fix(text: str, error: str, context: ReflectionContext) -> str:
             return text
 
-        parser = ReflectionParser(
+        parser: ReflectionParser[dict[str, Any]] = ReflectionParser(
             base_parser=base,
             llm_fix_fn=no_fix,
             config=ParserConfig(max_reflection_retries=1),  # Only 1 retry
@@ -394,7 +407,7 @@ class TestRealWorldScenarios:
                 return text + "]}"
             return text
 
-        parser = ReflectionParser(
+        parser: ReflectionParser[dict[str, Any]] = ReflectionParser(
             base_parser=base,
             llm_fix_fn=egent_fixer,
         )
@@ -405,7 +418,7 @@ class TestRealWorldScenarios:
         result = parser.parse(broken_metadata)
 
         assert result.success
-        assert result.value["name"] == "sort_fn"
+        assert result.value is not None and result.value["name"] == "sort_fn"
         assert result.metadata["reflection_fixed"]
 
     def test_multiple_error_cascade(self) -> None:
@@ -424,7 +437,7 @@ class TestRealWorldScenarios:
             # If already balanced, try removing trailing comma
             return text.rstrip(",")
 
-        parser = ReflectionParser(
+        parser: ReflectionParser[dict[str, Any]] = ReflectionParser(
             base_parser=base,
             llm_fix_fn=incremental_fix,
             config=ParserConfig(max_reflection_retries=5),
@@ -434,7 +447,7 @@ class TestRealWorldScenarios:
         result = parser.parse('{"key": "value"')
 
         assert result.success
-        assert result.value["key"] == "value"
+        assert result.value is not None and result.value["key"] == "value"
         # Should succeed via reflection
         assert result.metadata["reflection_fixed"]
 
@@ -444,7 +457,7 @@ class TestRealWorldScenarios:
         User can decide if acceptable.
         """
         base = SimpleJsonParser()
-        parser = ReflectionParser(
+        parser: ReflectionParser[dict[str, Any]] = ReflectionParser(
             base_parser=base,
             llm_fix_fn=mock_llm_fix_json,
         )

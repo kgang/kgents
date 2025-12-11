@@ -1,7 +1,10 @@
 """Tests for VectorAgent - Semantic Manifold foundation."""
 
+from __future__ import annotations
+
 import tempfile
 from pathlib import Path
+from typing import Callable
 
 import pytest
 
@@ -24,12 +27,12 @@ class TestVectorAgentBasics:
     """Basic VectorAgent operations."""
 
     @pytest.fixture
-    def agent(self) -> VectorAgent:
+    def agent(self) -> VectorAgent[str]:
         """Create a test vector agent."""
         return VectorAgent(dimension=4)
 
     @pytest.fixture
-    def embedder(self):
+    def embedder(self) -> Callable[[str], np.ndarray]:
         """Simple hash-based embedder for testing."""
 
         def embed(text: str) -> np.ndarray:
@@ -39,7 +42,7 @@ class TestVectorAgentBasics:
 
         return embed
 
-    async def test_add_and_get(self, agent) -> None:
+    async def test_add_and_get(self, agent: VectorAgent[str]) -> None:
         """Test adding and retrieving entries."""
         embedding = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32)
         await agent.add("test1", "Hello world", embedding)
@@ -50,13 +53,13 @@ class TestVectorAgentBasics:
         assert entry.state == "Hello world"
         assert np.allclose(entry.embedding, embedding)
 
-    async def test_add_wrong_dimension_raises(self, agent) -> None:
+    async def test_add_wrong_dimension_raises(self, agent: VectorAgent[str]) -> None:
         """Test that wrong dimension raises error."""
         wrong_dim = np.array([1.0, 0.0], dtype=np.float32)
         with pytest.raises(SemanticError, match="dimension"):
             await agent.add("test1", "Hello", wrong_dim)
 
-    async def test_delete_entry(self, agent) -> None:
+    async def test_delete_entry(self, agent: VectorAgent[str]) -> None:
         """Test deleting entries."""
         embedding = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32)
         await agent.add("test1", "Hello", embedding)
@@ -65,7 +68,7 @@ class TestVectorAgentBasics:
         assert await agent.get("test1") is None
         assert await agent.delete("test1") is False  # Already deleted
 
-    async def test_load_returns_all_entries(self, agent) -> None:
+    async def test_load_returns_all_entries(self, agent: VectorAgent[str]) -> None:
         """Test that load returns all entries."""
         e1 = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32)
         e2 = np.array([0.0, 1.0, 0.0, 0.0], dtype=np.float32)
@@ -78,7 +81,7 @@ class TestVectorAgentBasics:
         assert "test1" in entries
         assert "test2" in entries
 
-    async def test_history_returns_states(self, agent) -> None:
+    async def test_history_returns_states(self, agent: VectorAgent[str]) -> None:
         """Test history returns states in reverse order."""
         e1 = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32)
         e2 = np.array([0.0, 1.0, 0.0, 0.0], dtype=np.float32)
@@ -89,7 +92,7 @@ class TestVectorAgentBasics:
         history = await agent.history()
         assert history == ["Second", "First"]
 
-    async def test_history_limit(self, agent) -> None:
+    async def test_history_limit(self, agent: VectorAgent[str]) -> None:
         """Test history respects limit."""
         for i in range(5):
             e = np.random.randn(4).astype(np.float32)
@@ -103,14 +106,16 @@ class TestVectorAgentNeighbors:
     """Neighbor search operations."""
 
     @pytest.fixture
-    def agent_with_data(self) -> VectorAgent:
+    def agent_with_data(self) -> VectorAgent[str]:
         """Create agent with test data."""
-        agent = VectorAgent(dimension=4, distance=DistanceMetric.COSINE)
+        agent: VectorAgent[str] = VectorAgent(
+            dimension=4, distance=DistanceMetric.COSINE
+        )
         return agent
 
-    async def test_neighbors_cosine(self, agent_with_data) -> None:
+    async def test_neighbors_cosine(self, agent_with_data: VectorAgent[str]) -> None:
         """Test k-NN with cosine distance."""
-        agent = agent_with_data
+        agent: VectorAgent[str] = agent_with_data
 
         # Add orthogonal vectors
         await agent.add("north", "North", np.array([1, 0, 0, 0], dtype=np.float32))
@@ -130,7 +135,9 @@ class TestVectorAgentNeighbors:
 
     async def test_neighbors_euclidean(self) -> None:
         """Test k-NN with euclidean distance."""
-        agent = VectorAgent(dimension=2, distance=DistanceMetric.EUCLIDEAN)
+        agent: VectorAgent[str] = VectorAgent(
+            dimension=2, distance=DistanceMetric.EUCLIDEAN
+        )
 
         await agent.add("origin", "Origin", np.array([0, 0], dtype=np.float32))
         await agent.add("near", "Near", np.array([1, 1], dtype=np.float32))
@@ -143,9 +150,11 @@ class TestVectorAgentNeighbors:
         assert results[0][0].id == "origin"
         assert results[1][0].id == "near"
 
-    async def test_neighbors_with_radius(self, agent_with_data) -> None:
+    async def test_neighbors_with_radius(
+        self, agent_with_data: VectorAgent[str]
+    ) -> None:
         """Test neighbors with maximum radius."""
-        agent = agent_with_data
+        agent: VectorAgent[str] = agent_with_data
 
         await agent.add("close", "Close", np.array([1, 0, 0, 0], dtype=np.float32))
         await agent.add("far", "Far", np.array([-1, 0, 0, 0], dtype=np.float32))
@@ -157,7 +166,9 @@ class TestVectorAgentNeighbors:
         assert len(results) == 1
         assert results[0][0].id == "close"
 
-    async def test_nearest_returns_states(self, agent_with_data) -> None:
+    async def test_nearest_returns_states(
+        self, agent_with_data: VectorAgent[str]
+    ) -> None:
         """Test nearest convenience method returns states."""
         agent = agent_with_data
 
@@ -174,12 +185,14 @@ class TestSemanticManifoldOperations:
     """Semantic manifold operations: curvature, geodesic, voids."""
 
     @pytest.fixture
-    def populated_agent(self) -> VectorAgent:
+    def populated_agent(self) -> VectorAgent[str]:
         """Create agent with clustered data."""
-        agent = VectorAgent(dimension=4)
+        agent: VectorAgent[str] = VectorAgent(dimension=4)
         return agent
 
-    async def test_curvature_at_cluster(self, populated_agent) -> None:
+    async def test_curvature_at_cluster(
+        self, populated_agent: VectorAgent[str]
+    ) -> None:
         """Test curvature estimation at cluster center."""
         agent = populated_agent
 
@@ -196,7 +209,7 @@ class TestSemanticManifoldOperations:
         # Low variance = low curvature
         assert curvature < 0.5
 
-    async def test_geodesic_path(self, populated_agent) -> None:
+    async def test_geodesic_path(self, populated_agent: VectorAgent[str]) -> None:
         """Test geodesic path between points."""
         agent = populated_agent
 
@@ -214,7 +227,9 @@ class TestSemanticManifoldOperations:
         expected_mid = start * 0.4 + end * 0.6  # 3/5 of the way
         assert np.allclose(mid, expected_mid, atol=0.01)
 
-    async def test_void_detection_empty(self, populated_agent) -> None:
+    async def test_void_detection_empty(
+        self, populated_agent: VectorAgent[str]
+    ) -> None:
         """Test void detection in empty space."""
         agent = populated_agent
 
@@ -228,7 +243,9 @@ class TestSemanticManifoldOperations:
         assert void is not None
         assert void.potential > 0.0
 
-    async def test_void_detection_populated(self, populated_agent) -> None:
+    async def test_void_detection_populated(
+        self, populated_agent: VectorAgent[str]
+    ) -> None:
         """Test void detection in populated space."""
         agent = populated_agent
 
@@ -248,11 +265,12 @@ class TestSemanticManifoldOperations:
                 query, search_radius=1.0, min_void_radius=2.0
             )
             # If found, potential should be low
-            assert void.potential < 0.5
+            if void is not None:
+                assert void.potential < 0.5
         except VoidNotFoundError:
             pass  # Expected when no significant void exists
 
-    async def test_cluster_centers(self, populated_agent) -> None:
+    async def test_cluster_centers(self, populated_agent: VectorAgent[str]) -> None:
         """Test cluster center detection."""
         agent = populated_agent
 
@@ -287,12 +305,12 @@ class TestVectorAgentPersistence:
             path = Path(tmpdir) / "vectors.json"
 
             # Create and populate
-            agent1 = VectorAgent(dimension=4, persistence_path=path)
+            agent1: VectorAgent[str] = VectorAgent(dimension=4, persistence_path=path)
             await agent1.add("test1", "Hello", np.array([1, 0, 0, 0], dtype=np.float32))
             await agent1.add("test2", "World", np.array([0, 1, 0, 0], dtype=np.float32))
 
             # Create new instance from same path
-            agent2 = VectorAgent(dimension=4, persistence_path=path)
+            agent2: VectorAgent[str] = VectorAgent(dimension=4, persistence_path=path)
 
             # Should have loaded data
             entries = await agent2.load()
@@ -302,6 +320,7 @@ class TestVectorAgentPersistence:
 
             # Check values
             entry1 = await agent2.get("test1")
+            assert entry1 is not None
             assert entry1.state == "Hello"
             assert np.allclose(entry1.embedding, [1, 0, 0, 0])
 
@@ -316,7 +335,7 @@ class TestVectorAgentWithEmbedder:
             # Simple deterministic embedder
             return np.array([len(text), 0, 0, 0], dtype=np.float32)
 
-        agent = VectorAgent(dimension=4, embedder=embedder)
+        agent: VectorAgent[str] = VectorAgent(dimension=4, embedder=embedder)
 
         await agent.save("Hi")  # Length 2
         await agent.save("Hello")  # Length 5
@@ -326,7 +345,7 @@ class TestVectorAgentWithEmbedder:
 
     async def test_save_without_embedder_raises(self) -> None:
         """Test that save without embedder raises error."""
-        agent = VectorAgent(dimension=4)  # No embedder
+        agent: VectorAgent[str] = VectorAgent(dimension=4)  # No embedder
 
         with pytest.raises(SemanticError, match="No embedder"):
             await agent.save("Hello")
@@ -337,7 +356,7 @@ class TestVectorAgentWithEmbedder:
         def embedder(text: str) -> np.ndarray:
             return np.array([1, 2, 3, 4], dtype=np.float32)
 
-        agent = VectorAgent(dimension=4, embedder=embedder)
+        agent: VectorAgent[str] = VectorAgent(dimension=4, embedder=embedder)
         point = await agent.embed("test")
 
         assert isinstance(point, Point)

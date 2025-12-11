@@ -11,7 +11,10 @@ Philosophy:
     Collect stones (Historian). Cast shadows (Bard).
 """
 
+from __future__ import annotations
+
 from datetime import datetime, timezone
+from typing import Any
 
 import pytest
 
@@ -61,8 +64,8 @@ def create_test_trace(
     agent_genus: str = "P",
     action: str = "INVOKE",
     parent_id: str | None = None,
-    inputs: dict | None = None,
-    outputs: dict | None = None,
+    inputs: dict[str, Any] | None = None,
+    outputs: dict[str, Any] | None = None,
     gas_consumed: int = 100,
     duration_ms: int = 50,
 ) -> SemanticTrace:
@@ -90,19 +93,19 @@ def create_test_trace(
 
 
 @pytest.fixture
-def crystal_store():
+def crystal_store() -> MemoryCrystalStore:
     """Create a memory crystal store."""
     return MemoryCrystalStore()
 
 
 @pytest.fixture
-def historian(crystal_store):
+def historian(crystal_store: MemoryCrystalStore) -> Historian:
     """Create a Historian."""
     return Historian(crystal_store)
 
 
 @pytest.fixture
-def sample_traces():
+def sample_traces() -> list[SemanticTrace]:
     """Create sample traces for testing."""
     return [
         create_test_trace(
@@ -133,13 +136,13 @@ def sample_traces():
 
 
 @pytest.fixture
-def holographic_memory():
+def holographic_memory() -> HolographicMemory[Any]:
     """Create a HolographicMemory instance."""
     return HolographicMemory()
 
 
 @pytest.fixture
-def persona_seed():
+def persona_seed() -> PersonaSeed:
     """Create a PersonaSeed for K-gent tests."""
     return PersonaSeed(
         name="Test Persona",
@@ -147,7 +150,7 @@ def persona_seed():
 
 
 @pytest.fixture
-def mock_llm_provider():
+def mock_llm_provider() -> SimpleLLMProvider:
     """Create a mock LLM provider for Bard tests."""
     # SimpleLLMProvider takes: response (optional str)
     provider = SimpleLLMProvider(response="Generated narrative for test traces...")
@@ -162,7 +165,9 @@ def mock_llm_provider():
 class TestNarrativeMemoryIntegration:
     """N × M: Narrative crystals persist in holographic memory."""
 
-    def test_historian_stores_trace(self, historian, sample_traces) -> None:
+    def test_historian_stores_trace(
+        self, historian: Historian, sample_traces: list[SemanticTrace]
+    ) -> None:
         """Test Historian stores traces."""
         for trace in sample_traces:
             historian.store.store(trace)
@@ -173,8 +178,10 @@ class TestNarrativeMemoryIntegration:
 
     @pytest.mark.asyncio
     async def test_trace_encodes_to_memory_pattern(
-        self, holographic_memory, sample_traces
-    ):
+        self,
+        holographic_memory: HolographicMemory[Any],
+        sample_traces: list[SemanticTrace],
+    ) -> None:
         """Test trace can be encoded as memory pattern."""
         trace = sample_traces[0]
 
@@ -198,7 +205,9 @@ class TestNarrativeMemoryIntegration:
         stats = holographic_memory.stats()
         assert stats.get("total_patterns", 0) >= 1
 
-    def test_crystal_store_query_by_genus(self, crystal_store, sample_traces) -> None:
+    def test_crystal_store_query_by_genus(
+        self, crystal_store: MemoryCrystalStore, sample_traces: list[SemanticTrace]
+    ) -> None:
         """Test querying crystals by genus."""
         for trace in sample_traces:
             crystal_store.store(trace)
@@ -209,18 +218,26 @@ class TestNarrativeMemoryIntegration:
         assert len(p_traces) == 2  # Two P-gent traces
         assert len(j_traces) == 1  # One J-gent trace
 
-    def test_crystal_lineage_preserved(self, crystal_store, sample_traces) -> None:
+    def test_crystal_lineage_preserved(
+        self, crystal_store: MemoryCrystalStore, sample_traces: list[SemanticTrace]
+    ) -> None:
         """Test trace lineage is preserved."""
         for trace in sample_traces:
             crystal_store.store(trace)
 
         child = crystal_store.get("trace-003")
+        assert child is not None
         assert child.parent_id == "trace-002"
 
-        parent = crystal_store.get(child.parent_id)
+        parent_id = child.parent_id
+        assert parent_id is not None
+        parent = crystal_store.get(parent_id)
+        assert parent is not None
         assert parent.parent_id == "trace-001"
 
-    def test_resonant_crystal_store_concept(self, crystal_store, sample_traces) -> None:
+    def test_resonant_crystal_store_concept(
+        self, crystal_store: MemoryCrystalStore, sample_traces: list[SemanticTrace]
+    ) -> None:
         """Test ResonantCrystalStore integrates with M-gent (conceptual)."""
         # Store traces
         for trace in sample_traces:
@@ -229,7 +246,7 @@ class TestNarrativeMemoryIntegration:
         # ResonantCrystalStore would add holographic resonance
         # This tests the interface compatibility
         class MockMemoryBridge:
-            def __init__(self, memory: HolographicMemory):
+            def __init__(self, memory: HolographicMemory[str]) -> None:
                 self.memory = memory
 
             def resonate(self, trace: SemanticTrace) -> float:
@@ -237,15 +254,17 @@ class TestNarrativeMemoryIntegration:
                 # In real implementation, would use embeddings
                 return 0.8
 
-        bridge = MockMemoryBridge(HolographicMemory())
+        bridge = MockMemoryBridge(HolographicMemory[str]())
         score = bridge.resonate(sample_traces[0])
         assert 0.0 <= score <= 1.0
 
-    def test_tiered_memory_with_crystals(self, sample_traces) -> None:
+    def test_tiered_memory_with_crystals(
+        self, sample_traces: list[SemanticTrace]
+    ) -> None:
         """Test TieredMemory hierarchy with crystal content."""
         from agents.m import TieredMemory
 
-        tiered = TieredMemory()
+        tiered: TieredMemory[SemanticTrace] = TieredMemory()
 
         # TieredMemory uses perceive() for sensory tier
         # and attend() to move to working memory
@@ -270,18 +289,18 @@ class TestNarrativeMemoryIntegration:
 class TestNarrativePersonaIntegration:
     """N × K: Narrative includes K-gent persona."""
 
-    def test_persona_seed_creation(self, persona_seed) -> None:
+    def test_persona_seed_creation(self, persona_seed: PersonaSeed) -> None:
         """Test PersonaSeed creates successfully."""
         assert persona_seed.name == "Test Persona"
         assert "preferences" in dir(persona_seed)
 
-    def test_persona_state_from_seed(self, persona_seed) -> None:
+    def test_persona_state_from_seed(self, persona_seed: PersonaSeed) -> None:
         """Test PersonaState from seed."""
         state = PersonaState(seed=persona_seed)
 
         assert state.seed.name == "Test Persona"
 
-    def test_persona_in_narrative_genre(self, persona_seed) -> None:
+    def test_persona_in_narrative_genre(self, persona_seed: PersonaSeed) -> None:
         """Test persona influences narrative genre."""
         state = PersonaState(seed=persona_seed)
 
@@ -291,7 +310,7 @@ class TestNarrativePersonaIntegration:
         assert state.seed.name == "Test Persona"
         assert preferred_genre == NarrativeGenre.TECHNICAL
 
-    def test_persona_verbosity_preference(self, persona_seed) -> None:
+    def test_persona_verbosity_preference(self, persona_seed: PersonaSeed) -> None:
         """Test persona verbosity maps to Bard verbosity."""
         state = PersonaState(seed=persona_seed)
 
@@ -318,7 +337,7 @@ class TestNarrativePersonaIntegration:
             Verbosity.VERBOSE,
         )
 
-    def test_dialogue_mode_affects_narrative(self, persona_seed) -> None:
+    def test_dialogue_mode_affects_narrative(self, persona_seed: PersonaSeed) -> None:
         """Test dialogue mode influences narrative style."""
         # Different dialogue modes
         modes = [
@@ -332,7 +351,7 @@ class TestNarrativePersonaIntegration:
             # Mode would influence how Bard tells the story
             assert mode.value in ["reflect", "advise", "challenge", "explore"]
 
-    def test_persona_constraints_in_narration(self, persona_seed) -> None:
+    def test_persona_constraints_in_narration(self, persona_seed: PersonaSeed) -> None:
         """Test persona constraints affect narration."""
         state = PersonaState(seed=persona_seed)
 
@@ -351,7 +370,7 @@ class TestNarrativePersonaIntegration:
             assert len(hedging_phrases) > 0
 
     def test_chronicle_with_persona_perspective(
-        self, sample_traces, persona_seed
+        self, sample_traces: list[SemanticTrace], persona_seed: PersonaSeed
     ) -> None:
         """Test Chronicle can include persona perspective."""
         # Build chronicle
@@ -389,7 +408,7 @@ class TestNarrativePersonaIntegration:
 class TestNarrativeObservationIntegration:
     """N × O: Narrative records observations."""
 
-    def test_observation_creates_trace(self, historian) -> None:
+    def test_observation_creates_trace(self, historian: Historian) -> None:
         """Test O-gent observation creates N-gent trace."""
         # Simulate observation data
         observation = ObservationResult(
@@ -424,9 +443,10 @@ class TestNarrativeObservationIntegration:
 
         assert retrieved is not None
         assert retrieved.agent_genus == "O"
+        assert retrieved.outputs is not None
         assert retrieved.outputs["duration_ms"] == 42.5
 
-    def test_panopticon_status_to_chronicle(self, historian) -> None:
+    def test_panopticon_status_to_chronicle(self, historian: Historian) -> None:
         """Test Panopticon status converts to chronicle entry."""
         # Simulate Panopticon status
         status_data = {
@@ -452,7 +472,7 @@ class TestNarrativeObservationIntegration:
         status_traces = list(historian.store.query(agent_id="panopticon"))
         assert len(status_traces) >= 1
 
-    def test_observation_hierarchy_in_narrative(self, historian) -> None:
+    def test_observation_hierarchy_in_narrative(self, historian: Historian) -> None:
         """Test observation hierarchy (telemetry → semantic → axiological)."""
         # Telemetry observation
         telemetry_trace = create_test_trace(
@@ -488,8 +508,13 @@ class TestNarrativeObservationIntegration:
 
         # Verify hierarchy
         axiological = historian.store.get("obs-axiological-001")
+        assert axiological is not None
+        assert axiological.parent_id is not None
         semantic = historian.store.get(axiological.parent_id)
+        assert semantic is not None
+        assert semantic.parent_id is not None
         telemetry = historian.store.get(semantic.parent_id)
+        assert telemetry is not None
 
         assert telemetry.trace_id == "obs-telemetry-001"
         assert semantic.trace_id == "obs-semantic-001"
@@ -506,11 +531,11 @@ class TestNarrativeStackFullIntegration:
     @pytest.mark.asyncio
     async def test_trace_to_memory_to_narrative(
         self,
-        historian,
-        holographic_memory,
-        mock_llm_provider,
-        sample_traces,
-    ):
+        historian: Historian,
+        holographic_memory: HolographicMemory[Any],
+        mock_llm_provider: SimpleLLMProvider,
+        sample_traces: list[SemanticTrace],
+    ) -> None:
         """Test trace → M-gent memory → N-gent narrative."""
         # 1. Store traces via Historian
         for trace in sample_traces:
@@ -547,7 +572,9 @@ class TestNarrativeStackFullIntegration:
         assert request.traces == sample_traces
         assert request.genre == NarrativeGenre.TECHNICAL
 
-    def test_observation_to_crystal_to_bard(self, historian, mock_llm_provider) -> None:
+    def test_observation_to_crystal_to_bard(
+        self, historian: Historian, mock_llm_provider: SimpleLLMProvider
+    ) -> None:
         """Test O-gent observation → N-gent crystal → Bard narrative."""
         # 1. Simulate observation
         obs_trace = create_test_trace(
@@ -584,10 +611,10 @@ class TestNarrativeStackFullIntegration:
 
     def test_persona_filtered_observation_narrative(
         self,
-        historian,
-        persona_seed,
-        mock_llm_provider,
-    ):
+        historian: Historian,
+        persona_seed: PersonaSeed,
+        mock_llm_provider: SimpleLLMProvider,
+    ) -> None:
         """Test persona filters observations for narrative."""
         # 1. Store various observations
         traces = [
@@ -630,7 +657,9 @@ class TestNarrativeStackFullIntegration:
         assert len(request.traces) == 1
         assert request.traces[0].inputs["level"] == "semantic"
 
-    def test_multi_agent_chronicle_with_o_gent(self, historian, sample_traces) -> None:
+    def test_multi_agent_chronicle_with_o_gent(
+        self, historian: Historian, sample_traces: list[SemanticTrace]
+    ) -> None:
         """Test Chronicle weaves O-gent observations with other agents."""
         # Store original traces
         for trace in sample_traces:

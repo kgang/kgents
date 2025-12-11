@@ -13,6 +13,8 @@ Philosophy:
     Economics provides metabolic control over computation.
 """
 
+from __future__ import annotations
+
 import pytest
 
 # B-gent imports
@@ -56,6 +58,7 @@ from agents.b import (
 
 # G-gent imports
 from agents.g import (
+    Tongue,
     create_schema_tongue,
 )
 
@@ -87,33 +90,33 @@ from agents.m import (
 
 
 @pytest.fixture
-def central_bank():
+def central_bank() -> CentralBank:
     """Create a CentralBank with initial tokens."""
     # CentralBank uses max_balance (not initial_tokens)
     return CentralBank(max_balance=1000, refill_rate=10.0)
 
 
 @pytest.fixture
-def entropy_budget():
+def entropy_budget() -> EntropyBudget:
     """Create an EntropyBudget."""
     # EntropyBudget uses initial/remaining (not max_depth/tokens_per_level)
     return EntropyBudget(initial=1.0, remaining=1.0)
 
 
 @pytest.fixture
-def value_ledger():
+def value_ledger() -> ValueLedger:
     """Create a ValueLedger."""
     return ValueLedger()
 
 
 @pytest.fixture
-def voi_ledger():
+def voi_ledger() -> VoILedger:
     """Create a VoI Ledger."""
     return VoILedger()
 
 
 @pytest.fixture
-def sample_tongue():
+def sample_tongue() -> Tongue:
     """Create a sample Tongue for testing."""
     # create_schema_tongue uses: name, domain, grammar, version
     return create_schema_tongue(
@@ -124,7 +127,7 @@ def sample_tongue():
 
 
 @pytest.fixture
-def semantic_registry():
+def semantic_registry() -> SemanticRegistry:
     """Create a SemanticRegistry for L-gent tests."""
     return SemanticRegistry()
 
@@ -195,7 +198,7 @@ class TestEconomicsGrammarIntegration:
         # Higher complexity = more explanation needed
         assert pressure.explanation_ratio > 0
 
-    def test_grammar_insurance_policy(self, sample_tongue) -> None:
+    def test_grammar_insurance_policy(self, sample_tongue: Tongue) -> None:
         """Test grammar insurance protects against parse failures."""
         insurance = GrammarInsurance()
 
@@ -247,13 +250,13 @@ class TestEconomicsGrammarIntegration:
 class TestEconomicsJITIntegration:
     """B × J: JIT compilation with budget constraints."""
 
-    def test_entropy_budget_creation(self, entropy_budget) -> None:
+    def test_entropy_budget_creation(self, entropy_budget: EntropyBudget) -> None:
         """Test EntropyBudget tracks remaining entropy."""
         # EntropyBudget uses initial/remaining (not max_depth/tokens_per_level)
         assert entropy_budget.initial == 1.0
         assert entropy_budget.remaining == 1.0
 
-    def test_entropy_budget_consumption(self, entropy_budget) -> None:
+    def test_entropy_budget_consumption(self, entropy_budget: EntropyBudget) -> None:
         """Test EntropyBudget consume/afford functionality."""
         assert entropy_budget.can_afford(0.5)
         new_budget = entropy_budget.consume(0.5)
@@ -278,7 +281,7 @@ class TestEconomicsJITIntegration:
             assert reality.value in ["deterministic", "probabilistic", "chaotic"]
 
     @pytest.mark.asyncio
-    async def test_central_bank_authorize(self, central_bank) -> None:
+    async def test_central_bank_authorize(self, central_bank: CentralBank) -> None:
         """Test central bank token authorization."""
         # CentralBank.authorize is async and takes account_id + estimated_tokens
         lease = await central_bank.authorize("test-account", 50)
@@ -349,12 +352,12 @@ class TestEconomicsMemoryIntegration:
 class TestEconomicsObservationIntegration:
     """B × O: Observations subject to VoI economics."""
 
-    def test_voi_ledger_creation(self, voi_ledger) -> None:
+    def test_voi_ledger_creation(self, voi_ledger: VoILedger) -> None:
         """Test VoI ledger creates successfully."""
         assert voi_ledger is not None
         assert isinstance(voi_ledger, VoILedger)
 
-    def test_voi_ledger_records_observation(self, voi_ledger) -> None:
+    def test_voi_ledger_records_observation(self, voi_ledger: VoILedger) -> None:
         """Test VoI ledger records observation costs."""
         finding = ObservationFinding(
             type=FindingType.HEALTH_CONFIRMED,
@@ -364,7 +367,7 @@ class TestEconomicsObservationIntegration:
         receipt = voi_ledger.log_observation(
             observer_id="test-observer",
             target_id="test-target",
-            gas_consumed=Gas(10.0),
+            gas_consumed=Gas(10),
             finding=finding,
             depth=ObservationDepth.TELEMETRY_ONLY,
         )
@@ -372,14 +375,16 @@ class TestEconomicsObservationIntegration:
         assert receipt is not None
         assert receipt.voi >= 0
 
-    def test_voi_optimizer_creation(self, voi_ledger) -> None:
+    def test_voi_optimizer_creation(
+        self, value_ledger: ValueLedger, voi_ledger: VoILedger
+    ) -> None:
         """Test VoI optimizer creates successfully."""
-        optimizer = create_voi_optimizer(voi_ledger)
+        optimizer = create_voi_optimizer(value_ledger, voi_ledger)
 
         assert optimizer is not None
         assert isinstance(optimizer, VoIOptimizer)
 
-    def test_voi_anomaly_detection_value(self, voi_ledger) -> None:
+    def test_voi_anomaly_detection_value(self, voi_ledger: VoILedger) -> None:
         """Test anomaly detection has high VoI."""
         finding = ObservationFinding(
             type=FindingType.ANOMALY_DETECTED,
@@ -390,7 +395,7 @@ class TestEconomicsObservationIntegration:
         receipt = voi_ledger.log_observation(
             observer_id="test-observer",
             target_id="test-target",
-            gas_consumed=Gas(50.0),
+            gas_consumed=Gas(50),
             finding=finding,
             depth=ObservationDepth.SEMANTIC_FULL,
         )
@@ -398,7 +403,7 @@ class TestEconomicsObservationIntegration:
         # Anomalies should have positive VoI
         assert receipt.voi > 0
 
-    def test_epistemic_capital_accumulates(self, voi_ledger) -> None:
+    def test_epistemic_capital_accumulates(self, voi_ledger: VoILedger) -> None:
         """Test epistemic capital accumulates across observations."""
         # Multiple observations
         for i in range(5):
@@ -409,7 +414,7 @@ class TestEconomicsObservationIntegration:
             voi_ledger.log_observation(
                 observer_id="test-observer",
                 target_id=f"target-{i}",
-                gas_consumed=Gas(10.0),
+                gas_consumed=Gas(10),
                 finding=finding,
             )
 
@@ -418,11 +423,13 @@ class TestEconomicsObservationIntegration:
         assert capital.observations == 5
         assert capital.confirmations == 5
 
-    def test_unified_accounting_creation(self, voi_ledger) -> None:
+    def test_unified_accounting_creation(
+        self, voi_ledger: VoILedger, value_ledger: ValueLedger
+    ) -> None:
         """Test unified accounting combines token and VoI economics."""
         # create_unified_accounting uses: value_ledger, voi_ledger
         accounting = create_unified_accounting(
-            value_ledger=ValueLedger(),
+            value_ledger=value_ledger,
             voi_ledger=voi_ledger,
         )
 
@@ -438,7 +445,9 @@ class TestEconomicsCatalogIntegration:
     """B × L: Catalog operations have economic implications."""
 
     @pytest.mark.asyncio
-    async def test_catalog_registration(self, semantic_registry) -> None:
+    async def test_catalog_registration(
+        self, semantic_registry: SemanticRegistry
+    ) -> None:
         """Test registering items in catalog."""
         # CatalogEntry needs: id, entity_type, name, version, description
         entry = CatalogEntry(
@@ -458,7 +467,7 @@ class TestEconomicsCatalogIntegration:
         assert result is not None
         assert result.name == "Test Entry"
 
-    def test_roc_monitor_for_catalog_items(self, value_ledger) -> None:
+    def test_roc_monitor_for_catalog_items(self, value_ledger: ValueLedger) -> None:
         """Test RoC monitor tracks catalog item value."""
         # RoCMonitor takes ledger (not thresholds)
         # RoCThresholds uses: bankruptcy, break_even, healthy (not warning/critical)
@@ -519,7 +528,7 @@ class TestEconomicsStackFullIntegration:
         assert gas.cost_usd >= 0
         assert level is not None
 
-    def test_observation_economics_flow(self, voi_ledger) -> None:
+    def test_observation_economics_flow(self, voi_ledger: VoILedger) -> None:
         """Test O-gent observation with B-gent economics."""
         # 1. Record multiple observations
         for i in range(3):
@@ -530,7 +539,7 @@ class TestEconomicsStackFullIntegration:
             voi_ledger.log_observation(
                 observer_id="test-observer",
                 target_id=f"target-{i}",
-                gas_consumed=Gas(10.0),
+                gas_consumed=Gas(10),
                 finding=finding,
                 depth=ObservationDepth.TELEMETRY_ONLY,
             )

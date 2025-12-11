@@ -10,6 +10,8 @@ Tests cover:
 - Panopticon dashboard
 """
 
+from __future__ import annotations
+
 import asyncio
 from dataclasses import dataclass
 from typing import Any
@@ -175,7 +177,7 @@ class TestObserverFunctor:
     @pytest.mark.asyncio
     async def test_functor_lift_preserves_behavior(self) -> None:
         """Test that lifted agent behaves identically to original."""
-        agent = MockAgent(result="hello world")
+        agent: MockAgent = MockAgent(result="hello world")
         observer = create_observer()
         functor = create_functor(observer)
 
@@ -190,7 +192,7 @@ class TestObserverFunctor:
     @pytest.mark.asyncio
     async def test_functor_records_observations(self) -> None:
         """Test that functor records observations."""
-        agent = MockAgent(result="test result")
+        agent: MockAgent = MockAgent(result="test result")
         observer = create_observer()
         functor = create_functor(observer)
 
@@ -206,7 +208,7 @@ class TestObserverFunctor:
     @pytest.mark.asyncio
     async def test_functor_records_entropy_on_error(self) -> None:
         """Test that functor records entropy on exceptions."""
-        agent = MockAgent(should_fail=True)
+        agent: MockAgent = MockAgent(should_fail=True)
         observer = create_observer()
         functor = create_functor(observer)
 
@@ -220,7 +222,7 @@ class TestObserverFunctor:
 
     def test_observe_convenience_function(self) -> None:
         """Test the observe() convenience function."""
-        agent = MockAgent()
+        agent: MockAgent = MockAgent()
         wrapped = observe(agent)
 
         assert isinstance(wrapped, ProprioceptiveWrapper)
@@ -287,7 +289,7 @@ class TestCompositeObserver:
         child2 = create_observer("child2")
 
         composite = create_composite(child1, child2)
-        agent = MockAgent()
+        agent: MockAgent = MockAgent()
 
         ctx = composite.pre_invoke(agent, "input")
 
@@ -367,7 +369,7 @@ class TestTelemetryObserver:
     async def test_telemetry_records_latency(self) -> None:
         """Test that telemetry records latency."""
         observer = create_telemetry_observer()
-        agent = MockAgent(delay_ms=50)
+        agent: MockAgent = MockAgent(delay_ms=50)
 
         ctx = observer.pre_invoke(agent, "input")
         await asyncio.sleep(0.06)  # Simulate delay
@@ -383,7 +385,7 @@ class TestTelemetryObserver:
     async def test_telemetry_counts_invocations(self) -> None:
         """Test that telemetry counts invocations."""
         observer = create_telemetry_observer()
-        agent = MockAgent()
+        agent: MockAgent = MockAgent()
 
         ctx = observer.pre_invoke(agent, "input")
         await observer.post_invoke(ctx, "result", 10.0)
@@ -396,7 +398,7 @@ class TestTelemetryObserver:
     def test_telemetry_tracks_errors(self) -> None:
         """Test that telemetry tracks errors."""
         observer = create_telemetry_observer()
-        agent = MockAgent()
+        agent: MockAgent = MockAgent()
 
         ctx = observer.pre_invoke(agent, "input")
         observer.record_entropy(ctx, ValueError("test error"))
@@ -505,9 +507,9 @@ class TestDriftDetection:
     @pytest.mark.asyncio
     async def test_drift_detector_alert_callback(self) -> None:
         """Test drift detector alert callback."""
-        alerts = []
+        alerts: list[DriftAlert] = []
 
-        def on_alert(alert: DriftAlert):
+        def on_alert(alert: DriftAlert) -> None:
             alerts.append(alert)
 
         detector = create_drift_detector(threshold=0.3, alert_callback=on_alert)
@@ -549,9 +551,9 @@ class TestBorromeanObserver:
     @pytest.mark.asyncio
     async def test_borromean_broken_knot(self) -> None:
         """Test Borromean knot when a register is invalid."""
-        alerts = []
+        alerts: list[Any] = []
 
-        def on_psychosis(alert):
+        def on_psychosis(alert: Any) -> None:
             alerts.append(alert)
 
         # Create observer with a validator that fails
@@ -721,9 +723,9 @@ class TestRoCMonitor:
 
     def test_roc_alerts(self) -> None:
         """Test RoC alerts."""
-        alerts = []
+        alerts: list[Any] = []
 
-        def on_alert(alert):
+        def on_alert(alert: Any) -> None:
             alerts.append(alert)
 
         ledger = create_value_ledger()
@@ -835,7 +837,7 @@ class TestVoIAwareObserver:
         """Test VoI observer statistics tracking."""
         observer = create_voi_aware_observer()
         # Set budget for the mock agent's id
-        agent = MockAgent(id="test_agent")
+        agent: MockAgent = MockAgent(id="test_agent")
         observer.set_budget("test_agent", 1000)
 
         result = await observer.observe_with_budget(agent, "input", "result", 50.0)
@@ -899,7 +901,7 @@ class TestIntegration:
     async def test_full_observation_pipeline(self) -> None:
         """Test complete observation pipeline."""
         # Create agent
-        agent = MockAgent(result="processed data")
+        agent: MockAgent = MockAgent(result="processed data")
 
         # Create observers
         telemetry = create_telemetry_observer()
@@ -929,7 +931,7 @@ class TestIntegration:
         voi_observer.set_budget("test_agent", 5000)
 
         # Create agent
-        agent = MockAgent(id="test_agent", result="important result")
+        agent: MockAgent = MockAgent(id="test_agent", result="important result")
 
         # Observe with budget
         result = await voi_observer.observe_with_budget(
@@ -1006,10 +1008,10 @@ class TestBootstrapWitness:
 
     def test_identity_agent_name(self) -> None:
         """Test IdentityAgent has correct name."""
-        id_agent = IdentityAgent()
+        id_agent: IdentityAgent[Any] = IdentityAgent()
         assert id_agent.name == "Id"
 
-        custom_id = IdentityAgent(name="CustomId")
+        custom_id: IdentityAgent[Any] = IdentityAgent(name="CustomId")
         assert custom_id.name == "CustomId"
 
     # --- Composed Agent Tests ---
@@ -1017,10 +1019,10 @@ class TestBootstrapWitness:
     @pytest.mark.asyncio
     async def test_composed_agent_basic(self) -> None:
         """Test ComposedAgent applies transforms in order."""
-        f = TestAgent[int, int]("f", lambda x: x + 1)
-        g = TestAgent[int, int]("g", lambda x: x * 2)
+        f: TestAgent[int, int] = TestAgent[int, int]("f", lambda x: x + 1)
+        g: TestAgent[int, int] = TestAgent[int, int]("g", lambda x: x * 2)
 
-        composed = f >> g
+        composed: Any = f >> g  # type: ignore[operator]
         result = await composed.invoke(5)
 
         # f(5) = 6, g(6) = 12
@@ -1029,20 +1031,20 @@ class TestBootstrapWitness:
     @pytest.mark.asyncio
     async def test_composed_agent_name(self) -> None:
         """Test ComposedAgent has descriptive name."""
-        f = TestAgent[int, int]("f", lambda x: x + 1)
-        g = TestAgent[int, int]("g", lambda x: x * 2)
+        f: TestAgent[int, int] = TestAgent[int, int]("f", lambda x: x + 1)
+        g: TestAgent[int, int] = TestAgent[int, int]("g", lambda x: x * 2)
 
-        composed = f >> g
+        composed: Any = f >> g  # type: ignore[operator]
         assert "(f >> g)" in composed.name
 
     @pytest.mark.asyncio
     async def test_triple_composition(self) -> None:
         """Test composing three agents."""
-        f = TestAgent[int, int]("f", lambda x: x + 1)
-        g = TestAgent[int, int]("g", lambda x: x * 2)
-        h = TestAgent[int, int]("h", lambda x: x - 3)
+        f: TestAgent[int, int] = TestAgent[int, int]("f", lambda x: x + 1)
+        g: TestAgent[int, int] = TestAgent[int, int]("g", lambda x: x * 2)
+        h: TestAgent[int, int] = TestAgent[int, int]("h", lambda x: x - 3)
 
-        composed = (f >> g) >> h
+        composed: Any = (f >> g) >> h  # type: ignore[operator]
         result = await composed.invoke(5)
 
         # f(5) = 6, g(6) = 12, h(12) = 9
@@ -1054,10 +1056,10 @@ class TestBootstrapWitness:
     async def test_left_identity_law(self) -> None:
         """Test left identity: Id >> f == f."""
         id_agent: IdentityAgent[int] = IdentityAgent()
-        f = TestAgent[int, int]("f", lambda x: x * 2 + 1)
+        f: TestAgent[int, int] = TestAgent[int, int]("f", lambda x: x * 2 + 1)
 
         for test_input in [0, 1, 5, 10, -3]:
-            composed = id_agent >> f
+            composed: Any = id_agent >> f  # type: ignore[operator]
             result_composed = await composed.invoke(test_input)
             result_direct = await f.invoke(test_input)
             assert result_composed == result_direct
@@ -1065,11 +1067,11 @@ class TestBootstrapWitness:
     @pytest.mark.asyncio
     async def test_right_identity_law(self) -> None:
         """Test right identity: f >> Id == f."""
-        f = TestAgent[int, int]("f", lambda x: x * 2 + 1)
+        f: TestAgent[int, int] = TestAgent[int, int]("f", lambda x: x * 2 + 1)
         id_agent: IdentityAgent[int] = IdentityAgent()
 
         for test_input in [0, 1, 5, 10, -3]:
-            composed = f >> id_agent
+            composed: Any = f >> id_agent  # type: ignore[operator]
             result_composed = await composed.invoke(test_input)
             result_direct = await f.invoke(test_input)
             assert result_composed == result_direct
@@ -1079,13 +1081,13 @@ class TestBootstrapWitness:
     @pytest.mark.asyncio
     async def test_associativity_law(self) -> None:
         """Test associativity: (f >> g) >> h == f >> (g >> h)."""
-        f = TestAgent[int, int]("f", lambda x: x + 1)
-        g = TestAgent[int, int]("g", lambda x: x * 2)
-        h = TestAgent[int, int]("h", lambda x: x - 3)
+        f: TestAgent[int, int] = TestAgent[int, int]("f", lambda x: x + 1)
+        g: TestAgent[int, int] = TestAgent[int, int]("g", lambda x: x * 2)
+        h: TestAgent[int, int] = TestAgent[int, int]("h", lambda x: x - 3)
 
         for test_input in [0, 1, 5, 10, -3]:
-            left_assoc = (f >> g) >> h
-            right_assoc = f >> (g >> h)
+            left_assoc: Any = (f >> g) >> h  # type: ignore[operator]
+            right_assoc: Any = f >> (g >> h)  # type: ignore[operator]
 
             result_left = await left_assoc.invoke(test_input)
             result_right = await right_assoc.invoke(test_input)
@@ -1593,9 +1595,9 @@ class TestIntegratedPanopticon:
 
     def test_alert_callback(self) -> None:
         """Test alert callback is called."""
-        alerts_received = []
+        alerts_received: list[PanopticonAlert] = []
 
-        def callback(alert):
+        def callback(alert: PanopticonAlert) -> None:
             alerts_received.append(alert)
 
         panopticon = IntegratedPanopticon(alert_callback=callback)
@@ -1784,7 +1786,7 @@ class TestPanopticonObserver:
     def test_pre_invoke(self) -> None:
         """Test pre_invoke hook."""
         observer = create_panopticon_observer()
-        agent = MockAgent()
+        agent: MockAgent = MockAgent()
 
         ctx = observer.pre_invoke(agent, "test input")
 
@@ -1795,7 +1797,7 @@ class TestPanopticonObserver:
     async def test_post_invoke(self) -> None:
         """Test post_invoke hook."""
         observer = create_panopticon_observer()
-        agent = MockAgent()
+        agent: MockAgent = MockAgent()
 
         ctx = observer.pre_invoke(agent, "test input")
         result = await observer.post_invoke(ctx, "result", 50.0)
@@ -1806,7 +1808,7 @@ class TestPanopticonObserver:
     async def test_slow_invocation_alert(self) -> None:
         """Test that slow invocations generate alerts."""
         observer = create_panopticon_observer()
-        agent = MockAgent()
+        agent: MockAgent = MockAgent()
 
         ctx = observer.pre_invoke(agent, "test input")
         await observer.post_invoke(ctx, "result", 1500.0)  # 1.5s
@@ -1818,7 +1820,7 @@ class TestPanopticonObserver:
     def test_record_entropy(self) -> None:
         """Test recording entropy generates alert."""
         observer = create_panopticon_observer()
-        agent = MockAgent()
+        agent: MockAgent = MockAgent()
 
         ctx = observer.pre_invoke(agent, "test input")
         observer.record_entropy(ctx, ValueError("Test error"))
@@ -1877,7 +1879,7 @@ class TestPanopticonPhase3Integration:
 
         # Simulate several agent invocations
         for i in range(5):
-            agent = MockAgent(id=f"agent_{i}", name=f"Agent{i}")
+            agent: MockAgent = MockAgent(id=f"agent_{i}", name=f"Agent{i}")
             ctx = observer.pre_invoke(agent, f"input_{i}")
             await observer.post_invoke(ctx, f"result_{i}", 50.0 + i * 10)
 
@@ -1915,7 +1917,7 @@ class TestPanopticonPhase3Integration:
         observer = create_panopticon_observer(panopticon)
 
         # Trigger slow invocation alert
-        agent = MockAgent()
+        agent: MockAgent = MockAgent()
         ctx = observer.pre_invoke(agent, "input")
         await observer.post_invoke(ctx, "result", 2000.0)  # Very slow
 

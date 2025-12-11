@@ -10,6 +10,8 @@ Tests integration between H-gent (Dialectic Introspection) and other agents:
 Philosophy: H-gents examine agent system state, not human users.
 """
 
+from pathlib import Path
+
 import pytest
 from agents.h import (
     DialecticInput,
@@ -86,6 +88,8 @@ class TestHegelAgent:
 
         # Each invocation should produce independent results
         # Tension contents should differ even if notes are same
+        assert result1.tension is not None
+        assert result2.tension is not None
         assert result1.tension.thesis != result2.tension.thesis
         assert result1.tension.antithesis != result2.tension.antithesis
 
@@ -424,7 +428,7 @@ class TestPersistentDialecticIntegration:
     """Test H-gent × D-gent integration (persistent dialectics)."""
 
     @pytest.mark.asyncio
-    async def test_dialectic_persistence(self, tmp_path) -> None:
+    async def test_dialectic_persistence(self, tmp_path: Path) -> None:
         """Test D-gent backed dialectic persistence."""
         path = tmp_path / "dialectic.json"
 
@@ -446,7 +450,7 @@ class TestPersistentDialecticIntegration:
         assert len(history) > 0
 
     @pytest.mark.asyncio
-    async def test_dialectic_memory_agent(self, tmp_path) -> None:
+    async def test_dialectic_memory_agent(self, tmp_path: Path) -> None:
         """Test DialecticMemoryAgent for semantic dialectic retrieval."""
         path = tmp_path / "dialectic_memory.json"
 

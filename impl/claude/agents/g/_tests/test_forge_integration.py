@@ -4,6 +4,10 @@ Tests for G-gent Phase 5: F-gent (Forge) Integration
 Tests the bridge between G-gent tongue synthesis and F-gent artifact forging.
 """
 
+from __future__ import annotations
+
+from typing import Any
+
 import pytest
 from agents.g.forge_integration import (
     FGENT_AVAILABLE,
@@ -78,7 +82,7 @@ def sample_interface(sample_tongue: Tongue) -> InterfaceTongue:
 
 
 @pytest.fixture
-def calendar_handlers() -> dict:
+def calendar_handlers() -> dict[str, Any]:
     """Sample handlers for calendar operations."""
     return {
         "CHECK": lambda noun, ctx: {"action": "check", "target": noun},
@@ -110,7 +114,7 @@ class TestInterfaceTongue:
     def test_interface_tongue_with_handlers(self, sample_tongue: Tongue) -> None:
         """Test InterfaceTongue with bound handlers."""
 
-        def handler(noun, ctx):
+        def handler(noun: str, ctx: dict[str, Any]) -> str:
             return f"handled: {noun}"
 
         interface = InterfaceTongue(
@@ -280,7 +284,7 @@ class TestBindHandlers:
     def test_bind_single_handler(self, sample_interface: InterfaceTongue) -> None:
         """Test binding a single handler."""
 
-        def handler(noun, ctx):
+        def handler(noun: str, ctx: dict[str, Any]) -> str:
             return f"handled: {noun}"
 
         result = bind_handlers(sample_interface, {"CHECK": handler})
@@ -301,7 +305,7 @@ class TestBindHandlers:
 
     def test_bind_handlers_returns_same_instance(
         self, sample_interface: InterfaceTongue
-    ):
+    ) -> None:
         """Test that bind_handlers modifies and returns same instance."""
         result = bind_handlers(sample_interface, {"TEST": lambda n, c: n})
 
@@ -317,16 +321,16 @@ class TestCreateInvocationHandler:
     """Tests for create_invocation_handler function."""
 
     def test_create_handler(
-        self, sample_interface: InterfaceTongue, calendar_handlers: dict
-    ):
+        self, sample_interface: InterfaceTongue, calendar_handlers: dict[str, Any]
+    ) -> None:
         """Test creating an invocation handler."""
         invoke = create_invocation_handler(sample_interface, calendar_handlers)
 
         assert callable(invoke)
 
     def test_handler_is_callable(
-        self, sample_interface: InterfaceTongue, calendar_handlers: dict
-    ):
+        self, sample_interface: InterfaceTongue, calendar_handlers: dict[str, Any]
+    ) -> None:
         """Test that created handler is callable."""
         invoke = create_invocation_handler(sample_interface, calendar_handlers)
 
@@ -418,7 +422,7 @@ class TestEmbedTongueInContract:
 
     def test_embed_preserves_original_invariants(
         self, sample_interface: InterfaceTongue
-    ):
+    ) -> None:
         """Test that original invariants are preserved."""
         from agents.f.contract import Contract, Invariant
 
@@ -490,7 +494,7 @@ class TestForgeWithInterface:
         )
 
     @pytest.mark.asyncio
-    async def test_forge_with_handlers(self, calendar_handlers: dict) -> None:
+    async def test_forge_with_handlers(self, calendar_handlers: dict[str, Any]) -> None:
         """Test forging with bound handlers."""
         contract, interface = await forge_with_interface(
             intent_text="Create a calendar assistant",

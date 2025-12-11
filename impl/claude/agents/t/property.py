@@ -15,7 +15,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Callable, Generic, List, Optional, Tuple, TypeVar
 
-from runtime.base import Agent
+from bootstrap.types import Agent
 
 A = TypeVar("A")  # Input type
 B = TypeVar("B")  # Output type
@@ -119,7 +119,7 @@ class ChoiceGenerator(Generator[A], Generic[A]):
 
 
 @dataclass
-class PropertyTestResult:
+class PropertyTestResult(Generic[A]):
     """Result of property-based testing."""
 
     total_cases: int  # Total test cases run
@@ -142,7 +142,7 @@ class PropertyTestResult:
 
 
 class PropertyAgent(
-    Agent[Tuple[Generator[A], Callable[[A, B], bool]], PropertyTestResult],
+    Agent[Tuple[Generator[A], Callable[[A, B], bool]], "PropertyTestResult[A]"],
     Generic[A, B],
 ):
     """
@@ -204,7 +204,7 @@ class PropertyAgent(
 
     async def invoke(
         self, input_data: Tuple[Generator[A], Callable[[A, B], bool]]
-    ) -> PropertyTestResult:
+    ) -> "PropertyTestResult[A]":
         """
         Run property-based tests.
 
@@ -218,7 +218,7 @@ class PropertyAgent(
         generator, property_fn = input_data
 
         # Use provided property_fn or fall back to __init__ one
-        prop = property_fn if property_fn else self.property_fn
+        prop = property_fn if property_fn is not None else self.property_fn
 
         rng = random.Random(self.seed)
         passed_cases = 0

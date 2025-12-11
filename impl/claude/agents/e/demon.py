@@ -446,6 +446,7 @@ class TeleologicalDemon:
             if not result.passed:
                 result.duration_ms = (time.time() - start) * 1000
                 phage.status = PhageStatus.REJECTED
+                assert result.rejection_reason is not None
                 phage.error = f"Layer 1: {result.rejection_reason.value}"
                 self.stats.record(result)
                 return result
@@ -456,6 +457,7 @@ class TeleologicalDemon:
             if not result.passed:
                 result.duration_ms = (time.time() - start) * 1000
                 phage.status = PhageStatus.REJECTED
+                assert result.rejection_reason is not None
                 phage.error = f"Layer 2: {result.rejection_reason.value}"
                 self.stats.record(result)
                 return result
@@ -468,6 +470,7 @@ class TeleologicalDemon:
                 phage.status = PhageStatus.REJECTED
                 phage.intent_alignment = result.intent_alignment
                 phage.intent_checked = True
+                assert result.rejection_reason is not None
                 phage.error = f"Layer 3: {result.rejection_reason.value}"
                 self.stats.record(result)
                 return result
@@ -480,6 +483,7 @@ class TeleologicalDemon:
             if not result.passed:
                 result.duration_ms = (time.time() - start) * 1000
                 phage.status = PhageStatus.REJECTED
+                assert result.rejection_reason is not None
                 phage.error = f"Layer 4: {result.rejection_reason.value}"
                 self.stats.record(result)
                 return result
@@ -490,6 +494,7 @@ class TeleologicalDemon:
             if not result.passed:
                 result.duration_ms = (time.time() - start) * 1000
                 phage.status = PhageStatus.REJECTED
+                assert result.rejection_reason is not None
                 phage.error = f"Layer 5: {result.rejection_reason.value}"
                 self.stats.record(result)
                 return result

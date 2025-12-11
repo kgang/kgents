@@ -5,6 +5,8 @@ Phase 3: PathfinderAgent with desire line navigation.
 Phase 4: ContextInjector with foveation algorithm.
 """
 
+from __future__ import annotations
+
 import pytest
 from agents.m.cartographer import (
     MockTrace,
@@ -162,10 +164,10 @@ class TestPathfinderAgent:
 
         assert plan.confidence == 0.0
         assert plan.mode == "exploration"
-        assert "No map" in plan.warning
+        assert plan.warning is not None and "No map" in plan.warning
 
     @pytest.mark.asyncio
-    async def test_invoke_with_map(self, simple_map) -> None:
+    async def test_invoke_with_map(self, simple_map: HoloMap) -> None:
         """Invoke with provided map."""
         pathfinder = PathfinderAgent()
         goal = Goal(
@@ -178,7 +180,7 @@ class TestPathfinderAgent:
         assert plan.mode == "desire_line"
 
     @pytest.mark.asyncio
-    async def test_path_prefers_desire_lines(self, simple_map) -> None:
+    async def test_path_prefers_desire_lines(self, simple_map: HoloMap) -> None:
         """Pathfinder prefers historical paths."""
         pathfinder = PathfinderAgent()
         goal = Goal(
@@ -192,7 +194,7 @@ class TestPathfinderAgent:
         assert plan.confidence > 0.3
 
     @pytest.mark.asyncio
-    async def test_bushwhack_when_no_path(self, simple_map) -> None:
+    async def test_bushwhack_when_no_path(self, simple_map: HoloMap) -> None:
         """Bushwhack mode when no desire line path exists."""
         # Create a map with disconnected landmarks
         isolated_map = HoloMap(
@@ -222,7 +224,9 @@ class TestPathfinderAgent:
         assert plan.confidence <= 0.3
 
     @pytest.mark.asyncio
-    async def test_void_crossing_reduces_confidence(self, map_with_void) -> None:
+    async def test_void_crossing_reduces_confidence(
+        self, map_with_void: HoloMap
+    ) -> None:
         """Path crossing void has reduced confidence."""
         pathfinder = PathfinderAgent()
         goal = Goal(
@@ -247,7 +251,7 @@ class TestPathfinderConfig:
         assert config.allow_exploration is True
 
     @pytest.mark.asyncio
-    async def test_disable_exploration(self, simple_map) -> None:
+    async def test_disable_exploration(self, simple_map: HoloMap) -> None:
         """Can disable exploration mode."""
         config = PathfinderConfig(allow_exploration=False)
         pathfinder = PathfinderAgent(config=config)
@@ -276,13 +280,13 @@ class TestPathfinderConfig:
 
         # Should fail without exploration
         assert plan.confidence == 0.0
-        assert "disabled" in plan.warning
+        assert plan.warning is not None and "disabled" in plan.warning
 
 
 class TestPathAnalysis:
     """Tests for path analysis."""
 
-    def test_analyze_empty_path(self, simple_map) -> None:
+    def test_analyze_empty_path(self, simple_map: HoloMap) -> None:
         """Analyze empty path."""
         from agents.m.cartography import NavigationPlan
 
@@ -296,11 +300,12 @@ class TestPathAnalysis:
         assert analysis.total_distance == 0.0
         assert analysis.void_crossings == 0
 
-    def test_analyze_single_waypoint(self, simple_map) -> None:
+    def test_analyze_single_waypoint(self, simple_map: HoloMap) -> None:
         """Analyze single waypoint path."""
         from agents.m.cartography import NavigationPlan
 
         landmark = simple_map.get_landmark("auth")
+        assert landmark is not None, "auth landmark should exist"
         plan = NavigationPlan(
             waypoints=[landmark],
             confidence=1.0,
@@ -310,13 +315,17 @@ class TestPathAnalysis:
 
         assert analysis.total_distance == 0.0
 
-    def test_analyze_multi_waypoint(self, simple_map) -> None:
+    def test_analyze_multi_waypoint(self, simple_map: HoloMap) -> None:
         """Analyze multi-waypoint path."""
         from agents.m.cartography import NavigationPlan
 
         auth = simple_map.get_landmark("auth")
         retry = simple_map.get_landmark("retry")
         error = simple_map.get_landmark("error")
+
+        assert auth is not None, "auth landmark should exist"
+        assert retry is not None, "retry landmark should exist"
+        assert error is not None, "error landmark should exist"
 
         plan = NavigationPlan(
             waypoints=[auth, retry, error],
@@ -359,7 +368,7 @@ class TestContextInjector:
         assert result.tokens_remaining == 4000
 
     @pytest.mark.asyncio
-    async def test_invoke_with_map(self, simple_map) -> None:
+    async def test_invoke_with_map(self, simple_map: HoloMap) -> None:
         """Invoke with provided map."""
         injector = ContextInjector()
         request = InjectionRequest(
@@ -374,7 +383,7 @@ class TestContextInjector:
         assert result.tokens_used <= 4000
 
     @pytest.mark.asyncio
-    async def test_focal_zone_populated(self, simple_map) -> None:
+    async def test_focal_zone_populated(self, simple_map: HoloMap) -> None:
         """Focal zone has nearby landmarks."""
         injector = ContextInjector()
         request = InjectionRequest(
@@ -387,7 +396,7 @@ class TestContextInjector:
         assert len(result.focal_memories) >= 0  # May be 0 if budget tight
 
     @pytest.mark.asyncio
-    async def test_budget_constraint(self, simple_map) -> None:
+    async def test_budget_constraint(self, simple_map: HoloMap) -> None:
         """Small budget limits output."""
         injector = ContextInjector()
 
@@ -412,7 +421,7 @@ class TestContextInjector:
         )
 
     @pytest.mark.asyncio
-    async def test_void_warnings_included(self, map_with_void) -> None:
+    async def test_void_warnings_included(self, map_with_void: HoloMap) -> None:
         """Void warnings are included in output."""
         injector = ContextInjector()
         request = InjectionRequest(
@@ -425,7 +434,7 @@ class TestContextInjector:
         assert len(result.void_warnings) >= 1
 
     @pytest.mark.asyncio
-    async def test_desire_lines_included(self, simple_map) -> None:
+    async def test_desire_lines_included(self, simple_map: HoloMap) -> None:
         """Desire lines are included in output."""
         injector = ContextInjector()
         request = InjectionRequest(
@@ -450,7 +459,7 @@ class TestInjectorConfig:
         assert config.tokens_per_landmark_full > config.tokens_per_landmark_blur
 
     @pytest.mark.asyncio
-    async def test_custom_config_no_focal(self, simple_map) -> None:
+    async def test_custom_config_no_focal(self, simple_map: HoloMap) -> None:
         """Can disable focal zone."""
         config = InjectorConfig(include_focal=False)
         injector = ContextInjector(config=config)
@@ -467,7 +476,7 @@ class TestContextString:
     """Tests for context string generation."""
 
     @pytest.mark.asyncio
-    async def test_to_context_string(self, simple_map) -> None:
+    async def test_to_context_string(self, simple_map: HoloMap) -> None:
         """OptimalContext renders to string."""
         injector = ContextInjector()
         request = InjectionRequest(
@@ -490,7 +499,7 @@ class TestPathfinderInjectorIntegration:
     """Integration tests for Pathfinder + ContextInjector."""
 
     @pytest.mark.asyncio
-    async def test_injector_with_pathfinder(self, simple_map) -> None:
+    async def test_injector_with_pathfinder(self, simple_map: HoloMap) -> None:
         """ContextInjector uses pathfinder for goal-directed context."""
         pathfinder = PathfinderAgent()
         injector = ContextInjector(pathfinder=pathfinder)

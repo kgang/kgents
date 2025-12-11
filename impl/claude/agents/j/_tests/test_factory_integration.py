@@ -13,6 +13,10 @@ All J-gent agents are marked with __is_test__ = True to distinguish them
 from production agents.
 """
 
+from __future__ import annotations
+
+from typing import Any
+
 import pytest
 from agents.j import (
     AgentSource,
@@ -28,8 +32,8 @@ from agents.j.factory_integration import (
 )
 from bootstrap.types import Agent
 
-# Mark wrapper as test agent
-JITAgentWrapper.__is_test__ = True
+# Mark wrapper as test agent (for runtime, not mypy)
+JITAgentWrapper.__is_test__ = True  # type: ignore[attr-defined]
 
 
 # --- Fixtures ---
@@ -124,7 +128,7 @@ async def test_create_agent_from_source_with_meta(
     )
 
     # Check AgentMeta
-    assert hasattr(agent, "meta")
+    assert isinstance(agent, JITAgentWrapper)
     meta = agent.meta
     assert meta.identity.name == "JITLogParser"
     assert meta.identity.genus == "j"
@@ -135,7 +139,7 @@ async def test_create_agent_from_source_with_meta(
 @pytest.mark.asyncio
 async def test_create_agent_from_source_with_jit_meta(
     simple_parser_source: AgentSource,
-):
+) -> None:
     """Test that created agent has JITAgentMeta."""
     constraints = ArchitectConstraints(entropy_budget=0.8)
 
@@ -146,7 +150,7 @@ async def test_create_agent_from_source_with_jit_meta(
     )
 
     # Check JITAgentMeta
-    assert hasattr(agent, "jit_meta")
+    assert isinstance(agent, JITAgentWrapper)
     jit_meta = agent.jit_meta
     assert isinstance(jit_meta, JITAgentMeta)
     assert jit_meta.source == simple_parser_source
@@ -175,7 +179,7 @@ async def test_create_agent_from_source_execution(
 @pytest.mark.asyncio
 async def test_create_agent_from_source_with_validation(
     simple_parser_source: AgentSource,
-):
+) -> None:
     """Test agent creation with validation enabled."""
     agent = await create_agent_from_source(
         source=simple_parser_source,
@@ -194,17 +198,18 @@ async def test_jit_agent_composition(simple_parser_source: AgentSource) -> None:
     """Test that JIT agents can compose with other agents via >>."""
 
     # Create a simple downstream agent
-    class UpperCaseAgent(Agent[object, str]):
+    class UpperCaseAgent(Agent[Any, str]):
         """Converts message to uppercase."""
 
         @property
         def name(self) -> str:
             return "UpperCaseAgent"
 
-        async def invoke(self, input: object) -> str:
+        async def invoke(self, input: Any) -> str:
             # Access the message attribute
             if hasattr(input, "message"):
-                return input.message.upper()
+                msg: str = input.message
+                return msg.upper()
             return str(input).upper()
 
     # Create JIT agent
@@ -245,7 +250,9 @@ def test_get_jit_meta_returns_meta() -> None:
     )
     mock_meta = AgentMeta.minimal("Test", "j", "Test agent")
 
-    wrapper = JITAgentWrapper(meta=mock_meta, jit_meta=mock_jit_meta)
+    wrapper: JITAgentWrapper[Any, Any] = JITAgentWrapper(
+        meta=mock_meta, jit_meta=mock_jit_meta
+    )
 
     # Test get_jit_meta
     result = get_jit_meta(wrapper)
@@ -286,7 +293,9 @@ def test_is_jit_agent_true() -> None:
     )
     mock_meta = AgentMeta.minimal("Test", "j", "Test agent")
 
-    wrapper = JITAgentWrapper(meta=mock_meta, jit_meta=mock_jit_meta)
+    wrapper: JITAgentWrapper[Any, Any] = JITAgentWrapper(
+        meta=mock_meta, jit_meta=mock_jit_meta
+    )
 
     assert is_jit_agent(wrapper) is True
 
@@ -402,6 +411,7 @@ async def test_agent_behavior_metadata(simple_parser_source: AgentSource) -> Non
         validate=False,
     )
 
+    assert isinstance(agent, JITAgentWrapper)
     behavior = agent.meta.behavior
     assert behavior is not None
 
@@ -500,6 +510,7 @@ class JITSimple:
     )
 
     # Verify config is stored
+    assert isinstance(agent, JITAgentWrapper)
     assert agent.jit_meta.sandbox_config == custom_config
     assert agent.jit_meta.sandbox_config.timeout_seconds == 10.0
     assert agent.jit_meta.sandbox_config.type_check is False
@@ -523,6 +534,7 @@ async def test_stability_score_for_simple_agent(
     )
 
     # Simple agent should have high stability
+    assert isinstance(agent, JITAgentWrapper)
     assert agent.jit_meta.stability_score >= 0.5
 
 
@@ -541,6 +553,7 @@ async def test_stability_score_for_complex_agent(
     )
 
     # Complex agent should have lower stability
+    assert isinstance(agent, JITAgentWrapper)
     jit_meta = agent.jit_meta
     assert jit_meta.stability_score < 0.9  # Not perfect
     assert jit_meta.stability_score >= 0.0  # But still valid range
@@ -714,6 +727,7 @@ async def test_jit_meta_preserves_full_provenance(
         validate=False,
     )
 
+    assert isinstance(agent, JITAgentWrapper)
     jit_meta = agent.jit_meta
 
     # Verify complete provenance
@@ -738,6 +752,7 @@ async def test_agent_meta_reflects_jit_nature(
         validate=False,
     )
 
+    assert isinstance(agent, JITAgentWrapper)
     meta = agent.meta
 
     # Should be marked as j-gent genus

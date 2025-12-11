@@ -7,6 +7,10 @@ Test the complete pipeline:
 3. Render (round-trip validation)
 """
 
+from __future__ import annotations
+
+from typing import Any
+
 import pytest
 from agents.g import (
     create_command_tongue,
@@ -38,6 +42,7 @@ class TestModel(BaseModel):
     result = tongue.parse('{"name": "test", "count": 42}')
 
     assert result.success
+    assert result.ast is not None
     assert result.ast["name"] == "test"
     assert result.ast["count"] == 42
     assert result.confidence > 0.8
@@ -112,6 +117,7 @@ def test_command_tongue_parse() -> None:
     result = tongue.parse("CHECK 2024-12-15")
 
     assert result.success
+    assert result.ast is not None
     assert result.ast["verb"] == "CHECK"
     assert "2024-12-15" in result.ast["noun"]
 
@@ -132,7 +138,11 @@ def test_command_tongue_parse_invalid() -> None:
     result = tongue.parse("DELETE meeting")
 
     assert not result.success
-    assert "DELETE" not in result.error or "No valid command" in result.error
+    assert (
+        result.error is None
+        or "DELETE" not in result.error
+        or "No valid command" in result.error
+    )
 
 
 def test_command_tongue_execute_with_handlers() -> None:
@@ -147,10 +157,10 @@ def test_command_tongue_execute_with_handlers() -> None:
     )
 
     # Define handlers
-    def check_handler(noun, context):
+    def check_handler(noun: str, context: dict[str, Any]) -> dict[str, Any]:
         return {"status": "checked", "date": noun}
 
-    def add_handler(noun, context):
+    def add_handler(noun: str, context: dict[str, Any]) -> dict[str, Any]:
         return {"status": "added", "event": noun}
 
     handlers = {"CHECK": check_handler, "ADD": add_handler}
@@ -162,6 +172,7 @@ def test_command_tongue_execute_with_handlers() -> None:
     exec_result = tongue.execute(parse_result.ast, handlers=handlers)
 
     assert exec_result.success
+    assert exec_result.value is not None
     assert exec_result.value["status"] == "checked"
     assert exec_result.value["date"] == "2024-12-15"
 
@@ -184,6 +195,7 @@ def test_command_tongue_execute_no_handler() -> None:
 
     # Should succeed but not execute
     assert exec_result.success
+    assert exec_result.value is not None
     assert not exec_result.value.get("executed", True)
     assert "CHECK" in exec_result.value["intent"]
 
@@ -246,6 +258,7 @@ SYMBOL: /[a-z]+/
     result = tongue.parse("(add x y)")
 
     assert result.success
+    assert result.ast is not None
     assert result.ast["type"] == "start"
 
 
@@ -273,6 +286,7 @@ class UserProfile(BaseModel):
     # 1. Parse
     parse_result = tongue.parse('{"username": "alice", "age": 30, "active": true}')
     assert parse_result.success
+    assert parse_result.ast is not None
     assert parse_result.ast["username"] == "alice"
 
     # 2. Execute (validation)
@@ -305,7 +319,7 @@ def test_full_pipeline_command() -> None:
     )
 
     # Define handlers
-    def read_handler(path, context):
+    def read_handler(path: str, context: dict[str, Any]) -> dict[str, Any]:
         return {"status": "read", "path": path, "content": f"Contents of {path}"}
 
     handlers = {"READ": read_handler}
@@ -313,12 +327,14 @@ def test_full_pipeline_command() -> None:
     # 1. Parse
     parse_result = tongue.parse("READ /tmp/test.txt")
     assert parse_result.success
+    assert parse_result.ast is not None
     assert parse_result.ast["verb"] == "READ"
     assert "/tmp/test.txt" in parse_result.ast["noun"]
 
     # 2. Execute with handler
     exec_result = tongue.execute(parse_result.ast, handlers=handlers)
     assert exec_result.success
+    assert exec_result.value is not None
     assert exec_result.value["status"] == "read"
     assert "test.txt" in exec_result.value["content"]
 
@@ -363,7 +379,7 @@ def test_context_passing() -> None:
     )
 
     # Handler that uses context
-    def get_handler(noun, context):
+    def get_handler(noun: str, context: dict[str, Any]) -> dict[str, Any]:
         value = context.get(noun, "not found")
         return {"key": noun, "value": value}
 
@@ -374,10 +390,11 @@ def test_context_passing() -> None:
     assert parse_result.success
 
     # Execute with context
-    context = {"username": "alice", "role": "admin"}
+    context: dict[str, Any] = {"username": "alice", "role": "admin"}
     exec_result = tongue.execute(parse_result.ast, context=context, handlers=handlers)
 
     assert exec_result.success
+    assert exec_result.value is not None
     assert exec_result.value["key"] == "username"
     assert exec_result.value["value"] == "alice"
 
@@ -411,7 +428,7 @@ def test_execute_error_handling() -> None:
     )
 
     # Handler that raises exception
-    def failing_handler(noun, context):
+    def failing_handler(noun: str, context: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("Intentional failure")
 
     handlers = {"TEST": failing_handler}
@@ -424,7 +441,7 @@ def test_execute_error_handling() -> None:
     exec_result = tongue.execute(parse_result.ast, handlers=handlers)
 
     assert not exec_result.success
-    assert "Intentional failure" in exec_result.error
+    assert exec_result.error is not None and "Intentional failure" in exec_result.error
 
 
 # ============================================================================
@@ -460,7 +477,7 @@ def test_side_effects_tracking() -> None:
     )
 
     # Handler with side effects
-    def test_handler(noun, context) -> None:
+    def test_handler(noun: str, context: dict[str, Any]) -> dict[str, Any]:
         context["called"] = True
         return {"result": "ok"}
 
@@ -468,7 +485,7 @@ def test_side_effects_tracking() -> None:
 
     # Parse and execute
     parse_result = tongue.parse("TEST something")
-    context = {}
+    context: dict[str, Any] = {}
     exec_result = tongue.execute(parse_result.ast, context=context, handlers=handlers)
 
     assert exec_result.success

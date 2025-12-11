@@ -322,7 +322,7 @@ class CountMinSketch:
     def _hash(self, key: str, seed: int) -> int:
         """Hash function with seed."""
         h = hashlib.md5(f"{key}:{seed}".encode()).digest()
-        return struct.unpack("<I", h[:4])[0] % self.width
+        return int(struct.unpack("<I", h[:4])[0]) % self.width
 
     def add(self, key: str, count: int = 1) -> None:
         """Add count for key."""
@@ -377,7 +377,7 @@ class HyperLogLog:
     def _hash(self, value: str) -> int:
         """64-bit hash of value."""
         h = hashlib.sha256(value.encode()).digest()
-        return struct.unpack("<Q", h[:8])[0]
+        return int(struct.unpack("<Q", h[:8])[0])
 
     def _leading_zeros(self, value: int, bits: int = 64) -> int:
         """Count leading zeros in binary representation."""

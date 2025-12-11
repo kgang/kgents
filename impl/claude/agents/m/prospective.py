@@ -17,6 +17,8 @@ Key Insight:
 - Ethical constraints are learned from experience, not hardcoded
 """
 
+from __future__ import annotations
+
 import math
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -100,10 +102,10 @@ class ActionHistory:
     Provides the action log for prospective memory.
     """
 
-    def __init__(self):
-        self._situations: Dict[str, Situation] = {}
-        self._actions: Dict[str, List[ActionRecord]] = {}  # situation_id → actions
-        self._action_outcomes: Dict[str, List[str]] = {}  # action_id → outcomes
+    def __init__(self) -> None:
+        self._situations: dict[str, Situation] = {}
+        self._actions: dict[str, list[ActionRecord]] = {}  # situation_id → actions
+        self._action_outcomes: dict[str, list[str]] = {}  # action_id → outcomes
 
     def record_situation(self, situation: Situation) -> None:
         """Record a situation."""
@@ -191,7 +193,7 @@ class ProspectiveAgent(Generic[T]):
         action_log: ActionHistory,
         min_similarity: float = 0.3,
         max_predictions: int = 5,
-    ):
+    ) -> None:
         """Initialize prospective agent.
 
         Args:
@@ -258,9 +260,9 @@ class ProspectiveAgent(Generic[T]):
             elif pred.confidence > seen_actions[pred.action].confidence:
                 seen_actions[pred.action] = pred
 
-        result = list(seen_actions.values())
-        result.sort(key=lambda p: -p.confidence)
-        return result[: self._max_predictions]
+        deduplicated = list(seen_actions.values())
+        deduplicated.sort(key=lambda p: -p.confidence)
+        return deduplicated[: self._max_predictions]
 
     async def record_experience(
         self,
@@ -402,7 +404,7 @@ class EthicalGeometry:
         dimensions: int = 8,
         forbidden_threshold: float = 0.7,
         virtuous_threshold: float = 0.7,
-    ):
+    ) -> None:
         """Initialize ethical geometry.
 
         Args:
@@ -701,7 +703,7 @@ class EthicalGeometryAgent:
         geometry: EthicalGeometry,
         suggest_alternatives: bool = True,
         max_alternatives: int = 3,
-    ):
+    ) -> None:
         """Initialize ethical geometry agent.
 
         Args:
@@ -807,11 +809,11 @@ class ContextualRecallAgent:
 
     def __init__(
         self,
-        memory: HolographicMemory,
+        memory: HolographicMemory[Any],
         task_weight: float = 0.4,
         mood_weight: float = 0.3,
         location_weight: float = 0.3,
-    ):
+    ) -> None:
         """Initialize contextual recall agent.
 
         Args:
@@ -825,7 +827,9 @@ class ContextualRecallAgent:
         self._mood_weight = mood_weight
         self._location_weight = location_weight
 
-    async def invoke(self, query: ContextualQuery) -> List[Tuple[MemoryPattern, float]]:
+    async def invoke(
+        self, query: ContextualQuery
+    ) -> List[Tuple[MemoryPattern[Any], float]]:
         """Recall memories with context weighting.
 
         Args:
@@ -838,7 +842,7 @@ class ContextualRecallAgent:
         base_results = await self._memory.retrieve(query.cue)
 
         # Apply context weighting
-        weighted: List[Tuple[MemoryPattern, float]] = []
+        weighted: List[Tuple[MemoryPattern[Any], float]] = []
 
         for result in base_results:
             context_boost = self._compute_context_relevance(
@@ -856,7 +860,7 @@ class ContextualRecallAgent:
 
     def _compute_context_relevance(
         self,
-        pattern: MemoryPattern,
+        pattern: MemoryPattern[Any],
         current_task: str,
         current_mood: str,
         current_location: str,
@@ -887,10 +891,10 @@ class ContextualRecallAgent:
 
 
 def create_prospective_agent(
-    memory: HolographicMemory,
+    memory: HolographicMemory[Any],
     action_log: Optional[ActionHistory] = None,
     min_similarity: float = 0.3,
-) -> ProspectiveAgent:
+) -> ProspectiveAgent[Any]:
     """Create a prospective agent with defaults.
 
     Args:

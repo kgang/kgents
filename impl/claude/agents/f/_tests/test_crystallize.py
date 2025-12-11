@@ -14,6 +14,8 @@ Test coverage:
 10. Re-forging scenarios
 """
 
+from __future__ import annotations
+
 import tempfile
 from pathlib import Path
 
@@ -80,7 +82,7 @@ def sample_intent() -> Intent:
 
 
 @pytest.fixture
-def sample_contract() -> Contract:
+def sample_contract(sample_intent: Intent) -> Contract:
     """Sample contract for testing."""
     return Contract(
         agent_name="WeatherFetcher",
@@ -106,7 +108,7 @@ def sample_contract() -> Contract:
             )
         ],
         semantic_intent="Fetch current weather data",
-        raw_intent="Fetch weather data for a given location",
+        raw_intent=sample_intent,
     )
 
 
@@ -370,8 +372,8 @@ def test_determine_version_bump_no_contract_change() -> None:
 
 
 def test_assemble_artifact_creates_valid_artifact(
-    sample_intent, sample_contract, sample_source_code
-):
+    sample_intent: Intent, sample_contract: Contract, sample_source_code: SourceCode
+) -> None:
     """assemble_artifact creates complete artifact."""
     artifact = assemble_artifact(
         intent=sample_intent,
@@ -388,8 +390,8 @@ def test_assemble_artifact_creates_valid_artifact(
 
 
 def test_assemble_artifact_extracts_tags(
-    sample_intent, sample_contract, sample_source_code
-):
+    sample_intent: Intent, sample_contract: Contract, sample_source_code: SourceCode
+) -> None:
     """assemble_artifact extracts tags from intent."""
     artifact = assemble_artifact(
         intent=sample_intent,
@@ -406,8 +408,8 @@ def test_assemble_artifact_extracts_tags(
 
 
 def test_assemble_artifact_extracts_dependencies(
-    sample_intent, sample_contract, sample_source_code
-):
+    sample_intent: Intent, sample_contract: Contract, sample_source_code: SourceCode
+) -> None:
     """assemble_artifact extracts dependencies from intent."""
     artifact = assemble_artifact(
         intent=sample_intent,
@@ -419,8 +421,8 @@ def test_assemble_artifact_extracts_dependencies(
 
 
 def test_assemble_artifact_custom_version(
-    sample_intent, sample_contract, sample_source_code
-):
+    sample_intent: Intent, sample_contract: Contract, sample_source_code: SourceCode
+) -> None:
     """assemble_artifact accepts custom version."""
     artifact = assemble_artifact(
         intent=sample_intent,
@@ -434,8 +436,8 @@ def test_assemble_artifact_custom_version(
 
 
 def test_assemble_artifact_with_parent_version(
-    sample_intent, sample_contract, sample_source_code
-):
+    sample_intent: Intent, sample_contract: Contract, sample_source_code: SourceCode
+) -> None:
     """assemble_artifact tracks parent version for re-forging."""
     artifact = assemble_artifact(
         intent=sample_intent,
@@ -452,8 +454,8 @@ def test_assemble_artifact_with_parent_version(
 
 
 def test_artifact_to_markdown_structure(
-    sample_intent, sample_contract, sample_source_code
-):
+    sample_intent: Intent, sample_contract: Contract, sample_source_code: SourceCode
+) -> None:
     """Artifact.to_markdown generates well-structured markdown."""
     artifact = assemble_artifact(
         intent=sample_intent,
@@ -473,8 +475,8 @@ def test_artifact_to_markdown_structure(
 
 
 def test_artifact_to_markdown_includes_intent(
-    sample_intent, sample_contract, sample_source_code
-):
+    sample_intent: Intent, sample_contract: Contract, sample_source_code: SourceCode
+) -> None:
     """Artifact markdown includes intent details."""
     artifact = assemble_artifact(
         intent=sample_intent,
@@ -490,8 +492,8 @@ def test_artifact_to_markdown_includes_intent(
 
 
 def test_artifact_to_markdown_includes_contract(
-    sample_intent, sample_contract, sample_source_code
-):
+    sample_intent: Intent, sample_contract: Contract, sample_source_code: SourceCode
+) -> None:
     """Artifact markdown includes contract details."""
     artifact = assemble_artifact(
         intent=sample_intent,
@@ -508,8 +510,8 @@ def test_artifact_to_markdown_includes_contract(
 
 
 def test_artifact_to_markdown_includes_examples(
-    sample_intent, sample_contract, sample_source_code
-):
+    sample_intent: Intent, sample_contract: Contract, sample_source_code: SourceCode
+) -> None:
     """Artifact markdown includes test examples."""
     artifact = assemble_artifact(
         intent=sample_intent,
@@ -524,8 +526,8 @@ def test_artifact_to_markdown_includes_examples(
 
 
 def test_artifact_to_markdown_includes_source_code(
-    sample_intent, sample_contract, sample_source_code
-):
+    sample_intent: Intent, sample_contract: Contract, sample_source_code: SourceCode
+) -> None:
     """Artifact markdown includes implementation."""
     artifact = assemble_artifact(
         intent=sample_intent,
@@ -544,8 +546,8 @@ def test_artifact_to_markdown_includes_source_code(
 
 
 def test_artifact_compute_hash_deterministic(
-    sample_intent, sample_contract, sample_source_code
-):
+    sample_intent: Intent, sample_contract: Contract, sample_source_code: SourceCode
+) -> None:
     """Artifact.compute_hash is deterministic for same content."""
     # Use fixed timestamp to ensure determinism
     fixed_time = "2025-12-08T10:00:00+00:00"
@@ -571,8 +573,8 @@ def test_artifact_compute_hash_deterministic(
 
 
 def test_artifact_compute_hash_changes_with_content(
-    sample_intent, sample_contract, sample_source_code
-):
+    sample_intent: Intent, sample_contract: Contract, sample_source_code: SourceCode
+) -> None:
     """Artifact.compute_hash changes if content changes."""
     artifact1 = assemble_artifact(
         intent=sample_intent,
@@ -599,8 +601,8 @@ def test_artifact_compute_hash_changes_with_content(
 
 
 def test_artifact_hash_excludes_hash_field(
-    sample_intent, sample_contract, sample_source_code
-):
+    sample_intent: Intent, sample_contract: Contract, sample_source_code: SourceCode
+) -> None:
     """Artifact hash computation excludes hash field itself."""
     artifact = assemble_artifact(
         intent=sample_intent,
@@ -617,7 +619,7 @@ def test_artifact_hash_excludes_hash_field(
 
 
 def test_save_artifact_creates_file(
-    sample_intent, sample_contract, sample_source_code
+    sample_intent: Intent, sample_contract: Contract, sample_source_code: SourceCode
 ) -> None:
     """save_artifact creates .alo.md file."""
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -636,8 +638,8 @@ def test_save_artifact_creates_file(
 
 
 def test_save_artifact_content_matches_markdown(
-    sample_intent, sample_contract, sample_source_code
-):
+    sample_intent: Intent, sample_contract: Contract, sample_source_code: SourceCode
+) -> None:
     """save_artifact writes correct markdown content."""
     with tempfile.TemporaryDirectory() as tmpdir:
         output_dir = Path(tmpdir)
@@ -654,8 +656,8 @@ def test_save_artifact_content_matches_markdown(
 
 
 def test_save_artifact_creates_directory(
-    sample_intent, sample_contract, sample_source_code
-):
+    sample_intent: Intent, sample_contract: Contract, sample_source_code: SourceCode
+) -> None:
     """save_artifact creates output directory if needed."""
     with tempfile.TemporaryDirectory() as tmpdir:
         output_dir = Path(tmpdir) / "nested" / "directory"
@@ -678,8 +680,8 @@ def test_save_artifact_creates_directory(
 
 @pytest.mark.skipif(not LGENT_AVAILABLE, reason="L-gent not available")
 async def test_register_with_lgent_creates_entry(
-    sample_intent, sample_contract, sample_source_code
-):
+    sample_intent: Intent, sample_contract: Contract, sample_source_code: SourceCode
+) -> None:
     """register_with_lgent creates catalog entry."""
     with tempfile.TemporaryDirectory() as tmpdir:
         storage_path = str(Path(tmpdir) / "registry.json")
@@ -701,8 +703,8 @@ async def test_register_with_lgent_creates_entry(
 
 @pytest.mark.skipif(not LGENT_AVAILABLE, reason="L-gent not available")
 async def test_register_with_lgent_maps_status(
-    sample_intent, sample_contract, sample_source_code
-):
+    sample_intent: Intent, sample_contract: Contract, sample_source_code: SourceCode
+) -> None:
     """register_with_lgent maps artifact status to catalog status."""
     with tempfile.TemporaryDirectory() as tmpdir:
         storage_path = str(Path(tmpdir) / "registry.json")
@@ -719,13 +721,14 @@ async def test_register_with_lgent_maps_status(
 
         from agents.l.catalog import Status
 
+        assert entry is not None
         assert entry.status == Status.ACTIVE
 
 
 @pytest.mark.skipif(not LGENT_AVAILABLE, reason="L-gent not available")
 async def test_register_with_lgent_lineage_relationships(
-    sample_intent, sample_contract, sample_source_code
-):
+    sample_intent: Intent, sample_contract: Contract, sample_source_code: SourceCode
+) -> None:
     """register_with_lgent adds lineage relationships."""
     with tempfile.TemporaryDirectory() as tmpdir:
         storage_path = str(Path(tmpdir) / "registry.json")
@@ -741,6 +744,7 @@ async def test_register_with_lgent_lineage_relationships(
 
         entry = await register_with_lgent(artifact, registry, Path("/tmp/test.alo.md"))
 
+        assert entry is not None
         assert "successor_to" in entry.relationships
         assert "1.0.0" in entry.relationships["successor_to"]
 
@@ -749,8 +753,8 @@ async def test_register_with_lgent_lineage_relationships(
 
 
 async def test_crystallize_full_workflow(
-    sample_intent, sample_contract, sample_source_code
-):
+    sample_intent: Intent, sample_contract: Contract, sample_source_code: SourceCode
+) -> None:
     """crystallize executes complete Phase 5 workflow."""
     with tempfile.TemporaryDirectory() as tmpdir:
         output_dir = Path(tmpdir)
@@ -776,8 +780,8 @@ async def test_crystallize_full_workflow(
 
 @pytest.mark.skipif(not LGENT_AVAILABLE, reason="L-gent not available")
 async def test_crystallize_with_lgent_registration(
-    sample_intent, sample_contract, sample_source_code
-):
+    sample_intent: Intent, sample_contract: Contract, sample_source_code: SourceCode
+) -> None:
     """crystallize registers with L-gent if registry provided."""
     with tempfile.TemporaryDirectory() as tmpdir:
         output_dir = Path(tmpdir)
@@ -803,8 +807,8 @@ async def test_crystallize_with_lgent_registration(
 
 
 async def test_crystallize_re_forging_scenario(
-    sample_intent, sample_contract, sample_source_code
-):
+    sample_intent: Intent, sample_contract: Contract, sample_source_code: SourceCode
+) -> None:
     """crystallize handles re-forging with version increment."""
     with tempfile.TemporaryDirectory() as tmpdir:
         output_dir = Path(tmpdir)
@@ -842,7 +846,9 @@ async def test_crystallize_re_forging_scenario(
 # ==================== Edge Cases ====================
 
 
-def test_artifact_with_no_examples(sample_contract, sample_source_code) -> None:
+def test_artifact_with_no_examples(
+    sample_contract: Contract, sample_source_code: SourceCode
+) -> None:
     """Artifact handles intent with no examples."""
     intent_no_examples = Intent(
         purpose="Simple agent",
@@ -862,7 +868,9 @@ def test_artifact_with_no_examples(sample_contract, sample_source_code) -> None:
     assert "No examples provided" in markdown
 
 
-def test_artifact_with_no_dependencies(sample_contract, sample_source_code) -> None:
+def test_artifact_with_no_dependencies(
+    sample_contract: Contract, sample_source_code: SourceCode
+) -> None:
     """Artifact handles intent with no dependencies."""
     intent_no_deps = Intent(
         purpose="Self-contained agent",
@@ -881,7 +889,7 @@ def test_artifact_with_no_dependencies(sample_contract, sample_source_code) -> N
 
 
 def test_artifact_changelog_default(
-    sample_intent, sample_contract, sample_source_code
+    sample_intent: Intent, sample_contract: Contract, sample_source_code: SourceCode
 ) -> None:
     """Artifact includes default changelog for v1.0.0."""
     artifact = assemble_artifact(

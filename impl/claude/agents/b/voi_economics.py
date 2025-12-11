@@ -29,7 +29,7 @@ import asyncio
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, cast
 
 from .metered_functor import Gas
 from .value_ledger import ValueLedger
@@ -589,7 +589,7 @@ class VoIOptimizer:
             )
 
         # Sort by priority (highest first)
-        recommendations.sort(key=lambda x: x["priority"], reverse=True)
+        recommendations.sort(key=lambda x: cast(float, x["priority"]), reverse=True)
         return recommendations
 
 
@@ -720,7 +720,7 @@ class AdaptiveObserver:
             )
 
         # Sort by next observation time
-        schedule.sort(key=lambda x: x["seconds_until_next"])
+        schedule.sort(key=lambda x: cast(float, x["seconds_until_next"]))
         return schedule
 
 

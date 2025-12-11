@@ -25,7 +25,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .axiological import AxiologicalObserver
 from .observer import (
@@ -37,6 +37,18 @@ from .observer import (
 )
 from .semantic import SemanticObserver
 from .telemetry import TelemetryObserver
+
+# Explicit exports for mypy
+__all__ = [
+    "FindingType",
+    "ObservationDepth",
+    "Panopticon",
+    "PanopticonStatus",
+    "VoIAwareObserver",
+    "VoIBudgetAllocation",
+    "VoIObserver",
+    "AdaptiveVoIObserver",
+]
 
 # Import B-gent VoI types
 try:
@@ -62,14 +74,14 @@ try:
 except ImportError:
     HAS_VOI = False
 
-    # Stub types for standalone use
-    class ObservationDepth(Enum):
+    # Stub types for standalone use - only define if not already imported
+    class ObservationDepth(Enum):  # type: ignore[no-redef]
         TELEMETRY_ONLY = "telemetry_only"
         SEMANTIC_SPOT = "semantic_spot"
         SEMANTIC_FULL = "semantic_full"
         AXIOLOGICAL = "axiological"
 
-    class FindingType(Enum):
+    class FindingType(Enum):  # type: ignore[no-redef]
         ANOMALY_DETECTED = "anomaly_detected"
         HEALTH_CONFIRMED = "health_confirmed"
         FALSE_POSITIVE = "false_positive"
@@ -300,7 +312,7 @@ class VoIAwareObserver(BaseObserver):
             )
 
         # Create result
-        result = VoIObservationResult(
+        obs_result = VoIObservationResult(
             finding=finding,
             depth_used=depth,
             gas_consumed=gas_cost,
@@ -308,8 +320,8 @@ class VoIAwareObserver(BaseObserver):
             budget_remaining=self.get_remaining_budget(agent_id),
         )
 
-        self._observation_history.append(result)
-        return result
+        self._observation_history.append(obs_result)
+        return obs_result
 
     async def _execute_observation(
         self,

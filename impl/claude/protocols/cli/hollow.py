@@ -59,6 +59,9 @@ WORKSPACE:
   init      Initialize .kgents workspace
   wipe      Remove local/global/all databases (with confirmation)
 
+DAEMON (Cortex gRPC Server):
+  daemon    Manage Cortex daemon (start|stop|status|install|logs)
+
 BOOTSTRAP:
   laws      Display/verify category laws
   principles Display/check 7 design principles
@@ -66,6 +69,16 @@ BOOTSTRAP:
 VISUALIZATION:
   garden    I-gent stigmergic field (TUI)
   dash      TUI dashboard
+
+DEVEX (Trust Loop):
+  ghost     Project system state to .kgents/ghost/
+  flinch    Analyze test failure patterns
+  status    Cortex health at a glance
+  dream     LucidDreamer morning briefing
+  map       M-gent HoloMap visualization
+  signal    SemanticField state
+  observe   Terrarium TUI (glass box visualization)
+  tether    Attach to agent with signal forwarding
 
 OPTIONS:
   --version     Show version
@@ -109,7 +122,7 @@ COMMAND_REGISTRY: dict[str, str] = {
     "library": "protocols.cli.genus.l_gent:cmd_library",
     "witness": "protocols.cli.genus.w_gent:cmd_witness",
     # Aliases (top-level shortcuts)
-    "observe": "protocols.cli.handlers.membrane:cmd_observe",
+    "observe": "protocols.cli.handlers.observe:cmd_observe",  # Terrarium TUI
     "sense": "protocols.cli.handlers.membrane:cmd_sense",
     "trace": "protocols.cli.handlers.membrane:cmd_trace",
     "touch": "protocols.cli.handlers.membrane:cmd_touch",
@@ -126,8 +139,14 @@ COMMAND_REGISTRY: dict[str, str] = {
     "signal": "protocols.cli.handlers.signal:cmd_signal",
     # DevEx V4 Phase 2 - Sensorium
     "ghost": "protocols.cli.handlers.ghost:cmd_ghost",
+    # Trust Loop Integration
+    "flinch": "protocols.cli.handlers.flinch:cmd_flinch",
+    # Phase D - Terrarium TUI + Tether Protocol
+    "terrarium": "protocols.cli.handlers.observe:cmd_observe",  # Alias
+    "tether": "protocols.cli.handlers.tether:cmd_tether",
     # K-Terrarium (Infrastructure)
     "infra": "protocols.cli.handlers.infra:cmd_infra",
+    "daemon": "protocols.cli.handlers.daemon:cmd_daemon",  # Cortex daemon lifecycle
     "exec": "protocols.cli.handlers.exec:cmd_exec",  # Q-gent execution
     "dev": "protocols.cli.handlers.dev:cmd_dev",  # Live reload dev mode
     # MCP (Phase 4)

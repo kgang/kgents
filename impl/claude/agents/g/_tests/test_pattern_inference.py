@@ -109,6 +109,7 @@ class TestPatternCluster:
             dominant_type=PatternType.TOKEN,
             coverage=1.0,
         )
+        assert cluster.primary_pattern is not None
         assert cluster.primary_pattern.pattern == "B"
 
     def test_empty_cluster_primary(self) -> None:

@@ -327,6 +327,7 @@ class TestForgeViewState:
         result = state.add_selected_to_pipeline()
         assert result is True
         assert len(state.pipeline.slots) == 1
+        assert state.pipeline.slots[0].archetype is not None
         assert state.pipeline.slots[0].archetype.id == "b"
 
     def test_add_from_empty_inventory(self) -> None:
@@ -512,9 +513,9 @@ class TestForgeViewKeyHandler:
         state.pipeline.add(Archetype(id="a", name="A", symbol="A"))
         handler = ForgeViewKeyHandler(state)
 
-        executed_pipeline = None
+        executed_pipeline: Pipeline | None = None
 
-        def on_execute(p):
+        def on_execute(p: Pipeline) -> None:
             nonlocal executed_pipeline
             executed_pipeline = p
 
@@ -531,7 +532,7 @@ class TestForgeViewKeyHandler:
 
         exited = False
 
-        def on_exit():
+        def on_exit() -> None:
             nonlocal exited
             exited = True
 

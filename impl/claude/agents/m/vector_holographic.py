@@ -321,7 +321,8 @@ class VectorHolographicMemory(HolographicMemory[T]):
         else:
             query_embedding = query
 
-        return await self._vector_backend.curvature_at(query_embedding, radius)
+        result: float = await self._vector_backend.curvature_at(query_embedding, radius)
+        return result
 
     async def cluster_analysis(self, k: int = 5) -> list[ClusterInfo]:
         """Analyze memory structure via clustering.
@@ -449,8 +450,8 @@ async def create_vector_holographic_memory(
     embedder: Any,
     persistence_path: Optional[Path] = None,
     namespace: str = "holographic",
-    **config_kwargs,
-) -> VectorHolographicMemory:
+    **config_kwargs: Any,
+) -> VectorHolographicMemory[Any]:
     """Create a VectorHolographicMemory with default configuration.
 
     Args:
@@ -466,7 +467,9 @@ async def create_vector_holographic_memory(
     try:
         from agents.l.vector_db import DgentVectorBackend
     except ImportError:
-        from impl.claude.agents.l.vector_db import DgentVectorBackend
+        from impl.claude.agents.l.vector_db import (
+            DgentVectorBackend,  # type: ignore[no-redef]
+        )
 
     config = VectorMemoryConfig(
         dimension=embedder.dimension,
@@ -487,7 +490,7 @@ async def create_vector_holographic_memory(
     )
 
 
-def create_simple_vector_memory(dimension: int = 64) -> VectorHolographicMemory:
+def create_simple_vector_memory(dimension: int = 64) -> VectorHolographicMemory[Any]:
     """Create a VectorHolographicMemory with mock components for testing.
 
     This uses the base HolographicMemory's pseudo-embedding instead of
@@ -522,10 +525,12 @@ def create_simple_vector_memory(dimension: int = 64) -> VectorHolographicMemory:
     class MockVectorBackend:
         """Mock vector backend for testing."""
 
-        def __init__(self):
-            self._vectors: dict[str, tuple[list[float], dict]] = {}
+        def __init__(self) -> None:
+            self._vectors: dict[str, tuple[list[float], dict[str, Any]]] = {}
 
-        async def add(self, id: str, vector: list[float], metadata: dict) -> None:
+        async def add(
+            self, id: str, vector: list[float], metadata: dict[str, Any]
+        ) -> None:
             self._vectors[id] = (vector, metadata)
 
         async def search(
@@ -533,7 +538,7 @@ def create_simple_vector_memory(dimension: int = 64) -> VectorHolographicMemory:
             query_vector: list[float],
             limit: int = 10,
             threshold: float = 0.0,
-            filters: Optional[dict] = None,
+            filters: Optional[dict[str, Any]] = None,
         ) -> list[Any]:
             import math
 
@@ -562,10 +567,12 @@ def create_simple_vector_memory(dimension: int = 64) -> VectorHolographicMemory:
         async def remove(self, id: str) -> None:
             self._vectors.pop(id, None)
 
-        async def find_void(self, *args, **kwargs) -> Optional[dict]:
+        async def find_void(
+            self, *args: Any, **kwargs: Any
+        ) -> Optional[dict[str, Any]]:
             return None
 
-        async def curvature_at(self, *args, **kwargs) -> float:
+        async def curvature_at(self, *args: Any, **kwargs: Any) -> float:
             return 0.5
 
         async def cluster_centers(self, k: int) -> list[list[float]]:

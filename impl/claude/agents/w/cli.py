@@ -83,8 +83,8 @@ class WitnessCLI(CLICapable):
         }
         fidelity_level = fidelity_map.get(fidelity, Fidelity.DOCUMENTARIAN)
 
-        _adapter = get_adapter(fidelity_level)  # noqa: F841 - reserved for future use
         _reader = WireReader(target)  # noqa: F841 - reserved for future use
+        _adapter = get_adapter(_reader, fidelity_level)  # noqa: F841 - reserved for future use
 
         print()
         print(f"  Watching: {target} [{fidelity}]")
@@ -129,7 +129,7 @@ class WitnessCLI(CLICapable):
         - DOCUMENTARIAN: Structured, rendered content
         - LIVEWIRE: Interactive, visual data
         """
-        from agents.w import detect_fidelity
+        from agents.w import WireReader, detect_fidelity
 
         file_path = Path(path)
         if not file_path.exists():
@@ -139,8 +139,9 @@ class WitnessCLI(CLICapable):
                 "reason": f"File not found: {path}",
             }
 
-        content = file_path.read_text()
-        fidelity = detect_fidelity(content)
+        # Create a WireReader for the path
+        reader = WireReader(str(file_path.parent))
+        fidelity_level = detect_fidelity(reader)
 
         # Heuristic reasoning
         if path.endswith(".json"):
@@ -153,7 +154,7 @@ class WitnessCLI(CLICapable):
             reason = "Content analysis"
 
         return {
-            "fidelity": fidelity.value,
+            "fidelity": fidelity_level.value,
             "confidence": 0.85,
             "reason": reason,
         }
@@ -218,7 +219,7 @@ class WitnessCLI(CLICapable):
         print("  Press Ctrl+C to stop")
         print()
 
-        await serve_agent(agent, host=host, port=port)
+        await serve_agent(agent, port=port)
 
         return {
             "agent": agent,
@@ -251,36 +252,36 @@ class WitnessCLI(CLICapable):
         else:
             dash = create_value_dashboard()
 
-        state = dash.get_state()
+        # Get the latest snapshots from the dashboard's history
+        token_history = dash.get_token_history(limit=1)
+        tensor_history = dash.get_tensor_history(limit=1)
+        voi_history = dash.get_voi_history(limit=1)
+        roc_history = dash.get_roc_history(limit=1)
 
         return {
             "tokens": {
-                "total": state.tokens.total if state.tokens else 1000,
-                "consumed": state.tokens.consumed if state.tokens else 150,
-                "remaining": state.tokens.remaining if state.tokens else 850,
+                "total": 1000,
+                "consumed": token_history[0].gas_consumed if token_history else 150,
+                "remaining": token_history[0].gas_available if token_history else 850,
             },
             "tensor": {
-                "physical": state.tensor.physical if state.tensor else 0.8,
-                "semantic": state.tensor.semantic if state.tensor else 0.6,
-                "economic": state.tensor.economic if state.tensor else 0.7,
-                "ethical": state.tensor.ethical if state.tensor else 0.9,
-            }
-            if state.tensor
-            else {"physical": 0.8, "semantic": 0.6, "economic": 0.7, "ethical": 0.9},
+                "physical": tensor_history[0].physical if tensor_history else 0.8,
+                "semantic": tensor_history[0].semantic if tensor_history else 0.6,
+                "economic": tensor_history[0].economic if tensor_history else 0.7,
+                "ethical": tensor_history[0].ethical if tensor_history else 0.9,
+            },
             "voi": {
-                "observations": state.voi.observations if state.voi else 42,
-                "disasters_prevented": state.voi.prevented if state.voi else 3,
-                "rovi": state.voi.rovi if state.voi else 1.2,
-            }
-            if state.voi
-            else {"observations": 42, "disasters_prevented": 3, "rovi": 1.2},
+                "observations": voi_history[0].observations if voi_history else 42,
+                "disasters_prevented": voi_history[0].anomalies_detected
+                if voi_history
+                else 3,
+                "rovi": voi_history[0].rovi if voi_history else 1.2,
+            },
             "roc": {
-                "complexity": state.roc.complexity if state.roc else 5.2,
-                "value": state.roc.value if state.roc else 8.1,
-                "roc": state.roc.roc if state.roc else 1.56,
-            }
-            if state.roc
-            else {"complexity": 5.2, "value": 8.1, "roc": 1.56},
+                "complexity": roc_history[0].total_gas_consumed if roc_history else 5.2,
+                "value": roc_history[0].total_value_generated if roc_history else 8.1,
+                "roc": roc_history[0].current_roc if roc_history else 1.56,
+            },
         }
 
     @expose(

@@ -448,7 +448,7 @@ class AutoTeleprompterSelector:
         self,
         analysis: TaskAnalysis,
         strategy: TeleprompterStrategy,
-        profile: dict,
+        profile: dict[str, Any],
     ) -> float:
         """Score a strategy for the given task analysis."""
         # Check hard constraints
@@ -462,9 +462,9 @@ class AutoTeleprompterSelector:
             return 0.1  # Can handle but not optimal
 
         # Weighted score
-        cost_score = profile["cost"]
-        quality_score = profile["quality"]
-        speed_score = profile["speed"]
+        cost_score: float = profile["cost"]
+        quality_score: float = profile["quality"]
+        speed_score: float = profile["speed"]
 
         # Adjust quality score based on task needs
         if analysis.requires_reasoning_chain and strategy in (
@@ -1148,7 +1148,7 @@ class CrossModelTransferAnalyzer:
       Transfer: Model × Trace → Prediction
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize transfer analyzer."""
         # Transfer efficiency matrix (source_family -> target_family -> efficiency)
         self._transfer_matrix = {
@@ -1793,9 +1793,13 @@ class AdvancedRefinery(Generic[A, B]):
             method=self.config.drift_method,
         )
 
-        self._transfer_analyzer = CrossModelTransferAnalyzer()
+        self._transfer_analyzer: CrossModelTransferAnalyzer = (
+            CrossModelTransferAnalyzer()
+        )
 
-        self._finetune_teleprompter = BootstrapFinetuneTeleprompter()
+        self._finetune_teleprompter: BootstrapFinetuneTeleprompter[Any, Any] = (
+            BootstrapFinetuneTeleprompter()
+        )
 
         self._reopt_trigger = ReoptimizationTrigger(
             drift_threshold=self.config.drift_threshold,

@@ -1,8 +1,11 @@
 """Tests for StreamAgent - Temporal Witness foundation."""
 
+from __future__ import annotations
+
 import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Any
 
 import pytest
 from agents.d.errors import DriftDetectionError
@@ -16,17 +19,17 @@ class TestStreamAgentBasics:
     """Basic StreamAgent operations."""
 
     @pytest.fixture
-    def counter_agent(self):
+    def counter_agent(self) -> StreamAgent[int, dict[str, Any]]:
         """Create a simple counter stream agent."""
 
-        def fold(state: int, event: dict) -> int:
+        def fold(state: int, event: dict[str, Any]) -> int:
             if event.get("type") == "increment":
-                return state + event.get("amount", 1)
+                return state + int(event.get("amount", 1))
             elif event.get("type") == "decrement":
-                return state - event.get("amount", 1)
+                return state - int(event.get("amount", 1))
             return state
 
-        return StreamAgent(fold=fold, initial=0)
+        return StreamAgent(fold=fold, initial=0)  # type: ignore[arg-type]
 
     @pytest.fixture
     def witness(self) -> WitnessReport:
@@ -37,46 +40,56 @@ class TestStreamAgentBasics:
             context={"test": True},
         )
 
-    async def test_append_and_load(self, counter_agent, witness) -> None:
+    async def test_append_and_load(
+        self, counter_agent: StreamAgent[int, dict[str, Any]], witness: WitnessReport
+    ) -> None:
         """Test appending events and loading state."""
-        await counter_agent.append({"type": "increment", "amount": 5}, witness)
+        await counter_agent.append({"type": "increment", "amount": 5}, witness)  # type: ignore[arg-type]
 
         state = await counter_agent.load()
-        assert state == 5
+        assert state == 5  # type: ignore[comparison-overlap]
 
-    async def test_multiple_events(self, counter_agent, witness) -> None:
+    async def test_multiple_events(
+        self, counter_agent: StreamAgent[int, dict[str, Any]], witness: WitnessReport
+    ) -> None:
         """Test multiple events fold correctly."""
-        await counter_agent.append({"type": "increment", "amount": 5}, witness)
-        await counter_agent.append({"type": "increment", "amount": 3}, witness)
-        await counter_agent.append({"type": "decrement", "amount": 2}, witness)
+        await counter_agent.append({"type": "increment", "amount": 5}, witness)  # type: ignore[arg-type]
+        await counter_agent.append({"type": "increment", "amount": 3}, witness)  # type: ignore[arg-type]
+        await counter_agent.append({"type": "decrement", "amount": 2}, witness)  # type: ignore[arg-type]
 
         state = await counter_agent.load()
-        assert state == 6  # 5 + 3 - 2
+        assert state == 6  # type: ignore[comparison-overlap]  # 5 + 3 - 2
 
-    async def test_history_returns_states(self, counter_agent, witness) -> None:
+    async def test_history_returns_states(
+        self, counter_agent: StreamAgent[int, dict[str, Any]], witness: WitnessReport
+    ) -> None:
         """Test history returns historical states."""
-        await counter_agent.append({"type": "increment", "amount": 1}, witness)
-        await counter_agent.append({"type": "increment", "amount": 2}, witness)
-        await counter_agent.append({"type": "increment", "amount": 3}, witness)
+        await counter_agent.append({"type": "increment", "amount": 1}, witness)  # type: ignore[arg-type]
+        await counter_agent.append({"type": "increment", "amount": 2}, witness)  # type: ignore[arg-type]
+        await counter_agent.append({"type": "increment", "amount": 3}, witness)  # type: ignore[arg-type]
 
         history = await counter_agent.history()
         # States after each event: 1, 3, 6
-        assert history == [6, 3, 1]  # Newest first
+        assert history == [6, 3, 1]  # type: ignore[comparison-overlap]  # Newest first
 
-    async def test_history_limit(self, counter_agent, witness) -> None:
+    async def test_history_limit(
+        self, counter_agent: StreamAgent[int, dict[str, Any]], witness: WitnessReport
+    ) -> None:
         """Test history respects limit."""
         for i in range(10):
-            await counter_agent.append({"type": "increment", "amount": 1}, witness)
+            await counter_agent.append({"type": "increment", "amount": 1}, witness)  # type: ignore[arg-type]
 
         history = await counter_agent.history(limit=3)
         assert len(history) == 3
 
-    async def test_event_count(self, counter_agent, witness) -> None:
+    async def test_event_count(
+        self, counter_agent: StreamAgent[int, dict[str, Any]], witness: WitnessReport
+    ) -> None:
         """Test event count."""
         assert await counter_agent.event_count() == 0
 
-        await counter_agent.append({"type": "increment"}, witness)
-        await counter_agent.append({"type": "increment"}, witness)
+        await counter_agent.append({"type": "increment"}, witness)  # type: ignore[arg-type]
+        await counter_agent.append({"type": "increment"}, witness)  # type: ignore[arg-type]
 
         assert await counter_agent.event_count() == 2
 
@@ -85,24 +98,26 @@ class TestTimeTravel:
     """Time-travel (replay) operations."""
 
     @pytest.fixture
-    def agent_with_events(self):
+    def agent_with_events(self) -> StreamAgent[list[str], str]:
         """Create agent with timed events."""
 
-        def fold(state: list, event: str) -> list:
+        def fold(state: list[str], event: str) -> list[str]:
             return state + [event]
 
-        return StreamAgent(fold=fold, initial=[])
+        return StreamAgent(fold=fold, initial=[])  # type: ignore[arg-type]
 
-    async def test_replay_to_timestamp(self, agent_with_events) -> None:
+    async def test_replay_to_timestamp(
+        self, agent_with_events: StreamAgent[list[str], str]
+    ) -> None:
         """Test replaying to specific timestamp."""
         agent = agent_with_events
         witness = WitnessReport(observer_id="test", confidence=1.0)
 
         # Add events at different times
-        await agent.append("event1", witness)
+        await agent.append("event1", witness)  # type: ignore[arg-type]
         mid_time = datetime.now()
-        await agent.append("event2", witness)
-        await agent.append("event3", witness)
+        await agent.append("event2", witness)  # type: ignore[arg-type]
+        await agent.append("event3", witness)  # type: ignore[arg-type]
 
         # Replay to mid_time should include event1 but not event2/3
         # Actually, mid_time is after event1, so it includes event1
@@ -111,33 +126,37 @@ class TestTimeTravel:
         # Due to timing, this may include event1 or event1+event2
         assert "event1" in state or len(state) >= 1
 
-    async def test_replay_range(self, agent_with_events) -> None:
+    async def test_replay_range(
+        self, agent_with_events: StreamAgent[list[str], str]
+    ) -> None:
         """Test replaying a time range."""
         agent = agent_with_events
         witness = WitnessReport(observer_id="test", confidence=1.0)
 
         before = datetime.now() - timedelta(seconds=1)
-        await agent.append("event1", witness)
-        await agent.append("event2", witness)
+        await agent.append("event1", witness)  # type: ignore[arg-type]
+        await agent.append("event2", witness)  # type: ignore[arg-type]
         after = datetime.now() + timedelta(seconds=1)
 
         state = await agent.replay(before, after)
-        assert state == ["event1", "event2"]
+        assert state == ["event1", "event2"]  # type: ignore[comparison-overlap]
 
-    async def test_replay_with_witnesses(self, agent_with_events) -> None:
+    async def test_replay_with_witnesses(
+        self, agent_with_events: StreamAgent[list[str], str]
+    ) -> None:
         """Test replay returns witness reports."""
         agent = agent_with_events
         witness = WitnessReport(observer_id="observer1", confidence=0.8)
 
         before = datetime.now() - timedelta(seconds=1)
-        await agent.append("event1", witness)
+        await agent.append("event1", witness)  # type: ignore[arg-type]
         after = datetime.now() + timedelta(seconds=1)
 
         results = await agent.replay_with_witnesses(before, after)
 
         assert len(results) == 1
         event, state, witness_report = results[0]
-        assert event == "event1"
+        assert event == "event1"  # type: ignore[comparison-overlap]
         assert witness_report.observer_id == "observer1"
         assert witness_report.confidence == 0.8
 
@@ -146,15 +165,17 @@ class TestDriftDetection:
     """Drift detection operations."""
 
     @pytest.fixture
-    def numeric_agent(self):
+    def numeric_agent(self) -> StreamAgent[dict[str, Any], dict[str, Any]]:
         """Create agent that tracks numeric values."""
 
-        def fold(state: dict, event: dict) -> dict:
+        def fold(state: dict[str, Any], event: dict[str, Any]) -> dict[str, Any]:
             return {**state, **event}
 
         return StreamAgent(fold=fold, initial={"value": 50})
 
-    async def test_detect_drift_numeric(self, numeric_agent) -> None:
+    async def test_detect_drift_numeric(
+        self, numeric_agent: StreamAgent[dict[str, Any], dict[str, Any]]
+    ) -> None:
         """Test drift detection on numeric values."""
         agent = numeric_agent
         witness = WitnessReport(observer_id="test", confidence=1.0)
@@ -177,7 +198,9 @@ class TestDriftDetection:
         assert report.drift_detected is True
         assert report.drift_magnitude > 0.5
 
-    async def test_detect_drift_stable(self, numeric_agent) -> None:
+    async def test_detect_drift_stable(
+        self, numeric_agent: StreamAgent[dict[str, Any], dict[str, Any]]
+    ) -> None:
         """Test drift detection when stable."""
         agent = numeric_agent
         witness = WitnessReport(observer_id="test", confidence=1.0)
@@ -198,10 +221,10 @@ class TestDriftDetection:
     async def test_detect_drift_insufficient_data(self) -> None:
         """Test drift detection with insufficient data."""
 
-        def fold(state, event):
+        def fold(state: int, event: int) -> int:
             return event
 
-        agent = StreamAgent(fold=fold, initial=0)
+        agent: StreamAgent[int, int] = StreamAgent(fold=fold, initial=0)
         witness = WitnessReport(observer_id="test", confidence=1.0)
 
         await agent.append(1, witness)
@@ -219,7 +242,7 @@ class TestMomentumTracking:
     """Momentum (semantic velocity) tracking."""
 
     @pytest.fixture
-    def momentum_agent(self):
+    def momentum_agent(self) -> StreamAgent[float, float]:
         """Create agent for momentum testing."""
 
         def fold(state: float, event: float) -> float:
@@ -227,7 +250,9 @@ class TestMomentumTracking:
 
         return StreamAgent(fold=fold, initial=0.0)
 
-    async def test_momentum_increasing(self, momentum_agent) -> None:
+    async def test_momentum_increasing(
+        self, momentum_agent: StreamAgent[float, float]
+    ) -> None:
         """Test momentum when increasing."""
         agent = momentum_agent
         witness = WitnessReport(observer_id="test", confidence=0.9)
@@ -245,7 +270,9 @@ class TestMomentumTracking:
         assert momentum.magnitude > 0
         assert momentum.confidence > 0.8
 
-    async def test_momentum_decreasing(self, momentum_agent) -> None:
+    async def test_momentum_decreasing(
+        self, momentum_agent: StreamAgent[float, float]
+    ) -> None:
         """Test momentum when decreasing."""
         agent = momentum_agent
         witness = WitnessReport(observer_id="test", confidence=0.9)
@@ -262,7 +289,9 @@ class TestMomentumTracking:
         assert momentum.direction == "decreasing"
         assert momentum.magnitude > 0
 
-    async def test_momentum_stable(self, momentum_agent) -> None:
+    async def test_momentum_stable(
+        self, momentum_agent: StreamAgent[float, float]
+    ) -> None:
         """Test momentum when stable."""
         agent = momentum_agent
         witness = WitnessReport(observer_id="test", confidence=0.9)
@@ -286,10 +315,10 @@ class TestEntropyMeasurement:
     async def test_entropy_high(self) -> None:
         """Test high entropy (rapid change)."""
 
-        def fold(state, event):
+        def fold(state: int, event: int) -> int:
             return event
 
-        agent = StreamAgent(fold=fold, initial=0)
+        agent: StreamAgent[int, int] = StreamAgent(fold=fold, initial=0)
 
         # Many events with high anomaly score
         # Entropy = 0.6 * normalized_rate + 0.4 * avg_anomaly
@@ -310,10 +339,10 @@ class TestEntropyMeasurement:
     async def test_entropy_low(self) -> None:
         """Test low entropy (stable)."""
 
-        def fold(state, event):
+        def fold(state: int, event: int) -> int:
             return event
 
-        agent = StreamAgent(fold=fold, initial=0)
+        agent: StreamAgent[int, int] = StreamAgent(fold=fold, initial=0)
 
         # Few events with low anomaly
         witness = WitnessReport(
@@ -329,10 +358,10 @@ class TestEntropyMeasurement:
     async def test_entropy_empty(self) -> None:
         """Test entropy when no events."""
 
-        def fold(state, event):
+        def fold(state: int, event: int) -> int:
             return event
 
-        agent = StreamAgent(fold=fold, initial=0)
+        agent: StreamAgent[int, int] = StreamAgent(fold=fold, initial=0)
 
         entropy = await agent.entropy(window=timedelta(hours=1))
         assert entropy == 0.0
@@ -344,28 +373,32 @@ class TestEventHistory:
     async def test_event_history_filter(self) -> None:
         """Test filtering event history."""
 
-        def fold(state, event):
+        def fold(
+            state: list[dict[str, str]], event: dict[str, str]
+        ) -> list[dict[str, str]]:
             return state + [event]
 
-        agent = StreamAgent(fold=fold, initial=[])
+        agent: StreamAgent[list[dict[str, str]], dict[str, str]] = StreamAgent(
+            fold=fold, initial=[]
+        )  # type: ignore[arg-type]
         witness = WitnessReport(observer_id="test", confidence=1.0)
 
-        await agent.append({"type": "a"}, witness)
-        await agent.append({"type": "b"}, witness)
-        await agent.append({"type": "a"}, witness)
+        await agent.append({"type": "a"}, witness)  # type: ignore[arg-type]
+        await agent.append({"type": "b"}, witness)  # type: ignore[arg-type]
+        await agent.append({"type": "a"}, witness)  # type: ignore[arg-type]
 
-        history = await agent.event_history(filter_by=lambda e: e.get("type") == "a")
+        history = await agent.event_history(filter_by=lambda e: e.get("type") == "a")  # type: ignore[attr-defined]
 
         assert len(history) == 2
-        assert all(e["type"] == "a" for _, e, _ in history)
+        assert all(e["type"] == "a" for _, e, _ in history)  # type: ignore[call-overload]
 
     async def test_events_since(self) -> None:
         """Test getting events since timestamp."""
 
-        def fold(state, event):
+        def fold(state: int, event: int) -> int:
             return event
 
-        agent = StreamAgent(fold=fold, initial=0)
+        agent: StreamAgent[int, int] = StreamAgent(fold=fold, initial=0)
         witness = WitnessReport(observer_id="test", confidence=1.0)
 
         await agent.append(1, witness)
@@ -416,14 +449,18 @@ class TestStreamAgentPersistence:
                 return state + event
 
             # Create and populate
-            agent1 = StreamAgent(fold=fold, initial=0, persistence_path=path)
+            agent1: StreamAgent[int, int] = StreamAgent(
+                fold=fold, initial=0, persistence_path=path
+            )
             witness = WitnessReport(observer_id="test", confidence=1.0)
 
             await agent1.append(5, witness)
             await agent1.append(3, witness)
 
             # Create new instance from same path
-            agent2 = StreamAgent(fold=fold, initial=0, persistence_path=path)
+            agent2: StreamAgent[int, int] = StreamAgent(
+                fold=fold, initial=0, persistence_path=path
+            )
 
             # Should have loaded state
             state = await agent2.load()
@@ -438,10 +475,12 @@ class TestStreamAgentPersistence:
         with tempfile.TemporaryDirectory() as tmpdir:
             path = Path(tmpdir) / "stream.json"
 
-            def fold(state, event):
+            def fold(state: int, event: int) -> int:
                 return event
 
-            agent1 = StreamAgent(fold=fold, initial=0, persistence_path=path)
+            agent1: StreamAgent[int, int] = StreamAgent(
+                fold=fold, initial=0, persistence_path=path
+            )
             witness = WitnessReport(
                 observer_id="observer1",
                 confidence=0.75,
@@ -452,7 +491,9 @@ class TestStreamAgentPersistence:
             await agent1.append(1, witness)
 
             # Load fresh
-            agent2 = StreamAgent(fold=fold, initial=0, persistence_path=path)
+            agent2: StreamAgent[int, int] = StreamAgent(
+                fold=fold, initial=0, persistence_path=path
+            )
 
             events = await agent2.events_since(datetime.min)
             assert len(events) == 1
@@ -467,10 +508,10 @@ class TestBoundedEventLog:
     async def test_max_events_enforced(self) -> None:
         """Test that max_events limit is enforced."""
 
-        def fold(state, event):
+        def fold(state: int, event: int) -> int:
             return state + 1
 
-        agent = StreamAgent(fold=fold, initial=0, max_events=5)
+        agent: StreamAgent[int, int] = StreamAgent(fold=fold, initial=0, max_events=5)
         witness = WitnessReport(observer_id="test", confidence=1.0)
 
         # Add more events than max
@@ -487,12 +528,14 @@ class TestSaveMethod:
     async def test_save_creates_synthetic_event(self) -> None:
         """Test save() creates synthetic state_set event."""
 
-        def fold(state, event):
+        def fold(state: int, event: dict[str, Any] | int) -> int:
             if isinstance(event, dict) and event.get("__synthetic__") == "state_set":
-                return event["value"]
+                return int(event["value"])
             return state
 
-        agent = StreamAgent(fold=fold, initial=0)
+        agent: StreamAgent[int, dict[str, Any] | int] = StreamAgent(
+            fold=fold, initial=0
+        )  # type: ignore[arg-type]
 
         await agent.save(42)
 

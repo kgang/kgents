@@ -27,8 +27,9 @@ from typing import (
 )
 
 # Type variables
-A = TypeVar("A")  # Input type
-B = TypeVar("B")  # Output type
+# Covariant for use in Protocol (appears only in return positions)
+A = TypeVar("A", covariant=True)  # Input type
+B = TypeVar("B", covariant=True)  # Output type
 
 
 # --- Signature: Declarative Task Specification ---

@@ -1,5 +1,7 @@
 """Tests for DiffBasedParser (Phase 3: Novel Techniques)."""
 
+from __future__ import annotations
+
 from agents.p.strategies.diff_based import (
     DiffBasedParser,
     create_egent_diff_parser,
@@ -26,6 +28,7 @@ class TestUnifiedDiff:
 """
         result = parser.parse(diff)
         assert result.success
+        assert result.value is not None
         assert "LINE2" in result.value
         assert result.confidence >= 0.8
 
@@ -46,6 +49,7 @@ class TestUnifiedDiff:
 """
         result = parser.parse(diff)
         assert result.success
+        assert result.value is not None
         assert "B" in result.value
 
     def test_unified_diff_not_present(self) -> None:
@@ -67,6 +71,7 @@ class TestSimpleReplacement:
         assert result.success
         assert result.value == "Hello Universe"
         assert result.confidence >= 0.85
+        assert result.strategy is not None
         assert "sed-replacement" in result.strategy
 
     def test_replace_with_format(self) -> None:
@@ -76,6 +81,7 @@ class TestSimpleReplacement:
         result = parser.parse(diff)
 
         assert result.success
+        assert result.value is not None
         assert "BAR" in result.value
         assert result.confidence >= 0.8
 
@@ -86,6 +92,7 @@ class TestSimpleReplacement:
         result = parser.parse(diff)
 
         assert result.success
+        assert result.value is not None
         assert "TEST" in result.value
 
     def test_replacement_not_found(self) -> None:
@@ -109,6 +116,7 @@ class TestLinePatch:
         result = parser.parse(diff)
 
         assert result.success
+        assert result.value is not None
         assert "LINE2" in result.value
         lines = result.value.split("\n")
         assert lines[1] == "LINE2"
@@ -121,6 +129,7 @@ class TestLinePatch:
         result = parser.parse(diff)
 
         assert result.success
+        assert result.value is not None
         assert "B" in result.value
 
     def test_at_notation(self) -> None:
@@ -131,6 +140,7 @@ class TestLinePatch:
         result = parser.parse(diff)
 
         assert result.success
+        assert result.value is not None
         assert "TWO" in result.value
 
     def test_line_out_of_range(self) -> None:
@@ -155,6 +165,7 @@ class TestFallbackChain:
         result = parser.parse(diff)
 
         assert result.success
+        assert result.value is not None
         assert "universe" in result.value
 
     def test_failure_after_all_attempts(self) -> None:
@@ -164,6 +175,7 @@ class TestFallbackChain:
         result = parser.parse(diff)
 
         assert not result.success
+        assert result.error is not None
         assert "Could not parse diff" in result.error
 
 
@@ -196,6 +208,7 @@ class TestConvenienceFunctions:
         result = parser.parse(diff)
 
         assert result.success
+        assert result.value is not None
         assert "Hello World" in result.value
         assert parser.fuzz_factor == 3  # Configured for HTML
 
@@ -208,6 +221,7 @@ class TestConvenienceFunctions:
         result = parser.parse(diff)
 
         assert result.success
+        assert result.value is not None
         assert "return 42" in result.value
         assert parser.fuzz_factor == 1  # Strict for code
 
@@ -223,7 +237,8 @@ class TestStreamParsing:
 
         assert len(results) == 1
         assert results[0].success
-        assert results[0].value is not None and "world" in results[0].value
+        assert results[0].value is not None
+        assert "world" in results[0].value
 
 
 class TestRepairTracking:
@@ -268,6 +283,7 @@ class TestRealWorldScenarios:
         result = parser.parse(diff)
 
         assert result.success
+        assert result.value is not None
         assert "Status: Running" in result.value
         assert "Loading..." not in result.value
 
@@ -283,5 +299,6 @@ def process(data):
         result = parser.parse(diff)
 
         assert result.success
+        assert result.value is not None
         assert "return [x * 2 for x in data]" in result.value
         assert "pass" not in result.value

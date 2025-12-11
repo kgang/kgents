@@ -4,6 +4,8 @@ L-gent Registry Tests
 Tests for the L-gent catalog registry implementation.
 """
 
+from __future__ import annotations
+
 import pytest
 from agents.l import CatalogEntry, EntityType, Registry, Status
 
@@ -150,19 +152,19 @@ async def test_registry_list_with_filters() -> None:
         await registry.register(entry)
 
     # List all
-    all_entries = await registry.list()
+    all_entries = await registry.list_entries()
     assert len(all_entries) == 5
 
     # Filter by entity_type
-    tongues = await registry.list(entity_type=EntityType.TONGUE)
+    tongues = await registry.list_entries(entity_type=EntityType.TONGUE)
     assert len(tongues) == 3  # 0, 2, 4
 
     # Filter by author
-    alice_entries = await registry.list(author="alice")
+    alice_entries = await registry.list_entries(author="alice")
     assert len(alice_entries) == 3  # 0, 1, 2
 
     # Filter with limit
-    limited = await registry.list(limit=2)
+    limited = await registry.list_entries(limit=2)
     assert len(limited) == 2
 
 
@@ -234,6 +236,7 @@ async def test_registry_update_usage() -> None:
     await registry.update_usage("test:usage:1.0.0", success=True)
 
     updated = await registry.get("test:usage:1.0.0")
+    assert updated is not None
     assert updated.usage_count == 1
     assert updated.success_rate == 1.0
     assert updated.last_used is not None
@@ -242,6 +245,7 @@ async def test_registry_update_usage() -> None:
     await registry.update_usage("test:usage:1.0.0", success=False, error="Test error")
 
     updated = await registry.get("test:usage:1.0.0")
+    assert updated is not None
     assert updated.usage_count == 2
     assert updated.success_rate < 1.0  # Should decrease
     assert updated.last_error == "Test error"
@@ -272,6 +276,7 @@ async def test_registry_deprecate() -> None:
 
     # Check status
     deprecated = await registry.get("test:deprecate:1.0.0")
+    assert deprecated is not None
     assert deprecated.status == Status.DEPRECATED
     assert deprecated.deprecation_reason == "Replaced by v2.0.0"
     assert deprecated.deprecated_in_favor_of == "test:deprecate:2.0.0"

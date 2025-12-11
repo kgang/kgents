@@ -10,10 +10,14 @@ This file implements the basic keyword search. Semantic and graph search
 will be added in future phases.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
 
-from .catalog import CatalogEntry, EntityType, Registry, Status
+from .registry import Registry
+from .types import CatalogEntry, EntityType, Status
 
 
 class SearchStrategy(Enum):
@@ -44,7 +48,7 @@ class Search:
     Phase 4: Fusion layer combining all strategies
     """
 
-    def __init__(self, registry: Registry):
+    def __init__(self, registry: Registry) -> None:
         """Initialize search with a registry."""
         self.registry = registry
 
@@ -53,7 +57,7 @@ class Search:
         query: str,
         strategy: SearchStrategy = SearchStrategy.KEYWORD,
         limit: int = 10,
-        filters: dict[str, any] | None = None,
+        filters: dict[str, Any] | None = None,
     ) -> list[SearchResult]:
         """Search the catalog.
 
@@ -78,7 +82,7 @@ class Search:
             raise ValueError(f"Unknown search strategy: {strategy}")
 
     async def _keyword_search(
-        self, query: str, limit: int, filters: dict[str, any] | None = None
+        self, query: str, limit: int, filters: dict[str, Any] | None = None
     ) -> list[SearchResult]:
         """Simple keyword-based search.
 
@@ -96,7 +100,7 @@ class Search:
         - Match in description: +0.2
         - Match in contracts: +0.1
         """
-        all_entries = await self.registry.list_all()
+        all_entries = await self.registry.list_entries()
 
         # Apply filters
         if filters:
@@ -159,7 +163,7 @@ class Search:
         return results[:limit]
 
     def _apply_filters(
-        self, entries: list[CatalogEntry], filters: dict[str, any]
+        self, entries: list[CatalogEntry], filters: dict[str, Any]
     ) -> list[CatalogEntry]:
         """Apply filters to entry list.
 
@@ -211,7 +215,7 @@ class Search:
         Returns:
             Agents matching the type signature
         """
-        all_entries = await self.registry.list_by_type(EntityType.AGENT)
+        all_entries = await self.registry.list_entries(entity_type=EntityType.AGENT)
 
         results: list[SearchResult] = []
 

@@ -19,7 +19,7 @@ import pytest
 
 
 @pytest.fixture
-def id_agent():
+def id_agent() -> Any:
     """Identity agent from bootstrap."""
     from bootstrap import ID
 
@@ -27,7 +27,7 @@ def id_agent():
 
 
 @pytest.fixture
-def compose_fn():
+def compose_fn() -> Callable[[Any, Any], Any]:
     """Compose function from bootstrap."""
     from bootstrap import compose
 
@@ -40,7 +40,7 @@ def compose_fn():
 
 
 @pytest.fixture
-def make_test_agent():
+def make_test_agent() -> Callable[[str, Callable[[Any], Any]], Any]:
     """Factory for creating test agents with known transforms."""
     from agents.o.bootstrap_witness import TestAgent
 
@@ -51,7 +51,9 @@ def make_test_agent():
 
 
 @pytest.fixture
-def additive_agents(make_test_agent):
+def additive_agents(
+    make_test_agent: Callable[[str, Callable[[Any], Any]], Any],
+) -> list[Any]:
     """Set of additive agents for associativity testing."""
     return [
         make_test_agent("add_1", lambda x: x + 1),
@@ -61,7 +63,9 @@ def additive_agents(make_test_agent):
 
 
 @pytest.fixture
-def multiplicative_agents(make_test_agent):
+def multiplicative_agents(
+    make_test_agent: Callable[[str, Callable[[Any], Any]], Any],
+) -> list[Any]:
     """Set of multiplicative agents for associativity testing."""
     return [
         make_test_agent("mul_2", lambda x: x * 2),
@@ -76,7 +80,7 @@ def multiplicative_agents(make_test_agent):
 
 
 @pytest.fixture
-def law_verifier(id_agent, compose_fn):
+def law_verifier(id_agent: Any, compose_fn: Callable[[Any, Any], Any]) -> Any:
     """
     Law verification helper.
 
@@ -86,11 +90,13 @@ def law_verifier(id_agent, compose_fn):
     class LawVerifier:
         """Verify category laws for agents."""
 
-        def __init__(self):
+        def __init__(self) -> None:
             self.id = id_agent
             self.compose = compose_fn
 
-        async def check_left_identity(self, agent: Any, test_input: Any) -> dict:
+        async def check_left_identity(
+            self, agent: Any, test_input: Any
+        ) -> dict[str, Any]:
             """Check Id >> f == f."""
             composed = self.compose(self.id, agent)
             composed_result = await composed.invoke(test_input)
@@ -104,7 +110,9 @@ def law_verifier(id_agent, compose_fn):
                 "input": test_input,
             }
 
-        async def check_right_identity(self, agent: Any, test_input: Any) -> dict:
+        async def check_right_identity(
+            self, agent: Any, test_input: Any
+        ) -> dict[str, Any]:
             """Check f >> Id == f."""
             composed = self.compose(agent, self.id)
             composed_result = await composed.invoke(test_input)
@@ -120,7 +128,7 @@ def law_verifier(id_agent, compose_fn):
 
         async def check_associativity(
             self, f: Any, g: Any, h: Any, test_input: Any
-        ) -> dict:
+        ) -> dict[str, Any]:
             """Check (f >> g) >> h == f >> (g >> h)."""
             left = self.compose(self.compose(f, g), h)
             right = self.compose(f, self.compose(g, h))

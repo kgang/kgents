@@ -13,9 +13,11 @@ Composition Laws verified:
 """
 
 import asyncio
+from typing import Any
 
 import pytest
 from agents.d import Symbiont, VolatileAgent
+from bootstrap.id import Id
 
 
 @pytest.mark.asyncio
@@ -108,7 +110,6 @@ async def test_composition_with_bootstrap() -> None:
 
     Verifies identity law: Id >> f >> Id == f
     """
-    from bootstrap.id import Id
 
     def logic(x: int, state: int) -> tuple[int, int]:
         return x + state, state + 1
@@ -117,7 +118,7 @@ async def test_composition_with_bootstrap() -> None:
     symbiont = Symbiont(logic=logic, memory=memory)
 
     # Compose with Identity (bootstrap agent)
-    pipeline = Id() >> symbiont >> Id()
+    pipeline: Any = Id[int]() >> symbiont >> Id[int]()
 
     result1 = await pipeline.invoke(5)
     assert result1 == 5  # 5 + 0
@@ -214,7 +215,7 @@ async def test_state_independence() -> None:
 if __name__ == "__main__":
     import asyncio
 
-    async def run_tests():
+    async def run_tests() -> None:
         """Run all tests manually."""
         print("Running Symbiont tests...")
 

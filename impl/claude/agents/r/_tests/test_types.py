@@ -88,7 +88,7 @@ class TestSignature:
         sig = Signature.simple("a", str, "b", str, "test")
 
         with pytest.raises(AttributeError):
-            sig.instructions = "modified"
+            object.__setattr__(sig, "instructions", "modified")
 
 
 class TestFieldSpec:
@@ -148,7 +148,7 @@ class TestExample:
         ex = Example.simple("a", "b")
 
         with pytest.raises(AttributeError):
-            ex.inputs = {"modified": "value"}
+            object.__setattr__(ex, "inputs", {"modified": "value"})
 
 
 # --- TextualGradient Tests ---
@@ -185,7 +185,7 @@ class TestTextualGradient:
         grad = TextualGradient(feedback="test")
 
         with pytest.raises(AttributeError):
-            grad.feedback = "modified"
+            object.__setattr__(grad, "feedback", "modified")
 
 
 # --- OptimizationTrace Tests ---
@@ -435,7 +435,9 @@ class TestTypesIntegration:
         # 5. Verify all types work together
         assert trace.baseline_score == 0.5
         assert trace.final_score == 0.8
-        assert abs(trace.improvement - 0.3) < 0.001  # Float comparison
+        assert (
+            trace.improvement is not None and abs(trace.improvement - 0.3) < 0.001
+        )  # Float comparison
 
     def test_gradient_in_trace(self) -> None:
         """Test that gradients can be recorded in iterations."""

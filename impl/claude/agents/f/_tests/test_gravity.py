@@ -8,6 +8,10 @@ Tests the Grounded pattern from spec/protocols/umwelt.md:
 - GravityBuilder
 """
 
+from __future__ import annotations
+
+from typing import Any
+
 import pytest
 from agents.f.gravity import (
     BoundedLength,
@@ -97,7 +101,7 @@ class TestFactConsistency:
     def test_custom_check_function(self) -> None:
         """Custom check function can be provided."""
 
-        def custom_check(output, facts):
+        def custom_check(output: Any, facts: dict[str, Any]) -> str | None:
             if "forbidden" in str(output).lower():
                 return "Contains forbidden word"
             return None
@@ -177,19 +181,19 @@ class TestTypeContract:
 
     def test_correct_type_passes(self) -> None:
         """Correct type passes."""
-        contract = TypeContract(expected_type=dict)
+        contract: TypeContract = TypeContract(expected_type=dict)
         assert contract.check({"key": "value"}) is None
 
     def test_wrong_type_fails(self) -> None:
         """Wrong type fails."""
-        contract = TypeContract(expected_type=dict)
+        contract: TypeContract = TypeContract(expected_type=dict)
         result = contract.check("string instead")
         assert result is not None
         assert "Type mismatch" in result
 
     def test_tuple_of_types(self) -> None:
         """Multiple acceptable types work."""
-        contract = TypeContract(expected_type=(dict, list))
+        contract: TypeContract = TypeContract(expected_type=(dict, list))
         assert contract.check({"key": "value"}) is None
         assert contract.check([1, 2, 3]) is None
         result = contract.check("string")
@@ -311,16 +315,16 @@ class TestComposedContract:
 
     def test_all_pass_composition_passes(self) -> None:
         """All passing contracts → composition passes."""
-        c1 = TypeContract(expected_type=dict)
-        c2 = RequiredFields(fields=["id"])
+        c1: TypeContract = TypeContract(expected_type=dict)
+        c2: RequiredFields = RequiredFields(fields=["id"])
         composed = c1 & c2
 
         assert composed.check({"id": 1}) is None
 
     def test_one_fails_composition_fails(self) -> None:
         """One failing contract → composition fails."""
-        c1 = TypeContract(expected_type=dict)
-        c2 = RequiredFields(fields=["id", "name"])
+        c1: TypeContract = TypeContract(expected_type=dict)
+        c2: RequiredFields = RequiredFields(fields=["id", "name"])
         composed = c1 & c2
 
         result = composed.check({"id": 1})  # Missing "name"
@@ -328,8 +332,8 @@ class TestComposedContract:
 
     def test_composition_name(self) -> None:
         """Composition name includes all contracts."""
-        c1 = TypeContract(expected_type=dict)
-        c2 = RequiredFields(fields=["id"])
+        c1: TypeContract = TypeContract(expected_type=dict)
+        c2: RequiredFields = RequiredFields(fields=["id"])
         composed = c1 & c2
 
         assert "TypeContract" in composed.name
@@ -406,8 +410,18 @@ class TestGrounded:
     @pytest.mark.asyncio
     async def test_grounded_multiple_contracts(self) -> None:
         """Grounded checks all contracts."""
-        inner = MockAgent(response={"id": 1})
-        grounded_agent = Grounded(
+
+        # Use a dict-returning agent instead of MockAgent
+        class DictAgent(Agent[str, dict[str, int]]):
+            @property
+            def name(self) -> str:
+                return "DictAgent"
+
+            async def invoke(self, input: str) -> dict[str, int]:
+                return {"id": 1}
+
+        inner: DictAgent = DictAgent()
+        grounded_agent: Grounded[str, dict[str, int]] = Grounded(
             inner=inner,
             gravity=[
                 TypeContract(expected_type=dict),
@@ -437,8 +451,8 @@ class TestGrounded:
 
     def test_grounded_name(self) -> None:
         """Grounded name includes contracts."""
-        inner = MockAgent()
-        grounded_agent = Grounded(
+        inner: MockAgent = MockAgent()
+        grounded_agent: Grounded[str, str] = Grounded(
             inner=inner,
             gravity=[TypeContract(expected_type=dict), BoundedLength(max_length=100)],
         )
@@ -450,8 +464,18 @@ class TestGrounded:
     @pytest.mark.asyncio
     async def test_grounded_with_gravity(self) -> None:
         """with_gravity adds contracts."""
-        inner = MockAgent(response={"id": 1})
-        grounded1 = Grounded(
+
+        # Use a dict-returning agent
+        class DictAgent(Agent[str, dict[str, int]]):
+            @property
+            def name(self) -> str:
+                return "DictAgent"
+
+            async def invoke(self, input: str) -> dict[str, int]:
+                return {"id": 1}
+
+        inner: DictAgent = DictAgent()
+        grounded1: Grounded[str, dict[str, int]] = Grounded(
             inner=inner,
             gravity=[TypeContract(expected_type=dict)],
         )
@@ -484,14 +508,14 @@ class TestGravityBuilder:
 
     def test_builder_basic(self) -> None:
         """Builder creates contracts."""
-        gravity = GravityBuilder().with_type(dict).build()
+        gravity: list[GravityContract] = GravityBuilder().with_type(dict).build()
 
         assert len(gravity) == 1
         assert isinstance(gravity[0], TypeContract)
 
     def test_builder_multiple(self) -> None:
         """Builder chains multiple contracts."""
-        gravity = (
+        gravity: list[GravityContract] = (
             GravityBuilder()
             .with_type(dict)
             .with_max_length(1000)
@@ -503,14 +527,16 @@ class TestGravityBuilder:
 
     def test_builder_with_facts(self) -> None:
         """Builder adds FactConsistency."""
-        gravity = GravityBuilder().with_facts({"sky": "blue"}).build()
+        gravity: list[GravityContract] = (
+            GravityBuilder().with_facts({"sky": "blue"}).build()
+        )
 
         assert len(gravity) == 1
         assert isinstance(gravity[0], FactConsistency)
 
     def test_builder_with_ethics(self) -> None:
         """Builder adds EthicalBoundary."""
-        gravity = GravityBuilder().with_ethics("strict").build()
+        gravity: list[GravityContract] = GravityBuilder().with_ethics("strict").build()
 
         assert len(gravity) == 1
         assert isinstance(gravity[0], EthicalBoundary)
@@ -518,7 +544,7 @@ class TestGravityBuilder:
 
     def test_builder_with_predicate(self) -> None:
         """Builder adds PredicateContract."""
-        gravity = (
+        gravity: list[GravityContract] = (
             GravityBuilder()
             .with_predicate(
                 predicate=lambda x: x > 0,
@@ -535,13 +561,15 @@ class TestGravityBuilder:
 
         class CustomContract(GravityContract):
             @property
-            def name(self):
+            def name(self) -> str:
                 return "Custom"
 
-            def check(self, output):
+            def check(self, output: Any) -> str | None:
                 return None
 
-        gravity = GravityBuilder().with_contract(CustomContract()).build()
+        gravity: list[GravityContract] = (
+            GravityBuilder().with_contract(CustomContract()).build()
+        )
 
         assert len(gravity) == 1
         assert gravity[0].name == "Custom"
@@ -577,7 +605,7 @@ class TestGravityIntegration:
     async def test_full_validation_pipeline(self) -> None:
         """Full pipeline: agent → grounded → contracts."""
         # Define strict contracts
-        gravity = (
+        gravity: list[GravityContract] = (
             GravityBuilder()
             .with_type(dict)
             .with_required_fields(["status", "data"])
@@ -590,15 +618,17 @@ class TestGravityIntegration:
         )
 
         # Create mock agent that returns valid response
-        class ValidAgent(Agent[str, dict]):
+        class ValidAgent(Agent[str, dict[str, Any]]):
             @property
-            def name(self):
+            def name(self) -> str:
                 return "ValidAgent"
 
-            async def invoke(self, input: str) -> dict:
+            async def invoke(self, input: str) -> dict[str, Any]:
                 return {"status": "ok", "data": input.upper()}
 
-        grounded_agent = Grounded(inner=ValidAgent(), gravity=gravity)
+        grounded_agent: Grounded[str, dict[str, Any]] = Grounded(
+            inner=ValidAgent(), gravity=gravity
+        )
         result = await grounded_agent.invoke("hello")
 
         assert result == {"status": "ok", "data": "HELLO"}
@@ -606,7 +636,7 @@ class TestGravityIntegration:
     @pytest.mark.asyncio
     async def test_validation_rejects_invalid(self) -> None:
         """Pipeline rejects invalid responses."""
-        gravity = (
+        gravity: list[GravityContract] = (
             GravityBuilder()
             .with_type(dict)
             .with_required_fields(["status", "data"])
@@ -614,15 +644,17 @@ class TestGravityIntegration:
         )
 
         # Create agent that returns invalid response
-        class InvalidAgent(Agent[str, dict]):
+        class InvalidAgent(Agent[str, dict[str, bool]]):
             @property
-            def name(self):
+            def name(self) -> str:
                 return "InvalidAgent"
 
-            async def invoke(self, input: str) -> dict:
+            async def invoke(self, input: str) -> dict[str, bool]:
                 return {"only_one_field": True}
 
-        grounded_agent = Grounded(inner=InvalidAgent(), gravity=gravity)
+        grounded_agent: Grounded[str, dict[str, bool]] = Grounded(
+            inner=InvalidAgent(), gravity=gravity
+        )
 
         with pytest.raises(GroundingError):
             await grounded_agent.invoke("input")
@@ -630,7 +662,7 @@ class TestGravityIntegration:
     @pytest.mark.asyncio
     async def test_ethical_and_type_combined(self) -> None:
         """Ethical and type contracts work together."""
-        gravity = (
+        gravity: list[GravityContract] = (
             GravityBuilder()
             .with_ethics("strict")
             .with_type(str)
@@ -639,7 +671,7 @@ class TestGravityIntegration:
         )
 
         # Valid agent
-        grounded = Grounded(
+        grounded: Grounded[str, str] = Grounded(
             inner=MockAgent(response="This is a safe response"),
             gravity=gravity,
         )

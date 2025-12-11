@@ -152,7 +152,7 @@ class Spinner:
 
     def render(self) -> str:
         """Render the spinner."""
-        char = self.style.value[self.frame]
+        char = str(self.style.value[self.frame])
         if self.use_color:
             char = colorize(char, self.color)
 

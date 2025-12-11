@@ -44,8 +44,8 @@ def make_trace(
     agent_genus: str = "G",
     action: str = "INVOKE",
     timestamp: datetime | None = None,
-    inputs: dict | None = None,
-    outputs: dict | None = None,
+    inputs: dict[str, object] | None = None,
+    outputs: dict[str, object] | None = None,
     duration_ms: int = 100,
     gas_consumed: int = 50,
     determinism: Determinism = Determinism.PROBABILISTIC,
@@ -232,7 +232,7 @@ class TestChapter:
 class TestNarrativeRequest:
     """Tests for NarrativeRequest dataclass."""
 
-    def test_request_creation(self, sample_traces) -> None:
+    def test_request_creation(self, sample_traces: list[SemanticTrace]) -> None:
         """Can create a narrative request."""
         request = NarrativeRequest(
             traces=sample_traces,
@@ -246,7 +246,7 @@ class TestNarrativeRequest:
         assert request.perspective == Perspective.FIRST_PERSON
         assert request.verbosity == Verbosity.VERBOSE
 
-    def test_request_defaults(self, sample_traces) -> None:
+    def test_request_defaults(self, sample_traces: list[SemanticTrace]) -> None:
         """Request has sensible defaults."""
         request = NarrativeRequest(traces=sample_traces)
 
@@ -257,7 +257,7 @@ class TestNarrativeRequest:
         assert request.filter_actions is None
         assert request.exclude_actions is None
 
-    def test_filter_by_agent(self, sample_traces) -> None:
+    def test_filter_by_agent(self, sample_traces: list[SemanticTrace]) -> None:
         """Can filter traces by agent."""
         request = NarrativeRequest(
             traces=sample_traces,
@@ -268,7 +268,7 @@ class TestNarrativeRequest:
         assert len(filtered) == 2
         assert all(t.agent_id == "parser" for t in filtered)
 
-    def test_filter_by_action(self, sample_traces) -> None:
+    def test_filter_by_action(self, sample_traces: list[SemanticTrace]) -> None:
         """Can filter traces by action."""
         request = NarrativeRequest(
             traces=sample_traces,
@@ -279,7 +279,7 @@ class TestNarrativeRequest:
         assert len(filtered) == 1
         assert filtered[0].action == "GENERATE"
 
-    def test_exclude_actions(self, sample_traces) -> None:
+    def test_exclude_actions(self, sample_traces: list[SemanticTrace]) -> None:
         """Can exclude traces by action."""
         request = NarrativeRequest(
             traces=sample_traces,
@@ -290,7 +290,7 @@ class TestNarrativeRequest:
         assert len(filtered) == 2
         assert all(t.action != "VALIDATE" for t in filtered)
 
-    def test_combined_filters(self, sample_traces) -> None:
+    def test_combined_filters(self, sample_traces: list[SemanticTrace]) -> None:
         """Can combine multiple filters."""
         request = NarrativeRequest(
             traces=sample_traces,
@@ -312,7 +312,7 @@ class TestNarrativeRequest:
 class TestNarrative:
     """Tests for Narrative dataclass."""
 
-    def test_narrative_creation(self, sample_traces) -> None:
+    def test_narrative_creation(self, sample_traces: list[SemanticTrace]) -> None:
         """Can create a narrative."""
         chapters = [
             Chapter(
@@ -337,7 +337,7 @@ class TestNarrative:
         assert len(narrative.traces_used) == 3
         assert len(narrative.chapters) == 1
 
-    def test_narrative_title(self, sample_traces) -> None:
+    def test_narrative_title(self, sample_traces: list[SemanticTrace]) -> None:
         """Narrative.title returns metadata title or default."""
         # With title
         n1 = Narrative(
@@ -358,7 +358,7 @@ class TestNarrative:
         )
         assert n2.title == "Untitled Narrative"
 
-    def test_narrative_total_duration(self, sample_traces) -> None:
+    def test_narrative_total_duration(self, sample_traces: list[SemanticTrace]) -> None:
         """Narrative.total_duration_ms sums trace durations."""
         narrative = Narrative(
             text="test",
@@ -370,7 +370,7 @@ class TestNarrative:
         # Each sample trace has duration_ms=100
         assert narrative.total_duration_ms == 300
 
-    def test_narrative_total_gas(self, sample_traces) -> None:
+    def test_narrative_total_gas(self, sample_traces: list[SemanticTrace]) -> None:
         """Narrative.total_gas sums gas consumed."""
         narrative = Narrative(
             text="test",
@@ -382,7 +382,7 @@ class TestNarrative:
         # Each sample trace has gas_consumed=50
         assert narrative.total_gas == 150
 
-    def test_narrative_agent_count(self, sample_traces) -> None:
+    def test_narrative_agent_count(self, sample_traces: list[SemanticTrace]) -> None:
         """Narrative.agent_count returns unique agent count."""
         narrative = Narrative(
             text="test",
@@ -394,7 +394,7 @@ class TestNarrative:
         # Sample traces have 2 unique agents: parser, generator
         assert narrative.agent_count == 2
 
-    def test_render_text(self, sample_traces) -> None:
+    def test_render_text(self, sample_traces: list[SemanticTrace]) -> None:
         """Narrative.render('text') returns plain text."""
         narrative = Narrative(
             text="The story goes...",
@@ -405,7 +405,7 @@ class TestNarrative:
 
         assert narrative.render("text") == "The story goes..."
 
-    def test_render_markdown(self, sample_traces) -> None:
+    def test_render_markdown(self, sample_traces: list[SemanticTrace]) -> None:
         """Narrative.render('markdown') returns markdown."""
         chapters = [
             Chapter(
@@ -430,7 +430,7 @@ class TestNarrative:
         assert "## Chapter 1" in md
         assert "*Theme: Processing" in md
 
-    def test_render_html(self, sample_traces) -> None:
+    def test_render_html(self, sample_traces: list[SemanticTrace]) -> None:
         """Narrative.render('html') returns HTML."""
         narrative = Narrative(
             text="The story...",
@@ -510,7 +510,7 @@ class TestBard:
         assert len(narrative.chapters) == 0
 
     @pytest.mark.asyncio
-    async def test_invoke_with_traces(self, sample_traces) -> None:
+    async def test_invoke_with_traces(self, sample_traces: list[SemanticTrace]) -> None:
         """Bard generates narrative from traces."""
         llm = SimpleLLMProvider(response="A tale of parsing and generation.")
         bard = Bard(llm=llm)
@@ -523,7 +523,9 @@ class TestBard:
         assert llm.call_count == 1
 
     @pytest.mark.asyncio
-    async def test_invoke_respects_genre(self, sample_traces) -> None:
+    async def test_invoke_respects_genre(
+        self, sample_traces: list[SemanticTrace]
+    ) -> None:
         """Bard includes genre in prompt."""
         llm = SimpleLLMProvider()
         bard = Bard(llm=llm)
@@ -533,10 +535,13 @@ class TestBard:
             narrative = await bard.invoke(request)
 
             assert narrative.genre == genre
+            assert llm.last_prompt is not None
             assert f"GENRE: {genre.value}" in llm.last_prompt
 
     @pytest.mark.asyncio
-    async def test_invoke_respects_verbosity(self, sample_traces) -> None:
+    async def test_invoke_respects_verbosity(
+        self, sample_traces: list[SemanticTrace]
+    ) -> None:
         """Bard includes verbosity in prompt."""
         llm = SimpleLLMProvider()
         bard = Bard(llm=llm)
@@ -545,10 +550,13 @@ class TestBard:
             request = NarrativeRequest(traces=sample_traces, verbosity=verbosity)
             await bard.invoke(request)
 
+            assert llm.last_prompt is not None
             assert f"VERBOSITY: {verbosity.value}" in llm.last_prompt
 
     @pytest.mark.asyncio
-    async def test_invoke_respects_perspective(self, sample_traces) -> None:
+    async def test_invoke_respects_perspective(
+        self, sample_traces: list[SemanticTrace]
+    ) -> None:
         """Bard includes perspective in prompt."""
         llm = SimpleLLMProvider()
         bard = Bard(llm=llm)
@@ -557,10 +565,13 @@ class TestBard:
             request = NarrativeRequest(traces=sample_traces, perspective=perspective)
             await bard.invoke(request)
 
+            assert llm.last_prompt is not None
             assert f"PERSPECTIVE: {perspective.value}" in llm.last_prompt
 
     @pytest.mark.asyncio
-    async def test_invoke_custom_prompt(self, sample_traces) -> None:
+    async def test_invoke_custom_prompt(
+        self, sample_traces: list[SemanticTrace]
+    ) -> None:
         """Bard includes custom prompt."""
         llm = SimpleLLMProvider()
         bard = Bard(llm=llm)
@@ -571,10 +582,11 @@ class TestBard:
         )
         await bard.invoke(request)
 
+        assert llm.last_prompt is not None
         assert "Focus on errors only." in llm.last_prompt
 
     @pytest.mark.asyncio
-    async def test_invoke_with_title(self, sample_traces) -> None:
+    async def test_invoke_with_title(self, sample_traces: list[SemanticTrace]) -> None:
         """Bard uses provided title."""
         bard = Bard()
         request = NarrativeRequest(traces=sample_traces, title="Custom Title")
@@ -584,7 +596,9 @@ class TestBard:
         assert narrative.title == "Custom Title"
 
     @pytest.mark.asyncio
-    async def test_invoke_generates_title(self, sample_traces) -> None:
+    async def test_invoke_generates_title(
+        self, sample_traces: list[SemanticTrace]
+    ) -> None:
         """Bard generates title from traces."""
         bard = Bard()
         request = NarrativeRequest(traces=sample_traces)
@@ -718,7 +732,7 @@ class TestBard:
         title = bard._generate_title(traces)
         assert "5 agents" in title.lower()
 
-    def test_format_crystals(self, sample_traces) -> None:
+    def test_format_crystals(self, sample_traces: list[SemanticTrace]) -> None:
         """Bard formats crystals for prompt."""
         bard = Bard()
         formatted = bard._format_crystals(sample_traces)
@@ -738,7 +752,7 @@ class TestForensicBard:
     """Tests for ForensicBard crash analyst."""
 
     @pytest.mark.asyncio
-    async def test_diagnose_basic(self, error_trace) -> None:
+    async def test_diagnose_basic(self, error_trace: SemanticTrace) -> None:
         """ForensicBard produces diagnosis."""
         llm = SimpleLLMProvider(
             response="Root cause: Invalid input data. The validator received malformed data."
@@ -754,7 +768,9 @@ class TestForensicBard:
         )
 
     @pytest.mark.asyncio
-    async def test_diagnose_with_context(self, error_trace, sample_traces) -> None:
+    async def test_diagnose_with_context(
+        self, error_trace: SemanticTrace, sample_traces: list[SemanticTrace]
+    ) -> None:
         """ForensicBard uses context traces."""
         llm = SimpleLLMProvider()
         forensic = ForensicBard(llm=llm)
@@ -766,10 +782,14 @@ class TestForensicBard:
 
         assert diagnosis.context_traces == sample_traces
         # Context should be in the prompt
-        assert "parser" in llm.last_prompt.lower() or "CONTEXT" in llm.last_prompt
+        assert llm.last_prompt is not None
+        prompt = llm.last_prompt
+        assert "parser" in prompt.lower() or "CONTEXT" in prompt
 
     @pytest.mark.asyncio
-    async def test_diagnose_with_similar_failures(self, error_trace) -> None:
+    async def test_diagnose_with_similar_failures(
+        self, error_trace: SemanticTrace
+    ) -> None:
         """ForensicBard includes similar failures."""
         similar = [
             make_trace(
@@ -787,10 +807,11 @@ class TestForensicBard:
         )
 
         assert diagnosis.similar_failures == similar
+        assert llm.last_prompt is not None
         assert "SIMILAR" in llm.last_prompt or "Similar error" in llm.last_prompt
 
     @pytest.mark.asyncio
-    async def test_echo_command(self, error_trace) -> None:
+    async def test_echo_command(self, error_trace: SemanticTrace) -> None:
         """Diagnosis includes echo command."""
         forensic = ForensicBard()
         diagnosis = await forensic.diagnose(error_trace)
@@ -846,7 +867,7 @@ class TestForensicBard:
 
         assert diagnosis.severity == "low"
 
-    def test_diagnosis_is_deterministic(self, error_trace) -> None:
+    def test_diagnosis_is_deterministic(self, error_trace: SemanticTrace) -> None:
         """Diagnosis.is_deterministic reflects trace determinism."""
         diag1 = Diagnosis(
             narrative="test",
@@ -864,7 +885,9 @@ class TestForensicBard:
         )
         assert diag2.is_deterministic is False
 
-    def test_diagnosis_agent_history(self, error_trace, sample_traces) -> None:
+    def test_diagnosis_agent_history(
+        self, error_trace: SemanticTrace, sample_traces: list[SemanticTrace]
+    ) -> None:
         """Diagnosis.agent_history returns agent sequence."""
         diag = Diagnosis(
             narrative="test",
@@ -1082,7 +1105,7 @@ class TestEdgeCases:
         assert len(narrative.chapters) == 1
 
     @pytest.mark.asyncio
-    async def test_all_filtered_out(self, sample_traces) -> None:
+    async def test_all_filtered_out(self, sample_traces: list[SemanticTrace]) -> None:
         """Bard handles all traces filtered out."""
         bard = Bard()
         request = NarrativeRequest(

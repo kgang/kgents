@@ -12,6 +12,8 @@ Tests cover:
 6. Portfolio analysis
 """
 
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 
 from ..grammar_insurance import (
@@ -219,39 +221,57 @@ class TestVolatilityMetrics:
 
     def test_category_thresholds(self) -> None:
         """Test category threshold boundaries."""
-        # Create metrics with specific volatility scores
-        base_metrics = {
-            "grammar_id": "test",
-            "measurement_period": timedelta(hours=24),
-            "failure_rate_stddev": 0.0,
-            "avg_latency_ms": 10.0,
-            "latency_variance": 1.0,
-            "unique_error_types": 0,
-            "most_common_error": None,
-            "error_concentration": 0.0,
-            "trend": "stable",
-            "trend_slope": 0.0,
-            "event_count": 100,
-        }
-
         # Test each threshold
         # With the volatility formula: score = failure_rate * 0.4 + stddev + error_diversity + trend
         # For failure_rate=0.15: score = 0.06, which is STABLE (< 0.1)
         # Need higher failure rates to reach LOW category
 
         low = VolatilityMetrics(
-            **base_metrics, failure_rate=0.35
-        )  # score = 0.14 -> LOW
+            grammar_id="test",
+            measurement_period=timedelta(hours=24),
+            failure_rate=0.35,  # score = 0.14 -> LOW
+            failure_rate_stddev=0.0,
+            avg_latency_ms=10.0,
+            latency_variance=1.0,
+            unique_error_types=0,
+            most_common_error=None,
+            error_concentration=0.0,
+            trend="stable",
+            trend_slope=0.0,
+            event_count=100,
+        )
         assert low.category == VolatilityCategory.LOW
 
         moderate = VolatilityMetrics(
-            **base_metrics, failure_rate=0.6
-        )  # score = 0.24 -> MODERATE
+            grammar_id="test",
+            measurement_period=timedelta(hours=24),
+            failure_rate=0.6,  # score = 0.24 -> MODERATE
+            failure_rate_stddev=0.0,
+            avg_latency_ms=10.0,
+            latency_variance=1.0,
+            unique_error_types=0,
+            most_common_error=None,
+            error_concentration=0.0,
+            trend="stable",
+            trend_slope=0.0,
+            event_count=100,
+        )
         assert moderate.category == VolatilityCategory.MODERATE
 
         high = VolatilityMetrics(
-            **base_metrics, failure_rate=1.0
-        )  # score = 0.4 -> HIGH
+            grammar_id="test",
+            measurement_period=timedelta(hours=24),
+            failure_rate=1.0,  # score = 0.4 -> HIGH
+            failure_rate_stddev=0.0,
+            avg_latency_ms=10.0,
+            latency_variance=1.0,
+            unique_error_types=0,
+            most_common_error=None,
+            error_concentration=0.0,
+            trend="stable",
+            trend_slope=0.0,
+            event_count=100,
+        )
         assert high.category == VolatilityCategory.HIGH
 
 
@@ -273,7 +293,7 @@ class TestVolatilityMonitor:
             monitor.record_parse(event)
 
         metrics = monitor.get_metrics("grammar1")
-        assert metrics is not None
+        assert metrics is not None, "Metrics should not be None after recording parses"
         assert metrics.failure_rate == 0.0
         assert metrics.event_count == 10
 
@@ -292,6 +312,8 @@ class TestVolatilityMonitor:
         m1 = monitor.get_metrics("g1")
         m2 = monitor.get_metrics("g2")
 
+        assert m1 is not None, "g1 metrics should not be None"
+        assert m2 is not None, "g2 metrics should not be None"
         assert m1.failure_rate == 0.0
         assert m2.failure_rate == 1.0
 
@@ -325,6 +347,7 @@ class TestVolatilityMonitor:
 
         metrics = monitor.get_metrics("g")
         # With enough data points, trend should be detected
+        assert metrics is not None, "Metrics should not be None after recording parses"
         assert metrics.trend in ("improving", "stable", "degrading")
 
 
@@ -743,7 +766,7 @@ class TestGrammarInsurance:
             input_hash="abc123",
         )
 
-        assert claim is not None
+        assert claim is not None, "Claim should not be None for valid policy"
         assert claim.claim_id.startswith("CLM-")
         assert claim.status == "pending"
         assert claim.claim_id in insurance.claims
@@ -778,6 +801,7 @@ class TestGrammarInsurance:
             input_hash="abc123",
         )
 
+        assert claim is not None, "Claim should not be None for valid policy"
         result = insurance.process_claim(claim.claim_id)
 
         assert result.success is True
@@ -815,6 +839,7 @@ class TestGrammarInsurance:
                 return (True, 50)
             return (False, 0)
 
+        assert claim is not None, "Claim should not be None for valid policy"
         result = insurance.process_claim(claim.claim_id, fallback_parser=mock_fallback)
 
         assert result.success is True
@@ -840,6 +865,7 @@ class TestGrammarInsurance:
             input_hash="abc123",
         )
 
+        assert claim is not None, "Claim should not be None for valid policy"
         result = insurance.process_claim(claim.claim_id)
 
         # Payout should be reduced by deductible
@@ -1147,10 +1173,11 @@ class TestIntegration:
             input_hash="xyz789",
         )
 
+        assert claim is not None, "Claim should not be None for valid policy"
         assert claim.status == "pending"
 
         # 5. Process claim with fallback
-        def mock_fallback(gid, ih):
+        def mock_fallback(gid: str, ih: str) -> tuple[bool, int]:
             return (gid == "simple_json", 500)
 
         result = insurance.process_claim(claim.claim_id, fallback_parser=mock_fallback)

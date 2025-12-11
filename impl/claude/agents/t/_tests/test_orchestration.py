@@ -16,8 +16,11 @@ Coverage:
 - Context-based tool selection
 """
 
+from __future__ import annotations
+
 import asyncio
 from dataclasses import dataclass
+from typing import Any
 
 import pytest
 from agents.t.orchestration import (
@@ -36,6 +39,7 @@ from agents.t.orchestration import (
     Task,
 )
 from agents.t.tool import Tool, ToolErrorType, ToolMeta
+from bootstrap.types import Err
 
 # =============================================================================
 # Test Fixtures: Simple Tools
@@ -146,7 +150,7 @@ class FallbackTool(Tool[NumberInput, NumberOutput]):
 async def test_sequential_basic() -> None:
     """Test basic sequential execution."""
     tools = [AddOneTool(), MultiplyByTwoTool(), SquareTool()]
-    orchestrator = SequentialOrchestrator(tools)
+    orchestrator: SequentialOrchestrator[Any, Any, Any] = SequentialOrchestrator(tools)
 
     # (5 + 1) * 2 = 12, 12^2 = 144
     result = await orchestrator.execute(NumberInput(value=5))
@@ -158,7 +162,9 @@ async def test_sequential_basic() -> None:
 @pytest.mark.asyncio
 async def test_sequential_single_tool() -> None:
     """Test sequential with single tool."""
-    orchestrator = SequentialOrchestrator([AddOneTool()])
+    orchestrator: SequentialOrchestrator[Any, Any, Any] = SequentialOrchestrator(
+        [AddOneTool()]
+    )
 
     result = await orchestrator.execute(NumberInput(value=10))
 
@@ -170,12 +176,13 @@ async def test_sequential_single_tool() -> None:
 async def test_sequential_stops_on_error() -> None:
     """Test sequential stops on first error."""
     tools = [AddOneTool(), FailingTool(), SquareTool()]
-    orchestrator = SequentialOrchestrator(tools)
+    orchestrator: SequentialOrchestrator[Any, Any, Any] = SequentialOrchestrator(tools)
 
     result = await orchestrator.execute(NumberInput(value=5))
 
     assert result.is_err()
     # Access error details from Err result
+    assert isinstance(result, Err)
     assert result.error.tool_name == "failing_tool"
     assert result.error.error_type == ToolErrorType.FATAL
 
@@ -227,7 +234,7 @@ async def test_parallel_indexing() -> None:
 @pytest.mark.asyncio
 async def test_parallel_faster_than_sequential() -> None:
     """Test parallel execution is faster than sequential."""
-    tools = [SlowTool(), SlowTool(), SlowTool()]
+    tools: list[Tool[NumberInput, Any]] = [SlowTool(), SlowTool(), SlowTool()]
 
     # Parallel execution
     parallel_orchestrator = ParallelOrchestrator(tools)
@@ -322,7 +329,7 @@ async def test_supervisor_round_robin() -> None:
 async def test_supervisor_custom_selector() -> None:
     """Test supervisor with custom selector."""
 
-    def always_square(task, workers):
+    def always_square(task: Task[Any], workers: list[Tool[Any, Any]]) -> Tool[Any, Any]:
         return workers[2]  # Always pick SquareTool
 
     workers = [AddOneTool(), MultiplyByTwoTool(), SquareTool()]
@@ -364,6 +371,7 @@ async def test_supervisor_handles_worker_failure() -> None:
     result = await supervisor.delegate(task)
 
     assert result.is_err()
+    assert isinstance(result, Err)
     assert result.recoverable  # Could retry with different worker
 
     stats = supervisor.get_worker_stats()
@@ -610,7 +618,9 @@ async def test_dynamic_empty_tools() -> None:
 async def test_integration_sequential_then_parallel() -> None:
     """Test combining sequential and parallel patterns."""
     # First: sequential (add 1, then multiply by 2)
-    sequential = SequentialOrchestrator([AddOneTool(), MultiplyByTwoTool()])
+    sequential: SequentialOrchestrator[Any, Any, Any] = SequentialOrchestrator(
+        [AddOneTool(), MultiplyByTwoTool()]
+    )
     seq_result = await sequential.execute(NumberInput(value=5))
     assert seq_result.is_ok()
     intermediate = seq_result.unwrap()  # (5 + 1) * 2 = 12

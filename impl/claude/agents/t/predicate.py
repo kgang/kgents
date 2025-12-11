@@ -9,7 +9,7 @@ A validator that:
 
 from __future__ import annotations
 
-from typing import Callable, Generic, TypeVar
+from typing import Any, Callable, Generic, TypeVar
 
 from bootstrap.types import Agent
 
@@ -49,8 +49,8 @@ class PredicateAgent(Agent[A, A], Generic[A]):
         self,
         predicate: Callable[[A], bool],
         name: str = "Predicate",
-        error_message: str = ""
-    ):
+        error_message: str = "",
+    ) -> None:
         """
         Initialize predicate agent.
 
@@ -129,9 +129,7 @@ class PredicateAgent(Agent[A, A], Generic[A]):
 
 # Helper function for quick predicate creation
 def predicate_agent(
-    predicate: Callable[[A], bool],
-    name: str = "Predicate",
-    error_message: str = ""
+    predicate: Callable[[A], bool], name: str = "Predicate", error_message: str = ""
 ) -> PredicateAgent[A]:
     """
     Create a PredicateAgent with given predicate.
@@ -149,12 +147,13 @@ def predicate_agent(
 
 # Common predicates for convenience
 
+
 def not_none(x: A | None) -> bool:
     """Predicate: value is not None."""
     return x is not None
 
 
-def not_empty(x: str | list | dict) -> bool:
+def not_empty(x: str | list[Any] | dict[Any, Any]) -> bool:
     """Predicate: value is not empty."""
     return len(x) > 0
 

@@ -9,6 +9,8 @@ Tests cover:
 5. RGentIntegrationHub: Unified pipeline
 """
 
+from __future__ import annotations
+
 from typing import Any, Callable
 
 import pytest
@@ -132,7 +134,7 @@ class TestPrototypeRefinementRequest:
 
     def test_request_with_examples(
         self, sample_source_code: str, sample_examples: list[Example]
-    ):
+    ) -> None:
         """Test request with pre-existing examples."""
         request = PrototypeRefinementRequest(
             source_code=sample_source_code,
@@ -356,7 +358,9 @@ class TestTGentLossAdapter:
 
         assert "CUSTOM" in signal.feedback
 
-    def test_compute_loss_signal_success(self, exact_match_metric: Callable) -> None:
+    def test_compute_loss_signal_success(
+        self, exact_match_metric: Callable[[Any, Any], float]
+    ) -> None:
         """Test computing loss signal for success case."""
         adapter = TGentLossAdapter()
         signal = adapter.compute_loss_signal(
@@ -368,7 +372,9 @@ class TestTGentLossAdapter:
         assert signal.score == 1.0
         assert signal.feedback == ""  # No feedback for success
 
-    def test_compute_loss_signal_failure(self, exact_match_metric: Callable) -> None:
+    def test_compute_loss_signal_failure(
+        self, exact_match_metric: Callable[[Any, Any], float]
+    ) -> None:
         """Test computing loss signal for failure case."""
         adapter = TGentLossAdapter()
         signal = adapter.compute_loss_signal(
@@ -380,7 +386,9 @@ class TestTGentLossAdapter:
         assert signal.score == 0.0
         assert signal.feedback != ""  # Should have feedback
 
-    def test_batch_operations(self, exact_match_metric: Callable) -> None:
+    def test_batch_operations(
+        self, exact_match_metric: Callable[[Any, Any], float]
+    ) -> None:
         """Test batch signal operations."""
         adapter = TGentLossAdapter()
 
@@ -400,7 +408,9 @@ class TestTGentLossAdapter:
         signals = adapter.complete_batch()
         assert len(signals) == 3
 
-    def test_aggregate_batch_feedback(self, exact_match_metric: Callable) -> None:
+    def test_aggregate_batch_feedback(
+        self, exact_match_metric: Callable[[Any, Any], float]
+    ) -> None:
         """Test aggregating batch feedback."""
         adapter = TGentLossAdapter()
         adapter.start_batch()
@@ -573,8 +583,8 @@ class TestBudgetConstrainedRefinery:
         self,
         sample_signature: Signature,
         sample_examples: list[Example],
-        exact_match_metric: Callable,
-    ):
+        exact_match_metric: Callable[[Any, Any], float],
+    ) -> None:
         """Test refining with approved budget."""
         protocol = BGentBudgetProtocol()
         refinery = BudgetConstrainedRefinery(budget_protocol=protocol)
@@ -594,8 +604,8 @@ class TestBudgetConstrainedRefinery:
         self,
         sample_signature: Signature,
         sample_examples: list[Example],
-        exact_match_metric: Callable,
-    ):
+        exact_match_metric: Callable[[Any, Any], float],
+    ) -> None:
         """Test refining with denied budget."""
         protocol = BGentBudgetProtocol(min_roi_threshold=10.0)  # Very high threshold
         refinery = BudgetConstrainedRefinery(budget_protocol=protocol)
@@ -701,7 +711,9 @@ class TestLGentOptimizationIndex:
 
         # All results should have score >= 0.7
         for entry in results:
-            assert entry.optimization_score >= 0.7
+            assert (
+                entry.optimization_score is not None and entry.optimization_score >= 0.7
+            )
 
     def test_find_optimized_by_method(self, sample_signature: Signature) -> None:
         """Test finding optimized entries by method."""
@@ -741,6 +753,7 @@ class TestLGentOptimizationIndex:
             trace=trace,
         )
 
+        assert entry.optimization_trace_id is not None
         retrieved = index.get_trace(entry.optimization_trace_id)
         assert retrieved is not None
         assert retrieved.method == "bootstrap_fewshot"
@@ -838,7 +851,9 @@ class TestRGentIntegrationHub:
         with pytest.raises(RuntimeError, match="F-gent integration not enabled"):
             await hub.refine_prototype(request)
 
-    def test_compute_loss_signal(self, exact_match_metric: Callable) -> None:
+    def test_compute_loss_signal(
+        self, exact_match_metric: Callable[[Any, Any], float]
+    ) -> None:
         """Test computing loss signal through hub."""
         hub = RGentIntegrationHub()
 
@@ -852,7 +867,7 @@ class TestRGentIntegrationHub:
         assert signal.feedback != ""
 
     def test_compute_loss_signal_t_gent_disabled(
-        self, exact_match_metric: Callable
+        self, exact_match_metric: Callable[[Any, Any], float]
     ) -> None:
         """Test computing loss signal with T-gent disabled."""
         config = RGentIntegrationConfig(enable_t_gent=False)
@@ -870,6 +885,7 @@ class TestRGentIntegrationHub:
         trace.add_iteration("Test", 0.5)
         trace.add_iteration("Improved", 0.9)
 
+        assert hub.optimization_index is not None
         hub.optimization_index.index_optimization_result(
             entry_id="test-hub",
             name="HubTestAgent",
@@ -927,11 +943,14 @@ class TestFullIntegrationPipeline:
             # At least the just-indexed entry should be found
             assert len(entries) >= 0  # May be 0 if no actual optimization happened
 
-    def test_t_gent_loss_to_batch(self, exact_match_metric: Callable) -> None:
+    def test_t_gent_loss_to_batch(
+        self, exact_match_metric: Callable[[Any, Any], float]
+    ) -> None:
         """Test T-gent loss signal batching."""
         hub = RGentIntegrationHub()
 
         # Start batch
+        assert hub.t_gent_adapter is not None
         hub.t_gent_adapter.start_batch()
 
         # Simulate multiple evaluations
@@ -954,8 +973,8 @@ class TestFullIntegrationPipeline:
         self,
         sample_signature: Signature,
         sample_examples: list[Example],
-        exact_match_metric: Callable,
-    ):
+        exact_match_metric: Callable[[Any, Any], float],
+    ) -> None:
         """Test B-gent budget-constrained optimization."""
         hub = RGentIntegrationHub(
             RGentIntegrationConfig(
@@ -976,6 +995,7 @@ class TestFullIntegrationPipeline:
         assert trace is not None
 
         # Check spend was reported
+        assert hub.budget_protocol is not None
         report = hub.budget_protocol.get_spend_report(grant.grant_id)
         assert report is not None
 
@@ -1057,6 +1077,7 @@ class TestEdgeCases:
 
         # Should have the second version
         entry = index.get_entry("duplicate-test")
+        assert entry is not None
         assert entry.name == "Agent2"
         assert entry.optimization_method == "method2"
 

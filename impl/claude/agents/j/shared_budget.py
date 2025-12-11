@@ -55,7 +55,7 @@ class SharedEntropyBudget:
     backing: BgentEntropyBudget = field(default_factory=BgentEntropyBudget)
     threshold: float = 0.1
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Initialize backing budget based on depth."""
         if self.backing.initial == 1.0 and self.depth > 0:
             # Set initial budget based on depth: 1/(depth+1)

@@ -71,7 +71,8 @@ class CommunicationLog:
     @property
     def agent_pair(self) -> tuple[str, str]:
         """Canonical agent pair (sorted for consistent lookup)."""
-        return tuple(sorted([self.sender, self.receiver]))
+        sorted_pair = sorted([self.sender, self.receiver])
+        return (sorted_pair[0], sorted_pair[1])
 
 
 @dataclass
@@ -158,7 +159,8 @@ class PidginMetadata:
     @property
     def agent_pair(self) -> tuple[str, str]:
         """Canonical agent pair."""
-        return tuple(sorted([self.agent_a, self.agent_b]))
+        sorted_pair = sorted([self.agent_a, self.agent_b])
+        return (sorted_pair[0], sorted_pair[1])
 
     @property
     def is_active(self) -> bool:
@@ -278,7 +280,8 @@ class CommunicationTracker:
         Returns:
             List of communication logs
         """
-        pair = tuple(sorted([agent_a, agent_b]))
+        sorted_pair = sorted([agent_a, agent_b])
+        pair: tuple[str, str] = (sorted_pair[0], sorted_pair[1])
         logs = self.logs.get(pair, [])
 
         if since:
@@ -525,7 +528,7 @@ class CompressionROICalculator:
             0.3 * length_consistency + 0.4 * repetition_score + 0.3 * domain_score
         )
 
-        return min(1.0, max(0.0, regularity))
+        return float(min(1.0, max(0.0, regularity)))
 
     def _days_spanned(self, logs: list[CommunicationLog]) -> float:
         """Calculate days spanned by logs."""
@@ -609,7 +612,8 @@ class CompressionEconomyMonitor:
         This is the main entry point for tracking communication costs.
         """
         # Check if there's an available pidgin
-        pair = tuple(sorted([sender, receiver]))
+        sorted_pair = sorted([sender, receiver])
+        pair: tuple[str, str] = (sorted_pair[0], sorted_pair[1])
         pidgin = self.pidgins.get(pair)
         using_pidgin = pidgin.name if pidgin and pidgin.is_active else None
 
@@ -740,11 +744,12 @@ class CompressionEconomyMonitor:
                 entry = await register_tongue(
                     tongue, self.registry, author="CompressionEconomyMonitor"
                 )
-                pidgin.tongue_id = entry.id
+                pidgin.tongue_id = str(entry.id)  # type: ignore[attr-defined]
 
             # Store pidgin
-            pair = tuple(sorted([agent_a, agent_b]))
-            self.pidgins[pair] = pidgin
+            sorted_pair = sorted([agent_a, agent_b])
+            pair_key: tuple[str, str] = (sorted_pair[0], sorted_pair[1])
+            self.pidgins[pair_key] = pidgin
 
             # Notify callbacks
             notification = PidginAvailable(
@@ -769,7 +774,8 @@ class CompressionEconomyMonitor:
         agent_b: str,
     ) -> PidginMetadata | None:
         """Get pidgin for an agent pair if one exists."""
-        pair = tuple(sorted([agent_a, agent_b]))
+        sorted_pair = sorted([agent_a, agent_b])
+        pair: tuple[str, str] = (sorted_pair[0], sorted_pair[1])
         return self.pidgins.get(pair)
 
     def on_pidgin_available(

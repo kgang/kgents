@@ -454,7 +454,7 @@ class TemplateRegistry:
     - Template composition (combine templates)
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize empty registry."""
         self._templates: dict[str, ForgeTemplate] = {}
 

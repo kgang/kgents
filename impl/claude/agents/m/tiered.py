@@ -65,7 +65,7 @@ class WorkingMemoryChunk(Generic[T]):
         """Activation adjusted by age."""
         age_minutes = (datetime.now() - self.timestamp).total_seconds() / 60
         decay = 0.95**age_minutes  # Decay per minute
-        return self.activation * decay
+        return float(self.activation * decay)
 
 
 class AttentionFilter:

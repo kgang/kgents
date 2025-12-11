@@ -10,8 +10,14 @@ Tests cover:
 - Error handling
 """
 
+from __future__ import annotations
+
 import json
-from unittest.mock import patch
+from typing import TYPE_CHECKING, Any
+from unittest.mock import MagicMock, patch
+
+if TYPE_CHECKING:
+    import pytest
 
 from ..commands import (
     IntentResult,
@@ -153,58 +159,58 @@ class TestFormatting:
 class TestCmdNew:
     """Tests for the 'new' command."""
 
-    def test_help(self, capsys) -> None:
+    def test_help(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_new(["--help"])
         assert result == 0
         output = capsys.readouterr().out
         assert "kgents new" in output
         assert "Create something new" in output
 
-    def test_no_args_shows_help(self, capsys) -> None:
+    def test_no_args_shows_help(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_new([])
         assert result == 0
         assert "kgents new" in capsys.readouterr().out
 
-    def test_missing_name(self, capsys) -> None:
+    def test_missing_name(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_new(["agent"])
         assert result == 1
         assert "requires <type> and <name>" in capsys.readouterr().out
 
-    def test_invalid_type(self, capsys) -> None:
+    def test_invalid_type(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_new(["invalid", "name"])
         assert result == 1
         assert "unknown type" in capsys.readouterr().out
 
-    def test_create_agent(self, capsys) -> None:
+    def test_create_agent(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_new(["agent", "Archimedes"])
         assert result == 0
         output = capsys.readouterr().out
         assert "Created agent" in output
         assert "Archimedes" in output
 
-    def test_create_agent_json(self, capsys) -> None:
+    def test_create_agent_json(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_new(["agent", "Archimedes", "--format=json"])
         assert result == 0
         output = json.loads(capsys.readouterr().out)
         assert output["success"] is True
         assert output["output"]["name"] == "Archimedes"
 
-    def test_create_flow(self, capsys) -> None:
+    def test_create_flow(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_new(["flow", "review-pipeline"])
         assert result == 0
         assert "Created flow" in capsys.readouterr().out
 
-    def test_create_tongue(self, capsys) -> None:
+    def test_create_tongue(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_new(["tongue", "calendar-commands"])
         assert result == 0
         assert "Created tongue" in capsys.readouterr().out
 
-    def test_create_schema(self, capsys) -> None:
+    def test_create_schema(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_new(["schema", "user-profile"])
         assert result == 0
         assert "Created schema" in capsys.readouterr().out
 
-    def test_with_options(self, capsys) -> None:
+    def test_with_options(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_new(["agent", "Test", "--genus=b", "--template=minimal"])
         assert result == 0
         output = capsys.readouterr().out
@@ -219,45 +225,49 @@ class TestCmdNew:
 class TestCmdRun:
     """Tests for the 'run' command."""
 
-    def test_help(self, capsys) -> None:
+    def test_help(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_run(["--help"])
         assert result == 0
         assert "kgents run" in capsys.readouterr().out
 
-    def test_no_args_shows_help(self, capsys) -> None:
+    def test_no_args_shows_help(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_run([])
         assert result == 0
 
-    def test_missing_intent(self, capsys) -> None:
+    def test_missing_intent(self, capsys: pytest.CaptureFixture[str]) -> None:
         cmd_run(["--format=json"])
         # With only options, no positional, should fail
         output = capsys.readouterr().out
         assert "requires an intent" in output or "run" in output
 
-    def test_run_intent(self, capsys) -> None:
+    def test_run_intent(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_run(["test all functions"])
         assert result == 0
         assert "Execution Complete" in capsys.readouterr().out
 
-    def test_run_dry_run(self, capsys) -> None:
+    def test_run_dry_run(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_run(["test all functions", "--dry-run"])
         assert result == 0
         assert "Dry Run" in capsys.readouterr().out
 
-    def test_run_json(self, capsys) -> None:
+    def test_run_json(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_run(["test all functions", "--format=json"])
         assert result == 0
         output = json.loads(capsys.readouterr().out)
         assert output["success"] is True
         assert "intent" in output["output"]
 
-    def test_classification_deterministic(self, capsys) -> None:
+    def test_classification_deterministic(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
         result = cmd_run(["lint code", "--format=json", "--dry-run"])
         assert result == 0
         output = json.loads(capsys.readouterr().out)
         assert output["output"]["classification"] == "DETERMINISTIC"
 
-    def test_classification_probabilistic(self, capsys) -> None:
+    def test_classification_probabilistic(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
         result = cmd_run(["review code for issues", "--format=json", "--dry-run"])
         assert result == 0
         output = json.loads(capsys.readouterr().out)
@@ -272,28 +282,28 @@ class TestCmdRun:
 class TestCmdCheck:
     """Tests for the 'check' command."""
 
-    def test_help(self, capsys) -> None:
+    def test_help(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_check(["--help"])
         assert result == 0
         assert "kgents check" in capsys.readouterr().out
 
-    def test_check_target(self, capsys) -> None:
+    def test_check_target(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_check(["src/main.py"])
         assert result == 0
         assert "Check" in capsys.readouterr().out
 
-    def test_check_json(self, capsys) -> None:
+    def test_check_json(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_check(["src/main.py", "--format=json"])
         assert result == 0
         output = json.loads(capsys.readouterr().out)
         assert "target" in output["output"]
         assert "passed" in output["output"]
 
-    def test_check_against_laws(self, capsys) -> None:
+    def test_check_against_laws(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_check(["test.py", "--against=laws"])
         assert result == 0
 
-    def test_check_strict(self, capsys) -> None:
+    def test_check_strict(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_check(["test.py", "--strict"])
         # May fail if warnings present
         assert result in (0, 1)
@@ -307,29 +317,29 @@ class TestCmdCheck:
 class TestCmdThink:
     """Tests for the 'think' command."""
 
-    def test_help(self, capsys) -> None:
+    def test_help(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_think(["--help"])
         assert result == 0
         assert "kgents think" in capsys.readouterr().out
 
-    def test_think_topic(self, capsys) -> None:
+    def test_think_topic(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_think(["optimization strategies"])
         assert result == 0
         assert "Hypotheses" in capsys.readouterr().out
 
-    def test_think_json(self, capsys) -> None:
+    def test_think_json(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_think(["optimization strategies", "--format=json"])
         assert result == 0
         output = json.loads(capsys.readouterr().out)
         assert "hypotheses" in output["output"]
 
-    def test_think_with_limit(self, capsys) -> None:
+    def test_think_with_limit(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_think(["topic", "--limit=2", "--format=json"])
         assert result == 0
         output = json.loads(capsys.readouterr().out)
         assert output["output"]["count"] <= 2
 
-    def test_think_with_falsify(self, capsys) -> None:
+    def test_think_with_falsify(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_think(["topic", "--falsify", "--format=json"])
         assert result == 0
         output = json.loads(capsys.readouterr().out)
@@ -346,17 +356,17 @@ class TestCmdThink:
 class TestCmdWatch:
     """Tests for the 'watch' command."""
 
-    def test_help(self, capsys) -> None:
+    def test_help(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_watch(["--help"])
         assert result == 0
         assert "kgents watch" in capsys.readouterr().out
 
-    def test_watch_target(self, capsys) -> None:
+    def test_watch_target(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_watch(["./logs/"])
         assert result == 0
         assert "Watching" in capsys.readouterr().out
 
-    def test_watch_json(self, capsys) -> None:
+    def test_watch_json(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_watch(["./logs/", "--format=json"])
         assert result == 0
         output = json.loads(capsys.readouterr().out)
@@ -371,23 +381,23 @@ class TestCmdWatch:
 class TestCmdFind:
     """Tests for the 'find' command."""
 
-    def test_help(self, capsys) -> None:
+    def test_help(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_find(["--help"])
         assert result == 0
         assert "kgents find" in capsys.readouterr().out
 
-    def test_find_query(self, capsys) -> None:
+    def test_find_query(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_find(["calendar operations"])
         assert result == 0
         assert "Search" in capsys.readouterr().out
 
-    def test_find_json(self, capsys) -> None:
+    def test_find_json(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_find(["calendar", "--format=json"])
         assert result == 0
         output = json.loads(capsys.readouterr().out)
         assert "results" in output["output"]
 
-    def test_find_with_type(self, capsys) -> None:
+    def test_find_with_type(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_find(["parser", "--type=agent", "--format=json"])
         assert result == 0
         output = json.loads(capsys.readouterr().out)
@@ -402,23 +412,23 @@ class TestCmdFind:
 class TestCmdFix:
     """Tests for the 'fix' command."""
 
-    def test_help(self, capsys) -> None:
+    def test_help(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_fix(["--help"])
         assert result == 0
         assert "kgents fix" in capsys.readouterr().out
 
-    def test_fix_target(self, capsys) -> None:
+    def test_fix_target(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_fix(["input.json"])
         assert result == 0
         assert "Fixed" in capsys.readouterr().out
 
-    def test_fix_json(self, capsys) -> None:
+    def test_fix_json(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_fix(["input.json", "--format=json"])
         assert result == 0
         output = json.loads(capsys.readouterr().out)
         assert output["output"]["target"] == "input.json"
 
-    def test_fix_preview(self, capsys) -> None:
+    def test_fix_preview(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_fix(["input.json", "--preview", "--format=json"])
         assert result == 0
         output = json.loads(capsys.readouterr().out)
@@ -433,24 +443,24 @@ class TestCmdFix:
 class TestCmdSpeak:
     """Tests for the 'speak' command."""
 
-    def test_help(self, capsys) -> None:
+    def test_help(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_speak(["--help"])
         assert result == 0
         assert "kgents speak" in capsys.readouterr().out
 
-    def test_speak_domain(self, capsys) -> None:
+    def test_speak_domain(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_speak(["file operations"])
         assert result == 0
         assert "Tongue Created" in capsys.readouterr().out
 
-    def test_speak_json(self, capsys) -> None:
+    def test_speak_json(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_speak(["file operations", "--format=json"])
         assert result == 0
         output = json.loads(capsys.readouterr().out)
         assert output["output"]["domain"] == "file operations"
         assert "grammar" in output["output"]
 
-    def test_speak_with_level(self, capsys) -> None:
+    def test_speak_with_level(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_speak(["domain", "--level=schema", "--format=json"])
         assert result == 0
         output = json.loads(capsys.readouterr().out)
@@ -465,23 +475,23 @@ class TestCmdSpeak:
 class TestCmdJudge:
     """Tests for the 'judge' command."""
 
-    def test_help(self, capsys) -> None:
+    def test_help(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_judge(["--help"])
         assert result == 0
         assert "kgents judge" in capsys.readouterr().out
 
-    def test_judge_input(self, capsys) -> None:
+    def test_judge_input(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_judge(["A monolithic agent that does everything"])
         assert result in (0, 1)  # May pass or fail based on evaluation
         assert "Judgment" in capsys.readouterr().out
 
-    def test_judge_json(self, capsys) -> None:
+    def test_judge_json(self, capsys: pytest.CaptureFixture[str]) -> None:
         cmd_judge(["test input", "--format=json"])
         output = json.loads(capsys.readouterr().out)
         assert "overall_verdict" in output["output"]
         assert "evaluations" in output["output"]
 
-    def test_judge_specific_principle(self, capsys) -> None:
+    def test_judge_specific_principle(self, capsys: pytest.CaptureFixture[str]) -> None:
         cmd_judge(["input", "--principle=Composable", "--format=json"])
         output = json.loads(capsys.readouterr().out)
         # Should only evaluate one principle
@@ -626,47 +636,51 @@ class TestStep:
 class TestCmdDo:
     """Tests for the 'do' command (intent router)."""
 
-    def test_help(self, capsys) -> None:
+    def test_help(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_do(["--help"])
         assert result == 0
         assert "kgents do" in capsys.readouterr().out
 
-    def test_no_args_shows_help(self, capsys) -> None:
+    def test_no_args_shows_help(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_do([])
         assert result == 0
 
-    def test_dry_run(self, capsys) -> None:
+    def test_dry_run(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_do(["check input.py", "--dry-run"])
         assert result == 0
         output = capsys.readouterr().out
         assert "Intent Detected" in output
 
-    def test_json_output(self, capsys) -> None:
+    def test_json_output(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_do(["check input.py", "--format=json"])
         assert result == 0
         output = json.loads(capsys.readouterr().out)
         assert "intent" in output
         assert "steps" in output
 
-    def test_composite_intent(self, capsys) -> None:
+    def test_composite_intent(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_do(["check and fix test.py", "--dry-run"])
         assert result == 0
         output = capsys.readouterr().out
         assert "kgents" in output  # Should show command
 
     @patch("builtins.input", return_value="n")
-    def test_cancelled_execution(self, mock_input, capsys) -> None:
+    def test_cancelled_execution(
+        self, mock_input: MagicMock, capsys: pytest.CaptureFixture[str]
+    ) -> None:
         result = cmd_do(["check test.py"])
         assert result == 0
         assert "cancelled" in capsys.readouterr().out.lower()
 
     @patch("builtins.input", return_value="y")
-    def test_confirmed_execution(self, mock_input, capsys) -> None:
+    def test_confirmed_execution(
+        self, mock_input: MagicMock, capsys: pytest.CaptureFixture[str]
+    ) -> None:
         result = cmd_do(["check test.py"])
         assert result == 0
         assert "Execution Complete" in capsys.readouterr().out
 
-    def test_auto_yes(self, capsys) -> None:
+    def test_auto_yes(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_do(["check test.py", "-y"])
         assert result == 0
         assert "Execution Complete" in capsys.readouterr().out
@@ -725,7 +739,7 @@ class TestModuleImports:
 class TestIntegration:
     """Integration tests for the intent layer."""
 
-    def test_new_then_check_flow(self, capsys) -> None:
+    def test_new_then_check_flow(self, capsys: pytest.CaptureFixture[str]) -> None:
         # Create an agent
         result1 = cmd_new(["agent", "TestAgent", "--format=json"])
         assert result1 == 0
@@ -734,7 +748,7 @@ class TestIntegration:
         result2 = cmd_check(["agents/testagent/", "--format=json"])
         assert result2 in (0, 1)
 
-    def test_speak_then_find(self, capsys) -> None:
+    def test_speak_then_find(self, capsys: pytest.CaptureFixture[str]) -> None:
         # Create a tongue
         result1 = cmd_speak(["calendar", "--format=json"])
         assert result1 == 0
@@ -743,7 +757,7 @@ class TestIntegration:
         result2 = cmd_find(["calendar", "--format=json"])
         assert result2 == 0
 
-    def test_intent_router_coverage(self, capsys) -> None:
+    def test_intent_router_coverage(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Test that router generates reasonable plans for various intents."""
         intents = [
             "check the code",

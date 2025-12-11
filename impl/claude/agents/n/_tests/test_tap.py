@@ -1,6 +1,9 @@
 """Tests for HistorianTap wire protocol integration."""
 
+from __future__ import annotations
+
 from datetime import datetime, timezone
+from typing import Any
 
 import pytest
 
@@ -15,8 +18,8 @@ def make_frame(
     correlation_id: str = "corr-123",
     agent_id: str = "test-agent",
     agent_genus: str = "B",
-    payload: any = None,
-    metadata: dict | None = None,
+    payload: Any = None,
+    metadata: dict[str, Any] | None = None,
 ) -> WireFrame:
     """Helper to create test frames."""
     return WireFrame(
@@ -86,30 +89,32 @@ class TestHistorianTap:
         return MemoryCrystalStore()
 
     @pytest.fixture
-    def historian(self, store) -> Historian:
+    def historian(self, store: MemoryCrystalStore) -> Historian:
         h = Historian(store)
         h.reset_context()
         return h
 
     @pytest.fixture
-    def tap(self, historian) -> HistorianTap:
+    def tap(self, historian: Historian) -> HistorianTap:
         return HistorianTap(historian)
 
-    def test_tap_creation(self, historian) -> None:
+    def test_tap_creation(self, historian: Historian) -> None:
         """Can create a tap."""
         tap = HistorianTap(historian)
         assert tap.historian is historian
         assert tap.active_traces == 0
 
     @pytest.mark.asyncio
-    async def test_tap_passes_through(self, tap) -> None:
+    async def test_tap_passes_through(self, tap: HistorianTap) -> None:
         """Tap returns frame unchanged."""
         frame = make_frame(FrameType.LOG_EVENT)
         result = await tap.on_frame(frame)
         assert result is frame
 
     @pytest.mark.asyncio
-    async def test_invoke_start_begins_trace(self, tap, store) -> None:
+    async def test_invoke_start_begins_trace(
+        self, tap: HistorianTap, store: MemoryCrystalStore
+    ) -> None:
         """INVOKE_START begins a trace."""
         frame = make_frame(
             FrameType.INVOKE_START,
@@ -121,7 +126,9 @@ class TestHistorianTap:
         assert "corr-123" in tap.get_pending_trace_ids()
 
     @pytest.mark.asyncio
-    async def test_invoke_end_completes_trace(self, tap, store) -> None:
+    async def test_invoke_end_completes_trace(
+        self, tap: HistorianTap, store: MemoryCrystalStore
+    ) -> None:
         """INVOKE_END completes the trace."""
         start = make_frame(
             FrameType.INVOKE_START,
@@ -144,7 +151,9 @@ class TestHistorianTap:
         assert crystal.outputs == {"output": "result"}
 
     @pytest.mark.asyncio
-    async def test_error_aborts_trace(self, tap, store) -> None:
+    async def test_error_aborts_trace(
+        self, tap: HistorianTap, store: MemoryCrystalStore
+    ) -> None:
         """ERROR aborts the trace."""
         start = make_frame(FrameType.INVOKE_START)
         await tap.on_frame(start)
@@ -162,7 +171,9 @@ class TestHistorianTap:
         assert crystal.action == Action.ERROR
 
     @pytest.mark.asyncio
-    async def test_error_with_dict_payload(self, tap, store) -> None:
+    async def test_error_with_dict_payload(
+        self, tap: HistorianTap, store: MemoryCrystalStore
+    ) -> None:
         """ERROR can have dict payload with error key."""
         start = make_frame(FrameType.INVOKE_START)
         await tap.on_frame(start)
@@ -177,7 +188,9 @@ class TestHistorianTap:
         assert "Something failed" in str(crystal.outputs)
 
     @pytest.mark.asyncio
-    async def test_multiple_concurrent_traces(self, tap, store) -> None:
+    async def test_multiple_concurrent_traces(
+        self, tap: HistorianTap, store: MemoryCrystalStore
+    ) -> None:
         """Can handle multiple concurrent traces."""
         # Start two traces
         start1 = make_frame(FrameType.INVOKE_START, correlation_id="c1")
@@ -197,7 +210,9 @@ class TestHistorianTap:
         assert store.count() == 2
 
     @pytest.mark.asyncio
-    async def test_orphan_end_ignored(self, tap, store) -> None:
+    async def test_orphan_end_ignored(
+        self, tap: HistorianTap, store: MemoryCrystalStore
+    ) -> None:
         """INVOKE_END without matching START is ignored."""
         end = make_frame(
             FrameType.INVOKE_END,
@@ -209,7 +224,9 @@ class TestHistorianTap:
         assert store.count() == 0
 
     @pytest.mark.asyncio
-    async def test_action_from_metadata(self, tap, store) -> None:
+    async def test_action_from_metadata(
+        self, tap: HistorianTap, store: MemoryCrystalStore
+    ) -> None:
         """Action is extracted from frame metadata."""
         start = make_frame(FrameType.INVOKE_START)
         await tap.on_frame(start)
@@ -224,7 +241,9 @@ class TestHistorianTap:
         assert crystal.action == "GENERATE"
 
     @pytest.mark.asyncio
-    async def test_determinism_from_metadata(self, tap, store) -> None:
+    async def test_determinism_from_metadata(
+        self, tap: HistorianTap, store: MemoryCrystalStore
+    ) -> None:
         """Determinism hint from frame metadata."""
         start = make_frame(FrameType.INVOKE_START)
         await tap.on_frame(start)
@@ -238,7 +257,7 @@ class TestHistorianTap:
         crystal = list(store.iter_all())[0]
         assert crystal.determinism == Determinism.PROBABILISTIC
 
-    def test_sync_version(self, tap, store) -> None:
+    def test_sync_version(self, tap: HistorianTap, store: MemoryCrystalStore) -> None:
         """Sync version works for non-async contexts."""
         start = make_frame(FrameType.INVOKE_START)
         tap.on_frame_sync(start)
@@ -258,16 +277,16 @@ class TestWireIntegration:
         return MemoryCrystalStore()
 
     @pytest.fixture
-    def historian(self, store) -> Historian:
+    def historian(self, store: MemoryCrystalStore) -> Historian:
         h = Historian(store)
         h.reset_context()
         return h
 
     @pytest.fixture
-    def wire(self, historian) -> WireIntegration:
+    def wire(self, historian: Historian) -> WireIntegration:
         return WireIntegration(historian)
 
-    def test_create_start_frame(self, wire) -> None:
+    def test_create_start_frame(self, wire: WireIntegration) -> None:
         """Can create start frame."""
         frame = wire.create_start_frame(
             correlation_id="c1",
@@ -280,7 +299,7 @@ class TestWireIntegration:
         assert frame.correlation_id == "c1"
         assert frame.payload == {"test": True}
 
-    def test_create_end_frame(self, wire) -> None:
+    def test_create_end_frame(self, wire: WireIntegration) -> None:
         """Can create end frame."""
         frame = wire.create_end_frame(
             correlation_id="c1",
@@ -294,7 +313,7 @@ class TestWireIntegration:
         assert frame.payload == {"result": 42}
         assert frame.determinism_hint == Determinism.DETERMINISTIC
 
-    def test_create_error_frame(self, wire) -> None:
+    def test_create_error_frame(self, wire: WireIntegration) -> None:
         """Can create error frame."""
         error = ValueError("test")
         frame = wire.create_error_frame(
@@ -308,11 +327,13 @@ class TestWireIntegration:
         assert frame.payload is error
 
     @pytest.mark.asyncio
-    async def test_trace_callable_success(self, wire, store) -> None:
+    async def test_trace_callable_success(
+        self, wire: WireIntegration, store: MemoryCrystalStore
+    ) -> None:
         """Decorator traces successful calls."""
 
         @wire.trace_callable("my-agent", "B", "GENERATE")
-        async def my_func(x):
+        async def my_func(x: int) -> dict[str, int]:
             return {"result": x * 2}
 
         result = await my_func(21)
@@ -324,11 +345,13 @@ class TestWireIntegration:
         assert crystal.action == "GENERATE"
 
     @pytest.mark.asyncio
-    async def test_trace_callable_error(self, wire, store) -> None:
+    async def test_trace_callable_error(
+        self, wire: WireIntegration, store: MemoryCrystalStore
+    ) -> None:
         """Decorator traces failed calls."""
 
         @wire.trace_callable("my-agent", "B")
-        async def failing_func():
+        async def failing_func() -> None:
             raise ValueError("oops")
 
         with pytest.raises(ValueError):

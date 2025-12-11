@@ -20,8 +20,8 @@ from dataclasses import dataclass
 from typing import Any, Optional, Tuple, TypeVar
 
 from bootstrap.judge import Judge as BootstrapJudge
-from bootstrap.types import JudgeInput, Verdict
-from runtime.base import Agent, AgentContext, LLMAgent
+from bootstrap.types import Agent, JudgeInput, Verdict
+from runtime.base import AgentContext, LLMAgent
 
 A = TypeVar("A")  # Intent type
 B = TypeVar("B")  # Output type
@@ -35,7 +35,7 @@ class JudgmentCriteria:
     safety: float = 1.0  # Weight for safety (0.0-1.0)
     style: float = 0.5  # Weight for style (0.0-1.0)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validate weights are in [0, 1]."""
         for name in ["correctness", "safety", "style"]:
             value = getattr(self, name)
@@ -53,7 +53,7 @@ class JudgmentResult:
     weighted_score: float  # Overall weighted score
     explanation: str = ""  # Optional explanation from judge
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validate scores are in [0, 1]."""
         for name in ["correctness", "safety", "style", "weighted_score"]:
             value = getattr(self, name)
@@ -120,7 +120,7 @@ class JudgeAgent(LLMAgent[Tuple[A, B], JudgmentResult]):
             "result = await judge.execute_async((intent, output), runtime)"
         )
 
-    def build_prompt(self, input_data: Tuple[A, B]) -> AgentContext:
+    def build_prompt(self, input_data: Tuple[A, B]) -> "AgentContext":
         """
         Build evaluation prompt for LLM.
 
@@ -291,6 +291,6 @@ async def self_evaluate_t_gent(
 
 
 # Singleton judge with default criteria
-default_judge = JudgeAgent(
+default_judge: JudgeAgent[Any, Any] = JudgeAgent(
     criteria=JudgmentCriteria(correctness=1.0, safety=1.0, style=0.5)
 )

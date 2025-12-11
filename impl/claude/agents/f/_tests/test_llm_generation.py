@@ -9,7 +9,10 @@ These tests verify:
 5. Mock-based testing (no real API calls by default)
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
+from typing import Any
 
 import pytest
 from agents.f.contract import Contract, Invariant
@@ -20,7 +23,7 @@ from agents.f.llm_generation import (
     generate_code_with_llm,
 )
 from agents.f.prototype import PrototypeConfig, generate_prototype_async
-from runtime.base import AgentResult
+from runtime.base import AgentContext, AgentResult, LLMAgent, Runtime
 
 # ============================================================================
 # Mock Runtime for Testing
@@ -28,7 +31,7 @@ from runtime.base import AgentResult
 
 
 @dataclass
-class MockRuntime:
+class MockRuntime(Runtime):
     """
     Mock runtime that returns pre-defined responses.
 
@@ -38,7 +41,9 @@ class MockRuntime:
     response: str = ""
     call_count: int = 0
 
-    async def execute(self, agent, input_val):
+    async def execute(
+        self, agent: LLMAgent[Any, Any], input_val: Any
+    ) -> AgentResult[Any]:
         """Mock execute that returns pre-configured response."""
         self.call_count += 1
         output = agent.parse_response(self.response)
@@ -48,6 +53,13 @@ class MockRuntime:
             model="mock-model",
             usage={"input_tokens": 100, "output_tokens": 200, "total_tokens": 300},
         )
+
+    async def raw_completion(
+        self,
+        context: AgentContext,
+    ) -> tuple[str, dict[str, Any]]:
+        """Low-level completion call (not used in these tests)."""
+        return (self.response, {"model": "mock-model"})
 
 
 # ============================================================================
@@ -262,8 +274,8 @@ async def test_generate_prototype_async_iterates_on_failure() -> None:
     contract = Contract(agent_name="TestAgent", input_type="str", output_type="str")
 
     # Mock runtime that returns different code on each call
-    class IteratingMockRuntime:
-        def __init__(self):
+    class IteratingMockRuntime(Runtime):
+        def __init__(self) -> None:
             self.call_count = 0
             self.responses = [
                 # Attempt 1: Syntax error
@@ -272,7 +284,9 @@ async def test_generate_prototype_async_iterates_on_failure() -> None:
                 "class TestAgent:\n    def invoke(self, x: str) -> str:\n        return x",
             ]
 
-        async def execute(self, agent, input_val):
+        async def execute(
+            self, agent: LLMAgent[Any, Any], input_val: Any
+        ) -> AgentResult[Any]:
             response = self.responses[self.call_count]
             self.call_count += 1
             output = agent.parse_response(response)
@@ -282,6 +296,18 @@ async def test_generate_prototype_async_iterates_on_failure() -> None:
                 model="mock",
                 usage={},
             )
+
+        async def raw_completion(
+            self,
+            context: AgentContext,
+        ) -> tuple[str, dict[str, Any]]:
+            """Low-level completion call (not used in these tests)."""
+            response = (
+                self.responses[self.call_count]
+                if self.call_count < len(self.responses)
+                else self.responses[-1]
+            )
+            return (response, {"model": "mock"})
 
     runtime = IteratingMockRuntime()
     config = PrototypeConfig(use_llm=True, runtime=runtime, max_attempts=3)

@@ -13,7 +13,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Callable, Generic, List, Optional, Tuple, TypeVar
 
-from runtime.base import Agent
+from bootstrap.types import Agent
 
 A = TypeVar("A")  # Input type
 B = TypeVar("B")  # Output type
@@ -24,9 +24,9 @@ class DiffResult(Generic[B]):
     """Result of differential testing."""
 
     input: Any  # The input tested
-    outputs: List[Tuple[str, B]]  # List of (agent_name, output) pairs
+    outputs: List[Tuple[str, Any]]  # List of (agent_name, output) pairs
     all_agree: bool  # Whether all outputs are equal
-    majority_output: Optional[B] = None  # Most common output (if exists)
+    majority_output: Optional[Any] = None  # Most common output (if exists)
     deviants: List[str] = field(default_factory=list)  # Agents with differing outputs
     explanation: str = ""  # Optional explanation of differences
 
@@ -127,7 +127,7 @@ class OracleAgent(Agent[Tuple[A, List[Agent[A, B]]], DiffResult[B]], Generic[A, 
         agents_to_test = agents if agents else self.agents
 
         # Execute all agents on the same input
-        outputs: List[Tuple[str, B]] = []
+        outputs: List[Tuple[str, Any]] = []
         for agent in agents_to_test:
             try:
                 output = await agent.invoke(test_input)
@@ -289,4 +289,4 @@ def structural_equality(a: Any, b: Any) -> bool:
             return False
         return all(structural_equality(x, y) for x, y in zip(a, b))
 
-    return a == b
+    return bool(a == b)

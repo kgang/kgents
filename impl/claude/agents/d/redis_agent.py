@@ -21,6 +21,7 @@ from typing import (
     List,
     Type,
     TypeVar,
+    cast,
     get_args,
     get_origin,
     get_type_hints,
@@ -78,7 +79,7 @@ class RedisAgent(Generic[S], DataAgent[S]):
         ttl: int | None = None,
         max_history: int = 100,
         publish_channel: str | None = None,
-    ):
+    ) -> None:
         """
         Initialize Redis D-gent.
 
@@ -316,8 +317,10 @@ class RedisAgent(Generic[S], DataAgent[S]):
         """Deserialize JSON data to state type."""
         try:
             if is_dataclass(self.schema):
-                return self._deserialize_dataclass(self.schema, data)
-            return data
+                return cast(
+                    S, self._deserialize_dataclass(cast(Type[Any], self.schema), data)
+                )
+            return cast(S, data)
         except Exception as e:
             raise StateCorruptionError(f"Cannot deserialize to {self.schema}: {e}")
 
@@ -355,7 +358,9 @@ class RedisAgent(Generic[S], DataAgent[S]):
                         args = get_args(field_type)
                         if args and is_dataclass(args[0]):
                             kwargs[field_name] = [
-                                self._deserialize_dataclass(args[0], item)
+                                self._deserialize_dataclass(
+                                    cast(Type[Any], args[0]), item
+                                )
                                 if isinstance(item, dict)
                                 else item
                                 for item in field_value

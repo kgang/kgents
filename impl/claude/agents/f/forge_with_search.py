@@ -16,13 +16,16 @@ Workflow:
 From docs/CROSS_POLLINATION_ANALYSIS.md Phase A.3
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from enum import Enum
 
 from agents.f.contract import Contract, synthesize_contract
 from agents.f.intent import parse_intent
-from agents.l.catalog import CatalogEntry, EntityType, Registry, Status
+from agents.l.registry import Registry
 from agents.l.search import Search, SearchResult
+from agents.l.types import CatalogEntry, EntityType, Status
 
 
 class ForgeDecision(Enum):

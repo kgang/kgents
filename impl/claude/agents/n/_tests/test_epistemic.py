@@ -15,6 +15,7 @@ Target: 30+ tests
 """
 
 from datetime import datetime, timedelta, timezone
+from typing import Any
 
 import pytest
 from agents.n.bard import (
@@ -54,8 +55,8 @@ def make_trace(
     timestamp: datetime | None = None,
     determinism: Determinism = Determinism.DETERMINISTIC,
     duration_ms: int = 100,
-    inputs: dict | None = None,
-    outputs: dict | None = None,
+    inputs: dict[str, Any] | None = None,
+    outputs: dict[str, Any] | None = None,
 ) -> SemanticTrace:
     """Create a test trace."""
     return SemanticTrace(

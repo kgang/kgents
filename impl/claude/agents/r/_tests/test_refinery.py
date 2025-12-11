@@ -10,6 +10,10 @@ Tests cover:
 - RefineryAgent: Main interface
 """
 
+from __future__ import annotations
+
+from typing import Any
+
 import pytest
 from agents.r.refinery import (
     BootstrapFewShotTeleprompter,
@@ -30,7 +34,7 @@ from agents.r.types import (
 
 
 @pytest.fixture
-def simple_signature():
+def simple_signature() -> Signature:
     """Create a simple signature for testing."""
     return Signature.simple(
         input_name="question",
@@ -42,7 +46,7 @@ def simple_signature():
 
 
 @pytest.fixture
-def simple_examples():
+def simple_examples() -> list[Example]:
     """Create simple examples for testing."""
     return [
         Example.simple("What is 2+2?", "4"),
@@ -53,7 +57,7 @@ def simple_examples():
 
 
 @pytest.fixture
-def scored_examples():
+def scored_examples() -> list[Example]:
     """Create examples with pre-computed scores."""
     return [
         Example(
@@ -79,7 +83,7 @@ def scored_examples():
     ]
 
 
-def simple_metric(pred, label) -> float:
+def simple_metric(pred: object, label: object) -> float:
     """Simple equality metric."""
     return 1.0 if pred == label else 0.0
 
@@ -92,20 +96,24 @@ class TestBootstrapFewShotTeleprompter:
 
     def test_strategy_property(self) -> None:
         """Test strategy property."""
-        tp = BootstrapFewShotTeleprompter()
+        tp: BootstrapFewShotTeleprompter[Any, Any] = BootstrapFewShotTeleprompter()
         assert tp.strategy == TeleprompterStrategy.BOOTSTRAP_FEWSHOT
 
     def test_num_demos_config(self) -> None:
         """Test configurable number of demos."""
-        tp = BootstrapFewShotTeleprompter(num_demos=2)
+        tp: BootstrapFewShotTeleprompter[Any, Any] = BootstrapFewShotTeleprompter(
+            num_demos=2
+        )
         assert tp.num_demos == 2
 
     @pytest.mark.asyncio
     async def test_compile_returns_trace(
-        self, simple_signature, scored_examples
+        self, simple_signature: Signature, scored_examples: list[Example]
     ) -> None:
         """Test that compile returns an OptimizationTrace."""
-        tp = BootstrapFewShotTeleprompter(num_demos=2)
+        tp: BootstrapFewShotTeleprompter[Any, Any] = BootstrapFewShotTeleprompter(
+            num_demos=2
+        )
 
         trace = await tp.compile(
             signature=simple_signature,
@@ -121,10 +129,12 @@ class TestBootstrapFewShotTeleprompter:
 
     @pytest.mark.asyncio
     async def test_compile_selects_best_demos(
-        self, simple_signature, scored_examples
+        self, simple_signature: Signature, scored_examples: list[Example]
     ) -> None:
         """Test that best scoring examples are selected."""
-        tp = BootstrapFewShotTeleprompter(num_demos=2)
+        tp: BootstrapFewShotTeleprompter[Any, Any] = BootstrapFewShotTeleprompter(
+            num_demos=2
+        )
 
         trace = await tp.compile(
             signature=simple_signature,
@@ -138,10 +148,10 @@ class TestBootstrapFewShotTeleprompter:
 
     @pytest.mark.asyncio
     async def test_compile_tracks_timing(
-        self, simple_signature, scored_examples
+        self, simple_signature: Signature, scored_examples: list[Example]
     ) -> None:
         """Test that timing is tracked."""
-        tp = BootstrapFewShotTeleprompter()
+        tp: BootstrapFewShotTeleprompter[Any, Any] = BootstrapFewShotTeleprompter()
 
         trace = await tp.compile(
             signature=simple_signature,
@@ -162,25 +172,27 @@ class TestTextGradTeleprompter:
 
     def test_strategy_property(self) -> None:
         """Test strategy property."""
-        tp = TextGradTeleprompter()
+        tp: TextGradTeleprompter[Any, Any] = TextGradTeleprompter()
         assert tp.strategy == TeleprompterStrategy.TEXTGRAD
 
     def test_learning_rate_config(self) -> None:
         """Test configurable learning rate."""
-        tp = TextGradTeleprompter(learning_rate=0.5)
+        tp: TextGradTeleprompter[Any, Any] = TextGradTeleprompter(learning_rate=0.5)
         assert tp.learning_rate == 0.5
 
     def test_convergence_threshold_config(self) -> None:
         """Test configurable convergence threshold."""
-        tp = TextGradTeleprompter(convergence_threshold=0.001)
+        tp: TextGradTeleprompter[Any, Any] = TextGradTeleprompter(
+            convergence_threshold=0.001
+        )
         assert tp.convergence_threshold == 0.001
 
     @pytest.mark.asyncio
     async def test_compile_returns_trace(
-        self, simple_signature, simple_examples
+        self, simple_signature: Signature, simple_examples: list[Example]
     ) -> None:
         """Test that compile returns an OptimizationTrace."""
-        tp = TextGradTeleprompter()
+        tp: TextGradTeleprompter[Any, Any] = TextGradTeleprompter()
 
         trace = await tp.compile(
             signature=simple_signature,
@@ -195,10 +207,12 @@ class TestTextGradTeleprompter:
 
     @pytest.mark.asyncio
     async def test_compile_respects_max_iterations(
-        self, simple_signature, simple_examples
-    ):
+        self, simple_signature: Signature, simple_examples: list[Example]
+    ) -> None:
         """Test that max_iterations is respected."""
-        tp = TextGradTeleprompter(convergence_threshold=0.0)  # Never converge
+        tp: TextGradTeleprompter[Any, Any] = TextGradTeleprompter(
+            convergence_threshold=0.0
+        )  # Never converge
 
         trace = await tp.compile(
             signature=simple_signature,
@@ -219,15 +233,15 @@ class TestMIPROv2Teleprompter:
 
     def test_strategy_property(self) -> None:
         """Test strategy property."""
-        tp = MIPROv2Teleprompter()
+        tp: MIPROv2Teleprompter[Any, Any] = MIPROv2Teleprompter()
         assert tp.strategy == TeleprompterStrategy.MIPRO_V2
 
     @pytest.mark.asyncio
     async def test_compile_returns_stub_trace(
-        self, simple_signature, simple_examples
+        self, simple_signature: Signature, simple_examples: list[Example]
     ) -> None:
         """Test that stub returns appropriate trace."""
-        tp = MIPROv2Teleprompter()
+        tp: MIPROv2Teleprompter[Any, Any] = MIPROv2Teleprompter()
 
         trace = await tp.compile(
             signature=simple_signature,
@@ -245,15 +259,15 @@ class TestOPROTeleprompter:
 
     def test_strategy_property(self) -> None:
         """Test strategy property."""
-        tp = OPROTeleprompter()
+        tp: OPROTeleprompter[Any, Any] = OPROTeleprompter()
         assert tp.strategy == TeleprompterStrategy.OPRO
 
     @pytest.mark.asyncio
     async def test_compile_returns_stub_trace(
-        self, simple_signature, simple_examples
+        self, simple_signature: Signature, simple_examples: list[Example]
     ) -> None:
         """Test that stub returns appropriate trace."""
-        tp = OPROTeleprompter()
+        tp: OPROTeleprompter[Any, Any] = OPROTeleprompter()
 
         trace = await tp.compile(
             signature=simple_signature,
@@ -362,7 +376,8 @@ class TestROIOptimizer:
         )
 
         # Marginal ROI should recommend cheaper method
-        if decision.proceed and decision.roi_estimate:
+        if decision.proceed:
+            assert decision.roi_estimate is not None
             if decision.roi_estimate.roi < 2.0:
                 assert (
                     decision.recommended_method
@@ -382,6 +397,7 @@ class TestROIOptimizer:
         )
 
         assert decision.proceed
+        assert decision.roi_estimate is not None
         assert decision.roi_estimate.value_per_call_usd == 1.0
 
 
@@ -393,25 +409,27 @@ class TestRefineryAgent:
 
     def test_default_strategy(self) -> None:
         """Test default strategy is bootstrap few-shot."""
-        agent = RefineryAgent()
+        agent: RefineryAgent[Any, Any] = RefineryAgent()
         assert agent.strategy == TeleprompterStrategy.BOOTSTRAP_FEWSHOT
 
     def test_custom_strategy(self) -> None:
         """Test custom strategy configuration."""
-        agent = RefineryAgent(strategy=TeleprompterStrategy.TEXTGRAD)
+        agent: RefineryAgent[Any, Any] = RefineryAgent(
+            strategy=TeleprompterStrategy.TEXTGRAD
+        )
         assert agent.strategy == TeleprompterStrategy.TEXTGRAD
 
     def test_has_roi_optimizer(self) -> None:
         """Test that ROI optimizer is created."""
-        agent = RefineryAgent()
+        agent: RefineryAgent[Any, Any] = RefineryAgent()
         assert agent.roi_optimizer is not None
 
     @pytest.mark.asyncio
     async def test_refine_returns_trace(
-        self, simple_signature, scored_examples
+        self, simple_signature: Signature, scored_examples: list[Example]
     ) -> None:
         """Test that refine returns an OptimizationTrace."""
-        agent = RefineryAgent()
+        agent: RefineryAgent[Any, Any] = RefineryAgent()
 
         trace = await agent.refine(
             signature=simple_signature,
@@ -425,10 +443,10 @@ class TestRefineryAgent:
 
     @pytest.mark.asyncio
     async def test_refine_with_roi_check(
-        self, simple_signature, scored_examples
+        self, simple_signature: Signature, scored_examples: list[Example]
     ) -> None:
         """Test refine with ROI checking enabled."""
-        agent = RefineryAgent()
+        agent: RefineryAgent[Any, Any] = RefineryAgent()
 
         trace = await agent.refine(
             signature=simple_signature,
@@ -443,10 +461,12 @@ class TestRefineryAgent:
 
     @pytest.mark.asyncio
     async def test_refine_skips_on_negative_roi(
-        self, simple_signature, scored_examples
-    ):
+        self, simple_signature: Signature, scored_examples: list[Example]
+    ) -> None:
         """Test that refine skips when ROI is negative."""
-        agent = RefineryAgent(strategy=TeleprompterStrategy.MIPRO_V2)
+        agent: RefineryAgent[Any, Any] = RefineryAgent(
+            strategy=TeleprompterStrategy.MIPRO_V2
+        )
 
         trace = await agent.refine(
             signature=simple_signature,
@@ -462,7 +482,7 @@ class TestRefineryAgent:
 
     def test_select_strategy_simple_small(self) -> None:
         """Test strategy selection for simple small task."""
-        agent = RefineryAgent()
+        agent: RefineryAgent[Any, Any] = RefineryAgent()
 
         strategy = agent.select_strategy(
             task_complexity="simple",
@@ -474,7 +494,7 @@ class TestRefineryAgent:
 
     def test_select_strategy_complex(self) -> None:
         """Test strategy selection for complex task."""
-        agent = RefineryAgent()
+        agent: RefineryAgent[Any, Any] = RefineryAgent()
 
         strategy = agent.select_strategy(
             task_complexity="complex",
@@ -486,7 +506,7 @@ class TestRefineryAgent:
 
     def test_select_strategy_low_budget(self) -> None:
         """Test strategy selection with low budget."""
-        agent = RefineryAgent()
+        agent: RefineryAgent[Any, Any] = RefineryAgent()
 
         strategy = agent.select_strategy(
             task_complexity="medium",
@@ -498,7 +518,7 @@ class TestRefineryAgent:
 
     def test_select_strategy_large_production(self) -> None:
         """Test strategy selection for large production dataset."""
-        agent = RefineryAgent()
+        agent: RefineryAgent[Any, Any] = RefineryAgent()
 
         strategy = agent.select_strategy(
             task_complexity="medium",
@@ -517,11 +537,13 @@ class TestRefineryIntegration:
 
     @pytest.mark.asyncio
     async def test_full_optimization_flow(
-        self, simple_signature, scored_examples
+        self, simple_signature: Signature, scored_examples: list[Example]
     ) -> None:
         """Test complete optimization flow."""
         # 1. Create refinery agent
-        agent = RefineryAgent(strategy=TeleprompterStrategy.BOOTSTRAP_FEWSHOT)
+        agent: RefineryAgent[Any, Any] = RefineryAgent(
+            strategy=TeleprompterStrategy.BOOTSTRAP_FEWSHOT
+        )
 
         # 2. Run refinement
         trace = await agent.refine(
@@ -541,11 +563,13 @@ class TestRefineryIntegration:
 
     @pytest.mark.asyncio
     async def test_strategy_switch_on_roi(
-        self, simple_signature, scored_examples
+        self, simple_signature: Signature, scored_examples: list[Example]
     ) -> None:
         """Test that strategy can be switched based on ROI."""
         # Start with expensive strategy
-        agent = RefineryAgent(strategy=TeleprompterStrategy.MIPRO_V2)
+        agent: RefineryAgent[Any, Any] = RefineryAgent(
+            strategy=TeleprompterStrategy.MIPRO_V2
+        )
 
         # Run with marginal ROI scenario
         trace = await agent.refine(

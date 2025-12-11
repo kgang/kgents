@@ -29,9 +29,9 @@ import ast
 from dataclasses import dataclass, field
 from typing import Any, Callable, Optional
 
-from bootstrap.judge import MINI_JUDGES, JudgeInput
+from bootstrap.judge import MINI_JUDGES
 from bootstrap.judge import Judge as BootstrapJudge
-from bootstrap.types import Agent, PartialVerdict, Verdict
+from bootstrap.types import Agent, JudgeInput, PartialVerdict, Verdict
 
 # Template generation (Phase D - H12)
 from .templates import TemplateContext, generate_template
@@ -457,7 +457,7 @@ class JITSafetyJudge(BootstrapJudge):
             print(verdict.revisions)
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize with combined bootstrap + JIT judges."""
         combined_judges = dict(MINI_JUDGES)
         combined_judges.update(JIT_MINI_JUDGES)

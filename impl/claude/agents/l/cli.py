@@ -80,31 +80,35 @@ class LibraryCLI(CLICapable):
         # Map string to EntityType
         type_filter = None
         if type:
-            type_map = {
+            type_map: dict[str, EntityType] = {
                 "agent": EntityType.AGENT,
                 "tongue": EntityType.TONGUE,
-                "tool": EntityType.TOOL,
+                "contract": EntityType.CONTRACT,
+                "memory": EntityType.MEMORY,
+                "spec": EntityType.SPEC,
+                "test": EntityType.TEST,
+                "template": EntityType.TEMPLATE,
+                "pattern": EntityType.PATTERN,
                 "hypothesis": EntityType.HYPOTHESIS,
-                "artifact": EntityType.ARTIFACT,
-                "script": EntityType.SCRIPT,
-                "document": EntityType.DOCUMENT,
             }
             type_filter = type_map.get(type.lower())
 
-        entries = await registry.find(entity_type=type_filter)
+        results = await registry.find(entity_type=type_filter)
 
         return {
             "entries": [
                 {
-                    "id": e.id,
-                    "name": e.name,
-                    "type": e.entity_type.value if e.entity_type else "unknown",
-                    "status": e.status.value if e.status else "unknown",
-                    "description": e.description,
+                    "id": r.entry.id,
+                    "name": r.entry.name,
+                    "type": r.entry.entity_type.value
+                    if r.entry.entity_type
+                    else "unknown",
+                    "status": r.entry.status.value if r.entry.status else "unknown",
+                    "description": r.entry.description,
                 }
-                for e in entries
+                for r in results
             ],
-            "count": len(entries),
+            "count": len(results),
         }
 
     @expose(
@@ -131,31 +135,54 @@ class LibraryCLI(CLICapable):
         registry = await create_semantic_registry()
 
         if semantic:
-            results = await registry.find_semantic(query, limit=limit)
+            semantic_results = await registry.find_semantic(query, limit=limit)
+            return {
+                "query": query,
+                "results": [
+                    {
+                        "id": r.entry.id,
+                        "name": r.entry.name,
+                        "type": r.entry.entity_type.value,
+                        "score": r.similarity,
+                        "description": r.entry.description,
+                    }
+                    for r in semantic_results
+                ],
+                "count": len(semantic_results),
+            }
         elif keyword:
-            results = await registry.find(query=query, limit=limit)
+            keyword_results = await registry.find(query=query, limit=limit)
+            return {
+                "query": query,
+                "results": [
+                    {
+                        "id": r.entry.id,
+                        "name": r.entry.name,
+                        "type": r.entry.entity_type.value,
+                        "score": r.score,
+                        "description": r.entry.description,
+                    }
+                    for r in keyword_results
+                ],
+                "count": len(keyword_results),
+            }
         else:
-            # Hybrid search
-            results = await registry.find_hybrid(query, limit=limit)
-
-        return {
-            "query": query,
-            "results": [
-                {
-                    "id": r.entry.id if hasattr(r, "entry") else r.id,
-                    "name": r.entry.name if hasattr(r, "entry") else r.name,
-                    "type": r.entry.entity_type.value
-                    if hasattr(r, "entry") and r.entry.entity_type
-                    else "unknown",
-                    "score": r.score if hasattr(r, "score") else 1.0,
-                    "description": r.entry.description
-                    if hasattr(r, "entry")
-                    else getattr(r, "description", None),
-                }
-                for r in results
-            ],
-            "count": len(results),
-        }
+            # Hybrid search returns SearchResult
+            hybrid_results = await registry.find_hybrid(query, limit=limit)
+            return {
+                "query": query,
+                "results": [
+                    {
+                        "id": r.entry.id,
+                        "name": r.entry.name,
+                        "type": r.entry.entity_type.value,
+                        "score": r.score,
+                        "description": r.entry.description,
+                    }
+                    for r in hybrid_results
+                ],
+                "count": len(hybrid_results),
+            }
 
     @expose(
         help="Register new artifact",
@@ -173,29 +200,34 @@ class LibraryCLI(CLICapable):
         """
         Register new artifact in catalog.
 
-        Types: agent, tongue, tool, hypothesis, artifact, script, document
+        Types: agent, tongue, contract, memory, spec, test, template, pattern, hypothesis
         """
         import uuid
 
         from agents.l import CatalogEntry, EntityType, Registry, Status
 
-        type_map = {
+        type_map: dict[str, EntityType] = {
             "agent": EntityType.AGENT,
             "tongue": EntityType.TONGUE,
-            "tool": EntityType.TOOL,
+            "contract": EntityType.CONTRACT,
+            "memory": EntityType.MEMORY,
+            "spec": EntityType.SPEC,
+            "test": EntityType.TEST,
+            "template": EntityType.TEMPLATE,
+            "pattern": EntityType.PATTERN,
             "hypothesis": EntityType.HYPOTHESIS,
-            "artifact": EntityType.ARTIFACT,
-            "script": EntityType.SCRIPT,
-            "document": EntityType.DOCUMENT,
         }
 
         # Infer name from path if not provided
         artifact_name = name or Path(path).stem
 
+        entity_type = type_map.get(type.lower(), EntityType.AGENT)
+
         entry = CatalogEntry(
             id=str(uuid.uuid4())[:8],
             name=artifact_name,
-            entity_type=type_map.get(type.lower(), EntityType.ARTIFACT),
+            entity_type=entity_type,
+            version="0.1.0",
             status=Status.ACTIVE,
             description=f"Registered from {path}",
         )
@@ -263,11 +295,11 @@ class LibraryCLI(CLICapable):
         result: dict[str, Any] = {"id": id}
 
         if not descendants:
-            ancestor_list = graph.get_ancestors(id, max_depth=depth)
+            ancestor_list = await graph.get_ancestors(id, max_depth=depth)
             result["ancestors"] = list(ancestor_list)
 
         if not ancestors:
-            descendant_list = graph.get_descendants(id, max_depth=depth)
+            descendant_list = await graph.get_descendants(id, max_depth=depth)
             result["descendants"] = list(descendant_list)
 
         return result
@@ -304,9 +336,9 @@ class LibraryCLI(CLICapable):
             "pipeline": " >> ".join(id_list),
             "stages": [
                 {
-                    "from": s.from_agent,
-                    "to": s.to_agent,
-                    "compatible": s.compatible,
+                    "from": s.from_id,
+                    "to": s.to_id,
+                    "compatible": s.result.compatible,
                 }
                 for s in verification.stages
             ]
@@ -348,23 +380,23 @@ class LibraryCLI(CLICapable):
         from agents.l import Registry, Status
 
         registry = Registry()
-        all_entries = await registry.find()
+        results = await registry.find()
 
         by_type: dict[str, int] = {}
         active = 0
         deprecated = 0
 
-        for e in all_entries:
-            t = e.entity_type.value if e.entity_type else "unknown"
+        for r in results:
+            t = r.entry.entity_type.value if r.entry.entity_type else "unknown"
             by_type[t] = by_type.get(t, 0) + 1
 
-            if e.status == Status.ACTIVE:
+            if r.entry.status == Status.ACTIVE:
                 active += 1
-            elif e.status == Status.DEPRECATED:
+            elif r.entry.status == Status.DEPRECATED:
                 deprecated += 1
 
         return {
-            "total": len(all_entries),
+            "total": len(results),
             "by_type": by_type,
             "active": active,
             "deprecated": deprecated,

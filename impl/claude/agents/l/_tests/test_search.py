@@ -4,14 +4,16 @@ Tests for L-gent search functionality.
 
 import os
 import tempfile
+from collections.abc import Generator
 
 import pytest
-from agents.l.catalog import CatalogEntry, EntityType, Registry
+from agents.l.registry import Registry
 from agents.l.search import Search, SearchStrategy
+from agents.l.types import CatalogEntry, EntityType
 
 
 @pytest.fixture
-def temp_storage():
+def temp_storage() -> Generator[str, None, None]:
     """Temporary storage file for testing."""
     fd, path = tempfile.mkstemp(suffix=".json")
     os.close(fd)
@@ -20,9 +22,9 @@ def temp_storage():
 
 
 @pytest.fixture
-async def populated_registry(temp_storage):
+async def populated_registry() -> Registry:
     """Registry populated with test data."""
-    registry = Registry(storage_path=temp_storage)
+    registry = Registry()
 
     # Create diverse test entries
     entries = [
@@ -88,7 +90,7 @@ async def populated_registry(temp_storage):
 
 
 @pytest.mark.asyncio
-async def test_keyword_search_by_name(populated_registry) -> None:
+async def test_keyword_search_by_name(populated_registry: Registry) -> None:
     """Test searching by agent name."""
     search = Search(populated_registry)
 
@@ -100,7 +102,7 @@ async def test_keyword_search_by_name(populated_registry) -> None:
 
 
 @pytest.mark.asyncio
-async def test_keyword_search_by_keyword(populated_registry) -> None:
+async def test_keyword_search_by_keyword(populated_registry: Registry) -> None:
     """Test searching by keywords."""
     search = Search(populated_registry)
 
@@ -112,7 +114,7 @@ async def test_keyword_search_by_keyword(populated_registry) -> None:
 
 
 @pytest.mark.asyncio
-async def test_keyword_search_by_description(populated_registry) -> None:
+async def test_keyword_search_by_description(populated_registry: Registry) -> None:
     """Test searching within descriptions."""
     search = Search(populated_registry)
 
@@ -123,7 +125,7 @@ async def test_keyword_search_by_description(populated_registry) -> None:
 
 
 @pytest.mark.asyncio
-async def test_search_with_filters(populated_registry) -> None:
+async def test_search_with_filters(populated_registry: Registry) -> None:
     """Test search with type filters."""
     search = Search(populated_registry)
 
@@ -139,7 +141,7 @@ async def test_search_with_filters(populated_registry) -> None:
 
 
 @pytest.mark.asyncio
-async def test_search_with_author_filter(populated_registry) -> None:
+async def test_search_with_author_filter(populated_registry: Registry) -> None:
     """Test filtering by author."""
     search = Search(populated_registry)
 
@@ -151,7 +153,7 @@ async def test_search_with_author_filter(populated_registry) -> None:
 
 
 @pytest.mark.asyncio
-async def test_search_result_ordering(populated_registry) -> None:
+async def test_search_result_ordering(populated_registry: Registry) -> None:
     """Test that results are ordered by relevance score."""
     search = Search(populated_registry)
 
@@ -163,7 +165,7 @@ async def test_search_result_ordering(populated_registry) -> None:
 
 
 @pytest.mark.asyncio
-async def test_search_limit(populated_registry) -> None:
+async def test_search_limit(populated_registry: Registry) -> None:
     """Test search result limit."""
     search = Search(populated_registry)
 
@@ -173,7 +175,7 @@ async def test_search_limit(populated_registry) -> None:
 
 
 @pytest.mark.asyncio
-async def test_find_by_type_signature(populated_registry) -> None:
+async def test_find_by_type_signature(populated_registry: Registry) -> None:
     """Test finding agents by type signature."""
     search = Search(populated_registry)
 
@@ -186,7 +188,7 @@ async def test_find_by_type_signature(populated_registry) -> None:
 
 
 @pytest.mark.asyncio
-async def test_find_by_type_signature_partial(populated_registry) -> None:
+async def test_find_by_type_signature_partial(populated_registry: Registry) -> None:
     """Test finding agents by partial type signature."""
     search = Search(populated_registry)
 
@@ -198,7 +200,7 @@ async def test_find_by_type_signature_partial(populated_registry) -> None:
 
 
 @pytest.mark.asyncio
-async def test_find_similar(populated_registry) -> None:
+async def test_find_similar(populated_registry: Registry) -> None:
     """Test finding similar entries."""
     search = Search(populated_registry)
 
@@ -213,7 +215,7 @@ async def test_find_similar(populated_registry) -> None:
 
 
 @pytest.mark.asyncio
-async def test_search_no_results(populated_registry) -> None:
+async def test_search_no_results(populated_registry: Registry) -> None:
     """Test search with no matching results."""
     search = Search(populated_registry)
 
@@ -223,7 +225,7 @@ async def test_search_no_results(populated_registry) -> None:
 
 
 @pytest.mark.asyncio
-async def test_semantic_search_not_implemented(populated_registry) -> None:
+async def test_semantic_search_not_implemented(populated_registry: Registry) -> None:
     """Test that semantic search raises NotImplementedError."""
     search = Search(populated_registry)
 
@@ -232,7 +234,7 @@ async def test_semantic_search_not_implemented(populated_registry) -> None:
 
 
 @pytest.mark.asyncio
-async def test_graph_search_not_implemented(populated_registry) -> None:
+async def test_graph_search_not_implemented(populated_registry: Registry) -> None:
     """Test that graph search raises NotImplementedError."""
     search = Search(populated_registry)
 

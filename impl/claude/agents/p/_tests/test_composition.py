@@ -2,23 +2,30 @@
 Tests for P-gents composition patterns (Fallback, Fusion, Switch).
 """
 
+from __future__ import annotations
+
+from collections.abc import Iterator
+from typing import Any
+
 import pytest
 from agents.p.composition import FallbackParser, FusionParser, SwitchParser
-from agents.p.core import IdentityParser, ParseResult
+from agents.p.core import IdentityParser, Parser, ParseResult
 from agents.p.strategies.anchor import AnchorBasedParser
 
 # Mock parsers for testing
 
 
-class AlwaysSuccessParser:
+class AlwaysSuccessParser(Parser[str]):
     """Parser that always succeeds."""
 
-    def __init__(self, value="success", confidence=0.9, strategy="success"):
+    def __init__(
+        self, value: str = "success", confidence: float = 0.9, strategy: str = "success"
+    ) -> None:
         self._value = value
         self._confidence = confidence
         self._strategy = strategy
 
-    def parse(self, text: str) -> ParseResult:
+    def parse(self, text: str) -> ParseResult[str]:
         return ParseResult(
             success=True,
             value=self._value,
@@ -26,24 +33,36 @@ class AlwaysSuccessParser:
             strategy=self._strategy,
         )
 
-    def parse_stream(self, tokens):
+    def parse_stream(self, tokens: Iterator[str]) -> Iterator[ParseResult[str]]:
         text = "".join(tokens)
         yield self.parse(text)
 
+    def configure(self, **config: Any) -> "AlwaysSuccessParser":
+        """Configure is a no-op for this mock parser."""
+        return self
 
-class AlwaysFailParser:
+
+class AlwaysFailParser(Parser[str]):
     """Parser that always fails."""
 
-    def __init__(self, error="fail", strategy="fail"):
+    def __init__(self, error: str = "fail", strategy: str = "fail") -> None:
         self._error = error
         self._strategy = strategy
 
-    def parse(self, text: str) -> ParseResult:
+    def parse(self, text: str) -> ParseResult[str]:
         return ParseResult(
             success=False,
             error=self._error,
             strategy=self._strategy,
         )
+
+    def parse_stream(self, tokens: Iterator[str]) -> Iterator[ParseResult[str]]:
+        text = "".join(tokens)
+        yield self.parse(text)
+
+    def configure(self, **config: Any) -> "AlwaysFailParser":
+        """Configure is a no-op for this mock parser."""
+        return self
 
 
 class TestFallbackParser:
@@ -102,6 +121,7 @@ class TestFallbackParser:
         result = parser.parse("test")
 
         assert not result.success
+        assert result.error is not None
         assert "error1" in result.error
         assert "error2" in result.error
         assert "error3" in result.error
@@ -114,10 +134,10 @@ class TestFallbackParser:
 
     def test_real_world_anchor_fallback(self) -> None:
         """Real-world example: Anchor parser with fallback."""
-        parser = FallbackParser(
+        parser: FallbackParser[Any] = FallbackParser(
             AnchorBasedParser(anchor="###ITEM:"),
             AnchorBasedParser(anchor="- "),  # Markdown bullet
-            IdentityParser(),  # Fallback to raw text
+            IdentityParser[Any](),  # Fallback to raw text
         )
 
         # First anchor succeeds
@@ -174,22 +194,23 @@ class TestFusionParser:
 
     def test_fusion_all_fail(self) -> None:
         """Fusion fails if all parsers fail."""
-        parser = FusionParser(
+        parser: FusionParser[str] = FusionParser(
             AlwaysFailParser("error1", "first"),
             AlwaysFailParser("error2", "second"),
-            merge_fn=lambda values: None,
+            merge_fn=lambda values: "",  # Return empty string instead of None
         )
 
         result = parser.parse("test")
 
         assert not result.success
+        assert result.error is not None
         assert "error1" in result.error
         assert "error2" in result.error
 
     def test_merge_function_error(self) -> None:
         """Fusion handles merge function errors."""
 
-        def bad_merge(values):
+        def bad_merge(values: list[str]) -> str:
             raise ValueError("Merge failed")
 
         parser = FusionParser(
@@ -201,12 +222,13 @@ class TestFusionParser:
         result = parser.parse("test")
 
         assert not result.success
+        assert result.error is not None
         assert "Merge function failed" in result.error
 
     def test_no_parsers_raises(self) -> None:
         """FusionParser requires at least one parser."""
         with pytest.raises(ValueError, match="at least one parser"):
-            FusionParser(merge_fn=lambda x: x)
+            FusionParser(merge_fn=lambda x: "".join(x))
 
 
 class TestSwitchParser:
@@ -214,7 +236,7 @@ class TestSwitchParser:
 
     def test_switch_on_prefix(self) -> None:
         """Switch based on text prefix."""
-        routes = {
+        routes: dict[Any, Parser[str]] = {
             lambda t: t.startswith("{"): AlwaysSuccessParser("json", 0.9, "json"),
             lambda t: t.startswith("###"): AlwaysSuccessParser("anchor", 0.9, "anchor"),
             lambda t: True: AlwaysSuccessParser("default", 0.8, "default"),
@@ -238,7 +260,7 @@ class TestSwitchParser:
 
     def test_switch_no_match(self) -> None:
         """Switch fails if no condition matches."""
-        routes = {
+        routes: dict[Any, Parser[str]] = {
             lambda t: t.startswith("{"): AlwaysSuccessParser("json", 0.9, "json"),
         }
         parser = SwitchParser(routes)
@@ -246,15 +268,16 @@ class TestSwitchParser:
         result = parser.parse("plain text")
 
         assert not result.success
+        assert result.error is not None
         assert "No matching parser" in result.error
 
     def test_switch_condition_error(self) -> None:
         """Switch handles condition evaluation errors."""
 
-        def bad_condition(text):
+        def bad_condition(text: str) -> bool:
             raise ValueError("Condition error")
 
-        routes = {
+        routes: dict[Any, Parser[str]] = {
             bad_condition: AlwaysSuccessParser("bad", 0.9, "bad"),
             lambda t: True: AlwaysSuccessParser("fallback", 0.9, "fallback"),
         }
@@ -273,14 +296,14 @@ class TestSwitchParser:
 
     def test_real_world_format_detection(self) -> None:
         """Real-world example: Format detection."""
-        routes = {
+        routes: dict[Any, Parser[Any]] = {
             lambda t: t.strip().startswith("{"): AlwaysSuccessParser(
                 "json", 0.95, "json"
             ),
             lambda t: "###" in t: AnchorBasedParser(anchor="###ITEM:"),
-            lambda t: True: IdentityParser(),
+            lambda t: True: IdentityParser[Any](),
         }
-        parser = SwitchParser(routes)
+        parser: SwitchParser[Any] = SwitchParser(routes)
 
         # JSON detected
         result1 = parser.parse('{"key": "value"}')
@@ -330,17 +353,17 @@ class TestCompositionNesting:
             AlwaysSuccessParser("loose-json", 0.8, "loose"),
         )
 
-        fallback_text = FallbackParser(
+        fallback_text: FallbackParser[Any] = FallbackParser(
             AlwaysSuccessParser("structured", 0.9, "structured"),
-            IdentityParser(),
+            IdentityParser[Any](),
         )
 
-        routes = {
+        routes: dict[Any, Parser[Any]] = {
             lambda t: t.startswith("{"): fallback_json,
             lambda t: True: fallback_text,
         }
 
-        parser = SwitchParser(routes)
+        parser: SwitchParser[Any] = SwitchParser(routes)
 
         # JSON route
         result1 = parser.parse("{}")

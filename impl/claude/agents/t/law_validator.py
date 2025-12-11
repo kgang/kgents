@@ -19,6 +19,8 @@ logger = logging.getLogger(__name__)
 A = TypeVar("A")
 B = TypeVar("B")
 C = TypeVar("C")
+A_contra = TypeVar("A_contra", contravariant=True)
+B_co = TypeVar("B_co", covariant=True)
 
 
 # --- Law Validation Results ---
@@ -78,10 +80,10 @@ class LawValidationReport:
 # --- Agent Protocol (for law checking) ---
 
 
-class AgentLike(Protocol[A, B]):
+class AgentLike(Protocol[A_contra, B_co]):
     """Protocol for composable agents."""
 
-    async def run(self, input_data: A) -> B:
+    async def run(self, input_data: A_contra) -> B_co:
         """Execute the agent."""
         ...
 
@@ -259,7 +261,7 @@ async def check_functor_identity(
 
     try:
         # F(id)(value) should equal value
-        def identity(x):
+        def identity(x: A) -> A:
             return x
 
         mapped = functor_map(identity)
@@ -287,7 +289,7 @@ async def check_functor_identity(
 
 
 async def check_functor_composition(
-    functor_map: Callable[[Callable], Callable],
+    functor_map: Callable[[Callable[..., Any]], Callable[..., Any]],
     f: Callable[[A], B],
     g: Callable[[B], C],
     test_value: Any,
@@ -310,7 +312,7 @@ async def check_functor_composition(
 
     try:
         # Left side: F(g . f)(value)
-        def composed_fn(x):
+        def composed_fn(x: A) -> C:
             return g(f(x))
 
         left_result = functor_map(composed_fn)(test_value)
@@ -345,7 +347,7 @@ async def check_functor_composition(
 
 async def check_monad_left_identity(
     unit: Callable[[A], Any],  # A -> M[A]
-    bind: Callable[[Any, Callable], Any],  # M[A] -> (A -> M[B]) -> M[B]
+    bind: Callable[[Any, Callable[..., Any]], Any],  # M[A] -> (A -> M[B]) -> M[B]
     f: Callable[[A], Any],  # A -> M[B]
     test_value: A,
     equality_fn: Callable[[Any, Any], bool] | None = None,
@@ -395,7 +397,7 @@ async def check_monad_left_identity(
 
 async def check_monad_right_identity(
     unit: Callable[[A], Any],
-    bind: Callable[[Any, Callable], Any],
+    bind: Callable[[Any, Callable[..., Any]], Any],
     m: Any,  # M[A]
     equality_fn: Callable[[Any, Any], bool] | None = None,
 ) -> LawViolation | None:
@@ -442,7 +444,7 @@ async def check_monad_right_identity(
 
 
 async def check_monad_associativity(
-    bind: Callable[[Any, Callable], Any],
+    bind: Callable[[Any, Callable[..., Any]], Any],
     m: Any,  # M[A]
     f: Callable[[Any], Any],  # A -> M[B]
     g: Callable[[Any], Any],  # B -> M[C]
@@ -469,7 +471,7 @@ async def check_monad_associativity(
         left_result = bind(left_intermediate, g)
 
         # Right side: m.bind(λa. f(a).bind(g))
-        def composed_fn(a):
+        def composed_fn(a: Any) -> Any:
             return bind(f(a), g)
 
         right_result = bind(m, composed_fn)
@@ -505,7 +507,7 @@ class LawValidator:
     Cross-pollination T2.6: Validates E-gent evolution pipeline laws.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.violations: list[LawViolation] = []
         self.laws_checked: list[str] = []
 
@@ -572,9 +574,9 @@ class LawValidator:
 
 
 async def validate_evolution_pipeline_laws(
-    ground_stage: AgentLike,
-    hypothesis_stage: AgentLike,
-    experiment_stage: AgentLike,
+    ground_stage: AgentLike[Any, Any],
+    hypothesis_stage: AgentLike[Any, Any],
+    experiment_stage: AgentLike[Any, Any],
     test_input: Any,
 ) -> LawValidationReport:
     """

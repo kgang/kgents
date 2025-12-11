@@ -185,7 +185,7 @@ class EthicalBoundary(GravityContract):
     name: str = "EthicalBoundary"
     blocked_patterns: list[str] = field(default_factory=list)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.blocked_patterns:
             if self.level == "strict":
                 self.blocked_patterns = [
@@ -251,7 +251,7 @@ class DomainInvariant(GravityContract):
     f_contract: Any  # F-gent Contract with invariants
     name: str = ""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.name:
             self.name = f"DomainInvariant({self.domain})"
 
@@ -474,7 +474,9 @@ class Grounded(Agent[A, B], Generic[A, B]):
 # === Grounded Decorator ===
 
 
-def grounded(*contracts: GravityContract, on_violation: str = "raise"):
+def grounded(
+    *contracts: GravityContract, on_violation: str = "raise"
+) -> Callable[[type[Agent[A, B]]], type[Agent[A, B]]]:
     """
     Decorator to apply gravity to an agent class.
 
@@ -488,18 +490,18 @@ def grounded(*contracts: GravityContract, on_violation: str = "raise"):
     def decorator(cls: type[Agent[A, B]]) -> type[Agent[A, B]]:
         original_init = cls.__init__
 
-        def new_init(self, *args, **kwargs):
+        def new_init(self: Any, *args: Any, **kwargs: Any) -> None:
             original_init(self, *args, **kwargs)
             # Store contracts for later wrapping
             self._gravity_contracts = contracts
             self._gravity_on_violation = on_violation
 
-        cls.__init__ = new_init
+        cls.__init__ = new_init  # type: ignore[method-assign]
 
         # Wrap invoke to check gravity
         original_invoke = cls.invoke
 
-        async def new_invoke(self, input: A) -> B:
+        async def new_invoke(self: Any, input: A) -> B:
             output = await original_invoke(self, input)
 
             # Apply gravity
@@ -526,7 +528,7 @@ def grounded(*contracts: GravityContract, on_violation: str = "raise"):
 
             return output
 
-        cls.invoke = new_invoke
+        cls.invoke = new_invoke  # type: ignore[method-assign]
 
         return cls
 
@@ -551,7 +553,7 @@ class GravityBuilder:
         ... )
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._contracts: list[GravityContract] = []
 
     def with_facts(self, facts: dict[str, Any]) -> "GravityBuilder":

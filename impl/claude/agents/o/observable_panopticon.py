@@ -28,6 +28,7 @@ from typing import Any, AsyncIterator, Callable, Optional
 from ..w.protocol import WireObservable
 from .observer import (
     BaseObserver,
+    EntropyEvent,
     ObservationContext,
     ObservationResult,
     ObservationStatus,
@@ -213,7 +214,7 @@ class ObservablePanopticon(WireObservable):
 
         # Streaming state
         self._streaming = False
-        self._stream_task: Optional[asyncio.Task] = None
+        self._stream_task: Optional[asyncio.Task[None]] = None
 
         # Callbacks
         self._on_status_change: list[Callable[[WireStatusSnapshot], None]] = []
@@ -541,9 +542,19 @@ class WireObserver(BaseObserver):
 
         return obs_result
 
-    def record_entropy(self, context: ObservationContext, error: Exception) -> None:
+    def record_entropy(
+        self, context: ObservationContext, error: Exception
+    ) -> EntropyEvent:
         """Record entropy (error) event."""
         self._error_count += 1
+
+        entropy_event = EntropyEvent(
+            source_agent=context.agent_name,
+            event_type="exception",
+            severity="error",
+            description=f"{type(error).__name__}: {error}",
+            data={"error_type": type(error).__name__},
+        )
 
         if self._emit_entropy:
             self._wire.log_event(
@@ -555,6 +566,8 @@ class WireObserver(BaseObserver):
                 phase="empty",
                 error=f"{type(error).__name__}: {error}",
             )
+
+        return entropy_event
 
     @property
     def wire(self) -> WireObservable:

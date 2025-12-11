@@ -10,6 +10,8 @@ This module indexes scientific hypotheses and their outcomes in the L-gent catal
 enabling pattern analysis and learning across domains.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -127,7 +129,7 @@ class HypothesisIndex:
     Cross-pollination T2.10: This is the core integration point.
     """
 
-    def __init__(self, storage_path: str | None = None):
+    def __init__(self, storage_path: str | None = None) -> None:
         """
         Initialize hypothesis index.
 
@@ -329,12 +331,14 @@ class HypothesisIndex:
         )
 
         # Analyze novelty distribution
-        novelty_success = {}
+        novelty_success: dict[str, int] = {}
         for h in confirmed:
             novelty_success[h.novelty] = novelty_success.get(h.novelty, 0) + 1
 
         most_successful_novelty = (
-            max(novelty_success, key=novelty_success.get) if novelty_success else None
+            max(novelty_success, key=lambda k: novelty_success[k])
+            if novelty_success
+            else None
         )
 
         # Confidence analysis
@@ -346,8 +350,8 @@ class HypothesisIndex:
         )
 
         # Keyword analysis
-        confirmed_keywords = {}
-        refuted_keywords = {}
+        confirmed_keywords: dict[str, int] = {}
+        refuted_keywords: dict[str, int] = {}
 
         for h in confirmed:
             for kw in h.keywords:

@@ -78,21 +78,21 @@ class Predicate:
         if self.operator == Operator.EXISTS:
             return True
         elif self.operator == Operator.EQ:
-            return actual == self.value
+            return bool(actual == self.value)
         elif self.operator == Operator.NE:
-            return actual != self.value
+            return bool(actual != self.value)
         elif self.operator == Operator.LT:
-            return actual < self.value
+            return bool(actual < self.value)
         elif self.operator == Operator.LE:
-            return actual <= self.value
+            return bool(actual <= self.value)
         elif self.operator == Operator.GT:
-            return actual > self.value
+            return bool(actual > self.value)
         elif self.operator == Operator.GE:
-            return actual >= self.value
+            return bool(actual >= self.value)
         elif self.operator == Operator.IN:
-            return actual in self.value
+            return bool(actual in self.value)
         elif self.operator == Operator.CONTAINS:
-            return self.value in actual
+            return bool(self.value in actual)
         elif self.operator == Operator.MATCHES:
             return bool(re.match(self.value, str(actual)))
 
@@ -158,10 +158,10 @@ def _extract_path(data: Any, path: str) -> Any:
     return current
 
 
-def _set_path(data: Dict, path: str, value: Any) -> Dict:
+def _set_path(data: Dict[str, Any], path: str, value: Any) -> Dict[str, Any]:
     """Set value at path in data (immutable - returns new dict)."""
     if not path or path == ".":
-        return value
+        return dict(value) if isinstance(value, dict) else {}
 
     # Make a copy
     result = dict(data) if isinstance(data, dict) else data
@@ -270,9 +270,9 @@ class QueryableDataAgent(Generic[S]):
             raise QueryError("set() only works on dict-based states")
 
         new_state = _set_path(state, path, value)
-        await self._underlying.save(new_state)
+        await self._underlying.save(new_state)  # type: ignore[arg-type]
 
-    async def query(self, q: Query) -> QueryResult:
+    async def query(self, q: Query) -> QueryResult[Any]:
         """
         Execute a structured query.
 
@@ -288,7 +288,7 @@ class QueryableDataAgent(Generic[S]):
         state = await self._underlying.load()
 
         # Determine what to query (state itself or a collection within)
-        data = state
+        data: Any = state
 
         # Apply filters
         if q.where:
@@ -310,7 +310,7 @@ class QueryableDataAgent(Generic[S]):
             try:
                 data = sorted(
                     data,
-                    key=lambda x: _extract_path(x, q.order_by),
+                    key=lambda x: _extract_path(x, q.order_by if q.order_by else ""),
                     reverse=q.descending,
                 )
             except Exception:

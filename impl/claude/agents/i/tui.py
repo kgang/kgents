@@ -304,7 +304,7 @@ class FieldRenderer:
 class KeyHandler:
     """Handles keyboard input for TUI navigation."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._handlers: dict[str, Callable[[], None]] = {}
 
     def register(self, key: str, handler: Callable[[], None]) -> None:

@@ -291,7 +291,7 @@ def retrieve_with_learning(
     for metaphor in corpus:
         if strategy == "thompson" and hasattr(model, "sample"):
             # Thompson sampling: sample from posterior
-            score = model.sample(features, metaphor.id)  # type: ignore
+            score = model.sample(features, metaphor.id)
         elif strategy == "ucb":
             # Upper confidence bound
             mean, std = model.predict_with_uncertainty(features, metaphor.id)

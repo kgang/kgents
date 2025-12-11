@@ -5,12 +5,14 @@ Provides foundation for the Temporal Witness concept from noosphere.md.
 Supports event sourcing, time-travel, drift detection, and momentum tracking.
 """
 
+from __future__ import annotations
+
 import json
 import statistics
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Callable, Generic, List, Optional, Tuple, TypeVar
+from typing import Any, Callable, Generic, List, Optional, Tuple, TypeVar, cast
 
 from .errors import (
     DriftDetectionError,
@@ -102,7 +104,7 @@ class StreamAgent(Generic[E, S]):
         initial: S,
         persistence_path: Optional[Path] = None,
         max_events: int = 10000,
-    ):
+    ) -> None:
         """
         Initialize stream agent.
 
@@ -171,7 +173,7 @@ class StreamAgent(Generic[E, S]):
         """
         # Check for synthetic state_set events
         if isinstance(event, dict) and event.get("__synthetic__") == "state_set":
-            new_state = event["value"]
+            new_state = cast(S, event["value"])
         else:
             # Apply fold function
             new_state = self.fold(self._current_state, event)
@@ -221,7 +223,7 @@ class StreamAgent(Generic[E, S]):
                 isinstance(record.event, dict)
                 and record.event.get("__synthetic__") == "state_set"
             ):
-                state = record.event["value"]
+                state = cast(S, record.event["value"])
             else:
                 state = self.fold(state, record.event)
 
@@ -255,7 +257,7 @@ class StreamAgent(Generic[E, S]):
                 isinstance(record.event, dict)
                 and record.event.get("__synthetic__") == "state_set"
             ):
-                state = record.event["value"]
+                state = cast(S, record.event["value"])
             else:
                 state = self.fold(state, record.event)
 

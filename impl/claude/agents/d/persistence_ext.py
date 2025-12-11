@@ -9,6 +9,8 @@ Enhanced persistence capabilities for PersistentAgent:
 These extensions work with any DataAgent backend.
 """
 
+from __future__ import annotations
+
 import gzip
 import json
 import shutil
@@ -25,6 +27,7 @@ from typing import (
     Optional,
     Type,
     TypeVar,
+    cast,
 )
 
 from .errors import (
@@ -62,11 +65,11 @@ class SchemaVersion:
     created_at: datetime = field(default_factory=datetime.now)
     description: str = ""
 
-    def __lt__(self, other: "SchemaVersion") -> bool:
+    def __lt__(self, other: SchemaVersion) -> bool:
         """Compare versions for ordering."""
         return self._parse_version() < other._parse_version()
 
-    def _parse_version(self) -> tuple:
+    def _parse_version(self) -> tuple[int, ...]:
         """Parse version string into comparable tuple."""
         parts = self.version.split(".")
         return tuple(int(p) if p.isdigit() else 0 for p in parts)
@@ -98,7 +101,7 @@ class MigrationRegistry:
     Manages a chain of migrations to evolve schema over time.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._migrations: Dict[str, Migration] = {}  # from_version → Migration
 
     def register(self, migration: Migration) -> None:
@@ -183,7 +186,7 @@ class VersionedPersistentAgent(Generic[S]):
         current_version: str,
         migrations: Optional[MigrationRegistry] = None,
         max_history: int = 100,
-    ):
+    ) -> None:
         self.path = Path(path)
         self.schema = schema
         self.current_version = current_version
@@ -191,7 +194,7 @@ class VersionedPersistentAgent(Generic[S]):
         self.max_history = max_history
 
         # Underlying agent (operates on VersionedState, not S directly)
-        self._backend = PersistentAgent(
+        self._backend: PersistentAgent[Dict[str, Any]] = PersistentAgent(
             path=self.path,
             schema=dict,  # Store as dict for migration flexibility
             max_history=max_history,
@@ -273,14 +276,14 @@ class VersionedPersistentAgent(Generic[S]):
     def _serialize(self, state: S) -> Dict[str, Any]:
         """Serialize state to dict."""
         if is_dataclass(state):
-            return asdict(state)  # type: ignore
-        return state  # type: ignore
+            return asdict(state)  # type: ignore[arg-type]
+        return state  # type: ignore[return-value]
 
     def _deserialize(self, data: Dict[str, Any]) -> S:
         """Deserialize dict to state type."""
         if is_dataclass(self.schema):
-            return self.schema(**data)  # type: ignore
-        return data  # type: ignore
+            return self.schema(**data)
+        return cast(S, data)
 
 
 # === Backup/Restore Utilities ===
@@ -332,7 +335,7 @@ class BackupManager:
         backup_dir: Path | str,
         max_backups: int = 10,
         backup_suffix: str = ".backup",
-    ):
+    ) -> None:
         self.backup_dir = Path(backup_dir)
         self.max_backups = max_backups
         self.backup_suffix = backup_suffix
@@ -540,7 +543,7 @@ class CompressedPersistentAgent(Generic[S]):
         schema: Type[S],
         compression: Optional[CompressionConfig] = None,
         max_history: int = 100,
-    ):
+    ) -> None:
         self.path = Path(path)
         self.schema = schema
         self.compression = compression or CompressionConfig()
@@ -653,14 +656,14 @@ class CompressedPersistentAgent(Generic[S]):
     def _serialize(self, state: S) -> Any:
         """Serialize state to JSON-compatible structure."""
         if is_dataclass(state):
-            return asdict(state)  # type: ignore
+            return asdict(state)  # type: ignore[arg-type]
         return state
 
     def _deserialize(self, data: Any) -> S:
         """Deserialize JSON data to state type."""
         if is_dataclass(self.schema):
-            return self.schema(**data)  # type: ignore
-        return data  # type: ignore
+            return self.schema(**data)
+        return cast(S, data)
 
     async def get_compression_stats(self) -> Dict[str, Any]:
         """

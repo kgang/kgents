@@ -17,7 +17,7 @@ import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
+from typing import Optional, Type
 
 from .protocol import WireEvent, WireReader
 
@@ -74,7 +74,7 @@ class RenderResult:
 class FidelityAdapter(ABC):
     """Base class for fidelity adapters."""
 
-    def __init__(self, reader: WireReader):
+    def __init__(self, reader: WireReader) -> None:
         self.reader = reader
 
     @property
@@ -636,7 +636,7 @@ def get_adapter(
     if fidelity is None:
         fidelity = detect_fidelity(reader)
 
-    adapters = {
+    adapters: dict[Fidelity, Type[FidelityAdapter]] = {
         Fidelity.TELETYPE: TeletypeAdapter,
         Fidelity.DOCUMENTARIAN: DocumentarianAdapter,
         Fidelity.LIVEWIRE: LiveWireAdapter,

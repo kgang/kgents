@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import tempfile
 import time
+from collections.abc import Generator
 from pathlib import Path
 
 import pytest
@@ -48,7 +49,7 @@ from agents.e.safety import (
 
 
 @pytest.fixture
-def temp_dir() -> Path:
+def temp_dir() -> Generator[Path, None, None]:
     """Create a temporary directory for tests."""
     with tempfile.TemporaryDirectory() as d:
         yield Path(d)
@@ -329,11 +330,14 @@ class TestAtomicMutationManager:
         self, rollback_manager: AtomicMutationManager, test_file: Path
     ) -> None:
         """Test atomic context manager commits on success."""
-        with rollback_manager.atomic(phage_id="phage_123") as checkpoint:
+        checkpoint: AtomicCheckpoint | None = None
+        with rollback_manager.atomic(phage_id="phage_123") as cp:
+            checkpoint = cp
             checkpoint.add_file(test_file)
             test_file.write_text("modified")
 
         # Should be committed
+        assert checkpoint is not None
         assert checkpoint.status == RollbackStatus.COMMITTED
         assert test_file.read_text() == "modified"
 
@@ -341,13 +345,16 @@ class TestAtomicMutationManager:
         self, rollback_manager: AtomicMutationManager, test_file: Path
     ) -> None:
         """Test atomic context manager rolls back on exception."""
+        checkpoint: AtomicCheckpoint | None = None
         with pytest.raises(ValueError):
-            with rollback_manager.atomic(phage_id="phage_123") as checkpoint:
+            with rollback_manager.atomic(phage_id="phage_123") as cp:
+                checkpoint = cp
                 checkpoint.add_file(test_file)
                 test_file.write_text("modified")
                 raise ValueError("Test error")
 
         # Should be rolled back
+        assert checkpoint is not None
         assert checkpoint.status == RollbackStatus.ROLLED_BACK
         assert test_file.read_text() == "original content"
 
@@ -780,12 +787,12 @@ class TestSandbox:
 
     def test_file_size_limit(self) -> None:
         """Test file size limit enforcement."""
-        config = SandboxConfig(max_file_size_mb=0.001)  # Very small
+        config = SandboxConfig(max_file_size_mb=1)  # 1 MB limit
         sandbox = Sandbox(config=config)
 
         with sandbox.enter() as sb:
-            # Large content
-            content = "x" * 2000
+            # Large content (2 MB)
+            content = "x" * (2 * 1024 * 1024)
 
             with pytest.raises(SandboxViolation) as exc_info:
                 sb.write_file(content, "large.py")
@@ -814,7 +821,9 @@ class TestSandbox:
             result = await sb.execute_python("import time; time.sleep(5)")
 
             assert not result.success
-            assert "timeout" in result.violations or "timeout" in result.error.lower()
+            assert "timeout" in result.violations or (
+                result.error is not None and "timeout" in result.error.lower()
+            )
 
     @pytest.mark.asyncio
     async def test_run_tests_without_subprocess(self) -> None:
@@ -872,6 +881,7 @@ class TestSafetySystem:
 
         await safety_system.post_infection_success("phage_1", test_file, checkpoint, 10)
 
+        assert checkpoint is not None
         assert checkpoint.status == RollbackStatus.COMMITTED
         assert test_file.read_text() == "modified"
 
@@ -888,6 +898,7 @@ class TestSafetySystem:
             "phage_1", test_file, checkpoint, "tests failed"
         )
 
+        assert checkpoint is not None
         assert checkpoint.status == RollbackStatus.ROLLED_BACK
         assert test_file.read_text() == "original content"
 
@@ -1026,7 +1037,7 @@ class TestIntegration:
         async with sandbox.enter_async() as sb:
             # Write simple test
             code = """
-def test_simple():
+def test_simple() -> None:
     assert 1 + 1 == 2
 
 if __name__ == "__main__":

@@ -609,7 +609,7 @@ class TypeLattice:
     async def _agents_accepting(self, type_id: str) -> list[Any]:
         """Find all agents that accept type_id as input."""
         results = []
-        all_entries = await self.registry.list()
+        all_entries = await self.registry.list_entries()
 
         for entry in all_entries:
             if entry.input_type and self.is_subtype(type_id, entry.input_type):

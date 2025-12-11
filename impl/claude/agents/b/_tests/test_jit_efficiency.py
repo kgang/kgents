@@ -9,6 +9,8 @@ Tests the G+J+B trio for high-frequency trading optimization:
 - High-Frequency Tongue builder
 """
 
+from __future__ import annotations
+
 import time
 
 import pytest
@@ -57,13 +59,13 @@ from agents.b.jit_efficiency import (
 
 
 @pytest.fixture
-def bid_grammar():
+def bid_grammar() -> str:
     """Standard bid grammar regex."""
     return r"(?P<agent_id>[a-z0-9]{8}):(?P<price>[0-9]+(?:\.[0-9]{2})?):(?P<timestamp>[0-9]{10})"
 
 
 @pytest.fixture
-def bid_inputs():
+def bid_inputs() -> list[str]:
     """Sample bid inputs for testing."""
     return [
         "abc12345:100.50:1234567890",
@@ -73,13 +75,13 @@ def bid_inputs():
 
 
 @pytest.fixture
-def jump_table_grammar():
+def jump_table_grammar() -> str:
     """Jump table grammar specification."""
     return "agent_id:8,price:10,timestamp:10"
 
 
 @pytest.fixture
-def jump_table_input():
+def jump_table_input() -> str:
     """Sample input for jump table parsing."""
     return "abc12345:0000100.50:1234567890"
 
@@ -273,7 +275,9 @@ class TestRegexJITCompiler:
         assert artifact.compilation_time_ms >= 0
         assert artifact.parse_fn is not None
 
-    def test_compiled_parse_success(self, bid_grammar, bid_inputs) -> None:
+    def test_compiled_parse_success(
+        self, bid_grammar: str, bid_inputs: list[str]
+    ) -> None:
         """Test that compiled parser works correctly."""
         compiler = RegexJITCompiler()
         config = CompilationConfig()
@@ -286,7 +290,7 @@ class TestRegexJITCompiler:
         assert result["price"] == "100.50"
         assert result["timestamp"] == "1234567890"
 
-    def test_compiled_parse_failure(self, bid_grammar) -> None:
+    def test_compiled_parse_failure(self, bid_grammar: str) -> None:
         """Test that compiled parser returns None on failure."""
         compiler = RegexJITCompiler()
         config = CompilationConfig()
@@ -334,7 +338,7 @@ class TestRegexJITCompiler:
 class TestJumpTableJITCompiler:
     """Tests for JumpTableJITCompiler."""
 
-    def test_compile_jump_table(self, jump_table_grammar) -> None:
+    def test_compile_jump_table(self, jump_table_grammar: str) -> None:
         """Test compiling a jump table spec."""
         compiler = JumpTableJITCompiler()
         config = CompilationConfig(target=JITCompilationTarget.JUMP_TABLE)
@@ -344,7 +348,9 @@ class TestJumpTableJITCompiler:
         assert artifact.target == JITCompilationTarget.JUMP_TABLE
         assert artifact.parse_fn is not None
 
-    def test_compiled_parse_success(self, jump_table_grammar, jump_table_input) -> None:
+    def test_compiled_parse_success(
+        self, jump_table_grammar: str, jump_table_input: str
+    ) -> None:
         """Test that jump table parser works."""
         compiler = JumpTableJITCompiler()
         config = CompilationConfig()
@@ -381,7 +387,7 @@ class TestJumpTableJITCompiler:
 class TestBytecodeJITCompiler:
     """Tests for BytecodeJITCompiler."""
 
-    def test_compile_bytecode(self, bid_grammar) -> None:
+    def test_compile_bytecode(self, bid_grammar: str) -> None:
         """Test compiling to bytecode."""
         compiler = BytecodeJITCompiler()
         config = CompilationConfig(target=JITCompilationTarget.BYTECODE)
@@ -391,7 +397,9 @@ class TestBytecodeJITCompiler:
         assert artifact.target == JITCompilationTarget.BYTECODE
         assert artifact.parse_fn is not None
 
-    def test_compiled_parse_success(self, bid_grammar, bid_inputs) -> None:
+    def test_compiled_parse_success(
+        self, bid_grammar: str, bid_inputs: list[str]
+    ) -> None:
         """Test that bytecode parser works."""
         compiler = BytecodeJITCompiler()
         config = CompilationConfig()
@@ -448,13 +456,13 @@ class TestJITCompilerRegistry:
 
         # Mock compiler
         class MockCompiler:
-            def compile(self, grammar, config):
+            def compile(self, grammar: str, config: CompilationConfig) -> None:
                 pass
 
-            def supports_grammar_level(self, level):
+            def supports_grammar_level(self, level: str) -> bool:
                 return True
 
-        registry.register_compiler(JITCompilationTarget.C, MockCompiler())
+        registry.register_compiler(JITCompilationTarget.C, MockCompiler())  # type: ignore[arg-type]
         compiler = registry.get_compiler(JITCompilationTarget.C)
         assert isinstance(compiler, MockCompiler)
 
@@ -475,7 +483,7 @@ class TestJITCompilerRegistry:
 class TestCompiledTongue:
     """Tests for CompiledTongue."""
 
-    def test_create_compiled_tongue(self, bid_grammar) -> None:
+    def test_create_compiled_tongue(self, bid_grammar: str) -> None:
         """Test creating a compiled tongue."""
         compiler = RegexJITCompiler()
         config = CompilationConfig()
@@ -492,7 +500,9 @@ class TestCompiledTongue:
         assert tongue.tongue_version == "1.0.0"
         assert tongue.usage_count == 0
 
-    def test_parse_increments_usage(self, bid_grammar, bid_inputs) -> None:
+    def test_parse_increments_usage(
+        self, bid_grammar: str, bid_inputs: list[str]
+    ) -> None:
         """Test that parse increments usage count."""
         compiler = RegexJITCompiler()
         config = CompilationConfig()
@@ -511,7 +521,7 @@ class TestCompiledTongue:
         tongue.parse(bid_inputs[1])
         assert tongue.usage_count == 2
 
-    def test_parse_returns_dict(self, bid_grammar, bid_inputs) -> None:
+    def test_parse_returns_dict(self, bid_grammar: str, bid_inputs: list[str]) -> None:
         """Test parse returns proper dict."""
         compiler = RegexJITCompiler()
         config = CompilationConfig()
@@ -529,7 +539,7 @@ class TestCompiledTongue:
         assert result["ast"] is not None
         assert result["error"] is None
 
-    def test_parse_failure(self, bid_grammar) -> None:
+    def test_parse_failure(self, bid_grammar: str) -> None:
         """Test parse failure returns proper dict."""
         compiler = RegexJITCompiler()
         config = CompilationConfig()
@@ -547,7 +557,7 @@ class TestCompiledTongue:
         # so success is True but ast is None
         assert result["ast"] is None
 
-    def test_compiled_key(self, bid_grammar) -> None:
+    def test_compiled_key(self, bid_grammar: str) -> None:
         """Test compiled_key property."""
         compiler = RegexJITCompiler()
         config = CompilationConfig(target=JITCompilationTarget.REGEX)
@@ -571,7 +581,7 @@ class TestCompiledTongue:
 class TestLatencyBenchmark:
     """Tests for LatencyBenchmark."""
 
-    def test_measure_single(self, bid_grammar, bid_inputs) -> None:
+    def test_measure_single(self, bid_grammar: str, bid_inputs: list[str]) -> None:
         """Test single measurement."""
         compiler = RegexJITCompiler()
         config = CompilationConfig()
@@ -584,7 +594,7 @@ class TestLatencyBenchmark:
         assert measurement.total_time_ns > 0
         assert measurement.input_size_bytes > 0
 
-    def test_benchmark_parser(self, bid_grammar, bid_inputs) -> None:
+    def test_benchmark_parser(self, bid_grammar: str, bid_inputs: list[str]) -> None:
         """Test benchmarking a parser."""
         compiler = RegexJITCompiler()
         config = CompilationConfig()
@@ -601,14 +611,14 @@ class TestLatencyBenchmark:
         assert len(measurements) > 0
         assert all(m.parse_time_ns > 0 for m in measurements)
 
-    def test_compare_parsers(self, bid_grammar, bid_inputs) -> None:
+    def test_compare_parsers(self, bid_grammar: str, bid_inputs: list[str]) -> None:
         """Test comparing baseline and JIT parsers."""
         import re
 
         # Baseline: standard regex
         baseline_pattern = re.compile(bid_grammar)
 
-        def baseline_parse(text):
+        def baseline_parse(text: str) -> dict[str, str] | None:
             m = baseline_pattern.match(text)
             return m.groupdict() if m else None
 
@@ -894,7 +904,7 @@ class TestJITEfficiencyMonitor:
         opportunities = monitor.identify_opportunities()
         assert len(opportunities) == 0
 
-    def test_compile_tongue(self, bid_grammar) -> None:
+    def test_compile_tongue(self, bid_grammar: str) -> None:
         """Test compiling a tongue."""
         monitor = JITEfficiencyMonitor()
         compiled = monitor.compile_tongue(
@@ -906,7 +916,7 @@ class TestJITEfficiencyMonitor:
         assert compiled.tongue_name == "BidTongue"
         assert compiled.tongue_version == "1.0.0"
 
-    def test_get_compiled_tongue(self, bid_grammar) -> None:
+    def test_get_compiled_tongue(self, bid_grammar: str) -> None:
         """Test getting a compiled tongue."""
         monitor = JITEfficiencyMonitor()
         monitor.compile_tongue("BidTongue", "1.0.0", bid_grammar)
@@ -915,7 +925,9 @@ class TestJITEfficiencyMonitor:
         assert compiled is not None
         assert compiled.tongue_name == "BidTongue"
 
-    def test_benchmark_and_credit(self, bid_grammar, bid_inputs) -> None:
+    def test_benchmark_and_credit(
+        self, bid_grammar: str, bid_inputs: list[str]
+    ) -> None:
         """Test benchmarking and crediting."""
         import re
 
@@ -925,7 +937,7 @@ class TestJITEfficiencyMonitor:
         # Baseline parser
         pattern = re.compile(bid_grammar)
 
-        def baseline_parse(text):
+        def baseline_parse(text: str) -> dict[str, str] | None:
             m = pattern.match(text)
             return m.groupdict() if m else None
 
@@ -936,7 +948,7 @@ class TestJITEfficiencyMonitor:
         assert report.sample_count > 0
         assert entry.tongue_name == "BidTongue"
 
-    def test_get_summary(self, bid_grammar) -> None:
+    def test_get_summary(self, bid_grammar: str) -> None:
         """Test getting monitor summary."""
         monitor = JITEfficiencyMonitor()
         monitor.record_parse("TestTongue", 1_000_000)
@@ -1074,7 +1086,7 @@ class TestConvenienceFunctions:
         grammar = r"(?P<x>[a-z]+)"
         pattern = re.compile(grammar)
 
-        def baseline(text):
+        def baseline(text: str) -> dict[str, str] | None:
             m = pattern.match(text)
             return m.groupdict() if m else None
 
@@ -1116,7 +1128,7 @@ class TestConvenienceFunctions:
 class TestIntegration:
     """Integration tests for the full JIT efficiency pipeline."""
 
-    def test_full_pipeline(self, bid_grammar, bid_inputs) -> None:
+    def test_full_pipeline(self, bid_grammar: str, bid_inputs: list[str]) -> None:
         """Test full JIT efficiency pipeline."""
         import re
 
@@ -1150,7 +1162,7 @@ class TestIntegration:
         # 6. Benchmark and credit
         pattern = re.compile(bid_grammar)
 
-        def baseline(text):
+        def baseline(text: str) -> dict[str, str] | None:
             m = pattern.match(text)
             return m.groupdict() if m else None
 
@@ -1186,6 +1198,7 @@ class TestIntegration:
         for inp in inputs:
             result = compiled.parse(inp)
             assert result["success"] is True
+            assert result["ast"] is not None
             assert result["ast"]["agent_id"] is not None
             assert result["ast"]["price"] is not None
             assert result["ast"]["timestamp"] is not None
@@ -1221,7 +1234,7 @@ class TestEdgeCases:
         grammar = r"(?P<x>[a-z]+)"
         pattern = re.compile(grammar)
 
-        def baseline(text):
+        def baseline(text: str) -> dict[str, str] | None:
             m = pattern.match(text)
             return m.groupdict() if m else None
 
@@ -1248,7 +1261,7 @@ class TestEdgeCases:
         ledger = ProfitSharingLedger()
         assert ledger.get_balance("unknown_agent") == 0.0
 
-    def test_compiled_tongue_timestamp(self, bid_grammar) -> None:
+    def test_compiled_tongue_timestamp(self, bid_grammar: str) -> None:
         """Test that compiled tongue has timestamp."""
         monitor = JITEfficiencyMonitor()
         compiled = monitor.compile_tongue("Test", "1.0", bid_grammar)
@@ -1266,7 +1279,9 @@ class TestEdgeCases:
 class TestPerformance:
     """Performance tests (marked slow for selective running)."""
 
-    def test_jit_speedup_measurable(self, bid_grammar, bid_inputs) -> None:
+    def test_jit_speedup_measurable(
+        self, bid_grammar: str, bid_inputs: list[str]
+    ) -> None:
         """Test that JIT provides measurable speedup."""
         import re
 
@@ -1276,7 +1291,7 @@ class TestPerformance:
         # Baseline
         pattern = re.compile(bid_grammar)
 
-        def baseline(text):
+        def baseline(text: str) -> dict[str, str] | None:
             m = pattern.match(text)
             return m.groupdict() if m else None
 

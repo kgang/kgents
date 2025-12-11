@@ -103,7 +103,7 @@ class LensAgent(Generic[S, A]):
         full_history = await self.parent.history(limit)
         return [self.lens.get(s) for s in full_history]
 
-    def __rshift__(self, other: "Lens[A, B]") -> "LensAgent[S, B]":
+    def __rshift__(self, other: Lens[A, B]) -> LensAgent[S, B]:
         """
         Compose lenses for deeper focusing: self >> other.
 
@@ -137,8 +137,6 @@ class LensAgent(Generic[S, A]):
             >>> await zip_dgent.load()  # "12345"
         """
         from .lens import Lens
-
-        B = TypeVar("B")
 
         # Compose lenses: self.lens >> other
         composed_lens: Lens[S, B] = Lens(

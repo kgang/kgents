@@ -11,6 +11,8 @@ Tests integration between Ψ-gent (Metaphor Engine) and other agents:
 Philosophy: Reasoning by analogy as geometric transformation.
 """
 
+from __future__ import annotations
+
 from datetime import datetime
 from typing import Any
 
@@ -70,10 +72,10 @@ class MockLEmbedder:
 class MockBudgetManager:
     """Mock B-gent budget manager for testing."""
 
-    def __init__(self, balance: int = 10000):
+    def __init__(self, balance: int = 10000) -> None:
         self.balance = balance
-        self.authorizations: list[dict] = []
-        self.costs: list[dict] = []
+        self.authorizations: list[dict[str, Any]] = []
+        self.costs: list[dict[str, Any]] = []
 
     def authorize(self, operation: str, estimated_tokens: int) -> bool:
         """Authorize token usage."""
@@ -102,7 +104,7 @@ class MockBudgetManager:
 class MockDataAgent:
     """Mock D-gent data agent for testing."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.store: dict[str, Any] = {}
 
     def get(self, key: str) -> Any | None:
@@ -115,9 +117,9 @@ class MockDataAgent:
 class MockHistorian:
     """Mock N-gent historian for testing."""
 
-    def __init__(self):
-        self.traces: list[dict] = []
-        self.active_traces: dict[str, dict] = {}
+    def __init__(self) -> None:
+        self.traces: list[dict[str, Any]] = []
+        self.active_traces: dict[str, dict[str, Any]] = {}
 
     def begin_trace(self, action: str, input_obj: dict[str, Any]) -> str:
         """Begin a trace, return trace ID."""
@@ -149,11 +151,11 @@ class MockHistorian:
 class MockGrammarEngine:
     """Mock G-gent grammar engine for testing."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.templates: dict[str, str] = {
             "psi_project": "Project {problem_description} into {metaphor_name} at abstraction {abstraction}",
         }
-        self.render_calls: list[dict] = []
+        self.render_calls: list[dict[str, Any]] = []
 
     def render(self, template: str, **kwargs: Any) -> str:
         """Render a template."""
@@ -179,7 +181,7 @@ def sample_problem() -> Problem:
         id="test_problem_1",
         description="How should we optimize the database query performance?",
         domain="software_engineering",
-        constraints=["must maintain data integrity", "limit memory usage"],
+        constraints=("must maintain data integrity", "limit memory usage"),
     )
 
 
@@ -244,7 +246,7 @@ def engine() -> MetaphorEngine:
 class TestPsiLgentIntegration:
     """Test Ψ-gent × L-gent integration (embeddings)."""
 
-    def test_embed_problem(self, sample_problem) -> None:
+    def test_embed_problem(self, sample_problem: Problem) -> None:
         """Test embedding a problem with L-gent."""
         embedder = MockLEmbedder(dim=32)
 
@@ -254,7 +256,7 @@ class TestPsiLgentIntegration:
         assert len(embedded.embedding) == 32
         assert embedder.call_count == 1
 
-    def test_embed_problem_cached(self, sample_problem) -> None:
+    def test_embed_problem_cached(self, sample_problem: Problem) -> None:
         """Test that already-embedded problems are not re-embedded."""
         embedder = MockLEmbedder(dim=32)
 
@@ -266,7 +268,7 @@ class TestPsiLgentIntegration:
         assert embedded1.embedding == embedded2.embedding
         assert embedder.call_count == 1  # Only called once
 
-    def test_embed_metaphor(self, sample_metaphors) -> None:
+    def test_embed_metaphor(self, sample_metaphors: list[Metaphor]) -> None:
         """Test embedding a metaphor with L-gent."""
         embedder = MockLEmbedder(dim=32)
         metaphor = sample_metaphors[0]
@@ -276,7 +278,7 @@ class TestPsiLgentIntegration:
         assert embedded.embedding is not None
         assert len(embedded.embedding) == 32
 
-    def test_embed_corpus(self, sample_metaphors) -> None:
+    def test_embed_corpus(self, sample_metaphors: list[Metaphor]) -> None:
         """Test batch embedding entire corpus."""
         embedder = MockLEmbedder(dim=32)
 
@@ -298,7 +300,9 @@ class TestPsiLgentIntegration:
         # Orthogonal vectors = 0.0
         assert cosine_similarity(a, c) == pytest.approx(0.0)
 
-    def test_retrieve_by_embedding(self, sample_problem, sample_metaphors) -> None:
+    def test_retrieve_by_embedding(
+        self, sample_problem: Problem, sample_metaphors: list[Metaphor]
+    ) -> None:
         """Test retrieval using embeddings."""
         embedder = MockLEmbedder(dim=32)
 
@@ -322,7 +326,9 @@ class TestPsiLgentIntegration:
 class TestPsiBgentIntegration:
     """Test Ψ-gent × B-gent integration (token economics)."""
 
-    def test_solve_with_budget_authorized(self, sample_problem, engine) -> None:
+    def test_solve_with_budget_authorized(
+        self, sample_problem: Problem, engine: MetaphorEngine
+    ) -> None:
         """Test solve with sufficient budget."""
         budget_manager = MockBudgetManager(balance=10000)
 
@@ -337,7 +343,9 @@ class TestPsiBgentIntegration:
         assert len(budget_manager.authorizations) == 1
         assert budget_manager.authorizations[0]["authorized"] is True
 
-    def test_solve_with_budget_denied(self, sample_problem, engine) -> None:
+    def test_solve_with_budget_denied(
+        self, sample_problem: Problem, engine: MetaphorEngine
+    ) -> None:
         """Test solve with insufficient budget."""
         budget_manager = MockBudgetManager(balance=100)  # Low balance
 
@@ -389,7 +397,7 @@ class TestPsiDgentIntegration:
 
         assert engine.engine is not None
 
-    def test_persistent_engine_saves_state(self, sample_problem) -> None:
+    def test_persistent_engine_saves_state(self, sample_problem: Problem) -> None:
         """Test that persistent engine saves state after solve."""
         data_agent = MockDataAgent()
         engine = PersistentEngine(d_gent=data_agent)
@@ -428,7 +436,9 @@ class TestPsiDgentIntegration:
 class TestPsiNgentIntegration:
     """Test Ψ-gent × N-gent integration (narrative tracing)."""
 
-    def test_solve_with_tracing(self, sample_problem, engine) -> None:
+    def test_solve_with_tracing(
+        self, sample_problem: Problem, engine: MetaphorEngine
+    ) -> None:
         """Test solve with N-gent tracing."""
         historian = MockHistorian()
 
@@ -439,7 +449,9 @@ class TestPsiNgentIntegration:
         assert trace.problem_id == sample_problem.id
         assert trace.timestamp is not None
 
-    def test_trace_captures_stages(self, sample_problem, engine) -> None:
+    def test_trace_captures_stages(
+        self, sample_problem: Problem, engine: MetaphorEngine
+    ) -> None:
         """Test that trace captures all stages."""
         historian = MockHistorian()
 
@@ -456,7 +468,9 @@ class TestPsiNgentIntegration:
         # Trace should have stages
         assert isinstance(trace.stages, dict)
 
-    def test_historian_records_trace(self, sample_problem, engine) -> None:
+    def test_historian_records_trace(
+        self, sample_problem: Problem, engine: MetaphorEngine
+    ) -> None:
         """Test that historian records the trace."""
         historian = MockHistorian()
 
@@ -475,7 +489,9 @@ class TestPsiNgentIntegration:
 class TestPsiGgentIntegration:
     """Test Ψ-gent × G-gent integration (grammar/prompts)."""
 
-    def test_project_with_grammar(self, sample_problem, sample_metaphors) -> None:
+    def test_project_with_grammar(
+        self, sample_problem: Problem, sample_metaphors: list[Metaphor]
+    ) -> None:
         """Test project stage using G-gent grammar."""
         grammar = MockGrammarEngine()
         metaphor = sample_metaphors[0]
@@ -549,7 +565,7 @@ class TestPsiDependencyInjection:
 class TestResilientEngine:
     """Test Ψ-gent resilient engine with graceful degradation."""
 
-    def test_resilient_engine_without_deps(self, sample_problem) -> None:
+    def test_resilient_engine_without_deps(self, sample_problem: Problem) -> None:
         """Test resilient engine works without dependencies."""
         engine = MetaphorEngine()
         resilient = ResilientEngine(engine)
@@ -557,7 +573,7 @@ class TestResilientEngine:
         solution = resilient.solve_problem(sample_problem)
         assert isinstance(solution, Solution)
 
-    def test_resilient_engine_with_l_gent(self, sample_problem) -> None:
+    def test_resilient_engine_with_l_gent(self, sample_problem: Problem) -> None:
         """Test resilient engine uses L-gent when available."""
         engine = MetaphorEngine()
         deps = GentDependencies(l_gent=MockLEmbedder())
@@ -566,7 +582,7 @@ class TestResilientEngine:
         solution = resilient.solve_problem(sample_problem)
         assert isinstance(solution, Solution)
 
-    def test_resilient_engine_with_n_gent(self, sample_problem) -> None:
+    def test_resilient_engine_with_n_gent(self, sample_problem: Problem) -> None:
         """Test resilient engine uses N-gent when available."""
         engine = MetaphorEngine()
         deps = GentDependencies(n_gent=MockHistorian())
@@ -575,7 +591,9 @@ class TestResilientEngine:
         solution = resilient.solve_problem(sample_problem)
         assert isinstance(solution, Solution)
 
-    def test_resilient_engine_handles_l_gent_failure(self, sample_problem) -> None:
+    def test_resilient_engine_handles_l_gent_failure(
+        self, sample_problem: Problem
+    ) -> None:
         """Test resilient engine continues if L-gent fails."""
 
         class FailingEmbedder:
@@ -602,7 +620,7 @@ class TestResilientEngine:
 class TestPsiLearningIntegration:
     """Test Ψ-gent learning model integration."""
 
-    def test_thompson_sampling_integration(self, sample_problem) -> None:
+    def test_thompson_sampling_integration(self, sample_problem: Problem) -> None:
         """Test Thompson sampling model with solve."""
         engine = MetaphorEngine()
 
@@ -613,7 +631,7 @@ class TestPsiLearningIntegration:
         # Model should have some data
         assert isinstance(engine.retrieval_model, ThompsonSamplingModel)
 
-    def test_abstraction_model_integration(self, sample_problem) -> None:
+    def test_abstraction_model_integration(self, sample_problem: Problem) -> None:
         """Test abstraction model with solve."""
         engine = MetaphorEngine()
         engine.solve_problem(sample_problem)
@@ -621,7 +639,7 @@ class TestPsiLearningIntegration:
         # Abstraction model should exist
         assert isinstance(engine.abstraction_model, AbstractionModel)
 
-    def test_feedback_updates_model(self, sample_problem) -> None:
+    def test_feedback_updates_model(self, sample_problem: Problem) -> None:
         """Test that feedback updates learning model."""
         engine = MetaphorEngine()
 

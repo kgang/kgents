@@ -68,7 +68,7 @@ class ObservedPattern:
     examples: list[str] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not 0.0 <= self.frequency <= 1.0:
             raise ValueError(f"Frequency must be 0.0-1.0, got {self.frequency}")
 
@@ -198,7 +198,7 @@ class PatternAnalyzer:
     Works with W-gent to identify structural regularities.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         # Regex patterns for common structures
         self._verb_pattern = re.compile(r"^([A-Z]{2,})\s+(.+)$")
         self._func_pattern = re.compile(r"^(\w+)\((.+)\)$")
@@ -351,7 +351,7 @@ class GrammarSynthesizer:
     Implements the core G-gent pattern inference logic.
     """
 
-    def __init__(self, min_confidence: float = 0.5):
+    def __init__(self, min_confidence: float = 0.5) -> None:
         self.min_confidence = min_confidence
 
     def hypothesize(self, patterns: list[ObservedPattern]) -> GrammarHypothesis:
@@ -577,7 +577,7 @@ class GrammarValidator:
             suggestions=suggestions,
         )
 
-    def _build_parser(self, hypothesis: GrammarHypothesis):
+    def _build_parser(self, hypothesis: GrammarHypothesis) -> Any:
         """Build a simple parser function from hypothesis."""
         # Extract verbs from rules
         verbs = set()
@@ -604,7 +604,7 @@ class GrammarValidator:
         hypothesis: GrammarHypothesis,
     ) -> list[str]:
         """Generate suggestions for fixing failed inputs."""
-        suggestions = []
+        suggestions: list[str] = []
 
         if not failed_inputs:
             return suggestions
@@ -643,7 +643,7 @@ class PatternInferenceEngine:
         self,
         max_iterations: int = 5,
         min_coverage: float = 0.95,
-    ):
+    ) -> None:
         self.max_iterations = max_iterations
         self.min_coverage = min_coverage
         self.analyzer = PatternAnalyzer()
@@ -790,7 +790,7 @@ class PatternInferenceEngine:
         builder = builder.with_interpreter_config(
             InterpreterConfig(
                 runtime="python",
-                semantics="strict",
+                semantics={},  # Empty semantics for inferred grammar
                 timeout_ms=5000,
                 pure_functions_only=False,
             )

@@ -10,6 +10,10 @@ Tests:
 - Validation error propagation
 """
 
+from __future__ import annotations
+
+from typing import Any
+
 import pytest
 from agents.p.strategies.lazy_validation import (
     LazyValidatedDict,
@@ -25,9 +29,9 @@ class TestLazyValidatedDict:
 
     def test_basic_access(self) -> None:
         raw = {"name": "Alice", "age": "30"}
-        schema = {"name": str, "age": int}
+        schema: dict[str, type[Any]] = {"name": str, "age": int}
 
-        lazy = LazyValidatedDict(raw, schema)
+        lazy: LazyValidatedDict[Any] = LazyValidatedDict(raw, schema)
 
         # Access should validate on first access
         assert lazy["name"] == "Alice"
@@ -35,9 +39,9 @@ class TestLazyValidatedDict:
 
     def test_lazy_validation_deferred(self) -> None:
         raw = {"valid": "ok", "invalid": "not_a_number"}
-        schema = {"valid": str, "invalid": int}
+        schema: dict[str, type[Any]] = {"valid": str, "invalid": int}
 
-        lazy = LazyValidatedDict(raw, schema)
+        lazy: LazyValidatedDict[Any] = LazyValidatedDict(raw, schema)
 
         # Accessing valid field should work
         assert lazy["valid"] == "ok"
@@ -60,7 +64,7 @@ class TestLazyValidatedDict:
             "as_bool_false": bool,
         }
 
-        lazy = LazyValidatedDict(raw, schema)
+        lazy: LazyValidatedDict[Any] = LazyValidatedDict(raw, schema)
 
         assert lazy["as_float"] == 3.14
         assert lazy["as_int"] == 42
@@ -69,9 +73,9 @@ class TestLazyValidatedDict:
 
     def test_get_with_default(self) -> None:
         raw = {"exists": "value"}
-        schema = {"exists": str, "missing": str}
+        schema: dict[str, type[Any]] = {"exists": str, "missing": str}
 
-        lazy = LazyValidatedDict(raw, schema)
+        lazy: LazyValidatedDict[Any] = LazyValidatedDict(raw, schema)
 
         assert lazy.get("exists") == "value"
         assert lazy.get("missing") is None
@@ -79,18 +83,18 @@ class TestLazyValidatedDict:
 
     def test_contains(self) -> None:
         raw = {"exists": "value"}
-        schema = {"exists": str, "missing": str}
+        schema: dict[str, type[Any]] = {"exists": str, "missing": str}
 
-        lazy = LazyValidatedDict(raw, schema)
+        lazy: LazyValidatedDict[Any] = LazyValidatedDict(raw, schema)
 
         assert "exists" in lazy
         assert "missing" not in lazy
 
     def test_keys(self) -> None:
         raw = {"a": 1, "b": 2, "c": 3}
-        schema = {"a": int, "b": int, "c": int}
+        schema: dict[str, type[Any]] = {"a": int, "b": int, "c": int}
 
-        lazy = LazyValidatedDict(raw, schema)
+        lazy: LazyValidatedDict[Any] = LazyValidatedDict(raw, schema)
 
         keys = list(lazy.keys())
         assert "a" in keys
@@ -99,9 +103,9 @@ class TestLazyValidatedDict:
 
     def test_caching(self) -> None:
         raw = {"field": "42"}
-        schema = {"field": int}
+        schema: dict[str, type[Any]] = {"field": int}
 
-        lazy = LazyValidatedDict(raw, schema)
+        lazy: LazyValidatedDict[Any] = LazyValidatedDict(raw, schema)
 
         # First access validates
         val1 = lazy["field"]
@@ -112,9 +116,9 @@ class TestLazyValidatedDict:
 
     def test_access_log(self) -> None:
         raw = {"a": 1, "b": 2, "c": 3}
-        schema = {"a": int, "b": int, "c": int}
+        schema: dict[str, type[Any]] = {"a": int, "b": int, "c": int}
 
-        lazy = LazyValidatedDict(raw, schema)
+        lazy: LazyValidatedDict[Any] = LazyValidatedDict(raw, schema)
 
         # Access some fields
         _ = lazy["a"]
@@ -126,9 +130,9 @@ class TestLazyValidatedDict:
 
     def test_to_dict(self) -> None:
         raw = {"name": "Alice", "age": "30"}
-        schema = {"name": str, "age": int}
+        schema: dict[str, type[Any]] = {"name": str, "age": int}
 
-        lazy = LazyValidatedDict(raw, schema)
+        lazy: LazyValidatedDict[Any] = LazyValidatedDict(raw, schema)
 
         d = lazy.to_dict()
 
@@ -143,10 +147,10 @@ class TestLazyValidatedDictCoercers:
     def test_custom_coercer(self) -> None:
         raw = {"doubled": "21"}
 
-        def double_coercer(value):
+        def double_coercer(value: Any) -> int:
             return int(value) * 2
 
-        lazy = LazyValidatedDict(
+        lazy: LazyValidatedDict[Any] = LazyValidatedDict(
             raw,
             schema={"doubled": int},
             coercers={"doubled": double_coercer},
@@ -156,9 +160,11 @@ class TestLazyValidatedDictCoercers:
 
     def test_datetime_coercer(self) -> None:
         raw = {"date": "2025-12-09"}
-        schema = {"date": str}  # Type hint is str, but coercer handles datetime
+        schema: dict[str, type[Any]] = {
+            "date": str
+        }  # Type hint is str, but coercer handles datetime
 
-        lazy = LazyValidatedDict(
+        lazy: LazyValidatedDict[Any] = LazyValidatedDict(
             raw,
             schema=schema,
             coercers={"date": datetime_coercer},
@@ -174,9 +180,9 @@ class TestLazyValidatedDictCoercers:
 
     def test_list_of_strings_coercer_from_list(self) -> None:
         raw = {"items": [1, 2, 3]}
-        schema = {"items": list}
+        schema: dict[str, type[Any]] = {"items": list}
 
-        lazy = LazyValidatedDict(
+        lazy: LazyValidatedDict[Any] = LazyValidatedDict(
             raw,
             schema=schema,
             coercers={"items": list_of_strings_coercer},
@@ -186,9 +192,9 @@ class TestLazyValidatedDictCoercers:
 
     def test_list_of_strings_coercer_from_csv(self) -> None:
         raw = {"items": "a, b, c"}
-        schema = {"items": list}
+        schema: dict[str, type[Any]] = {"items": list}
 
-        lazy = LazyValidatedDict(
+        lazy: LazyValidatedDict[Any] = LazyValidatedDict(
             raw,
             schema=schema,
             coercers={"items": list_of_strings_coercer},
@@ -201,8 +207,8 @@ class TestLazyValidationParser:
     """Test LazyValidationParser."""
 
     def test_parse_valid_json(self) -> None:
-        schema = {"name": str, "age": int}
-        parser = LazyValidationParser(schema)
+        schema: dict[str, type[Any]] = {"name": str, "age": int}
+        parser: LazyValidationParser[Any] = LazyValidationParser(schema)
 
         result = parser.parse('{"name": "Alice", "age": "30"}')
 
@@ -212,8 +218,8 @@ class TestLazyValidationParser:
         assert result.value["age"] == 30
 
     def test_parse_with_extra_fields(self) -> None:
-        schema = {"name": str}
-        parser = LazyValidationParser(schema)
+        schema: dict[str, type[Any]] = {"name": str}
+        parser: LazyValidationParser[Any] = LazyValidationParser(schema)
 
         result = parser.parse('{"name": "Alice", "extra": "ignored"}')
 
@@ -223,8 +229,8 @@ class TestLazyValidationParser:
         assert result.metadata["extra_fields"] == 1
 
     def test_parse_with_missing_fields(self) -> None:
-        schema = {"name": str, "age": int}
-        parser = LazyValidationParser(schema)
+        schema: dict[str, type[Any]] = {"name": str, "age": int}
+        parser: LazyValidationParser[Any] = LazyValidationParser(schema)
 
         result = parser.parse('{"name": "Alice"}')
 
@@ -234,29 +240,29 @@ class TestLazyValidationParser:
 
         # Accessing missing field should error
         with pytest.raises(KeyError):
-            _ = result.value["age"]
+            _ = result.value["age"] if result.value is not None else None
 
     def test_parse_invalid_json(self) -> None:
-        schema = {"name": str}
-        parser = LazyValidationParser(schema)
+        schema: dict[str, type[Any]] = {"name": str}
+        parser: LazyValidationParser[Any] = LazyValidationParser(schema)
 
         result = parser.parse('{"name": "Alice"')
 
         assert not result.success
-        assert "JSON parse error" in result.error
+        assert result.error is not None and "JSON parse error" in result.error
 
     def test_parse_non_object(self) -> None:
-        schema = {"name": str}
-        parser = LazyValidationParser(schema)
+        schema: dict[str, type[Any]] = {"name": str}
+        parser: LazyValidationParser[Any] = LazyValidationParser(schema)
 
         result = parser.parse("[1, 2, 3]")
 
         assert not result.success
-        assert "Expected JSON object" in result.error
+        assert result.error is not None and "Expected JSON object" in result.error
 
     def test_confidence_based_on_field_coverage(self) -> None:
-        schema = {"a": int, "b": int, "c": int}
-        parser = LazyValidationParser(schema)
+        schema: dict[str, type[Any]] = {"a": int, "b": int, "c": int}
+        parser: LazyValidationParser[Any] = LazyValidationParser(schema)
 
         # Full coverage
         result1 = parser.parse('{"a": 1, "b": 2, "c": 3}')
@@ -272,15 +278,15 @@ class TestLazyValidationParserConfiguration:
     """Test parser configuration."""
 
     def test_configure_returns_new_parser(self) -> None:
-        schema = {"name": str}
-        parser = LazyValidationParser(schema)
+        schema: dict[str, type[Any]] = {"name": str}
+        parser: LazyValidationParser[Any] = LazyValidationParser(schema)
         new_parser = parser.configure(min_confidence=0.8)
 
         assert isinstance(new_parser, LazyValidationParser)
         assert new_parser is not parser
 
     def test_convenience_constructor(self) -> None:
-        schema = {"name": str, "age": int}
+        schema: dict[str, type[Any]] = {"name": str, "age": int}
         parser = lazy_validation_parser(schema)
 
         assert isinstance(parser, LazyValidationParser)
@@ -292,8 +298,8 @@ class TestLazyValidationParserMetadata:
     """Test metadata tracking."""
 
     def test_metadata_field_counts(self) -> None:
-        schema = {"required": str}
-        parser = LazyValidationParser(schema)
+        schema: dict[str, type[Any]] = {"required": str}
+        parser: LazyValidationParser[Any] = LazyValidationParser(schema)
 
         result = parser.parse('{"required": "ok", "extra1": "x", "extra2": "y"}')
 
@@ -303,8 +309,8 @@ class TestLazyValidationParserMetadata:
         assert result.metadata["missing_fields"] == 0
 
     def test_metadata_field_coverage(self) -> None:
-        schema = {"a": int, "b": int}
-        parser = LazyValidationParser(schema)
+        schema: dict[str, type[Any]] = {"a": int, "b": int}
+        parser: LazyValidationParser[Any] = LazyValidationParser(schema)
 
         result = parser.parse('{"a": 1}')
 
@@ -315,8 +321,8 @@ class TestLazyValidationParserEdgeCases:
     """Test edge cases."""
 
     def test_empty_schema(self) -> None:
-        schema = {}
-        parser = LazyValidationParser(schema)
+        schema: dict[str, type[Any]] = {}
+        parser: LazyValidationParser[Any] = LazyValidationParser(schema)
 
         result = parser.parse('{"anything": "goes"}')
 
@@ -324,8 +330,8 @@ class TestLazyValidationParserEdgeCases:
         # No schema fields to validate
 
     def test_empty_data(self) -> None:
-        schema = {"required": str}
-        parser = LazyValidationParser(schema)
+        schema: dict[str, type[Any]] = {"required": str}
+        parser: LazyValidationParser[Any] = LazyValidationParser(schema)
 
         result = parser.parse("{}")
 
@@ -333,23 +339,25 @@ class TestLazyValidationParserEdgeCases:
         assert result.metadata["missing_fields"] == 1
 
     def test_null_values(self) -> None:
-        schema = {"nullable": str}
-        parser = LazyValidationParser(schema)
+        schema: dict[str, type[Any]] = {"nullable": str}
+        parser: LazyValidationParser[Any] = LazyValidationParser(schema)
 
         result = parser.parse('{"nullable": null}')
 
         assert result.success
+        assert result.value is not None
         # Accessing should raise validation error (can't coerce None to str)
         with pytest.raises(KeyError, match="validation failed"):
             _ = result.value["nullable"]
 
     def test_nested_objects_not_deeply_validated(self) -> None:
-        schema = {"user": dict}
-        parser = LazyValidationParser(schema)
+        schema: dict[str, type[Any]] = {"user": dict}
+        parser: LazyValidationParser[Any] = LazyValidationParser(schema)
 
         result = parser.parse('{"user": {"name": "Alice", "age": 30}}')
 
         assert result.success
+        assert result.value is not None
         user = result.value["user"]
         assert isinstance(user, dict)
         assert user["name"] == "Alice"
@@ -359,8 +367,8 @@ class TestLazyValidationParserRepairs:
     """Test repair tracking."""
 
     def test_repairs_for_extra_fields(self) -> None:
-        schema = {"expected": str}
-        parser = LazyValidationParser(schema)
+        schema: dict[str, type[Any]] = {"expected": str}
+        parser: LazyValidationParser[Any] = LazyValidationParser(schema)
 
         result = parser.parse('{"expected": "ok", "extra": "x"}')
 
@@ -368,8 +376,8 @@ class TestLazyValidationParserRepairs:
         assert any("extra" in r.lower() for r in result.repairs)
 
     def test_repairs_for_missing_fields(self) -> None:
-        schema = {"required": str}
-        parser = LazyValidationParser(schema)
+        schema: dict[str, type[Any]] = {"required": str}
+        parser: LazyValidationParser[Any] = LazyValidationParser(schema)
 
         result = parser.parse("{}")
 
@@ -381,15 +389,15 @@ class TestLazyValidationParserStream:
     """Test stream parsing."""
 
     def test_parse_stream_buffers_and_parses(self) -> None:
-        schema = {"name": str}
-        parser = LazyValidationParser(schema)
+        schema: dict[str, type[Any]] = {"name": str}
+        parser: LazyValidationParser[Any] = LazyValidationParser(schema)
 
         tokens = ['{"na', 'me": ', '"Alice"}']
         results = list(parser.parse_stream(iter(tokens)))
 
         assert len(results) == 1
         assert results[0].success
-        assert results[0].value["name"] == "Alice"
+        assert results[0].value is not None and results[0].value["name"] == "Alice"
 
 
 if __name__ == "__main__":

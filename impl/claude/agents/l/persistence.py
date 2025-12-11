@@ -36,10 +36,12 @@ Usage:
 from __future__ import annotations
 
 # Import D-gent primitives
+import builtins
 import sys
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
+from typing import Any
 
 from .registry import Registry
 from .types import (
@@ -109,10 +111,10 @@ class PersistentRegistry:
     def __init__(
         self,
         registry: Registry,
-        storage: PersistentAgent,
+        storage: PersistentAgent[dict[str, Any]],
         config: PersistenceConfig,
         path: Path,
-    ):
+    ) -> None:
         """
         Initialize persistent registry.
 
@@ -259,8 +261,8 @@ class PersistentRegistry:
         author: str | None = None,
         limit: int | None = None,
     ) -> list[CatalogEntry]:
-        """List entries with optional filters. See Registry.list()."""
-        return await self._registry.list(
+        """List entries with optional filters. See Registry.list_entries()."""
+        return await self._registry.list_entries(
             entity_type=entity_type,
             status=status,
             author=author,
@@ -271,9 +273,9 @@ class PersistentRegistry:
         self,
         query: str | None = None,
         entity_type: EntityType | None = None,
-        keywords: list[str] | None = None,
+        keywords: builtins.list[str] | None = None,
         limit: int = 10,
-    ) -> list[SearchResult]:
+    ) -> builtins.list[SearchResult]:
         """Search for entries. See Registry.find()."""
         return await self._registry.find(
             query=query,
@@ -329,7 +331,7 @@ class PersistentRegistry:
         self,
         id: str,
         relationship_type: str,
-    ) -> list[CatalogEntry]:
+    ) -> builtins.list[CatalogEntry]:
         """Find entries related to a given entry. See Registry.find_related()."""
         return await self._registry.find_related(id, relationship_type)
 
@@ -355,7 +357,7 @@ class PersistentRegistry:
         """Current persistence configuration."""
         return self._config
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Export catalog as dictionary."""
         return self._registry.to_dict()
 

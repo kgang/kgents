@@ -7,6 +7,8 @@ Tests:
 - Composition and categorical properties
 """
 
+from __future__ import annotations
+
 import asyncio
 import time
 
@@ -34,7 +36,9 @@ async def test_mock_agent() -> None:
     print("\n=== Testing MockAgent ===")
 
     # Create mock agent
-    mock = MockAgent[str, dict](MockConfig(output={"status": "ok", "value": 42}))
+    mock = MockAgent[str, dict[str, object]](
+        MockConfig(output={"status": "ok", "value": 42})
+    )
 
     # Test: constant morphism property
     result1 = await mock.invoke("input_1")
@@ -177,7 +181,7 @@ async def test_spy_agent() -> None:
     """Test SpyAgent - identity with observation."""
     print("\n=== Testing SpyAgent ===")
 
-    spy = SpyAgent[dict](label="TestSpy")
+    spy = SpyAgent[dict[str, str]](label="TestSpy")
 
     # Test: identity property
     input1 = {"data": "value1"}
@@ -318,7 +322,7 @@ async def test_noise_agent() -> None:
     print("\n=== Testing NoiseAgent ===")
 
     # Test: deterministic noise with seed
-    noise = NoiseAgent(level=1.0, seed=42)  # Always perturb
+    noise: NoiseAgent[str] = NoiseAgent(level=1.0, seed=42)  # Always perturb
 
     input_str = "Fix the bug"
     result1 = await noise.invoke(input_str)
@@ -326,13 +330,13 @@ async def test_noise_agent() -> None:
     print(f"✓ NoiseAgent: '{input_str}' -> '{result1}'")
 
     # Test: same seed yields same perturbation
-    noise2 = NoiseAgent(level=1.0, seed=42)
+    noise2: NoiseAgent[str] = NoiseAgent(level=1.0, seed=42)
     result2 = await noise2.invoke(input_str)
     assert result1 == result2  # Deterministic with same seed
     print("✓ NoiseAgent: Deterministic with same seed")
 
     # Test: zero noise is identity
-    no_noise = NoiseAgent(level=0.0)
+    no_noise: NoiseAgent[str] = NoiseAgent(level=0.0)
     result = await no_noise.invoke(input_str)
     assert result == input_str
     print("✓ NoiseAgent: Level 0.0 is identity")
@@ -347,7 +351,7 @@ async def test_latency_agent() -> None:
     print("\n=== Testing LatencyAgent ===")
 
     # Test: adds delay
-    latency = LatencyAgent(delay=0.05, variance=0.0)
+    latency: LatencyAgent[str] = LatencyAgent(delay=0.05, variance=0.0)
 
     start = time.time()
     result = await latency.invoke("test_data")
@@ -358,7 +362,7 @@ async def test_latency_agent() -> None:
     print(f"✓ LatencyAgent: Added {elapsed:.3f}s delay (expected ~0.050s)")
 
     # Test: variance
-    latency_var = LatencyAgent(delay=0.05, variance=0.02, seed=42)
+    latency_var: LatencyAgent[str] = LatencyAgent(delay=0.05, variance=0.02, seed=42)
     start = time.time()
     result = await latency_var.invoke("test")
     elapsed = time.time() - start
@@ -376,7 +380,7 @@ async def test_flaky_agent() -> None:
 
     # Test: always fails with p=1.0
     mock = MockAgent[str, str](MockConfig(output="success"))
-    always_fail = FlakyAgent(mock, probability=1.0, seed=42)
+    always_fail: FlakyAgent[str, str] = FlakyAgent(mock, probability=1.0, seed=42)  # type: ignore[arg-type]
 
     try:
         await always_fail.invoke("test")
@@ -386,13 +390,13 @@ async def test_flaky_agent() -> None:
         print(f"✓ FlakyAgent: p=1.0 always fails: {e}")
 
     # Test: never fails with p=0.0
-    never_fail = FlakyAgent(mock, probability=0.0, seed=42)
+    never_fail: FlakyAgent[str, str] = FlakyAgent(mock, probability=0.0, seed=42)  # type: ignore[arg-type]
     result = await never_fail.invoke("test")
     assert result == "success"
     print("✓ FlakyAgent: p=0.0 never fails")
 
     # Test: probabilistic behavior
-    sometimes_fail = FlakyAgent(mock, probability=0.5, seed=42)
+    sometimes_fail: FlakyAgent[str, str] = FlakyAgent(mock, probability=0.5, seed=42)  # type: ignore[arg-type]
     failures = 0
     successes = 0
     for _ in range(20):
@@ -495,11 +499,11 @@ async def test_phase2_composition() -> None:
     metrics = MetricsAgent[str](label="Performance")
     noise = NoiseAgent[str](level=0.5, seed=42)
 
-    pipeline = counter >> metrics >> noise
+    pipeline: object = counter >> metrics >> noise  # type: ignore[operator]
 
     # Execute multiple times
     for i in range(3):
-        result = await pipeline.invoke(f"input_{i}")
+        result = await pipeline.invoke(f"input_{i}")  # type: ignore[attr-defined]
         # Result may be perturbed
         print(f"  Iteration {i + 1}: '{f'input_{i}'}' -> '{result}'")
 
@@ -517,7 +521,7 @@ async def test_phase2_composition() -> None:
     print("✓ Composition: Counter >> Metrics >> Noise works")
 
 
-async def main():
+async def main() -> None:
     """Run all tests."""
     print("=" * 60)
     print("T-gents Test Suite (Phase 1 + Phase 2)")

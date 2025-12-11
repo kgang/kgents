@@ -189,7 +189,7 @@ class CartographicObserver:
         # Annotate landmarks
         annotated_landmarks = []
         for landmark in holo_map.landmarks:
-            health = self._get_landmark_health(landmark)
+            landmark_health = self._get_landmark_health(landmark)
             annotated_landmark = Attractor(
                 id=landmark.id,
                 centroid=landmark.centroid,
@@ -198,11 +198,11 @@ class CartographicObserver:
                 density=landmark.density,
                 member_count=landmark.member_count,
                 variance=landmark.variance,
-                semantic_drift=health.semantic_drift,
-                last_visited=health.last_accessed,
-                visit_count=health.access_count,
+                semantic_drift=landmark_health.semantic_drift,
+                last_visited=landmark_health.last_accessed,
+                visit_count=landmark_health.access_count,
                 artifact_type=landmark.artifact_type,
-                metadata={**landmark.metadata, "health": health},
+                metadata={**landmark.metadata, "health": landmark_health},
             )
             annotated_landmarks.append(annotated_landmark)
 
@@ -238,10 +238,10 @@ class CartographicObserver:
         stale_edges = 0
 
         for edge in holo_map.desire_lines:
-            health = self._get_edge_health(edge)
-            if health.is_healthy:
+            edge_health = self._get_edge_health(edge)
+            if edge_health.is_healthy:
                 healthy_edges += 1
-            if health.is_stale:
+            if edge_health.is_stale:
                 stale_edges += 1
 
         # Calculate void coverage
@@ -253,10 +253,12 @@ class CartographicObserver:
                 void_coverage = min(1.0, total_void_area / total_area)
 
         # Calculate overall health
-        landmark_health = healthy_landmarks / max(1, len(holo_map.landmarks))
-        edge_health = healthy_edges / max(1, len(holo_map.desire_lines))
+        landmark_health_rate = healthy_landmarks / max(1, len(holo_map.landmarks))
+        edge_health_rate = healthy_edges / max(1, len(holo_map.desire_lines))
         void_penalty = void_coverage * 0.3
-        overall_health = max(0.0, (landmark_health + edge_health) / 2 - void_penalty)
+        overall_health = max(
+            0.0, (landmark_health_rate + edge_health_rate) / 2 - void_penalty
+        )
 
         return MapHealth(
             total_landmarks=len(holo_map.landmarks),

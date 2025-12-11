@@ -68,7 +68,7 @@ class NoiseAgent(Generic[A]):
         level: float = 0.1,
         seed: Optional[int] = None,
         noise_types: Optional[List[NoiseType]] = None,
-    ):
+    ) -> None:
         """Initialize NoiseAgent.
 
         Args:
@@ -207,4 +207,4 @@ class NoiseAgent(Generic[A]):
         """
         from bootstrap.types import ComposedAgent
 
-        return ComposedAgent(self, other)
+        return ComposedAgent(self, other)  # type: ignore[arg-type]

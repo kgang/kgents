@@ -225,6 +225,7 @@ class TestDashboardPanels:
         from agents.o.cortex_observer import CortexHealthSnapshot
 
         snapshot = dashboard._last_snapshot
+        assert snapshot is not None
 
         lines = dashboard._render_hemisphere_panel(snapshot)
 
@@ -239,6 +240,7 @@ class TestDashboardPanels:
         dashboard._update()
 
         snapshot = dashboard._last_snapshot
+        assert snapshot is not None
         lines = dashboard._render_coherency_panel(snapshot)
 
         assert len(lines) > 0
@@ -253,6 +255,7 @@ class TestDashboardPanels:
         dashboard._update()
 
         snapshot = dashboard._last_snapshot
+        assert snapshot is not None
         lines = dashboard._render_synapse_panel(snapshot)
 
         assert len(lines) > 0
@@ -265,6 +268,7 @@ class TestDashboardPanels:
         dashboard._update()
 
         snapshot = dashboard._last_snapshot
+        assert snapshot is not None
         lines = dashboard._render_hippocampus_panel(snapshot)
 
         assert len(lines) > 0
@@ -277,6 +281,7 @@ class TestDashboardPanels:
         dashboard._update()
 
         snapshot = dashboard._last_snapshot
+        assert snapshot is not None
         lines = dashboard._render_dream_panel(snapshot)
 
         assert len(lines) > 0

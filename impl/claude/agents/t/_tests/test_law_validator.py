@@ -4,7 +4,10 @@ Tests for T-gent Law Validator (Cross-pollination T2.6).
 Tests categorical law validation for agent pipelines.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
+from typing import Any, Callable
 
 import pytest
 from agents.t.law_validator import (
@@ -29,9 +32,9 @@ class SimpleAgent:
     """Simple test agent for law validation."""
 
     name: str
-    transform: callable
+    transform: Callable[[Any], Any]
 
-    async def run(self, input_data):
+    async def run(self, input_data: Any) -> Any:
         return self.transform(input_data)
 
 
@@ -59,7 +62,7 @@ async def test_associativity_violation() -> None:
     # Create agents where order matters due to side effects
     state = {"count": 0}
 
-    def stateful_transform(x):
+    def stateful_transform(x: Any) -> Any:
         state["count"] += 1
         return x + state["count"]
 
@@ -113,7 +116,7 @@ async def test_right_identity_holds() -> None:
 async def test_functor_identity() -> None:
     """Test functor identity law: F(id) = id."""
 
-    def list_map(f):
+    def list_map(f: Callable[[Any], Any]) -> Callable[[list[Any]], list[Any]]:
         """Simple functor map for lists."""
         return lambda xs: [f(x) for x in xs]
 
@@ -128,13 +131,13 @@ async def test_functor_identity() -> None:
 async def test_functor_composition() -> None:
     """Test functor composition law: F(g . f) = F(g) . F(f)."""
 
-    def list_map(f):
+    def list_map(f: Callable[[Any], Any]) -> Callable[[list[Any]], list[Any]]:
         return lambda xs: [f(x) for x in xs]
 
-    def f(x):
+    def f(x: Any) -> Any:
         return x + 1
 
-    def g(x):
+    def g(x: Any) -> Any:
         return x * 2
 
     test_value = [1, 2, 3]
@@ -152,13 +155,13 @@ async def test_monad_left_identity() -> None:
     """Test monad left identity: unit(a).bind(f) = f(a)."""
 
     # Simple list monad
-    def unit(a):
+    def unit(a: Any) -> list[Any]:
         return [a]
 
-    def bind(m, f):
+    def bind(m: list[Any], f: Callable[[Any], list[Any]]) -> list[Any]:
         return [y for x in m for y in f(x)]
 
-    def f(x):
+    def f(x: Any) -> list[Any]:
         return [x, x + 1]
 
     test_value = 5
@@ -172,10 +175,10 @@ async def test_monad_left_identity() -> None:
 async def test_monad_right_identity() -> None:
     """Test monad right identity: m.bind(unit) = m."""
 
-    def unit(a):
+    def unit(a: Any) -> list[Any]:
         return [a]
 
-    def bind(m, f):
+    def bind(m: list[Any], f: Callable[[Any], list[Any]]) -> list[Any]:
         return [y for x in m for y in f(x)]
 
     m = [1, 2, 3]
@@ -189,15 +192,15 @@ async def test_monad_right_identity() -> None:
 async def test_monad_associativity() -> None:
     """Test monad associativity: m.bind(f).bind(g) = m.bind(λa. f(a).bind(g))."""
 
-    def bind(m, f):
+    def bind(m: list[Any], f: Callable[[Any], list[Any]]) -> list[Any]:
         return [y for x in m for y in f(x)]
 
     m = [1, 2]
 
-    def f(x):
+    def f(x: Any) -> list[Any]:
         return [x, x + 1]
 
-    def g(x):
+    def g(x: Any) -> list[Any]:
         return [x * 2]
 
     violation = await check_monad_associativity(bind, m, f, g)

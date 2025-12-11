@@ -39,7 +39,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Generic, Optional, TypeVar
+from typing import Any, Callable, Generic, Optional, TypeVar, cast
 
 from bootstrap.types import Result, err, ok
 
@@ -73,7 +73,7 @@ class SequentialOrchestrator(Generic[A, B, C]):
         result = await orchestrator.execute(input_data)
     """
 
-    def __init__(self, tools: list[Tool]):
+    def __init__(self, tools: list[Tool[Any, Any]]):
         """Initialize with list of tools to execute sequentially."""
         if not tools:
             raise ValueError("SequentialOrchestrator requires at least one tool")
@@ -167,7 +167,7 @@ class ParallelOrchestrator(Generic[A]):
         self.tools = tools
         self.name = f"Parallel[{', '.join(t.name for t in tools)}]"
 
-    async def execute(self, input: A) -> Result[ParallelResult, ToolError]:
+    async def execute(self, input: A) -> Result[ParallelResult[Any], ToolError]:
         """
         Execute all tools in parallel with same input.
 
@@ -304,7 +304,7 @@ class SupervisorPattern(Generic[A, B]):
         self.workers = workers
         self.selector = selector or self._round_robin_selector
         self._current_worker_index = 0
-        self._worker_stats: dict[str, dict] = {
+        self._worker_stats: dict[str, dict[str, Any]] = {
             w.name: {"tasks_completed": 0, "tasks_failed": 0, "avg_latency_ms": 0.0}
             for w in workers
         }
@@ -365,7 +365,7 @@ class SupervisorPattern(Generic[A, B]):
 
             return err(error, str(error), True)
 
-    def get_worker_stats(self) -> dict[str, dict]:
+    def get_worker_stats(self) -> dict[str, dict[str, Any]]:
         """Get statistics for all workers."""
         return self._worker_stats.copy()
 
@@ -460,8 +460,10 @@ class HandoffPattern(Generic[A, B]):
                 ):
                     if rule.from_tool == self.primary.name:
                         # Transform if needed
-                        handoff_input = (
-                            rule.transform(result) if rule.transform else result
+                        handoff_input: A = (
+                            rule.transform(result)
+                            if rule.transform
+                            else cast(A, result)
                         )
                         try:
                             handoff_result = await rule.to_tool.invoke(handoff_input)
@@ -542,19 +544,19 @@ class HandoffPattern(Generic[A, B]):
                         try:
                             handoff_result = await rule.to_tool.invoke(input)
                             return ok(handoff_result)
-                        except Exception as e:
+                        except Exception as handoff_e:
                             return err(
                                 ToolError(
                                     error_type=ToolErrorType.FATAL,
-                                    message=str(e),
+                                    message=str(handoff_e),
                                     tool_name=rule.to_tool.name,
                                     input=input,
                                 ),
-                                str(e),
+                                str(handoff_e),
                                 False,
                             )
 
-            return err(error, str(e), False)
+            return err(error, error.message, False)
 
 
 # =============================================================================

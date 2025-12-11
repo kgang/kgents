@@ -158,19 +158,23 @@ class JITToolWrapper(Tool[A, B], Generic[A, B]):
 
     @property
     def name(self) -> str:
-        return self._meta.identity.name
+        return str(self._meta.identity.name)
 
     @property
-    def meta(self) -> ToolMeta:
+    def meta(self) -> ToolMeta:  # type: ignore[override]
         return self._meta
 
     @property
     def jit_tool_meta(self) -> JITToolMeta:
         return self._jit_tool_meta
 
-    async def invoke(self, input_val: A) -> Result[B, ToolError]:
+    async def invoke(self, input_val: A) -> Result[B, ToolError]:  # type: ignore[override]
         """
         Execute JIT tool in sandbox.
+
+        Intentionally returns Result[B, ToolError] instead of B to provide
+        explicit error handling for sandboxed execution failures. This allows
+        callers to distinguish between sandbox errors and successful tool execution.
 
         Steps:
         1. Execute source in sandbox with input

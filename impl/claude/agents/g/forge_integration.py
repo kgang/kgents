@@ -15,6 +15,8 @@ Key Functions:
 - `forge_with_interface()`: Complete flow from intent to artifact with G-gent interface
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from typing import Any, Callable, Optional
 
@@ -37,8 +39,8 @@ try:
     FGENT_AVAILABLE = True
 except ImportError:
     FGENT_AVAILABLE = False
-    Contract = None
-    Intent = None
+    Contract = None  # type: ignore[assignment, misc]
+    Intent = None  # type: ignore[assignment, misc]
 
 
 @dataclass
@@ -60,31 +62,33 @@ class InterfaceTongue:
     tongue: Tongue
     artifact_name: str
     operations: dict[str, str] = field(default_factory=dict)
-    handlers: dict[str, Callable] = field(default_factory=dict)
+    handlers: dict[str, Callable[..., Any]] = field(default_factory=dict)
     examples: list[str] = field(default_factory=list)
 
     def parse(self, command: str) -> ParseResult:
         """Parse a DSL command using the embedded tongue."""
-        return parse_with_tongue(command, self.tongue)
+        return parse_with_tongue(command, self.tongue.parser_config)
 
-    def execute(self, command: str, context: Optional[dict] = None) -> ExecutionResult:
+    def execute(
+        self, command: str, context: Optional[dict[str, Any]] = None
+    ) -> ExecutionResult:
         """Parse and execute a DSL command."""
         parse_result = self.parse(command)
         if not parse_result.success:
             return ExecutionResult(
                 success=False,
                 value=None,
-                error="; ".join(parse_result.errors) if parse_result.errors else None,
+                error=parse_result.error,
             )
 
         return execute_with_tongue(
             parse_result.ast,
-            self.tongue,
-            handlers=self.handlers,
+            self.tongue.interpreter_config,
             context=context or {},
+            handlers=self.handlers,
         )
 
-    def invoke(self, command: str, context: Optional[dict] = None) -> Any:
+    def invoke(self, command: str, context: Optional[dict[str, Any]] = None) -> Any:
         """
         High-level invocation: parse, execute, return result or raise.
 
@@ -103,8 +107,8 @@ class InterfaceTongue:
         """
         result = self.execute(command, context)
         if not result.success:
-            errors = result.errors or ["Unknown execution error"]
-            raise ValueError(f"Command failed: {'; '.join(errors)}")
+            error = result.error or "Unknown execution error"
+            raise ValueError(f"Command failed: {error}")
         return result.value
 
 
@@ -136,7 +140,7 @@ class TongueEmbedding:
     operations: list[str] = field(default_factory=list)
     examples: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dict for storage in contract."""
         return {
             "tongue_name": self.tongue_name,
@@ -150,7 +154,7 @@ class TongueEmbedding:
         }
 
     @staticmethod
-    def from_dict(data: dict) -> "TongueEmbedding":
+    def from_dict(data: dict[str, Any]) -> TongueEmbedding:
         """Deserialize from dict."""
         return TongueEmbedding(
             tongue_name=data["tongue_name"],
@@ -281,9 +285,9 @@ async def create_artifact_interface(
 
 
 def embed_tongue_in_contract(
-    contract: "Contract",
+    contract: Contract,
     interface_tongue: InterfaceTongue,
-) -> "Contract":
+) -> Contract:
     """
     Embed tongue metadata into an F-gent contract.
 
@@ -350,8 +354,8 @@ def embed_tongue_in_contract(
 
 def create_invocation_handler(
     interface_tongue: InterfaceTongue,
-    handlers: Optional[dict[str, Callable]] = None,
-) -> Callable[[str, Optional[dict]], Any]:
+    handlers: Optional[dict[str, Callable[..., Any]]] = None,
+) -> Callable[[str, Optional[dict[str, Any]]], Any]:
     """
     Create a function that handles DSL command invocation.
 
@@ -375,7 +379,7 @@ def create_invocation_handler(
     if handlers:
         interface_tongue.handlers.update(handlers)
 
-    def invoke_handler(command: str, context: Optional[dict] = None) -> Any:
+    def invoke_handler(command: str, context: Optional[dict[str, Any]] = None) -> Any:
         return interface_tongue.invoke(command, context)
 
     return invoke_handler
@@ -383,7 +387,7 @@ def create_invocation_handler(
 
 def bind_handlers(
     interface_tongue: InterfaceTongue,
-    handlers: dict[str, Callable],
+    handlers: dict[str, Callable[..., Any]],
 ) -> InterfaceTongue:
     """
     Bind handler functions to an interface tongue.
@@ -414,8 +418,8 @@ async def forge_with_interface(
     domain: str,
     constraints: Optional[list[str]] = None,
     operations: Optional[dict[str, str]] = None,
-    handlers: Optional[dict[str, Callable]] = None,
-) -> tuple["Contract", InterfaceTongue]:
+    handlers: Optional[dict[str, Callable[..., Any]]] = None,
+) -> tuple[Contract, InterfaceTongue]:
     """
     Complete flow: Create F-gent contract with G-gent interface.
 

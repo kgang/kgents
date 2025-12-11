@@ -1,5 +1,7 @@
 """Tests for Psi-gent learning system."""
 
+from __future__ import annotations
+
 import pytest
 
 from ..corpus import STANDARD_CORPUS
@@ -121,12 +123,16 @@ class TestFrequencyModel:
             has_embedding=False,
         )
 
-    def test_predict_unknown_is_uncertain(self, model, features) -> None:
+    def test_predict_unknown_is_uncertain(
+        self, model: FrequencyModel, features: ProblemFeatures
+    ) -> None:
         """Unknown pairs return 0.5 (uncertain)."""
         score = model.predict(features, "unknown_metaphor")
         assert score == 0.5
 
-    def test_update_changes_prediction(self, model, features) -> None:
+    def test_update_changes_prediction(
+        self, model: FrequencyModel, features: ProblemFeatures
+    ) -> None:
         """Updates change future predictions."""
         # Record some successes
         for _ in range(10):
@@ -143,7 +149,9 @@ class TestFrequencyModel:
         score = model.predict(features, "plumbing")
         assert score > 0.5
 
-    def test_is_trained_requires_data(self, model, features) -> None:
+    def test_is_trained_requires_data(
+        self, model: FrequencyModel, features: ProblemFeatures
+    ) -> None:
         """Model is not trained without sufficient data."""
         assert not model.is_trained
 
@@ -159,7 +167,9 @@ class TestFrequencyModel:
 
         assert model.is_trained
 
-    def test_uncertainty_with_few_samples(self, model, features) -> None:
+    def test_uncertainty_with_few_samples(
+        self, model: FrequencyModel, features: ProblemFeatures
+    ) -> None:
         """Uncertainty is high with few samples."""
         # Add just 2 samples
         for _ in range(2):
@@ -201,18 +211,24 @@ class TestThompsonSamplingModel:
             has_embedding=False,
         )
 
-    def test_predict_unknown_uses_prior(self, model, features) -> None:
+    def test_predict_unknown_uses_prior(
+        self, model: ThompsonSamplingModel, features: ProblemFeatures
+    ) -> None:
         """Unknown pairs use prior (alpha=1, beta=1 -> mean=0.5)."""
         score = model.predict(features, "unknown")
         assert score == 0.5
 
-    def test_sample_varies(self, model, features) -> None:
+    def test_sample_varies(
+        self, model: ThompsonSamplingModel, features: ProblemFeatures
+    ) -> None:
         """Samples vary (Thompson sampling property)."""
         samples = [model.sample(features, "test") for _ in range(100)]
         # Should have some variation
         assert max(samples) - min(samples) > 0.1
 
-    def test_update_shifts_distribution(self, model, features) -> None:
+    def test_update_shifts_distribution(
+        self, model: ThompsonSamplingModel, features: ProblemFeatures
+    ) -> None:
         """Successful updates shift distribution up."""
         initial = model.predict(features, "plumbing")
 
@@ -229,7 +245,9 @@ class TestThompsonSamplingModel:
         after = model.predict(features, "plumbing")
         assert after > initial
 
-    def test_failures_shift_distribution_down(self, model, features) -> None:
+    def test_failures_shift_distribution_down(
+        self, model: ThompsonSamplingModel, features: ProblemFeatures
+    ) -> None:
         """Failed updates shift distribution down."""
         initial = model.predict(features, "plumbing")
 
@@ -246,7 +264,9 @@ class TestThompsonSamplingModel:
         after = model.predict(features, "plumbing")
         assert after < initial
 
-    def test_decay_moves_toward_prior(self, model, features) -> None:
+    def test_decay_moves_toward_prior(
+        self, model: ThompsonSamplingModel, features: ProblemFeatures
+    ) -> None:
         """Decay moves parameters toward prior."""
         # Add many successes
         for _ in range(50):
@@ -294,7 +314,9 @@ class TestAbstractionModel:
             has_embedding=False,
         )
 
-    def test_suggest_default_scales_with_complexity(self, model) -> None:
+    def test_suggest_default_scales_with_complexity(
+        self, model: AbstractionModel
+    ) -> None:
         """Default suggestion scales with complexity."""
         low_complexity = ProblemFeatures(
             domain="test",
@@ -318,7 +340,9 @@ class TestAbstractionModel:
 
         assert high_abs > low_abs
 
-    def test_learns_from_success(self, model, features) -> None:
+    def test_learns_from_success(
+        self, model: AbstractionModel, features: ProblemFeatures
+    ) -> None:
         """Model learns successful abstraction levels."""
         # Record successes at abstraction=0.7
         for _ in range(10):
@@ -335,7 +359,9 @@ class TestAbstractionModel:
         # Should be close to 0.7
         assert 0.6 < suggested < 0.8
 
-    def test_ignores_failures(self, model, features) -> None:
+    def test_ignores_failures(
+        self, model: AbstractionModel, features: ProblemFeatures
+    ) -> None:
         """Model ignores failed attempts."""
         # Record failures at various levels
         for abs_level in [0.1, 0.3, 0.5, 0.9]:
@@ -362,7 +388,7 @@ class TestRetrievalIntegration:
     """Tests for learning-based retrieval."""
 
     @pytest.fixture
-    def trained_model(self):
+    def trained_model(self) -> ThompsonSamplingModel:
         """Create a trained model favoring plumbing."""
         model = ThompsonSamplingModel()
         features = ProblemFeatures(
@@ -387,7 +413,9 @@ class TestRetrievalIntegration:
 
         return model
 
-    def test_retrieve_with_learning_uses_model(self, trained_model) -> None:
+    def test_retrieve_with_learning_uses_model(
+        self, trained_model: ThompsonSamplingModel
+    ) -> None:
         """Learning retrieval uses model predictions."""
         problem = Problem(
             id="1",

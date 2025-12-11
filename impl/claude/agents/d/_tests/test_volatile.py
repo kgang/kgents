@@ -8,6 +8,8 @@ Tests cover:
 - History ordering and limits
 """
 
+from typing import Any
+
 import pytest
 from agents.d import VolatileAgent
 
@@ -15,7 +17,7 @@ from agents.d import VolatileAgent
 @pytest.mark.asyncio
 async def test_round_trip() -> None:
     """State survives save/load cycle without corruption."""
-    dgent = VolatileAgent[dict](_state={"initial": "state"})
+    dgent = VolatileAgent[dict[str, Any]](_state={"initial": "state"})
 
     test_state = {"value": 42, "nested": {"key": "data"}}
     await dgent.save(test_state)
@@ -28,7 +30,7 @@ async def test_round_trip() -> None:
 @pytest.mark.asyncio
 async def test_isolation() -> None:
     """Loaded state is independent copy, not reference."""
-    dgent = VolatileAgent[dict](_state={"value": 1})
+    dgent = VolatileAgent[dict[str, Any]](_state={"value": 1})
 
     # Load and mutate
     state1 = await dgent.load()
@@ -102,7 +104,7 @@ async def test_snapshot_non_async() -> None:
 @pytest.mark.asyncio
 async def test_complex_state() -> None:
     """Works with complex nested structures."""
-    dgent = VolatileAgent[dict](_state={})
+    dgent = VolatileAgent[dict[str, Any]](_state={})
 
     complex_state = {
         "users": {"alice": {"age": 30}, "bob": {"age": 25}},
@@ -154,7 +156,7 @@ async def test_dataclass_state() -> None:
 if __name__ == "__main__":
     import asyncio
 
-    async def run_tests():
+    async def run_tests() -> None:
         """Run all tests manually."""
         print("Running VolatileAgent tests...")
 

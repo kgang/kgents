@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from datetime import datetime
+from typing import Any
 
 from .types import (
     Catalog,
@@ -73,7 +74,7 @@ class Registry:
         """Check existence without retrieving."""
         return id in self.catalog.entries
 
-    async def list(
+    async def list_entries(
         self,
         entity_type: EntityType | None = None,
         status: Status | None = None,
@@ -351,12 +352,12 @@ class Registry:
             if e is not None
         ]
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Export catalog as dictionary."""
         return self.catalog.to_dict()
 
     @classmethod
-    def from_dict(cls, data: dict) -> "Registry":
+    def from_dict(cls, data: dict[str, Any]) -> "Registry":
         """Import catalog from dictionary."""
         catalog = Catalog.from_dict(data)
         return cls(catalog=catalog)

@@ -1,7 +1,10 @@
 """Tests for GraphAgent - Relational Lattice foundation."""
 
+from __future__ import annotations
+
 import tempfile
 from pathlib import Path
+from typing import Any
 
 import pytest
 import pytest_asyncio
@@ -17,11 +20,11 @@ class TestGraphAgentBasics:
     """Basic GraphAgent operations."""
 
     @pytest.fixture
-    def agent(self) -> GraphAgent:
+    def agent(self) -> GraphAgent[Any]:
         """Create a test graph agent."""
-        return GraphAgent()
+        return GraphAgent[Any]()
 
-    async def test_add_and_get_node(self, agent) -> None:
+    async def test_add_and_get_node(self, agent: GraphAgent[Any]) -> None:
         """Test adding and retrieving nodes."""
         await agent.add_node("test1", {"name": "Test"})
 
@@ -30,20 +33,20 @@ class TestGraphAgentBasics:
         assert node.id == "test1"
         assert node.state == {"name": "Test"}
 
-    async def test_node_exists(self, agent) -> None:
+    async def test_node_exists(self, agent: GraphAgent[Any]) -> None:
         """Test node existence check."""
         assert await agent.node_exists("test1") is False
         await agent.add_node("test1", "state")
         assert await agent.node_exists("test1") is True
 
-    async def test_delete_node(self, agent) -> None:
+    async def test_delete_node(self, agent: GraphAgent[Any]) -> None:
         """Test deleting nodes."""
         await agent.add_node("test1", "state")
         assert await agent.delete_node("test1") is True
         assert await agent.get_node("test1") is None
         assert await agent.delete_node("test1") is False  # Already deleted
 
-    async def test_list_nodes(self, agent) -> None:
+    async def test_list_nodes(self, agent: GraphAgent[Any]) -> None:
         """Test listing all nodes."""
         await agent.add_node("a", "A")
         await agent.add_node("b", "B")
@@ -52,7 +55,7 @@ class TestGraphAgentBasics:
         nodes = await agent.list_nodes()
         assert set(nodes) == {"a", "b", "c"}
 
-    async def test_load_returns_all_nodes(self, agent) -> None:
+    async def test_load_returns_all_nodes(self, agent: GraphAgent[Any]) -> None:
         """Test that load returns all nodes."""
         await agent.add_node("test1", "State1")
         await agent.add_node("test2", "State2")
@@ -62,7 +65,7 @@ class TestGraphAgentBasics:
         assert "test1" in nodes
         assert "test2" in nodes
 
-    async def test_history_returns_states(self, agent) -> None:
+    async def test_history_returns_states(self, agent: GraphAgent[Any]) -> None:
         """Test history returns states in reverse order."""
         await agent.add_node("test1", "First")
         await agent.add_node("test2", "Second")
@@ -70,12 +73,13 @@ class TestGraphAgentBasics:
         history = await agent.history()
         assert history == ["Second", "First"]
 
-    async def test_save_creates_node(self, agent) -> None:
+    async def test_save_creates_node(self, agent: GraphAgent[Any]) -> None:
         """Test save creates node with auto ID."""
         node_id = await agent.save("Test State")
         assert node_id is not None
 
         node = await agent.get_node(node_id)
+        assert node is not None
         assert node.state == "Test State"
 
 
@@ -83,17 +87,17 @@ class TestGraphAgentEdges:
     """Edge operations."""
 
     @pytest_asyncio.fixture
-    async def agent_with_nodes(self):
+    async def agent_with_nodes(self) -> GraphAgent[Any]:
         """Create agent with test nodes."""
-        agent = GraphAgent()
+        agent: GraphAgent[Any] = GraphAgent[Any]()
         await agent.add_node("parent", "Parent")
         await agent.add_node("child1", "Child 1")
         await agent.add_node("child2", "Child 2")
         return agent
 
-    async def test_add_edge(self, agent_with_nodes) -> None:
+    async def test_add_edge(self, agent_with_nodes: GraphAgent[Any]) -> None:
         """Test adding edges between nodes."""
-        agent = agent_with_nodes
+        agent: GraphAgent[Any] = agent_with_nodes
 
         await agent.add_edge("child1", EdgeKind.IS_A, "parent")
 
@@ -102,23 +106,27 @@ class TestGraphAgentEdges:
         assert edges[0].kind == EdgeKind.IS_A
         assert edges[0].target == "parent"
 
-    async def test_add_edge_missing_source_raises(self, agent_with_nodes) -> None:
+    async def test_add_edge_missing_source_raises(
+        self, agent_with_nodes: GraphAgent[Any]
+    ) -> None:
         """Test that adding edge with missing source raises error."""
-        agent = agent_with_nodes
+        agent: GraphAgent[Any] = agent_with_nodes
 
         with pytest.raises(NodeNotFoundError, match="Source"):
             await agent.add_edge("nonexistent", EdgeKind.IS_A, "parent")
 
-    async def test_add_edge_missing_target_raises(self, agent_with_nodes) -> None:
+    async def test_add_edge_missing_target_raises(
+        self, agent_with_nodes: GraphAgent[Any]
+    ) -> None:
         """Test that adding edge with missing target raises error."""
-        agent = agent_with_nodes
+        agent: GraphAgent[Any] = agent_with_nodes
 
         with pytest.raises(NodeNotFoundError, match="Target"):
             await agent.add_edge("child1", EdgeKind.IS_A, "nonexistent")
 
-    async def test_bidirectional_edge(self, agent_with_nodes) -> None:
+    async def test_bidirectional_edge(self, agent_with_nodes: GraphAgent[Any]) -> None:
         """Test bidirectional edges."""
-        agent = agent_with_nodes
+        agent: GraphAgent[Any] = agent_with_nodes
 
         await agent.add_edge(
             "child1", EdgeKind.RELATED_TO, "child2", bidirectional=True
@@ -130,9 +138,11 @@ class TestGraphAgentEdges:
         assert any(e.target == "child2" for e in edges1)
         assert any(e.target == "child1" for e in edges2)
 
-    async def test_get_edges_by_direction(self, agent_with_nodes) -> None:
+    async def test_get_edges_by_direction(
+        self, agent_with_nodes: GraphAgent[Any]
+    ) -> None:
         """Test getting edges by direction."""
-        agent = agent_with_nodes
+        agent: GraphAgent[Any] = agent_with_nodes
 
         await agent.add_edge("child1", EdgeKind.IS_A, "parent")
         await agent.add_edge("child2", EdgeKind.IS_A, "child1")  # child2 -> child1
@@ -151,9 +161,9 @@ class TestGraphAgentEdges:
         both_edges = await agent.get_edges("child1", direction="both")
         assert len(both_edges) == 2
 
-    async def test_get_edges_by_kind(self, agent_with_nodes) -> None:
+    async def test_get_edges_by_kind(self, agent_with_nodes: GraphAgent[Any]) -> None:
         """Test filtering edges by kind."""
-        agent = agent_with_nodes
+        agent: GraphAgent[Any] = agent_with_nodes
 
         await agent.add_edge("child1", EdgeKind.IS_A, "parent")
         await agent.add_edge("child1", EdgeKind.USES, "child2")
@@ -162,9 +172,9 @@ class TestGraphAgentEdges:
         assert len(is_a_edges) == 1
         assert is_a_edges[0].kind == EdgeKind.IS_A
 
-    async def test_remove_edge(self, agent_with_nodes) -> None:
+    async def test_remove_edge(self, agent_with_nodes: GraphAgent[Any]) -> None:
         """Test removing edges."""
-        agent = agent_with_nodes
+        agent: GraphAgent[Any] = agent_with_nodes
 
         await agent.add_edge("child1", EdgeKind.IS_A, "parent")
         assert await agent.remove_edge("child1", EdgeKind.IS_A, "parent") is True
@@ -172,9 +182,11 @@ class TestGraphAgentEdges:
         edges = await agent.get_edges("child1", direction="out")
         assert len(edges) == 0
 
-    async def test_delete_node_removes_edges(self, agent_with_nodes) -> None:
+    async def test_delete_node_removes_edges(
+        self, agent_with_nodes: GraphAgent[Any]
+    ) -> None:
         """Test that deleting node removes connected edges."""
-        agent = agent_with_nodes
+        agent: GraphAgent[Any] = agent_with_nodes
 
         await agent.add_edge("child1", EdgeKind.IS_A, "parent")
         await agent.add_edge("child2", EdgeKind.IS_A, "child1")
@@ -190,7 +202,7 @@ class TestLatticeOperations:
     """Lattice operations: meet, join, entails."""
 
     @pytest_asyncio.fixture
-    async def taxonomy(self):
+    async def taxonomy(self) -> GraphAgent[Any]:
         """Create a simple taxonomy (ontology).
 
         Structure:
@@ -202,7 +214,7 @@ class TestLatticeOperations:
                 ├── Car
                 └── Bike
         """
-        agent = GraphAgent()
+        agent: GraphAgent[Any] = GraphAgent[Any]()
 
         # Add nodes
         await agent.add_node("thing", "Thing")
@@ -223,37 +235,37 @@ class TestLatticeOperations:
 
         return agent
 
-    async def test_entails_direct(self, taxonomy) -> None:
+    async def test_entails_direct(self, taxonomy: GraphAgent[Any]) -> None:
         """Test direct entailment."""
         # Dog IS_A Animal
         assert await taxonomy.entails("dog", "animal") is True
         # Animal IS_A Thing
         assert await taxonomy.entails("animal", "thing") is True
 
-    async def test_entails_transitive(self, taxonomy) -> None:
+    async def test_entails_transitive(self, taxonomy: GraphAgent[Any]) -> None:
         """Test transitive entailment."""
         # Dog IS_A Thing (via Animal)
         assert await taxonomy.entails("dog", "thing") is True
 
-    async def test_entails_not_related(self, taxonomy) -> None:
+    async def test_entails_not_related(self, taxonomy: GraphAgent[Any]) -> None:
         """Test non-entailment."""
         # Dog is not a Vehicle
         assert await taxonomy.entails("dog", "vehicle") is False
         # Car is not an Animal
         assert await taxonomy.entails("car", "animal") is False
 
-    async def test_entails_self(self, taxonomy) -> None:
+    async def test_entails_self(self, taxonomy: GraphAgent[Any]) -> None:
         """Test self-entailment."""
         assert await taxonomy.entails("dog", "dog") is True
 
-    async def test_meet_siblings(self, taxonomy) -> None:
+    async def test_meet_siblings(self, taxonomy: GraphAgent[Any]) -> None:
         """Test meet (greatest common ancestor) of siblings."""
         # Dog and Cat both are Animals
         # Meet finds common ancestors - both "animal" and "thing" are valid
         meet = await taxonomy.meet("dog", "cat")
         assert meet in ("animal", "thing")
 
-    async def test_meet_cousins(self, taxonomy) -> None:
+    async def test_meet_cousins(self, taxonomy: GraphAgent[Any]) -> None:
         """Test meet of cousins."""
         # Dog and Car meet at Thing
         meet = await taxonomy.meet("dog", "car")
@@ -261,29 +273,29 @@ class TestLatticeOperations:
 
     async def test_meet_no_common_ancestor(self) -> None:
         """Test meet when no common ancestor."""
-        agent = GraphAgent()
+        agent: GraphAgent[Any] = GraphAgent[Any]()
         await agent.add_node("a", "A")
         await agent.add_node("b", "B")
 
         meet = await agent.meet("a", "b")
         assert meet is None
 
-    async def test_compare_below(self, taxonomy) -> None:
+    async def test_compare_below(self, taxonomy: GraphAgent[Any]) -> None:
         """Test compare when one is below the other."""
         result = await taxonomy.compare("dog", "animal")
         assert result == "a ≤ b"
 
-    async def test_compare_above(self, taxonomy) -> None:
+    async def test_compare_above(self, taxonomy: GraphAgent[Any]) -> None:
         """Test compare when one is above the other."""
         result = await taxonomy.compare("animal", "dog")
         assert result == "b ≤ a"
 
-    async def test_compare_equal(self, taxonomy) -> None:
+    async def test_compare_equal(self, taxonomy: GraphAgent[Any]) -> None:
         """Test compare when equal."""
         result = await taxonomy.compare("dog", "dog")
         assert result == "a = b"
 
-    async def test_compare_incomparable(self, taxonomy) -> None:
+    async def test_compare_incomparable(self, taxonomy: GraphAgent[Any]) -> None:
         """Test compare when incomparable."""
         result = await taxonomy.compare("dog", "car")
         assert result == "incomparable"
@@ -293,12 +305,12 @@ class TestProvenanceOperations:
     """Provenance tracking: lineage, descendants."""
 
     @pytest_asyncio.fixture
-    async def derivation_chain(self):
+    async def derivation_chain(self) -> GraphAgent[Any]:
         """Create a derivation chain.
 
         v1 -> v2 -> v3 -> v4
         """
-        agent = GraphAgent()
+        agent: GraphAgent[Any] = GraphAgent[Any]()
 
         await agent.add_node("v1", "Version 1")
         await agent.add_node("v2", "Version 2")
@@ -311,27 +323,27 @@ class TestProvenanceOperations:
 
         return agent
 
-    async def test_lineage(self, derivation_chain) -> None:
+    async def test_lineage(self, derivation_chain: GraphAgent[Any]) -> None:
         """Test lineage (ancestors)."""
         lineage = await derivation_chain.lineage("v4")
         assert lineage == ["v3", "v2", "v1"]
 
-    async def test_lineage_root(self, derivation_chain) -> None:
+    async def test_lineage_root(self, derivation_chain: GraphAgent[Any]) -> None:
         """Test lineage of root has no ancestors."""
         lineage = await derivation_chain.lineage("v1")
         assert lineage == []
 
-    async def test_descendants(self, derivation_chain) -> None:
+    async def test_descendants(self, derivation_chain: GraphAgent[Any]) -> None:
         """Test descendants."""
         desc = await derivation_chain.descendants("v1")
         assert set(desc) == {"v2", "v3", "v4"}
 
-    async def test_descendants_leaf(self, derivation_chain) -> None:
+    async def test_descendants_leaf(self, derivation_chain: GraphAgent[Any]) -> None:
         """Test descendants of leaf has none."""
         desc = await derivation_chain.descendants("v4")
         assert desc == []
 
-    async def test_derivation_path(self, derivation_chain) -> None:
+    async def test_derivation_path(self, derivation_chain: GraphAgent[Any]) -> None:
         """Test finding derivation path."""
         path = await derivation_chain.derivation_path("v1", "v4")
         assert path is None  # v1 can't reach v4 (edges go the other way)
@@ -345,9 +357,9 @@ class TestTraversalOperations:
     """Graph traversal operations."""
 
     @pytest_asyncio.fixture
-    async def connected_graph(self):
+    async def connected_graph(self) -> GraphAgent[Any]:
         """Create a connected graph."""
-        agent = GraphAgent()
+        agent: GraphAgent[Any] = GraphAgent[Any]()
 
         await agent.add_node("a", "A")
         await agent.add_node("b", "B")
@@ -360,7 +372,7 @@ class TestTraversalOperations:
 
         return agent
 
-    async def test_traverse(self, connected_graph) -> None:
+    async def test_traverse(self, connected_graph: GraphAgent[Any]) -> None:
         """Test graph traversal."""
         subgraph = await connected_graph.traverse("a", depth=2)
 
@@ -369,7 +381,7 @@ class TestTraversalOperations:
         assert "c" in subgraph.nodes
         assert len(subgraph.edges) >= 2
 
-    async def test_traverse_depth_limit(self, connected_graph) -> None:
+    async def test_traverse_depth_limit(self, connected_graph: GraphAgent[Any]) -> None:
         """Test traversal respects depth limit."""
         subgraph = await connected_graph.traverse("a", depth=1)
 
@@ -377,7 +389,7 @@ class TestTraversalOperations:
         assert "b" in subgraph.nodes
         assert "c" not in subgraph.nodes  # Too far
 
-    async def test_find_path(self, connected_graph) -> None:
+    async def test_find_path(self, connected_graph: GraphAgent[Any]) -> None:
         """Test finding shortest path."""
         path = await connected_graph.find_path("a", "c")
 
@@ -386,7 +398,7 @@ class TestTraversalOperations:
         assert path[0].source == "a"
         assert path[-1].target == "c"
 
-    async def test_find_path_no_route(self, connected_graph) -> None:
+    async def test_find_path_no_route(self, connected_graph: GraphAgent[Any]) -> None:
         """Test finding path when no route exists."""
         # Add isolated node
         await connected_graph.add_node("isolated", "Isolated")
@@ -396,7 +408,7 @@ class TestTraversalOperations:
 
     async def test_connected_components(self) -> None:
         """Test finding connected components."""
-        agent = GraphAgent()
+        agent: GraphAgent[Any] = GraphAgent[Any]()
 
         # Component 1
         await agent.add_node("a1", "A1")
@@ -425,13 +437,13 @@ class TestGraphAgentPersistence:
             path = Path(tmpdir) / "graph.json"
 
             # Create and populate
-            agent1 = GraphAgent(persistence_path=path)
+            agent1: GraphAgent[Any] = GraphAgent[Any](persistence_path=path)
             await agent1.add_node("test1", "State1")
             await agent1.add_node("test2", "State2")
             await agent1.add_edge("test1", EdgeKind.IS_A, "test2")
 
             # Create new instance from same path
-            agent2 = GraphAgent(persistence_path=path)
+            agent2: GraphAgent[Any] = GraphAgent[Any](persistence_path=path)
 
             # Should have loaded data
             nodes = await agent2.load()
@@ -457,7 +469,7 @@ class TestEdgeKind:
 
     def test_edge_reverse(self) -> None:
         """Test Edge reverse method."""
-        edge = Edge(
+        edge: Edge[Any] = Edge[Any](
             source="a",
             kind=EdgeKind.IS_A,
             target="b",

@@ -117,7 +117,7 @@ class JITAgentWrapper(Agent[A, B], Generic[A, B]):
     @property
     def name(self) -> str:
         """Agent name from source class name."""
-        return self._meta.identity.name
+        return str(self._meta.identity.name)
 
     @property
     def meta(self) -> AgentMeta:
@@ -155,7 +155,7 @@ class JITAgentWrapper(Agent[A, B], Generic[A, B]):
         if not result.success:
             raise RuntimeError(f"JIT execution failed: {result.error}")
 
-        return result.output
+        return result.output  # type: ignore[no-any-return]
 
 
 def _build_agent_meta(
@@ -235,7 +235,7 @@ async def create_agent_from_source(
     if validate:
         verdict = await jit_safety_judge.evaluate_source(source, constraints)
         if verdict.type.value == "reject":
-            reasons = ", ".join(verdict.rejections) if verdict.rejections else "Unknown"
+            reasons = verdict.reasoning if verdict.reasoning else "Unknown"
             raise ValueError(f"JIT source rejected: {reasons}")
 
     # Step 2: Compute stability score from Chaosmonger analysis

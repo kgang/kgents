@@ -219,7 +219,7 @@ class ResolutionBudget:
         self._recency_weight = 0.3
         self._importance_weight = 0.3
 
-    def calculate_priority(self, pattern: MemoryPattern) -> float:
+    def calculate_priority(self, pattern: MemoryPattern[Any]) -> float:
         """Calculate priority score for a pattern.
 
         Priority = weighted sum of:
@@ -241,7 +241,7 @@ class ResolutionBudget:
 
     def allocate_resolution(
         self,
-        patterns: list[MemoryPattern],
+        patterns: list[MemoryPattern[Any]],
         available_budget: int,
     ) -> dict[str, ResolutionAllocation]:
         """Allocate resolution budget to patterns.
@@ -700,7 +700,7 @@ class MemoryEconomicsDashboard:
     efficiency metrics, and budget health.
     """
 
-    def __init__(self, budgeted_memory: BudgetedMemory):
+    def __init__(self, budgeted_memory: BudgetedMemory[Any]) -> None:
         """Initialize dashboard.
 
         Args:
@@ -776,8 +776,8 @@ class MemoryEconomicsDashboard:
 def create_budgeted_memory(
     bank: CentralBankProtocol,
     account_id: str = "m-gent",
-    **kwargs,
-) -> BudgetedMemory:
+    **kwargs: Any,
+) -> BudgetedMemory[Any]:
     """Create a BudgetedMemory with default configuration.
 
     Args:
@@ -788,7 +788,7 @@ def create_budgeted_memory(
     Returns:
         Configured BudgetedMemory
     """
-    memory = HolographicMemory()
+    memory: HolographicMemory[Any] = HolographicMemory()
     return BudgetedMemory(
         memory=memory,
         bank=bank,
@@ -800,7 +800,7 @@ def create_budgeted_memory(
 def create_mock_bank(
     max_balance: int = 100000,
     refill_rate: float = 100.0,
-) -> Any:
+) -> CentralBankProtocol:
     """Create a mock CentralBank for testing.
 
     Returns a lightweight mock that implements CentralBankProtocol
@@ -822,7 +822,7 @@ def create_mock_bank(
         voided: bool = False
 
     class MockBucket:
-        def __init__(self, max_bal: int):
+        def __init__(self, max_bal: int) -> None:
             self.max_balance = max_bal
             self.balance = max_bal
 
@@ -845,8 +845,8 @@ def create_mock_bank(
             return tokens - available
 
     class MockBank:
-        def __init__(self):
-            self.bucket = MockBucket(max_balance)
+        def __init__(self) -> None:
+            self.bucket: TokenBudgetProtocol = MockBucket(max_balance)
             self._leases: dict[str, MockLease] = {}
             self._lease_counter = 0
 

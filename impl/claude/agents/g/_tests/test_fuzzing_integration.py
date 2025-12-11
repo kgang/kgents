@@ -419,6 +419,7 @@ class TestFuzzResult:
             parse_result=parse_result,
         )
         assert result.parse_result is not None
+        assert result.parse_result.ast is not None
         assert result.parse_result.ast["verb"] == "CHECK"
 
 

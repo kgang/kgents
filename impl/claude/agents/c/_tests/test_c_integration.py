@@ -111,9 +111,9 @@ class IntToStrAgent(Agent[int, str]):
 class FlakeyAgent(Agent[int, int]):
     """Agent that fails sometimes for testing retry."""
 
-    def __init__(self):
-        self.attempts = 0
-        self.fail_until = 2  # Fail first 2 attempts
+    def __init__(self) -> None:
+        self.attempts: int = 0
+        self.fail_until: int = 2  # Fail first 2 attempts
 
     @property
     def name(self) -> str:
@@ -334,7 +334,7 @@ class TestMonadLaws:
     def test_left_identity_either(self) -> None:
         """Left identity for Either monad."""
 
-        def f(x: int) -> Either[str, int]:
+        def f(x: int) -> Either[None, int]:
             return Right(x * 2)
 
         a = 21

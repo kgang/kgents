@@ -147,10 +147,10 @@ class GardenCLI(CLICapable):
         # Set up handlers
         result: dict[str, Any] = {"status": "exited", "pipeline_executed": False}
 
-        def on_exit():
+        def on_exit() -> None:
             pass
 
-        def on_execute(pipeline):
+        def on_execute(pipeline: Any) -> None:
             result["pipeline_executed"] = True
             result["pipeline"] = pipeline.composition_string
             result["token_budget"] = pipeline.total_token_cost

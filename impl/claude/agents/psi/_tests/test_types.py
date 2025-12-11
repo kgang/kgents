@@ -207,7 +207,7 @@ class TestProjection:
             gaps=("c",),
         )
 
-    def test_coverage(self, sample_projection) -> None:
+    def test_coverage(self, sample_projection: Projection) -> None:
         """Coverage is mappings / (mappings + gaps)."""
         # 2 mappings, 1 gap = 2/3
         assert 0.66 < sample_projection.coverage < 0.67
@@ -225,7 +225,7 @@ class TestProjection:
         assert p.coverage == 0.0
 
     @pytest.mark.law
-    def test_projection_invariants(self, sample_projection) -> None:
+    def test_projection_invariants(self, sample_projection: Projection) -> None:
         """Projection invariants must hold."""
         assert validate_projection(sample_projection) == []
 

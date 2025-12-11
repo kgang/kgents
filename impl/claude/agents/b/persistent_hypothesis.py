@@ -10,6 +10,8 @@ Provides durable storage for hypothesis history, enabling:
 - D-gent lineage support
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -57,7 +59,7 @@ class HypothesisMemory:
     # NOTE: JSON serializes int keys as strings, so we use _fix_catalog_ids after load
     catalog_ids: dict[int, str] = field(default_factory=dict)  # hyp_idx -> catalog_id
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Fix catalog_ids keys that were converted to strings by JSON serialization."""
         # JSON doesn't support int keys, so they get serialized as strings
         # Convert them back to ints when loading
@@ -399,7 +401,7 @@ class PersistentHypothesisStorage:
         source_idx: int,
         target_idx: int,
         relationship: str,
-        context: dict | None = None,
+        context: dict[str, Any] | None = None,
     ) -> HypothesisLineageEdge:
         """
         Record a lineage relationship between hypotheses.

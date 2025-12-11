@@ -7,7 +7,10 @@ Tests the cross-pollination workflow:
 - Prevent duplicate creation (Curated principle)
 """
 
+from __future__ import annotations
+
 import tempfile
+from collections.abc import AsyncGenerator, Generator
 from pathlib import Path
 
 import pytest
@@ -23,7 +26,7 @@ from agents.l.catalog import CatalogEntry, EntityType, Registry, Status
 
 
 @pytest.fixture
-def temp_registry():
+def temp_registry() -> Generator[Registry, None, None]:
     """Create temporary registry for testing."""
     with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
         registry = Registry(f.name)
@@ -33,7 +36,7 @@ def temp_registry():
 
 
 @pytest.fixture
-async def populated_registry(temp_registry):
+async def populated_registry(temp_registry: Registry) -> AsyncGenerator[Registry, None]:
     """Registry with some pre-existing artifacts."""
     # Register a summarizer agent
     await temp_registry.register(
@@ -70,7 +73,7 @@ async def populated_registry(temp_registry):
         )
     )
 
-    return temp_registry
+    yield temp_registry
 
 
 # ============================================================================
@@ -79,11 +82,11 @@ async def populated_registry(temp_registry):
 
 
 @pytest.mark.asyncio
-async def test_search_before_forge_no_matches(temp_registry) -> None:
+async def test_search_before_forge_no_matches(temp_registry: Registry) -> None:
     """When no similar artifacts exist, recommend forging new."""
     result = await search_before_forge(
         intent_text="Create an agent that validates email addresses",
-        registry=temp_registry,
+        registry=temp_registry,  # type: ignore[arg-type]
         similarity_threshold=0.9,
     )
 
@@ -99,11 +102,11 @@ async def test_search_before_forge_no_matches(temp_registry) -> None:
 
 
 @pytest.mark.asyncio
-async def test_search_before_forge_exact_match(populated_registry) -> None:
+async def test_search_before_forge_exact_match(populated_registry: Registry) -> None:
     """When similar artifact exists, recommend reuse."""
     result = await search_before_forge(
         intent_text="Create an agent that summarizes papers",
-        registry=populated_registry,
+        registry=populated_registry,  # type: ignore[arg-type]
         similarity_threshold=0.1,  # Low threshold for keyword matching
     )
 
@@ -123,11 +126,11 @@ async def test_search_before_forge_exact_match(populated_registry) -> None:
 
 
 @pytest.mark.asyncio
-async def test_search_before_forge_partial_match(populated_registry) -> None:
+async def test_search_before_forge_partial_match(populated_registry: Registry) -> None:
     """Keyword overlap should surface related artifacts."""
     result = await search_before_forge(
         intent_text="Create an agent that fetches weather forecasts",
-        registry=populated_registry,
+        registry=populated_registry,  # type: ignore[arg-type]
         similarity_threshold=0.1,  # Low threshold for keyword matching
     )
 
@@ -143,12 +146,12 @@ async def test_search_before_forge_partial_match(populated_registry) -> None:
 
 
 @pytest.mark.asyncio
-async def test_forge_with_registration_new_artifact(temp_registry) -> None:
+async def test_forge_with_registration_new_artifact(temp_registry: Registry) -> None:
     """Complete workflow: search → forge → register."""
     contract, search_result = await forge_with_registration(
         intent_text="Create an agent that validates JSON schemas",
         agent_name="JSONValidator",
-        registry=temp_registry,
+        registry=temp_registry,  # type: ignore[arg-type]
         author="charlie",
         similarity_threshold=0.9,
     )
@@ -177,12 +180,14 @@ async def test_forge_with_registration_new_artifact(temp_registry) -> None:
 
 
 @pytest.mark.asyncio
-async def test_forge_with_registration_duplicate_detection(populated_registry) -> None:
+async def test_forge_with_registration_duplicate_detection(
+    populated_registry: Registry,
+) -> None:
     """Attempting to forge similar artifact should trigger recommendation."""
     contract, search_result = await forge_with_registration(
         intent_text="Create an agent that summarizes research papers",
         agent_name="ResearchSummarizer",
-        registry=populated_registry,
+        registry=populated_registry,  # type: ignore[arg-type]
         similarity_threshold=0.1,  # Low threshold for keyword matching
     )
 
@@ -202,7 +207,7 @@ async def test_forge_with_registration_duplicate_detection(populated_registry) -
 
 
 @pytest.mark.asyncio
-async def test_register_forged_artifact(temp_registry) -> None:
+async def test_register_forged_artifact(temp_registry: Registry) -> None:
     """Test standalone registration of a contract."""
     contract = Contract(
         agent_name="DataParser",
@@ -226,14 +231,14 @@ async def test_register_forged_artifact(temp_registry) -> None:
     entry = await register_forged_artifact(
         contract=contract,
         agent_name="DataParser",
-        registry=temp_registry,
+        registry=temp_registry,  # type: ignore[arg-type]
         author="dave",
         keywords=["parsing", "CSV"],
     )
 
     # Check entry
     assert entry.name == "DataParser"
-    assert entry.entity_type == EntityType.CONTRACT
+    assert entry.entity_type == EntityType.CONTRACT  # type: ignore[comparison-overlap]
     assert entry.input_type == "str"
     assert entry.output_type == "dict"
     assert "parsing" in entry.keywords
@@ -252,7 +257,7 @@ async def test_register_forged_artifact(temp_registry) -> None:
 
 
 @pytest.mark.asyncio
-async def test_register_artifact_auto_keywords(temp_registry) -> None:
+async def test_register_artifact_auto_keywords(temp_registry: Registry) -> None:
     """Keywords should default to invariant descriptions."""
     from agents.f.contract import Invariant
 
@@ -277,7 +282,7 @@ async def test_register_artifact_auto_keywords(temp_registry) -> None:
     entry = await register_forged_artifact(
         contract=contract,
         agent_name="IdempotentAgent",
-        registry=temp_registry,
+        registry=temp_registry,  # type: ignore[arg-type]
         author="eve",
         keywords=None,  # Should extract from invariants
     )
@@ -302,12 +307,12 @@ async def test_register_artifact_auto_keywords(temp_registry) -> None:
     ],
 )
 async def test_similarity_threshold_tuning(
-    populated_registry, threshold, expected_matches
-):
+    populated_registry: Registry, threshold: float, expected_matches: bool
+) -> None:
     """Test how similarity threshold affects match detection."""
     result = await search_before_forge(
         intent_text="Summarize content from papers",
-        registry=populated_registry,
+        registry=populated_registry,  # type: ignore[arg-type]
         similarity_threshold=threshold,
     )
 
@@ -326,12 +331,14 @@ async def test_similarity_threshold_tuning(
 
 
 @pytest.mark.asyncio
-async def test_curated_principle_duplicate_prevention(populated_registry) -> None:
+async def test_curated_principle_duplicate_prevention(
+    populated_registry: Registry,
+) -> None:
     """Verify that search-before-forge embodies Curated principle."""
     # Attempt to forge duplicate weather agent
     result = await search_before_forge(
         intent_text="Create an agent that queries weather APIs",
-        registry=populated_registry,
+        registry=populated_registry,  # type: ignore[arg-type]
         similarity_threshold=0.1,  # Low threshold for keyword matching
     )
 
@@ -355,13 +362,13 @@ async def test_curated_principle_duplicate_prevention(populated_registry) -> Non
 
 
 @pytest.mark.asyncio
-async def test_type_signature_consideration(temp_registry) -> None:
+async def test_type_signature_consideration(temp_registry: Registry) -> None:
     """Test that type signatures are preserved in registration."""
     # Register agent with specific type signature
     contract, _ = await forge_with_registration(
         intent_text="Parse JSON string to dictionary",
         agent_name="JSONParser",
-        registry=temp_registry,
+        registry=temp_registry,  # type: ignore[arg-type]
     )
 
     # Retrieve and check type signature
@@ -381,7 +388,7 @@ async def test_type_signature_consideration(temp_registry) -> None:
 
 
 @pytest.mark.asyncio
-async def test_integration_with_intent_parser(temp_registry) -> None:
+async def test_integration_with_intent_parser(temp_registry: Registry) -> None:
     """Verify integration with F-gent intent parsing."""
     # Complex intent with dependencies and constraints
     complex_intent = """
@@ -393,7 +400,7 @@ async def test_integration_with_intent_parser(temp_registry) -> None:
     contract, search_result = await forge_with_registration(
         intent_text=complex_intent,
         agent_name="APIValidator",
-        registry=temp_registry,
+        registry=temp_registry,  # type: ignore[arg-type]
         author="frank",
     )
 

@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Generic, TypeVar
 
-from runtime.base import Agent
+from bootstrap.types import Agent
 
 A = TypeVar("A")
 B = TypeVar("B")
@@ -27,6 +27,7 @@ B = TypeVar("B")
 
 class FailureType(Enum):
     """Types of failures the agent can simulate."""
+
     SYNTAX = "syntax"  # Syntax error (invalid Python)
     TYPE = "type"  # Type checking error (mypy)
     IMPORT = "import"  # Missing import error
@@ -40,6 +41,7 @@ class FailureType(Enum):
 @dataclass
 class FailingConfig:
     """Configuration for FailingAgent."""
+
     error_type: FailureType = FailureType.TYPE
     fail_count: int = -1  # -1 = always fail, N = fail N times then succeed
     error_message: str = ""  # Custom error message
@@ -53,7 +55,7 @@ class FailingConfig:
 
         messages = {
             FailureType.SYNTAX: f"SyntaxError: invalid syntax at line 42 (attempt {attempt})",
-            FailureType.TYPE: f"error: Unexpected keyword argument \"runtime\" for \"Agent\" [call-arg] (attempt {attempt})",
+            FailureType.TYPE: f'error: Unexpected keyword argument "runtime" for "Agent" [call-arg] (attempt {attempt})',
             FailureType.IMPORT: f"ImportError: No module named 'nonexistent_module' (attempt {attempt})",
             FailureType.RUNTIME: f"RuntimeError: Simulated runtime failure (attempt {attempt})",
             FailureType.TIMEOUT: f"TimeoutError: Operation timed out after 30s (attempt {attempt})",

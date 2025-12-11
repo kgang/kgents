@@ -15,12 +15,16 @@ Use Cases:
 - Performance optimization: Skip validation for debug-only fields
 """
 
+from __future__ import annotations
+
 import json
+from collections.abc import Iterator
 from typing import Any, Callable, Generic, Optional, TypeVar
 
 from agents.p.core import ParserConfig, ParseResult
 
 T = TypeVar("T")
+A = TypeVar("A")
 
 
 class LazyValidatedDict(Generic[T]):
@@ -38,10 +42,10 @@ class LazyValidatedDict(Generic[T]):
 
     def __init__(
         self,
-        raw_data: dict,
+        raw_data: dict[str, Any],
         schema: dict[str, type],
         coercers: Optional[dict[str, Callable[[Any], Any]]] = None,
-    ):
+    ) -> None:
         """
         Initialize lazy validated dict.
 
@@ -53,8 +57,8 @@ class LazyValidatedDict(Generic[T]):
         self._data = raw_data
         self._schema = schema
         self._coercers = coercers or {}
-        self._validated = {}  # Cache validated values
-        self._access_log = []  # Track which fields were accessed
+        self._validated: dict[str, Any] = {}  # Cache validated values
+        self._access_log: list[str] = []  # Track which fields were accessed
 
     def __getitem__(self, key: str) -> Any:
         """
@@ -116,7 +120,7 @@ class LazyValidatedDict(Generic[T]):
         """Check if key exists in raw data."""
         return key in self._data
 
-    def keys(self):
+    def keys(self) -> Any:
         """Return keys from raw data."""
         return self._data.keys()
 
@@ -183,7 +187,7 @@ class LazyValidatedDict(Generic[T]):
         else:
             return value
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """
         Convert to plain dict (validates all schema fields).
 
@@ -203,7 +207,7 @@ class LazyValidatedDict(Generic[T]):
         return self._access_log.copy()
 
 
-class LazyValidationParser:
+class LazyValidationParser(Generic[A]):
     """
     Parser that returns LazyValidatedDict for deferred validation.
 
@@ -216,10 +220,10 @@ class LazyValidationParser:
 
     def __init__(
         self,
-        schema: dict[str, type],
+        schema: dict[str, type[Any]],
         coercers: Optional[dict[str, Callable[[Any], Any]]] = None,
         config: Optional[ParserConfig] = None,
-    ):
+    ) -> None:
         """
         Initialize lazy validation parser.
 
@@ -232,7 +236,7 @@ class LazyValidationParser:
         self.coercers = coercers or {}
         self.config = config or ParserConfig()
 
-    def parse(self, text: str) -> ParseResult[LazyValidatedDict]:
+    def parse(self, text: str) -> ParseResult[LazyValidatedDict[A]]:
         """
         Parse text into LazyValidatedDict.
 
@@ -258,7 +262,7 @@ class LazyValidationParser:
                 )
 
             # Wrap in LazyValidatedDict (no validation yet)
-            lazy_dict = LazyValidatedDict(
+            lazy_dict: LazyValidatedDict[A] = LazyValidatedDict(
                 raw_data=data,
                 schema=self.schema,
                 coercers=self.coercers,
@@ -307,7 +311,9 @@ class LazyValidationParser:
                 strategy="lazy-validation",
             )
 
-    def parse_stream(self, tokens):
+    def parse_stream(
+        self, tokens: Iterator[str]
+    ) -> Iterator[ParseResult[LazyValidatedDict[A]]]:
         """
         Stream parsing (buffer and parse complete).
 
@@ -316,7 +322,7 @@ class LazyValidationParser:
         text = "".join(tokens)
         yield self.parse(text)
 
-    def configure(self, **config) -> "LazyValidationParser":
+    def configure(self, **config: Any) -> "LazyValidationParser[A]":
         """Return new parser with updated configuration."""
         new_config = ParserConfig(**{**vars(self.config), **config})
         new_config.validate()
@@ -335,7 +341,7 @@ def lazy_validation_parser(
     schema: dict[str, type],
     coercers: Optional[dict[str, Callable[[Any], Any]]] = None,
     config: Optional[ParserConfig] = None,
-) -> LazyValidationParser:
+) -> LazyValidationParser[Any]:
     """
     Create lazy validation parser.
 

@@ -176,7 +176,7 @@ class SimpleValueLedger:
     In production, integrate with the full ValueLedger.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.treasury = SimpleTreasury()
         self._agent_sheets: dict[str, SimpleBalanceSheet] = {}
 
@@ -361,7 +361,7 @@ class TensorValidator:
     Falls back to simple validation if unavailable.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._has_checker = HAS_VALUE_TENSOR
         if HAS_VALUE_TENSOR:
             self._checker = AntiDelusionChecker()
@@ -389,7 +389,7 @@ class TensorValidator:
             anomalies = list(consistency_result) if consistency_result else []
 
         # Check conservation laws (requires before/after state)
-        conservation_violations = []
+        conservation_violations: list[str] = []
         # In production, compare tensor._previous with current
 
         # Check dimension health
@@ -409,7 +409,7 @@ class TensorValidator:
         return TensorValidationReport(
             tensor_valid=len(anomalies) == 0,
             conservation_valid=len(conservation_violations) == 0,
-            anomalies=anomalies,
+            anomalies=anomalies,  # type: ignore[arg-type]
             violations=conservation_violations,
             dimensions_healthy=dimensions_healthy,
         )
@@ -574,7 +574,7 @@ class LedgerAuditor:
         # Bankruptcy check
         if sheet.assets < 0:
             findings["pass"] = False
-            findings["findings"].append(
+            findings["findings"].append(  # type: ignore[attr-defined]
                 {
                     "type": "bankruptcy",
                     "severity": "critical",
@@ -586,7 +586,7 @@ class LedgerAuditor:
 
         # Efficiency check
         if sheet.roc < 0.5 and sheet.gas_consumed > 100:
-            findings["findings"].append(
+            findings["findings"].append(  # type: ignore[attr-defined]
                 {
                     "type": "low_efficiency",
                     "severity": "warning",
@@ -600,7 +600,7 @@ class LedgerAuditor:
             avg_impact_per_tx = sheet.assets / sheet.transactions
 
             if avg_impact_per_tx > avg_gas_per_tx * 10:
-                findings["findings"].append(
+                findings["findings"].append(  # type: ignore[attr-defined]
                     {
                         "type": "suspicious_returns",
                         "severity": "warning",
@@ -626,7 +626,7 @@ class LedgerAuditor:
             self.ledger.get_agent_balance_sheet(a).assets
             for a in self.ledger.get_all_agents()
         )
-        return abs(total_impact - sum_agent_impact) < 0.001
+        return bool(abs(total_impact - sum_agent_impact) < 0.001)
 
 
 # =============================================================================

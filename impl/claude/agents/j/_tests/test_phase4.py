@@ -164,10 +164,10 @@ class TestJGentCoordinator:
 
     def test_jgent_name_includes_depth(self) -> None:
         """JGent name shows current depth."""
-        j0 = JGent()
+        j0: JGent[Any] = JGent()
         assert j0.name == "JGent[depth=0]"
 
-        j1 = JGent(depth=1)
+        j1: JGent[Any] = JGent(depth=1)
         assert j1.name == "JGent[depth=1]"
 
     def test_entropy_budget_diminishes_with_depth(self) -> None:
@@ -183,10 +183,10 @@ class TestJGentCoordinator:
         - depth 2: 0.25
         - depth 3: 0.125
         """
-        j0 = JGent(depth=0)
-        j1 = JGent(depth=1)
-        j2 = JGent(depth=2)
-        j3 = JGent(depth=3)
+        j0: JGent[Any] = JGent(depth=0)
+        j1: JGent[Any] = JGent(depth=1)
+        j2: JGent[Any] = JGent(depth=2)
+        j3: JGent[Any] = JGent(depth=3)
 
         # Geometric decay with decay_factor=0.5
         assert j0.entropy_budget == 1.0
@@ -196,7 +196,7 @@ class TestJGentCoordinator:
 
     def test_spawn_child_increments_depth(self) -> None:
         """Spawning child JGent increments depth."""
-        parent = JGent(depth=0)
+        parent: JGent[Any] = JGent(depth=0)
         child = parent.spawn_child()
 
         assert parent._depth == 0

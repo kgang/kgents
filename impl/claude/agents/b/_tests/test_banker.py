@@ -9,6 +9,8 @@ Tests for:
 - Value Ledger (transaction accounting)
 """
 
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 
 import pytest
@@ -890,6 +892,7 @@ class TestBankerIntegration:
             virtues=["improved_readability", "added_tests"],
         )
 
+        assert tx.tensor is not None
         assert tx.tensor.ethical.net_ethical_multiplier > 1.0
         assert "virtue:improved_readability" in tx.impact.multipliers
 

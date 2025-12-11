@@ -8,7 +8,10 @@ Tests the DNA protocol from spec/protocols/config.md:
 - DNA composition with modifiers
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
+from typing import Any
 
 import pytest
 from bootstrap.dna import (
@@ -83,8 +86,8 @@ class TestBaseDNA:
     def test_immutability(self) -> None:
         """DNA is frozen (immutable)."""
         dna = BaseDNA.germinate()
-        with pytest.raises(Exception):  # FrozenInstanceError
-            dna.exploration_budget = 0.5
+        with pytest.raises((AttributeError, Exception)):  # FrozenInstanceError
+            dna.exploration_budget = 0.5  # type: ignore[misc]
 
     def test_to_dict(self) -> None:
         """DNA can be converted to dict."""
@@ -578,7 +581,7 @@ class TestCustomDNA:
             warmth: float = 0.7
 
             @classmethod
-            def constraints(cls):
+            def constraints(cls) -> list[Constraint]:
                 base = super().constraints()
                 return base + [
                     Constraint(
@@ -588,7 +591,7 @@ class TestCustomDNA:
                     ),
                 ]
 
-            def _standard_expressions(self):
+            def _standard_expressions(self) -> dict[str, Any]:
                 base = super()._standard_expressions()
                 return {
                     **base,

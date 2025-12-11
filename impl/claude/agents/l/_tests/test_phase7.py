@@ -8,6 +8,8 @@ This test suite validates:
 - Full three-brain workflow
 """
 
+from __future__ import annotations
+
 from datetime import datetime
 
 import pytest
@@ -44,7 +46,7 @@ from agents.l import (
 
 
 @pytest.fixture
-async def sample_registry():
+async def sample_registry() -> Registry:
     """Create a registry with sample agents for testing."""
     registry = Registry()
 
@@ -107,7 +109,7 @@ async def sample_registry():
 
 
 @pytest.fixture
-async def sample_lineage():
+async def sample_lineage() -> LineageGraph:
     """Create a lineage graph with sample relationships."""
     lineage = LineageGraph()
 
@@ -129,7 +131,7 @@ async def sample_lineage():
 
 
 @pytest.fixture
-async def sample_lattice(sample_registry):
+async def sample_lattice(sample_registry: Registry) -> TypeLattice:
     """Create a type lattice with sample types."""
     lattice = TypeLattice(sample_registry)
 
@@ -155,8 +157,11 @@ class TestGraphBrain:
     """Test GraphBrain functionality."""
 
     async def test_initialization(
-        self, sample_registry, sample_lineage, sample_lattice
-    ):
+        self,
+        sample_registry: Registry,
+        sample_lineage: LineageGraph,
+        sample_lattice: TypeLattice,
+    ) -> None:
         """Test GraphBrain can be initialized."""
         brain = GraphBrain(sample_registry, sample_lineage, sample_lattice)
         assert brain.registry == sample_registry
@@ -164,8 +169,11 @@ class TestGraphBrain:
         assert brain.lattice == sample_lattice
 
     async def test_find_downstream_compatible(
-        self, sample_registry, sample_lineage, sample_lattice
-    ):
+        self,
+        sample_registry: Registry,
+        sample_lineage: LineageGraph,
+        sample_lattice: TypeLattice,
+    ) -> None:
         """Test finding agents that can receive output."""
         brain = GraphBrain(sample_registry, sample_lineage, sample_lattice)
 
@@ -178,8 +186,11 @@ class TestGraphBrain:
         assert "cleaner_1" in ids or "summarizer_1" in ids
 
     async def test_find_upstream_compatible(
-        self, sample_registry, sample_lineage, sample_lattice
-    ):
+        self,
+        sample_registry: Registry,
+        sample_lineage: LineageGraph,
+        sample_lattice: TypeLattice,
+    ) -> None:
         """Test finding agents that can feed input."""
         brain = GraphBrain(sample_registry, sample_lineage, sample_lattice)
 
@@ -191,7 +202,10 @@ class TestGraphBrain:
         assert "parser_1" in ids  # HTMLParser outputs StructuredData
 
     async def test_find_path(
-        self, sample_registry, sample_lineage, sample_lattice
+        self,
+        sample_registry: Registry,
+        sample_lineage: LineageGraph,
+        sample_lattice: TypeLattice,
     ) -> None:
         """Test finding composition path from source to target type."""
         brain = GraphBrain(sample_registry, sample_lineage, sample_lattice)
@@ -206,8 +220,11 @@ class TestGraphBrain:
         assert "analyzer_1" in path
 
     async def test_get_dependents(
-        self, sample_registry, sample_lineage, sample_lattice
-    ):
+        self,
+        sample_registry: Registry,
+        sample_lineage: LineageGraph,
+        sample_lattice: TypeLattice,
+    ) -> None:
         """Test finding dependents."""
         brain = GraphBrain(sample_registry, sample_lineage, sample_lattice)
 
@@ -219,7 +236,10 @@ class TestGraphBrain:
         assert "summarizer_1" in ids
 
     async def test_get_ancestors(
-        self, sample_registry, sample_lineage, sample_lattice
+        self,
+        sample_registry: Registry,
+        sample_lineage: LineageGraph,
+        sample_lattice: TypeLattice,
     ) -> None:
         """Test finding ancestors."""
         brain = GraphBrain(sample_registry, sample_lineage, sample_lattice)
@@ -232,8 +252,11 @@ class TestGraphBrain:
         assert isinstance(ancestors, list)
 
     async def test_create_graph_brain(
-        self, sample_registry, sample_lineage, sample_lattice
-    ):
+        self,
+        sample_registry: Registry,
+        sample_lineage: LineageGraph,
+        sample_lattice: TypeLattice,
+    ) -> None:
         """Test convenience function."""
         brain = await create_graph_brain(
             sample_registry, sample_lineage, sample_lattice
@@ -248,8 +271,11 @@ class TestQueryFusion:
     """Test QueryFusion functionality."""
 
     async def test_initialization(
-        self, sample_registry, sample_lineage, sample_lattice
-    ):
+        self,
+        sample_registry: Registry,
+        sample_lineage: LineageGraph,
+        sample_lattice: TypeLattice,
+    ) -> None:
         """Test QueryFusion can be initialized."""
         keyword = Search(sample_registry)
         semantic = SemanticBrain(SimpleEmbedder())
@@ -261,8 +287,11 @@ class TestQueryFusion:
         assert fusion.graph == graph
 
     async def test_query_classification_exact_name(
-        self, sample_registry, sample_lineage, sample_lattice
-    ):
+        self,
+        sample_registry: Registry,
+        sample_lineage: LineageGraph,
+        sample_lattice: TypeLattice,
+    ) -> None:
         """Test query type classification for exact names."""
         keyword = Search(sample_registry)
         semantic = SemanticBrain(SimpleEmbedder())
@@ -274,8 +303,11 @@ class TestQueryFusion:
         assert fusion._classify_query("Summarizer_v2") == QueryType.EXACT_NAME
 
     async def test_query_classification_semantic(
-        self, sample_registry, sample_lineage, sample_lattice
-    ):
+        self,
+        sample_registry: Registry,
+        sample_lineage: LineageGraph,
+        sample_lattice: TypeLattice,
+    ) -> None:
         """Test query type classification for semantic intent."""
         keyword = Search(sample_registry)
         semantic = SemanticBrain(SimpleEmbedder())
@@ -289,8 +321,11 @@ class TestQueryFusion:
         assert fusion._classify_query("analyze sentiment") == QueryType.SEMANTIC_INTENT
 
     async def test_query_classification_type_query(
-        self, sample_registry, sample_lineage, sample_lattice
-    ):
+        self,
+        sample_registry: Registry,
+        sample_lineage: LineageGraph,
+        sample_lattice: TypeLattice,
+    ) -> None:
         """Test query type classification for type queries."""
         keyword = Search(sample_registry)
         semantic = SemanticBrain(SimpleEmbedder())
@@ -302,8 +337,11 @@ class TestQueryFusion:
         assert fusion._classify_query("input:JSON output:Text") == QueryType.TYPE_QUERY
 
     async def test_query_classification_relationship(
-        self, sample_registry, sample_lineage, sample_lattice
-    ):
+        self,
+        sample_registry: Registry,
+        sample_lineage: LineageGraph,
+        sample_lattice: TypeLattice,
+    ) -> None:
         """Test query type classification for relationships."""
         keyword = Search(sample_registry)
         semantic = SemanticBrain(SimpleEmbedder())
@@ -317,12 +355,15 @@ class TestQueryFusion:
         )
 
     async def test_search_combines_results(
-        self, sample_registry, sample_lineage, sample_lattice
-    ):
+        self,
+        sample_registry: Registry,
+        sample_lineage: LineageGraph,
+        sample_lattice: TypeLattice,
+    ) -> None:
         """Test that search combines results from all brains."""
         keyword = Search(sample_registry)
         semantic = SemanticBrain(SimpleEmbedder())
-        entries_dict = {e.id: e for e in await sample_registry.list()}
+        entries_dict = {e.id: e for e in await sample_registry.list_entries()}
         await semantic.fit(entries_dict)
         graph = GraphBrain(sample_registry, sample_lineage, sample_lattice)
 
@@ -337,8 +378,11 @@ class TestQueryFusion:
         assert "parse" in response.query_interpretation.lower()
 
     async def test_create_query_fusion(
-        self, sample_registry, sample_lineage, sample_lattice
-    ):
+        self,
+        sample_registry: Registry,
+        sample_lineage: LineageGraph,
+        sample_lattice: TypeLattice,
+    ) -> None:
         """Test convenience function."""
         keyword = Search(sample_registry)
         semantic = SemanticBrain(SimpleEmbedder())
@@ -357,7 +401,7 @@ class TestQueryFusion:
 class TestVectorSemanticBrain:
     """Test VectorSemanticBrain functionality."""
 
-    async def test_add_and_search(self, sample_registry) -> None:
+    async def test_add_and_search(self, sample_registry: Registry) -> None:
         """Test adding entries and searching."""
         from agents.l import create_vector_backend
 
@@ -366,7 +410,7 @@ class TestVectorSemanticBrain:
         brain = VectorSemanticBrain(embedder, backend)
 
         # Add entries
-        entries = list(sample_registry._entries.values())
+        entries = await sample_registry.list_entries()
         await brain.add_batch(entries)
 
         # Search
@@ -376,7 +420,7 @@ class TestVectorSemanticBrain:
         # Should find HTMLParser
         assert any("parse" in r.entry.description.lower() for r in results)
 
-    async def test_remove_entry(self, sample_registry) -> None:
+    async def test_remove_entry(self, sample_registry: Registry) -> None:
         """Test removing entries."""
         from agents.l import create_vector_backend
 
@@ -385,7 +429,8 @@ class TestVectorSemanticBrain:
         brain = VectorSemanticBrain(embedder, backend)
 
         # Add an entry
-        entry = list(sample_registry._entries.values())[0]
+        all_entries = await sample_registry.list_entries()
+        entry = all_entries[0]
         await brain.add_entry(entry)
 
         count_before = await brain.count()
@@ -404,13 +449,16 @@ class TestPhase7Integration:
     """Test full three-brain hybrid workflow."""
 
     async def test_full_workflow(
-        self, sample_registry, sample_lineage, sample_lattice
+        self,
+        sample_registry: Registry,
+        sample_lineage: LineageGraph,
+        sample_lattice: TypeLattice,
     ) -> None:
         """Test complete three-brain search workflow."""
         # Setup all three brains
         keyword = Search(sample_registry)
         semantic = SemanticBrain(SimpleEmbedder())
-        entries_dict = {e.id: e for e in await sample_registry.list()}
+        entries_dict = {e.id: e for e in await sample_registry.list_entries()}
         await semantic.fit(entries_dict)
         graph = GraphBrain(sample_registry, sample_lineage, sample_lattice)
 
@@ -429,8 +477,11 @@ class TestPhase7Integration:
         assert response.query_type == QueryType.SEMANTIC_INTENT
 
     async def test_graph_brain_with_registry(
-        self, sample_registry, sample_lineage, sample_lattice
-    ):
+        self,
+        sample_registry: Registry,
+        sample_lineage: LineageGraph,
+        sample_lattice: TypeLattice,
+    ) -> None:
         """Test GraphBrain integrated with Registry."""
         brain = GraphBrain(sample_registry, sample_lineage, sample_lattice)
 
@@ -452,7 +503,10 @@ class TestPhase7EdgeCases:
     """Test edge cases and error handling."""
 
     async def test_empty_search(
-        self, sample_registry, sample_lineage, sample_lattice
+        self,
+        sample_registry: Registry,
+        sample_lineage: LineageGraph,
+        sample_lattice: TypeLattice,
     ) -> None:
         """Test search with no results."""
         keyword = Search(sample_registry)
@@ -469,8 +523,11 @@ class TestPhase7EdgeCases:
         assert isinstance(response.results, list)
 
     async def test_graph_brain_nonexistent_artifact(
-        self, sample_registry, sample_lineage, sample_lattice
-    ):
+        self,
+        sample_registry: Registry,
+        sample_lineage: LineageGraph,
+        sample_lattice: TypeLattice,
+    ) -> None:
         """Test GraphBrain with nonexistent artifact."""
         brain = GraphBrain(sample_registry, sample_lineage, sample_lattice)
 
@@ -483,8 +540,11 @@ class TestPhase7EdgeCases:
         assert results == []
 
     async def test_fusion_weights_sum_to_one(
-        self, sample_registry, sample_lineage, sample_lattice
-    ):
+        self,
+        sample_registry: Registry,
+        sample_lineage: LineageGraph,
+        sample_lattice: TypeLattice,
+    ) -> None:
         """Test that fusion weights always sum to 1.0."""
         keyword = Search(sample_registry)
         semantic = SemanticBrain(SimpleEmbedder())

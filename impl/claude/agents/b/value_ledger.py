@@ -214,7 +214,7 @@ class ValueOracle:
     | Ethical | Policy compliant + positive externalities | 1.2x multiplier |
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.complexity_oracle = ComplexityOracle()
 
     def calculate_impact(self, output: AgentOutput) -> Impact:
@@ -451,7 +451,7 @@ class ValueLedger:
     Resembles a corporate balance sheet, not a log file.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.treasury = Treasury()
         self.oracle = ValueOracle()
         self.complexity_oracle = ComplexityOracle()
@@ -607,7 +607,7 @@ class RoCMonitor:
     | > 2.0 | High yield | Exemplar |
     """
 
-    def __init__(self, ledger: ValueLedger):
+    def __init__(self, ledger: ValueLedger) -> None:
         self.ledger = ledger
         self.thresholds = RoCThresholds()
 

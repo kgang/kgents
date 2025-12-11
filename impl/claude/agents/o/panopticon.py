@@ -27,7 +27,7 @@ import asyncio
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, AsyncIterator, Callable
+from typing import Any, AsyncIterator, Callable, cast
 
 from .axiological import AxiologicalObserver, RoCMonitor
 from .bootstrap_witness import (
@@ -36,6 +36,7 @@ from .bootstrap_witness import (
 )
 from .observer import (
     BaseObserver,
+    EntropyEvent,
     ObservationContext,
     ObservationResult,
     ObserverLevel,
@@ -46,7 +47,6 @@ from .telemetry import TelemetryObserver, TopologyMapper
 # VoI integration (optional)
 try:
     from .voi_observer import (
-        ObservationDepth,
         VoIAwareObserver,
         VoIObservationConfig,
     )
@@ -281,13 +281,13 @@ class IntegratedPanopticon(BaseObserver):
         alert_callback: Callable[[PanopticonAlert], None] | None = None,
         max_alerts: int = 100,
         bootstrap_check_interval_s: float = 60.0,
-    ):
+    ) -> None:
         super().__init__(observer_id=observer_id)
         self._level = ObserverLevel.SYSTEM
 
         # Dimension X: Telemetry
         self.telemetry = telemetry or TelemetryObserver()
-        self.topology = topology or TopologyMapper()
+        self.topology: TopologyMapper = topology or TopologyMapper()
 
         # Dimension Y: Semantics
         self.semantic = semantic
@@ -367,6 +367,37 @@ class IntegratedPanopticon(BaseObserver):
     # Status Collection
     # -------------------------------------------------------------------------
 
+    def _calculate_percentile(self, histogram: Any, percentile: float) -> float:
+        """
+        Calculate percentile from histogram buckets.
+
+        Args:
+            histogram: HistogramValue with buckets
+            percentile: Percentile to calculate (0.0-1.0)
+
+        Returns:
+            Estimated percentile value
+        """
+        if histogram.count == 0:
+            return 0.0
+
+        target_count = histogram.count * percentile
+        cumulative = 0
+        prev_le = 0.0
+
+        for bucket in histogram.buckets:
+            cumulative += bucket.count
+            if cumulative >= target_count:
+                # Linear interpolation within bucket
+                if bucket.count > 0:
+                    ratio = (target_count - (cumulative - bucket.count)) / bucket.count
+                    return float(prev_le + (cast(float, bucket.le) - prev_le) * ratio)
+                return float(bucket.le)
+            prev_le = cast(float, bucket.le)
+
+        # If we get here, return the last bucket upper bound
+        return float(histogram.buckets[-1].le) if histogram.buckets else 0.0
+
     def _collect_telemetry_status(self) -> TelemetryStatus:
         """Collect Dimension X status."""
         status = TelemetryStatus()
@@ -377,9 +408,9 @@ class IntegratedPanopticon(BaseObserver):
         # Aggregate latency histogram
         latency_hist = metrics.get_histogram("agent.latency_ms")
         if latency_hist:
-            status.latency_p50_ms = latency_hist.percentile(0.50)
-            status.latency_p95_ms = latency_hist.percentile(0.95)
-            status.latency_p99_ms = latency_hist.percentile(0.99)
+            status.latency_p50_ms = self._calculate_percentile(latency_hist, 0.50)
+            status.latency_p95_ms = self._calculate_percentile(latency_hist, 0.95)
+            status.latency_p99_ms = self._calculate_percentile(latency_hist, 0.99)
             status.total_invocations = latency_hist.count
 
         # Error rate
@@ -391,7 +422,7 @@ class IntegratedPanopticon(BaseObserver):
         # Topology
         graph = self.topology.get_topology()
         status.active_agents = len(graph.nodes)
-        status.composition_count = sum(e.count for e in graph.edges)
+        status.composition_count = sum(e[2] for e in graph.edges)
 
         return status
 
@@ -923,15 +954,18 @@ class PanopticonObserver(BaseObserver):
 
         return obs_result
 
-    def record_entropy(self, context: ObservationContext, error: Exception) -> None:
+    def record_entropy(
+        self, context: ObservationContext, error: Exception
+    ) -> EntropyEvent:
         """Record entropy (error) to Panopticon."""
-        self.panopticon.telemetry.record_entropy(context, error)
+        entropy_event = self.panopticon.telemetry.record_entropy(context, error)
         self.panopticon.add_alert(
             AlertSeverity.ERROR,
             "telemetry",
             f"Error in {context.agent_name}: {type(error).__name__}",
             {"error": str(error)},
         )
+        return entropy_event
 
 
 def create_panopticon_observer(

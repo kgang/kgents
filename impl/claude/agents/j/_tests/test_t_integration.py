@@ -19,6 +19,8 @@ All J+T tools are marked with __is_test__ = True to distinguish them
 from production agents.
 """
 
+from __future__ import annotations
+
 from typing import Any
 
 import pytest
@@ -155,9 +157,11 @@ class TestToolTemplate:
             template_source="pass",
         )
 
-        # Should raise FrozenInstanceError
-        with pytest.raises(Exception):  # dataclasses.FrozenInstanceError
-            template.name = "Changed"
+        # Should raise FrozenInstanceError or AttributeError for read-only property
+        with pytest.raises(
+            (Exception, AttributeError)
+        ):  # dataclasses.FrozenInstanceError or property error
+            template.name = "Changed"  # type: ignore[misc]
 
 
 # --- JITToolMeta Tests ---
@@ -187,7 +191,7 @@ class TestJITToolMeta:
 
     def test_jit_tool_meta_with_template(
         self, simple_tool_source: AgentSource, custom_template: ToolTemplate
-    ):
+    ) -> None:
         """Test JITToolMeta with template reference."""
         jit_meta = JITAgentMeta(
             source=simple_tool_source,
@@ -266,9 +270,8 @@ class FailingTool:
         result = await tool.invoke("test")
 
         assert result.is_err()
-        error = result.error  # Access error directly on Err
-        assert isinstance(error, ToolError)
-        assert error.error_type == ToolErrorType.FATAL
+        assert isinstance(result.error, ToolError)  # type: ignore[union-attr]
+        assert result.error.error_type == ToolErrorType.FATAL  # type: ignore[union-attr]
 
     @pytest.mark.asyncio
     async def test_wrapper_meta_property(self, simple_tool_source: AgentSource) -> None:
@@ -286,7 +289,7 @@ class FailingTool:
     @pytest.mark.asyncio
     async def test_wrapper_jit_tool_meta_property(
         self, simple_tool_source: AgentSource
-    ):
+    ) -> None:
         """Test wrapper jit_tool_meta property."""
         tool = await create_tool_from_source(
             source=simple_tool_source,
@@ -602,12 +605,12 @@ class PrefixAdder:
         """Test composing JIT tool with an adapter agent."""
 
         # Create adapter that unwraps Result then processes
-        class UnwrapAndCount(Agent[Result, int]):
+        class UnwrapAndCount(Agent[Result[Any, Any], int]):
             @property
             def name(self) -> str:
                 return "UnwrapAndCount"
 
-            async def invoke(self, input: Result) -> int:
+            async def invoke(self, input: Result[Any, Any]) -> int:
                 if input.is_ok():
                     return len(input.unwrap())
                 return -1
@@ -729,7 +732,7 @@ class MaliciousTool:
 
         # Should fail because eval is blocked
         assert result.is_err()
-        assert result.error.error_type == ToolErrorType.FATAL
+        assert result.error.error_type == ToolErrorType.FATAL  # type: ignore[union-attr]
 
     @pytest.mark.asyncio
     async def test_sandbox_isolation(self) -> None:
@@ -791,8 +794,7 @@ class DetailedError:
         result = await tool.invoke("test")
 
         assert result.is_err()
-        error = result.error  # Access error directly on Err
-        assert "DetailedError" in error.tool_name
+        assert "DetailedError" in result.error.tool_name  # type: ignore[union-attr]
 
 
 # --- Metadata and Provenance Tests ---
@@ -939,9 +941,8 @@ class ErrorTypeTool:
         result = await tool.invoke("test")
 
         assert result.is_err()
-        error = result.error  # Access error directly on Err
-        assert isinstance(error, ToolError)
-        assert error.error_type == ToolErrorType.FATAL
+        assert isinstance(result.error, ToolError)  # type: ignore[union-attr]
+        assert result.error.error_type == ToolErrorType.FATAL  # type: ignore[union-attr]
 
     @pytest.mark.asyncio
     async def test_tool_meta_minimal_factory(self) -> None:

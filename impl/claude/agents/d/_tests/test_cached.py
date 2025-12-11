@@ -11,6 +11,7 @@ Validates:
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import pytest
 from agents.d import CachedAgent, PersistentAgent, VolatileAgent
@@ -234,13 +235,13 @@ async def test_backend_write_failure_preserves_cache() -> None:
 
     # Create a backend that will fail on save
     class FailingBackend:
-        async def load(self):
+        async def load(self) -> TestState:
             return TestState(value=1, label="old")
 
-        async def save(self, state):
+        async def save(self, state: TestState) -> None:
             raise RuntimeError("Backend write failed!")
 
-        async def history(self, limit=None):
+        async def history(self, limit: int | None = None) -> list[Any]:
             return []
 
     cache = VolatileAgent(_state=TestState(value=1, label="old"))

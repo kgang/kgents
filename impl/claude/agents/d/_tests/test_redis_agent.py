@@ -5,11 +5,16 @@ Note: Tests are skipped if redis package not installed or server not available.
 Uses fakeredis for unit tests when available.
 """
 
+from __future__ import annotations
+
+from collections.abc import AsyncGenerator
 from dataclasses import dataclass
 from enum import Enum
-from typing import List
+from typing import Any, TypeVar
 
 import pytest
+
+S = TypeVar("S")
 
 # Check if dependencies are available
 try:
@@ -51,7 +56,7 @@ class SimpleState:
 @dataclass
 class NestedState:
     simple: SimpleState
-    tags: List[str]
+    tags: list[str]
 
 
 class Priority(Enum):
@@ -65,7 +70,7 @@ class EnumState:
     count: int
 
 
-class FakeRedisAgent(RedisAgent):
+class FakeRedisAgent(RedisAgent[S]):
     """RedisAgent using fakeredis for testing without a real server."""
 
     async def connect(self) -> None:
@@ -80,12 +85,12 @@ class FakeRedisAgent(RedisAgent):
 
 
 @pytest.fixture
-async def fake_redis_agent():
+async def fake_redis_agent() -> AsyncGenerator[FakeRedisAgent[SimpleState], None]:
     """Create a fake Redis agent for testing."""
     if not FAKEREDIS_AVAILABLE:
         pytest.skip("fakeredis not installed")
 
-    agent = FakeRedisAgent(
+    agent: FakeRedisAgent[SimpleState] = FakeRedisAgent(
         redis_url="redis://fake",
         key="test:state",
         schema=SimpleState,
@@ -104,7 +109,9 @@ class TestRedisBasicOperations:
     """Tests for basic CRUD operations with Redis."""
 
     @pytest.mark.asyncio
-    async def test_save_and_load(self, fake_redis_agent) -> None:
+    async def test_save_and_load(
+        self, fake_redis_agent: FakeRedisAgent[SimpleState]
+    ) -> None:
         """State round-trips correctly."""
         state = SimpleState(value=42, name="test")
         await fake_redis_agent.save(state)
@@ -114,13 +121,17 @@ class TestRedisBasicOperations:
         assert loaded.name == "test"
 
     @pytest.mark.asyncio
-    async def test_load_without_state_raises(self, fake_redis_agent) -> None:
+    async def test_load_without_state_raises(
+        self, fake_redis_agent: FakeRedisAgent[SimpleState]
+    ) -> None:
         """Loading non-existent state raises StateNotFoundError."""
         with pytest.raises(StateNotFoundError):
             await fake_redis_agent.load()
 
     @pytest.mark.asyncio
-    async def test_multiple_saves(self, fake_redis_agent) -> None:
+    async def test_multiple_saves(
+        self, fake_redis_agent: FakeRedisAgent[SimpleState]
+    ) -> None:
         """Multiple saves update state, load returns latest."""
         await fake_redis_agent.save(SimpleState(value=1, name="v1"))
         await fake_redis_agent.save(SimpleState(value=2, name="v2"))
@@ -131,7 +142,7 @@ class TestRedisBasicOperations:
         assert loaded.name == "v3"
 
     @pytest.mark.asyncio
-    async def test_exists(self, fake_redis_agent) -> None:
+    async def test_exists(self, fake_redis_agent: FakeRedisAgent[SimpleState]) -> None:
         """exists() correctly detects state presence."""
         assert not await fake_redis_agent.exists()
 
@@ -139,7 +150,7 @@ class TestRedisBasicOperations:
         assert await fake_redis_agent.exists()
 
     @pytest.mark.asyncio
-    async def test_delete(self, fake_redis_agent) -> None:
+    async def test_delete(self, fake_redis_agent: FakeRedisAgent[SimpleState]) -> None:
         """delete() removes state and history."""
         await fake_redis_agent.save(SimpleState(value=1, name="test"))
         assert await fake_redis_agent.exists()
@@ -149,7 +160,9 @@ class TestRedisBasicOperations:
         assert not await fake_redis_agent.exists()
 
     @pytest.mark.asyncio
-    async def test_delete_nonexistent(self, fake_redis_agent) -> None:
+    async def test_delete_nonexistent(
+        self, fake_redis_agent: FakeRedisAgent[SimpleState]
+    ) -> None:
         """delete() returns False for non-existent key."""
         result = await fake_redis_agent.delete()
         assert result is False
@@ -160,7 +173,9 @@ class TestRedisHistory:
     """Tests for history functionality."""
 
     @pytest.mark.asyncio
-    async def test_history_returns_previous_states(self, fake_redis_agent) -> None:
+    async def test_history_returns_previous_states(
+        self, fake_redis_agent: FakeRedisAgent[SimpleState]
+    ) -> None:
         """History contains previous states, not current."""
         await fake_redis_agent.save(SimpleState(value=1, name="first"))
         await fake_redis_agent.save(SimpleState(value=2, name="second"))
@@ -172,7 +187,9 @@ class TestRedisHistory:
         assert history[1].value == 1  # Oldest
 
     @pytest.mark.asyncio
-    async def test_history_with_limit(self, fake_redis_agent) -> None:
+    async def test_history_with_limit(
+        self, fake_redis_agent: FakeRedisAgent[SimpleState]
+    ) -> None:
         """History respects limit parameter."""
         for i in range(5):
             await fake_redis_agent.save(SimpleState(value=i, name=f"v{i}"))
@@ -183,7 +200,9 @@ class TestRedisHistory:
         assert history[1].value == 2
 
     @pytest.mark.asyncio
-    async def test_history_empty_initially(self, fake_redis_agent) -> None:
+    async def test_history_empty_initially(
+        self, fake_redis_agent: FakeRedisAgent[SimpleState]
+    ) -> None:
         """Empty history for new agent."""
         history = await fake_redis_agent.history()
         assert history == []
@@ -196,7 +215,7 @@ class TestRedisComplexTypes:
     @pytest.mark.asyncio
     async def test_nested_dataclass(self) -> None:
         """Nested dataclasses serialize and deserialize correctly."""
-        agent = FakeRedisAgent(
+        agent: FakeRedisAgent[NestedState] = FakeRedisAgent(
             redis_url="redis://fake",
             key="test:nested",
             schema=NestedState,
@@ -218,7 +237,7 @@ class TestRedisComplexTypes:
     @pytest.mark.asyncio
     async def test_enum_serialization(self) -> None:
         """Enums serialize to values and deserialize back."""
-        agent = FakeRedisAgent(
+        agent: FakeRedisAgent[EnumState] = FakeRedisAgent(
             redis_url="redis://fake",
             key="test:enum",
             schema=EnumState,
@@ -434,7 +453,7 @@ class TestRedisLiveServer:
     """Integration tests with real Redis server."""
 
     @pytest.fixture
-    async def live_agent(self):
+    async def live_agent(self) -> AsyncGenerator[RedisAgent[SimpleState], None]:
         """Create agent connected to real Redis."""
         agent = create_redis_agent(
             redis_url="redis://localhost:6379",
@@ -447,7 +466,7 @@ class TestRedisLiveServer:
         await agent.close()
 
     @pytest.mark.asyncio
-    async def test_real_save_load(self, live_agent) -> None:
+    async def test_real_save_load(self, live_agent: RedisAgent[SimpleState]) -> None:
         """State persists in real Redis."""
         await live_agent.save(SimpleState(value=42, name="live"))
         loaded = await live_agent.load()

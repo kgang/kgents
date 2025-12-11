@@ -52,7 +52,7 @@ try:
     DSPY_AVAILABLE = True
 except ImportError:
     DSPY_AVAILABLE = False
-    dspy = None  # type: ignore
+    dspy = None
 
 
 # --- DSPy Availability Check ---
@@ -182,7 +182,7 @@ class DSPyModuleWrapper:
 
     _dspy_module: Any = field(default=None, init=False)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         require_dspy()
         self._build_module()
 
@@ -195,7 +195,7 @@ class DSPyModuleWrapper:
         else:
             self._dspy_module = dspy.Predict(dspy_sig)
 
-    def forward(self, **kwargs) -> Any:
+    def forward(self, **kwargs: Any) -> Any:
         """Execute the DSPy module."""
         return self._dspy_module(**kwargs)
 
@@ -255,7 +255,7 @@ class DSPyBootstrapFewShot:
         # Create metric wrapper
         output_name = signature.output_names[0] if signature.output_names else "output"
 
-        def dspy_metric(example, pred, _trace=None):
+        def dspy_metric(example: Any, pred: Any, _trace: Any = None) -> float:
             pred_value = getattr(pred, output_name, None)
             label_value = example.get(output_name)
             try:
@@ -380,7 +380,7 @@ class DSPyMIPROv2:
         # Create metric wrapper
         output_name = signature.output_names[0] if signature.output_names else "output"
 
-        def dspy_metric(example, pred, _trace=None):
+        def dspy_metric(example: Any, pred: Any, _trace: Any = None) -> float:
             pred_value = getattr(pred, output_name, None)
             label_value = example.get(output_name)
             try:
@@ -1042,6 +1042,6 @@ def create_anthropic_llm_func(
             max_tokens=max_tokens,
             messages=[{"role": "user", "content": prompt}],
         )
-        return response.content[0].text if response.content else ""
+        return response.content[0].text if response.content else ""  # type: ignore[union-attr]
 
     return llm_func

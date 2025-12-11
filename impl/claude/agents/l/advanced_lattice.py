@@ -15,6 +15,7 @@ Philosophy:
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from .lattice import (
     SubtypeEdge,
@@ -36,12 +37,12 @@ class UnionType:
     members: tuple[str, ...]  # Frozen for hashing
     id: str = ""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.id:
             # Create canonical ID from sorted members
             self.id = " | ".join(sorted(self.members))
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.members)
 
     def contains(self, type_id: str) -> bool:
@@ -75,11 +76,11 @@ class IntersectionType:
     members: tuple[str, ...]
     id: str = ""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.id:
             self.id = " & ".join(sorted(self.members))
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.members)
 
     def requires_all(self, type_ids: list[str]) -> bool:
@@ -108,7 +109,7 @@ class TypePath:
     steps: tuple[str, ...]  # Type IDs visited
     cost: float = 1.0  # Total adaptation cost
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self.source, self.target, self.steps))
 
 
@@ -158,7 +159,7 @@ class CachedLattice(TypeLattice):
             self._maybe_evict(self._join_cache)
         return self._join_cache[key]
 
-    def _maybe_evict(self, cache: dict) -> None:
+    def _maybe_evict(self, cache: dict[Any, Any]) -> None:
         """Evict oldest entries if cache is too large."""
         if len(cache) > self._cache_size:
             # Simple FIFO eviction (dict maintains insertion order in Python 3.7+)

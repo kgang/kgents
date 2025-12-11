@@ -344,7 +344,7 @@ class HallucinationDetector:
         self, traces: list[UnreliableTrace]
     ) -> list[HallucinationIndicator]:
         """Detect temporal inconsistencies."""
-        indicators = []
+        indicators: list[HallucinationIndicator] = []
 
         if len(traces) < 2:
             return indicators

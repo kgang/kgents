@@ -129,7 +129,7 @@ class JobSpec:
         args = [self.code] if self.image.args is None else self.image.args + [self.code]
 
         # Build container spec
-        container = {
+        container: dict[str, Any] = {
             "name": "executor",
             "image": self.image.name,
             "imagePullPolicy": self.image.pull_policy,
@@ -153,7 +153,7 @@ class JobSpec:
         }
 
         # Build pod spec
-        pod_spec = {
+        pod_spec: dict[str, Any] = {
             "restartPolicy": "Never",  # Don't restart failed jobs
             "containers": [container],
             # Write to /tmp for read-only root

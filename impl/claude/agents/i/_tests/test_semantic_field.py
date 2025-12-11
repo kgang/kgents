@@ -10,6 +10,8 @@ Tests:
 - Safety and economic signals
 """
 
+from typing import Any
+
 import pytest
 from agents.i.semantic_field import (
     FieldCoordinate,
@@ -114,7 +116,7 @@ class TestSemanticPheromone:
             target_domain="graph",
             confidence=0.8,
         )
-        pheromone = SemanticPheromone(
+        pheromone: SemanticPheromone[MetaphorPayload] = SemanticPheromone(
             id="test-1",
             emitter="psi",
             kind=SemanticPheromoneKind.METAPHOR,
@@ -131,7 +133,7 @@ class TestSemanticPheromone:
 
     def test_pheromone_decay(self) -> None:
         """Test pheromone decay over time."""
-        pheromone = SemanticPheromone(
+        pheromone: SemanticPheromone[dict[str, Any]] = SemanticPheromone(
             id="test-1",
             emitter="psi",
             kind=SemanticPheromoneKind.METAPHOR,
@@ -141,13 +143,13 @@ class TestSemanticPheromone:
         )
 
         # Decay
-        new_intensity = pheromone.decay(1.0)
+        new_intensity: float = pheromone.decay(1.0)
         assert new_intensity < 1.0
         assert pheromone.intensity == new_intensity
 
     def test_pheromone_expires(self) -> None:
         """Test pheromone expiration after many decays."""
-        pheromone = SemanticPheromone(
+        pheromone: SemanticPheromone[dict[str, Any]] = SemanticPheromone(
             id="test-1",
             emitter="psi",
             kind=SemanticPheromoneKind.WARNING,  # Fast decay

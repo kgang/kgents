@@ -323,7 +323,7 @@ async def with_retry(
     """
     if is_transient is None:
 
-        def is_transient(e):
+        def is_transient(e: BaseException) -> bool:
             return isinstance(e, TransientError)
 
     async def retry_transform(state: RetryState[B]) -> RetryState[B]:

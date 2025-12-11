@@ -29,8 +29,8 @@ from agents.d.protocol import DataAgent
 try:
     from bootstrap.dna import DNA, DNAValidationError
 except ImportError:
-    DNA = Any
-    DNAValidationError = Exception
+    DNA = Any  # type: ignore[misc,assignment]
+    DNAValidationError = Exception  # type: ignore[misc,assignment]
 
 
 # === Type Variables ===
@@ -399,13 +399,15 @@ class HypotheticalProjector:
         # Import here to avoid circular dependency
         from agents.d.volatile import VolatileAgent
 
-        volatile_class = volatile_class or VolatileAgent
-
         # Clone current state
         current_state = await real_projector._root.load()
 
         # Create hypothetical root with cloned state
-        hypothetical_root = volatile_class(_state=current_state)
+        if volatile_class is None:
+            hypothetical_root: DataAgent[Any] = VolatileAgent(_state=current_state)
+        else:
+            # For custom volatile classes, assume they accept _state parameter
+            hypothetical_root = volatile_class(_state=current_state)  # type: ignore[call-arg]
 
         return cls(hypothetical_root)
 

@@ -510,7 +510,7 @@ class OpenTelemetryExporter(MetricsExporter):
     ):
         super().__init__(observer, config)
         self._running = False
-        self._export_task: asyncio.Task | None = None
+        self._export_task: asyncio.Task[None] | None = None
 
     def export(self) -> str:
         """
@@ -707,7 +707,9 @@ def create_metrics_exporter(
         else MetricsExportConfig()
     )
 
-    exporters = {
+    exporters: dict[
+        str, type[PrometheusExporter] | type[OpenTelemetryExporter] | type[JSONExporter]
+    ] = {
         "prometheus": PrometheusExporter,
         "opentelemetry": OpenTelemetryExporter,
         "otel": OpenTelemetryExporter,

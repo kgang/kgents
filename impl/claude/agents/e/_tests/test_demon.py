@@ -334,6 +334,7 @@ class TestLayer1Syntax:
         self, demon: TeleologicalDemon, simple_phage: Phage
     ) -> None:
         """Test valid syntax passes layer 1."""
+        assert simple_phage.mutation is not None
         result = demon._check_layer1_syntax(simple_phage.mutation)
         assert result.passed
         assert result.syntax_valid
@@ -348,6 +349,7 @@ class TestLayer1Syntax:
 
         assert not result.passed
         assert result.rejection_reason == RejectionReason.SYNTAX_ERROR
+        assert result.rejection_detail is not None
         assert "Original code" in result.rejection_detail
 
     def test_invalid_mutated_syntax_fails(self, demon: TeleologicalDemon) -> None:
@@ -360,6 +362,7 @@ class TestLayer1Syntax:
 
         assert not result.passed
         assert result.rejection_reason == RejectionReason.SYNTAX_ERROR
+        assert result.rejection_detail is not None
         assert "Mutated code" in result.rejection_detail
 
     def test_diff_too_large_fails(self, demon: TeleologicalDemon) -> None:
@@ -534,6 +537,7 @@ def calculate(x):
         result = demon._check_layer3_teleological(mutation)
         assert not result.passed
         assert result.rejection_reason == RejectionReason.PARASITIC_PATTERN
+        assert result.rejection_detail is not None
         assert "hardcoding" in result.rejection_detail
 
     def test_parasitic_pattern_pass_only_fails(self, demon: TeleologicalDemon) -> None:
@@ -913,6 +917,7 @@ class TestDemonIntegration:
 
         result = demon._check_layer3_teleological(mutation)
         assert not result.passed
+        assert result.rejection_detail is not None
         assert "always_none" in result.rejection_detail
 
     def test_intent_alignment_recorded_on_phage(

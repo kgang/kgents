@@ -376,7 +376,7 @@ class TestHoloMap:
         assert hm.landmark_count == 0
         assert hm.edge_count == 0
 
-    def test_get_landmark(self, sample_map) -> None:
+    def test_get_landmark(self, sample_map: HoloMap) -> None:
         """Get landmark by ID."""
         auth = sample_map.get_landmark("auth")
         assert auth is not None
@@ -385,7 +385,7 @@ class TestHoloMap:
         missing = sample_map.get_landmark("nonexistent")
         assert missing is None
 
-    def test_nearest_landmark(self, sample_map) -> None:
+    def test_nearest_landmark(self, sample_map: HoloMap) -> None:
         """Find nearest landmark."""
         # Nearest to origin
         nearest = sample_map.nearest_landmark([0.0, 0.0])
@@ -395,34 +395,35 @@ class TestHoloMap:
 
         # Nearest to auth location
         nearest = sample_map.nearest_landmark([1.0, 0.0])
+        assert nearest is not None
         assert nearest.id == "auth"
 
-    def test_landmarks_within(self, sample_map) -> None:
+    def test_landmarks_within(self, sample_map: HoloMap) -> None:
         """Find landmarks within radius."""
         within = sample_map.landmarks_within([0.0, 0.0], radius=1.5)
         assert len(within) >= 2  # auth and logging at least
 
-    def test_has_path_direct(self, sample_map) -> None:
+    def test_has_path_direct(self, sample_map: HoloMap) -> None:
         """Check path existence for connected landmarks."""
         assert sample_map.has_path([1.0, 0.0], [1.5, 0.5])  # auth -> retry
 
-    def test_has_path_indirect(self, sample_map) -> None:
+    def test_has_path_indirect(self, sample_map: HoloMap) -> None:
         """Check path existence through intermediates."""
         # auth -> retry -> error
         assert sample_map.has_path([1.0, 0.0], [2.0, 0.0])
 
-    def test_has_path_same_landmark(self, sample_map) -> None:
+    def test_has_path_same_landmark(self, sample_map: HoloMap) -> None:
         """Path to self always exists."""
         assert sample_map.has_path([1.0, 0.0], [1.0, 0.0])
 
-    def test_get_paved_path(self, sample_map) -> None:
+    def test_get_paved_path(self, sample_map: HoloMap) -> None:
         """Get desire-line path between landmarks."""
         path = sample_map.get_paved_path([1.0, 0.0], [2.0, 0.0])
         assert len(path) >= 2
         assert path[0].id == "auth"
         assert path[-1].id == "error"
 
-    def test_get_paved_path_prefers_high_weight(self, sample_map) -> None:
+    def test_get_paved_path_prefers_high_weight(self, sample_map: HoloMap) -> None:
         """Path should prefer high-weight edges."""
         # auth -> retry (0.8) -> error (0.6) = cost 1.25 + 1.67 = 2.92
         # auth -> error (0.3) = cost 3.33
@@ -432,7 +433,7 @@ class TestHoloMap:
         labels = [p.label for p in path]
         assert "Retry Logic" in labels or len(path) == 2
 
-    def test_adjacent_to(self, sample_map) -> None:
+    def test_adjacent_to(self, sample_map: HoloMap) -> None:
         """Get adjacent landmarks."""
         adjacent = sample_map.adjacent_to([1.0, 0.0])  # auth
         adjacent_ids = {a.id for a in adjacent}
@@ -440,12 +441,12 @@ class TestHoloMap:
         assert "retry" in adjacent_ids
         assert "error" in adjacent_ids
 
-    def test_edges_from(self, sample_map) -> None:
+    def test_edges_from(self, sample_map: HoloMap) -> None:
         """Get edges from a landmark."""
         edges = sample_map.edges_from("auth")
         assert len(edges) >= 3  # retry, error, logging (+ reverses)
 
-    def test_resolution_at(self, sample_map) -> None:
+    def test_resolution_at(self, sample_map: HoloMap) -> None:
         """Get resolution at different distances."""
         # At origin (center) - full resolution
         res = sample_map.resolution_at([0.0, 0.0])
@@ -455,14 +456,14 @@ class TestHoloMap:
         res = sample_map.resolution_at([10.0, 0.0])
         assert res == 0.0
 
-    def test_get_focal_landmarks(self, sample_map) -> None:
+    def test_get_focal_landmarks(self, sample_map: HoloMap) -> None:
         """Get landmarks in focal zone."""
         focal = sample_map.get_focal_landmarks()
         # auth and logging are within inner_radius=1.0
         focal_ids = {l.id for l in focal}
         assert "auth" in focal_ids or "logging" in focal_ids
 
-    def test_coverage(self, sample_map) -> None:
+    def test_coverage(self, sample_map: HoloMap) -> None:
         """Coverage estimate."""
         coverage = sample_map.coverage
         assert 0.0 <= coverage <= 1.0
@@ -506,13 +507,13 @@ class TestHoloMapWithVoids:
             ),
         )
 
-    def test_is_in_void(self, map_with_void) -> None:
+    def test_is_in_void(self, map_with_void: HoloMap) -> None:
         """Check if point is in void."""
         assert map_with_void.is_in_void([5.0, 5.0])
         assert map_with_void.is_in_void([5.5, 5.5])
         assert not map_with_void.is_in_void([0.0, 0.0])
 
-    def test_get_void_at(self, map_with_void) -> None:
+    def test_get_void_at(self, map_with_void: HoloMap) -> None:
         """Get void at a point."""
         void = map_with_void.get_void_at([5.0, 5.0])
         assert void is not None
@@ -628,7 +629,9 @@ class TestEdgeCases:
             ),
         )
 
-        assert hm.nearest_landmark([0.0, 0.0]).id == "only"
+        nearest = hm.nearest_landmark([0.0, 0.0])
+        assert nearest is not None
+        assert nearest.id == "only"
         assert hm.has_path([1.0, 0.0], [1.0, 0.0])  # Same point
         # Both points map to "only" landmark, so path exists (same landmark)
         # This is correct behavior - any point maps to nearest landmark

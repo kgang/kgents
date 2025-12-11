@@ -379,7 +379,7 @@ class OPROTeleprompter(BaseTeleprompter[A, B]):
 class TeleprompterFactory:
     """Factory for creating teleprompter instances."""
 
-    _registry: dict[TeleprompterStrategy, type[BaseTeleprompter]] = {
+    _registry: dict[TeleprompterStrategy, type[BaseTeleprompter[Any, Any]]] = {
         TeleprompterStrategy.BOOTSTRAP_FEWSHOT: BootstrapFewShotTeleprompter,
         TeleprompterStrategy.TEXTGRAD: TextGradTeleprompter,
         TeleprompterStrategy.MIPRO_V2: MIPROv2Teleprompter,
@@ -387,7 +387,7 @@ class TeleprompterFactory:
     }
 
     @classmethod
-    def get(cls, strategy: TeleprompterStrategy | str) -> BaseTeleprompter:
+    def get(cls, strategy: TeleprompterStrategy | str) -> BaseTeleprompter[Any, Any]:
         """Get a teleprompter instance by strategy."""
         if isinstance(strategy, str):
             strategy = TeleprompterStrategy(strategy)
@@ -402,7 +402,7 @@ class TeleprompterFactory:
     def register(
         cls,
         strategy: TeleprompterStrategy,
-        teleprompter_cls: type[BaseTeleprompter],
+        teleprompter_cls: type[BaseTeleprompter[Any, Any]],
     ) -> None:
         """Register a custom teleprompter implementation."""
         cls._registry[strategy] = teleprompter_cls
@@ -527,7 +527,7 @@ class RefineryAgent(Generic[A, B]):
     strategy: TeleprompterStrategy = TeleprompterStrategy.BOOTSTRAP_FEWSHOT
     roi_optimizer: ROIOptimizer | None = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.roi_optimizer is None:
             self.roi_optimizer = ROIOptimizer()
 

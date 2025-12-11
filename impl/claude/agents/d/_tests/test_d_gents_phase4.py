@@ -8,10 +8,14 @@ Tests the integration of D-gents with:
 - T-gents (SpyAgent with VolatileAgent)
 """
 
+from __future__ import annotations
+
 import asyncio
 import shutil
 import tempfile
+from collections.abc import Generator
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -42,7 +46,7 @@ from agents.t import SpyAgent
 
 
 @pytest.fixture
-def temp_dir():
+def temp_dir() -> Generator[Path, None, None]:
     """Create temporary directory for test files."""
     tmpdir = Path(tempfile.mkdtemp())
     yield tmpdir
@@ -53,7 +57,7 @@ def temp_dir():
 
 
 @pytest.mark.asyncio
-async def test_kgent_persistent_persona_integration(temp_dir) -> None:
+async def test_kgent_persistent_persona_integration(temp_dir: Path) -> None:
     """Test K-gent with PersistentAgent for persona continuity."""
     path = temp_dir / "persona.json"
 
@@ -87,7 +91,7 @@ async def test_kgent_persistent_persona_integration(temp_dir) -> None:
 
 
 @pytest.mark.asyncio
-async def test_bgents_hypothesis_storage_integration(temp_dir) -> None:
+async def test_bgents_hypothesis_storage_integration(temp_dir: Path) -> None:
     """Test B-gents with PersistentAgent for hypothesis memory."""
     path = temp_dir / "hypotheses.json"
 
@@ -138,12 +142,14 @@ async def test_jgents_entropy_constraint_integration() -> None:
     """Test J-gent entropy constraints with EntropyConstrainedAgent."""
 
     # Simulate depth 0 in promise tree (full budget)
-    dgent_depth0 = EntropyConstrainedAgent.from_depth(
-        backend=VolatileAgent(_state={}),
-        depth=0,
-        initial_budget=0.5,
-        decay_factor=0.5,
-        base_size_bytes=1000,
+    dgent_depth0: EntropyConstrainedAgent[dict[str, Any]] = (
+        EntropyConstrainedAgent.from_depth(
+            backend=VolatileAgent(_state={}),
+            depth=0,
+            initial_budget=0.5,
+            decay_factor=0.5,
+            base_size_bytes=1000,
+        )
     )
 
     # Small state should succeed
@@ -152,12 +158,14 @@ async def test_jgents_entropy_constraint_integration() -> None:
     assert loaded == {"key": "value"}
 
     # Simulate depth 3 (budget = 0.5 * 0.5^3 = 0.0625, max = 62.5 bytes)
-    dgent_depth3 = EntropyConstrainedAgent.from_depth(
-        backend=VolatileAgent(_state={}),
-        depth=3,
-        initial_budget=0.5,
-        decay_factor=0.5,
-        base_size_bytes=1000,
+    dgent_depth3: EntropyConstrainedAgent[dict[str, Any]] = (
+        EntropyConstrainedAgent.from_depth(
+            backend=VolatileAgent(_state={}),
+            depth=3,
+            initial_budget=0.5,
+            decay_factor=0.5,
+            base_size_bytes=1000,
+        )
     )
 
     # Large state should fail
@@ -207,7 +215,7 @@ async def test_tgents_spy_volatile_integration() -> None:
 
 
 @pytest.mark.asyncio
-async def test_cross_genus_integration_kgent_bgents(temp_dir) -> None:
+async def test_cross_genus_integration_kgent_bgents(temp_dir: Path) -> None:
     """Test K-gent + B-gents integration for personalized science."""
     persona_path = temp_dir / "persona.json"
     hyp_path = temp_dir / "hypotheses.json"
@@ -266,7 +274,7 @@ async def test_cross_genus_integration_kgent_bgents(temp_dir) -> None:
 
 
 @pytest.mark.asyncio
-async def test_full_phase4_integration(temp_dir) -> None:
+async def test_full_phase4_integration(temp_dir: Path) -> None:
     """
     Full Phase 4 integration test demonstrating all 4 integrations.
 
@@ -281,8 +289,8 @@ async def test_full_phase4_integration(temp_dir) -> None:
     await hyp_storage.load()
 
     # 3. J-gents with entropy constraint
-    entropy_dgent = EntropyConstrainedAgent.from_depth(
-        backend=VolatileAgent(_state={}), depth=1
+    entropy_dgent: EntropyConstrainedAgent[dict[str, Any]] = (
+        EntropyConstrainedAgent.from_depth(backend=VolatileAgent(_state={}), depth=1)
     )
     await entropy_dgent.save({"small": "data"})
 

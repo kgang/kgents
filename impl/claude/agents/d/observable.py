@@ -68,14 +68,14 @@ class Subscription:
 
     id: str
     path: Optional[str]  # None = all changes
-    callback: Callable[[Change], Awaitable[None]]
+    callback: Callable[[Change[Any]], Awaitable[None]]
     debounce_ms: int = 0
     active: bool = True
     created_at: datetime = field(default_factory=datetime.now)
 
     # Internal state for debouncing
-    _pending_changes: List[Change] = field(default_factory=list)
-    _debounce_task: Optional[asyncio.Task] = None
+    _pending_changes: List[Change[Any]] = field(default_factory=list)
+    _debounce_task: Optional[asyncio.Task[Any]] = None
 
 
 class ObservableDataAgent(Generic[S]):
@@ -137,7 +137,7 @@ class ObservableDataAgent(Generic[S]):
         await self._underlying.save(state)
         self._last_state = state
 
-        change = Change(
+        change: Change[S] = Change(
             id=str(uuid.uuid4()),
             change_type=ChangeType.SET,
             path=None,
@@ -156,7 +156,7 @@ class ObservableDataAgent(Generic[S]):
 
     async def subscribe(
         self,
-        callback: Callable[[Change], Awaitable[None]],
+        callback: Callable[[Change[Any]], Awaitable[None]],
         debounce_ms: int = 0,
     ) -> str:
         """
@@ -181,7 +181,7 @@ class ObservableDataAgent(Generic[S]):
     async def subscribe_path(
         self,
         path: str,
-        callback: Callable[[Change], Awaitable[None]],
+        callback: Callable[[Change[Any]], Awaitable[None]],
         debounce_ms: int = 0,
     ) -> str:
         """
@@ -290,10 +290,10 @@ class ObservableDataAgent(Generic[S]):
 
         # Update path
         new_state = self._set_path(dict(state), path, value)
-        await self._underlying.save(new_state)
-        self._last_state = new_state
+        await self._underlying.save(new_state)  # type: ignore[arg-type]
+        self._last_state = new_state  # type: ignore[assignment]
 
-        change = Change(
+        change: Change[S] = Change(
             id=str(uuid.uuid4()),
             change_type=ChangeType.UPDATE,
             path=path,
@@ -316,10 +316,10 @@ class ObservableDataAgent(Generic[S]):
 
         # Delete path
         new_state = self._delete_path(dict(state), path)
-        await self._underlying.save(new_state)
-        self._last_state = new_state
+        await self._underlying.save(new_state)  # type: ignore[arg-type]
+        self._last_state = new_state  # type: ignore[assignment]
 
-        change = Change(
+        change: Change[S] = Change(
             id=str(uuid.uuid4()),
             change_type=ChangeType.DELETE,
             path=path,
@@ -436,7 +436,7 @@ class ObservableDataAgent(Generic[S]):
             sub._debounce_task.cancel()
 
         # Create new debounce task
-        async def flush():
+        async def flush() -> None:
             await asyncio.sleep(sub.debounce_ms / 1000)
             if sub.active and sub._pending_changes:
                 # Notify with most recent change
@@ -465,10 +465,10 @@ class ObservableDataAgent(Generic[S]):
                 return None
         return current
 
-    def _set_path(self, data: Dict, path: str, value: Any) -> Dict:
+    def _set_path(self, data: dict[str, Any], path: str, value: Any) -> dict[str, Any]:
         """Set value at path (immutable)."""
         if not path:
-            return value
+            return dict(value) if isinstance(value, dict) else value
 
         parts = path.split(".")
         result = dict(data)
@@ -484,7 +484,7 @@ class ObservableDataAgent(Generic[S]):
         current[parts[-1]] = value
         return result
 
-    def _delete_path(self, data: Dict, path: str) -> Dict:
+    def _delete_path(self, data: dict[str, Any], path: str) -> dict[str, Any]:
         """Delete value at path (immutable)."""
         if not path:
             return {}
@@ -587,8 +587,8 @@ class ObservableDataAgent(Generic[S]):
 
 
 def on_change(
-    observable: ObservableDataAgent,
-    callback: Callable[[Change], Awaitable[None]],
+    observable: ObservableDataAgent[Any],
+    callback: Callable[[Change[Any]], Awaitable[None]],
 ) -> Callable[[], Awaitable[None]]:
     """
     Convenience decorator for subscribing to changes.
@@ -597,11 +597,11 @@ def on_change(
     """
     sub_id = None
 
-    async def subscribe():
+    async def subscribe() -> None:
         nonlocal sub_id
         sub_id = await observable.subscribe(callback)
 
-    async def unsubscribe():
+    async def unsubscribe() -> None:
         if sub_id:
             await observable.unsubscribe(sub_id)
 

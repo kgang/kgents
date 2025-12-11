@@ -10,7 +10,10 @@ Tests integration between Memory, Data, Library, Banker, and Narrative agents:
 Philosophy: Memory is not storage—it is active reconstruction.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
+from typing import Any
 
 import pytest
 
@@ -57,7 +60,7 @@ class TestMemoryDgentBackend:
     @pytest.mark.asyncio
     async def test_holographic_memory_basic_operations(self) -> None:
         """Test basic HolographicMemory store/retrieve."""
-        memory = HolographicMemory()
+        memory: HolographicMemory[str] = HolographicMemory()
 
         # Store a memory
         pattern = await memory.store(
@@ -73,7 +76,7 @@ class TestMemoryDgentBackend:
     @pytest.mark.asyncio
     async def test_holographic_memory_retrieval(self) -> None:
         """Test HolographicMemory retrieval by cue."""
-        memory = HolographicMemory()
+        memory: HolographicMemory[str] = HolographicMemory()
 
         # Store several memories
         await memory.store(
@@ -94,7 +97,7 @@ class TestMemoryDgentBackend:
     async def test_dgent_backed_memory_persistence(self) -> None:
         """Test DgentBackedHolographicMemory with D-gent storage."""
         # Create D-gent storage layer
-        volatile = VolatileAgent(_state={})
+        volatile: VolatileAgent[dict[str, Any]] = VolatileAgent(_state={})
         config = MemoryConfig(
             enable_semantic=True,
             enable_temporal=True,
@@ -102,7 +105,7 @@ class TestMemoryDgentBackend:
         unified = UnifiedMemory(volatile, config)
 
         # Create M-gent memory backed by D-gent
-        memory = DgentBackedHolographicMemory(
+        memory: DgentBackedHolographicMemory[str] = DgentBackedHolographicMemory(
             storage=unified,
             namespace="test_memory",
         )
@@ -126,7 +129,7 @@ class TestMemoryDgentBackend:
     @pytest.mark.asyncio
     async def test_memory_compression(self) -> None:
         """Test memory compression reduces storage."""
-        memory = HolographicMemory()
+        memory: HolographicMemory[str] = HolographicMemory()
 
         # Store several memories
         for i in range(10):
@@ -145,7 +148,7 @@ class TestMemoryDgentBackend:
     @pytest.mark.asyncio
     async def test_memory_consolidation(self) -> None:
         """Test memory consolidation organizes patterns."""
-        memory = HolographicMemory()
+        memory: HolographicMemory[str] = HolographicMemory()
 
         # Store memories over simulated time
         await memory.store("mem-001", "First memory", ["early"])
@@ -169,7 +172,7 @@ class TestSymbiontIntegration:
             new_count = count + increment
             return new_count, new_count
 
-        memory = VolatileAgent(_state=0)
+        memory: VolatileAgent[int] = VolatileAgent(_state=0)
         counter = Symbiont(logic=counter_logic, memory=memory)
 
         # First invocation
@@ -188,11 +191,11 @@ class TestSymbiontIntegration:
     async def test_symbiont_with_history(self) -> None:
         """Test Symbiont maintains history."""
 
-        def append_logic(item: str, items: list) -> tuple[list, list]:
+        def append_logic(item: str, items: list[str]) -> tuple[list[str], list[str]]:
             new_items = items + [item]
             return new_items, new_items
 
-        memory = VolatileAgent(_state=[])
+        memory: VolatileAgent[list[str]] = VolatileAgent(_state=[])
         appender = Symbiont(logic=append_logic, memory=memory)
 
         await appender.invoke("first")
@@ -210,7 +213,9 @@ class TestUnifiedMemoryLayers:
     @pytest.mark.asyncio
     async def test_unified_memory_semantic_layer(self) -> None:
         """Test UnifiedMemory semantic associate/recall."""
-        volatile = VolatileAgent(_state={"initial": "state"})
+        volatile: VolatileAgent[dict[str, str]] = VolatileAgent(
+            _state={"initial": "state"}
+        )
         config = MemoryConfig(
             enable_semantic=True,
             auto_associate=True,
@@ -227,7 +232,7 @@ class TestUnifiedMemoryLayers:
     @pytest.mark.asyncio
     async def test_unified_memory_temporal_layer(self) -> None:
         """Test UnifiedMemory temporal witness/replay."""
-        volatile = VolatileAgent(_state={"version": 1})
+        volatile: VolatileAgent[dict[str, int]] = VolatileAgent(_state={"version": 1})
         config = MemoryConfig(enable_temporal=True)
         unified = UnifiedMemory(volatile, config)
 
@@ -243,7 +248,7 @@ class TestUnifiedMemoryLayers:
     @pytest.mark.asyncio
     async def test_unified_memory_relational_layer(self) -> None:
         """Test UnifiedMemory relational edges."""
-        volatile = VolatileAgent(_state={})
+        volatile: VolatileAgent[dict[str, Any]] = VolatileAgent(_state={})
         config = MemoryConfig(
             enable_relational=True,
             track_lineage=True,
@@ -267,10 +272,10 @@ class TestProspectiveMemory:
     async def test_prospective_agent_prediction(self) -> None:
         """Test ProspectiveAgent predicts actions from situations."""
         # Create memory and action history
-        memory = HolographicMemory()
-        history = ActionHistory()
+        memory: HolographicMemory[str] = HolographicMemory()
+        history: ActionHistory = ActionHistory()
 
-        agent = ProspectiveAgent(
+        agent: ProspectiveAgent[str] = ProspectiveAgent(
             memory=memory,
             action_log=history,
             min_similarity=0.3,
@@ -306,9 +311,11 @@ class TestProspectiveMemory:
     @pytest.mark.asyncio
     async def test_prospective_learns_from_outcomes(self) -> None:
         """Test ProspectiveAgent learns from action outcomes."""
-        memory = HolographicMemory()
-        history = ActionHistory()
-        agent = ProspectiveAgent(memory=memory, action_log=history)
+        memory: HolographicMemory[str] = HolographicMemory()
+        history: ActionHistory = ActionHistory()
+        agent: ProspectiveAgent[str] = ProspectiveAgent(
+            memory=memory, action_log=history
+        )
 
         # Record successful action
         situation = Situation(
@@ -333,8 +340,8 @@ class TestMemoryVectorIntegration:
     @pytest.mark.asyncio
     async def test_semantic_registry_search(self) -> None:
         """Test SemanticRegistry finds similar entries."""
-        embedder = SimpleEmbedder(dimension=128)
-        registry = SemanticRegistry(embedder=embedder)
+        embedder: SimpleEmbedder = SimpleEmbedder(dimension=128)
+        registry: SemanticRegistry = SemanticRegistry(embedder=embedder)
 
         # Register entries
         await registry.register(
@@ -370,8 +377,8 @@ class TestMemoryVectorIntegration:
     @pytest.mark.asyncio
     async def test_memory_with_embeddings(self) -> None:
         """Test memory stores and retrieves by embedding similarity."""
-        embedder = SimpleEmbedder(dimension=128)
-        memory = HolographicMemory(embedder=embedder)
+        embedder: SimpleEmbedder = SimpleEmbedder(dimension=128)
+        memory: HolographicMemory[str] = HolographicMemory(embedder=embedder)
 
         # Store with embeddings
         embedding = await embedder.embed("programming concepts")
@@ -393,7 +400,7 @@ class TestBudgetedMemory:
     @pytest.mark.asyncio
     async def test_memory_respects_storage_limits(self) -> None:
         """Test memory operations respect configured limits."""
-        memory = HolographicMemory(
+        memory: HolographicMemory[str] = HolographicMemory(
             hot_threshold=0.7,
             cold_threshold=0.3,
             forget_threshold_days=30.0,
@@ -413,7 +420,7 @@ class TestBudgetedMemory:
     @pytest.mark.asyncio
     async def test_memory_pattern_strength_decay(self) -> None:
         """Test memory pattern strength decays over time."""
-        memory = HolographicMemory()
+        memory: HolographicMemory[str] = HolographicMemory()
 
         pattern = await memory.store(
             id="decaying",
@@ -434,8 +441,8 @@ class TestMemoryNarrativeIntegration:
     @pytest.mark.asyncio
     async def test_historian_records_traces(self) -> None:
         """Test Historian records semantic traces."""
-        store = MemoryCrystalStore()
-        historian = Historian(store)
+        store: MemoryCrystalStore = MemoryCrystalStore()
+        historian: Historian = Historian(store)
 
         # Create a mock traceable agent
         @dataclass
@@ -464,8 +471,8 @@ class TestMemoryNarrativeIntegration:
     @pytest.mark.asyncio
     async def test_crystal_store_query(self) -> None:
         """Test crystal store can be queried."""
-        store = MemoryCrystalStore()
-        historian = Historian(store)
+        store: MemoryCrystalStore = MemoryCrystalStore()
+        historian: Historian = Historian(store)
 
         @dataclass
         class MockAgent:
@@ -486,8 +493,8 @@ class TestMemoryNarrativeIntegration:
     @pytest.mark.asyncio
     async def test_bard_creates_narrative(self) -> None:
         """Test Bard creates narrative from traces."""
-        store = MemoryCrystalStore()
-        historian = Historian(store)
+        store: MemoryCrystalStore = MemoryCrystalStore()
+        historian: Historian = Historian(store)
 
         @dataclass
         class MockAgent:
@@ -522,7 +529,7 @@ class TestMemoryPatternAccess:
     @pytest.mark.asyncio
     async def test_pattern_access_updates_metadata(self) -> None:
         """Test accessing pattern updates access metadata."""
-        memory = HolographicMemory()
+        memory: HolographicMemory[str] = HolographicMemory()
 
         pattern = await memory.store(
             id="access-test",
@@ -537,7 +544,7 @@ class TestMemoryPatternAccess:
     @pytest.mark.asyncio
     async def test_resonance_result_scoring(self) -> None:
         """Test resonance results include similarity scores."""
-        memory = HolographicMemory()
+        memory: HolographicMemory[str] = HolographicMemory()
 
         await memory.store("res-001", "First memory about cats", ["cats"])
         await memory.store("res-002", "Second memory about dogs", ["dogs"])
@@ -560,7 +567,7 @@ class TestMemoryLinkingAssociation:
         """Test AssociativeWebMemory link creation."""
         from agents.m import AssociativeWebMemory
 
-        volatile = VolatileAgent(_state={})
+        volatile: VolatileAgent[dict[str, Any]] = VolatileAgent(_state={})
         # Need all layers enabled for full memory functionality
         unified = UnifiedMemory(
             volatile,
@@ -572,7 +579,7 @@ class TestMemoryLinkingAssociation:
         )
 
         # Use AssociativeWebMemory for link/spread_activation
-        memory = AssociativeWebMemory(
+        memory: AssociativeWebMemory[str] = AssociativeWebMemory(
             storage=unified,
             namespace="linking_test",
         )
@@ -593,7 +600,7 @@ class TestMemoryLinkingAssociation:
         """Test spread activation through memory network."""
         from agents.m import AssociativeWebMemory
 
-        volatile = VolatileAgent(_state={})
+        volatile: VolatileAgent[dict[str, Any]] = VolatileAgent(_state={})
         # Need all layers enabled for full memory functionality
         unified = UnifiedMemory(
             volatile,
@@ -605,7 +612,7 @@ class TestMemoryLinkingAssociation:
         )
 
         # Use AssociativeWebMemory for link/spread_activation
-        memory = AssociativeWebMemory(
+        memory: AssociativeWebMemory[str] = AssociativeWebMemory(
             storage=unified,
             namespace="activation_test",
         )

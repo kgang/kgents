@@ -12,7 +12,7 @@ from __future__ import annotations
 import sys
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Union, get_args, get_origin
+from typing import Any, Callable, Union, cast, get_args, get_origin
 
 # Python 3.10+ has types.UnionType for X | Y syntax
 if sys.version_info >= (3, 10):
@@ -194,9 +194,9 @@ class TypeRegistry:
         if origin is Union:
             non_none_args = [a for a in args if a is not type(None)]
             if non_none_args:
-                return non_none_args[0]
+                return cast(type, non_none_args[0])
 
         if origin is list and args:
-            return args[0]
+            return cast(type, args[0])
 
         return python_type

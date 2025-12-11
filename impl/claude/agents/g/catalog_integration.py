@@ -11,6 +11,8 @@ Phase 4 Implementation:
 - find_composable: Find tongues that can compose
 """
 
+from __future__ import annotations
+
 from agents.g.types import GrammarLevel, Tongue
 from agents.l import CatalogEntry, CompatibilityReport, EntityType, Registry
 
@@ -233,7 +235,7 @@ async def find_composable(
         List of composable tongue entries
     """
     # Get all tongues from registry
-    all_tongues = await registry.list(entity_type=EntityType.TONGUE, limit=100)
+    all_tongues = await registry.list_entries(entity_type=EntityType.TONGUE, limit=100)
 
     composable_entries = []
     for entry in all_tongues:

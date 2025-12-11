@@ -11,7 +11,10 @@ Tests cover:
 Tests are written to gracefully handle missing dependencies.
 """
 
+from __future__ import annotations
+
 import os
+from pathlib import Path
 
 import pytest
 from agents.l.embedders import (
@@ -104,7 +107,7 @@ class TestSentenceTransformerEmbedder:
         vec3 = await embedder.embed("database")
 
         # Compute cosine similarity
-        def cosine_sim(a, b):
+        def cosine_sim(a: list[float], b: list[float]) -> float:
             import math
 
             dot = sum(x * y for x, y in zip(a, b))
@@ -193,7 +196,7 @@ class TestCachedEmbedder:
     """Tests for CachedEmbedder."""
 
     @pytest.mark.asyncio
-    async def test_cache_hit(self, tmp_path) -> None:
+    async def test_cache_hit(self, tmp_path: Path) -> None:
         """Test that cache is hit on repeated queries."""
         cache_path = str(tmp_path / "cache.json")
         base_embedder = SimpleEmbedder(dimension=128)
@@ -210,7 +213,7 @@ class TestCachedEmbedder:
         assert vec1 == vec2
 
     @pytest.mark.asyncio
-    async def test_cache_persistence(self, tmp_path) -> None:
+    async def test_cache_persistence(self, tmp_path: Path) -> None:
         """Test that cache persists across instances."""
         cache_path = str(tmp_path / "cache.json")
         base_embedder = SimpleEmbedder(dimension=128)
@@ -227,7 +230,7 @@ class TestCachedEmbedder:
         assert vec1 == vec2
 
     @pytest.mark.asyncio
-    async def test_batch_caching(self, tmp_path) -> None:
+    async def test_batch_caching(self, tmp_path: Path) -> None:
         """Test batch embedding with partial cache hits."""
         cache_path = str(tmp_path / "cache.json")
         base_embedder = SimpleEmbedder(dimension=128)
@@ -245,7 +248,7 @@ class TestCachedEmbedder:
         assert all(len(v) == 128 for v in vectors)
 
     @pytest.mark.asyncio
-    async def test_dimension_passthrough(self, tmp_path) -> None:
+    async def test_dimension_passthrough(self, tmp_path: Path) -> None:
         """Test that dimension is passed through from base embedder."""
         cache_path = str(tmp_path / "cache.json")
         base_embedder = SimpleEmbedder(dimension=256)
@@ -254,7 +257,7 @@ class TestCachedEmbedder:
         assert embedder.dimension == 256
 
     @pytest.mark.asyncio
-    async def test_corrupted_cache_recovery(self, tmp_path) -> None:
+    async def test_corrupted_cache_recovery(self, tmp_path: Path) -> None:
         """Test recovery from corrupted cache file."""
         cache_path = str(tmp_path / "cache.json")
 

@@ -134,7 +134,7 @@ class TestBootstrapWitness:
     async def test_identity_left_law(self) -> None:
         """Id >> f ≡ f (left identity law)."""
         f = SimpleAgent()
-        id_agent = Id()
+        id_agent: Agent[str, str] = Id()
 
         # Id >> f
         composed = id_agent >> f
@@ -149,10 +149,10 @@ class TestBootstrapWitness:
     async def test_identity_right_law(self) -> None:
         """f >> Id ≡ f (right identity law)."""
         f = SimpleAgent()
-        id_agent = Id()
+        id_agent: Agent[str, int] = Id()
 
         # f >> Id
-        composed = f >> id_agent
+        composed = f >> id_agent  # type: ignore[operator]
         result_composed = await composed.invoke("hello")
 
         # f alone
@@ -233,7 +233,7 @@ class TestMorphismProtocol:
 
     def test_id_is_morphism(self) -> None:
         """Id agent is a valid morphism."""
-        id_agent = Id()
+        id_agent: Agent[object, object] = Id()
         assert isinstance(id_agent, Morphism)
 
 
@@ -257,12 +257,12 @@ class TestDomainCodomain:
     def test_get_domain_returns_none_for_untyped(self) -> None:
         """get_domain() returns None if no type hints available."""
 
-        class UntypedAgent(Agent):
+        class UntypedAgent(Agent[object, object]):
             @property
-            def name(self):
+            def name(self) -> str:
                 return "Untyped"
 
-            async def invoke(self, input):
+            async def invoke(self, input: object) -> object:
                 return input
 
         agent = UntypedAgent()

@@ -11,6 +11,8 @@ All backends implement the DataAgent protocol with:
 - Atomic transactions
 """
 
+from __future__ import annotations
+
 import json
 from abc import ABC, abstractmethod
 from dataclasses import asdict, is_dataclass
@@ -75,7 +77,7 @@ class SQLBackend(ABC):
 class SQLiteBackend(SQLBackend):
     """SQLite backend using aiosqlite (optional dependency)."""
 
-    def __init__(self, db_path: str):
+    def __init__(self, db_path: str) -> None:
         self.db_path = db_path
         self._conn: Any = None  # aiosqlite.Connection when connected
 
@@ -122,7 +124,7 @@ class SQLiteBackend(SQLBackend):
 class PostgreSQLBackend(SQLBackend):
     """PostgreSQL backend using asyncpg (optional dependency)."""
 
-    def __init__(self, connection_string: str):
+    def __init__(self, connection_string: str) -> None:
         self.connection_string = connection_string
         self._conn: Any = None  # asyncpg.Connection when connected
 
@@ -218,7 +220,7 @@ class SQLAgent(Generic[S], DataAgent[S]):
         key: str,
         schema: Type[S],
         max_history: int = 100,
-    ):
+    ) -> None:
         """
         Initialize SQL D-gent.
 
@@ -401,7 +403,7 @@ class SQLAgent(Generic[S], DataAgent[S]):
     def _serialize(self, state: S) -> Any:
         """Serialize state to JSON-compatible structure."""
 
-        def enum_serializer(obj):
+        def enum_serializer(obj: Any) -> Any:
             if isinstance(obj, Enum):
                 return obj.value
             return obj
@@ -409,7 +411,8 @@ class SQLAgent(Generic[S], DataAgent[S]):
         try:
             if is_dataclass(state):
                 return asdict(
-                    state, dict_factory=lambda x: {k: enum_serializer(v) for k, v in x}
+                    cast(Any, state),
+                    dict_factory=lambda x: {k: enum_serializer(v) for k, v in x},
                 )
             return state
         except Exception as e:
@@ -419,12 +422,12 @@ class SQLAgent(Generic[S], DataAgent[S]):
         """Deserialize JSON data to state type."""
         try:
             if is_dataclass(self.schema):
-                return self._deserialize_dataclass(self.schema, data)
-            return data
+                return cast(S, self._deserialize_dataclass(self.schema, data))
+            return cast(S, data)
         except Exception as e:
             raise StateCorruptionError(f"Cannot deserialize to {self.schema}: {e}")
 
-    def _deserialize_dataclass(self, cls: Type, data: dict) -> Any:
+    def _deserialize_dataclass(self, cls: Type[Any], data: dict[str, Any]) -> Any:
         """Recursively deserialize a dataclass and its nested fields."""
         if not isinstance(data, dict):
             return data
@@ -434,7 +437,7 @@ class SQLAgent(Generic[S], DataAgent[S]):
         except Exception:
             type_hints = {}
 
-        kwargs = {}
+        kwargs: dict[str, Any] = {}
         for field_name, field_value in data.items():
             field_type = type_hints.get(field_name)
 
@@ -442,7 +445,7 @@ class SQLAgent(Generic[S], DataAgent[S]):
                 kwargs[field_name] = None
             elif field_type and is_dataclass(field_type):
                 kwargs[field_name] = self._deserialize_dataclass(
-                    field_type, field_value
+                    cast(Type[Any], field_type), field_value
                 )
             elif field_type:
                 try:
@@ -458,7 +461,9 @@ class SQLAgent(Generic[S], DataAgent[S]):
                         args = get_args(field_type)
                         if args and is_dataclass(args[0]):
                             kwargs[field_name] = [
-                                self._deserialize_dataclass(args[0], item)
+                                self._deserialize_dataclass(
+                                    cast(Type[Any], args[0]), item
+                                )
                                 if isinstance(item, dict)
                                 else item
                                 for item in field_value
@@ -471,12 +476,12 @@ class SQLAgent(Generic[S], DataAgent[S]):
 
         return cls(**kwargs)
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> SQLAgent[S]:
         """Async context manager entry."""
         await self.connect()
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Async context manager exit."""
         await self.close()
 

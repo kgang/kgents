@@ -13,7 +13,7 @@ Architecture:
 from __future__ import annotations
 
 import re
-from typing import Iterator, Optional
+from typing import Any, Iterator, Optional
 
 from agents.p.core import (
     Parser,
@@ -134,7 +134,7 @@ class FgentArtifactParser:
         final_text = "".join(accumulated)
         yield self.parse(final_text)
 
-    def configure(self, **config) -> "FgentArtifactParser":
+    def configure(self, **config: Any) -> "FgentArtifactParser":
         """Return new parser with updated P-gents config."""
         new_config = PParserConfig(**{**vars(self.config), **config})
         new_config.validate()
@@ -280,7 +280,9 @@ class FgentArtifactParser:
         output_type = output_match.group(1) if output_match else "Any"
 
         # Parse invariants (simplified - would need full parser for complex cases)
-        invariants = []
+        from agents.f.contract import Invariant
+
+        invariants: list[Invariant] = []
 
         return Contract(
             agent_name=agent_name,

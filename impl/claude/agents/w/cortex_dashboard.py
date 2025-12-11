@@ -157,7 +157,7 @@ class CortexDashboard:
 
         # Running state
         self._running = False
-        self._update_task: asyncio.Task | None = None
+        self._update_task: asyncio.Task[None] | None = None
 
         # Sparkline histories
         self._surprise_sparkline = SparklineData(max_size=self._config.history_size)

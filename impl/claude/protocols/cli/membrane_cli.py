@@ -59,7 +59,7 @@ class SemanticCurvature:
     repellers: tuple[str, ...]  # Concepts pushed away
     interpretation: str
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "shape_id": self.shape_id,
             "type": "curvature",
@@ -87,7 +87,7 @@ class SemanticVoid:
     persistence: float  # How stable across time
     interpretation: str
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "shape_id": self.shape_id,
             "type": "void",
@@ -115,7 +115,7 @@ class SemanticMomentum:
     is_conserved: bool  # Is momentum stable?
     interpretation: str
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "shape_id": self.shape_id,
             "type": "momentum",
@@ -144,7 +144,7 @@ class DampeningField:
     affected_count: int  # How many items are affected
     interpretation: str
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "shape_id": self.shape_id,
             "type": "dampening",
@@ -169,7 +169,7 @@ class MembraneObserveResult:
     suggestion: str
     observed_at: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "integrity_score": self.integrity_score,
             "trend": self.trend,
@@ -188,7 +188,7 @@ class MembraneSenseResult:
     shape_count: int
     sensed_at: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "integrity_score": self.integrity_score,
             "dominant_shape": self.dominant_shape.to_dict()
@@ -208,7 +208,7 @@ class MembraneTraceResult:
     history: list[dict]  # Historical momentum snapshots
     traced_at: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "topic": self.topic,
             "momentum": self.momentum.to_dict() if self.momentum else None,
@@ -427,7 +427,7 @@ class MembraneCLI:
         self,
         shape_id: str,
         ctx: CLIContext | None = None,
-    ) -> CommandResult[dict]:
+    ) -> CommandResult[dict[str, Any]]:
         """
         Acknowledge a shape - mark as seen, reduce its urgency.
 
@@ -471,7 +471,7 @@ class MembraneCLI:
         self,
         description: str,
         ctx: CLIContext | None = None,
-    ) -> CommandResult[dict]:
+    ) -> CommandResult[dict[str, Any]]:
         """
         Give voice to a void - create explicit principle for implicit pattern.
 
@@ -509,7 +509,7 @@ class MembraneCLI:
         shape_id: str,
         reason: str = "Productive tension",
         ctx: CLIContext | None = None,
-    ) -> CommandResult[dict]:
+    ) -> CommandResult[dict[str, Any]]:
         """
         Preserve productive tension - prevent premature resolution.
 
@@ -549,7 +549,7 @@ class MembraneCLI:
         self,
         shape_id: str,
         ctx: CLIContext | None = None,
-    ) -> CommandResult[dict]:
+    ) -> CommandResult[dict[str, Any]]:
         """
         Let go of held tension - allow natural resolution.
 

@@ -138,7 +138,7 @@ class MemoryCrystalStore(CrystalStore):
     Fast but ephemeral—crystals are lost when process exits.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._crystals: dict[str, SemanticTrace] = {}
         # Indices for efficient queries
         self._by_agent: dict[str, list[str]] = {}

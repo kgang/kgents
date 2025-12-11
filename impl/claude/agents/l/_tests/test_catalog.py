@@ -4,13 +4,14 @@ Tests for L-gent catalog (Registry and CatalogEntry).
 
 import os
 import tempfile
+from typing import Any, Generator
 
 import pytest
 from agents.l.catalog import CatalogEntry, EntityType, Registry, Status
 
 
 @pytest.fixture
-def temp_storage():
+def temp_storage() -> Generator[str, None, None]:
     """Temporary storage file for testing."""
     fd, path = tempfile.mkstemp(suffix=".json")
     os.close(fd)
@@ -19,7 +20,7 @@ def temp_storage():
 
 
 @pytest.fixture
-def sample_entry():
+def sample_entry() -> CatalogEntry:
     """Sample catalog entry for testing."""
     return CatalogEntry(
         id="test-agent-001",
@@ -35,7 +36,7 @@ def sample_entry():
 
 
 @pytest.mark.asyncio
-async def test_catalog_entry_serialization(sample_entry) -> None:
+async def test_catalog_entry_serialization(sample_entry: CatalogEntry) -> None:
     """Test CatalogEntry can be serialized and deserialized."""
     # Serialize
     data = sample_entry.to_dict()
@@ -56,7 +57,9 @@ async def test_catalog_entry_serialization(sample_entry) -> None:
 
 
 @pytest.mark.asyncio
-async def test_registry_register_and_get(temp_storage, sample_entry) -> None:
+async def test_registry_register_and_get(
+    temp_storage: str, sample_entry: CatalogEntry
+) -> None:
     """Test registering and retrieving entries."""
     registry = Registry(storage_path=temp_storage)
 
@@ -72,7 +75,9 @@ async def test_registry_register_and_get(temp_storage, sample_entry) -> None:
 
 
 @pytest.mark.asyncio
-async def test_registry_persistence(temp_storage, sample_entry) -> None:
+async def test_registry_persistence(
+    temp_storage: str, sample_entry: CatalogEntry
+) -> None:
     """Test that registry persists across instances."""
     # First instance - register entry
     registry1 = Registry(storage_path=temp_storage)
@@ -88,7 +93,7 @@ async def test_registry_persistence(temp_storage, sample_entry) -> None:
 
 
 @pytest.mark.asyncio
-async def test_registry_list_by_type(temp_storage) -> None:
+async def test_registry_list_by_type(temp_storage: str) -> None:
     """Test filtering entries by type."""
     registry = Registry(storage_path=temp_storage)
 
@@ -132,7 +137,9 @@ async def test_registry_list_by_type(temp_storage) -> None:
 
 
 @pytest.mark.asyncio
-async def test_registry_deprecate(temp_storage, sample_entry) -> None:
+async def test_registry_deprecate(
+    temp_storage: str, sample_entry: CatalogEntry
+) -> None:
     """Test deprecating an entry."""
     registry = Registry(storage_path=temp_storage)
 
@@ -164,7 +171,9 @@ async def test_registry_deprecate(temp_storage, sample_entry) -> None:
 
 
 @pytest.mark.asyncio
-async def test_registry_record_usage(temp_storage, sample_entry) -> None:
+async def test_registry_record_usage(
+    temp_storage: str, sample_entry: CatalogEntry
+) -> None:
     """Test recording usage statistics."""
     registry = Registry(storage_path=temp_storage)
 
@@ -174,6 +183,7 @@ async def test_registry_record_usage(temp_storage, sample_entry) -> None:
     await registry.record_usage("test-agent-001", success=True)
 
     entry = await registry.get("test-agent-001")
+    assert entry is not None
     assert entry.usage_count == 1
     assert entry.success_rate == 1.0
     assert entry.last_used is not None
@@ -182,13 +192,14 @@ async def test_registry_record_usage(temp_storage, sample_entry) -> None:
     await registry.record_usage("test-agent-001", success=False, error="Test error")
 
     entry = await registry.get("test-agent-001")
+    assert entry is not None
     assert entry.usage_count == 2
     assert entry.success_rate < 1.0  # Should decrease
     assert entry.last_error == "Test error"
 
 
 @pytest.mark.asyncio
-async def test_registry_find_by_keyword(temp_storage) -> None:
+async def test_registry_find_by_keyword(temp_storage: str) -> None:
     """Test finding entries by keyword."""
     registry = Registry(storage_path=temp_storage)
 

@@ -4,6 +4,8 @@ Prototype generation for F-gents (Phase 3: Prototype).
 This module implements the (Intent, Contract) → SourceCode morphism from spec/f-gents/forge.md.
 """
 
+from __future__ import annotations
+
 import ast
 import re
 from dataclasses import dataclass, field
@@ -497,6 +499,8 @@ async def generate_prototype_async(
             # Import here to avoid circular dependency
             from agents.f.llm_generation import generate_code_with_llm
 
+            # mypy: runtime is guaranteed non-None due to check above
+            assert config.runtime is not None
             code = await generate_code_with_llm(
                 intent,
                 contract,

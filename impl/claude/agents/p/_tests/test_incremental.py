@@ -9,6 +9,8 @@ Tests:
 - Node counting and metadata
 """
 
+from __future__ import annotations
+
 import pytest
 from agents.p.strategies.incremental import (
     IncrementalNode,
@@ -28,6 +30,7 @@ class TestIncrementalParserComplete:
 
         assert result.success
         assert result.confidence == 1.0
+        assert result.value is not None
         assert result.value.type == "object"
         assert result.value.complete
         assert len(result.value.children) == 2
@@ -42,6 +45,7 @@ class TestIncrementalParserComplete:
 
         assert result.success
         assert result.confidence == 1.0
+        assert result.value is not None
         assert result.value.type == "array"
         assert result.value.complete
         assert len(result.value.children) == 5
@@ -54,6 +58,7 @@ class TestIncrementalParserComplete:
 
         assert result.success
         assert result.confidence == 1.0
+        assert result.value is not None
         assert result.value.type == "object"
         assert len(result.value.children) == 2
 
@@ -76,10 +81,12 @@ class TestIncrementalParserPartial:
         assert result.success
         assert result.confidence < 1.0
         assert result.partial
+        assert result.value is not None
         assert result.value.type == "object"
         assert not result.value.complete
         assert result.metadata["complete"] is False
-        assert result.metadata["incomplete_nodes"] > 0
+        incomplete_nodes = result.metadata.get("incomplete_nodes")
+        assert incomplete_nodes is not None and incomplete_nodes > 0
 
     def test_parse_unclosed_array(self) -> None:
         parser = IncrementalParser()
@@ -89,6 +96,7 @@ class TestIncrementalParserPartial:
 
         assert result.success
         assert result.partial
+        assert result.value is not None
         assert result.value.type == "array"
         assert not result.value.complete
 
@@ -100,6 +108,7 @@ class TestIncrementalParserPartial:
 
         assert result.success
         assert result.partial
+        assert result.value is not None
         assert result.value.type == "object"
         # Should have one child (name field)
         assert len(result.value.children) >= 0
@@ -111,6 +120,7 @@ class TestIncrementalParserPartial:
         result = parser.parse(text)
 
         assert result.success
+        assert result.value is not None
         assert result.value.type == "incomplete"
         assert result.confidence == 0.1  # Minimum non-zero confidence
 
@@ -132,6 +142,7 @@ class TestIncrementalParserStream:
         assert final.success
         assert final.confidence == 1.0
         assert not final.partial
+        assert final.value is not None
         assert final.value.type == "object"
         assert final.value.complete
 
@@ -157,7 +168,12 @@ class TestIncrementalParserStream:
 
         # Check stream position increases
         positions = [r.stream_position for r in results]
-        assert all(positions[i] < positions[i + 1] for i in range(len(positions) - 1))
+        if len(positions) > 1:
+            for i in range(len(positions) - 1):
+                pos_i = positions[i]
+                pos_next = positions[i + 1]
+                assert pos_i is not None and pos_next is not None
+                assert pos_i < pos_next
 
         # Check node count increases
         for result in results:
@@ -216,8 +232,8 @@ class TestIncrementalParserConfidence:
         parser = IncrementalParser()
         result = parser.parse('{"incomplete": ')
 
-        assert result.confidence < 1.0
-        assert result.confidence > 0.0
+        assert result.confidence is not None and result.confidence < 1.0
+        assert result.confidence is not None and result.confidence > 0.0
 
     def test_empty_has_minimum_confidence(self) -> None:
         parser = IncrementalParser()
@@ -260,22 +276,26 @@ class TestIncrementalParserEdgeCases:
         # Number
         result = parser.parse("42")
         assert result.success
+        assert result.value is not None
         assert result.value.type == "number"
         assert result.value.value == 42
 
         # String
         result = parser.parse('"hello"')
         assert result.success
+        assert result.value is not None
         assert result.value.type == "string"
 
         # Boolean
         result = parser.parse("true")
         assert result.success
+        assert result.value is not None
         assert result.value.type == "boolean"
 
         # Null
         result = parser.parse("null")
         assert result.success
+        assert result.value is not None
         assert result.value.type == "null"
 
     def test_parse_deeply_nested(self) -> None:
@@ -287,6 +307,7 @@ class TestIncrementalParserEdgeCases:
         assert result.success
         assert result.confidence == 1.0
         # Should build complete nested structure
+        assert result.value is not None
         assert result.value.type == "object"
 
     def test_parse_array_of_objects(self) -> None:
@@ -296,6 +317,7 @@ class TestIncrementalParserEdgeCases:
         result = parser.parse(text)
 
         assert result.success
+        assert result.value is not None
         assert result.value.type == "array"
         assert len(result.value.children) == 2
 

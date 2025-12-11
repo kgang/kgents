@@ -140,7 +140,7 @@ class RelationalLattice(Generic[N]):
         """
         from pathlib import Path
 
-        self._graph = GraphAgent(
+        self._graph: GraphAgent[N] = GraphAgent(
             persistence_path=Path(persistence_path) if persistence_path else None,
         )
 

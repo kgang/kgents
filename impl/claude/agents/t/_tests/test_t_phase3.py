@@ -5,6 +5,8 @@ Tests:
 - Phase 3: JudgeAgent, PropertyAgent, OracleAgent (Type IV Critics)
 """
 
+from __future__ import annotations
+
 import asyncio
 from typing import Any
 
@@ -28,25 +30,28 @@ from agents.t import (
     numeric_equality,
     semantic_equality,
 )
+from bootstrap.types import Agent
 
 
 # Simple identity agent for testing
-class IdentityAgent:
+class IdentityAgent(Agent[Any, Any]):
     """Identity agent for testing: returns input unchanged."""
 
-    def __init__(self):
-        self.name = "Identity"
+    @property
+    def name(self) -> str:
+        return "Identity"
 
     async def invoke(self, input_data: Any) -> Any:
         return input_data
 
 
 # Simple uppercase agent for testing
-class UppercaseAgent:
+class UppercaseAgent(Agent[str, str]):
     """Uppercase agent for testing: converts strings to uppercase."""
 
-    def __init__(self):
-        self.name = "Uppercase"
+    @property
+    def name(self) -> str:
+        return "Uppercase"
 
     async def invoke(self, input_data: str) -> str:
         if isinstance(input_data, str):
@@ -55,22 +60,24 @@ class UppercaseAgent:
 
 
 # Agent that doubles integers
-class DoubleAgent:
+class DoubleAgent(Agent[int, int]):
     """Double agent for testing: doubles integer inputs."""
 
-    def __init__(self):
-        self.name = "Double"
+    @property
+    def name(self) -> str:
+        return "Double"
 
     async def invoke(self, input_data: int) -> int:
         return input_data * 2
 
 
 # Agent that adds 1
-class IncrementAgent:
+class IncrementAgent(Agent[int, int]):
     """Increment agent for testing: adds 1 to integers."""
 
-    def __init__(self):
-        self.name = "Increment"
+    @property
+    def name(self) -> str:
+        return "Increment"
 
     async def invoke(self, input_data: int) -> int:
         return input_data + 1
@@ -82,7 +89,7 @@ async def test_judge_agent_mock() -> None:
 
     # Create judge agent
     criteria = JudgmentCriteria(correctness=1.0, safety=1.0, style=0.5)
-    judge = JudgeAgent(criteria=criteria)
+    judge: JudgeAgent[Any, Any] = JudgeAgent(criteria=criteria)
 
     # Test: build_prompt
     intent = "Fix the authentication bug"
@@ -133,10 +140,10 @@ async def test_property_agent_identity() -> None:
     print("\n=== Testing PropertyAgent (Identity) ===")
 
     # Create identity agent
-    identity = IdentityAgent()
+    identity: IdentityAgent = IdentityAgent()
 
     # Create property agent
-    prop_agent = PropertyAgent(
+    prop_agent: PropertyAgent[Any, Any] = PropertyAgent(
         agent=identity,
         property_fn=identity_property,
         num_cases=50,
@@ -166,10 +173,10 @@ async def test_property_agent_length_preserved() -> None:
     print("\n=== Testing PropertyAgent (Length Preserved) ===")
 
     # Create uppercase agent (preserves length)
-    uppercase = UppercaseAgent()
+    uppercase: UppercaseAgent = UppercaseAgent()
 
     # Create property agent
-    prop_agent = PropertyAgent(
+    prop_agent: PropertyAgent[Any, Any] = PropertyAgent(
         agent=uppercase,
         property_fn=length_preserved_property,
         num_cases=30,
@@ -195,10 +202,10 @@ async def test_property_agent_failure_detection() -> None:
     print("\n=== Testing PropertyAgent (Failure Detection) ===")
 
     # Create double agent (does NOT preserve identity)
-    double = DoubleAgent()
+    double: DoubleAgent = DoubleAgent()
 
     # Test identity property (should fail for most inputs except 0)
-    prop_agent = PropertyAgent(
+    prop_agent: PropertyAgent[Any, Any] = PropertyAgent(
         agent=double,
         property_fn=identity_property,
         num_cases=20,
@@ -222,10 +229,10 @@ async def test_property_agent_not_none() -> None:
     print("\n=== Testing PropertyAgent (Not None) ===")
 
     # Create mock agent that always returns something
-    mock = MockAgent(MockConfig(output="result"))
+    mock: MockAgent[Any, Any] = MockAgent[Any, Any](MockConfig(output="result"))
 
     # Test not_none property
-    prop_agent = PropertyAgent(
+    prop_agent: PropertyAgent[Any, Any] = PropertyAgent(
         agent=mock,
         property_fn=not_none_property,
         num_cases=25,
@@ -247,12 +254,12 @@ async def test_oracle_agent_agreement() -> None:
     print("\n=== Testing OracleAgent (Agreement) ===")
 
     # Create three identity agents (should all agree)
-    agent1 = IdentityAgent()
-    agent2 = IdentityAgent()
-    agent3 = IdentityAgent()
+    agent1: IdentityAgent = IdentityAgent()
+    agent2: IdentityAgent = IdentityAgent()
+    agent3: IdentityAgent = IdentityAgent()
 
     # Create oracle
-    oracle = OracleAgent(agents=[agent1, agent2, agent3])
+    oracle: OracleAgent[Any, Any] = OracleAgent(agents=[agent1, agent2, agent3])
 
     # Test with input
     test_input = "test data"
@@ -275,12 +282,12 @@ async def test_oracle_agent_disagreement() -> None:
     print("\n=== Testing OracleAgent (Disagreement) ===")
 
     # Create agents with different behavior
-    identity = IdentityAgent()
-    uppercase = UppercaseAgent()
-    double_mock = MockAgent(MockConfig(output="DOUBLED"))
+    identity: IdentityAgent = IdentityAgent()
+    uppercase: UppercaseAgent = UppercaseAgent()
+    double_mock: MockAgent[Any, Any] = MockAgent[Any, Any](MockConfig(output="DOUBLED"))
 
     # Create oracle
-    oracle = OracleAgent(
+    oracle: OracleAgent[Any, Any] = OracleAgent(
         agents=[identity, uppercase, double_mock],
         equality_fn=lambda a, b: a == b,
     )
@@ -301,7 +308,7 @@ async def test_oracle_agent_majority() -> None:
     print("\n=== Testing OracleAgent (Majority) ===")
 
     # Create 5 agents: 3 identity, 2 uppercase
-    agents = [
+    agents: list[Agent[Any, Any]] = [
         IdentityAgent(),
         IdentityAgent(),
         IdentityAgent(),
@@ -310,7 +317,7 @@ async def test_oracle_agent_majority() -> None:
     ]
 
     # Create oracle
-    oracle = OracleAgent(
+    oracle: OracleAgent[Any, Any] = OracleAgent(
         agents=agents,
         majority_threshold=0.5,  # 50% threshold
     )
@@ -333,13 +340,13 @@ async def test_regression_oracle() -> None:
     print("\n=== Testing RegressionOracle ===")
 
     # Reference implementation (identity)
-    reference = IdentityAgent()
+    reference: IdentityAgent = IdentityAgent()
 
     # System under test (uppercase - different behavior)
-    sut = UppercaseAgent()
+    sut: UppercaseAgent = UppercaseAgent()
 
     # Create regression oracle
-    oracle = RegressionOracle(
+    oracle: RegressionOracle[Any, Any] = RegressionOracle(
         reference=reference,
         system_under_test=sut,
     )
@@ -364,11 +371,13 @@ async def test_semantic_equality() -> None:
     print("\n=== Testing Semantic Equality ===")
 
     # Create oracle with semantic equality
-    agent1 = MockAgent(MockConfig(output="Hello World"))
-    agent2 = MockAgent(MockConfig(output="hello world"))
-    agent3 = MockAgent(MockConfig(output="  HELLO WORLD  "))
+    agent1: MockAgent[Any, Any] = MockAgent[Any, Any](MockConfig(output="Hello World"))
+    agent2: MockAgent[Any, Any] = MockAgent[Any, Any](MockConfig(output="hello world"))
+    agent3: MockAgent[Any, Any] = MockAgent[Any, Any](
+        MockConfig(output="  HELLO WORLD  ")
+    )
 
-    oracle = OracleAgent(
+    oracle: OracleAgent[Any, Any] = OracleAgent(
         agents=[agent1, agent2, agent3],
         equality_fn=semantic_equality,
     )
@@ -396,17 +405,19 @@ async def test_phase3_composition() -> None:
 
     # Compose PropertyAgent with OracleAgent
     # Create agents for oracle
-    double = DoubleAgent()
-    IncrementAgent()
+    double: DoubleAgent = DoubleAgent()
+    _increment: IncrementAgent = IncrementAgent()
 
     # Create oracle to test consistency
-    oracle = OracleAgent(agents=[double, double])  # Same agent twice
+    oracle: OracleAgent[Any, Any] = OracleAgent(
+        agents=[double, double]
+    )  # Same agent twice
 
     # Property: oracle should always agree with itself
-    def oracle_consistency(input: int, result: DiffResult) -> bool:
+    def oracle_consistency(input_val: int, result: DiffResult[Any]) -> bool:
         return result.all_agree
 
-    PropertyAgent(
+    _prop_agent: PropertyAgent[Any, Any] = PropertyAgent(
         agent=oracle,
         property_fn=oracle_consistency,
         num_cases=10,
@@ -415,7 +426,7 @@ async def test_phase3_composition() -> None:
     )
 
     # Generate test cases
-    IntGenerator(0, 50)
+    _int_gen: IntGenerator = IntGenerator(0, 50)
 
     # Run property test - need to create the proper input tuple
     # Note: PropertyAgent expects (Generator, property_fn) as input
@@ -427,7 +438,7 @@ async def test_phase3_composition() -> None:
     print("  - Type signatures align for composition")
 
 
-async def main():
+async def main() -> None:
     """Run all Phase 3 tests."""
     print("=" * 60)
     print("T-gents Test Suite - Phase 3 (Type IV Critics)")

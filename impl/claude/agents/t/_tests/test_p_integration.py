@@ -8,6 +8,8 @@ Tests P-gent parsers specialized for T-gent (Tool) workflows:
 - ErrorParser: Tool errors → Recovery strategies
 """
 
+from __future__ import annotations
+
 import json
 
 from agents.t.p_integration import (
@@ -44,6 +46,7 @@ class TestSchemaParser:
         result = parser.parse(json.dumps(schema))
 
         assert result.success
+        assert result.value is not None
         assert result.value["name"] == "web_search"
         assert result.value["input_type"] == "web_search_Input"
         assert result.value["output_type"] == "web_search_Output"
@@ -66,6 +69,7 @@ class TestSchemaParser:
         result = parser.parse(json.dumps(schema))
 
         assert result.success
+        assert result.value is not None
         assert result.value["input_type"] == "CalculationRequest"
         assert result.value["output_type"] == "CalculationResult"
 
@@ -82,6 +86,7 @@ class TestSchemaParser:
         result = parser.parse(json.dumps(schema))
 
         assert result.success
+        assert result.value is not None
         assert result.value["input_type"] == "str"
         assert result.value["output_type"] == "str"
 
@@ -94,6 +99,7 @@ class TestSchemaParser:
         result = parser.parse(json.dumps(schema))
 
         assert not result.success
+        assert result.error is not None
         assert "name" in result.error.lower()
 
     def test_parse_schema_missing_io_schemas(self) -> None:
@@ -105,6 +111,7 @@ class TestSchemaParser:
         result = parser.parse(json.dumps(schema))
 
         assert result.success
+        assert result.value is not None
         assert result.value["input_type"] == "Any"
         assert result.value["output_type"] == "Any"
 
@@ -121,6 +128,7 @@ class TestSchemaParser:
         result = parser.parse(json.dumps(schema))
 
         assert result.success
+        assert result.value is not None
         assert result.value["input_schema"] == {"type": "string"}
         assert result.value["output_schema"] == {"type": "number"}
 
@@ -132,6 +140,7 @@ class TestSchemaParser:
         result = parser.parse(json.dumps(schema))
 
         assert result.success
+        assert result.value is not None
         assert result.value["name"] == "tool"
 
 
@@ -151,6 +160,7 @@ class TestInputParser:
         result = parser.parse(text)
 
         assert result.success
+        assert result.value is not None
         assert result.value["query"] == "Python agents"
         assert result.value["limit"] == "10"
         assert result.confidence > 0.6
@@ -163,6 +173,7 @@ class TestInputParser:
         result = parser.parse(text)
 
         assert result.success
+        assert result.value is not None
         assert result.value["message"] == "Hello world"
 
     def test_parse_input_as_json_fallback(self) -> None:
@@ -173,6 +184,7 @@ class TestInputParser:
         result = parser.parse(text)
 
         assert result.success
+        assert result.value is not None
         assert "query" in result.value
 
     def test_parse_input_no_params_found(self) -> None:
@@ -183,6 +195,7 @@ class TestInputParser:
         result = parser.parse(text)
 
         assert not result.success
+        assert result.error is not None
         assert "no parameters" in result.error.lower()
 
     def test_parse_input_partial_match(self) -> None:
@@ -197,6 +210,7 @@ class TestInputParser:
         result = parser.parse(text)
 
         assert result.success
+        assert result.value is not None
         assert "query" in result.value
         assert "filter" in result.value
         assert "sort" not in result.value  # Missing param is not included
@@ -209,6 +223,7 @@ class TestInputParser:
         result = parser.parse(text)
 
         assert result.success
+        assert result.value is not None
         assert result.value["param1"] == "value1"
 
 
@@ -223,6 +238,7 @@ class TestOutputParser:
         result = parser.parse(output)
 
         assert result.success
+        assert result.value is not None
         assert result.value["status"] == "success"
         assert result.value["result"] == [1, 2, 3]
 
@@ -244,6 +260,7 @@ class TestOutputParser:
         result = parser.parse(output)
 
         assert result.success
+        assert result.value is not None
         assert result.value["data"]["count"] == 2
         assert len(result.value["data"]["items"]) == 2
 
@@ -259,6 +276,7 @@ class TestOutputParser:
         # Success depends on repair strategy, but should not crash
         assert result.success or not result.success  # Either outcome is valid
         if result.success:
+            assert result.value is not None
             assert len(result.repairs) > 0
 
     def test_parse_output_with_expected_type(self) -> None:
@@ -269,6 +287,7 @@ class TestOutputParser:
         result = parser.parse(output)
 
         assert result.success
+        assert result.value is not None
         assert result.metadata["expected_type"] == "SearchResults"
 
     def test_parse_empty_output(self) -> None:
@@ -279,6 +298,7 @@ class TestOutputParser:
         result = parser.parse(output)
 
         assert result.success
+        assert result.value is not None
         assert result.value == {}
 
     def test_convenience_constructor(self) -> None:
@@ -289,6 +309,7 @@ class TestOutputParser:
         result = parser.parse(output)
 
         assert result.success
+        assert result.value is not None
 
 
 class TestErrorParser:
@@ -302,6 +323,7 @@ class TestErrorParser:
         result = parser.parse(error)
 
         assert result.success
+        assert result.value is not None
         assert result.value["error_type"] == "transient"
         assert result.value["recovery"] == "retry"
 
@@ -313,6 +335,7 @@ class TestErrorParser:
         result = parser.parse(error)
 
         assert result.success
+        assert result.value is not None
         assert result.value["error_type"] == "auth"
         assert result.value["recovery"] == "refresh_credentials"
 
@@ -324,6 +347,7 @@ class TestErrorParser:
         result = parser.parse(error)
 
         assert result.success
+        assert result.value is not None
         assert result.value["error_type"] == "not_found"
         assert result.value["recovery"] == "check_inputs"
 
@@ -335,6 +359,7 @@ class TestErrorParser:
         result = parser.parse(error)
 
         assert result.success
+        assert result.value is not None
         assert result.value["error_type"] == "rate_limit"
         assert result.value["recovery"] == "backoff"
 
@@ -353,6 +378,7 @@ class TestErrorParser:
         result = parser.parse(error)
 
         assert result.success
+        assert result.value is not None
         assert result.value["error_type"] == "server_error"
         assert result.value["recovery"] == "retry"
 
@@ -364,6 +390,7 @@ class TestErrorParser:
         result = parser.parse(error)
 
         assert result.success
+        assert result.value is not None
         assert result.value["error_type"] == "bad_request"
         assert result.value["recovery"] == "validate_inputs"
 
@@ -375,6 +402,7 @@ class TestErrorParser:
         result = parser.parse(error)
 
         assert result.success
+        assert result.value is not None
         assert result.value["error_type"] == "transient"
         assert result.value["recovery"] == "retry"
 
@@ -386,6 +414,7 @@ class TestErrorParser:
         result = parser.parse(error)
 
         assert result.success
+        assert result.value is not None
         assert result.value["error_type"] == "unknown"
         assert result.value["recovery"] == "manual_intervention"
 
@@ -397,6 +426,7 @@ class TestErrorParser:
         result = parser.parse(error)
 
         assert result.success
+        assert result.value is not None
         assert result.value["error_type"] == "auth"
         assert result.value["recovery"] == "refresh_credentials"
 
@@ -408,6 +438,7 @@ class TestErrorParser:
         result = parser.parse(error)
 
         assert result.success
+        assert result.value is not None
         assert "transient" in result.value["error_type"]
 
 
@@ -534,16 +565,19 @@ class TestRealWorldToolScenarios:
         # Scenario 1: Rate limit
         error1 = "429 Too Many Requests"
         result1 = error_parser.parse(error1)
+        assert result1.value is not None
         assert result1.value["recovery"] == "backoff"
 
         # Scenario 2: Auth failure
         error2 = "401 Unauthorized"
         result2 = error_parser.parse(error2)
+        assert result2.value is not None
         assert result2.value["recovery"] == "refresh_credentials"
 
         # Scenario 3: Transient network issue
         error3 = "Connection timeout"
         result3 = error_parser.parse(error3)
+        assert result3.value is not None
         assert result3.value["recovery"] == "retry"
 
     def test_database_query_tool_workflow(self) -> None:
@@ -563,4 +597,5 @@ class TestRealWorldToolScenarios:
         results = '{"rows": [{"id": 1, "name": "test"}], "count": 1}'
         output_result = output_parser.parse(results)
         assert output_result.success
+        assert output_result.value is not None
         assert output_result.value["count"] == 1

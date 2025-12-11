@@ -11,6 +11,8 @@ Tests cover:
 7. Error handling
 """
 
+from __future__ import annotations
+
 import tempfile
 from dataclasses import dataclass
 from datetime import datetime
@@ -164,7 +166,7 @@ class MockMarket:
 
     def __init__(self, base_odds: float = 2.0):
         self._base_odds = base_odds
-        self.bets_placed: list[dict] = []
+        self.bets_placed: list[dict[str, Any]] = []
         self.settlements: list[tuple[str, bool]] = []
         self.schema_rates: dict[str, float] = {}
 
@@ -221,7 +223,7 @@ class MockStaking:
 
     def __init__(self, stake_rate: float = 0.01):
         self._stake_rate = stake_rate
-        self.stakes: dict[str, dict] = {}
+        self.stakes: dict[str, dict[str, Any]] = {}
         self.released: list[str] = []
         self.forfeited: list[str] = []
 
@@ -261,7 +263,8 @@ class MockStaking:
     async def forfeit_stake(self, stake_id: str) -> int:
         if stake_id in self.stakes:
             self.forfeited.append(stake_id)
-            return self.stakes[stake_id]["amount"]
+            amount: Any = self.stakes[stake_id]["amount"]
+            return int(amount)
         return 0
 
 
@@ -518,7 +521,7 @@ class TestMutatePhase:
     @pytest.mark.asyncio
     async def test_mutate_phase_complex_code(
         self, complex_code: str, temp_file_complex: Path
-    ):
+    ) -> None:
         """Test mutation generation on complex code."""
         config = CycleConfig(max_mutations_per_cycle=20)
         cycle = ThermodynamicCycle(config=config)
@@ -759,7 +762,7 @@ class TestFullCycle:
     @pytest.mark.asyncio
     async def test_complete_cycle_basic(
         self, simple_code: str, temp_file: Path, intent: Intent
-    ):
+    ) -> None:
         """Test complete cycle execution."""
         config = CycleConfig(
             run_tests=False,
@@ -783,7 +786,7 @@ class TestFullCycle:
     @pytest.mark.asyncio
     async def test_cycle_with_integrations(
         self, simple_code: str, temp_file: Path, intent: Intent
-    ):
+    ) -> None:
         """Test cycle with full integrations."""
         config = CycleConfig(
             run_tests=False,
@@ -816,7 +819,7 @@ class TestFullCycle:
     @pytest.mark.asyncio
     async def test_cycle_temperature_adjustment(
         self, simple_code: str, temp_file: Path
-    ):
+    ) -> None:
         """Test that temperature adjusts based on success rate."""
         config = CycleConfig(
             initial_temperature=1.0,
@@ -1107,8 +1110,8 @@ try:
     class TestCycleProperties:
         """Property-based tests for cycle."""
 
-        @given(temperature=st.floats(min_value=0.0, max_value=10.0))
-        @settings(max_examples=20)
+        @given(temperature=st.floats(min_value=0.0, max_value=10.0))  # type: ignore[untyped-decorator]
+        @settings(max_examples=20)  # type: ignore[untyped-decorator]
         def test_temperature_bounds_property(self, temperature: float) -> None:
             """Test temperature is always within bounds."""
             config = CycleConfig(
@@ -1120,11 +1123,11 @@ try:
 
             assert config.min_temperature <= cycle.temperature <= config.max_temperature
 
-        @given(
+        @given(  # type: ignore[untyped-decorator]
             successes=st.integers(min_value=0, max_value=100),
             failures=st.integers(min_value=0, max_value=100),
         )
-        @settings(max_examples=20)
+        @settings(max_examples=20)  # type: ignore[untyped-decorator]
         def test_success_rate_property(self, successes: int, failures: int) -> None:
             """Test success rate is always valid."""
             result = CycleResult(

@@ -12,14 +12,16 @@ import asyncio
 import random
 from typing import TYPE_CHECKING, Generic, Optional, TypeVar
 
+from bootstrap.types import Agent
+
 if TYPE_CHECKING:
-    from bootstrap.types import Agent, ComposedAgent
+    from bootstrap.types import ComposedAgent
 
 A = TypeVar("A")
 B = TypeVar("B")
 
 
-class LatencyAgent(Generic[A]):
+class LatencyAgent(Agent[A, A], Generic[A]):
     """Identity morphism with temporal cost L_Δ.
 
     Category Theory:
@@ -47,7 +49,7 @@ class LatencyAgent(Generic[A]):
         delay: float,
         variance: float = 0.0,
         seed: Optional[int] = None,
-    ):
+    ) -> None:
         """Initialize LatencyAgent.
 
         Args:
@@ -55,11 +57,16 @@ class LatencyAgent(Generic[A]):
             variance: Random variance (±variance) in seconds
             seed: Random seed for reproducibility
         """
-        self.name = f"Latency(Δ={delay}s)"
+        self._name = f"Latency(Δ={delay}s)"
         self.delay = delay
         self.variance = variance
         self.rng = random.Random(seed)
         self.__is_test__ = True
+
+    @property
+    def name(self) -> str:
+        """Human-readable name for this agent."""
+        return self._name
 
     async def invoke(self, input_data: A) -> A:
         """Add latency, then return input unchanged.

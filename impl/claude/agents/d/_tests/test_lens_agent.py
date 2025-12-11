@@ -1,6 +1,7 @@
 """Tests for LensAgent."""
 
 from dataclasses import dataclass
+from typing import Any
 
 import pytest
 from agents.d import VolatileAgent
@@ -26,7 +27,9 @@ class User:
 @pytest.mark.asyncio
 async def test_lens_agent_focused_load() -> None:
     """LensAgent loads sub-state through lens."""
-    parent = VolatileAgent(_state={"users": {"alice": "data"}, "products": {}})
+    parent: VolatileAgent[dict[str, Any]] = VolatileAgent(
+        _state={"users": {"alice": "data"}, "products": {}}
+    )
     lens_dgent = LensAgent(parent=parent, lens=key_lens("users"))
 
     users = await lens_dgent.load()
@@ -36,7 +39,9 @@ async def test_lens_agent_focused_load() -> None:
 @pytest.mark.asyncio
 async def test_lens_agent_focused_save() -> None:
     """LensAgent saves sub-state, updates parent."""
-    parent = VolatileAgent(_state={"users": {}, "products": {}})
+    parent: VolatileAgent[dict[str, Any]] = VolatileAgent(
+        _state={"users": {}, "products": {}}
+    )
     lens_dgent = LensAgent(parent=parent, lens=key_lens("users"))
 
     await lens_dgent.save({"alice": {"age": 30}})
@@ -67,8 +72,8 @@ async def test_lens_agent_isolation() -> None:
 
     # LensAgent sees only "users"
     assert sub_state == {"alice": "data"}
-    assert "products" not in sub_state  # type: ignore
-    assert "secret" not in sub_state  # type: ignore
+    assert "products" not in sub_state
+    assert "secret" not in sub_state
 
 
 @pytest.mark.asyncio
@@ -83,7 +88,7 @@ async def test_lens_agent_history() -> None:
     await parent.save({"count": 3, "other": "data"})
 
     # LensAgent history shows only "count" field
-    history = await lens_dgent.history()
+    history: list[Any] = await lens_dgent.history()
 
     assert len(history) == 3
     assert history[0] == 2  # Newest first (current excluded)
@@ -97,7 +102,9 @@ async def test_lens_agent_history() -> None:
 @pytest.mark.asyncio
 async def test_multiple_lens_agents_shared_parent() -> None:
     """Multiple LensAgents can share parent with different lenses."""
-    parent = VolatileAgent(_state={"users": {}, "products": {}, "orders": {}})
+    parent: VolatileAgent[dict[str, Any]] = VolatileAgent(
+        _state={"users": {}, "products": {}, "orders": {}}
+    )
 
     user_dgent = LensAgent(parent=parent, lens=key_lens("users"))
     product_dgent = LensAgent(parent=parent, lens=key_lens("products"))
@@ -133,7 +140,7 @@ async def test_lens_agent_with_composed_lens() -> None:
     city_lens = key_lens("city")
     composed = user_lens >> address_lens >> city_lens
 
-    parent = VolatileAgent(
+    parent: VolatileAgent[dict[str, Any]] = VolatileAgent(
         _state={
             "user": {"name": "Alice", "address": {"city": "NYC", "zip": "10001"}},
             "settings": {},
@@ -154,7 +161,7 @@ async def test_lens_agent_with_composed_lens() -> None:
     assert updated_city == "SF"
 
     # Verify parent structure preserved
-    full_state = await parent.load()
+    full_state: dict[str, Any] = await parent.load()
     assert full_state["user"]["name"] == "Alice"
     assert full_state["user"]["address"]["zip"] == "10001"
     assert full_state["user"]["address"]["city"] == "SF"

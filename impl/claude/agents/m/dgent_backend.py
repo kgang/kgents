@@ -12,6 +12,8 @@ providing:
 This bridges M-gent's cognitive layer with D-gent's storage layer.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple, TypeVar
@@ -107,8 +109,8 @@ class DgentBackedHolographicMemory(HolographicMemory[T]):
         embedder: Any = None,  # L-gent Embedder
         config: Optional[PersistenceConfig] = None,
         namespace: str = "holographic",
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         """Initialize D-gent backed holographic memory.
 
         Args:
@@ -346,7 +348,7 @@ class DgentBackedHolographicMemory(HolographicMemory[T]):
         limit: int,
     ) -> List[ResonanceResult[T]]:
         """Recall patterns from D-gent semantic layer."""
-        results = []
+        results: List[ResonanceResult[T]] = []
 
         if not isinstance(query, str):
             return results  # D-gent semantic uses text queries
@@ -371,14 +373,14 @@ class DgentBackedHolographicMemory(HolographicMemory[T]):
                     )
                 else:
                     # Try to recover
-                    pattern = await self._recover_pattern(entry_id)
-                    if pattern:
+                    maybe_pattern = await self._recover_pattern(entry_id)
+                    if maybe_pattern:
                         results.append(
                             ResonanceResult(
-                                pattern=pattern,
+                                pattern=maybe_pattern,
                                 similarity=score,
                                 resolution=self._compression_to_resolution(
-                                    pattern.compression
+                                    maybe_pattern.compression
                                 ),
                             )
                         )
@@ -629,7 +631,9 @@ class TemporalMemory(DgentBackedHolographicMemory[T]):
             return None
 
         state = await self._dgent_storage.replay(timestamp)
-        return state
+        if state is None:
+            return None
+        return dict(state)
 
     async def timeline(
         self,
@@ -702,8 +706,8 @@ def create_dgent_memory(
     embedder: Any = None,
     namespace: str = "holographic",
     enable_all: bool = False,
-    **kwargs,
-) -> DgentBackedHolographicMemory:
+    **kwargs: Any,
+) -> DgentBackedHolographicMemory[Any]:
     """Create D-gent backed holographic memory with convenient defaults.
 
     Args:
@@ -738,8 +742,8 @@ def create_associative_memory(
     storage: Any,
     embedder: Any = None,
     namespace: str = "associative",
-    **kwargs,
-) -> AssociativeWebMemory:
+    **kwargs: Any,
+) -> AssociativeWebMemory[Any]:
     """Create associative web memory.
 
     Args:
@@ -768,8 +772,8 @@ def create_temporal_memory(
     storage: Any,
     embedder: Any = None,
     namespace: str = "temporal",
-    **kwargs,
-) -> TemporalMemory:
+    **kwargs: Any,
+) -> TemporalMemory[Any]:
     """Create temporal memory.
 
     Args:

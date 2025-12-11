@@ -40,7 +40,7 @@ from agents.t.permissions import (
     ToolCapabilities,
 )
 from agents.t.tool import Tool, ToolError, ToolErrorType, ToolTrace
-from bootstrap.types import Result, err, ok
+from bootstrap.types import Err, Ok, Result, err, ok
 
 # Type variables
 A = TypeVar("A")
@@ -136,7 +136,7 @@ class CircuitBreakerTool(Tool[A, B], Generic[A, B]):
         self,
         inner: Tool[A, B],
         config: Optional[CircuitBreakerConfig] = None,
-    ):
+    ) -> None:
         self.inner = inner
         self.config = config or CircuitBreakerConfig()
         self.state = CircuitBreakerState()
@@ -261,7 +261,7 @@ class ToolExecutor(Generic[A, B]):
         self,
         tool: Tool[A, B],
         enable_tracing: bool = False,
-    ):
+    ) -> None:
         self.tool = tool
         self.enable_tracing = enable_tracing
 
@@ -371,7 +371,7 @@ class RetryExecutor(Generic[A, B]):
         self,
         tool: Tool[A, B],
         config: Optional[RetryConfig] = None,
-    ):
+    ) -> None:
         self.tool = tool
         self.config = config or RetryConfig()
         self.executor = ToolExecutor(tool)
@@ -410,7 +410,8 @@ class RetryExecutor(Generic[A, B]):
             if result.is_ok():
                 return result
 
-            # Extract error
+            # Extract error - use isinstance for proper type narrowing
+            assert isinstance(result, Err)
             error = result.error
             last_error = error
 
@@ -427,6 +428,7 @@ class RetryExecutor(Generic[A, B]):
             await asyncio.sleep(delay_ms / 1000)
 
         # Should never reach here, but return last error
+        assert last_error is not None, "Should have at least one error"
         return err(last_error, str(last_error), last_error.recoverable)
 
 
@@ -461,7 +463,7 @@ class RobustToolExecutor(Generic[A, B]):
         circuit_config: Optional[CircuitBreakerConfig] = None,
         retry_config: Optional[RetryConfig] = None,
         enable_tracing: bool = False,
-    ):
+    ) -> None:
         # Wrap tool with circuit breaker
         self.circuit_breaker = CircuitBreakerTool(tool, circuit_config)
 
@@ -548,7 +550,7 @@ class SecureToolExecutor(Generic[A, B]):
         circuit_config: Optional[CircuitBreakerConfig] = None,
         retry_config: Optional[RetryConfig] = None,
         enable_tracing: bool = True,
-    ):
+    ) -> None:
         """
         Initialize secure tool executor.
 
@@ -568,7 +570,9 @@ class SecureToolExecutor(Generic[A, B]):
 
         # Permission and audit
         self.classifier = classifier or PermissionClassifier()
-        self.audit_logger = audit_logger or AuditLogger()
+        self.audit_logger: AuditLogger = (
+            audit_logger if audit_logger is not None else AuditLogger()
+        )
 
         # Robust execution
         self.robust_executor = RobustToolExecutor(
@@ -601,6 +605,8 @@ class SecureToolExecutor(Generic[A, B]):
         )
 
         if result.is_ok():
+            # Type narrowing for Result
+            assert isinstance(result, Ok)
             self.token = result.value
 
         # Log permission request
@@ -638,7 +644,8 @@ class SecureToolExecutor(Generic[A, B]):
             # Use existing token
             token_result = self.token.use()
             if not token_result.is_ok():
-                # Token invalid/expired
+                # Token invalid/expired - type narrowing for Err
+                assert isinstance(token_result, Err)
                 permission_error = ToolError(
                     error_type=ToolErrorType.PERMISSION,
                     message=token_result.message,
@@ -716,6 +723,16 @@ class SecureToolExecutor(Generic[A, B]):
         duration_ms = (end_time - start_time).total_seconds() * 1000
 
         # 4. Log execution
+        output_summary: Optional[str] = None
+        error_msg: Optional[str] = None
+
+        if result.is_ok():
+            assert isinstance(result, Ok)
+            output_summary = self._summarize_output(result.value)
+        else:
+            assert isinstance(result, Err)
+            error_msg = str(result.error)
+
         await self.audit_logger.log_execution(
             tool_id=self.tool.name,
             tool_name=self.tool.name,
@@ -723,10 +740,8 @@ class SecureToolExecutor(Generic[A, B]):
             permission=permission,
             input_summary=self._summarize_input(input),
             success=result.is_ok(),
-            output_summary=self._summarize_output(result.value)
-            if result.is_ok()
-            else None,
-            error=str(result.error) if result.is_err() else None,
+            output_summary=output_summary,
+            error=error_msg,
             duration_ms=duration_ms,
             token_id=self.token.token_id if self.token else None,
         )
@@ -767,20 +782,21 @@ class SecureToolExecutor(Generic[A, B]):
         """
         permission = self.classifier.classify(self.capabilities, self.context)
 
-        status = {
-            "permission": permission.value,
-            "tool": self.tool.name,
-            "context_id": self.context.agent_id,
-            "token": None,
-        }
-
+        token_info: Optional[dict[str, Any]] = None
         if self.token:
-            status["token"] = {
+            token_info = {
                 "id": self.token.token_id,
                 "valid": self.token.is_valid(),
                 "expires_at": self.token.expires_at.isoformat(),
                 "uses": self.token.uses,
             }
+
+        status: dict[str, Any] = {
+            "permission": permission.value,
+            "tool": self.tool.name,
+            "context_id": self.context.agent_id,
+            "token": token_info,
+        }
 
         return status
 

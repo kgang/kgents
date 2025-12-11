@@ -10,6 +10,8 @@ Tests cover:
 - Tongue dataclass (immutability, hashing, serialization)
 """
 
+from __future__ import annotations
+
 import json
 
 import pytest
@@ -210,7 +212,7 @@ def test_domain_analysis_populated() -> None:
 
 
 @pytest.fixture
-def sample_tongue():
+def sample_tongue() -> Tongue:
     """Create a sample Tongue for testing."""
     grammar = 'CMD ::= "CHECK" Date | "ADD" Event'
     return Tongue(
@@ -228,7 +230,7 @@ def sample_tongue():
         ),
         interpreter_config=InterpreterConfig(
             runtime="python",
-            semantics="command",
+            semantics={},
         ),
         domain="Calendar Management",
         constraints=("No DELETE operations", "No overwrites"),
@@ -246,13 +248,13 @@ def sample_tongue():
     )
 
 
-def test_tongue_immutability(sample_tongue) -> None:
+def test_tongue_immutability(sample_tongue: Tongue) -> None:
     """Test that Tongue is immutable (frozen)."""
     with pytest.raises(Exception):  # FrozenInstanceError
-        sample_tongue.name = "NewName"
+        sample_tongue.name = "NewName"  # type: ignore[misc]
 
 
-def test_tongue_hashable(sample_tongue) -> None:
+def test_tongue_hashable(sample_tongue: Tongue) -> None:
     """Test that Tongue is hashable."""
     hash_value = hash(sample_tongue)
     assert isinstance(hash_value, int)
@@ -277,28 +279,30 @@ def test_tongue_hashable(sample_tongue) -> None:
     assert hash(sample_tongue) == hash(tongue2)
 
 
-def test_tongue_parse_implemented(sample_tongue) -> None:
+def test_tongue_parse_implemented(sample_tongue: Tongue) -> None:
     """Test that parse() works with BNF grammar (Phase 3 implemented)."""
     result = sample_tongue.parse("CHECK 2024-12-15")
     assert result.success
+    assert result.ast is not None
     assert result.ast["verb"] == "CHECK"
     assert result.ast["noun"] == "2024-12-15"
 
 
-def test_tongue_execute_implemented(sample_tongue) -> None:
+def test_tongue_execute_implemented(sample_tongue: Tongue) -> None:
     """Test that execute() works with parsed AST (Phase 3 implemented)."""
     result = sample_tongue.execute({"verb": "CHECK", "noun": "2024-12-15"})
     assert result.success
     # Command execution without handlers returns intent-only
+    assert result.value is not None
     assert result.value["executed"] is False
 
 
-def test_tongue_validate(sample_tongue) -> None:
+def test_tongue_validate(sample_tongue: Tongue) -> None:
     """Test that validate() returns validated status."""
     assert sample_tongue.validate() is True
 
 
-def test_tongue_render_implemented(sample_tongue) -> None:
+def test_tongue_render_implemented(sample_tongue: Tongue) -> None:
     """Test that render() works with AST (Phase 3 implemented)."""
     rendered = sample_tongue.render({"verb": "CHECK", "noun": "2024-12-15"})
     assert rendered == "CHECK 2024-12-15"
@@ -309,7 +313,7 @@ def test_tongue_render_implemented(sample_tongue) -> None:
 # ============================================================================
 
 
-def test_tongue_to_dict(sample_tongue) -> None:
+def test_tongue_to_dict(sample_tongue: Tongue) -> None:
     """Test Tongue serialization to dict."""
     data = sample_tongue.to_dict()
     assert data["name"] == "CalendarTongue"
@@ -322,7 +326,7 @@ def test_tongue_to_dict(sample_tongue) -> None:
     assert len(data["constraint_proofs"]) == 1
 
 
-def test_tongue_to_json(sample_tongue) -> None:
+def test_tongue_to_json(sample_tongue: Tongue) -> None:
     """Test Tongue serialization to JSON."""
     json_str = sample_tongue.to_json()
     data = json.loads(json_str)
@@ -330,7 +334,7 @@ def test_tongue_to_json(sample_tongue) -> None:
     assert data["domain"] == "Calendar Management"
 
 
-def test_tongue_from_dict(sample_tongue) -> None:
+def test_tongue_from_dict(sample_tongue: Tongue) -> None:
     """Test Tongue deserialization from dict."""
     data = sample_tongue.to_dict()
     tongue = Tongue.from_dict(data)
@@ -344,7 +348,7 @@ def test_tongue_from_dict(sample_tongue) -> None:
     assert len(tongue.examples) == len(sample_tongue.examples)
 
 
-def test_tongue_from_json(sample_tongue) -> None:
+def test_tongue_from_json(sample_tongue: Tongue) -> None:
     """Test Tongue deserialization from JSON."""
     json_str = sample_tongue.to_json()
     tongue = Tongue.from_json(json_str)
@@ -353,7 +357,7 @@ def test_tongue_from_json(sample_tongue) -> None:
     assert tongue.version == sample_tongue.version
 
 
-def test_tongue_serialization_round_trip(sample_tongue) -> None:
+def test_tongue_serialization_round_trip(sample_tongue: Tongue) -> None:
     """Test that serialization is a round-trip."""
     # JSON round-trip
     json_str = sample_tongue.to_json()
@@ -384,6 +388,7 @@ def test_example_creation() -> None:
         description="Check calendar on specific date",
     )
     assert ex.text == "CHECK 2024-12-15"
+    assert ex.expected_ast is not None
     assert ex.expected_ast["type"] == "check"
     assert ex.description == "Check calendar on specific date"
 

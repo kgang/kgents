@@ -14,7 +14,7 @@ Phase 6 Goals:
 """
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, cast
 
 from .semantic import Embedder
 
@@ -23,14 +23,14 @@ SENTENCE_TRANSFORMERS_AVAILABLE = False
 OPENAI_AVAILABLE = False
 
 try:
-    from sentence_transformers import SentenceTransformer  # type: ignore
+    from sentence_transformers import SentenceTransformer
 
     SENTENCE_TRANSFORMERS_AVAILABLE = True
 except ImportError:
     pass
 
 try:
-    import openai  # type: ignore
+    import openai
 
     OPENAI_AVAILABLE = True
 except ImportError:
@@ -94,7 +94,7 @@ class SentenceTransformerEmbedder:
     @property
     def dimension(self) -> int:
         """Dimension of embedding vectors."""
-        return self._dimension
+        return cast(int, self._dimension)
 
     @property
     def metadata(self) -> EmbeddingMetadata:
@@ -120,7 +120,7 @@ class SentenceTransformerEmbedder:
         embedding = self._model.encode(
             text, normalize_embeddings=self.normalize, show_progress_bar=False
         )
-        return embedding.tolist()
+        return cast(list[float], embedding.tolist())
 
     async def embed_batch(self, texts: list[str]) -> list[list[float]]:
         """Embed multiple texts efficiently.
@@ -134,7 +134,7 @@ class SentenceTransformerEmbedder:
         embeddings = self._model.encode(
             texts, normalize_embeddings=self.normalize, show_progress_bar=False
         )
-        return embeddings.tolist()
+        return cast(list[list[float]], embeddings.tolist())
 
 
 class OpenAIEmbedder:
@@ -224,7 +224,7 @@ class OpenAIEmbedder:
         # Update dimension if this is the first call
         if self._dimension != len(embedding):
             self._dimension = len(embedding)
-        return embedding
+        return cast(list[float], embedding)
 
     async def embed_batch(self, texts: list[str]) -> list[list[float]]:
         """Embed multiple texts efficiently.

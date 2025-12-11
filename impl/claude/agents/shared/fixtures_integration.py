@@ -14,6 +14,8 @@ Usage:
     )
 """
 
+from __future__ import annotations
+
 from agents.f.contract import (
     CompositionRule,
     Contract,
@@ -26,6 +28,7 @@ from agents.f.intent import (
     Intent,
 )
 from agents.f.prototype import SourceCode
+from agents.l.catalog import CatalogEntry
 
 
 def make_sample_intent(
@@ -111,7 +114,7 @@ def make_sample_contract(
             )
         ],
         semantic_intent="Fetch current weather data",
-        raw_intent="Fetch weather data for a given location",
+        raw_intent=make_sample_intent(),
     )
 
 
@@ -170,7 +173,7 @@ def make_sample_catalog_entry(
     name: str = "TestAgent",
     description: str = "A test agent for unit tests",
     author: str = "test",
-):
+) -> CatalogEntry:
     """
     Create a sample CatalogEntry for testing.
 
@@ -179,6 +182,8 @@ def make_sample_catalog_entry(
     from agents.l.catalog import CatalogEntry, EntityType, Status
 
     return CatalogEntry(
+        id="test-agent-1",
+        version="1.0.0",
         name=name,
         entity_type=EntityType.AGENT,
         description=description,

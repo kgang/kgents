@@ -11,9 +11,11 @@ Composition Laws:
 """
 
 from dataclasses import dataclass
+from typing import Any
 
 import pytest
 from agents.d.lens import (
+    Lens,
     field_lens,
     identity_lens,
     index_lens,
@@ -92,7 +94,7 @@ def test_index_lens_set() -> None:
 
 def test_identity_lens() -> None:
     """identity_lens returns state unchanged."""
-    lens = identity_lens()
+    lens: Lens[dict[str, Any], dict[str, Any]] = identity_lens()
     state = {"name": "Alice"}
 
     assert lens.get(state) == state
@@ -129,7 +131,7 @@ def test_lens_composition_dataclass() -> None:
     @dataclass
     class State:
         user: User
-        settings: dict
+        settings: dict[str, Any]
 
     state = State(
         user=User(name="Alice", address=Address(city="NYC", zip="10001")),
@@ -231,7 +233,9 @@ class TestLensLawsPropertyBased:
             ({"a": [1, 2, 3], "b": [4, 5]}, [10], [20, 30]),
         ],
     )
-    def test_key_lens_laws_property_based(self, state, value1, value2) -> None:
+    def test_key_lens_laws_property_based(
+        self, state: dict[str, Any], value1: Any, value2: Any
+    ) -> None:
         """Property test: key_lens laws hold for various types."""
         lens = key_lens("a")
         laws = verify_lens_laws(lens, state, value1, value2)
@@ -247,7 +251,9 @@ class TestLensLawsPropertyBased:
             (["a", "b", "c"], 1, "x", "y"),
         ],
     )
-    def test_index_lens_laws_property_based(self, items, index, v1, v2) -> None:
+    def test_index_lens_laws_property_based(
+        self, items: list[Any], index: int, v1: Any, v2: Any
+    ) -> None:
         """Property test: index_lens laws hold for various indices."""
         lens = index_lens(index)
         laws = verify_lens_laws(lens, items, v1, v2)

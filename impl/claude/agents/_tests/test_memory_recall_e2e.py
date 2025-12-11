@@ -12,7 +12,10 @@ Philosophy: Memory is not retrieval—it is active reconstruction.
 The hologram metaphor is architecturally load-bearing.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
+from typing import Any
 
 import pytest
 
@@ -71,7 +74,7 @@ class TestMemoryStoreExperience:
     @pytest.mark.asyncio
     async def test_store_simple_experience(self) -> None:
         """Test storing a simple experience in holographic memory."""
-        memory = HolographicMemory()
+        memory: HolographicMemory[str] = HolographicMemory()
 
         pattern = await memory.store(
             id="exp-001",
@@ -86,7 +89,7 @@ class TestMemoryStoreExperience:
     @pytest.mark.asyncio
     async def test_store_multiple_related_experiences(self) -> None:
         """Test storing multiple related experiences."""
-        memory = HolographicMemory()
+        memory: HolographicMemory[str] = HolographicMemory()
 
         experiences = [
             (
@@ -110,7 +113,7 @@ class TestMemoryStoreExperience:
     async def test_store_with_embedding(self) -> None:
         """Test storing experience with embedding vector."""
         embedder = SimpleEmbedder(dimension=128)
-        memory = HolographicMemory(embedder=embedder)
+        memory: HolographicMemory[str] = HolographicMemory(embedder=embedder)
 
         embedding = await embedder.embed("debugging memory issues")
         pattern = await memory.store(
@@ -130,14 +133,14 @@ class TestDgentPersistence:
     @pytest.mark.asyncio
     async def test_persist_to_volatile_backend(self) -> None:
         """Test persisting memory to D-gent VolatileAgent."""
-        volatile = VolatileAgent(_state={})
+        volatile: VolatileAgent[dict[str, Any]] = VolatileAgent(_state={})
         config = MemoryConfig(
             enable_semantic=True,
             enable_temporal=True,
         )
         unified = UnifiedMemory(volatile, config)
 
-        memory = DgentBackedHolographicMemory(
+        memory: DgentBackedHolographicMemory[str] = DgentBackedHolographicMemory(
             storage=unified,
             namespace="e2e_test",
         )
@@ -159,7 +162,9 @@ class TestDgentPersistence:
     @pytest.mark.asyncio
     async def test_unified_memory_layers(self) -> None:
         """Test D-gent UnifiedMemory with all layers."""
-        volatile = VolatileAgent(_state={"initial": "data"})
+        volatile: VolatileAgent[dict[str, Any]] = VolatileAgent(
+            _state={"initial": "data"}
+        )
         config = MemoryConfig(
             enable_semantic=True,
             enable_temporal=True,
@@ -172,31 +177,31 @@ class TestDgentPersistence:
         await unified.associate({"concept": "test"}, "test_concept")
 
         # Use temporal layer
-        await unified.save({"version": 1})
-        await unified.witness("v1", {"version": 1})
+        await unified.save({"version": "1"})
+        await unified.witness("v1", {"version": "1"})
 
-        await unified.save({"version": 2})
-        await unified.witness("v2", {"version": 2})
+        await unified.save({"version": "2"})
+        await unified.witness("v2", {"version": "2"})
 
         # Use relational layer
         await unified.relate("entity_a", "depends_on", "entity_b")
 
         # Verify current state
         current = await unified.load()
-        assert current["version"] == 2
+        assert current["version"] == "2"
 
     @pytest.mark.asyncio
     async def test_memory_survives_simulated_restart(self) -> None:
         """Test memory persists through simulated restart."""
-        shared_state = {}  # Simulate persistent storage
+        shared_state: dict[str, Any] = {}  # Simulate persistent storage
 
         # Session 1: Store - DgentBackedHolographicMemory requires temporal layer
-        volatile1 = VolatileAgent(_state=shared_state)
+        volatile1: VolatileAgent[dict[str, Any]] = VolatileAgent(_state=shared_state)
         unified1 = UnifiedMemory(
             volatile1,
             MemoryConfig(enable_semantic=True, enable_temporal=True),
         )
-        memory1 = DgentBackedHolographicMemory(
+        memory1: DgentBackedHolographicMemory[str] = DgentBackedHolographicMemory(
             storage=unified1, namespace="restart_test"
         )
 
@@ -211,12 +216,14 @@ class TestDgentPersistence:
         final_state = await unified1.load()
 
         # Session 2: Restore (simulated restart)
-        volatile2 = VolatileAgent(_state=final_state if final_state else {})
+        volatile2: VolatileAgent[dict[str, Any]] = VolatileAgent(
+            _state=final_state if final_state else {}
+        )
         unified2 = UnifiedMemory(
             volatile2,
             MemoryConfig(enable_semantic=True, enable_temporal=True),
         )
-        memory2 = DgentBackedHolographicMemory(
+        memory2: DgentBackedHolographicMemory[str] = DgentBackedHolographicMemory(
             storage=unified2, namespace="restart_test"
         )
 
@@ -249,6 +256,7 @@ class TestLgentIndexing:
         assert entry_id == "memory-entry-001"
 
         retrieved = await registry.get("memory-entry-001")
+        assert retrieved is not None
         assert retrieved.name == "DebuggingExperience"
 
     @pytest.mark.asyncio
@@ -332,7 +340,7 @@ class TestHolographicRecall:
     @pytest.mark.asyncio
     async def test_retrieve_by_concept(self) -> None:
         """Test retrieving memories by concept."""
-        memory = HolographicMemory()
+        memory: HolographicMemory[str] = HolographicMemory()
 
         await memory.store(
             "mem-001", "Python is great for scripting", ["python", "scripting"]
@@ -355,7 +363,7 @@ class TestHolographicRecall:
     async def test_retrieve_with_similarity_threshold(self) -> None:
         """Test retrieval with similarity filtering."""
         embedder = SimpleEmbedder(dimension=128)
-        memory = HolographicMemory(embedder=embedder)
+        memory: HolographicMemory[str] = HolographicMemory(embedder=embedder)
 
         await memory.store(
             "mem-001", "Machine learning models need training data", ["ml", "data"]
@@ -374,7 +382,7 @@ class TestHolographicRecall:
     @pytest.mark.asyncio
     async def test_recollection_agent_reconstruction(self) -> None:
         """Test RecollectionAgent reconstructs from cue."""
-        memory = HolographicMemory()
+        memory: HolographicMemory[str] = HolographicMemory()
         agent = RecollectionAgent(memory=memory)
 
         # Store original experience
@@ -403,7 +411,7 @@ class TestHolographicRecall:
     async def test_tiered_memory_promotion(self) -> None:
         """Test TieredMemory promotes accessed memories."""
         embedder = SimpleEmbedder(dimension=128)
-        memory = TieredMemory(embedder=embedder, working_capacity=7)
+        memory: TieredMemory[str] = TieredMemory(embedder=embedder, working_capacity=7)
 
         # Perceive in sensory tier (TieredMemory uses perceive, not store)
         memory.perceive("New sensory input about programming", salience=0.6)
@@ -487,8 +495,10 @@ class TestNarrativeGeneration:
         historian = Historian(store)
 
         traceable = MockTraceable()
-        ctx = historian.begin_trace(traceable, "test input")
-        trace = historian.end_trace(ctx, action="TEST", outputs="test output")
+        ctx = historian.begin_trace(traceable, {"input": "test input"})
+        trace = historian.end_trace(
+            ctx, action="TEST", outputs={"output": "test output"}
+        )
 
         # Available genres: TECHNICAL, LITERARY, NOIR, SYSADMIN, MINIMAL, DETECTIVE
         genres = [
@@ -517,11 +527,11 @@ class TestFullRecallLifecycle:
     async def test_complete_lifecycle(self) -> None:
         """Test full memory lifecycle from store to narrative."""
         # 1. M-gent stores experience
-        volatile = VolatileAgent(_state={})
+        volatile: VolatileAgent[dict[str, Any]] = VolatileAgent(_state={})
         unified = UnifiedMemory(
             volatile, MemoryConfig(enable_semantic=True, enable_temporal=True)
         )
-        memory = DgentBackedHolographicMemory(
+        memory: DgentBackedHolographicMemory[str] = DgentBackedHolographicMemory(
             storage=unified, namespace="lifecycle_test"
         )
 
@@ -586,12 +596,14 @@ class TestFullRecallLifecycle:
     async def test_lifecycle_with_multiple_agents(self) -> None:
         """Test lifecycle involving multiple agent traces."""
         # Setup - DgentBackedHolographicMemory requires temporal layer
-        volatile = VolatileAgent(_state={})
+        volatile: VolatileAgent[dict[str, Any]] = VolatileAgent(_state={})
         unified = UnifiedMemory(
             volatile,
             MemoryConfig(enable_semantic=True, enable_temporal=True),
         )
-        memory = DgentBackedHolographicMemory(storage=unified, namespace="multi_agent")
+        memory: DgentBackedHolographicMemory[str] = DgentBackedHolographicMemory(
+            storage=unified, namespace="multi_agent"
+        )
 
         # Store experiences from different "agents"
         experiences = [
@@ -653,9 +665,9 @@ class TestFullRecallLifecycle:
     async def test_lifecycle_with_prospective_memory(self) -> None:
         """Test lifecycle including prospective (predictive) memory."""
         # Setup prospective agent
-        memory = HolographicMemory()
+        memory: HolographicMemory[str] = HolographicMemory()
         history = ActionHistory()
-        prospective = ProspectiveAgent(
+        prospective: ProspectiveAgent[str] = ProspectiveAgent(
             memory=memory,
             action_log=history,
             min_similarity=0.3,
@@ -727,7 +739,7 @@ class TestEdgeCases:
     @pytest.mark.asyncio
     async def test_empty_memory_recall(self) -> None:
         """Test recalling from empty memory."""
-        memory = HolographicMemory()
+        memory: HolographicMemory[str] = HolographicMemory()
 
         results = await memory.retrieve("nonexistent query", limit=5)
         assert results == []
@@ -735,7 +747,7 @@ class TestEdgeCases:
     @pytest.mark.asyncio
     async def test_recall_with_no_matching_concepts(self) -> None:
         """Test recall when no concepts match."""
-        memory = HolographicMemory()
+        memory: HolographicMemory[str] = HolographicMemory()
 
         await memory.store("mem-001", "Python programming", ["python"])
 
@@ -763,7 +775,7 @@ class TestEdgeCases:
     @pytest.mark.asyncio
     async def test_memory_compression_after_many_stores(self) -> None:
         """Test memory compression after storing many experiences."""
-        memory = HolographicMemory()
+        memory: HolographicMemory[str] = HolographicMemory()
 
         # Store many memories
         for i in range(50):
@@ -789,7 +801,7 @@ class TestIntegrationResilience:
     async def test_dgent_failure_recovery(self) -> None:
         """Test memory operates when D-gent backend is unavailable."""
         # Start with working memory
-        memory = HolographicMemory()
+        memory: HolographicMemory[str] = HolographicMemory()
 
         await memory.store("resilient-001", "This should work", ["resilient"])
 
@@ -826,8 +838,8 @@ class TestIntegrationResilience:
         historian = Historian(store)
 
         traceable = MockTraceable()
-        ctx = historian.begin_trace(traceable, "test")
-        trace = historian.end_trace(ctx, action="TEST", outputs="output")
+        ctx = historian.begin_trace(traceable, {"input": "test"})
+        trace = historian.end_trace(ctx, action="TEST", outputs={"output": "output"})
 
         narrative = await bard.invoke(
             NarrativeRequest(

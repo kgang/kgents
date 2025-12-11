@@ -52,7 +52,7 @@ class WireFrame:
     @property
     def action(self) -> str:
         """Extract action from metadata or default to INVOKE."""
-        return self.metadata.get("action", Action.INVOKE)
+        return str(self.metadata.get("action", Action.INVOKE))
 
     @property
     def determinism_hint(self) -> Determinism | None:
@@ -185,6 +185,7 @@ class HistorianTap:
             return
 
         # Extract error from payload
+        error: Exception | str
         if isinstance(frame.payload, Exception):
             error = frame.payload
         elif isinstance(frame.payload, dict) and "error" in frame.payload:
@@ -236,7 +237,7 @@ class WireIntegration:
         agent_id: str,
         agent_genus: str,
         action: str = Action.INVOKE,
-    ) -> Callable[[Callable], Callable]:
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """
         Decorator to trace a callable.
 
@@ -246,8 +247,8 @@ class WireIntegration:
                 ...
         """
 
-        def decorator(func: Callable) -> Callable:
-            async def wrapper(*args, **kwargs):
+        def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+            async def wrapper(*args: Any, **kwargs: Any) -> Any:
                 # Create frame for start
                 import uuid
 

@@ -276,7 +276,7 @@ class TestSemanticRegistry:
         assert await registry.exists("test1") is True
 
         # List
-        entries = await registry.list(entity_type=EntityType.AGENT)
+        entries = await registry.list_entries(entity_type=EntityType.AGENT)
         assert len(entries) > 0
 
         # Find (keyword search)
@@ -286,11 +286,13 @@ class TestSemanticRegistry:
         # Update usage
         await registry.update_usage("test1", success=True)
         updated = await registry.get("test1")
+        assert updated is not None
         assert updated.usage_count == 1
 
         # Deprecate
         await registry.deprecate("test1", reason="outdated")
         deprecated = await registry.get("test1")
+        assert deprecated is not None
         assert deprecated.status == Status.DEPRECATED
 
     @pytest.mark.asyncio

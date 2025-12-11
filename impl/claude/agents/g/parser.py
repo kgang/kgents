@@ -39,7 +39,7 @@ from agents.g.types import GrammarFormat, ParserConfig, ParseResult
 class ParserStrategy:
     """Base class for parsing strategies."""
 
-    def parse(self, text: str, config: ParserConfig) -> ParseResult[Any]:
+    def parse(self, text: str, config: ParserConfig) -> ParseResult:
         """
         Parse text according to configuration.
 
@@ -66,7 +66,7 @@ class PydanticParser(ParserStrategy):
     Text should be Python code that creates an instance.
     """
 
-    def parse(self, text: str, config: ParserConfig) -> ParseResult[Any]:
+    def parse(self, text: str, config: ParserConfig) -> ParseResult:
         if not HAS_PYDANTIC:
             return ParseResult(
                 success=False, error="Pydantic not installed (pip install pydantic)"
@@ -161,7 +161,7 @@ class BNFCommandParser(ParserStrategy):
     Example: <command> ::= <verb> <noun>
     """
 
-    def parse(self, text: str, config: ParserConfig) -> ParseResult[Any]:
+    def parse(self, text: str, config: ParserConfig) -> ParseResult:
         grammar = config.grammar_spec
 
         # Extract verbs from grammar
@@ -227,7 +227,7 @@ class LarkRecursiveParser(ParserStrategy):
     Grammar: Lark EBNF format
     """
 
-    def parse(self, text: str, config: ParserConfig) -> ParseResult[Any]:
+    def parse(self, text: str, config: ParserConfig) -> ParseResult:
         if not HAS_LARK:
             return ParseResult(
                 success=False, error="Lark not installed (pip install lark)"
@@ -256,7 +256,7 @@ class LarkRecursiveParser(ParserStrategy):
                 success=False, error=f"Lark parsing failed: {e}", confidence=0.0
             )
 
-    def _tree_to_dict(self, tree: Any) -> dict[str, Any]:
+    def _tree_to_dict(self, tree: Any) -> dict[str, Any] | str:
         """Convert Lark tree to dict representation."""
         if not isinstance(tree, Tree):
             return str(tree)
@@ -299,7 +299,7 @@ def create_parser(config: ParserConfig) -> ParserStrategy:
 # ============================================================================
 
 
-def parse_with_tongue(text: str, config: ParserConfig) -> ParseResult[Any]:
+def parse_with_tongue(text: str, config: ParserConfig) -> ParseResult:
     """
     Parse text using Tongue's parser configuration.
 

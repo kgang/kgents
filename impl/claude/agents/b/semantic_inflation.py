@@ -1168,7 +1168,7 @@ class SemanticCPIMonitor:
     over time, detecting inflation trends.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize CPI monitor."""
         self._observations: list[tuple[datetime, InflationCategory, float]] = []
         self._snapshots: list[CPISnapshot] = []

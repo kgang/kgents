@@ -44,7 +44,7 @@ except ImportError:
     F_GENT_AVAILABLE = False
 
 try:
-    from agents.t.metrics import MetricObserver
+    from agents.t.metrics import MetricObserver  # type: ignore[attr-defined]
     from agents.t.tool import Tool, ToolIdentity, ToolMeta
 
     T_GENT_AVAILABLE = True
@@ -59,7 +59,7 @@ except ImportError:
     L_GENT_AVAILABLE = False
 
 try:
-    from agents.b.hypothesis import Hypothesis
+    from agents.b.hypothesis import Hypothesis  # type: ignore[attr-defined]
 
     B_GENT_AVAILABLE = True
 except ImportError:
@@ -174,7 +174,7 @@ class FGentRefineryBridge:
 
     def __init__(
         self,
-        refinery: Optional[RefineryAgent] = None,
+        refinery: Optional[RefineryAgent[Any, Any]] = None,
         roi_optimizer: Optional[ROIOptimizer] = None,
     ):
         """
@@ -246,7 +246,7 @@ class FGentRefineryBridge:
                     # Extract return annotation
                     if node.returns:
                         if isinstance(node.returns, ast.Name):
-                            output_type = self._type_from_name(node.returns.id)
+                            output_type = self._type_from_name(node.returns.id)  # type: ignore[assignment]
                         elif isinstance(node.returns, ast.Subscript):
                             # e.g., Result[str, Error]
                             if isinstance(node.returns.value, ast.Name):
@@ -255,7 +255,7 @@ class FGentRefineryBridge:
                                     if isinstance(node.returns.slice, ast.Tuple):
                                         first_elt = node.returns.slice.elts[0]
                                         if isinstance(first_elt, ast.Name):
-                                            output_type = self._type_from_name(
+                                            output_type = self._type_from_name(  # type: ignore[assignment]
                                                 first_elt.id
                                             )
 
@@ -265,7 +265,7 @@ class FGentRefineryBridge:
                         if first_arg.annotation and isinstance(
                             first_arg.annotation, ast.Name
                         ):
-                            input_type = self._type_from_name(first_arg.annotation.id)
+                            input_type = self._type_from_name(first_arg.annotation.id)  # type: ignore[assignment]
 
                     break
 
@@ -329,7 +329,7 @@ Output: <expected output>
 Generate realistic, diverse examples that cover edge cases."""
 
             try:
-                response = await llm_func(prompt)
+                response = await llm_func(prompt)  # type: ignore[misc]
                 # Parse response into examples
                 examples = self._parse_llm_examples(response, signature)
             except Exception:
@@ -644,7 +644,7 @@ Provide specific, actionable feedback on what went wrong and how to fix it.
 Focus on the key differences and what the model should have done differently."""
 
             try:
-                feedback = await llm_func(prompt)
+                feedback = await llm_func(prompt)  # type: ignore[misc]
             except Exception:
                 feedback = self._default_feedback(prediction, expected)
 
@@ -898,7 +898,7 @@ class BudgetConstrainedRefinery:
     def __init__(
         self,
         budget_protocol: BGentBudgetProtocol,
-        refinery: Optional[RefineryAgent] = None,
+        refinery: Optional[RefineryAgent[Any, Any]] = None,
     ):
         """
         Initialize the constrained refinery.
@@ -1038,7 +1038,7 @@ class LGentOptimizationIndex:
         optimization results into the discovery lattice.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the optimization index."""
         self._entries: dict[str, OptimizationCatalogEntry] = {}
         self._trace_storage: dict[str, OptimizationTrace] = {}
@@ -1218,21 +1218,25 @@ class RGentIntegrationHub:
         self.config = config or RGentIntegrationConfig()
 
         # Core refinery
-        self.refinery = RefineryAgent()
+        self.refinery: RefineryAgent[Any, Any] = RefineryAgent()
 
         # F-gent bridge
+        self.f_gent_bridge: Optional[FGentRefineryBridge]
         if self.config.enable_f_gent:
             self.f_gent_bridge = FGentRefineryBridge(refinery=self.refinery)
         else:
             self.f_gent_bridge = None
 
         # T-gent adapter
+        self.t_gent_adapter: Optional[TGentLossAdapter]
         if self.config.enable_t_gent:
             self.t_gent_adapter = TGentLossAdapter()
         else:
             self.t_gent_adapter = None
 
         # B-gent protocol
+        self.budget_protocol: Optional[BGentBudgetProtocol]
+        self.budget_refinery: Optional[BudgetConstrainedRefinery]
         if self.config.enable_b_gent:
             self.budget_protocol = BGentBudgetProtocol(
                 default_budget_usd=self.config.default_budget_usd,
@@ -1247,6 +1251,7 @@ class RGentIntegrationHub:
             self.budget_refinery = None
 
         # L-gent index
+        self.optimization_index: Optional[LGentOptimizationIndex]
         if self.config.enable_l_gent:
             self.optimization_index = LGentOptimizationIndex()
         else:

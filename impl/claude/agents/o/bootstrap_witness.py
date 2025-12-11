@@ -393,13 +393,13 @@ class BootstrapWitness(BaseObserver):
 
         for i in range(self.test_iterations):
             # Create a test agent: f(x) = x * 2 + i
-            f = TestAgent[int, int](f"f_{i}", lambda x, offset=i: x * 2 + offset)
+            f = TestAgent[int, int](f"f_{i}", lambda x, offset=i: x * 2 + offset)  # type: ignore[misc]
             test_input = i + 1
 
             cases_run += 1
 
             # Test left identity: Id >> f == f
-            composed_left = id_agent >> f
+            composed_left: ComposedAgent[int, int] = id_agent >> f  # type: ignore[operator]
             try:
                 result_composed = await composed_left.invoke(test_input)
                 result_direct = await f.invoke(test_input)
@@ -417,7 +417,7 @@ class BootstrapWitness(BaseObserver):
             # Test right identity: f >> Id == f
             # Need an IdentityAgent that works with the output type
             id_agent_out: IdentityAgent[int] = IdentityAgent("Id")
-            composed_right = f >> id_agent_out
+            composed_right: ComposedAgent[int, int] = f >> id_agent_out  # type: ignore[operator]
 
             try:
                 result_composed = await composed_right.invoke(test_input)
@@ -455,30 +455,28 @@ class BootstrapWitness(BaseObserver):
 
         for i in range(self.test_iterations):
             # Create three test agents with different transforms
-            f = TestAgent[int, int](f"f_{i}", lambda x, o=i: x + 1 + o)
-            g = TestAgent[int, int](f"g_{i}", lambda x, o=i: x * 2 + o)
-            h = TestAgent[int, int](f"h_{i}", lambda x, o=i: x - 1 + o)
+            f = TestAgent[int, int](f"f_{i}", lambda x, o=i: x + 1 + o)  # type: ignore[misc]
+            g = TestAgent[int, int](f"g_{i}", lambda x, o=i: x * 2 + o)  # type: ignore[misc]
+            h = TestAgent[int, int](f"h_{i}", lambda x, o=i: x - 1 + o)  # type: ignore[misc]
 
             test_input = i + 1
             cases_run += 1
 
             # Test closure: composition yields an agent-like object
             try:
-                fg = f >> g
+                fg: ComposedAgent[int, int] = f >> g  # type: ignore[operator]
                 # Check it's callable (has invoke method)
                 if not hasattr(fg, "invoke"):
                     closure_holds = False
-                    evidence_parts.append(
-                        "Closure failed: f >> g has no invoke method"
-                    )
+                    evidence_parts.append("Closure failed: f >> g has no invoke method")
             except Exception as e:
                 closure_holds = False
                 evidence_parts.append(f"Closure exception: {e}")
 
             # Test associativity: (f >> g) >> h == f >> (g >> h)
             try:
-                left_assoc = (f >> g) >> h
-                right_assoc = f >> (g >> h)
+                left_assoc: ComposedAgent[int, int] = (f >> g) >> h  # type: ignore[operator]
+                right_assoc: ComposedAgent[int, int] = f >> (g >> h)  # type: ignore[operator]
 
                 result_left = await left_assoc.invoke(test_input)
                 result_right = await right_assoc.invoke(test_input)

@@ -10,7 +10,11 @@ Tests integration between K-gent (Persona) and other agents:
 Philosophy: K-gent is Ground projected through persona schema.
 """
 
+from __future__ import annotations
+
 from datetime import datetime
+from pathlib import Path
+from typing import Any
 
 import pytest
 from agents.k import (
@@ -176,7 +180,11 @@ class TestPersonaQuery:
         maybe_result = agent.invoke_safe(PersonaQuery(aspect="all"))
 
         assert maybe_result.is_just
-        result = maybe_result.value_or(None)
+        # Create a default PersonaResponse for value_or
+        default_response = PersonaResponse(
+            preferences=[], patterns=[], suggested_style=[], confidence=0.0
+        )
+        result = maybe_result.value_or(default_response)
         assert result is not None
         assert isinstance(result, PersonaResponse)
 
@@ -230,7 +238,11 @@ class TestKgentMemoryIntegration:
 
 
 def _make_trace(
-    agent_id: str, action: str, inputs: dict, outputs: dict, mode: str = None
+    agent_id: str,
+    action: str,
+    inputs: dict[str, Any],
+    outputs: dict[str, Any],
+    mode: str | None = None,
 ) -> SemanticTrace:
     """Helper to create SemanticTrace with required fields."""
     import hashlib
@@ -338,7 +350,7 @@ class TestPersistentPersona:
     """Test K-gent × D-gent integration (persistent persona)."""
 
     @pytest.mark.asyncio
-    async def test_persona_persistence(self, tmp_path) -> None:
+    async def test_persona_persistence(self, tmp_path: Path) -> None:
         """Test persistent persona state."""
         path = tmp_path / "persona.json"
 
@@ -367,7 +379,7 @@ class TestPersistentPersona:
         assert agent2.state.current_focus == "testing"
 
     @pytest.mark.asyncio
-    async def test_preference_evolution(self, tmp_path) -> None:
+    async def test_preference_evolution(self, tmp_path: Path) -> None:
         """Test tracking preference changes over time."""
         path = tmp_path / "persona_evolution.json"
 
@@ -447,7 +459,7 @@ class TestKgentMaybe:
         """Test Maybe.nothing creation."""
         from agents.k.persona import Maybe
 
-        maybe = Maybe.nothing("No value available")
+        maybe: Maybe[int] = Maybe.nothing("No value available")
         assert not maybe.is_just
         assert maybe.is_nothing
         assert maybe.value_or(0) == 0
@@ -466,7 +478,7 @@ class TestKgentMaybe:
         """Test Maybe.map on Nothing propagates."""
         from agents.k.persona import Maybe
 
-        maybe = Maybe.nothing("No value")
+        maybe: Maybe[int] = Maybe.nothing("No value")
         result = maybe.map(lambda x: x * 2)
         assert result.is_nothing
 

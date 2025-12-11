@@ -12,8 +12,16 @@ Usage:
     kgents infra destroy    # Remove cluster (--force to skip confirm)
     kgents infra deploy     # Deploy ping-agent POC (Phase 1)
     kgents infra apply <agent>  # Deploy agent via CRD (Phase 3)
-    kgents infra crd        # Install Agent CRD definition
+    kgents infra crd        # Install all kgents CRDs
+    kgents infra crd --list # List installed CRDs
     kgents infra cleanup    # Auto-cleanup failed deployments
+
+CRDs (Custom Resource Definitions):
+    agents.kgents.io      - Agent deployment specification
+    pheromones.kgents.io  - Stigmergic coordination (decay over time)
+    memories.kgents.io    - Persistent state management
+    umwelts.kgents.io     - Observer context (AGENTESE)
+    proposals.kgents.io   - Risk-aware change governance (T-gent integration)
 
 Apply Options:
     kgents infra apply b-gent           # PLACEHOLDER mode (safe, no image needed)
@@ -350,7 +358,22 @@ def _show_pods() -> None:
 
 
 def _cmd_crd(args: list[str]) -> int:
-    """Install the Agent CRD definition."""
+    """
+    Install all kgents CRD definitions.
+
+    CRDs installed (5 total):
+    - agents.kgents.io      (Agent deployment spec)
+    - pheromones.kgents.io  (Stigmergic coordination - decay over time)
+    - memories.kgents.io    (Persistent state management)
+    - umwelts.kgents.io     (Observer context - AGENTESE)
+    - proposals.kgents.io   (Risk-aware change governance)
+
+    Usage:
+        kgents infra crd           # Install all CRDs
+        kgents infra crd --apply   # Alias for install
+        kgents infra crd --list    # List installed CRDs
+        kgents infra crd --verify  # Verify CRD health
+    """
     from infra.k8s import ClusterStatus, KindCluster, create_operator
 
     cluster = KindCluster()
@@ -358,21 +381,174 @@ def _cmd_crd(args: list[str]) -> int:
         print("Cluster not running. Run 'kgents infra init' first.")
         return 1
 
-    print("Installing Agent CRD...")
+    # Handle --list flag
+    if "--list" in args:
+        return _list_crds()
+
+    # Handle --verify flag
+    if "--verify" in args:
+        return _verify_crds()
+
+    print("Installing kgents CRDs...")
+    print("=" * 40)
 
     import asyncio
 
+    # Install Agent CRD via operator
+    print("\n[1/5] Installing agents.kgents.io...")
     operator = create_operator()
-    success = asyncio.run(operator.apply_crd())
+    agent_success = asyncio.run(operator.apply_crd())
+    if agent_success:
+        print("  agents.kgents.io installed")
+    else:
+        print("  Failed to install agents.kgents.io")
 
-    if success:
-        print("Agent CRD installed successfully.")
+    # Install new CRDs from crds/ directory
+    crds_dir = Path(__file__).parent.parent.parent.parent / "infra" / "k8s" / "crds"
+
+    # All 4 additional CRDs (5 total including agent)
+    crd_files = [
+        ("pheromones.kgents.io", "pheromone-crd.yaml"),
+        ("memories.kgents.io", "memory-crd.yaml"),
+        ("umwelts.kgents.io", "umwelt-crd.yaml"),
+        ("proposals.kgents.io", "proposal-crd.yaml"),
+    ]
+
+    all_success = agent_success
+    for i, (crd_name, filename) in enumerate(crd_files, start=2):
+        print(f"\n[{i}/5] Installing {crd_name}...")
+        crd_path = crds_dir / filename
+
+        if not crd_path.exists():
+            print(f"  CRD file not found: {crd_path}")
+            all_success = False
+            continue
+
+        result = subprocess.run(
+            ["kubectl", "apply", "-f", str(crd_path)],
+            capture_output=True,
+            text=True,
+        )
+
+        if result.returncode == 0:
+            print(f"  {crd_name} installed")
+        else:
+            print(f"  Failed: {result.stderr.strip()}")
+            all_success = False
+
+    print("\n" + "=" * 40)
+    if all_success:
+        print("All 5 CRDs installed successfully.")
         print("\nVerify with:")
-        print("  kubectl get crd agents.kgents.io")
+        print("  kubectl get crd | grep kgents")
+        print("\nWatch resources:")
+        print("  kubectl get pheromones -n kgents-agents --watch")
+        print("  kubectl get proposals -n kgents-agents --watch")
         return 0
     else:
-        print("Failed to install Agent CRD.")
+        print("Some CRDs failed to install. Check errors above.")
         return 1
+
+
+def _verify_crds() -> int:
+    """Verify all kgents CRDs are healthy and properly installed."""
+    expected_crds = [
+        "agents.kgents.io",
+        "pheromones.kgents.io",
+        "memories.kgents.io",
+        "umwelts.kgents.io",
+        "proposals.kgents.io",
+    ]
+
+    print("Verifying kgents CRDs...")
+    print("=" * 40)
+
+    result = subprocess.run(
+        ["kubectl", "get", "crd", "-o", "json"],
+        capture_output=True,
+        text=True,
+    )
+
+    if result.returncode != 0:
+        print(f"Failed to query CRDs: {result.stderr}")
+        return 1
+
+    import json
+
+    try:
+        crd_data = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        print("Failed to parse CRD response")
+        return 1
+
+    installed = {
+        item["metadata"]["name"]
+        for item in crd_data.get("items", [])
+        if "kgents.io" in item["metadata"]["name"]
+    }
+
+    all_healthy = True
+    for crd in expected_crds:
+        if crd in installed:
+            # Check if CRD is established
+            status_result = subprocess.run(
+                [
+                    "kubectl",
+                    "get",
+                    "crd",
+                    crd,
+                    "-o",
+                    "jsonpath={.status.conditions[?(@.type=='Established')].status}",
+                ],
+                capture_output=True,
+                text=True,
+            )
+            established = status_result.stdout.strip() == "True"
+            if established:
+                print(f"  {crd}: HEALTHY")
+            else:
+                print(f"  {crd}: DEGRADED (not established)")
+                all_healthy = False
+        else:
+            print(f"  {crd}: MISSING")
+            all_healthy = False
+
+    print("\n" + "=" * 40)
+    if all_healthy:
+        print("All CRDs healthy.")
+        return 0
+    else:
+        print("Some CRDs need attention. Run 'kgents infra crd' to install.")
+        return 1
+
+
+def _list_crds() -> int:
+    """List installed kgents CRDs."""
+    result = subprocess.run(
+        ["kubectl", "get", "crd", "-o", "name"],
+        capture_output=True,
+        text=True,
+    )
+
+    if result.returncode != 0:
+        print(f"Failed to list CRDs: {result.stderr}")
+        return 1
+
+    kgents_crds = [
+        line.replace("customresourcedefinition.apiextensions.k8s.io/", "")
+        for line in result.stdout.strip().split("\n")
+        if "kgents.io" in line
+    ]
+
+    if kgents_crds:
+        print("Installed kgents CRDs:")
+        for crd in sorted(kgents_crds):
+            print(f"  - {crd}")
+    else:
+        print("No kgents CRDs installed.")
+        print("Run 'kgents infra crd' to install.")
+
+    return 0
 
 
 def _cmd_apply(args: list[str]) -> int:

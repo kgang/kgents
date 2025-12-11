@@ -114,7 +114,7 @@ class WireState:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to JSON-serializable dict."""
-        result = {
+        result: Dict[str, Any] = {
             "_protocol_version": self.protocol_version,
             "agent_id": self.agent_id,
             "phase": self.phase,

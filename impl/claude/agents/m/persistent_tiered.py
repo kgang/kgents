@@ -11,6 +11,8 @@ Integrates the three-tier memory architecture with D-gent storage:
 This is the complete memory hierarchy with D-gent backends.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, Dict, Generic, List, Optional, TypeVar
@@ -90,7 +92,7 @@ class PersistentWorkingMemory(WorkingMemory[T]):
         capacity: int = 7,
         cache: Any = None,  # D-gent CachedAgent
         ttl_minutes: float = 30.0,
-    ):
+    ) -> None:
         """Initialize persistent working memory.
 
         Args:
@@ -207,7 +209,7 @@ class PersistentTieredMemory(Generic[T]):
         working_cache: Any = None,  # D-gent CachedAgent
         embedder: Any = None,  # L-gent Embedder
         config: Optional[TierConfig] = None,
-    ):
+    ) -> None:
         """Initialize persistent tiered memory.
 
         Args:
@@ -327,7 +329,7 @@ class PersistentTieredMemory(Generic[T]):
 
     # ========== Tier 2 → Tier 3: Consolidation ==========
 
-    async def consolidate(self, force: bool = False) -> Dict[str, int]:
+    async def consolidate(self, force: bool = False) -> Dict[str, Any]:
         """Move working memory to long-term holographic storage.
 
         This is the "sleep" phase where memories are encoded to
@@ -530,8 +532,8 @@ class NarrativeMemory(PersistentTieredMemory[T]):
         self,
         longterm_storage: Any,
         narrator: Any = None,  # N-gent NarratorAgent
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         """Initialize narrative memory.
 
         Args:
@@ -663,8 +665,8 @@ def create_persistent_tiered_memory(
     working_cache: Any = None,
     embedder: Any = None,
     enable_all: bool = False,
-    **kwargs,
-) -> PersistentTieredMemory:
+    **kwargs: Any,
+) -> PersistentTieredMemory[Any]:
     """Create persistent tiered memory with convenient defaults.
 
     Args:
@@ -677,7 +679,7 @@ def create_persistent_tiered_memory(
     Returns:
         Configured PersistentTieredMemory
     """
-    config_kwargs = {}
+    config_kwargs: Dict[str, Any] = {}
 
     if enable_all:
         config_kwargs["enable_semantic"] = True
@@ -699,8 +701,8 @@ def create_persistent_tiered_memory(
 def create_narrative_memory(
     longterm_storage: Any,
     narrator: Any = None,
-    **kwargs,
-) -> NarrativeMemory:
+    **kwargs: Any,
+) -> NarrativeMemory[Any]:
     """Create narrative memory.
 
     Args:

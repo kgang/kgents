@@ -10,6 +10,8 @@ Tests:
 - Field validation
 """
 
+from __future__ import annotations
+
 import pytest
 from agents.p.strategies.structural_decoupling import (
     StructuralDecouplingParser,
@@ -35,6 +37,7 @@ class TestStructuralDecouplingParser:
         result = parser.parse("Generate a document")
 
         assert result.success
+        assert result.value is not None
         assert isinstance(result.value, dict)
         assert "title" in result.value
         assert "count" in result.value
@@ -51,6 +54,7 @@ class TestStructuralDecouplingParser:
         result = parser.parse("test")
 
         # Structure is guaranteed to match schema
+        assert result.value is not None
         assert len(result.value) == 3
         assert set(result.value.keys()) == {"field1", "field2", "field3"}
 
@@ -87,6 +91,7 @@ class TestStructuredFieldTypes:
         parser = StructuralDecouplingParser(schema, mock_llm_generate)
         result = parser.parse("test")
 
+        assert result.value is not None
         assert isinstance(result.value["text"], str)
 
     def test_number_field(self) -> None:
@@ -97,6 +102,7 @@ class TestStructuredFieldTypes:
         parser = StructuralDecouplingParser(schema, mock_llm_generate)
         result = parser.parse("test")
 
+        assert result.value is not None
         assert isinstance(result.value["count"], (int, float))
 
     def test_boolean_field(self) -> None:
@@ -107,6 +113,7 @@ class TestStructuredFieldTypes:
         parser = StructuralDecouplingParser(schema, mock_llm_generate)
         result = parser.parse("test")
 
+        assert result.value is not None
         assert isinstance(result.value["active"], bool)
 
     def test_array_field(self) -> None:
@@ -117,6 +124,7 @@ class TestStructuredFieldTypes:
         parser = StructuralDecouplingParser(schema, mock_llm_generate)
         result = parser.parse("test")
 
+        assert result.value is not None
         assert isinstance(result.value["items"], list)
 
     def test_object_field(self) -> None:
@@ -127,6 +135,7 @@ class TestStructuredFieldTypes:
         parser = StructuralDecouplingParser(schema, mock_llm_generate)
         result = parser.parse("test")
 
+        assert result.value is not None
         assert isinstance(result.value["nested"], dict)
 
 
@@ -142,6 +151,7 @@ class TestTypeCoercion:
 
         result = parser.parse("test")
 
+        assert result.value is not None
         assert result.value["field"] == "quoted value"
 
     def test_coerce_number_from_string(self) -> None:
@@ -153,6 +163,7 @@ class TestTypeCoercion:
 
         result = parser.parse("test")
 
+        assert result.value is not None
         assert result.value["field"] == 42
 
     def test_coerce_float_from_string(self) -> None:
@@ -164,6 +175,7 @@ class TestTypeCoercion:
 
         result = parser.parse("test")
 
+        assert result.value is not None
         assert result.value["field"] == 3.14
 
     def test_coerce_boolean_true_variants(self) -> None:
@@ -176,6 +188,7 @@ class TestTypeCoercion:
             parser = StructuralDecouplingParser(schema, llm_bool)
 
             result = parser.parse("test")
+            assert result.value is not None
             assert result.value["field"] is True
 
     def test_coerce_boolean_false_variants(self) -> None:
@@ -188,6 +201,7 @@ class TestTypeCoercion:
             parser = StructuralDecouplingParser(schema, llm_bool)
 
             result = parser.parse("test")
+            assert result.value is not None
             assert result.value["field"] is False
 
     def test_coerce_array_from_json(self) -> None:
@@ -199,6 +213,7 @@ class TestTypeCoercion:
 
         result = parser.parse("test")
 
+        assert result.value is not None
         assert result.value["field"] == ["item1", "item2", "item3"]
 
     def test_coerce_array_from_csv(self) -> None:
@@ -210,6 +225,7 @@ class TestTypeCoercion:
 
         result = parser.parse("test")
 
+        assert result.value is not None
         assert result.value["field"] == ["a", "b", "c"]
 
 
@@ -235,6 +251,7 @@ class TestFieldValidation:
         result = parser.parse("test")
 
         assert result.success
+        assert result.value is not None
         assert result.value["field"] == "long enough value"
 
     def test_field_with_validator_fails_uses_default(self) -> None:
@@ -257,6 +274,7 @@ class TestFieldValidation:
 
         assert result.success
         # Should use default value (empty string)
+        assert result.value is not None
         assert result.value["field"] == ""
         assert len(result.repairs) > 0
         assert "validation" in result.repairs[0].lower()
@@ -266,7 +284,7 @@ class TestCustomPrompts:
     """Test custom prompt templates."""
 
     def test_field_with_custom_prompt(self) -> None:
-        captured_prompt = None
+        captured_prompt: str | None = None
 
         def llm_capture(prompt: str) -> str:
             nonlocal captured_prompt
@@ -284,6 +302,7 @@ class TestCustomPrompts:
         parser = StructuralDecouplingParser(schema, llm_capture)
         parser.parse("my context")
 
+        assert captured_prompt is not None
         assert "Custom prompt" in captured_prompt
         assert "field" in captured_prompt
         assert "my context" in captured_prompt
@@ -414,6 +433,7 @@ class TestErrorHandling:
         result = parser.parse("test")
 
         assert result.success  # Should still succeed with defaults
+        assert result.value is not None
         assert result.value["field"] == ""  # Default string
         assert len(result.repairs) > 0
 

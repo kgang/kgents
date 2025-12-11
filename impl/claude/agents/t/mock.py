@@ -12,7 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Generic, TypeVar
 
-from runtime.base import Agent
+from bootstrap.types import Agent
 
 A = TypeVar("A")
 B = TypeVar("B")
@@ -21,6 +21,7 @@ B = TypeVar("B")
 @dataclass
 class MockConfig:
     """Configuration for MockAgent."""
+
     output: Any = None  # Output to return
     delay_ms: int = 0  # Simulated delay in milliseconds
 
@@ -69,9 +70,10 @@ class MockAgent(Agent[A, B], Generic[A, B]):
 
         if self.config.delay_ms > 0:
             import asyncio
+
             await asyncio.sleep(self.config.delay_ms / 1000.0)
 
-        return self.config.output
+        return self.config.output  # type: ignore
 
     @property
     def call_count(self) -> int:

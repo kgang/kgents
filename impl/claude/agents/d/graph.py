@@ -242,7 +242,7 @@ class GraphAgent(Generic[N]):
         if target not in self._nodes:
             raise NodeNotFoundError(f"Target node not found: {target}")
 
-        edge = Edge(
+        edge: Edge[N] = Edge(
             source=source,
             kind=kind,
             target=target,
@@ -756,7 +756,7 @@ class GraphAgent(Generic[N]):
 
             # Load edges
             for edge_data in data["edges"]:
-                edge = Edge(
+                edge: Edge[N] = Edge(
                     source=edge_data["source"],
                     kind=EdgeKind(edge_data["kind"]),
                     target=edge_data["target"],

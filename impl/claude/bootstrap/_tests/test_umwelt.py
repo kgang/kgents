@@ -200,7 +200,7 @@ class TestLightweightUmwelt:
     @pytest.mark.asyncio
     async def test_lightweight_set(self) -> None:
         """LightweightUmwelt.set() updates storage."""
-        storage = VolatileAgent(_state={})
+        storage: VolatileAgent[dict[str, Any]] = VolatileAgent(_state={})
         umwelt = LightweightUmwelt(
             storage=storage,
             dna=TestDNA.germinate(),
@@ -213,7 +213,7 @@ class TestLightweightUmwelt:
 
     def test_lightweight_is_grounded(self) -> None:
         """LightweightUmwelt.is_grounded() checks contracts."""
-        storage = VolatileAgent(_state={})
+        storage: VolatileAgent[dict[str, Any]] = VolatileAgent(_state={})
         umwelt = LightweightUmwelt(
             storage=storage,
             dna=TestDNA.germinate(),
@@ -279,7 +279,9 @@ class TestProjector:
     @pytest.mark.asyncio
     async def test_projector_with_gravity(self) -> None:
         """Projector attaches gravity contracts."""
-        root = VolatileAgent(_state={"agents": {"test": {}}})
+        root: VolatileAgent[dict[str, Any]] = VolatileAgent(
+            _state={"agents": {"test": {}}}
+        )
         projector = Projector(root)
 
         contract = NoNumbersContract()
@@ -295,7 +297,7 @@ class TestProjector:
     @pytest.mark.asyncio
     async def test_projector_register_gravity(self) -> None:
         """Projector can register default gravity for agent types."""
-        root = VolatileAgent(_state={"agents": {}})
+        root: VolatileAgent[dict[str, Any]] = VolatileAgent(_state={"agents": {}})
         projector = Projector(root)
 
         # Register default gravity for agent "k"
@@ -311,7 +313,7 @@ class TestProjector:
 
     def test_projector_validates_dna(self) -> None:
         """Projector validates DNA constraints."""
-        root = VolatileAgent(_state={})
+        root: VolatileAgent[dict[str, Any]] = VolatileAgent(_state={})
         projector = Projector(root)
 
         # Create invalid DNA (exploration_budget=0 violates positive_exploration)
@@ -388,7 +390,7 @@ class TestProjectorLightweight:
     @pytest.mark.asyncio
     async def test_project_lightweight(self) -> None:
         """project_lightweight creates LightweightUmwelt."""
-        root = VolatileAgent(_state={})
+        root: VolatileAgent[dict[str, Any]] = VolatileAgent(_state={})
         projector = Projector(root)
 
         agent_storage = VolatileAgent(_state={"direct": "access"})

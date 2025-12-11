@@ -141,7 +141,7 @@ def test_update_outcome() -> None:
         outcome_confidence=0.95,
     )
 
-    assert index.hypotheses["hyp-001"].outcome == HypothesisOutcome.CONFIRMED
+    assert index.hypotheses["hyp-001"].outcome == HypothesisOutcome.CONFIRMED  # type: ignore[comparison-overlap]
     assert index.hypotheses["hyp-001"].outcome_confidence == 0.95
     assert len(index.outcome_index[HypothesisOutcome.CONFIRMED]) == 1
     assert len(index.outcome_index[HypothesisOutcome.PENDING]) == 0
@@ -478,7 +478,12 @@ def test_analyze_confidence_patterns() -> None:
 
     analysis = index.analyze_domain_patterns("test")
 
-    assert analysis.avg_confidence_when_confirmed > analysis.avg_confidence_when_refuted
+    assert (
+        analysis.avg_confidence_when_confirmed is not None
+        and analysis.avg_confidence_when_refuted is not None
+        and analysis.avg_confidence_when_confirmed
+        > analysis.avg_confidence_when_refuted
+    )
 
 
 def test_analyze_recommendations() -> None:

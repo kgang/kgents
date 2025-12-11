@@ -7,17 +7,27 @@ Tests cover:
 - Sync utilities and migration
 """
 
+from __future__ import annotations
+
 from datetime import datetime
+from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
+
+if TYPE_CHECKING:
+    from agents.l.semantic import SimpleEmbedder
+    from agents.l.types import CatalogEntry
 
 # Check for numpy availability
 try:
     import numpy as np
+    from numpy import ndarray
 
     NUMPY_AVAILABLE = True
 except ImportError:
-    np = None
+    np = None  # type: ignore[assignment]
+    ndarray = None  # type: ignore[assignment,misc]
     NUMPY_AVAILABLE = False
 
 from agents.l.semantic import SimpleEmbedder
@@ -28,13 +38,13 @@ pytestmark = pytest.mark.skipif(not NUMPY_AVAILABLE, reason="numpy not installed
 
 
 @pytest.fixture
-def embedder():
+def embedder() -> SimpleEmbedder:
     """Simple embedder for testing."""
     return SimpleEmbedder(dimension=64)
 
 
 @pytest.fixture
-def sample_entry():
+def sample_entry() -> CatalogEntry:
     """Sample catalog entry for testing."""
     return CatalogEntry(
         id="test_agent_1",
@@ -51,7 +61,7 @@ def sample_entry():
 
 
 @pytest.fixture
-def sample_entries():
+def sample_entries() -> list[CatalogEntry]:
     """Multiple sample entries for testing."""
     return [
         CatalogEntry(
@@ -77,7 +87,7 @@ class TestDgentVectorBackend:
     """Tests for DgentVectorBackend."""
 
     @pytest.mark.asyncio
-    async def test_add_and_search(self, tmp_path) -> None:
+    async def test_add_and_search(self, tmp_path: Path) -> None:
         """Test basic add and search."""
         from agents.l.vector_db import DgentVectorBackend
 
@@ -100,7 +110,7 @@ class TestDgentVectorBackend:
         assert isinstance(results[0].similarity, float)
 
     @pytest.mark.asyncio
-    async def test_dimension_property(self, tmp_path) -> None:
+    async def test_dimension_property(self, tmp_path: Path) -> None:
         """Test dimension property."""
         from agents.l.vector_db import DgentVectorBackend
 
@@ -108,7 +118,7 @@ class TestDgentVectorBackend:
         assert backend.dimension == 128
 
     @pytest.mark.asyncio
-    async def test_metadata_filtering(self, tmp_path) -> None:
+    async def test_metadata_filtering(self, tmp_path: Path) -> None:
         """Test search with metadata filters."""
         from agents.l.vector_db import DgentVectorBackend
 
@@ -125,7 +135,7 @@ class TestDgentVectorBackend:
         assert results[0].id == "agent1"
 
     @pytest.mark.asyncio
-    async def test_threshold_filtering(self, tmp_path) -> None:
+    async def test_threshold_filtering(self, tmp_path: Path) -> None:
         """Test search with similarity threshold."""
         from agents.l.vector_db import DgentVectorBackend
 
@@ -146,7 +156,7 @@ class TestDgentVectorBackend:
             assert results[0].id == "similar"
 
     @pytest.mark.asyncio
-    async def test_remove(self, tmp_path) -> None:
+    async def test_remove(self, tmp_path: Path) -> None:
         """Test removing entries."""
         from agents.l.vector_db import DgentVectorBackend
 
@@ -166,7 +176,7 @@ class TestDgentVectorBackend:
         assert "id2" in ids
 
     @pytest.mark.asyncio
-    async def test_clear(self, tmp_path) -> None:
+    async def test_clear(self, tmp_path: Path) -> None:
         """Test clearing all entries."""
         from agents.l.vector_db import DgentVectorBackend
 
@@ -184,7 +194,7 @@ class TestDgentVectorBackend:
         assert count == 0
 
     @pytest.mark.asyncio
-    async def test_count(self, tmp_path) -> None:
+    async def test_count(self, tmp_path: Path) -> None:
         """Test counting entries."""
         from agents.l.vector_db import DgentVectorBackend
 
@@ -200,7 +210,7 @@ class TestDgentVectorBackend:
         assert await backend.count() == 2
 
     @pytest.mark.asyncio
-    async def test_add_batch(self, tmp_path) -> None:
+    async def test_add_batch(self, tmp_path: Path) -> None:
         """Test batch adding."""
         from agents.l.vector_db import DgentVectorBackend
 
@@ -215,7 +225,7 @@ class TestDgentVectorBackend:
         assert await backend.count() == 3
 
     @pytest.mark.asyncio
-    async def test_persistence(self, tmp_path) -> None:
+    async def test_persistence(self, tmp_path: Path) -> None:
         """Test that data persists across instances."""
         from agents.l.vector_db import DgentVectorBackend
 
@@ -235,7 +245,7 @@ class TestDgentVectorBackend:
         assert results[0].id == "id1"
 
     @pytest.mark.asyncio
-    async def test_curvature(self, tmp_path) -> None:
+    async def test_curvature(self, tmp_path: Path) -> None:
         """Test curvature estimation."""
         from agents.l.vector_db import DgentVectorBackend
 
@@ -252,7 +262,7 @@ class TestDgentVectorBackend:
         assert isinstance(curvature, float)
 
     @pytest.mark.asyncio
-    async def test_cluster_centers(self, tmp_path) -> None:
+    async def test_cluster_centers(self, tmp_path: Path) -> None:
         """Test cluster center finding."""
         from agents.l.vector_db import DgentVectorBackend
 
@@ -279,7 +289,7 @@ class TestVectorCatalog:
     """Tests for VectorCatalog unified interface."""
 
     @pytest.mark.asyncio
-    async def test_create_empty(self, embedder, tmp_path) -> None:
+    async def test_create_empty(self, embedder: SimpleEmbedder, tmp_path: Path) -> None:
         """Test creating empty catalog."""
         from agents.l.vector_db import VectorCatalog
 
@@ -293,7 +303,9 @@ class TestVectorCatalog:
         assert state.indexed_entries == 0
 
     @pytest.mark.asyncio
-    async def test_register_and_search(self, embedder, sample_entry, tmp_path) -> None:
+    async def test_register_and_search(
+        self, embedder: SimpleEmbedder, sample_entry: CatalogEntry, tmp_path: Path
+    ) -> None:
         """Test registering and searching."""
         from agents.l.vector_db import VectorCatalog
 
@@ -314,7 +326,9 @@ class TestVectorCatalog:
         assert any(r.id == sample_entry.id for r in results)
 
     @pytest.mark.asyncio
-    async def test_get(self, embedder, sample_entry, tmp_path) -> None:
+    async def test_get(
+        self, embedder: SimpleEmbedder, sample_entry: CatalogEntry, tmp_path: Path
+    ) -> None:
         """Test getting entry by ID."""
         from agents.l.vector_db import VectorCatalog
 
@@ -336,7 +350,9 @@ class TestVectorCatalog:
         assert missing is None
 
     @pytest.mark.asyncio
-    async def test_delete(self, embedder, sample_entry, tmp_path) -> None:
+    async def test_delete(
+        self, embedder: SimpleEmbedder, sample_entry: CatalogEntry, tmp_path: Path
+    ) -> None:
         """Test deleting entries."""
         from agents.l.vector_db import VectorCatalog
 
@@ -360,7 +376,12 @@ class TestVectorCatalog:
         assert deleted is False
 
     @pytest.mark.asyncio
-    async def test_multiple_entries(self, embedder, sample_entries, tmp_path) -> None:
+    async def test_multiple_entries(
+        self,
+        embedder: SimpleEmbedder,
+        sample_entries: list[CatalogEntry],
+        tmp_path: Path,
+    ) -> None:
         """Test with multiple entries."""
         from agents.l.vector_db import VectorCatalog
 
@@ -379,7 +400,9 @@ class TestVectorCatalog:
         assert state.indexed_entries == 5
 
     @pytest.mark.asyncio
-    async def test_search_with_entity_filter(self, embedder, tmp_path) -> None:
+    async def test_search_with_entity_filter(
+        self, embedder: SimpleEmbedder, tmp_path: Path
+    ) -> None:
         """Test search with entity type filter."""
         from agents.l.vector_db import VectorCatalog
 
@@ -426,7 +449,12 @@ class TestVectorCatalog:
             assert r.entry.entity_type == EntityType.AGENT
 
     @pytest.mark.asyncio
-    async def test_cluster_analysis(self, embedder, sample_entries, tmp_path) -> None:
+    async def test_cluster_analysis(
+        self,
+        embedder: SimpleEmbedder,
+        sample_entries: list[CatalogEntry],
+        tmp_path: Path,
+    ) -> None:
         """Test cluster analysis."""
         from agents.l.vector_db import VectorCatalog
 
@@ -456,7 +484,7 @@ class TestUtilityFunctions:
     """Tests for utility functions."""
 
     @pytest.mark.asyncio
-    async def test_create_dgent_vector_backend(self, tmp_path) -> None:
+    async def test_create_dgent_vector_backend(self, tmp_path: Path) -> None:
         """Test create_dgent_vector_backend convenience function."""
         from agents.l.vector_db import create_dgent_vector_backend
 
@@ -468,7 +496,9 @@ class TestUtilityFunctions:
         assert backend.dimension == 128
 
     @pytest.mark.asyncio
-    async def test_create_vector_catalog(self, embedder, tmp_path) -> None:
+    async def test_create_vector_catalog(
+        self, embedder: SimpleEmbedder, tmp_path: Path
+    ) -> None:
         """Test create_vector_catalog convenience function."""
         from agents.l.vector_db import create_vector_catalog
 
@@ -486,7 +516,10 @@ class TestMigration:
 
     @pytest.mark.asyncio
     async def test_migrate_to_dgent_backend(
-        self, embedder, sample_entries, tmp_path
+        self,
+        embedder: SimpleEmbedder,
+        sample_entries: list[CatalogEntry],
+        tmp_path: Path,
     ) -> None:
         """Test migrating entries to D-gent backend."""
         from agents.l.vector_db import migrate_to_dgent_backend
@@ -519,7 +552,9 @@ class TestIntegration:
     """Integration tests for the full vector DB workflow."""
 
     @pytest.mark.asyncio
-    async def test_full_workflow(self, embedder, tmp_path) -> None:
+    async def test_full_workflow(
+        self, embedder: SimpleEmbedder, tmp_path: Path
+    ) -> None:
         """Test complete workflow: create, add, search, delete."""
         from agents.l.vector_db import VectorCatalog
 
@@ -593,7 +628,9 @@ class TestIntegration:
         assert state.total_entries == 2
 
     @pytest.mark.asyncio
-    async def test_similarity_ranking(self, embedder, tmp_path) -> None:
+    async def test_similarity_ranking(
+        self, embedder: SimpleEmbedder, tmp_path: Path
+    ) -> None:
         """Test that results are ranked by similarity."""
         from agents.l.vector_db import VectorCatalog
 

@@ -29,7 +29,7 @@ from typing import Any, Protocol, runtime_checkable
 
 from .bard import Bard, LLMProvider, Narrative, NarrativeRequest
 from .store import CrystalStore
-from .types import SemanticTrace
+from .types import Determinism, SemanticTrace
 
 # =============================================================================
 # L-gent Integration: Crystal Indexing
@@ -195,8 +195,27 @@ class IndexedCrystalStore(CrystalStore):
     def get(self, trace_id: str) -> SemanticTrace | None:
         return self.base.get(trace_id)
 
-    def query(self, **kwargs) -> list[SemanticTrace]:
-        return self.base.query(**kwargs)
+    def query(
+        self,
+        agent_id: str | None = None,
+        agent_genus: str | None = None,
+        action: str | None = None,
+        determinism: Determinism | None = None,
+        start_time: datetime | None = None,
+        end_time: datetime | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[SemanticTrace]:
+        return self.base.query(
+            agent_id=agent_id,
+            agent_genus=agent_genus,
+            action=action,
+            determinism=determinism,
+            start_time=start_time,
+            end_time=end_time,
+            limit=limit,
+            offset=offset,
+        )
 
     def get_children(self, trace_id: str) -> list[SemanticTrace]:
         return self.base.get_children(trace_id)
@@ -350,8 +369,15 @@ class ResonantCrystalStore:
                 timestamp=datetime.now(timezone.utc),
             )
         else:
-            # Text-based query
-            query_pattern = {"query": query}
+            # Text-based query - use a proper pattern with empty vector
+            query_pattern = CrystalMemoryPattern(
+                trace_id="query",
+                agent_id="user",
+                action="QUERY",
+                vector=[],
+                timestamp=datetime.now(timezone.utc),
+                metadata={"query": query},
+            )
 
         result = await self.memory.resonate(query_pattern, threshold)
 
@@ -725,7 +751,7 @@ class NarrativeOrchestrator:
         """
         # Store
         if hasattr(self.store, "store_and_index"):
-            await self.store.store_and_index(crystal)  # type: ignore
+            await self.store.store_and_index(crystal)
         else:
             self.store.store(crystal)
 
@@ -748,7 +774,7 @@ class NarrativeOrchestrator:
         self,
         traces: list[SemanticTrace] | None = None,
         query: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> Narrative:
         """
         Generate a narrative from traces or a query.
@@ -764,7 +790,7 @@ class NarrativeOrchestrator:
         if not traces and query:
             # Search for relevant traces
             if hasattr(self.store, "search_semantic"):
-                results = await self.store.search_semantic(query, limit=50)  # type: ignore
+                results = await self.store.search_semantic(query, limit=50)
                 traces = [t for t, _ in results]
             else:
                 # Fall back to recent traces
@@ -790,7 +816,7 @@ class NarrativeOrchestrator:
         Search crystals semantically.
         """
         if hasattr(self.store, "search_semantic"):
-            results = await self.store.search_semantic(query, limit)  # type: ignore
+            results = await self.store.search_semantic(query, limit)
             return [t for t, _ in results]
         return []
 
@@ -803,7 +829,10 @@ class NarrativeOrchestrator:
         Find resonating patterns in holographic memory.
         """
         if hasattr(self.store, "resonate_query"):
-            return await self.store.resonate_query(query, threshold)  # type: ignore
+            result: list[CrystalMemoryPattern] = await self.store.resonate_query(
+                query, threshold
+            )
+            return result
         return []
 
     def get_stats(self) -> dict[str, Any]:

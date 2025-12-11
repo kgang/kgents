@@ -436,7 +436,7 @@ class AsyncAgent(Agent[A, asyncio.Future[B]]):
     async def invoke(self, input: A) -> asyncio.Future[B]:
         # Create a task that runs the inner agent
         task = asyncio.create_task(self._inner.invoke(input))
-        return task  # type: ignore
+        return task
 
 
 # --- Logged Functor: Add Observability ---
@@ -561,7 +561,7 @@ class LoggedAgent(Agent[A, B]):
 
 
 async def check_identity_law(
-    functor_lift: Callable[[Agent[A, B]], Agent[Any, Any]],
+    functor_lift: Callable[[Agent[A, A]], Agent[Any, Any]],
     identity_agent: Agent[A, A],
     test_input: Any,
 ) -> bool:
@@ -582,7 +582,7 @@ async def check_identity_law(
 
         # For most functors, F(id)(x) should equal x
         # (equality check depends on functor type)
-        return result == test_input
+        return bool(result == test_input)
     except Exception as e:
         logger.warning(f"Identity law check failed with error: {e}")
         return False
@@ -619,7 +619,7 @@ async def check_composition_law(
         result_right = await lifted_composition.invoke(test_input)
 
         # Results should be equal
-        return result_left == result_right
+        return bool(result_left == result_right)
     except Exception as e:
         logger.warning(f"Composition law check failed with error: {e}")
         return False

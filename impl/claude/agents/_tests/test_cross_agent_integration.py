@@ -10,6 +10,8 @@ Tests integration between Parser, JIT, and Tool agents:
 Philosophy: Agents compose via >> and integrate via shared protocols.
 """
 
+from __future__ import annotations
+
 import json
 
 import pytest
@@ -61,6 +63,7 @@ class JSONProducer:
         parse_result = parser.parse(result)
 
         assert parse_result.success
+        assert parse_result.value is not None
         assert parse_result.value.value["message"] == "Processed: test input"
         assert parse_result.value.value["status"] == "ok"
         assert parse_result.confidence > 0.7
@@ -88,17 +91,22 @@ class AnchorProducer:
         result = await jit_agent.invoke("test")
 
         # Parse with anchor-based parser
-        result_parser = AnchorBasedParser(anchor="###RESULT:")
-        status_parser = AnchorBasedParser(anchor="###STATUS:")
-        confidence_parser = AnchorBasedParser(anchor="###CONFIDENCE:")
+        result_parser: AnchorBasedParser[str] = AnchorBasedParser(anchor="###RESULT:")
+        status_parser: AnchorBasedParser[str] = AnchorBasedParser(anchor="###STATUS:")
+        confidence_parser: AnchorBasedParser[str] = AnchorBasedParser(
+            anchor="###CONFIDENCE:"
+        )
 
         result_parsed = result_parser.parse(result)
         status_parsed = status_parser.parse(result)
         confidence_parsed = confidence_parser.parse(result)
 
         assert result_parsed.success
+        assert result_parsed.value is not None
         assert "TEST" in result_parsed.value[0]
+        assert status_parsed.value is not None
         assert status_parsed.value[0].strip() == "completed"
+        assert confidence_parsed.value is not None
         assert "0.95" in confidence_parsed.value[0]
 
     @pytest.mark.asyncio
@@ -128,6 +136,7 @@ class DataGenerator:
         parse_result = parser.parse(output)
 
         assert parse_result.success
+        assert parse_result.value is not None
         assert parse_result.value["processed"] == "test"
         assert parse_result.value["count"] == 4
 
@@ -162,6 +171,7 @@ class TestToolsWithParserIntegration:
         result = schema_parser.parse(json.dumps(tool_schema))
 
         assert result.success
+        assert result.value is not None
         assert result.value["name"] == "calculator"
         assert "Input" in result.value["input_type"]
         assert "Output" in result.value["output_type"]
@@ -186,6 +196,7 @@ class TestToolsWithParserIntegration:
             result = error_parser.parse(error_msg)
 
             assert result.success, f"Failed to parse {error_name}"
+            assert result.value is not None
             assert result.value["error_type"] == expected_type
             assert result.value["recovery"] == expected_recovery
 
@@ -201,6 +212,7 @@ class TestToolsWithParserIntegration:
         result = parser.parse(tool_output)
 
         assert result.success
+        assert result.value is not None
         assert isinstance(result.value["data"], list)
         assert isinstance(result.value["metadata"], dict)
         assert result.value["metadata"]["count"] == 3
@@ -277,6 +289,7 @@ class ErrorHandlingTool:
         error_parsed = error_parser.parse(json.dumps(error_result))
 
         assert error_parsed.success
+        assert error_parsed.value is not None
         assert error_parsed.value["error_type"] == "not_found"
 
 
@@ -315,6 +328,7 @@ class DataProcessorTool:
         parsed_output = output_parser.parse(tool_output)
 
         assert parsed_output.success
+        assert parsed_output.value is not None
         assert parsed_output.value["operation"] == "sum"
         assert parsed_output.value["result"] == 15
 
@@ -349,6 +363,7 @@ class DataExtractor:
         step1_parsed = parser.parse(step1_output)
 
         assert step1_parsed.success
+        assert step1_parsed.value is not None
         assert step1_parsed.value["extracted"] == [10, 5, 3]
         assert step1_parsed.value["count"] == 3
 
@@ -376,6 +391,7 @@ class Calculator:
         step2_parsed = parser.parse(step2_output)
 
         assert step2_parsed.success
+        assert step2_parsed.value is not None
         assert step2_parsed.value["sum"] == 18
         assert step2_parsed.value["product"] == 150
         assert step2_parsed.value["count"] == 3
@@ -409,6 +425,7 @@ class FlakeyOutputTool:
         clean_parsed = parser.parse(clean_output)
 
         assert clean_parsed.success
+        assert clean_parsed.value is not None
         assert clean_parsed.value["result"] == "success"
 
         # Test with malformed output (P-gent should repair)
@@ -418,6 +435,7 @@ class FlakeyOutputTool:
         # P-gent parsers handle malformed JSON gracefully
         # They either succeed with repairs or fail gracefully
         if malformed_parsed.success:
+            assert malformed_parsed.value is not None
             assert len(malformed_parsed.repairs) > 0  # Repairs were applied
             assert malformed_parsed.confidence < 1.0  # Confidence reduced
         else:
@@ -456,6 +474,7 @@ class ProvenanceTool:
         parsed = parser.parse(output)
 
         assert parsed.success
+        assert parsed.value is not None
         assert parsed.value["tool_version"] == "jit-v1.0"
         assert "compilation_timestamp" in parsed.value
 
@@ -467,6 +486,7 @@ class ProvenanceTool:
         result = parser.parse(output)
 
         assert result.success
+        assert result.value is not None
         assert result.metadata["expected_type"] == "TestOutput"
         assert "actual_type" in result.metadata
         assert result.strategy == "output-parsed"

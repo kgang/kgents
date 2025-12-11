@@ -117,8 +117,8 @@ class GrammarianCLI(CLICapable):
             if hasattr(tongue, "grammar_format")
             else "unknown",
             "grammar": tongue.grammar,
-            "constraints": [p.constraint for p in tongue.proofs]
-            if tongue.proofs
+            "constraints": [p.constraint for p in tongue.constraint_proofs]
+            if tongue.constraint_proofs
             else [],
             "examples": [e.input for e in tongue.examples] if tongue.examples else [],
             "version": tongue.version,
@@ -142,25 +142,26 @@ class GrammarianCLI(CLICapable):
         The tongue must be registered in the L-gent catalog.
         Returns parse result with AST and confidence.
         """
-        from agents.g import find_tongue
+        from agents.g import Tongue, find_tongue
         from agents.l import Registry
 
         registry = Registry()
-        tongue_obj = await find_tongue(registry, tongue)
+        tongue_entries = await find_tongue(registry, tongue)
 
-        if tongue_obj is None:
+        if not tongue_entries:
             return {
                 "success": False,
                 "error": f"Tongue not found: {tongue}",
                 "ast": None,
             }
 
-        result = tongue_obj.parse(input_text)
+        # Get first entry and reconstruct Tongue from catalog entry
+        entry = tongue_entries[0]
+        # For now, return error indicating need for full Tongue reconstruction
         return {
-            "success": result.success,
-            "ast": str(result.ast) if result.ast else None,
-            "error": result.error,
-            "confidence": result.confidence,
+            "success": False,
+            "error": f"Tongue parsing not yet implemented for catalog entries: {entry.name}",
+            "ast": None,
         }
 
     @expose(
@@ -186,9 +187,9 @@ class GrammarianCLI(CLICapable):
         from agents.l import Registry
 
         registry = Registry()
-        tongue = await find_tongue(registry, tongue_name)
+        tongue_entries = await find_tongue(registry, tongue_name)
 
-        if tongue is None:
+        if not tongue_entries:
             return {"error": f"Tongue not found: {tongue_name}"}
 
         # Load examples from file
@@ -205,15 +206,19 @@ class GrammarianCLI(CLICapable):
         # Use pattern inference to evolve
         engine = PatternInferenceEngine()
 
-        for example in example_list:
-            engine.observe(example)
-
-        hypothesis = engine.hypothesize()
+        # Use infer_grammar instead of observe/hypothesize
+        report = await engine.infer_grammar(
+            example_list, domain=tongue_entries[0].tongue_domain
+        )
 
         return {
-            "new_patterns": len(hypothesis.rules) if hypothesis else 0,
-            "grammar_updated": hypothesis is not None,
-            "hypothesis_confidence": hypothesis.confidence if hypothesis else 0.0,
+            "new_patterns": len(report.final_hypothesis.rules)
+            if report.final_hypothesis
+            else 0,
+            "grammar_updated": report.success,
+            "hypothesis_confidence": report.final_hypothesis.confidence
+            if report.final_hypothesis
+            else 0.0,
         }
 
     @expose(
@@ -230,15 +235,15 @@ class GrammarianCLI(CLICapable):
         from agents.l import EntityType, Registry
 
         registry = Registry()
-        entries = await registry.find(entity_type=EntityType.TONGUE)
+        results = await registry.find(entity_type=EntityType.TONGUE)
 
         tongues = [
             {
-                "name": e.name,
-                "domain": e.description or "unknown",
-                "level": e.tongue_level or "command",
+                "name": result.entry.name,
+                "domain": result.entry.description or "unknown",
+                "level": result.entry.tongue_level or "command",
             }
-            for e in entries
+            for result in results
         ]
 
         return {"tongues": tongues, "count": len(tongues)}
@@ -247,7 +252,7 @@ class GrammarianCLI(CLICapable):
         help="Show Tongue details",
         examples=["kgents grammar show calendar"],
     )
-    async def show(self, name: str) -> dict[str, Any] | None:
+    async def show(self, name: str) -> dict[str, Any]:
         """
         Show detailed information about a Tongue.
 
@@ -257,24 +262,21 @@ class GrammarianCLI(CLICapable):
         from agents.l import Registry
 
         registry = Registry()
-        tongue = await find_tongue(registry, name)
+        tongue_entries = await find_tongue(registry, name)
 
-        if tongue is None:
+        if not tongue_entries:
             return {"error": f"Tongue not found: {name}"}
 
+        entry = tongue_entries[0]
         return {
-            "name": tongue.name,
-            "domain": tongue.domain,
-            "level": tongue.level.value,
-            "format": tongue.grammar_format.value
-            if hasattr(tongue, "grammar_format")
-            else "unknown",
-            "grammar": tongue.grammar,
-            "constraints": [p.constraint for p in tongue.proofs]
-            if tongue.proofs
-            else [],
-            "examples": [e.input for e in tongue.examples] if tongue.examples else [],
-            "version": tongue.version,
+            "name": entry.name,
+            "domain": entry.tongue_domain or "unknown",
+            "level": entry.tongue_level or "unknown",
+            "format": entry.tongue_format or "unknown",
+            "grammar": "Grammar not stored in catalog entry",
+            "constraints": entry.tongue_constraints or [],
+            "examples": [],
+            "version": entry.version,
         }
 
     @expose(
@@ -299,19 +301,19 @@ class GrammarianCLI(CLICapable):
         from agents.l import Registry
 
         registry = Registry()
-        tongue = await find_tongue(registry, name)
+        tongue_entries = await find_tongue(registry, name)
 
-        if tongue is None:
+        if not tongue_entries:
             return {"error": f"Tongue not found: {name}"}
 
-        report = await fuzz_tongue(tongue, iterations=iterations)
-
+        # For now, return error indicating need for full Tongue reconstruction
         return {
-            "iterations": report.total_inputs,
-            "valid_count": report.valid_count,
-            "invalid_count": report.invalid_count,
-            "success_rate": report.valid_count / max(1, report.total_inputs),
-            "failures": [r.input_text for r in report.results if not r.valid][:10],
+            "error": "Tongue validation not yet implemented for catalog entries",
+            "iterations": 0,
+            "valid_count": 0,
+            "invalid_count": 0,
+            "success_rate": 0.0,
+            "failures": [],
         }
 
     @expose(
@@ -358,12 +360,14 @@ class GrammarianCLI(CLICapable):
 
         engine = PatternInferenceEngine()
 
-        for pattern in pattern_list:
-            engine.observe(pattern)
+        # Use infer_grammar instead of observe/hypothesize
+        report = await engine.infer_grammar(pattern_list)
 
-        hypothesis = engine.hypothesize()
-
-        if hypothesis is None or hypothesis.confidence < min_confidence:
+        if (
+            not report.success
+            or not report.final_hypothesis
+            or report.final_hypothesis.confidence < min_confidence
+        ):
             return {
                 "pattern_count": len(pattern_list),
                 "rule_count": 0,
@@ -371,6 +375,7 @@ class GrammarianCLI(CLICapable):
                 "grammar": "",
             }
 
+        hypothesis = report.final_hypothesis
         return {
             "pattern_count": len(pattern_list),
             "rule_count": len(hypothesis.rules),

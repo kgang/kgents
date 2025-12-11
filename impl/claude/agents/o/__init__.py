@@ -37,6 +37,8 @@ Example:
     print(panopticon.render_dashboard())
 """
 
+from __future__ import annotations
+
 # Core observer types
 # Dimension Z: Axiology
 from .axiological import (
@@ -70,106 +72,6 @@ from .axiological import (
     create_value_ledger,
     create_value_ledger_observer,
 )
-from .observer import (
-    # Protocols and base types
-    Agent,
-    BaseObserver,
-    # Composite
-    CompositeObserver,
-    EntropyEvent,
-    ObservationContext,
-    ObservationResult,
-    # Context and result types
-    ObservationStatus,
-    Observer,
-    # Observer functor
-    ObserverFunctor,
-    ObserverHierarchy,
-    # Hierarchy
-    ObserverLevel,
-    ProprioceptiveWrapper,
-    StratifiedObserver,
-    create_composite,
-    create_functor,
-    create_hierarchy,
-    # Convenience
-    create_observer,
-    observe,
-)
-
-# Dimension Y: Semantics
-from .semantic import (
-    BorromeanObserver,
-    DriftAlert,
-    DriftDetector,
-    DriftMeasurer,
-    DriftReport,
-    # Drift detection
-    DriftSeverity,
-    HallucinationDetector,
-    # Hallucination detection
-    HallucinationReport,
-    ImaginaryHealth,
-    KnotHealth,
-    PsychosisAlert,
-    RealHealth,
-    # Semantic observer
-    SemanticObserver,
-    SimpleDriftMeasurer,
-    # Borromean knot
-    SymbolicHealth,
-    create_borromean_observer,
-    # Convenience
-    create_drift_detector,
-    create_hallucination_detector,
-    create_semantic_observer,
-)
-
-# Dimension X: Telemetry
-from .telemetry import (
-    # Topology mapping
-    CompositionEdge,
-    CompositionGraph,
-    HistogramBucket,
-    HistogramValue,
-    MetricsCollector,
-    # Metrics types
-    MetricType,
-    MetricValue,
-    # Telemetry observer
-    TelemetryObserver,
-    TopologyMapper,
-    TopologyNode,
-    TopologyObserver,
-    # Convenience
-    create_metrics_collector,
-    create_telemetry_observer,
-    create_topology_mapper,
-    create_topology_observer,
-)
-
-# VoI Integration
-from .voi_observer import (
-    Panopticon,
-    # Panopticon dashboard
-    PanopticonStatus,
-    # VoI observer
-    VoIAwareObserver,
-    VoIBudgetAllocation,
-    # VoI types
-    VoIObservationConfig,
-    VoIObservationResult,
-    create_full_observer_stack,
-    create_panopticon,
-    # Convenience
-    create_voi_aware_observer,
-)
-
-# Re-export ObservationDepth and FindingType for VoI integration
-try:
-    from .voi_observer import FindingType, ObservationDepth
-except ImportError:
-    pass  # Already defined in voi_observer.py
 
 # Panopticon Integration (O-gent Phase 3)
 # Bootstrap Witness (O-gent Phase 2)
@@ -233,6 +135,32 @@ from .metrics_export import (
     create_metrics_exporter,
     create_otel_exporter,
 )
+from .observer import (
+    # Protocols and base types
+    Agent,
+    BaseObserver,
+    # Composite
+    CompositeObserver,
+    EntropyEvent,
+    ObservationContext,
+    ObservationResult,
+    # Context and result types
+    ObservationStatus,
+    Observer,
+    # Observer functor
+    ObserverFunctor,
+    ObserverHierarchy,
+    # Hierarchy
+    ObserverLevel,
+    ProprioceptiveWrapper,
+    StratifiedObserver,
+    create_composite,
+    create_functor,
+    create_hierarchy,
+    # Convenience
+    create_observer,
+    observe,
+)
 from .panopticon import (
     AlertSeverity,
     AxiologicalStatus,
@@ -260,6 +188,76 @@ from .panopticon import (
     render_dimensions_summary,
     # Rendering functions
     render_unified_dashboard,
+)
+
+# Dimension Y: Semantics
+from .semantic import (
+    BorromeanObserver,
+    DriftAlert,
+    DriftDetector,
+    DriftMeasurer,
+    DriftReport,
+    # Drift detection
+    DriftSeverity,
+    HallucinationDetector,
+    # Hallucination detection
+    HallucinationReport,
+    ImaginaryHealth,
+    KnotHealth,
+    PsychosisAlert,
+    RealHealth,
+    # Semantic observer
+    SemanticObserver,
+    SimpleDriftMeasurer,
+    # Borromean knot
+    SymbolicHealth,
+    create_borromean_observer,
+    # Convenience
+    create_drift_detector,
+    create_hallucination_detector,
+    create_semantic_observer,
+)
+
+# Dimension X: Telemetry
+from .telemetry import (
+    # Topology mapping
+    CompositionEdge,
+    CompositionGraph,
+    HistogramBucket,
+    HistogramValue,
+    MetricsCollector,
+    # Metrics types
+    MetricType,
+    MetricValue,
+    # Telemetry observer
+    TelemetryObserver,
+    TopologyMapper,
+    TopologyNode,
+    TopologyObserver,
+    # Convenience
+    create_metrics_collector,
+    create_telemetry_observer,
+    create_topology_mapper,
+    create_topology_observer,
+)
+
+# VoI Integration
+from .voi_observer import (
+    FindingType,
+    ObservationDepth,
+    Panopticon,
+    # Panopticon dashboard
+    PanopticonStatus,
+    # VoI observer
+    VoIAwareObserver,
+    VoIBudgetAllocation,
+    # VoI types
+    VoIObservationConfig,
+    VoIObservationResult,
+    create_full_observer_stack,
+    create_panopticon,
+    # Convenience
+    create_voi_aware_observer,
 )
 
 __all__ = [

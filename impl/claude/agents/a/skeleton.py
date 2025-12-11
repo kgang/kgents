@@ -19,6 +19,8 @@ Philosophy: Composition, not duplication. We re-export Agent as AbstractAgent
 for semantic clarity, but it's the same class.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from typing import Any, Generic, Protocol, Type, TypeVar, runtime_checkable
 
@@ -32,6 +34,10 @@ AbstractAgent = Agent
 # Type variables
 A = TypeVar("A")
 B = TypeVar("B")
+
+# Covariant type variables for protocol use (output position)
+T_co = TypeVar("T_co", covariant=True)
+U_co = TypeVar("U_co", covariant=True)
 
 
 @dataclass
@@ -453,7 +459,7 @@ class BootstrapWitness:
         """
         from bootstrap.id import Id
 
-        id_agent = Id()
+        id_agent: Agent[Any, Any] = Id()
 
         # Direct invocation
         direct_result = await agent.invoke(test_input)
@@ -466,7 +472,7 @@ class BootstrapWitness:
         right_composed = agent >> id_agent
         right_result = await right_composed.invoke(test_input)
 
-        return direct_result == left_result == right_result
+        return bool(direct_result == left_result == right_result)
 
     @classmethod
     async def verify_composition_laws(
@@ -485,7 +491,7 @@ class BootstrapWitness:
         right_composed = f >> (g >> h)
         right_result = await right_composed.invoke(test_input)
 
-        return left_result == right_result
+        return bool(left_result == right_result)
 
 
 # =============================================================================
@@ -494,7 +500,7 @@ class BootstrapWitness:
 
 
 @runtime_checkable
-class Morphism(Protocol[A, B]):
+class Morphism(Protocol):
     """
     Agent as morphism in the category of agents.
 
@@ -515,11 +521,11 @@ class Morphism(Protocol[A, B]):
         """Human-readable name for this morphism."""
         ...
 
-    async def invoke(self, input: A) -> B:
+    async def invoke(self, input: Any) -> Any:
         """The morphism arrow A → B."""
         ...
 
-    def __rshift__(self, other: "Agent[B, Any]") -> "Agent[A, Any]":
+    def __rshift__(self, other: Agent[Any, Any]) -> Agent[Any, Any]:
         """Composition: f >> g creates morphism A → C."""
         ...
 
@@ -691,9 +697,10 @@ class _WrappedAgent(Agent[A, B], Generic[A, B]):
 
     async def invoke(self, input: A) -> B:
         if self._is_async:
-            return await self._impl(input)
+            result = await self._impl(input)
         else:
-            return self._impl(input)
+            result = self._impl(input)
+        return result  # type: ignore
 
 
 class AgentFactory:

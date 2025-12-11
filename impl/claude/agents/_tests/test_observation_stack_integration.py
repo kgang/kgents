@@ -12,8 +12,11 @@ Philosophy:
     The observation stack makes invisible computation visible.
 """
 
+from __future__ import annotations
+
 import asyncio
 from datetime import datetime, timezone
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -75,8 +78,8 @@ def create_test_trace(
     agent_genus: str = "O",
     action: str = "INVOKE",
     parent_id: str | None = None,
-    inputs: dict | None = None,
-    outputs: dict | None = None,
+    inputs: dict[str, Any] | None = None,
+    outputs: dict[str, Any] | None = None,
 ) -> SemanticTrace:
     """Create a test SemanticTrace with all required fields."""
     return SemanticTrace(
@@ -102,7 +105,7 @@ def create_test_trace(
 
 
 @pytest.fixture
-def mock_agent():
+def mock_agent() -> MagicMock:
     """Create a mock agent for observation tests."""
     agent = MagicMock()
     agent.id = "test-agent-001"
@@ -111,31 +114,31 @@ def mock_agent():
 
 
 @pytest.fixture
-def wire_observable():
+def wire_observable() -> WireObservable:
     """Create a WireObservable for tests."""
     return WireObservable("test-observable")
 
 
 @pytest.fixture
-def panopticon():
+def panopticon() -> Any:
     """Create an IntegratedPanopticon for tests."""
     return create_integrated_panopticon()
 
 
 @pytest.fixture
-def crystal_store():
+def crystal_store() -> Any:
     """Create a memory crystal store for N-gent tests."""
     return MemoryCrystalStore()
 
 
 @pytest.fixture
-def historian(crystal_store):
+def historian(crystal_store: Any) -> Historian:
     """Create a Historian for N-gent tests."""
     return Historian(crystal_store)
 
 
 @pytest.fixture
-def voi_ledger():
+def voi_ledger() -> VoILedger:
     """Create a VoI ledger."""
     return VoILedger()
 
@@ -155,7 +158,7 @@ class TestObservationWirePipeline:
         assert isinstance(panopticon, ObservablePanopticon)
         assert isinstance(panopticon, WireObservable)
 
-    def test_observable_panopticon_collects_snapshot(self, panopticon) -> None:
+    def test_observable_panopticon_collects_snapshot(self, panopticon: Any) -> None:
         """Test ObservablePanopticon collects status snapshots."""
         obs_panopticon = ObservablePanopticon(panopticon=panopticon)
         snapshot = obs_panopticon.collect_snapshot()
@@ -172,7 +175,7 @@ class TestObservationWirePipeline:
         assert isinstance(snapshot.semantic_healthy, bool)
         assert isinstance(snapshot.economic_healthy, bool)
 
-    def test_snapshot_converts_to_dict(self, panopticon) -> None:
+    def test_snapshot_converts_to_dict(self, panopticon: Any) -> None:
         """Test WireStatusSnapshot serializes for wire protocol."""
         obs_panopticon = ObservablePanopticon(panopticon=panopticon)
         snapshot = obs_panopticon.collect_snapshot()
@@ -191,7 +194,7 @@ class TestObservationWirePipeline:
         assert "healthy" in wire_dict["telemetry"]
         assert "latency_p95" in wire_dict["telemetry"]
 
-    def test_wire_observer_creates_context(self, mock_agent) -> None:
+    def test_wire_observer_creates_context(self, mock_agent: MagicMock) -> None:
         """Test WireObserver creates observation context."""
         observer = create_wire_observer()
         context = observer.pre_invoke(mock_agent, {"input": "test"})
@@ -202,7 +205,9 @@ class TestObservationWirePipeline:
         assert "input_preview" in context.metadata
 
     @pytest.mark.asyncio
-    async def test_wire_observer_records_completion(self, mock_agent) -> None:
+    async def test_wire_observer_records_completion(
+        self, mock_agent: MagicMock
+    ) -> None:
         """Test WireObserver records observation completion."""
         observer = create_wire_observer()
         context = observer.pre_invoke(mock_agent, {"input": "test"})
@@ -214,7 +219,7 @@ class TestObservationWirePipeline:
         assert result.duration_ms == 42.5
         assert result.output_data == {"output": "done"}
 
-    def test_wire_observer_records_entropy(self, mock_agent) -> None:
+    def test_wire_observer_records_entropy(self, mock_agent: MagicMock) -> None:
         """Test WireObserver records error events."""
         observer = create_wire_observer()
         context = observer.pre_invoke(mock_agent, {"input": "test"})
@@ -226,7 +231,7 @@ class TestObservationWirePipeline:
         assert stats["observations"] == 1
         assert stats["errors"] == 1
 
-    def test_emission_modes(self, panopticon) -> None:
+    def test_emission_modes(self, panopticon: Any) -> None:
         """Test different emission modes for ObservablePanopticon."""
         for mode in EmissionMode:
             obs_panopticon = ObservablePanopticon(
@@ -234,7 +239,7 @@ class TestObservationWirePipeline:
             )
             assert obs_panopticon.emission_mode == mode
 
-    def test_should_emit_continuous_mode(self, panopticon) -> None:
+    def test_should_emit_continuous_mode(self, panopticon: Any) -> None:
         """Test CONTINUOUS mode always emits."""
         obs_panopticon = ObservablePanopticon(
             panopticon=panopticon, emission_mode=EmissionMode.CONTINUOUS
@@ -242,7 +247,7 @@ class TestObservationWirePipeline:
         snapshot = obs_panopticon.collect_snapshot()
         assert obs_panopticon.should_emit(snapshot) is True
 
-    def test_should_emit_on_change_mode(self, panopticon) -> None:
+    def test_should_emit_on_change_mode(self, panopticon: Any) -> None:
         """Test ON_CHANGE mode emits only when status changes."""
         obs_panopticon = ObservablePanopticon(
             panopticon=panopticon, emission_mode=EmissionMode.ON_CHANGE
@@ -310,7 +315,7 @@ class TestObservationDashboardIntegration:
         assert "roc" in wire_data["sparklines"]
         assert "drift" in wire_data["sparklines"]
 
-    def test_i_gent_meter_for_metrics(self, panopticon) -> None:
+    def test_i_gent_meter_for_metrics(self, panopticon: Any) -> None:
         """Test I-gent Meter displays observation metrics."""
         status = panopticon.get_status()
 
@@ -324,7 +329,7 @@ class TestObservationDashboardIntegration:
 
         assert "Drift" in rendered
 
-    def test_colorized_health_status(self, panopticon) -> None:
+    def test_colorized_health_status(self, panopticon: Any) -> None:
         """Test health status uses appropriate colors."""
         status = panopticon.get_status()
 
@@ -335,7 +340,7 @@ class TestObservationDashboardIntegration:
             colored = colorize("DEGRADED", Color.YELLOW)
             assert "\033[33m" in colored  # Yellow ANSI code
 
-    def test_unified_dashboard_render(self, panopticon) -> None:
+    def test_unified_dashboard_render(self, panopticon: Any) -> None:
         """Test unified dashboard rendering."""
         status = panopticon.get_status()
         dashboard = render_unified_dashboard(status)
@@ -352,12 +357,12 @@ class TestObservationDashboardIntegration:
 class TestObservationEconomicsIntegration:
     """O × B: Observations subject to VoI economics."""
 
-    def test_voi_ledger_creation(self, voi_ledger) -> None:
+    def test_voi_ledger_creation(self, voi_ledger: VoILedger) -> None:
         """Test VoI ledger creates successfully."""
         assert voi_ledger is not None
         assert isinstance(voi_ledger, VoILedger)
 
-    def test_voi_ledger_records_observation(self, voi_ledger) -> None:
+    def test_voi_ledger_records_observation(self, voi_ledger: VoILedger) -> None:
         """Test VoI ledger records observation costs."""
         finding = ObservationFinding(
             type=FindingType.HEALTH_CONFIRMED,
@@ -367,7 +372,7 @@ class TestObservationEconomicsIntegration:
         receipt = voi_ledger.log_observation(
             observer_id="test-observer",
             target_id="test-target",
-            gas_consumed=Gas(10.0),
+            gas_consumed=Gas(10),
             finding=finding,
             depth=ObservationDepth.TELEMETRY_ONLY,
         )
@@ -375,7 +380,7 @@ class TestObservationEconomicsIntegration:
         assert receipt is not None
         assert receipt.voi >= 0  # Value of information calculated
 
-    def test_voi_anomaly_detection_value(self, voi_ledger) -> None:
+    def test_voi_anomaly_detection_value(self, voi_ledger: VoILedger) -> None:
         """Test anomaly detection has high VoI."""
         finding = ObservationFinding(
             type=FindingType.ANOMALY_DETECTED,
@@ -386,7 +391,7 @@ class TestObservationEconomicsIntegration:
         receipt = voi_ledger.log_observation(
             observer_id="test-observer",
             target_id="test-target",
-            gas_consumed=Gas(50.0),
+            gas_consumed=Gas(50),
             finding=finding,
             depth=ObservationDepth.SEMANTIC_FULL,
         )
@@ -394,7 +399,7 @@ class TestObservationEconomicsIntegration:
         # Anomalies should have positive VoI
         assert receipt.voi > 0
 
-    def test_epistemic_capital_accumulates(self, voi_ledger) -> None:
+    def test_epistemic_capital_accumulates(self, voi_ledger: VoILedger) -> None:
         """Test epistemic capital accumulates across observations."""
         # Multiple observations
         for i in range(5):
@@ -405,7 +410,7 @@ class TestObservationEconomicsIntegration:
             voi_ledger.log_observation(
                 observer_id="test-observer",
                 target_id=f"target-{i}",
-                gas_consumed=Gas(10.0),
+                gas_consumed=Gas(10),
                 finding=finding,
             )
 
@@ -414,7 +419,7 @@ class TestObservationEconomicsIntegration:
         assert capital.observations == 5
         assert capital.confirmations == 5
 
-    def test_observation_depth_affects_gas(self, voi_ledger) -> None:
+    def test_observation_depth_affects_gas(self, voi_ledger: VoILedger) -> None:
         """Test different depths have different costs."""
         # Gas takes tokens (int), not cost directly
         depths = [
@@ -445,7 +450,7 @@ class TestObservationEconomicsIntegration:
 class TestObservationNarrativeIntegration:
     """O × N: Observations feed into narrative."""
 
-    def test_historian_records_observation_trace(self, historian) -> None:
+    def test_historian_records_observation_trace(self, historian: Historian) -> None:
         """Test Historian records observation as trace."""
         trace = create_test_trace(
             trace_id="obs-trace-001",
@@ -461,9 +466,12 @@ class TestObservationNarrativeIntegration:
 
         assert retrieved is not None
         assert retrieved.agent_genus == "O"
+        assert retrieved.inputs is not None
         assert retrieved.inputs["observed_agent"] == "test-agent"
 
-    def test_observation_creates_semantic_trace(self, historian, mock_agent) -> None:
+    def test_observation_creates_semantic_trace(
+        self, historian: Historian, mock_agent: MagicMock
+    ) -> None:
         """Test observation creates semantic trace for N-gent."""
         trace = create_test_trace(
             trace_id=f"obs-{mock_agent.id}-001",
@@ -480,7 +488,9 @@ class TestObservationNarrativeIntegration:
         assert len(all_traces) >= 1
         assert any(t.agent_genus == "O" for t in all_traces)
 
-    def test_observation_lineage_traceable(self, historian, mock_agent) -> None:
+    def test_observation_lineage_traceable(
+        self, historian: Historian, mock_agent: MagicMock
+    ) -> None:
         """Test observation lineage can be traced."""
         # Parent observation
         parent_trace = create_test_trace(
@@ -508,7 +518,9 @@ class TestObservationNarrativeIntegration:
         assert child is not None
         assert child.parent_id == "parent-obs-001"
 
-    def test_panopticon_status_to_narrative(self, historian, panopticon) -> None:
+    def test_panopticon_status_to_narrative(
+        self, historian: Historian, panopticon: Any
+    ) -> None:
         """Test Panopticon status converts to narrative trace."""
         status = panopticon.get_status()
 
@@ -542,7 +554,7 @@ class TestObservationStackFullIntegration:
 
     @pytest.mark.asyncio
     async def test_observe_emit_display_record_flow(
-        self, historian, mock_agent
+        self, historian: Historian, mock_agent: MagicMock
     ) -> None:
         """Test O-gent observe → W-gent emit → I-gent display → N-gent record."""
         # 1. Create observation infrastructure
@@ -587,12 +599,13 @@ class TestObservationStackFullIntegration:
         # 8. Verify end-to-end
         retrieved = historian.store.get(trace.trace_id)
         assert retrieved is not None
+        assert retrieved.outputs is not None
         assert retrieved.outputs["duration_ms"] == 10.0
 
     @pytest.mark.asyncio
     async def test_budget_constrained_observation_flow(
-        self, historian, mock_agent, voi_ledger
-    ):
+        self, historian: Historian, mock_agent: MagicMock, voi_ledger: VoILedger
+    ) -> None:
         """Test observation flow with VoI budget constraints."""
         # 1. Create VoI-constrained observation
         wire_observer = create_wire_observer()
@@ -614,7 +627,7 @@ class TestObservationStackFullIntegration:
         receipt = voi_ledger.log_observation(
             observer_id=context.agent_id,
             target_id=mock_agent.id,
-            gas_consumed=Gas(20.0),
+            gas_consumed=Gas(20),
             finding=finding,
             depth=ObservationDepth.SEMANTIC_SPOT,
         )
@@ -637,4 +650,5 @@ class TestObservationStackFullIntegration:
         # 5. Verify economics tracked
         retrieved = historian.store.get(trace.trace_id)
         assert retrieved is not None
+        assert retrieved.outputs is not None
         assert "voi" in retrieved.outputs

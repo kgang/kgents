@@ -360,10 +360,12 @@ class TestRecordFailure:
     ) -> None:
         """Recording failure weakens existing pattern."""
         await library.record_success(sample_phage, impact=1.0)
+        assert sample_phage.mutation is not None
         initial_fitness = library.get_fitness(sample_phage.mutation.signature)
 
         await library.record_failure(sample_phage)
 
+        assert sample_phage.mutation is not None
         new_fitness = library.get_fitness(sample_phage.mutation.signature)
         assert new_fitness < initial_fitness
 
@@ -496,6 +498,7 @@ class TestGetFitness:
         """Returns correct fitness for pattern."""
         await library.record_success(sample_phage, impact=2.0)
 
+        assert sample_phage.mutation is not None
         fitness = library.get_fitness(sample_phage.mutation.signature)
 
         assert fitness == 2.0
@@ -902,6 +905,7 @@ class TestProperties:
         await library.record_failure(sample_phage)
         pattern = await library.record_failure(sample_phage)
 
+        assert pattern is not None
         assert pattern.total_uses == pattern.success_count + pattern.failure_count
         assert pattern.total_uses == 4
 

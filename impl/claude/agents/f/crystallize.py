@@ -13,6 +13,8 @@ This phase:
 From spec/f-gents/forge.md Phase 5 and spec/f-gents/artifacts.md
 """
 
+from __future__ import annotations
+
 import hashlib
 import re
 from dataclasses import dataclass, field
@@ -404,7 +406,7 @@ def extract_tags_from_intent(intent: Intent) -> list[str]:
     Returns:
         List of lowercase tags
     """
-    tags = set()
+    tags: set[str] = set()
 
     # Extract from purpose (simple keyword extraction)
     # In production, use NLP library like spaCy

@@ -6,6 +6,8 @@ F-gent creates permanent parameterized templates,
 J-gent instantiates them with runtime parameters.
 """
 
+from __future__ import annotations
+
 import pytest
 from agents.f import Contract, parse_intent, synthesize_contract
 from agents.j import ArchitectConstraints
@@ -31,7 +33,7 @@ def simple_contract() -> Contract:
         invariants=[],
         composition_rules=[],
         semantic_intent="Parse text and return dictionary",
-        raw_intent="Parse text and return dictionary",
+        raw_intent=None,
     )
 
 
@@ -45,7 +47,7 @@ def parameterized_contract() -> Contract:
         invariants=[],
         composition_rules=[],
         semantic_intent="Process {format} data and output {output_type}",
-        raw_intent="Process {format} data and output {output_type}",
+        raw_intent=None,
     )
 
 
@@ -59,14 +61,14 @@ def multi_param_contract() -> Contract:
         invariants=[],
         composition_rules=[],
         semantic_intent="Convert {source} format to {dest} format with {encoding} encoding",
-        raw_intent="Convert {source} format to {dest} format with {encoding} encoding",
+        raw_intent=None,
     )
 
 
 # --- Test Contract → Template Conversion ---
 
 
-def test_contract_to_template_no_params(simple_contract) -> None:
+def test_contract_to_template_no_params(simple_contract: Contract) -> None:
     """Convert contract without parameters to template."""
     template = contract_to_template(simple_contract)
 
@@ -76,7 +78,9 @@ def test_contract_to_template_no_params(simple_contract) -> None:
     assert template.metadata["source"] == "f-gent"
 
 
-def test_contract_to_template_auto_detect_params(parameterized_contract) -> None:
+def test_contract_to_template_auto_detect_params(
+    parameterized_contract: Contract,
+) -> None:
     """Auto-detect parameters from {placeholder} syntax."""
     template = contract_to_template(parameterized_contract)
 
@@ -84,14 +88,14 @@ def test_contract_to_template_auto_detect_params(parameterized_contract) -> None
     assert template.contract == parameterized_contract
 
 
-def test_contract_to_template_multiple_params(multi_param_contract) -> None:
+def test_contract_to_template_multiple_params(multi_param_contract: Contract) -> None:
     """Auto-detect multiple parameters across fields."""
     template = contract_to_template(multi_param_contract)
 
     assert set(template.parameters) == {"source", "dest", "encoding"}
 
 
-def test_contract_to_template_explicit_params(simple_contract) -> None:
+def test_contract_to_template_explicit_params(simple_contract: Contract) -> None:
     """Explicitly specify parameters (override auto-detection)."""
     template = contract_to_template(
         simple_contract,
@@ -103,7 +107,7 @@ def test_contract_to_template_explicit_params(simple_contract) -> None:
     assert template.default_values["custom_param"] == "default"
 
 
-def test_contract_to_template_with_defaults(parameterized_contract) -> None:
+def test_contract_to_template_with_defaults(parameterized_contract: Contract) -> None:
     """Template with default parameter values."""
     template = contract_to_template(
         parameterized_contract,
@@ -118,7 +122,7 @@ def test_contract_to_template_with_defaults(parameterized_contract) -> None:
 
 @pytest.mark.asyncio
 async def test_instantiate_template_missing_required_param(
-    parameterized_contract,
+    parameterized_contract: Contract,
 ) -> None:
     """Raise error when required parameter is missing."""
     template = contract_to_template(parameterized_contract)
@@ -129,7 +133,9 @@ async def test_instantiate_template_missing_required_param(
 
 
 @pytest.mark.asyncio
-async def test_instantiate_template_with_defaults(parameterized_contract) -> None:
+async def test_instantiate_template_with_defaults(
+    parameterized_contract: Contract,
+) -> None:
     """Use default values for missing parameters."""
     template = contract_to_template(
         parameterized_contract,
@@ -149,7 +155,7 @@ async def test_instantiate_template_with_defaults(parameterized_contract) -> Non
 
 
 @pytest.mark.asyncio
-async def test_instantiate_template_basic(parameterized_contract) -> None:
+async def test_instantiate_template_basic(parameterized_contract: Contract) -> None:
     """Basic template instantiation with all parameters."""
     template = contract_to_template(parameterized_contract)
     params = TemplateParameters(values={"format": "CSV", "output_type": "JSON"})
@@ -169,7 +175,9 @@ async def test_instantiate_template_basic(parameterized_contract) -> None:
 
 
 @pytest.mark.asyncio
-async def test_instantiate_template_agent_name_filled(parameterized_contract) -> None:
+async def test_instantiate_template_agent_name_filled(
+    parameterized_contract: Contract,
+) -> None:
     """Verify agent name parameters are filled."""
     template = contract_to_template(parameterized_contract)
     params = TemplateParameters(values={"format": "XML", "output_type": "YAML"})
@@ -183,7 +191,9 @@ async def test_instantiate_template_agent_name_filled(parameterized_contract) ->
 
 
 @pytest.mark.asyncio
-async def test_instantiate_template_generates_source(parameterized_contract) -> None:
+async def test_instantiate_template_generates_source(
+    parameterized_contract: Contract,
+) -> None:
     """Verify J-gent generates actual source code."""
     template = contract_to_template(parameterized_contract)
     params = TemplateParameters(values={"format": "JSON", "output_type": "dict"})
@@ -196,7 +206,9 @@ async def test_instantiate_template_generates_source(parameterized_contract) -> 
 
 
 @pytest.mark.asyncio
-async def test_instantiate_template_safety_validation(parameterized_contract) -> None:
+async def test_instantiate_template_safety_validation(
+    parameterized_contract: Contract,
+) -> None:
     """Verify safety constraints are enforced."""
     template = contract_to_template(parameterized_contract)
 
@@ -262,7 +274,7 @@ async def test_forge_and_instantiate_multiple_params() -> None:
 # --- Test Template Registry ---
 
 
-def test_registry_register_and_get(parameterized_contract) -> None:
+def test_registry_register_and_get(parameterized_contract: Contract) -> None:
     """Register template and retrieve by name."""
     registry = TemplateRegistry()
     template = contract_to_template(parameterized_contract)
@@ -273,7 +285,9 @@ def test_registry_register_and_get(parameterized_contract) -> None:
     assert retrieved == template
 
 
-def test_registry_list_all(parameterized_contract, simple_contract) -> None:
+def test_registry_list_all(
+    parameterized_contract: Contract, simple_contract: Contract
+) -> None:
     """List all registered templates."""
     registry = TemplateRegistry()
 
@@ -286,7 +300,9 @@ def test_registry_list_all(parameterized_contract, simple_contract) -> None:
     assert "template2" in all_names
 
 
-def test_registry_search(parameterized_contract, simple_contract) -> None:
+def test_registry_search(
+    parameterized_contract: Contract, simple_contract: Contract
+) -> None:
     """Search templates by intent keywords."""
     registry = TemplateRegistry()
 
@@ -377,7 +393,7 @@ async def test_integration_reusable_template() -> None:
 
 
 @pytest.mark.asyncio
-async def test_edge_case_no_parameters(simple_contract) -> None:
+async def test_edge_case_no_parameters(simple_contract: Contract) -> None:
     """Template with no parameters works (degenerates to normal instantiation)."""
     template = contract_to_template(simple_contract)
     params = TemplateParameters(values={})
@@ -387,7 +403,7 @@ async def test_edge_case_no_parameters(simple_contract) -> None:
 
 
 @pytest.mark.asyncio
-async def test_edge_case_extra_parameters(parameterized_contract) -> None:
+async def test_edge_case_extra_parameters(parameterized_contract: Contract) -> None:
     """Extra parameters (not in template) are ignored gracefully."""
     template = contract_to_template(parameterized_contract)
     params = TemplateParameters(
@@ -413,7 +429,7 @@ def test_edge_case_parameter_placeholder_escaping() -> None:
         invariants=[],
         composition_rules=[],
         semantic_intent="Parse format: {{literal}} and {actual_param}",
-        raw_intent="Parse format: {{literal}} and {actual_param}",
+        raw_intent=None,
     )
 
     template = contract_to_template(contract)

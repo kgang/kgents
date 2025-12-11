@@ -12,6 +12,8 @@ Full J-gent will be implemented later with:
 - Safety collapse mechanisms
 """
 
+from __future__ import annotations
+
 from typing import Any, Callable
 
 from agents.g.types import ExecutionResult, InterpreterConfig
@@ -82,13 +84,15 @@ class CommandExecutor(ExecutionStrategy):
     Commands have side effects but are deterministic.
     """
 
-    def __init__(self, handlers: dict[str, Callable[[Any], Any]] | None = None):
+    def __init__(
+        self, handlers: dict[str, Callable[[Any, dict[str, Any]], Any]] | None = None
+    ) -> None:
         """
         Initialize with command handlers.
 
         Args:
             handlers: Dict mapping verb → handler function
-                     Handler signature: (noun: Any) → result: Any
+                     Handler signature: (noun: Any, context: dict[str, Any]) → result: Any
         """
         self.handlers = handlers or {}
 
@@ -204,7 +208,8 @@ class RecursiveInterpreter(ExecutionStrategy):
 
 
 def create_interpreter(
-    config: InterpreterConfig, handlers: dict[str, Callable] | None = None
+    config: InterpreterConfig,
+    handlers: dict[str, Callable[[Any, dict[str, Any]], Any]] | None = None,
 ) -> ExecutionStrategy:
     """
     Create appropriate execution strategy based on configuration.
@@ -216,7 +221,8 @@ def create_interpreter(
     Returns:
         ExecutionStrategy instance
     """
-    semantics = config.semantics.upper() if config.semantics else "PURE"
+    # config.semantics is a dict[str, str], extract runtime type from config
+    semantics = config.runtime.upper() if config.runtime else "PURE"
 
     strategy_map = {
         "PURE": PureFunctionalExecutor,
@@ -242,7 +248,7 @@ def execute_with_tongue(
     ast: Any,
     config: InterpreterConfig,
     context: dict[str, Any] | None = None,
-    handlers: dict[str, Callable] | None = None,
+    handlers: dict[str, Callable[[Any, dict[str, Any]], Any]] | None = None,
 ) -> ExecutionResult:
     """
     Execute parsed AST using Tongue's interpreter configuration.

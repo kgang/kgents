@@ -48,7 +48,7 @@ class ObserveAction:
         self.base_port = base_port
         self.auto_open = auto_open
         self._active_wgents: dict[str, int] = {}  # agent_name -> port
-        self._processes: dict[str, subprocess.Popen] = {}
+        self._processes: dict[str, subprocess.Popen[bytes]] = {}
 
     def get_port(self, agent_name: str) -> int:
         """

@@ -26,11 +26,13 @@ Architecture:
 This is Phase 8 of L-gent: Full D-gent integration for production workloads.
 """
 
+from __future__ import annotations
+
 # Import D-gent components
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 from .semantic import Embedder, SemanticResult
 from .types import Catalog, CatalogEntry, EntityType
@@ -43,9 +45,9 @@ try:
     import numpy as np
     from agents.d.vector import NUMPY_AVAILABLE, DistanceMetric, VectorAgent
 except ImportError:
-    np = None  # type: ignore
-    VectorAgent = None  # type: ignore
-    DistanceMetric = None  # type: ignore
+    np = None  # type: ignore[assignment]
+    VectorAgent = None  # type: ignore[assignment, misc]
+    DistanceMetric = None  # type: ignore[assignment, misc]
     NUMPY_AVAILABLE = False
 
 
@@ -114,7 +116,7 @@ class DgentVectorBackend:
         d_metric = distance_map.get(distance, DistanceMetric.COSINE)
 
         # Create D-gent VectorAgent
-        self._agent: VectorAgent = VectorAgent(
+        self._agent: VectorAgent[dict[str, Any]] = VectorAgent(
             dimension=dimension,
             distance=d_metric,
             persistence_path=persistence_path,
@@ -179,7 +181,7 @@ class DgentVectorBackend:
         # Use D-gent's neighbors method
         neighbors = await self._agent.neighbors(vec, k=limit * 2)
 
-        results = []
+        results: list[VectorSearchResult] = []
         for entry, distance in neighbors:
             entry_id = entry.id
             metadata = self._entry_cache.get(entry_id, entry.metadata)
@@ -256,14 +258,14 @@ class DgentVectorBackend:
             Curvature estimate (higher = sharper boundary)
         """
         vec = np.array(vector, dtype=np.float32)
-        return await self._agent.curvature_at(vec, radius)
+        return float(await self._agent.curvature_at(vec, radius))
 
     async def find_void(
         self,
         vector: list[float],
         search_radius: float = 1.0,
         min_void_radius: float = 0.2,
-    ) -> Optional[dict]:
+    ) -> Optional[dict[str, Any]]:
         """Find unexplored regions (Ma) near a point.
 
         Voids are regions with high semantic potential but low coverage.
@@ -475,7 +477,7 @@ class VectorCatalog:
         )
 
         # Convert to SemanticResult with full CatalogEntry
-        results = []
+        results: list[SemanticResult] = []
         for vr in vector_results:
             entry = self.catalog.entries.get(vr.id)
             if entry:
@@ -490,7 +492,9 @@ class VectorCatalog:
 
         return results
 
-    async def find_gaps(self, query: str, radius: float = 1.0) -> Optional[dict]:
+    async def find_gaps(
+        self, query: str, radius: float = 1.0
+    ) -> Optional[dict[str, Any]]:
         """Find gaps in catalog coverage near a query.
 
         Args:
@@ -514,11 +518,11 @@ class VectorCatalog:
 
         # Find pending (in catalog but not indexed)
         # For now, assume all are indexed after _index_all
-        pending = []
+        pending: list[str] = []
 
         # Find orphaned (in vectors but not catalog)
         # Would need to enumerate vector IDs for full check
-        orphaned = []
+        orphaned: list[str] = []
 
         return VectorSyncState(
             total_entries=len(catalog_ids),
@@ -527,7 +531,7 @@ class VectorCatalog:
             orphaned_vectors=orphaned,
         )
 
-    async def cluster_analysis(self, k: int = 5) -> list[dict]:
+    async def cluster_analysis(self, k: int = 5) -> list[dict[str, Any]]:
         """Analyze catalog structure via clustering.
 
         Returns cluster centers with nearby entries.
@@ -540,7 +544,7 @@ class VectorCatalog:
         """
         centers = await self.vector_backend.cluster_centers(k)
 
-        clusters = []
+        clusters: list[dict[str, Any]] = []
         for i, center in enumerate(centers):
             # Find entries near this center
             nearby = await self.vector_backend.search(center, limit=5)

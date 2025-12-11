@@ -10,6 +10,10 @@ Structure:
 - init.py: Workspace initialization
 - wipe.py: Database cleanup commands
 - debug.py: Debug utilities
+- ghost.py: Living Filesystem projection (DevEx V4 Phase 2)
+- flinch.py: Test failure analysis (Trust Loop Integration)
+- infra.py: K-Terrarium infrastructure (K8s cluster, CRDs)
+- daemon.py: Cortex daemon lifecycle (start/stop/status, Mac launchd)
 
 All handlers follow the signature:
     def cmd_<name>(args: list[str]) -> int

@@ -13,6 +13,8 @@ Phase 5 Implementation:
 - Auto-indexing: Embeddings updated on register/delete
 """
 
+from __future__ import annotations
+
 from typing import Any
 
 from .registry import Registry
@@ -40,7 +42,7 @@ class SemanticRegistry(Registry):
         catalog: Catalog | None = None,
         embedder: Embedder | None = None,
         auto_index: bool = True,
-    ):
+    ) -> None:
         """Initialize semantic registry.
 
         Args:
@@ -202,22 +204,24 @@ class SemanticRegistry(Registry):
             combined[entry_id] = (score, result.entry, f"Keyword: {result.explanation}")
 
         # Add/update with semantic results
-        for result in semantic_results:
-            entry_id = result.entry.id
-            semantic_score = result.similarity * semantic_weight
+        for semantic_result in semantic_results:
+            entry_id = semantic_result.entry.id
+            semantic_score = semantic_result.similarity * semantic_weight
 
             if entry_id in combined:
                 # Combine scores
                 existing_score, entry, existing_explanation = combined[entry_id]
                 total_score = existing_score + semantic_score
-                explanation = f"{existing_explanation} | Semantic: {result.explanation}"
+                explanation = (
+                    f"{existing_explanation} | Semantic: {semantic_result.explanation}"
+                )
                 combined[entry_id] = (total_score, entry, explanation)
             else:
                 # Add semantic-only result
                 combined[entry_id] = (
                     semantic_score,
-                    result.entry,
-                    f"Semantic: {result.explanation}",
+                    semantic_result.entry,
+                    f"Semantic: {semantic_result.explanation}",
                 )
 
         # Convert to SearchResult and sort
@@ -398,7 +402,7 @@ class SemanticRegistry(Registry):
             if entropy_used is not None:
                 if "entropy_history" not in entry.relationships:
                     entry.relationships["entropy_history"] = []
-                entry.relationships["entropy_history"].append(entropy_used)
+                entry.relationships["entropy_history"].append(str(entropy_used))
 
 
 # Convenience functions

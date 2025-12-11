@@ -20,10 +20,18 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Coroutine
+from typing import TYPE_CHECKING, Any, Callable, Coroutine
 
 from .interfaces import TelemetryEvent
 from .storage import StorageProvider, XDGPaths
+
+if TYPE_CHECKING:
+    from agents.d.bicameral import BicameralMemory
+    from agents.o.cortex_observer import CortexObserver
+
+    from .dreamer import LucidDreamer
+    from .hippocampus import Hippocampus
+    from .synapse import Synapse
 
 
 class OperationMode(str, Enum):
@@ -47,6 +55,27 @@ class LifecycleState:
     project_path: Path | None = None
     project_hash: str | None = None
     errors: list[str] = field(default_factory=list)
+
+    # Bicameral Engine components (populated if storage available)
+    synapse: Synapse | None = None
+    hippocampus: Hippocampus | None = None
+    dreamer: LucidDreamer | None = None
+    bicameral: BicameralMemory | None = None
+    cortex_observer: CortexObserver | None = None
+
+    @property
+    def dream_cycles_total(self) -> int:
+        """Total dream cycles from dreamer."""
+        if self.dreamer:
+            return self.dreamer._total_dreams
+        return 0
+
+    @property
+    def last_dream(self) -> Any:
+        """Last dream report from dreamer."""
+        if self.dreamer and self.dreamer._dream_history:
+            return self.dreamer._dream_history[-1]
+        return None
 
 
 class LifecycleManager:
@@ -186,6 +215,13 @@ class LifecycleManager:
                 errors=errors,
             )
 
+            # Stage 8: Create Bicameral Engine components
+            try:
+                await self._create_bicameral_stack(storage, instance_id, project_hash)
+            except Exception as e:
+                errors.append(f"Bicameral stack creation warning: {e}")
+                # Non-fatal: system can work without full stack
+
             return self._state
 
         except Exception as e:
@@ -324,6 +360,110 @@ class LifecycleManager:
         import hashlib
 
         return hashlib.sha256(str(project_path.resolve()).encode()).hexdigest()[:8]
+
+    async def _create_bicameral_stack(
+        self,
+        storage: StorageProvider,
+        instance_id: str,
+        project_hash: str | None,
+    ) -> None:
+        """
+        Create the Bicameral Engine stack (Synapse, Hippocampus, Dreamer, etc).
+
+        This populates self._state with the full cognitive stack.
+        Non-fatal if components fail - system degrades gracefully.
+        """
+        if not self._state:
+            return
+
+        # Import here to avoid circular deps and ensure components exist
+        try:
+            from .dreamer import DreamerConfig, LucidDreamer, create_lucid_dreamer
+            from .hippocampus import Hippocampus, HippocampusConfig
+            from .synapse import Synapse, SynapseConfig
+        except ImportError as e:
+            self._state.errors.append(f"Core components not available: {e}")
+            return
+
+        # Create Synapse (event bus / Active Inference router)
+        try:
+            synapse_config = SynapseConfig(
+                high_surprise_threshold=0.7,
+                flashbulb_threshold=0.95,
+                batch_window_ms=100,
+            )
+            synapse = Synapse(config=synapse_config)
+            self._state.synapse = synapse
+        except Exception as e:
+            self._state.errors.append(f"Synapse creation failed: {e}")
+
+        # Create Hippocampus (short-term memory buffer)
+        try:
+            hippocampus_config = HippocampusConfig(
+                max_size=10000,
+                flush_threshold=0.8,
+            )
+            hippocampus = Hippocampus(config=hippocampus_config)
+            self._state.hippocampus = hippocampus
+        except Exception as e:
+            self._state.errors.append(f"Hippocampus creation failed: {e}")
+
+        # Create LucidDreamer (interruptible maintenance)
+        if self._state.synapse and self._state.hippocampus:
+            try:
+                dreamer_config = DreamerConfig(
+                    rem_interval_hours=24.0,
+                    rem_start_time_utc="03:00",
+                    max_rem_duration_minutes=30,
+                    enable_neurogenesis=True,
+                )
+                dreamer = create_lucid_dreamer(
+                    synapse=self._state.synapse,
+                    hippocampus=self._state.hippocampus,
+                    cortex=None,  # Will wire to BicameralMemory if available
+                    config_dict=None,
+                )
+                # Override with our config
+                dreamer._config = dreamer_config
+                self._state.dreamer = dreamer
+            except Exception as e:
+                self._state.errors.append(f"LucidDreamer creation failed: {e}")
+
+        # Create BicameralMemory (optional - requires D-gent)
+        try:
+            from agents.d.bicameral import BicameralMemory, create_bicameral_memory
+
+            bicameral = create_bicameral_memory(
+                left_store=storage.relational,
+                right_store=storage.vector,
+            )
+            self._state.bicameral = bicameral
+
+            # Wire dreamer's cortex to bicameral
+            if self._state.dreamer:
+                self._state.dreamer._cortex = bicameral
+        except ImportError:
+            # D-gent not available, skip
+            pass
+        except Exception as e:
+            self._state.errors.append(f"BicameralMemory creation warning: {e}")
+
+        # Create CortexObserver (O-gent health monitoring)
+        try:
+            from agents.o.cortex_observer import create_cortex_observer
+
+            observer = create_cortex_observer(
+                bicameral=self._state.bicameral,
+                synapse=self._state.synapse,
+                hippocampus=self._state.hippocampus,
+                dreamer=self._state.dreamer,
+            )
+            self._state.cortex_observer = observer
+        except ImportError:
+            # O-gent not available, skip
+            pass
+        except Exception as e:
+            self._state.errors.append(f"CortexObserver creation warning: {e}")
 
     async def _attempt_recovery(self, storage: StorageProvider) -> None:
         """

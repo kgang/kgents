@@ -15,7 +15,8 @@ import hashlib
 import json
 from contextvars import ContextVar
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+from types import TracebackType
+from typing import TYPE_CHECKING, Any, Literal, Protocol, runtime_checkable
 from uuid import uuid4
 
 from .types import Action, Determinism, SemanticTrace, TraceContext
@@ -300,12 +301,21 @@ class TracingContext:
         self._ctx = self.historian.begin_trace(self.agent, self.input_data)
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> Literal[False]:
         if self._ctx is None:
-            return
+            return False
 
         if exc_val is not None:
-            self.historian.abort_trace(self._ctx, exc_val)
+            # Convert BaseException to Exception or str for abort_trace
+            if isinstance(exc_val, Exception):
+                self.historian.abort_trace(self._ctx, exc_val)
+            else:
+                self.historian.abort_trace(self._ctx, str(exc_val))
         else:
             outputs = (
                 self._result
@@ -319,7 +329,12 @@ class TracingContext:
     async def __aenter__(self) -> TracingContext:
         return self.__enter__()
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> Literal[False]:
         return self.__exit__(exc_type, exc_val, exc_tb)
 
     def set_result(self, result: Any) -> None:

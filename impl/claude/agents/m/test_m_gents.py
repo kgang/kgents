@@ -8,10 +8,13 @@ Tests:
 - TieredMemory: three-tier hierarchy
 """
 
+from __future__ import annotations
+
 import asyncio
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -55,7 +58,7 @@ class TestHolographicMemory:
         return HolographicMemory[str]()
 
     @pytest.mark.asyncio
-    async def test_store_creates_pattern(self, memory) -> None:
+    async def test_store_creates_pattern(self, memory: HolographicMemory[str]) -> None:
         """Store creates a memory pattern."""
         pattern = await memory.store(
             id="m1",
@@ -68,7 +71,7 @@ class TestHolographicMemory:
         assert "preference" in pattern.concepts
 
     @pytest.mark.asyncio
-    async def test_retrieve_finds_similar(self, memory) -> None:
+    async def test_retrieve_finds_similar(self, memory: HolographicMemory[str]) -> None:
         """Retrieve finds similar patterns by resonance."""
         await memory.store("m1", "User prefers dark mode", ["preference"])
         await memory.store("m2", "User works at night", ["schedule"])
@@ -79,7 +82,9 @@ class TestHolographicMemory:
         assert all(isinstance(r, ResonanceResult) for r in results)
 
     @pytest.mark.asyncio
-    async def test_retrieve_always_returns_something(self, memory) -> None:
+    async def test_retrieve_always_returns_something(
+        self, memory: HolographicMemory[str]
+    ) -> None:
         """Retrieve returns empty list, not None, when no matches."""
         await memory.store("m1", "Hello world", ["greeting"])
 
@@ -88,7 +93,7 @@ class TestHolographicMemory:
         assert isinstance(results, list)
 
     @pytest.mark.asyncio
-    async def test_retrieve_by_concept(self, memory) -> None:
+    async def test_retrieve_by_concept(self, memory: HolographicMemory[str]) -> None:
         """Retrieve by concept finds exact concept matches."""
         await memory.store("m1", "Dark mode setting", ["preference", "ui"])
         await memory.store("m2", "Language setting", ["preference", "locale"])
@@ -100,7 +105,9 @@ class TestHolographicMemory:
         assert all("preference" in r.pattern.concepts for r in results)
 
     @pytest.mark.asyncio
-    async def test_access_updates_metadata(self, memory) -> None:
+    async def test_access_updates_metadata(
+        self, memory: HolographicMemory[str]
+    ) -> None:
         """Accessing a pattern updates its metadata."""
         pattern = await memory.store("m1", "Test content")
         initial_access_count = pattern.access_count
@@ -110,17 +117,21 @@ class TestHolographicMemory:
         assert memory._patterns["m1"].access_count > initial_access_count
 
     @pytest.mark.asyncio
-    async def test_demote_reduces_resolution(self, memory) -> None:
+    async def test_demote_reduces_resolution(
+        self, memory: HolographicMemory[str]
+    ) -> None:
         """Demoting a pattern reduces its resolution."""
         await memory.store("m1", "Test content")
         assert memory._patterns["m1"].compression == CompressionLevel.FULL
 
         await memory.demote("m1", levels=1)
 
-        assert memory._patterns["m1"].compression == CompressionLevel.HIGH
+        assert memory._patterns["m1"].compression == CompressionLevel.HIGH  # type: ignore[comparison-overlap]
 
     @pytest.mark.asyncio
-    async def test_promote_increases_resolution(self, memory) -> None:
+    async def test_promote_increases_resolution(
+        self, memory: HolographicMemory[str]
+    ) -> None:
         """Promoting a pattern increases its resolution."""
         await memory.store("m1", "Test content")
         memory._patterns["m1"].compression = CompressionLevel.LOW
@@ -130,7 +141,9 @@ class TestHolographicMemory:
         assert memory._patterns["m1"].compression == CompressionLevel.MEDIUM
 
     @pytest.mark.asyncio
-    async def test_consolidate_processes_patterns(self, memory) -> None:
+    async def test_consolidate_processes_patterns(
+        self, memory: HolographicMemory[str]
+    ) -> None:
         """Consolidation processes hot and cold patterns."""
         # Create a hot pattern (frequently accessed)
         await memory.store("hot1", "Hot content")
@@ -146,9 +159,9 @@ class TestHolographicMemory:
         assert "demoted" in stats
         assert "promoted" in stats
 
-    def test_temperature_calculation(self, memory) -> None:
+    def test_temperature_calculation(self, memory: HolographicMemory[str]) -> None:
         """Pattern temperature reflects recency and frequency."""
-        pattern = MemoryPattern(
+        pattern = MemoryPattern[str](
             id="test",
             content="Test",
             embedding=[0.0] * 64,
@@ -164,9 +177,11 @@ class TestHolographicMemory:
 
         assert temp2 < temp1  # Older = colder
 
-    def test_retention_follows_forgetting_curve(self, memory) -> None:
+    def test_retention_follows_forgetting_curve(
+        self, memory: HolographicMemory[str]
+    ) -> None:
         """Retention follows Ebbinghaus forgetting curve."""
-        pattern = MemoryPattern(
+        pattern = MemoryPattern[str](
             id="test",
             content="Test",
             embedding=[0.0] * 64,
@@ -183,7 +198,9 @@ class TestHolographicMemory:
 
         assert ret2 < ret1  # Retention decays
 
-    def test_stats_returns_memory_statistics(self, memory) -> None:
+    def test_stats_returns_memory_statistics(
+        self, memory: HolographicMemory[str]
+    ) -> None:
         """Stats returns comprehensive memory statistics."""
         stats = memory.stats()
 
@@ -204,11 +221,13 @@ class TestRecollectionAgent:
         return HolographicMemory[str]()
 
     @pytest.fixture
-    def agent(self, memory):
+    def agent(self, memory: HolographicMemory[str]) -> RecollectionAgent[str]:
         return RecollectionAgent(memory)
 
     @pytest.mark.asyncio
-    async def test_invoke_with_text_cue(self, agent, memory) -> None:
+    async def test_invoke_with_text_cue(
+        self, agent: RecollectionAgent[str], memory: HolographicMemory[str]
+    ) -> None:
         """Invoke with text cue retrieves memories."""
         await memory.store("m1", "User likes pizza", ["food"])
 
@@ -218,7 +237,9 @@ class TestRecollectionAgent:
         assert isinstance(recollection, Recollection)
 
     @pytest.mark.asyncio
-    async def test_invoke_with_concept_cue(self, agent, memory) -> None:
+    async def test_invoke_with_concept_cue(
+        self, agent: RecollectionAgent[str], memory: HolographicMemory[str]
+    ) -> None:
         """Invoke with concept cue retrieves by concept."""
         await memory.store("m1", "User prefers dark mode", ["preference"])
 
@@ -228,7 +249,7 @@ class TestRecollectionAgent:
         assert isinstance(recollection, Recollection)
 
     @pytest.mark.asyncio
-    async def test_invoke_with_invalid_cue(self, agent) -> None:
+    async def test_invoke_with_invalid_cue(self, agent: RecollectionAgent[str]) -> None:
         """Invalid cue returns empty recollection."""
         cue = Cue()  # No text, concepts, or embedding
         recollection = await agent.invoke(cue)
@@ -237,7 +258,9 @@ class TestRecollectionAgent:
         assert recollection.reconstruction_method == "invalid_cue"
 
     @pytest.mark.asyncio
-    async def test_recall_by_concept(self, agent, memory) -> None:
+    async def test_recall_by_concept(
+        self, agent: RecollectionAgent[str], memory: HolographicMemory[str]
+    ) -> None:
         """recall_by_concept retrieves by semantic concept."""
         await memory.store("m1", "Setting A", ["settings"])
         await memory.store("m2", "Setting B", ["settings"])
@@ -247,13 +270,15 @@ class TestRecollectionAgent:
         assert isinstance(recollection, Recollection)
 
     @pytest.mark.asyncio
-    async def test_simple_reconstructor(self, memory) -> None:
+    async def test_simple_reconstructor(self, memory: HolographicMemory[str]) -> None:
         """SimpleReconstructor returns top match."""
         await memory.store("m1", "First memory")
         await memory.store("m2", "Second memory")
 
-        reconstructor = SimpleReconstructor()
-        agent = RecollectionAgent(memory, reconstructor=reconstructor)
+        reconstructor: SimpleReconstructor[str] = SimpleReconstructor()
+        agent: RecollectionAgent[str] = RecollectionAgent(
+            memory, reconstructor=reconstructor
+        )
 
         cue = Cue(text="First")
         recollection = await agent.invoke(cue)
@@ -261,13 +286,15 @@ class TestRecollectionAgent:
         assert recollection.reconstruction_method == "top_match"
 
     @pytest.mark.asyncio
-    async def test_weighted_reconstructor(self, memory) -> None:
+    async def test_weighted_reconstructor(self, memory: HolographicMemory[str]) -> None:
         """WeightedReconstructor synthesizes from multiple patterns."""
         await memory.store("m1", "Memory A")
         await memory.store("m2", "Memory B")
 
-        reconstructor = WeightedReconstructor()
-        agent = RecollectionAgent(memory, reconstructor=reconstructor)
+        reconstructor: WeightedReconstructor[str] = WeightedReconstructor()
+        agent: RecollectionAgent[str] = RecollectionAgent(
+            memory, reconstructor=reconstructor
+        )
 
         cue = Cue(text="Memory")
         recollection = await agent.invoke(cue)
@@ -283,11 +310,13 @@ class TestContextualRecollectionAgent:
         return HolographicMemory[str]()
 
     @pytest.fixture
-    def agent(self, memory):
+    def agent(self, memory: HolographicMemory[str]) -> ContextualRecollectionAgent[str]:
         return ContextualRecollectionAgent(memory)
 
     @pytest.mark.asyncio
-    async def test_context_affects_recall(self, agent, memory) -> None:
+    async def test_context_affects_recall(
+        self, agent: ContextualRecollectionAgent[str], memory: HolographicMemory[str]
+    ) -> None:
         """Context affects which memories are recalled."""
         await memory.store("m1", "Work task A")
         await memory.store("m2", "Personal task B")
@@ -312,11 +341,13 @@ class TestConsolidationAgent:
         return HolographicMemory[str]()
 
     @pytest.fixture
-    def agent(self, memory):
+    def agent(self, memory: HolographicMemory[str]) -> ConsolidationAgent[str]:
         return ConsolidationAgent(memory)
 
     @pytest.mark.asyncio
-    async def test_invoke_returns_result(self, agent, memory) -> None:
+    async def test_invoke_returns_result(
+        self, agent: ConsolidationAgent[str], memory: HolographicMemory[str]
+    ) -> None:
         """Invoke returns consolidation result."""
         await memory.store("m1", "Test memory")
 
@@ -328,7 +359,9 @@ class TestConsolidationAgent:
         assert result.after_profile is not None
 
     @pytest.mark.asyncio
-    async def test_light_mode_minimal_changes(self, agent, memory) -> None:
+    async def test_light_mode_minimal_changes(
+        self, agent: ConsolidationAgent[str], memory: HolographicMemory[str]
+    ) -> None:
         """Light mode makes minimal changes."""
         await memory.store("m1", "Test memory")
 
@@ -337,7 +370,9 @@ class TestConsolidationAgent:
         assert result.was_productive or result.demoted == 0
 
     @pytest.mark.asyncio
-    async def test_deep_mode_aggressive_cleanup(self, agent, memory) -> None:
+    async def test_deep_mode_aggressive_cleanup(
+        self, agent: ConsolidationAgent[str], memory: HolographicMemory[str]
+    ) -> None:
         """Deep mode is more aggressive."""
         await memory.store("m1", "Old memory")
         memory._patterns["m1"].last_accessed = datetime.now() - timedelta(days=60)
@@ -348,7 +383,7 @@ class TestConsolidationAgent:
 
     @pytest.mark.asyncio
     async def test_profile_returns_temperature_distribution(
-        self, agent, memory
+        self, agent: ConsolidationAgent[str], memory: HolographicMemory[str]
     ) -> None:
         """Profile returns temperature distribution."""
         await memory.store("m1", "Memory 1")
@@ -359,7 +394,9 @@ class TestConsolidationAgent:
         assert profile.total == 2
 
     @pytest.mark.asyncio
-    async def test_schedule_consolidation(self, agent, memory) -> None:
+    async def test_schedule_consolidation(
+        self, agent: ConsolidationAgent[str], memory: HolographicMemory[str]
+    ) -> None:
         """Schedule returns appropriate mode based on state."""
         # Empty memory - no consolidation needed
         mode = await agent.schedule_consolidation()
@@ -380,11 +417,13 @@ class TestForgettingCurveAgent:
         return HolographicMemory[str]()
 
     @pytest.fixture
-    def agent(self, memory):
+    def agent(self, memory: HolographicMemory[str]) -> ForgettingCurveAgent[str]:
         return ForgettingCurveAgent(memory)
 
     @pytest.mark.asyncio
-    async def test_analyze_categorizes_patterns(self, agent, memory) -> None:
+    async def test_analyze_categorizes_patterns(
+        self, agent: ForgettingCurveAgent[str], memory: HolographicMemory[str]
+    ) -> None:
         """Analyze categorizes patterns by retention."""
         # Well-retained pattern
         await memory.store("m1", "Recent memory")
@@ -400,7 +439,9 @@ class TestForgettingCurveAgent:
         assert "can_compress" in analysis
         assert "stable" in analysis
 
-    def test_optimal_review_interval(self, agent, memory) -> None:
+    def test_optimal_review_interval(
+        self, agent: ForgettingCurveAgent[str], memory: HolographicMemory[str]
+    ) -> None:
         """Optimal interval based on strength."""
         asyncio.run(memory.store("m1", "Test memory"))
 
@@ -538,7 +579,7 @@ class TestTieredMemory:
     def memory(self) -> TieredMemory[str]:
         return TieredMemory[str]()
 
-    def test_perceive_adds_to_sensory(self, memory) -> None:
+    def test_perceive_adds_to_sensory(self, memory: TieredMemory[str]) -> None:
         """Perceive adds to sensory tier."""
         memory.perceive("Hello world", salience=0.7)
 
@@ -546,7 +587,7 @@ class TestTieredMemory:
         assert len(perceptions) == 1
 
     @pytest.mark.asyncio
-    async def test_attend_moves_to_working(self, memory) -> None:
+    async def test_attend_moves_to_working(self, memory: TieredMemory[str]) -> None:
         """Attend moves from sensory to working."""
         memory.perceive("Important message", salience=0.9)
 
@@ -555,7 +596,7 @@ class TestTieredMemory:
         assert len(chunk_ids) > 0
         assert memory._working.utilization > 0
 
-    def test_load_to_working_direct(self, memory) -> None:
+    def test_load_to_working_direct(self, memory: TieredMemory[str]) -> None:
         """Can load directly to working memory."""
         chunk_id = memory.load_to_working(
             "Direct content",
@@ -566,7 +607,9 @@ class TestTieredMemory:
         assert chunk is not None
 
     @pytest.mark.asyncio
-    async def test_consolidate_moves_to_longterm(self, memory) -> None:
+    async def test_consolidate_moves_to_longterm(
+        self, memory: TieredMemory[str]
+    ) -> None:
         """Consolidate moves from working to long-term."""
         memory.load_to_working("Content to consolidate")
 
@@ -575,7 +618,9 @@ class TestTieredMemory:
         assert stats["consolidated"] > 0
 
     @pytest.mark.asyncio
-    async def test_recall_retrieves_from_longterm(self, memory) -> None:
+    async def test_recall_retrieves_from_longterm(
+        self, memory: TieredMemory[str]
+    ) -> None:
         """Recall retrieves from long-term."""
         await memory._longterm.store("m1", "User preference: dark mode")
 
@@ -583,7 +628,7 @@ class TestTieredMemory:
 
         assert isinstance(patterns, list)
 
-    def test_stats_covers_all_tiers(self, memory) -> None:
+    def test_stats_covers_all_tiers(self, memory: TieredMemory[str]) -> None:
         """Stats covers all memory tiers."""
         stats = memory.stats()
 
@@ -665,20 +710,20 @@ class TestMGentIntegration:
 class MockUnifiedMemory:
     """Mock D-gent UnifiedMemory for testing."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._concepts: dict[str, list[str]] = {}
-        self._events: list[tuple] = []
+        self._events: list[tuple[datetime, str, dict[str, Any]]] = []
         self._relationships: dict[str, list[tuple[str, str]]] = {}
-        self._current_state: dict = {}
+        self._current_state: dict[str, Any] = {}
 
-    async def save(self, state: dict) -> str:
+    async def save(self, state: dict[str, Any]) -> str:
         self._current_state = state
         return f"entry-{len(self._events)}"
 
-    async def load(self) -> dict:
+    async def load(self) -> dict[str, Any]:
         return self._current_state
 
-    async def associate(self, state: dict, concept: str) -> None:
+    async def associate(self, state: dict[str, Any], concept: str) -> None:
         if concept not in self._concepts:
             self._concepts[concept] = []
         entry_id = state.get("id", "unknown")
@@ -693,19 +738,26 @@ class MockUnifiedMemory:
                     results.append((entry_id, 0.8))
         return results[:limit]
 
-    async def witness(self, event_label: str, state: dict) -> None:
+    async def witness(self, event_label: str, state: dict[str, Any]) -> None:
         self._events.append((datetime.now(), event_label, state))
 
-    async def replay(self, timestamp) -> dict | None:
+    async def replay(self, timestamp: datetime) -> dict[str, Any] | None:
         for ts, _, state in reversed(self._events):
             if ts <= timestamp:
-                return state
+                return dict(state)
         return None
 
-    async def timeline(self, start=None, end=None, limit=None) -> list:
+    async def timeline(
+        self,
+        start: datetime | None = None,
+        end: datetime | None = None,
+        limit: int | None = None,
+    ) -> list[tuple[datetime, str, dict[str, Any]]]:
         return self._events[:limit] if limit else self._events
 
-    async def events_by_label(self, label: str, limit: int = 10) -> list:
+    async def events_by_label(
+        self, label: str, limit: int = 10
+    ) -> list[tuple[datetime, dict[str, Any]]]:
         results = [(ts, state) for ts, l, state in self._events if l == label]
         return results[:limit]
 
@@ -714,13 +766,17 @@ class MockUnifiedMemory:
             self._relationships[source] = []
         self._relationships[source].append((relation, target))
 
-    async def related_to(self, entity_id: str, relation: str = None) -> list:
+    async def related_to(
+        self, entity_id: str, relation: str | None = None
+    ) -> list[tuple[str, str]]:
         rels = self._relationships.get(entity_id, [])
         if relation:
             rels = [(r, t) for r, t in rels if r == relation]
         return rels
 
-    async def related_from(self, entity_id: str, relation: str = None) -> list:
+    async def related_from(
+        self, entity_id: str, relation: str | None = None
+    ) -> list[tuple[str, str]]:
         results = []
         for source, rels in self._relationships.items():
             for rel, target in rels:
@@ -728,11 +784,11 @@ class MockUnifiedMemory:
                     results.append((rel, source))
         return results
 
-    async def trace(self, start: str, max_depth: int = 3) -> dict:
+    async def trace(self, start: str, max_depth: int = 3) -> dict[str, Any]:
         visited = set()
         edges = []
 
-        def dfs(node: str, depth: int):
+        def dfs(node: str, depth: int) -> None:
             if depth > max_depth or node in visited:
                 return
             visited.add(node)
@@ -743,7 +799,7 @@ class MockUnifiedMemory:
         dfs(start, 0)
         return {"nodes": list(visited), "edges": edges, "depth": max_depth}
 
-    def stats(self) -> dict:
+    def stats(self) -> dict[str, int]:
         return {
             "concept_count": len(self._concepts),
             "event_count": len(self._events),
@@ -776,14 +832,16 @@ class TestDgentBackedHolographicMemory:
         return MockUnifiedMemory()
 
     @pytest.fixture
-    def memory(self, storage):
+    def memory(self, storage: MockUnifiedMemory) -> DgentBackedHolographicMemory[str]:
         return DgentBackedHolographicMemory(
             storage=storage,
             namespace="test",
         )
 
     @pytest.mark.asyncio
-    async def test_store_persists_to_dgent(self, memory, storage) -> None:
+    async def test_store_persists_to_dgent(
+        self, memory: DgentBackedHolographicMemory[str], storage: MockUnifiedMemory
+    ) -> None:
         """Store persists to D-gent storage."""
         await memory.store("m1", "Test content", ["concept1"])
 
@@ -791,7 +849,9 @@ class TestDgentBackedHolographicMemory:
         assert "test:concept1" in storage._concepts
 
     @pytest.mark.asyncio
-    async def test_store_witnesses_event(self, memory, storage) -> None:
+    async def test_store_witnesses_event(
+        self, memory: DgentBackedHolographicMemory[str], storage: MockUnifiedMemory
+    ) -> None:
         """Store records temporal event."""
         await memory.store("m1", "Test content")
 
@@ -800,7 +860,9 @@ class TestDgentBackedHolographicMemory:
         assert "store:m1" in storage._events[0][1]
 
     @pytest.mark.asyncio
-    async def test_retrieve_with_dgent_fallback(self, memory, storage) -> None:
+    async def test_retrieve_with_dgent_fallback(
+        self, memory: DgentBackedHolographicMemory[str], storage: MockUnifiedMemory
+    ) -> None:
         """Retrieve uses D-gent semantic layer."""
         await memory.store("m1", "User prefers dark mode", ["preference"])
 
@@ -809,7 +871,9 @@ class TestDgentBackedHolographicMemory:
         assert len(results) >= 0  # May or may not find based on embedding
 
     @pytest.mark.asyncio
-    async def test_persist_explicit(self, memory, storage) -> None:
+    async def test_persist_explicit(
+        self, memory: DgentBackedHolographicMemory[str], storage: MockUnifiedMemory
+    ) -> None:
         """Explicit persist syncs all patterns."""
         await memory.store("m1", "Content 1")
         await memory.store("m2", "Content 2")
@@ -819,7 +883,9 @@ class TestDgentBackedHolographicMemory:
         assert stats["persisted"] == 2
 
     @pytest.mark.asyncio
-    async def test_stats_includes_dgent_info(self, memory, storage) -> None:
+    async def test_stats_includes_dgent_info(
+        self, memory: DgentBackedHolographicMemory[str], storage: MockUnifiedMemory
+    ) -> None:
         """Stats includes D-gent information."""
         await memory.store("m1", "Test content")
 
@@ -829,7 +895,9 @@ class TestDgentBackedHolographicMemory:
         assert stats["dgent"]["namespace"] == "test"
 
     @pytest.mark.asyncio
-    async def test_consolidate_syncs_to_dgent(self, memory, storage) -> None:
+    async def test_consolidate_syncs_to_dgent(
+        self, memory: DgentBackedHolographicMemory[str], storage: MockUnifiedMemory
+    ) -> None:
         """Consolidation syncs changes to D-gent."""
         await memory.store("m1", "Test content")
 
@@ -838,7 +906,9 @@ class TestDgentBackedHolographicMemory:
         assert "demoted" in result or "promoted" in result
 
     @pytest.mark.asyncio
-    async def test_demote_tracks_pending(self, memory, storage) -> None:
+    async def test_demote_tracks_pending(
+        self, memory: DgentBackedHolographicMemory[str], storage: MockUnifiedMemory
+    ) -> None:
         """Demote tracks pending updates."""
         await memory.store("m1", "Test content")
         await memory.demote("m1")
@@ -854,14 +924,16 @@ class TestAssociativeWebMemory:
         return MockUnifiedMemory()
 
     @pytest.fixture
-    def memory(self, storage):
+    def memory(self, storage: MockUnifiedMemory) -> AssociativeWebMemory[str]:
         return AssociativeWebMemory(
             storage=storage,
             namespace="associative",
         )
 
     @pytest.mark.asyncio
-    async def test_link_creates_relationship(self, memory, storage) -> None:
+    async def test_link_creates_relationship(
+        self, memory: AssociativeWebMemory[str], storage: MockUnifiedMemory
+    ) -> None:
         """Link creates D-gent relationship."""
         await memory.store("m1", "Memory A")
         await memory.store("m2", "Memory B")
@@ -871,7 +943,9 @@ class TestAssociativeWebMemory:
         assert ("related_to", "m2") in storage._relationships.get("m1", [])
 
     @pytest.mark.asyncio
-    async def test_spread_activation(self, memory, storage) -> None:
+    async def test_spread_activation(
+        self, memory: AssociativeWebMemory[str], storage: MockUnifiedMemory
+    ) -> None:
         """Spread activation traverses relationships."""
         await memory.store("m1", "Memory A")
         await memory.store("m2", "Memory B")
@@ -886,7 +960,9 @@ class TestAssociativeWebMemory:
         assert len(results) >= 0
 
     @pytest.mark.asyncio
-    async def test_related_memories(self, memory, storage) -> None:
+    async def test_related_memories(
+        self, memory: AssociativeWebMemory[str], storage: MockUnifiedMemory
+    ) -> None:
         """Related memories returns directly linked patterns."""
         await memory.store("m1", "Memory A")
         await memory.store("m2", "Memory B")
@@ -906,14 +982,16 @@ class TestTemporalMemory:
         return MockUnifiedMemory()
 
     @pytest.fixture
-    def memory(self, storage):
+    def memory(self, storage: MockUnifiedMemory) -> TemporalMemory[str]:
         return TemporalMemory(
             storage=storage,
             namespace="temporal",
         )
 
     @pytest.mark.asyncio
-    async def test_at_time_returns_snapshot(self, memory, storage) -> None:
+    async def test_at_time_returns_snapshot(
+        self, memory: TemporalMemory[str], storage: MockUnifiedMemory
+    ) -> None:
         """At time returns state snapshot."""
         await memory.store("m1", "First memory")
 
@@ -923,7 +1001,9 @@ class TestTemporalMemory:
         assert snapshot is not None or snapshot is None
 
     @pytest.mark.asyncio
-    async def test_timeline_returns_events(self, memory, storage) -> None:
+    async def test_timeline_returns_events(
+        self, memory: TemporalMemory[str], storage: MockUnifiedMemory
+    ) -> None:
         """Timeline returns memory events."""
         await memory.store("m1", "Memory 1")
         await memory.store("m2", "Memory 2")
@@ -933,7 +1013,9 @@ class TestTemporalMemory:
         assert len(events) >= 0
 
     @pytest.mark.asyncio
-    async def test_concept_evolution(self, memory, storage) -> None:
+    async def test_concept_evolution(
+        self, memory: TemporalMemory[str], storage: MockUnifiedMemory
+    ) -> None:
         """Concept evolution tracks changes over time."""
         await memory.store("m1", "Task A", ["task"])
         await memory.store("m2", "Task B", ["task"])
@@ -948,7 +1030,9 @@ class TestPersistentWorkingMemory:
 
     def test_load_tracks_timestamp(self) -> None:
         """Load tracks timestamp for TTL."""
-        working = PersistentWorkingMemory(capacity=5, ttl_minutes=30)
+        working: PersistentWorkingMemory[str] = PersistentWorkingMemory(
+            capacity=5, ttl_minutes=30
+        )
 
         working.load("c1", "Content 1")
 
@@ -956,7 +1040,9 @@ class TestPersistentWorkingMemory:
 
     def test_cleanup_expired_removes_old(self) -> None:
         """Cleanup removes expired chunks."""
-        working = PersistentWorkingMemory(capacity=5, ttl_minutes=0.001)
+        working: PersistentWorkingMemory[str] = PersistentWorkingMemory(
+            capacity=5, ttl_minutes=0.001
+        )
 
         working.load("c1", "Content 1")
         working._chunk_timestamps["c1"] = datetime.now() - timedelta(minutes=1)
@@ -968,7 +1054,9 @@ class TestPersistentWorkingMemory:
 
     def test_active_chunks_filters_expired(self) -> None:
         """Active chunks filters out expired."""
-        working = PersistentWorkingMemory(capacity=5, ttl_minutes=30)
+        working: PersistentWorkingMemory[str] = PersistentWorkingMemory(
+            capacity=5, ttl_minutes=30
+        )
 
         working.load("c1", "Content 1")
         working.load("c2", "Content 2")
@@ -992,10 +1080,10 @@ class TestPersistentTieredMemory:
         return MockUnifiedMemory()
 
     @pytest.fixture
-    def memory(self, storage):
+    def memory(self, storage: MockUnifiedMemory) -> PersistentTieredMemory[str]:
         return PersistentTieredMemory(longterm_storage=storage)
 
-    def test_perceive_adds_to_sensory(self, memory) -> None:
+    def test_perceive_adds_to_sensory(self, memory: TieredMemory[str]) -> None:
         """Perceive adds to sensory tier."""
         memory.perceive("Hello world", salience=0.8)
 
@@ -1003,7 +1091,7 @@ class TestPersistentTieredMemory:
         assert len(perceptions) == 1
 
     @pytest.mark.asyncio
-    async def test_attend_moves_to_working(self, memory) -> None:
+    async def test_attend_moves_to_working(self, memory: TieredMemory[str]) -> None:
         """Attend moves from sensory to working."""
         memory.perceive("Important message", salience=0.9)
 
@@ -1013,7 +1101,9 @@ class TestPersistentTieredMemory:
         assert memory._working.utilization > 0
 
     @pytest.mark.asyncio
-    async def test_consolidate_moves_to_longterm(self, memory, storage) -> None:
+    async def test_consolidate_moves_to_longterm(
+        self, memory: PersistentTieredMemory[str], storage: MockUnifiedMemory
+    ) -> None:
         """Consolidate moves to long-term with D-gent persistence."""
         memory.load_to_working("Content to consolidate", ["test"])
 
@@ -1022,7 +1112,9 @@ class TestPersistentTieredMemory:
         assert stats["consolidated"] > 0
 
     @pytest.mark.asyncio
-    async def test_recall_retrieves_from_longterm(self, memory, storage) -> None:
+    async def test_recall_retrieves_from_longterm(
+        self, memory: PersistentTieredMemory[str], storage: MockUnifiedMemory
+    ) -> None:
         """Recall retrieves from long-term."""
         await memory._longterm.store("m1", "User preference: dark mode")
 
@@ -1031,7 +1123,9 @@ class TestPersistentTieredMemory:
         assert isinstance(patterns, list)
 
     @pytest.mark.asyncio
-    async def test_persist_explicit(self, memory, storage) -> None:
+    async def test_persist_explicit(
+        self, memory: PersistentTieredMemory[str], storage: MockUnifiedMemory
+    ) -> None:
         """Explicit persist syncs all tiers."""
         memory.load_to_working("Content 1")
         memory.load_to_working("Content 2")
@@ -1041,7 +1135,7 @@ class TestPersistentTieredMemory:
         assert "consolidation" in stats
         assert "longterm" in stats
 
-    def test_stats_covers_all_tiers(self, memory) -> None:
+    def test_stats_covers_all_tiers(self, memory: TieredMemory[str]) -> None:
         """Stats covers all memory tiers."""
         stats = memory.stats()
 
@@ -1050,7 +1144,9 @@ class TestPersistentTieredMemory:
         assert hasattr(stats, "longterm")
 
     @pytest.mark.asyncio
-    async def test_full_lifecycle_with_dgent(self, memory, storage) -> None:
+    async def test_full_lifecycle_with_dgent(
+        self, memory: PersistentTieredMemory[str], storage: MockUnifiedMemory
+    ) -> None:
         """Test full lifecycle: perceive → attend → consolidate → recall."""
         # 1. Perceive
         memory.perceive("User said they like dark mode", salience=0.9)
@@ -1073,18 +1169,20 @@ class TestNarrativeMemory:
         return MockUnifiedMemory()
 
     @pytest.fixture
-    def memory(self, storage):
+    def memory(self, storage: MockUnifiedMemory) -> NarrativeMemory[str]:
         return NarrativeMemory(longterm_storage=storage)
 
     @pytest.mark.asyncio
-    async def test_begin_episode(self, memory) -> None:
+    async def test_begin_episode(self, memory: NarrativeMemory[str]) -> None:
         """Begin episode creates episode ID."""
         episode_id = await memory.begin_episode("test-episode")
 
         assert episode_id.startswith("episode-")
 
     @pytest.mark.asyncio
-    async def test_store_with_episode(self, memory, storage) -> None:
+    async def test_store_with_episode(
+        self, memory: NarrativeMemory[str], storage: MockUnifiedMemory
+    ) -> None:
         """Store with episode creates relationship."""
         episode_id = await memory.begin_episode("test")
 
@@ -1099,7 +1197,9 @@ class TestNarrativeMemory:
         assert ("part_of", episode_id) in storage._relationships.get("m1", [])
 
     @pytest.mark.asyncio
-    async def test_end_episode_consolidates(self, memory, storage) -> None:
+    async def test_end_episode_consolidates(
+        self, memory: NarrativeMemory[str], storage: MockUnifiedMemory
+    ) -> None:
         """End episode consolidates memories."""
         episode_id = await memory.begin_episode("test")
         await memory.store_with_episode("m1", "Content", None, episode_id)
@@ -1117,7 +1217,7 @@ class TestFactoryFunctions:
     def storage(self) -> MockUnifiedMemory:
         return MockUnifiedMemory()
 
-    def test_create_dgent_memory(self, storage) -> None:
+    def test_create_dgent_memory(self, storage: MockUnifiedMemory) -> None:
         """create_dgent_memory creates configured memory."""
         memory = create_dgent_memory(
             storage=storage,
@@ -1129,7 +1229,7 @@ class TestFactoryFunctions:
         assert memory._namespace == "test"
         assert memory._config.enable_semantic
 
-    def test_create_persistent_tiered_memory(self, storage) -> None:
+    def test_create_persistent_tiered_memory(self, storage: MockUnifiedMemory) -> None:
         """create_persistent_tiered_memory creates configured memory."""
         memory = create_persistent_tiered_memory(
             longterm_storage=storage,
@@ -1148,8 +1248,10 @@ class TestMGentDGentIntegration:
     @pytest.mark.asyncio
     async def test_holographic_with_unified_memory(self) -> None:
         """Holographic memory works with UnifiedMemory."""
-        storage = MockUnifiedMemory()
-        memory = DgentBackedHolographicMemory(storage=storage)
+        storage: MockUnifiedMemory = MockUnifiedMemory()
+        memory: DgentBackedHolographicMemory[str] = DgentBackedHolographicMemory(
+            storage=storage
+        )
 
         # Store
         await memory.store("m1", "User likes dark mode", ["preference"])
@@ -1170,8 +1272,8 @@ class TestMGentDGentIntegration:
     @pytest.mark.asyncio
     async def test_tiered_memory_full_flow(self) -> None:
         """Tiered memory: perceive → attend → consolidate → recall."""
-        storage = MockUnifiedMemory()
-        memory = PersistentTieredMemory(
+        storage: MockUnifiedMemory = MockUnifiedMemory()
+        memory: PersistentTieredMemory[str] = PersistentTieredMemory(
             longterm_storage=storage,
             config=TierConfig(auto_consolidate=False),
         )
@@ -1199,8 +1301,8 @@ class TestMGentDGentIntegration:
     @pytest.mark.asyncio
     async def test_associative_web_spreading_activation(self) -> None:
         """Associative web with D-gent relational layer."""
-        storage = MockUnifiedMemory()
-        memory = AssociativeWebMemory(
+        storage: MockUnifiedMemory = MockUnifiedMemory()
+        memory: AssociativeWebMemory[str] = AssociativeWebMemory(
             storage=storage,
             config=PersistenceConfig(enable_relational=True),
         )
@@ -1226,8 +1328,8 @@ class TestMGentDGentIntegration:
     @pytest.mark.asyncio
     async def test_narrative_memory_episode_flow(self) -> None:
         """Narrative memory with episode structure."""
-        storage = MockUnifiedMemory()
-        memory = NarrativeMemory(
+        storage: MockUnifiedMemory = MockUnifiedMemory()
+        memory: NarrativeMemory[str] = NarrativeMemory(
             longterm_storage=storage,
             config=TierConfig(enable_relational=True),
         )
@@ -1360,11 +1462,18 @@ class TestProspectiveAgent:
         return ActionHistory()
 
     @pytest.fixture
-    def agent(self, memory, action_log):
+    def agent(
+        self, memory: HolographicMemory[str], action_log: ActionHistory
+    ) -> ProspectiveAgent[str]:
         return ProspectiveAgent(memory, action_log)
 
     @pytest.mark.asyncio
-    async def test_invoke_returns_predictions(self, agent, memory, action_log) -> None:
+    async def test_invoke_returns_predictions(
+        self,
+        agent: ProspectiveAgent[str],
+        memory: HolographicMemory[str],
+        action_log: ActionHistory,
+    ) -> None:
         """Invoke returns predictions based on past experience."""
         # Record past experience
         past_sit = Situation(id="s1", description="User asked about dark mode")
@@ -1386,7 +1495,7 @@ class TestProspectiveAgent:
         assert isinstance(predictions, list)
 
     @pytest.mark.asyncio
-    async def test_record_experience(self, agent) -> None:
+    async def test_record_experience(self, agent: ProspectiveAgent[str]) -> None:
         """Record experience builds predictive model."""
         sit = Situation(id="s1", description="User needs help")
 
@@ -1401,7 +1510,12 @@ class TestProspectiveAgent:
         assert record.success is True
 
     @pytest.mark.asyncio
-    async def test_prediction_confidence(self, agent, memory, action_log) -> None:
+    async def test_prediction_confidence(
+        self,
+        agent: ProspectiveAgent[str],
+        memory: HolographicMemory[str],
+        action_log: ActionHistory,
+    ) -> None:
         """Prediction confidence reflects similarity and success rate."""
         # Record successful action
         past_sit = Situation(id="s1", description="User wants pizza")
@@ -1436,7 +1550,9 @@ class TestProspectiveAgent:
         # Predictions should exist
         assert isinstance(predictions, list)
 
-    def test_stats(self, agent, action_log) -> None:
+    def test_stats(
+        self, agent: ProspectiveAgent[str], action_log: ActionHistory
+    ) -> None:
         """Stats returns agent statistics."""
         action_log.record_situation(Situation(id="s1", description="Test"))
 
@@ -1453,7 +1569,7 @@ class TestEthicalGeometry:
     def geometry(self) -> EthicalGeometry:
         return EthicalGeometry()
 
-    def test_learn_from_harmful_experience(self, geometry) -> None:
+    def test_learn_from_harmful_experience(self, geometry: EthicalGeometry) -> None:
         """Learning from harm expands forbidden region."""
         exp = EthicalExperience(
             action="Share private data",
@@ -1468,7 +1584,7 @@ class TestEthicalGeometry:
         position = geometry.locate("Share private data")
         assert position.region == EthicalRegion.FORBIDDEN
 
-    def test_learn_from_good_experience(self, geometry) -> None:
+    def test_learn_from_good_experience(self, geometry: EthicalGeometry) -> None:
         """Learning from good expands virtuous region."""
         exp = EthicalExperience(
             action="Help user solve problem",
@@ -1483,7 +1599,7 @@ class TestEthicalGeometry:
         position = geometry.locate("Help user solve problem")
         assert position.region == EthicalRegion.VIRTUOUS
 
-    def test_locate_new_action(self, geometry) -> None:
+    def test_locate_new_action(self, geometry: EthicalGeometry) -> None:
         """Locate returns position for new action."""
         position = geometry.locate("Unknown action")
 
@@ -1492,7 +1608,7 @@ class TestEthicalGeometry:
         # New action is permissible by default
         assert position.region == EthicalRegion.PERMISSIBLE
 
-    def test_forbidden_property(self, geometry) -> None:
+    def test_forbidden_property(self, geometry: EthicalGeometry) -> None:
         """Forbidden property returns all forbidden positions."""
         geometry.learn_from_experience(
             EthicalExperience(
@@ -1509,7 +1625,7 @@ class TestEthicalGeometry:
         assert len(forbidden) == 1
         assert forbidden[0].action == "Bad action"
 
-    def test_nearest_permissible(self, geometry) -> None:
+    def test_nearest_permissible(self, geometry: EthicalGeometry) -> None:
         """Nearest permissible finds alternatives."""
         # Create forbidden and permissible positions
         geometry.learn_from_experience(
@@ -1532,7 +1648,7 @@ class TestEthicalGeometry:
 
         assert isinstance(alternatives, list)
 
-    def test_nearest_virtuous(self, geometry) -> None:
+    def test_nearest_virtuous(self, geometry: EthicalGeometry) -> None:
         """Nearest virtuous finds virtuous alternative."""
         geometry.learn_from_experience(
             EthicalExperience(
@@ -1555,7 +1671,7 @@ class TestEthicalGeometry:
         assert virtuous is not None
         assert virtuous.region == EthicalRegion.VIRTUOUS
 
-    def test_stats(self, geometry) -> None:
+    def test_stats_geometry(self, geometry: EthicalGeometry) -> None:
         """Stats returns geometry statistics."""
         stats = geometry.stats()
 
@@ -1572,11 +1688,13 @@ class TestEthicalGeometryAgent:
         return EthicalGeometry()
 
     @pytest.fixture
-    def agent(self, geometry):
+    def agent(self, geometry: EthicalGeometry) -> EthicalGeometryAgent:
         return EthicalGeometryAgent(geometry)
 
     @pytest.mark.asyncio
-    async def test_invoke_blocks_forbidden(self, agent, geometry) -> None:
+    async def test_invoke_blocks_forbidden(
+        self, agent: EthicalGeometryAgent, geometry: EthicalGeometry
+    ) -> None:
         """Invoke blocks forbidden actions."""
         # Learn that action is forbidden
         geometry.learn_from_experience(
@@ -1596,7 +1714,7 @@ class TestEthicalGeometryAgent:
         assert path.reason != ""
 
     @pytest.mark.asyncio
-    async def test_invoke_allows_permissible(self, agent) -> None:
+    async def test_invoke_allows_permissible(self, agent: EthicalGeometryAgent) -> None:
         """Invoke allows permissible actions."""
         proposal = ActionProposal(action="Normal action")
         path = await agent.invoke(proposal)
@@ -1604,7 +1722,9 @@ class TestEthicalGeometryAgent:
         assert path.blocked is False
 
     @pytest.mark.asyncio
-    async def test_invoke_suggests_virtuous(self, agent, geometry) -> None:
+    async def test_invoke_suggests_virtuous(
+        self, agent: EthicalGeometryAgent, geometry: EthicalGeometry
+    ) -> None:
         """Invoke suggests virtuous alternatives."""
         # Learn virtuous action
         geometry.learn_from_experience(
@@ -1624,7 +1744,9 @@ class TestEthicalGeometryAgent:
         assert path.distance_to_virtue < float("inf")
 
     @pytest.mark.asyncio
-    async def test_learn_updates_geometry(self, agent, geometry) -> None:
+    async def test_learn_updates_geometry(
+        self, agent: EthicalGeometryAgent, geometry: EthicalGeometry
+    ) -> None:
         """Learn updates underlying geometry."""
         await agent.learn(
             EthicalExperience(
@@ -1639,7 +1761,7 @@ class TestEthicalGeometryAgent:
         position = geometry.locate("New bad action")
         assert position.region == EthicalRegion.FORBIDDEN
 
-    def test_stats(self, agent) -> None:
+    def test_stats_agent(self, agent: EthicalGeometryAgent) -> None:
         """Stats returns agent statistics."""
         stats = agent.stats()
 
@@ -1714,11 +1836,13 @@ class TestContextualRecallAgent:
         return HolographicMemory[str]()
 
     @pytest.fixture
-    def agent(self, memory):
+    def agent(self, memory: HolographicMemory[str]) -> ContextualRecallAgent:
         return ContextualRecallAgent(memory)
 
     @pytest.mark.asyncio
-    async def test_invoke_with_context(self, agent, memory) -> None:
+    async def test_invoke_with_context(
+        self, agent: ContextualRecallAgent, memory: HolographicMemory[str]
+    ) -> None:
         """Invoke weights results by context."""
         await memory.store("m1", "Work task A")
         await memory.store("m2", "Personal task B")
@@ -1732,7 +1856,9 @@ class TestContextualRecallAgent:
         assert isinstance(results, list)
 
     @pytest.mark.asyncio
-    async def test_context_boosts_relevance(self, agent, memory) -> None:
+    async def test_context_boosts_relevance(
+        self, agent: ContextualRecallAgent, memory: HolographicMemory[str]
+    ) -> None:
         """Context matching boosts relevance."""
         await memory.store("m1", "Work meeting notes")
         await memory.store("m2", "Home renovation plans")
@@ -1789,8 +1915,8 @@ class TestPhase3Integration:
     @pytest.mark.asyncio
     async def test_prospective_with_holographic(self) -> None:
         """ProspectiveAgent integrates with HolographicMemory."""
-        memory = HolographicMemory[str]()
-        agent = ProspectiveAgent(memory, ActionHistory())
+        memory: HolographicMemory[str] = HolographicMemory[str]()
+        agent: ProspectiveAgent[str] = ProspectiveAgent(memory, ActionHistory())
 
         # Record experiences
         for i in range(3):
@@ -1839,9 +1965,11 @@ class TestPhase3Integration:
     @pytest.mark.asyncio
     async def test_prospective_with_dgent_memory(self) -> None:
         """ProspectiveAgent works with D-gent backed memory."""
-        storage = MockUnifiedMemory()
-        memory = DgentBackedHolographicMemory(storage=storage)
-        agent = ProspectiveAgent(memory, ActionHistory())
+        storage: MockUnifiedMemory = MockUnifiedMemory()
+        memory: DgentBackedHolographicMemory[str] = DgentBackedHolographicMemory(
+            storage=storage
+        )
+        agent: ProspectiveAgent[str] = ProspectiveAgent(memory, ActionHistory())
 
         # Record experience
         sit = Situation(id="s1", description="User needs help")
@@ -1857,9 +1985,9 @@ class TestPhase3Integration:
     @pytest.mark.asyncio
     async def test_ethical_with_prospective(self) -> None:
         """Ethical and prospective work together."""
-        memory = HolographicMemory[str]()
-        action_log = ActionHistory()
-        prospective = ProspectiveAgent(memory, action_log)
+        memory: HolographicMemory[str] = HolographicMemory[str]()
+        action_log: ActionHistory = ActionHistory()
+        prospective: ProspectiveAgent[str] = ProspectiveAgent(memory, action_log)
 
         geometry = EthicalGeometry()
         ethical = EthicalGeometryAgent(geometry)
@@ -1906,12 +2034,14 @@ class TestVectorHolographicMemory:
     """Tests for VectorHolographicMemory (L-gent integration)."""
 
     @pytest.fixture
-    def memory(self) -> VectorHolographicMemory:
+    def memory(self) -> VectorHolographicMemory[str]:
         """Create a simple vector memory for testing."""
         return create_simple_vector_memory(dimension=64)
 
     @pytest.mark.asyncio
-    async def test_store_and_retrieve(self, memory) -> None:
+    async def test_store_and_retrieve(
+        self, memory: VectorHolographicMemory[str]
+    ) -> None:
         """Store and retrieve using vector similarity."""
         await memory.store("m1", "User prefers dark mode", ["preference", "ui"])
         await memory.store("m2", "User works at night", ["schedule"])
@@ -1922,7 +2052,9 @@ class TestVectorHolographicMemory:
         assert isinstance(results, list)
 
     @pytest.mark.asyncio
-    async def test_store_creates_pattern(self, memory) -> None:
+    async def test_store_creates_pattern_vector(
+        self, memory: VectorHolographicMemory[str]
+    ) -> None:
         """Store creates pattern in both memory and backend."""
         pattern = await memory.store("m1", "Test content", ["test"])
 
@@ -1930,7 +2062,9 @@ class TestVectorHolographicMemory:
         assert "test" in pattern.concepts
 
     @pytest.mark.asyncio
-    async def test_delete_removes_pattern(self, memory) -> None:
+    async def test_delete_removes_pattern(
+        self, memory: VectorHolographicMemory[str]
+    ) -> None:
         """Delete removes from both memory and backend."""
         await memory.store("m1", "Content to delete")
 
@@ -1940,14 +2074,16 @@ class TestVectorHolographicMemory:
         assert "m1" not in memory._patterns
 
     @pytest.mark.asyncio
-    async def test_delete_nonexistent(self, memory) -> None:
+    async def test_delete_nonexistent(
+        self, memory: VectorHolographicMemory[str]
+    ) -> None:
         """Delete returns False for nonexistent pattern."""
         deleted = await memory.delete("nonexistent")
 
         assert deleted is False
 
     @pytest.mark.asyncio
-    async def test_cluster_analysis(self, memory) -> None:
+    async def test_cluster_analysis(self, memory: VectorHolographicMemory[str]) -> None:
         """Cluster analysis returns cluster info."""
         await memory.store("m1", "Topic A content")
         await memory.store("m2", "Topic A related")
@@ -1960,7 +2096,7 @@ class TestVectorHolographicMemory:
             assert isinstance(cluster, ClusterInfo)
 
     @pytest.mark.asyncio
-    async def test_find_void(self, memory) -> None:
+    async def test_find_void(self, memory: VectorHolographicMemory[str]) -> None:
         """Find void returns None or VoidInfo."""
         await memory.store("m1", "Some content")
 
@@ -1970,7 +2106,7 @@ class TestVectorHolographicMemory:
         assert void is None or isinstance(void, VoidInfo)
 
     @pytest.mark.asyncio
-    async def test_curvature_at(self, memory) -> None:
+    async def test_curvature_at(self, memory: VectorHolographicMemory[str]) -> None:
         """Curvature estimation returns a float."""
         await memory.store("m1", "Test content")
 
@@ -1979,7 +2115,9 @@ class TestVectorHolographicMemory:
         assert isinstance(curvature, float)
 
     @pytest.mark.asyncio
-    async def test_demote_tracks_pending(self, memory) -> None:
+    async def test_demote_tracks_pending_vector(
+        self, memory: VectorHolographicMemory[str]
+    ) -> None:
         """Demote tracks pending updates."""
         await memory.store("m1", "Test content")
 
@@ -1988,7 +2126,7 @@ class TestVectorHolographicMemory:
         assert "m1" in memory._pending_updates
 
     @pytest.mark.asyncio
-    async def test_sync_to_backend(self, memory) -> None:
+    async def test_sync_to_backend(self, memory: VectorHolographicMemory[str]) -> None:
         """Sync clears pending updates."""
         await memory.store("m1", "Test content")
         await memory.demote("m1")
@@ -1998,7 +2136,9 @@ class TestVectorHolographicMemory:
         assert synced == 1
         assert len(memory._pending_updates) == 0
 
-    def test_stats_includes_vector_info(self, memory) -> None:
+    def test_stats_includes_vector_info(
+        self, memory: VectorHolographicMemory[str]
+    ) -> None:
         """Stats include vector backend information."""
         stats = memory.stats()
 
@@ -2006,7 +2146,9 @@ class TestVectorHolographicMemory:
         assert stats["vector_backend"]["dimension"] == 64
 
     @pytest.mark.asyncio
-    async def test_compress_by_curvature(self, memory) -> None:
+    async def test_compress_by_curvature(
+        self, memory: VectorHolographicMemory[str]
+    ) -> None:
         """Curvature-based compression returns stats."""
         await memory.store("m1", "Test content")
 
@@ -2059,26 +2201,26 @@ class TestMemoryCostModel:
     def cost_model(self) -> MemoryCostModel:
         return MemoryCostModel()
 
-    def test_storage_cost_base(self, cost_model) -> None:
+    def test_storage_cost_base(self, cost_model: MemoryCostModel) -> None:
         """Storage cost includes base cost."""
         cost = cost_model.storage_cost("short content")
 
         assert cost >= cost_model.base_storage_cost
 
-    def test_storage_cost_scales_with_length(self, cost_model) -> None:
+    def test_storage_cost_scales_with_length(self, cost_model: MemoryCostModel) -> None:
         """Storage cost scales with content length."""
         short_cost = cost_model.storage_cost("short")
         long_cost = cost_model.storage_cost("a" * 10000)
 
         assert long_cost > short_cost
 
-    def test_retrieval_cost_base(self, cost_model) -> None:
+    def test_retrieval_cost_base(self, cost_model: MemoryCostModel) -> None:
         """Retrieval cost includes base cost."""
         cost = cost_model.retrieval_cost()
 
         assert cost >= cost_model.base_retrieval_cost
 
-    def test_resolution_cost_promotion(self, cost_model) -> None:
+    def test_resolution_cost_promotion(self, cost_model: MemoryCostModel) -> None:
         """Promoting resolution costs tokens."""
         cost = cost_model.resolution_cost(
             CompressionLevel.LOW,
@@ -2087,7 +2229,7 @@ class TestMemoryCostModel:
 
         assert cost > 0
 
-    def test_resolution_cost_demotion(self, cost_model) -> None:
+    def test_resolution_cost_demotion(self, cost_model: MemoryCostModel) -> None:
         """Demoting resolution costs nothing."""
         cost = cost_model.resolution_cost(
             CompressionLevel.FULL,
@@ -2096,7 +2238,7 @@ class TestMemoryCostModel:
 
         assert cost == 0
 
-    def test_consolidation_cost(self, cost_model) -> None:
+    def test_consolidation_cost(self, cost_model: MemoryCostModel) -> None:
         """Consolidation cost scales with pattern count."""
         cost_10 = cost_model.consolidation_cost(10)
         cost_20 = cost_model.consolidation_cost(20)
@@ -2111,9 +2253,9 @@ class TestResolutionBudget:
     def resolution_budget(self) -> ResolutionBudget:
         return ResolutionBudget()
 
-    def test_calculate_priority(self, resolution_budget) -> None:
+    def test_calculate_priority(self, resolution_budget: ResolutionBudget) -> None:
         """Priority calculation produces reasonable values."""
-        pattern = MemoryPattern(
+        pattern: MemoryPattern[str] = MemoryPattern(
             id="test",
             content="Test",
             embedding=[0.0] * 64,
@@ -2125,15 +2267,19 @@ class TestResolutionBudget:
 
         assert 0.0 <= priority <= 1.0
 
-    def test_allocate_resolution_empty(self, resolution_budget) -> None:
+    def test_allocate_resolution_empty(
+        self, resolution_budget: ResolutionBudget
+    ) -> None:
         """Allocation handles empty pattern list."""
         allocations = resolution_budget.allocate_resolution([], 10000)
 
         assert allocations == {}
 
-    def test_allocate_resolution_distributes(self, resolution_budget) -> None:
+    def test_allocate_resolution_distributes(
+        self, resolution_budget: ResolutionBudget
+    ) -> None:
         """Allocation distributes budget based on priority."""
-        patterns = [
+        patterns: list[MemoryPattern[str]] = [
             MemoryPattern(
                 id="hot", content="Hot", embedding=[0.0] * 64, access_count=100
             ),
@@ -2148,7 +2294,7 @@ class TestResolutionBudget:
         # Hot pattern should get higher priority
         assert allocations["hot"].priority_score >= allocations["cold"].priority_score
 
-    def test_stats(self, resolution_budget) -> None:
+    def test_stats(self, resolution_budget: ResolutionBudget) -> None:
         """Stats returns allocation information."""
         stats = resolution_budget.stats()
 
@@ -2160,10 +2306,11 @@ class TestBudgetedMemory:
 
     @pytest.fixture
     def bank(self) -> CentralBankProtocol:
-        return create_mock_bank(max_balance=100000)
+        bank: CentralBankProtocol = create_mock_bank(max_balance=100000)
+        return bank
 
     @pytest.fixture
-    def memory(self, bank):
+    def memory(self, bank: CentralBankProtocol) -> BudgetedMemory[str]:
         return BudgetedMemory(
             memory=HolographicMemory(),
             bank=bank,
@@ -2171,7 +2318,9 @@ class TestBudgetedMemory:
         )
 
     @pytest.mark.asyncio
-    async def test_store_charges_tokens(self, memory, bank) -> None:
+    async def test_store_charges_tokens(
+        self, memory: BudgetedMemory[str], bank: CentralBankProtocol
+    ) -> None:
         """Store operation charges tokens."""
         initial_balance = bank.get_balance()
 
@@ -2182,7 +2331,7 @@ class TestBudgetedMemory:
         assert bank.get_balance() < initial_balance
 
     @pytest.mark.asyncio
-    async def test_store_creates_receipt(self, memory) -> None:
+    async def test_store_creates_receipt(self, memory: BudgetedMemory[str]) -> None:
         """Store creates a receipt with details."""
         receipt = await memory.store("m1", "Test content", ["concept"])
 
@@ -2191,7 +2340,9 @@ class TestBudgetedMemory:
         assert receipt.pattern_id == "m1"
 
     @pytest.mark.asyncio
-    async def test_retrieve_charges_tokens(self, memory, bank) -> None:
+    async def test_retrieve_charges_tokens(
+        self, memory: BudgetedMemory[str], bank: CentralBankProtocol
+    ) -> None:
         """Retrieve operation charges tokens."""
         await memory.store("m1", "Test content")
         initial_balance = bank.get_balance()
@@ -2202,7 +2353,9 @@ class TestBudgetedMemory:
         assert bank.get_balance() < initial_balance
 
     @pytest.mark.asyncio
-    async def test_retrieve_returns_results_and_receipt(self, memory) -> None:
+    async def test_retrieve_returns_results_and_receipt(
+        self, memory: BudgetedMemory[str]
+    ) -> None:
         """Retrieve returns both results and receipt."""
         await memory.store("m1", "Test content")
 
@@ -2213,7 +2366,9 @@ class TestBudgetedMemory:
         assert receipt.operation == "retrieve"
 
     @pytest.mark.asyncio
-    async def test_consolidate_with_budget(self, memory, bank) -> None:
+    async def test_consolidate_with_budget(
+        self, memory: BudgetedMemory[str], bank: CentralBankProtocol
+    ) -> None:
         """Consolidation charges tokens."""
         await memory.store("m1", "Test content")
         initial_balance = bank.get_balance()
@@ -2224,7 +2379,9 @@ class TestBudgetedMemory:
         assert bank.get_balance() < initial_balance
 
     @pytest.mark.asyncio
-    async def test_budget_status(self, memory, bank) -> None:
+    async def test_budget_status(
+        self, memory: BudgetedMemory[str], bank: CentralBankProtocol
+    ) -> None:
         """Budget status returns current state."""
         status = memory.budget_status()
 
@@ -2233,7 +2390,7 @@ class TestBudgetedMemory:
         assert "is_low" in status
 
     @pytest.mark.asyncio
-    async def test_memory_stats(self, memory) -> None:
+    async def test_memory_stats(self, memory: BudgetedMemory[str]) -> None:
         """Memory stats includes budget info."""
         await memory.store("m1", "Test content")
 
@@ -2243,11 +2400,13 @@ class TestBudgetedMemory:
         assert "resolution_budget" in stats
 
     @pytest.mark.asyncio
-    async def test_insufficient_budget_triggers_compression(self, bank) -> None:
+    async def test_insufficient_budget_triggers_compression(
+        self, bank: CentralBankProtocol
+    ) -> None:
         """Low budget triggers emergency compression."""
         # Use very small budget
-        small_bank = create_mock_bank(max_balance=50)
-        memory = BudgetedMemory(
+        small_bank: CentralBankProtocol = create_mock_bank(max_balance=50)
+        memory: BudgetedMemory[str] = BudgetedMemory(
             memory=HolographicMemory(),
             bank=small_bank,
             account_id="test",
@@ -2266,10 +2425,11 @@ class TestMemoryEconomicsDashboard:
 
     @pytest.fixture
     def bank(self) -> CentralBankProtocol:
-        return create_mock_bank()
+        bank: CentralBankProtocol = create_mock_bank()
+        return bank
 
     @pytest.fixture
-    def memory(self, bank):
+    def memory(self, bank: CentralBankProtocol) -> BudgetedMemory[str]:
         return BudgetedMemory(
             memory=HolographicMemory(),
             bank=bank,
@@ -2277,11 +2437,13 @@ class TestMemoryEconomicsDashboard:
         )
 
     @pytest.fixture
-    def dashboard(self, memory):
+    def dashboard(self, memory: BudgetedMemory[str]) -> MemoryEconomicsDashboard:
         return MemoryEconomicsDashboard(memory)
 
     @pytest.mark.asyncio
-    async def test_generate_report(self, memory, dashboard) -> None:
+    async def test_generate_report(
+        self, memory: BudgetedMemory[str], dashboard: MemoryEconomicsDashboard
+    ) -> None:
         """Generate report produces valid report."""
         await memory.store("m1", "Test content")
         await memory.retrieve("test")
@@ -2293,7 +2455,9 @@ class TestMemoryEconomicsDashboard:
         assert report.total_tokens_spent > 0
 
     @pytest.mark.asyncio
-    async def test_report_metrics(self, memory, dashboard) -> None:
+    async def test_report_metrics(
+        self, memory: BudgetedMemory[str], dashboard: MemoryEconomicsDashboard
+    ) -> None:
         """Report includes all expected metrics."""
         await memory.store("m1", "Test")
 
@@ -2360,8 +2524,8 @@ class TestPhase4Integration:
     @pytest.mark.asyncio
     async def test_resolution_allocation_affects_patterns(self) -> None:
         """Resolution budget affects pattern compression."""
-        bank = create_mock_bank()
-        memory = BudgetedMemory(
+        bank: CentralBankProtocol = create_mock_bank()
+        memory: BudgetedMemory[str] = BudgetedMemory(
             memory=HolographicMemory(),
             bank=bank,
             account_id="test",
@@ -2392,8 +2556,8 @@ class TestPhase4Integration:
     @pytest.mark.asyncio
     async def test_full_economic_lifecycle(self) -> None:
         """Test full lifecycle: store → retrieve → consolidate → report."""
-        bank = create_mock_bank(max_balance=50000)
-        memory = BudgetedMemory(
+        bank: CentralBankProtocol = create_mock_bank(max_balance=50000)
+        memory: BudgetedMemory[str] = BudgetedMemory(
             memory=HolographicMemory(),
             bank=bank,
             account_id="lifecycle-test",

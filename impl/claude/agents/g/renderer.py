@@ -9,6 +9,8 @@ Rendering is the inverse of parsing:
 - parse(render(AST)) ≈ AST (round-trip property)
 """
 
+from __future__ import annotations
+
 from typing import Any
 
 from agents.g.types import GrammarFormat, GrammarLevel
@@ -88,7 +90,7 @@ def _render_command(ast: Any) -> str:
     if noun:
         return f"{verb} {noun}"
     else:
-        return verb
+        return str(verb)
 
 
 def _render_recursive(ast: Any) -> str:

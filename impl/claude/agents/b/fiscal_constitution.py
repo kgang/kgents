@@ -82,7 +82,7 @@ class ParseSuccess(Generic[T]):
 
 
 # Type alias for parse results
-ParseResult = ParseError | ParseSuccess
+ParseResult = ParseError | ParseSuccess[Any]
 
 
 # =============================================================================
@@ -773,6 +773,8 @@ class LedgerTongue:
     def _execute_query(self, cmd: QueryCommand) -> ExecutionResult:
         """Execute a query command."""
         if cmd.query_type == "balance":
+            assert cmd.account_id is not None, "account_id required for balance query"
+            assert cmd.currency is not None, "currency required for balance query"
             balance = self.ledger.get_balance(cmd.account_id, cmd.currency)
             return ExecutionResult(
                 success=True,
@@ -792,6 +794,7 @@ class LedgerTongue:
                 },
             )
         elif cmd.query_type == "supply":
+            assert cmd.currency is not None, "currency required for supply query"
             supply = self.ledger.total_supply.get(cmd.currency, 0.0)
             return ExecutionResult(
                 success=True,
@@ -1001,7 +1004,7 @@ class ConstitutionalBanker:
             success=result.success,
             reason="Constitutional execution successful"
             if result.success
-            else result.error,
+            else (result.error or "Unknown error"),
             type="CONSTITUTIONAL_EXECUTION" if result.success else "ERROR",
             result=result.result,
             transaction=result.transaction,

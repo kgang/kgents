@@ -12,6 +12,8 @@ Target: 40+ comprehensive tests covering:
 - Edge cases and fuzz-like testing
 """
 
+from __future__ import annotations
+
 from datetime import datetime
 
 import pytest
@@ -257,13 +259,13 @@ class TestParserSyntax:
         ledger.mint_initial("alice", "USD", 1000.0)
         return LedgerTongueParser(ledger)
 
-    def test_parse_unknown_command(self, parser) -> None:
+    def test_parse_unknown_command(self, parser: LedgerTongueParser) -> None:
         """Test parsing unknown command."""
         result = parser.parse("MINT 100 USD TO alice")
         assert isinstance(result, ParseError)
         assert "Unknown command" in result.error
 
-    def test_parse_transfer_valid(self, parser) -> None:
+    def test_parse_transfer_valid(self, parser: LedgerTongueParser) -> None:
         """Test parsing valid transfer."""
         result = parser.parse("TRANSFER 100 USD FROM alice TO bob")
         assert isinstance(result, ParseSuccess)
@@ -271,7 +273,7 @@ class TestParserSyntax:
         assert result.ast.amount == 100.0
         assert result.ast.currency == "USD"
 
-    def test_parse_transfer_with_memo(self, parser) -> None:
+    def test_parse_transfer_with_memo(self, parser: LedgerTongueParser) -> None:
         """Test parsing transfer with memo."""
         result = parser.parse(
             'TRANSFER 50 USD FROM alice TO bob MEMO "payment for services"'
@@ -279,79 +281,79 @@ class TestParserSyntax:
         assert isinstance(result, ParseSuccess)
         assert result.ast.memo == "payment for services"
 
-    def test_parse_transfer_decimal_amount(self, parser) -> None:
+    def test_parse_transfer_decimal_amount(self, parser: LedgerTongueParser) -> None:
         """Test parsing transfer with decimal amount."""
         result = parser.parse("TRANSFER 99.99 USD FROM alice TO bob")
         assert isinstance(result, ParseSuccess)
         assert result.ast.amount == 99.99
 
-    def test_parse_transfer_case_insensitive(self, parser) -> None:
+    def test_parse_transfer_case_insensitive(self, parser: LedgerTongueParser) -> None:
         """Test parsing is case insensitive for keywords."""
         result = parser.parse("transfer 100 usd from alice to bob")
         assert isinstance(result, ParseSuccess)
         assert result.ast.currency == "USD"  # Currency normalized to uppercase
 
-    def test_parse_transfer_invalid_syntax(self, parser) -> None:
+    def test_parse_transfer_invalid_syntax(self, parser: LedgerTongueParser) -> None:
         """Test parsing transfer with invalid syntax."""
         result = parser.parse("TRANSFER alice TO bob 100 USD")
         assert isinstance(result, ParseError)
         assert "Invalid TRANSFER syntax" in result.error
 
-    def test_parse_transfer_invalid_currency(self, parser) -> None:
+    def test_parse_transfer_invalid_currency(self, parser: LedgerTongueParser) -> None:
         """Test parsing transfer with invalid currency."""
         result = parser.parse("TRANSFER 100 XYZ FROM alice TO bob")
         assert isinstance(result, ParseError)
         assert "Unknown currency" in result.error
 
-    def test_parse_transfer_negative_amount(self, parser) -> None:
+    def test_parse_transfer_negative_amount(self, parser: LedgerTongueParser) -> None:
         """Test parsing transfer with negative amount fails."""
         # Note: regex won't match negative, so it's a syntax error
         result = parser.parse("TRANSFER -100 USD FROM alice TO bob")
         assert isinstance(result, ParseError)
 
-    def test_parse_transfer_self_transfer(self, parser) -> None:
+    def test_parse_transfer_self_transfer(self, parser: LedgerTongueParser) -> None:
         """Test parsing self-transfer fails."""
         result = parser.parse("TRANSFER 100 USD FROM alice TO alice")
         assert isinstance(result, ParseError)
         assert "same account" in result.error
 
-    def test_parse_query_balance(self, parser) -> None:
+    def test_parse_query_balance(self, parser: LedgerTongueParser) -> None:
         """Test parsing balance query."""
         result = parser.parse("QUERY BALANCE OF alice IN USD")
         assert isinstance(result, ParseSuccess)
         assert isinstance(result.ast, QueryCommand)
         assert result.ast.query_type == "balance"
 
-    def test_parse_query_history(self, parser) -> None:
+    def test_parse_query_history(self, parser: LedgerTongueParser) -> None:
         """Test parsing history query."""
         result = parser.parse("QUERY HISTORY OF alice")
         assert isinstance(result, ParseSuccess)
         assert result.ast.query_type == "history"
 
-    def test_parse_query_supply(self, parser) -> None:
+    def test_parse_query_supply(self, parser: LedgerTongueParser) -> None:
         """Test parsing supply query."""
         result = parser.parse("QUERY SUPPLY OF USD")
         assert isinstance(result, ParseSuccess)
         assert result.ast.query_type == "supply"
 
-    def test_parse_query_invalid(self, parser) -> None:
+    def test_parse_query_invalid(self, parser: LedgerTongueParser) -> None:
         """Test parsing invalid query."""
         result = parser.parse("QUERY SOMETHING OF alice")
         assert isinstance(result, ParseError)
 
-    def test_parse_reserve(self, parser) -> None:
+    def test_parse_reserve(self, parser: LedgerTongueParser) -> None:
         """Test parsing reserve command."""
         result = parser.parse("RESERVE 100 USD FROM alice")
         assert isinstance(result, ParseSuccess)
         assert isinstance(result.ast, ReserveCommand)
 
-    def test_parse_reserve_with_reason(self, parser) -> None:
+    def test_parse_reserve_with_reason(self, parser: LedgerTongueParser) -> None:
         """Test parsing reserve with reason."""
         result = parser.parse('RESERVE 50 USD FROM alice REASON "escrow for trade"')
         assert isinstance(result, ParseSuccess)
         assert result.ast.reason == "escrow for trade"
 
-    def test_parse_release(self, parser) -> None:
+    def test_parse_release(self, parser: LedgerTongueParser) -> None:
         """Test parsing release command."""
         # First need to reserve some funds
         parser.ledger.reserve_funds("alice", "USD", 100.0)
@@ -471,7 +473,7 @@ class TestLedgerTongue:
         ledger.mint_initial("treasury", "EUR", 500.0)
         return LedgerTongue(ledger)
 
-    def test_run_transfer_success(self, tongue) -> None:
+    def test_run_transfer_success(self, tongue: LedgerTongue) -> None:
         """Test successful transfer through run()."""
         result = tongue.run("TRANSFER 100 USD FROM alice TO bob")
 
@@ -480,14 +482,14 @@ class TestLedgerTongue:
         assert result.transaction is not None
         assert tongue.ledger.get_balance("bob", "USD") == 100.0
 
-    def test_run_transfer_insufficient(self, tongue) -> None:
+    def test_run_transfer_insufficient(self, tongue: LedgerTongue) -> None:
         """Test transfer with insufficient funds returns ParseError."""
         result = tongue.run("TRANSFER 5000 USD FROM alice TO bob")
 
         assert isinstance(result, ParseError)
         assert "Insufficient funds" in result.error
 
-    def test_run_query_balance(self, tongue) -> None:
+    def test_run_query_balance(self, tongue: LedgerTongue) -> None:
         """Test balance query execution."""
         result = tongue.run("QUERY BALANCE OF alice IN USD")
 
@@ -495,38 +497,42 @@ class TestLedgerTongue:
         assert result.success is True
         assert result.result["balance"] == 1000.0
 
-    def test_run_query_history(self, tongue) -> None:
+    def test_run_query_history(self, tongue: LedgerTongue) -> None:
         """Test history query execution."""
         tongue.run("TRANSFER 50 USD FROM alice TO bob")
         result = tongue.run("QUERY HISTORY OF alice")
 
+        assert isinstance(result, ExecutionResult)
         assert result.success is True
         assert len(result.result["transactions"]) == 1
 
-    def test_run_query_supply(self, tongue) -> None:
+    def test_run_query_supply(self, tongue: LedgerTongue) -> None:
         """Test supply query execution."""
         result = tongue.run("QUERY SUPPLY OF USD")
 
+        assert isinstance(result, ExecutionResult)
         assert result.success is True
         assert result.result["total_supply"] == 1000.0
 
-    def test_run_reserve_success(self, tongue) -> None:
+    def test_run_reserve_success(self, tongue: LedgerTongue) -> None:
         """Test successful reserve."""
         result = tongue.run('RESERVE 200 USD FROM alice REASON "escrow"')
 
+        assert isinstance(result, ExecutionResult)
         assert result.success is True
         assert tongue.ledger.get_balance("alice", "USD") == 800.0
         assert tongue.ledger.get_account("alice").reserved("USD") == 200.0
 
-    def test_run_release_success(self, tongue) -> None:
+    def test_run_release_success(self, tongue: LedgerTongue) -> None:
         """Test successful release."""
         tongue.run("RESERVE 200 USD FROM alice")
         result = tongue.run("RELEASE 100 USD TO alice")
 
+        assert isinstance(result, ExecutionResult)
         assert result.success is True
         assert tongue.ledger.get_balance("alice", "USD") == 900.0
 
-    def test_chain_of_transfers(self, tongue) -> None:
+    def test_chain_of_transfers(self, tongue: LedgerTongue) -> None:
         """Test chain of transfers maintains invariants."""
         tongue.run("TRANSFER 500 USD FROM alice TO bob")
         tongue.run("TRANSFER 250 USD FROM bob TO charlie")
@@ -555,7 +561,7 @@ class TestConstitutionalBanker:
         """Create constitutional banker with initial funds."""
         return create_constitutional_banker(initial_accounts={"alice": {"USD": 1000.0}})
 
-    def test_execute_sync_success(self, banker) -> None:
+    def test_execute_sync_success(self, banker: ConstitutionalBanker) -> None:
         """Test synchronous execution success."""
         result = banker.execute_sync("TRANSFER 100 USD FROM alice TO bob")
 
@@ -563,7 +569,7 @@ class TestConstitutionalBanker:
         assert result.type == "CONSTITUTIONAL_EXECUTION"
         assert result.transaction is not None
 
-    def test_execute_sync_grammar_rejection(self, banker) -> None:
+    def test_execute_sync_grammar_rejection(self, banker: ConstitutionalBanker) -> None:
         """Test synchronous execution grammar rejection."""
         result = banker.execute_sync("TRANSFER 5000 USD FROM alice TO bob")
 
@@ -571,7 +577,7 @@ class TestConstitutionalBanker:
         assert result.type == "GRAMMAR_REJECTION"
         assert "Constitutional violation" in result.reason
 
-    def test_verify_constitution_initial(self, banker) -> None:
+    def test_verify_constitution_initial(self, banker: ConstitutionalBanker) -> None:
         """Test constitution verification on initial state."""
         invariants = banker.verify_constitution()
 
@@ -579,7 +585,9 @@ class TestConstitutionalBanker:
         assert invariants["no_negative_balances"] is True
         assert invariants["double_entry"] is True
 
-    def test_verify_constitution_after_operations(self, banker) -> None:
+    def test_verify_constitution_after_operations(
+        self, banker: ConstitutionalBanker
+    ) -> None:
         """Test constitution verification after operations."""
         banker.execute_sync("TRANSFER 100 USD FROM alice TO bob")
         banker.execute_sync("TRANSFER 50 USD FROM bob TO charlie")
@@ -588,7 +596,7 @@ class TestConstitutionalBanker:
 
         assert all(v is True for v in invariants.values())
 
-    def test_get_ledger_state(self, banker) -> None:
+    def test_get_ledger_state(self, banker: ConstitutionalBanker) -> None:
         """Test getting ledger state."""
         ledger = banker.get_ledger_state()
 
@@ -610,7 +618,7 @@ class TestConstitutionalBankerAsync:
         return create_constitutional_banker(initial_accounts={"alice": {"USD": 1000.0}})
 
     @pytest.mark.asyncio
-    async def test_execute_async_success(self, banker) -> None:
+    async def test_execute_async_success(self, banker: ConstitutionalBanker) -> None:
         """Test async execution success."""
         result = await banker.execute_financial_operation(
             "agent1", "TRANSFER 100 USD FROM alice TO bob"
@@ -621,7 +629,9 @@ class TestConstitutionalBankerAsync:
         assert result.gas_consumed is not None
 
     @pytest.mark.asyncio
-    async def test_execute_async_grammar_rejection(self, banker) -> None:
+    async def test_execute_async_grammar_rejection(
+        self, banker: ConstitutionalBanker
+    ) -> None:
         """Test async execution grammar rejection."""
         result = await banker.execute_financial_operation(
             "agent1", "TRANSFER 5000 USD FROM alice TO bob"
@@ -631,7 +641,7 @@ class TestConstitutionalBankerAsync:
         assert result.type == "GRAMMAR_REJECTION"
 
     @pytest.mark.asyncio
-    async def test_execute_async_query(self, banker) -> None:
+    async def test_execute_async_query(self, banker: ConstitutionalBanker) -> None:
         """Test async query execution."""
         result = await banker.execute_financial_operation(
             "agent1", "QUERY BALANCE OF alice IN USD"
@@ -756,6 +766,7 @@ class TestEdgeCases:
         # Ten transfers of 10 USD each
         for i in range(10):
             result = tongue.run(f"TRANSFER 10 USD FROM alice TO receiver{i}")
+            assert isinstance(result, ExecutionResult)
             assert result.success is True
 
         # 11th should fail
@@ -873,6 +884,7 @@ class TestConstitutionalInvariants:
 
         # First transfer
         result1 = tongue.run("TRANSFER 60 USD FROM alice TO bob")
+        assert isinstance(result1, ExecutionResult)
         assert result1.success is True
 
         # Second transfer should fail based on NEW balance

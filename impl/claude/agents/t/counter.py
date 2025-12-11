@@ -10,14 +10,16 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Generic, TypeVar
 
+from bootstrap.types import Agent
+
 if TYPE_CHECKING:
-    from bootstrap.types import Agent, ComposedAgent
+    from bootstrap.types import ComposedAgent
 
 A = TypeVar("A")
 B = TypeVar("B")
 
 
-class CounterAgent(Generic[A]):
+class CounterAgent(Agent[A, A], Generic[A]):
     """Identity morphism with invocation counting C.
 
     Category Theory:
@@ -38,16 +40,21 @@ class CounterAgent(Generic[A]):
         >>> print(f"API called {counter.count} times")
     """
 
-    def __init__(self, label: str):
+    def __init__(self, label: str) -> None:
         """Initialize CounterAgent.
 
         Args:
             label: Human-readable label for this counter
         """
-        self.name = f"Counter({label})"
+        self._name = f"Counter({label})"
         self.label = label
         self.count = 0
         self.__is_test__ = True
+
+    @property
+    def name(self) -> str:
+        """Return the agent name."""
+        return self._name
 
     async def invoke(self, input_data: A) -> A:
         """Increment counter and pass through.

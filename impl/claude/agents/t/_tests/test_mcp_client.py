@@ -14,9 +14,12 @@ Test Coverage:
 10. Mock server testing patterns
 """
 
+from __future__ import annotations
+
 import asyncio
 import json
-from unittest.mock import AsyncMock
+from typing import Any
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from agents.t.mcp_client import (
@@ -31,6 +34,7 @@ from agents.t.mcp_client import (
     StdioTransport,
 )
 from agents.t.tool import ToolError, ToolErrorType
+from bootstrap.types import Err
 
 # --- JSON-RPC Tests ---
 
@@ -291,6 +295,7 @@ async def test_mcp_client_connect_error() -> None:
     result = await client.connect()
 
     assert result.is_err()
+    assert isinstance(result, Err)
     error = result.error
     assert isinstance(error, ToolError)
     assert error.error_type == ToolErrorType.FATAL
@@ -312,7 +317,9 @@ async def test_mcp_client_connect_timeout() -> None:
     result = await client.connect()
 
     assert result.is_err()
+    assert isinstance(result, Err)
     error = result.error
+    assert isinstance(error, ToolError)
     assert error.error_type == ToolErrorType.TIMEOUT
 
 
@@ -368,7 +375,9 @@ async def test_mcp_client_list_tools_not_connected() -> None:
     result = await client.list_tools()
 
     assert result.is_err()
+    assert isinstance(result, Err)
     error = result.error
+    assert isinstance(error, ToolError)
     assert error.error_type == ToolErrorType.FATAL
     assert "not connected" in error.message.lower()
 
@@ -418,7 +427,9 @@ async def test_mcp_client_call_tool_method_not_found() -> None:
     result = await client.call_tool("nonexistent_tool", {})
 
     assert result.is_err()
+    assert isinstance(result, Err)
     error = result.error
+    assert isinstance(error, ToolError)
     assert error.error_type == ToolErrorType.NOT_FOUND
 
 
@@ -442,7 +453,9 @@ async def test_mcp_client_call_tool_invalid_params() -> None:
     result = await client.call_tool("web_search", {"invalid": "params"})
 
     assert result.is_err()
+    assert isinstance(result, Err)
     error = result.error
+    assert isinstance(error, ToolError)
     assert error.error_type == ToolErrorType.VALIDATION
 
 
@@ -463,7 +476,9 @@ async def test_mcp_client_call_tool_timeout() -> None:
     result = await client.call_tool("slow_tool", {})
 
     assert result.is_err()
+    assert isinstance(result, Err)
     error = result.error
+    assert isinstance(error, ToolError)
     assert error.error_type == ToolErrorType.TIMEOUT
 
 
@@ -568,14 +583,14 @@ async def test_mcp_tool_invoke_success() -> None:
     # Mock call_tool to return success
     from bootstrap.types import ok
 
-    client.call_tool = AsyncMock(return_value=ok("Search results"))
+    mock_call_tool = AsyncMock(return_value=ok("Search results"))
+    with patch.object(client, "call_tool", mock_call_tool):
+        tool = MCPTool.from_schema(schema, client)
 
-    tool = MCPTool.from_schema(schema, client)
+        result = await tool.invoke({"query": "MCP protocol"})
 
-    result = await tool.invoke({"query": "MCP protocol"})
-
-    assert result == "Search results"
-    client.call_tool.assert_called_once_with("web_search", {"query": "MCP protocol"})
+        assert result == "Search results"
+        mock_call_tool.assert_called_once_with("web_search", {"query": "MCP protocol"})
 
 
 @pytest.mark.asyncio
@@ -599,18 +614,19 @@ async def test_mcp_tool_invoke_error() -> None:
         message="Connection failed",
         tool_name="web_search",
     )
-    client.call_tool = AsyncMock(
+    mock_call_tool = AsyncMock(
         return_value=err(tool_error, message="Connection failed", recoverable=True)
     )
 
-    tool = MCPTool.from_schema(schema, client)
+    with patch.object(client, "call_tool", mock_call_tool):
+        tool = MCPTool.from_schema(schema, client)
 
-    # Should raise ToolError
-    with pytest.raises(ToolError) as exc_info:
-        await tool.invoke({"query": "MCP protocol"})
+        # Should raise ToolError
+        with pytest.raises(ToolError) as exc_info:
+            await tool.invoke({"query": "MCP protocol"})
 
-    assert exc_info.value.error_type == ToolErrorType.NETWORK
-    assert "Connection failed" in str(exc_info.value)
+        assert exc_info.value.error_type == ToolErrorType.NETWORK
+        assert "Connection failed" in str(exc_info.value)
 
 
 # --- Integration Tests ---
@@ -687,16 +703,17 @@ async def test_mcp_tool_composition() -> None:
     # Mock call_tool
     from bootstrap.types import ok
 
-    client.call_tool = AsyncMock(return_value=ok("HELLO WORLD"))
+    mock_call_tool = AsyncMock(return_value=ok("HELLO WORLD"))
 
-    tool = MCPTool.from_schema(schema, client)
+    with patch.object(client, "call_tool", mock_call_tool):
+        tool = MCPTool.from_schema(schema, client)
 
-    # Test Tool[A, B] interface
-    result = await tool.invoke({"text": "hello world"})
-    assert result == "HELLO WORLD"
+        # Test Tool[A, B] interface
+        result = await tool.invoke({"text": "hello world"})
+        assert result == "HELLO WORLD"
 
-    # MCPTool should be composable with >> operator (inherited from Agent)
-    assert hasattr(tool, "__rshift__")  # Has >> operator
+        # MCPTool should be composable with >> operator (inherited from Agent)
+        assert hasattr(tool, "__rshift__")  # Has >> operator
 
 
 if __name__ == "__main__":

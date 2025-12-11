@@ -10,6 +10,8 @@ Tests verify:
 - Error handling
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Any
 
@@ -96,7 +98,9 @@ class CountingInterceptor(BaseInterceptor):
 class TransformInterceptor(BaseInterceptor):
     """Transforms payload in before hook."""
 
-    def __init__(self, transform_fn, name: str = "transform", order: int = 100):
+    def __init__(
+        self, transform_fn: Any, name: str = "transform", order: int = 100
+    ) -> None:
         super().__init__(name, order)
         self._transform = transform_fn
 
@@ -108,7 +112,9 @@ class TransformInterceptor(BaseInterceptor):
 class ResultTransformInterceptor(BaseInterceptor):
     """Transforms result in after hook."""
 
-    def __init__(self, transform_fn, name: str = "result_transform", order: int = 100):
+    def __init__(
+        self, transform_fn: Any, name: str = "result_transform", order: int = 100
+    ) -> None:
         super().__init__(name, order)
         self._transform = transform_fn
 
@@ -124,7 +130,9 @@ class ResultTransformInterceptor(BaseInterceptor):
 class MetadataInterceptor(BaseInterceptor):
     """Adds metadata to results."""
 
-    def __init__(self, metadata: dict, name: str = "metadata", order: int = 200):
+    def __init__(
+        self, metadata: dict[str, Any], name: str = "metadata", order: int = 200
+    ) -> None:
         super().__init__(name, order)
         self._metadata = metadata
 
@@ -145,7 +153,9 @@ class TestBusMessage:
 
     def test_create_basic_message(self) -> None:
         """Test basic message creation."""
-        msg = BusMessage(source="cli", target="psi", payload="hello")
+        msg: BusMessage[str, str] = BusMessage(
+            source="cli", target="psi", payload="hello"
+        )
 
         assert msg.source == "cli"
         assert msg.target == "psi"
@@ -156,7 +166,9 @@ class TestBusMessage:
 
     def test_message_blocking(self) -> None:
         """Test message blocking mechanism."""
-        msg = BusMessage(source="cli", target="psi", payload="data")
+        msg: BusMessage[str, str] = BusMessage(
+            source="cli", target="psi", payload="data"
+        )
 
         msg.block("Rate limited")
 
@@ -165,7 +177,7 @@ class TestBusMessage:
 
     def test_message_context(self) -> None:
         """Test context setting and getting."""
-        msg = BusMessage(source="a", target="b", payload=42)
+        msg: BusMessage[int, str] = BusMessage(source="a", target="b", payload=42)
 
         msg.set_context("token_cost", 100)
         msg.set_context("user_id", "user-123")
@@ -177,13 +189,13 @@ class TestBusMessage:
 
     def test_message_priority(self) -> None:
         """Test priority levels."""
-        low = BusMessage(
+        low: BusMessage[int, str] = BusMessage(
             source="a", target="b", payload=1, priority=MessagePriority.LOW
         )
-        high = BusMessage(
+        high: BusMessage[int, str] = BusMessage(
             source="a", target="b", payload=2, priority=MessagePriority.HIGH
         )
-        critical = BusMessage(
+        critical: BusMessage[int, str] = BusMessage(
             source="a", target="b", payload=3, priority=MessagePriority.CRITICAL
         )
 
@@ -191,8 +203,8 @@ class TestBusMessage:
 
     def test_message_unique_id(self) -> None:
         """Test that each message gets a unique ID."""
-        msg1 = BusMessage(source="a", target="b", payload=1)
-        msg2 = BusMessage(source="a", target="b", payload=1)
+        msg1: BusMessage[int, str] = BusMessage(source="a", target="b", payload=1)
+        msg2: BusMessage[int, str] = BusMessage(source="a", target="b", payload=1)
 
         # IDs should be different (timestamp-based)
         assert msg1.message_id != msg2.message_id
@@ -208,7 +220,7 @@ class TestAgentRegistry:
     def registry(self) -> AgentRegistry:
         return AgentRegistry()
 
-    def test_register_agent(self, registry) -> None:
+    def test_register_agent(self, registry: AgentRegistry) -> None:
         """Test agent registration."""
         echo = EchoAgent()
         registry.register("echo", echo)
@@ -216,7 +228,7 @@ class TestAgentRegistry:
         assert registry.get("echo") is echo
         assert "echo" in registry.list_agents()
 
-    def test_unregister_agent(self, registry) -> None:
+    def test_unregister_agent(self, registry: AgentRegistry) -> None:
         """Test agent unregistration."""
         registry.register("echo", EchoAgent())
 
@@ -224,12 +236,12 @@ class TestAgentRegistry:
         assert registry.get("echo") is None
         assert "echo" not in registry.list_agents()
 
-    def test_unregister_nonexistent(self, registry) -> None:
+    def test_unregister_nonexistent(self, registry: AgentRegistry) -> None:
         """Test unregistering non-existent agent."""
         assert not registry.unregister("nonexistent")
 
     @pytest.mark.asyncio
-    async def test_invoke_agent(self, registry) -> None:
+    async def test_invoke_agent(self, registry: AgentRegistry) -> None:
         """Test invoking registered agent."""
         registry.register("double", DoubleAgent())
 
@@ -238,7 +250,7 @@ class TestAgentRegistry:
         assert result == 10
 
     @pytest.mark.asyncio
-    async def test_invoke_nonexistent(self, registry) -> None:
+    async def test_invoke_nonexistent(self, registry: AgentRegistry) -> None:
         """Test invoking non-existent agent raises KeyError."""
         with pytest.raises(KeyError, match="Agent not found"):
             await registry.invoke("nonexistent", "data")
@@ -254,7 +266,7 @@ class TestBaseInterceptor:
     async def test_passthrough_before(self) -> None:
         """Test default before passes through."""
         interceptor = PassthroughInterceptor()
-        msg = BusMessage(source="a", target="b", payload="test")
+        msg: BusMessage[str, str] = BusMessage(source="a", target="b", payload="test")
 
         result = await interceptor.before(msg)
 
@@ -265,7 +277,7 @@ class TestBaseInterceptor:
     async def test_passthrough_after(self) -> None:
         """Test default after wraps unchanged."""
         interceptor = PassthroughInterceptor()
-        msg = BusMessage(source="a", target="b", payload="test")
+        msg: BusMessage[str, str] = BusMessage(source="a", target="b", payload="test")
 
         result = await interceptor.after(msg, "output")
 
@@ -288,52 +300,56 @@ class TestMiddlewareBus:
         return bus
 
     @pytest.mark.asyncio
-    async def test_basic_dispatch(self, bus) -> None:
+    async def test_basic_dispatch(self, bus: MiddlewareBus) -> None:
         """Test basic message dispatch."""
-        result = await bus.send("cli", "echo", "hello")
+        result: Any = await bus.send("cli", "echo", "hello")
 
         assert result.value == "hello"
         assert not result.blocked
 
     @pytest.mark.asyncio
-    async def test_dispatch_with_transform(self, bus) -> None:
+    async def test_dispatch_with_transform(self, bus: MiddlewareBus) -> None:
         """Test dispatch with computation."""
-        result = await bus.send("cli", "double", 7)
+        result: Any = await bus.send("cli", "double", 7)
 
         assert result.value == 14
         assert not result.blocked
 
     @pytest.mark.asyncio
-    async def test_dispatch_to_unknown_target(self, bus) -> None:
+    async def test_dispatch_to_unknown_target(self, bus: MiddlewareBus) -> None:
         """Test dispatch to non-existent target."""
-        result = await bus.send("cli", "nonexistent", "data")
+        result: Any = await bus.send("cli", "nonexistent", "data")
 
         assert result.blocked
+        assert result.block_reason is not None
         assert "not found" in result.block_reason.lower()
 
     @pytest.mark.asyncio
-    async def test_dispatch_with_failing_agent(self, bus) -> None:
+    async def test_dispatch_with_failing_agent(self, bus: MiddlewareBus) -> None:
         """Test dispatch when agent throws."""
-        result = await bus.send("cli", "failing", "data")
+        result: Any = await bus.send("cli", "failing", "data")
 
         assert result.blocked
+        assert result.block_reason is not None
         assert "Invocation failed" in result.block_reason
         assert "error" in result.metadata
 
     @pytest.mark.asyncio
-    async def test_interceptor_ordering(self, bus) -> None:
+    async def test_interceptor_ordering(self, bus: MiddlewareBus) -> None:
         """Test interceptors run in order."""
-        order_log = []
+        order_log: list[str] = []
 
         class OrderTracker(BaseInterceptor):
-            def __init__(self, name: str, order: int):
+            def __init__(self, name: str, order: int) -> None:
                 super().__init__(name, order)
 
-            async def before(self, msg):
+            async def before(self, msg: BusMessage[Any, Any]) -> BusMessage[Any, Any]:
                 order_log.append(f"{self.name}:before")
                 return msg
 
-            async def after(self, msg, result):
+            async def after(
+                self, msg: BusMessage[Any, Any], result: Any
+            ) -> InterceptorResult[Any]:
                 order_log.append(f"{self.name}:after")
                 return InterceptorResult(value=result)
 
@@ -350,7 +366,7 @@ class TestMiddlewareBus:
         assert order_log[3:] == ["third:after", "second:after", "first:after"]
 
     @pytest.mark.asyncio
-    async def test_blocking_interceptor(self, bus) -> None:
+    async def test_blocking_interceptor(self, bus: MiddlewareBus) -> None:
         """Test interceptor blocking message."""
         blocker = BlockingInterceptor(
             name="blocker",
@@ -360,14 +376,14 @@ class TestMiddlewareBus:
         )
         bus.register_interceptor(blocker)
 
-        result = await bus.send("cli", "echo", "blocked")
+        result: Any = await bus.send("cli", "echo", "blocked")
 
         assert result.blocked
         assert result.block_reason == "Payload is 'blocked'"
         assert result.value is None
 
     @pytest.mark.asyncio
-    async def test_fallback_on_block(self, bus) -> None:
+    async def test_fallback_on_block(self, bus: MiddlewareBus) -> None:
         """Test fallback handler when message is blocked."""
         blocker = BlockingInterceptor(
             name="blocker",
@@ -377,13 +393,13 @@ class TestMiddlewareBus:
         bus.register_interceptor(blocker)
         bus.register_fallback("echo", lambda msg: "fallback_value")
 
-        result = await bus.send("cli", "echo", "anything")
+        result: Any = await bus.send("cli", "echo", "anything")
 
         assert result.blocked
         assert result.value == "fallback_value"
 
     @pytest.mark.asyncio
-    async def test_payload_transformation(self, bus) -> None:
+    async def test_payload_transformation(self, bus: MiddlewareBus) -> None:
         """Test interceptor transforming payload."""
         transformer = TransformInterceptor(
             transform_fn=lambda x: x * 2,
@@ -392,13 +408,13 @@ class TestMiddlewareBus:
         )
         bus.register_interceptor(transformer)
 
-        result = await bus.send("cli", "double", 5)
+        result: Any = await bus.send("cli", "double", 5)
 
         # Input 5 -> doubled to 10 -> doubled again by agent to 20
         assert result.value == 20
 
     @pytest.mark.asyncio
-    async def test_result_transformation(self, bus) -> None:
+    async def test_result_transformation(self, bus: MiddlewareBus) -> None:
         """Test interceptor transforming result."""
         transformer = ResultTransformInterceptor(
             transform_fn=lambda x: x + 100,
@@ -407,13 +423,13 @@ class TestMiddlewareBus:
         )
         bus.register_interceptor(transformer)
 
-        result = await bus.send("cli", "double", 5)
+        result: Any = await bus.send("cli", "double", 5)
 
         # 5 -> 10 (doubled) -> 110 (add 100)
         assert result.value == 110
 
     @pytest.mark.asyncio
-    async def test_metadata_collection(self, bus) -> None:
+    async def test_metadata_collection(self, bus: MiddlewareBus) -> None:
         """Test metadata collected from interceptors."""
         meta1 = MetadataInterceptor({"token_cost": 50}, name="cost", order=100)
         meta2 = MetadataInterceptor({"safety_score": 0.95}, name="safety", order=200)
@@ -421,13 +437,13 @@ class TestMiddlewareBus:
         bus.register_interceptor(meta1)
         bus.register_interceptor(meta2)
 
-        result = await bus.send("cli", "echo", "test")
+        result: Any = await bus.send("cli", "echo", "test")
 
         assert result.metadata["token_cost"] == 50
         assert result.metadata["safety_score"] == 0.95
 
     @pytest.mark.asyncio
-    async def test_unregister_interceptor(self, bus) -> None:
+    async def test_unregister_interceptor(self, bus: MiddlewareBus) -> None:
         """Test removing an interceptor."""
         counter = CountingInterceptor("counter")
         bus.register_interceptor(counter)
@@ -441,26 +457,26 @@ class TestMiddlewareBus:
         assert counter.before_count == 1  # Not incremented
 
     @pytest.mark.asyncio
-    async def test_dispatch_timing(self, bus) -> None:
+    async def test_dispatch_timing(self, bus: MiddlewareBus) -> None:
         """Test dispatch records duration."""
-        result = await bus.send("cli", "echo", "test")
+        result: Any = await bus.send("cli", "echo", "test")
 
         assert result.duration_ms >= 0
 
     @pytest.mark.asyncio
-    async def test_interceptors_run_list(self, bus) -> None:
+    async def test_interceptors_run_list(self, bus: MiddlewareBus) -> None:
         """Test tracking which interceptors ran."""
         bus.register_interceptor(CountingInterceptor("counter1", order=100))
         bus.register_interceptor(CountingInterceptor("counter2", order=200))
 
-        result = await bus.send("cli", "echo", "test")
+        result: Any = await bus.send("cli", "echo", "test")
 
         assert "counter1:before" in result.interceptors_run
         assert "counter2:before" in result.interceptors_run
         assert "counter1:after" in result.interceptors_run
         assert "counter2:after" in result.interceptors_run
 
-    def test_list_interceptors(self, bus) -> None:
+    def test_list_interceptors(self, bus: MiddlewareBus) -> None:
         """Test listing interceptors in order."""
         bus.register_interceptor(CountingInterceptor("third", order=300))
         bus.register_interceptor(CountingInterceptor("first", order=100))
@@ -535,11 +551,11 @@ class TestBusIntegration:
         bus.registry.register("suffix", AddPrefixAgent(prefix="]"))
 
         # First dispatch
-        result1 = await bus.send("cli", "prefix", "hello")
+        result1: Any = await bus.send("cli", "prefix", "hello")
         assert result1.value == "[hello"
 
         # Second dispatch using first result
-        result2 = await bus.send("cli", "suffix", result1.value)
+        result2: Any = await bus.send("cli", "suffix", result1.value)
         assert result2.value == "][hello"
 
     @pytest.mark.asyncio
@@ -549,16 +565,16 @@ class TestBusIntegration:
         bus.registry.register("echo", EchoAgent())
 
         class ContextWriter(BaseInterceptor):
-            async def before(self, msg):
+            async def before(self, msg: BusMessage[Any, Any]) -> BusMessage[Any, Any]:
                 msg.set_context("written_by", "ContextWriter")
                 return msg
 
         class ContextReader(BaseInterceptor):
-            def __init__(self):
+            def __init__(self) -> None:
                 super().__init__("reader", order=200)
-                self.read_context = None
+                self.read_context: Any = None
 
-            async def before(self, msg):
+            async def before(self, msg: BusMessage[Any, Any]) -> BusMessage[Any, Any]:
                 self.read_context = msg.get_context("written_by")
                 return msg
 
@@ -601,7 +617,7 @@ class TestBusIntegration:
         bus.register_interceptor(logger)
 
         # Positive number should succeed
-        result = await bus.send("cli", "double", 5)
+        result: Any = await bus.send("cli", "double", 5)
         assert result.value == 10
         assert result.metadata.get("token_cost") == 10
         assert not result.blocked
@@ -609,4 +625,5 @@ class TestBusIntegration:
         # Negative number should be blocked by safety
         result = await bus.send("cli", "double", -5)
         assert result.blocked
+        assert result.block_reason is not None
         assert "Negative numbers blocked" in result.block_reason

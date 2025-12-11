@@ -5,6 +5,8 @@ Provides durable state storage using JSON serialization,
 atomic file operations, and append-only history (JSONL).
 """
 
+from __future__ import annotations
+
 import json
 from dataclasses import asdict, is_dataclass
 from enum import Enum
@@ -15,6 +17,7 @@ from typing import (
     List,
     Type,
     TypeVar,
+    cast,
     get_args,
     get_origin,
     get_type_hints,
@@ -62,7 +65,7 @@ class PersistentAgent(Generic[S]):
         path: Path | str,
         schema: Type[S],
         max_history: int = 100,
-    ):
+    ) -> None:
         """
         Initialize persistent D-gent.
 
@@ -304,8 +307,10 @@ class PersistentAgent(Generic[S]):
                         args = get_args(field_type)
                         if args and is_dataclass(args[0]):
                             # List of dataclasses
+                            # args[0] from get_args is always a type, not an instance
+                            item_type = cast(Type[Any], args[0])
                             kwargs[field_name] = [
-                                self._deserialize_dataclass(args[0], item)
+                                self._deserialize_dataclass(item_type, item)
                                 if isinstance(item, dict)
                                 else item
                                 for item in field_value

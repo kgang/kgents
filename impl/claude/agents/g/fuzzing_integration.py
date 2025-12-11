@@ -257,7 +257,7 @@ class TongueInputGenerator:
         inputs = []
 
         # Simple schema templates
-        templates = [
+        templates: list[dict[str, Any]] = [
             {"name": "test", "value": 42},
             {"id": 1, "title": "Example"},
             {"type": "item", "data": {}},
@@ -527,7 +527,7 @@ class TongueFuzzer:
             # Boundary inputs: we don't know if they should pass, so just record
             result = self._test_input(
                 text, FuzzInputType.BOUNDARY, expected_success=None
-            )  # type: ignore
+            )
             results.append(result)
             boundary_passed += 1  # Boundaries always "pass" (we're observing)
 

@@ -9,6 +9,8 @@ Foundational types for Domain Specific Language synthesis:
 - Proofs: Constraint verification tracking
 """
 
+from __future__ import annotations
+
 import hashlib
 import json
 from dataclasses import dataclass, field
@@ -134,7 +136,7 @@ class ParserConfig:
         """Alias for strategy."""
         return self.strategy
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not 0.0 <= self.confidence_threshold <= 1.0:
             raise ValueError(
                 f"confidence_threshold must be in [0.0, 1.0], got {self.confidence_threshold}"
@@ -159,7 +161,7 @@ class InterpreterConfig:
     pure_functions_only: bool = False
     timeout_ms: int = 5000
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.timeout_ms <= 0:
             raise ValueError(f"timeout_ms must be positive, got {self.timeout_ms}")
 
@@ -266,7 +268,7 @@ class DomainAnalysis:
     constraints: list[str] = field(default_factory=list)
     relationships: dict[str, list[str]] = field(default_factory=dict)
     lexicon: set[str] = field(default_factory=set)
-    semantics: dict[str, Callable] = field(default_factory=dict)
+    semantics: dict[str, Callable[..., Any]] = field(default_factory=dict)
 
 
 # ============================================================================

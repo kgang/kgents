@@ -1,5 +1,7 @@
 """Tests for Psi-gent metaphor corpus."""
 
+from __future__ import annotations
+
 import pytest
 
 from ..corpus import (
@@ -70,17 +72,17 @@ class TestMetaphorCorpus:
         """Create a test corpus."""
         return create_standard_corpus()
 
-    def test_create_standard_corpus(self, corpus) -> None:
+    def test_create_standard_corpus(self, corpus: MetaphorCorpus) -> None:
         """create_standard_corpus returns populated corpus."""
         assert len(corpus) == len(STANDARD_CORPUS)
 
-    def test_iterate_corpus(self, corpus) -> None:
+    def test_iterate_corpus(self, corpus: MetaphorCorpus) -> None:
         """Can iterate over corpus."""
         metaphors = list(corpus)
         assert len(metaphors) == len(STANDARD_CORPUS)
         assert all(isinstance(m, Metaphor) for m in metaphors)
 
-    def test_get_by_id(self, corpus) -> None:
+    def test_get_by_id(self, corpus: MetaphorCorpus) -> None:
         """Get metaphor by ID."""
         plumbing = corpus.get("plumbing")
         assert plumbing is not None
@@ -89,13 +91,13 @@ class TestMetaphorCorpus:
         missing = corpus.get("nonexistent")
         assert missing is None
 
-    def test_all_ids(self, corpus) -> None:
+    def test_all_ids(self, corpus: MetaphorCorpus) -> None:
         """all_ids returns set of IDs."""
         ids = corpus.all_ids
         assert "plumbing" in ids
         assert "ecosystem" in ids
 
-    def test_add_valid_metaphor(self, corpus) -> None:
+    def test_add_valid_metaphor(self, corpus: MetaphorCorpus) -> None:
         """Can add a valid metaphor."""
         new_metaphor = Metaphor(
             id="chess",
@@ -121,12 +123,12 @@ class TestMetaphorCorpus:
         assert len(corpus) == initial_count + 1
         assert corpus.get("chess") is not None
 
-    def test_add_duplicate_fails(self, corpus) -> None:
+    def test_add_duplicate_fails(self, corpus: MetaphorCorpus) -> None:
         """Cannot add metaphor with existing ID."""
         with pytest.raises(ValueError, match="already exists"):
             corpus.add(PLUMBING)
 
-    def test_add_invalid_fails(self, corpus) -> None:
+    def test_add_invalid_fails(self, corpus: MetaphorCorpus) -> None:
         """Cannot add invalid metaphor."""
         invalid = Metaphor(
             id="bad",
@@ -138,7 +140,7 @@ class TestMetaphorCorpus:
         with pytest.raises(ValueError, match="Invalid"):
             corpus.add(invalid)
 
-    def test_remove_dynamic(self, corpus) -> None:
+    def test_remove_dynamic(self, corpus: MetaphorCorpus) -> None:
         """Can remove dynamic metaphors."""
         new_metaphor = Metaphor(
             id="temp",
@@ -157,7 +159,7 @@ class TestMetaphorCorpus:
         assert removed
         assert corpus.get("temp") is None
 
-    def test_remove_static_fails(self, corpus) -> None:
+    def test_remove_static_fails(self, corpus: MetaphorCorpus) -> None:
         """Cannot remove static metaphors."""
         removed = corpus.remove("plumbing")
         assert not removed

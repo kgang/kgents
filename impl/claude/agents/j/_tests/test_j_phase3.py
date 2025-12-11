@@ -31,7 +31,7 @@ from agents.j import (
 )
 
 # Mark all agents as test agents
-MetaArchitect.__is_test__ = True
+setattr(MetaArchitect, "__is_test__", True)
 
 
 # --- MetaArchitect Tests ---
@@ -71,6 +71,7 @@ async def test_meta_architect_parser_pattern() -> None:
     result = await architect.invoke(input_data)
 
     # Should recognize "parse" keyword and use parser pattern
+    assert result.source is not None
     assert "parse" in result.source.lower()
     assert result.class_name.startswith("JIT")
     assert "re" in result.imports  # Parser likely uses regex
@@ -89,6 +90,7 @@ async def test_meta_architect_filter_pattern() -> None:
     result = await architect.invoke(input_data)
 
     # Should recognize "filter" keyword
+    assert result.source is not None
     assert "filter" in result.source.lower()
     assert result.class_name == "JITFilter"
 
@@ -106,6 +108,7 @@ async def test_meta_architect_analyzer_pattern() -> None:
     result = await architect.invoke(input_data)
 
     # Should recognize "analyze" keyword
+    assert result.source is not None
     assert "analyze" in result.source.lower()
     assert result.class_name == "JITAnalyzer"
 
@@ -123,6 +126,7 @@ async def test_meta_architect_validator_pattern() -> None:
     result = await architect.invoke(input_data)
 
     # Should recognize "validate" keyword
+    assert result.source is not None
     assert "validate" in result.source.lower()
     assert result.class_name == "JITValidator"
 
@@ -300,6 +304,7 @@ class MaliciousAgent:
 
     # Should fail because eval is not in restricted builtins
     assert not result.success
+    assert result.error is not None
     assert "eval" in result.error.lower() or "not defined" in result.error.lower()
 
 

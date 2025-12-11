@@ -18,6 +18,8 @@ Architecture:
 - Backends are swappable at runtime
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Any, Optional, Protocol
 
@@ -113,16 +115,16 @@ CHROMADB_AVAILABLE = False
 FAISS_AVAILABLE = False
 
 try:
-    import chromadb  # type: ignore
-    from chromadb.config import Settings  # type: ignore
+    import chromadb
+    from chromadb.config import Settings
 
     CHROMADB_AVAILABLE = True
 except ImportError:
     pass
 
 try:
-    import faiss  # type: ignore
-    import numpy as np  # type: ignore
+    import faiss
+    import numpy as np
 
     FAISS_AVAILABLE = True
 except ImportError:
@@ -298,7 +300,7 @@ class ChromaDBBackend:
 
     async def count(self) -> int:
         """Get number of entries in ChromaDB."""
-        return self._collection.count()
+        return int(self._collection.count())
 
     def _clean_metadata(self, metadata: dict[str, Any]) -> dict[str, Any]:
         """Clean metadata for ChromaDB (only primitives allowed)."""
@@ -572,7 +574,7 @@ class FAISSBackend:
 
     async def count(self) -> int:
         """Get number of entries in FAISS index."""
-        return self._index.ntotal
+        return int(self._index.ntotal)
 
     def _matches_filters(
         self, metadata: dict[str, Any], filters: dict[str, Any]

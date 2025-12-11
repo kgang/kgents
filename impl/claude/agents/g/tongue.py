@@ -304,7 +304,7 @@ def evolve_tongue(
             validated=False
         )
     """
-    updates = {}
+    updates: dict[str, Any] = {}
     if version is not None:
         updates["version"] = version
     if grammar is not None:
@@ -355,7 +355,7 @@ def create_schema_tongue(
         .with_interpreter_config(
             InterpreterConfig(
                 runtime="python",
-                semantics="pure",
+                semantics={},
                 pure_functions_only=True,
                 timeout_ms=1000,
             )
@@ -406,7 +406,7 @@ def create_command_tongue(
             )
         )
         .with_interpreter_config(
-            InterpreterConfig(runtime="python", semantics="command", timeout_ms=5000)
+            InterpreterConfig(runtime="python", semantics={}, timeout_ms=5000)
         )
     )
 
@@ -449,7 +449,7 @@ def create_recursive_tongue(
         .with_interpreter_config(
             InterpreterConfig(
                 runtime="sandboxed",
-                semantics="recursive",
+                semantics={},
                 pure_functions_only=True,
                 timeout_ms=10000,
             )

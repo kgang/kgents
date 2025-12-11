@@ -17,6 +17,8 @@ All integrations are optional - the base Cortex modules work standalone,
 and these adapters enhance functionality when dependencies are available.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
@@ -156,7 +158,7 @@ def get_integration_status() -> IntegrationStatus:
 def create_enhanced_oracle(
     embedder_backend: str = "auto",
     cache_path: str | None = None,
-):
+) -> Any:
     """Create Oracle with L-gent enhanced embeddings.
 
     Args:
@@ -207,7 +209,7 @@ class PersistentWitnessStore:
     when PersistentAgent is not available (graceful degradation).
     """
 
-    def __init__(self, path: str = ".kgents/witness_store.json"):
+    def __init__(self, path: str = ".kgents/witness_store.json") -> None:
         """Initialize persistent witness store.
 
         Args:
@@ -218,7 +220,7 @@ class PersistentWitnessStore:
         # Note: PersistentAgent requires path + schema, not initial_state
         # We use simple in-memory storage with file backup for graceful degradation
 
-    def record(self, witness) -> None:
+    def record(self, witness: Any) -> None:
         """Record a witness."""
         self._in_memory.append(witness)
 
@@ -228,7 +230,7 @@ class PersistentWitnessStore:
         outcome: str | None = None,
         since: datetime | None = None,
         limit: int = 100,
-    ) -> list:
+    ) -> list[Any]:
         """Query witnesses with filters."""
         witnesses = self._in_memory.copy()
 
@@ -252,7 +254,7 @@ class PersistentWitnessStore:
         return len(self._in_memory)
 
 
-def create_persistent_analyst(store_path: str = ".kgents/witness_store.json"):
+def create_persistent_analyst(store_path: str = ".kgents/witness_store.json") -> Any:
     """Create Analyst with D-gent persistent storage.
 
     Args:
@@ -282,7 +284,7 @@ class LatticeValidatedTopology:
     validation as a fallback when lattice is unavailable.
     """
 
-    def __init__(self, base_topology):
+    def __init__(self, base_topology: Any) -> None:
         """Initialize with base topology.
 
         Args:
@@ -298,7 +300,7 @@ class LatticeValidatedTopology:
         self.base.add_agent(name, input_type, output_type)
 
     @property
-    def agents(self):
+    def agents(self) -> Any:
         """Delegate agents property to base topology."""
         return self.base.agents
 
@@ -381,7 +383,7 @@ class EnhancedTestCost:
     economic: dict[str, float] = field(default_factory=dict)
     ethical: dict[str, float] = field(default_factory=dict)
 
-    def to_gas(self):
+    def to_gas(self) -> Any:
         """Convert to B-gent Gas if available."""
         if BGENT_AVAILABLE:
             return Gas(
@@ -404,7 +406,7 @@ class BudgetedMarket:
     This wrapper uses base market allocation with optional budget tracking.
     """
 
-    def __init__(self, base_market, initial_budget: float = 10000.0):
+    def __init__(self, base_market: Any, initial_budget: float = 10000.0) -> None:
         """Initialize budgeted market.
 
         Args:
@@ -417,7 +419,7 @@ class BudgetedMarket:
         # We track budget manually for simplified integration
 
     async def allocate_with_budget(
-        self, assets: list, total_budget: float | None = None
+        self, assets: list[Any], total_budget: float | None = None
     ) -> dict[str, float]:
         """Allocate budget with B-gent accounting.
 
@@ -459,7 +461,7 @@ class TeleologicalRedTeam:
     - Mutator integration: L-gent schema-driven mutations
     """
 
-    def __init__(self, base_red_team, intent_threshold: float = 0.3):
+    def __init__(self, base_red_team: Any, intent_threshold: float = 0.3) -> None:
         """Initialize teleological red team.
 
         Args:
@@ -482,8 +484,8 @@ class TeleologicalRedTeam:
             self._mutator = Mutator(MutatorConfig(default_temperature=0.8))
 
     async def evolve_with_demon(
-        self, agent, seed_inputs: list, intent_description: str = ""
-    ) -> list:
+        self, agent: Any, seed_inputs: list[Any], intent_description: str = ""
+    ) -> list[Any]:
         """Evolve adversarial inputs with teleological filtering.
 
         Args:
@@ -544,7 +546,7 @@ class ObservedCortex:
     - Value of Information tracking
     """
 
-    def __init__(self, base_cortex):
+    def __init__(self, base_cortex: Any) -> None:
         """Initialize observed cortex.
 
         Args:
@@ -555,7 +557,7 @@ class ObservedCortex:
 
     def register_agent(
         self,
-        agent,
+        agent: Any,
         input_type: str = "Any",
         output_type: str = "Any",
         observe: bool = True,
@@ -579,7 +581,7 @@ class ObservedCortex:
         else:
             self.base.register_agent(agent, input_type, output_type)
 
-    def get_telemetry(self, agent_name: str) -> dict | None:
+    def get_telemetry(self, agent_name: str) -> dict[str, Any] | None:
         """Get telemetry for an agent.
 
         Args:
@@ -593,7 +595,7 @@ class ObservedCortex:
             return observer.get_metrics()
         return None
 
-    def get_all_telemetry(self) -> dict[str, dict]:
+    def get_all_telemetry(self) -> dict[str, dict[str, Any]]:
         """Get telemetry for all observed agents."""
         return {name: self.get_telemetry(name) or {} for name in self._observers}
 
@@ -610,7 +612,7 @@ def create_enhanced_cortex(
     use_lattice_validation: bool = True,
     use_bgent_budgeting: bool = True,
     use_egent_evolution: bool = True,
-):
+) -> Any:
     """Create fully integrated Cortex with all available enhancements.
 
     Args:
@@ -631,7 +633,7 @@ def create_enhanced_cortex(
     oracle = create_enhanced_oracle(embedder_backend)
 
     # Create enhanced topology
-    topology = TypeTopology()
+    topology: Any = TypeTopology()
     if use_lattice_validation:
         topology = LatticeValidatedTopology(topology)
 
@@ -641,7 +643,7 @@ def create_enhanced_cortex(
     witness_store = WitnessStore()
 
     # Create base Cortex
-    cortex = Cortex(oracle=oracle, topology=topology, witness_store=witness_store)
+    cortex: Any = Cortex(oracle=oracle, topology=topology, witness_store=witness_store)
 
     # Wrap with O-gent observation
     if observe_agents and OGENT_AVAILABLE:

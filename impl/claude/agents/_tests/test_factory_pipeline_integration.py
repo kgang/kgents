@@ -10,6 +10,8 @@ Tests integration between JIT, Forge, Tool, Library, and Banker agents:
 Philosophy: The factory pipeline transforms intent into executable artifacts.
 """
 
+from __future__ import annotations
+
 import pytest
 
 # F-gent imports
@@ -248,7 +250,7 @@ class TestPromiseSystem:
 
         # Mark resolving
         promise.mark_resolving()
-        assert promise.state == PromiseState.RESOLVING
+        assert promise.state == PromiseState.RESOLVING  # type: ignore[comparison-overlap]
 
         # Mark resolved
         promise.mark_resolved("actual value")
@@ -330,6 +332,7 @@ class TestSourceRegistration:
 
         await registry.register(entry)
         retrieved = await registry.get("forged-agent-001")
+        assert retrieved is not None
 
         assert retrieved.forged_by == "f-gent"
         assert retrieved.forged_from == "intent://validate-email"
@@ -369,7 +372,7 @@ class TestSourceRegistration:
         )
 
         # List only agents
-        agents = await registry.list(entity_type=EntityType.AGENT)
+        agents = await registry.list_entries(entity_type=EntityType.AGENT)
         assert len(agents) == 2
         assert all(a.entity_type == EntityType.AGENT for a in agents)
 
@@ -410,7 +413,7 @@ class TestBudgetConstrainedCompilation:
             entropy_threshold=0.5,  # High threshold
         )
 
-        jgent = JGent(config=config)
+        jgent: JGent[str] = JGent(config=config)
 
         input_data = JGentInput(
             intent="Simple computation",
@@ -505,6 +508,7 @@ class TestArtifactCrystallization:
 
         await registry.register(entry)
         retrieved = await registry.get("weather-agent-v1")
+        assert retrieved is not None
 
         assert retrieved.name == "WeatherAgent"
         assert retrieved.input_type == contract.input_type

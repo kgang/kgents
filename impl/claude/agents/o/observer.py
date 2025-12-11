@@ -31,8 +31,8 @@ from enum import Enum
 from typing import Any, Generic, Optional, Protocol, TypeVar
 
 # Type variables for generic agent typing
-A = TypeVar("A")  # Input type
-B = TypeVar("B")  # Output type
+A = TypeVar("A", contravariant=True)  # Input type (contravariant for protocols)
+B = TypeVar("B", covariant=True)  # Output type (covariant for protocols)
 T = TypeVar("T")
 
 
@@ -197,7 +197,7 @@ class BaseObserver(Observer):
     Suitable as a base class for specialized observers.
     """
 
-    def __init__(self, observer_id: str = "base_observer"):
+    def __init__(self, observer_id: str = "base_observer") -> None:
         self.observer_id = observer_id
         self._observations: list[ObservationResult] = []
         self._entropy_events: list[EntropyEvent] = []
@@ -290,7 +290,7 @@ class ObserverFunctor:
     - Side effects: Only telemetry emission
     """
 
-    def __init__(self, observer: Observer):
+    def __init__(self, observer: Observer) -> None:
         """
         Initialize the functor with an observer.
 
@@ -316,7 +316,7 @@ class ProprioceptiveWrapper(Generic[A, B]):
     The wrapper is invisible to callers and doesn't affect results.
     """
 
-    def __init__(self, inner: Agent[A, B], observer: Observer):
+    def __init__(self, inner: Agent[A, B], observer: Observer) -> None:
         """
         Wrap an agent with observation.
 
@@ -465,7 +465,7 @@ class CompositeObserver(Observer):
     (telemetry, semantic, axiological) into a single observation point.
     """
 
-    def __init__(self, observers: list[Observer] | None = None):
+    def __init__(self, observers: list[Observer] | None = None) -> None:
         """
         Initialize with optional list of child observers.
 

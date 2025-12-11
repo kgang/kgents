@@ -126,7 +126,7 @@ class Entity:
         """Euclidean distance to another entity."""
         dx = self.x - other.x
         dy = self.y - other.y
-        return (dx * dx + dy * dy) ** 0.5
+        return float((dx * dx + dy * dy) ** 0.5)
 
     def move(self, dx: int, dy: int, bounds: tuple[int, int]) -> None:
         """Move by delta, respecting bounds."""
@@ -446,15 +446,15 @@ class FieldSimulator:
 
         Returns the new synthesized entity, or None if synthesis fails.
         """
-        sources = [self.state.get_entity(id) for id in source_ids]
-        sources = [e for e in sources if e is not None]
+        sources_optional = [self.state.get_entity(id) for id in source_ids]
+        sources: list[Entity] = [e for e in sources_optional if e is not None]
 
         if len(sources) < 2:
             return None
 
         # Calculate synthesis position (centroid)
-        cx = sum(e.x for e in sources) // len(sources)
-        cy = sum(e.y for e in sources) // len(sources)
+        cx = sum([e.x for e in sources]) // len(sources)
+        cy = sum([e.y for e in sources]) // len(sources)
 
         # Create synthesized entity
         synthesized = Entity(

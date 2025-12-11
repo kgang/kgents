@@ -82,7 +82,7 @@ class Chapter:
     trace_count: int = 0
     duration_ms: int = 0
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Ensure agents_involved is a list."""
         if isinstance(self.agents_involved, set):
             self.agents_involved = list(self.agents_involved)
@@ -143,7 +143,7 @@ class Narrative:
     @property
     def title(self) -> str:
         """Get the narrative title."""
-        return self.metadata.get("title", "Untitled Narrative")
+        return str(self.metadata.get("title", "Untitled Narrative"))
 
     @property
     def total_duration_ms(self) -> int:

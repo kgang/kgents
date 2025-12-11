@@ -24,7 +24,7 @@ import hashlib
 import json
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Generic, Protocol, TypeVar, runtime_checkable
+from typing import Any, Generic, Protocol, TypeVar, cast, runtime_checkable
 
 # Import from instance_db (protocols layer)
 try:
@@ -525,7 +525,7 @@ class InstanceDBRelationalBackend(Generic[S], DataAgent[S]):
             raise StateNotFoundError(f"No state for key '{self._key}'")
 
         try:
-            return json.loads(row[self._config.state_column])
+            return cast(S, json.loads(row[self._config.state_column]))
         except json.JSONDecodeError as e:
             raise StorageError(f"Invalid JSON in database: {e}")
 
@@ -917,7 +917,7 @@ class CortexAdapter:
 def create_vector_backend(
     vector_store: IVectorStore,
     relational_store: IRelationalStore | None = None,
-    **config_kwargs,
+    **config_kwargs: Any,
 ) -> InstanceDBVectorBackend:
     """
     Create an InstanceDBVectorBackend.
@@ -942,7 +942,7 @@ def create_relational_backend(
     store: IRelationalStore,
     key: str,
     schema: type[S] | None = None,
-    **config_kwargs,
+    **config_kwargs: Any,
 ) -> InstanceDBRelationalBackend[S]:
     """
     Create an InstanceDBRelationalBackend.

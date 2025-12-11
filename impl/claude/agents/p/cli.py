@@ -18,12 +18,12 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any, Callable, Union
 
 from protocols.cli.prism import CLICapable, expose
 
 if TYPE_CHECKING:
-    pass
+    from agents.p import AnchorBasedParser, StackBalancingParser
 
 
 class ParserCLI(CLICapable):
@@ -84,6 +84,7 @@ class ParserCLI(CLICapable):
             text = input_source
 
         # Select parser
+        parser: Union[AnchorBasedParser[Any], StackBalancingParser]
         if strategy == "anchor":
             parser = AnchorBasedParser()
         elif strategy == "stack":
@@ -130,6 +131,7 @@ class ParserCLI(CLICapable):
         else:
             text = malformed
 
+        parser: Union[AnchorBasedParser[Any], StackBalancingParser]
         if strategy == "stack":
             parser = StackBalancingParser()
         else:
@@ -191,7 +193,7 @@ class ParserCLI(CLICapable):
         # Type validation
         expected_type = schema.get("type")
         if expected_type:
-            type_map = {
+            type_map: dict[str, Union[type, tuple[type, ...]]] = {
                 "object": dict,
                 "array": list,
                 "string": str,
@@ -257,10 +259,12 @@ class ParserCLI(CLICapable):
         final_result = None
 
         for chunk in chunks:
-            result = parser.parse_stream(chunk)
-            if result.value:
-                partial_values.append(result.value)
-            final_result = result
+            # parse_stream returns an Iterator, consume it to get results
+            results = list(parser.parse_stream(iter(chunk)))
+            for result in results:
+                if result.value:
+                    partial_values.append(result.value)
+                final_result = result
 
         return {
             "chunks": len(chunks),

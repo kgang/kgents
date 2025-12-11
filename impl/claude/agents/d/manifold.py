@@ -50,7 +50,7 @@ class SemanticPoint:
 
     coordinates: Any  # np.ndarray when numpy available
     label: str = ""
-    metadata: dict = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     curvature: float = 0.0  # Local curvature at this point
 
     def distance_to(self, other: "SemanticPoint", metric: str = "cosine") -> float:
@@ -60,8 +60,8 @@ class SemanticPoint:
 
         a, b = self.coordinates, other.coordinates
         if metric == "cosine":
-            norm_a = np.linalg.norm(a)
-            norm_b = np.linalg.norm(b)
+            norm_a = float(np.linalg.norm(a))
+            norm_b = float(np.linalg.norm(b))
             if norm_a == 0 or norm_b == 0:
                 return 1.0
             return 1.0 - float(np.dot(a, b) / (norm_a * norm_b))
@@ -196,7 +196,7 @@ if NUMPY_AVAILABLE:
 
             # Storage
             self._entries: dict[
-                str, Tuple[S, np.ndarray, dict]
+                str, Tuple[S, np.ndarray, dict[str, Any]]
             ] = {}  # id -> (state, embedding, metadata)
             self._embeddings: Optional[np.ndarray] = None
             self._ids: List[str] = []
@@ -214,7 +214,7 @@ if NUMPY_AVAILABLE:
             entry_id: str,
             state: S,
             embedding: np.ndarray,
-            metadata: Optional[dict] = None,
+            metadata: Optional[dict[str, Any]] = None,
         ) -> SemanticPoint:
             """
             Add state with explicit embedding to the manifold.
@@ -314,7 +314,7 @@ if NUMPY_AVAILABLE:
 
             results = []
             for idx in indices:
-                entry_id = self._ids[idx]
+                entry_id = self._ids[int(idx)]
                 dist = float(distances[idx])
                 if radius is not None and dist > radius:
                     continue
@@ -376,7 +376,7 @@ if NUMPY_AVAILABLE:
             mean_dist = float(np.mean(nearby_distances))
 
             if mean_dist > 0:
-                return min(1.0, variance / mean_dist)
+                return min(1.0, float(variance / mean_dist))
             return variance
 
         def classify_curvature(self, curvature: float) -> CurvatureRegion:
@@ -478,7 +478,7 @@ if NUMPY_AVAILABLE:
                 for dist_factor in [0.2, 0.5, 0.8]:
                     sample_point = point + direction * search_radius * dist_factor
                     distances = self._compute_distances(sample_point)
-                    min_dist = float(np.min(distances))
+                    min_dist = float(np.min(distances)) if len(distances) > 0 else 0.0
 
                     if min_dist > min_void_radius and min_dist > best_potential:
                         best_potential = min_dist
@@ -584,7 +584,7 @@ if NUMPY_AVAILABLE:
                 center = centers[i]
                 distances = [self._distance(center, emb) for emb in cluster_embeddings]
                 radius = max(distances) if distances else 0.0
-                coherence = 1.0 - (np.mean(distances) if distances else 0.0)
+                coherence = 1.0 - (float(np.mean(distances)) if distances else 0.0)
 
                 curvature = await self.curvature_at(center)
                 center_point = SemanticPoint(
@@ -617,11 +617,11 @@ if NUMPY_AVAILABLE:
                 if entry_id in self._curvature_cache:
                     curvatures.append(self._curvature_cache[entry_id])
 
-            avg_curvature = np.mean(curvatures) if curvatures else 0.0
+            avg_curvature = float(np.mean(curvatures)) if curvatures else 0.0
 
             # Coverage: rough estimate based on void potential
             if voids:
-                avg_void_potential = np.mean([v.potential for v in voids])
+                avg_void_potential = float(np.mean([v.potential for v in voids]))
                 coverage = 1.0 - avg_void_potential
             else:
                 coverage = 1.0 if len(self._entries) > 0 else 0.0
@@ -632,7 +632,7 @@ if NUMPY_AVAILABLE:
                 num_clusters=len(clusters),
                 average_curvature=float(avg_curvature),
                 void_count=len(voids),
-                coverage=coverage,
+                coverage=float(coverage),
             )
 
         # === Internal Methods ===
@@ -657,8 +657,8 @@ if NUMPY_AVAILABLE:
         def _distance(self, a: np.ndarray, b: np.ndarray) -> float:
             """Compute distance between two vectors."""
             if self.distance_metric == "cosine":
-                norm_a = np.linalg.norm(a)
-                norm_b = np.linalg.norm(b)
+                norm_a = float(np.linalg.norm(a))
+                norm_b = float(np.linalg.norm(b))
                 if norm_a == 0 or norm_b == 0:
                     return 1.0
                 return 1.0 - float(np.dot(a, b) / (norm_a * norm_b))

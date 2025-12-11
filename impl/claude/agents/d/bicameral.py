@@ -29,7 +29,7 @@ import json
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, auto
-from typing import Any, Protocol, TypeVar, runtime_checkable
+from typing import TYPE_CHECKING, Any, Protocol, TypeVar, runtime_checkable
 
 from .errors import NoosphereError
 from .infra_backends import (
@@ -39,7 +39,8 @@ from .infra_backends import (
 )
 
 # Import from instance_db (protocols layer)
-try:
+_INSTANCE_DB_AVAILABLE = False
+if TYPE_CHECKING:
     from protocols.cli.instance_db.hippocampus import (
         Hippocampus,
         ICortex,
@@ -52,18 +53,31 @@ try:
     )
     from protocols.cli.instance_db.nervous import Signal
     from protocols.cli.instance_db.synapse import Synapse
+else:
+    try:
+        from protocols.cli.instance_db.hippocampus import (
+            Hippocampus,
+            ICortex,
+            LetheEpoch,
+        )
+        from protocols.cli.instance_db.interfaces import (
+            IRelationalStore,
+            IVectorStore,
+            VectorSearchResult,
+        )
+        from protocols.cli.instance_db.nervous import Signal
+        from protocols.cli.instance_db.synapse import Synapse
 
-    _INSTANCE_DB_AVAILABLE = True
-except ImportError:
-    _INSTANCE_DB_AVAILABLE = False
-    IRelationalStore = None  # type: ignore
-    IVectorStore = None  # type: ignore
-    VectorSearchResult = None  # type: ignore
-    Hippocampus = None  # type: ignore
-    ICortex = None  # type: ignore
-    LetheEpoch = None  # type: ignore
-    Signal = None  # type: ignore
-    Synapse = None  # type: ignore
+        _INSTANCE_DB_AVAILABLE = True
+    except ImportError:
+        IRelationalStore = None  # type: ignore[misc, assignment]
+        IVectorStore = None  # type: ignore[misc, assignment]
+        VectorSearchResult = None  # type: ignore[misc, assignment]
+        Hippocampus = None  # type: ignore[misc, assignment]
+        ICortex = None  # type: ignore[misc, assignment]
+        LetheEpoch = None  # type: ignore[misc, assignment]
+        Signal = None  # type: ignore[misc, assignment]
+        Synapse = None  # type: ignore[misc, assignment]
 
 
 S = TypeVar("S")
@@ -228,7 +242,7 @@ class BicameralMemory:
         embedding_provider: IEmbeddingProvider | None = None,
         telemetry: ITelemetryLogger | None = None,
         config: BicameralConfig | None = None,
-    ):
+    ) -> None:
         """
         Initialize Bicameral Memory.
 
@@ -797,7 +811,7 @@ class BicameralCortex:
         bicameral: BicameralMemory,
         table: str = "memories",
         embed_field: str | None = None,
-    ):
+    ) -> None:
         """
         Initialize BicameralCortex.
 
@@ -870,7 +884,7 @@ def create_bicameral_memory(
     relational_store: IRelationalStore,
     vector_store: IVectorStore | None = None,
     embedding_provider: IEmbeddingProvider | None = None,
-    **config_kwargs,
+    **config_kwargs: Any,
 ) -> BicameralMemory:
     """
     Create a BicameralMemory instance.

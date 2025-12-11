@@ -30,6 +30,8 @@ from typing import Any, Callable, Generic, Protocol, TypeVar, runtime_checkable
 
 A = TypeVar("A")
 B = TypeVar("B")
+A_contra = TypeVar("A_contra", contravariant=True)
+B_co = TypeVar("B_co", covariant=True)
 
 
 class MessagePriority(Enum):
@@ -205,10 +207,10 @@ class PassthroughInterceptor(BaseInterceptor):
 
 
 @runtime_checkable
-class Invocable(Protocol[A, B]):
+class Invocable(Protocol[A_contra, B_co]):
     """Protocol for anything that can be invoked."""
 
-    async def invoke(self, input: A) -> B: ...
+    async def invoke(self, input: A_contra) -> B_co: ...
 
 
 class AgentRegistry:

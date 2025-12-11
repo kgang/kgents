@@ -5,6 +5,10 @@ Tests for G-gent integration with L-gent catalog.
 Tests tongue registration, discovery, and compatibility checking.
 """
 
+from __future__ import annotations
+
+from dataclasses import replace
+
 import pytest
 from agents.g import GrammarLevel, create_command_tongue, create_schema_tongue
 from agents.g.catalog_integration import (
@@ -104,11 +108,17 @@ async def test_find_tongue_by_domain() -> None:
     # Find by domain
     calendar_results = await find_tongue(registry, domain="Calendar")
     assert len(calendar_results) > 0
-    assert any("calendar" in e.tongue_domain.lower() for e in calendar_results)
+    assert any(
+        e.tongue_domain is not None and "calendar" in e.tongue_domain.lower()
+        for e in calendar_results
+    )
 
     database_results = await find_tongue(registry, domain="Database")
     assert len(database_results) > 0
-    assert any("database" in e.tongue_domain.lower() for e in database_results)
+    assert any(
+        e.tongue_domain is not None and "database" in e.tongue_domain.lower()
+        for e in database_results
+    )
 
 
 @pytest.mark.asyncio
@@ -122,7 +132,7 @@ async def test_find_tongue_by_constraints() -> None:
         domain="Calendar",
         grammar='<verb> ::= "CHECK" | "ADD"',
     )
-    safe_tongue = safe_tongue.__replace__(constraints=("No deletes", "No overwrites"))
+    safe_tongue = replace(safe_tongue, constraints=("No deletes", "No overwrites"))
 
     full_tongue = create_command_tongue(
         name="FullCalendar",
@@ -228,14 +238,14 @@ async def test_check_compatibility_constraint_conflicts() -> None:
         domain="Operations",
         grammar='<verb> ::= "READ"',
     )
-    tongue_a = tongue_a.__replace__(constraints=("no deletes",))
+    tongue_a = replace(tongue_a, constraints=("no deletes",))
 
     tongue_b = create_command_tongue(
         name="FullOps",
         domain="Operations",
         grammar='<verb> ::= "READ" | "DELETE"',
     )
-    tongue_b = tongue_b.__replace__(constraints=("allows deletes",))
+    tongue_b = replace(tongue_b, constraints=("allows deletes",))
 
     compat = await check_compatibility(tongue_a, tongue_b)
 
@@ -308,6 +318,7 @@ async def test_update_tongue_metrics() -> None:
 
     # Initial state
     entry = await registry.get(entry_id)
+    assert entry is not None
     assert entry.usage_count == 0
     assert entry.success_rate == 1.0
 
@@ -315,6 +326,7 @@ async def test_update_tongue_metrics() -> None:
     await update_tongue_metrics(tongue, registry, success=True)
 
     entry = await registry.get(entry_id)
+    assert entry is not None
     assert entry.usage_count == 1
     assert entry.success_rate == 1.0
 
@@ -322,6 +334,7 @@ async def test_update_tongue_metrics() -> None:
     await update_tongue_metrics(tongue, registry, success=False, error="Parse error")
 
     entry = await registry.get(entry_id)
+    assert entry is not None
     assert entry.usage_count == 2
     assert entry.success_rate < 1.0  # Should have decreased
     assert entry.last_error == "Parse error"
@@ -371,4 +384,5 @@ async def test_full_workflow() -> None:
     # Verify metrics updated
     entry_id = "tongue:calendarfull:1.0.0"
     entry = await registry.get(entry_id)
+    assert entry is not None
     assert entry.usage_count == 1

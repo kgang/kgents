@@ -12,6 +12,8 @@ This phase:
 From spec/f-gents/forge.md Phase 4
 """
 
+from __future__ import annotations
+
 import sys
 from dataclasses import dataclass, field
 from enum import Enum
@@ -206,6 +208,10 @@ def _execute_in_sandbox(source_code: str, test_input: Any, agent_name: str) -> A
 
         # Instantiate agent
         agent_class = restricted_globals[agent_name]
+        if not callable(agent_class):
+            raise SandboxExecutionError(
+                f"'{agent_name}' is not callable (not a class or constructor)"
+            )
         agent_instance = agent_class()
 
         # Verify agent has invoke method

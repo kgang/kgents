@@ -4,6 +4,8 @@ Tests for Syntax Tax: Chomsky-Based Pricing
 B×G Phase 3 - Structural Economics integration.
 """
 
+from __future__ import annotations
+
 import pytest
 from agents.b.syntax_tax import (
     ChomskyLevel,
@@ -110,20 +112,20 @@ class TestGrammarClassifier:
 
     # Regular (Type 3) grammars
 
-    def test_classify_simple_regex(self, classifier) -> None:
+    def test_classify_simple_regex(self, classifier: GrammarClassifier) -> None:
         """Simple regex with quantifiers is classified as context-free."""
         grammar = r"[a-z]+"
         analysis = classifier.classify(grammar)
         # The + quantifier triggers context-free detection
         assert analysis.level in (ChomskyLevel.REGULAR, ChomskyLevel.CONTEXT_FREE)
 
-    def test_classify_simple_pattern(self, classifier) -> None:
+    def test_classify_simple_pattern(self, classifier: GrammarClassifier) -> None:
         """Simple pattern without BNF is regular."""
         grammar = "VERB NOUN"
         analysis = classifier.classify(grammar)
         assert analysis.level == ChomskyLevel.REGULAR
 
-    def test_classify_alternation_only(self, classifier) -> None:
+    def test_classify_alternation_only(self, classifier: GrammarClassifier) -> None:
         """Simple alternation is regular."""
         grammar = "GET | POST | PUT | DELETE"
         analysis = classifier.classify(grammar)
@@ -132,7 +134,7 @@ class TestGrammarClassifier:
 
     # Context-Free (Type 2) grammars
 
-    def test_classify_bnf_grammar(self, classifier) -> None:
+    def test_classify_bnf_grammar(self, classifier: GrammarClassifier) -> None:
         """BNF grammar is context-free."""
         grammar = """
         command ::= verb noun
@@ -142,7 +144,7 @@ class TestGrammarClassifier:
         analysis = classifier.classify(grammar)
         assert analysis.level == ChomskyLevel.CONTEXT_FREE
 
-    def test_classify_recursive_grammar(self, classifier) -> None:
+    def test_classify_recursive_grammar(self, classifier: GrammarClassifier) -> None:
         """Recursive grammar is context-free."""
         grammar = """
         expr ::= term | expr "+" term
@@ -152,7 +154,7 @@ class TestGrammarClassifier:
         assert analysis.level == ChomskyLevel.CONTEXT_FREE
         assert GrammarFeature.RECURSIVE_RULE in analysis.features
 
-    def test_classify_nested_structure(self, classifier) -> None:
+    def test_classify_nested_structure(self, classifier: GrammarClassifier) -> None:
         """Nested structures are context-free."""
         grammar = 'list ::= "[" items "]"'
         analysis = classifier.classify(grammar)
@@ -165,14 +167,14 @@ class TestGrammarClassifier:
 
     # Context-Sensitive (Type 1) grammars
 
-    def test_classify_context_keyword(self, classifier) -> None:
+    def test_classify_context_keyword(self, classifier: GrammarClassifier) -> None:
         """Grammar with 'context' keyword is context-sensitive."""
         grammar = "context-dependent rule: A B → A C B"
         analysis = classifier.classify(grammar)
         assert analysis.level == ChomskyLevel.CONTEXT_SENSITIVE
         assert GrammarFeature.CONTEXT_DEPENDENT in analysis.features
 
-    def test_classify_attribute_grammar(self, classifier) -> None:
+    def test_classify_attribute_grammar(self, classifier: GrammarClassifier) -> None:
         """Grammar with attributes is context-sensitive."""
         grammar = "@attribute inherited value"
         analysis = classifier.classify(grammar)
@@ -180,27 +182,27 @@ class TestGrammarClassifier:
 
     # Turing-Complete (Type 0) grammars
 
-    def test_classify_with_eval(self, classifier) -> None:
+    def test_classify_with_eval(self, classifier: GrammarClassifier) -> None:
         """Grammar with eval is Turing-complete."""
         grammar = "expr ::= eval(code)"
         analysis = classifier.classify(grammar)
         assert analysis.level == ChomskyLevel.TURING_COMPLETE
         assert GrammarFeature.ARBITRARY_COMPUTATION in analysis.features
 
-    def test_classify_with_loop(self, classifier) -> None:
+    def test_classify_with_loop(self, classifier: GrammarClassifier) -> None:
         """Grammar with loop is Turing-complete."""
         grammar = "program ::= while condition do statement"
         analysis = classifier.classify(grammar)
         assert analysis.level == ChomskyLevel.TURING_COMPLETE
         assert GrammarFeature.LOOP_CONSTRUCT in analysis.features
 
-    def test_classify_recursive_keyword(self, classifier) -> None:
+    def test_classify_recursive_keyword(self, classifier: GrammarClassifier) -> None:
         """Grammar with 'recursive' keyword is Turing-complete."""
         grammar = "recursive function definition"
         analysis = classifier.classify(grammar)
         assert analysis.level == ChomskyLevel.TURING_COMPLETE
 
-    def test_classify_unbounded(self, classifier) -> None:
+    def test_classify_unbounded(self, classifier: GrammarClassifier) -> None:
         """Grammar marked unbounded is Turing-complete."""
         grammar = "unbounded computation"
         analysis = classifier.classify(grammar)
@@ -208,7 +210,7 @@ class TestGrammarClassifier:
 
     # Confidence levels
 
-    def test_confidence_varies(self, classifier) -> None:
+    def test_confidence_varies(self, classifier: GrammarClassifier) -> None:
         """Confidence varies by grammar clarity."""
         simple = classifier.classify("[a-z]+")
         complex_tc = classifier.classify("eval(x)")
@@ -233,35 +235,35 @@ class TestSyntaxTaxSchedule:
         """Create default schedule."""
         return SyntaxTaxSchedule()
 
-    def test_default_costs(self, schedule) -> None:
+    def test_default_costs(self, schedule: SyntaxTaxSchedule) -> None:
         """Default costs are set correctly."""
         assert schedule.regular_cost == 0.001
         assert schedule.context_free_cost == 0.003
         assert schedule.context_sensitive_cost == 0.010
         assert schedule.turing_complete_cost == 0.030
 
-    def test_get_cost_per_token(self, schedule) -> None:
+    def test_get_cost_per_token(self, schedule: SyntaxTaxSchedule) -> None:
         """Cost per token lookup works."""
         assert schedule.get_cost_per_token(ChomskyLevel.REGULAR) == 0.001
         assert schedule.get_cost_per_token(ChomskyLevel.CONTEXT_FREE) == 0.003
         assert schedule.get_cost_per_token(ChomskyLevel.CONTEXT_SENSITIVE) == 0.010
         assert schedule.get_cost_per_token(ChomskyLevel.TURING_COMPLETE) == 0.030
 
-    def test_gas_limits(self, schedule) -> None:
+    def test_gas_limits(self, schedule: SyntaxTaxSchedule) -> None:
         """Gas limits are set for high-risk levels."""
         assert schedule.get_gas_limit(ChomskyLevel.REGULAR) is None
         assert schedule.get_gas_limit(ChomskyLevel.CONTEXT_FREE) is None
         assert schedule.get_gas_limit(ChomskyLevel.CONTEXT_SENSITIVE) == 500_000
         assert schedule.get_gas_limit(ChomskyLevel.TURING_COMPLETE) == 100_000
 
-    def test_escrow_multipliers(self, schedule) -> None:
+    def test_escrow_multipliers(self, schedule: SyntaxTaxSchedule) -> None:
         """Escrow multipliers are set correctly."""
         assert schedule.get_escrow_multiplier(ChomskyLevel.REGULAR) == 1.0
         assert schedule.get_escrow_multiplier(ChomskyLevel.CONTEXT_FREE) == 1.0
         assert schedule.get_escrow_multiplier(ChomskyLevel.CONTEXT_SENSITIVE) == 1.5
         assert schedule.get_escrow_multiplier(ChomskyLevel.TURING_COMPLETE) == 2.0
 
-    def test_calculate_cost_regular(self, schedule) -> None:
+    def test_calculate_cost_regular(self, schedule: SyntaxTaxSchedule) -> None:
         """Regular grammar cost calculation."""
         gas, limit, escrow = schedule.calculate_cost(ChomskyLevel.REGULAR, 1000)
 
@@ -270,7 +272,7 @@ class TestSyntaxTaxSchedule:
         assert limit is None
         assert escrow == 0
 
-    def test_calculate_cost_context_free(self, schedule) -> None:
+    def test_calculate_cost_context_free(self, schedule: SyntaxTaxSchedule) -> None:
         """Context-free grammar cost calculation."""
         gas, limit, escrow = schedule.calculate_cost(ChomskyLevel.CONTEXT_FREE, 1000)
 
@@ -279,7 +281,7 @@ class TestSyntaxTaxSchedule:
         assert limit is None
         assert escrow == 0
 
-    def test_calculate_cost_turing_complete(self, schedule) -> None:
+    def test_calculate_cost_turing_complete(self, schedule: SyntaxTaxSchedule) -> None:
         """Turing-complete grammar cost calculation with escrow."""
         gas, limit, escrow = schedule.calculate_cost(ChomskyLevel.TURING_COMPLETE, 1000)
 
@@ -319,7 +321,7 @@ class TestSyntaxTaxBudget:
         budget.set_agent_budget("agent3", 5_000)  # Medium - can afford some downgrades
         return budget
 
-    def test_evaluate_regular_grammar(self, budget) -> None:
+    def test_evaluate_regular_grammar(self, budget: SyntaxTaxBudget) -> None:
         """Simple grammar is classified and approved."""
         # Use a simple pattern without regex quantifiers
         decision = budget.evaluate_grammar("agent1", "VERB NOUN", 1000)
@@ -329,7 +331,7 @@ class TestSyntaxTaxBudget:
         assert decision.gas_limit is None
         assert decision.escrow_required == 0
 
-    def test_evaluate_context_free_grammar(self, budget) -> None:
+    def test_evaluate_context_free_grammar(self, budget: SyntaxTaxBudget) -> None:
         """Context-free grammar evaluation succeeds."""
         grammar = """
         expr ::= term | expr "+" term
@@ -339,7 +341,7 @@ class TestSyntaxTaxBudget:
         assert decision.approved is True
         assert decision.level == ChomskyLevel.CONTEXT_FREE
 
-    def test_evaluate_turing_complete_grammar(self, budget) -> None:
+    def test_evaluate_turing_complete_grammar(self, budget: SyntaxTaxBudget) -> None:
         """Turing-complete grammar requires escrow."""
         grammar = "eval(code)"
         decision = budget.evaluate_grammar("agent1", grammar, 1000)
@@ -349,7 +351,7 @@ class TestSyntaxTaxBudget:
         assert decision.gas_limit == 100_000
         assert decision.escrow_required > 0
 
-    def test_insufficient_budget_rejected(self, budget) -> None:
+    def test_insufficient_budget_rejected(self, budget: SyntaxTaxBudget) -> None:
         """Insufficient budget is rejected."""
         grammar = "eval(code)"
         decision = budget.evaluate_grammar("agent2", grammar, 1000)
@@ -357,7 +359,9 @@ class TestSyntaxTaxBudget:
         assert decision.approved is False
         assert "Insufficient" in decision.reason
 
-    def test_downgrade_available_when_insufficient(self, budget) -> None:
+    def test_downgrade_available_when_insufficient(
+        self, budget: SyntaxTaxBudget
+    ) -> None:
         """Downgrade is suggested when budget insufficient for Turing but can afford cheaper."""
         grammar = "eval(code)"
         # agent3 has 5000 tokens - can afford regular (1000) or context-free (3000) but not Turing (90000)
@@ -369,7 +373,7 @@ class TestSyntaxTaxBudget:
         # Downgrade should be cheaper (higher type number = cheaper)
         assert decision.downgrade_level.value > ChomskyLevel.TURING_COMPLETE.value
 
-    def test_tier_summary(self, budget) -> None:
+    def test_tier_summary(self, budget: SyntaxTaxBudget) -> None:
         """Tier summary provides all tiers."""
         summary = budget.get_tier_summary()
 
@@ -398,7 +402,7 @@ class TestEscrow:
         return budget
 
     @pytest.mark.asyncio
-    async def test_hold_escrow(self, budget) -> None:
+    async def test_hold_escrow(self, budget: SyntaxTaxBudget) -> None:
         """Escrow can be held."""
         lease = await budget.hold_escrow("agent1", 5000, ChomskyLevel.TURING_COMPLETE)
 
@@ -410,7 +414,7 @@ class TestEscrow:
         assert lease.forfeited is False
 
     @pytest.mark.asyncio
-    async def test_release_escrow(self, budget) -> None:
+    async def test_release_escrow(self, budget: SyntaxTaxBudget) -> None:
         """Escrow can be released on success."""
         lease = await budget.hold_escrow("agent1", 5000, ChomskyLevel.TURING_COMPLETE)
 
@@ -419,10 +423,11 @@ class TestEscrow:
 
         # Verify released
         stored_lease = budget.get_escrow(lease.id)
+        assert stored_lease is not None
         assert stored_lease.released is True
 
     @pytest.mark.asyncio
-    async def test_forfeit_escrow(self, budget) -> None:
+    async def test_forfeit_escrow(self, budget: SyntaxTaxBudget) -> None:
         """Escrow can be forfeited on failure."""
         lease = await budget.hold_escrow("agent1", 5000, ChomskyLevel.TURING_COMPLETE)
 
@@ -431,10 +436,11 @@ class TestEscrow:
 
         # Verify forfeited
         stored_lease = budget.get_escrow(lease.id)
+        assert stored_lease is not None
         assert stored_lease.forfeited is True
 
     @pytest.mark.asyncio
-    async def test_cannot_release_twice(self, budget) -> None:
+    async def test_cannot_release_twice(self, budget: SyntaxTaxBudget) -> None:
         """Cannot release escrow twice."""
         lease = await budget.hold_escrow("agent1", 5000, ChomskyLevel.TURING_COMPLETE)
 
@@ -444,7 +450,7 @@ class TestEscrow:
         assert result is False
 
     @pytest.mark.asyncio
-    async def test_cannot_forfeit_after_release(self, budget) -> None:
+    async def test_cannot_forfeit_after_release(self, budget: SyntaxTaxBudget) -> None:
         """Cannot forfeit after release."""
         lease = await budget.hold_escrow("agent1", 5000, ChomskyLevel.TURING_COMPLETE)
 
@@ -471,11 +477,11 @@ class TestDowngradeNegotiator:
         return budget
 
     @pytest.fixture
-    def negotiator(self, budget):
+    def negotiator(self, budget: SyntaxTaxBudget) -> DowngradeNegotiator:
         """Create negotiator."""
         return DowngradeNegotiator(budget)
 
-    def test_propose_downgrade(self, negotiator) -> None:
+    def test_propose_downgrade(self, negotiator: DowngradeNegotiator) -> None:
         """Downgrade proposal is generated."""
         # Explicitly request downgrade from TURING to CONTEXT_FREE
         proposal = negotiator.propose_downgrade(
@@ -493,7 +499,7 @@ class TestDowngradeNegotiator:
         assert len(proposal.constraints_to_add) > 0
         assert len(proposal.capability_loss) > 0
 
-    def test_propose_finds_affordable(self, negotiator) -> None:
+    def test_propose_finds_affordable(self, negotiator: DowngradeNegotiator) -> None:
         """Proposal finds affordable level when not specified."""
         proposal = negotiator.propose_downgrade(
             "agent1",
@@ -506,7 +512,9 @@ class TestDowngradeNegotiator:
         # In Chomsky hierarchy, higher value = simpler = cheaper
         assert proposal.proposed_level.value > proposal.original_level.value
 
-    def test_no_downgrade_when_same_level(self, negotiator) -> None:
+    def test_no_downgrade_when_same_level(
+        self, negotiator: DowngradeNegotiator
+    ) -> None:
         """No proposal when target is same as current."""
         proposal = negotiator.propose_downgrade(
             "agent1",
@@ -517,7 +525,9 @@ class TestDowngradeNegotiator:
 
         assert proposal is None
 
-    def test_no_downgrade_when_target_higher_complexity(self, negotiator) -> None:
+    def test_no_downgrade_when_target_higher_complexity(
+        self, negotiator: DowngradeNegotiator
+    ) -> None:
         """No proposal when target is higher complexity (lower value = more complex)."""
         # Trying to "downgrade" from REGULAR (3) to CONTEXT_FREE (2) is actually an upgrade
         # because CONTEXT_FREE is more complex (lower value)
@@ -531,7 +541,7 @@ class TestDowngradeNegotiator:
         # This should return None because you can't "downgrade" to a more complex level
         assert proposal is None
 
-    def test_savings_calculation(self, negotiator) -> None:
+    def test_savings_calculation(self, negotiator: DowngradeNegotiator) -> None:
         """Savings are calculated correctly."""
         proposal = negotiator.propose_downgrade(
             "agent1",
@@ -617,7 +627,7 @@ class TestIntegration:
         budget.set_agent_budget("medium_agent", 5_000)  # Can afford downgrades
         return budget
 
-    def test_rich_agent_can_use_any_grammar(self, budget) -> None:
+    def test_rich_agent_can_use_any_grammar(self, budget: SyntaxTaxBudget) -> None:
         """Rich agent can afford any grammar level."""
         grammars = [
             "VERB NOUN",  # Regular (simple pattern)
@@ -630,7 +640,9 @@ class TestIntegration:
             decision = budget.evaluate_grammar("rich_agent", grammar, 1000)
             assert decision.approved is True, f"Failed for: {grammar}"
 
-    def test_poor_agent_gets_downgrade_suggestions(self, budget) -> None:
+    def test_poor_agent_gets_downgrade_suggestions(
+        self, budget: SyntaxTaxBudget
+    ) -> None:
         """Poor agent gets downgrade suggestions for expensive grammars."""
         # medium_agent can afford cheaper grammars, so will get downgrade suggestion
         decision = budget.evaluate_grammar("medium_agent", "eval(code)", 1000)
@@ -638,7 +650,7 @@ class TestIntegration:
         assert decision.approved is False
         assert decision.downgrade_available is True
 
-    def test_cost_proportional_to_complexity(self, budget) -> None:
+    def test_cost_proportional_to_complexity(self, budget: SyntaxTaxBudget) -> None:
         """Higher Chomsky complexity = higher cost."""
         grammars_by_level = [
             ("VERB NOUN", ChomskyLevel.REGULAR),  # Simple pattern
@@ -656,7 +668,7 @@ class TestIntegration:
         assert costs[0] < costs[1] < costs[2]
 
     @pytest.mark.asyncio
-    async def test_full_escrow_workflow(self, budget) -> None:
+    async def test_full_escrow_workflow(self, budget: SyntaxTaxBudget) -> None:
         """Full escrow workflow: hold → execute → release."""
         # Evaluate Turing-complete grammar
         decision = budget.evaluate_grammar("rich_agent", "eval(code)", 1000)
@@ -677,6 +689,7 @@ class TestIntegration:
 
         # Verify escrow state
         stored = budget.get_escrow(lease.id)
+        assert stored is not None
         assert stored.released is True
         assert stored.forfeited is False
 
@@ -694,24 +707,24 @@ class TestEdgeCases:
         """Create classifier."""
         return GrammarClassifier()
 
-    def test_empty_grammar(self, classifier) -> None:
+    def test_empty_grammar(self, classifier: GrammarClassifier) -> None:
         """Empty grammar is classified as regular."""
         analysis = classifier.classify("")
         assert analysis.level == ChomskyLevel.REGULAR
         assert analysis.confidence < 1.0
 
-    def test_whitespace_only_grammar(self, classifier) -> None:
+    def test_whitespace_only_grammar(self, classifier: GrammarClassifier) -> None:
         """Whitespace-only grammar is classified as regular."""
         analysis = classifier.classify("   \n\t  ")
         assert analysis.level == ChomskyLevel.REGULAR
 
-    def test_unicode_grammar(self, classifier) -> None:
+    def test_unicode_grammar(self, classifier: GrammarClassifier) -> None:
         """Unicode in grammar doesn't break classification."""
         analysis = classifier.classify("命令 ::= 動詞 名詞")
         # Should parse without error
         assert analysis.level in list(ChomskyLevel)
 
-    def test_very_long_grammar(self, classifier) -> None:
+    def test_very_long_grammar(self, classifier: GrammarClassifier) -> None:
         """Long grammar can be classified."""
         # Create a long grammar
         rules = [f"rule{i} ::= 'token{i}'" for i in range(100)]

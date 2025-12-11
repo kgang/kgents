@@ -328,7 +328,7 @@ async def validate_tongue_comprehensive(tongue: Tongue) -> ValidationReport:
     Returns:
         ValidationReport with detailed results
     """
-    errors = []
+    errors: list[str] = []
 
     # Check unambiguous
     is_unambiguous, ambiguities = await verify_unambiguous(tongue.grammar)

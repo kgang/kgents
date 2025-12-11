@@ -10,6 +10,8 @@ Tests integration between Parser agents and other agents:
 Philosophy: Parsers are the syntactic membrane of the system.
 """
 
+from __future__ import annotations
+
 from typing import Any
 
 # F-gent imports
@@ -118,7 +120,7 @@ class TestParserGrammarIntegration:
     def test_parser_fallback_chain_with_tongue_context(self) -> None:
         """Test fallback parser chain uses tongue-aware strategies."""
         # Create parser chain
-        parser = FallbackParser(
+        parser: FallbackParser[Any] = FallbackParser(
             StackBalancingParser(),
             AnchorBasedParser(anchor="###RESULT:"),
             ProbabilisticASTParser(config=ParserConfig()),
@@ -215,7 +217,7 @@ class TestParserErrorRecovery:
 
     def test_anchor_parser_extracts_labeled_content(self) -> None:
         """Test anchor parser extracts content after markers."""
-        parser = AnchorBasedParser(anchor="###RESULT:")
+        parser: AnchorBasedParser[list[str]] = AnchorBasedParser(anchor="###RESULT:")
 
         text = """
         Some preamble text here.
@@ -225,6 +227,7 @@ class TestParserErrorRecovery:
 
         result = parser.parse(text)
         assert result.success
+        assert result.value is not None
         assert "The actual result value" in result.value[0]
 
     def test_stack_balancing_repairs_brackets(self) -> None:
@@ -241,9 +244,11 @@ class TestParserErrorRecovery:
         json_parser = ProbabilisticASTParser(config=ParserConfig())
 
         # Second parser that extracts anchored content
-        anchor_parser = AnchorBasedParser(anchor="RESULT:")
+        anchor_parser: AnchorBasedParser[list[str]] = AnchorBasedParser(
+            anchor="RESULT:"
+        )
 
-        fallback = FallbackParser(
+        fallback: FallbackParser[Any] = FallbackParser(
             json_parser,
             anchor_parser,
             config=ParserConfig(min_confidence=0.3),
@@ -276,6 +281,7 @@ class TestParserStreamProcessing:
         result = parser.parse(full_doc)
 
         assert result.success
+        assert result.value is not None
         assert result.value.value["meta"]["count"] == 3
 
     def test_parser_tracks_stream_position(self) -> None:
@@ -301,15 +307,15 @@ class TestParserComposition:
             return "###" in text
 
         json_parser = ProbabilisticASTParser(config=ParserConfig())
-        anchor_parser = AnchorBasedParser(anchor="###")
+        anchor_parser: AnchorBasedParser[list[str]] = AnchorBasedParser(anchor="###")
 
         # SwitchParser takes a routes dict mapping predicates to parsers
-        routes = {
+        routes: dict[Any, Any] = {
             is_json: json_parser,
             is_anchored: anchor_parser,
         }
 
-        switch = SwitchParser(routes=routes, config=ParserConfig())
+        switch: SwitchParser[Any] = SwitchParser(routes=routes, config=ParserConfig())
 
         # JSON input -> JSON parser
         json_result = switch.parse('{"type": "json"}')

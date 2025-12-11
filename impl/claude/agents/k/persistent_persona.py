@@ -8,8 +8,10 @@ Wraps PersonaState with PersistentAgent to enable:
 - Pattern learning persistence
 """
 
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from agents.d import PersistentAgent
 
@@ -122,7 +124,7 @@ class PersistentPersonaAgent(KgentAgent):
         self,
         category: str,
         key: str,
-        value: any,
+        value: Any,
         confidence: float = 0.9,
         source: str = "explicit",
     ) -> None:
