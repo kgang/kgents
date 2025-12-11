@@ -220,6 +220,7 @@ class UnifiedMemory(Generic[S]):
             # Create entry if needed
             await self.save(state)
 
+        assert self._current_entry is not None  # Set by save() above
         entry_id = self._current_entry.id
 
         # Add to concept index
@@ -473,7 +474,7 @@ class UnifiedMemory(Generic[S]):
         visited = set()
         edges = []
 
-        def dfs(node: str, depth: int):
+        def dfs(node: str, depth: int) -> None:
             if depth > max_depth or node in visited:
                 return
             visited.add(node)
@@ -584,7 +585,7 @@ class UnifiedMemory(Generic[S]):
 class LensedUnifiedMemory(Generic[A]):
     """UnifiedMemory focused through a lens."""
 
-    def __init__(self, parent: UnifiedMemory, lens: Lens):
+    def __init__(self, parent: "UnifiedMemory[Any]", lens: "Lens[Any, A]"):
         self._parent = parent
         self._lens = lens
 
@@ -606,7 +607,7 @@ class LensedUnifiedMemory(Generic[A]):
 def create_unified_memory(
     underlying: DataAgent[S],
     enable_all: bool = False,
-    **kwargs,
+    **kwargs: Any,
 ) -> UnifiedMemory[S]:
     """
     Create UnifiedMemory with convenient defaults.

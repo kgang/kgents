@@ -27,10 +27,10 @@ class WitnessReport:
 
     observer_id: str
     confidence: float  # 0.0 to 1.0
-    context: dict = field(default_factory=dict)  # Ambient conditions
+    context: dict[str, Any] = field(default_factory=dict)  # Ambient conditions
     anomaly_score: float = 0.0  # How unexpected was this event?
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not 0.0 <= self.confidence <= 1.0:
             raise ValueError(f"Confidence must be 0.0-1.0, got {self.confidence}")
 
@@ -140,7 +140,7 @@ class StreamAgent(Generic[E, S]):
         This method exists for DataAgent protocol compatibility.
         """
         # Create synthetic "state_set" event
-        event = {"__synthetic__": "state_set", "value": state}  # type: ignore
+        event = {"__synthetic__": "state_set", "value": state}
         await self.append(
             event,  # type: ignore
             WitnessReport(

@@ -297,7 +297,7 @@ class RedisAgent(Generic[S], DataAgent[S]):
     def _serialize(self, state: S) -> Any:
         """Serialize state to JSON-compatible structure."""
 
-        def enum_serializer(obj):
+        def enum_serializer(obj: Any) -> Any:
             if isinstance(obj, Enum):
                 return obj.value
             return obj
@@ -305,7 +305,8 @@ class RedisAgent(Generic[S], DataAgent[S]):
         try:
             if is_dataclass(state):
                 return asdict(
-                    state, dict_factory=lambda x: {k: enum_serializer(v) for k, v in x}
+                    state,  # type: ignore[arg-type]
+                    dict_factory=lambda x: {k: enum_serializer(v) for k, v in x},
                 )
             return state
         except Exception as e:
@@ -320,7 +321,7 @@ class RedisAgent(Generic[S], DataAgent[S]):
         except Exception as e:
             raise StateCorruptionError(f"Cannot deserialize to {self.schema}: {e}")
 
-    def _deserialize_dataclass(self, cls: Type, data: dict) -> Any:
+    def _deserialize_dataclass(self, cls: Type[Any], data: dict[str, Any]) -> Any:
         """Recursively deserialize a dataclass and its nested fields."""
         if not isinstance(data, dict):
             return data
@@ -330,7 +331,7 @@ class RedisAgent(Generic[S], DataAgent[S]):
         except Exception:
             type_hints = {}
 
-        kwargs = {}
+        kwargs: dict[str, Any] = {}
         for field_name, field_value in data.items():
             field_type = type_hints.get(field_name)
 
@@ -367,12 +368,17 @@ class RedisAgent(Generic[S], DataAgent[S]):
 
         return cls(**kwargs)
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> "RedisAgent[S]":
         """Async context manager entry."""
         await self.connect()
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: Any,
+    ) -> None:
         """Async context manager exit."""
         await self.close()
 

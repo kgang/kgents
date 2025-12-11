@@ -265,7 +265,7 @@ cd impl/claude && uv run mypy --strict --explicit-package-bases agents/ bootstra
 
 ## Tech Debt Inventory
 
-**Mypy**: 7,516 strict errors baselined in `mypy-baseline.txt`. CI enforces **no new errors** on push.
+**Mypy**: 3,880 strict errors baselined in `mypy-baseline.txt` (reduced from 7,516). CI enforces **no new errors** on push.
 ```bash
 # Check for new errors (CI blocks on any new errors)
 cd impl/claude && uv run mypy --strict --explicit-package-bases agents/ bootstrap/ runtime/ 2>&1 | uv run mypy-baseline filter

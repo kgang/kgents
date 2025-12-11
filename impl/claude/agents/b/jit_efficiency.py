@@ -336,7 +336,7 @@ class RegexJITCompiler:
     Good for: Fixed formats, bidding languages, simple commands.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         import re
 
         self._re = re
@@ -397,7 +397,7 @@ class JumpTableJITCompiler:
     Good for: Bidding languages with fixed field widths.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._cache: dict[str, CompiledArtifact] = {}
 
     def compile(
@@ -471,7 +471,7 @@ class BytecodeJITCompiler:
     Good for: Context-free grammars with moderate complexity.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._cache: dict[str, CompiledArtifact] = {}
 
     def compile(
@@ -529,7 +529,7 @@ class JITCompilerRegistry:
     Provides access to appropriate compiler for each target.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._compilers: dict[JITCompilationTarget, JITCompilerProtocol] = {
             JITCompilationTarget.REGEX: RegexJITCompiler(),
             JITCompilationTarget.JUMP_TABLE: JumpTableJITCompiler(),
@@ -592,7 +592,7 @@ class LatencyBenchmark:
     def measure_single(
         self,
         parse_fn: Callable[[str], Any],
-        execute_fn: Callable[[Any, dict], Any] | None,
+        execute_fn: Callable[[Any, dict[str, Any]], Any] | None,
         test_input: str,
         context: dict[str, Any] | None = None,
     ) -> LatencyMeasurement:
@@ -626,7 +626,7 @@ class LatencyBenchmark:
         self,
         parse_fn: Callable[[str], Any],
         test_inputs: list[str],
-        execute_fn: Callable[[Any, dict], Any] | None = None,
+        execute_fn: Callable[[Any, dict[str, Any]], Any] | None = None,
     ) -> list[LatencyMeasurement]:
         """
         Benchmark a parser over multiple inputs.
@@ -659,8 +659,8 @@ class LatencyBenchmark:
         jit_parse: Callable[[str], Any],
         test_inputs: list[str],
         target: JITCompilationTarget,
-        baseline_execute: Callable[[Any, dict], Any] | None = None,
-        jit_execute: Callable[[Any, dict], Any] | None = None,
+        baseline_execute: Callable[[Any, dict[str, Any]], Any] | None = None,
+        jit_execute: Callable[[Any, dict[str, Any]], Any] | None = None,
     ) -> LatencyReport:
         """
         Compare baseline and JIT parsers, generate report.
@@ -702,7 +702,7 @@ class ProfitShare:
     j_gent_share: float = 0.30
     system_share: float = 0.40
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Validate non-negative shares
         if self.g_gent_share < 0 or self.j_gent_share < 0 or self.system_share < 0:
             raise ValueError("Profit shares cannot be negative")

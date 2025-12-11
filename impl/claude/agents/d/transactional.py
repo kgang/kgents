@@ -11,6 +11,7 @@ Enables time-travel debugging via savepoints.
 """
 
 import uuid
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -59,7 +60,7 @@ class Savepoint(Generic[S]):
     created_at: datetime
     metadata: Dict[str, Any] = field(default_factory=dict)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.id:
             self.id = str(uuid.uuid4())
 
@@ -80,7 +81,7 @@ class Transaction(Generic[S]):
     savepoints: List[Savepoint[S]] = field(default_factory=list)
     operations: List[str] = field(default_factory=list)  # Operation log
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.id:
             self.id = str(uuid.uuid4())
 
@@ -153,7 +154,9 @@ class TransactionalDataAgent(Generic[S]):
     # === Transaction Operations ===
 
     @asynccontextmanager
-    async def transaction(self, name: Optional[str] = None):
+    async def transaction(
+        self, name: Optional[str] = None
+    ) -> AsyncIterator[Transaction[S]]:
         """
         Begin a new transaction.
 
@@ -274,7 +277,7 @@ class TransactionalDataAgent(Generic[S]):
             metadata=metadata or {},
         )
 
-        self._current_txn.savepoints.append(sp)
+        self._current_txn.savepoints.append(sp)  # type: ignore[arg-type]
         self._current_txn.operations.append(f"savepoint({name})")
 
         return sp.id

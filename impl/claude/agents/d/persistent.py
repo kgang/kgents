@@ -207,7 +207,7 @@ class PersistentAgent(Generic[S]):
             StateSerializationError: If state contains non-serializable types
         """
 
-        def enum_serializer(obj):
+        def enum_serializer(obj: Any) -> Any:
             """Convert enums to their values for JSON serialization."""
             if isinstance(obj, Enum):
                 return obj.value
@@ -216,8 +216,9 @@ class PersistentAgent(Generic[S]):
         try:
             if is_dataclass(state):
                 return asdict(
-                    state, dict_factory=lambda x: {k: enum_serializer(v) for k, v in x}
-                )  # type: ignore
+                    state,  # type: ignore[arg-type]
+                    dict_factory=lambda x: {k: enum_serializer(v) for k, v in x},
+                )
             return state
         except Exception as e:
             raise StateSerializationError(f"Cannot serialize state: {e}")
@@ -244,7 +245,7 @@ class PersistentAgent(Generic[S]):
         except Exception as e:
             raise StateCorruptionError(f"Cannot deserialize to {self.schema}: {e}")
 
-    def _deserialize_dataclass(self, cls: Type, data: dict) -> Any:
+    def _deserialize_dataclass(self, cls: Type[Any], data: dict[str, Any]) -> Any:
         """
         Recursively deserialize a dataclass and its nested dataclass fields.
 
@@ -272,7 +273,7 @@ class PersistentAgent(Generic[S]):
             type_hints = {}
 
         # Build kwargs with recursively deserialized fields
-        kwargs = {}
+        kwargs: dict[str, Any] = {}
         for field_name, field_value in data.items():
             field_type = type_hints.get(field_name)
 
