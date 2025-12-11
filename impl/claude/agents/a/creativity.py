@@ -19,9 +19,10 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
 
-from runtime.base import LLMAgent, AgentContext
+from runtime.base import AgentContext, LLMAgent
 from runtime.json_utils import parse_structured_sections
-from .skeleton import AgentMeta, AgentIdentity, AgentInterface, AgentBehavior
+
+from .skeleton import AgentBehavior, AgentIdentity, AgentInterface, AgentMeta
 
 
 class CreativityMode(Enum):

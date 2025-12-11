@@ -16,10 +16,9 @@ Use Cases:
 """
 
 import json
-from typing import Optional, Any, Callable, TypeVar, Generic
+from typing import Any, Callable, Generic, Optional, TypeVar
 
-from agents.p.core import ParseResult, ParserConfig
-
+from agents.p.core import ParserConfig, ParseResult
 
 T = TypeVar("T")
 
@@ -143,9 +142,9 @@ class LazyValidatedDict(Generic[T]):
                 raise ValueError(f"Cannot coerce None to {expected_type}")
 
         # Handle numeric types
-        if expected_type == float:
+        if expected_type is float:
             return float(value)
-        elif expected_type == int:
+        elif expected_type is int:
             # Coerce from string or float
             if isinstance(value, str):
                 return int(value)
@@ -154,7 +153,7 @@ class LazyValidatedDict(Generic[T]):
             return int(value)
 
         # Handle boolean
-        elif expected_type == bool:
+        elif expected_type is bool:
             if isinstance(value, bool):
                 return value
             elif isinstance(value, str):
@@ -163,18 +162,18 @@ class LazyValidatedDict(Generic[T]):
                 return bool(value)
 
         # Handle string
-        elif expected_type == str:
+        elif expected_type is str:
             return str(value)
 
         # Handle list
-        elif expected_type == list:
+        elif expected_type is list:
             if isinstance(value, list):
                 return value
             else:
                 raise ValueError(f"Expected list, got {type(value)}")
 
         # Handle dict
-        elif expected_type == dict:
+        elif expected_type is dict:
             if isinstance(value, dict):
                 return value
             else:

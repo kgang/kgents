@@ -5,10 +5,10 @@ Tests for wipe command.
 from unittest.mock import patch
 
 from protocols.cli.handlers.wipe import (
-    cmd_wipe,
-    _get_size_str,
-    _get_global_path,
     _collect_targets,
+    _get_global_path,
+    _get_size_str,
+    cmd_wipe,
 )
 
 

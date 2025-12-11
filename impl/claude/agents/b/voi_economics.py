@@ -34,7 +34,6 @@ from typing import Any, Callable, Optional
 from .metered_functor import Gas
 from .value_ledger import ValueLedger
 
-
 # =============================================================================
 # Observation Depth and Finding Types
 # =============================================================================

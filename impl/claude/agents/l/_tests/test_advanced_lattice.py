@@ -1,7 +1,6 @@
 """Tests for advanced lattice operations."""
 
 import pytest
-
 from agents.l.advanced_lattice import (
     AdvancedLattice,
     CachedLattice,
@@ -11,7 +10,6 @@ from agents.l.advanced_lattice import (
     create_cached_lattice,
 )
 from agents.l.lattice import SubtypeEdge, TypeKind, TypeNode
-
 
 # registry fixture imported from conftest.py
 

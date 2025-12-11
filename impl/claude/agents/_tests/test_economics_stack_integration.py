@@ -17,41 +17,41 @@ import pytest
 
 # B-gent imports
 from agents.b import (
-    # Value Tensor
-    ValueTensor,
-    PhysicalDimension,
-    SemanticDimension,
-    EconomicDimension,
-    EthicalDimension,
-    TensorAlgebra,
-    # Metered Functor
-    Gas,
     CentralBank,
-    EntropyBudget,
-    # Value Ledger
-    ValueLedger,
-    RoCMonitor,
-    SyntaxTaxSchedule,
     ChomskyLevel,
-    create_syntax_tax_budget,
-    classify_grammar,
-    calculate_syntax_tax,
     # Semantic Inflation
     ComplexityVector,
-    calculate_inflation_pressure,
+    EconomicDimension,
+    EntropyBudget,
+    EthicalDimension,
+    FindingType,
+    # Metered Functor
+    Gas,
     # Grammar Insurance
     GrammarInsurance,
-    VolatilityMonitor,
-    ParseEvent,
     HedgeStrategy,
+    ObservationDepth,
+    ObservationFinding,
+    ParseEvent,
+    PhysicalDimension,
+    RoCMonitor,
+    SemanticDimension,
+    SyntaxTaxSchedule,
+    TensorAlgebra,
+    # Value Ledger
+    ValueLedger,
+    # Value Tensor
+    ValueTensor,
     # VoI Economics
     VoILedger,
     VoIOptimizer,
-    ObservationDepth,
-    FindingType,
-    ObservationFinding,
-    create_voi_optimizer,
+    VolatilityMonitor,
+    calculate_inflation_pressure,
+    calculate_syntax_tax,
+    classify_grammar,
+    create_syntax_tax_budget,
     create_unified_accounting,
+    create_voi_optimizer,
 )
 
 # G-gent imports
@@ -61,26 +61,25 @@ from agents.g import (
 
 # J-gent imports
 from agents.j import (
-    promise,
     PromiseState,
     Reality,
-)
-
-# M-gent imports
-from agents.m import (
-    create_budgeted_memory,
-    create_mock_bank,
-    BudgetedMemory,
-    ResolutionBudget,
+    promise,
 )
 
 # L-gent imports
 from agents.l import (
-    SemanticRegistry,
     CatalogEntry,
     EntityType,
+    SemanticRegistry,
 )
 
+# M-gent imports
+from agents.m import (
+    BudgetedMemory,
+    ResolutionBudget,
+    create_budgeted_memory,
+    create_mock_bank,
+)
 
 # =============================================================================
 # Test Fixtures

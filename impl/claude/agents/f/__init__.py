@@ -12,12 +12,36 @@ from agents.f.contract import (
     Invariant,
     synthesize_contract,
 )
+from agents.f.crystallize import (
+    Artifact,
+    ArtifactMetadata,
+    ArtifactStatus,
+    Version,
+    VersionBump,
+    assemble_artifact,
+    crystallize,
+    determine_version_bump,
+    extract_tags_from_intent,
+    register_with_lgent,
+    save_artifact,
+)
 from agents.f.intent import (
     Dependency,
     DependencyType,
     Example,
     Intent,
     parse_intent,
+)
+from agents.f.j_integration import (
+    BoundedComplexity,
+    DeterministicOnly,
+    EntropyAware,
+    IntentFilter,
+    RealityGate,
+    admits_intent,
+    create_safe_gate,
+    create_strict_gate,
+    gate_intent,
 )
 from agents.f.prototype import (
     PrototypeConfig,
@@ -45,30 +69,6 @@ from agents.f.validate import (
     validate,
     validate_with_self_healing,
     verify_invariant,
-)
-from agents.f.crystallize import (
-    Artifact,
-    ArtifactMetadata,
-    ArtifactStatus,
-    Version,
-    VersionBump,
-    assemble_artifact,
-    crystallize,
-    determine_version_bump,
-    extract_tags_from_intent,
-    register_with_lgent,
-    save_artifact,
-)
-from agents.f.j_integration import (
-    RealityGate,
-    DeterministicOnly,
-    BoundedComplexity,
-    EntropyAware,
-    IntentFilter,
-    create_safe_gate,
-    create_strict_gate,
-    admits_intent,
-    gate_intent,
 )
 
 __all__ = [

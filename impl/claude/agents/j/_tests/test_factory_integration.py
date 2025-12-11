@@ -14,9 +14,6 @@ from production agents.
 """
 
 import pytest
-
-from bootstrap.types import Agent
-
 from agents.j import (
     AgentSource,
     ArchitectConstraints,
@@ -24,11 +21,12 @@ from agents.j import (
 from agents.j.factory_integration import (
     JITAgentMeta,
     JITAgentWrapper,
-    create_agent_from_source,
     compile_and_instantiate,
+    create_agent_from_source,
     get_jit_meta,
     is_jit_agent,
 )
+from bootstrap.types import Agent
 
 # Mark wrapper as test agent
 JITAgentWrapper.__is_test__ = True

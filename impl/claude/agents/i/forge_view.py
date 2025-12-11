@@ -18,9 +18,13 @@ See: spec/i-gents/README.md (The Forge View section)
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field as dataclass_field
+from dataclasses import dataclass
+from dataclasses import field as dataclass_field
 from enum import Enum
-from typing import Callable, Optional
+from typing import TYPE_CHECKING, Callable, Optional
+
+if TYPE_CHECKING:
+    from agents.l.catalog import CatalogEntry, Registry
 
 
 class ArchetypeLevel(Enum):

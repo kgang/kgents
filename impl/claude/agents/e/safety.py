@@ -39,7 +39,6 @@ from pathlib import Path
 from typing import Any, AsyncIterator, Iterator, Protocol
 from uuid import uuid4
 
-
 # =============================================================================
 # Rollback Guarantees (Atomic Mutations)
 # =============================================================================

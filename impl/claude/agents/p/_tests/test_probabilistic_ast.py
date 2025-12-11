@@ -1,10 +1,10 @@
 """Tests for ProbabilisticASTParser (Phase 3: Novel Techniques)."""
 
 from agents.p.strategies.probabilistic_ast import (
-    ProbabilisticASTParser,
     ProbabilisticASTNode,
-    query_confident_fields,
+    ProbabilisticASTParser,
     get_low_confidence_paths,
+    query_confident_fields,
 )
 
 

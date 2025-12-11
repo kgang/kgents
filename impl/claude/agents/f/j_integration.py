@@ -30,11 +30,11 @@ from typing import Any, Callable
 
 from agents.f.gravity import GravityContract
 from agents.j.reality import (
-    Reality,
-    classify_intent,
+    ATOMIC_KEYWORDS,
     CHAOTIC_KEYWORDS,
     COMPLEX_KEYWORDS,
-    ATOMIC_KEYWORDS,
+    Reality,
+    classify_intent,
 )
 
 

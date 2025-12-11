@@ -19,12 +19,14 @@ Parsers are morphisms Text → ParseResult[A] that compose in three ways:
    - Used when input format is detectable
 """
 
-from typing import Iterator, Callable, Optional
+from typing import Callable, Generic, Iterator, Optional, TypeVar
 
-from agents.p.core import Parser, ParseResult, ParserConfig
+from agents.p.core import Parser, ParserConfig, ParseResult
+
+A = TypeVar("A")
 
 
-class FallbackParser[A]:
+class FallbackParser(Generic[A]):
     """
     Try strategies in order until one succeeds (Chain of Responsibility).
 
@@ -125,7 +127,7 @@ class FallbackParser[A]:
         return FallbackParser(*self.strategies, config=new_config)
 
 
-class FusionParser[A]:
+class FusionParser(Generic[A]):
     """
     Run multiple parsers and merge results (Parallel Fusion).
 
@@ -236,7 +238,7 @@ class FusionParser[A]:
         return FusionParser(*self.parsers, merge_fn=self.merge_fn, config=new_config)
 
 
-class SwitchParser[A]:
+class SwitchParser(Generic[A]):
     """
     Choose parser based on input characteristics (Conditional Switch).
 

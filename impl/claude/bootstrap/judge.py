@@ -22,6 +22,7 @@ See spec/bootstrap.md lines 72-93, spec/principles.md.
 """
 
 from __future__ import annotations
+
 import asyncio
 from dataclasses import dataclass
 from typing import Any, Callable, Optional
@@ -34,7 +35,6 @@ from .types import (
     Verdict,
     VerdictType,
 )
-
 
 # --- Mini-Judge Functions (Pure Functions) ---
 # Each mini-judge evaluates one principle.

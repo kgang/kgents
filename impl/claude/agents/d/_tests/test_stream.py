@@ -1,15 +1,15 @@
 """Tests for StreamAgent - Temporal Witness foundation."""
 
-import pytest
+import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path
-import tempfile
 
+import pytest
+from agents.d.errors import DriftDetectionError
 from agents.d.stream import (
     StreamAgent,
     WitnessReport,
 )
-from agents.d.errors import DriftDetectionError
 
 
 class TestStreamAgentBasics:

@@ -9,11 +9,11 @@ Note: Requires numpy. Install with: pip install numpy
 
 from __future__ import annotations
 
-from typing import TypeVar, Generic, List, Tuple, Callable, Optional, Any
+import json
 from dataclasses import dataclass, field
 from enum import Enum
-import json
 from pathlib import Path
+from typing import Any, Callable, Generic, List, Optional, Tuple, TypeVar
 
 try:
     import numpy as np
@@ -25,10 +25,9 @@ except ImportError:
 
 from .errors import (
     SemanticError,
-    VoidNotFoundError,
     StorageError,
+    VoidNotFoundError,
 )
-
 
 S = TypeVar("S")  # State type
 

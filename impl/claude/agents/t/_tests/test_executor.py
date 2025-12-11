@@ -9,23 +9,22 @@ Tests for executor.py:
 """
 
 import asyncio
-import pytest
 from datetime import datetime
 
-from agents.t.tool import Tool, ToolMeta, ToolError, ToolErrorType
+import pytest
 from agents.t.executor import (
-    # Circuit Breaker
-    CircuitState,
     CircuitBreakerConfig,
     CircuitBreakerError,
     CircuitBreakerTool,
-    # Executors
-    ToolExecutor,
+    # Circuit Breaker
+    CircuitState,
+    RetryConfig,
     RetryExecutor,
     RobustToolExecutor,
-    RetryConfig,
+    # Executors
+    ToolExecutor,
 )
-
+from agents.t.tool import Tool, ToolError, ToolErrorType, ToolMeta
 
 # --- Test Tools ---
 

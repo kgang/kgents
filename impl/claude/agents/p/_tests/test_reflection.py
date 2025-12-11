@@ -5,14 +5,15 @@ Tests LLM-based self-repair with reflection loop.
 """
 
 import json
+
+from agents.p.core import ParserConfig, ParseResult
 from agents.p.strategies.reflection import (
-    ReflectionParser,
     ReflectionContext,
-    simple_reflection_prompt,
+    ReflectionParser,
     create_reflection_parser_with_llm,
     mock_llm_fix_json,
+    simple_reflection_prompt,
 )
-from agents.p.core import ParseResult, ParserConfig
 
 
 # Simple JSON parser for testing
@@ -56,7 +57,7 @@ class TestReflectionBasics:
         assert result.success
         assert result.value == {"key": "value"}
         assert result.metadata["reflection_attempts"] == 0
-        assert result.metadata["reflection_fixed"] == False
+        assert not result.metadata["reflection_fixed"]
         assert result.confidence > 0.9  # Minimal penalty
 
     def test_one_reflection_success(self):
@@ -74,7 +75,7 @@ class TestReflectionBasics:
         assert result.success
         assert result.value == {"key": "value"}
         assert result.metadata["reflection_attempts"] == 1
-        assert result.metadata["reflection_fixed"] == True
+        assert result.metadata["reflection_fixed"]
         assert len(result.repairs) > 0
         assert "reflection" in result.repairs[0].lower()
         assert result.confidence < 0.9  # Penalty for reflection
@@ -405,7 +406,7 @@ class TestRealWorldScenarios:
 
         assert result.success
         assert result.value["name"] == "sort_fn"
-        assert result.metadata["reflection_fixed"] == True
+        assert result.metadata["reflection_fixed"]
 
     def test_multiple_error_cascade(self):
         """
@@ -435,7 +436,7 @@ class TestRealWorldScenarios:
         assert result.success
         assert result.value["key"] == "value"
         # Should succeed via reflection
-        assert result.metadata["reflection_fixed"] == True
+        assert result.metadata["reflection_fixed"]
 
     def test_confidence_signals_quality(self):
         """

@@ -11,16 +11,15 @@ Sources of change:
 4. Temporal decay (confidence degrades without reinforcement)
 """
 
-from dataclasses import dataclass, field
-from typing import Any, Optional
-from enum import Enum
-from datetime import datetime
 import logging
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any, Optional, Protocol
 
 from bootstrap.types import Agent
-from .persona import PersonaState, PersonaSeed
-from typing import Protocol
 
+from .persona import PersonaSeed, PersonaState
 
 # Configure structured logging
 logger = logging.getLogger(__name__)
@@ -28,23 +27,26 @@ logger = logging.getLogger(__name__)
 
 class ConfidenceLevel(Enum):
     """Confidence levels for preferences."""
-    HIGH = "high"        # 0.8-1.0: Recently confirmed, explicit
-    MEDIUM = "medium"    # 0.5-0.8: Inferred or older
-    LOW = "low"          # 0.2-0.5: Stale, needs confirmation
+
+    HIGH = "high"  # 0.8-1.0: Recently confirmed, explicit
+    MEDIUM = "medium"  # 0.5-0.8: Inferred or older
+    LOW = "low"  # 0.2-0.5: Stale, needs confirmation
     UNCERTAIN = "uncertain"  # <0.2: Contradictory evidence
 
 
 class ChangeSource(Enum):
     """Source of preference/pattern changes."""
-    EXPLICIT = "explicit"    # Kent directly stated this
-    INFERRED = "inferred"    # K-gent observed this pattern
+
+    EXPLICIT = "explicit"  # Kent directly stated this
+    INFERRED = "inferred"  # K-gent observed this pattern
     INHERITED = "inherited"  # From initial bootstrap
-    DECAYED = "decayed"      # Lost confidence over time
+    DECAYED = "decayed"  # Lost confidence over time
 
 
 @dataclass
 class EvolutionInput:
     """Input for persona evolution."""
+
     # What triggered this evolution
     trigger: str  # "explicit", "observation", "contradiction", "review", "forget"
 
@@ -61,6 +63,7 @@ class EvolutionInput:
 @dataclass
 class EvolutionOutput:
     """Output from persona evolution."""
+
     accepted: bool
     new_state: PersonaState
     change_summary: str
@@ -99,6 +102,7 @@ class EvolutionHandler(Protocol):
 @dataclass
 class ConfidenceTracker:
     """Track confidence for a single preference/pattern."""
+
     value: float = 1.0
     last_confirmed: Optional[datetime] = None
     source: ChangeSource = ChangeSource.INHERITED
@@ -123,7 +127,7 @@ class ConfidenceTracker:
                 "new_level": self.level.value,
                 "evidence_count": self.evidence_count,
                 "source": self.source.value,
-            }
+            },
         )
 
     def decay(self, months: float) -> None:
@@ -144,7 +148,7 @@ class ConfidenceTracker:
                 "new_level": self.level.value,
                 "months_elapsed": months,
                 "decay_rate": decay_rate,
-            }
+            },
         )
 
     def contradict(self) -> None:
@@ -166,7 +170,7 @@ class ConfidenceTracker:
                 "new_level": self.level.value,
                 "old_source": old_source.value,
                 "new_source": self.source.value,
-            }
+            },
         )
 
     @property
@@ -182,6 +186,7 @@ class ConfidenceTracker:
 
 
 # Concrete handler implementations
+
 
 class ExplicitUpdateHandler:
     """
@@ -203,7 +208,7 @@ class ExplicitUpdateHandler:
                 "event": "explicit_update",
                 "aspect": input.aspect,
                 "operation": input.operation,
-            }
+            },
         )
 
         new_state = self._apply_change(input)
@@ -231,7 +236,7 @@ class ExplicitUpdateHandler:
                 "event": "apply_change",
                 "aspect": input.aspect,
                 "operation": input.operation,
-            }
+            },
         )
 
         # Create a copy of the state
@@ -257,12 +262,16 @@ class ExplicitUpdateHandler:
                 values = new_state.seed.preferences.get("values", [])
                 if isinstance(values, list):
                     values.append(input.content)
-                    logger.debug("Added preference value", extra={"value": input.content})
+                    logger.debug(
+                        "Added preference value", extra={"value": input.content}
+                    )
             elif input.operation == "remove":
                 values = new_state.seed.preferences.get("values", [])
                 if isinstance(values, list) and input.content in values:
                     values.remove(input.content)
-                    logger.debug("Removed preference value", extra={"value": input.content})
+                    logger.debug(
+                        "Removed preference value", extra={"value": input.content}
+                    )
 
         elif input.aspect == "pattern":
             if input.operation == "add":
@@ -276,10 +285,16 @@ class ExplicitUpdateHandler:
                 if isinstance(input.content, dict):
                     if "current_focus" in input.content:
                         new_state.current_focus = input.content["current_focus"]
-                        logger.debug("Modified current_focus", extra={"focus": input.content["current_focus"]})
+                        logger.debug(
+                            "Modified current_focus",
+                            extra={"focus": input.content["current_focus"]},
+                        )
                     if "recent_interests" in input.content:
                         new_state.recent_interests = input.content["recent_interests"]
-                        logger.debug("Modified recent_interests", extra={"count": len(input.content["recent_interests"])})
+                        logger.debug(
+                            "Modified recent_interests",
+                            extra={"count": len(input.content["recent_interests"])},
+                        )
 
         self._state = new_state
         return new_state
@@ -315,7 +330,7 @@ class ObservationHandler:
                         "key": key,
                         "evidence_count": tracker.evidence_count,
                         "confidence": tracker.value,
-                    }
+                    },
                 )
 
                 new_state = self._apply_change(input)
@@ -333,7 +348,7 @@ class ObservationHandler:
                     "event": "pattern_observed",
                     "key": key,
                     "initial_confidence": 0.4,
-                }
+                },
             )
 
             self._trackers[key] = ConfidenceTracker(
@@ -408,7 +423,7 @@ class ContradictionHandler:
                 "aspect": input.aspect,
                 "content": str(input.content),
                 "conflicting_evidence": input.conflicting_evidence,
-            }
+            },
         )
 
         # Check for automatically detected conflicts
@@ -470,7 +485,7 @@ class ForgetHandler:
                 "aspect": input.aspect,
                 "content": str(input.content),
                 "reason": input.reason,
-            }
+            },
         )
 
         key = f"{input.aspect}.{input.content}"
@@ -480,7 +495,7 @@ class ForgetHandler:
             del self._trackers[key]
             logger.info(
                 "Removed from confidence tracking",
-                extra={"event": "tracker_removed", "key": key}
+                extra={"event": "tracker_removed", "key": key},
             )
 
         # Remove from state
@@ -525,7 +540,7 @@ class ForgetHandler:
                     patterns.remove(input.content)
                     logger.debug(
                         "Removed pattern",
-                        extra={"category": category, "pattern": input.content}
+                        extra={"category": category, "pattern": input.content},
                     )
 
         elif input.aspect == "context":
@@ -541,6 +556,7 @@ class ForgetHandler:
 @dataclass
 class ConflictData:
     """Data about conflicting preferences."""
+
     preference_a: str
     preference_b: str
     evidence_a: list[str]
@@ -581,7 +597,7 @@ class ConflictDetector:
         for aspect, items in aspect_groups.items():
             # Simple heuristic: if multiple items in same aspect have contradicting sources
             for i, (key_a, tracker_a) in enumerate(items):
-                for key_b, tracker_b in items[i + 1:]:
+                for key_b, tracker_b in items[i + 1 :]:
                     # Check if both have high evidence but different sources
                     if (
                         tracker_a.evidence_count >= 3
@@ -633,7 +649,10 @@ class ReviewHandler:
                 if months_old > 12 and tracker.value < 0.3:
                     very_stale_items.append(key)
                 # Seasonal review: flag items >6 months old
-                elif months_old > 6 and tracker.level in (ConfidenceLevel.LOW, ConfidenceLevel.UNCERTAIN):
+                elif months_old > 6 and tracker.level in (
+                    ConfidenceLevel.LOW,
+                    ConfidenceLevel.UNCERTAIN,
+                ):
                     stale_items.append(key)
             elif tracker.level in (ConfidenceLevel.LOW, ConfidenceLevel.UNCERTAIN):
                 stale_items.append(key)
@@ -646,7 +665,7 @@ class ReviewHandler:
                     "event": "auto_archive",
                     "count": len(very_stale_items),
                     "items": very_stale_items,
-                }
+                },
             )
             for key in very_stale_items:
                 del self._trackers[key]
@@ -658,7 +677,7 @@ class ReviewHandler:
                     "event": "stale_items_found",
                     "count": len(stale_items),
                     "items": stale_items[:5],  # Log first 5
-                }
+                },
             )
 
             return EvolutionOutput(
@@ -679,7 +698,7 @@ class ReviewHandler:
                 "event": "review_completed",
                 "stale_count": 0,
                 "archived_count": len(very_stale_items),
-            }
+            },
         )
 
         return EvolutionOutput(
@@ -732,7 +751,7 @@ class TriggerRouter(Agent[EvolutionInput, EvolutionOutput]):
                 "trigger": input.trigger,
                 "aspect": input.aspect,
                 "operation": input.operation,
-            }
+            },
         )
 
         # Get handler for trigger
@@ -744,7 +763,7 @@ class TriggerRouter(Agent[EvolutionInput, EvolutionOutput]):
                 extra={
                     "event": "unknown_trigger",
                     "trigger": input.trigger,
-                }
+                },
             )
             return EvolutionOutput(
                 accepted=False,
@@ -763,7 +782,7 @@ class TriggerRouter(Agent[EvolutionInput, EvolutionOutput]):
                 "trigger": input.trigger,
                 "accepted": result.accepted,
                 "needs_confirmation": result.needs_confirmation,
-            }
+            },
         )
 
         return result
@@ -796,7 +815,7 @@ class EvolutionAgent(Agent[EvolutionInput, EvolutionOutput]):
                 "event": "agent_initialized",
                 "agent_name": self.name,
                 "persona_name": state.seed.name,
-            }
+            },
         )
 
     @property
@@ -818,7 +837,7 @@ class EvolutionAgent(Agent[EvolutionInput, EvolutionOutput]):
                 "aspect": input.aspect,
                 "operation": input.operation,
                 "reason": input.reason,
-            }
+            },
         )
 
         # Delegate to router (composition, not orchestration)
@@ -831,7 +850,7 @@ class EvolutionAgent(Agent[EvolutionInput, EvolutionOutput]):
                 "accepted": result.accepted,
                 "needs_confirmation": result.needs_confirmation,
                 "change_summary": result.change_summary,
-            }
+            },
         )
 
         return result
@@ -839,25 +858,30 @@ class EvolutionAgent(Agent[EvolutionInput, EvolutionOutput]):
 
 # Bootstrap functionality
 
+
 class BootstrapMode(Enum):
     """Bootstrap modes for initial persona population."""
-    CLEAN_SLATE = "clean_slate"      # Start empty, build through interaction
-    INTERVIEW = "interview"           # Structured onboarding conversation
-    DOCUMENT_IMPORT = "document"      # Import from existing writings
-    HYBRID = "hybrid"                 # Recommended: interview + observation
+
+    CLEAN_SLATE = "clean_slate"  # Start empty, build through interaction
+    INTERVIEW = "interview"  # Structured onboarding conversation
+    DOCUMENT_IMPORT = "document"  # Import from existing writings
+    HYBRID = "hybrid"  # Recommended: interview + observation
 
 
 @dataclass
 class BootstrapConfig:
     """Configuration for persona bootstrapping."""
+
     mode: BootstrapMode = BootstrapMode.HYBRID
 
     # For INTERVIEW mode
-    core_questions: list[str] = field(default_factory=lambda: [
-        "What are your core values?",
-        "What's your current focus?",
-        "What matters most to you in how others communicate with you?",
-    ])
+    core_questions: list[str] = field(
+        default_factory=lambda: [
+            "What are your core values?",
+            "What's your current focus?",
+            "What matters most to you in how others communicate with you?",
+        ]
+    )
 
     # For DOCUMENT_IMPORT mode
     import_sources: list[str] = field(default_factory=list)
@@ -867,8 +891,7 @@ class BootstrapConfig:
 
 
 async def bootstrap_persona(
-    config: BootstrapConfig,
-    existing_state: Optional[PersonaState] = None
+    config: BootstrapConfig, existing_state: Optional[PersonaState] = None
 ) -> PersonaState:
     """
     Bootstrap a persona state based on configuration.
@@ -891,7 +914,7 @@ async def bootstrap_persona(
         extra={
             "event": "bootstrap_start",
             "mode": config.mode.value,
-        }
+        },
     )
 
     if config.mode == BootstrapMode.CLEAN_SLATE:
@@ -923,7 +946,7 @@ async def bootstrap_persona(
             extra={
                 "event": "bootstrap_interview",
                 "questions": config.core_questions,
-            }
+            },
         )
 
         # Return state with metadata about needed questions
@@ -939,7 +962,7 @@ async def bootstrap_persona(
             extra={
                 "event": "bootstrap_import",
                 "source_count": len(config.import_sources),
-            }
+            },
         )
 
         # TODO: Actual document parsing would go here
@@ -955,7 +978,7 @@ async def bootstrap_persona(
             state.seed.patterns = {}
             logger.info(
                 "Hybrid mode - cleared patterns for observation",
-                extra={"event": "bootstrap_hybrid"}
+                extra={"event": "bootstrap_hybrid"},
             )
 
         # Keep core preferences from seed/import
@@ -965,7 +988,7 @@ async def bootstrap_persona(
             extra={
                 "event": "bootstrap_hybrid_ready",
                 "questions": config.core_questions[:2],  # Fewer questions in hybrid
-            }
+            },
         )
 
         return state
@@ -975,6 +998,7 @@ async def bootstrap_persona(
 
 
 # Convenience functions
+
 
 def evolve_persona(state: PersonaState) -> EvolutionAgent:
     """Create an evolution agent for the given persona state."""
@@ -986,9 +1010,10 @@ async def bootstrap_clean_slate() -> PersonaState:
     return await bootstrap_persona(BootstrapConfig(mode=BootstrapMode.CLEAN_SLATE))
 
 
-async def bootstrap_hybrid(existing_state: Optional[PersonaState] = None) -> PersonaState:
+async def bootstrap_hybrid(
+    existing_state: Optional[PersonaState] = None,
+) -> PersonaState:
     """Quick bootstrap with recommended hybrid mode."""
     return await bootstrap_persona(
-        BootstrapConfig(mode=BootstrapMode.HYBRID),
-        existing_state=existing_state
+        BootstrapConfig(mode=BootstrapMode.HYBRID), existing_state=existing_state
     )

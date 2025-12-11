@@ -11,33 +11,33 @@ Tests cover:
 
 from __future__ import annotations
 
-import pytest
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 from ..phage import (
-    infect,
-    spawn_child,
-    get_lineage_chain,
-    calculate_lineage_fitness,
-    analyze_lineage,
-    infect_batch,
-    create_infection_env,
-    create_test_only_env,
-    create_production_env,
     InfectionConfig,
     InfectionEnvironment,
+    analyze_lineage,
+    calculate_lineage_fitness,
+    create_infection_env,
+    create_production_env,
+    create_test_only_env,
+    get_lineage_chain,
+    infect,
+    infect_batch,
+    spawn_child,
 )
 from ..types import (
-    Phage,
-    PhageStatus,
-    PhageLineage,
-    MutationVector,
     InfectionStatus,
+    MutationVector,
+    Phage,
+    PhageLineage,
+    PhageStatus,
 )
-
 
 # =============================================================================
 # Mock Integrations

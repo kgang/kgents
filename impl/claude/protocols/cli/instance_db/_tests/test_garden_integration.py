@@ -8,22 +8,22 @@ These tests verify the complete memory lifecycle:
 - Nutrients feed back into new entries (composability)
 """
 
-import pytest
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
+
+import pytest
 
 from ..compost import (
     CompostBin,
     CompostConfig,
     create_nutrient_block,
 )
+from ..hippocampus import LetheEpoch
 from ..lethe import (
     LetheStore,
     RetentionConfig,
 )
-from ..hippocampus import LetheEpoch
-
 
 # === Mock MemoryGarden types (to avoid circular import) ===
 

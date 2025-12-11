@@ -9,8 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Iterator
 
-from .types import Metaphor, Operation, Example, validate_metaphor
-
+from .types import Example, Metaphor, Operation, validate_metaphor
 
 # =============================================================================
 # Corpus Management

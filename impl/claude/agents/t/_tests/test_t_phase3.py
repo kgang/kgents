@@ -9,24 +9,24 @@ import asyncio
 from typing import Any
 
 from agents.t import (
-    MockAgent,
-    MockConfig,
+    DiffResult,
+    IntGenerator,
     # Phase 3 - Type IV Critics
     JudgeAgent,
     JudgmentCriteria,
     JudgmentResult,
+    MockAgent,
+    MockConfig,
+    OracleAgent,
     PropertyAgent,
     PropertyTestResult,
-    IntGenerator,
+    RegressionOracle,
     StringGenerator,
     identity_property,
-    not_none_property,
     length_preserved_property,
-    OracleAgent,
-    RegressionOracle,
-    DiffResult,
-    semantic_equality,
+    not_none_property,
     numeric_equality,
+    semantic_equality,
 )
 
 

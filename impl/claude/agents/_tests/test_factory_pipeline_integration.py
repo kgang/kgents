@@ -12,34 +12,34 @@ Philosophy: The factory pipeline transforms intent into executable artifacts.
 
 import pytest
 
+# F-gent imports
+from agents.f import (
+    Artifact,
+    ArtifactMetadata,
+    ArtifactStatus,
+    CompositionRule,
+    Contract,
+    Invariant,
+    Version,
+    parse_intent,
+    synthesize_contract,
+)
+
 # J-gent imports
 from agents.j import (
-    Promise,
-    PromiseState,
-    Reality,
-    RealityClassifier,
+    AgentSource,
+    ArchitectConstraints,
     ClassificationInput,
     JGent,
     JGentConfig,
     JGentInput,
-    AgentSource,
-    ArchitectConstraints,
+    JITAgentWrapper,
+    Promise,
+    PromiseState,
+    Reality,
+    RealityClassifier,
     SandboxConfig,
     create_agent_from_source,
-    JITAgentWrapper,
-)
-
-# F-gent imports
-from agents.f import (
-    Contract,
-    Invariant,
-    CompositionRule,
-    Artifact,
-    ArtifactMetadata,
-    ArtifactStatus,
-    Version,
-    parse_intent,
-    synthesize_contract,
 )
 
 # L-gent imports
@@ -51,8 +51,8 @@ from agents.l import (
 
 # Shared fixtures
 from agents.shared.fixtures_integration import (
-    make_sample_intent,
     make_sample_contract,
+    make_sample_intent,
     make_sample_source_code,
 )
 

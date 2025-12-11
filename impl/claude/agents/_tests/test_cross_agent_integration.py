@@ -11,21 +11,22 @@ Philosophy: Agents compose via >> and integrate via shared protocols.
 """
 
 import json
+
 import pytest
 from agents.j import (
     AgentSource,
-    create_agent_from_source,
     JITAgentWrapper,
+    create_agent_from_source,
 )
 from agents.p import (
-    ParserConfig,
     AnchorBasedParser,
+    ParserConfig,
     ProbabilisticASTParser,
 )
 from agents.t.p_integration import (
-    create_tgent_schema_parser,
-    create_tgent_output_parser,
     create_tgent_error_parser,
+    create_tgent_output_parser,
+    create_tgent_schema_parser,
 )
 
 

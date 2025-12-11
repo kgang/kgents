@@ -14,17 +14,16 @@ from __future__ import annotations
 import pytest
 
 from ..neurogenesis import (
-    SchemaNeurogenesis,
-    NeurogenesisConfig,
-    MigrationProposal,
-    MigrationAction,
     ColumnType,
-    PatternCluster,
-    TypeInferrer,
+    MigrationAction,
+    MigrationProposal,
     MockSchemaIntrospector,
+    NeurogenesisConfig,
+    PatternCluster,
+    SchemaNeurogenesis,
+    TypeInferrer,
     create_schema_neurogenesis,
 )
-
 
 # =============================================================================
 # Fixtures

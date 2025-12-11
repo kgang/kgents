@@ -15,20 +15,11 @@ from datetime import datetime, timezone
 
 import pytest
 
-# N-gent imports
-from agents.n import (
-    # Core types
-    SemanticTrace,
-    Historian,
-    MemoryCrystalStore,
-    # Bard (read-time)
-    Bard,
-    NarrativeRequest,
-    NarrativeGenre,
-    Verbosity,
-    SimpleLLMProvider,
-    # Chronicle (multi-agent)
-    ChronicleBuilder,
+# K-gent imports
+from agents.k import (
+    DialogueMode,
+    PersonaSeed,
+    PersonaState,
 )
 
 # M-gent imports
@@ -36,11 +27,20 @@ from agents.m import (
     HolographicMemory,
 )
 
-# K-gent imports
-from agents.k import (
-    PersonaSeed,
-    PersonaState,
-    DialogueMode,
+# N-gent imports
+from agents.n import (
+    # Bard (read-time)
+    Bard,
+    # Chronicle (multi-agent)
+    ChronicleBuilder,
+    Historian,
+    MemoryCrystalStore,
+    NarrativeGenre,
+    NarrativeRequest,
+    # Core types
+    SemanticTrace,
+    SimpleLLMProvider,
+    Verbosity,
 )
 
 # O-gent imports
@@ -49,7 +49,6 @@ from agents.o import (
     ObservationResult,
     ObservationStatus,
 )
-
 
 # =============================================================================
 # Helper Functions

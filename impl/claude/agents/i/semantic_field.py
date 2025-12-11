@@ -20,13 +20,13 @@ See: docs/agent-cross-pollination-final-proposal.md (Phase 2)
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field as dataclass_field
+from dataclasses import dataclass
+from dataclasses import field as dataclass_field
 from datetime import datetime
 from enum import Enum
 from math import exp
 from typing import Any, Callable, Generic, TypeVar
 from uuid import uuid4
-
 
 A = TypeVar("A")  # Source type
 B = TypeVar("B")  # Target type

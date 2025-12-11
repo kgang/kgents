@@ -24,7 +24,8 @@ from enum import Enum
 from typing import Any, Optional
 
 from .graph_search import GraphBrain, GraphResult
-from .search import Search, SearchResult as KeywordResult
+from .search import Search
+from .search import SearchResult as KeywordResult
 from .semantic import SemanticBrain, SemanticResult
 from .types import CatalogEntry
 

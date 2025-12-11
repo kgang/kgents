@@ -10,21 +10,21 @@ Provides a query interface for complex state access:
 Enables expressive state interrogation without full loads.
 """
 
+import re
+from dataclasses import dataclass, field
+from enum import Enum, auto
 from typing import (
-    TypeVar,
+    Any,
+    Callable,
+    Dict,
     Generic,
     List,
     Optional,
-    Any,
-    Dict,
-    Callable,
+    TypeVar,
 )
-from dataclasses import dataclass, field
-from enum import Enum, auto
-import re
 
-from .protocol import DataAgent
 from .errors import StateError
+from .protocol import DataAgent
 
 
 class QueryError(StateError):

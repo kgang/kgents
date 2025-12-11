@@ -28,16 +28,15 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
-from agents.g.types import (
-    Tongue,
-    GrammarLevel,
-    GrammarFormat,
-    ConstraintProof,
-    ParserConfig,
-    InterpreterConfig,
-)
 from agents.g.tongue import TongueBuilder
-
+from agents.g.types import (
+    ConstraintProof,
+    GrammarFormat,
+    GrammarLevel,
+    InterpreterConfig,
+    ParserConfig,
+    Tongue,
+)
 
 # ============================================================================
 # Pattern Types (from W-gent observations)

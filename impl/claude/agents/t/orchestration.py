@@ -33,6 +33,7 @@ References:
 """
 
 from __future__ import annotations
+
 import asyncio
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -40,7 +41,8 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Callable, Generic, Optional, TypeVar
 
-from bootstrap.types import Result, ok, err
+from bootstrap.types import Result, err, ok
+
 from .tool import Tool, ToolError, ToolErrorType, ToolTrace
 
 # Type variables

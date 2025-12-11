@@ -14,11 +14,12 @@ Flow:
 """
 
 from __future__ import annotations
+
 import asyncio
 import subprocess
 import sys
 from datetime import datetime
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from .types import GardenState, MarginNote

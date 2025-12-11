@@ -10,18 +10,27 @@ Tests the complete agent creation lifecycle:
 Philosophy: Spec → DNA → Implementation → Execution is the full lifecycle.
 """
 
-import pytest
 from dataclasses import dataclass
+
+import pytest
+
+# D-gent imports (Data)
+from agents.d import (
+    MemoryConfig,
+    Symbiont,
+    UnifiedMemory,
+    VolatileAgent,
+)
 
 # F-gent imports (Forge)
 from agents.f import (
-    Intent,
-    Example,
-    Contract,
-    Invariant,
     Artifact,
     ArtifactMetadata,
     ArtifactStatus,
+    Contract,
+    Example,
+    Intent,
+    Invariant,
     Version,
     parse_intent,
     synthesize_contract,
@@ -37,16 +46,8 @@ from agents.j import (
 from agents.l import (
     CatalogEntry,
     EntityType,
-    Status,
     Registry,
-)
-
-# D-gent imports (Data)
-from agents.d import (
-    VolatileAgent,
-    UnifiedMemory,
-    MemoryConfig,
-    Symbiont,
+    Status,
 )
 
 # O-gent imports (Observer)
@@ -55,8 +56,14 @@ from agents.o import (
     observe,
 )
 
-# Bootstrap imports
+# Shared fixtures
+from agents.shared.fixtures_integration import (
+    make_sample_contract,
+    make_sample_intent,
+    make_sample_source_code,
+)
 
+# Bootstrap imports
 # DNA imports
 from bootstrap.dna import (
     Constraint,
@@ -65,13 +72,6 @@ from bootstrap.dna import (
 # Umwelt imports
 from bootstrap.umwelt import (
     Umwelt,
-)
-
-# Shared fixtures
-from agents.shared.fixtures_integration import (
-    make_sample_intent,
-    make_sample_contract,
-    make_sample_source_code,
 )
 
 
@@ -378,7 +378,7 @@ class TestAgentEvolution:
     @pytest.mark.asyncio
     async def test_version_bump_on_change(self):
         """Test version bumps appropriately on changes."""
-        from agents.f import determine_version_bump, VersionBump
+        from agents.f import VersionBump, determine_version_bump
 
         old_contract = Contract(
             agent_name="Evolving",
@@ -407,7 +407,7 @@ class TestAgentEvolution:
     @pytest.mark.asyncio
     async def test_breaking_change_major_bump(self):
         """Test breaking changes require major bump."""
-        from agents.f import determine_version_bump, VersionBump
+        from agents.f import VersionBump, determine_version_bump
 
         old_contract = Contract(
             agent_name="Breaking",

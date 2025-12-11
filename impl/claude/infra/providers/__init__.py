@@ -27,22 +27,22 @@ from typing import Any
 # Import from existing protocols/cli/instance_db/providers
 # This bridges the gap during migration
 from protocols.cli.instance_db.providers.sqlite import (
-    SQLiteRelationalStore,
-    NumpyVectorStore,
     FilesystemBlobStore,
-    SQLiteTelemetryStore,
-    InMemoryRelationalStore,
-    InMemoryVectorStore,
     InMemoryBlobStore,
+    InMemoryRelationalStore,
     InMemoryTelemetryStore,
+    InMemoryVectorStore,
+    NumpyVectorStore,
+    SQLiteRelationalStore,
+    SQLiteTelemetryStore,
 )
 
 from ..ground import InfrastructureConfig, XDGPaths
 from ..storage import (
-    IRelationalStore,
-    IVectorStore,
     IBlobStore,
+    IRelationalStore,
     ITelemetryStore,
+    IVectorStore,
 )
 
 __all__ = [

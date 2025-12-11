@@ -18,11 +18,11 @@ See spec/r-gents/README.md for full specification.
 """
 
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Callable, Generic, TypeVar
-
 
 from .types import (
     Example,

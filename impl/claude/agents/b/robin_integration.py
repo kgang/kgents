@@ -19,25 +19,26 @@ The "composition" is at the conceptual level:
 from dataclasses import dataclass, field
 from typing import Optional
 
-from bootstrap.types import Agent
-from runtime.base import Runtime, AgentResult
-from agents.a.skeleton import AgentMeta, AgentIdentity, AgentInterface, AgentBehavior
-from agents.k import (
-    PersonaSeed,
-    PersonaState,
-    PersonaQuery,
-    PersonaResponse,
-    DialogueMode,
-    DialogueInput,
-    DialogueOutput,
-    KgentAgent,
-    PersonaQueryAgent,
-)  # kgent, query_persona intentionally not imported (available via agents.k)
+from agents.a.skeleton import AgentBehavior, AgentIdentity, AgentInterface, AgentMeta
 from agents.h import (
-    HegelAgent,
     DialecticInput,
     DialecticOutput,
+    HegelAgent,
 )
+from agents.k import (
+    DialogueInput,
+    DialogueMode,
+    DialogueOutput,
+    KgentAgent,
+    PersonaQuery,
+    PersonaQueryAgent,
+    PersonaResponse,
+    PersonaSeed,
+    PersonaState,
+)  # kgent, query_persona intentionally not imported (available via agents.k)
+from bootstrap.types import Agent
+from runtime.base import AgentResult, Runtime
+
 from .hypothesis import (
     HypothesisEngine,
     HypothesisInput,
@@ -135,13 +136,13 @@ class RobinOutput:
         return "\n".join(lines)
 
 
-from .robin_morphisms_integration import (  # noqa: E402
-    SynthesisInput,
-    NarrativeSynthesizer,
-    QuestionInput,
-    NextQuestionGenerator,
-)
 from .robin_helpers import generate_fallback_hypotheses  # noqa: E402
+from .robin_morphisms_integration import (  # noqa: E402
+    NarrativeSynthesizer,
+    NextQuestionGenerator,
+    QuestionInput,
+    SynthesisInput,
+)
 
 
 class RobinAgent(Agent[RobinInput, RobinOutput]):

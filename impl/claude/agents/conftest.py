@@ -8,9 +8,9 @@ This conftest provides:
 - Integration test helpers
 """
 
-import pytest
 from typing import Any
 
+import pytest
 
 # =============================================================================
 # Cross-Agent Fixtures

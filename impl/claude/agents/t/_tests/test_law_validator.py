@@ -4,23 +4,22 @@ Tests for T-gent Law Validator (Cross-pollination T2.6).
 Tests categorical law validation for agent pipelines.
 """
 
-import pytest
 from dataclasses import dataclass
 
+import pytest
 from agents.t.law_validator import (
-    LawValidator,
     LawValidationReport,
+    LawValidator,
     LawViolation,
     check_associativity,
-    check_left_identity,
-    check_right_identity,
-    check_functor_identity,
     check_functor_composition,
+    check_functor_identity,
+    check_left_identity,
+    check_monad_associativity,
     check_monad_left_identity,
     check_monad_right_identity,
-    check_monad_associativity,
+    check_right_identity,
 )
-
 
 # --- Test Agents (simple morphisms for law testing) ---
 
@@ -315,8 +314,9 @@ def test_law_validation_report_with_violations():
 @pytest.mark.asyncio
 async def test_validate_evolution_pipeline_mock():
     """Test validation with mock E-gent stages."""
-    from agents.t.law_validator import validate_evolution_pipeline_laws
     from pathlib import Path
+
+    from agents.t.law_validator import validate_evolution_pipeline_laws
 
     # Create mock stages
     @dataclass

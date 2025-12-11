@@ -9,9 +9,10 @@ Phase 4 of test evolution plan:
 - Report bootstrap integrity at session end
 """
 
-import pytest
 from datetime import datetime
 from typing import Any
+
+import pytest
 
 
 class WitnessPlugin:
@@ -36,9 +37,9 @@ class WitnessPlugin:
         self.session_start = datetime.now()
 
         try:
-            from agents.o.bootstrap_witness import BootstrapWitness
-
             import asyncio
+
+            from agents.o.bootstrap_witness import BootstrapWitness
 
             witness = BootstrapWitness(test_iterations=3)
             self.verification_result = asyncio.run(witness.invoke())

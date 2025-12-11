@@ -16,11 +16,11 @@ Integration:
 - Uses L-gent VectorBackend for embeddings
 """
 
+import math
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum, auto
 from typing import Any, Generic, TypeVar
-import math
 
 T = TypeVar("T")
 

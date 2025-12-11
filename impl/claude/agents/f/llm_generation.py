@@ -5,12 +5,18 @@ This module provides CodeGeneratorAgent, an LLMAgent that generates Python code
 from Intent + Contract specifications using Claude.
 """
 
+from __future__ import annotations
+
 import re
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from runtime.base import LLMAgent, AgentContext
 from agents.f.contract import Contract
 from agents.f.intent import Intent
+from runtime.base import AgentContext, LLMAgent
+
+if TYPE_CHECKING:
+    from runtime.base import Runtime
 
 
 @dataclass

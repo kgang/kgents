@@ -8,11 +8,13 @@ Defines the fundamental types for parsing LLM outputs:
 """
 
 from dataclasses import dataclass, field
-from typing import Protocol, Optional, Any, Iterator
+from typing import Any, Generic, Iterator, Optional, Protocol, TypeVar
+
+A = TypeVar("A")
 
 
 @dataclass
-class ParseResult[A]:
+class ParseResult(Generic[A]):
     """
     Result of parsing operation with full transparency.
 
@@ -56,7 +58,7 @@ class ParseResult[A]:
             raise ValueError("ParseResult: partial=True requires confidence < 1.0")
 
 
-class Parser[A](Protocol):
+class Parser(Protocol[A]):
     """
     Parser transforms fuzzy text into structured data.
 
@@ -170,7 +172,7 @@ class ParserConfig:
             )
 
 
-class IdentityParser[A]:
+class IdentityParser(Generic[A]):
     """
     Identity parser for the category of parsers.
 

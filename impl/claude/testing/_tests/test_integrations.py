@@ -5,29 +5,28 @@ These tests verify that the integration adapters work correctly,
 using graceful degradation when dependencies are unavailable.
 """
 
-import pytest
 from dataclasses import dataclass
 
+import pytest
+from testing.analyst import CausalAnalyst, TestWitness
+from testing.cortex import Cortex
 from testing.integrations import (
+    BudgetedMarket,
     IntegrationStatus,
-    get_integration_status,
+    LatticeValidatedTopology,
+    ObservedCortex,
+    PersistentWitnessStore,
+    TeleologicalRedTeam,
+    create_enhanced_cortex,
     create_enhanced_oracle,
     create_persistent_analyst,
-    create_enhanced_cortex,
-    PersistentWitnessStore,
-    LatticeValidatedTopology,
-    BudgetedMarket,
-    TeleologicalRedTeam,
-    ObservedCortex,
     format_integration_report,
+    get_integration_status,
 )
+from testing.market import TestAsset, TestCost, TestMarket
 from testing.oracle import Oracle
-from testing.analyst import CausalAnalyst, TestWitness
-from testing.topologist import TypeTopology
-from testing.market import TestMarket, TestAsset, TestCost
 from testing.red_team import RedTeam
-from testing.cortex import Cortex
-
+from testing.topologist import TypeTopology
 
 # =============================================================================
 # Test Fixtures

@@ -12,14 +12,14 @@ Tests:
 
 import pytest
 from protocols.tongue_parser import (
+    TongueContext,
     TongueDocument,
     TongueIntegration,
-    TongueContext,
-    TriggerType,
     TongueParseError,
+    TriggerType,
+    generate_integration_code,
     parse_tongue,
     validate_document,
-    generate_integration_code,
 )
 
 

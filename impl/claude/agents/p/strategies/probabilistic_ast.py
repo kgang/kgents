@@ -15,11 +15,11 @@ Use Cases:
 - L-gent catalog metadata: Mark auto-inferred tags as low-confidence
 """
 
+import json
 from dataclasses import dataclass, field
 from typing import Any, Optional
-import json
 
-from agents.p.core import ParseResult, Parser, ParserConfig
+from agents.p.core import Parser, ParserConfig, ParseResult
 
 
 @dataclass

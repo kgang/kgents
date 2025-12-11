@@ -6,8 +6,8 @@ All D-gents must implement this protocol to provide uniform access to state.
 D-gents can also act as morphisms Agent[S, S] for composition with other agents.
 """
 
-from typing import TypeVar, Protocol, List
 from abc import abstractmethod
+from typing import List, Protocol, TypeVar
 
 S = TypeVar("S")  # State type
 T = TypeVar("T")  # Target state type (for composition)

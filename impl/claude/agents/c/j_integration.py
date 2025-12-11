@@ -17,8 +17,8 @@ Integration Pattern:
 
 from typing import Callable, Optional, TypeVar
 
-from bootstrap.types import Agent
 from agents.j.promise import Promise as JPromise
+from bootstrap.types import Agent
 
 A = TypeVar("A")
 B = TypeVar("B")

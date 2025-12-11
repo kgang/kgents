@@ -1,15 +1,15 @@
 """Tests for GraphAgent - Relational Lattice foundation."""
 
-import pytest
-from pathlib import Path
 import tempfile
+from pathlib import Path
 
+import pytest
+from agents.d.errors import NodeNotFoundError
 from agents.d.graph import (
-    GraphAgent,
     Edge,
     EdgeKind,
+    GraphAgent,
 )
-from agents.d.errors import NodeNotFoundError
 
 
 class TestGraphAgentBasics:

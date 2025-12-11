@@ -1,17 +1,18 @@
 """Tests for EvolvingParser (Phase 3: Novel Techniques)."""
 
-import pytest
-import tempfile
 import os
+import tempfile
+
+import pytest
+from agents.p.core import ParseResult
+from agents.p.strategies.anchor import AnchorBasedParser
 from agents.p.strategies.evolving import (
+    DriftReport,
     EvolvingParser,
     FormatStats,
-    DriftReport,
     create_multi_format_parser,
 )
-from agents.p.strategies.anchor import AnchorBasedParser
 from agents.p.strategies.stack_balancing import json_stream_parser
-from agents.p.core import ParseResult
 
 
 class MockParser:

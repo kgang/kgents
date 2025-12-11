@@ -12,6 +12,7 @@ can be regenerated. See spec/bootstrap.md for the full specification.
 """
 
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum

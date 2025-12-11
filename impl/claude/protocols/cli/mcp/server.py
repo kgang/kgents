@@ -482,8 +482,8 @@ async def handle_psi(problem: str, domain: str = "general") -> MCPToolResult:
     """
     try:
         from agents.psi import (
-            PsychopompAgent,
             Novel,
+            PsychopompAgent,
             create_standard_library,
         )
 

@@ -18,11 +18,16 @@ Design Philosophy:
 - Composable: Works with existing SemanticRegistry
 """
 
-from typing import Any, Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Optional
 
 from .semantic import Embedder, SemanticResult
 from .types import CatalogEntry, Status
 from .vector_backend import VectorBackend, create_vector_backend
+
+if TYPE_CHECKING:
+    from .semantic import SemanticBrain
 
 
 class VectorSemanticBrain:
@@ -199,8 +204,9 @@ class VectorSemanticBrain:
         In production, this should fetch the full entry from the registry.
         This is a fallback for when we only have vector backend data.
         """
-        from .types import EntityType
         from datetime import datetime
+
+        from .types import EntityType
 
         return CatalogEntry(
             id=entry_id,

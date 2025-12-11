@@ -9,52 +9,52 @@ Tests for:
 - Value Ledger (transaction accounting)
 """
 
-import pytest
 from datetime import datetime, timedelta
 
-# Value Tensor tests
-from ..value_tensor import (
-    PhysicalDimension,
-    SemanticDimension,
-    EconomicDimension,
-    EthicalDimension,
-    ImpactTier,
-    ExchangeMatrix,
-    create_standard_exchange_rates,
-    AntiDelusionChecker,
-    ValueTensor,
-    TensorAlgebra,
-)
+import pytest
 
 # Metered Functor tests
 from ..metered_functor import (
+    Bid,
+    CentralBank,
+    Denial,
+    DualBudget,
+    EntropyBudget,
     Gas,
     Impact,
-    TokenBucket,
-    SinkingFund,
-    Loan,
-    Denial,
-    TokenFuture,
-    Bid,
-    priority_auction,
-    CentralBank,
     InsufficientFundsError,
-    EntropyBudget,
-    DualBudget,
+    Loan,
+    SinkingFund,
+    TokenBucket,
+    TokenFuture,
     meter,
+    priority_auction,
 )
 
 # Value Ledger tests
 from ..value_ledger import (
     ComplexityOracle,
-    SimpleOutput,
-    ValueOracle,
     EthicalRegulator,
+    RoCMonitor,
+    SimpleOutput,
     Treasury,
     ValueLedger,
-    RoCMonitor,
+    ValueOracle,
 )
 
+# Value Tensor tests
+from ..value_tensor import (
+    AntiDelusionChecker,
+    EconomicDimension,
+    EthicalDimension,
+    ExchangeMatrix,
+    ImpactTier,
+    PhysicalDimension,
+    SemanticDimension,
+    TensorAlgebra,
+    ValueTensor,
+    create_standard_exchange_rates,
+)
 
 # =============================================================================
 # Value Tensor Tests

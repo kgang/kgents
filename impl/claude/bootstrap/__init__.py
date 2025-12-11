@@ -13,56 +13,57 @@ The 7 bootstrap agents from which all of kgents can be regenerated:
 See spec/bootstrap.md for the full specification.
 """
 
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
+
+from .compose import Compose, compose, decompose, depth, flatten, pipeline
+from .contradict import Contradict, TensionDetector, contradict
+from .fix import Fix, fix, iterate_until_stable, poll_until_stable
+from .ground import Ground, ground
+
+# Agents
+from .id import ID, Id
+from .judge import Judge, accepts, judge
+from .sublate import Sublate, resolve_or_hold, sublate
 
 # Types
 from .types import (
+    VOID,
     # Base types
     Agent,
     AgentProtocol,
     ComposedAgent,
-    # Result type
-    Result,
-    Ok,
+    # Input/Output types
+    ContradictInput,
+    ContradictResult,
     Err,
-    ok,
-    err,
-    # Tension types
-    Tension,
-    TensionMode,
-    Synthesis,
-    HoldTension,
-    # Verdict types
-    Verdict,
-    VerdictType,
-    PartialVerdict,
-    Principles,
-    # Ground types
-    PersonaSeed,
-    WorldSeed,
     Facts,
     # Fix types
     FixConfig,
     FixResult,
-    # Input/Output types
-    ContradictInput,
-    ContradictResult,
+    HoldTension,
+    JudgeInput,
+    Ok,
+    PartialVerdict,
+    # Ground types
+    PersonaSeed,
+    Principles,
+    # Result type
+    Result,
     SublateInput,
     SublateResult,
-    JudgeInput,
+    Synthesis,
+    # Tension types
+    Tension,
+    TensionMode,
+    # Verdict types
+    Verdict,
+    VerdictType,
     # Void
     Void,
-    VOID,
+    WorldSeed,
+    err,
+    ok,
 )
-
-# Agents
-from .id import Id, ID
-from .ground import Ground, ground
-from .compose import Compose, compose, pipeline, decompose, flatten, depth
-from .contradict import Contradict, contradict, TensionDetector
-from .judge import Judge, judge, accepts
-from .sublate import Sublate, sublate, resolve_or_hold
-from .fix import Fix, fix, iterate_until_stable, poll_until_stable
 
 __all__ = [
     # Base types

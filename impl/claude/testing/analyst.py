@@ -14,12 +14,11 @@ Phase 8.2 - Causal Analysis:
 - Root cause analysis via causal graphs
 """
 
+import math
+import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Callable, Literal
-import re
-import math
-
 
 # =============================================================================
 # Core Types

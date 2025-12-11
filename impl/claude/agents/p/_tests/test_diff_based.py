@@ -2,8 +2,8 @@
 
 from agents.p.strategies.diff_based import (
     DiffBasedParser,
-    create_wgent_diff_parser,
     create_egent_diff_parser,
+    create_wgent_diff_parser,
 )
 
 

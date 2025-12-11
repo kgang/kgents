@@ -45,8 +45,8 @@ Usage:
 
 from .ground import (
     Ground,
-    XDGPaths,
     InfrastructureConfig,
+    XDGPaths,
     resolve_ground,
 )
 from .lifecycle import (
@@ -57,14 +57,14 @@ from .lifecycle import (
     quick_bootstrap,
 )
 from .storage import (
-    StorageProvider,
     ProviderConfig,
     RetentionConfig,
+    StorageProvider,
 )
 from .synapse import (
-    Synapse,
     Signal,
     SignalKind,
+    Synapse,
     SynapseConfig,
 )
 

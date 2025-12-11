@@ -10,9 +10,9 @@ This module provides agents that validate categorical laws:
 Cross-pollination T2.6: Validates E-gent evolution pipeline laws.
 """
 
-from dataclasses import dataclass
-from typing import TypeVar, Callable, Any, Protocol
 import logging
+from dataclasses import dataclass
+from typing import Any, Callable, Protocol, TypeVar
 
 logger = logging.getLogger(__name__)
 

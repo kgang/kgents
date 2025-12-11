@@ -31,7 +31,7 @@ from enum import Enum
 from typing import Any, Callable
 from uuid import uuid4
 
-from .hippocampus import Hippocampus, ICortex, FlushResult
+from .hippocampus import FlushResult, Hippocampus, ICortex
 from .synapse import Synapse
 
 

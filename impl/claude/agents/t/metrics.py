@@ -7,9 +7,10 @@ Type III Observer - Inspection with timing data.
 """
 
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import Generic, TypeVar, TYPE_CHECKING
+
 import time
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Generic, TypeVar
 
 if TYPE_CHECKING:
     from bootstrap.types import Agent, ComposedAgent

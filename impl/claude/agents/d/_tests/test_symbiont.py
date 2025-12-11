@@ -13,8 +13,9 @@ Composition Laws verified:
 """
 
 import asyncio
+
 import pytest
-from agents.d import VolatileAgent, Symbiont
+from agents.d import Symbiont, VolatileAgent
 
 
 @pytest.mark.asyncio

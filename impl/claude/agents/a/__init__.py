@@ -15,49 +15,48 @@ AbstractAgent is just an alias for semantic clarity.
 For richer metadata, use AgentMeta (optional).
 """
 
+from .creativity import (
+    # Agent
+    CreativityCoach,
+    CreativityInput,
+    # Types
+    CreativityMode,
+    CreativityResponse,
+    Persona,
+    # Convenience functions
+    creativity_coach,
+    philosophical_coach,
+    playful_coach,
+    provocative_coach,
+)
 from .skeleton import (
     # The skeleton (re-exported from bootstrap)
     AbstractAgent,
-    # Optional metadata
-    AgentMeta,
+    AgentBehavior,
+    AgentFactory,
     AgentIdentity,
     AgentInterface,
-    AgentBehavior,
-    # Utilities
-    has_meta,
-    get_meta,
-    check_composition,
+    # Optional metadata
+    AgentMeta,
+    # Phase 3: AgentFactory
+    AgentSpec,
+    AutopoieticAgent,
     # Phase 1: BootstrapWitness
     BootstrapVerificationResult,
     BootstrapWitness,
-    # Phase 2: Category-Theoretic Protocols
-    Morphism,
-    Functor,
-    get_domain,
-    get_codomain,
-    verify_composition_types,
-    # Phase 3: AgentFactory
-    AgentSpec,
-    AgentFactory,
     FactoryAgent,
+    Functor,
     # Phase 4: GroundedSkeleton
     GroundedSkeleton,
-    AutopoieticAgent,
-)
-
-from .creativity import (
-    # Types
-    CreativityMode,
-    CreativityInput,
-    CreativityResponse,
-    Persona,
-    # Agent
-    CreativityCoach,
-    # Convenience functions
-    creativity_coach,
-    playful_coach,
-    philosophical_coach,
-    provocative_coach,
+    # Phase 2: Category-Theoretic Protocols
+    Morphism,
+    check_composition,
+    get_codomain,
+    get_domain,
+    get_meta,
+    # Utilities
+    has_meta,
+    verify_composition_types,
 )
 
 __all__ = [

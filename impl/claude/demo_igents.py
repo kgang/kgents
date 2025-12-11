@@ -10,17 +10,18 @@ Demonstrates the fractal visualization scales:
 """
 
 from datetime import datetime, timedelta
+
 from agents.i import (
-    Phase,
+    AgentState,
+    CardRenderer,
+    GardenRenderer,
+    GardenState,
     Glyph,
     GlyphRenderer,
-    CardRenderer,
-    PageRenderer,
-    GardenRenderer,
-    AgentState,
-    GardenState,
     MarginNote,
     NoteSource,
+    PageRenderer,
+    Phase,
 )
 
 print("=" * 70)

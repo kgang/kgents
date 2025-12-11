@@ -10,18 +10,19 @@ Tests integration between K-gent (Persona) and other agents:
 Philosophy: K-gent is Ground projected through persona schema.
 """
 
-import pytest
+from datetime import datetime
 
+import pytest
 from agents.k import (
-    KgentAgent,
-    PersonaQueryAgent,
-    PersonaState,
-    PersonaSeed,
-    PersonaQuery,
-    PersonaResponse,
     DialogueInput,
-    DialogueOutput,
     DialogueMode,
+    DialogueOutput,
+    KgentAgent,
+    PersonaQuery,
+    PersonaQueryAgent,
+    PersonaResponse,
+    PersonaSeed,
+    PersonaState,
     kgent,
     query_persona,
 )
@@ -30,7 +31,6 @@ from agents.k.persistent_persona import (
 )
 from agents.m import HolographicMemory
 from agents.n import Chronicle, SemanticTrace
-from datetime import datetime
 
 
 class TestKgentDialogue:

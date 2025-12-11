@@ -15,25 +15,26 @@ Stack:
 """
 
 from __future__ import annotations
+
 import asyncio
 import json
+import logging
 import webbrowser
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, AsyncIterator
-import logging
+from typing import AsyncIterator, Optional
 
 try:
-    from fastapi import FastAPI
-    from fastapi.responses import HTMLResponse, StreamingResponse, PlainTextResponse
     import uvicorn
+    from fastapi import FastAPI
+    from fastapi.responses import HTMLResponse, PlainTextResponse, StreamingResponse
 
     FASTAPI_AVAILABLE = True
 except ImportError:
     FASTAPI_AVAILABLE = False
 
+from .fidelity import Fidelity, detect_fidelity, get_adapter
 from .protocol import WireReader
-from .fidelity import Fidelity, get_adapter, detect_fidelity
 
 logger = logging.getLogger(__name__)
 

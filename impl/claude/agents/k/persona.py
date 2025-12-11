@@ -8,8 +8,8 @@ K-gent is Ground projected through persona_schema:
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Callable, Optional, Generic, TypeVar
 from enum import Enum
+from typing import Any, Callable, Generic, Optional, TypeVar
 
 from bootstrap.types import Agent
 

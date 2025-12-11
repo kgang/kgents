@@ -14,11 +14,12 @@ See spec/bootstrap.md lines 98-142, spec/k-gent/persona.md.
 """
 
 from __future__ import annotations
+
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
 
-from .types import Agent, Facts, PersonaSeed, WorldSeed, Void, VOID
+from .types import VOID, Agent, Facts, PersonaSeed, Void, WorldSeed
 
 
 class Ground(Agent[Void, Facts]):

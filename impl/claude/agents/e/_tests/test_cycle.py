@@ -12,37 +12,36 @@ Tests cover:
 """
 
 import tempfile
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any
-from dataclasses import dataclass
 from uuid import uuid4
 
 import pytest
 
 from ..cycle import (
-    ThermodynamicCycle,
     CycleConfig,
     CyclePhase,
     CycleResult,
-    create_cycle,
+    EvolutionAgent,
+    ThermodynamicCycle,
     create_conservative_cycle,
+    create_cycle,
     create_exploratory_cycle,
     create_full_cycle,
-    EvolutionAgent,
 )
+from ..demon import DemonConfig, TeleologicalDemon
+from ..library import ViralLibrary, ViralLibraryConfig
+from ..mutator import Mutator, MutatorConfig
 from ..types import (
-    Intent,
-    Phage,
-    PhageStatus,
-    MutationVector,
     InfectionResult,
     InfectionStatus,
+    Intent,
+    MutationVector,
+    Phage,
+    PhageStatus,
 )
-from ..demon import TeleologicalDemon, DemonConfig
-from ..mutator import Mutator, MutatorConfig
-from ..library import ViralLibrary, ViralLibraryConfig
-
 
 # =============================================================================
 # Test Fixtures
@@ -1102,7 +1101,8 @@ class TestErrorHandling:
 
 
 try:
-    from hypothesis import given, strategies as st, settings
+    from hypothesis import given, settings
+    from hypothesis import strategies as st
 
     class TestCycleProperties:
         """Property-based tests for cycle."""

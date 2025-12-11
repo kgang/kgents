@@ -13,7 +13,7 @@ from __future__ import annotations
 import random
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Callable, Generic, TypeVar, List, Optional, Tuple
+from typing import Any, Callable, Generic, List, Optional, Tuple, TypeVar
 
 from runtime.base import Agent
 
@@ -121,11 +121,12 @@ class ChoiceGenerator(Generator[A], Generic[A]):
 @dataclass
 class PropertyTestResult:
     """Result of property-based testing."""
-    total_cases: int            # Total test cases run
-    passed_cases: int           # Cases that passed
-    failed_cases: int           # Cases that failed
+
+    total_cases: int  # Total test cases run
+    passed_cases: int  # Cases that passed
+    failed_cases: int  # Cases that failed
     failures: List[Tuple[A, str]] = field(default_factory=list)  # (input, error) pairs
-    property_name: str = ""     # Name of property being tested
+    property_name: str = ""  # Name of property being tested
 
     @property
     def success_rate(self) -> float:
@@ -140,7 +141,10 @@ class PropertyTestResult:
         return self.failed_cases == 0
 
 
-class PropertyAgent(Agent[Tuple[Generator[A], Callable[[A, B], bool]], PropertyTestResult], Generic[A, B]):
+class PropertyAgent(
+    Agent[Tuple[Generator[A], Callable[[A, B], bool]], PropertyTestResult],
+    Generic[A, B],
+):
     """
     Property-based testing agent.
 
@@ -198,7 +202,9 @@ class PropertyAgent(Agent[Tuple[Generator[A], Callable[[A, B], bool]], PropertyT
         """Return agent name."""
         return f"PropertyAgent({self.property_name})"
 
-    async def invoke(self, input_data: Tuple[Generator[A], Callable[[A, B], bool]]) -> PropertyTestResult:
+    async def invoke(
+        self, input_data: Tuple[Generator[A], Callable[[A, B], bool]]
+    ) -> PropertyTestResult:
         """
         Run property-based tests.
 
@@ -233,10 +239,12 @@ class PropertyAgent(Agent[Tuple[Generator[A], Callable[[A, B], bool]], PropertyT
                     passed_cases += 1
                 else:
                     failed_cases += 1
-                    failures.append((
-                        test_input,
-                        f"Property failed for input: {test_input}, output: {output}"
-                    ))
+                    failures.append(
+                        (
+                            test_input,
+                            f"Property failed for input: {test_input}, output: {output}",
+                        )
+                    )
 
             except Exception as e:
                 failed_cases += 1
@@ -272,7 +280,7 @@ def length_preserved_property(input: Any, output: Any) -> bool:
 
 def type_preserved_property(input: A, output: B) -> bool:
     """Property: output type should match input type."""
-    return type(input) == type(output)
+    return type(input) is type(output)
 
 
 # Common generators

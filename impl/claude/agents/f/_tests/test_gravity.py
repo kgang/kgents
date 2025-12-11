@@ -9,25 +9,23 @@ Tests the Grounded pattern from spec/protocols/umwelt.md:
 """
 
 import pytest
-
-from bootstrap.types import Agent
 from agents.f.gravity import (
-    # Errors
-    GroundingError,
+    BoundedLength,
+    ComposedContract,
+    EthicalBoundary,
+    FactConsistency,
+    GravityBuilder,
     # Contracts
     GravityContract,
-    ComposedContract,
-    FactConsistency,
-    EthicalBoundary,
-    TypeContract,
-    BoundedLength,
-    RequiredFields,
-    PredicateContract,
     # Wrapper
     Grounded,
-    GravityBuilder,
+    # Errors
+    GroundingError,
+    PredicateContract,
+    RequiredFields,
+    TypeContract,
 )
-
+from bootstrap.types import Agent
 
 # ============================================================================
 # Mock Agent for Testing

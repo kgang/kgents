@@ -11,7 +11,6 @@ import tempfile
 from pathlib import Path
 
 import pytest
-
 from agents.f.contract import Contract
 from agents.f.forge_with_search import (
     ForgeDecision,

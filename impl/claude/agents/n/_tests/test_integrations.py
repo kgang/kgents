@@ -9,12 +9,11 @@ Tests:
 - NarrativeOrchestrator: Unified integration layer
 """
 
-import pytest
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from ..types import Determinism, SemanticTrace
-from ..store import MemoryCrystalStore
+import pytest
+
 from ..bard import NarrativeGenre, NarrativeRequest, Verbosity
 from ..integrations import (
     BudgetedBard,
@@ -27,7 +26,8 @@ from ..integrations import (
     ResonantCrystalStore,
     VisualizableBard,
 )
-
+from ..store import MemoryCrystalStore
+from ..types import Determinism, SemanticTrace
 
 # =============================================================================
 # Fixtures

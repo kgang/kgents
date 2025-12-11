@@ -12,33 +12,32 @@ Target: 40+ comprehensive tests covering:
 - Edge cases and fuzz-like testing
 """
 
-import pytest
 from datetime import datetime
 
+import pytest
 from agents.b.fiscal_constitution import (
+    Account,
+    AccountBalance,
+    # Banker
+    ConstitutionalBanker,
+    ExecutionResult,
+    LedgerState,
+    LedgerTongue,
+    # Parser and Tongue
+    LedgerTongueParser,
+    LedgerTransaction,
     # Types
     ParseError,
     ParseSuccess,
-    AccountBalance,
-    Account,
-    LedgerState,
-    LedgerTransaction,
+    QueryCommand,
+    ReleaseCommand,
+    ReserveCommand,
     # Commands
     TransferCommand,
-    QueryCommand,
-    ReserveCommand,
-    ReleaseCommand,
-    # Parser and Tongue
-    LedgerTongueParser,
-    LedgerTongue,
-    ExecutionResult,
-    # Banker
-    ConstitutionalBanker,
-    create_ledger_tongue,
     create_constitutional_banker,
     create_fiscal_constitution,
+    create_ledger_tongue,
 )
-
 
 # =============================================================================
 # AccountBalance Tests

@@ -4,16 +4,17 @@ Tests for M-gent Cartography Integrations.
 Phase 5 Polish: O-gent, Ψ-gent, and I-gent integration tests.
 """
 
-import pytest
 from datetime import datetime, timedelta
 
+import pytest
+
 from ..cartography import (
-    HoloMap,
     Attractor,
-    WeightedEdge,
-    Void,
-    Region,
+    HoloMap,
     Horizon,
+    Region,
+    Void,
+    WeightedEdge,
     create_context_vector,
 )
 from ..cartography_integrations import (
@@ -22,20 +23,19 @@ from ..cartography_integrations import (
     EdgeHealth,
     LandmarkHealth,
     MapHealth,
+    MapRenderConfig,
+    # I-gent
+    MapRenderer,
     # Ψ-gent
     MetaphorLocator,
     MetaphorMatch,
     MetaphorNeighborhood,
-    # I-gent
-    MapRenderer,
-    MapRenderConfig,
+    annotate_and_render,
     # Factories
     create_cartographic_observer,
-    create_metaphor_locator,
     create_map_renderer,
-    annotate_and_render,
+    create_metaphor_locator,
 )
-
 
 # ============================================================================
 # Test Fixtures

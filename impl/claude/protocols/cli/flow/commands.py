@@ -20,7 +20,6 @@ import asyncio
 import json
 from pathlib import Path
 
-
 # =============================================================================
 # Output Formatting
 # =============================================================================
@@ -121,8 +120,8 @@ def format_validation_result_rich(errors: list[str], path: str) -> str:
 
 async def cmd_flow_run(args: list[str]) -> int:
     """Execute a flowfile."""
-    from .parser import parse_flowfile
     from .engine import FlowEngine
+    from .parser import parse_flowfile
 
     if not args:
         print("Usage: kgents flow run <flowfile> [input] [--var key=value ...]")
@@ -245,7 +244,7 @@ async def cmd_flow_validate(args: list[str]) -> int:
 
 async def cmd_flow_explain(args: list[str]) -> int:
     """Explain a flowfile in human-readable form."""
-    from .parser import parse_flowfile, explain_flow
+    from .parser import explain_flow, parse_flowfile
 
     if not args:
         print("Usage: kgents flow explain <flowfile>")

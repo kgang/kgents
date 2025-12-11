@@ -10,14 +10,14 @@ Composition Laws:
 - Associativity: (l1 >> l2) >> l3 == l1 >> (l2 >> l3)
 """
 
-import pytest
 from dataclasses import dataclass
 
+import pytest
 from agents.d.lens import (
-    key_lens,
     field_lens,
-    index_lens,
     identity_lens,
+    index_lens,
+    key_lens,
     verify_lens_laws,
 )
 

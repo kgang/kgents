@@ -9,7 +9,6 @@ Test Coverage:
 """
 
 import pytest
-
 from agents.l.semantic import (
     SemanticBrain,
     SemanticResult,

@@ -194,7 +194,7 @@ class TestStreamingJSON:
         assert final.success
         assert not final.partial
         assert final.confidence == 1.0  # Fully balanced
-        assert final.metadata.get("final") == True
+        assert final.metadata.get("final")
 
 
 class TestStreamingHTML:

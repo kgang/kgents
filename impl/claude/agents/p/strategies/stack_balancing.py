@@ -20,9 +20,9 @@ Use Cases:
 """
 
 import re
-from typing import Iterator, Optional, Literal
+from typing import Iterator, Literal, Optional
 
-from agents.p.core import ParseResult, ParserConfig
+from agents.p.core import ParserConfig, ParseResult
 
 
 class StackBalancingParser:

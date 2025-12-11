@@ -8,12 +8,12 @@ Validates:
 - History delegation (backend is source of truth)
 """
 
-import pytest
 import tempfile
-from pathlib import Path
 from dataclasses import dataclass
+from pathlib import Path
 
-from agents.d import VolatileAgent, PersistentAgent, CachedAgent
+import pytest
+from agents.d import CachedAgent, PersistentAgent, VolatileAgent
 
 
 @dataclass

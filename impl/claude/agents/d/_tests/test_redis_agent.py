@@ -13,14 +13,14 @@ import pytest
 
 # Check if dependencies are available
 try:
+    from ..errors import (
+        StateNotFoundError,
+        StorageError,
+    )
     from ..redis_agent import (
         RedisAgent,
         create_redis_agent,
         create_valkey_agent,
-    )
-    from ..errors import (
-        StateNotFoundError,
-        StorageError,
     )
 
     REDIS_DEPS = True

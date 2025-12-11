@@ -19,7 +19,6 @@ import json
 from unittest.mock import AsyncMock
 
 import pytest
-
 from agents.t.mcp_client import (
     HttpSseTransport,
     JsonRpcError,
@@ -32,7 +31,6 @@ from agents.t.mcp_client import (
     StdioTransport,
 )
 from agents.t.tool import ToolError, ToolErrorType
-
 
 # --- JSON-RPC Tests ---
 

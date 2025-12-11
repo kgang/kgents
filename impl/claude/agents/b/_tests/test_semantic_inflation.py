@@ -16,33 +16,32 @@ Tests cover:
 10. Edge cases
 """
 
-import pytest
 from datetime import datetime
 
+import pytest
 from agents.b.semantic_inflation import (
+    AudienceLevel,
+    AudienceProfile,
+    ComplexityAnalyzer,
     # Types
     ComplexityDimension,
     ComplexityVector,
-    AudienceLevel,
-    AudienceProfile,
-    InflationPressure,
-    InflationCategory,
-    InflationReport,
-    TokenAllocation,
-    DeflationStrategy,
-    DeflationProposal,
-    InflationBudget,
     DeflationNegotiator,
-    ComplexityAnalyzer,
+    DeflationProposal,
+    DeflationStrategy,
+    InflationBudget,
+    InflationCategory,
+    InflationPressure,
+    InflationReport,
     SemanticCPIMonitor,
-    # Functions
-    create_inflation_budget,
+    TokenAllocation,
     analyze_complexity,
     calculate_inflation_pressure,
-    get_deflation_recommendations,
+    # Functions
+    create_inflation_budget,
     estimate_explanation_tokens,
+    get_deflation_recommendations,
 )
-
 
 # =============================================================================
 # ComplexityVector Tests

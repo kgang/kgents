@@ -17,6 +17,7 @@ See spec/bootstrap.md lines 57-70, spec/c-gents/composition.md.
 """
 
 from __future__ import annotations
+
 from typing import TypeVar
 
 from .types import Agent, ComposedAgent

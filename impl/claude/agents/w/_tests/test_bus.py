@@ -10,23 +10,22 @@ Tests verify:
 - Error handling
 """
 
-import pytest
 from dataclasses import dataclass
 from typing import Any
 
+import pytest
 from agents.w.bus import (
+    AgentRegistry,
+    BaseInterceptor,
+    BlockingInterceptor,
     BusMessage,
     InterceptorResult,
-    BaseInterceptor,
-    PassthroughInterceptor,
     LoggingInterceptor,
-    BlockingInterceptor,
-    AgentRegistry,
-    MiddlewareBus,
     MessagePriority,
+    MiddlewareBus,
+    PassthroughInterceptor,
     create_bus,
 )
-
 
 # --- Test Agents ---
 

@@ -17,9 +17,9 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple, TypeVar
 
 from .holographic import (
+    CompressionLevel,
     HolographicMemory,
     MemoryPattern,
-    CompressionLevel,
     ResonanceResult,
 )
 

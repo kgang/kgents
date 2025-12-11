@@ -25,10 +25,9 @@ from typing import Any, Protocol, runtime_checkable
 
 from .ground import (
     Ground,
-    XDGPaths,
     InfrastructureConfig,
+    XDGPaths,
 )
-
 
 # =============================================================================
 # Protocol Interfaces (Infrastructure Layer)

@@ -9,24 +9,24 @@ These tests verify:
 - LetheGardener operations
 """
 
-import pytest
 import secrets
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
 
-from ..lethe import (
-    LetheStore,
-    LetheGardener,
-    ForgetProof,
-    RetentionPolicy,
-    RetentionConfig,
-    NullStorageBackend,
-    create_lethe_store,
-    create_lethe_gardener,
-)
-from ..hippocampus import LetheEpoch
+import pytest
 
+from ..hippocampus import LetheEpoch
+from ..lethe import (
+    ForgetProof,
+    LetheGardener,
+    LetheStore,
+    NullStorageBackend,
+    RetentionConfig,
+    RetentionPolicy,
+    create_lethe_gardener,
+    create_lethe_store,
+)
 
 # === Test Fixtures ===
 

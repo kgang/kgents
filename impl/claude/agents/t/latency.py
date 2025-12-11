@@ -7,9 +7,10 @@ Type II Saboteur - Chaos Engineering for performance testing.
 """
 
 from __future__ import annotations
-from typing import Generic, TypeVar, Optional, TYPE_CHECKING
+
 import asyncio
 import random
+from typing import TYPE_CHECKING, Generic, Optional, TypeVar
 
 if TYPE_CHECKING:
     from bootstrap.types import Agent, ComposedAgent

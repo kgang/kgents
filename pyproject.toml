@@ -25,3 +25,26 @@ members = [
 [tool.uv.sources]
 # Allow workspace packages to reference each other
 kgents-runtime = { workspace = true }
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = [
+    "E402",  # Import not at top - intentional for optional deps
+    "E501",  # Line too long - not enforced
+    "E741",  # Ambiguous variable name (l, O, I) - review case-by-case
+    "F401",  # Unused import - many intentional re-exports
+]
+
+[tool.ruff.lint.per-file-ignores]
+"**/test_*.py" = ["F401", "F841"]  # Test files often have unused imports/vars
+"**/__init__.py" = ["F401"]        # Re-exports are intentional
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_ignores = true
+ignore_missing_imports = true  # Until all deps have stubs

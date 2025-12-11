@@ -27,7 +27,6 @@ import re
 from dataclasses import dataclass, field
 from enum import Enum
 
-
 # =============================================================================
 # Types
 # =============================================================================
@@ -485,11 +484,11 @@ async def execute_plan_async(plan: ExecutionPlan) -> dict:
     """
     from protocols.cli.mcp.server import (
         handle_check,
-        handle_judge,
-        handle_think,
-        handle_fix,
-        handle_speak,
         handle_find,
+        handle_fix,
+        handle_judge,
+        handle_speak,
+        handle_think,
     )
 
     # Map commands to handlers

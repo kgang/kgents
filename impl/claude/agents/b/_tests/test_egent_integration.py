@@ -1,22 +1,21 @@
 """Tests for B-gent E-gent Integration module."""
 
-import pytest
 from datetime import timedelta
 
+import pytest
 from agents.b.egent_integration import (
     # Prediction Market
     BetOutcome,
-    PredictionMarket,
     # Grant System (Sun)
     GrantStatus,
-    Sun,
+    PredictionMarket,
     # Staking
     StakingPool,
+    Sun,
     # Combined
     create_evolution_economics,
 )
 from agents.b.metered_functor import CentralBank
-
 
 # =============================================================================
 # Prediction Market Tests

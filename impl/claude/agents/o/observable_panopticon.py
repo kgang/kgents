@@ -21,17 +21,11 @@ import asyncio
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, AsyncIterator, Callable, Optional
 from pathlib import Path
+from typing import Any, AsyncIterator, Callable, Optional
 
-# Import O-gent components
-from .panopticon import (
-    IntegratedPanopticon,
-    UnifiedPanopticonStatus,
-    PanopticonAlert,
-    AlertSeverity,
-    create_integrated_panopticon,
-)
+# Import W-gent wire protocol
+from ..w.protocol import WireObservable
 from .observer import (
     BaseObserver,
     ObservationContext,
@@ -39,9 +33,14 @@ from .observer import (
     ObservationStatus,
 )
 
-# Import W-gent wire protocol
-from ..w.protocol import WireObservable
-
+# Import O-gent components
+from .panopticon import (
+    AlertSeverity,
+    IntegratedPanopticon,
+    PanopticonAlert,
+    UnifiedPanopticonStatus,
+    create_integrated_panopticon,
+)
 
 # =============================================================================
 # Wire Protocol Emission Modes

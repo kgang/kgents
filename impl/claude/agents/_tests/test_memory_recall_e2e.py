@@ -12,26 +12,15 @@ Philosophy: Memory is not retrieval—it is active reconstruction.
 The hologram metaphor is architecturally load-bearing.
 """
 
-import pytest
 from dataclasses import dataclass
 
-# M-gent imports
-from agents.m import (
-    HolographicMemory,
-    DgentBackedHolographicMemory,
-    RecollectionAgent,
-    Cue,
-    TieredMemory,
-    ProspectiveAgent,
-    Situation,
-    ActionHistory,
-)
+import pytest
 
 # D-gent imports
 from agents.d import (
-    VolatileAgent,
-    UnifiedMemory,
     MemoryConfig,
+    UnifiedMemory,
+    VolatileAgent,
 )
 
 # L-gent imports
@@ -43,16 +32,28 @@ from agents.l import (
     SimpleEmbedder,
 )
 
+# M-gent imports
+from agents.m import (
+    ActionHistory,
+    Cue,
+    DgentBackedHolographicMemory,
+    HolographicMemory,
+    ProspectiveAgent,
+    RecollectionAgent,
+    Situation,
+    TieredMemory,
+)
+
 # N-gent imports
 from agents.n import (
+    Bard,
+    ChronicleBuilder,
+    Determinism,
     Historian,
     MemoryCrystalStore,
-    Bard,
-    NarrativeRequest,
     NarrativeGenre,
+    NarrativeRequest,
     Verbosity,
-    Determinism,
-    ChronicleBuilder,
 )
 
 

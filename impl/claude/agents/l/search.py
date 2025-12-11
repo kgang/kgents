@@ -13,7 +13,7 @@ will be added in future phases.
 from dataclasses import dataclass
 from enum import Enum
 
-from .catalog import CatalogEntry, Registry, EntityType, Status
+from .catalog import CatalogEntry, EntityType, Registry, Status
 
 
 class SearchStrategy(Enum):

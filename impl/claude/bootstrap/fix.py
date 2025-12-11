@@ -16,6 +16,7 @@ See spec/bootstrap.md lines 181-193, Idiom 1 (lines 318-347).
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Awaitable, Callable, Generic, Optional, TypeVar
 

@@ -19,31 +19,29 @@ All J+T tools are marked with __is_test__ = True to distinguish them
 from production agents.
 """
 
-import pytest
 from typing import Any
 
-from bootstrap.types import Agent, Result
-
-from agents.t.tool import ToolMeta, ToolError, ToolErrorType
-from agents.t.permissions import ToolCapabilities
-
+import pytest
 from agents.j import (
     AgentSource,
     ArchitectConstraints,
 )
+from agents.j.factory_integration import JITAgentMeta
+from agents.j.sandbox import SandboxConfig
 from agents.j.t_integration import (
-    ToolTemplate,
+    FILTER_TEMPLATE,
+    JSON_FIELD_EXTRACTOR,
+    TEXT_TRANSFORMER,
     JITToolMeta,
     JITToolWrapper,
+    ToolTemplate,
     compile_tool_from_intent,
     compile_tool_from_template,
     create_tool_from_source,
-    JSON_FIELD_EXTRACTOR,
-    TEXT_TRANSFORMER,
-    FILTER_TEMPLATE,
 )
-from agents.j.factory_integration import JITAgentMeta
-from agents.j.sandbox import SandboxConfig
+from agents.t.permissions import ToolCapabilities
+from agents.t.tool import ToolError, ToolErrorType, ToolMeta
+from bootstrap.types import Agent, Result
 
 # Mark wrapper as test agent
 JITToolWrapper.__is_test__ = True

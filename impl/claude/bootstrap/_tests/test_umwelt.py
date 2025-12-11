@@ -8,20 +8,19 @@ Tests the Umwelt Protocol from spec/protocols/umwelt.md:
 - Hypothetical/temporal projection
 """
 
-import pytest
 from dataclasses import dataclass
 from typing import Any
 
-from agents.d.lens import key_lens, identity_lens
+import pytest
+from agents.d.lens import identity_lens, key_lens
 from agents.d.volatile import VolatileAgent
 from bootstrap.dna import BaseDNA, DNAValidationError
 from bootstrap.umwelt import (
-    Umwelt,
+    HypotheticalProjector,
     LightweightUmwelt,
     Projector,
-    HypotheticalProjector,
+    Umwelt,
 )
-
 
 # ============================================================================
 # Mock Contracts

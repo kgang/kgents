@@ -7,8 +7,9 @@ Tests cover:
 - Sync utilities and migration
 """
 
-import pytest
 from datetime import datetime
+
+import pytest
 
 # Check for numpy availability
 try:
@@ -19,9 +20,8 @@ except ImportError:
     np = None
     NUMPY_AVAILABLE = False
 
-from agents.l.types import CatalogEntry, EntityType, Status
 from agents.l.semantic import SimpleEmbedder
-
+from agents.l.types import CatalogEntry, EntityType, Status
 
 # Skip all tests if numpy not available
 pytestmark = pytest.mark.skipif(not NUMPY_AVAILABLE, reason="numpy not installed")

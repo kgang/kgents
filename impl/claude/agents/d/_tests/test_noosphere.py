@@ -4,12 +4,13 @@ Tests for D-gent Phase 4: The Noosphere.
 Tests SemanticManifold, TemporalWitness, RelationalLattice, and MemoryGarden.
 """
 
-import pytest
 import asyncio
+import shutil
+import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path
-import tempfile
-import shutil
+
+import pytest
 
 # Conditional numpy import
 try:
@@ -21,33 +22,29 @@ except ImportError:
     NUMPY_AVAILABLE = False
 
 from agents.d import (
-    # Stream types used by witness
-    WitnessReport,
     DriftReport,
     EdgeKind,
+    # Stream types used by witness
+    WitnessReport,
 )
-
-from agents.d.witness import (
-    TemporalWitness,
-    DriftSeverity,
-    EntropyLevel,
-)
-
-from agents.d.lattice import (
-    RelationalLattice,
-    LatticeRelation,
-)
-
 from agents.d.garden import (
-    MemoryGarden,
-    Lifecycle,
+    Contradiction,
     Evidence,
     EvidenceType,
-    Contradiction,
     Insight,
+    Lifecycle,
+    MemoryGarden,
     Nutrients,
 )
-
+from agents.d.lattice import (
+    LatticeRelation,
+    RelationalLattice,
+)
+from agents.d.witness import (
+    DriftSeverity,
+    EntropyLevel,
+    TemporalWitness,
+)
 
 # =============================================================================
 # Fixtures

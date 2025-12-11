@@ -43,138 +43,42 @@ Integration:
 - B-gent: Memory economics (token budget)
 """
 
-from .holographic import (
-    HolographicMemory,
-    MemoryPattern,
-    ResonanceResult,
-    CompressionLevel,
-)
-from .recollection import (
-    RecollectionAgent,
-    Recollection,
-    Cue,
-    ReconstructionRequest,
-)
-from .consolidation import (
-    ConsolidationAgent,
-    ConsolidationResult,
-    TemperatureProfile,
-)
-from .tiered import (
-    TieredMemory,
-    MemoryTier,
-    AttentionFilter,
-)
-from .dgent_backend import (
-    DgentBackedHolographicMemory,
-    AssociativeWebMemory,
-    TemporalMemory,
-    PersistenceConfig,
-    create_dgent_memory,
-    create_associative_memory,
-    create_temporal_memory,
-)
-from .persistent_tiered import (
-    PersistentTieredMemory,
-    PersistentWorkingMemory,
-    NarrativeMemory,
-    TierConfig,
-    TierStats,
-    MemoryHierarchyStats,
-    create_persistent_tiered_memory,
-    create_narrative_memory,
-)
-from .prospective import (
-    # ProspectiveAgent
-    ProspectiveAgent,
-    Situation,
-    ActionRecord,
-    ActionHistory,
-    PredictedAction,
-    # EthicalGeometryAgent
-    EthicalGeometry,
-    EthicalGeometryAgent,
-    EthicalExperience,
-    EthicalPosition,
-    EthicalRegion,
-    EthicalPath,
-    ActionProposal,
-    # ContextualRecallAgent
-    ContextualQuery,
-    ContextualRecallAgent,
-    # Factory functions
-    create_prospective_agent,
-    create_ethical_agent,
-)
-from .vector_holographic import (
-    VectorHolographicMemory,
-    VectorMemoryConfig,
-    VoidInfo,
-    ClusterInfo,
-    create_vector_holographic_memory,
-    create_simple_vector_memory,
-)
-from .memory_budget import (
-    BudgetedMemory,
-    MemoryCostModel,
-    MemoryReceipt,
-    ResolutionBudget,
-    ResolutionAllocation,
-    MemoryEconomicsReport,
-    MemoryEconomicsDashboard,
-    InsufficientBudgetError,
-    create_budgeted_memory,
-    create_mock_bank,
-)
-
-# Phase 5: Holographic Cartography
-from .cartography import (
-    # Core types
-    HoloMap,
-    Attractor,
-    WeightedEdge,
-    ContextVector,
-    Horizon,
-    Region,
-    Void,
-    Resolution,
-    # Navigation types
-    Goal,
-    NavigationPlan,
-    # Context injection types
-    FoveatedView,
-    InjectionRequest,
-    OptimalContext,
-    # Factory functions
-    create_empty_holomap,
-    create_context_vector,
-    create_attractor,
-    create_desire_line,
-)
 from .cartographer import (
     CartographerAgent,
     CartographerConfig,
     DesireLineComputer,
+    MockTrace,
+    MockTraceStore,
     # Mock implementations
     MockVectorSearch,
-    MockTraceStore,
-    MockTrace,
     # Factory functions
     create_cartographer,
     create_mock_cartographer,
 )
-from .pathfinder import (
-    PathfinderAgent,
-    PathfinderConfig,
-    PathAnalysis,
-    analyze_path,
-    create_pathfinder,
-)
-from .context_injector import (
-    ContextInjector,
-    InjectorConfig,
-    inject_context,
-    create_context_injector,
+
+# Phase 5: Holographic Cartography
+from .cartography import (
+    Attractor,
+    ContextVector,
+    # Context injection types
+    FoveatedView,
+    # Navigation types
+    Goal,
+    # Core types
+    HoloMap,
+    Horizon,
+    InjectionRequest,
+    NavigationPlan,
+    OptimalContext,
+    Region,
+    Resolution,
+    Void,
+    WeightedEdge,
+    create_attractor,
+    create_context_vector,
+    create_desire_line,
+    # Factory functions
+    create_empty_holomap,
 )
 
 # Phase 5 Polish: O-gent, Ψ-gent, I-gent Integrations
@@ -184,18 +88,114 @@ from .cartography_integrations import (
     EdgeHealth,
     LandmarkHealth,
     MapHealth,
+    MapRenderConfig,
+    # I-gent: Visualization
+    MapRenderer,
     # Ψ-gent: Metaphor discovery
     MetaphorLocator,
     MetaphorMatch,
     MetaphorNeighborhood,
-    # I-gent: Visualization
-    MapRenderer,
-    MapRenderConfig,
+    annotate_and_render,
     # Factory functions
     create_cartographic_observer,
-    create_metaphor_locator,
     create_map_renderer,
-    annotate_and_render,
+    create_metaphor_locator,
+)
+from .consolidation import (
+    ConsolidationAgent,
+    ConsolidationResult,
+    TemperatureProfile,
+)
+from .context_injector import (
+    ContextInjector,
+    InjectorConfig,
+    create_context_injector,
+    inject_context,
+)
+from .dgent_backend import (
+    AssociativeWebMemory,
+    DgentBackedHolographicMemory,
+    PersistenceConfig,
+    TemporalMemory,
+    create_associative_memory,
+    create_dgent_memory,
+    create_temporal_memory,
+)
+from .holographic import (
+    CompressionLevel,
+    HolographicMemory,
+    MemoryPattern,
+    ResonanceResult,
+)
+from .memory_budget import (
+    BudgetedMemory,
+    InsufficientBudgetError,
+    MemoryCostModel,
+    MemoryEconomicsDashboard,
+    MemoryEconomicsReport,
+    MemoryReceipt,
+    ResolutionAllocation,
+    ResolutionBudget,
+    create_budgeted_memory,
+    create_mock_bank,
+)
+from .pathfinder import (
+    PathAnalysis,
+    PathfinderAgent,
+    PathfinderConfig,
+    analyze_path,
+    create_pathfinder,
+)
+from .persistent_tiered import (
+    MemoryHierarchyStats,
+    NarrativeMemory,
+    PersistentTieredMemory,
+    PersistentWorkingMemory,
+    TierConfig,
+    TierStats,
+    create_narrative_memory,
+    create_persistent_tiered_memory,
+)
+from .prospective import (
+    ActionHistory,
+    ActionProposal,
+    ActionRecord,
+    # ContextualRecallAgent
+    ContextualQuery,
+    ContextualRecallAgent,
+    EthicalExperience,
+    # EthicalGeometryAgent
+    EthicalGeometry,
+    EthicalGeometryAgent,
+    EthicalPath,
+    EthicalPosition,
+    EthicalRegion,
+    PredictedAction,
+    # ProspectiveAgent
+    ProspectiveAgent,
+    Situation,
+    create_ethical_agent,
+    # Factory functions
+    create_prospective_agent,
+)
+from .recollection import (
+    Cue,
+    Recollection,
+    RecollectionAgent,
+    ReconstructionRequest,
+)
+from .tiered import (
+    AttentionFilter,
+    MemoryTier,
+    TieredMemory,
+)
+from .vector_holographic import (
+    ClusterInfo,
+    VectorHolographicMemory,
+    VectorMemoryConfig,
+    VoidInfo,
+    create_simple_vector_memory,
+    create_vector_holographic_memory,
 )
 
 __all__ = [

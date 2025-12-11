@@ -2,19 +2,18 @@
 
 import pytest
 
+from ..corpus import PLUMBING
+from ..engine import MetaphorEngine
 from ..types import (
-    Problem,
-    Metaphor,
-    Projection,
     ChallengeResult,
-    MetaphorSolution,
-    Solution,
     Distortion,
     EngineConfig,
+    Metaphor,
+    MetaphorSolution,
+    Problem,
+    Projection,
+    Solution,
 )
-from ..engine import MetaphorEngine
-from ..corpus import PLUMBING
-
 
 # =============================================================================
 # Fixtures

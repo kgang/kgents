@@ -16,10 +16,12 @@ Use Cases:
 - F-gent contract synthesis: Repair constraint violations
 """
 
-from typing import Iterator, Optional, Callable, Any
 from dataclasses import dataclass
+from typing import Any, Callable, Generic, Iterator, Optional, TypeVar
 
-from agents.p.core import Parser, ParseResult, ParserConfig
+from agents.p.core import Parser, ParserConfig, ParseResult
+
+A = TypeVar("A")
 
 
 @dataclass
@@ -40,7 +42,7 @@ class ReflectionContext:
     previous_responses: list[str]
 
 
-class ReflectionParser[A]:
+class ReflectionParser(Generic[A]):
     """
     Parser with LLM-based reflection loop for self-repair.
 

@@ -23,13 +23,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Protocol, Callable
+from typing import Any, Callable, Protocol
 
 from .types import (
-    Phage,
     MutationVector,
+    Phage,
 )
-
 
 # =============================================================================
 # Viral Pattern (DNA of successful mutations)

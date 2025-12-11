@@ -11,8 +11,7 @@ import random
 from dataclasses import dataclass, field
 from typing import Protocol
 
-from .types import Problem, Metaphor, ProblemFeatures, Feedback, Outcome
-
+from .types import Feedback, Metaphor, Outcome, Problem, ProblemFeatures
 
 # =============================================================================
 # Reward Mapping

@@ -25,13 +25,14 @@ References:
 """
 
 from __future__ import annotations
+
 from abc import abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Generic, Optional, TypeVar, Type
+from typing import Any, Generic, Optional, Type, TypeVar
 
-from bootstrap.types import Agent, Result, ok, err
+from bootstrap.types import Agent, Result, err, ok
 
 # Type variables
 A = TypeVar("A")  # Input type

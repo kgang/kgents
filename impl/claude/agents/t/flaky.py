@@ -6,8 +6,8 @@ The morphism that fails with probability p, otherwise delegates to wrapped agent
 Type II Saboteur - Chaos Engineering for reliability testing.
 """
 
-from typing import Generic, TypeVar, Optional, Protocol
 import random
+from typing import Generic, Optional, Protocol, TypeVar
 
 In = TypeVar("In")
 Out = TypeVar("Out")

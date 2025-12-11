@@ -10,10 +10,10 @@ This implements Phase 1 of the test evolution plan:
 - BootstrapWitness integration
 """
 
-import pytest
-from typing import Any
 from dataclasses import dataclass
+from typing import Any
 
+import pytest
 
 # =============================================================================
 # Core Agent Fixtures

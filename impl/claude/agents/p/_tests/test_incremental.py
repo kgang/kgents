@@ -11,8 +11,8 @@ Tests:
 
 import pytest
 from agents.p.strategies.incremental import (
-    IncrementalParser,
     IncrementalNode,
+    IncrementalParser,
     incremental_json_parser,
 )
 

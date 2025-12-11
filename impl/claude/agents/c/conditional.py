@@ -6,8 +6,8 @@ input → [condition?] → [A] if true
                       → [B] if false
 """
 
-from typing import TypeVar, Callable, Union, Awaitable
 import asyncio
+from typing import Awaitable, Callable, TypeVar, Union
 
 from bootstrap.types import Agent
 
@@ -36,7 +36,7 @@ class BranchAgent(Agent[A, Union[B, C]]):
 
     If predicate(input) is True, runs if_true agent.
     Otherwise, runs if_false agent.
-    
+
     Predicate can be sync or async.
     """
 
@@ -67,7 +67,7 @@ class SwitchAgent(Agent[A, B]):
 
     Maps input to a key, selects agent based on key.
     Falls back to default if key not found.
-    
+
     Key function can be sync or async.
     """
 
@@ -151,6 +151,7 @@ class FilterAgent(Agent[list[A], list[A]]):
 
 
 # --- Convenience functions ---
+
 
 def branch(
     predicate: Predicate[A],

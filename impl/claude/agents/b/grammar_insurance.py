@@ -33,11 +33,11 @@ Integration:
 from __future__ import annotations
 
 import hashlib
+from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Callable
-from collections import deque
 
 from .metered_functor import CentralBank
 from .syntax_tax import ChomskyLevel, GrammarClassifier

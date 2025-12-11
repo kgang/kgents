@@ -13,15 +13,15 @@ Part of the Noosphere Layer (D-gent Phase 4).
 
 from __future__ import annotations
 
-from typing import TypeVar, Generic, List, Optional, Set, Dict, Any, Tuple
 from dataclasses import dataclass, field
-from enum import Enum
 from datetime import datetime
+from enum import Enum
+from typing import Any, Dict, Generic, List, Optional, Set, Tuple, TypeVar
 
-from .graph import GraphAgent, Edge, EdgeKind, Subgraph
 from .errors import (
     NodeNotFoundError,
 )
+from .graph import Edge, EdgeKind, GraphAgent, Subgraph
 
 N = TypeVar("N")  # Node type
 

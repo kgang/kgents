@@ -8,34 +8,33 @@ Tests verify:
 - PersonaInterceptor (K-gent prior injection)
 """
 
-import pytest
 from dataclasses import dataclass
 from typing import Any
 
+import pytest
 from agents.w.bus import (
     BusMessage,
     create_bus,
 )
 from agents.w.interceptors import (
-    # Metering
-    TokenCost,
+    InMemoryObservationSink,
     InMemoryTreasury,
-    SimpleCostOracle,
     MeteringInterceptor,
-    # Safety
-    SafetyThresholds,
-    SafetyInterceptor,
     # Telemetry
     Observation,
-    InMemoryObservationSink,
-    TelemetryInterceptor,
+    PersonaInterceptor,
     # Persona
     PersonaPriors,
-    PersonaInterceptor,
+    SafetyInterceptor,
+    # Safety
+    SafetyThresholds,
+    SimpleCostOracle,
+    TelemetryInterceptor,
+    # Metering
+    TokenCost,
     # Factory
     create_standard_interceptors,
 )
-
 
 # --- Test Agents ---
 

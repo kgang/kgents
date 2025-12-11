@@ -4,14 +4,15 @@ Tests for SQLite providers.
 Tests the concrete implementations of repository interfaces.
 """
 
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
 
 from ..interfaces import TelemetryEvent
 from ..providers.sqlite import (
-    SQLiteRelationalStore,
-    NumpyVectorStore,
     FilesystemBlobStore,
+    NumpyVectorStore,
+    SQLiteRelationalStore,
     SQLiteTelemetryStore,
 )
 

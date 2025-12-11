@@ -12,17 +12,15 @@ Comprehensive test coverage for:
 """
 
 import pytest
-
 from agents.l import (
+    LineageError,
     LineageGraph,
     Relationship,
     RelationshipType,
-    LineageError,
+    record_dependency,
     record_evolution,
     record_fork,
-    record_dependency,
 )
-
 
 # ─────────────────────────────────────────────────────────────
 # Fixtures

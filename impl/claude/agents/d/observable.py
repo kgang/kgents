@@ -10,24 +10,24 @@ Provides reactive patterns for state changes:
 Enables reactive UI updates and inter-agent communication.
 """
 
-from typing import (
-    TypeVar,
-    Generic,
-    List,
-    Optional,
-    Any,
-    Dict,
-    Callable,
-    Awaitable,
-)
+import asyncio
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, auto
-import asyncio
-import uuid
+from typing import (
+    Any,
+    Awaitable,
+    Callable,
+    Dict,
+    Generic,
+    List,
+    Optional,
+    TypeVar,
+)
 
-from .protocol import DataAgent
 from .errors import StateError
+from .protocol import DataAgent
 
 
 class ObservableError(StateError):

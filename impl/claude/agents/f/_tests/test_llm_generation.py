@@ -9,19 +9,18 @@ These tests verify:
 5. Mock-based testing (no real API calls by default)
 """
 
-import pytest
 from dataclasses import dataclass
 
+import pytest
+from agents.f.contract import Contract, Invariant
+from agents.f.intent import Example, Intent
 from agents.f.llm_generation import (
     CodeGeneratorAgent,
     GenerationRequest,
     generate_code_with_llm,
 )
-from agents.f.intent import Intent, Example
-from agents.f.contract import Contract, Invariant
-from agents.f.prototype import generate_prototype_async, PrototypeConfig
+from agents.f.prototype import PrototypeConfig, generate_prototype_async
 from runtime.base import AgentResult
-
 
 # ============================================================================
 # Mock Runtime for Testing

@@ -17,20 +17,19 @@ from datetime import datetime, timedelta
 import pytest
 
 from ..dreamer import (
-    LucidDreamer,
     DreamerConfig,
     DreamPhase,
     DreamReport,
-    MaintenanceTaskType,
+    LucidDreamer,
     MaintenanceChunk,
+    MaintenanceTaskType,
     NightWatch,
     Question,
     create_lucid_dreamer,
 )
 from ..hippocampus import Hippocampus, HippocampusConfig
-from ..synapse import Synapse, SynapseConfig
 from ..nervous import Signal
-
+from ..synapse import Synapse, SynapseConfig
 
 # =============================================================================
 # Fixtures

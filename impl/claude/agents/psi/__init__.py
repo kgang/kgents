@@ -28,42 +28,39 @@ Example:
             print(f"  - {action}")
 """
 
-from .types import (
-    # Core types
-    Problem,
-    Metaphor,
-    Operation,
-    Example,
-    ConceptMapping,
-    Projection,
-    ChallengeResult,
-    MetaphorSolution,
-    Solution,
-    Distortion,
-    # Search state
-    SearchState,
-    EngineConfig,
-    # Learning types
-    ProblemFeatures,
-    Feedback,
-    Outcome,
-)
-
 from .corpus import (
-    MetaphorCorpus,
     STANDARD_CORPUS,
+    MetaphorCorpus,
     create_standard_corpus,
 )
-
 from .engine import (
     MetaphorEngine,
 )
-
 from .learning import (
+    AbstractionModel,
+    FrequencyModel,
     RetrievalModel,
     ThompsonSamplingModel,
-    FrequencyModel,
-    AbstractionModel,
+)
+from .types import (
+    ChallengeResult,
+    ConceptMapping,
+    Distortion,
+    EngineConfig,
+    Example,
+    Feedback,
+    Metaphor,
+    MetaphorSolution,
+    Operation,
+    Outcome,
+    # Core types
+    Problem,
+    # Learning types
+    ProblemFeatures,
+    Projection,
+    # Search state
+    SearchState,
+    Solution,
 )
 
 __all__ = [

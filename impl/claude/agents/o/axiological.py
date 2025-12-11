@@ -31,12 +31,12 @@ from .observer import (
 # In production, these would be proper imports
 try:
     from ..b.value_tensor import (
-        ValueTensor,
-        PhysicalDimension,
-        SemanticDimension,
+        AntiDelusionChecker,
         EconomicDimension,
         EthicalDimension,
-        AntiDelusionChecker,
+        PhysicalDimension,
+        SemanticDimension,
+        ValueTensor,
     )
 
     HAS_VALUE_TENSOR = True
@@ -44,7 +44,7 @@ except ImportError:
     HAS_VALUE_TENSOR = False
 
 try:
-    from ..b.value_ledger import ValueLedger, BalanceSheet
+    from ..b.value_ledger import BalanceSheet, ValueLedger
 
     HAS_VALUE_LEDGER = True
 except ImportError:

@@ -10,17 +10,18 @@ Tests cover:
 6. Dynamic configuration
 """
 
-import pytest
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
 
+import pytest
+
 from ..nervous import (
-    Signal,
-    SignalPriority,
+    ISynapse,
     NervousSystem,
     NervousSystemConfig,
     NullSynapse,
-    ISynapse,
+    Signal,
+    SignalPriority,
     create_nervous_system,
 )
 

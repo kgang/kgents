@@ -1,14 +1,14 @@
 """Tests for Reality-Aware Contracts (J-gent × F-gent integration)."""
 
 from agents.f.j_integration import (
-    RealityGate,
-    DeterministicOnly,
     BoundedComplexity,
+    DeterministicOnly,
     EntropyAware,
     IntentFilter,
+    RealityGate,
+    admits_intent,
     create_safe_gate,
     create_strict_gate,
-    admits_intent,
     gate_intent,
 )
 

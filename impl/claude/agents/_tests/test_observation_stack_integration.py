@@ -18,6 +18,29 @@ from unittest.mock import MagicMock
 
 import pytest
 
+# B-gent imports
+from agents.b import (
+    FindingType,
+    Gas,
+    ObservationDepth,
+    ObservationFinding,
+    VoILedger,
+)
+
+# I-gent imports
+from agents.i import (
+    Color,
+    Meter,
+    colorize,
+)
+
+# N-gent imports
+from agents.n import (
+    Historian,
+    MemoryCrystalStore,
+    SemanticTrace,
+)
+
 # O-gent imports
 from agents.o import (
     # Core observer
@@ -28,42 +51,18 @@ from agents.o import (
     render_unified_dashboard,
 )
 from agents.o.observable_panopticon import (
+    EmissionMode,
     ObservablePanopticon,
     WireStatusSnapshot,
-    EmissionMode,
     create_observable_panopticon,
-    create_wire_observer,
     create_panopticon_dashboard,
+    create_wire_observer,
 )
 
 # W-gent imports
 from agents.w import (
     WireObservable,
 )
-
-# I-gent imports
-from agents.i import (
-    Meter,
-    colorize,
-    Color,
-)
-
-# B-gent imports
-from agents.b import (
-    VoILedger,
-    ObservationDepth,
-    FindingType,
-    ObservationFinding,
-    Gas,
-)
-
-# N-gent imports
-from agents.n import (
-    SemanticTrace,
-    Historian,
-    MemoryCrystalStore,
-)
-
 
 # =============================================================================
 # Helper Functions

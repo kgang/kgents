@@ -14,8 +14,8 @@ from __future__ import annotations
 
 from typing import Generic, List, TypeVar
 
-from bootstrap.types import Agent
 from agents.d import VolatileAgent
+from bootstrap.types import Agent
 
 A = TypeVar("A")
 

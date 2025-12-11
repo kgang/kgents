@@ -21,16 +21,15 @@ import subprocess
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Protocol, Any
+from typing import Any, Protocol
 
 from .types import (
-    Phage,
-    PhageStatus,
-    MutationVector,
     InfectionResult,
     InfectionStatus,
+    MutationVector,
+    Phage,
+    PhageStatus,
 )
-
 
 # =============================================================================
 # Protocols for Integration

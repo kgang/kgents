@@ -18,7 +18,6 @@ import tempfile
 from pathlib import Path
 
 import pytest
-
 from agents.f.contract import CompositionRule, Contract, Invariant
 from agents.f.crystallize import (
     ArtifactMetadata,
@@ -37,9 +36,8 @@ from agents.f.prototype import SourceCode, StaticAnalysisReport
 # Try to import L-gent for registration tests
 try:
     from agents.d.persistent import PersistentAgent
-    from agents.l.catalog import Registry
-
     from agents.f.crystallize import register_with_lgent
+    from agents.l.catalog import Registry
 
     LGENT_AVAILABLE = True
 except ImportError:

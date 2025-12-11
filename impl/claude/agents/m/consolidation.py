@@ -16,7 +16,7 @@ from datetime import datetime, timedelta
 from enum import Enum, auto
 from typing import Generic, Optional, TypeVar
 
-from .holographic import HolographicMemory, CompressionLevel
+from .holographic import CompressionLevel, HolographicMemory
 
 T = TypeVar("T")
 

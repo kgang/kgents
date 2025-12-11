@@ -10,9 +10,10 @@ Tests cover:
 6. Workspace initialization
 """
 
-import pytest
 import tempfile
 from pathlib import Path
+
+import pytest
 
 # Check if PyYAML is available
 try:
@@ -220,7 +221,7 @@ class TestWorkspaceContext:
     @requires_yaml
     def test_effective_values_no_override(self, workspace):
         """effective_* returns config values when no override."""
-        from protocols.cli.context import load_config, WorkspaceContext
+        from protocols.cli.context import WorkspaceContext, load_config
 
         config = load_config(workspace)
         ctx = WorkspaceContext(root=workspace, config=config, is_workspace=True)
@@ -231,7 +232,7 @@ class TestWorkspaceContext:
 
     def test_effective_values_with_override(self, workspace):
         """effective_* returns override when provided."""
-        from protocols.cli.context import load_config, WorkspaceContext
+        from protocols.cli.context import WorkspaceContext, load_config
 
         config = load_config(workspace)
         ctx = WorkspaceContext(
@@ -249,7 +250,7 @@ class TestWorkspaceContext:
 
     def test_resolve_path_absolute(self, workspace):
         """resolve_path returns absolute paths unchanged."""
-        from protocols.cli.context import load_config, WorkspaceContext
+        from protocols.cli.context import WorkspaceContext, load_config
 
         config = load_config(workspace)
         ctx = WorkspaceContext(root=workspace, config=config, is_workspace=True)
@@ -261,7 +262,7 @@ class TestWorkspaceContext:
 
     def test_resolve_path_relative_in_workspace(self, workspace):
         """resolve_path resolves relative paths from workspace root."""
-        from protocols.cli.context import load_config, WorkspaceContext
+        from protocols.cli.context import WorkspaceContext, load_config
 
         config = load_config(workspace)
         ctx = WorkspaceContext(root=workspace, config=config, is_workspace=True)

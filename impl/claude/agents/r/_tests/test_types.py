@@ -9,22 +9,21 @@ Tests cover:
 - ROI types: Economic constraints
 """
 
-import pytest
 from datetime import datetime, timedelta
 
+import pytest
 from agents.r.types import (
-    Signature,
-    FieldSpec,
     Example,
-    TextualGradient,
+    FieldSpec,
+    OptimizationBudget,
+    OptimizationDecision,
     OptimizationIteration,
     OptimizationTrace,
-    TeleprompterStrategy,
-    OptimizationBudget,
     ROIEstimate,
-    OptimizationDecision,
+    Signature,
+    TeleprompterStrategy,
+    TextualGradient,
 )
-
 
 # --- Signature Tests ---
 

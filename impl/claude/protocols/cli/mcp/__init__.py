@@ -15,19 +15,19 @@ As Client:
 From docs/cli-integration-plan.md Part 8.
 """
 
-from .server import (
-    MCPServer,
-    MCPTool,
-    MCPToolResult,
-    MCPRequest,
-    MCPResponse,
-    start_server,
-    create_tool_manifest,
-)
 from .client import (
     MCPClient,
     MCPConnection,
     invoke_tool,
+)
+from .server import (
+    MCPRequest,
+    MCPResponse,
+    MCPServer,
+    MCPTool,
+    MCPToolResult,
+    create_tool_manifest,
+    start_server,
 )
 
 __all__ = [

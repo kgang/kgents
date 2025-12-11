@@ -17,7 +17,7 @@ from typing import Any
 
 from ..chaosmonger import StabilityConfig, analyze_stability
 from ..meta_architect import AgentSource
-from .namespace import SandboxConfig, SandboxResult, SandboxedNamespace
+from .namespace import SandboxConfig, SandboxedNamespace, SandboxResult
 
 
 async def type_check_source(source: str) -> tuple[bool, str]:

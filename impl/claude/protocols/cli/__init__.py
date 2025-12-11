@@ -13,22 +13,21 @@ The CLI embodies all seven principles at the surface level.
 """
 
 from .cli_types import (
-    # Enums
-    OutputFormat,
-    OutputLevel,
     BudgetLevel,
-    PersonaMode,
-    ErrorSeverity,
-    ErrorRecoverability,
-    # Core types
-    CommandResult,
-    OutputEnvelope,
-    ErrorInfo,
     BudgetStatus,
     # Context
     CLIContext,
+    # Core types
+    CommandResult,
+    ErrorInfo,
+    ErrorRecoverability,
+    ErrorSeverity,
+    OutputEnvelope,
+    # Enums
+    OutputFormat,
+    OutputLevel,
+    PersonaMode,
 )
-
 from .membrane_cli import (
     MembraneCLI,
     membrane_observe,

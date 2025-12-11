@@ -17,11 +17,11 @@ Bootstrap Integration:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, TypeVar, Tuple, Optional
+from typing import Any, Optional, Tuple, TypeVar
 
-from runtime.base import Agent, LLMAgent, AgentContext
 from bootstrap.judge import Judge as BootstrapJudge
 from bootstrap.types import JudgeInput, Verdict
+from runtime.base import Agent, AgentContext, LLMAgent
 
 A = TypeVar("A")  # Intent type
 B = TypeVar("B")  # Output type

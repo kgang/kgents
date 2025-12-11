@@ -18,8 +18,8 @@ and these adapters enhance functionality when dependencies are available.
 """
 
 from dataclasses import dataclass, field
-from typing import Any
 from datetime import datetime
+from typing import Any
 
 # =============================================================================
 # Import Guards (Graceful Degradation Pattern)
@@ -34,15 +34,15 @@ OGENT_AVAILABLE = False
 
 # L-gent: Embeddings and Type Lattice
 try:
-    from agents.l.semantic import Embedder, SimpleEmbedder
     from agents.l.embedders import (
-        SentenceTransformerEmbedder,
-        OpenAIEmbedder,
-        CachedEmbedder,
-        create_best_available_embedder,
-        SENTENCE_TRANSFORMERS_AVAILABLE,
         OPENAI_AVAILABLE,
+        SENTENCE_TRANSFORMERS_AVAILABLE,
+        CachedEmbedder,
+        OpenAIEmbedder,
+        SentenceTransformerEmbedder,
+        create_best_available_embedder,
     )
+    from agents.l.semantic import Embedder, SimpleEmbedder
 
     LGENT_AVAILABLE = True
 except ImportError:
@@ -51,7 +51,7 @@ except ImportError:
 
 # L-gent: Type Lattice
 try:
-    from agents.l.lattice import TypeLattice, TypeNode, CompositionResult
+    from agents.l.lattice import CompositionResult, TypeLattice, TypeNode
 
     LGENT_LATTICE_AVAILABLE = True
 except ImportError:
@@ -69,8 +69,8 @@ except ImportError:
 # N-gent: Narrative
 try:
     from agents.n.bard import Bard
-    from agents.n.historian import Historian
     from agents.n.echo_chamber import EchoChamber
+    from agents.n.historian import Historian
 
     NGENT_AVAILABLE = True
 except ImportError:
@@ -79,10 +79,10 @@ except ImportError:
 # B-gent: Economics
 try:
     from agents.b.metered_functor import (
+        CentralBank,
         Gas,
         Receipt,
         TokenBucket,
-        CentralBank,
     )
 
     BGENT_AVAILABLE = True
@@ -91,9 +91,9 @@ except ImportError:
 
 # E-gent v2: Evolution
 try:
-    from agents.e.types import Phage, MutationVector, Intent
-    from agents.e.demon import TeleologicalDemon, DemonConfig
+    from agents.e.demon import DemonConfig, TeleologicalDemon
     from agents.e.mutator import Mutator, MutatorConfig
+    from agents.e.types import Intent, MutationVector, Phage
 
     EGENT_AVAILABLE = True
 except ImportError:

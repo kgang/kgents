@@ -27,10 +27,11 @@ from __future__ import annotations
 
 import ast
 from dataclasses import dataclass, field
-from typing import Any, Optional, Callable
+from typing import Any, Callable, Optional
 
+from bootstrap.judge import MINI_JUDGES, JudgeInput
+from bootstrap.judge import Judge as BootstrapJudge
 from bootstrap.types import Agent, PartialVerdict, Verdict
-from bootstrap.judge import Judge as BootstrapJudge, JudgeInput, MINI_JUDGES
 
 # Template generation (Phase D - H12)
 from .templates import TemplateContext, generate_template

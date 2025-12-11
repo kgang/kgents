@@ -8,33 +8,32 @@ RETRIEVE -> PROJECT -> CHALLENGE -> SOLVE -> TRANSLATE -> VERIFY
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Callable, Any
+from typing import Any, Callable
 from uuid import uuid4
 
-from .types import (
-    Problem,
-    Metaphor,
-    Operation,
-    ConceptMapping,
-    Projection,
-    ChallengeResult,
-    MetaphorSolution,
-    Solution,
-    Distortion,
-    SearchState,
-    EngineConfig,
-    Feedback,
-    Outcome,
-)
 from .corpus import MetaphorCorpus, create_standard_corpus
 from .learning import (
-    ThompsonSamplingModel,
     AbstractionModel,
+    ThompsonSamplingModel,
+    cold_start_retrieval,
     extract_features,
     retrieve_with_learning,
-    cold_start_retrieval,
 )
-
+from .types import (
+    ChallengeResult,
+    ConceptMapping,
+    Distortion,
+    EngineConfig,
+    Feedback,
+    Metaphor,
+    MetaphorSolution,
+    Operation,
+    Outcome,
+    Problem,
+    Projection,
+    SearchState,
+    Solution,
+)
 
 # =============================================================================
 # LLM Interface (Pluggable)

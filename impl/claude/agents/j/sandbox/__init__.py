@@ -10,8 +10,8 @@ Philosophy:
 > "Trust, but verify. Then sandbox anyway."
 """
 
-from .namespace import SandboxedNamespace, SandboxConfig, SandboxResult
 from .executor import execute_in_sandbox, jit_compile_and_execute, type_check_source
+from .namespace import SandboxConfig, SandboxedNamespace, SandboxResult
 from .validation import validate_jit_safety
 
 __all__ = [

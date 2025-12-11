@@ -5,7 +5,6 @@ Phase: J-gent Phase 2 (L-gent Integration)
 """
 
 import pytest
-
 from agents.l.semantic_registry import create_semantic_registry
 from agents.l.types import CatalogEntry, EntityType, Status
 

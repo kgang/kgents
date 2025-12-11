@@ -10,7 +10,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
-
 from agents.f.contract import Contract
 from agents.f.intent import Intent
 

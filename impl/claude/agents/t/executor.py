@@ -24,22 +24,23 @@ References:
 """
 
 from __future__ import annotations
+
 import asyncio
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import Any, Generic, Optional, TypeVar
 
-from bootstrap.types import Result, ok, err
-from agents.t.tool import Tool, ToolError, ToolErrorType, ToolTrace
 from agents.t.permissions import (
-    PermissionClassifier,
     AgentContext,
-    ToolCapabilities,
-    TemporaryToken,
-    PermissionLevel,
     AuditLogger,
+    PermissionClassifier,
+    PermissionLevel,
+    TemporaryToken,
+    ToolCapabilities,
 )
+from agents.t.tool import Tool, ToolError, ToolErrorType, ToolTrace
+from bootstrap.types import Result, err, ok
 
 # Type variables
 A = TypeVar("A")

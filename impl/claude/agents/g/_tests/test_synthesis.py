@@ -9,18 +9,16 @@ Tests the core G-gent synthesis capabilities:
 """
 
 import pytest
-
-from agents.g.types import GrammarLevel, GrammarFormat
 from agents.g.synthesis import (
-    analyze_domain,
-    synthesize_grammar,
-    generate_parser_config,
-    generate_interpreter_config,
+    _apply_constraints,
     _extract_entities,
     _extract_operations,
-    _apply_constraints,
+    analyze_domain,
+    generate_interpreter_config,
+    generate_parser_config,
+    synthesize_grammar,
 )
-
+from agents.g.types import GrammarFormat, GrammarLevel
 
 # ============================================================================
 # Domain Analysis Tests

@@ -78,348 +78,344 @@ Currently implemented:
 - HF Tongues: High-Frequency Tongue builder for HFT scenarios
 """
 
-from .hypothesis import (
-    HypothesisEngine,
-    HypothesisInput,
-    HypothesisOutput,
-    hypothesis_engine,
-    rigorous_engine,
-    exploratory_engine,
-)
-
-from .hypothesis_parser import (
-    Hypothesis,
-    NoveltyLevel,
-)
-
-from .robin_integration import (
-    RobinAgent,
-    RobinInput,
-    RobinOutput,
-    robin,
-    robin_with_persona,
-    quick_robin,
-    fallback_robin,
-)
-
-from .persistent_hypothesis import (
-    HypothesisMemory,
-    HypothesisLineageEdge,
-    PersistentHypothesisStorage,
-    persistent_hypothesis_storage,
-)
-
 from .catalog_integration import (
     # Types
     HypothesisCatalogEntry,
     TestResult,
-    # Registration
-    register_hypothesis,
-    register_hypothesis_batch,
     # Discovery
     find_hypotheses,
     find_related_hypotheses,
+    get_hypothesis_lineage,
+    mark_hypothesis_falsified,
     # Lineage
     record_hypothesis_evolution,
     record_hypothesis_fork,
-    get_hypothesis_lineage,
+    # Registration
+    register_hypothesis,
+    register_hypothesis_batch,
     # Metrics
     update_hypothesis_metrics,
-    mark_hypothesis_falsified,
-)
-
-# Banker Economics (Phase 3)
-from .value_tensor import (
-    # Dimensions
-    PhysicalDimension,
-    SemanticDimension,
-    EconomicDimension,
-    EthicalDimension,
-    ImpactTier,
-    # Exchange
-    ExchangeRate,
-    ExchangeMatrix,
-    create_standard_exchange_rates,
-    # Conservation
-    ConservationLaw,
-    Anomaly,
-    AntiDelusionChecker,
-    # Tensor
-    ValueTensor,
-    TensorAlgebra,
-)
-
-from .metered_functor import (
-    # Currency types
-    Gas,
-    Impact,
-    Receipt,
-    # Token accounting
-    TokenBucket,
-    SinkingFund,
-    Loan,
-    Denial,
-    TokenFuture,
-    FuturesMarket,
-    # Auction
-    Bid,
-    Allocation,
-    priority_auction,
-    # Central Bank
-    CentralBank,
-    InsufficientFundsError,
-    # Budgets
-    EntropyBudget,
-    DualBudget,
-    # Functor
-    Metered,
-    meter,
-    metered_invoke,
-)
-
-from .value_ledger import (
-    # Oracles
-    ComplexityOracle,
-    ValueOracle,
-    # Output types
-    SimpleOutput,
-    # Regulation
-    EthicalRegulator,
-    # Accounting
-    Treasury,
-    BalanceSheet,
-    TransactionReceipt,
-    ValueLedger,
-    # Monitoring
-    RoCThresholds,
-    RoCAssessment,
-    RoCMonitor,
 )
 
 # Compression Economy (Phase 4: Structural Economics B×G Integration)
 from .compression_economy import (
     # Types
     AdoptionStatus,
-    CommunicationLog,
-    CompressionROI,
-    PidginMetadata,
-    PidginAvailable,
     BudgetDecision,
+    CommunicationLog,
     # Classes
     CommunicationTracker,
-    CompressionROICalculator,
     CompressionEconomyMonitor,
+    CompressionROI,
+    CompressionROICalculator,
+    PidginAvailable,
+    PidginMetadata,
     SemanticZipperBudget,
+    analyze_compression_opportunity,
     # Convenience functions
     create_compression_monitor,
     create_zipper_budget,
-    analyze_compression_opportunity,
-)
-
-# VoI Economics (Phase 4: Value of Information for O-gent observation)
-from .voi_economics import (
-    # Enums
-    ObservationDepth,
-    FindingType,
-    # Finding types
-    ObservationFinding,
-    ObservationRecord,
-    Intervention,
-    InterventionOutcome,
-    VoIReceipt,
-    # Epistemic Capital (third currency)
-    EpistemicCapital,
-    # Ledger
-    VoILedger,
-    # Optimizer
-    VoIOptimizer,
-    # Adaptive observation
-    AdaptiveObserver,
-    # Unified accounting
-    UnifiedValueAccounting,
-    SystemHealthReport,
-    # Convenience functions
-    create_voi_ledger,
-    create_voi_optimizer,
-    create_adaptive_observer,
-    create_unified_accounting,
-)
-
-# Fiscal Constitution (B×G Phase 2: Grammar-based financial safety)
-from .fiscal_constitution import (
-    # Parse result types
-    ParseError,
-    ParseSuccess,
-    # Operation types
-    OperationType,
-    # Account types
-    AccountBalance,
-    Account,
-    LedgerState,
-    LedgerTransaction,
-    # Command AST nodes
-    TransferCommand,
-    QueryCommand,
-    ReserveCommand,
-    ReleaseCommand,
-    # Parser and Tongue
-    LedgerTongueParser,
-    LedgerTongue,
-    ExecutionResult,
-    # Banker
-    ConstitutionalBanker,
-    TransactionResult,
-    # Convenience functions
-    create_ledger_tongue,
-    create_constitutional_banker,
-    create_fiscal_constitution,
-)
-
-# Syntax Tax (B×G Phase 3: Chomsky-based pricing)
-from .syntax_tax import (
-    # Chomsky hierarchy types
-    ChomskyLevel,
-    GrammarFeature,
-    GrammarAnalysis,
-    # Classifier
-    GrammarClassifier,
-    # Pricing
-    SyntaxTaxSchedule,
-    SyntaxTaxDecision,
-    # Budget
-    SyntaxTaxBudget,
-    EscrowLease,
-    # Downgrade
-    DowngradeProposal,
-    DowngradeNegotiator,
-    # Convenience functions
-    create_syntax_tax_budget,
-    classify_grammar,
-    calculate_syntax_tax,
-    get_tier_costs,
-)
-
-# Semantic Inflation (B×G Phase 4: Complexity → Verbosity Pressure)
-from .semantic_inflation import (
-    # Complexity types
-    ComplexityDimension,
-    ComplexityVector,
-    # Audience types
-    AudienceLevel,
-    AudienceProfile,
-    # Inflation types
-    InflationPressure,
-    InflationCategory,
-    InflationReport,
-    # Allocation types
-    TokenAllocation,
-    AllocationDecision,
-    # Deflation types
-    DeflationStrategy,
-    DeflationProposal,
-    # CPI types
-    CPISnapshot,
-    # Classes
-    InflationBudget,
-    DeflationNegotiator as InflationDeflationNegotiator,  # Renamed to avoid collision
-    ComplexityAnalyzer,
-    SemanticCPIMonitor,
-    # Convenience functions
-    create_inflation_budget,
-    analyze_complexity,
-    calculate_inflation_pressure,
-    get_deflation_recommendations,
-    estimate_explanation_tokens,
-)
-
-# Grammar Insurance (B×G Phase 5: Volatility Hedging)
-from .grammar_insurance import (
-    # Volatility types
-    VolatilityCategory,
-    ParseEvent,
-    VolatilityWindow,
-    VolatilityMetrics,
-    VolatilityMonitor,
-    # Hedge types
-    HedgeStrategy,
-    GrammarHedge,
-    # Insurance types
-    InsurancePolicy,
-    InsuranceClaim,
-    PremiumQuote,
-    PremiumCalculator,
-    ClaimResult,
-    # Main manager
-    GrammarInsurance,
-    # Portfolio analysis
-    PortfolioRisk,
-    PortfolioAnalyzer,
-    # Convenience functions
-    create_fallback_hedge,
-    create_versioned_hedge,
-    create_ensemble_hedge,
-    estimate_annual_premium,
-    calculate_hedge_cost,
 )
 
 # E-gent Integration (Evolution Economics)
 from .egent_integration import (
     # Prediction Market
     BetOutcome,
-    MutationBet,
-    MarketQuote,
-    SettlementResult,
-    PredictionMarket,
-    # Grant System (Sun)
-    GrantStatus,
-    Grant,
-    GrantConsumption,
-    Sun,
-    # Staking
-    PhageStake,
-    StakingPool,
     # Combined
     EvolutionEconomics,
+    Grant,
+    GrantConsumption,
+    # Grant System (Sun)
+    GrantStatus,
+    MarketQuote,
+    MutationBet,
+    # Staking
+    PhageStake,
+    PredictionMarket,
+    SettlementResult,
+    StakingPool,
+    Sun,
     create_evolution_economics,
+)
+
+# Fiscal Constitution (B×G Phase 2: Grammar-based financial safety)
+from .fiscal_constitution import (
+    Account,
+    # Account types
+    AccountBalance,
+    # Banker
+    ConstitutionalBanker,
+    ExecutionResult,
+    LedgerState,
+    LedgerTongue,
+    # Parser and Tongue
+    LedgerTongueParser,
+    LedgerTransaction,
+    # Operation types
+    OperationType,
+    # Parse result types
+    ParseError,
+    ParseSuccess,
+    QueryCommand,
+    ReleaseCommand,
+    ReserveCommand,
+    TransactionResult,
+    # Command AST nodes
+    TransferCommand,
+    create_constitutional_banker,
+    create_fiscal_constitution,
+    # Convenience functions
+    create_ledger_tongue,
+)
+
+# Grammar Insurance (B×G Phase 5: Volatility Hedging)
+from .grammar_insurance import (
+    ClaimResult,
+    GrammarHedge,
+    # Main manager
+    GrammarInsurance,
+    # Hedge types
+    HedgeStrategy,
+    InsuranceClaim,
+    # Insurance types
+    InsurancePolicy,
+    ParseEvent,
+    PortfolioAnalyzer,
+    # Portfolio analysis
+    PortfolioRisk,
+    PremiumCalculator,
+    PremiumQuote,
+    # Volatility types
+    VolatilityCategory,
+    VolatilityMetrics,
+    VolatilityMonitor,
+    VolatilityWindow,
+    calculate_hedge_cost,
+    create_ensemble_hedge,
+    # Convenience functions
+    create_fallback_hedge,
+    create_versioned_hedge,
+    estimate_annual_premium,
+)
+from .hypothesis import (
+    HypothesisEngine,
+    HypothesisInput,
+    HypothesisOutput,
+    exploratory_engine,
+    hypothesis_engine,
+    rigorous_engine,
+)
+from .hypothesis_parser import (
+    Hypothesis,
+    NoveltyLevel,
 )
 
 # JIT Efficiency (B×G Phase 6: High-Frequency Trading Optimization)
 from .jit_efficiency import (
-    # Compilation targets
-    JITCompilationTarget,
-    OptimizationLevel,
-    # Latency types
-    LatencyMeasurement,
-    LatencyReport,
+    # Benchmarking
+    BenchmarkConfig,
+    BytecodeJITCompiler,
     # Compilation types
     CompilationConfig,
     CompiledArtifact,
     CompiledTongue,
-    # Compilers
-    RegexJITCompiler,
-    JumpTableJITCompiler,
-    BytecodeJITCompiler,
-    JITCompilerRegistry,
-    # Benchmarking
-    BenchmarkConfig,
-    LatencyBenchmark,
-    # Profit sharing
-    ProfitShare,
-    ProfitEntry,
-    ProfitSharingLedger,
-    # Monitor
-    JITOpportunity,
-    TongueUsageStats,
-    JITEfficiencyMonitor,
+    HFTongueBuilder,
     # HF Tongue
     HFTongueSpec,
-    HFTongueBuilder,
+    # Compilation targets
+    JITCompilationTarget,
+    JITCompilerRegistry,
+    JITEfficiencyMonitor,
+    # Monitor
+    JITOpportunity,
+    JumpTableJITCompiler,
+    LatencyBenchmark,
+    # Latency types
+    LatencyMeasurement,
+    LatencyReport,
+    OptimizationLevel,
+    ProfitEntry,
+    # Profit sharing
+    ProfitShare,
+    ProfitSharingLedger,
+    # Compilers
+    RegexJITCompiler,
+    TongueUsageStats,
+    benchmark_jit_speedup,
+    compile_grammar_jit,
+    create_hf_tongue_builder,
     # Convenience functions
     create_jit_monitor,
-    compile_grammar_jit,
-    benchmark_jit_speedup,
-    create_hf_tongue_builder,
     estimate_jit_value,
+)
+from .metered_functor import (
+    Allocation,
+    # Auction
+    Bid,
+    # Central Bank
+    CentralBank,
+    Denial,
+    DualBudget,
+    # Budgets
+    EntropyBudget,
+    FuturesMarket,
+    # Currency types
+    Gas,
+    Impact,
+    InsufficientFundsError,
+    Loan,
+    # Functor
+    Metered,
+    Receipt,
+    SinkingFund,
+    # Token accounting
+    TokenBucket,
+    TokenFuture,
+    meter,
+    metered_invoke,
+    priority_auction,
+)
+from .persistent_hypothesis import (
+    HypothesisLineageEdge,
+    HypothesisMemory,
+    PersistentHypothesisStorage,
+    persistent_hypothesis_storage,
+)
+from .robin_integration import (
+    RobinAgent,
+    RobinInput,
+    RobinOutput,
+    fallback_robin,
+    quick_robin,
+    robin,
+    robin_with_persona,
+)
+
+# Semantic Inflation (B×G Phase 4: Complexity → Verbosity Pressure)
+from .semantic_inflation import (
+    AllocationDecision,
+    # Audience types
+    AudienceLevel,
+    AudienceProfile,
+    ComplexityAnalyzer,
+    # Complexity types
+    ComplexityDimension,
+    ComplexityVector,
+    # CPI types
+    CPISnapshot,
+    DeflationProposal,
+    # Deflation types
+    DeflationStrategy,
+    # Classes
+    InflationBudget,
+    InflationCategory,
+    # Inflation types
+    InflationPressure,
+    InflationReport,
+    SemanticCPIMonitor,
+    # Allocation types
+    TokenAllocation,
+    analyze_complexity,
+    calculate_inflation_pressure,
+    # Convenience functions
+    create_inflation_budget,
+    estimate_explanation_tokens,
+    get_deflation_recommendations,
+)
+from .semantic_inflation import (
+    DeflationNegotiator as InflationDeflationNegotiator,  # Renamed to avoid collision
+)
+
+# Syntax Tax (B×G Phase 3: Chomsky-based pricing)
+from .syntax_tax import (
+    # Chomsky hierarchy types
+    ChomskyLevel,
+    DowngradeNegotiator,
+    # Downgrade
+    DowngradeProposal,
+    EscrowLease,
+    GrammarAnalysis,
+    # Classifier
+    GrammarClassifier,
+    GrammarFeature,
+    # Budget
+    SyntaxTaxBudget,
+    SyntaxTaxDecision,
+    # Pricing
+    SyntaxTaxSchedule,
+    calculate_syntax_tax,
+    classify_grammar,
+    # Convenience functions
+    create_syntax_tax_budget,
+    get_tier_costs,
+)
+from .value_ledger import (
+    BalanceSheet,
+    # Oracles
+    ComplexityOracle,
+    # Regulation
+    EthicalRegulator,
+    RoCAssessment,
+    RoCMonitor,
+    # Monitoring
+    RoCThresholds,
+    # Output types
+    SimpleOutput,
+    TransactionReceipt,
+    # Accounting
+    Treasury,
+    ValueLedger,
+    ValueOracle,
+)
+
+# Banker Economics (Phase 3)
+from .value_tensor import (
+    Anomaly,
+    AntiDelusionChecker,
+    # Conservation
+    ConservationLaw,
+    EconomicDimension,
+    EthicalDimension,
+    ExchangeMatrix,
+    # Exchange
+    ExchangeRate,
+    ImpactTier,
+    # Dimensions
+    PhysicalDimension,
+    SemanticDimension,
+    TensorAlgebra,
+    # Tensor
+    ValueTensor,
+    create_standard_exchange_rates,
+)
+
+# VoI Economics (Phase 4: Value of Information for O-gent observation)
+from .voi_economics import (
+    # Adaptive observation
+    AdaptiveObserver,
+    # Epistemic Capital (third currency)
+    EpistemicCapital,
+    FindingType,
+    Intervention,
+    InterventionOutcome,
+    # Enums
+    ObservationDepth,
+    # Finding types
+    ObservationFinding,
+    ObservationRecord,
+    SystemHealthReport,
+    # Unified accounting
+    UnifiedValueAccounting,
+    # Ledger
+    VoILedger,
+    # Optimizer
+    VoIOptimizer,
+    VoIReceipt,
+    create_adaptive_observer,
+    create_unified_accounting,
+    # Convenience functions
+    create_voi_ledger,
+    create_voi_optimizer,
 )
 
 __all__ = [

@@ -8,11 +8,11 @@ This demonstrates Phase 5 of the test evolution plan.
 These tests are designed to discover unexpected behaviors.
 """
 
-import pytest
 import random
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+import pytest
 from testing.accursed_share import (
     Discovery,
     DiscoveryLog,
@@ -183,8 +183,9 @@ class TestChaoticComposition:
 
         This test doesn't assert - it discovers.
         """
-        from agents.o.bootstrap_witness import TestAgent
         from functools import reduce
+
+        from agents.o.bootstrap_witness import TestAgent
         from bootstrap import compose
 
         # Create a pool of test agents
@@ -210,8 +211,9 @@ class TestChaoticComposition:
     @pytest.mark.asyncio
     async def test_deep_composition_chain(self):
         """Test very deep composition chains."""
-        from bootstrap import compose, ID
         from functools import reduce
+
+        from bootstrap import ID, compose
 
         # Chain 100 identity agents
         agents = [ID for _ in range(100)]
@@ -228,6 +230,7 @@ class TestChaoticComposition:
     async def test_concurrent_composition(self):
         """Test concurrent agent invocations."""
         import asyncio
+
         from agents.o.bootstrap_witness import TestAgent
 
         agent = TestAgent("counter", lambda x: x + 1)

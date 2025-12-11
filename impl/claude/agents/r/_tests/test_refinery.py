@@ -11,22 +11,20 @@ Tests cover:
 """
 
 import pytest
-
-from agents.r.types import (
-    Signature,
-    Example,
-    TeleprompterStrategy,
-)
 from agents.r.refinery import (
     BootstrapFewShotTeleprompter,
-    TextGradTeleprompter,
     MIPROv2Teleprompter,
     OPROTeleprompter,
-    TeleprompterFactory,
-    ROIOptimizer,
     RefineryAgent,
+    ROIOptimizer,
+    TeleprompterFactory,
+    TextGradTeleprompter,
 )
-
+from agents.r.types import (
+    Example,
+    Signature,
+    TeleprompterStrategy,
+)
 
 # --- Test Fixtures ---
 

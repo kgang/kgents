@@ -5,21 +5,19 @@ B×G Phase 3 - Structural Economics integration.
 """
 
 import pytest
-
 from agents.b.syntax_tax import (
     ChomskyLevel,
-    GrammarFeature,
+    DowngradeNegotiator,
     GrammarAnalysis,
     GrammarClassifier,
-    SyntaxTaxSchedule,
+    GrammarFeature,
     SyntaxTaxBudget,
-    DowngradeNegotiator,
-    create_syntax_tax_budget,
-    classify_grammar,
+    SyntaxTaxSchedule,
     calculate_syntax_tax,
+    classify_grammar,
+    create_syntax_tax_budget,
     get_tier_costs,
 )
-
 
 # =============================================================================
 # ChomskyLevel Tests

@@ -16,12 +16,14 @@ Use Cases:
 - L-gent catalog search: Use ###ARTIFACT: anchor for results
 """
 
-from typing import Iterator, Optional
+from typing import Generic, Iterator, Optional, TypeVar
 
-from agents.p.core import ParseResult, ParserConfig
+from agents.p.core import ParserConfig, ParseResult
+
+A = TypeVar("A")
 
 
-class AnchorBasedParser[A]:
+class AnchorBasedParser(Generic[A]):
     """
     Extract content using anchor markers, ignore structure.
 

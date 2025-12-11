@@ -14,25 +14,24 @@ grammatically impossible rather than runtime-checked.
 
 from typing import Any
 
-from agents.g.types import (
-    Tongue,
-    GrammarLevel,
-    GrammarFormat,
-    Example,
-)
 from agents.g.synthesis import (
     analyze_domain,
-    synthesize_grammar,
-    generate_parser_config,
     generate_interpreter_config,
-)
-from agents.g.validation import (
-    generate_constraint_proofs,
-    validate_tongue_comprehensive,
-    ValidationReport,
+    generate_parser_config,
+    synthesize_grammar,
 )
 from agents.g.tongue import TongueBuilder
-
+from agents.g.types import (
+    Example,
+    GrammarFormat,
+    GrammarLevel,
+    Tongue,
+)
+from agents.g.validation import (
+    ValidationReport,
+    generate_constraint_proofs,
+    validate_tongue_comprehensive,
+)
 
 # ============================================================================
 # Grammarian Agent

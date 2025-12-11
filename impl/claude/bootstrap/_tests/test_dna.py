@@ -8,32 +8,31 @@ Tests the DNA protocol from spec/protocols/config.md:
 - DNA composition with modifiers
 """
 
-import pytest
 from dataclasses import dataclass
 
+import pytest
 from bootstrap.dna import (
-    # Base types
-    BaseDNA,
-    LLMAgentDNA,
-    StatefulAgentDNA,
-    RiskAwareAgentDNA,
-    HypothesisDNA,
-    JGentDNA,
-    # Composition
-    ComposedDNA,
-    UrgencyModifier,
-    ContextModifier,
-    # Constraints
-    Constraint,
-    DNAValidationError,
-    TraitNotFoundError,
+    BOUNDED_DEPTH,
     # Standard constraints
     EPISTEMIC_HUMILITY,
-    POSITIVE_EXPLORATION,
-    BOUNDED_DEPTH,
     POPPERIAN_PRINCIPLE,
+    POSITIVE_EXPLORATION,
+    # Base types
+    BaseDNA,
+    # Composition
+    ComposedDNA,
+    # Constraints
+    Constraint,
+    ContextModifier,
+    DNAValidationError,
+    HypothesisDNA,
+    JGentDNA,
+    LLMAgentDNA,
+    RiskAwareAgentDNA,
+    StatefulAgentDNA,
+    TraitNotFoundError,
+    UrgencyModifier,
 )
-
 
 # ============================================================================
 # BaseDNA Tests

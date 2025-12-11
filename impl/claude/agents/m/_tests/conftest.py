@@ -9,13 +9,12 @@ Shared fixtures for M-gent test suites:
 """
 
 from datetime import datetime, timedelta
+
 import pytest
-
-from agents.m.holographic import HolographicMemory, MemoryPattern
-from agents.m.tiered import TieredMemory
-from agents.m.recollection import RecollectionAgent
 from agents.m.consolidation import ConsolidationAgent, ForgettingCurveAgent
-
+from agents.m.holographic import HolographicMemory, MemoryPattern
+from agents.m.recollection import RecollectionAgent
+from agents.m.tiered import TieredMemory
 
 # ========== Core Memory Fixtures ==========
 

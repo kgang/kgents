@@ -13,16 +13,16 @@ Part of the Noosphere Layer (D-gent Phase 4).
 
 from __future__ import annotations
 
-from typing import TypeVar, Generic, List, Tuple, Callable, Optional, Any
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
+from typing import Any, Callable, Generic, List, Optional, Tuple, TypeVar
 
-from .stream import StreamAgent, WitnessReport, DriftReport, EventRecord, Vector
 from .errors import (
-    TemporalError,
     DriftDetectionError,
+    TemporalError,
 )
+from .stream import DriftReport, EventRecord, StreamAgent, Vector, WitnessReport
 
 E = TypeVar("E")  # Event type
 S = TypeVar("S")  # State type

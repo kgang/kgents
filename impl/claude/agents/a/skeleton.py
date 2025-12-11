@@ -20,7 +20,7 @@ for semantic clarity, but it's the same class.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, TypeVar, Generic, Type, Protocol, runtime_checkable
+from typing import Any, Generic, Protocol, Type, TypeVar, runtime_checkable
 
 # Re-export the bootstrap Agent as AbstractAgent
 # This is NOT a new class - it's the recognition that Agent IS the skeleton

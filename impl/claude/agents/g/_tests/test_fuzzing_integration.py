@@ -9,32 +9,31 @@ Tests:
 """
 
 import pytest
-from agents.g.types import (
-    Tongue,
-    GrammarLevel,
-    GrammarFormat,
-    ParserConfig,
-    InterpreterConfig,
-    Example,
-    ConstraintProof,
-    CounterExample,
-)
 from agents.g.fuzzing_integration import (
-    TongueInputGenerator,
-    TongueFuzzer,
-    TonguePropertyTester,
     FuzzInputType,
-    FuzzResult,
     FuzzReport,
-    PropertyType,
+    FuzzResult,
     PropertyResult,
     PropertyTestReport,
+    PropertyType,
+    TongueFuzzer,
+    TongueInputGenerator,
+    TonguePropertyTester,
     fuzz_tongue,
+    generate_constraint_proofs,
     property_test_tongue,
     validate_tongue_with_t_gent,
-    generate_constraint_proofs,
 )
-
+from agents.g.types import (
+    ConstraintProof,
+    CounterExample,
+    Example,
+    GrammarFormat,
+    GrammarLevel,
+    InterpreterConfig,
+    ParserConfig,
+    Tongue,
+)
 
 # ============================================================================
 # Test Fixtures

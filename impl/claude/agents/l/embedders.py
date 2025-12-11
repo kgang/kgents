@@ -18,7 +18,6 @@ from typing import Optional
 
 from .semantic import Embedder
 
-
 # Sentinel for optional imports
 SENTENCE_TRANSFORMERS_AVAILABLE = False
 OPENAI_AVAILABLE = False

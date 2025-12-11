@@ -4,37 +4,37 @@ Tests for D-gent Phase 3: Extended Protocols.
 Tests TransactionalDataAgent, QueryableDataAgent, ObservableDataAgent, and UnifiedMemory.
 """
 
-import pytest
 import asyncio
 
-from ..volatile import VolatileAgent
-from ..transactional import (
-    TransactionalDataAgent,
-    TransactionError,
-    RollbackError,
+import pytest
+
+from ..observable import (
+    ChangeType,
+    ObservableDataAgent,
 )
 from ..queryable import (
-    QueryableDataAgent,
-    Query,
-    Predicate,
     Operator,
-    eq,
-    gt,
+    Predicate,
+    Query,
+    QueryableDataAgent,
     contains,
+    eq,
     exists,
+    gt,
 )
-from ..observable import (
-    ObservableDataAgent,
-    ChangeType,
+from ..transactional import (
+    RollbackError,
+    TransactionalDataAgent,
+    TransactionError,
 )
 from ..unified import (
-    UnifiedMemory,
+    LayerNotAvailableError,
     MemoryConfig,
     MemoryLayer,
-    LayerNotAvailableError,
+    UnifiedMemory,
     create_unified_memory,
 )
-
+from ..volatile import VolatileAgent
 
 # ==============================================================================
 # TransactionalDataAgent Tests

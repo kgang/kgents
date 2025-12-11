@@ -7,9 +7,8 @@ Provides shared fixtures for L-gent tests including:
 """
 
 import pytest
-
-from agents.l.registry import Registry
 from agents.l.lattice import create_lattice
+from agents.l.registry import Registry
 
 
 @pytest.fixture

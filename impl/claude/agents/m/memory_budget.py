@@ -28,14 +28,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Generic, Optional, Protocol, TypeVar
 from enum import Enum, auto
+from typing import Any, Generic, Optional, Protocol, TypeVar
 
 from .holographic import (
+    CompressionLevel,
     HolographicMemory,
     MemoryPattern,
     ResonanceResult,
-    CompressionLevel,
 )
 
 T = TypeVar("T")

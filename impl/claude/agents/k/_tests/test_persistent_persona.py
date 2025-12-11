@@ -5,19 +5,19 @@ Validates that persona state persists across sessions and
 that preference evolution is tracked correctly.
 """
 
-import pytest
-from pathlib import Path
-import tempfile
 import shutil
+import tempfile
+from pathlib import Path
 
+import pytest
 from agents.k import (
-    PersistentPersonaAgent,
-    PersistentPersonaQueryAgent,
-    PersonaState,
-    PersonaSeed,
     DialogueInput,
     DialogueMode,
+    PersistentPersonaAgent,
+    PersistentPersonaQueryAgent,
     PersonaQuery,
+    PersonaSeed,
+    PersonaState,
     persistent_kgent,
     persistent_query_persona,
 )

@@ -22,15 +22,14 @@ from pathlib import Path
 from typing import Iterator
 
 from .types import (
+    AgentEntry,
+    AgentStatus,
+    ArtifactEntry,
     DashboardEvent,
     EventType,
     Session,
     SessionState,
-    AgentEntry,
-    AgentStatus,
-    ArtifactEntry,
 )
-
 
 # =============================================================================
 # Database Schema

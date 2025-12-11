@@ -25,14 +25,13 @@ import aiosqlite
 import numpy as np
 
 from ..interfaces import (
-    IRelationalStore,
-    IVectorStore,
     IBlobStore,
+    IRelationalStore,
     ITelemetryStore,
-    VectorSearchResult,
+    IVectorStore,
     TelemetryEvent,
+    VectorSearchResult,
 )
-
 
 # =============================================================================
 # SQLiteRelationalStore

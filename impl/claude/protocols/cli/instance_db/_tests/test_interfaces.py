@@ -5,22 +5,23 @@ Verifies that the interface contracts are properly defined
 and that implementations satisfy them.
 """
 
-import pytest
 from typing import runtime_checkable
 
+import pytest
+
 from ..interfaces import (
-    IRelationalStore,
-    IVectorStore,
     IBlobStore,
+    IRelationalStore,
     ITelemetryStore,
-    VectorSearchResult,
+    IVectorStore,
     TelemetryEvent,
+    VectorSearchResult,
 )
 from ..providers.sqlite import (
-    InMemoryRelationalStore,
-    InMemoryVectorStore,
     InMemoryBlobStore,
+    InMemoryRelationalStore,
     InMemoryTelemetryStore,
+    InMemoryVectorStore,
 )
 
 

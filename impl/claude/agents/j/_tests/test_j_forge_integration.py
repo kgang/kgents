@@ -7,7 +7,6 @@ J-gent instantiates them with runtime parameters.
 """
 
 import pytest
-
 from agents.f import Contract, parse_intent, synthesize_contract
 from agents.j import ArchitectConstraints
 from agents.j.forge_integration import (
@@ -18,7 +17,6 @@ from agents.j.forge_integration import (
     forge_and_instantiate,
     instantiate_template,
 )
-
 
 # --- Test Fixtures ---
 

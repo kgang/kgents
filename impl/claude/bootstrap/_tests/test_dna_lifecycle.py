@@ -9,20 +9,30 @@ Tests the DNA (configuration as genetic code) lifecycle:
 Philosophy: Configuration is not loaded—it is expressed.
 """
 
-import pytest
-from typing import Any
 from dataclasses import dataclass
+from typing import Any
+
+import pytest
+
+# Gravity imports (F-gent)
+from agents.f.gravity import (
+    GravityContract,
+    Grounded,
+)
+from agents.f.gravity import (
+    GroundingError as GravityGroundingError,
+)
 
 # Bootstrap imports
 from bootstrap import (
-    compose,
-    Result,
-    Ok,
     Err,
+    Ok,
+    Result,
     Tension,
     TensionMode,
     Verdict,
     VerdictType,
+    compose,
 )
 
 # DNA imports
@@ -33,13 +43,6 @@ from bootstrap.dna import (
 # Umwelt imports
 from bootstrap.umwelt import (
     Umwelt,
-)
-
-# Gravity imports (F-gent)
-from agents.f.gravity import (
-    GravityContract,
-    Grounded,
-    GroundingError as GravityGroundingError,
 )
 
 

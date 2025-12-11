@@ -26,7 +26,7 @@ from abc import ABC
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Callable, Generic, TypeVar, Protocol, runtime_checkable
+from typing import Any, Callable, Generic, Protocol, TypeVar, runtime_checkable
 
 A = TypeVar("A")
 B = TypeVar("B")

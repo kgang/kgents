@@ -17,19 +17,19 @@ Pattern: Wrapper that persists dialectic outputs after each synthesis.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
 
-from bootstrap.types import Agent
 from agents.d import PersistentAgent
+from bootstrap.types import Agent
 
 from .hegel import (
-    HegelAgent,
     DialecticInput,
     DialecticOutput,
     DialecticStep,
+    HegelAgent,
 )
 
 

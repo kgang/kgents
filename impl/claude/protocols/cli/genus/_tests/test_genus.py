@@ -11,9 +11,8 @@ Tests the Big 6 Genera CLI handlers:
 """
 
 import json
-from io import StringIO
 import sys
-
+from io import StringIO
 
 # =============================================================================
 # G-gent Tests (Grammar CLI)
@@ -966,8 +965,8 @@ class TestGenusModuleImports:
             cmd_garden,
             cmd_grammar,
             cmd_jit,
-            cmd_parse,
             cmd_library,
+            cmd_parse,
             cmd_witness,
         )
 
@@ -983,8 +982,8 @@ class TestGenusModuleImports:
         from protocols.cli.genus.g_gent import cmd_grammar
         from protocols.cli.genus.i_gent import cmd_garden
         from protocols.cli.genus.j_gent import cmd_jit
-        from protocols.cli.genus.p_gent import cmd_parse
         from protocols.cli.genus.l_gent import cmd_library
+        from protocols.cli.genus.p_gent import cmd_parse
         from protocols.cli.genus.w_gent import cmd_witness
 
         assert callable(cmd_garden)
@@ -1009,8 +1008,8 @@ class TestGenusIntegration:
             cmd_garden,
             cmd_grammar,
             cmd_jit,
-            cmd_parse,
             cmd_library,
+            cmd_parse,
             cmd_witness,
         )
 
@@ -1040,8 +1039,8 @@ class TestGenusIntegration:
             cmd_garden,
             cmd_grammar,
             cmd_jit,
-            cmd_parse,
             cmd_library,
+            cmd_parse,
             cmd_witness,
         )
 

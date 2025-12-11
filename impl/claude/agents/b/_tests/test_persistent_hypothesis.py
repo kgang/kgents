@@ -5,9 +5,9 @@ Tests D-gent integration for hypothesis persistence, lineage tracking,
 and session management.
 """
 
-import pytest
 from pathlib import Path
 
+import pytest
 from agents.b.hypothesis_parser import (
     Hypothesis,
     NoveltyLevel,
@@ -18,7 +18,6 @@ from agents.b.persistent_hypothesis import (
     PersistentHypothesisStorage,
     persistent_hypothesis_storage,
 )
-
 
 # ─────────────────────────────────────────────────────────────────
 # Fixtures

@@ -7,8 +7,8 @@ Tests the laws and principles CLI commands from Phase 2.
 from __future__ import annotations
 
 import json
-import pytest
 
+import pytest
 from protocols.cli.bootstrap.laws import (
     CATEGORY_LAWS,
     LawName,
@@ -21,19 +21,19 @@ from protocols.cli.bootstrap.laws import (
     verify_laws,
     witness_composition,
 )
-
 from protocols.cli.bootstrap.principles import (
     DESIGN_PRINCIPLES,
-    PrincipleName,
-    PrincipleEvaluation,
     EvaluationReport,
-    Verdict as PrincipleVerdict,
+    PrincipleEvaluation,
+    PrincipleName,
     cmd_principles,
+    evaluate_against_principles,
     format_principles_json,
     format_principles_rich,
-    evaluate_against_principles,
 )
-
+from protocols.cli.bootstrap.principles import (
+    Verdict as PrincipleVerdict,
+)
 
 # ─────────────────────────────────────────────────────────────────
 # Laws Tests

@@ -7,14 +7,14 @@ The runtime handles the actual API calls and response parsing.
 Uses bootstrap Fix pattern for retry logic with convergence tracking.
 """
 
+import asyncio
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Generic, TypeVar, Optional, Callable, Awaitable, Union
-import asyncio
+from typing import Any, Awaitable, Callable, Generic, Optional, TypeVar, Union
 
 from bootstrap import Agent
-from bootstrap.types import FixConfig, FixResult
 from bootstrap.fix import Fix
+from bootstrap.types import FixConfig, FixResult
 
 A = TypeVar("A")
 B = TypeVar("B")

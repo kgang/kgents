@@ -5,11 +5,12 @@ The Symbiont pattern embodies endosymbiotic composition where pure logic
 (the "host") gains memory through integration with a D-gent (the "organelle").
 """
 
-from typing import TypeVar, Generic, Callable, Union, Awaitable
-from dataclasses import dataclass
 import asyncio
+from dataclasses import dataclass
+from typing import Awaitable, Callable, Generic, TypeVar, Union
 
 from bootstrap.types import Agent
+
 from .protocol import DataAgent
 
 S = TypeVar("S")  # State

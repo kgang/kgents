@@ -92,209 +92,189 @@ Usage:
     tools = await registry.find_by_signature(str, Summary)
 """
 
+from .counter import (
+    CounterAgent,
+)
+from .evolution_integration import (
+    EvolutionPipelineValidationReport,
+    PipelineStageReport,
+    PipelineValidationConfig,
+    evolve_with_law_validation,
+    validate_evolution_pipeline,
+    validate_evolution_stages_from_pipeline,
+)
+from .executor import (
+    CircuitBreakerConfig,
+    CircuitBreakerError,
+    CircuitBreakerState,
+    CircuitBreakerTool,
+    # Circuit Breaker
+    CircuitState,
+    # Config
+    RetryConfig,
+    RetryExecutor,
+    RobustToolExecutor,
+    SecureToolExecutor,
+    # Executors
+    ToolExecutor,
+)
 from .failing import (
     FailingAgent,
     FailingConfig,
     FailureType,
     failing_agent,
-    syntax_failing,
     import_failing,
+    syntax_failing,
 )
-
-from .mock import (
-    MockAgent,
-    MockConfig,
-    mock_agent,
-)
-
 from .fixture import (
     FixtureAgent,
     FixtureConfig,
     fixture_agent,
 )
-
-from .spy import (
-    SpyAgent,
-    spy_agent,
-)
-
-from .predicate import (
-    PredicateAgent,
-    predicate_agent,
-    not_none,
-    not_empty,
-    is_positive,
-    is_non_negative,
-)
-
-from .noise import (
-    NoiseAgent,
-    NoiseConfig,
-    NoiseType,
-)
-
-from .latency import (
-    LatencyAgent,
-)
-
 from .flaky import (
     FlakyAgent,
 )
-
-from .counter import (
-    CounterAgent,
-)
-
-from .metrics import (
-    MetricsAgent,
-    PerformanceMetrics,
-)
-
 from .judge import (
     JudgeAgent,
     JudgmentCriteria,
     JudgmentResult,
     self_evaluate_t_gent,
 )
-
-from .property import (
-    PropertyAgent,
-    PropertyTestResult,
-    IntGenerator,
-    StringGenerator,
-    ChoiceGenerator,
-    identity_property,
-    not_none_property,
-    length_preserved_property,
+from .latency import (
+    LatencyAgent,
 )
-
-from .oracle import (
-    OracleAgent,
-    RegressionOracle,
-    DiffResult,
-    semantic_equality,
-    numeric_equality,
-)
-
 from .law_validator import (
-    LawValidator,
     LawValidationReport,
+    LawValidator,
     LawViolation,
     check_associativity,
-    check_left_identity,
-    check_right_identity,
-    check_functor_identity,
     check_functor_composition,
+    check_functor_identity,
+    check_left_identity,
+    check_monad_associativity,
     check_monad_left_identity,
     check_monad_right_identity,
-    check_monad_associativity,
+    check_right_identity,
     validate_evolution_pipeline_laws,
 )
-
-from .evolution_integration import (
-    PipelineValidationConfig,
-    PipelineStageReport,
-    EvolutionPipelineValidationReport,
-    validate_evolution_pipeline,
-    validate_evolution_stages_from_pipeline,
-    evolve_with_law_validation,
-)
-
-from .tool import (
-    Tool,
-    ToolMeta,
-    ToolIdentity,
-    ToolInterface,
-    ToolRuntime,
-    ToolError,
-    ToolErrorType,
-    ToolTrace,
-    PassthroughTool,
-    TracedTool,
-    CachedTool,
-    RetryTool,
-)
-
-from .registry import (
-    ToolRegistry,
-    ToolEntry,
-    get_registry,
-    set_registry,
-)
-
-from .executor import (
-    # Circuit Breaker
-    CircuitState,
-    CircuitBreakerConfig,
-    CircuitBreakerState,
-    CircuitBreakerError,
-    CircuitBreakerTool,
-    # Executors
-    ToolExecutor,
-    RetryExecutor,
-    RobustToolExecutor,
-    SecureToolExecutor,
-    # Config
-    RetryConfig,
-)
-
-from .permissions import (
-    # Permission types
-    PermissionLevel,
-    SecurityLevel,
-    SensitivityLevel,
-    # Context and capabilities
-    AgentContext,
-    ToolCapabilities,
-    # Tokens
-    TemporaryToken,
-    # Classifier
-    PermissionClassifier,
-    # Audit
-    AuditLogger,
-    AuditLog,
-)
-
 from .mcp_client import (
-    # MCP Protocol Types
-    MCPTransportType,
-    MCPServerInfo,
-    MCPToolSchema,
-    MCPResource,
+    HttpSseTransport,
+    JsonRpcError,
     # JSON-RPC
     JsonRpcRequest,
     JsonRpcResponse,
-    JsonRpcError,
-    # Transport
-    MCPTransport,
-    StdioTransport,
-    HttpSseTransport,
     # Client
     MCPClient,
+    MCPResource,
+    MCPServerInfo,
     MCPTool,
+    MCPToolSchema,
+    # Transport
+    MCPTransport,
+    # MCP Protocol Types
+    MCPTransportType,
+    StdioTransport,
 )
-
+from .metrics import (
+    MetricsAgent,
+    PerformanceMetrics,
+)
+from .mock import (
+    MockAgent,
+    MockConfig,
+    mock_agent,
+)
+from .noise import (
+    NoiseAgent,
+    NoiseConfig,
+    NoiseType,
+)
+from .oracle import (
+    DiffResult,
+    OracleAgent,
+    RegressionOracle,
+    numeric_equality,
+    semantic_equality,
+)
 from .orchestration import (
-    # Sequential
-    SequentialOrchestrator,
+    CostBasedSelection,
+    # Dynamic Selection
+    DynamicToolSelector,
+    EnvironmentBasedSelection,
+    HandoffCondition,
+    # Handoff
+    HandoffPattern,
+    HandoffRule,
+    LatencyBasedSelection,
     # Parallel
     ParallelOrchestrator,
     ParallelResult,
+    SelectionContext,
+    SelectionStrategy,
+    # Sequential
+    SequentialOrchestrator,
     # Supervisor
     SupervisorPattern,
     Task,
     WorkerAssignment,
-    # Handoff
-    HandoffPattern,
-    HandoffCondition,
-    HandoffRule,
-    # Dynamic Selection
-    DynamicToolSelector,
-    SelectionContext,
-    SelectionStrategy,
-    CostBasedSelection,
-    LatencyBasedSelection,
-    EnvironmentBasedSelection,
+)
+from .permissions import (
+    # Context and capabilities
+    AgentContext,
+    AuditLog,
+    # Audit
+    AuditLogger,
+    # Classifier
+    PermissionClassifier,
+    # Permission types
+    PermissionLevel,
+    SecurityLevel,
+    SensitivityLevel,
+    # Tokens
+    TemporaryToken,
+    ToolCapabilities,
+)
+from .predicate import (
+    PredicateAgent,
+    is_non_negative,
+    is_positive,
+    not_empty,
+    not_none,
+    predicate_agent,
+)
+from .property import (
+    ChoiceGenerator,
+    IntGenerator,
+    PropertyAgent,
+    PropertyTestResult,
+    StringGenerator,
+    identity_property,
+    length_preserved_property,
+    not_none_property,
+)
+from .registry import (
+    ToolEntry,
+    ToolRegistry,
+    get_registry,
+    set_registry,
+)
+from .spy import (
+    SpyAgent,
+    spy_agent,
+)
+from .tool import (
+    CachedTool,
+    PassthroughTool,
+    RetryTool,
+    Tool,
+    ToolError,
+    ToolErrorType,
+    ToolIdentity,
+    ToolInterface,
+    ToolMeta,
+    ToolRuntime,
+    ToolTrace,
+    TracedTool,
 )
 
 __all__ = [

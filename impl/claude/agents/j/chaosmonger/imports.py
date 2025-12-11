@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import ast
 
-from .types import IMPORT_RISK, DEFAULT_IMPORT_RISK, StabilityConfig
+from .types import DEFAULT_IMPORT_RISK, IMPORT_RISK, StabilityConfig
 
 
 def extract_imports(tree: ast.AST) -> list[str]:
@@ -53,7 +53,9 @@ def check_imports(
             # Not in whitelist - check risk
             risk = IMPORT_RISK.get(imp, DEFAULT_IMPORT_RISK)
             if risk > 0.5:
-                violations.append(f"Import '{imp}' not in allowed list (risk={risk:.1f})")
+                violations.append(
+                    f"Import '{imp}' not in allowed list (risk={risk:.1f})"
+                )
             total_risk += risk
         else:
             total_risk += IMPORT_RISK.get(imp, 0.0)

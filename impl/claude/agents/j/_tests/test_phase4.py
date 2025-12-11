@@ -9,9 +9,9 @@ Tests for:
 - Ground collapse semantics
 """
 
-import pytest
 from typing import Any
 
+import pytest
 from agents.j import (
     # Phase 1: Promise & Reality
     Reality,
@@ -28,7 +28,6 @@ from agents.j.jgent import (
     jgent,
     jgent_sync,
 )
-
 
 # --- Test Generation Tests ---
 

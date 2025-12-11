@@ -28,8 +28,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Generic, TypeVar
 
-from .metered_functor import Gas, CentralBank
-
+from .metered_functor import CentralBank, Gas
 
 # =============================================================================
 # Type Definitions

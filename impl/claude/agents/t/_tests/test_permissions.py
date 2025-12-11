@@ -15,18 +15,16 @@ Test Coverage:
 """
 
 import pytest
-
-from agents.t.tool import Tool, ToolMeta, ToolErrorType
+from agents.t.executor import SecureToolExecutor
 from agents.t.permissions import (
+    AgentContext,
+    AuditLogger,
     PermissionClassifier,
     PermissionLevel,
-    AgentContext,
-    ToolCapabilities,
     SecurityLevel,
-    AuditLogger,
+    ToolCapabilities,
 )
-from agents.t.executor import SecureToolExecutor
-
+from agents.t.tool import Tool, ToolErrorType, ToolMeta
 
 # --- Test Fixtures ---
 

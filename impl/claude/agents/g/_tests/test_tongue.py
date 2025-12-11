@@ -9,34 +9,33 @@ Tests cover:
 - Tongue evolution/versioning
 """
 
+import importlib.util
 import tempfile
-import pytest
 from pathlib import Path
 
-import importlib.util
+import pytest
 
 HAS_YAML = importlib.util.find_spec("yaml") is not None
 
-from agents.g.types import (
-    GrammarLevel,
-    GrammarFormat,
-    ParserConfig,
-    InterpreterConfig,
-    ConstraintProof,
-)
 from agents.g.tongue import (
     TongueBuilder,
-    validate_tongue,
-    save_tongue_json,
-    load_tongue_json,
-    save_tongue_yaml,
-    load_tongue_yaml,
-    create_schema_tongue,
     create_command_tongue,
     create_recursive_tongue,
+    create_schema_tongue,
     evolve_tongue,
+    load_tongue_json,
+    load_tongue_yaml,
+    save_tongue_json,
+    save_tongue_yaml,
+    validate_tongue,
 )
-
+from agents.g.types import (
+    ConstraintProof,
+    GrammarFormat,
+    GrammarLevel,
+    InterpreterConfig,
+    ParserConfig,
+)
 
 # ============================================================================
 # TongueBuilder Tests

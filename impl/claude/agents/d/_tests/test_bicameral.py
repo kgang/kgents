@@ -4,13 +4,13 @@ Tests for Bicameral Memory.
 Tests BicameralMemory, Ghost Detection, Self-Healing, and Coherency Protocol.
 """
 
-import pytest
+# Mock the instance_db imports for testing
+import sys
 from dataclasses import dataclass
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
-# Mock the instance_db imports for testing
-import sys
+import pytest
 
 # Create mock modules
 mock_interfaces = MagicMock()
@@ -60,21 +60,20 @@ sys.modules["protocols.cli.instance_db.synapse"] = mock_synapse
 
 # Now import the module under test
 from ..bicameral import (
-    BicameralMemory,
     BicameralConfig,
     BicameralCortex,
     BicameralError,
+    BicameralMemory,
     CoherencyReport,
     GhostRecord,
-    StaleRecord,
     HemisphereRole,
-    create_bicameral_memory,
+    StaleRecord,
     create_bicameral_cortex,
+    create_bicameral_memory,
 )
 from ..infra_backends import (
     ContentHash,
 )
-
 
 # ==============================================================================
 # Test Fixtures

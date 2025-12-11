@@ -10,7 +10,6 @@ Test Coverage:
 """
 
 import pytest
-
 from agents.l.registry import Registry
 from agents.l.semantic_registry import SemanticRegistry, create_semantic_registry
 from agents.l.types import CatalogEntry, EntityType, Status

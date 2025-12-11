@@ -209,8 +209,8 @@ class TestComposition:
 
     def test_fallback_composition(self):
         """Test fallback composition of E-gent and B-gent parsers."""
-        from agents.e.parser.p_integration import code_parser
         from agents.b.p_integration import hypothesis_parser
+        from agents.e.parser.p_integration import code_parser
 
         # This won't actually work type-wise since they parse to different types,
         # but it demonstrates the composition interface

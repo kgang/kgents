@@ -9,9 +9,9 @@ This conftest provides:
 - Composition primitives for testing
 """
 
-import pytest
 from typing import Any, Callable
 
+import pytest
 
 # =============================================================================
 # Bootstrap Agent Fixtures

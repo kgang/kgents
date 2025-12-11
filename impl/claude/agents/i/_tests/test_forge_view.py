@@ -10,22 +10,22 @@ Tests cover:
 """
 
 import pytest
-
 from agents.i.forge_view import (
+    DEFAULT_ARCHETYPES,
     Archetype,
     ArchetypeLevel,
+    ForgeViewKeyHandler,
+    ForgeViewRenderer,
+    ForgeViewState,
     Pipeline,
     PipelineSlot,
-    ForgeViewState,
-    ForgeViewRenderer,
-    ForgeViewKeyHandler,
-    DEFAULT_ARCHETYPES,
-    create_demo_forge_state,
-    render_forge_view_once,
     archetype_from_catalog_entry,
+    create_demo_forge_state,
     load_archetypes_from_entries,
+    render_forge_view_once,
 )
-from agents.l.catalog import CatalogEntry, EntityType as LEntityType, Status
+from agents.l.catalog import CatalogEntry, Status
+from agents.l.catalog import EntityType as LEntityType
 
 
 class TestArchetype:

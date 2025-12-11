@@ -19,9 +19,9 @@ Why Monads matter:
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Generic, TypeVar, Callable
+from typing import Any, Callable, Generic, TypeVar
 
-from .functor import Maybe, Just, Nothing, Either, Right, Left
+from .functor import Either, Just, Left, Maybe, Nothing, Right
 
 A = TypeVar("A")
 B = TypeVar("B")
@@ -58,6 +58,7 @@ class Monad(ABC, Generic[A]):
 # --- Monad instances for Maybe and Either ---
 # Maybe and Either from functor.py already have flat_map which IS bind.
 
+
 def pure_maybe(value: A) -> Maybe[A]:
     """unit/return for Maybe monad."""
     return Just(value)
@@ -74,6 +75,7 @@ def fail_either(error: str) -> Either[str, None]:
 
 
 # --- Monad transformers (composition of monads) ---
+
 
 class MaybeEither(Generic[A]):
     """
@@ -106,11 +108,13 @@ class MaybeEither(Generic[A]):
     def bind(self, f: Callable[[A], "MaybeEither[B]"]) -> "MaybeEither[B]":
         """
         Monadic bind for MaybeEither.
-        
+
         Short-circuits on Nothing or Left.
         """
         if self._value.is_nothing():
-            return MaybeEither(Nothing)  # Nothing is compatible with Maybe[Either[Any, B]]
+            return MaybeEither(
+                Nothing
+            )  # Nothing is compatible with Maybe[Either[Any, B]]
         inner = self._value.value  # type: ignore
         if inner.is_left():
             return MaybeEither(Just(inner))

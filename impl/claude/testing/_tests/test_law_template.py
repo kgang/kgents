@@ -12,7 +12,7 @@ Copy this template when creating tests for new agents.
 """
 
 import pytest
-from bootstrap import compose, ID
+from bootstrap import ID, compose
 
 
 class TestAgentLawTemplate:

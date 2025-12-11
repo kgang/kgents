@@ -20,17 +20,16 @@ except ImportError:
     AIOSQLITE_AVAILABLE = False
 
 # Import agent classes (always available, deps checked at runtime)
-from ..sql_agent import (
-    SQLAgent,
-    SQLiteBackend,
-    PostgreSQLBackend,
-    create_sqlite_agent,
-)
 from ..errors import (
     StateNotFoundError,
     StorageError,
 )
-
+from ..sql_agent import (
+    PostgreSQLBackend,
+    SQLAgent,
+    SQLiteBackend,
+    create_sqlite_agent,
+)
 
 # Test fixtures
 

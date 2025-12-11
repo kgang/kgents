@@ -30,7 +30,6 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Callable, ClassVar, Literal, Optional
 
-
 # =============================================================================
 # Dimension 1: Physical Resources
 # =============================================================================

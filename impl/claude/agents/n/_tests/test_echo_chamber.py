@@ -8,22 +8,22 @@ Tests:
 - LucidDreamer: Counterfactuals and drift detection
 """
 
-import pytest
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from ..types import Determinism, SemanticTrace
+import pytest
+
 from ..echo_chamber import (
+    CounterfactualResult,
+    DriftReport,
     Echo,
     EchoChamber,
     EchoMode,
     LucidDreamer,
-    DriftReport,
-    CounterfactualResult,
     SimpleDriftMeasurer,
     quick_drift_check,
 )
-
+from ..types import Determinism, SemanticTrace
 
 # =============================================================================
 # Fixtures

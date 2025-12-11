@@ -9,45 +9,44 @@ Tests cover:
 5. Unified AdvancedRefinery
 """
 
-import pytest
 from datetime import datetime, timedelta
 
+import pytest
+from agents.r.advanced import (
+    AdvancedRefinery,
+    # Part 5: Unified
+    AdvancedRefineryConfig,
+    AnthropicFinetunePreparer,
+    AutoTeleprompterSelector,
+    BootstrapFinetuneTeleprompter,
+    CrossModelTransferAnalyzer,
+    DatasetCharacteristics,
+    DriftDetectionMethod,
+    DriftReport,
+    FinetuneConfig,
+    FinetuneDataset,
+    # Part 4: Fine-tuning
+    FinetuneStatus,
+    ModelDriftDetector,
+    # Part 3: Transfer analysis
+    ModelProfile,
+    OpenAIFinetunePreparer,
+    # Part 2: Drift detection
+    PerformanceSample,
+    ReoptimizationTrigger,
+    StrategyRecommendation,
+    TaskAnalysis,
+    TaskAnalyzer,
+    # Part 1: Auto-selection
+    TaskComplexity,
+    TransferPrediction,
+)
 from agents.r.types import (
     Example,
     OptimizationTrace,
     Signature,
     TeleprompterStrategy,
 )
-from agents.r.advanced import (
-    # Part 1: Auto-selection
-    TaskComplexity,
-    DatasetCharacteristics,
-    TaskAnalysis,
-    StrategyRecommendation,
-    TaskAnalyzer,
-    AutoTeleprompterSelector,
-    # Part 2: Drift detection
-    PerformanceSample,
-    DriftReport,
-    DriftDetectionMethod,
-    ModelDriftDetector,
-    ReoptimizationTrigger,
-    # Part 3: Transfer analysis
-    ModelProfile,
-    TransferPrediction,
-    CrossModelTransferAnalyzer,
-    # Part 4: Fine-tuning
-    FinetuneStatus,
-    FinetuneConfig,
-    FinetuneDataset,
-    OpenAIFinetunePreparer,
-    AnthropicFinetunePreparer,
-    BootstrapFinetuneTeleprompter,
-    # Part 5: Unified
-    AdvancedRefineryConfig,
-    AdvancedRefinery,
-)
-
 
 # =============================================================================
 # Fixtures

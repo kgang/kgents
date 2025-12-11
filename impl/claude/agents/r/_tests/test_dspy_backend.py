@@ -12,24 +12,22 @@ Tests cover:
 """
 
 import pytest
-
+from agents.r.dspy_backend import (
+    LLMOpro,
+    LLMTextGrad,
+    example_to_dspy,
+    examples_to_dspy,
+    get_dspy_teleprompter,
+    is_dspy_available,
+    signature_to_dspy,
+)
 from agents.r.types import (
-    Signature,
     Example,
     FieldSpec,
+    Signature,
     TeleprompterStrategy,
     TextualGradient,
 )
-from agents.r.dspy_backend import (
-    is_dspy_available,
-    get_dspy_teleprompter,
-    LLMTextGrad,
-    LLMOpro,
-    signature_to_dspy,
-    example_to_dspy,
-    examples_to_dspy,
-)
-
 
 # --- Test Fixtures ---
 

@@ -14,32 +14,30 @@ import json
 from unittest.mock import patch
 
 from ..commands import (
-    cmd_new,
-    cmd_run,
+    IntentResult,
+    _format_epilogue,
+    _format_rich,
+    _parse_args,
     cmd_check,
-    cmd_think,
-    cmd_watch,
     cmd_find,
     cmd_fix,
-    cmd_speak,
     cmd_judge,
-    IntentResult,
-    _parse_args,
-    _format_rich,
-    _format_epilogue,
+    cmd_new,
+    cmd_run,
+    cmd_speak,
+    cmd_think,
+    cmd_watch,
 )
-
 from ..router import (
-    cmd_do,
-    classify_intent,
-    generate_plan,
-    assess_risk,
-    extract_targets,
     IntentCategory,
     RiskLevel,
     Step,
+    assess_risk,
+    classify_intent,
+    cmd_do,
+    extract_targets,
+    generate_plan,
 )
-
 
 # =============================================================================
 # Helper Fixtures
@@ -684,15 +682,15 @@ class TestModuleImports:
 
     def test_import_commands(self):
         from ..commands import (
-            cmd_new,
-            cmd_run,
             cmd_check,
-            cmd_think,
-            cmd_watch,
             cmd_find,
             cmd_fix,
-            cmd_speak,
             cmd_judge,
+            cmd_new,
+            cmd_run,
+            cmd_speak,
+            cmd_think,
+            cmd_watch,
         )
 
         assert callable(cmd_new)
@@ -706,14 +704,14 @@ class TestModuleImports:
         assert callable(cmd_judge)
 
     def test_import_router(self):
-        from ..router import cmd_do, classify_intent, generate_plan
+        from ..router import classify_intent, cmd_do, generate_plan
 
         assert callable(cmd_do)
         assert callable(classify_intent)
         assert callable(generate_plan)
 
     def test_lazy_loading_via_init(self):
-        from .. import cmd_new, cmd_do
+        from .. import cmd_do, cmd_new
 
         assert callable(cmd_new)
         assert callable(cmd_do)

@@ -100,42 +100,6 @@ Wire Protocol Integration:
 """
 
 # Core Types
-from .types import (
-    Action,
-    Determinism,
-    SemanticTrace,
-    TraceContext,
-)
-
-# Historian (Write-Time)
-from .historian import (
-    Historian,
-    Traceable,
-    TracingContext,
-)
-
-# Crystal Storage
-from .store import (
-    CrystalStore,
-    CrystalStats,
-    MemoryCrystalStore,
-    compute_stats,
-)
-
-# Wire Protocol Integration
-from .tap import (
-    FrameType,
-    HistorianTap,
-    WireFrame,
-    WireIntegration,
-)
-
-# D-gent Backed Storage
-from .dgent_store import (
-    DgentCrystalStore,
-    SimpleDgentCrystalStore,
-)
-
 # Bard (Phase 2 - Read-Time Storytelling)
 from .bard import (
     Bard,
@@ -151,6 +115,21 @@ from .bard import (
     Verbosity,
 )
 
+# Chronicle (Phase 4 - Multi-Agent)
+from .chronicle import (
+    Chronicle,
+    ChronicleBuilder,
+    CorrelationDetector,
+    Interaction,
+    TimelineView,
+)
+
+# D-gent Backed Storage
+from .dgent_store import (
+    DgentCrystalStore,
+    SimpleDgentCrystalStore,
+)
+
 # Echo Chamber (Phase 3 - Replay)
 from .echo_chamber import (
     CounterfactualResult,
@@ -161,28 +140,6 @@ from .echo_chamber import (
     LucidDreamer,
     SimpleDriftMeasurer,
     quick_drift_check,
-)
-
-# Chronicle (Phase 4 - Multi-Agent)
-from .chronicle import (
-    Chronicle,
-    ChronicleBuilder,
-    CorrelationDetector,
-    Interaction,
-    TimelineView,
-)
-
-# Integrations (Phase 5 - D/L/M/I/B-gent)
-from .integrations import (
-    BudgetedBard,
-    CrystalMemoryPattern,
-    IndexedCrystalStore,
-    InsufficientBudgetError,
-    NarrationCost,
-    NarrativeOrchestrator,
-    NarrativeVisualization,
-    ResonantCrystalStore,
-    VisualizableBard,
 )
 
 # Epistemic Features (Phase 6)
@@ -202,6 +159,48 @@ from .epistemic import (
     UnreliableNarrative,
     UnreliableNarrator,
     UnreliableTrace,
+)
+
+# Historian (Write-Time)
+from .historian import (
+    Historian,
+    Traceable,
+    TracingContext,
+)
+
+# Integrations (Phase 5 - D/L/M/I/B-gent)
+from .integrations import (
+    BudgetedBard,
+    CrystalMemoryPattern,
+    IndexedCrystalStore,
+    InsufficientBudgetError,
+    NarrationCost,
+    NarrativeOrchestrator,
+    NarrativeVisualization,
+    ResonantCrystalStore,
+    VisualizableBard,
+)
+
+# Crystal Storage
+from .store import (
+    CrystalStats,
+    CrystalStore,
+    MemoryCrystalStore,
+    compute_stats,
+)
+
+# Wire Protocol Integration
+from .tap import (
+    FrameType,
+    HistorianTap,
+    WireFrame,
+    WireIntegration,
+)
+from .types import (
+    Action,
+    Determinism,
+    SemanticTrace,
+    TraceContext,
 )
 
 __all__ = [

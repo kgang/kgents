@@ -5,7 +5,6 @@ Focused tests covering core validation functionality.
 """
 
 import pytest
-
 from agents.f.contract import Contract, Invariant
 from agents.f.intent import Example, Intent
 from agents.f.prototype import SourceCode, StaticAnalysisReport
@@ -22,7 +21,6 @@ from agents.f.validate import (
     validate_with_self_healing,
     verify_invariant,
 )
-
 
 # ============================================================================
 # Test Helpers

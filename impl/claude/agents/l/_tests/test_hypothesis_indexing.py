@@ -4,17 +4,16 @@ Tests for L-gent Hypothesis Indexing (Cross-pollination T2.10).
 Tests hypothesis outcome indexing and pattern learning.
 """
 
-import pytest
 from dataclasses import dataclass
 
+import pytest
 from agents.l.hypothesis_indexing import (
     HypothesisIndex,
-    HypothesisRecord,
     HypothesisOutcome,
+    HypothesisRecord,
     HypothesisSearchQuery,
     bgent_hypothesis_to_record,
 )
-
 
 # --- Test: HypothesisRecord Creation ---
 

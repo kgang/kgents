@@ -7,14 +7,13 @@ Tests contract law validation for F-gent synthesized contracts.
 from dataclasses import dataclass, field
 
 from agents.c.contract_validator import (
-    ContractValidator,
-    ContractValidationReport,
     ContractLawViolation,
-    validate_contract_laws,
-    validate_composition_compatibility,
+    ContractValidationReport,
+    ContractValidator,
     suggest_contract_improvements,
+    validate_composition_compatibility,
+    validate_contract_laws,
 )
-
 
 # --- Mock Contract (matches F-gent Contract structure) ---
 

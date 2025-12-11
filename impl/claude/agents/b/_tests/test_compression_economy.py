@@ -10,29 +10,28 @@ Tests cover:
 4. SemanticZipperBudget: Budget evaluation with natural language tax
 """
 
-import pytest
 from datetime import datetime, timedelta
 
+import pytest
 from agents.b.compression_economy import (
     # Types
     AdoptionStatus,
-    CommunicationLog,
-    CompressionROI,
-    PidginMetadata,
-    PidginAvailable,
     BudgetDecision,
+    CommunicationLog,
     # Classes
     CommunicationTracker,
-    CompressionROICalculator,
     CompressionEconomyMonitor,
+    CompressionROI,
+    CompressionROICalculator,
+    PidginAvailable,
+    PidginMetadata,
     SemanticZipperBudget,
+    analyze_compression_opportunity,
     # Convenience functions
     create_compression_monitor,
     create_zipper_budget,
-    analyze_compression_opportunity,
 )
-from agents.b.metered_functor import Gas, CentralBank
-
+from agents.b.metered_functor import CentralBank, Gas
 
 # =============================================================================
 # CommunicationLog Tests

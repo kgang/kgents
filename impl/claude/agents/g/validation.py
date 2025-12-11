@@ -10,17 +10,16 @@ This module provides validation without requiring full T-gent integration.
 Production systems would use T-gent for fuzzing and property testing.
 """
 
+import re
 from dataclasses import dataclass
 from typing import Any
-import re
 
 from agents.g.types import (
-    Tongue,
-    CounterExample,
     ConstraintProof,
+    CounterExample,
     DomainAnalysis,
+    Tongue,
 )
-
 
 # ============================================================================
 # Validation Result Types

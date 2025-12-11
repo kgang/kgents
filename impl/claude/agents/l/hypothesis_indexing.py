@@ -10,11 +10,11 @@ This module indexes scientific hypotheses and their outcomes in the L-gent catal
 enabling pattern analysis and learning across domains.
 """
 
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import Any
-import logging
 
 logger = logging.getLogger(__name__)
 

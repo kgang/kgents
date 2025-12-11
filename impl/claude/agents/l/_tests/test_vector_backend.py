@@ -11,7 +11,6 @@ Tests are written to gracefully handle missing dependencies.
 """
 
 import pytest
-
 from agents.l.vector_backend import (
     CHROMADB_AVAILABLE,
     FAISS_AVAILABLE,

@@ -1,25 +1,23 @@
 """Tests for L-gent E-gent Integration module."""
 
 import pytest
-
 from agents.l.egent_integration import (
-    # Mutation schemas
-    MutationSchema,
-    SchemaCategory,
     STANDARD_SCHEMAS,
     # Code intent
     CodeIntent,
+    # Mutation schemas
+    MutationSchema,
+    SchemaCategory,
+    # Extended registry
+    cosine_similarity,
+    create_egent_registry,
     extract_code_docstrings,
     extract_code_names,
     # Type inference
     infer_types,
     types_compatible,
-    # Extended registry
-    cosine_similarity,
-    create_egent_registry,
 )
 from agents.l.semantic import SimpleEmbedder
-
 
 # =============================================================================
 # Mutation Schema Tests

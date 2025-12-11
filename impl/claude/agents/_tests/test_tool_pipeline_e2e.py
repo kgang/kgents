@@ -11,8 +11,9 @@ Tests the complete tool pipeline:
 Philosophy: Tools are agents at the boundary of the system.
 """
 
-import pytest
 from dataclasses import dataclass
+
+import pytest
 
 # F-gent imports
 from agents.f import (
@@ -23,24 +24,19 @@ from agents.f import (
 # J-gent imports
 from agents.j import (
     AgentSource,
-    create_agent_from_source,
     JITAgentWrapper,
+    create_agent_from_source,
 )
 
-# T-gent imports
-from agents.t import (
-    Tool,
-    ToolMeta,
-    ToolIdentity,
-    ToolRegistry,
-    ToolExecutor,
-    RobustToolExecutor,
-    MockAgent,
-    MockConfig,
-    SpyAgent,
-    FailingAgent,
-    FailingConfig,
-    FailureType,
+# N-gent imports
+from agents.n import (
+    Bard,
+    Determinism,
+    Historian,
+    MemoryCrystalStore,
+    NarrativeGenre,
+    NarrativeRequest,
+    Verbosity,
 )
 
 # O-gent imports
@@ -48,15 +44,20 @@ from agents.o import (
     BaseObserver,
 )
 
-# N-gent imports
-from agents.n import (
-    Historian,
-    MemoryCrystalStore,
-    Bard,
-    NarrativeRequest,
-    NarrativeGenre,
-    Verbosity,
-    Determinism,
+# T-gent imports
+from agents.t import (
+    FailingAgent,
+    FailingConfig,
+    FailureType,
+    MockAgent,
+    MockConfig,
+    RobustToolExecutor,
+    SpyAgent,
+    Tool,
+    ToolExecutor,
+    ToolIdentity,
+    ToolMeta,
+    ToolRegistry,
 )
 
 

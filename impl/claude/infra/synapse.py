@@ -27,13 +27,13 @@ From spec/bootstrap.md (Fix):
 from __future__ import annotations
 
 import asyncio
+import hashlib
+import json
+from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, auto
-from typing import Any, Callable, Awaitable, Protocol
-from collections import deque
-import hashlib
-import json
+from typing import Any, Awaitable, Callable, Protocol
 
 
 class SignalKind(Enum):

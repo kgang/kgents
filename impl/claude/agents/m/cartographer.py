@@ -26,8 +26,8 @@ from uuid import uuid4
 from .cartography import (
     Attractor,
     ContextVector,
-    Horizon,
     HoloMap,
+    Horizon,
     Region,
     Resolution,
     Void,

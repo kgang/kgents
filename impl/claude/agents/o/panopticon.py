@@ -29,26 +29,26 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, AsyncIterator, Callable
 
+from .axiological import AxiologicalObserver, RoCMonitor
+from .bootstrap_witness import (
+    BootstrapObserver,
+    BootstrapVerificationResult,
+)
 from .observer import (
     BaseObserver,
     ObservationContext,
     ObservationResult,
     ObserverLevel,
 )
+from .semantic import BorromeanObserver, DriftDetector, SemanticObserver
 from .telemetry import TelemetryObserver, TopologyMapper
-from .semantic import SemanticObserver, DriftDetector, BorromeanObserver
-from .axiological import AxiologicalObserver, RoCMonitor
-from .bootstrap_witness import (
-    BootstrapObserver,
-    BootstrapVerificationResult,
-)
 
 # VoI integration (optional)
 try:
     from .voi_observer import (
+        ObservationDepth,
         VoIAwareObserver,
         VoIObservationConfig,
-        ObservationDepth,
     )
 
     HAS_VOI = True

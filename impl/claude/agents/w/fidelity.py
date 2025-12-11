@@ -12,13 +12,14 @@ dictating format.
 """
 
 from __future__ import annotations
+
+import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
-import json
 
-from .protocol import WireReader, WireEvent
+from .protocol import WireEvent, WireReader
 
 
 class Fidelity(Enum):

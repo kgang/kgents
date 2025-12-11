@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-
 from protocols.cli.prism import ExposeMetadata, expose, get_expose_meta, is_exposed
 
 

@@ -7,10 +7,11 @@ Type II Saboteur - Chaos Engineering for robustness testing.
 """
 
 from __future__ import annotations
+
+import random
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Generic, TypeVar, Optional, List, TYPE_CHECKING
-import random
+from typing import TYPE_CHECKING, Generic, List, Optional, TypeVar
 
 if TYPE_CHECKING:
     from bootstrap.types import Agent, ComposedAgent

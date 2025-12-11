@@ -13,7 +13,6 @@ Meet/Join Laws:
 """
 
 import pytest
-
 from agents.l.lattice import (
     SubtypeEdge,
     TypeKind,
@@ -22,7 +21,6 @@ from agents.l.lattice import (
     create_lattice,
 )
 from agents.l.types import CatalogEntry, EntityType
-
 
 # registry and lattice fixtures imported from conftest.py
 

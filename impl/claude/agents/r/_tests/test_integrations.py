@@ -9,39 +9,38 @@ Tests cover:
 5. RGentIntegrationHub: Unified pipeline
 """
 
-import pytest
 from typing import Any, Callable
 
+import pytest
+from agents.r.integrations import (
+    BGentBudgetProtocol,
+    BudgetConstrainedRefinery,
+    # B-gent integration
+    BudgetDenied,
+    BudgetGrant,
+    BudgetSpendReport,
+    FGentRefineryBridge,
+    LGentOptimizationIndex,
+    # T-gent integration
+    MetricSignal,
+    # L-gent integration
+    OptimizationCatalogEntry,
+    PrototypeRefinementRequest,
+    PrototypeRefinementResult,
+    # F-gent integration
+    RefinePhase,
+    # Unified hub
+    RGentIntegrationConfig,
+    RGentIntegrationHub,
+    TextualLossSignal,
+    TGentLossAdapter,
+)
 from agents.r.types import (
     Example,
     OptimizationTrace,
     Signature,
     TeleprompterStrategy,
 )
-from agents.r.integrations import (
-    # F-gent integration
-    RefinePhase,
-    PrototypeRefinementRequest,
-    PrototypeRefinementResult,
-    FGentRefineryBridge,
-    # T-gent integration
-    MetricSignal,
-    TextualLossSignal,
-    TGentLossAdapter,
-    # B-gent integration
-    BudgetDenied,
-    BudgetGrant,
-    BudgetSpendReport,
-    BGentBudgetProtocol,
-    BudgetConstrainedRefinery,
-    # L-gent integration
-    OptimizationCatalogEntry,
-    LGentOptimizationIndex,
-    # Unified hub
-    RGentIntegrationConfig,
-    RGentIntegrationHub,
-)
-
 
 # =============================================================================
 # Test Fixtures
@@ -221,8 +220,8 @@ class TestFGentRefineryBridge:
 
         assert signature is not None
         assert signature.instructions == "Summarize text concisely"
-        assert signature.input_fields[0].field_type == str
-        assert signature.output_fields[0].field_type == str
+        assert signature.input_fields[0].field_type is str
+        assert signature.output_fields[0].field_type is str
 
     def test_extract_signature_from_invalid_source(self):
         """Test extracting signature from invalid source."""
@@ -241,11 +240,11 @@ class TestFGentRefineryBridge:
         """Test type name to Python type conversion."""
         bridge = FGentRefineryBridge()
 
-        assert bridge._type_from_name("str") == str
-        assert bridge._type_from_name("int") == int
-        assert bridge._type_from_name("float") == float
-        assert bridge._type_from_name("bool") == bool
-        assert bridge._type_from_name("Unknown") == str  # Default
+        assert bridge._type_from_name("str") is str
+        assert bridge._type_from_name("int") is int
+        assert bridge._type_from_name("float") is float
+        assert bridge._type_from_name("bool") is bool
+        assert bridge._type_from_name("Unknown") is str  # Default
 
     @pytest.mark.asyncio
     async def test_generate_synthetic_examples(self, sample_signature: Signature):

@@ -11,8 +11,8 @@ Phase 4 Implementation:
 - find_composable: Find tongues that can compose
 """
 
-from agents.g.types import Tongue, GrammarLevel
-from agents.l import Registry, CatalogEntry, EntityType, CompatibilityReport
+from agents.g.types import GrammarLevel, Tongue
+from agents.l import CatalogEntry, CompatibilityReport, EntityType, Registry
 
 
 async def register_tongue(

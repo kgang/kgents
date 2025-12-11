@@ -11,38 +11,37 @@ Tests integration between Ψ-gent (Metaphor Engine) and other agents:
 Philosophy: Reasoning by analogy as geometric transformation.
 """
 
-import pytest
 from datetime import datetime
 from typing import Any
 
+import pytest
 from agents.psi import (
-    MetaphorEngine,
-    Problem,
-    Metaphor,
-    Operation,
-    Solution,
     EngineConfig,
+    Metaphor,
+    MetaphorEngine,
+    Operation,
+    Problem,
+    Solution,
 )
 from agents.psi.integrations import (
-    embed_problem,
-    embed_metaphor,
-    embed_corpus,
-    cosine_similarity,
-    retrieve_by_embedding,
-    solve_with_budget,
-    PsiBudget,
-    TokenReceipt,
-    PersistentEngine,
-    solve_with_tracing,
-    PsiTrace,
-    project_with_grammar,
     GentDependencies,
     IntegrationConfig,
-    create_engine_with_deps,
+    PersistentEngine,
+    PsiBudget,
+    PsiTrace,
     ResilientEngine,
+    TokenReceipt,
+    cosine_similarity,
+    create_engine_with_deps,
+    embed_corpus,
+    embed_metaphor,
+    embed_problem,
+    project_with_grammar,
+    retrieve_by_embedding,
+    solve_with_budget,
+    solve_with_tracing,
 )
-from agents.psi.learning import ThompsonSamplingModel, AbstractionModel
-
+from agents.psi.learning import AbstractionModel, ThompsonSamplingModel
 
 # =============================================================================
 # Mock Implementations for Testing

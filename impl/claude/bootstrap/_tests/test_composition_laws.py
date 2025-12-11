@@ -9,38 +9,39 @@ Tests category theory laws for agent composition:
 Philosophy: Agents are morphisms in a category; laws ensure predictable composition.
 """
 
-import pytest
-from typing import Any, TypeVar
 from dataclasses import dataclass
+from typing import Any, TypeVar
 
-# Bootstrap imports
-from bootstrap import (
-    ID,
-    compose,
-    Ok,
-    Err,
-)
+import pytest
 
 # C-gent imports
 from agents.c import (
     # Maybe
     Just,
+    Left,
     Nothing,
-    maybe,
     # Either
     Right,
-    Left,
-    either,
-    # Functor verification
-    check_identity_law,
-    check_composition_law,
-    # Parallel
-    fan_out,
     # Conditional
     branch,
-    switch,
+    check_composition_law,
+    # Functor verification
+    check_identity_law,
+    either,
+    # Parallel
+    fan_out,
     # Logged
     logged,
+    maybe,
+    switch,
+)
+
+# Bootstrap imports
+from bootstrap import (
+    ID,
+    Err,
+    Ok,
+    compose,
 )
 
 A = TypeVar("A")

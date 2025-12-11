@@ -15,13 +15,12 @@ not runtime checks. Forbidden operations are grammatically impossible.
 import re
 
 from agents.g.types import (
-    GrammarLevel,
-    GrammarFormat,
     DomainAnalysis,
-    ParserConfig,
+    GrammarFormat,
+    GrammarLevel,
     InterpreterConfig,
+    ParserConfig,
 )
-
 
 # ============================================================================
 # Domain Analysis
