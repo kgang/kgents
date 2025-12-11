@@ -282,7 +282,7 @@ class CommunicationTracker:
         logs = self.logs.get(pair, [])
 
         if since:
-            logs = [l for l in logs if l.timestamp >= since]
+            logs = [log for log in logs if log.timestamp >= since]
 
         return logs
 
@@ -301,7 +301,9 @@ class CommunicationTracker:
 
         for pair in list(self.logs.keys()):
             original_count = len(self.logs[pair])
-            self.logs[pair] = [l for l in self.logs[pair] if l.timestamp >= cutoff]
+            self.logs[pair] = [
+                log for log in self.logs[pair] if log.timestamp >= cutoff
+            ]
             removed += original_count - len(self.logs[pair])
 
             # Remove empty pairs
@@ -327,8 +329,8 @@ class CommunicationTracker:
                 "using_natural_language_count": 0,
             }
 
-        total_tokens = sum(l.tokens for l in logs)
-        using_pidgin = sum(1 for l in logs if l.using_pidgin)
+        total_tokens = sum(log.tokens for log in logs)
+        using_pidgin = sum(1 for log in logs if log.using_pidgin)
 
         return {
             "message_count": len(logs),
@@ -403,7 +405,7 @@ class CompressionROICalculator:
             )
 
         # Calculate current costs
-        total_tokens = sum(l.tokens for l in logs)
+        total_tokens = sum(log.tokens for log in logs)
         avg_tokens = total_tokens / len(logs)
 
         # Estimate compression ratio from message regularity
@@ -481,14 +483,14 @@ class CompressionROICalculator:
         if not logs:
             return 0.0
 
-        messages = [l.message for l in logs]
+        messages = [log.message for log in logs]
 
         # 1. Length consistency (std dev / mean)
         lengths = [len(m.split()) for m in messages]
         if len(lengths) > 1:
             mean_len = sum(lengths) / len(lengths)
             if mean_len > 0:
-                variance = sum((l - mean_len) ** 2 for l in lengths) / len(lengths)
+                variance = sum((x - mean_len) ** 2 for x in lengths) / len(lengths)
                 std_dev = variance**0.5
                 length_consistency = 1.0 - min(1.0, std_dev / mean_len)
             else:
@@ -510,7 +512,7 @@ class CompressionROICalculator:
             repetition_score = 0.0
 
         # 3. Domain consistency (all messages from same domain)
-        domains = set(l.domain for l in logs if l.domain)
+        domains = set(log.domain for log in logs if log.domain)
         if len(domains) == 1:
             domain_score = 1.0
         elif len(domains) == 0:
@@ -530,7 +532,7 @@ class CompressionROICalculator:
         if len(logs) < 2:
             return 1.0
 
-        timestamps = [l.timestamp for l in logs]
+        timestamps = [log.timestamp for log in logs]
         earliest = min(timestamps)
         latest = max(timestamps)
 
@@ -697,10 +699,10 @@ class CompressionEconomyMonitor:
 
         # Get example messages for pidgin synthesis
         logs = self.tracker.get_logs(agent_a, agent_b)
-        examples = [l.message for l in logs[:20]]  # Sample of 20
+        examples = [log.message for log in logs[:20]]  # Sample of 20
 
         # Determine domain from logs
-        domains = [l.domain for l in logs if l.domain]
+        domains = [log.domain for log in logs if log.domain]
         domain = domains[0] if domains else f"Communication: {agent_a} ↔ {agent_b}"
 
         try:

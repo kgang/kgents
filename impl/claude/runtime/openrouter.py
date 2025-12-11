@@ -8,7 +8,15 @@ import os
 from typing import Any, TypeVar, get_args, get_origin
 from dataclasses import dataclass
 
-from .base import Runtime, LLMAgent, AgentContext, AgentResult, with_retry, TransientError, PermanentError
+from .base import (
+    Runtime,
+    LLMAgent,
+    AgentContext,
+    AgentResult,
+    with_retry,
+    TransientError,
+    PermanentError,
+)
 
 A = TypeVar("A")
 B = TypeVar("B")
@@ -33,12 +41,13 @@ class APIClient:
     backoff_base: float = 2.0
 
     _client: Any = None
-    
+
     def _ensure_client(self) -> None:
         """Lazy-initialize the HTTP client."""
         if self._client is None:
             try:
                 import httpx
+
                 self._client = httpx.AsyncClient(
                     base_url=self.base_url,
                     headers={
@@ -53,11 +62,11 @@ class APIClient:
                 raise ImportError(
                     "httpx package required. Install with: pip install httpx"
                 )
-    
+
     def _is_transient_error(self, error: Exception) -> bool:
         """Classify HTTP errors as transient or permanent."""
         error_str = str(error).lower()
-        error_type = type(error).__name__
+        type(error).__name__
 
         # Already classified
         if isinstance(error, TransientError):
@@ -68,7 +77,12 @@ class APIClient:
         # HTTP status code errors
         if "429" in error_str or "rate limit" in error_str:
             return True
-        if "500" in error_str or "502" in error_str or "503" in error_str or "504" in error_str:
+        if (
+            "500" in error_str
+            or "502" in error_str
+            or "503" in error_str
+            or "504" in error_str
+        ):
             return True
         if "timeout" in error_str:
             return True
@@ -89,6 +103,7 @@ class APIClient:
         This makes APIClient a callable morphism that can be composed.
         Uses Fix pattern retry with exponential backoff.
         """
+
         async def _attempt() -> tuple[str, dict[str, Any]]:
             """Single API call attempt."""
             self._ensure_client()
@@ -134,7 +149,7 @@ class APIClient:
         )
 
         return result
-    
+
     async def close(self) -> None:
         """Release resources."""
         if self._client:
@@ -180,7 +195,9 @@ class OpenRouterRuntime(Runtime):
         # Initialize composable API client morphism
         resolved_api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
         if not resolved_api_key:
-            raise ValueError("OpenRouter API key required. Set OPENROUTER_API_KEY or pass api_key.")
+            raise ValueError(
+                "OpenRouter API key required. Set OPENROUTER_API_KEY or pass api_key."
+            )
         self._client = APIClient(
             api_key=resolved_api_key,
             model=model or self.DEFAULT_MODEL,
@@ -193,40 +210,40 @@ class OpenRouterRuntime(Runtime):
     def _validate_output_type(self, output: Any, agent: LLMAgent[A, B]) -> None:
         """
         Validate that parse_response returned the expected output type.
-        
+
         Performs basic runtime type checking to catch mismatches early.
         Only validates simple types (str, int, float, dict, list, bool, None).
         For complex types or generics, validation is best-effort.
-        
+
         Args:
             output: The parsed output from parse_response
             agent: The agent that produced the output
-            
+
         Raises:
             TypeError: If output type doesn't match agent's type annotation
         """
         if not self._validate_types:
             return
-            
+
         # Try to get the output type from the agent's class annotations
         agent_class = type(agent)
-        
+
         # Look for __orig_bases__ which contains Generic[A, B] info
         if not hasattr(agent_class, "__orig_bases__"):
             return  # Can't validate without type info
-            
+
         for base in agent_class.__orig_bases__:
             origin = get_origin(base)
             if origin is None:
                 continue
-                
+
             # Check if this is LLMAgent[A, B] or Agent[A, B]
             base_name = getattr(origin, "__name__", "")
             if base_name in ("LLMAgent", "Agent"):
                 args = get_args(base)
                 if len(args) >= 2:
                     expected_type = args[1]  # B is the second type parameter
-                    
+
                     # Validate against expected type
                     if not self._check_type_match(output, expected_type):
                         raise TypeError(
@@ -238,37 +255,39 @@ class OpenRouterRuntime(Runtime):
     def _check_type_match(self, value: Any, expected_type: Any) -> bool:
         """
         Check if value matches expected type.
-        
+
         Handles basic types, type unions (|), and simple generic types.
         Returns True for TypeVars or complex types we can't validate.
         """
         # Handle TypeVar - we can't validate these at runtime
         if isinstance(expected_type, TypeVar):
             return True
-            
+
         # Handle None type
         if expected_type is type(None):
             return value is None
-            
+
         # Handle Union types (int | str)
         origin = get_origin(expected_type)
         if origin is not None:
             # For Union types, check if value matches any of the types
             if hasattr(origin, "__name__") and origin.__name__ == "UnionType":
-                return any(self._check_type_match(value, t) for t in get_args(expected_type))
-            
+                return any(
+                    self._check_type_match(value, t) for t in get_args(expected_type)
+                )
+
             # For generic types like list[str], dict[str, int]
             # Just check the outer type (list, dict) for now
             if origin in (list, dict, set, tuple):
                 return isinstance(value, origin)
-                
+
             # For other generic types, be permissive
             return True
-            
+
         # Handle basic types
         if expected_type in (str, int, float, bool, dict, list, tuple, set):
             return isinstance(value, expected_type)
-            
+
         # For other types, assume valid (be permissive for complex types)
         return True
 
@@ -289,7 +308,7 @@ class OpenRouterRuntime(Runtime):
         response_text, metadata = await self.raw_completion(context)
 
         output = agent.parse_response(response_text)
-        
+
         # Validate output type matches agent's declared type B
         self._validate_output_type(output, agent)
 

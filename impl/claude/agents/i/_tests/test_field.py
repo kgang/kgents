@@ -304,8 +304,6 @@ class TestFieldSimulator:
 
         sim = FieldSimulator(state, brownian_probability=1.0)  # Always move
 
-        initial_pos = entity.position
-
         # Run many ticks to ensure movement
         for _ in range(100):
             sim.tick()

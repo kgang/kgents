@@ -29,7 +29,7 @@ import ast
 from dataclasses import dataclass, field
 from typing import Any, Optional, Callable
 
-from bootstrap.types import Agent, PartialVerdict, Verdict, VerdictType
+from bootstrap.types import Agent, PartialVerdict, Verdict
 from bootstrap.judge import Judge as BootstrapJudge, JudgeInput, MINI_JUDGES
 
 # Template generation (Phase D - H12)
@@ -42,7 +42,9 @@ class ArchitectInput:
 
     intent: str  # Natural language description of agent purpose
     context: dict[str, Any] = field(default_factory=dict)  # Available data/examples
-    constraints: ArchitectConstraints = field(default_factory=lambda: ArchitectConstraints())
+    constraints: ArchitectConstraints = field(
+        default_factory=lambda: ArchitectConstraints()
+    )
 
 
 @dataclass(frozen=True)
@@ -199,9 +201,7 @@ class MetaArchitect(Agent[ArchitectInput, AgentSource]):
         try:
             tree = ast.parse(source)
             classes = [
-                node.name
-                for node in ast.walk(tree)
-                if isinstance(node, ast.ClassDef)
+                node.name for node in ast.walk(tree) if isinstance(node, ast.ClassDef)
             ]
 
             if not classes:
@@ -301,7 +301,9 @@ async def compile_agent(
     return await architect.invoke(input_data)
 
 
-def validate_source_safety(source: AgentSource, constraints: ArchitectConstraints) -> tuple[bool, str]:
+def validate_source_safety(
+    source: AgentSource, constraints: ArchitectConstraints
+) -> tuple[bool, str]:
     """
     Validate that generated source meets safety constraints.
 
@@ -318,7 +320,9 @@ def validate_source_safety(source: AgentSource, constraints: ArchitectConstraint
     - No forbidden patterns
     """
     # Check complexity
-    max_complexity = int(constraints.entropy_budget * constraints.max_cyclomatic_complexity)
+    max_complexity = int(
+        constraints.entropy_budget * constraints.max_cyclomatic_complexity
+    )
     if source.complexity > max_complexity:
         return (
             False,
@@ -342,8 +346,7 @@ def validate_source_safety(source: AgentSource, constraints: ArchitectConstraint
 
 
 def check_jit_safe(
-    agent: Agent[Any, Any],
-    context: Optional[dict[str, Any]] = None
+    agent: Agent[Any, Any], context: Optional[dict[str, Any]] = None
 ) -> PartialVerdict:
     """
     JIT-specific safety check: no forbidden patterns in source.
@@ -351,7 +354,11 @@ def check_jit_safe(
     A mini-judge for the "jit_safe" principle.
     """
     source_code = context.get("source_code", "") if context else ""
-    constraints = context.get("constraints", ArchitectConstraints()) if context else ArchitectConstraints()
+    constraints = (
+        context.get("constraints", ArchitectConstraints())
+        if context
+        else ArchitectConstraints()
+    )
 
     for pattern in constraints.forbidden_patterns:
         if pattern in source_code:
@@ -371,8 +378,7 @@ def check_jit_safe(
 
 
 def check_entropy_bounded(
-    agent: Agent[Any, Any],
-    context: Optional[dict[str, Any]] = None
+    agent: Agent[Any, Any], context: Optional[dict[str, Any]] = None
 ) -> PartialVerdict:
     """
     JIT-specific check: complexity within entropy budget.
@@ -389,14 +395,15 @@ def check_entropy_bounded(
     return PartialVerdict(
         principle="entropy_bounded",
         passed=passed,
-        reasons=(f"Complexity {complexity} vs budget {max_allowed}",) if not passed else (),
+        reasons=(f"Complexity {complexity} vs budget {max_allowed}",)
+        if not passed
+        else (),
         confidence=0.9,
     )
 
 
 def check_imports_allowed(
-    agent: Agent[Any, Any],
-    context: Optional[dict[str, Any]] = None
+    agent: Agent[Any, Any], context: Optional[dict[str, Any]] = None
 ) -> PartialVerdict:
     """
     JIT-specific check: only allowed imports used.
@@ -418,7 +425,9 @@ def check_imports_allowed(
 
 
 # JIT-specific mini-judges
-JIT_MINI_JUDGES: dict[str, Callable[[Agent[Any, Any], Optional[dict[str, Any]]], PartialVerdict]] = {
+JIT_MINI_JUDGES: dict[
+    str, Callable[[Agent[Any, Any], Optional[dict[str, Any]]], PartialVerdict]
+] = {
     "jit_safe": check_jit_safe,
     "entropy_bounded": check_entropy_bounded,
     "imports_allowed": check_imports_allowed,
@@ -468,6 +477,7 @@ class JITSafetyJudge(BootstrapJudge):
         Returns:
             Verdict with ACCEPT, REVISE, or REJECT
         """
+
         # Create a stub agent to represent the generated source
         class GeneratedAgentStub(Agent[Any, Any]):
             """Stub agent for judging generated source."""

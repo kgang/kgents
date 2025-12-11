@@ -587,7 +587,7 @@ class TestVoidDetection:
         cartographer = CartographerAgent(vector_search=search, config=config)
         context = create_context_vector([0.0, 0.0])
 
-        holomap = await cartographer.invoke(context)
+        await cartographer.invoke(context)
         # May have voids between clusters
         # (depends on clustering result)
 
@@ -670,5 +670,5 @@ class TestCartographerIntegration:
         # Can use map for navigation
         nearest = holomap.nearest_landmark([0.0, 0.0])
         if nearest:
-            adjacent = holomap.adjacent_to([0.0, 0.0])
+            holomap.adjacent_to([0.0, 0.0])
             # May or may not have adjacent depending on desire lines

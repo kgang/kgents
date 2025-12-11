@@ -20,7 +20,7 @@ See spec/bootstrap.md lines 145-163.
 
 from __future__ import annotations
 import asyncio
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Optional, Protocol, Sequence
 
 from .types import (
@@ -297,9 +297,7 @@ class Contradict(Agent[ContradictInput, ContradictResult]):
 
         for detector in self._detectors:
             # Check circuit breaker
-            breaker = self._circuit_breakers.get(
-                detector.name, CircuitBreaker()
-            )
+            breaker = self._circuit_breakers.get(detector.name, CircuitBreaker())
             if breaker.is_open:
                 continue
 

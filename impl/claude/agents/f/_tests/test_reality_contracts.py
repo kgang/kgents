@@ -1,6 +1,6 @@
 """Tests for Reality-Aware Contracts (J-gent × F-gent integration)."""
 
-from agents.f.reality_contracts import (
+from agents.f.j_integration import (
     RealityGate,
     DeterministicOnly,
     BoundedComplexity,
@@ -63,7 +63,7 @@ class TestRealityGate:
         assert high_gate.admits("analyze data")
 
         # Very low budget - even simple tasks may fail due to threshold
-        low_gate = RealityGate(entropy_budget=0.05, chaos_threshold=0.1)
+        RealityGate(entropy_budget=0.05, chaos_threshold=0.1)
         # Low budget forces chaotic classification
         # (depends on implementation details)
 
@@ -307,7 +307,7 @@ class TestIntegration:
         assert admits_intent("analyze the data", high_contracts)
 
         # Low budget - restrictive
-        low_contracts = create_safe_gate(entropy_budget=0.15)
+        create_safe_gate(entropy_budget=0.15)
         # EntropyAware should reject probabilistic at low budget
         # But RealityGate and BoundedComplexity may still pass
         # This tests the combined behavior

@@ -776,7 +776,7 @@ class TestCrossAgentIntegration:
         path = temp_dir / "entropy_versioned.json"
 
         # Create versioned agent
-        versioned = VersionedPersistentAgent(
+        VersionedPersistentAgent(
             path=path,
             schema=dict,
             current_version="1.0.0",

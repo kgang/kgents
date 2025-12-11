@@ -455,7 +455,7 @@ class ValueDashboard(WireObservable):
         self._state.timestamp = datetime.now()
 
         # Convert to WireState format
-        state = WireState(
+        WireState(
             agent_id=self._state.agent_id,
             phase="observing",
             data=self._to_wire_data(),

@@ -59,7 +59,7 @@ from agents.f.crystallize import (
     register_with_lgent,
     save_artifact,
 )
-from agents.f.reality_contracts import (
+from agents.f.j_integration import (
     RealityGate,
     DeterministicOnly,
     BoundedComplexity,

@@ -172,7 +172,7 @@ class TestLifecycleManagerBootstrap:
         (tmp_path / "data" / "kgents" / "membrane.db").touch()
 
         manager = LifecycleManager()
-        state = await manager.bootstrap()
+        await manager.bootstrap()
 
         assert (tmp_path / "config" / "kgents").exists()
         assert (tmp_path / "data" / "kgents").exists()
@@ -300,7 +300,7 @@ class TestLifecycleManagerShutdown:
         monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "cache"))
 
         manager = LifecycleManager()
-        state = await manager.bootstrap()
+        await manager.bootstrap()
         await manager.shutdown()
 
         # Re-open to check telemetry

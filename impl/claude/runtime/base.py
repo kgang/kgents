@@ -10,17 +10,11 @@ Uses bootstrap Fix pattern for retry logic with convergence tracking.
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Generic, TypeVar, Optional, Callable, Awaitable, Union
-import json
 import asyncio
 
 from bootstrap import Agent
 from bootstrap.types import FixConfig, FixResult
 from bootstrap.fix import Fix
-from .json_utils import (
-    robust_json_parse,
-    json_response_parser,
-    parse_structured_sections,
-)
 
 A = TypeVar("A")
 B = TypeVar("B")
@@ -35,6 +29,7 @@ E = TypeVar("E")  # Error type
 @dataclass
 class Success(Generic[B]):
     """Success result containing value."""
+
     value: B
 
     def is_success(self) -> bool:
@@ -55,6 +50,7 @@ class Success(Generic[B]):
 @dataclass
 class Error(Generic[E]):
     """Error result containing error information."""
+
     error: E
     message: str = ""
     recoverable: bool = True  # Whether error is recoverable via retry
@@ -102,6 +98,7 @@ class AgentContext:
     Contains the agent's system prompt, conversation history,
     and any grounded facts needed for execution.
     """
+
     system_prompt: str
     messages: list[dict[str, str]] = field(default_factory=list)
     facts: Optional[dict[str, Any]] = None
@@ -117,6 +114,7 @@ class AgentResult(Generic[B]):
 
     Includes the output, raw response, and any metadata.
     """
+
     output: B
     raw_response: str
     model: str
@@ -160,17 +158,17 @@ class LLMAgent(Agent[A, B], ABC):
         """Parse LLM response to output type."""
         pass
 
-    async def execute_async(self, input: A, runtime: 'Runtime') -> B:
+    async def execute_async(self, input: A, runtime: "Runtime") -> B:
         """
         Async execution of this agent.
-        
+
         Default implementation calls runtime.execute and extracts output.
         Override for custom async behavior.
         """
         result = await runtime.execute(self, input)
         return result.output
 
-    def then_async(self, g: 'LLMAgent[B, C]') -> 'AsyncComposedAgent[A, B, C]':
+    def then_async(self, g: "LLMAgent[B, C]") -> "AsyncComposedAgent[A, B, C]":
         """
         Async composition: self >> g.
 
@@ -198,7 +196,9 @@ class AsyncComposedAgent(LLMAgent[A, C], Generic[A, B, C]):
 
     async def invoke(self, input: A) -> C:
         """Not implemented - use execute_async with runtime instead."""
-        raise NotImplementedError("AsyncComposedAgent requires runtime. Use execute_async.")
+        raise NotImplementedError(
+            "AsyncComposedAgent requires runtime. Use execute_async."
+        )
 
     def build_prompt(self, input: A) -> AgentContext:
         """Not used - async execution bypasses this."""
@@ -208,7 +208,7 @@ class AsyncComposedAgent(LLMAgent[A, C], Generic[A, B, C]):
         """Not used - async execution bypasses this."""
         raise NotImplementedError("AsyncComposedAgent uses execute_async")
 
-    async def execute_async(self, input: A, runtime: 'Runtime') -> C:
+    async def execute_async(self, input: A, runtime: "Runtime") -> C:
         """Execute f, then g sequentially."""
         b = await self.f.execute_async(input, runtime)
         c = await self.g.execute_async(b, runtime)
@@ -218,7 +218,7 @@ class AsyncComposedAgent(LLMAgent[A, C], Generic[A, B, C]):
 async def acompose(*agents: LLMAgent[Any, Any]) -> LLMAgent[Any, Any]:
     """
     Async composition of multiple agents: f >> g >> h.
-    
+
     Example:
         pipeline = acompose(extract_facts, summarize, format_output)
         result = await pipeline.execute_async(input, runtime)
@@ -227,7 +227,7 @@ async def acompose(*agents: LLMAgent[Any, Any]) -> LLMAgent[Any, Any]:
         raise ValueError("acompose requires at least one agent")
     if len(agents) == 1:
         return agents[0]
-    
+
     result = agents[0]
     for agent in agents[1:]:
         result = result.then_async(agent)
@@ -235,23 +235,21 @@ async def acompose(*agents: LLMAgent[Any, Any]) -> LLMAgent[Any, Any]:
 
 
 async def parallel_execute(
-    agents: list[LLMAgent[A, B]],
-    inputs: list[A],
-    runtime: 'Runtime'
+    agents: list[LLMAgent[A, B]], inputs: list[A], runtime: "Runtime"
 ) -> list[B]:
     """
     Execute multiple agents concurrently on their respective inputs.
-    
+
     This enables true parallelism for I/O-bound LLM calls.
-    
+
     Args:
         agents: List of agents to execute
         inputs: Corresponding inputs for each agent
         runtime: Runtime to use for execution
-    
+
     Returns:
         List of outputs in the same order as inputs
-    
+
     Example:
         # Process multiple documents concurrently
         results = await parallel_execute(
@@ -262,28 +260,31 @@ async def parallel_execute(
     """
     if len(agents) != len(inputs):
         raise ValueError("agents and inputs must have same length")
-    
+
     tasks = [
         agent.execute_async(input_val, runtime)
         for agent, input_val in zip(agents, inputs)
     ]
-    
+
     return await asyncio.gather(*tasks)
 
 
 class TransientError(Exception):
     """Transient error that may succeed on retry (rate limits, timeouts, etc)."""
+
     pass
 
 
 class PermanentError(Exception):
     """Permanent error that won't succeed on retry (auth, invalid input, etc)."""
+
     pass
 
 
 @dataclass
 class RetryState(Generic[B]):
     """State for retry-as-Fix pattern. Tracks value, errors, and attempts."""
+
     value: Optional[B] = None
     error: Optional[Exception] = None
     attempt: int = 0
@@ -294,7 +295,7 @@ async def with_retry(
     fn: Callable[[], Awaitable[B]],
     max_attempts: int = 3,
     backoff_base: float = 2.0,
-    is_transient: Optional[Callable[[Exception], bool]] = None
+    is_transient: Optional[Callable[[Exception], bool]] = None,
 ) -> tuple[B, int]:
     """
     Fix pattern for retry logic using bootstrap Fix.
@@ -321,7 +322,9 @@ async def with_retry(
         )
     """
     if is_transient is None:
-        is_transient = lambda e: isinstance(e, TransientError)
+
+        def is_transient(e):
+            return isinstance(e, TransientError)
 
     async def retry_transform(state: RetryState[B]) -> RetryState[B]:
         """Transform function for Fix: try fn, track result/error."""
@@ -393,11 +396,7 @@ class Runtime(ABC):
     """
 
     @abstractmethod
-    async def execute(
-        self,
-        agent: LLMAgent[A, B],
-        input: A
-    ) -> AgentResult[B]:
+    async def execute(self, agent: LLMAgent[A, B], input: A) -> AgentResult[B]:
         """Execute an LLM agent with input and return result."""
         pass
 

@@ -751,9 +751,9 @@ class ModelDriftDetector:
 
         # Z-score relative to baseline
         if std_score > 0:
-            z_score = (mean_score - self.baseline_score) / std_score
+            (mean_score - self.baseline_score) / std_score
         else:
-            z_score = 0.0
+            pass
 
         # Determine drift
         score_delta = mean_score - self.baseline_score

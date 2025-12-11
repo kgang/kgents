@@ -68,7 +68,7 @@ from bootstrap.umwelt import (
 )
 
 # Shared fixtures
-from agents.shared.fixtures import (
+from agents.shared.fixtures_integration import (
     make_sample_intent,
     make_sample_contract,
     make_sample_source_code,

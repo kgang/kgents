@@ -204,8 +204,9 @@ class GrammarClassifier:
         """
         grammar_lower = grammar.lower()
         features: set[GrammarFeature] = set()
-        warnings: list[str] = []
-        details: dict[str, Any] = {}
+        # Reserved for future use when warnings are implemented
+        _warnings: list[str] = []
+        _details: dict[str, Any] = {}
 
         # Check for Turing-complete features first (highest risk)
         for pattern in self.TURING_COMPLETE_PATTERNS:

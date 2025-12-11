@@ -421,7 +421,7 @@ class TestTypesIntegration:
         sig = Signature.simple("question", str, "answer", str, "Answer questions.")
 
         # 2. Create examples
-        examples = [
+        [
             Example.simple("2+2?", "4"),
             Example.simple("3+3?", "6"),
         ]

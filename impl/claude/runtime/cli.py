@@ -8,7 +8,6 @@ Implements Fix pattern: retries on parse failures until valid output.
 """
 
 import asyncio
-import json
 import shutil
 from typing import Any, TypeVar, Callable
 from enum import Enum
@@ -21,9 +20,14 @@ B = TypeVar("B")
 
 class ParseErrorType(Enum):
     """Classification of parse errors for retry strategy."""
+
     TRANSIENT_FORMAT = "transient_format"  # Missing markdown, JSON syntax - retry
-    TRANSIENT_EXTRACTION = "transient_extraction"  # Data present but malformed - retry with coercion
-    PERMANENT_SCHEMA = "permanent_schema"  # Wrong data structure - fast fail or force coercion
+    TRANSIENT_EXTRACTION = (
+        "transient_extraction"  # Data present but malformed - retry with coercion
+    )
+    PERMANENT_SCHEMA = (
+        "permanent_schema"  # Wrong data structure - fast fail or force coercion
+    )
     PERMANENT_MISSING = "permanent_missing"  # Required data absent - fast fail
     TIMEOUT = "timeout"  # CLI timeout - fast fail
     UNKNOWN = "unknown"  # Unclassified - retry
@@ -31,7 +35,13 @@ class ParseErrorType(Enum):
 
 class ParseError(Exception):
     """Raised when LLM output cannot be parsed."""
-    def __init__(self, message: str, raw_response: str, error_type: ParseErrorType = ParseErrorType.UNKNOWN):
+
+    def __init__(
+        self,
+        message: str,
+        raw_response: str,
+        error_type: ParseErrorType = ParseErrorType.UNKNOWN,
+    ):
         super().__init__(message)
         self.raw_response = raw_response
         self.error_type = error_type
@@ -40,16 +50,16 @@ class ParseError(Exception):
 def classify_parse_error(error_msg: str, raw_response: str) -> ParseErrorType:
     """
     Classify a parse error to determine retry strategy.
-    
+
     Returns:
         ParseErrorType indicating whether error is transient or permanent
     """
     error_lower = error_msg.lower()
-    
+
     # Timeout errors - permanent
     if "timeout" in error_lower:
         return ParseErrorType.TIMEOUT
-    
+
     # Missing sections - check if data exists but poorly formatted
     if "no code content" in error_lower or "no json" in error_lower:
         # If response is very short, data is likely missing (permanent)
@@ -57,42 +67,45 @@ def classify_parse_error(error_msg: str, raw_response: str) -> ParseErrorType:
             return ParseErrorType.PERMANENT_MISSING
         # If response is substantial, likely formatting issue (transient)
         return ParseErrorType.TRANSIENT_FORMAT
-    
+
     # JSON errors - check if JSON-like content exists
     if "json" in error_lower or "decode" in error_lower:
         # Look for JSON-like patterns
         if "{" in raw_response and "}" in raw_response:
             return ParseErrorType.TRANSIENT_EXTRACTION
         return ParseErrorType.PERMANENT_MISSING
-    
+
     # Schema/type errors - permanent
-    if any(term in error_lower for term in ["schema", "type", "field required", "missing key"]):
+    if any(
+        term in error_lower
+        for term in ["schema", "type", "field required", "missing key"]
+    ):
         return ParseErrorType.PERMANENT_SCHEMA
-    
+
     # Extraction/parsing errors - transient if data seems present
     if any(term in error_lower for term in ["extract", "parse", "format"]):
         if len(raw_response.strip()) > 100:
             return ParseErrorType.TRANSIENT_EXTRACTION
         return ParseErrorType.PERMANENT_MISSING
-    
+
     return ParseErrorType.UNKNOWN
 
 
 class CLIAgent:
     """
     Pure morphism: AgentContext → (str, dict).
-    
+
     This is the core CLI execution primitive - a simple function
     from prompt context to raw LLM response.
-    
+
     Type signature: AgentContext → (response_text, metadata)
-    
+
     Benefits:
     - Composable: Can be wrapped, chained, or tested independently
     - Clear contract: Input and output types are explicit
     - Single responsibility: Just execute, don't retry/parse
     """
-    
+
     def __init__(
         self,
         claude_path: str | None = None,
@@ -102,7 +115,7 @@ class CLIAgent:
     ):
         """
         Initialize CLI agent.
-        
+
         Args:
             claude_path: Path to claude CLI. Defaults to finding it in PATH.
             timeout: Timeout in seconds for CLI execution.
@@ -113,65 +126,66 @@ class CLIAgent:
         self._timeout = timeout
         self._verbose = verbose
         self._progress_callback = progress_callback
-        
+
         if not self._claude_path:
             raise RuntimeError(
                 "Claude CLI not found. Install with: npm install -g @anthropic-ai/claude-code"
             )
-    
+
     def _log(self, msg: str) -> None:
         """Log progress if verbose or callback is set."""
         if self._progress_callback:
             self._progress_callback(msg)
         if self._verbose:
             print(f"      [CLI] {msg}", flush=True)
-    
+
     async def __call__(self, context: AgentContext) -> tuple[str, dict[str, Any]]:
         """
         Execute: AgentContext → (response_text, metadata).
-        
+
         This is the morphism application - pure execution without retry logic.
         """
         # Build the prompt from system + user messages
         prompt_parts = []
-        
+
         if context.system_prompt:
             prompt_parts.append(context.system_prompt)
-        
+
         for msg in context.messages:
             if msg["role"] == "user":
                 prompt_parts.append(msg["content"])
-        
+
         full_prompt = "\n\n".join(prompt_parts)
         prompt_len = len(full_prompt)
         self._log(f"Sending {prompt_len:,} chars to Claude CLI...")
-        
+
         # Execute claude -p
         assert self._claude_path is not None  # Already validated in __init__
         proc = await asyncio.create_subprocess_exec(
             self._claude_path,
-            "-p", full_prompt,
-            "--output-format", "text",
+            "-p",
+            full_prompt,
+            "--output-format",
+            "text",
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-        
+
         try:
             stdout, stderr = await asyncio.wait_for(
-                proc.communicate(),
-                timeout=self._timeout
+                proc.communicate(), timeout=self._timeout
             )
         except asyncio.TimeoutError:
             proc.kill()
             raise TimeoutError(f"Claude CLI timed out after {self._timeout}s")
-        
+
         if proc.returncode != 0:
             error_msg = stderr.decode() if stderr else "Unknown error"
             raise RuntimeError(f"Claude CLI failed: {error_msg}")
-        
+
         response_text = stdout.decode().strip()
         self._log(f"Received {len(response_text):,} chars response")
-        
+
         # CLI doesn't provide token counts, so we estimate
         metadata = {
             "model": "claude-cli",
@@ -181,7 +195,7 @@ class CLIAgent:
                 "total_tokens": (len(full_prompt) + len(response_text)) // 4,
             },
         }
-        
+
         return response_text, metadata
 
 
@@ -234,7 +248,9 @@ class ClaudeCLIRuntime(Runtime):
         """Log progress (delegate to CLI agent)."""
         self._cli_agent._log(msg)
 
-    def _build_retry_message(self, error: str, previous_response: str, error_type: ParseErrorType) -> str:
+    def _build_retry_message(
+        self, error: str, previous_response: str, error_type: ParseErrorType
+    ) -> str:
         """
         Build a targeted retry message based on error type.
 
@@ -319,16 +335,14 @@ OUTPUT FORMAT:
 
         # Extract reformatted content
         reformatted_match = re.search(
-            r'##\s*REFORMATTED\s*\n(.*?)(?=##\s*CONFIDENCE|$)',
+            r"##\s*REFORMATTED\s*\n(.*?)(?=##\s*CONFIDENCE|$)",
             response_text,
-            re.DOTALL | re.IGNORECASE
+            re.DOTALL | re.IGNORECASE,
         )
 
         # Extract confidence
         confidence_match = re.search(
-            r'##\s*CONFIDENCE\s*\n\s*([\d.]+)',
-            response_text,
-            re.IGNORECASE
+            r"##\s*CONFIDENCE\s*\n\s*([\d.]+)", response_text, re.IGNORECASE
         )
 
         if reformatted_match:
@@ -375,10 +389,13 @@ OUTPUT FORMAT:
             # Add retry context if this is a retry
             if attempt > 0 and last_error:
                 # Construct a helpful retry message based on what's missing
-                retry_message = self._build_retry_message(last_error, all_responses[-1], last_error_type)
+                retry_message = self._build_retry_message(
+                    last_error, all_responses[-1], last_error_type
+                )
                 retry_context = AgentContext(
                     system_prompt=context.system_prompt,
-                    messages=context.messages + [
+                    messages=context.messages
+                    + [
                         {"role": "assistant", "content": all_responses[-1]},
                         {"role": "user", "content": retry_message},
                     ],
@@ -402,12 +419,20 @@ OUTPUT FORMAT:
             except Exception as e:
                 last_error = str(e)
                 last_error_type = classify_parse_error(last_error, response_text)
-                self._log(f"Parse attempt {attempt + 1} failed: {last_error_type.value} - {last_error[:100]}")
+                self._log(
+                    f"Parse attempt {attempt + 1} failed: {last_error_type.value} - {last_error[:100]}"
+                )
 
                 # Fast-fail on permanent errors if we're not on last retry
                 if attempt < self._max_retries - 1:
-                    if last_error_type in (ParseErrorType.PERMANENT_SCHEMA, ParseErrorType.PERMANENT_MISSING, ParseErrorType.TIMEOUT):
-                        self._log(f"Permanent error detected ({last_error_type.value}), skipping to coercion")
+                    if last_error_type in (
+                        ParseErrorType.PERMANENT_SCHEMA,
+                        ParseErrorType.PERMANENT_MISSING,
+                        ParseErrorType.TIMEOUT,
+                    ):
+                        self._log(
+                            f"Permanent error detected ({last_error_type.value}), skipping to coercion"
+                        )
                         # Jump to coercion logic if enabled
                         if self._enable_coercion:
                             attempt = self._max_retries - 1  # Force to last attempt
@@ -415,7 +440,7 @@ OUTPUT FORMAT:
                             raise ParseError(
                                 f"Permanent parse error on attempt {attempt + 1}: {last_error}",
                                 response_text,
-                                last_error_type
+                                last_error_type,
                             )
 
                 # Last retry failed - try AI coercion if enabled
@@ -424,9 +449,13 @@ OUTPUT FORMAT:
                         # Try to coerce the response using another AI call
                         try:
                             # Get expected format from the agent's docstring or system prompt
-                            expected_format = getattr(agent, '_expected_format', None)
+                            expected_format = getattr(agent, "_expected_format", None)
                             if not expected_format:
-                                expected_format = context.system_prompt[:1000] if context.system_prompt else "JSON object"
+                                expected_format = (
+                                    context.system_prompt[:1000]
+                                    if context.system_prompt
+                                    else "JSON object"
+                                )
 
                             coerced, confidence = await self._coerce_response(
                                 malformed_response=response_text,
@@ -435,7 +464,9 @@ OUTPUT FORMAT:
                             )
 
                             if confidence >= self._coercion_confidence:
-                                self._log(f"Coercion succeeded with confidence {confidence:.2f}")
+                                self._log(
+                                    f"Coercion succeeded with confidence {confidence:.2f}"
+                                )
                                 try:
                                     output = agent.parse_response(coerced)
                                     return AgentResult(
@@ -445,17 +476,23 @@ OUTPUT FORMAT:
                                         usage=metadata["usage"],
                                     )
                                 except Exception as coerce_error:
-                                    self._log(f"Coerced response still failed to parse: {coerce_error}")
+                                    self._log(
+                                        f"Coerced response still failed to parse: {coerce_error}"
+                                    )
                             else:
-                                self._log(f"Coercion confidence {confidence:.2f} below threshold {self._coercion_confidence}")
+                                self._log(
+                                    f"Coercion confidence {confidence:.2f} below threshold {self._coercion_confidence}"
+                                )
                         except Exception as coercion_err:
                             self._log(f"Coercion failed: {coercion_err}")
 
                     raise ParseError(
                         f"Failed to parse response after {self._max_retries} attempts: {last_error}",
                         response_text,
-                        last_error_type
+                        last_error_type,
                     )
 
         # Should not reach here
-        raise ParseError("Unexpected: no response generated", "", ParseErrorType.UNKNOWN)
+        raise ParseError(
+            "Unexpected: no response generated", "", ParseErrorType.UNKNOWN
+        )

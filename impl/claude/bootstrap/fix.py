@@ -16,7 +16,7 @@ See spec/bootstrap.md lines 181-193, Idiom 1 (lines 318-347).
 """
 
 from __future__ import annotations
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Awaitable, Callable, Generic, Optional, TypeVar
 
 from .types import Agent, FixConfig, FixResult
@@ -225,9 +225,7 @@ async def iterate_until_stable(
     """
     result = await fix(transform, initial, max_iterations)
     if not result.converged:
-        raise RuntimeError(
-            f"Failed to converge after {result.iterations} iterations"
-        )
+        raise RuntimeError(f"Failed to converge after {result.iterations} iterations")
     return result.value
 
 
@@ -275,7 +273,9 @@ async def poll_until_stable(
 
     # Initial poll
     initial_value = await poll_fn()
-    initial_state = PollState(value=initial_value, required_stability=required_stability)
+    initial_state = PollState(
+        value=initial_value, required_stability=required_stability
+    )
 
     async def poll_transform(state: PollState[A]) -> PollState[A]:
         new_value = await poll_fn()

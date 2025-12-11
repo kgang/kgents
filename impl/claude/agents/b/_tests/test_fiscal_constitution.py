@@ -746,7 +746,7 @@ class TestEdgeCases:
     def test_extra_whitespace(self):
         """Test command with extra whitespace."""
         tongue = create_ledger_tongue({"alice": {"USD": 100.0}})
-        result = tongue.run("  TRANSFER   100   USD   FROM   alice   TO   bob  ")
+        _result = tongue.run("  TRANSFER   100   USD   FROM   alice   TO   bob  ")
         # Should handle gracefully (may fail due to multiple spaces in regex)
         # This tests robustness
 

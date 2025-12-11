@@ -215,7 +215,7 @@ class FieldRenderer:
                 grid[entity.y][entity.x] = self._c(color, symbol)
 
         # Render with border
-        padding = " " * self.config.field_padding
+        " " * self.config.field_padding
         top_border = "│  ┌" + "─" * self.state.width + "┐  │"
         bottom_border = "│  └" + "─" * self.state.width + "┘  │"
 

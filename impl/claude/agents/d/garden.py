@@ -613,7 +613,7 @@ class MemoryGarden(Generic[S]):
         """Get garden statistics."""
         entries = list(self._entries.values())
 
-        lifecycle_counts = {l: 0 for l in Lifecycle}
+        lifecycle_counts = {lc: 0 for lc in Lifecycle}
         for entry in entries:
             lifecycle_counts[entry.lifecycle] += 1
 

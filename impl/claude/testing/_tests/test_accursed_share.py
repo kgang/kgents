@@ -160,7 +160,7 @@ class TestWeirdInputs:
 
         for inp in inputs:
             try:
-                result = await ID.invoke(inp)
+                await ID.invoke(inp)
                 # ID should return input unchanged
                 # (but comparison might fail for some types)
                 handled += 1

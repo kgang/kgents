@@ -5,7 +5,7 @@ The Symbiont pattern embodies endosymbiotic composition where pure logic
 (the "host") gains memory through integration with a D-gent (the "organelle").
 """
 
-from typing import TypeVar, Generic, Callable, Union, Awaitable, Any
+from typing import TypeVar, Generic, Callable, Union, Awaitable
 from dataclasses import dataclass
 import asyncio
 
@@ -13,12 +13,12 @@ from bootstrap.types import Agent
 from .protocol import DataAgent
 
 S = TypeVar("S")  # State
-I = TypeVar("I")  # Input
-O = TypeVar("O")  # Output
+In = TypeVar("In")  # Input
+Out = TypeVar("Out")  # Output
 
 
 @dataclass
-class Symbiont(Agent[I, O], Generic[I, O, S]):
+class Symbiont(Agent[In, Out], Generic[In, Out, S]):
     """
     Fuses stateless logic with stateful memory.
 
@@ -40,8 +40,8 @@ class Symbiont(Agent[I, O], Generic[I, O, S]):
     """
 
     logic: Union[
-        Callable[[I, S], tuple[O, S]],
-        Callable[[I, S], Awaitable[tuple[O, S]]],
+        Callable[[In, S], tuple[Out, S]],
+        Callable[[In, S], Awaitable[tuple[Out, S]]],
     ]
     memory: DataAgent[S]
 
@@ -50,7 +50,7 @@ class Symbiont(Agent[I, O], Generic[I, O, S]):
         """Name for composition chains."""
         return f"Symbiont({getattr(self.logic, '__name__', 'logic')})"
 
-    async def invoke(self, input_data: I) -> O:
+    async def invoke(self, input_data: In) -> Out:
         """
         Execute the stateful computation.
 

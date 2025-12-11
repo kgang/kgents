@@ -699,7 +699,7 @@ class TestEdgeCases:
 
     def test_signature_with_empty_instructions(self):
         """Test signature with empty instructions."""
-        sig = Signature(
+        Signature(
             input_fields=(FieldSpec(name="input", field_type=str),),
             output_fields=(FieldSpec(name="output", field_type=str),),
             instructions="",

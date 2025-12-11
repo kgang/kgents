@@ -748,7 +748,7 @@ def cmd_watch(args: list[str]) -> int:
     interval = int(opts.get("interval", "5"))
     duration = int(opts.get("duration", "60"))
     pattern = opts.get("pattern")
-    silent = opts.get("silent", False)
+    opts.get("silent", False)
 
     if not positional:
         print("Error: watch requires a target")

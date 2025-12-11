@@ -63,6 +63,48 @@ from .value_dashboard import (
     create_minimal_dashboard,
 )
 
+# Middleware Bus (Phase 0 cross-pollination)
+from .bus import (
+    BusMessage,
+    InterceptorResult,
+    Interceptor,
+    BaseInterceptor,
+    PassthroughInterceptor,
+    LoggingInterceptor,
+    BlockingInterceptor,
+    AgentRegistry,
+    DispatchResult,
+    MiddlewareBus,
+    MessagePriority,
+    create_bus,
+)
+
+# Core Interceptors (Phase 1 cross-pollination)
+from .interceptors import (
+    # Metering (B-gent)
+    TokenCost,
+    CostOracle,
+    Treasury,
+    InMemoryTreasury,
+    SimpleCostOracle,
+    MeteringInterceptor,
+    # Safety (J-gent)
+    SafetyThresholds,
+    EntropyChecker,
+    SimpleEntropyChecker,
+    SafetyInterceptor,
+    # Telemetry (O-gent)
+    Observation,
+    ObservationSink,
+    InMemoryObservationSink,
+    TelemetryInterceptor,
+    # Persona (K-gent)
+    PersonaPriors,
+    PersonaInterceptor,
+    # Factory
+    create_standard_interceptors,
+)
+
 __all__ = [
     # Protocol
     "WireObservable",
@@ -91,4 +133,35 @@ __all__ = [
     "ValueDashboard",
     "create_value_dashboard",
     "create_minimal_dashboard",
+    # Middleware Bus
+    "BusMessage",
+    "InterceptorResult",
+    "Interceptor",
+    "BaseInterceptor",
+    "PassthroughInterceptor",
+    "LoggingInterceptor",
+    "BlockingInterceptor",
+    "AgentRegistry",
+    "DispatchResult",
+    "MiddlewareBus",
+    "MessagePriority",
+    "create_bus",
+    # Core Interceptors
+    "TokenCost",
+    "CostOracle",
+    "Treasury",
+    "InMemoryTreasury",
+    "SimpleCostOracle",
+    "MeteringInterceptor",
+    "SafetyThresholds",
+    "EntropyChecker",
+    "SimpleEntropyChecker",
+    "SafetyInterceptor",
+    "Observation",
+    "ObservationSink",
+    "InMemoryObservationSink",
+    "TelemetryInterceptor",
+    "PersonaPriors",
+    "PersonaInterceptor",
+    "create_standard_interceptors",
 ]

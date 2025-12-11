@@ -82,7 +82,7 @@ def test_memory_add_response_with_session(
     memory: HypothesisMemory, sample_response: ParsedHypothesisResponse
 ):
     """Test adding response with session tracking."""
-    indices = memory.add_response(
+    _indices = memory.add_response(
         sample_response, domain="test", session_id="session-1"
     )
 

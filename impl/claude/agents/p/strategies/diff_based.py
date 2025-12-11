@@ -87,7 +87,7 @@ class DiffBasedParser(Parser[str]):
         """Try to parse and apply unified diff format."""
         try:
             # Split into base lines
-            base_lines = self.base_template.splitlines(keepends=True)
+            self.base_template.splitlines(keepends=True)
 
             # Parse unified diff
             # Unified diff format has lines starting with:

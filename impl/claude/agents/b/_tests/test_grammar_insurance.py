@@ -1113,7 +1113,7 @@ class TestIntegration:
         insurance = GrammarInsurance()
 
         # 1. Create hedge
-        hedge = insurance.create_hedge(
+        _hedge = insurance.create_hedge(
             grammar_id="json_parser",
             strategy=HedgeStrategy.FALLBACK,
             fallback_grammar_ids=["simple_json", "basic_kv"],

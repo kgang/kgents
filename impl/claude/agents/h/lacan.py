@@ -11,7 +11,7 @@ Lacan's three registers:
 Problems arise when the registers come unknotted.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Optional, Union
 
@@ -33,13 +33,14 @@ class KnotStatus(Enum):
 @dataclass
 class RegisterLocation:
     """Where an output sits in the three registers."""
+
     symbolic: float  # 0-1 how much in Symbolic
     imaginary: float  # 0-1 how much in Imaginary
     real_proximity: float  # 0-1 how close to the Real
 
     def __post_init__(self) -> None:
         """Validate register values are in [0, 1]."""
-        for field_name in ['symbolic', 'imaginary', 'real_proximity']:
+        for field_name in ["symbolic", "imaginary", "real_proximity"]:
             value = getattr(self, field_name)
             if not (0 <= value <= 1):
                 raise ValueError(f"{field_name} must be in [0, 1], got {value}")
@@ -48,6 +49,7 @@ class RegisterLocation:
 @dataclass
 class Slippage:
     """Register slippage - claiming to be in one register while actually in another."""
+
     claimed: Register
     actual: Register
     evidence: str
@@ -56,6 +58,7 @@ class Slippage:
 @dataclass
 class LacanInput:
     """Input for register analysis."""
+
     output: Any
     context: Optional[dict[str, Any]] = None
     focus: Optional[Register] = None  # Focus on specific register
@@ -64,6 +67,7 @@ class LacanInput:
 @dataclass
 class LacanOutput:
     """Result of register analysis."""
+
     register_location: RegisterLocation
     gaps: list[str]  # What cannot be represented
     slippages: list[Slippage]
@@ -74,6 +78,7 @@ class LacanOutput:
 @dataclass
 class LacanError:
     """Error in register analysis - making the Real explicit."""
+
     error_type: str
     message: str
     input_snapshot: str
@@ -85,21 +90,55 @@ LacanResult = Union[LacanOutput, LacanError]
 
 # Markers for each register
 SYMBOLIC_MARKERS = [
-    "defined", "specified", "typed", "interface", "contract",
-    "rule", "law", "structure", "formal", "protocol",
-    "must", "shall", "requires", "returns", "implements",
+    "defined",
+    "specified",
+    "typed",
+    "interface",
+    "contract",
+    "rule",
+    "law",
+    "structure",
+    "formal",
+    "protocol",
+    "must",
+    "shall",
+    "requires",
+    "returns",
+    "implements",
 ]
 
 IMAGINARY_MARKERS = [
-    "helpful", "friendly", "intelligent", "perfect", "always",
-    "completely", "understand", "best", "ideal", "seamless",
-    "I am", "we are", "our goal", "we provide",
+    "helpful",
+    "friendly",
+    "intelligent",
+    "perfect",
+    "always",
+    "completely",
+    "understand",
+    "best",
+    "ideal",
+    "seamless",
+    "I am",
+    "we are",
+    "our goal",
+    "we provide",
 ]
 
 REAL_MARKERS = [
-    "cannot", "impossible", "limit", "edge case", "failure",
-    "error", "exception", "undefined", "unknown", "crash",
-    "timeout", "overflow", "corrupt", "lost",
+    "cannot",
+    "impossible",
+    "limit",
+    "edge case",
+    "failure",
+    "error",
+    "exception",
+    "undefined",
+    "unknown",
+    "crash",
+    "timeout",
+    "overflow",
+    "corrupt",
+    "lost",
 ]
 
 
@@ -112,7 +151,7 @@ class LacanAgent(Agent[LacanInput, LacanResult]):
     2. Gaps (what cannot be represented)
     3. Slippages (miscategorizations)
     4. Knot status (are the registers properly knotted?)
-    
+
     Returns LacanResult (union of LacanOutput | LacanError).
     Failures become data rather than exceptions.
     """
@@ -128,7 +167,7 @@ class LacanAgent(Agent[LacanInput, LacanResult]):
                 return LacanError(
                     error_type="validation",
                     message="Cannot analyze None output",
-                    input_snapshot="None"
+                    input_snapshot="None",
                 )
 
             output_str = str(input.output).lower()
@@ -137,7 +176,7 @@ class LacanAgent(Agent[LacanInput, LacanResult]):
                 return LacanError(
                     error_type="validation",
                     message="Cannot analyze empty output",
-                    input_snapshot=""
+                    input_snapshot="",
                 )
 
             location = self._locate_in_registers(output_str)
@@ -158,19 +197,19 @@ class LacanAgent(Agent[LacanInput, LacanResult]):
             return LacanError(
                 error_type="value_error",
                 message=str(e),
-                input_snapshot=str(input.output)[:100]
+                input_snapshot=str(input.output)[:100],
             )
         except Exception as e:
             # The Real intrudes - something we didn't symbolize
             return LacanError(
                 error_type="real_intrusion",
                 message=f"Unexpected: {type(e).__name__}: {str(e)}",
-                input_snapshot=str(input.output)[:100]
+                input_snapshot=str(input.output)[:100],
             )
 
     def _locate_in_registers(self, output: str) -> RegisterLocation:
         """Locate the output in the three registers."""
-        words = output.split()
+        output.split()
 
         symbolic_count = sum(1 for marker in SYMBOLIC_MARKERS if marker in output)
         imaginary_count = sum(1 for marker in IMAGINARY_MARKERS if marker in output)
@@ -189,7 +228,9 @@ class LacanAgent(Agent[LacanInput, LacanResult]):
             real_proximity=real_proximity,
         )
 
-    def _identify_gaps(self, output: str, context: Optional[dict[str, Any]]) -> list[str]:
+    def _identify_gaps(
+        self, output: str, context: Optional[dict[str, Any]]
+    ) -> list[str]:
         """Identify what cannot be represented."""
         gaps = []
 
@@ -226,29 +267,35 @@ class LacanAgent(Agent[LacanInput, LacanResult]):
         # High imaginary with claims of factuality
         if location.imaginary > 0.5:
             if any(word in output for word in ["know", "fact", "true", "accurate"]):
-                slippages.append(Slippage(
-                    claimed=Register.SYMBOLIC,
-                    actual=Register.IMAGINARY,
-                    evidence="Knowledge claims with high imaginary content",
-                ))
+                slippages.append(
+                    Slippage(
+                        claimed=Register.SYMBOLIC,
+                        actual=Register.IMAGINARY,
+                        evidence="Knowledge claims with high imaginary content",
+                    )
+                )
 
         # Low real proximity with completeness claims
         if location.real_proximity < 0.2:
             if any(word in output for word in ["complete", "full", "entire", "all"]):
-                slippages.append(Slippage(
-                    claimed=Register.SYMBOLIC,
-                    actual=Register.IMAGINARY,
-                    evidence="Completeness claims that avoid touching the Real (limits, edges)",
-                ))
+                slippages.append(
+                    Slippage(
+                        claimed=Register.SYMBOLIC,
+                        actual=Register.IMAGINARY,
+                        evidence="Completeness claims that avoid touching the Real (limits, edges)",
+                    )
+                )
 
         # Aspirational as factual
         if "we provide" in output or "we are" in output:
             if location.imaginary > location.symbolic:
-                slippages.append(Slippage(
-                    claimed=Register.SYMBOLIC,
-                    actual=Register.IMAGINARY,
-                    evidence="Self-description as fact when actually aspirational",
-                ))
+                slippages.append(
+                    Slippage(
+                        claimed=Register.SYMBOLIC,
+                        actual=Register.IMAGINARY,
+                        evidence="Self-description as fact when actually aspirational",
+                    )
+                )
 
         return slippages
 
@@ -317,6 +364,7 @@ class QuickRegister(Agent[str, str]):
 
 
 # Convenience functions
+
 
 def lacan() -> LacanAgent:
     """Create a register triangulation agent."""

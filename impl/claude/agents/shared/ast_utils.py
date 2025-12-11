@@ -18,13 +18,14 @@ from __future__ import annotations
 
 import ast
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from typing import Any, Generic, Optional, TypeVar
+from dataclasses import dataclass
+from typing import Generic, Optional, TypeVar
 
 
 @dataclass(frozen=True)
 class FunctionInfo:
     """Information about a function extracted from AST."""
+
     name: str
     lineno: int
     end_lineno: Optional[int]
@@ -38,6 +39,7 @@ class FunctionInfo:
 @dataclass(frozen=True)
 class ClassInfo:
     """Information about a class extracted from AST."""
+
     name: str
     lineno: int
     end_lineno: Optional[int]
@@ -207,9 +209,7 @@ def estimate_branching_factor(tree: ast.AST) -> int:
 
         elif isinstance(node, ast.FunctionDef):
             # Count return statements as potential branches
-            return_count = sum(
-                1 for n in ast.walk(node) if isinstance(n, ast.Return)
-            )
+            return_count = sum(1 for n in ast.walk(node) if isinstance(n, ast.Return))
             if return_count > 1:
                 max_branches = max(max_branches, return_count)
 

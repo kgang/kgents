@@ -600,8 +600,8 @@ class TestEventStore:
 
     def test_list_sessions_by_state(self, store):
         """Can filter sessions by state."""
-        s1 = store.create_session(name="Live 1")
-        s2 = store.create_session(name="Live 2")
+        store.create_session(name="Live 1")
+        store.create_session(name="Live 2")
         s3 = store.create_session(name="Ended")
         store.end_session(s3.id)
 
@@ -905,7 +905,7 @@ class TestDashboardController:
 
         controller.load_session(controller.current_session.id)
 
-        event = controller.seek(3)
+        controller.seek(3)
         assert controller.playback.current_index == 3
 
     def test_playback_step(self, controller):

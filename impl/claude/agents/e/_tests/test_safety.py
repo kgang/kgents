@@ -489,8 +489,8 @@ class TestRateLimiter:
         limiter.record_mutation()
         try:
             limiter.check_mutation()
-        except RateLimitExceeded as e:
-            first_retry = e.retry_after
+        except RateLimitExceeded:
+            pass
 
         # Second violation (without reset)
         try:
@@ -1035,7 +1035,7 @@ if __name__ == "__main__":
     test_simple()
     print("PASS")
 """
-            test_file = sb.write_file(code, "test_simple.py")
+            sb.write_file(code, "test_simple.py")
 
             result = await sb.execute_python(code)
 

@@ -638,7 +638,7 @@ async def test_integration_supervisor_with_handoff():
             to_tool=fallback,
         )
     ]
-    handoff_tool = HandoffPattern(primary, rules)
+    HandoffPattern(primary, rules)
 
     # Create supervisor with regular tools and handoff
     # Note: HandoffPattern is not a Tool, so we use regular tools

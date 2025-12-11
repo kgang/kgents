@@ -167,7 +167,7 @@ class TestStrategyRanking:
             parser.parse("test")  # format_a ranked first
 
         # Check format_a is dominant
-        report = parser.report_drift()
+        parser.report_drift()
         # Both have success, but format_a tried first more often
         assert (
             parser._stats["format_a"].success_count

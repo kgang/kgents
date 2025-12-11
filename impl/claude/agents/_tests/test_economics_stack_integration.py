@@ -31,8 +31,6 @@ from agents.b import (
     # Value Ledger
     ValueLedger,
     RoCMonitor,
-    RoCThresholds,
-    # Syntax Tax
     SyntaxTaxSchedule,
     ChomskyLevel,
     create_syntax_tax_budget,
@@ -64,7 +62,6 @@ from agents.g import (
 # J-gent imports
 from agents.j import (
     promise,
-    Promise,
     PromiseState,
     Reality,
 )
@@ -284,8 +281,6 @@ class TestEconomicsJITIntegration:
     @pytest.mark.asyncio
     async def test_central_bank_authorize(self, central_bank):
         """Test central bank token authorization."""
-        initial = central_bank.get_balance()
-
         # CentralBank.authorize is async and takes account_id + estimated_tokens
         lease = await central_bank.authorize("test-account", 50)
 
@@ -520,8 +515,10 @@ class TestEconomicsStackFullIntegration:
         # 2. Calculate syntax tax (takes grammar, estimated_tokens)
         gas, level = calculate_syntax_tax(grammar, estimated_tokens=100)
 
-        # 3. Verify cost was computed
+        # 3. Verify classification and cost were computed
+        assert classification is not None
         assert gas.cost_usd >= 0
+        assert level is not None
 
     def test_observation_economics_flow(self, voi_ledger):
         """Test O-gent observation with B-gent economics."""

@@ -10,7 +10,7 @@ Returns pre-defined outputs based on input lookup, ensuring:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, Generic, Optional, TypeVar
+from typing import Dict, Generic, Optional, TypeVar
 
 from bootstrap.types import Agent
 
@@ -21,6 +21,7 @@ B = TypeVar("B")
 @dataclass
 class FixtureConfig(Generic[A, B]):
     """Configuration for FixtureAgent."""
+
     fixtures: Dict[A, B]  # Input → Output mapping
     default: Optional[B] = None  # Fallback if input not in fixtures
     strict: bool = True  # Raise error on missing input if True
@@ -102,7 +103,9 @@ class FixtureAgent(Agent[A, B], Generic[A, B]):
 
 
 # Helper function for quick fixture creation
-def fixture_agent(fixtures: Dict[A, B], default: Optional[B] = None, strict: bool = True) -> FixtureAgent[A, B]:
+def fixture_agent(
+    fixtures: Dict[A, B], default: Optional[B] = None, strict: bool = True
+) -> FixtureAgent[A, B]:
     """
     Create a FixtureAgent with given fixtures.
 
@@ -114,4 +117,6 @@ def fixture_agent(fixtures: Dict[A, B], default: Optional[B] = None, strict: boo
     Returns:
         Configured FixtureAgent
     """
-    return FixtureAgent(FixtureConfig(fixtures=fixtures, default=default, strict=strict))
+    return FixtureAgent(
+        FixtureConfig(fixtures=fixtures, default=default, strict=strict)
+    )

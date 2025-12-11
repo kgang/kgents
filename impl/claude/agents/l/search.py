@@ -12,26 +12,27 @@ will be added in future phases.
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Callable
 
 from .catalog import CatalogEntry, Registry, EntityType, Status
 
 
 class SearchStrategy(Enum):
     """Available search strategies."""
-    KEYWORD = "keyword"       # Text matching (BM25-like)
-    SEMANTIC = "semantic"     # Embedding similarity (future)
-    GRAPH = "graph"           # Relationship traversal (future)
-    FUSION = "fusion"         # Combined multi-strategy (future)
+
+    KEYWORD = "keyword"  # Text matching (BM25-like)
+    SEMANTIC = "semantic"  # Embedding similarity (future)
+    GRAPH = "graph"  # Relationship traversal (future)
+    FUSION = "fusion"  # Combined multi-strategy (future)
 
 
 @dataclass
 class SearchResult:
     """A single search result with relevance score."""
+
     entry: CatalogEntry
-    score: float              # 0.0 to 1.0 (higher = more relevant)
+    score: float  # 0.0 to 1.0 (higher = more relevant)
     strategy: SearchStrategy  # Which search found this
-    explanation: str          # Why this was returned
+    explanation: str  # Why this was returned
 
 
 class Search:
@@ -52,7 +53,7 @@ class Search:
         query: str,
         strategy: SearchStrategy = SearchStrategy.KEYWORD,
         limit: int = 10,
-        filters: dict[str, any] | None = None
+        filters: dict[str, any] | None = None,
     ) -> list[SearchResult]:
         """Search the catalog.
 
@@ -77,10 +78,7 @@ class Search:
             raise ValueError(f"Unknown search strategy: {strategy}")
 
     async def _keyword_search(
-        self,
-        query: str,
-        limit: int,
-        filters: dict[str, any] | None = None
+        self, query: str, limit: int, filters: dict[str, any] | None = None
     ) -> list[SearchResult]:
         """Simple keyword-based search.
 
@@ -147,21 +145,21 @@ class Search:
 
             # Only include if score > 0
             if score > 0:
-                results.append(SearchResult(
-                    entry=entry,
-                    score=score,
-                    strategy=SearchStrategy.KEYWORD,
-                    explanation="; ".join(explanations[:3])  # Top 3 reasons
-                ))
+                results.append(
+                    SearchResult(
+                        entry=entry,
+                        score=score,
+                        strategy=SearchStrategy.KEYWORD,
+                        explanation="; ".join(explanations[:3]),  # Top 3 reasons
+                    )
+                )
 
         # Sort by score (descending) and limit
         results.sort(key=lambda r: r.score, reverse=True)
         return results[:limit]
 
     def _apply_filters(
-        self,
-        entries: list[CatalogEntry],
-        filters: dict[str, any]
+        self, entries: list[CatalogEntry], filters: dict[str, any]
     ) -> list[CatalogEntry]:
         """Apply filters to entry list.
 
@@ -199,7 +197,7 @@ class Search:
         self,
         input_type: str | None = None,
         output_type: str | None = None,
-        limit: int = 10
+        limit: int = 10,
     ) -> list[SearchResult]:
         """Find agents by type signature.
 
@@ -228,27 +226,27 @@ class Search:
                 matches = False
 
             if matches:
-                explanation = f"Type signature: {entry.input_type} → {entry.output_type}"
+                explanation = (
+                    f"Type signature: {entry.input_type} → {entry.output_type}"
+                )
 
                 # Boost score for high success rate
                 score *= entry.success_rate
 
-                results.append(SearchResult(
-                    entry=entry,
-                    score=score,
-                    strategy=SearchStrategy.KEYWORD,  # For now
-                    explanation=explanation
-                ))
+                results.append(
+                    SearchResult(
+                        entry=entry,
+                        score=score,
+                        strategy=SearchStrategy.KEYWORD,  # For now
+                        explanation=explanation,
+                    )
+                )
 
         # Sort by score
         results.sort(key=lambda r: r.score, reverse=True)
         return results[:limit]
 
-    async def find_similar(
-        self,
-        entry_id: str,
-        limit: int = 5
-    ) -> list[SearchResult]:
+    async def find_similar(self, entry_id: str, limit: int = 5) -> list[SearchResult]:
         """Find entries similar to a given entry.
 
         Phase 1 (MVP): Uses keyword overlap

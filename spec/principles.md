@@ -541,6 +541,62 @@ def puppet_swap(problem: Problem, source_puppet: Puppet, target_puppet: Puppet) 
 
 ---
 
+## Operational Principle: Transparent Infrastructure
+
+> Infrastructure should communicate what it's doing. Users should never wonder "what just happened?"
+
+This principle applies to all infrastructure work: CLI startup, database initialization, background processes, maintenance tasks.
+
+### The Communication Hierarchy
+
+| Level | When | Message Style | Example |
+|-------|------|---------------|---------|
+| **First Run** | Infrastructure created | Celebratory, informative | `[kgents] First run! Created cortex at ~/.local/share/kgents/` |
+| **Warning** | Degraded mode | Yellow, actionable | `[kgents] Running in DB-less mode. Database will be created...` |
+| **Verbose** | `--verbose/-v` flag | Full details | `[cortex] Initialized: global DB | instance=36d0984c` |
+| **Error** | Failure | Red, sympathetic | `[kgents] Bootstrap failed: {reason}` |
+| **Silent** | Normal success | No output | (nothing) |
+
+### Key Behaviors
+
+1. **First-run is special**: Users should know where their data lives
+2. **Degraded mode is visible**: If something isn't working, say so
+3. **Normal operation is quiet**: Don't spam users with success messages
+4. **Verbose mode exists**: Power users can opt into details
+5. **Errors are sympathetic**: Don't just dump stack traces
+
+### The Messaging Principle
+
+```python
+def infra_operation(self, verbose: bool = False):
+    """
+    Principle: Infrastructure work should always communicate what's happening.
+    Users should never wonder "what is this doing?" during startup.
+    """
+    if self.is_first_run():
+        self._signal_first_run()      # Always: tell user where data lives
+
+    if self.is_degraded():
+        self._signal_degraded_mode()  # Always: warn about limitations
+
+    if verbose:
+        self._signal_details()        # Opt-in: full status
+
+    # Normal success: silent
+```
+
+### Anti-Patterns
+
+- Silent first-run that creates files without telling user
+- Verbose output on every run (noise)
+- Error messages that just say "failed"
+- Infrastructure that "just works" but user has no idea what happened
+- Hiding degraded mode from users
+
+*Zen Principle: The well-designed tool feels silent, but speaks when something important happens.*
+
+---
+
 ## Applying the Principles
 
 When designing or reviewing an agent, ask:
@@ -554,5 +610,6 @@ When designing or reviewing an agent, ask:
 | Composable | Can this work with other agents? (LLM agents: Does it return single outputs, or ask the prompt to combine?) |
 | Heterarchical | Can this agent both lead and follow? Does it avoid fixed hierarchy? |
 | Generative | Could this be regenerated from spec? Is the design compressed? |
+| **Transparent Infrastructure** | Does infrastructure communicate what's happening? |
 
 A "no" on any principle is a signal to reconsider.

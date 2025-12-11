@@ -342,7 +342,7 @@ async def infect(
 
         # Release stake with bonus
         if stake_record and env.staking:
-            returned = await env.staking.release_stake(
+            await env.staking.release_stake(
                 stake_record.stake_id,
                 bonus_percentage=config.bonus_for_success,
             )

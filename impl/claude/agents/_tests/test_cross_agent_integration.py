@@ -190,12 +190,6 @@ class TestToolsWithParserIntegration:
 
     def test_tool_output_validation_with_parser(self):
         """Test validating tool outputs against schema."""
-        # Expected output schema
-        expected_schema = {
-            "type": "object",
-            "properties": {"data": {"type": "array"}, "metadata": {"type": "object"}},
-        }
-
         # Tool output
         tool_output = json.dumps(
             {"data": [1, 2, 3], "metadata": {"count": 3, "source": "api"}}
@@ -244,7 +238,7 @@ class SimpleToolAgent:
         assert isinstance(result, dict)
         assert result["tool_name"] == "jit_tool"
         assert result["output"] == "TEST INPUT"
-        assert result["metadata"]["jit_compiled"] == True
+        assert result["metadata"]["jit_compiled"] is True
 
     @pytest.mark.asyncio
     async def test_jit_tool_with_error_handling(self):

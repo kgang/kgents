@@ -9,8 +9,8 @@ Type II Saboteur - Chaos Engineering for reliability testing.
 from typing import Generic, TypeVar, Optional, Protocol
 import random
 
-I = TypeVar("I")
-O = TypeVar("O")
+In = TypeVar("In")
+Out = TypeVar("Out")
 
 
 I_contra = TypeVar("I_contra", contravariant=True)
@@ -27,7 +27,7 @@ class Agent(Protocol[I_contra, O_co]):
         ...
 
 
-class FlakyAgent(Generic[I, O]):
+class FlakyAgent(Generic[In, Out]):
     """Probabilistic chaos wrapper F_p.
 
     Category Theory:
@@ -54,7 +54,7 @@ class FlakyAgent(Generic[I, O]):
 
     def __init__(
         self,
-        wrapped: Agent[I, O],
+        wrapped: Agent[In, Out],
         probability: float = 0.1,
         seed: Optional[int] = None,
     ):
@@ -71,7 +71,7 @@ class FlakyAgent(Generic[I, O]):
         self.rng = random.Random(seed)
         self.__is_test__ = True
 
-    async def invoke(self, input_data: I) -> O:
+    async def invoke(self, input_data: In) -> Out:
         """Randomly fail or delegate to wrapped agent.
 
         Category Theory: F_p: A → B ∪ {⊥}

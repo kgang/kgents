@@ -75,8 +75,7 @@ class TestCommandResolution:
         from protocols.cli.hollow import resolve_command, COMMAND_REGISTRY
 
         # All registered commands should be resolvable
-        # (may return legacy handler if not implemented yet)
-        for cmd in ["mirror", "pulse", "ground"]:
+        for cmd in ["membrane", "check", "find"]:
             if cmd in COMMAND_REGISTRY:
                 handler = resolve_command(cmd)
                 assert handler is not None, f"Failed to resolve: {cmd}"
@@ -88,15 +87,12 @@ class TestCommandResolution:
         handler = resolve_command("nonexistent_command_xyz")
         assert handler is None
 
-    def test_legacy_fallback(self):
-        """Legacy commands fall back to main.py handler."""
-        from protocols.cli.hollow import resolve_command, LEGACY_COMMANDS
+    def test_membrane_resolves(self):
+        """Membrane command resolves to handler."""
+        from protocols.cli.hollow import resolve_command
 
-        # Legacy commands should resolve (they use the legacy handler)
-        for cmd in ["mirror", "membrane"]:
-            if cmd in LEGACY_COMMANDS:
-                handler = resolve_command(cmd)
-                assert handler is not None
+        handler = resolve_command("membrane")
+        assert handler is not None
 
 
 # =============================================================================
@@ -111,9 +107,9 @@ class TestFuzzyMatching:
         """Close typos get suggestions."""
         from protocols.cli.hollow import suggest_similar
 
-        # "mirro" should suggest "mirror"
-        suggestions = suggest_similar("mirro")
-        assert "mirror" in suggestions
+        # "membran" should suggest "membrane"
+        suggestions = suggest_similar("membran")
+        assert "membrane" in suggestions
 
     def test_suggest_no_match(self):
         """Completely wrong input gets no suggestions."""
@@ -126,12 +122,12 @@ class TestFuzzyMatching:
         """print_suggestions shows helpful output."""
         from protocols.cli.hollow import print_suggestions
 
-        print_suggestions("mirro")
+        print_suggestions("membran")
         out = capsys.readouterr().out
 
         # Now uses sympathetic errors format
-        assert "'mirro' isn't a kgents command" in out
-        assert "mirror" in out  # Suggestion should appear
+        assert "'membran' isn't a kgents command" in out
+        assert "membrane" in out  # Suggestion should appear
 
 
 # =============================================================================
@@ -178,9 +174,9 @@ class TestFlagParsing:
         """--explain flag is parsed."""
         from protocols.cli.hollow import parse_global_flags
 
-        flags, remaining = parse_global_flags(["--explain", "mirror"])
+        flags, remaining = parse_global_flags(["--explain", "membrane"])
         assert flags["explain"] is True
-        assert remaining == ["mirror"]
+        assert remaining == ["membrane"]
 
     def test_parse_no_metrics(self):
         """--no-metrics flag is parsed."""
@@ -194,8 +190,8 @@ class TestFlagParsing:
         """Command and args are preserved in remaining."""
         from protocols.cli.hollow import parse_global_flags
 
-        flags, remaining = parse_global_flags(["mirror", "observe", "./path"])
-        assert remaining == ["mirror", "observe", "./path"]
+        flags, remaining = parse_global_flags(["membrane", "observe", "./path"])
+        assert remaining == ["membrane", "observe", "./path"]
 
 
 # =============================================================================
@@ -232,18 +228,20 @@ class TestIntegration:
         from protocols.cli.hollow import main
 
         # Handler shows help and returns 0 (doesn't call sys.exit)
-        result = main(["pulse", "--help"])
+        result = main(["wipe", "--help"])
         out = capsys.readouterr().out
 
         assert result == 0
-        assert "pulse" in out
+        assert "wipe" in out
         assert "help" in out.lower() or "USAGE" in out
 
-    def test_full_command_execution(self):
+    def test_full_command_execution(self, tmp_path, monkeypatch):
         """Full command execution path works."""
         from protocols.cli.hollow import main
 
-        # pulse should execute and return 0
-        # (may print output, but shouldn't crash)
-        result = main(["pulse", "."])
-        assert result in (0, 1)  # 0 success, 1 if error in handler
+        # Use isolated XDG paths to avoid touching real DB
+        monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
+
+        # wipe should execute and return 0 (nothing to wipe)
+        result = main(["wipe", "global"])
+        assert result in (0, 1)  # 0 success (nothing to wipe), 1 if error

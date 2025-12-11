@@ -152,7 +152,7 @@ class PersistentWorkingMemory(WorkingMemory[T]):
         if self._cache is None or chunk_id not in self._chunks:
             return
 
-        chunk = self._chunks[chunk_id]
+        self._chunks[chunk_id]
         # Would call: await self._cache.save({...})
         # But this is sync, so we'd need to make this async
         # For now, just track the intent

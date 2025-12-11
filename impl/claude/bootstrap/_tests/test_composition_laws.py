@@ -273,8 +273,11 @@ class TestMaybeFunctor:
         """Test fmap (g . f) == fmap g . fmap f for Maybe."""
         j = Just(5)
 
-        f = lambda x: x + 1
-        g = lambda x: x * 2
+        def f(x):
+            return x + 1
+
+        def g(x):
+            return x * 2
 
         # fmap (g . f)
         composed = j.map(lambda x: g(f(x)))
@@ -323,8 +326,11 @@ class TestEitherFunctor:
         """Test fmap (g . f) == fmap g . fmap f for Either."""
         r = Right(3)
 
-        f = lambda x: x + 2
-        g = lambda x: x * 3
+        def f(x):
+            return x + 2
+
+        def g(x):
+            return x * 3
 
         composed = r.map(lambda x: g(f(x)))
         chained = r.map(f).map(g)

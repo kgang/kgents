@@ -230,7 +230,7 @@ class TestTracingContext:
     def test_context_manager_exception(self, historian, agent, store):
         """Context manager records failed trace on exception."""
         with pytest.raises(ValueError):
-            with TracingContext(historian, agent, {}) as ctx:
+            with TracingContext(historian, agent, {}):
                 raise ValueError("test error")
 
         assert store.count() == 1

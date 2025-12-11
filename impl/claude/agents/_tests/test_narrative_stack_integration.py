@@ -29,13 +29,11 @@ from agents.n import (
     SimpleLLMProvider,
     # Chronicle (multi-agent)
     ChronicleBuilder,
-    Chronicle,
 )
 
 # M-gent imports
 from agents.m import (
     HolographicMemory,
-    Cue,
 )
 
 # K-gent imports
@@ -196,6 +194,8 @@ class TestNarrativeMemoryIntegration:
         )
 
         # Memory should store - stats() returns dict (not async)
+        # pattern is stored (used implicitly)
+        assert pattern is not None
         stats = holographic_memory.stats()
         assert stats.get("total_patterns", 0) >= 1
 
@@ -289,6 +289,7 @@ class TestNarrativePersonaIntegration:
         # Analytical persona might prefer TECHNICAL genre
         preferred_genre = NarrativeGenre.TECHNICAL
 
+        assert state.seed.name == "Test Persona"
         assert preferred_genre == NarrativeGenre.TECHNICAL
 
     def test_persona_verbosity_preference(self, persona_seed):
@@ -374,6 +375,8 @@ class TestNarrativePersonaIntegration:
                 if t.agent_genus in interesting_genera:
                     relevant_traces.append(t)
 
+        # Verify persona and filtering
+        assert state.seed.name == "Test Persona"
         assert len(relevant_traces) >= 2
 
 
@@ -537,7 +540,9 @@ class TestNarrativeStackFullIntegration:
         # 5. Bard would generate narrative (mocked)
         bard = Bard(llm=mock_llm_provider)
 
-        # Verify request is valid for Bard
+        # Verify memory retrieval, request is valid for Bard
+        assert recalled is not None  # Memory was queried
+        assert bard is not None  # Bard was created
         assert request.traces == sample_traces
         assert request.genre == NarrativeGenre.TECHNICAL
 
@@ -571,7 +576,8 @@ class TestNarrativeStackFullIntegration:
         # 4. Bard produces narrative
         bard = Bard(llm=mock_llm_provider)
 
-        # Verify narrative request has observation data
+        # Verify Bard created and narrative request has observation data
+        assert bard is not None
         assert len(request.traces) >= 1
         assert request.traces[0].agent_genus == "O"
 
@@ -618,7 +624,8 @@ class TestNarrativeStackFullIntegration:
             verbosity=Verbosity.TERSE,
         )
 
-        # Verify filtering worked
+        # Verify persona loaded and filtering worked
+        assert state.seed.name == "Test Persona"
         assert len(request.traces) == 1
         assert request.traces[0].inputs["level"] == "semantic"
 

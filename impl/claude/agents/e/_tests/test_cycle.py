@@ -828,8 +828,6 @@ class TestFullCycle:
         )
         cycle = ThermodynamicCycle(config=config)
 
-        initial_temp = cycle.temperature
-
         await cycle.run(
             code=simple_code,
             target_path=temp_file,

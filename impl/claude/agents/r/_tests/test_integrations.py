@@ -536,7 +536,7 @@ class TestBGentBudgetProtocol:
 
         # Create two grants
         grant1 = protocol.request_grant("Test1", 5.0, 3.0)
-        grant2 = protocol.request_grant("Test2", 8.0, 4.0)
+        protocol.request_grant("Test2", 8.0, 4.0)
 
         assert protocol.total_granted > 0
 

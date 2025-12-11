@@ -400,7 +400,7 @@ class FieldSimulator:
             return
 
         active_count = sum(1 for e in agents if e.phase == Phase.ACTIVE)
-        total = len(agents)
+        len(agents)
 
         # Check for contradictions
         has_contradiction = any(

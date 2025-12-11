@@ -226,7 +226,7 @@ class TestReflectionContext:
             config=ParserConfig(max_reflection_retries=5),
         )
 
-        result = parser.parse('{"broken')
+        parser.parse('{"broken')
 
         # Should have captured at least 2 contexts (2 reflection attempts)
         assert len(contexts) >= 2

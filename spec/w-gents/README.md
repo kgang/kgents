@@ -602,8 +602,10 @@ W-gent adds to I-gent margin notes:
 |----------|-------------|
 | [wire-protocol.md](wire-protocol.md) | How agents expose state to W-gent |
 | [fidelity.md](fidelity.md) | Three fidelity levels (teletype, documentarian, live wire) |
-| [rendering.md](rendering.md) | HTML/CSS templates and visual design |
+| [stigmergy.md](stigmergy.md) | Pheromone-based agent coordination |
+| [interceptors.md](interceptors.md) | Middleware interceptor chain (B, J, K, O) |
 | [integration.md](integration.md) | I-gent integration and ecosystem composition |
+| [rendering.md](rendering.md) | HTML/CSS templates and visual design |
 | [security.md](security.md) | Privacy, localhost binding, access control |
 
 ---
