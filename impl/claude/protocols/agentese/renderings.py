@@ -23,13 +23,12 @@ from datetime import datetime
 from typing import Any, Protocol, runtime_checkable
 
 from .node import (
-    Renderable,
     BasicRendering,
     BlueprintRendering,
-    PoeticRendering,
     EconomicRendering,
+    PoeticRendering,
+    Renderable,
 )
-
 
 # === Additional Rendering Types ===
 

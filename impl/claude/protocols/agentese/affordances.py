@@ -26,6 +26,7 @@ from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt
+
     from .node import AgentMeta
 
 

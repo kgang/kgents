@@ -19,23 +19,22 @@ from pathlib import Path
 import pytest
 
 from .. import (
-    Logos,
-    create_logos,
-    JITLogosNode,
     AffordanceError,
+    JITLogosNode,
+    Logos,
+    PathNotFoundError,
     PathSyntaxError,
     TastefulnessError,
-    PathNotFoundError,
+    create_logos,
 )
 from ..jit import (
-    SpecParser,
-    SpecCompiler,
     JITCompiler,
     JITPromoter,
-    create_jit_compiler,
+    SpecCompiler,
+    SpecParser,
     compile_spec,
+    create_jit_compiler,
 )
-
 
 # === Fixtures ===
 

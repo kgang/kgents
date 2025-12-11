@@ -14,213 +14,212 @@ Core exports:
 - Context resolvers: world, self, concept, void, time
 """
 
-from .exceptions import (
-    AgentesError,
-    PathNotFoundError,
-    PathSyntaxError,
-    AffordanceError,
-    ObserverRequiredError,
-    TastefulnessError,
-    BudgetExhaustedError,
-    CompositionViolationError,
-)
-from .node import (
-    LogosNode,
-    AffordanceSet,
-    AgentMeta,
-    Renderable,
-    BasicRendering,
-    BlueprintRendering,
-    PoeticRendering,
-    EconomicRendering,
-    JITLogosNode,
-    BaseLogosNode,
-)
-from .logos import Logos, create_logos, ComposedPath, IdentityPath
-
-# Phase 3: Affordances
-from .affordances import (
-    # Types
-    AspectCategory,
-    Aspect,
-    # Constants
-    CORE_ASPECTS,
-    STANDARD_ASPECTS,
-    ARCHETYPE_AFFORDANCES,
-    # Registry
-    AffordanceRegistry,
-    create_affordance_registry,
-    # Matcher
-    AffordanceMatcher,
-    StandardAffordanceMatcher,
-    CapabilityAffordanceMatcher,
-    # DNA
-    ArchetypeDNA,
-    # Adapter
-    UmweltAdapter,
-    create_umwelt_adapter,
-    # Context sets
-    ContextAffordanceSet,
-    WORLD_AFFORDANCE_SET,
-    SELF_AFFORDANCE_SET,
-    CONCEPT_AFFORDANCE_SET,
-    VOID_AFFORDANCE_SET,
-    TIME_AFFORDANCE_SET,
-    get_context_affordance_set,
-)
-
-# Phase 3: Renderings
-from .renderings import (
-    ScientificRendering,
-    DeveloperRendering,
-    AdminRendering,
-    PhilosopherRendering,
-    MemoryRendering,
-    EntropyRendering,
-    TemporalRendering,
-    RenderingFactory,
-    StandardRenderingFactory,
-    MemoryRenderingFactory,
-    EntropyRenderingFactory,
-    TemporalRenderingFactory,
-    create_rendering_factory,
-    render_for_archetype,
-)
-
-# Phase 4: JIT Compilation
-from .jit import (
-    # Parser
-    ParsedSpec,
-    SpecParser,
-    # Compiler
-    SpecCompiler,
-    JITCompiler,
-    # Promotion
-    PromotionResult,
-    JITPromoter,
-    # Factory functions
-    create_jit_compiler,
-    compile_spec,
-)
-
-# Phase 5: Composition & Category Laws
-from .laws import (
-    # Core types
-    Identity,
-    Id,
-    IDENTITY,
-    Composable,
-    Composed,
-    # Law verification
-    LawVerificationResult,
-    CategoryLawVerifier,
-    # Minimal output
-    is_single_logical_unit,
-    enforce_minimal_output,
-    # Helpers
-    compose,
-    pipe,
-    LawEnforcingComposition,
-    SimpleMorphism,
-    morphism,
-    create_verifier,
-    create_enforcing_composition,
-)
-
-# Phase 6: Integration Layer
-from .integration import (
-    # Umwelt Integration
-    UmweltIntegration,
-    create_umwelt_integration,
-    # Membrane Integration
-    MEMBRANE_AGENTESE_MAP,
-    MembraneAgenteseBridge,
-    create_membrane_bridge,
-    # L-gent Integration
-    LgentRegistryProtocol,
-    LgentIntegration,
-    create_lgent_integration,
-    # G-gent Integration
-    AGENTESE_BNF,
-    AGENTESE_CONSTRAINTS,
-    AGENTESE_EXAMPLES,
-    GgentIntegration,
-    create_ggent_integration,
-    # Unified Factory
-    AgentesIntegrations,
-    create_agentese_integrations,
-)
-
-# Phase 7: Wire to Logos
-from .wiring import (
-    WiredLogos,
-    create_wired_logos,
-    wire_existing_logos,
-    create_minimal_wired_logos,
-)
-
 # Phase 8: Natural Language Adapter
 from .adapter import (
-    # Result types
-    TranslationResult,
-    TranslationError,
+    LLM_TRANSLATION_EXAMPLES,
     # Constants
     TRANSLATION_PATTERNS,
-    LLM_TRANSLATION_EXAMPLES,
-    # Protocols
-    Translator,
-    AsyncTranslator,
-    LLMProtocol,
-    # Translators
-    PatternTranslator,
-    LLMTranslator,
     # Adapter
     AgentesAdapter,
+    AsyncTranslator,
+    LLMProtocol,
+    LLMTranslator,
+    # Translators
+    PatternTranslator,
+    TranslationError,
+    # Result types
+    TranslationResult,
+    # Protocols
+    Translator,
+    build_translation_prompt,
     # Factory functions
     create_adapter,
     create_pattern_translator,
-    build_translation_prompt,
+)
+
+# Phase 3: Affordances
+from .affordances import (
+    ARCHETYPE_AFFORDANCES,
+    CONCEPT_AFFORDANCE_SET,
+    # Constants
+    CORE_ASPECTS,
+    SELF_AFFORDANCE_SET,
+    STANDARD_ASPECTS,
+    TIME_AFFORDANCE_SET,
+    VOID_AFFORDANCE_SET,
+    WORLD_AFFORDANCE_SET,
+    # Matcher
+    AffordanceMatcher,
+    # Registry
+    AffordanceRegistry,
+    # DNA
+    ArchetypeDNA,
+    Aspect,
+    # Types
+    AspectCategory,
+    CapabilityAffordanceMatcher,
+    # Context sets
+    ContextAffordanceSet,
+    StandardAffordanceMatcher,
+    # Adapter
+    UmweltAdapter,
+    create_affordance_registry,
+    create_umwelt_adapter,
+    get_context_affordance_set,
 )
 
 # Phase 2: Context Resolvers
 from .contexts import (
     VALID_CONTEXTS,
-    # World context
-    WorldContextResolver,
-    WorldNode,
-    create_world_resolver,
-    create_world_node,
-    # Self context
-    SelfContextResolver,
-    MemoryNode,
     CapabilitiesNode,
-    StateNode,
-    IdentityNode,
-    create_self_resolver,
     # Concept context
     ConceptContextResolver,
     ConceptNode,
-    create_concept_resolver,
-    create_concept_node,
-    # Void context
-    VoidContextResolver,
-    EntropyPool,
     EntropyNode,
-    SerendipityNode,
+    EntropyPool,
+    FutureNode,
     GratitudeNode,
+    IdentityNode,
+    MemoryNode,
+    PastNode,
     RandomnessGrant,
-    create_void_resolver,
-    create_entropy_pool,
+    ScheduledAction,
+    ScheduleNode,
+    # Self context
+    SelfContextResolver,
+    SerendipityNode,
+    StateNode,
     # Time context
     TimeContextResolver,
     TraceNode,
-    PastNode,
-    FutureNode,
-    ScheduleNode,
-    ScheduledAction,
-    create_time_resolver,
+    # Void context
+    VoidContextResolver,
+    # World context
+    WorldContextResolver,
+    WorldNode,
+    create_concept_node,
+    create_concept_resolver,
     # Unified factory
     create_context_resolvers,
+    create_entropy_pool,
+    create_self_resolver,
+    create_time_resolver,
+    create_void_resolver,
+    create_world_node,
+    create_world_resolver,
+)
+from .exceptions import (
+    AffordanceError,
+    AgentesError,
+    BudgetExhaustedError,
+    CompositionViolationError,
+    ObserverRequiredError,
+    PathNotFoundError,
+    PathSyntaxError,
+    TastefulnessError,
+)
+
+# Phase 6: Integration Layer
+from .integration import (
+    # G-gent Integration
+    AGENTESE_BNF,
+    AGENTESE_CONSTRAINTS,
+    AGENTESE_EXAMPLES,
+    # Membrane Integration
+    MEMBRANE_AGENTESE_MAP,
+    # Unified Factory
+    AgentesIntegrations,
+    GgentIntegration,
+    LgentIntegration,
+    # L-gent Integration
+    LgentRegistryProtocol,
+    MembraneAgenteseBridge,
+    # Umwelt Integration
+    UmweltIntegration,
+    create_agentese_integrations,
+    create_ggent_integration,
+    create_lgent_integration,
+    create_membrane_bridge,
+    create_umwelt_integration,
+)
+
+# Phase 4: JIT Compilation
+from .jit import (
+    JITCompiler,
+    JITPromoter,
+    # Parser
+    ParsedSpec,
+    # Promotion
+    PromotionResult,
+    # Compiler
+    SpecCompiler,
+    SpecParser,
+    compile_spec,
+    # Factory functions
+    create_jit_compiler,
+)
+
+# Phase 5: Composition & Category Laws
+from .laws import (
+    IDENTITY,
+    CategoryLawVerifier,
+    Composable,
+    Composed,
+    Id,
+    # Core types
+    Identity,
+    LawEnforcingComposition,
+    # Law verification
+    LawVerificationResult,
+    SimpleMorphism,
+    # Helpers
+    compose,
+    create_enforcing_composition,
+    create_verifier,
+    enforce_minimal_output,
+    # Minimal output
+    is_single_logical_unit,
+    morphism,
+    pipe,
+)
+from .logos import ComposedPath, IdentityPath, Logos, create_logos
+from .node import (
+    AffordanceSet,
+    AgentMeta,
+    BaseLogosNode,
+    BasicRendering,
+    BlueprintRendering,
+    EconomicRendering,
+    JITLogosNode,
+    LogosNode,
+    PoeticRendering,
+    Renderable,
+)
+
+# Phase 3: Renderings
+from .renderings import (
+    AdminRendering,
+    DeveloperRendering,
+    EntropyRendering,
+    EntropyRenderingFactory,
+    MemoryRendering,
+    MemoryRenderingFactory,
+    PhilosopherRendering,
+    RenderingFactory,
+    ScientificRendering,
+    StandardRenderingFactory,
+    TemporalRendering,
+    TemporalRenderingFactory,
+    create_rendering_factory,
+    render_for_archetype,
+)
+
+# Phase 7: Wire to Logos
+from .wiring import (
+    WiredLogos,
+    create_minimal_wired_logos,
+    create_wired_logos,
+    wire_existing_logos,
 )
 
 __all__ = [

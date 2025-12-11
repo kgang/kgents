@@ -25,8 +25,8 @@ from typing import (
 )
 
 if TYPE_CHECKING:
-    from bootstrap.umwelt import Umwelt
     from bootstrap.types import Agent
+    from bootstrap.umwelt import Umwelt
 
 # Type variables for generic types
 A = TypeVar("A")  # Input type

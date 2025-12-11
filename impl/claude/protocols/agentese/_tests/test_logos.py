@@ -12,18 +12,18 @@ Verifies:
 
 import pytest
 
+from ..exceptions import (
+    AffordanceError,
+    ObserverRequiredError,
+    PathNotFoundError,
+    PathSyntaxError,
+)
 from ..logos import (
     ComposedPath,
     Logos,
     PlaceholderNode,
     SimpleRegistry,
     create_logos,
-)
-from ..exceptions import (
-    AffordanceError,
-    ObserverRequiredError,
-    PathNotFoundError,
-    PathSyntaxError,
 )
 from ..node import (
     AgentMeta,

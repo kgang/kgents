@@ -10,31 +10,30 @@ Tests the WiredLogos class and its integration with:
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
-import asyncio
 
 import pytest
 
-from ..wiring import (
-    WiredLogos,
-    create_wired_logos,
-    wire_existing_logos,
-    create_minimal_wired_logos,
+from ..exceptions import (
+    AffordanceError,
+    ObserverRequiredError,
+    PathNotFoundError,
+    PathSyntaxError,
 )
-from ..logos import Logos, create_logos
 from ..integration import (
     AgentesIntegrations,
 )
+from ..logos import Logos, create_logos
 from ..node import AgentMeta, BasicRendering
-from ..exceptions import (
-    PathSyntaxError,
-    PathNotFoundError,
-    AffordanceError,
-    ObserverRequiredError,
+from ..wiring import (
+    WiredLogos,
+    create_minimal_wired_logos,
+    create_wired_logos,
+    wire_existing_logos,
 )
-
 
 # =============================================================================
 # Test Fixtures

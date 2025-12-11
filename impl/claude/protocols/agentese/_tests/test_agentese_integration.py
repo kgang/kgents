@@ -10,26 +10,26 @@ Demonstrates how AGENTESE integrates the kgents ecosystem:
 This file serves as documentation-by-test for AGENTESE usage patterns.
 """
 
-import pytest
 from unittest.mock import MagicMock
 
+import pytest
+
 from .. import (
+    Id,
     # Core
     Logos,
-    create_logos,
     PathNotFoundError,
     compose,
+    create_logos,
     pipe,
-    Id,
 )
 from ..contexts import (
+    AGENT_REGISTRY,
     VALID_CONTEXTS,
     # Agent discovery
     AgentContextResolver,
     create_agent_resolver,
-    AGENT_REGISTRY,
 )
-
 
 # === Fixtures ===
 

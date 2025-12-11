@@ -25,7 +25,7 @@ from ..node import (
     BasicRendering,
     Renderable,
 )
-from ..renderings import DeveloperRendering, AdminRendering
+from ..renderings import AdminRendering, DeveloperRendering
 
 if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt

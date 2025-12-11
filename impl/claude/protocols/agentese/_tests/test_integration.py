@@ -15,25 +15,24 @@ from typing import Any
 
 import pytest
 
+from ..affordances import ARCHETYPE_AFFORDANCES, ArchetypeDNA
+from ..exceptions import PathNotFoundError, PathSyntaxError
 from ..integration import (
-    # Umwelt Integration
-    create_umwelt_integration,
-    # Membrane Integration
-    MEMBRANE_AGENTESE_MAP,
-    create_membrane_bridge,
-    # L-gent Integration
-    create_lgent_integration,
     # G-gent Integration
     AGENTESE_BNF,
     AGENTESE_CONSTRAINTS,
     AGENTESE_EXAMPLES,
-    create_ggent_integration,
+    # Membrane Integration
+    MEMBRANE_AGENTESE_MAP,
     # Unified Factory
     create_agentese_integrations,
+    create_ggent_integration,
+    # L-gent Integration
+    create_lgent_integration,
+    create_membrane_bridge,
+    # Umwelt Integration
+    create_umwelt_integration,
 )
-from ..affordances import ArchetypeDNA, ARCHETYPE_AFFORDANCES
-from ..exceptions import PathNotFoundError, PathSyntaxError
-
 
 # =============================================================================
 # Test Fixtures

@@ -6,19 +6,19 @@ Provides mock observers, nodes, and Umwelts for testing.
 
 from __future__ import annotations
 
-import pytest
 from dataclasses import dataclass, field
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
 
+import pytest
+
+from ..logos import Logos, SimpleRegistry
 from ..node import (
     AgentMeta,
     BasicRendering,
     Renderable,
 )
-from ..logos import Logos, SimpleRegistry
-
 
 # === Mock DNA Types ===
 

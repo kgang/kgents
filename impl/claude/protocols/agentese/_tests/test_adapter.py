@@ -12,19 +12,18 @@ from typing import Any
 import pytest
 
 from ..adapter import (
-    TranslationResult,
-    TranslationError,
-    TRANSLATION_PATTERNS,
     LLM_TRANSLATION_EXAMPLES,
-    PatternTranslator,
-    LLMTranslator,
+    TRANSLATION_PATTERNS,
     AgentesAdapter,
+    LLMTranslator,
+    PatternTranslator,
+    TranslationError,
+    TranslationResult,
+    build_translation_prompt,
     create_adapter,
     create_pattern_translator,
-    build_translation_prompt,
 )
 from ..integration import GgentIntegration
-
 
 # =============================================================================
 # Test Fixtures
