@@ -64,7 +64,7 @@ dreamer = create_lucid_dreamer(synapse, hippocampus)
 report = await dreamer.rem_cycle()
 ```
 
-### Semantic Field (71 tests)
+### Semantic Field (66 tests)
 
 Stigmergic coordination via pheromones - agents emit/sense signals without direct imports.
 
@@ -78,11 +78,30 @@ Stigmergic coordination via pheromones - agents emit/sense signals without direc
 | N | NARRATIVE | NARRATIVE |
 | L | CAPABILITY | CAPABILITY |
 | O | - | All types |
+| **E** | **MUTATION** | - |
+| **H** | **SYNTHESIS** | - |
+| **K** | **PRIOR** | - |
+| **R** | **REFINEMENT** | - |
+
+**Phase 1 Complete (MUTATION, SYNTHESIS, PRIOR, REFINEMENT pheromones)**
 
 ```python
 field = create_semantic_field()
 emitter = create_psi_emitter(field)
 emitter.emit_metaphor("source", "target", strength=0.85, position=pos)
+
+# Phase 1 emitters
+evolution = create_evolution_emitter(field)
+evolution.emit_mutation("mut_001", fitness_delta=0.3, generation=5, position=pos)
+
+hegel = create_hegel_emitter(field)
+hegel.emit_synthesis("thesis", "antithesis", "synthesis", confidence=0.85, position=pos)
+
+persona = create_persona_emitter(field)
+persona.emit_prior_change("risk_tolerance", 0.7, "kent", position=pos)
+
+refinery = create_refinery_emitter(field)
+refinery.emit_refinement("target_id", "optimization", improvement_ratio=1.3, position=pos)
 ```
 
 ### M-gent Cartography (157 tests)

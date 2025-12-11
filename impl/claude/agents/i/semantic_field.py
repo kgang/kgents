@@ -62,6 +62,19 @@ class SemanticPheromoneKind(Enum):
     # L-gent emissions (Phase 4)
     CAPABILITY = "capability"  # Agent capability advertisement
 
+    # Phase 1: High-Priority Emitters
+    # E-gent emissions
+    MUTATION = "mutation"  # Evolution/mutation signals
+
+    # H-gent emissions
+    SYNTHESIS = "synthesis"  # Dialectic synthesis signals
+
+    # K-gent emissions
+    PRIOR = "prior"  # Persona/prior signals
+
+    # R-gent emissions
+    REFINEMENT = "refinement"  # Optimization/refinement signals
+
     @property
     def decay_rate(self) -> float:
         """Decay rate per tick (0.0 to 1.0)."""
@@ -75,6 +88,11 @@ class SemanticPheromoneKind(Enum):
             SemanticPheromoneKind.MEMORY: 0.08,  # Slow decay - memories persist
             SemanticPheromoneKind.NARRATIVE: 0.12,  # Moderate decay
             SemanticPheromoneKind.CAPABILITY: 0.02,  # Very slow - capabilities are stable
+            # Phase 1 types
+            SemanticPheromoneKind.MUTATION: 0.2,  # Medium persistence - mutations matter
+            SemanticPheromoneKind.SYNTHESIS: 0.1,  # Slow decay - insights persist
+            SemanticPheromoneKind.PRIOR: 0.05,  # Very slow - persona is stable
+            SemanticPheromoneKind.REFINEMENT: 0.15,  # Medium - refinements are actionable
         }[self]
 
     @property
@@ -90,6 +108,11 @@ class SemanticPheromoneKind(Enum):
             SemanticPheromoneKind.MEMORY: 0.3,
             SemanticPheromoneKind.NARRATIVE: 0.4,
             SemanticPheromoneKind.CAPABILITY: 1.0,  # Wide broadcast for discovery
+            # Phase 1 types
+            SemanticPheromoneKind.MUTATION: 0.6,  # Wide - evolution affects ecosystem
+            SemanticPheromoneKind.SYNTHESIS: 0.5,  # Wide - insights spread
+            SemanticPheromoneKind.PRIOR: 1.0,  # Very wide - persona affects all agents
+            SemanticPheromoneKind.REFINEMENT: 0.5,  # Medium - targeted improvements
         }[self]
 
 
@@ -113,8 +136,10 @@ class FieldCoordinate:
             # Euclidean distance in embedding space
             if len(self.embedding) != len(other.embedding):
                 return float("inf")
-            sum_sq = sum((a - b) ** 2 for a, b in zip(self.embedding, other.embedding))
-            return sum_sq**0.5
+            sum_sq: float = sum(
+                (a - b) ** 2 for a, b in zip(self.embedding, other.embedding)
+            )
+            return float(sum_sq**0.5)
 
         if self.domain and other.domain:
             # Domain matching: 0.0 if same, 1.0 if different
@@ -1280,6 +1305,632 @@ class CatalogFieldSensor:
 
 
 # =============================================================================
+# Phase 1: E-gent Evolution Field Interface (MUTATION signals)
+# =============================================================================
+
+
+@dataclass
+class MutationPayload:
+    """
+    Payload for MUTATION pheromones.
+
+    Represents an evolution/mutation signal from E-gent's thermodynamic cycle.
+    """
+
+    mutation_id: str
+    fitness_delta: float  # Change in fitness (-1.0 to 1.0)
+    generation: int
+    parent_id: str | None = None
+    mutation_type: str = "unknown"  # "crossover", "point", "structural"
+    schema_signature: str = ""  # Mutation schema used
+    gibbs_energy: float = 0.0  # Thermodynamic viability
+
+
+@dataclass
+class FitnessChangePayload:
+    """
+    Payload for fitness change signals.
+
+    Emitted when an entity's fitness changes significantly.
+    """
+
+    entity_id: str
+    old_fitness: float
+    new_fitness: float
+    reason: str = ""
+
+
+@dataclass
+class CycleCompletePayload:
+    """
+    Payload for evolution cycle completion.
+
+    Emitted at the end of a thermodynamic cycle.
+    """
+
+    generation: int
+    best_fitness: float
+    population_size: int
+    mutations_succeeded: int
+    mutations_failed: int
+    temperature: float = 1.0
+
+
+class EvolutionFieldEmitter:
+    """
+    E-gent's interface for emitting evolution/mutation signals.
+
+    Emits MUTATION pheromones during thermodynamic evolution cycles.
+    Does NOT know about R-gent or any consumer.
+    """
+
+    def __init__(self, field: SemanticField, agent_id: str = "evolution"):
+        self._field = field
+        self._agent_id = agent_id
+
+    def emit_mutation(
+        self,
+        mutation_id: str,
+        fitness_delta: float,
+        generation: int,
+        position: FieldCoordinate,
+        parent_id: str | None = None,
+        mutation_type: str = "unknown",
+        schema_signature: str = "",
+        gibbs_energy: float = 0.0,
+    ) -> str:
+        """
+        Emit a mutation signal.
+
+        Called when E-gent discovers a successful mutation.
+        """
+        payload = MutationPayload(
+            mutation_id=mutation_id,
+            fitness_delta=fitness_delta,
+            generation=generation,
+            parent_id=parent_id,
+            mutation_type=mutation_type,
+            schema_signature=schema_signature,
+            gibbs_energy=gibbs_energy,
+        )
+
+        # Intensity based on fitness improvement
+        intensity = min(1.0, max(0.1, 0.5 + fitness_delta))
+
+        return self._field.emit(
+            emitter=self._agent_id,
+            kind=SemanticPheromoneKind.MUTATION,
+            payload=payload,
+            position=position,
+            intensity=intensity,
+            metadata={
+                "mutation_id": mutation_id,
+                "generation": generation,
+                "fitness_delta": fitness_delta,
+            },
+        )
+
+    def emit_fitness_change(
+        self,
+        entity_id: str,
+        old_fitness: float,
+        new_fitness: float,
+        position: FieldCoordinate,
+        reason: str = "",
+    ) -> str:
+        """
+        Emit a fitness change signal.
+
+        Called when significant fitness changes occur.
+        """
+        payload = FitnessChangePayload(
+            entity_id=entity_id,
+            old_fitness=old_fitness,
+            new_fitness=new_fitness,
+            reason=reason,
+        )
+
+        delta = new_fitness - old_fitness
+        intensity = min(1.0, max(0.1, abs(delta)))
+
+        return self._field.emit(
+            emitter=self._agent_id,
+            kind=SemanticPheromoneKind.MUTATION,
+            payload=payload,
+            position=position,
+            intensity=intensity,
+            metadata={
+                "entity_id": entity_id,
+                "fitness_delta": delta,
+                "signal_type": "fitness_change",
+            },
+        )
+
+    def emit_cycle_complete(
+        self,
+        generation: int,
+        best_fitness: float,
+        population_size: int,
+        position: FieldCoordinate,
+        mutations_succeeded: int = 0,
+        mutations_failed: int = 0,
+        temperature: float = 1.0,
+    ) -> str:
+        """
+        Emit a cycle completion signal.
+
+        Called at the end of each thermodynamic evolution cycle.
+        """
+        payload = CycleCompletePayload(
+            generation=generation,
+            best_fitness=best_fitness,
+            population_size=population_size,
+            mutations_succeeded=mutations_succeeded,
+            mutations_failed=mutations_failed,
+            temperature=temperature,
+        )
+
+        return self._field.emit(
+            emitter=self._agent_id,
+            kind=SemanticPheromoneKind.MUTATION,
+            payload=payload,
+            position=position,
+            intensity=best_fitness,
+            metadata={
+                "generation": generation,
+                "signal_type": "cycle_complete",
+            },
+        )
+
+
+# =============================================================================
+# Phase 1: H-gent Hegel Field Interface (SYNTHESIS signals)
+# =============================================================================
+
+
+@dataclass
+class SynthesisPayload:
+    """
+    Payload for SYNTHESIS pheromones.
+
+    Represents a dialectic synthesis from H-gent.
+    """
+
+    thesis: str
+    antithesis: str
+    synthesis: str
+    confidence: float
+    domain: str = ""
+    resolution_type: str = ""  # "preserve", "negate", "elevate"
+
+
+@dataclass
+class ContradictionPayload:
+    """
+    Payload for contradiction detection.
+
+    Emitted when H-gent detects unresolved contradictions.
+    """
+
+    statement_a: str
+    statement_b: str
+    severity: float  # 0.0 to 1.0
+    tension_mode: str = ""  # "logical", "temporal", "contextual"
+    description: str = ""
+
+
+class HegelFieldEmitter:
+    """
+    H-gent's interface for emitting dialectic signals.
+
+    Emits SYNTHESIS pheromones during dialectic operations.
+    Does NOT know about Psi-gent or any consumer.
+    """
+
+    def __init__(self, field: SemanticField, agent_id: str = "hegel"):
+        self._field = field
+        self._agent_id = agent_id
+
+    def emit_synthesis(
+        self,
+        thesis: str,
+        antithesis: str,
+        synthesis: str,
+        confidence: float,
+        position: FieldCoordinate,
+        domain: str = "",
+        resolution_type: str = "",
+    ) -> str:
+        """
+        Emit a synthesis signal.
+
+        Called when H-gent achieves a dialectic synthesis.
+        """
+        payload = SynthesisPayload(
+            thesis=thesis,
+            antithesis=antithesis,
+            synthesis=synthesis,
+            confidence=confidence,
+            domain=domain,
+            resolution_type=resolution_type,
+        )
+
+        return self._field.emit(
+            emitter=self._agent_id,
+            kind=SemanticPheromoneKind.SYNTHESIS,
+            payload=payload,
+            position=position,
+            intensity=confidence,
+            metadata={
+                "domain": domain,
+                "resolution_type": resolution_type,
+                "signal_type": "synthesis",
+            },
+        )
+
+    def emit_contradiction(
+        self,
+        statement_a: str,
+        statement_b: str,
+        severity: float,
+        position: FieldCoordinate,
+        tension_mode: str = "",
+        description: str = "",
+    ) -> str:
+        """
+        Emit a contradiction signal.
+
+        Called when H-gent detects significant contradictions.
+        This allows J-gent to sense potential safety issues.
+        """
+        payload = ContradictionPayload(
+            statement_a=statement_a,
+            statement_b=statement_b,
+            severity=severity,
+            tension_mode=tension_mode,
+            description=description,
+        )
+
+        return self._field.emit(
+            emitter=self._agent_id,
+            kind=SemanticPheromoneKind.SYNTHESIS,
+            payload=payload,
+            position=position,
+            intensity=severity,
+            metadata={
+                "tension_mode": tension_mode,
+                "signal_type": "contradiction",
+            },
+        )
+
+    def emit_productive_tension(
+        self,
+        thesis: str,
+        antithesis: str,
+        why_held: str,
+        position: FieldCoordinate,
+    ) -> str:
+        """
+        Emit a productive tension signal.
+
+        Called when H-gent decides synthesis is premature.
+        """
+        payload = {
+            "thesis": thesis,
+            "antithesis": antithesis,
+            "why_held": why_held,
+            "productive": True,
+        }
+
+        return self._field.emit(
+            emitter=self._agent_id,
+            kind=SemanticPheromoneKind.SYNTHESIS,
+            payload=payload,
+            position=position,
+            intensity=0.7,  # Productive tensions are significant
+            metadata={
+                "signal_type": "productive_tension",
+            },
+        )
+
+
+# =============================================================================
+# Phase 1: K-gent Persona Field Interface (PRIOR signals)
+# =============================================================================
+
+
+@dataclass
+class PriorPayload:
+    """
+    Payload for PRIOR pheromones.
+
+    Represents a persona preference/prior from K-gent.
+    """
+
+    prior_type: str  # "risk_tolerance", "time_preference", "creativity", etc.
+    value: float  # 0.0 to 1.0 normalized value
+    persona_id: str
+    reason: str = ""
+    confidence: float = 1.0
+
+
+@dataclass
+class PersonaShiftPayload:
+    """
+    Payload for persona shift signals.
+
+    Emitted when K-gent's active persona changes.
+    """
+
+    old_persona: str | None
+    new_persona: str
+    trigger: str = ""  # What caused the shift
+
+
+class PersonaFieldEmitter:
+    """
+    K-gent's interface for emitting persona/prior signals.
+
+    Emits PRIOR pheromones to broadcast personality preferences.
+    All agents can sense these to adapt their behavior.
+    """
+
+    def __init__(self, field: SemanticField, agent_id: str = "persona"):
+        self._field = field
+        self._agent_id = agent_id
+
+    def emit_prior_change(
+        self,
+        prior_type: str,
+        value: float,
+        persona_id: str,
+        position: FieldCoordinate,
+        reason: str = "",
+        confidence: float = 1.0,
+    ) -> str:
+        """
+        Emit a prior change signal.
+
+        Called when a persona preference is updated or asserted.
+        """
+        payload = PriorPayload(
+            prior_type=prior_type,
+            value=value,
+            persona_id=persona_id,
+            reason=reason,
+            confidence=confidence,
+        )
+
+        return self._field.emit(
+            emitter=self._agent_id,
+            kind=SemanticPheromoneKind.PRIOR,
+            payload=payload,
+            position=position,
+            intensity=confidence,
+            metadata={
+                "prior_type": prior_type,
+                "persona_id": persona_id,
+            },
+        )
+
+    def emit_persona_shift(
+        self,
+        old_persona: str | None,
+        new_persona: str,
+        position: FieldCoordinate,
+        trigger: str = "",
+    ) -> str:
+        """
+        Emit a persona shift signal.
+
+        Called when the active persona changes.
+        """
+        payload = PersonaShiftPayload(
+            old_persona=old_persona,
+            new_persona=new_persona,
+            trigger=trigger,
+        )
+
+        return self._field.emit(
+            emitter=self._agent_id,
+            kind=SemanticPheromoneKind.PRIOR,
+            payload=payload,
+            position=position,
+            intensity=1.0,  # Persona shifts are high priority
+            metadata={
+                "old_persona": old_persona,
+                "new_persona": new_persona,
+                "signal_type": "persona_shift",
+            },
+        )
+
+    def emit_preference(
+        self,
+        category: str,
+        preference: str,
+        strength: float,
+        position: FieldCoordinate,
+        persona_id: str = "default",
+    ) -> str:
+        """
+        Emit a general preference signal.
+
+        Convenience method for broadcasting preferences.
+        """
+        payload = {
+            "category": category,
+            "preference": preference,
+            "strength": strength,
+            "persona_id": persona_id,
+        }
+
+        return self._field.emit(
+            emitter=self._agent_id,
+            kind=SemanticPheromoneKind.PRIOR,
+            payload=payload,
+            position=position,
+            intensity=strength,
+            metadata={
+                "category": category,
+                "signal_type": "preference",
+            },
+        )
+
+
+# =============================================================================
+# Phase 1: R-gent Refinery Field Interface (REFINEMENT signals)
+# =============================================================================
+
+
+@dataclass
+class RefinementPayload:
+    """
+    Payload for REFINEMENT pheromones.
+
+    Represents an optimization result from R-gent.
+    """
+
+    target_id: str
+    improvement_type: str  # "compression", "optimization", "simplification"
+    improvement_ratio: float  # > 1.0 means improvement
+    before_metrics: dict[str, Any] = dataclass_field(default_factory=dict)
+    after_metrics: dict[str, Any] = dataclass_field(default_factory=dict)
+
+
+@dataclass
+class RefinementOpportunityPayload:
+    """
+    Payload for refinement opportunity signals.
+
+    Emitted when R-gent identifies potential improvements.
+    """
+
+    target_id: str
+    potential_improvement: float  # Estimated improvement ratio
+    strategy: str  # Recommended teleprompter strategy
+    cost_estimate: float = 0.0  # Estimated cost in USD
+
+
+class RefineryFieldEmitter:
+    """
+    R-gent's interface for emitting refinement signals.
+
+    Emits REFINEMENT pheromones during optimization.
+    Does NOT know about E-gent or any consumer.
+    """
+
+    def __init__(self, field: SemanticField, agent_id: str = "refinery"):
+        self._field = field
+        self._agent_id = agent_id
+
+    def emit_refinement(
+        self,
+        target_id: str,
+        improvement_type: str,
+        improvement_ratio: float,
+        position: FieldCoordinate,
+        before_metrics: dict[str, Any] | None = None,
+        after_metrics: dict[str, Any] | None = None,
+    ) -> str:
+        """
+        Emit a refinement result signal.
+
+        Called when R-gent completes an optimization.
+        """
+        payload = RefinementPayload(
+            target_id=target_id,
+            improvement_type=improvement_type,
+            improvement_ratio=improvement_ratio,
+            before_metrics=before_metrics or {},
+            after_metrics=after_metrics or {},
+        )
+
+        # Intensity based on improvement ratio
+        intensity = min(1.0, max(0.1, improvement_ratio - 0.5))
+
+        return self._field.emit(
+            emitter=self._agent_id,
+            kind=SemanticPheromoneKind.REFINEMENT,
+            payload=payload,
+            position=position,
+            intensity=intensity,
+            metadata={
+                "target_id": target_id,
+                "improvement_type": improvement_type,
+                "improvement_ratio": improvement_ratio,
+            },
+        )
+
+    def emit_opportunity(
+        self,
+        target_id: str,
+        potential_improvement: float,
+        strategy: str,
+        position: FieldCoordinate,
+        cost_estimate: float = 0.0,
+    ) -> str:
+        """
+        Emit a refinement opportunity signal.
+
+        Called when R-gent identifies potential optimizations.
+        """
+        payload = RefinementOpportunityPayload(
+            target_id=target_id,
+            potential_improvement=potential_improvement,
+            strategy=strategy,
+            cost_estimate=cost_estimate,
+        )
+
+        return self._field.emit(
+            emitter=self._agent_id,
+            kind=SemanticPheromoneKind.REFINEMENT,
+            payload=payload,
+            position=position,
+            intensity=min(1.0, potential_improvement),
+            metadata={
+                "target_id": target_id,
+                "strategy": strategy,
+                "signal_type": "opportunity",
+            },
+        )
+
+    def emit_optimization_trace(
+        self,
+        target_id: str,
+        method: str,
+        iterations: int,
+        final_score: float,
+        position: FieldCoordinate,
+        converged: bool = False,
+    ) -> str:
+        """
+        Emit an optimization trace signal.
+
+        Called to broadcast optimization progress/results.
+        """
+        payload = {
+            "target_id": target_id,
+            "method": method,
+            "iterations": iterations,
+            "final_score": final_score,
+            "converged": converged,
+        }
+
+        return self._field.emit(
+            emitter=self._agent_id,
+            kind=SemanticPheromoneKind.REFINEMENT,
+            payload=payload,
+            position=position,
+            intensity=final_score,
+            metadata={
+                "target_id": target_id,
+                "method": method,
+                "signal_type": "optimization_trace",
+            },
+        )
+
+
+# =============================================================================
 # Factory Functions
 # =============================================================================
 
@@ -1362,3 +2013,34 @@ def create_catalog_sensor(
 ) -> CatalogFieldSensor:
     """Create an L-gent catalog sensor."""
     return CatalogFieldSensor(field, agent_id)
+
+
+# Phase 1 Factory Functions
+
+
+def create_evolution_emitter(
+    field: SemanticField, agent_id: str = "evolution"
+) -> EvolutionFieldEmitter:
+    """Create an E-gent evolution emitter."""
+    return EvolutionFieldEmitter(field, agent_id)
+
+
+def create_hegel_emitter(
+    field: SemanticField, agent_id: str = "hegel"
+) -> HegelFieldEmitter:
+    """Create an H-gent Hegel emitter."""
+    return HegelFieldEmitter(field, agent_id)
+
+
+def create_persona_emitter(
+    field: SemanticField, agent_id: str = "persona"
+) -> PersonaFieldEmitter:
+    """Create a K-gent persona emitter."""
+    return PersonaFieldEmitter(field, agent_id)
+
+
+def create_refinery_emitter(
+    field: SemanticField, agent_id: str = "refinery"
+) -> RefineryFieldEmitter:
+    """Create an R-gent refinery emitter."""
+    return RefineryFieldEmitter(field, agent_id)

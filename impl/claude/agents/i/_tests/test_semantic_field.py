@@ -20,13 +20,18 @@ from agents.i.semantic_field import (
     SemanticPheromoneKind,
     WarningPayload,
     create_economic_emitter,
+    # Phase 1 imports
+    create_evolution_emitter,
     create_forge_sensor,
+    create_hegel_emitter,
     create_memory_emitter,
     create_memory_sensor,
     create_narrative_emitter,
     create_narrative_sensor,
     create_observer_sensor,
+    create_persona_emitter,
     create_psi_emitter,
+    create_refinery_emitter,
     create_safety_emitter,
     create_semantic_field,
 )
@@ -770,3 +775,505 @@ class TestPheromoneKindProperties:
     def test_warning_has_wide_radius(self):
         """Warnings should broadcast widely."""
         assert SemanticPheromoneKind.WARNING.default_radius >= 1.0
+
+    def test_phase1_kinds_have_properties(self):
+        """Test Phase 1 pheromone kinds have decay and radius."""
+        phase1_kinds = [
+            SemanticPheromoneKind.MUTATION,
+            SemanticPheromoneKind.SYNTHESIS,
+            SemanticPheromoneKind.PRIOR,
+            SemanticPheromoneKind.REFINEMENT,
+        ]
+        for kind in phase1_kinds:
+            assert 0.0 < kind.decay_rate <= 1.0
+            assert kind.default_radius > 0
+
+    def test_prior_decays_slowly(self):
+        """Priors should decay slowly (persona is stable)."""
+        assert (
+            SemanticPheromoneKind.PRIOR.decay_rate
+            < SemanticPheromoneKind.MUTATION.decay_rate
+        )
+
+    def test_prior_has_wide_radius(self):
+        """Priors should broadcast widely to affect all agents."""
+        assert SemanticPheromoneKind.PRIOR.default_radius >= 1.0
+
+
+# =============================================================================
+# Phase 1: E-gent Evolution Field Emitter Tests
+# =============================================================================
+
+
+class TestEvolutionFieldEmitter:
+    """Tests for E-gent EvolutionFieldEmitter (MUTATION signals)."""
+
+    def test_emit_mutation(self):
+        """Test emitting a mutation signal."""
+        field = create_semantic_field()
+        emitter = create_evolution_emitter(field)
+        position = FieldCoordinate(domain="evolution")
+
+        phero_id = emitter.emit_mutation(
+            mutation_id="mut_001",
+            fitness_delta=0.3,
+            generation=5,
+            position=position,
+            parent_id="mut_000",
+            mutation_type="point",
+            schema_signature="AddFunction",
+            gibbs_energy=-0.5,
+        )
+
+        assert phero_id.startswith("phero-")
+
+        pheromones = field.get_all(SemanticPheromoneKind.MUTATION)
+        assert len(pheromones) == 1
+
+        payload = pheromones[0].payload
+        assert payload.mutation_id == "mut_001"
+        assert payload.fitness_delta == 0.3
+        assert payload.generation == 5
+        assert payload.parent_id == "mut_000"
+        assert payload.mutation_type == "point"
+        assert payload.gibbs_energy == -0.5
+
+    def test_mutation_intensity_scales_with_fitness(self):
+        """Higher fitness delta should produce higher intensity."""
+        field = create_semantic_field()
+        emitter = create_evolution_emitter(field)
+        position = FieldCoordinate()
+
+        # Low fitness delta
+        emitter.emit_mutation("mut_low", -0.2, 1, position)
+        # High fitness delta
+        emitter.emit_mutation("mut_high", 0.4, 1, position)
+
+        pheromones = field.get_all(SemanticPheromoneKind.MUTATION)
+        intensities = sorted([p.intensity for p in pheromones])
+
+        # Higher fitness delta should have higher intensity
+        assert intensities[0] < intensities[1]
+
+    def test_emit_fitness_change(self):
+        """Test emitting a fitness change signal."""
+        field = create_semantic_field()
+        emitter = create_evolution_emitter(field)
+        position = FieldCoordinate()
+
+        phero_id = emitter.emit_fitness_change(
+            entity_id="agent_001",
+            old_fitness=0.5,
+            new_fitness=0.8,
+            position=position,
+            reason="optimization",
+        )
+
+        assert phero_id.startswith("phero-")
+
+        pheromones = field.get_all(SemanticPheromoneKind.MUTATION)
+        assert len(pheromones) == 1
+
+        payload = pheromones[0].payload
+        assert payload.entity_id == "agent_001"
+        assert payload.old_fitness == 0.5
+        assert payload.new_fitness == 0.8
+
+    def test_emit_cycle_complete(self):
+        """Test emitting cycle completion signal."""
+        field = create_semantic_field()
+        emitter = create_evolution_emitter(field)
+        position = FieldCoordinate()
+
+        phero_id = emitter.emit_cycle_complete(
+            generation=10,
+            best_fitness=0.95,
+            population_size=100,
+            position=position,
+            mutations_succeeded=8,
+            mutations_failed=2,
+            temperature=0.8,
+        )
+
+        assert phero_id.startswith("phero-")
+
+        pheromones = field.get_all(SemanticPheromoneKind.MUTATION)
+        assert len(pheromones) == 1
+
+        payload = pheromones[0].payload
+        assert payload.generation == 10
+        assert payload.best_fitness == 0.95
+        assert payload.population_size == 100
+        assert payload.mutations_succeeded == 8
+        assert payload.mutations_failed == 2
+
+
+# =============================================================================
+# Phase 1: H-gent Hegel Field Emitter Tests
+# =============================================================================
+
+
+class TestHegelFieldEmitter:
+    """Tests for H-gent HegelFieldEmitter (SYNTHESIS signals)."""
+
+    def test_emit_synthesis(self):
+        """Test emitting a synthesis signal."""
+        field = create_semantic_field()
+        emitter = create_hegel_emitter(field)
+        position = FieldCoordinate(domain="philosophy")
+
+        phero_id = emitter.emit_synthesis(
+            thesis="Individual freedom",
+            antithesis="Social order",
+            synthesis="Liberal democracy",
+            confidence=0.85,
+            position=position,
+            domain="political_theory",
+            resolution_type="elevate",
+        )
+
+        assert phero_id.startswith("phero-")
+
+        pheromones = field.get_all(SemanticPheromoneKind.SYNTHESIS)
+        assert len(pheromones) == 1
+
+        payload = pheromones[0].payload
+        assert payload.thesis == "Individual freedom"
+        assert payload.antithesis == "Social order"
+        assert payload.synthesis == "Liberal democracy"
+        assert payload.confidence == 0.85
+        assert payload.resolution_type == "elevate"
+
+    def test_synthesis_intensity_matches_confidence(self):
+        """Synthesis intensity should match confidence."""
+        field = create_semantic_field()
+        emitter = create_hegel_emitter(field)
+        position = FieldCoordinate()
+
+        emitter.emit_synthesis("A", "B", "C", 0.9, position)
+
+        pheromones = field.get_all(SemanticPheromoneKind.SYNTHESIS)
+        assert pheromones[0].intensity == 0.9
+
+    def test_emit_contradiction(self):
+        """Test emitting a contradiction signal."""
+        field = create_semantic_field()
+        emitter = create_hegel_emitter(field)
+        position = FieldCoordinate()
+
+        phero_id = emitter.emit_contradiction(
+            statement_a="X is true",
+            statement_b="X is false",
+            severity=0.8,
+            position=position,
+            tension_mode="logical",
+            description="Direct contradiction detected",
+        )
+
+        assert phero_id.startswith("phero-")
+
+        pheromones = field.get_all(SemanticPheromoneKind.SYNTHESIS)
+        assert len(pheromones) == 1
+
+        payload = pheromones[0].payload
+        assert payload.statement_a == "X is true"
+        assert payload.statement_b == "X is false"
+        assert payload.severity == 0.8
+        assert payload.tension_mode == "logical"
+
+    def test_emit_productive_tension(self):
+        """Test emitting productive tension signal."""
+        field = create_semantic_field()
+        emitter = create_hegel_emitter(field)
+        position = FieldCoordinate()
+
+        phero_id = emitter.emit_productive_tension(
+            thesis="Speed",
+            antithesis="Accuracy",
+            why_held="Trade-off depends on context",
+            position=position,
+        )
+
+        assert phero_id.startswith("phero-")
+
+        pheromones = field.get_all(SemanticPheromoneKind.SYNTHESIS)
+        assert len(pheromones) == 1
+        assert pheromones[0].metadata.get("signal_type") == "productive_tension"
+
+
+# =============================================================================
+# Phase 1: K-gent Persona Field Emitter Tests
+# =============================================================================
+
+
+class TestPersonaFieldEmitter:
+    """Tests for K-gent PersonaFieldEmitter (PRIOR signals)."""
+
+    def test_emit_prior_change(self):
+        """Test emitting a prior change signal."""
+        field = create_semantic_field()
+        emitter = create_persona_emitter(field)
+        position = FieldCoordinate()
+
+        phero_id = emitter.emit_prior_change(
+            prior_type="risk_tolerance",
+            value=0.7,
+            persona_id="kent",
+            position=position,
+            reason="User expressed preference for bold choices",
+            confidence=0.9,
+        )
+
+        assert phero_id.startswith("phero-")
+
+        pheromones = field.get_all(SemanticPheromoneKind.PRIOR)
+        assert len(pheromones) == 1
+
+        payload = pheromones[0].payload
+        assert payload.prior_type == "risk_tolerance"
+        assert payload.value == 0.7
+        assert payload.persona_id == "kent"
+        assert payload.confidence == 0.9
+
+    def test_prior_intensity_matches_confidence(self):
+        """Prior intensity should match confidence."""
+        field = create_semantic_field()
+        emitter = create_persona_emitter(field)
+        position = FieldCoordinate()
+
+        emitter.emit_prior_change("creativity", 0.8, "kent", position, confidence=0.75)
+
+        pheromones = field.get_all(SemanticPheromoneKind.PRIOR)
+        assert pheromones[0].intensity == 0.75
+
+    def test_emit_persona_shift(self):
+        """Test emitting a persona shift signal."""
+        field = create_semantic_field()
+        emitter = create_persona_emitter(field)
+        position = FieldCoordinate()
+
+        phero_id = emitter.emit_persona_shift(
+            old_persona="researcher",
+            new_persona="creator",
+            position=position,
+            trigger="Project phase change",
+        )
+
+        assert phero_id.startswith("phero-")
+
+        pheromones = field.get_all(SemanticPheromoneKind.PRIOR)
+        assert len(pheromones) == 1
+        # Persona shifts have high intensity
+        assert pheromones[0].intensity == 1.0
+
+        payload = pheromones[0].payload
+        assert payload.old_persona == "researcher"
+        assert payload.new_persona == "creator"
+
+    def test_emit_preference(self):
+        """Test emitting a general preference signal."""
+        field = create_semantic_field()
+        emitter = create_persona_emitter(field)
+        position = FieldCoordinate()
+
+        phero_id = emitter.emit_preference(
+            category="communication",
+            preference="concise",
+            strength=0.85,
+            position=position,
+        )
+
+        assert phero_id.startswith("phero-")
+
+        pheromones = field.get_all(SemanticPheromoneKind.PRIOR)
+        assert len(pheromones) == 1
+        assert pheromones[0].intensity == 0.85
+
+
+# =============================================================================
+# Phase 1: R-gent Refinery Field Emitter Tests
+# =============================================================================
+
+
+class TestRefineryFieldEmitter:
+    """Tests for R-gent RefineryFieldEmitter (REFINEMENT signals)."""
+
+    def test_emit_refinement(self):
+        """Test emitting a refinement signal."""
+        field = create_semantic_field()
+        emitter = create_refinery_emitter(field)
+        position = FieldCoordinate()
+
+        phero_id = emitter.emit_refinement(
+            target_id="agent_summarizer",
+            improvement_type="optimization",
+            improvement_ratio=1.3,
+            position=position,
+            before_metrics={"score": 0.7, "cost": 100},
+            after_metrics={"score": 0.91, "cost": 80},
+        )
+
+        assert phero_id.startswith("phero-")
+
+        pheromones = field.get_all(SemanticPheromoneKind.REFINEMENT)
+        assert len(pheromones) == 1
+
+        payload = pheromones[0].payload
+        assert payload.target_id == "agent_summarizer"
+        assert payload.improvement_type == "optimization"
+        assert payload.improvement_ratio == 1.3
+        assert payload.before_metrics["score"] == 0.7
+        assert payload.after_metrics["score"] == 0.91
+
+    def test_refinement_intensity_scales_with_improvement(self):
+        """Higher improvement ratio should produce higher intensity."""
+        field = create_semantic_field()
+        emitter = create_refinery_emitter(field)
+        position = FieldCoordinate()
+
+        # Small improvement
+        emitter.emit_refinement("target_a", "optimization", 1.1, position)
+        # Large improvement
+        emitter.emit_refinement("target_b", "optimization", 1.5, position)
+
+        pheromones = field.get_all(SemanticPheromoneKind.REFINEMENT)
+        intensities = sorted([p.intensity for p in pheromones])
+
+        # Higher improvement should have higher intensity
+        assert intensities[0] < intensities[1]
+
+    def test_emit_opportunity(self):
+        """Test emitting a refinement opportunity signal."""
+        field = create_semantic_field()
+        emitter = create_refinery_emitter(field)
+        position = FieldCoordinate()
+
+        phero_id = emitter.emit_opportunity(
+            target_id="agent_classifier",
+            potential_improvement=1.4,
+            strategy="mipro_v2",
+            position=position,
+            cost_estimate=5.0,
+        )
+
+        assert phero_id.startswith("phero-")
+
+        pheromones = field.get_all(SemanticPheromoneKind.REFINEMENT)
+        assert len(pheromones) == 1
+
+        payload = pheromones[0].payload
+        assert payload.target_id == "agent_classifier"
+        assert payload.potential_improvement == 1.4
+        assert payload.strategy == "mipro_v2"
+        assert payload.cost_estimate == 5.0
+
+    def test_emit_optimization_trace(self):
+        """Test emitting optimization trace signal."""
+        field = create_semantic_field()
+        emitter = create_refinery_emitter(field)
+        position = FieldCoordinate()
+
+        phero_id = emitter.emit_optimization_trace(
+            target_id="agent_qa",
+            method="textgrad",
+            iterations=15,
+            final_score=0.88,
+            position=position,
+            converged=True,
+        )
+
+        assert phero_id.startswith("phero-")
+
+        pheromones = field.get_all(SemanticPheromoneKind.REFINEMENT)
+        assert len(pheromones) == 1
+        assert pheromones[0].metadata.get("signal_type") == "optimization_trace"
+
+
+# =============================================================================
+# Phase 1 Integration Tests
+# =============================================================================
+
+
+class TestPhase1Integration:
+    """Integration tests for Phase 1 emitters working together."""
+
+    def test_evolution_and_refinement_coordination(self):
+        """Test E-gent and R-gent can coordinate via field."""
+        field = create_semantic_field()
+        evolution = create_evolution_emitter(field)
+        refinery = create_refinery_emitter(field)
+        observer = create_observer_sensor(field)
+        position = FieldCoordinate()
+
+        # E-gent discovers a mutation
+        evolution.emit_mutation("mut_001", 0.25, 1, position, mutation_type="point")
+
+        # R-gent identifies refinement opportunity
+        refinery.emit_opportunity("mut_001", 1.3, "bootstrap_fewshot", position)
+
+        # Observer can see both signals
+        observed = observer.observe_all(position)
+
+        assert SemanticPheromoneKind.MUTATION.value in observed
+        assert SemanticPheromoneKind.REFINEMENT.value in observed
+
+    def test_persona_affects_all_agents(self):
+        """Test K-gent priors are visible to observer."""
+        field = create_semantic_field()
+        persona = create_persona_emitter(field)
+        observer = create_observer_sensor(field)
+        position = FieldCoordinate()
+
+        # K-gent broadcasts a preference
+        persona.emit_prior_change(
+            "verbosity", 0.3, "kent", position, reason="User prefers concise output"
+        )
+
+        # Observer can see the prior
+        observed = observer.observe_all(position)
+        assert SemanticPheromoneKind.PRIOR.value in observed
+
+        # Prior has wide radius so it reaches everywhere
+        priors = observed[SemanticPheromoneKind.PRIOR.value]
+        assert len(priors) == 1
+
+    def test_hegel_synthesis_visible_to_psi(self):
+        """Test H-gent synthesis can be observed by other agents."""
+        field = create_semantic_field()
+        hegel = create_hegel_emitter(field)
+        psi = create_psi_emitter(field)
+        position = FieldCoordinate()
+
+        # H-gent achieves a synthesis
+        hegel.emit_synthesis(
+            "Efficiency", "Reliability", "Robust efficiency", 0.85, position
+        )
+
+        # Psi-gent (metaphor solver) emits a related metaphor
+        psi.emit_metaphor("robust_efficiency", "bridge_engineering", 0.75, position)
+
+        # Both signals coexist in the field
+        synthesis_signals = field.get_all(SemanticPheromoneKind.SYNTHESIS)
+        metaphor_signals = field.get_all(SemanticPheromoneKind.METAPHOR)
+
+        assert len(synthesis_signals) == 1
+        assert len(metaphor_signals) == 1
+
+    def test_field_summary_includes_phase1(self):
+        """Test field summary counts Phase 1 pheromones."""
+        field = create_semantic_field()
+        observer = create_observer_sensor(field)
+        position = FieldCoordinate()
+
+        # Emit one of each Phase 1 type
+        create_evolution_emitter(field).emit_mutation("m1", 0.2, 1, position)
+        create_hegel_emitter(field).emit_synthesis("A", "B", "C", 0.8, position)
+        create_persona_emitter(field).emit_prior_change("x", 0.5, "k", position)
+        create_refinery_emitter(field).emit_refinement("t", "opt", 1.2, position)
+
+        summary = observer.field_summary()
+
+        assert summary[SemanticPheromoneKind.MUTATION.value] == 1
+        assert summary[SemanticPheromoneKind.SYNTHESIS.value] == 1
+        assert summary[SemanticPheromoneKind.PRIOR.value] == 1
+        assert summary[SemanticPheromoneKind.REFINEMENT.value] == 1
