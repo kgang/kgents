@@ -17,7 +17,7 @@ Use Cases:
 
 import json
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any, Iterator, Optional
 
 from agents.p.core import Parser, ParserConfig, ParseResult
 
@@ -42,7 +42,7 @@ class ProbabilisticASTNode:
     repair_applied: Optional[str] = None
     path: str = "root"  # Path in AST (e.g., "root.data.items[0].name")
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert node to dict representation."""
         result = {
             "type": self.type,
@@ -72,21 +72,21 @@ class ProbabilisticASTNode:
 
         if self.type == "object":
             # For objects, recursively get confident children
-            result = {}
+            obj_result: dict[str, Any] = {}
             for child in self.children:
                 if child.confidence >= min_confidence:
                     key = child.path.split(".")[-1]
-                    result[key] = child.get_confident_value(min_confidence)
-            return result
+                    obj_result[key] = child.get_confident_value(min_confidence)
+            return obj_result
 
         elif self.type == "array":
             # For arrays, filter confident children
-            result = []
+            arr_result: list[Any] = []
             for child in self.children:
                 confident_val = child.get_confident_value(min_confidence)
                 if confident_val is not None:
-                    result.append(confident_val)
-            return result
+                    arr_result.append(confident_val)
+            return arr_result
 
         else:
             return self.value
@@ -329,17 +329,17 @@ class ProbabilisticASTParser(Parser[ProbabilisticASTNode]):
         return None
 
     def parse_stream(
-        self, tokens: list[str]
-    ) -> list[ParseResult[ProbabilisticASTNode]]:
+        self, tokens: Iterator[str]
+    ) -> Iterator[ParseResult[ProbabilisticASTNode]]:
         """
         Stream parsing for probabilistic AST.
 
         Buffers tokens and parses when sufficient for a node.
         """
         text = "".join(tokens)
-        return [self.parse(text)]
+        yield self.parse(text)
 
-    def configure(self, **config_updates) -> "ProbabilisticASTParser":
+    def configure(self, **config_updates: Any) -> "ProbabilisticASTParser":
         """Return new parser with updated configuration."""
         new_config = ParserConfig(**{**self.config.__dict__, **config_updates})
         return ProbabilisticASTParser(config=new_config)
@@ -347,7 +347,7 @@ class ProbabilisticASTParser(Parser[ProbabilisticASTNode]):
 
 def query_confident_fields(
     ast: ProbabilisticASTNode, min_confidence: float = 0.8
-) -> dict:
+) -> Any:
     """
     Extract only high-confidence fields from probabilistic AST.
 
@@ -377,9 +377,9 @@ def get_low_confidence_paths(
         uncertain = get_low_confidence_paths(result.value, max_confidence=0.6)
         # ["root.data.count", "root.items[2].name"]
     """
-    paths = []
+    paths: list[str] = []
 
-    def traverse(node: ProbabilisticASTNode):
+    def traverse(node: ProbabilisticASTNode) -> None:
         if node.confidence <= max_confidence:
             paths.append(node.path)
         for child in node.children:

@@ -16,7 +16,7 @@ Use Cases:
 - L-gent catalog search: Use ###ARTIFACT: anchor for results
 """
 
-from typing import Generic, Iterator, Optional, TypeVar
+from typing import Any, Callable, Generic, Iterator, Optional, TypeVar, cast
 
 from agents.p.core import ParserConfig, ParseResult
 
@@ -36,7 +36,7 @@ class AnchorBasedParser(Generic[A]):
     def __init__(
         self,
         anchor: str = "###ITEM:",
-        extractor: Optional[callable] = None,
+        extractor: Optional[Callable[[str], A]] = None,
         config: Optional[ParserConfig] = None,
     ):
         """
@@ -49,7 +49,12 @@ class AnchorBasedParser(Generic[A]):
             config: Parser configuration
         """
         self.anchor = anchor
-        self.extractor = extractor or (lambda x: x)
+        # When no extractor is provided, we return str as A (user must use AnchorBasedParser[str])
+        self._extractor: Callable[[str], A] = (
+            extractor
+            if extractor is not None
+            else cast(Callable[[str], A], lambda x: x)
+        )
         self.config = config or ParserConfig()
 
     def parse(self, text: str) -> ParseResult[list[A]]:
@@ -106,7 +111,7 @@ class AnchorBasedParser(Generic[A]):
 
         # Apply extractor function to convert text to A
         try:
-            items = [self.extractor(item) for item in items_text]
+            items: list[A] = [self._extractor(item) for item in items_text]
         except Exception as e:
             return ParseResult(
                 success=False,
@@ -152,7 +157,7 @@ class AnchorBasedParser(Generic[A]):
                     item_text = part.split("\n")[0].strip()
                     if item_text:
                         try:
-                            item = self.extractor(item_text)
+                            item = self._extractor(item_text)
                             items.append(item)
                         except Exception:
                             # Skip malformed items in streaming
@@ -184,7 +189,7 @@ class AnchorBasedParser(Generic[A]):
                 item_text = part.split("\n")[0].strip()
                 if item_text:
                     try:
-                        item = self.extractor(item_text)
+                        item = self._extractor(item_text)
                         items.append(item)
                     except Exception:
                         pass
@@ -209,14 +214,14 @@ class AnchorBasedParser(Generic[A]):
                 strategy="anchor-based-stream",
             )
 
-    def configure(self, **config) -> "AnchorBasedParser[A]":
+    def configure(self, **config: Any) -> "AnchorBasedParser[A]":
         """Return new parser with updated configuration."""
         new_config = ParserConfig(**{**vars(self.config), **config})
         new_config.validate()
 
         return AnchorBasedParser(
             anchor=self.anchor,
-            extractor=self.extractor,
+            extractor=self._extractor,
             config=new_config,
         )
 

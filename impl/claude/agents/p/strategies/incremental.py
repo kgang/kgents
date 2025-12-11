@@ -43,7 +43,7 @@ class IncrementalNode:
     children: list["IncrementalNode"] = field(default_factory=list)
     key: Optional[str] = None  # For object properties
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to plain dict for serialization."""
         result = {
             "type": self.type,
@@ -467,7 +467,7 @@ class IncrementalParser:
             min_conf = min(min_conf, child_min)
         return min_conf
 
-    def configure(self, **config) -> "IncrementalParser":
+    def configure(self, **config: Any) -> "IncrementalParser":
         """Return new parser with updated configuration."""
         new_config = ParserConfig(**{**vars(self.config), **config})
         new_config.validate()

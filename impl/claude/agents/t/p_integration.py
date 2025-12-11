@@ -12,7 +12,7 @@ P-gents ensure that data crossing tool boundaries is well-formed and type-safe.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any, Iterator, Optional
 
 from agents.p.core import Parser, ParserConfig, ParseResult
 from agents.p.strategies.anchor import AnchorBasedParser
@@ -23,7 +23,7 @@ from agents.p.strategies.probabilistic_ast import (
 
 
 @dataclass
-class SchemaParser(Parser[dict]):
+class SchemaParser(Parser[dict[str, Any]]):
     """
     Parse MCP tool schema into kgents Tool type signature.
 
@@ -42,14 +42,14 @@ class SchemaParser(Parser[dict]):
 
     config: ParserConfig = field(default_factory=ParserConfig)
 
-    def parse(self, text: str) -> ParseResult[dict]:
+    def parse(self, text: str) -> ParseResult[dict[str, Any]]:
         """Parse MCP schema into Tool signature."""
         # Try probabilistic AST first
         prob_parser = ProbabilisticASTParser(config=self.config)
         result = prob_parser.parse(text)
 
-        if not result.success:
-            return ParseResult[dict](
+        if not result.success or result.value is None:
+            return ParseResult[dict[str, Any]](
                 success=False, error=f"Failed to parse schema: {result.error}"
             )
 
@@ -57,18 +57,20 @@ class SchemaParser(Parser[dict]):
         schema = query_confident_fields(result.value, min_confidence=0.7)
 
         if not schema or not isinstance(schema, dict):
-            return ParseResult[dict](
+            return ParseResult[dict[str, Any]](
                 success=False, error="Schema is not a valid object"
             )
 
         # Convert to Tool signature
-        tool_sig = {}
+        tool_sig: dict[str, Any] = {}
 
         # Extract name
         if "name" in schema:
             tool_sig["name"] = schema["name"]
         else:
-            return ParseResult[dict](success=False, error="Schema missing 'name' field")
+            return ParseResult[dict[str, Any]](
+                success=False, error="Schema missing 'name' field"
+            )
 
         # Infer input type from schema
         if "inputSchema" in schema:
@@ -92,7 +94,7 @@ class SchemaParser(Parser[dict]):
         tool_sig["input_schema"] = schema.get("inputSchema", {})
         tool_sig["output_schema"] = schema.get("outputSchema", {})
 
-        return ParseResult[dict](
+        return ParseResult[dict[str, Any]](
             success=True,
             value=tool_sig,
             confidence=result.confidence,
@@ -101,7 +103,7 @@ class SchemaParser(Parser[dict]):
             metadata={"original_confidence": result.confidence},
         )
 
-    def _infer_type_name(self, json_schema: dict, default: str) -> str:
+    def _infer_type_name(self, json_schema: dict[str, Any], default: str) -> str:
         """Infer a type name from JSON schema."""
         if isinstance(json_schema, dict):
             schema_type = json_schema.get("type", "object")
@@ -119,25 +121,28 @@ class SchemaParser(Parser[dict]):
             elif schema_type == "object":
                 # Check if there's a title
                 if "title" in json_schema:
-                    return json_schema["title"]
+                    title = json_schema["title"]
+                    return str(title) if title else default
                 return default
             else:
                 return default
         return default
 
-    def parse_stream(self, tokens: list[str]) -> list[ParseResult[dict]]:
+    def parse_stream(
+        self, tokens: Iterator[str]
+    ) -> Iterator[ParseResult[dict[str, Any]]]:
         """Stream parsing (buffer and parse once)."""
         text = "".join(tokens)
-        return [self.parse(text)]
+        yield self.parse(text)
 
-    def configure(self, **config_updates) -> "SchemaParser":
+    def configure(self, **config_updates: Any) -> "SchemaParser":
         """Return new parser with updated configuration."""
         new_config = ParserConfig(**{**self.config.__dict__, **config_updates})
         return SchemaParser(config=new_config)
 
 
 @dataclass
-class InputParser(Parser[dict]):
+class InputParser(Parser[dict[str, Any]]):
     """
     Parse natural language into tool parameters.
 
@@ -155,14 +160,16 @@ class InputParser(Parser[dict]):
     parameter_names: list[str] = field(default_factory=list)
     config: ParserConfig = field(default_factory=ParserConfig)
 
-    def parse(self, text: str) -> ParseResult[dict]:
+    def parse(self, text: str) -> ParseResult[dict[str, Any]]:
         """Parse natural language into parameters."""
-        params = {}
-        confidence_scores = []
+        params: dict[str, Any] = {}
+        confidence_scores: list[float] = []
 
         # Try to extract parameters using anchors
         for param_name in self.parameter_names:
-            anchor_parser = AnchorBasedParser(anchor=f"###{param_name}:")
+            anchor_parser: AnchorBasedParser[list[str]] = AnchorBasedParser(
+                anchor=f"###{param_name}:"
+            )
             result = anchor_parser.parse(text)
 
             if result.success and result.value:
@@ -172,16 +179,18 @@ class InputParser(Parser[dict]):
         if not params:
             # Fallback: try to parse as JSON
             prob_parser = ProbabilisticASTParser(config=self.config)
-            result = prob_parser.parse(text)
+            prob_result = prob_parser.parse(text)
 
-            if result.success:
-                confident = query_confident_fields(result.value, min_confidence=0.6)
+            if prob_result.success and prob_result.value is not None:
+                confident = query_confident_fields(
+                    prob_result.value, min_confidence=0.6
+                )
                 if confident and isinstance(confident, dict):
                     params = confident
-                    confidence_scores = [result.confidence]
+                    confidence_scores = [prob_result.confidence]
 
         if not params:
-            return ParseResult[dict](
+            return ParseResult[dict[str, Any]](
                 success=False, error="No parameters found in input"
             )
 
@@ -191,7 +200,7 @@ class InputParser(Parser[dict]):
             else 0.5
         )
 
-        return ParseResult[dict](
+        return ParseResult[dict[str, Any]](
             success=True,
             value=params,
             confidence=avg_confidence,
@@ -199,12 +208,14 @@ class InputParser(Parser[dict]):
             metadata={"param_count": len(params)},
         )
 
-    def parse_stream(self, tokens: list[str]) -> list[ParseResult[dict]]:
+    def parse_stream(
+        self, tokens: Iterator[str]
+    ) -> Iterator[ParseResult[dict[str, Any]]]:
         """Stream parsing."""
         text = "".join(tokens)
-        return [self.parse(text)]
+        yield self.parse(text)
 
-    def configure(self, **config_updates) -> "InputParser":
+    def configure(self, **config_updates: Any) -> "InputParser":
         """Return new parser with updated configuration."""
         new_config = ParserConfig(**{**self.config.__dict__, **config_updates})
         return InputParser(parameter_names=self.parameter_names, config=new_config)
@@ -236,6 +247,8 @@ class OutputParser(Parser[Any]):
             )
 
         # Extract confident value
+        if result.value is None:
+            return ParseResult[Any](success=False, error="Parse result has no value")
         confident_value = query_confident_fields(
             result.value, min_confidence=self.config.min_confidence
         )
@@ -254,19 +267,19 @@ class OutputParser(Parser[Any]):
             },
         )
 
-    def parse_stream(self, tokens: list[str]) -> list[ParseResult[Any]]:
+    def parse_stream(self, tokens: Iterator[str]) -> Iterator[ParseResult[Any]]:
         """Stream parsing."""
         text = "".join(tokens)
-        return [self.parse(text)]
+        yield self.parse(text)
 
-    def configure(self, **config_updates) -> "OutputParser":
+    def configure(self, **config_updates: Any) -> "OutputParser":
         """Return new parser with updated configuration."""
         new_config = ParserConfig(**{**self.config.__dict__, **config_updates})
         return OutputParser(expected_type=self.expected_type, config=new_config)
 
 
 @dataclass
-class ErrorParser(Parser[dict]):
+class ErrorParser(Parser[dict[str, Any]]):
     """
     Parse tool errors into recovery strategies.
 
@@ -280,13 +293,13 @@ class ErrorParser(Parser[dict]):
 
     config: ParserConfig = field(default_factory=ParserConfig)
 
-    def parse(self, text: str) -> ParseResult[dict]:
+    def parse(self, text: str) -> ParseResult[dict[str, Any]]:
         """Parse error into recovery strategy."""
         # Parse error structure
         prob_parser = ProbabilisticASTParser(config=self.config)
         result = prob_parser.parse(text)
 
-        if not result.success:
+        if not result.success or result.value is None:
             # Raw error string
             return self._classify_raw_error(text)
 
@@ -299,7 +312,7 @@ class ErrorParser(Parser[dict]):
         # Classify error type
         error_classification = self._classify_error(error_data)
 
-        return ParseResult[dict](
+        return ParseResult[dict[str, Any]](
             success=True,
             value=error_classification,
             confidence=result.confidence * 0.9,  # Slightly reduce for classification
@@ -308,7 +321,7 @@ class ErrorParser(Parser[dict]):
             metadata={"original_error": error_data},
         )
 
-    def _classify_raw_error(self, text: str) -> ParseResult[dict]:
+    def _classify_raw_error(self, text: str) -> ParseResult[dict[str, Any]]:
         """Classify error from raw text."""
         text_lower = text.lower()
 
@@ -332,7 +345,7 @@ class ErrorParser(Parser[dict]):
             error_type = "unknown"
             recovery = "manual_intervention"
 
-        return ParseResult[dict](
+        return ParseResult[dict[str, Any]](
             success=True,
             value={
                 "error_type": error_type,
@@ -344,7 +357,7 @@ class ErrorParser(Parser[dict]):
             strategy="error-heuristic",
         )
 
-    def _classify_error(self, error_data: dict) -> dict:
+    def _classify_error(self, error_data: dict[str, Any]) -> dict[str, Any]:
         """Classify error from structured data."""
         # Check for status code
         code = (
@@ -396,14 +409,25 @@ class ErrorParser(Parser[dict]):
                 pass
 
         # Fallback to message-based classification
-        return self._classify_raw_error(message).value
+        raw_result = self._classify_raw_error(message)
+        return (
+            raw_result.value
+            if raw_result.value is not None
+            else {
+                "error_type": "unknown",
+                "recovery": "manual_intervention",
+                "details": message,
+            }
+        )
 
-    def parse_stream(self, tokens: list[str]) -> list[ParseResult[dict]]:
+    def parse_stream(
+        self, tokens: Iterator[str]
+    ) -> Iterator[ParseResult[dict[str, Any]]]:
         """Stream parsing."""
         text = "".join(tokens)
-        return [self.parse(text)]
+        yield self.parse(text)
 
-    def configure(self, **config_updates) -> "ErrorParser":
+    def configure(self, **config_updates: Any) -> "ErrorParser":
         """Return new parser with updated configuration."""
         new_config = ParserConfig(**{**self.config.__dict__, **config_updates})
         return ErrorParser(config=new_config)

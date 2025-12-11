@@ -201,7 +201,7 @@ class ReflectionParser(Generic[A]):
         text = "".join(tokens)
         yield self.parse(text)
 
-    def configure(self, **config) -> "ReflectionParser[A]":
+    def configure(self, **config: Any) -> "ReflectionParser[A]":
         """Return new parser with updated configuration."""
         new_config = ParserConfig(**{**vars(self.config), **config})
         new_config.validate()
@@ -252,7 +252,7 @@ def create_reflection_parser_with_llm(
     base_parser: Parser[Any],
     llm_callable: Callable[[str], str],
     config: Optional[ParserConfig] = None,
-) -> ReflectionParser:
+) -> "ReflectionParser[Any]":
     """
     Create reflection parser with LLM callable.
 

@@ -202,7 +202,7 @@ class IdentityParser(Generic[A]):
                 partial=True,
             )
 
-    def configure(self, **config: Any) -> "IdentityParser":
+    def configure(self, **config: Any) -> "IdentityParser[A]":
         """Return new IdentityParser with updated config."""
         new_config = ParserConfig(**{**vars(self.config), **config})
         new_config.validate()

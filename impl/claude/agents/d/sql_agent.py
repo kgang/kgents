@@ -22,6 +22,7 @@ from typing import (
     List,
     Type,
     TypeVar,
+    cast,
     get_args,
     get_origin,
     get_type_hints,
@@ -52,17 +53,21 @@ class SQLBackend(ABC):
         ...
 
     @abstractmethod
-    async def execute(self, query: str, params: tuple = ()) -> None:
+    async def execute(self, query: str, params: tuple[Any, ...] = ()) -> None:
         """Execute a query without returning results."""
         ...
 
     @abstractmethod
-    async def fetchone(self, query: str, params: tuple = ()) -> tuple | None:
+    async def fetchone(
+        self, query: str, params: tuple[Any, ...] = ()
+    ) -> tuple[Any, ...] | None:
         """Execute query and return single row."""
         ...
 
     @abstractmethod
-    async def fetchall(self, query: str, params: tuple = ()) -> List[tuple]:
+    async def fetchall(
+        self, query: str, params: tuple[Any, ...] = ()
+    ) -> List[tuple[Any, ...]]:
         """Execute query and return all rows."""
         ...
 
@@ -72,7 +77,7 @@ class SQLiteBackend(SQLBackend):
 
     def __init__(self, db_path: str):
         self.db_path = db_path
-        self._conn = None
+        self._conn: Any = None  # aiosqlite.Connection when connected
 
     async def connect(self) -> None:
         try:
@@ -89,23 +94,29 @@ class SQLiteBackend(SQLBackend):
             await self._conn.close()
             self._conn = None
 
-    async def execute(self, query: str, params: tuple = ()) -> None:
+    async def execute(self, query: str, params: tuple[Any, ...] = ()) -> None:
         if not self._conn:
             raise StorageError("Database not connected")
         await self._conn.execute(query, params)
         await self._conn.commit()
 
-    async def fetchone(self, query: str, params: tuple = ()) -> tuple | None:
+    async def fetchone(
+        self, query: str, params: tuple[Any, ...] = ()
+    ) -> tuple[Any, ...] | None:
         if not self._conn:
             raise StorageError("Database not connected")
         cursor = await self._conn.execute(query, params)
-        return await cursor.fetchone()
+        result = await cursor.fetchone()
+        return tuple(result) if result else None
 
-    async def fetchall(self, query: str, params: tuple = ()) -> List[tuple]:
+    async def fetchall(
+        self, query: str, params: tuple[Any, ...] = ()
+    ) -> List[tuple[Any, ...]]:
         if not self._conn:
             raise StorageError("Database not connected")
         cursor = await self._conn.execute(query, params)
-        return await cursor.fetchall()
+        rows = await cursor.fetchall()
+        return [tuple(row) for row in rows]
 
 
 class PostgreSQLBackend(SQLBackend):
@@ -113,7 +124,7 @@ class PostgreSQLBackend(SQLBackend):
 
     def __init__(self, connection_string: str):
         self.connection_string = connection_string
-        self._conn = None
+        self._conn: Any = None  # asyncpg.Connection when connected
 
     async def connect(self) -> None:
         try:
@@ -130,21 +141,25 @@ class PostgreSQLBackend(SQLBackend):
             await self._conn.close()
             self._conn = None
 
-    async def execute(self, query: str, params: tuple = ()) -> None:
+    async def execute(self, query: str, params: tuple[Any, ...] = ()) -> None:
         if not self._conn:
             raise StorageError("Database not connected")
         # Convert SQLite-style ? placeholders to PostgreSQL $1, $2, ...
         pg_query = self._convert_placeholders(query)
         await self._conn.execute(pg_query, *params)
 
-    async def fetchone(self, query: str, params: tuple = ()) -> tuple | None:
+    async def fetchone(
+        self, query: str, params: tuple[Any, ...] = ()
+    ) -> tuple[Any, ...] | None:
         if not self._conn:
             raise StorageError("Database not connected")
         pg_query = self._convert_placeholders(query)
         row = await self._conn.fetchrow(pg_query, *params)
         return tuple(row) if row else None
 
-    async def fetchall(self, query: str, params: tuple = ()) -> List[tuple]:
+    async def fetchall(
+        self, query: str, params: tuple[Any, ...] = ()
+    ) -> List[tuple[Any, ...]]:
         if not self._conn:
             raise StorageError("Database not connected")
         pg_query = self._convert_placeholders(query)

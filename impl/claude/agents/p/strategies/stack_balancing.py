@@ -20,7 +20,7 @@ Use Cases:
 """
 
 import re
-from typing import Iterator, Literal, Optional
+from typing import Any, Iterator, Literal, Optional
 
 from agents.p.core import ParserConfig, ParseResult
 
@@ -95,8 +95,8 @@ class StackBalancingParser:
 
     def _parse_html(self, text: str) -> ParseResult[str]:
         """Parse HTML with tag balancing."""
-        stack = []
-        repairs = []
+        stack: list[str] = []
+        repairs: list[str] = []
 
         # Find all tags
         tags = list(self.tag_pattern.finditer(text))
@@ -200,7 +200,7 @@ class StackBalancingParser:
     def _parse_stream_html(self, tokens: Iterator[str]) -> Iterator[ParseResult[str]]:
         """Stream parse HTML with progressive balancing."""
         buffer = ""
-        stack = []
+        stack: list[str] = []
 
         for token in tokens:
             buffer += token
@@ -343,7 +343,7 @@ class StackBalancingParser:
             },
         )
 
-    def configure(self, **config) -> "StackBalancingParser":
+    def configure(self, **config: Any) -> "StackBalancingParser":
         """Return new parser with updated configuration."""
         new_config = ParserConfig(**{**vars(self.config), **config})
         new_config.validate()

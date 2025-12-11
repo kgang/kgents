@@ -127,9 +127,9 @@ class HypothesisResponseParser:
         Raises:
             ValueError: If no valid hypotheses found in response
         """
-        hypotheses = []
-        reasoning_chain = []
-        suggested_tests = []
+        hypotheses: list[Hypothesis] = []
+        reasoning_chain: list[str] = []
+        suggested_tests: list[str] = []
 
         lines = response.strip().split("\n")
         section: Optional[str] = None

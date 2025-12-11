@@ -1,6 +1,6 @@
 # HYDRATE.md - kgents Session Context
 
-**Status**: 6,945+ tests | Branch: `main`
+**Status**: 7,025+ tests | Branch: `main`
 
 ## Current: K-Terrarium Phase 4 (Live Reload Dev Mode)
 
@@ -265,7 +265,7 @@ cd impl/claude && uv run mypy --strict --explicit-package-bases agents/ bootstra
 
 ## Tech Debt Inventory
 
-**Mypy**: 3,880 strict errors baselined in `mypy-baseline.txt` (reduced from 7,516). CI enforces **no new errors** on push.
+**Mypy**: ~3,974 strict errors baselined in `mypy-baseline.txt` (reduced from 7,516). CI enforces **no new errors** on push.
 ```bash
 # Check for new errors (CI blocks on any new errors)
 cd impl/claude && uv run mypy --strict --explicit-package-bases agents/ bootstrap/ runtime/ 2>&1 | uv run mypy-baseline filter

@@ -18,7 +18,7 @@ Use Cases:
 import json
 import time
 from dataclasses import dataclass, field
-from typing import Generic, Optional, TypeVar
+from typing import Any, Generic, Iterator, Optional, TypeVar
 
 from agents.p.core import Parser, ParserConfig, ParseResult
 
@@ -51,7 +51,7 @@ class FormatStats:
             else 0.0
         )
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dict for serialization."""
         return {
             "name": self.name,
@@ -74,7 +74,7 @@ class DriftReport:
     drift_detected: bool = False
     drift_reason: Optional[str] = None
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dict for serialization."""
         return {
             "formats": {name: stats.to_dict() for name, stats in self.formats.items()},
@@ -128,7 +128,7 @@ class EvolvingParser(Generic[A], Parser[A]):
     _last_dominant: Optional[str] = field(default=None, init=False, repr=False)
     _drift_threshold: float = 0.15  # 15% change in dominant format triggers drift
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Initialize stats for all strategies."""
         if not self._stats:
             self._stats = {
@@ -235,7 +235,11 @@ class EvolvingParser(Generic[A], Parser[A]):
         drift_detected = False
         drift_reason = None
 
-        if self._last_dominant and current_dominant != self._last_dominant:
+        if (
+            self._last_dominant
+            and current_dominant
+            and current_dominant != self._last_dominant
+        ):
             old_stats = self._stats[self._last_dominant]
             new_stats = self._stats[current_dominant]
 
@@ -282,18 +286,18 @@ class EvolvingParser(Generic[A], Parser[A]):
 
         self._total_parses = data.get("total_parses", 0)
 
-    def parse_stream(self, tokens: list[str]) -> list[ParseResult[A]]:
+    def parse_stream(self, tokens: Iterator[str]) -> Iterator[ParseResult[A]]:
         """Stream parsing (buffers and parses complete)."""
         text = "".join(tokens)
-        return [self.parse(text)]
+        yield self.parse(text)
 
-    def configure(self, **config_updates) -> "EvolvingParser[A]":
+    def configure(self, **config_updates: Any) -> "EvolvingParser[A]":
         """Return new parser with updated configuration."""
         new_config = ParserConfig(**{**self.config.__dict__, **config_updates})
         return EvolvingParser(strategies=self.strategies, config=new_config)
 
 
-def create_multi_format_parser(formats: dict[str, Parser]) -> EvolvingParser:
+def create_multi_format_parser(formats: dict[str, Parser[A]]) -> "EvolvingParser[A]":
     r"""
     Create an EvolvingParser that learns from multiple formats.
 

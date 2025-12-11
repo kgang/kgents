@@ -11,7 +11,7 @@ and type-safe before execution.
 """
 
 from dataclasses import dataclass
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Iterator, Optional
 
 from agents.p.core import Parser, ParserConfig, ParseResult
 from agents.p.strategies.anchor import AnchorBasedParser
@@ -20,7 +20,7 @@ from agents.p.strategies.reflection import ReflectionParser
 
 
 @dataclass
-class IntentParser(Parser[dict]):
+class IntentParser(Parser[dict[str, Any]]):
     """
     Parse natural language intent into structured AgentIntent.
 
@@ -41,16 +41,24 @@ class IntentParser(Parser[dict]):
 
     config: ParserConfig = ParserConfig()
 
-    def parse(self, text: str) -> ParseResult[dict]:
+    def parse(self, text: str) -> ParseResult[dict[str, Any]]:
         """Parse intent from text with anchors."""
         # Use anchor-based extraction for each field
-        behavior_parser = AnchorBasedParser(anchor="###BEHAVIOR:")
-        constraint_parser = AnchorBasedParser(anchor="###CONSTRAINT:")
-        input_parser = AnchorBasedParser(anchor="###INPUT:")
-        output_parser = AnchorBasedParser(anchor="###OUTPUT:")
+        behavior_parser: AnchorBasedParser[list[str]] = AnchorBasedParser(
+            anchor="###BEHAVIOR:"
+        )
+        constraint_parser: AnchorBasedParser[list[str]] = AnchorBasedParser(
+            anchor="###CONSTRAINT:"
+        )
+        input_parser: AnchorBasedParser[list[str]] = AnchorBasedParser(
+            anchor="###INPUT:"
+        )
+        output_parser: AnchorBasedParser[list[str]] = AnchorBasedParser(
+            anchor="###OUTPUT:"
+        )
 
-        intent = {}
-        confidence_scores = []
+        intent: dict[str, Any] = {}
+        confidence_scores: list[float] = []
 
         # Extract behavior
         behavior_result = behavior_parser.parse(text)
@@ -89,7 +97,7 @@ class IntentParser(Parser[dict]):
             intent["output_type"] = "Any"
 
         if not intent.get("behavior"):
-            return ParseResult[dict](
+            return ParseResult[dict[str, Any]](
                 success=False, error="No behavior specified in intent"
             )
 
@@ -99,7 +107,7 @@ class IntentParser(Parser[dict]):
             else 0.5
         )
 
-        return ParseResult[dict](
+        return ParseResult[dict[str, Any]](
             success=True,
             value=intent,
             confidence=avg_confidence,
@@ -107,12 +115,14 @@ class IntentParser(Parser[dict]):
             metadata={"fields_extracted": len(intent)},
         )
 
-    def parse_stream(self, tokens: list[str]) -> list[ParseResult[dict]]:
+    def parse_stream(
+        self, tokens: Iterator[str]
+    ) -> Iterator[ParseResult[dict[str, Any]]]:
         """Stream parsing (buffer and parse once)."""
         text = "".join(tokens)
-        return [self.parse(text)]
+        yield self.parse(text)
 
-    def configure(self, **config_updates) -> "IntentParser":
+    def configure(self, **config_updates: Any) -> "IntentParser":
         """Return new parser with updated configuration."""
         new_config = ParserConfig(**{**self.config.__dict__, **config_updates})
         return IntentParser(config=new_config)
@@ -191,12 +201,12 @@ class SourceCodeParser(Parser[str]):
                 success=False, error=f"Python syntax error: {e}", strategy="python-ast"
             )
 
-    def parse_stream(self, tokens: list[str]) -> list[ParseResult[str]]:
+    def parse_stream(self, tokens: Iterator[str]) -> Iterator[ParseResult[str]]:
         """Stream parsing (buffer until valid Python)."""
         text = "".join(tokens)
-        return [self.parse(text)]
+        yield self.parse(text)
 
-    def configure(self, **config_updates) -> "SourceCodeParser":
+    def configure(self, **config_updates: Any) -> "SourceCodeParser":
         """Return new parser with updated configuration."""
         new_config = ParserConfig(**{**self.config.__dict__, **config_updates})
         return SourceCodeParser(config=new_config)
@@ -231,7 +241,11 @@ class AgentOutputParser(Parser[Any]):
         prob_parser = ProbabilisticASTParser(config=self.config)
         result = prob_parser.parse(text)
 
-        if result.success and result.confidence >= self.config.min_confidence:
+        if (
+            result.success
+            and result.confidence >= self.config.min_confidence
+            and result.value is not None
+        ):
             # Extract the actual value from the AST node
             return ParseResult[Any](
                 success=True,
@@ -245,20 +259,32 @@ class AgentOutputParser(Parser[Any]):
 
         # Try reflection if LLM available
         if self.llm_func:
-            reflection_parser = ReflectionParser(
-                base_parser=prob_parser, llm_func=self.llm_func, config=self.config
-            )
-            result = reflection_parser.parse(text)
+            from agents.p.strategies.reflection import ReflectionContext
 
-            if result.success:
+            def llm_fix_wrapper(
+                original: str, error: str, context: ReflectionContext
+            ) -> str:
+                # Simple wrapper that ignores context and uses original llm_func
+                return (
+                    self.llm_func(f"Fix this JSON: {original}\nError: {error}")
+                    if self.llm_func
+                    else original
+                )
+
+            reflection_parser: ReflectionParser[Any] = ReflectionParser(
+                base_parser=prob_parser, llm_fix_fn=llm_fix_wrapper, config=self.config
+            )
+            reflection_result = reflection_parser.parse(text)
+
+            if reflection_result.success and reflection_result.value is not None:
                 return ParseResult[Any](
                     success=True,
-                    value=result.value.value
-                    if hasattr(result.value, "value")
-                    else result.value,
-                    confidence=result.confidence,
+                    value=reflection_result.value.value
+                    if hasattr(reflection_result.value, "value")
+                    else reflection_result.value,
+                    confidence=reflection_result.confidence,
                     strategy="reflection",
-                    repairs=result.repairs,
+                    repairs=reflection_result.repairs,
                 )
 
         # Fallback: return original text with low confidence
@@ -270,12 +296,12 @@ class AgentOutputParser(Parser[Any]):
             repairs=["Could not parse, returning raw text"],
         )
 
-    def parse_stream(self, tokens: list[str]) -> list[ParseResult[Any]]:
+    def parse_stream(self, tokens: Iterator[str]) -> Iterator[ParseResult[Any]]:
         """Stream parsing."""
         text = "".join(tokens)
-        return [self.parse(text)]
+        yield self.parse(text)
 
-    def configure(self, **config_updates) -> "AgentOutputParser":
+    def configure(self, **config_updates: Any) -> "AgentOutputParser":
         """Return new parser with updated configuration."""
         new_config = ParserConfig(**{**self.config.__dict__, **config_updates})
         return AgentOutputParser(config=new_config, llm_func=self.llm_func)

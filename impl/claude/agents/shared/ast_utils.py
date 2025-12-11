@@ -379,7 +379,7 @@ def extract_functions(tree: ast.AST) -> list[FunctionInfo]:
                 continue
 
             # Check for docstring
-            has_docstring = (
+            has_docstring = bool(
                 node.body
                 and isinstance(node.body[0], ast.Expr)
                 and isinstance(node.body[0].value, ast.Constant)
@@ -428,7 +428,7 @@ def extract_classes(tree: ast.AST) -> list[ClassInfo]:
 
             for item in node.body:
                 if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                    has_docstring = (
+                    method_has_docstring = bool(
                         item.body
                         and isinstance(item.body[0], ast.Expr)
                         and isinstance(item.body[0].value, ast.Constant)
@@ -450,13 +450,13 @@ def extract_classes(tree: ast.AST) -> list[ClassInfo]:
                             args=tuple(a.arg for a in item.args.args),
                             is_async=isinstance(item, ast.AsyncFunctionDef),
                             is_private=item.name.startswith("_"),
-                            has_docstring=has_docstring,
+                            has_docstring=method_has_docstring,
                             return_annotation=return_annotation,
                         )
                     )
 
             # Check for class docstring
-            has_docstring = (
+            class_has_docstring = bool(
                 node.body
                 and isinstance(node.body[0], ast.Expr)
                 and isinstance(node.body[0].value, ast.Constant)
@@ -478,7 +478,7 @@ def extract_classes(tree: ast.AST) -> list[ClassInfo]:
                     end_lineno=getattr(node, "end_lineno", None),
                     methods=tuple(methods),
                     bases=tuple(bases),
-                    has_docstring=has_docstring,
+                    has_docstring=class_has_docstring,
                 )
             )
 
@@ -698,7 +698,7 @@ class ComplexityVisitor(ASTVisitor[int]):
     Complexity = 1 + decision points (if, for, while, etc.)
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize with base complexity of 1."""
         self._complexity = 1
 

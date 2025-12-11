@@ -22,7 +22,7 @@ Use Cases:
 """
 
 from dataclasses import dataclass
-from typing import Any, Callable, Literal, Optional
+from typing import Any, Callable, Iterator, Literal, Optional
 
 from agents.p.core import ParserConfig, ParseResult
 
@@ -82,7 +82,7 @@ class StructuralDecouplingParser:
         self.llm_generate = llm_generate
         self.config = config or ParserConfig()
 
-    def parse(self, prompt_context: str) -> ParseResult[dict]:
+    def parse(self, prompt_context: str) -> ParseResult[dict[str, Any]]:
         """
         Parse by generating structure and filling with LLM values.
 
@@ -175,17 +175,17 @@ class StructuralDecouplingParser:
 
         if field_def.type == "string":
             # Remove quotes if present
-            value = raw_value.strip("\"'")
-            return value, 0.95
+            str_value = raw_value.strip("\"'")
+            return str_value, 0.95
 
         elif field_def.type == "number":
             try:
                 # Try to parse as number
                 if "." in raw_value or "e" in raw_value.lower():
-                    value = float(raw_value)
+                    num_value: float | int = float(raw_value)
                 else:
-                    value = int(raw_value)
-                return value, 0.95
+                    num_value = int(raw_value)
+                return num_value, 0.95
             except ValueError:
                 # Extract first number from text
                 import re
@@ -193,8 +193,10 @@ class StructuralDecouplingParser:
                 match = re.search(r"-?\d+\.?\d*", raw_value)
                 if match:
                     num_str = match.group()
-                    value = float(num_str) if "." in num_str else int(num_str)
-                    return value, 0.7
+                    extracted_num: float | int = (
+                        float(num_str) if "." in num_str else int(num_str)
+                    )
+                    return extracted_num, 0.7
                 else:
                     # Default to 0
                     return 0, 0.3
@@ -266,7 +268,9 @@ class StructuralDecouplingParser:
         }
         return defaults.get(field_type, None)
 
-    def parse_stream(self, tokens):
+    def parse_stream(
+        self, tokens: Iterator[str]
+    ) -> Iterator[ParseResult[dict[str, Any]]]:
         """
         Stream parsing not applicable for structural decoupling.
 
@@ -276,7 +280,7 @@ class StructuralDecouplingParser:
             "Structural decoupling doesn't support streaming input"
         )
 
-    def configure(self, **config) -> "StructuralDecouplingParser":
+    def configure(self, **config: Any) -> "StructuralDecouplingParser":
         """Return new parser with updated configuration."""
         new_config = ParserConfig(**{**vars(self.config), **config})
         new_config.validate()
@@ -330,7 +334,9 @@ def structural_decoupling_parser(
 # Helper builders for common schemas
 
 
-def simple_schema(**field_types) -> dict[str, StructuredField]:
+def simple_schema(
+    **field_types: Literal["string", "number", "boolean", "array", "object"],
+) -> dict[str, StructuredField]:
     """
     Build simple schema from field names and types.
 
@@ -355,7 +361,7 @@ def simple_schema(**field_types) -> dict[str, StructuredField]:
 
 def field_with_prompt(
     name: str,
-    type: str,
+    type: Literal["string", "number", "boolean", "array", "object"],
     prompt_template: str,
     validator: Optional[Callable[[Any], bool]] = None,
 ) -> StructuredField:

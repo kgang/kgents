@@ -12,7 +12,7 @@ Architecture:
 
 from __future__ import annotations
 
-from typing import Iterator, Optional
+from typing import Any, Iterator, Optional
 
 from agents.p.core import (
     Parser,
@@ -124,7 +124,7 @@ class BgentHypothesisParser:
         final_text = "".join(accumulated)
         yield self.parse(final_text)
 
-    def configure(self, **config) -> "BgentHypothesisParser":
+    def configure(self, **config: Any) -> "BgentHypothesisParser":
         """Return new parser with updated P-gents config."""
         new_config = PParserConfig(**{**vars(self.config), **config})
         new_config.validate()

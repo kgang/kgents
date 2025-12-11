@@ -224,7 +224,7 @@ def _extract_tone(text: str) -> str | None:
 
 def _analyze_dependencies(text: str) -> list[Dependency]:
     """Identify external dependencies mentioned in the text."""
-    dependencies = []
+    dependencies: list[Dependency] = []
     lower_text = text.lower()
 
     # Dependency detection patterns

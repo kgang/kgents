@@ -84,7 +84,7 @@ def identity_lens() -> Lens[S, S]:
     return Lens(get=lambda s: s, set=lambda s, a: a)
 
 
-def key_lens(key: str) -> Lens[dict, Any]:
+def key_lens(key: str) -> Lens[dict[str, Any], Any]:
     """
     Lens focusing on a dictionary key.
 
@@ -134,7 +134,7 @@ def field_lens(field_name: str) -> Lens[Any, Any]:
     )
 
 
-def index_lens(i: int) -> Lens[list, Any]:
+def index_lens(i: int) -> Lens[list[Any], Any]:
     """
     Lens focusing on list element at index i.
 
@@ -244,7 +244,9 @@ def verify_put_put_law(lens: Lens[S, A], state: S, a1: A, a2: A) -> bool:
     return result1 == result2
 
 
-def verify_lens_laws(lens: Lens[S, A], state: S, value1: A, value2: A) -> dict:
+def verify_lens_laws(
+    lens: Lens[S, A], state: S, value1: A, value2: A
+) -> dict[str, bool]:
     """
     Verify all three lens laws.
 
@@ -314,7 +316,7 @@ class Prism(Generic[S, A]):
             preview=lambda s: (
                 other.preview(a) if (a := self.preview(s)) is not None else None
             ),
-            review=lambda b: self.review(other.review(b)) if self.review else None,
+            review=lambda b: self.review(other.review(b)),
             modify_if_present=lambda s, f: self.modify_if_present(
                 s, lambda a: other.modify_if_present(a, f)
             ),
@@ -325,7 +327,7 @@ class Prism(Generic[S, A]):
         return self.compose(other)
 
 
-def optional_key_prism(key: str) -> Prism[dict, Any]:
+def optional_key_prism(key: str) -> Prism[dict[str, Any], Any]:
     """
     Prism focusing on an optional dictionary key.
 
@@ -380,7 +382,7 @@ def optional_field_prism(field_name: str) -> Prism[Any, Any]:
     )
 
 
-def optional_index_prism(i: int) -> Prism[list, Any]:
+def optional_index_prism(i: int) -> Prism[list[Any], Any]:
     """
     Prism focusing on list element at index i (if it exists).
 
@@ -483,7 +485,7 @@ def list_traversal() -> Traversal[List[A], A]:
     )
 
 
-def dict_values_traversal() -> Traversal[dict, Any]:
+def dict_values_traversal() -> Traversal[dict[str, Any], Any]:
     """
     Traversal over all values in a dictionary.
 
@@ -502,7 +504,7 @@ def dict_values_traversal() -> Traversal[dict, Any]:
     )
 
 
-def dict_keys_traversal() -> Traversal[dict, Any]:
+def dict_keys_traversal() -> Traversal[dict[str, Any], Any]:
     """
     Traversal over all keys in a dictionary.
 
@@ -521,7 +523,7 @@ def dict_keys_traversal() -> Traversal[dict, Any]:
     )
 
 
-def dict_items_traversal() -> Traversal[dict, tuple]:
+def dict_items_traversal() -> Traversal[dict[str, Any], tuple[str, Any]]:
     """
     Traversal over all (key, value) pairs in a dictionary.
 
@@ -640,7 +642,7 @@ def verify_prism_laws(
     state_with_value: S,
     state_without_value: S,
     value: A,
-) -> dict:
+) -> dict[str, bool]:
     """
     Verify prism laws.
 
@@ -657,7 +659,7 @@ def verify_prism_laws(
     Returns:
         Dict with law names and pass/fail status
     """
-    results = {
+    results: dict[str, bool] = {
         "preview_some": False,
         "preview_none": False,
         "modify_preserves": False,
@@ -685,7 +687,7 @@ def verify_traversal_laws(
     trav: Traversal[S, A],
     state: S,
     value: A,
-) -> dict:
+) -> dict[str, bool]:
     """
     Verify traversal laws.
 
@@ -701,7 +703,7 @@ def verify_traversal_laws(
     Returns:
         Dict with law names and pass/fail status
     """
-    results = {
+    results: dict[str, bool] = {
         "identity": False,
         "fusion": False,
     }

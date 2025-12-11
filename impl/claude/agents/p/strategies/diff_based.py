@@ -17,6 +17,7 @@ Use Cases:
 
 import re
 from dataclasses import dataclass, field
+from typing import Any, Iterator
 
 from agents.p.core import Parser, ParserConfig, ParseResult
 
@@ -295,7 +296,7 @@ class DiffBasedParser(Parser[str]):
                 success=False, error=f"Line patch parsing failed: {e}"
             )
 
-    def parse_stream(self, tokens: list[str]) -> list[ParseResult[str]]:
+    def parse_stream(self, tokens: Iterator[str]) -> Iterator[ParseResult[str]]:
         """
         Stream parsing for diffs (buffer until complete).
 
@@ -303,9 +304,9 @@ class DiffBasedParser(Parser[str]):
         all tokens and parse once.
         """
         text = "".join(tokens)
-        return [self.parse(text)]
+        yield self.parse(text)
 
-    def configure(self, **config_updates) -> "DiffBasedParser":
+    def configure(self, **config_updates: Any) -> "DiffBasedParser":
         """Return new parser with updated configuration."""
         new_config = ParserConfig(**{**self.config.__dict__, **config_updates})
         return DiffBasedParser(

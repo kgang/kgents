@@ -19,7 +19,7 @@ Parsers are morphisms Text → ParseResult[A] that compose in three ways:
    - Used when input format is detectable
 """
 
-from typing import Callable, Generic, Iterator, Optional, TypeVar
+from typing import Any, Callable, Generic, Iterator, Optional, TypeVar
 
 from agents.p.core import Parser, ParserConfig, ParseResult
 
@@ -119,7 +119,7 @@ class FallbackParser(Generic[A]):
         text = "".join(tokens)
         yield self.parse(text)
 
-    def configure(self, **config) -> "FallbackParser[A]":
+    def configure(self, **config: Any) -> "FallbackParser[A]":
         """Return new parser with updated configuration."""
         new_config = ParserConfig(**{**vars(self.config), **config})
         new_config.validate()
@@ -188,7 +188,8 @@ class FusionParser(Generic[A]):
 
         # Merge successful results
         try:
-            merged_value = self.merge_fn([r.value for r in successful])
+            values: list[A] = [r.value for r in successful if r.value is not None]
+            merged_value = self.merge_fn(values)
         except Exception as e:
             return ParseResult(
                 success=False,
@@ -230,7 +231,7 @@ class FusionParser(Generic[A]):
         text = "".join(tokens)
         yield self.parse(text)
 
-    def configure(self, **config) -> "FusionParser[A]":
+    def configure(self, **config: Any) -> "FusionParser[A]":
         """Return new parser with updated configuration."""
         new_config = ParserConfig(**{**vars(self.config), **config})
         new_config.validate()
@@ -357,7 +358,7 @@ class SwitchParser(Generic[A]):
             strategy="switch-stream",
         )
 
-    def configure(self, **config) -> "SwitchParser[A]":
+    def configure(self, **config: Any) -> "SwitchParser[A]":
         """Return new parser with updated configuration."""
         new_config = ParserConfig(**{**vars(self.config), **config})
         new_config.validate()
