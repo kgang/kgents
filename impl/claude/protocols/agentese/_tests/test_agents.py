@@ -7,20 +7,20 @@ The world.agent.* namespace makes the kgents ecosystem discoverable:
     world.agent.bgent.invoke    → Invoke B-gent (placeholder)
 """
 
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 from ..contexts.agents import (
     AGENT_REGISTRY,
     AgentContextResolver,
-    AgentNode,
     AgentListNode,
-    create_agent_resolver,
+    AgentNode,
     create_agent_node,
+    create_agent_resolver,
 )
 from ..exceptions import PathNotFoundError
 from ..node import BasicRendering
-
 
 # === Fixtures ===
 

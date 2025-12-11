@@ -31,9 +31,9 @@ from .exceptions import (
 from .node import AgentMeta, LogosNode
 
 if TYPE_CHECKING:
-    from bootstrap.umwelt import Umwelt
-    from agents.l.catalog import CatalogEntry, EntityType
     from agents.g.types import Tongue
+    from agents.l.catalog import CatalogEntry, EntityType
+    from bootstrap.umwelt import Umwelt
 
 
 # =============================================================================
@@ -125,8 +125,8 @@ class UmweltIntegration:
         Returns:
             Minimal Umwelt suitable for AGENTESE invocation
         """
-        from bootstrap.umwelt import Umwelt
         from agents.d.lens import identity_lens
+        from bootstrap.umwelt import Umwelt
 
         dna = ArchetypeDNA(
             name=name,

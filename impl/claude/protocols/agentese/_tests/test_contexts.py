@@ -9,38 +9,38 @@ Tests for the five strict contexts:
 - time.*    - The Temporal (Heterarchical)
 """
 
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
 
 from ..contexts import (
     VALID_CONTEXTS,
-    # World
-    WorldNode,
-    create_world_resolver,
-    create_world_node,
-    MemoryNode,
     CapabilitiesNode,
-    StateNode,
-    IdentityNode,
-    create_self_resolver,
     ConceptNode,
-    create_concept_resolver,
-    create_concept_node,
     EntropyNode,
-    SerendipityNode,
+    FutureNode,
     GratitudeNode,
-    create_void_resolver,
-    create_entropy_pool,
+    IdentityNode,
+    MemoryNode,
+    PastNode,
+    ScheduleNode,
+    SerendipityNode,
+    StateNode,
     # Time
     TraceNode,
-    PastNode,
-    FutureNode,
-    ScheduleNode,
+    # World
+    WorldNode,
+    create_concept_node,
+    create_concept_resolver,
+    create_entropy_pool,
+    create_self_resolver,
     create_time_resolver,
+    create_void_resolver,
+    create_world_node,
+    create_world_resolver,
 )
 from ..node import AgentMeta, BasicRendering
 from .conftest import MockUmwelt
-
 
 # ============================================================
 # VALID CONTEXTS TESTS

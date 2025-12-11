@@ -8,10 +8,12 @@ A space for growing things.
 """
 
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt
+
     from impl.claude.protocols.agentese.node import AgentMeta, Renderable
 
 # Archetype -> affordances mapping

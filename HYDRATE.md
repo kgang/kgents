@@ -2,7 +2,37 @@
 
 **Status**: ~6,683 tests passing | Branch: `main`
 
-## Current: Meta-Bootstrap Active (🔄 EXECUTING)
+## Recent: New Agent Batch Refactoring (Complete)
+
+Comprehensive review and refactoring of seven proposed agents (Q, S, U, V, X, Y, Z) against design principles and bootstrap derivability. **All changes executed.**
+
+### Assessment Summary
+
+| Agent | Status | Verdict | Key Issue |
+|-------|--------|---------|-----------|
+| **Q-gent** | Clean | KEEP | Cleanly derived (Ground + Contradict) |
+| **S-gent** | Clean | KEEP | Cleanly derived (Ground + Compose) |
+| **V-gent** | Clean | KEEP | Extends Judge bootstrap with user principles |
+| **U-gent** | Heavy | SIMPLIFY | Complex machinery, could be infrastructure |
+| **X-gent** | Infrastructure | RECONSIDER | MCP/OpenAPI is protocol, not agent genus |
+| **Y-gent** | Overlap | MERGE | Graph composition overlaps C-gent + Fix |
+| **Z-gent** | Overlap | MERGE | Context mgmt overlaps Cooled Functor + Lethe |
+
+### Actions Completed
+
+| Action | Status | Output |
+|--------|--------|--------|
+| KEEP Q-gent | Done | `spec/q-gents/README.md` |
+| KEEP S-gent | Done | `spec/s-gents/README.md` |
+| KEEP V-gent | Done | `spec/v-gents/README.md` |
+| REFACTOR U-gent -> B-gent | Done | `spec/b-gents/distillation.md` |
+| DELETE X-gent -> Infrastructure | Done | `docs/infrastructure/mcp-integration.md` |
+| MERGE Y-gent -> C-gent | Done | `spec/c-gents/graph-composition.md` |
+| DISTRIBUTE Z-gent | Done | `spec/c-gents/context-management.md` |
+
+---
+
+## Previous: Meta-Bootstrap Active
 
 The system now observes itself during development. See `docs/meta-bootstrap-plan.md`.
 
@@ -155,12 +185,12 @@ Memory-as-Orientation: HoloMap, Attractors, Desire Lines, Voids, Foveation.
 ```python
 cartographer = create_cartographer(vector_search, trace_store)
 holo_map = await cartographer.invoke(context_vector, Resolution.ADAPTIVE)
-# → landmarks, desire_lines, voids, horizon
+# -> landmarks, desire_lines, voids, horizon
 ```
 
 ### W-gent Interceptors (125 tests)
 
-Pipeline: Safety(50) → Metering(100) → Telemetry(200) → Persona(300)
+Pipeline: Safety(50) -> Metering(100) -> Telemetry(200) -> Persona(300)
 
 ---
 

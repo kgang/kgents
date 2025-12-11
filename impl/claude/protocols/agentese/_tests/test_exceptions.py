@@ -7,17 +7,17 @@ All errors must explain WHY and suggest WHAT TO DO.
 import pytest
 
 from ..exceptions import (
-    AgentesError,
-    PathNotFoundError,
-    PathSyntaxError,
     AffordanceError,
-    ObserverRequiredError,
-    TastefulnessError,
+    AgentesError,
     BudgetExhaustedError,
     CompositionViolationError,
-    path_not_found,
+    ObserverRequiredError,
+    PathNotFoundError,
+    PathSyntaxError,
+    TastefulnessError,
     affordance_denied,
     invalid_path_syntax,
+    path_not_found,
 )
 
 

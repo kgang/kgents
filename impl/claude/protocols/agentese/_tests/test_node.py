@@ -8,12 +8,13 @@ Verifies:
 - Stateless invariant (Symbiont pattern)
 """
 
-import pytest
 from typing import Any
 
+import pytest
+
 from ..node import (
-    AgentMeta,
     AffordanceSet,
+    AgentMeta,
     AspectAgent,
     BaseLogosNode,
     BasicRendering,

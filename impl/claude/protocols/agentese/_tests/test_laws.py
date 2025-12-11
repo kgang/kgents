@@ -13,36 +13,35 @@ Tests verify:
 
 from __future__ import annotations
 
-import pytest
 from dataclasses import dataclass
 from typing import Any
 
+import pytest
+
+from ..exceptions import CompositionViolationError
 from ..laws import (
-    # Core types
-    Id,
     IDENTITY,
-    Composable,
-    Composed,
     # Law verification
     CategoryLawVerifier,
-    # Minimal output
-    is_single_logical_unit,
-    enforce_minimal_output,
-    # Helpers
-    compose,
-    pipe,
+    Composable,
+    Composed,
+    # Core types
+    Id,
     LawEnforcingComposition,
     SimpleMorphism,
-    morphism,
-    create_verifier,
+    # Helpers
+    compose,
     create_enforcing_composition,
+    create_verifier,
+    enforce_minimal_output,
+    # Minimal output
+    is_single_logical_unit,
+    morphism,
+    pipe,
 )
 from ..logos import ComposedPath, Logos
-from ..exceptions import CompositionViolationError
 from ..node import BasicRendering
-
 from .conftest import MockNode, MockUmwelt
-
 
 # === Test Helpers ===
 

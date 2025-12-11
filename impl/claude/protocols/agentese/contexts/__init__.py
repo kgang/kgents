@@ -17,64 +17,58 @@ from typing import Any
 VALID_CONTEXTS = frozenset({"world", "self", "concept", "void", "time"})
 
 # Import context resolvers
-from .world import (
-    WorldContextResolver,
-    WorldNode,
-    create_world_resolver,
-    create_world_node,
-    WORLD_ARCHETYPE_AFFORDANCES,
-)
-
-from .self_ import (
-    SelfContextResolver,
-    MemoryNode,
-    CapabilitiesNode,
-    StateNode,
-    IdentityNode,
-    create_self_resolver,
-    SELF_AFFORDANCES,
-)
-
-from .concept import (
-    ConceptContextResolver,
-    ConceptNode,
-    create_concept_resolver,
-    create_concept_node,
-    CONCEPT_ARCHETYPE_AFFORDANCES,
-)
-
-from .void import (
-    VoidContextResolver,
-    EntropyPool,
-    EntropyNode,
-    SerendipityNode,
-    GratitudeNode,
-    RandomnessGrant,
-    create_void_resolver,
-    create_entropy_pool,
-)
-
-from .time import (
-    TimeContextResolver,
-    TraceNode,
-    PastNode,
-    FutureNode,
-    ScheduleNode,
-    ScheduledAction,
-    create_time_resolver,
-    TIME_AFFORDANCES,
-)
-
 # Agent discovery (world.agent.* namespace)
 from .agents import (
-    AgentContextResolver,
-    AgentNode,
-    AgentListNode,
     AGENT_REGISTRY,
-    create_agent_resolver,
+    AgentContextResolver,
+    AgentListNode,
+    AgentNode,
     create_agent_node,
+    create_agent_resolver,
 )
-
+from .concept import (
+    CONCEPT_ARCHETYPE_AFFORDANCES,
+    ConceptContextResolver,
+    ConceptNode,
+    create_concept_node,
+    create_concept_resolver,
+)
+from .self_ import (
+    SELF_AFFORDANCES,
+    CapabilitiesNode,
+    IdentityNode,
+    MemoryNode,
+    SelfContextResolver,
+    StateNode,
+    create_self_resolver,
+)
+from .time import (
+    TIME_AFFORDANCES,
+    FutureNode,
+    PastNode,
+    ScheduledAction,
+    ScheduleNode,
+    TimeContextResolver,
+    TraceNode,
+    create_time_resolver,
+)
+from .void import (
+    EntropyNode,
+    EntropyPool,
+    GratitudeNode,
+    RandomnessGrant,
+    SerendipityNode,
+    VoidContextResolver,
+    create_entropy_pool,
+    create_void_resolver,
+)
+from .world import (
+    WORLD_ARCHETYPE_AFFORDANCES,
+    WorldContextResolver,
+    WorldNode,
+    create_world_node,
+    create_world_resolver,
+)
 
 # === Unified Resolver Factory ===
 
