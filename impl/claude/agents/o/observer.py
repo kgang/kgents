@@ -88,7 +88,7 @@ class ObservationContext:
     observation_id: str = ""
     metadata: dict[str, Any] = field(default_factory=dict)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.observation_id:
             self.observation_id = f"obs_{self.agent_id}_{self.timestamp.isoformat()}"
 
@@ -404,7 +404,7 @@ class StratifiedObserver:
     level: ObserverLevel
     name: str = ""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.name:
             self.name = getattr(self.observer, "observer_id", "unnamed")
 
@@ -420,7 +420,7 @@ class ObserverHierarchy:
     Prevents observation loops and enforces level constraints.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._observers: dict[ObserverLevel, list[StratifiedObserver]] = {
             level: [] for level in ObserverLevel
         }

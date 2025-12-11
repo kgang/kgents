@@ -46,7 +46,7 @@ class ParseResult(Generic[A]):
     stream_position: Optional[int] = None  # For incremental parsing
     metadata: dict[str, Any] = field(default_factory=dict)  # Strategy-specific info
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validate invariants."""
         if self.success and self.value is None:
             raise ValueError("ParseResult: success=True requires value is not None")
@@ -108,7 +108,7 @@ class Parser(Protocol[A]):
         """
         ...
 
-    def configure(self, **config) -> "Parser[A]":
+    def configure(self, **config: Any) -> "Parser[A]":
         """
         Return new parser with updated configuration.
 
@@ -202,7 +202,7 @@ class IdentityParser(Generic[A]):
                 partial=True,
             )
 
-    def configure(self, **config) -> "IdentityParser":
+    def configure(self, **config: Any) -> "IdentityParser":
         """Return new IdentityParser with updated config."""
         new_config = ParserConfig(**{**vars(self.config), **config})
         new_config.validate()

@@ -103,7 +103,7 @@ class LineageGraph:
     Phase 3 implementation uses in-memory storage with optional persistence.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize lineage graph."""
         # In-memory storage for Phase 3
         # Future: Integrate with D-gent GraphAgent

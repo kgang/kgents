@@ -22,7 +22,7 @@ import logging
 import webbrowser
 from datetime import datetime
 from pathlib import Path
-from typing import AsyncIterator, Optional
+from typing import Any, AsyncIterator, Optional
 
 try:
     import uvicorn
@@ -101,14 +101,14 @@ class WireServer:
         )
 
         @app.get("/", response_class=HTMLResponse)
-        async def index():
+        async def index() -> HTMLResponse:
             """Main view - rendered by fidelity adapter."""
             adapter = get_adapter(self.reader, self.fidelity)
             result = adapter.render()
             return HTMLResponse(content=result.html)
 
         @app.get("/state")
-        async def state():
+        async def state() -> dict[str, Any]:
             """Raw state JSON endpoint."""
             wire_state = self.reader.read_state()
             if wire_state:
@@ -116,13 +116,13 @@ class WireServer:
             return {"error": "No state available", "agent_id": self.agent_name}
 
         @app.get("/stream")
-        async def stream():
+        async def stream() -> list[dict[str, Any]]:
             """Raw stream events as JSON."""
             events = self.reader.read_stream(tail=100)
             return [e.to_dict() for e in events]
 
         @app.get("/metrics")
-        async def metrics():
+        async def metrics() -> dict[str, Any]:
             """Raw metrics JSON endpoint."""
             wire_metrics = self.reader.read_metrics()
             if wire_metrics:
@@ -130,7 +130,7 @@ class WireServer:
             return {"error": "No metrics available"}
 
         @app.get("/events")
-        async def events_sse():
+        async def events_sse() -> StreamingResponse:
             """Server-Sent Events stream for real-time updates."""
 
             async def event_generator() -> AsyncIterator[str]:
@@ -147,7 +147,7 @@ class WireServer:
             return StreamingResponse(event_generator(), media_type="text/event-stream")
 
         @app.get("/download")
-        async def download():
+        async def download() -> PlainTextResponse:
             """Download stream log as text file."""
             events = self.reader.read_stream()
             content = "\n".join(e.to_log_line() for e in events)
@@ -160,7 +160,7 @@ class WireServer:
             )
 
         @app.get("/export")
-        async def export_to_igent():
+        async def export_to_igent() -> PlainTextResponse:
             """Export current state as I-gent margin note format."""
             state = self.reader.read_state()
             metrics = self.reader.read_metrics()
@@ -189,7 +189,7 @@ class WireServer:
             return PlainTextResponse(content="\n".join(notes), media_type="text/plain")
 
         @app.get("/health")
-        async def health():
+        async def health() -> dict[str, Any]:
             """Health check endpoint."""
             return {
                 "status": "ok",
@@ -270,7 +270,7 @@ async def serve_agent(
     await server.run_forever()
 
 
-def cli_main():
+def cli_main() -> None:
     """CLI entry point for wire server."""
     import argparse
 

@@ -35,10 +35,10 @@ class VolatileAgent(Generic[S]):
     """
 
     _state: S
-    _history: deque = field(default_factory=lambda: deque(maxlen=100))
+    _history: deque[S] = field(default_factory=lambda: deque(maxlen=100))
     _max_history: int = 100
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Initialize history deque with correct maxlen."""
         if not isinstance(self._history, deque):
             # Convert list to deque if passed as list

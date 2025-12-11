@@ -208,7 +208,7 @@ class ValueDashboard(WireObservable):
         self._running = False
         self._update_task: Optional[asyncio.Task] = None
 
-    def _detect_panels(self):
+    def _detect_panels(self) -> None:
         """Detect which panels to enable based on data sources."""
         if self.bank is not None:
             self._state.panels_enabled.add(DashboardPanel.TOKEN_ECONOMICS)
@@ -228,13 +228,13 @@ class ValueDashboard(WireObservable):
         # System health always available
         self._state.panels_enabled.add(DashboardPanel.SYSTEM_HEALTH)
 
-    async def start(self):
+    async def start(self) -> None:
         """Start the dashboard update loop."""
         self._running = True
         self._update_task = asyncio.create_task(self._update_loop())
         self.log_event("INFO", "start", "Value Dashboard started")
 
-    async def stop(self):
+    async def stop(self) -> None:
         """Stop the dashboard update loop."""
         self._running = False
         if self._update_task:
@@ -245,7 +245,7 @@ class ValueDashboard(WireObservable):
                 pass
         self.log_event("INFO", "stop", "Value Dashboard stopped")
 
-    async def _update_loop(self):
+    async def _update_loop(self) -> None:
         """Main update loop - collects metrics and emits state."""
         while self._running:
             try:
@@ -258,7 +258,7 @@ class ValueDashboard(WireObservable):
                 self.log_event("ERROR", "update", f"Update failed: {e}")
                 await asyncio.sleep(self.update_interval)
 
-    async def _collect_metrics(self):
+    async def _collect_metrics(self) -> None:
         """Collect current metrics from all data sources."""
         now = datetime.now()
 
@@ -426,7 +426,7 @@ class ValueDashboard(WireObservable):
             threshold_status="healthy",
         )
 
-    def _collect_anomalies(self):
+    def _collect_anomalies(self) -> None:
         """Collect anomalies from anti-delusion checker."""
         if not HAS_BGENT or self.anti_delusion is None:
             return
@@ -444,13 +444,13 @@ class ValueDashboard(WireObservable):
             for a in anomalies[-10:]  # Last 10 anomalies
         ]
 
-    def _append_history(self, history: list, snapshot: Any):
+    def _append_history(self, history: list[Any], snapshot: Any) -> None:
         """Append to history with circular buffer semantics."""
         history.append(snapshot)
         while len(history) > self.history_limit:
             history.pop(0)
 
-    async def _emit_state(self):
+    async def _emit_state(self) -> None:
         """Emit current state through wire protocol."""
         self._state.timestamp = datetime.now()
 
@@ -614,7 +614,7 @@ class ValueDashboard(WireObservable):
 
 def create_value_dashboard(
     agent_id: str = "value-dashboard",
-    **kwargs,
+    **kwargs: Any,
 ) -> ValueDashboard:
     """
     Create a Value Dashboard instance.

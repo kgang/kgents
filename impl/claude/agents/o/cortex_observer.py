@@ -695,7 +695,7 @@ class CortexObserver:
         """
         self._callbacks.append(callback)
 
-        def unsubscribe():
+        def unsubscribe() -> None:
             if callback in self._callbacks:
                 self._callbacks.remove(callback)
 

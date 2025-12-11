@@ -174,7 +174,7 @@ class Registry:
         self._entries: dict[str, CatalogEntry] = {}
         self._loaded = False
 
-    async def _ensure_loaded(self):
+    async def _ensure_loaded(self) -> None:
         """Lazy load entries from storage."""
         if not self._loaded:
             try:
