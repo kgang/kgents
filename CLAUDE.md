@@ -16,7 +16,7 @@ Deeply specifying and implementing the agent ecosystem with AGENTESE as the meta
 | Letter | Name | Theme |
 |--------|------|-------|
 | A | Agents | Abstract architectures + Art/Creativity coaches |
-| B | Bgents | Bio/Scientific discovery + Economics |
+| B | Bgents | Bio/Scientific discovery + Economics + Distillation |
 | C | Cgents | Category Theory basis (composability) |
 | D | Dgents | Data Agents (state, memory, persistence) |
 | E | Egents | Evolution (teleological thermodynamics) |
@@ -24,7 +24,11 @@ Deeply specifying and implementing the agent ecosystem with AGENTESE as the meta
 | L | Lgents | Lattice/Library (semantic registry) |
 | M | Mgents | Memory/Map (holographic cartography) |
 | N | Ngents | Narrative (witness/trace) |
+| T | Tgents | Testing (algebraic reliability, Types I-V) |
+| U | Ugents | Utility (tool use, MCP integration) |
+| Y | Ygent | Y-Combinator (cognitive + somatic topology) |
 | Ψ | Psigent | Psychopomp (metaphor engine) |
+| Ω | Omegagent | Somatic Orchestrator (morphemes, proprioception) |
 
 ## AGENTESE: The Verb-First Ontology
 

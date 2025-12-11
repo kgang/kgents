@@ -41,12 +41,14 @@ The synthesis is valid: implementation wisdom has been elevated to spec-level pr
    - [k-gent/](k-gent/) - Personalization Functor (system's fix)
    - [l-gents/](l-gents/) - Library (knowledge curation, semantic discovery)
    - [m-gents/](m-gents/) - Memory (holographic associative memory, memory as morphism)
+   - [omega-gents/](omega-gents/) - Somatic (morphemes, proprioception, infrastructure as body)
    - [n-gents/](n-gents/) - Narrator (story-telling, time-travel debugging)
    - [o-gents/](o-gents/) - Observability (system-wide telemetry, bootstrap witness)
    - [p-gents/](p-gents/) - Parser (multi-strategy parsing, structured output)
    - [psi-gents/](psi-gents/) - Psychopomp (holonic projection, MHC, Jung, Lacan, metaethics)
    - [r-gents/](r-gents/) - Refinery (prompt optimization, DSPy/TextGrad/OPRO integration)
-   - [t-gents/](t-gents/) - Testing (algebraic reliability)
+   - [t-gents/](t-gents/) - Testing (algebraic reliability, Types I-V)
+   - [u-gents/](u-gents/) - Utility (tool use, MCP integration)
    - [w-gents/](w-gents/) - Wire (ephemeral process observation, stigmergic coordination)
 
 ---
@@ -60,6 +62,11 @@ Agents don't exist in isolation. Key integration points:
 | D+E | E-gents use D-gent memory for evolution state |
 | J+F | F-gent artifacts can be JIT-instantiated via J-gent |
 | T+* | T-gents can test any agent via Spy/Mock patterns |
+| T+U | T-gents test U-gent tools (MockAgent, SpyAgent, FlakyAgent) |
+| U+P | U-gent Tool parsing uses P-gent strategies |
+| U+D | U-gent tools use D-gent caching (90% cost reduction) |
+| U+L | L-gent indexes U-gent tool registry |
+| U+W | W-gent traces U-gent tool execution |
 | K+* | K-gent functor lifts any agent into personalized space |
 | P+T | T-gent Tool parsing uses P-gent strategies |
 | W+I | W-gent observation feeds I-gent visualization |
@@ -77,6 +84,12 @@ Agents don't exist in isolation. Key integration points:
 | Ψ+H | Ψ-gent uses H-gent dialectics for ego/shadow synthesis |
 | Ψ+O | O-gent observes Ψ-gent Borromean register transitions |
 | Ψ+N | N-gent narrates Ψ-gent's integration journeys |
+| Ω+Y | Y-gent topology uses Ω-gent to manifest bodies |
+| Ω+B | B-gent meters Ω-gent morphology costs (ATP, not Approval) |
+| Ω+D | D-gent sidecar provides state persistence via `with_sidecar()` |
+| Ω+N | N-gent chronicles Ω-gent pod lifecycle events |
+| Ω+O | O-gent observes Ω-gent proprioception metrics |
+| Ω+Ψ | Ψ-gent metaphors can recommend Ω-gent morphology changes |
 
 See `impl/claude/agents/*/` `__init__.py` files for explicit cross-pollination labels.
 

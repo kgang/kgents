@@ -1,32 +1,16 @@
-# T-gents Phase 2: Tool Use as Categorical Composition
+# U-gents: Tool Use as Categorical Composition
 
----
-
-> ## ⚠️ DEPRECATED
->
-> **This specification has been migrated to [U-gents](../u-gents/tool-use.md).**
->
-> The Tool Use framework belongs to **U-gents** (Utility agents), not T-gents.
-> T-gents are now exclusively for **Testing/Verification** (Types I-V).
->
-> **Migration Date**: 2025-12-11
-> **New Location**: `spec/u-gents/tool-use.md`
->
-> This file is preserved for historical reference only.
-
----
-
-**Status**: ~~Proposal~~ **DEPRECATED** - See [U-gents](../u-gents/tool-use.md)
-**Date**: 2025-12-08
+**Status**: Standard
+**Date**: 2025-12-08 (migrated to U-gents: 2025-12-11)
 **Research Foundation**: 2024-2025 industry analysis + MCP ecosystem study
 
 ---
 
 ## Executive Summary
 
-This specification proposes **T-gents Phase 2: Tool Use**, a novel architecture for empowering all kgents agents with composable, category-theoretic tool capabilities. Unlike traditional agentic frameworks that bolt tool use onto existing systems, this approach treats **tools as morphisms** and **tool composition as functorial operations**, creating a unified mathematical foundation.
+This specification defines **U-gents Tool Use**, a novel architecture for empowering all kgents agents with composable, category-theoretic tool capabilities. Unlike traditional agentic frameworks that bolt tool use onto existing systems, this approach treats **tools as morphisms** and **tool composition as functorial operations**, creating a unified mathematical foundation.
 
-**Core Innovation**: Tools are not external functions—they are **T-gents** (testing/tool agents) that compose via categorical laws, enabling:
+**Core Innovation**: Tools are not external functions—they are **U-gents** (utility agents) that compose via categorical laws, enabling:
 - **Algebraic reliability**: Tools proven correct via categorical laws
 - **Composable pipelines**: Tools chain via `>>` just like agents
 - **Type-safe execution**: Schema validation as morphism typing
@@ -35,7 +19,7 @@ This specification proposes **T-gents Phase 2: Tool Use**, a novel architecture 
 
 **Integration Points**:
 - **P-gents (Parser)**: Parse tool schemas, responses, and errors
-- **Existing T-gents**: Tool use extends testing morphisms
+- **T-gents (Testing)**: Test tools via MockAgent, SpyAgent, FlakyAgent
 - **Bootstrap**: Tools compose via Compose, validated via Judge
 - **All genera**: Universal tool use empowers A/B/C/D/E/F/H/I/J/K/L agents
 
@@ -65,12 +49,11 @@ pipeline = parse_query >> search_tool >> format_results
 - Categorical laws (associativity, identity) apply
 - Type safety via morphism signatures
 
-**2. Testing = Tool Use**
-- T-gents already model testing as morphisms
-- Tool use is **generalization** of testing patterns
-- Saboteurs (FailingAgent) → Tool errors
-- Observers (SpyAgent) → Tool tracing
-- Nullifiers (MockAgent) → Tool mocking
+**2. Testing Integration**
+- T-gents test U-gent tools via existing patterns
+- MockAgent simulates tools for testing
+- SpyAgent traces tool execution
+- FlakyAgent tests retry logic
 
 **3. Unified Framework**
 - No separate "tool calling" subsystem

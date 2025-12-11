@@ -1,6 +1,8 @@
 # T-gents Taxonomy: Detailed Specifications
 
-This document provides comprehensive specifications for each type of T-gent, including implementation details, configuration, and usage patterns.
+This document provides comprehensive specifications for each type of T-gent (Types I-IV), including implementation details, configuration, and usage patterns.
+
+> **Note**: Type V (Adversarial) is specified in [adversarial.md](adversarial.md).
 
 ---
 
@@ -618,6 +620,10 @@ class JudgeAgent:
 | **III** | CounterAgent | $A \to A$ | Invocation tracking |
 | **III** | MetricsAgent | $A \to A$ | Performance profiling |
 | **IV** | JudgeAgent | $(A, B) \to [0,1]$ | Semantic evaluation |
+| **V** | AdversarialGym | $Agent \to Report$ | Chaos engineering |
+| **V** | StressCoordinate | $(n, f, l, d)$ | Stress-test space |
+
+> **Type V Details**: See [adversarial.md](adversarial.md) for full Adversarial Gym specification.
 
 ---
 

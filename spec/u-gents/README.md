@@ -1,356 +1,331 @@
-# U-GENT: THE UNDERSTUDY
+# U-gents: The Algebra of Utility
 
-## Specification v2.0
+The letter **U** represents **Utility** agents—typed morphisms specialized for external interaction through composable tool interfaces.
 
-**Status:** Proposed Standard
-**Symbol:** `U` (The Economic Compressor)
-**Motto:** *"Genius is expensive. Routine should be cheap."*
+> *"A tool is not an external function. It is an agent with a contract."*
 
 ---
 
-## 1. The Concept: Black-Box Chain-of-Thought Distillation
+## Philosophy
 
-U-gent addresses the **Intelligence-Cost Paradox**: the most capable agents (Teachers) are too expensive to run in infinite loops, while the cheapest agents (Students) lack the judgment for autonomous tasks.
-
-U-gent implements **Black-Box Chain-of-Thought Distillation**. It does not merely copy the *output* of a teacher; it captures the *reasoning process* (the "Rationalization"), filters it for quality, and trains smaller, local, or cheaper models to mimic that reasoning.
-
-### The Core Shift
-
+Traditional agent frameworks treat tools as **opaque function calls**:
+```python
+# Traditional approach (non-compositional)
+result = agent.call_tool("search", {"query": "MCP protocol"})
 ```
-FROM: Calling GPT-4 10,000 times for a repetitive classification task.
 
-TO:   Calling GPT-4 50 times to generate a training set,
-      verifying the data,
-      fine-tuning a Llama-3-8B model,
-      serving the remaining 9,950 calls at 1/100th the cost.
+**kgents approach**: Tools are **morphisms in the agent category**:
+```python
+# Categorical approach (compositional)
+search_tool: Tool[SearchQuery, SearchResults]
+pipeline = parse_query >> search_tool >> format_results
 ```
+
+### Why This Matters
+
+1. **Composition is Primary**: Tools compose via `>>` like all agents
+2. **Type Safety**: Schema validation as morphism typing
+3. **Unified Abstraction**: Tools are agents; agents use tools
+4. **Category Laws Apply**: Associativity, identity verified
 
 ---
 
-## 2. Theoretical Foundation
+## The Six Types
 
-### 2.1 The Distillation Hierarchy
+U-gents are categorized into six types based on their role in tool composition:
 
-Most modern agent systems rely on proprietary APIs (Claude, OpenAI) where access to probability distributions (logits) is restricted. U-gent focuses on **Rationale Distillation**:
-
-| Method | Access Required | U-gent Viability |
-|--------|----------------|------------------|
-| **Standard Distillation (White-Box)** | Probability distributions (logits) | Hard with APIs |
-| **Rationale Distillation (Black-Box)** | Text outputs only | Primary method |
-| **In-Context Distillation** | Few-shot prompts | Secondary method |
-
-**Rationale Distillation**: Student learns to generate the Teacher's "Chain of Thought" before the answer. The reasoning tokens become training signal.
-
-### 2.2 The Active Learning Loop
-
-Random sampling of Teacher traces is inefficient. U-gent employs **Uncertainty Sampling**:
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    ACTIVE LEARNING LOOP                          │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│    Input ──► Student attempts task                               │
-│                     │                                            │
-│                     ▼                                            │
-│              ┌─────────────┐                                     │
-│              │  Measure    │                                     │
-│              │  Semantic   │                                     │
-│              │  Entropy    │                                     │
-│              └──────┬──────┘                                     │
-│                     │                                            │
-│         ┌──────────┴──────────┐                                 │
-│         ▼                     ▼                                  │
-│  ┌─────────────┐      ┌─────────────┐                           │
-│  │    LOW      │      │    HIGH     │                           │
-│  │ Uncertainty │      │ Uncertainty │                           │
-│  └──────┬──────┘      └──────┬──────┘                           │
-│         │                    │                                   │
-│         ▼                    ▼                                   │
-│  Use Student         Escalate to Teacher                        │
-│  (Free)              (Cost → Investment)                        │
-│                             │                                    │
-│                             ▼                                    │
-│                      Add to Training Set                        │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-This ensures the training budget is spent only on the **frontier of the Student's ignorance**.
-
-### 2.3 The "Step-by-Step" Protocol
-
-Research shows that small models fail at complex tasks not because they lack knowledge, but because they lack **working memory**. U-gent forces Students to output reasoning tokens before final answers, effectively "buying time to think."
-
-```
-Input → [Student] → <Reasoning Block> → Final Answer
-```
-
-The reasoning block externalizes the working memory that smaller models lack internally.
+| Type | Name | Purpose |
+|------|------|---------|
+| I | Core | `Tool[A,B]`, ToolMeta, PassthroughTool |
+| II | Wrappers | TracedTool, CachedTool, RetryTool |
+| III | Execution | ToolExecutor, CircuitBreaker, RetryExecutor |
+| IV | MCP | MCPClient, MCPTool, Transports |
+| V | Security | PermissionClassifier, AuditLogger |
+| VI | Orchestration | ParallelOrchestrator, Supervisor, Handoff |
 
 ---
 
-## 3. The Distillation Architecture
+## Type I: Core
 
-### 3.1 The Panopticon (Data Collection)
+The foundational types for tool definition.
 
-The observer must be smarter than a simple logger. It implements **Hindsight Relabeling**: if a Teacher's execution fails or errors, it is discarded or corrected before storage.
+### Tool[A, B]
+
+Every tool is a typed morphism with explicit domain and codomain:
 
 ```python
 @dataclass
-class ShadowPanopticon:
+class Tool(Agent[Input, Output]):
     """
-    Advanced observer that filters for 'Golden Traces'.
-    Only successful, high-quality reasoning paths are stored.
+    A tool is an agent specialized for external interaction.
+
+    Category Theory:
+    - Object: Types (Input, Output)
+    - Morphism: Tool execution (Input → Output)
+    - Identity: PassthroughTool
+    - Composition: Sequential tool chains
     """
 
-    trace_store: DGent[TraceDataset]
-    quality_gate: Agent[Trace, bool]  # Usually a fast V-gent check
-
-    async def observe_and_filter(self, trace: TeacherTrace):
-        # 1. Outcome Check: Did the task succeed?
-        if trace.status != "SUCCESS":
-            return  # Discard failures
-
-        # 2. Heuristic Check: Is the reasoning too short?
-        if len(trace.reasoning_tokens) < 50:
-            return  # Discard "lucky guesses" without reasoning
-
-        # 3. Storage
-        await self.trace_store.append(trace)
+    input_schema: type[Input]
+    output_schema: type[Output]
+    name: str
+    description: str
 ```
 
-**Quality Gates:**
-- Outcome verification (success/failure)
-- Reasoning depth thresholds
-- V-gent principle validation
-- Coherence scoring
+**Type Safety Guarantee**:
+```python
+tool_a: Tool[A, B]
+tool_b: Tool[B, C]
+pipeline = tool_a >> tool_b  # Tool[A, C] ✓
 
-### 3.2 The Curriculum Sieve (Dataset Curation)
+tool_c: Tool[D, E]
+pipeline = tool_a >> tool_c  # Type error: B ≠ D ✗
+```
 
-Before training, data must be curated. U-gent synthesizes **Counterfactuals** and **Edge Cases** to robustify the dataset.
+---
+
+## Type II: Wrappers
+
+Decorators that add cross-cutting concerns while preserving the tool signature.
+
+| Wrapper | Purpose |
+|---------|---------|
+| **TracedTool** | W-gent integration for observability |
+| **CachedTool** | D-gent integration for prompt caching (90% cost reduction) |
+| **RetryTool** | Exponential backoff for transient errors |
 
 ```python
-class CurriculumSieve:
-    """
-    Refines raw traces into a high-quality training corpus.
-    """
+# Composition of wrappers
+robust_search = TracedTool(
+    CachedTool(
+        RetryTool(web_search, max_retries=3),
+        cache=d_gent_cache
+    ),
+    tracer=w_gent_tracer
+)
+```
 
-    async def synthesize_edge_cases(
+---
+
+## Type III: Execution
+
+Runtime infrastructure for tool invocation with error handling.
+
+### ToolExecutor
+
+```python
+class ToolExecutor:
+    """Execute tools with Result monad error handling."""
+
+    async def execute(
         self,
-        trace: TeacherTrace
-    ) -> list[TeacherTrace]:
-        """
-        Ask the Teacher: 'What would have made this task harder?'
-        Generate synthetic difficult examples to prevent
-        overfitting to easy routines.
-        """
-        synthetic_inputs = await self.teacher.invoke(
-            f"Given input '{trace.input}', generate 3 variations "
-            f"that are semantically tricky or adversarial."
-        )
-        # Teacher solves the new tricky inputs → New Traces
-        return await self.solve_and_capture(synthetic_inputs)
+        tool: Tool[Input, Output],
+        input: Input,
+        context: ExecutionContext
+    ) -> Result[Output, ToolError]:
+        # Check cache, validate, execute, trace
+        ...
 ```
 
-**Curriculum Learning Stages:**
-1. Easy examples (high Teacher confidence)
-2. Medium examples (moderate variance)
-3. Hard examples (synthetic adversarials)
-4. Edge cases (Teacher-identified tricky inputs)
+### CircuitBreaker
 
-### 3.3 The Semantic Router
+Stop calling failing tools after N consecutive failures:
 
-The router decides who handles the request. It uses **Semantic Entropy** rather than simple logprobs, as probability metrics are often poorly calibrated.
+```python
+class CircuitBreaker:
+    """Circuit breaker pattern for tools."""
+
+    states: ["CLOSED", "OPEN", "HALF_OPEN"]
+    failure_threshold: int = 5
+    recovery_timeout: float = 30.0
+```
+
+---
+
+## Type IV: MCP
+
+Integration with **Model Context Protocol**, the industry-standard tool interface.
+
+| MCP Primitive | kgents Equivalent |
+|---------------|-------------------|
+| Tool | `Tool[Input, Output]` |
+| Resource | `DataSource[Query, Data]` |
+| Prompt | `PromptTemplate[Params, str]` |
+| Server | ToolRegistry |
+| Client | Agent invoking tools |
+
+```python
+# Connect to MCP server
+client = MCPClient(server="localhost:8080")
+tools = await client.list_tools()
+
+# Invoke MCP tool
+result = await client.invoke("search", {"query": "..."})
+```
+
+---
+
+## Type V: Security
+
+Permission model and audit logging.
+
+### PermissionClassifier
+
+Implements Attribute-Based Access Control (ABAC):
+
+```python
+class PermissionClassifier:
+    """Classify tool as allowed/denied based on context."""
+
+    def classify(self, tool: Tool, context: AgentContext) -> Permission:
+        # Check security level, time, data sensitivity
+        ...
+
+    def grant_temporary(self, tool: Tool, duration: int = 900) -> Token:
+        # Short-lived token (15-60 minutes)
+        # Zero standing privileges
+        ...
+```
+
+### AuditLogger
+
+Complete execution trace for compliance:
 
 ```python
 @dataclass
-class SemanticRouter:
-    """
-    Routes based on Semantic Entropy.
-    """
-    student: StudentModel
-    teacher: TeacherAgent
-    entropy_threshold: float = 0.6
-
-    async def route(self, input: Input) -> Output:
-        # 1. Fast Draft: Student generates output
-        draft = await self.student.generate(input)
-
-        # 2. Uncertainty Check
-        # Fast: Check logprobs of answer tokens
-        # Robust: Sample student 3 times; if answers differ → High Uncertainty
-        uncertainty = await self.estimate_uncertainty(input, draft)
-
-        if uncertainty < self.entropy_threshold:
-            return draft  # Cheap success
-
-        # 3. Escalation
-        teacher_output = await self.teacher.invoke(input)
-
-        # 4. Loop Closure: Hard example becomes training data
-        await self.u_gent.record_gap(input, teacher_output)
-
-        return teacher_output
+class AuditEntry:
+    tool_name: str
+    agent_id: str
+    input: Any
+    output: Result[Any, Error]
+    timestamp: datetime
+    permissions: list[str]
 ```
-
-**Uncertainty Estimation Methods:**
-- **Logprob Analysis**: Fast but poorly calibrated
-- **Semantic Sampling**: Generate N samples, check semantic divergence
-- **Confidence Tokens**: Train model to output calibrated confidence
 
 ---
 
-## 4. Integration & Economics
+## Type VI: Orchestration
 
-### 4.1 The ROI Formula (B-gent Integration)
+Multi-tool patterns as functors.
 
-U-gent is an investment vehicle. B-gent allocates capital (tokens) based on projected ROI.
-
-```
-         (Cost_T - Cost_S) × N_calls - Cost_Training
-ROI = ─────────────────────────────────────────────────
-                     Cost_Training
-
-Where:
-  Cost_T:        Cost per Teacher call (e.g., $0.03)
-  Cost_S:        Cost per Student call (e.g., $0.0002)
-  N_calls:       Projected volume
-  Cost_Training: Cost to gather data + fine-tune
-```
-
-**Break-Even Analysis:**
-```
-              Cost_Training
-BEP_calls = ─────────────────
-            Cost_T - Cost_S
-```
-
-If BEP < 1 week of volume, B-gent authorizes training investment.
-
-### 4.2 Integration Flow
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    U-GENT INTEGRATION MAP                        │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  ┌───────────┐     ┌───────────┐     ┌───────────┐             │
-│  │  L-gent   │────►│  B-gent   │────►│  U-gent   │             │
-│  │ (Catalog) │     │ (Banker)  │     │(Distiller)│             │
-│  └───────────┘     └───────────┘     └─────┬─────┘             │
-│       │                                    │                    │
-│       │ Reports                            │ Shadows            │
-│       │ high-frequency                     ▼                    │
-│       │ tasks                        ┌───────────┐              │
-│       │                              │  Teacher  │              │
-│       │                              │ (K-gent)  │              │
-│       │                              └─────┬─────┘              │
-│       │                                    │                    │
-│       └────────────────────────────────────┼────────────────────│
-│                                            │                    │
-│                                            ▼                    │
-│                                      ┌───────────┐              │
-│                                      │  D-gent   │              │
-│                                      │ (Traces)  │              │
-│                                      └───────────┘              │
-│                                                                  │
-│  Flow:                                                          │
-│  1. L-gent identifies high-frequency task patterns              │
-│  2. B-gent calculates ROI, authorizes training budget           │
-│  3. U-gent shadows Teacher, builds trace corpus                 │
-│  4. U-gent trains Student, validates with V-gent                │
-│  5. Student deployed; escalations feed back to training         │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### 4.3 U + R (Refinery Synergy)
-
-- **R-gent (Refinery):** Optimizes the *prompt* (finding the best words to make the Teacher work better)
-- **U-gent (Understudy):** Removes the prompt entirely. Instructions are baked into model weights.
-
-**Pattern:** R-gent optimizes the prompt *first*. Once stable and successful, U-gent uses that R-optimized prompt to generate the Golden Dataset for distillation.
-
----
-
-## 5. Implementation Roadmap
-
-### Phase 1: The "Hitchhiker" (Passive Shadowing)
-A wrapper that sits on `Agent.invoke`. It sends inputs/outputs to a D-gent vector store. It does **not** train. It simply builds `corpus.jsonl`.
+| Pattern | Category Theory | Description |
+|---------|-----------------|-------------|
+| Sequential | Functor composition | `f >> g >> h` |
+| Parallel | Product functor | `f × g × h` |
+| Fallback | Coproduct | `f + g + h` (try in order) |
+| Supervisor | Comma category | Central coordinator |
+| Handoff | Natural transformation | Transfer control |
 
 ```python
-shadowed_agent = u_gent.shadow(teacher)
-# All teacher calls now logged
-```
+# Parallel: Run tools concurrently, merge results
+gather_context = (search_web × search_docs × search_memory) >> merge
 
-### Phase 2: The "Imposter" (Evaluation Mode)
-The Student model runs in the background for every request (fire-and-forget). It does not return the answer to the user.
-
-**Metric:** `AgreementRate` — How often does `Student(x) == Teacher(x)`?
-
-When `AgreementRate > 95%` on the validation set, the Switch is enabled.
-
-### Phase 3: The "Switch" (Active Routing)
-The router is deployed. It directs traffic to the Student, escalating only on high uncertainty. The system now saves money.
-
-### Phase 4: The "Dreamer" (Synthetic Augmentation)
-The Teacher runs during off-peak hours to generate synthetic edge cases for the Student, preemptively closing knowledge gaps before users encounter them.
-
----
-
-## 6. Anti-Patterns & Safety
-
-### 6.1 The Echo Chamber
-**Problem:** Training a Student on its own output.
-**Rule:** Students train ONLY on Teacher outputs or verified Ground Truth.
-
-### 6.2 The Cargo Cult
-**Problem:** Distilling the answer without the reasoning.
-**Rule:** Training data must be `(Input → Reasoning → Output)`.
-
-### 6.3 The Frozen Student
-**Problem:** Never updating the student after deployment.
-**Rule:** Concept Drift detection monitors escalation rate. Spike triggers re-training.
-
-### 6.4 Mode Collapse
-**Problem:** Student learns "average" safe response rather than specific nuance.
-**Mitigation:** Use LoRA adapters specific to narrow tasks rather than one giant "do-everything" student.
-
----
-
-## 7. Technical Stack Recommendation
-
-For implementation in `impl/claude/agents/u/`:
-
-| Component | Recommendation | Rationale |
-|-----------|---------------|-----------|
-| **Student Model** | Llama-3-8B-Instruct (4-bit) | Edge deployment, low cost |
-| **API Student** | GPT-4o-mini | API-based distillation |
-| **Training Framework** | Unsloth or Torchtune | 2x faster training |
-| **Adapter Strategy** | LoRA (Low-Rank Adaptation) | Hot-swap skills instantly |
-
-**LoRA Adapter Pattern:**
-```
-Base Model: Frozen Llama-3-8B
-├── Skill A (SQL Generation): LoRA Adapter A
-├── Skill B (Summarization):  LoRA Adapter B
-└── Skill C (Code Review):    LoRA Adapter C
+# Fallback: Try tools in order until success
+robust_search = google + bing + duckduckgo
 ```
 
 ---
 
-## 8. Principles Alignment
+## Integration Points
+
+### With P-gents (Parser)
+
+Four parsing boundaries:
+1. **Schema Parsing**: MCP → kgents Tool
+2. **Input Parsing**: NL → Tool parameters
+3. **Output Parsing**: Tool response → Structured data
+4. **Error Parsing**: Errors → Recoverable/Fatal
+
+### With D-gents (Data)
+
+- **Prompt Caching**: 90% cost reduction for repeated contexts
+- **Tool State**: Persistent configuration
+- **Execution History**: Tool usage traces
+
+### With L-gents (Library)
+
+- **Tool Discovery**: Search by type signature
+- **Composition Planning**: Find tool chains via graph search
+- **Version Management**: Tool evolution
+
+### With W-gents (Wire Observation)
+
+- **Live Monitoring**: Real-time tool execution dashboard
+- **Trace Emission**: OpenTelemetry integration
+- **Performance Profiling**: Latency, cost, success rate
+
+### With T-gents (Testing)
+
+T-gents test U-gents via the same patterns:
+- **MockAgent** simulates tools for testing
+- **SpyAgent** observes tool execution
+- **FlakyAgent** tests retry logic
+
+---
+
+## Specifications
+
+| Document | Description |
+|----------|-------------|
+| [tool-use.md](tool-use.md) | Full specification (1380 lines) |
+| [core.md](core.md) | Type I: Tool[A,B] base class |
+| [mcp.md](mcp.md) | Type IV: MCP protocol integration |
+| [execution.md](execution.md) | Type III: ToolExecutor, CircuitBreaker |
+
+---
+
+## Design Principles
+
+### 1. Tools as Typed Morphisms
+
+Every tool has explicit domain and codomain. Composition only succeeds if types align.
+
+### 2. Parser-First Design
+
+Every tool co-designed with P-gent parser. Graceful degradation on malformed outputs.
+
+### 3. Monadic Error Handling
+
+Result monad + Railway Oriented Programming. Type-safe error composition.
+
+### 4. MCP Native
+
+Industry-standard protocol as compositional substrate. Universal interoperability.
+
+### 5. Observability via Traced Categories
+
+Every execution is traced via W-gent. Full visibility into tool call trees.
+
+---
+
+## Principles Alignment
 
 | Principle | How U-gent Aligns |
 |-----------|-------------------|
-| **Tasteful** | Single purpose: economic compression through distillation |
-| **Curated** | Only high-frequency, stable-pattern tasks are distilled |
-| **Ethical** | V-gent validates Students before promotion; no quality degradation |
-| **Joy-Inducing** | "Apprentice becomes master" narrative; watching cost curves drop |
-| **Composable** | `u_gent.distill(any_agent, task)` works uniformly |
-| **Generative** | Creates new cheap capabilities from expensive ones |
+| **Tasteful** | Single purpose: external interaction via tools |
+| **Curated** | Six types, not sprawl |
+| **Ethical** | Permission model, audit logging |
+| **Composable** | Tools compose via `>>` |
+| **Generative** | Regenerable from spec |
 
 ---
 
-*"The Master fails more times than the Apprentice has even tried. The U-gent captures those trials so the Apprentice need not fail at all."*
+## Migration Note
+
+> **Former "Understudy" content**: The U-gent letter previously specified knowledge distillation ("The Understudy"). That content has been migrated to [B-gent/distillation.md](../b-gents/distillation.md) as it is fundamentally an *economic optimization*, not a core agent capability. U now represents **Utility** agents—the Tool Use framework.
+
+---
+
+## See Also
+
+- [tool-use.md](tool-use.md) - Full tool use specification
+- [../t-gents/](../t-gents/) - T-gents: Testing (test U-gent tools)
+- [../p-gents/](../p-gents/) - P-gents: Parser integration
+- [../d-gents/](../d-gents/) - D-gents: Caching integration
+- [../l-gents/](../l-gents/) - L-gents: Tool discovery
+- [../w-gents/](../w-gents/) - W-gents: Observability
+- [../b-gents/distillation.md](../b-gents/distillation.md) - Distillation (former Understudy)
+
+---
+
+*"A tool is not an external function. It is an agent with a contract."*

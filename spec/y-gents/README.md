@@ -487,3 +487,248 @@ By reifying these structures into the **Y-Combinator Agent**, we allow the syste
 ---
 
 *"To go straight, you must sometimes go around."*
+
+---
+
+## 10. Somatic Topology (Project MORPHEUS Extension)
+
+Y-gent's topology operations extend beyond cognitive graphs to **agent populations** in the somatic layer. Just as Y-gent branches and merges thoughts, it also branches and merges running agent instances.
+
+**Related**: `docs/omega-agents-implementation-plan.md`, `docs/project-morpheus.md`
+
+### 10.1 Agent Population Topology
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    Y-GENT SOMATIC TOPOLOGY                           │
+│                                                                      │
+│         ┌─────┐                                                      │
+│         │  A  │ ──── branch(3) ────▶  A₁  A₂  A₃                    │
+│         └─────┘                       │   │   │                      │
+│                                       └───┼───┘                      │
+│                                           │                          │
+│                                      merge() ─▶  A'                  │
+│                                                                      │
+│         ┌─────┐                      ┌─────────┐     ┌─────┐        │
+│         │  B  │ ──── chrysalis ────▶ │ LIMINAL │ ──▶ │  B' │        │
+│         └─────┘      (morphing)      │  STATE  │     └─────┘        │
+│                                      └─────────┘                     │
+│                                       (dreaming)                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+| Operation | Cognitive Domain | Somatic Domain |
+|-----------|------------------|----------------|
+| `branch(n)` | Fork n thought paths | Spawn n agent variants |
+| `merge(strategy)` | Synthesize thoughts | Consolidate agents |
+| `fix(criterion)` | Recurse until stable | Loop until morphology stable |
+| `prune(selector)` | Keep best thoughts | Terminate underperforming variants |
+
+### 10.2 The Chrysalis Pattern
+
+When an agent needs to change its morphology significantly (e.g., add GPU, scale from 1→10 replicas), it enters a **chrysalis state**—a liminal phase where the agent exists but is between forms.
+
+```python
+@dataclass
+class SomaticChrysalis:
+    """
+    Liminal state during morphology transformation.
+
+    The agent exists but is between forms. State is preserved
+    in the seed; new body is being prepared.
+
+    Design: Part of Y-gent (topology) not Ω-gent (resources).
+    Y-gent manages the transition; Ω-gent provides the new body.
+    """
+
+    seed: SoulSeed           # Preserved state (D-gent extraction)
+    old_morphology: Morphology
+    new_morphology: Morphology
+    trace: list[str]         # What happened during transformation
+    attempts: int = 0
+
+    async def enter(self, agent: "Agent") -> "SomaticChrysalis":
+        """Harvest state from current form, begin transformation."""
+        seed = await agent.harvest_soul()  # D-gent state extraction
+        return SomaticChrysalis(
+            seed=seed,
+            old_morphology=agent.current_morphology,
+            new_morphology=self.new_morphology,
+            trace=[f"Entered chrysalis at {datetime.now()}"],
+        )
+
+    async def dream(self, thought: str) -> None:
+        """
+        Low-compute processing while waiting for new form.
+        Can plan, but cannot act on the world.
+        """
+        self.trace.append(f"[Dream] {thought}")
+
+    async def await_body(self, pod_watcher: PodWatcher) -> ThoughtPod:
+        """Wait for new body to be ready."""
+        while self.attempts < 10:
+            self.attempts += 1
+
+            if await pod_watcher.is_running():
+                self.trace.append(f"New body ready on attempt {self.attempts}")
+                return await self.germinate(pod_watcher.pod)
+
+            await self.dream(f"Attempt {self.attempts} waiting...")
+            await asyncio.sleep(2)
+
+        raise ChrysalisFailure(f"Body never ready after {self.attempts} attempts")
+
+    async def germinate(self, new_pod: ThoughtPod) -> ThoughtPod:
+        """Implant preserved state into new form."""
+        await new_pod.restore_state(self.seed)
+        return new_pod
+```
+
+### 10.3 Branching Agent Populations
+
+```python
+class YGentSomatic:
+    """
+    Topology controller for agent populations.
+
+    Extends Y-gent's cognitive topology to the somatic layer.
+    """
+
+    def __init__(self, omega: OmegaGent, d_gent: DGent):
+        self.omega = omega
+        self.d_gent = d_gent
+
+    async def branch(self, agent: Agent, count: int) -> list[Agent]:
+        """
+        Spawn N variants of an agent.
+
+        Each variant shares the base morphology but may diverge.
+        Used for: parallel search, A/B testing, redundancy.
+        """
+        variants = []
+        for i in range(count):
+            variant_morphology = agent.morphology >> with_variant_id(i)
+            variant = await self.omega.manifest(variant_morphology)
+            variants.append(variant)
+        return variants
+
+    async def merge(
+        self,
+        agents: list[Agent],
+        strategy: MergeStrategy
+    ) -> Agent:
+        """
+        Consolidate multiple agents into one.
+
+        Strategies:
+        - WINNER: Best-performing variant survives
+        - ENSEMBLE: All contribute to merged state
+        - CONSENSUS: Only agreed-upon state survives
+        """
+        match strategy:
+            case MergeStrategy.WINNER:
+                winner = max(agents, key=lambda a: a.performance_score)
+                # Terminate losers
+                for agent in agents:
+                    if agent != winner:
+                        await self.omega.terminate(agent)
+                return winner
+
+            case MergeStrategy.ENSEMBLE:
+                merged_state = await self._ensemble_states(agents)
+                merged = await self._spawn_with_state(merged_state)
+                # Terminate all originals
+                for agent in agents:
+                    await self.omega.terminate(agent)
+                return merged
+
+            case MergeStrategy.CONSENSUS:
+                consensus_state = await self._find_consensus(agents)
+                merged = await self._spawn_with_state(consensus_state)
+                for agent in agents:
+                    await self.omega.terminate(agent)
+                return merged
+
+
+class MergeStrategy(Enum):
+    """How to consolidate multiple agents."""
+
+    WINNER = "winner"       # Best performer survives
+    ENSEMBLE = "ensemble"   # All contribute to merged state
+    CONSENSUS = "consensus" # Only agreed-upon state survives
+```
+
+### 10.4 Cognitive + Somatic Unification
+
+The same Y-gent handles both domains through a unified interface:
+
+| Aspect | Cognitive Y-gent | Somatic Y-gent |
+|--------|------------------|----------------|
+| **Nodes** | ThoughtNode | Agent instance |
+| **Edges** | Dependency | Communication |
+| **Branch** | Fork thought paths | Spawn variants |
+| **Merge** | Synthesize insights | Consolidate agents |
+| **Fix** | Recurse until V-gent approves | Loop until morphology stable |
+| **Chrysalis** | (implicit in backtrack) | Explicit liminal state |
+
+```python
+class UnifiedYGent:
+    """
+    Y-gent that operates on both thoughts and bodies.
+    """
+
+    def __init__(self, cognitive: YGent, somatic: YGentSomatic):
+        self.cognitive = cognitive
+        self.somatic = somatic
+
+    async def branch(
+        self,
+        target: ThoughtNode | Agent,
+        count: int
+    ) -> list[ThoughtNode] | list[Agent]:
+        """Branch thoughts or agents based on target type."""
+        if isinstance(target, ThoughtNode):
+            return await self.cognitive.branch(target, count)
+        else:
+            return await self.somatic.branch(target, count)
+
+    async def merge(
+        self,
+        targets: list[ThoughtNode] | list[Agent],
+        strategy: MergeStrategy
+    ) -> ThoughtNode | Agent:
+        """Merge thoughts or agents based on target type."""
+        if targets and isinstance(targets[0], ThoughtNode):
+            return await self.cognitive.merge(targets, strategy)
+        else:
+            return await self.somatic.merge(targets, strategy)
+```
+
+### 10.5 Implementation Files (Somatic Extension)
+
+```
+impl/claude/agents/y/
+├── __init__.py
+├── y_gent.py             # Existing: Cognitive topology
+├── topology.py           # NEW: Somatic branch/merge
+├── chrysalis.py          # NEW: Transformation state
+├── unified.py            # NEW: Cognitive + Somatic interface
+└── _tests/
+    ├── test_y_gent.py    # Existing
+    ├── test_topology.py  # NEW
+    └── test_chrysalis.py # NEW
+```
+
+### 10.6 CLI Commands (Somatic)
+
+```bash
+# Topology operations
+kgents topology branch <agent> --count=3     # Spawn variants
+kgents topology merge <agents...> --strategy=winner  # Consolidate
+kgents topology chrysalis <agent>            # Show chrysalis state if any
+kgents topology graph                        # Visualize agent topology
+```
+
+---
+
+*"The caterpillar becomes the butterfly not by growing wings, but by dissolving and reforming."*

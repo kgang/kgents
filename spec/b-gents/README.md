@@ -88,6 +88,7 @@ The letter "B" holds both views simultaneously.
 | [bio-gent.md](bio-gent.md) | Bio | Personalized scientific companion |
 | [banker.md](banker.md) | Banker | The Metered Functor, Central Bank, and Universal Value Protocol |
 | [value-tensor.md](value-tensor.md) | Banker | Multi-dimensional resource ontology |
+| [distillation.md](distillation.md) | Banker | Knowledge distillation (the Understudy pattern) |
 
 ---
 
@@ -157,5 +158,6 @@ All would share the core B-gent structure: conservation, selection, metabolism.
 - [hypothesis-engine.md](hypothesis-engine.md) - Bio: Hypothesis generation
 - [robin.md](robin.md) - Bio: Scientific companion
 - [banker.md](banker.md) - Banker: Economic metabolism
+- [distillation.md](distillation.md) - Banker: Knowledge distillation
 - [../bootstrap.md](../bootstrap.md) - Entropy Budget (the third resource)
 - [../principles.md](../principles.md) - Meta-heterarchy discussion
