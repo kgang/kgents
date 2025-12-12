@@ -1,0 +1,195 @@
+# K8gents Operator Deployment
+# Deploys all three operators (Agent, Pheromone, Proposal) in a single pod.
+#
+# AGENTESE: world.cluster.operators.define
+#
+# Apply: kubectl apply -f impl/claude/infra/k8s/manifests/operators-deployment.yaml
+---
+# ServiceAccount for the operator
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kgents-operator
+  namespace: kgents-agents
+  labels:
+    app.kubernetes.io/name: kgents-operator
+    app.kubernetes.io/component: operator
+    app.kubernetes.io/part-of: kgents
+
+---
+# ClusterRole with permissions for all kgents resources
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kgents-operator
+  labels:
+    app.kubernetes.io/name: kgents-operator
+    app.kubernetes.io/component: operator
+    app.kubernetes.io/part-of: kgents
+rules:
+  # kgents.io custom resources - full access
+  - apiGroups: ["kgents.io"]
+    resources:
+      - agents
+      - agents/status
+      - pheromones
+      - pheromones/status
+      - proposals
+      - proposals/status
+      - memories
+      - memories/status
+      - umwelts
+      - umwelts/status
+    verbs: ["*"]
+
+  # Core resources for agent deployments
+  - apiGroups: [""]
+    resources:
+      - pods
+      - pods/log
+      - services
+      - configmaps
+      - secrets
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+  # Deployments for agent pods
+  - apiGroups: ["apps"]
+    resources:
+      - deployments
+      - statefulsets
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+  # Network policies for agent isolation
+  - apiGroups: ["networking.k8s.io"]
+    resources:
+      - networkpolicies
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+  # Events for observability
+  - apiGroups: [""]
+    resources:
+      - events
+    verbs: ["create", "patch"]
+
+  # kopf internal state (peering)
+  - apiGroups: ["kopf.dev"]
+    resources:
+      - clusterkopfpeerings
+    verbs: ["*"]
+  - apiGroups: [""]
+    resources:
+      - namespaces
+    verbs: ["list", "watch"]
+
+---
+# ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kgents-operator
+  labels:
+    app.kubernetes.io/name: kgents-operator
+    app.kubernetes.io/component: operator
+    app.kubernetes.io/part-of: kgents
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kgents-operator
+subjects:
+  - kind: ServiceAccount
+    name: kgents-operator
+    namespace: kgents-agents
+
+---
+# Operator Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kgents-operator
+  namespace: kgents-agents
+  labels:
+    app.kubernetes.io/name: kgents-operator
+    app.kubernetes.io/component: operator
+    app.kubernetes.io/part-of: kgents
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kgents-operator
+  template:
+    metadata:
+      labels:
+        app: kgents-operator
+        app.kubernetes.io/name: kgents-operator
+        app.kubernetes.io/component: operator
+    spec:
+      serviceAccountName: kgents-operator
+
+      containers:
+      - name: operator
+        image: kgents/operator:latest
+        imagePullPolicy: Never  # Use local Kind image
+
+        ports:
+        - containerPort: 8080
+          name: health
+          protocol: TCP
+
+        env:
+        - name: OPERATOR_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        # kopf settings
+        - name: KOPF_STANDALONE
+          value: "true"
+
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "50m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 3
+
+---
+# Service for health endpoint (optional, for monitoring)
+apiVersion: v1
+kind: Service
+metadata:
+  name: kgents-operator
+  namespace: kgents-agents
+  labels:
+    app.kubernetes.io/name: kgents-operator
+    app.kubernetes.io/component: operator
+    app.kubernetes.io/part-of: kgents
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8080
+    name: health
+    protocol: TCP
+  selector:
+    app: kgents-operator
