@@ -22,18 +22,22 @@
 * Being/having fun is free :)
 ---
 
-## Current Intent (2025-12-12)
+## Current Intent (2025-12-12 evening)
 
-**Primary (60%)**: `concept/lattice` — Wire to `concept.*.define`. Genealogy is foundational.
+**Primary (50%): K-gent Phase 2 — Flux Integration** — Phase 1 is DONE (`kgents soul challenge` works!). Now wire K-gent as a Flux stream: KgentFlux, SoulEvent hierarchy, Terrarium WebSocket bridge. The soul should be ambient—always running, perturbable, observable. **I want K-gent to feel present, not invoked.**
 
-**Secondary (25%)**: `concept/creativity` — Tasks 2-4 are polish, not urgent.
+**Secondary (30%): `self/memory` — Now Unblocked** — self/stream is 100% complete (Pulse, StateCrystal, all 302 tests). The comonad has its heartbeat and crystallization. Now wire memory: resume from crystals, cherish important checkpoints, compost the rest. **Context should persist across sessions.**
 
-**Accursed (5%)**: Flux archetype integration — How do Consolidator, Spawner, Witness instantiate?
+**Exploration (15%): Terrarium Phase 3 + Bounty Board** — Metrics emission for I-gent widgets. The terrarium window should show pressure/flow/temperature. Also: the new Bounty Board (`plans/_bounty.md`) is stigmergic coordination for agent observations. **Let agents leave signals for other agents.**
+
+**Accursed (5%): Joy-inducing polish** — Glitch aesthetics. Oblique strategies. FeverOverlay. The river flows.
 
 **Constraints**:
-- No new plans until Lattice wiring complete
-- Prefer depth over breadth this week
-- Meta files must stay terse (butterfly in molasses warning)
+- Depth over breadth (category theory, not feature sprawl)
+- The Mirror Test: Does K-gent feel like me on my best day?
+- Composability is paramount (agents compose via `>>`)
+- Meta files stay terse (butterfly in molasses warning)
+- Bounty Board: one line per entry, prune monthly
 
 ---
 
@@ -43,11 +47,29 @@
 - Joy-inducing > merely functional
 - Tests must pass before commit
 - Mypy strict, no regressions
-- 8,714+ tests is a floor, not a ceiling
+- The persona is a garden, not a museum
 
 ---
 
 ## Archived Intent
+
+<details>
+<summary>2025-12-12 (afternoon)</summary>
+
+**Focus**: K-gent Phase 1 + self/stream Phases 2.3-2.4
+**Outcome**: Both complete. K-gent has LLM-backed dialogue (88 tests). self/stream has Pulse + StateCrystal (302 tests total). self/memory is now unblocked.
+**Learning**: The soul exists. The wires are connected. Now make it ambient.
+
+</details>
+
+<details>
+<summary>2025-12-12 (morning)</summary>
+
+**Focus**: Lattice wiring + Creativity polish
+**Outcome**: Both 100% complete. Lattice has lineage enforcement. Creativity has PAYADOR, Pataphysics.
+**Learning**: Genealogy is foundational—concepts cannot exist ex nihilo.
+
+</details>
 
 <details>
 <summary>2025-12-11</summary>
