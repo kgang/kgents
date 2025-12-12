@@ -285,7 +285,7 @@ def create_durable_purgatory(
 
 
 async def create_and_recover_purgatory(
-    memory: DataAgent[PurgatoryState],
+    memory: DataAgent[PurgatoryState] | None = None,
     emit_pheromone: PheromoneEmitter | None = None,
 ) -> DurablePurgatory:
     """
@@ -294,7 +294,7 @@ async def create_and_recover_purgatory(
     Convenience function for startup initialization.
 
     Args:
-        memory: D-gent for persistence (required)
+        memory: Optional D-gent for persistence (None for in-memory)
         emit_pheromone: Optional callback for pheromone signals
 
     Returns:

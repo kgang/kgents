@@ -1,21 +1,21 @@
 ---
 path: agents/semaphores
-status: active
-progress: 95
+status: complete
+progress: 100
 last_touched: 2025-12-12
 touched_by: claude-opus-4.5
 blocking: []
 enables: [void/entropy]
 session_notes: |
-  Phases 1-5 COMPLETE (138 tests):
+  ALL PHASES COMPLETE (182 tests):
   - Phase 1: SemaphoreToken, ReentryContext, Purgatory (49 tests)
   - Phase 2: Flux Integration - JSON serialization, deadline checking,
     pheromone emission, SemaphoreMixin, flux_integration.py (70 tests)
   - Phase 3: DurablePurgatory with D-gent backing (19 tests)
   - Phase 4: AGENTESE paths - self.semaphore.*, world.purgatory.*
   - Phase 5: CLI handler - kgents semaphore list/resolve/cancel/inspect/void
-
-  Remaining: QA integration testing, wire CLI to Cortex daemon singleton
+  - Phase 6: QA Integration - AGENTESE path tests, CLI handler tests,
+    end-to-end integration tests, Cortex daemon wiring (44 tests)
 ---
 
 # Agent Semaphores: The Rodizio Pattern

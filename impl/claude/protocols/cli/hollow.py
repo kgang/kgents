@@ -166,6 +166,8 @@ COMMAND_REGISTRY: dict[str, str] = {
     "forest": "protocols.cli.handlers.forest:cmd_forest",
     # Metabolic Pressure (Accursed Share)
     "tithe": "protocols.cli.handlers.tithe:cmd_tithe",
+    # Agent Semaphores (Human-in-the-Loop)
+    "semaphore": "protocols.cli.handlers.semaphore:cmd_semaphore",
 }
 
 

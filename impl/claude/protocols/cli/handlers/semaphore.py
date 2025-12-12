@@ -193,17 +193,46 @@ def _get_purgatory() -> Any:
     """
     Get or create the Purgatory instance.
 
-    In a full implementation, this would be a singleton
-    integrated with the Cortex daemon.
+    Resolution order:
+    1. Try to get from lifecycle state (shared across CLI session)
+    2. Fall back to module-level singleton (in-memory)
+
+    The lifecycle state's purgatory is preferred because:
+    - It can be backed by D-gent for persistence
+    - It's shared across all CLI commands in the session
+    - It survives command re-invocations
     """
     from agents.flux.semaphore import Purgatory
 
     global _purgatory_instance
+
+    # Try to get from lifecycle state first
+    try:
+        from protocols.cli.hollow import get_lifecycle_state
+
+        lifecycle_state = get_lifecycle_state()
+        if lifecycle_state is not None:
+            # Check if lifecycle has a purgatory
+            purgatory = getattr(lifecycle_state, "purgatory", None)
+            if purgatory is not None:
+                return purgatory
+    except ImportError:
+        pass
+
+    # Fall back to module-level singleton
     if _purgatory_instance is None:
-        # For now, use in-memory purgatory
-        # TODO: Integrate with Cortex daemon for persistence
         _purgatory_instance = Purgatory()
     return _purgatory_instance
+
+
+def set_purgatory(purgatory: Any) -> None:
+    """
+    Set the module-level purgatory instance.
+
+    Used for testing and explicit configuration.
+    """
+    global _purgatory_instance
+    _purgatory_instance = purgatory
 
 
 async def _handle_list(
