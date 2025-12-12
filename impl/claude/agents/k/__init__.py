@@ -1,17 +1,70 @@
 """
-K-gent: Kent Simulacra
+K-gent: Kent Simulacra - The Digital Soul (Governance Functor)
 
-The personalizer - Ground projected through persona_schema.
-
-K-gent provides:
-- Queryable preferences for other agents
-- Dialogue modes (reflect, advise, challenge, explore)
-- Evolution through interaction
+K-gent is the Middleware of Consciousness:
+1. INTERCEPTS Semaphores from Purgatory (auto-resolves or annotates)
+2. INHABITS Terrarium as ambient presence (not just CLI command)
+3. DREAMS during Hypnagogia (async refinement at night)
 
 K-gent is NOT Kent. It is a mirror for self-dialogue and a personalization
-layer for the entire kgents ecosystem.
+layer for the entire kgents ecosystem. When you type `kgents soul challenge`,
+the response should feel like Kent on his best day, reminding Kent on his
+worst day what he actually believes.
+
+This is Autopoiesis Level 4: The system critiques its own reason for
+existing based on your values.
+
+Phase 1 Features:
+- LLM-backed dialogue (DIALOGUE/DEEP tiers use actual LLM)
+- Deep intercept with principle reasoning
+- Audit trail for all mediations
 """
 
+from .audit import (
+    AuditEntry,
+    AuditTrail,
+)
+from .eigenvectors import (
+    KENT_EIGENVECTORS,
+    EigenvectorCoordinate,
+    KentEigenvectors,
+    eigenvector_context,
+    get_challenge_style,
+    get_dialectical_prompt,
+    get_eigenvectors,
+)
+
+# Phase 2: Flux Integration (K-gent streaming)
+from .events import (
+    SoulEvent,
+    SoulEventType,
+    dialogue_end_event,
+    dialogue_start_event,
+    dialogue_turn_event,
+    eigenvector_probe_event,
+    error_event,
+    # Ambient events (soul present, not invoked)
+    feeling_event,
+    from_dialogue_output,
+    from_intercept_result,
+    gratitude_event,
+    intercept_request_event,
+    intercept_result_event,
+    is_ambient_event,
+    is_dialogue_event,
+    is_external_event,
+    is_intercept_event,
+    is_request_event,
+    is_system_event,
+    mode_change_event,
+    observation_event,
+    perturbation_event,
+    ping_event,
+    pulse_event,
+    self_challenge_event,
+    state_snapshot_event,
+    thought_event,
+)
 from .evolution import (
     BootstrapConfig,
     # Bootstrap
@@ -28,6 +81,33 @@ from .evolution import (
     bootstrap_hybrid,
     bootstrap_persona,
     evolve_persona,
+)
+from .flux import (
+    KgentFlux,
+    KgentFluxConfig,
+    KgentFluxState,
+    create_kgent_flux,
+)
+
+# Soul Functor (Alethic Algebra Phase 4)
+from .functor import (
+    Soul,
+    SoulAgent,
+    SoulFunctor,
+    soul_lift,
+    soul_with,
+    unlift,
+    unwrap,
+)
+from .llm import (
+    BaseLLMClient,
+    ClaudeLLMClient,
+    LLMClient,
+    LLMResponse,
+    MockLLMClient,
+    create_llm_client,
+    has_llm_credentials,
+    morpheus_available,
 )
 from .persistent_persona import (
     PersistentPersonaAgent,
@@ -48,8 +128,88 @@ from .persona import (
     kgent,
     query_persona,
 )
+from .rumination import (
+    RuminationConfig,
+    RuminationState,
+    quick_rumination,
+    ruminate,
+    # Synergy: Pulse Bridge (K-gent → D-gent Vitality)
+    rumination_to_crystal_task,
+    soul_to_pulse,
+)
+from .soul import (
+    DANGEROUS_KEYWORDS,
+    BudgetConfig,
+    BudgetTier,
+    InterceptResult,
+    KgentSoul,
+    SoulDialogueOutput,
+    SoulState,
+    create_soul,
+    soul,
+)
+from .starters import (
+    ADVISE_STARTERS,
+    CHALLENGE_STARTERS,
+    EXPLORE_STARTERS,
+    REFLECT_STARTERS,
+    all_starters,
+    format_all_starters_for_display,
+    format_starters_for_display,
+    get_starters,
+    random_starter,
+)
+from .templates import (
+    get_whisper_response,
+    should_use_template,
+    try_template_response,
+)
 
 __all__ = [
+    # Soul (Middleware of Consciousness)
+    "KgentSoul",
+    "SoulState",
+    "SoulDialogueOutput",
+    "InterceptResult",
+    "BudgetTier",
+    "BudgetConfig",
+    "DANGEROUS_KEYWORDS",
+    "soul",
+    "create_soul",
+    # LLM Client
+    "LLMClient",
+    "LLMResponse",
+    "BaseLLMClient",
+    "ClaudeLLMClient",
+    "MockLLMClient",
+    "create_llm_client",
+    "has_llm_credentials",
+    "morpheus_available",
+    # Audit Trail
+    "AuditEntry",
+    "AuditTrail",
+    # Eigenvectors
+    "KentEigenvectors",
+    "EigenvectorCoordinate",
+    "KENT_EIGENVECTORS",
+    "get_eigenvectors",
+    "eigenvector_context",
+    "get_challenge_style",
+    "get_dialectical_prompt",
+    # Starters
+    "REFLECT_STARTERS",
+    "ADVISE_STARTERS",
+    "CHALLENGE_STARTERS",
+    "EXPLORE_STARTERS",
+    "get_starters",
+    "random_starter",
+    "all_starters",
+    "format_starters_for_display",
+    "format_all_starters_for_display",
+    # Templates
+    "try_template_response",
+    "get_whisper_response",
+    "should_use_template",
     # Persona types
     "PersonaSeed",
     "PersonaState",
@@ -84,4 +244,53 @@ __all__ = [
     # Conflict detection
     "ConflictData",
     "ConflictDetector",
+    # Soul Functor (Alethic Algebra Phase 4)
+    "Soul",
+    "SoulAgent",
+    "SoulFunctor",
+    "soul_lift",
+    "soul_with",
+    "unlift",
+    "unwrap",
+    # Phase 2: Flux Integration (K-gent streaming)
+    "SoulEvent",
+    "SoulEventType",
+    "dialogue_start_event",
+    "dialogue_turn_event",
+    "dialogue_end_event",
+    "mode_change_event",
+    "intercept_request_event",
+    "intercept_result_event",
+    "eigenvector_probe_event",
+    "pulse_event",
+    "state_snapshot_event",
+    "error_event",
+    "ping_event",
+    "from_dialogue_output",
+    "from_intercept_result",
+    "is_dialogue_event",
+    "is_intercept_event",
+    "is_system_event",
+    "is_request_event",
+    "KgentFlux",
+    "KgentFluxConfig",
+    "KgentFluxState",
+    "create_kgent_flux",
+    # Ambient events (soul present, not invoked)
+    "thought_event",
+    "feeling_event",
+    "observation_event",
+    "self_challenge_event",
+    "perturbation_event",
+    "gratitude_event",
+    "is_ambient_event",
+    "is_external_event",
+    # Rumination (autonomous ambient event generation)
+    "ruminate",
+    "quick_rumination",
+    "RuminationConfig",
+    "RuminationState",
+    # Synergy: Pulse Bridge (K-gent → D-gent Vitality)
+    "soul_to_pulse",
+    "rumination_to_crystal_task",
 ]

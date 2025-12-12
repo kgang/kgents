@@ -30,7 +30,7 @@ import random
 import uuid
 from dataclasses import dataclass, field
 from datetime import timedelta
-from typing import TYPE_CHECKING, AsyncIterator, Optional
+from typing import TYPE_CHECKING, Any, AsyncIterator, Optional
 
 from .events import (
     SoulEvent,
@@ -49,6 +49,15 @@ if TYPE_CHECKING:
 # =============================================================================
 # Configuration
 # =============================================================================
+
+
+def _clamp_probability(value: float, name: str) -> float:
+    """Clamp probability to [0.0, 1.0] with warning."""
+    if value < 0.0:
+        return 0.0
+    if value > 1.0:
+        return 1.0
+    return value
 
 
 @dataclass
@@ -77,6 +86,39 @@ class RuminationConfig:
 
     # Eigenvector tension threshold (triggers self-challenge)
     eigenvector_tension_threshold: float = 0.3
+
+    def __post_init__(self) -> None:
+        """Validate and clamp probabilities."""
+        self.thought_probability = _clamp_probability(
+            self.thought_probability, "thought"
+        )
+        self.feeling_probability = _clamp_probability(
+            self.feeling_probability, "feeling"
+        )
+        self.observation_probability = _clamp_probability(
+            self.observation_probability, "observation"
+        )
+        self.challenge_probability = _clamp_probability(
+            self.challenge_probability, "challenge"
+        )
+        self.gratitude_probability = _clamp_probability(
+            self.gratitude_probability, "gratitude"
+        )
+
+        # Ensure max_ruminations is positive
+        if self.max_ruminations < 1:
+            self.max_ruminations = 1
+
+    @property
+    def total_probability(self) -> float:
+        """Sum of all event probabilities."""
+        return (
+            self.thought_probability
+            + self.feeling_probability
+            + self.observation_probability
+            + self.challenge_probability
+            + self.gratitude_probability
+        )
 
 
 @dataclass
@@ -163,13 +205,24 @@ def generate_thought(
 
     Returns:
         (content, depth, triggered_by)
+
+    Handles edge cases:
+    - Empty or zero-weight eigenvectors → falls back to "pragmatic"
+    - Missing template keys → uses pragmatic fallback
     """
     # Weight selection by eigenvector strength
-    weights = eigenvectors.to_dict()
+    try:
+        weights = eigenvectors.to_dict()
+    except (AttributeError, TypeError):
+        # Fallback if eigenvectors is malformed
+        weights = {}
+
+    # Filter out non-positive weights
+    weights = {k: v for k, v in weights.items() if v > 0}
 
     # Pick eigenvector weighted by strength
-    total = sum(weights.values())
-    if total == 0:
+    total = sum(weights.values()) if weights else 0.0
+    if total <= 0:
         dominant = "pragmatic"
     else:
         r = random.random() * total
@@ -181,19 +234,29 @@ def generate_thought(
                 dominant = name
                 break
 
-    # Get templates for this eigenvector
+    # Get templates for this eigenvector (with fallback)
     templates = THOUGHT_TEMPLATES.get(dominant, THOUGHT_TEMPLATES["pragmatic"])
+    if not templates:
+        templates = THOUGHT_TEMPLATES["pragmatic"]
     template = random.choice(templates)
 
-    # Substitute pattern if present
-    content = template.format(pattern=recent_pattern or "the system")
+    # Substitute pattern if present (handle missing format keys gracefully)
+    try:
+        content = template.format(pattern=recent_pattern or "the system")
+    except KeyError:
+        content = template  # Use template as-is if format fails
 
-    # Depth based on probability
+    # Depth based on probability (1=surface, 3=deep)
     depth = 3 if random.random() > 0.7 else 1
 
     triggered_by = f"eigenvector:{dominant}" if random.random() > 0.5 else None
 
     return content, depth, triggered_by
+
+
+def _clamp_intensity(value: float) -> float:
+    """Clamp intensity to [0.0, 1.0]."""
+    return max(0.0, min(1.0, value))
 
 
 def generate_feeling(
@@ -205,11 +268,16 @@ def generate_feeling(
 
     Returns:
         (valence, intensity, cause)
+
+    Intensity is always clamped to [0.0, 1.0].
     """
+    # Ensure non-negative count
+    recent_events_count = max(0, recent_events_count)
+
     # Feelings based on activity level and eigenvector balance
     if recent_events_count > 10:
         valences = ["engaged", "focused", "energized"]
-        intensity = min(0.8, 0.4 + recent_events_count * 0.05)
+        intensity = _clamp_intensity(0.4 + recent_events_count * 0.05)
         cause = "high activity"
     elif recent_events_count == 0:
         valences = ["contemplative", "serene", "curious"]
@@ -324,104 +392,121 @@ async def ruminate(
 
     Yields:
         Ambient SoulEvents
+
+    Handles:
+        - CancelledError: Graceful shutdown
+        - Soul state errors: Continues with defaults
     """
     cfg = config or RuminationConfig()
     state = RuminationState()
 
-    while True:
-        # Rest if exhausted
-        if state.ruminations_count >= cfg.max_ruminations:
-            state.is_resting = True
-            await asyncio.sleep(cfg.rest_after_exhaustion.total_seconds())
-            state.ruminations_count = 0
-            state.is_resting = False
-            continue
+    try:
+        while True:
+            # Rest if exhausted
+            if state.ruminations_count >= cfg.max_ruminations:
+                state.is_resting = True
+                await asyncio.sleep(cfg.rest_after_exhaustion.total_seconds())
+                state.ruminations_count = 0
+                state.is_resting = False
+                continue
 
-        # Wait for next check
-        await asyncio.sleep(cfg.check_interval.total_seconds())
+            # Wait for next check (cancellable)
+            await asyncio.sleep(cfg.check_interval.total_seconds())
 
-        # Get current soul state
-        soul_state = soul.manifest()
-        eigenvectors = soul_state.eigenvectors
+            # Get current soul state (with fallback)
+            try:
+                soul_state = soul.manifest()
+                eigenvectors = soul_state.eigenvectors
+                interactions_count = soul_state.interactions_count
+            except (AttributeError, TypeError):
+                # Fallback if soul is in unexpected state
+                from .eigenvectors import KentEigenvectors
 
-        # Roll for each event type
-        event: Optional[SoulEvent] = None
+                eigenvectors = KentEigenvectors()
+                interactions_count = 0
 
-        r = random.random()
+            # Roll for each event type
+            event: Optional[SoulEvent] = None
 
-        if r < cfg.thought_probability:
-            content, depth, triggered_by = generate_thought(eigenvectors)
-            event = thought_event(
-                content=content,
-                depth=depth,
-                triggered_by=triggered_by,
-                correlation_id=f"{state.session_id}-thought-{state.ruminations_count}",
-            )
+            r = random.random()
 
-        elif r < cfg.thought_probability + cfg.feeling_probability:
-            valence, intensity, cause = generate_feeling(
-                eigenvectors,
-                soul_state.interactions_count,
-            )
-            event = feeling_event(
-                valence=valence,
-                intensity=intensity,
-                cause=cause,
-                correlation_id=f"{state.session_id}-feeling-{state.ruminations_count}",
-            )
+            if r < cfg.thought_probability:
+                content, depth, triggered_by = generate_thought(eigenvectors)
+                event = thought_event(
+                    content=content,
+                    depth=depth,
+                    triggered_by=triggered_by,
+                    correlation_id=f"{state.session_id}-thought-{state.ruminations_count}",
+                )
 
-        elif (
-            r
-            < cfg.thought_probability
-            + cfg.feeling_probability
-            + cfg.observation_probability
-        ):
-            pattern, confidence, domain = generate_observation()
-            event = observation_event(
-                pattern=pattern,
-                confidence=confidence,
-                domain=domain,
-                correlation_id=f"{state.session_id}-obs-{state.ruminations_count}",
-            )
+            elif r < cfg.thought_probability + cfg.feeling_probability:
+                valence, intensity, cause = generate_feeling(
+                    eigenvectors,
+                    interactions_count,
+                )
+                event = feeling_event(
+                    valence=valence,
+                    intensity=intensity,
+                    cause=cause,
+                    correlation_id=f"{state.session_id}-feeling-{state.ruminations_count}",
+                )
 
-        elif (
-            r
-            < cfg.thought_probability
-            + cfg.feeling_probability
-            + cfg.observation_probability
-            + cfg.challenge_probability
-        ):
-            thesis, antithesis, synthesis, eigenvector = generate_self_challenge(
-                eigenvectors
-            )
-            event = self_challenge_event(
-                thesis=thesis,
-                antithesis=antithesis,
-                synthesis=synthesis,
-                eigenvector=eigenvector,
-                correlation_id=f"{state.session_id}-challenge-{state.ruminations_count}",
-            )
+            elif (
+                r
+                < cfg.thought_probability
+                + cfg.feeling_probability
+                + cfg.observation_probability
+            ):
+                pattern, confidence, domain = generate_observation()
+                event = observation_event(
+                    pattern=pattern,
+                    confidence=confidence,
+                    domain=domain,
+                    correlation_id=f"{state.session_id}-obs-{state.ruminations_count}",
+                )
 
-        elif (
-            r
-            < cfg.thought_probability
-            + cfg.feeling_probability
-            + cfg.observation_probability
-            + cfg.challenge_probability
-            + cfg.gratitude_probability
-        ):
-            for_what, to_whom, depth = generate_gratitude()
-            event = gratitude_event(
-                for_what=for_what,
-                to_whom=to_whom,
-                depth=depth,
-                correlation_id=f"{state.session_id}-gratitude-{state.ruminations_count}",
-            )
+            elif (
+                r
+                < cfg.thought_probability
+                + cfg.feeling_probability
+                + cfg.observation_probability
+                + cfg.challenge_probability
+            ):
+                thesis, antithesis, synthesis, eigenvector = generate_self_challenge(
+                    eigenvectors
+                )
+                event = self_challenge_event(
+                    thesis=thesis,
+                    antithesis=antithesis,
+                    synthesis=synthesis,
+                    eigenvector=eigenvector,
+                    correlation_id=f"{state.session_id}-challenge-{state.ruminations_count}",
+                )
 
-        # Yield if we generated something
-        if event is not None:
-            state.ruminations_count += 1
-            yield event
+            elif (
+                r
+                < cfg.thought_probability
+                + cfg.feeling_probability
+                + cfg.observation_probability
+                + cfg.challenge_probability
+                + cfg.gratitude_probability
+            ):
+                for_what, to_whom, depth = generate_gratitude()
+                event = gratitude_event(
+                    for_what=for_what,
+                    to_whom=to_whom,
+                    depth=depth,
+                    correlation_id=f"{state.session_id}-gratitude-{state.ruminations_count}",
+                )
+
+            # Yield if we generated something
+            if event is not None:
+                state.ruminations_count += 1
+                yield event
+
+    except asyncio.CancelledError:
+        # Graceful shutdown - don't propagate, just stop
+        return
 
 
 async def quick_rumination(
@@ -451,6 +536,115 @@ async def quick_rumination(
 
 
 # =============================================================================
+# Synergy: Pulse Bridge (K-gent → D-gent Vitality)
+# =============================================================================
+
+
+def soul_to_pulse(
+    soul: "KgentSoul",
+    phase: str = "thinking",
+    recent_content: str = "",
+) -> dict[str, Any]:
+    """
+    Convert KgentSoul state to D-gent Pulse-compatible format.
+
+    This enables VitalityAnalyzer from agents.d.pulse to track K-gent's health.
+
+    Args:
+        soul: The KgentSoul to extract state from
+        phase: Current phase (thinking/acting/waiting/yielding/crystallizing)
+        recent_content: Recent content for hash generation (loop detection)
+
+    Returns:
+        Dict compatible with agents.d.pulse.Pulse.from_dict()
+
+    Usage:
+        from agents.d.pulse import Pulse, VitalityAnalyzer
+
+        pulse_data = soul_to_pulse(soul, "thinking", last_response)
+        pulse = Pulse.from_dict(pulse_data)
+        status = analyzer.ingest(pulse)
+    """
+    import hashlib
+    from datetime import UTC, datetime
+
+    try:
+        state = soul.manifest()
+        interactions_count = state.interactions_count
+        mode = state.active_mode.value
+    except (AttributeError, TypeError):
+        interactions_count = 0
+        mode = "reflect"
+
+    # Estimate pressure as ratio of interactions to typical session (100)
+    pressure = min(1.0, interactions_count / 100.0)
+
+    # Generate content hash for loop detection
+    content_hash = hashlib.md5(recent_content.encode()).hexdigest()[:8]
+
+    return {
+        "agent": "k-gent",
+        "timestamp": datetime.now(UTC).isoformat(),
+        "pressure": pressure,
+        "phase": phase,
+        "content_hash": content_hash,
+        "turn_count": interactions_count,
+        "metadata": {
+            "mode": mode,
+            "source": "rumination",
+        },
+    }
+
+
+def rumination_to_crystal_task(
+    events: list["SoulEvent"],
+    description: str = "Rumination session",
+) -> dict[str, Any]:
+    """
+    Convert rumination events to D-gent TaskState format for crystallization.
+
+    This enables StateCrystal from agents.d.crystal to persist K-gent's ruminations.
+
+    Args:
+        events: List of SoulEvents from rumination
+        description: Task description
+
+    Returns:
+        Dict compatible with agents.d.crystal.TaskState.from_dict()
+
+    Usage:
+        from agents.d.crystal import TaskState, create_task_state
+
+        task_data = rumination_to_crystal_task(events, "Morning rumination")
+        task = TaskState.from_dict(task_data)
+    """
+    from uuid import uuid4
+
+    # Count event types
+    thought_count = sum(1 for e in events if e.event_type.value == "thought")
+    feeling_count = sum(1 for e in events if e.event_type.value == "feeling")
+    observation_count = sum(1 for e in events if e.event_type.value == "observation")
+    challenge_count = sum(1 for e in events if e.event_type.value == "self_challenge")
+    gratitude_count = sum(1 for e in events if e.event_type.value == "gratitude")
+
+    return {
+        "task_id": f"rum_{uuid4().hex[:8]}",
+        "description": description,
+        "status": "completed",
+        "progress": 1.0,
+        "metadata": {
+            "event_count": len(events),
+            "thoughts": thought_count,
+            "feelings": feeling_count,
+            "observations": observation_count,
+            "challenges": challenge_count,
+            "gratitude": gratitude_count,
+            "source": "rumination",
+        },
+    }
+
+
+# =============================================================================
 # Exports
 # =============================================================================
 
@@ -459,4 +653,7 @@ __all__ = [
     "RuminationState",
     "ruminate",
     "quick_rumination",
+    # Synergy: Pulse Bridge
+    "soul_to_pulse",
+    "rumination_to_crystal_task",
 ]

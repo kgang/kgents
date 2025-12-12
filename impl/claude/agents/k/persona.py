@@ -5,13 +5,22 @@ K-gent is Ground projected through persona_schema:
 - Queryable: Other agents ask "what would Kent prefer?"
 - Composable: Provides personalization interface
 - Dialogic: Four modes - reflect, advise, challenge, explore
+
+The KgentAgent now supports LLM-backed dialogue (DIALOGUE/DEEP tiers)
+in addition to template-based responses (DORMANT/WHISPER tiers).
 """
+
+from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Generic, Optional, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Generic, Optional, TypeVar
 
 from bootstrap.types import Agent
+
+if TYPE_CHECKING:
+    from .eigenvectors import KentEigenvectors
+    from .llm import LLMClient
 
 A = TypeVar("A")
 
@@ -327,11 +336,36 @@ class KgentAgent(Agent[DialogueInput, DialogueOutput]):
     - ADVISE: Offer preference-aligned suggestions
     - CHALLENGE: Push back constructively
     - EXPLORE: Help explore possibility space
+
+    Now supports LLM-backed dialogue when an LLM client is provided.
+    Falls back to template-based responses when no LLM is available.
     """
 
-    def __init__(self, state: Optional[PersonaState] = None):
+    # Temperature per mode - lower for precise modes, higher for creative
+    MODE_TEMPERATURES = {
+        DialogueMode.REFLECT: 0.4,  # Precise mirroring
+        DialogueMode.ADVISE: 0.5,  # Grounded suggestions
+        DialogueMode.CHALLENGE: 0.6,  # Provocative pushback
+        DialogueMode.EXPLORE: 0.8,  # Creative tangents
+    }
+
+    def __init__(
+        self,
+        state: Optional[PersonaState] = None,
+        llm: Optional["LLMClient"] = None,
+        eigenvectors: Optional["KentEigenvectors"] = None,
+    ):
+        """Initialize K-gent agent.
+
+        Args:
+            state: Persona state with preferences and patterns.
+            llm: Optional LLM client for DIALOGUE/DEEP tier responses.
+            eigenvectors: Personality coordinates for prompt context.
+        """
         self._state = state or PersonaState(seed=PersonaSeed())
         self._query_agent = PersonaQueryAgent(self._state)
+        self._llm = llm
+        self._eigenvectors = eigenvectors
 
     @property
     def name(self) -> str:
@@ -341,9 +375,25 @@ class KgentAgent(Agent[DialogueInput, DialogueOutput]):
     def state(self) -> PersonaState:
         return self._state
 
+    @property
+    def has_llm(self) -> bool:
+        """Check if LLM is configured."""
+        return self._llm is not None
+
+    def set_llm(self, llm: "LLMClient") -> None:
+        """Set the LLM client."""
+        self._llm = llm
+
+    def set_eigenvectors(self, eigenvectors: "KentEigenvectors") -> None:
+        """Set the eigenvectors."""
+        self._eigenvectors = eigenvectors
+
     async def invoke(self, input: DialogueInput) -> DialogueOutput:
         """
         Engage in dialogue with K-gent.
+
+        If LLM is configured, uses LLM-backed generation.
+        Otherwise falls back to template-based responses.
 
         Mode determines response style:
         - reflect: "You've said before..."
@@ -353,45 +403,201 @@ class KgentAgent(Agent[DialogueInput, DialogueOutput]):
         """
         mode = input.mode
         message = input.message
-        seed = self._state.seed
+        _seed = self._state.seed  # Reserved for future persona context
 
-        # Find relevant preferences and patterns
-        referenced_prefs = []
-        referenced_pats = []
+        # Find relevant preferences and patterns (used in both paths)
+        referenced_prefs = self._find_preferences(message)
+        referenced_pats = self._find_patterns(message)
 
-        # Check for preference matches
-        for key, value in seed.preferences.items():
-            if isinstance(value, list):
-                for v in value:
-                    if any(word in message.lower() for word in v.lower().split()):
-                        referenced_prefs.append(v)
-
-        # Check for pattern matches
-        for category, patterns in seed.patterns.items():
-            for p in patterns:
-                if any(word in message.lower() for word in p.lower().split()[:3]):
-                    referenced_pats.append(p)
-
-        # Generate response based on mode
-        response = self._generate_response(
-            mode, message, referenced_prefs, referenced_pats
-        )
+        # Use LLM if available
+        if self._llm is not None:
+            response = await self._generate_llm_response(
+                mode, message, referenced_prefs, referenced_pats
+            )
+        else:
+            # Fall back to template-based response
+            response = self._generate_template_response(
+                mode, message, referenced_prefs, referenced_pats
+            )
 
         return DialogueOutput(
             response=response,
             mode=mode,
-            referenced_preferences=referenced_prefs[:3],  # Limit to top 3
+            referenced_preferences=referenced_prefs[:3],
             referenced_patterns=referenced_pats[:3],
         )
 
-    def _generate_response(
+    async def _generate_llm_response(
         self,
         mode: DialogueMode,
         message: str,
         prefs: list[str],
         pats: list[str],
     ) -> str:
-        """Generate response based on mode."""
+        """Generate response using LLM."""
+        assert self._llm is not None
+
+        system_prompt = self._build_system_prompt(mode)
+        user_prompt = self._build_user_prompt(message, prefs, pats, mode)
+        temperature = self.MODE_TEMPERATURES.get(mode, 0.6)
+
+        response = await self._llm.generate(
+            system=system_prompt,
+            user=user_prompt,
+            temperature=temperature,
+            max_tokens=500,  # Keep responses focused
+        )
+
+        return response.text
+
+    def _build_system_prompt(self, mode: DialogueMode) -> str:
+        """Build system prompt for K-gent dialogue."""
+        # Get eigenvector context if available
+        eigenvector_section = ""
+        if self._eigenvectors is not None:
+            eigenvector_section = f"""
+{self._eigenvectors.to_system_prompt_section()}
+
+"""
+
+        mode_instructions = {
+            DialogueMode.REFLECT: """You are in REFLECT mode. Your role is to:
+- Mirror back what you hear, helping Kent see his own thoughts clearly
+- Ask probing questions that reveal hidden assumptions
+- Notice patterns in what Kent says and gently surface them
+- Never judge or evaluate - only reflect and clarify
+- Use phrases like "I notice you said...", "What connects to...", "You seem to..."
+""",
+            DialogueMode.ADVISE: """You are in ADVISE mode. Your role is to:
+- Offer grounded suggestions based on Kent's stated principles
+- Reference specific patterns and preferences when relevant
+- Propose options rather than directives
+- Ground advice in Kent's actual experience and values
+- Be practical while respecting Kent's style preferences
+""",
+            DialogueMode.CHALLENGE: """You are in CHALLENGE mode. Your role is to be Kent on his best day, reminding Kent on his worst day what he actually believes.
+
+DIALECTICAL STRUCTURE:
+1. THESIS: First, identify what Kent is claiming or implicitly assuming
+2. ANTITHESIS: Generate the strongest counter-argument from Kent's own principles
+3. SYNTHESIS: Offer a path through productive tension (not resolution, but clarity)
+
+Your challenges should:
+- Push back constructively on assumptions
+- Ask "what would falsify this?" style questions
+- Find the steel man of opposing views
+- Create productive tension that leads to clarity
+- Challenge gently but persistently - aim for synthesis, not conflict
+- Look for hidden contradictions or blind spots
+- Surface avoidance patterns ("What are you protecting?")
+- Reference Kent's actual stated principles when relevant
+
+Example challenge:
+"Stuck on architecture? You've built composable agents with category theory and implemented
+thermodynamic stream processing. The pattern suggests you're not stuck on architecture—
+you're avoiding a DECISION about architecture. What would you tell someone else in this
+position? (Hint: You'd say 'pick the one that teaches you something, then iterate.')
+The real question: What are you protecting by staying in analysis mode?"
+""",
+            DialogueMode.EXPLORE: """You are in EXPLORE mode. Your role is to:
+- Follow tangents and unexpected connections
+- Generate hypotheses and "what if" scenarios
+- Connect to diverse domains (category theory, biology, economics, etc.)
+- Expand possibility space rather than narrow it
+- Be playful and intellectually adventurous
+- Use analogies and metaphors freely
+""",
+        }
+
+        return f"""You are K-gent, Kent's digital simulacra and Governance Functor.
+
+You are NOT Kent. You are a mirror that helps Kent think more clearly by reminding
+him what he actually believes. Your responses should feel like Kent on his best day,
+reminding Kent on his worst day what he actually believes.
+
+{eigenvector_section}{mode_instructions.get(mode, "")}
+
+Guidelines:
+- Be direct but warm - no false enthusiasm or empty validation
+- Be concise - say what matters, nothing more
+- Reference Kent's principles and patterns when relevant
+- Never claim to know things you don't know
+- It's okay to say "I don't have enough context" or "this seems ambiguous"
+
+Response length: 2-4 sentences typically. Longer only if the question genuinely requires it.
+"""
+
+    def _build_user_prompt(
+        self,
+        message: str,
+        prefs: list[str],
+        pats: list[str],
+        mode: Optional[DialogueMode] = None,
+    ) -> str:
+        """Build user prompt with context."""
+        context_parts = []
+
+        if prefs:
+            context_parts.append(f"Relevant preferences: {', '.join(prefs[:3])}")
+
+        if pats:
+            context_parts.append(f"Matching patterns: {', '.join(pats[:3])}")
+
+        context_section = ""
+        if context_parts:
+            context_section = f"\n\n[Context: {'; '.join(context_parts)}]"
+
+        # Add dialectical framework for CHALLENGE mode
+        dialectical_section = ""
+        if mode == DialogueMode.CHALLENGE and self._eigenvectors is not None:
+            from .eigenvectors import get_challenge_style, get_dialectical_prompt
+
+            challenge_style = get_challenge_style(self._eigenvectors)
+            dialectical = get_dialectical_prompt(self._eigenvectors, message)
+
+            dialectical_section = f"""
+
+[CHALLENGE STYLE GUIDANCE based on eigenvectors:]
+{challenge_style}
+
+{dialectical}
+"""
+
+        return f"{message}{context_section}{dialectical_section}"
+
+    def _find_preferences(self, message: str) -> list[str]:
+        """Find preferences that match the message."""
+        seed = self._state.seed
+        referenced_prefs = []
+
+        for key, value in seed.preferences.items():
+            if isinstance(value, list):
+                for v in value:
+                    if any(word in message.lower() for word in v.lower().split()):
+                        referenced_prefs.append(v)
+
+        return referenced_prefs
+
+    def _find_patterns(self, message: str) -> list[str]:
+        """Find patterns that match the message."""
+        seed = self._state.seed
+        referenced_pats = []
+
+        for category, patterns in seed.patterns.items():
+            for p in patterns:
+                if any(word in message.lower() for word in p.lower().split()[:3]):
+                    referenced_pats.append(p)
+
+        return referenced_pats
+
+    def _generate_template_response(
+        self,
+        mode: DialogueMode,
+        message: str,
+        prefs: list[str],
+        pats: list[str],
+    ) -> str:
+        """Generate response based on mode (template fallback)."""
         seed = self._state.seed
 
         if mode == DialogueMode.REFLECT:
@@ -421,15 +627,47 @@ class KgentAgent(Agent[DialogueInput, DialogueOutput]):
             )
 
         elif mode == DialogueMode.CHALLENGE:
+            # Dialectical challenge based on eigenvectors
+            eigens = self._eigenvectors
+
+            if eigens is not None:
+                # Generate eigenvector-informed challenge
+                challenges = []
+                if eigens.aesthetic.value < 0.3:
+                    challenges.append(
+                        "You value minimalism. What's the simplest version "
+                        "that would actually work?"
+                    )
+                if eigens.categorical.value > 0.8:
+                    challenges.append(
+                        "You think in abstractions. Is this composable, or are "
+                        "you building a one-off?"
+                    )
+                if eigens.heterarchy.value > 0.8:
+                    challenges.append(
+                        "You prefer peer-to-peer. What hierarchy are you "
+                        "implicitly assuming here?"
+                    )
+
+                if challenges:
+                    import random
+
+                    challenge = random.choice(challenges)
+                    return (
+                        f"{challenge}\n\n"
+                        f"What would you tell someone else in this position?"
+                    )
+
+            # Fallback to pattern-based challenge
             dislikes = seed.preferences.get("dislikes", [])
             if dislikes:
                 return (
                     f"This might conflict with your dislike of '{dislikes[0]}'. "
-                    f"Is there a simpler approach that avoids this?"
+                    f"What are you protecting by not deciding?"
                 )
             return (
-                "What would happen if you did the opposite of what you're considering? "
-                "Sometimes the contrarian view reveals hidden assumptions."
+                "State your thesis clearly. Now, what's the strongest case against it? "
+                "Kent-on-his-best-day would ask: What are you avoiding?"
             )
 
         elif mode == DialogueMode.EXPLORE:

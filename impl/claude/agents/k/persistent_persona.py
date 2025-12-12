@@ -77,13 +77,21 @@ class PersistentPersonaAgent(KgentAgent):
         Load persona state from disk.
 
         Call this after initialization to restore persisted state.
+        If the file doesn't exist or is corrupted, keeps the initial state.
         """
         try:
             self._state = await self._dgent.load()
             self._query_agent = PersonaQueryAgent(self._state)
-        except Exception:
-            # No state exists yet, use initial state
+        except FileNotFoundError:
+            # No state exists yet, use initial state (expected on first run)
             pass
+        except (ValueError, KeyError, TypeError) as e:
+            # Corrupted state file - log but keep initial state
+            import logging
+
+            logging.getLogger(__name__).warning(
+                "Failed to load persona state, using defaults: %s", e
+            )
 
     async def save_state(self) -> None:
         """Persist current persona state to disk."""
@@ -180,11 +188,22 @@ class PersistentPersonaQueryAgent(PersonaQueryAgent):
         )
 
     async def load_state(self) -> None:
-        """Load persona state from disk."""
+        """Load persona state from disk.
+
+        If the file doesn't exist or is corrupted, keeps the initial state.
+        """
         try:
             self._state = await self._dgent.load()
-        except Exception:
+        except FileNotFoundError:
+            # No state exists yet, use initial state (expected on first run)
             pass
+        except (ValueError, KeyError, TypeError) as e:
+            # Corrupted state file - log but keep initial state
+            import logging
+
+            logging.getLogger(__name__).warning(
+                "Failed to load query agent state, using defaults: %s", e
+            )
 
     async def save_state(self) -> None:
         """Persist current persona state."""
