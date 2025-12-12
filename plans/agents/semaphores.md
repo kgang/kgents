@@ -1,20 +1,21 @@
 ---
 path: agents/semaphores
 status: active
-progress: 20
+progress: 95
 last_touched: 2025-12-12
 touched_by: claude-opus-4.5
 blocking: []
 enables: [void/entropy]
 session_notes: |
-  Phase 1 COMPLETE (78 tests). Core types implemented:
-  - SemaphoreToken (the Red Card)
-  - ReentryContext (the Green Card)
-  - Purgatory (the waiting room)
-  - SemaphoreReason (6-way taxonomy)
-  Design decisions: cancelled tokens stay in _pending for audit trail,
-  no events emitted (deferred to Phase 2), frozen_state is bytes.
-  Next: Phase 2 (Flux Integration).
+  Phases 1-5 COMPLETE (138 tests):
+  - Phase 1: SemaphoreToken, ReentryContext, Purgatory (49 tests)
+  - Phase 2: Flux Integration - JSON serialization, deadline checking,
+    pheromone emission, SemaphoreMixin, flux_integration.py (70 tests)
+  - Phase 3: DurablePurgatory with D-gent backing (19 tests)
+  - Phase 4: AGENTESE paths - self.semaphore.*, world.purgatory.*
+  - Phase 5: CLI handler - kgents semaphore list/resolve/cancel/inspect/void
+
+  Remaining: QA integration testing, wire CLI to Cortex daemon singleton
 ---
 
 # Agent Semaphores: The Rodizio Pattern

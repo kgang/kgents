@@ -1,3 +1,15 @@
+---
+path: self/memory
+status: blocked
+progress: 30
+last_touched: 2025-12-12
+touched_by: claude-opus-4.5
+blocking: [self/stream]
+enables: []
+session_notes: |
+  Ghost cache complete. Awaits self/stream Phase 2.4 for StateCrystal.
+---
+
 # D-gent Memory: self.memory.* Implementation
 
 > *"Memory is not storage. Memory is selection."*

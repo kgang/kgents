@@ -7,6 +7,8 @@ The token carries all state needed for crash-safe resumption.
 
 from __future__ import annotations
 
+import base64
+import json
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -143,9 +145,13 @@ class SemaphoreToken(Generic[R]):
         """
         Check if token is still awaiting resolution.
 
-        A token is pending if it has neither been resolved nor cancelled.
+        A token is pending if it has not been resolved, cancelled, or voided.
         """
-        return self.resolved_at is None and self.cancelled_at is None
+        return (
+            self.resolved_at is None
+            and self.cancelled_at is None
+            and getattr(self, "voided_at", None) is None
+        )
 
     @property
     def is_resolved(self) -> bool:
@@ -178,3 +184,119 @@ class SemaphoreToken(Generic[R]):
         if not isinstance(other, SemaphoreToken):
             return NotImplemented
         return self.id == other.id
+
+    # ─────────────────────────────────────────────────────────────
+    # Deadline Management
+    # ─────────────────────────────────────────────────────────────
+
+    voided_at: datetime | None = field(default=None, repr=False)
+    """When the token was voided (deadline expired). None if not voided."""
+
+    @property
+    def is_voided(self) -> bool:
+        """
+        Check if token was voided (deadline expired).
+
+        A voided token had its deadline pass without resolution.
+        This is the system's "default on a promise" - the human failed
+        to provide context within the specified timeframe.
+        """
+        return self.voided_at is not None
+
+    def check_deadline(self) -> bool:
+        """
+        Check if deadline has passed and void if so.
+
+        Returns:
+            True if token is now voided (deadline passed), False otherwise.
+
+        Note:
+            This method mutates state if deadline has passed.
+            Only pending tokens can be voided.
+        """
+        if not self.is_pending:
+            return self.is_voided
+        if self.deadline is None:
+            return False
+        if datetime.now() >= self.deadline:
+            self.voided_at = datetime.now()
+            return True
+        return False
+
+    # ─────────────────────────────────────────────────────────────
+    # JSON Serialization (for D-gent persistence)
+    # ─────────────────────────────────────────────────────────────
+
+    def to_json(self) -> dict[str, Any]:
+        """
+        Serialize token to JSON-compatible dict.
+
+        frozen_state (bytes) is base64-encoded for JSON compatibility.
+        datetime fields are ISO-formatted strings.
+
+        Returns:
+            JSON-serializable dict representation
+        """
+        return {
+            "id": self.id,
+            "reason": self.reason.value,
+            "frozen_state": base64.b64encode(self.frozen_state).decode("utf-8"),
+            "original_event": self.original_event,  # Must be JSON-serializable
+            "required_type": (
+                self.required_type.__name__ if self.required_type is not None else None
+            ),
+            "deadline": self.deadline.isoformat() if self.deadline else None,
+            "escalation": self.escalation,
+            "prompt": self.prompt,
+            "options": self.options,
+            "severity": self.severity,
+            "created_at": self.created_at.isoformat(),
+            "resolved_at": self.resolved_at.isoformat() if self.resolved_at else None,
+            "cancelled_at": (
+                self.cancelled_at.isoformat() if self.cancelled_at else None
+            ),
+            "voided_at": self.voided_at.isoformat() if self.voided_at else None,
+        }
+
+    @classmethod
+    def from_json(cls, data: dict[str, Any]) -> "SemaphoreToken[Any]":
+        """
+        Deserialize token from JSON dict.
+
+        Args:
+            data: Dict from to_json() or JSON parsing
+
+        Returns:
+            Reconstructed SemaphoreToken
+
+        Note:
+            required_type is stored as string name only; the actual type
+            is not reconstructed (would require import resolution).
+        """
+        token: SemaphoreToken[Any] = cls(
+            id=data["id"],
+            reason=SemaphoreReason(data["reason"]),
+            frozen_state=base64.b64decode(data["frozen_state"]),
+            original_event=data.get("original_event"),
+            required_type=None,  # Type name only, not actual type
+            deadline=(
+                datetime.fromisoformat(data["deadline"])
+                if data.get("deadline")
+                else None
+            ),
+            escalation=data.get("escalation"),
+            prompt=data.get("prompt", ""),
+            options=data.get("options", []),
+            severity=data.get("severity", "info"),
+            created_at=datetime.fromisoformat(data["created_at"]),
+        )
+
+        # Set terminal state timestamps
+        if data.get("resolved_at"):
+            token.resolved_at = datetime.fromisoformat(data["resolved_at"])
+        if data.get("cancelled_at"):
+            token.cancelled_at = datetime.fromisoformat(data["cancelled_at"])
+        if data.get("voided_at"):
+            token.voided_at = datetime.fromisoformat(data["voided_at"])
+
+        return token

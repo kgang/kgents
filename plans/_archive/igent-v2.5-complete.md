@@ -1,3 +1,22 @@
+---
+path: self/interface
+status: active
+progress: 80
+last_touched: 2025-12-12
+touched_by: claude-opus-4.5
+blocking: []
+enables: [self/memory, self/cli-refactor]
+session_notes: |
+  Phase 1 COMPLETE: FluxApp, DensityField, FlowArrow, Earth theme (40 tests)
+  Phase 2 COMPLETE: Registry, OgentPoller, XYZ health bars, animations (30 tests)
+  Phase 3 COMPLETE: WIRE/BODY overlays, waveform, event stream, proprioception (31 tests)
+  Phase 4 COMPLETE: Glitch system, AGENTESE HUD, void.* triggers (36 tests)
+  Total: 137 tests pass, mypy clean
+  App launches: `uv run python -m agents.i.app --demo`
+  Key bindings: h/j/k/l navigate, w wire, b body, g glitch, q quit
+  Next: Phase 5 - Polish & FD3 Bridge
+---
+
 # I-gent v2.5: The Semantic Flux
 
 **AGENTESE Context:** `self.interface.*`

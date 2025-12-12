@@ -1,3 +1,16 @@
+---
+path: agents/t-gent
+status: dormant
+progress: 90
+last_touched: 2025-12-12
+touched_by: claude-opus-4.5
+blocking: []
+enables: []
+session_notes: |
+  Types I-IV complete. Type V (AdversarialGym) remaining.
+  U-gent separation complete.
+---
+
 # T-gents: Testing Agents (Types I-V)
 
 > *"T-gents are endofunctors on Cat_Agent. They do not leave the category."*

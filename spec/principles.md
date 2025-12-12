@@ -214,7 +214,7 @@ Perturbation preserves **State Integrity**.
 
 See:
 - `spec/c-gents/functor-catalog.md` §13 — Flux functor
-- `spec/c-gents/flux.md` — Full specification
+- `spec/agents/flux.md` — Full specification
 
 ### Anti-patterns
 - Permanent orchestrator/worker relationships

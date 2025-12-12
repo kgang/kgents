@@ -36,13 +36,13 @@
 
 ## Unresolved Questions
 
-1. **JSON serialization**: `SemaphoreToken` needs `to_json()`/`from_json()` for Phase 3 (D-gent persistence). Should this be added in Phase 2 or Phase 3?
+1. **JSON serialization**: `SemaphoreToken` needs `to_json()`/`from_json()` for Phase 3 (D-gent persistence). Should this be added in Phase 2 or Phase 3? Do this in phase 2.
 
-2. **Deadline enforcement**: The `deadline` field exists but nothing monitors it. When should deadline checking be added?
+2. **Deadline enforcement**: The `deadline` field exists but nothing monitors it. When should deadline checking be added? [Kent's Brainstorm] If the deadline passes, it's automatically marked a NOOP or VOID/NULL. Some semantic designation as defaulted on a promise (loan) by not doing the thing expected. Basically, there should be built-in failsafes by design, even if it's that it'll never expire because of how are system is. It's cheap to store these states and reproduce them, though practically, we'll need lifecycle management for this like everything.
 
-3. **Pheromone integration**: Purgatory should emit pheromones when tokens change state. What signals? `purgatory.ejected`, `purgatory.resolved`, `purgatory.cancelled`?
+3. **Pheromone integration**: Purgatory should emit pheromones when tokens change state. What signals? `purgatory.ejected`, `purgatory.resolved`, `purgatory.cancelled`? Those are good.
 
-## For the Next Session
+## For current session NOW <- WE ARE HERE
 
 **Read**:
 - `plans/agents/semaphores.md` (updated with Phase 1 status)

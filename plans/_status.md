@@ -113,15 +113,16 @@
 
 ---
 
-## Agent Semaphores (`agents/semaphores.md`) — 20%
+## Agent Semaphores (`agents/semaphores.md`) — 95%
 
 | Phase | Component | Status | Tests |
 |-------|-----------|--------|-------|
-| 1 | SemaphoreToken, ReentryContext, Purgatory | ✅ | 78 |
-| 2 | Flux Integration (Purgatory Pattern) | 📋 | — |
-| 3 | Symbiont Integration (Durability) | 📋 | — |
-| 4 | AGENTESE Paths (`self.semaphore.*`) | 📋 | — |
-| 5 | CLI (`kgents semaphore`) | 📋 | — |
+| 1 | SemaphoreToken, ReentryContext, Purgatory | ✅ | 49 |
+| 2 | Flux Integration (JSON, deadline, pheromones) | ✅ | 70 |
+| 3 | DurablePurgatory (D-gent backing) | ✅ | 19 |
+| 4 | AGENTESE Paths (`self.semaphore.*`, `world.purgatory.*`) | ✅ | — |
+| 5 | CLI (`kgents semaphore`) | ✅ | — |
+| — | QA Integration + Cortex daemon wiring | 📋 | — |
 
 ---
 

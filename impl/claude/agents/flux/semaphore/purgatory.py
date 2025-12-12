@@ -3,16 +3,25 @@ Purgatory: The waiting room for ejected events.
 
 Tokens wait here until humans provide context.
 Crash-resistant via D-gent backing (Phase 3).
+
+Pheromone Signals:
+- purgatory.ejected: Token ejected to purgatory
+- purgatory.resolved: Token resolved by human
+- purgatory.cancelled: Token cancelled
+- purgatory.voided: Token deadline expired (defaulted on promise)
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any
+from typing import Any, Awaitable, Callable
 
 from .reentry import ReentryContext
 from .token import SemaphoreToken
+
+# Type alias for pheromone emission callback
+PheromoneEmitter = Callable[[str, dict[str, Any]], Awaitable[None]]
 
 
 @dataclass
@@ -65,10 +74,13 @@ class Purgatory:
     """
 
     _pending: dict[str, SemaphoreToken[Any]] = field(default_factory=dict)
-    """Map of token_id → SemaphoreToken. Includes resolved/cancelled tokens."""
+    """Map of token_id → SemaphoreToken. Includes resolved/cancelled/voided tokens."""
 
     _memory: Any = None
     """D-gent memory adapter (Phase 3). None for in-memory only."""
+
+    _emit_pheromone: PheromoneEmitter | None = None
+    """Optional callback for pheromone emission. Best-effort: failures are ignored."""
 
     async def save(self, token: SemaphoreToken[Any]) -> None:
         """
@@ -86,6 +98,18 @@ class Purgatory:
         self._pending[token.id] = token
         if self._memory:
             await self._persist()
+
+        # Emit pheromone signal
+        await self._signal(
+            "purgatory.ejected",
+            {
+                "token_id": token.id,
+                "reason": token.reason.value,
+                "severity": token.severity,
+                "prompt": token.prompt,
+                "has_deadline": token.deadline is not None,
+            },
+        )
 
     async def resolve(
         self,
@@ -131,6 +155,17 @@ class Purgatory:
         if self._memory:
             await self._persist()
 
+        # Emit pheromone signal
+        await self._signal(
+            "purgatory.resolved",
+            {
+                "token_id": token_id,
+                "reason": token.reason.value,
+                "severity": token.severity,
+                "human_input_type": type(human_input).__name__,
+            },
+        )
+
         return reentry
 
     async def cancel(self, token_id: str) -> bool:
@@ -157,6 +192,16 @@ class Purgatory:
 
         if self._memory:
             await self._persist()
+
+        # Emit pheromone signal
+        await self._signal(
+            "purgatory.cancelled",
+            {
+                "token_id": token_id,
+                "reason": token.reason.value,
+                "severity": token.severity,
+            },
+        )
 
         return True
 
@@ -210,11 +255,68 @@ class Purgatory:
         """Clear all tokens (for testing)."""
         self._pending.clear()
 
+    async def void_expired(self) -> list[SemaphoreToken[Any]]:
+        """
+        Void all tokens whose deadlines have passed.
+
+        This is the "default on a promise" operation - tokens that
+        weren't resolved in time are marked as voided.
+
+        Returns:
+            List of tokens that were voided
+
+        Note:
+            Call this periodically or on startup to enforce deadlines.
+            Voided tokens remain in _pending for audit trail.
+        """
+        voided: list[SemaphoreToken[Any]] = []
+
+        for token in self._pending.values():
+            if token.is_pending and token.check_deadline():
+                voided.append(token)
+
+                # Emit pheromone signal
+                await self._signal(
+                    "purgatory.voided",
+                    {
+                        "token_id": token.id,
+                        "reason": token.reason.value,
+                        "severity": token.severity,
+                        "deadline": token.deadline.isoformat()
+                        if token.deadline
+                        else None,
+                        "escalation": token.escalation,
+                    },
+                )
+
+        if voided and self._memory:
+            await self._persist()
+
+        return voided
+
     async def _persist(self) -> None:
         """
         Persist state to D-gent (Phase 3).
 
-        For Phase 1, this is a no-op placeholder.
+        For Phase 1/2, this is a no-op placeholder.
         """
         if self._memory:
             await self._memory.save({"pending": self._pending})
+
+    async def _signal(self, signal: str, data: dict[str, Any]) -> None:
+        """
+        Emit a pheromone signal (best-effort).
+
+        Args:
+            signal: Signal name (e.g., "purgatory.ejected")
+            data: Signal payload
+
+        Note:
+            Failures are silently ignored - pheromones are observability,
+            not control flow.
+        """
+        if self._emit_pheromone is not None:
+            try:
+                await self._emit_pheromone(signal, data)
+            except Exception:
+                pass  # Best-effort: failures are ignored

@@ -50,6 +50,7 @@ from .self_ import (
     JudgmentNode,
     MemoryNode,
     SelfContextResolver,
+    SemaphoreNode,
     StateNode,
     create_self_resolver,
 )
@@ -81,7 +82,9 @@ from .void import (
     create_void_resolver,
 )
 from .world import (
+    PURGATORY_AFFORDANCES,
     WORLD_ARCHETYPE_AFFORDANCES,
+    PurgatoryNode,
     WorldContextResolver,
     WorldNode,
     create_world_node,
@@ -99,6 +102,7 @@ def create_context_resolvers(
     grammarian: Any = None,
     entropy_budget: float = 100.0,
     capital_ledger: Any = None,
+    purgatory: Any = None,
 ) -> dict[str, Any]:
     """
     Create all five context resolvers with unified configuration.
@@ -111,13 +115,18 @@ def create_context_resolvers(
         grammarian: G-gent for validation
         entropy_budget: Initial entropy budget for void context
         capital_ledger: EventSourcedLedger for void.capital.* (injected for testing)
+        purgatory: Purgatory for semaphore management (self.semaphore.*, world.purgatory.*)
 
     Returns:
         Dictionary mapping context names to resolvers
     """
     return {
-        "world": create_world_resolver(registry=registry, narrator=narrator),
-        "self": create_self_resolver(d_gent=d_gent, n_gent=narrator),
+        "world": create_world_resolver(
+            registry=registry, narrator=narrator, purgatory=purgatory
+        ),
+        "self": create_self_resolver(
+            d_gent=d_gent, n_gent=narrator, purgatory=purgatory
+        ),
         "concept": create_concept_resolver(registry=registry, grammarian=grammarian),
         "void": create_void_resolver(
             initial_budget=entropy_budget, ledger=capital_ledger
@@ -130,6 +139,7 @@ __all__ = [
     # Constants
     "VALID_CONTEXTS",
     "WORLD_ARCHETYPE_AFFORDANCES",
+    "PURGATORY_AFFORDANCES",
     "SELF_AFFORDANCES",
     "CONCEPT_ARCHETYPE_AFFORDANCES",
     "TIME_AFFORDANCES",
@@ -137,6 +147,7 @@ __all__ = [
     # World context
     "WorldContextResolver",
     "WorldNode",
+    "PurgatoryNode",
     "create_world_resolver",
     "create_world_node",
     # Self context
@@ -146,6 +157,7 @@ __all__ = [
     "StateNode",
     "IdentityNode",
     "JudgmentNode",
+    "SemaphoreNode",
     "create_self_resolver",
     # Self judgment (SPECS critique)
     "Critique",

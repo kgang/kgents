@@ -1,175 +1,72 @@
----
-type: next-session-prompt
-created: 2025-12-12
-focus: Post-Flux Priorities
-plans:
-  - concept/lattice
-  - void/entropy
-  - concept/creativity (Tasks 2-4)
----
+# _focus.md — Human Intent
 
-# Next Session: Post-Flux Priorities
+> *"ONLY WRITE TO THIS FILE WITH HUMAN's (KENT/K-GENT/K)'s PREFERENCES AND INTENT! REFLECT AND REALIZE HIS DREAMS. CHALLENGE HIM. GROW WITH HIM. BECOME THE GARDEN TOGETHER."*
 
-> *"The Flux Functor is complete. Agents can now be alive."*
+## Protocol
 
-## Just Completed: Flux Functor
-
-**261 tests** | Location: `impl/claude/agents/flux/`
-
-The Flux Functor lifts agents from discrete state to continuous flow:
-```
-Flux: Agent[A, B] → Agent[Flux[A], Flux[B]]
-Where Flux[T] = AsyncIterator[T]
-```
-
-Key features:
-- Event-driven streams (no polling in core)
-- `start()` returns `AsyncIterator[B]` (Living Pipelines)
-- `invoke()` on FLOWING = perturbation (not bypass)
-- Living Pipelines via `|` operator
-- Ouroboric feedback configurable
-- Entropy physics integration
+- **Human writes**: Priorities, wishes, constraints, taste
+- **Agent reads**: At session start, as ground truth for attention allocation
+- **Never**: Overwritten by agents. Session state → `_epilogues/`
+- **Format**: Append new intent blocks. Old blocks age but persist.
 
 ---
+## KENT's WISHES
+* More interactivity with all of kgents
+* More refined meta-cognition from his ai agent and ai agent systems
 
-## Track 1: concept/lattice (40% complete)
+## KENT's NEVERS
+* Do not place requirements for hitting some number of tests. Describe the tests themselves conceptually. Apply the principle Generativity
 
-**Priority**: HIGH (foundational for autopoiesis)
-**Effort**: Medium
-**Unblocked**: Yes
+## KENT's INFO2AGENTS
+* Whenever you write a prompt, it'll always be executed with /hydrate
+* Being/having fun is free :)
+---
 
-### Goal
-Wire lattice validation to `concept.*.define`. No concept can be created without lineage.
+## Current Intent (2025-12-12)
 
-### Files to Modify
-```
-protocols/agentese/contexts/concept.py  # Add define_concept()
-agents/l/lattice.py                     # Verify integration points
-```
+**Primary (60%)**: `concept/lattice` — Wire to `concept.*.define`. Genealogy is foundational.
 
-### Exit Criteria
-```python
-# This should FAIL:
-await logos.invoke("concept.orphan.define", spec="...")
-# → LineageError: Concepts cannot exist ex nihilo.
+**Secondary (25%)**: `concept/creativity` — Tasks 2-4 are polish, not urgent.
 
-# This should WORK:
-await logos.invoke(
-    "concept.new_agent.define",
-    spec="A specialized agent type",
-    extends=["concept.agent"],
-)
-```
+**Accursed (5%)**: Flux archetype integration — How do Consolidator, Spawner, Witness instantiate?
+
+**Constraints**:
+- No new plans until Lattice wiring complete
+- Prefer depth over breadth this week
+- Meta files must stay terse (butterfly in molasses warning)
 
 ---
 
-## Track 2: void/entropy (Research Complete, Now Unblocked)
+## Standing Intent (Always)
 
-**Priority**: HIGH (Flux enables this)
-**Effort**: Medium
-**Unblocked**: YES - Flux provides the stream infrastructure!
-
-### Goal
-Wire Metabolism to Flux. When a FluxAgent processes events, it should consume metabolic energy.
-
-### Key Integration Points
-```python
-# In FluxAgent._process_flux():
-async for event in self._merged_source(source):
-    # Consume metabolic energy (NEW)
-    if self._metabolism:
-        await self._metabolism.consume(event)
-
-    # Existing entropy check
-    if not self._can_continue():
-        self._collapse_to_ground()
-        break
-```
-
-### Files to Create/Modify
-```
-agents/flux/metabolism.py          # FluxMetabolism adapter
-protocols/agentese/metabolism/     # Already exists (36 tests)
-```
+- Tasteful > feature-complete
+- Joy-inducing > merely functional
+- Tests must pass before commit
+- Mypy strict, no regressions
+- 8,714+ tests is a floor, not a ceiling
 
 ---
 
-## Track 3: Creativity Tasks 2-4 (90% complete)
+## Archived Intent
 
-**Priority**: LOW (polish work)
-**Effort**: Low per task
+<details>
+<summary>2025-12-11</summary>
 
-### Task 2: Bidirectional Skeleton (PAYADOR)
-When texture reveals structural issues, rewrite the skeleton.
+**Focus**: Flux Functor implementation
+**Outcome**: Complete (261 tests). Living Pipelines work.
+**Learning**: Event-driven > timer-driven. Perturbation > bypass.
 
-### Task 3: Wire Pataphysics to LLM
-Connect `void.pataphysics.solve` to actual LLM hallucination.
+</details>
 
-### Task 4: Auto-Wire Curator Middleware
-Make WundtCurator optional middleware that can be enabled globally.
+<details>
+<summary>2025-12-10</summary>
 
----
+**Focus**: I-gent v2.5, Reflector Pattern
+**Outcome**: Phases 1-5 complete (137 tests). FluxReflector bridges CLI↔TUI.
+**Learning**: Textual reactive model maps cleanly to density fields.
 
-## Quick Start Commands
-
-```bash
-cd /Users/kentgang/git/kgents/impl/claude
-
-# Verify Flux tests pass
-python -m pytest agents/flux/_tests/ -v
-
-# Track 1: Lattice
-python -m pytest protocols/agentese/lattice/_tests/ -v
-
-# Track 2: Metabolism
-python -m pytest protocols/agentese/metabolism/_tests/ -v
-
-# Full verification
-uv run mypy .
-python -m pytest -m "not slow" -q
-```
+</details>
 
 ---
 
-## Recommended Order
-
-1. **Track 2 (void/entropy)** - Highest impact, Flux enables this NOW
-2. **Track 1 (Lattice)** - Foundational, long dormant
-3. **Track 3 (Creativity)** - Polish work, can be incremental
-
----
-
-## Flux Implementation Summary (for reference)
-
-Files created:
-```
-agents/flux/
-├── __init__.py
-├── state.py            # FluxState enum
-├── errors.py           # FluxError, FluxStateError, FluxPipelineError
-├── config.py           # FluxConfig dataclass
-├── perturbation.py     # Perturbation handling
-├── agent.py            # FluxAgent (the core)
-├── functor.py          # Flux.lift() / Flux.unlift()
-├── pipeline.py         # FluxPipeline, | operator
-├── sources/
-│   ├── __init__.py
-│   ├── base.py         # FluxSource protocol
-│   ├── events.py       # from_iterable, empty, single, repeat, range_source
-│   ├── periodic.py     # periodic, countdown, tick
-│   └── merged.py       # merged, filtered, mapped, batched, take, skip
-└── _tests/
-    ├── test_state.py
-    ├── test_errors.py
-    ├── test_config.py
-    ├── test_perturbation.py
-    ├── test_functor.py
-    ├── test_agent.py
-    ├── test_pipeline.py
-    ├── test_sources.py
-    └── test_integration.py
-```
-
----
-
-*"The noun is a lie. There is only the rate of change."*
+*This file belongs to the human. Agents: read, respect, respond—but never rewrite.*

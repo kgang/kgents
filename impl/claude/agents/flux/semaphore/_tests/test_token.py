@@ -281,3 +281,238 @@ class TestSemaphoreTokenReason:
         """All SemaphoreReason values can be used."""
         token = SemaphoreToken[str](reason=reason)
         assert token.reason == reason
+
+
+# === Phase 2 Tests: JSON Serialization ===
+
+
+class TestSemaphoreTokenJsonSerialization:
+    """Test to_json and from_json methods."""
+
+    def test_to_json_basic(self) -> None:
+        """to_json produces JSON-serializable dict."""
+        import json
+
+        token = SemaphoreToken[str](
+            id="sem-test1234",
+            reason=SemaphoreReason.APPROVAL_NEEDED,
+            prompt="Delete records?",
+            options=["Yes", "No"],
+            severity="warning",
+        )
+
+        data = token.to_json()
+
+        # Should be JSON-serializable
+        json_str = json.dumps(data)
+        assert isinstance(json_str, str)
+
+        # Check fields
+        assert data["id"] == "sem-test1234"
+        assert data["reason"] == "approval_needed"
+        assert data["prompt"] == "Delete records?"
+        assert data["options"] == ["Yes", "No"]
+        assert data["severity"] == "warning"
+
+    def test_to_json_frozen_state_base64(self) -> None:
+        """frozen_state is base64-encoded."""
+        import base64
+
+        state = b"some binary data"
+        token = SemaphoreToken[str](frozen_state=state)
+
+        data = token.to_json()
+
+        # Should be base64 string
+        assert isinstance(data["frozen_state"], str)
+        decoded = base64.b64decode(data["frozen_state"])
+        assert decoded == state
+
+    def test_to_json_datetimes_iso_format(self) -> None:
+        """Datetime fields are ISO-formatted strings."""
+        token = SemaphoreToken[str]()
+        token.resolved_at = datetime.now()
+
+        data = token.to_json()
+
+        assert isinstance(data["created_at"], str)
+        assert isinstance(data["resolved_at"], str)
+        # Should be parseable
+        datetime.fromisoformat(data["created_at"])
+        datetime.fromisoformat(data["resolved_at"])
+
+    def test_from_json_restores_token(self) -> None:
+        """from_json restores token from dict."""
+        import base64
+
+        state = b"test state"
+        data = {
+            "id": "sem-restored",
+            "reason": "approval_needed",
+            "frozen_state": base64.b64encode(state).decode("utf-8"),
+            "original_event": "test_event",
+            "required_type": None,
+            "deadline": None,
+            "escalation": "team-lead",
+            "prompt": "Restore test?",
+            "options": ["A", "B"],
+            "severity": "critical",
+            "created_at": "2025-01-01T12:00:00",
+            "resolved_at": None,
+            "cancelled_at": None,
+            "voided_at": None,
+        }
+
+        token = SemaphoreToken.from_json(data)
+
+        assert token.id == "sem-restored"
+        assert token.reason == SemaphoreReason.APPROVAL_NEEDED
+        assert token.frozen_state == state
+        assert token.original_event == "test_event"
+        assert token.escalation == "team-lead"
+        assert token.prompt == "Restore test?"
+        assert token.options == ["A", "B"]
+        assert token.severity == "critical"
+        assert token.is_pending is True
+
+    def test_roundtrip_json(self) -> None:
+        """to_json then from_json preserves token."""
+        import pickle
+
+        state = {"partial": "result", "step": 5}
+        original = SemaphoreToken[str](
+            reason=SemaphoreReason.CONTEXT_REQUIRED,
+            frozen_state=pickle.dumps(state),
+            original_event="original",
+            prompt="Question?",
+            options=["One", "Two"],
+            severity="info",
+            deadline=datetime.now() + timedelta(hours=1),
+            escalation="admin",
+        )
+
+        data = original.to_json()
+        restored = SemaphoreToken.from_json(data)
+
+        assert restored.id == original.id
+        assert restored.reason == original.reason
+        assert restored.frozen_state == original.frozen_state
+        assert restored.prompt == original.prompt
+        assert restored.options == original.options
+        assert restored.severity == original.severity
+        assert restored.escalation == original.escalation
+
+    def test_from_json_with_terminal_states(self) -> None:
+        """from_json handles resolved/cancelled/voided states."""
+        import base64
+
+        data: dict[str, object] = {
+            "id": "sem-resolved",
+            "reason": "approval_needed",
+            "frozen_state": base64.b64encode(b"").decode("utf-8"),
+            "original_event": None,
+            "required_type": None,
+            "deadline": None,
+            "escalation": None,
+            "prompt": "",
+            "options": [],
+            "severity": "info",
+            "created_at": "2025-01-01T12:00:00",
+            "resolved_at": "2025-01-01T13:00:00",
+            "cancelled_at": None,
+            "voided_at": None,
+        }
+
+        token = SemaphoreToken.from_json(data)
+
+        assert token.is_resolved is True
+        assert token.is_pending is False
+
+
+# === Phase 2 Tests: Deadline and Voiding ===
+
+
+class TestSemaphoreTokenDeadline:
+    """Test deadline checking and voiding."""
+
+    def test_is_voided_initially_false(self) -> None:
+        """is_voided is False for new token."""
+        token = SemaphoreToken[str]()
+        assert token.is_voided is False
+
+    def test_is_voided_true_after_voiding(self) -> None:
+        """is_voided is True after voided_at is set."""
+        token = SemaphoreToken[str]()
+        token.voided_at = datetime.now()
+        assert token.is_voided is True
+
+    def test_is_pending_false_when_voided(self) -> None:
+        """is_pending is False when token is voided."""
+        token = SemaphoreToken[str]()
+        token.voided_at = datetime.now()
+        assert token.is_pending is False
+
+    def test_check_deadline_no_deadline(self) -> None:
+        """check_deadline returns False when no deadline."""
+        token = SemaphoreToken[str](deadline=None)
+        assert token.check_deadline() is False
+        assert token.is_voided is False
+
+    def test_check_deadline_future(self) -> None:
+        """check_deadline returns False when deadline is in future."""
+        token = SemaphoreToken[str](deadline=datetime.now() + timedelta(hours=1))
+        assert token.check_deadline() is False
+        assert token.is_voided is False
+
+    def test_check_deadline_passed(self) -> None:
+        """check_deadline voids token when deadline has passed."""
+        token = SemaphoreToken[str](deadline=datetime.now() - timedelta(seconds=1))
+        assert token.check_deadline() is True
+        assert token.is_voided is True
+        assert token.voided_at is not None
+
+    def test_check_deadline_already_resolved(self) -> None:
+        """check_deadline doesn't void already-resolved token."""
+        token = SemaphoreToken[str](deadline=datetime.now() - timedelta(seconds=1))
+        token.resolved_at = datetime.now()
+
+        result = token.check_deadline()
+
+        # Returns current voided state (False) but doesn't change anything
+        assert result is False
+        assert token.is_voided is False
+
+    def test_check_deadline_already_cancelled(self) -> None:
+        """check_deadline doesn't void already-cancelled token."""
+        token = SemaphoreToken[str](deadline=datetime.now() - timedelta(seconds=1))
+        token.cancelled_at = datetime.now()
+
+        result = token.check_deadline()
+
+        assert result is False
+        assert token.is_voided is False
+
+    def test_voided_resolved_cancelled_mutually_exclusive(self) -> None:
+        """Only one terminal state should be set (logical constraint)."""
+        # A well-behaved system won't set multiple terminal states
+        # But we can verify the state properties work correctly
+
+        # Voided token
+        voided = SemaphoreToken[str]()
+        voided.voided_at = datetime.now()
+        assert voided.is_voided is True
+        assert voided.is_resolved is False
+        assert voided.is_cancelled is False
+        assert voided.is_pending is False
+
+    def test_json_roundtrip_voided_token(self) -> None:
+        """JSON roundtrip preserves voided state."""
+        token = SemaphoreToken[str](deadline=datetime.now() - timedelta(hours=1))
+        token.check_deadline()  # Void it
+        assert token.is_voided is True
+
+        data = token.to_json()
+        restored = SemaphoreToken.from_json(data)
+
+        assert restored.is_voided is True
+        assert restored.voided_at is not None

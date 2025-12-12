@@ -14,6 +14,8 @@ Key Components:
     - ReentryContext: The Green Card. Injected back as Perturbation.
     - Purgatory: The waiting room. Tokens wait here until human resolves.
     - SemaphoreReason: Why the agent yielded (taxonomy).
+    - SemaphoreCapable: Protocol for agents that can yield semaphores.
+    - SemaphoreMixin: Mixin with helpers for creating semaphores.
 
 Example:
     >>> from agents.flux.semaphore import (
@@ -45,16 +47,62 @@ The Purgatory Pattern:
     via existing Perturbation mechanism. This solves:
     1. Python generators cannot be pickled (server restart loses stack frame)
     2. Head-of-line blocking (one semaphore blocks entire Flux stream)
+
+Pheromone Signals:
+    - purgatory.ejected: Token ejected to purgatory
+    - purgatory.resolved: Token resolved by human
+    - purgatory.cancelled: Token cancelled
+    - purgatory.voided: Token deadline expired (defaulted on promise)
 """
 
+from .durable import (
+    DEFAULT_STATE,
+    DurablePurgatory,
+    PurgatoryState,
+    create_and_recover_purgatory,
+    create_durable_purgatory,
+)
+from .flux_integration import (
+    SemaphoreFluxConfig,
+    SemaphoreFluxMixin,
+    create_reentry_perturbation,
+    create_semaphore_flux,
+    inject_reentry,
+    is_reentry_context,
+)
+from .mixin import (
+    SemaphoreCapable,
+    SemaphoreMixin,
+    is_semaphore_capable,
+    is_semaphore_token,
+)
 from .purgatory import Purgatory
 from .reason import SemaphoreReason
 from .reentry import ReentryContext
 from .token import SemaphoreToken
 
 __all__ = [
+    # Core types
     "Purgatory",
     "ReentryContext",
     "SemaphoreReason",
     "SemaphoreToken",
+    # Durable (D-gent backed)
+    "DEFAULT_STATE",
+    "DurablePurgatory",
+    "PurgatoryState",
+    "create_and_recover_purgatory",
+    "create_durable_purgatory",
+    # Mixin and protocol
+    "SemaphoreCapable",
+    "SemaphoreMixin",
+    "is_semaphore_capable",
+    "is_semaphore_token",
+    # Flux integration
+    "SemaphoreFluxConfig",
+    "SemaphoreFluxMixin",
+    "create_reentry_perturbation",
+    "create_semaphore_flux",
+    "inject_reentry",
+    "is_reentry_context",
 ]

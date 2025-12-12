@@ -1,9 +1,24 @@
+---
+path: agents/u-gent
+status: complete
+progress: 100
+last_touched: 2025-12-11
+touched_by: claude-opus-4.5
+blocking: []
+enables: []
+session_notes: |
+  Migration COMPLETE. All tool code moved from agents/t to agents/u.
+  Deprecation bridge in place (agents.t imports warn).
+  Files: core.py, mcp.py, executor.py, orchestration.py, permissions.py
+  Mypy passes with 0 errors.
+---
+
 # U-gents: Utility Agents (Tool Use)
 
 > *"U-gents cross the boundary. They bridge Cat_Agent to Cat_Tool."*
 
 **AGENTESE Context**: External interface
-**Status**: Migration Planned (from T-gent)
+**Status**: Complete (migrated from T-gent)
 **Categorical Role**: `U: Cat_Agent → Cat_Tool` (boundary morphism)
 **Principles**: Composable, Tasteful
 

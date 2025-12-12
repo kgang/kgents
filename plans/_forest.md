@@ -19,7 +19,7 @@
 | Plan | Progress | Last Touched | Notes |
 |------|----------|--------------|-------|
 | agents/t-gent | 90% | 2025-12-12 | Type V Adversarial remaining |
-| agents/semaphores | 20% | 2025-12-12 | Phase 1 done (78 tests). Rodizio Pattern. |
+| agents/semaphores | 95% | 2025-12-12 | Phases 1-5 done (138 tests). QA remaining. |
 | void/entropy | 70% | 2025-12-12 | CLI tithe done; TUI remaining |
 
 ---

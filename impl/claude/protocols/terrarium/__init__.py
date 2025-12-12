@@ -11,14 +11,30 @@ The Mirror Protocol:
 The agent emits to a HolographicBuffer once. The buffer broadcasts to N clients.
 Slow clients don't slow the agent.
 
+Phase 2 - Prism REST Bridge:
+- PrismRestBridge auto-generates REST endpoints from CLICapable agents
+- Uses Prism's introspection for type-safe JSON schemas
+
+Phase 3 - I-gent Widget Metrics:
+- MetricsManager emits live metabolism metrics to observers
+- Metrics: pressure (backlog), flow (throughput), temperature (heat)
+- /api/{agent_id}/metrics endpoint for REST access
+
 Usage:
-    from protocols.terrarium import Terrarium, HolographicBuffer
+    from protocols.terrarium import Terrarium, HolographicBuffer, PrismRestBridge
 
     # Create gateway
     terrarium = Terrarium()
 
-    # Register an agent with its mirror
+    # Register FluxAgent with mirror
     terrarium.register_agent(agent_id, flux_agent)
+
+    # Start metrics emission when agent is running
+    terrarium.start_agent_metrics(agent_id)
+
+    # Mount CLICapable agent as REST
+    bridge = PrismRestBridge()
+    bridge.mount(terrarium.app, grammar_cli)
 
     # Run server
     import uvicorn
@@ -39,13 +55,31 @@ from .events import (
     make_result_event,
 )
 from .gateway import Terrarium
+from .metrics import (
+    MetricsManager,
+    calculate_flow,
+    calculate_pressure,
+    calculate_temperature,
+    emit_fever_alert,
+    emit_metrics_loop,
+)
 from .mirror import HolographicBuffer
+from .rest_bridge import PrismRestBridge
 
 __all__ = [
     # Core
     "Terrarium",
     "HolographicBuffer",
     "TerrariumConfig",
+    # Phase 2: REST Bridge
+    "PrismRestBridge",
+    # Phase 3: Metrics
+    "MetricsManager",
+    "emit_metrics_loop",
+    "calculate_pressure",
+    "calculate_flow",
+    "calculate_temperature",
+    "emit_fever_alert",
     # Events
     "EventType",
     "TerriumEvent",

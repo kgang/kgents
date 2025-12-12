@@ -24,6 +24,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from .config import TerrariumConfig
+from .metrics import MetricsManager
 from .mirror import HolographicBuffer
 
 if TYPE_CHECKING:
@@ -93,13 +94,26 @@ class Terrarium:
 
     config: TerrariumConfig = field(default_factory=TerrariumConfig)
 
+    # Enable metrics emission for registered agents
+    enable_metrics: bool = True
+
+    # Metrics emission interval in seconds
+    metrics_interval: float = 1.0
+
     # Agent registry: agent_id → AgentRegistration
     _registry: dict[str, AgentRegistration[Any, Any]] = field(
         default_factory=dict, init=False
     )
 
+    # Metrics manager for I-gent widget updates
+    _metrics_manager: MetricsManager = field(init=False)
+
     # The FastAPI app (lazy-initialized)
     _app: Any = field(default=None, init=False)
+
+    def __post_init__(self) -> None:
+        """Initialize metrics manager."""
+        self._metrics_manager = MetricsManager(default_interval=self.metrics_interval)
 
     @property
     def app(self) -> Any:
@@ -138,12 +152,12 @@ class Terrarium:
             ),
         )
 
-        @app.get("/health")  # type: ignore[untyped-decorator]
+        @app.get("/health")
         async def health() -> dict[str, str]:
             """Health check endpoint."""
             return {"status": "healthy", "service": "terrarium"}
 
-        @app.get("/api/agents")  # type: ignore[untyped-decorator]
+        @app.get("/api/agents")
         async def list_agents() -> dict[str, Any]:
             """List all registered agents."""
             return {
@@ -159,7 +173,7 @@ class Terrarium:
                 ]
             }
 
-        @app.get("/api/{agent_id}/snapshot")  # type: ignore[untyped-decorator]
+        @app.get("/api/{agent_id}/snapshot")
         async def get_snapshot(agent_id: str) -> JSONResponse:
             """
             Get current state snapshot for an agent.
@@ -183,7 +197,77 @@ class Terrarium:
                 }
             )
 
-        @app.websocket("/perturb/{agent_id}")  # type: ignore[untyped-decorator]
+        @app.get("/api/{agent_id}/metrics")
+        async def get_metrics(agent_id: str) -> JSONResponse:
+            """
+            Get current metrics for an agent.
+
+            Returns live metabolism metrics:
+            - pressure: Queue backlog (0-100)
+            - flow: Throughput (events/second)
+            - temperature: Metabolic heat (0-1)
+
+            For real-time updates, use /observe/{agent_id} WebSocket instead.
+            """
+            reg = self._registry.get(agent_id)
+            if reg is None:
+                return JSONResponse(
+                    status_code=404,
+                    content={"error": f"Agent not found: {agent_id}"},
+                )
+
+            # Get cached metrics if available
+            cached = self._metrics_manager.get_last_metrics(agent_id)
+
+            # Calculate fresh metrics if no cache
+            if cached is None:
+                from .metrics import (
+                    calculate_flow,
+                    calculate_pressure,
+                    calculate_temperature,
+                )
+
+                cached = {
+                    "pressure": calculate_pressure(reg.agent),
+                    "flow": 0.0,  # Need time delta for flow
+                    "temperature": calculate_temperature(reg.agent),
+                }
+
+            return JSONResponse(
+                content={
+                    "agent_id": agent_id,
+                    "state": str(reg.agent.state),
+                    "metrics": cached,
+                    "events_processed": reg.agent.events_processed,
+                    "entropy_remaining": reg.agent.entropy_remaining,
+                    "is_running": reg.agent.is_running,
+                }
+            )
+
+        @app.get("/api/metrics/all")
+        async def get_all_metrics() -> JSONResponse:
+            """
+            Get metrics for all registered agents.
+
+            Aggregate view for I-gent dashboard DensityField.
+            """
+            all_metrics = self._metrics_manager.get_all_metrics()
+
+            result = []
+            for agent_id, reg in self._registry.items():
+                metrics = all_metrics.get(agent_id, {})
+                result.append(
+                    {
+                        "agent_id": agent_id,
+                        "state": str(reg.agent.state),
+                        "metrics": metrics,
+                        "is_running": reg.agent.is_running,
+                    }
+                )
+
+            return JSONResponse(content={"agents": result})
+
+        @app.websocket("/perturb/{agent_id}")
         async def ws_perturb(websocket: WebSocket, agent_id: str) -> None:
             """
             The Beam: High entropy, auth required, injects Perturbation.
@@ -249,7 +333,7 @@ class Terrarium:
             except WebSocketDisconnect:
                 logger.info(f"Perturb connection closed for {agent_id}")
 
-        @app.websocket("/observe/{agent_id}")  # type: ignore[untyped-decorator]
+        @app.websocket("/observe/{agent_id}")
         async def ws_observe(websocket: WebSocket, agent_id: str) -> None:
             """
             The Reflection: Zero entropy to agent, broadcast mirror.
@@ -302,17 +386,20 @@ class Terrarium:
         agent_id: str,
         agent: "FluxAgent[A, B]",
         metadata: dict[str, Any] | None = None,
+        emit_metrics: bool | None = None,
     ) -> HolographicBuffer:
         """
         Register a FluxAgent with the terrarium.
 
         Creates a HolographicBuffer for the agent and wires it up
-        to receive agent events.
+        to receive agent events. If metrics emission is enabled,
+        starts emitting metabolism metrics to the buffer.
 
         Args:
             agent_id: Unique identifier for the agent
             agent: The FluxAgent to register
             metadata: Optional metadata (shown in agent list)
+            emit_metrics: Override metrics emission (uses terrarium default if None)
 
         Returns:
             The HolographicBuffer for the agent (for direct use)
@@ -334,12 +421,20 @@ class Terrarium:
             metadata=metadata or {},
         )
 
+        # Start metrics emission if enabled and agent is running
+        should_emit = emit_metrics if emit_metrics is not None else self.enable_metrics
+        is_running = getattr(agent, "is_running", False)
+        if should_emit and is_running:
+            self._metrics_manager.start_metrics(agent_id, agent, mirror)
+
         logger.info(f"Registered agent: {agent_id}")
         return mirror
 
     def unregister_agent(self, agent_id: str) -> bool:
         """
         Unregister an agent from the terrarium.
+
+        Stops metrics emission if active.
 
         Args:
             agent_id: The agent to unregister
@@ -348,10 +443,44 @@ class Terrarium:
             True if agent was found and unregistered, False otherwise
         """
         if agent_id in self._registry:
+            # Stop metrics emission
+            self._metrics_manager.stop_metrics(agent_id)
+
             del self._registry[agent_id]
             logger.info(f"Unregistered agent: {agent_id}")
             return True
         return False
+
+    def start_agent_metrics(self, agent_id: str) -> bool:
+        """
+        Start metrics emission for a registered agent.
+
+        Call this after starting a FluxAgent to begin emitting
+        metabolism metrics to observers.
+
+        Args:
+            agent_id: The agent to start metrics for
+
+        Returns:
+            True if started, False if agent not found or already emitting
+        """
+        reg = self._registry.get(agent_id)
+        if reg is None:
+            return False
+
+        return self._metrics_manager.start_metrics(agent_id, reg.agent, reg.mirror)
+
+    def stop_agent_metrics(self, agent_id: str) -> bool:
+        """
+        Stop metrics emission for an agent.
+
+        Args:
+            agent_id: The agent to stop metrics for
+
+        Returns:
+            True if stopped, False if not found
+        """
+        return self._metrics_manager.stop_metrics(agent_id)
 
     def get_agent(self, agent_id: str) -> "FluxAgent[Any, Any] | None":
         """Get a registered agent by ID."""
@@ -367,3 +496,8 @@ class Terrarium:
     def registered_agents(self) -> list[str]:
         """List of registered agent IDs."""
         return list(self._registry.keys())
+
+    @property
+    def metrics_manager(self) -> MetricsManager:
+        """Access the metrics manager for advanced control."""
+        return self._metrics_manager
