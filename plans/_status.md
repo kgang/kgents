@@ -27,9 +27,9 @@
 
 ---
 
-## Context Management (`self/stream.md`) — 75%
+## Context Management (`self/stream.md`) — 100% COMPLETE ✅
 
-**Phase 2.1 COMPLETE** (181 tests):
+**ALL PHASES COMPLETE** (302 tests):
 
 | Component | Status | Tests |
 |-----------|--------|-------|
@@ -38,19 +38,11 @@
 | ContextProjector | ✅ | 28 |
 | StreamContextResolver | ✅ | 31 |
 | MDL Compression | ✅ | 43 |
-
-**Phase 2.2 COMPLETE** (44 tests):
-
-| Component | Status | Tests |
-|-----------|--------|-------|
 | ModalScope | ✅ | 44 |
+| Pulse + VitalityAnalyzer | ✅ | 35 |
+| StateCrystal + CrystallizationEngine + Reaper | ✅ | 42 |
 
-**Remaining (Phases 2.3-2.4)**:
-
-| Phase | Component | Status |
-|-------|-----------|--------|
-| 2.3 | Pulse + VitalityAnalyzer | 📋 |
-| 2.4 | StateCrystal + Reaper | 📋 |
+**Archived in place.** self/memory is now UNBLOCKED.
 
 ---
 
@@ -104,12 +96,13 @@
 
 ---
 
-## Memory (`self/memory.md`) — 30% [BLOCKED]
+## Memory (`self/memory.md`) — 30% [UNBLOCKED]
 
 | Component | Status | Notes |
 |-----------|--------|-------|
 | Ghost cache | ✅ | Complete |
-| StateCrystal | 📋 | Awaits self/stream Phase 2.4 |
+| StateCrystal | ✅ | self/stream Phase 2.4 DONE |
+| Resume/Crystallize | 📋 | Ready for integration |
 
 ---
 
@@ -161,4 +154,4 @@ cd impl/claude && uv run mypy .
 
 ---
 
-*Last verified: 2025-12-12 (9,699 tests)*
+*Last verified: 2025-12-12 (9,778 tests, mypy clean)*

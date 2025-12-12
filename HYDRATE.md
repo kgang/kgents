@@ -17,7 +17,7 @@
 
 ## Status
 
-**Tests**: 9,699 | **Mypy**: Strict (0 errors) | **Branch**: `main`
+**Tests**: 9,778 | **Mypy**: Strict (0 errors) | **Branch**: `main`
 
 ---
 
@@ -39,17 +39,16 @@ time.*     — Temporal (traces, forecasts)
 
 | Plan | Progress | Next |
 |------|----------|------|
-| `self/stream` | 75% | Phases 2.3-2.4 (Pulse, Crystal) |
-| `agents/k-gent` | new | K-gent Categorical Imperative |
-| `infra/cluster-native-runtime` | 100% | Complete (all phases) |
+| `agents/k-gent` | 40% | Phase 2: KgentFlux, events, Terrarium wire |
+| `architecture/alethic-algebra` | 20% | Phases 2-5 (HaloAlgebra, Guard) |
 
 ## Completed (Recent)
 
-- **Alethic Algebra Phase 2** — 37 tests, C-gent functors retrofitted to UniversalFunctor
+- **self/stream** — 302 tests, Phases 2.1-2.4 ALL COMPLETE (ContextWindow, ModalScope, Pulse, Crystal)
+- **Cluster-Native Runtime** — 24+ tests, PVC, DgentClient, U-gent + D-gent integration
 - **Terrarium** — 176+ tests, Mirror Protocol, K8s Operator, Purgatory integration
-- **Agent Semaphores** — 182 tests, Rodizio pattern, Phases 1-5
+- **Agent Semaphores** — 182 tests, Rodizio pattern, Phases 1-6
 - **Creativity v2.5** — 146+ tests, PAYADOR, Curator, Pataphysics
-- **Lattice** — 69 tests, Lineage enforcement, `concept.*.define`
 
 ---
 
