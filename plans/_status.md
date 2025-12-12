@@ -113,7 +113,7 @@
 
 ---
 
-## Agent Semaphores (`agents/semaphores.md`) — 95%
+## Agent Semaphores (`agents/semaphores.md`) — 100% COMPLETE
 
 | Phase | Component | Status | Tests |
 |-------|-----------|--------|-------|
@@ -122,19 +122,33 @@
 | 3 | DurablePurgatory (D-gent backing) | ✅ | 19 |
 | 4 | AGENTESE Paths (`self.semaphore.*`, `world.purgatory.*`) | ✅ | — |
 | 5 | CLI (`kgents semaphore`) | ✅ | — |
-| — | QA Integration + Cortex daemon wiring | 📋 | — |
+| 6 | QA Integration + Cortex daemon wiring | ✅ | 44 |
 
 ---
 
-## Terrarium (`agents/terrarium.md`) — 0%
+## Terrarium (`agents/terrarium.md`) — 100% COMPLETE ✅
 
-| Phase | Component | Status |
-|-------|-----------|--------|
-| 1 | WebSocket Gateway + Mirror Protocol | 📋 |
-| 2 | Prism REST Bridge | 📋 |
-| 3 | I-gent Widget Server | 📋 |
-| 4 | K8s Operator | 📋 |
-| 5 | Purgatory Integration | 📋 |
+| Phase | Component | Status | Tests |
+|-------|-----------|--------|-------|
+| 1 | WebSocket Gateway + Mirror Protocol | ✅ | 45 |
+| 2 | Prism REST Bridge | ✅ | 30+ |
+| 3 | I-gent Widget Server (metrics) | ✅ | — |
+| 4 | K8s Operator (AgentServer CRD) | ✅ | 28 |
+| 5 | Purgatory Integration (FluxAgent wiring) | ✅ | 14 |
+
+**Total**: 176+ tests. All phases complete. Archived in place.
+
+---
+
+## Alethic Algebra (`architecture/alethic-algebra-tactics.md`) — 20%
+
+| Phase | Component | Status | Tests |
+|-------|-----------|--------|-------|
+| 1 | UniversalFunctor Protocol | ✅ | 18 |
+| 2 | HaloAlgebra (Functorial Composition) | 📋 | — |
+| 3 | Parametric Decorators (Guard) | 📋 | — |
+| 4 | Projector Implementation | 📋 | — |
+| 5 | Law Registry (Generative) | 📋 | — |
 
 ---
 
@@ -147,4 +161,4 @@ cd impl/claude && uv run mypy .
 
 ---
 
-*Last verified: 2025-12-12 (8,938 tests)*
+*Last verified: 2025-12-12 (9,699 tests)*

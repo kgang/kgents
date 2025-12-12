@@ -8,7 +8,7 @@
 
 | File | Agent May | Agent Must NOT |
 |------|-----------|----------------|
-| `plans/_focus.md` | Read | Write |
+| `plans/_focus.md` | Read | Write Things Non-personal to Kent |
 | `plans/_forest.md` | Regenerate | Add prose |
 | `plans/meta.md` | Append (one line) | Expand (50-line cap) |
 | `HYDRATE.md` | Update facts | Bloat |
@@ -17,7 +17,7 @@
 
 ## Status
 
-**Tests**: 9,135 | **Mypy**: Strict (0 errors) | **Branch**: `main`
+**Tests**: 9,699 | **Mypy**: Strict (0 errors) | **Branch**: `main`
 
 ---
 
@@ -40,15 +40,16 @@ time.*     — Temporal (traces, forecasts)
 | Plan | Progress | Next |
 |------|----------|------|
 | `self/stream` | 75% | Phases 2.3-2.4 (Pulse, Crystal) |
-| `agents/terrarium` | 50% | Phase 3 (metrics emission) |
+| `agents/k-gent` | new | K-gent Categorical Imperative |
+| `infra/cluster-native-runtime` | 100% | Complete (all phases) |
 
 ## Completed (Recent)
 
+- **Alethic Algebra Phase 2** — 37 tests, C-gent functors retrofitted to UniversalFunctor
+- **Terrarium** — 176+ tests, Mirror Protocol, K8s Operator, Purgatory integration
 - **Agent Semaphores** — 182 tests, Rodizio pattern, Phases 1-5
 - **Creativity v2.5** — 146+ tests, PAYADOR, Curator, Pataphysics
 - **Lattice** — 69 tests, Lineage enforcement, `concept.*.define`
-- **Flux Functor** — 261 tests, Living Pipelines, perturbation
-- **I-gent v2.5** — 137 tests, Phases 1-5 complete
 
 ---
 
@@ -84,7 +85,9 @@ For details beyond this seed:
 - **Human intent**: `plans/_focus.md`
 - **Learnings**: `plans/meta.md`
 - **Principles**: `spec/principles.md`
+- **Skills**: `plans/skills/` — patterns for common tasks
+- **DevEx**: `/harden`, `/trace`, `/diff-spec`, `/debt`
 
 ---
 
-*Compress, don't expand. If this file exceeds 100 lines, prune it.*
+*Compress, don't expand. If this file exceeds 125 lines, prune it immediately.*

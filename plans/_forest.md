@@ -10,7 +10,10 @@
 
 | Plan | Progress | Status | Notes |
 |------|----------|--------|-------|
-| self/stream | 75% | active | Phase 2.2 DONE, 2.3-2.4 remaining |
+| self/stream | 75% | active | Phase 2.2 DONE (ModalScope), 2.3-2.4 remaining |
+| agents/k-gent | new | active | Categorical Imperative - LLM-backed dialogue, deep intercept |
+| architecture/alethic-algebra | 20% | active | Phase 1 DONE (UniversalFunctor), Phases 2-5 remaining |
+| infra/cluster-native-runtime | 100% | complete | All phases done - PVC, DgentClient, integration tests |
 
 ---
 
@@ -19,7 +22,6 @@
 | Plan | Progress | Last Touched | Notes |
 |------|----------|--------------|-------|
 | agents/t-gent | 90% | 2025-12-12 | Type V Adversarial remaining |
-| agents/semaphores | 95% | 2025-12-12 | Phases 1-5 done (138 tests). QA remaining. |
 | void/entropy | 70% | 2025-12-12 | CLI tithe done; TUI remaining |
 
 ---
@@ -44,12 +46,13 @@
 
 | Plan | Archive Path | Tests | Notes |
 |------|--------------|-------|-------|
+| Cluster-Native Runtime | `infra/cluster-native-runtime.md` | 24+ | PVC, DgentClient, U-gent + D-gent integration |
+| Terrarium | `agents/terrarium.md` | 176+ | Mirror Protocol, K8s Operator, Purgatory |
+| Agent Semaphores | `agents/semaphores.md` | 182 | Rodizio pattern complete |
 | Creativity v2.5 | `concept/creativity.md` | 146+ | PAYADOR, Curator, Pataphysics |
 | Lattice | `concept/lattice.md` | 69 | Lineage enforcement complete |
 | Flux Functor | `_archive/flux-functor-v1.0-complete.md` | 261 | Living Pipelines via `\|` |
 | I-gent v2.5 | `_archive/igent-v2.5-complete.md` | 137 | Phases 1-5 complete |
-| Reflector | `_archive/reflector-v1.0-complete.md` | 36 | Terminal/Headless/Flux |
-| U-gent Migration | `_archive/u-gent-migration-v1.0-complete.md` | — | Tool code split from T-gent |
 
 ---
 
@@ -58,10 +61,10 @@
 Per `plans/principles.md` §3 and `_focus.md`:
 
 ```
-Primary (60%):    concept/creativity (Tasks 2-4 polish)
-Secondary (25%):  self/stream (Phases 2.2-2.4)
-Maintenance (10%): Check blocked/dormant trees
-Accursed (5%):    agents/semaphores (explore Purgatory)
+Primary (50%):    agents/k-gent (Categorical Imperative - LLM-backed governance)
+Secondary (30%):  self/stream (Phases 2.3-2.4: Pulse, Crystal)
+Maintenance (15%): Check blocked/dormant trees
+Accursed (5%):    Joy-inducing polish
 ```
 
 ---
@@ -70,11 +73,11 @@ Accursed (5%):    agents/semaphores (explore Purgatory)
 
 | Metric | Value |
 |--------|-------|
-| Active trees | 1 |
-| Dormant | 3 |
+| Active trees | 3 |
+| Dormant | 2 |
 | Blocked | 1 |
-| Recently archived | 6 |
-| Tests | 8,938 |
+| Recently archived | 7 |
+| Tests | 9,699 |
 
 ---
 
@@ -84,7 +87,11 @@ Accursed (5%):    agents/semaphores (explore Purgatory)
 self/memory (30%) ◀── blocked by ── self/stream (75%)
 concept/lattice (100%) ──enables──▶ concept/creativity (100%)
 void/entropy (70%) ── done ── Flux integration + CLI tithe
-agents/semaphores (20%) ──enables──▶ void/entropy (metabolism pressure)
+agents/semaphores (100%) ──enables──▶ void/entropy (metabolism pressure)
+agents/terrarium (100%) ──uses──▶ agents/semaphores (Purgatory)
+agents/k-gent (new) ──uses──▶ agents/semaphores (Rodizio Sommelier)
+infra/cluster-native-runtime (100%) ──enables──▶ agents/k-gent (standard API)
+architecture/alethic-algebra (20%) ──enables──▶ agents/k-gent (Guard functor)
 ```
 
 ---
