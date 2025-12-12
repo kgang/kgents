@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import asyncio
 import random
+import time
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import TYPE_CHECKING, Callable
@@ -223,11 +224,7 @@ class GlitchEvent:
     glitch_type: GlitchType
     intensity: float
     duration_ms: int
-    timestamp: float = field(
-        default_factory=lambda: asyncio.get_event_loop().time()
-        if asyncio.get_event_loop().is_running()
-        else 0
-    )
+    timestamp: float = field(default_factory=time.time)
     source: str = ""  # What caused the glitch (e.g., "void.sip", "error")
 
 
