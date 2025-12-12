@@ -28,6 +28,7 @@ This catalog identifies and formalizes **functor patterns** found throughout kge
 | **Tool** | `Agent[A,B] → Tool[A,B]` | T+J | 🔄 Implicit | Tool-use wrapping |
 | **Trace** | `Agent[A,B] → Agent[A,B]` | W | 🔄 Implicit | Observability wrapping |
 | **Sandbox** | `Agent[A,B] → Agent[A,B]` | J | 🔄 Implicit | Safety isolation |
+| **Flux** | `Agent[A,B] → Agent[Flux[A], Flux[B]]` | C | 🔄 Planned | Discrete → Continuous flow |
 
 ---
 
@@ -507,6 +508,125 @@ Add to functor catalog with:
 
 ---
 
+## 13. Flux Functor (agents/flux)
+
+### Signature
+```
+Flux: Agent[A, B] → Agent[Flux[A], Flux[B]]
+```
+
+Where `Flux[T] = AsyncIterator[T]` (asynchronous stream).
+
+### Description
+Lifts an Agent from the domain of **Discrete State** to the domain of **Continuous Flow**. It transforms an agent that maps `A → B` into a process that maps `Flux[A] → Flux[B]`.
+
+This solves **The Sink Problem**: Where does the output go?
+- In Function Mode, output is returned to the caller.
+- In Flux Mode, output is emitted as a continuous stream.
+
+**Living Pipelines**: Because output flows, Flux agents compose via pipe:
+```python
+pipeline = flux_a | flux_b | flux_c
+async for result in pipeline.start(source):
+    ...
+```
+
+### Laws
+```python
+# Identity Preservation
+Flux(Id) ≅ Id_Flux  # Identity maps Flux[A] → Flux[A]
+
+# Composition Preservation
+Flux(f >> g) ≅ Flux(f) >> Flux(g)
+```
+
+### Key Insight
+Flux operationalizes the quote *"The noun is a lie. There is only the rate of change."*
+
+```
+Static:  Agent: A → B           (a point transformation)
+Dynamic: Flux(Agent): dA/dt → dB/dt  (a continuous flow)
+```
+
+### The Lift Operation
+```python
+class Flux:
+    @staticmethod
+    def lift(agent: Agent[A, B]) -> FluxAgent[A, B]:
+        """Lift to flux domain."""
+        return FluxAgent(inner=agent)
+
+    @staticmethod
+    def unlift(flux_agent: FluxAgent[A, B]) -> Agent[A, B]:
+        """Extract inner agent."""
+        return flux_agent.inner
+```
+
+### The Perturbation Principle
+When `invoke(x)` is called on a FluxAgent that is:
+- **DORMANT**: Direct invocation (discrete mode)
+- **FLOWING**: Inject `x` as high-priority perturbation into stream
+
+This preserves **State Integrity**: If agent has Symbiont memory, perturbation flows through the same state-loading path as normal events. No race conditions, no "schizophrenia."
+
+### Ouroboric Feedback
+```python
+config = FluxConfig(
+    feedback_fraction=0.3,  # 30% of outputs feed back to input
+    feedback_transform=lambda b: b.as_context(),  # B → A adapter
+)
+```
+
+| Fraction | Behavior |
+|----------|----------|
+| 0.0 | Pure reactive (no feedback) |
+| 0.1-0.3 | Light context accumulation |
+| 0.5 | Equal external/internal |
+| 1.0 | Full ouroboros (solipsism risk) |
+
+### Flux Topology (Physics of Flow)
+Agents are topological knots in event streams:
+
+| Metric | Meaning | Calculation |
+|--------|---------|-------------|
+| **Pressure** | Queue depth | `len(queues)` |
+| **Flow** | Throughput | `events/second` |
+| **Turbulence** | Error rate | `errors/events` |
+| **Temperature** | Token metabolism | From void/entropy |
+
+### Configuration
+```python
+@dataclass
+class FluxConfig:
+    # Entropy (J-gent physics)
+    entropy_budget: float = 1.0
+    entropy_decay: float = 0.01
+    max_events: int | None = None
+
+    # Backpressure
+    buffer_size: int = 100
+    drop_policy: str = "block"  # "block" | "drop_oldest" | "drop_newest"
+
+    # Ouroboros
+    feedback_fraction: float = 0.0
+    feedback_transform: Callable[[B], A] | None = None
+
+    # Observability
+    emit_pheromones: bool = True
+    agent_id: str | None = None
+```
+
+### Specification
+`spec/c-gents/flux.md`
+
+### Implementation
+`impl/claude/agents/flux/`
+
+### Status
+🔄 **Planned** - Specification complete
+
+---
+
 ## Functor Composition Patterns
 
 ### Sequential Wrapping
@@ -601,4 +721,4 @@ Metered(Trace(agent)) != Trace(Metered(agent))
 
 ---
 
-**Status**: This catalog identifies 12 functors across kgents. 1 is fully documented (Promise), 11 are implicit. Formalizing these would enable systematic reasoning about agent transformations and composition patterns across the entire ecosystem.
+**Status**: This catalog identifies 13 functors across kgents. 1 is fully documented (Promise), 1 is planned (Flux), 11 are implicit. Formalizing these would enable systematic reasoning about agent transformations and composition patterns across the entire ecosystem.

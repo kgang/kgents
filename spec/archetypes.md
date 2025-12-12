@@ -486,9 +486,65 @@ The space of possible archetypes is open—new patterns will emerge as the syste
 
 ---
 
+## Archetypes as Flux Configurations
+
+The eight archetypes are **instantiations of the Flux functor** with specific configurations.
+
+| Archetype | Flux Configuration | Key Insight |
+|-----------|-------------------|-------------|
+| **Consolidator** | `source=idle_signal` | Await, don't poll |
+| **Spawner** | Flux that emits child FluxAgents | Recursive flux |
+| **Witness** | `Flux(Id)` with trace side effects | Identity + observation |
+| **Questioner** | Flux with Type IV Critic inner | Never produces, only questions |
+| **Uncertain** | Flux with N parallel output streams | Superposition until collapse |
+| **Dialectician** | `feedback_fraction=0.5` | Equal thesis/antithesis |
+| **Shapeshifter** | Dynamic Observable | Self-determined visualization |
+| **Introspector** | Hegel→Lacan→Jung pipeline | Deep reflection |
+
+### The Event-Driven Insight
+
+Archetypes are NOT timer-driven zombies. The **Consolidator** doesn't poll every N seconds — it **awaits an idle signal**:
+
+```python
+# BAD: Timer zombie (Polling Fallacy)
+async def consolidate_loop():
+    while True:
+        await asyncio.sleep(300)  # Poll every 5 min
+        await consolidate()
+
+# GOOD: Event-driven (Flux pattern)
+async def consolidate_flux(idle_signal: AsyncIterator[IdleEvent]):
+    async for _ in idle_signal:
+        await consolidate()
+```
+
+### Example: Dialectician as Flux
+
+```python
+# Dialectician: thesis → antithesis → synthesis
+# Uses 50% feedback so output (synthesis) becomes next input (thesis)
+
+dialectician_flux = Flux.lift(
+    Contradict() >> Sublate(),
+    config=FluxConfig(
+        feedback_fraction=0.5,  # Equal internal/external
+        feedback_transform=lambda synthesis: synthesis.as_thesis(),
+    )
+)
+
+# External theses come from source, internal from feedback
+async for synthesis in dialectician_flux.start(thesis_source):
+    ...
+```
+
+See `spec/c-gents/flux.md` for full Flux specification.
+
+---
+
 ## See Also
 
 - [bootstrap.md](bootstrap.md) - The seven bootstrap agents
 - [anatomy.md](anatomy.md) - Symbiont and Hypnagogic patterns
 - [testing.md](testing.md) - T-gents taxonomy (Type IV Critics = Questioner)
 - [reliability.md](reliability.md) - Fallback patterns
+- [c-gents/flux.md](c-gents/flux.md) - Flux Functor specification

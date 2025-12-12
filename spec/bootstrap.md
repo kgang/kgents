@@ -218,6 +218,37 @@ The fixed-point operator. Takes a self-referential definition and finds what it 
 
 ---
 
+## Why Flux Is Not a Bootstrap Agent
+
+**Question**: Should Flux be added to the bootstrap as the eighth irreducible agent?
+
+**Analysis**:
+
+| Criterion | Flux | Assessment |
+|-----------|------|------------|
+| **Irreducible?** | Derivable from Fix | Flux ≅ Fix applied to streams |
+| **Required for regeneration?** | No | Can regenerate without Flux |
+| **Categorical necessity?** | No | Composition works without Flux |
+
+**The Derivation**:
+
+```python
+Flux(agent) ≅ Fix(
+    transform=lambda stream: map_async(agent.invoke, stream),
+    equality_check=lambda s1, s2: s1.exhausted and s2.exhausted
+)
+```
+
+Flux is the application of Fix to the streaming domain. Since Fix is already irreducible, Flux derives from it.
+
+**Conclusion**: Flux is a **derived functor**, not a bootstrap primitive. It belongs in:
+- `spec/c-gents/functor-catalog.md` §13
+- `spec/c-gents/flux.md`
+
+**However**: Flux is **foundational infrastructure** for living agents. Without it, all agents are corpses that only move when poked. The fact that it's derived doesn't diminish its importance — it elevates Fix as the foundation from which Flux emerges.
+
+---
+
 ## Performance Considerations
 
 The bootstrap agents are designed for correctness and composability first, performance second. However, certain patterns emerge from production use:

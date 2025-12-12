@@ -182,6 +182,40 @@ Traditional multi-agent systems impose hierarchy (orchestrator/worker). This cre
 
 An agent can be **invoked** (functional) or **running** (autonomous). The same agent, two modes.
 
+### The Flux Topology
+
+The Heterarchical Principle asserts dual modes. The **Flux Functor** operationalizes this.
+
+The quote at the core of kgents — *"The noun is a lie. There is only the rate of change."* — becomes literal:
+
+```
+Static:  Agent: A → B           (a point transformation)
+Dynamic: Flux(Agent): dA/dt → dB/dt  (a continuous flow)
+```
+
+Agents are not architecture — they are **topological knots in event streams**. This allows modeling via fluid dynamics:
+
+| Metric | Meaning |
+|--------|---------|
+| **Pressure** | Queue depth (backlog) |
+| **Flow** | Throughput (events/second) |
+| **Turbulence** | Error rate |
+| **Temperature** | Token metabolism (void/entropy) |
+
+### The Perturbation Principle
+
+When a FluxAgent is **FLOWING** (processing a stream), calling `invoke()` doesn't bypass the stream — it **perturbs** it. The invocation becomes a high-priority event injected into the flux.
+
+**Why?** If the agent has Symbiont memory, bypassing would cause:
+- State loaded twice (race condition)
+- Inconsistent updates ("schizophrenia")
+
+Perturbation preserves **State Integrity**.
+
+See:
+- `spec/c-gents/functor-catalog.md` §13 — Flux functor
+- `spec/c-gents/flux.md` — Full specification
+
 ### Anti-patterns
 - Permanent orchestrator/worker relationships
 - Agents that can only be called, never run autonomously
