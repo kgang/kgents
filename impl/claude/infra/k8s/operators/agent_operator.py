@@ -57,7 +57,7 @@ def parse_agent_spec(
     """Parse CRD spec into AgentSpec dataclass."""
     resources = spec.get("resources", {})
     limits = resources.get("limits", {})
-    requests = resources.get("requests", {})
+    _ = resources.get("requests", {})  # Reserved for future use
     symbiont = spec.get("symbiont", {})
     memory_config = symbiont.get("memory", {})
     network = spec.get("networkPolicy", {})
@@ -135,7 +135,7 @@ def generate_memory_cr(
 
 if KOPF_AVAILABLE:
 
-    @kopf.on.create("kgents.io", "v1", "agents")  # type: ignore[arg-type]
+    @kopf.on.create("kgents.io", "v1", "agents")  # type: ignore[misc]
     async def on_agent_create(
         spec: dict[str, Any],
         meta: dict[str, Any],
@@ -345,7 +345,7 @@ if KOPF_AVAILABLE:
             ]
             raise kopf.PermanentError(f"Failed to create agent: {e}")
 
-    @kopf.on.update("kgents.io", "v1", "agents")  # type: ignore[arg-type]
+    @kopf.on.update("kgents.io", "v1", "agents")  # type: ignore[misc]
     async def on_agent_update(
         spec: dict[str, Any],
         meta: dict[str, Any],
@@ -404,7 +404,7 @@ if KOPF_AVAILABLE:
                 return {"updated": False, "recreate_needed": True}
             raise
 
-    @kopf.on.delete("kgents.io", "v1", "agents")  # type: ignore[arg-type]
+    @kopf.on.delete("kgents.io", "v1", "agents")  # type: ignore[misc]
     async def on_agent_delete(
         spec: dict[str, Any],
         meta: dict[str, Any],
@@ -450,7 +450,7 @@ if KOPF_AVAILABLE:
 
         return {"deleted": True, "memory_retention": retention}
 
-    @kopf.timer("kgents.io", "v1", "agents", interval=COGNITIVE_PROBE_INTERVAL)  # type: ignore[arg-type]
+    @kopf.timer("kgents.io", "v1", "agents", interval=COGNITIVE_PROBE_INTERVAL)  # type: ignore[misc]
     async def cognitive_health_check(
         spec: dict[str, Any],
         meta: dict[str, Any],
@@ -531,7 +531,7 @@ if KOPF_AVAILABLE:
                 return {"health": "UNKNOWN", "error": "deployment_not_found"}
             raise
 
-    @kopf.on.field("kgents.io", "v1", "agents", field="spec.replicas")  # type: ignore[arg-type]
+    @kopf.on.field("kgents.io", "v1", "agents", field="spec.replicas")  # type: ignore[misc]
     async def on_replicas_change(
         old: int | None,
         new: int | None,

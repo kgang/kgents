@@ -42,7 +42,7 @@ from typing import TYPE_CHECKING, Any, cast
 try:
     import yaml
 except ImportError:
-    yaml = None  # type: ignore
+    yaml = None  # type: ignore[assignment]
 
 from .exceptions import (
     PathNotFoundError,

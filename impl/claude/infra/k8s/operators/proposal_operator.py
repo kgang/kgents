@@ -363,7 +363,7 @@ def generate_review_pheromone(
 
 if KOPF_AVAILABLE:
 
-    @kopf.on.create("kgents.io", "v1", "proposals")  # type: ignore[arg-type]
+    @kopf.on.create("kgents.io", "v1", "proposals")  # type: ignore[misc]
     async def on_proposal_create(
         spec: dict[str, Any],
         meta: dict[str, Any],
@@ -470,7 +470,7 @@ if KOPF_AVAILABLE:
             "level": risk.risk_level.value,
         }
 
-    @kopf.timer("kgents.io", "v1", "proposals", interval=EXPIRY_CHECK_INTERVAL)  # type: ignore[arg-type]
+    @kopf.timer("kgents.io", "v1", "proposals", interval=EXPIRY_CHECK_INTERVAL)  # type: ignore[misc]
     async def check_proposal_expiry(
         spec: dict[str, Any],
         meta: dict[str, Any],
@@ -480,7 +480,7 @@ if KOPF_AVAILABLE:
     ) -> dict[str, Any] | None:
         """Check if proposal has expired."""
         name = meta["name"]
-        namespace = meta.get("namespace", "kgents-agents")
+        _ = meta.get("namespace", "kgents-agents")  # Reserved for future use
         current_phase = status.get("phase")
 
         # Skip if already in terminal state
@@ -518,7 +518,7 @@ if KOPF_AVAILABLE:
 
         return None
 
-    @kopf.on.field("kgents.io", "v1", "proposals", field="status.approvals")  # type: ignore[arg-type]
+    @kopf.on.field("kgents.io", "v1", "proposals", field="status.approvals")  # type: ignore[misc]
     async def on_approval_change(
         old: list[dict[str, Any]] | None,
         new: list[dict[str, Any]] | None,

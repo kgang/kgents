@@ -23,11 +23,11 @@ from dataclasses import dataclass, field
 from typing import Any, Callable
 
 import numpy as np
+from field.hdc_ops import DIMENSIONS
+from field.holographic import HolographicField
+from weave.event import Event
+from weave.weave import TheWeave
 
-from ..field.hdc_ops import DIMENSIONS
-from ..field.holographic import HolographicField
-from ..weave.event import Event
-from ..weave.weave import TheWeave
 from .foraging import DEFAULT_POLICY, ForageAction, ForagingPolicy, ForagingResult
 from .free_energy import FreeEnergyState, GenerativeModel, Vector
 

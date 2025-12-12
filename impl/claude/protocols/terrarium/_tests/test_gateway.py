@@ -73,6 +73,7 @@ class TestTerrariumRegistry:
         @dataclass
         class MockFluxAgent:
             state: str = "DORMANT"
+            is_running: bool = False
 
         agent = MockFluxAgent()
         mirror = terrarium.register_agent("test-agent", agent)  # type: ignore
@@ -89,6 +90,7 @@ class TestTerrariumRegistry:
         @dataclass
         class MockFluxAgent:
             state: str = "DORMANT"
+            is_running: bool = False
 
         agent1 = MockFluxAgent()
         agent2 = MockFluxAgent()
@@ -107,6 +109,7 @@ class TestTerrariumRegistry:
         @dataclass
         class MockFluxAgent:
             state: str = "DORMANT"
+            is_running: bool = False
 
         agent = MockFluxAgent()
         terrarium.register_agent("to-remove", agent)  # type: ignore
@@ -133,6 +136,7 @@ class TestTerrariumRegistry:
         @dataclass
         class MockFluxAgent:
             state: str = "DORMANT"
+            is_running: bool = False
 
         agent = MockFluxAgent()
         terrarium.register_agent("retrieval-test", agent)  # type: ignore
@@ -156,6 +160,7 @@ class TestTerrariumRegistry:
         @dataclass
         class MockFluxAgent:
             state: str = "DORMANT"
+            is_running: bool = False
 
         agent = MockFluxAgent()
         registered_mirror = terrarium.register_agent("mirror-test", agent)  # type: ignore
@@ -173,6 +178,7 @@ class TestTerrariumRegistry:
         @dataclass
         class MockFluxAgent:
             state: str = "DORMANT"
+            is_running: bool = False
 
         agent = MockFluxAgent()
         terrarium.register_agent(
@@ -210,6 +216,7 @@ class TestTerrariumConfig:
         @dataclass
         class MockFluxAgent:
             state: str = "DORMANT"
+            is_running: bool = False
 
         agent = MockFluxAgent()
         mirror = terrarium.register_agent("history-test", agent)  # type: ignore

@@ -100,14 +100,14 @@ class WireServer:
             redoc_url=None,  # Disable redoc
         )
 
-        @app.get("/", response_class=HTMLResponse)  # type: ignore[untyped-decorator]
+        @app.get("/", response_class=HTMLResponse)  # type: ignore[misc]
         async def index() -> HTMLResponse:
             """Main view - rendered by fidelity adapter."""
             adapter = get_adapter(self.reader, self.fidelity)
             result = adapter.render()
             return HTMLResponse(content=result.html)
 
-        @app.get("/state")  # type: ignore[untyped-decorator]
+        @app.get("/state")  # type: ignore[misc]
         async def state() -> dict[str, Any]:
             """Raw state JSON endpoint."""
             wire_state = self.reader.read_state()
@@ -115,13 +115,13 @@ class WireServer:
                 return wire_state.to_dict()
             return {"error": "No state available", "agent_id": self.agent_name}
 
-        @app.get("/stream")  # type: ignore[untyped-decorator]
+        @app.get("/stream")  # type: ignore[misc]
         async def stream() -> list[dict[str, Any]]:
             """Raw stream events as JSON."""
             events = self.reader.read_stream(tail=100)
             return [e.to_dict() for e in events]
 
-        @app.get("/metrics")  # type: ignore[untyped-decorator]
+        @app.get("/metrics")  # type: ignore[misc]
         async def metrics() -> dict[str, Any]:
             """Raw metrics JSON endpoint."""
             wire_metrics = self.reader.read_metrics()
@@ -129,7 +129,7 @@ class WireServer:
                 return wire_metrics.to_dict()
             return {"error": "No metrics available"}
 
-        @app.get("/events")  # type: ignore[untyped-decorator]
+        @app.get("/events")  # type: ignore[misc]
         async def events_sse() -> StreamingResponse:
             """Server-Sent Events stream for real-time updates."""
 
@@ -146,7 +146,7 @@ class WireServer:
 
             return StreamingResponse(event_generator(), media_type="text/event-stream")
 
-        @app.get("/download")  # type: ignore[untyped-decorator]
+        @app.get("/download")  # type: ignore[misc]
         async def download() -> PlainTextResponse:
             """Download stream log as text file."""
             events = self.reader.read_stream()
@@ -159,7 +159,7 @@ class WireServer:
                 },
             )
 
-        @app.get("/export")  # type: ignore[untyped-decorator]
+        @app.get("/export")  # type: ignore[misc]
         async def export_to_igent() -> PlainTextResponse:
             """Export current state as I-gent margin note format."""
             state = self.reader.read_state()
@@ -188,7 +188,7 @@ class WireServer:
 
             return PlainTextResponse(content="\n".join(notes), media_type="text/plain")
 
-        @app.get("/health")  # type: ignore[untyped-decorator]
+        @app.get("/health")  # type: ignore[misc]
         async def health() -> dict[str, Any]:
             """Health check endpoint."""
             return {

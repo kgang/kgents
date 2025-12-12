@@ -17,7 +17,7 @@
 
 ## Status
 
-**Tests**: 8,714+ | **Mypy**: Strict (0 errors) | **Branch**: `main`
+**Tests**: 8,986 | **Mypy**: Strict (0 errors) | **Branch**: `main`
 
 ---
 
@@ -39,15 +39,21 @@ time.*     — Temporal (traces, forecasts)
 
 | Plan | Progress | Next |
 |------|----------|------|
-| `concept/lattice` | 60% | Wire to `concept.*.define` |
-| `concept/creativity` | 90% | Tasks 2-4 |
+| `concept/creativity` | 90% | Tasks 2-4 (polish) |
+| `self/stream` | 70% | Phases 2.2-2.4 (ModalScope, Pulse, Crystal) |
 
 ## Completed (Recent)
 
-- **Flux Functor** — `agents/flux/` (261 tests): Living Pipelines, perturbation
-- **Metabolism v1** — `protocols/agentese/metabolism/` (36 tests)
-- **I-gent v2.5** — Phases 1-5 (137 tests)
-- **Reflector Pattern** — Terminal/Headless/Flux (36 tests)
+- **Lattice** — 69 tests, Lineage enforcement, `concept.*.define`
+- **Flux Functor** — 261 tests, Living Pipelines, perturbation
+- **I-gent v2.5** — 137 tests, Phases 1-5 complete
+- **Reflector** — 36 tests, Terminal/Headless/Flux
+- **Metabolism v1** — 36 tests, MetabolicEngine + FeverStream
+
+## Conceptual Extensions (Docs Ready)
+
+- **Agent Servers** — `docs/agent-servers.md` (Terrarium web gateway)
+- **Agent Semaphores** — `plans/agents/semaphores.md` (Rodizio pattern, spec complete)
 
 ---
 
@@ -82,7 +88,6 @@ For details beyond this seed:
 - **Forest canopy**: `plans/_forest.md`
 - **Human intent**: `plans/_focus.md`
 - **Learnings**: `plans/meta.md`
-- **Status matrix**: `plans/_status.md`
 - **Principles**: `spec/principles.md`
 
 ---

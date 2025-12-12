@@ -152,7 +152,7 @@ def should_evaporate(
 
 if KOPF_AVAILABLE:
 
-    @kopf.on.create("kgents.io", "v1", "pheromones")  # type: ignore[arg-type]
+    @kopf.on.create("kgents.io", "v1", "pheromones")  # type: ignore[misc]
     async def on_pheromone_create(
         spec: dict[str, Any],
         meta: dict[str, Any],
@@ -182,7 +182,7 @@ if KOPF_AVAILABLE:
 
         return {"created": True, "type": pheromone_type}
 
-    @kopf.timer("kgents.io", "v1", "pheromones", interval=GC_INTERVAL_SECONDS)  # type: ignore[arg-type]
+    @kopf.timer("kgents.io", "v1", "pheromones", interval=GC_INTERVAL_SECONDS)  # type: ignore[misc]
     async def garbage_collect_pheromones(
         spec: dict[str, Any],
         meta: dict[str, Any],
@@ -225,7 +225,7 @@ if KOPF_AVAILABLE:
 
         return {"evaporated": True, "final_intensity": intensity}
 
-    @kopf.on.field("kgents.io", "v1", "pheromones", field="status.sensed_by")  # type: ignore[arg-type]
+    @kopf.on.field("kgents.io", "v1", "pheromones", field="status.sensed_by")  # type: ignore[misc]
     async def on_pheromone_sensed(
         old: list[str] | None,
         new: list[str] | None,
