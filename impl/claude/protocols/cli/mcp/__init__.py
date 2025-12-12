@@ -5,6 +5,7 @@ kgents can be both MCP client AND server - bidirectional integration.
 
 As Server (Priority!):
 - Exposes kgents commands as MCP tools
+- Exposes K8s cluster state as MCP resources (Phase E)
 - Allows Claude/Cursor to invoke kgents operations
 - Bootstrapping: Claude helps build the rest of the CLI
 
@@ -19,6 +20,13 @@ from .client import (
     MCPClient,
     MCPConnection,
     invoke_tool,
+)
+from .resources import (
+    K8sConfig,
+    K8sResourceProvider,
+    MCPResource,
+    MCPResourceContent,
+    get_provider,
 )
 from .server import (
     MCPRequest,
@@ -39,6 +47,12 @@ __all__ = [
     "MCPResponse",
     "start_server",
     "create_tool_manifest",
+    # Resources (Phase E)
+    "MCPResource",
+    "MCPResourceContent",
+    "K8sResourceProvider",
+    "K8sConfig",
+    "get_provider",
     # Client
     "MCPClient",
     "MCPConnection",

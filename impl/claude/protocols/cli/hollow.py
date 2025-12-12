@@ -116,6 +116,7 @@ COMMAND_REGISTRY: dict[str, str] = {
     "laws": "protocols.cli.bootstrap.laws:cmd_laws",
     "principles": "protocols.cli.bootstrap.principles:cmd_principles",
     # Genus Layer (Power User)
+    "capital": "protocols.cli.genus.c_gent:cmd_capital",
     "grammar": "protocols.cli.genus.g_gent:cmd_grammar",
     "jit": "protocols.cli.genus.j_gent:cmd_jit",
     "parse": "protocols.cli.genus.p_gent:cmd_parse",

@@ -18,6 +18,8 @@ See: docs/cli-integration-plan.md Part 6: Genus Layer
 from __future__ import annotations
 
 __all__ = [
+    # C-gent commands
+    "cmd_capital",
     # G-gent commands
     "cmd_grammar",
     # I-gent commands
@@ -31,6 +33,13 @@ __all__ = [
     # W-gent commands
     "cmd_witness",
 ]
+
+
+def cmd_capital(args: list[str]) -> int:
+    """Capital/Economy commands (C-gent)."""
+    from .c_gent import cmd_capital as handler
+
+    return handler(args)
 
 
 def cmd_garden(args: list[str]) -> int:

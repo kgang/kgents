@@ -1,5 +1,5 @@
 """
-MCP Server - Expose kgents as MCP tools.
+MCP Server - Expose kgents as MCP tools and resources.
 
 This is the "Killer Feature" - making kgents available to Claude/Cursor.
 Priority: Implement early so Claude can help build the rest of the CLI.
@@ -12,6 +12,12 @@ Exposed Tools (auto-generated from intent layer):
 - kgents_speak: Create domain language
 - kgents_find: Search catalog
 - kgents_flow: Execute flowfile
+
+Exposed Resources (Phase E - K8s integration):
+- kgents://agents: List Agent CRs
+- kgents://agents/{name}: Agent status
+- kgents://pheromones: Active pheromones
+- kgents://cluster/status: Cluster health
 
 From docs/cli-integration-plan.md Part 8.
 """
@@ -732,6 +738,7 @@ class MCPServer:
     MCP Server for kgents.
 
     Implements JSON-RPC 2.0 over stdio for MCP protocol.
+    Exposes both tools (active operations) and resources (passive data).
     """
 
     def __init__(self, name: str = "kgents", version: str = "0.2.0"):
@@ -739,6 +746,18 @@ class MCPServer:
         self.version = version
         self.tools = TOOL_REGISTRY.copy()
         self._running = False
+        self._resource_provider: Any = None
+
+    def _get_resource_provider(self) -> Any:
+        """Lazy-load the K8s resource provider."""
+        if self._resource_provider is None:
+            try:
+                from .resources import get_provider
+
+                self._resource_provider = get_provider()
+            except ImportError:
+                self._resource_provider = None
+        return self._resource_provider
 
     def register_tool(self, tool: MCPTool) -> None:
         """Register a custom tool."""
@@ -746,10 +765,16 @@ class MCPServer:
 
     def _get_capabilities(self) -> dict[str, Any]:
         """Get server capabilities."""
+        capabilities: dict[str, Any] = {
+            "tools": {},
+        }
+
+        # Add resources capability if provider available
+        if self._get_resource_provider() is not None:
+            capabilities["resources"] = {}
+
         return {
-            "capabilities": {
-                "tools": {},
-            },
+            "capabilities": capabilities,
             "protocolVersion": MCPVersion.V1.value,
             "serverInfo": {
                 "name": self.name,
@@ -788,6 +813,50 @@ class MCPServer:
                 "isError": True,
             }
 
+    def _list_resources(self) -> list[dict[str, Any]]:
+        """List all available resources."""
+        provider = self._get_resource_provider()
+        if provider is None:
+            return []
+
+        return [r.to_dict() for r in provider.list_resources()]
+
+    def _list_resource_templates(self) -> list[dict[str, Any]]:
+        """List resource templates (for dynamic URIs)."""
+        provider = self._get_resource_provider()
+        if provider is None:
+            return []
+
+        return provider.list_resource_templates()
+
+    async def _read_resource(self, uri: str) -> dict[str, Any]:
+        """Read a resource by URI."""
+        provider = self._get_resource_provider()
+        if provider is None:
+            return {
+                "contents": [
+                    {
+                        "uri": uri,
+                        "mimeType": "application/json",
+                        "text": '{"error": "Resource provider not available"}',
+                    }
+                ]
+            }
+
+        try:
+            content = await provider.read_resource(uri)
+            return {"contents": [content.to_dict()]}
+        except Exception as e:
+            return {
+                "contents": [
+                    {
+                        "uri": uri,
+                        "mimeType": "application/json",
+                        "text": json.dumps({"error": str(e)}),
+                    }
+                ]
+            }
+
     async def handle_request(self, request: MCPRequest) -> MCPResponse:
         """Handle an incoming MCP request."""
         method = request.method
@@ -796,6 +865,7 @@ class MCPServer:
         if method == "initialize":
             return MCPResponse(id=request.id, result=self._get_capabilities())
 
+        # Tool methods
         elif method == "tools/list":
             return MCPResponse(id=request.id, result={"tools": self._list_tools()})
 
@@ -803,6 +873,20 @@ class MCPServer:
             tool_name = params.get("name", "")
             arguments = params.get("arguments", {})
             result = await self._call_tool(tool_name, arguments)
+            return MCPResponse(id=request.id, result=result)
+
+        # Resource methods (Phase E - K8s integration)
+        elif method == "resources/list":
+            resources = self._list_resources()
+            return MCPResponse(id=request.id, result={"resources": resources})
+
+        elif method == "resources/templates/list":
+            templates = self._list_resource_templates()
+            return MCPResponse(id=request.id, result={"resourceTemplates": templates})
+
+        elif method == "resources/read":
+            uri = params.get("uri", "")
+            result = await self._read_resource(uri)
             return MCPResponse(id=request.id, result=result)
 
         elif method == "notifications/initialized":
