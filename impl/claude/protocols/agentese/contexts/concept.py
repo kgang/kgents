@@ -6,17 +6,32 @@ The Abstract: platonics, definitions, logic, compressed wisdom.
 concept.* handles resolve to abstract concepts that can be:
 - Refined via dialectical challenge
 - Related to other concepts
-- Defined (autopoiesis)
+- Defined (autopoiesis) with REQUIRED lineage
 
 Principle Alignment: Generative (compressed wisdom)
+
+The Genealogical Constraint: No concept exists ex nihilo.
+Every concept must declare its parents and justify its existence.
+
+> "No concept born without parents. No orphan in the family tree."
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 from ..exceptions import TastefulnessError
+from ..lattice.checker import ConsistencyResult, get_lattice_checker
+from ..lattice.errors import LatticeError, LineageError
+from ..lattice.lineage import (
+    STANDARD_PARENTS,
+    ConceptLineage,
+    compute_affordances,
+    compute_constraints,
+    compute_depth,
+)
 from ..node import (
     BaseLogosNode,
     BasicRendering,
@@ -26,6 +41,8 @@ from ..renderings import PhilosopherRendering, ScientificRendering
 
 if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt
+
+    from ..logos import Logos
 
 
 # === Concept Affordances by Archetype ===
@@ -52,7 +69,10 @@ class ConceptNode(BaseLogosNode):
     - Perceived (manifest)
     - Refined via dialectic (refine)
     - Related to other concepts (relate)
-    - Defined/created (define)
+    - Defined/created (define) with REQUIRED lineage
+
+    The Genealogical Constraint:
+    Every concept (except 'concept' root) must have at least one parent.
 
     Examples:
         concept.justice - The abstract idea of justice
@@ -68,15 +88,38 @@ class ConceptNode(BaseLogosNode):
     related_concepts: tuple[str, ...] = ()
     metadata: dict[str, Any] = field(default_factory=dict)
 
+    # Lineage tracking (Genealogical Constraint)
+    lineage: ConceptLineage | None = None
+
     # Integration points
     _registry: Any = None  # L-gent for concept lookup
     _grammarian: Any = None  # G-gent for validation
+    _logos: "Logos | None" = None  # Logos resolver for lineage validation
 
     def __post_init__(self) -> None:
         if not self.name:
             self.name = (
                 self._handle.split(".")[-1] if "." in self._handle else self._handle
             )
+
+    @property
+    def extends(self) -> list[str]:
+        """Get parent concepts from lineage."""
+        if self.lineage:
+            return self.lineage.extends
+        return []
+
+    @property
+    def subsumes(self) -> list[str]:
+        """Get child concepts from lineage."""
+        if self.lineage:
+            return self.lineage.subsumes
+        return []
+
+    @property
+    def has_lineage(self) -> bool:
+        """Check if this concept has lineage information."""
+        return self.lineage is not None
 
     @property
     def handle(self) -> str:
@@ -313,21 +356,78 @@ class ConceptNode(BaseLogosNode):
         observer: "Umwelt[Any, Any]",
         **kwargs: Any,
     ) -> "ConceptNode":
-        """Create a child concept (autopoiesis)."""
+        """
+        Create a child concept (autopoiesis) with REQUIRED lineage.
+
+        The Genealogical Constraint: No concept exists ex nihilo.
+        Every concept must declare its parents and justify its existence.
+
+        Args (via kwargs):
+            name: Name of the new concept (REQUIRED)
+            definition: Definition text (REQUIRED for non-exploratory concepts)
+            extends: List of parent concept handles (defaults to [self._handle])
+            justification: Why this concept needs to exist
+            domain: Domain classification (defaults to parent's domain)
+
+        Returns:
+            ConceptNode with lineage information
+
+        Raises:
+            LineageError: If no parents provided
+            LatticeError: If lattice position is invalid
+            TastefulnessError: If definition is missing
+        """
         name = kwargs.get("name", "unnamed")
         definition = kwargs.get("definition", "")
         domain = kwargs.get("domain", self.domain)
+        justification = kwargs.get("justification", "")
+
+        # Get parent concepts - default to this concept
+        extends = kwargs.get("extends", [self._handle])
+        if isinstance(extends, str):
+            extends = [extends]
+
+        # Ensure at least one parent (Genealogical Constraint)
+        if not extends:
+            extends = [self._handle]  # Default to current concept as parent
 
         child_handle = f"concept.{name}"
-        child = ConceptNode(
-            _handle=child_handle,
-            name=name,
-            definition=definition,
-            domain=domain,
-            related_concepts=(self.name,),
-            _registry=self._registry,
-            _grammarian=self._grammarian,
+
+        # Get the lattice checker
+        checker = get_lattice_checker(logos=self._logos)
+
+        # Check lattice position
+        result = await checker.check_position(
+            new_handle=child_handle,
+            parents=extends,
         )
+
+        if not result.valid:
+            if result.violation_type == "parent_missing":
+                raise LineageError(
+                    f"Cannot create '{name}': parent concepts do not exist",
+                    handle=child_handle,
+                    missing_parents=[p for p in extends if p not in STANDARD_PARENTS],
+                )
+            elif result.violation_type == "cycle":
+                raise LatticeError(
+                    f"Cannot create '{name}': would create cycle",
+                    handle=child_handle,
+                    violation_type="cycle",
+                    cycle_path=result.cycle_path,
+                )
+            elif result.violation_type == "affordance_conflict":
+                raise LatticeError(
+                    f"Cannot create '{name}': parent affordances conflict",
+                    handle=child_handle,
+                    violation_type="affordance_conflict",
+                    conflicting_affordances=result.conflicting_affordances,
+                )
+            else:
+                raise LatticeError(
+                    f"Cannot create '{name}': {result.reason}",
+                    handle=child_handle,
+                )
 
         # Validate against Tasteful principle if G-gent available
         if self._grammarian and not definition:
@@ -335,6 +435,57 @@ class ConceptNode(BaseLogosNode):
                 f"Cannot define {name} without a definition",
                 validation_errors=["Definition required"],
             )
+
+        # Compute inherited affordances and constraints
+        inherited_affordances: set[str] = set()
+        inherited_constraints: set[str] = set()
+        parent_lineages: list[ConceptLineage] = []
+
+        for parent_handle in extends:
+            parent_lineage = checker.get_lineage(parent_handle)
+            if parent_lineage:
+                inherited_affordances |= parent_lineage.affordances
+                if inherited_constraints:
+                    inherited_constraints &= parent_lineage.constraints
+                else:
+                    inherited_constraints = parent_lineage.constraints.copy()
+                parent_lineages.append(parent_lineage)
+
+        # Create lineage record
+        lineage = ConceptLineage(
+            handle=child_handle,
+            extends=extends,
+            subsumes=[],
+            justification=justification,
+            affordances=inherited_affordances,
+            constraints=inherited_constraints,
+            created_by=getattr(observer.dna, "name", "unknown"),
+            created_at=datetime.now(UTC),
+            domain=domain,
+            depth=compute_depth(parent_lineages),
+        )
+
+        # Register lineage with checker
+        checker.register_lineage(lineage)
+
+        # Update parent lineages to include this child
+        for parent_handle in extends:
+            parent_lineage = checker.get_lineage(parent_handle)
+            if parent_lineage:
+                parent_lineage.add_child(child_handle)
+
+        # Create the concept node with lineage
+        child = ConceptNode(
+            _handle=child_handle,
+            name=name,
+            definition=definition,
+            domain=domain,
+            related_concepts=tuple(extends),
+            lineage=lineage,
+            _registry=self._registry,
+            _grammarian=self._grammarian,
+            _logos=self._logos,
+        )
 
         return child
 
@@ -613,3 +764,273 @@ def create_concept_node(
         examples=tuple(examples or []),
         related_concepts=tuple(related or []),
     )
+
+
+# === Standalone define_concept Function ===
+
+
+async def define_concept(
+    logos: "Logos",
+    handle: str,
+    observer: "Umwelt[Any, Any]",
+    spec: str,
+    extends: list[str],
+    subsumes: list[str] | None = None,
+    justification: str = "",
+) -> ConceptNode:
+    """
+    Create a new concept with required lineage.
+
+    AGENTESE: concept.*.define
+
+    The Genealogical Constraint: No concept exists ex nihilo.
+    Every concept must declare its parents and justify its existence.
+
+    Args:
+        logos: The Logos resolver
+        handle: The AGENTESE handle (e.g., "concept.justice.procedural")
+        observer: The observer creating this concept
+        spec: The concept definition/specification
+        extends: Parent concept handles (REQUIRED, non-empty)
+        subsumes: Optional child concept handles
+        justification: Why does this concept need to exist?
+
+    Returns:
+        The newly created ConceptNode with lineage
+
+    Raises:
+        LineageError: If extends is empty (ex nihilo creation)
+        LineageError: If parent concepts don't exist
+        LatticeError: If position would create cycle or conflicts
+    """
+    from ..exceptions import PathNotFoundError
+
+    # 1. Validate lineage (HARD REQUIREMENT)
+    if not extends:
+        raise LineageError(
+            f"Cannot create '{handle}': concepts cannot exist ex nihilo",
+            handle=handle,
+        )
+
+    # 2. Validate parents exist
+    missing_parents = []
+    for parent in extends:
+        # Check standard parents first
+        if parent in STANDARD_PARENTS:
+            continue
+        # Then check Logos
+        try:
+            logos.resolve(parent, observer)
+        except PathNotFoundError:
+            missing_parents.append(parent)
+
+    if missing_parents:
+        raise LineageError(
+            f"Cannot create '{handle}': parent concepts do not exist",
+            handle=handle,
+            missing_parents=missing_parents,
+        )
+
+    # 3. L-gent lattice consistency check
+    checker = get_lattice_checker(logos=logos)
+    result = await checker.check_position(
+        new_handle=handle,
+        parents=extends,
+        children=subsumes or [],
+    )
+
+    if not result.valid:
+        if result.violation_type == "cycle":
+            raise LatticeError(
+                f"Cannot create '{handle}': would create cycle",
+                handle=handle,
+                violation_type="cycle",
+                cycle_path=result.cycle_path,
+            )
+        elif result.violation_type == "affordance_conflict":
+            raise LatticeError(
+                f"Cannot create '{handle}': parent affordances conflict",
+                handle=handle,
+                violation_type="affordance_conflict",
+                conflicting_affordances=result.conflicting_affordances,
+            )
+        else:
+            raise LatticeError(
+                f"Cannot create '{handle}': {result.reason}",
+                handle=handle,
+            )
+
+    # 4. Compute inherited affordances and constraints
+    inherited_affordances: set[str] = set()
+    inherited_constraints: set[str] | None = None
+    parent_lineages: list[ConceptLineage] = []
+
+    for parent_handle in extends:
+        parent_lineage = checker.get_lineage(parent_handle)
+        if parent_lineage:
+            inherited_affordances |= parent_lineage.affordances
+            if inherited_constraints is None:
+                inherited_constraints = parent_lineage.constraints.copy()
+            else:
+                inherited_constraints &= parent_lineage.constraints
+            parent_lineages.append(parent_lineage)
+
+    # 5. Create lineage record
+    lineage = ConceptLineage(
+        handle=handle,
+        extends=extends,
+        subsumes=subsumes or [],
+        justification=justification,
+        affordances=inherited_affordances,
+        constraints=inherited_constraints or set(),
+        created_by=getattr(observer.dna, "name", "unknown"),
+        created_at=datetime.now(UTC),
+        domain=_extract_domain(handle),
+        depth=compute_depth(parent_lineages),
+    )
+
+    # 6. Register lineage
+    checker.register_lineage(lineage)
+
+    # 7. Update parent lineages
+    for parent_handle in extends:
+        parent_lineage = checker.get_lineage(parent_handle)
+        if parent_lineage:
+            parent_lineage.add_child(handle)
+
+    # 8. Extract name from handle
+    name = handle.split(".")[-1] if "." in handle else handle
+
+    # 9. Create and return ConceptNode
+    node = ConceptNode(
+        _handle=handle,
+        name=name,
+        definition=spec,
+        domain=_extract_domain(handle),
+        lineage=lineage,
+        _logos=logos,
+    )
+
+    # 10. Register in Logos cache
+    logos._cache[handle] = node
+
+    return node
+
+
+def _extract_domain(handle: str) -> str:
+    """Extract domain from handle path."""
+    parts = handle.split(".")
+    if len(parts) >= 3:
+        # concept.justice.procedural -> justice
+        return parts[1]
+    elif len(parts) == 2:
+        # concept.justice -> general
+        return "general"
+    return "general"
+
+
+# === Lattice Visualization Helpers ===
+
+
+def get_concept_tree(
+    root_handle: str = "concept",
+    max_depth: int = 10,
+) -> dict[str, Any]:
+    """
+    Get the concept tree starting from a root.
+
+    Args:
+        root_handle: Starting concept handle
+        max_depth: Maximum traversal depth
+
+    Returns:
+        Nested dictionary representing the tree structure
+    """
+    checker = get_lattice_checker()
+
+    def _build_tree(handle: str, depth: int) -> dict[str, Any]:
+        if depth >= max_depth:
+            return {"handle": handle, "truncated": True}
+
+        lineage = checker.get_lineage(handle)
+        if not lineage:
+            return {"handle": handle, "children": []}
+
+        return {
+            "handle": handle,
+            "depth": lineage.depth,
+            "affordances": list(lineage.affordances),
+            "constraints": list(lineage.constraints),
+            "children": [_build_tree(child, depth + 1) for child in lineage.subsumes],
+        }
+
+    return _build_tree(root_handle, 0)
+
+
+def render_concept_lattice(
+    root_handle: str = "concept",
+    max_depth: int = 10,
+) -> str:
+    """
+    Render the concept lattice as ASCII tree.
+
+    Args:
+        root_handle: Starting concept handle
+        max_depth: Maximum traversal depth
+
+    Returns:
+        ASCII representation of the tree
+    """
+    lines = ["CONCEPT LATTICE", "=" * 40, ""]
+    checker = get_lattice_checker()
+
+    stats = {"nodes": 0, "edges": 0, "max_depth": 0, "orphans": 0}
+
+    def _render_node(handle: str, prefix: str, is_last: bool, depth: int) -> None:
+        if depth >= max_depth:
+            return
+
+        lineage = checker.get_lineage(handle)
+        if not lineage:
+            stats["orphans"] += 1
+            return
+
+        stats["nodes"] += 1
+        stats["max_depth"] = max(stats["max_depth"], lineage.depth)
+
+        # Render this node
+        connector = "└── " if is_last else "├── "
+        name = handle.split(".")[-1] if "." in handle else handle
+        lines.append(f"{prefix}{connector}{name}")
+
+        # Render children
+        children = lineage.subsumes
+        stats["edges"] += len(children)
+
+        for i, child in enumerate(children):
+            is_child_last = i == len(children) - 1
+            child_prefix = prefix + ("    " if is_last else "│   ")
+            _render_node(child, child_prefix, is_child_last, depth + 1)
+
+    # Start with root
+    root_lineage = checker.get_lineage(root_handle)
+    if root_lineage:
+        name = root_handle.split(".")[-1] if "." in root_handle else root_handle
+        lines.append(f"{name} (Top)")
+        for i, child in enumerate(root_lineage.subsumes):
+            _render_node(child, "", i == len(root_lineage.subsumes) - 1, 1)
+    else:
+        lines.append(f"{root_handle} (not found)")
+
+    # Stats
+    lines.append("")
+    lines.append("=" * 40)
+    lines.append(
+        f"Nodes: {stats['nodes']} | "
+        f"Edges: {stats['edges']} | "
+        f"Depth: {stats['max_depth']} | "
+        f"Orphans: {stats['orphans']}"
+    )
+    lines.append("=" * 40)
+
+    return "\n".join(lines)

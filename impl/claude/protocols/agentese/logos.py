@@ -613,6 +613,8 @@ class Logos:
         handle: str,
         spec: str,
         observer: "Umwelt[Any, Any]",
+        extends: list[str] | None = None,
+        justification: str = "",
     ) -> LogosNode:
         """
         Create a new concept via autopoiesis.
@@ -620,10 +622,17 @@ class Logos:
         The Generative Principle: Specs are compressed wisdom.
         New entities can be created from well-formed specs.
 
+        For concept.* handles, the Genealogical Constraint applies:
+        - No concept exists ex nihilo
+        - Every concept must declare its parents (extends)
+        - Lattice position must be validated
+
         Args:
             handle: The AGENTESE path for the new entity (e.g., "world.garden")
             spec: The spec content (markdown with YAML front matter)
             observer: The observer creating this entity
+            extends: Parent concept handles (REQUIRED for concept.* paths)
+            justification: Why this concept needs to exist
 
         Returns:
             The newly created LogosNode
@@ -632,6 +641,8 @@ class Logos:
             AffordanceError: If observer lacks 'define' affordance
             TastefulnessError: If spec is invalid
             PathSyntaxError: If handle is malformed
+            LineageError: If concept has no parents (for concept.* context)
+            LatticeError: If lattice position is invalid
         """
         from .jit import JITCompiler
 
@@ -669,6 +680,31 @@ class Logos:
                 available=["manifest", "witness", "affordances"],
             )
 
+        # === CONCEPT CONTEXT: Genealogical Constraint ===
+        # For concept.* paths, use lineage-aware define
+        if context == "concept":
+            from .contexts.concept import define_concept as lineage_define_concept
+
+            # Genealogical Constraint: concepts require parents
+            if not extends:
+                from .lattice.errors import LineageError
+
+                raise LineageError(
+                    f"Cannot create '{handle}': concepts cannot exist ex nihilo",
+                    handle=handle,
+                )
+
+            # Delegate to lineage-aware define
+            return await lineage_define_concept(
+                logos=self,
+                handle=handle,
+                observer=observer,
+                spec=spec,
+                extends=extends,
+                justification=justification,
+            )
+
+        # === OTHER CONTEXTS: Standard JIT compilation ===
         # Validate spec via G-gent if available
         if self._grammarian is not None:
             # G-gent validation would go here
@@ -842,6 +878,7 @@ def create_logos(
     grammarian: Any = None,
     capital_ledger: Any = None,
     curator: "WundtCurator | None" = None,
+    middleware: list["WundtCurator"] | None = None,
 ) -> Logos:
     """
     Create a Logos resolver with standard configuration.
@@ -855,10 +892,39 @@ def create_logos(
         grammarian: G-gent for grammar validation
         capital_ledger: EventSourcedLedger for void.capital.* (injected for testing)
         curator: WundtCurator for aesthetic filtering (Phase 5)
+        middleware: List of middleware to apply to all invoke() calls.
+                   If provided, this takes precedence over the curator parameter.
+                   The first WundtCurator in the list becomes the primary curator.
 
     Returns:
         Configured Logos instance with Phase 2 context resolvers
+
+    Example:
+        # Simple usage with curator
+        logos = create_logos(curator=WundtCurator())
+
+        # With middleware list (enables chaining)
+        logos = create_logos(
+            middleware=[
+                WundtCurator(
+                    low_threshold=0.2,
+                    high_threshold=0.8,
+                ),
+            ]
+        )
+
+        # All outputs are filtered through the Wundt curve
+        result = await logos.invoke("concept.story.manifest", observer)
     """
+    # Determine the curator to use
+    effective_curator = curator
+    if middleware:
+        # Use first WundtCurator from middleware list
+        for mw in middleware:
+            if hasattr(mw, "filter") and hasattr(mw, "evaluate"):
+                effective_curator = mw
+                break
+
     logos = Logos(
         registry=registry or SimpleRegistry(),
         spec_root=Path(spec_root),
@@ -867,10 +933,55 @@ def create_logos(
         _b_gent=b_gent,
         _grammarian=grammarian,
         _capital_ledger=capital_ledger,
-        _curator=curator,
+        _curator=effective_curator,
     )
     logos.__post_init__()  # Initialize context resolvers
     return logos
+
+
+def create_curated_logos(
+    complexity_min: float = 0.1,
+    complexity_max: float = 0.9,
+    novelty_min: float = 0.1,
+    novelty_max: float = 0.9,
+    **kwargs: Any,
+) -> Logos:
+    """
+    Convenience factory to create a Logos with pre-configured Wundt Curator.
+
+    This is the recommended way to enable aesthetic filtering globally.
+    All invoke() results will be filtered through the Wundt Curve.
+
+    Args:
+        complexity_min: Below this complexity = boring (default 0.1)
+        complexity_max: Above this complexity = chaotic (default 0.9)
+        novelty_min: Below this novelty = boring (default 0.1)
+        novelty_max: Above this novelty = chaotic (default 0.9)
+        **kwargs: Additional arguments passed to create_logos()
+
+    Returns:
+        Logos with WundtCurator middleware enabled
+
+    Example:
+        # Create Logos that filters boring/chaotic output
+        logos = create_curated_logos()
+
+        # Custom thresholds for creative applications
+        logos = create_curated_logos(
+            complexity_min=0.2,  # Tolerate more simplicity
+            complexity_max=0.95,  # Allow more complexity
+            novelty_min=0.15,
+            novelty_max=0.85,
+        )
+    """
+    from .middleware.curator import WundtCurator
+
+    curator = WundtCurator(
+        low_threshold=min(complexity_min, novelty_min),
+        high_threshold=max(complexity_max, novelty_max),
+    )
+
+    return create_logos(curator=curator, **kwargs)
 
 
 # === Example Nodes for Testing ===

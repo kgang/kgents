@@ -32,6 +32,9 @@ from .concept import (
     ConceptNode,
     create_concept_node,
     create_concept_resolver,
+    define_concept,
+    get_concept_tree,
+    render_concept_lattice,
 )
 from .concept_blend import (
     BLEND_AFFORDANCES,
@@ -154,6 +157,9 @@ __all__ = [
     "ConceptNode",
     "create_concept_resolver",
     "create_concept_node",
+    "define_concept",
+    "get_concept_tree",
+    "render_concept_lattice",
     # Concept blending (concept.blend.*)
     "BLEND_AFFORDANCES",
     "BlendNode",

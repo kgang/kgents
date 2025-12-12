@@ -12,6 +12,7 @@ Usage:
     kgents map --summary   # Just text summary
     kgents map --json      # Machine-readable JSON
     kgents map --ghost     # Show cached map state
+    kgents map --lattice   # Show concept lattice (genealogical tree)
     kgents map <query>     # Center map on query
 
 Example output:
@@ -29,6 +30,20 @@ Example output:
       ✓ CLI Handlers
       ✓ Instance DB
       ⚠ MCP Integration (drifting)
+
+Concept Lattice (--lattice):
+    CONCEPT LATTICE
+    ========================================
+    concept (Top)
+    ├── entity
+    │   ├── agent
+    │   └── tool
+    ├── process
+    │   └── workflow
+    └── relation
+    ========================================
+    Nodes: 5 | Edges: 4 | Depth: 2 | Orphans: 0
+    ========================================
 
 Architecture:
     This handler is "hollowed" - it delegates to GlassClient which implements:
@@ -56,6 +71,7 @@ def cmd_map(args: list[str]) -> int:
     summary_only = "--summary" in args
     json_mode = "--json" in args
     ghost_mode = "--ghost" in args
+    lattice_mode = "--lattice" in args
     help_mode = "--help" in args or "-h" in args
 
     # Extract query/focus if provided
@@ -72,6 +88,10 @@ def cmd_map(args: list[str]) -> int:
     # Ghost mode: show cached map state
     if ghost_mode:
         return _show_ghost_map_state()
+
+    # Lattice mode: show concept lattice
+    if lattice_mode:
+        return _show_concept_lattice(query, json_mode)
 
     # Run async map command
     return asyncio.run(
@@ -435,4 +455,54 @@ def _show_ghost_map_state() -> int:
 
     except Exception as e:
         print(f"[ERROR] Failed to read Ghost cache: {e}")
+        return 1
+
+
+def _show_concept_lattice(
+    root_handle: str | None = None, json_mode: bool = False
+) -> int:
+    """
+    Show the concept lattice (genealogical tree).
+
+    The lattice shows the family tree of concepts:
+    - Parents (extends) - who this concept inherits from
+    - Children (subsumes) - concepts that extend this one
+    - Affordances - inherited capabilities
+    - Constraints - requirements from parents
+
+    Args:
+        root_handle: Optional root to start from (default: "concept")
+        json_mode: If True, output JSON instead of ASCII
+
+    Returns:
+        Exit code (0 = success)
+    """
+    try:
+        from protocols.agentese.contexts.concept import (
+            get_concept_tree,
+            render_concept_lattice,
+        )
+
+        # Default root
+        if not root_handle:
+            root_handle = "concept"
+
+        if json_mode:
+            # JSON output
+            tree = get_concept_tree(root_handle)
+            print(json.dumps(tree, indent=2))
+        else:
+            # ASCII output
+            output = render_concept_lattice(root_handle)
+            print(output)
+
+        return 0
+
+    except ImportError as e:
+        print(f"[LATTICE] Import error: {e}")
+        print("  Ensure protocols.agentese.contexts.concept is available.")
+        return 1
+
+    except Exception as e:
+        print(f"[LATTICE] Error rendering lattice: {e}")
         return 1
