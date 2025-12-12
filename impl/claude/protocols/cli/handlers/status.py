@@ -28,10 +28,13 @@ import asyncio
 import json as json_module
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
+
+if TYPE_CHECKING:
+    from protocols.cli.reflector import InvocationContext
 
 
-def cmd_status(args: list[str]) -> int:
+def cmd_status(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """
     Display cortex health status.
 
@@ -42,7 +45,21 @@ def cmd_status(args: list[str]) -> int:
     - On success: GlassClient writes status to Ghost cache automatically
     - On failure: GlassClient reads from Ghost cache if available
     - Enables offline resilience for debugging
+
+    Reflector Integration:
+    - If ctx is provided, outputs via dual-channel (human + semantic)
+    - Human output goes to stdout
+    - Semantic output goes to FD3 (for agent consumption)
     """
+    # Get context from hollow.py if not provided
+    if ctx is None:
+        try:
+            from protocols.cli.hollow import get_invocation_context
+
+            ctx = get_invocation_context("status", args)
+        except ImportError:
+            pass
+
     # Parse args
     full_mode = "--full" in args
     json_mode = "--json" in args
@@ -64,6 +81,7 @@ def cmd_status(args: list[str]) -> int:
             full_mode=full_mode,
             json_mode=json_mode,
             cortex_only=cortex_only,
+            ctx=ctx,
         )
     )
 
@@ -72,6 +90,7 @@ async def _async_status(
     full_mode: bool = False,
     json_mode: bool = False,
     cortex_only: bool = False,
+    ctx: "InvocationContext | None" = None,
 ) -> int:
     """
     Async implementation of status command using GlassClient.
@@ -80,6 +99,8 @@ async def _async_status(
     1. gRPC to Cortex daemon
     2. Local CortexServicer
     3. Ghost cache
+
+    If ctx is provided, outputs via dual-channel (human + semantic).
     """
     from protocols.cli.glass import GlassResponse, get_glass_client
     from protocols.cli.hollow import find_kgents_root
@@ -112,6 +133,11 @@ async def _async_status(
         # Extract status data from response
         status_data = _extract_status_data(response.data)
 
+        # Build semantic output (for FD3)
+        semantic_output = _build_semantic_output(
+            status_data, project_root, cortex_only, response.is_ghost, response.ghost_age
+        )
+
         # Render based on mode
         if json_mode:
             output = _build_json_output_from_data(
@@ -124,15 +150,19 @@ async def _async_status(
                     if response.ghost_age
                     else None,
                 }
-            print(json_module.dumps(output, indent=2, default=str))
+            human_output = json_module.dumps(output, indent=2, default=str)
+            _emit_output(human_output, semantic_output, ctx)
 
         elif full_mode:
             _print_full_status(status_data, response.is_ghost, response.ghost_age)
             if not cortex_only:
                 _print_ghost_panel(project_root)
+            # Full mode doesn't use dual-channel (too complex)
+            if ctx is not None:
+                ctx.emit_semantic(semantic_output)
 
         else:
-            # Compact mode
+            # Compact mode - use dual-channel output
             compact_line = _render_compact_status(
                 status_data, response.is_ghost, response.ghost_age
             )
@@ -140,19 +170,81 @@ async def _async_status(
                 ghost_status = _get_ghost_status_line(project_root)
                 if ghost_status:
                     compact_line = _merge_status_lines(compact_line, ghost_status)
-            print(compact_line)
+            _emit_output(compact_line, semantic_output, ctx)
 
         return 0
 
     except ConnectionError as e:
         # GlassClient couldn't connect AND no Ghost cache available
-        print(f"[STATUS] X OFFLINE | {e}")
+        error_human = f"[STATUS] X OFFLINE | {e}"
+        error_semantic = {"health": "offline", "error": str(e)}
+        _emit_output(error_human, error_semantic, ctx)
         print("  Run 'kgents infra init' to start the Cortex daemon.")
         return 1
 
     except Exception as e:
-        print(f"[STATUS] X ERROR | {e}")
+        error_human = f"[STATUS] X ERROR | {e}"
+        error_semantic = {"health": "error", "error": str(e)}
+        _emit_output(error_human, error_semantic, ctx)
         return 1
+
+
+def _emit_output(
+    human: str,
+    semantic: dict[str, Any],
+    ctx: "InvocationContext | None",
+) -> None:
+    """
+    Emit output via dual-channel if ctx available, else print.
+
+    This is the key integration point with the Reflector Protocol:
+    - Human output goes to stdout (for humans)
+    - Semantic output goes to FD3 (for agents consuming our output)
+    """
+    if ctx is not None:
+        ctx.output(human=human, semantic=semantic)
+    else:
+        print(human)
+
+
+def _build_semantic_output(
+    status_data: dict[str, Any],
+    project_root: Path,
+    cortex_only: bool,
+    is_ghost: bool,
+    ghost_age: Any,
+) -> dict[str, Any]:
+    """
+    Build semantic output for FD3 channel.
+
+    This is the structured data that agents can consume.
+    """
+    semantic: dict[str, Any] = {
+        "health": status_data.get("health", "unknown"),
+        "instance_id": status_data.get("instance_id", "unknown"),
+        "agents": status_data.get("agents", []),
+        "components": status_data.get("components", []),
+    }
+
+    if is_ghost:
+        semantic["_source"] = "ghost"
+        if ghost_age is not None:
+            semantic["_age_seconds"] = ghost_age.total_seconds()
+    else:
+        semantic["_source"] = "live"
+
+    # Add pheromones if present
+    pheromones = status_data.get("pheromone_levels", {})
+    if pheromones:
+        semantic["pheromone_levels"] = pheromones
+
+    # Add ghost context if not cortex-only
+    if not cortex_only:
+        ghost_context = _get_ghost_context(project_root)
+        if ghost_context:
+            semantic["ghost_context"] = ghost_context
+
+    return semantic
 
 
 def _extract_status_data(data: Any) -> dict[str, Any]:

@@ -77,6 +77,7 @@ class TestAgentRegistry:
             "d",
             "e",
             "f",
+            "flux",
             "g",
             "h",
             "i",
