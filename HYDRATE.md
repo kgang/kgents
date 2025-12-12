@@ -47,7 +47,7 @@ hydrate.time.witness       → Temporal trace (git log, recent changes)
 | Note enablement | `hydrate.project.afford` | Announce what you enable |
 | Update shared | `hydrate.concept.refine` | Prefix `[STALE?]` if uncertain |
 
-**Status**: 7,140 tests (81 skipped) | Branch: `main` | Mypy: Strict (0 errors)
+**Status**: 7,767 tests | Branch: `main` | Mypy: Strict (0 errors)
 
 ---
 
@@ -80,6 +80,30 @@ Projects are holons. Grasping yields observer-dependent affordances.
 | Proposal | `world.proposal.refine` → Safe autopoiesis via dry-run |
 
 **v4.0**: Five CRDs • Categorical composition • Workload classification • Trust gates
+
+**Operationalization (Phase A-F)**:
+```bash
+# Phase A - Cluster setup (✅ DONE)
+./impl/claude/infra/k8s/scripts/setup-cluster.sh
+
+# Phase B - Operator deployment (✅ DONE)
+./impl/claude/infra/k8s/scripts/deploy-operators.sh
+
+# Phase C-D - L-gent deployment (✅ DONE)
+# agents/l/server.py (HTTP wrapper) + agents/l/Dockerfile
+# Endpoints: /health, /ready, /catalog, /stats
+
+# Phase E - MCP Resources (✅ DONE)
+# protocols/cli/mcp/resources.py - kgents:// URI scheme
+
+# Phase F - LLM Integration (✅ DONE)
+# infra/cortex/probes.py - CognitiveProbe, PathProbe
+# infra/cortex/agents/ - DefineAgent, BlendAgent, CriticAgent
+```
+
+**Running Pods** (`kubectl get pods -n kgents-agents`):
+- kgents-operator (1/1) • l-gent (1/1) • l-gent-postgres (1/1) • ping-agent (1/1)
+
 **afford**: DevEx • W-gent wire • O-gent observability
 **block**: None
 
@@ -162,6 +186,7 @@ pytest -m "not slow" -q              # Must pass (pre-existing failures exempt)
 - Cross-agent: `*_integration.py` or SemanticField
 - Foundational: `shared`, `a`, `d`, `l`, `c`
 - Imports: Prefer absolute (`from agents.x import Y`)
+- **Dockerfiles**: Use `__deps__.py` manifests; validate with `python impl/claude/infra/scripts/build_agent_image.py <module> --validate`
 
 ---
 
@@ -169,16 +194,23 @@ pytest -m "not slow" -q              # Must pass (pre-existing failures exempt)
 
 **tech debt** (the accursed share—acknowledged, not ignored):
 - Mypy: Strict (0 errors) - achieved 2025-12-11
-- Tests: 7,140 passing, 81 skipped (external deps)
-- TODOs: 74 across 33 files
+- Tests: 7,767 passing (25 compression tests + 7 curator tests + 28 other)
 - External stubs: Using `ignore_missing_imports` for redis, kubernetes, etc.
-  - Consider: [types-redis](https://pypi.org/project/types-redis/) (note: redis ≥5.0 has native types)
-  - Consider: [kubernetes-stubs-elephant-fork](https://pypi.org/project/kubernetes-stubs-elephant-fork/) (v33.1.0, actively maintained)
 
 **phase.manifest**:
-- Phase 0 (CLI Hollowing): Complete — `glass.py`, `cortex/service.py`, CRDs
-- Phase 1 (Grammar/Accounting): Next — `shared/accounting.py`, `shared/capital.py`
-- Phase 2 (Store Comonad): Planned — `agents/d/context_comonad.py`
+- Phase 0 (CLI Hollowing): Complete
+- Phase 1 (Grammar/Accounting): Complete — `shared/capital.py`, `shared/costs.py`, `shared/budget.py`
+- Phase 2 (Store Comonad): Complete — `agents/d/context_comonad.py`
+- **Phase 5-8 (Creativity v2.5)**: Complete — See `plans/concept/creativity.md`
+  - Phase 5: Wundt Curator (`middleware/curator.py`)
+  - Phase 6: Conceptual Blending (`contexts/concept_blend.py`)
+  - Phase 7: Critic's Loop (`contexts/self_judgment.py`)
+  - Phase 8: Contract Melt + Pataphysics (`shared/melting.py`)
+  - **Task 1**: MDL + Reconstruction Validation (`contexts/compression.py`) ✅ NEW
+- **Creativity v2.5 Remaining** (3 items):
+  - Task 2: Bidirectional Skeleton (PAYADOR)
+  - Task 3: Wire Pataphysics Solver to LLM
+  - Task 4: Auto-Wire WundtCurator Middleware (already in Logos.invoke!)
 
 ---
 

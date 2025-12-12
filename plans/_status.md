@@ -1,6 +1,6 @@
 # Implementation Status Matrix
 
-> Last updated: 2025-12-11
+> Last updated: 2025-12-11 (Phase 2.1 complete)
 
 This document tracks implementation status against plans. Verified against actual codebase.
 
@@ -52,17 +52,34 @@ This document tracks implementation status against plans. Verified against actua
 | Memory CRD | ✅ Done | `infra/k8s/crds/memory-crd.yaml` | 5KB |
 | Umwelt CRD | ✅ Done | `infra/k8s/crds/umwelt-crd.yaml` | 6.3KB |
 | Proposal CRD | ✅ Done | `infra/k8s/crds/proposal-crd.yaml` | 13.7KB |
-| Agent Operator | 📋 Planned | `infra/k8s/operators/agent_operator.py` | Use kopf |
-| Proposal Operator | 📋 Planned | `infra/k8s/operators/proposal_operator.py` | Risk calculation |
+| Agent Operator | ✅ Done | `infra/k8s/operators/agent_operator.py` | 700 lines, kopf handlers |
+| Pheromone Operator | ✅ Done | `infra/k8s/operators/pheromone_operator.py` | 348 lines, decay loop |
+| Proposal Operator | ✅ Done | `infra/k8s/operators/proposal_operator.py` | 795 lines, risk calc |
 | T-gent Webhook | 📋 Planned | | ValidatingAdmissionWebhook |
 | Cortex daemon deployment | ✅ Done | `infra/k8s/manifests/cortex-daemon-deployment.yaml` | |
 | Tether Protocol | ✅ Done | `infra/k8s/tether.py` | Agent tethering |
-| Cognitive Probes | 📋 Planned | | LLM health checks |
+| Cognitive Probes | 📋 Planned | `infra/cortex/probes.py` | LLM health checks |
 | Durable Execution | 📋 Planned | | CRD state machine |
 | Dream Cycle Operator | 📋 Planned | | Low-load self-optimization |
 | Terrarium TUI | 🚧 In Progress | `agents/i/terrarium_tui.py` | Basic structure exists |
 | Visual Stigmergy (heatmap) | 📋 Planned | | Pheromone visualization |
 | Seance Mode | 📋 Planned | | Time-travel debugging |
+
+### K8s Operationalization (Phase A-F)
+
+| Component | Status | Location | Notes |
+|-----------|--------|----------|-------|
+| Cluster setup script | ✅ Done | `infra/k8s/scripts/setup-cluster.sh` | Phase A |
+| Cluster verify script | ✅ Done | `infra/k8s/scripts/verify-cluster.sh` | Phase A |
+| Cluster teardown script | ✅ Done | `infra/k8s/scripts/teardown-cluster.sh` | Phase A |
+| Operator Dockerfile | ✅ Done | `infra/k8s/operators/Dockerfile` | Phase B |
+| Operator deployment | ✅ Done | `infra/k8s/manifests/operators-deployment.yaml` | Phase B |
+| Operator deploy script | ✅ Done | `infra/k8s/scripts/deploy-operators.sh` | Phase B |
+| L-gent HTTP server | 📋 Planned | `agents/l/server.py` | Phase C |
+| L-gent Dockerfile | 📋 Planned | `agents/l/Dockerfile` | Phase C |
+| L-gent deploy script | 📋 Planned | `infra/k8s/scripts/deploy-lgent.sh` | Phase D |
+| MCP resource provider | 📋 Planned | `protocols/cli/mcp/resources.py` | Phase E |
+| Cortex LLM integration | 📋 Planned | `infra/cortex/service.py` | Phase F (uses runtime/cli.py) |
 
 ---
 
@@ -70,13 +87,15 @@ This document tracks implementation status against plans. Verified against actua
 
 | Component | Status | Location | Notes |
 |-----------|--------|----------|-------|
-| `ContextWindow` (Store Comonad) | 📋 Planned | `agents/d/context_comonad.py` | extract/extend/duplicate |
-| Comonad law tests | 📋 Planned | `agents/d/_tests/test_comonad_laws.py` | Property-based |
-| `ContextProjector` (Galois Connection) | 📋 Planned | `agents/d/projector.py` | Not a Lens |
-| `LinearityMap` | 📋 Planned | `agents/d/linearity.py` | Resource classes |
-| Observation masking | 📋 Planned | | JetBrains pattern |
+| `ContextWindow` (Store Comonad) | ✅ Done | `agents/d/context_window.py` | extract/extend/duplicate (41 tests) |
+| `LinearityMap` | ✅ Done | `agents/d/linearity.py` | Resource classes (38 tests) |
+| `ContextProjector` (Galois Connection) | ✅ Done | `agents/d/projector.py` | Not a Lens (28 tests) |
+| `AdaptiveThreshold` | ✅ Done | `agents/d/projector.py` | ACON-style thresholds |
+| AGENTESE `self.stream.*` | ✅ Done | `protocols/agentese/contexts/stream.py` | Full path resolver (31 tests) |
+| Comonad law tests | ✅ Done | `agents/d/_tests/test_context_window.py` | Left/Right identity verified |
+| MDL Compression Quality | ✅ Done | `protocols/agentese/contexts/compression.py` | Ventura Fix (43 tests) |
+| Observation masking | 📋 Planned | | JetBrains pattern (in projector) |
 | Incremental summarization | 📋 Planned | `agents/r/incremental.py` | Differential updates |
-| Adaptive thresholds | 📋 Planned | `agents/d/adaptive.py` | ACON-style |
 | `Pulse` dataclass | 📋 Planned | `agents/o/pulse.py` | Fast-lane heartbeat |
 | `FastChannel` | 📋 Planned | `infra/cortex/fast_channel.py` | Log-based vitality |
 | `SlowChannel` | 📋 Planned | `infra/cortex/slow_channel.py` | CRD-based signals |
@@ -90,18 +109,24 @@ This document tracks implementation status against plans. Verified against actua
 
 | Component | Status | Location | Notes |
 |-----------|--------|----------|-------|
-| `CapitalLedger` | 📋 Planned | `shared/capital.py` | Social capital tracking |
-| `TrustEvent` | 📋 Planned | `shared/capital.py` | Trust history |
-| `BypassResult` | 📋 Planned | `shared/capital.py` | Fool's Bypass result |
-| `fool_bypass()` | 📋 Planned | `shared/capital.py` | Spend capital to bypass |
-| `TrustGate` (with Capital) | 📋 Planned | `infra/k8s/operators/trust_gate.py` | Integrated evaluation |
-| `ResourceToken` | 📋 Planned | `shared/accounting.py` | Runtime accounting |
-| `Ledger` | 📋 Planned | `shared/accounting.py` | Token ledger |
+| `EventSourcedLedger` | ✅ Done | `shared/capital.py` | Event-sourced capital tracking (83 tests) |
+| `LedgerEvent` | ✅ Done | `shared/capital.py` | Immutable events (CREDIT, DEBIT, BYPASS, etc.) |
+| `BypassToken` | ✅ Done | `shared/capital.py` | OCap capability token |
+| `mint_bypass()` | ✅ Done | `shared/capital.py` | Mint bypass token |
+| `CostFactor` | ✅ Done | `shared/costs.py` | Algebraic cost composition |
+| `CostContext` | ✅ Done | `shared/costs.py` | Context for cost calculation |
+| `ResourceBudget` | ✅ Done | `shared/budget.py` | Context manager for budgets |
+| `CapitalNode` | ✅ Done | `protocols/agentese/contexts/void.py` | void.capital.* AGENTESE paths |
+| `TrustGate` | ✅ Done | `agents/t/trustgate.py` | Capital-backed gate with bypass (23 tests) |
+| `Proposal` | ✅ Done | `agents/t/trustgate.py` | Action to be evaluated |
+| `TrustDecision` | ✅ Done | `agents/t/trustgate.py` | Gate evaluation result |
 | `MetabolicEngine` | 📋 Planned | `protocols/agentese/metabolism/__init__.py` | Token thermometer |
 | `FeverStream` | 📋 Planned | `protocols/agentese/metabolism/fever.py` | Background dreamer |
-| `kgents tithe` command | 📋 Planned | `protocols/cli/handlers/tithe.py` | Voluntary discharge |
-| `kgents capital balance` | 📋 Planned | | Query capital |
-| `kgents capital history` | 📋 Planned | | Trust event history |
+| `kgents capital balance` | ✅ Done | `protocols/cli/genus/c_gent.py` | Query capital (24 tests) |
+| `kgents capital history` | ✅ Done | `protocols/cli/genus/c_gent.py` | Trust event history |
+| `kgents capital tithe` | ✅ Done | `protocols/cli/genus/c_gent.py` | Voluntary discharge (potlatch) |
+| Store Comonad persistence | ✅ Done | `agents/d/context_comonad.py` | D-gent event persistence (26 tests) |
+| JudgeAgent → TrustGate | ✅ Done | `agents/t/trustgate.py` | LLM-based semantic evaluation |
 
 ---
 
@@ -118,6 +143,31 @@ This document tracks implementation status against plans. Verified against actua
 | `ModalLogos` wrapper | 📋 Planned | `protocols/agentese/modal/logos.py` | Branch-isolated |
 | `could_*`, `must_*` aspects | 📋 Planned | `protocols/agentese/modal/aspects.py` | Modal operators |
 | D-gent fork (non-Git state) | 📋 Planned | `agents/d/fork.py` | Copy-on-write |
+
+---
+
+## I-gent v2.5: Semantic Flux (`self/interface.md`)
+
+| Component | Status | Location | Notes |
+|-----------|--------|----------|-------|
+| Textual app skeleton | 📋 Planned | `agents/i/app.py` | Main application |
+| FluxScreen (default) | 📋 Planned | `agents/i/screens/flux.py` | Agent density field |
+| WIRE overlay | 📋 Planned | `agents/i/screens/overlays/wire.py` | Hold `w` for overlay |
+| BODY overlay | 📋 Planned | `agents/i/screens/overlays/body.py` | Omega proprioception |
+| DensityField widget | 📋 Planned | `agents/i/widgets/density_field.py` | Block element rendering |
+| FlowArrow widget | 📋 Planned | `agents/i/widgets/flow_arrow.py` | Throughput visualization |
+| Waveform widget | 📋 Planned | `agents/i/widgets/waveform.py` | Processing texture |
+| XYZMeter widget | 📋 Planned | `agents/i/widgets/xyz_meter.py` | O-gent health bars |
+| Glitch renderer | 📋 Planned | `agents/i/widgets/glitch.py` | Zalgo/corruption effect |
+| AGENTESE HUD | 📋 Planned | `agents/i/widgets/agentese_hud.py` | Path completion with arrows |
+| MemoryGarden widget | 📋 Planned | `agents/i/widgets/memory_garden.py` | D-gent visualization |
+| AgentObservable protocol | 📋 Planned | `shared/observable.py` | Universal agent interface |
+| Registry data source | 📋 Planned | `agents/i/data/registry.py` | Agent mesh connection |
+| O-gent data source | 📋 Planned | `agents/i/data/ogent.py` | Polling with ~2.2s jitter |
+| State persistence | 📋 Planned | `agents/i/data/state.py` | Session cursor/layout |
+| Earth theme | 📋 Planned | `agents/i/theme/earth.py` | Deep earth + pink/purple |
+| Web deployment | 📋 Planned | | `textual serve` integration |
+| Terrarium TUI (legacy) | 🚧 In Progress | `agents/i/terrarium_tui.py` | Will be replaced by v2.5 |
 
 ---
 
@@ -138,15 +188,23 @@ This document tracks implementation status against plans. Verified against actua
 1. **Phase 0 (Hollow Bone)** - ✅ COMPLETE
    - ResilientClient, Ghost cache, hollowed handlers, gRPC service
 
-2. **Phase 1 (Grammar)** - 📋 NEXT
-   - Resource Accounting (`shared/accounting.py`)
-   - Capital Ledger (`shared/capital.py`)
-   - AGENTESE path registry enhancement
+2. **Phase 1 (Grammar)** - ✅ COMPLETE (Phase 1.7)
+   - ✅ Capital Ledger (`shared/capital.py`) - Event-sourced, 83 tests
+   - ✅ Cost Functions (`shared/costs.py`) - Algebraic composition
+   - ✅ Budget Manager (`shared/budget.py`) - Context manager pattern
+   - ✅ AGENTESE void.capital.* paths - Wired to ledger
+   - ✅ TrustGate (`agents/t/trustgate.py`) - BypassToken + JudgeAgent, 28 tests
+   - ✅ CLI Commands (`protocols/cli/genus/c_gent.py`) - balance/history/tithe, 24 tests
+   - ✅ Store Comonad (`agents/d/context_comonad.py`) - D-gent event persistence, 26 tests
 
-3. **Phase 2 (Brain)** - 📋 PENDING
-   - Store Comonad implementation
-   - ContextProjector
-   - Modal Scope via duplicate()
+3. **Phase 2 (Brain)** - ✅ COMPLETE (Phase 2.1)
+   - ✅ LinearityMap (`agents/d/linearity.py`) - Resource classes, 38 tests
+   - ✅ ContextWindow (`agents/d/context_window.py`) - Turn-level Store Comonad, 41 tests
+   - ✅ ContextProjector (`agents/d/projector.py`) - Galois Connection, 28 tests
+   - ✅ AdaptiveThreshold - ACON-style compression thresholds
+   - ✅ AGENTESE `self.stream.*` (`protocols/agentese/contexts/stream.py`) - 31 tests
+   - 📋 Modal Scope via duplicate() - Git-backed branching (Phase 2.2)
+   - 📋 StateCrystal / Crystallization (Phase 2.4)
 
 4. **Phase 3 (Body)** - 📋 PENDING
    - K8s Operators (Agent, Proposal)
@@ -156,7 +214,13 @@ This document tracks implementation status against plans. Verified against actua
 5. **Phase 4 (Senses)** - 📋 PENDING
    - Dual-lane pheromones
    - Crystallization engine
-   - Terrarium TUI polish
+   - ~~Terrarium TUI polish~~ → **I-gent v2.5 Semantic Flux**
+
+6. **Phase 5 (Interface Renaissance)** - 📋 PENDING
+   - I-gent v2.5 Core Flux (density fields, block elements)
+   - WIRE/BODY overlays
+   - Glitch mechanic + AGENTESE HUD
+   - Web deployment via `textual serve`
 
 ---
 
@@ -182,4 +246,4 @@ cd impl/claude && uv run mypy --strict --explicit-package-bases .
 
 ---
 
-*Last verified against codebase: 2025-12-11*
+*Last verified against codebase: 2025-12-11 (MDL Compression + 7,707 tests)*

@@ -207,6 +207,119 @@ Visual interface for the hive mind:
 
 ---
 
+## Operationalization Phases (2025-12-11)
+
+> *K8s infrastructure first, LLM integration second.*
+
+### Phase A: Cluster Setup (✅ DONE)
+
+| Deliverable | Path | Status |
+|-------------|------|--------|
+| Setup script | `infra/k8s/scripts/setup-cluster.sh` | ✅ |
+| Verify script | `infra/k8s/scripts/verify-cluster.sh` | ✅ |
+| Teardown script | `infra/k8s/scripts/teardown-cluster.sh` | ✅ |
+
+**Commands**:
+```bash
+./impl/claude/infra/k8s/scripts/setup-cluster.sh
+./impl/claude/infra/k8s/scripts/verify-cluster.sh
+```
+
+### Phase B: Operator Deployment (✅ DONE)
+
+Single pod with all 3 operators (kopf handles multiplexing).
+
+| Deliverable | Path | Status |
+|-------------|------|--------|
+| Dockerfile | `infra/k8s/operators/Dockerfile` | ✅ |
+| Deployment manifest | `infra/k8s/manifests/operators-deployment.yaml` | ✅ |
+| Deploy script | `infra/k8s/scripts/deploy-operators.sh` | ✅ |
+
+**Operators** (already implemented):
+- `agent_operator.py` (700 lines) - Reconciles Agent → Deployment + Service
+- `pheromone_operator.py` (348 lines) - Decay loop (60s interval)
+- `proposal_operator.py` (795 lines) - Risk calculation + T-gent pheromone
+
+### Phase C: L-gent Containerization (📋 PLANNED)
+
+L-gent is pure Python library. Needs HTTP server wrapper.
+
+| Deliverable | Path | Status |
+|-------------|------|--------|
+| HTTP server | `agents/l/server.py` | 📋 |
+| Dockerfile | `agents/l/Dockerfile` | 📋 |
+| Build script | `agents/l/scripts/build.sh` | 📋 |
+
+**Endpoints**:
+- `GET /health` - Liveness
+- `GET /ready` - Readiness
+- `POST /search` - Semantic search
+- `POST /register` - Register artifact
+
+### Phase D: L-gent Cluster Deploy (📋 PLANNED)
+
+| Deliverable | Path | Status |
+|-------------|------|--------|
+| PostgreSQL | `infra/k8s/manifests/l-gent-postgres.yaml` | ✅ (exists) |
+| L-gent deployment | `infra/k8s/manifests/l-gent-deployment.yaml` | 🚧 (placeholder) |
+| Agent CR | `infra/k8s/manifests/l-gent-agent-cr.yaml` | 📋 |
+| Deploy script | `infra/k8s/scripts/deploy-lgent.sh` | 📋 |
+| Verify script | `infra/k8s/scripts/verify-lgent.sh` | 📋 |
+
+### Phase E: MCP Resources (✅ COMPLETE)
+
+Expose K8s as MCP resources:
+```
+kgents://agents           -> List Agent CRs
+kgents://agents/{name}    -> Agent status
+kgents://pheromones       -> Active pheromones
+kgents://cluster/status   -> Cluster health
+```
+
+| Deliverable | Path | Status |
+|-------------|------|--------|
+| Resource provider | `protocols/cli/mcp/resources.py` | ✅ |
+| MCP server update | `protocols/cli/mcp/server.py` | ✅ |
+| Tests | `protocols/cli/mcp/_tests/test_resources.py` | ✅ (16 tests) |
+
+### Phase F: LLM Integration (✅ COMPLETE)
+
+Wire `ClaudeCLIRuntime` into Cortex for LLM-backed AGENTESE paths.
+
+| Deliverable | Path | Status |
+|-------------|------|--------|
+| Cognitive probes | `infra/cortex/probes.py` | ✅ |
+| Cortex LLM wire | `infra/cortex/service.py` | ✅ |
+| Path agents | `infra/cortex/agents/` | ✅ |
+| Tests | `infra/cortex/_tests/test_probes.py` | ✅ (19 tests) |
+
+**Components implemented**:
+- `CognitiveProbe` - Basic LLM health check (echo test)
+- `ReasoningProbe` - Deeper cognitive validation (arithmetic)
+- `PathProbe` - AGENTESE path resolution validation
+- `DefineAgent` - concept.define path handler
+- `BlendAgent` - concept.blend.forge path handler
+- `CriticAgent` - concept.refine path handler
+
+**Usage**:
+```python
+# Create servicer with LLM runtime
+servicer = create_cortex_servicer(use_cli_runtime=True)
+
+# Run cognitive probe
+result = await servicer._run_cognitive_probe()
+
+# Invoke LLM-backed path
+result = await servicer.Invoke(request)  # path="concept.define"
+```
+
+**Existing runtime** (`impl/claude/runtime/`):
+- `ClaudeCLIRuntime` - Uses `claude -p` (OAuth, no API key)
+- `ClaudeRuntime` - Direct Anthropic API
+- `OpenRouterRuntime` - Multi-model gateway
+
+---
+
 ## NOT Doing (Yet)
 
 | Feature | Why Deferred | Revisit When |

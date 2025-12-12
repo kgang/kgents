@@ -17,11 +17,13 @@ plans/
 ├── self/
 │   ├── stream.md                # self.stream.* (Store Comonad, ContextProjector)
 │   ├── memory.md                # self.memory.* (D-gent, Ghost cache)
-│   └── cli.md                   # self.cli.* (ResilientClient, hollowing)
+│   ├── cli.md                   # self.cli.* (ResilientClient, hollowing)
+│   └── interface.md             # self.interface.* (I-gent v2.5, Semantic Flux)
 ├── void/
 │   ├── capital.md               # void.capital.* (Social capital, Fool's Bypass)
 │   └── entropy.md               # void.entropy.* (Metabolism, tithe)
 ├── concept/
+│   ├── creativity.md            # concept.blend.* + self.judgment.* (ICCC v2.5)
 │   └── lattice.md               # concept.*.define (Genealogical typing)
 ├── agents/
 │   ├── t-gent.md                # Testing agents (Types I-V)
@@ -57,6 +59,16 @@ All major architectural decisions are recorded here with rationale.
 | 2025-12-11 | **Algebraic Cost Functions** | Composable cost factors: `COST = BASE + RISK_PREMIUM + JUDGMENT_DEFICIT`. Testable, transparent. | `void/capital.md` |
 | 2025-12-11 | **Reject Phantom Types** | Fighting Python's type system violates Joy-Inducing. Use context managers instead. | `void/capital.md` |
 | 2025-12-11 | **Ledger Dependency Injection** | Logos accepts specific Ledger instance. Enables test isolation. Default is ephemeral in-memory. | `void/capital.md` |
+| 2025-12-11 | **I-gent v2.5: Semantic Flux** | Reject v1.0 (too poetic) AND v2.0 (server rack). Agents are currents, not rooms. Block elements for density. | `self/interface.md` |
+| 2025-12-11 | **Textual Framework** | Use Textual (not pure Rich) for reactive programming and web deployment via `textual serve`. | `self/interface.md` |
+| 2025-12-11 | **Glitch as Feature** | Errors/void.* render as Unicode corruption (Zalgo), not red boxes. Accursed Share made visible. | `self/interface.md` |
+| 2025-12-11 | **AGENTESE HUD** | Typing paths draws visible morphism arrows. Category theory in real-time. | `self/interface.md` |
+| 2025-12-11 | **W-gent Overlay Mode** | Hold `w` for wire overlay, release to return. Not separate spawn. | `self/interface.md` |
+| 2025-12-11 | **Processing Waveforms** | Logical work = square wave; creative work = noisy wave. Texture visible. | `self/interface.md` |
+| 2025-12-11 | **Deep Earth Color Palette** | Charcoal base, amber active, slate dormant, pink/purple accents. | `self/interface.md` |
+| 2025-12-11 | **Single operator pod** | Sufficient for <100 agents; simpler than 3 separate pods. kopf handles multiplexing. | `world/k8-gents.md` |
+| 2025-12-11 | **L-gent HTTP wrapper** | Pure library needs server for K8s deployment. HTTP over gRPC for simplicity. | `world/k8-gents.md` |
+| 2025-12-11 | **Cognitive probes via ClaudeCLIRuntime** | LLM health != HTTP 200. Use existing `claude -p` runtime. | `world/k8-gents.md` |
 
 ---
 
@@ -123,9 +135,11 @@ These require Kent's input before implementation:
 | `self/stream.md` | `self.stream.*` | Store Comonad, ContextProjector, Crystals |
 | `self/memory.md` | `self.memory.*` | Ghost cache, D-gent state |
 | `self/cli.md` | `self.cli.*` | ResilientClient, hollowed handlers |
+| `self/interface.md` | `self.interface.*` | I-gent v2.5, Semantic Flux, AGENTESE HUD |
 | `void/capital.md` | `void.capital.*` | Capital Ledger, Fool's Bypass |
 | `void/entropy.md` | `void.entropy.*` | Metabolism, tithe, fever |
 | `concept/lattice.md` | `concept.*.define` | Genealogical typing, lineage enforcement |
+| `concept/creativity.md` | `concept.blend.*`, `self.judgment.*` | Blending, Wundt Curator, Critic's Loop |
 | `agents/t-gent.md` | (internal) | Types I-V testing agents |
 | `agents/u-gent.md` | (external) | Tool use, MCP integration |
 
