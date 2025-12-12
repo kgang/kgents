@@ -2,8 +2,9 @@
 
 **A specification for tasteful, curated, ethical, joy-inducing agents.**
 
-[![Tests](https://img.shields.io/badge/tests-7,025+-brightgreen)](impl/claude)
+[![Tests](https://img.shields.io/badge/tests-7,812+-brightgreen)](impl/claude)
 [![Python](https://img.shields.io/badge/python-3.11+-blue)](pyproject.toml)
+[![Mypy](https://img.shields.io/badge/mypy-strict-blue)](impl/claude/mypy.ini)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 ## Overview
@@ -44,8 +45,9 @@ Agents are organized into an alphabetical taxonomy of genera:
 | **O** | Ogents | Observation, panopticon integration |
 | **P** | Pgents | Parsing strategies |
 | **Q** | Qgents | Quartermaster (K8s disposable execution) |
-| **R** | Rgents | Reasoning |
-| **T** | Tgents | Testing, MCP integration |
+| **R** | Rgents | Reasoning, resilience |
+| **T** | Tgents | Testing (Types I-V), TrustGate |
+| **U** | Ugents | Utility (tools, MCP, execution) |
 | **W** | Wgents | Wire protocol, interceptor pipelines |
 | **Ψ** | Psigent | Metaphor engine, morphic transformations |
 
@@ -109,17 +111,30 @@ kgents conjecture --limit 3    # Generate hypotheses
 
 ```
 kgents/
-├── spec/                      # Specifications (start here)
-│   ├── protocols/             # AGENTESE, Umwelt, etc.
-│   ├── principles.md          # Design principles
-│   └── [a-z]-gents/           # Agent genus specifications
-├── impl/                      # Reference implementations
-│   └── claude/                # Claude Code implementation
-│       ├── agents/            # 20+ agent implementations
-│       ├── protocols/         # AGENTESE runtime
-│       ├── infra/             # K-Terrarium (K8s)
-│       └── testing/           # Test infrastructure
-└── docs/                      # Supporting documentation
+├── spec/                           # Specifications (start here)
+│   ├── protocols/                  # AGENTESE, Curator, Blending, Critic
+│   ├── k8-gents/                   # K8s CRD specs + protocols
+│   ├── principles.md               # Design principles
+│   └── {a-z}-gents/                # Agent genus specifications
+├── impl/claude/                    # Reference implementation
+│   ├── agents/                     # 22+ agent implementations
+│   │   ├── t/                      # Testing (mock, spy, trustgate)
+│   │   └── u/                      # Utility (tools, MCP, executor)
+│   ├── protocols/
+│   │   ├── agentese/               # AGENTESE runtime (559 tests)
+│   │   │   ├── contexts/           # Stream, Blend, Judgment, Compression
+│   │   │   └── middleware/         # Curator
+│   │   └── cli/                    # CLI + MCP server
+│   ├── infra/
+│   │   ├── cortex/                 # LLM integration (probes, agents)
+│   │   ├── stigmergy/              # Redis pheromone store
+│   │   └── k8s/                    # Operators, CRDs, scripts
+│   ├── shared/                     # Capital, Costs, Budget, Pataphysics
+│   └── testing/                    # Test infrastructure
+├── plans/                          # Implementation roadmap
+│   ├── _status.md                  # Status matrix
+│   └── NEXT_SESSION_PROMPT.md      # Session quick-start
+└── docs/                           # Supporting documentation
 ```
 
 ## Key Systems
@@ -142,11 +157,11 @@ Pipeline-based message processing: Safety → Metering → Telemetry → Persona
 # Run tests
 pytest -m "not slow" -q
 
-# Type checking (with baseline)
-cd impl/claude && uv run mypy --strict agents/ 2>&1 | uv run mypy-baseline filter
+# Type checking (strict mode, 0 errors)
+cd impl/claude && uv run mypy .
 
 # Lint
-ruff check .
+cd impl/claude && uv run ruff check
 ```
 
 ## Philosophy

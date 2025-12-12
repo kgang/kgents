@@ -11,23 +11,24 @@ A practical guide for working with the kgents reference implementation in `impl/
 | **a** | Skeleton architecture | `skeleton.py`, `creativity.py` | `test_skeleton.py` |
 | **b** | Token economics, metering | `metered_functor.py`, `hypothesis.py` | `test_banker.py` |
 | **c** | Category theory, composition | `functor.py`, `monad.py`, `parallel.py` | `test_c_integration.py` |
-| **d** | State/Memory (Bicameral) | `bicameral.py`, `lens.py`, `symbiont.py` | `test_bicameral.py` |
+| **d** | State/Memory (Bicameral) | `bicameral.py`, `context_comonad.py`, `context_window.py`, `linearity.py`, `projector.py` | `test_bicameral.py`, `test_comonad.py` |
 | **e** | Thermodynamic evolution | `cycle.py` | — |
 | **f** | Factory pipeline | `factory.py`, `parser.py` | `test_factory_integration.py` |
 | **g** | Grammar/Generation | `grammar.py` | — |
 | **h** | Dialectics (Hegel/Jung) | — | — |
-| **i** | Interface (SemanticField) | `semantic_field.py` | — |
-| **j** | JIT compilation | `compiler.py`, `templates.py` | — |
+| **i** | Interface (SemanticField) | `semantic_field.py`, `terrarium_tui.py` | — |
+| **j** | JIT compilation | `compiler.py`, `templates.py`, `t_integration.py` | — |
 | **k** | Kent simulacra | `persona.py` | — |
-| **l** | Semantic registry | `semantic_registry.py` | — |
+| **l** | Semantic registry | `semantic_registry.py`, `server.py`, `Dockerfile` | — |
 | **m** | Cartography (HoloMap) | `cartographer.py`, `attractors.py` | — |
 | **n** | Narrative traces | `chronicle.py` | — |
 | **o** | Observer functor | `observer.py`, `cortex_observer.py` | — |
 | **p** | Parser/Persistence | — | — |
 | **psi** | Metaphor engine | `engine.py`, `corpus.py`, `learning.py` | `test_engine.py` |
 | **q** | Quartermaster (K8s exec) | `quartermaster.py` | — |
-| **r** | Refinery (optimization) | `refinery.py`, `advanced.py` | `test_refinery.py` |
-| **t** | Tool use, MCP | `tool.py`, `mcp_client.py`, `permissions.py` | `test_mcp.py` |
+| **r** | Refinery (optimization) | `refinery.py`, `advanced.py`, `integrations.py` | `test_refinery.py` |
+| **t** | Testing (Types I-V) | `trustgate.py`, mock, spy, judge, property | `test_trustgate.py` |
+| **u** | Utility (tools, MCP) | `core.py`, `mcp.py`, `executor.py`, `orchestration.py`, `permissions.py` | `test_core.py`, `test_mcp.py` |
 | **w** | Wire protocol, bus | `bus.py`, `interceptors.py` | — |
 
 ---
@@ -234,6 +235,175 @@ result = await pipeline.intercept(agent, input)
 
 **Files**: `agents/w/interceptors.py`, `agents/w/bus.py`
 
+### Context Comonad (D-gent)
+
+Store comonad for context window management:
+
+```python
+from agents.d.context_comonad import ContextComonad
+
+comonad = ContextComonad(initial_state)
+
+# Extract current value
+current = comonad.extract()
+
+# Extend with a function
+extended = comonad.extend(lambda ctx: transform(ctx.extract()))
+
+# Duplicate for nested context
+duplicated = comonad.duplicate()
+```
+
+**Files**: `agents/d/context_comonad.py`, `agents/d/context_window.py`, `agents/d/linearity.py`, `agents/d/projector.py`
+
+### TrustGate (T-gent)
+
+Capability-based trust verification:
+
+```python
+from agents.t.trustgate import TrustGate, BypassToken
+
+gate = TrustGate(ledger=capital_ledger)
+
+# Check if agent has sufficient trust
+if await gate.verify(agent_id, required_trust=100):
+    # Proceed with operation
+    pass
+
+# Bypass for privileged operations (unforgeable capability)
+token = BypassToken.create(reason="admin override")
+await gate.bypass(token, operation)
+```
+
+**Files**: `agents/t/trustgate.py`
+
+### U-gent Tools & MCP
+
+Tool execution and MCP integration (migrated from T-gent):
+
+```python
+from agents.u.core import Tool, ToolRegistry
+from agents.u.mcp import MCPClient
+from agents.u.executor import ToolExecutor
+
+# Register tools
+registry = ToolRegistry()
+registry.register(my_tool)
+
+# Execute via MCP
+client = MCPClient(server_url)
+result = await client.call_tool("tool_name", args)
+
+# Or via executor
+executor = ToolExecutor(registry)
+result = await executor.execute("tool_name", args)
+```
+
+**Files**: `agents/u/core.py`, `agents/u/mcp.py`, `agents/u/executor.py`, `agents/u/orchestration.py`
+
+### Capital Accounting (shared)
+
+Event-sourced trust ledger:
+
+```python
+from shared.capital import CapitalLedger, Transaction
+from shared.costs import OperationCost
+from shared.budget import Budget
+
+ledger = CapitalLedger()
+
+# Record transaction
+ledger.record(Transaction(
+    agent_id="agent-1",
+    amount=100,
+    operation="tool_call",
+))
+
+# Check balance (derived from events)
+balance = ledger.balance("agent-1")
+
+# Budget allocation
+budget = Budget(total=1000)
+budget.allocate("agent-1", 500)
+```
+
+**Files**: `shared/capital.py`, `shared/costs.py`, `shared/budget.py`
+
+### Pataphysics (shared)
+
+Exception semantics and imaginary solutions:
+
+```python
+from shared.pataphysics import PataphysicsSolver, ImaginarySolution
+
+solver = PataphysicsSolver()
+
+# Find solution in exception space
+solution = solver.solve(
+    problem="impossible constraint",
+    constraints=["must be X", "must not be X"],
+)
+# Returns ImaginarySolution with clinamen (swerve) and syzygy (alignment)
+```
+
+**Files**: `shared/pataphysics.py`, `shared/melting.py`
+
+### Wundt Curator (middleware)
+
+Aesthetic filtering based on Wundt curve:
+
+```python
+from protocols.agentese.middleware.curator import WundtCurator
+
+curator = WundtCurator(
+    complexity_threshold=0.7,
+    novelty_weight=0.5,
+)
+
+# Filter outputs by aesthetic value
+filtered = await curator.curate(outputs)
+```
+
+**Files**: `protocols/agentese/middleware/curator.py`
+
+### Concept Blending (contexts)
+
+Fauconnier-Turner conceptual integration:
+
+```python
+from protocols.agentese.contexts.concept_blend import ConceptBlender
+
+blender = ConceptBlender()
+
+# Blend two input spaces
+blend = await blender.blend(
+    space1={"frame": "journey", "elements": [...]},
+    space2={"frame": "argument", "elements": [...]},
+)
+# Returns emergent structure with novel inferences
+```
+
+**Files**: `protocols/agentese.contexts/concept_blend.py`
+
+### Self Judgment (contexts)
+
+Critic's loop for dialectical refinement:
+
+```python
+from protocols.agentese.contexts.self_judgment import CriticLoop
+
+critic = CriticLoop()
+
+# Refine through dialectical challenge
+refined = await critic.refine(
+    thesis=initial_output,
+    criteria=["clarity", "correctness", "elegance"],
+    max_iterations=3,
+)
+```
+
+**Files**: `protocols/agentese/contexts/self_judgment.py`
+
 ---
 
 ## Integration Patterns
@@ -312,7 +482,9 @@ pytest impl/claude/agents/d/ -v      # Specific agent
 | Python 3.12 syntax | Use `Generic[A]` + `TypeVar`, not `class Foo[A]:` |
 | Cross-agent imports | Use `*_integration.py` files or SemanticField |
 | Forward refs | `from __future__ import annotations` + `TYPE_CHECKING` |
-| Mypy errors | Check `mypy-baseline.txt`, run filter |
+| Mypy errors | Now strict mode (0 errors); run `uv run mypy .` |
+| T-gent vs U-gent | T = Testing (Types I-V, TrustGate); U = Utility (tools, MCP, executor) |
+| Dockerfiles | Use `__deps__.py` manifests; validate with `build_agent_image.py` |
 
 ---
 
@@ -324,9 +496,12 @@ These exist in `spec/` but not `impl/`:
 |-------|---------------|--------|
 | **Ω-gent** (Somatic) | `spec/omega-gents/` | Spec complete, no impl |
 | **Y-gent** (Topology) | `spec/y-gents/` | Partial |
+| **I-gent v2.5** (Semantic Flux) | `plans/self/interface.md` | Spec complete, awaiting impl |
 | Z-gent (Zettelkasten) | — | Specced in principles |
 
 The Ω-gent morpheme system and `self.body.*` proprioception are fully specified but awaiting implementation.
+
+The I-gent v2.5 "Semantic Flux" interface (density fields, flow arrows, glitch mechanic) is fully specified in `plans/self/interface.md` but not yet implemented.
 
 ---
 
