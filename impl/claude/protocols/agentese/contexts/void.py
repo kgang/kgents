@@ -728,9 +728,24 @@ class PataphysicsNode(BaseLogosNode):
 
         This is the AGENTESE path for contract-bounded hallucination.
         When rigid solutions fail, pataphysics provides alternatives.
+
+        PAYADOR Enhancement (v2.5): When an llm_client is provided,
+        uses high-temperature LLM calls (temperature=1.4) for truly
+        imaginary solutions. Falls back to oblique templates if no LLM.
+
+        Args (via kwargs):
+            problem: The problem to solve
+            ensure: Optional postcondition predicate
+            llm_client: Optional LLM client with async generate() method
+            max_retries: Retries for postcondition satisfaction (default 3)
+
+        Returns:
+            Dict with solution, method, and contract status
         """
         problem = kwargs.get("problem", "the unsolvable")
         ensure = kwargs.get("ensure")  # Optional postcondition
+        llm_client = kwargs.get("llm_client")  # Optional LLM client
+        max_retries = kwargs.get("max_retries", 3)
 
         try:
             grant = self._pool.sip(0.08)
@@ -740,22 +755,34 @@ class PataphysicsNode(BaseLogosNode):
                 "status": "budget_exhausted",
             }
 
-        # Generate imaginary solution
         seed = grant["seed"]
-        template_idx = int(seed * len(self._solution_templates))
-        template = self._solution_templates[template_idx]
 
-        solution = template.format(problem=problem)
+        # If LLM client provided, use it for imaginary solutions
+        if llm_client is not None:
+            solution = await self._llm_solve(
+                problem=problem,
+                ensure=ensure,
+                llm_client=llm_client,
+                max_retries=max_retries,
+                seed=seed,
+            )
+            method = "pataphysics_llm"
+        else:
+            # Fallback: Generate using template
+            template_idx = int(seed * len(self._solution_templates))
+            template = self._solution_templates[template_idx]
+            solution = template.format(problem=problem)
+            method = "pataphysics_oblique"
 
         result = {
             "solution": solution,
             "problem": problem,
             "seed": seed,
-            "method": "pataphysics",
+            "method": method,
             "jarry_certified": True,
         }
 
-        # If a postcondition is provided, note whether it would pass
+        # If a postcondition is provided, note whether it passes
         if ensure is not None:
             try:
                 result["contract_satisfied"] = bool(ensure(solution))
@@ -763,6 +790,73 @@ class PataphysicsNode(BaseLogosNode):
                 result["contract_satisfied"] = False
 
         return result
+
+    async def _llm_solve(
+        self,
+        problem: str,
+        ensure: Any,
+        llm_client: Any,
+        max_retries: int,
+        seed: float,
+    ) -> str:
+        """
+        Use LLM to generate an imaginary solution with contract enforcement.
+
+        The Veale Fix: Pataphysics with postconditions prevents poison.
+        Uses high temperature (1.4) for creative, unexpected solutions.
+
+        Args:
+            problem: The problem to solve
+            ensure: Optional postcondition predicate
+            llm_client: LLM client with async generate() method
+            max_retries: Number of retries if postcondition fails
+            seed: Entropy seed for fallback
+
+        Returns:
+            Imaginary solution string
+        """
+        prompt = f"""You are a pataphysician—a practitioner of the science of imaginary solutions.
+
+Alfred Jarry wrote: "Pataphysics will study the laws governing exceptions,
+and will explain the universe supplementary to this one."
+
+Given this problem, provide an IMAGINARY SOLUTION that:
+- Inverts conventional assumptions
+- Treats the exception as the rule
+- May be paradoxical yet illuminating
+- Is brief (1-3 sentences)
+
+Problem: {problem}
+
+Respond with ONLY the imaginary solution. No preamble, no explanation."""
+
+        for attempt in range(max_retries):
+            try:
+                response = await llm_client.generate(
+                    prompt,
+                    temperature=1.4,  # HIGH temperature for creativity
+                    max_tokens=200,
+                )
+                solution = str(response).strip()
+
+                # If postcondition provided, validate
+                if ensure is None:
+                    return solution
+
+                try:
+                    if ensure(solution):
+                        return solution
+                except Exception:
+                    pass  # Postcondition evaluation failed, retry
+
+            except Exception:
+                # LLM call failed, continue to next attempt
+                pass
+
+        # All retries exhausted, fall back to template
+        template_idx = int(seed * len(self._solution_templates))
+        template = self._solution_templates[template_idx]
+        return template.format(problem=problem)
 
     async def _melt(
         self,

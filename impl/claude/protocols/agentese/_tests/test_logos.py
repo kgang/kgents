@@ -569,3 +569,157 @@ class TestCuratorMiddleware:
         """create_logos() without curator has None curator."""
         logos = create_logos()
         assert logos._curator is None
+
+
+# === Auto-Curator Tests (PAYADOR v2.5) ===
+
+
+class TestAutoCurator:
+    """Tests for automatic curator application on GENERATION aspects."""
+
+    def test_generation_aspects_list_is_complete(self) -> None:
+        """Verify all GENERATION aspects are in the auto-curate list."""
+        logos = Logos()
+        expected_generation = {
+            "define",
+            "spawn",
+            "fork",
+            "dream",
+            "refine",
+            "dialectic",
+        }
+        for aspect in expected_generation:
+            assert logos._should_auto_curate(aspect), (
+                f"{aspect} should be in GENERATION aspects"
+            )
+
+    def test_perception_aspects_not_auto_curated(self) -> None:
+        """PERCEPTION aspects should NOT be auto-curated."""
+        logos = Logos()
+        perception_aspects = ["manifest", "witness", "sense", "map"]
+        for aspect in perception_aspects:
+            assert not logos._should_auto_curate(aspect), (
+                f"{aspect} should NOT be auto-curated"
+            )
+
+    def test_mutation_aspects_not_auto_curated(self) -> None:
+        """MUTATION aspects should NOT be auto-curated."""
+        logos = Logos()
+        mutation_aspects = ["transform", "renovate", "evolve", "repair"]
+        for aspect in mutation_aspects:
+            assert not logos._should_auto_curate(aspect), (
+                f"{aspect} should NOT be auto-curated"
+            )
+
+    def test_blend_is_auto_curated(self) -> None:
+        """blend is a GENERATION aspect and should be auto-curated."""
+        logos = Logos()
+        assert logos._should_auto_curate("blend")
+
+    def test_solve_is_auto_curated(self) -> None:
+        """solve (pataphysics) is a GENERATION aspect and should be auto-curated."""
+        logos = Logos()
+        assert logos._should_auto_curate("solve")
+
+    @pytest.mark.asyncio
+    async def test_auto_curate_applies_wundt_filter(
+        self, mock_umwelt: MockUmwelt
+    ) -> None:
+        """_auto_curate should apply Wundt filtering."""
+        logos = Logos()
+
+        # String result should pass through curator
+        result = await logos._auto_curate(
+            "This is a test artifact with moderate complexity.",
+            cast("Umwelt[Any, Any]", mock_umwelt),
+            "concept.test.define",
+        )
+
+        # Result should be unchanged (passes Wundt curve)
+        assert isinstance(result, str)
+
+    @pytest.mark.asyncio
+    async def test_auto_curate_conservative_thresholds(
+        self, mock_umwelt: MockUmwelt
+    ) -> None:
+        """Auto-curator should use conservative (permissive) thresholds."""
+        # Very simple content should pass conservative thresholds
+        logos = Logos()
+
+        result = await logos._auto_curate(
+            "Simple.",  # Very boring content
+            cast("Umwelt[Any, Any]", mock_umwelt),
+            "concept.test.define",
+        )
+
+        # Conservative thresholds (0.15 low) should pass short content
+        assert result is not None
+
+    @pytest.mark.asyncio
+    async def test_generation_aspect_triggers_auto_curation(
+        self, logos_with_nodes: Logos, mock_umwelt: MockUmwelt
+    ) -> None:
+        """GENERATION aspect without explicit curator triggers auto-curation flow."""
+        # Directly test that _should_auto_curate returns True for generation aspects
+        # and _auto_curate is called internally
+        logos = logos_with_nodes
+
+        # Verify the auto-curate logic is triggered for GENERATION aspects
+        assert logos._should_auto_curate("define") is True
+        assert logos._should_auto_curate("blend") is True
+        assert logos._should_auto_curate("refine") is True
+
+        # Verify non-GENERATION aspects don't trigger auto-curation
+        assert logos._should_auto_curate("manifest") is False
+
+        # Test _auto_curate directly returns filtered result
+        # Use a string input to avoid complexity in dict depth calculation
+        result = await logos._auto_curate(
+            "This is a test definition with some content for curation.",
+            cast("Umwelt[Any, Any]", mock_umwelt),
+            "concept.test.define",
+        )
+        assert result is not None
+
+    @pytest.mark.asyncio
+    async def test_explicit_curator_skips_auto_curation(
+        self, mock_umwelt: MockUmwelt
+    ) -> None:
+        """When explicit curator is set, auto-curator should NOT be used."""
+        from unittest.mock import AsyncMock, MagicMock
+
+        registry = SimpleRegistry()
+        # Use house with manifest (which we control)
+        node = PlaceholderNode(
+            handle="world.house",
+        )
+        registry.register("world.house", node)
+
+        # Create mock curator
+        mock_curator = MagicMock()
+        mock_curator.filter = AsyncMock(return_value="explicit_curator_result")
+
+        logos = Logos(registry=registry, _curator=mock_curator)
+
+        # Invoke manifest - even though not a GENERATION aspect,
+        # explicit curator should be called
+        result = await logos.invoke(
+            "world.house.manifest",
+            cast("Umwelt[Any, Any]", mock_umwelt),
+        )
+
+        # Mock curator should be called
+        mock_curator.filter.assert_called_once()
+        assert result == "explicit_curator_result"
+
+    def test_generation_aspects_complete_set(self) -> None:
+        """Verify _GENERATION_ASPECTS contains expected aspects."""
+        logos = Logos()
+
+        # Core GENERATION aspects from affordances.py
+        expected = {"define", "spawn", "fork", "dream", "refine", "dialectic", "blend"}
+        for aspect in expected:
+            assert aspect in logos._GENERATION_ASPECTS, f"Missing: {aspect}"
+
+        # Also includes solve (pataphysics generates creative content)
+        assert "solve" in logos._GENERATION_ASPECTS

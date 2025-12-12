@@ -27,7 +27,7 @@
 
 ---
 
-## Context Management (`self/stream.md`) — 70%
+## Context Management (`self/stream.md`) — 75%
 
 **Phase 2.1 COMPLETE** (181 tests):
 
@@ -39,28 +39,33 @@
 | StreamContextResolver | ✅ | 31 |
 | MDL Compression | ✅ | 43 |
 
-**Remaining (Phases 2.2-2.4)**:
+**Phase 2.2 COMPLETE** (44 tests):
+
+| Component | Status | Tests |
+|-----------|--------|-------|
+| ModalScope | ✅ | 44 |
+
+**Remaining (Phases 2.3-2.4)**:
 
 | Phase | Component | Status |
 |-------|-----------|--------|
-| 2.2 | ModalScope | 📋 |
 | 2.3 | Pulse + VitalityAnalyzer | 📋 |
 | 2.4 | StateCrystal + Reaper | 📋 |
 
 ---
 
-## Creativity v2.5 (`concept/creativity.md`) — 90%
+## Creativity v2.5 (`concept/creativity.md`) — 100% COMPLETE
 
-| Component | Status |
-|-----------|--------|
-| WundtCurator | ✅ |
-| Conceptual Blending | ✅ |
-| Critic's Loop | ✅ |
-| Contract Melt + Pataphysics | ✅ |
-| MDL Compression | ✅ |
-| Bidirectional Skeleton | 📋 |
-| Wire Pataphysics to LLM | 📋 |
-| Auto-Wire Curator | 📋 |
+| Component | Status | Tests |
+|-----------|--------|-------|
+| WundtCurator | ✅ | 49 |
+| Conceptual Blending | ✅ | — |
+| Critic's Loop (PAYADOR) | ✅ | — |
+| Contract Melt + Pataphysics | ✅ | 36 |
+| MDL Compression | ✅ | 43 |
+| Bidirectional Skeleton | ✅ | (in PAYADOR) |
+| Wire Pataphysics to LLM | ✅ | 8 |
+| Auto-Wire Curator | ✅ | 10 |
 
 ---
 
@@ -86,15 +91,15 @@
 
 ---
 
-## Entropy/Metabolism (`void/entropy.md`) — 60%
+## Entropy/Metabolism (`void/entropy.md`) — 70%
 
 | Component | Status | Tests |
 |-----------|--------|-------|
 | MetabolicEngine | ✅ | 36 |
 | FeverStream | ✅ | — |
 | FluxMetabolism | ✅ | 21 |
-| AGENTESE MetabolicNode | 📋 | — |
-| CLI tithe command | 📋 | — |
+| AGENTESE MetabolicNode | ✅ | (in void.py) |
+| CLI tithe command | ✅ | 12 |
 | TUI FeverOverlay | 📋 | — |
 
 ---
@@ -141,4 +146,4 @@ cd impl/claude && uv run mypy .
 
 ---
 
-*Last verified: 2025-12-12 (8,846+ tests)*
+*Last verified: 2025-12-12 (8,938 tests)*

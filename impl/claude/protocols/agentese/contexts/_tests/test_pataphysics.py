@@ -112,13 +112,14 @@ class TestPataphysicsSolve:
 
     @pytest.mark.asyncio
     async def test_solve_includes_method_pataphysics(self) -> None:
-        """solve should identify method as pataphysics."""
+        """solve should identify method as pataphysics (oblique or llm)."""
         node = PataphysicsNode()
         observer = MockUmwelt()
 
         result = await node._invoke_aspect("solve", observer, problem="test")
 
-        assert result.get("method") == "pataphysics"
+        # Without LLM client, should use oblique method
+        assert result.get("method") == "pataphysics_oblique"
 
     @pytest.mark.asyncio
     async def test_solve_is_jarry_certified(self) -> None:
@@ -457,3 +458,194 @@ class TestPhase8Required:
         # Verify we're not using the old "hallucinate" name
         affordances = node._get_affordances_for_archetype("default")
         assert "hallucinate" not in affordances  # Old name should not exist
+
+
+# === Test LLM Integration (v2.5 PAYADOR Enhancement) ===
+
+
+class MockLLMClient:
+    """Mock LLM client for testing."""
+
+    def __init__(
+        self,
+        responses: list[str] | None = None,
+        should_fail: bool = False,
+    ) -> None:
+        self.responses = responses or ["An imaginary solution emerges from the void."]
+        self.call_count = 0
+        self.should_fail = should_fail
+        self.last_temperature: float | None = None
+        self.last_prompt: str | None = None
+
+    async def generate(
+        self,
+        prompt: str,
+        temperature: float = 1.0,
+        max_tokens: int = 100,
+    ) -> str:
+        self.call_count += 1
+        self.last_temperature = temperature
+        self.last_prompt = prompt
+
+        if self.should_fail:
+            raise RuntimeError("LLM failed")
+
+        # Cycle through responses
+        idx = (self.call_count - 1) % len(self.responses)
+        return self.responses[idx]
+
+
+class TestPataphysicsLLMIntegration:
+    """Test LLM integration for void.pataphysics.solve (v2.5 PAYADOR)."""
+
+    @pytest.mark.asyncio
+    async def test_solve_with_llm_uses_high_temperature(self) -> None:
+        """solve with LLM should use high temperature (1.4)."""
+        llm = MockLLMClient()
+        node = PataphysicsNode()
+        observer = MockUmwelt()
+
+        await node._invoke_aspect(
+            "solve",
+            observer,
+            problem="test problem",
+            llm_client=llm,
+        )
+
+        assert llm.call_count == 1
+        assert llm.last_temperature == 1.4  # HIGH temperature for creativity
+
+    @pytest.mark.asyncio
+    async def test_solve_with_llm_returns_llm_response(self) -> None:
+        """solve with LLM should return LLM-generated solution."""
+        expected_solution = "The key is to invert the problem itself."
+        llm = MockLLMClient(responses=[expected_solution])
+        node = PataphysicsNode()
+        observer = MockUmwelt()
+
+        result = await node._invoke_aspect(
+            "solve",
+            observer,
+            problem="test problem",
+            llm_client=llm,
+        )
+
+        assert result["solution"] == expected_solution
+        assert result["method"] == "pataphysics_llm"
+
+    @pytest.mark.asyncio
+    async def test_solve_without_llm_uses_oblique(self) -> None:
+        """solve without LLM should fall back to oblique templates."""
+        node = PataphysicsNode()
+        observer = MockUmwelt()
+
+        result = await node._invoke_aspect(
+            "solve",
+            observer,
+            problem="test problem",
+        )
+
+        assert result["method"] == "pataphysics_oblique"
+        # Should contain templated solution
+        assert (
+            "problem" in result["solution"].lower()
+            or "test problem" in result["solution"]
+        )
+
+    @pytest.mark.asyncio
+    async def test_solve_llm_with_postcondition_retries(self) -> None:
+        """solve with LLM should retry until postcondition passes."""
+        # First response fails postcondition, second passes
+        llm = MockLLMClient(
+            responses=[
+                "too short",  # Will fail length check
+                "This is a longer solution that passes the postcondition check.",
+            ]
+        )
+        node = PataphysicsNode()
+        observer = MockUmwelt()
+
+        result = await node._invoke_aspect(
+            "solve",
+            observer,
+            problem="test",
+            llm_client=llm,
+            ensure=lambda x: len(x) > 20,  # Requires longer solution
+        )
+
+        # Should have called LLM twice (retry)
+        assert llm.call_count == 2
+        assert result["contract_satisfied"] is True
+
+    @pytest.mark.asyncio
+    async def test_solve_llm_falls_back_on_failure(self) -> None:
+        """solve should fall back to oblique when LLM fails."""
+        llm = MockLLMClient(should_fail=True)
+        node = PataphysicsNode()
+        observer = MockUmwelt()
+
+        result = await node._invoke_aspect(
+            "solve",
+            observer,
+            problem="test problem",
+            llm_client=llm,
+        )
+
+        # Should still return a solution (from templates)
+        assert "solution" in result
+        # Method still says LLM because we tried it
+        assert result["method"] == "pataphysics_llm"
+
+    @pytest.mark.asyncio
+    async def test_solve_llm_prompt_includes_problem(self) -> None:
+        """solve LLM prompt should include the problem."""
+        llm = MockLLMClient()
+        node = PataphysicsNode()
+        observer = MockUmwelt()
+
+        await node._invoke_aspect(
+            "solve",
+            observer,
+            problem="quantum entanglement paradox",
+            llm_client=llm,
+        )
+
+        assert llm.last_prompt is not None
+        assert "quantum entanglement paradox" in llm.last_prompt
+
+    @pytest.mark.asyncio
+    async def test_solve_llm_prompt_mentions_jarry(self) -> None:
+        """solve LLM prompt should reference Alfred Jarry (pataphysics founder)."""
+        llm = MockLLMClient()
+        node = PataphysicsNode()
+        observer = MockUmwelt()
+
+        await node._invoke_aspect(
+            "solve",
+            observer,
+            problem="test",
+            llm_client=llm,
+        )
+
+        assert llm.last_prompt is not None
+        assert "Jarry" in llm.last_prompt
+
+    @pytest.mark.asyncio
+    async def test_solve_respects_max_retries(self) -> None:
+        """solve should respect max_retries parameter."""
+        # Response always fails postcondition
+        llm = MockLLMClient(responses=["x"])
+        node = PataphysicsNode()
+        observer = MockUmwelt()
+
+        await node._invoke_aspect(
+            "solve",
+            observer,
+            problem="test",
+            llm_client=llm,
+            ensure=lambda x: False,  # Always fails
+            max_retries=5,
+        )
+
+        # Should have tried 5 times
+        assert llm.call_count == 5

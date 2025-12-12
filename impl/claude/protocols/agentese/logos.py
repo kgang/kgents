@@ -459,8 +459,12 @@ class Logos:
         result = await node.invoke(aspect, observer, **kwargs)
 
         # Apply curator filtering (Phase 5: Wundt Curve aesthetic filtering)
+        # PAYADOR Enhancement (v2.5): Auto-apply curator for GENERATION aspects
         if self._curator is not None:
             result = await self._curator.filter(result, observer, path, self)
+        elif self._should_auto_curate(aspect):
+            # Auto-create curator for GENERATION aspects
+            result = await self._auto_curate(result, observer, path)
 
         return result
 
@@ -814,6 +818,70 @@ class Logos:
         archetype = getattr(dna, "archetype", "default")
         capabilities = getattr(dna, "capabilities", ())
         return AgentMeta(name=name, archetype=archetype, capabilities=capabilities)
+
+    # === PAYADOR (v2.5): Auto-Curator for GENERATION aspects ===
+
+    # GENERATION aspects from affordances.py that should auto-curate
+    _GENERATION_ASPECTS: frozenset[str] = frozenset(
+        {
+            "define",
+            "spawn",
+            "fork",
+            "dream",
+            "refine",
+            "dialectic",
+            "compress",
+            "blend",
+            "solve",  # pataphysics.solve generates creative content
+        }
+    )
+
+    def _should_auto_curate(self, aspect: str) -> bool:
+        """
+        Determine if an aspect should be auto-curated.
+
+        PAYADOR Enhancement (v2.5): GENERATION category aspects
+        automatically get filtered through the Wundt Curator to ensure
+        quality output (not too boring, not too chaotic).
+
+        Args:
+            aspect: The aspect being invoked
+
+        Returns:
+            True if the aspect should be auto-curated
+        """
+        return aspect in self._GENERATION_ASPECTS
+
+    async def _auto_curate(
+        self,
+        result: Any,
+        observer: "Umwelt[Any, Any]",
+        path: str,
+    ) -> Any:
+        """
+        Apply automatic curation for GENERATION aspects.
+
+        Creates a default WundtCurator and filters the result.
+        Uses conservative thresholds to avoid being too aggressive.
+
+        Args:
+            result: The result to filter
+            observer: The observer's Umwelt
+            path: The full AGENTESE path
+
+        Returns:
+            Filtered result
+        """
+        from .middleware.curator import WundtCurator
+
+        # Use conservative thresholds for auto-curation
+        # More permissive than manual curation to avoid surprises
+        auto_curator = WundtCurator(
+            low_threshold=0.15,  # Only reject very boring output
+            high_threshold=0.95,  # Allow quite chaotic output
+        )
+
+        return await auto_curator.filter(result, observer, path, self)
 
     # === Convenience Methods ===
 
