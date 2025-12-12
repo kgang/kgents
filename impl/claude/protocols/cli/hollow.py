@@ -88,6 +88,10 @@ DEVEX (Trust Loop):
 PLANNING (Forest Protocol):
   forest    Plan forest health (status|update|check|lint)
 
+SOUL (Digital Simulacra):
+  soul      K-gent self-dialogue (reflect|advise|challenge|explore)
+  semaphore Agent semaphores (list|resolve|cancel|inspect)
+
 OPTIONS:
   --version     Show version
   --help, -h    Show this help
@@ -168,6 +172,15 @@ COMMAND_REGISTRY: dict[str, str] = {
     "tithe": "protocols.cli.handlers.tithe:cmd_tithe",
     # Agent Semaphores (Human-in-the-Loop)
     "semaphore": "protocols.cli.handlers.semaphore:cmd_semaphore",
+    # K-gent Soul (Digital Simulacra)
+    "soul": "protocols.cli.handlers.soul:cmd_soul",
+    # Soul mode aliases (top-level shortcuts)
+    "reflect": "protocols.cli.handlers.soul:cmd_reflect",
+    "advise": "protocols.cli.handlers.soul:cmd_advise",
+    "challenge": "protocols.cli.handlers.soul:cmd_challenge",
+    "explore": "protocols.cli.handlers.soul:cmd_explore",
+    # Alethic Architecture (Universal Agent)
+    "a": "protocols.cli.handlers.a_gent:cmd_a",
 }
 
 

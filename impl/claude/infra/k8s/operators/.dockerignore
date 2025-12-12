@@ -1,0 +1,21 @@
+# Operator-specific .dockerignore
+# Inherits from parent, but ensure these are excluded
+
+# Tests
+_tests/
+test_*.py
+conftest.py
+*.test.py
+
+# Development files
+*.md
+LICENSE
+
+# Cache
+__pycache__/
+*.pyc
+.mypy_cache/
+
+# Environment (NEVER include)
+.env
+*.env

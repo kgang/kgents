@@ -35,8 +35,11 @@ from .perturbation import (
 from .state import FluxState
 
 if TYPE_CHECKING:
+    from impl.claude.protocols.terrarium.mirror import HolographicBuffer
+
     from .metabolism import FluxMetabolism
     from .pipeline import FluxPipeline
+    from .semaphore.purgatory import Purgatory
 
 A = TypeVar("A")  # Input type
 B = TypeVar("B")  # Output type
@@ -92,6 +95,12 @@ class FluxAgent(Generic[A, B]):
 
     # Metabolism integration (optional)
     _metabolism: "FluxMetabolism[A, B] | None" = field(default=None, init=False)
+
+    # Mirror Protocol integration (Phase 5: Terrarium observability)
+    _mirror: "HolographicBuffer | None" = field(default=None, init=False)
+
+    # Purgatory integration (Phase 5: Semaphore system)
+    _purgatory: "Purgatory | None" = field(default=None, init=False)
 
     def __post_init__(self) -> None:
         """Initialize runtime state and queues."""
@@ -177,6 +186,101 @@ class FluxAgent(Generic[A, B]):
         metabolism = self._metabolism
         self._metabolism = None
         return metabolism
+
+    # ─────────────────────────────────────────────────────────────
+    # Mirror Protocol Integration (Phase 5: Terrarium)
+    # ─────────────────────────────────────────────────────────────
+
+    def attach_mirror(self, mirror: "HolographicBuffer") -> "FluxAgent[A, B]":
+        """
+        Attach a HolographicBuffer for Terrarium observability.
+
+        When attached, the flux will:
+        - Emit TerriumEvents for semaphore ejections
+        - Emit TerriumEvents for semaphore resolutions
+        - Allow external observation without disturbing metabolism
+
+        The Mirror Protocol ensures:
+        - Agent emits ONCE to the buffer
+        - Buffer broadcasts to N clients
+        - Slow clients don't slow the agent
+
+        Args:
+            mirror: The HolographicBuffer to attach
+
+        Returns:
+            Self (for chaining)
+
+        Example:
+            >>> flux = Flux.lift(agent).attach_mirror(buffer)
+        """
+        self._mirror = mirror
+        return self
+
+    def detach_mirror(self) -> "HolographicBuffer | None":
+        """
+        Detach the mirror.
+
+        Returns:
+            The previously attached mirror, or None
+        """
+        mirror = self._mirror
+        self._mirror = None
+        return mirror
+
+    @property
+    def mirror(self) -> "HolographicBuffer | None":
+        """Optional mirror for Terrarium observability."""
+        return self._mirror
+
+    # ─────────────────────────────────────────────────────────────
+    # Purgatory Integration (Phase 5: Semaphores)
+    # ─────────────────────────────────────────────────────────────
+
+    def attach_purgatory(self, purgatory: "Purgatory") -> "FluxAgent[A, B]":
+        """
+        Attach a Purgatory for semaphore handling.
+
+        When attached, the flux will:
+        - Detect SemaphoreToken returns from inner.invoke()
+        - Eject blocked events to Purgatory (no head-of-line blocking)
+        - Handle ReentryContext injection for resolution
+
+        The Rodizio Pattern:
+        - Agent returns SemaphoreToken (the Red Card)
+        - FluxAgent detects and ejects to Purgatory
+        - Stream continues processing other events
+        - Human resolves via CLI/API
+        - ReentryContext injected as high-priority Perturbation
+        - Agent's resume() method completes processing
+
+        Args:
+            purgatory: The Purgatory instance
+
+        Returns:
+            Self (for chaining)
+
+        Example:
+            >>> flux = Flux.lift(agent).attach_purgatory(purgatory)
+        """
+        self._purgatory = purgatory
+        return self
+
+    def detach_purgatory(self) -> "Purgatory | None":
+        """
+        Detach the purgatory.
+
+        Returns:
+            The previously attached purgatory, or None
+        """
+        purgatory = self._purgatory
+        self._purgatory = None
+        return purgatory
+
+    @property
+    def purgatory(self) -> "Purgatory | None":
+        """Optional purgatory for semaphore handling."""
+        return self._purgatory
 
     # ─────────────────────────────────────────────────────────────
     # THE CRITICAL METHOD: start() returns AsyncIterator[B]
@@ -439,6 +543,25 @@ class FluxAgent(Generic[A, B]):
                 if result_future:
                     self._state = FluxState.PERTURBED
 
+                # Phase 5: Check for ReentryContext (semaphore resolution)
+                # ReentryContext is injected as Perturbation when human resolves
+                is_reentry, reentry_result = await self._handle_reentry_if_needed(
+                    input_data
+                )
+                if is_reentry:
+                    # Reentry handled - emit result and continue
+                    if result_future and not result_future.done():
+                        result_future.set_result(reentry_result)
+                    else:
+                        await self._emit_output(reentry_result)
+                    # Emit resolution event to mirror
+                    await self._emit_semaphore_resolved(input_data)
+                    if self._state == FluxState.PERTURBED:
+                        self._state = FluxState.FLOWING
+                    self._consume_entropy()
+                    self._events_processed += 1
+                    continue
+
                 # Process through inner agent
                 try:
                     result = await self.inner.invoke(input_data)
@@ -456,6 +579,15 @@ class FluxAgent(Generic[A, B]):
                 finally:
                     if self._state == FluxState.PERTURBED:
                         self._state = FluxState.FLOWING
+
+                # Phase 5: Check for SemaphoreToken (agent yielding to human)
+                # If detected, eject to Purgatory and emit to Mirror
+                if await self._handle_semaphore_if_needed(result, input_data):
+                    # Semaphore handled - stream continues (no head-of-line blocking)
+                    # Don't emit to output, don't set result_future
+                    self._consume_entropy()
+                    self._events_processed += 1
+                    continue
 
                 # Route result
                 if result_future and not result_future.done():
@@ -645,6 +777,153 @@ class FluxAgent(Generic[A, B]):
             return
         # TODO: Integration with pheromone system
         # For now, this is a placeholder
+
+    # ─────────────────────────────────────────────────────────────
+    # Phase 5: Semaphore Integration (Purgatory + Mirror)
+    # ─────────────────────────────────────────────────────────────
+
+    async def _handle_semaphore_if_needed(
+        self, result: Any, original_event: Any
+    ) -> bool:
+        """
+        Check if result is SemaphoreToken and handle if so.
+
+        The Rodizio Pattern:
+        1. Detect SemaphoreToken return
+        2. Eject to Purgatory (if attached)
+        3. Emit to Mirror (if attached)
+        4. Stream continues (no blocking)
+
+        Args:
+            result: Return value from inner.invoke()
+            original_event: The input event that triggered this
+
+        Returns:
+            True if result was a SemaphoreToken (handled), False otherwise
+        """
+        from .semaphore.flux_integration import process_semaphore_result
+        from .semaphore.mixin import is_semaphore_token
+
+        if not is_semaphore_token(result):
+            return False
+
+        # Eject to Purgatory if attached
+        if self._purgatory is not None:
+            await process_semaphore_result(
+                token=result,
+                purgatory=self._purgatory,
+                original_event=original_event,
+            )
+
+        # Emit to Mirror if attached (Phase 5 Terrarium integration)
+        await self._emit_semaphore_ejected(result)
+
+        return True
+
+    async def _handle_reentry_if_needed(self, event: Any) -> tuple[bool, Any]:
+        """
+        Check if event is ReentryContext and handle if so.
+
+        Called when human resolves a semaphore and ReentryContext
+        is injected as a high-priority Perturbation.
+
+        Args:
+            event: The event to check
+
+        Returns:
+            (True, result) if was ReentryContext, (False, None) otherwise
+        """
+        from .semaphore.flux_integration import (
+            is_reentry_context,
+            process_reentry_event,
+        )
+
+        if not is_reentry_context(event):
+            return False, None
+
+        # Process reentry through agent.resume()
+        result = await process_reentry_event(
+            reentry=event,
+            agent=self.inner,
+        )
+        return True, result
+
+    async def _emit_semaphore_ejected(self, token: Any) -> None:
+        """
+        Emit SemaphoreEvent to Mirror when token ejected.
+
+        Fire and forget - failures are silently ignored.
+        The agent's metabolism is sacred; observers don't slow it.
+
+        Args:
+            token: The SemaphoreToken that was ejected
+        """
+        if self._mirror is None:
+            return
+
+        try:
+            from protocols.terrarium.events import SemaphoreEvent
+
+            # Build context from token
+            context: dict[str, Any] = {}
+            if hasattr(token, "reason") and token.reason is not None:
+                context["reason"] = (
+                    token.reason.value
+                    if hasattr(token.reason, "value")
+                    else str(token.reason)
+                )
+            if hasattr(token, "deadline") and token.deadline is not None:
+                context["deadline"] = (
+                    token.deadline.isoformat()
+                    if hasattr(token.deadline, "isoformat")
+                    else str(token.deadline)
+                )
+
+            semaphore_event = SemaphoreEvent(
+                token_id=token.id,
+                agent_id=self._id,
+                prompt=getattr(token, "prompt", "") or "",
+                options=getattr(token, "options", []) or [],
+                severity=getattr(token, "severity", "info") or "info",
+                context=context,
+            )
+
+            # Convert to TerriumEvent and emit
+            terrium_event = semaphore_event.as_terrium_event()
+            await self._mirror.reflect(terrium_event.as_dict())
+
+        except Exception:
+            # Best effort - don't disrupt flux for mirror failures
+            pass
+
+    async def _emit_semaphore_resolved(self, reentry: Any) -> None:
+        """
+        Emit resolution event to Mirror when semaphore resolved.
+
+        Fire and forget - failures are silently ignored.
+
+        Args:
+            reentry: The ReentryContext that was processed
+        """
+        if self._mirror is None:
+            return
+
+        try:
+            from protocols.terrarium.events import EventType, TerriumEvent
+
+            terrium_event = TerriumEvent(
+                event_type=EventType.SEMAPHORE_RESOLVED,
+                agent_id=self._id,
+                data={
+                    "token_id": getattr(reentry, "token_id", "unknown"),
+                    "resolved": True,
+                },
+            )
+            await self._mirror.reflect(terrium_event.as_dict())
+
+        except Exception:
+            # Best effort - don't disrupt flux for mirror failures
+            pass
 
     # ─────────────────────────────────────────────────────────────
     # Composition: The Pipe Operator

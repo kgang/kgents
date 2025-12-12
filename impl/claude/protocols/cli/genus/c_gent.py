@@ -107,7 +107,11 @@ async def _async_balance(agent: str | None, json_mode: bool) -> int:
         agents = ledger.agents()
         if not agents:
             if json_mode:
-                print(json.dumps({"agents": [], "message": "No agents in ledger"}, indent=2))
+                print(
+                    json.dumps(
+                        {"agents": [], "message": "No agents in ledger"}, indent=2
+                    )
+                )
             else:
                 print("[CAPITAL] No agents in ledger")
                 print("         Agents appear when they interact with TrustGate")
@@ -132,7 +136,9 @@ async def _async_history(agent: str | None, limit: int, json_mode: bool) -> int:
 
     if not events:
         if json_mode:
-            print(json.dumps({"events": [], "message": "No events in ledger"}, indent=2))
+            print(
+                json.dumps({"events": [], "message": "No events in ledger"}, indent=2)
+            )
         else:
             agent_str = f" for {agent}" if agent else ""
             print(f"[CAPITAL] No events{agent_str}")
@@ -169,15 +175,20 @@ async def _async_tithe(agent: str, amount: float, json_mode: bool) -> int:
     current = ledger.balance(agent)
     if current < amount:
         if json_mode:
-            print(json.dumps({
-                "success": False,
-                "error": "insufficient_capital",
-                "agent": agent,
-                "required": amount,
-                "available": current,
-            }, indent=2))
+            print(
+                json.dumps(
+                    {
+                        "success": False,
+                        "error": "insufficient_capital",
+                        "agent": agent,
+                        "required": amount,
+                        "available": current,
+                    },
+                    indent=2,
+                )
+            )
         else:
-            print(f"[CAPITAL] ✗ Insufficient capital for tithe")
+            print("[CAPITAL] ✗ Insufficient capital for tithe")
             print(f"          Agent: {agent}")
             print(f"          Required: {amount:.3f}")
             print(f"          Available: {current:.3f}")
@@ -198,15 +209,20 @@ async def _async_tithe(agent: str, amount: float, json_mode: bool) -> int:
 
     new_balance = ledger.balance(agent)
     if json_mode:
-        print(json.dumps({
-            "success": True,
-            "agent": agent,
-            "amount_tithed": amount,
-            "new_balance": new_balance,
-            "correlation_id": event.correlation_id,
-        }, indent=2))
+        print(
+            json.dumps(
+                {
+                    "success": True,
+                    "agent": agent,
+                    "amount_tithed": amount,
+                    "new_balance": new_balance,
+                    "correlation_id": event.correlation_id,
+                },
+                indent=2,
+            )
+        )
     else:
-        print(f"[CAPITAL] ✓ Potlatch complete (Accursed Share)")
+        print("[CAPITAL] ✓ Potlatch complete (Accursed Share)")
         print(f"          Agent: {agent}")
         print(f"          Tithed: {amount:.3f}")
         print(f"          New balance: {new_balance:.3f}")

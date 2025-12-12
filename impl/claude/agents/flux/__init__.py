@@ -49,7 +49,8 @@ from .errors import (
     FluxSourceError,
     FluxStateError,
 )
-from .functor import Flux, FluxLifter, is_flux, lift, unlift
+from .functor import Flux, FluxFunctor, FluxLifter, is_flux, lift, unlift
+from .metabolism import FluxMetabolism, create_flux_metabolism
 from .perturbation import (
     Perturbation,
     await_perturbation,
@@ -57,7 +58,6 @@ from .perturbation import (
     is_perturbation,
     unwrap_perturbation,
 )
-from .metabolism import FluxMetabolism, create_flux_metabolism
 from .pipeline import FluxPipeline, pipeline
 from .state import FluxState
 
@@ -84,6 +84,7 @@ __all__ = [
     "FluxAgent",
     # Functor
     "Flux",
+    "FluxFunctor",
     "FluxLifter",
     "lift",
     "unlift",

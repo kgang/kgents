@@ -270,8 +270,14 @@ class TestFunctorRegistry:
     """Test the functor registry."""
 
     def setup_method(self) -> None:
-        """Clear registry before each test."""
+        """Save and clear registry before each test."""
+        self._saved_functors = FunctorRegistry._functors.copy()
         FunctorRegistry._functors.clear()
+
+    def teardown_method(self) -> None:
+        """Restore registry after each test."""
+        FunctorRegistry._functors.clear()
+        FunctorRegistry._functors.update(self._saved_functors)
 
     def test_register_and_get(self) -> None:
         """Can register and retrieve functors."""

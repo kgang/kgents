@@ -28,7 +28,7 @@ import json
 import subprocess
 import time
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum, auto
 from typing import Any, Callable
 
@@ -88,6 +88,40 @@ class TokenBudget:
 
 
 @dataclass
+class SemaphoreState:
+    """
+    Semaphore state for TUI display.
+
+    Phase 5: Purgatory integration - show pending semaphores awaiting resolution.
+    """
+
+    token_id: str
+    prompt: str
+    severity: str  # info, warning, critical
+    reason: str  # SemaphoreReason value
+    options: list[str] = field(default_factory=list)
+    created_at: datetime = field(default_factory=datetime.now)
+    deadline: datetime | None = None
+
+    @property
+    def time_remaining(self) -> timedelta | None:
+        """Calculate time remaining until deadline."""
+        if self.deadline is None:
+            return None
+        remaining = self.deadline - datetime.now()
+        return remaining if remaining.total_seconds() > 0 else timedelta(0)
+
+    @property
+    def is_urgent(self) -> bool:
+        """Check if this semaphore needs immediate attention."""
+        if self.severity == "critical":
+            return True
+        if self.time_remaining is not None:
+            return self.time_remaining.total_seconds() < 300  # < 5 minutes
+        return False
+
+
+@dataclass
 class TerrariumState:
     """Complete terrarium state for rendering."""
 
@@ -96,6 +130,7 @@ class TerrariumState:
     pheromones: list[PheromoneLevel] = field(default_factory=list)
     thoughts: list[Thought] = field(default_factory=list)
     budget: TokenBudget | None = None
+    semaphores: list[SemaphoreState] = field(default_factory=list)  # Phase 5
     last_update: datetime = field(default_factory=datetime.now)
 
 
@@ -207,10 +242,14 @@ class TerrariumRenderer:
         timestamp = state.last_update.strftime("%H:%M:%S")
         health_indicator = f"{health_color}●{RESET}"
 
-        title = f" TERRARIUM {health_indicator}"
-        time_str = f"{timestamp} UTC "
+        title = f" TERRARIUM {health_indicator} "
+        time_str = f" {timestamp} UTC "
+        content_width = self.width - 2  # Exclude box corners
 
-        padding = self.width - len(" TERRARIUM ● ") - len(time_str)
+        # Build header with title left, time right
+        padding = content_width - len(title) - len(time_str)
+        _header_content = f"{title}{'─' * padding}{time_str}"
+
         return f"┌{'─' * (self.width - 2)}┐"
 
     def _separator(self) -> str:
@@ -342,16 +381,20 @@ class TerrariumDataSource:
         # Fetch in parallel
         agents_task = asyncio.create_task(self._fetch_agents())
         pheromones_task = asyncio.create_task(self._fetch_pheromones())
+        semaphores_task = asyncio.create_task(self._fetch_semaphores())
 
         state.agents = await agents_task
         state.pheromones = await pheromones_task
+        state.semaphores = await semaphores_task
         state.thoughts = self._thought_buffer[-20:]
         state.budget = await self._fetch_budget()
         state.last_update = datetime.now()
 
-        # Determine health
+        # Determine health (include semaphore urgency)
         if not state.agents:
             state.health = "unhealthy"
+        elif any(s.is_urgent for s in state.semaphores):
+            state.health = "degraded"  # Urgent semaphores need attention
         elif all(a.status == "running" for a in state.agents):
             state.health = "healthy"
         else:
@@ -490,6 +533,87 @@ class TerrariumDataSource:
             history=self._burn_history,
         )
 
+    async def _fetch_semaphores(self) -> list[SemaphoreState]:
+        """
+        Fetch pending semaphores from purgatory.
+
+        Phase 5: Multiple data sources possible:
+        - Option A: REST call to terrarium gateway /api/purgatory/list
+        - Option B: gRPC call to cortex daemon
+        - Option C: kubectl get semaphores CRD (future)
+
+        Currently implements Option A (REST).
+        """
+        try:
+            # Try REST endpoint first (terrarium gateway)
+            import httpx
+
+            async with httpx.AsyncClient(timeout=2.0) as client:
+                # Try localhost first (development)
+                for host in ["localhost:8080", "terrarium.kgents-agents.svc:8080"]:
+                    try:
+                        response = await client.get(f"http://{host}/api/purgatory/list")
+                        if response.status_code == 200:
+                            data = response.json()
+                            return self._parse_semaphores(data)
+                    except Exception:
+                        continue
+
+            return []
+
+        except ImportError:
+            # httpx not available, try kubectl
+            return await self._fetch_semaphores_kubectl()
+        except Exception:
+            return []
+
+    async def _fetch_semaphores_kubectl(self) -> list[SemaphoreState]:
+        """Fetch semaphores via kubectl (future CRD)."""
+        # Future: When semaphores become K8s CRDs
+        # kubectl get semaphores.kgents.io -n kgents-agents -o json
+        return []
+
+    def _parse_semaphores(self, data: dict[str, Any]) -> list[SemaphoreState]:
+        """Parse semaphore data from REST response."""
+        semaphores = []
+
+        for item in data.get("pending", []):
+            deadline = None
+            if item.get("deadline"):
+                try:
+                    deadline = datetime.fromisoformat(item["deadline"])
+                except (ValueError, TypeError):
+                    pass
+
+            created_at = datetime.now()
+            if item.get("created_at"):
+                try:
+                    created_at = datetime.fromisoformat(item["created_at"])
+                except (ValueError, TypeError):
+                    pass
+
+            semaphores.append(
+                SemaphoreState(
+                    token_id=item.get("id", "unknown"),
+                    prompt=item.get("prompt", "No prompt"),
+                    severity=item.get("severity", "info"),
+                    reason=item.get("reason", "unknown"),
+                    options=item.get("options", []),
+                    created_at=created_at,
+                    deadline=deadline,
+                )
+            )
+
+        # Sort by urgency (critical first, then by deadline)
+        semaphores.sort(
+            key=lambda s: (
+                0 if s.severity == "critical" else 1,
+                s.deadline or datetime.max,
+            )
+        )
+
+        return semaphores
+
     def add_thought(self, thought: Thought) -> None:
         """Add a thought to the buffer."""
         self._thought_buffer.append(thought)
@@ -556,6 +680,172 @@ try:
     from textual.containers import Container, Horizontal, Vertical
     from textual.reactive import reactive
     from textual.widgets import DataTable, Footer, Header, ProgressBar, Static
+
+    # Import metrics components
+    from .data.terrarium_source import AgentMetrics, TerrariumWebSocketSource
+    from .widgets.density_field import DensityField
+    from .widgets.metrics_panel import MetricsPanel
+
+    class LiveMetricsPanel(Static):
+        """
+        Panel showing live pressure/flow/temperature metrics.
+
+        Terrarium Phase 3: This panel displays real-time agent metabolism
+        sourced from the Terrarium WebSocket feed.
+        """
+
+        def __init__(
+            self,
+            websocket_url: str = "ws://localhost:8080",
+            name: str | None = None,
+            id: str | None = None,  # noqa: A002
+            classes: str | None = None,
+        ) -> None:
+            super().__init__(name=name, id=id, classes=classes)
+            self.websocket_url = websocket_url
+            self._metrics_panels: dict[str, MetricsPanel] = {}
+            self._ws_source: TerrariumWebSocketSource | None = None
+            self._ws_task: asyncio.Task[None] | None = None
+
+        def compose(self) -> ComposeResult:
+            yield Static("Connecting to Terrarium...", id="metrics-status")
+
+        async def start_metrics_stream(self, agent_ids: list[str]) -> None:
+            """
+            Start streaming metrics for the given agents.
+
+            Args:
+                agent_ids: List of agent IDs to observe
+            """
+            if self._ws_task and not self._ws_task.done():
+                self._ws_task.cancel()
+
+            self._ws_source = TerrariumWebSocketSource(
+                base_url=self.websocket_url,
+                on_connected=self._on_connected,
+                on_disconnected=self._on_disconnected,
+                on_error=self._on_error,
+            )
+
+            # Start observing agents
+            self._ws_task = asyncio.create_task(self._observe_agents(agent_ids))
+
+        async def _observe_agents(self, agent_ids: list[str]) -> None:
+            """Observe multiple agents and update panels."""
+            if not self._ws_source:
+                return
+
+            from .data.terrarium_source import observe_multiple
+
+            try:
+                async for metrics in observe_multiple(self._ws_source, agent_ids):
+                    self._update_panel(metrics)
+            except asyncio.CancelledError:
+                pass
+
+        def _update_panel(self, metrics: AgentMetrics) -> None:
+            """Update the display with new metrics."""
+            # Build display lines
+            lines = []
+
+            # Header
+            state_icon = {"flowing": "●", "dormant": "○", "stopped": "◌"}.get(
+                metrics.state, "?"
+            )
+            health_icon = {"healthy": "🟢", "degraded": "🟡", "critical": "🔴"}.get(
+                metrics.health, "⚪"
+            )
+            lines.append(f" {state_icon} {metrics.agent_id} {health_icon}")
+            lines.append("")
+
+            # Pressure bar
+            pressure_bar = _progress_bar(metrics.pressure / 100, 20)
+            lines.append(f" Pressure  {pressure_bar} {metrics.pressure:5.1f}")
+
+            # Flow (auto-scale)
+            flow_bar = _progress_bar(min(1.0, metrics.flow / 50), 20)
+            lines.append(f" Flow      {flow_bar} {metrics.flow:5.1f}/s")
+
+            # Temperature bar
+            temp_bar = _progress_bar(metrics.temperature, 20)
+            temp_pct = metrics.temperature * 100
+            temp_icon = "🔥" if metrics.temperature > 0.8 else "🌡️"
+            lines.append(f" Temp {temp_icon}   {temp_bar} {temp_pct:5.1f}%")
+
+            # Update the static content
+            self.query_one("#metrics-status", Static).update("\n".join(lines))
+
+        def _on_connected(self, agent_id: str) -> None:
+            """Handle WebSocket connection."""
+            self.query_one("#metrics-status", Static).update(f"Connected to {agent_id}")
+
+        def _on_disconnected(self, agent_id: str) -> None:
+            """Handle WebSocket disconnection."""
+            self.query_one("#metrics-status", Static).update(
+                f"Disconnected from {agent_id}"
+            )
+
+        def _on_error(self, agent_id: str, error: Exception) -> None:
+            """Handle WebSocket error."""
+            self.query_one("#metrics-status", Static).update(
+                f"Error for {agent_id}: {error}"
+            )
+
+        async def stop(self) -> None:
+            """Stop the metrics stream."""
+            if self._ws_task:
+                self._ws_task.cancel()
+            if self._ws_source:
+                await self._ws_source.disconnect_all()
+
+    class AgentDensityPanel(Static):
+        """
+        Panel showing agents as DensityField clusters.
+
+        Terrarium Phase 3: Agents are rendered as density fields where
+        temperature maps to activity level.
+        """
+
+        def __init__(
+            self,
+            name: str | None = None,
+            id: str | None = None,  # noqa: A002
+            classes: str | None = None,
+        ) -> None:
+            super().__init__(name=name, id=id, classes=classes)
+            self._density_fields: dict[str, DensityField] = {}
+
+        def compose(self) -> ComposeResult:
+            yield Static("No agents", id="density-placeholder")
+
+        def update_agent_metrics(self, metrics: AgentMetrics) -> None:
+            """
+            Update density field for an agent based on metrics.
+
+            Args:
+                metrics: AgentMetrics from WebSocket
+            """
+            agent_id = metrics.agent_id
+
+            if agent_id not in self._density_fields:
+                # Create new density field
+                field = DensityField(
+                    agent_id=agent_id,
+                    agent_name=agent_id,
+                    activity=metrics.temperature,
+                    id=f"density-{agent_id}",
+                )
+                self._density_fields[agent_id] = field
+
+                # Remove placeholder and mount
+                placeholder = self.query_one("#density-placeholder", Static)
+                placeholder.remove()
+                self.mount(field)
+            else:
+                # Update existing
+                field = self._density_fields[agent_id]
+                field.activity = metrics.temperature
+                field.agent_name = metrics.state
 
     class AgentPanel(Static):
         """Panel showing agent states."""
@@ -625,15 +915,60 @@ try:
             ]
             self.update("\n".join(lines))
 
+    class PurgatoryPanel(Static):
+        """
+        Panel showing pending semaphores awaiting resolution.
+
+        Phase 5: The Rodizio Pattern made visible - tokens in Purgatory
+        are displayed here for human attention.
+        """
+
+        def compose(self) -> ComposeResult:
+            yield Static("No pending semaphores")
+
+        def update_semaphores(self, semaphores: list[SemaphoreState]) -> None:
+            """Update the semaphore display."""
+            if not semaphores:
+                self.update("No pending semaphores")
+                return
+
+            lines = []
+            for sem in semaphores[:5]:  # Show top 5
+                # Severity icon
+                icon = {"critical": "🔴", "warning": "🟡", "info": "🔵"}.get(
+                    sem.severity, "⚪"
+                )
+
+                # Time info
+                time_str = sem.created_at.strftime("%H:%M:%S")
+                deadline_str = ""
+                if sem.time_remaining is not None:
+                    mins = int(sem.time_remaining.total_seconds() // 60)
+                    if mins < 5:
+                        deadline_str = f" ⏰ {mins}m"
+                    else:
+                        deadline_str = f" ⏱ {mins}m"
+
+                # Urgency indicator
+                urgent = "❗" if sem.is_urgent else ""
+
+                # Build display
+                lines.append(f"{icon} [{time_str}]{deadline_str} {urgent}")
+                lines.append(f"   {sem.prompt[:50]}")
+                lines.append(f"   Options: {', '.join(sem.options[:3])}")
+                lines.append("")
+
+            self.update("\n".join(lines).strip())
+
     class TerrariumTextualApp(App[None]):
         """The Glass Box - Textual-based TUI for K-Terrarium."""
 
         CSS = """
         Screen {
             layout: grid;
-            grid-size: 2 3;
+            grid-size: 2 5;
             grid-columns: 1fr 1fr;
-            grid-rows: auto 1fr auto;
+            grid-rows: auto auto auto 1fr auto;
         }
 
         #agents {
@@ -645,6 +980,20 @@ try:
         #heatmap {
             row-span: 1;
             border: solid blue;
+            padding: 1;
+        }
+
+        #metrics {
+            column-span: 2;
+            border: solid magenta;
+            padding: 1;
+            height: auto;
+            min-height: 8;
+        }
+
+        #purgatory {
+            column-span: 2;
+            border: solid red;
             padding: 1;
         }
 
@@ -666,16 +1015,26 @@ try:
             ("r", "refresh", "Refresh"),
             ("d", "detail", "Toggle Detail"),
             ("t", "tether", "Tether"),
+            ("s", "semaphores", "Semaphores"),
+            ("m", "metrics", "Focus Metrics"),
         ]
 
-        def __init__(self, data_source: TerrariumDataSource | None = None) -> None:
+        def __init__(
+            self,
+            data_source: TerrariumDataSource | None = None,
+            websocket_url: str = "ws://localhost:8080",
+        ) -> None:
             super().__init__()
             self.data_source = data_source or TerrariumDataSource()
+            self.websocket_url = websocket_url
+            self._metrics_panel: LiveMetricsPanel | None = None
 
         def compose(self) -> ComposeResult:
             yield Header()
             yield AgentPanel(id="agents")
             yield PheromoneHeatmap(id="heatmap")
+            yield LiveMetricsPanel(websocket_url=self.websocket_url, id="metrics")
+            yield PurgatoryPanel(id="purgatory")
             yield ThoughtStream(id="thoughts")
             yield TokenEconomy(id="economy")
             yield Footer()
@@ -685,6 +1044,9 @@ try:
             self.set_interval(2.0, self.refresh_state)
             await self.refresh_state()
 
+            # Start metrics stream after first refresh (to get agent IDs)
+            self._metrics_panel = self.query_one("#metrics", LiveMetricsPanel)
+
         async def refresh_state(self) -> None:
             """Refresh all panels with current state."""
             state = await self.data_source.fetch_state()
@@ -693,8 +1055,16 @@ try:
             self.query_one("#heatmap", PheromoneHeatmap).update_pheromones(
                 state.pheromones
             )
+            self.query_one("#purgatory", PurgatoryPanel).update_semaphores(
+                state.semaphores
+            )
             self.query_one("#thoughts", ThoughtStream).update_thoughts(state.thoughts)
             self.query_one("#economy", TokenEconomy).update_budget(state.budget)
+
+            # Start metrics stream for discovered agents
+            if self._metrics_panel and state.agents:
+                agent_ids = [a.name for a in state.agents]
+                await self._metrics_panel.start_metrics_stream(agent_ids)
 
         def action_refresh(self) -> None:
             """Manual refresh action."""
@@ -708,6 +1078,19 @@ try:
             """Open tether dialog."""
             pass  # TODO: Implement tether dialog
 
+        def action_semaphores(self) -> None:
+            """Focus on semaphores panel."""
+            self.query_one("#purgatory").focus()
+
+        def action_metrics(self) -> None:
+            """Focus on metrics panel."""
+            self.query_one("#metrics").focus()
+
+        async def on_unmount(self) -> None:
+            """Clean up on unmount."""
+            if self._metrics_panel:
+                await self._metrics_panel.stop()
+
     TEXTUAL_AVAILABLE = True
 
 except ImportError:
@@ -718,6 +1101,7 @@ except ImportError:
 def create_terrarium_app(
     use_textual: bool = True,
     refresh_interval: float = 2.0,
+    websocket_url: str = "ws://localhost:8080",
 ) -> TerrariumApp | Any:
     """
     Factory function to create the appropriate TUI.
@@ -725,6 +1109,7 @@ def create_terrarium_app(
     Args:
         use_textual: Prefer Textual if available
         refresh_interval: Refresh interval in seconds
+        websocket_url: WebSocket URL for live metrics
 
     Returns:
         TerrariumApp (simple) or TerrariumTextualApp (rich)
@@ -732,7 +1117,10 @@ def create_terrarium_app(
     data_source = TerrariumDataSource()
 
     if use_textual and TEXTUAL_AVAILABLE:
-        return TerrariumTextualApp(data_source=data_source)
+        return TerrariumTextualApp(
+            data_source=data_source,
+            websocket_url=websocket_url,
+        )
 
     return TerrariumApp(
         data_source=data_source,

@@ -17,6 +17,7 @@ Test Coverage:
 from __future__ import annotations
 
 import pytest
+from agents.u.core import Tool, ToolErrorType, ToolMeta
 from agents.u.executor import SecureToolExecutor
 from agents.u.permissions import (
     AgentContext,
@@ -26,7 +27,6 @@ from agents.u.permissions import (
     SecurityLevel,
     ToolCapabilities,
 )
-from agents.u.core import Tool, ToolErrorType, ToolMeta
 from bootstrap.types import Err, Ok
 
 # --- Test Fixtures ---

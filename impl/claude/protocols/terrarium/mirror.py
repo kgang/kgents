@@ -73,12 +73,17 @@ class HolographicBuffer:
 
     max_history: int = 100
     broadcast_timeout: float = 0.1
+    drain_timeout: float = 5.0  # Max time to wait for pending broadcasts on shutdown
 
     # Internal state
     _active_mirrors: list[WebSocketLike] = field(default_factory=list, init=False)
     _history: deque[dict[str, Any]] = field(init=False)
     _event_count: int = field(default=0, init=False)
     _broadcast_lock: asyncio.Lock = field(default_factory=asyncio.Lock, init=False)
+    _pending_broadcasts: set[asyncio.Task[None]] = field(
+        default_factory=set, init=False
+    )
+    _shutting_down: bool = field(default=False, init=False)
 
     def __post_init__(self) -> None:
         """Initialize the history deque."""
@@ -99,6 +104,16 @@ class HolographicBuffer:
         """Total events reflected through this buffer."""
         return self._event_count
 
+    @property
+    def pending_broadcast_count(self) -> int:
+        """Number of broadcasts still in flight."""
+        return len(self._pending_broadcasts)
+
+    @property
+    def is_shutting_down(self) -> bool:
+        """True if the buffer is draining for shutdown."""
+        return self._shutting_down
+
     async def reflect(self, event: dict[str, Any]) -> None:
         """
         Emit an event through the mirror.
@@ -112,13 +127,23 @@ class HolographicBuffer:
         Args:
             event: The event to broadcast (must be JSON-serializable)
         """
+        # During shutdown, skip new broadcasts but still record to history
+        if self._shutting_down:
+            logger.debug("Skipping broadcast during shutdown")
+            self._history.append(event)
+            self._event_count += 1
+            return
+
         self._history.append(event)
         self._event_count += 1
 
         # Fire and forget: don't await the broadcast
         # Use create_task to avoid blocking the agent
+        # Track tasks for graceful shutdown
         if self._active_mirrors:
-            asyncio.create_task(self._broadcast(event))
+            task = asyncio.create_task(self._broadcast(event))
+            self._pending_broadcasts.add(task)
+            task.add_done_callback(self._pending_broadcasts.discard)
 
     async def _broadcast(self, event: dict[str, Any]) -> None:
         """
@@ -215,3 +240,68 @@ class HolographicBuffer:
             Copy of the current history
         """
         return list(self._history)
+
+    async def drain(self, timeout: float | None = None) -> int:
+        """
+        Gracefully drain pending broadcasts before shutdown.
+
+        Waits for all pending broadcast tasks to complete, up to timeout.
+        After calling drain, new reflect() calls will skip broadcasting.
+
+        Args:
+            timeout: Maximum seconds to wait. Defaults to self.drain_timeout.
+
+        Returns:
+            Number of broadcasts that completed during drain.
+        """
+        if timeout is None:
+            timeout = self.drain_timeout
+
+        self._shutting_down = True
+
+        if not self._pending_broadcasts:
+            logger.info("No pending broadcasts to drain")
+            return 0
+
+        pending_count = len(self._pending_broadcasts)
+        logger.info(f"Draining {pending_count} pending broadcasts (timeout={timeout}s)")
+
+        try:
+            # Wait for all pending broadcasts with timeout
+            done, pending = await asyncio.wait(
+                self._pending_broadcasts,
+                timeout=timeout,
+                return_when=asyncio.ALL_COMPLETED,
+            )
+
+            completed = len(done)
+            cancelled = len(pending)
+
+            if cancelled > 0:
+                logger.warning(f"Cancelled {cancelled} broadcasts during drain")
+                for task in pending:
+                    task.cancel()
+
+            logger.info(f"Drain complete: {completed} broadcasts delivered")
+            return completed
+
+        except Exception as e:
+            logger.error(f"Error during drain: {e}")
+            # Cancel remaining tasks
+            for task in self._pending_broadcasts:
+                task.cancel()
+            return 0
+
+    async def shutdown(self) -> None:
+        """
+        Full graceful shutdown: drain broadcasts and disconnect mirrors.
+
+        Call this from server shutdown handlers (e.g., FastAPI lifespan).
+        """
+        # 1. Drain pending broadcasts
+        await self.drain()
+
+        # 2. Disconnect all mirrors
+        mirror_count = len(self._active_mirrors)
+        self._active_mirrors.clear()
+        logger.info(f"Disconnected {mirror_count} mirrors during shutdown")

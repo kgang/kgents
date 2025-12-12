@@ -42,23 +42,31 @@ from .contract_validator import (
 from .functor import (
     # Async
     AsyncAgent,
+    AsyncFunctor,
     # Either
     Either,
     EitherAgent,
+    EitherFunctor,
     # Fix (retry)
     FixAgent,
+    FixFunctor,
     Just,
     Left,
     # List
     ListAgent,
+    ListFunctor,
     LogEntry,
     # Logged
     LoggedAgent,
+    LoggedFunctor,
     # Maybe
     Maybe,
     MaybeAgent,
+    MaybeFunctor,
     Nothing,
     Right,
+    # Unlift error
+    UnliftError,
     async_agent,
     check_composition_law,
     # Law validation
@@ -68,6 +76,13 @@ from .functor import (
     list_agent,
     logged,
     maybe,
+    # Unlift functions (Phase 1: Symmetric Lifting)
+    unlift_async,
+    unlift_either,
+    unlift_fix,
+    unlift_list,
+    unlift_logged,
+    unlift_maybe,
 )
 
 # Promise functor (J-gent integration)
@@ -104,26 +119,38 @@ __all__ = [
     "Just",
     "Nothing",
     "MaybeAgent",
+    "MaybeFunctor",
     "maybe",
+    "unlift_maybe",
     # Either
     "Either",
     "Right",
     "Left",
     "EitherAgent",
+    "EitherFunctor",
     "either",
+    "unlift_either",
     # Fix (retry)
     "FixAgent",
+    "FixFunctor",
     "fix",
+    "unlift_fix",
     # List
     "ListAgent",
+    "ListFunctor",
     "list_agent",
+    "unlift_list",
     # Async
     "AsyncAgent",
+    "AsyncFunctor",
     "async_agent",
+    "unlift_async",
     # Logged
     "LoggedAgent",
+    "LoggedFunctor",
     "LogEntry",
     "logged",
+    "unlift_logged",
     # Promise
     "PromiseAgent",
     "promise_agent",
@@ -131,6 +158,8 @@ __all__ = [
     # Law validation
     "check_identity_law",
     "check_composition_law",
+    # Unlift error
+    "UnliftError",
     # Parallel
     "ParallelAgent",
     "FanOutAgent",

@@ -1,0 +1,86 @@
+# Kind Cluster Configuration for kgents Terrarium
+#
+# Self-Hosted First Philosophy:
+# This cluster is the foundation for routing ALL agent interactions
+# through Kubernetes infrastructure, including LLM calls.
+#
+# Usage:
+#   # Create the cluster
+#   kind create cluster --config impl/claude/infra/k8s/kind/terrarium-cluster.yaml
+#
+#   # Load local images
+#   kind load docker-image kgents/terrarium:latest --name kgents-terrarium
+#
+#   # Apply CRDs
+#   kubectl apply -f impl/claude/infra/k8s/crds/agentserver-crd.yaml
+#
+#   # Run the operator
+#   kopf run impl/claude/infra/k8s/operators/agentserver_operator.py
+#
+# Port Mappings:
+#   localhost:8080 -> Terrarium Gateway (WebSocket + REST)
+#   localhost:9090 -> Prometheus Metrics
+#   localhost:30051 -> gRPC (Cortex Daemon)
+#
+# Architecture:
+#   ┌─────────────────────────────────────────────────────────┐
+#   │  Kind Cluster: kgents-terrarium                         │
+#   │  ┌────────────────────────────────────────────────────┐│
+#   │  │  Control Plane Node                                ││
+#   │  │  ┌─────────────────────────────────────────────┐  ││
+#   │  │  │  Terrarium Gateway Pod                       │  ││
+#   │  │  │  - /observe/{agent}: WebSocket (read-only)   │  ││
+#   │  │  │  - /perturb/{agent}: WebSocket (write)       │  ││
+#   │  │  │  - /api/purgatory/*: REST (semaphores)       │  ││
+#   │  │  └─────────────────────────────────────────────┘  ││
+#   │  │  ┌─────────────────────────────────────────────┐  ││
+#   │  │  │  AgentServer Operator                        │  ││
+#   │  │  │  - Watches AgentServer CRDs                  │  ││
+#   │  │  │  - Creates Deployment, Service, ConfigMap    │  ││
+#   │  │  └─────────────────────────────────────────────┘  ││
+#   │  └────────────────────────────────────────────────────┘│
+#   └─────────────────────────────────────────────────────────┘
+#
+# AGENTESE: world.terrarium.cluster.manifest
+
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: kgents-terrarium
+nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "kgents.io/role=terrarium"
+    extraPortMappings:
+      # Terrarium Gateway - Main WebSocket + REST interface
+      - containerPort: 30080
+        hostPort: 8080
+        protocol: TCP
+        listenAddress: "127.0.0.1"
+      # Prometheus Metrics
+      - containerPort: 30090
+        hostPort: 9090
+        protocol: TCP
+        listenAddress: "127.0.0.1"
+      # gRPC for Cortex Daemon
+      - containerPort: 30051
+        hostPort: 50051
+        protocol: TCP
+        listenAddress: "127.0.0.1"
+    extraMounts:
+      # Mount local agent code for development
+      - hostPath: /tmp/kgents-terrarium
+        containerPath: /var/lib/kgents
+        readOnly: false
+        propagation: Bidirectional
+
+# Networking configuration
+networking:
+  # Use default CNI (kindnet)
+  disableDefaultCNI: false
+  # Enable pod-to-pod communication
+  podSubnet: "10.244.0.0/16"
+  serviceSubnet: "10.96.0.0/12"

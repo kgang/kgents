@@ -27,6 +27,7 @@ class EventType(str, Enum):
     # Metabolic events
     METABOLISM = "metabolism"
     FEVER = "fever"
+    METRICS_DEGRADED = "metrics_degraded"
 
     # Purgatory/Semaphore events (Phase 5)
     SEMAPHORE_EJECTED = "semaphore_ejected"

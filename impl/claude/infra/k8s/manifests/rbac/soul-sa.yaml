@@ -1,0 +1,68 @@
+# K-gent Soul ServiceAccount and RBAC
+#
+# The Soul library (when running as standalone pod) needs:
+# 1. Read Agents for governance decisions
+# 2. Read/Write Purgatory state
+# 3. Read Umwelt for observer context
+#
+# Note: When Soul is imported as library, it inherits the
+# host pod's ServiceAccount. This SA is for standalone deployment.
+#
+# AGENTESE: self.soul.rbac.manifest
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kgents-soul
+  namespace: kgents
+  labels:
+    app.kubernetes.io/name: kgents-soul
+    app.kubernetes.io/part-of: kgents
+    app.kubernetes.io/component: governance
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: kgents-soul
+  namespace: kgents
+  labels:
+    app.kubernetes.io/name: kgents-soul
+    app.kubernetes.io/part-of: kgents
+rules:
+  # Read agents for principle validation
+  - apiGroups: ["kgents.io"]
+    resources: ["agents"]
+    verbs: ["get", "list", "watch"]
+  # Read/Write purgatory for semaphore governance
+  - apiGroups: ["kgents.io"]
+    resources: ["purgatorys", "purgatories"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  # Read umwelts for observer-relative decisions
+  - apiGroups: ["kgents.io"]
+    resources: ["umwelts"]
+    verbs: ["get", "list"]
+  # Read pheromones for stigmergy context
+  - apiGroups: ["kgents.io"]
+    resources: ["pheromones"]
+    verbs: ["get", "list", "watch"]
+  # Read proposals for governance review
+  - apiGroups: ["kgents.io"]
+    resources: ["proposals"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: kgents-soul
+  namespace: kgents
+  labels:
+    app.kubernetes.io/name: kgents-soul
+    app.kubernetes.io/part-of: kgents
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: kgents-soul
+subjects:
+  - kind: ServiceAccount
+    name: kgents-soul
+    namespace: kgents

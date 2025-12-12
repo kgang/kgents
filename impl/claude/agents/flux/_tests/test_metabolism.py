@@ -6,7 +6,13 @@ import asyncio
 from typing import Any, AsyncIterator
 
 import pytest
-from agents.flux import Flux, FluxAgent, FluxConfig, FluxMetabolism, create_flux_metabolism
+from agents.flux import (
+    Flux,
+    FluxAgent,
+    FluxConfig,
+    FluxMetabolism,
+    create_flux_metabolism,
+)
 from bootstrap.types import Agent
 from protocols.agentese.metabolism import (
     FeverEvent,

@@ -8,13 +8,48 @@ A-gents provide:
 - Category-theoretic protocols (Morphism, Functor)
 - Agent factory (AgentFactory)
 - Self-describing agents (GroundedSkeleton)
+- **Alethic Architecture**: Halo capability protocol + Archetypes
 
 The key insight of A-gents: Agent[A, B] from bootstrap IS the skeleton.
 AbstractAgent is just an alias for semantic clarity.
 
 For richer metadata, use AgentMeta (optional).
+
+## The Alethic Architecture
+
+The Halo system provides declarative capabilities:
+- Nucleus: Pure logic (what the agent does)
+- Halo: Declarative capabilities (what the agent could become)
+- Archetype: Pre-packaged Halo for common patterns
+- Projector: Target-specific compilation (how the agent manifests)
+
+Example:
+    >>> @Capability.Stateful(schema=MyMemory)
+    ... @Capability.Soulful(persona="Kent")
+    ... class MyAgent(Agent[str, str]):
+    ...     async def invoke(self, input: str) -> str:
+    ...         return f"Hello, {input}"
+
+Or using archetypes:
+    >>> class MyService(Kappa[Request, Response]):
+    ...     async def invoke(self, req: Request) -> Response:
+    ...         return process(req)
+
+See: plans/architecture/alethic.md
 """
 
+# Alethic Architecture: Genus Archetypes
+from .archetypes import (
+    # Base
+    Archetype,
+    # Standard Archetypes
+    Delta,
+    Kappa,
+    Lambda,
+    # Utilities
+    get_archetype,
+    is_archetype_instance,
+)
 from .creativity import (
     # Agent
     CreativityCoach,
@@ -28,6 +63,42 @@ from .creativity import (
     philosophical_coach,
     playful_coach,
     provocative_coach,
+)
+
+# Alethic Algebra: Universal Functor Protocol
+from .functor import (
+    # Verification
+    FunctorLawResult,
+    # Core Protocol
+    FunctorRegistry,
+    FunctorVerificationReport,
+    Liftable,
+    Pointed,
+    UniversalFunctor,
+    # Combinators
+    compose_functors,
+    identity_functor,
+    verify_composition_law,
+    verify_functor,
+    verify_identity_law,
+)
+from .halo import (
+    HALO_ATTR,
+    # Base
+    Capability,
+    CapabilityBase,
+    # Capability types
+    ObservableCapability,
+    SoulfulCapability,
+    StatefulCapability,
+    StreamableCapability,
+    # Introspection
+    get_capability,
+    get_halo,
+    get_own_halo,
+    has_capability,
+    inherit_halo,
+    merge_halos,
 )
 from .skeleton import (
     # The skeleton (re-exported from bootstrap)
@@ -97,4 +168,37 @@ __all__ = [
     "playful_coach",
     "philosophical_coach",
     "provocative_coach",
+    # Alethic Architecture: Halo Capability Protocol
+    "Capability",
+    "CapabilityBase",
+    "HALO_ATTR",
+    "StatefulCapability",
+    "SoulfulCapability",
+    "ObservableCapability",
+    "StreamableCapability",
+    "get_halo",
+    "get_own_halo",
+    "has_capability",
+    "get_capability",
+    "merge_halos",
+    "inherit_halo",
+    # Alethic Algebra: Universal Functor Protocol
+    "UniversalFunctor",
+    "Liftable",
+    "Pointed",
+    "FunctorRegistry",
+    "FunctorLawResult",
+    "FunctorVerificationReport",
+    "verify_identity_law",
+    "verify_composition_law",
+    "verify_functor",
+    "compose_functors",
+    "identity_functor",
+    # Alethic Architecture: Genus Archetypes
+    "Archetype",
+    "Kappa",
+    "Lambda",
+    "Delta",
+    "get_archetype",
+    "is_archetype_instance",
 ]

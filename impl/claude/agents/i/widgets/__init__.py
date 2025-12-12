@@ -22,6 +22,7 @@ from .glitch import (
     glitch_message,
 )
 from .health_bar import CompactHealthBar, MiniHealthBar, XYZHealthBar
+from .metrics_panel import MetricsPanel, MultiMetricsPanel
 from .proprioception import (
     ProprioceptionBar,
     ProprioceptionBars,
@@ -40,6 +41,9 @@ __all__ = [
     "XYZHealthBar",
     "CompactHealthBar",
     "MiniHealthBar",
+    # Metrics widgets (Terrarium Phase 3)
+    "MetricsPanel",
+    "MultiMetricsPanel",
     # Waveform widgets (Phase 3)
     "ProcessingWaveform",
     "WaveformDisplay",

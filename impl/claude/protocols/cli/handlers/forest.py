@@ -130,7 +130,9 @@ def generate_forest_md(plans: list[PlanHeader]) -> str:
     # Calculate metrics
     total = len(plans)
     avg_progress = sum(p.progress for p in plans) // max(total, 1)
-    longest_untouched = max(dormant, key=lambda p: p.days_since_touched) if dormant else None
+    longest_untouched = (
+        max(dormant, key=lambda p: p.days_since_touched) if dormant else None
+    )
 
     # Find next accursed share candidate (oldest dormant)
     accursed_next = dormant[0].path if dormant else "none"
@@ -152,7 +154,9 @@ def generate_forest_md(plans: list[PlanHeader]) -> str:
 
     for p in active:
         notes = p.session_notes.split("\n")[0][:50] if p.session_notes else ""
-        lines.append(f"| {p.path} | {p.progress}% | {p.last_touched} | {p.status} | {notes} |")
+        lines.append(
+            f"| {p.path} | {p.progress}% | {p.last_touched} | {p.status} | {notes} |"
+        )
 
     if not active:
         lines.append("| (none) | - | - | - | - |")
@@ -172,7 +176,9 @@ def generate_forest_md(plans: list[PlanHeader]) -> str:
     for p in blocked:
         blockers = ", ".join(p.blocking) if p.blocking else "unknown"
         notes = p.session_notes.split("\n")[0][:40] if p.session_notes else ""
-        lines.append(f"| {p.path} | {p.progress}% | {blockers} | {p.last_touched} | {notes} |")
+        lines.append(
+            f"| {p.path} | {p.progress}% | {blockers} | {p.last_touched} | {notes} |"
+        )
 
     if not blocked:
         lines.append("| (none) | - | - | - | - |")
@@ -196,7 +202,9 @@ def generate_forest_md(plans: list[PlanHeader]) -> str:
             action = "Continue work"
         else:
             action = "Read spec, draft approach"
-        lines.append(f"| {p.path} | {p.progress}% | {p.last_touched} | {p.days_since_touched} | {action} |")
+        lines.append(
+            f"| {p.path} | {p.progress}% | {p.last_touched} | {p.days_since_touched} | {action} |"
+        )
 
     if not dormant:
         lines.append("| (none) | - | - | - | - |")
@@ -243,16 +251,18 @@ def generate_forest_md(plans: list[PlanHeader]) -> str:
             "| Metric | Value |",
             "|--------|-------|",
             f"| Total trees | {total} |",
-            f"| Active | {len(active)} ({len(active)*100//max(total,1)}%) |",
-            f"| Dormant | {len(dormant)} ({len(dormant)*100//max(total,1)}%) |",
-            f"| Blocked | {len(blocked)} ({len(blocked)*100//max(total,1)}%) |",
-            f"| Complete | {len(complete)} ({len(complete)*100//max(total,1)}%) |",
+            f"| Active | {len(active)} ({len(active) * 100 // max(total, 1)}%) |",
+            f"| Dormant | {len(dormant)} ({len(dormant) * 100 // max(total, 1)}%) |",
+            f"| Blocked | {len(blocked)} ({len(blocked) * 100 // max(total, 1)}%) |",
+            f"| Complete | {len(complete)} ({len(complete) * 100 // max(total, 1)}%) |",
             f"| Average progress | {avg_progress}% |",
         ]
     )
 
     if longest_untouched:
-        lines.append(f"| Longest untouched | {longest_untouched.path} ({longest_untouched.days_since_touched} days) |")
+        lines.append(
+            f"| Longest untouched | {longest_untouched.path} ({longest_untouched.days_since_touched} days) |"
+        )
 
     lines.append(f"| Accursed share next | {accursed_next} |")
 
@@ -279,7 +289,9 @@ def generate_forest_md(plans: list[PlanHeader]) -> str:
     # Show dormant trees needing attention
     for p in dormant:
         if p.days_since_touched > 5:
-            lines.append(f"{p.path} ({p.progress}%) ◀── needs attention ── [{p.days_since_touched} days dormant]")
+            lines.append(
+                f"{p.path} ({p.progress}%) ◀── needs attention ── [{p.days_since_touched} days dormant]"
+            )
 
     lines.extend(
         [
@@ -373,7 +385,9 @@ def forest_status() -> str:
 
     if dormant:
         oldest = max(dormant, key=lambda p: p.days_since_touched)
-        lines.append(f"\nAccursed Share Candidate: {oldest.path} ({oldest.days_since_touched} days)")
+        lines.append(
+            f"\nAccursed Share Candidate: {oldest.path} ({oldest.days_since_touched} days)"
+        )
 
     return "\n".join(lines)
 
@@ -441,9 +455,13 @@ def forest_check() -> tuple[bool, str]:
         return False, "_forest.md is stale. Run 'forest update' to refresh it."
 
     # Check for stale plans (>7 days untouched)
-    stale_plans = [p for p in plans if p.days_since_touched > 7 and p.status != "complete"]
+    stale_plans = [
+        p for p in plans if p.days_since_touched > 7 and p.status != "complete"
+    ]
     if stale_plans:
-        stale_list = ", ".join(f"{p.path} ({p.days_since_touched}d)" for p in stale_plans)
+        stale_list = ", ".join(
+            f"{p.path} ({p.days_since_touched}d)" for p in stale_plans
+        )
         return True, f"WARNING: Stale plans need attention: {stale_list}"
 
     return True, f"Forest is healthy. {len(plans)} plans tracked."
@@ -455,7 +473,7 @@ def forest_lint() -> tuple[bool, str]:
     plans_dir = root / "plans"
     plans = scan_plans(plans_dir)
 
-    required_fields = ["path", "status", "progress", "last_touched"]
+    # Required fields: path, status, progress, last_touched
     issues: list[str] = []
 
     for plan in plans:

@@ -6,6 +6,8 @@ without requiring a real K8s cluster.
 
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 from infra.k8s.operator import (
     AgentPhase,
@@ -540,3 +542,142 @@ class TestIntegrationScenarios:
         assert agent.deployment is None
         assert agent.service is None
         assert agent.memory_cr is None
+
+
+class TestSCUProbe:
+    """Test SCU probe functionality."""
+
+    @pytest.mark.asyncio
+    async def test_scu_probe_healthy_response(self) -> None:
+        """SCU probe returns HEALTHY for successful cognitive response."""
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        import httpx
+        from infra.k8s.operators.agent_operator import run_scu_probe
+
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"status": "healthy", "response": "HEALTHY"}
+
+        mock_client = AsyncMock()
+        mock_client.post = AsyncMock(return_value=mock_response)
+
+        with patch.object(httpx, "AsyncClient") as mock_constructor:
+            mock_constructor.return_value.__aenter__ = AsyncMock(
+                return_value=mock_client
+            )
+            mock_constructor.return_value.__aexit__ = AsyncMock(return_value=None)
+
+            status, latency, message = await run_scu_probe("http://test-service")
+
+        assert status == "HEALTHY"
+        assert latency > 0
+        assert "passed" in message.lower()
+
+    @pytest.mark.asyncio
+    async def test_scu_probe_fallback_to_basic_health(self) -> None:
+        """SCU probe falls back to basic health when cognitive endpoint missing."""
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        import httpx
+        from infra.k8s.operators.agent_operator import run_scu_probe
+
+        # First call to cognitive endpoint returns 404
+        cognitive_response = MagicMock()
+        cognitive_response.status_code = 404
+
+        # Fallback to basic health
+        health_response = MagicMock()
+        health_response.status_code = 200
+
+        mock_client = AsyncMock()
+        mock_client.post = AsyncMock(return_value=cognitive_response)
+        mock_client.get = AsyncMock(return_value=health_response)
+
+        with patch.object(httpx, "AsyncClient") as mock_constructor:
+            mock_constructor.return_value.__aenter__ = AsyncMock(
+                return_value=mock_client
+            )
+            mock_constructor.return_value.__aexit__ = AsyncMock(return_value=None)
+
+            status, latency, message = await run_scu_probe("http://test-service")
+
+        assert status == "HEALTHY"
+        assert "Basic health check" in message
+
+    @pytest.mark.asyncio
+    async def test_scu_probe_timeout(self) -> None:
+        """SCU probe returns UNRESPONSIVE on timeout."""
+        from unittest.mock import AsyncMock, patch
+
+        import httpx
+        from infra.k8s.operators.agent_operator import run_scu_probe
+
+        mock_client = AsyncMock()
+        mock_client.post = AsyncMock(side_effect=httpx.TimeoutException("timeout"))
+
+        with patch.object(httpx, "AsyncClient") as mock_constructor:
+            mock_constructor.return_value.__aenter__ = AsyncMock(
+                return_value=mock_client
+            )
+            mock_constructor.return_value.__aexit__ = AsyncMock(return_value=None)
+
+            status, latency, message = await run_scu_probe(
+                "http://test-service", timeout=0.1
+            )
+
+        assert status == "UNRESPONSIVE"
+        assert "timeout" in message.lower()
+
+    @pytest.mark.asyncio
+    async def test_scu_probe_connection_error(self) -> None:
+        """SCU probe returns UNRESPONSIVE on connection error."""
+        from unittest.mock import AsyncMock, patch
+
+        import httpx
+        from infra.k8s.operators.agent_operator import run_scu_probe
+
+        mock_client = AsyncMock()
+        mock_client.post = AsyncMock(
+            side_effect=httpx.ConnectError("connection refused")
+        )
+
+        with patch.object(httpx, "AsyncClient") as mock_constructor:
+            mock_constructor.return_value.__aenter__ = AsyncMock(
+                return_value=mock_client
+            )
+            mock_constructor.return_value.__aexit__ = AsyncMock(return_value=None)
+
+            status, latency, message = await run_scu_probe("http://test-service")
+
+        assert status == "UNRESPONSIVE"
+        assert "Connection failed" in message
+
+    @pytest.mark.asyncio
+    async def test_scu_probe_degraded_on_unexpected_response(self) -> None:
+        """SCU probe returns DEGRADED when response doesn't contain HEALTHY."""
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        import httpx
+        from infra.k8s.operators.agent_operator import run_scu_probe
+
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "status": "unknown",
+            "response": "something else",
+        }
+
+        mock_client = AsyncMock()
+        mock_client.post = AsyncMock(return_value=mock_response)
+
+        with patch.object(httpx, "AsyncClient") as mock_constructor:
+            mock_constructor.return_value.__aenter__ = AsyncMock(
+                return_value=mock_client
+            )
+            mock_constructor.return_value.__aexit__ = AsyncMock(return_value=None)
+
+            status, latency, message = await run_scu_probe("http://test-service")
+
+        assert status == "DEGRADED"
+        assert "Unexpected response" in message

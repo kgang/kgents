@@ -38,6 +38,9 @@ from .cortex import (
     format_briefing_report,
     format_full_report,
 )
+
+# Type-safe fixtures
+from .fixtures import as_agent, as_umwelt
 from .flaky_registry import FlakyPattern, FlakyRegistry
 
 # Phase 8: Integrations with kgents ecosystem
@@ -112,6 +115,9 @@ from .topologist import (
 )
 
 __all__ = [
+    # Fixtures (type-safe mocks)
+    "as_umwelt",
+    "as_agent",
     # Strategies (Phase 3)
     "simple_agents",
     "agent_chains",

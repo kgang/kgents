@@ -195,7 +195,7 @@ class WiredLogos:
             self._validate_path(path)
 
         # Step 2: UmweltIntegration for enhanced meta extraction
-        meta = self.integrations.umwelt.extract_meta(observer)
+        _meta = self.integrations.umwelt.extract_meta(observer)
 
         # Step 3 & 4: Invoke via Logos (uses our resolve() which is enhanced)
         success = True

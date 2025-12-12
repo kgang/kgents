@@ -824,7 +824,7 @@ class TestLogosWithAffordances:
             "world.house.manifest", cast(Umwelt[Any, Any], poet)
         )
 
-        assert type(arch_result) != type(poet_result)
+        assert type(arch_result) is not type(poet_result)
         assert isinstance(arch_result, BlueprintRendering)
         assert isinstance(poet_result, PoeticRendering)
 

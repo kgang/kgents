@@ -961,6 +961,89 @@ Respond with ONLY the imaginary solution. No preamble, no explanation."""
 
 
 @dataclass
+class HypnagogiaNode(BaseLogosNode):
+    """
+    void.hypnagogia - Access to the dream cycle.
+
+    The hypnagogia node provides AGENTESE access to K-gent's dream cycle:
+    - status: Current hypnagogia state (buffered interactions, patterns)
+    - wake: Trigger a manual dream cycle
+    - report: Get the last dream report
+    - patterns: List discovered patterns
+
+    Philosophy:
+        "Sleep consolidates memory. Dreams consolidate meaning."
+
+    Integration: This node wraps the global HypnagogicCycle singleton.
+    """
+
+    _handle: str = "void.hypnagogia"
+
+    @property
+    def handle(self) -> str:
+        return self._handle
+
+    def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
+        """Everyone can interact with hypnagogia."""
+        return ("status", "wake", "report", "patterns")
+
+    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+        """View hypnagogia status."""
+        from agents.k.hypnagogia import get_hypnagogia
+
+        cycle = get_hypnagogia()
+        status = cycle.status()
+
+        return BasicRendering(
+            summary="Hypnagogia (Dream Cycle)",
+            content=(
+                f"Interactions buffered: {status['interactions_buffered']}\n"
+                f"Patterns stored: {status['patterns_stored']}\n"
+                f"Dreams completed: {status['dreams_completed']}"
+            ),
+            metadata=status,
+        )
+
+    async def _invoke_aspect(
+        self,
+        aspect: str,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> Any:
+        """Handle hypnagogia aspects."""
+        from agents.k.hypnagogia import get_hypnagogia
+        from agents.k.soul import create_soul
+
+        cycle = get_hypnagogia()
+
+        match aspect:
+            case "status":
+                return cycle.status()
+            case "wake":
+                # Trigger a dream cycle
+                dry_run = kwargs.get("dry_run", False)
+                soul = kwargs.get("soul")
+                if soul is None:
+                    soul = create_soul()  # Use default soul
+                report = await cycle.dream(soul, dry_run=dry_run)
+                return report.to_dict()
+            case "report":
+                # Get the last dream report
+                last_report = cycle.last_dream
+                if last_report is None:
+                    return {"error": "No dreams yet"}
+                return last_report.to_dict()
+            case "patterns":
+                # List all patterns
+                return {
+                    "patterns": [p.to_dict() for p in cycle.patterns.values()],
+                    "count": len(cycle.patterns),
+                }
+            case _:
+                return {"aspect": aspect, "status": "not implemented"}
+
+
+@dataclass
 class MetabolicNode(BaseLogosNode):
     """
     void.metabolism - Metabolic pressure tracking and fever generation.
@@ -1092,6 +1175,7 @@ class VoidContextResolver:
     _capital: CapitalNode | None = None
     _pataphysics: PataphysicsNode | None = None
     _metabolism: MetabolicNode | None = None
+    _hypnagogia: HypnagogiaNode | None = None
 
     def __post_init__(self) -> None:
         """Initialize singleton nodes with shared pool and ledger."""
@@ -1101,6 +1185,7 @@ class VoidContextResolver:
         self._capital = CapitalNode(_ledger=self._ledger)
         self._pataphysics = PataphysicsNode(_pool=self._pool)
         self._metabolism = MetabolicNode()
+        self._hypnagogia = HypnagogiaNode()
 
         # Wire entropy pool to metabolic engine
         if self._metabolism._engine is not None:
@@ -1130,6 +1215,8 @@ class VoidContextResolver:
                 return self._pataphysics or PataphysicsNode()
             case "metabolism":
                 return self._metabolism or MetabolicNode()
+            case "hypnagogia":
+                return self._hypnagogia or HypnagogiaNode()
             case _:
                 # Generic void node for undefined holons
                 return GenericVoidNode(holon, self._pool)

@@ -114,29 +114,32 @@ class TestCalculatePressure:
         """Empty queues = zero pressure."""
         agent = MockFluxAgent()
 
-        pressure = calculate_pressure(agent)  # type: ignore
+        pressure, err = calculate_pressure(agent)  # type: ignore
 
         assert pressure == 0.0
+        assert err is None
 
     def test_pressure_from_output_queue(self) -> None:
         """Output queue fullness contributes to pressure."""
         agent = MockFluxAgent()
         agent._output_queue = MockQueue(_size=50)
 
-        pressure = calculate_pressure(agent)  # type: ignore
+        pressure, err = calculate_pressure(agent)  # type: ignore
 
         # 50/100 buffer size * 50 weight = 25
         assert pressure == 25.0
+        assert err is None
 
     def test_pressure_from_perturbation_queue(self) -> None:
         """Perturbation queue contributes heavily to pressure."""
         agent = MockFluxAgent()
         agent._perturbation_queue = MockQueue(_size=5)
 
-        pressure = calculate_pressure(agent)  # type: ignore
+        pressure, err = calculate_pressure(agent)  # type: ignore
 
         # 5/10 * 50 weight = 25
         assert pressure == 25.0
+        assert err is None
 
     def test_combined_pressure(self) -> None:
         """Both queues contribute to pressure."""
@@ -144,12 +147,13 @@ class TestCalculatePressure:
         agent._output_queue = MockQueue(_size=50)
         agent._perturbation_queue = MockQueue(_size=5)
 
-        pressure = calculate_pressure(agent)  # type: ignore
+        pressure, err = calculate_pressure(agent)  # type: ignore
 
         # Output: 50/100 * 50 = 25
         # Perturbation: 5/10 * 50 = 25
         # Total: 50
         assert pressure == 50.0
+        assert err is None
 
     def test_pressure_capped_at_100(self) -> None:
         """Pressure is capped at 100."""
@@ -157,9 +161,10 @@ class TestCalculatePressure:
         agent._output_queue = MockQueue(_size=100)
         agent._perturbation_queue = MockQueue(_size=20)
 
-        pressure = calculate_pressure(agent)  # type: ignore
+        pressure, err = calculate_pressure(agent)  # type: ignore
 
         assert pressure == 100.0
+        assert err is None
 
 
 class TestCalculateFlow:
@@ -170,36 +175,44 @@ class TestCalculateFlow:
         agent = MockFluxAgent()
         agent._events_processed = 10
 
-        flow = calculate_flow(agent, previous_count=10, time_delta=1.0)  # type: ignore
+        flow, new_count, err = calculate_flow(agent, previous_count=10, time_delta=1.0)  # type: ignore
 
         assert flow == 0.0
+        assert new_count == 10
+        assert err is None
 
     def test_flow_events_per_second(self) -> None:
         """Flow = events processed / time delta."""
         agent = MockFluxAgent()
         agent._events_processed = 20
 
-        flow = calculate_flow(agent, previous_count=10, time_delta=2.0)  # type: ignore
+        flow, new_count, err = calculate_flow(agent, previous_count=10, time_delta=2.0)  # type: ignore
 
         assert flow == 5.0  # 10 events / 2 seconds
+        assert new_count == 20
+        assert err is None
 
     def test_flow_zero_time_delta(self) -> None:
         """Zero time delta = zero flow (avoid division by zero)."""
         agent = MockFluxAgent()
         agent._events_processed = 20
 
-        flow = calculate_flow(agent, previous_count=10, time_delta=0.0)  # type: ignore
+        flow, new_count, err = calculate_flow(agent, previous_count=10, time_delta=0.0)  # type: ignore
 
         assert flow == 0.0
+        assert new_count == 10  # Previous count returned when time_delta <= 0
+        assert err is None
 
     def test_flow_negative_delta_clipped(self) -> None:
         """Negative time delta = zero flow."""
         agent = MockFluxAgent()
         agent._events_processed = 20
 
-        flow = calculate_flow(agent, previous_count=10, time_delta=-1.0)  # type: ignore
+        flow, new_count, err = calculate_flow(agent, previous_count=10, time_delta=-1.0)  # type: ignore
 
         assert flow == 0.0
+        assert new_count == 10  # Previous count returned when time_delta <= 0
+        assert err is None
 
 
 class TestCalculateTemperature:
@@ -210,36 +223,40 @@ class TestCalculateTemperature:
         agent = MockFluxAgent()
         agent._metabolism = MockMetabolism(_temperature=0.7)
 
-        temp = calculate_temperature(agent)  # type: ignore
+        temp, err = calculate_temperature(agent)  # type: ignore
 
         assert temp == 0.7
+        assert err is None
 
     def test_temperature_from_entropy_consumption(self) -> None:
         """Without metabolism, temperature = entropy consumed ratio."""
         agent = MockFluxAgent()
         agent._entropy_remaining = 800.0  # 200 consumed of 1000
 
-        temp = calculate_temperature(agent)  # type: ignore
+        temp, err = calculate_temperature(agent)  # type: ignore
 
         assert temp == 0.2  # 20% consumed
+        assert err is None
 
     def test_temperature_fully_consumed(self) -> None:
         """Fully consumed entropy = temperature 1.0."""
         agent = MockFluxAgent()
         agent._entropy_remaining = 0.0
 
-        temp = calculate_temperature(agent)  # type: ignore
+        temp, err = calculate_temperature(agent)  # type: ignore
 
         assert temp == 1.0
+        assert err is None
 
     def test_temperature_capped(self) -> None:
         """Temperature capped at 1.0."""
         agent = MockFluxAgent()
         agent._metabolism = MockMetabolism(_temperature=1.5)
 
-        temp = calculate_temperature(agent)  # type: ignore
+        temp, err = calculate_temperature(agent)  # type: ignore
 
         assert temp == 1.0
+        assert err is None
 
 
 # ─────────────────────────────────────────────────────────────

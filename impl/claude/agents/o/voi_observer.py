@@ -46,8 +46,6 @@ __all__ = [
     "PanopticonStatus",
     "VoIAwareObserver",
     "VoIBudgetAllocation",
-    "VoIObserver",
-    "AdaptiveVoIObserver",
 ]
 
 # Import B-gent VoI types

@@ -18,7 +18,6 @@ from datetime import datetime
 from pathlib import Path
 
 import pytest
-
 from protocols.cli.reflector import (
     CommandEndEvent,
     CommandStartEvent,
@@ -40,7 +39,6 @@ from protocols.cli.reflector import (
     error_event,
     proposal_added,
 )
-
 
 # =============================================================================
 # Event Tests
@@ -164,7 +162,9 @@ class TestInvocationContext:
         assert ctx.args == ["--full"]
         assert ctx.invoker == Invoker.HUMAN
 
-    def test_emit_human_without_reflector(self, capsys: pytest.CaptureFixture[str]) -> None:
+    def test_emit_human_without_reflector(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
         """Test emit_human falls back to print without reflector."""
         ctx = InvocationContext(command="test")
         ctx.emit_human("Hello, human!")
@@ -512,7 +512,9 @@ class TestIntegration:
         try:
             # Create reflector with FD3
             reflector = TerminalReflector(fd3_path=fd3_path)
-            ctx = create_invocation_context("status", reflector=reflector, fd3_path=fd3_path)
+            ctx = create_invocation_context(
+                "status", reflector=reflector, fd3_path=fd3_path
+            )
 
             # Handler emits dual output
             ctx.output(

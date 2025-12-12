@@ -1,0 +1,309 @@
+# Morpheus Gateway CRD
+#
+# Morpheus is the LLM Gateway that provides OpenAI-compatible API
+# while routing to multiple backends (Anthropic, OpenAI, OpenRouter, Ollama).
+#
+# Why Morpheus?
+#   - Standard API: Applications use OpenAI/Anthropic SDK with base_url override
+#   - Portable Agents: Swap LLM provider by changing one env var
+#   - Centralized Auth: Gateway holds secrets, apps don't need credentials
+#   - Metrics: Single point for LLM observability
+#
+# Architecture:
+#   MorpheusGateway CR → MorpheusOperator → Deployment + Service + Secret mount
+#
+# Principle alignment:
+#   - Heterarchical: Standard APIs, no vendor lock-in
+#   - Tasteful: Thin adapter layer, not infrastructure theater
+#   - Generative: Spec (OpenAI schema) compresses impl
+#
+# AGENTESE: world.morpheus.gateway.define
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: morpheusgateways.kgents.io
+  labels:
+    app.kubernetes.io/part-of: kgents
+    app.kubernetes.io/component: llm-gateway
+spec:
+  group: kgents.io
+  scope: Namespaced
+  names:
+    plural: morpheusgateways
+    singular: morpheusgateway
+    kind: MorpheusGateway
+    shortNames:
+      - morpheus
+      - mg
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          required:
+            - spec
+          properties:
+            spec:
+              type: object
+              properties:
+                # Provider Configuration
+                providers:
+                  type: array
+                  description: "LLM provider backends"
+                  items:
+                    type: object
+                    required:
+                      - name
+                      - prefix
+                    properties:
+                      name:
+                        type: string
+                        description: "Provider name"
+                        enum:
+                          - anthropic
+                          - openai
+                          - openrouter
+                          - ollama
+                          - vllm
+                      prefix:
+                        type: string
+                        description: "Model prefix for routing (e.g., 'claude-' routes claude-* models)"
+                      endpoint:
+                        type: string
+                        description: "Base URL for provider API"
+                      secretRef:
+                        type: object
+                        description: "Reference to Secret containing API key"
+                        properties:
+                          name:
+                            type: string
+                            description: "Secret name"
+                          key:
+                            type: string
+                            description: "Key within secret containing API key"
+                            default: "api-key"
+                      enabled:
+                        type: boolean
+                        description: "Whether provider is enabled"
+                        default: true
+
+                # Claude CLI Adapter (special provider using claude subprocess)
+                claudeCli:
+                  type: object
+                  description: "Claude CLI adapter configuration (uses `claude -p`)"
+                  properties:
+                    enabled:
+                      type: boolean
+                      description: "Enable Claude CLI adapter"
+                      default: true
+                    prefix:
+                      type: string
+                      description: "Model prefix for CLI routing"
+                      default: "claude-cli-"
+                    secretRef:
+                      type: string
+                      description: "Secret name containing Claude auth (config.json, credentials.json)"
+                      default: "claude-auth"
+                    maxConcurrent:
+                      type: integer
+                      description: "Max concurrent subprocess invocations"
+                      minimum: 1
+                      maximum: 10
+                      default: 3
+                    timeoutSeconds:
+                      type: integer
+                      description: "Timeout per request in seconds"
+                      minimum: 10
+                      maximum: 600
+                      default: 120
+
+                # Gateway Deployment
+                gateway:
+                  type: object
+                  description: "Gateway deployment configuration"
+                  properties:
+                    image:
+                      type: string
+                      description: "Container image"
+                      default: "kgents/morpheus:latest"
+                    replicas:
+                      type: integer
+                      description: "Number of replicas"
+                      minimum: 1
+                      maximum: 10
+                      default: 1
+                    port:
+                      type: integer
+                      description: "Gateway port"
+                      minimum: 1024
+                      maximum: 65535
+                      default: 8080
+                    resources:
+                      type: object
+                      properties:
+                        limits:
+                          type: object
+                          properties:
+                            cpu:
+                              type: string
+                              default: "500m"
+                            memory:
+                              type: string
+                              default: "512Mi"
+                        requests:
+                          type: object
+                          properties:
+                            cpu:
+                              type: string
+                              default: "100m"
+                            memory:
+                              type: string
+                              default: "256Mi"
+
+                # Service Configuration
+                service:
+                  type: object
+                  description: "K8s Service configuration"
+                  properties:
+                    type:
+                      type: string
+                      description: "Service type"
+                      enum:
+                        - ClusterIP
+                        - LoadBalancer
+                        - NodePort
+                      default: "ClusterIP"
+                    nodePort:
+                      type: integer
+                      description: "NodePort (if type=NodePort)"
+                      minimum: 30000
+                      maximum: 32767
+                    annotations:
+                      type: object
+                      description: "Service annotations"
+                      additionalProperties:
+                        type: string
+
+                # Rate Limiting
+                rateLimit:
+                  type: object
+                  description: "Rate limiting configuration"
+                  properties:
+                    enabled:
+                      type: boolean
+                      default: true
+                    requestsPerMinute:
+                      type: integer
+                      description: "Max requests per minute per client"
+                      default: 60
+                    burstSize:
+                      type: integer
+                      description: "Burst allowance"
+                      default: 10
+
+                # Metrics
+                metrics:
+                  type: object
+                  description: "Prometheus metrics configuration"
+                  properties:
+                    enabled:
+                      type: boolean
+                      default: true
+                    port:
+                      type: integer
+                      default: 9090
+                    path:
+                      type: string
+                      default: "/metrics"
+
+                # Caching (future)
+                cache:
+                  type: object
+                  description: "Response caching configuration"
+                  properties:
+                    enabled:
+                      type: boolean
+                      default: false
+                    ttlSeconds:
+                      type: integer
+                      default: 300
+                    maxEntries:
+                      type: integer
+                      default: 1000
+
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                  description: "Current phase"
+                  enum:
+                    - Pending
+                    - Deploying
+                    - Running
+                    - Degraded
+                    - Failed
+                observedGeneration:
+                  type: integer
+                deployment:
+                  type: string
+                  description: "Managed Deployment name"
+                service:
+                  type: string
+                  description: "Managed Service name"
+                endpoint:
+                  type: string
+                  description: "Gateway endpoint URL"
+                readyReplicas:
+                  type: integer
+                providersReady:
+                  type: integer
+                  description: "Number of healthy providers"
+                totalRequests:
+                  type: integer
+                  description: "Total requests served"
+                lastRequestTime:
+                  type: string
+                  format: date-time
+                conditions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      status:
+                        type: string
+                      lastTransitionTime:
+                        type: string
+                        format: date-time
+                      reason:
+                        type: string
+                      message:
+                        type: string
+
+      subresources:
+        status: {}
+        scale:
+          specReplicasPath: .spec.gateway.replicas
+          statusReplicasPath: .status.readyReplicas
+
+      additionalPrinterColumns:
+        - name: Phase
+          type: string
+          jsonPath: .status.phase
+        - name: Endpoint
+          type: string
+          jsonPath: .status.endpoint
+        - name: Providers
+          type: integer
+          jsonPath: .status.providersReady
+        - name: Replicas
+          type: integer
+          jsonPath: .status.readyReplicas
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp

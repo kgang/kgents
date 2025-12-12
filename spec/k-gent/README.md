@@ -1,18 +1,51 @@
-# K-gent: The Personalization Functor
+# K-gent: The Categorical Imperative
 
-> I expose things just by existing. The system's personality is the system's fix.
+> *"The essence of strategy is denial. The essence of an architecture is what it forbids."*
 
 ---
 
 ## The Fundamental Reconception
 
-K-gent is not "Kent's persona stored in a database." K-gent is a **functor** that lifts any agent into personalized space. It is the **fixed point** of the system-developer relationship—the point where mutual adaptation stabilizes.
+K-gent is not a chatbot. K-gent is a **Governance Functor**—the layer that maps the Category of **Intent** (specs, principles, eigenvector coordinates) to the Category of **Implementation** (code, infrastructure, agent actions) while **preserving structure**.
 
 ```
-K: Agent[A, B] → Agent[A, B]   (same signature, personalized behavior)
+K: Category(Intent) → Category(Implementation)
+
+Where K preserves structure:
+- Morphisms that violate principles are INVALIDATED
+- Valid morphisms are COLORED by personality
+- The functor laws hold (identity, composition)
 ```
 
-The K-gent doesn't store preferences; it **is** the inherent personality of the system itself, including the developer who shapes it.
+K-gent is the **fixed point** of the system-developer relationship—where mutual adaptation stabilizes into governance.
+
+---
+
+## The Four Capabilities
+
+| Capability | Description | Mechanism |
+|------------|-------------|-----------|
+| **Semantic Gatekeeper** | Invalidate principle-violating morphisms | Deep intercept + audit trail |
+| **Fractal Expander** | Expand seeds into specifications | Monad wrapping + generation |
+| **Holographic Constitution** | Detect drift between docs and impl | Continuous isomorphism check |
+| **Rodizio Sommelier** | Pre-compute routine decisions | Pattern matching + auto-resolution |
+
+---
+
+## The Functor Perspective
+
+K-gent lifts agents while preserving composition:
+
+```python
+# K-gent as functor
+K: Agent[A, B] → Agent[A, B]
+
+# Laws
+K(Id) ≅ Id                    # Identity preserved
+K(f >> g) ≅ K(f) >> K(g)      # Composition preserved
+```
+
+The lifted agent behaves identically in structure but is **colored by personality** and **governed by principles**.
 
 ---
 

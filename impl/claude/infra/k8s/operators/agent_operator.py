@@ -17,10 +17,13 @@ Principle alignment:
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from datetime import datetime, timezone
 from typing import Any
+
+import httpx
 
 # Import the existing AgentSpec and related classes
 from ..operator import (
@@ -48,6 +51,106 @@ logger = logging.getLogger(__name__)
 # Reconciliation configuration
 COGNITIVE_PROBE_INTERVAL = 30.0  # seconds
 MEMORY_CREATE_DELAY = 5.0  # Wait for deployment before creating memory
+SCU_PROBE_TIMEOUT = 10.0  # seconds for cognitive health probe
+SCU_PROBE_DEGRADED_LATENCY_MS = 5000.0  # latency above this is degraded
+
+
+async def run_scu_probe(
+    service_url: str,
+    timeout: float = SCU_PROBE_TIMEOUT,
+) -> tuple[str, float, str]:
+    """
+    Run SCU (Standard Cognitive Unit) probe against agent health endpoint.
+
+    For LLM-based agents, validates that the agent can:
+    1. Respond to health requests (liveness)
+    2. Process simple prompts (cognitive health)
+
+    Args:
+        service_url: Base URL of the agent service (e.g., http://l-gent.kgents-agents.svc)
+        timeout: Maximum time to wait for response
+
+    Returns:
+        Tuple of (status, latency_ms, message) where status is one of:
+        - "HEALTHY": Agent responds correctly
+        - "DEGRADED": Agent responds but slowly or incorrectly
+        - "UNRESPONSIVE": Agent doesn't respond
+        - "ERROR": Probe encountered an error
+    """
+    import time
+
+    start_time = time.perf_counter()
+
+    # Try the cognitive health endpoint first (for LLM agents)
+    cognitive_url = f"{service_url}/health/cognitive"
+    health_url = f"{service_url}/health"
+
+    async with httpx.AsyncClient(timeout=timeout) as client:
+        try:
+            # Attempt cognitive probe first
+            response = await client.post(
+                cognitive_url,
+                json={"probe": "echo", "challenge": "HEALTHY"},
+            )
+            latency_ms = (time.perf_counter() - start_time) * 1000
+
+            if response.status_code == 200:
+                data = response.json()
+                # Check if response contains expected content
+                if data.get("status") == "healthy" or "HEALTHY" in str(
+                    data.get("response", "")
+                ):
+                    if latency_ms > SCU_PROBE_DEGRADED_LATENCY_MS:
+                        return (
+                            "DEGRADED",
+                            latency_ms,
+                            f"High latency: {latency_ms:.0f}ms",
+                        )
+                    return ("HEALTHY", latency_ms, "Cognitive probe passed")
+                else:
+                    return (
+                        "DEGRADED",
+                        latency_ms,
+                        f"Unexpected response: {str(data)[:100]}",
+                    )
+            elif response.status_code == 404:
+                # Fall back to basic health check
+                pass
+            else:
+                return ("DEGRADED", latency_ms, f"HTTP {response.status_code}")
+
+        except httpx.TimeoutException:
+            latency_ms = (time.perf_counter() - start_time) * 1000
+            return ("UNRESPONSIVE", latency_ms, f"Timeout after {timeout}s")
+        except httpx.ConnectError as e:
+            latency_ms = (time.perf_counter() - start_time) * 1000
+            return ("UNRESPONSIVE", latency_ms, f"Connection failed: {e}")
+        except Exception as e:
+            latency_ms = (time.perf_counter() - start_time) * 1000
+            logger.warning(f"SCU probe error: {e}")
+            # Fall through to basic health check
+
+        # Fall back to basic HTTP health check
+        try:
+            response = await client.get(health_url)
+            latency_ms = (time.perf_counter() - start_time) * 1000
+
+            if response.status_code == 200:
+                if latency_ms > SCU_PROBE_DEGRADED_LATENCY_MS:
+                    return ("DEGRADED", latency_ms, f"High latency: {latency_ms:.0f}ms")
+                return ("HEALTHY", latency_ms, "Basic health check passed")
+            else:
+                return ("DEGRADED", latency_ms, f"HTTP {response.status_code}")
+
+        except httpx.TimeoutException:
+            latency_ms = (time.perf_counter() - start_time) * 1000
+            return ("UNRESPONSIVE", latency_ms, f"Timeout after {timeout}s")
+        except httpx.ConnectError as e:
+            latency_ms = (time.perf_counter() - start_time) * 1000
+            return ("UNRESPONSIVE", latency_ms, f"Connection failed: {e}")
+        except Exception as e:
+            latency_ms = (time.perf_counter() - start_time) * 1000
+            return ("ERROR", latency_ms, str(e))
 
 
 def parse_agent_spec(
@@ -494,22 +597,79 @@ if KOPF_AVAILABLE:
             now = datetime.now(timezone.utc).isoformat()
 
             if ready_replicas >= desired_replicas:
-                # All replicas ready - mark as healthy
-                # TODO: Actually run SCU probe against agent endpoint
-                patch.status["phase"] = AgentPhase.RUNNING.value
+                # All replicas ready - run SCU probe to verify cognitive health
+                service_url = f"http://{deployment_name}.{namespace}.svc.cluster.local"
+                health_endpoint = health_config.get("endpoint", "/health")
+                probe_timeout = health_config.get("timeout", SCU_PROBE_TIMEOUT)
+
+                # Override default URL if custom endpoint specified
+                if health_endpoint != "/health":
+                    service_url = f"{service_url}{health_endpoint}"
+
+                probe_status, latency_ms, message = await run_scu_probe(
+                    service_url,
+                    timeout=probe_timeout,
+                )
+
                 patch.status["readyReplicas"] = ready_replicas
-                patch.status["cognitiveHealth"] = "HEALTHY"
                 patch.status["lastProbeTime"] = now
-                patch.status["conditions"] = [
-                    {
-                        "type": "Ready",
-                        "status": "True",
-                        "reason": "AllReplicasReady",
-                        "message": f"{ready_replicas}/{desired_replicas} replicas ready",
-                        "lastTransitionTime": now,
+                patch.status["lastProbeLatencyMs"] = latency_ms
+                patch.status["lastProbeMessage"] = message
+
+                if probe_status == "HEALTHY":
+                    patch.status["phase"] = AgentPhase.RUNNING.value
+                    patch.status["cognitiveHealth"] = "HEALTHY"
+                    patch.status["conditions"] = [
+                        {
+                            "type": "Ready",
+                            "status": "True",
+                            "reason": "CognitiveProbeHealthy",
+                            "message": f"SCU probe passed ({latency_ms:.0f}ms)",
+                            "lastTransitionTime": now,
+                        }
+                    ]
+                    return {
+                        "health": "HEALTHY",
+                        "ready": ready_replicas,
+                        "latency_ms": latency_ms,
                     }
-                ]
-                return {"health": "HEALTHY", "ready": ready_replicas}
+                elif probe_status == "DEGRADED":
+                    patch.status["phase"] = AgentPhase.DEGRADED.value
+                    patch.status["cognitiveHealth"] = "DEGRADED"
+                    patch.status["conditions"] = [
+                        {
+                            "type": "Ready",
+                            "status": "True",
+                            "reason": "CognitiveProbeDegrade",
+                            "message": message,
+                            "lastTransitionTime": now,
+                        }
+                    ]
+                    logger.warning(f"Agent {name} cognitive probe degraded: {message}")
+                    return {
+                        "health": "DEGRADED",
+                        "ready": ready_replicas,
+                        "latency_ms": latency_ms,
+                    }
+                else:
+                    # UNRESPONSIVE or ERROR - mark as degraded but keep running
+                    patch.status["phase"] = AgentPhase.DEGRADED.value
+                    patch.status["cognitiveHealth"] = probe_status
+                    patch.status["conditions"] = [
+                        {
+                            "type": "Ready",
+                            "status": "False",
+                            "reason": "CognitiveProbeUnresponsive",
+                            "message": message,
+                            "lastTransitionTime": now,
+                        }
+                    ]
+                    logger.error(f"Agent {name} cognitive probe failed: {message}")
+                    return {
+                        "health": probe_status,
+                        "ready": ready_replicas,
+                        "error": message,
+                    }
             elif ready_replicas > 0:
                 # Partially ready - degraded
                 patch.status["phase"] = AgentPhase.DEGRADED.value

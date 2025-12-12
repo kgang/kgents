@@ -14,6 +14,7 @@ import asyncio
 from datetime import datetime
 
 import pytest
+from agents.u.core import Tool, ToolError, ToolErrorType, ToolMeta
 from agents.u.executor import (
     CircuitBreakerConfig,
     CircuitBreakerError,
@@ -26,7 +27,6 @@ from agents.u.executor import (
     # Executors
     ToolExecutor,
 )
-from agents.u.core import Tool, ToolError, ToolErrorType, ToolMeta
 from bootstrap.types import Err, Ok
 
 # --- Test Tools ---

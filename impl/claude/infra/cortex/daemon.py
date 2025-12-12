@@ -19,6 +19,8 @@ Architecture:
                             StorageProvider
                             BicameralMemory
                             PheromoneField
+                            HolographicBuffer (Phase 5)
+                            Purgatory (Phase 5)
 """
 
 from __future__ import annotations
@@ -26,12 +28,15 @@ from __future__ import annotations
 import asyncio
 import signal
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from agents.flux.semaphore import Purgatory
     from infra.cortex import CortexServicer
     from protocols.cli.instance_db.lifecycle import LifecycleManager
+    from protocols.terrarium.mirror import HolographicBuffer
 
 # Default gRPC port
 DEFAULT_PORT = 50051
@@ -42,6 +47,11 @@ class CortexDaemon:
     The Cortex daemon that hosts the Logos gRPC service.
 
     This is the living brain of kgents. The CLI is just glass in front of it.
+
+    Phase 5 (Terrarium Integration):
+    - HolographicBuffer: Shared mirror for observability
+    - Purgatory: Shared waiting room for semaphore tokens
+    - All FluxAgents created by the servicer can be attached to these
     """
 
     def __init__(
@@ -55,6 +65,10 @@ class CortexDaemon:
         self._lifecycle_manager: LifecycleManager | None = None
         self._servicer: CortexServicer | None = None
         self._shutdown_event = asyncio.Event()
+
+        # Phase 5: Terrarium integration
+        self._buffer: "HolographicBuffer | None" = None
+        self._purgatory: "Purgatory | None" = None
 
     async def start(self) -> None:
         """Start the daemon."""
@@ -106,7 +120,8 @@ class CortexDaemon:
         print("[cortex] Daemon stopped")
 
     async def _bootstrap(self) -> None:
-        """Bootstrap the lifecycle manager."""
+        """Bootstrap the lifecycle manager and terrarium infrastructure."""
+        # Bootstrap lifecycle manager
         try:
             from protocols.cli.instance_db.lifecycle import LifecycleManager
 
@@ -122,15 +137,102 @@ class CortexDaemon:
             print(f"[cortex] Bootstrap warning: {e}", file=sys.stderr)
             self._lifecycle_manager = None
 
+        # Phase 5: Bootstrap terrarium infrastructure
+        await self._bootstrap_terrarium()
+
+    async def _bootstrap_terrarium(self) -> None:
+        """Bootstrap the shared HolographicBuffer and Purgatory."""
+        try:
+            from agents.flux.semaphore import Purgatory
+            from protocols.terrarium.mirror import HolographicBuffer
+
+            # Create shared buffer for all observers
+            self._buffer = HolographicBuffer(max_history=100)
+            print("[cortex] HolographicBuffer initialized")
+
+            # Create shared purgatory for semaphore tokens
+            self._purgatory = Purgatory()
+
+            # Wire purgatory emission to buffer
+            self._purgatory._emit_pheromone = self._emit_purgatory_pheromone
+            print("[cortex] Purgatory initialized and wired to buffer")
+
+        except ImportError as e:
+            print(f"[cortex] Terrarium not available: {e}", file=sys.stderr)
+            self._buffer = None
+            self._purgatory = None
+        except Exception as e:
+            print(f"[cortex] Terrarium bootstrap warning: {e}", file=sys.stderr)
+
+    async def _emit_purgatory_pheromone(
+        self, signal: str, data: dict[str, Any]
+    ) -> None:
+        """
+        Emit purgatory signals to the HolographicBuffer.
+
+        This allows observers to see semaphore events in real-time:
+        - purgatory_ejected: Token ejected to purgatory
+        - purgatory_resolved: Token resolved by human
+        - purgatory_cancelled: Token cancelled
+        - purgatory_voided: Token deadline expired
+        """
+        if self._buffer is None:
+            return
+
+        event = {
+            "type": signal.replace(".", "_"),
+            "data": data,
+            "timestamp": datetime.now().isoformat(),
+            "source": "cortex.purgatory",
+        }
+
+        try:
+            await self._buffer.reflect(event)
+        except Exception:
+            # Best-effort: don't let emission failures affect control flow
+            pass
+
     async def _shutdown(self) -> None:
-        """Shutdown the lifecycle manager."""
+        """Shutdown the lifecycle manager and terrarium infrastructure."""
+        # Shutdown lifecycle manager
         if self._lifecycle_manager is not None:
             await self._lifecycle_manager.shutdown()
             self._lifecycle_manager = None
 
+        # Shutdown terrarium infrastructure
+        await self._shutdown_terrarium()
+
+    async def _shutdown_terrarium(self) -> None:
+        """Shutdown the HolographicBuffer and Purgatory."""
+        if self._purgatory is not None:
+            # Void any expired tokens before shutdown
+            try:
+                voided = await self._purgatory.void_expired()
+                if voided:
+                    print(f"[cortex] Voided {len(voided)} expired tokens on shutdown")
+            except Exception:
+                pass  # Best-effort cleanup
+            self._purgatory = None
+
+        if self._buffer is not None:
+            self._buffer = None
+
+        print("[cortex] Terrarium infrastructure shutdown")
+
     def stop(self) -> None:
         """Signal the daemon to stop."""
         self._shutdown_event.set()
+
+    # Phase 5: Property accessors for terrarium infrastructure
+    @property
+    def buffer(self) -> "HolographicBuffer | None":
+        """Get the shared HolographicBuffer for observer attachment."""
+        return self._buffer
+
+    @property
+    def purgatory(self) -> "Purgatory | None":
+        """Get the shared Purgatory for semaphore handling."""
+        return self._purgatory
 
 
 async def run_daemon(

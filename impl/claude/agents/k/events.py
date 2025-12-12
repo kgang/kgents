@@ -616,6 +616,139 @@ def gratitude_event(
 
 
 # =============================================================================
+# Dream Event Factories: Hypnagogia (Phase 4)
+# =============================================================================
+
+
+def dream_start_event(
+    interactions_count: int,
+    correlation_id: Optional[str] = None,
+) -> SoulEvent:
+    """
+    Create a DREAM_START event.
+
+    Emitted when a hypnagogia dream cycle begins.
+
+    Args:
+        interactions_count: Number of interactions being processed
+        correlation_id: Correlation ID for tracing
+    """
+    return SoulEvent(
+        event_type=SoulEventType.DREAM_START,
+        timestamp=_utc_now(),
+        payload={
+            "interactions_count": interactions_count,
+        },
+        correlation_id=correlation_id,
+    )
+
+
+def dream_pattern_event(
+    pattern: str,
+    occurrences: int,
+    promoted: bool = False,
+    maturity: str = "seed",
+    correlation_id: Optional[str] = None,
+) -> SoulEvent:
+    """
+    Create a DREAM_PATTERN event.
+
+    Emitted when a pattern is discovered or promoted during dreaming.
+
+    Args:
+        pattern: The pattern content
+        occurrences: How many times this pattern has been seen
+        promoted: Whether the pattern was promoted to higher maturity
+        maturity: Current maturity level (seed, sapling, tree, compost)
+        correlation_id: Correlation ID for tracing
+    """
+    return SoulEvent(
+        event_type=SoulEventType.DREAM_PATTERN,
+        timestamp=_utc_now(),
+        payload={
+            "pattern": pattern,
+            "occurrences": occurrences,
+            "promoted": promoted,
+            "maturity": maturity,
+        },
+        correlation_id=correlation_id,
+    )
+
+
+def dream_insight_event(
+    eigenvector: str,
+    delta: float,
+    old_confidence: float,
+    new_confidence: float,
+    evidence: Optional[list[str]] = None,
+    correlation_id: Optional[str] = None,
+) -> SoulEvent:
+    """
+    Create a DREAM_INSIGHT event.
+
+    Emitted when an eigenvector's confidence is adjusted during dreaming.
+
+    Args:
+        eigenvector: Name of the eigenvector (aesthetic, categorical, etc.)
+        delta: Change in confidence
+        old_confidence: Previous confidence value
+        new_confidence: New confidence value
+        evidence: Patterns that supported this change
+        correlation_id: Correlation ID for tracing
+    """
+    return SoulEvent(
+        event_type=SoulEventType.DREAM_INSIGHT,
+        timestamp=_utc_now(),
+        payload={
+            "eigenvector": eigenvector,
+            "delta": delta,
+            "old_confidence": old_confidence,
+            "new_confidence": new_confidence,
+            "evidence": evidence or [],
+        },
+        correlation_id=correlation_id,
+    )
+
+
+def dream_end_event(
+    patterns_discovered: int,
+    patterns_promoted: int,
+    patterns_composted: int,
+    eigenvector_changes: int,
+    insights: Optional[list[str]] = None,
+    was_dry_run: bool = False,
+    correlation_id: Optional[str] = None,
+) -> SoulEvent:
+    """
+    Create a DREAM_END event.
+
+    Emitted when a hypnagogia dream cycle completes.
+
+    Args:
+        patterns_discovered: Number of patterns found
+        patterns_promoted: Number of patterns promoted
+        patterns_composted: Number of stale patterns composted
+        eigenvector_changes: Number of eigenvector adjustments
+        insights: Human-readable insights from the dream
+        was_dry_run: Whether this was a dry run (no changes applied)
+        correlation_id: Correlation ID for tracing
+    """
+    return SoulEvent(
+        event_type=SoulEventType.DREAM_END,
+        timestamp=_utc_now(),
+        payload={
+            "patterns_discovered": patterns_discovered,
+            "patterns_promoted": patterns_promoted,
+            "patterns_composted": patterns_composted,
+            "eigenvector_changes": eigenvector_changes,
+            "insights": insights or [],
+            "was_dry_run": was_dry_run,
+        },
+        correlation_id=correlation_id,
+    )
+
+
+# =============================================================================
 # Higher-Level Event Creation (from Soul Types)
 # =============================================================================
 
@@ -757,6 +890,22 @@ def is_external_event(event: SoulEvent) -> bool:
     )
 
 
+def is_dream_event(event: SoulEvent) -> bool:
+    """
+    Check if event is a dream/hypnagogia event.
+
+    Dream events are emitted during the hypnagogic cycle
+    when the soul processes accumulated interactions and
+    refines its understanding.
+    """
+    return event.event_type in (
+        SoulEventType.DREAM_START,
+        SoulEventType.DREAM_PATTERN,
+        SoulEventType.DREAM_INSIGHT,
+        SoulEventType.DREAM_END,
+    )
+
+
 # =============================================================================
 # Exports
 # =============================================================================
@@ -794,4 +943,10 @@ __all__ = [
     "is_request_event",
     "is_ambient_event",
     "is_external_event",
+    "is_dream_event",
+    # Factory functions - Dream (Hypnagogia Phase 4)
+    "dream_start_event",
+    "dream_pattern_event",
+    "dream_insight_event",
+    "dream_end_event",
 ]

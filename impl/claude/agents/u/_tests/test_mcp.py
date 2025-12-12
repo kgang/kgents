@@ -22,6 +22,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from agents.u.core import ToolError, ToolErrorType
 from agents.u.mcp import (
     HttpSseTransport,
     JsonRpcError,
@@ -33,7 +34,6 @@ from agents.u.mcp import (
     MCPToolSchema,
     StdioTransport,
 )
-from agents.u.core import ToolError, ToolErrorType
 from bootstrap.types import Err
 
 # --- JSON-RPC Tests ---

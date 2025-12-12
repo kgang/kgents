@@ -224,6 +224,20 @@ except ImportError:
     ManifoldStats = None  # type: ignore
     CurvatureRegion = None  # type: ignore
 
+# Phase 2.4: StateCrystal (Checkpoints with Comonadic Lineage)
+from .crystal import (
+    CrystallizationEngine,
+    CrystallizationResult,
+    CrystalReaper,
+    FocusFragment,
+    ReapResult,
+    ResumeResult,
+    StateCrystal,
+    TaskState,
+    TaskStatus,
+    create_crystal_engine,
+    create_task_state,
+)
 from .garden import (
     Contradiction,
     Evidence,
@@ -242,6 +256,17 @@ from .lattice import (
     LatticeStats,
     MeetJoinResult,
     RelationalLattice,
+)
+
+# Phase 2.3: Pulse (Zero-Cost Vitality Signals)
+from .pulse import (
+    AgentPhase,
+    Pulse,
+    VitalityAnalyzer,
+    VitalityStatus,
+    create_analyzer,
+    create_pulse,
+    create_pulse_from_window,
 )
 from .witness import (
     DriftSeverity,
@@ -560,4 +585,24 @@ __all__ = [
     "HemisphereRole",
     "create_bicameral_memory",
     "create_bicameral_cortex",
+    # Phase 2.3: Pulse (Zero-Cost Vitality Signals)
+    "Pulse",
+    "AgentPhase",
+    "VitalityAnalyzer",
+    "VitalityStatus",
+    "create_pulse",
+    "create_pulse_from_window",
+    "create_analyzer",
+    # Phase 2.4: StateCrystal (Checkpoints with Comonadic Lineage)
+    "StateCrystal",
+    "TaskState",
+    "TaskStatus",
+    "FocusFragment",
+    "CrystallizationEngine",
+    "CrystallizationResult",
+    "CrystalReaper",
+    "ReapResult",
+    "ResumeResult",
+    "create_crystal_engine",
+    "create_task_state",
 ]

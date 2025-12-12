@@ -88,6 +88,30 @@ await logos.invoke("world.house.manifest", economist_umwelt)  # → Appraisal
 - Composability is paramount (C-gents principles apply everywhere)
 - Read `spec/principles.md` before contributing
 - **Use AGENTESE paths** for agent-world interaction when possible
+- **Consult skills** in `plans/skills/` for common patterns
+
+## DevEx Commands (Slash Commands)
+
+| Command | Purpose |
+|---------|---------|
+| `/harden <target>` | Robustify, shore up durability of a module |
+| `/trace <target>` | Trace execution paths and data flow |
+| `/diff-spec <spec>` | Compare implementation against specification |
+| `/debt <path>` | Technical debt audit |
+
+## Skills Directory
+
+`plans/skills/` contains documented patterns for common tasks:
+
+| Skill | Description |
+|-------|-------------|
+| `agentese-path.md` | Adding AGENTESE paths (e.g., `self.soul.*`) |
+| `building-agent.md` | Creating well-formed agents with functors |
+| `cli-command.md` | Adding CLI commands to kgents |
+| `flux-agent.md` | Lifting agents to stream processing |
+| `handler-patterns.md` | CLI handler patterns |
+| `plan-file.md` | Forest Protocol plan files |
+| `test-patterns.md` | Testing conventions and fixtures |
 
 ## Core Principles (Summary)
 

@@ -11,9 +11,15 @@ Where Flux[T] = AsyncIterator[T]
 Functor Laws:
     Identity:    Flux(Id) ≅ Id_Flux
     Composition: Flux(f >> g) ≅ Flux(f) >> Flux(g)
+
+Universal Functor Integration (Alethic Algebra Phase 3):
+    FluxFunctor implements UniversalFunctor[FluxAgent], enabling:
+    - Law verification via verify_functor()
+    - Registry integration with other functors
+    - Functor composition: compose_functors(FluxFunctor, MaybeFunctor)
 """
 
-from typing import Any, TypeVar
+from typing import Any, AsyncIterator, TypeVar
 
 from bootstrap.types import Agent
 
@@ -211,3 +217,83 @@ class FluxLifter:
 lift = Flux.lift
 unlift = Flux.unlift
 is_flux = Flux.is_flux
+
+
+# =============================================================================
+# Universal Functor Protocol Integration (Alethic Algebra Phase 3)
+# =============================================================================
+
+from agents.a.functor import FunctorRegistry, UniversalFunctor
+
+
+class FluxFunctor(UniversalFunctor[FluxAgent[Any, Any]]):
+    """
+    Universal Functor for Flux (stream processing) context.
+
+    Lifts agents from the discrete domain (Agent[A, B]) to the streaming
+    domain (FluxAgent[A, B]) where streams are AsyncIterator[T].
+
+    Satisfies functor laws:
+    - Identity: FluxFunctor.lift(id)(stream) processes identity on each element
+    - Composition: FluxFunctor.lift(g . f) = FluxFunctor.lift(g) . FluxFunctor.lift(f)
+
+    Note on Law Verification:
+        FluxFunctor operates on streams (AsyncIterator), not discrete values.
+        Law verification requires special handling because:
+        1. start() returns AsyncIterator[B], not a single value
+        2. Testing must collect stream outputs for comparison
+        3. The identity/composition laws hold per-element across the stream
+
+    Example:
+        >>> flux_agent = FluxFunctor.lift(my_agent)
+        >>> async for result in flux_agent.start(source):
+        ...     process(result)
+    """
+
+    @staticmethod
+    def lift(agent: Agent[A, B]) -> Any:
+        """
+        Lift an agent to the streaming domain.
+
+        Args:
+            agent: Discrete agent to lift
+
+        Returns:
+            FluxAgent that processes streams through the inner agent
+
+        Note:
+            Returns FluxAgent[A, B] at runtime. The return type is Any because
+            FluxAgent is not an Agent subclass (it represents stream processing,
+            not discrete invocation). This matches the UniversalFunctor protocol
+            while preserving the actual FluxAgent behavior.
+        """
+        return Flux.lift(agent)
+
+    @staticmethod
+    def pure(value: A) -> AsyncIterator[A]:
+        """
+        Embed a value as a single-element stream.
+
+        In the Flux context, pure creates an async iterator that yields
+        exactly one value. This satisfies the Pointed functor requirement.
+
+        Args:
+            value: The value to embed
+
+        Returns:
+            An AsyncIterator yielding only this value
+        """
+
+        async def single_value_stream() -> AsyncIterator[A]:
+            yield value
+
+        return single_value_stream()
+
+
+def _register_flux_functor() -> None:
+    """Register FluxFunctor with the universal registry."""
+    FunctorRegistry.register("Flux", FluxFunctor)
+
+
+# Auto-register on import
+_register_flux_functor()

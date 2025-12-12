@@ -47,6 +47,7 @@ addopts = [
     "-v",
     "--strict-markers",
     "--tb=short",
+    "-m", "not e2e",  # Skip E2E tests by default (use -m e2e to run)
 ]
 # Suppress PytestCollectionWarning for dataclass/enum classes that start with "Test" or similar
 filterwarnings = [
@@ -65,6 +66,7 @@ markers = [
     "external: mark test as requiring external services",
     "accursed_share: mark test as exploratory/chaos (Phase 5)",
     "property: mark test as property-based (Phase 3)",
+    "e2e: end-to-end Kubernetes tests (require kind cluster)",
 ]
 
 # Note: mypy configuration is in mypy.ini - it provides more granular control

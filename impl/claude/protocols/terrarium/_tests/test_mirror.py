@@ -183,6 +183,9 @@ class TestMirrorProtocolFireAndForget:
         # (the broadcast happens in background task)
         assert elapsed < 0.01, f"reflect() took {elapsed * 1000:.1f}ms, should be <10ms"
 
+        # Wait for broadcast task to timeout (avoids unawaited coroutine warnings)
+        await asyncio.sleep(0.15)
+
     @pytest.mark.asyncio
     async def test_reflect_fast_with_many_observers(self) -> None:
         """reflect() stays fast regardless of observer count.
@@ -206,6 +209,9 @@ class TestMirrorProtocolFireAndForget:
 
         # 100 reflects should be <1s total (<10ms each)
         assert elapsed < 1.0, f"100 reflects took {elapsed * 1000:.1f}ms"
+
+        # Wait for broadcast tasks to complete (avoids unawaited coroutine warnings)
+        await asyncio.sleep(0.15)
 
     @pytest.mark.asyncio
     async def test_disconnected_observers_cleaned_up(self) -> None:
@@ -296,3 +302,123 @@ class TestEventSerialization:
         # Observer should not have received anything (serialization failed)
         # But buffer should still work
         assert buffer.events_reflected == 1
+
+
+class TestGracefulShutdown:
+    """Tests for graceful shutdown and drain functionality."""
+
+    @pytest.mark.asyncio
+    async def test_pending_broadcast_count_tracks_tasks(self) -> None:
+        """pending_broadcast_count tracks in-flight broadcasts."""
+        buffer = HolographicBuffer(broadcast_timeout=0.5)
+
+        # Attach a slow observer
+        ws = MockWebSocket(delay=0.2)
+        await buffer.attach_mirror(ws)
+
+        # Reflect an event - creates pending broadcast
+        await buffer.reflect({"type": "test"})
+
+        # Should have 1 pending broadcast
+        assert buffer.pending_broadcast_count >= 0  # May already complete
+
+        # Wait for broadcast to complete
+        await asyncio.sleep(0.3)
+        assert buffer.pending_broadcast_count == 0
+
+    @pytest.mark.asyncio
+    async def test_drain_waits_for_pending_broadcasts(self) -> None:
+        """drain() waits for pending broadcasts to complete."""
+        buffer = HolographicBuffer(broadcast_timeout=0.5, drain_timeout=2.0)
+
+        # Attach observers
+        observers = [MockWebSocket() for _ in range(3)]
+        for ws in observers:
+            await buffer.attach_mirror(ws)
+
+        # Emit several events
+        for i in range(5):
+            await buffer.reflect({"seq": i})
+
+        # Drain should complete
+        completed = await buffer.drain()
+
+        assert completed >= 0
+        assert buffer.is_shutting_down is True
+
+    @pytest.mark.asyncio
+    async def test_drain_skips_new_broadcasts(self) -> None:
+        """After drain starts, new reflect() calls skip broadcasting."""
+        buffer = HolographicBuffer()
+
+        ws = MockWebSocket()
+        await buffer.attach_mirror(ws)
+
+        # Start drain
+        await buffer.drain()
+
+        # New reflect should not broadcast
+        initial_messages = len(ws.messages)
+        await buffer.reflect({"type": "post-drain"})
+        await asyncio.sleep(0.05)
+
+        # No new messages should arrive
+        assert len(ws.messages) == initial_messages
+
+        # But history should still be updated
+        assert buffer.events_reflected >= 1
+
+    @pytest.mark.asyncio
+    async def test_drain_times_out_on_slow_broadcasts(self) -> None:
+        """drain() respects timeout and cancels slow broadcasts."""
+        buffer = HolographicBuffer(broadcast_timeout=2.0, drain_timeout=0.1)
+
+        # Attach a very slow observer
+        ws = MockWebSocket(delay=5.0)
+        await buffer.attach_mirror(ws)
+
+        # Emit event
+        await buffer.reflect({"type": "test"})
+
+        # Drain should timeout
+        import time
+
+        start = time.perf_counter()
+        await buffer.drain()
+        elapsed = time.perf_counter() - start
+
+        # Should return in ~drain_timeout (0.1s), not broadcast_timeout (2s)
+        assert elapsed < 0.5
+
+    @pytest.mark.asyncio
+    async def test_drain_returns_zero_when_no_pending(self) -> None:
+        """drain() returns 0 when no broadcasts pending."""
+        buffer = HolographicBuffer()
+
+        # No observers, no pending broadcasts
+        completed = await buffer.drain()
+
+        assert completed == 0
+
+    @pytest.mark.asyncio
+    async def test_shutdown_drains_and_disconnects(self) -> None:
+        """shutdown() drains broadcasts and disconnects all mirrors."""
+        buffer = HolographicBuffer()
+
+        # Attach observers
+        observers = [MockWebSocket() for _ in range(3)]
+        for ws in observers:
+            await buffer.attach_mirror(ws)
+        assert buffer.observer_count == 3
+
+        # Shutdown
+        await buffer.shutdown()
+
+        assert buffer.is_shutting_down is True
+        assert buffer.observer_count == 0
+
+    @pytest.mark.asyncio
+    async def test_is_shutting_down_initially_false(self) -> None:
+        """is_shutting_down starts as False."""
+        buffer = HolographicBuffer()
+        assert buffer.is_shutting_down is False

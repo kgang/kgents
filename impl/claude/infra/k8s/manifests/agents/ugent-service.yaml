@@ -1,0 +1,59 @@
+# U-gent Service
+#
+# Exposes the U-gent server within the cluster at:
+#   http://ugent.kgents.svc.cluster.local:8080
+#
+# Other agents can call U-gent for tool execution:
+#   POST http://ugent:8080/execute
+#
+# AGENTESE: world.ugent.service.manifest
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ugent
+  namespace: kgents
+  labels:
+    app.kubernetes.io/name: ugent
+    app.kubernetes.io/part-of: kgents
+    app.kubernetes.io/component: tool-execution
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: ugent
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+---
+# ServiceAccount for U-gent
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ugent
+  namespace: kgents
+  labels:
+    app.kubernetes.io/name: ugent
+    app.kubernetes.io/part-of: kgents
+---
+# Optional: NodePort service for local development with Kind
+apiVersion: v1
+kind: Service
+metadata:
+  name: ugent-nodeport
+  namespace: kgents
+  labels:
+    app.kubernetes.io/name: ugent-nodeport
+    app.kubernetes.io/part-of: kgents
+    app.kubernetes.io/component: tool-execution
+spec:
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: ugent
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      nodePort: 30081
+      protocol: TCP

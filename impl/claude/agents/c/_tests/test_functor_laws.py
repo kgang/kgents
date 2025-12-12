@@ -433,6 +433,89 @@ class TestFunctorRegistration:
 
 
 # =============================================================================
+# Symmetric Lifting Tests (Phase 1: Categorical Consolidation)
+# =============================================================================
+
+
+class TestSymmetricLifting:
+    """Verify round-trip law: unlift(lift(agent)) ≅ agent."""
+
+    @pytest.mark.asyncio
+    async def test_maybe_roundtrip(self) -> None:
+        """MaybeFunctor: unlift(lift(agent)) ≅ agent."""
+        original = DoubleAgent()
+        lifted = MaybeFunctor.lift(original)
+        unlifted = MaybeFunctor.unlift(lifted)
+
+        # Round-trip should give equivalent behavior
+        assert unlifted.name == original.name
+        assert await unlifted.invoke(5) == await original.invoke(5)
+
+    @pytest.mark.asyncio
+    async def test_either_roundtrip(self) -> None:
+        """EitherFunctor: unlift(lift(agent)) ≅ agent."""
+        original = DoubleAgent()
+        lifted = EitherFunctor.lift(original)
+        unlifted = EitherFunctor.unlift(lifted)
+
+        # Round-trip should give equivalent behavior
+        assert unlifted.name == original.name
+        assert await unlifted.invoke(5) == await original.invoke(5)
+
+    @pytest.mark.asyncio
+    async def test_list_roundtrip(self) -> None:
+        """ListFunctor: unlift(lift(agent)) ≅ agent."""
+        original = DoubleAgent()
+        lifted = ListFunctor.lift(original)
+        unlifted = ListFunctor.unlift(lifted)
+
+        # Round-trip should give equivalent behavior
+        assert unlifted.name == original.name
+        assert await unlifted.invoke(5) == await original.invoke(5)
+
+    @pytest.mark.asyncio
+    async def test_async_roundtrip(self) -> None:
+        """AsyncFunctor: unlift(lift(agent)) ≅ agent."""
+        original = DoubleAgent()
+        lifted = AsyncFunctor.lift(original)
+        unlifted = AsyncFunctor.unlift(lifted)
+
+        # Round-trip should give equivalent behavior
+        assert unlifted.name == original.name
+        assert await unlifted.invoke(5) == await original.invoke(5)
+
+    @pytest.mark.asyncio
+    async def test_logged_roundtrip(self) -> None:
+        """LoggedFunctor: unlift(lift(agent)) ≅ agent."""
+        original = DoubleAgent()
+        lifted = LoggedFunctor.lift(original)
+        unlifted = LoggedFunctor.unlift(lifted)
+
+        # Round-trip should give equivalent behavior
+        assert unlifted.name == original.name
+        assert await unlifted.invoke(5) == await original.invoke(5)
+
+    @pytest.mark.asyncio
+    async def test_fix_roundtrip(self) -> None:
+        """FixFunctor: unlift(lift(agent)) ≅ agent."""
+        original = DoubleAgent()
+        lifted = FixFunctor.lift(original)
+        unlifted = FixFunctor.unlift(lifted)
+
+        # Round-trip should give equivalent behavior
+        assert unlifted.name == original.name
+        assert await unlifted.invoke(5) == await original.invoke(5)
+
+    def test_unlift_wrong_type_raises(self) -> None:
+        """unlift() raises UnliftError for wrong type."""
+        from agents.c.functor import UnliftError, unlift_maybe
+
+        # Try to unlift something that isn't a MaybeAgent
+        with pytest.raises(UnliftError):
+            unlift_maybe(DoubleAgent())  # type: ignore[arg-type]
+
+
+# =============================================================================
 # Backward Compatibility Tests
 # =============================================================================
 

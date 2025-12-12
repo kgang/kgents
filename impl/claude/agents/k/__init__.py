@@ -35,12 +35,17 @@ from .eigenvectors import (
 )
 
 # Phase 2: Flux Integration (K-gent streaming)
+# Dream events (from events.py)
 from .events import (
     SoulEvent,
     SoulEventType,
     dialogue_end_event,
     dialogue_start_event,
     dialogue_turn_event,
+    dream_end_event,
+    dream_insight_event,
+    dream_pattern_event,
+    dream_start_event,
     eigenvector_probe_event,
     error_event,
     # Ambient events (soul present, not invoked)
@@ -52,6 +57,7 @@ from .events import (
     intercept_result_event,
     is_ambient_event,
     is_dialogue_event,
+    is_dream_event,
     is_external_event,
     is_intercept_event,
     is_request_event,
@@ -98,6 +104,42 @@ from .functor import (
     soul_with,
     unlift,
     unwrap,
+)
+
+# Phase 5: PersonaGarden (Pattern Storage)
+from .garden import (
+    EntryType,
+    GardenEntry,
+    GardenLifecycle,
+    GardenStats,
+    PersonaGarden,
+    get_garden,
+    set_garden,
+)
+
+# Phase 5: Semantic Gatekeeper
+from .gatekeeper import (
+    Principle,
+    SemanticGatekeeper,
+    Severity,
+    ValidationResult,
+    Violation,
+    validate_content,
+    validate_file,
+)
+
+# Phase 4: Hypnagogia (Dream Cycle)
+from .hypnagogia import (
+    DreamReport,
+    EigenvectorDelta,
+    HypnagogicConfig,
+    HypnagogicCycle,
+    Interaction,
+    Pattern,
+    PatternMaturity,
+    create_hypnagogic_cycle,
+    get_hypnagogia,
+    set_hypnagogia,
 )
 from .llm import (
     BaseLLMClient,
@@ -293,4 +335,37 @@ __all__ = [
     # Synergy: Pulse Bridge (K-gent → D-gent Vitality)
     "soul_to_pulse",
     "rumination_to_crystal_task",
+    # Phase 4: Hypnagogia (Dream Cycle)
+    "HypnagogicCycle",
+    "HypnagogicConfig",
+    "DreamReport",
+    "Pattern",
+    "PatternMaturity",
+    "EigenvectorDelta",
+    "Interaction",
+    "create_hypnagogic_cycle",
+    "get_hypnagogia",
+    "set_hypnagogia",
+    # Dream events
+    "dream_start_event",
+    "dream_pattern_event",
+    "dream_insight_event",
+    "dream_end_event",
+    "is_dream_event",
+    # Phase 5: PersonaGarden (Pattern Storage)
+    "PersonaGarden",
+    "GardenEntry",
+    "GardenLifecycle",
+    "GardenStats",
+    "EntryType",
+    "get_garden",
+    "set_garden",
+    # Phase 5: Semantic Gatekeeper
+    "SemanticGatekeeper",
+    "Principle",
+    "Severity",
+    "Violation",
+    "ValidationResult",
+    "validate_file",
+    "validate_content",
 ]

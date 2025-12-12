@@ -7,15 +7,16 @@ Tests the kgents:// resource scheme for exposing K8s cluster state.
 from __future__ import annotations
 
 import json
+
 import pytest
 
 from ..resources import (
+    KGENTS_RESOURCE_TEMPLATES,
+    KGENTS_RESOURCES,
     K8sConfig,
     K8sResourceProvider,
     MCPResource,
     MCPResourceContent,
-    KGENTS_RESOURCES,
-    KGENTS_RESOURCE_TEMPLATES,
 )
 from ..server import MCPRequest, MCPServer
 

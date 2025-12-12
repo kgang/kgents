@@ -1,4 +1,4 @@
-"""I-gent v2.5 Data - State, Registry, and O-gent Polling."""
+"""I-gent v2.5 Data - State, Registry, O-gent Polling, and Terrarium Source."""
 
 from .ogent import (
     HealthLevel,
@@ -23,6 +23,11 @@ from .registry import (
     create_demo_registry_async,
 )
 from .state import AgentSnapshot, FluxState, SessionState, create_demo_flux_state
+from .terrarium_source import (
+    AgentMetrics,
+    TerrariumWebSocketSource,
+    observe_multiple,
+)
 from .types import Phase
 
 __all__ = [
@@ -53,4 +58,8 @@ __all__ = [
     "render_xyz_bar",
     "render_xyz_compact",
     "value_to_health_level",
+    # Terrarium Source
+    "AgentMetrics",
+    "TerrariumWebSocketSource",
+    "observe_multiple",
 ]

@@ -53,6 +53,22 @@ GRIPE | 2025-12-12 | [LOW] | K8s e2e tests require active cluster—should be ma
 IDEA | 2025-12-12 | [HIGH] | self.soul.* AGENTESE paths exist but CLI doesn't use them—unify API | #k-gent #agentese
 WIN | 2025-12-12 | [HIGH] | if KgentFlux caches LLM responses per-eigenvector, could reduce cost 5-10x | #k-gent #performance
 IDEA | 2025-12-12 | [MED] | terrarium metrics widget could show bounty board status | #devex #meta
+IDEA | 2025-12-12 | [HIGH] | C-gent functors (Maybe/Either/List) lack unlift()—can't escape monad nesting | #arch #c-gent
+IDEA | 2025-12-12 | [HIGH] | 15+ CLI handlers bypass AGENTESE—route soul/semaphore/status through Logos | #agentese #cli
+GRIPE | 2025-12-12 | [HIGH] | void.dream only in MetabolicNode—should be standalone void.dream.* path | #agentese #void
+IDEA | 2025-12-12 | [HIGH] | Unify O-gent, N-gent, T-gent observers into single ObserverFunctor | #arch #functor
+WIN | 2025-12-12 | [HIGH] | D-gent protocol → StateMonad functor would enable Flux(State(agent)) composition | #arch #d-gent
+IDEA | 2025-12-12 | [HIGH] | FunctorRegistry exists but unused—register all functors for declarative composition | #arch #functor
+GRIPE | 2025-12-12 | [MED] | FluxAgent.invoke() semantics change based on _state (DORMANT vs FLOWING)—violates functor laws | #flux #testing
+IDEA | 2025-12-12 | [MED] | Add void.slop.* path for noise-as-resource operations (generate/absorb/transmute) | #agentese #void
+WIN | 2025-12-12 | [MED] | Natural language adapter exists but unused—wire to CLI for "kgents sip from the void" | #agentese #devex
+IDEA | 2025-12-12 | [MED] | 12 implicit functors in spec—formalize in spec/c-gents/functors.md with laws | #spec #functor
+GRIPE | 2025-12-12 | [MED] | K-gent access control specified (lines 193-208) but not implemented—security gap | #k-gent #spec
+IDEA | 2025-12-12 | [MED] | T-gent Type IV JudgeAgent needs formalized evaluation criteria algebra | #t-gent #spec
+WIN | 2025-12-12 | [MED] | Soul context is sticky—parameterize Persona type for Soul[A, P] generics | #k-gent #arch
+IDEA | 2025-12-12 | [MED] | pytest fixture `isolated_registry` would fix functor test isolation anti-pattern | #testing #devex
+IDEA | 2025-12-12 | [LOW] | parallel()/fan_out()/branch() should be proper functors, not special-case agents | #c-gent #arch
+WIN | 2025-12-12 | [LOW] | Cross-functor law tests (Soul >> Flux != Flux >> Soul)—composition matrix | #testing #functor
 ```
 
 ---

@@ -12,7 +12,6 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-
 from protocols.cli.genus.c_gent import (
     _deserialize_ledger,
     _render_balance,
@@ -21,7 +20,6 @@ from protocols.cli.genus.c_gent import (
     cmd_capital,
 )
 from shared.capital import EventSourcedLedger, LedgerEvent
-
 
 # === Test Fixtures ===
 
@@ -52,7 +50,9 @@ class TestSerialization:
         assert "config" in data
         assert data["config"]["initial_capital"] == 0.5
 
-    def test_serialize_with_events(self, ledger_with_events: EventSourcedLedger) -> None:
+    def test_serialize_with_events(
+        self, ledger_with_events: EventSourcedLedger
+    ) -> None:
         """Ledger with events serializes correctly."""
         data = _serialize_ledger(ledger_with_events)
 
@@ -60,7 +60,9 @@ class TestSerialization:
         assert data["events"][0]["event_type"] == "ISSUE"
         assert data["events"][0]["agent"] == "agent-a"
 
-    def test_roundtrip_preserves_events(self, ledger_with_events: EventSourcedLedger) -> None:
+    def test_roundtrip_preserves_events(
+        self, ledger_with_events: EventSourcedLedger
+    ) -> None:
         """Serialization → deserialization preserves events."""
         data = _serialize_ledger(ledger_with_events)
         restored = _deserialize_ledger(data)
@@ -202,9 +204,7 @@ class TestHistoryCommand:
         assert "events" in data
         assert len(data["events"]) == 4
 
-    def test_history_limit_flag(
-        self, capsys: pytest.CaptureFixture[str]
-    ) -> None:
+    def test_history_limit_flag(self, capsys: pytest.CaptureFixture[str]) -> None:
         """--limit N restricts output."""
         import protocols.cli.genus.c_gent as c_gent_module
 
@@ -252,8 +252,9 @@ class TestTitheCommand:
         """Tithe fails if insufficient capital."""
         ledger = EventSourcedLedger()
         # Default agent has 0.5 initial capital
-        with patch("protocols.cli.genus.c_gent._get_ledger") as mock_get, patch(
-            "protocols.cli.genus.c_gent._save_ledger"
+        with (
+            patch("protocols.cli.genus.c_gent._get_ledger") as mock_get,
+            patch("protocols.cli.genus.c_gent._save_ledger"),
         ):
             mock_get.return_value = ledger
             result = cmd_capital(["tithe", "10.0"])  # More than balance
@@ -262,15 +263,14 @@ class TestTitheCommand:
         captured = capsys.readouterr()
         assert "insufficient" in captured.out.lower()
 
-    def test_tithe_success(
-        self, capsys: pytest.CaptureFixture[str]
-    ) -> None:
+    def test_tithe_success(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Successful tithe shows confirmation."""
         ledger = EventSourcedLedger()
         ledger.issue("default", 0.3, "test")  # Give some capital
 
-        with patch("protocols.cli.genus.c_gent._get_ledger") as mock_get, patch(
-            "protocols.cli.genus.c_gent._save_ledger"
+        with (
+            patch("protocols.cli.genus.c_gent._get_ledger") as mock_get,
+            patch("protocols.cli.genus.c_gent._save_ledger"),
         ):
             mock_get.return_value = ledger
             result = cmd_capital(["tithe", "0.1"])
@@ -279,15 +279,14 @@ class TestTitheCommand:
         captured = capsys.readouterr()
         assert "complete" in captured.out.lower() or "✓" in captured.out
 
-    def test_tithe_json_success(
-        self, capsys: pytest.CaptureFixture[str]
-    ) -> None:
+    def test_tithe_json_success(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Successful tithe in JSON mode."""
         ledger = EventSourcedLedger()
         ledger.issue("default", 0.3, "test")
 
-        with patch("protocols.cli.genus.c_gent._get_ledger") as mock_get, patch(
-            "protocols.cli.genus.c_gent._save_ledger"
+        with (
+            patch("protocols.cli.genus.c_gent._get_ledger") as mock_get,
+            patch("protocols.cli.genus.c_gent._save_ledger"),
         ):
             mock_get.return_value = ledger
             result = cmd_capital(["tithe", "0.1", "--json"])
@@ -298,15 +297,14 @@ class TestTitheCommand:
         assert data["success"] is True
         assert data["amount_tithed"] == 0.1
 
-    def test_tithe_with_agent_flag(
-        self, capsys: pytest.CaptureFixture[str]
-    ) -> None:
+    def test_tithe_with_agent_flag(self, capsys: pytest.CaptureFixture[str]) -> None:
         """--agent flag specifies which agent to tithe from."""
         ledger = EventSourcedLedger()
         ledger.issue("custom-agent", 0.5, "test")
 
-        with patch("protocols.cli.genus.c_gent._get_ledger") as mock_get, patch(
-            "protocols.cli.genus.c_gent._save_ledger"
+        with (
+            patch("protocols.cli.genus.c_gent._get_ledger") as mock_get,
+            patch("protocols.cli.genus.c_gent._save_ledger"),
         ):
             mock_get.return_value = ledger
             result = cmd_capital(["tithe", "0.1", "--agent", "custom-agent", "--json"])

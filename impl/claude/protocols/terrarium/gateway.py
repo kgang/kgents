@@ -227,10 +227,12 @@ class Terrarium:
                     calculate_temperature,
                 )
 
+                pressure, _ = calculate_pressure(reg.agent)
+                temperature, _ = calculate_temperature(reg.agent)
                 cached = {
-                    "pressure": calculate_pressure(reg.agent),
+                    "pressure": pressure,
                     "flow": 0.0,  # Need time delta for flow
-                    "temperature": calculate_temperature(reg.agent),
+                    "temperature": temperature,
                 }
 
             return JSONResponse(

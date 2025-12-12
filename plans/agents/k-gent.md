@@ -1,7 +1,7 @@
 ---
 path: agents/k-gent
 status: active
-progress: 60
+progress: 90
 last_touched: 2025-12-12
 touched_by: claude-opus-4.5
 blocking: []
@@ -14,7 +14,17 @@ session_notes: |
   - `kgents soul challenge` works end-to-end
   PHASE 2 COMPLETE: Flux integration (events, KgentFlux)
   PHASE 3 COMPLETE: CLI stream (`kgents soul stream`)
-  PHASE 4 IN PROGRESS: Hypnagogia (dream refinement)
+  PHASE 4 COMPLETE: Hypnagogia (dream cycle, 38 tests)
+  PHASE 5 COMPLETE: Completion sprint (70 new tests)
+  - PersonaGarden (26 tests) - pattern storage with garden metaphor
+  - Semantic Gatekeeper (24 tests) - principle validation
+  - `kgents soul garden` - view patterns/preferences
+  - `kgents soul validate <file>` - check against principles
+  - AGENTESE void.hypnagogia.* paths (8 tests)
+  REMAINING (deferred):
+  - Fractal Expander
+  - Holographic Constitution
+  Total K-gent tests: 389+
 ---
 
 # K-gent: The Categorical Imperative
@@ -61,66 +71,79 @@ Where:
 - Budget tiers (DORMANT/WHISPER/DIALOGUE/DEEP)
 - Template system for zero-cost responses
 
-### Gaps (Fix)
-| Gap | Impact | Priority |
-|-----|--------|----------|
-| Template-only DIALOGUE/DEEP | Hollow responses | P0 |
-| Keyword-based intercept | Dangerous auto-approval | P0 |
-| No Flux integration | Violates Heterarchical | P1 |
-| No PersonaGarden | No learning loop | P2 |
-| No Hypnagogia | Static eigenvectors | P3 |
+### Gaps (Status)
+| Gap | Impact | Status |
+|-----|--------|--------|
+| Template-only DIALOGUE/DEEP | Hollow responses | ✅ Fixed (Phase 1) |
+| Keyword-based intercept | Dangerous auto-approval | ✅ Fixed (Phase 1) |
+| No Flux integration | Violates Heterarchical | ✅ Fixed (Phase 2) |
+| No PersonaGarden | No learning loop | ✅ Fixed (Phase 5) |
+| No Hypnagogia | Static eigenvectors | ✅ Fixed (Phase 4) |
+| No Semantic Gatekeeper | Can't validate code | ✅ Fixed (Phase 5) |
+| No AGENTESE paths | Integration gap | ✅ Fixed (Phase 5) |
 
 ---
 
 ## Implementation Phases
 
-### Phase 1: Core Governance (Week 1) — PRIORITY
+### Phase 1: Core Governance ✅ COMPLETE (88 tests)
 
 **Goal**: K-gent delivers value as governance layer
 
-| Task | File | Exit Criterion |
-|------|------|----------------|
-| LLM-backed dialogue | `agents/k/persona.py` | DIALOGUE tier uses actual LLM |
-| Deep intercept | `agents/k/soul.py` | Principle-based reasoning, not keywords |
-| Audit trail | `agents/k/audit.py` | Every mediation logged with rationale |
+| Task | File | Status |
+|------|------|--------|
+| LLM-backed dialogue | `agents/k/persona.py` | ✅ DIALOGUE/DEEP use LLM |
+| Deep intercept | `agents/k/soul.py` | ✅ Principle-based reasoning |
+| Audit trail | `agents/k/audit.py` | ✅ Every mediation logged |
 
-**Validation**: Mirror Test avg ≥ 4/5, zero "delete production" auto-approvals
-
-### Phase 2: Flux Integration (Weeks 2-3)
+### Phase 2: Flux Integration ✅ COMPLETE
 
 **Goal**: K-gent runs as Flux stream (Heterarchical)
 
-| Task | File | Exit Criterion |
-|------|------|----------------|
-| KgentFlux | `agents/k/flux.py` | Ambient stream + perturbation |
-| Event types | `agents/k/events.py` | SoulEvent hierarchy |
-| Terrarium wire | `protocols/terrarium/soul.py` | WebSocket dialogue |
+| Task | File | Status |
+|------|------|--------|
+| KgentFlux | `agents/k/flux.py` | ✅ Ambient stream + perturbation |
+| Event types | `agents/k/events.py` | ✅ SoulEvent hierarchy |
+| CLI stream | `protocols/cli/handlers/soul.py` | ✅ `kgents soul stream` |
 
-**Validation**: K-gent runs autonomously AND composably
+### Phase 3: CLI Stream ✅ COMPLETE
 
-### Phase 3: PersonaGarden (Week 4)
+**Goal**: Interactive ambient mode
 
-**Goal**: Close feedback loop
+| Task | File | Status |
+|------|------|--------|
+| Stream command | `protocols/cli/handlers/soul.py` | ✅ FLOWING mode |
+| Pulse output | `agents/k/rumination.py` | ✅ Ambient presence |
 
-| Task | File | Exit Criterion |
-|------|------|----------------|
-| Pattern model | `agents/k/garden.py` | STONES/SEEDS/TREES/COMPOST |
-| D-gent storage | `agents/k/garden.py` | Patterns persist |
-| Query interface | `agents/k/garden.py` | Dialogue references patterns |
-
-**Validation**: 60% of dialogue outputs feed PersonaGarden
-
-### Phase 4: Hypnagogia (Week 5+)
+### Phase 4: Hypnagogia ✅ COMPLETE (38 tests)
 
 **Goal**: Eigenvector evolution
 
-| Task | File | Exit Criterion |
-|------|------|----------------|
-| HypnagogicCycle | `agents/k/hypnagogia.py` | 3AM batch refinement |
-| Pattern extraction | `agents/k/hypnagogia.py` | SEED → TREE promotion |
-| Confidence evolution | `agents/k/eigenvectors.py` | ±0.05/month measurable |
+| Task | File | Status |
+|------|------|--------|
+| HypnagogicCycle | `agents/k/hypnagogia.py` | ✅ Dream cycle |
+| Pattern extraction | `agents/k/hypnagogia.py` | ✅ SEED → TREE |
+| Dream CLI | `protocols/cli/handlers/soul.py` | ✅ `kgents soul dream` |
 
-**Validation**: Eigenvector confidence changes based on evidence
+### Phase 5: Completion Sprint ✅ COMPLETE (70 tests)
+
+**Goal**: Complete remaining spec work
+
+| Task | File | Status |
+|------|------|--------|
+| PersonaGarden | `agents/k/garden.py` | ✅ 26 tests |
+| `soul garden` CLI | `protocols/cli/handlers/soul.py` | ✅ Pattern view |
+| Semantic Gatekeeper | `agents/k/gatekeeper.py` | ✅ 24 tests |
+| `soul validate` CLI | `protocols/cli/handlers/soul.py` | ✅ Principle check |
+| AGENTESE hypnagogia | `protocols/agentese/contexts/void.py` | ✅ 8 tests |
+
+### Remaining (Deferred)
+
+| Task | Description | Priority |
+|------|-------------|----------|
+| Fractal Expander | Expand seeds → specs | Low |
+| Holographic Constitution | Detect drift | Low |
+| Rodizio Sommelier | Auto-resolve routine | Low |
 
 ---
 

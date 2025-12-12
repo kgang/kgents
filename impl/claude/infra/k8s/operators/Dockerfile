@@ -15,6 +15,7 @@ WORKDIR /app
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
@@ -53,9 +54,10 @@ RUN echo '"""K8s Operators."""' > /app/k8s/operators/__init__.py
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
-# Health check - kopf exposes health on /healthz
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/healthz')" || exit 1
+# Health check - kopf exposes health on /healthz with --liveness flag
+# Use curl for more reliable health checks
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+    CMD curl --fail --silent http://localhost:8080/healthz || exit 1
 
 # Run all operators with kopf
 CMD ["kopf", "run", \

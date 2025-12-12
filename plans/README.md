@@ -28,12 +28,36 @@ plans/
 ├── meta.md                      # Mycelium: atomic learnings (50-line cap)
 ├── _status.md                   # Implementation status matrix
 ├── _epilogues/                  # Session continuity
+├── skills/                      # HOW-TO guides for agents (pull before doing)
 ├── self/                        # self.* plans
 ├── concept/                     # concept.* plans
 ├── void/                        # void.* plans
 ├── agents/                      # Agent-specific plans
 └── _archive/                    # Completed plans
 ```
+
+### Skills Directory (Agent Knowledge Base)
+
+**Location**: `plans/skills/`
+
+Before implementing a common task, **check if a skill exists**:
+```bash
+ls plans/skills/
+cat plans/skills/cli-command.md   # Example: how to add a CLI command
+```
+
+Skills are crystallized knowledge—patterns that have been documented for reuse. Pull before implementing. Contribute after learning something novel.
+
+### DevEx Commands (Slash Commands)
+
+Use these for engineering workflows:
+
+| Command | Purpose |
+|---------|---------|
+| `/harden <target>` | Robustify, shore up durability |
+| `/trace <target>` | Trace execution paths and data flow |
+| `/diff-spec <spec>` | Compare impl against spec |
+| `/debt <path>` | Technical debt audit |
 
 ### Meta Files
 
@@ -43,6 +67,7 @@ plans/
 | `_focus.md` | Human intent | Human | **Never** |
 | `meta.md` | Atomic learnings | Both | Append only |
 | `_epilogues/` | Session seeds | Agent | New files |
+| `skills/` | How-to guides | Agent | Add new, edit existing |
 
 ---
 

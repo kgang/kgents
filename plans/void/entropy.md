@@ -1,13 +1,15 @@
 ---
 path: void/entropy
 status: dormant
-progress: 60
+progress: 70
 last_touched: 2025-12-12
 touched_by: claude-opus-4.5
 blocking: []
 enables: [self/stream]
 session_notes: |
-  Flux integration complete (57 tests). Remaining: TUI/CLI polish.
+  Core metabolism + Flux integration complete (57 tests).
+  CLI tithe command implemented (12 tests).
+  Remaining: TUI FeverOverlay widget.
 ---
 
 # Metabolism: void.entropy.* Implementation
