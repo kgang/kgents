@@ -378,20 +378,20 @@ class TestEventHistory:
         ) -> list[dict[str, str]]:
             return state + [event]
 
-        agent = StreamAgent[list[dict[str, str]], dict[str, str]](
+        agent = StreamAgent[dict[str, str], list[dict[str, str]]](
             fold=fold,
-            initial=[],  # type: ignore[arg-type]
+            initial=[],
         )
         witness = WitnessReport(observer_id="test", confidence=1.0)
 
-        await agent.append({"type": "a"}, witness)  # type: ignore[arg-type]
-        await agent.append({"type": "b"}, witness)  # type: ignore[arg-type]
-        await agent.append({"type": "a"}, witness)  # type: ignore[arg-type]
+        await agent.append({"type": "a"}, witness)
+        await agent.append({"type": "b"}, witness)
+        await agent.append({"type": "a"}, witness)
 
-        history = await agent.event_history(filter_by=lambda e: e.get("type") == "a")  # type: ignore[attr-defined]
+        history = await agent.event_history(filter_by=lambda e: e.get("type") == "a")
 
         assert len(history) == 2
-        assert all(e["type"] == "a" for _, e, _ in history)  # type: ignore[call-overload]
+        assert all(e["type"] == "a" for _, e, _ in history)
 
     async def test_events_since(self) -> None:
         """Test getting events since timestamp."""
@@ -534,9 +534,9 @@ class TestSaveMethod:
                 return int(event["value"])
             return state
 
-        agent = StreamAgent[int, dict[str, Any] | int](
+        agent = StreamAgent[dict[str, Any] | int, int](
             fold=fold,
-            initial=0,  # type: ignore[arg-type]
+            initial=0,
         )
 
         await agent.save(42)

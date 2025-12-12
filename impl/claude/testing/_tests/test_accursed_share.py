@@ -14,7 +14,7 @@ import random
 from collections.abc import Generator
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any
+from typing import Any, Callable
 
 import pytest
 from testing.accursed_share import (
@@ -193,13 +193,15 @@ class TestChaoticComposition:
         from bootstrap import compose
 
         # Create a pool of test agents
+        def make_adder(i: int) -> Callable[[Any], Any]:
+            return lambda x: x + i
+
+        def make_multiplier(i: int) -> Callable[[Any], Any]:
+            return lambda x: x * (i + 1)
+
         agent_pool: list[TestAgent[Any, Any]] = [
-            TestAgent(f"add_{i}", lambda x, i=i: x + i)
-            for i in range(5)  # type: ignore[misc]
-        ] + [
-            TestAgent(f"mul_{i}", lambda x, i=i: x * (i + 1))
-            for i in range(3)  # type: ignore[misc]
-        ]
+            TestAgent(f"add_{i}", make_adder(i)) for i in range(5)
+        ] + [TestAgent(f"mul_{i}", make_multiplier(i)) for i in range(3)]
 
         # Random selection
         n_agents = random.randint(2, 5)
