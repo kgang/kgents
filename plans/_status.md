@@ -1,6 +1,6 @@
 # Implementation Status Matrix
 
-> Last updated: 2025-12-11
+> Last updated: 2025-12-12
 
 ## Legend
 
@@ -18,10 +18,11 @@ These plans are fully implemented and moved to `_archive/`:
 
 | Plan | Archive Path | Tests |
 |------|--------------|-------|
+| **Flux Functor** | `agents/loop.md` (kept as reference) | **261** |
 | CLI Hollowing | `_archive/cli-hollowing-v1.0-complete.md` | 100+ |
 | Capital Ledger | `_archive/capital-ledger-v1.0-complete.md` | 83+ |
 | **K8-Terrarium v2.0** | `_archive/k8-terrarium-v2.0-complete.md` | 24+ (pheromone) |
-| **T/U-gent Separation** | N/A (git-moved) | 7,741 total |
+| **T/U-gent Separation** | N/A (git-moved) | 7,812 total |
 
 ---
 
@@ -48,22 +49,34 @@ All K8-Terrarium v2.0 work is done and archived:
 
 ---
 
-## Context Management (`self/stream.md`)
+## Context Management (`self/stream.md`) — 70%
 
-| Component | Status | Notes |
-|-----------|--------|-------|
-| ContextWindow (Store Comonad) | ✅ Done | 41 tests |
-| LinearityMap | ✅ Done | 38 tests |
-| ContextProjector | ✅ Done | 28 tests |
-| AGENTESE `self.stream.*` | ✅ Done | 31 tests |
-| MDL Compression | ✅ Done | 43 tests |
-| Modal Scope | 📋 | Git-backed branching |
-| StateCrystal | 📋 | Checkpointing |
-| Dual-lane pheromones | 📋 | Fast/slow channels |
+**Phase 2.1 COMPLETE** (181 tests):
+
+| Component | Status | Tests | Notes |
+|-----------|--------|-------|-------|
+| ContextWindow | ✅ Done | 41 | Store Comonad (extract/extend/duplicate) |
+| LinearityMap | ✅ Done | 38 | DROPPABLE/REQUIRED/PRESERVED monotonicity |
+| ContextProjector | ✅ Done | 28 | Galois Connection (NOT lens—explicitly lossy) |
+| StreamContextResolver | ✅ Done | 31 | AGENTESE `self.stream.*` routing |
+| MDL Compression | ✅ Done | 43 | Ventura Fix: Quality = Ratio × (1 - Error) |
+
+**Phases 2.2-2.4 PLANNED**:
+
+| Phase | Component | AGENTESE Path | Notes |
+|-------|-----------|---------------|-------|
+| 2.2 | ModalScope | `void.entropy.sip/pour` | Git-backed branching via duplicate() |
+| 2.3 | Pulse + VitalityAnalyzer | `time.trace.pulse` | Zero-token health (loop detection) |
+| 2.4 | StateCrystal + Reaper | `self.memory.crystallize` | Comonadic checkpoints with TTL |
+
+**Novel insights** (see `self/stream.md` Part IV):
+- Context as thermodynamic system (pressure, entropy, phase transitions)
+- GCC mapping: Git operations → comonadic operations
+- Adaptive thresholds (implemented in projector.py, needs wiring)
 
 ---
 
-## Creativity v2.5 (`concept/creativity.md`)
+## Creativity v2.5 (`concept/creativity.md`) — 90%
 
 | Component | Status | Notes |
 |-----------|--------|-------|
@@ -89,14 +102,56 @@ All K8-Terrarium v2.0 work is done and archived:
 
 ---
 
+## Reflector Pattern (`self/reflector.md`) — ✅ COMPLETE
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Reflector Protocol | ✅ Done | `protocols/cli/reflector/protocol.py` |
+| RuntimeEvent types | ✅ Done | 10+ event types in `events.py` |
+| TerminalReflector | ✅ Done | stdout + FD3 file output |
+| HeadlessReflector | ✅ Done | test-friendly capture |
+| FluxReflector | ✅ Done | `agents/i/reflector/flux_reflector.py` |
+| hollow.py wiring | ✅ Done | Reflector created in main(), events emitted |
+| status.py pilot | ✅ Done | Uses ctx.output() for dual-channel |
+| Tests | ✅ Done | 36 tests passing |
+
+---
+
+## I-gent v2.5 (`self/interface.md`) — ✅ COMPLETE
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Phase 1: Core Flux | ✅ Done | FluxApp, DensityField, FlowArrow (40 tests) |
+| Phase 2: Live Data | ✅ Done | Registry, OgentPoller, XYZ bars (30 tests) |
+| Phase 3: Overlays | ✅ Done | WIRE/BODY overlays, waveform (31 tests) |
+| Phase 4: Glitch & HUD | ✅ Done | GlitchController, AGENTESE HUD (36 tests) |
+| Phase 5: Polish & FD3 | ✅ Done | FD3 bridge, FluxReflector integration |
+
+---
+
+## Lattice v1 (`concept/lattice.md`) — 40%
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| LineageChecker | ✅ Done | `protocols/agentese/lattice/checker.py` |
+| LineageTracker | ✅ Done | `protocols/agentese/lattice/lineage.py` |
+| LineageError types | ✅ Done | `protocols/agentese/lattice/errors.py` |
+| Wire to concept.*.define | 📋 | Pending: connect to Logos |
+| Tests | 🚧 | In lattice/_tests/ |
+
+---
+
+## Researched (Ready for Implementation)
+
+| Plan | Priority | Notes |
+|------|----------|-------|
+| `void/entropy.md` (Metabolism) | Medium | **Research complete** 2025-12-12. See `entropy-research-report.md` |
+
 ## Still Planned (No Progress)
 
 | Plan | Priority | Blocked By |
 |------|----------|------------|
-| `self/interface.md` (I-gent v2.5) | Medium | Nothing |
-| `self/memory.md` (StateCrystal) | Low | `self/stream.md` |
-| `void/entropy.md` (Metabolism) | Low | Nothing |
-| `concept/lattice.md` (Genealogy) | Low | Nothing |
+| `self/memory.md` (StateCrystal) | Low | `self/stream.md` Phase 2.4 |
 
 ---
 
@@ -115,4 +170,4 @@ cd impl/claude && pytest --collect-only -q | tail -1
 
 ---
 
-*Last verified: 2025-12-11 (7,741 tests passed, K8-Terrarium v2.0 + T/U-gent separation complete)*
+*Last verified: 2025-12-12 (8,337+ tests, **Flux Functor complete (261 tests)**, FluxReflector complete, Lattice v1 40%, void/entropy researched)*
