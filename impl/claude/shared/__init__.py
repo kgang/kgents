@@ -33,11 +33,20 @@ from .costs import (
 from .melting import (
     ContractViolationError,
     MeltingContext,
+    create_llm_solver,
     default_pataphysics_solver,
     get_postcondition,
     is_meltable,
     meltable,
     meltable_sync,
+)
+from .pataphysics import (
+    PataphysicsAgent,
+    PataphysicsMode,
+    PataphysicsResult,
+    PataphysicsSolverConfig,
+    create_pataphysics_solver,
+    pataphysics_solver_with_postcondition,
 )
 
 __all__ = [
@@ -61,9 +70,17 @@ __all__ = [
     # melting.py
     "ContractViolationError",
     "MeltingContext",
+    "create_llm_solver",
     "default_pataphysics_solver",
     "get_postcondition",
     "is_meltable",
     "meltable",
     "meltable_sync",
+    # pataphysics.py
+    "PataphysicsAgent",
+    "PataphysicsMode",
+    "PataphysicsResult",
+    "PataphysicsSolverConfig",
+    "create_pataphysics_solver",
+    "pataphysics_solver_with_postcondition",
 ]

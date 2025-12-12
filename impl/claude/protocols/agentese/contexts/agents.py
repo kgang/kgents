@@ -158,6 +158,12 @@ AGENT_REGISTRY: dict[str, dict[str, Any]] = {
         "status": "active",
         "description": "Disposable container execution via Kubernetes",
     },
+    "u": {
+        "name": "U-gent",
+        "theme": "Utility (tool use, MCP integration)",
+        "status": "active",
+        "description": "Tool orchestration, MCP client, and utility execution",
+    },
     "w": {
         "name": "W-gent",
         "theme": "Witness",

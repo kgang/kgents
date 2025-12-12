@@ -117,7 +117,7 @@ class K8sResourceProvider:
                 return None
 
             self._kubectl_available = True
-            return json.loads(result.stdout)
+            return dict(json.loads(result.stdout))
 
         except FileNotFoundError:
             logger.warning("kubectl not found")
@@ -257,11 +257,12 @@ class K8sResourceProvider:
             # If this is a pod (fallback), extract from labels
             if "containerStatuses" in status:
                 agent_info["phase"] = (
-                    "Running" if status.get("phase") == "Running" else status.get("phase")
+                    "Running"
+                    if status.get("phase") == "Running"
+                    else status.get("phase")
                 )
                 agent_info["ready"] = all(
-                    cs.get("ready", False)
-                    for cs in status.get("containerStatuses", [])
+                    cs.get("ready", False) for cs in status.get("containerStatuses", [])
                 )
 
             agents.append(agent_info)
@@ -345,14 +346,18 @@ class K8sResourceProvider:
         )
 
     async def _read_pheromones(self) -> MCPResourceContent:
-        """List active pheromone signals."""
+        """List active pheromone signals.
+
+        PASSIVE STIGMERGY (v2.0): Intensity is calculated on read using the
+        decay function, not stored in status.
+        """
         # Try to get Pheromone CRs
         result = self._run_kubectl(
             "get", "pheromones.kgents.io", "-n", self.config.namespace
         )
 
         if result is None:
-            # Pheromones might be stored in ConfigMaps
+            # Pheromones might be stored in ConfigMaps (legacy)
             result = self._run_kubectl(
                 "get",
                 "configmaps",
@@ -369,13 +374,24 @@ class K8sResourceProvider:
                 spec = item.get("spec", {})
                 data = item.get("data", {})
 
+                # Calculate current intensity (Passive Stigmergy)
+                current_intensity = self._calculate_pheromone_intensity(spec, metadata)
+
                 pheromone = {
                     "name": metadata.get("name"),
                     "type": spec.get("type") or data.get("type", "unknown"),
                     "source": spec.get("source") or data.get("source"),
                     "target": spec.get("target") or data.get("target"),
-                    "intensity": spec.get("intensity") or data.get("intensity"),
+                    # Current intensity calculated on read
+                    "intensity": current_intensity,
+                    # Also include decay parameters for transparency
+                    "initialIntensity": spec.get(
+                        "initialIntensity", spec.get("intensity")
+                    ),
+                    "halfLifeMinutes": spec.get("halfLifeMinutes"),
+                    "emittedAt": spec.get("emittedAt"),
                     "created": metadata.get("creationTimestamp"),
+                    "phase": item.get("status", {}).get("phase", "ACTIVE"),
                 }
                 pheromones.append(pheromone)
 
@@ -386,10 +402,65 @@ class K8sResourceProvider:
                     "pheromones": pheromones,
                     "count": len(pheromones),
                     "namespace": self.config.namespace,
+                    "note": "Intensity calculated on read (Passive Stigmergy v2.0)",
                 },
                 indent=2,
             ),
         )
+
+    def _calculate_pheromone_intensity(
+        self,
+        spec: dict[str, Any],
+        metadata: dict[str, Any],
+    ) -> float:
+        """Calculate current pheromone intensity from decay parameters.
+
+        PASSIVE STIGMERGY: This mirrors the operator's calculate_intensity()
+        function. Intensity is derived from stored parameters, not status.
+
+        Formula: intensity(t) = initialIntensity * (0.5 ^ (elapsed / halfLife))
+        """
+        from datetime import datetime
+
+        # Get emission time (prefer emittedAt, fallback to creationTimestamp)
+        emitted_str = spec.get("emittedAt") or metadata.get("creationTimestamp")
+
+        # Handle legacy pheromones without emittedAt
+        if not emitted_str:
+            return float(spec.get("intensity", spec.get("initialIntensity", 1.0)))
+
+        try:
+            emitted_at = datetime.fromisoformat(emitted_str.replace("Z", "+00:00"))
+        except (ValueError, AttributeError):
+            return float(spec.get("initialIntensity", spec.get("intensity", 1.0)))
+
+        # Get decay parameters
+        initial = spec.get("initialIntensity", spec.get("intensity", 1.0))
+        half_life = spec.get("halfLifeMinutes", 10.0)
+
+        # Legacy conversion: decay_rate to half_life
+        if "decay_rate" in spec and "halfLifeMinutes" not in spec:
+            decay_rate = spec["decay_rate"]
+            if decay_rate > 0:
+                half_life = 0.693 / decay_rate  # ln(2) / decay_rate
+
+        # Apply type-specific multiplier for DREAM pheromones
+        pheromone_type = spec.get("type", "STATE")
+        if pheromone_type == "DREAM":
+            half_life *= 2.0  # DREAM pheromones last twice as long
+
+        # Calculate elapsed time
+        from datetime import timezone as tz
+
+        now = datetime.now(tz.utc)
+        elapsed_minutes = (
+            now - emitted_at.replace(tzinfo=tz.utc)
+        ).total_seconds() / 60.0
+
+        # Exponential decay: intensity = initial * (0.5 ^ (elapsed / half_life))
+        intensity = float(initial) * (0.5 ** (elapsed_minutes / half_life))
+
+        return float(round(max(0.0, min(1.0, intensity)), 4))
 
     async def _read_cluster_status(self) -> MCPResourceContent:
         """Get overall cluster health."""
@@ -401,9 +472,7 @@ class K8sResourceProvider:
         }
 
         # Check namespace exists
-        ns_result = self._run_kubectl(
-            "get", "namespace", self.config.namespace
-        )
+        ns_result = self._run_kubectl("get", "namespace", self.config.namespace)
         if ns_result is None:
             status["healthy"] = False
             status["issues"].append(f"Namespace '{self.config.namespace}' not found")
@@ -413,15 +482,11 @@ class K8sResourceProvider:
             )
 
         # Get pods
-        pods_result = self._run_kubectl(
-            "get", "pods", "-n", self.config.namespace
-        )
+        pods_result = self._run_kubectl("get", "pods", "-n", self.config.namespace)
         if pods_result:
             pods = pods_result.get("items", [])
             running = sum(
-                1
-                for p in pods
-                if p.get("status", {}).get("phase") == "Running"
+                1 for p in pods if p.get("status", {}).get("phase") == "Running"
             )
             total = len(pods)
             status["components"]["pods"] = {
@@ -431,9 +496,7 @@ class K8sResourceProvider:
             }
             if running < total:
                 status["healthy"] = False
-                status["issues"].append(
-                    f"{total - running} pod(s) not running"
-                )
+                status["issues"].append(f"{total - running} pod(s) not running")
 
         # Check operator
         operator_result = self._run_kubectl(
@@ -476,9 +539,7 @@ class K8sResourceProvider:
                 status["issues"].append("L-gent not ready")
 
         # Check CRDs
-        crd_result = self._run_kubectl_text(
-            "get", "crd", "agents.kgents.io"
-        )
+        crd_result = self._run_kubectl_text("get", "crd", "agents.kgents.io")
         status["components"]["agent_crd"] = {
             "installed": crd_result is not None,
         }

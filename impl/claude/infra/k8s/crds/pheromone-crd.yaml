@@ -3,7 +3,15 @@
 # Pheromones are the coordination mechanism for kgents:
 #   - Agents EMIT pheromones (signals into the field)
 #   - Agents SENSE pheromones (perceive the field)
-#   - Pheromones DECAY over time (entropy)
+#   - Pheromones DECAY over time (entropy) - CALCULATED ON READ
+#
+# PASSIVE STIGMERGY (v2.0):
+#   Intensity is NOT stored in status. Instead, we store decay parameters
+#   and calculate intensity on read:
+#     intensity(t) = initialIntensity * (0.5 ^ ((now - emittedAt) / halfLifeMinutes))
+#
+#   This prevents etcd write storms from decay timers updating every pheromone.
+#   The operator only DELETES pheromones below threshold, never UPDATES them.
 #
 # This makes invisible coordination VISIBLE:
 #   kubectl get pheromones --watch
@@ -12,6 +20,7 @@
 #   - AGENTESE: Observation is action - watching pheromones IS sensing
 #   - Heterarchical: No fixed emitter/sensor hierarchy
 #   - Accursed Share: DREAM pheromones are "useless" by design
+#   - Tasteful: No etcd write storms from decay updates
 ---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
@@ -43,7 +52,6 @@ spec:
               type: object
               required:
                 - type
-                - intensity
                 - source
               properties:
                 type:
@@ -61,20 +69,40 @@ spec:
                     - TEST        # Test harness signals
                     - INTENT      # F-gent: action declarations
                     - DREAM       # Dreamer: accursed share (creative tangents)
+                    - CHAOS       # Void service: resilience testing
+                # PASSIVE STIGMERGY: Decay parameters (not state)
+                emittedAt:
+                  type: string
+                  format: date-time
+                  description: "When the pheromone was emitted (defaults to creation time)"
+                initialIntensity:
+                  type: number
+                  description: "Starting signal strength (0.0-1.0)"
+                  minimum: 0
+                  maximum: 1
+                  default: 1.0
+                halfLifeMinutes:
+                  type: number
+                  description: "Time in minutes for intensity to halve (default: 10)"
+                  minimum: 0.1
+                  default: 10
+                # Legacy field - kept for backward compatibility during migration
                 intensity:
                   type: number
-                  description: "Signal strength (0.0-1.0)"
+                  description: "DEPRECATED: Use initialIntensity. Signal strength (0.0-1.0)"
                   minimum: 0
                   maximum: 1
                 decay_rate:
                   type: number
-                  description: "Rate at which intensity decreases per minute (default: 0.1)"
+                  description: "DEPRECATED: Use halfLifeMinutes. Rate at which intensity decreases per minute"
                   minimum: 0
                   maximum: 1
-                  default: 0.1
                 source:
                   type: string
                   description: "Agent that emitted this pheromone (e.g., 'B-gent', 'Psi-gent')"
+                target:
+                  type: string
+                  description: "Target agent (optional - broadcast if omitted)"
                 payload:
                   type: string
                   description: "Semantic content of the signal (JSON or plain text)"
@@ -95,17 +123,14 @@ spec:
             status:
               type: object
               properties:
-                current_intensity:
-                  type: number
-                  description: "Decayed intensity (updated by operator)"
-                created_at:
+                # NOTE: current_intensity REMOVED - calculated on read (Passive Stigmergy)
+                phase:
                   type: string
-                  format: date-time
-                  description: "When the pheromone was emitted"
-                last_decay:
-                  type: string
-                  format: date-time
-                  description: "Last time decay was applied"
+                  description: "Lifecycle phase: ACTIVE, EVAPORATING, EVAPORATED"
+                  enum:
+                    - ACTIVE
+                    - EVAPORATING
+                    - EVAPORATED
                 sensed_by:
                   type: array
                   description: "Agents that have sensed this pheromone"
@@ -117,16 +142,20 @@ spec:
         - name: Type
           type: string
           jsonPath: .spec.type
-        - name: Intensity
+        - name: Initial
           type: number
-          jsonPath: .status.current_intensity
+          jsonPath: .spec.initialIntensity
           priority: 0
+        - name: HalfLife
+          type: number
+          jsonPath: .spec.halfLifeMinutes
+          priority: 1
         - name: Source
           type: string
           jsonPath: .spec.source
-        - name: Payload
+        - name: Target
           type: string
-          jsonPath: .spec.payload
+          jsonPath: .spec.target
           priority: 1
         - name: Age
           type: date

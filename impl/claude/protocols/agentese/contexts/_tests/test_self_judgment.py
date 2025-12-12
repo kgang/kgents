@@ -15,6 +15,7 @@ Required tests from creativity.md Phase 7:
 
 Property-based tests ensure the spec is correct regardless of implementation.
 """
+# mypy: disable-error-code="arg-type,no-any-return"
 
 from __future__ import annotations
 
@@ -44,7 +45,7 @@ class MockDNA:
 
 
 class MockUmwelt:
-    """Mock Umwelt for testing."""
+    """Mock Umwelt for testing - satisfies Umwelt protocol for test purposes."""
 
     def __init__(
         self,
@@ -95,14 +96,14 @@ class MockLogos:
 
 
 @pytest.fixture
-def observer() -> MockUmwelt:
-    """Create a default observer."""
+def observer() -> Any:
+    """Create a default observer (typed as Any to satisfy mock usage)."""
     return MockUmwelt()
 
 
 @pytest.fixture
-def observer_with_prior() -> MockUmwelt:
-    """Create an observer with prior expectation."""
+def observer_with_prior() -> Any:
+    """Create an observer with prior expectation (typed as Any to satisfy mock usage)."""
     return MockUmwelt(prior="Expected output")
 
 
@@ -750,3 +751,394 @@ class TestCritiqueProperties:
             suggestions=[],
         )
         assert critique_zero.overall == 0.0
+
+
+# === PAYADOR Bidirectional Skeleton Tests ===
+
+
+from ..self_judgment import (
+    RefinementMode,
+    Skeleton,
+    SkeletonRewriteConfig,
+    build_skeleton_expand_prompt,
+    build_skeleton_rewrite_prompt,
+    parse_skeleton_response,
+)
+
+
+class TestSkeletonRewriteConfig:
+    """Tests for SkeletonRewriteConfig dataclass."""
+
+    def test_default_config_values(self) -> None:
+        """Default config should have sensible thresholds."""
+        config = SkeletonRewriteConfig()
+        assert config.novelty_threshold == 0.3
+        assert config.utility_threshold == 0.4
+        assert config.temperature == 0.8
+        assert config.max_tokens == 1024
+
+    def test_config_validates_thresholds(self) -> None:
+        """Config should validate threshold ranges."""
+        with pytest.raises(ValueError, match="novelty_threshold"):
+            SkeletonRewriteConfig(novelty_threshold=1.5)
+
+        with pytest.raises(ValueError, match="utility_threshold"):
+            SkeletonRewriteConfig(utility_threshold=-0.1)
+
+    def test_config_is_frozen(self) -> None:
+        """Config should be immutable."""
+        config = SkeletonRewriteConfig()
+        with pytest.raises(Exception):  # FrozenInstanceError
+            config.novelty_threshold = 0.5  # type: ignore[misc]
+
+
+class TestSkeleton:
+    """Tests for Skeleton dataclass."""
+
+    def test_skeleton_creation(self) -> None:
+        """Skeleton should store structure, intent, and constraints."""
+        skeleton = Skeleton(
+            structure=("Introduction", "Main argument", "Conclusion"),
+            intent="Persuade the reader",
+            constraints=("Keep under 500 words", "Use formal tone"),
+        )
+        assert len(skeleton.structure) == 3
+        assert skeleton.intent == "Persuade the reader"
+        assert len(skeleton.constraints) == 2
+
+    def test_skeleton_to_prompt(self) -> None:
+        """to_prompt should produce readable format."""
+        skeleton = Skeleton(
+            structure=("Point A", "Point B"),
+            intent="Explain a concept",
+        )
+        prompt = skeleton.to_prompt()
+        assert "Skeleton Structure" in prompt
+        assert "1. Point A" in prompt
+        assert "2. Point B" in prompt
+        assert "Intent: Explain a concept" in prompt
+
+    def test_skeleton_to_prompt_with_constraints(self) -> None:
+        """to_prompt should include constraints when present."""
+        skeleton = Skeleton(
+            structure=("Point A",),
+            intent="Test",
+            constraints=("Constraint 1", "Constraint 2"),
+        )
+        prompt = skeleton.to_prompt()
+        assert "Constraints:" in prompt
+        assert "- Constraint 1" in prompt
+        assert "- Constraint 2" in prompt
+
+
+class TestSkeletonPromptBuilding:
+    """Tests for skeleton prompt building functions."""
+
+    def test_build_skeleton_rewrite_prompt(self) -> None:
+        """Should build a valid rewrite prompt."""
+        critique = Critique.create(
+            novelty=0.2,
+            utility=0.3,
+            surprise=0.5,
+            reasoning="Low novelty and utility",
+            suggestions=["Restructure the argument"],
+        )
+        prompt = build_skeleton_rewrite_prompt(
+            "Original text here",
+            critique,
+            purpose="Explain the concept",
+        )
+
+        assert "Current Artifact" in prompt
+        assert "Original text here" in prompt
+        assert "Critique" in prompt
+        assert "0.20" in prompt or "0.2" in prompt  # Novelty
+        assert "Purpose: Explain the concept" in prompt
+        assert "STRUCTURAL" in prompt
+
+    def test_build_skeleton_expand_prompt(self) -> None:
+        """Should build a valid expansion prompt."""
+        skeleton = Skeleton(
+            structure=("Intro", "Body", "Conclusion"),
+            intent="Teach a concept",
+        )
+        prompt = build_skeleton_expand_prompt(skeleton, "Original artifact")
+
+        assert "Skeleton Structure" in prompt
+        assert "Intro" in prompt
+        assert "Teach a concept" in prompt
+        assert "Original Artifact" in prompt
+        assert "Task" in prompt
+
+
+class TestParseSkeletonResponse:
+    """Tests for parse_skeleton_response function."""
+
+    def test_parse_valid_json_response(self) -> None:
+        """Should parse valid JSON response."""
+        response = """
+        Here is the skeleton:
+        {"structure": ["Point 1", "Point 2"], "intent": "Test intent", "constraints": ["Be brief"]}
+        """
+        skeleton = parse_skeleton_response(response)
+
+        assert skeleton is not None
+        assert skeleton.structure == ("Point 1", "Point 2")
+        assert skeleton.intent == "Test intent"
+        assert skeleton.constraints == ("Be brief",)
+
+    def test_parse_invalid_response_returns_none(self) -> None:
+        """Should return None for invalid response."""
+        skeleton = parse_skeleton_response("This is not JSON at all")
+        assert skeleton is None
+
+    def test_parse_partial_json_response(self) -> None:
+        """Should handle partial/malformed JSON."""
+        response = '{"structure": ["A"], broken json'
+        skeleton = parse_skeleton_response(response)
+        # Should return None for malformed JSON
+        assert skeleton is None
+
+
+class TestNeedsSkeletonRewrite:
+    """Tests for _needs_skeleton_rewrite detection."""
+
+    def test_no_config_returns_false(self) -> None:
+        """Without config, should never trigger skeleton rewrite."""
+        loop = CriticsLoop()  # No skeleton_config
+
+        critique = Critique.create(
+            novelty=0.1,  # Very low
+            utility=0.1,  # Very low
+            surprise=0.5,
+            reasoning="Low scores",
+            suggestions=[],
+        )
+
+        assert loop._needs_skeleton_rewrite(critique) is False
+
+    def test_no_llm_solver_returns_false(self) -> None:
+        """Without LLM solver, should not trigger."""
+        loop = CriticsLoop(
+            skeleton_config=SkeletonRewriteConfig(),
+            llm_solver=None,  # No solver
+        )
+
+        critique = Critique.create(
+            novelty=0.1,
+            utility=0.1,
+            surprise=0.5,
+            reasoning="Low scores",
+            suggestions=[],
+        )
+
+        assert loop._needs_skeleton_rewrite(critique) is False
+
+    def test_low_novelty_and_utility_triggers_rewrite(self) -> None:
+        """Low novelty AND utility should trigger skeleton rewrite."""
+
+        async def mock_solver(system: str, user: str) -> str:
+            return '{"structure": ["test"], "intent": "test", "constraints": []}'
+
+        loop = CriticsLoop(
+            skeleton_config=SkeletonRewriteConfig(
+                novelty_threshold=0.3,
+                utility_threshold=0.4,
+            ),
+            llm_solver=mock_solver,
+        )
+
+        # Both below thresholds
+        critique = Critique.create(
+            novelty=0.2,  # < 0.3
+            utility=0.3,  # < 0.4
+            surprise=0.5,
+            reasoning="Structural issues",
+            suggestions=[],
+        )
+
+        assert loop._needs_skeleton_rewrite(critique) is True
+
+    def test_high_novelty_no_rewrite(self) -> None:
+        """High novelty should not trigger rewrite even with low utility."""
+
+        async def mock_solver(system: str, user: str) -> str:
+            return "{}"
+
+        loop = CriticsLoop(
+            skeleton_config=SkeletonRewriteConfig(),
+            llm_solver=mock_solver,
+        )
+
+        # High novelty, low utility - texture issue, not structural
+        critique = Critique.create(
+            novelty=0.8,  # High
+            utility=0.2,  # Low
+            surprise=0.5,
+            reasoning="Novel but not useful",
+            suggestions=[],
+        )
+
+        assert loop._needs_skeleton_rewrite(critique) is False
+
+    def test_high_utility_no_rewrite(self) -> None:
+        """High utility should not trigger rewrite even with low novelty."""
+
+        async def mock_solver(system: str, user: str) -> str:
+            return "{}"
+
+        loop = CriticsLoop(
+            skeleton_config=SkeletonRewriteConfig(),
+            llm_solver=mock_solver,
+        )
+
+        # Low novelty, high utility - conventional but works
+        critique = Critique.create(
+            novelty=0.2,  # Low
+            utility=0.8,  # High
+            surprise=0.5,
+            reasoning="Not novel but useful",
+            suggestions=[],
+        )
+
+        assert loop._needs_skeleton_rewrite(critique) is False
+
+
+class TestDetermineRefinementMode:
+    """Tests for _determine_refinement_mode."""
+
+    def test_returns_skeleton_when_rewrite_needed(self) -> None:
+        """Should return SKELETON mode when structural issues detected."""
+
+        async def mock_solver(system: str, user: str) -> str:
+            return "{}"
+
+        loop = CriticsLoop(
+            skeleton_config=SkeletonRewriteConfig(),
+            llm_solver=mock_solver,
+        )
+
+        critique = Critique.create(
+            novelty=0.1,
+            utility=0.1,
+            surprise=0.5,
+            reasoning="Both low",
+            suggestions=[],
+        )
+
+        assert loop._determine_refinement_mode(critique) == RefinementMode.SKELETON
+
+    def test_returns_texture_when_no_rewrite_needed(self) -> None:
+        """Should return TEXTURE mode for normal refinement."""
+        loop = CriticsLoop()  # No skeleton config
+
+        critique = Critique.create(
+            novelty=0.5,
+            utility=0.5,
+            surprise=0.5,
+            reasoning="Normal scores",
+            suggestions=[],
+        )
+
+        assert loop._determine_refinement_mode(critique) == RefinementMode.TEXTURE
+
+
+class TestSkeletonRewriteIntegration:
+    """Integration tests for skeleton rewrite flow."""
+
+    @pytest.mark.asyncio
+    async def test_skeleton_rewrite_flow(self) -> None:
+        """Test full skeleton rewrite flow with mocked LLM."""
+        rewrite_called = False
+        expand_called = False
+
+        async def mock_solver(system: str, user: str) -> str:
+            nonlocal rewrite_called, expand_called
+
+            if "structural rewriter" in system.lower():
+                rewrite_called = True
+                return '{"structure": ["New point 1", "New point 2"], "intent": "Improved", "constraints": []}'
+            elif "expanding" in system.lower() or "expand" in system.lower():
+                expand_called = True
+                return "This is the expanded new artifact with improved structure."
+            return ""
+
+        loop = CriticsLoop(
+            skeleton_config=SkeletonRewriteConfig(),
+            llm_solver=mock_solver,
+        )
+
+        critique = Critique.create(
+            novelty=0.1,
+            utility=0.1,
+            surprise=0.5,
+            reasoning="Structural issues",
+            suggestions=[],
+        )
+
+        result = await loop._rewrite_with_skeleton(
+            "Original artifact",
+            critique,
+        )
+
+        assert rewrite_called, "Skeleton rewrite should have been called"
+        assert expand_called, "Skeleton expand should have been called"
+        assert result is not None
+        assert "expanded" in result.lower() or "improved" in result.lower()
+
+    @pytest.mark.asyncio
+    async def test_skeleton_rewrite_fallback_on_parse_error(self) -> None:
+        """Should return None if skeleton parsing fails."""
+
+        async def bad_solver(system: str, user: str) -> str:
+            return "Not valid JSON"
+
+        loop = CriticsLoop(
+            skeleton_config=SkeletonRewriteConfig(),
+            llm_solver=bad_solver,
+        )
+
+        critique = Critique.create(
+            novelty=0.1,
+            utility=0.1,
+            surprise=0.5,
+            reasoning="Test",
+            suggestions=[],
+        )
+
+        result = await loop._rewrite_with_skeleton("artifact", critique)
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_refine_artifact_uses_skeleton_when_appropriate(
+        self, observer: MockUmwelt
+    ) -> None:
+        """_refine_artifact should use skeleton rewrite for structural issues."""
+        skeleton_used = False
+
+        async def mock_solver(system: str, user: str) -> str:
+            nonlocal skeleton_used
+            skeleton_used = True
+            if "rewriter" in system.lower():
+                return '{"structure": ["A", "B"], "intent": "Test", "constraints": []}'
+            return "Expanded artifact from skeleton"
+
+        loop = CriticsLoop(
+            skeleton_config=SkeletonRewriteConfig(),
+            llm_solver=mock_solver,
+        )
+
+        critique = Critique.create(
+            novelty=0.1,
+            utility=0.1,
+            surprise=0.5,
+            reasoning="Structural",
+            suggestions=[],
+        )
+
+        logos = MockLogos()
+        result = await loop._refine_artifact(logos, observer, "Original", critique)
+
+        assert skeleton_used
+        # Result should be from skeleton expansion, not original
+        assert result != "Original"

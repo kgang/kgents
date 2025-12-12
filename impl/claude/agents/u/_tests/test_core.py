@@ -12,7 +12,7 @@ Tests cover:
 from dataclasses import dataclass
 
 import pytest
-from agents.t import (
+from agents.u import (
     PassthroughTool,
     Tool,
     ToolError,

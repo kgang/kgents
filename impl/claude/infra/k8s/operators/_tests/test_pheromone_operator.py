@@ -1,8 +1,15 @@
-"""Tests for Pheromone Operator decay logic.
+"""Tests for Pheromone Operator - Passive Stigmergy (v2.0).
 
 These tests verify the pheromone decay system works correctly
 without requiring a real K8s cluster.
+
+v2.0 Changes:
+- calculate_intensity() replaces calculate_decay()
+- Intensity calculated on read, not stored
+- MockPheromone.intensity is a property, not a field
+- should_evaporate() replaces should_delete()
 """
+# mypy: disable-error-code="union-attr"
 
 from __future__ import annotations
 
@@ -10,160 +17,208 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 from infra.k8s.operators.pheromone_operator import (
-    DEFAULT_DECAY_RATE,
-    DREAM_DECAY_MULTIPLIER,
+    DEFAULT_HALF_LIFE_MINUTES,
+    DREAM_HALF_LIFE_MULTIPLIER,
+    EVAPORATION_THRESHOLD,
     MockPheromone,
     MockPheromoneField,
-    calculate_decay,
+    calculate_intensity,
     get_mock_field,
     reset_mock_field,
-    should_delete,
+    should_evaporate,
 )
 
 
-class TestCalculateDecay:
-    """Test the decay calculation function."""
+class TestCalculateIntensity:
+    """Test the intensity calculation function (Passive Stigmergy)."""
 
-    def test_basic_decay(self) -> None:
-        """Basic decay reduces intensity."""
-        result = calculate_decay(
-            current_intensity=1.0,
-            decay_rate=0.1,
-            pheromone_type="WARNING",
-            elapsed_minutes=1.0,
-        )
-        assert result == pytest.approx(0.9)
+    def test_fresh_pheromone_full_intensity(self) -> None:
+        """Fresh pheromone has full intensity."""
+        spec = {
+            "emittedAt": datetime.now(timezone.utc).isoformat(),
+            "initialIntensity": 1.0,
+            "halfLifeMinutes": 10,
+            "type": "WARNING",
+        }
+        result = calculate_intensity(spec)
+        assert result == pytest.approx(1.0, abs=0.01)
 
-    def test_decay_over_time(self) -> None:
-        """Decay accumulates over multiple minutes."""
-        result = calculate_decay(
-            current_intensity=1.0,
-            decay_rate=0.1,
-            pheromone_type="WARNING",
-            elapsed_minutes=5.0,
-        )
-        assert result == pytest.approx(0.5)
+    def test_half_life_decay(self) -> None:
+        """After one half-life, intensity is ~0.5."""
+        old_time = datetime.now(timezone.utc) - timedelta(minutes=10)
+        spec = {
+            "emittedAt": old_time.isoformat(),
+            "initialIntensity": 1.0,
+            "halfLifeMinutes": 10,
+            "type": "WARNING",
+        }
+        result = calculate_intensity(spec)
+        assert result == pytest.approx(0.5, abs=0.05)
 
-    def test_decay_clamps_to_zero(self) -> None:
-        """Decay cannot go below zero."""
-        result = calculate_decay(
-            current_intensity=0.1,
-            decay_rate=0.5,
-            pheromone_type="WARNING",
-            elapsed_minutes=1.0,
-        )
-        assert result == 0.0
+    def test_double_half_life_quarter_intensity(self) -> None:
+        """After two half-lives, intensity is ~0.25."""
+        old_time = datetime.now(timezone.utc) - timedelta(minutes=20)
+        spec = {
+            "emittedAt": old_time.isoformat(),
+            "initialIntensity": 1.0,
+            "halfLifeMinutes": 10,
+            "type": "WARNING",
+        }
+        result = calculate_intensity(spec)
+        assert result == pytest.approx(0.25, abs=0.05)
 
-    def test_dream_decay_slower(self) -> None:
-        """DREAM pheromones decay at half rate (accursed share)."""
-        warning_decay = calculate_decay(
-            current_intensity=1.0,
-            decay_rate=0.2,
-            pheromone_type="WARNING",
-            elapsed_minutes=1.0,
-        )
-        dream_decay = calculate_decay(
-            current_intensity=1.0,
-            decay_rate=0.2,
-            pheromone_type="DREAM",
-            elapsed_minutes=1.0,
-        )
+    def test_dream_decays_slower(self) -> None:
+        """DREAM pheromones decay at half rate (2x half-life)."""
+        old_time = datetime.now(timezone.utc) - timedelta(minutes=10)
 
-        assert warning_decay == pytest.approx(0.8)
-        assert dream_decay == pytest.approx(0.9)  # Half decay rate
-        assert dream_decay > warning_decay  # DREAM preserved longer
+        warning_spec = {
+            "emittedAt": old_time.isoformat(),
+            "initialIntensity": 1.0,
+            "halfLifeMinutes": 10,
+            "type": "WARNING",
+        }
+        dream_spec = {
+            "emittedAt": old_time.isoformat(),
+            "initialIntensity": 1.0,
+            "halfLifeMinutes": 10,
+            "type": "DREAM",  # Gets 2x multiplier
+        }
 
-    def test_zero_decay_rate(self) -> None:
-        """Zero decay rate means no decay."""
-        result = calculate_decay(
-            current_intensity=1.0,
-            decay_rate=0.0,
-            pheromone_type="STATE",
-            elapsed_minutes=100.0,
-        )
-        assert result == 1.0
+        warning_intensity = calculate_intensity(warning_spec)
+        dream_intensity = calculate_intensity(dream_spec)
+
+        assert warning_intensity == pytest.approx(0.5, abs=0.05)
+        # DREAM with 2x multiplier: effective half-life is 20min
+        # After 10min: 0.5^(10/20) = 0.5^0.5 ≈ 0.707
+        assert dream_intensity == pytest.approx(0.707, abs=0.05)
+        assert dream_intensity > warning_intensity
+
+    def test_legacy_intensity_field(self) -> None:
+        """Legacy specs with 'intensity' field still work."""
+        spec = {
+            "intensity": 0.8,  # Legacy field
+            "type": "STATE",
+        }
+        result = calculate_intensity(spec)
+        assert result == 0.8
+
+    def test_custom_initial_intensity(self) -> None:
+        """Custom initial intensity is respected."""
+        spec = {
+            "emittedAt": datetime.now(timezone.utc).isoformat(),
+            "initialIntensity": 0.5,
+            "halfLifeMinutes": 10,
+            "type": "STATE",
+        }
+        result = calculate_intensity(spec)
+        assert result == pytest.approx(0.5, abs=0.01)
 
 
-class TestShouldDelete:
-    """Test the deletion decision function."""
+class TestShouldEvaporate:
+    """Test the evaporation decision function."""
 
-    def test_delete_at_zero_intensity(self) -> None:
-        """Delete when intensity reaches zero."""
-        assert should_delete(intensity=0.0, created_at=None, ttl_seconds=None) is True
+    def test_evaporate_below_threshold(self) -> None:
+        """Evaporate when intensity below threshold."""
+        # Very old pheromone should be below threshold
+        old_time = datetime.now(timezone.utc) - timedelta(hours=2)
+        spec = {
+            "emittedAt": old_time.isoformat(),
+            "initialIntensity": 1.0,
+            "halfLifeMinutes": 10,
+            "type": "STATE",
+        }
+        meta = {"creationTimestamp": old_time.isoformat()}
+        assert should_evaporate(spec, meta) is True
 
-    def test_dont_delete_with_intensity(self) -> None:
-        """Don't delete when intensity remains."""
-        assert should_delete(intensity=0.5, created_at=None, ttl_seconds=None) is False
+    def test_dont_evaporate_fresh(self) -> None:
+        """Don't evaporate fresh pheromones."""
+        spec = {
+            "emittedAt": datetime.now(timezone.utc).isoformat(),
+            "initialIntensity": 1.0,
+            "halfLifeMinutes": 10,
+            "type": "STATE",
+        }
+        meta = {"creationTimestamp": datetime.now(timezone.utc).isoformat()}
+        assert should_evaporate(spec, meta) is False
 
-    def test_delete_on_ttl_expired(self) -> None:
-        """Delete when TTL has expired."""
-        created = datetime.now(timezone.utc) - timedelta(seconds=120)
-        assert should_delete(intensity=1.0, created_at=created, ttl_seconds=60) is True
+    def test_evaporate_on_ttl_expired(self) -> None:
+        """Evaporate when TTL has expired."""
+        spec = {
+            "emittedAt": datetime.now(timezone.utc).isoformat(),
+            "initialIntensity": 1.0,
+            "halfLifeMinutes": 60,  # Long half-life
+            "type": "STATE",
+            "ttl_seconds": 60,
+        }
+        old_time = datetime.now(timezone.utc) - timedelta(seconds=120)
+        meta = {"creationTimestamp": old_time.isoformat()}
+        assert should_evaporate(spec, meta) is True
 
-    def test_dont_delete_before_ttl(self) -> None:
-        """Don't delete before TTL expires."""
-        created = datetime.now(timezone.utc) - timedelta(seconds=30)
-        assert should_delete(intensity=1.0, created_at=created, ttl_seconds=60) is False
-
-    def test_no_ttl_only_checks_intensity(self) -> None:
-        """Without TTL, only intensity matters."""
-        created = datetime.now(timezone.utc) - timedelta(days=100)
-        assert (
-            should_delete(intensity=0.5, created_at=created, ttl_seconds=None) is False
-        )
+    def test_dont_evaporate_before_ttl(self) -> None:
+        """Don't evaporate before TTL expires."""
+        spec = {
+            "emittedAt": datetime.now(timezone.utc).isoformat(),
+            "initialIntensity": 1.0,
+            "halfLifeMinutes": 60,
+            "type": "STATE",
+            "ttl_seconds": 120,
+        }
+        recent = datetime.now(timezone.utc) - timedelta(seconds=30)
+        meta = {"creationTimestamp": recent.isoformat()}
+        assert should_evaporate(spec, meta) is False
 
 
 class TestMockPheromone:
-    """Test the mock pheromone implementation."""
+    """Test the mock pheromone implementation (Passive Stigmergy)."""
 
     def test_create_pheromone(self) -> None:
         """Can create a mock pheromone."""
         ph = MockPheromone(
             name="test-ph",
             pheromone_type="WARNING",
-            intensity=0.8,
+            initial_intensity=0.8,
             source="B-gent",
             payload="Budget exceeded",
         )
         assert ph.name == "test-ph"
         assert ph.type == "WARNING"
-        assert ph.intensity == 0.8
+        assert ph.initial_intensity == 0.8
         assert ph.source == "B-gent"
         assert ph.payload == "Budget exceeded"
         assert ph.sensed_by == []
 
-    def test_decay_reduces_intensity(self) -> None:
-        """Decay reduces pheromone intensity."""
+    def test_intensity_is_property(self) -> None:
+        """Intensity is calculated on access (Passive Stigmergy)."""
         ph = MockPheromone(
             name="test-ph",
             pheromone_type="WARNING",
-            intensity=1.0,
+            initial_intensity=1.0,
             source="B-gent",
-            decay_rate=0.2,
+            half_life_minutes=10,
         )
-        deleted = ph.decay(elapsed_minutes=1.0)
-        assert deleted is False
-        assert ph.intensity == pytest.approx(0.8)
+        # Fresh pheromone should be ~1.0
+        assert ph.intensity == pytest.approx(1.0, abs=0.01)
 
-    def test_decay_returns_true_when_depleted(self) -> None:
-        """Decay returns True when intensity reaches zero."""
+    def test_should_evaporate_threshold(self) -> None:
+        """should_evaporate() returns True below threshold."""
+        # Create a pheromone with very short half-life in the past
         ph = MockPheromone(
             name="test-ph",
             pheromone_type="WARNING",
-            intensity=0.1,
+            initial_intensity=1.0,
             source="B-gent",
-            decay_rate=0.5,
+            half_life_minutes=0.1,  # Very short
         )
-        deleted = ph.decay(elapsed_minutes=1.0)
-        assert deleted is True
-        assert ph.intensity == 0.0
+        # Manually set emitted_at to the past
+        ph.emitted_at = datetime.now(timezone.utc) - timedelta(hours=1)
+        assert ph.should_evaporate() is True
 
     def test_sense_records_agent(self) -> None:
         """Sensing records which agents sensed the pheromone."""
         ph = MockPheromone(
             name="test-ph",
             pheromone_type="MEMORY",
-            intensity=0.5,
+            initial_intensity=0.5,
             source="M-gent",
         )
         ph.sense("O-gent")
@@ -176,7 +231,7 @@ class TestMockPheromone:
 
 
 class TestMockPheromoneField:
-    """Test the mock pheromone field."""
+    """Test the mock pheromone field (Passive Stigmergy)."""
 
     def test_emit_and_list(self) -> None:
         """Can emit and list pheromones."""
@@ -191,15 +246,30 @@ class TestMockPheromoneField:
     def test_sense_filters_by_type(self) -> None:
         """Sensing can filter by pheromone type."""
         field = MockPheromoneField()
-        field.emit("warn-1", "WARNING", 0.8, "F-gent")
-        field.emit("mem-1", "MEMORY", 0.5, "M-gent")
-        field.emit("warn-2", "WARNING", 0.6, "J-gent")
+        field.emit("warn-1", "WARNING", initial_intensity=0.8, source="F-gent")
+        field.emit("mem-1", "MEMORY", initial_intensity=0.5, source="M-gent")
+        field.emit("warn-2", "WARNING", initial_intensity=0.6, source="J-gent")
 
         warnings = field.sense("O-gent", pheromone_type="WARNING")
         assert len(warnings) == 2
         assert all(ph.type == "WARNING" for ph in warnings)
         # Sorted by intensity descending
-        assert warnings[0].intensity > warnings[1].intensity
+        assert warnings[0].intensity >= warnings[1].intensity
+
+    def test_sense_filters_by_target(self) -> None:
+        """Sensing can filter by target agent."""
+        field = MockPheromoneField()
+        field.emit("broadcast", "WARNING", 0.8, "F-gent", target=None)
+        field.emit("targeted", "WARNING", 0.8, "F-gent", target="O-gent")
+        field.emit("other", "WARNING", 0.8, "F-gent", target="N-gent")
+
+        # O-gent should see broadcast and targeted at them
+        sensed = field.sense("O-gent", target="O-gent")
+        assert len(sensed) == 2  # broadcast + targeted
+        names = {ph.name for ph in sensed}
+        assert "broadcast" in names
+        assert "targeted" in names
+        assert "other" not in names
 
     def test_sense_records_sensor(self) -> None:
         """Sensing records the sensing agent."""
@@ -210,25 +280,32 @@ class TestMockPheromoneField:
         ph = field.list()[0]
         assert "O-gent" in ph.sensed_by
 
-    def test_tick_applies_decay(self) -> None:
-        """Tick applies decay to all pheromones."""
+    def test_tick_garbage_collects(self) -> None:
+        """Tick garbage collects evaporated pheromones."""
         field = MockPheromoneField()
-        field.emit("ph-1", "WARNING", 0.5, "F-gent", decay_rate=0.1)
-        field.emit("ph-2", "MEMORY", 0.3, "M-gent", decay_rate=0.2)
+        # Create one with very short half-life
+        field.emit(
+            "will-die",
+            "MEMORY",
+            initial_intensity=0.02,
+            source="M-gent",
+            half_life_minutes=0.1,
+        )
+        # Manually age it
+        field.get("will-die").emitted_at = datetime.now(timezone.utc) - timedelta(
+            hours=1
+        )
 
-        field.tick(elapsed_minutes=1.0)
+        # Create one that will survive
+        field.emit(
+            "will-survive",
+            "WARNING",
+            initial_intensity=1.0,
+            source="F-gent",
+            half_life_minutes=60,
+        )
 
-        pheromones = {ph.name: ph.intensity for ph in field.list()}
-        assert pheromones["ph-1"] == pytest.approx(0.4)
-        assert pheromones["ph-2"] == pytest.approx(0.1)
-
-    def test_tick_deletes_depleted(self) -> None:
-        """Tick deletes pheromones that decay to zero."""
-        field = MockPheromoneField()
-        field.emit("will-survive", "WARNING", 1.0, "F-gent", decay_rate=0.1)
-        field.emit("will-die", "MEMORY", 0.1, "M-gent", decay_rate=0.5)
-
-        deleted = field.tick(elapsed_minutes=1.0)
+        deleted = field.tick()
 
         assert deleted == 1
         names = [ph.name for ph in field.list()]
@@ -272,7 +349,7 @@ class TestIntegrationScenarios:
         field.emit(
             name="test-failure-graph-py",
             pheromone_type="WARNING",
-            intensity=0.9,
+            initial_intensity=0.9,
             source="F-gent",
             payload='{"file": "graph.py", "line": 142, "occurrences": 3}',
         )
@@ -280,22 +357,11 @@ class TestIntegrationScenarios:
         # O-gent monitors field, senses all warnings
         warnings = field.sense("O-gent", pheromone_type="WARNING")
         assert len(warnings) == 1
-        assert warnings[0].intensity == 0.9
+        # Fresh pheromone should be close to initial
+        assert warnings[0].intensity == pytest.approx(0.9, abs=0.05)
 
-        # Time passes, decay occurs
-        field.tick(elapsed_minutes=2.0)
-
-        # Intensity reduced but still present
-        warnings = field.sense("O-gent", pheromone_type="WARNING")
-        assert warnings[0].intensity < 0.9
-
-        # F-gent fixes the issue - doesn't emit more warnings
-        # Over time, the WARNING decays away naturally
-        for _ in range(10):
-            field.tick(elapsed_minutes=1.0)
-
-        # Eventually deleted
-        assert len(field.list()) == 0
+        # Sense records the agent
+        assert "O-gent" in warnings[0].sensed_by
 
     def test_dream_pheromone_preserved(self) -> None:
         """DREAM pheromones decay slower (accursed share principle)."""
@@ -305,30 +371,62 @@ class TestIntegrationScenarios:
         field.emit(
             name="dream-haiku-auth",
             pheromone_type="DREAM",
-            intensity=0.8,
+            initial_intensity=0.8,
             source="Dreamer",
             payload="What if auth.py was a haiku?",
-            decay_rate=0.2,  # Same rate, but DREAM applies multiplier
+            half_life_minutes=10,
         )
 
         # Standard warning for comparison
         field.emit(
             name="warning-auth",
             pheromone_type="WARNING",
-            intensity=0.8,
+            initial_intensity=0.8,
             source="F-gent",
-            decay_rate=0.2,
+            half_life_minutes=10,
         )
 
-        # After 2 minutes of decay
-        field.tick(elapsed_minutes=2.0)
+        # Get the pheromones
+        dream_ph = field.get("dream-haiku-auth")
+        warning_ph = field.get("warning-auth")
 
-        pheromones = {ph.name: ph.intensity for ph in field.list()}
+        # Manually age them by 10 minutes
+        aged_time = datetime.now(timezone.utc) - timedelta(minutes=10)
+        dream_ph.emitted_at = aged_time
+        warning_ph.emitted_at = aged_time
 
-        # DREAM decays at 0.2 * 0.5 = 0.1 per minute
-        # WARNING decays at 0.2 per minute
-        assert pheromones["dream-haiku-auth"] == pytest.approx(0.6)  # 0.8 - 0.1*2
-        assert pheromones["warning-auth"] == pytest.approx(0.4)  # 0.8 - 0.2*2
+        # DREAM with 2x half-life multiplier decays slower
+        # WARNING: 0.8 * 0.5^(10/10) = 0.4
+        # DREAM: 0.8 * 0.5^(10/20) ≈ 0.566
+        assert warning_ph.intensity == pytest.approx(0.4, abs=0.05)
+        assert dream_ph.intensity == pytest.approx(0.566, abs=0.05)
 
         # DREAM preserved longer - joy cannot be optimized
-        assert pheromones["dream-haiku-auth"] > pheromones["warning-auth"]
+        assert dream_ph.intensity > warning_ph.intensity
+
+    def test_passive_stigmergy_no_updates(self) -> None:
+        """Verify that intensity is calculated, not stored."""
+        field = MockPheromoneField()
+
+        field.emit(
+            name="test-ph",
+            pheromone_type="STATE",
+            initial_intensity=1.0,
+            source="test",
+            half_life_minutes=10,
+        )
+
+        ph = field.get("test-ph")
+
+        # Store initial_intensity (the stored value)
+        stored_value = ph.initial_intensity
+
+        # Access intensity multiple times (calculated on read)
+        i1 = ph.intensity
+        i2 = ph.intensity
+
+        # Stored value unchanged
+        assert ph.initial_intensity == stored_value
+
+        # Calculated values should be very close (calculated at ~same time)
+        assert i1 == pytest.approx(i2, abs=0.001)

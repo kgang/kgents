@@ -264,12 +264,57 @@ def get_postcondition(f: Callable[..., Any]) -> Callable[[Any], bool] | None:
     return getattr(f, "_ensure", None)
 
 
+# === LLM-backed Solver (Task 3: Wire Pataphysics to LLM) ===
+
+
+def create_llm_solver(
+    ensure: "Callable[[Any], bool] | None" = None,
+    verbose: bool = False,
+) -> "Callable[[MeltingContext], Awaitable[Any]]":
+    """
+    Create an LLM-backed pataphysics solver using Claude CLI.
+
+    This factory creates a solver that uses the Claude Code CLI for
+    generating imaginary solutions. The CLI handles authentication
+    automatically via OAuth.
+
+    Args:
+        ensure: Optional postcondition for better prompting
+        verbose: Enable debug logging
+
+    Returns:
+        Async solver function for use with @meltable(solver=...)
+
+    Example:
+        @meltable(
+            solver=create_llm_solver(ensure=lambda x: x > 0),
+            ensure=lambda x: x > 0,
+        )
+        async def calculate_value() -> int:
+            raise RuntimeError("Boom")
+
+    Note:
+        Requires Claude CLI to be installed and authenticated.
+        The solver is lazy-initialized on first use.
+    """
+    from .pataphysics import pataphysics_solver_with_postcondition
+
+    if ensure is not None:
+        return pataphysics_solver_with_postcondition(ensure=ensure, verbose=verbose)
+
+    # No postcondition, return a basic solver
+    from .pataphysics import create_pataphysics_solver
+
+    return create_pataphysics_solver()
+
+
 # === Re-exports ===
 
 
 __all__ = [
     "ContractViolationError",
     "MeltingContext",
+    "create_llm_solver",
     "default_pataphysics_solver",
     "get_postcondition",
     "is_meltable",

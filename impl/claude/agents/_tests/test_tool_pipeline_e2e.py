@@ -45,15 +45,19 @@ from agents.o import (
     BaseObserver,
 )
 
-# T-gent imports
+# T-gent imports (testing agents)
 from agents.t import (
     FailingAgent,
     FailingConfig,
     FailureType,
     MockAgent,
     MockConfig,
-    RobustToolExecutor,
     SpyAgent,
+)
+
+# U-gent imports (utility/tool agents)
+from agents.u import (
+    RobustToolExecutor,
     Tool,
     ToolExecutor,
     ToolIdentity,

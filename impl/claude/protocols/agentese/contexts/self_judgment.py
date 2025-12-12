@@ -10,6 +10,14 @@ Source: SPECS (Jordanous 2012) - Standardised Procedure for Evaluating Creative 
 
 Core Insight: "A generator without a critic is just a random number generator."
 
+PAYADOR Fix (v2.5): Bidirectional Skeleton-Texture Pipeline
+When critique detects structural issues (low novelty AND low utility), the system:
+1. Detects that the structure is wrong (not just texture)
+2. Rewrites the skeleton via LLM
+3. Re-expands with new skeleton
+
+Source: "Minimalist Approach to Grounding Language Models" (ICCC 2024)
+
 Principle Alignment:
 - Tasteful: Critique provides architectural quality assessment
 - Ethical: Self-evaluation maintains agent responsibility
@@ -19,13 +27,17 @@ Principle Alignment:
 
 from __future__ import annotations
 
+import json
+import re
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+from enum import Enum
+from typing import TYPE_CHECKING, Any, Callable, Protocol, runtime_checkable
 
 from ..middleware.curator import structural_surprise
 
 if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt
+    from runtime.cli import ClaudeCLIRuntime
 
 
 # === Critique Weights ===
@@ -184,6 +196,218 @@ class RefinedArtifact:
         }
 
 
+# === PAYADOR: Bidirectional Skeleton-Texture Types ===
+
+
+class RefinementMode(Enum):
+    """
+    Mode of refinement for the PAYADOR bidirectional pipeline.
+
+    - TEXTURE: Refine the surface rendering (default)
+    - SKELETON: Rewrite the underlying structure
+    """
+
+    TEXTURE = "texture"
+    SKELETON = "skeleton"
+
+
+@dataclass(frozen=True)
+class SkeletonRewriteConfig:
+    """
+    Configuration for skeleton rewriting via LLM.
+
+    Attributes:
+        novelty_threshold: Below this novelty score, consider skeleton rewrite
+        utility_threshold: Below this utility score (combined with novelty), trigger rewrite
+        temperature: LLM temperature for skeleton generation
+        max_tokens: Maximum tokens for skeleton response
+    """
+
+    novelty_threshold: float = 0.3
+    utility_threshold: float = 0.4
+    temperature: float = 0.8
+    max_tokens: int = 1024
+
+    def __post_init__(self) -> None:
+        """Validate thresholds are in valid range."""
+        for name, value in [
+            ("novelty_threshold", self.novelty_threshold),
+            ("utility_threshold", self.utility_threshold),
+        ]:
+            if not 0.0 <= value <= 1.0:
+                raise ValueError(f"{name} must be between 0.0 and 1.0, got {value}")
+
+
+@dataclass(frozen=True)
+class Skeleton:
+    """
+    Structural representation of an artifact.
+
+    The skeleton captures the high-level structure (plot points, arguments,
+    sections) without surface details (prose, formatting, examples).
+
+    Attributes:
+        structure: The structural elements as a list of strings
+        intent: The original purpose or goal
+        constraints: Any constraints to maintain during re-expansion
+    """
+
+    structure: tuple[str, ...]
+    intent: str
+    constraints: tuple[str, ...] = ()
+
+    def to_prompt(self) -> str:
+        """Convert skeleton to LLM-readable format."""
+        lines = [
+            "## Skeleton Structure",
+            "",
+        ]
+        for i, elem in enumerate(self.structure, 1):
+            lines.append(f"{i}. {elem}")
+        lines.extend(
+            [
+                "",
+                f"## Intent: {self.intent}",
+            ]
+        )
+        if self.constraints:
+            lines.append("")
+            lines.append("## Constraints:")
+            for c in self.constraints:
+                lines.append(f"- {c}")
+        return "\n".join(lines)
+
+
+# === Skeleton Agent Prompts ===
+
+
+SKELETON_REWRITE_SYSTEM = """You are a structural rewriter for creative artifacts.
+
+Given an artifact and critique, you extract and rewrite the underlying STRUCTURE (skeleton),
+not the surface text (texture). The skeleton captures:
+- Key points, arguments, or plot elements
+- Logical organization and flow
+- Core concepts that need to be communicated
+
+You respond in JSON format with:
+{
+    "structure": ["point 1", "point 2", ...],
+    "intent": "the core purpose of this artifact",
+    "constraints": ["constraint 1", ...],
+    "reasoning": "why this new structure addresses the critique"
+}
+
+Focus on STRUCTURAL changes. If the critique indicates low novelty, propose a more
+novel organizational approach. If utility is low, restructure to better serve the purpose."""
+
+
+def build_skeleton_rewrite_prompt(
+    artifact: Any,
+    critique: "Critique",
+    purpose: str | None = None,
+) -> str:
+    """Build prompt for skeleton rewriting."""
+    lines = [
+        "## Current Artifact",
+        str(artifact),
+        "",
+        "## Critique",
+        f"Novelty: {critique.novelty:.2f}",
+        f"Utility: {critique.utility:.2f}",
+        f"Surprise: {critique.surprise:.2f}",
+        f"Overall: {critique.overall:.2f}",
+        f"Reasoning: {critique.reasoning}",
+        "",
+        "## Suggestions",
+    ]
+    for s in critique.suggestions:
+        lines.append(f"- {s}")
+
+    if purpose:
+        lines.extend(
+            [
+                "",
+                f"## Purpose: {purpose}",
+            ]
+        )
+
+    lines.extend(
+        [
+            "",
+            "## Task",
+            "Analyze the STRUCTURAL issues in this artifact based on the critique.",
+            "Propose a new skeleton (structure) that addresses the critique.",
+            "Focus on reorganization and restructuring, not word-level changes.",
+            "",
+            'Respond with JSON: {"structure": [...], "intent": "...", '
+            '"constraints": [...], "reasoning": "..."}',
+        ]
+    )
+
+    return "\n".join(lines)
+
+
+SKELETON_EXPAND_SYSTEM = """You are a creative writer expanding structural skeletons into full prose.
+
+Given a skeleton (structure, intent, constraints), you generate the full artifact
+that realizes this structure. Maintain the skeleton's organization while adding:
+- Rich detail and examples
+- Smooth transitions
+- Appropriate tone and style
+- Engaging prose
+
+The output should feel natural, not like a mechanical expansion of bullet points."""
+
+
+def build_skeleton_expand_prompt(
+    skeleton: "Skeleton",
+    original_artifact: Any | None = None,
+) -> str:
+    """Build prompt for skeleton expansion."""
+    lines = [skeleton.to_prompt()]
+
+    if original_artifact is not None:
+        lines.extend(
+            [
+                "",
+                "## Original Artifact (for reference, do not copy directly)",
+                str(original_artifact)[:500],  # Truncate for context
+            ]
+        )
+
+    lines.extend(
+        [
+            "",
+            "## Task",
+            "Expand this skeleton into a full, polished artifact.",
+            "Follow the structure exactly, but make it read naturally.",
+            "Respect all constraints.",
+            "",
+            "Provide ONLY the expanded artifact, no commentary.",
+        ]
+    )
+
+    return "\n".join(lines)
+
+
+def parse_skeleton_response(response: str) -> Skeleton | None:
+    """Parse LLM response into a Skeleton."""
+    # Try to extract JSON from response
+    json_match = re.search(r"\{[^{}]*\}", response, re.DOTALL)
+    if json_match:
+        try:
+            data = json.loads(json_match.group())
+            return Skeleton(
+                structure=tuple(data.get("structure", [])),
+                intent=data.get("intent", ""),
+                constraints=tuple(data.get("constraints", [])),
+            )
+        except (json.JSONDecodeError, ValueError, KeyError):
+            pass
+
+    return None
+
+
 # === Logos Protocol (for type hints) ===
 
 
@@ -212,6 +436,11 @@ class CriticsLoop:
     Implements the fundamental insight from creative AI research:
     separate generation from evaluation, then iterate.
 
+    PAYADOR Enhancement (v2.5): Bidirectional Skeleton-Texture Pipeline
+    When critique detects structural issues (low novelty AND low utility),
+    the system can rewrite the underlying skeleton structure via LLM,
+    rather than just refining the surface texture.
+
     Usage:
         loop = CriticsLoop(threshold=0.7, max_iterations=3)
         result, critique = await loop.generate_with_critique(
@@ -220,14 +449,27 @@ class CriticsLoop:
 
     Or for direct critique:
         critique = await loop.critique(artifact, observer, purpose="documentation")
+
+    For skeleton-aware refinement (requires LLM runtime):
+        loop = CriticsLoop(
+            skeleton_config=SkeletonRewriteConfig(),
+            llm_solver=my_llm_solver,
+        )
     """
 
     max_iterations: int = 3
     threshold: float = 0.7
     weights: CritiqueWeights = field(default_factory=CritiqueWeights)
 
+    # PAYADOR: Skeleton rewriting configuration
+    skeleton_config: SkeletonRewriteConfig | None = None
+    # LLM solver for skeleton operations (optional, enables PAYADOR)
+    llm_solver: Callable[[str, str], Any] | None = None
+
     # Configuration for assessment
     _prior_work: list[Any] = field(default_factory=list)
+    # Cached purpose for skeleton operations
+    _current_purpose: str | None = field(default=None, repr=False)
 
     def __post_init__(self) -> None:
         """Validate configuration."""
@@ -646,9 +888,26 @@ class CriticsLoop:
         """
         Apply critique feedback to improve artifact.
 
-        Delegates to concept.refine.apply if available.
-        Falls back to simple modification for basic types.
+        PAYADOR Enhancement: When structural issues are detected (low novelty
+        AND low utility), attempts skeleton rewriting before texture refinement.
+
+        Flow:
+        1. Check if critique suggests structural issues (_needs_skeleton_rewrite)
+        2. If yes and LLM available: rewrite skeleton, then expand
+        3. Otherwise: delegate to concept.refine.apply
+        4. Fallback: return artifact unchanged
         """
+        # PAYADOR: Check for structural issues requiring skeleton rewrite
+        if self._needs_skeleton_rewrite(critique):
+            try:
+                rewritten = await self._rewrite_with_skeleton(artifact, critique)
+                if rewritten is not None and rewritten != artifact:
+                    return rewritten
+            except Exception:
+                # Skeleton rewrite failed, fall through to texture refinement
+                pass
+
+        # Texture refinement: delegate to concept.refine.apply
         try:
             return await logos.invoke(
                 "concept.refine.apply",
@@ -662,6 +921,172 @@ class CriticsLoop:
             # Real refinement requires LLM or domain-specific logic
             return artifact
 
+    # === PAYADOR: Bidirectional Skeleton-Texture Methods ===
+
+    def _needs_skeleton_rewrite(self, critique: Critique) -> bool:
+        """
+        Determine if critique indicates structural (skeleton) issues.
+
+        The PAYADOR insight: when BOTH novelty AND utility are low,
+        the problem is likely structural, not just surface-level.
+        Texture refinement won't help - we need to rewrite the skeleton.
+
+        Args:
+            critique: The critique of the current artifact
+
+        Returns:
+            True if skeleton rewrite is recommended
+        """
+        # No skeleton config = no skeleton rewriting
+        if self.skeleton_config is None:
+            return False
+
+        # No LLM solver = can't do skeleton rewriting
+        if self.llm_solver is None:
+            return False
+
+        config = self.skeleton_config
+
+        # PAYADOR condition: low novelty AND low utility
+        # This indicates the structure itself is problematic
+        structural_issue = (
+            critique.novelty < config.novelty_threshold
+            and critique.utility < config.utility_threshold
+        )
+
+        return structural_issue
+
+    def _determine_refinement_mode(self, critique: Critique) -> RefinementMode:
+        """
+        Determine whether to refine texture or rewrite skeleton.
+
+        Args:
+            critique: The critique of the current artifact
+
+        Returns:
+            RefinementMode indicating the type of refinement needed
+        """
+        if self._needs_skeleton_rewrite(critique):
+            return RefinementMode.SKELETON
+        return RefinementMode.TEXTURE
+
+    async def _rewrite_with_skeleton(
+        self,
+        artifact: Any,
+        critique: Critique,
+    ) -> Any | None:
+        """
+        Rewrite artifact via skeleton rewrite then expansion.
+
+        PAYADOR bidirectional flow:
+        1. Extract/rewrite skeleton from artifact based on critique
+        2. Expand skeleton back to full artifact
+
+        Args:
+            artifact: The current artifact
+            critique: Critique indicating structural issues
+
+        Returns:
+            New artifact, or None if rewrite failed
+        """
+        if self.llm_solver is None:
+            return None
+
+        # Step 1: Rewrite skeleton
+        skeleton = await self._rewrite_skeleton(artifact, critique)
+        if skeleton is None:
+            return None
+
+        # Step 2: Expand skeleton to new artifact
+        return await self._expand_skeleton(skeleton, artifact)
+
+    async def _rewrite_skeleton(
+        self,
+        artifact: Any,
+        critique: Critique,
+    ) -> Skeleton | None:
+        """
+        Use LLM to rewrite the structural skeleton based on critique.
+
+        Args:
+            artifact: The current artifact
+            critique: Critique with structural issues
+
+        Returns:
+            New Skeleton, or None if rewrite failed
+        """
+        if self.llm_solver is None:
+            return None
+
+        # Build prompt for skeleton rewriting
+        user_prompt = build_skeleton_rewrite_prompt(
+            artifact, critique, self._current_purpose
+        )
+
+        try:
+            # Call LLM solver
+            response = await self._call_llm(SKELETON_REWRITE_SYSTEM, user_prompt)
+            return parse_skeleton_response(response)
+        except Exception:
+            return None
+
+    async def _expand_skeleton(
+        self,
+        skeleton: Skeleton,
+        original_artifact: Any | None = None,
+    ) -> Any:
+        """
+        Expand a skeleton back into a full artifact.
+
+        Args:
+            skeleton: The skeleton to expand
+            original_artifact: Optional original for style reference
+
+        Returns:
+            Expanded artifact as string
+        """
+        if self.llm_solver is None:
+            # Without LLM, return skeleton as structured text
+            return skeleton.to_prompt()
+
+        # Build expansion prompt
+        user_prompt = build_skeleton_expand_prompt(skeleton, original_artifact)
+
+        try:
+            response = await self._call_llm(SKELETON_EXPAND_SYSTEM, user_prompt)
+            return response.strip()
+        except Exception:
+            # Fallback: return skeleton as text
+            return skeleton.to_prompt()
+
+    async def _call_llm(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+    ) -> str:
+        """
+        Call the LLM solver with system and user prompts.
+
+        Args:
+            system_prompt: System prompt for LLM
+            user_prompt: User prompt with task
+
+        Returns:
+            LLM response string
+        """
+        if self.llm_solver is None:
+            raise RuntimeError("No LLM solver configured")
+
+        # The llm_solver is expected to be async and take (system, user) prompts
+        import asyncio
+
+        if asyncio.iscoroutinefunction(self.llm_solver):
+            result = await self.llm_solver(system_prompt, user_prompt)
+        else:
+            result = self.llm_solver(system_prompt, user_prompt)
+
+        return str(result)
+
 
 # === Exports ===
 
@@ -670,4 +1095,12 @@ __all__ = [
     "CritiqueWeights",
     "CriticsLoop",
     "RefinedArtifact",
+    # PAYADOR types
+    "RefinementMode",
+    "Skeleton",
+    "SkeletonRewriteConfig",
+    # PAYADOR prompt builders (for testing/extension)
+    "build_skeleton_rewrite_prompt",
+    "build_skeleton_expand_prompt",
+    "parse_skeleton_response",
 ]

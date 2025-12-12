@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import pytest
-from agents.t.orchestration import (
+from agents.u.orchestration import (
     CostBasedSelection,
     DynamicToolSelector,
     EnvironmentBasedSelection,
@@ -38,7 +38,7 @@ from agents.t.orchestration import (
     SupervisorPattern,
     Task,
 )
-from agents.t.tool import Tool, ToolErrorType, ToolMeta
+from agents.u.core import Tool, ToolErrorType, ToolMeta
 from bootstrap.types import Err
 
 # =============================================================================

@@ -30,7 +30,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Optional, Type, TypeVar
 
-from .tool import Tool, ToolMeta
+from .core import Tool, ToolMeta
 
 # Type variables
 A = TypeVar("A")

@@ -35,7 +35,7 @@ Tool[A,B] (composable via >>)
 
 Example:
     >>> from agents.j.t_integration import compile_tool_from_intent
-    >>> from agents.t import ToolCapabilities
+    >>> from agents.u import ToolCapabilities
     >>>
     >>> # Generate tool from natural language
     >>> tool = await compile_tool_from_intent(
@@ -59,8 +59,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Generic, TypeVar
 
-from agents.t.permissions import ToolCapabilities
-from agents.t.tool import Tool, ToolError, ToolErrorType, ToolMeta
+from agents.u.core import Tool, ToolError, ToolErrorType, ToolMeta
+from agents.u.permissions import ToolCapabilities
 from bootstrap.types import Result, err, ok
 
 from .chaosmonger import StabilityConfig, analyze_stability

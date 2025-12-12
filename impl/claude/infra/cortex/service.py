@@ -12,10 +12,17 @@ The Cortex Servicer implements all RPC methods defined in logos.proto:
 - GetMap: Returns pre-rendered HoloMap
 - Tithe: Entropy discharge
 
+K8-Terrarium v2.0 Architectural Changes:
+- CortexServicer delegates world.cluster.* and void.pheromone.* to LogosResolver
+- LogosResolver is a stateless AGENTESE → K8s translation layer (~200 lines)
+- Pheromone intensity calculated on read (Passive Stigmergy)
+- This reduces CortexServicer's role as a bottleneck (Heterarchy principle)
+
 Design Principles:
 1. Graceful Degradation: Always return something useful
 2. Transparent Infrastructure: Log and trace all operations
 3. Generative: Implementation follows proto spec exactly
+4. Heterarchical: No God Objects - delegate to specialized resolvers
 """
 
 from __future__ import annotations
@@ -163,6 +170,9 @@ class CortexServicer:
     This IS the living system. The CLI is just glass in front of it.
     Business logic lives HERE, not in CLI handlers.
 
+    K8-Terrarium v2.0: Delegates world.cluster.* and void.pheromone.*
+    paths to LogosResolver (stateless translation layer).
+
     Usage:
         servicer = CortexServicer()
 
@@ -181,6 +191,7 @@ class CortexServicer:
         metabolism: Any = None,
         pheromone_field: Any = None,
         llm_runtime: Any = None,
+        k8s_namespace: str = "kgents-agents",
     ):
         """
         Initialize the Cortex servicer.
@@ -191,6 +202,7 @@ class CortexServicer:
             metabolism: MetabolicEngine instance (for pressure/fever)
             pheromone_field: SemanticField instance (for pheromone levels)
             llm_runtime: LLM runtime for cognitive operations (ClaudeCLIRuntime)
+            k8s_namespace: Kubernetes namespace for LogosResolver
         """
         self._lifecycle_state = lifecycle_state
         self._logos = logos
@@ -198,6 +210,11 @@ class CortexServicer:
         self._pheromone_field = pheromone_field
         self._llm_runtime = llm_runtime
         self._instance_id = str(uuid.uuid4())[:8]
+
+        # K8-Terrarium v2.0: LogosResolver for K8s translation
+        from .logos_resolver import LogosResolver
+
+        self._k8s_resolver = LogosResolver(namespace=k8s_namespace)
 
         # Track metabolic pressure internally if no external engine
         self._internal_pressure = 0.0
@@ -341,6 +358,9 @@ class CortexServicer:
         This is the heart of the Logos service: every CLI command
         ultimately resolves to an AGENTESE path invocation.
 
+        K8-Terrarium v2.0: Delegates world.cluster.* and void.pheromone.*
+        paths to LogosResolver for stateless K8s translation.
+
         Maps to: logos.invoke(path, observer, lens, **kwargs)
         """
         import time
@@ -374,8 +394,11 @@ class CortexServicer:
                 except json.JSONDecodeError:
                     kwargs[k] = v
 
+            # K8-Terrarium v2.0: Delegate K8s paths to LogosResolver
+            if self._is_k8s_path(path):
+                result = await self._invoke_k8s_path(path, kwargs)
             # Invoke through Logos if available
-            if self._logos:
+            elif self._logos:
                 # Full AGENTESE resolution
                 result = await self._logos.invoke(
                     path,
@@ -406,6 +429,43 @@ class CortexServicer:
                 lens=lens,
                 duration_ms=duration_ms,
             )
+
+    def _is_k8s_path(self, path: str) -> bool:
+        """Check if path should be delegated to LogosResolver."""
+        k8s_prefixes = (
+            "world.cluster.",
+            "void.pheromone",
+            "self.memory.secret",
+            "self.memory.config",
+            "time.trace.",
+        )
+        return path.startswith(k8s_prefixes)
+
+    async def _invoke_k8s_path(
+        self, path: str, kwargs: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Invoke a K8s path via LogosResolver.
+
+        K8-Terrarium v2.0: Stateless translation from AGENTESE to K8s API.
+        """
+        try:
+            # Parse path to extract aspect
+            ctx, entity, name, aspect = self._k8s_resolver.parse_path(path)
+            aspect = aspect or "manifest"
+
+            # Resolve to handle (no observer for now - TODO: integrate Umwelt)
+            handle = await self._k8s_resolver.resolve(path, observer=None)
+
+            # Invoke the aspect
+            result = await self._k8s_resolver.invoke(handle, aspect, **kwargs)
+            return dict(result)
+
+        except ValueError as e:
+            return {"error": str(e), "path": path}
+        except PermissionError as e:
+            return {"error": str(e), "path": path, "type": "permission_denied"}
+        except NotImplementedError as e:
+            return {"error": str(e), "path": path, "type": "not_implemented"}
 
     async def Tithe(self, request: Any = None, context: Any = None) -> TitheResult:
         """
@@ -998,7 +1058,9 @@ class CortexServicer:
             if entity == "refine":
                 # concept.refine -> Dialectical refinement
                 statement = kwargs.get("statement", "")
-                return await self._invoke_llm_path("concept.refine", statement=statement)
+                return await self._invoke_llm_path(
+                    "concept.refine", statement=statement
+                )
 
         # Unknown path
         return {
@@ -1205,7 +1267,9 @@ def create_cortex_servicer(
             # CLI not available - log warning but continue
             import sys
 
-            print(f"[cortex] Warning: Could not create CLI runtime: {e}", file=sys.stderr)
+            print(
+                f"[cortex] Warning: Could not create CLI runtime: {e}", file=sys.stderr
+            )
 
     return CortexServicer(
         lifecycle_state=lifecycle_state,

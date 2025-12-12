@@ -1,6 +1,7 @@
 """
 Tests for Stream Context Resolver: self.stream.*
 """
+# mypy: disable-error-code="attr-defined"
 
 from __future__ import annotations
 

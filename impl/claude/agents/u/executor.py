@@ -31,7 +31,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Generic, Optional, TypeVar
 
-from agents.t.permissions import (
+from .permissions import (
     AgentContext,
     AuditLogger,
     PermissionClassifier,
@@ -39,7 +39,7 @@ from agents.t.permissions import (
     TemporaryToken,
     ToolCapabilities,
 )
-from agents.t.tool import Tool, ToolError, ToolErrorType, ToolTrace
+from .core import Tool, ToolError, ToolErrorType, ToolTrace
 from bootstrap.types import Err, Ok, Result, err, ok
 
 # Type variables

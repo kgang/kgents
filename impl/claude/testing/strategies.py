@@ -22,10 +22,10 @@ try:
     HYPOTHESIS_AVAILABLE = True
 except ImportError:
     HYPOTHESIS_AVAILABLE = False
-    st = None
-    given = None
-    settings = None
-    assume = None
+    st = None  # type: ignore[assignment]
+    given = None  # type: ignore[assignment]
+    settings = None  # type: ignore[assignment,misc]
+    assume = None  # type: ignore[assignment]
 
 
 A = TypeVar("A")
@@ -174,34 +174,34 @@ if HYPOTHESIS_AVAILABLE:
 else:
     # Fallback stubs when hypothesis is not available
 
-    def simple_agents(*args: Any, **kwargs: Any) -> None:
+    def simple_agents(*args: Any, **kwargs: Any) -> Any:  # type: ignore[misc]
         """Stub: hypothesis not available."""
         raise ImportError("hypothesis package required for property-based testing")
 
-    def agent_chains(*args: Any, **kwargs: Any) -> None:
+    def agent_chains(*args: Any, **kwargs: Any) -> Any:  # type: ignore[misc]
         """Stub: hypothesis not available."""
         raise ImportError("hypothesis package required for property-based testing")
 
-    def valid_dna(*args: Any, **kwargs: Any) -> None:
+    def valid_dna(*args: Any, **kwargs: Any) -> Any:  # type: ignore[misc]
         """Stub: hypothesis not available."""
         raise ImportError("hypothesis package required for property-based testing")
 
-    def invalid_dna(*args: Any, **kwargs: Any) -> None:
+    def invalid_dna(*args: Any, **kwargs: Any) -> Any:  # type: ignore[misc]
         """Stub: hypothesis not available."""
         raise ImportError("hypothesis package required for property-based testing")
 
-    def type_names(*args: Any, **kwargs: Any) -> None:
+    def type_names(*args: Any, **kwargs: Any) -> Any:  # type: ignore[misc]
         """Stub: hypothesis not available."""
         raise ImportError("hypothesis package required for property-based testing")
 
-    def hypothesis_dna(*args: Any, **kwargs: Any) -> None:
+    def hypothesis_dna(*args: Any, **kwargs: Any) -> Any:  # type: ignore[misc]
         """Stub: hypothesis not available."""
         raise ImportError("hypothesis package required for property-based testing")
 
-    def json_like_values(*args: Any, **kwargs: Any) -> None:
+    def json_like_values(*args: Any, **kwargs: Any) -> Any:  # type: ignore[misc]
         """Stub: hypothesis not available."""
         raise ImportError("hypothesis package required for property-based testing")
 
-    def boundary_inputs(*args: Any, **kwargs: Any) -> None:
+    def boundary_inputs(*args: Any, **kwargs: Any) -> Any:  # type: ignore[misc]
         """Stub: hypothesis not available."""
         raise ImportError("hypothesis package required for property-based testing")

@@ -12,6 +12,7 @@ Required tests from creativity.md Phase 8:
 - test_contract_melt_retries
 - test_pataphysics_solve_alias
 """
+# mypy: disable-error-code="arg-type,attr-defined"
 
 from __future__ import annotations
 
@@ -39,7 +40,7 @@ class MockDNA:
 
 
 class MockUmwelt:
-    """Mock Umwelt for testing."""
+    """Mock Umwelt for testing - typed as Any at fixture level."""
 
     def __init__(
         self,
@@ -49,6 +50,10 @@ class MockUmwelt:
     ) -> None:
         self.dna = MockDNA(name, archetype)
         self.context = context or {}
+
+
+# Type alias for test fixtures - suppresses arg-type errors at call sites
+MockUmweltAny = Any
 
 
 # === Test PataphysicsNode Basics ===

@@ -827,7 +827,7 @@ class MCPServer:
         if provider is None:
             return []
 
-        return provider.list_resource_templates()
+        return list(provider.list_resource_templates())
 
     async def _read_resource(self, uri: str) -> dict[str, Any]:
         """Read a resource by URI."""

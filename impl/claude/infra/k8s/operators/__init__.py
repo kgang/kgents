@@ -21,10 +21,10 @@ from .agent_operator import (
 from .pheromone_operator import (
     MockPheromone,
     MockPheromoneField,
-    calculate_decay,
+    calculate_intensity,  # v2.0: Passive Stigmergy
     get_mock_field,
     reset_mock_field,
-    should_delete,
+    should_evaporate,  # v2.0: Renamed from should_delete
 )
 from .proposal_operator import (
     # Mock classes
@@ -58,8 +58,8 @@ __all__ = [
     "MockPheromoneField",
     "get_mock_field",
     "reset_mock_field",
-    "calculate_decay",
-    "should_delete",
+    "calculate_intensity",  # v2.0: Passive Stigmergy
+    "should_evaporate",  # v2.0: Renamed from should_delete
     # Agent operator
     "MockAgent",
     "MockAgentRegistry",

@@ -47,7 +47,11 @@ hydrate.time.witness       → Temporal trace (git log, recent changes)
 | Note enablement | `hydrate.project.afford` | Announce what you enable |
 | Update shared | `hydrate.concept.refine` | Prefix `[STALE?]` if uncertain |
 
-**Status**: 7,767 tests | Branch: `main` | Mypy: Strict (0 errors)
+**Status**: 5,190+ tests | Branch: `main` | Mypy: Strict (0 errors)
+
+**Recent**: U-gent complete (2025-12-11) — Tool/MCP/Executor migrated from T-gent; deprecation bridge in place
+
+**Plans archived**: CLI Hollowing + Capital Ledger (2025-12-11) → `plans/_archive/`
 
 ---
 
@@ -161,6 +165,8 @@ kgents ghost     → time.witness.stream
 | L | registry | `agents/l/semantic_registry.py` |
 | M | cartography | `agents/m/cartographer.py` |
 | N | narrative | `agents/n/chronicle.py` |
+| T | testing | `agents/t/` (mock, spy, judge, property) |
+| U | utility | `agents/u/` (Tool, MCP, executor, orchestration) |
 | Ψ | metaphor | `agents/psi/engine.py` |
 
 ---
@@ -201,16 +207,19 @@ pytest -m "not slow" -q              # Must pass (pre-existing failures exempt)
 - Phase 0 (CLI Hollowing): Complete
 - Phase 1 (Grammar/Accounting): Complete — `shared/capital.py`, `shared/costs.py`, `shared/budget.py`
 - Phase 2 (Store Comonad): Complete — `agents/d/context_comonad.py`
-- **Phase 5-8 (Creativity v2.5)**: Complete — See `plans/concept/creativity.md`
+- **Phase 5-8 (Creativity v2.5)**: ✅ COMPLETE — See `plans/concept/creativity.md`
   - Phase 5: Wundt Curator (`middleware/curator.py`)
   - Phase 6: Conceptual Blending (`contexts/concept_blend.py`)
   - Phase 7: Critic's Loop (`contexts/self_judgment.py`)
   - Phase 8: Contract Melt + Pataphysics (`shared/melting.py`)
-  - **Task 1**: MDL + Reconstruction Validation (`contexts/compression.py`) ✅ NEW
-- **Creativity v2.5 Remaining** (3 items):
-  - Task 2: Bidirectional Skeleton (PAYADOR)
-  - Task 3: Wire Pataphysics Solver to LLM
-  - Task 4: Auto-Wire WundtCurator Middleware (already in Logos.invoke!)
+  - Task 1: MDL + Reconstruction Validation (`contexts/compression.py`) ✅
+  - Task 2: Bidirectional Skeleton (PAYADOR Fix) (`contexts/self_judgment.py`) ✅ NEW
+  - Task 3: Wire Pataphysics Solver to LLM (`shared/pataphysics.py`) ✅
+
+**Next priorities** (see `plans/NEXT_SESSION_PROMPT.md`):
+1. L-gent HTTP wrapper (Phase C-D operationalization)
+2. Curator auto-wiring (Task 4)
+3. I-gent v2.5 Semantic Flux
 
 ---
 

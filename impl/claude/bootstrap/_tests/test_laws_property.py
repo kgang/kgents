@@ -24,7 +24,7 @@ except ImportError:
     HYPOTHESIS_AVAILABLE = False
 
     # Create dummy decorators so module can be imported
-    def given(
+    def given(  # type: ignore[misc,no-redef]
         *args: Any, **kwargs: Any
     ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
@@ -32,7 +32,7 @@ except ImportError:
 
         return decorator
 
-    def settings(
+    def settings(  # type: ignore[misc,no-redef]
         *args: Any, **kwargs: Any
     ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
@@ -40,10 +40,10 @@ except ImportError:
 
         return decorator
 
-    def simple_agents() -> None:
+    def simple_agents() -> Any:  # type: ignore[misc]
         return None
 
-    def agent_chains(*args: Any, **kwargs: Any) -> None:
+    def agent_chains(*args: Any, **kwargs: Any) -> Any:  # type: ignore[misc]
         return None
 
 

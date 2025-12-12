@@ -43,7 +43,7 @@ from typing import Any, Callable, Generic, Optional, TypeVar, cast
 
 from bootstrap.types import Result, err, ok
 
-from .tool import Tool, ToolError, ToolErrorType, ToolTrace
+from .core import Tool, ToolError, ToolErrorType, ToolTrace
 
 # Type variables
 A = TypeVar("A")

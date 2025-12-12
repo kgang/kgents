@@ -1,21 +1,31 @@
-"""Pheromone Operator - Decay pheromone intensity over time.
+"""Pheromone Operator - Passive Stigmergy Garbage Collection.
 
-The pheromone operator manages the lifecycle of Pheromone CRs:
-1. On CREATE: Initialize status.current_intensity from spec.intensity
-2. On TIMER: Decay intensity by decay_rate, delete if <= 0 or TTL expired
-3. On SENSE: Track which agents have sensed the pheromone
+PASSIVE STIGMERGY (v2.0):
+The pheromone operator ONLY DELETES pheromones, never UPDATES them.
+Intensity is calculated on read using the decay function:
+    intensity(t) = initialIntensity * (0.5 ^ ((now - emittedAt) / halfLifeMinutes))
+
+This prevents etcd write storms - critical for K8s health.
+
+The operator:
+1. On CREATE: Initialize emittedAt if not set, set phase to ACTIVE
+2. On TIMER (every 5 min): DELETE pheromones below evaporation threshold
+3. On CHAOS type: Trigger chaos injection for resilience testing
 
 This makes stigmergy a first-class K8s primitive:
     kubectl get pheromones --watch
 
 Principle alignment:
 - E-gent (Thermodynamics): Pheromones decay - entropy increases
-- Accursed Share: DREAM pheromones may decay slower (preserved chaos)
+- Accursed Share: DREAM pheromones have longer half-life
+- Tasteful: No etcd write storms (DELETE only, no UPDATE)
+- Graceful Degradation: CHAOS pheromones train resilience
 """
 
 from __future__ import annotations
 
 import logging
+import random
 from datetime import datetime, timezone
 from typing import Any
 
@@ -34,67 +44,104 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-# Decay configuration
-DEFAULT_DECAY_RATE = 0.1  # 10% per minute
-DECAY_INTERVAL_SECONDS = 60.0
-DREAM_DECAY_MULTIPLIER = 0.5  # DREAM pheromones decay slower (accursed share)
+# Passive Stigmergy Configuration
+DEFAULT_HALF_LIFE_MINUTES = 10.0
+DREAM_HALF_LIFE_MULTIPLIER = 2.0  # DREAM pheromones last twice as long
+EVAPORATION_THRESHOLD = 0.01  # Delete when intensity < 1%
+GC_INTERVAL_SECONDS = 300.0  # Garbage collection every 5 minutes (not 60s)
 
-# Pheromone types that decay slower (the sacred waste)
+# Pheromone types with extended half-life (the sacred waste)
 SLOW_DECAY_TYPES = {"DREAM"}
 
 
-def calculate_decay(
-    current_intensity: float,
-    decay_rate: float,
-    pheromone_type: str,
-    elapsed_minutes: float = 1.0,
-) -> float:
-    """Calculate decayed intensity.
+def calculate_intensity(spec: dict[str, Any]) -> float:
+    """Calculate current pheromone intensity from decay parameters.
+
+    PASSIVE STIGMERGY: This is a pure function that calculates intensity
+    from stored parameters. NO WRITES to etcd.
+
+    Formula: intensity(t) = initialIntensity * (0.5 ^ (elapsed / halfLife))
 
     Args:
-        current_intensity: Current intensity (0-1)
-        decay_rate: Decay rate per minute
-        pheromone_type: Type of pheromone (affects decay for DREAM)
-        elapsed_minutes: Time elapsed since last decay
+        spec: Pheromone spec containing decay parameters
 
     Returns:
-        New intensity after decay (clamped to 0-1)
+        Current intensity (0.0-1.0)
     """
-    effective_rate = decay_rate
+    # Get emission time (prefer emittedAt, fallback to legacy created_at)
+    emitted_str = spec.get("emittedAt")
 
-    # DREAM pheromones decay slower - the accursed share is preserved
+    # Handle legacy pheromones with old schema
+    if not emitted_str:
+        # Legacy: use intensity directly if no emittedAt
+        return float(spec.get("intensity", spec.get("initialIntensity", 1.0)))
+
+    try:
+        emitted_at = datetime.fromisoformat(emitted_str.replace("Z", "+00:00"))
+    except (ValueError, AttributeError):
+        return float(spec.get("initialIntensity", 1.0))
+
+    # Get decay parameters
+    initial = spec.get("initialIntensity", spec.get("intensity", 1.0))
+    half_life = spec.get("halfLifeMinutes", DEFAULT_HALF_LIFE_MINUTES)
+
+    # Legacy conversion: decay_rate to half_life
+    if "decay_rate" in spec and "halfLifeMinutes" not in spec:
+        # Approximate: decay_rate of 0.1 per minute ≈ half_life of ~7 minutes
+        decay_rate = spec["decay_rate"]
+        if decay_rate > 0:
+            half_life = 0.693 / decay_rate  # ln(2) / decay_rate
+
+    # Apply type-specific multiplier
+    pheromone_type = spec.get("type", "STATE")
     if pheromone_type in SLOW_DECAY_TYPES:
-        effective_rate *= DREAM_DECAY_MULTIPLIER
+        half_life *= DREAM_HALF_LIFE_MULTIPLIER
 
-    new_intensity = current_intensity - (effective_rate * elapsed_minutes)
-    return max(0.0, min(1.0, new_intensity))
+    # Calculate elapsed time
+    now = datetime.now(timezone.utc)
+    elapsed_minutes = (
+        now - emitted_at.replace(tzinfo=timezone.utc)
+    ).total_seconds() / 60.0
+
+    # Exponential decay: intensity = initial * (0.5 ^ (elapsed / half_life))
+    intensity = float(initial) * (0.5 ** (elapsed_minutes / half_life))
+
+    return float(max(0.0, min(1.0, intensity)))
 
 
-def should_delete(
-    intensity: float,
-    created_at: datetime | None,
-    ttl_seconds: int | None,
+def should_evaporate(
+    spec: dict[str, Any],
+    meta: dict[str, Any],
 ) -> bool:
-    """Determine if pheromone should be deleted.
+    """Determine if pheromone should be garbage collected.
 
     Args:
-        intensity: Current intensity
-        created_at: When the pheromone was created
-        ttl_seconds: Hard TTL (if set)
+        spec: Pheromone spec
+        meta: Pheromone metadata
 
     Returns:
         True if pheromone should be deleted
     """
-    # Delete if intensity has decayed to zero
-    if intensity <= 0:
+    # Calculate current intensity
+    intensity = calculate_intensity(spec)
+
+    # Delete if below evaporation threshold
+    if intensity < EVAPORATION_THRESHOLD:
         return True
 
-    # Delete if TTL has expired
-    if ttl_seconds is not None and created_at is not None:
-        now = datetime.now(timezone.utc)
-        age_seconds = (now - created_at).total_seconds()
-        if age_seconds >= ttl_seconds:
-            return True
+    # Check hard TTL
+    ttl_seconds = spec.get("ttl_seconds")
+    if ttl_seconds is not None:
+        created_str = meta.get("creationTimestamp")
+        if created_str:
+            try:
+                created_at = datetime.fromisoformat(created_str.replace("Z", "+00:00"))
+                now = datetime.now(timezone.utc)
+                age_seconds = (now - created_at).total_seconds()
+                if age_seconds >= ttl_seconds:
+                    return True
+            except (ValueError, AttributeError):
+                pass
 
     return False
 
@@ -109,107 +156,74 @@ if KOPF_AVAILABLE:
     async def on_pheromone_create(
         spec: dict[str, Any],
         meta: dict[str, Any],
-        status: dict[str, Any],
         patch: kopf.Patch,
         **_: Any,
     ) -> dict[str, Any]:
-        """Initialize pheromone status on creation."""
-        intensity = spec.get("intensity", 1.0)
+        """Initialize pheromone on creation.
+
+        PASSIVE STIGMERGY: We only set phase, not current_intensity.
+        If emittedAt is missing, it defaults to creationTimestamp.
+        """
         pheromone_type = spec.get("type", "STATE")
+        initial = spec.get("initialIntensity", spec.get("intensity", 1.0))
 
         logger.info(
             f"Pheromone created: {meta['name']} "
-            f"type={pheromone_type} intensity={intensity}"
+            f"type={pheromone_type} initialIntensity={initial}"
         )
 
-        # Set initial status
-        now = datetime.now(timezone.utc).isoformat()
-        patch.status["current_intensity"] = intensity
-        patch.status["created_at"] = now
-        patch.status["last_decay"] = now
+        # Set phase to ACTIVE (no current_intensity - calculated on read)
+        patch.status["phase"] = "ACTIVE"
         patch.status["sensed_by"] = []
 
-        return {"created": True, "intensity": intensity}
+        # Handle CHAOS pheromones immediately
+        if pheromone_type == "CHAOS":
+            await _handle_chaos_pheromone(spec, meta)
 
-    @kopf.timer("kgents.io", "v1", "pheromones", interval=DECAY_INTERVAL_SECONDS)  # type: ignore[arg-type]
-    async def decay_pheromones(
+        return {"created": True, "type": pheromone_type}
+
+    @kopf.timer("kgents.io", "v1", "pheromones", interval=GC_INTERVAL_SECONDS)  # type: ignore[arg-type]
+    async def garbage_collect_pheromones(
         spec: dict[str, Any],
         meta: dict[str, Any],
-        status: dict[str, Any],
-        patch: kopf.Patch,
         **_: Any,
     ) -> dict[str, Any] | None:
-        """Decay pheromone intensity over time."""
+        """Garbage collect evaporated pheromones.
+
+        PASSIVE STIGMERGY: This timer ONLY DELETES pheromones.
+        It NEVER updates status.current_intensity.
+
+        Runs every 5 minutes (not every minute) because we're only
+        garbage collecting, not updating state.
+        """
         name = meta["name"]
         namespace = meta.get("namespace", "default")
 
-        # Get current values
-        current_intensity = status.get("current_intensity", spec.get("intensity", 1.0))
-        decay_rate = spec.get("decay_rate", DEFAULT_DECAY_RATE)
-        pheromone_type = spec.get("type", "STATE")
-        ttl_seconds = spec.get("ttl_seconds")
+        # Calculate current intensity (pure function, no writes)
+        intensity = calculate_intensity(spec)
 
-        # Parse created_at
-        created_at_str = status.get("created_at")
-        created_at = None
-        if created_at_str:
-            try:
-                created_at = datetime.fromisoformat(
-                    created_at_str.replace("Z", "+00:00")
-                )
-            except (ValueError, AttributeError):
-                pass
+        # Check if should evaporate
+        if not should_evaporate(spec, meta):
+            logger.debug(f"Pheromone {name} still active (intensity={intensity:.4f})")
+            return None
 
-        # Calculate elapsed time since last decay
-        last_decay_str = status.get("last_decay")
-        elapsed_minutes = 1.0
-        if last_decay_str:
-            try:
-                last_decay = datetime.fromisoformat(
-                    last_decay_str.replace("Z", "+00:00")
-                )
-                now = datetime.now(timezone.utc)
-                elapsed_minutes = (now - last_decay).total_seconds() / 60.0
-            except (ValueError, AttributeError):
-                pass
+        # DELETE the pheromone (no status update)
+        logger.info(f"Evaporating pheromone: {name} (intensity={intensity:.4f})")
 
-        # Calculate new intensity
-        new_intensity = calculate_decay(
-            current_intensity, decay_rate, pheromone_type, elapsed_minutes
-        )
-
-        # Check if should delete
-        if should_delete(new_intensity, created_at, ttl_seconds):
-            logger.info(
-                f"Deleting decayed pheromone: {name} (intensity={new_intensity:.3f})"
+        api = client.CustomObjectsApi()
+        try:
+            api.delete_namespaced_custom_object(
+                group="kgents.io",
+                version="v1",
+                namespace=namespace,
+                plural="pheromones",
+                name=name,
             )
+        except ApiException as e:
+            if e.status != 404:  # Already deleted is fine
+                logger.error(f"Failed to delete pheromone {name}: {e}")
 
-            # Delete the pheromone
-            api = client.CustomObjectsApi()
-            try:
-                api.delete_namespaced_custom_object(
-                    group="kgents.io",
-                    version="v1",
-                    namespace=namespace,
-                    plural="pheromones",
-                    name=name,
-                )
-            except ApiException as e:
-                if e.status != 404:  # Already deleted is fine
-                    logger.error(f"Failed to delete pheromone {name}: {e}")
-
-            return {"deleted": True, "final_intensity": new_intensity}
-
-        # Update status
-        now_str: str = datetime.now(timezone.utc).isoformat()
-        patch.status["current_intensity"] = new_intensity
-        patch.status["last_decay"] = now_str
-
-        logger.debug(
-            f"Decayed pheromone {name}: {current_intensity:.3f} -> {new_intensity:.3f}"
-        )
-
-        return {"decayed": True, "intensity": new_intensity}
+        return {"evaporated": True, "final_intensity": intensity}
 
     @kopf.on.field("kgents.io", "v1", "pheromones", field="status.sensed_by")  # type: ignore[arg-type]
     async def on_pheromone_sensed(
@@ -228,50 +242,159 @@ if KOPF_AVAILABLE:
 
 
 # ============================================================================
+# Chaos Injection (void.entropy.sip implementation)
+# ============================================================================
+
+
+async def _handle_chaos_pheromone(spec: dict[str, Any], meta: dict[str, Any]) -> None:
+    """Handle CHAOS pheromones for resilience testing.
+
+    This implements void.entropy.sip - controlled chaos injection.
+    The Accursed Share in action: "waste" of killing healthy pods
+    trains the system for resilience.
+    """
+    if not KOPF_AVAILABLE:
+        return
+
+    payload_str = spec.get("payload", "{}")
+    try:
+        import json
+
+        payload = json.loads(payload_str) if payload_str else {}
+    except json.JSONDecodeError:
+        payload = {}
+
+    action = payload.get("action")
+    namespace = payload.get("namespace", meta.get("namespace", "kgents-agents"))
+
+    logger.warning(f"CHAOS pheromone received: action={action} namespace={namespace}")
+
+    if action == "terminate_random_pod":
+        await _terminate_random_pod(namespace)
+    elif action == "network_partition":
+        # Future: implement network chaos via NetworkPolicy
+        logger.info("Network partition chaos not yet implemented")
+    elif action == "resource_pressure":
+        # Future: implement resource chaos
+        logger.info("Resource pressure chaos not yet implemented")
+
+
+async def _terminate_random_pod(namespace: str) -> None:
+    """Terminate a random pod in the namespace.
+
+    This is the void.entropy.sip implementation - controlled chaos
+    that trains the Left Brain (operators) for resilience.
+    """
+    if not KOPF_AVAILABLE:
+        return
+
+    try:
+        api = client.CoreV1Api()
+        pods = api.list_namespaced_pod(
+            namespace, label_selector="app.kubernetes.io/part-of=kgents"
+        )
+
+        if not pods.items:
+            logger.warning(f"No kgents pods found in {namespace} for chaos injection")
+            return
+
+        # Select random victim
+        victim = random.choice(pods.items)
+        victim_name = victim.metadata.name
+
+        logger.warning(
+            f"CHAOS: Terminating pod {victim_name} in {namespace} "
+            f"(void.entropy.sip - the accursed share)"
+        )
+
+        api.delete_namespaced_pod(victim_name, namespace)
+
+    except ApiException as e:
+        logger.error(f"CHAOS: Failed to terminate pod: {e}")
+
+
+# ============================================================================
 # Standalone Functions (for testing without K8s)
 # ============================================================================
 
 
 class MockPheromone:
-    """In-memory pheromone for testing without K8s."""
+    """In-memory pheromone for testing without K8s.
+
+    PASSIVE STIGMERGY: Uses half-life decay model, intensity calculated on read.
+    """
 
     def __init__(
         self,
         name: str,
         pheromone_type: str,
-        intensity: float,
-        source: str,
-        decay_rate: float = DEFAULT_DECAY_RATE,
+        initial_intensity: float = 1.0,
+        source: str = "",
+        half_life_minutes: float = DEFAULT_HALF_LIFE_MINUTES,
         payload: str = "",
         ttl_seconds: int | None = None,
+        target: str | None = None,
     ) -> None:
         self.name = name
         self.type = pheromone_type
-        self.intensity = intensity
+        self.initial_intensity = initial_intensity
         self.source = source
-        self.decay_rate = decay_rate
+        self.half_life_minutes = half_life_minutes
         self.payload = payload
         self.ttl_seconds = ttl_seconds
-        self.created_at = datetime.now(timezone.utc)
-        self.last_decay = self.created_at
+        self.target = target
+        self.emitted_at = datetime.now(timezone.utc)
         self.sensed_by: list[str] = []
 
-    def decay(self, elapsed_minutes: float = 1.0) -> bool:
-        """Apply decay, return True if pheromone should be deleted."""
-        self.intensity = calculate_decay(
-            self.intensity, self.decay_rate, self.type, elapsed_minutes
-        )
-        self.last_decay = datetime.now(timezone.utc)
-        return should_delete(self.intensity, self.created_at, self.ttl_seconds)
+    @property
+    def intensity(self) -> float:
+        """Calculate current intensity (Passive Stigmergy)."""
+        spec = {
+            "emittedAt": self.emitted_at.isoformat(),
+            "initialIntensity": self.initial_intensity,
+            "halfLifeMinutes": self.half_life_minutes,
+            "type": self.type,
+        }
+        return calculate_intensity(spec)
+
+    def should_evaporate(self) -> bool:
+        """Check if pheromone should be garbage collected."""
+        # Below threshold
+        if self.intensity < EVAPORATION_THRESHOLD:
+            return True
+
+        # TTL expired
+        if self.ttl_seconds is not None:
+            age = (datetime.now(timezone.utc) - self.emitted_at).total_seconds()
+            if age >= self.ttl_seconds:
+                return True
+
+        return False
 
     def sense(self, agent: str) -> None:
         """Record that an agent sensed this pheromone."""
         if agent not in self.sensed_by:
             self.sensed_by.append(agent)
 
+    def to_spec(self) -> dict[str, Any]:
+        """Convert to CRD-like spec for compatibility."""
+        return {
+            "type": self.type,
+            "emittedAt": self.emitted_at.isoformat() + "Z",
+            "initialIntensity": self.initial_intensity,
+            "halfLifeMinutes": self.half_life_minutes,
+            "source": self.source,
+            "target": self.target,
+            "payload": self.payload,
+            "ttl_seconds": self.ttl_seconds,
+        }
+
 
 class MockPheromoneField:
-    """In-memory pheromone field for testing without K8s."""
+    """In-memory pheromone field for testing without K8s.
+
+    PASSIVE STIGMERGY: Intensity calculated on sense(), GC on tick().
+    """
 
     def __init__(self) -> None:
         self._pheromones: dict[str, MockPheromone] = {}
@@ -280,53 +403,97 @@ class MockPheromoneField:
         self,
         name: str,
         pheromone_type: str,
-        intensity: float,
-        source: str,
+        initial_intensity: float = 1.0,
+        source: str = "",
+        half_life_minutes: float = DEFAULT_HALF_LIFE_MINUTES,
         **kwargs: Any,
     ) -> MockPheromone:
         """Emit a new pheromone."""
-        ph = MockPheromone(name, pheromone_type, intensity, source, **kwargs)
+        # Handle legacy 'intensity' parameter
+        if "intensity" in kwargs and "initial_intensity" not in kwargs:
+            initial_intensity = kwargs.pop("intensity")
+
+        ph = MockPheromone(
+            name=name,
+            pheromone_type=pheromone_type,
+            initial_intensity=initial_intensity,
+            source=source,
+            half_life_minutes=half_life_minutes,
+            **kwargs,
+        )
         self._pheromones[name] = ph
         logger.info(
-            f"Emitted pheromone: {name} type={pheromone_type} intensity={intensity}"
+            f"Emitted pheromone: {name} type={pheromone_type} "
+            f"initialIntensity={initial_intensity} halfLife={half_life_minutes}min"
         )
+
+        # Handle CHAOS pheromones
+        if pheromone_type == "CHAOS":
+            logger.warning(f"CHAOS pheromone emitted: {name}")
+
         return ph
 
     def sense(
-        self, agent: str, pheromone_type: str | None = None
+        self,
+        agent: str,
+        pheromone_type: str | None = None,
+        target: str | None = None,
     ) -> list[MockPheromone]:
         """Sense pheromones in the field.
+
+        PASSIVE STIGMERGY: Intensity is calculated on each sense() call.
 
         Args:
             agent: Agent doing the sensing
             pheromone_type: Filter by type (None = all types)
+            target: Filter by target (None = include broadcast and targeted)
 
         Returns:
             List of matching pheromones (sorted by intensity descending)
         """
         result = []
         for ph in self._pheromones.values():
-            if pheromone_type is None or ph.type == pheromone_type:
-                ph.sense(agent)
-                result.append(ph)
+            # Filter by type
+            if pheromone_type is not None and ph.type != pheromone_type:
+                continue
+
+            # Filter by target (include broadcast pheromones where target is None)
+            if target is not None and ph.target is not None and ph.target != target:
+                continue
+
+            ph.sense(agent)
+            result.append(ph)
+
+        # Sort by current intensity (calculated on each access)
         return sorted(result, key=lambda p: p.intensity, reverse=True)
 
-    def tick(self, elapsed_minutes: float = 1.0) -> int:
-        """Apply decay to all pheromones, return count deleted."""
+    def tick(self) -> int:
+        """Garbage collect evaporated pheromones.
+
+        PASSIVE STIGMERGY: Only DELETE, never update intensity.
+        Called periodically to clean up evaporated pheromones.
+
+        Returns:
+            Number of pheromones evaporated
+        """
         to_delete = []
         for name, ph in self._pheromones.items():
-            if ph.decay(elapsed_minutes):
+            if ph.should_evaporate():
                 to_delete.append(name)
 
         for name in to_delete:
             del self._pheromones[name]
-            logger.info(f"Deleted decayed pheromone: {name}")
+            logger.info(f"Evaporated pheromone: {name}")
 
         return len(to_delete)
 
     def list(self) -> list[MockPheromone]:
         """List all pheromones."""
         return list(self._pheromones.values())
+
+    def get(self, name: str) -> MockPheromone | None:
+        """Get a specific pheromone by name."""
+        return self._pheromones.get(name)
 
 
 # Global mock field for testing

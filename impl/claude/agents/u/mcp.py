@@ -37,7 +37,7 @@ from typing import Any, Dict, List, Optional, TypeVar, Union
 
 from bootstrap.types import Err, Result, err, ok
 
-from .tool import Tool, ToolError, ToolErrorType, ToolMeta
+from .core import Tool, ToolError, ToolErrorType, ToolMeta
 
 # Type variables
 A = TypeVar("A")

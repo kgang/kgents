@@ -1,117 +1,108 @@
-# AGENTESE v2.5 - MDL Compression Complete
+# Next Session: L-gent HTTP Wrapper + Creativity Finalization
 
-> **Status**: Task 1 (Ventura Fix) complete. 7,707 tests passing, mypy strict.
-> **Session**: 2025-12-11
-> **New Files**: `protocols/agentese/contexts/compression.py` (43 tests)
+> *"The imagination is not a state: it is the human existence itself." — William Blake*
 
----
+## Session Context
 
-## What Was Completed
-
-### Task 1: MDL + Reconstruction Validation (The Ventura Fix)
-
-Implemented MDL-compliant compression quality metrics:
-
-| Component | Purpose |
-|-----------|---------|
-| `CompressionQuality` | Frozen dataclass: ratio, error, quality, lengths |
-| `validate_compression()` | Async validation with regenerator + distance |
-| `validate_compression_sync()` | Sync version with pre-computed regenerated |
-| `CompressionValidator` | Configurable thresholds, rejection reasons |
-| `compress_with_validation()` | Full compress→validate→raise pipeline |
-
-**The Ventura Fix**: Empty specs get zero compression ratio (not infinity)
-
-```python
-Quality = CompressionRatio * (1.0 - SemanticDistance(artifact, regenerated))
-```
-
-**Key insight**: High compression alone isn't rewarded—the spec must actually encode the artifact faithfully.
+**Previous Session** (2025-12-11): U-gent migration + PAYADOR/Pataphysics completion
+- All 5,190 tests pass, mypy strict passes
+- U-gent module complete: Tool, MCP, Executor, Permissions, Orchestration migrated from T-gent
+- Deprecation bridge in `agents/t/` forwards to `agents/u/`
+- PAYADOR bidirectional skeleton wired (Task 2 ✅)
+- Pataphysics LLM integration complete (Task 3 ✅)
 
 ---
 
-## v2.5 Success Criteria Status
+## Recommended Focus: L-gent HTTP Wrapper
 
-**Quality Metrics**:
-- [x] Compression validated by reconstruction (MDL) → **DONE**
-- [x] Melt bounded by postconditions → `@meltable(ensure=...)`
-- [ ] Skeleton supports texture→structure feedback → Task 2
+The L-gent semantic registry needs an HTTP wrapper for K8s deployment.
 
-**Novelty Mechanisms**:
-- [x] `concept.blend.forge` produces meaningful blends
-- [x] Wundt curator rejects boring/chaotic output
-- [x] Critic's loop improves generation quality
+### L-gent HTTP Wrapper (Priority 1)
 
-**Integration**:
-- [x] All new aspects registered in AGENTESE
-- [x] Middleware hooks into `Logos.invoke` → lines 461-463
-- [x] Tests pass, mypy strict passes
+> *"The registry is not a database—it is a semantic field."*
 
----
+**Context**: L-gent exists as `agents/l/semantic_registry.py` but needs HTTP endpoints for K8s operationalization.
 
-## Remaining v2.5 Tasks
+**Location**: `impl/claude/agents/l/` (needs `server.py`)
 
-### Task 2: Bidirectional Skeleton (PAYADOR Fix)
-Enable texture→structure feedback in generation pipelines.
-
-**Location**: `protocols/agentese/contexts/narrative.py` (NEW)
-
-```python
-@dataclass
-class NarrativePipeline:
-    async def generate(self, intent: str, observer: Umwelt) -> str:
-        skeleton = await self._generate_skeleton(intent, observer)
-        for iteration in range(self.max_iterations):
-            prose = await self._render_prose(skeleton, observer)
-            critique = await self._critique_prose(prose, observer)
-            if critique.suggests_structure_change:
-                skeleton = await self._revise_skeleton(skeleton, critique)
-        return prose
-```
-
-### Task 3: Wire Pataphysics Solver to LLM
-Replace `default_pataphysics_solver` (returns None) with LLM invocation.
-
-**Location**: `shared/llm_solver.py` (NEW)
-
-Current state in `shared/melting.py:90-104`:
-```python
-async def default_pataphysics_solver(ctx: MeltingContext) -> Any:
-    """Returns None as the 'imaginary solution'..."""
-    return None
-```
+**Deliverables**:
+1. FastAPI/Starlette HTTP server wrapping SemanticRegistry
+2. Endpoints: `/health`, `/ready`, `/catalog`, `/stats`, `/register`, `/resolve`
+3. Dockerfile for K8s deployment
+4. Integration with existing L-gent tests
 
 ---
 
-## Quick Verification
+## Remaining Creativity Tasks
+
+### Task 4: Auto-Wire Curator Middleware (Priority 2)
+
+**Context**: `WundtCurator` middleware exists but isn't auto-wired into the pipeline.
+
+**Location**: `impl/claude/creativity/wundt.py` (exists)
+
+**Deliverables**:
+1. Create factory that auto-wires curator into blend pipeline
+2. Add scoring thresholds for automatic filtering
+3. Integration tests for full blend→curate→refine cycle
+
+---
+
+## Alternative: I-gent v2.5 (Semantic Flux)
+
+If creativity work isn't appealing, `self/interface.md` defines I-gent v2.5:
+
+**Concept**: Agents are *currents*, not rooms. The interface is flux, not state.
+
+**Phase 1 Deliverables**:
+1. `SemanticFlux` data structure (gradient-based navigation)
+2. `FluxNavigator` for exploring concept space
+3. AGENTESE `self.interface.*` paths
+
+**Location**: `impl/claude/agents/i/` (needs flux module)
+
+---
+
+## Quick Start Commands
 
 ```bash
-cd /Users/kentgang/git/kgents/impl/claude
+# Check current status
+cd impl/claude && uv run pytest -q --tb=no | tail -5
 
-# Run compression tests
-python -m pytest protocols/agentese/contexts/_tests/test_compression.py -v
+# Run creativity tests
+cd impl/claude && uv run pytest creativity/ -v
 
-# Run all tests
-python -m pytest -q --tb=no
+# Run pataphysics tests
+cd impl/claude && uv run pytest shared/_tests/test_pataphysics.py -v
 
-# Check types
-uv run mypy protocols/agentese/contexts/compression.py
+# Check what's in creativity/
+ls -la impl/claude/creativity/
 ```
 
 ---
 
 ## Key Files
 
-| Purpose | Path |
-|---------|------|
-| MDL Compression | `protocols/agentese/contexts/compression.py` |
-| Compression Tests | `protocols/agentese/contexts/_tests/test_compression.py` |
-| Creativity Plan | `plans/concept/creativity.md` |
-| WundtCurator | `protocols/agentese/middleware/curator.py` |
-| Pataphysics | `shared/melting.py` |
-| Conceptual Blend | `protocols/agentese/contexts/concept_blend.py` |
-| Critic's Loop | `protocols/agentese/contexts/self_judgment.py` |
+| File | Purpose |
+|------|---------|
+| `creativity/payador.py` | Bidirectional skeleton (Task 2) |
+| `shared/pataphysics.py` | Imaginary solutions (Task 3) |
+| `creativity/wundt.py` | Curator middleware (Task 4) |
+| `creativity/blend.py` | Conceptual blending |
+| `creativity/critic.py` | Critic's loop |
+| `plans/concept/creativity.md` | Full creativity plan |
 
 ---
 
-*"The noun is a lie. There is only the rate of change."*
+## Decision Required
+
+Choose one of:
+1. **L-gent HTTP wrapper** - K8s operationalization (recommended)
+2. **Task 4** - Curator auto-wiring
+3. **I-gent v2.5** - Semantic Flux interface
+
+All are independent and can be done in any order.
+
+---
+
+*"Creativity is intelligence having fun." — Einstein*

@@ -45,7 +45,7 @@ except ImportError:
 
 try:
     from agents.t.metrics import MetricObserver  # type: ignore[attr-defined]
-    from agents.t.tool import Tool, ToolIdentity, ToolMeta
+    from agents.u.core import Tool, ToolIdentity, ToolMeta
 
     T_GENT_AVAILABLE = True
 except ImportError:
