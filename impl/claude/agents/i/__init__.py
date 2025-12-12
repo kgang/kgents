@@ -1,40 +1,43 @@
 """
-I-gents: The Stigmergic Field.
+I-gents: Interface Agents.
+
+I-gent provides multiple visualization modes for the kgents ecosystem:
+
+## v2.5 - The Semantic Flux (NEW)
+
+    "Agents are not rooms to visit—they are currents of cognition."
+
+    >>> from agents.i.app import FluxApp, run_flux
+    >>> run_flux(demo=True)  # Launch the Semantic Flux TUI
+
+Features:
+- Density field rendering (░▒▓█) - agents as weather, not boxes
+- h/j/k/l vim-style navigation
+- Flow arrows with throughput-based styling
+- Glitch effects for void/error states (Accursed Share made visible)
+- Session state persistence
+
+## v1.0 - The Stigmergic Field (Legacy)
 
 Interface agents that render the kgents ecosystem as a stigmergic field:
 a shared environment where agents leave traces (pheromones), respond to
 traces, and coordinate without explicit communication.
 
-Core concepts:
-- Field: 2D grid where entities move and interact
-- Entity: Bootstrap agents + task attractors
-- Pheromone: Invisible environmental traces that affect behavior
-- Dialectic Phase: System-wide synthesis state
-
-Three Layers:
-1. Physical - Entity positions, phases, events
-2. Topological - Composition morphisms, gravity, tension
-3. Semantic - Intent, dialectic phase, value alignment
-
-Example:
     >>> from agents.i import FieldState, Entity, EntityType, FieldSimulator
-    >>>
     >>> state = create_demo_field()
     >>> simulator = FieldSimulator(state)
     >>> simulator.tick()  # Advance simulation
-    >>>
-    >>> from agents.i.tui import TUIApplication
-    >>> app = TUIApplication(state)
-    >>> app.run_sync()  # Launch interactive TUI
 
 Legacy types (still available):
 - Phase: Moon-cycle lifecycle states
 - Glyph: Atomic unit of visualization
 - Scale: Fractal zoom levels
 
-See: spec/i-gents/README.md
+See: spec/i-gents/README.md, plans/self/interface.md
 """
 
+# App
+from .app import FluxApp, run_flux
 from .breath import BreathCycle, BreathManager
 
 # UI Components
@@ -57,6 +60,40 @@ from .components import (
     create_dashboard,
     create_panel,
     create_progress_bar,
+)
+
+# O-gent Polling (Phase 2)
+from .data.ogent import (
+    HealthLevel,
+    OgentPoller,
+    XYZHealth,
+    create_mock_health,
+    render_xyz_bar,
+    render_xyz_compact,
+    value_to_health_level,
+)
+
+# Registry (Phase 2)
+from .data.registry import (
+    AgentObservable,
+    AgentRegistry,
+    AgentStatus,
+    MemoryRegistry,
+    MockObservable,
+    RegisteredAgent,
+    RegistryCallback,
+    RegistryEvent,
+    RegistryEventType,
+    create_demo_registry,
+    create_demo_registry_async,
+)
+
+# Data/State
+from .data.state import (
+    AgentSnapshot,
+    FluxState,
+    SessionState,
+    create_demo_flux_state,
 )
 
 # Dream Report Rendering (Instance DB Phase 6)
@@ -117,6 +154,15 @@ from .renderers import (
     LibraryRenderer,
     PageRenderer,
 )
+
+# Screens
+from .screens.flux import FluxScreen
+
+# =============================================================================
+# v2.5 - The Semantic Flux
+# =============================================================================
+# Theme
+from .theme.earth import EARTH_PALETTE, EarthTheme
 from .types import (
     AgentState,
     GardenState,
@@ -126,6 +172,12 @@ from .types import (
     Phase,
     Scale,
 )
+
+# Widgets
+from .widgets.density_field import DensityField
+from .widgets.density_field import Phase as FluxPhase  # Alias to avoid collision
+from .widgets.flow_arrow import ConnectionType, Direction, FlowArrow
+from .widgets.health_bar import CompactHealthBar, MiniHealthBar, XYZHealthBar
 
 __all__ = [
     # Legacy Types (still supported)
@@ -210,4 +262,49 @@ __all__ = [
     "render_migration_sql",
     "create_mock_dream_report",
     "create_mock_questions",
+    # ==========================================================================
+    # v2.5 - The Semantic Flux
+    # ==========================================================================
+    # Theme
+    "EARTH_PALETTE",
+    "EarthTheme",
+    # Widgets
+    "DensityField",
+    "FluxPhase",
+    "FlowArrow",
+    "ConnectionType",
+    "Direction",
+    "XYZHealthBar",
+    "CompactHealthBar",
+    "MiniHealthBar",
+    # Data/State
+    "AgentSnapshot",
+    "FluxState",
+    "SessionState",
+    "create_demo_flux_state",
+    # Registry (Phase 2)
+    "AgentObservable",
+    "AgentRegistry",
+    "AgentStatus",
+    "MemoryRegistry",
+    "MockObservable",
+    "RegisteredAgent",
+    "RegistryCallback",
+    "RegistryEvent",
+    "RegistryEventType",
+    "create_demo_registry",
+    "create_demo_registry_async",
+    # O-gent Polling (Phase 2)
+    "HealthLevel",
+    "OgentPoller",
+    "XYZHealth",
+    "create_mock_health",
+    "render_xyz_bar",
+    "render_xyz_compact",
+    "value_to_health_level",
+    # Screens
+    "FluxScreen",
+    # App
+    "FluxApp",
+    "run_flux",
 ]
