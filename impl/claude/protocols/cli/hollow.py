@@ -17,13 +17,18 @@ LifecycleManager, enabling DB persistence and telemetry from the first command.
 from __future__ import annotations
 
 import importlib
+import os
 import sys
+import time
 from pathlib import Path
 from typing import Any, Callable, Sequence, cast
 
 # Global lifecycle manager (lazy-initialized)
 _lifecycle_manager = None
 _lifecycle_state = None
+
+# Global reflector (lazy-initialized)
+_reflector: Any = None
 
 # =============================================================================
 # Version & Constants
@@ -79,6 +84,9 @@ DEVEX (Trust Loop):
   signal    SemanticField state
   observe   Terrarium TUI (glass box visualization)
   tether    Attach to agent with signal forwarding
+
+PLANNING (Forest Protocol):
+  forest    Plan forest health (status|update|check|lint)
 
 OPTIONS:
   --version     Show version
@@ -154,6 +162,10 @@ COMMAND_REGISTRY: dict[str, str] = {
     "mcp": "protocols.cli.mcp.server:cmd_mcp",
     # TUI Dashboard (Phase 7)
     "dash": "protocols.cli.tui.dashboard:cmd_dash",
+    # Forest Protocol (Plan Management)
+    "forest": "protocols.cli.handlers.forest:cmd_forest",
+    # Metabolic Pressure (Accursed Share)
+    "tithe": "protocols.cli.handlers.tithe:cmd_tithe",
 }
 
 
@@ -287,6 +299,82 @@ def get_storage_provider() -> Any:
     if _lifecycle_state is None:
         return None
     return _lifecycle_state.storage_provider
+
+
+# =============================================================================
+# Reflector Management
+# =============================================================================
+
+
+def _create_reflector(verbose: bool = False) -> Any:
+    """
+    Create a TerminalReflector for the current command.
+
+    The Reflector mediates output between the runtime and user:
+    - Human-readable text goes to stdout
+    - Semantic data goes to FD3 (if KGENTS_FD3 env var is set)
+
+    This enables agent-to-agent communication via structured JSON
+    while keeping human output pretty.
+    """
+    global _reflector
+
+    try:
+        from protocols.cli.reflector import TerminalReflector
+
+        # Check for FD3 path in environment
+        fd3_path = os.environ.get("KGENTS_FD3")
+
+        _reflector = TerminalReflector(verbose=verbose, fd3_path=fd3_path)
+        return _reflector
+    except ImportError:
+        # Reflector module not available - return None
+        return None
+
+
+def _get_reflector() -> Any:
+    """Get the current reflector (if any)."""
+    return _reflector
+
+
+def _close_reflector() -> None:
+    """Close the reflector and release resources."""
+    global _reflector
+
+    if _reflector is not None:
+        try:
+            _reflector.close()
+        except Exception:
+            pass
+        _reflector = None
+
+
+def get_invocation_context(
+    command: str,
+    args: list[str] | None = None,
+) -> Any:
+    """
+    Get an InvocationContext for the current command.
+
+    This is the public API for handlers to access the reflector.
+    Handlers can call ctx.output(human=..., semantic=...) for dual-channel output.
+
+    Returns None if reflector is not available.
+    """
+    if _reflector is None:
+        return None
+
+    try:
+        from protocols.cli.reflector import create_invocation_context
+
+        return create_invocation_context(
+            command=command,
+            args=args or [],
+            reflector=_reflector,
+            fd3_path=os.environ.get("KGENTS_FD3"),
+        )
+    except ImportError:
+        return None
 
 
 # =============================================================================
@@ -550,12 +638,29 @@ def main(argv: Sequence[str] | None = None) -> int:
         project_root = find_kgents_root()
         _sync_bootstrap(project_root, verbose=verbose)
 
+    # Create reflector for this command invocation
+    # This enables dual-channel output (human + semantic)
+    reflector = _create_reflector(verbose=verbose)
+    start_time = time.time()
+
+    # Emit command start event (if reflector available)
+    if reflector is not None:
+        try:
+            from protocols.cli.reflector import command_start
+
+            reflector.on_event(command_start(command, command_args))
+        except ImportError:
+            pass
+
     # Execute handler
+    exit_code = 0
     try:
-        return int(handler(command_args))
+        exit_code = int(handler(command_args))
+        return exit_code
     except KeyboardInterrupt:
         print("\n[...] Interrupted. No worries—nothing was left in a bad state.")
-        return 130
+        exit_code = 130
+        return exit_code
     except Exception as e:
         # Sympathetic error handling
         try:
@@ -564,8 +669,24 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(handle_exception(e, verbose=verbose))
         except ImportError:
             print(f"Error: {e}")
-        return 1
+        exit_code = 1
+        return exit_code
     finally:
+        # Emit command end event (if reflector available)
+        if reflector is not None:
+            try:
+                from protocols.cli.reflector import command_end
+
+                duration_ms = int((time.time() - start_time) * 1000)
+                reflector.on_event(
+                    command_end(command, exit_code=exit_code, duration_ms=duration_ms)
+                )
+            except ImportError:
+                pass
+
+        # Close reflector
+        _close_reflector()
+
         # Graceful shutdown
         _sync_shutdown(verbose=verbose)
 

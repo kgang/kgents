@@ -863,6 +863,116 @@ class PataphysicsNode(BaseLogosNode):
         }
 
 
+# === Metabolic Node ===
+
+
+@dataclass
+class MetabolicNode(BaseLogosNode):
+    """
+    void.metabolism - Metabolic pressure tracking and fever generation.
+
+    The Accursed Share: surplus must be spent.
+
+    Affordances:
+    - pressure: Query current metabolic pressure
+    - fever: Check if system is in fever state
+    - oblique: Get an Oblique Strategy (FREE, no LLM)
+    - dream: Generate fever dream (EXPENSIVE, uses LLM)
+    - tithe: Voluntary pressure discharge
+    - status: Full metabolic status
+
+    Integration: This node wraps MetabolicEngine and FeverStream.
+    """
+
+    _handle: str = "void.metabolism"
+
+    # Lazy-loaded to avoid circular imports
+    _engine: Any = field(default=None)
+    _fever_stream: Any = field(default=None)
+
+    def __post_init__(self) -> None:
+        """Lazy-initialize engine and fever stream."""
+        if self._engine is None:
+            from protocols.agentese.metabolism import (
+                FeverStream,
+                get_metabolic_engine,
+            )
+
+            self._engine = get_metabolic_engine()
+            self._fever_stream = FeverStream()
+
+    @property
+    def handle(self) -> str:
+        return self._handle
+
+    def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
+        """Everyone can interact with metabolism."""
+        return ("pressure", "fever", "oblique", "dream", "tithe", "status")
+
+    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+        """View metabolic status."""
+        status = self._engine.status()
+        pressure_pct = int(status["pressure"] / status["critical_threshold"] * 100)
+        fever_str = "FEVER" if status["in_fever"] else "normal"
+
+        return BasicRendering(
+            summary=f"Metabolism ({fever_str})",
+            content=f"Pressure: {pressure_pct}% of threshold | Temperature: {status['temperature']:.2f}",
+            metadata=status,
+        )
+
+    async def _invoke_aspect(
+        self,
+        aspect: str,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> Any:
+        """Handle metabolism aspects."""
+        match aspect:
+            case "pressure":
+                return {
+                    "pressure": self._engine.pressure,
+                    "in_fever": self._engine.in_fever,
+                    "critical_threshold": self._engine.critical_threshold,
+                }
+            case "fever":
+                return {
+                    "in_fever": self._engine.in_fever,
+                    "fever_start": self._engine.fever_start,
+                }
+            case "oblique":
+                seed = kwargs.get("seed")
+                strategy = self._fever_stream.oblique(seed)
+                return {"strategy": strategy}
+            case "dream":
+                context = kwargs.get("context", {})
+                llm_client = kwargs.get("llm_client")
+                dream = await self._fever_stream.dream(context, llm_client)
+                return {"dream": dream}
+            case "tithe":
+                amount = kwargs.get("amount", 0.1)
+                return self._engine.tithe(amount)
+            case "status":
+                return self._engine.status()
+            case "tick":
+                # Manual tick for testing
+                input_count = kwargs.get("input_count", 0)
+                output_count = kwargs.get("output_count", 0)
+                event = self._engine.tick(input_count, output_count)
+                if event:
+                    return {
+                        "fever_triggered": True,
+                        "event": {
+                            "intensity": event.intensity,
+                            "trigger": event.trigger,
+                            "oblique_strategy": event.oblique_strategy,
+                        },
+                    }
+                return {"fever_triggered": False, "pressure": self._engine.pressure}
+            case _:
+                return {"aspect": aspect, "status": "not implemented"}
+
+
 # === Void Context Resolver ===
 
 
@@ -872,7 +982,7 @@ class VoidContextResolver:
     Resolver for void.* context.
 
     The void is always accessible to all agents.
-    It provides entropy, serendipity, gratitude, capital, and pataphysics.
+    It provides entropy, serendipity, gratitude, capital, pataphysics, and metabolism.
     """
 
     # Shared entropy pool
@@ -887,6 +997,7 @@ class VoidContextResolver:
     _gratitude: GratitudeNode | None = None
     _capital: CapitalNode | None = None
     _pataphysics: PataphysicsNode | None = None
+    _metabolism: MetabolicNode | None = None
 
     def __post_init__(self) -> None:
         """Initialize singleton nodes with shared pool and ledger."""
@@ -895,13 +1006,18 @@ class VoidContextResolver:
         self._gratitude = GratitudeNode(_pool=self._pool)
         self._capital = CapitalNode(_ledger=self._ledger)
         self._pataphysics = PataphysicsNode(_pool=self._pool)
+        self._metabolism = MetabolicNode()
+
+        # Wire entropy pool to metabolic engine
+        if self._metabolism._engine is not None:
+            self._metabolism._engine.set_entropy_pool(self._pool)
 
     def resolve(self, holon: str, rest: list[str]) -> BaseLogosNode:
         """
         Resolve a void.* path to a node.
 
         Args:
-            holon: The void subsystem (entropy, serendipity, gratitude, capital, pataphysics)
+            holon: The void subsystem (entropy, serendipity, gratitude, capital, pataphysics, metabolism)
             rest: Additional path components
 
         Returns:
@@ -918,6 +1034,8 @@ class VoidContextResolver:
                 return self._capital or CapitalNode()
             case "pataphysics":
                 return self._pataphysics or PataphysicsNode()
+            case "metabolism":
+                return self._metabolism or MetabolicNode()
             case _:
                 # Generic void node for undefined holons
                 return GenericVoidNode(holon, self._pool)
