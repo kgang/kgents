@@ -180,6 +180,7 @@ class CortexServicer:
         logos: Any = None,
         metabolism: Any = None,
         pheromone_field: Any = None,
+        llm_runtime: Any = None,
     ):
         """
         Initialize the Cortex servicer.
@@ -189,16 +190,22 @@ class CortexServicer:
             logos: Logos resolver instance (for AGENTESE paths)
             metabolism: MetabolicEngine instance (for pressure/fever)
             pheromone_field: SemanticField instance (for pheromone levels)
+            llm_runtime: LLM runtime for cognitive operations (ClaudeCLIRuntime)
         """
         self._lifecycle_state = lifecycle_state
         self._logos = logos
         self._metabolism = metabolism
         self._pheromone_field = pheromone_field
+        self._llm_runtime = llm_runtime
         self._instance_id = str(uuid.uuid4())[:8]
 
         # Track metabolic pressure internally if no external engine
         self._internal_pressure = 0.0
         self._critical_threshold = 0.8
+
+        # LLM health tracking
+        self._llm_healthy: bool | None = None
+        self._llm_last_check: datetime | None = None
 
     async def GetStatus(self, request: Any = None, context: Any = None) -> Any:
         """
@@ -940,6 +947,7 @@ class CortexServicer:
         Handle known AGENTESE paths directly without full Logos.
 
         This is a fallback for when the Logos resolver isn't available.
+        Routes cognitive paths to LLM runtime when available.
         """
         # Parse path components
         parts = path.split(".")
@@ -957,17 +965,174 @@ class CortexServicer:
                 status = await self.GetStatus()
                 return status.to_dict()
 
+            if entity == "cortex" and aspect == "probe":
+                # self.cortex.probe -> Run cognitive probe
+                return await self._run_cognitive_probe()
+
         elif context == "void":
             if entity == "entropy" and aspect == "tithe":
                 # void.entropy.tithe -> Tithe
                 result = await self.Tithe()
                 return result.to_dict()
 
+        elif context == "concept":
+            # Cognitive paths - require LLM runtime
+            if self._llm_runtime is None:
+                return {
+                    "error": f"LLM runtime required for path: {path}",
+                    "suggestion": "Configure CortexServicer with llm_runtime parameter",
+                }
+
+            if entity == "define":
+                # concept.define -> Define a term using LLM
+                term = kwargs.get("term", "")
+                return await self._invoke_llm_path("concept.define", term=term)
+
+            if entity == "blend" and aspect == "forge":
+                # concept.blend.forge -> Blend concepts
+                concepts = kwargs.get("concepts", [])
+                return await self._invoke_llm_path(
+                    "concept.blend.forge", concepts=concepts
+                )
+
+            if entity == "refine":
+                # concept.refine -> Dialectical refinement
+                statement = kwargs.get("statement", "")
+                return await self._invoke_llm_path("concept.refine", statement=statement)
+
         # Unknown path
         return {
             "error": f"Unknown path: {path}",
-            "suggestion": "Available paths: self.cortex.manifest, void.entropy.tithe",
+            "suggestion": "Available paths: self.cortex.manifest, self.cortex.probe, "
+            "void.entropy.tithe, concept.define, concept.blend.forge, concept.refine",
         }
+
+    async def _run_cognitive_probe(self) -> dict[str, Any]:
+        """Run cognitive probe against LLM runtime."""
+        if self._llm_runtime is None:
+            return {
+                "healthy": False,
+                "message": "No LLM runtime configured",
+                "status": "unavailable",
+            }
+
+        try:
+            from .probes import CognitiveProbe
+
+            probe = CognitiveProbe()
+            result = await probe.check(self._llm_runtime)
+
+            # Update cached health status
+            self._llm_healthy = result.healthy
+            self._llm_last_check = datetime.now()
+
+            return result.to_dict()
+        except Exception as e:
+            return {
+                "healthy": False,
+                "message": str(e),
+                "status": "error",
+            }
+
+    async def _invoke_llm_path(self, path: str, **kwargs: Any) -> dict[str, Any]:
+        """
+        Invoke an LLM-backed AGENTESE path.
+
+        Uses the configured LLM runtime to execute cognitive operations.
+        """
+        if self._llm_runtime is None:
+            return {"error": "No LLM runtime configured"}
+
+        from runtime.base import AgentContext
+
+        # Build prompt based on path
+        if path == "concept.define":
+            term = kwargs.get("term", "")
+            context = AgentContext(
+                system_prompt=(
+                    "You are a precise definition engine. "
+                    "Provide a clear, concise definition."
+                ),
+                messages=[
+                    {
+                        "role": "user",
+                        "content": f"Define the term: {term}\n\n"
+                        "Respond with a JSON object containing:\n"
+                        '{"term": "<term>", "definition": "<definition>", '
+                        '"examples": ["<example1>", "<example2>"]}',
+                    }
+                ],
+                temperature=0.3,
+                max_tokens=500,
+            )
+
+        elif path == "concept.blend.forge":
+            concepts = kwargs.get("concepts", [])
+            context = AgentContext(
+                system_prompt=(
+                    "You are a concept blending engine. "
+                    "Create novel concepts by blending input concepts."
+                ),
+                messages=[
+                    {
+                        "role": "user",
+                        "content": f"Blend these concepts: {concepts}\n\n"
+                        "Respond with a JSON object containing:\n"
+                        '{"blend": "<blended_concept>", '
+                        '"rationale": "<why_this_blend>", '
+                        '"novel_properties": ["<property1>", "<property2>"]}',
+                    }
+                ],
+                temperature=0.7,
+                max_tokens=500,
+            )
+
+        elif path == "concept.refine":
+            statement = kwargs.get("statement", "")
+            context = AgentContext(
+                system_prompt=(
+                    "You are a dialectical refinement engine. "
+                    "Challenge and improve statements through critique."
+                ),
+                messages=[
+                    {
+                        "role": "user",
+                        "content": f"Refine this statement: {statement}\n\n"
+                        "Respond with a JSON object containing:\n"
+                        '{"original": "<original>", '
+                        '"critique": "<constructive_critique>", '
+                        '"refined": "<improved_statement>"}',
+                    }
+                ],
+                temperature=0.5,
+                max_tokens=500,
+            )
+
+        else:
+            return {"error": f"Unknown LLM path: {path}"}
+
+        try:
+            response_text, metadata = await self._llm_runtime.raw_completion(context)
+
+            # Try to parse as JSON
+            try:
+                result = json.loads(response_text)
+            except json.JSONDecodeError:
+                result = {"raw_response": response_text}
+
+            return {
+                "path": path,
+                "result": result,
+                "model": metadata.get("model", "unknown"),
+                "usage": metadata.get("usage", {}),
+            }
+
+        except Exception as e:
+            return {
+                "path": path,
+                "error": str(e),
+                "error_type": type(e).__name__,
+            }
 
     async def _generate_fever_dream(self) -> str:
         """
@@ -997,6 +1162,8 @@ def create_cortex_servicer(
     logos: Any = None,
     metabolism: Any = None,
     pheromone_field: Any = None,
+    llm_runtime: Any = None,
+    use_cli_runtime: bool = False,
 ) -> CortexServicer:
     """
     Factory function for creating a configured Cortex servicer.
@@ -1008,12 +1175,16 @@ def create_cortex_servicer(
         # With lifecycle state
         servicer = create_cortex_servicer(lifecycle_state=state)
 
+        # With LLM runtime for cognitive paths
+        servicer = create_cortex_servicer(use_cli_runtime=True)
+
         # Full configuration
         servicer = create_cortex_servicer(
             lifecycle_state=state,
             logos=logos_instance,
             metabolism=metabolic_engine,
             pheromone_field=field_state,
+            llm_runtime=custom_runtime,
         )
 
     Args:
@@ -1021,10 +1192,25 @@ def create_cortex_servicer(
         logos: Logos resolver instance (for AGENTESE paths)
         metabolism: MetabolicEngine instance (for pressure/fever)
         pheromone_field: SemanticField or FieldState (for pheromone levels)
+        llm_runtime: LLM runtime for cognitive operations
+        use_cli_runtime: If True, auto-create ClaudeCLIRuntime (requires Claude CLI)
     """
+    # Auto-create CLI runtime if requested
+    if llm_runtime is None and use_cli_runtime:
+        try:
+            from runtime.cli import ClaudeCLIRuntime
+
+            llm_runtime = ClaudeCLIRuntime(timeout=60.0, max_retries=2)
+        except (ImportError, RuntimeError) as e:
+            # CLI not available - log warning but continue
+            import sys
+
+            print(f"[cortex] Warning: Could not create CLI runtime: {e}", file=sys.stderr)
+
     return CortexServicer(
         lifecycle_state=lifecycle_state,
         logos=logos,
         metabolism=metabolism,
         pheromone_field=pheromone_field,
+        llm_runtime=llm_runtime,
     )
