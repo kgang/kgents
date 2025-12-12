@@ -50,6 +50,8 @@ if TYPE_CHECKING:
     from bootstrap.types import Agent
     from bootstrap.umwelt import Umwelt
 
+    from .middleware.curator import WundtCurator
+
 
 # === Composed Path ===
 
@@ -294,6 +296,10 @@ class Logos:
     _d_gent: Any = None  # D-gent for persistence
     _b_gent: Any = None  # B-gent for budgeting
     _grammarian: Any = None  # G-gent for validation
+    _capital_ledger: Any = None  # EventSourcedLedger for void.capital.*
+
+    # Middleware (Phase 5: Wundt Curator for aesthetic filtering)
+    _curator: "WundtCurator | None" = None
 
     def __post_init__(self) -> None:
         """Initialize context resolvers if not already set."""
@@ -304,6 +310,7 @@ class Logos:
                 d_gent=self._d_gent,
                 b_gent=self._b_gent,
                 grammarian=self._grammarian,
+                capital_ledger=self._capital_ledger,
             )
 
     def resolve(
@@ -449,7 +456,13 @@ class Logos:
                 available=available,
             )
 
-        return await node.invoke(aspect, observer, **kwargs)
+        result = await node.invoke(aspect, observer, **kwargs)
+
+        # Apply curator filtering (Phase 5: Wundt Curve aesthetic filtering)
+        if self._curator is not None:
+            result = await self._curator.filter(result, observer, path, self)
+
+        return result
 
     def compose(self, *paths: str, enforce_output: bool = True) -> ComposedPath:
         """
@@ -782,6 +795,40 @@ class Logos:
         """Clear the resolution cache."""
         self._cache.clear()
 
+    def with_curator(self, curator: "WundtCurator") -> "Logos":
+        """
+        Create a new Logos instance with curator middleware.
+
+        The curator filters invoke() results through the Wundt Curve,
+        rejecting boring/chaotic output and enhancing/compressing as needed.
+
+        Args:
+            curator: WundtCurator instance for aesthetic filtering
+
+        Returns:
+            New Logos instance with curator set
+
+        Example:
+            from protocols.agentese.middleware.curator import WundtCurator
+
+            curated_logos = logos.with_curator(WundtCurator())
+            result = await curated_logos.invoke("concept.story.manifest", observer)
+            # Result is filtered through Wundt Curve
+        """
+        return Logos(
+            registry=self.registry,
+            spec_root=self.spec_root,
+            _cache=self._cache.copy(),
+            _jit_nodes=self._jit_nodes.copy(),
+            _context_resolvers=self._context_resolvers,
+            _narrator=self._narrator,
+            _d_gent=self._d_gent,
+            _b_gent=self._b_gent,
+            _grammarian=self._grammarian,
+            _capital_ledger=self._capital_ledger,
+            _curator=curator,
+        )
+
 
 # === Factory Functions ===
 
@@ -793,6 +840,8 @@ def create_logos(
     d_gent: Any = None,
     b_gent: Any = None,
     grammarian: Any = None,
+    capital_ledger: Any = None,
+    curator: "WundtCurator | None" = None,
 ) -> Logos:
     """
     Create a Logos resolver with standard configuration.
@@ -804,6 +853,8 @@ def create_logos(
         d_gent: D-gent for persistence and temporal projection
         b_gent: B-gent for budgeting and forecasting
         grammarian: G-gent for grammar validation
+        capital_ledger: EventSourcedLedger for void.capital.* (injected for testing)
+        curator: WundtCurator for aesthetic filtering (Phase 5)
 
     Returns:
         Configured Logos instance with Phase 2 context resolvers
@@ -815,6 +866,8 @@ def create_logos(
         _d_gent=d_gent,
         _b_gent=b_gent,
         _grammarian=grammarian,
+        _capital_ledger=capital_ledger,
+        _curator=curator,
     )
     logos.__post_init__()  # Initialize context resolvers
     return logos

@@ -22,6 +22,9 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
+from shared.capital import BypassToken, EventSourcedLedger, InsufficientCapitalError
+from shared.melting import ContractViolationError, MeltingContext, meltable
+
 from ..exceptions import BudgetExhaustedError
 from ..node import (
     BaseLogosNode,
@@ -513,6 +516,353 @@ class GratitudeNode(BaseLogosNode):
         }
 
 
+# === Capital Node ===
+
+
+@dataclass
+class CapitalNode(BaseLogosNode):
+    """
+    void.capital - Agent capital ledger interface.
+
+    AGENTESE access to the event-sourced capital ledger:
+    - manifest: View balance (projection from events)
+    - witness: View history (event stream)
+    - tithe: Burn capital (potlatch ritual)
+    - bypass: Mint bypass token (OCap capability)
+
+    The Accursed Share: wealth that is not consumed will consume the community.
+    """
+
+    _handle: str = "void.capital"
+    _ledger: EventSourcedLedger = field(default_factory=EventSourcedLedger)
+
+    @property
+    def handle(self) -> str:
+        return self._handle
+
+    def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
+        """All agents can interact with capital."""
+        return ("balance", "history", "tithe", "bypass")
+
+    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+        """
+        AGENTESE: void.capital.manifest
+
+        View capital balance for the observing agent.
+        Balance is derived from events, not stored.
+        """
+        agent = self._get_agent_id(observer)
+        balance = self._ledger.balance(agent)
+
+        return BasicRendering(
+            summary="Capital Ledger (Accursed Share)",
+            content=f"Agent: {agent}\nBalance: {balance:.3f} / {self._ledger.max_capital:.3f}",
+            metadata={
+                "agent": agent,
+                "balance": balance,
+                "max_capital": self._ledger.max_capital,
+                "initial_capital": self._ledger.initial_capital,
+                "event_count": len(self._ledger.witness(agent)),
+            },
+        )
+
+    async def _invoke_aspect(
+        self,
+        aspect: str,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> Any:
+        """Handle capital aspects."""
+        agent = kwargs.get("agent") or self._get_agent_id(observer)
+
+        match aspect:
+            case "balance":
+                return {
+                    "agent": agent,
+                    "balance": self._ledger.balance(agent),
+                    "max": self._ledger.max_capital,
+                }
+            case "history" | "witness":
+                limit = kwargs.get("limit", 100)
+                events = self._ledger.witness(agent, limit=limit)
+                return {
+                    "agent": agent,
+                    "events": [
+                        {
+                            "type": e.event_type,
+                            "amount": e.amount,
+                            "timestamp": e.timestamp.isoformat(),
+                            "metadata": e.metadata,
+                        }
+                        for e in events
+                    ],
+                    "count": len(events),
+                }
+            case "tithe":
+                amount = kwargs.get("amount", 0.1)
+                event = self._ledger.potlatch(agent, amount)
+                if event is None:
+                    raise InsufficientCapitalError(
+                        "Insufficient capital for tithe",
+                        agent=agent,
+                        required=amount,
+                        available=self._ledger.balance(agent),
+                    )
+                return {
+                    "ritual": "potlatch",
+                    "agent": agent,
+                    "amount": amount,
+                    "remaining": self._ledger.balance(agent),
+                    "gratitude": "The river flows.",
+                }
+            case "bypass":
+                check_name = kwargs.get("check", "trust_gate")
+                cost = kwargs.get("cost", 0.1)
+                ttl = kwargs.get("ttl", 60.0)
+                token = self._ledger.mint_bypass(agent, check_name, cost, ttl)
+                if token is None:
+                    raise InsufficientCapitalError(
+                        "Insufficient capital for bypass",
+                        agent=agent,
+                        required=cost,
+                        available=self._ledger.balance(agent),
+                    )
+                return {
+                    "token": token,
+                    "agent": agent,
+                    "check": check_name,
+                    "cost": cost,
+                    "expires_at": token.expires_at.isoformat(),
+                    "remaining": self._ledger.balance(agent),
+                }
+            case _:
+                return {"aspect": aspect, "status": "not implemented"}
+
+    def _get_agent_id(self, observer: "Umwelt[Any, Any]") -> str:
+        """Extract agent ID from Umwelt's DNA."""
+        dna = observer.dna
+        return getattr(dna, "name", "unknown")
+
+
+# === Pataphysics Node ===
+
+
+@dataclass
+class PataphysicsNode(BaseLogosNode):
+    """
+    void.pataphysics - The Science of Imaginary Solutions.
+
+    Alfred Jarry: "Pataphysics is the science of imaginary solutions,
+    which symbolically attributes the properties of objects,
+    described by their virtuality, to their lineaments."
+
+    This node provides AGENTESE access to contract-bounded hallucination:
+    - solve: Generate an imaginary solution to a problem
+    - melt: Invoke a meltable function with fallback
+    - verify: Check if a solution satisfies contracts
+
+    The rename from "hallucinate" to "pataphysics.solve" is intentional:
+    - "Hallucinate" implies error, accident, unreliability
+    - "Solve" implies deliberate method, even when imaginary
+
+    See: plans/concept/creativity.md (The Veale Fix)
+    """
+
+    _handle: str = "void.pataphysics"
+    _pool: EntropyPool = field(default_factory=EntropyPool)
+
+    # Solution templates for imaginary solutions
+    _solution_templates: tuple[str, ...] = (
+        "Imagine that {problem} could be addressed by inverting the question.",
+        "Consider: what if {problem} were actually its own solution?",
+        "The imaginary solution: treat {problem} as a feature, not a bug.",
+        "Pataphysics suggests: the exception IS the rule for {problem}.",
+        "What lies beyond {problem}? Perhaps the answer is the question itself.",
+    )
+
+    @property
+    def handle(self) -> str:
+        return self._handle
+
+    def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
+        """Everyone can invoke pataphysics."""
+        return ("solve", "melt", "verify", "imagine")
+
+    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+        """View pataphysics interface."""
+        return BasicRendering(
+            summary="Pataphysics Portal (Imaginary Solutions)",
+            content="The science of imaginary solutions. Use 'solve' to find what lies beyond.",
+            metadata={
+                "entropy_remaining": self._pool.remaining,
+                "jarry_quote": "Pataphysics will be, above all, the science of the particular.",
+            },
+        )
+
+    async def _invoke_aspect(
+        self,
+        aspect: str,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> Any:
+        """Handle pataphysics aspects."""
+        match aspect:
+            case "solve":
+                return await self._solve(observer, **kwargs)
+            case "melt":
+                return await self._melt(observer, **kwargs)
+            case "verify":
+                return await self._verify(observer, **kwargs)
+            case "imagine":
+                return await self._imagine(observer, **kwargs)
+            case _:
+                return {"aspect": aspect, "status": "not implemented"}
+
+    async def _solve(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Generate an imaginary solution to a problem.
+
+        This is the AGENTESE path for contract-bounded hallucination.
+        When rigid solutions fail, pataphysics provides alternatives.
+        """
+        problem = kwargs.get("problem", "the unsolvable")
+        ensure = kwargs.get("ensure")  # Optional postcondition
+
+        try:
+            grant = self._pool.sip(0.08)
+        except BudgetExhaustedError:
+            return {
+                "solution": "The void is exhausted. Tithe first, then solve.",
+                "status": "budget_exhausted",
+            }
+
+        # Generate imaginary solution
+        seed = grant["seed"]
+        template_idx = int(seed * len(self._solution_templates))
+        template = self._solution_templates[template_idx]
+
+        solution = template.format(problem=problem)
+
+        result = {
+            "solution": solution,
+            "problem": problem,
+            "seed": seed,
+            "method": "pataphysics",
+            "jarry_certified": True,
+        }
+
+        # If a postcondition is provided, note whether it would pass
+        if ensure is not None:
+            try:
+                result["contract_satisfied"] = bool(ensure(solution))
+            except Exception:
+                result["contract_satisfied"] = False
+
+        return result
+
+    async def _melt(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Invoke a meltable operation with fallback.
+
+        This is a meta-operation: it doesn't execute meltable functions
+        directly, but provides context for how melting works.
+        """
+        context = kwargs.get("context", {})
+        error_type = kwargs.get("error_type", "unknown")
+
+        return {
+            "melting_context": MeltingContext(
+                function_name=context.get("function", "unknown"),
+                args=context.get("args", ()),
+                kwargs=context.get("kwargs", {}),
+                error=Exception(f"Simulated {error_type}"),
+                attempt=0,
+            ),
+            "instruction": "Use @meltable decorator for contract-bounded fallback",
+            "philosophy": "When rigid code fails, imagination provides.",
+        }
+
+    async def _verify(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Verify if a solution satisfies a contract.
+
+        Args:
+            solution: The proposed solution
+            ensure: The postcondition predicate
+        """
+        solution = kwargs.get("solution")
+        ensure = kwargs.get("ensure")
+
+        if ensure is None:
+            return {
+                "verified": True,
+                "reason": "No contract specified (vacuously true)",
+            }
+
+        try:
+            satisfied = bool(ensure(solution))
+            return {
+                "verified": satisfied,
+                "solution": solution,
+                "reason": "Contract satisfied" if satisfied else "Contract violated",
+            }
+        except Exception as e:
+            return {
+                "verified": False,
+                "solution": solution,
+                "reason": f"Contract evaluation failed: {e}",
+                "error": str(e),
+            }
+
+    async def _imagine(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Pure imagination: generate without constraints.
+
+        Unlike 'solve', this doesn't attempt to address a problem.
+        It simply generates novel content from the entropy pool.
+        """
+        domain = kwargs.get("domain", "the possible")
+
+        try:
+            grant = self._pool.sip(0.05)
+        except BudgetExhaustedError:
+            return {
+                "imagination": "Even imagination requires entropy. Tithe to restore.",
+                "status": "budget_exhausted",
+            }
+
+        imaginations = [
+            f"In the realm of {domain}, all contradictions resolve.",
+            f"Beyond {domain} lies its shadow, equally real.",
+            f"What if {domain} dreamed of us, instead?",
+            f"The inverse of {domain} is also {domain}.",
+            f"In pataphysics, {domain} is merely the beginning.",
+        ]
+
+        idx = int(grant["seed"] * len(imaginations))
+        return {
+            "imagination": imaginations[idx],
+            "domain": domain,
+            "seed": grant["seed"],
+        }
+
+
 # === Void Context Resolver ===
 
 
@@ -522,29 +872,36 @@ class VoidContextResolver:
     Resolver for void.* context.
 
     The void is always accessible to all agents.
-    It provides entropy, serendipity, and gratitude.
+    It provides entropy, serendipity, gratitude, capital, and pataphysics.
     """
 
     # Shared entropy pool
     _pool: EntropyPool = field(default_factory=EntropyPool)
 
+    # Shared capital ledger (injected for dependency isolation)
+    _ledger: EventSourcedLedger = field(default_factory=EventSourcedLedger)
+
     # Singleton nodes
     _entropy: EntropyNode | None = None
     _serendipity: SerendipityNode | None = None
     _gratitude: GratitudeNode | None = None
+    _capital: CapitalNode | None = None
+    _pataphysics: PataphysicsNode | None = None
 
     def __post_init__(self) -> None:
-        """Initialize singleton nodes with shared pool."""
+        """Initialize singleton nodes with shared pool and ledger."""
         self._entropy = EntropyNode(_pool=self._pool)
         self._serendipity = SerendipityNode(_pool=self._pool)
         self._gratitude = GratitudeNode(_pool=self._pool)
+        self._capital = CapitalNode(_ledger=self._ledger)
+        self._pataphysics = PataphysicsNode(_pool=self._pool)
 
     def resolve(self, holon: str, rest: list[str]) -> BaseLogosNode:
         """
         Resolve a void.* path to a node.
 
         Args:
-            holon: The void subsystem (entropy, serendipity, gratitude)
+            holon: The void subsystem (entropy, serendipity, gratitude, capital, pataphysics)
             rest: Additional path components
 
         Returns:
@@ -557,6 +914,10 @@ class VoidContextResolver:
                 return self._serendipity or SerendipityNode()
             case "gratitude":
                 return self._gratitude or GratitudeNode()
+            case "capital":
+                return self._capital or CapitalNode()
+            case "pataphysics":
+                return self._pataphysics or PataphysicsNode()
             case _:
                 # Generic void node for undefined holons
                 return GenericVoidNode(holon, self._pool)
@@ -611,14 +972,16 @@ class GenericVoidNode(BaseLogosNode):
 def create_void_resolver(
     initial_budget: float = 100.0,
     regeneration_rate: float = 0.1,
+    ledger: EventSourcedLedger | None = None,
 ) -> VoidContextResolver:
-    """Create a VoidContextResolver with custom entropy configuration."""
+    """Create a VoidContextResolver with custom entropy and capital configuration."""
     pool = EntropyPool(
         initial_budget=initial_budget,
         remaining=initial_budget,
         regeneration_rate=regeneration_rate,
     )
-    resolver = VoidContextResolver(_pool=pool)
+    capital_ledger = ledger or EventSourcedLedger()
+    resolver = VoidContextResolver(_pool=pool, _ledger=capital_ledger)
     resolver.__post_init__()
     return resolver
 

@@ -450,3 +450,122 @@ class TestPlaceholderNode:
         result = await node.manifest(cast("Umwelt[Any, Any]", mock_umwelt))
         assert isinstance(result, BasicRendering)
         assert "Placeholder" in result.summary
+
+
+class TestCuratorMiddleware:
+    """Tests for WundtCurator integration with Logos."""
+
+    def test_with_curator_creates_new_instance(self, logos_with_nodes: Logos) -> None:
+        """with_curator() creates a new Logos instance with curator set."""
+        from protocols.agentese.middleware.curator import WundtCurator
+
+        curator = WundtCurator()
+        curated_logos = logos_with_nodes.with_curator(curator)
+
+        # Should be a new instance
+        assert curated_logos is not logos_with_nodes
+        # Curator should be set
+        assert curated_logos._curator is curator
+        # Original should not have curator
+        assert logos_with_nodes._curator is None
+
+    def test_with_curator_preserves_registry(self, logos_with_nodes: Logos) -> None:
+        """with_curator() preserves the registry."""
+        from protocols.agentese.middleware.curator import WundtCurator
+
+        curated_logos = logos_with_nodes.with_curator(WundtCurator())
+
+        # Registry is shared
+        assert curated_logos.registry is logos_with_nodes.registry
+
+    @pytest.mark.asyncio
+    async def test_curator_filter_called_on_invoke(
+        self, mock_umwelt: MockUmwelt
+    ) -> None:
+        """Curator filter is called during invoke."""
+        from unittest.mock import AsyncMock
+
+        from protocols.agentese.middleware.curator import WundtCurator
+
+        registry = SimpleRegistry()
+        registry.register(
+            "world.house",
+            PlaceholderNode(handle="world.house"),
+        )
+        curator = WundtCurator()
+        curator.filter = AsyncMock(return_value="filtered_result")  # type: ignore[method-assign]
+
+        logos = Logos(registry=registry, _curator=curator)
+
+        result = await logos.invoke(
+            "world.house.manifest", cast("Umwelt[Any, Any]", mock_umwelt)
+        )
+
+        # Curator filter was called
+        curator.filter.assert_called_once()
+        assert result == "filtered_result"
+
+    @pytest.mark.asyncio
+    async def test_invoke_without_curator_returns_raw(
+        self, logos_with_nodes: Logos, mock_umwelt: MockUmwelt
+    ) -> None:
+        """invoke() without curator returns raw result."""
+        result = await logos_with_nodes.invoke(
+            "world.house.manifest", cast("Umwelt[Any, Any]", mock_umwelt)
+        )
+
+        # Should be the raw result (BasicRendering)
+        assert isinstance(result, BasicRendering)
+
+    @pytest.mark.asyncio
+    async def test_curator_exempt_paths_bypass_filter(
+        self, mock_umwelt: MockUmwelt
+    ) -> None:
+        """Exempt paths bypass curator filtering."""
+        from unittest.mock import AsyncMock
+
+        from protocols.agentese.middleware.curator import WundtCurator
+
+        registry = SimpleRegistry()
+        registry.register(
+            "void.entropy",
+            PlaceholderNode(handle="void.entropy"),
+        )
+        curator = WundtCurator()
+
+        # Track if filter is actually invoked
+        original_filter = curator.filter
+        filter_called = False
+
+        async def tracking_filter(*args: Any, **kwargs: Any) -> Any:
+            nonlocal filter_called
+            filter_called = True
+            return await original_filter(*args, **kwargs)
+
+        curator.filter = tracking_filter  # type: ignore[method-assign]
+
+        logos = Logos(registry=registry, _curator=curator)
+
+        # void.* paths should be exempt
+        result = await logos.invoke(
+            "void.entropy.manifest", cast("Umwelt[Any, Any]", mock_umwelt)
+        )
+
+        # Filter was called (Logos calls it), but curator internally exempts
+        assert filter_called
+        # Result should still be valid
+        assert isinstance(result, BasicRendering)
+
+    def test_create_logos_with_curator(self) -> None:
+        """create_logos() accepts curator parameter."""
+        from protocols.agentese.middleware.curator import WundtCurator
+
+        curator = WundtCurator()
+        logos = create_logos(curator=curator)
+
+        assert logos._curator is curator
+
+    def test_create_logos_without_curator(self) -> None:
+        """create_logos() without curator has None curator."""
+        logos = create_logos()
+        assert logos._curator is None

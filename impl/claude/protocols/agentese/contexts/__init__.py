@@ -33,14 +33,28 @@ from .concept import (
     create_concept_node,
     create_concept_resolver,
 )
+from .concept_blend import (
+    BLEND_AFFORDANCES,
+    BlendNode,
+    BlendResult,
+    create_blend_node,
+    forge_blend,
+)
 from .self_ import (
     SELF_AFFORDANCES,
     CapabilitiesNode,
     IdentityNode,
+    JudgmentNode,
     MemoryNode,
     SelfContextResolver,
     StateNode,
     create_self_resolver,
+)
+from .self_judgment import (
+    CriticsLoop,
+    Critique,
+    CritiqueWeights,
+    RefinedArtifact,
 )
 from .time import (
     TIME_AFFORDANCES,
@@ -53,6 +67,7 @@ from .time import (
     create_time_resolver,
 )
 from .void import (
+    CapitalNode,
     EntropyNode,
     EntropyPool,
     GratitudeNode,
@@ -80,6 +95,7 @@ def create_context_resolvers(
     b_gent: Any = None,
     grammarian: Any = None,
     entropy_budget: float = 100.0,
+    capital_ledger: Any = None,
 ) -> dict[str, Any]:
     """
     Create all five context resolvers with unified configuration.
@@ -91,6 +107,7 @@ def create_context_resolvers(
         b_gent: B-gent for budgeting and forecasting
         grammarian: G-gent for validation
         entropy_budget: Initial entropy budget for void context
+        capital_ledger: EventSourcedLedger for void.capital.* (injected for testing)
 
     Returns:
         Dictionary mapping context names to resolvers
@@ -99,7 +116,9 @@ def create_context_resolvers(
         "world": create_world_resolver(registry=registry, narrator=narrator),
         "self": create_self_resolver(d_gent=d_gent, n_gent=narrator),
         "concept": create_concept_resolver(registry=registry, grammarian=grammarian),
-        "void": create_void_resolver(initial_budget=entropy_budget),
+        "void": create_void_resolver(
+            initial_budget=entropy_budget, ledger=capital_ledger
+        ),
         "time": create_time_resolver(narrator=narrator, d_gent=d_gent, b_gent=b_gent),
     }
 
@@ -123,18 +142,31 @@ __all__ = [
     "CapabilitiesNode",
     "StateNode",
     "IdentityNode",
+    "JudgmentNode",
     "create_self_resolver",
+    # Self judgment (SPECS critique)
+    "Critique",
+    "CritiqueWeights",
+    "CriticsLoop",
+    "RefinedArtifact",
     # Concept context
     "ConceptContextResolver",
     "ConceptNode",
     "create_concept_resolver",
     "create_concept_node",
+    # Concept blending (concept.blend.*)
+    "BLEND_AFFORDANCES",
+    "BlendNode",
+    "BlendResult",
+    "create_blend_node",
+    "forge_blend",
     # Void context
     "VoidContextResolver",
     "EntropyPool",
     "EntropyNode",
     "SerendipityNode",
     "GratitudeNode",
+    "CapitalNode",
     "RandomnessGrant",
     "create_void_resolver",
     "create_entropy_pool",

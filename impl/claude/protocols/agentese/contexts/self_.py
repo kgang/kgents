@@ -29,6 +29,7 @@ from ..node import (
 if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt
 
+from .self_judgment import CriticsLoop, Critique, RefinedArtifact
 
 # === Self Affordances ===
 
@@ -37,6 +38,14 @@ SELF_AFFORDANCES: dict[str, tuple[str, ...]] = {
     "capabilities": ("list", "acquire", "release"),
     "state": ("checkpoint", "restore", "inspect"),
     "identity": ("reflect", "evolve"),
+    "judgment": (
+        "taste",
+        "surprise",
+        "expectations",
+        "calibrate",
+        "critique",
+        "refine",
+    ),
 }
 
 
@@ -336,6 +345,327 @@ class StateNode(BaseLogosNode):
                 return {"aspect": aspect, "status": "not implemented"}
 
 
+# === Judgment Node ===
+
+
+@dataclass
+class JudgmentNode(BaseLogosNode):
+    """
+    self.judgment - Aesthetic judgment and taste.
+
+    Provides access to the Wundt Curator for aesthetic filtering:
+    - taste: Evaluate aesthetic quality (returns TasteScore)
+    - surprise: Measure Bayesian surprise
+    - expectations: View/set prior expectations
+    - calibrate: Learn optimal thresholds from feedback
+    - critique: SPECS-based evaluation (novelty, utility, surprise)
+    - refine: Iterative refinement loop with critique feedback
+
+    AGENTESE: self.judgment.*
+
+    Principle Alignment:
+    - Tasteful: Architectural quality filtering
+    - Joy-Inducing: Interesting > Boring or Chaotic
+    """
+
+    _handle: str = "self.judgment"
+
+    # Wundt Curator configuration
+    _low_threshold: float = 0.1
+    _high_threshold: float = 0.9
+    _expectations: dict[str, Any] = field(default_factory=dict)
+
+    # Critics Loop for SPECS-based evaluation
+    _critics_loop: CriticsLoop | None = None
+
+    @property
+    def handle(self) -> str:
+        return self._handle
+
+    def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
+        """Judgment affordances available to all archetypes."""
+        return SELF_AFFORDANCES["judgment"]
+
+    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+        """View current judgment configuration."""
+        return BasicRendering(
+            summary="Judgment Configuration",
+            content=(
+                f"Wundt Curve Thresholds:\n"
+                f"  Boring threshold: < {self._low_threshold}\n"
+                f"  Chaotic threshold: > {self._high_threshold}\n"
+                f"  Expectations: {len(self._expectations)} priors set"
+            ),
+            metadata={
+                "low_threshold": self._low_threshold,
+                "high_threshold": self._high_threshold,
+                "expectation_keys": list(self._expectations.keys()),
+            },
+        )
+
+    async def _invoke_aspect(
+        self,
+        aspect: str,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> Any:
+        """Handle judgment aspects."""
+        match aspect:
+            case "taste":
+                return await self._evaluate_taste(observer, **kwargs)
+            case "surprise":
+                return await self._measure_surprise(observer, **kwargs)
+            case "expectations":
+                return self._manage_expectations(observer, **kwargs)
+            case "calibrate":
+                return self._calibrate(observer, **kwargs)
+            case "critique":
+                return await self._critique_artifact(observer, **kwargs)
+            case "refine":
+                return await self._refine_artifact(observer, **kwargs)
+            case _:
+                return {"aspect": aspect, "status": "not implemented"}
+
+    async def _evaluate_taste(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Evaluate aesthetic taste via Wundt Curve.
+
+        Args:
+            content: The content to evaluate
+            prior: Optional prior expectation (defaults to observer context)
+
+        Returns:
+            TasteScore-like dict with novelty, complexity, verdict
+        """
+        from ..middleware.curator import (
+            SemanticDistance,
+            TasteScore,
+            structural_surprise,
+        )
+
+        content = kwargs.get("content")
+        prior = kwargs.get("prior")
+
+        if content is None:
+            return {"error": "content required"}
+
+        # Get prior from context if not provided
+        if prior is None:
+            prior = self._expectations.get("prior")
+            # Also check observer context (using getattr for type safety)
+            if prior is None:
+                obs_context = getattr(observer, "context", {})
+                if isinstance(obs_context, dict):
+                    obs_expectations = obs_context.get("expectations", {})
+                    if isinstance(obs_expectations, dict):
+                        prior = obs_expectations.get("prior")
+
+        # Compute surprise
+        if prior is not None:
+            content_str = str(content)
+            prior_str = str(prior)
+            novelty = structural_surprise(content_str, prior_str)
+        else:
+            novelty = 0.5  # Neutral when no prior
+
+        # Create TasteScore
+        score = TasteScore.from_novelty(
+            novelty=novelty,
+            complexity=0.5,  # Default complexity
+            low_threshold=self._low_threshold,
+            high_threshold=self._high_threshold,
+        )
+
+        return {
+            "novelty": score.novelty,
+            "complexity": score.complexity,
+            "wundt_score": score.wundt_score,
+            "verdict": score.verdict,
+            "is_acceptable": score.is_acceptable,
+        }
+
+    async def _measure_surprise(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> float:
+        """
+        Measure Bayesian surprise between content and prior.
+
+        Args:
+            content: The content to measure
+            prior: The expected content
+
+        Returns:
+            Surprise value between 0.0 and 1.0
+        """
+        from ..middleware.curator import structural_surprise
+
+        content = kwargs.get("content")
+        prior = kwargs.get("prior", self._expectations.get("prior"))
+
+        if content is None:
+            return 0.5  # Neutral
+
+        if prior is None:
+            return 0.5  # Neutral when no prior
+
+        return structural_surprise(str(content), str(prior))
+
+    def _manage_expectations(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        View or set prior expectations.
+
+        Args:
+            set_key: Key to set (if setting)
+            set_value: Value to set (if setting)
+            get_key: Key to get (if getting)
+            clear: If True, clear all expectations
+
+        Returns:
+            Current expectations or operation result
+        """
+        if kwargs.get("clear"):
+            self._expectations.clear()
+            return {"status": "cleared", "expectations": {}}
+
+        set_key = kwargs.get("set_key")
+        set_value = kwargs.get("set_value")
+        if set_key and set_value is not None:
+            self._expectations[set_key] = set_value
+            return {"status": "set", "key": set_key}
+
+        get_key = kwargs.get("get_key")
+        if get_key:
+            return {"key": get_key, "value": self._expectations.get(get_key)}
+
+        return {"expectations": dict(self._expectations)}
+
+    def _calibrate(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Calibrate thresholds from feedback.
+
+        Args:
+            low: New low threshold
+            high: New high threshold
+            feedback: List of (content, rating) tuples for learning
+
+        Returns:
+            Updated thresholds
+        """
+        low = kwargs.get("low")
+        high = kwargs.get("high")
+
+        if low is not None:
+            self._low_threshold = max(0.0, min(low, 1.0))
+        if high is not None:
+            self._high_threshold = max(0.0, min(high, 1.0))
+
+        # Ensure low < high
+        if self._low_threshold >= self._high_threshold:
+            self._high_threshold = min(self._low_threshold + 0.1, 1.0)
+
+        return {
+            "status": "calibrated",
+            "low_threshold": self._low_threshold,
+            "high_threshold": self._high_threshold,
+        }
+
+    def _get_or_create_loop(self) -> CriticsLoop:
+        """Get or create the CriticsLoop instance."""
+        if self._critics_loop is None:
+            self._critics_loop = CriticsLoop()
+        return self._critics_loop
+
+    async def _critique_artifact(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        SPECS-based critique of an artifact.
+
+        Args:
+            artifact: The artifact to evaluate
+            purpose: Optional purpose for utility assessment
+            prior_work: Optional list of prior work for novelty comparison
+
+        Returns:
+            Critique result as dict (novelty, utility, surprise, overall, reasoning)
+        """
+        artifact = kwargs.get("artifact")
+        if artifact is None:
+            return {"error": "artifact required"}
+
+        purpose = kwargs.get("purpose")
+        prior_work = kwargs.get("prior_work")
+
+        loop = self._get_or_create_loop()
+        critique = await loop.critique(
+            artifact, observer, purpose=purpose, prior_work=prior_work
+        )
+        return critique.to_dict()
+
+    async def _refine_artifact(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Iterative refinement loop with critique feedback.
+
+        Requires a Logos instance to be passed for generation.
+
+        Args:
+            logos: Logos instance for invocations
+            generator_path: AGENTESE path for generation
+            purpose: Optional purpose for utility assessment
+            threshold: Optional threshold (default 0.7)
+            max_iterations: Optional max iterations (default 3)
+            **generator_kwargs: Additional args for the generator
+
+        Returns:
+            RefinedArtifact result as dict
+        """
+        logos = kwargs.get("logos")
+        generator_path = kwargs.get("generator_path")
+
+        if logos is None:
+            return {"error": "logos required"}
+        if generator_path is None:
+            return {"error": "generator_path required"}
+
+        purpose = kwargs.get("purpose")
+        threshold = kwargs.get("threshold", 0.7)
+        max_iterations = kwargs.get("max_iterations", 3)
+
+        # Extract generator kwargs (remove our params)
+        generator_kwargs = {
+            k: v
+            for k, v in kwargs.items()
+            if k
+            not in ("logos", "generator_path", "purpose", "threshold", "max_iterations")
+        }
+
+        loop = CriticsLoop(threshold=threshold, max_iterations=max_iterations)
+        result = await loop.generate_with_trace(
+            logos, observer, generator_path, purpose=purpose, **generator_kwargs
+        )
+        return result.to_dict()
+
+
 # === Identity Node ===
 
 
@@ -408,7 +738,7 @@ class SelfContextResolver:
     Resolver for self.* context.
 
     The self context provides introspection into the agent's
-    internal state, memory, capabilities, and identity.
+    internal state, memory, capabilities, identity, and judgment.
     """
 
     # D-gent integration for persistence
@@ -421,6 +751,7 @@ class SelfContextResolver:
     _capabilities: CapabilitiesNode | None = None
     _state: StateNode | None = None
     _identity: IdentityNode | None = None
+    _judgment: JudgmentNode | None = None
 
     def __post_init__(self) -> None:
         """Initialize singleton nodes."""
@@ -428,13 +759,14 @@ class SelfContextResolver:
         self._capabilities = CapabilitiesNode()
         self._state = StateNode()
         self._identity = IdentityNode()
+        self._judgment = JudgmentNode()
 
     def resolve(self, holon: str, rest: list[str]) -> BaseLogosNode:
         """
         Resolve a self.* path to a node.
 
         Args:
-            holon: The self subsystem (memory, capabilities, state, identity)
+            holon: The self subsystem (memory, capabilities, state, identity, judgment)
             rest: Additional path components
 
         Returns:
@@ -449,6 +781,8 @@ class SelfContextResolver:
                 return self._state or StateNode()
             case "identity":
                 return self._identity or IdentityNode()
+            case "judgment":
+                return self._judgment or JudgmentNode()
             case _:
                 # Generic self node for undefined holons
                 return GenericSelfNode(holon)

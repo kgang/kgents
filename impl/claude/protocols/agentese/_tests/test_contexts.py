@@ -15,10 +15,12 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, cast
 
 import pytest
+from shared.capital import EventSourcedLedger, InsufficientCapitalError
 
 from ..contexts import (
     VALID_CONTEXTS,
     CapabilitiesNode,
+    CapitalNode,
     ConceptNode,
     EntropyNode,
     FutureNode,
@@ -529,6 +531,251 @@ class TestVoidContextResolver:
         gratitude = resolver.resolve("gratitude", [])
         assert entropy._pool is serendipity._pool  # type: ignore[attr-defined]
         assert serendipity._pool is gratitude._pool  # type: ignore[attr-defined]
+
+    def test_resolve_capital(self, resolver: VoidContextResolver) -> None:
+        """Resolves void.capital."""
+        node = resolver.resolve("capital", [])
+        assert isinstance(node, CapitalNode)
+
+    def test_shared_capital_ledger(self) -> None:
+        """VoidContextResolver with injected ledger shares it with capital node."""
+        ledger = EventSourcedLedger()
+        resolver = create_void_resolver(ledger=ledger)
+        capital = resolver.resolve("capital", [])
+        assert capital._ledger is ledger  # type: ignore[attr-defined]
+
+
+class TestCapitalNode:
+    """Tests for CapitalNode (void.capital.*)."""
+
+    @pytest.fixture
+    def ledger(self) -> EventSourcedLedger:
+        """Fresh ledger per test."""
+        return EventSourcedLedger()
+
+    @pytest.fixture
+    def capital_node(self, ledger: EventSourcedLedger) -> CapitalNode:
+        """Capital node with injected ledger."""
+        return CapitalNode(_ledger=ledger)
+
+    @pytest.fixture
+    def observer(self) -> MockUmwelt:
+        return MockUmwelt(archetype="default")
+
+    @pytest.fixture
+    def named_observer(self) -> MockUmwelt:
+        """Observer with a specific name for capital tracking."""
+        from .conftest import MockDNA
+
+        return MockUmwelt(dna=MockDNA(name="test-agent", archetype="default"))
+
+    def test_handle(self, capital_node: CapitalNode) -> None:
+        """Capital node has correct handle."""
+        assert capital_node.handle == "void.capital"
+
+    def test_affordances(self, capital_node: CapitalNode) -> None:
+        """Capital node has capital affordances."""
+        meta = AgentMeta(name="test", archetype="default")
+        affordances = capital_node.affordances(meta)
+        assert "balance" in affordances
+        assert "history" in affordances
+        assert "tithe" in affordances
+        assert "bypass" in affordances
+
+    @pytest.mark.asyncio
+    async def test_manifest_shows_balance(
+        self, capital_node: CapitalNode, named_observer: MockUmwelt
+    ) -> None:
+        """Manifest returns balance rendering."""
+        result = await capital_node.manifest(cast("Umwelt[Any, Any]", named_observer))
+        assert isinstance(result, BasicRendering)
+        assert "Capital Ledger" in result.summary
+        assert "balance" in result.metadata
+
+    @pytest.mark.asyncio
+    async def test_balance_aspect(
+        self, capital_node: CapitalNode, named_observer: MockUmwelt
+    ) -> None:
+        """Balance aspect returns agent balance."""
+        result = await capital_node.invoke(
+            "balance", cast("Umwelt[Any, Any]", named_observer)
+        )
+        assert "agent" in result
+        assert "balance" in result
+        assert result["balance"] == 0.5  # initial_capital
+
+    @pytest.mark.asyncio
+    async def test_witness_aspect(
+        self,
+        capital_node: CapitalNode,
+        ledger: EventSourcedLedger,
+        named_observer: MockUmwelt,
+    ) -> None:
+        """Witness aspect returns event history."""
+        # Add some history
+        ledger.credit("test-agent", 0.1, "test_credit")
+        ledger.debit("test-agent", 0.05, "test_debit")
+
+        result = await capital_node.invoke(
+            "witness", cast("Umwelt[Any, Any]", named_observer)
+        )
+        assert "events" in result
+        assert result["count"] == 2
+
+    @pytest.mark.asyncio
+    async def test_history_aspect_alias(
+        self,
+        capital_node: CapitalNode,
+        ledger: EventSourcedLedger,
+        named_observer: MockUmwelt,
+    ) -> None:
+        """History aspect is alias for witness."""
+        ledger.credit("test-agent", 0.1, "test")
+
+        result = await capital_node.invoke(
+            "history", cast("Umwelt[Any, Any]", named_observer)
+        )
+        assert "events" in result
+        assert result["count"] == 1
+
+    @pytest.mark.asyncio
+    async def test_tithe_burns_capital(
+        self,
+        capital_node: CapitalNode,
+        ledger: EventSourcedLedger,
+        named_observer: MockUmwelt,
+    ) -> None:
+        """Tithe (potlatch) burns capital."""
+        initial = ledger.balance("test-agent")
+
+        result = await capital_node.invoke(
+            "tithe", cast("Umwelt[Any, Any]", named_observer), amount=0.1
+        )
+
+        assert result["ritual"] == "potlatch"
+        assert result["amount"] == 0.1
+        assert result["remaining"] < initial
+        assert "gratitude" in result
+
+    @pytest.mark.asyncio
+    async def test_tithe_insufficient_raises(
+        self,
+        capital_node: CapitalNode,
+        ledger: EventSourcedLedger,
+        named_observer: MockUmwelt,
+    ) -> None:
+        """Tithe raises InsufficientCapitalError if insufficient balance."""
+        with pytest.raises(InsufficientCapitalError):
+            await capital_node.invoke(
+                "tithe", cast("Umwelt[Any, Any]", named_observer), amount=10.0
+            )
+
+    @pytest.mark.asyncio
+    async def test_bypass_mints_token(
+        self,
+        capital_node: CapitalNode,
+        ledger: EventSourcedLedger,
+        named_observer: MockUmwelt,
+    ) -> None:
+        """Bypass mints a BypassToken."""
+        result = await capital_node.invoke(
+            "bypass",
+            cast("Umwelt[Any, Any]", named_observer),
+            check="trust_gate",
+            cost=0.1,
+        )
+
+        assert "token" in result
+        token = result["token"]
+        assert token.check_name == "trust_gate"
+        assert token.cost == 0.1
+        assert token.agent == "test-agent"
+        assert token.is_valid()
+
+    @pytest.mark.asyncio
+    async def test_bypass_insufficient_raises(
+        self,
+        capital_node: CapitalNode,
+        ledger: EventSourcedLedger,
+        named_observer: MockUmwelt,
+    ) -> None:
+        """Bypass raises InsufficientCapitalError if insufficient balance."""
+        with pytest.raises(InsufficientCapitalError):
+            await capital_node.invoke(
+                "bypass",
+                cast("Umwelt[Any, Any]", named_observer),
+                check="trust_gate",
+                cost=10.0,
+            )
+
+    @pytest.mark.asyncio
+    async def test_bypass_deducts_cost(
+        self,
+        capital_node: CapitalNode,
+        ledger: EventSourcedLedger,
+        named_observer: MockUmwelt,
+    ) -> None:
+        """Bypass deducts cost from agent's balance."""
+        initial = ledger.balance("test-agent")
+
+        await capital_node.invoke(
+            "bypass",
+            cast("Umwelt[Any, Any]", named_observer),
+            check="trust_gate",
+            cost=0.1,
+        )
+
+        final = ledger.balance("test-agent")
+        assert final == initial - 0.1
+
+
+class TestCapitalLogosIntegration:
+    """Test capital integration with Logos."""
+
+    @pytest.fixture
+    def ledger(self) -> EventSourcedLedger:
+        return EventSourcedLedger()
+
+    @pytest.fixture
+    def logos_with_capital(self, ledger: EventSourcedLedger) -> Logos:
+        from ..logos import create_logos
+
+        return create_logos(capital_ledger=ledger)
+
+    @pytest.fixture
+    def named_observer(self) -> MockUmwelt:
+        from .conftest import MockDNA
+
+        return MockUmwelt(dna=MockDNA(name="test-agent", archetype="default"))
+
+    def test_resolve_void_capital(self, logos_with_capital: Logos) -> None:
+        """Logos resolves void.capital path."""
+        node = logos_with_capital.resolve("void.capital")
+        assert node.handle == "void.capital"
+        assert isinstance(node, CapitalNode)
+
+    @pytest.mark.asyncio
+    async def test_invoke_void_capital_balance(
+        self, logos_with_capital: Logos, named_observer: MockUmwelt
+    ) -> None:
+        """Invoke void.capital.balance through Logos."""
+        result = await logos_with_capital.invoke(
+            "void.capital.balance", cast("Umwelt[Any, Any]", named_observer)
+        )
+        assert "balance" in result
+        assert result["agent"] == "test-agent"
+
+    @pytest.mark.asyncio
+    async def test_invoke_void_capital_tithe(
+        self, logos_with_capital: Logos, named_observer: MockUmwelt
+    ) -> None:
+        """Invoke void.capital.tithe through Logos."""
+        result = await logos_with_capital.invoke(
+            "void.capital.tithe",
+            cast("Umwelt[Any, Any]", named_observer),
+            amount=0.1,
+        )
+        assert result["ritual"] == "potlatch"
 
 
 # ============================================================
