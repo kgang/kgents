@@ -1088,6 +1088,220 @@ class CriticsLoop:
         return str(result)
 
 
+# === PAYADOR: Helper Functions ===
+# Define these before revise_skeleton so they can be used
+
+
+def critique_suggests_structure_change(critique: Critique) -> bool:
+    """
+    Check if critique suggests the issue is structural.
+
+    PAYADOR condition: low novelty AND low utility indicates
+    the skeleton itself needs rewriting, not just texture polish.
+    """
+    return critique.novelty < 0.3 and critique.utility < 0.4
+
+
+def critique_structural_issues(critique: Critique) -> list[str]:
+    """
+    Extract structural issues from critique suggestions.
+
+    Filters suggestions to those that indicate structural problems.
+    """
+    structural_keywords = [
+        "reorganiz",
+        "restructur",
+        "reorder",
+        "approach",
+        "perspective",
+        "structure",
+        "organization",
+        "flow",
+        "logic",
+    ]
+
+    issues: list[str] = []
+    for suggestion in critique.suggestions:
+        suggestion_lower = suggestion.lower()
+        if any(keyword in suggestion_lower for keyword in structural_keywords):
+            issues.append(suggestion)
+
+    # If no explicit structural issues but PAYADOR condition met, add generic
+    if not issues and critique.novelty < 0.3 and critique.utility < 0.4:
+        issues.append("Structure may need fundamental reorganization")
+
+    return issues
+
+
+# === PAYADOR: High-Level API ===
+
+
+async def revise_skeleton(
+    skeleton: Skeleton,
+    critique: Critique,
+    llm_solver: Callable[[str, str], Any] | None = None,
+) -> Skeleton:
+    """
+    PAYADOR: When texture reveals structural issues, rewrite the skeleton.
+
+    This function implements the "bidirectional" part of the PAYADOR pipeline.
+    When critique detects that the problem is structural (not surface-level),
+    we regenerate the skeleton rather than trying to polish prose.
+
+    The key insight from "Minimalist Approach to Grounding Language Models" (ICCC 2024):
+    texture-to-structure feedback catches issues that forward-only generation misses.
+
+    Args:
+        skeleton: The current skeleton structure
+        critique: The critique indicating structural issues
+        llm_solver: Optional LLM solver (system_prompt, user_prompt) -> response
+                   If None, performs rule-based restructuring
+
+    Returns:
+        New Skeleton with revised structure addressing the critique
+
+    Example:
+        # Without LLM - rule-based restructuring
+        new_skeleton = await revise_skeleton(skeleton, critique)
+
+        # With LLM - uses LLM for intelligent restructuring
+        new_skeleton = await revise_skeleton(skeleton, critique, llm_solver=my_llm)
+    """
+    if not critique_suggests_structure_change(critique):
+        # No structural change needed
+        return skeleton
+
+    # If LLM solver available, use it for intelligent restructuring
+    if llm_solver is not None:
+        # Build prompt for skeleton revision
+        user_prompt = _build_revision_prompt(skeleton, critique)
+        try:
+            import asyncio
+
+            if asyncio.iscoroutinefunction(llm_solver):
+                response = await llm_solver(SKELETON_REWRITE_SYSTEM, user_prompt)
+            else:
+                response = llm_solver(SKELETON_REWRITE_SYSTEM, user_prompt)
+
+            new_skeleton = parse_skeleton_response(str(response))
+            if new_skeleton is not None:
+                return new_skeleton
+        except Exception:
+            pass  # Fall through to rule-based restructuring
+
+    # Rule-based restructuring (fallback or when no LLM)
+    return _rule_based_restructure(skeleton, critique)
+
+
+def _build_revision_prompt(skeleton: Skeleton, critique: Critique) -> str:
+    """Build prompt for skeleton revision based on critique."""
+    lines = [
+        "## Current Skeleton",
+        skeleton.to_prompt(),
+        "",
+        "## Critique",
+        f"Novelty: {critique.novelty:.2f}",
+        f"Utility: {critique.utility:.2f}",
+        f"Surprise: {critique.surprise:.2f}",
+        f"Overall: {critique.overall:.2f}",
+        f"Reasoning: {critique.reasoning}",
+        "",
+        "## Issues Identified",
+    ]
+
+    for issue in critique_structural_issues(critique):
+        lines.append(f"- {issue}")
+
+    lines.extend(
+        [
+            "",
+            "## Task",
+            "Revise the skeleton structure to address the identified issues.",
+            "Focus on structural reorganization, not surface changes.",
+            "",
+            'Respond with JSON: {"structure": [...], "intent": "...", '
+            '"constraints": [...], "reasoning": "..."}',
+        ]
+    )
+
+    return "\n".join(lines)
+
+
+def _rule_based_restructure(skeleton: Skeleton, critique: Critique) -> Skeleton:
+    """
+    Apply rule-based restructuring when LLM is unavailable.
+
+    Rules applied:
+    - Low novelty (< 0.3): Reorder elements to create new perspective
+    - Low utility (< 0.4): Add purpose-alignment constraints
+    - Combine above: Split long elements, merge redundant ones
+    """
+    new_structure = list(skeleton.structure)
+    new_constraints = list(skeleton.constraints)
+
+    # Low novelty: Reorder to create new perspective
+    if critique.novelty < 0.3 and len(new_structure) > 2:
+        # Move later elements earlier (different perspective)
+        mid = len(new_structure) // 2
+        new_structure = new_structure[mid:] + new_structure[:mid]
+
+    # Low utility: Add purpose-alignment constraint
+    if critique.utility < 0.4 and skeleton.intent:
+        constraint = f"Each element must directly serve: {skeleton.intent}"
+        if constraint not in new_constraints:
+            new_constraints.append(constraint)
+
+    # Both low: Split complex elements
+    if critique.novelty < 0.3 and critique.utility < 0.4:
+        expanded: list[str] = []
+        for elem in new_structure:
+            # Split elements with conjunctions
+            if " and " in elem.lower():
+                parts = elem.split(" and ")
+                expanded.extend(part.strip() for part in parts if part.strip())
+            else:
+                expanded.append(elem)
+        new_structure = expanded
+
+    return Skeleton(
+        structure=tuple(new_structure),
+        intent=skeleton.intent,
+        constraints=tuple(new_constraints),
+    )
+
+
+# === Critique Extensions for PAYADOR ===
+
+
+# Monkey-patch Critique class with PAYADOR methods as properties
+# Using a property descriptor that delegates to the standalone functions
+class _SuggestsStructureChangeDescriptor:
+    """Property descriptor for Critique.suggests_structure_change."""
+
+    def __get__(
+        self, obj: Critique | None, objtype: type[Critique] | None = None
+    ) -> bool:
+        if obj is None:
+            return False
+        return critique_suggests_structure_change(obj)
+
+
+class _StructuralIssuesDescriptor:
+    """Property descriptor for Critique.structural_issues."""
+
+    def __get__(
+        self, obj: Critique | None, objtype: type[Critique] | None = None
+    ) -> list[str]:
+        if obj is None:
+            return []
+        return critique_structural_issues(obj)
+
+
+# Attach descriptors to Critique
+Critique.suggests_structure_change = _SuggestsStructureChangeDescriptor()  # type: ignore[attr-defined]
+Critique.structural_issues = _StructuralIssuesDescriptor()  # type: ignore[attr-defined]
+
+
 # === Exports ===
 
 __all__ = [
@@ -1103,4 +1317,6 @@ __all__ = [
     "build_skeleton_rewrite_prompt",
     "build_skeleton_expand_prompt",
     "parse_skeleton_response",
+    # PAYADOR high-level API (v2.5)
+    "revise_skeleton",
 ]

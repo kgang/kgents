@@ -418,6 +418,133 @@ def pataphysics_solver_with_postcondition(
     )
 
 
+# === AGENTESE Integration: void.pataphysics.solve ===
+
+
+async def void_hallucinate(
+    func: Callable[..., Any],
+    error: Exception,
+    args: tuple[Any, ...],
+    kwargs: dict[str, Any],
+    runtime: "ClaudeCLIRuntime | None" = None,
+    mode: PataphysicsMode = PataphysicsMode.ANOMALY,
+    postcondition: Callable[[Any], bool] | None = None,
+) -> Any:
+    """
+    Invoke imaginary solution via LLM when reality fails.
+
+    This is the AGENTESE entry point for void.pataphysics.solve.
+    When a function fails (raises an exception), this function uses the
+    Claude CLI to generate a plausible result that satisfies the contract.
+
+    'Pataphysics is the science of imaginary solutions.
+    - Alfred Jarry
+
+    Args:
+        func: The function that failed
+        error: The exception that was raised
+        args: Positional arguments that were passed to func
+        kwargs: Keyword arguments that were passed to func
+        runtime: Optional ClaudeCLIRuntime instance (created if None)
+        mode: Pataphysics mode (ANOMALY, CLINAMEN, or SYZYGY)
+        postcondition: Optional postcondition the result must satisfy
+
+    Returns:
+        An imaginary solution that is plausible given the function's contract
+
+    Example:
+        @meltable(solver=void_hallucinate)
+        async def risky_operation() -> dict:
+            raise ConnectionError("Network unavailable")
+
+        # When risky_operation fails, void_hallucinate generates
+        # a plausible result based on the function signature and context
+
+    AGENTESE Usage:
+        result = await logos.invoke(
+            "void.pataphysics.solve",
+            observer,
+            func=my_func,
+            error=caught_error,
+            args=original_args,
+            kwargs=original_kwargs,
+        )
+    """
+    # Build MeltingContext
+    from .melting import MeltingContext
+
+    ctx = MeltingContext(
+        function_name=func.__name__,
+        args=args,
+        kwargs=kwargs,
+        error=error,
+    )
+
+    # Create solver with config
+    config = PataphysicsSolverConfig(mode=mode)
+    solver = create_pataphysics_solver(
+        runtime=runtime,
+        config=config,
+        postcondition=postcondition,
+    )
+
+    # Invoke and return
+    return await solver(ctx)
+
+
+async def void_hallucinate_with_type(
+    expected_type: type[Any],
+    error: Exception,
+    context: str = "",
+    runtime: "ClaudeCLIRuntime | None" = None,
+    mode: PataphysicsMode = PataphysicsMode.ANOMALY,
+) -> Any:
+    """
+    Generate an imaginary solution of a specific type.
+
+    Simpler API when you just need a value of a certain type
+    without a full function context.
+
+    Args:
+        expected_type: The type of value to generate
+        error: The error that triggered the hallucination
+        context: Optional context about what was being attempted
+        runtime: Optional ClaudeCLIRuntime instance
+        mode: Pataphysics mode
+
+    Returns:
+        An imaginary value of the expected type
+
+    Example:
+        # When API fails, generate plausible response
+        try:
+            data = await fetch_user_data(user_id)
+        except APIError as e:
+            data = await void_hallucinate_with_type(
+                expected_type=dict,
+                error=e,
+                context=f"Fetching user data for {user_id}",
+            )
+    """
+
+    # Create a dummy function with the right return type annotation
+    def _dummy() -> Any:
+        pass
+
+    _dummy.__annotations__["return"] = expected_type
+    _dummy.__name__ = f"generate_{expected_type.__name__}"
+    _dummy.__doc__ = context or f"Generate a plausible {expected_type.__name__}"
+
+    return await void_hallucinate(
+        func=_dummy,
+        error=error,
+        args=(),
+        kwargs={},
+        runtime=runtime,
+        mode=mode,
+    )
+
+
 # === Exports ===
 
 
@@ -428,4 +555,7 @@ __all__ = [
     "PataphysicsSolverConfig",
     "create_pataphysics_solver",
     "pataphysics_solver_with_postcondition",
+    # AGENTESE integration (v2.5)
+    "void_hallucinate",
+    "void_hallucinate_with_type",
 ]

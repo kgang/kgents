@@ -44,7 +44,7 @@ from .widgets.agentese_hud import create_demo_paths
 from .widgets.glitch import get_glitch_controller
 
 if TYPE_CHECKING:
-    pass
+    from .reflector import FluxReflector
 
 
 # Demo mode intervals
@@ -89,6 +89,7 @@ class FluxApp(App[None]):
         demo_mode: bool = False,
         live_mode: bool = False,
         registry: AgentRegistry | None = None,
+        reflector: "FluxReflector | None" = None,
     ) -> None:
         """
         Initialize the Flux application.
@@ -99,6 +100,7 @@ class FluxApp(App[None]):
             demo_mode: If True, always use demo data
             live_mode: If True, enable live data updates via O-gent polling
             registry: Custom agent registry (if None, uses demo registry)
+            reflector: Optional FluxReflector to connect CLI events to TUI
         """
         super().__init__()
         self._state_path = state_path or DEFAULT_STATE_PATH
@@ -111,6 +113,11 @@ class FluxApp(App[None]):
         self._demo_hud_task: asyncio.Task[None] | None = None
         self._demo_paths = create_demo_paths()
         self._demo_path_index = 0
+        self._reflector: "FluxReflector | None" = reflector
+
+        # Wire reflector to this app
+        if self._reflector is not None:
+            self._reflector.set_app(self)
 
         if state:
             self._flux_state = state
@@ -308,6 +315,16 @@ class FluxApp(App[None]):
                 sub_path=path.sub_path,
             )
 
+    @property
+    def reflector(self) -> "FluxReflector | None":
+        """Get the attached FluxReflector (if any)."""
+        return self._reflector
+
+    @property
+    def flux_screen(self) -> FluxScreen | None:
+        """Get the current FluxScreen (if mounted)."""
+        return self._flux_screen
+
     def action_help(self) -> None:
         """Show help."""
         self.notify(
@@ -329,6 +346,7 @@ def run_flux(
     live: bool = False,
     state_path: Path | None = None,
     registry: AgentRegistry | None = None,
+    reflector: "FluxReflector | None" = None,
 ) -> None:
     """
     Run the Flux application.
@@ -338,12 +356,14 @@ def run_flux(
         live: If True, enable live data updates via O-gent polling
         state_path: Custom path for session state
         registry: Custom agent registry (for live mode)
+        reflector: Optional FluxReflector to connect CLI events to TUI
     """
     app = FluxApp(
         demo_mode=demo,
         live_mode=live,
         state_path=state_path,
         registry=registry,
+        reflector=reflector,
     )
     app.run()
 
