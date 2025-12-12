@@ -170,6 +170,13 @@ AGENT_REGISTRY: dict[str, dict[str, Any]] = {
         "status": "active",
         "description": "Witnessing and verification",
     },
+    "flux": {
+        "name": "Flux",
+        "theme": "Stream Transformer (Agent[A,B] → Agent[Flux[A], Flux[B]])",
+        "status": "active",
+        "description": "Event-driven stream processing, living pipelines, perturbation principle",
+        "tests": 282,
+    },
 }
 
 
