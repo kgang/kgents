@@ -553,11 +553,11 @@ class TerrariumApp:
 # Textual-based implementation (if textual is available)
 try:
     from textual.app import App, ComposeResult
-    from textual.widgets import Header, Footer, Static, DataTable, ProgressBar
-    from textual.containers import Horizontal, Vertical, Container
+    from textual.containers import Container, Horizontal, Vertical
     from textual.reactive import reactive
+    from textual.widgets import DataTable, Footer, Header, ProgressBar, Static
 
-    class AgentPanel(Static):  # type: ignore[misc]
+    class AgentPanel(Static):
         """Panel showing agent states."""
 
         def compose(self) -> ComposeResult:
@@ -574,7 +574,7 @@ try:
                 )
             self.update("\n".join(lines) or "No agents running")
 
-    class PheromoneHeatmap(Static):  # type: ignore[misc]
+    class PheromoneHeatmap(Static):
         """Pheromone heatmap visualization."""
 
         def compose(self) -> ComposeResult:
@@ -588,7 +588,7 @@ try:
                 lines.append(f"{ph.ptype:<12} {bar} {ph.intensity:.2f}")
             self.update("\n".join(lines) or "No pheromones")
 
-    class ThoughtStream(Static):  # type: ignore[misc]
+    class ThoughtStream(Static):
         """Thought stream panel."""
 
         def compose(self) -> ComposeResult:
@@ -603,7 +603,7 @@ try:
                 lines.append(f"{time_str} [{t.source:<8}] {prefix}{t.content[:50]}")
             self.update("\n".join(lines) or "Quiet mind...")
 
-    class TokenEconomy(Static):  # type: ignore[misc]
+    class TokenEconomy(Static):
         """Token economy panel."""
 
         def compose(self) -> ComposeResult:
@@ -625,7 +625,7 @@ try:
             ]
             self.update("\n".join(lines))
 
-    class TerrariumTextualApp(App):  # type: ignore[misc]
+    class TerrariumTextualApp(App[None]):
         """The Glass Box - Textual-based TUI for K-Terrarium."""
 
         CSS = """

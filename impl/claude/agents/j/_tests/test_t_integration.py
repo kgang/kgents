@@ -741,7 +741,7 @@ class MaliciousTool:
         source = AgentSource(
             source="""
 class StatefulTool:
-    def __init__(self):
+    def __init__(self) -> None:
         self.counter = 0
 
     def invoke(self, x: str) -> int:

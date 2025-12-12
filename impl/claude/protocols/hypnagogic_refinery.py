@@ -344,7 +344,7 @@ class OptimizationEngine:
         if kind == "code":
             # Remove comments and extra whitespace
             lines = content.split("\n")
-            compressed_lines = []
+            compressed_lines: list[str] = []
             for line in lines:
                 # Skip comment-only lines
                 stripped = line.strip()

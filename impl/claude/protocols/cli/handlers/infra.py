@@ -670,21 +670,14 @@ def _apply_from_file(path: Path, deploy_mode: "DeployMode") -> int:
     print(f"Applying {path}...")
     print(f"  Mode: {deploy_mode.value}")
 
-    from infra.k8s import apply_agent_from_file
-
+    # TODO: implement apply_agent_from_file in infra.k8s module
+    # from infra.k8s import apply_agent_from_file
+    # result = asyncio.run(apply_agent_from_file(path))
     # Note: apply_agent_from_file would need to be updated to accept deploy_mode
-    result = asyncio.run(apply_agent_from_file(path))
 
-    if result.success:
-        print(f"Success: {result.message}")
-        if result.created:
-            print(f"  Created: {', '.join(result.created)}")
-        if result.updated:
-            print(f"  Updated: {', '.join(result.updated)}")
-        return 0
-    else:
-        print(f"Failed: {result.message}")
-        return 1
+    # Temporary placeholder until function is implemented
+    print("Error: apply_agent_from_file not yet implemented")
+    return 1
 
 
 def _apply_agent_by_name(name: str, deploy_mode: "DeployMode") -> int:

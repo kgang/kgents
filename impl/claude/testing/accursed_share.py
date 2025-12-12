@@ -167,9 +167,9 @@ class DiscoveryLog:
         """Get discoveries by type."""
         return [d for d in self.discoveries if d.discovery_type == discovery_type]
 
-    def summary(self) -> dict[str, int]:
+    def summary(self) -> dict[str, Any]:
         """Get summary statistics."""
-        by_type = {}
+        by_type: dict[str, int] = {}
         for d in self.discoveries:
             by_type[d.discovery_type] = by_type.get(d.discovery_type, 0) + 1
         return {

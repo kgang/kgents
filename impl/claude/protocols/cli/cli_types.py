@@ -304,7 +304,7 @@ class CommandResult(Generic[T]):
             duration_ms=duration_ms,
         )
 
-    def to_envelope(self, agent: str = "") -> OutputEnvelope[T | dict]:
+    def to_envelope(self, agent: str = "") -> OutputEnvelope[T | dict[str, Any]]:
         """Wrap result in output envelope."""
         if self.success and self.output is not None:
             return OutputEnvelope(

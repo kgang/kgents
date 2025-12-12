@@ -234,15 +234,11 @@ class TemporaryToken:
         """
         if not self.is_valid():
             if self.revoked:
-                return err(
-                    f"Token revoked: {self.revocation_reason}",
-                    recoverable=False,
-                )
+                msg = f"Token revoked: {self.revocation_reason}"
+                return err(msg, message=msg, recoverable=False)
             else:
-                return err(
-                    f"Token expired at {self.expires_at}",
-                    recoverable=False,
-                )
+                msg = f"Token expired at {self.expires_at}"
+                return err(msg, message=msg, recoverable=False)
 
         self.uses += 1
         self.last_used_at = datetime.now()
@@ -433,16 +429,14 @@ class PermissionClassifier:
         permission = self.classify(capabilities, context)
 
         if permission == PermissionLevel.DENIED:
-            return err(
-                f"Permission denied for tool '{tool_id}' in context {context.agent_id}",
-                recoverable=False,
+            msg = (
+                f"Permission denied for tool '{tool_id}' in context {context.agent_id}"
             )
+            return err(msg, message=msg, recoverable=False)
 
         if permission == PermissionLevel.RESTRICTED:
-            return err(
-                f"Tool '{tool_id}' requires additional approval",
-                recoverable=True,
-            )
+            msg = f"Tool '{tool_id}' requires additional approval"
+            return err(msg, message=msg, recoverable=True)
 
         # Generate token
         token_id = self._generate_token_id()

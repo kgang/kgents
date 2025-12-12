@@ -50,7 +50,7 @@ def simple_parser_source() -> AgentSource:
     source_code = '''
 class ParsedLog:
     """Simple result class."""
-    def __init__(self, level: str, message: str):
+    def __init__(self, level: str, message: str) -> None:
         self.level = level
         self.message = message
 
@@ -459,7 +459,7 @@ async def test_sandbox_isolates_multiple_executions() -> None:
     source = AgentSource(
         source="""
 class JITStateful:
-    def __init__(self):
+    def __init__(self) -> None:
         self.counter = 0
 
     async def invoke(self, input: str) -> int:
@@ -794,7 +794,7 @@ async def test_agent_with_simple_class() -> None:
     source = AgentSource(
         source="""
 class Result:
-    def __init__(self, value: str, count: int):
+    def __init__(self, value: str, count: int) -> None:
         self.value = value
         self.count = count
 

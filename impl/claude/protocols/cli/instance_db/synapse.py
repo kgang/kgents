@@ -166,7 +166,7 @@ class PredictiveModel:
 
         # Step 3: Update prediction (exponential smoothing)
         # new_pred = α × actual + (1 - α) × old_pred
-        self._predictions[signal_type] = (
+        self._predictions[signal_type] = float(
             self._alpha * actual + (1 - self._alpha) * predicted
         )
 
@@ -182,7 +182,7 @@ class PredictiveModel:
         sigma = max(0.01, self._variances[signal_type] ** 0.5)
         normalized = min(1.0, raw_surprise / (1 + sigma))
 
-        return normalized
+        return float(normalized)
 
     def surprise_for(self, signal_type: str, actual: float = 1.0) -> float:
         """
@@ -200,7 +200,7 @@ class PredictiveModel:
         predicted = self._predictions.get(signal_type, self._prior)
         raw_surprise = abs(actual - predicted)
         sigma = max(0.01, self._variances.get(signal_type, 0.25) ** 0.5)
-        return min(1.0, raw_surprise / (1 + sigma))
+        return float(min(1.0, raw_surprise / (1 + sigma)))
 
     def reset(self) -> None:
         """Reset all predictions to prior."""
@@ -296,12 +296,12 @@ class Synapse:
         # Batching
         self._batch_queue: deque[Signal] = deque()
         self._batch_lock = asyncio.Lock()
-        self._flush_task: asyncio.Task | None = None
+        self._flush_task: asyncio.Task[None] | None = None
 
         # Handlers
-        self._fast_handlers: list[ISynapseHandler | Callable] = []
-        self._batch_handlers: list[ISynapseHandler | Callable] = []
-        self._flashbulb_handlers: list[ISynapseHandler | Callable] = []
+        self._fast_handlers: list[ISynapseHandler | Callable[..., Any]] = []
+        self._batch_handlers: list[ISynapseHandler | Callable[..., Any]] = []
+        self._flashbulb_handlers: list[ISynapseHandler | Callable[..., Any]] = []
 
         # Recent signals for interrupt checking (sliding window)
         self._recent: deque[tuple[Signal, float]] = deque(
@@ -328,15 +328,15 @@ class Synapse:
         """Current batch queue size."""
         return len(self._batch_queue)
 
-    def on_fast_path(self, handler: ISynapseHandler | Callable) -> None:
+    def on_fast_path(self, handler: ISynapseHandler | Callable[..., Any]) -> None:
         """Register handler for fast-path signals."""
         self._fast_handlers.append(handler)
 
-    def on_batch_path(self, handler: ISynapseHandler | Callable) -> None:
+    def on_batch_path(self, handler: ISynapseHandler | Callable[..., Any]) -> None:
         """Register handler for batch-path signals."""
         self._batch_handlers.append(handler)
 
-    def on_flashbulb(self, handler: ISynapseHandler | Callable) -> None:
+    def on_flashbulb(self, handler: ISynapseHandler | Callable[..., Any]) -> None:
         """Register handler for flashbulb signals (highest priority)."""
         self._flashbulb_handlers.append(handler)
 
@@ -401,7 +401,7 @@ class Synapse:
         for handler in self._flashbulb_handlers:
             try:
                 if hasattr(handler, "handle"):
-                    await handler.handle(signal)  # type: ignore
+                    await handler.handle(signal)
                 else:
                     result = handler(signal)
                     if asyncio.iscoroutine(result):
@@ -413,7 +413,7 @@ class Synapse:
         for handler in self._fast_handlers:
             try:
                 if hasattr(handler, "handle"):
-                    await handler.handle(signal)  # type: ignore
+                    await handler.handle(signal)
                 else:
                     result = handler(signal)
                     if asyncio.iscoroutine(result):
@@ -442,7 +442,7 @@ class Synapse:
         for handler in self._fast_handlers:
             try:
                 if hasattr(handler, "handle"):
-                    await handler.handle(signal)  # type: ignore
+                    await handler.handle(signal)
                 else:
                     result = handler(signal)
                     if asyncio.iscoroutine(result):
@@ -542,7 +542,7 @@ class Synapse:
             try:
                 for signal in signals:
                     if hasattr(handler, "handle"):
-                        await handler.handle(signal)  # type: ignore
+                        await handler.handle(signal)
                     else:
                         result = handler(signal)
                         if asyncio.iscoroutine(result):

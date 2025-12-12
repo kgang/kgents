@@ -8,15 +8,18 @@ These tests verify the complete memory lifecycle:
 - Nutrients feed back into new entries (composability)
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
 from ..compost import (
     CompostBin,
     CompostConfig,
+    ICompostable,
     create_nutrient_block,
 )
 from ..hippocampus import LetheEpoch
@@ -37,12 +40,12 @@ class MockGardenEntry:
     lifecycle: str  # "seed", "sapling", "tree", "flower", "compost"
     trust: float
     hypothesis: str = ""
-    planted_at: datetime = None
-    tags: list[str] = None
-    evidence: list = None
-    connections: list[str] = None
+    planted_at: datetime | None = None
+    tags: list[str] | None = None
+    evidence: list[Any] | None = None
+    connections: list[str] | None = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.planted_at is None:
             self.planted_at = datetime.now()
         if self.tags is None:
@@ -61,7 +64,7 @@ class MockSignal:
     data: dict[str, Any]
     timestamp: str = ""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.timestamp:
             self.timestamp = datetime.now().isoformat()
 
@@ -80,27 +83,30 @@ def garden_entry_to_signals(entry: MockGardenEntry) -> list[MockSignal]:
         )
     ]
     # Add evidence as signals
-    for i, ev in enumerate(entry.evidence):
-        signals.append(
-            MockSignal(
-                signal_type="garden.evidence",
-                data={
-                    "entry_id": entry.id,
-                    "evidence_index": i,
-                    "evidence_data": ev,
-                },
+    if entry.evidence is not None:
+        for i, ev in enumerate(entry.evidence):
+            signals.append(
+                MockSignal(
+                    signal_type="garden.evidence",
+                    data={
+                        "entry_id": entry.id,
+                        "evidence_index": i,
+                        "evidence_data": ev,
+                    },
+                )
             )
-        )
     return signals
 
 
 def create_test_epoch_from_entry(entry: MockGardenEntry) -> LetheEpoch:
     """Create a Lethe epoch from a garden entry."""
+    evidence_count = len(entry.evidence) if entry.evidence is not None else 0
+    planted_at = entry.planted_at if entry.planted_at is not None else datetime.now()
     return LetheEpoch(
         epoch_id=f"garden-{entry.id}",
-        created_at=entry.planted_at.isoformat(),
+        created_at=planted_at.isoformat(),
         sealed_at=datetime.now().isoformat(),
-        signal_count=1 + len(entry.evidence),
+        signal_count=1 + evidence_count,
         signal_types={"garden.entry", "garden.evidence"},
     )
 
@@ -154,7 +160,7 @@ class TestGardenToCompost:
             quantile_fields=["trust"],
         )
         bin = CompostBin(config=config)
-        bin.add_batch(all_signals)
+        bin.add_batch(cast(list[ICompostable], all_signals))
 
         block = bin.seal("garden-batch-001")
 
@@ -235,7 +241,9 @@ class TestNutrientFeedback:
         for entry in old_entries:
             old_signals.extend(garden_entry_to_signals(entry))
 
-        old_block = create_nutrient_block("old-batch", old_signals)
+        old_block = create_nutrient_block(
+            "old-batch", cast(list[ICompostable], old_signals)
+        )
 
         # New batch: fresh entries (would benefit from old context)
         new_entries = [
@@ -253,7 +261,9 @@ class TestNutrientFeedback:
         for entry in new_entries:
             new_signals.extend(garden_entry_to_signals(entry))
 
-        new_block = create_nutrient_block("new-batch", new_signals)
+        new_block = create_nutrient_block(
+            "new-batch", cast(list[ICompostable], new_signals)
+        )
 
         # Merge blocks to get combined context
         combined = old_block.merge(new_block)
@@ -289,7 +299,7 @@ class TestNutrientFeedback:
 
         block = create_nutrient_block(
             "insights-batch",
-            signals,
+            cast(list[ICompostable], signals),
             config=CompostConfig(frequency_fields=["signal_type"]),
         )
 
@@ -370,19 +380,20 @@ class TestFullLifecycle:
         signals_by_epoch = {}
 
         for name, days_ago, lifecycle in entries:
+            planted_at = datetime.now() - timedelta(days=days_ago)
             entry = MockGardenEntry(
                 id=name,
                 content={"test": True},
                 lifecycle=lifecycle,
                 trust=0.5,
-                planted_at=datetime.now() - timedelta(days=days_ago),
+                planted_at=planted_at,
             )
             epoch = create_test_epoch_from_entry(entry)
             # Override sealed_at for testing
             epoch = LetheEpoch(
                 epoch_id=epoch.epoch_id,
-                created_at=entry.planted_at.isoformat(),
-                sealed_at=(entry.planted_at + timedelta(hours=1)).isoformat(),
+                created_at=planted_at.isoformat(),
+                sealed_at=(planted_at + timedelta(hours=1)).isoformat(),
                 signal_count=epoch.signal_count,
                 signal_types=epoch.signal_types,
             )

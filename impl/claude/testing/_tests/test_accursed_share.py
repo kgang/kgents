@@ -8,9 +8,13 @@ This demonstrates Phase 5 of the test evolution plan.
 These tests are designed to discover unexpected behaviors.
 """
 
+from __future__ import annotations
+
 import random
+from collections.abc import Generator
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import Any
 
 import pytest
 from testing.accursed_share import (
@@ -24,12 +28,12 @@ class TestDiscoveryLog:
     """Tests for the discovery log system."""
 
     @pytest.fixture
-    def temp_log(self):
+    def temp_log(self) -> Generator[DiscoveryLog, None, None]:
         """Create a temporary discovery log."""
         with TemporaryDirectory() as tmpdir:
             yield DiscoveryLog(Path(tmpdir) / "discoveries.json")
 
-    def test_record_discovery(self, temp_log) -> None:
+    def test_record_discovery(self, temp_log: DiscoveryLog) -> None:
         """Test recording a discovery."""
         discovery = Discovery(
             test_name="test_example",
@@ -41,7 +45,7 @@ class TestDiscoveryLog:
         assert len(temp_log.discoveries) == 1
         assert temp_log.discoveries[0].test_name == "test_example"
 
-    def test_composition_success_recording(self, temp_log) -> None:
+    def test_composition_success_recording(self, temp_log: DiscoveryLog) -> None:
         """Test recording a composition success."""
         discovery = temp_log.record_composition_success(
             test_name="test_compose",
@@ -53,7 +57,7 @@ class TestDiscoveryLog:
         assert discovery.discovery_type == "composition_success"
         assert "AgentA >> AgentB >> AgentC" in discovery.description
 
-    def test_boundary_case_recording(self, temp_log) -> None:
+    def test_boundary_case_recording(self, temp_log: DiscoveryLog) -> None:
         """Test recording a boundary case."""
         discovery = temp_log.record_boundary_case(
             test_name="test_boundary",
@@ -65,7 +69,7 @@ class TestDiscoveryLog:
         assert discovery.discovery_type == "boundary_case"
         assert discovery.actionable is True
 
-    def test_persistence(self, temp_log) -> None:
+    def test_persistence(self, temp_log: DiscoveryLog) -> None:
         """Test that discoveries persist across instances."""
         temp_log.record(
             Discovery(
@@ -81,7 +85,7 @@ class TestDiscoveryLog:
         assert len(new_log.discoveries) == 1
         assert new_log.discoveries[0].test_name == "test_persist"
 
-    def test_get_actionable(self, temp_log) -> None:
+    def test_get_actionable(self, temp_log: DiscoveryLog) -> None:
         """Test filtering actionable discoveries."""
         temp_log.record(
             Discovery(
@@ -104,7 +108,7 @@ class TestDiscoveryLog:
         assert len(actionable) == 1
         assert actionable[0].test_name == "actionable"
 
-    def test_summary(self, temp_log) -> None:
+    def test_summary(self, temp_log: DiscoveryLog) -> None:
         """Test summary statistics."""
         temp_log.record(
             Discovery(
@@ -189,8 +193,12 @@ class TestChaoticComposition:
         from bootstrap import compose
 
         # Create a pool of test agents
-        agent_pool = [TestAgent(f"add_{i}", lambda x, i=i: x + i) for i in range(5)] + [
-            TestAgent(f"mul_{i}", lambda x, i=i: x * (i + 1)) for i in range(3)
+        agent_pool: list[TestAgent[Any, Any]] = [
+            TestAgent(f"add_{i}", lambda x, i=i: x + i)
+            for i in range(5)  # type: ignore[misc]
+        ] + [
+            TestAgent(f"mul_{i}", lambda x, i=i: x * (i + 1))
+            for i in range(3)  # type: ignore[misc]
         ]
 
         # Random selection
@@ -198,7 +206,7 @@ class TestChaoticComposition:
         selected = random.sample(agent_pool, n_agents)
 
         try:
-            composed = reduce(compose, selected)
+            composed = reduce(compose, selected)  # type: ignore[arg-type]
             result = await composed.invoke(1)
 
             names = [a.name for a in selected]
@@ -218,7 +226,7 @@ class TestChaoticComposition:
         # Chain 100 identity agents
         agents = [ID for _ in range(100)]
 
-        deep_chain = reduce(compose, agents)
+        deep_chain = reduce(compose, agents)  # type: ignore[arg-type]
 
         result = await deep_chain.invoke(42)
         assert result == 42, f"Deep chain changed value: {result}"
@@ -233,7 +241,7 @@ class TestChaoticComposition:
 
         from agents.o.bootstrap_witness import TestAgent
 
-        agent = TestAgent("counter", lambda x: x + 1)
+        agent: TestAgent[Any, Any] = TestAgent("counter", lambda x: x + 1)
 
         # Many concurrent invocations
         tasks = [agent.invoke(i) for i in range(100)]
@@ -259,11 +267,11 @@ class TestSerendipitousDiscovery:
         from bootstrap import compose
 
         # int -> str -> list -> dict
-        to_str = TestAgent("to_str", lambda x: str(x))
-        to_list = TestAgent("to_list", lambda x: [x])
-        to_dict = TestAgent("to_dict", lambda x: {"value": x})
+        to_str: TestAgent[Any, Any] = TestAgent("to_str", lambda x: str(x))
+        to_list: TestAgent[Any, Any] = TestAgent("to_list", lambda x: [x])
+        to_dict: TestAgent[Any, Any] = TestAgent("to_dict", lambda x: {"value": x})
 
-        chain = compose(compose(to_str, to_list), to_dict)
+        chain: Any = compose(compose(to_str, to_list), to_dict)  # type: ignore[arg-type]
 
         result = await chain.invoke(42)
 
@@ -281,22 +289,22 @@ class TestSerendipitousDiscovery:
         from agents.o.bootstrap_witness import TestAgent
         from bootstrap import compose
 
-        def failing_transform(x):
+        def failing_transform(x: int) -> int:
             if x == 0:
                 raise ValueError("Cannot handle zero")
             return x * 2
 
-        safe = TestAgent("safe", lambda x: x + 1)
-        risky = TestAgent("risky", failing_transform)
+        safe: TestAgent[Any, Any] = TestAgent("safe", lambda x: x + 1)
+        risky: TestAgent[Any, Any] = TestAgent("risky", failing_transform)
 
         # Safe before risky: 0 -> 1 -> 2 (succeeds)
-        chain1 = compose(safe, risky)
+        chain1: Any = compose(safe, risky)  # type: ignore[arg-type]
         result1 = await chain1.invoke(0)
         print(f"safe >> risky on 0: {result1}")
         assert result1 == 2
 
         # Risky before safe: 0 -> error
-        chain2 = compose(risky, safe)
+        chain2: Any = compose(risky, safe)  # type: ignore[arg-type]
         try:
             await chain2.invoke(0)
             print("risky >> safe on 0: succeeded (unexpected)")

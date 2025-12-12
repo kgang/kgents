@@ -38,7 +38,7 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime
 from pathlib import Path
-from typing import Callable
+from typing import Any, Callable
 
 from .event_store import EventStore
 from .types import (
@@ -136,7 +136,7 @@ class DashboardController:
         event_type: EventType,
         source: str,
         message: str,
-        data: dict | None = None,
+        data: dict[str, Any] | None = None,
     ) -> DashboardEvent | None:
         """Add an event to the current session."""
         if not self.current_session:
@@ -486,7 +486,7 @@ if TEXTUAL_AVAILABLE:
         def compose(self) -> ComposeResult:
             yield Input(placeholder="> Enter command...", id="command-input")
 
-    class DashboardApp(App):
+    class DashboardApp(App[None]):
         """The main dashboard application."""
 
         CSS = """
@@ -710,11 +710,11 @@ def cmd_dash(args: list[str]) -> int:
 
     # Handle --replay
     if parsed.replay:
-        session = controller.load_session(parsed.replay)
-        if not session:
+        loaded_session = controller.load_session(parsed.replay)
+        if not loaded_session:
             print(f"Session not found: {parsed.replay}")
             return 1
-        print(f"Replaying session: {session.name}")
+        print(f"Replaying session: {loaded_session.name}")
     else:
         # Start new live session
         flow_name = None
@@ -832,22 +832,22 @@ def cmd_session(args: list[str]) -> int:
         return 0
 
     elif parsed.action == "export":
-        session = store.get_session(parsed.session_id)
-        if not session:
+        export_session = store.get_session(parsed.session_id)
+        if not export_session:
             print(f"Session not found: {parsed.session_id}")
             return 1
 
         if parsed.format == "json":
             import json
 
-            print(json.dumps(session.to_dict(), indent=2))
+            print(json.dumps(export_session.to_dict(), indent=2))
         else:
             # Export as flowfile (simplified)
-            print("# Exported from session:", session.id)
+            print("# Exported from session:", export_session.id)
             print("version: '1.0'")
-            print(f"name: '{session.name}'")
+            print(f"name: '{export_session.name}'")
             print("steps:")
-            for agent in session.agents.values():
+            for agent in export_session.agents.values():
                 print(f"  - id: {agent.id}")
                 print(f"    genus: {agent.genus}")
         return 0

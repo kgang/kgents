@@ -36,6 +36,7 @@ from __future__ import annotations
 import asyncio
 import sys
 from pathlib import Path
+from typing import Any
 
 
 def cmd_exec(args: list[str]) -> int:
@@ -72,7 +73,7 @@ def cmd_exec(args: list[str]) -> int:
     return asyncio.run(_run_exec(code, options))
 
 
-async def _run_exec(code: str, options: dict) -> int:
+async def _run_exec(code: str, options: dict[str, Any]) -> int:
     """Run execution via Q-gent."""
     # Import here for lazy loading
     try:
@@ -114,9 +115,9 @@ async def _run_exec(code: str, options: dict) -> int:
     return 0 if result.success else 1
 
 
-def _parse_args(args: list[str]) -> dict:
+def _parse_args(args: list[str]) -> dict[str, Any]:
     """Parse command line arguments manually."""
-    options: dict = {}
+    options: dict[str, Any] = {}
     i = 0
 
     while i < len(args):

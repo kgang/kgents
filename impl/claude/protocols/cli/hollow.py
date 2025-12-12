@@ -19,7 +19,7 @@ from __future__ import annotations
 import importlib
 import sys
 from pathlib import Path
-from typing import Callable, Sequence
+from typing import Any, Callable, Sequence, cast
 
 # Global lifecycle manager (lazy-initialized)
 _lifecycle_manager = None
@@ -161,7 +161,7 @@ COMMAND_REGISTRY: dict[str, str] = {
 # =============================================================================
 
 
-def resolve_command(name: str) -> Callable | None:
+def resolve_command(name: str) -> Callable[..., Any] | None:
     """
     Resolve command name to callable, importing only when needed.
 
@@ -177,7 +177,7 @@ def resolve_command(name: str) -> Callable | None:
 
     try:
         module = importlib.import_module(module_path)
-        return getattr(module, func_name)
+        return cast("Callable[..., int] | None", getattr(module, func_name))
     except (ImportError, AttributeError) as e:
         # Command registered but handler not found
         print(f"Error loading command '{name}': {e}")
@@ -229,7 +229,7 @@ def print_suggestions(command: str) -> None:
 # =============================================================================
 
 
-async def _bootstrap_cortex(project_path: Path | None = None):
+async def _bootstrap_cortex(project_path: Path | None = None) -> Any:
     """
     Bootstrap the cortex asynchronously.
 
@@ -257,7 +257,7 @@ async def _bootstrap_cortex(project_path: Path | None = None):
         return None
 
 
-async def _shutdown_cortex():
+async def _shutdown_cortex() -> None:
     """Gracefully shutdown the cortex."""
     global _lifecycle_manager, _lifecycle_state
 
@@ -267,7 +267,7 @@ async def _shutdown_cortex():
         _lifecycle_state = None
 
 
-def get_lifecycle_state():
+def get_lifecycle_state() -> Any:
     """
     Get the current lifecycle state.
 
@@ -277,7 +277,7 @@ def get_lifecycle_state():
     return _lifecycle_state
 
 
-def get_storage_provider():
+def get_storage_provider() -> Any:
     """
     Get the storage provider from the lifecycle state.
 
@@ -314,7 +314,7 @@ def find_kgents_root() -> Path | None:
     return None
 
 
-def load_context() -> dict:
+def load_context() -> dict[str, Any]:
     """
     Load context from .kgents/config.yaml if it exists.
 
@@ -331,7 +331,7 @@ def load_context() -> dict:
 
     # Lazy import yaml only if config exists
     try:
-        import yaml  # type: ignore
+        import yaml
 
         with open(config_path) as f:
             return yaml.safe_load(f) or {}
@@ -348,7 +348,7 @@ def load_context() -> dict:
 # =============================================================================
 
 
-def parse_global_flags(args: list[str]) -> tuple[dict, list[str]]:
+def parse_global_flags(args: list[str]) -> tuple[dict[str, Any], list[str]]:
     """
     Parse global flags without importing argparse.
 
@@ -417,7 +417,7 @@ NO_BOOTSTRAP_COMMANDS = {
 }
 
 
-def _sync_bootstrap(project_path: Path | None = None, verbose: bool = False):
+def _sync_bootstrap(project_path: Path | None = None, verbose: bool = False) -> None:
     """
     Bootstrap the cortex synchronously.
 
@@ -453,13 +453,13 @@ def _sync_bootstrap(project_path: Path | None = None, verbose: bool = False):
                 pass
             # Normal mode: silent success (no noise)
 
-        return state
+        return  # Intentionally return None - state is only for internal use
     except Exception as e:
         print(f"\033[33m[kgents]\033[0m Bootstrap warning: {e}", file=sys.stderr)
-        return None
+        return
 
 
-def _sync_shutdown(verbose: bool = False):
+def _sync_shutdown(verbose: bool = False) -> None:
     """
     Shutdown the cortex synchronously.
 
@@ -527,7 +527,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         handler = resolve_command(command)
         if handler:
             filtered_args = [a for a in command_args if a not in ("--help", "-h")]
-            return handler(["--help"] + filtered_args)
+            return int(handler(["--help"] + filtered_args))
         else:
             print_suggestions(command)
             return 1
@@ -551,7 +551,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     # Execute handler
     try:
-        return handler(command_args)
+        return int(handler(command_args))
     except KeyboardInterrupt:
         print("\n[...] Interrupted. No worries—nothing was left in a bad state.")
         return 130

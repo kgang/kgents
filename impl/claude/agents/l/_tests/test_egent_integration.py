@@ -131,7 +131,7 @@ class TestExtractCodeDocstrings:
         """Test extracting module docstring."""
         code = '''"""Module docstring."""
 
-def foo():
+def foo() -> None:
     pass
 '''
         docstrings = extract_code_docstrings(code)
@@ -153,7 +153,7 @@ def calculate(x: int) -> int:
 class DataProcessor:
     """Process data efficiently."""
 
-    def process(self):
+    def process(self) -> None:
         """Process one item."""
         pass
 '''
@@ -164,7 +164,7 @@ class DataProcessor:
     def test_no_docstrings(self) -> None:
         """Test code without docstrings."""
         code = """
-def foo():
+def foo() -> None:
     return 42
 """
         docstrings = extract_code_docstrings(code)
@@ -183,10 +183,10 @@ class TestExtractCodeNames:
     def test_extract_function_names(self) -> None:
         """Test extracting function names."""
         code = """
-def calculate_sum(a, b):
+def calculate_sum(a, b) -> None:
     return a + b
 
-async def fetch_data():
+async def fetch_data() -> None:
     pass
 """
         names = extract_code_names(code)
@@ -197,7 +197,7 @@ async def fetch_data():
         """Test extracting class names."""
         code = """
 class DataProcessor:
-    def process(self):
+    def process(self) -> None:
         pass
 
 class ResultHandler:
@@ -211,8 +211,8 @@ class ResultHandler:
     def test_nested_functions(self) -> None:
         """Test extracting nested function names."""
         code = """
-def outer():
-    def inner():
+def outer() -> None:
+    def inner() -> None:
         pass
     return inner
 """
@@ -307,7 +307,11 @@ async def fetch(url: str) -> dict:
         assert types[0].output_type == "dict"
 
     def test_infer_untyped_function(self) -> None:
-        """Test inferring untyped function defaults to Any."""
+        """Test inferring untyped function defaults to Any for args.
+
+        Note: An explicit `-> None` annotation gives output_type='None' (string).
+        To test truly untyped output, omit the return annotation.
+        """
         code = """
 def mystery(x, y):
     return x + y
@@ -315,6 +319,7 @@ def mystery(x, y):
         types = infer_types(code)
         assert len(types) == 1
         assert types[0].input_types == ["Any", "Any"]
+        # No return annotation = Python None (not string 'None')
         assert types[0].output_type is None
 
     def test_infer_class_types(self) -> None:
@@ -324,7 +329,7 @@ class User:
     name: str
     age: int
 
-    def greet(self):
+    def greet(self) -> None:
         pass
 """
         types = infer_types(code)
@@ -349,26 +354,26 @@ class TestTypesCompatible:
 
     def test_identical_types_compatible(self) -> None:
         """Test identical code is compatible with itself."""
-        original = infer_types("def foo(): pass")
-        mutated = infer_types("def foo(): pass")
+        original = infer_types("def foo() -> None: pass")
+        mutated = infer_types("def foo() -> None: pass")
         assert types_compatible(original, mutated)
 
     def test_added_function_compatible(self) -> None:
         """Test adding a function is compatible."""
-        original = infer_types("def foo(): pass")
-        mutated = infer_types("def foo(): pass\ndef bar(): pass")
+        original = infer_types("def foo() -> None: pass")
+        mutated = infer_types("def foo() -> None: pass\ndef bar() -> None: pass")
         assert types_compatible(original, mutated)
 
     def test_removed_public_incompatible(self) -> None:
         """Test removing a public function is incompatible."""
-        original = infer_types("def foo(): pass\ndef bar(): pass")
-        mutated = infer_types("def bar(): pass")
+        original = infer_types("def foo() -> None: pass\ndef bar() -> None: pass")
+        mutated = infer_types("def bar() -> None: pass")
         assert not types_compatible(original, mutated)
 
     def test_removed_private_compatible(self) -> None:
         """Test removing a private function is compatible."""
-        original = infer_types("def foo(): pass\ndef _helper(): pass")
-        mutated = infer_types("def foo(): pass")
+        original = infer_types("def foo() -> None: pass\ndef _helper() -> None: pass")
+        mutated = infer_types("def foo() -> None: pass")
         assert types_compatible(original, mutated)
 
     def test_changed_signature_incompatible(self) -> None:
@@ -378,8 +383,12 @@ class TestTypesCompatible:
         assert not types_compatible(original, mutated)
 
     def test_any_return_compatible(self) -> None:
-        """Test Any return type is compatible with specific types."""
-        original = infer_types("def foo(): return 1")  # Untyped = Any
+        """Test untyped return is compatible with specific types.
+
+        When output_type is None (no annotation), it's treated as compatible
+        with any concrete type (covariant behavior).
+        """
+        original = infer_types("def foo(): return 1")  # No return type = untyped
         mutated = infer_types("def foo() -> int: return 1")
         assert types_compatible(original, mutated)
 
@@ -469,7 +478,7 @@ def parse_json(data: str) -> dict:
         """Test creating code intent with user description."""
         registry = await create_egent_registry()
 
-        code = "def mystery(): pass"
+        code = "def mystery() -> None: pass"
         intent = await registry.create_code_intent(
             code,
             user_description="Process user authentication",
@@ -484,7 +493,7 @@ def parse_json(data: str) -> dict:
         registry = await create_egent_registry()
 
         code = '''
-def calculate():
+def calculate() -> None:
     """Calculate the sum of all items."""
     pass
 '''
@@ -507,8 +516,10 @@ def calculate():
         """Test type compatibility via registry."""
         registry = await create_egent_registry()
 
-        original = "def foo(): pass\ndef bar(): pass"
-        mutated = "def foo(): pass\ndef bar(): pass\ndef baz(): pass"
+        original = "def foo() -> None: pass\ndef bar() -> None: pass"
+        mutated = (
+            "def foo() -> None: pass\ndef bar() -> None: pass\ndef baz() -> None: pass"
+        )
 
         assert registry.types_compatible(original, mutated)
 
@@ -517,8 +528,8 @@ def calculate():
         """Test type incompatibility via registry."""
         registry = await create_egent_registry()
 
-        original = "def foo(): pass\ndef bar(): pass"
-        mutated = "def baz(): pass"  # Removed foo and bar
+        original = "def foo() -> None: pass\ndef bar() -> None: pass"
+        mutated = "def baz() -> None: pass"  # Removed foo and bar
 
         assert not registry.types_compatible(original, mutated)
 

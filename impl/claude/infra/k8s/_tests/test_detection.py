@@ -6,6 +6,8 @@ These tests use mocks to avoid requiring Docker/Kind to be installed.
 
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 from infra.k8s.detection import (
     TerrariumCapability,
@@ -53,7 +55,9 @@ class TestTerrariumDetection:
 class TestDetectTerrariumMode:
     """Tests for the detect_terrarium_mode function."""
 
-    def test_no_docker_returns_none_capability(self, mock_docker_unavailable) -> None:
+    def test_no_docker_returns_none_capability(
+        self, mock_docker_unavailable: Any
+    ) -> None:
         """When Docker is not running, capability is NONE."""
         result = detect_terrarium_mode()
 
@@ -63,8 +67,8 @@ class TestDetectTerrariumMode:
         assert "Docker" in result.error
 
     def test_docker_but_no_kind_returns_none(
-        self, mock_docker_available, mock_kind_not_installed
-    ):
+        self, mock_docker_available: Any, mock_kind_not_installed: Any
+    ) -> None:
         """When Kind is not installed, capability is NONE."""
         result = detect_terrarium_mode()
 
@@ -75,8 +79,11 @@ class TestDetectTerrariumMode:
         assert "Kind" in result.error
 
     def test_kind_available_no_cluster(
-        self, mock_docker_available, mock_kind_installed, mock_cluster_not_exists
-    ):
+        self,
+        mock_docker_available: Any,
+        mock_kind_installed: Any,
+        mock_cluster_not_exists: Any,
+    ) -> None:
         """When Kind is installed but no cluster, capability is KIND_AVAILABLE."""
         result = detect_terrarium_mode()
 
@@ -87,8 +94,11 @@ class TestDetectTerrariumMode:
         assert result.error is None
 
     def test_cluster_running(
-        self, mock_docker_available, mock_kind_installed, mock_cluster_exists
-    ):
+        self,
+        mock_docker_available: Any,
+        mock_kind_installed: Any,
+        mock_cluster_exists: Any,
+    ) -> None:
         """When cluster exists, capability is CLUSTER_RUNNING."""
         result = detect_terrarium_mode("kgents-local")
 
@@ -99,8 +109,11 @@ class TestDetectTerrariumMode:
         assert result.error is None
 
     def test_custom_cluster_name(
-        self, mock_docker_available, mock_kind_installed, mock_cluster_exists
-    ):
+        self,
+        mock_docker_available: Any,
+        mock_kind_installed: Any,
+        mock_cluster_exists: Any,
+    ) -> None:
         """Custom cluster name is passed through."""
         result = detect_terrarium_mode("my-custom-cluster")
 

@@ -120,7 +120,7 @@ def sample_traces() -> list[SemanticTrace]:
             agent_id="agent-b",
             agent_genus="J",
             parent_id="trace-001",
-            inputs={"code": "def foo(): pass"},
+            inputs={"code": "def foo() -> None: pass"},
             outputs={"compiled": True},
         ),
         create_test_trace(

@@ -357,7 +357,7 @@ fi
         return False
 
 
-def main():
+def main() -> None:
     """CLI entry point for spec-to-CRD generation."""
     import argparse
 

@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 
 # =============================================================================
 # Import Guards (Graceful Degradation Pattern)
@@ -263,10 +263,10 @@ def create_persistent_analyst(store_path: str = ".kgents/witness_store.json") ->
     Returns:
         CausalAnalyst with persistent store
     """
-    from .analyst import CausalAnalyst
+    from .analyst import CausalAnalyst, WitnessStore
 
     store = PersistentWitnessStore(store_path)
-    return CausalAnalyst(store)
+    return CausalAnalyst(cast(WitnessStore, store))
 
 
 # =============================================================================
@@ -348,7 +348,9 @@ class LatticeValidatedTopology:
         Returns:
             List of valid paths
         """
-        paths = self.base.equivalent_paths(start, end, max_depth)
+        paths: list[list[str]] = cast(
+            list[list[str]], self.base.equivalent_paths(start, end, max_depth)
+        )
 
         if validate and self._lattice:
             paths = [p for p in paths if self.validate_path(p)]
@@ -387,9 +389,8 @@ class EnhancedTestCost:
         """Convert to B-gent Gas if available."""
         if BGENT_AVAILABLE:
             return Gas(
-                compute=self.joules,
-                latency=self.time_ms,
                 tokens=self.tokens,
+                time_ms=self.time_ms,
             )
         return None
 
@@ -431,7 +432,9 @@ class BudgetedMarket:
             Allocation map
         """
         budget = total_budget if total_budget is not None else self._budget
-        return await self.base.calculate_kelly_allocation(assets, budget)
+        return cast(
+            dict[str, float], await self.base.calculate_kelly_allocation(assets, budget)
+        )
 
     async def charge_test(self, test_id: str, cost: EnhancedTestCost) -> bool:
         """Charge for a test run.
@@ -497,7 +500,9 @@ class TeleologicalRedTeam:
             Evolved population filtered by Demon
         """
         # Get base evolution
-        population = await self.base.evolve_adversarial_suite(agent, seed_inputs)
+        population: list[Any] = cast(
+            list[Any], await self.base.evolve_adversarial_suite(agent, seed_inputs)
+        )
 
         if not self._demon:
             return population
@@ -506,7 +511,7 @@ class TeleologicalRedTeam:
         intent = Intent(
             description=intent_description or "Find security vulnerabilities",
             embedding=[0.0] * 128,  # Placeholder
-            source="test",
+            source="tests",
         )
         self._demon.set_intent(intent)
 
@@ -592,7 +597,7 @@ class ObservedCortex:
         """
         observer = self._observers.get(agent_name)
         if observer and hasattr(observer, "get_metrics"):
-            return observer.get_metrics()
+            return cast(dict[str, Any], observer.get_metrics())
         return None
 
     def get_all_telemetry(self) -> dict[str, dict[str, Any]]:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from enum import Enum
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional, cast
 
 from protocols.cli.prism import TypeRegistry
 
@@ -52,18 +52,18 @@ class TestTypeRegistryOptional:
 
     def test_optional_str(self) -> None:
         """Optional[str] is not required."""
-        result = TypeRegistry.map(str | None)
+        result = TypeRegistry.map(cast(type, str | None))
         assert result.get("required") is False
 
     def test_optional_int(self) -> None:
         """Optional[int] maps inner type."""
-        result = TypeRegistry.map(int | None)
+        result = TypeRegistry.map(cast(type, int | None))
         assert result["type"] is int
         assert result.get("required") is False
 
     def test_optional_with_typing(self) -> None:
         """Optional from typing module works."""
-        result = TypeRegistry.map(Optional[str])
+        result = TypeRegistry.map(cast(type, Optional[str]))
         assert result.get("required") is False
 
 
@@ -112,7 +112,7 @@ class TestTypeRegistryCustom:
         class CustomType:
             pass
 
-        def custom_mapper(t):
+        def custom_mapper(t: type) -> dict[str, Any]:
             return {"type": str, "metavar": "CUSTOM"}
 
         TypeRegistry.register(CustomType, custom_mapper)
@@ -139,7 +139,7 @@ class TestTypeRegistryCustom:
     def test_custom_overrides_builtin(self) -> None:
         """Custom registration overrides builtins."""
 
-        def custom_int_mapper(t):
+        def custom_int_mapper(t: type) -> dict[str, Any]:
             return {"type": str, "help": "Custom int"}
 
         TypeRegistry.register(int, custom_int_mapper)
@@ -170,8 +170,8 @@ class TestTypeRegistryHelpers:
 
     def test_is_optional_union_none(self) -> None:
         """is_optional detects T | None."""
-        assert TypeRegistry.is_optional(str | None) is True
-        assert TypeRegistry.is_optional(int | None) is True
+        assert TypeRegistry.is_optional(cast(type, str | None)) is True
+        assert TypeRegistry.is_optional(cast(type, int | None)) is True
 
     def test_is_optional_non_optional(self) -> None:
         """is_optional returns False for non-optional."""
@@ -180,8 +180,8 @@ class TestTypeRegistryHelpers:
 
     def test_get_inner_type_optional(self) -> None:
         """get_inner_type extracts from Optional."""
-        assert TypeRegistry.get_inner_type(str | None) is str
-        assert TypeRegistry.get_inner_type(int | None) is int
+        assert TypeRegistry.get_inner_type(cast(type, str | None)) is str
+        assert TypeRegistry.get_inner_type(cast(type, int | None)) is int
 
     def test_get_inner_type_list(self) -> None:
         """get_inner_type extracts from list."""

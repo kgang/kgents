@@ -18,7 +18,7 @@ import pytest
 
 
 @pytest.fixture
-def mock_wire():
+def mock_wire() -> Any:
     """Mock wire for protocol testing."""
     from dataclasses import dataclass, field
 

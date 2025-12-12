@@ -200,7 +200,7 @@ class IStorageBackend(Protocol):
 class NullStorageBackend:
     """Null storage backend for testing."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._epochs: dict[str, bytes] = {}
 
     async def store_epoch(self, epoch_id: str, content: bytes) -> None:

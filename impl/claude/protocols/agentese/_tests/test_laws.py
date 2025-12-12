@@ -14,7 +14,7 @@ Tests verify:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, AsyncGenerator, cast
 
 import pytest
 
@@ -104,12 +104,12 @@ class GeneratorMorphism:
 
     name: str = "to_generator"
 
-    async def invoke(self, input: int):
+    async def invoke(self, input: int) -> AsyncGenerator[int, None]:
         for i in range(input):
             yield i
 
     def __rshift__(self, other: Composable[Any, Any]) -> Composed[int, Any]:
-        return Composed(self, other)
+        return Composed(self, other)  # type: ignore[arg-type]
 
 
 # === Identity Tests ===
@@ -243,7 +243,9 @@ class TestCategoryLawVerifier:
         return SquareMorphism()
 
     @pytest.mark.asyncio
-    async def test_verify_left_identity_passes(self, verifier, inc) -> None:
+    async def test_verify_left_identity_passes(
+        self, verifier: CategoryLawVerifier, inc: IncrementMorphism
+    ) -> None:
         """Left identity law passes for well-behaved morphism."""
         result = await verifier.verify_left_identity(inc, 5)
         assert result.passed
@@ -252,21 +254,31 @@ class TestCategoryLawVerifier:
         assert result.right_result == 6  # inc(5) = 6
 
     @pytest.mark.asyncio
-    async def test_verify_right_identity_passes(self, verifier, inc) -> None:
+    async def test_verify_right_identity_passes(
+        self, verifier: CategoryLawVerifier, inc: IncrementMorphism
+    ) -> None:
         """Right identity law passes for well-behaved morphism."""
         result = await verifier.verify_right_identity(inc, 5)
         assert result.passed
         assert result.law == "right_identity"
 
     @pytest.mark.asyncio
-    async def test_verify_identity_passes(self, verifier, inc) -> None:
+    async def test_verify_identity_passes(
+        self, verifier: CategoryLawVerifier, inc: IncrementMorphism
+    ) -> None:
         """Full identity law verification passes."""
         result = await verifier.verify_identity(inc, 5)
         assert result.passed
         assert result.law == "identity"
 
     @pytest.mark.asyncio
-    async def test_verify_associativity_passes(self, verifier, inc, dbl, sqr) -> None:
+    async def test_verify_associativity_passes(
+        self,
+        verifier: CategoryLawVerifier,
+        inc: IncrementMorphism,
+        dbl: DoubleMorphism,
+        sqr: SquareMorphism,
+    ) -> None:
         """Associativity law passes for well-behaved morphisms."""
         result = await verifier.verify_associativity(inc, dbl, sqr, 5)
         assert result.passed
@@ -276,7 +288,13 @@ class TestCategoryLawVerifier:
         assert result.right_result == 144
 
     @pytest.mark.asyncio
-    async def test_verify_all(self, verifier, inc, dbl, sqr) -> None:
+    async def test_verify_all(
+        self,
+        verifier: CategoryLawVerifier,
+        inc: IncrementMorphism,
+        dbl: DoubleMorphism,
+        sqr: SquareMorphism,
+    ) -> None:
         """verify_all checks all laws."""
         results = await verifier.verify_all(inc, dbl, sqr, 5)
         assert len(results) == 3
@@ -288,7 +306,9 @@ class TestCategoryLawVerifier:
         }
 
     @pytest.mark.asyncio
-    async def test_result_is_boolean(self, verifier, inc) -> None:
+    async def test_result_is_boolean(
+        self, verifier: CategoryLawVerifier, inc: IncrementMorphism
+    ) -> None:
         """LawVerificationResult can be used as boolean."""
         result = await verifier.verify_left_identity(inc, 5)
         assert bool(result) is True
@@ -298,8 +318,8 @@ class TestCategoryLawVerifier:
         """Custom comparator for result equality."""
 
         # Use approximate comparison
-        def approx_equal(a, b):
-            return abs(a - b) < 0.01
+        def approx_equal(a: Any, b: Any) -> bool:
+            return cast(bool, abs(a - b) < 0.01)
 
         verifier = CategoryLawVerifier(comparator=approx_equal)
         result = await verifier.verify_left_identity(IncrementMorphism(), 5)
@@ -462,7 +482,7 @@ class TestSimpleMorphism:
     async def test_simple_morphism_async(self) -> None:
         """SimpleMorphism wraps async functions."""
 
-        async def async_add(x):
+        async def async_add(x: int) -> int:
             return x + 1
 
         m = SimpleMorphism("async_add", async_add)
@@ -563,30 +583,30 @@ class TestComposedPath:
     def observer(self) -> MockUmwelt:
         return MockUmwelt()
 
-    def test_composed_path_len(self, logos) -> None:
+    def test_composed_path_len(self, logos: Logos) -> None:
         """ComposedPath has length."""
         path = logos.compose("a.b.c", "d.e.f")
         assert len(path) == 2
 
-    def test_composed_path_iter(self, logos) -> None:
+    def test_composed_path_iter(self, logos: Logos) -> None:
         """ComposedPath is iterable."""
         path = logos.compose("a.b.c", "d.e.f", "g.h.i")
         paths = list(path)
         assert paths == ["a.b.c", "d.e.f", "g.h.i"]
 
-    def test_composed_path_name(self, logos) -> None:
+    def test_composed_path_name(self, logos: Logos) -> None:
         """ComposedPath has readable name."""
         path = logos.compose("a.b.c", "d.e.f")
         assert path.name == "a.b.c >> d.e.f"
 
-    def test_composed_path_rshift_string(self, logos) -> None:
+    def test_composed_path_rshift_string(self, logos: Logos) -> None:
         """ComposedPath >> string appends path."""
         path = logos.compose("a.b.c")
         extended = path >> "d.e.f"
         assert len(extended) == 2
         assert list(extended) == ["a.b.c", "d.e.f"]
 
-    def test_composed_path_rshift_composed(self, logos) -> None:
+    def test_composed_path_rshift_composed(self, logos: Logos) -> None:
         """ComposedPath >> ComposedPath combines paths."""
         path1 = logos.compose("a.b.c")
         path2 = logos.compose("d.e.f", "g.h.i")
@@ -594,7 +614,7 @@ class TestComposedPath:
         assert len(combined) == 3
         assert list(combined) == ["a.b.c", "d.e.f", "g.h.i"]
 
-    def test_composed_path_equality(self, logos) -> None:
+    def test_composed_path_equality(self, logos: Logos) -> None:
         """ComposedPath equality based on paths."""
         path1 = logos.compose("a.b.c", "d.e.f")
         path2 = logos.compose("a.b.c", "d.e.f")
@@ -602,7 +622,7 @@ class TestComposedPath:
         assert path1 == path2
         assert path1 != path3
 
-    def test_without_enforcement(self, logos) -> None:
+    def test_without_enforcement(self, logos: Logos) -> None:
         """without_enforcement creates version without output checks."""
         path = logos.compose("a.b.c")
         assert path._enforce_minimal_output is True
@@ -621,26 +641,28 @@ class TestIdentityPath:
     def observer(self) -> MockUmwelt:
         return MockUmwelt()
 
-    def test_identity_path_name(self, logos) -> None:
+    def test_identity_path_name(self, logos: Logos) -> None:
         """IdentityPath has name 'Id'."""
         id_path = logos.identity()
         assert id_path.name == "Id"
 
     @pytest.mark.asyncio
-    async def test_identity_path_invoke(self, logos, observer) -> None:
+    async def test_identity_path_invoke(
+        self, logos: Logos, observer: MockUmwelt
+    ) -> None:
         """IdentityPath invoke returns input unchanged."""
         id_path = logos.identity()
-        result = await id_path.invoke(observer, initial_input="test")
+        result = await id_path.invoke(cast(Any, observer), initial_input="test")
         assert result == "test"
 
-    def test_identity_path_rshift_string(self, logos) -> None:
+    def test_identity_path_rshift_string(self, logos: Logos) -> None:
         """IdentityPath >> string creates ComposedPath."""
         id_path = logos.identity()
         path = id_path >> "world.house.manifest"
         assert isinstance(path, ComposedPath)
         assert list(path) == ["world.house.manifest"]
 
-    def test_identity_path_rshift_composed(self, logos) -> None:
+    def test_identity_path_rshift_composed(self, logos: Logos) -> None:
         """IdentityPath >> ComposedPath returns ComposedPath unchanged."""
         id_path = logos.identity()
         composed = logos.compose("a.b.c", "d.e.f")
@@ -655,13 +677,13 @@ class TestLogosPath:
     def logos(self) -> Logos:
         return Logos()
 
-    def test_path_creates_composed(self, logos) -> None:
+    def test_path_creates_composed(self, logos: Logos) -> None:
         """logos.path() creates single-path ComposedPath."""
         path = logos.path("world.house.manifest")
         assert isinstance(path, ComposedPath)
         assert len(path) == 1
 
-    def test_path_chainable(self, logos) -> None:
+    def test_path_chainable(self, logos: Logos) -> None:
         """logos.path() result is chainable."""
         path = logos.path("a.b.c") >> "d.e.f" >> "g.h.i"
         assert len(path) == 3
@@ -676,7 +698,7 @@ class TestCategoryLaws:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("input_value", [0, 1, -1, 100, -100])
-    async def test_identity_law_left(self, input_value) -> None:
+    async def test_identity_law_left(self, input_value: int) -> None:
         """Id >> f == f for all inputs."""
         f = IncrementMorphism()
         verifier = CategoryLawVerifier()
@@ -685,7 +707,7 @@ class TestCategoryLaws:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("input_value", [0, 1, -1, 100, -100])
-    async def test_identity_law_right(self, input_value) -> None:
+    async def test_identity_law_right(self, input_value: int) -> None:
         """f >> Id == f for all inputs."""
         f = IncrementMorphism()
         verifier = CategoryLawVerifier()
@@ -694,7 +716,7 @@ class TestCategoryLaws:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("input_value", [0, 1, 2, 5, 10])
-    async def test_associativity_law(self, input_value) -> None:
+    async def test_associativity_law(self, input_value: int) -> None:
         """(f >> g) >> h == f >> (g >> h) for all inputs."""
         f = IncrementMorphism()
         g = DoubleMorphism()

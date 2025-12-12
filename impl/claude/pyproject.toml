@@ -62,3 +62,5 @@ markers = [
     "accursed_share: mark test as exploratory/chaos (Phase 5)",
     "property: mark test as property-based (Phase 3)",
 ]
+
+# Note: mypy configuration is in mypy.ini - it provides more granular control

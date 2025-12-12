@@ -7,33 +7,24 @@ The three-layer catalog architecture:
 3. Lattice: How fits? (type partial order) - see lattice.py
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
 from typing import Any
 
 from agents.d.persistent import PersistentAgent
 
+# Re-export from types.py to avoid duplicate enum definitions
+from agents.l.types import EntityType, Status
 
-class EntityType(Enum):
-    """Types of artifacts L-gent tracks."""
-
-    AGENT = "agent"  # Executable agents (A → B morphisms)
-    CONTRACT = "contract"  # Interface definitions (type + invariants)
-    MEMORY = "memory"  # Session/context records
-    SPEC = "spec"  # Specification documents
-    TEST = "test"  # Test artifacts
-    TEMPLATE = "template"  # F-gent forge templates
-    PATTERN = "pattern"  # Reusable design patterns
-
-
-class Status(Enum):
-    """Lifecycle status of an artifact."""
-
-    ACTIVE = "active"  # Available for use
-    DEPRECATED = "deprecated"  # Still works, not recommended
-    RETIRED = "retired"  # No longer functional
-    DRAFT = "draft"  # Work in progress
+# Explicitly export re-imported types for mypy
+__all__ = [
+    "EntityType",
+    "Status",
+    "CatalogEntry",
+    "Registry",
+]
 
 
 @dataclass
@@ -216,6 +207,46 @@ class Registry:
         """Get all entries."""
         await self._ensure_loaded()
         return list(self._entries.values())
+
+    async def list_entries(
+        self,
+        entity_type: EntityType | None = None,
+        status: Status | None = None,
+        author: str | None = None,
+        limit: int | None = None,
+    ) -> list[CatalogEntry]:
+        """List entries with optional filters.
+
+        Alias compatible with registry.Registry.list_entries().
+
+        Args:
+            entity_type: Filter by entity type
+            status: Filter by status
+            author: Filter by author
+            limit: Maximum number of results
+
+        Returns:
+            List of matching entries, sorted by updated_at descending
+        """
+        await self._ensure_loaded()
+        entries = list(self._entries.values())
+
+        # Apply filters
+        if entity_type is not None:
+            entries = [e for e in entries if e.entity_type == entity_type]
+        if status is not None:
+            entries = [e for e in entries if e.status == status]
+        if author is not None:
+            entries = [e for e in entries if e.author == author]
+
+        # Sort by updated_at descending (most recent first)
+        entries.sort(key=lambda e: e.updated_at, reverse=True)
+
+        # Apply limit
+        if limit is not None:
+            entries = entries[:limit]
+
+        return entries
 
     async def list_by_type(self, entity_type: EntityType) -> list[CatalogEntry]:
         """Get all entries of a specific type."""

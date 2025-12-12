@@ -1,0 +1,376 @@
+// kgents.proto - gRPC service definition for K-Terrarium
+//
+// This defines the contract between the Hollow CLI and the Cortex daemon.
+// The CLI becomes pure gRPC calls - no business logic.
+//
+// Principle alignment:
+// - Hollow CLI: Can be rewritten in Rust in a day
+// - Protocol First: Contract before implementation
+// - Transparent Infrastructure: All operations observable
+
+syntax = "proto3";
+
+package kgents.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/kgents/kgents/pkg/proto/v1";
+
+// ============================================================================
+// Cortex Service - The brain of K-Terrarium
+// ============================================================================
+
+service Cortex {
+    // Health and status
+    rpc GetStatus(StatusRequest) returns (StatusResponse);
+    rpc GetHealth(HealthRequest) returns (HealthResponse);
+
+    // Dream briefing (LucidDreamer)
+    rpc GetDream(DreamRequest) returns (DreamResponse);
+
+    // Map visualization (M-gent cartography)
+    rpc GetMap(MapRequest) returns (MapResponse);
+
+    // Real-time streams
+    rpc StreamThoughts(ThoughtStreamRequest) returns (stream Thought);
+    rpc StreamPheromones(PheromoneStreamRequest) returns (stream PheromoneEvent);
+
+    // Tether protocol (attach to agent)
+    rpc Tether(stream TetherCommand) returns (stream TetherEvent);
+
+    // Agent management
+    rpc ListAgents(ListAgentsRequest) returns (ListAgentsResponse);
+    rpc GetAgent(GetAgentRequest) returns (AgentInfo);
+
+    // Pheromone field
+    rpc ListPheromones(ListPheromonesRequest) returns (ListPheromonesResponse);
+    rpc EmitPheromone(EmitPheromoneRequest) returns (EmitPheromoneResponse);
+}
+
+// ============================================================================
+// Status Messages
+// ============================================================================
+
+message StatusRequest {
+    bool verbose = 1;  // Include detailed component status
+}
+
+message StatusResponse {
+    string health = 1;  // "healthy", "degraded", "unhealthy"
+    repeated AgentStatus agents = 2;
+    map<string, double> pheromone_levels = 3;  // type -> aggregate intensity
+    TokenBudget budget = 4;
+    google.protobuf.Timestamp timestamp = 5;
+
+    // Component status (if verbose)
+    repeated ComponentStatus components = 6;
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+    bool healthy = 1;
+    string message = 2;
+    map<string, bool> components = 3;  // component -> healthy
+}
+
+message AgentStatus {
+    string name = 1;
+    string genus = 2;
+    string status = 3;  // "running", "idle", "error", "starting"
+    double cpu_percent = 4;
+    int64 memory_mb = 5;
+    int32 replicas_ready = 6;
+    int32 replicas_desired = 7;
+}
+
+message ComponentStatus {
+    string name = 1;
+    string status = 2;
+    string message = 3;
+}
+
+message TokenBudget {
+    int64 used = 1;
+    int64 limit = 2;
+    double burn_rate_per_minute = 3;
+    string top_consumer = 4;
+}
+
+// ============================================================================
+// Dream Messages (LucidDreamer)
+// ============================================================================
+
+message DreamRequest {
+    bool include_insights = 1;
+    bool include_warnings = 2;
+    int32 max_dreams = 3;  // 0 = default (5)
+}
+
+message DreamResponse {
+    google.protobuf.Timestamp generated_at = 1;
+    repeated Dream dreams = 2;
+    repeated Insight insights = 3;
+    repeated Warning warnings = 4;
+    string summary = 5;  // Morning briefing summary
+}
+
+message Dream {
+    string content = 1;
+    string source = 2;  // Which agent/system generated it
+    double confidence = 3;
+    string category = 4;  // "creative", "connection", "warning", "opportunity"
+    google.protobuf.Timestamp created_at = 5;
+}
+
+message Insight {
+    string title = 1;
+    string description = 2;
+    repeated string affected_files = 3;
+    string severity = 4;  // "info", "suggestion", "important"
+}
+
+message Warning {
+    string message = 1;
+    string source = 2;
+    string severity = 3;  // "low", "medium", "high"
+    google.protobuf.Timestamp first_seen = 4;
+    int32 occurrence_count = 5;
+}
+
+// ============================================================================
+// Map Messages (M-gent Cartography)
+// ============================================================================
+
+message MapRequest {
+    string focus = 1;  // Optional: focus area (file/directory)
+    string resolution = 2;  // "low", "medium", "high", "adaptive"
+    bool include_desire_lines = 3;
+    bool include_voids = 4;
+}
+
+message MapResponse {
+    repeated Landmark landmarks = 1;
+    repeated DesireLine desire_lines = 2;
+    repeated Void voids = 3;
+    Horizon horizon = 4;
+    repeated Attractor attractors = 5;
+}
+
+message Landmark {
+    string name = 1;
+    string path = 2;
+    double significance = 3;
+    string category = 4;  // "entry_point", "hub", "leaf", "test"
+    Position position = 5;
+}
+
+message DesireLine {
+    string from_path = 1;
+    string to_path = 2;
+    double strength = 3;
+    int32 traversal_count = 4;
+}
+
+message Void {
+    string path = 1;
+    string description = 2;
+    double mystery_score = 3;
+}
+
+message Horizon {
+    repeated string visible_files = 1;
+    repeated string beyond = 2;  // Files just out of view
+}
+
+message Attractor {
+    string name = 1;
+    Position position = 2;
+    double strength = 3;
+    repeated string attracted_files = 4;
+}
+
+message Position {
+    double x = 1;
+    double y = 2;
+    double z = 3;
+}
+
+// ============================================================================
+// Thought Stream Messages
+// ============================================================================
+
+message ThoughtStreamRequest {
+    repeated string filter_sources = 1;  // Empty = all sources
+    double min_confidence = 2;  // 0 = all
+    bool include_dreams = 3;  // Include DREAM pheromone thoughts
+}
+
+message Thought {
+    string content = 1;
+    string source = 2;  // Agent that generated the thought
+    google.protobuf.Timestamp timestamp = 3;
+    double confidence = 4;
+    string category = 5;  // "observation", "inference", "dream", "warning"
+    map<string, string> metadata = 6;
+}
+
+// ============================================================================
+// Pheromone Messages
+// ============================================================================
+
+message PheromoneStreamRequest {
+    repeated string filter_types = 1;  // Empty = all types
+    double min_intensity = 2;
+}
+
+message PheromoneEvent {
+    string event_type = 1;  // "emitted", "decayed", "sensed", "deleted"
+    Pheromone pheromone = 2;
+    string sensed_by = 3;  // If event_type == "sensed"
+}
+
+message Pheromone {
+    string name = 1;
+    string type = 2;  // METAPHOR, WARNING, MEMORY, etc.
+    double intensity = 3;
+    string source = 4;
+    string payload = 5;
+    Position position = 6;
+    google.protobuf.Timestamp created_at = 7;
+    repeated string sensed_by = 8;
+}
+
+message ListPheromonesRequest {
+    string namespace = 1;  // Default: kgents-agents
+    string type_filter = 2;  // Optional: filter by type
+    double min_intensity = 3;
+}
+
+message ListPheromonesResponse {
+    repeated Pheromone pheromones = 1;
+    map<string, double> type_totals = 2;  // Aggregate by type
+}
+
+message EmitPheromoneRequest {
+    string type = 1;
+    double intensity = 2;
+    string source = 3;
+    string payload = 4;
+    Position position = 5;
+    double decay_rate = 6;  // 0 = use default
+    int32 ttl_seconds = 7;  // 0 = no hard TTL
+}
+
+message EmitPheromoneResponse {
+    bool success = 1;
+    string name = 2;  // Generated pheromone name
+    string message = 3;
+}
+
+// ============================================================================
+// Tether Messages (Attach to running agent)
+// ============================================================================
+
+message TetherCommand {
+    oneof command {
+        TetherAttach attach = 1;
+        TetherSignal signal = 2;
+        TetherInput input = 3;
+        TetherDetach detach = 4;
+    }
+}
+
+message TetherAttach {
+    string agent_id = 1;
+    bool enable_debug = 2;  // Inject debugpy
+    int32 debug_port = 3;  // Default: 5678
+}
+
+message TetherSignal {
+    int32 signal = 1;  // Unix signal number (2=SIGINT, 15=SIGTERM)
+}
+
+message TetherInput {
+    bytes data = 1;  // Stdin data
+}
+
+message TetherDetach {
+    bool graceful = 1;  // Send SIGTERM before detaching
+}
+
+message TetherEvent {
+    oneof event {
+        TetherAttached attached = 1;
+        TetherOutput output = 2;
+        TetherExited exited = 3;
+        TetherError error = 4;
+    }
+}
+
+message TetherAttached {
+    string pod_name = 1;
+    string container = 2;
+    int32 debug_port = 3;  // 0 if debug not enabled
+}
+
+message TetherOutput {
+    bytes stdout = 1;
+    bytes stderr = 2;
+}
+
+message TetherExited {
+    int32 exit_code = 1;
+    string reason = 2;
+}
+
+message TetherError {
+    string message = 1;
+    bool recoverable = 2;
+}
+
+// ============================================================================
+// Agent Management Messages
+// ============================================================================
+
+message ListAgentsRequest {
+    string namespace = 1;
+    bool include_stopped = 2;
+}
+
+message ListAgentsResponse {
+    repeated AgentInfo agents = 1;
+}
+
+message GetAgentRequest {
+    string name = 1;
+    string namespace = 2;
+}
+
+message AgentInfo {
+    string name = 1;
+    string genus = 2;
+    string namespace = 3;
+    string status = 4;
+
+    // Resource usage
+    double cpu_percent = 5;
+    int64 memory_bytes = 6;
+
+    // Deployment info
+    int32 replicas_ready = 7;
+    int32 replicas_desired = 8;
+    string image = 9;
+
+    // Umwelt reference
+    string umwelt = 10;
+
+    // Pheromone activity
+    repeated string emits = 11;  // Pheromone types this agent emits
+    repeated string senses = 12;  // Pheromone types this agent senses
+
+    // Timestamps
+    google.protobuf.Timestamp created_at = 13;
+    google.protobuf.Timestamp last_active = 14;
+}

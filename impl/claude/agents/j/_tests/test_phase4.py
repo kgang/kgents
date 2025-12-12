@@ -369,7 +369,7 @@ class TestChaosmongerIntegration:
     def test_stable_code_passes_chaosmonger(self) -> None:
         """Simple stable code passes Chaosmonger."""
         code = """
-def simple_function(x):
+def simple_function(x) -> None:
     return x + 1
 """
         assert is_stable(code) is True
@@ -377,7 +377,7 @@ def simple_function(x):
     def test_unstable_code_fails_chaosmonger(self) -> None:
         """Unbounded recursion fails Chaosmonger."""
         code = """
-def infinite_loop():
+def infinite_loop() -> None:
     while True:
         pass
 """

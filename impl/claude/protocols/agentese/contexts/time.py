@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from ..node import (
     BaseLogosNode,
@@ -131,7 +131,10 @@ class TraceNode(BaseLogosNode):
         # Try N-gent first if available
         if self._narrator:
             try:
-                return await self._narrator.get_trace(topic=topic, limit=limit)
+                return cast(
+                    dict[str, Any],
+                    await self._narrator.get_trace(topic=topic, limit=limit),
+                )
             except Exception:
                 pass
 
@@ -268,7 +271,10 @@ class PastNode(BaseLogosNode):
         # Try D-gent first if available
         if self._d_gent:
             try:
-                return await self._d_gent.project(target=target, timestamp=timestamp)
+                return cast(
+                    dict[str, Any],
+                    await self._d_gent.project(target=target, timestamp=timestamp),
+                )
             except Exception:
                 pass
 
@@ -408,7 +414,10 @@ class FutureNode(BaseLogosNode):
         # Try B-gent first if available
         if self._b_gent:
             try:
-                return await self._b_gent.forecast(target=target, horizon=horizon)
+                return cast(
+                    dict[str, Any],
+                    await self._b_gent.forecast(target=target, horizon=horizon),
+                )
             except Exception:
                 pass
 

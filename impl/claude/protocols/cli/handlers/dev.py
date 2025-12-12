@@ -46,6 +46,7 @@ from __future__ import annotations
 import asyncio
 import sys
 from pathlib import Path
+from typing import Any
 
 
 def cmd_dev(args: list[str]) -> int:
@@ -194,9 +195,9 @@ async def _cmd_status() -> int:
     return 0
 
 
-def _parse_args(args: list[str]) -> dict:
+def _parse_args(args: list[str]) -> dict[str, Any]:
     """Parse command line arguments."""
-    options: dict = {}
+    options: dict[str, Any] = {}
     i = 0
 
     while i < len(args):

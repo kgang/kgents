@@ -1,0 +1,404 @@
+// logos.proto - The Protocol Authority for AGENTESE
+//
+// This file IS the spec. CLI handlers are derived from it.
+// Principle: Generative - spec is compression.
+//
+// The Logos service provides:
+// 1. Universal AGENTESE path resolution via Invoke()
+// 2. Ghost-enabled status retrieval via GetStatus()
+// 3. Streaming for interactive commands via StreamDreams/StreamObserve
+// 4. HoloMap retrieval via GetMap()
+//
+// Every CLI command maps to an AGENTESE path:
+//   kgents status  →  self.cortex.manifest
+//   kgents dream   →  self.memory.consolidate
+//   kgents map     →  world.project.manifest
+//   kgents signal  →  void.pheromone.*
+//   kgents tithe   →  void.entropy.tithe
+
+syntax = "proto3";
+
+package kgents.logos.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/any.proto";
+
+option go_package = "github.com/kgents/kgents/pkg/logos/v1";
+
+// ============================================================================
+// The Logos Service - Universal AGENTESE Resolution
+// ============================================================================
+
+service Logos {
+    // Core resolution - maps to logos.invoke(path, observer, lens)
+    // This is the heart of AGENTESE: every CLI command becomes an Invoke call
+    rpc Invoke(InvokeRequest) returns (InvokeResponse);
+
+    // Status with Ghost support - always returns something useful
+    // Maps to: self.cortex.manifest
+    rpc GetStatus(StatusRequest) returns (StatusResponse);
+
+    // Streaming for interactive commands
+    // Maps to: self.memory.consolidate (dream mode)
+    rpc StreamDreams(stream DreamInput) returns (stream DreamOutput);
+
+    // Streaming observation - real-time system events
+    // Maps to: world.project.observe
+    rpc StreamObserve(ObserveRequest) returns (stream ObserveEvent);
+
+    // Map retrieval (pre-rendered)
+    // Maps to: world.project.manifest (with lens=optics.cartography)
+    rpc GetMap(MapRequest) returns (HoloMap);
+
+    // Tithe - voluntary entropy discharge
+    // Maps to: void.entropy.tithe
+    rpc Tithe(TitheRequest) returns (TitheResponse);
+}
+
+// ============================================================================
+// Invoke Messages (Universal AGENTESE Resolution)
+// ============================================================================
+
+message InvokeRequest {
+    // The AGENTESE path to invoke
+    // Format: context.entity.aspect
+    // Examples:
+    //   - "self.cortex.manifest" (status)
+    //   - "world.project.manifest" (map)
+    //   - "void.entropy.tithe" (tithe)
+    //   - "concept.agent.define" (create new agent)
+    string path = 1;
+
+    // Serialized Umwelt (observer DNA)
+    // The observer determines what affordances are available
+    bytes observer_dna = 2;
+
+    // Optional lens override (default: optics.identity)
+    // Examples: "optics.structure", "optics.surface", "optics.essence"
+    string lens = 3;
+
+    // Additional keyword arguments (JSON-encoded)
+    map<string, string> kwargs = 4;
+}
+
+message InvokeResponse {
+    // The resolved result (type depends on path)
+    google.protobuf.Any result = 1;
+
+    // For simple results, the raw JSON string
+    string result_json = 2;
+
+    // Execution metadata
+    InvokeMetadata metadata = 3;
+}
+
+message InvokeMetadata {
+    // The path that was invoked
+    string path = 1;
+
+    // The lens that was applied
+    string lens = 2;
+
+    // Execution timing
+    google.protobuf.Duration duration = 3;
+
+    // Metabolic cost (tokens consumed)
+    int64 tokens_input = 4;
+    int64 tokens_output = 5;
+
+    // Witness trace (N-gent)
+    string trace_id = 6;
+
+    // Was this from cache?
+    bool from_cache = 7;
+}
+
+// ============================================================================
+// Status Messages (Ghost-Enabled)
+// ============================================================================
+
+message StatusRequest {
+    bool verbose = 1;
+    // Optional: specific components to check
+    repeated string components = 2;
+}
+
+message StatusResponse {
+    // Overall health: "healthy", "degraded", "unhealthy"
+    string health = 1;
+
+    // Agent statuses
+    repeated AgentStatus agents = 2;
+
+    // Pheromone field summary
+    map<string, float> pheromone_levels = 3;
+
+    // Metabolic pressure (for tithe display)
+    float metabolic_pressure = 4;
+
+    // Instance identifier
+    string instance_id = 5;
+
+    // Timestamp
+    google.protobuf.Timestamp timestamp = 6;
+
+    // Component details (if verbose)
+    repeated ComponentHealth components = 7;
+}
+
+message AgentStatus {
+    string name = 1;
+    string genus = 2;
+    string status = 3;  // "running", "idle", "error", "starting"
+    google.protobuf.Timestamp last_active = 4;
+}
+
+message ComponentHealth {
+    string name = 1;
+    bool healthy = 2;
+    string message = 3;
+}
+
+// ============================================================================
+// Dream Stream Messages (Interactive Consolidation)
+// ============================================================================
+
+message DreamInput {
+    // User input during dream session
+    string text = 1;
+
+    // Control commands
+    oneof control {
+        bool start_session = 2;
+        bool end_session = 3;
+        string set_phase = 4;  // "rem", "nrem", "lucid"
+    }
+}
+
+message DreamOutput {
+    // Dream content chunk
+    string text = 1;
+
+    // Is the system waiting for input?
+    bool awaiting_input = 2;
+
+    // Current dream phase
+    string phase = 3;
+
+    // Dream metadata
+    DreamMetadata metadata = 4;
+}
+
+message DreamMetadata {
+    // Confidence in the dream content
+    float confidence = 1;
+
+    // Source of the dream
+    string source = 2;
+
+    // Associated memories
+    repeated string memory_ids = 3;
+}
+
+// ============================================================================
+// Observe Stream Messages (Real-Time Events)
+// ============================================================================
+
+message ObserveRequest {
+    // Event type filters (empty = all)
+    repeated string event_types = 1;
+
+    // Minimum significance threshold
+    float min_significance = 2;
+
+    // Optional focus area
+    string focus_path = 3;
+}
+
+message ObserveEvent {
+    // Event type: "invocation", "pheromone", "agent", "memory", "fever"
+    string event_type = 1;
+
+    // Event content (JSON)
+    string content = 2;
+
+    // Timestamp
+    google.protobuf.Timestamp timestamp = 3;
+
+    // Source of the event
+    string source = 4;
+
+    // Significance (0.0 - 1.0)
+    float significance = 5;
+}
+
+// ============================================================================
+// Map Messages (HoloMap Cartography)
+// ============================================================================
+
+message MapRequest {
+    // Optional focus point
+    string focus = 1;
+
+    // Resolution: "low", "medium", "high", "adaptive"
+    string resolution = 2;
+
+    // Output format: "text", "json", "svg", "web"
+    string format = 3;
+
+    // Include desire lines (paths of frequent traversal)
+    bool include_desire_lines = 4;
+
+    // Include voids (areas of mystery)
+    bool include_voids = 5;
+
+    // Include attractors (semantic gravity wells)
+    bool include_attractors = 6;
+}
+
+message HoloMap {
+    // Landmarks (significant locations)
+    repeated MapLandmark landmarks = 1;
+
+    // Desire lines (frequent paths)
+    repeated DesireLine desire_lines = 2;
+
+    // Voids (unexplored areas)
+    repeated MapVoid voids = 3;
+
+    // Attractors (semantic centers)
+    repeated Attractor attractors = 4;
+
+    // Horizon (edge of visible territory)
+    MapHorizon horizon = 5;
+
+    // Pre-rendered visualization (if format specified)
+    string rendered = 6;
+
+    // Metadata
+    MapMetadata metadata = 7;
+}
+
+message MapLandmark {
+    string name = 1;
+    string path = 2;
+    float significance = 3;
+    string category = 4;  // "entry_point", "hub", "leaf", "test"
+    MapPosition position = 5;
+}
+
+message DesireLine {
+    string from_path = 1;
+    string to_path = 2;
+    float strength = 3;
+    int32 traversal_count = 4;
+}
+
+message MapVoid {
+    string path = 1;
+    string description = 2;
+    float mystery_score = 3;
+}
+
+message Attractor {
+    string name = 1;
+    MapPosition position = 2;
+    float strength = 3;
+    repeated string attracted_files = 4;
+}
+
+message MapHorizon {
+    repeated string visible_files = 1;
+    repeated string beyond = 2;
+}
+
+message MapPosition {
+    float x = 1;
+    float y = 2;
+    float z = 3;
+}
+
+message MapMetadata {
+    google.protobuf.Timestamp generated_at = 1;
+    int32 total_files = 2;
+    int32 total_landmarks = 3;
+    string focus = 4;
+    string resolution = 5;
+}
+
+// ============================================================================
+// Tithe Messages (Entropy Discharge)
+// ============================================================================
+
+message TitheRequest {
+    // Amount of pressure to discharge (0.0 - 1.0)
+    // 0.0 = minimal tithe (10% of current pressure)
+    // 1.0 = full discharge
+    float amount = 1;
+
+    // Optional gratitude message
+    string gratitude = 2;
+}
+
+message TitheResponse {
+    // Was the tithe successful?
+    bool success = 1;
+
+    // Response from the void
+    string gratitude_response = 2;
+
+    // Remaining pressure after tithe
+    float remaining_pressure = 3;
+
+    // Pressure discharged
+    float discharged = 4;
+
+    // Fever dream generated (if system was feverish)
+    string fever_dream = 5;
+}
+
+// ============================================================================
+// Umwelt (Observer DNA)
+// ============================================================================
+
+message Umwelt {
+    // Unique observer identifier
+    string id = 1;
+
+    // Observer archetype (determines affordances)
+    string archetype = 2;
+
+    // Permissions mask
+    uint64 permissions = 3;
+
+    // Current focus/context
+    string focus = 4;
+
+    // Personality coordinates (for K-gent)
+    map<string, float> personality = 5;
+
+    // Custom metadata
+    map<string, string> metadata = 6;
+}
+
+// ============================================================================
+// Error Messages
+// ============================================================================
+
+message LogosError {
+    // Error code
+    string code = 1;
+
+    // Human-readable message
+    string message = 2;
+
+    // Path that caused the error
+    string path = 3;
+
+    // Suggestions for recovery
+    repeated string suggestions = 4;
+
+    // Was there a fallback?
+    string fallback_used = 5;
+}

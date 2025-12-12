@@ -9,8 +9,11 @@ Tests cover:
 - Session management
 """
 
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -140,7 +143,7 @@ class TestDashboardEvent:
         )
 
         with pytest.raises(Exception):  # FrozenInstanceError
-            event.id = "changed"
+            event.id = "changed"  # type: ignore[misc]
 
 
 class TestThoughtEntry:
@@ -377,8 +380,12 @@ class TestSession:
             )
             session.add_event(event)
 
-        assert session.get_event_at(0).message == "Event 0"
-        assert session.get_event_at(4).message == "Event 4"
+        evt0 = session.get_event_at(0)
+        assert evt0 is not None
+        assert evt0.message == "Event 0"
+        evt4 = session.get_event_at(4)
+        assert evt4 is not None
+        assert evt4.message == "Event 4"
         assert session.get_event_at(10) is None
 
 
@@ -466,10 +473,12 @@ class TestPlaybackState:
         playback = PlaybackState(session=session)
 
         event = playback.step_forward()
+        assert event is not None
         assert event.message == "Event 1"
         assert playback.current_index == 1
 
         event = playback.step_forward()
+        assert event is not None
         assert event.message == "Event 2"
 
         # At end, returns None
@@ -494,9 +503,11 @@ class TestPlaybackState:
         playback.seek(2)
 
         event = playback.step_backward()
+        assert event is not None
         assert event.message == "Event 1"
 
         event = playback.step_backward()
+        assert event is not None
         assert event.message == "Event 0"
 
         # At start, returns None
@@ -535,16 +546,16 @@ class TestEventStore:
     """Tests for EventStore (SQLite persistence)."""
 
     @pytest.fixture
-    def store(self, tmp_path):
+    def store(self, tmp_path: Path) -> Any:
         """Create a temporary event store."""
         db_path = tmp_path / "test.db"
         return EventStore(db_path)
 
-    def test_create_store(self, store) -> None:
+    def test_create_store(self, store: Any) -> None:
         """Can create an event store."""
         assert store.db_path.exists()
 
-    def test_generate_id(self, store) -> None:
+    def test_generate_id(self, store: Any) -> None:
         """IDs are generated with prefixes."""
         evt_id = store.generate_id("evt")
         assert evt_id.startswith("evt_")
@@ -553,7 +564,7 @@ class TestEventStore:
         sess_id = store.generate_id("sess")
         assert sess_id.startswith("sess_")
 
-    def test_create_session(self, store) -> None:
+    def test_create_session(self, store: Any) -> None:
         """Can create a session."""
         session = store.create_session(
             name="Test Session",
@@ -565,7 +576,7 @@ class TestEventStore:
         assert session.state == SessionState.LIVE
         assert session.flow_name == "review"
 
-    def test_get_session(self, store) -> None:
+    def test_get_session(self, store: Any) -> None:
         """Can retrieve a session."""
         created = store.create_session(name="Test")
         retrieved = store.get_session(created.id)
@@ -574,12 +585,12 @@ class TestEventStore:
         assert retrieved.id == created.id
         assert retrieved.name == "Test"
 
-    def test_get_session_not_found(self, store) -> None:
+    def test_get_session_not_found(self, store: Any) -> None:
         """Getting non-existent session returns None."""
         result = store.get_session("sess_notexist")
         assert result is None
 
-    def test_end_session(self, store) -> None:
+    def test_end_session(self, store: Any) -> None:
         """Can end a session."""
         session = store.create_session(name="Test")
         store.end_session(session.id)
@@ -588,7 +599,7 @@ class TestEventStore:
         assert retrieved.state == SessionState.ENDED
         assert retrieved.ended_at is not None
 
-    def test_list_sessions(self, store) -> None:
+    def test_list_sessions(self, store: Any) -> None:
         """Can list sessions."""
         store.create_session(name="Session 1")
         store.create_session(name="Session 2")
@@ -597,7 +608,7 @@ class TestEventStore:
         sessions = store.list_sessions()
         assert len(sessions) == 3
 
-    def test_list_sessions_by_state(self, store) -> None:
+    def test_list_sessions_by_state(self, store: Any) -> None:
         """Can filter sessions by state."""
         store.create_session(name="Live 1")
         store.create_session(name="Live 2")
@@ -610,7 +621,7 @@ class TestEventStore:
         ended_sessions = store.list_sessions(state=SessionState.ENDED)
         assert len(ended_sessions) == 1
 
-    def test_list_sessions_limit(self, store) -> None:
+    def test_list_sessions_limit(self, store: Any) -> None:
         """Can limit session list."""
         for i in range(10):
             store.create_session(name=f"Session {i}")
@@ -618,7 +629,7 @@ class TestEventStore:
         sessions = store.list_sessions(limit=5)
         assert len(sessions) == 5
 
-    def test_delete_session(self, store) -> None:
+    def test_delete_session(self, store: Any) -> None:
         """Can delete a session."""
         session = store.create_session(name="To Delete")
         store.add_event(
@@ -634,7 +645,7 @@ class TestEventStore:
         retrieved = store.get_session(session.id)
         assert retrieved is None
 
-    def test_add_event(self, store) -> None:
+    def test_add_event(self, store: Any) -> None:
         """Can add events to a session."""
         session = store.create_session(name="Test")
 
@@ -650,7 +661,7 @@ class TestEventStore:
         assert event.event_type == EventType.THOUGHT
         assert event.data["lines"] == 42
 
-    def test_get_events(self, store) -> None:
+    def test_get_events(self, store: Any) -> None:
         """Can retrieve events for a session."""
         session = store.create_session(name="Test")
 
@@ -662,7 +673,7 @@ class TestEventStore:
         # +1 for SESSION_START
         assert len(events) == 4
 
-    def test_get_events_by_type(self, store) -> None:
+    def test_get_events_by_type(self, store: Any) -> None:
         """Can filter events by type."""
         session = store.create_session(name="Test")
 
@@ -673,7 +684,7 @@ class TestEventStore:
         thought_events = store.get_events(session.id, event_type=EventType.THOUGHT)
         assert len(thought_events) == 2
 
-    def test_register_agent(self, store) -> None:
+    def test_register_agent(self, store: Any) -> None:
         """Can register an agent."""
         session = store.create_session(name="Test")
 
@@ -687,7 +698,7 @@ class TestEventStore:
         assert agent.id == "step_parse"
         assert agent.status == AgentStatus.PENDING
 
-    def test_update_agent_status(self, store) -> None:
+    def test_update_agent_status(self, store: Any) -> None:
         """Can update agent status."""
         session = store.create_session(name="Test")
         store.register_agent(session.id, "step_parse", "parse", "P-gent")
@@ -700,7 +711,7 @@ class TestEventStore:
         assert agent is not None
         assert agent.status == AgentStatus.COMPLETE
 
-    def test_register_artifact(self, store) -> None:
+    def test_register_artifact(self, store: Any) -> None:
         """Can register an artifact."""
         session = store.create_session(name="Test")
 
@@ -715,7 +726,7 @@ class TestEventStore:
         assert artifact.name == "output.json"
         assert artifact.size_bytes == 1024
 
-    def test_session_loads_with_events(self, store) -> None:
+    def test_session_loads_with_events(self, store: Any) -> None:
         """Session loads with all events."""
         session = store.create_session(name="Test")
         store.add_event(session.id, EventType.THOUGHT, "parse", "Event 1")
@@ -725,7 +736,7 @@ class TestEventStore:
         # +1 for SESSION_START
         assert len(retrieved.events) == 3
 
-    def test_session_loads_with_agents(self, store) -> None:
+    def test_session_loads_with_agents(self, store: Any) -> None:
         """Session loads with all agents."""
         session = store.create_session(name="Test")
         store.register_agent(session.id, "parse", "parse", "P-gent")
@@ -734,7 +745,7 @@ class TestEventStore:
         retrieved = store.get_session(session.id)
         assert len(retrieved.agents) == 2
 
-    def test_session_loads_with_artifacts(self, store) -> None:
+    def test_session_loads_with_artifacts(self, store: Any) -> None:
         """Session loads with all artifacts."""
         session = store.create_session(name="Test")
         store.register_artifact(session.id, "output.json", "json")
@@ -743,7 +754,7 @@ class TestEventStore:
         retrieved = store.get_session(session.id)
         assert len(retrieved.artifacts) == 2
 
-    def test_cleanup_old_sessions(self, store) -> None:
+    def test_cleanup_old_sessions(self, store: Any) -> None:
         """Can cleanup old sessions."""
         # Create and end a session
         session = store.create_session(name="Old Session")
@@ -755,7 +766,7 @@ class TestEventStore:
 
         assert store.get_session(session.id) is None
 
-    def test_get_statistics(self, store) -> None:
+    def test_get_statistics(self, store: Any) -> None:
         """Can get store statistics."""
         session = store.create_session(name="Test")
         store.add_event(session.id, EventType.THOUGHT, "test", "Test")
@@ -776,18 +787,18 @@ class TestDashboardController:
     """Tests for DashboardController."""
 
     @pytest.fixture
-    def controller(self, tmp_path):
+    def controller(self, tmp_path: Path) -> Any:
         """Create a controller with temporary store."""
         db_path = tmp_path / "test.db"
         store = EventStore(db_path)
         return DashboardController(store)
 
-    def test_create_controller(self, controller) -> None:
+    def test_create_controller(self, controller: Any) -> None:
         """Can create a controller."""
         assert controller.current_session is None
         assert controller.playback is None
 
-    def test_start_session(self, controller) -> None:
+    def test_start_session(self, controller: Any) -> None:
         """Can start a session."""
         session = controller.start_session(
             name="Test Session",
@@ -798,14 +809,14 @@ class TestDashboardController:
         assert controller.current_session == session
         assert session.state == SessionState.LIVE
 
-    def test_end_session(self, controller) -> None:
+    def test_end_session(self, controller: Any) -> None:
         """Can end a session."""
         controller.start_session(name="Test")
         controller.end_session()
 
         assert controller.current_session.state == SessionState.ENDED
 
-    def test_load_session(self, controller) -> None:
+    def test_load_session(self, controller: Any) -> None:
         """Can load a historical session."""
         # Create and end a session
         session = controller.start_session(name="Historical")
@@ -821,7 +832,7 @@ class TestDashboardController:
         assert loaded.id == session_id
         assert controller.playback is not None
 
-    def test_add_event(self, controller) -> None:
+    def test_add_event(self, controller: Any) -> None:
         """Can add events."""
         controller.start_session(name="Test")
 
@@ -834,7 +845,7 @@ class TestDashboardController:
         assert event is not None
         assert len(controller.current_session.events) >= 1
 
-    def test_add_thought(self, controller) -> None:
+    def test_add_thought(self, controller: Any) -> None:
         """Can add thoughts."""
         controller.start_session(name="Test")
 
@@ -846,7 +857,7 @@ class TestDashboardController:
         assert thought.content == "Found 3 functions"
         assert len(controller.current_session.thoughts) == 1
 
-    def test_register_agent(self, controller) -> None:
+    def test_register_agent(self, controller: Any) -> None:
         """Can register agents."""
         controller.start_session(name="Test")
 
@@ -855,7 +866,7 @@ class TestDashboardController:
         assert agent.id == "step_parse"
         assert "step_parse" in controller.current_session.agents
 
-    def test_update_agent(self, controller) -> None:
+    def test_update_agent(self, controller: Any) -> None:
         """Can update agent status."""
         controller.start_session(name="Test")
         controller.register_agent("step_parse", "parse", "P-gent")
@@ -869,7 +880,7 @@ class TestDashboardController:
         assert agent.status == AgentStatus.COMPLETE
         assert agent.completed_at is not None
 
-    def test_register_artifact(self, controller) -> None:
+    def test_register_artifact(self, controller: Any) -> None:
         """Can register artifacts."""
         controller.start_session(name="Test")
 
@@ -882,11 +893,11 @@ class TestDashboardController:
         assert artifact is not None
         assert artifact.id in controller.current_session.artifacts
 
-    def test_event_callbacks(self, controller) -> None:
+    def test_event_callbacks(self, controller: Any) -> None:
         """Event callbacks are called."""
         received_events = []
 
-        def callback(event):
+        def callback(event: Any) -> None:
             received_events.append(event)
 
         controller.on_event(callback)
@@ -895,7 +906,7 @@ class TestDashboardController:
 
         assert len(received_events) >= 1
 
-    def test_playback_seek(self, controller) -> None:
+    def test_playback_seek(self, controller: Any) -> None:
         """Can seek in playback mode."""
         controller.start_session(name="Test")
         for i in range(5):
@@ -907,7 +918,7 @@ class TestDashboardController:
         controller.seek(3)
         assert controller.playback.current_index == 3
 
-    def test_playback_step(self, controller) -> None:
+    def test_playback_step(self, controller: Any) -> None:
         """Can step through playback."""
         controller.start_session(name="Test")
         for i in range(3):
@@ -922,7 +933,7 @@ class TestDashboardController:
         controller.step_backward()
         assert controller.playback.current_index == 0
 
-    def test_toggle_pause(self, controller) -> None:
+    def test_toggle_pause(self, controller: Any) -> None:
         """Can toggle pause."""
         controller.start_session(name="Test")
         controller.add_event(EventType.THOUGHT, "test", "Event")
@@ -945,7 +956,7 @@ class TestDashboardController:
 class TestCmdDash:
     """Tests for cmd_dash entry point."""
 
-    def test_dash_help(self, capsys) -> None:
+    def test_dash_help(self, capsys: pytest.CaptureFixture[str]) -> None:
         """--help shows usage."""
         with pytest.raises(SystemExit) as exc_info:
             cmd_dash(["--help"])
@@ -954,7 +965,12 @@ class TestCmdDash:
         captured = capsys.readouterr()
         assert "TUI Dashboard" in captured.out
 
-    def test_dash_list_empty(self, tmp_path, capsys, monkeypatch) -> None:
+    def test_dash_list_empty(
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         """--list with no sessions shows message."""
         # Use temp db
         monkeypatch.chdir(tmp_path)
@@ -964,7 +980,12 @@ class TestCmdDash:
         captured = capsys.readouterr()
         assert "No sessions" in captured.out or "Available sessions" in captured.out
 
-    def test_dash_replay_not_found(self, tmp_path, capsys, monkeypatch) -> None:
+    def test_dash_replay_not_found(
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         """--replay with invalid session shows error."""
         monkeypatch.chdir(tmp_path)
         result = cmd_dash(["--replay=sess_notexist"])
@@ -973,7 +994,12 @@ class TestCmdDash:
         captured = capsys.readouterr()
         assert "not found" in captured.out
 
-    def test_dash_flow_not_found(self, tmp_path, capsys, monkeypatch) -> None:
+    def test_dash_flow_not_found(
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         """--flow with missing file shows error."""
         monkeypatch.chdir(tmp_path)
         result = cmd_dash(["--flow=notexist.yaml"])
@@ -992,11 +1018,11 @@ class TestIntegration:
     """Integration tests for the full TUI system."""
 
     @pytest.fixture
-    def store(self, tmp_path):
+    def store(self, tmp_path: Path) -> Any:
         """Create a temporary event store."""
         return EventStore(tmp_path / "test.db")
 
-    def test_full_session_lifecycle(self, store) -> None:
+    def test_full_session_lifecycle(self, store: Any) -> None:
         """Test complete session lifecycle."""
         controller = DashboardController(store)
 
@@ -1038,7 +1064,7 @@ class TestIntegration:
         assert loaded.agents["parse"].status == AgentStatus.COMPLETE
         assert loaded.agents["refine"].status == AgentStatus.SKIPPED
 
-    def test_session_replay(self, store) -> None:
+    def test_session_replay(self, store: Any) -> None:
         """Test session replay functionality."""
         controller = DashboardController(store)
 
@@ -1070,7 +1096,7 @@ class TestIntegration:
         controller2.seek(0)
         assert controller2.playback.current_index == 0
 
-    def test_multiple_sessions(self, store) -> None:
+    def test_multiple_sessions(self, store: Any) -> None:
         """Test multiple concurrent sessions."""
         # Create multiple sessions
         s1 = store.create_session(name="Session 1")
@@ -1095,7 +1121,7 @@ class TestIntegration:
         ended = store.list_sessions(state=SessionState.ENDED)
         assert len(ended) == 1
 
-    def test_cleanup(self, store) -> None:
+    def test_cleanup(self, store: Any) -> None:
         """Test session cleanup."""
         # Create sessions
         s1 = store.create_session(name="Keep")

@@ -35,7 +35,7 @@ from __future__ import annotations
 import asyncio
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     pass
@@ -210,7 +210,7 @@ def _run_daemon_legacy(project_root: Path) -> int:
     return 0
 
 
-async def _daemon_main_legacy(writer) -> None:
+async def _daemon_main_legacy(writer: Any) -> None:
     """Async daemon main loop for legacy writer."""
     # Initial projection
     await writer.project()
@@ -309,7 +309,7 @@ def _add_thought(project_root: Path, args: list[str]) -> int:
     return 0
 
 
-def _configure_writer(writer) -> None:
+def _configure_writer(writer: Any) -> None:
     """Try to configure writer with available integrations."""
     from protocols.cli.hollow import get_lifecycle_state
 

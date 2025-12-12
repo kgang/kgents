@@ -22,7 +22,7 @@ class TestExposeDecorator:
         """@expose with only help parameter."""
 
         @expose(help="Reify domain into Tongue")
-        def reify(domain: str):
+        def reify(domain: str) -> None:
             pass
 
         meta = get_expose_meta(reify)
@@ -39,7 +39,7 @@ class TestExposeDecorator:
             help="Reify domain",
             examples=['kgents grammar reify "Calendar"', "kgents grammar reify Math"],
         )
-        def reify(domain: str):
+        def reify(domain: str) -> None:
             pass
 
         meta = get_expose_meta(reify)
@@ -51,7 +51,7 @@ class TestExposeDecorator:
         """@expose with aliases parameter."""
 
         @expose(help="List items", aliases=["ls", "l"])
-        def list_items():
+        def list_items() -> None:
             pass
 
         meta = get_expose_meta(list_items)
@@ -62,7 +62,7 @@ class TestExposeDecorator:
         """@expose with hidden=True."""
 
         @expose(help="Debug command", hidden=True)
-        def debug():
+        def debug() -> None:
             pass
 
         meta = get_expose_meta(debug)
@@ -86,11 +86,12 @@ class TestExposeDecorator:
         """@expose works on async functions."""
 
         @expose(help="Async command")
-        async def async_cmd(value: str) -> dict:
+        async def async_cmd(value: str) -> dict[str, str]:
             return {"value": value}
 
         assert is_exposed(async_cmd)
         meta = get_expose_meta(async_cmd)
+        assert meta is not None
         assert meta.help == "Async command"
 
     def test_expose_on_method(self) -> None:
@@ -115,7 +116,7 @@ class TestIsExposed:
         """is_exposed returns True for decorated functions."""
 
         @expose(help="Test")
-        def exposed():
+        def exposed() -> None:
             pass
 
         assert is_exposed(exposed) is True
@@ -123,7 +124,7 @@ class TestIsExposed:
     def test_is_exposed_false(self) -> None:
         """is_exposed returns False for non-decorated functions."""
 
-        def not_exposed():
+        def not_exposed() -> None:
             pass
 
         assert is_exposed(not_exposed) is False
@@ -137,10 +138,10 @@ class TestIsExposed:
     def test_is_exposed_false_for_wrong_attribute(self) -> None:
         """is_exposed returns False if _expose_meta is not ExposeMetadata."""
 
-        def fake_exposed():
+        def fake_exposed() -> None:
             pass
 
-        fake_exposed._expose_meta = "not metadata"
+        setattr(fake_exposed, "_expose_meta", "not metadata")
 
         assert is_exposed(fake_exposed) is False
 
@@ -163,7 +164,7 @@ class TestGetExposeMeta:
     def test_get_expose_meta_returns_none(self) -> None:
         """get_expose_meta returns None for non-decorated functions."""
 
-        def regular_func():
+        def regular_func() -> None:
             pass
 
         assert get_expose_meta(regular_func) is None
@@ -171,10 +172,10 @@ class TestGetExposeMeta:
     def test_get_expose_meta_returns_none_for_wrong_type(self) -> None:
         """get_expose_meta returns None if attribute is wrong type."""
 
-        def fake():
+        def fake() -> None:
             pass
 
-        fake._expose_meta = {"help": "not right"}
+        setattr(fake, "_expose_meta", {"help": "not right"})
 
         assert get_expose_meta(fake) is None
 

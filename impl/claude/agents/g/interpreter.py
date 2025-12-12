@@ -224,19 +224,17 @@ def create_interpreter(
     # config.semantics is a dict[str, str], extract runtime type from config
     semantics = config.runtime.upper() if config.runtime else "PURE"
 
-    strategy_map = {
-        "PURE": PureFunctionalExecutor,
-        "COMMAND": lambda: CommandExecutor(handlers),
-        "RECURSIVE": RecursiveInterpreter,
-    }
+    # If handlers are provided, use CommandExecutor regardless of runtime setting
+    # This supports the common pattern of create_command_tongue with runtime="python"
+    if handlers is not None:
+        return CommandExecutor(handlers)
 
-    strategy_factory = strategy_map.get(semantics, PureFunctionalExecutor)
-
-    if callable(strategy_factory):
-        if semantics == "COMMAND":
-            return strategy_factory()
-        return strategy_factory()
-    return strategy_factory
+    if semantics == "COMMAND":
+        return CommandExecutor(handlers)
+    elif semantics == "RECURSIVE":
+        return RecursiveInterpreter()
+    else:
+        return PureFunctionalExecutor()
 
 
 # ============================================================================

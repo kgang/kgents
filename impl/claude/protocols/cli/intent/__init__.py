@@ -25,6 +25,8 @@ See: docs/cli-integration-plan.md Part 2
 
 from __future__ import annotations
 
+from typing import Any
+
 # Lazy loading - only import when accessed
 __all__ = [
     "cmd_new",
@@ -40,7 +42,7 @@ __all__ = [
 ]
 
 
-def __getattr__(name: str):
+def __getattr__(name: str) -> Any:
     """Lazy load command handlers."""
     if name in (
         "cmd_new",

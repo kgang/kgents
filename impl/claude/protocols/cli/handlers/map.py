@@ -41,7 +41,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any
+from typing import Any, cast
 
 
 def cmd_map(args: list[str]) -> int:
@@ -104,7 +104,7 @@ async def _async_map(
         try:
             from protocols.proto.generated import MapRequest
 
-            request = MapRequest(
+            request: Any = MapRequest(
                 focus=query or "",
                 resolution="medium",
                 format="ascii" if ascii_only else "full",
@@ -203,13 +203,15 @@ def _extract_map_data(data: Any) -> dict[str, Any]:
         try:
             from google.protobuf.json_format import MessageToDict
 
-            return MessageToDict(data, preserving_proto_field_name=True)
+            return cast(
+                dict[str, Any], MessageToDict(data, preserving_proto_field_name=True)
+            )
         except ImportError:
             pass
 
     # Dataclass with to_dict
     if hasattr(data, "to_dict"):
-        return data.to_dict()
+        return cast(dict[str, Any], data.to_dict())
 
     # HoloMap object from local servicer
     if hasattr(data, "landmarks"):

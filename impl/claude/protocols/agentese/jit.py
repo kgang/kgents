@@ -37,7 +37,7 @@ import ast
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 try:
     import yaml
@@ -561,7 +561,7 @@ class JITCompiler:
         # Find the generated class
         for name, obj in namespace.items():
             if name.startswith("JIT") and name.endswith("Node"):
-                return obj()
+                return cast(LogosNode, obj())
 
         raise TastefulnessError(
             "No LogosNode class found in generated source",

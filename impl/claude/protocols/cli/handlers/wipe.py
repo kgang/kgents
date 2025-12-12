@@ -56,11 +56,12 @@ def _get_size_str(path: Path) -> str:
     else:
         size = sum(f.stat().st_size for f in path.rglob("*") if f.is_file())
 
+    size_f = float(size)
     for unit in ["B", "KB", "MB", "GB"]:
-        if size < 1024:
-            return f"{size:.1f} {unit}"
-        size /= 1024
-    return f"{size:.1f} TB"
+        if size_f < 1024:
+            return f"{size_f:.1f} {unit}"
+        size_f /= 1024
+    return f"{size_f:.1f} TB"
 
 
 def _find_local_db() -> Path | None:

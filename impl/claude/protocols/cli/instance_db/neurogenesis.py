@@ -355,7 +355,7 @@ class SchemaNeurogenesis:
         self, table: str, column: str, samples: list[dict[str, Any]]
     ) -> list[PatternCluster]:
         """Analyze JSON samples to find patterns."""
-        clusters = []
+        clusters: list[PatternCluster] = []
 
         # Count key occurrences
         key_counts: Counter[str] = Counter()

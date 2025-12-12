@@ -37,14 +37,14 @@ def simple_mutation() -> MutationVector:
     return MutationVector(
         schema_signature="loop_to_comprehension",
         original_code="""
-def process_items(items):
+def process_items(items) -> None:
     result = []
     for item in items:
         result.append(item * 2)
     return result
 """,
         mutated_code="""
-def process_items(items):
+def process_items(items) -> None:
     return [item * 2 for item in items]
 """,
         enthalpy_delta=-0.3,
@@ -199,11 +199,11 @@ class TestParasiticPatterns:
     def test_detect_hardcoding_positive(self) -> None:
         """Test detecting hardcoded returns."""
         original = """
-def calculate(x):
+def calculate(x) -> None:
     return x * 2 + 1
 """
         mutated = """
-def calculate(x):
+def calculate(x) -> None:
     if x == 5:
         return 11
     if x == 10:
@@ -217,14 +217,14 @@ def calculate(x):
     def test_detect_hardcoding_negative(self) -> None:
         """Test non-hardcoded code passes."""
         original = """
-def calculate(x):
+def calculate(x) -> None:
     result = []
     for i in range(x):
         result.append(i)
     return result
 """
         mutated = """
-def calculate(x):
+def calculate(x) -> None:
     return list(range(x))
 """
         assert not detect_hardcoding(original, mutated)
@@ -232,14 +232,14 @@ def calculate(x):
     def test_detect_functionality_deletion_positive(self) -> None:
         """Test detecting deleted functionality."""
         original = """
-def process(data):
+def process(data) -> None:
     validated = validate(data)
     transformed = transform(validated)
     enriched = enrich(transformed)
     return save(enriched)
 """
         mutated = """
-def process(data):
+def process(data) -> None:
     return data
 """
         assert detect_functionality_deletion(original, mutated)
@@ -247,14 +247,14 @@ def process(data):
     def test_detect_functionality_deletion_negative(self) -> None:
         """Test non-deleted functionality passes."""
         original = """
-def process(data):
+def process(data) -> None:
     result = []
     for item in data:
         result.append(item * 2)
     return result
 """
         mutated = """
-def process(data):
+def process(data) -> None:
     return [item * 2 for item in data]
 """
         assert not detect_functionality_deletion(original, mutated)
@@ -262,11 +262,11 @@ def process(data):
     def test_detect_pass_only_bodies_positive(self) -> None:
         """Test detecting pass-only function bodies."""
         original = """
-def calculate(x):
+def calculate(x) -> None:
     return x * 2
 """
         mutated = """
-def calculate(x):
+def calculate(x) -> None:
     pass
 """
         assert detect_pass_only_bodies(original, mutated)
@@ -274,11 +274,11 @@ def calculate(x):
     def test_detect_pass_only_bodies_negative(self) -> None:
         """Test non-empty functions pass."""
         original = """
-def calculate(x):
+def calculate(x) -> None:
     return x * 2
 """
         mutated = """
-def calculate(x):
+def calculate(x) -> None:
     return x + x
 """
         assert not detect_pass_only_bodies(original, mutated)
@@ -286,11 +286,11 @@ def calculate(x):
     def test_detect_test_gaming_positive(self) -> None:
         """Test detecting test gaming (many new conditionals)."""
         original = """
-def process(x):
+def process(x) -> None:
     return x * 2
 """
         mutated = """
-def process(x):
+def process(x) -> None:
     if x == 1:
         return 2
     if x == 2:
@@ -308,13 +308,13 @@ def process(x):
     def test_detect_test_gaming_negative(self) -> None:
         """Test normal code passes."""
         original = """
-def process(x):
+def process(x) -> None:
     if x > 0:
         return x * 2
     return 0
 """
         mutated = """
-def process(x):
+def process(x) -> None:
     if x > 0:
         return x + x
     return 0
@@ -343,7 +343,7 @@ class TestLayer1Syntax:
         """Test invalid original syntax fails layer 1."""
         mutation = MutationVector(
             original_code="def broken(",
-            mutated_code="def valid(): pass",
+            mutated_code="def valid() -> None: pass",
         )
         result = demon._check_layer1_syntax(mutation)
 
@@ -355,7 +355,7 @@ class TestLayer1Syntax:
     def test_invalid_mutated_syntax_fails(self, demon: TeleologicalDemon) -> None:
         """Test invalid mutated syntax fails layer 1."""
         mutation = MutationVector(
-            original_code="def valid(): pass",
+            original_code="def valid() -> None: pass",
             mutated_code="def broken(",
         )
         result = demon._check_layer1_syntax(mutation)
@@ -368,8 +368,8 @@ class TestLayer1Syntax:
     def test_diff_too_large_fails(self, demon: TeleologicalDemon) -> None:
         """Test oversized diff fails layer 1."""
         mutation = MutationVector(
-            original_code="def valid(): pass",
-            mutated_code="def valid(): pass",
+            original_code="def valid() -> None: pass",
+            mutated_code="def valid() -> None: pass",
             lines_changed=1000,
         )
         demon.config.max_diff_lines = 500
@@ -392,18 +392,18 @@ class TestLayer2Semantic:
         """Test mutations preserving public names pass layer 2."""
         mutation = MutationVector(
             original_code="""
-def public_func():
+def public_func() -> None:
     pass
 
 class PublicClass:
     pass
 """,
             mutated_code="""
-def public_func():
+def public_func() -> None:
     return 42
 
 class PublicClass:
-    def method(self):
+    def method(self) -> None:
         pass
 """,
         )
@@ -416,14 +416,14 @@ class PublicClass:
         """Test removing public names fails layer 2."""
         mutation = MutationVector(
             original_code="""
-def public_func():
+def public_func() -> None:
     pass
 
-def another_func():
+def another_func() -> None:
     pass
 """,
             mutated_code="""
-def another_func():
+def another_func() -> None:
     pass
 """,
         )
@@ -436,14 +436,14 @@ def another_func():
         """Test removing private names passes layer 2."""
         mutation = MutationVector(
             original_code="""
-def public_func():
+def public_func() -> None:
     pass
 
-def _private_func():
+def _private_func() -> None:
     pass
 """,
             mutated_code="""
-def public_func():
+def public_func() -> None:
     pass
 """,
         )
@@ -457,7 +457,7 @@ def public_func():
         demon = TeleologicalDemon(config=config)
 
         mutation = MutationVector(
-            original_code="def func(): pass",
+            original_code="def func() -> None: pass",
             mutated_code="# empty",
         )
 
@@ -472,8 +472,8 @@ def public_func():
 
         demon = TeleologicalDemon(type_checker=strict_checker)
         mutation = MutationVector(
-            original_code="def func(): pass",
-            mutated_code="def func(): pass",
+            original_code="def func() -> None: pass",
+            mutated_code="def func() -> None: pass",
         )
 
         result = demon._check_layer2_semantic(mutation)
@@ -491,8 +491,8 @@ class TestLayer3Teleological:
     def test_high_confidence_passes(self, demon: TeleologicalDemon) -> None:
         """Test high confidence mutation passes layer 3."""
         mutation = MutationVector(
-            original_code="def func(): pass",
-            mutated_code="def func(): return 1",
+            original_code="def func() -> None: pass",
+            mutated_code="def func() -> None: return 1",
             confidence=0.8,
             description="Add return value",
         )
@@ -504,8 +504,8 @@ class TestLayer3Teleological:
     def test_low_confidence_fails(self, demon: TeleologicalDemon) -> None:
         """Test low confidence mutation fails layer 3."""
         mutation = MutationVector(
-            original_code="def func(): pass",
-            mutated_code="def func(): return 1",
+            original_code="def func() -> None: pass",
+            mutated_code="def func() -> None: return 1",
             confidence=0.1,
         )
         demon.config.min_intent_alignment = 0.3
@@ -518,11 +518,11 @@ class TestLayer3Teleological:
         """Test parasitic pattern (hardcoding) fails layer 3."""
         mutation = MutationVector(
             original_code="""
-def calculate(x):
+def calculate(x) -> None:
     return x * 2 + 1
 """,
             mutated_code="""
-def calculate(x):
+def calculate(x) -> None:
     if x == 5:
         return 11
     if x == 10:
@@ -544,11 +544,11 @@ def calculate(x):
         """Test parasitic pattern (pass-only) fails layer 3."""
         mutation = MutationVector(
             original_code="""
-def calculate(x):
+def calculate(x) -> None:
     return x * 2
 """,
             mutated_code="""
-def calculate(x):
+def calculate(x) -> None:
     pass
 """,
             confidence=0.9,
@@ -567,8 +567,8 @@ def calculate(x):
         demon = TeleologicalDemon(config=config)
 
         mutation = MutationVector(
-            original_code="def func(): return 1",
-            mutated_code="def func(): pass",
+            original_code="def func() -> None: return 1",
+            mutated_code="def func() -> None: pass",
             confidence=0.1,
         )
 
@@ -579,8 +579,8 @@ def calculate(x):
         """Test layer 3 with Intent explicitly set."""
         demon = TeleologicalDemon(intent=simple_intent)
         mutation = MutationVector(
-            original_code="def func(): pass",
-            mutated_code="def func(): return 1",
+            original_code="def func() -> None: pass",
+            mutated_code="def func() -> None: return 1",
             confidence=0.7,
             description="Refactor to be more Pythonic",
         )
@@ -725,9 +725,7 @@ class TestFullSelection:
     """Tests for the full 5-layer selection pipeline."""
 
     def test_valid_phage_passes_all_layers(
-        self,
-        demon: TeleologicalDemon,
-        simple_phage: Phage,
+        self, demon: TeleologicalDemon, simple_phage: Phage
     ) -> None:
         """Test valid phage passes all layers."""
         result = demon.select(simple_phage)
@@ -753,7 +751,7 @@ class TestFullSelection:
         """Test rejection updates phage status."""
         phage = Phage(
             mutation=MutationVector(
-                original_code="def func(): pass",
+                original_code="def func() -> None: pass",
                 mutated_code="def (",  # Invalid syntax
             ),
         )
@@ -765,9 +763,7 @@ class TestFullSelection:
         assert phage.error is not None
 
     def test_stats_updated_on_selection(
-        self,
-        demon: TeleologicalDemon,
-        simple_phage: Phage,
+        self, demon: TeleologicalDemon, simple_phage: Phage
     ) -> None:
         """Test stats are updated on selection."""
         initial_total = demon.stats.total_checked
@@ -781,22 +777,22 @@ class TestFullSelection:
         phages = [
             Phage(
                 mutation=MutationVector(
-                    original_code="def f(): pass",
-                    mutated_code="def f(): return 1",
+                    original_code="def f() -> None: pass",
+                    mutated_code="def f() -> None: return 1",
                     enthalpy_delta=-0.1,
                     confidence=0.8,
                 )
             ),
             Phage(
                 mutation=MutationVector(
-                    original_code="def g(): pass",
+                    original_code="def g() -> None: pass",
                     mutated_code="def g(",  # Invalid
                 )
             ),
             Phage(
                 mutation=MutationVector(
-                    original_code="def h(): pass",
-                    mutated_code="def h(): return 2",
+                    original_code="def h() -> None: pass",
+                    mutated_code="def h() -> None: return 2",
                     enthalpy_delta=-0.1,
                     confidence=0.8,
                 )
@@ -815,15 +811,15 @@ class TestFullSelection:
         phages = [
             Phage(
                 mutation=MutationVector(
-                    original_code="def f(): pass",
-                    mutated_code="def f(): return 1",
+                    original_code="def f() -> None: pass",
+                    mutated_code="def f() -> None: return 1",
                     enthalpy_delta=-0.1,
                     confidence=0.8,
                 )
             ),
             Phage(
                 mutation=MutationVector(
-                    original_code="def g(): pass",
+                    original_code="def g() -> None: pass",
                     mutated_code="def g(",  # Invalid
                 )
             ),
@@ -841,8 +837,8 @@ class TestFullSelection:
         # This mutation would fail layer 2 normally
         phage = Phage(
             mutation=MutationVector(
-                original_code="def public(): pass",
-                mutated_code="def other(): pass",  # Public name removed
+                original_code="def public() -> None: pass",
+                mutated_code="def other() -> None: pass",  # Public name removed
             )
         )
 
@@ -910,8 +906,8 @@ class TestDemonIntegration:
         demon.add_parasitic_pattern(custom_pattern)
 
         mutation = MutationVector(
-            original_code="def func(): return 1",
-            mutated_code="def func(): return None",
+            original_code="def func() -> None: return 1",
+            mutated_code="def func() -> None: return None",
             confidence=0.9,
         )
 
@@ -921,9 +917,7 @@ class TestDemonIntegration:
         assert "always_none" in result.rejection_detail
 
     def test_intent_alignment_recorded_on_phage(
-        self,
-        demon: TeleologicalDemon,
-        simple_phage: Phage,
+        self, demon: TeleologicalDemon, simple_phage: Phage
     ) -> None:
         """Test intent alignment is recorded on phage."""
         demon.select(simple_phage)
@@ -932,9 +926,7 @@ class TestDemonIntegration:
         assert simple_phage.intent_alignment > 0
 
     def test_duration_recorded(
-        self,
-        demon: TeleologicalDemon,
-        simple_phage: Phage,
+        self, demon: TeleologicalDemon, simple_phage: Phage
     ) -> None:
         """Test selection duration is recorded."""
         result = demon.select(simple_phage)
@@ -977,8 +969,8 @@ class TestEdgeCases:
     def test_unicode_in_code(self, demon: TeleologicalDemon) -> None:
         """Test Unicode in code handling."""
         mutation = MutationVector(
-            original_code='def func(): return "hello 世界"',
-            mutated_code='def func(): return "hello 世界!"',
+            original_code='def func() -> None: return "hello 世界"',
+            mutated_code='def func() -> None: return "hello 世界!"',
             enthalpy_delta=-0.1,
             confidence=0.8,
         )
@@ -990,8 +982,8 @@ class TestEdgeCases:
     def test_very_large_diff(self, demon: TeleologicalDemon) -> None:
         """Test very large diff handling."""
         mutation = MutationVector(
-            original_code="def f(): pass",
-            mutated_code="def f(): pass",
+            original_code="def f() -> None: pass",
+            mutated_code="def f() -> None: pass",
             lines_changed=10000,
         )
         phage = Phage(mutation=mutation)

@@ -6,6 +6,8 @@ using graceful degradation when dependencies are unavailable.
 """
 
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
 
 import pytest
 from testing.analyst import CausalAnalyst, TestWitness
@@ -39,7 +41,7 @@ class MockAgent:
 
     name: str
 
-    async def invoke(self, x):
+    async def invoke(self, x: Any) -> str:
         return str(x) + f"[{self.name}]"
 
 
@@ -118,12 +120,12 @@ class TestEnhancedOracle:
 class TestPersistentWitnessStore:
     """Tests for Analyst × D-gent integration."""
 
-    def test_create_store(self, tmp_path) -> None:
+    def test_create_store(self, tmp_path: Path) -> None:
         """Should create persistent store."""
         store = PersistentWitnessStore(str(tmp_path / "witnesses.json"))
         assert len(store) == 0
 
-    def test_record_witness(self, tmp_path) -> None:
+    def test_record_witness(self, tmp_path: Path) -> None:
         """Should record witness."""
         store = PersistentWitnessStore(str(tmp_path / "witnesses.json"))
         witness = TestWitness(
@@ -136,7 +138,7 @@ class TestPersistentWitnessStore:
         assert len(store) == 1
 
     @pytest.mark.asyncio
-    async def test_query_witnesses(self, tmp_path) -> None:
+    async def test_query_witnesses(self, tmp_path: Path) -> None:
         """Should query witnesses."""
         store = PersistentWitnessStore(str(tmp_path / "witnesses.json"))
 
@@ -156,7 +158,7 @@ class TestPersistentWitnessStore:
 class TestPersistentAnalyst:
     """Tests for create_persistent_analyst."""
 
-    def test_create_analyst(self, tmp_path) -> None:
+    def test_create_analyst(self, tmp_path: Path) -> None:
         """Should create analyst with persistent store."""
         analyst = create_persistent_analyst(str(tmp_path / "witnesses.json"))
         assert isinstance(analyst, CausalAnalyst)
@@ -302,7 +304,7 @@ class TestEnhancedCortex:
         # Should return either Cortex or ObservedCortex
         assert cortex is not None
 
-    def test_create_with_all_options(self, tmp_path) -> None:
+    def test_create_with_all_options(self, tmp_path: Path) -> None:
         """Should create with all options."""
         cortex = create_enhanced_cortex(
             embedder_backend="auto",
@@ -329,7 +331,7 @@ class TestGracefulDegradation:
         # Should use fallback embedder
         assert oracle.embedder is not None
 
-    def test_analyst_without_dgent(self, tmp_path) -> None:
+    def test_analyst_without_dgent(self, tmp_path: Path) -> None:
         """Analyst should work without D-gent persistence."""
         analyst = create_persistent_analyst(str(tmp_path / "witnesses.json"))
         # Should still work, just without persistence

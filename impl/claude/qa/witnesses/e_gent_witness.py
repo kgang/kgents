@@ -702,7 +702,7 @@ def process_items(items):
 
         # Show rejection reasons
         if rejected:
-            reasons = {}
+            reasons: dict[str, int] = {}
             for p, r in results:
                 if not r.passed and r.rejection_reason:
                     key = r.rejection_reason.value

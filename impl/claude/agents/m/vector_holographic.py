@@ -465,10 +465,10 @@ async def create_vector_holographic_memory(
     """
     # Import here to avoid circular imports
     try:
-        from agents.l.vector_db import DgentVectorBackend
+        from agents.l.vector_db import DgentVectorBackend as DgentVectorBackend_
     except ImportError:
-        from impl.claude.agents.l.vector_db import (
-            DgentVectorBackend,  # type: ignore[no-redef]
+        from impl.claude.agents.l.vector_db import (  # type: ignore[no-redef]
+            DgentVectorBackend as DgentVectorBackend_,
         )
 
     config = VectorMemoryConfig(
@@ -478,7 +478,7 @@ async def create_vector_holographic_memory(
         **config_kwargs,
     )
 
-    vector_backend = DgentVectorBackend(
+    vector_backend = DgentVectorBackend_(
         dimension=config.dimension,
         persistence_path=persistence_path,
     )

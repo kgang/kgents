@@ -100,7 +100,7 @@ class FailingCountTool(Tool[TextInput, NumberOutput]):
         output_schema=NumberOutput,
     )
 
-    def __init__(self, fail_count: int = 2):
+    def __init__(self, fail_count: int = 2) -> None:
         self.fail_count = fail_count
         self.invocation_count = 0
 

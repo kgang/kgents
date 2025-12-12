@@ -53,7 +53,7 @@ from agents.psi.learning import AbstractionModel, ThompsonSamplingModel
 class MockLEmbedder:
     """Mock L-gent embedder for testing."""
 
-    def __init__(self, dim: int = 64):
+    def __init__(self, dim: int = 64) -> None:
         self.dim = dim
         self.call_count = 0
 

@@ -10,11 +10,16 @@ Tests:
 - Healing plan generation
 """
 
+from __future__ import annotations
+
+from typing import Any
+
 import pytest
 from protocols.mirror_stage import (
     EgoIdeal,
     HealingAction,
     HealingPlan,
+    MirrorStage,
     SystemCondition,
     create_mirror_stage,
     create_telemetry,
@@ -131,11 +136,11 @@ class TestDiagnosis:
     """Tests for MirrorStage.diagnose()."""
 
     @pytest.fixture
-    def mirror(self) -> create_mirror_stage:
+    def mirror(self) -> MirrorStage:
         return create_mirror_stage()
 
     @pytest.mark.asyncio
-    async def test_diagnose_coherent(self, mirror) -> None:
+    async def test_diagnose_coherent(self, mirror: MirrorStage) -> None:
         """Test diagnosis of healthy system."""
         telemetry = create_telemetry(
             agent_count=10,
@@ -152,7 +157,7 @@ class TestDiagnosis:
         assert state.severity == 0.0
 
     @pytest.mark.asyncio
-    async def test_diagnose_fragmentation(self, mirror) -> None:
+    async def test_diagnose_fragmentation(self, mirror: MirrorStage) -> None:
         """Test diagnosis of fragmented system."""
         telemetry = create_telemetry(
             agent_count=10,
@@ -165,7 +170,7 @@ class TestDiagnosis:
         assert state.primary_condition == SystemCondition.FRAGMENTATION
 
     @pytest.mark.asyncio
-    async def test_diagnose_conflict(self, mirror) -> None:
+    async def test_diagnose_conflict(self, mirror: MirrorStage) -> None:
         """Test diagnosis of conflicted system."""
         telemetry = create_telemetry(
             agent_count=10,
@@ -179,7 +184,7 @@ class TestDiagnosis:
         assert state.primary_condition == SystemCondition.CONFLICT
 
     @pytest.mark.asyncio
-    async def test_diagnose_multiple_conditions(self, mirror) -> None:
+    async def test_diagnose_multiple_conditions(self, mirror: MirrorStage) -> None:
         """Test diagnosis with multiple conditions."""
         telemetry = create_telemetry(
             agent_count=10,
@@ -203,11 +208,11 @@ class TestInterpretation:
     """Tests for MirrorStage.interpret()."""
 
     @pytest.fixture
-    def mirror(self) -> create_mirror_stage:
+    def mirror(self) -> MirrorStage:
         return create_mirror_stage()
 
     @pytest.mark.asyncio
-    async def test_interpret_fragmentation(self, mirror) -> None:
+    async def test_interpret_fragmentation(self, mirror: MirrorStage) -> None:
         """Test interpretation of fragmentation."""
         telemetry = create_telemetry(
             agent_count=10,
@@ -223,7 +228,9 @@ class TestInterpretation:
         assert interpretation.severity > 0
 
     @pytest.mark.asyncio
-    async def test_interpret_conflict_dialectic_impasse(self, mirror) -> None:
+    async def test_interpret_conflict_dialectic_impasse(
+        self, mirror: MirrorStage
+    ) -> None:
         """Test interpretation selects dialectic impasse for blocked messages."""
         telemetry = create_telemetry(
             agent_count=10,
@@ -238,7 +245,7 @@ class TestInterpretation:
         assert "Dialectic Impasse" in interpretation.metaphor_name
 
     @pytest.mark.asyncio
-    async def test_interpret_coherent(self, mirror) -> None:
+    async def test_interpret_coherent(self, mirror: MirrorStage) -> None:
         """Test interpretation of coherent system."""
         telemetry = create_telemetry(
             agent_count=10,
@@ -253,7 +260,7 @@ class TestInterpretation:
         assert "Integrated" in interpretation.metaphor_name
 
     @pytest.mark.asyncio
-    async def test_interpretation_has_opposites(self, mirror) -> None:
+    async def test_interpretation_has_opposites(self, mirror: MirrorStage) -> None:
         """Test interpretation includes implied opposite for dialectic."""
         telemetry = create_telemetry(
             agent_count=10,
@@ -273,11 +280,11 @@ class TestSynthesis:
     """Tests for MirrorStage.synthesize()."""
 
     @pytest.fixture
-    def mirror(self) -> create_mirror_stage:
+    def mirror(self) -> MirrorStage:
         return create_mirror_stage()
 
     @pytest.mark.asyncio
-    async def test_synthesize_produces_ideal(self, mirror) -> None:
+    async def test_synthesize_produces_ideal(self, mirror: MirrorStage) -> None:
         """Test synthesis produces an ego ideal."""
         telemetry = create_telemetry(
             agent_count=10,
@@ -294,7 +301,9 @@ class TestSynthesis:
         assert ideal.description
 
     @pytest.mark.asyncio
-    async def test_synthesize_has_preserve_negate_elevate(self, mirror) -> None:
+    async def test_synthesize_has_preserve_negate_elevate(
+        self, mirror: MirrorStage
+    ) -> None:
         """Test synthesis includes Hegelian sublation components for fragmented system."""
         telemetry = create_telemetry(
             agent_count=10,
@@ -315,7 +324,7 @@ class TestSynthesis:
         assert len(ideal.elevate) > 0
 
     @pytest.mark.asyncio
-    async def test_synthesize_target_metrics(self, mirror) -> None:
+    async def test_synthesize_target_metrics(self, mirror: MirrorStage) -> None:
         """Test synthesis includes target metrics."""
         telemetry = create_telemetry(
             agent_count=10,
@@ -336,11 +345,11 @@ class TestHealingPlan:
     """Tests for full healing plan generation."""
 
     @pytest.fixture
-    def mirror(self) -> create_mirror_stage:
+    def mirror(self) -> MirrorStage:
         return create_mirror_stage()
 
     @pytest.mark.asyncio
-    async def test_heal_fragmented_system(self, mirror) -> None:
+    async def test_heal_fragmented_system(self, mirror: MirrorStage) -> None:
         """Test healing plan for fragmented system."""
         telemetry = create_telemetry(
             agent_count=10,
@@ -359,7 +368,7 @@ class TestHealingPlan:
         assert HealingAction.RECONNECT in actions
 
     @pytest.mark.asyncio
-    async def test_heal_conflicted_system(self, mirror) -> None:
+    async def test_heal_conflicted_system(self, mirror: MirrorStage) -> None:
         """Test healing plan for conflicted system."""
         telemetry = create_telemetry(
             agent_count=10,
@@ -376,7 +385,7 @@ class TestHealingPlan:
         assert HealingAction.SYNTHESIZE in actions
 
     @pytest.mark.asyncio
-    async def test_heal_healthy_system(self, mirror) -> None:
+    async def test_heal_healthy_system(self, mirror: MirrorStage) -> None:
         """Test healing plan for healthy system."""
         telemetry = create_telemetry(
             agent_count=10,
@@ -393,7 +402,7 @@ class TestHealingPlan:
         assert HealingAction.MAINTAIN in actions
 
     @pytest.mark.asyncio
-    async def test_healing_steps_have_criteria(self, mirror) -> None:
+    async def test_healing_steps_have_criteria(self, mirror: MirrorStage) -> None:
         """Test healing steps include success criteria."""
         telemetry = create_telemetry(
             agent_count=10,
@@ -407,7 +416,7 @@ class TestHealingPlan:
             assert step.success_criteria
 
     @pytest.mark.asyncio
-    async def test_healing_steps_prioritized(self, mirror) -> None:
+    async def test_healing_steps_prioritized(self, mirror: MirrorStage) -> None:
         """Test healing steps are prioritized."""
         telemetry = create_telemetry(
             agent_count=10,
@@ -421,7 +430,7 @@ class TestHealingPlan:
         assert priorities == sorted(priorities)  # Ascending order
 
     @pytest.mark.asyncio
-    async def test_healing_history(self, mirror) -> None:
+    async def test_healing_history(self, mirror: MirrorStage) -> None:
         """Test healing history is tracked."""
         telemetry1 = create_telemetry(agent_count=10, active_agents=3)
         telemetry2 = create_telemetry(agent_count=10, active_agents=8)
@@ -436,11 +445,11 @@ class TestEstimatedImprovement:
     """Tests for estimated improvement calculation."""
 
     @pytest.fixture
-    def mirror(self) -> create_mirror_stage:
+    def mirror(self) -> MirrorStage:
         return create_mirror_stage()
 
     @pytest.mark.asyncio
-    async def test_improvement_positive_for_issues(self, mirror) -> None:
+    async def test_improvement_positive_for_issues(self, mirror: MirrorStage) -> None:
         """Test positive improvement estimated for issues."""
         telemetry = create_telemetry(
             agent_count=10,
@@ -453,7 +462,7 @@ class TestEstimatedImprovement:
         assert plan.estimated_improvement > 0
 
     @pytest.mark.asyncio
-    async def test_no_improvement_for_healthy(self, mirror) -> None:
+    async def test_no_improvement_for_healthy(self, mirror: MirrorStage) -> None:
         """Test no improvement needed for healthy system."""
         telemetry = create_telemetry(
             agent_count=10,

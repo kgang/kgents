@@ -6,6 +6,7 @@ Tests the (Intent, Contract) → SourceCode morphism.
 
 import ast
 
+import pytest
 from agents.f.contract import CompositionRule, Contract, Invariant, synthesize_contract
 from agents.f.intent import Dependency, DependencyType, Example, Intent, parse_intent
 from agents.f.prototype import (
@@ -188,7 +189,7 @@ import json
 from typing import Dict
 
 class WeatherAgent:
-    def __init__(self):
+    def __init__(self) -> None:
         self.cache = {}
 
     def invoke(self, location: str) -> Dict:
@@ -357,7 +358,7 @@ class WeatherAgent:
         code = f"""
 import subprocess
 
-def process(data):
+def process(data) -> None:
     very_long_line = "{long_suffix}"
     return data
 """

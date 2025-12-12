@@ -30,7 +30,10 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
+
+if TYPE_CHECKING:
+    from protocols.cli.glass import GlassResponse
 
 
 def cmd_dream(args: list[str]) -> int:
@@ -75,7 +78,7 @@ async def _async_dream(
 
     Uses Invoke RPC with self.dreamer.* paths for dream operations.
     """
-    from protocols.cli.glass import get_glass_client, GlassResponse
+    from protocols.cli.glass import GlassResponse, get_glass_client
 
     client = get_glass_client()
 
@@ -106,7 +109,7 @@ async def _show_briefing_via_glass(client: Any, brief_mode: bool = False) -> int
     try:
         from protocols.proto.generated import InvokeRequest
 
-        request = InvokeRequest(
+        request: Any = InvokeRequest(
             path="self.dreamer.manifest",
             lens="optics.identity",
         )
@@ -151,7 +154,7 @@ async def _run_rem_cycle_via_glass(client: Any) -> int:
     try:
         from protocols.proto.generated import InvokeRequest
 
-        request = InvokeRequest(
+        request: Any = InvokeRequest(
             path="self.dreamer.rem",
             lens="optics.identity",
         )
@@ -215,15 +218,19 @@ async def _answer_questions_via_glass(client: Any) -> int:
     try:
         from protocols.proto.generated import InvokeRequest
 
-        request = InvokeRequest(path="self.dreamer.manifest", lens="optics.identity")
+        request: Any = InvokeRequest(
+            path="self.dreamer.manifest", lens="optics.identity"
+        )
     except ImportError:
 
-        class SimpleRequest:
+        class SimpleRequestForManifest:
             def __init__(self, path: str, lens: str):
                 self.path = path
                 self.lens = lens
 
-        request = SimpleRequest(path="self.dreamer.manifest", lens="optics.identity")
+        request = SimpleRequestForManifest(
+            path="self.dreamer.manifest", lens="optics.identity"
+        )
 
     response = await client.invoke(
         method="Invoke",
@@ -280,20 +287,20 @@ async def _answer_questions_via_glass(client: Any) -> int:
         try:
             from protocols.proto.generated import InvokeRequest
 
-            answer_request = InvokeRequest(
+            answer_request: Any = InvokeRequest(
                 path="self.dreamer.answer",
                 lens="optics.identity",
                 kwargs={"answers": json.dumps(answers)},
             )
         except ImportError:
 
-            class SimpleRequest:
-                def __init__(self, path: str, lens: str, kwargs: dict):
+            class SimpleRequestWithKwargs:
+                def __init__(self, path: str, lens: str, kwargs: dict[str, Any]):
                     self.path = path
                     self.lens = lens
                     self.kwargs = kwargs
 
-            answer_request = SimpleRequest(
+            answer_request = SimpleRequestWithKwargs(
                 path="self.dreamer.answer",
                 lens="optics.identity",
                 kwargs={"answers": json.dumps(answers)},
@@ -320,7 +327,8 @@ def _extract_dream_data(data: Any) -> dict[str, Any]:
     # Handle InvokeResponse
     if hasattr(data, "result_json"):
         try:
-            return json.loads(data.result_json)
+            parsed = json.loads(data.result_json)
+            return parsed if isinstance(parsed, dict) else {}
         except (json.JSONDecodeError, TypeError):
             pass
 
@@ -329,13 +337,16 @@ def _extract_dream_data(data: Any) -> dict[str, Any]:
         try:
             from google.protobuf.json_format import MessageToDict
 
-            return MessageToDict(data, preserving_proto_field_name=True)
+            return cast(
+                dict[str, Any], MessageToDict(data, preserving_proto_field_name=True)
+            )
         except ImportError:
             pass
 
     # Dataclass
     if hasattr(data, "to_dict"):
-        return data.to_dict()
+        result = data.to_dict()
+        return result if isinstance(result, dict) else {}
 
     return {"raw": str(data)}
 
@@ -349,7 +360,7 @@ def _extract_invoke_result(data: Any) -> dict[str, Any]:
 
     if hasattr(data, "result_json"):
         try:
-            return json.loads(data.result_json)
+            return cast(dict[str, Any], json.loads(data.result_json))
         except (json.JSONDecodeError, TypeError):
             pass
 
@@ -427,7 +438,7 @@ def _priority_label(priority: int) -> str:
 def _show_ghost_dream_state() -> int:
     """Show cached dream state for debugging."""
     try:
-        from protocols.cli.glass import GhostCache, GHOST_DIR
+        from protocols.cli.glass import GHOST_DIR, GhostCache
 
         cache = GhostCache()
         data, age, timestamp = cache.read("dream")

@@ -138,7 +138,7 @@ class MCPResponse:
     error: dict[str, Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        response = {"jsonrpc": self.jsonrpc, "id": self.id}
+        response: dict[str, Any] = {"jsonrpc": self.jsonrpc, "id": self.id}
         if self.error:
             response["error"] = self.error
         else:
@@ -161,12 +161,19 @@ async def handle_check(
     """
     # Import lazily to avoid circular imports
     try:
-        from ..bootstrap.principles import evaluate_principles
+        from ..bootstrap.principles import evaluate_against_principles
 
-        result = evaluate_principles(target, principles)
+        result_report = await evaluate_against_principles(target)
+
+        # Convert EvaluationReport to dict format
+        result = {
+            "approved": result_report.overall_verdict.value == "accept",
+            "verdict": result_report.overall_verdict.value,
+            "summary": result_report.summary,
+        }
 
         return MCPToolResult(
-            success=result.get("approved", False),
+            success=bool(result.get("approved", False)),
             content=json.dumps(result, indent=2),
             content_type="application/json",
         )
@@ -186,19 +193,31 @@ async def handle_judge(input_text: str, strictness: str = "high") -> MCPToolResu
     Maps to: kgents judge "<input>" --strictness=<level>
     """
     try:
-        from ..bootstrap.principles import judge_against_principles
+        from ..bootstrap.principles import evaluate_against_principles
 
-        result = judge_against_principles(input_text, strictness)
+        result_report = await evaluate_against_principles(input_text)
 
-        verdict = result.get("verdict", "UNKNOWN")
-        formatted = f"Verdict: {verdict}\n\nScores:\n"
-        for principle, score in result.get("scores", {}).items():
-            formatted += f"  - {principle}: {score:.2f}\n"
+        verdict = result_report.overall_verdict.value
+        formatted = f"Verdict: {verdict}\n\nEvaluations:\n"
+        for eval in result_report.evaluations:
+            formatted += f"  - {eval.principle.value}: {eval.verdict.value} ({eval.confidence:.2f})\n"
+        formatted += f"\nSummary: {result_report.summary}\n"
 
         return MCPToolResult(
-            success=verdict == "APPROVED",
+            success=verdict == "accept",
             content=formatted,
-            metadata=result,
+            metadata={
+                "verdict": verdict,
+                "summary": result_report.summary,
+                "evaluations": [
+                    {
+                        "principle": e.principle.value,
+                        "verdict": e.verdict.value,
+                        "confidence": e.confidence,
+                    }
+                    for e in result_report.evaluations
+                ],
+            },
         )
     except ImportError:
         # Placeholder
@@ -482,24 +501,24 @@ async def handle_psi(problem: str, domain: str = "general") -> MCPToolResult:
     """
     try:
         from agents.psi import (
-            Novel,
-            PsychopompAgent,
-            create_standard_library,
+            MetaphorEngine,
+            Problem,
+            create_standard_corpus,
         )
 
         # Create the problem specification
-        novel = Novel(
-            problem_id=f"mcp_{hash(problem) % 10000:04d}",
+        problem_obj = Problem(
+            id=f"mcp_{hash(problem) % 10000:04d}",
             description=problem,
             domain=domain,
         )
 
-        # Create psychopomp agent with standard metaphor library
-        library = create_standard_library()
-        agent = PsychopompAgent(library=library)
+        # Create metaphor engine with standard corpus
+        corpus = create_standard_corpus()
+        engine = MetaphorEngine(corpus=corpus)
 
         # Solve the problem (synchronous call)
-        result = agent.solve(novel)
+        result = engine.solve_problem(problem_obj)
 
         # Format output
         output = f"Problem: {problem}\n"
@@ -507,21 +526,19 @@ async def handle_psi(problem: str, domain: str = "general") -> MCPToolResult:
 
         if result.success:
             output += "✅ Solution Found!\n\n"
-            if result.metaphor_used:
-                output += f"Metaphor Used: {result.metaphor_used.name}\n"
-                output += f"Metaphor Domain: {result.metaphor_used.domain}\n"
+            if result.metaphor_solution:
+                output += f"Metaphor Used: {result.metaphor_solution.projection.metaphor.name}\n"
+                output += f"Metaphor Domain: {result.metaphor_solution.projection.metaphor.domain}\n"
+                output += f"\nReasoning:\n{result.metaphor_solution.reasoning}\n"
 
-            if result.reified_solution:
-                output += (
-                    f"\nSolution:\n{result.reified_solution.solution_description}\n"
-                )
+            if result.translated_answer:
+                output += f"\nSolution:\n{result.translated_answer}\n"
 
             if result.distortion:
-                output += f"\nDistortion: {result.distortion.delta:.2f}\n"
+                output += f"\nDistortion: {result.distortion.total:.2f}\n"
         else:
             output += "❌ No solution found\n"
-            output += f"Reason: {result.failure_reason or 'Unknown'}\n"
-            output += f"\nCandidates tried: {result.candidates_tried}\n"
+            output += "Reason: Distortion too high or no suitable metaphor found\n"
 
         return MCPToolResult(
             success=result.success,
@@ -529,10 +546,10 @@ async def handle_psi(problem: str, domain: str = "general") -> MCPToolResult:
             metadata={
                 "problem": problem,
                 "domain": domain,
-                "metaphor_used": result.metaphor_used.name
-                if result.metaphor_used
+                "metaphor_used": result.metaphor_solution.projection.metaphor.name
+                if result.metaphor_solution
                 else None,
-                "iterations": result.iterations,
+                "distortion": result.distortion.total if result.distortion else None,
             },
         )
     except ImportError as e:

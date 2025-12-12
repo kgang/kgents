@@ -9,8 +9,10 @@ Phase 3 of test evolution plan:
 - Type strategies for boundary testing
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import TypeVar
+from typing import Any, TypeVar
 
 # Hypothesis imports are optional
 try:
@@ -20,10 +22,10 @@ try:
     HYPOTHESIS_AVAILABLE = True
 except ImportError:
     HYPOTHESIS_AVAILABLE = False
-    st = None  # type: ignore
-    given = None  # type: ignore
-    settings = None  # type: ignore
-    assume = None  # type: ignore
+    st = None
+    given = None
+    settings = None
+    assume = None
 
 
 A = TypeVar("A")
@@ -55,9 +57,11 @@ if HYPOTHESIS_AVAILABLE:
                 return x + self._offset
 
             def __rshift__(self, other):
-                from bootstrap import compose
+                from typing import cast
 
-                return compose(self, other)
+                from bootstrap import Agent, compose
+
+                return compose(cast(Agent[Any, Any], self), other)
 
         name = draw(st.text(min_size=1, max_size=10, alphabet="abcdefghijklmnop"))
         offset = draw(st.integers(min_value=-100, max_value=100))
@@ -133,8 +137,8 @@ if HYPOTHESIS_AVAILABLE:
     # Input Strategies
     # =============================================================================
 
-    @st.composite
-    def json_like_values(draw):
+    @st.composite  # type: ignore[untyped-decorator]
+    def json_like_values(draw: Any) -> Any:
         """Generate JSON-compatible values for testing."""
         return draw(
             st.one_of(
@@ -150,8 +154,8 @@ if HYPOTHESIS_AVAILABLE:
             )
         )
 
-    @st.composite
-    def boundary_inputs(draw):
+    @st.composite  # type: ignore[untyped-decorator]
+    def boundary_inputs(draw: Any) -> Any:
         """Generate boundary-case inputs for stress testing."""
         return draw(
             st.one_of(
@@ -170,34 +174,34 @@ if HYPOTHESIS_AVAILABLE:
 else:
     # Fallback stubs when hypothesis is not available
 
-    def simple_agents(*args, **kwargs):
+    def simple_agents(*args: Any, **kwargs: Any) -> None:
         """Stub: hypothesis not available."""
         raise ImportError("hypothesis package required for property-based testing")
 
-    def agent_chains(*args, **kwargs):
+    def agent_chains(*args: Any, **kwargs: Any) -> None:
         """Stub: hypothesis not available."""
         raise ImportError("hypothesis package required for property-based testing")
 
-    def valid_dna(*args, **kwargs):
+    def valid_dna(*args: Any, **kwargs: Any) -> None:
         """Stub: hypothesis not available."""
         raise ImportError("hypothesis package required for property-based testing")
 
-    def invalid_dna(*args, **kwargs):
+    def invalid_dna(*args: Any, **kwargs: Any) -> None:
         """Stub: hypothesis not available."""
         raise ImportError("hypothesis package required for property-based testing")
 
-    def type_names(*args, **kwargs):
+    def type_names(*args: Any, **kwargs: Any) -> None:
         """Stub: hypothesis not available."""
         raise ImportError("hypothesis package required for property-based testing")
 
-    def hypothesis_dna(*args, **kwargs):
+    def hypothesis_dna(*args: Any, **kwargs: Any) -> None:
         """Stub: hypothesis not available."""
         raise ImportError("hypothesis package required for property-based testing")
 
-    def json_like_values(*args, **kwargs):
+    def json_like_values(*args: Any, **kwargs: Any) -> None:
         """Stub: hypothesis not available."""
         raise ImportError("hypothesis package required for property-based testing")
 
-    def boundary_inputs(*args, **kwargs):
+    def boundary_inputs(*args: Any, **kwargs: Any) -> None:
         """Stub: hypothesis not available."""
         raise ImportError("hypothesis package required for property-based testing")

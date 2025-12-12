@@ -35,6 +35,7 @@ class AgentPhase(Enum):
 
     PENDING = "Pending"
     RUNNING = "Running"
+    DEGRADED = "Degraded"
     FAILED = "Failed"
     TERMINATING = "Terminating"
 

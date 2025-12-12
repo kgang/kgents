@@ -396,7 +396,7 @@ class RedTeam:
             survivors = population[: self.population_size // 2]
 
             # Generate offspring
-            offspring = []
+            offspring: list[AdversarialInput] = []
             while len(offspring) < self.population_size // 2:
                 # Select parents
                 parent_a = self._tournament_select(survivors)

@@ -11,6 +11,7 @@ Tests cover:
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
 import pytest
 
@@ -47,7 +48,7 @@ from ..types import (
 class TestFlowStep:
     """Tests for FlowStep dataclass."""
 
-    def test_create_minimal(self):
+    def test_create_minimal(self) -> None:
         """Create a minimal step."""
         step = FlowStep(id="parse", genus="P-gent", operation="extract")
         assert step.id == "parse"
@@ -56,7 +57,7 @@ class TestFlowStep:
         assert step.input is None
         assert step.args == {}
 
-    def test_create_with_all_fields(self):
+    def test_create_with_all_fields(self) -> None:
         """Create step with all fields."""
         step = FlowStep(
             id="judge",
@@ -74,7 +75,7 @@ class TestFlowStep:
         assert step.condition == "parse.success"
         assert step.debug is True
 
-    def test_to_dict(self):
+    def test_to_dict(self) -> None:
         """Convert step to dict."""
         step = FlowStep(id="test", genus="T-gent", operation="verify")
         d = step.to_dict()
@@ -82,7 +83,7 @@ class TestFlowStep:
         assert d["genus"] == "T-gent"
         assert d["operation"] == "verify"
 
-    def test_from_dict(self):
+    def test_from_dict(self) -> None:
         """Create step from dict."""
         data = {
             "id": "parse",
@@ -94,7 +95,7 @@ class TestFlowStep:
         assert step.id == "parse"
         assert step.debug is True
 
-    def test_round_trip(self):
+    def test_round_trip(self) -> None:
         """Dict round-trip preserves data."""
         step = FlowStep(
             id="refine",
@@ -118,7 +119,7 @@ class TestFlowStep:
 class TestFlowfile:
     """Tests for Flowfile dataclass."""
 
-    def test_create_minimal(self):
+    def test_create_minimal(self) -> None:
         """Create minimal flowfile."""
         flow = Flowfile(
             name="Test Flow",
@@ -127,7 +128,7 @@ class TestFlowfile:
         assert flow.name == "Test Flow"
         assert len(flow.steps) == 1
 
-    def test_to_dict(self):
+    def test_to_dict(self) -> None:
         """Convert flowfile to dict."""
         flow = Flowfile(
             version="1.0",
@@ -145,7 +146,7 @@ class TestFlowfile:
         assert d["name"] == "Review Pipeline"
         assert len(d["steps"]) == 2
 
-    def test_from_dict(self):
+    def test_from_dict(self) -> None:
         """Create flowfile from dict."""
         data = {
             "version": "1.0",
@@ -158,7 +159,7 @@ class TestFlowfile:
         assert flow.name == "Test"
         assert len(flow.steps) == 1
 
-    def test_input_config(self):
+    def test_input_config(self) -> None:
         """Input configuration parsing."""
         data = {
             "name": "Test",
@@ -172,7 +173,7 @@ class TestFlowfile:
         assert flow.input.type == "file"
         assert ".py" in flow.input.extensions
 
-    def test_output_config(self):
+    def test_output_config(self) -> None:
         """Output configuration parsing."""
         data = {
             "name": "Test",
@@ -195,24 +196,24 @@ class TestFlowfile:
 class TestTemplateRendering:
     """Tests for Jinja2 template rendering."""
 
-    def test_simple_variable(self):
+    def test_simple_variable(self) -> None:
         """Render simple variable."""
         result = render_template("Hello {{ name }}", {"name": "World"})
         assert result == "Hello World"
 
-    def test_default_value(self):
+    def test_default_value(self) -> None:
         """Render with default value."""
         result = render_template("Level: {{ strictness | default('high') }}", {})
         assert result == "Level: high"
 
-    def test_override_default(self):
+    def test_override_default(self) -> None:
         """Override default value."""
         result = render_template(
             "Level: {{ strictness | default('high') }}", {"strictness": "low"}
         )
         assert result == "Level: low"
 
-    def test_multiple_variables(self):
+    def test_multiple_variables(self) -> None:
         """Render multiple variables."""
         template = "{{ action }} {{ target }} with {{ tool }}"
         result = render_template(
@@ -225,7 +226,7 @@ class TestTemplateRendering:
         )
         assert result == "parse code with P-gent"
 
-    def test_render_flowfile_args(self):
+    def test_render_flowfile_args(self) -> None:
         """Render flowfile step args."""
         flow = Flowfile(
             name="Test",
@@ -252,7 +253,7 @@ class TestYAMLParsing:
     """Tests for YAML flowfile parsing."""
 
     @pytest.fixture
-    def sample_yaml(self):
+    def sample_yaml(self) -> Any:
         return """
 version: "1.0"
 name: "Code Review Pipeline"
@@ -294,7 +295,7 @@ on_error:
   strategy: halt
 """
 
-    def test_parse_sample_yaml(self, sample_yaml):
+    def test_parse_sample_yaml(self, sample_yaml: str) -> None:
         """Parse complete YAML flowfile."""
         try:
             import yaml
@@ -309,7 +310,7 @@ on_error:
         assert flow.steps[1].input == "from:parse"
         assert flow.steps[2].condition == "judge.verdict != 'APPROVED'"
 
-    def test_parse_minimal_yaml(self):
+    def test_parse_minimal_yaml(self) -> None:
         """Parse minimal YAML."""
         try:
             import yaml
@@ -336,7 +337,7 @@ steps:
 class TestValidation:
     """Tests for flowfile validation."""
 
-    def test_valid_flowfile(self):
+    def test_valid_flowfile(self) -> None:
         """Valid flowfile passes validation."""
         flow = Flowfile(
             name="Valid",
@@ -350,13 +351,13 @@ class TestValidation:
         errors = validate_flowfile(flow)
         assert errors == []
 
-    def test_empty_steps(self):
+    def test_empty_steps(self) -> None:
         """Empty steps fails validation."""
         flow = Flowfile(name="Empty", steps=[])
         errors = validate_flowfile(flow)
         assert any("at least one step" in e for e in errors)
 
-    def test_duplicate_step_ids(self):
+    def test_duplicate_step_ids(self) -> None:
         """Duplicate step IDs fail validation."""
         flow = Flowfile(
             name="Dupe",
@@ -368,7 +369,7 @@ class TestValidation:
         errors = validate_flowfile(flow)
         assert any("Duplicate" in e for e in errors)
 
-    def test_invalid_reference(self):
+    def test_invalid_reference(self) -> None:
         """Invalid step reference fails validation."""
         flow = Flowfile(
             name="BadRef",
@@ -385,7 +386,7 @@ class TestValidation:
         errors = validate_flowfile(flow)
         assert any("unknown step" in e for e in errors)
 
-    def test_invalid_genus(self):
+    def test_invalid_genus(self) -> None:
         """Invalid genus fails validation."""
         flow = Flowfile(
             name="BadGenus",
@@ -405,7 +406,7 @@ class TestValidation:
 class TestDependencyResolution:
     """Tests for dependency graph and topological sort."""
 
-    def test_build_dependency_graph(self):
+    def test_build_dependency_graph(self) -> None:
         """Build dependency graph from flowfile."""
         flow = Flowfile(
             name="Test",
@@ -427,7 +428,7 @@ class TestDependencyResolution:
         assert graph["judge"] == ["parse"]
         assert graph["refine"] == ["judge"]
 
-    def test_topological_sort_linear(self):
+    def test_topological_sort_linear(self) -> None:
         """Topological sort of linear pipeline."""
         flow = Flowfile(
             name="Linear",
@@ -440,7 +441,7 @@ class TestDependencyResolution:
         order = topological_sort(flow)
         assert order.index("a") < order.index("b") < order.index("c")
 
-    def test_topological_sort_parallel(self):
+    def test_topological_sort_parallel(self) -> None:
         """Topological sort with parallel steps."""
         flow = Flowfile(
             name="Parallel",
@@ -457,7 +458,7 @@ class TestDependencyResolution:
         order = topological_sort(flow)
         assert order[0] == "root"
 
-    def test_circular_dependency_detected(self):
+    def test_circular_dependency_detected(self) -> None:
         """Circular dependency raises error."""
         flow = Flowfile(
             name="Circular",
@@ -479,9 +480,9 @@ class TestDependencyResolution:
 class TestConditionEvaluation:
     """Tests for condition expression evaluation."""
 
-    def test_simple_equality(self):
+    def test_simple_equality(self) -> None:
         """Evaluate simple equality."""
-        results = {
+        results: dict[str, StepResult] = {
             "judge": StepResult(
                 step_id="judge",
                 status=StepStatus.COMPLETED,
@@ -491,7 +492,7 @@ class TestConditionEvaluation:
         assert evaluate_condition("judge.verdict == 'APPROVED'", results) is True
         assert evaluate_condition("judge.verdict == 'REJECTED'", results) is False
 
-    def test_inequality(self):
+    def test_inequality(self) -> None:
         """Evaluate inequality."""
         results = {
             "judge": StepResult(
@@ -502,7 +503,7 @@ class TestConditionEvaluation:
         }
         assert evaluate_condition("judge.verdict != 'APPROVED'", results) is True
 
-    def test_not_prefix(self):
+    def test_not_prefix(self) -> None:
         """Evaluate with not prefix."""
         results = {
             "parse": StepResult(
@@ -513,16 +514,16 @@ class TestConditionEvaluation:
         }
         assert evaluate_condition("not parse.valid", results) is False
 
-    def test_success_check(self):
+    def test_success_check(self) -> None:
         """Evaluate success check."""
         results = {
             "step1": StepResult(step_id="step1", status=StepStatus.COMPLETED),
         }
         assert evaluate_condition("step1.success", results) is True
 
-    def test_missing_step(self):
+    def test_missing_step(self) -> None:
         """Missing step returns default."""
-        results = {}
+        results: dict[str, Any] = {}
         # Default behavior for missing step
         assert evaluate_condition("missing.field == 'value'", results) is False
 
@@ -536,11 +537,11 @@ class TestFlowEngine:
     """Tests for flow execution engine."""
 
     @pytest.fixture
-    def engine(self):
+    def engine(self) -> Any:
         return FlowEngine()
 
     @pytest.fixture
-    def simple_flow(self):
+    def simple_flow(self) -> Any:
         return Flowfile(
             name="Simple",
             steps=[
@@ -549,7 +550,7 @@ class TestFlowEngine:
         )
 
     @pytest.fixture
-    def multi_step_flow(self):
+    def multi_step_flow(self) -> Any:
         return Flowfile(
             name="MultiStep",
             steps=[
@@ -561,7 +562,7 @@ class TestFlowEngine:
         )
 
     @pytest.mark.asyncio
-    async def test_execute_simple_flow(self, engine, simple_flow):
+    async def test_execute_simple_flow(self, engine: Any, simple_flow: Any) -> None:
         """Execute a simple single-step flow."""
         result = await engine.execute(simple_flow, "test input")
         assert result.status == FlowStatus.COMPLETED
@@ -569,7 +570,9 @@ class TestFlowEngine:
         assert result.total_steps == 1
 
     @pytest.mark.asyncio
-    async def test_execute_multi_step_flow(self, engine, multi_step_flow):
+    async def test_execute_multi_step_flow(
+        self, engine: Any, multi_step_flow: Any
+    ) -> None:
         """Execute a multi-step flow."""
         result = await engine.execute(multi_step_flow, "test input")
         assert result.status == FlowStatus.COMPLETED
@@ -577,7 +580,7 @@ class TestFlowEngine:
         assert len(result.step_results) == 2
 
     @pytest.mark.asyncio
-    async def test_step_input_passing(self, engine, multi_step_flow):
+    async def test_step_input_passing(self, engine: Any, multi_step_flow: Any) -> None:
         """Verify input is passed between steps."""
         result = await engine.execute(multi_step_flow, "test input")
 
@@ -587,7 +590,7 @@ class TestFlowEngine:
         assert judge_result.output is not None
 
     @pytest.mark.asyncio
-    async def test_conditional_skip(self, engine):
+    async def test_conditional_skip(self, engine: Any) -> None:
         """Step skipped when condition not met."""
         flow = Flowfile(
             name="Conditional",
@@ -610,7 +613,7 @@ class TestFlowEngine:
         assert refine_results[0].status == StepStatus.SKIPPED
 
     @pytest.mark.asyncio
-    async def test_flow_result_timing(self, engine, simple_flow):
+    async def test_flow_result_timing(self, engine: Any, simple_flow: Any) -> None:
         """Flow result includes timing information."""
         result = await engine.execute(simple_flow, "test")
         assert result.started_at is not None
@@ -619,7 +622,7 @@ class TestFlowEngine:
         assert result.duration_ms >= 0
 
     @pytest.mark.asyncio
-    async def test_step_result_timing(self, engine, simple_flow):
+    async def test_step_result_timing(self, engine: Any, simple_flow: Any) -> None:
         """Step results include timing information."""
         result = await engine.execute(simple_flow, "test")
         step_result = result.step_results[0]
@@ -636,7 +639,7 @@ class TestFlowEngine:
 class TestVisualization:
     """Tests for flow visualization."""
 
-    def test_visualize_linear_flow(self):
+    def test_visualize_linear_flow(self) -> None:
         """Visualize a linear pipeline."""
         flow = Flowfile(
             name="Linear",
@@ -650,13 +653,13 @@ class TestVisualization:
         assert "[judge]" in viz
         assert "──▶" in viz
 
-    def test_visualize_empty_flow(self):
+    def test_visualize_empty_flow(self) -> None:
         """Visualize empty flow."""
         flow = Flowfile(name="Empty", steps=[])
         viz = visualize_flow(flow)
         assert "empty" in viz.lower()
 
-    def test_explain_flow(self):
+    def test_explain_flow(self) -> None:
         """Explain flow in human-readable form."""
         flow = Flowfile(
             name="Review Pipeline",
@@ -689,7 +692,7 @@ class TestVisualization:
 class TestFlowResult:
     """Tests for FlowResult dataclass."""
 
-    def test_completed_steps_count(self):
+    def test_completed_steps_count(self) -> None:
         """Count completed steps correctly."""
         result = FlowResult(
             flow_name="Test",
@@ -703,7 +706,7 @@ class TestFlowResult:
         assert result.completed_steps == 2
         assert result.total_steps == 3
 
-    def test_to_dict(self):
+    def test_to_dict(self) -> None:
         """Convert result to dict."""
         result = FlowResult(
             flow_name="Test",
@@ -716,7 +719,7 @@ class TestFlowResult:
         assert d["status"] == "completed"
         assert d["duration_ms"] == 1000.0
 
-    def test_failed_result(self):
+    def test_failed_result(self) -> None:
         """Failed result includes error info."""
         result = FlowResult(
             flow_name="Test",
@@ -745,7 +748,7 @@ class TestFlowResult:
 class TestCLICommands:
     """Unit tests for CLI command handlers."""
 
-    def test_format_flow_result_completed(self):
+    def test_format_flow_result_completed(self) -> None:
         """Format completed flow result."""
         from ..commands import format_flow_result_rich
 
@@ -766,7 +769,7 @@ class TestCLICommands:
         assert "parse" in output
         assert "judge" in output
 
-    def test_format_flow_result_failed(self):
+    def test_format_flow_result_failed(self) -> None:
         """Format failed flow result."""
         from ..commands import format_flow_result_rich
 
@@ -785,7 +788,7 @@ class TestCLICommands:
         assert "FAILED" in output
         assert "Parse error" in output
 
-    def test_format_validation_valid(self):
+    def test_format_validation_valid(self) -> None:
         """Format valid flowfile validation result."""
         from ..commands import format_validation_result_rich
 
@@ -793,7 +796,7 @@ class TestCLICommands:
         assert "valid" in output.lower()
         assert "test.yaml" in output
 
-    def test_format_validation_invalid(self):
+    def test_format_validation_invalid(self) -> None:
         """Format invalid flowfile validation result."""
         from ..commands import format_validation_result_rich
 

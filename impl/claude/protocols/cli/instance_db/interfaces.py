@@ -11,7 +11,7 @@ These interfaces abstract the storage backend, enabling:
 Design: Repository Pattern with async support.
 """
 
-from contextlib import asynccontextmanager
+from contextlib import AbstractAsyncContextManager
 from dataclasses import dataclass
 from typing import Any, AsyncIterator, Protocol, runtime_checkable
 
@@ -46,7 +46,7 @@ class IRelationalStore(Protocol):
 
     async def fetch_one(
         self, query: str, params: dict[str, Any] | None = None
-    ) -> dict | None:
+    ) -> dict[str, Any] | None:
         """
         Fetch single row as dict.
 
@@ -87,8 +87,7 @@ class IRelationalStore(Protocol):
         """
         ...
 
-    @asynccontextmanager
-    async def transaction(self) -> AsyncIterator["IRelationalStore"]:
+    def transaction(self) -> "AbstractAsyncContextManager[IRelationalStore]":
         """
         Begin transaction, auto-commit on success, rollback on exception.
 

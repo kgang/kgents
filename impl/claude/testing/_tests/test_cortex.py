@@ -9,8 +9,11 @@ Tests cover all five pillars:
 5. Red Team - Adversarial evolution
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any
 
 import pytest
 from testing.analyst import (
@@ -64,7 +67,7 @@ class MockAgent:
     name: str
     offset: int = 0
 
-    async def invoke(self, x):
+    async def invoke(self, x: Any) -> Any:
         if isinstance(x, int):
             return x + self.offset
         return str(x) + f"[{self.name}]"
@@ -76,7 +79,7 @@ class EchoAgent:
 
     name: str = "Echo"
 
-    async def invoke(self, x):
+    async def invoke(self, x: Any) -> Any:
         return x
 
 
@@ -86,7 +89,7 @@ class UpperAgent:
 
     name: str = "Upper"
 
-    async def invoke(self, x):
+    async def invoke(self, x: Any) -> str:
         return str(x).upper()
 
 
@@ -96,7 +99,7 @@ class ReverseAgent:
 
     name: str = "Reverse"
 
-    async def invoke(self, x):
+    async def invoke(self, x: Any) -> str:
         return str(x)[::-1]
 
 
@@ -106,7 +109,7 @@ class FailingAgent:
 
     name: str = "Failing"
 
-    async def invoke(self, x):
+    async def invoke(self, x: Any) -> Any:
         if "fail" in str(x).lower():
             raise ValueError("Triggered failure")
         return x
@@ -119,7 +122,7 @@ class SlowAgent:
     name: str = "Slow"
     delay_ms: float = 100
 
-    async def invoke(self, x):
+    async def invoke(self, x: Any) -> Any:
         import asyncio
 
         await asyncio.sleep(self.delay_ms / 1000)
@@ -139,7 +142,7 @@ class TestOracle:
         return Oracle()
 
     @pytest.mark.asyncio
-    async def test_semantic_equivalence_identical(self, oracle) -> None:
+    async def test_semantic_equivalence_identical(self, oracle: Oracle) -> None:
         """Identical outputs should be semantically equivalent."""
         # Test the similarity function directly
         sim = await oracle.similarity("hello world", "hello world")
@@ -155,7 +158,7 @@ class TestOracle:
         assert result is True  # With threshold 0, identical should pass
 
     @pytest.mark.asyncio
-    async def test_semantic_equivalence_different(self, oracle) -> None:
+    async def test_semantic_equivalence_different(self, oracle: Oracle) -> None:
         """Very different outputs should not be equivalent."""
         result = await oracle.semantically_equivalent(
             "hello world", "goodbye moon universe stars"
@@ -164,13 +167,13 @@ class TestOracle:
         assert isinstance(result, bool)
 
     @pytest.mark.asyncio
-    async def test_similarity_range(self, oracle) -> None:
+    async def test_similarity_range(self, oracle: Oracle) -> None:
         """Similarity should be in [0, 1]."""
         sim = await oracle.similarity("hello", "world")
         assert 0 <= sim <= 1
 
     @pytest.mark.asyncio
-    async def test_idempotency_relation_holds(self, oracle) -> None:
+    async def test_idempotency_relation_holds(self, oracle: Oracle) -> None:
         """Idempotency should hold for identical outputs."""
         relation = IdempotencyRelation()
         result = await relation.check("input", "output", "output", "output")
@@ -178,7 +181,7 @@ class TestOracle:
         assert result.relation == "idempotency"
 
     @pytest.mark.asyncio
-    async def test_idempotency_relation_fails(self, oracle) -> None:
+    async def test_idempotency_relation_fails(self, oracle: Oracle) -> None:
         """Idempotency should fail for different outputs."""
         relation = IdempotencyRelation(tolerance=0.99)
         result = await relation.check(
@@ -187,7 +190,7 @@ class TestOracle:
         assert result.holds is False
 
     @pytest.mark.asyncio
-    async def test_validate_agent(self, oracle) -> None:
+    async def test_validate_agent(self, oracle: Oracle) -> None:
         """Should validate an agent with metamorphic tests."""
         agent = EchoAgent()
         validation = await oracle.validate_agent(agent, ["hello", "world"])
@@ -196,7 +199,7 @@ class TestOracle:
         assert validation.tests_run >= 1
         assert 0 <= validation.validity_score <= 1
 
-    def test_format_validation_report(self, oracle) -> None:
+    def test_format_validation_report(self, oracle: Oracle) -> None:
         """Should format validation report."""
         from testing.oracle import OracleValidation
 
@@ -290,7 +293,7 @@ class TestTopologist:
         return Topologist(topology, oracle)
 
     @pytest.mark.asyncio
-    async def test_contextual_invariance_echo(self, topologist) -> None:
+    async def test_contextual_invariance_echo(self, topologist: Topologist) -> None:
         """Echo agent should be invariant to noise."""
         agent = EchoAgent()
         result = await topologist.test_contextual_invariance(
@@ -340,7 +343,7 @@ class TestWitnessStore:
     def store(self) -> WitnessStore:
         return WitnessStore()
 
-    def test_record_and_query(self, store) -> None:
+    def test_record_and_query(self, store: WitnessStore) -> None:
         """Should record and query witnesses."""
         witness = TestWitness(
             test_id="test_1",
@@ -353,7 +356,7 @@ class TestWitnessStore:
         assert len(store) == 1
 
     @pytest.mark.asyncio
-    async def test_query_by_test_id(self, store) -> None:
+    async def test_query_by_test_id(self, store: WitnessStore) -> None:
         """Should filter by test_id."""
         store.record(
             TestWitness(test_id="test_1", agent_path=[], input_data="a", outcome="pass")
@@ -367,7 +370,7 @@ class TestWitnessStore:
         assert results[0].test_id == "test_1"
 
     @pytest.mark.asyncio
-    async def test_query_by_outcome(self, store) -> None:
+    async def test_query_by_outcome(self, store: WitnessStore) -> None:
         """Should filter by outcome."""
         store.record(
             TestWitness(test_id="test_1", agent_path=[], input_data="a", outcome="pass")
@@ -390,10 +393,10 @@ class TestCausalAnalyst:
         return CausalAnalyst(store)
 
     @pytest.mark.asyncio
-    async def test_delta_debug(self, analyst) -> None:
+    async def test_delta_debug(self, analyst: CausalAnalyst) -> None:
         """Should find minimal failing input."""
 
-        async def test_func(x) -> None:
+        async def test_func(x: Any) -> Any:
             if "fail" in str(x).lower():
                 raise ValueError("failure")
             return x
@@ -410,12 +413,14 @@ class TestCausalAnalyst:
         assert len(result.failing_variations) >= 1
 
     @pytest.mark.asyncio
-    async def test_flakiness_diagnosis_insufficient(self, analyst) -> None:
+    async def test_flakiness_diagnosis_insufficient(
+        self, analyst: CausalAnalyst
+    ) -> None:
         """Should detect insufficient data."""
         diagnosis = await analyst.flakiness_diagnosis("nonexistent_test")
         assert diagnosis.diagnosis == "Insufficient data"
 
-    def test_entropy_calculation(self, analyst) -> None:
+    def test_entropy_calculation(self, analyst: CausalAnalyst) -> None:
         """Should calculate entropy correctly."""
         # All same outcome -> entropy 0
         outcomes = ["pass", "pass", "pass"]
@@ -473,7 +478,7 @@ class TestTestMarket:
         return TestMarket(budget_tier="dev")
 
     @pytest.mark.asyncio
-    async def test_kelly_allocation(self, market) -> None:
+    async def test_kelly_allocation(self, market: TestMarket) -> None:
         """Should calculate Kelly-optimal allocation."""
         assets = [
             TestAsset(
@@ -503,7 +508,7 @@ class TestTestMarket:
         assert total == pytest.approx(100.0) or total == 0.0  # Edge case: all 0
 
     @pytest.mark.asyncio
-    async def test_prioritize_by_surprise(self, market) -> None:
+    async def test_prioritize_by_surprise(self, market: TestMarket) -> None:
         """Should prioritize tests by surprise value."""
         assets = [
             TestAsset(
@@ -596,7 +601,7 @@ class TestRedTeam:
         return RedTeam(population_size=10, generations=3)
 
     @pytest.mark.asyncio
-    async def test_evolve_population(self, red_team) -> None:
+    async def test_evolve_population(self, red_team: RedTeam) -> None:
         """Should evolve adversarial population."""
         agent = EchoAgent()
         seeds = ["hello", "world"]
@@ -608,7 +613,7 @@ class TestRedTeam:
         assert population[0].fitness >= population[-1].fitness
 
     @pytest.mark.asyncio
-    async def test_find_vulnerabilities(self, red_team) -> None:
+    async def test_find_vulnerabilities(self, red_team: RedTeam) -> None:
         """Should find vulnerabilities in failing agent."""
         agent = FailingAgent()
         seeds = ["hello", "this should fail"]
@@ -633,7 +638,7 @@ class TestCortex:
     def cortex(self) -> Cortex:
         return Cortex()
 
-    def test_register_agent(self, cortex) -> None:
+    def test_register_agent(self, cortex: Cortex) -> None:
         """Should register agent in all systems."""
         agent = EchoAgent()
         cortex.register_agent(agent, "str", "str")
@@ -641,13 +646,13 @@ class TestCortex:
         assert "Echo" in cortex._agents
         assert "Echo" in cortex.topology.agents
 
-    def test_register_test(self, cortex) -> None:
+    def test_register_test(self, cortex: Cortex) -> None:
         """Should register test in market."""
         cortex.register_test("test_1", cost_joules=10.0)
 
         assert "test_1" in cortex.budget_manager.market._assets
 
-    def test_record_witness(self, cortex) -> None:
+    def test_record_witness(self, cortex: Cortex) -> None:
         """Should record witness in store."""
         cortex.record_witness(
             test_id="test_1",
@@ -660,7 +665,7 @@ class TestCortex:
         assert len(cortex.witness_store) == 1
 
     @pytest.mark.asyncio
-    async def test_daytime_run(self, cortex) -> None:
+    async def test_daytime_run(self, cortex: Cortex) -> None:
         """Should select tests for daytime run."""
         # Register some tests
         cortex.register_test("test_1", cost_joules=1.0)
@@ -671,7 +676,7 @@ class TestCortex:
         assert len(selected) >= 1
 
     @pytest.mark.asyncio
-    async def test_morning_briefing(self, cortex) -> None:
+    async def test_morning_briefing(self, cortex: Cortex) -> None:
         """Should generate morning briefing."""
         briefing = await cortex.morning_briefing({})
 

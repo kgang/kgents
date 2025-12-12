@@ -17,13 +17,15 @@ import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
+from types import ModuleType
 from typing import Any
 
 # yaml is optional - we can use JSON fallback
 try:
-    import yaml
+    import yaml as yaml_module
 
     HAS_YAML = True
+    yaml: ModuleType | None = yaml_module
 except ImportError:
     HAS_YAML = False
     yaml = None
@@ -216,7 +218,7 @@ def _expand_env_vars(value: str, strict: bool = True) -> str:
     }
 
     # Handle ${env:VAR} pattern
-    def replace_env(match):
+    def replace_env(match: Any) -> str:
         var_name = match.group(1)
         env_value = os.environ.get(var_name)
         if env_value is None:
@@ -236,7 +238,7 @@ def _expand_env_vars(value: str, strict: bool = True) -> str:
     value = re.sub(r"\$\{env:(\w+)\}", replace_env, value)
 
     # Handle ${VAR} pattern (XDG vars)
-    def replace_xdg(match):
+    def replace_xdg(match: Any) -> str:
         var_name = match.group(1)
         env_value = os.environ.get(var_name)
         if env_value is None:
@@ -302,7 +304,7 @@ class StorageProvider:
                 with open(config_path) as f:
                     content = f.read()
                     # Try YAML first, fall back to JSON
-                    if HAS_YAML:
+                    if HAS_YAML and yaml is not None:
                         raw_config = yaml.safe_load(content)
                     else:
                         raw_config = json.loads(content)

@@ -467,7 +467,7 @@ async def test_jit_with_chaosmonger_integration() -> None:
     source = AgentSource(
         source="""
 class ComplexAgent:
-    def process(self, x):
+    def process(self, x) -> None:
         if x > 0:
             if x > 10:
                 if x > 100:

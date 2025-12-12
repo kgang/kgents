@@ -171,7 +171,7 @@ class TestDevModeUnit:
 
     def test_create_dev_mode(self) -> None:
         """Test factory function."""
-        progress_calls = []
+        progress_calls: list[str] = []
         dev = create_dev_mode(on_progress=progress_calls.append)
 
         assert dev is not None
@@ -307,12 +307,12 @@ class TestDevModeIntegration:
     """Integration tests that require a running Kind cluster."""
 
     @pytest.fixture
-    def dev(self) -> create_dev_mode:
+    def dev(self) -> DevMode:
         """Create DevMode instance."""
         return create_dev_mode()
 
     @pytest.fixture
-    def has_cluster(self) -> result.returncode == 0:
+    def has_cluster(self) -> bool:
         """Check if Kind cluster is available."""
         import subprocess
 

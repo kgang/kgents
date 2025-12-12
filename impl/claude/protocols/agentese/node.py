@@ -15,6 +15,7 @@ Key invariants:
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from typing import (
     TYPE_CHECKING,
@@ -96,7 +97,7 @@ class AffordanceSet:
         """Check if verb is in affordances."""
         return verb in self.verbs
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         """Iterate over available verbs."""
         return iter(self.verbs)
 
@@ -236,7 +237,7 @@ class BaseLogosNode(ABC):
         Default implementation creates an AspectAgent wrapper.
         Override for custom aspect agents.
         """
-        return AspectAgent(self, aspect)
+        return AspectAgent(self, aspect)  # type: ignore[return-value]
 
     @abstractmethod
     async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
@@ -330,7 +331,7 @@ class JITLogosNode:
         """Delegate to compiled node."""
         if self._node:
             return self._node.lens(aspect)
-        return AspectAgent(self, aspect)
+        return AspectAgent(self, aspect)  # type: ignore[return-value]
 
     async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
         """Delegate to compiled node."""
@@ -534,12 +535,12 @@ class ComposedAspectAgent:
         # This preserves associativity
         composed_second = ComposedAspectAgent(
             AspectAgent(
-                node=_WrapperNode(self.second),  # type: ignore
+                node=_WrapperNode(self.second),
                 aspect="invoke",
             ),
             other,
         )
-        return ComposedAspectAgent(self.first, composed_second)  # type: ignore
+        return ComposedAspectAgent(self.first, composed_second)  # type: ignore[arg-type]
 
 
 # === Helper Types ===

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 import pytest
 from protocols.cli.prism import CLICapable
@@ -23,7 +23,7 @@ class TestCLICapableProtocol:
             def cli_description(self) -> str:
                 return "Test agent"
 
-            def get_exposed_commands(self) -> dict[str, Callable]:
+            def get_exposed_commands(self) -> dict[str, Callable[..., object]]:
                 return {}
 
         agent = ValidAgent()
@@ -37,7 +37,7 @@ class TestCLICapableProtocol:
             def cli_description(self) -> str:
                 return "Test agent"
 
-            def get_exposed_commands(self) -> dict[str, Callable]:
+            def get_exposed_commands(self) -> dict[str, Callable[..., object]]:
                 return {}
 
         agent = InvalidAgent()
@@ -51,7 +51,7 @@ class TestCLICapableProtocol:
             def genus_name(self) -> str:
                 return "test"
 
-            def get_exposed_commands(self) -> dict[str, Callable]:
+            def get_exposed_commands(self) -> dict[str, Callable[..., object]]:
                 return {}
 
         agent = InvalidAgent()
@@ -84,7 +84,7 @@ class TestCLICapableProtocol:
             def cli_description(self) -> str:
                 return "Test"
 
-            def get_exposed_commands(self) -> dict[str, Callable]:
+            def get_exposed_commands(self) -> dict[str, Callable[..., object]]:
                 return {}
 
         agent = TestAgent()
@@ -102,7 +102,7 @@ class TestCLICapableProtocol:
             def cli_description(self) -> str:
                 return "G-gent Grammar/DSL operations"
 
-            def get_exposed_commands(self) -> dict[str, Callable]:
+            def get_exposed_commands(self) -> dict[str, Callable[..., object]]:
                 return {}
 
         agent = TestAgent()
@@ -111,10 +111,10 @@ class TestCLICapableProtocol:
     def test_get_exposed_commands_returns_dict(self) -> None:
         """get_exposed_commands returns a command mapping."""
 
-        def cmd_reify():
+        def cmd_reify() -> None:
             pass
 
-        def cmd_parse():
+        def cmd_parse() -> None:
             pass
 
         class TestAgent:
@@ -126,7 +126,7 @@ class TestCLICapableProtocol:
             def cli_description(self) -> str:
                 return "Test"
 
-            def get_exposed_commands(self) -> dict[str, Callable]:
+            def get_exposed_commands(self) -> dict[str, Callable[..., object]]:
                 return {"reify": cmd_reify, "parse": cmd_parse}
 
         agent = TestAgent()

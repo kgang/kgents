@@ -27,6 +27,6 @@ Usage:
 See spec/ for the conceptual specification.
 """
 
-from .bootstrap import *  # noqa: F403 - intentional re-export
+from .bootstrap import *  # noqa: F403 - intentional re-export  # type: ignore[import-not-found]
 
 __version__ = "0.1.0"

@@ -583,26 +583,26 @@ def cmd_laws(args: list[str]) -> int:
             print("Example: kgents laws witness 'ParseCode >> ValidateAST'")
             return 1
 
-        report = asyncio.run(witness_composition(parsed.operation))
+        witness_report = asyncio.run(witness_composition(parsed.operation))
         if parsed.format == "json":
             print(
                 json.dumps(
                     {
-                        "operation": report.operation,
-                        "left": report.left,
-                        "right": report.right,
-                        "result_type": report.result_type,
-                        "valid": report.valid,
-                        "laws_checked": [l.value for l in report.laws_checked],
-                        "witnessed_at": report.witnessed_at.isoformat(),
-                        "notes": report.notes,
+                        "operation": witness_report.operation,
+                        "left": witness_report.left,
+                        "right": witness_report.right,
+                        "result_type": witness_report.result_type,
+                        "valid": witness_report.valid,
+                        "laws_checked": [l.value for l in witness_report.laws_checked],
+                        "witnessed_at": witness_report.witnessed_at.isoformat(),
+                        "notes": witness_report.notes,
                     },
                     indent=2,
                 )
             )
         else:
-            print(format_witness_rich(report))
-        return 0 if report.valid else 1
+            print(format_witness_rich(witness_report))
+        return 0 if witness_report.valid else 1
 
     return 0
 

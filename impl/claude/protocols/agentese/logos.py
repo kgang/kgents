@@ -23,6 +23,8 @@ from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
+    Iterator,
+    cast,
 )
 
 from .contexts import (
@@ -45,8 +47,8 @@ from .node import (
 )
 
 if TYPE_CHECKING:
-    from bootstrap.umwelt import Umwelt
     from bootstrap.types import Agent
+    from bootstrap.umwelt import Umwelt
 
 
 # === Composed Path ===
@@ -151,7 +153,7 @@ class ComposedPath:
         """Number of paths in composition."""
         return len(self.paths)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         """Iterate over paths."""
         return iter(self.paths)
 
@@ -534,7 +536,7 @@ class Logos:
             resolver = self._context_resolvers[context]
             # All Phase 2 resolvers implement resolve(holon, rest)
             if hasattr(resolver, "resolve"):
-                return resolver.resolve(holon, rest)
+                return cast(LogosNode, resolver.resolve(holon, rest))
 
         # Fallback: Check registry directly
         node = self.registry.get(handle)
@@ -684,7 +686,7 @@ class Logos:
         handle: str,
         threshold: int = 100,
         success_threshold: float = 0.8,
-    ) -> "PromotionResult":
+    ) -> Any:
         """
         Promote a JIT node to permanent implementation.
 
@@ -749,11 +751,12 @@ class Logos:
 
     def list_jit_nodes(self) -> list[dict[str, Any]]:
         """List all JIT nodes with their status."""
-        return [
-            self.get_jit_status(handle)
-            for handle in self._jit_nodes
-            if self.get_jit_status(handle) is not None
-        ]
+        result: list[dict[str, Any]] = []
+        for handle in self._jit_nodes:
+            status = self.get_jit_status(handle)
+            if status is not None:
+                result.append(status)
+        return result
 
     def _umwelt_to_meta(self, umwelt: "Umwelt[Any, Any]") -> AgentMeta:
         """Extract AgentMeta from Umwelt's DNA."""
@@ -839,7 +842,7 @@ class PlaceholderNode:
 
     def lens(self, aspect: str) -> "Agent[Any, Any]":
         """Return aspect agent."""
-        return AspectAgent(self, aspect)
+        return cast("Agent[Any, Any]", AspectAgent(self, aspect))
 
     async def manifest(self, observer: "Umwelt[Any, Any]") -> BasicRendering:
         """Return basic rendering."""

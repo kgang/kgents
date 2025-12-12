@@ -37,6 +37,7 @@ from .value_tensor import (
 
 A = TypeVar("A", contravariant=True)
 B = TypeVar("B", covariant=True)
+B_inv = TypeVar("B_inv")  # Invariant for Receipt
 
 
 class Agent(Protocol[A, B]):
@@ -108,7 +109,7 @@ class Impact:
 
 
 @dataclass
-class Receipt(Generic[B]):
+class Receipt(Generic[B_inv]):
     """
     Receipt from metered execution.
 
@@ -116,7 +117,7 @@ class Receipt(Generic[B]):
     The Receipt wraps the result with economic metadata.
     """
 
-    value: B
+    value: B_inv
     gas: Gas
     impact: Optional[Impact] = None
     tensor: Optional[ValueTensor] = None

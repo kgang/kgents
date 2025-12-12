@@ -9,6 +9,9 @@ Tests cover:
 5. Global flag parsing
 """
 
+from pathlib import Path
+
+import pytest
 
 # =============================================================================
 # Help & Version (Fast Path)
@@ -18,7 +21,7 @@ Tests cover:
 class TestHelpAndVersion:
     """Test fast path for --help and --version."""
 
-    def test_help_no_args(self, capsys) -> None:
+    def test_help_no_args(self, capsys: pytest.CaptureFixture[str]) -> None:
         """kgents (no args) prints help."""
         from protocols.cli.hollow import main
 
@@ -31,7 +34,7 @@ class TestHelpAndVersion:
         assert "new" in out
         assert "run" in out
 
-    def test_help_flag(self, capsys) -> None:
+    def test_help_flag(self, capsys: pytest.CaptureFixture[str]) -> None:
         """kgents --help prints help."""
         from protocols.cli.hollow import main
 
@@ -41,7 +44,7 @@ class TestHelpAndVersion:
         assert result == 0
         assert "kgents - Kent's Agents CLI" in out
 
-    def test_help_short_flag(self, capsys) -> None:
+    def test_help_short_flag(self, capsys: pytest.CaptureFixture[str]) -> None:
         """kgents -h prints help."""
         from protocols.cli.hollow import main
 
@@ -51,7 +54,7 @@ class TestHelpAndVersion:
         assert result == 0
         assert "kgents - Kent's Agents CLI" in out
 
-    def test_version(self, capsys) -> None:
+    def test_version(self, capsys: pytest.CaptureFixture[str]) -> None:
         """kgents --version prints version."""
         from protocols.cli.hollow import main
 
@@ -118,7 +121,7 @@ class TestFuzzyMatching:
         suggestions = suggest_similar("xyzabc123")
         assert len(suggestions) == 0
 
-    def test_print_suggestions(self, capsys) -> None:
+    def test_print_suggestions(self, capsys: pytest.CaptureFixture[str]) -> None:
         """print_suggestions shows helpful output."""
         from protocols.cli.hollow import print_suggestions
 
@@ -202,7 +205,9 @@ class TestFlagParsing:
 class TestUnknownCommand:
     """Test handling of unknown commands."""
 
-    def test_unknown_command_exits_with_error(self, capsys) -> None:
+    def test_unknown_command_exits_with_error(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
         """Unknown command prints error and exits 1."""
         from protocols.cli.hollow import main
 
@@ -223,7 +228,7 @@ class TestUnknownCommand:
 class TestIntegration:
     """Integration tests for full command flow."""
 
-    def test_command_help_delegation(self, capsys) -> None:
+    def test_command_help_delegation(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Command-level --help delegates to handler."""
         from protocols.cli.hollow import main
 
@@ -235,7 +240,9 @@ class TestIntegration:
         assert "wipe" in out
         assert "help" in out.lower() or "USAGE" in out
 
-    def test_full_command_execution(self, tmp_path, monkeypatch) -> None:
+    def test_full_command_execution(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Full command execution path works."""
         from protocols.cli.hollow import main
 

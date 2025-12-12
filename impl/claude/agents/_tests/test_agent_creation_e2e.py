@@ -208,7 +208,7 @@ class ImplementedAgent:
         source = AgentSource(
             source="""
 class ConstrainedAgent:
-    def __init__(self):
+    def __init__(self) -> None:
         self.max_length = 100
 
     async def invoke(self, input: str) -> str:

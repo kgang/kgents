@@ -14,7 +14,7 @@ Principle Alignment: Heterarchical (resources in flux)
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from ..node import (
     BaseLogosNode,
@@ -198,7 +198,7 @@ class WorldNode(BaseLogosNode):
         """Get temporal trace via N-gent if available."""
         if self._narrator:
             try:
-                return await self._narrator.get_trace(self.handle)
+                return cast(dict[str, Any], await self._narrator.get_trace(self.handle))
             except Exception:
                 pass
         return {
@@ -240,7 +240,7 @@ class WorldNode(BaseLogosNode):
         if self._registry:
             try:
                 prefix = self.handle.rsplit(".", 1)[0]
-                return self._registry.list_handles(prefix)
+                return cast(list[str], self._registry.list_handles(prefix))
             except Exception:
                 pass
         return []

@@ -194,8 +194,8 @@ class TestJgentIntegration:
 
         # Verify entropy tracking
         assert "entropy_history" in updated.relationships
-        # Note: entropy_history contains floats, but type system expects list[str]
-        assert 0.05 in updated.relationships["entropy_history"]  # type: ignore[comparison-overlap]
+        # Note: entropy_history stores floats as strings (per dict[str, list[str]] type)
+        assert "0.05" in updated.relationships["entropy_history"]
 
 
 class TestIntegrationWorkflows:

@@ -181,8 +181,11 @@ class TestAgentDiscovery:
         self, agent_resolver: AgentContextResolver, developer_umwelt: MagicMock
     ) -> None:
         """world.agent.egent.manifest shows E-gent capabilities."""
+        from ..renderings import DeveloperRendering
+
         node = agent_resolver.resolve("agent", ["e"])
         rendering = await node.manifest(developer_umwelt)
+        assert isinstance(rendering, DeveloperRendering)
         assert "E-gent" in rendering.entity
         assert "evolution" in rendering.structure["theme"].lower()
 
@@ -197,10 +200,19 @@ class TestPolymorphicAffordances:
         self, logos: Logos, developer_umwelt: MagicMock, architect_umwelt: MagicMock
     ) -> None:
         """Different archetypes get different world.* affordances."""
-        node = logos.resolve("world.project")
+        from ..node import AgentMeta, BaseLogosNode
 
-        dev_meta = node._umwelt_to_meta(developer_umwelt)
-        arch_meta = node._umwelt_to_meta(architect_umwelt)
+        node = logos.resolve("world.project")
+        assert isinstance(node, BaseLogosNode)
+
+        dev_meta = AgentMeta(
+            name=developer_umwelt.dna.name,
+            archetype=developer_umwelt.dna.archetype,
+        )
+        arch_meta = AgentMeta(
+            name=architect_umwelt.dna.name,
+            archetype=architect_umwelt.dna.archetype,
+        )
 
         dev_affordances = node.affordances(dev_meta)
         arch_affordances = node.affordances(arch_meta)
@@ -231,8 +243,15 @@ class TestPolymorphicAffordances:
         self, logos: Logos, developer_umwelt: MagicMock
     ) -> None:
         """Concept context has dialectic/refine affordances."""
+        from ..node import AgentMeta, BaseLogosNode
+
         node = logos.resolve("concept.justice")
-        meta = node._umwelt_to_meta(developer_umwelt)
+        assert isinstance(node, BaseLogosNode)
+
+        meta = AgentMeta(
+            name=developer_umwelt.dna.name,
+            archetype=developer_umwelt.dna.archetype,
+        )
         affordances = node.affordances(meta)
 
         # Core affordances always available
@@ -330,7 +349,10 @@ class TestCrossContextWorkflow:
         e_node = agent_resolver.resolve("agent", [e_info["letter"]])
 
         # 3. Manifest E-gent capabilities
+        from ..renderings import DeveloperRendering
+
         rendering = await e_node.manifest(developer_umwelt)
+        assert isinstance(rendering, DeveloperRendering)
         assert "E-gent" in rendering.entity
 
         # 4. Check E-gent status
@@ -340,9 +362,7 @@ class TestCrossContextWorkflow:
 
     @pytest.mark.asyncio
     async def test_world_self_void_workflow(
-        self,
-        logos: Logos,
-        developer_umwelt: MagicMock,
+        self, logos: Logos, developer_umwelt: MagicMock
     ) -> None:
         """
         Workflow spanning world, self, and void contexts.
@@ -360,8 +380,15 @@ class TestCrossContextWorkflow:
         assert memory_rendering is not None
 
         # 3. Draw from void (entropy)
+        from ..node import AgentMeta, BaseLogosNode
+
         void_node = logos.resolve("void.entropy")
-        void_meta = void_node._umwelt_to_meta(developer_umwelt)
+        assert isinstance(void_node, BaseLogosNode)
+
+        void_meta = AgentMeta(
+            name=developer_umwelt.dna.name,
+            archetype=developer_umwelt.dna.archetype,
+        )
         if "sip" in void_node.affordances(void_meta):
             sip_result = await void_node.invoke("sip", developer_umwelt, amount=0.1)
             assert sip_result is not None

@@ -9,10 +9,17 @@ Phase 4 of test evolution plan:
 - Report bootstrap integrity at session end
 """
 
+from __future__ import annotations
+
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
+
+if TYPE_CHECKING:
+    from _pytest.config import Config
+    from _pytest.nodes import Item
+    from _pytest.reports import TestReport
 
 
 class WitnessPlugin:
@@ -29,7 +36,7 @@ class WitnessPlugin:
         self.session_start: datetime | None = None
         self.verification_result: Any = None
 
-    def pytest_sessionstart(self, session):
+    def pytest_sessionstart(self, session: pytest.Session) -> None:
         """Verify bootstrap at session start."""
         if not self.enabled:
             return
@@ -54,7 +61,7 @@ class WitnessPlugin:
             print(f"Warning: BootstrapWitness verification failed: {e}")
             self.verification_result = None
 
-    def pytest_runtest_logreport(self, report):
+    def pytest_runtest_logreport(self, report: TestReport) -> None:
         """Record test observations."""
         if report.when == "call":
             self.observations.append(
@@ -68,7 +75,7 @@ class WitnessPlugin:
                 }
             )
 
-    def pytest_sessionfinish(self, session, exitstatus):
+    def pytest_sessionfinish(self, session: pytest.Session, exitstatus: int) -> None:
         """Summary at session end."""
         if not self.enabled:
             return

@@ -39,15 +39,12 @@ class MockSignal:
     data: dict[str, Any]
     timestamp: str = ""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.timestamp:
             self.timestamp = datetime.now().isoformat()
 
 
-def create_test_epoch(
-    epoch_id: str = "test-epoch",
-    days_ago: int = 0,
-) -> LetheEpoch:
+def create_test_epoch(epoch_id: str = "test-epoch", days_ago: int = 0) -> LetheEpoch:
     """Create a test epoch."""
     sealed_at = datetime.now() - timedelta(days=days_ago)
     return LetheEpoch(

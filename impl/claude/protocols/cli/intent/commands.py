@@ -44,7 +44,7 @@ class IntentResult:
         self.suggestions = suggestions or []
         self.next_steps = next_steps or []
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "success": self.success,
             "output": self.output,
@@ -68,9 +68,9 @@ class EntityType(Enum):
 # =============================================================================
 
 
-def _parse_args(args: list[str]) -> tuple[dict, list[str]]:
+def _parse_args(args: list[str]) -> tuple[dict[str, str | bool], list[str]]:
     """Parse --key=value and --flag style arguments."""
-    opts = {}
+    opts: dict[str, str | bool] = {}
     positional = []
 
     for arg in args:
@@ -86,7 +86,7 @@ def _parse_args(args: list[str]) -> tuple[dict, list[str]]:
     return opts, positional
 
 
-def _format_rich(title: str, content: dict | list | str) -> str:
+def _format_rich(title: str, content: dict[str, Any] | list[Any] | str) -> str:
     """Format output in rich style with box drawing."""
     lines = [f"=== {title} ===", ""]
 
@@ -197,11 +197,14 @@ def cmd_new(args: list[str]) -> int:
     return 0 if result.success else 1
 
 
-def _create_entity(entity_type: EntityType, name: str, opts: dict) -> IntentResult:
+def _create_entity(
+    entity_type: EntityType, name: str, opts: dict[str, str | bool]
+) -> IntentResult:
     """Create entity of given type."""
-    template = opts.get("template", "default")
-    path = Path(opts.get("path", "."))
-    genus = opts.get("genus")
+    template = str(opts.get("template", "default"))
+    path = Path(str(opts.get("path", ".")))
+    genus_val = opts.get("genus")
+    genus = str(genus_val) if genus_val is not None else None
 
     if entity_type == EntityType.AGENT:
         return _create_agent(name, genus, template, path)
@@ -346,9 +349,12 @@ def cmd_run(args: list[str]) -> int:
 
     opts, positional = _parse_args(args)
     use_json = opts.get("format") == "json"
-    dry_run = opts.get("dry_run", False)
-    verbose = opts.get("verbose", False)
-    budget = opts.get("budget", "medium")
+    dry_run_val = opts.get("dry_run", False)
+    dry_run = bool(dry_run_val) if dry_run_val is not False else False
+    verbose_val = opts.get("verbose", False)
+    verbose = bool(verbose_val) if verbose_val is not False else False
+    budget_val = opts.get("budget", "medium")
+    budget = str(budget_val) if budget_val is not True else "medium"
 
     if not positional:
         print("Error: run requires an intent")
@@ -440,7 +446,7 @@ def _classify_intent(intent: str) -> str:
         return "PROBABILISTIC"
 
 
-def _generate_plan(intent: str, classification: str) -> list[dict]:
+def _generate_plan(intent: str, classification: str) -> list[dict[str, Any]]:
     """Generate execution plan for intent."""
     intent_lower = intent.lower()
 
@@ -480,14 +486,14 @@ def _generate_plan(intent: str, classification: str) -> list[dict]:
     return steps
 
 
-def _estimate_tokens(plan: list[dict], budget: str) -> int:
+def _estimate_tokens(plan: list[dict[str, Any]], budget: str) -> int:
     """Estimate token usage for plan."""
     base = len(plan) * 100
     budget_multipliers = {"minimal": 0.5, "low": 0.75, "medium": 1.0, "high": 1.5}
     return int(base * budget_multipliers.get(budget, 1.0))
 
 
-def _execute_plan(plan: list[dict], budget: str, verbose: bool) -> str:
+def _execute_plan(plan: list[dict[str, Any]], budget: str, verbose: bool) -> str:
     """Execute plan and return result summary."""
     # Simulated execution
     return f"Executed {len(plan)} steps successfully"
@@ -534,9 +540,12 @@ def cmd_check(args: list[str]) -> int:
 
     opts, positional = _parse_args(args)
     use_json = opts.get("format") == "json"
-    against = opts.get("against", "principles")
-    strict = opts.get("strict", False)
-    verbose = opts.get("verbose", False)
+    against_val = opts.get("against", "principles")
+    against = str(against_val) if against_val is not True else "principles"
+    strict_val = opts.get("strict", False)
+    strict = bool(strict_val) if strict_val is not False else False
+    verbose_val = opts.get("verbose", False)
+    verbose = bool(verbose_val) if verbose_val is not False else False
 
     if not positional:
         print("Error: check requires a target")
@@ -602,8 +611,12 @@ def _check_target(
             "checks": checks if verbose else None,
         },
         next_steps=[
-            f"kgents fix {target}  # Attempt auto-repair" if not success else None,
-            f"kgents principles check {target}  # Detailed principle analysis",
+            s
+            for s in [
+                f"kgents fix {target}  # Attempt auto-repair" if not success else None,
+                f"kgents principles check {target}  # Detailed principle analysis",
+            ]
+            if s is not None
         ],
     )
 
@@ -650,9 +663,16 @@ def cmd_think(args: list[str]) -> int:
 
     opts, positional = _parse_args(args)
     use_json = opts.get("format") == "json"
-    depth = opts.get("depth", "medium")
-    limit = int(opts.get("limit", "5"))
-    falsify = opts.get("falsify", False)
+    depth_val = opts.get("depth", "medium")
+    depth = str(depth_val) if depth_val is not True else "medium"
+    limit_val = opts.get("limit", "5")
+    limit = (
+        int(limit_val)
+        if isinstance(limit_val, str) or isinstance(limit_val, int)
+        else 5
+    )
+    falsify_val = opts.get("falsify", False)
+    falsify = bool(falsify_val) if falsify_val is not False else False
 
     if not positional:
         print("Error: think requires a topic")
@@ -831,9 +851,16 @@ def cmd_find(args: list[str]) -> int:
 
     opts, positional = _parse_args(args)
     use_json = opts.get("format") == "json"
-    entity_type = opts.get("type", "all")
-    limit = int(opts.get("limit", "10"))
-    exact = opts.get("exact", False)
+    entity_type_val = opts.get("type", "all")
+    entity_type = str(entity_type_val) if entity_type_val is not True else "all"
+    limit_val = opts.get("limit", "10")
+    limit = (
+        int(limit_val)
+        if isinstance(limit_val, str) or isinstance(limit_val, int)
+        else 10
+    )
+    exact_val = opts.get("exact", False)
+    exact = bool(exact_val) if exact_val is not False else False
 
     if not positional:
         print("Error: find requires a query")
@@ -942,9 +969,12 @@ def cmd_fix(args: list[str]) -> int:
 
     opts, positional = _parse_args(args)
     use_json = opts.get("format") == "json"
-    strategy = opts.get("strategy", "gentle")
-    preview = opts.get("preview", False)
-    backup = opts.get("backup", False)
+    strategy_val = opts.get("strategy", "gentle")
+    strategy = str(strategy_val) if strategy_val is not True else "gentle"
+    preview_val = opts.get("preview", False)
+    preview = bool(preview_val) if preview_val is not False else False
+    backup_val = opts.get("backup", False)
+    backup = bool(backup_val) if backup_val is not False else False
 
     if not positional:
         print("Error: fix requires a target")
@@ -1049,12 +1079,19 @@ def cmd_speak(args: list[str]) -> int:
 
     opts, positional = _parse_args(args)
     use_json = opts.get("format") == "json"
-    level = opts.get("level", "command")
-    constraints = (
-        opts.get("constraints", "").split(",") if opts.get("constraints") else []
+    level_val = opts.get("level", "command")
+    level = str(level_val) if level_val is not True else "command"
+    constraints_val = opts.get("constraints", "")
+    constraints_str = (
+        str(constraints_val) if constraints_val and constraints_val is not True else ""
     )
-    for_agent = opts.get("for")
-    examples = opts.get("examples")
+    constraints = constraints_str.split(",") if constraints_str else []
+    for_agent_val = opts.get("for")
+    for_agent = (
+        str(for_agent_val) if for_agent_val and for_agent_val is not True else None
+    )
+    examples_val = opts.get("examples")
+    examples = str(examples_val) if examples_val and examples_val is not True else None
 
     if not positional:
         print("Error: speak requires a domain")
@@ -1158,9 +1195,14 @@ def cmd_judge(args: list[str]) -> int:
 
     opts, positional = _parse_args(args)
     use_json = opts.get("format") == "json"
-    strict = opts.get("strict", False)
-    principle = opts.get("principle")
-    verbose = opts.get("verbose", False)
+    strict_val = opts.get("strict", False)
+    strict = bool(strict_val) if strict_val is not False else False
+    principle_val = opts.get("principle")
+    principle = (
+        str(principle_val) if principle_val and principle_val is not True else None
+    )
+    verbose_val = opts.get("verbose", False)
+    verbose = bool(verbose_val) if verbose_val is not False else False
 
     if not positional:
         print("Error: judge requires input")
@@ -1245,7 +1287,11 @@ def _judge_input(
             "evaluations": evaluations,
         },
         next_steps=[
-            "kgents fix <target>  # Attempt auto-repair" if not success else None,
-            "kgents principles  # Review the 7 principles",
+            s
+            for s in [
+                "kgents fix <target>  # Attempt auto-repair" if not success else None,
+                "kgents principles  # Review the 7 principles",
+            ]
+            if s is not None
         ],
     )

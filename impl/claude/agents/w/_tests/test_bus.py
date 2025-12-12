@@ -79,7 +79,7 @@ class AddPrefixAgent:
 class CountingInterceptor(BaseInterceptor):
     """Counts before/after calls."""
 
-    def __init__(self, name: str = "counting", order: int = 100):
+    def __init__(self, name: str = "counting", order: int = 100) -> None:
         super().__init__(name, order)
         self.before_count = 0
         self.after_count = 0

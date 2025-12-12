@@ -106,7 +106,7 @@ _restore("protocols.cli.instance_db.synapse", _original_synapse)
 class MockEmbeddingProvider:
     """Mock embedding provider for tests."""
 
-    def __init__(self, dimensions: int = 384):
+    def __init__(self, dimensions: int = 384) -> None:
         self._dimensions = dimensions
 
     def embed(self, text: str) -> list[float]:

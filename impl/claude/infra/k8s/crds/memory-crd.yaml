@@ -1,0 +1,152 @@
+# Memory CRD - Persistent State Primitive
+#
+# Memories are the persistence mechanism for kgents:
+#   - D-gent manages memory lifecycle
+#   - Memories can be RELATIONAL (structured) or VECTOR (embeddings)
+#   - Memories outlive pod restarts via PersistentVolumeClaims
+#
+# Architecture:
+#   Memory CR → MemoryOperator → PVC + ConfigMap (metadata)
+#
+# Principle alignment:
+#   - Ethical: Memories are transparent (can be inspected/deleted)
+#   - Composable: Memories can be shared between agents
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: memories.kgents.io
+  labels:
+    app.kubernetes.io/part-of: kgents
+    app.kubernetes.io/component: persistence
+spec:
+  group: kgents.io
+  scope: Namespaced
+  names:
+    plural: memories
+    singular: memory
+    kind: Memory
+    shortNames:
+      - mem
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          required:
+            - spec
+          properties:
+            spec:
+              type: object
+              required:
+                - owner
+                - type
+              properties:
+                owner:
+                  type: string
+                  description: "Agent that owns this memory (e.g., 'B-gent')"
+                type:
+                  type: string
+                  description: "Memory type - determines storage backend"
+                  enum:
+                    - RELATIONAL  # SQLite/Postgres - structured data
+                    - VECTOR      # ChromaDB/FAISS - embeddings
+                    - BICAMERAL   # Both RELATIONAL + VECTOR (split brain)
+                    - EPHEMERAL   # In-memory only (lost on restart)
+                storage_class:
+                  type: string
+                  description: "K8s storage class for the PVC"
+                  default: "standard"
+                size:
+                  type: string
+                  description: "Storage size (e.g., '1Gi', '500Mi')"
+                  default: "256Mi"
+                shared_with:
+                  type: array
+                  description: "Agents that can READ this memory"
+                  items:
+                    type: string
+                write_access:
+                  type: array
+                  description: "Agents that can WRITE to this memory"
+                  items:
+                    type: string
+                retention_policy:
+                  type: string
+                  description: "What happens when owner is deleted"
+                  enum:
+                    - DELETE      # Delete memory with owner
+                    - RETAIN      # Keep memory orphaned
+                    - COMPOST     # Mark for composting (Lethe)
+                  default: "RETAIN"
+                backup_schedule:
+                  type: string
+                  description: "Cron schedule for backups (optional)"
+                  pattern: "^(@(annually|yearly|monthly|weekly|daily|hourly))|((\\*|[0-9,\\-\\/]+)\\s+){4}(\\*|[0-9,\\-\\/]+)$"
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                  enum:
+                    - PENDING
+                    - PROVISIONING
+                    - READY
+                    - DEGRADED
+                    - COMPOSTING
+                    - TERMINATED
+                pvc_name:
+                  type: string
+                  description: "Name of the bound PVC"
+                size_used:
+                  type: string
+                  description: "Current storage usage"
+                last_backup:
+                  type: string
+                  format: date-time
+                last_access:
+                  type: string
+                  format: date-time
+                access_count:
+                  type: integer
+                  description: "Number of times this memory was accessed"
+                conditions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      status:
+                        type: string
+                      lastTransitionTime:
+                        type: string
+                        format: date-time
+                      reason:
+                        type: string
+                      message:
+                        type: string
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Owner
+          type: string
+          jsonPath: .spec.owner
+        - name: Type
+          type: string
+          jsonPath: .spec.type
+        - name: Phase
+          type: string
+          jsonPath: .status.phase
+        - name: Size
+          type: string
+          jsonPath: .spec.size
+        - name: Used
+          type: string
+          jsonPath: .status.size_used
+          priority: 1
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp

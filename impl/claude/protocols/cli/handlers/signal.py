@@ -43,7 +43,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any
+from typing import Any, cast
 
 
 def cmd_signal(args: list[str]) -> int:
@@ -130,7 +130,7 @@ async def _show_field_status_via_glass(client: Any, json_mode: bool) -> int:
     try:
         from protocols.proto.generated import InvokeRequest
 
-        request = InvokeRequest(
+        request: Any = InvokeRequest(
             path="self.field.manifest",
             lens="optics.identity",
         )
@@ -189,7 +189,7 @@ async def _emit_signal_via_glass(client: Any, args: list[str]) -> int:
     try:
         from protocols.proto.generated import InvokeRequest
 
-        request = InvokeRequest(
+        request: Any = InvokeRequest(
             path="self.field.emit",
             lens="optics.identity",
             kwargs={
@@ -201,7 +201,7 @@ async def _emit_signal_via_glass(client: Any, args: list[str]) -> int:
     except ImportError:
 
         class SimpleRequest:
-            def __init__(self, path: str, lens: str, kwargs: dict):
+            def __init__(self, path: str, lens: str, kwargs: dict[str, Any]):
                 self.path = path
                 self.lens = lens
                 self.kwargs = kwargs
@@ -250,7 +250,7 @@ async def _sense_signals_via_glass(
     try:
         from protocols.proto.generated import InvokeRequest
 
-        request = InvokeRequest(
+        request: Any = InvokeRequest(
             path="self.field.sense",
             lens="optics.identity",
             kwargs=kwargs,
@@ -258,7 +258,7 @@ async def _sense_signals_via_glass(
     except ImportError:
 
         class SimpleRequest:
-            def __init__(self, path: str, lens: str, kwargs: dict):
+            def __init__(self, path: str, lens: str, kwargs: dict[str, Any]):
                 self.path = path
                 self.lens = lens
                 self.kwargs = kwargs
@@ -315,7 +315,7 @@ async def _do_tick_via_glass(client: Any) -> int:
     try:
         from protocols.proto.generated import InvokeRequest
 
-        request = InvokeRequest(
+        request: Any = InvokeRequest(
             path="self.field.tick",
             lens="optics.identity",
         )
@@ -354,7 +354,8 @@ def _extract_field_data(data: Any) -> dict[str, Any]:
     # Handle InvokeResponse
     if hasattr(data, "result_json"):
         try:
-            return json.loads(data.result_json)
+            result = json.loads(data.result_json)
+            return result if isinstance(result, dict) else {"raw": result}
         except (json.JSONDecodeError, TypeError):
             pass
 
@@ -363,7 +364,9 @@ def _extract_field_data(data: Any) -> dict[str, Any]:
         try:
             from google.protobuf.json_format import MessageToDict
 
-            return MessageToDict(data, preserving_proto_field_name=True)
+            return cast(
+                dict[str, Any], MessageToDict(data, preserving_proto_field_name=True)
+            )
         except ImportError:
             pass
 
@@ -379,7 +382,7 @@ def _extract_invoke_result(data: Any) -> dict[str, Any]:
 
     if hasattr(data, "result_json"):
         try:
-            return json.loads(data.result_json)
+            return cast(dict[str, Any], json.loads(data.result_json))
         except (json.JSONDecodeError, TypeError):
             pass
 

@@ -21,7 +21,7 @@ from agents.p.strategies.stack_balancing import json_stream_parser
 class MockParser:
     """Mock parser for testing."""
 
-    def __init__(self, success: bool = True, value: str = "parsed"):
+    def __init__(self, success: bool = True, value: str = "parsed") -> None:
         self._success = success
         self._value = value
 

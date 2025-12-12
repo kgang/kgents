@@ -238,7 +238,7 @@ async def test_register_forged_artifact(temp_registry: Registry) -> None:
 
     # Check entry
     assert entry.name == "DataParser"
-    assert entry.entity_type == EntityType.CONTRACT  # type: ignore[comparison-overlap]
+    assert entry.entity_type == EntityType.CONTRACT
     assert entry.input_type == "str"
     assert entry.output_type == "dict"
     assert "parsing" in entry.keywords

@@ -20,7 +20,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Coroutine
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, cast
 
 from .interfaces import TelemetryEvent
 from .storage import StorageProvider, XDGPaths
@@ -97,7 +97,7 @@ class LifecycleManager:
         await manager.shutdown()
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._state: LifecycleState | None = None
         self._shutdown_handlers: list[Callable[[], Coroutine[Any, Any, None]]] = []
         self._paths: XDGPaths | None = None
@@ -388,9 +388,9 @@ class LifecycleManager:
         # Create Synapse (event bus / Active Inference router)
         try:
             synapse_config = SynapseConfig(
-                high_surprise_threshold=0.7,
+                surprise_threshold=0.7,
                 flashbulb_threshold=0.95,
-                batch_window_ms=100,
+                batch_interval_ms=100,
             )
             synapse = Synapse(config=synapse_config)
             self._state.synapse = synapse
@@ -401,7 +401,6 @@ class LifecycleManager:
         try:
             hippocampus_config = HippocampusConfig(
                 max_size=10000,
-                flush_threshold=0.8,
             )
             hippocampus = Hippocampus(config=hippocampus_config)
             self._state.hippocampus = hippocampus
@@ -434,14 +433,16 @@ class LifecycleManager:
             from agents.d.bicameral import BicameralMemory, create_bicameral_memory
 
             bicameral = create_bicameral_memory(
-                left_store=storage.relational,
-                right_store=storage.vector,
+                relational_store=storage.relational,
+                vector_store=storage.vector,
             )
             self._state.bicameral = bicameral
 
             # Wire dreamer's cortex to bicameral
             if self._state.dreamer:
-                self._state.dreamer._cortex = bicameral
+                from .hippocampus import ICortex
+
+                self._state.dreamer._cortex = cast(ICortex, bicameral)
         except ImportError:
             # D-gent not available, skip
             pass
@@ -450,13 +451,18 @@ class LifecycleManager:
 
         # Create CortexObserver (O-gent health monitoring)
         try:
-            from agents.o.cortex_observer import create_cortex_observer
+            from agents.o.cortex_observer import (
+                IHippocampus,
+                ILucidDreamer,
+                ISynapse,
+                create_cortex_observer,
+            )
 
             observer = create_cortex_observer(
                 bicameral=self._state.bicameral,
-                synapse=self._state.synapse,
-                hippocampus=self._state.hippocampus,
-                dreamer=self._state.dreamer,
+                synapse=cast(ISynapse | None, self._state.synapse),
+                hippocampus=cast(IHippocampus | None, self._state.hippocampus),
+                dreamer=cast(ILucidDreamer | None, self._state.dreamer),
             )
             self._state.cortex_observer = observer
         except ImportError:

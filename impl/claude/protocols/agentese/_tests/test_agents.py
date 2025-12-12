@@ -21,6 +21,7 @@ from ..contexts.agents import (
 )
 from ..exceptions import PathNotFoundError
 from ..node import BasicRendering
+from ..renderings import AdminRendering, DeveloperRendering
 
 # === Fixtures ===
 
@@ -252,6 +253,7 @@ class TestAgentNode:
         """Developer sees DeveloperRendering."""
         node = resolver.resolve("agent", ["e"])
         rendering = await node.manifest(mock_umwelt)
+        assert isinstance(rendering, DeveloperRendering)
         assert rendering.entity == "E-gent"
         assert "evolution" in rendering.structure["theme"].lower()
 
@@ -262,6 +264,7 @@ class TestAgentNode:
         """Admin sees AdminRendering with status."""
         node = resolver.resolve("agent", ["e"])
         rendering = await node.manifest(admin_umwelt)
+        assert isinstance(rendering, AdminRendering)
         assert rendering.entity == "E-gent"
         assert rendering.status == "active"
         assert rendering.metrics["tests"] == 353
@@ -393,10 +396,12 @@ class TestIntegration:
 
         # 3. Select E-gent
         e_node = resolver.resolve("agent", ["e"])
+        assert isinstance(e_node, AgentNode)
         assert e_node.agent_letter == "e"
 
         # 4. Manifest E-gent
         rendering = await e_node.manifest(mock_umwelt)
+        assert isinstance(rendering, DeveloperRendering)
         assert "E-gent" in rendering.entity
 
     @pytest.mark.asyncio

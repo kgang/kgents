@@ -74,7 +74,7 @@ class SQLiteRelationalStore(IRelationalStore):
 
     def _convert_params(
         self, query: str, params: dict[str, Any] | None
-    ) -> tuple[str, tuple]:
+    ) -> tuple[str, tuple[Any, ...]]:
         """
         Convert :name params to ? placeholders for SQLite.
 
@@ -119,7 +119,7 @@ class SQLiteRelationalStore(IRelationalStore):
 
     async def fetch_one(
         self, query: str, params: dict[str, Any] | None = None
-    ) -> dict | None:
+    ) -> dict[str, Any] | None:
         """Fetch single row as dict."""
         conn = await self._ensure_connection()
         converted_query, positional = self._convert_params(query, params)
@@ -133,7 +133,7 @@ class SQLiteRelationalStore(IRelationalStore):
 
     async def fetch_all(
         self, query: str, params: dict[str, Any] | None = None
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         """Fetch all rows as list of dicts."""
         conn = await self._ensure_connection()
         converted_query, positional = self._convert_params(query, params)
@@ -178,7 +178,7 @@ class SQLiteRelationalStore(IRelationalStore):
         async with self._lock:
             await conn.execute("BEGIN")
             try:
-                yield tx
+                yield tx  # type: ignore[misc]
                 await conn.commit()
             except Exception:
                 await conn.rollback()
@@ -194,7 +194,9 @@ class SQLiteRelationalStore(IRelationalStore):
 class _SQLiteTransaction:
     """Transaction-scoped store for nested operations."""
 
-    def __init__(self, conn: aiosqlite.Connection, lock: asyncio.Lock, convert_params):
+    def __init__(
+        self, conn: aiosqlite.Connection, lock: asyncio.Lock, convert_params: Any
+    ) -> None:
         self._conn = conn
         self._lock = lock
         self._convert_params = convert_params
@@ -206,7 +208,7 @@ class _SQLiteTransaction:
 
     async def fetch_one(
         self, query: str, params: dict[str, Any] | None = None
-    ) -> dict | None:
+    ) -> dict[str, Any] | None:
         converted_query, positional = self._convert_params(query, params)
         cursor = await self._conn.execute(converted_query, positional)
         row = await cursor.fetchone()
@@ -214,7 +216,7 @@ class _SQLiteTransaction:
 
     async def fetch_all(
         self, query: str, params: dict[str, Any] | None = None
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         converted_query, positional = self._convert_params(query, params)
         cursor = await self._conn.execute(converted_query, positional)
         rows = await cursor.fetchall()
@@ -638,7 +640,7 @@ class SQLiteTelemetryStore(ITelemetryStore):
 
         if event_type:
             query = "SELECT COUNT(*) as cnt FROM events WHERE event_type = ?"
-            params: tuple = (event_type,)
+            params: tuple[str, ...] = (event_type,)
         else:
             query = "SELECT COUNT(*) as cnt FROM events"
             params = ()
@@ -663,8 +665,8 @@ class SQLiteTelemetryStore(ITelemetryStore):
 class InMemoryRelationalStore(IRelationalStore):
     """In-memory relational store for testing."""
 
-    def __init__(self):
-        self._tables: dict[str, list[dict]] = {}
+    def __init__(self) -> None:
+        self._tables: dict[str, list[dict[str, Any]]] = {}
         self._lock = asyncio.Lock()
 
     async def execute(self, query: str, params: dict[str, Any] | None = None) -> int:
@@ -673,12 +675,12 @@ class InMemoryRelationalStore(IRelationalStore):
 
     async def fetch_one(
         self, query: str, params: dict[str, Any] | None = None
-    ) -> dict | None:
+    ) -> dict[str, Any] | None:
         return None
 
     async def fetch_all(
         self, query: str, params: dict[str, Any] | None = None
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         return []
 
     async def executemany(self, query: str, params_list: list[dict[str, Any]]) -> int:
@@ -697,7 +699,7 @@ class InMemoryVectorStore(IVectorStore):
 
     def __init__(self, dimensions: int = 384):
         self._dimensions = dimensions
-        self._vectors: dict[str, tuple[list[float], dict]] = {}
+        self._vectors: dict[str, tuple[list[float], dict[str, Any]]] = {}
 
     @property
     def dimensions(self) -> int:
@@ -732,7 +734,7 @@ class InMemoryVectorStore(IVectorStore):
 class InMemoryBlobStore(IBlobStore):
     """In-memory blob store for testing."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._blobs: dict[str, bytes] = {}
 
     async def put(self, key: str, data: bytes, content_type: str | None = None) -> str:
@@ -761,7 +763,7 @@ class InMemoryBlobStore(IBlobStore):
 class InMemoryTelemetryStore(ITelemetryStore):
     """In-memory telemetry store for testing."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._events: list[TelemetryEvent] = []
 
     async def append(self, events: list[TelemetryEvent]) -> int:

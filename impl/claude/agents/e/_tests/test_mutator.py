@@ -163,7 +163,7 @@ class TestAnalyzeHotSpots:
     def test_simple_function(self) -> None:
         """Test hot spot detection for simple function."""
         code = """
-def simple():
+def simple() -> None:
     return 42
 """
         hot_spots = analyze_hot_spots(code)
@@ -177,7 +177,7 @@ def simple():
     def test_complex_function(self) -> None:
         """Test hot spot detection for complex function."""
         code = """
-def complex_func(x):
+def complex_func(x) -> None:
     if x > 0:
         for i in range(x):
             if i % 2 == 0:
@@ -201,11 +201,11 @@ def complex_func(x):
         """Test hot spot detection for classes."""
         code = """
 class MyClass:
-    def method_a(self):
+    def method_a(self) -> None:
         if True:
             pass
 
-    def method_b(self):
+    def method_b(self) -> None:
         for i in range(10):
             yield i
 """
@@ -218,10 +218,10 @@ class MyClass:
     def test_sorted_by_priority(self) -> None:
         """Test that hot spots are sorted by priority."""
         code = """
-def simple():
+def simple() -> None:
     return 1
 
-def complex(x):
+def complex(x) -> None:
     if x > 0:
         for i in range(x):
             if i % 2 == 0:
@@ -249,7 +249,7 @@ class TestComplexityCalculation:
         """Test base complexity for minimal function."""
         import ast
 
-        tree = ast.parse("def f(): pass")
+        tree = ast.parse("def f() -> None: pass")
         func = tree.body[0]
         complexity = _calculate_complexity(func)
         assert complexity == 1.0  # Base complexity
@@ -258,7 +258,7 @@ class TestComplexityCalculation:
         """Test that if statements increase complexity."""
         import ast
 
-        tree = ast.parse("def f(x):\n    if x: pass")
+        tree = ast.parse("def f(x) -> None:\n    if x: pass")
         func = tree.body[0]
         complexity = _calculate_complexity(func)
         assert complexity > 1.0
@@ -268,7 +268,7 @@ class TestComplexityCalculation:
         import ast
 
         tree = ast.parse(
-            "def f():\n    for i in range(10): pass\n    while True: break"
+            "def f() -> None:\n    for i in range(10): pass\n    while True: break"
         )
         func = tree.body[0]
         complexity = _calculate_complexity(func)
@@ -320,7 +320,7 @@ class TestExtractConstant:
     def test_magic_number_extraction(self) -> None:
         """Test extraction of magic numbers."""
         code = """
-def calculate(x):
+def calculate(x) -> None:
     return x * 42 + 100
 """
         result = apply_extract_constant(code, None)
@@ -333,7 +333,7 @@ def calculate(x):
     def test_small_numbers_unchanged(self) -> None:
         """Test that small numbers are not extracted."""
         code = """
-def f(x):
+def f(x) -> None:
     return x + 1
 """
         result = apply_extract_constant(code, None)
@@ -353,7 +353,7 @@ class TestFlattenNesting:
     def test_nested_if_flattens(self) -> None:
         """Test flattening of nested if."""
         code = """
-def process(x):
+def process(x) -> None:
     if x is not None:
         result = x * 2
         return result
@@ -368,7 +368,7 @@ def process(x):
     def test_no_nesting_unchanged(self) -> None:
         """Test that flat code is unchanged."""
         code = """
-def simple():
+def simple() -> None:
     return 42
 """
         result = apply_flatten_nesting(code, None)
@@ -475,7 +475,7 @@ class TestMutator:
         mutator = Mutator()
 
         code = """
-def complex_func(items):
+def complex_func(items) -> None:
     result = []
     for item in items:
         if item > 0:
@@ -499,9 +499,9 @@ def complex_func(items):
         mutator = Mutator(config=config)
 
         code = """
-def f1(): return 42 * 100
-def f2(): return 43 * 200
-def f3(): return 44 * 300
+def f1() -> None: return 42 * 100
+def f2() -> None: return 43 * 200
+def f3() -> None: return 44 * 300
 """
         mutations = mutator.mutate(code)
         assert len(mutations) <= 2
@@ -512,7 +512,7 @@ def f3(): return 44 * 300
         mutator._stats.reset()
 
         code = """
-def f():
+def f() -> None:
     x = 42
     return x * 100
 """
@@ -527,7 +527,7 @@ def f():
         mutator = Mutator()
 
         code = """
-def process():
+def process() -> None:
     result = []
     for x in range(10):
         result.append(x * 2)
@@ -636,7 +636,7 @@ class TestUtilityFunctions:
 
     def test_count_line_changes_identical(self) -> None:
         """Test counting changes for identical code."""
-        code = "def f(): pass"
+        code = "def f() -> None: pass"
         changes = _count_line_changes(code, code)
         assert changes == 0
 
@@ -669,7 +669,7 @@ class TestMutatorIntegration:
 
         # Code with multiple mutation opportunities
         code = '''
-def process_items(items):
+def process_items(items) -> None:
     """Process a list of items."""
     result = []
     for item in items:
@@ -699,7 +699,7 @@ def process_items(items):
         demon = TeleologicalDemon()
 
         code = """
-def calculate(x):
+def calculate(x) -> None:
     magic = 42
     return x * magic + 100
 """

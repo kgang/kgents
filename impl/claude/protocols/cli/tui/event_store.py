@@ -19,7 +19,7 @@ import uuid
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Iterator
+from typing import Any, Iterator
 
 from .types import (
     AgentEntry,
@@ -336,7 +336,7 @@ class EventStore:
         """
         with self._connection() as conn:
             query = "SELECT * FROM sessions WHERE 1=1"
-            params: list = []
+            params: list[Any] = []
 
             if state:
                 query += " AND state = ?"
@@ -391,7 +391,7 @@ class EventStore:
         event_type: EventType,
         source: str,
         message: str,
-        data: dict | None = None,
+        data: dict[str, Any] | None = None,
     ) -> DashboardEvent:
         """
         Add an event to a session.
@@ -446,7 +446,7 @@ class EventStore:
         """Get events for a session with optional filters."""
         with self._connection() as conn:
             query = "SELECT * FROM events WHERE session_id = ?"
-            params: list = [session_id]
+            params: list[Any] = [session_id]
 
             if event_type:
                 query += " AND event_type = ?"
@@ -620,7 +620,7 @@ class EventStore:
             conn.commit()
             return len(session_ids)
 
-    def get_statistics(self) -> dict:
+    def get_statistics(self) -> dict[str, Any]:
         """Get store statistics."""
         with self._connection() as conn:
             sessions = conn.execute("SELECT COUNT(*) as count FROM sessions").fetchone()

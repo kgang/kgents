@@ -25,7 +25,7 @@ class TestEgentIntegration:
 
 ## CODE
 ```python
-def hello():
+def hello() -> None:
     return "world"
 ```
 """
@@ -33,7 +33,7 @@ def hello():
 
         assert result.success
         assert result.value is not None
-        assert "def hello():" in result.value.code
+        assert "def hello() -> None:" in result.value.code
         assert result.confidence > 0.5
         assert result.strategy is not None
         assert "e-gent" in result.strategy
@@ -46,7 +46,7 @@ def hello():
 
         response = """
 ```python
-def test():
+def test() -> None:
     pass
 ```
 """
@@ -54,7 +54,7 @@ def test():
 
         assert result.success
         assert result.value is not None
-        assert "def test():" in result.value.code
+        assert "def test() -> None:" in result.value.code
 
     def test_code_parser_failure(self) -> None:
         """Test E-gent code parser with invalid input."""

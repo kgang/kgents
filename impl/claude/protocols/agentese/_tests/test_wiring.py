@@ -13,7 +13,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 import pytest
 
@@ -35,6 +35,10 @@ from ..wiring import (
     wire_existing_logos,
 )
 
+if TYPE_CHECKING:
+    from bootstrap.types import Agent
+    from bootstrap.umwelt import Umwelt
+
 # =============================================================================
 # Test Fixtures
 # =============================================================================
@@ -55,7 +59,7 @@ class MockUmwelt:
 
     dna: MockDNA = field(default_factory=MockDNA)
     state: Any = None
-    gravity: tuple = ()
+    gravity: tuple[Any, ...] = ()
 
 
 @dataclass
@@ -73,7 +77,7 @@ class MockLgentEntry:
 class MockLgentRegistry:
     """Mock L-gent registry for testing."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._entries: dict[str, MockLgentEntry] = {}
         self._usage_log: list[tuple[str, bool, str | None]] = []
 
@@ -84,10 +88,7 @@ class MockLgentRegistry:
         self._entries[entry.id] = entry
 
     async def record_usage(
-        self,
-        entry_id: str,
-        success: bool = True,
-        error: str | None = None,
+        self, entry_id: str, success: bool = True, error: str | None = None
     ) -> None:
         self._usage_log.append((entry_id, success, error))
 
@@ -98,7 +99,7 @@ class MockLgentRegistry:
 class MockGrammarian:
     """Mock G-gent grammarian for testing."""
 
-    async def reify(self, **kwargs) -> dict:
+    async def reify(self, **kwargs: Any) -> dict[str, str]:
         return {"name": kwargs.get("name", "AgenteseTongue")}
 
 
@@ -134,8 +135,7 @@ def mock_grammarian() -> MockGrammarian:
 
 @pytest.fixture
 def wired_logos(
-    mock_lgent_registry: MockLgentRegistry,
-    mock_grammarian: MockGrammarian,
+    mock_lgent_registry: MockLgentRegistry, mock_grammarian: MockGrammarian
 ) -> WiredLogos:
     """Create a fully wired Logos for testing."""
     return create_wired_logos(
@@ -167,10 +167,8 @@ class TestWiredLogosCreation:
         assert isinstance(wired.integrations, AgentesIntegrations)
 
     def test_create_wired_logos_with_integrations(
-        self,
-        mock_lgent_registry: MockLgentRegistry,
-        mock_grammarian: MockGrammarian,
-    ):
+        self, mock_lgent_registry: MockLgentRegistry, mock_grammarian: MockGrammarian
+    ) -> None:
         """Test creating WiredLogos with integrations."""
         wired = create_wired_logos(
             lgent_registry=mock_lgent_registry,
@@ -256,12 +254,12 @@ class TestUmweltIntegration:
     """Tests for UmweltIntegration in WiredLogos."""
 
     def test_extract_meta_from_umwelt(
-        self,
-        wired_logos: WiredLogos,
-        architect_umwelt: MockUmwelt,
-    ):
+        self, wired_logos: WiredLogos, architect_umwelt: MockUmwelt
+    ) -> None:
         """Test extracting AgentMeta from Umwelt."""
-        meta = wired_logos.integrations.umwelt.extract_meta(architect_umwelt)
+        meta = wired_logos.integrations.umwelt.extract_meta(
+            cast("Umwelt[Any, Any]", architect_umwelt)
+        )
         assert isinstance(meta, AgentMeta)
         assert meta.archetype == "architect"
 
@@ -270,12 +268,14 @@ class TestUmweltIntegration:
         wired_logos: WiredLogos,
         architect_umwelt: MockUmwelt,
         poet_umwelt: MockUmwelt,
-    ):
+    ) -> None:
         """Test that different archetypes get different affordances."""
         architect_affordances = wired_logos.integrations.umwelt.get_affordances(
-            architect_umwelt
+            cast("Umwelt[Any, Any]", architect_umwelt)
         )
-        poet_affordances = wired_logos.integrations.umwelt.get_affordances(poet_umwelt)
+        poet_affordances = wired_logos.integrations.umwelt.get_affordances(
+            cast("Umwelt[Any, Any]", poet_umwelt)
+        )
 
         assert "renovate" in architect_affordances
         assert "renovate" not in poet_affordances
@@ -286,10 +286,14 @@ class TestUmweltIntegration:
         wired_logos: WiredLogos,
         architect_umwelt: MockUmwelt,
         poet_umwelt: MockUmwelt,
-    ):
+    ) -> None:
         """Test can_invoke checks observer affordances."""
-        assert wired_logos.integrations.umwelt.can_invoke(architect_umwelt, "renovate")
-        assert not wired_logos.integrations.umwelt.can_invoke(poet_umwelt, "renovate")
+        assert wired_logos.integrations.umwelt.can_invoke(
+            cast("Umwelt[Any, Any]", architect_umwelt), "renovate"
+        )
+        assert not wired_logos.integrations.umwelt.can_invoke(
+            cast("Umwelt[Any, Any]", poet_umwelt), "renovate"
+        )
 
 
 # =============================================================================
@@ -302,10 +306,8 @@ class TestLgentIntegration:
 
     @pytest.mark.asyncio
     async def test_track_invocation_success(
-        self,
-        wired_logos: WiredLogos,
-        mock_lgent_registry: MockLgentRegistry,
-    ):
+        self, wired_logos: WiredLogos, mock_lgent_registry: MockLgentRegistry
+    ) -> None:
         """Test that successful invocations are tracked."""
         await wired_logos._track_invocation("world.house.manifest", True)
         assert len(mock_lgent_registry._usage_log) == 1
@@ -313,10 +315,8 @@ class TestLgentIntegration:
 
     @pytest.mark.asyncio
     async def test_track_invocation_failure(
-        self,
-        wired_logos: WiredLogos,
-        mock_lgent_registry: MockLgentRegistry,
-    ):
+        self, wired_logos: WiredLogos, mock_lgent_registry: MockLgentRegistry
+    ) -> None:
         """Test that failed invocations are tracked with error."""
         await wired_logos._track_invocation(
             "world.house.manifest",
@@ -359,26 +359,26 @@ class TestMembraneBridge:
 
     @pytest.mark.asyncio
     async def test_execute_membrane_command(
-        self,
-        wired_logos: WiredLogos,
-        architect_umwelt: MockUmwelt,
-    ):
+        self, wired_logos: WiredLogos, architect_umwelt: MockUmwelt
+    ) -> None:
         """Test executing Membrane command via AGENTESE."""
         # The "observe" command maps to "world.project.manifest"
         # WorldContextResolver creates placeholder nodes, so this succeeds
-        result = await wired_logos.execute_membrane_command("observe", architect_umwelt)
+        result = await wired_logos.execute_membrane_command(
+            "observe", cast("Umwelt[Any, Any]", architect_umwelt)
+        )
         # For architects, should return BlueprintRendering
         assert result is not None
 
     @pytest.mark.asyncio
     async def test_execute_unknown_membrane_command_raises(
-        self,
-        wired_logos: WiredLogos,
-        architect_umwelt: MockUmwelt,
-    ):
+        self, wired_logos: WiredLogos, architect_umwelt: MockUmwelt
+    ) -> None:
         """Test that unknown Membrane commands raise PathNotFoundError."""
         with pytest.raises(PathNotFoundError):
-            await wired_logos.execute_membrane_command("unknown_cmd", architect_umwelt)
+            await wired_logos.execute_membrane_command(
+                "unknown_cmd", cast("Umwelt[Any, Any]", architect_umwelt)
+            )
 
 
 # =============================================================================
@@ -390,10 +390,8 @@ class TestIntegrationStatus:
     """Tests for integration status reporting."""
 
     def test_full_integration_status(
-        self,
-        mock_lgent_registry: MockLgentRegistry,
-        mock_grammarian: MockGrammarian,
-    ):
+        self, mock_lgent_registry: MockLgentRegistry, mock_grammarian: MockGrammarian
+    ) -> None:
         """Test status when all integrations available."""
         wired = create_wired_logos(
             lgent_registry=mock_lgent_registry,
@@ -470,30 +468,26 @@ class TestAutopoiesis:
 
     @pytest.mark.asyncio
     async def test_define_concept_validates_handle(
-        self,
-        wired_logos: WiredLogos,
-        architect_umwelt: MockUmwelt,
-    ):
+        self, wired_logos: WiredLogos, architect_umwelt: MockUmwelt
+    ) -> None:
         """Test that define_concept validates handle syntax."""
         with pytest.raises(PathSyntaxError):
             await wired_logos.define_concept(
                 "invalid",  # Too short
                 "spec content",
-                architect_umwelt,
+                cast("Umwelt[Any, Any]", architect_umwelt),
             )
 
     @pytest.mark.asyncio
     async def test_define_concept_checks_affordance(
-        self,
-        wired_logos: WiredLogos,
-        poet_umwelt: MockUmwelt,
-    ):
+        self, wired_logos: WiredLogos, poet_umwelt: MockUmwelt
+    ) -> None:
         """Test that define_concept checks observer affordance."""
         with pytest.raises(AffordanceError):
             await wired_logos.define_concept(
                 "world.garden",
                 "spec content",
-                poet_umwelt,  # Poet cannot define
+                cast("Umwelt[Any, Any]", poet_umwelt),  # Poet cannot define
             )
 
     @pytest.mark.asyncio
@@ -502,7 +496,7 @@ class TestAutopoiesis:
         mock_lgent_registry: MockLgentRegistry,
         mock_grammarian: MockGrammarian,
         architect_umwelt: MockUmwelt,
-    ):
+    ) -> None:
         """Test that define_concept registers in L-gent."""
         wired = create_wired_logos(
             lgent_registry=mock_lgent_registry,
@@ -521,7 +515,9 @@ affordances:
 # Garden
 A beautiful garden.
 """
-        node = await wired.define_concept("world.garden", spec, architect_umwelt)
+        node = await wired.define_concept(
+            "world.garden", spec, cast("Umwelt[Any, Any]", architect_umwelt)
+        )
 
         # Check L-gent registration
         assert "world.garden" in mock_lgent_registry._entries
@@ -560,17 +556,17 @@ class TestInvoke:
     async def test_invoke_requires_observer(self, wired_logos: WiredLogos) -> None:
         """Test that invoke requires observer."""
         with pytest.raises(ObserverRequiredError):
-            await wired_logos.invoke("world.house.manifest", None)
+            await wired_logos.invoke("world.house.manifest", None)  # type: ignore[arg-type]
 
     @pytest.mark.asyncio
     async def test_invoke_validates_path(
-        self,
-        wired_logos: WiredLogos,
-        architect_umwelt: MockUmwelt,
-    ):
+        self, wired_logos: WiredLogos, architect_umwelt: MockUmwelt
+    ) -> None:
         """Test that invoke validates path."""
         with pytest.raises(PathSyntaxError):
-            await wired_logos.invoke("invalid.path.manifest", architect_umwelt)
+            await wired_logos.invoke(
+                "invalid.path.manifest", cast("Umwelt[Any, Any]", architect_umwelt)
+            )
 
     @pytest.mark.asyncio
     async def test_invoke_tracks_success(
@@ -578,7 +574,7 @@ class TestInvoke:
         wired_logos: WiredLogos,
         mock_lgent_registry: MockLgentRegistry,
         architect_umwelt: MockUmwelt,
-    ):
+    ) -> None:
         """Test that successful invoke tracks usage."""
 
         # Register a world node first
@@ -586,23 +582,28 @@ class TestInvoke:
         class TestNode:
             handle: str = "world.test"
 
-            def affordances(self, observer):
+            def affordances(self, observer: Any) -> list[str]:
                 return ["manifest", "witness", "affordances"]
 
-            def lens(self, aspect):
-                return None
+            def lens(self, aspect: str) -> "Agent[Any, Any]":
+                # Return a stub agent - not used in this test
+                from bootstrap.types import Agent
 
-            async def manifest(self, observer):
+                return Agent(lambda x: x)  # type: ignore[abstract, call-arg]
+
+            async def manifest(self, observer: Any) -> BasicRendering:
                 return BasicRendering(summary="Test", content="Test content")
 
-            async def invoke(self, aspect, observer, **kwargs):
+            async def invoke(self, aspect: str, observer: Any, **kwargs: Any) -> Any:
                 if aspect == "manifest":
                     return await self.manifest(observer)
                 return {"aspect": aspect}
 
         wired_logos.register("world.test", TestNode())
 
-        result = await wired_logos.invoke("world.test.manifest", architect_umwelt)
+        result = await wired_logos.invoke(
+            "world.test.manifest", cast("Umwelt[Any, Any]", architect_umwelt)
+        )
         assert len(mock_lgent_registry._usage_log) == 1
         assert mock_lgent_registry._usage_log[0][1] is True  # success
 
@@ -612,11 +613,13 @@ class TestInvoke:
         wired_logos: WiredLogos,
         mock_lgent_registry: MockLgentRegistry,
         architect_umwelt: MockUmwelt,
-    ):
+    ) -> None:
         """Test that failed invoke tracks usage with error."""
         # Try to invoke with invalid path syntax (will definitely fail)
         with pytest.raises(PathSyntaxError):
-            await wired_logos.invoke("invalid", architect_umwelt)
+            await wired_logos.invoke(
+                "invalid", cast("Umwelt[Any, Any]", architect_umwelt)
+            )
 
         # No tracking for syntax errors (they fail before invoke)
         # Let's test with a valid path but unavailable affordance instead
@@ -627,16 +630,19 @@ class TestInvoke:
         class LimitedNode:
             handle: str = "world.limited"
 
-            def affordances(self, observer):
+            def affordances(self, observer: Any) -> list[str]:
                 return ["manifest"]  # Only manifest, no "unavailable"
 
-            def lens(self, aspect):
-                return None
+            def lens(self, aspect: str) -> "Agent[Any, Any]":
+                # Return a stub agent - not used in this test
+                from bootstrap.types import Agent
 
-            async def manifest(self, observer):
+                return Agent(lambda x: x)  # type: ignore[abstract, call-arg]
+
+            async def manifest(self, observer: Any) -> BasicRendering:
                 return BasicRendering(summary="Test", content="Test content")
 
-            async def invoke(self, aspect, observer, **kwargs):
+            async def invoke(self, aspect: str, observer: Any, **kwargs: Any) -> Any:
                 if aspect == "manifest":
                     return await self.manifest(observer)
                 raise AffordanceError(
@@ -650,7 +656,9 @@ class TestInvoke:
 
         # Try to invoke unavailable aspect
         with pytest.raises(AffordanceError):
-            await wired_logos.invoke("world.limited.unavailable", architect_umwelt)
+            await wired_logos.invoke(
+                "world.limited.unavailable", cast("Umwelt[Any, Any]", architect_umwelt)
+            )
 
         # Usage should be tracked with failure
         assert len(mock_lgent_registry._usage_log) == 1
@@ -675,13 +683,11 @@ class TestConvenienceMethods:
         assert not wired_logos.is_resolved("world.house")
 
     def test_clear_cache(
-        self,
-        wired_logos: WiredLogos,
-        mock_lgent_registry: MockLgentRegistry,
-    ):
+        self, wired_logos: WiredLogos, mock_lgent_registry: MockLgentRegistry
+    ) -> None:
         """Test clearing cache."""
         # Add something to L-gent cache
-        wired_logos.integrations.lgent._cache["test"] = "value"
+        wired_logos.integrations.lgent._cache["test"] = MockLgentEntry("test", "test")  # type: ignore[assignment]
 
         wired_logos.clear_cache()
 
@@ -732,5 +738,7 @@ class TestEdgeCases:
         )
 
         with pytest.raises(RuntimeError) as exc_info:
-            await wired.execute_membrane_command("observe", MockUmwelt())
+            await wired.execute_membrane_command(
+                "observe", cast("Umwelt[Any, Any]", MockUmwelt())
+            )
         assert "not available" in str(exc_info.value)

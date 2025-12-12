@@ -461,9 +461,7 @@ class TestSuggestMutations:
 
     @pytest.mark.asyncio
     async def test_with_lgent_uses_similarity(
-        self,
-        library_with_lgent: ViralLibrary,
-        mock_registry: MockSemanticRegistry,
+        self, library_with_lgent: ViralLibrary, mock_registry: MockSemanticRegistry
     ) -> None:
         """With L-gent, uses semantic similarity."""
         # Create pattern with specific embedding
@@ -636,9 +634,7 @@ class TestPrune:
 
     @pytest.mark.asyncio
     async def test_deregisters_from_lgent(
-        self,
-        library_with_lgent: ViralLibrary,
-        mock_registry: MockSemanticRegistry,
+        self, library_with_lgent: ViralLibrary, mock_registry: MockSemanticRegistry
     ) -> None:
         """Pruned patterns are deregistered from L-gent."""
         phage = Phage(

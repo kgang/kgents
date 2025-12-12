@@ -97,7 +97,7 @@ class LifecycleManager:
         await manager.shutdown()
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._state: LifecycleState | None = None
         self._shutdown_handlers: list[Callable[[], Awaitable[None]]] = []
         self._ground: Ground | None = None
@@ -191,9 +191,10 @@ class LifecycleManager:
                     return self._create_db_less_state(project, errors)
 
             # Stage 6: Register this instance
-            instance_id = str(uuid.uuid4())
+            instance_id_str: str = str(uuid.uuid4())
+            instance_id: str | None = instance_id_str
             try:
-                await self._register_instance(storage, instance_id, project)
+                await self._register_instance(storage, instance_id_str, project)
             except Exception as e:
                 errors.append(f"Instance registration failed: {e}")
                 instance_id = None

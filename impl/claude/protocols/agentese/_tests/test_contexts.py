@@ -12,7 +12,7 @@ Tests for the five strict contexts:
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 import pytest
 
@@ -50,6 +50,9 @@ from ..contexts.world import WorldContextResolver
 from ..logos import Logos
 from ..node import AgentMeta, BasicRendering, LogosNode
 from .conftest import MockUmwelt
+
+if TYPE_CHECKING:
+    from bootstrap.umwelt import Umwelt
 
 # ============================================================
 # VALID CONTEXTS TESTS
@@ -132,7 +135,7 @@ class TestWorldNode:
         self, world_node: WorldNode, observer: MockUmwelt
     ) -> None:
         """Default manifest returns BasicRendering."""
-        result = await world_node.manifest(observer)  # type: ignore[arg-type]
+        result = await world_node.manifest(cast("Umwelt[Any, Any]", observer))
         assert isinstance(result, BasicRendering)
         assert "house" in result.summary.lower()
 
@@ -140,7 +143,7 @@ class TestWorldNode:
     async def test_manifest_architect(self, world_node: WorldNode) -> None:
         """Architect sees BlueprintRendering."""
         observer = MockUmwelt(archetype="architect")
-        result = await world_node.manifest(observer)  # type: ignore[arg-type]
+        result = await world_node.manifest(cast("Umwelt[Any, Any]", observer))
         # Should be BlueprintRendering
         assert hasattr(result, "dimensions") or "blueprint" in str(type(result)).lower()
 
@@ -149,7 +152,7 @@ class TestWorldNode:
         self, world_node: WorldNode, observer: MockUmwelt
     ) -> None:
         """Witness aspect returns history."""
-        result = await world_node.invoke("witness", observer)  # type: ignore[arg-type]
+        result = await world_node.invoke("witness", cast("Umwelt[Any, Any]", observer))
         assert "handle" in result or "history" in result
 
 
@@ -217,8 +220,8 @@ class TestMemoryNode:
         """Checkpoint creates a memory snapshot."""
         result = await memory_node.invoke(
             "checkpoint",
-            observer,
-            label="test_checkpoint",  # type: ignore[arg-type]
+            cast("Umwelt[Any, Any]", observer),
+            label="test_checkpoint",
         )
         assert result["label"] == "test_checkpoint"
         assert "timestamp" in result
@@ -229,7 +232,9 @@ class TestMemoryNode:
     ) -> None:
         """Consolidate processes temporary memories."""
         memory_node._memories["test"] = {"temporary": True, "data": "value"}
-        result = await memory_node.invoke("consolidate", observer)  # type: ignore[arg-type]
+        result = await memory_node.invoke(
+            "consolidate", cast("Umwelt[Any, Any]", observer)
+        )
         assert "consolidated" in result
         # Memory should no longer be temporary
         assert memory_node._memories["test"]["temporary"] is False
@@ -253,8 +258,8 @@ class TestCapabilitiesNode:
         """Can acquire new capabilities."""
         result = await capabilities_node.invoke(
             "acquire",
-            observer,
-            capability="flying",  # type: ignore[arg-type]
+            cast("Umwelt[Any, Any]", observer),
+            capability="flying",
         )
         assert result["acquired"] == "flying"
         assert "flying" in capabilities_node._capabilities
@@ -267,8 +272,8 @@ class TestCapabilitiesNode:
         capabilities_node._capabilities.add("flying")
         result = await capabilities_node.invoke(
             "release",
-            observer,
-            capability="flying",  # type: ignore[arg-type]
+            cast("Umwelt[Any, Any]", observer),
+            capability="flying",
         )
         assert result["released"] == "flying"
         assert "flying" not in capabilities_node._capabilities
@@ -351,8 +356,8 @@ class TestConceptNode:
         """Refine challenges the concept definition."""
         result = await concept_node.invoke(
             "refine",
-            observer,
-            challenge="What are the limits of justice?",  # type: ignore[arg-type]
+            cast("Umwelt[Any, Any]", observer),
+            challenge="What are the limits of justice?",
         )
         assert "refined" in result
         assert "challenge" in result
@@ -362,7 +367,9 @@ class TestConceptNode:
         self, concept_node: ConceptNode, observer: MockUmwelt
     ) -> None:
         """Dialectic generates thesis/antithesis/synthesis."""
-        result = await concept_node.invoke("dialectic", observer)  # type: ignore[arg-type]
+        result = await concept_node.invoke(
+            "dialectic", cast("Umwelt[Any, Any]", observer)
+        )
         assert "thesis" in result
         assert "antithesis" in result
         assert "synthesis" in result
@@ -372,7 +379,9 @@ class TestConceptNode:
         self, concept_node: ConceptNode, observer: MockUmwelt
     ) -> None:
         """Relate finds concept connections."""
-        result = await concept_node.invoke("relate", observer, target="fairness")  # type: ignore[arg-type]
+        result = await concept_node.invoke(
+            "relate", cast("Umwelt[Any, Any]", observer), target="fairness"
+        )
         assert result["target"] == "fairness"
         assert "fairness" in result["all_relations"]
 
@@ -458,7 +467,9 @@ class TestVoidNodes:
     async def test_entropy_sip(self, observer: MockUmwelt) -> None:
         """Entropy node can sip randomness."""
         node = EntropyNode()
-        result = await node.invoke("sip", observer, amount=1.0)  # type: ignore[arg-type]
+        result = await node.invoke(
+            "sip", cast("Umwelt[Any, Any]", observer), amount=1.0
+        )
         assert "seed" in result
         assert "amount" in result
 
@@ -466,7 +477,9 @@ class TestVoidNodes:
     async def test_serendipity_tangent(self, observer: MockUmwelt) -> None:
         """Serendipity generates tangents."""
         node = SerendipityNode()
-        result = await node.invoke("sip", observer, context="testing")  # type: ignore[arg-type]
+        result = await node.invoke(
+            "sip", cast("Umwelt[Any, Any]", observer), context="testing"
+        )
         assert "tangent" in result
         assert len(result["tangent"]) > 0
 
@@ -474,14 +487,16 @@ class TestVoidNodes:
     async def test_gratitude_tithe(self, observer: MockUmwelt) -> None:
         """Gratitude accepts tithes."""
         node = GratitudeNode()
-        result = await node.invoke("tithe", observer)  # type: ignore[arg-type]
+        result = await node.invoke("tithe", cast("Umwelt[Any, Any]", observer))
         assert "gratitude" in result
 
     @pytest.mark.asyncio
     async def test_gratitude_thank(self, observer: MockUmwelt) -> None:
         """Gratitude accepts thanks."""
         node = GratitudeNode()
-        result = await node.invoke("thank", observer, target="the universe")  # type: ignore[arg-type]
+        result = await node.invoke(
+            "thank", cast("Umwelt[Any, Any]", observer), target="the universe"
+        )
         assert result["target"] == "the universe"
 
 
@@ -539,14 +554,18 @@ class TestTraceNode:
     @pytest.mark.asyncio
     async def test_witness(self, trace_node: TraceNode, observer: MockUmwelt) -> None:
         """Witness returns traces."""
-        result = await trace_node.invoke("witness", observer, limit=10)  # type: ignore[arg-type]
+        result = await trace_node.invoke(
+            "witness", cast("Umwelt[Any, Any]", observer), limit=10
+        )
         assert "traces" in result
         assert len(result["traces"]) == 2
 
     @pytest.mark.asyncio
     async def test_query(self, trace_node: TraceNode, observer: MockUmwelt) -> None:
         """Query filters traces."""
-        result = await trace_node.invoke("query", observer, query="created")  # type: ignore[arg-type]
+        result = await trace_node.invoke(
+            "query", cast("Umwelt[Any, Any]", observer), query="created"
+        )
         assert len(result["results"]) == 1
         assert result["results"][0]["event"] == "created"
 
@@ -569,7 +588,7 @@ class TestScheduleNode:
         """Defer schedules action with delay."""
         result = await schedule_node.invoke(
             "defer",
-            observer,  # type: ignore[arg-type]
+            cast("Umwelt[Any, Any]", observer),
             path="world.task.execute",
             delay=60,  # 60 seconds
         )
@@ -585,7 +604,7 @@ class TestScheduleNode:
         future_time = datetime.now() + timedelta(hours=1)
         result = await schedule_node.invoke(
             "defer",
-            observer,  # type: ignore[arg-type]
+            cast("Umwelt[Any, Any]", observer),
             path="world.task.execute",
             at=future_time,
         )
@@ -600,7 +619,7 @@ class TestScheduleNode:
         # First schedule
         defer_result = await schedule_node.invoke(
             "defer",
-            observer,  # type: ignore[arg-type]
+            cast("Umwelt[Any, Any]", observer),
             path="world.task.execute",
             delay=60,
         )
@@ -609,7 +628,7 @@ class TestScheduleNode:
         # Then cancel
         cancel_result = await schedule_node.invoke(
             "cancel",
-            observer,  # type: ignore[arg-type]
+            cast("Umwelt[Any, Any]", observer),
             id=action_id,
         )
         assert cancel_result["status"] == "cancelled"
@@ -620,10 +639,14 @@ class TestScheduleNode:
     ) -> None:
         """List returns scheduled actions."""
         # Schedule some actions
-        await schedule_node.invoke("defer", observer, path="task1", delay=60)  # type: ignore[arg-type]
-        await schedule_node.invoke("defer", observer, path="task2", delay=120)  # type: ignore[arg-type]
+        await schedule_node.invoke(
+            "defer", cast("Umwelt[Any, Any]", observer), path="task1", delay=60
+        )
+        await schedule_node.invoke(
+            "defer", cast("Umwelt[Any, Any]", observer), path="task2", delay=120
+        )
 
-        result = await schedule_node.invoke("list", observer)  # type: ignore[arg-type]
+        result = await schedule_node.invoke("list", cast("Umwelt[Any, Any]", observer))
         assert result["count"] == 2
 
 
@@ -645,7 +668,7 @@ class TestFutureNode:
         """Forecast returns probabilistic prediction."""
         result = await future_node.invoke(
             "forecast",
-            observer,  # type: ignore[arg-type]
+            cast("Umwelt[Any, Any]", observer),
             target="market",
             horizon="1d",
         )
@@ -659,7 +682,7 @@ class TestFutureNode:
         """Simulate returns simulation steps."""
         result = await future_node.invoke(
             "simulate",
-            observer,  # type: ignore[arg-type]
+            cast("Umwelt[Any, Any]", observer),
             target="process",
             steps=5,
         )
@@ -752,11 +775,15 @@ class TestLogosContextIntegration:
         self, logos: Logos, observer: MockUmwelt
     ) -> None:
         """Invoke world.*.manifest through Logos."""
-        result = await logos.invoke("world.house.manifest", observer)  # type: ignore[arg-type]
+        result = await logos.invoke(
+            "world.house.manifest", cast("Umwelt[Any, Any]", observer)
+        )
         assert result is not None
 
     @pytest.mark.asyncio
     async def test_invoke_void_sip(self, logos: Logos, observer: MockUmwelt) -> None:
         """Invoke void.entropy.sip through Logos."""
-        result = await logos.invoke("void.entropy.sip", observer, amount=1.0)  # type: ignore[arg-type]
+        result = await logos.invoke(
+            "void.entropy.sip", cast("Umwelt[Any, Any]", observer), amount=1.0
+        )
         assert "seed" in result

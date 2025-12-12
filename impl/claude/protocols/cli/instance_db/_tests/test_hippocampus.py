@@ -9,6 +9,10 @@ Coverage:
 - Synapse integration
 """
 
+from __future__ import annotations
+
+from typing import Any
+
 import pytest
 
 from ..hippocampus import (
@@ -30,7 +34,7 @@ from ..synapse import Synapse, SynapseConfig
 class MockCortex:
     """Mock Cortex for testing."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.signals: list[Signal] = []
         self.batch_calls = 0
         self.fail_next = False
@@ -51,7 +55,7 @@ class MockCortex:
         return len(signals)
 
 
-def make_signal(signal_type: str = "test", **kwargs) -> Signal:
+def make_signal(signal_type: str = "test", **kwargs: Any) -> Signal:
     """Create a test signal."""
     return Signal(signal_type=signal_type, data=kwargs)
 
@@ -394,6 +398,7 @@ class TestEpochManagement:
         await hippocampus.remember(make_signal("test"))
         result = await hippocampus.flush_to_cortex()
 
+        assert result.epoch_id is not None
         epoch = hippocampus.get_epoch(result.epoch_id)
 
         assert epoch is not None
@@ -416,6 +421,7 @@ class TestEpochManagement:
         await hippocampus.remember(make_signal("test"))
         result = await hippocampus.flush_to_cortex()
 
+        assert result.epoch_id is not None
         forgotten = hippocampus.forget_epoch(result.epoch_id)
 
         assert forgotten is True

@@ -36,7 +36,7 @@ from typing import Optional, List
 class DataProcessor:
     """Processes data."""
 
-    def __init__(self, path: Path):
+    def __init__(self, path: Path) -> None:
         self.path = path
 
     def process(self, data: List[str]) -> Optional[str]:
@@ -66,7 +66,7 @@ def standalone_func(x: int, y: int) -> int:
 # (an if statement with a return in the first 3 statements).
 # For this test, we use a function without any early return pattern.
 RECURSIVE_CODE = """
-def infinite_recurse(n):
+def infinite_recurse(n) -> None:
     x = n + 1
     y = infinite_recurse(x)
     z = y + 1
@@ -74,20 +74,20 @@ def infinite_recurse(n):
 """
 
 RECURSIVE_WITH_BASE = """
-def factorial(n):
+def factorial(n) -> None:
     if n <= 1:
         return 1
     return n * factorial(n - 1)
 """
 
 INFINITE_LOOP = """
-def run():
+def run() -> None:
     while True:
         pass
 """
 
 LOOP_WITH_BREAK = """
-def run():
+def run() -> None:
     while True:
         if should_stop():
             break

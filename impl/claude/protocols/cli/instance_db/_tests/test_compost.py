@@ -10,7 +10,7 @@ These tests verify:
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 
 from ..compost import (
     CompostBin,
@@ -18,6 +18,7 @@ from ..compost import (
     CompostingStrategy,
     CountMinSketch,
     HyperLogLog,
+    ICompostable,
     NutrientBlock,
     TDigestSimplified,
     create_compost_bin,
@@ -35,7 +36,7 @@ class MockSignal:
     data: dict[str, Any]
     timestamp: str = ""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.timestamp:
             self.timestamp = datetime.now().isoformat()
 
@@ -170,10 +171,12 @@ class TestTDigest:
 
         # Median should be ~50
         median = digest.quantile(0.5)
+        assert median is not None
         assert 40 <= median <= 60
 
         # P90 should be ~90
         p90 = digest.quantile(0.9)
+        assert p90 is not None
         assert 80 <= p90 <= 100
 
     def test_extreme_quantiles(self) -> None:
@@ -213,6 +216,7 @@ class TestTDigest:
 
         # Should still get reasonable estimates
         median = digest.quantile(0.5)
+        assert median is not None
         assert 4000 <= median <= 6000
 
 
@@ -337,7 +341,7 @@ class TestCompostBin:
         """Test that sealing creates a valid block."""
         bin = CompostBin()
         signals = create_test_signals(100)
-        bin.add_batch(signals)
+        bin.add_batch(cast(list[ICompostable], signals))
 
         block = bin.seal("test-epoch")
 
@@ -433,7 +437,7 @@ class TestCompostBin:
     def test_reset_after_seal(self) -> None:
         """Test that bin resets after sealing."""
         bin = CompostBin()
-        bin.add_batch(create_test_signals(50))
+        bin.add_batch(cast(list[ICompostable], create_test_signals(50)))
         bin.seal("epoch-1")
 
         assert bin.signal_count == 0
@@ -453,7 +457,7 @@ class TestCompostBin:
     def test_stats(self) -> None:
         """Test statistics reporting."""
         bin = CompostBin()
-        bin.add_batch(create_test_signals(50))
+        bin.add_batch(cast(list[ICompostable], create_test_signals(50)))
 
         stats = bin.stats()
 
@@ -488,7 +492,7 @@ class TestFactoryFunctions:
     def test_create_nutrient_block(self) -> None:
         """Test create_nutrient_block convenience function."""
         signals = create_test_signals(100)
-        block = create_nutrient_block("test-epoch", signals)
+        block = create_nutrient_block("test-epoch", cast(list[ICompostable], signals))
 
         assert block.epoch_id == "test-epoch"
         assert block.source_signal_count == 100
@@ -507,12 +511,12 @@ class TestCompostIntegration:
 
         # Compost
         bin = CompostBin()
-        bin.add_batch(signals)
+        bin.add_batch(cast(list[ICompostable], signals))
         block1 = bin.seal("epoch-1")
 
         # More signals
         more_signals = create_test_signals(500)
-        bin.add_batch(more_signals)
+        bin.add_batch(cast(list[ICompostable], more_signals))
         block2 = bin.seal("epoch-2")
 
         # Merge blocks

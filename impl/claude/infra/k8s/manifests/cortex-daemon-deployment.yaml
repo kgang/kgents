@@ -1,0 +1,167 @@
+# Cortex Daemon Deployment
+# The gRPC daemon for the Glass Terminal - all business logic lives here.
+#
+# The CLI is hollow - it makes gRPC calls to this daemon.
+# This is the living brain of K-Terrarium.
+#
+# Key features:
+#   - Logos service: Universal AGENTESE path resolution
+#   - Ghost cache: Last-known-good state for offline resilience
+#   - Graceful Degradation: Always returns something useful
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cortex-daemon-config
+  namespace: kgents-agents
+  labels:
+    app.kubernetes.io/name: cortex-daemon
+    app.kubernetes.io/component: core
+    app.kubernetes.io/part-of: kgents
+data:
+  CORTEX_GRPC_PORT: "50051"
+  CORTEX_HTTP_PORT: "8080"
+  CORTEX_LOG_LEVEL: "INFO"
+  # Ghost cache directory (shared with other pods via PVC if needed)
+  CORTEX_GHOST_DIR: "/data/ghost"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cortex-daemon
+  namespace: kgents-agents
+  labels:
+    app.kubernetes.io/name: cortex-daemon
+    app.kubernetes.io/component: core
+    app.kubernetes.io/part-of: kgents
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cortex-daemon
+  template:
+    metadata:
+      labels:
+        app: cortex-daemon
+        app.kubernetes.io/name: cortex-daemon
+        app.kubernetes.io/component: core
+    spec:
+      containers:
+      - name: cortex-daemon
+        # Placeholder image - we'll build the real one later
+        # For now, this creates the deployment structure
+        image: python:3.12-slim
+        command:
+        - 'python'
+        - '-c'
+        - |
+          import http.server
+          import socketserver
+          import os
+          import json
+          from datetime import datetime
+
+          print("Cortex Daemon placeholder starting...")
+          print(f"CORTEX_GRPC_PORT: {os.environ.get('CORTEX_GRPC_PORT', '50051')}")
+          print(f"CORTEX_HTTP_PORT: {os.environ.get('CORTEX_HTTP_PORT', '8080')}")
+          print()
+          print("This is a placeholder. To run the real Cortex Daemon:")
+          print("  1. Build: docker build -t kgents/cortex:latest -f impl/claude/infra/cortex/Dockerfile .")
+          print("  2. Load: kind load docker-image kgents/cortex:latest --name kgents")
+          print("  3. Apply: kubectl apply -f impl/claude/infra/k8s/manifests/cortex-daemon-deployment.yaml")
+          print()
+          print("Starting HTTP health endpoint on :8080...")
+
+          class HealthHandler(http.server.BaseHTTPRequestHandler):
+              def do_GET(self):
+                  if self.path == '/health':
+                      self.send_response(200)
+                      self.send_header("Content-type", "application/json")
+                      self.end_headers()
+                      self.wfile.write(json.dumps({
+                          "status": "healthy",
+                          "service": "cortex-daemon",
+                          "timestamp": datetime.now().isoformat(),
+                          "mode": "placeholder"
+                      }).encode())
+                  elif self.path == '/ready':
+                      self.send_response(200)
+                      self.send_header("Content-type", "text/plain")
+                      self.end_headers()
+                      self.wfile.write(b"ready\n")
+                  else:
+                      self.send_response(200)
+                      self.send_header("Content-type", "text/plain")
+                      self.end_headers()
+                      self.wfile.write(b"Cortex Daemon placeholder\n")
+              def log_message(self, format, *args):
+                  pass  # Suppress request logging
+
+          with socketserver.TCPServer(("", 8080), HealthHandler) as httpd:
+              print("Health server running on :8080")
+              httpd.serve_forever()
+        ports:
+        - containerPort: 50051
+          name: grpc
+          protocol: TCP
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        envFrom:
+        - configMapRef:
+            name: cortex-daemon-config
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "50m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+        # Ghost cache volume
+        volumeMounts:
+        - name: ghost-cache
+          mountPath: /data/ghost
+
+      volumes:
+      - name: ghost-cache
+        emptyDir:
+          sizeLimit: "100Mi"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cortex-daemon
+  namespace: kgents-agents
+  labels:
+    app.kubernetes.io/name: cortex-daemon
+    app.kubernetes.io/component: core
+    app.kubernetes.io/part-of: kgents
+spec:
+  type: ClusterIP
+  ports:
+  - port: 50051
+    targetPort: 50051
+    name: grpc
+    protocol: TCP
+  - port: 8080
+    targetPort: 8080
+    name: http
+    protocol: TCP
+  selector:
+    app: cortex-daemon

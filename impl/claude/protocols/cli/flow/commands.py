@@ -19,13 +19,14 @@ from __future__ import annotations
 import asyncio
 import json
 from pathlib import Path
+from typing import Any
 
 # =============================================================================
 # Output Formatting
 # =============================================================================
 
 
-def format_flow_result_rich(result: dict) -> str:
+def format_flow_result_rich(result: dict[str, Any]) -> str:
     """Format FlowResult for rich terminal output."""
     lines = []
 
@@ -317,32 +318,31 @@ async def cmd_flow_new(args: list[str]) -> int:
         name = "Parse Flow"
 
     if "judge" in intent_lower or "check" in intent_lower or "verify" in intent_lower:
-        steps.append(
-            {
-                "id": "judge",
-                "genus": "Bootstrap",
-                "operation": "judge",
-                "input": "from:parse" if steps else None,
-                "args": {"principles": "spec/principles.md"},
-            }
-        )
+        judge_step: dict[str, Any] = {
+            "id": "judge",
+            "genus": "Bootstrap",
+            "operation": "judge",
+            "args": {"principles": "spec/principles.md"},
+        }
+        if steps:
+            judge_step["input"] = "from:parse"
+        steps.append(judge_step)
         if "Parse" not in name:
             name = "Verification Flow"
         else:
             name = "Parse & Judge Flow"
 
     if "refine" in intent_lower or "fix" in intent_lower or "optimize" in intent_lower:
-        steps.append(
-            {
-                "id": "refine",
-                "genus": "R-gent",
-                "operation": "optimize",
-                "input": f"from:{steps[-1]['id']}" if steps else None,
-                "condition": "judge.verdict != 'APPROVED'"
-                if any(s["id"] == "judge" for s in steps)
-                else None,
-            }
-        )
+        refine_step: dict[str, Any] = {
+            "id": "refine",
+            "genus": "R-gent",
+            "operation": "optimize",
+        }
+        if steps:
+            refine_step["input"] = f"from:{steps[-1]['id']}"
+        if any(s["id"] == "judge" for s in steps):
+            refine_step["condition"] = "judge.verdict != 'APPROVED'"
+        steps.append(refine_step)
         name = name.replace(" Flow", "") + " & Refine Flow"
 
     if "watch" in intent_lower or "observe" in intent_lower:
@@ -367,14 +367,13 @@ async def cmd_flow_new(args: list[str]) -> int:
 
     # Default step if no patterns matched
     if not steps:
-        steps.append(
-            {
-                "id": "process",
-                "genus": "J-gent",
-                "operation": "compile",
-                "args": {"intent": intent},
-            }
-        )
+        default_step: dict[str, Any] = {
+            "id": "process",
+            "genus": "J-gent",
+            "operation": "compile",
+            "args": {"intent": intent},
+        }
+        steps.append(default_step)
         name = "Intent Flow"
 
     # Build flowfile

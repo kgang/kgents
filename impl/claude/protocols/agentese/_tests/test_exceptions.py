@@ -4,6 +4,10 @@ Tests for AGENTESE Sympathetic Errors
 All errors must explain WHY and suggest WHAT TO DO.
 """
 
+from __future__ import annotations
+
+from typing import Any
+
 import pytest
 
 from ..exceptions import (
@@ -276,7 +280,7 @@ class TestSympatheticErrorPrinciple:
             (CompositionViolationError, ("Law broken",)),
         ],
     )
-    def test_error_is_sympathetic(self, error_class, args) -> None:
+    def test_error_is_sympathetic(self, error_class: Any, args: Any) -> None:
         """Every error should have helpful content."""
         if len(args) == 2:
             msg, kwargs = args

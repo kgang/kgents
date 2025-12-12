@@ -110,7 +110,7 @@ class TestSemanticDimension:
     def test_from_compression(self) -> None:
         """Test compression-based heuristic."""
         # Structured text compresses well
-        structured = "def foo():\n    return 42\n" * 10
+        structured = "def foo() -> None:\n    return 42\n" * 10
         sem = SemanticDimension.from_compression(structured)
         assert sem.compression_ratio < 0.5  # Should compress well
         assert sem.measurement_method == "compression_heuristic"
@@ -127,7 +127,7 @@ class TestSemanticDimension:
             lambda x: "def" in x,  # Has function
             lambda x: "return" in x,  # Has return
         ]
-        code = "def foo():\n    return 42"
+        code = "def foo() -> None:\n    return 42"
         sem = SemanticDimension.from_validation(code, validators)
         assert sem.kolmogorov_proxy == 1.0  # Both passed
         assert sem.confidence == 0.8
@@ -608,7 +608,7 @@ class TestComplexityOracle:
         """Test structured text assessment."""
         oracle = ComplexityOracle()
         # Repetitive, structured code
-        code = "def foo():\n    return 42\n" * 20
+        code = "def foo() -> None:\n    return 42\n" * 20
         complexity = oracle.assess(code)
         assert complexity > 0.3  # Should detect structure
 
@@ -625,7 +625,7 @@ class TestComplexityOracle:
     def test_information_joule(self) -> None:
         """Test information joule calculation."""
         oracle = ComplexityOracle()
-        code = "def foo():\n    return 42\n" * 10
+        code = "def foo() -> None:\n    return 42\n" * 10
         j_inf = oracle.information_joule(code, tokens_consumed=100)
         assert j_inf > 0
 
@@ -636,7 +636,7 @@ class TestValueOracle:
     def test_syntactic_tier(self) -> None:
         """Test syntactic tier assignment."""
         oracle = ValueOracle()
-        output = SimpleOutput(content="def foo(): pass", _valid_syntax=True)
+        output = SimpleOutput(content="def foo() -> None: pass", _valid_syntax=True)
         impact = oracle.calculate_impact(output)
         assert impact.base_value >= 10
         assert impact.tier == "syntactic"
@@ -645,7 +645,7 @@ class TestValueOracle:
         """Test functional tier assignment."""
         oracle = ValueOracle()
         output = SimpleOutput(
-            content="def foo(): pass",
+            content="def foo() -> None: pass",
             _valid_syntax=True,
             _tests_passed=True,
         )
@@ -657,7 +657,7 @@ class TestValueOracle:
         """Test sin tax application."""
         oracle = ValueOracle()
         output = SimpleOutput(
-            content="def foo(): pass",
+            content="def foo() -> None: pass",
             _valid_syntax=True,
             _has_vulns=True,
         )
@@ -717,7 +717,7 @@ class TestValueLedger:
         """Test logging a profitable transaction."""
         ledger = ValueLedger()
         output = SimpleOutput(
-            content="def foo(): pass" * 10,
+            content="def foo() -> None: pass" * 10,
             _valid_syntax=True,
             _tests_passed=True,
         )
@@ -742,7 +742,7 @@ class TestValueLedger:
     def test_balance_sheet(self) -> None:
         """Test balance sheet generation."""
         ledger = ValueLedger()
-        output = SimpleOutput(content="def foo(): pass", _valid_syntax=True)
+        output = SimpleOutput(content="def foo() -> None: pass", _valid_syntax=True)
         gas = Gas(tokens=100)
         ledger.log_transaction("agent1", gas, output)
 
@@ -752,7 +752,7 @@ class TestValueLedger:
     def test_system_stats(self) -> None:
         """Test system statistics."""
         ledger = ValueLedger()
-        output = SimpleOutput(content="def foo(): pass", _valid_syntax=True)
+        output = SimpleOutput(content="def foo() -> None: pass", _valid_syntax=True)
         gas = Gas(tokens=100)
         ledger.log_transaction("agent1", gas, output)
 
@@ -774,7 +774,7 @@ class TestRoCMonitor:
         """Test assessment of profitable agent."""
         ledger = ValueLedger()
         output = SimpleOutput(
-            content="def foo(): pass" * 10,
+            content="def foo() -> None: pass" * 10,
             _valid_syntax=True,
             _tests_passed=True,
         )
@@ -878,7 +878,8 @@ class TestBankerIntegration:
 
         # Good output with virtues
         output = SimpleOutput(
-            content="def foo():\n    '''Documented function.'''\n    return 42\n" * 10,
+            content="def foo() -> None:\n    '''Documented function.'''\n    return 42\n"
+            * 10,
             _valid_syntax=True,
             _tests_passed=True,
             _improved_maintainability=True,

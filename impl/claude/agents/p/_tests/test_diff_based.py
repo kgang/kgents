@@ -214,7 +214,7 @@ class TestConvenienceFunctions:
 
     def test_egent_diff_parser(self) -> None:
         """Test E-gent code diff parser."""
-        code = "def foo():\n    pass"
+        code = "def foo() -> None:\n    pass"
         parser = create_egent_diff_parser(code)
 
         diff = "s/pass/return 42/"
@@ -290,7 +290,7 @@ class TestRealWorldScenarios:
     def test_egent_code_evolution(self) -> None:
         """Test E-gent code evolution via diff."""
         base = """
-def process(data):
+def process(data) -> None:
     # TODO: implement
     pass
 """

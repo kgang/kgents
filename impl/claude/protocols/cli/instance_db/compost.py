@@ -473,7 +473,7 @@ class TDigestSimplified:
         self._centroids.sort(key=lambda c: c[0])
 
         # Merge adjacent centroids
-        merged = []
+        merged: list[tuple[float, int]] = []
         current_mean, current_count = self._centroids[0]
 
         for mean, count in self._centroids[1:]:
@@ -715,16 +715,16 @@ class CompostBin:
                 sketch.add(str(data[field_name]))
 
         # Update cardinality sketches
-        for field_name, sketch in self._cardinality_sketches.items():
+        for field_name, hll_sketch in self._cardinality_sketches.items():
             if field_name in data:
-                sketch.add(str(data[field_name]))
+                hll_sketch.add(str(data[field_name]))
 
         # Update quantile sketches
-        for field_name, sketch in self._quantile_sketches.items():
+        for field_name, tdigest_sketch in self._quantile_sketches.items():
             if field_name in data:
                 value = data[field_name]
                 if isinstance(value, (int, float)):
-                    sketch.add(float(value))
+                    tdigest_sketch.add(float(value))
 
         # Update aggregations
         for field_name in self._config.sum_fields:

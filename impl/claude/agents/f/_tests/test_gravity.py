@@ -39,7 +39,7 @@ from bootstrap.types import Agent
 class MockAgent(Agent[str, str]):
     """Simple mock agent for testing Grounded wrapper."""
 
-    def __init__(self, response: str = "mock response"):
+    def __init__(self, response: str = "mock response") -> None:
         self._response = response
 
     @property

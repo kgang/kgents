@@ -16,7 +16,7 @@ with JSONL fallback for zero regression.
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
@@ -33,7 +33,7 @@ _FLINCH_FILE = _GHOST_DIR / "test_flinches.jsonl"
 _flinch_store = None
 
 
-def _get_flinch_store():
+def _get_flinch_store() -> Any:
     """Get or create the FlinchStore singleton with JSONL fallback."""
     global _flinch_store
     if _flinch_store is None:
@@ -48,7 +48,7 @@ def _get_flinch_store():
     return _flinch_store
 
 
-def _emit_test_flinch(report) -> None:
+def _emit_test_flinch(report: Any) -> None:
     """
     Emit a flinch signal for a failing test.
 
@@ -71,7 +71,7 @@ def _emit_test_flinch(report) -> None:
             import time
 
             _GHOST_DIR.mkdir(parents=True, exist_ok=True)
-            flinch = {
+            flinch_data: dict[str, Any] = {
                 "ts": time.time(),
                 "test": report.nodeid,
                 "phase": report.when,
@@ -79,13 +79,13 @@ def _emit_test_flinch(report) -> None:
                 "outcome": report.outcome,
             }
             with _FLINCH_FILE.open("a") as f:
-                f.write(json.dumps(flinch) + "\n")
+                f.write(json.dumps(flinch_data) + "\n")
     except Exception:
         # Never let flinch logging break tests
         pass
 
 
-def pytest_runtest_logreport(report):
+def pytest_runtest_logreport(report: Any) -> None:
     """Pytest hook: log failures as flinch signals."""
     if report.failed:
         _emit_test_flinch(report)
@@ -125,10 +125,11 @@ class IdentityAgent:
     async def invoke(self, input: Any) -> Any:
         return input
 
-    def __rshift__(self, other):
+    def __rshift__(self, other: Any) -> Any:
         from bootstrap import compose
+        from bootstrap.types import Agent
 
-        return compose(self, other)
+        return compose(cast(Agent[Any, Any], self), other)
 
 
 @pytest.fixture
@@ -155,21 +156,21 @@ def identity_agent() -> IdentityAgent:
 
 
 @pytest.fixture
-def volatile_store():
+def volatile_store() -> Any:
     """In-memory volatile storage for testing."""
     from agents.d import VolatileAgent
 
-    return VolatileAgent(agent_id="test_volatile")
+    return VolatileAgent(_state={})
 
 
 @pytest.fixture
-async def memory_store():
+async def memory_store() -> Any:
     """Memory crystal store for testing (N-gent)."""
     # Note: MemoryCrystalStore may not exist yet
     # Return VolatileAgent as fallback
     from agents.d import VolatileAgent
 
-    return VolatileAgent(agent_id="test_memory")
+    return VolatileAgent(_state={})
 
 
 # =============================================================================
@@ -178,7 +179,7 @@ async def memory_store():
 
 
 @pytest.fixture
-def test_dna():
+def test_dna() -> Any:
     """Standard test DNA configuration."""
     from bootstrap.dna import BaseDNA
 
@@ -186,7 +187,7 @@ def test_dna():
 
 
 @pytest.fixture
-def hypothesis_dna():
+def hypothesis_dna() -> Any:
     """Hypothesis DNA for B-gent testing."""
     from bootstrap.dna import HypothesisDNA
 
@@ -198,7 +199,7 @@ def hypothesis_dna():
 
 
 @pytest.fixture
-def jgent_dna():
+def jgent_dna() -> Any:
     """J-gent DNA for judgment testing."""
     from bootstrap.dna import JGentDNA
 
@@ -215,13 +216,13 @@ def jgent_dna():
 
 
 @pytest.fixture
-def test_embedding():
+def test_embedding() -> list[float]:
     """Standard test embedding (384-dim zeros)."""
     return [0.0] * 384
 
 
 @pytest.fixture
-def random_embedding():
+def random_embedding() -> list[float]:
     """Random test embedding for similarity tests."""
     import random
 
@@ -234,7 +235,7 @@ def random_embedding():
 
 
 @pytest.fixture
-def bootstrap_witness():
+def bootstrap_witness() -> Any:
     """BootstrapWitness for law verification."""
     from agents.o.bootstrap_witness import create_bootstrap_witness
 
@@ -242,7 +243,7 @@ def bootstrap_witness():
 
 
 @pytest.fixture
-async def verified_bootstrap(bootstrap_witness):
+async def verified_bootstrap(bootstrap_witness: Any) -> Any:
     """Pre-verified bootstrap state."""
     result = await bootstrap_witness.invoke()
     assert result.kernel_intact, "Bootstrap kernel compromised"
@@ -254,7 +255,7 @@ async def verified_bootstrap(bootstrap_witness):
 # =============================================================================
 
 
-def pytest_configure(config):
+def pytest_configure(config: Any) -> None:
     """Register custom markers for kgents testing."""
     # Law markers
     config.addinivalue_line(
@@ -291,7 +292,7 @@ def pytest_configure(config):
         config.pluginmanager.register(WitnessPlugin(enabled=True), "witness")
 
 
-def pytest_addoption(parser):
+def pytest_addoption(parser: Any) -> None:
     """Add kgents-specific command line options."""
     parser.addoption(
         "--witness",

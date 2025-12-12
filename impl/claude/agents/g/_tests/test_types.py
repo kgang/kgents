@@ -229,7 +229,7 @@ def sample_tongue() -> Tongue:
             grammar_spec=grammar,
         ),
         interpreter_config=InterpreterConfig(
-            runtime="python",
+            runtime="command",
             semantics={},
         ),
         domain="Calendar Management",

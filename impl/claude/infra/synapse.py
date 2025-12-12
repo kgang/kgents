@@ -176,7 +176,7 @@ class Synapse:
         self._batch_queue: deque[Signal] = deque()
         self._predictive_model = PredictiveModel()
         self._running = False
-        self._batch_task: asyncio.Task | None = None
+        self._batch_task: asyncio.Task[None] | None = None
 
         # Metrics
         self._signals_fired = 0
@@ -193,7 +193,7 @@ class Synapse:
             raise ValueError(f"Max handlers reached for {kind}")
 
         # Wrap callable in handler protocol if needed
-        if not isinstance(handler, SignalHandler):
+        if not hasattr(handler, "handle"):
             # Create wrapper
             class CallableHandler:
                 def __init__(self, fn: Callable[[Signal], Awaitable[None]]):

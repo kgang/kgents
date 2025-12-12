@@ -141,7 +141,7 @@ class TypeTopology:
         if start not in self.agents or end not in self.agents:
             return []
 
-        paths = []
+        paths: list[list[str]] = []
         self._find_paths(start, end, [start], set(), max_depth, paths)
         return paths
 
@@ -488,7 +488,10 @@ class Topologist:
             "Any": ["default input"],
         }
         choices = samples.get(type_name, samples["Any"])
-        return random.choice(choices)
+        # Type narrowing: choices is always a list from our samples dict
+        if isinstance(choices, list) and len(choices) > 0:
+            return random.choice(choices)
+        return "default input"
 
 
 # =============================================================================
@@ -541,9 +544,11 @@ def format_topologist_report(report: TopologistReport) -> str:
 
     if report.invariance_violations > 0:
         lines.append(" INVARIANCE VIOLATIONS:")
-        for r in report.invariance_results:
-            for v in r.violations:
-                lines.append(f"   {r.agent} + {v.functor}: sim={v.similarity:.2f}")
+        for inv_result in report.invariance_results:
+            for v in inv_result.violations:
+                lines.append(
+                    f"   {inv_result.agent} + {v.functor}: sim={v.similarity:.2f}"
+                )
 
     lines.append("=" * 60)
     return "\n".join(lines)

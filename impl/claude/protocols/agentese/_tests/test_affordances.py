@@ -10,7 +10,12 @@ The key invariants tested:
 4. manifest() returns archetype-appropriate rendering
 """
 
+from __future__ import annotations
+
+from typing import Any, cast
+
 import pytest
+from bootstrap.umwelt import Umwelt
 
 from ..affordances import (
     CONCEPT_AFFORDANCE_SET,
@@ -19,6 +24,7 @@ from ..affordances import (
     VOID_AFFORDANCE_SET,
     # Context sets
     WORLD_AFFORDANCE_SET,
+    AffordanceRegistry,
     # DNA
     ArchetypeDNA,
     Aspect,
@@ -27,11 +33,13 @@ from ..affordances import (
     CapabilityAffordanceMatcher,
     # Matcher
     StandardAffordanceMatcher,
+    UmweltAdapter,
     create_affordance_registry,
     # Adapter
     create_umwelt_adapter,
     get_context_affordance_set,
 )
+from ..logos import Logos
 from ..node import AgentMeta
 from ..renderings import (
     AdminRendering,
@@ -43,6 +51,7 @@ from ..renderings import (
     MemoryRendering,
     PhilosopherRendering,
     PoeticRendering,
+    RenderingFactory,
     ScientificRendering,
     TemporalRendering,
     create_rendering_factory,
@@ -72,8 +81,8 @@ class TestAspectCategory:
 
     def test_categories_are_distinct(self) -> None:
         """Each category is distinct."""
-        assert AspectCategory.PERCEPTION != AspectCategory.MUTATION
-        assert AspectCategory.MUTATION != AspectCategory.ENTROPY
+        assert AspectCategory.PERCEPTION != AspectCategory.MUTATION  # type: ignore[comparison-overlap]
+        assert AspectCategory.MUTATION != AspectCategory.ENTROPY  # type: ignore[comparison-overlap]
 
 
 class TestAspect:
@@ -132,17 +141,19 @@ class TestAffordanceRegistry:
     """Tests for AffordanceRegistry."""
 
     @pytest.fixture
-    def registry(self) -> create_affordance_registry:
+    def registry(self) -> AffordanceRegistry:
         return create_affordance_registry()
 
-    def test_core_affordances_for_default(self, registry) -> None:
+    def test_core_affordances_for_default(self, registry: AffordanceRegistry) -> None:
         """Default archetype gets core affordances."""
         affordances = registry.get_affordances("default")
         assert "manifest" in affordances
         assert "witness" in affordances
         assert "affordances" in affordances
 
-    def test_architect_gets_extra_affordances(self, registry) -> None:
+    def test_architect_gets_extra_affordances(
+        self, registry: AffordanceRegistry
+    ) -> None:
         """Architect archetype gets extra affordances."""
         affordances = registry.get_affordances("architect")
         assert "manifest" in affordances  # Core
@@ -150,7 +161,9 @@ class TestAffordanceRegistry:
         assert "blueprint" in affordances
         assert "demolish" in affordances
 
-    def test_poet_gets_different_affordances(self, registry) -> None:
+    def test_poet_gets_different_affordances(
+        self, registry: AffordanceRegistry
+    ) -> None:
         """Poet archetype gets different affordances than architect."""
         architect = set(registry.get_affordances("architect"))
         poet = set(registry.get_affordances("poet"))
@@ -167,14 +180,14 @@ class TestAffordanceRegistry:
         assert "metaphorize" in poet
         assert "metaphorize" not in architect
 
-    def test_has_affordance(self, registry) -> None:
+    def test_has_affordance(self, registry: AffordanceRegistry) -> None:
         """has_affordance checks correctly."""
         assert registry.has_affordance("architect", "manifest")
         assert registry.has_affordance("architect", "renovate")
         assert not registry.has_affordance("poet", "renovate")
         assert registry.has_affordance("poet", "metaphorize")
 
-    def test_register_new_archetype(self, registry) -> None:
+    def test_register_new_archetype(self, registry: AffordanceRegistry) -> None:
         """Can register a new archetype."""
         registry.register(
             "senior_architect", parents=("architect",), additional=("manage",)
@@ -185,14 +198,14 @@ class TestAffordanceRegistry:
         assert "renovate" in affordances  # Inherited from architect
         assert "manage" in affordances  # Additional
 
-    def test_extend_archetype(self, registry) -> None:
+    def test_extend_archetype(self, registry: AffordanceRegistry) -> None:
         """Can extend existing archetype."""
         registry.extend("architect", ("levitate",))
 
         affordances = registry.get_affordances("architect")
         assert "levitate" in affordances
 
-    def test_list_archetypes(self, registry) -> None:
+    def test_list_archetypes(self, registry: AffordanceRegistry) -> None:
         """Can list all archetypes."""
         archetypes = registry.list_archetypes()
         assert "architect" in archetypes
@@ -200,7 +213,7 @@ class TestAffordanceRegistry:
         assert "scientist" in archetypes
         assert "default" in archetypes
 
-    def test_get_aspect_info(self, registry) -> None:
+    def test_get_aspect_info(self, registry: AffordanceRegistry) -> None:
         """Can get aspect information."""
         aspect = registry.get_aspect_info("manifest")
         assert aspect is not None
@@ -223,13 +236,15 @@ class TestStandardAffordanceMatcher:
     def matcher(self) -> StandardAffordanceMatcher:
         return StandardAffordanceMatcher()
 
-    def test_matches_core_affordances(self, matcher) -> None:
+    def test_matches_core_affordances(self, matcher: StandardAffordanceMatcher) -> None:
         """Core affordances match for any archetype."""
         assert matcher.matches("default", "manifest")
         assert matcher.matches("architect", "manifest")
         assert matcher.matches("poet", "manifest")
 
-    def test_matches_archetype_specific(self, matcher) -> None:
+    def test_matches_archetype_specific(
+        self, matcher: StandardAffordanceMatcher
+    ) -> None:
         """Archetype-specific affordances match correctly."""
         assert matcher.matches("architect", "renovate")
         assert not matcher.matches("poet", "renovate")
@@ -248,11 +263,15 @@ class TestCapabilityAffordanceMatcher:
             }
         )
 
-    def test_matches_archetype_affordances(self, matcher) -> None:
+    def test_matches_archetype_affordances(
+        self, matcher: CapabilityAffordanceMatcher
+    ) -> None:
         """Still matches archetype affordances."""
         assert matcher.matches("architect", "renovate")
 
-    def test_matches_capability_grants(self, matcher) -> None:
+    def test_matches_capability_grants(
+        self, matcher: CapabilityAffordanceMatcher
+    ) -> None:
         """Matches capability-granted affordances."""
         # Default archetype doesn't have configure
         assert not matcher.matches("default", "configure", capabilities=())
@@ -260,7 +279,9 @@ class TestCapabilityAffordanceMatcher:
         # But with admin_access capability, they do
         assert matcher.matches("default", "configure", capabilities=("admin_access",))
 
-    def test_capability_overrides_archetype(self, matcher) -> None:
+    def test_capability_overrides_archetype(
+        self, matcher: CapabilityAffordanceMatcher
+    ) -> None:
         """Capability can grant affordances regardless of archetype."""
         # Architect normally can't metaphorize
         assert not matcher.matches("architect", "metaphorize", capabilities=())
@@ -321,7 +342,7 @@ class TestUmweltAdapter:
     """Tests for UmweltAdapter."""
 
     @pytest.fixture
-    def adapter(self) -> create_umwelt_adapter:
+    def adapter(self) -> UmweltAdapter:
         return create_umwelt_adapter()
 
     @pytest.fixture
@@ -332,37 +353,57 @@ class TestUmweltAdapter:
     def poet_umwelt(self) -> MockUmwelt:
         return MockUmwelt(archetype="poet")
 
-    def test_extract_meta(self, adapter, architect_umwelt) -> None:
+    def test_extract_meta(
+        self, adapter: UmweltAdapter, architect_umwelt: MockUmwelt
+    ) -> None:
         """Can extract AgentMeta from Umwelt."""
-        meta = adapter.extract_meta(architect_umwelt)
+        meta = adapter.extract_meta(cast(Umwelt[Any, Any], architect_umwelt))
         assert isinstance(meta, AgentMeta)
         assert meta.archetype == "architect"
 
-    def test_get_affordances(self, adapter, architect_umwelt, poet_umwelt) -> None:
+    def test_get_affordances(
+        self,
+        adapter: UmweltAdapter,
+        architect_umwelt: MockUmwelt,
+        poet_umwelt: MockUmwelt,
+    ) -> None:
         """Gets correct affordances for different umwelts."""
-        architect_affs = adapter.get_affordances(architect_umwelt)
-        poet_affs = adapter.get_affordances(poet_umwelt)
+        architect_affs = adapter.get_affordances(
+            cast(Umwelt[Any, Any], architect_umwelt)
+        )
+        poet_affs = adapter.get_affordances(cast(Umwelt[Any, Any], poet_umwelt))
 
         assert "renovate" in architect_affs
         assert "renovate" not in poet_affs
         assert "metaphorize" in poet_affs
         assert "metaphorize" not in architect_affs
 
-    def test_can_invoke(self, adapter, architect_umwelt, poet_umwelt) -> None:
+    def test_can_invoke(
+        self,
+        adapter: UmweltAdapter,
+        architect_umwelt: MockUmwelt,
+        poet_umwelt: MockUmwelt,
+    ) -> None:
         """can_invoke checks correctly."""
-        assert adapter.can_invoke(architect_umwelt, "renovate")
-        assert not adapter.can_invoke(poet_umwelt, "renovate")
-        assert adapter.can_invoke(poet_umwelt, "metaphorize")
-        assert not adapter.can_invoke(architect_umwelt, "metaphorize")
+        assert adapter.can_invoke(cast(Umwelt[Any, Any], architect_umwelt), "renovate")
+        assert not adapter.can_invoke(cast(Umwelt[Any, Any], poet_umwelt), "renovate")
+        assert adapter.can_invoke(cast(Umwelt[Any, Any], poet_umwelt), "metaphorize")
+        assert not adapter.can_invoke(
+            cast(Umwelt[Any, Any], architect_umwelt), "metaphorize"
+        )
 
         # Core affordances available to all
-        assert adapter.can_invoke(architect_umwelt, "manifest")
-        assert adapter.can_invoke(poet_umwelt, "manifest")
+        assert adapter.can_invoke(cast(Umwelt[Any, Any], architect_umwelt), "manifest")
+        assert adapter.can_invoke(cast(Umwelt[Any, Any], poet_umwelt), "manifest")
 
-    def test_filter_affordances(self, adapter, architect_umwelt) -> None:
+    def test_filter_affordances(
+        self, adapter: UmweltAdapter, architect_umwelt: MockUmwelt
+    ) -> None:
         """Can filter affordances to those available."""
         available = ["manifest", "renovate", "metaphorize", "sip"]
-        filtered = adapter.filter_affordances(architect_umwelt, available)
+        filtered = adapter.filter_affordances(
+            cast(Umwelt[Any, Any], architect_umwelt), available
+        )
 
         assert "manifest" in filtered
         assert "renovate" in filtered
@@ -539,45 +580,47 @@ class TestStandardRenderingFactory:
     """Tests for StandardRenderingFactory."""
 
     @pytest.fixture
-    def factory(self) -> create_rendering_factory:
+    def factory(self) -> RenderingFactory:
         return create_rendering_factory()
 
-    def test_creates_blueprint_for_architect(self, factory) -> None:
+    def test_creates_blueprint_for_architect(self, factory: RenderingFactory) -> None:
         """Creates BlueprintRendering for architect."""
         r = factory.create("architect", "house", {"dimensions": {"w": 10}})
         assert isinstance(r, BlueprintRendering)
 
-    def test_creates_poetic_for_poet(self, factory) -> None:
+    def test_creates_poetic_for_poet(self, factory: RenderingFactory) -> None:
         """Creates PoeticRendering for poet."""
         r = factory.create("poet", "house", {})
         assert isinstance(r, PoeticRendering)
 
-    def test_creates_economic_for_economist(self, factory) -> None:
+    def test_creates_economic_for_economist(self, factory: RenderingFactory) -> None:
         """Creates EconomicRendering for economist."""
         r = factory.create("economist", "house", {"value": 500000})
         assert isinstance(r, EconomicRendering)
 
-    def test_creates_scientific_for_scientist(self, factory) -> None:
+    def test_creates_scientific_for_scientist(self, factory: RenderingFactory) -> None:
         """Creates ScientificRendering for scientist."""
         r = factory.create("scientist", "house", {})
         assert isinstance(r, ScientificRendering)
 
-    def test_creates_developer_for_developer(self, factory) -> None:
+    def test_creates_developer_for_developer(self, factory: RenderingFactory) -> None:
         """Creates DeveloperRendering for developer."""
         r = factory.create("developer", "app", {})
         assert isinstance(r, DeveloperRendering)
 
-    def test_creates_admin_for_admin(self, factory) -> None:
+    def test_creates_admin_for_admin(self, factory: RenderingFactory) -> None:
         """Creates AdminRendering for admin."""
         r = factory.create("admin", "server", {})
         assert isinstance(r, AdminRendering)
 
-    def test_creates_philosopher_for_philosopher(self, factory) -> None:
+    def test_creates_philosopher_for_philosopher(
+        self, factory: RenderingFactory
+    ) -> None:
         """Creates PhilosopherRendering for philosopher."""
         r = factory.create("philosopher", "justice", {})
         assert isinstance(r, PhilosopherRendering)
 
-    def test_creates_basic_for_unknown(self, factory) -> None:
+    def test_creates_basic_for_unknown(self, factory: RenderingFactory) -> None:
         """Creates BasicRendering for unknown archetype."""
         r = factory.create("unknown_archetype", "entity", {})
         assert isinstance(r, BasicRendering)
@@ -607,7 +650,7 @@ class TestPolymorphicManifest:
         )
         observer = MockUmwelt(archetype="architect")
 
-        result = await node.manifest(observer)
+        result = await node.manifest(cast(Umwelt[Any, Any], observer))
         assert isinstance(result, BlueprintRendering)
 
     @pytest.mark.asyncio
@@ -618,7 +661,7 @@ class TestPolymorphicManifest:
         node = create_world_node(name="house")
         observer = MockUmwelt(archetype="poet")
 
-        result = await node.manifest(observer)
+        result = await node.manifest(cast(Umwelt[Any, Any], observer))
         assert isinstance(result, PoeticRendering)
 
     @pytest.mark.asyncio
@@ -632,7 +675,7 @@ class TestPolymorphicManifest:
         )
         observer = MockUmwelt(archetype="economist")
 
-        result = await node.manifest(observer)
+        result = await node.manifest(cast(Umwelt[Any, Any], observer))
         assert isinstance(result, EconomicRendering)
 
     @pytest.mark.asyncio
@@ -643,7 +686,7 @@ class TestPolymorphicManifest:
         node = create_world_node(name="house")
         observer = MockUmwelt(archetype="scientist")
 
-        result = await node.manifest(observer)
+        result = await node.manifest(cast(Umwelt[Any, Any], observer))
         assert isinstance(result, ScientificRendering)
 
     @pytest.mark.asyncio
@@ -654,7 +697,7 @@ class TestPolymorphicManifest:
         node = create_world_node(name="app")
         observer = MockUmwelt(archetype="developer")
 
-        result = await node.manifest(observer)
+        result = await node.manifest(cast(Umwelt[Any, Any], observer))
         assert isinstance(result, DeveloperRendering)
 
     @pytest.mark.asyncio
@@ -665,7 +708,7 @@ class TestPolymorphicManifest:
         node = create_world_node(name="server")
         observer = MockUmwelt(archetype="admin")
 
-        result = await node.manifest(observer)
+        result = await node.manifest(cast(Umwelt[Any, Any], observer))
         assert isinstance(result, AdminRendering)
 
     @pytest.mark.asyncio
@@ -676,7 +719,7 @@ class TestPolymorphicManifest:
         node = create_world_node(name="house")
         observer = MockUmwelt(archetype="default")
 
-        result = await node.manifest(observer)
+        result = await node.manifest(cast(Umwelt[Any, Any], observer))
         assert isinstance(result, BasicRendering)
 
     @pytest.mark.asyncio
@@ -690,7 +733,7 @@ class TestPolymorphicManifest:
         )
         observer = MockUmwelt(archetype="philosopher")
 
-        result = await node.manifest(observer)
+        result = await node.manifest(cast(Umwelt[Any, Any], observer))
         assert isinstance(result, PhilosopherRendering)
         assert "justice" in result.concept
 
@@ -702,7 +745,7 @@ class TestPolymorphicManifest:
         node = create_concept_node(name="entropy")
         observer = MockUmwelt(archetype="scientist")
 
-        result = await node.manifest(observer)
+        result = await node.manifest(cast(Umwelt[Any, Any], observer))
         assert isinstance(result, ScientificRendering)
 
 
@@ -725,7 +768,9 @@ class TestAffordanceErrors:
 
         # Poet cannot renovate
         with pytest.raises(AffordanceError) as exc_info:
-            await logos.invoke("world.house.renovate", poet_umwelt)
+            await logos.invoke(
+                "world.house.renovate", cast(Umwelt[Any, Any], poet_umwelt)
+            )
 
         # Error message should list available affordances
         error = exc_info.value
@@ -759,42 +804,52 @@ class TestLogosWithAffordances:
     """Integration tests for Logos with affordance filtering."""
 
     @pytest.fixture
-    def logos(self) -> "Logos":
+    def logos(self) -> Logos:
         from ..logos import create_logos
 
         return create_logos()
 
     @pytest.mark.asyncio
-    async def test_same_path_different_observer_different_result(self, logos) -> None:
+    async def test_same_path_different_observer_different_result(
+        self, logos: Logos
+    ) -> None:
         """Same path yields different results for different observers."""
         architect = MockUmwelt(archetype="architect")
         poet = MockUmwelt(archetype="poet")
 
-        arch_result = await logos.invoke("world.house.manifest", architect)
-        poet_result = await logos.invoke("world.house.manifest", poet)
+        arch_result = await logos.invoke(
+            "world.house.manifest", cast(Umwelt[Any, Any], architect)
+        )
+        poet_result = await logos.invoke(
+            "world.house.manifest", cast(Umwelt[Any, Any], poet)
+        )
 
         assert type(arch_result) != type(poet_result)
         assert isinstance(arch_result, BlueprintRendering)
         assert isinstance(poet_result, PoeticRendering)
 
     @pytest.mark.asyncio
-    async def test_architect_can_renovate(self, logos) -> None:
+    async def test_architect_can_renovate(self, logos: Logos) -> None:
         """Architect can invoke renovate aspect."""
         architect = MockUmwelt(archetype="architect")
 
         # Should not raise
         result = await logos.invoke(
-            "world.house.transform", architect, changes={"roof": "new"}
+            "world.house.transform",
+            cast(Umwelt[Any, Any], architect),
+            changes={"roof": "new"},
         )
         assert "transformed" in result
 
     @pytest.mark.asyncio
-    async def test_void_available_to_all(self, logos) -> None:
+    async def test_void_available_to_all(self, logos: Logos) -> None:
         """Void aspects are available to all archetypes."""
         archetypes = ["default", "architect", "poet", "scientist"]
 
         for archetype in archetypes:
             observer = MockUmwelt(archetype=archetype)
             # All should be able to sip entropy
-            result = await logos.invoke("void.entropy.sip", observer, amount=1.0)
+            result = await logos.invoke(
+                "void.entropy.sip", cast(Umwelt[Any, Any], observer), amount=1.0
+            )
             assert "seed" in result

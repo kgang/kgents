@@ -395,7 +395,7 @@ class BudgetManager:
     Switches between strategies based on context.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._markets: dict[str, TestMarket] = {
             tier: TestMarket(tier) for tier in BUDGET_TIERS
         }

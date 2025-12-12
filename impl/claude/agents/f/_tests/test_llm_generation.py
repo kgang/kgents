@@ -54,10 +54,7 @@ class MockRuntime(Runtime):
             usage={"input_tokens": 100, "output_tokens": 200, "total_tokens": 300},
         )
 
-    async def raw_completion(
-        self,
-        context: AgentContext,
-    ) -> tuple[str, dict[str, Any]]:
+    async def raw_completion(self, context: AgentContext) -> tuple[str, dict[str, Any]]:
         """Low-level completion call (not used in these tests)."""
         return (self.response, {"model": "mock-model"})
 
@@ -279,7 +276,7 @@ async def test_generate_prototype_async_iterates_on_failure() -> None:
             self.call_count = 0
             self.responses = [
                 # Attempt 1: Syntax error
-                "class TestAgent\n    def invoke(self, x): return x",
+                "class TestAgent\n    def invoke(self, x) -> None: return x",
                 # Attempt 2: Valid code
                 "class TestAgent:\n    def invoke(self, x: str) -> str:\n        return x",
             ]
@@ -298,8 +295,7 @@ async def test_generate_prototype_async_iterates_on_failure() -> None:
             )
 
         async def raw_completion(
-            self,
-            context: AgentContext,
+            self, context: AgentContext
         ) -> tuple[str, dict[str, Any]]:
             """Low-level completion call (not used in these tests)."""
             response = (

@@ -43,7 +43,7 @@ def test_sandbox_simple() -> None:
     """Test sandbox execution of simple agent."""
     code = """
 class DoublerAgent:
-    def invoke(self, x):
+    def invoke(self, x) -> None:
         return x * 2
 """
     result = _execute_in_sandbox(code, 5, "DoublerAgent")
@@ -61,7 +61,7 @@ def test_sandbox_runtime_error() -> None:
     """Test sandbox with runtime error."""
     code = """
 class BuggyAgent:
-    def invoke(self, x):
+    def invoke(self, x) -> None:
         raise ValueError("bug")
 """
     with pytest.raises(SandboxExecutionError, match="ValueError"):
@@ -77,7 +77,7 @@ def test_run_test_passing() -> None:
     """Test run_test with passing test."""
     source = _make_source("""
 class Agent:
-    def invoke(self, x):
+    def invoke(self, x) -> None:
         return x * 2
 """)
     example = Example(input=5, expected_output=10)
@@ -89,7 +89,7 @@ def test_run_test_failing() -> None:
     """Test run_test with failing test."""
     source = _make_source("""
 class Agent:
-    def invoke(self, x):
+    def invoke(self, x) -> None:
         return x * 3
 """)
     example = Example(input=5, expected_output=10)
@@ -144,7 +144,7 @@ def test_validate_all_passing() -> None:
     """Test validate with all passing."""
     source = _make_source("""
 class Agent:
-    def invoke(self, x):
+    def invoke(self, x) -> None:
         return x * 2
 """)
     examples = [Example(input=5, expected_output=10)]
@@ -164,7 +164,7 @@ def test_validate_test_failure() -> None:
     """Test validate with test failure."""
     source = _make_source("""
 class Agent:
-    def invoke(self, x):
+    def invoke(self, x) -> None:
         return x * 3
 """)
     examples = [Example(input=5, expected_output=10)]
@@ -190,12 +190,12 @@ async def test_self_healing_success() -> None:
     """Test self-healing succeeds on retry."""
     buggy = _make_source("""
 class Agent:
-    def invoke(self, x):
+    def invoke(self, x) -> None:
         return x * 3
 """)
     fixed = _make_source("""
 class Agent:
-    def invoke(self, x):
+    def invoke(self, x) -> None:
         return x * 2
 """)
 
@@ -216,7 +216,7 @@ async def test_self_healing_max_attempts() -> None:
     """Test self-healing reaches max attempts or convergence."""
     buggy = _make_source("""
 class Agent:
-    def invoke(self, x):
+    def invoke(self, x) -> None:
         return x * 3
 """)
 
@@ -248,13 +248,13 @@ class Agent:
 
 def test_code_similarity_identical() -> None:
     """Test identical codes."""
-    c1 = "def foo(): return 42"
-    c2 = "def foo(): return 42"
+    c1 = "def foo() -> None: return 42"
+    c2 = "def foo() -> None: return 42"
     assert _compute_code_similarity([c1, c2]) == 1.0
 
 
 def test_code_similarity_different() -> None:
     """Test different codes."""
-    c1 = "def foo(): return 42"
+    c1 = "def foo() -> None: return 42"
     c2 = "class Bar: pass"
     assert _compute_code_similarity([c1, c2]) < 0.5

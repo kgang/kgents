@@ -15,6 +15,7 @@ import ast
 import textwrap
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING, Any, cast
 
 import pytest
 
@@ -35,6 +36,9 @@ from ..jit import (
     compile_spec,
     create_jit_compiler,
 )
+
+if TYPE_CHECKING:
+    from bootstrap.umwelt import Umwelt
 
 # === Fixtures ===
 
@@ -475,7 +479,9 @@ class TestLogosJITIntegration:
 
         # Use an architect to define a new concept
         architect = MockUmwelt(dna=MockDNA(name="architect", archetype="architect"))
-        await logos.define_concept("world.garden", sample_spec, architect)
+        await logos.define_concept(
+            "world.garden", sample_spec, cast("Umwelt[Any, Any]", architect)
+        )
 
         assert "world.garden" in logos._jit_nodes
 
@@ -488,7 +494,9 @@ class TestLogosJITIntegration:
 
         # Use an architect to define a new concept
         architect = MockUmwelt(dna=MockDNA(name="architect", archetype="architect"))
-        await logos.define_concept("world.garden", sample_spec, architect)
+        await logos.define_concept(
+            "world.garden", sample_spec, cast("Umwelt[Any, Any]", architect)
+        )
 
         status = logos.get_jit_status("world.garden")
 
@@ -505,7 +513,9 @@ class TestLogosJITIntegration:
 
         # Use an architect to define a new concept
         architect = MockUmwelt(dna=MockDNA(name="architect", archetype="architect"))
-        await logos.define_concept("world.garden", sample_spec, architect)
+        await logos.define_concept(
+            "world.garden", sample_spec, cast("Umwelt[Any, Any]", architect)
+        )
 
         nodes = logos.list_jit_nodes()
 
@@ -567,10 +577,7 @@ class TestDefineConceptAutopoiesis:
 
     @pytest.mark.asyncio
     async def test_define_concept_success(
-        self,
-        tmp_path: Path,
-        architect_umwelt: MockUmwelt,
-        simple_spec: str,
+        self, tmp_path: Path, architect_umwelt: MockUmwelt, simple_spec: str
     ) -> None:
         """Architect can define new concepts."""
         logos = create_logos(spec_root=tmp_path)
@@ -578,7 +585,7 @@ class TestDefineConceptAutopoiesis:
         node = await logos.define_concept(
             handle="world.fountain",
             spec=simple_spec,
-            observer=architect_umwelt,
+            observer=cast("Umwelt[Any, Any]", architect_umwelt),
         )
 
         assert node is not None
@@ -587,10 +594,7 @@ class TestDefineConceptAutopoiesis:
 
     @pytest.mark.asyncio
     async def test_define_concept_unauthorized(
-        self,
-        tmp_path: Path,
-        poet_umwelt: MockUmwelt,
-        simple_spec: str,
+        self, tmp_path: Path, poet_umwelt: MockUmwelt, simple_spec: str
     ) -> None:
         """Poet cannot define new concepts."""
         logos = create_logos(spec_root=tmp_path)
@@ -599,17 +603,14 @@ class TestDefineConceptAutopoiesis:
             await logos.define_concept(
                 handle="world.fountain",
                 spec=simple_spec,
-                observer=poet_umwelt,
+                observer=cast("Umwelt[Any, Any]", poet_umwelt),
             )
 
         assert "cannot define" in str(exc_info.value).lower()
 
     @pytest.mark.asyncio
     async def test_define_concept_invalid_handle(
-        self,
-        tmp_path: Path,
-        architect_umwelt: MockUmwelt,
-        simple_spec: str,
+        self, tmp_path: Path, architect_umwelt: MockUmwelt, simple_spec: str
     ) -> None:
         """Invalid handle raises PathSyntaxError."""
         logos = create_logos(spec_root=tmp_path)
@@ -618,15 +619,12 @@ class TestDefineConceptAutopoiesis:
             await logos.define_concept(
                 handle="invalid",  # Missing context
                 spec=simple_spec,
-                observer=architect_umwelt,
+                observer=cast("Umwelt[Any, Any]", architect_umwelt),
             )
 
     @pytest.mark.asyncio
     async def test_define_concept_invalid_context(
-        self,
-        tmp_path: Path,
-        architect_umwelt: MockUmwelt,
-        simple_spec: str,
+        self, tmp_path: Path, architect_umwelt: MockUmwelt, simple_spec: str
     ) -> None:
         """Invalid context raises PathSyntaxError."""
         logos = create_logos(spec_root=tmp_path)
@@ -635,15 +633,12 @@ class TestDefineConceptAutopoiesis:
             await logos.define_concept(
                 handle="invalid_context.fountain",
                 spec=simple_spec,
-                observer=architect_umwelt,
+                observer=cast("Umwelt[Any, Any]", architect_umwelt),
             )
 
     @pytest.mark.asyncio
     async def test_defined_concept_is_resolvable(
-        self,
-        tmp_path: Path,
-        architect_umwelt: MockUmwelt,
-        simple_spec: str,
+        self, tmp_path: Path, architect_umwelt: MockUmwelt, simple_spec: str
     ) -> None:
         """Defined concept can be resolved."""
         logos = create_logos(spec_root=tmp_path)
@@ -651,7 +646,7 @@ class TestDefineConceptAutopoiesis:
         await logos.define_concept(
             handle="world.fountain",
             spec=simple_spec,
-            observer=architect_umwelt,
+            observer=cast("Umwelt[Any, Any]", architect_umwelt),
         )
 
         # Should now be resolvable
@@ -664,16 +659,16 @@ class TestPromoteConcept:
 
     @pytest.mark.asyncio
     async def test_promote_concept_success(
-        self,
-        tmp_path: Path,
-        sample_spec: str,
+        self, tmp_path: Path, sample_spec: str
     ) -> None:
         """Successfully promote a JIT concept."""
         logos = create_logos(spec_root=tmp_path)
 
         # Define a concept to get a JIT node
         architect = MockUmwelt(dna=MockDNA(name="architect", archetype="architect"))
-        await logos.define_concept("world.garden", sample_spec, architect)
+        await logos.define_concept(
+            "world.garden", sample_spec, cast("Umwelt[Any, Any]", architect)
+        )
 
         # Simulate usage to meet promotion criteria
         jit_node = logos._jit_nodes["world.garden"]
@@ -701,16 +696,16 @@ class TestPromoteConcept:
 
     @pytest.mark.asyncio
     async def test_promote_concept_not_ready(
-        self,
-        tmp_path: Path,
-        sample_spec: str,
+        self, tmp_path: Path, sample_spec: str
     ) -> None:
         """Promoting node that doesn't meet criteria fails."""
         logos = create_logos(spec_root=tmp_path)
 
         # Define a concept to get a JIT node
         architect = MockUmwelt(dna=MockDNA(name="architect", archetype="architect"))
-        await logos.define_concept("world.garden", sample_spec, architect)
+        await logos.define_concept(
+            "world.garden", sample_spec, cast("Umwelt[Any, Any]", architect)
+        )
 
         # Don't simulate usage - node not ready
 

@@ -6,10 +6,11 @@ Provides mock observers, nodes, and Umwelts for testing.
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from dataclasses import dataclass, field
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
@@ -19,6 +20,9 @@ from ..node import (
     BasicRendering,
     Renderable,
 )
+
+if TYPE_CHECKING:
+    from bootstrap.umwelt import Umwelt
 
 # === Mock DNA Types ===
 
@@ -115,31 +119,32 @@ class MockNode:
 
         return AspectAgent(self, aspect)
 
-    async def manifest(self, observer: MockUmwelt) -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
         """Return mock rendering."""
         if self._manifest_result:
             return self._manifest_result
+        archetype = getattr(observer.dna, "archetype", "default")
         return BasicRendering(
             summary=f"Mock: {self.handle}",
-            content=f"Rendered for {observer.dna.archetype}",
+            content=f"Rendered for {archetype}",
         )
 
     async def invoke(
-        self,
-        aspect: str,
-        observer: MockUmwelt,
-        **kwargs: Any,
+        self, aspect: str, observer: "Umwelt[Any, Any]", **kwargs: Any
     ) -> Any:
         """Mock invocation."""
         if aspect == "manifest":
             return await self.manifest(observer)
         if aspect == "affordances":
+            name = getattr(observer.dna, "name", "unknown")
+            archetype = getattr(observer.dna, "archetype", "default")
             meta = AgentMeta(
-                name=observer.dna.name,
-                archetype=observer.dna.archetype,
+                name=name,
+                archetype=archetype,
             )
             return self.affordances(meta)
-        return {"aspect": aspect, "kwargs": kwargs, "observer": observer.dna.name}
+        observer_name = getattr(observer.dna, "name", "unknown")
+        return {"aspect": aspect, "kwargs": kwargs, "observer": observer_name}
 
 
 # === Fixtures ===
@@ -235,7 +240,7 @@ def populated_registry() -> SimpleRegistry:
 
 
 @pytest.fixture
-def temp_spec_dir():
+def temp_spec_dir() -> Generator[Path, None, None]:
     """Temporary spec directory for JIT testing."""
     with TemporaryDirectory() as tmpdir:
         spec_root = Path(tmpdir)

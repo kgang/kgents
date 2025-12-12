@@ -147,7 +147,7 @@ class GhostWriter:
 
         # State
         self._running = False
-        self._daemon_task: asyncio.Task | None = None
+        self._daemon_task: asyncio.Task[None] | None = None
         self._thoughts: list[ThoughtEntry] = []
         self._tensions: list[TensionPoint] = []
         self._last_projection: GhostProjection | None = None
@@ -342,10 +342,13 @@ class GhostWriter:
         # From synapse: recent high-surprise events
         if self._synapse:
             try:
-                metrics = self._synapse.get_metrics()
-                if metrics.flashbulb_count > 0:
+                metrics = self._synapse.metrics()  # type: ignore[operator]
+                # Note: metrics dict doesn't have flashbulb_count,
+                # using fast_path_count as proxy for high-surprise events
+                fast_path = metrics.get("fast_path_count", 0)
+                if fast_path > 0:
                     self.add_thought(
-                        f"Flashbulb events detected: {metrics.flashbulb_count}",
+                        f"High-surprise events detected: {fast_path}",
                         source="synapse",
                         tags=["alert"],
                     )
@@ -501,10 +504,11 @@ def create_ghost_writer(
         project_root = Path.cwd()
 
     ghost_dir = project_root / ".kgents" / "ghost"
-    hydrate_path = project_root / "HYDRATE.md"
+    hydrate_path_candidate = project_root / "HYDRATE.md"
 
-    if not hydrate_path.exists():
-        hydrate_path = None
+    hydrate_path: Path | None = (
+        hydrate_path_candidate if hydrate_path_candidate.exists() else None
+    )
 
     return GhostWriter(
         ghost_dir=ghost_dir,

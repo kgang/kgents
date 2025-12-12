@@ -19,7 +19,7 @@ import json
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Awaitable, Callable
 
 from .parser import (
     render_flowfile,
@@ -41,7 +41,7 @@ from .types import (
 
 
 # Type for step execution handler
-StepExecutor = Callable[[FlowStep, Any, dict[str, Any]], Any]
+StepExecutor = Callable[[FlowStep, Any, dict[str, Any]], Awaitable[Any]]
 
 
 async def execute_p_gent_step(
@@ -286,7 +286,7 @@ async def execute_generic_step(
 
 
 # Genus -> Executor mapping
-GENUS_EXECUTORS: dict[str, Callable] = {
+GENUS_EXECUTORS: dict[str, StepExecutor] = {
     "P-gent": execute_p_gent_step,
     "J-gent": execute_j_gent_step,
     "G-gent": execute_g_gent_step,
@@ -393,7 +393,7 @@ class FlowEngine:
         self.progress_callback = progress_callback
         self._executors = GENUS_EXECUTORS.copy()
 
-    def register_executor(self, genus: str, executor: Callable) -> None:
+    def register_executor(self, genus: str, executor: StepExecutor) -> None:
         """Register a custom executor for a genus."""
         self._executors[genus] = executor
 

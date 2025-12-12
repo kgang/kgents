@@ -27,7 +27,7 @@ from ..storage import (
 class TestXDGPaths:
     """Tests for XDG path resolution."""
 
-    def test_default_paths(self, monkeypatch) -> None:
+    def test_default_paths(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Should use default paths when env vars not set."""
         # Clear XDG env vars
         monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
@@ -41,7 +41,7 @@ class TestXDGPaths:
         assert paths.data == home / ".local" / "share" / "kgents"
         assert paths.cache == home / ".cache" / "kgents"
 
-    def test_custom_paths_from_env(self, monkeypatch) -> None:
+    def test_custom_paths_from_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Should use paths from environment variables."""
         monkeypatch.setenv("XDG_CONFIG_HOME", "/custom/config")
         monkeypatch.setenv("XDG_DATA_HOME", "/custom/data")
@@ -53,7 +53,7 @@ class TestXDGPaths:
         assert paths.data == Path("/custom/data/kgents")
         assert paths.cache == Path("/custom/cache/kgents")
 
-    def test_ensure_dirs(self, tmp_path, monkeypatch) -> None:
+    def test_ensure_dirs(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """Should create directories."""
         monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
         monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
@@ -113,6 +113,7 @@ class TestProviderConfig:
         assert config.connection == "/path/to/db.sqlite"
         assert config.wal_mode is False
         assert config.dimensions == 512
+        assert config.retention is not None
         assert config.retention.hot_days == 14
 
 
@@ -138,7 +139,9 @@ class TestInfrastructureConfig:
         assert config.vector.dimensions == 256
         assert config.blob.path == "/tmp/blobs"
 
-    def test_default_config(self, tmp_path, monkeypatch) -> None:
+    def test_default_config(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Should create default local-first config."""
         monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
         paths = XDGPaths.resolve()
@@ -147,6 +150,7 @@ class TestInfrastructureConfig:
 
         assert config.profile == "local-canonical"
         assert config.relational.type == "sqlite"
+        assert config.relational.connection is not None
         assert "membrane.db" in config.relational.connection
         assert config.vector.type == "numpy"
 
@@ -155,7 +159,7 @@ class TestStorageProvider:
     """Tests for StorageProvider."""
 
     @pytest.mark.asyncio
-    async def test_from_config_dict(self, tmp_path) -> None:
+    async def test_from_config_dict(self, tmp_path: Path) -> None:
         """Should create provider from config dict."""
         config = {
             "profile": "test",
@@ -205,7 +209,7 @@ class TestStorageProvider:
         await provider.close()
 
     @pytest.mark.asyncio
-    async def test_run_migrations(self, tmp_path) -> None:
+    async def test_run_migrations(self, tmp_path: Path) -> None:
         """Should run migrations to create schema."""
         config = {
             "profile": "test",
@@ -244,7 +248,9 @@ class TestStorageProvider:
         await provider.close()
 
     @pytest.mark.asyncio
-    async def test_env_var_expansion(self, tmp_path, monkeypatch) -> None:
+    async def test_env_var_expansion(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Should expand environment variables in config."""
         monkeypatch.setenv("TEST_DB_PATH", str(tmp_path / "from_env.db"))
 
@@ -276,7 +282,7 @@ class TestStorageProvider:
         await provider.close()
 
     @pytest.mark.asyncio
-    async def test_close_all_providers(self, tmp_path) -> None:
+    async def test_close_all_providers(self, tmp_path: Path) -> None:
         """Should close all providers."""
         config = {
             "profile": "test",
@@ -319,7 +325,7 @@ class TestStorageProviderFromFile:
     """Tests for loading config from file."""
 
     @pytest.mark.asyncio
-    async def test_from_config_file(self, tmp_path) -> None:
+    async def test_from_config_file(self, tmp_path: Path) -> None:
         """Should load config from JSON file."""
         import json
 
@@ -371,7 +377,7 @@ class TestStorageProviderFromFile:
         await provider.close()
 
     @pytest.mark.asyncio
-    async def test_fallback_when_no_config(self, tmp_path) -> None:
+    async def test_fallback_when_no_config(self, tmp_path: Path) -> None:
         """Should use defaults when no config file exists."""
         paths = XDGPaths(
             config=tmp_path / "config" / "kgents",

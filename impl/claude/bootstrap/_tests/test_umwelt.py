@@ -30,7 +30,7 @@ from bootstrap.umwelt import (
 class MockContract:
     """Mock contract for testing."""
 
-    def __init__(self, name: str = "MockContract", passes: bool = True):
+    def __init__(self, name: str = "MockContract", passes: bool = True) -> None:
         self._name = name
         self._passes = passes
 

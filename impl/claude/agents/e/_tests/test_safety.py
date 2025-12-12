@@ -832,7 +832,7 @@ class TestSandbox:
         sandbox = Sandbox(config=config)
 
         async with sandbox.enter_async() as sb:
-            test_file = sb.write_file("def test_foo(): pass", "test_foo.py")
+            test_file = sb.write_file("def test_foo() -> None: pass", "test_foo.py")
             result = await sb.run_tests(test_file)
 
             assert not result.success

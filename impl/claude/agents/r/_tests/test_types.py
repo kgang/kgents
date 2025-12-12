@@ -88,7 +88,7 @@ class TestSignature:
         sig = Signature.simple("a", str, "b", str, "test")
 
         with pytest.raises(AttributeError):
-            object.__setattr__(sig, "instructions", "modified")
+            sig.instructions = "modified"  # type: ignore[misc]
 
 
 class TestFieldSpec:
@@ -148,7 +148,7 @@ class TestExample:
         ex = Example.simple("a", "b")
 
         with pytest.raises(AttributeError):
-            object.__setattr__(ex, "inputs", {"modified": "value"})
+            ex.inputs = {"modified": "value"}  # type: ignore[misc]
 
 
 # --- TextualGradient Tests ---
@@ -185,7 +185,7 @@ class TestTextualGradient:
         grad = TextualGradient(feedback="test")
 
         with pytest.raises(AttributeError):
-            object.__setattr__(grad, "feedback", "modified")
+            grad.feedback = "modified"  # type: ignore[misc]
 
 
 # --- OptimizationTrace Tests ---

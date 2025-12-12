@@ -11,8 +11,16 @@ This template demonstrates Phase 2 of the test evolution plan:
 Copy this template when creating tests for new agents.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, cast
+
 import pytest
 from bootstrap import ID, compose
+from bootstrap.types import Agent
+
+if TYPE_CHECKING:
+    from agents.o.bootstrap_witness import TestAgent
 
 
 class TestAgentLawTemplate:
@@ -26,7 +34,7 @@ class TestAgentLawTemplate:
     """
 
     @pytest.fixture
-    def sample_agent(self) -> "TestAgent":
+    def sample_agent(self) -> "TestAgent[Any, Any]":
         """
         Create the agent under test.
 
@@ -37,7 +45,7 @@ class TestAgentLawTemplate:
         return TestAgent(name="sample", transform=lambda x: x * 2)
 
     @pytest.fixture
-    def test_inputs(self) -> None:
+    def test_inputs(self) -> Any:
         """Standard test inputs for law verification."""
         return [0, 1, -1, 42, 1000]
 
@@ -48,7 +56,9 @@ class TestAgentLawTemplate:
     @pytest.mark.law("identity")
     @pytest.mark.law_identity
     @pytest.mark.asyncio
-    async def test_left_identity(self, sample_agent, test_inputs) -> None:
+    async def test_left_identity(
+        self, sample_agent: "TestAgent[Any, Any]", test_inputs: Any
+    ) -> None:
         """
         Test left identity law: Id >> f == f.
 
@@ -56,7 +66,9 @@ class TestAgentLawTemplate:
         have no effect on the result.
         """
         for input_val in test_inputs:
-            composed = compose(ID, sample_agent)
+            composed: Any = compose(
+                cast(Agent[Any, Any], ID), cast(Agent[Any, Any], sample_agent)
+            )
 
             direct = await sample_agent.invoke(input_val)
             via_id = await composed.invoke(input_val)
@@ -69,7 +81,9 @@ class TestAgentLawTemplate:
     @pytest.mark.law("identity")
     @pytest.mark.law_identity
     @pytest.mark.asyncio
-    async def test_right_identity(self, sample_agent, test_inputs) -> None:
+    async def test_right_identity(
+        self, sample_agent: "TestAgent[Any, Any]", test_inputs: Any
+    ) -> None:
         """
         Test right identity law: f >> Id == f.
 
@@ -77,7 +91,9 @@ class TestAgentLawTemplate:
         have no effect on the result.
         """
         for input_val in test_inputs:
-            composed = compose(sample_agent, ID)
+            composed: Any = compose(
+                cast(Agent[Any, Any], sample_agent), cast(Agent[Any, Any], ID)
+            )
 
             direct = await sample_agent.invoke(input_val)
             via_id = await composed.invoke(input_val)
@@ -94,7 +110,9 @@ class TestAgentLawTemplate:
     @pytest.mark.law("associativity")
     @pytest.mark.law_associativity
     @pytest.mark.asyncio
-    async def test_associativity(self, sample_agent, test_inputs) -> None:
+    async def test_associativity(
+        self, sample_agent: "TestAgent[Any, Any]", test_inputs: Any
+    ) -> None:
         """
         Test associativity law: (f >> g) >> h == f >> (g >> h).
 
@@ -103,20 +121,30 @@ class TestAgentLawTemplate:
         from agents.o.bootstrap_witness import TestAgent
 
         f = sample_agent
-        g = TestAgent(name="g", transform=lambda x: x + 1)
-        h = TestAgent(name="h", transform=lambda x: x - 1)
+        g: TestAgent[Any, Any] = TestAgent(name="g", transform=lambda x: x + 1)
+        h: TestAgent[Any, Any] = TestAgent(name="h", transform=lambda x: x - 1)
 
         for input_val in test_inputs:
-            left = compose(compose(f, g), h)
-            right = compose(f, compose(g, h))
+            left: Any = compose(
+                compose(cast(Agent[Any, Any], f), cast(Agent[Any, Any], g)),
+                cast(Agent[Any, Any], h),
+            )
+            right: Any = compose(
+                cast(Agent[Any, Any], f),
+                compose(cast(Agent[Any, Any], g), cast(Agent[Any, Any], h)),
+            )
 
             left_result = await left.invoke(input_val)
             right_result = await right.invoke(input_val)
 
+            # Create string representations without using >> operator
+            left_repr = f"(({f.name} >> {g.name}) >> {h.name})"
+            right_repr = f"({f.name} >> ({g.name} >> {h.name}))"
+
             assert left_result == right_result, (
                 f"Associativity violated for input {input_val}: "
-                f"left={(f >> g) >> h}={left_result}, "
-                f"right={f >> (g >> h)}={right_result}"
+                f"left={left_repr}={left_result}, "
+                f"right={right_repr}={right_result}"
             )
 
     # =========================================================================
@@ -125,7 +153,9 @@ class TestAgentLawTemplate:
 
     @pytest.mark.law("closure")
     @pytest.mark.asyncio
-    async def test_composition_closure(self, sample_agent) -> None:
+    async def test_composition_closure(
+        self, sample_agent: "TestAgent[Any, Any]"
+    ) -> None:
         """
         Test that composition produces a valid agent.
 
@@ -134,9 +164,11 @@ class TestAgentLawTemplate:
         """
         from agents.o.bootstrap_witness import TestAgent
 
-        g = TestAgent(name="g", transform=lambda x: x + 1)
+        g: TestAgent[Any, Any] = TestAgent(name="g", transform=lambda x: x + 1)
 
-        composed = compose(sample_agent, g)
+        composed: Any = compose(
+            cast(Agent[Any, Any], sample_agent), cast(Agent[Any, Any], g)
+        )
 
         # Should have invoke method
         assert hasattr(composed, "invoke"), "Composed agent missing invoke method"

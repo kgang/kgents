@@ -255,7 +255,7 @@ class LucidDreamer:
         hippocampus: Hippocampus,
         cortex: ICortex | None = None,
         config: DreamerConfig | None = None,
-        maintenance_tasks: list[Callable] | None = None,
+        maintenance_tasks: list[Callable[..., Any]] | None = None,
     ):
         """
         Initialize the Lucid Dreamer.
@@ -583,10 +583,13 @@ class LucidDreamer:
 
         # Example: Check for epoch accumulation
         if len(self._hippocampus.epochs) > 10:
+            epoch_context: dict[str, Any] = {
+                "epoch_count": float(len(self._hippocampus.epochs))
+            }
             questions.append(
                 (
                     f"You have {len(self._hippocampus.epochs)} memory epochs. Should we consolidate?",
-                    {"epoch_count": len(self._hippocampus.epochs)},
+                    epoch_context,
                     2,
                 )
             )

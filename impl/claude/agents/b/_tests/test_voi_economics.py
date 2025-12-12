@@ -478,7 +478,7 @@ class TestVoIOptimizer:
         optimizer.set_observability("agent1", 1.0)
 
         # Log a transaction to give agent impact
-        output = SimpleOutput(content="def foo(): pass", _valid_syntax=True)
+        output = SimpleOutput(content="def foo() -> None: pass", _valid_syntax=True)
         gas = Gas(tokens=100)
         value_ledger.log_transaction("agent1", gas, output)
 
@@ -579,7 +579,9 @@ class TestAdaptiveObserver:
         optimizer.set_observability("agent1", 1.0)
 
         # Log transaction for impact
-        output = SimpleOutput(content="def foo(): pass" * 10, _valid_syntax=True)
+        output = SimpleOutput(
+            content="def foo() -> None: pass" * 10, _valid_syntax=True
+        )
         value_ledger.log_transaction("agent1", Gas(tokens=100), output)
 
         interval = observer.compute_observation_interval("agent1")
@@ -688,7 +690,7 @@ class TestUnifiedValueAccounting:
 
         # Log profitable production
         output = SimpleOutput(
-            content="def foo(): pass" * 20,
+            content="def foo() -> None: pass" * 20,
             _valid_syntax=True,
             _tests_passed=True,
         )
@@ -751,7 +753,7 @@ class TestUnifiedValueAccounting:
         accounting = UnifiedValueAccounting(value_ledger, voi_ledger)
 
         # Add some production
-        output = SimpleOutput(content="def foo(): pass", _valid_syntax=True)
+        output = SimpleOutput(content="def foo() -> None: pass", _valid_syntax=True)
         value_ledger.log_transaction("agent1", Gas(tokens=100), output)
 
         # Add some observation
@@ -793,7 +795,7 @@ class TestVoIIntegration:
 
         # Log production to give agents impact
         output = SimpleOutput(
-            content="def process_data(): return transform(input())" * 10,
+            content="def process_data() -> None: return transform(input())" * 10,
             _valid_syntax=True,
             _tests_passed=True,
         )

@@ -7,9 +7,10 @@ Tests the translation from natural language to AGENTESE paths.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, cast
 
 import pytest
+from bootstrap.umwelt import Umwelt
 
 from ..adapter import (
     LLM_TRANSLATION_EXAMPLES,
@@ -45,13 +46,13 @@ class MockUmwelt:
 
     dna: MockDNA = field(default_factory=MockDNA)
     state: Any = None
-    gravity: tuple = ()
+    gravity: tuple[Any, ...] = ()
 
 
 class MockLLM:
     """Mock LLM for testing."""
 
-    def __init__(self, responses: dict[str, str] | None = None):
+    def __init__(self, responses: dict[str, str] | None = None) -> None:
         self._responses = responses or {}
         self._calls: list[str] = []
 
@@ -68,8 +69,8 @@ class MockLLM:
 class MockLogos:
     """Mock WiredLogos for testing."""
 
-    def __init__(self):
-        self._invocations: list[tuple[str, Any, dict]] = []
+    def __init__(self) -> None:
+        self._invocations: list[tuple[str, Any, dict[str, Any]]] = []
         self._results: dict[str, Any] = {}
 
     async def invoke(self, path: str, observer: Any, **kwargs: Any) -> Any:
@@ -171,7 +172,7 @@ class TestTranslationResult:
             original_input="test",
         )
         with pytest.raises(AttributeError):
-            result.path = "different.path"
+            result.path = "different.path"  # type: ignore[misc]
 
 
 # =============================================================================
@@ -449,7 +450,7 @@ class TestLLMTranslator:
     @pytest.mark.asyncio
     async def test_basic_translation(
         self, llm_translator: LLMTranslator, mock_llm: MockLLM
-    ):
+    ) -> None:
         """Test basic LLM translation."""
         mock_llm._responses["test query"] = "world.test.manifest"
         result = await llm_translator.translate("test query")
@@ -476,7 +477,7 @@ class TestLLMTranslator:
     @pytest.mark.asyncio
     async def test_llm_receives_prompt(
         self, llm_translator: LLMTranslator, mock_llm: MockLLM
-    ):
+    ) -> None:
         """Test that LLM receives properly formatted prompt."""
         await llm_translator.translate("test input")
         assert len(mock_llm._calls) == 1
@@ -543,13 +544,12 @@ class TestAgentesAdapter:
 
     @pytest.mark.asyncio
     async def test_execute_translates_and_invokes(
-        self,
-        adapter: AgentesAdapter,
-        mock_logos: MockLogos,
-        mock_umwelt: MockUmwelt,
-    ):
+        self, adapter: AgentesAdapter, mock_logos: MockLogos, mock_umwelt: MockUmwelt
+    ) -> None:
         """Test that execute translates and invokes."""
-        result = await adapter.execute("show me the house", mock_umwelt)
+        result = await adapter.execute(
+            "show me the house", cast(Umwelt[Any, Any], mock_umwelt)
+        )
         assert len(mock_logos._invocations) == 1
         path, observer, kwargs = mock_logos._invocations[0]
         assert path == "world.house.manifest"
@@ -557,13 +557,12 @@ class TestAgentesAdapter:
 
     @pytest.mark.asyncio
     async def test_execute_with_direct_path(
-        self,
-        adapter: AgentesAdapter,
-        mock_logos: MockLogos,
-        mock_umwelt: MockUmwelt,
-    ):
+        self, adapter: AgentesAdapter, mock_logos: MockLogos, mock_umwelt: MockUmwelt
+    ) -> None:
         """Test that execute works with direct AGENTESE paths."""
-        result = await adapter.execute("concept.justice.refine", mock_umwelt)
+        result = await adapter.execute(
+            "concept.justice.refine", cast(Umwelt[Any, Any], mock_umwelt)
+        )
         path, _, _ = mock_logos._invocations[0]
         assert path == "concept.justice.refine"
 
@@ -733,7 +732,7 @@ class TestIntegrationScenarios:
     @pytest.mark.asyncio
     async def test_developer_workflow(
         self, adapter: AgentesAdapter, mock_umwelt: MockUmwelt
-    ):
+    ) -> None:
         """Test typical developer queries."""
         # Check status
         result = await adapter.translate("get server status")
@@ -750,7 +749,7 @@ class TestIntegrationScenarios:
     @pytest.mark.asyncio
     async def test_philosopher_workflow(
         self, adapter: AgentesAdapter, mock_umwelt: MockUmwelt
-    ):
+    ) -> None:
         """Test philosophical queries."""
         # Refine concepts
         result = await adapter.translate("think harder about justice")
@@ -763,7 +762,7 @@ class TestIntegrationScenarios:
     @pytest.mark.asyncio
     async def test_entropy_workflow(
         self, adapter: AgentesAdapter, mock_umwelt: MockUmwelt
-    ):
+    ) -> None:
         """Test entropy/accursed share queries."""
         # Get randomness
         result = await adapter.translate("give me something random")
@@ -780,7 +779,7 @@ class TestIntegrationScenarios:
     @pytest.mark.asyncio
     async def test_memory_workflow(
         self, adapter: AgentesAdapter, mock_umwelt: MockUmwelt
-    ):
+    ) -> None:
         """Test memory-related queries."""
         # View memory
         result = await adapter.translate("show my memory")

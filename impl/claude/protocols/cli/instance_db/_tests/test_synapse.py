@@ -8,9 +8,13 @@ Coverage:
 - Metrics collection
 """
 
+from __future__ import annotations
+
+from typing import Any, cast
+
 import pytest
 
-from ..interfaces import TelemetryEvent
+from ..interfaces import ITelemetryStore, TelemetryEvent
 from ..nervous import Signal, SignalPriority
 from ..synapse import (
     PredictiveModel,
@@ -28,7 +32,7 @@ from ..synapse import (
 class MockTelemetryStore:
     """Mock telemetry store for testing."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.events: list[TelemetryEvent] = []
         self.fail_next = False
 
@@ -39,11 +43,34 @@ class MockTelemetryStore:
         self.events.extend(events)
         return len(events)
 
+    async def query(
+        self,
+        event_type: str | None = None,
+        since: str | None = None,
+        until: str | None = None,
+        instance_id: str | None = None,
+        limit: int = 1000,
+    ) -> list[TelemetryEvent]:
+        """Mock query implementation."""
+        return []
+
+    async def prune(self, older_than_days: int) -> int:
+        """Mock prune implementation."""
+        return 0
+
+    async def count(self, event_type: str | None = None) -> int:
+        """Mock count implementation."""
+        return len(self.events)
+
+    async def close(self) -> None:
+        """Mock close implementation."""
+        pass
+
 
 class MockHandler:
     """Mock handler for testing dispatch."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.signals: list[Signal] = []
 
     async def handle(self, signal: Signal) -> None:
@@ -246,8 +273,8 @@ class TestSynapseCreation:
     def test_create_with_store(self) -> None:
         """Test synapse with telemetry store."""
         store = MockTelemetryStore()
-        synapse = Synapse(telemetry_store=store)
-        assert synapse._store == store
+        synapse = Synapse(telemetry_store=cast(ITelemetryStore, store))
+        assert synapse._store is store
 
     def test_create_with_config(self) -> None:
         """Test synapse with custom config."""
@@ -404,7 +431,7 @@ class TestSynapseHandlers:
         synapse = Synapse(config=config)
         received = []
 
-        async def handler(signal):
+        async def handler(signal: Any) -> None:
             received.append(signal)
 
         synapse.on_fast_path(handler)
@@ -498,7 +525,7 @@ class TestSynapseTelemetry:
         """Test fast path logs to telemetry."""
         store = MockTelemetryStore()
         config = SynapseConfig(surprise_threshold=0.0)
-        synapse = Synapse(telemetry_store=store, config=config)
+        synapse = Synapse(telemetry_store=cast(ITelemetryStore, store), config=config)
 
         signal = Signal(signal_type="test", data={"key": "value"})
         result = await synapse.fire(signal)
@@ -512,7 +539,7 @@ class TestSynapseTelemetry:
         """Test batch path logs on flush."""
         store = MockTelemetryStore()
         config = SynapseConfig(surprise_threshold=1.0)
-        synapse = Synapse(telemetry_store=store, config=config)
+        synapse = Synapse(telemetry_store=cast(ITelemetryStore, store), config=config)
 
         for i in range(3):
             signal = Signal(signal_type=f"test.{i}", data={})
@@ -530,7 +557,7 @@ class TestSynapseTelemetry:
         store = MockTelemetryStore()
         store.fail_next = True
         config = SynapseConfig(surprise_threshold=0.0)
-        synapse = Synapse(telemetry_store=store, config=config)
+        synapse = Synapse(telemetry_store=cast(ITelemetryStore, store), config=config)
 
         signal = Signal(signal_type="test", data={})
         result = await synapse.fire(signal)

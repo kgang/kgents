@@ -11,11 +11,15 @@ Tests:
 - Rollback capability
 """
 
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 
 import pytest
 from protocols.hypnagogic_refinery import (
+    HypnagogicRefinery,
     MemoryTemperature,
+    OptimizationEngine,
     OptimizationObjective,
     OptimizationStatus,
     RefineryReport,
@@ -32,13 +36,13 @@ class TestMemoryRecord:
     def test_memory_creation(self) -> None:
         """Test basic memory creation."""
         memory = create_memory(
-            content="def hello(): pass",
+            content="def hello() -> None: pass",
             kind="code",
         )
 
         assert memory.kind == "code"
-        assert memory.content == "def hello(): pass"
-        assert memory.size_bytes == len("def hello(): pass".encode("utf-8"))
+        assert memory.content == "def hello() -> None: pass"
+        assert memory.size_bytes == len("def hello() -> None: pass".encode("utf-8"))
         assert memory.access_count == 0
 
     def test_memory_age(self) -> None:
@@ -85,7 +89,9 @@ class TestMemoryStore:
         store.add(memory)
 
         store.get("test-1")
-        assert store.get("test-1").access_count == 2  # Two gets
+        result = store.get("test-1")
+        assert result is not None
+        assert result.access_count == 2  # Two gets
 
     def test_query_by_temperature_cold(self) -> None:
         """Test querying cold memories."""
@@ -135,17 +141,19 @@ class TestOptimizationEngine:
     """Tests for OptimizationEngine."""
 
     @pytest.fixture
-    def engine(self) -> create_optimization_engine:
+    def engine(self) -> OptimizationEngine:
         return create_optimization_engine(min_improvement=0.1)
 
     @pytest.mark.asyncio
-    async def test_compress_code_with_comments(self, engine) -> None:
+    async def test_compress_code_with_comments(
+        self, engine: OptimizationEngine
+    ) -> None:
         """Test compressing code with many comments."""
         code = """# This is a header comment
 # It has multiple lines
 # That can be removed
 
-def hello():
+def hello() -> None:
     # This comment can stay
     pass
 
@@ -164,9 +172,9 @@ def hello():
         assert improvement > 0
 
     @pytest.mark.asyncio
-    async def test_skip_minimal_compression(self, engine) -> None:
+    async def test_skip_minimal_compression(self, engine: OptimizationEngine) -> None:
         """Test skipping code with minimal compression potential."""
-        code = """def hello():
+        code = """def hello() -> None:
     return "world"
 """
 
@@ -180,7 +188,7 @@ def hello():
         assert improvement < 0.1
 
     @pytest.mark.asyncio
-    async def test_cache_compression(self, engine) -> None:
+    async def test_cache_compression(self, engine: OptimizationEngine) -> None:
         """Test cache optimization (full removal)."""
         cache_content = "{'key': 'value', 'data': [1,2,3]}"
 
@@ -194,9 +202,9 @@ def hello():
         assert improvement == 1.0
 
     @pytest.mark.asyncio
-    async def test_verify_semantics_code(self, engine) -> None:
+    async def test_verify_semantics_code(self, engine: OptimizationEngine) -> None:
         """Test semantics verification for code."""
-        original = """def foo():
+        original = """def foo() -> None:
     pass
 
 class Bar:
@@ -204,7 +212,7 @@ class Bar:
 """
 
         # Good optimization (preserves definitions)
-        good_optimized = """def foo():
+        good_optimized = """def foo() -> None:
     pass
 class Bar:
     pass"""
@@ -228,16 +236,16 @@ class TestHypnagogicRefinery:
     """Tests for HypnagogicRefinery."""
 
     @pytest.fixture
-    def refinery(self) -> create_refinery:
+    def refinery(self) -> HypnagogicRefinery:
         return create_refinery(max_candidates=5, min_improvement=0.1)
 
-    def test_refinery_creation(self, refinery) -> None:
+    def test_refinery_creation(self, refinery: HypnagogicRefinery) -> None:
         """Test refinery creation."""
         assert refinery.memory_store is not None
         assert refinery.cycles == []
 
     @pytest.mark.asyncio
-    async def test_dream_cycle_empty_store(self, refinery) -> None:
+    async def test_dream_cycle_empty_store(self, refinery: HypnagogicRefinery) -> None:
         """Test dream cycle with no memories."""
         report = await refinery.dream_cycle()
 
@@ -246,13 +254,15 @@ class TestHypnagogicRefinery:
         assert report.candidates_found == 0
 
     @pytest.mark.asyncio
-    async def test_dream_cycle_with_cold_memory(self, refinery) -> None:
+    async def test_dream_cycle_with_cold_memory(
+        self, refinery: HypnagogicRefinery
+    ) -> None:
         """Test dream cycle finds and optimizes cold memory."""
         # Add a cold memory with comments
         code_with_comments = """# Header comment
 # Another line
 
-def test():
+def test() -> None:
     pass
 
 # More comments
@@ -275,7 +285,9 @@ def test():
         # Should attempt optimization
 
     @pytest.mark.asyncio
-    async def test_dream_cycle_skips_hot_memory(self, refinery) -> None:
+    async def test_dream_cycle_skips_hot_memory(
+        self, refinery: HypnagogicRefinery
+    ) -> None:
         """Test dream cycle skips hot memories."""
         memory = create_memory(
             content="# lots of comments\n" * 10,
@@ -292,7 +304,9 @@ def test():
         assert report.memories_examined == 0
 
     @pytest.mark.asyncio
-    async def test_dream_cycle_respects_limit(self, refinery) -> None:
+    async def test_dream_cycle_respects_limit(
+        self, refinery: HypnagogicRefinery
+    ) -> None:
         """Test dream cycle respects max candidates."""
         # Add many cold memories
         for i in range(20):
@@ -310,10 +324,10 @@ def test():
         assert report.candidates_found <= 5
 
     @pytest.mark.asyncio
-    async def test_rollback(self, refinery) -> None:
+    async def test_rollback(self, refinery: HypnagogicRefinery) -> None:
         """Test rollback of optimization."""
         original_content = """# Comment to remove
-def foo():
+def foo() -> None:
     pass
 """
         memory = create_memory(
@@ -335,25 +349,25 @@ def foo():
             assert result.rollback_available
 
             # Content should be optimized
-            assert (
-                refinery.memory_store.get("rollback-test").content != original_content
-            )
+            optimized_memory = refinery.memory_store.get("rollback-test")
+            assert optimized_memory is not None
+            assert optimized_memory.content != original_content
 
             # Rollback
             success = refinery.rollback(result)
             assert success
 
             # Content should be restored
-            assert (
-                refinery.memory_store.get("rollback-test").content == original_content
-            )
+            restored_memory = refinery.memory_store.get("rollback-test")
+            assert restored_memory is not None
+            assert restored_memory.content == original_content
 
     @pytest.mark.asyncio
-    async def test_total_bytes_saved(self, refinery) -> None:
+    async def test_total_bytes_saved(self, refinery: HypnagogicRefinery) -> None:
         """Test tracking of total bytes saved."""
         # Add cold memory with lots of comments
         memory = create_memory(
-            content="# " + "comment " * 100 + "\ndef f(): pass",
+            content="# " + "comment " * 100 + "\ndef f() -> None: pass",
             kind="code",
             id="big-comments",
         )
@@ -441,21 +455,21 @@ class TestIntegration:
         code = """# This is a module for testing
 # It has several functions
 
-def add(a, b):
+def add(a, b) -> None:
     '''Add two numbers.'''
     return a + b
 
 # Another comment block
 # With multiple lines
 
-def multiply(x, y):
+def multiply(x, y) -> None:
     '''Multiply two numbers.'''
     return x * y
 
 class Calculator:
     '''A simple calculator.'''
 
-    def divide(self, a, b):
+    def divide(self, a, b) -> None:
         '''Divide a by b.'''
         return a / b
 """
@@ -473,6 +487,7 @@ class Calculator:
 
         # Get optimized memory
         optimized_memory = refinery.memory_store.get("functional-code")
+        assert optimized_memory is not None
 
         # All functions and class should still be present
         assert "def add(" in optimized_memory.content

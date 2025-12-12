@@ -18,7 +18,7 @@ import math
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Callable, Literal
+from typing import Any, Callable, Literal, Sequence
 
 # =============================================================================
 # Core Types
@@ -159,7 +159,7 @@ class WitnessStore:
     Can be backed by D-gent PersistentAgent for persistence.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._witnesses: list[TestWitness] = []
 
     def record(self, witness: TestWitness) -> None:
@@ -263,7 +263,7 @@ class CausalAnalyst:
 
     async def _generate_variations(self, input_data: Any) -> list[Any]:
         """Generate input variations for delta debugging."""
-        variations = []
+        variations: list[Any] = []
 
         if isinstance(input_data, str):
             text = input_data
@@ -595,7 +595,7 @@ class CausalAnalyst:
             cause="Non-deterministic agent behavior",
         )
 
-    def _calculate_entropy(self, outcomes: list[str]) -> float:
+    def _calculate_entropy(self, outcomes: Sequence[str]) -> float:
         """Calculate Shannon entropy of outcome distribution."""
         if not outcomes:
             return 0.0
@@ -676,17 +676,17 @@ def format_analyst_report(
 
     if delta_results:
         lines.append(" DELTA DEBUGGING RESULTS:")
-        for r in delta_results:
-            lines.append(f"   Cause: {r.isolated_cause}")
-            lines.append(f"   Confidence: {r.confidence:.2f}")
+        for delta_r in delta_results:
+            lines.append(f"   Cause: {delta_r.isolated_cause}")
+            lines.append(f"   Confidence: {delta_r.confidence:.2f}")
             lines.append("")
 
     if counterfactual_results:
         lines.append(" COUNTERFACTUAL QUERIES:")
-        for r in counterfactual_results:
-            lines.append(f"   Q: {r.query}")
-            lines.append(f"   A: {r.answer}")
-            lines.append(f"   Confidence: {r.confidence:.2f}")
+        for cf_r in counterfactual_results:
+            lines.append(f"   Q: {cf_r.query}")
+            lines.append(f"   A: {cf_r.answer}")
+            lines.append(f"   Confidence: {cf_r.confidence:.2f}")
             lines.append("")
 
     if causal_graphs:

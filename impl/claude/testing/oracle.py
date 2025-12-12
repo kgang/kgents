@@ -13,50 +13,56 @@ Phase 8.1 - Foundation:
 - Agent validation via metamorphic relations
 """
 
+from __future__ import annotations
+
 import math
 import random
 from dataclasses import dataclass, field
-from typing import Any, Callable, Protocol
+from typing import TYPE_CHECKING, Any, Callable, Protocol
 
-# Try relative import first, fall back to absolute
-try:
-    from ..agents.l.semantic import Embedder, SimpleEmbedder
-except ImportError:
+if TYPE_CHECKING:
+    # For type checking, use the real types if available
     try:
-        from agents.l.semantic import Embedder, SimpleEmbedder
+        from agents.l.semantic import Embedder as _EmbedderType
+        from agents.l.semantic import SimpleEmbedder as _SimpleEmbedderType
     except ImportError:
-        # Fallback: define minimal Embedder protocol locally
-        class Embedder(Protocol):
-            """Protocol for embedding text into vector space."""
+        _EmbedderType = None  # type: ignore[misc, assignment]
+        _SimpleEmbedderType = None  # type: ignore[misc, assignment]
 
-            async def embed(self, text: str) -> list[float]: ...
 
-            @property
-            def dimension(self) -> int: ...
+# Define protocol and fallback implementation
+class Embedder(Protocol):
+    """Protocol for embedding text into vector space."""
 
-        class SimpleEmbedder:
-            """Minimal TF-IDF embedder fallback."""
+    async def embed(self, text: str) -> list[float]: ...
 
-            def __init__(self, dimension: int = 128):
-                self._dimension = dimension
-                self._vocabulary: dict[str, int] = {}
+    @property
+    def dimension(self) -> int: ...
 
-            @property
-            def dimension(self) -> int:
-                return self._dimension
 
-            async def embed(self, text: str) -> list[float]:
-                """Simple hash-based embedding."""
-                tokens = text.lower().split()
-                vec = [0.0] * self._dimension
-                for token in tokens:
-                    idx = hash(token) % self._dimension
-                    vec[idx] += 1.0
-                # Normalize
-                norm = math.sqrt(sum(v * v for v in vec))
-                if norm > 0:
-                    vec = [v / norm for v in vec]
-                return vec
+class SimpleEmbedder:
+    """Minimal TF-IDF embedder fallback."""
+
+    def __init__(self, dimension: int = 128):
+        self._dimension = dimension
+        self._vocabulary: dict[str, int] = {}
+
+    @property
+    def dimension(self) -> int:
+        return self._dimension
+
+    async def embed(self, text: str) -> list[float]:
+        """Simple hash-based embedding."""
+        tokens = text.lower().split()
+        vec = [0.0] * self._dimension
+        for token in tokens:
+            idx = hash(token) % self._dimension
+            vec[idx] += 1.0
+        # Normalize
+        norm = math.sqrt(sum(v * v for v in vec))
+        if norm > 0:
+            vec = [v / norm for v in vec]
+        return vec
 
 
 # =============================================================================
@@ -261,9 +267,9 @@ class PermutationInvarianceRelation:
 
     async def check(
         self,
-        input_a: list,
+        input_a: list[Any],
         output_a: Any,
-        input_b: list,  # Permuted input_a
+        input_b: list[Any],  # Permuted input_a
         output_b: Any,
     ) -> RelationResult:
         """Check if permuting input produces equivalent output."""
@@ -575,7 +581,7 @@ class Oracle:
 
 def custom_relation(
     name: str,
-    check_fn: Callable[[Any, Any, Any, Any], tuple[bool, dict]],
+    check_fn: Callable[[Any, Any, Any, Any], tuple[bool, dict[str, Any]]],
 ) -> MetamorphicRelation:
     """Create a custom metamorphic relation.
 

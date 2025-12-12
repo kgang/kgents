@@ -1,0 +1,180 @@
+# Umwelt CRD - Observer Context Primitive
+#
+# The Umwelt is the perceptual world of an agent - what it can perceive and how.
+# From AGENTESE: "There is no view from nowhere. Observation is action."
+#
+# Architecture:
+#   Umwelt CR → ConfigMap (non-sensitive) + Secret (sensitive)
+#
+# Key insight:
+#   - Different agents see the same world differently
+#   - The Umwelt determines what affordances are available
+#   - K-gent's umwelt includes Kent's preferences
+#   - B-gent's umwelt includes budget constraints
+#
+# Principle alignment:
+#   - AGENTESE: Observation is action - umwelt shapes perception
+#   - Ethical: Secrets are separate from context
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: umwelts.kgents.io
+  labels:
+    app.kubernetes.io/part-of: kgents
+    app.kubernetes.io/component: context
+spec:
+  group: kgents.io
+  scope: Namespaced
+  names:
+    plural: umwelts
+    singular: umwelt
+    kind: Umwelt
+    shortNames:
+      - uw
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          required:
+            - spec
+          properties:
+            spec:
+              type: object
+              required:
+                - agent
+              properties:
+                agent:
+                  type: string
+                  description: "Agent this umwelt belongs to"
+                persona:
+                  type: object
+                  description: "Personality coordinates (K-gent integration)"
+                  properties:
+                    warmth:
+                      type: number
+                      minimum: 0
+                      maximum: 1
+                      description: "Warmth vs coldness (0=robotic, 1=warm)"
+                    directness:
+                      type: number
+                      minimum: 0
+                      maximum: 1
+                      description: "Direct vs circumspect (0=hedging, 1=direct)"
+                    humor:
+                      type: number
+                      minimum: 0
+                      maximum: 1
+                      description: "Seriousness vs humor (0=serious, 1=playful)"
+                    verbosity:
+                      type: number
+                      minimum: 0
+                      maximum: 1
+                      description: "Terse vs verbose (0=minimal, 1=elaborate)"
+                affordances:
+                  type: array
+                  description: "AGENTESE paths this agent can invoke"
+                  items:
+                    type: string
+                  example:
+                    - "world.*.manifest"
+                    - "self.memory.*"
+                    - "concept.*.refine"
+                constraints:
+                  type: object
+                  description: "Resource constraints"
+                  properties:
+                    token_budget:
+                      type: integer
+                      description: "Max tokens per invocation"
+                    memory_budget_mb:
+                      type: integer
+                      description: "Max memory in MB"
+                    cpu_budget_millicores:
+                      type: integer
+                      description: "Max CPU in millicores"
+                    rate_limit_per_minute:
+                      type: integer
+                      description: "Max invocations per minute"
+                context:
+                  type: object
+                  description: "Non-sensitive context data"
+                  x-kubernetes-preserve-unknown-fields: true
+                secret_ref:
+                  type: string
+                  description: "Name of Secret containing sensitive context (API keys, etc.)"
+                pheromone_sensitivity:
+                  type: object
+                  description: "Which pheromone types this agent senses"
+                  properties:
+                    sense:
+                      type: array
+                      description: "Pheromone types this agent responds to"
+                      items:
+                        type: string
+                        enum:
+                          - METAPHOR
+                          - WARNING
+                          - MEMORY
+                          - NARRATIVE
+                          - OPPORTUNITY
+                          - SCARCITY
+                          - CAPABILITY
+                          - STATE
+                          - TEST
+                          - INTENT
+                          - DREAM
+                    emit:
+                      type: array
+                      description: "Pheromone types this agent can emit"
+                      items:
+                        type: string
+                        enum:
+                          - METAPHOR
+                          - WARNING
+                          - MEMORY
+                          - NARRATIVE
+                          - OPPORTUNITY
+                          - SCARCITY
+                          - CAPABILITY
+                          - STATE
+                          - TEST
+                          - INTENT
+                          - DREAM
+            status:
+              type: object
+              properties:
+                configmap_name:
+                  type: string
+                  description: "Generated ConfigMap name"
+                secret_valid:
+                  type: boolean
+                  description: "Whether the referenced secret exists"
+                last_applied:
+                  type: string
+                  format: date-time
+                active_agents:
+                  type: integer
+                  description: "Number of agent pods using this umwelt"
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Agent
+          type: string
+          jsonPath: .spec.agent
+        - name: Affordances
+          type: integer
+          jsonPath: .spec.affordances
+          priority: 1
+        - name: Token Budget
+          type: integer
+          jsonPath: .spec.constraints.token_budget
+        - name: Active
+          type: integer
+          jsonPath: .status.active_agents
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp

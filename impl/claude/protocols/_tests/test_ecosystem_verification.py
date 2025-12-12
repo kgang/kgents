@@ -86,6 +86,7 @@ class TestFunctorCompositionEcosystem:
         lifted_g = maybe(g)
         right = await (lifted_f >> lifted_g).invoke(Just(5))
 
+        assert isinstance(left, Just) and isinstance(right, Just)
         assert left.value == right.value == 20
 
     @pytest.mark.asyncio
@@ -145,6 +146,7 @@ class TestFunctorCompositionEcosystem:
         # Right side: F(g) ∘ F(f)
         right = await (either(f) >> either(g)).invoke(Right("hello"))
 
+        assert isinstance(left, Right) and isinstance(right, Right)
         assert left.value == right.value == "HELLO!"
 
     @pytest.mark.asyncio
@@ -207,13 +209,14 @@ class TestMonadLawsEcosystem:
         """Maybe monad: pure(a).bind(f) = f(a)."""
         from agents.c import Just, pure_maybe
 
-        def f(x: int) -> Just:
+        def f(x: int) -> Just[int]:
             return Just(x * 2)
 
         a = 21
         left = pure_maybe(a).flat_map(f)
         right = f(a)
 
+        assert isinstance(left, Just)
         assert left.value == right.value == 42
 
     def test_maybe_monad_right_identity(self) -> None:
@@ -222,16 +225,17 @@ class TestMonadLawsEcosystem:
 
         m = Just(42)
         result = m.flat_map(pure_maybe)
+        assert isinstance(result, Just)
         assert result.value == 42
 
     def test_maybe_monad_associativity(self) -> None:
         """Maybe monad: m.bind(f).bind(g) = m.bind(λa. f(a).bind(g))."""
         from agents.c import Just
 
-        def f(x: int) -> Just:
+        def f(x: int) -> Just[int]:
             return Just(x * 2)
 
-        def g(x: int) -> Just:
+        def g(x: int) -> Just[int]:
             return Just(x + 10)
 
         m = Just(5)
@@ -242,6 +246,7 @@ class TestMonadLawsEcosystem:
         # Right: m.bind(λa. f(a).bind(g))
         right = m.flat_map(lambda a: f(a).flat_map(g))
 
+        assert isinstance(left, Just) and isinstance(right, Just)
         assert left.value == right.value == 20
 
 

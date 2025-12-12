@@ -24,6 +24,7 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from .cli_types import (
     BudgetLevel,
@@ -205,7 +206,7 @@ class MembraneTraceResult:
 
     topic: str
     momentum: SemanticMomentum | None
-    history: list[dict]  # Historical momentum snapshots
+    history: list[dict[str, Any]]  # Historical momentum snapshots
     traced_at: datetime = field(default_factory=datetime.now)
 
     def to_dict(self) -> dict[str, Any]:
@@ -230,7 +231,7 @@ class MembraneCLI:
     and provides gestures to acknowledge and interact with what is perceived.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize Membrane CLI."""
         self._shape_counter = 0
         self._shapes: list[SemanticShape] = []

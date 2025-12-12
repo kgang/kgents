@@ -5,8 +5,6 @@ Verifies that the interface contracts are properly defined
 and that implementations satisfy them.
 """
 
-from typing import runtime_checkable
-
 import pytest
 
 from ..interfaces import (
@@ -30,19 +28,31 @@ class TestInterfaceDefinitions:
 
     def test_relational_store_is_runtime_checkable(self) -> None:
         """IRelationalStore should be runtime checkable."""
-        assert runtime_checkable(IRelationalStore)
+        # Protocol is already decorated with @runtime_checkable
+        # We verify this by checking that isinstance works at runtime
+        store = InMemoryRelationalStore()
+        assert isinstance(store, IRelationalStore)
 
     def test_vector_store_is_runtime_checkable(self) -> None:
         """IVectorStore should be runtime checkable."""
-        assert runtime_checkable(IVectorStore)
+        # Protocol is already decorated with @runtime_checkable
+        # We verify this by checking that isinstance works at runtime
+        store = InMemoryVectorStore()
+        assert isinstance(store, IVectorStore)
 
     def test_blob_store_is_runtime_checkable(self) -> None:
         """IBlobStore should be runtime checkable."""
-        assert runtime_checkable(IBlobStore)
+        # Protocol is already decorated with @runtime_checkable
+        # We verify this by checking that isinstance works at runtime
+        store = InMemoryBlobStore()
+        assert isinstance(store, IBlobStore)
 
     def test_telemetry_store_is_runtime_checkable(self) -> None:
         """ITelemetryStore should be runtime checkable."""
-        assert runtime_checkable(ITelemetryStore)
+        # Protocol is already decorated with @runtime_checkable
+        # We verify this by checking that isinstance works at runtime
+        store = InMemoryTelemetryStore()
+        assert isinstance(store, ITelemetryStore)
 
 
 class TestVectorSearchResult:

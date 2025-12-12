@@ -536,10 +536,7 @@ class TestInfect:
 
     @pytest.mark.asyncio
     async def test_infection_with_staking(
-        self,
-        temp_dir: Path,
-        sample_phage: Phage,
-        mock_staking: MockStakingPool,
+        self, temp_dir: Path, sample_phage: Phage, mock_staking: MockStakingPool
     ) -> None:
         """Infection stakes tokens when configured."""
         target = temp_dir / "test.py"
@@ -559,10 +556,7 @@ class TestInfect:
 
     @pytest.mark.asyncio
     async def test_successful_infection_releases_stake(
-        self,
-        temp_dir: Path,
-        sample_phage: Phage,
-        mock_staking: MockStakingPool,
+        self, temp_dir: Path, sample_phage: Phage, mock_staking: MockStakingPool
     ) -> None:
         """Successful infection releases stake."""
         target = temp_dir / "test.py"
@@ -637,10 +631,7 @@ class TestInfect:
 
     @pytest.mark.asyncio
     async def test_records_success_in_library(
-        self,
-        temp_dir: Path,
-        sample_phage: Phage,
-        mock_library: MockViralLibrary,
+        self, temp_dir: Path, sample_phage: Phage, mock_library: MockViralLibrary
     ) -> None:
         """Successful infection records in library."""
         target = temp_dir / "test.py"
@@ -660,10 +651,7 @@ class TestInfect:
 
     @pytest.mark.asyncio
     async def test_settles_bets_on_success(
-        self,
-        temp_dir: Path,
-        sample_phage: Phage,
-        mock_market: MockPredictionMarket,
+        self, temp_dir: Path, sample_phage: Phage, mock_market: MockPredictionMarket
     ) -> None:
         """Successful infection settles bets."""
         target = temp_dir / "test.py"
@@ -683,10 +671,7 @@ class TestInfect:
 
     @pytest.mark.asyncio
     async def test_updates_schema_success_rate(
-        self,
-        temp_dir: Path,
-        sample_phage: Phage,
-        mock_market: MockPredictionMarket,
+        self, temp_dir: Path, sample_phage: Phage, mock_market: MockPredictionMarket
     ) -> None:
         """Updates schema success rate after settlement."""
         target = temp_dir / "test.py"

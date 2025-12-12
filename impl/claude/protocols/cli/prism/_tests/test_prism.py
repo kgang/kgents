@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import io
 import sys
-from typing import Callable
+from collections.abc import Callable
+from typing import Any
 
 import pytest
 from protocols.cli.prism import CLICapable, Prism, expose
@@ -21,7 +22,7 @@ class MockAgent:
     def cli_description(self) -> str:
         return "Mock agent for testing"
 
-    def get_exposed_commands(self) -> dict[str, Callable]:
+    def get_exposed_commands(self) -> dict[str, Callable[..., object]]:
         return {
             "greet": self.greet,
             "add": self.add,
@@ -30,7 +31,7 @@ class MockAgent:
         }
 
     @expose(help="Greet someone", examples=["kgents mock greet Alice"])
-    def greet(self, name: str, loud: bool = False) -> dict:
+    def greet(self, name: str, loud: bool = False) -> dict[str, str]:
         """Greet a person by name."""
         greeting = f"Hello, {name}!"
         if loud:
@@ -38,17 +39,17 @@ class MockAgent:
         return {"greeting": greeting}
 
     @expose(help="Add two numbers")
-    def add(self, a: int, b: int = 0) -> dict:
+    def add(self, a: int, b: int = 0) -> dict[str, int]:
         """Add two integers."""
         return {"result": a + b}
 
     @expose(help="Echo a message")
-    def echo(self, message: str, count: int = 1) -> dict:
+    def echo(self, message: str, count: int = 1) -> dict[str, list[str]]:
         """Echo a message multiple times."""
         return {"messages": [message] * count}
 
     @expose(help="Async command")
-    async def async_cmd(self, value: str) -> dict:
+    async def async_cmd(self, value: str) -> dict[str, str]:
         """An async command."""
         return {"async_value": value}
 
@@ -276,7 +277,7 @@ class TestPrismEdgeCases:
             def cli_description(self) -> str:
                 return "Empty agent"
 
-            def get_exposed_commands(self) -> dict[str, Callable]:
+            def get_exposed_commands(self) -> dict[str, Callable[..., object]]:
                 return {}
 
         prism = Prism(EmptyAgent())
@@ -295,10 +296,10 @@ class TestPrismEdgeCases:
             def cli_description(self) -> str:
                 return "Partial agent"
 
-            def get_exposed_commands(self) -> dict[str, Callable]:
+            def get_exposed_commands(self) -> dict[str, Callable[..., object]]:
                 return {"bare": self.bare}
 
-            def bare(self, arg: str) -> dict:
+            def bare(self, arg: str) -> dict[str, str]:
                 return {"arg": arg}
 
         prism = Prism(PartialAgent())
@@ -323,11 +324,11 @@ class TestPrismAliases:
             def cli_description(self) -> str:
                 return "Alias test"
 
-            def get_exposed_commands(self) -> dict[str, Callable]:
+            def get_exposed_commands(self) -> dict[str, Callable[..., object]]:
                 return {"list": self.list_items}
 
             @expose(help="List items", aliases=["ls", "l"])
-            def list_items(self) -> dict:
+            def list_items(self) -> dict[str, list[int]]:
                 return {"items": [1, 2, 3]}
 
         prism = Prism(AliasAgent())

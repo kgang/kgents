@@ -11,7 +11,7 @@ Phase 4 of test evolution plan:
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 
 
 @dataclass
@@ -56,7 +56,7 @@ class FlakyRegistry:
     Can be backed by D-gent for persistence, or run in-memory.
     """
 
-    def __init__(self, store: Optional[any] = None):
+    def __init__(self, store: Optional[Any] = None):
         """
         Initialize the registry.
 
@@ -137,7 +137,8 @@ class FlakyRegistry:
     async def _get(self, test_id: str) -> Optional[FlakyPattern]:
         """Get pattern from store."""
         if self.store is not None:
-            return await self.store.get(test_id)
+            result = await self.store.get(test_id)
+            return result  # type: ignore[no-any-return]
         return self._memory.get(test_id)
 
     async def _get_or_create(self, test_id: str) -> FlakyPattern:

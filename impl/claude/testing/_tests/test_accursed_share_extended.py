@@ -7,9 +7,12 @@ We cherish and express gratitude for slop.
 Phase 6 of test evolution plan: Expand chaos tests to 50.
 """
 
+from __future__ import annotations
+
 import asyncio
 import random
 from dataclasses import dataclass
+from typing import Any, cast
 
 import pytest
 
@@ -25,10 +28,12 @@ class TestDGentChaos:
     @pytest.mark.asyncio
     async def test_rapid_state_updates(self) -> None:
         """Rapid state updates."""
+        from typing import Any
+
         from agents.d import VolatileAgent
 
         # VolatileAgent uses _state for storage
-        store: VolatileAgent[dict] = VolatileAgent(_state={})
+        store: VolatileAgent[dict[str, Any]] = VolatileAgent(_state={})
 
         for _ in range(100):
             key = f"key_{random.randint(0, 10)}"
@@ -59,18 +64,20 @@ class TestDGentChaos:
     @pytest.mark.asyncio
     async def test_concurrent_reads_writes(self) -> None:
         """Concurrent reads and writes to same store."""
+        from typing import Any
+
         from agents.d import VolatileAgent
 
-        store: VolatileAgent[dict] = VolatileAgent(_state={})
+        store: VolatileAgent[dict[str, Any]] = VolatileAgent(_state={})
 
-        async def writer():
+        async def writer() -> None:
             for i in range(50):
                 current = await store.load()
                 current[f"key_{i % 10}"] = i
                 await store.save(current)
                 await asyncio.sleep(0.001)
 
-        async def reader():
+        async def reader() -> list[Any]:
             results = []
             for _ in range(50):
                 try:
@@ -93,13 +100,13 @@ class TestDGentChaos:
         from agents.d import VolatileAgent
 
         # Create deeply nested structure
-        def nest(depth):
+        def nest(depth: int) -> dict[str, Any]:
             if depth == 0:
                 return {"leaf": random.random()}
             return {"level": depth, "child": nest(depth - 1)}
 
         nested = nest(50)
-        store: VolatileAgent[dict] = VolatileAgent(_state=nested)
+        store: VolatileAgent[dict[str, Any]] = VolatileAgent(_state=nested)
 
         retrieved = await store.load()
         assert retrieved["level"] == 50
@@ -273,6 +280,7 @@ class TestNGentChaos:
         store.store(trace)  # Sync method
 
         retrieved = store.get(trace.trace_id)  # Sync method
+        assert retrieved is not None
         assert len(retrieved.inputs["data"]) == 100000
         print("N-gent large: 100KB trace stored and retrieved")
 
@@ -289,10 +297,12 @@ class TestCrossAgentChaos:
     @pytest.mark.asyncio
     async def test_d_to_l_pipeline(self) -> None:
         """Data flows from D-gent to L-gent."""
+        from typing import Any
+
         from agents.d import VolatileAgent
         from agents.l import CatalogEntry, EntityType, SemanticRegistry
 
-        store: VolatileAgent[dict] = VolatileAgent(_state={})
+        store: VolatileAgent[dict[str, Any]] = VolatileAgent(_state={})
         registry = SemanticRegistry()
 
         # Store data in D-gent, register in L-gent
@@ -319,11 +329,13 @@ class TestCrossAgentChaos:
     @pytest.mark.asyncio
     async def test_concurrent_multi_agent(self) -> None:
         """Concurrent operations across multiple D-gent instances."""
+        from typing import Any
+
         from agents.d import VolatileAgent
 
-        stores = [VolatileAgent[dict](_state={}) for _ in range(5)]
+        stores = [VolatileAgent[dict[str, Any]](_state={}) for _ in range(5)]
 
-        async def writer(store, n):
+        async def writer(store: Any, n: int) -> None:
             for i in range(n):
                 current = await store.load()
                 current[f"key_{i}"] = i
@@ -363,7 +375,7 @@ class TestCrossAgentChaos:
             async def invoke(self, x: int) -> int:
                 return x * 2
 
-        composed = compose(counter, Double())
+        composed: Any = compose(cast(Any, counter), cast(Any, Double()))
 
         # Invoke several times
         results = []
@@ -388,6 +400,8 @@ class TestCompositionBoundaryChaos:
     @pytest.mark.asyncio
     async def test_type_coercion_pipeline(self) -> None:
         """Pipeline with aggressive type coercions."""
+        from typing import Any
+
         from bootstrap import compose
 
         @dataclass
@@ -401,25 +415,29 @@ class TestCompositionBoundaryChaos:
         class StrToList:
             name: str = "StrToList"
 
-            async def invoke(self, x: str) -> list:
+            async def invoke(self, x: str) -> list[str]:
                 return list(x)
 
         @dataclass
         class ListToDict:
             name: str = "ListToDict"
 
-            async def invoke(self, x: list) -> dict:
+            async def invoke(self, x: list[str]) -> dict[str, str]:
                 return {str(i): v for i, v in enumerate(x)}
 
         @dataclass
         class DictToTuple:
             name: str = "DictToTuple"
 
-            async def invoke(self, x: dict) -> tuple:
+            async def invoke(self, x: dict[str, str]) -> tuple[tuple[str, str], ...]:
                 return tuple(x.items())
 
-        pipeline = compose(
-            compose(compose(IntToStr(), StrToList()), ListToDict()), DictToTuple()
+        pipeline: Any = compose(
+            compose(
+                compose(cast(Any, IntToStr()), cast(Any, StrToList())),
+                cast(Any, ListToDict()),
+            ),
+            cast(Any, DictToTuple()),
         )
 
         result = await pipeline.invoke(12345)
@@ -446,7 +464,7 @@ class TestCompositionBoundaryChaos:
                     raise ValueError("Don't like 5")
                 return x * 2
 
-        chain = compose(Safe(), Risky())
+        chain: Any = compose(cast(Any, Safe()), cast(Any, Risky()))
 
         # Should work for most inputs
         for i in range(10):
@@ -480,7 +498,7 @@ class TestCompositionBoundaryChaos:
                     return "got_none"
                 return f"got_{x}"
 
-        chain = compose(MaybeReturn(), HandleNone())
+        chain: Any = compose(cast(Any, MaybeReturn()), cast(Any, HandleNone()))
 
         results = [await chain.invoke(i) for i in range(6)]
         print(f"None propagation: {results}")
@@ -530,7 +548,7 @@ class TestMemoryPressureChaos:
 
         # Chain 500 increment agents
         agents = [Increment() for _ in range(500)]
-        chain = reduce(compose, agents)
+        chain = reduce(lambda a, b: compose(a, b), agents)  # type: ignore[arg-type,return-value]
 
         result = await chain.invoke(0)
         assert result == 500

@@ -406,7 +406,7 @@ def create_command_tongue(
             )
         )
         .with_interpreter_config(
-            InterpreterConfig(runtime="python", semantics={}, timeout_ms=5000)
+            InterpreterConfig(runtime="command", semantics={}, timeout_ms=5000)
         )
     )
 

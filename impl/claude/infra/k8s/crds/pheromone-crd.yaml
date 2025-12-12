@@ -1,0 +1,133 @@
+# Pheromone CRD - Stigmergic Coordination Primitive
+#
+# Pheromones are the coordination mechanism for kgents:
+#   - Agents EMIT pheromones (signals into the field)
+#   - Agents SENSE pheromones (perceive the field)
+#   - Pheromones DECAY over time (entropy)
+#
+# This makes invisible coordination VISIBLE:
+#   kubectl get pheromones --watch
+#
+# Principle alignment:
+#   - AGENTESE: Observation is action - watching pheromones IS sensing
+#   - Heterarchical: No fixed emitter/sensor hierarchy
+#   - Accursed Share: DREAM pheromones are "useless" by design
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: pheromones.kgents.io
+  labels:
+    app.kubernetes.io/part-of: kgents
+    app.kubernetes.io/component: coordination
+spec:
+  group: kgents.io
+  scope: Namespaced
+  names:
+    plural: pheromones
+    singular: pheromone
+    kind: Pheromone
+    shortNames:
+      - ph
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          required:
+            - spec
+          properties:
+            spec:
+              type: object
+              required:
+                - type
+                - intensity
+                - source
+              properties:
+                type:
+                  type: string
+                  description: "Semantic type of the pheromone signal"
+                  enum:
+                    - METAPHOR    # Psi-gent: conceptual bridges
+                    - WARNING     # F/J-gent: danger signals
+                    - MEMORY      # M-gent: recall triggers
+                    - NARRATIVE   # N-gent: story threads
+                    - OPPORTUNITY # B-gent: economic openings
+                    - SCARCITY    # B-gent: resource constraints
+                    - CAPABILITY  # L-gent: new abilities
+                    - STATE       # D-gent: persistence events
+                    - TEST        # Test harness signals
+                    - INTENT      # F-gent: action declarations
+                    - DREAM       # Dreamer: accursed share (creative tangents)
+                intensity:
+                  type: number
+                  description: "Signal strength (0.0-1.0)"
+                  minimum: 0
+                  maximum: 1
+                decay_rate:
+                  type: number
+                  description: "Rate at which intensity decreases per minute (default: 0.1)"
+                  minimum: 0
+                  maximum: 1
+                  default: 0.1
+                source:
+                  type: string
+                  description: "Agent that emitted this pheromone (e.g., 'B-gent', 'Psi-gent')"
+                payload:
+                  type: string
+                  description: "Semantic content of the signal (JSON or plain text)"
+                position:
+                  type: object
+                  description: "Optional position in semantic space (for spatial coordination)"
+                  properties:
+                    x:
+                      type: number
+                    y:
+                      type: number
+                    z:
+                      type: number
+                ttl_seconds:
+                  type: integer
+                  description: "Hard TTL - pheromone deleted after this many seconds regardless of intensity"
+                  minimum: 0
+            status:
+              type: object
+              properties:
+                current_intensity:
+                  type: number
+                  description: "Decayed intensity (updated by operator)"
+                created_at:
+                  type: string
+                  format: date-time
+                  description: "When the pheromone was emitted"
+                last_decay:
+                  type: string
+                  format: date-time
+                  description: "Last time decay was applied"
+                sensed_by:
+                  type: array
+                  description: "Agents that have sensed this pheromone"
+                  items:
+                    type: string
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Type
+          type: string
+          jsonPath: .spec.type
+        - name: Intensity
+          type: number
+          jsonPath: .status.current_intensity
+          priority: 0
+        - name: Source
+          type: string
+          jsonPath: .spec.source
+        - name: Payload
+          type: string
+          jsonPath: .spec.payload
+          priority: 1
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp

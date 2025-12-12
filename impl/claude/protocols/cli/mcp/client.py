@@ -20,7 +20,7 @@ import subprocess
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from .server import MCPRequest, MCPResponse, MCPTool, MCPToolResult
 
@@ -39,7 +39,7 @@ class MCPConnection:
     env: dict[str, str] = field(default_factory=dict)
 
     # Runtime state
-    process: subprocess.Popen | None = None
+    process: subprocess.Popen[str] | None = None
     tools: list[MCPTool] = field(default_factory=list)
     _initialized: bool = False
 

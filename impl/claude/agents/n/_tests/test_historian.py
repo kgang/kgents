@@ -12,7 +12,7 @@ from ..types import Action, Determinism
 class MockAgent:
     """Mock agent for testing."""
 
-    def __init__(self, name: str = "mock-agent", genus: str = "T"):
+    def __init__(self, name: str = "mock-agent", genus: str = "T") -> None:
         self._name = name
         self._genus = genus
 

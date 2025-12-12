@@ -54,13 +54,13 @@ from ..types import (
 def simple_code() -> str:
     """Simple Python code for testing."""
     return """
-def process_items(items):
+def process_items(items) -> None:
     result = []
     for item in items:
         result.append(item * 2)
     return result
 
-def calculate(x, y):
+def calculate(x, y) -> None:
     value = 42
     return x + y + value
 """
@@ -70,7 +70,7 @@ def calculate(x, y):
 def complex_code() -> str:
     """More complex code with multiple mutation opportunities."""
     return """
-def deep_function(data):
+def deep_function(data) -> None:
     if data is not None:
         result = []
         for item in data:
@@ -80,18 +80,18 @@ def deep_function(data):
         return result
     return []
 
-def another_function(x):
+def another_function(x) -> None:
     temp = x + 100
     return temp * 2
 
 class MyClass:
-    def method(self, items):
+    def method(self, items) -> None:
         results = []
         for item in items:
             results.append(self.transform(item))
         return results
 
-    def transform(self, x):
+    def transform(self, x) -> None:
         return x * 10
 """
 
@@ -144,7 +144,7 @@ def intent() -> Intent:
 class MockSun:
     """Mock Sun for testing grant system."""
 
-    def __init__(self, has_grant: bool = False, budget: int = 10000):
+    def __init__(self, has_grant: bool = False, budget: int = 10000) -> None:
         self._has_grant = has_grant
         self._budget = budget
         self.consumed: list[tuple[str, str, int]] = []
@@ -164,7 +164,7 @@ class MockSun:
 class MockMarket:
     """Mock PredictionMarket for testing."""
 
-    def __init__(self, base_odds: float = 2.0):
+    def __init__(self, base_odds: float = 2.0) -> None:
         self._base_odds = base_odds
         self.bets_placed: list[dict[str, Any]] = []
         self.settlements: list[tuple[str, bool]] = []
@@ -221,7 +221,7 @@ class MockMarket:
 class MockStaking:
     """Mock StakingPool for testing."""
 
-    def __init__(self, stake_rate: float = 0.01):
+    def __init__(self, stake_rate: float = 0.01) -> None:
         self._stake_rate = stake_rate
         self.stakes: dict[str, dict[str, Any]] = {}
         self.released: list[str] = []
@@ -448,7 +448,7 @@ class TestIntent:
         cycle = ThermodynamicCycle()
 
         intent = await cycle.infer_intent(
-            code="def hello(): pass",
+            code="def hello() -> None: pass",
             description="A greeting function",
         )
 
@@ -464,7 +464,7 @@ class TestIntent:
         cycle = ThermodynamicCycle(l_gent=l_gent)
 
         intent = await cycle.infer_intent(
-            code="def hello(): pass",
+            code="def hello() -> None: pass",
             description="A greeting function",
         )
 

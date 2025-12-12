@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 #
-# kgents pre-commit hook (LIGHT)
+# kgents pre-commit hook
 #
 # Philosophy: Fast feedback on actively touched files.
 # Heavy tests run on pre-push.
 #
-# Checks:
+# Checks (all BLOCKING for staged files):
 #   1. Ruff format (auto-fix, re-stage)
-#   2. Ruff lint (auto-fix, re-stage)
-#   3. Mypy (relaxed, non-blocking)
+#   2. Ruff lint (auto-fix, then strict check - BLOCKING)
+#   3. Mypy (strict on staged files - BLOCKING)
 #
 # Does NOT run:
 #   - Full test suite (see pre-push)
@@ -17,7 +17,8 @@
 #   - Property tests
 #
 
-set -e
+# Note: We don't use `set -e` because we track failures manually with FAILED variable
+# This allows us to show all errors before failing
 
 # Source library (resolve symlinks to find actual script location)
 SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")")" && pwd)"
@@ -26,7 +27,7 @@ source "$SCRIPT_DIR/lib.sh"
 REPO_ROOT=$(get_repo_root)
 cd "$REPO_ROOT"
 
-echo -e "${BOLD}pre-commit${NC} ${CYAN}(light checks on staged files)${NC}"
+echo -e "${BOLD}pre-commit${NC} ${CYAN}(checks on staged files - ruff & mypy BLOCKING)${NC}"
 echo ""
 
 # Check dependencies
@@ -45,9 +46,10 @@ echo "$STAGED_PY" | sed 's/^/  /'
 echo ""
 
 TOTAL_STEPS=3
+FAILED=0
 
 # =============================================================================
-# Step 1: Format
+# Step 1: Format (auto-fix)
 # =============================================================================
 section "Ruff format (auto-fix)" 1 $TOTAL_STEPS
 
@@ -56,30 +58,70 @@ success "Format complete"
 echo ""
 
 # =============================================================================
-# Step 2: Lint
+# Step 2: Lint (BLOCKING)
 # =============================================================================
-section "Ruff lint (auto-fix)" 2 $TOTAL_STEPS
+section "Ruff lint (BLOCKING)" 2 $TOTAL_STEPS
 
-if run_ruff_lint "$STAGED_PY" "false"; then
+# First auto-fix what we can
+run_ruff_lint "$STAGED_PY" "false" 2>/dev/null || true
+
+# Now do a strict check on staged files
+LINT_FAILED=0
+for file in $STAGED_PY; do
+    if [ -f "$file" ]; then
+        cd "$REPO_ROOT"
+        LINT_OUTPUT=$(uv run ruff check "$file" 2>&1)
+        LINT_EXIT=$?
+        if [ $LINT_EXIT -ne 0 ]; then
+            if [ $LINT_FAILED -eq 0 ]; then
+                error "Lint errors in staged files:"
+            fi
+            echo "$LINT_OUTPUT"
+            LINT_FAILED=1
+        fi
+    fi
+done
+
+if [ $LINT_FAILED -eq 0 ]; then
     success "Lint passed"
 else
-    warn "Lint issues found (review above)"
+    FAILED=1
 fi
 echo ""
 
 # =============================================================================
-# Step 3: Type check (non-blocking)
+# Step 3: Type check (BLOCKING)
 # =============================================================================
-section "Mypy (relaxed)" 3 $TOTAL_STEPS
+section "Mypy (BLOCKING)" 3 $TOTAL_STEPS
 
 IMPL_FILES=$(filter_impl_claude "$STAGED_PY")
 if [ -n "$IMPL_FILES" ]; then
-    DIRS=$(echo "$IMPL_FILES" | xargs -n1 dirname | sort -u | sed 's|impl/claude/||g')
-    if run_mypy "$DIRS" "false"; then
+    cd "$REPO_ROOT/impl/claude"
+
+    # Run mypy on each staged file individually for precise error reporting
+    MYPY_FAILED=0
+    for file in $IMPL_FILES; do
+        # Convert to relative path from impl/claude
+        REL_FILE=$(echo "$file" | sed 's|impl/claude/||g')
+        if [ -f "$REL_FILE" ]; then
+            MYPY_OUTPUT=$(uv run mypy --config-file mypy.ini "$REL_FILE" 2>&1)
+            MYPY_EXIT=$?
+            if [ $MYPY_EXIT -ne 0 ]; then
+                if [ $MYPY_FAILED -eq 0 ]; then
+                    error "Type errors in staged files:"
+                fi
+                echo "$MYPY_OUTPUT" | grep -v "^Success:"
+                MYPY_FAILED=1
+            fi
+        fi
+    done
+
+    if [ $MYPY_FAILED -eq 0 ]; then
         success "Type check passed"
     else
-        warn "Type issues found (non-blocking)"
+        FAILED=1
     fi
+    cd "$REPO_ROOT"
 else
     info "No impl/claude files to check"
 fi
@@ -89,8 +131,16 @@ echo ""
 # Done
 # =============================================================================
 hr
-success "pre-commit complete"
-info "Heavy tests will run on push (pre-push hook)"
-hr
-
-exit 0
+if [ $FAILED -eq 0 ]; then
+    success "pre-commit complete. All checks passed."
+    info "Heavy tests will run on push (pre-push hook)"
+    hr
+    exit 0
+else
+    error "pre-commit FAILED. Fix lint/type errors before committing."
+    echo ""
+    info "To bypass (not recommended):"
+    info "  git commit --no-verify"
+    hr
+    exit 1
+fi

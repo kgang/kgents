@@ -230,12 +230,12 @@ class Cortex:
             List of test IDs that were selected
         """
         # Get test assets
-        assets = [
+        raw_assets = [
             self.budget_manager.market._assets.get(t)
             for t in available_tests
             if t in self.budget_manager.market._assets
         ]
-        assets = [a for a in assets if a is not None]
+        assets = [a for a in raw_assets if a is not None]
 
         if not assets:
             return available_tests[:10]  # Fallback
@@ -243,7 +243,7 @@ class Cortex:
         # Select tests using market
         selected = await self.budget_manager.select_tests(
             assets,
-            changed_files,  # type: ignore
+            changed_files,
         )
 
         return selected
@@ -272,7 +272,7 @@ class Cortex:
         if seed_inputs is None:
             seed_inputs = ["test input", "hello world", '{"key": "value"}']
 
-        results = {}
+        results: dict[str, Any] = {}
 
         # 1. Topologist: Test commutativity
         commutativity_results = await self.topologist.fuzz_equivalent_paths(count=100)
@@ -287,7 +287,7 @@ class Cortex:
         )
 
         # 2. Red Team: Evolve adversarial inputs
-        red_team_results = []
+        red_team_results: list[RedTeamReport] = []
         for agent in agents:
             report = await self.red_team.run_adversarial_campaign(agent, seed_inputs)
             red_team_results.append(report)
@@ -295,7 +295,7 @@ class Cortex:
         results["red_team"] = red_team_results
 
         # 3. Oracle: Validate agents
-        oracle_results = []
+        oracle_results: list[OracleValidation] = []
         for agent in agents:
             validation = await self.oracle.validate_agent(agent, seed_inputs)
             oracle_results.append(validation)
@@ -303,7 +303,7 @@ class Cortex:
         results["oracle"] = oracle_results
 
         # 4. Analyst: Analyze any failures
-        analyst_results = {}
+        analyst_results: dict[str, Any] = {}
         failures = await self.witness_store.query(outcome="fail", limit=50)
         for failure in failures[:10]:  # Analyze top 10
             graph = await self.analyst.root_cause_analysis(failure.test_id)
@@ -482,7 +482,7 @@ def format_full_report(
             sections.append(format_validation_report(result))
 
     if red_team_results:
-        for result in red_team_results:
-            sections.append(format_red_team_report(result))
+        for red_team_result in red_team_results:
+            sections.append(format_red_team_report(red_team_result))
 
     return "\n\n".join(sections)

@@ -22,7 +22,7 @@ Provider Selection:
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 # Import from existing protocols/cli/instance_db/providers
 # This bridges the gap during migration
@@ -94,12 +94,17 @@ async def create_providers(
     vector: IVectorStore
     if config.vector.type == "numpy":
         vector_path = config.vector.path or str(paths.data / "vectors.json")
-        vector = NumpyVectorStore(
-            storage_path=Path(vector_path),
-            dimensions=config.vector.dimensions,
+        vector = cast(
+            IVectorStore,
+            NumpyVectorStore(
+                storage_path=Path(vector_path),
+                dimensions=config.vector.dimensions,
+            ),
         )
     elif config.vector.type == "memory":
-        vector = InMemoryVectorStore(dimensions=config.vector.dimensions)
+        vector = cast(
+            IVectorStore, InMemoryVectorStore(dimensions=config.vector.dimensions)
+        )
     else:
         raise ValueError(f"Unknown vector provider: {config.vector.type}")
 
@@ -107,9 +112,9 @@ async def create_providers(
     blob: IBlobStore
     if config.blob.type == "filesystem":
         blob_path = config.blob.path or str(paths.data / "blobs")
-        blob = FilesystemBlobStore(base_path=Path(blob_path))
+        blob = cast(IBlobStore, FilesystemBlobStore(base_path=Path(blob_path)))
     elif config.blob.type == "memory":
-        blob = InMemoryBlobStore()
+        blob = cast(IBlobStore, InMemoryBlobStore())
     else:
         raise ValueError(f"Unknown blob provider: {config.blob.type}")
 
@@ -119,9 +124,11 @@ async def create_providers(
         telemetry_connection = config.telemetry.connection or str(
             paths.data / "telemetry.db"
         )
-        telemetry = SQLiteTelemetryStore(db_path=Path(telemetry_connection))
+        telemetry = cast(
+            ITelemetryStore, SQLiteTelemetryStore(db_path=Path(telemetry_connection))
+        )
     elif config.telemetry.type == "memory":
-        telemetry = InMemoryTelemetryStore()
+        telemetry = cast(ITelemetryStore, InMemoryTelemetryStore())
     else:
         raise ValueError(f"Unknown telemetry provider: {config.telemetry.type}")
 

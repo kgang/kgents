@@ -11,7 +11,7 @@ Tests for:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
@@ -54,7 +54,7 @@ class MockUmwelt:
 
     dna: Any = field(default_factory=MockDNA)
     state: Any = None
-    gravity: tuple = ()
+    gravity: tuple[Any, ...] = ()
 
 
 @dataclass
@@ -66,7 +66,7 @@ class MockCatalogEntry:
     name: str = ""
     version: str = "1.0.0"
     description: str = ""
-    keywords: list = field(default_factory=list)
+    keywords: list[str] = field(default_factory=list)
     author: str = "unknown"
     status: str = "active"
     usage_count: int = 0
@@ -76,7 +76,7 @@ class MockCatalogEntry:
 class MockLgentRegistry:
     """Mock L-gent registry for testing."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._entries: dict[str, MockCatalogEntry] = {}
         self._usage_log: list[tuple[str, bool, str | None]] = []
 
@@ -87,10 +87,7 @@ class MockLgentRegistry:
         self._entries[entry.id] = entry
 
     async def record_usage(
-        self,
-        entry_id: str,
-        success: bool = True,
-        error: str | None = None,
+        self, entry_id: str, success: bool = True, error: str | None = None
     ) -> None:
         self._usage_log.append((entry_id, success, error))
         if entry_id in self._entries:
@@ -103,16 +100,11 @@ class MockLgentRegistry:
 class MockLogos:
     """Mock Logos for testing."""
 
-    def __init__(self):
-        self.invocations: list[tuple[str, Any, dict]] = []
+    def __init__(self) -> None:
+        self.invocations: list[tuple[str, Any, dict[str, Any]]] = []
         self._results: dict[str, Any] = {}
 
-    async def invoke(
-        self,
-        path: str,
-        observer: Any,
-        **kwargs: Any,
-    ) -> Any:
+    async def invoke(self, path: str, observer: Any, **kwargs: Any) -> Any:
         self.invocations.append((path, observer, kwargs))
         return self._results.get(path, {"path": path, "kwargs": kwargs})
 
@@ -121,25 +113,25 @@ class MockLogos:
 
 
 @pytest.fixture
-def mock_umwelt():
+def mock_umwelt() -> Any:
     """Create a mock Umwelt."""
     return MockUmwelt()
 
 
 @pytest.fixture
-def architect_umwelt():
+def architect_umwelt() -> Any:
     """Create an architect Umwelt."""
     return MockUmwelt(dna=MockDNA(name="architect_agent", archetype="architect"))
 
 
 @pytest.fixture
-def mock_logos():
+def mock_logos() -> Any:
     """Create a mock Logos."""
     return MockLogos()
 
 
 @pytest.fixture
-def mock_registry():
+def mock_registry() -> Any:
     """Create a mock L-gent registry."""
     return MockLgentRegistry()
 
@@ -159,7 +151,7 @@ class TestUmweltIntegration:
         assert integration.adapter is not None
         assert integration.registry is not None
 
-    def test_extract_meta_default(self, mock_umwelt) -> None:
+    def test_extract_meta_default(self, mock_umwelt: Any) -> None:
         """Test extracting meta from default DNA."""
         integration = create_umwelt_integration()
         meta = integration.extract_meta(mock_umwelt)
@@ -168,7 +160,7 @@ class TestUmweltIntegration:
         assert meta.archetype == "default"
         assert meta.capabilities == ()
 
-    def test_extract_meta_architect(self, architect_umwelt) -> None:
+    def test_extract_meta_architect(self, architect_umwelt: Any) -> None:
         """Test extracting meta from architect DNA."""
         integration = create_umwelt_integration()
         meta = integration.extract_meta(architect_umwelt)
@@ -184,13 +176,13 @@ class TestUmweltIntegration:
             capabilities=("experiment", "analyze"),
         )
         umwelt = MockUmwelt(dna=dna)
-        meta = integration.extract_meta(umwelt)
+        meta = integration.extract_meta(cast(Any, umwelt))
 
         assert meta.name == "custom_agent"
         assert meta.archetype == "scientist"
         assert "experiment" in meta.capabilities
 
-    def test_get_affordances_default(self, mock_umwelt) -> None:
+    def test_get_affordances_default(self, mock_umwelt: Any) -> None:
         """Test getting affordances for default archetype."""
         integration = create_umwelt_integration()
         affordances = integration.get_affordances(mock_umwelt)
@@ -200,7 +192,7 @@ class TestUmweltIntegration:
         assert "witness" in affordances
         assert "affordances" in affordances
 
-    def test_get_affordances_architect(self, architect_umwelt) -> None:
+    def test_get_affordances_architect(self, architect_umwelt: Any) -> None:
         """Test getting affordances for architect archetype."""
         integration = create_umwelt_integration()
         affordances = integration.get_affordances(architect_umwelt)
@@ -210,21 +202,21 @@ class TestUmweltIntegration:
         assert "measure" in affordances
         assert "blueprint" in affordances
 
-    def test_can_invoke_core_aspect(self, mock_umwelt) -> None:
+    def test_can_invoke_core_aspect(self, mock_umwelt: Any) -> None:
         """Test can_invoke for core aspects."""
         integration = create_umwelt_integration()
 
         assert integration.can_invoke(mock_umwelt, "manifest") is True
         assert integration.can_invoke(mock_umwelt, "witness") is True
 
-    def test_can_invoke_archetype_aspect(self, architect_umwelt) -> None:
+    def test_can_invoke_archetype_aspect(self, architect_umwelt: Any) -> None:
         """Test can_invoke for archetype-specific aspects."""
         integration = create_umwelt_integration()
 
         # Architect can renovate
         assert integration.can_invoke(architect_umwelt, "renovate") is True
 
-    def test_cannot_invoke_restricted_aspect(self, mock_umwelt) -> None:
+    def test_cannot_invoke_restricted_aspect(self, mock_umwelt: Any) -> None:
         """Test that default cannot invoke restricted aspects."""
         integration = create_umwelt_integration()
 
@@ -232,11 +224,11 @@ class TestUmweltIntegration:
         assert integration.can_invoke(mock_umwelt, "demolish") is False
 
     @pytest.mark.parametrize("archetype", list(ARCHETYPE_AFFORDANCES.keys()))
-    def test_all_archetypes_have_affordances(self, archetype) -> None:
+    def test_all_archetypes_have_affordances(self, archetype: str) -> None:
         """Test that all standard archetypes return affordances."""
         integration = create_umwelt_integration()
         umwelt = MockUmwelt(dna=MockDNA(archetype=archetype))
-        affordances = integration.get_affordances(umwelt)
+        affordances = integration.get_affordances(cast(Any, umwelt))
 
         # All archetypes get core affordances
         assert "manifest" in affordances
@@ -274,14 +266,14 @@ class TestMembraneIntegration:
         """Test dream command mapping."""
         assert MEMBRANE_AGENTESE_MAP["dream"] == "self.memory.consolidate"
 
-    def test_create_bridge(self, mock_logos) -> None:
+    def test_create_bridge(self, mock_logos: Any) -> None:
         """Test bridge creation."""
         bridge = create_membrane_bridge(mock_logos)
         assert bridge is not None
         assert bridge.logos is mock_logos
 
     @pytest.mark.asyncio
-    async def test_execute_observe(self, mock_logos, mock_umwelt) -> None:
+    async def test_execute_observe(self, mock_logos: Any, mock_umwelt: Any) -> None:
         """Test executing observe command."""
         bridge = create_membrane_bridge(mock_logos)
         result = await bridge.execute("observe", mock_umwelt)
@@ -291,7 +283,9 @@ class TestMembraneIntegration:
         assert path == "world.project.manifest"
 
     @pytest.mark.asyncio
-    async def test_execute_trace_with_topic(self, mock_logos, mock_umwelt) -> None:
+    async def test_execute_trace_with_topic(
+        self, mock_logos: Any, mock_umwelt: Any
+    ) -> None:
         """Test executing trace command with topic."""
         bridge = create_membrane_bridge(mock_logos)
         result = await bridge.execute("trace", mock_umwelt, topic="authentication")
@@ -302,7 +296,7 @@ class TestMembraneIntegration:
 
     @pytest.mark.asyncio
     async def test_execute_unknown_command_raises(
-        self, mock_logos, mock_umwelt
+        self, mock_logos: Any, mock_umwelt: Any
     ) -> None:
         """Test that unknown command raises error."""
         bridge = create_membrane_bridge(mock_logos)
@@ -312,14 +306,14 @@ class TestMembraneIntegration:
 
         assert "nonexistent" in str(exc_info.value)
 
-    def test_register_custom_command(self, mock_logos) -> None:
+    def test_register_custom_command(self, mock_logos: Any) -> None:
         """Test registering custom command."""
         bridge = create_membrane_bridge(mock_logos)
         bridge.register_command("custom", "concept.custom.manifest")
 
         assert bridge.get_path("custom") == "concept.custom.manifest"
 
-    def test_list_commands(self, mock_logos) -> None:
+    def test_list_commands(self, mock_logos: Any) -> None:
         """Test listing commands."""
         bridge = create_membrane_bridge(mock_logos)
         commands = bridge.list_commands()
@@ -327,13 +321,13 @@ class TestMembraneIntegration:
         assert len(commands) > 0
         assert any(cmd == "observe" for cmd, path in commands)
 
-    def test_get_path_returns_none_for_unknown(self, mock_logos) -> None:
+    def test_get_path_returns_none_for_unknown(self, mock_logos: Any) -> None:
         """Test get_path returns None for unknown command."""
         bridge = create_membrane_bridge(mock_logos)
         assert bridge.get_path("nonexistent") is None
 
     @pytest.mark.asyncio
-    async def test_parameterized_path(self, mock_logos, mock_umwelt) -> None:
+    async def test_parameterized_path(self, mock_logos: Any, mock_umwelt: Any) -> None:
         """Test parameterized path resolution."""
         bridge = create_membrane_bridge(mock_logos)
         result = await bridge.execute("define", mock_umwelt, entity="garden")
@@ -355,7 +349,7 @@ class TestLgentIntegration:
         integration = create_lgent_integration()
         assert integration.registry is None
 
-    def test_create_integration_with_registry(self, mock_registry) -> None:
+    def test_create_integration_with_registry(self, mock_registry: Any) -> None:
         """Test creating integration with registry."""
         integration = create_lgent_integration(mock_registry)
         assert integration.registry is mock_registry
@@ -368,14 +362,14 @@ class TestLgentIntegration:
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_lookup_not_found(self, mock_registry) -> None:
+    async def test_lookup_not_found(self, mock_registry: Any) -> None:
         """Test lookup returns None when not found."""
         integration = create_lgent_integration(mock_registry)
         result = await integration.lookup("world.nonexistent")
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_lookup_found(self, mock_registry) -> None:
+    async def test_lookup_found(self, mock_registry: Any) -> None:
         """Test lookup returns entry when found."""
         entry = MockCatalogEntry(id="world.house", name="house")
         mock_registry._entries["world.house"] = entry
@@ -387,7 +381,7 @@ class TestLgentIntegration:
         assert result.id == "world.house"
 
     @pytest.mark.asyncio
-    async def test_lookup_caches_result(self, mock_registry) -> None:
+    async def test_lookup_caches_result(self, mock_registry: Any) -> None:
         """Test that lookup caches results."""
         entry = MockCatalogEntry(id="world.house", name="house")
         mock_registry._entries["world.house"] = entry
@@ -414,7 +408,7 @@ class TestLgentIntegration:
         await integration.record_invocation("world.house", success=True)
 
     @pytest.mark.asyncio
-    async def test_record_invocation_with_registry(self, mock_registry) -> None:
+    async def test_record_invocation_with_registry(self, mock_registry: Any) -> None:
         """Test record_invocation logs to registry."""
         entry = MockCatalogEntry(id="world.house", name="house")
         mock_registry._entries["world.house"] = entry
@@ -426,7 +420,7 @@ class TestLgentIntegration:
         assert mock_registry._usage_log[0] == ("world.house", True, None)
 
     @pytest.mark.asyncio
-    async def test_record_invocation_failure(self, mock_registry) -> None:
+    async def test_record_invocation_failure(self, mock_registry: Any) -> None:
         """Test record_invocation with failure."""
         entry = MockCatalogEntry(id="world.house", name="house")
         mock_registry._entries["world.house"] = entry
@@ -449,7 +443,7 @@ class TestLgentIntegration:
         assert handles == []
 
     @pytest.mark.asyncio
-    async def test_list_handles_with_context(self, mock_registry) -> None:
+    async def test_list_handles_with_context(self, mock_registry: Any) -> None:
         """Test list_handles filters by context."""
         mock_registry._entries["world.house"] = MockCatalogEntry(id="world.house")
         mock_registry._entries["world.garden"] = MockCatalogEntry(id="world.garden")
@@ -462,10 +456,10 @@ class TestLgentIntegration:
         assert "world.garden" in handles
         assert "self.memory" not in handles
 
-    def test_clear_cache(self, mock_registry) -> None:
+    def test_clear_cache(self, mock_registry: Any) -> None:
         """Test clearing the cache."""
         integration = create_lgent_integration(mock_registry)
-        integration._cache["test"] = MockCatalogEntry(id="test")
+        integration._cache["test"] = cast(Any, MockCatalogEntry(id="test"))
 
         integration.clear_cache()
         assert len(integration._cache) == 0
@@ -516,7 +510,7 @@ class TestGgentIntegration:
         assert is_valid is True
 
     @pytest.mark.parametrize("path", AGENTESE_EXAMPLES)
-    def test_validate_all_examples(self, path) -> None:
+    def test_validate_all_examples(self, path: str) -> None:
         """Test that all example paths are valid."""
         integration = create_ggent_integration()
         is_valid, error = integration.validate_path(path)
@@ -528,6 +522,7 @@ class TestGgentIntegration:
 
         is_valid, error = integration.validate_path("invalid.house.manifest")
         assert is_valid is False
+        assert error is not None
         assert "context" in error.lower()
 
     def test_validate_path_too_short(self) -> None:
@@ -536,6 +531,7 @@ class TestGgentIntegration:
 
         is_valid, error = integration.validate_path("world")
         assert is_valid is False
+        assert error is not None
         assert "at least" in error.lower()
 
     def test_validate_path_invalid_identifier(self) -> None:
@@ -544,6 +540,7 @@ class TestGgentIntegration:
 
         is_valid, error = integration.validate_path("world.House.manifest")
         assert is_valid is False
+        assert error is not None
         assert "invalid" in error.lower()
 
     def test_validate_path_numeric_identifier(self) -> None:
@@ -634,20 +631,20 @@ class TestUnifiedIntegrations:
         assert integrations.lgent is not None
         assert integrations.ggent is not None
 
-    def test_create_with_logos(self, mock_logos) -> None:
+    def test_create_with_logos(self, mock_logos: Any) -> None:
         """Test creating with Logos for Membrane."""
         integrations = create_agentese_integrations(logos=mock_logos)
 
         assert integrations.membrane is not None
         assert integrations.membrane.logos is mock_logos
 
-    def test_create_with_registry(self, mock_registry) -> None:
+    def test_create_with_registry(self, mock_registry: Any) -> None:
         """Test creating with L-gent registry."""
         integrations = create_agentese_integrations(lgent_registry=mock_registry)
 
         assert integrations.lgent.registry is mock_registry
 
-    def test_create_full(self, mock_logos, mock_registry) -> None:
+    def test_create_full(self, mock_logos: Any, mock_registry: Any) -> None:
         """Test creating with all components."""
         integrations = create_agentese_integrations(
             logos=mock_logos,
@@ -662,7 +659,9 @@ class TestUnifiedIntegrations:
         integrations = create_agentese_integrations()
         assert integrations.is_fully_integrated() is False
 
-    def test_is_fully_integrated_true(self, mock_logos, mock_registry) -> None:
+    def test_is_fully_integrated_true(
+        self, mock_logos: Any, mock_registry: Any
+    ) -> None:
         """Test is_fully_integrated returns True when all present."""
 
         # Mock grammarian
@@ -684,7 +683,9 @@ class TestUnifiedIntegrations:
         assert "umwelt" in available
         assert "membrane" not in available
 
-    def test_available_integrations_full(self, mock_logos, mock_registry) -> None:
+    def test_available_integrations_full(
+        self, mock_logos: Any, mock_registry: Any
+    ) -> None:
         """Test available_integrations with full setup."""
 
         class MockGrammarian:
@@ -713,8 +714,8 @@ class TestCrossIntegration:
 
     @pytest.mark.asyncio
     async def test_membrane_to_logos_to_lgent(
-        self, mock_logos, mock_registry, mock_umwelt
-    ):
+        self, mock_logos: Any, mock_registry: Any, mock_umwelt: Any
+    ) -> None:
         """Test Membrane → Logos → L-gent flow."""
         # Setup
         entry = MockCatalogEntry(id="world.project", name="project")
@@ -726,6 +727,7 @@ class TestCrossIntegration:
         )
 
         # Execute observe via Membrane
+        assert integrations.membrane is not None
         result = await integrations.membrane.execute("observe", mock_umwelt)
 
         # Verify Logos was called
@@ -737,7 +739,7 @@ class TestCrossIntegration:
         await integrations.lgent.record_invocation("world.project", success=True)
         assert mock_registry._usage_log[0][0] == "world.project"
 
-    def test_umwelt_extract_for_affordance_check(self, architect_umwelt) -> None:
+    def test_umwelt_extract_for_affordance_check(self, architect_umwelt: Any) -> None:
         """Test extracting meta for affordance checking."""
         integrations = create_agentese_integrations()
 
@@ -761,7 +763,7 @@ class TestCrossIntegration:
             assert can_invoke is True
 
     @pytest.mark.asyncio
-    async def test_graceful_degradation(self, mock_umwelt) -> None:
+    async def test_graceful_degradation(self, mock_umwelt: Any) -> None:
         """Test that integrations work even with missing components."""
         # Create with only Umwelt (minimal)
         integrations = create_agentese_integrations()

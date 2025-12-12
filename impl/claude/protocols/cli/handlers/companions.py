@@ -12,11 +12,12 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
+from typing import cast
 
 
 def _parse_args_simple(
     args: list[str], positional: str | None = None
-) -> tuple[dict, str | None]:
+) -> tuple[dict[str, object], str | None]:
     """
     Simple argument parser for companion commands.
 
@@ -78,7 +79,7 @@ def cmd_pulse(args: list[str]) -> int:
     )
     from protocols.cli.companions import CompanionsCLI
 
-    async def run():
+    async def run() -> int:
         ctx = CLIContext(
             output_format=OutputFormat(options["format"]),
             budget=BudgetStatus.from_level(BudgetLevel.MINIMAL),
@@ -91,7 +92,7 @@ def cmd_pulse(args: list[str]) -> int:
         else:
             print(f"Error: {result.error}")
 
-        return result.exit_code
+        return cast(int, result.exit_code)
 
     return asyncio.run(run())
 
@@ -126,7 +127,7 @@ def cmd_ground(args: list[str]) -> int:
     )
     from protocols.cli.companions import CompanionsCLI
 
-    async def run():
+    async def run() -> int:
         ctx = CLIContext(
             output_format=OutputFormat(options["format"]),
             budget=BudgetStatus.from_level(BudgetLevel.MINIMAL),
@@ -139,7 +140,7 @@ def cmd_ground(args: list[str]) -> int:
         else:
             print(f"Error: {result.error}")
 
-        return result.exit_code
+        return cast(int, result.exit_code)
 
     return asyncio.run(run())
 
@@ -169,7 +170,7 @@ def cmd_breathe(args: list[str]) -> int:
     )
     from protocols.cli.companions import CompanionsCLI
 
-    async def run():
+    async def run() -> int:
         ctx = CLIContext(
             output_format=OutputFormat(options["format"]),
             budget=BudgetStatus.from_level(BudgetLevel.MINIMAL),
@@ -182,7 +183,7 @@ def cmd_breathe(args: list[str]) -> int:
         else:
             print(f"Error: {result.error}")
 
-        return result.exit_code
+        return cast(int, result.exit_code)
 
     return asyncio.run(run())
 
@@ -214,7 +215,7 @@ def cmd_entropy(args: list[str]) -> int:
     )
     from protocols.cli.companions import CompanionsCLI
 
-    async def run():
+    async def run() -> int:
         ctx = CLIContext(
             output_format=OutputFormat(options["format"]),
             budget=BudgetStatus.from_level(BudgetLevel.MINIMAL),
@@ -227,6 +228,6 @@ def cmd_entropy(args: list[str]) -> int:
         else:
             print(f"Error: {result.error}")
 
-        return result.exit_code
+        return cast(int, result.exit_code)
 
     return asyncio.run(run())

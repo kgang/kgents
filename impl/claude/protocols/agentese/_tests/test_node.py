@@ -8,6 +8,8 @@ Verifies:
 - Stateless invariant (Symbiont pattern)
 """
 
+from __future__ import annotations
+
 from typing import Any
 
 import pytest
@@ -55,7 +57,7 @@ class TestAgentMeta:
         """AgentMeta is frozen."""
         meta = AgentMeta(name="test")
         with pytest.raises(Exception):  # FrozenInstanceError
-            meta.name = "changed"
+            meta.name = "changed"  # type: ignore[misc]
 
 
 class TestAffordanceSet:
@@ -147,35 +149,37 @@ class TestRenderable:
 class TestLogosNodeProtocol:
     """Tests for LogosNode protocol compliance."""
 
-    def test_mock_node_is_protocol_compliant(self, mock_node) -> None:
+    def test_mock_node_is_protocol_compliant(self, mock_node: Any) -> None:
         """MockNode satisfies LogosNode protocol."""
         # Runtime checkable protocol
         assert isinstance(mock_node, LogosNode)
 
-    def test_protocol_has_handle(self, mock_node) -> None:
+    def test_protocol_has_handle(self, mock_node: Any) -> None:
         """LogosNode must have handle property."""
         assert hasattr(mock_node, "handle")
         assert mock_node.handle == "test.mock"
 
-    def test_protocol_has_affordances(self, mock_node, agent_meta) -> None:
+    def test_protocol_has_affordances(self, mock_node: Any, agent_meta: Any) -> None:
         """LogosNode must have affordances method."""
         affs = mock_node.affordances(agent_meta)
         assert isinstance(affs, list)
         assert "manifest" in affs  # Base affordance
 
-    def test_protocol_has_lens(self, mock_node) -> None:
+    def test_protocol_has_lens(self, mock_node: Any) -> None:
         """LogosNode must have lens method."""
         agent = mock_node.lens("manifest")
         assert agent is not None
 
     @pytest.mark.asyncio
-    async def test_protocol_has_manifest(self, mock_node, mock_umwelt) -> None:
+    async def test_protocol_has_manifest(
+        self, mock_node: Any, mock_umwelt: Any
+    ) -> None:
         """LogosNode must have manifest method."""
         result = await mock_node.manifest(mock_umwelt)
         assert isinstance(result, Renderable)
 
     @pytest.mark.asyncio
-    async def test_protocol_has_invoke(self, mock_node, mock_umwelt) -> None:
+    async def test_protocol_has_invoke(self, mock_node: Any, mock_umwelt: Any) -> None:
         """LogosNode must have invoke method."""
         result = await mock_node.invoke("manifest", mock_umwelt)
         assert result is not None
@@ -185,7 +189,7 @@ class TestPolymorphicAffordances:
     """Tests for observer-dependent affordances."""
 
     def test_different_archetypes_get_different_affordances(
-        self, polymorphic_node
+        self, polymorphic_node: Any
     ) -> None:
         """Same node, different observers, different affordances."""
         architect_meta = AgentMeta(name="a", archetype="architect")
@@ -215,7 +219,7 @@ class TestPolymorphicAffordances:
         assert "renovate" not in default_affs
         assert "describe" not in default_affs
 
-    def test_archetype_specific_affordances_only(self, polymorphic_node) -> None:
+    def test_archetype_specific_affordances_only(self, polymorphic_node: Any) -> None:
         """Architect shouldn't have poet affordances and vice versa."""
         architect_meta = AgentMeta(name="a", archetype="architect")
         poet_meta = AgentMeta(name="p", archetype="poet")
@@ -257,7 +261,7 @@ class TestJITLogosNode:
         assert node.usage_count == 2
 
     @pytest.mark.asyncio
-    async def test_jit_node_tracks_success(self, mock_umwelt) -> None:
+    async def test_jit_node_tracks_success(self, mock_umwelt: Any) -> None:
         """JITLogosNode tracks success rate."""
         node = JITLogosNode(handle="test", source="", spec="Test spec")
 
@@ -269,7 +273,7 @@ class TestJITLogosNode:
         assert node.success_rate == 0.5  # 1/2 since manifest also counts
 
     @pytest.mark.asyncio
-    async def test_jit_node_fallback_manifest(self, mock_umwelt) -> None:
+    async def test_jit_node_fallback_manifest(self, mock_umwelt: Any) -> None:
         """JITLogosNode returns spec as fallback manifest."""
         node = JITLogosNode(
             handle="test.node",
@@ -305,24 +309,26 @@ class TestJITLogosNode:
 class TestAspectAgent:
     """Tests for AspectAgent wrapper."""
 
-    def test_aspect_agent_creation(self, mock_node) -> None:
+    def test_aspect_agent_creation(self, mock_node: Any) -> None:
         """AspectAgent wraps node + aspect."""
         agent = AspectAgent(node=mock_node, aspect="manifest")
         assert agent.name == "test.mock.manifest"
 
     @pytest.mark.asyncio
-    async def test_aspect_agent_invoke(self, mock_node, mock_umwelt) -> None:
+    async def test_aspect_agent_invoke(self, mock_node: Any, mock_umwelt: Any) -> None:
         """AspectAgent invokes node with Umwelt."""
         agent = AspectAgent(node=mock_node, aspect="manifest")
         result = await agent.invoke(mock_umwelt)
         assert isinstance(result, Renderable)
 
-    def test_aspect_agent_composition(self, mock_node) -> None:
+    def test_aspect_agent_composition(self, mock_node: Any) -> None:
         """AspectAgent can be composed with >>."""
+        from ..node import ComposedAspectAgent
+
         agent1 = AspectAgent(node=mock_node, aspect="manifest")
         agent2 = AspectAgent(node=mock_node, aspect="witness")
 
-        composed = agent1 >> agent2
+        composed: ComposedAspectAgent = agent1 >> agent2  # type: ignore[operator]
         assert "manifest" in composed.name
         assert "witness" in composed.name
 
@@ -333,9 +339,9 @@ class TestBaseLogosNode:
     def test_cannot_instantiate_directly(self) -> None:
         """BaseLogosNode is abstract."""
         with pytest.raises(TypeError):
-            BaseLogosNode()
+            BaseLogosNode()  # type: ignore[abstract]
 
-    def test_concrete_implementation(self, mock_umwelt) -> None:
+    def test_concrete_implementation(self, mock_umwelt: Any) -> None:
         """Concrete implementation works."""
 
         class ConcreteNode(BaseLogosNode):
@@ -351,7 +357,9 @@ class TestBaseLogosNode:
             async def manifest(self, observer: Any) -> Renderable:
                 return BasicRendering(summary="Concrete node")
 
-            async def _invoke_aspect(self, aspect: str, observer: Any, **kwargs) -> Any:
+            async def _invoke_aspect(
+                self, aspect: str, observer: Any, **kwargs: Any
+            ) -> Any:
                 return {"aspect": aspect}
 
         node = ConcreteNode()

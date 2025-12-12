@@ -648,7 +648,7 @@ class TestComplexityAnalyzer:
         """Test analysis of complex code."""
         analyzer = ComplexityAnalyzer()
         code = """
-async def process_data():
+async def process_data() -> None:
     while True:
         try:
             if condition:
@@ -849,7 +849,7 @@ class TestIntegration:
         """Test complete inflation workflow."""
         # 1. Analyze complexity
         code = """
-async def process_batch(items):
+async def process_batch(items) -> None:
     results = []
     for item in items:
         try:

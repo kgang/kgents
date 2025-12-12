@@ -26,8 +26,9 @@ from __future__ import annotations
 
 import asyncio
 import json as json_module
+from datetime import timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 
 def cmd_status(args: list[str]) -> int:
@@ -91,7 +92,7 @@ async def _async_status(
         try:
             from protocols.proto.generated import StatusRequest
 
-            request = StatusRequest(verbose=full_mode)
+            request: Any = StatusRequest(verbose=full_mode)
         except ImportError:
             # Fallback: simple object with verbose attribute
             class SimpleRequest:
@@ -168,13 +169,15 @@ def _extract_status_data(data: Any) -> dict[str, Any]:
         try:
             from google.protobuf.json_format import MessageToDict
 
-            return MessageToDict(data, preserving_proto_field_name=True)
+            return cast(
+                dict[str, Any], MessageToDict(data, preserving_proto_field_name=True)
+            )
         except ImportError:
             pass
 
     # Dataclass with to_dict
     if hasattr(data, "to_dict"):
-        return data.to_dict()
+        return cast(dict[str, Any], data.to_dict())
 
     # Dataclass without to_dict
     if hasattr(data, "__dataclass_fields__"):
@@ -305,7 +308,7 @@ def _get_ghost_context(project_root: Path) -> dict[str, Any] | None:
     context_path = project_root / ".kgents" / "ghost" / "context.json"
     if context_path.exists():
         try:
-            return json_module.loads(context_path.read_text())
+            return cast(dict[str, Any], json_module.loads(context_path.read_text()))
         except Exception:
             pass
     return None
@@ -418,9 +421,12 @@ def _show_glass_cache_status() -> int:
         if entries:
             print("  Cached data:")
             for entry in entries:
-                age = entry["age"]
-                if age is not None:
-                    seconds = int(age.total_seconds())
+                raw_age = entry["age"]
+                entry_age: timedelta | None = (
+                    raw_age if isinstance(raw_age, timedelta) else None
+                )
+                if entry_age is not None:
+                    seconds = int(entry_age.total_seconds())
                     if seconds < 60:
                         age_str = f"{seconds}s ago"
                     elif seconds < 3600:

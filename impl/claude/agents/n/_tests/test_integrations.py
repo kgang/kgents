@@ -103,18 +103,13 @@ class MockVectorIndex:
         self._embeddings: dict[str, tuple[list[float], dict[str, Any]]] = {}
 
     async def add(
-        self,
-        id: str,
-        embedding: list[float],
-        metadata: dict[str, Any] | None = None,
+        self, id: str, embedding: list[float], metadata: dict[str, Any] | None = None
     ) -> None:
         """Add embedding."""
         self._embeddings[id] = (embedding, metadata or {})
 
     async def search(
-        self,
-        query: list[float],
-        limit: int = 10,
+        self, query: list[float], limit: int = 10
     ) -> list[tuple[str, float]]:
         """Search for similar embeddings."""
         # Simple cosine similarity

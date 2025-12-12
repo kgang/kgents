@@ -378,9 +378,10 @@ class TestEventHistory:
         ) -> list[dict[str, str]]:
             return state + [event]
 
-        agent: StreamAgent[list[dict[str, str]], dict[str, str]] = StreamAgent(
-            fold=fold, initial=[]
-        )  # type: ignore[arg-type]
+        agent = StreamAgent[list[dict[str, str]], dict[str, str]](
+            fold=fold,
+            initial=[],  # type: ignore[arg-type]
+        )
         witness = WitnessReport(observer_id="test", confidence=1.0)
 
         await agent.append({"type": "a"}, witness)  # type: ignore[arg-type]
@@ -533,9 +534,10 @@ class TestSaveMethod:
                 return int(event["value"])
             return state
 
-        agent: StreamAgent[int, dict[str, Any] | int] = StreamAgent(
-            fold=fold, initial=0
-        )  # type: ignore[arg-type]
+        agent = StreamAgent[int, dict[str, Any] | int](
+            fold=fold,
+            initial=0,  # type: ignore[arg-type]
+        )
 
         await agent.save(42)
 
