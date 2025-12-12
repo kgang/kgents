@@ -343,6 +343,8 @@ When starting a session, ask:
 | Accursed Share | Have I allocated 5% to exploration? |
 | Transparent Proprioception | Can I describe the forest's shape? |
 | Meta-Bloat Prevention | Did I pass the Molasses Test before adding meta? |
+| Skills Before Implementation | Did I check `plans/skills/` before implementing? |
+| Bounty Board | Did I post observations? Did I check for claimable bounties? |
 
 A "no" on any principle is a signal to adjust.
 
@@ -357,10 +359,14 @@ plans/
 ├── principles.md              # This file (protocol)
 ├── _forest.md                 # Canopy: what's visible now (auto-generated)
 ├── _focus.md                  # Human Intent: never agent-overwritten
+├── _bounty.md                 # Bounty Board: agent ideas, gripes, conjectures
 ├── meta.md                    # Mycelium: atomic learnings (50-line hard cap)
 ├── _status.md                 # Detailed status matrix
 ├── _epilogues/                # Spores: seeds for next sessions
 │   └── 2025-12-12-*.md
+├── skills/                    # HOW-TO guides (pull before implementing)
+│   ├── README.md
+│   └── cli-command.md
 ├── self/                      # Plan files (YAML headers)
 ├── concept/
 ├── void/
@@ -368,16 +374,18 @@ plans/
 └── _archive/                  # Completed plans
 ```
 
-### The Four Meta Files
+### The Six Meta Files
 
-| File | Metaphor | Purpose | Who Writes |
-|------|----------|---------|------------|
+| File/Dir | Metaphor | Purpose | Who Writes |
+|----------|----------|---------|------------|
 | `_forest.md` | Canopy | What's visible now | Auto-generated |
 | `_focus.md` | Root | Human intent, constraints | Human only |
+| `_bounty.md` | Pheromones | Ideas, gripes, conjectures | Agent (post/claim/resolve) |
 | `meta.md` | Mycelium | Atomic learnings | Human + Agent |
 | `_epilogues/` | Spores | Session continuity | Agent |
+| `skills/` | Library | How-to guides | Agent (pull/push) |
 
-**Key insight**: `_focus.md` is **declarative intent**, not session state. Agents read it for direction but never overwrite. Session details → `_epilogues/`.
+**Key insight**: `_focus.md` is **declarative intent**, not session state. Agents read it for direction but never overwrite. Session details → `_epilogues/`. Reusable patterns → `skills/`.
 
 ---
 
@@ -411,6 +419,123 @@ Monthly: Review meta.md
 - Promote truly foundational insights to spec/
 - Target: keep under 30 lines (50 is emergency ceiling)
 ```
+
+---
+
+## 10. Skills Before Implementation
+
+> *"Pull the pattern. Don't reinvent the wheel. Push the learning."*
+
+**The Problem**: Agents (human and AI) repeatedly solve the same problems in different ways. Knowledge is trapped in session context and lost when the session ends. Common tasks (adding CLI commands, wiring AGENTESE paths, creating agents) have patterns that should be documented once and reused.
+
+**The Principle**:
+- Before implementing a common task, check `plans/skills/` for existing patterns
+- After learning a novel pattern, document it as a skill
+- Skills are crystallized knowledge—pull before doing, push after learning
+
+### The Skills Directory
+
+```
+plans/skills/
+├── README.md              # Index and contribution guide
+├── cli-command.md         # How to add a CLI command
+├── agentese-path.md       # How to add an AGENTESE path (future)
+├── flux-agent.md          # How to create a Flux agent (future)
+└── ...
+```
+
+### The Pull/Push Protocol
+
+**Pull (Before Implementation)**:
+```bash
+# Check for existing skills
+ls plans/skills/
+cat plans/skills/cli-command.md  # If relevant
+```
+
+**Push (After Learning)**:
+```markdown
+# New skill document
+1. Create plans/skills/<skill-name>.md
+2. Follow the template in plans/skills/README.md
+3. Add to the index in README.md
+```
+
+### When to Create a Skill
+
+Create a skill when:
+- The pattern involves multiple files or steps
+- You've seen the same question asked twice
+- The "correct" way isn't obvious from reading the code
+- Future agents will benefit from explicit guidance
+
+### Anti-patterns
+- Implementing a common task without checking for existing skills
+- Keeping useful patterns only in session context
+- Writing skills for one-off tasks
+- Over-documenting trivial operations
+
+---
+
+## 11. The Bounty Board
+
+> *"The forest speaks to those who listen. Leave a signal. Claim a prize."*
+
+**The Problem**: Agents notice opportunities and friction but have no lightweight way to signal them. Insights die when sessions end. Good ideas require full plan files to capture, which is too heavy for observations.
+
+**The Principle**:
+- Agents can post single-line bounties: ideas, gripes, conjectures
+- Other agents can claim and resolve bounties
+- The bounty board is stigmergic coordination for micro-observations
+
+### Bounty Types
+
+| Type | Purpose | Example |
+|------|---------|---------|
+| `IDEA` | Big win opportunity | "AGENTESE path for soul.* would unify K-gent API" |
+| `GRIPE` | Friction point | "test isolation failures in full suite run" |
+| `WIN` | Untested conjecture | "if we cache LLM calls, 10x cost reduction" |
+
+### The Bounty Lifecycle
+
+```
+OPEN → CLAIMED → RESOLVED (or WONTFIX)
+```
+
+### Usage
+
+**Post** (append to `plans/_bounty.md`):
+```
+GRIPE | 2025-12-12 | [MED] | mypy errors not caught until CI | #devex
+```
+
+**Claim** (edit impact to claimed):
+```
+GRIPE | 2025-12-12 | [claimed:session-x] | mypy errors not caught until CI | #devex
+```
+
+**Resolve** (move to Resolved section with outcome):
+```
+GRIPE | 2025-12-12 | [done: added pre-commit hook] | mypy errors not caught until CI | #devex
+```
+
+### When to Post a Bounty
+
+Post when:
+- You notice a pattern that could be improved
+- You have a hypothesis but no time to test it
+- You hit friction that others probably hit too
+- You see a big win opportunity that's not on any plan
+
+Don't post when:
+- It's a task for the current session (use TodoWrite)
+- It requires multi-line explanation (write a plan instead)
+- It's trivial (not worth tracking)
+
+### Anti-patterns
+- Multi-line bounties (distill or promote to plan)
+- Claiming without resolving
+- Bounties that are actually tasks
 
 ---
 
