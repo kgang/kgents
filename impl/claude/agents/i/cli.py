@@ -101,7 +101,7 @@ class GardenCLI(CLICapable):
 
         try:
             app = TUIApplication(state=field_state, config=config)
-            app.run_sync()
+            await app.run()  # Use async run, not run_sync (we're already in asyncio)
             return {"status": "exited", "ticks": field_state.tick}
         except KeyboardInterrupt:
             return {"status": "interrupted", "ticks": field_state.tick}
@@ -317,7 +317,7 @@ class GardenCLI(CLICapable):
 
         try:
             app = TUIApplication(state=state, config=config)
-            app.run_sync()
+            await app.run()  # Use async run, not run_sync (we're already in asyncio)
             return {"status": "exited", "ticks": state.tick}
         except KeyboardInterrupt:
             return {"status": "interrupted", "ticks": state.tick}

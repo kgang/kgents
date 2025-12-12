@@ -184,6 +184,28 @@ class ProcessingWaveform(Widget):
         if hasattr(self, "_animate_timer"):
             self._animate_timer.stop()
 
+    def pulse(self, intensity: float = 1.0) -> None:
+        """
+        Trigger a visual pulse on the waveform.
+
+        This is called by FluxReflector when a PheromoneEvent arrives.
+        The pulse effect momentarily increases animation speed or
+        bumps the offset to create a visual "beat".
+
+        Args:
+            intensity: Pulse intensity from 0.0 to 1.0 (higher = stronger)
+        """
+        # Bump the animation offset based on intensity
+        # This creates an immediate visual "jump" in the waveform
+        bump = int(3 + intensity * 5)  # 3-8 character jump
+        self.animation_offset += bump
+
+        # If creative mode, temporarily increase offset more
+        if self.operation_type == OperationType.CREATIVE:
+            self.animation_offset += int(intensity * 3)
+
+        self.refresh()
+
 
 class WaveformDisplay(Widget):
     """
