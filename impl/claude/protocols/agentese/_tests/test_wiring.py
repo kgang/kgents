@@ -13,9 +13,10 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 import pytest
+from testing.fixtures import as_umwelt
 
 from ..exceptions import (
     AffordanceError,
@@ -257,9 +258,7 @@ class TestUmweltIntegration:
         self, wired_logos: WiredLogos, architect_umwelt: MockUmwelt
     ) -> None:
         """Test extracting AgentMeta from Umwelt."""
-        meta = wired_logos.integrations.umwelt.extract_meta(
-            cast("Umwelt[Any, Any]", architect_umwelt)
-        )
+        meta = wired_logos.integrations.umwelt.extract_meta(as_umwelt(architect_umwelt))
         assert isinstance(meta, AgentMeta)
         assert meta.archetype == "architect"
 
@@ -271,10 +270,10 @@ class TestUmweltIntegration:
     ) -> None:
         """Test that different archetypes get different affordances."""
         architect_affordances = wired_logos.integrations.umwelt.get_affordances(
-            cast("Umwelt[Any, Any]", architect_umwelt)
+            as_umwelt(architect_umwelt)
         )
         poet_affordances = wired_logos.integrations.umwelt.get_affordances(
-            cast("Umwelt[Any, Any]", poet_umwelt)
+            as_umwelt(poet_umwelt)
         )
 
         assert "renovate" in architect_affordances
@@ -289,10 +288,10 @@ class TestUmweltIntegration:
     ) -> None:
         """Test can_invoke checks observer affordances."""
         assert wired_logos.integrations.umwelt.can_invoke(
-            cast("Umwelt[Any, Any]", architect_umwelt), "renovate"
+            as_umwelt(architect_umwelt), "renovate"
         )
         assert not wired_logos.integrations.umwelt.can_invoke(
-            cast("Umwelt[Any, Any]", poet_umwelt), "renovate"
+            as_umwelt(poet_umwelt), "renovate"
         )
 
 
@@ -365,7 +364,7 @@ class TestMembraneBridge:
         # The "observe" command maps to "world.project.manifest"
         # WorldContextResolver creates placeholder nodes, so this succeeds
         result = await wired_logos.execute_membrane_command(
-            "observe", cast("Umwelt[Any, Any]", architect_umwelt)
+            "observe", as_umwelt(architect_umwelt)
         )
         # For architects, should return BlueprintRendering
         assert result is not None
@@ -377,7 +376,7 @@ class TestMembraneBridge:
         """Test that unknown Membrane commands raise PathNotFoundError."""
         with pytest.raises(PathNotFoundError):
             await wired_logos.execute_membrane_command(
-                "unknown_cmd", cast("Umwelt[Any, Any]", architect_umwelt)
+                "unknown_cmd", as_umwelt(architect_umwelt)
             )
 
 
@@ -475,7 +474,7 @@ class TestAutopoiesis:
             await wired_logos.define_concept(
                 "invalid",  # Too short
                 "spec content",
-                cast("Umwelt[Any, Any]", architect_umwelt),
+                as_umwelt(architect_umwelt),
             )
 
     @pytest.mark.asyncio
@@ -487,7 +486,7 @@ class TestAutopoiesis:
             await wired_logos.define_concept(
                 "world.garden",
                 "spec content",
-                cast("Umwelt[Any, Any]", poet_umwelt),  # Poet cannot define
+                as_umwelt(poet_umwelt),  # Poet cannot define
             )
 
     @pytest.mark.asyncio
@@ -516,7 +515,7 @@ affordances:
 A beautiful garden.
 """
         node = await wired.define_concept(
-            "world.garden", spec, cast("Umwelt[Any, Any]", architect_umwelt)
+            "world.garden", spec, as_umwelt(architect_umwelt)
         )
 
         # Check L-gent registration
@@ -565,7 +564,7 @@ class TestInvoke:
         """Test that invoke validates path."""
         with pytest.raises(PathSyntaxError):
             await wired_logos.invoke(
-                "invalid.path.manifest", cast("Umwelt[Any, Any]", architect_umwelt)
+                "invalid.path.manifest", as_umwelt(architect_umwelt)
             )
 
     @pytest.mark.asyncio
@@ -602,7 +601,7 @@ class TestInvoke:
         wired_logos.register("world.test", TestNode())
 
         result = await wired_logos.invoke(
-            "world.test.manifest", cast("Umwelt[Any, Any]", architect_umwelt)
+            "world.test.manifest", as_umwelt(architect_umwelt)
         )
         assert len(mock_lgent_registry._usage_log) == 1
         assert mock_lgent_registry._usage_log[0][1] is True  # success
@@ -617,9 +616,7 @@ class TestInvoke:
         """Test that failed invoke tracks usage with error."""
         # Try to invoke with invalid path syntax (will definitely fail)
         with pytest.raises(PathSyntaxError):
-            await wired_logos.invoke(
-                "invalid", cast("Umwelt[Any, Any]", architect_umwelt)
-            )
+            await wired_logos.invoke("invalid", as_umwelt(architect_umwelt))
 
         # No tracking for syntax errors (they fail before invoke)
         # Let's test with a valid path but unavailable affordance instead
@@ -657,7 +654,7 @@ class TestInvoke:
         # Try to invoke unavailable aspect
         with pytest.raises(AffordanceError):
             await wired_logos.invoke(
-                "world.limited.unavailable", cast("Umwelt[Any, Any]", architect_umwelt)
+                "world.limited.unavailable", as_umwelt(architect_umwelt)
             )
 
         # Usage should be tracked with failure
@@ -738,7 +735,5 @@ class TestEdgeCases:
         )
 
         with pytest.raises(RuntimeError) as exc_info:
-            await wired.execute_membrane_command(
-                "observe", cast("Umwelt[Any, Any]", MockUmwelt())
-            )
+            await wired.execute_membrane_command("observe", as_umwelt(MockUmwelt()))
         assert "not available" in str(exc_info.value)

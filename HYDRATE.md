@@ -17,7 +17,7 @@
 
 ## Status
 
-**Tests**: 9,046 | **Mypy**: Strict (0 errors) | **Branch**: `main`
+**Tests**: 9,135 | **Mypy**: Strict (0 errors) | **Branch**: `main`
 
 ---
 
@@ -39,21 +39,16 @@ time.*     — Temporal (traces, forecasts)
 
 | Plan | Progress | Next |
 |------|----------|------|
-| `concept/creativity` | 90% | Tasks 2-4 (polish) |
-| `self/stream` | 70% | Phases 2.2-2.4 (ModalScope, Pulse, Crystal) |
+| `self/stream` | 75% | Phases 2.3-2.4 (Pulse, Crystal) |
+| `agents/terrarium` | 50% | Phase 3 (metrics emission) |
 
 ## Completed (Recent)
 
+- **Agent Semaphores** — 182 tests, Rodizio pattern, Phases 1-5
+- **Creativity v2.5** — 146+ tests, PAYADOR, Curator, Pataphysics
 - **Lattice** — 69 tests, Lineage enforcement, `concept.*.define`
 - **Flux Functor** — 261 tests, Living Pipelines, perturbation
 - **I-gent v2.5** — 137 tests, Phases 1-5 complete
-- **Reflector** — 36 tests, Terminal/Headless/Flux
-- **Metabolism v1** — 36 tests, MetabolicEngine + FeverStream
-
-## Conceptual Extensions (Docs Ready)
-
-- **Agent Servers** — `docs/agent-servers.md` (Terrarium web gateway)
-- **Agent Semaphores** — `plans/agents/semaphores.md` (Rodizio pattern, spec complete)
 
 ---
 

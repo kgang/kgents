@@ -15,9 +15,10 @@ import ast
 import textwrap
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 import pytest
+from testing.fixtures import as_umwelt
 
 from .. import (
     AffordanceError,
@@ -479,9 +480,7 @@ class TestLogosJITIntegration:
 
         # Use an architect to define a new concept
         architect = MockUmwelt(dna=MockDNA(name="architect", archetype="architect"))
-        await logos.define_concept(
-            "world.garden", sample_spec, cast("Umwelt[Any, Any]", architect)
-        )
+        await logos.define_concept("world.garden", sample_spec, as_umwelt(architect))
 
         assert "world.garden" in logos._jit_nodes
 
@@ -494,9 +493,7 @@ class TestLogosJITIntegration:
 
         # Use an architect to define a new concept
         architect = MockUmwelt(dna=MockDNA(name="architect", archetype="architect"))
-        await logos.define_concept(
-            "world.garden", sample_spec, cast("Umwelt[Any, Any]", architect)
-        )
+        await logos.define_concept("world.garden", sample_spec, as_umwelt(architect))
 
         status = logos.get_jit_status("world.garden")
 
@@ -513,9 +510,7 @@ class TestLogosJITIntegration:
 
         # Use an architect to define a new concept
         architect = MockUmwelt(dna=MockDNA(name="architect", archetype="architect"))
-        await logos.define_concept(
-            "world.garden", sample_spec, cast("Umwelt[Any, Any]", architect)
-        )
+        await logos.define_concept("world.garden", sample_spec, as_umwelt(architect))
 
         nodes = logos.list_jit_nodes()
 
@@ -585,7 +580,7 @@ class TestDefineConceptAutopoiesis:
         node = await logos.define_concept(
             handle="world.fountain",
             spec=simple_spec,
-            observer=cast("Umwelt[Any, Any]", architect_umwelt),
+            observer=as_umwelt(architect_umwelt),
         )
 
         assert node is not None
@@ -603,7 +598,7 @@ class TestDefineConceptAutopoiesis:
             await logos.define_concept(
                 handle="world.fountain",
                 spec=simple_spec,
-                observer=cast("Umwelt[Any, Any]", poet_umwelt),
+                observer=as_umwelt(poet_umwelt),
             )
 
         assert "cannot define" in str(exc_info.value).lower()
@@ -619,7 +614,7 @@ class TestDefineConceptAutopoiesis:
             await logos.define_concept(
                 handle="invalid",  # Missing context
                 spec=simple_spec,
-                observer=cast("Umwelt[Any, Any]", architect_umwelt),
+                observer=as_umwelt(architect_umwelt),
             )
 
     @pytest.mark.asyncio
@@ -633,7 +628,7 @@ class TestDefineConceptAutopoiesis:
             await logos.define_concept(
                 handle="invalid_context.fountain",
                 spec=simple_spec,
-                observer=cast("Umwelt[Any, Any]", architect_umwelt),
+                observer=as_umwelt(architect_umwelt),
             )
 
     @pytest.mark.asyncio
@@ -646,7 +641,7 @@ class TestDefineConceptAutopoiesis:
         await logos.define_concept(
             handle="world.fountain",
             spec=simple_spec,
-            observer=cast("Umwelt[Any, Any]", architect_umwelt),
+            observer=as_umwelt(architect_umwelt),
         )
 
         # Should now be resolvable
@@ -666,9 +661,7 @@ class TestPromoteConcept:
 
         # Define a concept to get a JIT node
         architect = MockUmwelt(dna=MockDNA(name="architect", archetype="architect"))
-        await logos.define_concept(
-            "world.garden", sample_spec, cast("Umwelt[Any, Any]", architect)
-        )
+        await logos.define_concept("world.garden", sample_spec, as_umwelt(architect))
 
         # Simulate usage to meet promotion criteria
         jit_node = logos._jit_nodes["world.garden"]
@@ -703,9 +696,7 @@ class TestPromoteConcept:
 
         # Define a concept to get a JIT node
         architect = MockUmwelt(dna=MockDNA(name="architect", archetype="architect"))
-        await logos.define_concept(
-            "world.garden", sample_spec, cast("Umwelt[Any, Any]", architect)
-        )
+        await logos.define_concept("world.garden", sample_spec, as_umwelt(architect))
 
         # Don't simulate usage - node not ready
 

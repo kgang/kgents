@@ -13,9 +13,10 @@ Verifies:
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 import pytest
+from testing.fixtures import as_umwelt
 
 if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt
@@ -144,7 +145,7 @@ class TestObserverRequirement:
     ) -> None:
         """invoke() with observer works."""
         result = await logos_with_nodes.invoke(
-            "world.house.manifest", cast("Umwelt[Any, Any]", mock_umwelt)
+            "world.house.manifest", as_umwelt(mock_umwelt)
         )
         assert result is not None
 
@@ -171,9 +172,7 @@ class TestAffordanceEnforcement:
         logos = Logos(registry=registry)
 
         # manifest is always available
-        result = await logos.invoke(
-            "world.house.manifest", cast("Umwelt[Any, Any]", mock_umwelt)
-        )
+        result = await logos.invoke("world.house.manifest", as_umwelt(mock_umwelt))
         assert result is not None
 
     @pytest.mark.asyncio
@@ -191,9 +190,7 @@ class TestAffordanceEnforcement:
 
         # default archetype doesn't have "demolish"
         with pytest.raises(AffordanceError) as exc:
-            await logos.invoke(
-                "world.house.demolish", cast("Umwelt[Any, Any]", mock_umwelt)
-            )
+            await logos.invoke("world.house.demolish", as_umwelt(mock_umwelt))
         assert "demolish" in str(exc.value)
         assert "default" in str(exc.value)  # observer archetype
 
@@ -210,9 +207,7 @@ class TestAffordanceEnforcement:
         logos = Logos(registry=registry)
 
         with pytest.raises(AffordanceError) as exc:
-            await logos.invoke(
-                "world.house.demolish", cast("Umwelt[Any, Any]", mock_umwelt)
-            )
+            await logos.invoke("world.house.demolish", as_umwelt(mock_umwelt))
         # Should mention available affordances
         assert "manifest" in str(exc.value)
 
@@ -334,7 +329,7 @@ class TestComposition:
         path = logos_with_nodes.compose(
             "world.house.manifest",
         )
-        result = await path.invoke(cast("Umwelt[Any, Any]", mock_umwelt))
+        result = await path.invoke(as_umwelt(mock_umwelt))
         assert result is not None
 
 
@@ -405,7 +400,7 @@ class TestSympatheticErrors:
         """AffordanceError lists available alternatives."""
         with pytest.raises(AffordanceError) as exc:
             await logos_with_nodes.invoke(
-                "world.house.demolish", cast("Umwelt[Any, Any]", mock_umwelt)
+                "world.house.demolish", as_umwelt(mock_umwelt)
             )
         error = str(exc.value)
         # Should list what IS available
@@ -447,7 +442,7 @@ class TestPlaceholderNode:
     async def test_placeholder_manifest(self, mock_umwelt: MockUmwelt) -> None:
         """PlaceholderNode returns BasicRendering on manifest."""
         node = PlaceholderNode(handle="test.placeholder")
-        result = await node.manifest(cast("Umwelt[Any, Any]", mock_umwelt))
+        result = await node.manifest(as_umwelt(mock_umwelt))
         assert isinstance(result, BasicRendering)
         assert "Placeholder" in result.summary
 
@@ -497,9 +492,7 @@ class TestCuratorMiddleware:
 
         logos = Logos(registry=registry, _curator=curator)
 
-        result = await logos.invoke(
-            "world.house.manifest", cast("Umwelt[Any, Any]", mock_umwelt)
-        )
+        result = await logos.invoke("world.house.manifest", as_umwelt(mock_umwelt))
 
         # Curator filter was called
         curator.filter.assert_called_once()
@@ -511,7 +504,7 @@ class TestCuratorMiddleware:
     ) -> None:
         """invoke() without curator returns raw result."""
         result = await logos_with_nodes.invoke(
-            "world.house.manifest", cast("Umwelt[Any, Any]", mock_umwelt)
+            "world.house.manifest", as_umwelt(mock_umwelt)
         )
 
         # Should be the raw result (BasicRendering)
@@ -547,9 +540,7 @@ class TestCuratorMiddleware:
         logos = Logos(registry=registry, _curator=curator)
 
         # void.* paths should be exempt
-        result = await logos.invoke(
-            "void.entropy.manifest", cast("Umwelt[Any, Any]", mock_umwelt)
-        )
+        result = await logos.invoke("void.entropy.manifest", as_umwelt(mock_umwelt))
 
         # Filter was called (Logos calls it), but curator internally exempts
         assert filter_called
@@ -631,7 +622,7 @@ class TestAutoCurator:
         # String result should pass through curator
         result = await logos._auto_curate(
             "This is a test artifact with moderate complexity.",
-            cast("Umwelt[Any, Any]", mock_umwelt),
+            as_umwelt(mock_umwelt),
             "concept.test.define",
         )
 
@@ -648,7 +639,7 @@ class TestAutoCurator:
 
         result = await logos._auto_curate(
             "Simple.",  # Very boring content
-            cast("Umwelt[Any, Any]", mock_umwelt),
+            as_umwelt(mock_umwelt),
             "concept.test.define",
         )
 
@@ -676,7 +667,7 @@ class TestAutoCurator:
         # Use a string input to avoid complexity in dict depth calculation
         result = await logos._auto_curate(
             "This is a test definition with some content for curation.",
-            cast("Umwelt[Any, Any]", mock_umwelt),
+            as_umwelt(mock_umwelt),
             "concept.test.define",
         )
         assert result is not None
@@ -705,7 +696,7 @@ class TestAutoCurator:
         # explicit curator should be called
         result = await logos.invoke(
             "world.house.manifest",
-            cast("Umwelt[Any, Any]", mock_umwelt),
+            as_umwelt(mock_umwelt),
         )
 
         # Mock curator should be called
