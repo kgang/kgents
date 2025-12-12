@@ -17,7 +17,7 @@
 
 ## Status
 
-**Tests**: 9,778 | **Mypy**: Strict (0 errors) | **Branch**: `main`
+**Tests**: 9,990 | **Mypy**: Strict (0 errors) | **Branch**: `main`
 
 ---
 
@@ -39,8 +39,9 @@ time.*     — Temporal (traces, forecasts)
 
 | Plan | Progress | Next |
 |------|----------|------|
-| `agents/k-gent` | 40% | Phase 2: KgentFlux, events, Terrarium wire |
+| `agents/k-gent` | 60% | Phase 3 done: CLI stream, Phase 4: Hypnagogia |
 | `architecture/alethic-algebra` | 20% | Phases 2-5 (HaloAlgebra, Guard) |
+| Exploration (15%) | plan | Terrarium metrics → I-gent, Bounty Board automation |
 
 ## Completed (Recent)
 
@@ -85,6 +86,7 @@ For details beyond this seed:
 - **Learnings**: `plans/meta.md`
 - **Principles**: `spec/principles.md`
 - **Skills**: `plans/skills/` — patterns for common tasks
+- **Exploration**: `docs/exploration-terrarium-bounty-board.md` — metrics + bounty plan
 - **DevEx**: `/harden`, `/trace`, `/diff-spec`, `/debt`
 
 ---

@@ -10,8 +10,8 @@
 
 | Plan | Progress | Status | Notes |
 |------|----------|--------|-------|
-| agents/k-gent | 40% | active | Phase 1 COMPLETE (88 tests), Phase 2 (Flux) in progress |
-| architecture/alethic-algebra | 20% | active | Phase 1 DONE (UniversalFunctor), Phases 2-5 remaining |
+| agents/k-gent | 60% | active | Phases 1-3 COMPLETE, Phase 4 (Hypnagogia) next |
+| architecture/alethic | 70% | active | Phases 1-3 COMPLETE (Functor, Halo, Archetypes), Phases 4-6 remaining |
 
 ---
 
@@ -76,7 +76,7 @@ Accursed (5%):    Joy-inducing polish
 | Dormant | 2 |
 | Blocked | 0 |
 | Recently archived | 8 |
-| Tests | 9,778 |
+| Tests | 9,990 |
 | Last verified | 2025-12-12 |
 
 ---
@@ -89,9 +89,9 @@ concept/lattice (100%) ──enables──▶ concept/creativity (100%)
 void/entropy (70%) ── done ── Flux integration + CLI tithe
 agents/semaphores (100%) ──enables──▶ void/entropy (metabolism pressure)
 agents/terrarium (100%) ──uses──▶ agents/semaphores (Purgatory)
-agents/k-gent (40%) ──uses──▶ agents/semaphores (Rodizio Sommelier)
+agents/k-gent (60%) ──uses──▶ agents/semaphores (Rodizio Sommelier)
 infra/cluster-native-runtime (100%) ──enables──▶ agents/k-gent (standard API)
-architecture/alethic-algebra (20%) ──enables──▶ agents/k-gent (Guard functor)
+architecture/alethic (70%) ──enables──▶ agents/k-gent (SoulFunctor integration)
 ```
 
 ---

@@ -1,7 +1,7 @@
 ---
 path: agents/k-gent
 status: active
-progress: 40
+progress: 60
 last_touched: 2025-12-12
 touched_by: claude-opus-4.5
 blocking: []
@@ -12,7 +12,9 @@ session_notes: |
   - Deep intercept with principle reasoning
   - Eigenvector-informed responses
   - `kgents soul challenge` works end-to-end
-  PHASE 2 IN PROGRESS: Flux integration (events, KgentFlux, Terrarium)
+  PHASE 2 COMPLETE: Flux integration (events, KgentFlux)
+  PHASE 3 COMPLETE: CLI stream (`kgents soul stream`)
+  PHASE 4 IN PROGRESS: Hypnagogia (dream refinement)
 ---
 
 # K-gent: The Categorical Imperative

@@ -12,6 +12,8 @@ Functor Laws:
 2. Composition: F(g ∘ f) = F(g) ∘ F(f)
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from abc import ABC, abstractmethod
@@ -322,6 +324,141 @@ class FixAgent(Agent[A, B]):
         # Should never reach here due to raise in loop, but satisfy type checker
         assert last_error is not None
         raise last_error
+
+
+# --- Unlift Operations (Phase 1: Symmetric Lifting) ---
+
+
+class UnliftError(Exception):
+    """Raised when unlift fails - agent wasn't lifted by this functor."""
+
+    pass
+
+
+def unlift_maybe(agent: MaybeAgent[A, B]) -> Agent[A, B]:
+    """
+    Extract inner agent from MaybeAgent.
+
+    This is the inverse of lift: unlift(lift(agent)) ≅ agent
+
+    Args:
+        agent: A MaybeAgent to unwrap
+
+    Returns:
+        The inner discrete agent
+
+    Raises:
+        UnliftError: If agent is not a MaybeAgent
+    """
+    if not isinstance(agent, MaybeAgent):
+        raise UnliftError(f"Cannot unlift {type(agent).__name__} - not a MaybeAgent")
+    return agent._inner
+
+
+def unlift_either(agent: EitherAgent[E, A, B]) -> Agent[A, B]:
+    """
+    Extract inner agent from EitherAgent.
+
+    This is the inverse of lift: unlift(lift(agent)) ≅ agent
+
+    Args:
+        agent: An EitherAgent to unwrap
+
+    Returns:
+        The inner discrete agent
+
+    Raises:
+        UnliftError: If agent is not an EitherAgent
+    """
+    if not isinstance(agent, EitherAgent):
+        raise UnliftError(f"Cannot unlift {type(agent).__name__} - not an EitherAgent")
+    return agent._inner
+
+
+def unlift_list(agent: ListAgent[A, B]) -> Agent[A, B]:
+    """
+    Extract inner agent from ListAgent.
+
+    This is the inverse of lift: unlift(lift(agent)) ≅ agent
+
+    Args:
+        agent: A ListAgent to unwrap
+
+    Returns:
+        The inner discrete agent
+
+    Raises:
+        UnliftError: If agent is not a ListAgent
+    """
+    if not isinstance(agent, ListAgent):
+        raise UnliftError(f"Cannot unlift {type(agent).__name__} - not a ListAgent")
+    return agent._inner
+
+
+def unlift_async(agent: AsyncAgent[A, B]) -> Agent[A, B]:
+    """
+    Extract inner agent from AsyncAgent.
+
+    This is the inverse of lift: unlift(lift(agent)) ≅ agent
+
+    Args:
+        agent: An AsyncAgent to unwrap
+
+    Returns:
+        The inner discrete agent
+
+    Raises:
+        UnliftError: If agent is not an AsyncAgent
+    """
+    if not isinstance(agent, AsyncAgent):
+        raise UnliftError(f"Cannot unlift {type(agent).__name__} - not an AsyncAgent")
+    return agent._inner
+
+
+def unlift_logged(agent: LoggedAgent[A, B]) -> Agent[A, B]:
+    """
+    Extract inner agent from LoggedAgent.
+
+    This is the inverse of lift: unlift(lift(agent)) ≅ agent
+
+    Note: History is NOT preserved when unlifting. The inner agent
+    is extracted without the logging wrapper's accumulated state.
+
+    Args:
+        agent: A LoggedAgent to unwrap
+
+    Returns:
+        The inner discrete agent
+
+    Raises:
+        UnliftError: If agent is not a LoggedAgent
+    """
+    if not isinstance(agent, LoggedAgent):
+        raise UnliftError(f"Cannot unlift {type(agent).__name__} - not a LoggedAgent")
+    return agent._inner
+
+
+def unlift_fix(agent: FixAgent[A, B]) -> Agent[A, B]:
+    """
+    Extract inner agent from FixAgent.
+
+    This is the inverse of lift: unlift(lift(agent)) ≅ agent
+
+    Note: Retry configuration is NOT preserved when unlifting.
+    The inner agent is extracted without the Fix wrapper's resilience.
+
+    Args:
+        agent: A FixAgent to unwrap
+
+    Returns:
+        The inner discrete agent
+
+    Raises:
+        UnliftError: If agent is not a FixAgent
+    """
+    if not isinstance(agent, FixAgent):
+        raise UnliftError(f"Cannot unlift {type(agent).__name__} - not a FixAgent")
+    return agent._inner
 
 
 # --- Convenience functions ---
@@ -648,3 +785,211 @@ def logged(
 
 
 # Promise functor moved to j_integration.py (C×J integration)
+
+
+# =============================================================================
+# Universal Functor Protocol Integration (Alethic Algebra Phase 2)
+# =============================================================================
+
+from agents.a.functor import FunctorRegistry, UniversalFunctor
+
+
+class MaybeFunctor(UniversalFunctor[Maybe[Any]]):
+    """
+    Universal Functor for Maybe context.
+
+    Lifts agents to operate on optional values.
+    Satisfies functor laws:
+    - Identity: MaybeFunctor.lift(id)(Just(x)) = Just(x)
+    - Composition: MaybeFunctor.lift(g . f) = MaybeFunctor.lift(g) . MaybeFunctor.lift(f)
+
+    Symmetric: Both lift() and unlift() are provided.
+    - lift(agent) -> MaybeAgent
+    - unlift(maybe_agent) -> Agent
+    - unlift(lift(agent)) ≅ agent
+    """
+
+    @staticmethod
+    def lift(agent: Agent[A, B]) -> MaybeAgent[A, B]:
+        """Lift an agent to operate on Maybe values."""
+        return MaybeAgent(agent)
+
+    @staticmethod
+    def unlift(agent: MaybeAgent[A, B]) -> Agent[A, B]:  # type: ignore[override]
+        """Extract inner agent from MaybeAgent."""
+        return unlift_maybe(agent)
+
+    @staticmethod
+    def pure(value: A) -> Maybe[A]:
+        """Embed a value in the Maybe context."""
+        return Just(value)
+
+
+class EitherFunctor(UniversalFunctor[Either[Any, Any]]):
+    """
+    Universal Functor for Either context.
+
+    Lifts agents to operate on success/error values.
+    Short-circuits on Left (error), applies agent on Right (success).
+
+    Symmetric: Both lift() and unlift() are provided.
+    - lift(agent) -> EitherAgent
+    - unlift(either_agent) -> Agent
+    - unlift(lift(agent)) ≅ agent
+    """
+
+    @staticmethod
+    def lift(agent: Agent[A, B]) -> EitherAgent[Any, A, B]:
+        """Lift an agent to operate on Either values."""
+        return EitherAgent(agent)
+
+    @staticmethod
+    def unlift(agent: EitherAgent[Any, A, B]) -> Agent[A, B]:  # type: ignore[override]
+        """Extract inner agent from EitherAgent."""
+        return unlift_either(agent)
+
+    @staticmethod
+    def pure(value: A) -> Either[Any, A]:
+        """Embed a value in the Either context (as Right/success)."""
+        return Right(value)
+
+
+class ListFunctor(UniversalFunctor[list[Any]]):
+    """
+    Universal Functor for List context.
+
+    Lifts agents to operate on collections element-wise.
+    Preserves order; processes elements in parallel by default.
+
+    Symmetric: Both lift() and unlift() are provided.
+    - lift(agent) -> ListAgent
+    - unlift(list_agent) -> Agent
+    - unlift(lift(agent)) ≅ agent
+    """
+
+    @staticmethod
+    def lift(agent: Agent[A, B]) -> ListAgent[A, B]:
+        """Lift an agent to operate on lists."""
+        return ListAgent(agent)
+
+    @staticmethod
+    def unlift(agent: ListAgent[A, B]) -> Agent[A, B]:  # type: ignore[override]
+        """Extract inner agent from ListAgent."""
+        return unlift_list(agent)
+
+    @staticmethod
+    def pure(value: A) -> list[A]:
+        """Embed a value in the List context (singleton list)."""
+        return [value]
+
+
+class AsyncFunctor(UniversalFunctor[asyncio.Future[Any]]):
+    """
+    Universal Functor for Async (Future) context.
+
+    Lifts agents to return futures for non-blocking execution.
+    Enables fire-and-forget or delayed retrieval patterns.
+
+    Symmetric: Both lift() and unlift() are provided.
+    - lift(agent) -> AsyncAgent
+    - unlift(async_agent) -> Agent
+    - unlift(lift(agent)) ≅ agent
+    """
+
+    @staticmethod
+    def lift(agent: Agent[A, B]) -> AsyncAgent[A, B]:
+        """Lift an agent to return a Future."""
+        return AsyncAgent(agent)
+
+    @staticmethod
+    def unlift(agent: AsyncAgent[A, B]) -> Agent[A, B]:  # type: ignore[override]
+        """Extract inner agent from AsyncAgent."""
+        return unlift_async(agent)
+
+    @staticmethod
+    def pure(value: A) -> asyncio.Future[A]:
+        """Embed a value in an immediately-resolved Future."""
+        future: asyncio.Future[A] = asyncio.Future()
+        future.set_result(value)
+        return future
+
+
+class LoggedFunctor(UniversalFunctor[Any]):
+    """
+    Universal Functor for Logged context.
+
+    Lifts agents to log all invocations with timing and metadata.
+    Note: This is an endofunctor (same category) that adds observability.
+
+    Symmetric: Both lift() and unlift() are provided.
+    - lift(agent) -> LoggedAgent
+    - unlift(logged_agent) -> Agent
+    - unlift(lift(agent)) ≅ agent
+
+    Warning: unlift() discards accumulated history.
+    """
+
+    @staticmethod
+    def lift(agent: Agent[A, B]) -> LoggedAgent[A, B]:
+        """Lift an agent to log all invocations."""
+        return LoggedAgent(agent)
+
+    @staticmethod
+    def unlift(agent: LoggedAgent[A, B]) -> Agent[A, B]:  # type: ignore[override]
+        """Extract inner agent from LoggedAgent (discards history)."""
+        return unlift_logged(agent)
+
+    @staticmethod
+    def pure(value: A) -> A:
+        """Logged functor doesn't wrap values; returns unchanged."""
+        return value
+
+
+class FixFunctor(UniversalFunctor[Any]):
+    """
+    Universal Functor for Fix (retry) context.
+
+    Lifts agents to retry on transient failures with exponential backoff.
+    Note: This is an endofunctor that adds resilience.
+
+    Symmetric: Both lift() and unlift() are provided.
+    - lift(agent) -> FixAgent
+    - unlift(fix_agent) -> Agent
+    - unlift(lift(agent)) ≅ agent
+
+    Warning: unlift() discards retry configuration.
+    """
+
+    @staticmethod
+    def lift(agent: Agent[A, B]) -> FixAgent[A, B]:
+        """Lift an agent to retry on failures."""
+        return FixAgent(agent)
+
+    @staticmethod
+    def unlift(agent: FixAgent[A, B]) -> Agent[A, B]:  # type: ignore[override]
+        """Extract inner agent from FixAgent (discards retry config)."""
+        return unlift_fix(agent)
+
+    @staticmethod
+    def pure(value: A) -> A:
+        """Fix functor doesn't wrap values; returns unchanged."""
+        return value
+
+
+# =============================================================================
+# Register all functors with the FunctorRegistry
+# =============================================================================
+
+
+def _register_cgent_functors() -> None:
+    """Register C-gent functors with the universal registry."""
+    FunctorRegistry.register("Maybe", MaybeFunctor)
+    FunctorRegistry.register("Either", EitherFunctor)
+    FunctorRegistry.register("List", ListFunctor)
+    FunctorRegistry.register("Async", AsyncFunctor)
+    FunctorRegistry.register("Logged", LoggedFunctor)
+    FunctorRegistry.register("Fix", FixFunctor)
+
+
+# Auto-register on import
+_register_cgent_functors()

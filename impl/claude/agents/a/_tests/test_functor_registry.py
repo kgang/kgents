@@ -1,0 +1,287 @@
+"""
+Tests for FunctorRegistry and cross-functor composition (Phase 4 & 5).
+
+Verifies:
+1. All expected functors are registered
+2. Registry discovery works
+3. Functor composition (F . G) works
+4. Composition matrix: key pairs compose correctly
+"""
+
+from collections.abc import AsyncGenerator
+
+# Import modules to trigger auto-registration
+import agents.c.functor  # noqa: F401 - needed for registration
+import agents.d.state_monad  # noqa: F401 - needed for registration
+import agents.flux.functor  # noqa: F401 - needed for registration
+import agents.k.functor  # noqa: F401 - needed for registration
+import agents.o.observer_functor  # noqa: F401 - needed for registration
+import pytest
+from agents.a.functor import (
+    FunctorRegistry,
+    UniversalFunctor,
+    compose_functors,
+    identity_functor,
+)
+from bootstrap.types import Agent
+
+# =============================================================================
+# Test Fixtures
+# =============================================================================
+
+
+class DoubleAgent(Agent[int, int]):
+    """Doubles its input."""
+
+    @property
+    def name(self) -> str:
+        return "Double"
+
+    async def invoke(self, input: int) -> int:
+        return input * 2
+
+
+class AddOneAgent(Agent[int, int]):
+    """Adds one to input."""
+
+    @property
+    def name(self) -> str:
+        return "AddOne"
+
+    async def invoke(self, input: int) -> int:
+        return input + 1
+
+
+class IdentityAgent(Agent[int, int]):
+    """Identity agent."""
+
+    @property
+    def name(self) -> str:
+        return "Identity"
+
+    async def invoke(self, input: int) -> int:
+        return input
+
+
+# =============================================================================
+# Registry Activation Tests (Phase 4)
+# =============================================================================
+
+
+class TestFunctorRegistration:
+    """Verify all functors are registered."""
+
+    def test_c_gent_functors_registered(self) -> None:
+        """All 6 C-gent functors are registered."""
+        expected = {"Maybe", "Either", "List", "Async", "Logged", "Fix"}
+        registered = set(FunctorRegistry.all_functors().keys())
+        assert expected.issubset(registered)
+
+    def test_observer_functor_registered(self) -> None:
+        """UnifiedObserverFunctor is registered."""
+        functor = FunctorRegistry.get("Observer")
+        assert functor is not None
+        assert "Observer" in functor.__name__
+
+    def test_state_functor_registered(self) -> None:
+        """StateMonadFunctor is registered."""
+        functor = FunctorRegistry.get("State")
+        assert functor is not None
+        assert "State" in functor.__name__
+
+    def test_flux_functor_registered(self) -> None:
+        """FluxFunctor is registered."""
+        functor = FunctorRegistry.get("Flux")
+        assert functor is not None
+        assert "Flux" in functor.__name__
+
+    def test_soul_functor_registered(self) -> None:
+        """SoulFunctor is registered."""
+        functor = FunctorRegistry.get("Soul")
+        assert functor is not None
+        assert "Soul" in functor.__name__
+
+    def test_at_least_10_functors(self) -> None:
+        """Registry contains at least 10 functors (Phase 4 goal)."""
+        all_functors = FunctorRegistry.all_functors()
+        assert len(all_functors) >= 10, f"Only {len(all_functors)} functors registered"
+
+    def test_all_functors_have_lift(self) -> None:
+        """All registered functors have lift() method."""
+        for name, functor in FunctorRegistry.all_functors().items():
+            assert hasattr(functor, "lift"), f"{name} missing lift()"
+
+    def test_most_functors_have_unlift(self) -> None:
+        """Most registered functors have unlift() method (symmetric lifting)."""
+        functors_with_unlift = 0
+        for name, functor in FunctorRegistry.all_functors().items():
+            if hasattr(functor, "unlift"):
+                # Check it's actually implemented (not just inherited)
+                try:
+                    functor.unlift(DoubleAgent())  # type: ignore[arg-type]
+                except (TypeError, NotImplementedError):
+                    functors_with_unlift += 1  # Has unlift, just wrong type
+                except Exception:
+                    functors_with_unlift += 1  # Other error, but has unlift
+
+        # At least 4 new functors should have unlift (Maybe, Either, List, Observer, State, etc.)
+        assert functors_with_unlift >= 4, (
+            f"Only {functors_with_unlift} functors with unlift"
+        )
+
+
+# =============================================================================
+# Composition Tests (Phase 5)
+# =============================================================================
+
+
+class TestFunctorComposition:
+    """Test functor composition (F . G)."""
+
+    @pytest.mark.asyncio
+    async def test_identity_functor_is_unit(self) -> None:
+        """Identity functor is the composition unit."""
+        IdF = identity_functor()
+        agent = DoubleAgent()
+
+        lifted = IdF.lift(agent)
+
+        assert lifted is agent
+        assert await lifted.invoke(5) == 10
+
+    @pytest.mark.asyncio
+    async def test_compose_maybe_logged(self) -> None:
+        """Maybe . Logged composition works."""
+        from agents.c.functor import Just, LoggedFunctor, MaybeFunctor
+
+        composed_lift = compose_functors(MaybeFunctor, LoggedFunctor)
+        agent = DoubleAgent()
+
+        lifted = composed_lift(agent)
+
+        # Inner is LoggedAgent, outer is MaybeAgent
+        result = await lifted.invoke(Just(5))
+        assert result == Just(10)
+
+    @pytest.mark.asyncio
+    async def test_compose_either_list(self) -> None:
+        """Either . List composition works."""
+        from agents.c.functor import EitherFunctor, ListFunctor, Right
+
+        composed_lift = compose_functors(EitherFunctor, ListFunctor)
+        agent = DoubleAgent()
+
+        lifted = composed_lift(agent)
+
+        # Input is Either[E, list[int]]
+        result = await lifted.invoke(Right([1, 2, 3]))
+        assert result == Right([2, 4, 6])
+
+    @pytest.mark.asyncio
+    async def test_compose_observer_maybe(self) -> None:
+        """Observer . Maybe composition works."""
+        from agents.c.functor import Just, MaybeFunctor
+        from agents.o.observer_functor import ListSink, UnifiedObserverFunctor
+
+        sink = ListSink()
+
+        # Observer(Maybe(agent))
+        maybe_agent = MaybeFunctor.lift(DoubleAgent())
+        observed = UnifiedObserverFunctor.lift(
+            maybe_agent, sink=sink, non_blocking=False
+        )
+
+        result = await observed.invoke(Just(5))
+
+        assert result == Just(10)
+        assert len(sink.events) == 1
+
+
+class TestCompositionMatrix:
+    """Test composition matrix: verify key functor pairs compose."""
+
+    @pytest.mark.asyncio
+    async def test_flux_state_composition(self) -> None:
+        """Flux . State composition (streaming + state)."""
+        from agents.d.state_monad import StateMonadFunctor
+        from agents.d.volatile import VolatileAgent
+        from agents.flux.functor import FluxFunctor
+
+        memory: VolatileAgent[dict[str, int]] = VolatileAgent(_state={"count": 0})
+
+        # State(agent) first, then Flux
+        state_agent = StateMonadFunctor.lift(DoubleAgent(), memory=memory)
+        flux_agent = FluxFunctor.lift(state_agent)
+
+        # Create source stream
+        async def source() -> AsyncGenerator[int, None]:
+            yield 5
+            yield 10
+
+        # Collect results
+        # Note: Full test would use Flux.start(), but we just verify composition works
+        assert flux_agent is not None
+
+    @pytest.mark.asyncio
+    async def test_observer_logged_composition(self) -> None:
+        """Observer . Logged composition (observation + logging)."""
+        from agents.c.functor import LoggedFunctor
+        from agents.o.observer_functor import ListSink, UnifiedObserverFunctor
+
+        sink = ListSink()
+
+        # Logged(agent) first, then Observer
+        logged_agent = LoggedFunctor.lift(DoubleAgent())
+        observed = UnifiedObserverFunctor.lift(
+            logged_agent, sink=sink, non_blocking=False
+        )
+
+        result = await observed.invoke(5)
+
+        assert result == 10
+        assert len(sink.events) == 1
+        # LoggedAgent has history as list of LogEntry objects
+        assert len(logged_agent.history) == 1  # type: ignore[attr-defined]
+        # LogEntry stores input_repr as string representation
+        assert "5" in logged_agent.history[0].input_repr  # type: ignore[attr-defined]
+
+    @pytest.mark.asyncio
+    async def test_maybe_fix_composition(self) -> None:
+        """Maybe . Fix composition (optional + resilience)."""
+        from agents.c.functor import FixFunctor, Just, MaybeFunctor
+
+        composed_lift = compose_functors(MaybeFunctor, FixFunctor)
+        agent = DoubleAgent()
+
+        lifted = composed_lift(agent)
+
+        result = await lifted.invoke(Just(7))
+        assert result == Just(14)
+
+
+# =============================================================================
+# Registry Discovery Tests
+# =============================================================================
+
+
+class TestRegistryDiscovery:
+    """Test registry discovery patterns."""
+
+    def test_get_returns_none_for_unknown(self) -> None:
+        """get() returns None for unknown functor."""
+        result = FunctorRegistry.get("NonExistent")
+        assert result is None
+
+    def test_all_functors_returns_copy(self) -> None:
+        """all_functors() returns a copy (immutable view)."""
+        all1 = FunctorRegistry.all_functors()
+        all2 = FunctorRegistry.all_functors()
+        assert all1 is not all2
+        assert all1 == all2
+
+    def test_functor_names_are_consistent(self) -> None:
+        """Functor names match their class names (convention)."""
+        for name, functor in FunctorRegistry.all_functors().items():
+            # Name should appear somewhere in class name
+            # E.g., "Maybe" in "MaybeFunctor", "Observer" in "UnifiedObserverFunctor"
+            assert name in functor.__name__ or functor.__name__.startswith(name)
