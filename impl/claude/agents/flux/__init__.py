@@ -57,6 +57,7 @@ from .perturbation import (
     is_perturbation,
     unwrap_perturbation,
 )
+from .metabolism import FluxMetabolism, create_flux_metabolism
 from .pipeline import FluxPipeline, pipeline
 from .state import FluxState
 
@@ -90,4 +91,7 @@ __all__ = [
     # Pipeline
     "FluxPipeline",
     "pipeline",
+    # Metabolism
+    "FluxMetabolism",
+    "create_flux_metabolism",
 ]

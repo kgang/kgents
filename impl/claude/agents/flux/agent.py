@@ -35,6 +35,7 @@ from .perturbation import (
 from .state import FluxState
 
 if TYPE_CHECKING:
+    from .metabolism import FluxMetabolism
     from .pipeline import FluxPipeline
 
 A = TypeVar("A")  # Input type
@@ -89,6 +90,9 @@ class FluxAgent(Generic[A, B]):
     # Sentinel for output completion
     _SENTINEL: object = field(default_factory=object, init=False)
 
+    # Metabolism integration (optional)
+    _metabolism: "FluxMetabolism[A, B] | None" = field(default=None, init=False)
+
     def __post_init__(self) -> None:
         """Initialize runtime state and queues."""
         self._entropy_remaining = self.config.entropy_budget
@@ -130,6 +134,49 @@ class FluxAgent(Generic[A, B]):
     def is_running(self) -> bool:
         """Check if flux is currently processing."""
         return self._state.is_processing()
+
+    @property
+    def metabolism(self) -> "FluxMetabolism[A, B] | None":
+        """Optional metabolism adapter."""
+        return self._metabolism
+
+    # ─────────────────────────────────────────────────────────────
+    # Metabolism Integration
+    # ─────────────────────────────────────────────────────────────
+
+    def attach_metabolism(
+        self, metabolism: "FluxMetabolism[A, B]"
+    ) -> "FluxAgent[A, B]":
+        """
+        Attach a metabolism adapter to this flux.
+
+        When attached, the flux will:
+        - Call metabolism.consume() on each event processed
+        - Track metabolic pressure alongside flux entropy
+        - Potentially trigger fever events
+
+        Args:
+            metabolism: The FluxMetabolism adapter to attach
+
+        Returns:
+            Self (for chaining)
+
+        Example:
+            >>> flux = Flux.lift(agent).attach_metabolism(metabolism)
+        """
+        self._metabolism = metabolism
+        return self
+
+    def detach_metabolism(self) -> "FluxMetabolism[A, B] | None":
+        """
+        Detach the metabolism adapter.
+
+        Returns:
+            The previously attached metabolism, or None
+        """
+        metabolism = self._metabolism
+        self._metabolism = None
+        return metabolism
 
     # ─────────────────────────────────────────────────────────────
     # THE CRITICAL METHOD: start() returns AsyncIterator[B]
@@ -375,6 +422,19 @@ class FluxAgent(Generic[A, B]):
 
                 # Unwrap perturbation if needed
                 input_data, result_future = unwrap_perturbation(event)
+
+                # Consume metabolic energy (The Accursed Share)
+                # This may trigger fever if pressure exceeds threshold
+                if self._metabolism is not None:
+                    fever_event = await self._metabolism.consume(input_data)
+                    if fever_event is not None:
+                        await self._emit_pheromone(
+                            "fever",
+                            {
+                                "intensity": fever_event.intensity,
+                                "oblique": fever_event.oblique_strategy,
+                            },
+                        )
 
                 if result_future:
                     self._state = FluxState.PERTURBED
