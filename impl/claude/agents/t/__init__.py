@@ -66,6 +66,12 @@ Type IX - Multi-Tool Orchestration (Phase 6):
 - HandoffPattern: Transfer control between tools (natural transformation)
 - DynamicToolSelector: Context-based tool selection (functor from Context → Tool)
 
+Type X - Trust Gate (Phase 7: Capital Integration):
+- TrustGate: Capital-backed gate with Fool's Bypass (OCap pattern)
+- Proposal: Action to be evaluated by the gate
+- TrustDecision: Result with approval status and capital changes
+- Algebraic cost computation via CostFactor composition
+
 Usage:
     from agents.t import MockAgent, FailingAgent, SpyAgent
 
@@ -276,6 +282,12 @@ from .tool import (
     ToolTrace,
     TracedTool,
 )
+from .trustgate import (
+    Proposal,
+    TrustDecision,
+    TrustGate,
+    create_trust_gate,
+)
 
 __all__ = [
     # Type I - Nullifiers
@@ -415,4 +427,9 @@ __all__ = [
     "CostBasedSelection",
     "LatencyBasedSelection",
     "EnvironmentBasedSelection",
+    # Type X - Trust Gate (Phase 7: Capital Integration)
+    "Proposal",
+    "TrustDecision",
+    "TrustGate",
+    "create_trust_gate",
 ]
