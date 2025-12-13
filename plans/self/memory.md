@@ -2,38 +2,46 @@
 path: self/memory
 status: active
 progress: 30
-last_touched: 2025-12-12
+last_touched: 2025-12-13
 touched_by: claude-opus-4.5
 blocking: []
-enables: []
+enables: [agents/k-gent, interfaces/interaction-flows]
 session_notes: |
-  Ghost cache complete. UNBLOCKED by self/stream (100% complete).
-  StateCrystal, CrystallizationEngine, CrystalReaper ready for integration.
+  UNBLOCKED. Ghost cache complete. Research synthesized (docs/research-autopoietic-dynamics.md).
+  Four Pillars codified in spec/m-gents/README.md: Stigmergy, Wittgenstein, Active Inference, Accursed Share.
+  Phase 1 (Ghost Cache) DONE. Phase 2 (Memory Crystal Formation) NEXT.
+  Key insight: Memory is reconstruction, not retrieval. Stigmergy enables collective memory without central store.
 ---
 
-# D-gent Memory: self.memory.* Implementation
+# Memory Architecture: The Autopoietic Weave
 
-> *"Memory is not storage. Memory is selection."*
+> *"To remember is to participate in a language game."*
 
-**AGENTESE Context**: `self.memory.*`
-**Status**: Ghost Cache Done, Comonadic Memory Planned
-**Principles**: Graceful Degradation, Accursed Share
-
----
-
-## Key Decisions
-
-| Decision | Rationale |
-|----------|-----------|
-| **Ghost cache** | Local file-based cache for CLI resilience |
-| **StateCrystal** | Checkpoint with linearity-aware compression |
-| **TTL-based composting** | Unpinned crystals auto-expire (Accursed Share) |
-| **Focus fragments** | PRESERVED regions survive compression verbatim |
-| **Parent chain** | Crystals track parent for `duplicate()` lineage |
+**AGENTESE Context**: `self.memory.*`, `time.weave.*`
+**Status**: Active (30% complete)
+**Principles**: AD-001 (Universal Functor), AD-002 (Polynomial Generalization), Holographic Degradation
+**Cross-refs**: `spec/m-gents/`, `docs/research-autopoietic-dynamics.md`, `docs/research-agent-memory-systems.md`
 
 ---
 
-## Ghost Cache (✅ DONE)
+## Core Insight
+
+Memory is not storage—it is **autopoietic reconstruction** within the Causal Weave. Four theoretical pillars:
+
+1. **Stigmergy**: Indirect coordination via environmental traces (pheromone fields)
+2. **Language Games**: Meaning as use, modeled by polynomial functors
+3. **Active Inference**: Self-evidencing via free energy minimization
+4. **The Accursed Share**: Entropy as creative force; surplus must be spent
+
+The synthesis: Memory serves **self-evidencing** (maintaining identity through time) while enabling **stigmergic coordination** (collective intelligence without central authority). Language games define **what counts as valid remembering** in context.
+
+---
+
+## Implementation Phases
+
+### Phase 1: Ghost Cache Foundation [COMPLETE]
+
+**Goal**: Basic caching infrastructure for context management.
 
 The Ghost cache provides offline CLI capability:
 
@@ -65,140 +73,246 @@ The Ghost cache provides offline CLI capability:
 | STALE | < 2x threshold | Show with `[GHOST]` |
 | REFUSE | > 2x threshold | Don't show (misleading) |
 
-**Adaptive staleness** based on cluster stability:
-```python
-threshold = BASE_THRESHOLD * (1 + stability_score)
+**Files**:
 ```
+impl/claude/infra/ghost/collectors.py   # Data collection
+impl/claude/protocols/cli/glass.py      # Ghost cache access
+impl/claude/agents/d/memory/            # D-gent storage layer
+```
+
+**Exit Criteria**: Ghost cache operational, collectors tested. (DONE - Dec 2025)
 
 ---
 
-## State Crystals (📋 PLANNED)
+### Phase 2: Memory Crystal Formation [NEXT]
 
+**Goal**: Implement holographic memory with graceful degradation.
+
+**Files**:
+```
+impl/claude/agents/m/crystal.py        # HolographicMemory implementation
+impl/claude/agents/m/consolidator.py   # ConsolidationAgent (hypnagogic)
+impl/claude/agents/m/primitives.py     # RecollectionAgent, ProspectiveAgent
+impl/claude/agents/m/_tests/           # Test suite
+```
+
+**Key Types**:
 ```python
 @dataclass
 class StateCrystal:
-    """
-    Checkpoint with linearity-aware compression.
-
-    AGENTESE: self.memory.crystallize
-    """
-
+    """Checkpoint with holographic compression."""
     crystal_id: str
     agent: str
     timestamp: datetime
 
-    # Core state (REQUIRED)
-    task_state: TaskState
-    working_memory: dict[str, Any]
-
-    # Compressed history (DROPPABLE masked)
-    history_summary: str
-    summary_tokens: int
+    # Holographic interference pattern
+    interference_pattern: np.ndarray
+    resolution: float  # 0.0 to 1.0
 
     # Focus fragments (PRESERVED: verbatim)
     focus_fragments: list[FocusFragment]
-    focus_tokens: int
 
     # Comonadic structure
     parent_crystal: str | None
-    branch_reason: str | None
     branch_depth: int = 0
 
     # Accursed Share lifecycle
     ttl: timedelta = timedelta(hours=24)
     pinned: bool = False
 
-    def is_expired(self) -> bool:
-        return not self.pinned and (datetime.now() - self.timestamp > self.ttl)
+    def compress(self, ratio: float) -> "StateCrystal":
+        """Holographic property: reduce resolution uniformly."""
+        ...
 
-    def total_tokens(self) -> int:
-        return self.summary_tokens + self.focus_tokens
-```
-
----
-
-## Focus Fragments
-
-```python
 @dataclass
-class FocusFragment:
-    """
-    A preserved fragment with PRESERVED linearity.
+class MemoryCrystal:
+    """Holographic memory with interference patterns."""
+    interference_pattern: np.ndarray
+    hot_patterns: set[str]      # Recently accessed
+    resolution_levels: dict[str, float]  # Per-concept resolution
 
-    Focus fragments survive compression verbatim.
-    They are marked via focus hints during crystallization.
-    """
+    async def store(self, concept: Concept, memory: Memory) -> None:
+        """Superimpose on interference pattern."""
+        ...
 
-    hint: str                   # What triggered preservation
-    content: str                # Verbatim content
-    position: int               # Original position in history
-    linearity: Linearity = Linearity.PRESERVED
-```
-
-**Focus hints examples**:
-- `[FOCUS:decision]` → Preserve decision rationale
-- `[FOCUS:error]` → Preserve error context
-- User-injected focus → Preserve verbatim
-
----
-
-## Crystallization Engine (📋 PLANNED)
-
-```python
-class CrystallizationEngine:
-    """
-    Creates State Crystals with linearity-aware compression.
-
-    AGENTESE: self.memory.crystallize
-    """
-
-    async def crystallize(
-        self,
-        context: ContextWindow,
-        focus_hints: list[str] | None = None,
-        ttl: timedelta = timedelta(hours=24),
-    ) -> StateCrystal:
-        """
-        Create a crystal from current context.
-
-        Process:
-        1. Mark linearity classes based on focus hints
-        2. Extract PRESERVED fragments verbatim
-        3. Compress DROPPABLE+REQUIRED via masking + summary
-        4. Store with comonadic metadata
-        """
+    async def retrieve(self, cue: Concept) -> Recollection:
+        """Reconstruct via resonance."""
         ...
 ```
 
+**Exit Criteria**:
+- [ ] HolographicMemory with store/retrieve/compress
+- [ ] ConsolidationAgent with hot/cold promotion/demotion
+- [ ] Ebbinghaus forgetting curves integrated
+- [ ] 50+ tests passing
+
 ---
 
-## Crystal Reaper (📋 PLANNED)
+### Phase 3: Stigmergic Layer
 
-```python
-class CrystalReaper:
-    """
-    TTL-based crystal composting.
+**Goal**: Enable indirect coordination via pheromone fields.
 
-    AGENTESE: void.entropy.pour
-
-    Unpinned crystals are composted after TTL.
-    Pinned crystals (`cherished`) survive indefinitely.
-    """
-
-    async def reap(self) -> list[str]:
-        """Compost expired crystals, return IDs."""
-        expired = [c for c in self.crystals if c.is_expired()]
-        for crystal in expired:
-            await self.d_gent.delete_crystal(crystal.crystal_id)
-        return [c.crystal_id for c in expired]
+**Files**:
+```
+impl/claude/agents/m/stigmergy.py      # PheromoneField, PheromoneAgent
+impl/claude/agents/m/hivemind.py       # HiveMindAgent for collective memory
 ```
 
-**Cherish operation**:
+**Key Types**:
 ```python
-# AGENTESE: self.memory.cherish
-await logos.invoke("self.memory.cherish", crystal_id="abc123")
-# → Sets pinned=True, survives reaping
+@dataclass
+class PheromoneField:
+    """Environmental memory via traces."""
+    traces: dict[Concept, float]
+    decay_rate: float = 0.1
+
+    async def deposit(self, concept: Concept, intensity: float):
+        """Leave trace (void.tithe integration)."""
+        ...
+
+    async def sense(self, position: Concept) -> list[tuple[Concept, float]]:
+        """Perceive gradients for navigation."""
+        ...
+
+    async def decay(self, elapsed: timedelta):
+        """Natural forgetting."""
+        ...
 ```
+
+**Exit Criteria**:
+- [ ] PheromoneField with deposit/sense/decay
+- [ ] PheromoneAgent following gradients
+- [ ] HiveMindAgent achieving consensus from distributed traces
+- [ ] Integration with void.tithe (deposits as tithes)
+- [ ] 40+ tests passing
+
+---
+
+### Phase 4: Wittgenstein Operator
+
+**Goal**: Implement language games as memory access patterns.
+
+**Files**:
+```
+impl/claude/agents/m/games.py          # LanguageGame, LanguageGameAgent
+impl/claude/agents/m/grammar.py        # GrammarEvolver
+```
+
+**Key Types**:
+```python
+@dataclass
+class LanguageGame(Generic[S]):
+    """Memory access as playing a game."""
+    name: str
+    positions: set[S]                    # Valid states
+    directions: Callable[[S], set[Direction]]  # Valid moves from state
+    rules: Callable[[S, Direction], bool]      # Grammar check
+
+    def is_grammatical(self, position: S, direction: Direction) -> bool:
+        """Is this move valid in the game?"""
+        return direction in self.directions(position) and self.rules(position, direction)
+```
+
+**Exit Criteria**:
+- [ ] LanguageGame with polynomial functor structure
+- [ ] LanguageGameAgent knowing-how-to-play
+- [ ] GrammarEvolver learning from interaction
+- [ ] Integration with concept.* AGENTESE paths
+- [ ] 40+ tests passing
+
+---
+
+### Phase 5: Active Inference Engine
+
+**Goal**: Memory retrieval as free energy minimization.
+
+**Files**:
+```
+impl/claude/agents/m/inference.py      # FreeEnergyAgent, SurpriseMinimizer
+impl/claude/agents/m/generative.py     # GenerativeModel base
+```
+
+**Key Types**:
+```python
+@dataclass
+class GenerativeModel:
+    """Agent's beliefs about causal structure."""
+    prior: Distribution
+    likelihood: Callable[[State, Observation], float]
+
+    def predict(self, state: State) -> Distribution:
+        """What observations do I expect?"""
+        ...
+
+    def infer(self, observation: Observation) -> Distribution:
+        """What states explain this observation?"""
+        ...
+
+@dataclass
+class FreeEnergyAgent:
+    """Memory in service of self-evidencing."""
+    model: GenerativeModel
+    preferences: Distribution  # Desired states
+
+    async def expected_free_energy(self, policy: Policy) -> float:
+        """G = pragmatic value - epistemic value"""
+        ...
+```
+
+**Exit Criteria**:
+- [ ] GenerativeModel with predict/infer
+- [ ] FreeEnergyAgent selecting policies
+- [ ] SurpriseMinimizer for consolidation
+- [ ] 40+ tests passing
+
+---
+
+### Phase 6: Bi-Temporal Store
+
+**Goal**: Separate event-time from knowledge-time.
+
+**Files**:
+```
+impl/claude/agents/m/temporal.py       # BiTemporalStore, BiTemporalFact
+impl/claude/agents/m/archaeology.py    # BeliefArchaeologist
+```
+
+**Key Types**:
+```python
+@dataclass
+class BiTemporalFact:
+    """Fact with two temporal dimensions."""
+    content: Any
+    t_event: datetime      # When it happened
+    t_known: datetime      # When agent learned it
+    superseded_by: Optional[str] = None
+```
+
+**Exit Criteria**:
+- [ ] BiTemporalStore with point-in-time queries
+- [ ] Retroactive correction without history loss
+- [ ] BeliefArchaeologist for belief evolution
+- [ ] 30+ tests passing
+
+---
+
+### Phase 7: Causal Weave Integration
+
+**Goal**: Memory operations within trace monoid structure.
+
+**Files**:
+```
+impl/claude/agents/m/weave.py          # TraceMemory, CausalConeAgent
+impl/claude/agents/m/knot.py           # KnotAgent for synchronization
+impl/claude/weave/memory_integration.py # Wire to existing trace_monoid
+```
+
+**Exit Criteria**:
+- [ ] TraceMemory respecting partial order
+- [ ] CausalConeAgent finding past/future cones
+- [ ] KnotAgent merging memory branches
+- [ ] Integration with impl/claude/weave/trace_monoid.py
+- [ ] 40+ tests passing
 
 ---
 
@@ -212,19 +326,22 @@ await logos.invoke("self.memory.cherish", crystal_id="abc123")
 | `self.memory.manifest` | Get cached state | Ghost cache read |
 | `self.memory.engram` | Persist state | Ghost cache write |
 | `self.memory.compost` | Force expiration | Delete crystal |
+| `self.memory.recall` | Reconstruct | Cue → Recollection |
+| `world.pheromone.deposit` | Leave trace | Stigmergic coordination |
+| `world.pheromone.sense` | Perceive gradients | Navigation |
+| `time.weave.causal_cone` | Find causality | Past/future cones |
 
 ---
 
-## Integration with Ghost
+## Cross-Agent Dependencies
 
-The Ghost cache IS `self.memory` from the CLI perspective:
-
-| Ghost Operation | AGENTESE Path | Description |
-|-----------------|---------------|-------------|
-| Write cache | `self.memory.engram` | Persist on successful invoke |
-| Read cache | `self.memory.manifest` | Graceful degradation fallback |
-| Cache miss | Transparent error | Clear messaging |
-| Stale data | `[GHOST]` prefix | User knows data is old |
+| Agent | Role in Memory |
+|-------|---------------|
+| **D-gent** | Storage layer (UnifiedMemory, VectorAgent) |
+| **L-gent** | Embedding space (terrain for cartography) |
+| **N-gent** | SemanticTraces (desire lines for navigation) |
+| **B-gent** | Economics (token budget for foveation) |
+| **K-gent** | Soul integration (memory defines identity) |
 
 ---
 
@@ -244,25 +361,59 @@ The Ghost cache IS `self.memory` from the CLI perspective:
 │   • Recent checkpoints                                  │
 │   • D-gent persistence (etcd/PVC)                       │
 │   • TTL-based expiration                                │
+│   • Holographic compression                             │
 └───────────────────────────┬─────────────────────────────┘
                             │ expire (unpinned)
                             ▼
 ┌─────────────────────────────────────────────────────────┐
-│ Cold Memory (Ghost Cache)                               │
-│   • CLI-local fallback                                  │
-│   • ~/.kgents/ghost/                                    │
+│ Cold Memory (Ghost Cache + Pheromone Fields)            │
+│   • CLI-local fallback (~/.kgents/ghost/)               │
+│   • Stigmergic traces (collective memory)               │
 │   • Staleness-aware                                     │
 └─────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Cross-References
+## Chunks (Parallelizable Work)
 
-- **Plans**: `self/stream.md` (ContextWindow), `void/entropy.md` (Composting)
-- **Impl**: `protocols/cli/glass.py` (Ghost), `agents/d/` (D-gent)
-- **Spec**: `spec/protocols/agentese.md`
+### Chunk A: Crystal Core (Phase 2)
+- HolographicMemory with SVD compression
+- Exit: store/retrieve/compress work, 25+ tests
+
+### Chunk B: Consolidation (Phase 2)
+- ConsolidationAgent with Ebbinghaus curves
+- Exit: hot/cold promotion works, 25+ tests
+
+### Chunk C: Pheromones (Phase 3)
+- PheromoneField with decay
+- Exit: deposit/sense/decay work, 20+ tests
+
+### Chunk D: Language Games (Phase 4)
+- LanguageGame polynomial functor
+- Exit: grammar checking works, 20+ tests
 
 ---
 
-*"What you forget defines you as much as what you remember."*
+## Research References
+
+- `docs/research-autopoietic-dynamics.md` — Synthesis of Four Pillars
+- `docs/research-agent-memory-systems.md` — Survey of existing systems
+- `docs/kgents_ A Next-Generation Agentic Memory Architecture.pdf` — Trace Monoid theory
+- `spec/m-gents/README.md` — M-gent specification
+
+---
+
+## Success Metrics
+
+| Metric | Target |
+|--------|--------|
+| Test count | 300+ |
+| Holographic property | 50% compression → 50% resolution (not 50% data loss) |
+| Stigmergic convergence | Consensus in < 10 iterations |
+| Language game coverage | 5+ games defined |
+| Bi-temporal queries | Point-in-time accuracy 100% |
+
+---
+
+*"Memory is the performance of identity across time."*

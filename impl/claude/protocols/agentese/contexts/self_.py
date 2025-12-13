@@ -49,6 +49,17 @@ SELF_AFFORDANCES: dict[str, tuple[str, ...]] = {
         "cherish",  # Pin crystal from reaping
         # Ghost cache operations
         "engram",  # Persist to Ghost cache
+        # Four Pillars operations (Phase 6)
+        "store",  # Store to MemoryCrystal
+        "retrieve",  # Retrieve from MemoryCrystal by resonance
+        "compress",  # Holographic compression
+        "promote",  # Increase concept resolution
+        "demote",  # Decrease concept resolution (graceful forgetting)
+        "deposit",  # Deposit pheromone trace (stigmergy)
+        "sense",  # Sense pheromone gradients
+        "play",  # Play language game move
+        "evaluate",  # Active inference evaluation
+        "inference_consolidate",  # Active inference-guided consolidation
     ),
     "capabilities": ("list", "acquire", "release"),
     "state": ("checkpoint", "restore", "inspect"),
@@ -109,6 +120,14 @@ class MemoryNode(BaseLogosNode):
     # Ghost cache path (for engram/manifest fallback)
     _ghost_path: Path | None = None
 
+    # Four Pillars integration (Phase 6)
+    _memory_crystal: Any = None  # MemoryCrystal from agents.m
+    _pheromone_field: Any = None  # PheromoneField from agents.m
+    _inference_agent: Any = None  # ActiveInferenceAgent from agents.m
+    _language_games: dict[str, Any] = field(
+        default_factory=dict
+    )  # name -> LanguageGame
+
     @property
     def handle(self) -> str:
         return self._handle
@@ -157,6 +176,27 @@ class MemoryNode(BaseLogosNode):
             # Ghost cache operations
             case "engram":
                 return await self._engram(observer, **kwargs)
+            # Four Pillars operations (Phase 6)
+            case "store":
+                return await self._store_crystal(observer, **kwargs)
+            case "retrieve":
+                return await self._retrieve_crystal(observer, **kwargs)
+            case "compress":
+                return await self._compress_crystal(observer, **kwargs)
+            case "promote":
+                return await self._promote_concept(observer, **kwargs)
+            case "demote":
+                return await self._demote_concept(observer, **kwargs)
+            case "deposit":
+                return await self._deposit_trace(observer, **kwargs)
+            case "sense":
+                return await self._sense_gradients(observer, **kwargs)
+            case "play":
+                return await self._play_game(observer, **kwargs)
+            case "evaluate":
+                return await self._evaluate_inference(observer, **kwargs)
+            case "inference_consolidate":
+                return await self._inference_consolidate(observer, **kwargs)
             case _:
                 return {"aspect": aspect, "status": "not implemented"}
 
@@ -500,6 +540,441 @@ class MemoryNode(BaseLogosNode):
             }
         except Exception as e:
             return {"error": f"Failed to write engram: {e}"}
+
+    # --- Four Pillars Operations (Phase 6) ---
+
+    async def _store_crystal(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Store a concept in the holographic MemoryCrystal.
+
+        AGENTESE: self.memory.store
+
+        Args:
+            concept_id: Unique identifier for the concept
+            content: The content to store
+            embedding: Vector representation (list of floats)
+
+        Returns:
+            Dict with storage result
+        """
+        if self._memory_crystal is None:
+            return {
+                "error": "MemoryCrystal not configured",
+                "note": "Wire MemoryCrystal to MemoryNode for Four Pillars ops",
+            }
+
+        concept_id = kwargs.get("concept_id")
+        content = kwargs.get("content")
+        embedding = kwargs.get("embedding")
+
+        if not concept_id:
+            return {"error": "concept_id required"}
+        if content is None:
+            return {"error": "content required"}
+        if not embedding:
+            return {"error": "embedding required"}
+
+        pattern = self._memory_crystal.store(concept_id, content, embedding)
+        return {
+            "status": "stored",
+            "concept_id": pattern.concept_id,
+            "resolution": pattern.resolution,
+        }
+
+    async def _retrieve_crystal(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Retrieve memories by resonance with cue.
+
+        AGENTESE: self.memory.retrieve
+
+        Args:
+            cue: Query embedding vector
+            threshold: Minimum similarity threshold (default 0.5)
+            limit: Maximum results (default 10)
+
+        Returns:
+            List of ResonanceMatch results
+        """
+        if self._memory_crystal is None:
+            return {"error": "MemoryCrystal not configured"}
+
+        cue = kwargs.get("cue")
+        if not cue:
+            return {"error": "cue (embedding) required"}
+
+        threshold = kwargs.get("threshold", 0.5)
+        limit = kwargs.get("limit", 10)
+
+        results = self._memory_crystal.retrieve(cue, threshold=threshold, limit=limit)
+        return {
+            "matches": [
+                {
+                    "concept_id": r.concept_id,
+                    "similarity": r.similarity,
+                    "resolution": r.resolution,
+                }
+                for r in results
+            ],
+            "count": len(results),
+        }
+
+    async def _compress_crystal(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Holographic compression (reduces resolution, not data).
+
+        AGENTESE: self.memory.compress
+
+        Args:
+            ratio: Compression ratio (0.5 = halve resolution)
+
+        Returns:
+            Compression result with new stats
+        """
+        if self._memory_crystal is None:
+            return {"error": "MemoryCrystal not configured"}
+
+        ratio = kwargs.get("ratio", 0.8)
+        try:
+            self._memory_crystal = self._memory_crystal.compress(ratio)
+            stats = self._memory_crystal.stats()
+            return {
+                "status": "compressed",
+                "ratio": ratio,
+                "stats": stats,
+            }
+        except ValueError as e:
+            return {"error": str(e)}
+
+    async def _promote_concept(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Increase resolution of a concept (reinforcement).
+
+        AGENTESE: self.memory.promote
+
+        Args:
+            concept_id: Concept to promote
+            factor: Increase factor (default 1.2 = 20% increase)
+
+        Returns:
+            Promotion result
+        """
+        if self._memory_crystal is None:
+            return {"error": "MemoryCrystal not configured"}
+
+        concept_id = kwargs.get("concept_id")
+        if not concept_id:
+            return {"error": "concept_id required"}
+
+        factor = kwargs.get("factor", 1.2)
+        self._memory_crystal.promote(concept_id, factor=factor)
+
+        pattern = self._memory_crystal.get_pattern(concept_id)
+        return {
+            "status": "promoted",
+            "concept_id": concept_id,
+            "new_resolution": pattern.resolution if pattern else None,
+        }
+
+    async def _demote_concept(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Decrease resolution of a concept (graceful forgetting).
+
+        AGENTESE: self.memory.demote
+
+        Args:
+            concept_id: Concept to demote
+            factor: Reduction factor (default 0.5 = halve)
+
+        Returns:
+            Demotion result
+        """
+        if self._memory_crystal is None:
+            return {"error": "MemoryCrystal not configured"}
+
+        concept_id = kwargs.get("concept_id")
+        if not concept_id:
+            return {"error": "concept_id required"}
+
+        factor = kwargs.get("factor", 0.5)
+        self._memory_crystal.demote(concept_id, factor=factor)
+
+        pattern = self._memory_crystal.get_pattern(concept_id)
+        return {
+            "status": "demoted",
+            "concept_id": concept_id,
+            "new_resolution": pattern.resolution if pattern else None,
+        }
+
+    async def _deposit_trace(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Deposit a pheromone trace (stigmergy).
+
+        AGENTESE: self.memory.deposit
+
+        The act of depositing IS the tithe—paying forward
+        for future agents who will follow these trails.
+
+        Args:
+            concept: The concept to mark
+            intensity: Trace strength (default 1.0)
+            metadata: Optional metadata dict
+
+        Returns:
+            Deposit result
+        """
+        if self._pheromone_field is None:
+            return {
+                "error": "PheromoneField not configured",
+                "note": "Wire PheromoneField to MemoryNode for stigmergic ops",
+            }
+
+        concept = kwargs.get("concept")
+        if not concept:
+            return {"error": "concept required"}
+
+        intensity = kwargs.get("intensity", 1.0)
+        metadata = kwargs.get("metadata")
+        meta = self._umwelt_to_meta(observer)
+
+        trace = await self._pheromone_field.deposit(
+            concept=concept,
+            intensity=intensity,
+            depositor=meta.name,
+            metadata=metadata,
+        )
+        return {
+            "status": "deposited",
+            "concept": trace.concept,
+            "intensity": trace.intensity,
+            "depositor": trace.depositor,
+        }
+
+    async def _sense_gradients(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Sense pheromone gradients.
+
+        AGENTESE: self.memory.sense
+
+        Returns concepts sorted by total trace intensity.
+
+        Args:
+            position: Optional current position for context
+
+        Returns:
+            List of gradients
+        """
+        if self._pheromone_field is None:
+            return {"error": "PheromoneField not configured"}
+
+        position = kwargs.get("position")
+        gradients = await self._pheromone_field.sense(position)
+
+        return {
+            "gradients": [
+                {
+                    "concept": g.concept,
+                    "total_intensity": g.total_intensity,
+                    "trace_count": g.trace_count,
+                    "dominant_depositor": g.dominant_depositor,
+                }
+                for g in gradients
+            ],
+            "count": len(gradients),
+        }
+
+    async def _play_game(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Play a move in a language game.
+
+        AGENTESE: self.memory.play
+
+        Memory access as playing a game (Wittgenstein).
+
+        Args:
+            game: Game name (recall, navigation, dialectical, etc.)
+            position: Current position/state
+            direction: Direction to move
+
+        Returns:
+            Move result
+        """
+        game_name = kwargs.get("game")
+        if not game_name:
+            return {
+                "error": "game required",
+                "available_games": list(self._language_games.keys()),
+            }
+
+        game = self._language_games.get(game_name)
+        if game is None:
+            return {
+                "error": f"Unknown game: {game_name}",
+                "available_games": list(self._language_games.keys()),
+            }
+
+        position = kwargs.get("position")
+        direction = kwargs.get("direction")
+
+        if position is None:
+            return {"error": "position required"}
+        if not direction:
+            # Return available directions
+            directions = game.directions(position)
+            return {
+                "game": game_name,
+                "position": position,
+                "available_directions": list(directions),
+            }
+
+        move = game.play(position, direction)
+        return {
+            "game": game_name,
+            "from_position": move.from_position,
+            "direction": move.direction,
+            "to_position": move.to_position,
+            "is_grammatical": move.is_grammatical,
+        }
+
+    async def _evaluate_inference(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Evaluate memory with Active Inference.
+
+        AGENTESE: self.memory.evaluate
+
+        Compute free energy budget for a memory.
+
+        Args:
+            concept_id: The concept to evaluate
+            content: The content (for complexity calculation)
+            relevance: Semantic relevance (0 to 1)
+
+        Returns:
+            Free energy evaluation
+        """
+        if self._inference_agent is None:
+            return {
+                "error": "ActiveInferenceAgent not configured",
+                "note": "Wire ActiveInferenceAgent to MemoryNode for inference ops",
+            }
+
+        concept_id = kwargs.get("concept_id")
+        content = kwargs.get("content", "")
+        relevance = kwargs.get("relevance", 0.5)
+
+        if not concept_id:
+            return {"error": "concept_id required"}
+
+        budget = await self._inference_agent.evaluate_memory(
+            concept_id=concept_id,
+            content=content,
+            relevance=relevance,
+        )
+
+        return {
+            "concept_id": concept_id,
+            "free_energy": budget.free_energy,
+            "complexity_cost": budget.complexity_cost,
+            "accuracy_gain": budget.accuracy_gain,
+            "should_retain": budget.should_retain(),
+            "recommendation": (
+                "promote"
+                if budget.free_energy < -0.5
+                else "retain"
+                if budget.free_energy < 0
+                else "demote"
+                if budget.free_energy < 0.5
+                else "forget"
+            ),
+        }
+
+    async def _inference_consolidate(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Consolidate memory using Active Inference.
+
+        AGENTESE: self.memory.inference_consolidate
+
+        Uses free energy minimization to decide what to promote/demote.
+
+        Args:
+            promote_threshold: Free energy below this → promote (default -0.5)
+            demote_threshold: Free energy above this → demote (default 0.5)
+
+        Returns:
+            Consolidation actions taken
+        """
+        if self._memory_crystal is None:
+            return {"error": "MemoryCrystal not configured"}
+        if self._inference_agent is None:
+            return {"error": "ActiveInferenceAgent not configured"}
+
+        try:
+            from agents.m import InferenceGuidedCrystal
+
+            guided = InferenceGuidedCrystal(self._memory_crystal, self._inference_agent)
+
+            promote_threshold = kwargs.get("promote_threshold", -0.5)
+            demote_threshold = kwargs.get("demote_threshold", 0.5)
+
+            actions = await guided.consolidate(
+                promote_threshold=promote_threshold,
+                demote_threshold=demote_threshold,
+            )
+
+            promoted = sum(1 for a in actions.values() if a == "promoted")
+            demoted = sum(1 for a in actions.values() if a == "demoted")
+            retained = sum(1 for a in actions.values() if a == "retained")
+
+            return {
+                "status": "consolidated",
+                "actions": actions,
+                "summary": {
+                    "promoted": promoted,
+                    "demoted": demoted,
+                    "retained": retained,
+                },
+            }
+        except ImportError:
+            return {"error": "agents.m module not available"}
 
 
 # === Capabilities Node ===
@@ -1269,6 +1744,11 @@ class SelfContextResolver:
     _crystallization_engine: Any = None
     # Ghost cache path for offline capability
     _ghost_path: Path | None = None
+    # Four Pillars integration (Phase 6)
+    _memory_crystal: Any = None  # MemoryCrystal from agents.m
+    _pheromone_field: Any = None  # PheromoneField from agents.m
+    _inference_agent: Any = None  # ActiveInferenceAgent from agents.m
+    _language_games: dict[str, Any] = field(default_factory=dict)
 
     # Singleton nodes for self context
     _memory: MemoryNode | None = None
@@ -1287,6 +1767,10 @@ class SelfContextResolver:
             _n_gent=self._n_gent,
             _crystallization_engine=self._crystallization_engine,
             _ghost_path=self._ghost_path,
+            _memory_crystal=self._memory_crystal,
+            _pheromone_field=self._pheromone_field,
+            _inference_agent=self._inference_agent,
+            _language_games=self._language_games,
         )
         self._capabilities = CapabilitiesNode()
         self._state = StateNode()
@@ -1381,6 +1865,11 @@ def create_self_resolver(
     purgatory: Any = None,
     crystallization_engine: Any = None,
     ghost_path: Path | None = None,
+    # Four Pillars integration (Phase 6)
+    memory_crystal: Any = None,
+    pheromone_field: Any = None,
+    inference_agent: Any = None,
+    language_games: dict[str, Any] | None = None,
 ) -> SelfContextResolver:
     """
     Create a SelfContextResolver with optional integrations.
@@ -1391,6 +1880,10 @@ def create_self_resolver(
         purgatory: Purgatory for semaphore integration
         crystallization_engine: CrystallizationEngine for crystal operations
         ghost_path: Path for Ghost cache (defaults to ~/.kgents/ghost)
+        memory_crystal: MemoryCrystal for Four Pillars holographic memory
+        pheromone_field: PheromoneField for stigmergic coordination
+        inference_agent: ActiveInferenceAgent for free energy-based retention
+        language_games: Dict of language games for Wittgensteinian access
 
     Returns:
         Configured SelfContextResolver
@@ -1401,5 +1894,10 @@ def create_self_resolver(
     resolver._purgatory = purgatory
     resolver._crystallization_engine = crystallization_engine
     resolver._ghost_path = ghost_path
+    # Four Pillars
+    resolver._memory_crystal = memory_crystal
+    resolver._pheromone_field = pheromone_field
+    resolver._inference_agent = inference_agent
+    resolver._language_games = language_games or {}
     resolver.__post_init__()  # Reinitialize with integrations
     return resolver

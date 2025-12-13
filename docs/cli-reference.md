@@ -10,7 +10,8 @@ Complete reference for all `kgents` CLI commands.
 
 | Category | Commands | Purpose |
 |----------|----------|---------|
-| **Soul** | `soul`, `soul challenge`, `soul dream` | K-gent persona interaction |
+| **Soul** | `soul`, `soul challenge`, `soul watch` | K-gent persona interaction |
+| **DevEx** | `dashboard`, `play`, `new` | Developer experience |
 | **Alethic** | `a list`, `a inspect`, `a manifest` | Agent architecture |
 | **Infrastructure** | `infra init`, `status`, `signal` | System management |
 | **Observation** | `observe trace`, `observe metrics` | Telemetry |
@@ -86,6 +87,59 @@ View PersonaGarden state.
 
 ```bash
 kgents soul garden
+```
+
+### `kgents soul watch`
+
+Ambient K-gent file watcher with 5 heuristics.
+
+```bash
+kgents soul watch              # Watch current directory
+kgents soul watch --path ./src # Watch specific path
+```
+
+Heuristics:
+- **Complexity**: Warns on functions >40 lines
+- **Naming**: Detects non-descriptive variables
+- **Patterns**: Suggests design patterns
+- **Tests**: Reminds about untested code
+- **Docs**: Highlights missing docstrings
+
+---
+
+## DevEx Commands
+
+### `kgents dashboard`
+
+Real-time TUI showing system metabolism.
+
+```bash
+kgents dashboard
+kgents dashboard --demo  # Use demo metrics
+```
+
+Panels: K-gent state, Metabolism pressure, Triad health, Flux throughput.
+
+Keybindings: `q` quit, `r` refresh, `1-4` focus panel.
+
+### `kgents play`
+
+Interactive tutorial playground.
+
+```bash
+kgents play           # List tutorials
+kgents play 1         # Run tutorial 1 (hello world)
+kgents play repl      # Start REPL mode
+```
+
+### `kgents new`
+
+Scaffold new agents from templates.
+
+```bash
+kgents new agent my-agent          # Create new agent
+kgents new agent my-agent --alpha  # Use Alpha archetype
+kgents new agent my-agent --kappa  # Use Kappa archetype
 ```
 
 ---

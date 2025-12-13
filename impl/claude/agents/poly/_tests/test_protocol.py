@@ -11,7 +11,6 @@ These tests verify:
 from typing import Any
 
 import pytest
-
 from agents.poly import (
     PolyAgent,
     WiringDiagram,
@@ -148,7 +147,7 @@ class TestParallelComposition:
     def test_parallel_composition(self) -> None:
         """Parallel composition runs both on same input."""
         double: PolyAgent[str, int, int] = from_function("Double", lambda x: x * 2)
-        square: PolyAgent[str, int, int] = from_function("Square", lambda x: x ** 2)
+        square: PolyAgent[str, int, int] = from_function("Square", lambda x: x**2)
 
         composed = parallel(double, square)
 
@@ -162,7 +161,7 @@ class TestParallelComposition:
     def test_parallel_state_product(self) -> None:
         """Parallel composition has product state space."""
         double: PolyAgent[str, int, int] = from_function("Double", lambda x: x * 2)
-        square: PolyAgent[str, int, int] = from_function("Square", lambda x: x ** 2)
+        square: PolyAgent[str, int, int] = from_function("Square", lambda x: x**2)
 
         composed = parallel(double, square)
 
@@ -321,3 +320,89 @@ class TestStateDependentBehavior:
         # Done accepts nothing
         done_dirs = workflow.directions("done")
         assert len(done_dirs) == 0
+
+
+# =============================================================================
+# Deprecation Sugar Tests
+# =============================================================================
+
+
+class TestDeprecationSugar:
+    """Tests for backwards compatibility with Agent[A, B]."""
+
+    def test_stateless_agent_type_alias(self) -> None:
+        """StatelessAgent is a type alias for single-state PolyAgent."""
+        from agents.poly import StatelessAgent
+
+        # Can create a StatelessAgent via from_function
+        agent: StatelessAgent[int, int] = from_function("Double", lambda x: x * 2)
+
+        # Works like any other PolyAgent
+        assert agent.name == "Double"
+        assert "ready" in agent.positions
+        _, result = agent.invoke("ready", 21)
+        assert result == 42
+
+    def test_to_bootstrap_agent_conversion(self) -> None:
+        """to_bootstrap_agent wraps PolyAgent with Agent interface."""
+        from agents.poly import to_bootstrap_agent
+
+        # Create a polynomial agent
+        poly = from_function("Triple", lambda x: x * 3)
+
+        # Convert to bootstrap Agent
+        agent = to_bootstrap_agent(poly)
+
+        # Has the right name
+        assert agent.name == "Triple"
+
+        # Note: actual invocation requires async context
+        # This just tests the conversion works
+        import asyncio
+
+        async def test_invoke() -> int:
+            return await agent.invoke(7)
+
+        result = asyncio.run(test_invoke())
+        assert result == 21
+
+    def test_to_bootstrap_agent_stateful(self) -> None:
+        """to_bootstrap_agent handles stateful polynomials."""
+        from agents.poly import to_bootstrap_agent
+
+        # Create a stateful counter
+        counter = stateful(
+            "Counter",
+            frozenset(range(10)),
+            0,
+            lambda s, _: ((s + 1) % 10, s),  # Returns previous, moves to next
+        )
+
+        agent = to_bootstrap_agent(counter)
+
+        import asyncio
+
+        async def count_twice() -> tuple[int, int]:
+            a = await agent.invoke(None)
+            b = await agent.invoke(None)
+            return a, b
+
+        first, second = asyncio.run(count_twice())
+        assert first == 0
+        assert second == 1
+
+    def test_from_function_creates_stateless(self) -> None:
+        """from_function creates a stateless polynomial."""
+        poly = from_function("Square", lambda x: x**2)
+
+        # Single state
+        assert len(poly.positions) == 1
+        assert "ready" in poly.positions
+
+        # State doesn't change
+        state, _ = poly.transition("ready", 5)
+        assert state == "ready"
+
+        # Output is correct
+        _, result = poly.invoke("ready", 5)
+        assert result == 25

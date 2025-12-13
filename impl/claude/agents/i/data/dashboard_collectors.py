@@ -197,6 +197,42 @@ class TraceAnalysisMetrics:
 
 
 @dataclass
+class TurnMetrics:
+    """
+    Turn-gents protocol metrics for dashboard display.
+
+    These metrics track the Turn-gents Protocol state:
+    - Turn history counts by type (SPEECH, ACTION, THOUGHT, YIELD, SILENCE)
+    - Causal cone compression ratios
+    - Pending YIELD approvals
+    """
+
+    total_turns: int = 0
+    by_type: dict[str, int] = field(default_factory=dict)
+    by_source: dict[str, int] = field(default_factory=dict)
+    pending_yields: int = 0
+    compression_ratio: float = 0.0  # Average compression across agents
+    cone_stats: dict[str, float] = field(default_factory=dict)  # agent_id -> ratio
+    is_online: bool = True
+
+    @property
+    def status_text(self) -> str:
+        """Human-readable status."""
+        if not self.is_online:
+            return "OFFLINE"
+        if self.total_turns == 0:
+            return "NO TURNS"
+        if self.pending_yields > 0:
+            return f"PENDING ({self.pending_yields})"
+        return f"{self.total_turns} turns"
+
+    @property
+    def compression_pct(self) -> int:
+        """Compression ratio as integer percentage."""
+        return int(self.compression_ratio * 100)
+
+
+@dataclass
 class DashboardMetrics:
     """Complete dashboard metrics bundle."""
 
@@ -206,6 +242,7 @@ class DashboardMetrics:
     flux: FluxMetrics = field(default_factory=FluxMetrics)
     traces: list[TraceEntry] = field(default_factory=list)
     trace_analysis: TraceAnalysisMetrics = field(default_factory=TraceAnalysisMetrics)
+    turns: TurnMetrics = field(default_factory=TurnMetrics)
     collected_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     @property
@@ -216,6 +253,7 @@ class DashboardMetrics:
             and self.metabolism.is_online
             and self.triad.is_online
             and self.flux.is_online
+            and self.turns.is_online
         )
 
 
@@ -247,8 +285,12 @@ async def collect_kgent_metrics() -> KgentMetrics:
 
         # Get last dream time
         hypnagogia = get_hypnagogia()
-        last_dream = getattr(hypnagogia, "last_dream", None) or getattr(
-            hypnagogia, "_last_dream_time", None
+        last_dream_report = getattr(hypnagogia, "last_dream", None)
+        # last_dream is a DreamReport, extract .timestamp if available
+        last_dream = (
+            last_dream_report.timestamp
+            if last_dream_report is not None and hasattr(last_dream_report, "timestamp")
+            else None
         )
 
         return KgentMetrics(
@@ -389,44 +431,128 @@ async def collect_trace_analysis(
             If None, uses the hottest functions from static analysis.
 
     Returns TraceAnalysisMetrics with call graph data.
+
+    Note: Static analysis is DISABLED in dashboard context to prevent freezing.
+    The analysis can take minutes on large codebases. Use `kg trace` CLI instead.
+    """
+    # DISABLED: Static analysis is too slow for real-time dashboard updates.
+    # It can take 3+ minutes on large codebases and blocks the event loop.
+    # Users should use `kg trace` CLI for static analysis instead.
+    #
+    # To re-enable with proper background processing:
+    # 1. Run analysis in a separate process (not thread - GIL blocks)
+    # 2. Cache results and serve from cache
+    # 3. Only trigger analysis on explicit user request
+    return TraceAnalysisMetrics(is_online=False)
+
+
+async def collect_turn_metrics() -> TurnMetrics:
+    """
+    Collect Turn-gents protocol metrics.
+
+    Returns TurnMetrics with:
+    - Turn history counts by type
+    - Causal cone compression ratios
+    - Pending YIELD approvals
+
+    Returns empty metrics with is_online=False if weave unavailable.
+
+    Note: This function is designed to be non-blocking and fail-safe.
+    If any operation takes too long or fails, it returns offline status.
     """
     try:
-        from .trace_provider import get_trace_provider
+        # Wrap in a coroutine with timeout to prevent blocking
+        return await asyncio.wait_for(
+            _collect_turn_metrics_impl(),
+            timeout=2.0,  # 2 second timeout
+        )
+    except asyncio.TimeoutError:
+        logger.warning("Turn metrics collection timed out")
+        return TurnMetrics(is_online=False)
+    except Exception as e:
+        logger.warning(f"Failed to collect turn metrics: {e}")
+        return TurnMetrics(is_online=False)
 
-        provider = get_trace_provider()
 
-        # Collect metrics (uses cached static analysis if available)
-        metrics = await provider.collect_metrics(include_static=True)
+async def _collect_turn_metrics_impl() -> TurnMetrics:
+    """Implementation of turn metrics collection (called with timeout)."""
+    try:
+        from protocols.cli.hollow import get_lifecycle_state
 
-        # Build call trees for hot functions
-        call_trees = []
-        targets = hot_function_targets or []
+        state = get_lifecycle_state()
+        if state is None:
+            return TurnMetrics(is_online=False)
 
-        # If no explicit targets, use hottest functions from analysis
-        if not targets and metrics.static.hottest_functions:
-            targets = [f["name"] for f in metrics.static.hottest_functions[:3]]
+        # Check for weave attribute safely
+        weave = getattr(state, "weave", None)
+        if weave is None:
+            return TurnMetrics(is_online=False)
 
-        for target in targets[:3]:  # Limit to 3 call trees
-            tree = provider.build_call_tree(target, depth=2, direction="callers")
-            if tree:
-                call_trees.append(tree)
+        # If no turns, return early
+        weave_len = len(weave)
+        if weave_len == 0:
+            return TurnMetrics(is_online=True)
 
-        return TraceAnalysisMetrics(
-            files_analyzed=metrics.static.files_analyzed,
-            definitions_found=metrics.static.definitions_found,
-            calls_found=metrics.static.calls_found,
-            analysis_time_ms=metrics.static.analysis_time_ms,
-            is_online=metrics.static.is_available,
-            hottest_functions=metrics.static.hottest_functions,
-            call_trees=call_trees,
+        from weave import CausalCone, Turn
+
+        # Count by type and source
+        by_type: dict[str, int] = {}
+        by_source: dict[str, int] = {}
+        sources_set: set[str] = set()
+
+        # Limit iteration to prevent long loops
+        events = list(weave.monoid.events)[:1000]  # Cap at 1000 events
+        for event in events:
+            source = getattr(event, "source", "unknown")
+            sources_set.add(source)
+            by_source[source] = by_source.get(source, 0) + 1
+
+            if isinstance(event, Turn):
+                type_name = event.turn_type.name
+                by_type[type_name] = by_type.get(type_name, 0) + 1
+
+        # Get pending yields count (with its own try/except)
+        pending_yields = 0
+        try:
+            from protocols.cli.handlers.approve import get_yield_handler
+
+            handler = get_yield_handler()
+            pending_yields = len(handler.list_pending())
+        except (ImportError, Exception):
+            pass  # Non-critical
+
+        # Compute compression ratios per agent (limit to 10 sources)
+        cone_stats: dict[str, float] = {}
+        try:
+            cone = CausalCone(weave)
+            for source in list(sources_set)[:10]:
+                if source != "unknown":
+                    ratio = cone.compression_ratio(source)
+                    cone_stats[source] = ratio
+        except Exception:
+            pass  # Non-critical
+
+        # Average compression
+        avg_compression = (
+            sum(cone_stats.values()) / len(cone_stats) if cone_stats else 0.0
+        )
+
+        return TurnMetrics(
+            total_turns=weave_len,
+            by_type=by_type,
+            by_source=by_source,
+            pending_yields=pending_yields,
+            compression_ratio=avg_compression,
+            cone_stats=cone_stats,
+            is_online=True,
         )
 
     except ImportError:
-        logger.debug("TraceDataProvider not available for trace analysis")
-        return TraceAnalysisMetrics(is_online=False)
+        logger.debug("Weave not available for turn metrics collection")
+        return TurnMetrics(is_online=False)
     except Exception as e:
-        logger.warning(f"Failed to collect trace analysis: {e}")
-        return TraceAnalysisMetrics(is_online=False)
+        logger.debug(f"Turn metrics collection error: {e}")
+        return TurnMetrics(is_online=False)
 
 
 async def collect_metrics() -> DashboardMetrics:
@@ -443,6 +569,7 @@ async def collect_metrics() -> DashboardMetrics:
         collect_flux_metrics(),
         collect_recent_traces(),
         collect_trace_analysis(),
+        collect_turn_metrics(),
         return_exceptions=True,
     )
 
@@ -473,6 +600,11 @@ async def collect_metrics() -> DashboardMetrics:
         if isinstance(results[5], TraceAnalysisMetrics)
         else TraceAnalysisMetrics(is_online=False)
     )
+    turns: TurnMetrics = (
+        results[6]
+        if isinstance(results[6], TurnMetrics)
+        else TurnMetrics(is_online=False)
+    )
 
     return DashboardMetrics(
         kgent=kgent,
@@ -481,6 +613,7 @@ async def collect_metrics() -> DashboardMetrics:
         flux=flux,
         traces=traces,
         trace_analysis=trace_analysis,
+        turns=turns,
     )
 
 
@@ -569,6 +702,21 @@ def create_demo_metrics() -> DashboardMetrics:
                 {"name": "StaticCallGraph.__init__", "callers": 1655},
             ],
             call_trees=[],  # Demo doesn't include call trees
+        ),
+        turns=TurnMetrics(
+            total_turns=42,
+            by_type={
+                "SPEECH": 18,
+                "ACTION": 12,
+                "THOUGHT": 8,
+                "YIELD": 3,
+                "SILENCE": 1,
+            },
+            by_source={"K-gent": 25, "test-agent": 17},
+            pending_yields=1,
+            compression_ratio=0.62,
+            cone_stats={"K-gent": 0.58, "test-agent": 0.66},
+            is_online=True,
         ),
     )
 
@@ -696,6 +844,7 @@ __all__ = [
     "FluxMetrics",
     "TraceEntry",
     "TraceAnalysisMetrics",
+    "TurnMetrics",
     "DashboardMetrics",
     # Collection functions
     "collect_metrics",
@@ -705,6 +854,7 @@ __all__ = [
     "collect_flux_metrics",
     "collect_recent_traces",
     "collect_trace_analysis",
+    "collect_turn_metrics",
     # Demo data
     "create_demo_metrics",
     "create_random_metrics",

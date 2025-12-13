@@ -125,13 +125,14 @@ class DebuggerScreen(Screen[None]):
         Binding("t", "toggle_thoughts", "Toggle Thoughts", show=True),
         Binding("g", "toggle_ghosts", "Toggle Ghosts", show=True),
         Binding("c", "highlight_cone", "Highlight Cone", show=True),
-        Binding("f", "fork_from_cursor", "Fork", show=True),
+        Binding("minus", "back", "Zoom Out", show=True),
+        Binding("underscore", "back", "Zoom Out", show=False),
         Binding("x", "export_trace", "Export", show=True),
         Binding("tab", "cycle_mode", "Cycle Mode", show=False),
         Binding("left", "timeline_rewind", "◀ Rewind", show=False),
         Binding("right", "timeline_step", "▶ Step", show=False),
         Binding("escape", "back", "Back", show=True),
-        Binding("q", "quit", "Quit", show=True),
+        Binding("q", "quit", "Quit", show=False),
     ]
 
     # Reactive properties

@@ -291,6 +291,14 @@ def pytest_configure(config: Any) -> None:
 
         config.pluginmanager.register(WitnessPlugin(enabled=True), "witness")
 
+    # Register test optimization plugin if --profile-tests is used
+    try:
+        from testing.optimization.pytest_plugin import pytest_configure as opt_configure
+
+        opt_configure(config)
+    except ImportError:
+        pass  # Plugin not available
+
 
 def pytest_addoption(parser: Any) -> None:
     """Add kgents-specific command line options."""
@@ -300,3 +308,12 @@ def pytest_addoption(parser: Any) -> None:
         default=False,
         help="Enable BootstrapWitness verification at session start",
     )
+
+    # Test optimization plugin options
+    # Import and register the optimization plugin's options
+    try:
+        from testing.optimization.pytest_plugin import pytest_addoption as opt_addoption
+
+        opt_addoption(parser)
+    except ImportError:
+        pass  # Plugin not available

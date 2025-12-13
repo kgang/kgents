@@ -25,6 +25,7 @@ from agents.a.halo import (
     SoulfulCapability,
     StatefulCapability,
     StreamableCapability,
+    TurnBasedCapability,
     get_halo,
     has_capability,
 )
@@ -32,7 +33,7 @@ from agents.flux import FluxAgent
 from bootstrap.types import Agent
 from system.projector import LocalProjector
 from system.projector.base import CompilationError, UnsupportedCapabilityError
-from system.projector.local import SoulfulAdapter, StatefulAdapter
+from system.projector.local import SoulfulAdapter, StatefulAdapter, TurnBasedAdapter
 
 # ═══════════════════════════════════════════════════════════════════════
 # Test Fixtures: Agent Classes
@@ -703,3 +704,190 @@ class TestLocalProjectorEdgeCases:
         assert isinstance(compiled._state, ComplexState)
         assert compiled._state.name == "default"
         assert compiled._state.nested == {}
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Test TurnBasedCapability (Turn-gents Protocol)
+# ═══════════════════════════════════════════════════════════════════════
+
+
+@Capability.TurnBased()
+class TurnBasedAgent(Agent[str, str]):
+    """Agent with turn-based behavior."""
+
+    @property
+    def name(self) -> str:
+        return "turnbased"
+
+    async def invoke(self, input: str) -> str:
+        return f"turnbased:{input}"
+
+
+@Capability.TurnBased(
+    allowed_types={"SPEECH", "ACTION"},
+    entropy_budget=10.0,
+    cone_depth=5,
+)
+class ConfiguredTurnBasedAgent(Agent[str, str]):
+    """Agent with custom turn-based configuration."""
+
+    @property
+    def name(self) -> str:
+        return "configured-turnbased"
+
+    async def invoke(self, input: str) -> str:
+        return f"configured:{input}"
+
+
+@Capability.Stateful(schema=dict)
+@Capability.TurnBased(entropy_budget=5.0)
+class StatefulTurnBasedAgent(Agent[str, str]):
+    """Agent with both stateful and turn-based capabilities."""
+
+    @property
+    def name(self) -> str:
+        return "stateful-turnbased"
+
+    async def invoke(self, input: str) -> str:
+        return f"stateful-turnbased:{input}"
+
+
+class TestTurnBasedCapability:
+    """Tests for TurnBasedCapability and TurnBasedAdapter."""
+
+    def test_projector_supports_turnbased_capability(self) -> None:
+        """LocalProjector supports TurnBasedCapability."""
+        projector = LocalProjector()
+        assert projector.supports(TurnBasedCapability)
+
+    def test_compile_turnbased_wraps_with_adapter(self) -> None:
+        """@TurnBased compiles to TurnBasedAdapter."""
+        projector = LocalProjector()
+        compiled = projector.compile(TurnBasedAgent)
+
+        assert isinstance(compiled, TurnBasedAdapter)
+        assert compiled.inner.name == "turnbased"
+
+    def test_turnbased_adapter_name_includes_inner(self) -> None:
+        """TurnBasedAdapter name includes inner agent name."""
+        projector = LocalProjector()
+        compiled = projector.compile(TurnBasedAgent)
+
+        assert compiled.name == "TurnBased(turnbased)"
+
+    def test_turnbased_adapter_preserves_configuration(self) -> None:
+        """TurnBasedAdapter preserves Halo configuration."""
+        projector = LocalProjector()
+        compiled = projector.compile(ConfiguredTurnBasedAgent)
+
+        assert isinstance(compiled, TurnBasedAdapter)
+        assert compiled.allowed_types == frozenset({"SPEECH", "ACTION"})
+        assert compiled.entropy_budget == 10.0
+        assert compiled.cone_depth == 5
+
+    @pytest.mark.asyncio
+    async def test_turnbased_agent_is_invocable(self) -> None:
+        """TurnBasedAdapter can invoke the inner agent."""
+        projector = LocalProjector()
+        compiled = projector.compile(TurnBasedAgent)
+
+        result = await compiled.invoke("test")
+
+        assert result == "turnbased:test"
+
+    @pytest.mark.asyncio
+    async def test_turnbased_records_turns(self) -> None:
+        """TurnBasedAdapter records turns to weave."""
+        projector = LocalProjector()
+        compiled = projector.compile(TurnBasedAgent)
+
+        assert isinstance(compiled, TurnBasedAdapter)
+
+        await compiled.invoke("hello")
+        await compiled.invoke("world")
+
+        # Check that turns were recorded
+        assert len(compiled.weave) == 2
+
+    @pytest.mark.asyncio
+    async def test_turnbased_tracks_entropy(self) -> None:
+        """TurnBasedAdapter tracks entropy spending."""
+        projector = LocalProjector()
+        compiled = projector.compile(TurnBasedAgent)
+
+        assert isinstance(compiled, TurnBasedAdapter)
+
+        # Initially no entropy spent
+        initial_remaining = compiled.entropy_remaining
+
+        await compiled.invoke("test")
+
+        # Entropy should decrease
+        assert compiled.entropy_remaining < initial_remaining
+
+    @pytest.mark.asyncio
+    async def test_turnbased_get_context(self) -> None:
+        """TurnBasedAdapter.get_context() returns causal history."""
+        projector = LocalProjector()
+        compiled = projector.compile(TurnBasedAgent)
+
+        assert isinstance(compiled, TurnBasedAdapter)
+
+        # Initially empty context
+        context = compiled.get_context()
+        assert context == []
+
+        # After invoke, context has one turn
+        await compiled.invoke("first")
+        context = compiled.get_context()
+        assert len(context) == 1
+
+    def test_turnbased_with_stateful_ordering(self) -> None:
+        """Stateful wraps nucleus, TurnBased wraps stateful."""
+        projector = LocalProjector()
+        compiled = projector.compile(StatefulTurnBasedAgent)
+
+        # Outermost should be TurnBasedAdapter
+        assert isinstance(compiled, TurnBasedAdapter)
+        # Inner should be StatefulAdapter
+        assert isinstance(compiled.inner, StatefulAdapter)
+
+    @pytest.mark.asyncio
+    async def test_turnbased_with_stateful_is_invocable(self) -> None:
+        """Stateful+TurnBased agent can be invoked."""
+        projector = LocalProjector()
+        compiled = projector.compile(StatefulTurnBasedAgent)
+
+        result = await compiled.invoke("test")
+
+        assert result == "stateful-turnbased:test"
+
+    @pytest.mark.asyncio
+    async def test_turnbased_record_turn_manually(self) -> None:
+        """Can manually record turns with different types."""
+        projector = LocalProjector()
+        compiled = projector.compile(TurnBasedAgent)
+
+        assert isinstance(compiled, TurnBasedAdapter)
+
+        # Record a THOUGHT turn manually
+        turn_id = await compiled.record_turn(
+            content="Thinking...",
+            turn_type="THOUGHT",
+            confidence=0.8,
+        )
+
+        assert turn_id is not None
+        assert len(compiled.weave) == 1
+
+    def test_turnbased_default_configuration(self) -> None:
+        """TurnBasedAdapter has sensible defaults."""
+        projector = LocalProjector()
+        compiled = projector.compile(TurnBasedAgent)
+
+        assert isinstance(compiled, TurnBasedAdapter)
+        assert compiled.allowed_types is None  # All allowed
+        assert compiled.dependency_policy == "causal_cone"
+        assert compiled.thought_collapse is True
+        assert compiled.entropy_budget == 1.0
+        assert compiled.surplus_fraction == 0.1

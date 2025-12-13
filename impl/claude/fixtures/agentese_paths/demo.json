@@ -1,0 +1,58 @@
+[
+  {
+    "agent_id": "robin",
+    "agent_name": "Robin",
+    "path": "world.codebase.search",
+    "args": "\"def authenticate\"",
+    "sub_path": "concept.security.authentication"
+  },
+  {
+    "agent_id": "robin",
+    "agent_name": "Robin",
+    "path": "self.memory.recall",
+    "args": "\"previous_audits\"",
+    "sub_path": null
+  },
+  {
+    "agent_id": "robin",
+    "agent_name": "Robin",
+    "path": "world.tool.grep",
+    "args": "\"-r token_validate\"",
+    "sub_path": null
+  },
+  {
+    "agent_id": "g-gent",
+    "agent_name": "Grammar",
+    "path": "concept.syntax.parse",
+    "args": "Expr -> Term Op Term",
+    "sub_path": "concept.category.morphism"
+  },
+  {
+    "agent_id": "psi-gent",
+    "agent_name": "Psychopomp",
+    "path": "void.sip",
+    "args": "",
+    "sub_path": "concept.metaphor.bridge"
+  },
+  {
+    "agent_id": "o-gent",
+    "agent_name": "Observer",
+    "path": "time.trace.witness",
+    "args": "robin.session",
+    "sub_path": null
+  },
+  {
+    "agent_id": "k-gent",
+    "agent_name": "K-gent",
+    "path": "self.soul.reflect",
+    "args": "\"composability\"",
+    "sub_path": "concept.philosophy.design"
+  },
+  {
+    "agent_id": "l-gent",
+    "agent_name": "Library",
+    "path": "world.registry.lookup",
+    "args": "\"AuthenticationHandler\"",
+    "sub_path": "self.catalog.index"
+  }
+]

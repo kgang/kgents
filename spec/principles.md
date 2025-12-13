@@ -135,6 +135,36 @@ Agents should generate the **smallest output that can be reliably composed**, no
 
 **Corollary**: Multi-section output formats (METADATA + CODE) can avoid serialization issues when outputs contain diverse data types, but the principle still holds—one logical output per call.
 
+### From Enumeration to Generation
+
+> *"Don't enumerate the flowers. Describe the garden's grammar."*
+
+The Composable principle extends beyond runtime composition to **design-time generation**:
+
+- **Operads define grammar**: Composition patterns are programmable, not hardcoded
+- **Primitives generate**: A small set of atomic agents plus operad operations → infinite valid compositions
+- **Closure replaces enumeration**: Instead of listing 600 CLI commands, define the operad that generates them
+
+**The Two Paths to Valid Composition**:
+
+Both paths produce valid compositions because the operad guarantees validity:
+
+```python
+# Path 1: Careful Design (intentional)
+pipeline = soul_operad.compose(["ground", "introspect", "shadow", "dialectic"])
+
+# Path 2: Chaotic Happenstance (void.* entropy)
+pipeline = await void.compose.sip(
+    primitives=PRIMITIVES,
+    grammar=soul_operad,
+    entropy=0.7
+)
+```
+
+The operad ensures validity. Entropy introduces variation. Both paths lead to the same garden.
+
+**See**: AD-003 (Generative Over Enumerative) in Architectural Decisions.
+
 ### Anti-patterns
 - Monolithic agents that can't be broken apart
 - Agents with hidden state that prevents composition
@@ -705,6 +735,7 @@ When designing or reviewing an agent, ask:
 | Transparent Infrastructure | Does infrastructure communicate what's happening? |
 | Graceful Degradation | Does the system work (degraded) when dependencies are missing? |
 | Spec-Driven Infrastructure | Is the deployment derived from spec, or hand-written? |
+| Pre-Computed Richness | Are demos/tests using real pre-computed data, or synthetic stubs? |
 
 A "no" on any principle is a signal to reconsider.
 
@@ -735,3 +766,148 @@ class UniversalFunctor(Generic[F]):
 - Halo capabilities compile to functor composition
 
 **Implementation**: See `plans/architecture/alethic-algebra-tactics.md`
+
+### AD-002: Polynomial Generalization (2025-12-13)
+
+> **Agents SHOULD generalize from `Agent[A, B]` to `PolyAgent[S, A, B]` where state-dependent behavior is required.**
+
+**Context**: The categorical critique revealed that `Agent[A,B] ≅ A → B` is insufficient—real agents have **modes**. An agent that accepts different inputs based on its internal state cannot be modeled as a simple function. Polynomial functors (Spivak, 2024) capture this naturally.
+
+**Decision**: Agents with state-dependent behavior use `PolyAgent[S, A, B]`:
+
+```python
+@dataclass(frozen=True)
+class PolyAgent(Generic[S, A, B]):
+    """Agent as polynomial functor: P(y) = Σ_{s ∈ positions} y^{directions(s)}"""
+    positions: FrozenSet[S]                    # Valid states (modes)
+    directions: Callable[[S], FrozenSet[A]]    # State-dependent valid inputs
+    transition: Callable[[S, A], tuple[S, B]]  # State × Input → (NewState, Output)
+```
+
+**Key insight**: `Agent[A, B]` embeds in `PolyAgent[Unit, A, B]`—traditional agents are single-state polynomials.
+
+**Consequences**:
+- K-gent uses `SOUL_POLYNOMIAL` with 7 eigenvector contexts as states
+- D-gent uses `MEMORY_POLYNOMIAL` with IDLE/LOADING/STORING/QUERYING/FORGETTING states
+- E-gent uses `EVOLUTION_POLYNOMIAL` with 8-phase thermodynamic cycle
+- Composition via **wiring diagrams**, not just `>>` operator
+- Operads define composition grammar programmatically
+
+**The Three Layers**:
+
+| Layer | Description | Purpose |
+|-------|-------------|---------|
+| **Primitives** | Atomic polynomial agents | Building blocks |
+| **Operads** | Composition grammar | What combinations are valid |
+| **Sheaves** | Gluing local → global | Emergence from composition |
+
+**Implementation**: See `plans/skills/polynomial-agent.md`, `impl/claude/agents/poly/`
+
+### AD-003: Generative Over Enumerative (2025-12-13)
+
+> **System design SHOULD define grammars that generate valid compositions, not enumerate instances.**
+
+**Context**: Creative exploration produced 600+ ideas for CLI commands. Enumerating instances is not scalable or maintainable. The categorical insight: define the **operad** (composition grammar), and instances are derived.
+
+**Decision**: Instead of listing commands, define operads that generate them:
+
+```python
+# Enumerative (anti-pattern):
+commands = ["kg soul vibe", "kg soul drift", "kg soul shadow", ...]  # 600+ items
+
+# Generative (correct):
+SOUL_OPERAD = Operad(
+    operations={
+        "introspect": Operation(arity=0, compose=introspect_compose),
+        "shadow": Operation(arity=1, compose=shadow_compose),
+        "dialectic": Operation(arity=2, compose=dialectic_compose),
+    }
+)
+# CLI commands derived: operad.operations → handlers
+```
+
+**Consequences**:
+- CLI handlers derived from operad operations via `CLIAlgebra` functor
+- Tests derived from operad laws via `SpecProjector`
+- Documentation derived from operation signatures
+- New commands added by extending operad, not editing lists
+
+**The Generative Equation**:
+```
+Operad × Primitives → ∞ valid compositions (generated)
+```
+
+**Implementation**: See `plans/ideas/impl/meta-construction.md`
+
+### AD-004: Pre-Computed Richness (2025-12-13)
+
+> **Demo data and QA fixtures SHOULD be pre-computed with real LLM outputs, not synthetic stubs.**
+
+**Context**: Any given LLM task done once is definitionally cheap; when orchestrated and self-compounded, they get expensive. Demo systems that use hardcoded strings miss the soul. The insight: **pre-generate rich data once, hotload forever**.
+
+**Decision**: All demo and QA systems use pre-computed LLM outputs:
+
+```python
+# Anti-pattern (synthetic stub):
+def create_demo_snapshot() -> AgentSnapshot:
+    return AgentSnapshot(name="Demo Agent", summary="A placeholder summary")
+
+# Correct (pre-computed richness):
+def create_demo_snapshot() -> AgentSnapshot:
+    return load_hotdata("fixtures/agent_snapshots/soul_in_deliberation.json")
+
+# The fixture was generated once by running:
+#   void.compose.sip(agent, entropy=0.8) → serialize → fixtures/
+```
+
+**The Three Truths**:
+
+1. **Demo kgents ARE kgents**: There is no distinction between "demo" and "real" - demos use the same data paths
+2. **LLM-once is cheap**: One LLM call to generate a fixture is negligible; repeated calls compound
+3. **Hotload everything**: Any pre-computed output can be swapped at runtime for development velocity
+
+**The HotData Protocol**:
+
+| Source | Cost | Usage |
+|--------|------|-------|
+| Pre-computed JSON | Near-zero | Production demos, tests |
+| Cached LLM output | One-time | Fixture generation |
+| Live LLM | Per-call | Only when freshness required |
+
+**Implementation Pattern**:
+
+```python
+@dataclass
+class HotData:
+    """Hotloadable pre-computed data with optional refresh."""
+    path: Path
+    schema: type[T]
+    ttl: timedelta | None = None  # None = forever valid
+
+    def load(self) -> T:
+        """Load from pre-computed file."""
+        return self.schema.from_json(self.path.read_text())
+
+    async def refresh(self, generator: Callable[[], Awaitable[T]]) -> T:
+        """Regenerate via LLM if stale."""
+        if self._is_fresh():
+            return self.load()
+        result = await generator()
+        self.path.write_text(result.to_json())
+        return result
+```
+
+**Consequences**:
+- All demo screens (`demo_all_screens.py`, `demo_glass_terminal.py`) use hotloaded fixtures
+- Test fixtures are generated by actual agents, not hand-crafted
+- `fixtures/` directory contains versioned, pre-computed outputs
+- `kg fixture refresh <path>` regenerates stale fixtures via LLM
+
+**The Hotload Principle**:
+```
+Pre-compute → Serialize → Hotload → (Optionally) Refresh
+     ↓             ↓          ↓                ↓
+   LLM once    JSON/YAML   Near-zero      LLM only when stale
+```
+
+*Zen Principle: The first spark costs nothing. The sustained fire requires fuel.*

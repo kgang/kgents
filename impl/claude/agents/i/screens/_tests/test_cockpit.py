@@ -15,11 +15,14 @@ from datetime import datetime
 
 import pytest
 from agents.i.data.core_types import Phase
+from agents.i.data.garden import PolynomialState, YieldTurn
 from agents.i.data.state import AgentSnapshot
 from agents.i.screens.cockpit import (
     CockpitScreen,
+    PolynomialStatePanel,
     SemaphoreDisplay,
     ThoughtsStream,
+    YieldQueuePanel,
     create_demo_snapshot,
 )
 
@@ -403,3 +406,211 @@ class TestCockpitScreenCss:
     def test_css_contains_slider_panel(self) -> None:
         """CSS defines slider panel."""
         assert ".slider-panel" in CockpitScreen.CSS
+
+
+# ─────────────────────────────────────────────────────────────
+# NEW TESTS for Enhanced CockpitScreen
+# ─────────────────────────────────────────────────────────────
+
+
+class TestPolynomialStatePanel:
+    """Tests for PolynomialStatePanel widget (NEW)."""
+
+    def test_creation_with_demo_state(self) -> None:
+        """Panel can be created with demo polynomial state."""
+        panel = PolynomialStatePanel()
+        assert panel.state is not None
+        assert panel.state.current_mode != ""
+
+    def test_creation_with_custom_state(self) -> None:
+        """Panel can be created with custom state."""
+        state = PolynomialState(
+            current_mode="GROUNDING",
+            valid_inputs=["Claim"],
+            state_hash="abc123",
+        )
+        panel = PolynomialStatePanel(state=state)
+        assert panel.state == state
+
+    def test_render_shows_current_mode(self) -> None:
+        """Rendering shows current mode."""
+        state = PolynomialState(current_mode="DELIBERATING")
+        panel = PolynomialStatePanel(state=state)
+        result = panel.render()
+
+        assert "DELIBERATING" in result
+        assert "Mode:" in result
+
+    def test_render_shows_state_hash(self) -> None:
+        """Rendering shows state hash."""
+        state = PolynomialState(
+            current_mode="JUDGING",
+            state_hash="7a3f2e1d",
+        )
+        panel = PolynomialStatePanel(state=state)
+        result = panel.render()
+
+        assert "7a3f2e1d" in result
+
+    def test_render_shows_valid_inputs(self) -> None:
+        """Rendering shows valid inputs."""
+        state = PolynomialState(
+            current_mode="GROUNDING",
+            valid_inputs=["Claim", "Evidence"],
+        )
+        panel = PolynomialStatePanel(state=state)
+        result = panel.render()
+
+        assert "Claim" in result
+        assert "Evidence" in result
+
+
+class TestYieldQueuePanel:
+    """Tests for YieldQueuePanel widget (NEW)."""
+
+    def test_empty_queue(self) -> None:
+        """Empty queue shows no pending yields."""
+        panel = YieldQueuePanel(yields=[])
+        result = panel.render()
+        assert "No pending yields" in result
+
+    def test_single_yield(self) -> None:
+        """Single yield is rendered."""
+        yield_turn = YieldTurn(
+            id="yield-1",
+            content="Execute dangerous operation?",
+            turn_type="YIELD:ACTION",
+            timestamp=123.0,
+        )
+        panel = YieldQueuePanel(yields=[yield_turn])
+        result = panel.render()
+
+        assert "Execute dangerous operation?" in result
+        assert "YIELD:ACTION" in result
+        assert "⏳" in result  # Pending indicator
+
+    def test_approved_yield(self) -> None:
+        """Approved yield shows checkmark."""
+        yield_turn = YieldTurn(
+            id="yield-1",
+            content="Safe operation",
+            turn_type="YIELD:ACTION",
+            timestamp=123.0,
+            is_approved=True,
+        )
+        panel = YieldQueuePanel(yields=[yield_turn])
+        result = panel.render()
+
+        assert "✓" in result  # Approved indicator
+
+    def test_multiple_yields(self) -> None:
+        """Multiple yields are rendered."""
+        yields = [
+            YieldTurn(
+                id="yield-1",
+                content="First yield",
+                turn_type="YIELD:ACTION",
+                timestamp=123.0,
+            ),
+            YieldTurn(
+                id="yield-2",
+                content="Second yield",
+                turn_type="YIELD:SPEECH",
+                timestamp=124.0,
+            ),
+        ]
+        panel = YieldQueuePanel(yields=yields)
+        result = panel.render()
+
+        assert "First yield" in result
+        assert "Second yield" in result
+        assert "Pending approvals: 2" in result
+
+
+class TestCockpitScreenEnhanced:
+    """Tests for enhanced CockpitScreen with polynomial and yield panels (NEW)."""
+
+    def test_demo_mode_creates_polynomial_state(self) -> None:
+        """Demo mode creates polynomial state."""
+        screen = CockpitScreen(demo_mode=True)
+        assert screen._polynomial_state is not None
+        assert screen._polynomial_state.current_mode != ""
+
+    def test_demo_mode_creates_yield_queue(self) -> None:
+        """Demo mode creates yield queue."""
+        screen = CockpitScreen(demo_mode=True)
+        assert screen._yield_queue is not None
+        assert len(screen._yield_queue) > 0
+
+    def test_get_polynomial_state(self) -> None:
+        """get_polynomial_state returns current state."""
+        screen = CockpitScreen(demo_mode=True)
+        state = screen.get_polynomial_state()
+        assert state == screen._polynomial_state
+
+    def test_get_pending_yields(self) -> None:
+        """get_pending_yields returns yield queue."""
+        screen = CockpitScreen(demo_mode=True)
+        yields = screen.get_pending_yields()
+        assert yields == screen._yield_queue
+
+    def test_approve_yield_updates_status(self) -> None:
+        """approve_yield marks yield as approved."""
+        yield_turn = YieldTurn(
+            id="test-yield",
+            content="Test operation",
+            turn_type="YIELD:ACTION",
+            timestamp=123.0,
+        )
+        screen = CockpitScreen(demo_mode=True)
+        screen._yield_queue = [yield_turn]
+
+        screen.approve_yield("test-yield")
+
+        assert yield_turn.is_approved is True
+
+    def test_reject_yield_removes_from_queue(self) -> None:
+        """reject_yield removes yield from queue."""
+        yield_turn = YieldTurn(
+            id="test-yield",
+            content="Test operation",
+            turn_type="YIELD:ACTION",
+            timestamp=123.0,
+        )
+        screen = CockpitScreen(demo_mode=True)
+        screen._yield_queue = [yield_turn]
+
+        screen.reject_yield("test-yield", "Too dangerous")
+
+        assert len(screen._yield_queue) == 0
+        assert yield_turn.reason == "Too dangerous"
+
+    def test_reject_nonexistent_yield_doesnt_crash(self) -> None:
+        """Rejecting non-existent yield doesn't crash."""
+        screen = CockpitScreen(demo_mode=True)
+        initial_len = len(screen._yield_queue)
+
+        # Should not crash
+        screen.reject_yield("nonexistent-id", "Reason")
+
+        # Queue unchanged
+        assert len(screen._yield_queue) == initial_len
+
+    def test_approve_nonexistent_yield_doesnt_crash(self) -> None:
+        """Approving non-existent yield doesn't crash."""
+        screen = CockpitScreen(demo_mode=True)
+
+        # Should not crash
+        screen.approve_yield("nonexistent-id")
+
+
+class TestCockpitScreenCssEnhanced:
+    """Tests for CSS styling of new panels."""
+
+    def test_css_contains_polynomial_panel(self) -> None:
+        """CSS defines polynomial panel."""
+        assert ".polynomial-panel" in CockpitScreen.CSS
+
+    def test_css_contains_yield_panel(self) -> None:
+        """CSS defines yield panel."""
+        assert ".yield-panel" in CockpitScreen.CSS

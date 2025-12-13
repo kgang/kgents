@@ -113,6 +113,21 @@ from .persistence_ext import (
     create_versioned_agent,
 )
 from .persistent import PersistentAgent
+
+# Phase 3 Polyfunctor: D-gent Polynomial (Memory States)
+from .polynomial import (
+    MEMORY_POLYNOMIAL,
+    ForgetCommand,
+    LoadCommand,
+    MemoryPhase,
+    MemoryPolynomialAgent,
+    MemoryResponse,
+    QueryCommand,
+    StoreCommand,
+    memory_directions,
+    memory_transition,
+    reset_memory,
+)
 from .protocol import DataAgent
 from .symbiont import Symbiont
 from .volatile import VolatileAgent
@@ -605,4 +620,16 @@ __all__ = [
     "ResumeResult",
     "create_crystal_engine",
     "create_task_state",
+    # Phase 3 Polyfunctor: D-gent Polynomial
+    "MemoryPhase",
+    "LoadCommand",
+    "StoreCommand",
+    "QueryCommand",
+    "ForgetCommand",
+    "MemoryResponse",
+    "MEMORY_POLYNOMIAL",
+    "memory_directions",
+    "memory_transition",
+    "MemoryPolynomialAgent",
+    "reset_memory",
 ]

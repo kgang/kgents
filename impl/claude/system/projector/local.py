@@ -157,6 +157,359 @@ class SoulfulAdapter(Agent[A, B], Generic[A, B]):
 
 
 @dataclass
+class TurnBasedAdapter(Agent[A, B], Generic[A, B]):
+    """
+    Adapter that wraps an agent with Turn-gents Protocol behavior.
+
+    The Turn-gents Protocol: interactions as causal morphisms.
+
+    This adapter:
+    1. Maintains a TheWeave for turn history
+    2. Computes CausalCone context before each invoke
+    3. Records turns to the weave after each invoke
+    4. Tracks confidence and entropy costs
+    5. Auto-yields for low-confidence ACTION turns
+
+    The key insight: "Context is a Light Cone, not a Window."
+    Instead of feeding the full history, we compute the causal
+    cone for the current agent to get minimal relevant context.
+
+    Args:
+        inner: The wrapped agent
+        allowed_types: Which turn types are allowed
+        dependency_policy: How to compute dependencies
+        cone_depth: Maximum depth of causal cone
+        thought_collapse: Whether to collapse THOUGHT turns
+        entropy_budget: Budget for order turns
+        surplus_fraction: Fraction for exploration
+        yield_threshold: Confidence threshold for YIELD
+        yield_approvers: Default approvers for auto-yield
+    """
+
+    inner: Agent[A, B]
+    allowed_types: frozenset[str] | None = None
+    dependency_policy: str = "causal_cone"
+    cone_depth: int | None = None
+    thought_collapse: bool = True
+    entropy_budget: float = 1.0
+    surplus_fraction: float = 0.1
+    yield_threshold: float = 0.3
+    yield_approvers: frozenset[str] = field(
+        default_factory=lambda: frozenset({"human"})
+    )
+
+    # Runtime state (not part of configuration)
+    _weave: Any = field(default=None, init=False, repr=False)
+    _cone: Any = field(default=None, init=False, repr=False)
+    _entropy_spent: float = field(default=0.0, init=False, repr=False)
+    _yield_handler: Any = field(default=None, init=False, repr=False)
+
+    @property
+    def name(self) -> str:
+        return f"TurnBased({self.inner.name})"
+
+    @property
+    def weave(self) -> Any:
+        """Access the turn history weave (from lifecycle or lazy-initialized)."""
+        if self._weave is None:
+            self._weave = self._get_or_create_weave()
+        return self._weave
+
+    def _get_or_create_weave(self) -> Any:
+        """
+        Get global weave from lifecycle or create instance-local fallback.
+
+        The global weave is preferred because it enables:
+        - Cross-agent turn correlation
+        - CLI debugging via `kg turns` and `kg dag`
+        - Compression metrics for H1 validation
+
+        Falls back to instance-local weave if lifecycle not available.
+        """
+        # Try lifecycle state first (shared weave)
+        try:
+            from protocols.cli.hollow import get_lifecycle_state
+
+            state = get_lifecycle_state()
+            if state and state.weave is not None:
+                return state.weave
+        except ImportError:
+            pass
+
+        # Fallback to instance-local weave
+        from weave import TheWeave
+
+        return TheWeave()
+
+    @property
+    def cone(self) -> Any:
+        """Access the causal cone projector (lazy-initialized)."""
+        if self._cone is None:
+            from weave import CausalCone
+
+            self._cone = CausalCone(self.weave)
+        return self._cone
+
+    @property
+    def yield_handler(self) -> Any:
+        """Access the yield handler (lazy-initialized)."""
+        if self._yield_handler is None:
+            from weave.yield_handler import YieldHandler
+
+            self._yield_handler = YieldHandler()
+        return self._yield_handler
+
+    def get_context(self, agent_id: str | None = None) -> list[Any]:
+        """
+        Get the causal context for the next turn.
+
+        This is the key operation: compute minimal context
+        via CausalCone projection instead of full history.
+
+        Also logs compression metrics for H1 validation when using
+        causal_cone dependency policy.
+
+        Args:
+            agent_id: Optional agent ID (defaults to inner.name)
+
+        Returns:
+            List of causally-relevant events in topological order
+        """
+        aid = agent_id or self.inner.name
+
+        # Get full weave size for compression metrics
+        full_size = len(self.weave)
+
+        context: list[Any]
+        if self.dependency_policy == "causal_cone":
+            context = self.cone.project_context(aid)
+        elif self.dependency_policy == "thread_only":
+            context = self.weave.thread(aid)
+        else:  # explicit
+            context = []
+
+        # Apply thought collapse if enabled
+        if self.thought_collapse:
+            from weave.turn import TurnType
+
+            context = [
+                e
+                for e in context
+                if not (hasattr(e, "turn_type") and e.turn_type == TurnType.THOUGHT)
+            ]
+
+        # Apply cone depth limit if set
+        if self.cone_depth is not None and len(context) > self.cone_depth:
+            context = context[-self.cone_depth :]
+
+        # Log compression metrics for H1 validation
+        # Only log when using causal_cone and there's meaningful data
+        if self.dependency_policy == "causal_cone" and full_size > 0:
+            try:
+                from weave.metrics import estimate_tokens, log_compression
+
+                full_tokens = estimate_tokens(full_size)
+                cone_tokens = estimate_tokens(len(context))
+                log_compression(aid, full_tokens, cone_tokens)
+            except ImportError:
+                pass  # Metrics module not available
+
+        return context
+
+    async def record_turn(
+        self,
+        content: Any,
+        turn_type: str = "SPEECH",
+        confidence: float = 1.0,
+        entropy_cost: float = 0.0,
+        depends_on: set[str] | None = None,
+    ) -> str:
+        """
+        Record a turn to the weave.
+
+        Args:
+            content: The turn content
+            turn_type: Type of turn (SPEECH, ACTION, THOUGHT, YIELD, SILENCE)
+            confidence: Meta-cognition confidence score
+            entropy_cost: Cost of this turn
+            depends_on: Explicit dependencies (auto-computed if None)
+
+        Returns:
+            The turn ID
+        """
+        from weave import Turn
+        from weave import TurnType as TT
+
+        # Parse turn type
+        tt = getattr(TT, turn_type, TT.SPEECH)
+
+        # Validate against allowed types
+        if self.allowed_types is not None and turn_type not in self.allowed_types:
+            tt = TT.SPEECH  # Default to SPEECH if not allowed
+
+        # Create turn
+        turn = Turn.create_turn(
+            content=content,
+            source=self.inner.name,
+            turn_type=tt,
+            confidence=confidence,
+            entropy_cost=entropy_cost,
+        )
+
+        # Compute dependencies if not provided
+        if depends_on is None:
+            tip = self.weave.tip(self.inner.name)
+            depends_on = {tip.id} if tip else None
+
+        # Record to weave
+        self.weave.monoid.append_mut(turn, depends_on)
+
+        # Refresh cone cache
+        self.cone.refresh_braid()
+
+        # Track entropy
+        self._entropy_spent += entropy_cost
+
+        return turn.id
+
+    @property
+    def entropy_remaining(self) -> float:
+        """Get remaining entropy budget."""
+        return max(0.0, self.entropy_budget - self._entropy_spent)
+
+    @property
+    def surplus_remaining(self) -> float:
+        """Get remaining surplus (exploration) budget."""
+        surplus_total = self.entropy_budget * self.surplus_fraction
+        surplus_spent = min(
+            self._entropy_spent * self.surplus_fraction,
+            surplus_total,
+        )
+        return max(0.0, surplus_total - surplus_spent)
+
+    def should_yield(self, confidence: float, turn_type: str = "ACTION") -> bool:
+        """
+        Determine if an action should generate a YIELD turn.
+
+        Based on yield_threshold configuration and turn type.
+
+        Args:
+            confidence: The action's confidence score [0.0, 1.0]
+            turn_type: The type of turn being evaluated
+
+        Returns:
+            True if the action should yield for approval
+        """
+        from weave.yield_handler import should_yield
+
+        return should_yield(confidence, self.yield_threshold, turn_type)
+
+    async def create_yield_turn(
+        self,
+        content: Any,
+        yield_reason: str,
+        *,
+        required_approvers: set[str] | None = None,
+        confidence: float = 0.5,
+        entropy_cost: float = 0.0,
+    ) -> Any:
+        """
+        Create and record a YIELD turn.
+
+        Args:
+            content: The proposed action/content
+            yield_reason: Why approval is needed
+            required_approvers: Who must approve (defaults to yield_approvers)
+            confidence: Meta-cognition confidence score
+            entropy_cost: Cost of this turn
+
+        Returns:
+            The YieldTurn that was created
+        """
+        from weave import YieldTurn
+
+        approvers = required_approvers or set(self.yield_approvers)
+
+        yield_turn = YieldTurn.create_yield(
+            content=content,
+            source=self.inner.name,
+            yield_reason=yield_reason,
+            required_approvers=approvers,
+            confidence=confidence,
+            entropy_cost=entropy_cost,
+        )
+
+        # Record to weave
+        tip = self.weave.tip(self.inner.name)
+        depends_on = {tip.id} if tip else None
+        self.weave.monoid.append_mut(yield_turn, depends_on)
+
+        # Refresh cone cache
+        self.cone.refresh_braid()
+
+        # Track entropy
+        self._entropy_spent += entropy_cost
+
+        return yield_turn
+
+    async def request_approval(
+        self,
+        content: Any,
+        yield_reason: str,
+        *,
+        required_approvers: set[str] | None = None,
+        timeout: float | None = None,
+        confidence: float = 0.5,
+    ) -> Any:
+        """
+        Create a YIELD turn and block until approval/rejection/timeout.
+
+        This is the high-level API for yielding with approval flow.
+
+        Args:
+            content: The proposed action/content
+            yield_reason: Why approval is needed
+            required_approvers: Who must approve
+            timeout: Optional timeout in seconds
+            confidence: Meta-cognition confidence score
+
+        Returns:
+            ApprovalResult with status and final turn state
+        """
+        yield_turn = await self.create_yield_turn(
+            content=content,
+            yield_reason=yield_reason,
+            required_approvers=required_approvers,
+            confidence=confidence,
+        )
+
+        return await self.yield_handler.request_approval(yield_turn, timeout=timeout)
+
+    async def invoke(self, input_data: A) -> B:
+        """
+        Invoke the inner agent with turn-based behavior.
+
+        1. Compute causal context
+        2. Invoke inner agent
+        3. Record turn to weave
+
+        The context is available but not automatically injected -
+        the agent can query get_context() if needed.
+        """
+        result = await self.inner.invoke(input_data)
+
+        # Record as SPEECH turn (default)
+        await self.record_turn(
+            content=result,
+            turn_type="SPEECH",
+            confidence=1.0,
+            entropy_cost=0.01,  # Minimal cost for basic turns
+        )
+
+        return result
+
+
+@dataclass
 class LocalProjector(Projector[Agent[Any, Any]]):
     """
     Compiles agent Halo into local Python runtime.
@@ -233,6 +586,7 @@ class LocalProjector(Projector[Agent[Any, Any]]):
             "SoulfulCapability",
             "ObservableCapability",
             "StreamableCapability",
+            "TurnBasedCapability",
         }
 
         for cap in halo:
@@ -257,13 +611,19 @@ class LocalProjector(Projector[Agent[Any, Any]]):
             if soulful_cap is not None:
                 agent = self._apply_soulful(agent, soulful_cap)
 
-        # 4. Apply @Observable (Mirror)
+        # 4. Apply @TurnBased (Turn-gents Protocol)
+        if _has_cap("TurnBasedCapability"):
+            turnbased_cap = _get_cap("TurnBasedCapability")
+            if turnbased_cap is not None:
+                agent = self._apply_turnbased(agent, turnbased_cap)
+
+        # 5. Apply @Observable (Mirror)
         # Note: Observable without Streamable just marks the agent
         observable_cap: Any = None
         if _has_cap("ObservableCapability"):
             observable_cap = _get_cap("ObservableCapability")
 
-        # 5. Apply @Streamable (Flux-functor) - outermost
+        # 6. Apply @Streamable (Flux-functor) - outermost
         if _has_cap("StreamableCapability"):
             streamable_cap = _get_cap("StreamableCapability")
             if streamable_cap is not None:
@@ -325,6 +685,34 @@ class LocalProjector(Projector[Agent[Any, Any]]):
             inner=agent,
             persona_name=cap.persona,
             persona_mode=cap.mode,
+        )
+
+    def _apply_turnbased(self, agent: Agent[Any, Any], cap: Any) -> Agent[Any, Any]:
+        """
+        Wrap agent with Turn-gents Protocol behavior.
+
+        Creates a TurnBasedAdapter that:
+        - Maintains turn history in TheWeave
+        - Computes CausalCone context before each turn
+        - Records turns after each invoke
+        - Tracks entropy costs
+
+        Args:
+            agent: The agent to wrap
+            cap: TurnBasedCapability with protocol configuration
+
+        Returns:
+            TurnBasedAdapter wrapping the agent
+        """
+        return TurnBasedAdapter(
+            inner=agent,
+            allowed_types=cap.allowed_types,
+            dependency_policy=cap.dependency_policy,
+            cone_depth=cap.cone_depth,
+            thought_collapse=cap.thought_collapse,
+            entropy_budget=cap.entropy_budget,
+            surplus_fraction=cap.surplus_fraction,
+            yield_threshold=cap.yield_threshold,
         )
 
     def _apply_observable_only(
@@ -397,11 +785,12 @@ class LocalProjector(Projector[Agent[Any, Any]]):
         """
         Check if LocalProjector supports a capability type.
 
-        LocalProjector supports all four standard capabilities:
+        LocalProjector supports all five standard capabilities:
         - StatefulCapability
         - SoulfulCapability
         - ObservableCapability
         - StreamableCapability
+        - TurnBasedCapability
 
         Args:
             capability: The capability type to check
@@ -414,6 +803,7 @@ class LocalProjector(Projector[Agent[Any, Any]]):
             SoulfulCapability,
             StatefulCapability,
             StreamableCapability,
+            TurnBasedCapability,
         )
 
         return capability in {
@@ -421,6 +811,7 @@ class LocalProjector(Projector[Agent[Any, Any]]):
             SoulfulCapability,
             ObservableCapability,
             StreamableCapability,
+            TurnBasedCapability,
         }
 
     def _ensure_state_dir(self) -> Path:

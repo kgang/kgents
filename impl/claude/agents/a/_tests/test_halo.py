@@ -24,6 +24,7 @@ from ..halo import (
     SoulfulCapability,
     StatefulCapability,
     StreamableCapability,
+    TurnBasedCapability,
     get_capability,
     get_halo,
     has_capability,
@@ -669,3 +670,126 @@ class TestEdgeCases:
         assert cap2 is not None
         assert cap1.schema is dict
         assert cap2.schema is list
+
+
+# --- Test TurnBasedCapability ---
+
+
+class TestTurnBasedCapability:
+    """Tests for TurnBasedCapability (Turn-gents Protocol)."""
+
+    def test_turnbased_adds_to_halo(self) -> None:
+        """@TurnBased should add TurnBasedCapability to halo."""
+
+        @Capability.TurnBased()
+        class MyAgent(BaseAgent):
+            pass
+
+        halo = get_halo(MyAgent)
+        assert len(halo) == 1
+        assert has_capability(MyAgent, TurnBasedCapability)
+
+    def test_turnbased_default_configuration(self) -> None:
+        """@TurnBased should have sensible defaults."""
+
+        @Capability.TurnBased()
+        class MyAgent(BaseAgent):
+            pass
+
+        cap = get_capability(MyAgent, TurnBasedCapability)
+        assert cap is not None
+        assert cap.allowed_types is None  # All types allowed
+        assert cap.dependency_policy == "causal_cone"
+        assert cap.cone_depth is None  # Unlimited
+        assert cap.thought_collapse is True
+        assert cap.entropy_budget == 1.0
+        assert cap.surplus_fraction == 0.1
+        assert cap.yield_threshold == 0.3
+
+    def test_turnbased_custom_configuration(self) -> None:
+        """@TurnBased should store custom configuration."""
+
+        @Capability.TurnBased(
+            allowed_types={"SPEECH", "ACTION"},
+            dependency_policy="thread_only",
+            cone_depth=10,
+            thought_collapse=False,
+            entropy_budget=5.0,
+            surplus_fraction=0.2,
+            yield_threshold=0.5,
+        )
+        class MyAgent(BaseAgent):
+            pass
+
+        cap = get_capability(MyAgent, TurnBasedCapability)
+        assert cap is not None
+        assert cap.allowed_types == frozenset({"SPEECH", "ACTION"})
+        assert cap.dependency_policy == "thread_only"
+        assert cap.cone_depth == 10
+        assert cap.thought_collapse is False
+        assert cap.entropy_budget == 5.0
+        assert cap.surplus_fraction == 0.2
+        assert cap.yield_threshold == 0.5
+
+    def test_turnbased_composes_with_other_capabilities(self) -> None:
+        """@TurnBased should compose with other capabilities."""
+
+        @Capability.Stateful(schema=MockState)
+        @Capability.TurnBased(entropy_budget=10.0)
+        @Capability.Observable()
+        class MyAgent(BaseAgent):
+            pass
+
+        halo = get_halo(MyAgent)
+        assert len(halo) == 3
+        assert has_capability(MyAgent, StatefulCapability)
+        assert has_capability(MyAgent, TurnBasedCapability)
+        assert has_capability(MyAgent, ObservableCapability)
+
+    def test_turnbased_override_in_subclass(self) -> None:
+        """Child can override parent's TurnBased configuration."""
+
+        @Capability.TurnBased(entropy_budget=1.0)
+        class Parent(BaseAgent):
+            pass
+
+        @Capability.TurnBased(entropy_budget=10.0)
+        class Child(Parent):
+            pass
+
+        parent_cap = get_capability(Parent, TurnBasedCapability)
+        child_cap = get_capability(Child, TurnBasedCapability)
+
+        assert parent_cap is not None
+        assert child_cap is not None
+        assert parent_cap.entropy_budget == 1.0
+        assert child_cap.entropy_budget == 10.0
+
+    def test_turnbased_allowed_types_converted_to_frozenset(self) -> None:
+        """allowed_types should be converted to frozenset."""
+
+        @Capability.TurnBased(allowed_types={"SPEECH"})
+        class MyAgent(BaseAgent):
+            pass
+
+        cap = get_capability(MyAgent, TurnBasedCapability)
+        assert cap is not None
+        assert isinstance(cap.allowed_types, frozenset)
+
+    def test_turnbased_is_hashable(self) -> None:
+        """TurnBasedCapability should be hashable for set storage."""
+        cap1 = TurnBasedCapability()
+        cap2 = TurnBasedCapability(entropy_budget=5.0)
+        cap3 = TurnBasedCapability()  # Same as cap1
+
+        caps = {cap1, cap2, cap3}
+        assert len(caps) == 2  # cap1 and cap3 are equal
+
+    def test_turnbased_equality(self) -> None:
+        """TurnBasedCapability equality should work correctly."""
+        cap1 = TurnBasedCapability(entropy_budget=1.0)
+        cap2 = TurnBasedCapability(entropy_budget=1.0)
+        cap3 = TurnBasedCapability(entropy_budget=2.0)
+
+        assert cap1 == cap2
+        assert cap1 != cap3

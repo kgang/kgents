@@ -16,6 +16,86 @@ Ideas and concepts exist in a superspace; words are approximate projections. Mem
 
 ---
 
+## The Four Pillars
+
+M-gent architecture rests on four theoretical pillars, synthesized from cognitive science, mathematics, and philosophy:
+
+### 1. Stigmergy — Indirect Coordination
+
+> *"The artifact remembers so the agent can forget."*
+
+Memory as **pheromone field**: agents deposit traces in the environment that influence future behavior. This enables:
+- **Decentralized consensus** without explicit communication
+- **Emergent memory** from accumulated interaction patterns
+- **Temporal gradient fields** that decay naturally (Ebbinghaus integration)
+
+```python
+class PheromoneField:
+    """Memory as environmental modification."""
+    traces: dict[Concept, float]  # Intensity per concept
+    decay_rate: float = 0.1      # Natural forgetting
+
+    async def deposit(self, concept: Concept, intensity: float = 1.0):
+        """Leave a trace—indirect coordination."""
+        self.traces[concept] = self.traces.get(concept, 0) + intensity
+
+    async def sense(self, position: Concept) -> list[tuple[Concept, float]]:
+        """Perceive gradients—what paths are well-trodden?"""
+        return sorted(self.traces.items(), key=lambda x: -x[1])
+```
+
+### 2. Wittgenstein Language Games — Meaning as Use
+
+> *"The meaning of a memory is its use in a context."*
+
+Memory retrieval as participation in **language games**. Each game has:
+- **Positions** (valid memory states)
+- **Directions** (possible transitions/uses)
+- **Rules** (what counts as valid play)
+
+Modeled via polynomial functors:
+
+```
+LanguageGame(y) = Σₛ∈S y^{D(s)}
+```
+
+Where S is positions (states) and D(s) is directions (valid moves from s). Memory is not lookup—it's knowing how to *play* with the concept.
+
+### 3. Active Inference — Free Energy Minimization
+
+> *"To remember is to reduce surprise."*
+
+Under the Free Energy Principle (Friston), agents are self-evidencing systems that minimize prediction error. Memory serves to:
+- **Reduce expected free energy** (surprise about future states)
+- **Maintain identity** through temporal consistency
+- **Select actions** that confirm self-models
+
+```python
+@dataclass
+class ActiveInferenceMemory:
+    generative_model: Beliefs  # P(causes | sensations)
+    expected_states: Distribution  # What I predict
+
+    def free_energy(self, observation: Observation) -> float:
+        """Surprise + complexity cost."""
+        surprise = -log(self.generative_model.predict(observation))
+        complexity = kl_divergence(self.prior, self.posterior)
+        return surprise + complexity
+```
+
+### 4. The Accursed Share — Entropy as Creative Force
+
+> *"Surplus energy creates. Hoarding destroys."*
+
+From Bataille's general economy: systems accumulate surplus that must be *spent* or it corrupts. Applied to memory:
+- **void.sip** — Draw creative entropy from the Accursed Share
+- **void.tithe** — Pay for order through purposeful forgetting
+- **Luxurious forgetting** — Deletion as generative act
+
+Memory compression isn't loss—it's transformation of energy from specific to general.
+
+---
+
 ## The Superspace Model
 
 Concepts and ideas exist in a high-dimensional superspace. Words and tokens are low-dimensional projections:
@@ -390,9 +470,92 @@ This replaces "dump everything relevant" with "show a map of the territory."
 
 ---
 
+---
+
+## The Bi-Temporal Model
+
+Memory exists in two times simultaneously:
+
+| Time | Symbol | Meaning |
+|------|--------|---------|
+| **Event Time** | t_event | When did this happen in the world? |
+| **Knowledge Time** | t_known | When did the agent learn this? |
+
+This separation enables:
+- **Retroactive updates** — Correct past beliefs when new evidence arrives
+- **Belief archaeology** — "What did I believe at time T about event E?"
+- **Counterfactual reasoning** — "If I had known X earlier..."
+
+```python
+@dataclass
+class BiTemporalFact:
+    """A fact situated in two temporal dimensions."""
+    content: Any
+    t_event: datetime      # When it happened
+    t_known: datetime      # When we learned it
+    superseded_by: Optional[str] = None  # If corrected
+
+    def was_known_at(self, query_time: datetime) -> bool:
+        """Was this fact known at query_time?"""
+        return self.t_known <= query_time
+```
+
+---
+
+## The Weave: Trace Monoid Foundation
+
+All M-gent operations occur within **The Weave**—a trace monoid capturing causally-ordered events.
+
+### Core Concepts
+
+| Concept | Definition | M-gent Application |
+|---------|------------|-------------------|
+| **Trace** | Mazurkiewicz trace = equivalence class of concurrent histories | Memory as partial order |
+| **Independence** | I ⊆ Σ × Σ, events that can commute | Concurrent retrieval |
+| **Knot** | Synchronization barrier, merges branches | Consensus/reconciliation |
+| **Turn** | Atomic perception-deliberation-action cycle | Memory access pattern |
+
+### Memory as Trace Morphism
+
+```python
+@dataclass
+class TraceMemory:
+    """Memory respects causal structure."""
+    events: set[MemoryEvent]
+    causal_order: PartialOrder[MemoryEvent]
+    independence: set[tuple[EventType, EventType]]
+
+    def concurrent_views(self, event: MemoryEvent) -> set[MemoryEvent]:
+        """What was happening concurrently?"""
+        return {e for e in self.events
+                if not self.causal_order.related(e, event)
+                and not self.causal_order.related(event, e)}
+
+    def causal_cone(self, event: MemoryEvent) -> set[MemoryEvent]:
+        """What caused this memory?"""
+        return self.causal_order.ancestors(event)
+```
+
+---
+
 ## See Also
 
 - [anatomy.md](../anatomy.md) - Symbiont and Hypnagogic patterns
 - [d-gents/](../d-gents/) - Data agents for persistence
 - [archetypes.md](../archetypes.md) - The Consolidator archetype
-- [principles.md](../principles.md) - Ethical principle
+- [principles.md](../principles.md) - Ethical principles
+- [holographic.md](holographic.md) - Three-tier architecture
+- [primitives.md](primitives.md) - Agent implementations
+
+---
+
+## Research Foundations
+
+The M-gent specification draws from:
+
+1. **Stigmergy**: Grassé (1959), Theraulaz & Bonabeau (1999)
+2. **Language Games**: Wittgenstein, *Philosophical Investigations* (1953)
+3. **Active Inference**: Friston (2010), Parr, Pezzulo & Friston (2022)
+4. **Polynomial Functors**: Spivak (2021), *Poly: An abundant categorical setting*
+5. **Trace Monoids**: Mazurkiewicz (1977), Diekert & Rozenberg (1995)
+6. **General Economy**: Bataille, *The Accursed Share* (1949)

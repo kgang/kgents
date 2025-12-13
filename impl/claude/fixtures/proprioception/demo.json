@@ -1,0 +1,8 @@
+{
+  "strain": 0.28,
+  "pressure": 0.52,
+  "reach": 3,
+  "temperature": 0.85,
+  "trauma": "NONE",
+  "morphology": "Base() >> with_ganglia(3) >> with_vault(\"1Gi\") >> with_telemetry()"
+}

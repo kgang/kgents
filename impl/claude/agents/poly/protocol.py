@@ -196,9 +196,7 @@ class WiringDiagram(Generic[S, S2, A, B, C]):
     def composed_positions(self) -> FrozenSet[tuple[S, S2]]:
         """Product of position sets."""
         return frozenset(
-            (s1, s2)
-            for s1 in self.left.positions
-            for s2 in self.right.positions
+            (s1, s2) for s1 in self.left.positions for s2 in self.right.positions
         )
 
     def compose(self) -> PolyAgent[tuple[S, S2], A, C]:
@@ -286,8 +284,12 @@ def stateful(
     Returns:
         A PolyAgent with the specified behavior
     """
+
+    def _default_directions(s: S) -> FrozenSet[Any]:
+        return frozenset({Any})
+
     if directions_fn is None:
-        directions_fn = lambda s: frozenset({Any})
+        directions_fn = _default_directions  # type: ignore[assignment]
 
     return PolyAgent(
         name=name,
@@ -368,15 +370,123 @@ def parallel(
         new_s2, out2 = right.transition(s2, input)
         return (new_s1, new_s2), (out1, out2)
 
-    positions = frozenset(
-        (s1, s2) for s1 in left.positions for s2 in right.positions
-    )
+    positions = frozenset((s1, s2) for s1 in left.positions for s2 in right.positions)
 
     return PolyAgent(
         name=f"par({left.name},{right.name})",
         positions=positions,
         _directions=par_directions,
         _transition=par_transition,
+    )
+
+
+# =============================================================================
+# Deprecation Sugar: Agent[A, B] Compatibility
+# =============================================================================
+
+
+# Type alias for stateless agents (backwards compatibility)
+# Agent[A, B] ≅ PolyAgent[str, A, B] where state is always "ready"
+StatelessAgent = PolyAgent[str, A, B]
+"""
+Type alias for stateless polynomial agents.
+
+This provides backwards compatibility with the Agent[A, B] pattern.
+A StatelessAgent has a single "ready" state and accepts any input.
+
+Usage:
+    # Traditional Agent[A, B] pattern
+    def double(x: int) -> int:
+        return x * 2
+
+    # Lift to polynomial space
+    agent: StatelessAgent[int, int] = from_function("double", double)
+"""
+
+
+def to_bootstrap_agent(poly: PolyAgent[S, A, B]) -> Any:
+    """
+    Convert a PolyAgent to a bootstrap Agent-compatible wrapper.
+
+    This enables polynomial agents to work with existing code expecting
+    the bootstrap.types.Agent interface.
+
+    Note: Returns Any to avoid circular import with bootstrap.types.
+
+    Example:
+        >>> poly = from_function("doubler", lambda x: x * 2)
+        >>> agent = to_bootstrap_agent(poly)
+        >>> await agent.invoke(21)  # Returns 42
+    """
+    from bootstrap.types import Agent as BootstrapAgent
+
+    class PolyAgentWrapper(BootstrapAgent[A, B]):
+        """Wrapper that adapts PolyAgent to bootstrap Agent interface."""
+
+        def __init__(self, poly_agent: PolyAgent[S, A, B], initial_state: S) -> None:
+            self._poly = poly_agent
+            self._state = initial_state
+
+        @property
+        def name(self) -> str:
+            return self._poly.name
+
+        async def invoke(self, input: A) -> B:
+            """Execute the polynomial agent."""
+            self._state, output = self._poly.transition(self._state, input)
+            return output
+
+    # Find initial state (first position, or "ready" for stateless)
+    initial: S
+    if "ready" in poly.positions:
+        initial = "ready"  # type: ignore
+    else:
+        initial = next(iter(poly.positions))
+
+    return PolyAgentWrapper(poly, initial)
+
+
+def from_bootstrap_agent(agent: Any) -> PolyAgent[str, Any, Any]:
+    """
+    Convert a bootstrap Agent to a PolyAgent.
+
+    The resulting polynomial has a single "ready" state.
+
+    Note: Takes Any to avoid circular import with bootstrap.types.
+
+    Example:
+        >>> from agents import agent
+        >>> @agent
+        ... async def doubler(x: int) -> int:
+        ...     return x * 2
+        >>> poly = from_bootstrap_agent(doubler)
+    """
+    import asyncio
+
+    def transition(state: str, input: Any) -> tuple[str, Any]:
+        # Run the async invoke synchronously if needed
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            # We're in an async context - this is problematic
+            # Return a coroutine wrapper
+            async def run() -> tuple[str, Any]:
+                result = await agent.invoke(input)
+                return "ready", result
+
+            # For now, just document this limitation
+            raise RuntimeError(
+                "Cannot convert async agent in running event loop. "
+                "Use to_bootstrap_agent() in the other direction instead."
+            )
+        else:
+            result = loop.run_until_complete(agent.invoke(input))
+            return "ready", result
+
+    return PolyAgent(
+        name=agent.name,
+        positions=frozenset({"ready"}),
+        _directions=lambda s: frozenset({Any}),
+        _transition=transition,
     )
 
 
@@ -394,4 +504,8 @@ __all__ = [
     # Composition
     "sequential",
     "parallel",
+    # Deprecation Sugar
+    "StatelessAgent",
+    "to_bootstrap_agent",
+    "from_bootstrap_agent",
 ]

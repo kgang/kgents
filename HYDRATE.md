@@ -17,7 +17,7 @@
 
 ## Status
 
-**Tests**: 12,015 | **Mypy**: Strict (0 errors) | **Branch**: `main`
+**Tests**: 12,515 | **Mypy**: Strict (0 errors) | **Branch**: `feat/forge`
 
 ---
 
@@ -39,16 +39,17 @@ time.*     — Temporal (traces, forecasts)
 
 | Plan | Progress | Next |
 |------|----------|------|
-| `architecture/polyfunctor` | 100% | Ready to archive |
-| `devex/trace-integration` | 25% | **P1** — Hardened, next: Ghost/Status/Dashboard |
-| `devex/telemetry` | 0% | **P5** — OpenTelemetry export |
+| `agents/k-gent` | 97% | Deferred: Fractal, Holographic |
+| `self/memory` | 30% | Four Pillars integration |
+| `architecture/turn-gents` | 0% | Chronos-Kairos Protocol (proposed) |
 
 ## Completed (Recent)
 
 - **DevEx Dashboard** — `kg dashboard`, 4-panel TUI, graceful degradation, 50+ tests
 - **DevEx Watch Mode** — `kg soul watch`, 5 heuristics (complexity, naming, patterns, tests, docs), 28 tests
 - **DevEx Gallery** — MkDocs site, 6 examples (composition, functors, soul, streaming), GitHub Actions
-- **OTEL Visibility** — K8s observability stack (Tempo/Prometheus/Grafana), `agentese.invoke` spans
+- **Telemetry (O-gent Dim X)** — TelemetryMiddleware, OTEL spans, metrics, CLI, K8s stack (Tempo/Prometheus/Grafana)
+- **Trace Integration** — TraceDataProvider, Ghost/Status/Dashboard/Flinch/MRI integration, 101+ tests
 - **DevEx Playground** — `kgents play`, 4 tutorials + REPL, 32 tests
 - **Alethic Architecture** — 337 tests, Phases 1-6 (Functor, Halo, Archetypes, Projectors)
 
@@ -56,9 +57,10 @@ time.*     — Temporal (traces, forecasts)
 
 | Sprint | Prompt |
 |--------|--------|
+| Dashboard Consolidation | `prompts/dashboard-demo-consolidation.md` — The dashboard IS the demo |
+| HotData | `prompts/hotdata-realization.md` — Pre-computed richness, demo kgents ARE kgents |
 | Polyfunctor | `prompts/polyfunctor-realization.md` — Spec poly/operad/sheaf, migrate genera |
 | DevEx | `prompts/devex-continuation.md` — Dashboard, watch-mode, gallery |
-| Trace Integration | `prompts/trace-integration-hardening-continuation.md` — Hardened, next phases |
 
 ---
 

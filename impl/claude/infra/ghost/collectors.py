@@ -5,20 +5,27 @@ Each collector is responsible for one domain of truth:
 - GitCollector: Version control state
 - FlinchCollector: Test failure patterns
 - InfraCollector: K-Terrarium cluster status
+- TraceGhostCollector: Trace analysis data
 
-Collectors are composable and fail gracefully.
+Collectors are composable and fail gracefully with proper timeout handling.
 """
 
 from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import subprocess
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+logger = logging.getLogger(__name__)
+
+# Default timeout for subprocess operations (seconds)
+DEFAULT_SUBPROCESS_TIMEOUT = 30.0
 
 
 @dataclass
@@ -141,8 +148,19 @@ class GitCollector(GhostCollector):
                 error=str(e),
             )
 
-    async def _run_git(self, *args: str) -> subprocess.CompletedProcess[str]:
-        """Run a git command asynchronously."""
+    async def _run_git(
+        self, *args: str, timeout: float = DEFAULT_SUBPROCESS_TIMEOUT
+    ) -> subprocess.CompletedProcess[str]:
+        """
+        Run a git command asynchronously with timeout.
+
+        Args:
+            *args: Git command arguments
+            timeout: Timeout in seconds (default: 30s)
+
+        Returns:
+            CompletedProcess with stdout/stderr decoded as strings
+        """
         proc = await asyncio.create_subprocess_exec(
             "git",
             *args,
@@ -150,13 +168,27 @@ class GitCollector(GhostCollector):
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-        stdout, stderr = await proc.communicate()
-        return subprocess.CompletedProcess(
-            args=["git", *args],
-            returncode=proc.returncode or 0,
-            stdout=stdout.decode(),
-            stderr=stderr.decode(),
-        )
+        try:
+            stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout)
+            return subprocess.CompletedProcess(
+                args=["git", *args],
+                returncode=proc.returncode or 0,
+                stdout=stdout.decode(),
+                stderr=stderr.decode(),
+            )
+        except asyncio.TimeoutError:
+            # Kill the process on timeout
+            proc.kill()
+            await proc.wait()
+            logger.warning(
+                f"Git command timed out after {timeout}s: git {' '.join(args)}"
+            )
+            return subprocess.CompletedProcess(
+                args=["git", *args],
+                returncode=-1,
+                stdout="",
+                stderr=f"Command timed out after {timeout} seconds",
+            )
 
 
 class FlinchCollector(GhostCollector):
@@ -279,19 +311,25 @@ class FlinchCollector(GhostCollector):
             return {"patterns": [], "message": "No flinch data found"}
 
         flinches: list[dict[str, Any]] = []
-        with open(self.flinch_path) as f:
-            for line in f:
-                line = line.strip()
-                if line:
-                    try:
-                        flinches.append(json.loads(line))
-                    except json.JSONDecodeError:
-                        continue
+        try:
+            with open(self.flinch_path) as f:
+                for line in f:
+                    line = line.strip()
+                    if line:
+                        try:
+                            flinches.append(json.loads(line))
+                        except json.JSONDecodeError:
+                            continue
+        except OSError as e:
+            logger.warning(f"Failed to read flinch file: {e}")
+            return {"patterns": [], "message": f"Error reading flinch data: {e}"}
 
         # Group by test module
         module_groups: dict[str, list[dict[str, Any]]] = {}
         for flinch in flinches:
             test = flinch.get("test", "")
+            if not isinstance(test, str):
+                continue
             if "::" in test:
                 module = test.split("::")[0]
             else:
@@ -312,15 +350,16 @@ class FlinchCollector(GhostCollector):
                 for name in test_names:
                     name_counts[name] = name_counts.get(name, 0) + 1
 
-                top_test = max(name_counts.items(), key=lambda x: x[1])
-                patterns.append(
-                    {
-                        "module": module,
-                        "total_failures": len(failures),
-                        "most_common_test": top_test[0],
-                        "most_common_count": top_test[1],
-                    }
-                )
+                if name_counts:
+                    top_test = max(name_counts.items(), key=lambda x: x[1])
+                    patterns.append(
+                        {
+                            "module": module,
+                            "total_failures": len(failures),
+                            "most_common_test": top_test[0],
+                            "most_common_count": top_test[1],
+                        }
+                    )
 
         patterns.sort(key=lambda x: -int(str(x["total_failures"])))
 
@@ -340,18 +379,24 @@ class FlinchCollector(GhostCollector):
             return []
 
         file_counts: dict[str, int] = {}
-        with open(self.flinch_path) as f:
-            for line in f:
-                line = line.strip()
-                if line:
-                    try:
-                        flinch = json.loads(line)
-                        test = flinch.get("test", "")
-                        if "::" in test:
-                            file_path = test.split("::")[0]
-                            file_counts[file_path] = file_counts.get(file_path, 0) + 1
-                    except json.JSONDecodeError:
-                        continue
+        try:
+            with open(self.flinch_path) as f:
+                for line in f:
+                    line = line.strip()
+                    if line:
+                        try:
+                            flinch = json.loads(line)
+                            test = flinch.get("test", "")
+                            if isinstance(test, str) and "::" in test:
+                                file_path = test.split("::")[0]
+                                file_counts[file_path] = (
+                                    file_counts.get(file_path, 0) + 1
+                                )
+                        except json.JSONDecodeError:
+                            continue
+        except OSError as e:
+            logger.warning(f"Failed to read flinch file for hot files: {e}")
+            return []
 
         return sorted(file_counts.items(), key=lambda x: -x[1])[:limit]
 
@@ -393,7 +438,7 @@ class InfraCollector(GhostCollector):
             }
 
             if status == ClusterStatus.RUNNING:
-                # Get pod info
+                # Get pod info with timeout
                 proc = await asyncio.create_subprocess_exec(
                     "kubectl",
                     "get",
@@ -405,19 +450,36 @@ class InfraCollector(GhostCollector):
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
                 )
-                stdout, _ = await proc.communicate()
+                try:
+                    stdout, _ = await asyncio.wait_for(
+                        proc.communicate(), timeout=DEFAULT_SUBPROCESS_TIMEOUT
+                    )
 
-                if proc.returncode == 0:
-                    pods_data = json.loads(stdout.decode())
-                    items = pods_data.get("items", [])
-                    data["pod_count"] = len(items)
+                    if proc.returncode == 0:
+                        pods_data = json.loads(stdout.decode())
+                        # Validate pods_data structure
+                        if isinstance(pods_data, dict):
+                            items = pods_data.get("items", [])
+                            if isinstance(items, list):
+                                data["pod_count"] = len(items)
 
-                    # Count by phase
-                    phases: dict[str, int] = {}
-                    for item in items:
-                        phase = item.get("status", {}).get("phase", "Unknown")
-                        phases[phase] = phases.get(phase, 0) + 1
-                    data["pod_phases"] = phases
+                                # Count by phase with type validation
+                                phases: dict[str, int] = {}
+                                for item in items:
+                                    if isinstance(item, dict):
+                                        status_dict = item.get("status", {})
+                                        if isinstance(status_dict, dict):
+                                            phase = status_dict.get("phase", "Unknown")
+                                            if isinstance(phase, str):
+                                                phases[phase] = phases.get(phase, 0) + 1
+                                data["pod_phases"] = phases
+                except asyncio.TimeoutError:
+                    proc.kill()
+                    await proc.wait()
+                    logger.warning("kubectl get pods timed out")
+                    data["pod_timeout"] = True
+                except json.JSONDecodeError as e:
+                    logger.debug(f"Failed to parse kubectl output: {e}")
 
                 data["health_line"] = (
                     f"infra:{data['cluster_status']} pods:{data.get('pod_count', 0)}"

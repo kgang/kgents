@@ -44,6 +44,9 @@
 2025-12-13  PolyAgent[S,A,B] > Agent[A,B]: mode-dependent behavior via polynomial positions/directions
 2025-12-13  Operads define composition grammar; algebras apply grammar to specific systems
 2025-12-13  Sheaf gluing = emergence: compatible locals → global with capabilities no local has
+2025-12-13  Test tiering is categorical: partition functor preserves semantics, improves timing (399s→85s)
+2025-12-13  LLM-once is cheap: pre-compute rich data, hotload forever; demo kgents ARE kgents (AD-004)
+2025-12-13  Reconciliation = read forest → fix drift → surface via demo → update status; runnable beats readable
 ```
 
 ## Anti-Patterns (Captured Failures)

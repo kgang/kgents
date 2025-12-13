@@ -35,8 +35,8 @@ class TestParseArguments:
 
     def test_parse_port_default(self) -> None:
         """Test default port is returned when not specified."""
-        assert _parse_port([]) == 50051
-        assert _parse_port(["--other"]) == 50051
+        assert _parse_port([]) == 50052
+        assert _parse_port(["--other"]) == 50052
 
     def test_parse_port_with_flag(self) -> None:
         """Test --port flag parsing."""
@@ -45,7 +45,7 @@ class TestParseArguments:
 
     def test_parse_port_invalid(self) -> None:
         """Test invalid port returns default."""
-        assert _parse_port(["--port", "invalid"]) == 50051
+        assert _parse_port(["--port", "invalid"]) == 50052
 
     def test_parse_lines_default(self) -> None:
         """Test default lines count."""

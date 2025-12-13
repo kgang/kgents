@@ -239,8 +239,11 @@ class PipelineBuilder(Widget):
 
     def _refresh_display(self) -> None:
         """Refresh the pipeline display."""
-        # Remove old content
-        container = self.query_one(VerticalScroll)
+        # Guard: only refresh if mounted
+        try:
+            container = self.query_one(VerticalScroll)
+        except Exception:
+            return  # Not mounted yet
         container.remove_children()
 
         if not self._components:

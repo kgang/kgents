@@ -1,0 +1,8 @@
+{
+  "current_mode": "DELIBERATING",
+  "valid_inputs": ["Claim", "Evidence", "Objection"],
+  "state_hash": "7a3f2e1d",
+  "transition_history": [
+    ["GROUNDING", "DELIBERATING"]
+  ]
+}

@@ -1,0 +1,38 @@
+[
+  {
+    "id": "main",
+    "name": "main",
+    "agent_ids": ["K-gent", "A-gent", "L-gent", "D-gent", "E-gent"],
+    "health": 0.82,
+    "flux_rate": 2.3,
+    "orchestration_state": "converging",
+    "breath_phase": 0.5
+  },
+  {
+    "id": "security-audit",
+    "name": "security-audit",
+    "agent_ids": ["robin", "g-gent", "summarizer"],
+    "health": 0.91,
+    "flux_rate": 4.7,
+    "orchestration_state": "converging",
+    "breath_phase": 0.7
+  },
+  {
+    "id": "experiment-alpha",
+    "name": "experiment-alpha",
+    "agent_ids": ["psi-gent", "j-gent", "o-gent"],
+    "health": 0.45,
+    "flux_rate": 0.4,
+    "orchestration_state": "diverging",
+    "breath_phase": 0.2
+  },
+  {
+    "id": "hibernating",
+    "name": "hibernating",
+    "agent_ids": ["archive-gent"],
+    "health": 0.99,
+    "flux_rate": 0.01,
+    "orchestration_state": "stable",
+    "breath_phase": 0.0
+  }
+]

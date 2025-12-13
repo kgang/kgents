@@ -22,8 +22,27 @@ This enables:
 - Synchronization points (knots)
 """
 
+from .causal_cone import CausalCone, CausalConeStats, compute_cone_stats
 from .dependency import DependencyGraph
+from .economics import (
+    BudgetConsumption,
+    BudgetPolicy,
+    BudgetStats,
+    BudgetType,
+    TurnBudgetTracker,
+    create_default_tracker,
+)
 from .event import Event
+from .metrics import (
+    AgentCompressionStats,
+    CompressionEvent,
+    CompressionMetrics,
+    estimate_tokens,
+    get_events,
+    get_metrics,
+    log_compression,
+    reset_metrics,
+)
 from .runtime_trace import TraceCollector, TraceEvent, TraceFilter, trace_function
 from .static_trace import CallSite, FunctionDef, StaticCallGraph
 from .trace_monoid import TraceMonoid
@@ -34,7 +53,16 @@ from .trace_renderer import (
     render_graph,
     render_trace,
 )
+from .turn import Turn, TurnType, YieldTurn
 from .weave import TheWeave
+from .yield_handler import (
+    ApprovalResult,
+    ApprovalStatus,
+    ApprovalStrategy,
+    YieldHandler,
+    compute_risk_score,
+    should_yield,
+)
 
 __all__ = [
     "Event",
@@ -53,4 +81,34 @@ __all__ = [
     "render_graph",
     "render_trace",
     "render_diff",
+    # Turn-gents Protocol
+    "Turn",
+    "TurnType",
+    "YieldTurn",
+    "CausalCone",
+    "CausalConeStats",
+    "compute_cone_stats",
+    # Yield Governance
+    "YieldHandler",
+    "ApprovalStrategy",
+    "ApprovalStatus",
+    "ApprovalResult",
+    "should_yield",
+    "compute_risk_score",
+    # Economics
+    "TurnBudgetTracker",
+    "BudgetType",
+    "BudgetConsumption",
+    "BudgetStats",
+    "BudgetPolicy",
+    "create_default_tracker",
+    # Compression Metrics (H1 Validation)
+    "CompressionEvent",
+    "CompressionMetrics",
+    "AgentCompressionStats",
+    "log_compression",
+    "get_metrics",
+    "reset_metrics",
+    "get_events",
+    "estimate_tokens",
 ]

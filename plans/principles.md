@@ -345,6 +345,7 @@ When starting a session, ask:
 | Meta-Bloat Prevention | Did I pass the Molasses Test before adding meta? |
 | Skills Before Implementation | Did I check `plans/skills/` before implementing? |
 | Bounty Board | Did I post observations? Did I check for claimable bounties? |
+| Implementation Lifecycle | What phase am I in? Is full lifecycle needed or can I skip to IMPLEMENT? |
 
 A "no" on any principle is a signal to adjust.
 
@@ -536,6 +537,96 @@ Don't post when:
 - Multi-line bounties (distill or promote to plan)
 - Claiming without resolving
 - Bounties that are actually tasks
+
+---
+
+## 12. The Implementation Lifecycle
+
+> Projects flow through phases. Know where you are.
+
+From creative exploration work (15 sessions, 600+ ideas), a natural 11-phase lifecycle emerged for multi-session projects:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        IMPLEMENTATION LIFECYCLE                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   ┌─────┐   ┌──────────┐   ┌─────────┐   ┌────────────┐   ┌───────────────┐ │
+│   │PLAN │ → │ RESEARCH │ → │ DEVELOP │ → │ STRATEGIZE │ → │CROSS-SYNERGIZE│ │
+│   └─────┘   └──────────┘   └─────────┘   └────────────┘   └───────────────┘ │
+│      ↓                                                            ↓          │
+│   ┌─────────┐   ┌────┐   ┌──────┐   ┌─────────┐   ┌─────────┐   ┌────────┐  │
+│   │IMPLEMENT│ → │ QA │ → │ TEST │ → │ EDUCATE │ → │ MEASURE │ → │REFLECT │  │
+│   └─────────┘   └────┘   └──────┘   └─────────┘   └─────────┘   └────────┘  │
+│                                                                     ↓        │
+│                                                          ┌──────────────────┐│
+│                                                          │   RE-METABOLIZE  ││
+│                                                          │   (Feed back to  ││
+│                                                          │    next cycle)   ││
+│                                                          └──────────────────┘│
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### The 11 Phases
+
+| Phase | Purpose | Exit Criteria |
+|-------|---------|---------------|
+| **PLAN** | Structure into chunks | Sub-plans created with dependencies |
+| **RESEARCH** | Understand existing code | Files mapped, blockers identified |
+| **DEVELOP** | Refine specifications | API designs documented |
+| **STRATEGIZE** | Sequence for maximum value | Sprint plan created |
+| **CROSS-SYNERGIZE** | Find connections | Agent combinations identified |
+| **IMPLEMENT** | Write code | Tests pass |
+| **QA** | Ensure quality | Checklist complete |
+| **TEST** | Verify correctness | Coverage target met |
+| **EDUCATE** | Document for users | Guides published |
+| **MEASURE** | Track effectiveness | Metrics live |
+| **REFLECT** | Learn and improve | Insights captured |
+
+### When to Use the Full Lifecycle
+
+**Use all 11 phases** for:
+- Multi-week projects spanning multiple sessions
+- Projects with multiple agents coordinating
+- Crown Jewels (Priority 10.0) implementations
+
+**Skip to IMPLEMENT** for:
+- Single-session tasks
+- Quick wins (Effort ≤ 2)
+- Well-understood changes
+
+### The Re-Metabolization Loop
+
+The lifecycle is a loop, not a line. REFLECT feeds back into PLAN:
+
+```
+REFLECT discovers:
+  "Soul commands compose better than expected"
+  "Cross-synergize phase found 3 new combinations"
+  "Test coverage goal too conservative"
+
+RE-METABOLIZE:
+  → Add discoveries to plans/meta.md
+  → Update skills/ with new patterns
+  → Adjust next cycle's strategy
+```
+
+### Parallel Agent Strategy
+
+The lifecycle supports parallel work:
+
+```
+Agent 1: RESEARCH (Week 1-2) → IMPLEMENT Track A (Week 3-4)
+Agent 2: DEVELOP (Week 1-2)  → IMPLEMENT Track B (Week 3-4)
+Agent 3: TEST (continuous)   → EDUCATE (Week 5-6)
+Agent 4: CROSS-SYNERGIZE     → Integration testing
+```
+
+### Anti-patterns
+- Jumping to IMPLEMENT without RESEARCH (hidden blockers emerge)
+- Skipping CROSS-SYNERGIZE (missing valuable combinations)
+- Treating REFLECT as optional (learning dies)
+- Sequential phases when parallel is possible
 
 ---
 

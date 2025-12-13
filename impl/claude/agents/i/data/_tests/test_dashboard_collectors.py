@@ -1,7 +1,20 @@
-"""Tests for dashboard data collectors."""
+"""Tests for dashboard data collectors.
+
+Test Performance Optimization (2025-12-13):
+- collect_trace_analysis() performs full static analysis (~30s)
+- Tests that call it are marked @pytest.mark.slow
+- A module-scoped fixture caches the analysis for reuse
+- Unit tests use mock data to avoid the expensive call
+
+Rationale (from spec/principles.md §7 Generative):
+- Tests are executable specification
+- Slow tests should not run on every push
+- Categorical separation: unit tests vs integration tests
+"""
 
 import asyncio
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 
 import pytest
 from agents.i.data.dashboard_collectors import (
@@ -18,6 +31,51 @@ from agents.i.data.dashboard_collectors import (
     create_demo_metrics,
     create_random_metrics,
 )
+
+if TYPE_CHECKING:
+    pass
+
+
+# =============================================================================
+# Module-scoped fixture for expensive trace analysis (caching functor)
+# =============================================================================
+
+
+@pytest.fixture(scope="module")
+def cached_trace_analysis() -> TraceAnalysisMetrics:
+    """
+    Cached trace analysis result for tests that need it.
+
+    This is a module-scoped fixture that runs the expensive static
+    analysis once per module, not once per test. This follows the
+    "Cache" functor pattern from the optimization framework.
+
+    For unit tests that don't need real data, use mock_trace_analysis.
+    """
+    import asyncio
+
+    return asyncio.get_event_loop().run_until_complete(collect_trace_analysis())
+
+
+@pytest.fixture
+def mock_trace_analysis() -> TraceAnalysisMetrics:
+    """
+    Mock trace analysis for fast unit tests.
+
+    Returns synthetic data that exercises the TraceAnalysisMetrics
+    dataclass without the expensive static analysis call.
+    """
+    return TraceAnalysisMetrics(
+        files_analyzed=100,
+        definitions_found=500,
+        calls_found=1000,
+        is_online=True,
+        hottest_functions=[
+            {"name": "invoke", "callers": 50},
+            {"name": "manifest", "callers": 30},
+        ],
+        call_trees=[],
+    )
 
 
 class TestKgentMetrics:
@@ -268,17 +326,23 @@ class TestCreateRandomMetrics:
 
 
 class TestCollectMetrics:
-    """Tests for collect_metrics function."""
+    """Tests for collect_metrics function.
 
+    NOTE: collect_metrics() calls collect_trace_analysis() which does
+    full static analysis. These tests are marked @pytest.mark.slow.
+    """
+
+    @pytest.mark.slow
     @pytest.mark.asyncio
     async def test_returns_dashboard_metrics(self) -> None:
-        """Returns a DashboardMetrics instance."""
+        """Returns a DashboardMetrics instance (SLOW: ~30s due to static analysis)."""
         m = await collect_metrics()
         assert isinstance(m, DashboardMetrics)
 
+    @pytest.mark.slow
     @pytest.mark.asyncio
     async def test_graceful_degradation(self) -> None:
-        """Handles missing services gracefully."""
+        """Handles missing services gracefully (SLOW: ~30s due to static analysis)."""
         # Even if services are unavailable, should return metrics
         m = await collect_metrics()
         assert m is not None
@@ -359,11 +423,15 @@ class TestMetricsObservable:
 
 
 class TestDashboardIntegration:
-    """Integration tests for dashboard metrics collection."""
+    """Integration tests for dashboard metrics collection.
 
+    NOTE: Tests calling collect_metrics() are slow (~30s) due to static analysis.
+    """
+
+    @pytest.mark.slow
     @pytest.mark.asyncio
     async def test_full_collection_cycle(self) -> None:
-        """Full collection cycle works end-to-end."""
+        """Full collection cycle works end-to-end (SLOW: ~30s due to static analysis)."""
         m = await collect_metrics()
 
         # Should have all metric types
@@ -439,40 +507,51 @@ class TestTraceAnalysisMetrics:
 
 
 class TestCollectTraceAnalysis:
-    """Tests for collect_trace_analysis function."""
+    """Tests for collect_trace_analysis function.
 
+    These tests call the SLOW static analysis (~30s).
+    Mark with @pytest.mark.slow to exclude from default runs.
+    """
+
+    @pytest.mark.slow
     @pytest.mark.asyncio
     async def test_returns_trace_analysis_metrics(self) -> None:
-        """Returns a TraceAnalysisMetrics instance."""
+        """Returns a TraceAnalysisMetrics instance (SLOW: ~30s)."""
         m = await collect_trace_analysis()
         assert isinstance(m, TraceAnalysisMetrics)
 
+    @pytest.mark.slow
     @pytest.mark.asyncio
     async def test_graceful_degradation(self) -> None:
-        """Handles missing trace provider gracefully."""
+        """Handles missing trace provider gracefully (SLOW: ~30s)."""
         # Even if trace provider fails, should return metrics
         m = await collect_trace_analysis()
         assert m is not None
 
+    @pytest.mark.slow
     @pytest.mark.asyncio
     async def test_collects_real_data(self) -> None:
-        """Collects real data from TraceDataProvider."""
+        """Collects real data from TraceDataProvider (SLOW: ~30s)."""
         m = await collect_trace_analysis()
         # If analysis succeeded, we should have file counts
         if m.is_online and m.files_analyzed > 0:
             assert m.definitions_found >= 0
             assert m.calls_found >= 0
 
+    @pytest.mark.slow
     @pytest.mark.asyncio
     async def test_with_custom_targets(self) -> None:
-        """Can specify custom targets for call trees."""
+        """Can specify custom targets for call trees (SLOW: ~30s)."""
         # This tests the parameter, even if no trees are built
         m = await collect_trace_analysis(hot_function_targets=["foo.bar", "baz.qux"])
         assert isinstance(m, TraceAnalysisMetrics)
 
 
 class TestDashboardMetricsWithTraceAnalysis:
-    """Tests for DashboardMetrics with trace_analysis field."""
+    """Tests for DashboardMetrics with trace_analysis field.
+
+    Fast tests use mock data; slow tests do real analysis.
+    """
 
     def test_has_trace_analysis_field(self) -> None:
         """DashboardMetrics has trace_analysis field."""
@@ -487,9 +566,10 @@ class TestDashboardMetricsWithTraceAnalysis:
         assert m.trace_analysis.files_analyzed > 0
         assert m.trace_analysis.is_online is True
 
+    @pytest.mark.slow
     @pytest.mark.asyncio
     async def test_collect_metrics_includes_trace_analysis(self) -> None:
-        """collect_metrics includes trace_analysis."""
+        """collect_metrics includes trace_analysis (SLOW: ~30s due to static analysis)."""
         m = await collect_metrics()
         assert m.trace_analysis is not None
         # May or may not be online depending on environment

@@ -1,0 +1,56 @@
+[
+  {
+    "seconds_ago": 45,
+    "event_type": "SEARCH",
+    "message": "Querying codebase for authentication patterns...",
+    "agent_id": "robin"
+  },
+  {
+    "seconds_ago": 42,
+    "event_type": "SEARCH",
+    "message": "Found 23 files with auth-related functions",
+    "agent_id": "robin"
+  },
+  {
+    "seconds_ago": 38,
+    "event_type": "FILTER",
+    "message": "Filtering to core authentication handlers",
+    "agent_id": "robin"
+  },
+  {
+    "seconds_ago": 33,
+    "event_type": "REASON",
+    "message": "Analyzing token validation logic in auth/handlers.py",
+    "agent_id": "robin"
+  },
+  {
+    "seconds_ago": 28,
+    "event_type": "SYNTHESIZE",
+    "message": "Tracing JWT verification call graph...",
+    "agent_id": "robin"
+  },
+  {
+    "seconds_ago": 22,
+    "event_type": "REASON",
+    "message": "Cross-referencing with security best practices",
+    "agent_id": "robin"
+  },
+  {
+    "seconds_ago": 15,
+    "event_type": "SYNTHESIZE",
+    "message": "Pattern detected: Token lacks expiry validation",
+    "agent_id": "robin"
+  },
+  {
+    "seconds_ago": 8,
+    "event_type": "REASON",
+    "message": "Formulating remediation steps...",
+    "agent_id": "robin"
+  },
+  {
+    "seconds_ago": 3,
+    "event_type": "COMPLETE",
+    "message": "Analysis complete: 1 critical finding, 2 recommendations",
+    "agent_id": "robin"
+  }
+]

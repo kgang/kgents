@@ -16,6 +16,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Callable, Generic, Optional, TypeVar
 
+from agents.a.halo import Capability
 from bootstrap.types import Agent
 
 if TYPE_CHECKING:
@@ -327,6 +328,12 @@ class PersonaQueryAgent(Agent[PersonaQuery, PersonaResponse]):
         return styles.get(agent.lower(), ["be direct but warm", "prefer concise"])
 
 
+@Capability.TurnBased(
+    allowed_types={"SPEECH", "ACTION", "THOUGHT", "YIELD"},
+    yield_threshold=0.5,  # YIELD for uncertain persona decisions
+    entropy_budget=10.0,
+    surplus_fraction=0.1,
+)
 class KgentAgent(Agent[DialogueInput, DialogueOutput]):
     """
     The main K-gent dialogue agent.
@@ -339,6 +346,12 @@ class KgentAgent(Agent[DialogueInput, DialogueOutput]):
 
     Now supports LLM-backed dialogue when an LLM client is provided.
     Falls back to template-based responses when no LLM is available.
+
+    Turn-gents Integration:
+    - Decorated with @Capability.TurnBased for turn recording
+    - Records SPEECH turns for dialogue outputs
+    - Records THOUGHT turns for internal reasoning
+    - YIELDs for low-confidence persona decisions (below 0.5)
     """
 
     # Temperature per mode - lower for precise modes, higher for creative

@@ -9,6 +9,7 @@ A-gents provide:
 - Agent factory (AgentFactory)
 - Self-describing agents (GroundedSkeleton)
 - **Alethic Architecture**: Halo capability protocol + Archetypes
+- **Alethic Agent**: Polynomial agent for truth-seeking (Phase 3 migration)
 
 The key insight of A-gents: Agent[A, B] from bootstrap IS the skeleton.
 AbstractAgent is just an alias for semantic clarity.
@@ -35,8 +36,35 @@ Or using archetypes:
     ...     async def invoke(self, req: Request) -> Response:
     ...         return process(req)
 
-See: plans/architecture/alethic.md
+## Alethic Agent (Polynomial)
+
+The AlethicAgent models truth-seeking as a polynomial state machine:
+- GROUNDING → DELIBERATING → JUDGING → SYNTHESIZING
+
+Example:
+    >>> agent = AlethicAgent()
+    >>> response = await agent.reason(Query(claim="The sky is blue"))
+    >>> print(response.verdict.accepted)
+
+See: plans/architecture/alethic.md, plans/architecture/polyfunctor.md
 """
+
+# Alethic Agent: Polynomial truth-seeking (Phase 3 migration)
+from .alethic import (
+    # Polynomial Agent
+    ALETHIC_AGENT,
+    # Wrapper
+    AlethicAgent,
+    # Types
+    AlethicResponse,
+    # State Machine
+    AlethicState,
+    DeliberationResult,
+    Evidence,
+    Query,
+    alethic_directions,
+    alethic_transition,
+)
 
 # Alethic Architecture: Genus Archetypes
 from .archetypes import (
@@ -208,6 +236,16 @@ __all__ = [
     "Delta",
     "get_archetype",
     "is_archetype_instance",
+    # Alethic Agent: Polynomial truth-seeking (Phase 3 Polyfunctor)
+    "AlethicState",
+    "Query",
+    "Evidence",
+    "DeliberationResult",
+    "AlethicResponse",
+    "ALETHIC_AGENT",
+    "alethic_directions",
+    "alethic_transition",
+    "AlethicAgent",
     # Quick agent creation
     "FunctionAgent",
     "agent",

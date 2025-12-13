@@ -113,6 +113,26 @@ from .phage import (
     infect_batch,
     spawn_child,
 )
+
+# Phase 3 Polyfunctor: E-gent Polynomial (Evolution Phases)
+from .polynomial import (
+    EVOLUTION_POLYNOMIAL,
+    EvolutionIntent,
+    EvolutionPhase,
+    EvolutionPolynomialAgent,
+    EvolutionResult,
+    EvolutionState,
+    InfectCommand,
+    MutateCommand,
+    Mutation,
+    PayoffCommand,
+    SelectCommand,
+    StartCycleCommand,
+    WagerCommand,
+    evolution_directions,
+    evolution_transition,
+    reset_evolution,
+)
 from .safety import (
     # Rollback
     AtomicCheckpoint,
@@ -259,4 +279,21 @@ __all__ = [
     "SafetyConfig",
     "create_safety_system",
     "create_test_safety_system",
+    # Phase 3 Polyfunctor: E-gent Polynomial
+    "EvolutionPhase",
+    "EvolutionIntent",
+    "Mutation",
+    "EvolutionState",
+    "StartCycleCommand",
+    "MutateCommand",
+    "SelectCommand",
+    "WagerCommand",
+    "InfectCommand",
+    "PayoffCommand",
+    "EvolutionResult",
+    "EVOLUTION_POLYNOMIAL",
+    "evolution_directions",
+    "evolution_transition",
+    "EvolutionPolynomialAgent",
+    "reset_evolution",
 ]

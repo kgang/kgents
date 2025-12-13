@@ -41,6 +41,10 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING, Any
 
+if TYPE_CHECKING:
+    from ..data.garden import GardenSnapshot
+    from ..data.state import FluxState
+
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Grid, Horizontal, Vertical
@@ -147,7 +151,9 @@ class MetabolismPanel(Static, can_focus=True):
     """Metabolic engine state panel."""
 
     DEFAULT_CSS = (
-        FOCUS_CSS.format(cls="MetabolismPanel", color="#e6a352", focus_color="#ffa500d6")
+        FOCUS_CSS.format(
+            cls="MetabolismPanel", color="#e6a352", focus_color="#ffa500d6"
+        )
         + """
     MetabolismPanel .panel-title {
         color: #e6a352;
@@ -570,19 +576,15 @@ class DashboardScreen(Screen[None]):
         if event.key == "1":
             if self._kgent_panel:
                 self._kgent_panel.focus()
-                self.notify("K-gent")
         elif event.key == "2":
             if self._metabolism_panel:
                 self._metabolism_panel.focus()
-                self.notify("Metabolism")
         elif event.key == "3":
             if self._flux_panel:
                 self._flux_panel.focus()
-                self.notify("Flux")
         elif event.key == "4":
             if self._triad_panel:
                 self._triad_panel.focus()
-                self.notify("Triad")
 
     def __init__(
         self,
@@ -713,9 +715,11 @@ class DashboardScreen(Screen[None]):
 
 class DashboardApp(App[None]):
     """
-    Standalone dashboard application.
+    Standalone dashboard application with unified navigation.
 
     Can be run directly or embedded in kgents CLI.
+    Integrates all screens (Observatory, Cockpit, Forge, Debugger) with
+    NavigationController for seamless zoom in/out.
     """
 
     CSS = """
@@ -726,19 +730,177 @@ class DashboardApp(App[None]):
 
     TITLE = "kgents dashboard"
 
+    BINDINGS = [
+        ("plus", "zoom_in", "Zoom In"),
+        ("equal", "zoom_in", "Zoom In"),
+        ("minus", "zoom_out", "Zoom Out"),
+        ("underscore", "zoom_out", "Zoom Out"),
+        ("f", "open_forge", "Forge"),
+        ("d", "open_debugger", "Debugger"),
+        ("question_mark", "show_help", "Help"),
+        ("q", "quit", "Quit"),
+    ]
+
     def __init__(self, demo_mode: bool = False, refresh_interval: float = 1.0) -> None:
         super().__init__()
         self.demo_mode = demo_mode
         self.refresh_interval = refresh_interval
 
+        # Initialize navigation system
+        from ..navigation import NavigationController, StateManager
+
+        self._state_manager = StateManager()
+        self._nav_controller = NavigationController(self, self._state_manager)
+
+        # Track current LOD for screen factories
+        self._current_lod = 0
+
+        # Store data for screen creation
+        self._flux_state: FluxState | None = None
+        self._gardens: list[GardenSnapshot] | None = None
+
     def on_mount(self) -> None:
-        """Push the dashboard screen on mount."""
+        """Push the dashboard screen on mount and register navigation."""
+        # Register screen factories with navigation controller
+        self._register_screens()
+
+        # Push the initial dashboard screen (LOD 0)
         self.push_screen(
             DashboardScreen(
                 demo_mode=self.demo_mode,
                 refresh_interval=self.refresh_interval,
             )
         )
+
+    def _register_screens(self) -> None:
+        """Register all screens with the navigation controller."""
+        # LOD -1: Observatory
+        self._nav_controller.register_lod_screen(-1, self._create_observatory)
+
+        # LOD 0: Dashboard/Terrarium
+        self._nav_controller.register_lod_screen(0, self._create_dashboard)
+
+        # LOD 1: Cockpit
+        self._nav_controller.register_lod_screen(1, self._create_cockpit)
+
+        # LOD 2: Debugger (will be handled specially)
+        # Debugger requires weave, so we don't register it here
+
+        # Special screens
+        self._nav_controller.register_forge(self._create_forge)
+        self._nav_controller.register_debugger(self._create_debugger)
+
+    def _create_observatory(self) -> None:
+        """Create and push Observatory screen."""
+        from ..data.garden import create_demo_gardens
+        from ..data.state import create_demo_flux_state
+        from .observatory import ObservatoryScreen
+
+        if self.demo_mode and self._gardens is None:
+            self._gardens = create_demo_gardens()
+        if self.demo_mode and self._flux_state is None:
+            self._flux_state = create_demo_flux_state()
+
+        self.push_screen(
+            ObservatoryScreen(
+                gardens=self._gardens,
+                flux_state=self._flux_state,
+                demo_mode=self.demo_mode,
+            )
+        )
+
+    def _create_dashboard(self) -> None:
+        """Create and push Dashboard screen."""
+        self.push_screen(
+            DashboardScreen(
+                demo_mode=self.demo_mode,
+                refresh_interval=self.refresh_interval,
+            )
+        )
+
+    def _create_cockpit(self) -> None:
+        """Create and push Cockpit screen."""
+        from .cockpit import CockpitScreen
+
+        # Get focused agent from state manager
+        focus = self._state_manager.get_focus(
+            "observatory"
+        ) or self._state_manager.get_focus("terrarium")
+
+        self.push_screen(
+            CockpitScreen(
+                agent_id=focus or "",
+                demo_mode=self.demo_mode,
+            )
+        )
+
+    def _create_forge(self) -> None:
+        """Create and push Forge screen."""
+        from .forge.screen import ForgeScreen
+
+        self.push_screen(ForgeScreen())
+
+    def _create_debugger(self, turn_id: str | None = None) -> None:
+        """Create and push Debugger screen."""
+        from weave import TheWeave
+
+        from .debugger_screen import DebuggerScreen
+
+        # Create a demo weave for now
+        # In production, this would come from the focused agent
+        weave = TheWeave()
+
+        self.push_screen(
+            DebuggerScreen(
+                weave=weave,
+                agent_id=turn_id,
+            )
+        )
+
+    # ========================================================================
+    # Global Actions (Key Bindings)
+    # ========================================================================
+
+    async def action_zoom_in(self) -> None:
+        """Zoom in to next lower LOD (+/=)."""
+        await self._nav_controller.zoom_in()
+
+    async def action_zoom_out(self) -> None:
+        """Zoom out to next higher LOD (-/_)."""
+        await self._nav_controller.zoom_out()
+
+    def action_open_forge(self) -> None:
+        """Open Forge screen (f)."""
+        self._nav_controller.go_to_forge()
+
+    def action_open_debugger(self) -> None:
+        """Open Debugger screen (d)."""
+        self._nav_controller.go_to_debugger()
+
+    def action_show_help(self) -> None:
+        """Show help overlay (?)."""
+        help_text = """
+DASHBOARD NAVIGATION
+
+Zoom:
+  +/=  - Zoom in (more detail)
+  -/_  - Zoom out (broader view)
+
+Screens:
+  f    - Open Forge (agent composition)
+  d    - Open Debugger (turn analysis)
+
+Other:
+  ?    - Show this help
+  q    - Quit
+
+LOD Levels:
+  -1   - Observatory (ecosystem view)
+   0   - Dashboard (system health)
+   1   - Cockpit (single agent)
+   2   - Debugger (forensic analysis)
+"""
+        self.notify(help_text, timeout=10)
 
 
 # =============================================================================

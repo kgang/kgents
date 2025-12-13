@@ -231,6 +231,10 @@ class JsonFileMetricExporter(MetricExporter):
     Export metrics to JSON files for local development.
     """
 
+    # Required by PeriodicExportingMetricReader
+    _preferred_temporality: dict[type, Any] = {}
+    _preferred_aggregation: dict[type, Any] = {}
+
     def __init__(self, output_dir: str | Path):
         self.output_dir = Path(output_dir).expanduser()
         self.output_dir.mkdir(parents=True, exist_ok=True)

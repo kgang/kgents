@@ -7,8 +7,12 @@ Shows agent internals at the token level:
 - Entropy panel (real-time uncertainty metrics)
 - Memory crystal list
 - Full state dump
+- Call trace analysis (integrated with weave/)
 
 This is the "MRI scan" of agent cognition - you see the raw machinery.
+
+Trace Integration: The TRACE panel shows static call graph analysis,
+helping developers understand how agents interact with the codebase.
 """
 
 from __future__ import annotations
@@ -95,6 +99,8 @@ class MRIScreen(Screen[None]):
 
     BINDINGS = [
         Binding("escape", "back", "Back", show=True),
+        Binding("minus", "back", "Zoom Out", show=True),
+        Binding("underscore", "back", "Zoom Out", show=False),
         Binding("r", "refresh_data", "Refresh", show=True),
         Binding("e", "export", "Export", show=False),
         Binding("q", "quit", "Quit", show=False),
@@ -231,19 +237,24 @@ class MRIScreen(Screen[None]):
                 else:
                     yield Static("[#c97b84]No snapshot data[/]")
 
-            # Panel 6: Live Density Field
+            # Panel 6: Trace Analysis Panel
             with Container(classes="panel"):
-                yield Static("[Live Density Field]", classes="panel-title")
+                yield Static("[Call Trace Analysis]", classes="panel-title")
                 yield Static("")
-                if self.agent_snapshot:
-                    yield DensityField(
-                        agent_id=self.agent_snapshot.id,
-                        agent_name=self.agent_snapshot.name,
-                        activity=self.agent_snapshot.activity,
-                        phase=self.agent_snapshot.phase,
-                    )
+                # Show trace analysis data if available
+                trace_content = self._get_trace_content()
+                if trace_content:
+                    for line in trace_content:
+                        yield Static(line)
                 else:
-                    yield Static("[#c97b84]No snapshot available[/]")
+                    yield Static("[#8b7ba5]Trace analysis - initializing...[/]")
+                    yield Static("")
+                    yield Static("This shows:")
+                    yield Static("  • Static call graph analysis")
+                    yield Static("  • Hot functions (most callers)")
+                    yield Static("  • Call tree visualization")
+                    yield Static("")
+                    yield Static("[dim]Use 'kgents trace' for detailed analysis[/dim]")
 
         yield Footer()
 
@@ -275,3 +286,58 @@ class MRIScreen(Screen[None]):
         self.agent_name = snapshot.name
         # Trigger a re-render
         self.refresh()
+
+    def _get_trace_content(self) -> list[str]:
+        """
+        Get trace analysis content from TraceDataProvider.
+
+        Returns formatted lines for display in the trace panel.
+        """
+        try:
+            from ..data.trace_provider import get_trace_provider
+
+            provider = get_trace_provider()
+            metrics = provider.get_latest_metrics()
+
+            if metrics is None:
+                return []
+
+            lines: list[str] = []
+
+            # Static analysis stats
+            if metrics.static.is_available and metrics.static.files_analyzed > 0:
+                lines.append(
+                    f"[#b3a89a]Files:[/] {metrics.static.files_analyzed:,}  "
+                    f"[#b3a89a]Defs:[/] {metrics.static.definitions_found:,}"
+                )
+                lines.append(f"[#b3a89a]Calls:[/] {metrics.static.calls_found:,}")
+                lines.append("")
+
+                # Hot functions
+                if metrics.static.hottest_functions:
+                    lines.append("[#f5d08a]Hot Functions:[/]")
+                    for func in metrics.static.hottest_functions[:3]:
+                        name = func.get("name", "?")
+                        callers = func.get("callers", 0)
+                        # Truncate long names
+                        if len(name) > 35:
+                            name = name[:32] + "..."
+                        lines.append(f"  • {name} ({callers})")
+            else:
+                lines.append("[#8b7ba5]Static analysis not yet run[/]")
+                lines.append("")
+                lines.append("Run 'kgents trace' to analyze")
+
+            # Anomalies
+            if metrics.anomalies:
+                lines.append("")
+                lines.append(f"[#c97b84]Anomalies: {len(metrics.anomalies)}[/]")
+                for anomaly in metrics.anomalies[:2]:
+                    lines.append(f"  ⚠ {anomaly.description[:40]}")
+
+            return lines
+
+        except ImportError:
+            return []
+        except Exception:
+            return []

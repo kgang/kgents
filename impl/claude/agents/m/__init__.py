@@ -36,6 +36,12 @@ Phase 5 - Holographic Cartography:
 - WeightedEdge: Desire line (historical path)
 - Horizon: Progressive disclosure boundary
 
+Phase 6 - Four Pillars (Autopoietic Memory):
+- MemoryCrystal: Holographic memory with graceful degradation
+- PheromoneField: Stigmergic coordination via traces
+- StigmergicAgent: Gradient-following navigation
+- LanguageGame: Wittgensteinian memory access
+
 Integration:
 - D-gent: Storage layer (UnifiedMemory, VectorAgent)
 - L-gent: Embedding space (VectorBackend, Embedder)
@@ -49,9 +55,7 @@ from .cartographer import (
     DesireLineComputer,
     MockTrace,
     MockTraceStore,
-    # Mock implementations
     MockVectorSearch,
-    # Factory functions
     create_cartographer,
     create_mock_cartographer,
 )
@@ -112,6 +116,15 @@ from .context_injector import (
     create_context_injector,
     inject_context,
 )
+
+# Phase 6: Four Pillars (Autopoietic Memory)
+from .crystal import (
+    CrystalPattern,
+    MemoryCrystal,
+    NumPyCrystal,
+    ResonanceMatch,
+    create_crystal,
+)
 from .dgent_backend import (
     AssociativeWebMemory,
     DgentBackedHolographicMemory,
@@ -121,11 +134,35 @@ from .dgent_backend import (
     create_dgent_memory,
     create_temporal_memory,
 )
+from .games import (
+    ComposedGame,
+    Direction,
+    LanguageGame,
+    Move,
+    PolynomialPosition,
+    create_associative_game,
+    create_dialectical_game,
+    create_episodic_game,
+    create_navigation_game,
+    create_recall_game,
+    game_to_polynomial,
+    polynomial_signature,
+)
 from .holographic import (
     CompressionLevel,
     HolographicMemory,
     MemoryPattern,
     ResonanceResult,
+)
+from .inference import (
+    ActiveInferenceAgent,
+    Belief,
+    FreeEnergyBudget,
+    InferenceAction,
+    InferenceGuidedCrystal,
+    PredictiveMemory,
+    create_guided_crystal,
+    create_inference_agent,
 )
 from .memory_budget import (
     BudgetedMemory,
@@ -156,6 +193,17 @@ from .persistent_tiered import (
     create_narrative_memory,
     create_persistent_tiered_memory,
 )
+from .polynomial import (
+    MemoryDirection,
+    MemoryMode,
+    MemoryOutput,
+    MemoryPolynomial,
+    MemoryState,
+    create_memory_polynomial,
+)
+from .polynomial import (
+    game_to_polynomial as polynomial_game_to_polynomial,  # Rename to avoid conflict
+)
 from .prospective import (
     ActionHistory,
     ActionProposal,
@@ -183,6 +231,15 @@ from .recollection import (
     Recollection,
     RecollectionAgent,
     ReconstructionRequest,
+)
+from .stigmergy import (
+    EnhancedStigmergicAgent,
+    PheromoneField,
+    SenseResult,
+    SimpleConceptSpace,
+    StigmergicAgent,
+    Trace,
+    create_ant_colony_optimization,
 )
 from .tiered import (
     AttentionFilter,
@@ -325,4 +382,49 @@ __all__ = [
     "MapRenderConfig",
     "create_map_renderer",
     "annotate_and_render",
+    # Phase 6: Four Pillars (Autopoietic Memory)
+    # Memory Crystal
+    "MemoryCrystal",
+    "NumPyCrystal",
+    "CrystalPattern",
+    "ResonanceMatch",
+    "create_crystal",
+    # Active Inference
+    "ActiveInferenceAgent",
+    "Belief",
+    "FreeEnergyBudget",
+    "InferenceAction",
+    "InferenceGuidedCrystal",
+    "PredictiveMemory",
+    "create_inference_agent",
+    "create_guided_crystal",
+    # Stigmergy
+    "PheromoneField",
+    "Trace",
+    "SenseResult",
+    "StigmergicAgent",
+    "EnhancedStigmergicAgent",
+    "SimpleConceptSpace",
+    "create_ant_colony_optimization",
+    # Language Games
+    "LanguageGame",
+    "Move",
+    "Direction",
+    "ComposedGame",
+    "PolynomialPosition",
+    "create_recall_game",
+    "create_navigation_game",
+    "create_dialectical_game",
+    "create_associative_game",
+    "create_episodic_game",
+    "game_to_polynomial",
+    "polynomial_signature",
+    # Memory Polynomial
+    "MemoryPolynomial",
+    "MemoryState",
+    "MemoryDirection",
+    "MemoryOutput",
+    "MemoryMode",
+    "create_memory_polynomial",
+    "polynomial_game_to_polynomial",
 ]

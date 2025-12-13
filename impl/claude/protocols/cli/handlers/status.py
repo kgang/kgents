@@ -174,6 +174,12 @@ async def _async_status(
                 ghost_status = _get_ghost_status_line(project_root)
                 if ghost_status:
                     compact_line = _merge_status_lines(compact_line, ghost_status)
+
+            # Add trace health line if available
+            trace_line = _get_trace_health_line(project_root)
+            if trace_line:
+                compact_line = f"{compact_line}\n{trace_line}"
+
             _emit_output(compact_line, semantic_output, ctx)
 
         return 0
@@ -408,6 +414,55 @@ def _get_ghost_context(project_root: Path) -> dict[str, Any] | None:
         except Exception:
             pass
     return None
+
+
+def _get_trace_health_line(project_root: Path) -> str | None:
+    """
+    Get trace health line for compact status output.
+
+    Reads trace_summary.json from ghost directory and formats a compact line.
+    Format: [TRACE] 512 files | 2847 defs | depth:4.2 avg | 0 anomalies
+    """
+    trace_path = project_root / ".kgents" / "ghost" / "trace_summary.json"
+    if not trace_path.exists():
+        return None
+
+    try:
+        trace_data = json_module.loads(trace_path.read_text())
+    except (OSError, json_module.JSONDecodeError):
+        return None
+
+    static = trace_data.get("static_analysis", {})
+    runtime = trace_data.get("runtime", {})
+    anomalies = trace_data.get("anomalies", [])
+
+    if not static.get("is_available", False):
+        return None
+
+    parts: list[str] = []
+
+    # File and definition counts
+    files = static.get("files_analyzed", 0)
+    if files > 0:
+        parts.append(f"{files:,} files")
+
+    defs = static.get("definitions_found", 0)
+    if defs > 0:
+        parts.append(f"{defs:,} defs")
+
+    # Runtime depth (if available)
+    avg_depth = runtime.get("avg_depth", 0)
+    if avg_depth > 0:
+        parts.append(f"depth:{avg_depth:.1f} avg")
+
+    # Anomaly count
+    anomaly_count = len(anomalies) if isinstance(anomalies, list) else 0
+    parts.append(f"{anomaly_count} anomalies")
+
+    if not parts:
+        return None
+
+    return f"[TRACE] {' | '.join(parts)}"
 
 
 def _merge_status_lines(cortex_line: str, ghost_status: str) -> str:

@@ -57,8 +57,8 @@ GHOST_DIR = Path.home() / ".kgents" / "ghost"
 # 500ms is enough for local daemon, but fast enough to not block user
 GRPC_TIMEOUT = 0.5
 
-# Default gRPC address for the Cortex daemon
-DEFAULT_GRPC_ADDRESS = "localhost:50051"
+# Default gRPC address for the Cortex daemon (50051 often used by Docker)
+DEFAULT_GRPC_ADDRESS = "localhost:50052"
 
 
 # =============================================================================

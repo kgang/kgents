@@ -22,6 +22,7 @@ dependencies = [
     "textual>=0.89.0",
     "pyyaml>=6.0",
     "jinja2>=3.1.6",
+    "watchdog>=3.0.0",
     # Observability (OpenTelemetry)
     "opentelemetry-api>=1.24.0",
     "opentelemetry-sdk>=1.24.0",
@@ -55,6 +56,10 @@ addopts = [
     "--tb=short",
     "-m", "not e2e",  # Skip E2E tests by default (use -m e2e to run)
 ]
+# Test Optimization: Run pytest with --profile-tests to enable profiling
+# Example: pytest --profile-tests --show-recommendations
+# Profiles are stored in .kgents/ghost/test_profiles.jsonl
+# See plans/skills/test-optimization.md for details
 # Suppress PytestCollectionWarning for dataclass/enum classes that start with "Test" or similar
 filterwarnings = [
     "ignore::pytest.PytestCollectionWarning",

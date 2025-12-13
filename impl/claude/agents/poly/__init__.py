@@ -16,66 +16,66 @@ See: plans/ideas/impl/meta-construction.md
 """
 
 from .primitives import (
+    # Primitives - Bootstrap (7)
+    COMPOSE,
+    CONTRADICT,
+    # Primitives - Entropy (3)
+    DEFINE,
+    # Primitives - Teleological (2)
+    EVOLVE,
+    FIX,
+    # Primitives - Memory (2)
+    FORGET,
+    GROUND,
+    ID,
+    JUDGE,
+    # Primitives - Perception (3)
+    LENS,
+    MANIFEST,
+    NARRATE,
+    # Registry
+    PRIMITIVES,
+    REMEMBER,
+    SIP,
+    SUBLATE,
+    TITHE,
+    WITNESS,
     # Types - Bootstrap
     Antithesis,
     Claim,
     ContradictState,
     Definition,
-    FixState,
-    GroundState,
-    JudgeState,
-    SublateState,
-    Spec,
-    Synthesis,
-    Thesis,
-    Verdict,
-    # Types - Perception
-    Handle,
-    Manifestation,
-    Trace,
-    Umwelt,
-    WitnessState,
     # Types - Entropy
     EntropyGrant,
     EntropyRequest,
-    Offering,
-    SipState,
-    TitheState,
-    # Types - Memory (D-gent)
-    ForgetState,
-    Memory,
-    MemoryResult,
-    RememberState,
     # Types - Teleological (E-gent, N-gent)
     Evolution,
     EvolveState,
+    FixState,
+    # Types - Memory (D-gent)
+    ForgetState,
+    GroundState,
+    # Types - Perception
+    Handle,
+    JudgeState,
+    Manifestation,
+    Memory,
+    MemoryResult,
     NarrateState,
+    Offering,
     Organism,
+    RememberState,
+    SipState,
+    Spec,
     Story,
-    # Primitives - Bootstrap (7)
-    COMPOSE,
-    CONTRADICT,
-    FIX,
-    GROUND,
-    ID,
-    JUDGE,
-    SUBLATE,
-    # Primitives - Perception (3)
-    LENS,
-    MANIFEST,
-    WITNESS,
-    # Primitives - Entropy (3)
-    DEFINE,
-    SIP,
-    TITHE,
-    # Primitives - Memory (2)
-    FORGET,
-    REMEMBER,
-    # Primitives - Teleological (2)
-    EVOLVE,
-    NARRATE,
-    # Registry
-    PRIMITIVES,
+    SublateState,
+    Synthesis,
+    Thesis,
+    TitheState,
+    Trace,
+    Umwelt,
+    Verdict,
+    WitnessState,
     all_primitives,
     get_primitive,
     primitive_names,
@@ -84,15 +84,19 @@ from .protocol import (
     # Core
     PolyAgent,
     PolyAgentProtocol,
+    # Deprecation Sugar
+    StatelessAgent,
     WiringDiagram,
     # Constructors
     constant,
+    from_bootstrap_agent,
     from_function,
     identity,
     # Composition
     parallel,
     sequential,
     stateful,
+    to_bootstrap_agent,
 )
 
 __all__ = [
@@ -108,6 +112,10 @@ __all__ = [
     # Composition
     "sequential",
     "parallel",
+    # Deprecation Sugar
+    "StatelessAgent",
+    "to_bootstrap_agent",
+    "from_bootstrap_agent",
     # Types - Bootstrap
     "GroundState",
     "JudgeState",

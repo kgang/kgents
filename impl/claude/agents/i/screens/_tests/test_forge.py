@@ -278,7 +278,7 @@ class TestCodeExporter:
         """Empty pipeline should generate valid Python."""
         code = exporter.export([])
         assert "async def run_pipeline" in code
-        assert "import" not in code  # No imports for empty pipeline
+        assert "import asyncio" in code  # Needs asyncio for main block
 
     def test_single_component_generates_imports(self, exporter: CodeExporter) -> None:
         """Single component should generate correct imports."""

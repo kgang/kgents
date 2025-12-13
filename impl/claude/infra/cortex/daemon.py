@@ -38,8 +38,8 @@ if TYPE_CHECKING:
     from protocols.cli.instance_db.lifecycle import LifecycleManager
     from protocols.terrarium.mirror import HolographicBuffer
 
-# Default gRPC port
-DEFAULT_PORT = 50051
+# Default gRPC port (50051 often used by Docker, so we use 50052)
+DEFAULT_PORT = 50052
 
 
 class CortexDaemon:

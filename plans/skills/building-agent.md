@@ -21,6 +21,19 @@ An agent in kgents is a **morphism A → B** in the category of agents. Building
 
 This skill synthesizes patterns from recently developed agents (Flux, Semaphores, Creativity) and the design principles.
 
+### When to Use Polynomial Agents Instead
+
+If your agent needs **mode-dependent behavior**—different inputs/outputs based on internal state—use a **Polynomial Agent** instead of `Agent[A, B]`.
+
+| Scenario | Use `Agent[A, B]` | Use `PolyAgent[S, A, B]` |
+|----------|-------------------|--------------------------|
+| Stateless transform | ✓ | ✓ (overkill) |
+| State machine | ✗ | ✓ |
+| Protocol phases | ✗ | ✓ |
+| Mode-dependent I/O | ✗ | ✓ |
+
+**See**: `plans/skills/polynomial-agent.md` for the polynomial agent skill guide.
+
 ---
 
 ## The Agent Protocol

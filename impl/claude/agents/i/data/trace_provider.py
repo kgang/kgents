@@ -36,6 +36,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import threading
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -43,6 +44,9 @@ from pathlib import Path
 from typing import Any, Callable
 
 logger = logging.getLogger(__name__)
+
+# Thread-safe singleton lock
+_instance_lock = threading.Lock()
 
 
 # =============================================================================
@@ -209,10 +213,21 @@ class TraceDataProvider:
 
     @classmethod
     def get_instance(cls) -> "TraceDataProvider":
-        """Get or create singleton instance."""
-        if cls._instance is None:
-            cls._instance = cls()
-        return cls._instance
+        """
+        Get or create singleton instance (thread-safe).
+
+        Uses double-checked locking pattern for efficient thread-safe access.
+        """
+        # Fast path: instance already exists
+        if cls._instance is not None:
+            return cls._instance
+
+        # Slow path: need to create instance with lock
+        with _instance_lock:
+            # Double-check after acquiring lock
+            if cls._instance is None:
+                cls._instance = cls()
+            return cls._instance
 
     def set_base_path(self, path: str) -> None:
         """Set base path for static analysis."""
@@ -311,7 +326,8 @@ class TraceDataProvider:
             hottest.sort(key=lambda x: x["callers"], reverse=True)
             return hottest[:limit]
 
-        except Exception:
+        except Exception as e:
+            logger.debug(f"Failed to get hottest functions: {e}")
             return []
 
     def get_callers(self, target: str, depth: int = 3) -> Any:
@@ -331,6 +347,11 @@ class TraceDataProvider:
         if self._static_graph is None:
             return []
 
+        # Validate input
+        if not target or not isinstance(target, str):
+            logger.debug(f"Invalid target for ghost calls: {target!r}")
+            return []
+
         try:
             ghosts = self._static_graph.get_ghost_calls(target)
             return [
@@ -342,7 +363,12 @@ class TraceDataProvider:
                 }
                 for g in ghosts
             ]
-        except Exception:
+        except AttributeError as e:
+            # Graph may not have get_ghost_calls method
+            logger.debug(f"Ghost calls not supported: {e}")
+            return []
+        except Exception as e:
+            logger.debug(f"Failed to get ghost calls for {target!r}: {e}")
             return []
 
     # =========================================================================
@@ -424,22 +450,33 @@ class TraceDataProvider:
         # Check runtime trace for deep recursion
         if self._runtime_monoid is not None:
             try:
-                for event in self._runtime_monoid.events:
-                    content = event.content
+                events = getattr(self._runtime_monoid, "events", None)
+                if events is None:
+                    return anomalies
+
+                for event in events:
+                    content = getattr(event, "content", None)
                     if isinstance(content, dict):
                         depth = content.get("depth", 0)
                         func = content.get("function", "unknown")
-                        if depth > 50:
+                        if isinstance(depth, int) and depth > 50:
                             anomalies.append(
                                 TraceAnomaly(
                                     type="deep_recursion",
                                     description=f"Call depth {depth} exceeds threshold",
-                                    location=func,
+                                    location=str(func),
                                     severity="warning",
                                 )
                             )
-            except Exception:
-                pass
+            except TypeError as e:
+                # events not iterable or other type issues
+                logger.debug(f"Could not iterate trace events: {e}")
+            except AttributeError as e:
+                # Missing expected attributes
+                logger.debug(f"Trace monoid missing expected attributes: {e}")
+            except Exception as e:
+                # Unexpected error - log but don't fail
+                logger.warning(f"Unexpected error detecting anomalies: {e}")
 
         return anomalies
 
@@ -540,14 +577,30 @@ class TraceDataProvider:
 
         # Get children (dependencies)
         try:
-            deps = graph.get_dependencies(node)
+            get_deps = getattr(graph, "get_dependencies", None)
+            if get_deps is None:
+                # Graph doesn't support dependency lookup
+                return tree_node
+
+            deps = get_deps(node)
+            if deps is None:
+                return tree_node
+
             for dep in deps:
+                if not isinstance(dep, str):
+                    continue
                 child = self._build_tree_from_graph(
                     dep, graph, visited, current_depth + 1
                 )
                 tree_node.children.append(child)
-        except Exception:
-            pass
+        except TypeError as e:
+            # deps not iterable
+            logger.debug(f"Dependencies not iterable for {node}: {e}")
+        except RecursionError:
+            # Prevent stack overflow from circular dependencies
+            logger.warning(f"Recursion limit hit building tree from {node}")
+        except Exception as e:
+            logger.debug(f"Failed to get dependencies for {node}: {e}")
 
         return tree_node
 

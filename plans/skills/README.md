@@ -24,12 +24,17 @@ This creates a **flywheel of knowledge accumulation**:
 ```
 plans/skills/
 ├── README.md                    # This file
-├── cli-command.md               # How to add a CLI command
 ├── agentese-path.md             # How to add an AGENTESE path
+├── agent-observability.md       # Adding observability to agents
+├── building-agent.md            # Create Agent[A, B] with functors
+├── cli-command.md               # How to add a CLI command
 ├── flux-agent.md                # How to create a Flux agent
-├── test-patterns.md             # Testing patterns and conventions
 ├── handler-patterns.md          # Common handler patterns
-└── plan-file.md                 # Writing plan files (Forest Protocol)
+├── hotdata-pattern.md           # Pre-computed data for demos/tests
+├── plan-file.md                 # Writing plan files (Forest Protocol)
+├── polynomial-agent.md          # Create PolyAgent[S, A, B] with modes
+├── reconciliation-session.md    # Audit and sync forest state
+└── test-patterns.md             # Testing patterns and conventions
 ```
 
 ---
@@ -128,23 +133,27 @@ How to confirm the skill was applied correctly.
 | Skill | Description | Difficulty |
 |-------|-------------|------------|
 | [agentese-path](agentese-path.md) | Add a new AGENTESE path (e.g., `self.soul.*`) | Medium |
-| [building-agent](building-agent.md) | Create a well-formed agent with functors and protocols | Medium |
+| [agent-observability](agent-observability.md) | Adding observability to agents | Medium |
+| [building-agent](building-agent.md) | Create a well-formed `Agent[A, B]` with functors | Medium |
 | [cli-command](cli-command.md) | Add a new CLI command to kgents | Easy |
 | [flux-agent](flux-agent.md) | Lift an agent to continuous stream processing | Medium |
 | [handler-patterns](handler-patterns.md) | Common patterns for CLI handlers | Easy-Medium |
+| [hotdata-pattern](hotdata-pattern.md) | Pre-computed LLM data for demos/tests (AD-004) | Easy |
 | [plan-file](plan-file.md) | Write plan files following the Forest Protocol | Easy |
+| [polynomial-agent](polynomial-agent.md) | Create `PolyAgent[S, A, B]` with state-dependent behavior | Medium-Advanced |
+| [reconciliation-session](reconciliation-session.md) | Audit, surface, and sync forest state | Medium |
 | [test-patterns](test-patterns.md) | Testing patterns and conventions | Easy-Medium |
 
 ---
 
 ## Future Skills (To Document)
 
-- [ ] Adding a D-gent memory backend
 - [ ] Writing Type I-V tests (T-gent patterns)
 - [ ] Creating a Tongue (DSL)
 - [ ] Implementing a protocol handler
 - [ ] Adding metrics and observability (Terrarium integration)
 - [ ] Implementing the Rodizio pattern (human-in-the-loop semaphores)
+- [ ] Sheaf emergence patterns (SOUL_SHEAF gluing)
 
 ---
 

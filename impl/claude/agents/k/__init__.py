@@ -183,6 +183,23 @@ from .persona import (
     query_persona,
 )
 
+# Phase 3 Polyfunctor: K-gent Polynomial (Eigenvector Contexts)
+from .polynomial import (
+    EIGENVECTOR_JUDGMENTS,
+    EIGENVECTOR_QUESTIONS,
+    EIGENVECTOR_VALUES,
+    SOUL_POLYNOMIAL,
+    EigenvectorContext,
+    SoulJudgment,
+    SoulPolynomialAgent,
+    SoulQuery,
+    SoulResponse,
+    eigenvector_directions,
+    eigenvector_transition,
+    from_sheaf_context,
+    to_sheaf_context,
+)
+
 # 110% Refinements (Domains 5-7)
 from .refinements import (
     # Domain 7: Deferred Capabilities
@@ -257,6 +274,19 @@ from .templates import (
     get_whisper_response,
     should_use_template,
     try_template_response,
+)
+
+# Phase 7: Watch Mode (Ambient Pair Programming)
+from .watcher import (
+    ComplexityHeuristic,
+    DocsHeuristic,
+    Heuristic,
+    HeuristicResult,
+    KgentWatcher,
+    NamingHeuristic,
+    PatternHeuristic,
+    TestsHeuristic,
+    WatcherConfig,
 )
 
 __all__ = [
@@ -430,4 +460,28 @@ __all__ = [
     "load_session",
     "quick_dialogue",
     "get_soul_dir",
+    # Phase 3 Polyfunctor: K-gent Polynomial
+    "EigenvectorContext",
+    "SoulQuery",
+    "SoulJudgment",
+    "SoulResponse",
+    "EIGENVECTOR_VALUES",
+    "EIGENVECTOR_QUESTIONS",
+    "EIGENVECTOR_JUDGMENTS",
+    "SOUL_POLYNOMIAL",
+    "eigenvector_directions",
+    "eigenvector_transition",
+    "to_sheaf_context",
+    "from_sheaf_context",
+    "SoulPolynomialAgent",
+    # Phase 7: Watch Mode (Ambient Pair Programming)
+    "KgentWatcher",
+    "WatcherConfig",
+    "Heuristic",
+    "HeuristicResult",
+    "ComplexityHeuristic",
+    "NamingHeuristic",
+    "PatternHeuristic",
+    "TestsHeuristic",
+    "DocsHeuristic",
 ]

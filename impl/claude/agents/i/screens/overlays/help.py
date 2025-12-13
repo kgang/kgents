@@ -17,6 +17,8 @@ from textual.containers import Container, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Static
 
+from ...theme.dashboard import THEME
+
 if TYPE_CHECKING:
     pass
 
@@ -61,50 +63,50 @@ class HelpOverlay(ModalScreen[None]):
     Press ? to open, Escape to close.
     """
 
-    CSS = """
-    HelpOverlay {
+    CSS = f"""
+    HelpOverlay {{
         align: center middle;
-    }
+    }}
 
-    HelpOverlay #help-container {
+    HelpOverlay #help-container {{
         width: 60;
         height: auto;
         max-height: 80%;
-        border: solid #4a4a5c;
-        background: #1a1a1a;
+        border: solid {THEME.border};
+        background: {THEME.background};
         padding: 1;
-    }
+    }}
 
-    HelpOverlay #help-header {
+    HelpOverlay #help-header {{
         height: 1;
-        color: #f5f0e6;
+        color: {THEME.text_primary};
         text-style: bold;
         text-align: center;
         margin-bottom: 1;
-    }
+    }}
 
-    HelpOverlay .help-category {
-        color: #e6a352;
+    HelpOverlay .help-category {{
+        color: {THEME.accent};
         text-style: bold;
         margin-top: 1;
-    }
+    }}
 
-    HelpOverlay .help-item {
-        color: #b3a89a;
-    }
+    HelpOverlay .help-item {{
+        color: {THEME.text_secondary};
+    }}
 
-    HelpOverlay .help-key {
-        color: #8b7ba5;
-    }
+    HelpOverlay .help-key {{
+        color: {THEME.info};
+    }}
 
-    HelpOverlay #help-footer {
+    HelpOverlay #help-footer {{
         height: 1;
-        color: #6a6560;
+        color: {THEME.text_muted};
         text-align: center;
         margin-top: 1;
-        border-top: solid #4a4a5c;
+        border-top: solid {THEME.border};
         padding-top: 1;
-    }
+    }}
     """
 
     BINDINGS = [

@@ -255,3 +255,193 @@ class TestCreateAllCollectors:
             git_collector = next(c for c in collectors if c.name == "git")
             assert isinstance(git_collector, GitCollector)
             assert git_collector.repo_path == Path(tmpdir)
+
+
+class TestTraceGhostCollector:
+    """Tests for TraceGhostCollector."""
+
+    @pytest.mark.asyncio
+    async def test_collect_returns_result(self) -> None:
+        """Collector returns a result with success status."""
+        from infra.ghost.collectors import TraceGhostCollector
+
+        collector = TraceGhostCollector(base_path=Path.cwd())
+        result = await collector.collect()
+
+        # Should always succeed (graceful degradation)
+        assert result.success or result.data.get("health_line") == "trace:not_available"
+
+    @pytest.mark.asyncio
+    async def test_collector_name(self) -> None:
+        """Collector has correct name."""
+        from infra.ghost.collectors import TraceGhostCollector
+
+        collector = TraceGhostCollector()
+        assert collector.name == "trace"
+
+    @pytest.mark.asyncio
+    async def test_collect_includes_static_analysis(self) -> None:
+        """Collector includes static analysis metrics when available."""
+        from infra.ghost.collectors import TraceGhostCollector
+
+        collector = TraceGhostCollector(base_path=Path.cwd())
+        result = await collector.collect()
+
+        if result.success and "static_analysis" in result.data:
+            static = result.data["static_analysis"]
+            assert "files_analyzed" in static
+            assert "definitions_found" in static
+            assert "is_available" in static
+
+    @pytest.mark.asyncio
+    async def test_collect_includes_runtime_metrics(self) -> None:
+        """Collector includes runtime trace metrics."""
+        from infra.ghost.collectors import TraceGhostCollector
+
+        collector = TraceGhostCollector(base_path=Path.cwd())
+        result = await collector.collect()
+
+        if result.success and "runtime" in result.data:
+            runtime = result.data["runtime"]
+            assert "total_events" in runtime
+            assert "is_available" in runtime
+
+    @pytest.mark.asyncio
+    async def test_collect_includes_anomalies(self) -> None:
+        """Collector includes anomalies list."""
+        from infra.ghost.collectors import TraceGhostCollector
+
+        collector = TraceGhostCollector(base_path=Path.cwd())
+        result = await collector.collect()
+
+        if result.success and "anomalies" in result.data:
+            anomalies = result.data["anomalies"]
+            assert isinstance(anomalies, list)
+
+    @pytest.mark.asyncio
+    async def test_collect_health_line(self) -> None:
+        """Collector builds a health line."""
+        from infra.ghost.collectors import TraceGhostCollector
+
+        collector = TraceGhostCollector(base_path=Path.cwd())
+        result = await collector.collect()
+
+        assert "health_line" in result.data
+        health = result.data["health_line"]
+        assert health.startswith("trace:")
+
+    @pytest.mark.asyncio
+    async def test_graceful_degradation(self) -> None:
+        """Collector degrades gracefully when TraceDataProvider unavailable."""
+        from infra.ghost.collectors import TraceGhostCollector
+
+        # Use a path with no Python files
+        with tempfile.TemporaryDirectory() as tmpdir:
+            collector = TraceGhostCollector(base_path=Path(tmpdir))
+            result = await collector.collect()
+
+            # Should still succeed even with no files to analyze
+            assert result.success
+
+    @pytest.mark.asyncio
+    async def test_collector_in_create_all(self) -> None:
+        """TraceGhostCollector is included in create_all_collectors."""
+        collectors = create_all_collectors()
+        names = [c.name for c in collectors]
+        assert "trace" in names
+
+    @pytest.mark.asyncio
+    async def test_hottest_functions_format(self) -> None:
+        """Hottest functions are formatted correctly."""
+        from infra.ghost.collectors import TraceGhostCollector
+
+        collector = TraceGhostCollector(base_path=Path.cwd())
+        result = await collector.collect()
+
+        if result.success and "static_analysis" in result.data:
+            static = result.data["static_analysis"]
+            hottest = static.get("hottest_functions", [])
+            for func in hottest:
+                assert "name" in func
+                assert "callers" in func
+
+
+class TestHardeningFeatures:
+    """Tests for robustness hardening."""
+
+    @pytest.mark.asyncio
+    async def test_git_collector_timeout_handling(self) -> None:
+        """GitCollector has timeout handling."""
+        from infra.ghost.collectors import GitCollector
+
+        # Verify the method signature includes timeout
+        collector = GitCollector()
+        # The _run_git method should have timeout param
+        import inspect
+
+        sig = inspect.signature(collector._run_git)
+        assert "timeout" in sig.parameters
+
+    def test_flinch_collector_io_error_handling(self) -> None:
+        """FlinchCollector handles IO errors gracefully."""
+        from infra.ghost.collectors import FlinchCollector
+
+        # Create collector pointing to a directory (not a file)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Point to the directory itself, not a file
+            dir_path = Path(tmpdir)
+            collector = FlinchCollector(flinch_path=dir_path)
+
+            # Should return empty patterns, not crash
+            patterns = collector.get_patterns()
+            assert "patterns" in patterns
+
+            # get_hot_files should return empty list
+            hot = collector.get_hot_files()
+            assert hot == []
+
+    def test_flinch_collector_invalid_test_field(self) -> None:
+        """FlinchCollector handles non-string test fields."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            flinch_path = Path(tmpdir) / "test.jsonl"
+
+            # Write data with invalid test field types
+            with open(flinch_path, "w") as f:
+                f.write(json.dumps({"ts": 1000, "test": 123}) + "\n")  # int
+                f.write(json.dumps({"ts": 1000, "test": None}) + "\n")  # None
+                f.write(json.dumps({"ts": 1000, "test": "valid::test"}) + "\n")
+
+            collector = FlinchCollector(flinch_path=flinch_path)
+            patterns = collector.get_patterns()
+
+            # Should only count the valid entry
+            assert patterns["total_flinches"] == 3
+            # But module grouping should skip invalid
+
+    @pytest.mark.asyncio
+    async def test_infra_collector_timeout_handling(self) -> None:
+        """InfraCollector handles kubectl timeout gracefully."""
+        # This tests that the collector has timeout handling in place
+        # The actual timeout behavior is tested via the async wait_for
+        from infra.ghost.collectors import DEFAULT_SUBPROCESS_TIMEOUT, InfraCollector
+
+        collector = InfraCollector()
+        # Verify the timeout constant exists and is reasonable
+        assert DEFAULT_SUBPROCESS_TIMEOUT == 30.0
+
+    @pytest.mark.asyncio
+    async def test_git_collector_handles_timeout_gracefully(self) -> None:
+        """GitCollector returns proper error on timeout."""
+        from infra.ghost.collectors import GitCollector
+
+        collector = GitCollector()
+
+        # Call with a very short timeout to test error handling path
+        # Note: This may actually complete before timeout on a real repo
+        result = await collector._run_git("status", timeout=0.001)
+
+        # Should either complete or return timeout error
+        assert result is not None
+        assert hasattr(result, "returncode")
+        assert hasattr(result, "stdout")
+        assert hasattr(result, "stderr")

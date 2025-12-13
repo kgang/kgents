@@ -6,6 +6,10 @@ Stores:
 - Layout preferences
 - Agent positions in the flux view
 - Connection visibility settings
+
+HotData Integration (AD-004):
+Demo functions use pre-computed fixtures when available,
+with inline fallbacks for first-run scenarios.
 """
 
 from __future__ import annotations
@@ -14,6 +18,8 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+
+from shared.hotdata import FIXTURES_DIR, HotData, register_hotdata
 
 from ..widgets.density_field import Phase
 
@@ -215,15 +221,28 @@ class SessionState:
             return cls()
 
 
-def create_demo_flux_state() -> FluxState:
-    """
-    Create a demo flux state with sample agents.
+# ─────────────────────────────────────────────────────────────────────────────
+# HotData Fixtures (AD-004: Pre-Computed Richness)
+# ─────────────────────────────────────────────────────────────────────────────
 
-    Useful for testing and demonstration.
+DEMO_FLUX_STATE_HOTDATA = HotData(
+    path=FIXTURES_DIR / "flux_states" / "demo.json",
+    schema=FluxState,
+)
+
+# Register with global registry for CLI management
+register_hotdata("demo_flux_state", DEMO_FLUX_STATE_HOTDATA)
+
+
+def _create_fallback_flux_state() -> FluxState:
+    """
+    Create inline fallback flux state (used when fixture is missing).
+
+    This is the inline definition preserved for first-run scenarios
+    and test environments where fixtures may not be available.
     """
     state = FluxState()
 
-    # Add some demo agents in a grid layout
     agents = [
         AgentSnapshot(
             id="g-gent",
@@ -292,3 +311,16 @@ def create_demo_flux_state() -> FluxState:
 
     state.focused_id = "robin"
     return state
+
+
+def create_demo_flux_state() -> FluxState:
+    """
+    Create a demo flux state with sample agents.
+
+    HotData Integration (AD-004):
+    - Loads from pre-computed fixture when available
+    - Falls back to inline definition for first-run scenarios
+
+    The pre-computed fixture contains richer, LLM-generated data.
+    """
+    return DEMO_FLUX_STATE_HOTDATA.load_or_default(_create_fallback_flux_state())

@@ -153,6 +153,68 @@ class TraceMonoid(Generic[T]):
         id_to_event = {e.id: e for e in self.events}
         return [id_to_event[eid] for eid in ordered_ids if eid in id_to_event]
 
+    def linearize_subset(self, event_ids: set[str]) -> list[Event[T]]:
+        """
+        Linearize only the specified events (respecting dependencies).
+
+        This is the key operation for CausalCone projection:
+        given a set of event IDs (typically the causal past),
+        return them in valid topological order.
+
+        Args:
+            event_ids: Set of event IDs to linearize
+
+        Returns:
+            List of events in valid execution order
+
+        Example:
+            # Get causal history for an agent's tip
+            causal_history = braid.get_all_dependencies(tip_id)
+            causal_history.add(tip_id)  # Include tip itself
+            linear_context = monoid.linearize_subset(causal_history)
+        """
+        if not event_ids:
+            return []
+
+        # Build subgraph of only the specified events
+        subgraph_deps: dict[str, set[str]] = {}
+        for eid in event_ids:
+            if eid in self._dependency_graph:
+                # Only include dependencies that are also in our subset
+                deps = self._dependency_graph.get_dependencies(eid)
+                subgraph_deps[eid] = deps & event_ids
+            else:
+                subgraph_deps[eid] = set()
+
+        # Topological sort on subgraph (Kahn's algorithm)
+        in_degree = {eid: len(deps) for eid, deps in subgraph_deps.items()}
+
+        # Build reverse mapping (who depends on whom)
+        dependents: dict[str, set[str]] = {eid: set() for eid in event_ids}
+        for eid, deps in subgraph_deps.items():
+            for dep in deps:
+                if dep in dependents:
+                    dependents[dep].add(eid)
+
+        # Start with events that have no dependencies (in subset)
+        from collections import deque
+
+        queue = deque([eid for eid, deg in in_degree.items() if deg == 0])
+        ordered_ids: list[str] = []
+
+        while queue:
+            current = queue.popleft()
+            ordered_ids.append(current)
+
+            for dependent in dependents.get(current, set()):
+                in_degree[dependent] -= 1
+                if in_degree[dependent] == 0:
+                    queue.append(dependent)
+
+        # Map IDs to events
+        id_to_event = {e.id: e for e in self.events}
+        return [id_to_event[eid] for eid in ordered_ids if eid in id_to_event]
+
     def project(self, agent: str) -> list[Event[T]]:
         """
         Project the Weave to a single agent's perspective.

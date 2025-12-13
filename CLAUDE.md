@@ -13,22 +13,24 @@ A specification for tasteful, curated, ethical, joy-inducing agents.
 
 Deeply specifying and implementing the agent ecosystem with AGENTESE as the meta-protocol.
 
-| Letter | Name | Theme |
-|--------|------|-------|
-| A | Agents | Abstract architectures + Art/Creativity coaches |
-| B | Bgents | Bio/Scientific discovery + Economics + Distillation |
-| C | Cgents | Category Theory basis (composability) |
-| D | Dgents | Data Agents (state, memory, persistence) |
-| E | Egents | Evolution (teleological thermodynamics) |
-| K | Kgent | Kent simulacra (interactive persona) |
-| L | Lgents | Lattice/Library (semantic registry) |
-| M | Mgents | Memory/Map (holographic cartography) |
-| N | Ngents | Narrative (witness/trace) |
-| T | Tgents | Testing (algebraic reliability, Types I-V) |
-| U | Ugents | Utility (tool use, MCP integration) |
-| Y | Ygent | Y-Combinator (cognitive + somatic topology) |
-| Ψ | Psigent | Psychopomp (metaphor engine) |
-| Ω | Omegagent | Somatic Orchestrator (morphemes, proprioception) |
+| Letter | Name | Theme | Polynomial |
+|--------|------|-------|------------|
+| A | Agents | Abstract architectures + Art/Creativity coaches | `ALETHIC_AGENT` |
+| B | Bgents | Bio/Scientific discovery + Economics + Distillation | — |
+| C | Cgents | Category Theory basis (composability) | — |
+| D | Dgents | Data Agents (state, memory, persistence) | `MEMORY_POLYNOMIAL` |
+| E | Egents | Evolution (teleological thermodynamics) | `EVOLUTION_POLYNOMIAL` |
+| K | Kgent | Kent simulacra (interactive persona) | `SOUL_POLYNOMIAL` |
+| L | Lgents | Lattice/Library (semantic registry) | — |
+| M | Mgents | Memory/Map (holographic cartography) | — |
+| N | Ngents | Narrative (witness/trace) | — |
+| T | Tgents | Testing (algebraic reliability, Types I-V) | — |
+| U | Ugents | Utility (tool use, MCP integration) | — |
+| Y | Ygent | Y-Combinator (cognitive + somatic topology) | — |
+| Ψ | Psigent | Psychopomp (metaphor engine) | — |
+| Ω | Omegagent | Somatic Orchestrator (morphemes, proprioception) | — |
+
+**Note**: Polynomial agents (`PolyAgent[S, A, B]`) capture state-dependent behavior. See `plans/skills/polynomial-agent.md`.
 
 ## AGENTESE: The Verb-First Ontology
 
@@ -106,11 +108,12 @@ await logos.invoke("world.house.manifest", economist_umwelt)  # → Appraisal
 | Skill | Description |
 |-------|-------------|
 | `agentese-path.md` | Adding AGENTESE paths (e.g., `self.soul.*`) |
-| `building-agent.md` | Creating well-formed agents with functors |
+| `building-agent.md` | Creating `Agent[A, B]` with functors |
 | `cli-command.md` | Adding CLI commands to kgents |
 | `flux-agent.md` | Lifting agents to stream processing |
 | `handler-patterns.md` | CLI handler patterns |
 | `plan-file.md` | Forest Protocol plan files |
+| `polynomial-agent.md` | Creating `PolyAgent[S, A, B]` with state machines |
 | `test-patterns.md` | Testing conventions and fixtures |
 
 ## Core Principles (Summary)

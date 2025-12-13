@@ -3,6 +3,12 @@
 from .cockpit import CockpitScreen, create_demo_snapshot
 from .flux import FluxScreen
 from .loom import LoomScreen, create_demo_cognitive_tree
+from .memory_map import (
+    LanguageGameWidget,
+    MemoryCrystalWidget,
+    MemoryMapScreen,
+    PheromoneFieldWidget,
+)
 from .mri import MRIScreen
 
 __all__ = [
@@ -16,4 +22,9 @@ __all__ = [
     # Cognitive Loom - Temporal navigation (branching history)
     "LoomScreen",
     "create_demo_cognitive_tree",
+    # Memory Map - Four Pillars visualization
+    "MemoryMapScreen",
+    "MemoryCrystalWidget",
+    "PheromoneFieldWidget",
+    "LanguageGameWidget",
 ]

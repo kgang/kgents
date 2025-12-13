@@ -28,6 +28,12 @@ from textual.screen import Screen
 from textual.widgets import Footer, Header, Static
 
 from ..data.core_types import Phase
+from ..data.garden import (
+    PolynomialState,
+    YieldTurn,
+    create_demo_polynomial_state,
+    create_demo_yield_turns,
+)
 from ..data.state import AgentSnapshot, create_demo_flux_state
 from ..widgets.density_field import DensityField
 from ..widgets.entropy import entropy_to_params
@@ -157,6 +163,222 @@ class ThoughtsStream(Static):
         return "\n".join(lines)
 
 
+class PolynomialStatePanel(Static):
+    """Display polynomial agent state machine."""
+
+    DEFAULT_CSS = """
+    PolynomialStatePanel {
+        width: 100%;
+        height: auto;
+        padding: 1;
+        color: #b3a89a;
+    }
+
+    PolynomialStatePanel .current-mode {
+        color: #e6a352;
+        text-style: bold;
+    }
+
+    PolynomialStatePanel .mode-node {
+        color: #b3a89a;
+    }
+    """
+
+    def __init__(
+        self,
+        state: PolynomialState | None = None,
+        name: str | None = None,
+        id: str | None = None,  # noqa: A002
+        classes: str | None = None,
+    ) -> None:
+        super().__init__(name=name, id=id, classes=classes)
+        self.state = state or create_demo_polynomial_state()
+
+    def render(self) -> str:
+        """Render polynomial state."""
+        # Build state machine visualization
+        mode_symbol_map = {
+            "GROUNDING": "●" if self.state.current_mode == "GROUNDING" else "○",
+            "DELIBERATING": "●" if self.state.current_mode == "DELIBERATING" else "○",
+            "JUDGING": "●" if self.state.current_mode == "JUDGING" else "○",
+            "COMPLETE": "●" if self.state.current_mode == "COMPLETE" else "○",
+        }
+
+        lines = [
+            f"[bold]Mode: {self.state.current_mode}[/]",
+            "",
+            "  GROUNDING   DELIBERAT   JUDGING    COMPLETE",
+            f"     {mode_symbol_map['GROUNDING']}    ──▶     {mode_symbol_map['DELIBERATING']}    ──▶    {mode_symbol_map['JUDGING']}   ──▶    {mode_symbol_map['COMPLETE']}",
+            "",
+            f"Valid inputs: {', '.join(self.state.valid_inputs)}",
+            f"State hash: {self.state.state_hash}",
+        ]
+
+        return "\n".join(lines)
+
+
+class YieldQueuePanel(Static):
+    """
+    Display pending YIELD turns awaiting approval.
+
+    This panel integrates with the Turn-gents YieldHandler to show
+    real pending yields from agents. It supports:
+    - Live refresh from YieldHandler
+    - Approve/reject via keyboard shortcuts (1-5 to select, a to approve, r to reject)
+    - Visual distinction for pending vs approved yields
+    """
+
+    DEFAULT_CSS = """
+    YieldQueuePanel {
+        width: 100%;
+        height: auto;
+        padding: 1;
+        color: #b3a89a;
+    }
+
+    YieldQueuePanel .yield-pending {
+        color: #f5d08a;
+    }
+
+    YieldQueuePanel .yield-approved {
+        color: #7bc275;
+    }
+
+    YieldQueuePanel .yield-selected {
+        background: #3a3a4c;
+    }
+    """
+
+    def __init__(
+        self,
+        yields: list[YieldTurn] | None = None,
+        name: str | None = None,
+        id: str | None = None,  # noqa: A002
+        classes: str | None = None,
+    ) -> None:
+        super().__init__(name=name, id=id, classes=classes)
+        self.yields = yields or []
+        self._selected_index = 0
+        self._use_real_handler = False  # Set to True to use real YieldHandler
+
+    def refresh_from_handler(self) -> None:
+        """
+        Refresh yields from the real YieldHandler.
+
+        Call this to pull pending yields from the Turn-gents system.
+        """
+        try:
+            from protocols.cli.handlers.approve import get_yield_handler
+
+            handler = get_yield_handler()
+            pending = handler.list_pending()
+
+            # Convert to YieldTurn format
+            self.yields = [
+                YieldTurn(
+                    id=t.id,
+                    content=t.yield_reason or t.content[:50]
+                    if hasattr(t, "content")
+                    else "",
+                    turn_type=f"YIELD:{getattr(t, 'original_type', 'ACTION')}",
+                    timestamp=t.timestamp,
+                    is_approved=False,
+                )
+                for t in pending[:5]  # Limit to 5
+            ]
+            self._use_real_handler = True
+            self.refresh()
+        except ImportError:
+            pass  # Handler not available
+
+    async def approve_selected(self) -> bool:
+        """
+        Approve the currently selected yield.
+
+        Returns True if approved successfully.
+        """
+        if not self.yields or self._selected_index >= len(self.yields):
+            return False
+
+        yield_turn = self.yields[self._selected_index]
+
+        if self._use_real_handler:
+            try:
+                from protocols.cli.handlers.approve import get_yield_handler
+
+                handler = get_yield_handler()
+                await handler.approve(yield_turn.id, "human")
+                self.refresh_from_handler()
+                return True
+            except ImportError:
+                pass
+
+        # Fallback: just mark as approved locally
+        yield_turn.is_approved = True
+        self.refresh()
+        return True
+
+    async def reject_selected(self, reason: str = "User rejected") -> bool:
+        """
+        Reject the currently selected yield.
+
+        Returns True if rejected successfully.
+        """
+        if not self.yields or self._selected_index >= len(self.yields):
+            return False
+
+        yield_turn = self.yields[self._selected_index]
+
+        if self._use_real_handler:
+            try:
+                from protocols.cli.handlers.approve import get_yield_handler
+
+                handler = get_yield_handler()
+                await handler.reject(yield_turn.id, reason, "human")
+                self.refresh_from_handler()
+                return True
+            except ImportError:
+                pass
+
+        # Fallback: remove from list
+        yield_turn.reason = reason
+        self.yields.pop(self._selected_index)
+        self._selected_index = min(self._selected_index, max(0, len(self.yields) - 1))
+        self.refresh()
+        return True
+
+    def select_index(self, index: int) -> None:
+        """Select a yield by index (1-5)."""
+        if 0 <= index < len(self.yields):
+            self._selected_index = index
+            self.refresh()
+
+    def render(self) -> str:
+        """Render yield queue."""
+        if not self.yields:
+            return "[dim]No pending yields[/dim]"
+
+        lines = [f"[bold]Pending approvals: {len(self.yields)}[/]", ""]
+
+        for i, yield_turn in enumerate(self.yields[:5], 1):  # Show up to 5
+            status = "[#7bc275]✓[/]" if yield_turn.is_approved else "[#f5d08a]⏳[/]"
+            selected = "▶ " if i - 1 == self._selected_index else "  "
+            content = (
+                yield_turn.content[:35] + "..."
+                if len(yield_turn.content) > 35
+                else yield_turn.content
+            )
+            turn_type = (
+                f"[dim]{yield_turn.turn_type}[/] " if yield_turn.turn_type else ""
+            )
+            lines.append(f'{selected}{status} [{i}] {turn_type}"{content}"')
+
+        lines.append("")
+        lines.append("[dim]1-5: select  a: approve  r: reject[/]")
+
+        return "\n".join(lines)
+
+
 class CockpitScreen(Screen[None]):
     """
     Cockpit View - LOD Level 1 (Surface).
@@ -246,6 +468,14 @@ class CockpitScreen(Screen[None]):
         height: 4;
     }
 
+    CockpitScreen .polynomial-panel {
+        height: 10;
+    }
+
+    CockpitScreen .yield-panel {
+        height: 10;
+    }
+
     CockpitScreen .agent-name {
         text-style: bold;
         color: #f5d08a;
@@ -274,6 +504,14 @@ class CockpitScreen(Screen[None]):
         Binding("right", "increase_temp", "Temp +", show=False),
         Binding("r", "refresh", "Refresh", show=True),
         Binding("q", "quit", "Quit", show=False),
+        # YIELD queue bindings
+        Binding("a", "approve_yield", "Approve", show=False),
+        Binding("x", "reject_yield", "Reject", show=False),
+        Binding("1", "select_yield_1", "Yield 1", show=False),
+        Binding("2", "select_yield_2", "Yield 2", show=False),
+        Binding("3", "select_yield_3", "Yield 3", show=False),
+        Binding("4", "select_yield_4", "Yield 4", show=False),
+        Binding("5", "select_yield_5", "Yield 5", show=False),
     ]
 
     # Reactive properties
@@ -306,11 +544,17 @@ class CockpitScreen(Screen[None]):
             self._create_demo_activity_history() if demo_mode else []
         )
 
+        # Polynomial state and yield queue (new panels)
+        self._polynomial_state = create_demo_polynomial_state() if demo_mode else None
+        self._yield_queue = create_demo_yield_turns() if demo_mode else []
+
         # Widget references
         self._density_field: DensityField | None = None
         self._temp_slider: Slider | None = None
         self._sparkline: Sparkline | None = None
         self._graph: GraphLayout | None = None
+        self._polynomial_panel: PolynomialStatePanel | None = None
+        self._yield_panel: YieldQueuePanel | None = None
 
     def _create_demo_semaphores(self) -> list[dict[str, str]]:
         """Create demo semaphores."""
@@ -436,6 +680,15 @@ class CockpitScreen(Screen[None]):
                         )
                         yield self._temp_slider
 
+                    # Polynomial state panel (NEW)
+                    if self._polynomial_state:
+                        with Container(classes="panel polynomial-panel"):
+                            yield Static("[Polynomial State]", classes="panel-title")
+                            self._polynomial_panel = PolynomialStatePanel(
+                                state=self._polynomial_state
+                            )
+                            yield self._polynomial_panel
+
                 # Right panel
                 with Vertical(id="right-panel"):
                     # Semaphores
@@ -447,6 +700,15 @@ class CockpitScreen(Screen[None]):
                     with Container(classes="panel thoughts-panel"):
                         yield Static("[Recent Thoughts]", classes="panel-title")
                         yield ThoughtsStream(thoughts=self._thoughts)
+
+                    # Yield queue panel (NEW)
+                    if self._yield_queue:
+                        with Container(classes="panel yield-panel"):
+                            yield Static("[Yield Queue]", classes="panel-title")
+                            self._yield_panel = YieldQueuePanel(
+                                yields=self._yield_queue
+                            )
+                            yield self._yield_panel
 
                     # Mini connection graph
                     with Container(classes="panel graph-panel"):
@@ -552,6 +814,50 @@ class CockpitScreen(Screen[None]):
         """Quit the application (q key)."""
         self.app.exit()
 
+    # YIELD queue actions
+    async def action_approve_yield(self) -> None:
+        """Approve the selected yield (a key)."""
+        if self._yield_panel:
+            success = await self._yield_panel.approve_selected()
+            if success:
+                self.notify("Yield approved", severity="information")
+            else:
+                self.notify("No yield to approve", severity="warning")
+
+    async def action_reject_yield(self) -> None:
+        """Reject the selected yield (x key)."""
+        if self._yield_panel:
+            success = await self._yield_panel.reject_selected()
+            if success:
+                self.notify("Yield rejected", severity="warning")
+            else:
+                self.notify("No yield to reject", severity="warning")
+
+    def action_select_yield_1(self) -> None:
+        """Select yield 1 (1 key)."""
+        if self._yield_panel:
+            self._yield_panel.select_index(0)
+
+    def action_select_yield_2(self) -> None:
+        """Select yield 2 (2 key)."""
+        if self._yield_panel:
+            self._yield_panel.select_index(1)
+
+    def action_select_yield_3(self) -> None:
+        """Select yield 3 (3 key)."""
+        if self._yield_panel:
+            self._yield_panel.select_index(2)
+
+    def action_select_yield_4(self) -> None:
+        """Select yield 4 (4 key)."""
+        if self._yield_panel:
+            self._yield_panel.select_index(3)
+
+    def action_select_yield_5(self) -> None:
+        """Select yield 5 (5 key)."""
+        if self._yield_panel:
+            self._yield_panel.select_index(4)
+
     # ─────────────────────────────────────────────────────────────
     # Public API
     # ─────────────────────────────────────────────────────────────
@@ -580,3 +886,38 @@ class CockpitScreen(Screen[None]):
         self._activity_history = self._activity_history[-20:]  # Keep last 20
         if self._sparkline:
             self._sparkline.values = self._activity_history
+
+    # ─────────────────────────────────────────────────────────────
+    # Interface Contract Methods (NEW)
+    # ─────────────────────────────────────────────────────────────
+
+    def get_polynomial_state(self) -> PolynomialState | None:
+        """Get the current polynomial agent state."""
+        return self._polynomial_state
+
+    def get_pending_yields(self) -> list[YieldTurn]:
+        """Get the list of pending yield turns."""
+        return self._yield_queue
+
+    def approve_yield(self, yield_id: str) -> None:
+        """Approve a specific yield turn."""
+        for yield_turn in self._yield_queue:
+            if yield_turn.id == yield_id:
+                yield_turn.is_approved = True
+                # Refresh the yield panel
+                if self._yield_panel:
+                    self._yield_panel.refresh()
+                return
+
+    def reject_yield(self, yield_id: str, reason: str) -> None:
+        """Reject a specific yield turn with a reason."""
+        for yield_turn in self._yield_queue:
+            if yield_turn.id == yield_id:
+                yield_turn.reason = reason
+                # Remove from queue
+                self._yield_queue.remove(yield_turn)
+                # Refresh the yield panel
+                if self._yield_panel:
+                    self._yield_panel.yields = self._yield_queue
+                    self._yield_panel.refresh()
+                return

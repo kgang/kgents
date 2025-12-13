@@ -1,0 +1,80 @@
+{
+  "agents": {
+    "g-gent": {
+      "id": "g-gent",
+      "name": "Grammar",
+      "phase": "ACTIVE",
+      "activity": 0.7,
+      "children": [],
+      "summary": "Parsing morphisms - transforming raw syntax into semantic structures. Currently processing a complex nested expression with multiple reduction paths. The parser has identified three potential parse trees and is evaluating disambiguation rules based on operator precedence and associativity.",
+      "grid_x": 0,
+      "grid_y": 0,
+      "connections": {
+        "robin": 0.8
+      }
+    },
+    "robin": {
+      "id": "robin",
+      "name": "Robin",
+      "phase": "ACTIVE",
+      "activity": 0.9,
+      "summary": "Hypothesis synthesis in full swing. Three competing hypotheses under active evaluation: (1) token validation bypass via clock skew, (2) session fixation through cookie manipulation, (3) privilege escalation via parameter tampering. Confidence distribution: 0.45, 0.35, 0.20. Evidence threads being woven into a coherent narrative.",
+      "grid_x": 2,
+      "grid_y": 1,
+      "connections": {
+        "summarizer": 0.6,
+        "j-gent": 0.3
+      }
+    },
+    "j-gent": {
+      "id": "j-gent",
+      "name": "J-gent",
+      "phase": "WAKING",
+      "activity": 0.3,
+      "children": [],
+      "summary": "Lazy evaluation engine stirring. 47 thunks accumulated in the evaluation queue. Forcing is being deferred until absolutely necessary. The most urgent thunk involves a recursive data structure that could benefit from memoization - considering whether to force now or continue accumulating.",
+      "grid_x": 4,
+      "grid_y": 0,
+      "connections": {}
+    },
+    "summarizer": {
+      "id": "summarizer",
+      "name": "Summarizer",
+      "phase": "DORMANT",
+      "activity": 0.1,
+      "children": [],
+      "summary": "Awaiting input from upstream agents. Last summary produced 3m ago covered authentication flow analysis. Ready to condense verbose streams into crystalline insights. Compression ratio target: 0.15. Buffer capacity: 12KB remaining.",
+      "grid_x": 4,
+      "grid_y": 2,
+      "connections": {}
+    },
+    "o-gent": {
+      "id": "o-gent",
+      "name": "Observer",
+      "phase": "ACTIVE",
+      "activity": 0.5,
+      "children": [],
+      "summary": "Monitoring flux topology across the agent mesh. Detected interesting pattern: robin's activity spike correlates with g-gent's parsing bursts. This suggests a feedback loop worth investigating. Collecting telemetry on inter-agent message latencies - current p99: 23ms.",
+      "grid_x": 0,
+      "grid_y": 2,
+      "connections": {
+        "robin": 0.4,
+        "g-gent": 0.2
+      }
+    },
+    "psi-gent": {
+      "id": "psi-gent",
+      "name": "Psychopomp",
+      "phase": "WANING",
+      "activity": 0.2,
+      "children": [],
+      "summary": "Metaphor engine cooling down after intense session. Last bridge constructed: 'authentication tokens as keys to a house - but who checks if the locksmith is trustworthy?' Currently in integration phase, letting the metaphor settle into semantic memory.",
+      "grid_x": 2,
+      "grid_y": 3,
+      "connections": {}
+    }
+  },
+  "focused_id": "robin",
+  "grid_width": 8,
+  "grid_height": 6
+}

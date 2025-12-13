@@ -187,23 +187,23 @@ class AgentPalette(Widget):
         with VerticalScroll():
             # Agents section
             yield Static("AGENTS", classes="section-header")
-            agent_list = ListView()
+            agent_items = []
             for spec in AGENT_CATALOG:
                 stars = "★" * spec.stars
                 item = ListItem(Static(f"{spec.display_name}  {stars}"))
                 item.spec = spec  # type: ignore
-                agent_list.append(item)
-            yield agent_list
+                agent_items.append(item)
+            yield ListView(*agent_items, id="agent-list")
 
             # Primitives section
             yield Static("PRIMITIVES", classes="section-header")
-            prim_list = ListView()
+            prim_items = []
             for spec in PRIMITIVE_CATALOG:
                 stars = "○" * spec.stars
                 item = ListItem(Static(f"{spec.display_name}  {stars}"))
                 item.spec = spec  # type: ignore
-                prim_list.append(item)
-            yield prim_list
+                prim_items.append(item)
+            yield ListView(*prim_items, id="prim-list")
 
     @on(ListView.Selected)
     def on_list_selected(self, event: ListView.Selected) -> None:

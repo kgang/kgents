@@ -1,0 +1,13 @@
+{
+  "id": "g-gent",
+  "name": "Grammar",
+  "phase": "ACTIVE",
+  "activity": 0.7,
+  "children": [],
+  "summary": "Parsing morphisms - transforming raw syntax into semantic structures. Currently processing a complex nested expression with multiple reduction paths.",
+  "grid_x": 0,
+  "grid_y": 0,
+  "connections": {
+    "robin": 0.8
+  }
+}

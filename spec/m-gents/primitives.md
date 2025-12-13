@@ -171,6 +171,297 @@ class EthicalGeometry:
 
 ---
 
+---
+
+## Stigmergic Primitives
+
+### PheromoneAgent
+
+Deposit and sense environmental traces for indirect coordination.
+
+```python
+PheromoneAgent: (Concept, Action) → TraceDeposit
+
+class PheromoneAgent(Agent[tuple[Concept, Action], TraceDeposit]):
+    """
+    Environmental memory via pheromone-like traces.
+
+    Instead of storing memories explicitly, deposit traces
+    that influence future behavior through gradients.
+
+    Integration with void.tithe: trace deposit IS the tithe—
+    paying forward for future agents.
+    """
+    field: PheromoneField
+    decay_rate: float = 0.1  # Natural forgetting per time unit
+
+    async def invoke(self, input: tuple[Concept, Action]) -> TraceDeposit:
+        concept, action = input
+        outcome = await self.evaluate_outcome(action)
+
+        # Deposit proportional to outcome quality
+        intensity = 1.0 + (outcome.success * 0.5)
+        await self.field.deposit(concept, intensity)
+
+        return TraceDeposit(
+            concept=concept,
+            intensity=intensity,
+            decay_rate=self.decay_rate,
+            timestamp=now()
+        )
+
+    async def follow_gradient(self, position: Concept) -> Concept:
+        """Move toward strongest trace (ant algorithm)."""
+        neighbors = await self.field.sense(position)
+        if not neighbors:
+            return await self.explore()  # Bushwhacking
+        # Probabilistic selection biased by intensity
+        return self.weighted_choice(neighbors)
+```
+
+### HiveMindAgent
+
+Collective memory emerging from distributed traces.
+
+```python
+HiveMindAgent: Query → CollectiveRecollection
+
+class HiveMindAgent(Agent[Query, CollectiveRecollection]):
+    """
+    Memory as emergent property of many trace depositors.
+
+    No central store—consensus emerges from accumulated traces.
+    Like ant colonies finding shortest paths without planning.
+    """
+    field: PheromoneField
+    participants: list[StigmergicAgent]
+
+    async def invoke(self, query: Query) -> CollectiveRecollection:
+        # Multiple agents sense the field
+        readings = await asyncio.gather(*[
+            agent.sense(query.concept)
+            for agent in self.participants
+        ])
+
+        # Consensus from convergent readings
+        consensus = self.aggregate(readings)
+
+        return CollectiveRecollection(
+            query=query,
+            consensus=consensus,
+            confidence=self.agreement_score(readings),
+            trace_count=len([r for r in readings if r])
+        )
+```
+
+---
+
+## Wittgensteinian Primitives
+
+### LanguageGameAgent
+
+Memory retrieval as playing a language game.
+
+```python
+LanguageGameAgent: (Concept, Context) → ValidMoves
+
+class LanguageGameAgent(Agent[tuple[Concept, Context], list[Move]]):
+    """
+    Memory as knowing-how-to-play.
+
+    From Wittgenstein: meaning is use. A concept's "memory"
+    is the set of valid moves one can make with it in context.
+
+    Modeled as polynomial functor: P(y) = Σₛ y^{D(s)}
+    - S: positions (states)
+    - D(s): directions (valid moves from state s)
+    """
+    games: dict[str, LanguageGame]  # Known games
+
+    async def invoke(self, input: tuple[Concept, Context]) -> list[Move]:
+        concept, context = input
+
+        # Find applicable game
+        game = self.find_game(context)
+        if not game:
+            return []  # Don't know how to play
+
+        # Current position from concept
+        position = game.locate(concept)
+
+        # Valid moves from this position
+        directions = game.directions(position)
+
+        return [
+            Move(
+                from_position=position,
+                direction=d,
+                result=game.apply(position, d),
+                grammar_check=game.is_grammatical(position, d)
+            )
+            for d in directions
+        ]
+
+    def find_game(self, context: Context) -> Optional[LanguageGame]:
+        """Which language game are we playing?"""
+        for name, game in self.games.items():
+            if game.matches_context(context):
+                return game
+        return None
+```
+
+### GrammarEvolver
+
+Learn the rules of language games from interaction.
+
+```python
+GrammarEvolver: Interaction → GameUpdate
+
+class GrammarEvolver(Agent[Interaction, GameUpdate]):
+    """
+    Language games evolve through use.
+
+    When novel moves succeed, they become grammatical.
+    When moves fail, the game learns new constraints.
+
+    "For a large class of cases... the meaning of a word is its use."
+    """
+    games: dict[str, LanguageGame]
+
+    async def invoke(self, interaction: Interaction) -> GameUpdate:
+        game = self.games.get(interaction.game_name)
+        if not game:
+            # New game discovered
+            game = LanguageGame.bootstrap(interaction)
+            self.games[interaction.game_name] = game
+            return GameUpdate(action="created", game=game)
+
+        # Observe move and outcome
+        move = interaction.move
+        outcome = interaction.outcome
+
+        if outcome.success:
+            if not game.is_grammatical(move.from_position, move.direction):
+                # Successful novel move → expand grammar
+                game.add_valid_move(move.from_position, move.direction)
+                return GameUpdate(action="expanded", move=move)
+        else:
+            if game.is_grammatical(move.from_position, move.direction):
+                # Failed grammatical move → context matters more
+                game.add_context_constraint(move, interaction.context)
+                return GameUpdate(action="constrained", move=move)
+
+        return GameUpdate(action="unchanged")
+```
+
+---
+
+## Active Inference Primitives
+
+### FreeEnergyAgent
+
+Memory retrieval minimizing expected free energy.
+
+```python
+FreeEnergyAgent: Observation → Action
+
+class FreeEnergyAgent(Agent[Observation, Action]):
+    """
+    Memory in service of self-evidencing.
+
+    Under the Free Energy Principle, agents are generative models
+    that minimize prediction error. Memory supports:
+    1. Better predictions (reduce surprise)
+    2. Policy selection (reduce expected future surprise)
+    3. Model update (learning)
+    """
+    generative_model: GenerativeModel  # Beliefs about world
+    preferences: Distribution  # Desired states
+
+    async def invoke(self, observation: Observation) -> Action:
+        # Update beliefs given observation (perception)
+        posterior = await self.infer_hidden_states(observation)
+
+        # Compute expected free energy for each possible action
+        policies = self.enumerate_policies()
+        G = {}
+        for policy in policies:
+            G[policy] = await self.expected_free_energy(
+                policy,
+                posterior,
+                self.preferences
+            )
+
+        # Select policy minimizing expected free energy
+        best_policy = min(policies, key=lambda p: G[p])
+
+        return best_policy.first_action()
+
+    async def expected_free_energy(
+        self,
+        policy: Policy,
+        beliefs: Distribution,
+        preferences: Distribution
+    ) -> float:
+        """
+        G = E[log Q(s) - log P(o|s) - log P(s)]
+
+        Balances:
+        - Epistemic value (information gain)
+        - Pragmatic value (achieving preferred states)
+        """
+        # Predict states under policy
+        predicted_states = await self.predict_under_policy(policy, beliefs)
+
+        # Epistemic: how much would we learn?
+        epistemic = self.info_gain(beliefs, predicted_states)
+
+        # Pragmatic: how close to preferences?
+        pragmatic = self.kl_divergence(predicted_states, preferences)
+
+        return pragmatic - epistemic  # Lower is better
+```
+
+### SurpriseMinimizer
+
+Consolidation driven by prediction error.
+
+```python
+SurpriseMinimizer: MemorySet → ConsolidatedMemory
+
+class SurpriseMinimizer(Agent[set[Memory], HolographicMemory]):
+    """
+    Consolidation as free energy minimization.
+
+    Keep memories that reduce prediction error.
+    Compress memories that add only complexity.
+    Forget memories that conflict with world model.
+    """
+    world_model: GenerativeModel
+
+    async def invoke(self, memories: set[Memory]) -> HolographicMemory:
+        consolidated = HolographicMemory()
+
+        for memory in memories:
+            # How surprising is this memory given our model?
+            surprise = await self.compute_surprise(memory)
+
+            # How much does it improve the model?
+            improvement = await self.model_improvement(memory)
+
+            if improvement > surprise:
+                # Memory reduces overall free energy → keep
+                consolidated.store(memory, resolution=1.0)
+            elif improvement > 0:
+                # Marginal improvement → compress
+                consolidated.store(memory, resolution=0.5)
+            # else: memory increases free energy → forget
+
+        return consolidated
+```
+
+---
+
 ## Advanced Primitives
 
 ### TemporalLens
@@ -401,8 +692,188 @@ Produces optimal, budget-constrained, foveated context for any turn.
 
 ---
 
+## Bi-Temporal Primitives
+
+### BiTemporalStore
+
+Memory with explicit event-time and knowledge-time separation.
+
+```python
+BiTemporalStore: BiTemporalQuery → list[BiTemporalFact]
+
+class BiTemporalStore(Agent[BiTemporalQuery, list[BiTemporalFact]]):
+    """
+    Two-dimensional temporal memory.
+
+    Every fact has:
+    - t_event: when did this happen in the world?
+    - t_known: when did the agent learn this?
+
+    Enables:
+    - Point-in-time queries: "What did I know at time T?"
+    - Retroactive correction: "I now know X was wrong"
+    - Belief archaeology: "How has my understanding evolved?"
+    """
+    facts: list[BiTemporalFact]
+
+    async def invoke(self, query: BiTemporalQuery) -> list[BiTemporalFact]:
+        results = []
+        for fact in self.facts:
+            # Match event time if specified
+            if query.as_of_event and fact.t_event > query.as_of_event:
+                continue
+            # Match knowledge time if specified
+            if query.as_of_known and fact.t_known > query.as_of_known:
+                continue
+            # Skip superseded facts unless we want the full history
+            if fact.superseded_by and not query.include_superseded:
+                continue
+            if query.matches(fact.content):
+                results.append(fact)
+        return results
+
+    async def correct(self, fact_id: str, new_content: Any, reason: str):
+        """Retroactively correct a belief without losing history."""
+        old_fact = self.get(fact_id)
+        new_fact = BiTemporalFact(
+            content=new_content,
+            t_event=old_fact.t_event,  # Same event time
+            t_known=now(),             # New knowledge time
+        )
+        old_fact.superseded_by = new_fact.id
+        self.facts.append(new_fact)
+```
+
+### BeliefArchaeologist
+
+Trace how understanding has evolved over time.
+
+```python
+BeliefArchaeologist: Concept → BeliefTimeline
+
+class BeliefArchaeologist(Agent[Concept, BeliefTimeline]):
+    """
+    Excavate the layers of belief about a concept.
+
+    "What did I believe about X at time T?"
+    "When did my understanding change?"
+    "What caused the revision?"
+    """
+    store: BiTemporalStore
+
+    async def invoke(self, concept: Concept) -> BeliefTimeline:
+        # Get all versions, including superseded
+        all_facts = await self.store.invoke(
+            BiTemporalQuery(
+                pattern=concept,
+                include_superseded=True
+            )
+        )
+
+        # Build timeline
+        timeline = BeliefTimeline(concept=concept)
+        for fact in sorted(all_facts, key=lambda f: f.t_known):
+            timeline.add_epoch(
+                belief=fact.content,
+                started=fact.t_known,
+                ended=all_facts[fact.superseded_by].t_known if fact.superseded_by else None,
+                superseded_by=fact.superseded_by
+            )
+
+        return timeline
+```
+
+---
+
+## Trace Monoid Primitives
+
+### CausalConeAgent
+
+Navigate the causal structure of memory.
+
+```python
+CausalConeAgent: MemoryEvent → CausalCone
+
+class CausalConeAgent(Agent[MemoryEvent, CausalCone]):
+    """
+    Memory respects causality.
+
+    Given an event, find:
+    - Past cone: what caused this?
+    - Future cone: what did this cause?
+    - Concurrent: what was independent?
+    """
+    weave: TraceMonoid
+
+    async def invoke(self, event: MemoryEvent) -> CausalCone:
+        past = self.weave.ancestors(event)
+        future = self.weave.descendants(event)
+        concurrent = self.weave.independent_of(event)
+
+        return CausalCone(
+            event=event,
+            past_cone=past,
+            future_cone=future,
+            concurrent=concurrent,
+            depth=max(len(past), len(future))
+        )
+```
+
+### KnotAgent
+
+Synchronization barrier for merging memory branches.
+
+```python
+KnotAgent: list[MemoryBranch] → MergedMemory
+
+class KnotAgent(Agent[list[MemoryBranch], MergedMemory]):
+    """
+    A Knot is a synchronization barrier in the Weave.
+
+    When multiple concurrent memory branches need to reconcile:
+    1. Identify conflicts
+    2. Apply merge strategy
+    3. Create unified view
+
+    Like a git merge for memories.
+    """
+
+    async def invoke(self, branches: list[MemoryBranch]) -> MergedMemory:
+        # Find common ancestor
+        common = self.find_common_ancestor(branches)
+
+        # Identify divergences
+        divergences = []
+        for branch in branches:
+            events_since = branch.events_since(common)
+            divergences.append(events_since)
+
+        # Detect conflicts (same concept, different content)
+        conflicts = self.detect_conflicts(divergences)
+
+        # Resolve
+        merged_events = []
+        for conflict in conflicts:
+            resolution = await self.resolve_conflict(conflict)
+            merged_events.append(resolution)
+
+        # Non-conflicting events just union
+        for div in divergences:
+            for event in div:
+                if event not in conflicts:
+                    merged_events.append(event)
+
+        return MergedMemory(
+            events=merged_events,
+            knot_point=now(),
+            source_branches=[b.id for b in branches]
+        )
+```
+
+---
+
 ## See Also
 
 - [holographic.md](holographic.md) - Architecture details
-- [README.md](README.md) - Philosophy
+- [README.md](README.md) - Philosophy and Four Pillars
 - [../anatomy.md](../anatomy.md) - Symbiont and Hypnagogic patterns

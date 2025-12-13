@@ -194,6 +194,36 @@
 
 ---
 
+## Turn-gents (`architecture/turn-gents.md`) — 100% COMPLETE ✅
+
+| Phase | Component | Status | Tests |
+|-------|-----------|--------|-------|
+| 1 | Turn Schema (Turn, TurnType, YieldTurn) | ✅ | 46 |
+| 2 | CausalCone + linearize_subset() | ✅ | 21 |
+| 3 | TurnBasedCapability Halo decorator | ✅ | 8 |
+| 4 | TurnBasedAdapter + LocalProjector | ✅ | 12 |
+| 5 | YieldHandler + approval strategies | ✅ | 40 |
+| 6 | TurnDAGRenderer for Terrarium TUI | ✅ | 25 |
+| 7 | TurnBudgetTracker (order + surplus) | ✅ | 35 |
+
+**Total**: 187 tests. All phases complete.
+
+**Files**:
+- `weave/turn.py` — Turn, TurnType, YieldTurn
+- `weave/causal_cone.py` — CausalCone, CausalConeStats
+- `weave/yield_handler.py` — YieldHandler, ApprovalStrategy
+- `weave/economics.py` — TurnBudgetTracker, BudgetPolicy
+- `agents/i/screens/turn_dag.py` — TurnDAGRenderer
+- `qa/demo_turn_gents.py` — Interactive demo
+
+**Integration Points**:
+- self/memory Phase 7: CausalConeAgent
+- interfaces/dashboard-overhaul: Debugger Screen LOD 2
+- agents/k-gent: Soul intercept via TurnBasedCapability
+- polynomial-agent: State transitions emit Turns
+
+---
+
 ## Verification
 
 ```bash
@@ -203,4 +233,4 @@ cd impl/claude && uv run mypy .
 
 ---
 
-*Last verified: 2025-12-13 Chief reconciliation (12,015 tests, mypy clean)*
+*Last verified: 2025-12-13 Chief reconciliation (12,515 tests, mypy clean)*

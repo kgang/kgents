@@ -327,7 +327,7 @@ def demo_grpc_daemon() -> bool:
     print_section("Start Daemon (in background)")
     print_code("""
 # In a separate terminal:
-python3.11 -m infra.cortex.daemon --port 50051
+python3.11 -m infra.cortex.daemon --port 50052
 
 # Or via kgents:
 kgents infra init
@@ -340,7 +340,7 @@ import grpc
 from protocols.proto.generated import LogosStub, StatusRequest
 
 async def call_daemon():
-    channel = grpc.aio.insecure_channel('localhost:50051')
+    channel = grpc.aio.insecure_channel('localhost:50052')
     stub = LogosStub(channel)
     response = await stub.GetStatus(StatusRequest(verbose=True))
     print(f"health: {response.health}")

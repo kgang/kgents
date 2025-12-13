@@ -106,9 +106,22 @@ Empty pipeline - no components added.
 Add components in the Forge to generate a pipeline.
 """
 
+import asyncio
+
+
 async def run_pipeline(input_data):
     """Empty pipeline - returns input unchanged."""
     return input_data
+
+
+async def main():
+    """Example usage."""
+    result = await run_pipeline("test input")
+    print(f"Result: {result}")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
 '''
 
     def _generate_imports(self, components: list[PipelineComponent]) -> list[str]:

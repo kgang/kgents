@@ -24,10 +24,10 @@
 
 ## Current Intent (2025-12-12 evening)
 
-* FUN TOYS *
-* ELEGANT LIGHTWEIGHT INTERACTIONS *
-* PRACTICAL VALUE *
-* SOMETHING I CAN SHOW PROFESSIONALLY AND ARTISTICALLY *
+* VISUAL UIs/Refined interactions *
+* MONEY GENERATING (planning) *
+* FUN YET TECHNICAL*
+
 
 **Constraints**:
 - Depth over breadth (category theory, not feature sprawl)

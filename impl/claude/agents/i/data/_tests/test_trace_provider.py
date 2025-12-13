@@ -322,11 +322,16 @@ class TestAnomalyDetection:
 
 
 class TestUnifiedCollection:
-    """Tests for collect_metrics."""
+    """Tests for collect_metrics.
 
+    NOTE: Tests with include_static=True do full static analysis (~20s).
+    Mark with @pytest.mark.slow to exclude from default runs.
+    """
+
+    @pytest.mark.slow
     @pytest.mark.asyncio
     async def test_collect_metrics_full(self) -> None:
-        """collect_metrics returns complete bundle."""
+        """collect_metrics returns complete bundle (SLOW: ~20s due to static analysis)."""
         from agents.i.data.trace_provider import TraceDataProvider
 
         TraceDataProvider._instance = None
@@ -346,7 +351,7 @@ class TestUnifiedCollection:
 
     @pytest.mark.asyncio
     async def test_collect_metrics_skip_static(self) -> None:
-        """collect_metrics with include_static=False."""
+        """collect_metrics with include_static=False (fast)."""
         from agents.i.data.trace_provider import TraceDataProvider
 
         TraceDataProvider._instance = None
@@ -358,9 +363,10 @@ class TestUnifiedCollection:
         assert metrics is not None
         assert metrics.runtime.is_available
 
+    @pytest.mark.slow
     @pytest.mark.asyncio
     async def test_collect_trace_metrics_convenience(self) -> None:
-        """collect_trace_metrics convenience function."""
+        """collect_trace_metrics convenience function (SLOW: ~20s due to static analysis)."""
         from agents.i.data.trace_provider import collect_trace_metrics
 
         metrics = await collect_trace_metrics(include_static=True)
@@ -468,3 +474,113 @@ class TestSubscription:
 
         provider.unsubscribe(callback)
         assert len(provider._subscribers) == 0
+
+
+# === Hardening Tests ===
+
+
+class TestThreadSafety:
+    """Tests for thread-safe singleton pattern."""
+
+    def test_concurrent_singleton_access(self) -> None:
+        """Concurrent access returns same instance."""
+        import threading
+
+        from agents.i.data.trace_provider import TraceDataProvider
+
+        TraceDataProvider._instance = None
+        instances: list[TraceDataProvider] = []
+        errors: list[Exception] = []
+
+        def get_instance() -> None:
+            try:
+                inst = TraceDataProvider.get_instance()
+                instances.append(inst)
+            except Exception as e:
+                errors.append(e)
+
+        threads = [threading.Thread(target=get_instance) for _ in range(10)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert len(errors) == 0
+        assert len(instances) == 10
+        # All instances should be the same object
+        assert all(inst is instances[0] for inst in instances)
+
+
+class TestGracefulDegradation:
+    """Tests for graceful degradation on invalid inputs."""
+
+    def test_get_ghost_calls_invalid_target(self) -> None:
+        """get_ghost_calls handles invalid targets gracefully."""
+        from agents.i.data.trace_provider import TraceDataProvider
+
+        TraceDataProvider._instance = None
+        provider = TraceDataProvider.get_instance()
+
+        # Empty string
+        result = provider.get_ghost_calls("")
+        assert result == []
+
+        # None (via type ignore for testing)
+        result = provider.get_ghost_calls(None)  # type: ignore[arg-type]
+        assert result == []
+
+    def test_detect_anomalies_with_malformed_monoid(self) -> None:
+        """detect_anomalies handles malformed monoid gracefully."""
+        from agents.i.data.trace_provider import TraceDataProvider
+
+        TraceDataProvider._instance = None
+        provider = TraceDataProvider.get_instance()
+
+        # Monoid without events attribute
+        class BrokenMonoid:
+            pass
+
+        provider.set_runtime_trace(BrokenMonoid())
+        anomalies = provider.detect_anomalies()
+        assert anomalies == []
+
+        # Monoid with non-iterable events
+        class NonIterableMonoid:
+            events = 42  # Not a list
+
+        provider.set_runtime_trace(NonIterableMonoid())
+        anomalies = provider.detect_anomalies()
+        assert anomalies == []
+
+    def test_build_tree_handles_missing_methods(self) -> None:
+        """_build_tree_from_graph handles graphs without get_dependencies."""
+        from agents.i.data.trace_provider import TraceDataProvider
+
+        TraceDataProvider._instance = None
+        provider = TraceDataProvider.get_instance()
+
+        class GraphWithoutMethod:
+            pass
+
+        tree = provider._build_tree_from_graph("test", GraphWithoutMethod(), set())
+        assert tree.name == "test"
+        assert tree.children == []
+
+    def test_build_tree_handles_non_string_deps(self) -> None:
+        """_build_tree_from_graph skips non-string dependencies."""
+        from agents.i.data.trace_provider import TraceDataProvider
+
+        TraceDataProvider._instance = None
+        provider = TraceDataProvider.get_instance()
+
+        class GraphWithMixedDeps:
+            def get_dependencies(self, node: str) -> list[Any]:
+                return ["valid_dep", 123, None, "another_valid"]
+
+        tree = provider._build_tree_from_graph("test", GraphWithMixedDeps(), set())
+        assert tree.name == "test"
+        # Should only include string deps
+        child_names = [c.name for c in tree.children]
+        assert "valid_dep" in child_names
+        assert "another_valid" in child_names
+        assert len(tree.children) == 2  # Only the two strings

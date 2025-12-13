@@ -1,0 +1,26 @@
+[
+  {
+    "id": "yield-1",
+    "content": "Execute deployment script to production environment? This will update auth-service v2.3.1 on 3 replicas.",
+    "turn_type": "YIELD:ACTION",
+    "timestamp": 0,
+    "is_approved": false,
+    "reason": ""
+  },
+  {
+    "id": "yield-2",
+    "content": "Publish kgents-core@0.5.2 to npm registry? Changelog includes breaking changes to Agent.invoke() signature.",
+    "turn_type": "YIELD:ACTION",
+    "timestamp": 0,
+    "is_approved": false,
+    "reason": ""
+  },
+  {
+    "id": "yield-3",
+    "content": "Send notification email to 1,247 subscribers about the security advisory?",
+    "turn_type": "YIELD:SPEECH",
+    "timestamp": 0,
+    "is_approved": false,
+    "reason": ""
+  }
+]

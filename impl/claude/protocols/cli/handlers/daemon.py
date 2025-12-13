@@ -46,7 +46,8 @@ PLIST_LABEL = "io.kgents.cortex"
 PLIST_FILENAME = f"{PLIST_LABEL}.plist"
 LAUNCH_AGENTS_DIR = Path.home() / "Library" / "LaunchAgents"
 LOGS_DIR = Path.home() / "Library" / "Logs" / "kgents"
-DEFAULT_PORT = 50051
+# 50051 is commonly used by Docker gRPC services, so we use 50052
+DEFAULT_PORT = 50052
 
 
 def cmd_daemon(args: list[str]) -> int:

@@ -1,0 +1,103 @@
+{
+  "kgent": {
+    "mode": "dialogue",
+    "garden_patterns": 12,
+    "garden_trees": 5,
+    "interactions_count": 127,
+    "tokens_used": 45231,
+    "last_dream_hours_ago": 2,
+    "is_online": true
+  },
+  "metabolism": {
+    "pressure": 0.42,
+    "temperature": 0.72,
+    "in_fever": false,
+    "fever_count": 2,
+    "is_online": true
+  },
+  "triad": {
+    "durability": 0.95,
+    "resonance": 0.88,
+    "reflex": 0.92,
+    "cdc_lag_ms": 127,
+    "synapse_active": true,
+    "outbox_pending": 3,
+    "is_online": true
+  },
+  "flux": {
+    "events_per_second": 2.5,
+    "queue_depth": 7,
+    "active_agents": 3,
+    "total_events_processed": 1847,
+    "error_rate": 0.02,
+    "is_online": true
+  },
+  "traces": [
+    {
+      "path": "self.soul.challenge",
+      "args": "(\"singleton\")",
+      "result": "REJECT",
+      "latency_ms": 23
+    },
+    {
+      "path": "world.cortex.invoke",
+      "args": "(gpt-4)",
+      "result": "success",
+      "latency_ms": 1200
+    },
+    {
+      "path": "void.entropy.tithe",
+      "args": "(0.1)",
+      "result": "discharged",
+      "latency_ms": 1
+    },
+    {
+      "path": "self.memory.recall",
+      "args": "(recent:5)",
+      "result": "3 patterns",
+      "latency_ms": 45
+    },
+    {
+      "path": "world.tool.execute",
+      "args": "(grep -r def)",
+      "result": "42 matches",
+      "latency_ms": 89
+    }
+  ],
+  "trace_analysis": {
+    "files_analyzed": 2582,
+    "definitions_found": 42189,
+    "calls_found": 133421,
+    "analysis_time_ms": 3880,
+    "is_online": true,
+    "hottest_functions": [
+      {"name": "TraceRenderer.__init__", "callers": 1655},
+      {"name": "CallVisitor.__init__", "callers": 1655},
+      {"name": "StaticCallGraph.__init__", "callers": 1655},
+      {"name": "logos.invoke", "callers": 892},
+      {"name": "AgentSnapshot.to_dict", "callers": 567}
+    ],
+    "call_trees": []
+  },
+  "turns": {
+    "total_turns": 42,
+    "by_type": {
+      "SPEECH": 18,
+      "ACTION": 12,
+      "THOUGHT": 8,
+      "YIELD": 3,
+      "SILENCE": 1
+    },
+    "by_source": {
+      "K-gent": 25,
+      "test-agent": 17
+    },
+    "pending_yields": 1,
+    "compression_ratio": 0.62,
+    "cone_stats": {
+      "K-gent": 0.58,
+      "test-agent": 0.66
+    },
+    "is_online": true
+  }
+}

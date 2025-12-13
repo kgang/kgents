@@ -176,6 +176,46 @@ class StreamableCapability(CapabilityBase):
     feedback: float = 0.0
 
 
+@dataclass(frozen=True, eq=True)
+class TurnBasedCapability(CapabilityBase):
+    """
+    Declare that this agent handles turn-based interactions.
+
+    The Turn-gents Protocol: interactions as causal morphisms.
+
+    The Projector will inject turn-based infrastructure:
+    - LocalProjector: CausalCone context projection, turn recording
+    - K8sProjector: Turn history in PVC, distributed cone computation
+
+    Turn Types:
+    - SPEECH: Utterance to user/agent (inspectable)
+    - ACTION: Tool call, side effect (interceptable)
+    - THOUGHT: Chain-of-thought (hidden by default)
+    - YIELD: Request for approval (blocks until resolved)
+    - SILENCE: Intentional non-action (logged)
+
+    Args:
+        allowed_types: Allowed turn types (None = all allowed)
+        dependency_policy: How to compute dependencies
+            - "causal_cone": Use CausalCone projection (default)
+            - "thread_only": Only agent's own events
+            - "explicit": Manual dependency specification
+        cone_depth: Maximum depth of causal cone (None = unlimited)
+        thought_collapse: Collapse THOUGHT turns in context (default: True)
+        entropy_budget: Entropy budget for order (production) turns
+        surplus_fraction: Fraction reserved for exploration (Accursed Share)
+        yield_threshold: Confidence threshold below which to YIELD
+    """
+
+    allowed_types: frozenset[str] | None = None  # None = all allowed
+    dependency_policy: str = "causal_cone"
+    cone_depth: int | None = None
+    thought_collapse: bool = True
+    entropy_budget: float = 1.0
+    surplus_fraction: float = 0.1
+    yield_threshold: float = 0.3
+
+
 # --- Capability Factory ---
 
 
@@ -251,6 +291,58 @@ class Capability:
             StreamableCapability decorator
         """
         return StreamableCapability(budget=budget, feedback=feedback)
+
+    @staticmethod
+    def TurnBased(
+        *,
+        allowed_types: set[str] | None = None,
+        dependency_policy: str = "causal_cone",
+        cone_depth: int | None = None,
+        thought_collapse: bool = True,
+        entropy_budget: float = 1.0,
+        surplus_fraction: float = 0.1,
+        yield_threshold: float = 0.3,
+    ) -> TurnBasedCapability:
+        """
+        Declare that this agent handles turn-based interactions.
+
+        The Turn-gents Protocol: interactions as causal morphisms.
+        Context is computed via CausalCone projection, not manually curated.
+
+        Args:
+            allowed_types: Set of allowed turn type names (e.g., {"SPEECH", "ACTION"}).
+                           None means all types allowed.
+            dependency_policy: How to compute dependencies:
+                - "causal_cone": Use CausalCone projection (default)
+                - "thread_only": Only agent's own events
+                - "explicit": Manual dependency specification
+            cone_depth: Maximum depth of causal cone (None = unlimited)
+            thought_collapse: Collapse THOUGHT turns in context
+            entropy_budget: Entropy budget for order (production) turns
+            surplus_fraction: Fraction reserved for exploration (Accursed Share)
+            yield_threshold: Confidence threshold below which to YIELD
+
+        Returns:
+            TurnBasedCapability decorator
+
+        Example:
+            @Capability.TurnBased(
+                allowed_types={"SPEECH", "ACTION", "THOUGHT"},
+                entropy_budget=10.0,
+                yield_threshold=0.5,
+            )
+            class MyAgent(Agent[str, str]):
+                ...
+        """
+        return TurnBasedCapability(
+            allowed_types=frozenset(allowed_types) if allowed_types else None,
+            dependency_policy=dependency_policy,
+            cone_depth=cone_depth,
+            thought_collapse=thought_collapse,
+            entropy_budget=entropy_budget,
+            surplus_fraction=surplus_fraction,
+            yield_threshold=yield_threshold,
+        )
 
 
 # --- Halo Introspection Functions ---
@@ -405,6 +497,7 @@ __all__ = [
     "SoulfulCapability",
     "ObservableCapability",
     "StreamableCapability",
+    "TurnBasedCapability",
     # Factory
     "Capability",
     # Introspection

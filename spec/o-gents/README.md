@@ -136,6 +136,13 @@ class TelemetryObserver:
 
 ### Telemetry Export
 
+**Implementation**: This is realized in `impl/claude/protocols/agentese/`:
+- `telemetry.py` — TelemetryMiddleware, `trace_invocation()` context manager
+- `metrics.py` — MetricsRegistry (counters, histograms, in-memory aggregation)
+- `exporters.py` — TelemetryConfig, OTLP/Jaeger/JSON exporters
+- **CLI**: `kgents telemetry status|traces|metrics|config|enable|disable`
+- **Tests**: 50+ across `test_telemetry.py`, `test_metrics.py`, `test_exporters.py`
+
 ```python
 class TelemetryExporter:
     """Export O-gent observations to external systems."""

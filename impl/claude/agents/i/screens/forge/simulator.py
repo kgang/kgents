@@ -260,11 +260,13 @@ class SimulationRunner(Widget):
         self._current_result = None
         self._current_step = 0
 
-        # Clear output
-        output = self.query_one("#sim-output", Static)
-        output.update("(awaiting input)")
-
-        self._set_status("Status: READY")
+        # Clear output (guard for unmounted widget)
+        try:
+            output = self.query_one("#sim-output", Static)
+            output.update("(awaiting input)")
+            self._set_status("Status: READY")
+        except Exception:
+            pass  # Not mounted yet
 
     def _simulate_component(
         self, component: PipelineComponent, input_value: Any
@@ -287,7 +289,11 @@ class SimulationRunner(Widget):
 
     def _update_display(self, result: SimulationResult) -> None:
         """Update the display with simulation results."""
-        output = self.query_one("#sim-output", Static)
+        # Guard: only update if mounted
+        try:
+            output = self.query_one("#sim-output", Static)
+        except Exception:
+            return  # Not mounted yet
 
         if result.success:
             # Show steps and final output

@@ -21,6 +21,7 @@ dev-dependencies = [
     "kopf>=1.39.0",
     "kubernetes>=34.1.0",
     "textual>=6.8.0",
+    "hypothesis>=6.148.7",
 ]
 
 [tool.uv.workspace]

@@ -84,6 +84,7 @@ DEVEX (Trust Loop):
   observe   Terrarium TUI (glass box visualization)
   tether    Attach to agent with signal forwarding
   trace     Static + runtime call graph tracing
+  telemetry OpenTelemetry observability (status|traces|metrics)
 
 PLANNING (Forest Protocol):
   forest    Plan forest health (status|update|check|lint)
@@ -95,6 +96,14 @@ SOUL (Digital Simulacra):
 META-CONSTRUCTION (Generative Machinery):
   meta      Meta-construction health (primitives, operads, sheaves)
   operad    Operad CLI (list, compose operations)
+
+TURN-GENTS (Causal Debugging & Governance):
+  turns     Show turn history for an agent
+  dag       Visualize turn DAG (causal structure)
+  fork      Fork from a turn for debugging
+  pending   List pending YIELD turns
+  approve   Approve a pending YIELD turn
+  reject    Reject a pending YIELD turn
 
 OPTIONS:
   --version     Show version
@@ -190,6 +199,17 @@ COMMAND_REGISTRY: dict[str, str] = {
     # Meta-Construction (Poly/Operad/Sheaf)
     "operad": "protocols.cli.handlers.operad:cmd_operad",
     "meta": "protocols.cli.handlers.meta:cmd_meta",
+    # OpenTelemetry Integration
+    "telemetry": "protocols.cli.handlers.telemetry:cmd_telemetry",
+    # Turn-gents Protocol (Turn Debugging & Governance)
+    "turns": "protocols.cli.handlers.turns:cmd_turns",
+    "dag": "protocols.cli.handlers.turns:cmd_dag",
+    "fork": "protocols.cli.handlers.turns:cmd_fork",
+    "pending": "protocols.cli.handlers.approve:cmd_pending",
+    "approve": "protocols.cli.handlers.approve:cmd_approve",
+    "reject": "protocols.cli.handlers.approve:cmd_reject",
+    # HotData Infrastructure (AD-004)
+    "fixture": "protocols.cli.handlers.fixture:cmd_fixture",
 }
 
 

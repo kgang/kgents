@@ -28,6 +28,7 @@ from .storage import StorageProvider, XDGPaths
 if TYPE_CHECKING:
     from agents.d.bicameral import BicameralMemory
     from agents.o.cortex_observer import CortexObserver
+    from weave import TheWeave
 
     from .dreamer import LucidDreamer
     from .hippocampus import Hippocampus
@@ -62,6 +63,9 @@ class LifecycleState:
     dreamer: LucidDreamer | None = None
     bicameral: BicameralMemory | None = None
     cortex_observer: CortexObserver | None = None
+
+    # Turn-gents Weave (global weave for turn recording)
+    weave: TheWeave | None = None
 
     @property
     def dream_cycles_total(self) -> int:
@@ -222,7 +226,14 @@ class LifecycleManager:
                 errors.append(f"Bicameral stack creation warning: {e}")
                 # Non-fatal: system can work without full stack
 
-            # Stage 9: Configure OTEL telemetry
+            # Stage 9: Create Turn-gents Weave
+            try:
+                self._create_weave()
+            except Exception as e:
+                errors.append(f"Weave creation warning: {e}")
+                # Non-fatal: system works without turn history
+
+            # Stage 10: Configure OTEL telemetry
             try:
                 self._setup_telemetry()
             except Exception as e:
@@ -503,6 +514,31 @@ class LifecycleManager:
             pass
         except Exception as e:
             self._state.errors.append(f"CortexObserver creation warning: {e}")
+
+    def _create_weave(self) -> None:
+        """
+        Create the global Turn-gents Weave.
+
+        The Weave is the shared history for all agents using
+        @Capability.TurnBased. This enables:
+        - CausalCone context projection
+        - Turn debugging via `kg turns` and `kg dag`
+        - Compression metrics for H1 validation
+
+        Non-fatal: system degrades gracefully without weave.
+        """
+        if not self._state:
+            return
+
+        try:
+            from weave import TheWeave
+
+            self._state.weave = TheWeave()
+        except ImportError:
+            # Weave module not available
+            self._state.errors.append("Weave module not available")
+        except Exception as e:
+            self._state.errors.append(f"Weave creation failed: {e}")
 
     async def _attempt_recovery(self, storage: StorageProvider) -> None:
         """

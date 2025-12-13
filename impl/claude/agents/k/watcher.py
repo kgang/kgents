@@ -604,7 +604,7 @@ class KgentWatcher:
             from watchdog.events import FileSystemEventHandler
             from watchdog.observers import Observer
 
-            class Handler(FileSystemEventHandler):  # type: ignore[misc]
+            class Handler(FileSystemEventHandler):
                 def __init__(self, watcher: KgentWatcher) -> None:
                     self._watcher = watcher
 
