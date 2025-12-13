@@ -24,13 +24,10 @@
 
 ## Current Intent (2025-12-12 evening)
 
-**Primary (50%): K-gent Phase 2 — Flux Integration** — Phase 1 is DONE (`kgents soul challenge` works!). Now wire K-gent as a Flux stream: KgentFlux, SoulEvent hierarchy, Terrarium WebSocket bridge. The soul should be ambient—always running, perturbable, observable. **I want K-gent to feel present, not invoked.**
-
-**Secondary (30%): `self/memory` — Now Unblocked** — self/stream is 100% complete (Pulse, StateCrystal, all 302 tests). The comonad has its heartbeat and crystallization. Now wire memory: resume from crystals, cherish important checkpoints, compost the rest. **Context should persist across sessions.**
-
-**Exploration (15%): Terrarium Phase 3 + Bounty Board** — Metrics emission for I-gent widgets. The terrarium window should show pressure/flow/temperature. Also: the new Bounty Board (`plans/_bounty.md`) is stigmergic coordination for agent observations. **Let agents leave signals for other agents.**
-
-**Accursed (5%): Joy-inducing polish** — Glitch aesthetics. Oblique strategies. FeverOverlay. The river flows.
+* FUN TOYS *
+* ELEGANT LIGHTWEIGHT INTERACTIONS *
+* PRACTICAL VALUE *
+* SOMETHING I CAN SHOW PROFESSIONALLY AND ARTISTICALLY *
 
 **Constraints**:
 - Depth over breadth (category theory, not feature sprawl)

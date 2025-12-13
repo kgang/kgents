@@ -1,15 +1,15 @@
 ---
 path: void/entropy
 status: dormant
-progress: 70
-last_touched: 2025-12-12
+progress: 85
+last_touched: 2025-12-13
 touched_by: claude-opus-4.5
 blocking: []
 enables: [self/stream]
 session_notes: |
-  Core metabolism + Flux integration complete (57 tests).
-  CLI tithe command implemented (12 tests).
-  Remaining: TUI FeverOverlay widget.
+  Core metabolism + Flux integration complete (36 + 21 = 57 tests).
+  CLI tithe command complete (12 tests).
+  Total: 69 tests. Only TUI FeverOverlay remaining.
 ---
 
 # Metabolism: void.entropy.* Implementation
@@ -457,10 +457,11 @@ Wire to existing GlitchController:
 - [ ] Update `VoidContextResolver`
 - [x] Wire `tick()` to FluxAgent event processing
 
-### CLI Handler
-- [ ] `tithe.py` handler
-- [ ] Wire to `hollow.py`
-- [ ] Reflector output
+### CLI Handler ✅ COMPLETE
+- [x] `tithe.py` handler
+- [x] Wire to `hollow.py`
+- [x] Reflector output
+- [x] 12 tests in `protocols/cli/handlers/_tests/test_tithe.py`
 
 ### TUI Integration
 - [ ] `FeverOverlay` widget
@@ -471,7 +472,7 @@ Wire to existing GlitchController:
 - [x] `test_engine.py`: Pressure dynamics (36 tests)
 - [x] `test_fever.py`: FeverStream behavior
 - [x] `test_metabolism.py`: Flux integration (21 tests)
-- [ ] `test_cli_tithe.py`: Command execution
+- [x] `test_tithe.py`: Command execution (12 tests)
 
 ---
 

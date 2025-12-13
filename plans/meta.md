@@ -38,6 +38,12 @@
 2025-12-12  Symmetric lifting: every functor needs both lift() and unlift()
 2025-12-12  Observation is a functor: O(f) ≅ f with pluggable sinks
 2025-12-12  State threading: StateMonad.lift(agent) makes state transparent to composition
+2025-12-12  Stigmergic surface: living docs where agents append suggestions, humans curate
+2025-12-12  Eigenvectors ARE the PersonalityField: navigate, don't inject personality
+2025-12-12  Changes have teeth: commit() must modify eigenvectors/garden, not just record
+2025-12-13  PolyAgent[S,A,B] > Agent[A,B]: mode-dependent behavior via polynomial positions/directions
+2025-12-13  Operads define composition grammar; algebras apply grammar to specific systems
+2025-12-13  Sheaf gluing = emergence: compatible locals → global with capabilities no local has
 ```
 
 ## Anti-Patterns (Captured Failures)
@@ -65,4 +71,4 @@
 
 ---
 
-*Lines: 32/50 | Last pruned: never*
+*Lines: 35/50 | Last pruned: never*

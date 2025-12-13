@@ -220,11 +220,16 @@ def _emit_output(
 
 ### Step 2: Register in COMMAND_REGISTRY
 
+> **⚠️ CRITICAL: This step is REQUIRED. Without it, your command will not work!**
+>
+> Creating a handler file is not enough. The command MUST be registered in `COMMAND_REGISTRY`
+> or you'll get "Unknown command" errors. This is the most common mistake when adding CLI commands.
+
 Add the command to the registry in `hollow.py`.
 
 **File**: `impl/claude/protocols/cli/hollow.py`
 
-**Location**: Find the `COMMAND_REGISTRY` dict (around line 105)
+**Location**: Find the `COMMAND_REGISTRY` dict (around line 110)
 
 **Pattern**:
 ```python
@@ -236,6 +241,12 @@ COMMAND_REGISTRY: dict[str, str] = {
 }
 ```
 
+**Format**: `"command_name": "module.path:function_name"`
+
+- `command_name`: What the user types (e.g., `kgents soul`)
+- `module.path`: Python import path to the handler module
+- `function_name`: The `cmd_*` function to call
+
 **Example** (adding `soul` command):
 ```python
 COMMAND_REGISTRY: dict[str, str] = {
@@ -243,6 +254,17 @@ COMMAND_REGISTRY: dict[str, str] = {
 
     # K-gent Soul (Digital Simulacra)
     "soul": "protocols.cli.handlers.soul:cmd_soul",
+}
+```
+
+**Example** (adding `meta` and `operad` commands):
+```python
+COMMAND_REGISTRY: dict[str, str] = {
+    # ... existing commands ...
+
+    # Meta-Construction (Poly/Operad/Sheaf)
+    "operad": "protocols.cli.handlers.operad:cmd_operad",
+    "meta": "protocols.cli.handlers.meta:cmd_meta",
 }
 ```
 
@@ -354,6 +376,48 @@ Expected: Your command appears in the help listing.
 
 ---
 
+## Troubleshooting
+
+### "Unknown command: <command>"
+
+**Problem**: You created a handler file but the command doesn't work.
+
+**Cause**: The command is not registered in `COMMAND_REGISTRY`.
+
+**Solution**: Add the registration to `impl/claude/protocols/cli/hollow.py`:
+```python
+COMMAND_REGISTRY: dict[str, str] = {
+    # ... existing commands ...
+    "<command>": "protocols.cli.handlers.<command>:cmd_<command>",
+}
+```
+
+**Checklist**:
+1. ✅ Handler file exists at `impl/claude/protocols/cli/handlers/<command>.py`
+2. ✅ Handler has `cmd_<command>` function
+3. ✅ **Command is registered in `COMMAND_REGISTRY`** ← Most common miss!
+4. ✅ No typos in module path or function name
+
+### "Error loading command '<command>': No module named..."
+
+**Problem**: Command is registered but can't be imported.
+
+**Cause**: Module path in `COMMAND_REGISTRY` is wrong.
+
+**Solution**: Check the module path matches your file location:
+- File: `impl/claude/protocols/cli/handlers/foo.py`
+- Registry: `"foo": "protocols.cli.handlers.foo:cmd_foo"`
+
+### Command doesn't appear in `kgents --help`
+
+**Problem**: Command works but isn't discoverable.
+
+**Cause**: Not added to `HELP_TEXT`.
+
+**Solution**: Add to the `HELP_TEXT` string in `hollow.py` (see Step 3).
+
+---
+
 ## Common Pitfalls
 
 ### 1. Importing at module level
@@ -450,7 +514,9 @@ The `X` prefix and semantic error dict enable proper error handling.
 
 ---
 
-## Real Example: The `soul` Command
+## Real Examples
+
+### Example 1: The `soul` Command
 
 Here's how the `soul` command was implemented:
 
@@ -469,6 +535,36 @@ Here's how the `soul` command was implemented:
      soul      K-gent self-dialogue (reflect|advise|challenge|explore)
    ```
 
+### Example 2: The `meta` and `operad` Commands
+
+These commands visualize the meta-construction machinery:
+
+1. **Handlers**:
+   - `impl/claude/protocols/cli/handlers/meta.py` (~250 lines)
+   - `impl/claude/protocols/cli/handlers/operad.py` (~300 lines)
+
+2. **Registration** in `hollow.py`:
+   ```python
+   # Meta-Construction (Poly/Operad/Sheaf)
+   "operad": "protocols.cli.handlers.operad:cmd_operad",
+   "meta": "protocols.cli.handlers.meta:cmd_meta",
+   ```
+
+3. **Help text**:
+   ```
+   META-CONSTRUCTION (Generative Machinery):
+     meta      Meta-construction health (primitives, operads, sheaves)
+     operad    Operad CLI (list, compose operations)
+   ```
+
+4. **Usage**:
+   ```bash
+   kgents meta                    # Health overview
+   kgents meta soul               # KENT_SOUL visualization
+   kgents operad list             # List all operads
+   kgents operad soul vibe        # Execute soul vibe check
+   ```
+
 ---
 
 ## Related Skills
@@ -480,4 +576,5 @@ Here's how the `soul` command was implemented:
 
 ## Changelog
 
+- 2025-12-13: Added CRITICAL warning about COMMAND_REGISTRY, Troubleshooting section, `meta`/`operad` examples
 - 2025-12-12: Initial version based on `soul` command implementation

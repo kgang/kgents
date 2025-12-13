@@ -17,7 +17,7 @@
 
 ## Status
 
-**Tests**: 9,990 | **Mypy**: Strict (0 errors) | **Branch**: `main`
+**Tests**: 11,559 | **Mypy**: Strict (0 errors) | **Branch**: `main`
 
 ---
 
@@ -39,17 +39,23 @@ time.*     — Temporal (traces, forecasts)
 
 | Plan | Progress | Next |
 |------|----------|------|
-| `agents/k-gent` | 60% | Phase 3 done: CLI stream, Phase 4: Hypnagogia |
-| `architecture/alethic-algebra` | 20% | Phases 2-5 (HaloAlgebra, Guard) |
-| Exploration (15%) | plan | Terrarium metrics → I-gent, Bounty Board automation |
+| `architecture/polyfunctor` | 30% | **P1** — Spec from impl (4 spec files) |
+| `devex/dashboard` | 0% | **P3** — 4-panel TUI, 1Hz refresh |
+| `devex/watch-mode` | 0% | **P5** — Ambient K-gent, 5 heuristics |
 
 ## Completed (Recent)
 
-- **self/stream** — 302 tests, Phases 2.1-2.4 ALL COMPLETE (ContextWindow, ModalScope, Pulse, Crystal)
-- **Cluster-Native Runtime** — 24+ tests, PVC, DgentClient, U-gent + D-gent integration
-- **Terrarium** — 176+ tests, Mirror Protocol, K8s Operator, Purgatory integration
-- **Agent Semaphores** — 182 tests, Rodizio pattern, Phases 1-6
-- **Creativity v2.5** — 146+ tests, PAYADOR, Curator, Pataphysics
+- **DevEx Playground** — `kgents play`, 4 tutorials + REPL, 32 tests
+- **DevEx Scaffolding** — `kgents new agent`, Jinja2 templates, 3 archetypes
+- **Alethic Architecture** — 337 tests, Phases 1-6 (Functor, Halo, Archetypes, Projectors, CLI)
+- **I-gent Widgets** — 217 tests, full widget toolkit (Sparkline, Timeline, Graph, etc.)
+
+## Sprint Prompts
+
+| Sprint | Prompt |
+|--------|--------|
+| Polyfunctor | `prompts/polyfunctor-realization.md` — Spec poly/operad/sheaf, migrate genera |
+| DevEx | `prompts/devex-continuation.md` — Dashboard, watch-mode, gallery |
 
 ---
 
@@ -74,19 +80,20 @@ A(abstract) B(economics) C(category) D(memory) E(evolution) F(futures) G(generat
 - Python 3.12: `Generic[A]` + `TypeVar`, not `class Foo[A]:`
 - Imports: Prefer absolute (`from agents.x import Y`)
 - Cross-agent: `*_integration.py` or SemanticField
-- Foundational modules: `shared`, `a`, `d`, `l`, `c`
+- Foundational modules: `shared`, `a`, `d`, `l`, `c`, `poly`, `operad`, `sheaf`
 
 ---
 
 ## Deep Dive
 
 For details beyond this seed:
+- **Functor Field Guide**: `docs/functor-field-guide.md` — Alethic Algebra without category theory
+- **Operator's Guide**: `docs/operators-guide.md` — Scenarios, eigenvectors, stigmergic surface
+- **Categorical Foundations**: `docs/categorical-foundations.md` — Category theory, principles
 - **Forest canopy**: `plans/_forest.md`
 - **Human intent**: `plans/_focus.md`
-- **Learnings**: `plans/meta.md`
 - **Principles**: `spec/principles.md`
 - **Skills**: `plans/skills/` — patterns for common tasks
-- **Exploration**: `docs/exploration-terrarium-bounty-board.md` — metrics + bounty plan
 - **DevEx**: `/harden`, `/trace`, `/diff-spec`, `/debt`
 
 ---

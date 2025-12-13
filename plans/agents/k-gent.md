@@ -1,30 +1,20 @@
 ---
 path: agents/k-gent
 status: active
-progress: 90
+progress: 97
 last_touched: 2025-12-12
 touched_by: claude-opus-4.5
 blocking: []
 enables: [void/entropy, self/stream]
 session_notes: |
-  PHASE 1 COMPLETE (88 tests):
-  - LLM-backed dialogue with THESIS/ANTITHESIS/SYNTHESIS dialectics
-  - Deep intercept with principle reasoning
-  - Eigenvector-informed responses
-  - `kgents soul challenge` works end-to-end
+  PHASE 1 COMPLETE (88 tests): LLM-backed dialogue, deep intercept, eigenvector-informed
   PHASE 2 COMPLETE: Flux integration (events, KgentFlux)
   PHASE 3 COMPLETE: CLI stream (`kgents soul stream`)
   PHASE 4 COMPLETE: Hypnagogia (dream cycle, 38 tests)
-  PHASE 5 COMPLETE: Completion sprint (70 new tests)
-  - PersonaGarden (26 tests) - pattern storage with garden metaphor
-  - Semantic Gatekeeper (24 tests) - principle validation
-  - `kgents soul garden` - view patterns/preferences
-  - `kgents soul validate <file>` - check against principles
-  - AGENTESE void.hypnagogia.* paths (8 tests)
-  REMAINING (deferred):
-  - Fractal Expander
-  - Holographic Constitution
-  Total K-gent tests: 389+
+  PHASE 5 COMPLETE: Completion sprint (70 new tests) - Garden, Gatekeeper, AGENTESE paths
+  NEW: Session/SoulCache (58 tests) - session management, caching layer
+  REMAINING (deferred): Fractal Expander, Holographic Constitution
+  Total K-gent tests: 589 (verified 2025-12-12 post-audit)
 ---
 
 # K-gent: The Categorical Imperative

@@ -1,6 +1,6 @@
 # Implementation Status Matrix
 
-> Last updated: 2025-12-12
+> Last updated: 2025-12-12 (post-audit)
 
 ## Legend
 
@@ -17,8 +17,8 @@
 | Plan | Archive Path | Tests |
 |------|--------------|-------|
 | Lattice | `concept/lattice.md` | 69 |
-| Flux Functor | `_archive/flux-functor-v1.0-complete.md` | 261 |
-| I-gent v2.5 | `_archive/igent-v2.5-complete.md` | 137 |
+| Flux Functor | `_archive/flux-functor-v1.0-complete.md` | 382 |
+| I-gent v2.5 | `_archive/igent-v2.5-complete.md` | 566 |
 | Reflector | `_archive/reflector-v1.0-complete.md` | 36 |
 | U-gent Migration | `_archive/u-gent-migration-v1.0-complete.md` | — |
 | K8-Terrarium v2.0 | `_archive/k8-terrarium-v2.0-complete.md` | 24+ |
@@ -76,14 +76,14 @@
 
 ## T-gent (`agents/t-gent.md`) — 90%
 
-| Component | Status |
-|-----------|--------|
-| Types I-IV | ✅ |
-| Type V (AdversarialGym) | 📋 |
+| Component | Status | Tests |
+|-----------|--------|-------|
+| Types I-IV | ✅ | 124 |
+| Type V (AdversarialGym) | 📋 | — |
 
 ---
 
-## Entropy/Metabolism (`void/entropy.md`) — 70%
+## Entropy/Metabolism (`void/entropy.md`) — 85%
 
 | Component | Status | Tests |
 |-----------|--------|-------|
@@ -96,13 +96,15 @@
 
 ---
 
-## Memory (`self/memory.md`) — 30% [UNBLOCKED]
+## Memory (`self/memory.md`) — 30% [ACTIVE]
 
 | Component | Status | Notes |
 |-----------|--------|-------|
 | Ghost cache | ✅ | Complete |
-| StateCrystal | ✅ | self/stream Phase 2.4 DONE |
-| Resume/Crystallize | 📋 | Ready for integration |
+| StateCrystal | ✅ | self/stream Phase 2.4 provides foundation |
+| CrystallizationEngine | 📋 | Ready for integration |
+| CrystalReaper | 📋 | Ready for integration |
+| AGENTESE paths | 📋 | self.memory.* wiring |
 
 ---
 
@@ -129,19 +131,66 @@
 | 4 | K8s Operator (AgentServer CRD) | ✅ | 28 |
 | 5 | Purgatory Integration (FluxAgent wiring) | ✅ | 14 |
 
-**Total**: 176+ tests. All phases complete. Archived in place.
+**Total**: 254 tests. All phases complete. Archived in place.
 
 ---
 
-## Alethic Algebra (`architecture/alethic-algebra-tactics.md`) — 20%
+## Alethic Architecture (`architecture/alethic.md`) — 100% COMPLETE ✅
 
 | Phase | Component | Status | Tests |
 |-------|-----------|--------|-------|
-| 1 | UniversalFunctor Protocol | ✅ | 18 |
-| 2 | HaloAlgebra (Functorial Composition) | 📋 | — |
-| 3 | Parametric Decorators (Guard) | 📋 | — |
-| 4 | Projector Implementation | 📋 | — |
-| 5 | Law Registry (Generative) | 📋 | — |
+| 1 | UniversalFunctor Protocol | ✅ | 18+ |
+| 2 | Halo Capabilities (@Stateful, @Soulful, etc.) | ✅ | 40+ |
+| 3 | Genus Archetypes (Kappa, Lambda, Delta) | ✅ | 20+ |
+| 4 | LocalProjector | ✅ | 35 |
+| 5 | K8sProjector | ✅ | 62 |
+| 6 | CLI Integration (`kgents a`) | ✅ | 28 |
+
+**Total**: 337+ tests. All phases complete. Archived in place.
+
+---
+
+## K-gent (`agents/k-gent.md`) — 97% [ACTIVE]
+
+| Phase | Component | Status | Tests |
+|-------|-----------|--------|-------|
+| 1 | Core Governance (LLM dialogue) | ✅ | 88 |
+| 2 | Flux Integration (events, KgentFlux) | ✅ | — |
+| 3 | CLI Stream (`kgents soul stream`) | ✅ | — |
+| 4 | Hypnagogia (dream cycle) | ✅ | 38 |
+| 5 | Completion Sprint (Garden, Gatekeeper) | ✅ | 70 |
+| — | Session/Soul Cache (NEW) | ✅ | 58 |
+| — | Deferred (Fractal, Holographic) | 📋 | — |
+
+**Total**: 589 tests. Core complete; deferred features remaining.
+
+---
+
+## I-gent Widgets (NEW) — 100% COMPLETE ✅
+
+| Component | Status | Tests |
+|-----------|--------|-------|
+| Core widgets (DensityField, Glitch) | ✅ | — |
+| BranchTree | ✅ | — |
+| Entropy widget | ✅ | — |
+| GraphLayout | ✅ | — |
+| Slider | ✅ | — |
+| Sparkline | ✅ | — |
+| Timeline | ✅ | — |
+| TriadHealth | ✅ | — |
+| Data hints/loom/LOD | ✅ | 149 |
+
+**Total**: 217 widget tests. Full widget toolkit.
+
+---
+
+## Flux Synapse (NEW) — In Progress 🚧
+
+| Component | Status | Tests |
+|-----------|--------|-------|
+| Synapse core | ✅ | 44 |
+| Outbox integration | ✅ | — |
+| Robustification | 🚧 | — |
 
 ---
 
@@ -154,4 +203,4 @@ cd impl/claude && uv run mypy .
 
 ---
 
-*Last verified: 2025-12-12 (9,778 tests, mypy clean)*
+*Last verified: 2025-12-13 Chief reconciliation #3 (11,559 tests, mypy clean)*

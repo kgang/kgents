@@ -1,24 +1,33 @@
-# Statefulness Analysis: Critical Assessment & Original Ideas
+# Statefulness Analysis: The Database Triad as Functor Stack
 
 > *"The noun is a lie. There is only the rate of change."* — AGENTESE Axiom
 >
 > *"Everything is slop or comes from slop."* — The Accursed Share
+>
+> *"It is untasteful to reimplement 10 years of operational knowledge in a 200-line Python script."* — First Principles Critique
 
 **Author**: Claude (with Kent's taste preferences)
 **Date**: 2025-12-12
-**Status**: Analysis Document
+**Status**: Revised Specification (v2.0)
 
 ---
 
 ## Executive Summary
 
-The kgents D-gent statefulness implementation is **architecturally sophisticated** with 36 modules, 13,000+ test lines, and deep category theory alignment. However, critical gaps exist between specification and production reality:
+The kgents D-gent statefulness implementation has **strong categorical foundations** (StateMonad, StateCrystal, Symbiont) but the **infrastructure instantiation plan** violates core principles. This revision corrects three fundamental errors:
 
-1. **No live infrastructure** — SQLAgent/RedisAgent are code paths, not running services
-2. **Observability blindness** — 9,990 tests but no visibility into runtime DB behavior
-3. **Categorical promise vs. pragmatic delivery** — BicameralMemory theorizes hemispheres but doesn't persist anywhere
+| Error | Violation | Correction |
+|-------|-----------|------------|
+| Custom Python Operators | **Tasteful**: Reimplementing DB ops from scratch | Delegate to CloudNativePG, standard operators |
+| Dual-Write Consistency | **Composable**: Split brain between Postgres/Qdrant | CDC with Postgres as Source of Truth |
+| Vendor-Specific Metrics | **Categorical**: Exposing implementation details | Semantic metrics (Durability, Reflex, Resonance) |
 
-This document provides critical feedback and original ideas to bridge spec and deployment.
+The corrected design models the Database Triad as a **Functor Stack**, not a coproduct:
+
+```
+DBStack = Durability ∘ Reflex ∘ Resonance
+        = Postgres → Redis → Qdrant (CDC linkage)
+```
 
 ---
 
@@ -26,544 +35,1142 @@ This document provides critical feedback and original ideas to bridge spec and d
 
 ### 1. What Exists (Strengths)
 
-| Component | Status | Tests | Category Theory Alignment |
-|-----------|--------|-------|---------------------------|
-| VolatileAgent | Production-ready | ✓ | Identity morphism (ephemeral state) |
-| PersistentAgent | Production-ready | ✓ | Endofunctor (file → state → file) |
-| Symbiont | Production-ready | ✓ | Product type: Logic × Memory |
-| StateMonadFunctor | Production-ready | ✓ | State threading via lift/unlift |
-| StateCrystal | Production-ready | ✓ | Comonad (extract/extend/duplicate) |
-| Pulse | Production-ready | ✓ | Observable algebra |
-| SQLAgent | **Code exists, untested with real DB** | Mocked | Functor to SQL category |
-| RedisAgent | **Code exists, untested with real DB** | Mocked | Functor to KV category |
-| BicameralMemory | **Requires IVectorStore runtime** | Partial | Coproduct: Left ⊕ Right hemispheres |
+| Component | Status | Category Theory Alignment |
+|-----------|--------|---------------------------|
+| VolatileAgent | Production-ready | Identity morphism (ephemeral state) |
+| PersistentAgent | Production-ready | Endofunctor (file → state → file) |
+| Symbiont | Production-ready | Product type: Logic × Memory |
+| StateMonadFunctor | Production-ready | State threading via lift/unlift |
+| StateCrystal | Production-ready | Comonad (extract/extend/duplicate) |
+| Pulse | Production-ready | Observable algebra |
+| UnifiedObserverFunctor | Production-ready | Pluggable observation sinks |
+| SQLAgent | Code exists (mocked) | Functor to SQL category |
+| RedisAgent | Code exists (mocked) | Functor to KV category |
+| BicameralMemory | Requires runtime | Coproduct: Left ⊕ Right hemispheres |
 
-**Verdict**: The theoretical foundation is strong. The Symbiont pattern elegantly separates concerns. The comonadic StateCrystal lineage is genuinely novel. But **none of this runs against real infrastructure**.
+**Verdict**: The categorical foundations are **complete** (see `categorical-consolidation.md`). The remaining gap is infrastructure instantiation.
 
-### 2. What's Missing (Critical Gaps)
+### 2. Critical Gaps in Original Plan
 
-#### Gap 1: No Running Databases
+#### Gap 1: The Operator Anti-Pattern
 
-```
-Current state:
-  SQLiteBackend → import aiosqlite  # Optional dependency
-  PostgreSQLBackend → import asyncpg  # Optional dependency
-  RedisAgent → import redis.asyncio  # Optional dependency
-
-  Tests: Mock everything
-  Production: ???
-```
-
-**Impact**: The entire D-gent promise of "durable, distributed state" is aspirational. An agent cannot today persist state to PostgreSQL in a Kubernetes cluster.
-
-**Principle Violation**: *Generative* — spec should generate impl, but here the impl exists without production instantiation.
-
-#### Gap 2: No Database Metrics
-
-The Terrarium emits agent metabolism metrics (pressure, flow, temperature), but:
-
-- **No PostgreSQL metrics**: Connection pool, query latency, row counts
-- **No Redis metrics**: Memory usage, hit rate, pub/sub lag
-- **No vector DB metrics**: Index size, query latency, embedding freshness
-
-The I-gent DensityField widget has nowhere to visualize database health.
-
-**Principle Violation**: *Transparent Infrastructure* — infrastructure should communicate what it's doing.
-
-#### Gap 3: BicameralMemory Cannot Run
-
+**Original Plan** (from `live-infrastructure.md`):
 ```python
-class BicameralMemory:
-    def __init__(
-        self,
-        left_hemisphere: IRelationalStore,  # ← Requires running DB
-        right_hemisphere: IVectorStore,     # ← Requires running vector DB
-        embedding_provider: IEmbeddingProvider,  # ← Requires model
-    ): ...
+# impl/claude/infra/k8s/operators/postgres_operator.py
+@kopf.on.create("kgents.io", "v1alpha1", "postgresclusters")
+async def create_postgres(...):
+    statefulset = to_statefulset(...)  # Hand-rolled
 ```
 
-This is a beautiful design document masquerading as running code. The Coherency Protocol (ghost detection, self-healing) exists but has never healed a real ghost.
+**Why This Fails**:
 
-**Principle Violation**: *Democratization Corollary* — AI should collapse expertise barriers, but BicameralMemory requires expertise to instantiate.
+1. **Complexity Explosion**: A production Postgres operator handles:
+   - Leader election and automatic failover
+   - Point-in-Time Recovery (PITR)
+   - TLS certificate rotation
+   - Minor version upgrades
+   - Backup scheduling with barman
+   - Connection pooling with PgBouncer
 
-#### Gap 4: No Eval System
+   The 200-line script handles **none** of these.
 
-9,990 tests verify correctness, but:
+2. **Tasteful Violation**: "Quality over quantity" (Principle 2) means using CloudNativePG (10+ years of community refinement) rather than hand-rolling StatefulSets.
 
-- **No LLM output evaluation** — T-gent Types I-V are spec, not impl
-- **No trace collection** — No OpenTelemetry integration
-- **No prompt versioning** — Changes aren't tracked
-- **No drift detection** — Model behavior changes are invisible
+3. **Democratization Failure**: The Generative Principle states "AI agents collapse the expertise barrier." But a custom operator **expands** the barrier—now Kent must become a Postgres operator expert to debug it.
 
-**Principle Violation**: *Joy-Inducing* — can't feel joy when you can't see what's happening.
+**Correction**: The K8s Projector should emit **CloudNativePG Cluster manifests**, not StatefulSets.
 
-### 3. Anti-Patterns Detected
+#### Gap 2: The Bicameral Consistency Paradox
 
-#### Anti-Pattern 1: Mocking as Production
-
-```python
-# In test_sql_agent.py
-class MockSQLBackend(SQLBackend):
-    """Mock for testing without real database."""
+**Original Design**:
+```
+Agent → Postgres (write row)
+     → Qdrant (write vector)  // Separate operation!
 ```
 
-Mocks are necessary for unit tests. But when **all** database tests are mocked, you've never verified the production path.
+**Why This Fails (The Dual-Write Problem)**:
 
-**Recommendation**: Add integration test marker (`@pytest.mark.integration`) with real containers.
+| Failure Mode | Symptom | Impact |
+|--------------|---------|--------|
+| Crash after Postgres, before Qdrant | "Ghost Data" (ID exists, vector missing) | Semantic search finds nothing |
+| Crash after Qdrant, before Postgres | "Hallucination" (vector points to non-existent ID) | Recall returns null |
+| Network partition | State diverges | BicameralMemory becomes "schizophrenic" |
 
-#### Anti-Pattern 2: Optional Dependencies Without Graceful Degradation
+**Category Theory Analysis**:
 
-```python
-try:
-    import asyncpg
-except ImportError:
-    raise ImportError("asyncpg required for PostgreSQL backend...")
-```
-
-This fails fast, which is good. But there's no **graceful degradation** path — no SQLite fallback when PostgreSQL is unavailable.
-
-**Recommendation**: Implement the Graceful Degradation principle from spec/principles.md.
-
-#### Anti-Pattern 3: Configuration Sprawl
-
-```python
-# BicameralConfig has 11 options
-auto_heal_ghosts: bool = True
-log_healed_ghosts: bool = True
-max_ghost_log: int = 1000
-flag_stale_on_recall: bool = True
-auto_reembed_stale: bool = False
-staleness_threshold_hours: float = 24.0
-coherency_check_on_recall: bool = True
-coherency_check_on_batch: bool = False
-log_coherency_reports: bool = True
-max_concurrent_validations: int = 10
-validation_timeout_seconds: float = 5.0
-```
-
-This violates **Tasteful**: 11 knobs creates combinatorial complexity.
-
-**Recommendation**: Presets (Conservative, Balanced, Aggressive) that set sensible defaults.
-
----
-
-## Part II: Original Ideas
-
-### Idea 1: The Database Functor Triad
-
-Kent chose PostgreSQL + Redis + Qdrant. Category-theoretically, this is a **coproduct**:
-
+The original design treats the Database Triad as a **coproduct**:
 ```
 DB = Postgres ⊕ Redis ⊕ Qdrant
 ```
 
-But more powerfully, we can model them as a **functor triad**:
+But coproducts have independent injections—each database receives data independently. This models the **symptom** (three databases), not the **structure** (one truth, multiple views).
 
+**Correction**: Model as a **Functor Stack** with CDC:
 ```
-       relations
-Postgres ───────────▶ State[Row]
-                     ↑
-       cache        │ lift
-Redis ──────────────▶ State[KV]
-                     │
-       embeddings   ▼
-Qdrant ─────────────▶ State[Vector]
+Truth (Postgres) → Derived View (Qdrant)
 ```
 
-**Original Insight**: Define a `DBFunctor` protocol that each backend implements:
+This is a **functorial relationship**, not a coproduct.
 
+#### Gap 3: Leaky Abstraction (Vendor Metrics)
+
+**Original Widgets**:
 ```python
-class DBFunctor(Protocol[F]):
-    """A functor from database operations to state transformations."""
-
-    async def lift(self, query: Query) -> State[F, Result]:
-        """Lift a query into the state monad."""
-        ...
-
-    async def unlift(self, state: State[F, A]) -> A:
-        """Extract result, committing state changes."""
-        ...
+class PostgresGauge(Vertical):  # Exposes "Postgres"
+class RedisGauge(Vertical):     # Exposes "Redis"
+class QdrantGauge(Vertical):    # Exposes "Qdrant"
 ```
 
-**Joy Factor**: This enables unified observability — every DB operation is a morphism we can trace.
+**Why This Fails**:
 
-### Idea 2: Schema Migrations as Natural Transformations
+If the observer is an agent engineer, they care about:
+- "Can I persist state safely?" (not "Is Postgres pool saturated?")
+- "Can I recall similar memories?" (not "What's Qdrant's vector count?")
+- "Can I think quickly?" (not "What's Redis's eviction policy?")
 
-Currently, migrations are ad-hoc (Alembic, manual SQL). Category-theoretically, a migration is a **natural transformation**:
+**Categorical Violation**: The observer should view the **State**, not the machinery. Metrics should be **semantic** (reflecting purpose) not **vendor** (reflecting implementation).
 
-```
-η: Schema_v1 ⟹ Schema_v2
-```
-
-**Original Design**:
-
-```python
-@dataclass
-class SchemaMigration:
-    """A natural transformation between schema versions."""
-    source: SchemaObject  # The v1 schema (objects in the category)
-    target: SchemaObject  # The v2 schema
-    forward: Morphism     # α: F(A) → G(A) for each object A
-    backward: Morphism    # Optional rollback (section)
-
-    def is_natural(self) -> bool:
-        """Verify naturality square commutes."""
-        # For each morphism f: A → B in source schema,
-        # G(f) ∘ α_A = α_B ∘ F(f)
-        ...
-```
-
-**Joy Factor**: Migrations become first-class citizens. Invalid migrations fail at compile time (naturality violated).
-
-### Idea 3: The Pulse Metric Bridge
-
-Pulse already emits agent health. Extend it to emit DB health:
-
-```python
-@dataclass
-class DBPulse:
-    """Vitality signal for database backends."""
-    backend: Literal["postgres", "redis", "qdrant"]
-    timestamp: str
-
-    # Connection health
-    pool_active: int
-    pool_idle: int
-    pool_waiting: int
-
-    # Query metrics
-    queries_per_second: float
-    avg_latency_ms: float
-    error_rate: float
-
-    # Resource usage
-    memory_mb: float
-    disk_mb: float  # For postgres/qdrant
-
-    # Categorical metric: morphism count
-    morphisms_executed: int  # Queries, commands, searches
-```
-
-**Joy Factor**: I-gent DensityField shows DB health alongside agent metabolism.
-
-### Idea 4: The Ghost Protocol for Offline
-
-BicameralMemory detects ghosts (stale vector entries). Extend this to **offline operation**:
+**Correction**: Define semantic metrics as **natural transformations** between vendor and purpose:
 
 ```
-Online Mode:
-  Agent ─── query ───▶ Postgres ─── result ───▶ Agent
+η: VendorMetrics ⟹ SemanticMetrics
 
-Offline Mode (Ghost Protocol):
-  Agent ─── query ───▶ LocalGhost ─── cached ───▶ Agent
-                           │
-                           └── marks query for sync when online
+η(PostgresMetrics) = DurabilitySignal   ("Is the truth safe?")
+η(RedisMetrics)    = ReflexSignal       ("How fast can I think?")
+η(QdrantMetrics)   = ResonanceSignal    ("Can I remember similar things?")
 ```
 
-**Original Design**:
+### 3. Anti-Patterns Detected (Updated)
 
-```python
-class GhostCache:
-    """Local cache that queues operations for eventual sync."""
-
-    async def query(self, sql: str) -> Result:
-        """Query local ghost if offline, queue for verification."""
-        if self.is_online:
-            result = await self.postgres.query(sql)
-            await self.ghost_file.cache(sql, result)
-            return result
-        else:
-            result = await self.ghost_file.load(sql)
-            self.sync_queue.append(VerifyQuery(sql, result.hash))
-            return result.with_stale_warning()
-```
-
-**Principle Alignment**: *Graceful Degradation* — works offline, syncs when online.
-
-### Idea 5: Visual Dashboard Schema
-
-Kent wants visual dashboards. Here's the categorical schema:
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    TERRARIUM DASHBOARD                      │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐   │
-│  │   POSTGRES    │  │    REDIS      │  │    QDRANT     │   │
-│  │  ───────────  │  │  ───────────  │  │  ───────────  │   │
-│  │  Pool: 5/10   │  │  Mem: 45MB    │  │  Vectors: 10K │   │
-│  │  QPS: 120     │  │  Hit: 94%     │  │  QPS: 50      │   │
-│  │  Lat: 2.3ms   │  │  Pub/Sub: 3   │  │  Lat: 8ms     │   │
-│  │  ████████░░   │  │  █████████░   │  │  ██████░░░░   │   │
-│  └───────────────┘  └───────────────┘  └───────────────┘   │
-│                                                             │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │              BICAMERAL COHERENCY                     │   │
-│  │  ─────────────────────────────────────────────────  │   │
-│  │  Left (Postgres) ←─ 99.2% coherent ─→ Right (Qdrant)│   │
-│  │  Ghosts healed: 3 today | Stale: 12 flagged         │   │
-│  │  Last coherency check: 2m ago                       │   │
-│  │  ███████████████████████████████████████░░░░░░░░   │   │
-│  └─────────────────────────────────────────────────────┘   │
-│                                                             │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │              MORPHISM TRACE (OTel)                   │   │
-│  │  ─────────────────────────────────────────────────  │   │
-│  │  14:32:01 │ SELECT │ Postgres │ 2ms │ K-gent        │   │
-│  │  14:32:01 │ GET    │ Redis    │ 0.1ms │ Session     │   │
-│  │  14:32:02 │ SEARCH │ Qdrant   │ 8ms │ BicameralMem │   │
-│  │  14:32:03 │ INSERT │ Postgres │ 3ms │ Crystal      │   │
-│  └─────────────────────────────────────────────────────┘   │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
-
-**Implementation**: Extend `metrics.py` to emit DB metrics, I-gent widgets consume `/api/db/metrics`.
-
-### Idea 6: T-gent Eval Integration
-
-Kent chose OpenTelemetry + custom evals. Map T-gent Types I-V to OTel:
-
-| T-gent Type | OTel Mapping | Eval Mechanism |
-|-------------|--------------|----------------|
-| Type I (Deterministic) | Span attributes | Assert on output |
-| Type II (Saboteur) | Fault injection spans | Monitor error rate |
-| Type III (Statistical) | Metric aggregation | Chi-square on distribution |
-| Type IV (Metamorphic) | Linked spans (before/after) | Relation holds |
-| Type V (Adversarial) | Security spans | No jailbreak success |
-
-**Original Design**:
-
-```python
-class TGentOTelEvaluator:
-    """Bridges T-gent algebraic testing with OpenTelemetry traces."""
-
-    def __init__(self, tracer: Tracer):
-        self.tracer = tracer
-
-    async def eval_type_i(self, agent: Agent, input: A, expected: B) -> EvalResult:
-        """Type I: Deterministic assertion with trace."""
-        with self.tracer.start_as_current_span("tgent.type_i") as span:
-            span.set_attribute("tgent.type", "deterministic")
-            span.set_attribute("input", str(input))
-
-            result = await agent.invoke(input)
-            passed = result == expected
-
-            span.set_attribute("expected", str(expected))
-            span.set_attribute("actual", str(result))
-            span.set_attribute("passed", passed)
-
-            return EvalResult(passed=passed, trace_id=span.get_span_context().trace_id)
-```
+| Anti-Pattern | Instance | Principle Violated |
+|--------------|----------|-------------------|
+| Mocking as Production | All DB tests mocked | Generative |
+| Configuration Sprawl | BicameralConfig has 11 knobs | Tasteful |
+| NIH Syndrome | Custom Postgres operator | Curated |
+| Split Source of Truth | Postgres + Qdrant as peers | Composable |
+| Vendor Metrics | PostgresGauge, RedisGauge | AGENTESE ("No view from nowhere") |
 
 ---
 
-## Part III: Implementation Roadmap
+## Part II: The Corrected Architecture
 
-### Phase 1: Live Infrastructure (Week 1)
+### 1. The Functor Stack Model
 
-**Goal**: Real databases running in Terrarium.
+**Core Insight**: The Database Triad is not a coproduct (independent databases) but a **Functor Stack** (layered transformations on a single source of truth).
 
-```yaml
-# impl/claude/infra/k8s/manifests/databases/
-postgres-deployment.yaml:
-  image: postgres:16
-  resources: {cpu: 500m, memory: 512Mi}
-  pvc: 1Gi
-
-redis-deployment.yaml:
-  image: valkey/valkey:8  # Open source Redis fork
-  resources: {cpu: 100m, memory: 128Mi}
-
-qdrant-deployment.yaml:
-  image: qdrant/qdrant:v1.12
-  resources: {cpu: 200m, memory: 256Mi}
-  pvc: 1Gi
+```
+┌─────────────────────────────────────────────────────────────────┐
+│              THE FUNCTOR STACK (Corrected Model)                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│   Postgres (ANCHOR)                                              │
+│       │                                                          │
+│       │ CDC/Outbox                                               │
+│       ▼                                                          │
+│   ┌───────────────────────────────────────────────────┐         │
+│   │              SYNAPSE FLUX AGENT                    │         │
+│   │   (Tails WAL/Outbox, transforms, propagates)       │         │
+│   └───────────────────────────────────────────────────┘         │
+│       │                           │                              │
+│       │ Embeddings                │ Cache invalidation           │
+│       ▼                           ▼                              │
+│   Qdrant (ASSOCIATOR)         Redis (SPARK)                     │
+│                                                                  │
+│   Categorical Structure:                                         │
+│                                                                  │
+│   Postgres ──Synapse──▶ Qdrant                                  │
+│       │                    │                                     │
+│       │    CDC Functor     │                                     │
+│       └────────────────────┘                                     │
+│                                                                  │
+│   DurabilityFunctor: Postgres → State[Row]                      │
+│   ReflexFunctor: Redis → State[KV]                              │
+│   ResonanceFunctor: Qdrant → State[Vector]                      │
+│                                                                  │
+│   Stack: Durability ∘ (Reflex × Resonance)                      │
+│          where Reflex and Resonance are derived views           │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-**Deliverables**:
-- [ ] PostgreSQL CRD and operator extension
-- [ ] Redis/Valkey CRD and operator extension
-- [ ] Qdrant CRD and operator extension
-- [ ] Connection pooling via PgBouncer
-- [ ] Integration tests with real containers
+**Formal Definition**:
 
-### Phase 2: Metrics Emission (Week 2)
+Let **Anchor** = Category of Postgres tables (objects) and SQL queries (morphisms).
+Let **View** = Category of derived state (Qdrant collections, Redis keys).
 
-**Goal**: DB metrics flow to Terrarium.
+The **CDC Functor** is:
+```
+Synapse: Anchor → View
+```
+
+Such that for any query `f: A → B` in Anchor:
+```
+Synapse(A) = derived view of A
+Synapse(f) = transformation that maintains derived view consistency
+```
+
+**Key Property**: Qdrant and Redis are **functorial images** of Postgres, not independent stores.
+
+### 2. The Operator-of-Operators (Managed, Not Built)
+
+Instead of writing `postgres_operator.py`, we **delegate to standard operators** and have the K8s Projector configure them.
+
+#### The Stack
+
+| Vendor | Operator | Why |
+|--------|----------|-----|
+| **Postgres** | CloudNativePG (CNPG) | Industry standard, handles HA/PITR/backups |
+| **Redis** | Bitnami Helm Chart or Spotahome | Battle-tested, handles failover |
+| **Qdrant** | Official Qdrant Helm Chart | Vendor-supported |
+
+#### The Revised Projector
 
 ```python
-# impl/claude/protocols/terrarium/db_metrics.py
-class DBMetricsEmitter:
-    """Emit database metrics to HolographicBuffer."""
+# impl/claude/system/projector/k8s_database.py
+"""
+K8s Database Projector: Emits manifests for standard operators.
 
-    async def emit_postgres_metrics(self, pool: asyncpg.Pool) -> None:
-        pulse = DBPulse(
-            backend="postgres",
-            pool_active=pool.get_size() - pool.get_idle_size(),
-            pool_idle=pool.get_idle_size(),
-            queries_per_second=self._calculate_qps(),
-            avg_latency_ms=self._calculate_avg_latency(),
-            ...
+Principle: "Managed, Not Built"
+- We emit CloudNativePG Cluster CRs, not StatefulSets
+- The operator handles Day 2 operations
+- Our Projector is a thin configuration layer
+"""
+
+from __future__ import annotations
+from dataclasses import dataclass
+from typing import Any
+
+
+@dataclass
+class DatabaseProjection:
+    """Projection from spec to operator manifest."""
+
+    postgres: dict[str, Any] | None = None
+    redis: dict[str, Any] | None = None
+    qdrant: dict[str, Any] | None = None
+
+
+def to_cnpg_cluster(name: str, database: str, storage: str = "1Gi") -> dict[str, Any]:
+    """
+    Generate CloudNativePG Cluster manifest.
+
+    This is NOT a StatefulSet—it's a high-level intent that CNPG
+    reconciles into StatefulSets, Services, Secrets, etc.
+    """
+    return {
+        "apiVersion": "postgresql.cnpg.io/v1",
+        "kind": "Cluster",
+        "metadata": {
+            "name": name,
+            "labels": {
+                "kgents.io/component": "database",
+                "kgents.io/role": "anchor",
+            },
+        },
+        "spec": {
+            "instances": 1,  # Start minimal, scale declaratively
+            "storage": {
+                "size": storage,
+            },
+            "postgresql": {
+                "shared_preload_libraries": ["pg_stat_statements"],
+            },
+            # CNPG handles:
+            # - Automatic failover
+            # - TLS rotation
+            # - Backup scheduling (when configured)
+            # - Metrics export
+            "monitoring": {
+                "enablePodMonitor": True,
+            },
+        },
+    }
+
+
+def to_redis_release(name: str, memory: str = "128Mi") -> dict[str, Any]:
+    """
+    Generate Helm Release for Redis (Bitnami).
+
+    Using HelmRelease (FluxCD) or direct Helm values.
+    """
+    return {
+        "apiVersion": "helm.toolkit.fluxcd.io/v2beta1",
+        "kind": "HelmRelease",
+        "metadata": {
+            "name": f"{name}-redis",
+            "labels": {
+                "kgents.io/component": "cache",
+                "kgents.io/role": "spark",
+            },
+        },
+        "spec": {
+            "interval": "10m",
+            "chart": {
+                "spec": {
+                    "chart": "redis",
+                    "version": "18.x",
+                    "sourceRef": {
+                        "kind": "HelmRepository",
+                        "name": "bitnami",
+                    },
+                },
+            },
+            "values": {
+                "architecture": "standalone",
+                "master": {
+                    "resources": {
+                        "limits": {"memory": memory},
+                    },
+                },
+                "metrics": {
+                    "enabled": True,
+                },
+            },
+        },
+    }
+
+
+def to_qdrant_release(name: str, storage: str = "1Gi") -> dict[str, Any]:
+    """
+    Generate Helm Release for Qdrant.
+    """
+    return {
+        "apiVersion": "helm.toolkit.fluxcd.io/v2beta1",
+        "kind": "HelmRelease",
+        "metadata": {
+            "name": f"{name}-qdrant",
+            "labels": {
+                "kgents.io/component": "vector",
+                "kgents.io/role": "associator",
+            },
+        },
+        "spec": {
+            "interval": "10m",
+            "chart": {
+                "spec": {
+                    "chart": "qdrant",
+                    "version": "0.9.x",
+                    "sourceRef": {
+                        "kind": "HelmRepository",
+                        "name": "qdrant",
+                    },
+                },
+            },
+            "values": {
+                "persistence": {
+                    "size": storage,
+                },
+                "metrics": {
+                    "serviceMonitor": {
+                        "enabled": True,
+                    },
+                },
+            },
+        },
+    }
+
+
+def project_database_triad(
+    name: str,
+    database: str = "kgents",
+    pg_storage: str = "1Gi",
+    redis_memory: str = "128Mi",
+    qdrant_storage: str = "1Gi",
+) -> DatabaseProjection:
+    """
+    Project the complete Database Triad.
+
+    Returns manifests for:
+    - CloudNativePG Cluster (Anchor)
+    - Redis HelmRelease (Spark)
+    - Qdrant HelmRelease (Associator)
+    """
+    return DatabaseProjection(
+        postgres=to_cnpg_cluster(name, database, pg_storage),
+        redis=to_redis_release(name, redis_memory),
+        qdrant=to_qdrant_release(name, qdrant_storage),
+    )
+```
+
+**Benefits**:
+- **Free HA**: CNPG handles leader election, failover
+- **Free Backups**: Barman integration when configured
+- **Free Metrics**: Prometheus exporters included
+- **Free Upgrades**: Operators handle rolling updates
+
+### 3. The Synapse (CDC Link)
+
+The **Synapse** is a specialized Flux agent that maintains consistency between the Anchor (Postgres) and derived views (Qdrant).
+
+**Categorical Definition**:
+
+```
+Synapse: Flux[ChangeEvent, SyncResult]
+
+where:
+  ChangeEvent = ROW_INSERTED | ROW_UPDATED | ROW_DELETED
+  SyncResult  = VectorUpserted | VectorDeleted | CacheInvalidated
+```
+
+**Implementation Pattern**:
+
+```python
+# impl/claude/agents/flux/synapse.py
+"""
+Synapse: CDC Flux agent that maintains derived views.
+
+Categorical Role: Functor from Anchor changes to View updates.
+"""
+
+from __future__ import annotations
+from dataclasses import dataclass
+from typing import AsyncIterator
+from agents.flux.agent import FluxAgent
+from agents.d.volatile import VolatileAgent
+
+
+@dataclass
+class ChangeEvent:
+    """A change in the Anchor (Postgres)."""
+    table: str
+    operation: str  # INSERT, UPDATE, DELETE
+    row_id: str
+    data: dict
+
+
+@dataclass
+class SyncResult:
+    """Result of syncing to derived view."""
+    target: str  # "qdrant" or "redis"
+    operation: str
+    success: bool
+    lag_ms: float
+
+
+class Synapse(FluxAgent[ChangeEvent, SyncResult]):
+    """
+    CDC Flux agent maintaining Postgres → Qdrant consistency.
+
+    Workflow:
+    1. Tail Postgres WAL or Outbox table
+    2. For each change, compute derived state
+    3. Push to Qdrant (vectors) and/or Redis (cache invalidation)
+    4. Acknowledge sync completion
+
+    Guarantee: If Postgres has row R, eventually Qdrant has vector(R).
+    """
+
+    async def process_stream(
+        self,
+        events: AsyncIterator[ChangeEvent]
+    ) -> AsyncIterator[SyncResult]:
+        async for event in events:
+            # 1. Extract embedding from content
+            if event.operation in ("INSERT", "UPDATE"):
+                embedding = await self._compute_embedding(event.data)
+
+                # 2. Upsert to Qdrant
+                await self.qdrant.upsert(
+                    collection="memories",
+                    points=[{
+                        "id": event.row_id,
+                        "vector": embedding,
+                        "payload": {"source": "postgres", "table": event.table},
+                    }],
+                )
+
+                # 3. Mark sync complete in Postgres
+                await self.postgres.execute(
+                    "UPDATE memories SET vector_synced_at = NOW() WHERE id = $1",
+                    event.row_id,
+                )
+
+            elif event.operation == "DELETE":
+                await self.qdrant.delete(collection="memories", ids=[event.row_id])
+
+            yield SyncResult(
+                target="qdrant",
+                operation=event.operation,
+                success=True,
+                lag_ms=self._measure_lag(),
+            )
+
+    async def _compute_embedding(self, data: dict) -> list[float]:
+        """Compute embedding for content."""
+        # Delegate to embedding provider (OpenAI, local model, etc.)
+        ...
+```
+
+**Key Property**: Postgres is the **sole source of writes**. Qdrant is **mathematically derivative**. If Qdrant is wiped, it can be fully regenerated from Postgres.
+
+**Outbox Pattern** (Alternative to WAL tailing):
+
+```sql
+-- Table: outbox
+CREATE TABLE outbox (
+    id SERIAL PRIMARY KEY,
+    event_type TEXT NOT NULL,
+    payload JSONB NOT NULL,
+    processed BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Trigger: populate outbox on memory changes
+CREATE OR REPLACE FUNCTION memory_change_trigger() RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO outbox (event_type, payload)
+    VALUES (
+        TG_OP,
+        jsonb_build_object('table', TG_TABLE_NAME, 'row', row_to_json(NEW))
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER memory_outbox_trigger
+    AFTER INSERT OR UPDATE OR DELETE ON memories
+    FOR EACH ROW EXECUTE FUNCTION memory_change_trigger();
+```
+
+The Synapse polls the outbox table, processes events, and marks them as processed. This avoids WAL tailing complexity while preserving consistency guarantees.
+
+### 4. Semantic Metrics (The Observer's View)
+
+**Principle**: Metrics should reflect **teleological purpose**, not vendor implementation.
+
+#### The Natural Transformation
+
+```
+η: VendorPulse ⟹ SemanticPulse
+
+VendorPulse:                    SemanticPulse:
+├─ PostgresPulse                ├─ DurabilitySignal
+├─ RedisPulse           η       ├─ ReflexSignal
+└─ QdrantPulse         ───▶     └─ ResonanceSignal
+```
+
+#### Implementation
+
+```python
+# impl/claude/protocols/terrarium/semantic_metrics.py
+"""
+Semantic Metrics: Purpose-oriented DB health signals.
+
+These are natural transformations from vendor metrics to semantic signals.
+The observer sees "Is the truth safe?" not "Postgres pool utilization."
+"""
+
+from __future__ import annotations
+from dataclasses import dataclass
+from enum import Enum
+from datetime import datetime, timezone
+
+
+class HealthLevel(Enum):
+    """Semantic health levels."""
+    THRIVING = "thriving"      # Everything excellent
+    HEALTHY = "healthy"        # Normal operation
+    STRAINED = "strained"      # Approaching limits
+    DEGRADED = "degraded"      # Reduced capability
+    CRITICAL = "critical"      # Intervention needed
+
+
+@dataclass(frozen=True)
+class DurabilitySignal:
+    """
+    Is the truth safe?
+
+    Derived from PostgreSQL metrics. The observer asks:
+    "Can I persist state with confidence?"
+    """
+    timestamp: str
+    health: HealthLevel
+
+    # Semantic metrics (not "pool_active" but "persistence_confidence")
+    persistence_confidence: float  # 0-1, derived from WAL lag, replication
+    truth_integrity: float         # 0-1, derived from checksum, corruption checks
+    write_capacity: float          # 0-1, derived from pool utilization inverse
+
+    @classmethod
+    def from_postgres_pulse(cls, pulse: "PostgresPulse") -> "DurabilitySignal":
+        """Natural transformation: PostgresPulse → DurabilitySignal."""
+        # Compute semantic metrics from vendor metrics
+        pool_available = 1 - (pulse.pool_active / pulse.pool_max) if pulse.pool_max > 0 else 0
+
+        # Health level based on semantic interpretation
+        if pool_available > 0.5 and pulse.avg_latency_ms < 20:
+            health = HealthLevel.THRIVING
+        elif pool_available > 0.2 and pulse.avg_latency_ms < 100:
+            health = HealthLevel.HEALTHY
+        elif pool_available > 0.1:
+            health = HealthLevel.STRAINED
+        elif pulse.pool_waiting > 0:
+            health = HealthLevel.DEGRADED
+        else:
+            health = HealthLevel.CRITICAL
+
+        return cls(
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            health=health,
+            persistence_confidence=pool_available,
+            truth_integrity=1.0,  # Would check WAL/replication status
+            write_capacity=pool_available,
         )
-        await self.buffer.broadcast(pulse.to_event())
+
+
+@dataclass(frozen=True)
+class ReflexSignal:
+    """
+    How fast can I think?
+
+    Derived from Redis metrics. The observer asks:
+    "Can I access cached state quickly?"
+    """
+    timestamp: str
+    health: HealthLevel
+
+    # Semantic metrics
+    thought_speed: float      # 0-1, derived from ops latency
+    memory_pressure: float    # 0-1, derived from eviction rate
+    recall_reliability: float # 0-1, derived from hit rate
+
+    @classmethod
+    def from_redis_pulse(cls, pulse: "RedisPulse") -> "ReflexSignal":
+        """Natural transformation: RedisPulse → ReflexSignal."""
+        memory_free = 1 - (pulse.memory_used_mb / pulse.memory_max_mb) if pulse.memory_max_mb > 0 else 0
+
+        if pulse.hit_rate > 0.9 and memory_free > 0.3:
+            health = HealthLevel.THRIVING
+        elif pulse.hit_rate > 0.7 and memory_free > 0.1:
+            health = HealthLevel.HEALTHY
+        elif pulse.hit_rate > 0.5:
+            health = HealthLevel.STRAINED
+        else:
+            health = HealthLevel.DEGRADED
+
+        return cls(
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            health=health,
+            thought_speed=1.0 if pulse.commands_per_second > 0 else 0.5,
+            memory_pressure=1 - memory_free,
+            recall_reliability=pulse.hit_rate,
+        )
+
+
+@dataclass(frozen=True)
+class ResonanceSignal:
+    """
+    Can I remember similar things?
+
+    Derived from Qdrant metrics. The observer asks:
+    "Can semantic search find relevant memories?"
+    """
+    timestamp: str
+    health: HealthLevel
+
+    # Semantic metrics
+    associative_capacity: float  # 0-1, derived from vector count vs limit
+    search_responsiveness: float # 0-1, derived from search latency
+    coherency_with_truth: float  # 0-1, derived from CDC lag
+
+    @classmethod
+    def from_qdrant_pulse(cls, pulse: "QdrantPulse", cdc_lag_ms: float = 0) -> "ResonanceSignal":
+        """Natural transformation: QdrantPulse → ResonanceSignal."""
+        # Coherency degrades as CDC lag increases
+        coherency = max(0, 1 - (cdc_lag_ms / 5000))  # 5s lag = 0 coherency
+
+        if pulse.avg_search_latency_ms < 50 and coherency > 0.9:
+            health = HealthLevel.THRIVING
+        elif pulse.avg_search_latency_ms < 200 and coherency > 0.7:
+            health = HealthLevel.HEALTHY
+        elif coherency > 0.5:
+            health = HealthLevel.STRAINED
+        else:
+            health = HealthLevel.DEGRADED
+
+        return cls(
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            health=health,
+            associative_capacity=1.0,  # Would check collection capacity
+            search_responsiveness=max(0, 1 - pulse.avg_search_latency_ms / 500),
+            coherency_with_truth=coherency,
+        )
+
+
+@dataclass(frozen=True)
+class TriadHealth:
+    """
+    Aggregate health of the Database Triad.
+
+    The observer sees one signal: "Is my state infrastructure working?"
+    """
+    durability: DurabilitySignal
+    reflex: ReflexSignal
+    resonance: ResonanceSignal
+
+    @property
+    def overall_health(self) -> HealthLevel:
+        """Aggregate health (worst-of)."""
+        levels = [self.durability.health, self.reflex.health, self.resonance.health]
+        priority = [HealthLevel.CRITICAL, HealthLevel.DEGRADED, HealthLevel.STRAINED,
+                    HealthLevel.HEALTHY, HealthLevel.THRIVING]
+        for level in priority:
+            if level in levels:
+                return level
+        return HealthLevel.HEALTHY
 ```
 
-**Deliverables**:
-- [ ] DBPulse dataclass
-- [ ] PostgreSQL metrics collector (via pg_stat_statements)
-- [ ] Redis metrics collector (via INFO command)
-- [ ] Qdrant metrics collector (via /metrics endpoint)
-- [ ] Terrarium `/api/db/metrics` endpoint
-
-### Phase 3: Visual Dashboard (Week 3)
-
-**Goal**: I-gent widgets for DB health.
+### 5. Revised Widget Implementation
 
 ```python
-# impl/claude/agents/i/widgets/db_panel.py
-class DBMetricsPanel(Widget):
-    """Textual widget for database health visualization."""
+# impl/claude/agents/i/widgets/semantic_panel.py
+"""
+Semantic Dashboard: Purpose-oriented state visibility.
+
+The observer sees:
+- "Is the truth safe?" (not "Postgres pool")
+- "How fast can I think?" (not "Redis memory")
+- "Can I remember similar things?" (not "Qdrant vectors")
+"""
+
+from textual.app import ComposeResult
+from textual.containers import Horizontal, Vertical
+from textual.widgets import Static, Label, ProgressBar
+from textual.reactive import reactive
+
+from protocols.terrarium.semantic_metrics import (
+    DurabilitySignal, ReflexSignal, ResonanceSignal, TriadHealth, HealthLevel
+)
+
+
+class SemanticGauge(Vertical):
+    """Base gauge for semantic signals."""
+
+    DEFAULT_CSS = """
+    SemanticGauge {
+        height: auto;
+        padding: 1;
+        border: solid $primary;
+    }
+
+    SemanticGauge .header {
+        text-style: bold;
+    }
+
+    SemanticGauge .metric {
+        margin-left: 2;
+    }
+    """
+
+    health: HealthLevel = reactive(HealthLevel.HEALTHY)
+
+    def _health_color(self, level: HealthLevel) -> str:
+        return {
+            HealthLevel.THRIVING: "green",
+            HealthLevel.HEALTHY: "blue",
+            HealthLevel.STRAINED: "yellow",
+            HealthLevel.DEGRADED: "orange",
+            HealthLevel.CRITICAL: "red",
+        }.get(level, "white")
+
+
+class DurabilityGauge(SemanticGauge):
+    """Is the truth safe?"""
+
+    signal: DurabilitySignal | None = reactive(None)
 
     def compose(self) -> ComposeResult:
-        yield PostgresGauge()
-        yield RedisGauge()
-        yield QdrantGauge()
-        yield BicameralCoherencyBar()
-        yield MorphismTraceLog()
+        yield Label("IS THE TRUTH SAFE?", classes="header")
+        yield Horizontal(
+            Label("Persistence:", classes="label"),
+            ProgressBar(total=100, show_eta=False, id="persistence-bar"),
+            Label("100%", id="persistence-text"),
+            classes="metric",
+        )
+        yield Horizontal(
+            Label("Write Capacity:", classes="label"),
+            ProgressBar(total=100, show_eta=False, id="write-bar"),
+            Label("100%", id="write-text"),
+            classes="metric",
+        )
+        yield Horizontal(
+            Label("Status:", classes="label"),
+            Label("HEALTHY", id="status-text"),
+            classes="metric",
+        )
+
+    def watch_signal(self, signal: DurabilitySignal | None) -> None:
+        if not signal:
+            return
+
+        # Update persistence confidence
+        bar = self.query_one("#persistence-bar", ProgressBar)
+        bar.update(progress=signal.persistence_confidence * 100)
+        self.query_one("#persistence-text", Label).update(
+            f"{signal.persistence_confidence:.0%}"
+        )
+
+        # Update write capacity
+        write_bar = self.query_one("#write-bar", ProgressBar)
+        write_bar.update(progress=signal.write_capacity * 100)
+        self.query_one("#write-text", Label).update(
+            f"{signal.write_capacity:.0%}"
+        )
+
+        # Update status
+        status = self.query_one("#status-text", Label)
+        status.update(signal.health.value.upper())
+        status.styles.color = self._health_color(signal.health)
+
+
+class ReflexGauge(SemanticGauge):
+    """How fast can I think?"""
+
+    signal: ReflexSignal | None = reactive(None)
+
+    def compose(self) -> ComposeResult:
+        yield Label("HOW FAST CAN I THINK?", classes="header")
+        yield Horizontal(
+            Label("Thought Speed:", classes="label"),
+            ProgressBar(total=100, show_eta=False, id="speed-bar"),
+            classes="metric",
+        )
+        yield Horizontal(
+            Label("Recall Reliability:", classes="label"),
+            Label("0%", id="recall-text"),
+            classes="metric",
+        )
+        yield Horizontal(
+            Label("Status:", classes="label"),
+            Label("HEALTHY", id="status-text"),
+            classes="metric",
+        )
+
+    def watch_signal(self, signal: ReflexSignal | None) -> None:
+        if not signal:
+            return
+
+        bar = self.query_one("#speed-bar", ProgressBar)
+        bar.update(progress=signal.thought_speed * 100)
+
+        self.query_one("#recall-text", Label).update(
+            f"{signal.recall_reliability:.0%}"
+        )
+
+        status = self.query_one("#status-text", Label)
+        status.update(signal.health.value.upper())
+        status.styles.color = self._health_color(signal.health)
+
+
+class ResonanceGauge(SemanticGauge):
+    """Can I remember similar things?"""
+
+    signal: ResonanceSignal | None = reactive(None)
+
+    def compose(self) -> ComposeResult:
+        yield Label("CAN I REMEMBER SIMILAR THINGS?", classes="header")
+        yield Horizontal(
+            Label("Search Responsiveness:", classes="label"),
+            ProgressBar(total=100, show_eta=False, id="search-bar"),
+            classes="metric",
+        )
+        yield Horizontal(
+            Label("Coherency with Truth:", classes="label"),
+            ProgressBar(total=100, show_eta=False, id="coherency-bar"),
+            Label("100%", id="coherency-text"),
+            classes="metric",
+        )
+        yield Horizontal(
+            Label("Status:", classes="label"),
+            Label("HEALTHY", id="status-text"),
+            classes="metric",
+        )
+
+    def watch_signal(self, signal: ResonanceSignal | None) -> None:
+        if not signal:
+            return
+
+        search_bar = self.query_one("#search-bar", ProgressBar)
+        search_bar.update(progress=signal.search_responsiveness * 100)
+
+        coherency_bar = self.query_one("#coherency-bar", ProgressBar)
+        coherency_bar.update(progress=signal.coherency_with_truth * 100)
+        self.query_one("#coherency-text", Label).update(
+            f"{signal.coherency_with_truth:.0%}"
+        )
+
+        status = self.query_one("#status-text", Label)
+        status.update(signal.health.value.upper())
+        status.styles.color = self._health_color(signal.health)
+
+
+class SemanticTriadPanel(Vertical):
+    """Complete semantic dashboard for state infrastructure."""
+
+    DEFAULT_CSS = """
+    SemanticTriadPanel {
+        height: auto;
+        padding: 1;
+    }
+
+    SemanticTriadPanel > Horizontal {
+        height: auto;
+    }
+
+    SemanticTriadPanel #overall-status {
+        text-style: bold;
+        text-align: center;
+        padding: 1;
+    }
+    """
+
+    health: TriadHealth | None = reactive(None)
+
+    def compose(self) -> ComposeResult:
+        yield Label("STATE INFRASTRUCTURE HEALTH", id="overall-status")
+        yield Horizontal(
+            DurabilityGauge(id="durability"),
+            ReflexGauge(id="reflex"),
+            ResonanceGauge(id="resonance"),
+        )
+
+    def watch_health(self, health: TriadHealth | None) -> None:
+        if not health:
+            return
+
+        self.query_one("#durability", DurabilityGauge).signal = health.durability
+        self.query_one("#reflex", ReflexGauge).signal = health.reflex
+        self.query_one("#resonance", ResonanceGauge).signal = health.resonance
+
+        # Update overall status
+        overall = self.query_one("#overall-status", Label)
+        color = {
+            HealthLevel.THRIVING: "green",
+            HealthLevel.HEALTHY: "blue",
+            HealthLevel.STRAINED: "yellow",
+            HealthLevel.DEGRADED: "orange",
+            HealthLevel.CRITICAL: "red",
+        }.get(health.overall_health, "white")
+        overall.styles.color = color
 ```
 
-**Deliverables**:
-- [ ] PostgresGauge widget (pool, QPS, latency)
-- [ ] RedisGauge widget (memory, hit rate)
-- [ ] QdrantGauge widget (vectors, search latency)
-- [ ] BicameralCoherencyBar widget
-- [ ] MorphismTraceLog (OTel spans)
+---
 
-### Phase 4: OpenTelemetry Integration (Week 4)
+## Part III: Categorical Formalization
 
-**Goal**: Traces for all DB operations.
+### 1. The Database Category (Revised)
+
+**Objects**: Tables in Postgres (the Anchor)
+**Morphisms**: SQL queries (transformations of rows)
+
+```
+Ob(Anchor) = { Table_memories, Table_sessions, Table_outbox, ... }
+Hom(A, B) = { f: A → B | f is a valid SQL query }
+```
+
+### 2. The CDC Functor
+
+```
+Synapse: Anchor → View
+```
+
+**Functor Laws**:
+1. **Identity**: `Synapse(id_A) = id_{Synapse(A)}`
+   - If no change to table A, no change to derived view
+2. **Composition**: `Synapse(g ∘ f) = Synapse(g) ∘ Synapse(f)`
+   - Sequential changes compose in the derived view
+
+### 3. The Semantic Transformation
+
+```
+η: VendorMetrics ⟹ SemanticMetrics
+```
+
+**Naturality Square**:
+```
+                    collect_postgres
+PostgresCluster ──────────────────────▶ PostgresPulse
+       │                                      │
+       │ vendor_upgrade                       │ η_Postgres
+       ▼                                      ▼
+PostgresCluster' ─────────────────────▶ DurabilitySignal'
+                    η(collect_postgres)
+```
+
+For any upgrade to the vendor (e.g., Postgres 15 → 16), the semantic interpretation must commute: upgrading then measuring = measuring then transforming.
+
+### 4. The State Monad (From Categorical Consolidation)
+
+The StateMonadFunctor (already implemented) threads state through computation:
 
 ```python
-# impl/claude/infra/telemetry/otel.py
-from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-
-def setup_otel(service_name: str = "kgents") -> Tracer:
-    """Configure OpenTelemetry with OTLP export."""
-    provider = TracerProvider()
-    processor = BatchSpanProcessor(OTLPSpanExporter())
-    provider.add_span_processor(processor)
-    trace.set_tracer_provider(provider)
-    return trace.get_tracer(service_name)
+StateMonadFunctor.lift(agent, memory=postgres_client)
 ```
 
-**Deliverables**:
-- [ ] OTel setup module
-- [ ] Instrumented SQLAgent (spans per query)
-- [ ] Instrumented RedisAgent (spans per command)
-- [ ] Instrumented BicameralMemory (spans per recall)
-- [ ] Jaeger deployment for trace visualization
+This lifts any agent into stateful computation backed by Postgres.
 
-### Phase 5: T-gent Eval Pipeline (Week 5)
+### 5. The Bicameral Coproduct (Revised)
 
-**Goal**: Algebraic testing with trace integration.
+**Original Model** (incorrect):
+```
+Bicameral = Postgres ⊕ Qdrant  // Independent injections
+```
 
-**Deliverables**:
-- [ ] TGentOTelEvaluator class
-- [ ] Type I-V eval implementations
-- [ ] Eval dashboard in I-gent
-- [ ] GitHub Actions integration for CI evals
+**Revised Model**:
+```
+Bicameral = Postgres ×_{Synapse} Qdrant  // Fiber product over Synapse
+```
+
+The fiber product ensures that for any memory `m`:
+- `m` in Postgres ⟹ eventually `vector(m)` in Qdrant
+- The Synapse functor maintains the correspondence
 
 ---
 
-## Part IV: Categorical Formalization
+## Part IV: Implementation Roadmap (Revised)
 
-### The Database Category
+### Phase 1: Operator Bootstrap (Infrastructure Delegation)
 
-Objects: Tables, Collections, Indices
-Morphisms: Queries, Commands, Searches
+**Goal**: Install standard operators, not write custom ones.
 
-```
-Ob(DB) = { Table_users, Table_memories, Collection_embeddings, ... }
-Hom(A, B) = { f: A → B | f is a valid SQL/Redis/Vector operation }
-```
+**Actions**:
+```bash
+# scripts/bootstrap_operators.sh
 
-### The State Monad for DB
+# 1. Install CloudNativePG
+kubectl apply -f https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.22/releases/cnpg-1.22.yaml
 
-```haskell
--- Haskell-style for clarity
-newtype DBState s a = DBState { runDB :: s -> IO (a, s) }
+# 2. Add Bitnami Helm repo
+helm repo add bitnami https://charts.bitnami.com/bitnami
 
-instance Monad (DBState s) where
-  return a = DBState $ \s -> pure (a, s)
-  m >>= f  = DBState $ \s -> do
-    (a, s') <- runDB m s
-    runDB (f a) s'
+# 3. Add Qdrant Helm repo
+helm repo add qdrant https://qdrant.github.io/qdrant-helm
+
+# 4. Install FluxCD for HelmRelease management (optional)
+flux install
 ```
 
-### The Bicameral Coproduct
+**Deliverables**:
+- [x] Bootstrap script for operator installation
+- [ ] CloudNativePG Cluster CR for kgents
+- [ ] Redis HelmRelease for kgents
+- [ ] Qdrant HelmRelease for kgents
 
-```
-Bicameral = Left ⊕ Right
+### Phase 2: Projector Revision
 
--- Injections
-inl : Postgres → Bicameral
-inr : Qdrant → Bicameral
+**Goal**: K8s Projector emits operator CRs, not StatefulSets.
 
--- Universal property: for any f: Postgres → X, g: Qdrant → X,
--- there exists unique [f, g]: Bicameral → X
-```
+**Actions**:
+1. Create `impl/claude/system/projector/k8s_database.py` (code above)
+2. Remove custom `postgres_operator.py`, `redis_operator.py`
+3. Update Projector tests to verify CR generation
 
-### Migration Natural Transformation
+**Deliverables**:
+- [ ] `to_cnpg_cluster()` function
+- [ ] `to_redis_release()` function
+- [ ] `to_qdrant_release()` function
+- [ ] Projector integration tests
 
-```
-η : Schema_v1 ⟹ Schema_v2
+### Phase 3: Synapse Implementation
 
--- Naturality condition
-For all f : A → B in Schema_v1:
-  Schema_v2(f) ∘ η_A = η_B ∘ Schema_v1(f)
-```
+**Goal**: CDC Flux agent maintains Postgres → Qdrant consistency.
+
+**Actions**:
+1. Implement Outbox table and trigger in migrations
+2. Create `impl/claude/agents/flux/synapse.py`
+3. Wire Synapse into D-gent initialization
+4. Add coherency metrics to Terrarium
+
+**Deliverables**:
+- [ ] Outbox migration SQL
+- [ ] Synapse FluxAgent class
+- [ ] CDC lag metric in TriadHealth
+- [ ] Integration tests with real DB
+
+### Phase 4: Semantic Metrics
+
+**Goal**: Replace vendor metrics with semantic signals.
+
+**Actions**:
+1. Create `impl/claude/protocols/terrarium/semantic_metrics.py` (code above)
+2. Create `impl/claude/agents/i/widgets/semantic_panel.py` (code above)
+3. Update Terrarium gateway to serve semantic metrics
+4. Deprecate vendor-specific widgets
+
+**Deliverables**:
+- [ ] DurabilitySignal, ReflexSignal, ResonanceSignal dataclasses
+- [ ] Natural transformation functions (from_*_pulse)
+- [ ] SemanticTriadPanel widget
+- [ ] `/api/state/health` endpoint
+
+### Phase 5: Integration & Testing
+
+**Goal**: End-to-end verification with real infrastructure.
+
+**Actions**:
+1. Create integration test suite with Kind + operators
+2. Verify CDC lag under load
+3. Test failover scenarios (operator-managed)
+4. Verify semantic metrics during degradation
+
+**Deliverables**:
+- [ ] `@pytest.mark.integration` test suite
+- [ ] CDC coherency tests
+- [ ] Failover verification
+- [ ] Semantic metric accuracy tests
 
 ---
 
-## Part V: Risk Assessment
+## Part V: Comparison Table
+
+| Feature | Original Plan (v1) | Revised Plan (v2) |
+|---------|-------------------|-------------------|
+| **Orchestration** | Custom Python Operators | CloudNativePG + Helm Charts |
+| **Consistency** | "Check on Read" (Race Conditions) | CDC / Outbox Pattern (Eventual Consistency) |
+| **Source of Truth** | Split (Postgres + Qdrant) | Unified (Postgres; Qdrant is a View) |
+| **Observability** | Vendor Metrics (Pool Size) | Semantic Metrics (Coherency Lag) |
+| **Maintenance** | Ignored (No Backups) | Automated (Via Standard Operators) |
+| **Categorical Model** | Coproduct (DB = Pg ⊕ Redis ⊕ Qdrant) | Functor Stack (Synapse: Anchor → View) |
+| **Day 2 Ops** | Manual intervention | Operator-managed (HA, PITR, TLS) |
+| **Expertise Required** | DBA + K8s + Python | Spec authoring only |
+
+---
+
+## Part VI: Risk Assessment (Revised)
 
 | Risk | Likelihood | Impact | Mitigation |
 |------|------------|--------|------------|
-| Container startup latency | Medium | Medium | Pre-pull images, resource requests |
-| PostgreSQL data loss | Low | Critical | PVC, WAL archiving, backups |
-| Redis memory exhaustion | Medium | Medium | maxmemory config, eviction policy |
-| Qdrant index corruption | Low | High | Snapshots, collection backups |
-| OTel overhead | Medium | Low | Sampling, batch export |
-| K8s complexity | High | Medium | Kind for dev, documentation |
+| Operator learning curve | Medium | Low | Operators have excellent docs |
+| CDC lag under high load | Medium | Medium | Tune batch size, add backpressure |
+| Helm version conflicts | Low | Medium | Pin versions in HelmRelease |
+| Semantic metric inaccuracy | Low | Medium | Validate against vendor metrics |
+| Kind resource limits | Medium | Low | Increase Kind node resources |
 
 ---
 
 ## Conclusion
 
-The kgents D-gent implementation is **architecturally beautiful but operationally absent**. This analysis identifies the gap and provides a categorical roadmap to bridge it.
+The revised architecture honors kgents principles:
 
-Kent's choices (PostgreSQL + Redis + Qdrant, OTel + custom, deep integration, visual dashboards) align with the principles:
+| Principle | How This Revision Honors It |
+|-----------|---------------------------|
+| **Tasteful** | Delegate to experts (operators), don't reimplement |
+| **Curated** | Three semantic signals, not eleven vendor metrics |
+| **Composable** | CDC functor composes with StateMonad |
+| **Heterarchical** | No "boss" database; Postgres is truth, not controller |
+| **Generative** | Projector generates operator CRs from spec |
+| **AGENTESE** | Semantic metrics respect observer's view |
 
-- **Tasteful**: Three specialized DBs, not one bloated solution
-- **Composable**: DBFunctor enables unified operations
-- **Heterarchical**: Coproduct structure, no single "boss" database
-- **Generative**: CRDs generate deployments from spec
-- **Joy-Inducing**: Visual dashboards make state visible
-
-The accursed share is acknowledged: this plan is slop until implemented. Let's compost it into a running system.
+The Accursed Share is acknowledged: this revision is itself slop until implemented. But it is **better-composted slop**—the categorical foundations are sound, the infrastructure is delegated, and the observer sees purpose, not machinery.
 
 ---
 
 *"Plans are worthless, but planning is everything." — Eisenhower*
 
+*"Buy before build. The community's ten years of refinement is free." — First Principles*
+
 **Sources**:
-- [Arize Phoenix](https://phoenix.arize.com/) — Open source LLM observability
-- [Guardrails AI](https://www.guardrailsai.com/) — LLM validation framework
-- [CQL Categorical Data](https://categoricaldata.net/papers) — Category theory for databases
-- [OpenTelemetry](https://opentelemetry.io/) — Observability framework
+- [CloudNativePG](https://cloudnative-pg.io/) — Production-grade Postgres operator
+- [Debezium](https://debezium.io/) — CDC platform (inspiration for Synapse)
+- [Transactional Outbox Pattern](https://microservices.io/patterns/data/transactional-outbox.html)
+- [Natural Transformations in Software](https://bartoszmilewski.com/2015/04/07/natural-transformations/)

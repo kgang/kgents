@@ -1,6 +1,6 @@
 ---
 path: agents/terrarium
-status: active
+status: complete
 progress: 100
 last_touched: 2025-12-12
 touched_by: claude-opus-4.5
