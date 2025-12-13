@@ -22,6 +22,7 @@ but it should not be the default pattern.
 from .base import Source, SourceProtocol
 from .events import empty, from_events, from_iterable, from_stream
 from .merged import batched, debounced, filtered, mapped, merged, skip, take
+from .outbox import MockConnection, MockConnectionPool, OutboxConfig, OutboxSource
 from .periodic import countdown, periodic, tick
 
 __all__ = [
@@ -45,4 +46,9 @@ __all__ = [
     "debounced",
     "take",
     "skip",
+    # Database sources
+    "OutboxSource",
+    "OutboxConfig",
+    "MockConnection",
+    "MockConnectionPool",
 ]

@@ -100,6 +100,13 @@ from .halo import (
     inherit_halo,
     merge_halos,
 )
+
+# Quick agent creation
+from .quick import (
+    FunctionAgent,
+    agent,
+    pipeline,
+)
 from .skeleton import (
     # The skeleton (re-exported from bootstrap)
     AbstractAgent,
@@ -201,4 +208,8 @@ __all__ = [
     "Delta",
     "get_archetype",
     "is_archetype_instance",
+    # Quick agent creation
+    "FunctionAgent",
+    "agent",
+    "pipeline",
 ]

@@ -9,6 +9,7 @@ Verifies:
 """
 
 from collections.abc import AsyncGenerator
+from typing import Any
 
 # Import modules to trigger auto-registration
 import agents.c.functor  # noqa: F401 - needed for registration
@@ -285,3 +286,188 @@ class TestRegistryDiscovery:
             # Name should appear somewhere in class name
             # E.g., "Maybe" in "MaybeFunctor", "Observer" in "UnifiedObserverFunctor"
             assert name in functor.__name__ or functor.__name__.startswith(name)
+
+
+# =============================================================================
+# Batch Law Verification Tests
+# =============================================================================
+
+
+class TestBatchFunctorLawVerification:
+    """
+    Verify all registered functors satisfy categorical laws.
+
+    This is the "alethic witness" test - ensures the entire functor
+    ecosystem maintains algebraic coherence.
+    """
+
+    @pytest.mark.asyncio
+    async def test_maybe_functor_satisfies_laws(self) -> None:
+        """Verify MaybeFunctor satisfies categorical laws."""
+        from agents.a.functor import verify_functor
+        from agents.c.functor import Just, MaybeFunctor
+
+        test_input = Just(5)
+        report = await verify_functor(
+            MaybeFunctor,
+            IdentityAgent(),
+            DoubleAgent(),
+            AddOneAgent(),
+            test_input,
+        )
+        assert report.identity_law.passed, (
+            f"Maybe: Identity law failed - {report.identity_law.explanation}"
+        )
+        assert report.composition_law.passed, (
+            f"Maybe: Composition law failed - {report.composition_law.explanation}"
+        )
+
+    @pytest.mark.asyncio
+    async def test_either_functor_satisfies_laws(self) -> None:
+        """Verify EitherFunctor satisfies categorical laws."""
+        from agents.a.functor import verify_functor
+        from agents.c.functor import EitherFunctor, Right
+
+        test_input = Right(5)
+        report = await verify_functor(
+            EitherFunctor,
+            IdentityAgent(),
+            DoubleAgent(),
+            AddOneAgent(),
+            test_input,
+        )
+        assert report.identity_law.passed, (
+            f"Either: Identity law failed - {report.identity_law.explanation}"
+        )
+        assert report.composition_law.passed, (
+            f"Either: Composition law failed - {report.composition_law.explanation}"
+        )
+
+    @pytest.mark.asyncio
+    async def test_list_functor_satisfies_laws(self) -> None:
+        """Verify ListFunctor satisfies categorical laws."""
+        from agents.a.functor import verify_functor
+        from agents.c.functor import ListFunctor
+
+        test_input = [5]
+        report = await verify_functor(
+            ListFunctor,
+            IdentityAgent(),
+            DoubleAgent(),
+            AddOneAgent(),
+            test_input,
+        )
+        assert report.identity_law.passed, (
+            f"List: Identity law failed - {report.identity_law.explanation}"
+        )
+        assert report.composition_law.passed, (
+            f"List: Composition law failed - {report.composition_law.explanation}"
+        )
+
+    @pytest.mark.asyncio
+    async def test_logged_functor_satisfies_laws(self) -> None:
+        """Verify LoggedFunctor satisfies categorical laws."""
+        from agents.a.functor import verify_functor
+        from agents.c.functor import LoggedFunctor
+
+        test_input = 5
+        report = await verify_functor(
+            LoggedFunctor,
+            IdentityAgent(),
+            DoubleAgent(),
+            AddOneAgent(),
+            test_input,
+        )
+        assert report.identity_law.passed, (
+            f"Logged: Identity law failed - {report.identity_law.explanation}"
+        )
+        assert report.composition_law.passed, (
+            f"Logged: Composition law failed - {report.composition_law.explanation}"
+        )
+
+    @pytest.mark.asyncio
+    async def test_fix_functor_satisfies_laws(self) -> None:
+        """Verify FixFunctor satisfies categorical laws."""
+        from agents.a.functor import verify_functor
+        from agents.c.functor import FixFunctor
+
+        test_input = 5
+        report = await verify_functor(
+            FixFunctor,
+            IdentityAgent(),
+            DoubleAgent(),
+            AddOneAgent(),
+            test_input,
+        )
+        assert report.identity_law.passed, (
+            f"Fix: Identity law failed - {report.identity_law.explanation}"
+        )
+        assert report.composition_law.passed, (
+            f"Fix: Composition law failed - {report.composition_law.explanation}"
+        )
+
+    @pytest.mark.asyncio
+    async def test_soul_functor_satisfies_laws(self) -> None:
+        """Verify SoulFunctor satisfies categorical laws."""
+        from agents.a.functor import verify_functor
+        from agents.k.functor import Soul, SoulFunctor
+
+        # Soul functor operates on Soul[int] values
+        test_input = Soul(value=5)
+
+        report = await verify_functor(
+            SoulFunctor,
+            IdentityAgent(),
+            DoubleAgent(),
+            AddOneAgent(),
+            test_input,
+        )
+
+        assert report.identity_law.passed, (
+            f"Soul: Identity law failed - {report.identity_law.explanation}"
+        )
+        assert report.composition_law.passed, (
+            f"Soul: Composition law failed - {report.composition_law.explanation}"
+        )
+
+    @pytest.mark.asyncio
+    async def test_verify_all_reports_generated(self) -> None:
+        """
+        Test FunctorRegistry.verify_all() generates reports for all functors.
+
+        This tests the batch verification API produces reports. Note that
+        non-discrete functors (Flux, Observer, State, Async) may not pass
+        standard verification because they operate on different domains.
+        """
+        from agents.c.functor import Just, Right
+
+        def input_factory(functor_name: str) -> Any:
+            """Create appropriate test input for each functor type."""
+            if functor_name == "Maybe":
+                return Just(5)
+            elif functor_name == "Either":
+                return Right(5)
+            elif functor_name == "List":
+                return [5]
+            elif functor_name == "Soul":
+                from agents.k.functor import Soul
+
+                return Soul(value=5)
+            else:
+                # Default for Logged, Fix, and others
+                return 5
+
+        reports = await FunctorRegistry.verify_all(
+            IdentityAgent(),
+            DoubleAgent(),
+            AddOneAgent(),
+            input_factory,
+        )
+
+        # Verify we got reports for registered functors
+        assert len(reports) > 0, "No functors were verified"
+
+        # Verify all functors produced a report (even if some fail due to domain mismatch)
+        all_functors = FunctorRegistry.all_functors()
+        for name in all_functors:
+            assert name in reports, f"Missing report for {name}"
