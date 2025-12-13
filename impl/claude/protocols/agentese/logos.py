@@ -301,6 +301,9 @@ class Logos:
     # Middleware (Phase 5: Wundt Curator for aesthetic filtering)
     _curator: "WundtCurator | None" = None
 
+    # Telemetry middleware (Phase 6: OpenTelemetry integration)
+    _telemetry_enabled: bool = False
+
     def __post_init__(self) -> None:
         """Initialize context resolvers if not already set."""
         if not self._context_resolvers:
@@ -456,7 +459,13 @@ class Logos:
                 available=available,
             )
 
-        result = await node.invoke(aspect, observer, **kwargs)
+        # Apply telemetry if enabled (Phase 6: OpenTelemetry integration)
+        if self._telemetry_enabled:
+            result = await self._invoke_with_telemetry(
+                node, aspect, observer, path, **kwargs
+            )
+        else:
+            result = await node.invoke(aspect, observer, **kwargs)
 
         # Apply curator filtering (Phase 5: Wundt Curve aesthetic filtering)
         # PAYADOR Enhancement (v2.5): Auto-apply curator for GENERATION aspects
@@ -467,6 +476,25 @@ class Logos:
             result = await self._auto_curate(result, observer, path)
 
         return result
+
+    async def _invoke_with_telemetry(
+        self,
+        node: LogosNode,
+        aspect: str,
+        observer: "Umwelt[Any, Any]",
+        path: str,
+        **kwargs: Any,
+    ) -> Any:
+        """Invoke with OpenTelemetry span wrapping."""
+        from .telemetry import trace_invocation
+
+        async with trace_invocation(path, observer) as span:
+            result = await node.invoke(aspect, observer, **kwargs)
+
+            # Record result type
+            span.set_attribute("agentese.result.type", type(result).__name__)
+
+            return result
 
     def compose(self, *paths: str, enforce_output: bool = True) -> ComposedPath:
         """
@@ -931,6 +959,46 @@ class Logos:
             _grammarian=self._grammarian,
             _capital_ledger=self._capital_ledger,
             _curator=curator,
+            _telemetry_enabled=self._telemetry_enabled,
+        )
+
+    def with_telemetry(self, enabled: bool = True) -> "Logos":
+        """
+        Create a new Logos instance with telemetry enabled/disabled.
+
+        When enabled, all invoke() calls are wrapped with OpenTelemetry spans
+        for distributed tracing.
+
+        Args:
+            enabled: Whether to enable telemetry (default True)
+
+        Returns:
+            New Logos instance with telemetry setting
+
+        Example:
+            from protocols.agentese.exporters import configure_telemetry
+
+            # Configure OTEL once at startup
+            configure_telemetry(TelemetryConfig(otlp_endpoint="tempo:4317"))
+
+            # Enable telemetry on Logos
+            traced_logos = logos.with_telemetry()
+            result = await traced_logos.invoke("self.soul.challenge", observer, "idea")
+            # Span exported to Tempo/Jaeger
+        """
+        return Logos(
+            registry=self.registry,
+            spec_root=self.spec_root,
+            _cache=self._cache.copy(),
+            _jit_nodes=self._jit_nodes.copy(),
+            _context_resolvers=self._context_resolvers,
+            _narrator=self._narrator,
+            _d_gent=self._d_gent,
+            _b_gent=self._b_gent,
+            _grammarian=self._grammarian,
+            _capital_ledger=self._capital_ledger,
+            _curator=self._curator,
+            _telemetry_enabled=enabled,
         )
 
 
@@ -947,6 +1015,7 @@ def create_logos(
     capital_ledger: Any = None,
     curator: "WundtCurator | None" = None,
     middleware: list["WundtCurator"] | None = None,
+    telemetry: bool = False,
 ) -> Logos:
     """
     Create a Logos resolver with standard configuration.
@@ -963,6 +1032,7 @@ def create_logos(
         middleware: List of middleware to apply to all invoke() calls.
                    If provided, this takes precedence over the curator parameter.
                    The first WundtCurator in the list becomes the primary curator.
+        telemetry: Enable OpenTelemetry tracing (Phase 6)
 
     Returns:
         Configured Logos instance with Phase 2 context resolvers
@@ -980,6 +1050,9 @@ def create_logos(
                 ),
             ]
         )
+
+        # With telemetry enabled
+        logos = create_logos(telemetry=True)
 
         # All outputs are filtered through the Wundt curve
         result = await logos.invoke("concept.story.manifest", observer)
@@ -1002,6 +1075,7 @@ def create_logos(
         _grammarian=grammarian,
         _capital_ledger=capital_ledger,
         _curator=effective_curator,
+        _telemetry_enabled=telemetry,
     )
     logos.__post_init__()  # Initialize context resolvers
     return logos

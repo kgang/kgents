@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 # === Temporal Affordances ===
 
 TIME_AFFORDANCES: dict[str, tuple[str, ...]] = {
-    "trace": ("witness", "query", "replay"),
+    "trace": ("witness", "query", "replay", "analyze", "collect", "render", "diff"),
     "past": ("project", "compare", "diff"),
     "future": ("forecast", "simulate", "predict"),
     "schedule": ("defer", "cancel", "list"),
@@ -67,10 +67,20 @@ class ScheduledAction:
 @dataclass
 class TraceNode(BaseLogosNode):
     """
-    time.trace - View temporal traces.
+    time.trace - View temporal traces and call graph analysis.
 
-    Provides access to the narrative history of events
-    via N-gent integration.
+    Provides access to both:
+    1. Narrative history of events (N-gent integration)
+    2. Static + runtime call graph tracing (weave integration)
+
+    AGENTESE paths:
+    - time.trace.analyze   # Static call graph
+    - time.trace.collect   # Runtime trace collection
+    - time.trace.render    # ASCII visualization
+    - time.trace.diff      # Compare traces
+    - time.trace.witness   # View traces (N-gent)
+    - time.trace.query     # Query traces
+    - time.trace.replay    # Replay trace sequence
     """
 
     _handle: str = "time.trace"
@@ -80,6 +90,12 @@ class TraceNode(BaseLogosNode):
 
     # Local trace storage for standalone operation
     _traces: list[dict[str, Any]] = field(default_factory=list)
+
+    # Cached static call graph for reuse
+    _static_graph: Any = None
+
+    # Last runtime trace for comparison/rendering
+    _last_runtime_trace: Any = None
 
     @property
     def handle(self) -> str:
@@ -92,6 +108,8 @@ class TraceNode(BaseLogosNode):
     async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
         """View trace summary."""
         trace_count = len(self._traces)
+        has_static = self._static_graph is not None
+        has_runtime = self._last_runtime_trace is not None
 
         return BasicRendering(
             summary="Temporal Traces",
@@ -99,6 +117,8 @@ class TraceNode(BaseLogosNode):
             metadata={
                 "trace_count": trace_count,
                 "n_gent_connected": self._narrator is not None,
+                "static_graph_loaded": has_static,
+                "runtime_trace_available": has_runtime,
             },
         )
 
@@ -116,6 +136,14 @@ class TraceNode(BaseLogosNode):
                 return await self._query(observer, **kwargs)
             case "replay":
                 return await self._replay(observer, **kwargs)
+            case "analyze":
+                return await self._analyze(observer, **kwargs)
+            case "collect":
+                return await self._collect(observer, **kwargs)
+            case "render":
+                return await self._render(observer, **kwargs)
+            case "diff":
+                return await self._diff(observer, **kwargs)
             case _:
                 return {"aspect": aspect, "status": "not implemented"}
 
@@ -197,11 +225,338 @@ class TraceNode(BaseLogosNode):
             "total": len(self._traces),
         }
 
+    async def _analyze(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Static call graph analysis.
+
+        AGENTESE: time.trace.analyze
+
+        Args:
+            target: Function/class to trace (required)
+            depth: Traversal depth (default: 5)
+            callees: If True, trace what target calls; else who calls target
+            path: Base path for analysis (default: impl/claude)
+            show_ghosts: Include dynamic/inferred calls
+
+        Returns:
+            Call graph with nodes, edges, and optional visualization
+        """
+        target = kwargs.get("target")
+        if not target:
+            return {"error": "target is required", "aspect": "analyze"}
+
+        depth = kwargs.get("depth", 5)
+        callees = kwargs.get("callees", False)
+        base_path = kwargs.get("path", "impl/claude")
+        show_ghosts = kwargs.get("show_ghosts", False)
+
+        try:
+            from weave.static_trace import StaticCallGraph
+
+            # Create or reuse static graph
+            if self._static_graph is None:
+                self._static_graph = StaticCallGraph(base_path)
+                self._static_graph.analyze("**/*.py")
+
+            graph = self._static_graph
+
+            # Trace callers or callees
+            if callees:
+                dep_graph = graph.trace_callees(target, depth=depth)
+                direction = "callees"
+            else:
+                dep_graph = graph.trace_callers(target, depth=depth)
+                direction = "callers"
+
+            # Get ghost calls if requested
+            ghosts: list[dict[str, Any]] = []
+            if show_ghosts:
+                ghost_calls = graph.get_ghost_calls(target)
+                ghosts = [
+                    {
+                        "callee": gc.callee,
+                        "caller": gc.caller,
+                        "file": str(gc.file),
+                        "line": gc.line,
+                    }
+                    for gc in ghost_calls
+                ]
+
+            return {
+                "target": target,
+                "direction": direction,
+                "depth": depth,
+                "nodes": list(dep_graph.nodes()),
+                "node_count": len(dep_graph),
+                "edges": [
+                    {"from": node, "to": list(dep_graph.get_dependencies(node))}
+                    for node in dep_graph.nodes()
+                ],
+                "ghosts": ghosts,
+                "files_analyzed": graph.num_files,
+                "definitions_found": graph.num_definitions,
+            }
+
+        except ImportError as e:
+            return {"error": f"weave module not available: {e}", "aspect": "analyze"}
+        except Exception as e:
+            return {"error": str(e), "aspect": "analyze"}
+
+    async def _collect(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Runtime trace collection.
+
+        AGENTESE: time.trace.collect
+
+        Note: This provides an interface to configure trace collection.
+        Actual execution tracing requires using TraceCollector directly
+        via the context manager pattern.
+
+        Args:
+            include_patterns: Glob patterns for files to include
+            exclude_patterns: Glob patterns for files to exclude
+            max_depth: Maximum call depth to trace
+            include_stdlib: Whether to trace stdlib calls
+
+        Returns:
+            Configuration status and any cached runtime trace data
+        """
+        include_patterns = kwargs.get("include_patterns", [])
+        exclude_patterns = kwargs.get("exclude_patterns", [])
+        max_depth = kwargs.get("max_depth")
+        include_stdlib = kwargs.get("include_stdlib", False)
+
+        try:
+            from weave.runtime_trace import TraceCollector, TraceFilter
+
+            # Create filter configuration
+            filter_config = TraceFilter(
+                include_patterns=include_patterns,
+                exclude_patterns=exclude_patterns
+                or [
+                    "**/site-packages/**",
+                    "**/.venv/**",
+                    "**/lib/python*/**",
+                ],
+                max_depth=max_depth,
+                include_stdlib=include_stdlib,
+            )
+
+            # Return configuration info
+            result: dict[str, Any] = {
+                "status": "configured",
+                "filter": {
+                    "include_patterns": filter_config.include_patterns,
+                    "exclude_patterns": filter_config.exclude_patterns,
+                    "max_depth": filter_config.max_depth,
+                    "include_stdlib": filter_config.include_stdlib,
+                },
+            }
+
+            # Include cached runtime trace info if available
+            if self._last_runtime_trace is not None:
+                result["cached_trace"] = {
+                    "event_count": len(self._last_runtime_trace),
+                    "available": True,
+                }
+
+            return result
+
+        except ImportError as e:
+            return {"error": f"weave module not available: {e}", "aspect": "collect"}
+        except Exception as e:
+            return {"error": str(e), "aspect": "collect"}
+
+    async def _render(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        ASCII visualization of traces.
+
+        AGENTESE: time.trace.render
+
+        Args:
+            mode: Visualization mode (tree, graph, timeline, flame)
+            source: What to render - "static" for call graph, "runtime" for trace
+            target: For static mode, the function to render
+            width: Output width (default: 80)
+            show_ghosts: Show ghost/dynamic calls
+
+        Returns:
+            ASCII visualization as string
+        """
+        mode = kwargs.get("mode", "tree")
+        source = kwargs.get("source", "static")
+        target = kwargs.get("target")
+        width = kwargs.get("width", 80)
+        show_ghosts = kwargs.get("show_ghosts", True)
+
+        try:
+            from weave.trace_renderer import RenderConfig, TraceRenderer
+
+            config = RenderConfig(
+                width=width,
+                show_ghosts=show_ghosts,
+            )
+            renderer = TraceRenderer(config)
+
+            if source == "static":
+                # Render static call graph
+                if target is None:
+                    return {"error": "target required for static rendering"}
+
+                # Get the call graph
+                analysis = await self._analyze(observer, target=target)
+                if "error" in analysis:
+                    return analysis
+
+                # Build dependency graph for rendering
+                from weave.dependency import DependencyGraph
+
+                dep_graph = DependencyGraph()
+                for edge in analysis.get("edges", []):
+                    from_node = edge["from"]
+                    to_nodes = edge.get("to", [])
+                    if to_nodes:
+                        dep_graph.add_node(from_node, depends_on=set(to_nodes))
+                    else:
+                        dep_graph.add_node(from_node)
+
+                # Render based on mode
+                layout = "tree" if mode == "tree" else "force"
+                ghost_nodes = {g["callee"] for g in analysis.get("ghosts", [])}
+                visualization = renderer.render_call_graph(
+                    dep_graph, layout=layout, ghost_nodes=ghost_nodes
+                )
+
+                return {
+                    "mode": mode,
+                    "source": source,
+                    "target": target,
+                    "visualization": visualization,
+                    "node_count": len(dep_graph),
+                }
+
+            elif source == "runtime":
+                # Render runtime trace
+                if self._last_runtime_trace is None:
+                    return {
+                        "error": "No runtime trace available. Use collect first.",
+                        "aspect": "render",
+                    }
+
+                monoid = self._last_runtime_trace
+
+                if mode == "timeline":
+                    visualization = renderer.render_timeline(monoid)
+                elif mode == "flame":
+                    visualization = renderer.render_flame(monoid)
+                else:  # tree
+                    visualization = renderer.render_tree_from_monoid(monoid)
+
+                return {
+                    "mode": mode,
+                    "source": source,
+                    "visualization": visualization,
+                    "event_count": len(monoid),
+                }
+
+            else:
+                return {
+                    "error": f"Unknown source: {source}. Use 'static' or 'runtime'."
+                }
+
+        except ImportError as e:
+            return {"error": f"weave module not available: {e}", "aspect": "render"}
+        except Exception as e:
+            return {"error": str(e), "aspect": "render"}
+
+    async def _diff(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Compare two traces.
+
+        AGENTESE: time.trace.diff
+
+        Args:
+            before: First trace (TraceMonoid or path to JSON)
+            after: Second trace (TraceMonoid or path to JSON)
+
+        Returns:
+            Diff showing added, removed, and unchanged functions
+        """
+        before_trace = kwargs.get("before")
+        after_trace = kwargs.get("after")
+
+        if before_trace is None or after_trace is None:
+            return {
+                "error": "Both 'before' and 'after' traces required",
+                "aspect": "diff",
+            }
+
+        try:
+            from weave.trace_renderer import TraceRenderer
+
+            renderer = TraceRenderer()
+
+            # If traces are TraceMonoids, render diff directly
+            visualization = renderer.render_diff(before_trace, after_trace)
+
+            # Extract function sets for programmatic access
+            def extract_funcs(monoid: Any) -> set[str]:
+                funcs: set[str] = set()
+                for event in monoid.events:
+                    content = event.content
+                    if isinstance(content, dict):
+                        func = content.get("function")
+                        if func:
+                            funcs.add(func)
+                return funcs
+
+            before_funcs = extract_funcs(before_trace)
+            after_funcs = extract_funcs(after_trace)
+
+            return {
+                "visualization": visualization,
+                "added": list(after_funcs - before_funcs),
+                "removed": list(before_funcs - after_funcs),
+                "unchanged": list(before_funcs & after_funcs),
+                "before_count": len(before_trace),
+                "after_count": len(after_trace),
+            }
+
+        except ImportError as e:
+            return {"error": f"weave module not available: {e}", "aspect": "diff"}
+        except Exception as e:
+            return {"error": str(e), "aspect": "diff"}
+
     def record(self, event: dict[str, Any]) -> None:
         """Record a trace event (for standalone operation)."""
         if "timestamp" not in event:
             event["timestamp"] = datetime.now().isoformat()
         self._traces.append(event)
+
+    def set_runtime_trace(self, monoid: Any) -> None:
+        """Cache a runtime trace for rendering/diff operations."""
+        self._last_runtime_trace = monoid
+
+    def clear_cache(self) -> None:
+        """Clear cached static graph and runtime trace."""
+        self._static_graph = None
+        self._last_runtime_trace = None
 
 
 # === Past Node ===

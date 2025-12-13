@@ -442,7 +442,11 @@ class TestRegistryCompleteness:
                 if os.path.isdir(os.path.join(agent_dir, d))
                 and not d.startswith("_")
                 and not d.startswith(".")
-                and d != "shared"
+                # Exclude utility directories and experimental/wip modules
+                and d not in ("shared", "examples", "poly", "operad", "sheaf")
+                # Exclude any test-generated agents (scaffolding creates these)
+                and not d.startswith("test")
+                and d != "archimedes"  # Common test fixture name
             ]
 
             for d in dirs:

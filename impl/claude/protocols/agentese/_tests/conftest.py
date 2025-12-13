@@ -24,6 +24,7 @@ from ..node import (
 if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt
 
+
 # === Mock DNA Types ===
 
 
@@ -58,9 +59,9 @@ class PoetDNA(MockDNA):
 
 
 @dataclass
-class MockUmwelt:
+class _MockUmweltImpl:
     """
-    Mock Umwelt for testing without full infrastructure.
+    Mock Umwelt implementation for testing without full infrastructure.
 
     Implements the minimal interface needed for AGENTESE testing.
     """
@@ -92,6 +93,11 @@ class MockUmwelt:
     def is_grounded(self, output: Any) -> bool:
         """Always returns True for mock."""
         return True
+
+
+# Type alias for MockUmwelt that's compatible with Umwelt[Any, Any]
+# Using Any as the underlying type silences the generic parameter requirement
+MockUmwelt = _MockUmweltImpl
 
 
 # === Mock Nodes ===
@@ -169,19 +175,19 @@ def poet_dna() -> PoetDNA:
 
 
 @pytest.fixture
-def mock_umwelt() -> MockUmwelt:
+def mock_umwelt() -> _MockUmweltImpl:
     """Default mock Umwelt."""
     return MockUmwelt()
 
 
 @pytest.fixture
-def architect_umwelt() -> MockUmwelt:
+def architect_umwelt() -> _MockUmweltImpl:
     """Architect Umwelt."""
     return MockUmwelt(dna=ArchitectDNA())
 
 
 @pytest.fixture
-def poet_umwelt() -> MockUmwelt:
+def poet_umwelt() -> _MockUmweltImpl:
     """Poet Umwelt."""
     return MockUmwelt(dna=PoetDNA())
 

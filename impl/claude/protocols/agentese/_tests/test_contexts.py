@@ -145,7 +145,7 @@ class TestWorldNode:
     @pytest.mark.asyncio
     async def test_manifest_architect(self, world_node: WorldNode) -> None:
         """Architect sees BlueprintRendering."""
-        observer = MockUmwelt(archetype="architect")
+        observer: MockUmwelt = MockUmwelt(archetype="architect")
         result = await world_node.manifest(as_umwelt(observer))
         # Should be BlueprintRendering
         assert hasattr(result, "dimensions") or "blueprint" in str(type(result)).lower()

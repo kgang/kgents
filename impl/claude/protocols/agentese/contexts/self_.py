@@ -16,8 +16,10 @@ Note: Named self_.py because 'self' is a Python reserved word.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from ..node import (
@@ -30,11 +32,24 @@ if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt
 
 from .self_judgment import CriticsLoop, Critique, RefinedArtifact
+from .vitals import VitalsContextResolver, create_vitals_resolver
 
 # === Self Affordances ===
 
 SELF_AFFORDANCES: dict[str, tuple[str, ...]] = {
-    "memory": ("consolidate", "prune", "checkpoint", "recall", "forget"),
+    "memory": (
+        "consolidate",
+        "prune",
+        "checkpoint",
+        "recall",
+        "forget",
+        # Crystal-based operations
+        "crystallize",  # Create StateCrystal checkpoint
+        "resume",  # Restore from StateCrystal
+        "cherish",  # Pin crystal from reaping
+        # Ghost cache operations
+        "engram",  # Persist to Ghost cache
+    ),
     "capabilities": ("list", "acquire", "release"),
     "state": ("checkpoint", "restore", "inspect"),
     "identity": ("reflect", "evolve"),
@@ -47,6 +62,7 @@ SELF_AFFORDANCES: dict[str, tuple[str, ...]] = {
         "refine",
     ),
     "semaphore": ("pending", "yield", "status"),
+    "vitals": ("triad", "synapse", "resonance", "circuit", "durability", "reflex"),
 }
 
 
@@ -65,6 +81,16 @@ class MemoryNode(BaseLogosNode):
     - checkpoint: Snapshot current state
     - recall: Retrieve specific memories
     - forget: Explicitly remove memories
+    - crystallize: Create StateCrystal checkpoint (from ContextWindow)
+    - resume: Restore ContextWindow from StateCrystal
+    - cherish: Pin crystal from TTL-based reaping
+    - engram: Persist state to Ghost cache
+
+    AGENTESE: self.memory.*
+
+    Architecture:
+        Hot Memory (ContextWindow) → crystallize → Warm Memory (StateCrystal)
+        Warm Memory (StateCrystal) → expire → Cold Memory (Ghost Cache)
     """
 
     _handle: str = "self.memory"
@@ -76,6 +102,12 @@ class MemoryNode(BaseLogosNode):
     # Integration points
     _d_gent: Any = None  # D-gent for persistence
     _n_gent: Any = None  # N-gent for tracing
+
+    # Crystal infrastructure (for crystallize/resume/cherish)
+    _crystallization_engine: Any = None  # CrystallizationEngine from agents.d.crystal
+
+    # Ghost cache path (for engram/manifest fallback)
+    _ghost_path: Path | None = None
 
     @property
     def handle(self) -> str:
@@ -115,6 +147,16 @@ class MemoryNode(BaseLogosNode):
                 return await self._recall(observer, **kwargs)
             case "forget":
                 return await self._forget(observer, **kwargs)
+            # Crystal-based operations
+            case "crystallize":
+                return await self._crystallize(observer, **kwargs)
+            case "resume":
+                return await self._resume(observer, **kwargs)
+            case "cherish":
+                return await self._cherish(observer, **kwargs)
+            # Ghost cache operations
+            case "engram":
+                return await self._engram(observer, **kwargs)
             case _:
                 return {"aspect": aspect, "status": "not implemented"}
 
@@ -215,6 +257,249 @@ class MemoryNode(BaseLogosNode):
             del self._memories[key]
             return {"forgotten": key, "status": "removed"}
         return {"status": "not found", "key": key}
+
+    # --- Crystal Operations ---
+
+    async def _crystallize(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Create a StateCrystal checkpoint from current context.
+
+        AGENTESE: self.memory.crystallize
+
+        Args:
+            context_window: The ContextWindow to crystallize
+            task_id: Task identifier
+            task_description: Human-readable task description
+            task_status: active/paused/completed/yielded/failed
+            working_memory: Optional key-value memory dict
+            ttl_hours: TTL in hours (default 24)
+            agent: Agent identifier (default from observer)
+
+        Returns:
+            Dict with crystal_id and crystallization details
+        """
+        if self._crystallization_engine is None:
+            return {
+                "error": "CrystallizationEngine not configured",
+                "note": "Wire CrystallizationEngine to MemoryNode for crystal ops",
+            }
+
+        # Import here to avoid circular imports
+        from agents.d.crystal import TaskState, TaskStatus
+
+        context_window = kwargs.get("context_window")
+        if context_window is None:
+            return {"error": "context_window required for crystallization"}
+
+        # Build task state
+        task_state = TaskState(
+            task_id=kwargs.get("task_id", "unknown"),
+            description=kwargs.get("task_description", "No description"),
+            status=TaskStatus(kwargs.get("task_status", "active")),
+            progress=kwargs.get("progress", 0.0),
+            metadata=kwargs.get("task_metadata", {}),
+        )
+
+        # Get agent from observer or kwargs
+        meta = self._umwelt_to_meta(observer)
+        agent = kwargs.get("agent", meta.name)
+
+        # Optional TTL
+        ttl_hours = kwargs.get("ttl_hours", 24)
+        ttl = timedelta(hours=ttl_hours)
+
+        # Optional parent crystal for lineage
+        parent_crystal_id = kwargs.get("parent_crystal_id")
+        parent_crystal = None
+        if parent_crystal_id:
+            parent_crystal = self._crystallization_engine.get_crystal(parent_crystal_id)
+
+        # Crystallize
+        result = await self._crystallization_engine.crystallize(
+            window=context_window,
+            task_state=task_state,
+            agent=agent,
+            working_memory=kwargs.get("working_memory"),
+            parent_crystal=parent_crystal,
+            ttl=ttl,
+        )
+
+        if result.success and result.crystal:
+            return {
+                "status": "crystallized",
+                "crystal_id": result.crystal.crystal_id,
+                "agent": result.crystal.agent,
+                "preserved_count": result.preserved_count,
+                "dropped_count": result.dropped_count,
+                "summary_length": result.summary_length,
+                "expires_at": result.crystal.expires_at.isoformat(),
+                "pinned": result.crystal.pinned,
+            }
+        return {"error": result.error or "Crystallization failed"}
+
+    async def _resume(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Restore ContextWindow from a StateCrystal.
+
+        AGENTESE: self.memory.resume
+
+        Args:
+            crystal_id: ID of the crystal to resume from
+            max_tokens: Max tokens for restored window (default 100000)
+
+        Returns:
+            Dict with restored window info or error
+        """
+        if self._crystallization_engine is None:
+            return {
+                "error": "CrystallizationEngine not configured",
+                "note": "Wire CrystallizationEngine to MemoryNode for crystal ops",
+            }
+
+        crystal_id = kwargs.get("crystal_id")
+        if not crystal_id:
+            return {"error": "crystal_id required"}
+
+        max_tokens = kwargs.get("max_tokens", 100_000)
+
+        result = await self._crystallization_engine.resume(
+            crystal_id=crystal_id,
+            max_tokens=max_tokens,
+        )
+
+        if result.success and result.window and result.crystal:
+            return {
+                "status": "resumed",
+                "crystal_id": crystal_id,
+                "restored_fragments": result.restored_fragments,
+                "task_id": result.crystal.task_state.task_id,
+                "task_description": result.crystal.task_state.description,
+                "task_status": result.crystal.task_state.status.value,
+                "working_memory": result.crystal.working_memory,
+                "window_turn_count": len(result.window.all_turns()),
+            }
+        return {"error": result.error or "Resume failed"}
+
+    async def _cherish(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Pin a crystal from TTL-based reaping.
+
+        AGENTESE: self.memory.cherish
+
+        Cherished crystals survive until explicitly deleted.
+        Use for important checkpoints worth preserving.
+
+        Args:
+            crystal_id: ID of the crystal to cherish
+            uncherish: If True, unpin instead of pin
+
+        Returns:
+            Dict with cherish status
+        """
+        if self._crystallization_engine is None:
+            return {
+                "error": "CrystallizationEngine not configured",
+                "note": "Wire CrystallizationEngine to MemoryNode for crystal ops",
+            }
+
+        crystal_id = kwargs.get("crystal_id")
+        if not crystal_id:
+            return {"error": "crystal_id required"}
+
+        crystal = self._crystallization_engine.get_crystal(crystal_id)
+        if crystal is None:
+            return {"error": f"Crystal not found: {crystal_id}"}
+
+        uncherish = kwargs.get("uncherish", False)
+        if uncherish:
+            crystal.uncherish()
+            return {
+                "status": "uncherished",
+                "crystal_id": crystal_id,
+                "pinned": False,
+            }
+        else:
+            crystal.cherish()
+            return {
+                "status": "cherished",
+                "crystal_id": crystal_id,
+                "pinned": True,
+            }
+
+    # --- Ghost Cache Operations ---
+
+    async def _engram(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Persist state to Ghost cache for offline CLI capability.
+
+        AGENTESE: self.memory.engram
+
+        Ghost cache provides resilience when cluster is unavailable.
+
+        Args:
+            key: Key for the engram (e.g., "status", "map", "agents/_index")
+            data: Data to persist (will be JSON serialized)
+            subdirectory: Optional subdirectory (e.g., "agents", "pheromones")
+
+        Returns:
+            Dict with engram status
+        """
+        if self._ghost_path is None:
+            # Default ghost path
+            self._ghost_path = Path.home() / ".kgents" / "ghost"
+
+        key = kwargs.get("key")
+        data = kwargs.get("data")
+
+        if not key:
+            return {"error": "key required"}
+        if data is None:
+            return {"error": "data required"}
+
+        # Ensure ghost directory exists
+        self._ghost_path.mkdir(parents=True, exist_ok=True)
+
+        # Handle subdirectory
+        subdirectory = kwargs.get("subdirectory")
+        if subdirectory:
+            target_dir = self._ghost_path / subdirectory
+            target_dir.mkdir(parents=True, exist_ok=True)
+        else:
+            target_dir = self._ghost_path
+
+        # Write engram
+        engram_file = target_dir / f"{key}.json"
+        try:
+            engram_data = {
+                "key": key,
+                "data": data,
+                "timestamp": datetime.now().isoformat(),
+                "agent": self._umwelt_to_meta(observer).name,
+            }
+            engram_file.write_text(json.dumps(engram_data, indent=2, default=str))
+            return {
+                "status": "engrammed",
+                "key": key,
+                "path": str(engram_file),
+            }
+        except Exception as e:
+            return {"error": f"Failed to write engram: {e}"}
 
 
 # === Capabilities Node ===
@@ -980,6 +1265,10 @@ class SelfContextResolver:
     _n_gent: Any = None
     # Purgatory for semaphore integration
     _purgatory: Any = None
+    # CrystallizationEngine for memory crystal operations
+    _crystallization_engine: Any = None
+    # Ghost cache path for offline capability
+    _ghost_path: Path | None = None
 
     # Singleton nodes for self context
     _memory: MemoryNode | None = None
@@ -988,26 +1277,38 @@ class SelfContextResolver:
     _identity: IdentityNode | None = None
     _judgment: JudgmentNode | None = None
     _semaphore: SemaphoreNode | None = None
+    # Vitals context resolver for self.vitals.*
+    _vitals_resolver: VitalsContextResolver | None = None
 
     def __post_init__(self) -> None:
         """Initialize singleton nodes."""
-        self._memory = MemoryNode(_d_gent=self._d_gent, _n_gent=self._n_gent)
+        self._memory = MemoryNode(
+            _d_gent=self._d_gent,
+            _n_gent=self._n_gent,
+            _crystallization_engine=self._crystallization_engine,
+            _ghost_path=self._ghost_path,
+        )
         self._capabilities = CapabilitiesNode()
         self._state = StateNode()
         self._identity = IdentityNode()
         self._judgment = JudgmentNode()
         self._semaphore = SemaphoreNode(_purgatory=self._purgatory)
+        self._vitals_resolver = create_vitals_resolver()
 
     def resolve(self, holon: str, rest: list[str]) -> BaseLogosNode:
         """
         Resolve a self.* path to a node.
 
         Args:
-            holon: The self subsystem (memory, capabilities, state, identity, judgment, semaphore)
+            holon: The self subsystem (memory, capabilities, state, identity, judgment, semaphore, vitals)
             rest: Additional path components
 
         Returns:
             Resolved node
+
+        Note:
+            For vitals, rest contains the vitals component (triad, synapse, resonance, circuit).
+            E.g., self.vitals.triad → holon="vitals", rest=["triad"]
         """
         match holon:
             case "memory":
@@ -1022,6 +1323,15 @@ class SelfContextResolver:
                 return self._judgment or JudgmentNode()
             case "semaphore":
                 return self._semaphore or SemaphoreNode()
+            case "vitals":
+                # Delegate to vitals resolver
+                if self._vitals_resolver is None:
+                    self._vitals_resolver = create_vitals_resolver()
+                if rest:
+                    # self.vitals.triad → VitalsContextResolver.resolve("triad", [])
+                    return self._vitals_resolver.resolve(rest[0], rest[1:])
+                # self.vitals → Return triad health as default
+                return self._vitals_resolver.resolve("triad", [])
             case _:
                 # Generic self node for undefined holons
                 return GenericSelfNode(holon)
@@ -1069,11 +1379,27 @@ def create_self_resolver(
     d_gent: Any = None,
     n_gent: Any = None,
     purgatory: Any = None,
+    crystallization_engine: Any = None,
+    ghost_path: Path | None = None,
 ) -> SelfContextResolver:
-    """Create a SelfContextResolver with optional integrations."""
+    """
+    Create a SelfContextResolver with optional integrations.
+
+    Args:
+        d_gent: D-gent for persistence
+        n_gent: N-gent for tracing
+        purgatory: Purgatory for semaphore integration
+        crystallization_engine: CrystallizationEngine for crystal operations
+        ghost_path: Path for Ghost cache (defaults to ~/.kgents/ghost)
+
+    Returns:
+        Configured SelfContextResolver
+    """
     resolver = SelfContextResolver()
     resolver._d_gent = d_gent
     resolver._n_gent = n_gent
     resolver._purgatory = purgatory
+    resolver._crystallization_engine = crystallization_engine
+    resolver._ghost_path = ghost_path
     resolver.__post_init__()  # Reinitialize with integrations
     return resolver
