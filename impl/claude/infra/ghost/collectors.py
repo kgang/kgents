@@ -451,6 +451,210 @@ class InfraCollector(GhostCollector):
             )
 
 
+class MetaGhostCollector(GhostCollector):
+    """
+    Collect meta-construction system health.
+
+    Gathers:
+    - Polynomial primitives count
+    - Registered operads
+    - Compositions generated
+    - Sheaf gluings performed
+    - Operad law verification status
+    """
+
+    @property
+    def name(self) -> str:
+        return "meta"
+
+    async def collect(self) -> CollectorResult:
+        timestamp = datetime.now().isoformat()
+
+        try:
+            data: dict[str, Any] = {}
+
+            # Polynomial primitives
+            try:
+                from agents.poly import primitive_names
+
+                data["primitives_count"] = len(primitive_names())
+                data["primitives"] = primitive_names()
+            except ImportError:
+                data["primitives_count"] = 0
+                data["primitives"] = []
+
+            # Registered operads
+            try:
+                from agents.operad import OperadRegistry
+
+                operads = OperadRegistry.all_operads()
+                data["operads_count"] = len(operads)
+                data["operads"] = list(operads.keys())
+
+                # Get operation counts per operad
+                data["operations_by_operad"] = {
+                    name: len(op.operations) for name, op in operads.items()
+                }
+            except ImportError:
+                data["operads_count"] = 0
+                data["operads"] = []
+
+            # Sheaf info
+            try:
+                from agents.sheaf import SOUL_SHEAF
+
+                data["soul_sheaf_contexts"] = len(SOUL_SHEAF.contexts)
+            except ImportError:
+                data["soul_sheaf_contexts"] = 0
+
+            # Build health line
+            parts = [
+                f"primitives:{data['primitives_count']}",
+                f"operads:{data['operads_count']}",
+            ]
+            if data.get("soul_sheaf_contexts", 0) > 0:
+                parts.append(f"contexts:{data['soul_sheaf_contexts']}")
+
+            data["health_line"] = " ".join(parts)
+
+            return CollectorResult(
+                source=self.name,
+                timestamp=timestamp,
+                success=True,
+                data=data,
+            )
+
+        except Exception as e:
+            return CollectorResult(
+                source=self.name,
+                timestamp=timestamp,
+                success=False,
+                error=str(e),
+            )
+
+
+class TraceGhostCollector(GhostCollector):
+    """
+    Collect trace analysis data for ghost projection.
+
+    Uses TraceDataProvider to gather:
+    - Static analysis metrics (files, definitions, calls)
+    - Hottest functions (most callers)
+    - Runtime trace status
+    - Detected anomalies
+
+    Projects to trace_summary.json in ghost directory.
+    """
+
+    def __init__(self, base_path: Path | None = None):
+        self.base_path = base_path or Path.cwd()
+
+    @property
+    def name(self) -> str:
+        return "trace"
+
+    async def collect(self) -> CollectorResult:
+        timestamp = datetime.now().isoformat()
+
+        try:
+            from agents.i.data.trace_provider import (
+                TraceDataProvider,
+                TraceMetrics,
+            )
+
+            # Get singleton provider
+            provider = TraceDataProvider.get_instance()
+
+            # Set base path for analysis
+            impl_path = self.base_path / "impl" / "claude"
+            if impl_path.exists():
+                provider.set_base_path(str(impl_path))
+            else:
+                provider.set_base_path(str(self.base_path))
+
+            # Collect metrics (include static analysis)
+            metrics: TraceMetrics = await provider.collect_metrics(include_static=True)
+
+            # Build data payload
+            data: dict[str, Any] = {
+                "static_analysis": {
+                    "files_analyzed": metrics.static.files_analyzed,
+                    "definitions_found": metrics.static.definitions_found,
+                    "calls_found": metrics.static.calls_found,
+                    "ghost_calls_found": metrics.static.ghost_calls_found,
+                    "analysis_time_ms": metrics.static.analysis_time_ms,
+                    "last_analyzed": (
+                        metrics.static.last_analyzed.isoformat()
+                        if metrics.static.last_analyzed
+                        else None
+                    ),
+                    "is_available": metrics.static.is_available,
+                    "hottest_functions": metrics.static.hottest_functions,
+                },
+                "runtime": {
+                    "total_events": metrics.runtime.total_events,
+                    "unique_functions": metrics.runtime.unique_functions,
+                    "avg_depth": metrics.runtime.avg_depth,
+                    "max_depth": metrics.runtime.max_depth,
+                    "threads_observed": metrics.runtime.threads_observed,
+                    "is_collecting": metrics.runtime.is_collecting,
+                    "is_available": metrics.runtime.is_available,
+                    "hot_paths": metrics.runtime.hot_paths,
+                },
+                "anomalies": [
+                    {
+                        "type": a.type,
+                        "description": a.description,
+                        "location": a.location,
+                        "severity": a.severity,
+                        "detected_at": a.detected_at.isoformat(),
+                    }
+                    for a in metrics.anomalies
+                ],
+                "collected_at": metrics.collected_at.isoformat(),
+            }
+
+            # Build health line
+            if not metrics.static.is_available:
+                health_line = "trace:unavailable"
+            else:
+                anomaly_count = len(metrics.anomalies)
+                health_parts = [
+                    f"trace:{metrics.static.files_analyzed}files",
+                    f"defs:{metrics.static.definitions_found}",
+                ]
+                if anomaly_count > 0:
+                    health_parts.append(f"anomalies:{anomaly_count}")
+                health_line = " ".join(health_parts)
+
+            data["health_line"] = health_line
+
+            return CollectorResult(
+                source=self.name,
+                timestamp=timestamp,
+                success=True,
+                data=data,
+            )
+
+        except ImportError as e:
+            return CollectorResult(
+                source=self.name,
+                timestamp=timestamp,
+                success=True,  # Graceful degradation
+                data={
+                    "health_line": "trace:not_available",
+                    "error": f"TraceDataProvider not available: {e}",
+                },
+            )
+        except Exception as e:
+            return CollectorResult(
+                source=self.name,
+                timestamp=timestamp,
+                success=False,
+                error=str(e),
+            )
+
+
 def create_all_collectors(project_root: Path | None = None) -> list[GhostCollector]:
     """
     Create all available collectors.
@@ -468,4 +672,6 @@ def create_all_collectors(project_root: Path | None = None) -> list[GhostCollect
         GitCollector(repo_path=project_root),
         FlinchCollector(flinch_path=project_root / ".kgents/ghost/test_flinches.jsonl"),
         InfraCollector(),
+        MetaGhostCollector(),
+        TraceGhostCollector(base_path=project_root),
     ]

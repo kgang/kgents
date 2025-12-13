@@ -44,6 +44,7 @@ from .collectors import (
     GhostCollector,
     GitCollector,
     InfraCollector,
+    TraceGhostCollector,
     create_all_collectors,
 )
 from .daemon import GhostDaemon, create_ghost_daemon
@@ -55,6 +56,7 @@ __all__ = [
     "GitCollector",
     "FlinchCollector",
     "InfraCollector",
+    "TraceGhostCollector",
     "CollectorResult",
     "create_all_collectors",
     # Health

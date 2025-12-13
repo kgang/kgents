@@ -92,6 +92,17 @@ from .fixture import (
 from .flaky import (
     FlakyAgent,
 )
+
+# Test Helpers (convenience functions)
+from .helpers import (
+    assert_agent_output,
+    assert_agent_raises,
+    assert_composition_associative,
+    assert_functor_composition,
+    assert_functor_identity,
+    counting_agent,
+    quick_mock,
+)
 from .judge import (
     JudgeAgent,
     JudgmentCriteria,
@@ -241,6 +252,14 @@ __all__ = [
     "TrustDecision",
     "TrustGate",
     "create_trust_gate",
+    # Test Helpers (convenience functions)
+    "assert_agent_output",
+    "assert_agent_raises",
+    "assert_composition_associative",
+    "assert_functor_identity",
+    "assert_functor_composition",
+    "quick_mock",
+    "counting_agent",
 ]
 
 
