@@ -134,7 +134,8 @@ class TestVisualization:
         from protocols.cli.handlers.trace import cmd_trace
 
         result = cmd_trace(
-            ["StaticCallGraph", "--tree", "--path", "impl/claude/weave", ctx,  # type: ignore[arg-type]
+            ["StaticCallGraph", "--tree", "--path", "impl/claude/weave"],
+            ctx,  # type: ignore[arg-type]
         )
 
         assert result == 0
@@ -144,7 +145,8 @@ class TestVisualization:
         from protocols.cli.handlers.trace import cmd_trace
 
         result = cmd_trace(
-            ["StaticCallGraph", "--graph", "--path", "impl/claude/weave", ctx,  # type: ignore[arg-type]
+            ["StaticCallGraph", "--graph", "--path", "impl/claude/weave"],
+            ctx,  # type: ignore[arg-type]
         )
 
         assert result == 0
@@ -154,7 +156,8 @@ class TestVisualization:
         from protocols.cli.handlers.trace import cmd_trace
 
         result = cmd_trace(
-            ["StaticCallGraph", "--json", "--path", "impl/claude/weave", ctx,  # type: ignore[arg-type]
+            ["StaticCallGraph", "--json", "--path", "impl/claude/weave"],
+            ctx,  # type: ignore[arg-type]
         )
 
         assert result == 0
@@ -185,7 +188,7 @@ class TestExport:
                     "--path",
                     "impl/claude/weave",
                 ],
-                ctx,
+                ctx,  # type: ignore[arg-type]
             )
 
             # Even if no nodes found, should not error
@@ -212,7 +215,7 @@ class TestExport:
                     "--path",
                     "impl/claude/weave",
                 ],
-                ctx,
+                ctx,  # type: ignore[arg-type]
             )
 
             assert result == 0
@@ -232,7 +235,8 @@ class TestFlagParsing:
 
         # Even with invalid depth, should not crash
         result = cmd_trace(
-            ["target", "--depth", "not-a-number", "--path", "impl/claude/weave", ctx,  # type: ignore[arg-type]
+            ["target", "--depth", "not-a-number", "--path", "impl/claude/weave"],
+            ctx,  # type: ignore[arg-type]
         )
 
         # Uses default depth, still succeeds
@@ -244,7 +248,8 @@ class TestFlagParsing:
 
         # Lens only used in runtime mode, but shouldn't crash in static
         result = cmd_trace(
-            ["target", "--lens", "K-gent", "--path", "impl/claude/weave", ctx,  # type: ignore[arg-type]
+            ["target", "--lens", "K-gent", "--path", "impl/claude/weave"],
+            ctx,  # type: ignore[arg-type]
         )
 
         assert result == 0
@@ -263,7 +268,7 @@ class TestFlagParsing:
                 "--path",
                 "impl/claude/weave",
             ],
-            ctx,
+            ctx,  # type: ignore[arg-type]
         )
 
         assert result == 0
@@ -313,7 +318,8 @@ class TestErrorHandling:
 
         # Search for something that doesn't exist
         result = cmd_trace(
-            ["NonExistentFunctionXYZ123", "--path", "impl/claude/weave", ctx,  # type: ignore[arg-type]
+            ["NonExistentFunctionXYZ123", "--path", "impl/claude/weave"],
+            ctx,  # type: ignore[arg-type]
         )
 
         assert result == 0
