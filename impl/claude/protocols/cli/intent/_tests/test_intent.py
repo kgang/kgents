@@ -13,11 +13,11 @@ Tests cover:
 from __future__ import annotations
 
 import json
+from collections.abc import Generator
 from typing import TYPE_CHECKING, Any
 from unittest.mock import MagicMock, patch
 
-if TYPE_CHECKING:
-    import pytest
+import pytest
 
 from ..commands import (
     IntentResult,
@@ -158,6 +158,21 @@ class TestFormatting:
 
 class TestCmdNew:
     """Tests for the 'new' command."""
+
+    @pytest.fixture(autouse=True)
+    def cleanup_test_agents(self) -> Generator[None, None, None]:
+        """Clean up any agents created during tests."""
+        import shutil
+        from pathlib import Path
+
+        yield
+
+        # Clean up test artifacts
+        agents_dir = Path(__file__).parent.parent.parent.parent.parent / "agents"
+        for test_dir in ["archimedes", "test"]:
+            agent_dir = agents_dir / test_dir
+            if agent_dir.exists():
+                shutil.rmtree(agent_dir)
 
     def test_help(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_new(["--help"])

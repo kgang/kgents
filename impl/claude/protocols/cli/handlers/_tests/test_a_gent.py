@@ -290,14 +290,17 @@ class TestRunCommand:
 
     @pytest.mark.anyio
     async def test_run_abstract_archetype_fails(self) -> None:
-        """Running abstract archetype returns error (expected)."""
+        """Running abstract archetype returns helpful error."""
         ctx = MockContext()
         result = await _handle_run(
             "Kappa", input_data=None, json_mode=False, ctx=_ctx(ctx)
         )
-        # Abstract classes can't be instantiated
+        # Abstract archetypes can't be run directly
         assert result == 1
-        assert any("instantiate abstract" in o[0].lower() for o in ctx.outputs)
+        output = ctx.outputs[0][0]
+        assert "abstract archetype" in output.lower()
+        assert "subclass" in output.lower()
+        assert "Example" in output
 
     @pytest.mark.anyio
     async def test_run_nonexistent_returns_error(self) -> None:

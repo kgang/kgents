@@ -221,29 +221,111 @@ def _create_entity(
 def _create_agent(
     name: str, genus: str | None, template: str, path: Path
 ) -> IntentResult:
-    """Create agent scaffold."""
-    slug = name.lower().replace(" ", "_")
-    agent_dir = path / "agents" / slug
+    """Create agent scaffold using Jinja2 templates."""
+    try:
+        from jinja2 import Environment, FileSystemLoader
+    except ImportError:
+        return IntentResult(
+            success=False,
+            error="jinja2 not installed. Run: uv add jinja2",
+            suggestions=["pip install jinja2", "uv add jinja2"],
+        )
 
-    # Simulate creation (actual implementation would create files)
+    # Normalize name
+    slug = name.lower().replace(" ", "_").replace("-", "_")
+    class_name = "".join(word.capitalize() for word in slug.split("_"))
+    if not class_name.endswith("Agent"):
+        class_name += "Agent"
+
+    # Map template to archetype
+    archetype_map = {"minimal": "Lambda", "default": "Lambda", "full": "Kappa"}
+    archetype = archetype_map.get(template, "Lambda")
+
+    # Find templates directory
+    templates_dir = Path(__file__).parent.parent.parent.parent / "_templates" / "agent"
+    if not templates_dir.exists():
+        return IntentResult(
+            success=False,
+            error=f"Templates not found at {templates_dir}",
+            suggestions=["Run from the impl/claude directory"],
+        )
+
+    # Output directory
+    output_base = Path(__file__).parent.parent.parent.parent / "agents"
+    agent_dir = output_base / slug
+
+    if agent_dir.exists():
+        return IntentResult(
+            success=False,
+            error=f"Directory already exists: {agent_dir}",
+            suggestions=[
+                f"Remove the existing directory: rm -rf {agent_dir}",
+                "Choose a different name",
+            ],
+        )
+
+    # Setup Jinja2
+    env = Environment(
+        loader=FileSystemLoader(str(templates_dir)),
+        trim_blocks=True,
+        lstrip_blocks=True,
+    )
+
+    # Template data
+    data = {
+        "name": name,
+        "module_name": slug,
+        "class_name": class_name,
+        "agent_name": " ".join(word.capitalize() for word in slug.split("_")),
+        "archetype": archetype,
+        "input_type": "str",
+        "output_type": "str",
+        "description": f"A {archetype} agent.",
+        "custom_output_type": False,
+        "input_example": '"test"',
+    }
+
+    # Create directories
+    agent_dir.mkdir(parents=True, exist_ok=True)
+    (agent_dir / "_tests").mkdir(exist_ok=True)
+
+    # Generate files
+    files_generated = []
+    templates_to_render = [
+        ("__init__.py.j2", agent_dir / "__init__.py"),
+        ("agent.py.j2", agent_dir / "agent.py"),
+        ("_tests/__init__.py.j2", agent_dir / "_tests" / "__init__.py"),
+        ("_tests/test_agent.py.j2", agent_dir / "_tests" / "test_agent.py"),
+    ]
+
+    for template_name, output_path in templates_to_render:
+        try:
+            tpl = env.get_template(template_name)
+            content = tpl.render(**data)
+            output_path.write_text(content)
+            files_generated.append(str(output_path.relative_to(output_base.parent)))
+        except Exception as e:
+            return IntentResult(
+                success=False,
+                error=f"Failed to generate {template_name}: {e}",
+            )
+
     return IntentResult(
         success=True,
         output={
             "name": name,
             "slug": slug,
+            "class_name": class_name,
+            "archetype": archetype,
             "genus": genus or "a",
             "template": template,
             "path": str(agent_dir),
-            "files": [
-                f"{slug}/__init__.py",
-                f"{slug}/agent.py",
-                f"{slug}/config.yaml",
-            ],
+            "files": files_generated,
         },
         next_steps=[
-            f'kgents speak "domain" --for={slug}  # Create domain language',
-            f"kgents check agents/{slug}/         # Verify against principles",
-            f'kgents run "test {name}"          # Test the agent',
+            f"cd agents/{slug} && edit agent.py  # Implement your logic",
+            f"pytest agents/{slug}/_tests/ -v    # Run tests",
+            f"from agents.{slug} import {class_name}  # Import",
         ],
     )
 

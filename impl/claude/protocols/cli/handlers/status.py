@@ -135,7 +135,11 @@ async def _async_status(
 
         # Build semantic output (for FD3)
         semantic_output = _build_semantic_output(
-            status_data, project_root, cortex_only, response.is_ghost, response.ghost_age
+            status_data,
+            project_root,
+            cortex_only,
+            response.is_ghost,
+            response.ghost_age,
         )
 
         # Render based on mode
@@ -460,6 +464,64 @@ def _print_ghost_panel(project_root: Path) -> None:
         print(f"  Projection count: {ghost_context.get('projection_count', 0)}")
         if "hydrate_current" in ghost_context:
             print(f"  HYDRATE: {ghost_context['hydrate_current']}")
+
+    # Print trace panel
+    _print_trace_panel(project_root)
+
+
+def _print_trace_panel(project_root: Path) -> None:
+    """Print trace analysis panel for full mode."""
+    trace_path = project_root / ".kgents" / "ghost" / "trace_summary.json"
+    if not trace_path.exists():
+        return
+
+    try:
+        trace_data = json_module.loads(trace_path.read_text())
+    except Exception:
+        return
+
+    static = trace_data.get("static_analysis", {})
+    runtime = trace_data.get("runtime", {})
+    anomalies = trace_data.get("anomalies", [])
+
+    if not static.get("is_available", False):
+        return
+
+    print()
+    print("-- Trace Analysis --")
+    print(f"  Files analyzed: {static.get('files_analyzed', 0):,}")
+    print(f"  Definitions:    {static.get('definitions_found', 0):,}")
+    print(f"  Call sites:     {static.get('calls_found', 0):,}")
+
+    # Hottest functions
+    hottest = static.get("hottest_functions", [])
+    if hottest:
+        print("\n  Hottest functions (by caller count):")
+        for func in hottest[:3]:
+            name = func.get("name", "unknown")
+            # Truncate long names
+            if len(name) > 40:
+                name = name[:37] + "..."
+            callers = func.get("callers", 0)
+            print(f"    - {name}: {callers} callers")
+
+    # Runtime trace info
+    if runtime.get("total_events", 0) > 0:
+        print("\n  Runtime trace:")
+        print(f"    Events: {runtime.get('total_events', 0)}")
+        print(f"    Avg depth: {runtime.get('avg_depth', 0):.1f}")
+        print(f"    Threads: {runtime.get('threads_observed', 0)}")
+
+    # Anomalies
+    if anomalies:
+        error_count = len([a for a in anomalies if a.get("severity") == "error"])
+        warning_count = len([a for a in anomalies if a.get("severity") == "warning"])
+        if error_count > 0 or warning_count > 0:
+            print(f"\n  Anomalies: {error_count} errors, {warning_count} warnings")
+            for anomaly in anomalies[:3]:
+                print(
+                    f"    - [{anomaly.get('severity', '?')}] {anomaly.get('description', '')}"
+                )
 
 
 # =============================================================================

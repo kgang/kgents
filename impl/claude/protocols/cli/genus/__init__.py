@@ -22,8 +22,7 @@ __all__ = [
     "cmd_capital",
     # G-gent commands
     "cmd_grammar",
-    # I-gent commands
-    "cmd_garden",
+    # NOTE: I-gent cmd_garden removed (superseded by kgents dashboard)
     # J-gent commands
     "cmd_jit",
     # P-gent commands
@@ -38,13 +37,6 @@ __all__ = [
 def cmd_capital(args: list[str]) -> int:
     """Capital/Economy commands (C-gent)."""
     from .c_gent import cmd_capital as handler
-
-    return handler(args)
-
-
-def cmd_garden(args: list[str]) -> int:
-    """Garden/Interface commands (I-gent)."""
-    from .i_gent import cmd_garden as handler
 
     return handler(args)
 

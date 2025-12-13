@@ -1,13 +1,14 @@
 """
 Tests for CLI Genus Layer (Phase 5).
 
-Tests the Big 6 Genera CLI handlers:
+Tests the Genera CLI handlers:
 - G-gent (grammar): reify, parse, evolve, list, show, validate, infer
-- I-gent (garden): field, forge, attach, export, demo
 - J-gent (jit): compile, classify, defer, execute, stability, budget
 - P-gent (parse): extract, repair, validate, stream, compose
 - L-gent (library): catalog, discover, register, show, lineage, compose
 - W-gent (witness): watch, fidelity, sample, serve, dashboard, log
+
+NOTE: I-gent (garden) tests removed - see agents/i/screens/dashboard.py
 """
 
 import json
@@ -160,131 +161,10 @@ class TestGGentCLI:
 
 
 # =============================================================================
-# I-gent Tests (Garden CLI)
+# I-gent Tests (Garden CLI) - REMOVED
 # =============================================================================
-
-
-class TestIGentCLI:
-    """Tests for I-gent garden CLI commands."""
-
-    def test_garden_help(self) -> None:
-        """Test garden help display."""
-        from protocols.cli.genus.i_gent import cmd_garden
-
-        captured = StringIO()
-        old_stdout = sys.stdout
-        sys.stdout = captured
-
-        try:
-            result = cmd_garden(["--help"])
-        finally:
-            sys.stdout = old_stdout
-
-        output = captured.getvalue()
-        assert result == 0
-        assert "garden" in output.lower()
-        assert "field" in output.lower()
-
-    def test_garden_unknown_subcommand(self) -> None:
-        """Test unknown subcommand handling."""
-        from protocols.cli.genus.i_gent import cmd_garden
-
-        captured = StringIO()
-        old_stdout = sys.stdout
-        sys.stdout = captured
-
-        try:
-            result = cmd_garden(["nonexistent"])
-        finally:
-            sys.stdout = old_stdout
-
-        # Prism uses argparse which returns exit code 2 for errors
-        assert result == 2
-
-    def test_garden_field_help(self) -> None:
-        """Test field subcommand help."""
-        from protocols.cli.genus.i_gent import cmd_garden
-
-        captured = StringIO()
-        old_stdout = sys.stdout
-        sys.stdout = captured
-
-        try:
-            result = cmd_garden(["field", "--help"])
-        finally:
-            sys.stdout = old_stdout
-
-        output = captured.getvalue()
-        assert result == 0
-        assert "field" in output.lower()
-
-    def test_garden_forge_help(self) -> None:
-        """Test forge subcommand help."""
-        from protocols.cli.genus.i_gent import cmd_garden
-
-        captured = StringIO()
-        old_stdout = sys.stdout
-        sys.stdout = captured
-
-        try:
-            result = cmd_garden(["forge", "--help"])
-        finally:
-            sys.stdout = old_stdout
-
-        output = captured.getvalue()
-        assert result == 0
-        assert "forge" in output.lower()
-
-    def test_garden_attach_help(self) -> None:
-        """Test attach subcommand help."""
-        from protocols.cli.genus.i_gent import cmd_garden
-
-        captured = StringIO()
-        old_stdout = sys.stdout
-        sys.stdout = captured
-
-        try:
-            result = cmd_garden(["attach", "--help"])
-        finally:
-            sys.stdout = old_stdout
-
-        output = captured.getvalue()
-        assert result == 0
-        assert "attach" in output.lower()
-
-    def test_garden_export_help(self) -> None:
-        """Test export subcommand help."""
-        from protocols.cli.genus.i_gent import cmd_garden
-
-        captured = StringIO()
-        old_stdout = sys.stdout
-        sys.stdout = captured
-
-        try:
-            result = cmd_garden(["export", "--help"])
-        finally:
-            sys.stdout = old_stdout
-
-        output = captured.getvalue()
-        assert result == 0
-        assert "export" in output.lower()
-
-    def test_garden_demo_help(self) -> None:
-        """Test demo subcommand help."""
-        from protocols.cli.genus.i_gent import cmd_garden
-
-        captured = StringIO()
-        old_stdout = sys.stdout
-        sys.stdout = captured
-
-        try:
-            result = cmd_garden(["demo", "--help"])
-        finally:
-            sys.stdout = old_stdout
-
-        output = captured.getvalue()
-        assert result == 0
-        assert "demo" in output.lower()
+# NOTE: TestIGentCLI removed - kgents garden has been superseded by kgents dashboard
+# See: agents/i/screens/dashboard.py
 
 
 # =============================================================================
@@ -962,7 +842,7 @@ class TestGenusModuleImports:
     def test_genus_init_imports(self) -> None:
         """Test genus __init__.py imports work."""
         from protocols.cli.genus import (
-            cmd_garden,
+            # NOTE: cmd_garden removed - superseded by kgents dashboard
             cmd_grammar,
             cmd_jit,
             cmd_library,
@@ -970,7 +850,6 @@ class TestGenusModuleImports:
             cmd_witness,
         )
 
-        assert callable(cmd_garden)
         assert callable(cmd_grammar)
         assert callable(cmd_jit)
         assert callable(cmd_parse)
@@ -980,13 +859,13 @@ class TestGenusModuleImports:
     def test_individual_module_imports(self) -> None:
         """Test individual module imports."""
         from protocols.cli.genus.g_gent import cmd_grammar
-        from protocols.cli.genus.i_gent import cmd_garden
+
+        # NOTE: i_gent removed - superseded by kgents dashboard
         from protocols.cli.genus.j_gent import cmd_jit
         from protocols.cli.genus.l_gent import cmd_library
         from protocols.cli.genus.p_gent import cmd_parse
         from protocols.cli.genus.w_gent import cmd_witness
 
-        assert callable(cmd_garden)
         assert callable(cmd_grammar)
         assert callable(cmd_jit)
         assert callable(cmd_parse)
@@ -1005,7 +884,7 @@ class TestGenusIntegration:
     def test_all_genera_have_help(self) -> None:
         """All genera should have --help support."""
         from protocols.cli.genus import (
-            cmd_garden,
+            # NOTE: cmd_garden removed - superseded by kgents dashboard
             cmd_grammar,
             cmd_jit,
             cmd_library,
@@ -1014,7 +893,6 @@ class TestGenusIntegration:
         )
 
         for cmd in [
-            cmd_garden,
             cmd_grammar,
             cmd_jit,
             cmd_parse,
@@ -1036,7 +914,7 @@ class TestGenusIntegration:
     def test_all_genera_handle_unknown(self) -> None:
         """All genera should handle unknown subcommands gracefully."""
         from protocols.cli.genus import (
-            cmd_garden,
+            # NOTE: cmd_garden removed - superseded by kgents dashboard
             cmd_grammar,
             cmd_jit,
             cmd_library,
@@ -1045,7 +923,6 @@ class TestGenusIntegration:
         )
 
         for cmd in [
-            cmd_garden,
             cmd_grammar,
             cmd_jit,
             cmd_parse,

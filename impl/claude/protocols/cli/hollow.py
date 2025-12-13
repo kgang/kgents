@@ -57,7 +57,6 @@ INTENT LAYER (learn these 10 verbs):
   do        Natural language intent router
 
 PROTOCOLS:
-  membrane  Membrane Protocol - topological perception
   flow      Flowfile engine for composition
 
 WORKSPACE:
@@ -72,10 +71,10 @@ BOOTSTRAP:
   principles Display/check 7 design principles
 
 VISUALIZATION:
-  garden    I-gent stigmergic field (TUI)
-  dash      TUI dashboard
+  dashboard Real-time system health TUI (K-gent, metabolism, flux, triad)
 
 DEVEX (Trust Loop):
+  play      Interactive playground (tutorials + REPL)
   ghost     Project system state to .kgents/ghost/
   flinch    Analyze test failure patterns
   status    Cortex health at a glance
@@ -84,6 +83,7 @@ DEVEX (Trust Loop):
   signal    SemanticField state
   observe   Terrarium TUI (glass box visualization)
   tether    Attach to agent with signal forwarding
+  trace     Static + runtime call graph tracing
 
 PLANNING (Forest Protocol):
   forest    Plan forest health (status|update|check|lint)
@@ -91,6 +91,10 @@ PLANNING (Forest Protocol):
 SOUL (Digital Simulacra):
   soul      K-gent self-dialogue (reflect|advise|challenge|explore)
   semaphore Agent semaphores (list|resolve|cancel|inspect)
+
+META-CONSTRUCTION (Generative Machinery):
+  meta      Meta-construction health (primitives, operads, sheaves)
+  operad    Operad CLI (list, compose operations)
 
 OPTIONS:
   --version     Show version
@@ -119,7 +123,7 @@ COMMAND_REGISTRY: dict[str, str] = {
     "judge": "protocols.cli.intent.commands:cmd_judge",
     "do": "protocols.cli.intent.router:cmd_do",
     # Protocols (existing)
-    "membrane": "protocols.cli.handlers.membrane:cmd_membrane",
+    # NOTE: membrane removed (deprecated, being rebuilt on D-gent + L-gent)
     # Flow Engine (Phase 3)
     "flow": "protocols.cli.flow.commands:cmd_flow",
     # Bootstrap (Phase 2)
@@ -136,12 +140,9 @@ COMMAND_REGISTRY: dict[str, str] = {
     "witness": "protocols.cli.genus.w_gent:cmd_witness",
     # Aliases (top-level shortcuts)
     "observe": "protocols.cli.handlers.observe:cmd_observe",  # Terrarium TUI
-    "sense": "protocols.cli.handlers.membrane:cmd_sense",
-    "trace": "protocols.cli.handlers.membrane:cmd_trace",
-    "touch": "protocols.cli.handlers.membrane:cmd_touch",
-    "name": "protocols.cli.handlers.membrane:cmd_name",
+    # NOTE: sense, trace, touch, name removed (membrane aliases, deprecated)
+    # NOTE: garden removed (superseded by dashboard - see agents/i/screens/dashboard.py)
     # I-gent
-    "garden": "protocols.cli.handlers.igent:cmd_garden",
     "whisper": "protocols.cli.handlers.igent:cmd_whisper",
     # Debug
     "debug": "protocols.cli.handlers.debug:cmd_debug",
@@ -164,8 +165,7 @@ COMMAND_REGISTRY: dict[str, str] = {
     "dev": "protocols.cli.handlers.dev:cmd_dev",  # Live reload dev mode
     # MCP (Phase 4)
     "mcp": "protocols.cli.mcp.server:cmd_mcp",
-    # TUI Dashboard (Phase 7)
-    "dash": "protocols.cli.tui.dashboard:cmd_dash",
+    # NOTE: dash removed (superseded by handlers/dashboard.py)
     # Forest Protocol (Plan Management)
     "forest": "protocols.cli.handlers.forest:cmd_forest",
     # Metabolic Pressure (Accursed Share)
@@ -181,6 +181,15 @@ COMMAND_REGISTRY: dict[str, str] = {
     "explore": "protocols.cli.handlers.soul:cmd_explore",
     # Alethic Architecture (Universal Agent)
     "a": "protocols.cli.handlers.a_gent:cmd_a",
+    # DevEx - Interactive Playground
+    "play": "protocols.cli.handlers.play:cmd_play",
+    # DevEx - Live Dashboard
+    "dashboard": "protocols.cli.handlers.dashboard:cmd_dashboard",
+    # DevEx - Trace (Static + Runtime)
+    "trace": "protocols.cli.handlers.trace:cmd_trace",
+    # Meta-Construction (Poly/Operad/Sheaf)
+    "operad": "protocols.cli.handlers.operad:cmd_operad",
+    "meta": "protocols.cli.handlers.meta:cmd_meta",
 }
 
 

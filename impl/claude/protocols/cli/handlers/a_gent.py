@@ -44,12 +44,17 @@ def _print_help() -> None:
     print("  manifest <agent>    Generate K8s manifests (YAML)")
     print("  run <agent>         Compile and run agent locally")
     print("  list                List available agents")
+    print("  new <name>          Scaffold a new agent (interactive)")
     print()
     print("OPTIONS:")
     print("  --namespace <ns>    K8s namespace for manifests (default: kgents-agents)")
     print("  --input <data>      Input data for 'run' command")
     print("  --validate          Validate generated manifests (for 'manifest' command)")
     print("  --json              Output as JSON")
+    print(
+        "  --archetype <type>  Archetype for 'new' command (kappa|lambda|delta|minimal)"
+    )
+    print("  --output <path>     Output path for 'new' command")
     print("  --help, -h          Show this help")
 
 
@@ -80,11 +85,17 @@ def cmd_a(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     json_mode = "--json" in args
     validate_mode = "--validate" in args
     namespace = "kgents-agents"
+    archetype = "minimal"
+    output_path = None
 
-    # Parse --namespace
+    # Parse --namespace, --archetype, --output
     for i, arg in enumerate(args):
         if arg == "--namespace" and i + 1 < len(args):
             namespace = args[i + 1]
+        elif arg == "--archetype" and i + 1 < len(args):
+            archetype = args[i + 1]
+        elif arg == "--output" and i + 1 < len(args):
+            output_path = args[i + 1]
 
     # Get subcommand
     subcommand = None
@@ -96,7 +107,12 @@ def cmd_a(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     while i < len(args):
         arg = args[i]
         if arg.startswith("-"):
-            if arg in ("--namespace", "--input") and i + 1 < len(args):
+            if arg in (
+                "--namespace",
+                "--input",
+                "--archetype",
+                "--output",
+            ) and i + 1 < len(args):
                 if arg == "--input":
                     input_data = args[i + 1]
                 i += 2
@@ -147,6 +163,16 @@ def cmd_a(args: list[str], ctx: "InvocationContext | None" = None) -> int:
 
         case "list":
             return _handle_list(json_mode, ctx)
+
+        case "new":
+            if not agent_name:
+                _emit_output(
+                    "[A] Error: 'new' requires an agent name",
+                    {"error": "Missing agent name"},
+                    ctx,
+                )
+                return 1
+            return _handle_new(agent_name, archetype, output_path, ctx)
 
         case _:
             _emit_output(
@@ -440,6 +466,27 @@ async def _handle_run(
             )
             return 1
 
+        # Check if it's an abstract archetype
+        from agents.a.archetypes import Delta, Kappa, Lambda
+
+        if agent_cls in (Kappa, Lambda, Delta):
+            _emit_output(
+                f"[A] Cannot run '{agent_name}' directly - it's an abstract archetype.\n"
+                f"    Archetypes must be subclassed with concrete implementations.\n\n"
+                f"    Example:\n"
+                f"      class MyService({agent_name}[str, str]):\n"
+                f"          @property\n"
+                f"          def name(self): return 'my-service'\n"
+                f"          async def invoke(self, x): return x.upper()\n\n"
+                f"    Then run: kgents a run my_module.MyService",
+                {
+                    "error": f"Abstract archetype: {agent_name}",
+                    "hint": "subclass required",
+                },
+                ctx,
+            )
+            return 1
+
         # Compile with LocalProjector
         projector = LocalProjector()
         compiled = projector.compile(agent_cls)
@@ -526,3 +573,328 @@ def _emit_output(
         ctx.output(human=human, semantic=semantic)
     else:
         print(human)
+
+
+# --- Scaffolding Templates ---
+
+_TEMPLATES = {
+    "minimal": '''"""
+{name}: A minimal agent.
+
+Run:
+    python -m {module_path}
+"""
+
+import asyncio
+
+from bootstrap.types import Agent
+
+
+class {class_name}(Agent[str, str]):
+    """
+    {description}
+
+    Type: Agent[str, str]
+    Input: A string
+    Output: A processed string
+    """
+
+    @property
+    def name(self) -> str:
+        return "{snake_name}"
+
+    async def invoke(self, input: str) -> str:
+        return f"Processed: {{input}}"
+
+
+async def main() -> None:
+    agent = {class_name}()
+    result = await agent.invoke("hello")
+    print(result)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+''',
+    "kappa": '''"""
+{name}: A full-stack Kappa agent.
+
+Kappa = Stateful + Soulful + Observable + Streamable
+
+Run:
+    python -m {module_path}
+"""
+
+import asyncio
+from dataclasses import dataclass, field
+
+from agents.a import Kappa, get_halo
+
+
+@dataclass
+class {class_name}State:
+    """State schema for {class_name}."""
+
+    call_count: int = 0
+    history: list[str] = field(default_factory=list)
+
+
+class {class_name}(Kappa[str, str]):
+    """
+    {description}
+
+    Type: Kappa[str, str] (full-stack agent)
+    Input: A string
+    Output: A processed string
+
+    Capabilities:
+    - Stateful: Persists state across invocations
+    - Soulful: Persona-aware via K-gent
+    - Observable: Emits telemetry
+    - Streamable: Can be lifted to Flux domain
+    """
+
+    def __init__(self) -> None:
+        self._state = {class_name}State()
+
+    @property
+    def name(self) -> str:
+        return "{snake_name}"
+
+    async def invoke(self, input: str) -> str:
+        self._state.call_count += 1
+        self._state.history.append(input)
+        return f"[Call #{{self._state.call_count}}] {{input}}"
+
+
+async def main() -> None:
+    agent = {class_name}()
+
+    # Multiple invocations to show state
+    for msg in ["hello", "world", "kgents"]:
+        result = await agent.invoke(msg)
+        print(result)
+
+    # Inspect capabilities
+    halo = get_halo({class_name})
+    print(f"\\nCapabilities: {{[type(c).__name__ for c in halo]}}")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+''',
+    "lambda": '''"""
+{name}: A minimal Lambda agent.
+
+Lambda = Observable only (the lightest archetype)
+
+Run:
+    python -m {module_path}
+"""
+
+import asyncio
+
+from agents.a import Lambda, get_halo
+
+
+class {class_name}(Lambda[str, str]):
+    """
+    {description}
+
+    Type: Lambda[str, str] (minimal agent)
+    Input: A string
+    Output: A processed string
+
+    Capabilities:
+    - Observable: Emits telemetry (can be monitored)
+    """
+
+    @property
+    def name(self) -> str:
+        return "{snake_name}"
+
+    async def invoke(self, input: str) -> str:
+        return f"Lambda processed: {{input}}"
+
+
+async def main() -> None:
+    agent = {class_name}()
+    result = await agent.invoke("hello")
+    print(result)
+
+    # Inspect capabilities
+    halo = get_halo({class_name})
+    print(f"Capabilities: {{[type(c).__name__ for c in halo]}}")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+''',
+    "delta": '''"""
+{name}: A data-focused Delta agent.
+
+Delta = Stateful + Observable (data-focused archetype)
+
+Run:
+    python -m {module_path}
+"""
+
+import asyncio
+from dataclasses import dataclass, field
+
+from agents.a import Delta, get_halo
+
+
+@dataclass
+class {class_name}State:
+    """State schema for {class_name}."""
+
+    records: list[dict] = field(default_factory=list)
+
+
+class {class_name}(Delta[str, str]):
+    """
+    {description}
+
+    Type: Delta[str, str] (data-focused agent)
+    Input: A string
+    Output: A processed string
+
+    Capabilities:
+    - Stateful: Persists data across invocations
+    - Observable: Emits telemetry
+    """
+
+    def __init__(self) -> None:
+        self._state = {class_name}State()
+
+    @property
+    def name(self) -> str:
+        return "{snake_name}"
+
+    async def invoke(self, input: str) -> str:
+        record = {{"input": input, "index": len(self._state.records)}}
+        self._state.records.append(record)
+        return f"Stored record #{{record['index']}}: {{input}}"
+
+
+async def main() -> None:
+    agent = {class_name}()
+
+    for data in ["alpha", "beta", "gamma"]:
+        result = await agent.invoke(data)
+        print(result)
+
+    print(f"\\nTotal records: {{len(agent._state.records)}}")
+
+    # Inspect capabilities
+    halo = get_halo({class_name})
+    print(f"Capabilities: {{[type(c).__name__ for c in halo]}}")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+''',
+}
+
+
+def _to_pascal_case(name: str) -> str:
+    """Convert snake_case or kebab-case to PascalCase."""
+    return "".join(word.capitalize() for word in name.replace("-", "_").split("_"))
+
+
+def _to_snake_case(name: str) -> str:
+    """Convert PascalCase or kebab-case to snake_case."""
+    import re
+
+    # Handle kebab-case
+    name = name.replace("-", "_")
+    # Handle PascalCase
+    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
+    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
+
+
+def _handle_new(
+    agent_name: str,
+    archetype: str,
+    output_path: str | None,
+    ctx: "InvocationContext | None",
+) -> int:
+    """
+    Handle 'a new <name>' command.
+
+    Scaffolds a new agent with the given name and archetype.
+    """
+    import os
+    from pathlib import Path
+
+    # Validate archetype
+    archetype = archetype.lower()
+    if archetype not in _TEMPLATES:
+        _emit_output(
+            f"[A] Unknown archetype: {archetype}. Options: {', '.join(_TEMPLATES.keys())}",
+            {"error": f"Unknown archetype: {archetype}"},
+            ctx,
+        )
+        return 1
+
+    # Generate names
+    class_name = _to_pascal_case(agent_name)
+    snake_name = _to_snake_case(agent_name)
+
+    # Determine output path
+    if output_path is None:
+        output_path = f"{snake_name}.py"
+
+    path = Path(output_path)
+
+    # Check if file exists
+    if path.exists():
+        _emit_output(
+            f"[A] File already exists: {output_path}",
+            {"error": f"File exists: {output_path}"},
+            ctx,
+        )
+        return 1
+
+    # Generate module path (for docstring)
+    if path.suffix == ".py":
+        module_path = str(path.with_suffix("")).replace(os.sep, ".")
+    else:
+        module_path = snake_name
+
+    # Generate content
+    template = _TEMPLATES[archetype]
+    content = template.format(
+        name=agent_name,
+        class_name=class_name,
+        snake_name=snake_name,
+        module_path=module_path,
+        description=f"A {archetype} agent scaffolded by kgents.",
+    )
+
+    # Write file
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content)
+
+        _emit_output(
+            f"[A] Created {archetype} agent: {output_path}\n"
+            f"    Class: {class_name}\n"
+            f"    Run: python {output_path}",
+            {
+                "created": str(output_path),
+                "class_name": class_name,
+                "archetype": archetype,
+            },
+            ctx,
+        )
+        return 0
+
+    except Exception as e:
+        _emit_output(
+            f"[A] Error creating agent: {e}",
+            {"error": str(e)},
+            ctx,
+        )
+        return 1

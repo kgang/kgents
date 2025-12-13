@@ -222,6 +222,13 @@ class LifecycleManager:
                 errors.append(f"Bicameral stack creation warning: {e}")
                 # Non-fatal: system can work without full stack
 
+            # Stage 9: Configure OTEL telemetry
+            try:
+                self._setup_telemetry()
+            except Exception as e:
+                errors.append(f"Telemetry setup warning: {e}")
+                # Non-fatal: system works without telemetry
+
             return self._state
 
         except Exception as e:
@@ -360,6 +367,32 @@ class LifecycleManager:
         import hashlib
 
         return hashlib.sha256(str(project_path.resolve()).encode()).hexdigest()[:8]
+
+    def _setup_telemetry(self) -> None:
+        """
+        Configure OpenTelemetry exporters from ~/.kgents/telemetry.yaml.
+
+        This integrates with the AGENTESE telemetry infrastructure,
+        sending traces to the configured OTEL collector (Tempo/Jaeger).
+
+        Non-fatal: if telemetry config is missing or invalid, we skip silently.
+        """
+        try:
+            from protocols.agentese.telemetry_config import setup_telemetry
+
+            configured = setup_telemetry()
+            if configured:
+                # Use stderr to avoid polluting stdout for programmatic use
+                print(
+                    "\033[90m[kgents]\033[0m OTEL telemetry enabled",
+                    file=sys.stderr,
+                )
+        except ImportError:
+            # Telemetry module not available
+            pass
+        except Exception:
+            # Telemetry config failed - non-fatal
+            pass
 
     async def _create_bicameral_stack(
         self,

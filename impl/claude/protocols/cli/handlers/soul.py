@@ -48,24 +48,33 @@ def _print_help() -> None:
     print()
     print("COMMANDS:")
     print("  stream              Ambient FLOWING mode (pulses + dialogue)")
+    print("  watch               Ambient file watcher (pair programming)")
     print("  starters            Show starter prompts for current mode")
-    print("  manifest            Show current soul state")
+    print("  manifest            Show current soul state (persistent)")
     print("  eigenvectors        Show personality coordinates")
     print("  audit               View recent mediations and audit trail")
     print("  garden              View PersonaGarden state (patterns, preferences)")
     print("  validate <file>     Check file against principles (Semantic Gatekeeper)")
     print("  dream               Trigger hypnagogia (dream cycle) manually")
     print()
+    print("BEING COMMANDS (cross-session identity):")
+    print("  history             View soul change history (who was I?)")
+    print("  propose <desc>      K-gent proposes a change to itself")
+    print("  commit <id>         Approve and commit a pending change")
+    print("  crystallize <name>  Save soul checkpoint for later")
+    print("  resume <id>         Resume from a crystallized state")
+    print()
     print("OPTIONS:")
     print("  --quick             WHISPER budget (~100 tokens)")
     print("  --deep              DEEP budget (~8000+ tokens, Council of Ghosts)")
     print("  --json              Output as JSON")
     print("  --summary           For 'audit': show summary instead of recent")
-    print("  --limit N           For 'audit': show N entries (default 10)")
+    print("  --limit N           For 'audit'/'history': show N entries (default 10)")
     print("  --pulse-interval N  For 'stream': seconds between pulses (default 30)")
     print("  --no-pulses         For 'stream': hide pulse output")
     print("  --dry-run           For 'dream': show what would change without applying")
     print("  --sync              For 'garden': sync patterns from hypnagogia first")
+    print("  --path <dir>        For 'watch': directory to watch (default: cwd)")
     print("  --help, -h          Show this help")
 
 
@@ -177,12 +186,26 @@ async def _async_soul(
                     pass
 
         # Handle special commands
+        # Parse watch-specific options
+        watch_path = None
+        for i, arg in enumerate(args):
+            if arg == "--path" and i + 1 < len(args):
+                watch_path = args[i + 1]
+                break
+
         match mode.lower():
             case "stream":
                 return await _handle_stream(
                     soul,
                     pulse_interval=pulse_interval,
                     show_pulses=show_pulses,
+                    json_mode=json_mode,
+                    ctx=ctx,
+                )
+            case "watch":
+                return await _handle_watch(
+                    soul,
+                    watch_path=watch_path,
                     json_mode=json_mode,
                     ctx=ctx,
                 )
@@ -211,6 +234,38 @@ async def _async_soul(
             case "dream":
                 dry_run = "--dry-run" in args
                 return await _handle_dream(soul, dry_run, json_mode, ctx)
+            case "history":
+                return await _handle_history(limit, json_mode, ctx)
+            case "propose":
+                # Get description from remaining args
+                desc_parts = [
+                    a for a in args if not a.startswith("-") and a != "propose"
+                ]
+                description = " ".join(desc_parts) if desc_parts else None
+                return await _handle_propose(description, json_mode, ctx)
+            case "commit":
+                # Get change ID from remaining args
+                change_id = None
+                for arg in args:
+                    if not arg.startswith("-") and arg != "commit":
+                        change_id = arg
+                        break
+                return await _handle_commit(change_id, json_mode, ctx)
+            case "crystallize":
+                # Get name from remaining args
+                name_parts = [
+                    a for a in args if not a.startswith("-") and a != "crystallize"
+                ]
+                name = " ".join(name_parts) if name_parts else None
+                return await _handle_crystallize(name, json_mode, ctx)
+            case "resume":
+                # Get crystal ID from remaining args
+                crystal_id = None
+                for arg in args:
+                    if not arg.startswith("-") and arg != "resume":
+                        crystal_id = arg
+                        break
+                return await _handle_resume(crystal_id, json_mode, ctx)
 
         # Map mode string to DialogueMode
         mode_map = {
@@ -935,6 +990,158 @@ async def _handle_stream(
     return 0
 
 
+async def _handle_watch(
+    soul: Any,
+    watch_path: str | None,
+    json_mode: bool,
+    ctx: "InvocationContext | None",
+) -> int:
+    """
+    Handle 'soul watch' command: ambient file watching.
+
+    Uses KgentWatcher to monitor codebase and emit suggestions
+    based on heuristics (complexity, naming, patterns, tests, docs).
+
+    Args:
+        soul: KgentSoul instance (for personality-infused suggestions)
+        watch_path: Directory to watch (default: cwd)
+        json_mode: Output as JSON
+        ctx: Invocation context
+    """
+    import signal
+    from pathlib import Path
+
+    from agents.k.watcher import KgentWatcher, WatcherConfig
+
+    # Determine path to watch
+    root = Path(watch_path) if watch_path else Path.cwd()
+    if not root.exists():
+        _emit_output(
+            f"[SOUL:WATCH] Error: Path does not exist: {root}",
+            {"error": f"Path does not exist: {root}"},
+            ctx,
+        )
+        return 1
+
+    # Create watcher
+    config = WatcherConfig(project_root=root)
+    watcher = KgentWatcher(config=config)
+
+    # Track notifications for display
+    notification_count = 0
+
+    def on_notification(n: Any) -> None:
+        nonlocal notification_count
+        notification_count += 1
+
+        if json_mode:
+            import json
+
+            data = {
+                "timestamp": n.timestamp.isoformat(),
+                "heuristic": n.heuristic,
+                "message": n.message,
+                "severity": n.severity,
+                "file_path": n.file_path,
+                "details": n.details,
+            }
+            _emit_output(json.dumps(data), data, ctx)
+        else:
+            # Human-friendly output
+            severity_icons = {
+                "info": "ℹ",
+                "warning": "⚠",
+                "suggestion": "💡",
+            }
+            icon = severity_icons.get(n.severity, "•")
+            ts = n.timestamp.strftime("%H:%M:%S")
+            relative_path = Path(n.file_path).name
+
+            _emit_output(
+                f"  [{ts}] {icon} [{n.heuristic}] {relative_path}",
+                {"notification": True},
+                ctx,
+            )
+            _emit_output(f"      {n.message}", {}, ctx)
+
+    watcher.subscribe(on_notification)
+
+    # Print startup banner
+    _emit_output(
+        f"[SOUL:WATCH] Watching: {root}",
+        {"status": "starting", "path": str(root)},
+        ctx,
+    )
+    _emit_output(
+        "  Press Ctrl+C to stop",
+        {},
+        ctx,
+    )
+    _emit_output(
+        "  Heuristics: complexity, naming, patterns, tests, docs",
+        {"heuristics": ["complexity", "naming", "patterns", "tests", "docs"]},
+        ctx,
+    )
+    _emit_output("", {}, ctx)
+
+    stop_event = asyncio.Event()
+    loop = asyncio.get_running_loop()
+
+    # Use asyncio signal handlers for proper async integration
+    def handle_signal() -> None:
+        stop_event.set()
+
+    # Track if we're using asyncio handlers or traditional
+    using_asyncio_signals = True
+    original_sigint: Any = None
+    original_sigterm: Any = None
+
+    # Install signal handlers using asyncio (works properly with event loop)
+    try:
+        loop.add_signal_handler(signal.SIGINT, handle_signal)
+        loop.add_signal_handler(signal.SIGTERM, handle_signal)
+    except NotImplementedError:
+        # Windows doesn't support add_signal_handler, fall back to traditional
+        using_asyncio_signals = False
+        original_sigint = signal.signal(signal.SIGINT, lambda s, f: stop_event.set())
+        original_sigterm = signal.signal(signal.SIGTERM, lambda s, f: stop_event.set())
+
+    try:
+        # Start watching
+        await watcher.start()
+
+        # Wait for stop signal
+        await stop_event.wait()
+
+    except KeyboardInterrupt:
+        pass
+    finally:
+        # Remove signal handlers
+        if using_asyncio_signals:
+            try:
+                loop.remove_signal_handler(signal.SIGINT)
+                loop.remove_signal_handler(signal.SIGTERM)
+            except (ValueError, RuntimeError):
+                pass
+        else:
+            # Restore original handlers on Windows
+            if original_sigint is not None:
+                signal.signal(signal.SIGINT, original_sigint)
+            if original_sigterm is not None:
+                signal.signal(signal.SIGTERM, original_sigterm)
+
+        # Stop watcher
+        await watcher.stop()
+
+        _emit_output(
+            f"[SOUL:WATCH] Stopped ({notification_count} notifications)",
+            {"status": "stopped", "notifications": notification_count},
+            ctx,
+        )
+
+    return 0
+
+
 def _format_pulse(
     event: Any,  # SoulEvent
     json_mode: bool,
@@ -1031,6 +1238,249 @@ def _emit_output(
     else:
         print(human)
 
+
+# =============================================================================
+# Being Commands (Cross-Session Identity)
+# =============================================================================
+
+
+async def _handle_history(
+    limit: int,
+    json_mode: bool,
+    ctx: "InvocationContext | None",
+) -> int:
+    """
+    Handle 'soul history' command - view soul change history.
+
+    Shows the archaeology of self: who was I before each change?
+    """
+    from agents.k.session import SoulSession
+
+    session = await SoulSession.load()
+    changes = session.who_was_i(limit)
+
+    if json_mode:
+        import json
+
+        _emit_output(json.dumps(changes, indent=2), {"changes": changes}, ctx)
+    else:
+        if not changes:
+            _emit_output(
+                "[SOUL:HISTORY] No changes yet. The soul is fresh.",
+                {"changes": []},
+                ctx,
+            )
+        else:
+            lines = [
+                "[SOUL:HISTORY] Who was I?",
+                "",
+            ]
+            for change in changes:
+                status_icon = {"committed": "+", "reverted": "-", "pending": "?"}
+                icon = status_icon.get(change.get("status", ""), "*")
+                lines.append(f"  [{icon}] {change['id']}: {change['description']}")
+                if change.get("felt_sense"):
+                    lines.append(f"      Felt: {change['felt_sense']}")
+                lines.append(f"      ({change.get('aspect', 'unknown')})")
+            _emit_output("\n".join(lines), {"changes": changes}, ctx)
+
+    return 0
+
+
+async def _handle_propose(
+    description: str | None,
+    json_mode: bool,
+    ctx: "InvocationContext | None",
+) -> int:
+    """
+    Handle 'soul propose' command - K-gent proposes a change.
+
+    Per Heterarchical principle: K-gent proposes, user approves.
+    """
+    from agents.k.session import SoulSession
+
+    if not description:
+        _emit_output(
+            "[SOUL:PROPOSE] Error: No description provided\n"
+            "Usage: kgents soul propose 'I want to be more concise'",
+            {"error": "No description provided"},
+            ctx,
+        )
+        return 1
+
+    session = await SoulSession.load()
+    change = await session.propose_change(description)
+
+    if json_mode:
+        import json
+
+        _emit_output(json.dumps(change.to_dict(), indent=2), change.to_dict(), ctx)
+    else:
+        lines = [
+            "[SOUL:PROPOSE] Change proposed",
+            "",
+            f"  ID: {change.id}",
+            f"  Description: {change.description}",
+            f"  Status: {change.status}",
+            "",
+            "To approve: kgents soul commit " + change.id,
+        ]
+        _emit_output("\n".join(lines), change.to_dict(), ctx)
+
+    return 0
+
+
+async def _handle_commit(
+    change_id: str | None,
+    json_mode: bool,
+    ctx: "InvocationContext | None",
+) -> int:
+    """
+    Handle 'soul commit' command - approve and commit a change.
+
+    This is where self-modification actually happens.
+    """
+    from agents.k.session import SoulSession
+
+    if not change_id:
+        # Show pending changes
+        session = await SoulSession.load()
+        pending = session.pending_changes
+
+        if not pending:
+            _emit_output(
+                "[SOUL:COMMIT] No pending changes. Use 'soul propose' first.",
+                {"pending": []},
+                ctx,
+            )
+            return 1
+
+        lines = [
+            "[SOUL:COMMIT] Pending changes:",
+            "",
+        ]
+        for change in pending:
+            lines.append(f"  {change.id}: {change.description}")
+        lines.append("")
+        lines.append("Usage: kgents soul commit <id>")
+        _emit_output("\n".join(lines), {"pending": [c.to_dict() for c in pending]}, ctx)
+        return 1
+
+    session = await SoulSession.load()
+    success = await session.commit_change(change_id)
+
+    if success:
+        _emit_output(
+            f"[SOUL:COMMIT] Change {change_id} committed. The soul has changed.",
+            {"committed": change_id, "success": True},
+            ctx,
+        )
+        return 0
+    else:
+        _emit_output(
+            f"[SOUL:COMMIT] Change {change_id} not found.",
+            {"error": f"Change {change_id} not found"},
+            ctx,
+        )
+        return 1
+
+
+async def _handle_crystallize(
+    name: str | None,
+    json_mode: bool,
+    ctx: "InvocationContext | None",
+) -> int:
+    """
+    Handle 'soul crystallize' command - save a checkpoint.
+
+    Creates a restore point you can resume from later.
+    """
+    from agents.k.session import SoulSession
+
+    if not name:
+        name = f"crystal-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+
+    session = await SoulSession.load()
+    crystal = await session.crystallize(name)
+
+    if json_mode:
+        import json
+
+        _emit_output(json.dumps(crystal.to_dict(), indent=2), crystal.to_dict(), ctx)
+    else:
+        lines = [
+            "[SOUL:CRYSTALLIZE] Soul state saved",
+            "",
+            f"  Crystal ID: {crystal.id}",
+            f"  Name: {crystal.name}",
+            f"  Created: {crystal.created_at.isoformat()}",
+            "",
+            f"To resume: kgents soul resume {crystal.id}",
+        ]
+        _emit_output("\n".join(lines), crystal.to_dict(), ctx)
+
+    return 0
+
+
+async def _handle_resume(
+    crystal_id: str | None,
+    json_mode: bool,
+    ctx: "InvocationContext | None",
+) -> int:
+    """
+    Handle 'soul resume' command - resume from a crystal.
+
+    Time travel to a previous soul state.
+    """
+    from agents.k.session import SoulPersistence, SoulSession
+
+    if not crystal_id:
+        # List available crystals
+        persistence = SoulPersistence()
+        crystals = persistence.list_crystals()
+
+        if not crystals:
+            _emit_output(
+                "[SOUL:RESUME] No crystals found. Use 'soul crystallize' first.",
+                {"crystals": []},
+                ctx,
+            )
+            return 1
+
+        lines = [
+            "[SOUL:RESUME] Available crystals:",
+            "",
+        ]
+        for cid in crystals:
+            crystal = persistence.load_crystal(cid)
+            if crystal:
+                lines.append(f"  {cid}: {crystal.name} ({crystal.created_at.date()})")
+        lines.append("")
+        lines.append("Usage: kgents soul resume <id>")
+        _emit_output("\n".join(lines), {"crystals": crystals}, ctx)
+        return 1
+
+    session = await SoulSession.load()
+    success = await session.resume_crystal(crystal_id)
+
+    if success:
+        _emit_output(
+            f"[SOUL:RESUME] Resumed from crystal {crystal_id}. The past is present.",
+            {"resumed": crystal_id, "success": True},
+            ctx,
+        )
+        return 0
+    else:
+        _emit_output(
+            f"[SOUL:RESUME] Crystal {crystal_id} not found.",
+            {"error": f"Crystal {crystal_id} not found"},
+            ctx,
+        )
+        return 1
+
+
+# Import datetime at top level for crystallize
+from datetime import datetime
 
 # --- Top-Level Mode Aliases ---
 # These allow `kgents reflect "prompt"` instead of `kgents soul reflect "prompt"`

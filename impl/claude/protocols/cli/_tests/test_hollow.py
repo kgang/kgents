@@ -90,11 +90,11 @@ class TestCommandResolution:
         handler = resolve_command("nonexistent_command_xyz")
         assert handler is None
 
-    def test_membrane_resolves(self) -> None:
-        """Membrane command resolves to handler."""
+    def test_soul_resolves(self) -> None:
+        """Soul command resolves to handler."""
         from protocols.cli.hollow import resolve_command
 
-        handler = resolve_command("membrane")
+        handler = resolve_command("soul")
         assert handler is not None
 
 
@@ -110,9 +110,9 @@ class TestFuzzyMatching:
         """Close typos get suggestions."""
         from protocols.cli.hollow import suggest_similar
 
-        # "membran" should suggest "membrane"
-        suggestions = suggest_similar("membran")
-        assert "membrane" in suggestions
+        # "sou" should suggest "soul"
+        suggestions = suggest_similar("sou")
+        assert "soul" in suggestions
 
     def test_suggest_no_match(self) -> None:
         """Completely wrong input gets no suggestions."""
@@ -125,12 +125,12 @@ class TestFuzzyMatching:
         """print_suggestions shows helpful output."""
         from protocols.cli.hollow import print_suggestions
 
-        print_suggestions("membran")
+        print_suggestions("sould")
         out = capsys.readouterr().out
 
         # Now uses sympathetic errors format
-        assert "'membran' isn't a kgents command" in out
-        assert "membrane" in out  # Suggestion should appear
+        assert "'sould' isn't a kgents command" in out
+        assert "soul" in out  # Suggestion should appear
 
 
 # =============================================================================
