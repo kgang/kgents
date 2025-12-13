@@ -61,6 +61,15 @@ from .components import (
     create_panel,
     create_progress_bar,
 )
+from .core_types import (
+    AgentState,
+    GardenState,
+    Glyph,
+    MarginNote,
+    NoteSource,
+    Phase,
+    Scale,
+)
 
 # O-gent Polling (Phase 2)
 from .data.ogent import (
@@ -163,15 +172,6 @@ from .screens.flux import FluxScreen
 # =============================================================================
 # Theme
 from .theme.earth import EARTH_PALETTE, EarthTheme
-from .types import (
-    AgentState,
-    GardenState,
-    Glyph,
-    MarginNote,
-    NoteSource,
-    Phase,
-    Scale,
-)
 
 # Widgets
 from .widgets.density_field import DensityField

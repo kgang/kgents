@@ -19,7 +19,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Callable, Protocol, runtime_checkable
 
-from .types import Phase
+from .core_types import Phase
 
 
 class AgentStatus(Enum):

@@ -9,6 +9,7 @@ Tests the core field dynamics:
 """
 
 import pytest
+from agents.i.core_types import Phase
 from agents.i.field import (
     DialecticPhase,
     Entity,
@@ -20,7 +21,6 @@ from agents.i.field import (
     create_default_field,
     create_demo_field,
 )
-from agents.i.types import Phase
 
 
 class TestEntity:

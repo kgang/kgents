@@ -487,6 +487,83 @@ def glitch_message(
     return add_zalgo(message, intensity, depth=2)
 
 
+# ─────────────────────────────────────────────────────────────
+# Oblique Strategies Easter Egg
+# When entropy > 0.9, occasionally flash wisdom from the void
+# Principle 4 (Joy-Inducing): Surprise and delight
+# ─────────────────────────────────────────────────────────────
+
+OBLIQUE_STRATEGIES = [
+    "Honor thy error as a hidden intention",
+    "What would your closest friend do?",
+    "The tape is now the music",
+    "Remove ambiguities and convert to specifics",
+    "Don't be afraid of things because they're easy to do",
+    "Use an old idea",
+    "State the problem in words as clearly as possible",
+    "Only one element of each kind",
+    "What would make this really useful?",
+    "Consider different fading systems",
+    "Discover the recipes you are using and abandon them",
+    "Disconnect from desire",
+    "Turn it upside down",
+    "Ask your body",
+    "Do nothing for as long as possible",
+    "Take a break",
+    "Simple subtraction",
+    "The most important thing is the thing most easily forgotten",
+    "Emphasize repetitions",
+    "Fill every beat with something",
+    "Remove specifics and convert to ambiguities",
+    "Go slowly all the way round the outside",
+    "Allow an easement (an easement is the abandonment of a stricture)",
+    "Accept advice",
+    "Change nothing and continue with immaculate consistency",
+    "Be extravagant",
+    "Humanize something free of error",
+    "Make a blank valuable by putting it in an exquisite frame",
+    "Use 'unqualified' people",
+    "What mistakes did you make last time?",
+    "Is it finished?",
+    "Retrace your steps",
+    "Give way to your worst impulse",
+    "Trust in the you of now",
+    "Breathe more deeply",
+]
+
+
+def sip_oblique_strategy() -> str:
+    """
+    Sip from the Accursed Share - return an Oblique Strategy.
+
+    Used when entropy is high to provide creative guidance.
+    This is the void.oblique.sip path manifesting.
+
+    Returns:
+        A random Oblique Strategy
+    """
+    return random.choice(OBLIQUE_STRATEGIES)
+
+
+def should_show_easter_egg(entropy: float) -> bool:
+    """
+    Determine if we should show an easter egg based on entropy.
+
+    Higher entropy = higher chance of showing.
+    Only triggers when entropy > 0.9 with 10% probability.
+
+    Args:
+        entropy: Current entropy level (0.0-1.0)
+
+    Returns:
+        True if we should show an easter egg
+    """
+    if entropy < 0.9:
+        return False
+    # 10% chance when entropy is high
+    return random.random() < 0.1
+
+
 # Singleton controller for app-wide glitch coordination
 _global_controller: GlitchController | None = None
 

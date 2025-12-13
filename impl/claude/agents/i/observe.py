@@ -22,7 +22,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
-    from .types import GardenState, MarginNote
+    from .core_types import GardenState, MarginNote
 
 
 class ObserveAction:
@@ -257,7 +257,7 @@ class GardenObserver:
         Returns:
             List of MarginNote objects (also added to agent state)
         """
-        from .types import MarginNote, NoteSource
+        from .core_types import MarginNote, NoteSource
 
         if agent_id not in self._active_observations:
             return []

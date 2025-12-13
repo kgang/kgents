@@ -28,6 +28,7 @@ from textual.screen import Screen
 from textual.widget import Widget
 from textual.widgets import Footer, Header, Static
 
+from ..data.lod import LODLevel, LODProjector
 from ..data.ogent import XYZHealth
 from ..data.state import AgentSnapshot, FluxState, create_demo_flux_state
 from ..theme.earth import EARTH_CSS, EARTH_PALETTE
@@ -369,6 +370,12 @@ class FluxScreen(Screen[None]):
         Binding("right", "move_right", "Right", show=False),
         Binding("enter", "focus_agent", "Focus"),
         Binding("escape", "zoom_out", "Back"),
+        Binding("plus", "zoom_in", "Zoom In", show=True),
+        Binding("minus", "zoom_out_lod", "Zoom Out", show=True),
+        Binding("equal", "zoom_in", "Zoom In", show=False),  # + without shift
+        Binding("underscore", "zoom_out_lod", "Zoom Out", show=False),  # - with shift
+        Binding("m", "show_mri", "MRI View", show=True),
+        Binding("t", "show_loom", "Loom View", show=True),
         Binding("w", "toggle_wire", "Wire"),
         Binding("b", "toggle_body", "Body"),
         Binding("p", "psi_insight", "Psi"),
@@ -398,6 +405,8 @@ class FluxScreen(Screen[None]):
         self._glitch_indicator: GlitchIndicator | None = None
         self._agentese_hud: AgentHUD | None = None
         self._compact_hud: CompactAgentHUD | None = None
+        self._current_lod: LODLevel = LODLevel.ORBIT
+        self._lod_projector = LODProjector()
 
     def compose(self) -> ComposeResult:
         """Compose the flux screen."""
@@ -717,3 +726,101 @@ class FluxScreen(Screen[None]):
             # Trigger glitch on void.* paths
             if path.path.startswith("void."):
                 self._glitch_controller.on_void_phase(path.agent_id)
+
+    # ========================================================================
+    # SEMANTIC ZOOM Methods (LOD)
+    # ========================================================================
+
+    def action_zoom_in(self) -> None:
+        """
+        Zoom in (+ key) - deeper LOD level.
+
+        ORBIT → SURFACE → INTERNAL
+        """
+        next_lod = self._current_lod.zoom_in()
+        if next_lod:
+            self._current_lod = next_lod
+            self.notify(f"Zoomed to: {self._current_lod.name}")
+
+            # If zooming to INTERNAL (MRI), show the MRI screen
+            if self._current_lod == LODLevel.INTERNAL:
+                self.action_show_mri()
+        else:
+            self.notify("Already at maximum zoom (INTERNAL)")
+
+    def action_zoom_out_lod(self) -> None:
+        """
+        Zoom out (- key) - shallower LOD level.
+
+        INTERNAL → SURFACE → ORBIT
+        """
+        prev_lod = self._current_lod.zoom_out()
+        if prev_lod:
+            self._current_lod = prev_lod
+            self.notify(f"Zoomed to: {self._current_lod.name}")
+        else:
+            self.notify("Already at minimum zoom (ORBIT)")
+
+    def action_show_mri(self) -> None:
+        """
+        Show MRI view (m key) - deep agent inspection.
+
+        This is the INTERNAL LOD level (LOD 2).
+        """
+        if not self._grid:
+            self.notify("No agents available")
+            return
+
+        agent_id = self._grid.get_focused_agent_id()
+        if not agent_id:
+            self.notify("Select an agent first")
+            return
+
+        agent = self.state.agents.get(agent_id)
+        if not agent:
+            self.notify("Agent not found")
+            return
+
+        # Import MRI screen here to avoid circular imports
+        from .mri import MRIScreen
+
+        # Push MRI screen
+        self.app.push_screen(
+            MRIScreen(
+                agent_snapshot=agent,
+                agent_id=agent_id,
+                agent_name=agent.name,
+            )
+        )
+
+    def action_show_loom(self) -> None:
+        """
+        Show Loom view (t key) - topological history navigation.
+
+        Opens the Cognitive Loom screen for the focused agent.
+        """
+        if not self._grid:
+            self.notify("No agents available")
+            return
+
+        agent_id = self._grid.get_focused_agent_id()
+        if not agent_id:
+            self.notify("Select an agent first")
+            return
+
+        agent = self.state.agents.get(agent_id)
+        if not agent:
+            self.notify("Agent not found")
+            return
+
+        # Import Loom screen here to avoid circular imports
+        from .loom import LoomScreen
+
+        # Push Loom screen (with demo mode if in demo)
+        self.app.push_screen(
+            LoomScreen(
+                agent_id=agent_id,
+                agent_name=agent.name,
+                demo_mode=self._demo_mode,
+            )
+        )

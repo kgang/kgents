@@ -12,7 +12,7 @@ This preserves the "paper trail" and enables:
 from datetime import datetime
 from typing import List, Optional
 
-from .types import (
+from .core_types import (
     AgentState,
     GardenState,
     LibraryState,

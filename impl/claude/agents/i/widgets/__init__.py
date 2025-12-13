@@ -1,4 +1,4 @@
-"""I-gent v2.5 Widgets - Density Fields, Flow Arrows, Health Bars, and Overlays."""
+"""I-gent v2.5 Widgets - Density Fields, Flow Arrows, Health Bars, Overlays, and Cognitive Loom."""
 
 from .agentese_hud import (
     AgentContext,
@@ -7,7 +7,9 @@ from .agentese_hud import (
     CompactAgentHUD,
     create_demo_paths,
 )
+from .branch_tree import BranchTree
 from .density_field import DensityField
+from .entropy import EntropyParams, entropy_to_border_style, entropy_to_params
 from .event_stream import AgentEvent, EventStream, EventStreamDisplay, EventType
 from .flow_arrow import FlowArrow
 from .glitch import (
@@ -21,7 +23,14 @@ from .glitch import (
     get_glitch_controller,
     glitch_message,
 )
+from .graph_layout import (
+    SEMANTIC_POSITIONS,
+    GraphLayout,
+    LayoutAlgorithm,
+    NodePosition,
+)
 from .health_bar import CompactHealthBar, MiniHealthBar, XYZHealthBar
+from .hint_container import HintContainer
 from .metrics_panel import MetricsPanel, MultiMetricsPanel
 from .proprioception import (
     ProprioceptionBar,
@@ -31,12 +40,37 @@ from .proprioception import (
     TraumaIndicator,
     TraumaLevel,
 )
+from .slider import SLIDER_CHARS, Slider, clamp, generate_slider_track
+from .sparkline import Sparkline, generate_sparkline
+from .timeline import Timeline
 from .waveform import OperationType, ProcessingWaveform, WaveformDisplay
 
 __all__ = [
     # Core widgets
     "DensityField",
     "FlowArrow",
+    # Entropy system (Phase 5: Generative TUI)
+    "EntropyParams",
+    "entropy_to_params",
+    "entropy_to_border_style",
+    # Sparkline widget (Phase 5: Generative TUI)
+    "Sparkline",
+    "generate_sparkline",
+    # Hint Container (Track C: Heterarchical UI)
+    "HintContainer",
+    # Cognitive Loom widgets (Track B: Temporal Topology)
+    "BranchTree",
+    "Timeline",
+    # Graph Layout (P5: Garden View)
+    "GraphLayout",
+    "LayoutAlgorithm",
+    "NodePosition",
+    "SEMANTIC_POSITIONS",
+    # Slider (P11: Direct Manipulation)
+    "Slider",
+    "generate_slider_track",
+    "clamp",
+    "SLIDER_CHARS",
     # Health widgets
     "XYZHealthBar",
     "CompactHealthBar",

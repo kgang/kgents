@@ -23,8 +23,9 @@ from textual.widget import Widget
 if TYPE_CHECKING:
     from textual.app import RenderResult
 
-from ..data.types import Phase
+from ..data.core_types import Phase
 from ..theme.earth import EarthTheme
+from .entropy import entropy_to_params
 
 # Re-export Phase for backwards compatibility
 __all__ = ["Phase", "DensityField", "DENSITY_CHARS", "GLITCH_CHARS"]
@@ -87,11 +88,24 @@ def generate_density_grid(
     phase: Phase,
     name: str = "",
     focused: bool = False,
+    dither_rate: float = 0.0,
+    jitter: int = 0,
 ) -> list[str]:
     """
     Generate a density grid for an agent.
 
-    Returns a list of strings, one per row.
+    Args:
+        width: Grid width in characters
+        height: Grid height in characters
+        activity: Activity level 0.0-1.0
+        phase: Current phase
+        name: Agent name to embed
+        focused: Whether widget is focused
+        dither_rate: Entropy-based dithering (0.0-0.4)
+        jitter: Entropy-based position jitter (0-3 pixels)
+
+    Returns:
+        List of strings, one per row
     """
     lines: list[str] = []
 
@@ -104,11 +118,24 @@ def generate_density_grid(
             lines.append(row)
         return lines
 
-    # Normal density rendering
+    # Normal density rendering with optional dithering
     for y in range(height):
         row = ""
         for x in range(width):
             char = activity_to_density_char(activity, x, y)
+
+            # Apply dithering based on entropy
+            if dither_rate > 0 and random.random() < dither_rate:
+                # Randomly shift character up or down in density
+                if random.random() < 0.5 and char != DENSITY_CHARS[0]:
+                    # Reduce density
+                    idx = DENSITY_CHARS.index(char)
+                    char = DENSITY_CHARS[max(0, idx - 1)]
+                elif char != DENSITY_CHARS[-1]:
+                    # Increase density
+                    idx = DENSITY_CHARS.index(char)
+                    char = DENSITY_CHARS[min(len(DENSITY_CHARS) - 1, idx + 1)]
+
             row += char
         lines.append(row)
 
@@ -201,6 +228,7 @@ class DensityField(Widget):
     phase: reactive[Phase] = reactive(Phase.DORMANT)
     agent_name: reactive[str] = reactive("")
     agent_id: reactive[str] = reactive("")
+    entropy: reactive[float] = reactive(0.0)  # NEW: Uncertainty level 0.0-1.0
     glitching: reactive[bool] = reactive(False)
     materializing: reactive[bool] = reactive(False)
     dematerializing: reactive[bool] = reactive(False)
@@ -212,6 +240,7 @@ class DensityField(Widget):
         agent_name: str = "",
         activity: float = 0.0,
         phase: Phase = Phase.DORMANT,
+        entropy: float = 0.0,
         name: str | None = None,
         id: str | None = None,  # noqa: A002
         classes: str | None = None,
@@ -221,6 +250,10 @@ class DensityField(Widget):
         self.agent_name = agent_name
         self.activity = activity
         self.phase = phase
+        self.entropy = entropy
+        # Heartbeat animation state
+        self._heartbeat_active = False
+        self._pulse_offset = 0.0
         self._update_classes()
 
     def _update_classes(self) -> None:
@@ -266,11 +299,18 @@ class DensityField(Widget):
         self._update_classes()
         self.refresh()
 
+    def watch_entropy(self, new_value: float) -> None:
+        """React to entropy changes."""
+        self.refresh()
+
     def render(self) -> "RenderResult":
-        """Render the density field."""
+        """Render the density field with entropy-aware distortion."""
         # Get widget dimensions
         width = max(12, self.size.width)
         height = max(3, self.size.height)
+
+        # Compute entropy parameters
+        entropy_params = entropy_to_params(self.entropy)
 
         # Generate density grid
         # During materialization, reduce effective activity based on progress
@@ -283,11 +323,15 @@ class DensityField(Widget):
             phase=self.phase,
             name=self.agent_name.upper()[: width - 4] if self.agent_name else "",
             focused=self.has_focus,
+            dither_rate=entropy_params.dither_rate,
+            jitter=entropy_params.jitter_amplitude,
         )
 
         # Apply effects based on state
-        if self.glitching:
-            grid = [add_glitch_effect(line, 0.3) for line in grid]
+        if self.glitching or entropy_params.glitch_intensity > 0:
+            # Use entropy-based intensity, or override with manual glitching
+            intensity = 0.3 if self.glitching else entropy_params.glitch_intensity
+            grid = [add_glitch_effect(line, intensity) for line in grid]
         elif self.materializing or self.dematerializing:
             # Apply partial visibility effect during (de)materialization
             grid = self._apply_materialization_effect(grid)
@@ -428,4 +472,56 @@ class DensityField(Widget):
 
     def watch_materialization_progress(self, new_value: float) -> None:
         """React to materialization progress changes."""
+        self.refresh()
+
+    # ─────────────────────────────────────────────────────────────
+    # Heartbeat Pulsing - Alive agents breathe
+    # Principle 4 (Joy-Inducing): Subtle animation that feels alive.
+    # ─────────────────────────────────────────────────────────────
+
+    async def start_heartbeat(
+        self,
+        base_rate_ms: int = 2000,
+        amplitude: float = 0.1,
+    ) -> None:
+        """
+        Start heartbeat pulsing animation.
+
+        The agent's activity level subtly pulses, creating a "breathing" effect.
+        Rate is derived from base activity - more active agents breathe faster.
+
+        Args:
+            base_rate_ms: Base heartbeat period in milliseconds
+            amplitude: How much activity varies (0.0-0.2)
+        """
+        import asyncio
+        import math
+
+        self._heartbeat_active = True
+        phase = 0.0
+
+        while self._heartbeat_active:
+            # Calculate breathing rate based on activity
+            # More active = faster breathing
+            rate_factor = 0.5 + self.activity * 0.5
+            rate_ms = base_rate_ms / rate_factor
+
+            # Sinusoidal pulse
+            pulse = math.sin(phase) * amplitude
+            _ = max(
+                0.0, min(1.0, self.activity + pulse)
+            )  # Calculate but use pulse directly
+
+            # Update rendering (without changing the base activity)
+            self._pulse_offset = pulse
+            self.refresh()
+
+            # Advance phase
+            phase += 0.1
+            await asyncio.sleep(rate_ms / 1000.0 / 10)
+
+    def stop_heartbeat(self) -> None:
+        """Stop heartbeat pulsing."""
+        self._heartbeat_active = False
+        self._pulse_offset = 0.0
         self.refresh()

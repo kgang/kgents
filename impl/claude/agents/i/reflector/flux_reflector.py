@@ -19,10 +19,10 @@ Thread Safety:
 
 Usage:
     # In one terminal
-    $ kgents garden  # Launches FluxApp with FluxReflector
+    $ kgents dashboard  # Launches DashboardApp with FluxReflector
 
     # In another terminal
-    $ kgents status  # FluxApp shows "cmd.status" in HUD
+    $ kgents status  # Dashboard shows event in traces panel
 """
 
 from __future__ import annotations

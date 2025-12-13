@@ -1,5 +1,21 @@
-"""I-gent v2.5 Data - State, Registry, O-gent Polling, and Terrarium Source."""
+"""I-gent v2.5 Data - State, Registry, O-gent Polling, Terrarium Source, Visual Hints, Cognitive Loom, and Dashboard Collectors."""
 
+from .core_types import Phase
+from .dashboard_collectors import (
+    DashboardMetrics,
+    FluxMetrics,
+    KgentMetrics,
+    MetabolismMetrics,
+    MetricsObservable,
+    TraceEntry,
+    TriadMetrics,
+    collect_metrics,
+    create_demo_metrics,
+    create_random_metrics,
+)
+from .hint_registry import HintRegistry, get_hint_registry, reset_hint_registry
+from .hints import VisualHint, validate_hint
+from .loom import CognitiveBranch, CognitiveTree
 from .ogent import (
     HealthLevel,
     OgentPoller,
@@ -28,7 +44,6 @@ from .terrarium_source import (
     TerrariumWebSocketSource,
     observe_multiple,
 )
-from .types import Phase
 
 __all__ = [
     # Types
@@ -62,4 +77,24 @@ __all__ = [
     "AgentMetrics",
     "TerrariumWebSocketSource",
     "observe_multiple",
+    # Visual Hints (Track C: Heterarchical UI)
+    "VisualHint",
+    "validate_hint",
+    "HintRegistry",
+    "get_hint_registry",
+    "reset_hint_registry",
+    # Cognitive Loom (Track B: Temporal Topology)
+    "CognitiveBranch",
+    "CognitiveTree",
+    # Dashboard Collectors
+    "DashboardMetrics",
+    "KgentMetrics",
+    "MetabolismMetrics",
+    "TriadMetrics",
+    "FluxMetrics",
+    "TraceEntry",
+    "collect_metrics",
+    "create_demo_metrics",
+    "create_random_metrics",
+    "MetricsObservable",
 ]

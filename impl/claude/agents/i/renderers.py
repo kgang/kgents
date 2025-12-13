@@ -17,7 +17,7 @@ Aesthetic principles:
 
 from typing import List
 
-from .types import (
+from .core_types import (
     AgentState,
     GardenState,
     Glyph,
@@ -261,7 +261,7 @@ class GardenRenderer:
     Renders multiple agents in spatial relationship—the zen garden view.
 
     Example:
-        ┌─ kgents garden ────────────────────────────── t: 00:14:32 ─┐
+        ┌─ kgents dashboard ──────────────────────────── t: 00:14:32 ─┐
         │                                                            │
         │       ● A ─────────┐                                       │
         │                    │                                       │

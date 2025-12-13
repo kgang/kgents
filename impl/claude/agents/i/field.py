@@ -23,7 +23,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Optional
 
-from .types import Phase
+from .core_types import Phase
 
 
 class EntityType(Enum):
