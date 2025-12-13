@@ -1,4 +1,4 @@
-# Forest Health: 2025-12-13 (Chief Reconciliation)
+# Forest Health: 2025-12-13 (Evening Update)
 
 > *"A single mighty oak casts too much shadow. We cultivate a forest where many trees grow."*
 
@@ -11,7 +11,9 @@
 | Plan | Progress | Status | Notes |
 |------|----------|--------|-------|
 | agents/k-gent | 97% | active | 589 tests. Session/cache added. Deferred: Fractal, Holographic. |
-| self/memory | 30% | active | UNBLOCKED by self/stream. Ghost cache done, crystals next. |
+| self/memory | 30% | active | UNBLOCKED. Ghost cache done, crystals next. |
+| architecture/turn-gents | 0% | proposed | Chronos-Kairos Protocol. Turn as causal morphism. |
+| architecture/polyfunctor | 100% | **COMPLETE** | 201 tests. All 4 phases done. Ready for archive. |
 
 ---
 
@@ -19,13 +21,11 @@
 
 | Plan | Priority | Status | Notes |
 |------|----------|--------|-------|
-| devex/playground | 1 | planned | `kgents play` — Interactive tutorials |
-| devex/scaffolding | 2 | planned | `kgents new` — Agent generator |
-| devex/dashboard | 3 | planned | `kgents dashboard` — Live metrics TUI |
-| devex/gallery | 4 | planned | MkDocs example gallery (blocked by playground) |
-| devex/watch-mode | 5 | planned | `kgents soul watch` — Ambient K-gent |
-| devex/telemetry | 6 | planned | OpenTelemetry export |
-| devex/trace | 7 | planned | `kgents trace` — Hybrid static+runtime tracing (enables telemetry, dashboard) |
+| devex/dashboard | 1 | **COMPLETE** | `kg dashboard` — 4-panel TUI, collectors, graceful degradation |
+| devex/trace-integration | 2 | planned | Trace into Dashboard, Ghost, Flinch, Status, MRI |
+| devex/watch-mode | 3 | **COMPLETE** | `kg soul watch` — 5 heuristics, watchdog, 28 tests |
+| devex/gallery | 4 | **COMPLETE** | MkDocs site, 6 examples, Material theme, GitHub Actions |
+| devex/telemetry | 5 | planned | OpenTelemetry export |
 
 ---
 
@@ -33,8 +33,8 @@
 
 | Plan | Progress | Last Touched | Notes |
 |------|----------|--------------|-------|
-| agents/t-gent | 90% | 2025-12-12 | 124 tests. Types I-IV complete, Type V (AdversarialGym) remaining. |
-| void/entropy | 85% | 2025-12-13 | 69 tests. CLI tithe ✅. Only TUI FeverOverlay remaining. |
+| agents/t-gent | 90% | 2025-12-12 | Types I-IV complete, Type V (AdversarialGym) remaining. |
+| void/entropy | 85% | 2025-12-13 | 69 tests. CLI tithe done. Only TUI FeverOverlay remaining. |
 
 ---
 
@@ -42,67 +42,31 @@
 
 | Plan | Progress | Notes |
 |------|----------|-------|
-| self/cli-refactor | 75% | Reflector+FD3 done. ProposalQueue remaining. See `docs/cli-refactor-assessment.md`. |
+| self/cli-refactor | 75% | Reflector+FD3 done. ProposalQueue remaining. |
 
 ---
 
 ## Blocked Trees
 
-| Plan | Progress | Blocked By | Notes |
-|------|----------|------------|-------|
-| *(none)* | - | - | - |
+*(none)*
 
 ---
 
-## Complete Trees (Archived In-Place)
-
-| Plan | Tests | Notes |
-|------|-------|-------|
-| architecture/alethic | 337 | Phases 1-6 ALL COMPLETE: Functor, Halo, Archetypes, LocalProjector, K8sProjector, CLI |
-| self/stream | 302 | Phases 2.1-2.4 ALL COMPLETE: ContextWindow, ModalScope, Pulse, Crystal |
-| agents/terrarium | 254 | Mirror Protocol, K8s Operator, Purgatory Integration (ALL 5 PHASES) |
-| agents/semaphores | 182 | Rodizio pattern, Phases 1-6 complete |
-| agents/i-gent-widgets | 217 | BranchTree, Entropy, GraphLayout, Slider, Sparkline, Timeline, TriadHealth |
-| agents/i-gent-data | 149 | Hints, Loom, LOD systems |
-| infra/cluster-native-runtime | 145 | K8sProjector, LocalProjector, system infrastructure |
-| concept/lattice | 69 | Lineage enforcement complete |
-| concept/creativity | 146+ | PAYADOR, Curator, Pataphysics (v2.5 complete) |
-
----
-
-## Recently Archived (Moved to `_archive/`)
+## Recently Archived (2025-12-13 Audit)
 
 | Plan | Archive Path | Tests | Notes |
 |------|--------------|-------|-------|
-| Flux Functor | `_archive/flux-functor-v1.0-complete.md` | 382 | Living Pipelines via `|` |
-| I-gent v2.5 | `_archive/igent-v2.5-complete.md` | 566 | Full TUI framework |
-| Reflector | `_archive/reflector-v1.0-complete.md` | 36 | CLI ↔ TUI bridge |
-| K8-Terrarium v2.0 | `_archive/k8-terrarium-v2.0-complete.md` | 24+ | K8s infrastructure |
-| CLI Hollowing | `_archive/cli-hollowing-v1.0-complete.md` | 100+ | Handler patterns |
-| Capital Ledger | `_archive/capital-ledger-v1.0-complete.md` | 83+ | Event-sourced ledger |
-
----
-
-## Emerging Work (Tracked in Git Status)
-
-| Work | Tests | Notes |
-|------|-------|-------|
-| Flux Synapse | 44 | Synapse core + outbox integration |
-| Triad Infrastructure | — | K8s manifests, setup scripts |
-| Vitals Context | — | AGENTESE vitals path |
-
----
-
-## Session Attention Budget
-
-Per `plans/principles.md` §3 and `_focus.md`:
-
-```
-Primary (50%):    K-gent ambient presence (97% done — polish, deferred features)
-Secondary (30%):  self/memory (30% — ready for crystal integration)
-Exploration (15%): Fun toys, interactivity, practical demos
-Accursed (5%):    Joy-inducing widgets (FeverOverlay is the last one)
-```
+| DevEx Playground | `_archive/playground-v1.0-complete.md` | 32 | `kgents play` — Interactive tutorials |
+| DevEx Scaffolding | `_archive/scaffolding-v1.0-complete.md` | — | `kgents new` — Agent generator |
+| DevEx Trace | `_archive/trace-v1.0-complete.md` | 252 | StaticCallGraph, RuntimeTrace, CLI |
+| Alethic Architecture | `_archive/alethic-v1.0-complete.md` | 337 | Functor, Halo, Archetypes, Projectors |
+| Categorical Consolidation | `_archive/categorical-consolidation-v1.0-complete.md` | — | Symmetric lifting, ObserverFunctor |
+| Agent Semaphores | `_archive/semaphores-v1.0-complete.md` | 182 | Rodizio pattern, Phases 1-6 |
+| Terrarium | `_archive/terrarium-v1.0-complete.md` | 176+ | Mirror Protocol, K8s Operator |
+| Self Stream | `_archive/stream-v1.0-complete.md` | 302 | ContextWindow, ModalScope, Pulse, Crystal |
+| Concept Lattice | `_archive/lattice-v1.0-complete.md` | 69 | Lineage enforcement |
+| Concept Creativity | `_archive/creativity-v2.5-complete.md` | 146+ | PAYADOR, Curator, Pataphysics |
+| Cluster Native Runtime | `_archive/cluster-native-runtime-v1.0-complete.md` | 145 | K8sProjector, LocalProjector |
 
 ---
 
@@ -110,34 +74,40 @@ Accursed (5%):    Joy-inducing widgets (FeverOverlay is the last one)
 
 | Metric | Value |
 |--------|-------|
-| Active trees | 2 |
-| Planned (DevEx) | 7 |
+| Active trees | 3 |
+| DevEx complete | 3 (dashboard, watch-mode, gallery) |
+| DevEx planned | 2 (trace-integration, telemetry) |
 | Dormant | 2 |
 | Archived-partial | 1 |
+| Ready for archive | 4 (polyfunctor, dashboard, watch-mode, gallery) |
 | Blocked | 0 |
-| Complete (in-place) | 9 |
-| Recently archived | 6 |
-| Tests | 11,559 |
+| Newly archived | 11 |
+| Tests | 12,015 |
 | Mypy (prod) | 0 errors |
-| Last verified | 2025-12-13 (Chief reconciliation #3) |
+| Last verified | 2025-12-13 (Chief reconciliation) |
 
 ---
 
 ## Dependency Graph
 
 ```
-self/stream (100%) ──enables──▶ self/memory (30% ACTIVE)
-concept/lattice (100%) ──enables──▶ concept/creativity (100%)
-void/entropy (85%) ── done ── Flux integration + CLI tithe
-agents/semaphores (100%) ──enables──▶ void/entropy (metabolism pressure)
-agents/terrarium (100%) ──uses──▶ agents/semaphores (Purgatory)
-agents/k-gent (97%) ──uses──▶ agents/semaphores (Rodizio Sommelier)
-infra/cluster-native-runtime (100%) ──enables──▶ agents/k-gent (standard API)
-architecture/alethic (100%) ──enables──▶ agents/k-gent (SoulFunctor integration)
+self/stream (ARCHIVED) ──enables──▶ self/memory (30% ACTIVE)
+concept/lattice (ARCHIVED) ──enables──▶ concept/creativity (ARCHIVED)
+void/entropy (85% DORMANT) ── Flux integration + CLI tithe
+agents/semaphores (ARCHIVED) ──enables──▶ void/entropy
+agents/terrarium (ARCHIVED) ──uses──▶ agents/semaphores
+agents/k-gent (97% ACTIVE) ──uses──▶ agents/semaphores
+infra/cluster-native-runtime (ARCHIVED) ──enables──▶ agents/k-gent
+architecture/alethic (ARCHIVED) ──enables──▶ agents/k-gent
+architecture/polyfunctor (COMPLETE) ──enables──▶ architecture/turn-gents (PROPOSED)
+architecture/turn-gents (PROPOSED) ──enables──▶ devex/trace-integration (PLANNED)
 
-devex/trace (0%) ──enables──▶ devex/telemetry (OpenTelemetry spans)
-devex/trace (0%) ──enables──▶ devex/dashboard (TRACES panel)
-weave/trace_monoid (100%) ──enables──▶ devex/trace (Mazurkiewicz foundation)
+devex/trace (ARCHIVED) ──enables──▶ devex/trace-integration (PLANNED)
+devex/trace (ARCHIVED) ──enables──▶ devex/telemetry (PLANNED)
+devex/trace-integration (PLANNED) ──enhances──▶ devex/dashboard (COMPLETE)
+devex/playground (ARCHIVED) ──enables──▶ devex/gallery (COMPLETE)
+devex/dashboard (COMPLETE) ──uses──▶ agents/k-gent (collectors)
+devex/watch-mode (COMPLETE) ──uses──▶ agents/k-gent (heuristics)
 ```
 
 ---

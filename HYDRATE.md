@@ -17,7 +17,7 @@
 
 ## Status
 
-**Tests**: 11,559 | **Mypy**: Strict (0 errors) | **Branch**: `main`
+**Tests**: 12,015 | **Mypy**: Strict (0 errors) | **Branch**: `main`
 
 ---
 
@@ -39,17 +39,18 @@ time.*     — Temporal (traces, forecasts)
 
 | Plan | Progress | Next |
 |------|----------|------|
-| `architecture/polyfunctor` | 30% | **P1** — Spec from impl (4 spec files) |
-| `devex/dashboard` | 0% | **P3** — 4-panel TUI, 1Hz refresh |
-| `devex/watch-mode` | 0% | **P5** — Ambient K-gent, 5 heuristics |
+| `architecture/polyfunctor` | 100% | Ready to archive |
+| `devex/trace-integration` | 25% | **P1** — Hardened, next: Ghost/Status/Dashboard |
+| `devex/telemetry` | 0% | **P5** — OpenTelemetry export |
 
 ## Completed (Recent)
 
-- **OTEL Visibility** — K8s observability stack (Tempo/Prometheus/Grafana), `agentese.invoke` spans in Tempo
+- **DevEx Dashboard** — `kg dashboard`, 4-panel TUI, graceful degradation, 50+ tests
+- **DevEx Watch Mode** — `kg soul watch`, 5 heuristics (complexity, naming, patterns, tests, docs), 28 tests
+- **DevEx Gallery** — MkDocs site, 6 examples (composition, functors, soul, streaming), GitHub Actions
+- **OTEL Visibility** — K8s observability stack (Tempo/Prometheus/Grafana), `agentese.invoke` spans
 - **DevEx Playground** — `kgents play`, 4 tutorials + REPL, 32 tests
-- **DevEx Scaffolding** — `kgents new agent`, Jinja2 templates, 3 archetypes
-- **Alethic Architecture** — 337 tests, Phases 1-6 (Functor, Halo, Archetypes, Projectors, CLI)
-- **I-gent Widgets** — 217 tests, full widget toolkit (Sparkline, Timeline, Graph, etc.)
+- **Alethic Architecture** — 337 tests, Phases 1-6 (Functor, Halo, Archetypes, Projectors)
 
 ## Sprint Prompts
 
@@ -57,6 +58,7 @@ time.*     — Temporal (traces, forecasts)
 |--------|--------|
 | Polyfunctor | `prompts/polyfunctor-realization.md` — Spec poly/operad/sheaf, migrate genera |
 | DevEx | `prompts/devex-continuation.md` — Dashboard, watch-mode, gallery |
+| Trace Integration | `prompts/trace-integration-hardening-continuation.md` — Hardened, next phases |
 
 ---
 
