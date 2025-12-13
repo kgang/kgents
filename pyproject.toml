@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "kgents monorepo - tasteful, curated, ethical agents"
 requires-python = ">=3.11"
 dependencies = [
+    "jinja2>=3.1.6",
     "kgents-runtime",
     "pyyaml",
 ]
