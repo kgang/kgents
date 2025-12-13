@@ -1,0 +1,38 @@
+"""
+Tests for {{ class_name }}.
+
+Generated with `kgents new {{ module_name }}`.
+"""
+
+from __future__ import annotations
+
+import pytest
+
+from ..agent import {{ class_name }}
+
+
+class Test{{ class_name }}:
+    """Tests for {{ class_name }}."""
+
+    def test_agent_name(self) -> None:
+        """Agent has correct name."""
+        agent = {{ class_name }}()
+        assert agent.name == "{{ module_name }}"
+
+    @pytest.mark.asyncio
+    async def test_invoke_raises_not_implemented(self) -> None:
+        """invoke() raises NotImplementedError until implemented."""
+        agent = {{ class_name }}()
+        with pytest.raises(NotImplementedError, match="Implement me"):
+            await agent.invoke({{ input_example }})
+
+    @pytest.mark.asyncio
+    async def test_invoke_with_sample_input(self) -> None:
+        """invoke() processes sample input correctly.
+
+        TODO: Uncomment and modify after implementing invoke().
+        """
+        # agent = {{ class_name }}()
+        # result = await agent.invoke({{ input_example }})
+        # assert result is not None
+        pass

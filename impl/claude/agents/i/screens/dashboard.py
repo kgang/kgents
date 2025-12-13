@@ -61,6 +61,29 @@ if TYPE_CHECKING:
 
 
 # =============================================================================
+# Focus Style Constants
+# =============================================================================
+
+# Consistent focus styling across all panels
+FOCUS_CSS = """
+    /* Unfocused state: subtle round border */
+    {cls} {{
+        width: 1fr;
+        height: auto;
+        border: round {color};
+        padding: 0 1;
+        background: #1a1a1a;
+    }}
+
+    /* Focused state: thick double border + brighter background */
+    {cls}:focus {{
+        border: double {focus_color};
+        background: #252525;
+    }}
+"""
+
+
+# =============================================================================
 # Panel Widgets
 # =============================================================================
 
@@ -68,19 +91,9 @@ if TYPE_CHECKING:
 class KgentPanel(Static, can_focus=True):
     """K-gent soul state panel."""
 
-    DEFAULT_CSS = """
-    KgentPanel {
-        width: 1fr;
-        height: auto;
-        border: round #7d9c7a;
-        padding: 0 1;
-        background: #1a1a1a;
-    }
-
-    KgentPanel:focus {
-        border: round #a0d09a;
-    }
-
+    DEFAULT_CSS = (
+        FOCUS_CSS.format(cls="KgentPanel", color="#7d9c7a", focus_color="#90ee90d6")
+        + """
     KgentPanel .panel-title {
         color: #7d9c7a;
         text-style: bold;
@@ -98,7 +111,9 @@ class KgentPanel(Static, can_focus=True):
         color: #e88a8a;
     }
     """
+    )
 
+    is_focused: reactive[bool] = reactive(False)
     mode: reactive[str] = reactive("--")
     garden_patterns: reactive[int] = reactive(0)
     garden_trees: reactive[int] = reactive(0)
@@ -131,19 +146,9 @@ class KgentPanel(Static, can_focus=True):
 class MetabolismPanel(Static, can_focus=True):
     """Metabolic engine state panel."""
 
-    DEFAULT_CSS = """
-    MetabolismPanel {
-        width: 1fr;
-        height: auto;
-        border: round #e6a352;
-        padding: 0 1;
-        background: #1a1a1a;
-    }
-
-    MetabolismPanel:focus {
-        border: round #f0b572;
-    }
-
+    DEFAULT_CSS = (
+        FOCUS_CSS.format(cls="MetabolismPanel", color="#e6a352", focus_color="#ffa500d6")
+        + """
     MetabolismPanel .panel-title {
         color: #e6a352;
         text-style: bold;
@@ -161,6 +166,7 @@ class MetabolismPanel(Static, can_focus=True):
         color: #7d9c7a;
     }
     """
+    )
 
     pressure: reactive[float] = reactive(0.0)
     temperature: reactive[float] = reactive(0.0)
@@ -211,19 +217,9 @@ class MetabolismPanel(Static, can_focus=True):
 class FluxPanel(Static, can_focus=True):
     """Flux event processing panel."""
 
-    DEFAULT_CSS = """
-    FluxPanel {
-        width: 1fr;
-        height: auto;
-        border: round #8ac4e8;
-        padding: 0 1;
-        background: #1a1a1a;
-    }
-
-    FluxPanel:focus {
-        border: round #a8d4f0;
-    }
-
+    DEFAULT_CSS = (
+        FOCUS_CSS.format(cls="FluxPanel", color="#8ac4e8", focus_color="#00bfffd6")
+        + """
     FluxPanel .panel-title {
         color: #8ac4e8;
         text-style: bold;
@@ -237,6 +233,7 @@ class FluxPanel(Static, can_focus=True):
         color: #e88a8a;
     }
     """
+    )
 
     events_per_second: reactive[float] = reactive(0.0)
     queue_depth: reactive[int] = reactive(0)
@@ -280,19 +277,9 @@ class FluxPanel(Static, can_focus=True):
 class TriadPanel(Static, can_focus=True):
     """Database triad health panel."""
 
-    DEFAULT_CSS = """
-    TriadPanel {
-        width: 1fr;
-        height: auto;
-        border: round #b3a89a;
-        padding: 0 1;
-        background: #1a1a1a;
-    }
-
-    TriadPanel:focus {
-        border: round #d0c5b5;
-    }
-
+    DEFAULT_CSS = (
+        FOCUS_CSS.format(cls="TriadPanel", color="#b3a89a", focus_color="#daa520d6")
+        + """
     TriadPanel .panel-title {
         color: #b3a89a;
         text-style: bold;
@@ -310,6 +297,7 @@ class TriadPanel(Static, can_focus=True):
         color: #e88a8a;
     }
     """
+    )
 
     durability: reactive[float] = reactive(0.0)
     resonance: reactive[float] = reactive(0.0)

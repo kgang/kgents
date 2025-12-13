@@ -1,0 +1,27 @@
+# Database Triad Namespace
+# Isolated environment for CDC pipeline components
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kgents-triad
+  labels:
+    app.kubernetes.io/part-of: kgents
+    kgents.io/tier: infrastructure
+    kgents.io/component: database-triad
+---
+# Resource limits for triad workloads
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: triad-limits
+  namespace: kgents-triad
+spec:
+  limits:
+    - default:
+        cpu: "200m"
+        memory: "512Mi"
+      defaultRequest:
+        cpu: "100m"
+        memory: "256Mi"
+      type: Container

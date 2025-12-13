@@ -10,6 +10,30 @@ This catalog identifies and formalizes **functor patterns** found throughout kge
 
 **Purpose**: Enable systematic reasoning about agent transformations across genera.
 
+**Foundation**: All functors are **polynomial endofunctors** operating on `PolyAgent[S, A, B]`. See `spec/architecture/polyfunctor.md` for theory.
+
+---
+
+## Polynomial Functor Summary
+
+Each functor transforms a polynomial agent `P(y) = Σ_{s ∈ S} y^{E(s)}` according to how it modifies positions (S), directions (E), and transitions.
+
+| Functor | Position Transform | Direction Transform | Transition Transform | Category |
+|---------|-------------------|---------------------|---------------------|----------|
+| **Promise** | Add `resolved` state | Identity | Lazy evaluation | Lifting |
+| **View** | Map to widget state | UI events | Render | Lifting |
+| **Metered** | Add budget state | Identity | Cost accounting | Economizing |
+| **Personalization** | Filter by eigenvector | Identity | Soul-mediated | Filtering |
+| **Lens** | Focus state | Bidirectional | Get/Set | Lifting |
+| **Optimization** | Identity | Identity | Improved prompts | Endofunctor |
+| **Spy** | Add history state | Identity | Log + forward | Observing |
+| **Mock** | Collapse to constant | Accept all | Return constant | Terminal |
+| **Parser** | Add parse state | Text only | Extract structure | Lifting |
+| **Tool** | Add MCP state | Add capability check | Sandboxed + Result | Lifting |
+| **Trace** | Add emission state | Identity | Emit + forward | Observing |
+| **Sandbox** | Namespace isolation | Filter forbidden | Guard execution | Filtering |
+| **Flux** | Add flow state | Streams | Continuous dynamics | Lifting |
+
 ---
 
 ## Functor Quick Reference
@@ -39,6 +63,25 @@ This catalog identifies and formalizes **functor patterns** found throughout kge
 Promise: Agent[A, B] → Agent[A, Promise[B]]
 ```
 
+### Polynomial Interpretation
+
+```
+Promise: PolyAgent[S, A, B] → PolyAgent[S × PromiseState, A, Promise[B]]
+
+where PromiseState = { PENDING, RESOLVED, FAILED }
+```
+
+**Position transform**: Adds promise lifecycle state to existing agent state.
+
+**Direction transform**: Identity (same inputs accepted).
+
+**Transition transform**:
+```
+Original: (s, a) → (s', b)
+Promised: (s, pending, a) → (s, pending, Promise(→ b))  # Defer
+          resolve() → (s', resolved, b)                   # Execute
+```
+
 ### Description
 Defers computation until explicitly resolved. Enables lazy evaluation trees.
 
@@ -65,6 +108,26 @@ Promise(f >> g) ≅ Promise(f) >> Promise(map(g))
 ```
 View: Agent[A, B] → Widget[Agent[A, B]]
 ```
+
+### Polynomial Interpretation
+
+```
+View: PolyAgent[S, A, B] → PolyAgent[WidgetState, UIEvent, WidgetOutput]
+
+where WidgetState = { INITIAL, LOADING, DISPLAYING, ERROR }
+```
+
+**Position transform**: Maps agent state space to widget lifecycle states.
+
+**Direction transform**: Agent inputs become UI events (clicks, gestures, data).
+
+**Transition transform**:
+```
+Agent dynamics → Render cycle:
+  (widget_state, event) → (new_widget_state, visual_update)
+```
+
+**Key polynomial insight**: View functor collapses complex agent state to visible widget state—a **quotient morphism**.
 
 ### Description
 Maps agents to contextually adaptive UI components. Deterministic: same agent always produces same widget structure (content varies with state).
@@ -107,6 +170,28 @@ Where `Transaction[A, B]` wraps execution with:
 - Execution: Actual agent invocation
 - Post-execution: Cost settlement & receipt
 
+### Polynomial Interpretation
+
+```
+Metered: PolyAgent[S, A, B] → PolyAgent[S × BudgetState, A, (B, Receipt)]
+
+where BudgetState = { AVAILABLE(tokens), EXHAUSTED, RATE_LIMITED }
+```
+
+**Position transform**: Adds economic state (budget, rate limit counters) to agent state.
+
+**Direction transform**: Identity, but transitions may be blocked if budget exhausted.
+
+**Transition transform**:
+```
+Original: (s, a) → (s', b)
+Metered:  (s, available(n), a) →
+          if cost(a) ≤ n: (s', available(n - cost(a)), (b, receipt))
+          else: (s, exhausted, Error("Budget exhausted"))
+```
+
+**Key polynomial insight**: Budget is a **linear resource**—the polynomial fiber at EXHAUSTED has no valid directions.
+
 ### Description
 Transforms any "free" agent into an "economic" agent operating within token budgets and rate limits.
 
@@ -141,6 +226,32 @@ Add to functor catalog with:
 ### Signature
 ```
 K: Agent[A, B] → Agent[A, B]  (same signature, personalized behavior)
+```
+
+### Polynomial Interpretation
+
+```
+K: PolyAgent[S, A, B] → PolyAgent[S ∩ SoulCompatible, A, B]
+
+where SoulCompatible = { s ∈ S | eigenvector_alignment(s) ≥ threshold }
+```
+
+**Position transform**: Filters positions to soul-compatible subset (sheaf restriction).
+
+**Direction transform**: Identity (same inputs accepted).
+
+**Transition transform**:
+```
+Original: (s, a) → (s', b)
+Personalized: (s, a) → (s', soul_mediate(b, context))
+```
+
+**Key polynomial insight**: K-functor is a **sheaf restriction**—it selects the fiber compatible with the eigenvector context. See `spec/agents/emergence.md` for SOUL_SHEAF.
+
+**Connection to SOUL_SHEAF**:
+```python
+# K-functor restricts to eigenvector-compatible positions
+K(agent, AESTHETIC) = SOUL_SHEAF.restrict(agent, AESTHETIC)
 ```
 
 ### Description
@@ -184,6 +295,29 @@ Lens[S, A]: (get: S → A, set: (S, A) → S)
 ```
 
 Lenses are **bidirectional functors** - they both extract and update.
+
+### Polynomial Interpretation
+
+```
+Lens: PolyAgent[S, Op, Result] → PolyAgent[S, Op, Result]
+
+where the polynomial is bidirectional:
+  Forward:  P(y) = Σ_{s ∈ S} y^{Get(s)}   # Read fiber
+  Backward: P(y) = Σ_{s ∈ S} y^{Set(s)}   # Write fiber
+```
+
+**Position transform**: Identity (same state space, focused view).
+
+**Direction transform**: Bidirectional—get reads, set writes.
+
+**Transition transform**:
+```
+Lens at focus f:
+  get: (s, READ) → (s, s.f)           # Extract subpart
+  set: (s, WRITE(v)) → (s{f=v}, ())   # Update subpart
+```
+
+**Key polynomial insight**: Lens is a **polynomial morphism with inverse**. The forward map (get) and backward map (set) form a bidirectional morphism in the polynomial category.
 
 ### Description
 Compositional state access. Lenses focus on sub-parts of larger structures while preserving the ability to update.
@@ -230,6 +364,29 @@ R: Agent[A, B] → Agent'[A, B]  (same signature, optimized prompts)
 
 **Key property**: This is an **endofunctor** - it maps Agent category to itself.
 
+### Polynomial Interpretation
+
+```
+R: PolyAgent[S, A, B] → PolyAgent[S, A, B]
+
+# Same polynomial structure, different transition implementation
+```
+
+**Position transform**: Identity (same state space).
+
+**Direction transform**: Identity (same inputs accepted).
+
+**Transition transform**:
+```
+Original: (s, a) → (s', b)      via prompt P
+Optimized: (s, a) → (s', b')    via prompt R(P)
+where Loss(b') ≤ Loss(b)
+```
+
+**Key polynomial insight**: R is a **pure endofunctor**—it doesn't change the polynomial structure at all. It only changes the transition function's implementation (the prompt). This is optimization within a fiber.
+
+**Uniqueness**: Among all kgents functors, R alone preserves the entire polynomial structure. It operates on the "implementation" rather than the "interface."
+
 ### Description
 Transforms agents by optimizing their prompts via teleprompters (DSPy, TextGrad, MIPROv2, OPRO). The optimized agent has identical interface but improved performance.
 
@@ -269,6 +426,26 @@ Add to functor catalog with:
 Spy: Agent[A, A] → Agent[A, A]  (identity with logging side effect)
 ```
 
+### Polynomial Interpretation
+
+```
+Spy: PolyAgent[S, A, A] → PolyAgent[S × History, A, A]
+
+where History = List[(timestamp, input, output)]
+```
+
+**Position transform**: Adds history accumulation state.
+
+**Direction transform**: Identity (same inputs accepted).
+
+**Transition transform**:
+```
+Original: (s, a) → (s', a)  # Identity
+Spied:    (s, history, a) → (s', history ++ [(now, a, a)], a)
+```
+
+**Key polynomial insight**: Spy adds a **writer fiber**—the history is a monoid that accumulates across transitions. This is the categorical Writer monad applied to polynomials.
+
 ### Description
 Wraps an identity agent with observation - records all inputs/outputs to history while passing data through unchanged.
 
@@ -307,6 +484,25 @@ Add to functor catalog with:
 ```
 Mock: Agent[A, B] → Agent[A, B]  (constant output, ignores input)
 ```
+
+### Polynomial Interpretation
+
+```
+Mock: PolyAgent[S, A, B] → PolyAgent[Unit, Any, B]
+
+# Collapses to single-state, constant-output polynomial
+```
+
+**Position transform**: Collapses to terminal object (single state).
+
+**Direction transform**: Accepts all inputs (universal).
+
+**Transition transform**:
+```
+Mock(b): (*, a) → (*, b)  # ∀ a ∈ A
+```
+
+**Key polynomial insight**: Mock is a **terminal morphism**—it maps any polynomial to the constant polynomial `P(y) = B`. In category theory, this is factoring through the terminal object.
 
 ### Description
 Replaces any agent with one that returns a fixed output, optionally with simulated latency.
@@ -348,6 +544,29 @@ Parser: Text → ParseResult[A]
 
 where ParseResult[A] = Success(value: A, confidence: float) | Failure(error)
 ```
+
+### Polynomial Interpretation
+
+```
+Parser: PolyAgent[ParseState, Text, ParseResult[A]]
+
+where ParseState = { READY, PARSING, REPAIRING, COMPLETE, FAILED }
+```
+
+**Position transform**: Adds parse lifecycle states.
+
+**Direction transform**: Restricts to text inputs only.
+
+**Transition transform**:
+```
+(ready, text) → (parsing, ...)
+(parsing, ...) → (complete, Success(a, confidence))
+                | (repairing, partial)
+                | (failed, Failure(error))
+(repairing, repair_hint) → (parsing, ...)  # Retry with hint
+```
+
+**Key polynomial insight**: Parser has a **non-trivial state machine**—the polynomial captures retry logic and repair strategies as explicit positions.
 
 ### Description
 Extracts structured data from unstructured text. Handles LLM output variability via confidence scores and repair strategies.
@@ -394,6 +613,30 @@ where Tool[A, B] adds:
 - Error handling via Result[B, ToolError]
 ```
 
+### Polynomial Interpretation
+
+```
+Tool: PolyAgent[S, A, B] → PolyAgent[S × ToolState, A, Result[B, ToolError]]
+
+where ToolState = { READY, CHECKING_CAPS, EXECUTING, SANDBOXED }
+```
+
+**Position transform**: Adds tool execution lifecycle and capability state.
+
+**Direction transform**: Adds capability check to valid directions.
+```
+directions(s, ready) = { a ∈ A | capabilities_satisfied(a) }
+```
+
+**Transition transform**:
+```
+(s, ready, a) → capability_check(a) →
+  if ok: (s, executing, ...) → (s', ready, Ok(b))
+  else:  (s, ready, Err(CapabilityDenied))
+```
+
+**Key polynomial insight**: Tool functor adds **capability-gated directions**—some inputs are not in the fiber if capabilities are missing.
+
 ### Description
 Wraps agents as MCP-compatible tools with safety constraints and standardized error handling.
 
@@ -435,6 +678,28 @@ Add to functor catalog with:
 Trace: Agent[A, B] → Agent[A, B]  (with observability side effects)
 ```
 
+### Polynomial Interpretation
+
+```
+Trace: PolyAgent[S, A, B] → PolyAgent[S × TraceState, A, B]
+
+where TraceState = { TRACING(wire_id), EMITTING, IDLE }
+```
+
+**Position transform**: Adds ephemeral trace emission state.
+
+**Direction transform**: Identity (same inputs accepted).
+
+**Transition transform**:
+```
+Original: (s, a) → (s', b)
+Traced:   (s, tracing(wire), a) →
+          emit(wire, TraceEvent(a, b)) →
+          (s', tracing(wire), b)
+```
+
+**Key polynomial insight**: Trace is a **side-effecting endofunctor**—it adds positions for emission state but the observable output is unchanged. Contrast with Spy: Trace is ephemeral (emits externally), Spy persists (accumulates internally).
+
 ### Description
 Wraps agent execution with real-time observability - emits events to Wire protocol without changing agent behavior.
 
@@ -462,7 +727,7 @@ Wire stops → all traces vanish (no persistence)
 ### Formalization Opportunity
 Add to functor catalog with:
 - Wire protocol event algebra
-- Ephemer ality guarantees
+- Ephemerality guarantees
 - Integration with Spy functor
 
 ---
@@ -473,6 +738,30 @@ Add to functor catalog with:
 ```
 Sandbox: Agent[A, B] → Agent[A, B]  (isolated execution)
 ```
+
+### Polynomial Interpretation
+
+```
+Sandbox: PolyAgent[S, A, B] → PolyAgent[S × Namespace, A, Result[B, SandboxError]]
+
+where Namespace = isolated execution context
+```
+
+**Position transform**: Adds namespace isolation state.
+
+**Direction transform**: Filters forbidden operations from valid directions.
+```
+directions_sandboxed(s, ns) = { a ∈ directions(s) | ¬forbidden(a, ns) }
+```
+
+**Transition transform**:
+```
+(s, ns, a) →
+  if forbidden(a, ns): (s, ns, Err(SandboxViolation(a)))
+  else: (s', fresh_ns, Ok(b))  # Fresh namespace per invocation
+```
+
+**Key polynomial insight**: Sandbox is a **filtering functor with namespace fiber**. The polynomial's direction set shrinks based on sandbox policy, and each transition gets a fresh namespace.
 
 ### Description
 Executes JIT-compiled agents in restricted namespace - prevents dangerous operations while maintaining interface.
@@ -516,6 +805,41 @@ Flux: Agent[A, B] → Agent[Flux[A], Flux[B]]
 ```
 
 Where `Flux[T] = AsyncIterator[T]` (asynchronous stream).
+
+### Polynomial Interpretation
+
+```
+Flux: PolyAgent[S, A, B] → PolyAgent[S × FluxState, Stream[A], Stream[B]]
+
+where FluxState = { DORMANT, FLOWING(queue, backpressure), DRAINING, STOPPED }
+```
+
+**Position transform**: Adds streaming lifecycle positions.
+```
+positions_flux = positions × { DORMANT, FLOWING, DRAINING, STOPPED }
+```
+
+**Direction transform**: Wraps single inputs as streams.
+```
+directions_flux(s, flowing) = Stream[directions(s)]
+```
+
+**Transition transform**:
+```
+Discrete: (s, a) → (s', b)
+Flux:     (s, flowing(q, bp), stream) →
+          for each a in stream:
+            (s', flowing(q', bp'), yield b)
+          → continuous output stream
+```
+
+**Key polynomial insight**: Flux is a **continuous extension**—it lifts discrete polynomial dynamics to continuous-time dynamics. The polynomial `P(y) = Σ y^{E(s)}` becomes a **streaming polynomial** where each fiber is an async stream.
+
+**Dual mode via perturbation**:
+```
+If state = DORMANT: invoke(x) → direct discrete call
+If state = FLOWING: invoke(x) → inject x as high-priority perturbation
+```
 
 ### Description
 Lifts an Agent from the domain of **Discrete State** to the domain of **Continuous Flow**. It transforms an agent that maps `A → B` into a process that maps `Flux[A] → Flux[B]`.
@@ -714,11 +1038,15 @@ Metered(Trace(agent)) != Trace(Metered(agent))
 
 ## See Also
 
-- [functors.md](functors.md) - Core functor theory
+- [functors.md](functors.md) - Core functor theory with polynomial foundation
 - [monads.md](monads.md) - Functors with structure
 - [anatomy.md](../anatomy.md) - Agent lifecycle & wrapping
+- [../architecture/polyfunctor.md](../architecture/polyfunctor.md) - Polyfunctor architecture specification
+- [../agents/primitives.md](../agents/primitives.md) - 17 primitive polynomial agents
+- [../agents/operads.md](../agents/operads.md) - Operad composition grammar
+- [../agents/emergence.md](../agents/emergence.md) - Sheaf-based emergence (SOUL_SHEAF)
 - Individual genus specs for detailed functor descriptions
 
 ---
 
-**Status**: This catalog identifies 13 functors across kgents. 1 is fully documented (Promise), 1 is planned (Flux), 11 are implicit. Formalizing these would enable systematic reasoning about agent transformations and composition patterns across the entire ecosystem.
+**Status**: This catalog identifies 13 functors across kgents, each with polynomial interpretation. The polynomial foundation reveals how each functor transforms positions, directions, and transitions of polynomial agents. See `spec/architecture/polyfunctor.md` for the underlying theory.

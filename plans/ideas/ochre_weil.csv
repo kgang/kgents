@@ -1,0 +1,480 @@
+idea_id,session,name,category,Joy,Composability,Taste,Compression,Showable,Ethical,Complexity,K_Score,notes
+S01-01,01,Identity Law Visualizer,Bootstrap/Id,4,5,5,4,5,5,2,33.36,Animated TUI showing Id >> f = f = f >> Id
+S01-02,01,kgents id-bench,Bootstrap/Id,3,5,4,4,4,5,1,36.11,Measures if Id >> f has zero overhead
+S01-03,01,Identity Crisis Detector,Bootstrap/Id,5,4,5,3,4,5,2,28.71,Finds agents that claim Identity but mutate
+S01-04,01,kgents whoami,Bootstrap/Id,4,5,5,5,5,5,2,36.48,PERFECT - Agent self-description
+S01-05,01,Identity Playground REPL,Bootstrap/Id,5,5,5,4,5,5,3,27.89,Interactive law testing
+S01-06,01,Id Art Generator,Bootstrap/Id,5,3,4,2,5,5,2,23.25,ASCII art of Id doing nothing
+S01-07,01,Identity as a Service,Bootstrap/Id,5,4,3,3,4,5,1,32.81,HTTP endpoint returning input unchanged
+S01-08,01,Zero-Knowledge Id Proof,Bootstrap/Id,5,2,3,2,3,5,3,12.53,Cryptographic proof of Id invocation
+S01-09,01,kgents id-golf,Bootstrap/Id,4,3,4,3,3,5,1,28.62,Smallest Identity implementation challenge
+S01-10,01,Identity Meditation Timer,Bootstrap/Id,3,2,3,2,2,5,1,16.07,TUI showing time through Identity unchanged
+S01-11,01,Pipeline Builder TUI,Bootstrap/Compose,5,5,5,5,5,5,3,30.50,Drag-and-drop agent composition
+S01-12,01,kgents compose-wizard,Bootstrap/Compose,4,5,5,5,5,5,2,36.48,Step-by-step composition wizard
+S01-13,01,Composition Depth Analyzer,Bootstrap/Compose,3,5,4,4,4,5,1,36.11,Shows nesting depth using existing depth()
+S01-14,01,Associativity Prover,Bootstrap/Compose,4,5,5,4,5,5,2,33.36,Animated proof (f>>g)>>h = f>>(g>>h)
+S01-15,01,Pipe Dreams Save/Load,Bootstrap/Compose,4,5,5,5,4,5,2,34.40,Save/load composed pipelines
+S01-16,01,Composition Hot-Reload,Bootstrap/Compose,4,4,4,4,4,5,3,20.29,Edit pipeline while running
+S01-17,01,kgents >> shell operator,Bootstrap/Compose,5,5,5,5,5,5,2,39.40,CROWN - Unix philosophy for agents
+S01-18,01,Composition Graph Visualizer,Bootstrap/Compose,4,5,5,4,5,5,3,25.83,Graphviz-style pipeline viz
+S01-19,01,Type-Safe Composition Checker,Bootstrap/Compose,3,5,5,5,3,5,2,29.73,Prevents bad compositions
+S01-20,01,Composition Chaos Monkey,Bootstrap/Compose,5,5,4,3,4,5,2,27.52,Random Id insertion to test laws
+S01-21,01,Parallel Composition,Bootstrap/Compose,4,5,4,4,4,5,3,21.74,Fan-out composition for parallel exec
+S01-22,01,Composition DSL Flowfiles,Bootstrap/Compose,4,5,5,5,5,5,3,28.25,YAML flowfile parser enhancement
+S01-23,01,Live Judgment Dashboard,Bootstrap/Judge,5,4,5,4,5,5,3,26.34,Real-time 7 principles evaluation
+S01-24,01,kgents judge,Bootstrap/Judge,4,5,5,5,5,5,2,36.48,CLI principle evaluation
+S01-25,01,Principle Scoreboard,Bootstrap/Judge,4,5,5,5,5,5,2,36.48,Track principles across codebase
+S01-26,01,Judge Explain Mode,Bootstrap/Judge,4,4,5,4,4,5,2,29.40,Detailed verdict explanation
+S01-27,01,Taste Test Game,Bootstrap/Judge,5,3,5,3,5,5,2,29.02,"Interactive ""which is more tasteful?"""
+S01-28,01,Judge vs User Consensus,Bootstrap/Judge,4,3,4,3,4,5,3,16.95,Compare Judge vs human feedback
+S01-29,01,Principle Workshop,Bootstrap/Judge,4,3,4,4,4,5,3,18.84,Interactive principle tutorial
+S01-30,01,Auto-Judge CI Hook,Bootstrap/Judge,3,5,4,5,3,5,2,26.43,GitHub action for PR judging
+S01-31,01,Principle Violation Detector,Bootstrap/Judge,3,5,5,5,4,5,2,31.65,Static analysis for violations
+S01-32,01,Custom Principle Builder,Bootstrap/Judge,4,4,4,4,4,5,3,20.29,Domain-specific principles
+S01-33,01,Judgment History Explorer,Bootstrap/Judge,4,4,4,4,4,5,2,26.21,Track judgments over time
+S01-34,01,kgents whoami Ground,Bootstrap/Ground,4,4,5,5,5,5,1,48.42,Show what Ground knows
+S01-35,01,Ground Editor TUI,Bootstrap/Ground,4,4,5,4,4,5,3,22.76,Interactive persona editor
+S01-36,01,Context Snapshot,Bootstrap/Ground,3,5,5,5,4,5,2,31.65,Freeze ground state
+S01-37,01,Ground Diff Viewer,Bootstrap/Ground,4,4,4,4,4,5,2,26.21,Show Ground changes
+S01-38,01,Persona Playground,Bootstrap/Ground,5,4,5,4,5,5,3,26.34,Try different personas
+S01-39,01,Ground Minimal Seed,Bootstrap/Ground,3,4,4,4,3,5,2,22.13,Kolmogorov-compress Ground
+S01-40,01,Ground-as-Code,Bootstrap/Ground,4,5,5,5,4,5,2,34.40,Version-control persona in YAML
+S01-41,01,Ground Truth Validator,Bootstrap/Ground,3,5,5,5,3,5,2,29.73,Ensure Ground consistency
+S01-42,01,Tension Detector TUI,Bootstrap/Contradict,5,4,5,4,5,5,3,26.34,Real-time tension detection
+S01-43,01,kgents contradict,Bootstrap/Contradict,4,5,5,5,5,5,2,36.48,CLI tension detection
+S01-44,01,Tension Heatmap,Bootstrap/Contradict,4,5,5,4,5,5,3,25.83,Visual heatmap of contradictions
+S01-45,01,Contradiction Game,Bootstrap/Contradict,5,3,5,3,5,5,2,29.02,Spot-the-contradiction puzzle
+S01-46,01,Custom Tension Detector,Bootstrap/Contradict,4,4,4,4,4,5,3,20.29,Define custom tension rules
+S01-47,01,Temporal Contradiction,Bootstrap/Contradict,4,4,5,4,4,5,3,22.76,Past me vs present me
+S01-48,01,Contradiction REPL,Bootstrap/Contradict,4,4,4,4,4,5,2,26.21,Interactive tension exploration
+S01-49,01,Tension Severity Slider,Bootstrap/Contradict,3,4,4,4,3,5,2,22.13,Adjust detection sensitivity
+S01-50,01,LacanError Explorer,Bootstrap/Contradict,5,3,4,3,4,5,2,24.15,Explore what can't be symbolized
+S01-51,01,Synthesis Wizard,Bootstrap/Sublate,5,4,5,4,5,5,3,26.34,Interactive synthesis assistant
+S01-52,01,kgents sublate,Bootstrap/Sublate,4,5,5,5,5,5,2,36.48,CLI synthesis
+S01-53,01,Hold-Tension Tracker,Bootstrap/Sublate,4,5,5,5,4,5,2,34.40,Track deliberately held tensions
+S01-54,01,Synthesis Quality Scorer,Bootstrap/Sublate,3,4,4,4,3,5,2,22.13,Rate synthesis quality
+S01-55,01,Dialectic Animator,Bootstrap/Sublate,5,4,4,4,5,5,3,23.71,Animated Hegelian dialectic
+S01-56,01,Premature Resolution Detector,Bootstrap/Sublate,4,5,5,5,4,5,2,34.40,Catch early resolutions
+S01-57,01,Custom Resolution Strategy,Bootstrap/Sublate,4,4,4,4,4,5,3,20.29,Domain-specific synthesis
+S01-58,01,Synthesis History,Bootstrap/Sublate,4,4,4,4,4,5,2,26.21,Track resolutions over time
+S01-59,01,Convergence Animator,Bootstrap/Fix,5,4,5,4,5,5,2,34.02,Watch values converge real-time
+S01-60,01,Fix Playground REPL,Bootstrap/Fix,5,5,5,4,5,5,2,36.02,Interactive fixed-point exploration
+S01-61,01,kgents poll,Bootstrap/Fix,4,5,5,5,4,5,2,34.40,Polling pattern CLI
+S01-62,01,Entropy Budget Visualizer,Bootstrap/Fix,4,4,5,4,5,5,2,31.36,Show entropy depletion
+S01-63,01,Fix History Viewer,Bootstrap/Fix,4,4,4,4,4,5,2,26.21,Explore full iteration history
+S01-64,01,Bounded History Demo,Bootstrap/Fix,3,4,4,4,3,5,2,22.13,Show memory savings
+S01-65,01,Convergence Racer,Bootstrap/Fix,5,4,4,4,5,5,3,23.71,Race different transforms
+S01-66,01,kgents retry,Bootstrap/Fix,4,5,5,5,4,5,2,34.40,Retry commands with Fix pattern
+S01-67,01,Non-Convergence Debugger,Bootstrap/Fix,4,4,5,4,4,5,3,22.76,Debug why Fix didn't converge
+S01-68,01,Proximity Graph,Bootstrap/Fix,4,4,5,4,5,5,2,31.36,Visualize proximity over time
+S01-69,01,Adaptive Convergence Tuner,Bootstrap/Fix,4,4,5,4,4,5,3,22.76,Auto-adjust max_iterations
+S01-70,01,Musical Convergence,Bootstrap/Fix,5,3,4,3,5,5,2,25.94,Sonified fixed-point
+S02-01,02,kgents whatif,Archetype/Uncertain,5,5,5,5,5,5,1,55.63,CROWN JEWEL - Show 3 alternatives
+S02-02,02,kgents why,Archetype/Questioner,5,4,5,4,4,5,1,45.03,"Recursive ""why?"" until bedrock"
+S02-03,02,kgents tension,Archetype/Dialectician,4,5,5,5,5,5,1,51.51,List all unresolved tensions
+S02-04,02,kgents challenge,Archetype/Questioner,5,4,5,4,5,5,1,48.03,Devil's Advocate mode
+S02-05,02,Child Mode,Archetype/Questioner,5,3,5,4,5,5,1,45.21,Why? Why? WHY?
+S02-06,02,Dynamic Prompt Character,Archetype/Shapeshifter,5,4,4,4,5,5,1,43.23,ASCII that breathes
+S02-07,02,Collapse Ceremony,Archetype/Uncertain,5,4,5,4,5,5,1,48.03,Dramatic wave collapse
+S02-08,02,What Do I Look Like,Archetype/Shapeshifter,5,3,5,4,5,5,1,45.21,Agent self-description
+S02-09,02,kgents sleep,Archetype/Consolidator,4,4,5,4,4,5,2,29.40,Trigger consolidation
+S02-10,02,kgents sleep --watch,Archetype/Consolidator,5,4,5,4,5,5,2,34.02,Watch consolidation live
+S02-11,02,kgents sleep-debt,Archetype/Consolidator,4,4,4,4,4,5,2,26.21,How long since last sleep?
+S02-12,02,kgents dream,Archetype/Consolidator,5,3,4,3,5,5,2,25.94,Poetic consolidation mode
+S02-13,02,kgents sleep-log,Archetype/Consolidator,4,4,4,4,4,5,2,26.21,History of sleep cycles
+S02-14,02,Before/After Sleep Diff,Archetype/Consolidator,5,4,5,4,5,5,2,34.02,Show compression visually
+S02-15,02,Sleep Debt Meter Widget,Archetype/Consolidator,4,4,4,4,4,5,2,26.21,I-gent sleep debt widget
+S02-16,02,Hypnagogia Visualizer,Archetype/Consolidator,5,3,4,3,4,5,3,18.69,Liminal space visualization
+S02-17,02,Sleep Schedule,Archetype/Consolidator,3,4,4,4,3,5,3,17.13,Auto-consolidation config
+S02-18,02,Lucid Consolidation,Archetype/Consolidator,4,3,4,3,4,5,3,16.95,User-guided consolidation
+S02-19,02,Consolidation Battle,Archetype/Consolidator,5,3,4,3,4,5,3,18.69,Pit strategies against each other
+S02-20,02,kgents assume,Archetype/Questioner,4,4,5,4,4,5,2,29.40,Assumption excavator
+S02-21,02,kgents interview,Archetype/Questioner,4,4,4,4,4,5,2,26.21,Structured questioning
+S02-22,02,Socratic Mode Toggle,Archetype/Questioner,4,4,4,4,4,5,2,26.21,Turn any command Socratic
+S02-23,02,Code Review Questioner,Archetype/Questioner,4,4,4,4,4,5,2,26.21,Questions-only review
+S02-24,02,Answer Own Question,Archetype/Questioner,5,3,4,3,4,5,2,24.15,Rubber duck elevated
+S02-25,02,Question Depth Tracker,Archetype/Questioner,4,3,4,3,4,5,2,21.90,"Visualize ""why?"" tree depth"
+S02-26,02,Mood Glyph,Archetype/Shapeshifter,4,3,4,3,4,5,1,30.91,Emotional state indicator
+S02-27,02,Phase Indicator,Archetype/Shapeshifter,4,3,5,4,5,5,1,41.45,Work stage visualization
+S02-28,02,Complexity-Adaptive Verbosity,Archetype/Shapeshifter,4,4,4,4,4,5,2,26.21,Output adapts to task
+S02-29,02,Resource-Based Appearance,Archetype/Shapeshifter,5,3,4,3,5,5,2,25.94,Visual reflects resources
+S02-30,02,Confidence Gradient,Archetype/Shapeshifter,4,4,4,4,5,5,2,27.95,Visual confidence indicator
+S02-31,02,Terminal Theme Shifter,Archetype/Shapeshifter,5,3,4,3,5,5,2,25.94,Terminal colors match mood
+S02-32,02,Shapeshifter Registry,Archetype/Shapeshifter,4,4,4,4,4,5,3,20.29,Pre-defined visual modes
+S02-33,02,Depth-Responsive Nesting,Archetype/Shapeshifter,4,4,4,4,4,5,2,26.21,Visual adapts to nesting
+S02-34,02,kgents spawn,Archetype/Spawner,4,5,5,5,4,5,2,34.40,Task decomposition
+S02-35,02,Entropy Budget Bar,Archetype/Spawner,4,5,5,5,5,5,1,51.51,Gamified recursion limits
+S02-36,02,kgents spawn --limit,Archetype/Spawner,3,5,4,4,4,5,1,36.11,Control spawn depth
+S02-37,02,Why Did You Spawn,Archetype/Spawner,4,4,4,4,4,5,2,26.21,Justify spawn decisions
+S02-38,02,Parallel vs Serial Toggle,Archetype/Spawner,3,5,4,4,4,5,2,25.58,Execution strategy toggle
+S02-39,02,Entropy Exhaustion Alert,Archetype/Spawner,4,4,5,4,4,5,1,41.50,Alert on budget depletion
+S02-40,02,Spawn Tree Visualizer,Archetype/Spawner,5,4,5,4,5,5,2,34.02,Beautiful recursive tree
+S02-41,02,Collapse Animation,Archetype/Spawner,5,3,5,3,5,5,2,29.02,Animate expand/collapse
+S02-42,02,Leaf Node Highlighter,Archetype/Spawner,4,4,4,4,4,5,2,26.21,Show where work happens
+S02-43,02,Aggregation Visualizer,Archetype/Spawner,5,4,5,4,5,5,2,34.02,Show results aggregating
+S02-44,02,Spawn History,Archetype/Spawner,4,4,4,4,4,5,2,26.21,Track spawn behavior
+S02-45,02,Superposition Display,Archetype/Uncertain,5,5,5,5,5,5,2,39.40,All variations side-by-side
+S02-46,02,Delayed Collapse Toggle,Archetype/Uncertain,4,5,4,4,4,5,2,28.08,Control collapse timing
+S02-47,02,Uncertainty Meter,Archetype/Uncertain,3,4,4,4,4,5,1,33.47,Quantify agent uncertainty
+S02-48,02,What Did I Not Choose,Archetype/Uncertain,5,4,5,4,5,5,2,34.02,Show counterfactuals
+S02-49,02,Branch Probability Weights,Archetype/Uncertain,4,4,4,4,4,5,2,26.21,Weighted superposition
+S02-50,02,Parallel Universe Diff,Archetype/Uncertain,5,4,5,4,5,5,2,34.02,Side-by-side variation diff
+S02-51,02,Variation Composer,Archetype/Uncertain,5,4,4,4,4,5,3,22.22,Mix best parts of each
+S02-52,02,Explore All Mode,Archetype/Uncertain,4,4,4,4,4,5,2,26.21,Never collapse
+S02-53,02,Schrodinger Demo,Archetype/Uncertain,5,4,4,4,5,5,2,30.62,Quantum cat demo
+S02-54,02,Variation Breeding,Archetype/Uncertain,5,4,4,4,4,5,3,22.22,Genetic algorithm evolution
+S02-55,02,Quantum Branch Viz,Archetype/Uncertain,5,4,5,4,5,5,2,34.02,Tree of possibilities
+S02-56,02,kgents witness,Archetype/Witness,4,5,5,5,4,5,2,34.40,Insert observer
+S02-57,02,What Did You See,Archetype/Witness,4,5,5,5,4,5,1,48.56,Witness summary
+S02-58,02,Time-Travel Debugger,Archetype/Witness,5,5,5,5,5,5,3,30.50,Replay from any point
+S02-59,02,Ghost Mode,Archetype/Witness,5,4,4,4,5,5,2,30.62,Silent observer
+S02-60,02,Witness Insertion Points,Archetype/Witness,4,4,4,4,4,5,2,26.21,Auto-detect insertion
+S02-61,02,Narrative Generation,Archetype/Witness,5,4,5,4,5,5,2,34.02,Story from witness logs
+S02-62,02,Witness Diff,Archetype/Witness,4,4,5,4,5,5,2,31.36,Before/after observations
+S02-63,02,Witness Network,Archetype/Witness,5,4,5,4,5,5,3,26.34,Graph of relationships
+S02-64,02,Selective Witness,Archetype/Witness,3,4,4,4,3,5,2,22.13,Filter observations
+S02-65,02,Witness Audit Trail,Archetype/Witness,3,5,5,5,4,5,2,31.65,Compliance-ready
+S02-66,02,Witness Poetry,Archetype/Witness,5,3,5,3,5,5,2,29.02,Poetic narratives
+S02-67,02,Synthesize Now Button,Archetype/Dialectician,4,5,5,5,4,5,1,48.56,Manual synthesis trigger
+S02-68,02,Why Hold,Archetype/Dialectician,3,4,5,4,3,5,1,35.44,Explain held tensions
+S02-69,02,Dialectic Chain,Archetype/Dialectician,4,4,5,4,5,5,2,31.36,Recursive synthesis
+S02-70,02,Tension Age Tracker,Archetype/Dialectician,4,4,4,4,4,5,2,26.21,How long held?
+S02-71,02,Synthesis Suggester,Archetype/Dialectician,4,4,4,4,4,5,2,26.21,AI proposals
+S02-72,02,Tension Queue Dashboard,Archetype/Dialectician,4,4,5,4,5,5,2,31.36,Visual tension dashboard
+S02-73,02,Dialectic Replay,Archetype/Dialectician,5,4,5,4,5,5,2,34.02,Watch synthesis replay
+S02-74,02,Tension Heatmap,Archetype/Dialectician,4,4,5,4,5,5,2,31.36,Severity visualization
+S02-75,02,Aufheben Explainer,Archetype/Dialectician,4,4,5,4,4,5,2,29.40,Preserved/negated/elevated
+S02-76,02,Dialectician Battle,Archetype/Dialectician,5,3,4,3,4,5,3,18.69,Competitive synthesis
+S02-77,02,kgents introspect,Archetype/Introspector,5,5,5,5,5,5,2,39.40,Full three-lens analysis
+S02-78,02,Lens Selector,Archetype/Introspector,3,4,4,4,3,5,1,31.24,Choose hegel/lacan/jung
+S02-79,02,Shadow Detector,Archetype/Introspector,5,4,5,4,5,5,2,34.02,What are we NOT seeing?
+S02-80,02,Blind Spot Finder,Archetype/Introspector,5,4,5,4,5,5,2,34.02,What lenses miss
+S02-81,02,Meta-Synthesis Generator,Archetype/Introspector,5,4,5,4,4,5,2,31.90,Integrate all three
+S02-82,02,Three-Column View,Archetype/Introspector,4,4,5,4,5,5,2,31.36,Hegel|Lacan|Jung
+S02-83,02,Register Analysis,Archetype/Introspector,4,4,5,4,5,5,2,31.36,Symbolic/Imaginary/Real
+S02-84,02,Projection Detector,Archetype/Introspector,5,4,5,4,5,5,2,34.02,Catch projecting
+S04-01,04,Contradiction Finder,H-gent/Hegel,4,4,5,4,4,5,2,29.40,Codebase tensions
+S04-02,04,Design Dialectic,H-gent/Hegel,5,4,5,4,5,5,2,34.02,Surface requirement tensions
+S04-03,04,API Contradiction Scan,H-gent/Hegel,4,4,5,4,4,5,2,29.40,Find interface inconsistencies
+S04-04,04,Synthesis Suggestion,H-gent/Hegel,4,4,5,4,4,5,3,22.76,Reconcile X and Y
+S04-05,04,Tension Dashboard,H-gent/Hegel,5,4,5,4,5,5,2,34.02,Live productive tensions
+S04-06,04,Dialectic REPL,H-gent/Hegel,5,4,5,4,5,5,2,34.02,Interactive synthesis
+S04-07,04,Sublation Explainer,H-gent/Hegel,3,4,5,4,4,5,1,37.97,Preserved/negated/elevated
+S04-08,04,Shadow Scanner,H-gent/Jung,5,4,5,5,5,5,1,52.54,CROWN - Claims X shadows Y
+S04-09,04,Persona-Shadow Gap,H-gent/Jung,5,4,5,4,5,5,2,34.02,Visualize integration balance
+S04-10,04,Projection Detector,H-gent/Jung,5,4,5,4,5,5,2,34.02,Find projections onto users
+S04-11,04,Archetype Identifier,H-gent/Jung,5,4,5,4,5,5,1,48.03,Your code is Wise Old Man
+S04-12,04,Integration Path Generator,H-gent/Jung,4,4,5,4,4,5,2,29.40,How to integrate shadow
+S04-13,04,Collective Shadow Scan,H-gent/Jung,4,4,5,4,4,5,2,29.40,System-level shadow
+S04-14,04,Shadow Confessional,H-gent/Jung,5,4,5,5,5,5,1,52.54,Safe acknowledgment
+S04-15,04,What Cant You Say,H-gent/Jung,5,4,5,5,5,5,1,52.54,CROWN - Surface unspeakable
+S04-16,04,Trickster Mode,H-gent/Jung,5,3,4,3,5,5,2,25.94,Activate shadow creativity
+S04-17,04,Self Archetype Warning,H-gent/Jung,4,4,5,4,4,5,1,41.50,Detect inflation
+S04-18,04,Register Radar,H-gent/Lacan,5,4,5,4,5,5,2,34.02,Show RSI position in 3D
+S04-19,04,Slippage Detector,H-gent/Lacan,5,4,5,5,5,5,1,52.54,CROWN - Claim facts but ideals
+S04-20,04,Gap Surfacer,H-gent/Lacan,5,4,5,5,5,5,1,52.54,CROWN - What can't be represented
+S04-21,04,Imaginary Alert,H-gent/Lacan,4,4,5,5,5,5,1,48.42,Aspirational not factual
+S04-22,04,Real Proximity Meter,H-gent/Lacan,5,4,5,4,5,5,2,34.02,How close to impossible
+S04-23,04,Knot Status Monitor,H-gent/Lacan,4,4,5,4,4,5,2,29.40,Registers properly knotted?
+S04-24,04,Objet Petit A Finder,H-gent/Lacan,5,4,5,4,5,5,2,34.02,System organized around lack
+S04-25,04,Symbolic Purifier,H-gent/Lacan,3,4,4,4,3,5,2,22.13,Remove imaginary fluff
+S04-26,04,Touch the Real,H-gent/Lacan,5,4,5,4,5,5,2,34.02,Force limit confrontation
+S04-27,04,Register Triangulator,H-gent/Lacan,5,4,5,4,5,5,3,26.34,All 3 perspectives at once
+S04-28,04,Metaphor Suggester,Psi-gent,5,4,5,4,5,5,3,26.34,Try thinking of X as Y
+S04-29,04,Challenge Mode,Psi-gent,5,4,5,4,5,5,2,34.02,Stress-test metaphor
+S04-30,04,Distortion Meter,Psi-gent,4,4,4,4,4,5,2,26.21,Translation loss
+S04-31,04,Metaphor Mapper,Psi-gent,5,4,5,4,5,5,3,26.34,Concept mapping viz
+S04-32,04,Abstraction Slider,Psi-gent,5,4,5,4,5,5,2,34.02,Concrete to Abstract
+S04-33,04,Projection Visualizer,Psi-gent,5,4,5,4,5,5,3,26.34,Problem in metaphor space
+S04-34,04,Translation Validator,Psi-gent,4,4,4,4,4,5,2,26.21,Solution maps back?
+S04-35,04,Quick Metaphor,Psi-gent,4,4,4,4,4,5,2,26.21,One-shot metaphor
+S04-36,04,kg shadow,H-gent/CLI,5,5,5,5,5,5,1,55.63,CROWN - CLI shadow analysis
+S04-37,04,kg dialectic,H-gent/CLI,5,5,5,5,5,5,1,55.63,CROWN - Synthesize two concepts
+S04-38,04,kg mirror,H-gent/CLI,5,4,5,5,5,5,1,52.54,Reflect on self-image
+S04-39,04,kg metaphor,Psi-gent/CLI,5,4,5,4,5,5,2,34.02,Suggest metaphor
+S04-40,04,kg register,H-gent/CLI,4,4,5,5,5,5,1,48.42,Show RSI position
+S04-41,04,kg project,H-gent/CLI,5,5,5,5,5,5,1,55.63,CROWN - What projecting?
+S04-42,04,kg archetype,H-gent/CLI,5,4,5,5,5,5,1,52.54,Dominant archetype
+S04-43,04,kg contradict,H-gent/CLI,4,5,5,5,4,5,1,48.56,Find antithesis
+S04-44,04,kg sublime,H-gent/CLI,4,5,5,5,4,5,1,48.56,Explicit sublation
+S04-45,04,kg gaps,H-gent/CLI,5,5,5,5,5,5,1,55.63,CROWN - What can't be said
+S04-46,04,Meta-Introspection,H-gent/Pipeline,5,5,5,5,5,5,3,30.50,All 3 H-gents + meta
+S04-47,04,Introspection REPL,H-gent/Pipeline,5,5,5,5,5,5,3,30.50,Interactive exploration
+S04-48,04,Who Am I Really,H-gent/Pipeline,5,4,5,4,5,5,2,34.02,Full self-examination
+S04-49,04,Integration Dashboard,H-gent/Pipeline,4,4,5,4,5,5,3,24.28,Track all 3 dimensions
+S04-50,04,Philosophical Debugger,H-gent/Pipeline,5,4,5,4,5,5,4,21.49,Step through introspection
+S06-01,06,Oblique Strategies Agent,A-gent/Creativity,5,4,5,4,5,5,2,34.02,Brian Eno lateral thinking
+S06-02,06,PAYADOR Battle Mode,A-gent/Creativity,5,4,5,4,5,5,3,26.34,Agent vs agent improv
+S06-03,06,Constraint Poet,A-gent/Creativity,4,4,5,4,4,5,2,29.40,Productive constraints
+S06-04,06,Bisociation Engine,A-gent/Creativity,4,4,5,4,4,5,2,29.40,Koestler forced connections
+S06-05,06,Yes-And Pipeline,A-gent/Creativity,4,5,5,5,4,5,2,34.40,Chain creativity modes
+S06-06,06,Creative Warm-Up,A-gent/Creativity,4,4,5,5,4,5,1,45.65,Daily creative exercises
+S06-07,06,Metaphor Mixer,A-gent/Creativity,5,4,5,4,5,5,2,34.02,Unexpected metaphors
+S06-08,06,Anti-Pattern Provocateur,A-gent/Creativity,4,4,5,4,4,5,2,29.40,Deliberate wrong approaches
+S06-09,06,Exquisite Corpus,A-gent/Creativity,5,4,5,4,4,5,3,24.70,Collaborative creativity
+S06-10,06,Genre Shifter,A-gent/Creativity,5,4,5,4,5,5,2,34.02,Reframe across genres
+S06-11,06,Reverse Brainstorm,A-gent/Creativity,4,4,5,5,4,5,1,45.65,Make idea WORSE
+S06-12,06,Emotion Palette Agent,A-gent/Creativity,4,4,5,4,4,5,2,29.40,Suggest emotional tones
+S06-13,06,Stream of Consciousness,A-gent/Creativity,4,4,4,4,3,5,3,18.94,Parse rambling thoughts
+S06-14,06,Creative Checkpoint,A-gent/Creativity,3,4,4,4,3,5,2,22.13,Periodic fresh perspectives
+S06-15,06,Serendipity Injector,A-gent/Creativity,4,4,4,5,4,5,1,40.70,"Random ""what if"" interrupts"
+S06-16,06,Muse Rotation,A-gent/Creativity,5,4,4,4,4,5,3,22.22,8 Greek muses as modes
+S06-17,06,Cross-Pollination Suggester,A-gent/Creativity,4,4,5,4,3,5,2,27.44,Techniques from Y for X
+S06-18,06,Safety Cage Demo,G-gent/Grammar,5,5,5,5,5,5,2,39.40,Try to break DSL
+S06-19,06,DSL Speedrun,G-gent/Grammar,4,5,5,5,5,5,2,36.48,30-second grammar gen
+S06-20,06,Grammar Golf,G-gent/Grammar,5,4,5,4,4,5,2,31.90,Minimize grammar size
+S06-21,06,Forbidden Word Game,G-gent/Grammar,4,5,5,5,5,5,2,36.48,DSL without DELETE
+S06-22,06,Pidgin Generator,G-gent/Grammar,4,4,5,4,4,5,3,22.76,90% token compression
+S06-23,06,Natural to Formal Pipeline,G-gent/Grammar,4,5,5,5,5,5,2,36.48,Live translation
+S06-24,06,Grammar Linter,G-gent/Grammar,3,4,4,4,3,5,3,17.13,Check for ambiguity
+S06-25,06,Constraint Proof Viewer,G-gent/Grammar,4,5,5,5,5,5,2,36.48,Show HOW constraints enforced
+S06-26,06,Tongue Diff,G-gent/Grammar,3,4,4,4,3,5,3,17.13,Compare grammar versions
+S06-27,06,BNF Beautifier,G-gent/Grammar,3,3,4,3,4,5,2,19.65,Pretty-print grammars
+S06-28,06,Grammar Playground CLI,G-gent/Grammar,5,5,5,5,5,5,3,30.50,Instant DSL REPL
+S06-29,06,Grammar Test Generator,G-gent/Grammar,4,4,4,4,4,5,3,20.29,Auto-fuzz Tongue
+S06-30,06,Constraint Challenge,G-gent/Grammar,4,4,5,4,4,5,2,29.40,Loops impossible but recursion
+S06-31,06,DSL from Examples,G-gent/Grammar,5,4,5,4,5,5,4,21.49,Infer grammar from examples
+S06-32,06,Intent to Artifact Viz,F-gent/Forge,5,4,5,4,5,5,3,26.34,Animated Forge Loop
+S06-33,06,Contract-First Wizard,F-gent/Forge,4,5,5,5,4,5,2,34.40,Step-by-step guide
+S06-34,06,ALO Viewer,F-gent/Forge,4,4,5,4,5,5,2,31.36,Beautiful .alo.md rendering
+S06-35,06,Forge Replay,F-gent/Forge,4,4,5,4,5,5,3,24.28,Show creation history
+S06-36,06,Composition Preview,F-gent/Forge,4,4,5,4,4,5,3,22.76,Composable with these 7
+S06-37,06,Search-Before-Forge CLI,F-gent/Forge,3,5,4,5,4,5,2,28.14,Found similar continue?
+S06-38,06,Contract Diff Viewer,F-gent/Forge,3,4,4,4,4,5,3,18.35,Compare similar contracts
+S06-39,06,Artifact Lineage Graph,F-gent/Forge,4,4,5,4,5,5,3,24.28,Git-style history
+S06-40,06,Intent Templates,F-gent/Forge,3,4,4,4,3,5,2,22.13,Common patterns
+S06-41,06,Forge Templates Gallery,F-gent/Forge,4,4,5,4,4,5,2,29.40,Curated examples
+S06-42,06,Quick Forge Mode,F-gent/Forge,4,4,4,4,3,5,2,24.46,Skip validation
+S06-43,06,kg create,CLI/Creation,4,5,5,5,4,5,2,34.40,Launch creation wizard
+S06-44,06,kg oblique,CLI/Creation,5,4,5,5,5,5,1,52.54,CROWN - Oblique Strategy
+S06-45,06,kg payada,CLI/Creation,5,4,5,4,5,5,2,34.02,Start payada battle
+S06-46,06,kg brainstorm,CLI/Creation,4,4,5,4,4,5,2,29.40,Quick creativity session
+S06-47,06,kg grammar try,CLI/Creation,5,5,5,5,5,5,2,39.40,Instant DSL REPL
+S06-48,06,kg forge,CLI/Creation,4,5,5,5,4,5,2,34.40,Start forge workflow
+S06-49,06,kg blend,CLI/Creation,5,5,5,5,5,5,2,39.40,Fauconnier blending
+S06-50,06,kg constrain,CLI/Creation,4,4,5,5,4,5,1,45.65,Constraint generator
+S06-51,06,kg yes-and,CLI/Creation,4,4,5,5,4,5,1,45.65,Improv expansion
+S06-52,06,kg safety-cage,CLI/Creation,5,5,5,5,5,5,2,39.40,Break-the-DSL demo
+S06-53,06,kg artifact show,CLI/Creation,4,4,5,4,5,5,2,31.36,Beautiful ALO viewer
+S06-54,06,kg artifact lineage,CLI/Creation,3,4,5,4,4,5,2,26.90,Git-style history
+S06-55,06,kg contract compare,CLI/Creation,3,4,5,4,4,5,2,26.90,Diff contracts
+S06-56,06,kg warm-up,CLI/Creation,4,4,4,5,3,5,1,38.23,Daily exercises
+S06-57,06,kg surprise-me,CLI/Creation,5,4,4,5,4,5,1,44.58,Random from void
+S06-58,06,kg muse,CLI/Creation,4,4,4,4,4,5,2,26.21,Greek muse persona
+S06-59,06,kg workshop,CLI/Creation,5,4,5,4,4,5,3,24.70,Full creative session
+S06-60,06,kg grammar check,CLI/Creation,3,4,4,4,3,5,2,22.13,Lint a Tongue
+S06-61,06,kg forge replay,CLI/Creation,4,4,5,4,5,5,2,31.36,Show creation history
+S06-62,06,kg playground,CLI/Creation,5,5,5,5,4,5,3,28.76,Interactive REPL for all
+S08-01,08,kg feel,Omega/Proprioception,5,4,5,5,5,5,2,37.21,CROWN - How does body feel?
+S08-02,08,Morphology REPL,Omega/Proprioception,5,4,5,4,5,5,2,34.02,Interactive morpheme composer
+S08-03,08,kg body sense,Omega/Proprioception,5,4,5,5,5,5,2,37.21,One-line proprioception
+S08-04,08,Chrysalis Watcher TUI,Omega/Topology,5,4,5,4,5,5,3,26.34,Watch metamorphosis live
+S08-05,08,Morpheme Catalog,Omega/Morphology,4,4,5,4,5,5,2,31.36,Browse infrastructure
+S08-06,08,kg morph,Omega/Morphology,4,4,5,4,5,5,2,31.36,Apply morpheme
+S08-07,08,Body Stress Alerts,Omega/Proprioception,4,4,5,4,5,5,3,24.28,Proactive warnings
+S08-08,08,Topology Graph TUI,Y-gent/Topology,5,4,5,4,5,5,4,21.49,ASCII population tree
+S08-09,08,Morphology Cost Preview,Omega/Morphology,4,4,5,4,4,5,2,29.40,Budget transparency
+S08-10,08,Branch Visualizer,Y-gent/Topology,5,4,5,4,5,5,4,21.49,Population fork animation
+S08-11,08,Body Emoji Status,Omega/Proprioception,5,4,4,4,5,5,2,30.62,Emoji health display
+S08-12,08,Morpheme Validator,Omega/Morphology,4,4,5,4,4,5,3,22.76,Check before manifest
+S08-13,08,Chrysalis Log,Y-gent/Chrysalis,4,4,5,4,4,5,4,18.57,Transformation narrative
+S08-14,08,Y-gent Merge Strategies,Y-gent/Topology,4,4,5,4,5,5,5,16.72,WINNER/ENSEMBLE/CONSENSUS
+S08-15,08,Body Diff,Omega/Proprioception,4,4,4,4,4,5,3,20.29,Morphology changes
+S08-16,08,Topology Timeline,Y-gent/Topology,4,4,5,4,4,5,5,15.68,Agent lineage viz
+S08-17,08,Morphology Templates,Omega/Morphology,3,4,4,4,4,5,2,23.71,Common patterns
+S08-18,08,Proprioception History,Omega/Proprioception,4,4,4,4,4,5,4,16.55,Body metrics over time
+S08-19,08,Branch Budget Forecast,Y-gent/Topology,4,4,4,4,4,5,5,13.98,Can I afford 10 variants?
+S08-20,08,Body Simulator,Omega/Proprioception,5,4,4,4,4,5,5,15.31,What-if morphology
+S08-21,08,kg body --live,Omega/CLI,4,4,5,4,4,5,3,22.76,Live-updating TUI
+S08-22,08,kg topology dot,Y-gent/CLI,4,4,4,4,4,5,4,16.55,Export Graphviz
+S08-23,08,kg morph --dry-run,Omega/CLI,3,4,4,4,3,5,2,22.13,Preview morph
+S08-24,08,Chrysalis Failure Recovery,Y-gent/Chrysalis,4,4,5,4,4,5,5,15.68,Rollback on failed
+S08-25,08,Dream Log Analyzer,Y-gent/Chrysalis,4,3,4,4,4,5,5,12.98,Parse chrysalis dreams
+S09-01,09,Symbiont Playground,D-gent/State,5,5,5,4,5,5,2,36.02,Pure logic + memory separation
+S09-02,09,State Before/After,D-gent/State,4,5,5,5,5,5,2,36.48,kg state diff
+S09-03,09,Memory Layers,D-gent/State,5,4,5,4,5,5,3,26.34,All modes at once
+S09-04,09,Wheres My State,D-gent/State,3,5,5,5,4,5,1,44.68,Inspect any D-gent
+S09-05,09,State Timeline,D-gent/State,5,4,5,4,5,5,2,34.02,Scrub through states
+S09-06,09,Live State Sync,D-gent/State,4,4,4,4,5,5,2,27.95,Two terminals same state
+S09-07,09,State Pulse,D-gent/State,4,4,4,4,5,5,1,39.46,Heartbeat indicator
+S09-08,09,Am I Volatile,D-gent/State,3,5,5,5,4,5,1,44.68,What survives restart?
+S09-09,09,Memory Type Detective,D-gent/State,3,4,4,4,4,5,1,33.47,Reveal implementation
+S09-10,09,Lens Playground,D-gent/Lens,5,5,5,4,5,5,2,36.02,Interactive composition
+S09-11,09,Lens Law Validator,D-gent/Lens,4,5,5,4,4,5,2,31.27,Visualize violations
+S09-12,09,Prism Explorer,D-gent/Lens,4,4,5,4,5,5,2,31.36,Optional fields
+S09-13,09,Traversal Painter,D-gent/Lens,5,4,5,4,5,5,2,34.02,Modify all matching
+S09-14,09,Lens Debugger,D-gent/Lens,4,4,5,4,4,5,2,29.40,Step through get/set
+S09-15,09,Focus Path,D-gent/Lens,4,5,5,5,4,5,1,48.56,Drill into nested
+S09-16,09,Multi-Lens View,D-gent/Lens,5,4,5,4,5,5,2,34.02,Split screen lenses
+S09-17,09,Lens Telescope,D-gent/Lens,5,5,5,4,5,5,2,36.02,Compose interactively
+S09-18,09,What Can I Focus,D-gent/Lens,4,4,5,4,4,5,2,29.40,Auto-discover paths
+S09-19,09,Crystal Gallery,D-gent/Crystal,5,4,5,4,5,5,2,34.02,Browse saved crystals
+S09-20,09,Crystallize Now,D-gent/Crystal,4,5,5,5,4,5,1,48.56,Instant checkpoint
+S09-21,09,Resume Explorer,D-gent/Crystal,5,4,5,4,5,5,2,34.02,Pick from saved
+S09-22,09,Crystal Lineage Tree,D-gent/Crystal,5,4,5,4,5,5,2,34.02,Parent/child branches
+S09-23,09,Cherish Mode,D-gent/Crystal,5,4,5,5,5,5,1,52.54,Prevent reaping
+S09-24,09,Crystal Reaper Dashboard,D-gent/Crystal,4,4,5,4,5,5,2,31.36,TTL countdown
+S09-25,09,Time Travel Debug,D-gent/Crystal,5,5,5,5,5,5,3,30.50,Step forward through history
+S09-26,09,Crystal Diff,D-gent/Crystal,4,4,5,4,5,5,2,31.36,Compare crystals
+S09-27,09,Registry TUI,L-gent/Registry,5,4,5,4,5,5,2,34.02,Browse all registered
+S09-28,09,What Exists,L-gent/Registry,3,5,5,5,4,5,1,44.68,One-liner registry
+S09-29,09,Semantic Search,L-gent/Registry,5,4,5,4,5,5,2,34.02,Fuzzy matching
+S09-30,09,Type Compatibility,L-gent/Registry,4,5,5,5,4,5,2,34.40,Can-compose check
+S09-31,09,Freshness Heatmap,L-gent/Registry,4,4,5,4,5,5,2,31.36,Color by last_used
+S09-32,09,Lineage Tree,L-gent/Lineage,5,4,5,4,5,5,2,34.02,ASCII successor_to
+S09-33,09,Blame Tracker,L-gent/Lineage,5,4,5,4,5,5,2,34.02,Full provenance
+S09-34,09,Impact Analysis,L-gent/Lineage,5,4,5,4,5,5,2,34.02,Deprecating X breaks Y
+S09-35,09,Ancestor Breadcrumbs,L-gent/Lineage,4,4,4,4,4,5,1,37.00,Evolution path
+S09-36,09,Fork Detector,L-gent/Lineage,5,4,5,4,5,5,2,34.02,When artifacts diverged
+S09-37,09,Dependency Walker,L-gent/Lineage,4,4,5,4,4,5,2,29.40,Walk depends_on
+S09-38,09,Lineage Export,L-gent/Lineage,4,4,5,4,5,5,2,31.36,DOT for Graphviz
+S09-39,09,Garden Growth,D-gent/Garden,5,4,5,4,5,5,3,26.34,Seed to tree lifecycle
+S09-40,09,Compost Pile,D-gent/Garden,5,3,5,3,5,5,2,29.02,Decomposing mulch
+S09-41,09,Trust Thermometer,D-gent/Garden,4,4,5,4,5,5,1,44.27,Visual trust 0-1
+S09-42,09,Evidence Counter,D-gent/Garden,4,4,5,4,5,5,2,31.36,Supporting vs contradicting
+S09-43,09,Memory Mycelium,D-gent/Garden,5,4,5,4,5,5,3,26.34,Hidden connections
+S11-01,11,kg sparkline,I-gent/CLI,4,4,5,5,5,5,1,48.42,Paste numbers get sparkline
+S11-02,11,kg weather,I-gent/CLI,4,4,5,5,5,5,1,48.42,Agent activity summary
+S11-03,11,Error Flash,I-gent/Widget,5,4,5,4,5,5,1,48.03,Screen glitches on errors
+S11-04,11,Entropy Playground,I-gent/Widget,5,4,5,4,5,5,1,48.03,Slider distorts text
+S11-05,11,LOD Slider,I-gent/Widget,4,4,5,4,5,5,1,44.27,Smooth ORBIT to INTERNAL
+S11-06,11,kg viz,I-gent/CLI,4,4,5,4,5,5,1,44.27,Launch FluxScreen
+S11-07,11,kg density,I-gent/CLI,5,4,5,4,5,5,2,34.02,Text as density field
+S11-08,11,kg loom,I-gent/CLI,4,4,5,4,4,5,1,41.50,Show cognitive tree
+S11-09,11,kg shadow,I-gent/CLI,5,4,5,5,4,5,1,49.54,Rejected paths
+S11-10,11,Oblique Flash,I-gent/Widget,5,4,5,4,5,5,1,48.03,High entropy -> strategy
+S11-11,11,Glitch Button,I-gent/Widget,5,3,4,3,5,5,1,36.62,Press for chaos
+S11-12,11,Density ASCII Art,I-gent/Widget,5,3,5,3,5,5,1,40.97,Type -> weather
+S11-13,11,Breath Sync,I-gent/Widget,5,3,5,3,5,5,1,40.97,All agents pulse
+S11-14,11,kg entropy,I-gent/CLI,3,4,5,4,4,5,1,37.97,System uncertainty
+S11-15,11,kg glitch,I-gent/CLI,5,3,5,3,5,5,1,40.97,Corrupt with Zalgo
+S11-16,11,kg breathe,I-gent/CLI,5,3,5,3,5,5,1,40.97,Start breathing anim
+S11-17,11,Cognitive Tree Animator,I-gent/Widget,5,4,5,4,5,5,2,34.02,Watch branches grow
+S11-18,11,Shadow Gallery,I-gent/Widget,5,4,5,4,5,5,2,34.02,All rejected paths
+S11-19,11,Agent Constellation,I-gent/Widget,5,3,5,3,5,5,2,29.02,GraphLayout as stars
+S11-20,11,Temperature Lab,I-gent/Widget,5,4,5,4,5,5,2,34.02,Multiple sliders
+S11-21,11,Timeline Scrubber,I-gent/Widget,5,4,5,4,5,5,2,34.02,Drag through history
+S11-22,11,Entropy Heatmap,I-gent/Widget,4,4,5,4,5,5,2,31.36,Uncertainty hotspots
+S11-23,11,Event Stream Waterfall,I-gent/Widget,4,4,5,4,5,5,2,31.36,Events cascading
+S11-24,11,FluxScreen Replay,I-gent/Widget,4,4,5,4,5,5,2,31.36,Record and playback
+S11-25,11,Glitch Poetry,I-gent/Widget,5,3,5,3,5,5,2,29.02,Corrupted text as art
+S11-26,11,Loom Navigator,I-gent/Widget,5,5,5,4,5,5,2,36.02,Keyboard tree navigation
+S11-27,11,Why Did You Choose,I-gent/Widget,5,4,5,4,4,5,2,31.90,Click branch see reasoning
+S11-28,11,Agent Garden,I-gent/Widget,5,4,5,4,5,5,3,26.34,Drag agents watch updates
+S11-29,11,Stigmergic Trails,I-gent/Widget,5,4,5,4,5,5,3,26.34,Visualize pheromones
+S11-30,11,Hint Inspector,I-gent/Widget,4,4,5,4,4,5,2,29.40,Hints agent emitting
+S11-31,11,LOD Comparison,I-gent/Widget,4,4,5,4,5,5,2,31.36,Split all 3 levels
+S11-32,11,Breath Meditation,I-gent/Widget,5,3,5,3,5,5,2,29.02,Full-screen breathing
+S11-33,11,Wire Tap Overlay,I-gent/Widget,4,4,5,4,5,5,2,31.36,See all messages
+S11-34,11,Pheromone Trails,I-gent/Widget,5,4,5,4,5,5,2,34.02,Stigmergic heatmap
+S11-35,11,Connection Animator,I-gent/Widget,5,4,5,4,5,5,2,34.02,Flows between agents
+S11-36,11,Throughput Gauge,I-gent/Widget,4,4,5,4,5,5,2,31.36,Real-time message rate
+S11-37,11,Dead Letter Queue,I-gent/Widget,4,4,5,4,4,5,2,29.40,Failed messages viz
+S11-38,11,Synapse Visualizer,I-gent/Widget,5,4,5,4,5,5,3,26.34,Neural event flow
+S11-39,11,Flux Pipeline Diagram,I-gent/Widget,5,4,5,4,5,5,3,26.34,Live pipeline viz
+S11-40,11,Entropy Ocean,I-gent/Widget,5,3,5,3,5,5,2,29.02,Waves of uncertainty
+S11-41,11,Cognitive Terrarium,I-gent/Widget,5,4,5,4,5,5,3,26.34,Watch agents evolve
+S11-42,11,Void Meditation,I-gent/Widget,5,2,5,3,5,5,1,38.41,Stare into glitch
+S11-43,11,Density Rain,I-gent/Widget,5,3,5,3,5,5,2,29.02,Matrix-style rain
+S11-44,11,Glitch Screensaver,I-gent/Widget,5,3,5,3,5,5,2,29.02,Ambient entropy art
+S11-45,11,Breath Garden,I-gent/Widget,5,3,5,3,5,5,2,29.02,Different rates
+S12-01,12,kgents tools,U-gent/Tools,4,4,5,4,5,5,2,31.36,MCP server browser
+S12-02,12,Tool Composition Builder,U-gent/Tools,5,5,5,4,5,5,3,27.89,Visual pipeline
+S12-03,12,Circuit Breaker Dashboard,U-gent/Tools,5,4,5,4,5,5,2,34.02,Live tool health
+S12-04,12,kgents execute,U-gent/Tools,4,4,5,5,4,5,1,45.65,One-liner tool runner
+S12-05,12,Permission Visualizer,U-gent/Tools,4,4,5,4,5,5,2,31.36,ABAC matrix
+S12-06,12,Audit Trail Viewer,U-gent/Tools,4,4,5,4,4,5,2,29.40,What agent did
+S12-07,12,Tool Latency Heatmap,U-gent/Tools,4,4,5,4,5,5,2,31.36,Performance viz
+S12-08,12,MCP Server Playground,U-gent/Tools,5,4,5,4,4,5,3,24.70,Spin up local
+S12-09,12,Retry Strategy Tester,U-gent/Tools,5,4,5,4,5,5,2,34.02,Simulate failures
+S12-10,12,Parallel vs Sequential,U-gent/Tools,5,4,5,4,5,5,2,34.02,Compare execution
+S12-11,12,Tool Capability Cards,U-gent/Tools,4,4,5,5,5,5,1,48.42,Pretty documentation
+S12-12,12,kgents secure,U-gent/Tools,3,4,5,5,3,5,1,39.24,Permission checker
+S12-13,12,kgents parse,P-gent/Parsing,5,5,5,5,5,5,1,55.63,CROWN - Universal parser
+S12-14,12,Confidence Thermometer,P-gent/Parsing,4,4,5,4,5,5,1,44.27,Emoji gradient
+S12-15,12,Repair Timeline,P-gent/Parsing,5,4,5,4,5,5,2,34.02,Every fix in order
+S12-16,12,Probabilistic AST,P-gent/Parsing,5,4,5,4,5,5,3,26.34,Click uncertain nodes
+S12-17,12,Format Drift Detector,P-gent/Parsing,5,4,5,4,5,5,2,34.02,LLM getting sloppier
+S12-18,12,Malformed Input Generator,P-gent/Parsing,5,4,5,4,5,5,2,34.02,Break intentionally
+S12-19,12,Parser Battle,P-gent/Parsing,5,4,5,4,5,5,2,34.02,Pit strategies
+S12-20,12,Streaming Parse Viz,P-gent/Parsing,5,4,5,4,5,5,2,34.02,Stack-balancing live
+S12-21,12,kgents coerce,P-gent/Parsing,4,4,5,4,4,5,2,29.40,Fuzzy parse anything
+S12-22,12,Low Confidence Paths,P-gent/Parsing,4,4,5,4,5,5,2,31.36,Highlight uncertain
+S12-23,12,Reflection Loop Viz,P-gent/Parsing,5,4,5,4,5,5,2,34.02,LLM self-correct
+S12-24,12,kgents reality,J-gent/JIT,5,5,5,5,5,5,1,55.63,CROWN - DET/PROB/CHAOTIC
+S12-25,12,Reality Wheel,J-gent/JIT,5,4,4,4,5,5,2,30.62,Spinning classification
+S12-26,12,Chaos Meter,J-gent/JIT,5,4,4,4,5,5,2,30.62,Chaos detection
+S12-27,12,kgents stable,J-gent/JIT,4,4,5,5,4,5,1,45.65,Quick stability check
+S12-28,12,Stability Report Card,J-gent/JIT,4,4,5,4,5,5,2,31.36,Cyclomatic etc
+S12-29,12,Import Risk Map,J-gent/JIT,4,4,5,4,5,5,2,31.36,Dangerous imports
+S12-30,12,JIT Compilation Demo,J-gent/JIT,5,4,5,4,5,5,2,34.02,Watch compilation
+S12-31,12,Promise Chain Viz,J-gent/JIT,5,4,5,4,5,5,3,26.34,Lazy computation
+S12-32,12,Entropy Budget Bar,J-gent/JIT,5,4,5,5,5,5,1,52.54,Gamified resources
+S12-33,12,kgents compile,J-gent/JIT,5,4,5,4,5,5,2,34.02,JIT compile intent
+S12-34,12,Sandbox Escape Test,J-gent/JIT,5,4,5,4,5,5,3,26.34,Try to break out
+S12-35,12,Collapse Ceremony,J-gent/JIT,5,4,5,5,5,5,1,52.54,Dramatic Ground fallback
+S12-36,12,Reality Flip Notification,J-gent/JIT,4,4,4,4,4,5,2,26.21,Alert type changes
+S13-01,13,kgents observe,O-gent/Observation,5,4,5,5,5,5,2,37.21,One-line health check
+S13-02,13,kgents panopticon,O-gent/Observation,5,4,5,4,5,5,3,26.34,Live ASCII dashboard
+S13-03,13,kgents drift,O-gent/Observation,5,4,5,4,5,5,2,34.02,Are we on topic?
+S13-04,13,kgents roc,O-gent/Observation,4,4,5,4,5,5,3,24.28,Return on Compute
+S13-05,13,Bootstrap Witness CLI,O-gent/Observation,4,5,5,4,5,5,3,25.83,Do laws hold?
+S13-06,13,Borromean Knot Viz,O-gent/Observation,5,4,5,4,5,5,5,18.15,RSI rings
+S13-07,13,kgents hallucinate,O-gent/Observation,5,4,5,4,4,5,4,20.15,Grounding check
+S13-08,13,VoI Budget Viz,O-gent/Observation,4,4,5,4,4,5,5,15.68,Observation economics
+S13-09,13,Dimension Dance TUI,O-gent/Observation,5,4,5,4,5,5,5,18.15,Three-axis vitals
+S13-10,13,Observer Functor REPL,O-gent/Observation,5,4,5,4,4,5,5,17.01,Interactive O(f)=f
+S13-11,13,Topology Graph,O-gent/Observation,4,4,5,4,4,5,5,15.68,Composition viz
+S13-12,13,Psychosis Demo,O-gent/Observation,5,4,4,4,4,5,4,18.13,Knot failure
+S13-13,13,Entropy Weather,O-gent/Observation,5,4,5,4,5,5,4,21.49,System as weather
+S13-14,13,Observer Hierarchy Viz,O-gent/Observation,4,4,4,4,4,5,4,16.55,Who watches watchers
+S13-15,13,Noethers Theorem Demo,O-gent/Observation,5,4,5,4,4,5,4,20.15,Intent conservation
+S14-01,14,Would Kent Approve Live,Cross/K+Judge,5,5,5,5,5,5,1,55.63,CROWN - Ethics + Soul
+S14-02,14,N Parses Superposition,Cross/P+Uncertain,5,5,5,5,5,5,1,55.63,CROWN - Quantum parsers
+S14-03,14,Living Garden Viz,Cross/I+Flux,5,5,5,5,5,5,1,55.63,CROWN - Breathing system
+S14-04,14,Soul Tension Detector,Cross/K+Contradict,5,5,5,5,5,5,1,55.63,CROWN - Git checks soul
+S14-05,14,Circuit Breaker Dashboard,Cross/U+Circuit+I,5,5,5,5,5,5,1,55.63,CROWN - Already Session 12
+S14-06,14,Time-Travel Form Replay,Cross/Witness+Shape,5,5,5,5,5,5,1,55.63,CROWN - Shapeshifter history
+S14-07,14,Dialectical Narrative,Cross/H+N,5,4,5,4,5,5,2,34.02,Contradictions -> plot
+S14-08,14,Instant Metaphor Finder,Cross/Psi+Problem,5,4,5,5,5,5,1,52.54,3 metaphors instantly
+S14-09,14,Evolution Visualizer,Cross/E+I,5,4,5,4,5,5,2,34.02,Watch evolution live
+S14-10,14,Memory Story Pipeline,Cross/M+N,5,4,5,4,5,5,2,34.02,Autobiography
+S14-11,14,Sleep Processes Questions,Cross/Quest+Consol,4,4,5,5,5,5,1,48.42,Marinate overnight
+S14-12,14,Convergence Replay,Cross/Fix+Witness,5,4,5,4,5,5,1,48.03,Watch iteration
+S14-13,14,Recursion Trace,Cross/Spawn+Witness,5,4,5,4,5,5,1,48.03,Beautiful tree
+S14-14,14,Why This Tension,Cross/Dialect+Quest,4,4,5,4,5,5,1,44.27,Socratic dialectics
+S14-15,14,Token Economy Dashboard,Cross/B+I,5,4,5,4,5,5,2,34.02,Beautiful economics
+S14-16,14,Adversarial Poetry,Cross/T+Creativity,5,4,4,4,5,5,2,30.62,Constraints breed genius
+S14-17,14,Grammar Prevents Danger,Cross/G+Safety,5,5,5,5,4,5,2,37.15,Grammatically impossible
+S14-18,14,Would Kent Allow,Cross/U+Perm+K,4,4,5,4,4,5,2,29.40,Soul-governed perms
+S14-19,14,Recursive JIT,Cross/J+Spawner,5,4,5,4,5,5,2,34.02,JIT agents spawn JIT
+S14-20,14,How Does Body Feel,Cross/Omega+Sensation,5,4,5,4,5,5,2,34.02,Proprioception
+S14-21,14,Parse Replay,Cross/P+Witness,4,4,5,4,5,5,2,31.36,Step by step
+S14-22,14,What Would Kent Synth,Cross/K+H+N,5,5,5,5,5,5,2,39.40,Soul+Logic+Story
+S14-23,14,Self-Healing Pipeline,Cross/U+P+J,5,5,5,5,5,5,3,30.50,Resilience default
+S14-24,14,N Syntheses Explorer,Cross/Unc+Dial+Spawn,5,4,5,4,5,5,2,34.02,Explore all
+S14-25,14,Three-Lens Replay,Cross/Wit+Intro+Shape,5,4,5,4,5,5,2,34.02,Hegel+Lacan+Jung
+S14-26,14,Soul-Aware Garden,Cross/I+Flux+K,5,4,5,4,5,5,2,34.02,Prioritize aligned
+S14-27,14,Socratic Sleep Synthesis,Cross/Q+C+D,5,5,5,5,5,5,2,39.40,Therapist while sleep
+S14-28,14,Tool Output Forensics,Cross/P+U+Witness,4,4,5,4,5,5,2,31.36,Debug archaeology
+S14-29,14,Ethical Code Review,Cross/Full-stack,5,5,5,5,5,5,2,39.40,Git + soul
+S14-30,14,Category Law Prover,Cross/Full-stack,5,5,5,5,5,5,3,30.50,Visual proof
+S14-31,14,Parallel Possibility,Cross/Full-stack,5,5,5,5,5,5,3,30.50,Explore N options
+S14-32,14,Tension Story Dashboard,Cross/Full-stack,5,4,5,4,5,5,3,26.34,Dialectic viz
+S14-33,14,Dream Memory Evolution,Cross/Full-stack,5,4,5,4,5,5,3,26.34,Sleep -> evolve
+S14-34,14,Ultimate Dashboard,Cross/Full-stack,5,5,5,5,5,5,4,24.89,Everything one glance
+S14-35,14,Thank You Entropy,Cross/Wild,5,4,5,4,4,5,2,31.90,Celebrate failures
+S14-36,14,Future Narratives,Cross/Wild,5,4,5,4,5,5,3,26.34,Predict week ahead
+S14-37,14,Kents Creative Mode,Cross/Wild,5,4,5,4,4,5,3,24.70,Soul-tuned creativity
+S15-01,15,Philosopher Tour Script,Tour/Philosophy,5,4,5,4,5,5,3,26.34,60s category theory
+S15-02,15,Developer Tour Script,Tour/Developer,5,4,5,4,5,5,2,34.02,60s practical
+S15-03,15,Skeptic Tour Script,Tour/Skeptic,4,4,5,4,5,5,4,19.80,Prove it works
+S15-04,15,Visual Tour Script,Tour/Visual,5,4,5,4,5,5,1,48.03,60s LOD transitions
+S15-05,15,What If Tour Script,Tour/Curious,5,4,5,4,5,5,2,34.02,60s possibilities
+S15-06,15,Soul Tour Script,Tour/Soul,5,4,5,5,5,5,1,52.54,60s K-gent modes
+S15-07,15,One-Liner Tour Script,Tour/Speed,4,4,5,5,4,5,1,45.65,30s best commands
+S15-08,15,Bootstrap Verification,Demo/Party,5,5,5,5,5,5,5,21.01,Self-regeneration
+S15-09,15,K-gent Shadow Detection,Demo/Party,5,4,5,5,5,5,1,52.54,Meta-awareness
+S15-10,15,Parse with Confidence,Demo/Party,5,4,5,4,5,5,2,34.02,78% confident
+S15-11,15,Dialectical Debugger,Demo/Party,5,4,5,4,5,5,4,21.49,Watch synthesis
+S15-12,15,Stigmergic Field,Demo/Party,5,5,5,5,5,5,1,55.63,Living dashboard

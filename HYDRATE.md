@@ -45,6 +45,7 @@ time.*     — Temporal (traces, forecasts)
 
 ## Completed (Recent)
 
+- **OTEL Visibility** — K8s observability stack (Tempo/Prometheus/Grafana), `agentese.invoke` spans in Tempo
 - **DevEx Playground** — `kgents play`, 4 tutorials + REPL, 32 tests
 - **DevEx Scaffolding** — `kgents new agent`, Jinja2 templates, 3 archetypes
 - **Alethic Architecture** — 337 tests, Phases 1-6 (Functor, Halo, Archetypes, Projectors, CLI)

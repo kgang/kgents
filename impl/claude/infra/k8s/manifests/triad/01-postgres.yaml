@@ -1,0 +1,358 @@
+# Database Triad PostgreSQL
+# Source of truth with outbox table for CDC
+#
+# The Durability layer: "Is the truth safe?"
+# - pgvector for embeddings
+# - Outbox table for CDC events
+# - Memories table for agent memory
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: triad-postgres
+  namespace: kgents-triad
+  labels:
+    app.kubernetes.io/name: triad-postgres
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: kgents
+    kgents.io/triad-role: durability
+type: Opaque
+stringData:
+  POSTGRES_USER: triad
+  POSTGRES_PASSWORD: triad-dev-password  # Rotate in prod
+  POSTGRES_DB: triad
+  # Connection string for Synapse
+  DATABASE_URL: postgresql://triad:triad-dev-password@triad-postgres:5432/triad
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: triad-postgres
+  namespace: kgents-triad
+  labels:
+    app.kubernetes.io/name: triad-postgres
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: kgents
+    kgents.io/triad-role: durability
+spec:
+  serviceName: triad-postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: triad-postgres
+  template:
+    metadata:
+      labels:
+        app: triad-postgres
+        app.kubernetes.io/name: triad-postgres
+        app.kubernetes.io/component: database
+        kgents.io/triad-role: durability
+    spec:
+      containers:
+      - name: postgres
+        image: pgvector/pgvector:pg16
+        ports:
+        - containerPort: 5432
+          name: postgres
+        envFrom:
+        - secretRef:
+            name: triad-postgres
+        env:
+        - name: POSTGRES_INITDB_ARGS
+          value: "--encoding=UTF8"
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/postgresql/data
+        - name: init-scripts
+          mountPath: /docker-entrypoint-initdb.d
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        readinessProbe:
+          exec:
+            command: ["pg_isready", "-U", "triad", "-d", "triad"]
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+        livenessProbe:
+          exec:
+            command: ["pg_isready", "-U", "triad", "-d", "triad"]
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+      volumes:
+      - name: init-scripts
+        configMap:
+          name: triad-postgres-init
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 2Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: triad-postgres
+  namespace: kgents-triad
+  labels:
+    app.kubernetes.io/name: triad-postgres
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: kgents
+    kgents.io/triad-role: durability
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: 5432
+    name: postgres
+  selector:
+    app: triad-postgres
+
+---
+# Headless service for StatefulSet DNS
+apiVersion: v1
+kind: Service
+metadata:
+  name: triad-postgres-headless
+  namespace: kgents-triad
+  labels:
+    app.kubernetes.io/name: triad-postgres
+    kgents.io/triad-role: durability
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - port: 5432
+    targetPort: 5432
+    name: postgres
+  selector:
+    app: triad-postgres
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: triad-postgres-init
+  namespace: kgents-triad
+  labels:
+    app.kubernetes.io/name: triad-postgres
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: kgents
+data:
+  01-extensions.sql: |
+    -- Enable pgvector for semantic search
+    CREATE EXTENSION IF NOT EXISTS vector;
+    -- Enable pg_trgm for fuzzy text search
+    CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+  02-outbox.sql: |
+    -- Transactional Outbox Pattern for CDC
+    -- This is the categorical observable interface for the Synapse functor.
+    --
+    -- Reference: https://microservices.io/patterns/data/transactional-outbox.html
+
+    CREATE TABLE IF NOT EXISTS outbox (
+        id BIGSERIAL PRIMARY KEY,
+        event_type TEXT NOT NULL,           -- INSERT, UPDATE, DELETE
+        table_name TEXT NOT NULL,           -- Source table name
+        row_id TEXT NOT NULL,               -- Primary key of affected row
+        payload JSONB NOT NULL,             -- Row data
+        processed BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        processed_at TIMESTAMPTZ
+    );
+
+    -- Index for efficient polling: unprocessed events in order
+    CREATE INDEX IF NOT EXISTS idx_outbox_unprocessed
+        ON outbox(created_at)
+        WHERE NOT processed;
+
+    -- Index for cleanup: find old processed events
+    CREATE INDEX IF NOT EXISTS idx_outbox_processed
+        ON outbox(processed_at)
+        WHERE processed;
+
+    COMMENT ON TABLE outbox IS 'Transactional outbox for CDC - Synapse polls this';
+
+    -- Generic trigger function
+    CREATE OR REPLACE FUNCTION outbox_trigger() RETURNS TRIGGER AS $$
+    BEGIN
+        INSERT INTO outbox (event_type, table_name, row_id, payload)
+        VALUES (
+            TG_OP,
+            TG_TABLE_NAME,
+            COALESCE(NEW.id::TEXT, OLD.id::TEXT),
+            CASE TG_OP
+                WHEN 'DELETE' THEN row_to_json(OLD)
+                ELSE row_to_json(NEW)
+            END
+        );
+        RETURN COALESCE(NEW, OLD);
+    END;
+    $$ LANGUAGE plpgsql;
+
+    -- Cleanup function
+    CREATE OR REPLACE FUNCTION outbox_cleanup(retention_days INTEGER DEFAULT 7) RETURNS INTEGER AS $$
+    DECLARE
+        deleted_count INTEGER;
+    BEGIN
+        DELETE FROM outbox
+        WHERE processed = TRUE
+        AND processed_at < NOW() - (retention_days || ' days')::INTERVAL;
+        GET DIAGNOSTICS deleted_count = ROW_COUNT;
+        RETURN deleted_count;
+    END;
+    $$ LANGUAGE plpgsql;
+
+    -- Monitoring view
+    CREATE OR REPLACE VIEW outbox_stats AS
+    SELECT
+        COUNT(*) FILTER (WHERE NOT processed) AS pending_events,
+        COUNT(*) FILTER (WHERE processed) AS processed_events,
+        MAX(created_at) FILTER (WHERE NOT processed) AS oldest_pending,
+        AVG(EXTRACT(EPOCH FROM (processed_at - created_at)) * 1000) FILTER (WHERE processed) AS avg_processing_lag_ms
+    FROM outbox;
+
+  03-memories.sql: |
+    -- Agent Memories Table
+    -- Primary data store for agent memory, synced to Qdrant via Synapse
+
+    CREATE TABLE IF NOT EXISTS memories (
+        id TEXT PRIMARY KEY,
+        agent_id TEXT NOT NULL,
+        content TEXT NOT NULL,
+        embedding vector(1536),  -- OpenAI ada-002 dimensions
+        memory_type TEXT NOT NULL DEFAULT 'episodic',  -- episodic, semantic, procedural
+        importance FLOAT DEFAULT 0.5,
+        metadata JSONB DEFAULT '{}',
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    -- Vector similarity index
+    CREATE INDEX IF NOT EXISTS idx_memories_embedding
+        ON memories
+        USING ivfflat (embedding vector_cosine_ops)
+        WITH (lists = 100);
+
+    -- Agent lookup
+    CREATE INDEX IF NOT EXISTS idx_memories_agent
+        ON memories(agent_id);
+
+    -- Memory type filtering
+    CREATE INDEX IF NOT EXISTS idx_memories_type
+        ON memories(memory_type);
+
+    -- Updated_at auto-update trigger
+    CREATE OR REPLACE FUNCTION update_updated_at()
+    RETURNS TRIGGER AS $$
+    BEGIN
+        NEW.updated_at = NOW();
+        RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+
+    DROP TRIGGER IF EXISTS memories_updated_at ON memories;
+    CREATE TRIGGER memories_updated_at
+        BEFORE UPDATE ON memories
+        FOR EACH ROW
+        EXECUTE FUNCTION update_updated_at();
+
+    -- Outbox trigger for CDC
+    DROP TRIGGER IF EXISTS memories_outbox_trigger ON memories;
+    CREATE TRIGGER memories_outbox_trigger
+        AFTER INSERT OR UPDATE OR DELETE ON memories
+        FOR EACH ROW EXECUTE FUNCTION outbox_trigger();
+
+    COMMENT ON TABLE memories IS 'Agent memories - synced to Qdrant via Synapse CDC';
+
+  04-persona-garden.sql: |
+    -- PersonaGarden: K-gent's Soul Memory
+    -- The durable layer for patterns, preferences, and persona insights.
+    --
+    -- CDC enabled: Changes auto-sync to Qdrant for semantic search.
+    --
+    -- AGENTESE: self.soul.garden.durable
+
+    CREATE TABLE IF NOT EXISTS persona_garden (
+        id BIGSERIAL PRIMARY KEY,
+        content TEXT NOT NULL,                           -- The pattern/preference content
+        entry_type TEXT NOT NULL DEFAULT 'pattern',      -- preference, pattern, value, behavior, insight
+        lifecycle TEXT NOT NULL DEFAULT 'seed',          -- seed, sapling, tree, flower, compost
+        confidence FLOAT NOT NULL DEFAULT 0.3,           -- 0.0-1.0
+        source TEXT NOT NULL DEFAULT 'manual',           -- manual, hypnagogia, dialogue, etc.
+        planted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        last_nurtured TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        evidence TEXT NOT NULL DEFAULT '[]',             -- JSON array of evidence strings
+        occurrences INTEGER NOT NULL DEFAULT 1,
+        tags TEXT NOT NULL DEFAULT '[]',                 -- JSON array of tags
+        eigenvector_affinities TEXT NOT NULL DEFAULT '{}', -- JSON object
+
+        -- Constraint: valid entry types
+        CONSTRAINT valid_entry_type CHECK (entry_type IN (
+            'preference', 'pattern', 'value', 'behavior', 'insight'
+        )),
+
+        -- Constraint: valid lifecycle
+        CONSTRAINT valid_lifecycle CHECK (lifecycle IN (
+            'seed', 'sapling', 'tree', 'flower', 'compost'
+        )),
+
+        -- Constraint: confidence range
+        CONSTRAINT valid_confidence CHECK (confidence >= 0.0 AND confidence <= 1.0)
+    );
+
+    -- Index for semantic similarity via trigram
+    CREATE INDEX IF NOT EXISTS idx_garden_content_trgm
+        ON persona_garden USING gin (content gin_trgm_ops);
+
+    -- Index for lifecycle queries (e.g., "get all trees")
+    CREATE INDEX IF NOT EXISTS idx_garden_lifecycle
+        ON persona_garden(lifecycle);
+
+    -- Index for entry type queries
+    CREATE INDEX IF NOT EXISTS idx_garden_entry_type
+        ON persona_garden(entry_type);
+
+    -- Index for staleness queries
+    CREATE INDEX IF NOT EXISTS idx_garden_staleness
+        ON persona_garden(last_nurtured)
+        WHERE lifecycle != 'compost';
+
+    -- Updated_at trigger
+    DROP TRIGGER IF EXISTS garden_updated_at ON persona_garden;
+    CREATE TRIGGER garden_updated_at
+        BEFORE UPDATE ON persona_garden
+        FOR EACH ROW
+        EXECUTE FUNCTION update_updated_at();
+
+    -- CDC outbox trigger
+    DROP TRIGGER IF EXISTS garden_outbox_trigger ON persona_garden;
+    CREATE TRIGGER garden_outbox_trigger
+        AFTER INSERT OR UPDATE OR DELETE ON persona_garden
+        FOR EACH ROW EXECUTE FUNCTION outbox_trigger();
+
+    -- Garden stats view
+    CREATE OR REPLACE VIEW garden_stats AS
+    SELECT
+        COUNT(*) AS total_entries,
+        COUNT(*) FILTER (WHERE lifecycle = 'seed') AS seeds,
+        COUNT(*) FILTER (WHERE lifecycle = 'sapling') AS saplings,
+        COUNT(*) FILTER (WHERE lifecycle = 'tree') AS trees,
+        COUNT(*) FILTER (WHERE lifecycle = 'flower') AS flowers,
+        COUNT(*) FILTER (WHERE lifecycle = 'compost') AS composted,
+        AVG(confidence) AS avg_confidence,
+        COUNT(*) FILTER (WHERE source = 'dialogue') AS auto_planted
+    FROM persona_garden;
+
+    COMMENT ON TABLE persona_garden IS 'K-gent persona patterns - synced to Qdrant via Synapse CDC';

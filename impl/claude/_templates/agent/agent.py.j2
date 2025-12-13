@@ -1,0 +1,45 @@
+"""
+{{ agent_name }}: {{ description }}
+
+Type: {{ archetype }}[{{ input_type }}, {{ output_type }}]
+{% if archetype == "Kappa" %}
+Capabilities: Stateful + Soulful + Observable + Streamable (full-stack)
+{% elif archetype == "Lambda" %}
+Capabilities: Observable only (stateless function)
+{% elif archetype == "Delta" %}
+Capabilities: Stateful + Observable (data-focused)
+{% endif %}
+"""
+
+from __future__ import annotations
+
+{% if archetype == "Kappa" %}
+from agents.a import Kappa
+{% elif archetype == "Lambda" %}
+from agents.a import Lambda
+{% elif archetype == "Delta" %}
+from agents.a import Delta
+{% endif %}
+{% if custom_output_type %}
+from .types import {{ output_type }}
+{% endif %}
+
+
+class {{ class_name }}({{ archetype }}[{{ input_type }}, {{ output_type }}]):
+    """
+    {{ description }}
+
+    Input: {{ input_type }}
+    Output: {{ output_type }}
+    """
+
+    @property
+    def name(self) -> str:
+        return "{{ module_name }}"
+
+    async def invoke(self, input: {{ input_type }}) -> {{ output_type }}:
+        """Process input and return output.
+
+        TODO: Implement your logic here.
+        """
+        raise NotImplementedError("Implement me!")

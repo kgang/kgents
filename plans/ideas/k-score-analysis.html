@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K-Score Combined Analysis - Four Philosopher Perspectives</title>
+    <style>
+        :root {
+            --bg-dark: #1a1814;
+            --bg-card: #252219;
+            --bg-hover: #2d2a22;
+            --text-primary: #d4c5b0;
+            --text-secondary: #b3a89a;
+            --text-muted: #6a6560;
+            --accent-amber: #e6a352;
+            --accent-sage: #7d9c7a;
+            --accent-salmon: #e88a8a;
+            --accent-sky: #8ac4e8;
+            --accent-purple: #a68dc9;
+            --border-color: #3d3830;
+            --crown-jewel: #ffd700;
+            --strong-win: #7d9c7a;
+            --solid: #8ac4e8;
+            --consider: #e6a352;
+            --reconsider: #e88a8a;
+            --cobalt: #6bb3f0;
+            --indigo: #9b8ac4;
+            --obsidian: #888888;
+            --ochre: #e6a352;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', monospace;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            color: var(--accent-amber);
+            text-shadow: 2px 2px 0 var(--bg-dark);
+            letter-spacing: 2px;
+        }
+
+        h1 .glitch {
+            animation: glitch 3s infinite;
+            display: inline-block;
+        }
+
+        @keyframes glitch {
+            0%, 90%, 100% { transform: translate(0); }
+            92% { transform: translate(-2px, 1px); }
+            94% { transform: translate(2px, -1px); }
+            96% { transform: translate(-1px, 2px); }
+        }
+
+        .subtitle { color: var(--text-secondary); margin-top: 10px; font-size: 0.9rem; }
+        .sparkline { font-size: 1.2rem; letter-spacing: 1px; color: var(--accent-amber); }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: border-color 0.3s;
+        }
+        .card:hover { border-color: var(--accent-amber); }
+        .card h2 {
+            color: var(--accent-amber);
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card h2::before { content: ">"; color: var(--text-muted); }
+        .card h3 { color: var(--text-secondary); margin: 15px 0 10px; font-size: 1rem; }
+
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+        @media (max-width: 1000px) { .grid-4, .grid-3 { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) { .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; } }
+
+        .stat-box {
+            text-align: center;
+            padding: 20px;
+            background: var(--bg-hover);
+            border-radius: 6px;
+        }
+        .stat-value { font-size: 2.5rem; font-weight: bold; color: var(--accent-amber); }
+        .stat-label { color: var(--text-secondary); font-size: 0.85rem; margin-top: 5px; }
+
+        .health-bar { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+        .health-bar label { width: 140px; color: var(--text-secondary); font-size: 0.85rem; }
+        .bar-track {
+            flex: 1;
+            height: 20px;
+            background: var(--bg-dark);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        .bar-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 8px;
+            font-size: 0.75rem;
+            color: var(--bg-dark);
+            font-weight: bold;
+        }
+        .bar-fill.crown { background: linear-gradient(90deg, var(--crown-jewel), #ffed4a); }
+        .bar-fill.strong { background: linear-gradient(90deg, var(--strong-win), #9dbc9a); }
+        .bar-fill.solid { background: linear-gradient(90deg, var(--solid), #a8d4f0); }
+        .bar-fill.consider { background: linear-gradient(90deg, var(--consider), #f0b868); }
+        .bar-fill.reconsider { background: linear-gradient(90deg, var(--reconsider), #f0a8a8); }
+
+        .pill {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            margin: 2px;
+        }
+        .pill.crown-jewel { background: var(--crown-jewel); color: #000; }
+        .pill.strong-win { background: var(--strong-win); color: #000; }
+        .pill.solid { background: var(--solid); color: #000; }
+        .pill.consider { background: var(--consider); color: #000; }
+        .pill.reconsider { background: var(--reconsider); color: #000; }
+
+        .source-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            margin: 1px;
+        }
+        .source-badge.cobalt { background: #1e3a5f; color: var(--cobalt); }
+        .source-badge.indigo { background: #3b2e5a; color: var(--indigo); }
+        .source-badge.obsidian { background: #2a2a2a; color: var(--obsidian); }
+        .source-badge.ochre { background: #5a4020; color: var(--ochre); }
+
+        .perspective-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        .perspective-count.p4 { background: var(--crown-jewel); color: #000; }
+        .perspective-count.p3 { background: var(--strong-win); color: #000; }
+        .perspective-count.p2 { background: var(--solid); color: #000; }
+        .perspective-count.p1 { background: var(--text-muted); color: var(--bg-dark); }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { color: var(--accent-amber); font-weight: normal; background: var(--bg-hover); }
+        tr:hover { background: var(--bg-hover); }
+
+        .table-wrapper { max-height: 400px; overflow-y: auto; }
+        .table-wrapper::-webkit-scrollbar { width: 8px; }
+        .table-wrapper::-webkit-scrollbar-track { background: var(--bg-dark); }
+        .table-wrapper::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+
+        .simulator {
+            background: var(--bg-hover);
+            border-radius: 8px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+        .slider-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+        .slider-item { display: flex; flex-direction: column; gap: 8px; }
+        .slider-header { display: flex; justify-content: space-between; align-items: center; }
+        .slider-label { color: var(--text-secondary); font-size: 0.9rem; }
+        .slider-value { color: var(--accent-amber); font-weight: bold; font-size: 1.1rem; min-width: 30px; text-align: right; }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: var(--bg-dark);
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent-amber);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+        .score-output {
+            text-align: center;
+            padding: 30px;
+            margin-top: 30px;
+            background: var(--bg-dark);
+            border-radius: 8px;
+        }
+        .score-number { font-size: 4rem; font-weight: bold; transition: color 0.3s; }
+        .score-category { font-size: 1.2rem; margin-top: 10px; }
+        .score-breakdown { margin-top: 20px; font-size: 0.85rem; color: var(--text-muted); }
+
+        .insight {
+            background: var(--bg-hover);
+            border-left: 3px solid var(--accent-amber);
+            padding: 15px 20px;
+            margin: 15px 0;
+        }
+        .insight.positive { border-color: var(--strong-win); }
+        .insight.negative { border-color: var(--reconsider); }
+        .insight.neutral { border-color: var(--solid); }
+        .insight.warning { border-color: var(--consider); }
+
+        .variance-bar {
+            display: flex;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            background: var(--bg-dark);
+            margin-top: 4px;
+        }
+        .variance-segment {
+            height: 100%;
+            transition: width 0.3s;
+        }
+
+        .ascii-box {
+            font-family: monospace;
+            white-space: pre;
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            line-height: 1.2;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            border-top: 1px solid var(--border-color);
+            margin-top: 40px;
+            color: var(--text-muted);
+        }
+
+        .breathe { animation: breathe 4s ease-in-out infinite; }
+        @keyframes breathe { 0%, 100% { opacity: 0.8; } 50% { opacity: 1; } }
+
+        .methodology {
+            background: var(--bg-hover);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            font-size: 0.9rem;
+        }
+        .methodology code {
+            background: var(--bg-dark);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: var(--accent-amber);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><span class="glitch">K</span>-Score Combined Analysis</h1>
+            <p class="subtitle">Four Philosopher Perspectives Averaged on 1,110 Unique Ideas</p>
+            <div style="margin-top: 15px;">
+                <span class="source-badge cobalt">Cobalt Spinoza</span>
+                <span class="source-badge indigo">Indigo Whitehead</span>
+                <span class="source-badge obsidian">Obsidian Deleuze</span>
+                <span class="source-badge ochre">Ochre Weil</span>
+            </div>
+            <div class="sparkline breathe" style="margin-top: 20px;">
+                ▁▂▃▄▅▆▇█▇▆▅▄▃▂▁ AVERAGED SCORES ▁▂▃▄▅▆▇█▇▆▅▄▃▂▁
+            </div>
+        </header>
+
+        <!-- Methodology -->
+        <section class="card methodology">
+            <h2>Methodology</h2>
+            <p>Each idea was evaluated by up to four "philosopher" perspectives, each scoring the same 7 dimensions independently. This analysis:</p>
+            <ol style="margin: 15px 0 0 20px; color: var(--text-secondary);">
+                <li>Normalized idea names across all four CSV files to match identical ideas</li>
+                <li>Averaged dimension scores (Joy, Composability, Taste, etc.) where multiple perspectives exist</li>
+                <li>Recalculated K-Score from averaged dimensions using the official formula</li>
+                <li>Tracked variance to identify where philosophers disagreed most</li>
+            </ol>
+        </section>
+
+        <!-- Key Metrics -->
+        <section class="card">
+            <h2>Aggregate Metrics</h2>
+            <div class="grid-4">
+                <div class="stat-box">
+                    <div class="stat-value">1,110</div>
+                    <div class="stat-label">Unique Ideas</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" style="color: var(--crown-jewel);">102</div>
+                    <div class="stat-label">Crown Jewels (40+)</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">27.5</div>
+                    <div class="stat-label">Avg K-Score (Strong Win)</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" style="color: var(--strong-win);">100%</div>
+                    <div class="stat-label">Ethical Gate Pass</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Perspective Coverage -->
+        <section class="card">
+            <h2>Perspective Coverage</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">
+                Ideas with more perspectives have more reliable averaged scores.
+            </p>
+            <div class="grid-4">
+                <div class="stat-box">
+                    <span class="perspective-count p4">4</span>
+                    <div class="stat-value" style="font-size: 1.8rem;">146</div>
+                    <div class="stat-label">All 4 perspectives<br>(Most Reliable)</div>
+                </div>
+                <div class="stat-box">
+                    <span class="perspective-count p3">3</span>
+                    <div class="stat-value" style="font-size: 1.8rem;">273</div>
+                    <div class="stat-label">3 perspectives</div>
+                </div>
+                <div class="stat-box">
+                    <span class="perspective-count p2">2</span>
+                    <div class="stat-value" style="font-size: 1.8rem;">137</div>
+                    <div class="stat-label">2 perspectives</div>
+                </div>
+                <div class="stat-box">
+                    <span class="perspective-count p1">1</span>
+                    <div class="stat-value" style="font-size: 1.8rem;">554</div>
+                    <div class="stat-label">Single perspective</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Category Distribution -->
+        <section class="card">
+            <h2>K-Score Category Distribution (Recalculated from Averaged Dimensions)</h2>
+            <div class="health-bar">
+                <label>Crown Jewel (40+)</label>
+                <div class="bar-track">
+                    <div class="bar-fill crown" style="width: 9.2%;">102</div>
+                </div>
+            </div>
+            <div class="health-bar">
+                <label>Strong Win (25-40)</label>
+                <div class="bar-track">
+                    <div class="bar-fill strong" style="width: 50.5%;">560</div>
+                </div>
+            </div>
+            <div class="health-bar">
+                <label>Solid (15-25)</label>
+                <div class="bar-track">
+                    <div class="bar-fill solid" style="width: 34.5%;">383</div>
+                </div>
+            </div>
+            <div class="health-bar">
+                <label>Consider (8-15)</label>
+                <div class="bar-track">
+                    <div class="bar-fill consider" style="width: 5.8%;">64</div>
+                </div>
+            </div>
+            <div class="health-bar">
+                <label>Reconsider (&lt;8)</label>
+                <div class="bar-track">
+                    <div class="bar-fill reconsider" style="width: 0.5%;">1</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Averaged Dimension Analysis -->
+        <section class="card">
+            <h2>Averaged Dimension Scores (Across All Perspectives)</h2>
+            <div class="grid-2">
+                <div>
+                    <div class="health-bar">
+                        <label>Joy</label>
+                        <div class="bar-track">
+                            <div class="bar-fill crown" style="width: 86%;">4.31</div>
+                        </div>
+                    </div>
+                    <div class="health-bar">
+                        <label>Composability</label>
+                        <div class="bar-track">
+                            <div class="bar-fill strong" style="width: 84%;">4.18</div>
+                        </div>
+                    </div>
+                    <div class="health-bar">
+                        <label>Taste</label>
+                        <div class="bar-track">
+                            <div class="bar-fill strong" style="width: 89%;">4.45</div>
+                        </div>
+                    </div>
+                    <div class="health-bar">
+                        <label>Compression</label>
+                        <div class="bar-track">
+                            <div class="bar-fill consider" style="width: 68%;">3.41</div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="health-bar">
+                        <label>Showable</label>
+                        <div class="bar-track">
+                            <div class="bar-fill strong" style="width: 89%;">4.46</div>
+                        </div>
+                    </div>
+                    <div class="health-bar">
+                        <label>Ethical</label>
+                        <div class="bar-track">
+                            <div class="bar-fill crown" style="width: 100%;">5.00</div>
+                        </div>
+                    </div>
+                    <div class="health-bar">
+                        <label>Complexity (inv)</label>
+                        <div class="bar-track">
+                            <div class="bar-fill solid" style="width: 46%;">2.31</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Most Reliable Ideas (4 Perspectives) -->
+        <section class="card">
+            <h2>Most Reliable Ideas (All 4 Perspectives Agree)</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">
+                These ideas were evaluated by all four philosophers. Lower variance = higher agreement.
+            </p>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Idea</th>
+                            <th>Avg K-Score</th>
+                            <th>Variance</th>
+                            <th>Individual Scores</th>
+                            <th>Sparkline</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>kgents parse</td>
+                            <td><span class="pill crown-jewel">48.4</span></td>
+                            <td>13.8</td>
+                            <td>
+                                <span class="source-badge cobalt">51.4</span>
+                                <span class="source-badge obsidian">53.7</span>
+                                <span class="source-badge ochre">55.6</span>
+                                <span class="source-badge indigo">41.8</span>
+                            </td>
+                            <td class="sparkline">▇██▅</td>
+                        </tr>
+                        <tr>
+                            <td>kgents reality</td>
+                            <td><span class="pill crown-jewel">48.4</span></td>
+                            <td>13.8</td>
+                            <td>
+                                <span class="source-badge cobalt">51.4</span>
+                                <span class="source-badge obsidian">53.7</span>
+                                <span class="source-badge ochre">55.6</span>
+                                <span class="source-badge indigo">41.8</span>
+                            </td>
+                            <td class="sparkline">▇██▅</td>
+                        </tr>
+                        <tr>
+                            <td>kg shadow CLI</td>
+                            <td><span class="pill crown-jewel">47.7</span></td>
+                            <td>9.8</td>
+                            <td>
+                                <span class="source-badge cobalt">47.1</span>
+                                <span class="source-badge obsidian">45.3</span>
+                                <span class="source-badge ochre">49.5</span>
+                                <span class="source-badge indigo">39.7</span>
+                            </td>
+                            <td class="sparkline">▇▆█▄</td>
+                        </tr>
+                        <tr>
+                            <td>Error Flash</td>
+                            <td><span class="pill crown-jewel">46.9</span></td>
+                            <td>7.0</td>
+                            <td>
+                                <span class="source-badge cobalt">43.7</span>
+                                <span class="source-badge obsidian">45.3</span>
+                                <span class="source-badge ochre">48.0</span>
+                                <span class="source-badge indigo">41.0</span>
+                            </td>
+                            <td class="sparkline">▆▇█▅</td>
+                        </tr>
+                        <tr>
+                            <td>kg oblique</td>
+                            <td><span class="pill crown-jewel">46.6</span></td>
+                            <td>12.5</td>
+                            <td>
+                                <span class="source-badge cobalt">40.1</span>
+                                <span class="source-badge obsidian">45.3</span>
+                                <span class="source-badge ochre">52.5</span>
+                                <span class="source-badge indigo">41.0</span>
+                            </td>
+                            <td class="sparkline">▄▆█▅</td>
+                        </tr>
+                        <tr>
+                            <td>kg weather</td>
+                            <td><span class="pill crown-jewel">46.0</span></td>
+                            <td>5.9</td>
+                            <td>
+                                <span class="source-badge cobalt">43.4</span>
+                                <span class="source-badge obsidian">42.6</span>
+                                <span class="source-badge ochre">48.4</span>
+                                <span class="source-badge indigo">42.6</span>
+                            </td>
+                            <td class="sparkline">▆▆█▆</td>
+                        </tr>
+                        <tr>
+                            <td>kg viz</td>
+                            <td><span class="pill crown-jewel">43.2</span></td>
+                            <td>3.8</td>
+                            <td>
+                                <span class="source-badge cobalt">40.5</span>
+                                <span class="source-badge obsidian">42.6</span>
+                                <span class="source-badge ochre">44.3</span>
+                                <span class="source-badge indigo">41.0</span>
+                            </td>
+                            <td class="sparkline">▅▆█▅</td>
+                        </tr>
+                        <tr>
+                            <td>LOD Slider</td>
+                            <td><span class="pill crown-jewel">43.2</span></td>
+                            <td>3.8</td>
+                            <td>
+                                <span class="source-badge cobalt">40.5</span>
+                                <span class="source-badge obsidian">42.6</span>
+                                <span class="source-badge ochre">44.3</span>
+                                <span class="source-badge indigo">41.0</span>
+                            </td>
+                            <td class="sparkline">▅▆█▅</td>
+                        </tr>
+                        <tr>
+                            <td>kg loom</td>
+                            <td><span class="pill crown-jewel">40.5</span></td>
+                            <td>4.4</td>
+                            <td>
+                                <span class="source-badge cobalt">37.1</span>
+                                <span class="source-badge obsidian">39.0</span>
+                                <span class="source-badge ochre">41.5</span>
+                                <span class="source-badge indigo">38.7</span>
+                            </td>
+                            <td class="sparkline">▅▆█▆</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- High Variance Ideas -->
+        <section class="card">
+            <h2>High Variance Ideas (Philosophers Disagreed Most)</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 15px;">
+                These ideas had the largest spread in K-Scores across perspectives. Worth investigating why.
+            </p>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Idea</th>
+                            <th>Variance</th>
+                            <th>Range</th>
+                            <th>Individual Scores by Philosopher</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Collapse Ceremony</td>
+                            <td style="color: var(--accent-salmon);">25.9</td>
+                            <td>26.7 → 52.5</td>
+                            <td>
+                                <span class="source-badge cobalt">43.7</span>
+                                <span class="source-badge obsidian">26.7</span>
+                                <span class="source-badge ochre">52.5</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Entropy Budget Bar</td>
+                            <td style="color: var(--accent-salmon);">23.1</td>
+                            <td>29.5 → 52.5</td>
+                            <td>
+                                <span class="source-badge cobalt">43.7</span>
+                                <span class="source-badge obsidian">29.5</span>
+                                <span class="source-badge ochre">52.5</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Synthesize Now Button</td>
+                            <td style="color: var(--accent-salmon);">22.0</td>
+                            <td>26.6 → 48.6</td>
+                            <td>
+                                <span class="source-badge cobalt">41.7</span>
+                                <span class="source-badge obsidian">26.6</span>
+                                <span class="source-badge ochre">48.6</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>What Did You See</td>
+                            <td style="color: var(--accent-salmon);">22.0</td>
+                            <td>26.6 → 48.6</td>
+                            <td>
+                                <span class="source-badge cobalt">34.4</span>
+                                <span class="source-badge obsidian">26.6</span>
+                                <span class="source-badge ochre">48.6</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>kgents panopticon</td>
+                            <td style="color: var(--consider);">19.0</td>
+                            <td>26.3 → 45.3</td>
+                            <td>
+                                <span class="source-badge cobalt">36.9</span>
+                                <span class="source-badge obsidian">45.3</span>
+                                <span class="source-badge ochre">26.3</span>
+                                <span class="source-badge indigo">40.1</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Circuit Breaker Dashboard</td>
+                            <td style="color: var(--consider);">17.5</td>
+                            <td>38.2 → 55.6</td>
+                            <td>
+                                <span class="source-badge cobalt">51.4</span>
+                                <span class="source-badge obsidian">41.2</span>
+                                <span class="source-badge ochre">55.6</span>
+                                <span class="source-badge indigo">38.2</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="insight warning" style="margin-top: 15px;">
+                <strong>Pattern:</strong> Obsidian Deleuze tends to score lower than Ochre Weil on visualization/ceremony ideas.
+                This may reflect different philosophical priorities (rhizomatic vs attention-focused evaluation).
+            </div>
+        </section>
+
+        <!-- Interactive K-Score Simulator -->
+        <section class="card simulator">
+            <h2>Interactive K-Score Simulator</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 25px;">
+                Adjust the sliders to see how dimension values affect K-Score. Simulate what happens when philosophers average their scores.
+            </p>
+
+            <div class="slider-group">
+                <div class="slider-item">
+                    <div class="slider-header">
+                        <span class="slider-label">Joy (x2 weight)</span>
+                        <span class="slider-value" id="joy-value">4.3</span>
+                    </div>
+                    <input type="range" id="joy" min="1" max="5" value="4.3" step="0.1">
+                </div>
+
+                <div class="slider-item">
+                    <div class="slider-header">
+                        <span class="slider-label">Composability (x1.5)</span>
+                        <span class="slider-value" id="comp-value">4.2</span>
+                    </div>
+                    <input type="range" id="comp" min="1" max="5" value="4.2" step="0.1">
+                </div>
+
+                <div class="slider-item">
+                    <div class="slider-header">
+                        <span class="slider-label">Taste (^1.4 power)</span>
+                        <span class="slider-value" id="taste-value">4.5</span>
+                    </div>
+                    <input type="range" id="taste" min="1" max="5" value="4.5" step="0.1">
+                </div>
+
+                <div class="slider-item">
+                    <div class="slider-header">
+                        <span class="slider-label">Compression</span>
+                        <span class="slider-value" id="compression-value">3.4</span>
+                    </div>
+                    <input type="range" id="compression" min="1" max="5" value="3.4" step="0.1">
+                </div>
+
+                <div class="slider-item">
+                    <div class="slider-header">
+                        <span class="slider-label">Showable</span>
+                        <span class="slider-value" id="showable-value">4.5</span>
+                    </div>
+                    <input type="range" id="showable" min="1" max="5" value="4.5" step="0.1">
+                </div>
+
+                <div class="slider-item">
+                    <div class="slider-header">
+                        <span class="slider-label">Complexity (lower = better)</span>
+                        <span class="slider-value" id="complexity-value">2.3</span>
+                    </div>
+                    <input type="range" id="complexity" min="1" max="5" value="2.3" step="0.1">
+                </div>
+            </div>
+
+            <div class="score-output">
+                <div class="score-number" id="k-score">27.5</div>
+                <div class="score-category" id="k-category">
+                    <span class="pill strong-win">Strong Win</span>
+                </div>
+                <div class="score-breakdown" id="k-breakdown">
+                    Calculating...
+                </div>
+                <div style="margin-top: 15px; font-size: 0.9rem;">
+                    <span class="sparkline" id="score-sparkline">▄▅▆▇█▇▆▅▄</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Key Insights -->
+        <section class="card">
+            <h2>Key Insights from Combined Analysis</h2>
+
+            <div class="insight positive">
+                <strong>Consensus on Ethics:</strong> All four philosophers gave perfect 5.0 ethical scores across all 1,110 ideas.
+                The kgents ecosystem maintains unwavering principles alignment.
+            </div>
+
+            <div class="insight positive">
+                <strong>CLI Commands Win:</strong> The highest-confidence Crown Jewels are CLI tools (kgents parse, kgents reality, kg shadow).
+                Simple, composable, joyful - the formula works.
+            </div>
+
+            <div class="insight neutral">
+                <strong>Compression Gap:</strong> Averaged compression (3.41) is notably lower than other dimensions.
+                Opportunity: Focus on spec-first, generative design patterns.
+            </div>
+
+            <div class="insight warning">
+                <strong>High Variance = Subjective:</strong> Visualization/ceremony ideas show highest disagreement.
+                "Collapse Ceremony" ranged from 26.7 (Obsidian) to 52.5 (Ochre) - a Crown Jewel to one, Solid to another.
+            </div>
+
+            <div class="insight positive">
+                <strong>Low Variance = Reliable:</strong> Ideas like "kg viz" and "LOD Slider" have variance under 4.0.
+                When all four philosophers agree, build with confidence.
+            </div>
+
+            <div class="insight neutral">
+                <strong>Philosopher Tendencies:</strong> Ochre Weil tends optimistic, Obsidian Deleuze more critical.
+                Neither is wrong - diversity of perspective strengthens evaluation.
+            </div>
+        </section>
+
+        <!-- Recommendations -->
+        <section class="card">
+            <h2>Strategic Recommendations</h2>
+            <div class="grid-2">
+                <div>
+                    <h3 style="color: var(--accent-sage);">High Confidence - Build Now</h3>
+                    <ul style="color: var(--text-secondary); padding-left: 20px; margin-top: 10px;">
+                        <li><strong>kgents parse</strong> (48.4, low variance)</li>
+                        <li><strong>kg shadow CLI</strong> (47.7, all 4 agree)</li>
+                        <li><strong>kg weather</strong> (46.0, very low variance)</li>
+                        <li><strong>kg viz</strong> (43.2, lowest variance)</li>
+                        <li><strong>LOD Slider</strong> (43.2, lowest variance)</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 style="color: var(--consider);">Needs Discussion</h3>
+                    <ul style="color: var(--text-secondary); padding-left: 20px; margin-top: 10px;">
+                        <li><strong>Collapse Ceremony</strong> (high variance - clarify vision)</li>
+                        <li><strong>Entropy Budget Bar</strong> (philosophers disagree on value)</li>
+                        <li><strong>Circuit Breaker Dashboard</strong> (scope unclear)</li>
+                        <li><strong>kgents panopticon</strong> (complexity concerns?)</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Formula Reference -->
+        <section class="card">
+            <h2>K-Score Formula Reference</h2>
+            <div class="ascii-box" style="text-align: center; font-size: 0.85rem; color: var(--accent-amber);">
+K-SCORE = (Joy x 2 + Composability x 1.5 + Taste^1.4) x GenerativeMultiplier
+          -----------------------------------------------------------------
+                              (Complexity x 0.7 + 1)
+
+GenerativeMultiplier = 1 + (Compression x 0.3) + (Showable x 0.2)
+
+Combined Analysis: Dimensions averaged across perspectives, then K-Score recalculated.
+
+Ranges:  40+ Crown Jewel | 25-40 Strong Win | 15-25 Solid | 8-15 Consider | &lt;8 Reconsider
+            </div>
+        </section>
+
+        <footer>
+            <div class="ascii-box">
+  ╔════════════════════════════════════════════════════════════════════════╗
+  ║  K-Score Combined Analysis Dashboard                                   ║
+  ║  1,110 unique ideas × 4 philosopher perspectives = averaged truth      ║
+  ║                                                                        ║
+  ║  Cobalt Spinoza   (554 evaluations) - Immanent evaluation              ║
+  ║  Indigo Whitehead (615 evaluations) - Process-relational scoring       ║
+  ║  Obsidian Deleuze (590 evaluations) - Rhizomatic critique              ║
+  ║  Ochre Weil       (472 evaluations) - Attention-focused assessment     ║
+  ║                                                                        ║
+  ║  "The score is not the goal. The principles are the goal."             ║
+  ╚════════════════════════════════════════════════════════════════════════╝
+            </div>
+            <p style="margin-top: 20px;">
+                Generated from <code>combined_analysis.json</code> | i-gent visualization patterns
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        function calculateKScore(joy, comp, taste, compression, showable, complexity) {
+            const genMult = 1 + (compression * 0.3) + (showable * 0.2);
+            const tastePower = Math.pow(taste, 1.4);
+            const numerator = (joy * 2 + comp * 1.5 + tastePower) * genMult;
+            const denominator = (complexity * 0.7) + 1;
+            return numerator / denominator;
+        }
+
+        function getCategory(score) {
+            if (score >= 40) return { name: 'Crown Jewel', class: 'crown-jewel', color: '#ffd700' };
+            if (score >= 25) return { name: 'Strong Win', class: 'strong-win', color: '#7d9c7a' };
+            if (score >= 15) return { name: 'Solid', class: 'solid', color: '#8ac4e8' };
+            if (score >= 8) return { name: 'Consider', class: 'consider', color: '#e6a352' };
+            return { name: 'Reconsider', class: 'reconsider', color: '#e88a8a' };
+        }
+
+        function generateSparkline(score) {
+            const chars = '▁▂▃▄▅▆▇█';
+            const normalized = Math.min(1, score / 55);
+            const idx = Math.floor(normalized * 7);
+            let spark = '';
+            for (let i = 0; i < 9; i++) {
+                const variance = Math.sin(i * 0.7) * 2;
+                const charIdx = Math.max(0, Math.min(7, idx + Math.floor(variance)));
+                spark += chars[charIdx];
+            }
+            return spark;
+        }
+
+        function updateScore() {
+            const joy = parseFloat(document.getElementById('joy').value);
+            const comp = parseFloat(document.getElementById('comp').value);
+            const taste = parseFloat(document.getElementById('taste').value);
+            const compression = parseFloat(document.getElementById('compression').value);
+            const showable = parseFloat(document.getElementById('showable').value);
+            const complexity = parseFloat(document.getElementById('complexity').value);
+
+            document.getElementById('joy-value').textContent = joy.toFixed(1);
+            document.getElementById('comp-value').textContent = comp.toFixed(1);
+            document.getElementById('taste-value').textContent = taste.toFixed(1);
+            document.getElementById('compression-value').textContent = compression.toFixed(1);
+            document.getElementById('showable-value').textContent = showable.toFixed(1);
+            document.getElementById('complexity-value').textContent = complexity.toFixed(1);
+
+            const score = calculateKScore(joy, comp, taste, compression, showable, complexity);
+            const category = getCategory(score);
+
+            const genMult = 1 + (compression * 0.3) + (showable * 0.2);
+            const tastePower = Math.pow(taste, 1.4).toFixed(2);
+            const numerator = ((joy * 2 + comp * 1.5 + parseFloat(tastePower)) * genMult).toFixed(1);
+            const denominator = ((complexity * 0.7) + 1).toFixed(1);
+
+            document.getElementById('k-score').textContent = score.toFixed(1);
+            document.getElementById('k-score').style.color = category.color;
+            document.getElementById('k-category').innerHTML =
+                `<span class="pill ${category.class}">${category.name}</span>`;
+            document.getElementById('k-breakdown').innerHTML =
+                `Numerator: (${joy.toFixed(1)}×2 + ${comp.toFixed(1)}×1.5 + ${tastePower}) × ${genMult.toFixed(2)} = ${numerator}<br>` +
+                `Denominator: (${complexity.toFixed(1)} × 0.7 + 1) = ${denominator}`;
+            document.getElementById('score-sparkline').textContent = generateSparkline(score);
+        }
+
+        document.querySelectorAll('input[type="range"]').forEach(slider => {
+            slider.addEventListener('input', updateScore);
+        });
+
+        updateScore();
+    </script>
+</body>
+</html>

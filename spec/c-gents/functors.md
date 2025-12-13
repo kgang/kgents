@@ -24,6 +24,65 @@ F(g ∘ f) = F(g) ∘ F(f)
 
 ---
 
+## Polynomial Foundation
+
+> *"Functors in kgents are polynomial endofunctors—they transform agents as dynamical systems."*
+
+### The Polynomial Perspective
+
+Traditional functor theory treats agents as functions: `Agent: A → B`. The **polyfunctor architecture** (see `spec/architecture/polyfunctor.md`) reveals that kgents functors are actually **polynomial functor endomorphisms**:
+
+```
+Functor: PolyAgent[S, A, B] → PolyAgent[S', A', B']
+```
+
+A functor transforms:
+- **Positions** (S → S'): The agent's state space
+- **Directions** (A → A'): Valid inputs at each state
+- **Transitions** ((S × A → (S, B)) → (S' × A' → (S', B'))): Dynamics
+
+### Why This Matters
+
+1. **State-Aware Transformation**: Functors can modify how agents handle internal state
+2. **Direction Filtering**: Functors can restrict/expand valid inputs per state
+3. **Transition Interception**: Functors wrap state transitions (not just outputs)
+
+### Functor as Endomorphism
+
+Most kgents functors are **endofunctors**—they map the Agent category to itself:
+
+```
+F: Agent[A, B] → Agent[A', B']  (traditional view)
+F: PolyAgent[S, A, B] → PolyAgent[S', A', B']  (polynomial view)
+```
+
+The polynomial view reveals that even "signature-preserving" functors (like Trace) may transform the state space.
+
+### Laws in Polynomial Terms
+
+**Identity Preservation** (polynomial):
+```
+F(Id_P) = Id_{F(P)}
+```
+Where `Id_P` is the identity polynomial (single state, pass-through).
+
+**Composition Preservation** (polynomial):
+```
+F(P ∘ Q) = F(P) ∘ F(Q)
+```
+Where `∘` is polynomial substitution (wiring diagram composition).
+
+### Functor Categories
+
+| Category | State Transform | Direction Transform | Transition Transform |
+|----------|-----------------|---------------------|----------------------|
+| **Lifting** | Add states | Wrap types | Wrap dynamics |
+| **Filtering** | Restrict states | Restrict inputs | Guard transitions |
+| **Observing** | Add observation state | Identity | Emit side effects |
+| **Economizing** | Add budget state | Identity | Meter transitions |
+
+---
+
 ## Common Functors
 
 | Functor | Purpose |
@@ -106,3 +165,6 @@ class Promise(Generic[T]):
 
 - [composition.md](composition.md) - Agent composition
 - [monads.md](monads.md) - Functors with structure
+- [functor-catalog.md](functor-catalog.md) - Complete functor catalog with polynomial interpretations
+- [../architecture/polyfunctor.md](../architecture/polyfunctor.md) - Polyfunctor architecture specification
+- [../agents/primitives.md](../agents/primitives.md) - 17 primitive polynomial agents

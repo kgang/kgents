@@ -1,0 +1,49 @@
+---
+# ServiceMonitor for auto-discovering kgents metrics endpoints
+# Requires Prometheus Operator to be installed
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: kgents-cortex
+  namespace: kgents-observability
+  labels:
+    app.kubernetes.io/name: kgents-cortex
+    app.kubernetes.io/part-of: kgents
+spec:
+  namespaceSelector:
+    matchNames:
+      - kgents
+      - default
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: kgents
+      metrics: enabled
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 15s
+      scrapeTimeout: 10s
+      honorLabels: true
+---
+# PodMonitor for pods without services
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: kgents-agents
+  namespace: kgents-observability
+  labels:
+    app.kubernetes.io/name: kgents-agents
+    app.kubernetes.io/part-of: kgents
+spec:
+  namespaceSelector:
+    matchNames:
+      - kgents
+      - default
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: kgents
+      metrics: enabled
+  podMetricsEndpoints:
+    - port: metrics
+      path: /metrics
+      interval: 15s

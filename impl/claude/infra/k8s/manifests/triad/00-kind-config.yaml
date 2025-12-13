@@ -1,0 +1,46 @@
+# Kind Cluster Configuration for Database Triad
+#
+# Minimal cluster for local development:
+# - Single node
+# - Port mappings for direct access
+# - Resource limits appropriate for dev
+#
+# Usage:
+#   kind create cluster --name kgents-triad --config 00-kind-config.yaml
+#
+# AGENTESE: self.vitals.triad.container
+---
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: kgents-triad
+nodes:
+- role: control-plane
+  # Port mappings for local access
+  extraPortMappings:
+  # PostgreSQL
+  - containerPort: 30432
+    hostPort: 5432
+    protocol: TCP
+  # Qdrant HTTP
+  - containerPort: 30633
+    hostPort: 6333
+    protocol: TCP
+  # Qdrant gRPC
+  - containerPort: 30634
+    hostPort: 6334
+    protocol: TCP
+  # Redis
+  - containerPort: 30679
+    hostPort: 6379
+    protocol: TCP
+  # Future: Prometheus metrics (use 19090 to avoid conflicts)
+  - containerPort: 30090
+    hostPort: 19090
+    protocol: TCP
+  # Labels for triad identification
+  kubeadmConfigPatches:
+  - |
+    kind: InitConfiguration
+    nodeRegistration:
+      kubeletExtraArgs:
+        node-labels: "kgents.io/triad-cluster=true"
