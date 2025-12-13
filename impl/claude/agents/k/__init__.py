@@ -111,17 +111,26 @@ from .garden import (
     EntryType,
     GardenEntry,
     GardenLifecycle,
+    GardenSeason,
     GardenStats,
     PersonaGarden,
+    SeasonConfig,
     get_garden,
     set_garden,
 )
 
 # Phase 5: Semantic Gatekeeper
 from .gatekeeper import (
+    AnalyzerResult,
+    ComposabilityAnalyzer,
+    DeepAnalysisResult,
+    GratitudeAnalyzer,
     Principle,
     SemanticGatekeeper,
     Severity,
+    TastefullnessAnalyzer,
+    ValidationHistory,
+    ValidationHistoryEntry,
     ValidationResult,
     Violation,
     validate_content,
@@ -130,8 +139,11 @@ from .gatekeeper import (
 
 # Phase 4: Hypnagogia (Dream Cycle)
 from .hypnagogia import (
+    DreamPersistence,
     DreamReport,
+    DreamSchedule,
     EigenvectorDelta,
+    HypnagogicCalibration,
     HypnagogicConfig,
     HypnagogicCycle,
     Interaction,
@@ -170,6 +182,27 @@ from .persona import (
     kgent,
     query_persona,
 )
+
+# 110% Refinements (Domains 5-7)
+from .refinements import (
+    # Domain 7: Deferred Capabilities
+    ConstitutionArticle,
+    # Domain 6: Error Experience
+    DialogueError,
+    EigenvectorError,
+    FractalExpander,
+    FractalNode,
+    GardenError,
+    GracefulDegradation,
+    HolographicConstitution,
+    HypnagogiaError,
+    SoulError,
+    SoulErrorSeverity,
+    # Domain 5: AGENTESE Paths
+    SoulPath,
+    SoulPathResolver,
+    SoulPathResult,
+)
 from .rumination import (
     RuminationConfig,
     RuminationState,
@@ -178,6 +211,19 @@ from .rumination import (
     # Synergy: Pulse Bridge (K-gent → D-gent Vitality)
     rumination_to_crystal_task,
     soul_to_pulse,
+)
+
+# Phase 6: Soul Session (Cross-Session Identity)
+from .session import (
+    PersistedSoulState,
+    SoulChange,
+    SoulCrystal,
+    SoulHistory,
+    SoulPersistence,
+    SoulSession,
+    get_soul_dir,
+    load_session,
+    quick_dialogue,
 )
 from .soul import (
     DANGEROUS_KEYWORDS,
@@ -194,10 +240,16 @@ from .starters import (
     ADVISE_STARTERS,
     CHALLENGE_STARTERS,
     EXPLORE_STARTERS,
+    MODE_PERSONALITIES,
     REFLECT_STARTERS,
+    DynamicStarterGenerator,
+    ModePersonality,
+    RichOutput,
     all_starters,
     format_all_starters_for_display,
     format_starters_for_display,
+    get_personality,
+    get_personality_from_mode_name,
     get_starters,
     random_starter,
 )
@@ -368,4 +420,14 @@ __all__ = [
     "ValidationResult",
     "validate_file",
     "validate_content",
+    # Phase 6: Soul Session (Cross-Session Identity)
+    "SoulSession",
+    "SoulChange",
+    "SoulCrystal",
+    "SoulHistory",
+    "SoulPersistence",
+    "PersistedSoulState",
+    "load_session",
+    "quick_dialogue",
+    "get_soul_dir",
 ]

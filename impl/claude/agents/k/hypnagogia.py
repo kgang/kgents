@@ -34,7 +34,8 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Optional
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Callable, Optional
 
 if TYPE_CHECKING:
     from .llm import LLMClient
@@ -69,6 +70,110 @@ class HypnagogicConfig:
     # LLM usage
     use_llm_for_patterns: bool = True
     pattern_extraction_temperature: float = 0.3
+
+    # Persistence (110% Domain 3)
+    persist_patterns: bool = True
+    persistence_path: Optional[str] = None  # Defaults to ~/.kgents/hypnagogia/
+
+    # Flux events (110% Domain 3)
+    emit_flux_events: bool = True
+
+    # Calibration (110% Domain 3)
+    adaptive_timing: bool = True
+    optimal_interaction_ratio: float = 0.15  # Target pattern/interaction ratio
+
+
+@dataclass
+class DreamSchedule:
+    """Schedule information for CortexDaemon integration (110% Domain 3)."""
+
+    next_dream: Optional[datetime] = None
+    last_dream: Optional[datetime] = None
+    consecutive_skips: int = 0
+    average_dream_duration_ms: float = 0.0
+    pattern_discovery_rate: float = 0.0  # Patterns per interaction
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to dictionary."""
+        return {
+            "next_dream": self.next_dream.isoformat() if self.next_dream else None,
+            "last_dream": self.last_dream.isoformat() if self.last_dream else None,
+            "consecutive_skips": self.consecutive_skips,
+            "average_dream_duration_ms": self.average_dream_duration_ms,
+            "pattern_discovery_rate": self.pattern_discovery_rate,
+        }
+
+
+@dataclass
+class HypnagogicCalibration:
+    """Adaptive calibration for dream timing (110% Domain 3)."""
+
+    # Learned parameters
+    optimal_interaction_threshold: int = 10
+    optimal_dream_hour: int = 3
+    quality_scores: list[float] = field(default_factory=list)
+
+    # Calibration history
+    dreams_since_calibration: int = 0
+    calibration_epoch: datetime = field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
+
+    def record_quality(self, pattern_rate: float, promotion_rate: float) -> None:
+        """Record dream quality metrics."""
+        # Quality = balance of discovery (pattern_rate) and validation (promotion_rate)
+        quality = (pattern_rate * 0.6) + (promotion_rate * 0.4)
+        self.quality_scores.append(quality)
+        self.dreams_since_calibration += 1
+
+        # Keep last 20 scores
+        if len(self.quality_scores) > 20:
+            self.quality_scores = self.quality_scores[-20:]
+
+    def recalibrate(self) -> bool:
+        """
+        Recalibrate dream parameters based on history.
+
+        Returns True if parameters were adjusted.
+        """
+        if self.dreams_since_calibration < 5:
+            return False
+
+        avg_quality = sum(self.quality_scores) / len(self.quality_scores)
+
+        adjusted = False
+
+        # Adjust threshold based on quality
+        if avg_quality < 0.1:
+            # Low quality = need more interactions
+            self.optimal_interaction_threshold = min(
+                50, self.optimal_interaction_threshold + 5
+            )
+            adjusted = True
+        elif avg_quality > 0.3:
+            # High quality = can dream more frequently
+            self.optimal_interaction_threshold = max(
+                5, self.optimal_interaction_threshold - 2
+            )
+            adjusted = True
+
+        if adjusted:
+            self.dreams_since_calibration = 0
+            self.calibration_epoch = datetime.now(timezone.utc)
+
+        return adjusted
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to dictionary."""
+        return {
+            "optimal_interaction_threshold": self.optimal_interaction_threshold,
+            "optimal_dream_hour": self.optimal_dream_hour,
+            "average_quality": sum(self.quality_scores) / len(self.quality_scores)
+            if self.quality_scores
+            else 0.0,
+            "dreams_since_calibration": self.dreams_since_calibration,
+            "calibration_epoch": self.calibration_epoch.isoformat(),
+        }
 
 
 # =============================================================================
@@ -270,6 +375,140 @@ class Interaction:
 
 
 # =============================================================================
+# Dream Persistence (110% Domain 3)
+# =============================================================================
+
+
+class DreamPersistence:
+    """
+    Persist and load dream state (110% Domain 3).
+
+    Saves:
+    - Discovered patterns (with maturity)
+    - Dream history (last N dreams)
+    - Calibration state
+    """
+
+    def __init__(self, storage_path: Optional[Path] = None) -> None:
+        """Initialize persistence."""
+        if storage_path is None:
+            storage_path = Path.home() / ".kgents" / "hypnagogia"
+        self._storage_path = storage_path
+        self._storage_path.mkdir(parents=True, exist_ok=True)
+
+    @property
+    def patterns_file(self) -> Path:
+        """Path to patterns file."""
+        return self._storage_path / "patterns.json"
+
+    @property
+    def history_file(self) -> Path:
+        """Path to history file."""
+        return self._storage_path / "history.json"
+
+    @property
+    def calibration_file(self) -> Path:
+        """Path to calibration file."""
+        return self._storage_path / "calibration.json"
+
+    def save_patterns(self, patterns: dict[str, "Pattern"]) -> None:
+        """Save patterns to disk."""
+        import json
+
+        data = {pid: p.to_dict() for pid, p in patterns.items()}
+        self.patterns_file.write_text(json.dumps(data, indent=2))
+
+    def load_patterns(self) -> dict[str, "Pattern"]:
+        """Load patterns from disk."""
+        import json
+
+        if not self.patterns_file.exists():
+            return {}
+
+        try:
+            data = json.loads(self.patterns_file.read_text())
+            patterns: dict[str, Pattern] = {}
+            for pid, pdata in data.items():
+                patterns[pid] = Pattern(
+                    content=pdata["content"],
+                    occurrences=pdata.get("occurrences", 1),
+                    maturity=PatternMaturity(pdata.get("maturity", "seed")),
+                    first_seen=datetime.fromisoformat(pdata["first_seen"]),
+                    last_seen=datetime.fromisoformat(pdata["last_seen"]),
+                    evidence=pdata.get("evidence", []),
+                    eigenvector_affinities=pdata.get("eigenvector_affinities", {}),
+                )
+            return patterns
+        except Exception:
+            return {}
+
+    def save_history(self, history: list["DreamReport"], max_entries: int = 30) -> None:
+        """Save dream history to disk."""
+        import json
+
+        # Keep only recent entries
+        recent = history[-max_entries:] if len(history) > max_entries else history
+        data = [r.to_dict() for r in recent]
+        self.history_file.write_text(json.dumps(data, indent=2))
+
+    def load_history(self) -> list["DreamReport"]:
+        """Load dream history from disk."""
+        import json
+
+        if not self.history_file.exists():
+            return []
+
+        try:
+            data = json.loads(self.history_file.read_text())
+            reports: list[DreamReport] = []
+            for rdata in data:
+                reports.append(
+                    DreamReport(
+                        timestamp=datetime.fromisoformat(rdata["timestamp"]),
+                        interactions_processed=rdata.get("interactions_processed", 0),
+                        patterns_discovered=[],  # Simplified for load
+                        patterns_promoted=[],
+                        patterns_composted=[],
+                        eigenvector_deltas=[],
+                        insights=rdata.get("insights", []),
+                        was_dry_run=rdata.get("was_dry_run", False),
+                    )
+                )
+            return reports
+        except Exception:
+            return []
+
+    def save_calibration(self, calibration: "HypnagogicCalibration") -> None:
+        """Save calibration state to disk."""
+        import json
+
+        self.calibration_file.write_text(json.dumps(calibration.to_dict(), indent=2))
+
+    def load_calibration(self) -> "HypnagogicCalibration":
+        """Load calibration state from disk."""
+        import json
+
+        if not self.calibration_file.exists():
+            return HypnagogicCalibration()
+
+        try:
+            data = json.loads(self.calibration_file.read_text())
+            return HypnagogicCalibration(
+                optimal_interaction_threshold=data.get(
+                    "optimal_interaction_threshold", 10
+                ),
+                optimal_dream_hour=data.get("optimal_dream_hour", 3),
+                quality_scores=[],  # Don't persist scores, recalculate
+                dreams_since_calibration=0,
+                calibration_epoch=datetime.fromisoformat(data["calibration_epoch"])
+                if "calibration_epoch" in data
+                else datetime.now(timezone.utc),
+            )
+        except Exception:
+            return HypnagogicCalibration()
+
+
+# =============================================================================
 # The Dream Cycle
 # =============================================================================
 
@@ -295,24 +534,88 @@ class HypnagogicCycle:
         self,
         config: Optional[HypnagogicConfig] = None,
         llm: Optional["LLMClient"] = None,
+        persistence: Optional[DreamPersistence] = None,
     ) -> None:
         """Initialize hypnagogic cycle.
 
         Args:
             config: Dream configuration
             llm: Optional LLM client for pattern extraction
+            persistence: Optional persistence handler (110% Domain 3)
         """
         self._config = config or HypnagogicConfig()
         self._llm = llm
 
-        # Pattern store (in-memory for now, could be persisted)
+        # Persistence (110% Domain 3)
+        self._persistence = persistence
+        if self._config.persist_patterns and not self._persistence:
+            path = (
+                Path(self._config.persistence_path)
+                if self._config.persistence_path
+                else None
+            )
+            self._persistence = DreamPersistence(path)
+
+        # Pattern store - load from persistence if available
         self._patterns: dict[str, Pattern] = {}
+        if self._persistence:
+            self._patterns = self._persistence.load_patterns()
 
         # Interaction buffer
         self._interactions: list[Interaction] = []
 
-        # Dream history
+        # Dream history - load from persistence if available
         self._dream_history: list[DreamReport] = []
+        if self._persistence:
+            self._dream_history = self._persistence.load_history()
+
+        # Calibration (110% Domain 3)
+        self._calibration = HypnagogicCalibration()
+        if self._persistence:
+            self._calibration = self._persistence.load_calibration()
+
+        # Schedule tracking (110% Domain 3)
+        self._schedule = DreamSchedule(
+            last_dream=self._dream_history[-1].timestamp
+            if self._dream_history
+            else None
+        )
+        self._update_next_dream()
+
+        # Event callback for Flux integration (110% Domain 3)
+        self._event_callback: Optional[Callable[[str, dict[str, Any]], None]] = None
+
+    def set_event_callback(
+        self, callback: Callable[[str, dict[str, Any]], None]
+    ) -> None:
+        """Set callback for Flux event emission (110% Domain 3)."""
+        self._event_callback = callback
+
+    def _emit_event(self, event_type: str, data: dict[str, Any]) -> None:
+        """Emit a hypnagogia event to Flux (110% Domain 3)."""
+        if self._event_callback and self._config.emit_flux_events:
+            self._event_callback(event_type, data)
+
+    def _update_next_dream(self) -> None:
+        """Update scheduled next dream time."""
+        now = datetime.now(timezone.utc)
+
+        # Use calibrated hour if adaptive timing enabled
+        dream_hour = self._config.dream_hour
+        if self._config.adaptive_timing:
+            dream_hour = self._calibration.optimal_dream_hour
+
+        # Calculate next dream time
+        next_dream = now.replace(
+            hour=dream_hour,
+            minute=self._config.dream_minute,
+            second=0,
+            microsecond=0,
+        )
+        if next_dream <= now:
+            next_dream += timedelta(days=1)
+
+        self._schedule.next_dream = next_dream
 
     @property
     def config(self) -> HypnagogicConfig:
@@ -333,6 +636,16 @@ class HypnagogicCycle:
     def last_dream(self) -> Optional[DreamReport]:
         """Most recent dream report."""
         return self._dream_history[-1] if self._dream_history else None
+
+    @property
+    def schedule(self) -> DreamSchedule:
+        """Get dream schedule (110% Domain 3)."""
+        return self._schedule
+
+    @property
+    def calibration(self) -> HypnagogicCalibration:
+        """Get calibration state (110% Domain 3)."""
+        return self._calibration
 
     # ─────────────────────────────────────────────────────────────────────────
     # Recording Interactions
@@ -394,6 +707,16 @@ class HypnagogicCycle:
         Returns:
             DreamReport with results
         """
+        # Emit start event (110% Domain 3)
+        self._emit_event(
+            "DREAM_START",
+            {
+                "interactions_buffered": self.interactions_buffered,
+                "patterns_stored": len(self._patterns),
+                "dry_run": dry_run,
+            },
+        )
+
         report = DreamReport(was_dry_run=dry_run)
 
         # Get interactions to process
@@ -480,6 +803,53 @@ class HypnagogicCycle:
         if not dry_run:
             self._interactions = self._interactions[report.interactions_processed :]
             self._dream_history.append(report)
+
+            # Persist state (110% Domain 3)
+            if self._persistence:
+                self._persistence.save_patterns(self._patterns)
+                self._persistence.save_history(self._dream_history)
+
+            # Update schedule (110% Domain 3)
+            self._schedule.last_dream = report.timestamp
+            if report.interactions_processed > 0:
+                self._schedule.pattern_discovery_rate = (
+                    len(report.patterns_discovered) / report.interactions_processed
+                )
+            self._update_next_dream()
+
+            # Calibration (110% Domain 3)
+            if self._config.adaptive_timing:
+                pattern_rate = (
+                    len(report.patterns_discovered) / report.interactions_processed
+                    if report.interactions_processed > 0
+                    else 0
+                )
+                promotion_rate = (
+                    len(report.patterns_promoted)
+                    / max(1, len(report.patterns_discovered))
+                    if report.patterns_discovered
+                    else 0
+                )
+                self._calibration.record_quality(pattern_rate, promotion_rate)
+
+                if self._calibration.recalibrate():
+                    report.insights.append(
+                        f"Calibration adjusted: interaction threshold now "
+                        f"{self._calibration.optimal_interaction_threshold}"
+                    )
+                    if self._persistence:
+                        self._persistence.save_calibration(self._calibration)
+
+        # Emit completion event (110% Domain 3)
+        self._emit_event(
+            "DREAM_COMPLETE",
+            {
+                "patterns_discovered": len(report.patterns_discovered),
+                "patterns_promoted": len(report.patterns_promoted),
+                "eigenvector_changes": len(report.eigenvector_deltas),
+                "dry_run": dry_run,
+            },
+        )
 
         return report
 
@@ -904,6 +1274,10 @@ __all__ = [
     "EigenvectorDelta",
     "DreamReport",
     "Interaction",
+    # 110% Domain 3
+    "DreamSchedule",
+    "HypnagogicCalibration",
+    "DreamPersistence",
     # The Cycle
     "HypnagogicCycle",
     # Factories

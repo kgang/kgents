@@ -70,7 +70,7 @@ async def empty_source() -> AsyncIterator[SoulEvent]:
     return
     # Make this an async generator
     if False:  # noqa: SIM223
-        yield  # type: ignore
+        yield
 
 
 async def slow_source(
@@ -204,8 +204,8 @@ class TestKgentFluxLifecycle:
 
         # Reset
         flux_no_pulse.reset()
-        current_state = flux_no_pulse.state  # Reload after state mutation
-        assert current_state == KgentFluxState.DORMANT  # type: ignore[comparison-overlap]
+        # After reset, state should be DORMANT (state machine transition)
+        assert flux_no_pulse.state.value == KgentFluxState.DORMANT.value
         assert flux_no_pulse.events_processed == 0
 
     def test_reset_fails_from_dormant(self) -> None:

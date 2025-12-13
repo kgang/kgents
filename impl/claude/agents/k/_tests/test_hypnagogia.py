@@ -299,7 +299,9 @@ class TestHypnagogicCycle:
 
     def test_cycle_creation(self) -> None:
         """Test cycle creation."""
-        cycle = HypnagogicCycle()
+        # Disable persistence to avoid loading patterns from disk
+        config = HypnagogicConfig(persist_patterns=False)
+        cycle = HypnagogicCycle(config=config)
 
         assert cycle.interactions_buffered == 0
         assert len(cycle.patterns) == 0
@@ -343,7 +345,9 @@ class TestHypnagogicCycle:
 
     def test_status(self) -> None:
         """Test status reporting."""
-        cycle = HypnagogicCycle()
+        # Disable persistence to avoid loading patterns from disk
+        config = HypnagogicConfig(persist_patterns=False)
+        cycle = HypnagogicCycle(config=config)
 
         cycle.record_interaction(
             message="Test",

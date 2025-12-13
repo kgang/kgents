@@ -66,6 +66,21 @@ class GardenLifecycle(str, Enum):
     COMPOST = "compost"  # Deprecated, being recycled
 
 
+class GardenSeason(str, Enum):
+    """Seasonal rhythms for the garden.
+
+    Spring: Planting focus - auto-plant new patterns readily
+    Summer: Growth focus - nurturing and evidence gathering
+    Autumn: Harvest focus - promote patterns to flowers, reap insights
+    Winter: Composting focus - decay stale patterns, prune aggressively
+    """
+
+    SPRING = "spring"  # Planting - new patterns welcomed
+    SUMMER = "summer"  # Growth - nurturing focus
+    AUTUMN = "autumn"  # Harvest - promote and reap
+    WINTER = "winter"  # Composting - decay and prune
+
+
 @dataclass
 class GardenEntry:
     """An entry in the persona garden."""
@@ -148,6 +163,38 @@ class GardenStats:
     total_evidence: int
     oldest_entry_days: float
     newest_entry_days: float
+    current_season: GardenSeason = GardenSeason.SUMMER
+    auto_planted_count: int = 0  # Patterns auto-planted from dialogue
+
+
+@dataclass
+class SeasonConfig:
+    """Configuration for seasonal behaviors."""
+
+    # Thresholds for auto-planting (lower = more planting)
+    auto_plant_threshold: float = 0.5  # Default confidence threshold
+
+    # Decay rates (per day)
+    staleness_decay_rate: float = 0.01  # Confidence decay per day of staleness
+
+    # Season-specific modifiers
+    spring_plant_boost: float = 0.2  # Extra confidence for spring plantings
+    winter_decay_multiplier: float = 2.0  # Faster decay in winter
+
+    # Promotion thresholds for harvest
+    autumn_promote_threshold: float = 0.7  # Lower threshold for autumn promotion
+
+    @classmethod
+    def for_season(cls, season: GardenSeason) -> "SeasonConfig":
+        """Get config optimized for a season."""
+        base = cls()
+        if season == GardenSeason.SPRING:
+            base.auto_plant_threshold = 0.3  # Plant more readily
+        elif season == GardenSeason.AUTUMN:
+            base.autumn_promote_threshold = 0.65  # Promote more readily
+        elif season == GardenSeason.WINTER:
+            base.staleness_decay_rate = 0.02  # Faster decay
+        return base
 
 
 # =============================================================================
@@ -184,6 +231,7 @@ class PersonaGarden:
         self,
         storage_path: Optional[Path] = None,
         auto_save: bool = True,
+        season: Optional[GardenSeason] = None,
     ) -> None:
         """
         Initialize persona garden.
@@ -191,18 +239,49 @@ class PersonaGarden:
         Args:
             storage_path: Path to store garden data. Defaults to ~/.kgents/garden/
             auto_save: Automatically save after modifications
+            season: Current season (defaults to auto-detect based on month)
         """
         if storage_path is None:
             storage_path = Path.home() / ".kgents" / "garden"
         self._storage_path = storage_path
         self._auto_save = auto_save
 
+        # Season tracking
+        self._season = season or self._detect_season()
+        self._season_config = SeasonConfig.for_season(self._season)
+
         # Entry storage
         self._entries: dict[str, GardenEntry] = {}
         self._entry_counter = 0
 
+        # Auto-plant tracking
+        self._auto_planted_count = 0
+
         # Load existing data
         self._load()
+
+    def _detect_season(self) -> GardenSeason:
+        """Detect season based on current month."""
+        month = datetime.now().month
+        if month in (3, 4, 5):
+            return GardenSeason.SPRING
+        elif month in (6, 7, 8):
+            return GardenSeason.SUMMER
+        elif month in (9, 10, 11):
+            return GardenSeason.AUTUMN
+        else:
+            return GardenSeason.WINTER
+
+    @property
+    def season(self) -> GardenSeason:
+        """Get current garden season."""
+        return self._season
+
+    @season.setter
+    def season(self, value: GardenSeason) -> None:
+        """Set garden season and update config."""
+        self._season = value
+        self._season_config = SeasonConfig.for_season(value)
 
     @property
     def storage_path(self) -> Path:
@@ -422,6 +501,247 @@ class PersonaGarden:
 
         return composted
 
+    async def staleness_decay(self) -> list[tuple[GardenEntry, float]]:
+        """
+        Apply natural confidence decay to stale entries.
+
+        Confidence decays based on staleness_days * decay_rate.
+        Winter season accelerates decay. Entries that decay below
+        0.1 confidence are automatically composted.
+
+        Returns:
+            List of (entry, decay_amount) tuples for entries that decayed
+        """
+        decayed: list[tuple[GardenEntry, float]] = []
+        decay_rate = self._season_config.staleness_decay_rate
+
+        # Winter accelerates decay
+        if self._season == GardenSeason.WINTER:
+            decay_rate *= self._season_config.winter_decay_multiplier
+
+        for entry in self._entries.values():
+            if entry.lifecycle == GardenLifecycle.COMPOST:
+                continue
+
+            # Calculate decay based on staleness
+            staleness = entry.staleness_days
+            if staleness > 1:  # Only decay after 1 day of staleness
+                decay_amount = (staleness - 1) * decay_rate
+                entry.confidence = max(0.0, entry.confidence - decay_amount)
+
+                if decay_amount > 0.001:  # Meaningful decay
+                    decayed.append((entry, decay_amount))
+
+                # Auto-compost if confidence drops too low
+                if entry.confidence < 0.1:
+                    entry.lifecycle = GardenLifecycle.COMPOST
+                else:
+                    # Update lifecycle based on new confidence
+                    entry.lifecycle = self._confidence_to_lifecycle(entry.confidence)
+
+        if decayed:
+            self._save_if_auto()
+
+        return decayed
+
+    async def cross_pollinate(
+        self,
+        other: "PersonaGarden",
+        similarity_threshold: float = 0.8,
+    ) -> list[GardenEntry]:
+        """
+        Cross-pollinate patterns from another garden.
+
+        Merges similar patterns (boosting confidence) and imports
+        new patterns that don't exist in this garden.
+
+        Args:
+            other: Another PersonaGarden to cross-pollinate from
+            similarity_threshold: How similar patterns must be to merge (0-1)
+
+        Returns:
+            List of newly imported entries
+        """
+        imported: list[GardenEntry] = []
+
+        for other_entry in other._entries.values():
+            if other_entry.lifecycle == GardenLifecycle.COMPOST:
+                continue
+
+            # Check for similar existing entry
+            similar = self._find_similar_entry(
+                other_entry.content, similarity_threshold
+            )
+
+            if similar:
+                # Merge: boost confidence, combine evidence
+                similar.confidence = min(
+                    1.0,
+                    similar.confidence + (other_entry.confidence * 0.3),
+                )
+                similar.evidence.extend(other_entry.evidence[-3:])  # Last 3 evidence
+                similar.occurrences += other_entry.occurrences
+                similar.last_nurtured = datetime.now(timezone.utc)
+                similar.lifecycle = self._confidence_to_lifecycle(similar.confidence)
+            else:
+                # Import as new entry (with reduced confidence)
+                new_entry = await self.plant(
+                    content=other_entry.content,
+                    entry_type=other_entry.entry_type,
+                    source="cross_pollination",
+                    confidence=other_entry.confidence * 0.5,  # Halved for imports
+                    tags=other_entry.tags + ["imported"],
+                    eigenvector_affinities=other_entry.eigenvector_affinities,
+                )
+                imported.append(new_entry)
+
+        if imported:
+            self._save_if_auto()
+
+        return imported
+
+    def _find_similar_entry(
+        self, content: str, threshold: float
+    ) -> Optional[GardenEntry]:
+        """Find an entry with similar content.
+
+        Returns None if content is empty or whitespace-only.
+        """
+        if not content or not content.strip():
+            return None
+
+        content_words = set(content.lower().split())
+
+        for entry in self._entries.values():
+            if entry.lifecycle == GardenLifecycle.COMPOST:
+                continue
+
+            entry_words = set(entry.content.lower().split())
+
+            # Jaccard similarity
+            if not content_words or not entry_words:
+                continue
+
+            intersection = len(content_words & entry_words)
+            union = len(content_words | entry_words)
+            similarity = intersection / union if union > 0 else 0
+
+            if similarity >= threshold:
+                return entry
+
+        return None
+
+    async def auto_plant_from_dialogue(
+        self,
+        message: str,
+        response: str,
+        detected_patterns: Optional[list[str]] = None,
+        eigenvector_affinities: Optional[dict[str, float]] = None,
+    ) -> list[GardenEntry]:
+        """
+        Auto-plant patterns detected from dialogue.
+
+        This is the feedback loop: every dialogue can nurture existing
+        patterns or plant new ones based on what was discussed.
+
+        Args:
+            message: The user's message
+            response: K-gent's response
+            detected_patterns: Optional list of detected patterns (from LLM)
+            eigenvector_affinities: Optional eigenvector connections
+
+        Returns:
+            List of entries that were planted or nurtured
+        """
+        affected: list[GardenEntry] = []
+
+        # Season affects auto-planting threshold
+        threshold = self._season_config.auto_plant_threshold
+        base_confidence = 0.25
+
+        # Spring boost for new plantings
+        if self._season == GardenSeason.SPRING:
+            base_confidence += self._season_config.spring_plant_boost
+
+        # If explicit patterns detected, plant them
+        if detected_patterns:
+            for pattern in detected_patterns:
+                # Check if similar pattern exists
+                similar = self._find_similar_entry(pattern, 0.7)
+                if similar:
+                    # Nurture existing
+                    await self.nurture(
+                        similar.id,
+                        f"Dialogue: {message[:50]}",
+                        confidence_boost=0.05,
+                    )
+                    affected.append(similar)
+                else:
+                    # Plant new
+                    entry = await self.plant_pattern(
+                        content=pattern,
+                        source="dialogue",
+                        confidence=base_confidence,
+                        eigenvector_affinities=eigenvector_affinities,
+                    )
+                    self._auto_planted_count += 1
+                    affected.append(entry)
+
+        # Also check for implicit patterns in the dialogue
+        implicit = self._detect_implicit_patterns(message, response)
+        for pattern_content, pattern_confidence in implicit:
+            if pattern_confidence >= threshold:
+                similar = self._find_similar_entry(pattern_content, 0.8)
+                if similar:
+                    await self.nurture(
+                        similar.id,
+                        "Implicit in dialogue",
+                        confidence_boost=0.03,
+                    )
+                    affected.append(similar)
+                elif pattern_confidence >= threshold + 0.1:  # Higher bar for implicit
+                    entry = await self.plant_pattern(
+                        content=pattern_content,
+                        source="dialogue_implicit",
+                        confidence=base_confidence * 0.8,  # Lower confidence
+                    )
+                    self._auto_planted_count += 1
+                    affected.append(entry)
+
+        return affected
+
+    def _detect_implicit_patterns(
+        self, message: str, response: str
+    ) -> list[tuple[str, float]]:
+        """
+        Detect implicit patterns from dialogue content.
+
+        Returns list of (pattern_description, confidence) tuples.
+        """
+        patterns: list[tuple[str, float]] = []
+        combined = f"{message} {response}".lower()
+
+        # Pattern indicators with confidence
+        indicators = [
+            ("always", "Consistent behavior pattern", 0.6),
+            ("prefer", "Preference pattern", 0.5),
+            ("usually", "Habitual pattern", 0.5),
+            ("tend to", "Tendency pattern", 0.4),
+            ("whenever", "Conditional behavior", 0.4),
+            ("important to me", "Core value", 0.7),
+            ("i believe", "Belief pattern", 0.6),
+            ("my approach", "Methodology pattern", 0.5),
+        ]
+
+        for indicator, pattern_type, base_conf in indicators:
+            if indicator in combined:
+                # Extract surrounding context (simplified)
+                idx = combined.find(indicator)
+                context = combined[max(0, idx - 30) : idx + 50]
+                patterns.append((f"{pattern_type}: {context.strip()}", base_conf))
+
+        return patterns[:3]  # Limit to top 3
+
     # ─────────────────────────────────────────────────────────────────────────
     # Hypnagogia Integration
     # ─────────────────────────────────────────────────────────────────────────
@@ -486,6 +806,8 @@ class PersonaGarden:
                 total_evidence=0,
                 oldest_entry_days=0.0,
                 newest_entry_days=0.0,
+                current_season=self._season,
+                auto_planted_count=self._auto_planted_count,
             )
 
         by_type: dict[str, int] = {}
@@ -510,6 +832,8 @@ class PersonaGarden:
             total_evidence=total_evidence,
             oldest_entry_days=max(ages),
             newest_entry_days=min(ages),
+            current_season=self._season,
+            auto_planted_count=self._auto_planted_count,
         )
 
     # ─────────────────────────────────────────────────────────────────────────
@@ -707,8 +1031,10 @@ __all__ = [
     # Types
     "EntryType",
     "GardenLifecycle",
+    "GardenSeason",
     "GardenEntry",
     "GardenStats",
+    "SeasonConfig",
     # The Garden
     "PersonaGarden",
     # Factories

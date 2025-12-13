@@ -383,7 +383,7 @@ class TestSynergyBridge:
             def manifest(self) -> None:
                 raise AttributeError("broken")
 
-        pulse_data = soul_to_pulse(BrokenSoul(), "waiting", "")  # type: ignore
+        pulse_data = soul_to_pulse(BrokenSoul(), "waiting", "")  # type: ignore[arg-type]
 
         assert pulse_data["turn_count"] == 0
         assert pulse_data["metadata"]["mode"] == "reflect"

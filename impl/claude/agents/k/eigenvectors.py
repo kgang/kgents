@@ -209,6 +209,79 @@ class KentEigenvectors:
             "joy": self.joy.value,
         }
 
+    def to_full_dict(self) -> dict[str, dict[str, Any]]:
+        """Export full eigenvector data for persistence."""
+        result = {}
+        for eigen in self.all_eigenvectors():
+            name = eigen.name.lower()
+            result[name] = {
+                "value": eigen.value,
+                "confidence": eigen.confidence,
+            }
+        return result
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "KentEigenvectors":
+        """Restore eigenvectors from persisted data."""
+        instance = cls()
+
+        # Map of name -> attribute
+        for name, eigen_data in data.items():
+            name_lower = name.lower()
+            if hasattr(instance, name_lower):
+                eigen = getattr(instance, name_lower)
+                if isinstance(eigen, EigenvectorCoordinate):
+                    # Update value and confidence from persisted data
+                    if isinstance(eigen_data, dict):
+                        eigen.value = eigen_data.get("value", eigen.value)
+                        eigen.confidence = eigen_data.get(
+                            "confidence", eigen.confidence
+                        )
+                    elif isinstance(eigen_data, (int, float)):
+                        # Legacy format: just value
+                        eigen.value = float(eigen_data)
+
+        return instance
+
+    def modify(
+        self,
+        name: str,
+        delta: float = 0.0,
+        absolute: float | None = None,
+        confidence_delta: float = 0.0,
+    ) -> bool:
+        """
+        Modify an eigenvector coordinate.
+
+        Args:
+            name: Eigenvector name (aesthetic, categorical, etc.)
+            delta: Change to apply to value (+/- float)
+            absolute: Set absolute value (overrides delta)
+            confidence_delta: Change to apply to confidence
+
+        Returns:
+            True if modification was applied, False if eigenvector not found
+        """
+        name_lower = name.lower()
+        if not hasattr(self, name_lower):
+            return False
+
+        eigen = getattr(self, name_lower)
+        if not isinstance(eigen, EigenvectorCoordinate):
+            return False
+
+        # Apply value change
+        if absolute is not None:
+            eigen.value = max(0.0, min(1.0, absolute))
+        else:
+            eigen.value = max(0.0, min(1.0, eigen.value + delta))
+
+        # Apply confidence change
+        if confidence_delta != 0.0:
+            eigen.confidence = max(0.0, min(1.0, eigen.confidence + confidence_delta))
+
+        return True
+
     def to_context_prompt(self) -> str:
         """
         Generate prompt fragment describing Kent's personality coordinates.

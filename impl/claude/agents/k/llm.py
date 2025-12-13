@@ -44,7 +44,7 @@ import os
 import shutil
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Optional, Protocol
+from typing import Any, Optional, Protocol, cast
 
 
 @dataclass
@@ -259,7 +259,7 @@ def create_llm_client(
     if prefer_morpheus and morpheus_available():
         from runtime.morpheus import MorpheusLLMClient
 
-        return MorpheusLLMClient()
+        return cast(LLMClient, MorpheusLLMClient())
 
     # Fallback to CLI (local development)
     return ClaudeLLMClient(

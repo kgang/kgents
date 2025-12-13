@@ -110,10 +110,12 @@ class TestSoulEvent:
         assert event.correlation_id == "test-123"
 
     def test_event_is_frozen(self) -> None:
-        """Events should be immutable."""
+        """Events should be immutable (frozen dataclass)."""
         event = ping_event()
+        # Frozen dataclasses raise FrozenInstanceError on direct attribute assignment
+        # (FrozenInstanceError is a subclass of AttributeError)
         with pytest.raises(AttributeError):
-            event.event_type = SoulEventType.ERROR  # type: ignore
+            event.event_type = SoulEventType.ERROR  # type: ignore[misc]
 
     def test_to_dict(self) -> None:
         """Should convert to dict."""

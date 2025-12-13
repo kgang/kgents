@@ -341,7 +341,26 @@ class KgentSoul:
 
         # DIALOGUE/DEEP tier: full LLM response
         input_data = DialogueInput(message=message, mode=mode)
-        output = await self._agent.invoke(input_data)
+
+        # Trace the LLM invocation for OTEL visibility
+        try:
+            from protocols.agentese.telemetry import trace_invocation
+
+            # Create a minimal umwelt-like object for tracing
+            class _TraceUmwelt:
+                id = "kgent-soul"
+                dna = None
+
+            async with trace_invocation(
+                f"self.soul.{mode.value}",
+                _TraceUmwelt(),
+                budget_tier=budget.value,
+                message_length=len(message),
+            ):
+                output = await self._agent.invoke(input_data)
+        except ImportError:
+            # Telemetry not available, invoke directly
+            output = await self._agent.invoke(input_data)
 
         # Estimate tokens based on response length
         tokens_estimate = len(output.response.split()) * 2
