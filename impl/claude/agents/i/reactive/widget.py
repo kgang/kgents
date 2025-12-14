@@ -15,16 +15,28 @@ This is categorically beautiful:
     project : Widget[S] -> Target -> UI[Target]
 
 The state machine IS the widget. The rendering IS a functor application.
+
+Instrumentation:
+    Metrics can be enabled via KGENTS_REACTIVE_METRICS=1 env var.
+    When enabled, render durations are tracked via OpenTelemetry.
 """
 
 from __future__ import annotations
 
+import os
 from abc import ABC, abstractmethod
 from enum import Enum, auto
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 if TYPE_CHECKING:
     pass
+
+# Check if metrics are enabled (opt-in for zero overhead by default)
+_METRICS_ENABLED = os.environ.get("KGENTS_REACTIVE_METRICS", "").lower() in (
+    "1",
+    "true",
+    "yes",
+)
 
 S = TypeVar("S")  # State type
 
@@ -103,20 +115,42 @@ class KgentsWidget(ABC, Generic[S]):
 
     def to_cli(self) -> str:
         """Convenience: project to CLI (returns string)."""
+        if _METRICS_ENABLED:
+            from agents.i.reactive._metrics import RenderTimer
+
+            with RenderTimer(self.__class__.__name__, "CLI"):
+                result = self.project(RenderTarget.CLI)
+            return str(result)
         result = self.project(RenderTarget.CLI)
         return str(result)
 
     def to_tui(self) -> Any:
         """Convenience: project to Textual (returns widget/text)."""
+        if _METRICS_ENABLED:
+            from agents.i.reactive._metrics import RenderTimer
+
+            with RenderTimer(self.__class__.__name__, "TUI"):
+                return self.project(RenderTarget.TUI)
         return self.project(RenderTarget.TUI)
 
     def to_marimo(self) -> Any:
         """Convenience: project to marimo (returns anywidget/HTML)."""
+        if _METRICS_ENABLED:
+            from agents.i.reactive._metrics import RenderTimer
+
+            with RenderTimer(self.__class__.__name__, "MARIMO"):
+                return self.project(RenderTarget.MARIMO)
         return self.project(RenderTarget.MARIMO)
 
     def to_json(self) -> dict[str, Any]:
         """Convenience: project to JSON (returns dict)."""
-        result = self.project(RenderTarget.JSON)
+        if _METRICS_ENABLED:
+            from agents.i.reactive._metrics import RenderTimer
+
+            with RenderTimer(self.__class__.__name__, "JSON"):
+                result = self.project(RenderTarget.JSON)
+        else:
+            result = self.project(RenderTarget.JSON)
         if isinstance(result, dict):
             return result
         return {"value": result}
