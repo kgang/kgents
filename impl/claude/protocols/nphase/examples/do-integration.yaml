@@ -1,0 +1,218 @@
+# ProjectDefinition for N-Phase Deep Integration: kg do + Forest + NPhase
+#
+# Usage:
+#   kg nphase compile examples/do-integration.yaml -o prompts/do-integration-compiled.md
+#
+name: nphase-do-deep-integration
+classification: crown_jewel
+
+scope:
+  goal: "Deeply integrate the N-Phase Prompt Compiler with kg do, creating a unified natural language interface for forest management, agent streaming, and phase-aware execution."
+  non_goals:
+    - "Replacing existing CLI commands (backward compatible)"
+    - "Building a full GUI (TUI via Textual is acceptable)"
+    - "External API integration (keep local-first)"
+  parallel_tracks:
+    T1: "Intent Router Enhancement (kg do expansion)"
+    T2: "Forest Integration (tree operations)"
+    T3: "Agent Stream + Turn-gent decision points"
+    T4: "Completeness Auditor (principles alignment)"
+
+decisions:
+  - id: D1
+    choice: "Python-first schema with frozen dataclasses"
+    rationale: "Type safety, immutability, already proven in nphase"
+  - id: D2
+    choice: "Hardcoded phase templates"
+    rationale: "No runtime I/O, version controlled"
+  - id: D3
+    choice: "Turn-gents for decision points"
+    rationale: "YIELD turns provide governance intercepts"
+  - id: D4
+    choice: "Forest Protocol for multi-session coordination"
+    rationale: "Proven pattern for plan management"
+
+file_map:
+  - path: "protocols/cli/intent/router.py"
+    lines: "1-787"
+    purpose: "Intent Router core (kg do)"
+  - path: "protocols/cli/handlers/forest.py"
+    lines: "1-536"
+    purpose: "Forest Protocol handler"
+  - path: "protocols/nphase/"
+    purpose: "N-Phase Prompt Compiler"
+  - path: "protocols/cli/handlers/turns.py"
+    purpose: "Turn-gent debugging/visualization"
+  - path: "protocols/cli/handlers/approve.py"
+    purpose: "YIELD turn governance"
+  - path: "weave/turn.py"
+    purpose: "Turn, TurnType, YieldTurn"
+  - path: "plans/_forest.md"
+    purpose: "Forest health aggregation"
+
+invariants:
+  - name: "Forest Consistency"
+    requirement: "_forest.md reflects all plan headers"
+    verification: "kg forest check"
+  - name: "Phase Accountability"
+    requirement: "Each phase produces minimum artifact"
+    verification: "phase_ledger tracking"
+  - name: "Turn-gent Governance"
+    requirement: "YIELD turns require explicit approval"
+    verification: "kg pending shows outstanding"
+  - name: "Principles Alignment"
+    requirement: "Completeness check validates 7 principles"
+    verification: "kg judge integration"
+
+blockers:
+  - id: B1
+    description: "Intent patterns need forest vocabulary"
+    evidence: "router.py:114-142 - no forest patterns"
+    resolution: "Add IntentCategory.FOREST with patterns"
+    status: open
+  - id: B2
+    description: "No agent stream abstraction"
+    evidence: "agents/i/reactive/ lacks stream component"
+    resolution: "Create AgentStreamView"
+    status: open
+  - id: B3
+    description: "Completeness check not codified"
+    evidence: "No per-phase criteria defined"
+    resolution: "Define minimum artifacts per phase"
+    status: open
+  - id: B4
+    description: "Status audit logic missing"
+    evidence: "No impl→plan status mapping"
+    resolution: "Create StatusReconciler"
+    status: open
+
+components:
+  - id: C1
+    name: "IntentPatterns (Forest)"
+    location: "protocols/cli/intent/router.py"
+    effort: S
+    description: "Add forest vocabulary to INTENT_PATTERNS"
+  - id: C2
+    name: "ForestCommands"
+    location: "protocols/cli/intent/forest_ops.py"
+    effort: M
+    dependencies: [C1]
+    description: "Forest operation command generators"
+  - id: C3
+    name: "AgentStreamView"
+    location: "agents/i/reactive/streams/"
+    effort: L
+    description: "Live agent execution stream"
+  - id: C4
+    name: "TurnGentDecisionUI"
+    location: "agents/i/reactive/screens/"
+    effort: M
+    dependencies: [C3]
+    description: "TUI for YIELD turn decisions"
+  - id: C5
+    name: "CompletenessAuditor"
+    location: "protocols/nphase/auditor.py"
+    effort: M
+    description: "Per-phase completeness validation"
+  - id: C6
+    name: "StatusReconciler"
+    location: "protocols/nphase/reconciler.py"
+    effort: M
+    dependencies: [C5]
+    description: "Sync impl metrics → plan statuses"
+  - id: C7
+    name: "MilestoneLogger"
+    location: "protocols/nphase/milestone.py"
+    effort: S
+    description: "One-line milestone logging"
+  - id: C8
+    name: "ForestStats"
+    location: "protocols/cli/handlers/forest.py"
+    effort: S
+    description: "Forest statistics aggregation"
+  - id: C9
+    name: "UnifiedDoHandler"
+    location: "protocols/cli/intent/router.py"
+    effort: M
+    dependencies: [C1, C2, C3, C5]
+    description: "Unified kg do handler with forest ops"
+
+waves:
+  - name: "Wave 1: Foundation"
+    components: [C1, C5, C7, C8]
+    strategy: "Intent patterns + auditor + stats (parallel)"
+  - name: "Wave 2: Forest Ops"
+    components: [C2, C6]
+    strategy: "Forest commands + status reconciliation"
+  - name: "Wave 3: Streaming"
+    components: [C3, C4]
+    strategy: "Agent stream + turn-gent UI (can parallel with Wave 2)"
+  - name: "Wave 4: Integration"
+    components: [C9]
+    strategy: "Unified kg do handler (depends on Wave 1-3)"
+
+checkpoints:
+  - id: CP1
+    name: "Intent Recognition"
+    criteria: "kg do 'show forest' produces forest view"
+  - id: CP2
+    name: "Completeness Audit"
+    criteria: "kg do 'check phase' validates current stage"
+  - id: CP3
+    name: "Agent Streaming"
+    criteria: "kg do 'stream soul' shows live execution"
+  - id: CP4
+    name: "Full Integration"
+    criteria: "All 8 operations work via kg do"
+
+entropy:
+  total: 0.75
+  allocation: {}
+  spent: {}
+
+n_phases: 11
+
+phase_overrides:
+  PLAN:
+    investigations:
+      - "What natural language patterns should trigger forest operations?"
+      - "How should agent streaming integrate with turn-gents?"
+      - "What constitutes 'completeness' for each N-Phase stage?"
+  RESEARCH:
+    investigations:
+      - "How does forest_status() aggregate plan data?"
+      - "What intent patterns exist in INTENT_PATTERNS?"
+      - "How does AgentStreamView work in reactive screens?"
+      - "What's the YieldHandler API for turn-gent governance?"
+  CROSS-SYNERGIZE:
+    investigations:
+      - "ProjectDefinition from nphase → PlanHeader from forest"
+      - "PhaseStatus → forest status field mapping"
+      - "Turn events → AgentStreamView updates"
+      - "YieldTurn → TUI decision point"
+
+phase_ledger:
+  PLAN: pending
+  RESEARCH: pending
+  DEVELOP: pending
+  STRATEGIZE: pending
+  CROSS-SYNERGIZE: pending
+  IMPLEMENT: pending
+  QA: pending
+  TEST: pending
+  EDUCATE: pending
+  MEASURE: pending
+  REFLECT: pending
+
+session_notes: |
+  CROWN JEWEL: Deep integration of nphase compiler with kg do.
+
+  Key operations to implement:
+  1. show forest - forest health view
+  2. list trees - list all plans with status
+  3. show tree <name> - deep view of single plan
+  4. stream <agent> - live agent execution with turn-gent decision points
+  5. check completeness - pre-generated completeness check
+  6. audit statuses - sync statuses from impl/metrics
+  7. log milestone - one-line summary logging
+  8. show stats - trees completed, progress, etc.

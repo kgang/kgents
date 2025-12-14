@@ -2,9 +2,10 @@
 API Key Authentication for Soul API.
 
 Implements:
-- API key validation
+- API key validation via tenancy module
 - User tier management (FREE, PRO, ENTERPRISE)
 - Rate limiting metadata
+- Tenant context injection
 - Graceful FastAPI dependency handling
 """
 
@@ -12,16 +13,20 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Optional
+from uuid import UUID
 
 # Graceful FastAPI import
 try:
-    from fastapi import Header, HTTPException
+    from fastapi import Header, HTTPException, Request
+    from starlette.middleware.base import BaseHTTPMiddleware
 
     HAS_FASTAPI = True
 except ImportError:
     HAS_FASTAPI = False
     # Stubs for when FastAPI is not installed
-    Header = None  # type: ignore[assignment]
+    Header = None  # type: ignore
+    Request = None  # type: ignore
+    BaseHTTPMiddleware = object  # type: ignore
 
     class HTTPException(Exception):  # type: ignore[no-redef]
         """Stub HTTPException."""
@@ -32,7 +37,7 @@ except ImportError:
             super().__init__(detail)
 
 
-# --- User Tier System ---
+# --- Tenant-Aware User Tier System ---
 
 
 @dataclass
@@ -41,7 +46,7 @@ class ApiKeyData:
     Validated API key data.
 
     Contains user identity, tier, and rate limit information.
-    In production, this would be loaded from a database.
+    Now integrated with tenancy module for multi-tenant support.
     """
 
     key: str  # The API key itself
@@ -50,20 +55,25 @@ class ApiKeyData:
     rate_limit: int  # Requests per day
     monthly_token_limit: int = 0  # Monthly token budget (0 = unlimited)
     tokens_used_month: int = 0  # Tokens used this month
+    # Tenant-aware fields
+    tenant_id: Optional[UUID] = None  # Multi-tenant support
+    scopes: tuple[str, ...] = ("read", "write")  # Permission scopes
 
 
 # --- API Key Validation ---
 
 # In-memory store for development/testing
-# In production, this would be a database
+# Production uses TenantService + ApiKeyService from protocols/tenancy/
 _API_KEY_STORE: dict[str, ApiKeyData] = {
-    # Development keys
+    # Development keys with tenant support
     "kg_dev_alice": ApiKeyData(
         key="kg_dev_alice",
         user_id="user_alice",
         tier="FREE",
         rate_limit=100,
         monthly_token_limit=10000,
+        tenant_id=UUID("00000000-0000-0000-0000-000000000001"),
+        scopes=("read",),
     ),
     "kg_dev_bob": ApiKeyData(
         key="kg_dev_bob",
@@ -71,6 +81,8 @@ _API_KEY_STORE: dict[str, ApiKeyData] = {
         tier="PRO",
         rate_limit=1000,
         monthly_token_limit=100000,
+        tenant_id=UUID("00000000-0000-0000-0000-000000000001"),
+        scopes=("read", "write"),
     ),
     "kg_dev_carol": ApiKeyData(
         key="kg_dev_carol",
@@ -78,6 +90,8 @@ _API_KEY_STORE: dict[str, ApiKeyData] = {
         tier="ENTERPRISE",
         rate_limit=10000,
         monthly_token_limit=0,  # Unlimited
+        tenant_id=UUID("00000000-0000-0000-0000-000000000001"),
+        scopes=("read", "write", "admin"),
     ),
 }
 
@@ -99,7 +113,7 @@ def lookup_api_key(key: str) -> Optional[ApiKeyData]:
     """
     Look up API key in store.
 
-    In production, this would query a database.
+    In production, this uses ApiKeyService from tenancy module.
 
     Args:
         key: The API key to look up
@@ -246,3 +260,79 @@ def can_use_budget_tier(user_tier: str, requested_tier: str) -> bool:
 
     allowed_tiers = tier_levels.get(user_tier, ["dormant"])
     return requested_tier in allowed_tiers
+
+
+def has_scope(api_key: ApiKeyData, scope: str) -> bool:
+    """
+    Check if API key has a specific scope.
+
+    Args:
+        api_key: The API key data
+        scope: Required scope (read, write, admin)
+
+    Returns:
+        True if key has the scope
+    """
+    return scope in api_key.scopes
+
+
+# --- Tenant Context Middleware ---
+
+if HAS_FASTAPI:
+    from typing import Any, Callable
+
+    class TenantContextMiddleware(BaseHTTPMiddleware):
+        """
+        Middleware that sets tenant context from API key.
+
+        Flow:
+        1. Extract API key from X-API-Key header
+        2. Validate key and get tenant_id
+        3. Set tenant context for the request
+        4. Clear context after request completes
+        """
+
+        async def dispatch(
+            self, request: "Request", call_next: Callable[["Request"], Any]
+        ) -> Any:
+            """Process request with tenant context."""
+            from protocols.tenancy.context import (
+                clear_tenant_context,
+                set_tenant_context,
+            )
+            from protocols.tenancy.models import Tenant
+            from protocols.tenancy.service import TenantService
+
+            # Get API key from header
+            api_key_header = request.headers.get("X-API-Key")
+
+            if api_key_header and validate_api_key_format(api_key_header):
+                key_data = lookup_api_key(api_key_header)
+
+                if key_data and key_data.tenant_id:
+                    # Set request state for downstream handlers
+                    request.state.user_id = key_data.user_id
+                    request.state.tenant_id = key_data.tenant_id
+                    request.state.api_key_data = key_data
+
+                    # Get tenant from service (in-memory for now)
+                    service = TenantService()
+                    tenant = await service.get_tenant(key_data.tenant_id)
+
+                    if tenant:
+                        # Set tenant context
+                        set_tenant_context(tenant)
+
+            try:
+                response = await call_next(request)
+                return response
+            finally:
+                # Always clear context
+                clear_tenant_context()
+
+else:
+
+    class TenantContextMiddleware:  # type: ignore[no-redef]
+        """Stub middleware when FastAPI is not installed."""
+
+        pass

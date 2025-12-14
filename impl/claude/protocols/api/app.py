@@ -1,12 +1,12 @@
 """
-FastAPI Application for Soul API Service.
+FastAPI Application for kgents SaaS API Service.
 
 Main application factory that:
 - Creates FastAPI app
-- Registers routes
-- Adds middleware
-- Configures CORS
-- Sets up health checks
+- Registers routes (Soul, AGENTESE, Sessions)
+- Adds middleware (CORS, Tenant Context, Metering)
+- Configures health checks
+- Provides multi-tenant support
 """
 
 from __future__ import annotations
@@ -26,17 +26,18 @@ except ImportError:
 
 from agents.k.soul import KgentSoul
 
-from .auth import ApiKeyData, get_optional_api_key
+from .auth import ApiKeyData, TenantContextMiddleware, get_optional_api_key
 from .metering import MeteringMiddleware
 from .models import HealthResponse
 from .soul import create_soul_router
 
 
 def create_app(
-    title: str = "K-gent Soul API",
+    title: str = "kgents SaaS API",
     version: str = "v1",
-    description: str = "Soul-as-a-Service: K-gent Soul via REST API",
+    description: str = "Multi-tenant AGENTESE and K-gent Soul API",
     enable_cors: bool = True,
+    enable_tenant_middleware: bool = True,
 ) -> "FastAPI":
     """
     Create and configure FastAPI application.
@@ -46,6 +47,7 @@ def create_app(
         version: API version
         description: API description
         enable_cors: Whether to enable CORS
+        enable_tenant_middleware: Whether to enable tenant context middleware
 
     Returns:
         Configured FastAPI app
@@ -78,12 +80,32 @@ def create_app(
             allow_headers=["*"],
         )
 
+    # Add tenant context middleware (sets tenant from API key)
+    if enable_tenant_middleware:
+        app.add_middleware(TenantContextMiddleware)
+
     # Add metering middleware
     app.add_middleware(MeteringMiddleware)
 
     # Register routers
+    # Soul endpoints
     soul_router = create_soul_router()
-    app.include_router(soul_router)
+    if soul_router is not None:
+        app.include_router(soul_router)
+
+    # AGENTESE endpoints
+    from .agentese import create_agentese_router
+
+    agentese_router = create_agentese_router()
+    if agentese_router is not None:
+        app.include_router(agentese_router)
+
+    # K-gent Sessions endpoints
+    from .sessions import create_sessions_router
+
+    sessions_router = create_sessions_router()
+    if sessions_router is not None:
+        app.include_router(sessions_router)
 
     # Health check endpoint
     @app.get("/health", response_model=HealthResponse, tags=["system"])
@@ -144,8 +166,19 @@ def create_app(
             "docs": "/docs",
             "health": "/health",
             "endpoints": {
-                "governance": "/v1/soul/governance",
-                "dialogue": "/v1/soul/dialogue",
+                "soul": {
+                    "governance": "/v1/soul/governance",
+                    "dialogue": "/v1/soul/dialogue",
+                },
+                "agentese": {
+                    "invoke": "/v1/agentese/invoke",
+                    "resolve": "/v1/agentese/resolve",
+                    "affordances": "/v1/agentese/affordances",
+                },
+                "kgent": {
+                    "sessions": "/v1/kgent/sessions",
+                    "messages": "/v1/kgent/sessions/{id}/messages",
+                },
             },
         }
 

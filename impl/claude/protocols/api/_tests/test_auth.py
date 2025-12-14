@@ -30,7 +30,9 @@ from protocols.api.auth import (
 @pytest.fixture
 def clean_api_keys() -> Generator[None, None, None]:
     """Clean API keys before each test and restore dev keys after."""
-    # Store original dev keys
+    from uuid import UUID
+
+    # Store original dev keys with tenant support
     dev_keys = {
         "kg_dev_alice": ApiKeyData(
             key="kg_dev_alice",
@@ -38,6 +40,8 @@ def clean_api_keys() -> Generator[None, None, None]:
             tier="FREE",
             rate_limit=100,
             monthly_token_limit=10000,
+            tenant_id=UUID("00000000-0000-0000-0000-000000000001"),
+            scopes=("read",),
         ),
         "kg_dev_bob": ApiKeyData(
             key="kg_dev_bob",
@@ -45,6 +49,8 @@ def clean_api_keys() -> Generator[None, None, None]:
             tier="PRO",
             rate_limit=1000,
             monthly_token_limit=100000,
+            tenant_id=UUID("00000000-0000-0000-0000-000000000001"),
+            scopes=("read", "write"),
         ),
         "kg_dev_carol": ApiKeyData(
             key="kg_dev_carol",
@@ -52,6 +58,8 @@ def clean_api_keys() -> Generator[None, None, None]:
             tier="ENTERPRISE",
             rate_limit=10000,
             monthly_token_limit=0,
+            tenant_id=UUID("00000000-0000-0000-0000-000000000001"),
+            scopes=("read", "write", "admin"),
         ),
     }
 

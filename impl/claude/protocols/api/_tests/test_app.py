@@ -34,7 +34,7 @@ class TestApplicationCreation:
         app = create_app()
 
         assert app is not None
-        assert app.title == "K-gent Soul API"
+        assert app.title == "kgents SaaS API"
         assert app.version == "v1"
 
     def test_create_app_custom(self) -> None:
@@ -86,12 +86,15 @@ class TestRootEndpoint:
         response = client.get("/")
         data = response.json()
 
-        # Check endpoints
+        # Check endpoints - now nested by service
         endpoints = data["endpoints"]
-        assert "governance" in endpoints
-        assert "dialogue" in endpoints
-        assert endpoints["governance"] == "/v1/soul/governance"
-        assert endpoints["dialogue"] == "/v1/soul/dialogue"
+        assert "soul" in endpoints
+        assert "agentese" in endpoints
+        assert "kgent" in endpoints
+        assert endpoints["soul"]["governance"] == "/v1/soul/governance"
+        assert endpoints["soul"]["dialogue"] == "/v1/soul/dialogue"
+        assert endpoints["agentese"]["invoke"] == "/v1/agentese/invoke"
+        assert endpoints["kgent"]["sessions"] == "/v1/kgent/sessions"
 
 
 class TestHealthEndpoint:
@@ -169,7 +172,7 @@ class TestOpenAPIDocumentation:
 
         assert "title" in info
         assert "version" in info
-        assert info["title"] == "K-gent Soul API"
+        assert info["title"] == "kgents SaaS API"
         assert info["version"] == "v1"
 
     def test_docs_ui_available(self, client: TestClient) -> None:
@@ -266,7 +269,7 @@ class TestAppMetadata:
         response = client.get("/openapi.json")
         data = response.json()
 
-        assert data["info"]["title"] == "K-gent Soul API"
+        assert data["info"]["title"] == "kgents SaaS API"
 
     def test_app_version(self, client: TestClient) -> None:
         """Test app version is set correctly."""
@@ -280,7 +283,8 @@ class TestAppMetadata:
         response = client.get("/openapi.json")
         data = response.json()
 
-        assert "Soul-as-a-Service" in data["info"]["description"]
+        # Updated for multi-tenant API
+        assert "AGENTESE" in data["info"]["description"]
 
 
 class TestEndpointTags:
