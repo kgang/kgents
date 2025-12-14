@@ -661,7 +661,7 @@ def _apply_all_agents(deploy_mode: "DeployMode") -> int:
 
 def _apply_from_file(path: Path, deploy_mode: "DeployMode") -> int:
     """Apply an Agent CRD from a YAML file."""
-    import asyncio
+    from infra.k8s import DeployMode
 
     if not path.exists():
         print(f"File not found: {path}")
@@ -670,14 +670,27 @@ def _apply_from_file(path: Path, deploy_mode: "DeployMode") -> int:
     print(f"Applying {path}...")
     print(f"  Mode: {deploy_mode.value}")
 
-    # TODO: implement apply_agent_from_file in infra.k8s module
-    # from infra.k8s import apply_agent_from_file
-    # result = asyncio.run(apply_agent_from_file(path))
-    # Note: apply_agent_from_file would need to be updated to accept deploy_mode
+    if deploy_mode == DeployMode.DRY_RUN:
+        # Just validate the YAML
+        result = subprocess.run(
+            ["kubectl", "apply", "-f", str(path), "--dry-run=client"],
+            capture_output=True,
+            text=True,
+        )
+    else:
+        # Actually apply
+        result = subprocess.run(
+            ["kubectl", "apply", "-f", str(path)],
+            capture_output=True,
+            text=True,
+        )
 
-    # Temporary placeholder until function is implemented
-    print("Error: apply_agent_from_file not yet implemented")
-    return 1
+    if result.returncode != 0:
+        print(f"  Failed: {result.stderr}")
+        return 1
+
+    print(f"  Applied: {result.stdout.strip()}")
+    return 0
 
 
 def _apply_agent_by_name(name: str, deploy_mode: "DeployMode") -> int:

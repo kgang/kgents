@@ -5,9 +5,9 @@ A live metrics dashboard showing K-gent, Metabolism, Flux, and Triad health
 with recent AGENTESE traces. Updates in real-time at configurable intervals.
 
 Usage:
-    kgents dashboard          # Launch dashboard (live metrics)
-    kgents dashboard --demo   # Launch with demo data
-    kgents dashboard --help   # Show help
+    kg dashboard          # Launch dashboard (live metrics)
+    kg dashboard --demo   # Launch with demo data
+    kg dashboard --help   # Show help
 
 Options:
     --demo              Use demo data instead of live metrics
@@ -21,7 +21,7 @@ Keybindings (in dashboard):
     1-4     Focus panel (K-gent, Metabolism, Flux, Triad)
 
 Example:
-    kgents dashboard
+    kg dashboard
     -> Shows live 4-panel dashboard with real-time updates
 
 Philosophy: "Make the system's metabolism visible."

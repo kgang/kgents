@@ -29,10 +29,10 @@ class TestHelpAndVersion:
         out = capsys.readouterr().out
 
         assert result == 0
-        assert "kgents - Kent's Agents CLI" in out
-        assert "INTENT LAYER" in out
-        assert "new" in out
-        assert "run" in out
+        assert "kgents - K-gents Agent Framework" in out
+        assert "AGENTESE Contexts" in out
+        assert "self" in out
+        assert "world" in out
 
     def test_help_flag(self, capsys: pytest.CaptureFixture[str]) -> None:
         """kgents --help prints help."""
@@ -42,7 +42,7 @@ class TestHelpAndVersion:
         out = capsys.readouterr().out
 
         assert result == 0
-        assert "kgents - Kent's Agents CLI" in out
+        assert "kgents - K-gents Agent Framework" in out
 
     def test_help_short_flag(self, capsys: pytest.CaptureFixture[str]) -> None:
         """kgents -h prints help."""
@@ -52,7 +52,7 @@ class TestHelpAndVersion:
         out = capsys.readouterr().out
 
         assert result == 0
-        assert "kgents - Kent's Agents CLI" in out
+        assert "kgents - K-gents Agent Framework" in out
 
     def test_version(self, capsys: pytest.CaptureFixture[str]) -> None:
         """kgents --version prints version."""

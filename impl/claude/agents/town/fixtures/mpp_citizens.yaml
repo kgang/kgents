@@ -1,0 +1,147 @@
+# Agent Town MPP Fixtures
+#
+# Generated via void.entropy.sip, these are the founding citizens
+# for the Minimal Playable Prototype.
+#
+# From Hui: Each citizen embodies a different cosmotechnics.
+# They are INCOMMENSURABLE. They meet in friction, not synthesis.
+#
+# From Glissant: Each has an opacity statement—what cannot be shared.
+# This is not concealment. This is their right to remain irreducible.
+
+version: "1.0"
+name: "smallville-mpp"
+description: "Minimal Playable Prototype with 3 citizens and 2 regions"
+
+# ============================================================================
+# CITIZENS: The Three Founding Members
+# ============================================================================
+
+citizens:
+  - name: Alice
+    archetype: Innkeeper
+    initial_region: inn
+    cosmotechnics: gathering
+    eigenvectors:
+      warmth: 0.8
+      curiosity: 0.6
+      trust: 0.7
+      creativity: 0.5
+      patience: 0.6
+
+  - name: Bob
+    archetype: Builder
+    initial_region: square
+    cosmotechnics: construction
+    eigenvectors:
+      warmth: 0.5
+      curiosity: 0.4
+      trust: 0.6
+      creativity: 0.7
+      patience: 0.3
+
+  - name: Clara
+    archetype: Explorer
+    initial_region: inn
+    cosmotechnics: exploration
+    eigenvectors:
+      warmth: 0.6
+      curiosity: 0.9
+      trust: 0.5
+      creativity: 0.8
+      patience: 0.4
+
+# ============================================================================
+# REGIONS: The Two Founding Locations
+# ============================================================================
+
+regions:
+  - name: inn
+    description: "Alice's gathering place. Warm hearth, shared stories."
+    connections:
+      - square
+    capacity: 10
+    properties:
+      warmth_bonus: 0.1
+      is_shelter: true
+
+  - name: square
+    description: "The town center. Open sky, chance encounters."
+    connections:
+      - inn
+    capacity: 20
+    properties:
+      visibility: high
+      is_public: true
+
+# ============================================================================
+# OPERAD CONFIGURATION
+# ============================================================================
+
+operad:
+  extends: TOWN_OPERAD
+  operations:
+    # MPP subset: 4 operations
+    - greet
+    - gossip
+    - trade
+    - solo
+
+# ============================================================================
+# DAILY CYCLE (Simplified for MPP)
+# ============================================================================
+
+daily_cycle:
+  phases:
+    - name: morning
+      token_budget: 5000
+      activities:
+        - wake
+        - encounter
+        - gossip
+        - work
+    - name: evening
+      token_budget: 5000
+      activities:
+        - gather
+        - trade
+        - reflect
+        - rest
+
+# ============================================================================
+# BUDGET (MPP)
+# ============================================================================
+
+budget:
+  monthly_cap: 1000000  # 1M for MPP
+  daily_target: 10000
+
+# ============================================================================
+# METRICS
+# ============================================================================
+
+metrics:
+  tension_index:
+    enabled: true
+    threshold_drama: 0.7
+  cooperation_level:
+    enabled: true
+
+# ============================================================================
+# ETHICS (Enforced)
+# ============================================================================
+
+ethics:
+  right_to_coherence: true
+  right_to_memory: true
+  right_to_rest: true
+  consent_gate: true
+  observer_duty: true
+
+# ============================================================================
+# SEED
+# ============================================================================
+
+seed:
+  entropy_source: void.entropy.sip
+  accursed_share: 0.10

@@ -546,13 +546,15 @@ async def _handle_diff(
         )
         before.append_mut(event)
 
-    # If target specified, run new trace for comparison
+    # If target specified, note that comparison is not yet supported
     if target:
-        # Would need to run trace and get 'after' monoid
-        # For now, just show the saved trace
-        pass
+        _emit_output(
+            f"[TRACE] Note: Comparison with '{target}' not yet supported. Showing saved trace only.",
+            {"warning": "comparison_not_implemented"},
+            ctx,
+        )
 
-    # For now, just display the loaded trace
+    # Display the loaded trace
     output = renderer.render_tree_from_monoid(before)
 
     result = {

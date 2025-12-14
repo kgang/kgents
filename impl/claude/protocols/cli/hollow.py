@@ -38,87 +38,36 @@ __version__ = "0.2.0"
 
 # Help text (no imports required)
 HELP_TEXT = """\
-kgents - Kent's Agents CLI
+kgents - K-gents Agent Framework
 
 USAGE:
-  kgents <command> [args...]
-  kgents <command> --help
+  kgents <context> [subcommand] [args...]
+  kgents <context> --help
 
-INTENT LAYER (learn these 10 verbs):
-  new       Create something (agent, flow, tongue)
-  run       Execute an intent
-  check     Verify target against principles/laws
-  think     Generate hypotheses about a topic
-  watch     Observe without judgment
-  find      Search the catalog
-  fix       Repair malformed input
-  speak     Create a domain language (Tongue)
-  judge     Evaluate against the 7 principles
-  do        Natural language intent router
+COMMANDS (AGENTESE Contexts):
+  self      Internal state, memory, soul
+  world     Agents, infrastructure, resources
+  concept   Laws, principles, dialectics
+  void      Entropy, shadow, archetypes
+  time      Traces, turns, telemetry
+  do        Natural language intent
+  flow      Pipeline composition
 
-PROTOCOLS:
-  flow      Flowfile engine for composition
-
-WORKSPACE:
-  init      Initialize .kgents workspace
-  wipe      Remove local/global/all databases (with confirmation)
-
-DAEMON (Cortex gRPC Server):
-  daemon    Manage Cortex daemon (start|stop|status|install|logs)
-
-BOOTSTRAP:
-  laws      Display/verify category laws
-  principles Display/check 7 design principles
-
-VISUALIZATION:
-  dashboard Real-time system health TUI (K-gent, metabolism, flux, triad)
-
-DEVEX (Trust Loop):
-  play      Interactive playground (tutorials + REPL)
-  ghost     Project system state to .kgents/ghost/
-  flinch    Analyze test failure patterns
-  status    Cortex health at a glance
-  dream     LucidDreamer morning briefing
-  map       M-gent HoloMap visualization
-  signal    SemanticField state
-  observe   Terrarium TUI (glass box visualization)
-  tether    Attach to agent with signal forwarding
-  trace     Static + runtime call graph tracing
-  telemetry OpenTelemetry observability (status|traces|metrics)
-  memory    Four Pillars memory health (crystal|field|inference)
-
-PLANNING (Forest Protocol):
-  forest    Plan forest health (status|update|check|lint)
-
-SOUL (Digital Simulacra):
-  soul      K-gent self-dialogue (reflect|advise|challenge|explore|approve)
-  semaphore Agent semaphores (list|resolve|cancel|inspect)
-
-PRO CROWN JEWELS (Track D):
-  whatif    Generate N alternative approaches to a problem
-  shadow    Surface shadow content (Jungian analysis)
-  dialectic Hegelian synthesis of opposing concepts
-  gaps      Surface representational gaps (Lacanian analysis)
-  mirror    Full introspection (Jung + Hegel + Lacan combined)
-  archetype Identify active and shadow archetypes
-  continuous Recursive dialectic until stability
-  collective-shadow System-level shadow from agent composition
-
-META-CONSTRUCTION (Generative Machinery):
-  meta      Meta-construction health (primitives, operads, sheaves)
-  operad    Operad CLI (list, compose operations)
-
-TURN-GENTS (Causal Debugging & Governance):
-  turns     Show turn history for an agent
-  dag       Visualize turn DAG (causal structure)
-  fork      Fork from a turn for debugging
-  pending   List pending YIELD turns
-  approve   Approve a pending YIELD turn
-  reject    Reject a pending YIELD turn
+Run 'kgents <context>' for subcommands.
 
 OPTIONS:
   --version     Show version
   --help, -h    Show this help
+  --explain     Show AGENTESE path for command
+
+EXAMPLES:
+  kgents self status           # System health
+  kgents self soul reflect     # K-gent reflection
+  kgents world agents list     # List registered agents
+  kgents concept laws          # Category laws
+  kgents void shadow           # Jungian shadow analysis
+  kgents time trace            # Call graph tracing
+  kgents do "test the API"     # Natural language intent
 
 For more: https://github.com/kgents/kgents
 """
@@ -131,6 +80,17 @@ For more: https://github.com/kgents/kgents
 # Only the invoked command's module will be imported
 
 COMMAND_REGISTRY: dict[str, str] = {
+    # ==========================================================================
+    # AGENTESE Context Commands (Tier 1 - Primary Interface)
+    # ==========================================================================
+    "self": "protocols.cli.contexts.self_:cmd_self",
+    "world": "protocols.cli.contexts.world:cmd_world",
+    "concept": "protocols.cli.contexts.concept:cmd_concept",
+    "void": "protocols.cli.contexts.void:cmd_void",
+    "time": "protocols.cli.contexts.time_:cmd_time",
+    # ==========================================================================
+    # Backward Compatibility (Deprecated - use context commands instead)
+    # ==========================================================================
     # Intent Layer (Phase 6)
     "new": "protocols.cli.intent.commands:cmd_new",
     "run": "protocols.cli.intent.commands:cmd_run",
@@ -235,7 +195,115 @@ COMMAND_REGISTRY: dict[str, str] = {
     "fixture": "protocols.cli.handlers.fixture:cmd_fixture",
     # Four Pillars Memory (Phase 4)
     "memory": "protocols.cli.handlers.memory:cmd_memory",
+    # N-Phase Prompt Compiler
+    "nphase": "protocols.cli.handlers.nphase:cmd_nphase",
+    # Agent Town (Civilizational Engine)
+    "town": "protocols.cli.handlers.town:cmd_town",
 }
+
+
+# =============================================================================
+# Deprecation Map (old command -> suggested AGENTESE path)
+# =============================================================================
+# These commands still work but emit a warning suggesting the new path.
+# Format: 'old_command': 'new agentese path'
+
+DEPRECATION_MAP: dict[str, str] = {
+    # self.* (Internal state, memory, soul)
+    "soul": "self soul",
+    "reflect": "self soul reflect",
+    "advise": "self soul advise",
+    "challenge": "self soul challenge",
+    "explore": "self soul explore",
+    "status": "self status",
+    "memory": "self memory",
+    "dream": "self dream",
+    "map": "self map",
+    "signal": "self signal",
+    "ghost": "self ghost",
+    "flinch": "self flinch",
+    "debug": "self debug",
+    "semaphore": "self semaphore",
+    # world.* (Agents, infrastructure, resources)
+    "a": "world agents",
+    "daemon": "world daemon",
+    "infra": "world infra",
+    "exec": "world exec",
+    "dev": "world dev",
+    "fixture": "world fixture",
+    "observe": "world observe",
+    "terrarium": "world terrarium",
+    "tether": "world tether",
+    "play": "world play",
+    "dashboard": "world dashboard",
+    "mcp": "world mcp",
+    # concept.* (Laws, principles, dialectics)
+    "laws": "concept laws",
+    "principles": "concept principles",
+    "dialectic": "concept dialectic",
+    "gaps": "concept gaps",
+    "continuous": "concept continuous",
+    "operad": "concept operad",
+    "meta": "concept meta",
+    # void.* (Entropy, shadow, archetypes)
+    "tithe": "void tithe",
+    "shadow": "void shadow",
+    "archetype": "void archetype",
+    "collective-shadow": "void collective-shadow",
+    "whatif": "void whatif",
+    "mirror": "void mirror",
+    # time.* (Traces, turns, telemetry)
+    "trace": "time trace",
+    "turns": "time turns",
+    "dag": "time dag",
+    "fork": "time fork",
+    "forest": "time forest",
+    "telemetry": "time telemetry",
+    "pending": "time pending",
+    "approve": "time approve",
+    "reject": "time reject",
+    # Intent layer -> do.*
+    "new": "do new",
+    "run": "do run",
+    "check": "do check",
+    "think": "do think",
+    "watch": "do watch",
+    "find": "do find",
+    "fix": "do fix",
+    "speak": "do speak",
+    "judge": "do judge",
+    # Bootstrap (keep at top level for now)
+    "init": "init (no change)",
+    "wipe": "wipe (no change)",
+    # Genus layer (power user)
+    "capital": "capital (power user)",
+    "grammar": "grammar (power user)",
+    "jit": "jit (power user)",
+    "parse": "parse (power user)",
+    "library": "library (power user)",
+    "witness": "witness (power user)",
+    # I-gent visualization
+    "whisper": "whisper (visualization)",
+    "sparkline": "sparkline (visualization)",
+    "weather": "weather (visualization)",
+    "glitch": "glitch (visualization)",
+}
+
+
+def _emit_deprecation_warning(old_cmd: str, new_path: str) -> None:
+    """Emit a deprecation warning for old command usage."""
+    # Skip warning for commands that haven't really changed
+    if (
+        "(no change)" in new_path
+        or "(power user)" in new_path
+        or "(visualization)" in new_path
+    ):
+        return
+
+    print(
+        f"\033[33m⚠ Deprecated:\033[0m 'kgents {old_cmd}' → 'kgents {new_path}'",
+        file=sys.stderr,
+    )
 
 
 # =============================================================================
@@ -251,9 +319,16 @@ def resolve_command(name: str) -> Callable[..., Any] | None:
     - We don't import any command modules at startup
     - We only import the specific module for the invoked command
     - This keeps startup time minimal
+
+    Also emits deprecation warnings for old command names that have
+    AGENTESE equivalents (e.g., 'kgents soul' -> 'kgents self soul').
     """
     if name not in COMMAND_REGISTRY:
         return None
+
+    # Emit deprecation warning if this is an old command
+    if name in DEPRECATION_MAP:
+        _emit_deprecation_warning(name, DEPRECATION_MAP[name])
 
     module_path, func_name = COMMAND_REGISTRY[name].rsplit(":", 1)
 
