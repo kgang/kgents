@@ -220,8 +220,11 @@ class GlyphWidget(KgentsWidget[GlyphState]):
         """MARIMO projection: HTML span with CSS styling."""
         style_parts = []
 
+        # Use explicit color or default to dark for light theme compatibility
         if state.fg:
             style_parts.append(f"color: {state.fg}")
+        else:
+            style_parts.append("color: #212529")  # Dark text for light backgrounds
         if state.bg:
             style_parts.append(f"background-color: {state.bg}")
 

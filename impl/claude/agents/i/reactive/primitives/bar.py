@@ -244,7 +244,7 @@ class BarWidget(KgentsWidget[BarState]):
         html += "</div>"
 
         if state.label:
-            html = f'<div class="kgents-bar-container"><span class="kgents-bar-label">{state.label}: </span>{html}</div>'
+            html = f'<div class="kgents-bar-container" style="color: #212529;"><span class="kgents-bar-label">{state.label}: </span>{html}</div>'
 
         return html
 

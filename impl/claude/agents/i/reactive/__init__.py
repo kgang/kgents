@@ -1,38 +1,147 @@
 """
-Reactive Substrate: Target-agnostic widget infrastructure.
+Reactive Substrate v1.0 - Target-agnostic widget infrastructure.
 
 This module provides the unified reactive primitives that enable the same
 widget definition to render across CLI, TUI (Textual), marimo, and JSON API.
 
-Key abstractions:
-- Signal[T]: Observable state primitive
-- Computed[T]: Derived state (auto-updates when dependencies change)
-- Effect: Side effects container
-- KgentsWidget[S]: Base widget class with project() for multiple targets
+Architecture:
+    project : KgentsWidget[S] → Target → Renderable[Target]
 
-Usage:
-    from agents.i.reactive import Signal, Computed, Effect
-    from agents.i.reactive import KgentsWidget, RenderTarget
-    from agents.i.reactive.entropy import entropy_to_distortion
-    from agents.i.reactive.joy import generate_personality
-    from agents.i.reactive.primitives.glyph import GlyphWidget, GlyphState
+Same widget state, different projections. Zero rewrites.
 
-The reactive substrate is grounded in six principles from v0-ui research:
-1. Pure Entropy Algebra - No random.random() in render paths
-2. Time Flows Downward - Parent provides t to children
-3. Projections Are Manifest - project() IS logos.invoke("manifest")
-4. Glyph as Atomic Unit - Everything composes from glyphs
-5. Deterministic Joy - Same seed -> same personality, forever
-6. Slots/Fillers Composition - Operad-like widget composition
+Quick Start:
+    from agents.i.reactive import AgentCardWidget, AgentCardState
+
+    # Define once
+    card = AgentCardWidget(AgentCardState(
+        name="My Agent",
+        phase="active",
+        activity=(0.3, 0.5, 0.7, 0.9),
+        capability=0.85,
+    ))
+
+    # Render anywhere
+    print(card.to_cli())      # Terminal
+    card.to_tui()             # Textual app
+    card.to_marimo()          # Notebook
+    card.to_json()            # API response
+
+Key Abstractions:
+    - Signal[T]: Observable state primitive
+    - Computed[T]: Derived state (auto-updates when dependencies change)
+    - Effect: Side effects container
+    - KgentsWidget[S]: Base widget class with project() for multiple targets
+    - CompositeWidget[S]: Widget that composes child widgets in slots
+
+Principles:
+    1. Pure Entropy Algebra - No random.random() in render paths
+    2. Time Flows Downward - Parent provides t to children
+    3. Projections Are Manifest - project() IS logos.invoke("manifest")
+    4. Glyph as Atomic Unit - Everything composes from glyphs
+    5. Deterministic Joy - Same seed -> same personality, forever
+    6. Slots/Fillers Composition - Operad-like widget composition
 """
 
+# Re-export adapters
+from agents.i.reactive.adapters import (
+    AgentTraceState,
+    AgentTraceWidget,
+    FlexContainer,
+    FocusSync,
+    MarimoAdapter,
+    NotebookTheme,
+    SpanData,
+    TextualAdapter,
+    ThemeBinding,
+    create_flex_container,
+    create_focus_sync,
+    create_marimo_adapter,
+    create_notebook_theme,
+    create_textual_adapter,
+    create_theme_binding,
+    create_trace_widget,
+    inject_theme_css,
+    is_anywidget_available,
+)
+
+# Re-export primitives
+from agents.i.reactive.primitives import (
+    AgentCardState,
+    AgentCardWidget,
+    BarState,
+    BarWidget,
+    DensityFieldState,
+    DensityFieldWidget,
+    DialecticCardState,
+    DialecticCardWidget,
+    Entity,
+    GlyphState,
+    GlyphWidget,
+    ShadowCardState,
+    ShadowCardWidget,
+    ShadowItem,
+    SparklineState,
+    SparklineWidget,
+    Wind,
+    YieldCardState,
+    YieldCardWidget,
+)
 from agents.i.reactive.signal import Computed, Effect, Signal
-from agents.i.reactive.widget import KgentsWidget, RenderTarget
+from agents.i.reactive.widget import CompositeWidget, KgentsWidget, RenderTarget
+
+__version__ = "1.0.0"
 
 __all__ = [
+    # Core
     "Signal",
     "Computed",
     "Effect",
     "KgentsWidget",
+    "CompositeWidget",
     "RenderTarget",
+    # Primitives - Atomic
+    "GlyphWidget",
+    "GlyphState",
+    # Primitives - Composed
+    "BarWidget",
+    "BarState",
+    "SparklineWidget",
+    "SparklineState",
+    "DensityFieldWidget",
+    "DensityFieldState",
+    "Entity",
+    "Wind",
+    # Primitives - Cards
+    "AgentCardWidget",
+    "AgentCardState",
+    "YieldCardWidget",
+    "YieldCardState",
+    # Primitives - H-gent Cards
+    "ShadowCardWidget",
+    "ShadowCardState",
+    "ShadowItem",
+    "DialecticCardWidget",
+    "DialecticCardState",
+    # Adapters - Textual
+    "TextualAdapter",
+    "create_textual_adapter",
+    "FlexContainer",
+    "create_flex_container",
+    "ThemeBinding",
+    "create_theme_binding",
+    "FocusSync",
+    "create_focus_sync",
+    # Adapters - Marimo
+    "MarimoAdapter",
+    "create_marimo_adapter",
+    "is_anywidget_available",
+    "NotebookTheme",
+    "create_notebook_theme",
+    "inject_theme_css",
+    "AgentTraceWidget",
+    "AgentTraceState",
+    "SpanData",
+    "create_trace_widget",
+    # Meta
+    "__version__",
 ]

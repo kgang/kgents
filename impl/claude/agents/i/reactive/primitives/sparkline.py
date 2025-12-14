@@ -261,7 +261,7 @@ class SparklineWidget(KgentsWidget[SparklineState]):
         html += "</div>"
 
         if state.label:
-            html = f'<div class="kgents-sparkline-container"><span class="kgents-sparkline-label">{state.label}: </span>{html}</div>'
+            html = f'<div class="kgents-sparkline-container" style="color: #212529;"><span class="kgents-sparkline-label">{state.label}: </span>{html}</div>'
 
         return html
 

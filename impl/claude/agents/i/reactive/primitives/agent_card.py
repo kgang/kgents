@@ -339,13 +339,15 @@ class AgentCardWidget(CompositeWidget[AgentCardState]):
         activity_html = str(self.slots["activity"].project(RenderTarget.MARIMO))
         capability_html = str(self.slots["capability"].project(RenderTarget.MARIMO))
 
-        # Card container style
+        # Card container style - light theme with good contrast
         card_style = (
             "font-family: monospace; "
-            "border: 1px solid #444; "
+            "border: 1px solid #dee2e6; "
             "border-radius: 4px; "
             "padding: 8px; "
-            "background: #1a1a1a;"
+            "background: #ffffff; "
+            "color: #212529; "
+            "box-shadow: 0 1px 3px rgba(0,0,0,0.1);"
         )
 
         # Apply breathing animation if active
@@ -357,9 +359,7 @@ class AgentCardWidget(CompositeWidget[AgentCardState]):
         # Header
         html += '<div class="kgents-card-header" style="margin-bottom: 4px;">'
         html += glyph_html
-        html += (
-            f'<span style="margin-left: 4px; font-weight: bold;">{state.name}</span>'
-        )
+        html += f'<span style="margin-left: 4px; font-weight: bold; color: #212529;">{state.name}</span>'
         html += "</div>"
 
         if state.style != "minimal":
