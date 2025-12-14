@@ -30,7 +30,7 @@ Deeply specifying and implementing the agent ecosystem with AGENTESE as the meta
 | Ψ | Psigent | Psychopomp (metaphor engine) | — |
 | Ω | Omegagent | Somatic Orchestrator (morphemes, proprioception) | — |
 
-**Note**: Polynomial agents (`PolyAgent[S, A, B]`) capture state-dependent behavior. See `plans/skills/polynomial-agent.md`.
+**Note**: Polynomial agents (`PolyAgent[S, A, B]`) capture state-dependent behavior. See `docs/skills/polynomial-agent.md`.
 
 ## AGENTESE: The Verb-First Ontology
 
@@ -91,7 +91,7 @@ await logos.invoke("world.house.manifest", economist_umwelt)  # → Appraisal
 - Composability is paramount (C-gents principles apply everywhere)
 - Read `spec/principles.md` before contributing
 - **Use AGENTESE paths** for agent-world interaction when possible
-- **Consult skills** in `plans/skills/` for common patterns
+- **Consult skills** in `docs/skills/` for common patterns
 
 ## DevEx Commands (Slash Commands)
 
@@ -104,7 +104,7 @@ await logos.invoke("world.house.manifest", economist_umwelt)  # → Appraisal
 
 ## Skills Directory
 
-`plans/skills/` contains documented patterns for common tasks:
+`docs/skills/` contains documented patterns for common tasks:
 
 | Skill | Description |
 |-------|-------------|

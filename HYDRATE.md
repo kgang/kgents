@@ -42,7 +42,7 @@ SENSE → ACT → REFLECT → (loop)
 | **ACT** | Implement, QA, Test, Educate |
 | **REFLECT** | Measure, Reflect, Re-Metabolize |
 
-**Full 11-Phase**: `plans/skills/n-phase-cycle/` (Crown Jewels only)
+**Full 11-Phase**: `docs/skills/n-phase-cycle/` (Crown Jewels only)
 
 **Auto-Inducer**: `⟿[PHASE]` continue | `⟂[REASON]` halt | *(none)* await human
 
@@ -56,7 +56,7 @@ SENSE → ACT → REFLECT → (loop)
 | `plans/_forest.md` | Canopy | Regenerate |
 | `plans/meta.md` | Mycelium | Append, 50-line cap |
 | `plans/_epilogues/` | Spores | Write at session end |
-| `plans/skills/` | Patterns | Pull → Apply → Push |
+| `docs/skills/` | Patterns | Pull → Apply → Push |
 
 ---
 
@@ -98,7 +98,7 @@ A B C D E F G H I J K L M N O P Ψ Q R T U W Flux
 
 ## Deep Dive
 
-`spec/principles.md` • `spec/protocols/auto-inducer.md` • `plans/skills/` • `docs/functor-field-guide.md`
+`spec/principles.md` • `spec/protocols/auto-inducer.md` • `docs/skills/` • `docs/functor-field-guide.md`
 
 ---
 
