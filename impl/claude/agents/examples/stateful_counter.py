@@ -96,7 +96,7 @@ async def main() -> None:
     print(f"\nHalo capabilities: {[type(cap).__name__ for cap in halo]}")
 
     # Using Delta archetype
-    delta_counter = CounterUsingDelta()
+    _delta_counter = CounterUsingDelta()  # Unused but shows instantiation pattern
     delta_halo = get_halo(CounterUsingDelta)
     print(f"Delta capabilities: {[type(cap).__name__ for cap in delta_halo]}")
 

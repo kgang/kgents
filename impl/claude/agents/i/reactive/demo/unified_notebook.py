@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Unified Demo Notebook - Wave 12 marimo integration.
 
@@ -5,6 +6,9 @@ Run with: marimo run impl/claude/agents/i/reactive/demo/unified_notebook.py
 
 This notebook demonstrates the functor property:
 Same widget definitions render to CLI, TUI, and Notebook targets.
+
+Note: This is a marimo notebook. The @app.cell decorator pattern doesn't
+play well with strict mypy, hence ignore-errors above.
 """
 # /// script
 # requires-python = ">=3.11"

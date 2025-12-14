@@ -340,7 +340,7 @@ def run_tui(dashboard: UnifiedDashboard) -> None:
         print("Install with: uv pip install textual")
         sys.exit(1)
 
-    class UnifiedTUIApp(App):
+    class UnifiedTUIApp(App[None]):
         """Wave 12 Unified Demo - TUI Mode."""
 
         TITLE = dashboard.title

@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     pass
 
 
-def get_playground_namespace() -> dict:
+def get_playground_namespace() -> dict[str, object]:
     """
     Build the namespace for the playground REPL.
 
@@ -175,7 +175,7 @@ def launch() -> None:
     try:
         from IPython import embed
 
-        embed(user_ns=namespace, colors="neutral")
+        embed(user_ns=namespace, colors="neutral")  # type: ignore[no-untyped-call]
     except ImportError:
         # Fall back to standard library REPL
         code.interact(

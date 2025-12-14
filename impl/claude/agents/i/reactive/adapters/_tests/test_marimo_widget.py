@@ -261,8 +261,12 @@ class TestJsonSerialization:
 
     def test_all_phases(self):
         """All phases serialize correctly."""
+        from typing import cast
+
+        from agents.i.reactive.primitives.glyph import Phase
+
         for phase in ["idle", "active", "waiting", "error", "complete", "thinking"]:
-            card = AgentCardWidget(AgentCardState(phase=phase))
+            card = AgentCardWidget(AgentCardState(phase=cast(Phase, phase)))
             adapter = MarimoAdapter(card)
 
             state = json.loads(adapter._state_json)

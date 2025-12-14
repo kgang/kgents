@@ -60,7 +60,7 @@ class ThemeBinding:
 
     def __init__(self) -> None:
         self._unsubscribe: Callable[[], None] | None = None
-        self._app: App | None = None
+        self._app: App[object] | None = None
         self._css_class: str = "kgents-theme"
 
     def to_css(self, theme: Theme) -> str:
@@ -263,7 +263,7 @@ class ThemeBinding:
             "--border-focus": self._rgb_to_css(theme.color(colors.border_focus)),
         }
 
-    def bind(self, app: App, provider: ThemeProvider) -> Callable[[], None]:
+    def bind(self, app: App[object], provider: ThemeProvider) -> Callable[[], None]:
         """
         Bind to a Textual App for reactive theme updates.
 

@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Reactive Substrate Tutorial - Learn the functor pattern step by step.
 
@@ -10,6 +11,9 @@ This interactive notebook teaches you to:
 4. Use reactive signals for dynamic updates
 
 Each cell builds on the previous one. Run them in order.
+
+Note: This is a marimo notebook. The @app.cell decorator pattern doesn't
+play well with strict mypy, hence ignore-errors above.
 """
 # /// script
 # requires-python = ">=3.11"

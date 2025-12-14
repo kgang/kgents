@@ -22,7 +22,6 @@ from typing import Any, FrozenSet
 
 from .protocol import PolyAgent, from_function
 
-
 # =============================================================================
 # Type Definitions
 # =============================================================================
@@ -306,9 +305,7 @@ ID = PolyAgent[str, Any, Any](
 
 
 # 2. Ground: Grounding primitive (queries → grounded facts)
-def _ground_transition(
-    state: GroundState, input: Any
-) -> tuple[GroundState, Any]:
+def _ground_transition(state: GroundState, input: Any) -> tuple[GroundState, Any]:
     """Ground an input to factual basis."""
     # In real implementation, this would call grounding logic
     if isinstance(input, str) and input.strip():
@@ -325,9 +322,7 @@ GROUND = PolyAgent[GroundState, Any, dict[str, Any]](
 
 
 # 3. Judge: Judgment primitive (claims → verdicts)
-def _judge_transition(
-    state: JudgeState, input: Claim
-) -> tuple[JudgeState, Verdict]:
+def _judge_transition(state: JudgeState, input: Claim) -> tuple[JudgeState, Verdict]:
     """Judge a claim."""
     if isinstance(input, Claim):
         accepted = input.confidence > 0.5
@@ -365,16 +360,12 @@ def _contradict_transition(
     if isinstance(input, Thesis):
         return (
             ContradictState.FOUND,
-            Antithesis(
-                thesis=input, contradiction=f"Contrary to: {input.content}"
-            ),
+            Antithesis(thesis=input, contradiction=f"Contrary to: {input.content}"),
         )
     default_thesis = Thesis(content=str(input))
     return (
         ContradictState.FOUND,
-        Antithesis(
-            thesis=default_thesis, contradiction=f"Contrary to: {input}"
-        ),
+        Antithesis(thesis=default_thesis, contradiction=f"Contrary to: {input}"),
     )
 
 
@@ -426,7 +417,10 @@ SUBLATE = PolyAgent[SublateState, tuple[Thesis, Antithesis], Synthesis](
 # 6. Compose: Meta-composition primitive
 COMPOSE: PolyAgent[str, Any, Any] = from_function(
     name="Compose",
-    fn=lambda pair: (pair[0], pair[1]),  # Identity on pairs; actual composition in operad
+    fn=lambda pair: (
+        pair[0],
+        pair[1],
+    ),  # Identity on pairs; actual composition in operad
 )
 
 
@@ -440,9 +434,7 @@ def _fix_directions(state: FixState) -> FrozenSet[Any]:
             return frozenset()  # No more inputs accepted
 
 
-def _fix_transition(
-    state: FixState, input: tuple[Any, int]
-) -> tuple[FixState, Any]:
+def _fix_transition(state: FixState, input: tuple[Any, int]) -> tuple[FixState, Any]:
     """
     Fixed-point transition.
 
@@ -607,9 +599,7 @@ TITHE = PolyAgent[TitheState, Offering, dict[str, Any]](
 
 
 # 13. Define: Autopoietic creation
-def _define_transition(
-    state: str, input: Spec
-) -> tuple[str, Definition]:
+def _define_transition(state: str, input: Spec) -> tuple[str, Definition]:
     """Autopoietically define a new agent."""
     if isinstance(input, Spec):
         return (
@@ -620,9 +610,7 @@ def _define_transition(
     default_spec = Spec(name=str(input), signature="Any -> Any", behavior="identity")
     return (
         "creating",
-        Definition(
-            spec=default_spec, created=False, message="Invalid spec"
-        ),
+        Definition(spec=default_spec, created=False, message="Invalid spec"),
     )
 
 
@@ -647,7 +635,8 @@ def _remember_transition(
     import time
 
     if isinstance(input, Memory):
-        timestamp = input.timestamp if input.timestamp > 0 else time.time()
+        # timestamp preserved in Memory object, validation only
+        _ = input.timestamp if input.timestamp > 0 else time.time()
         return (
             RememberState.STORED,
             MemoryResult(
@@ -672,7 +661,9 @@ def _remember_transition(
 
 REMEMBER = PolyAgent[RememberState, Memory, MemoryResult](
     name="Remember",
-    positions=frozenset({RememberState.IDLE, RememberState.STORING, RememberState.STORED}),
+    positions=frozenset(
+        {RememberState.IDLE, RememberState.STORING, RememberState.STORED}
+    ),
     _directions=lambda s: frozenset({Memory, Any})  # type: ignore[arg-type]
     if s in (RememberState.IDLE, RememberState.STORING)
     else frozenset(),
@@ -710,7 +701,9 @@ def _forget_transition(
 
 FORGET = PolyAgent[ForgetState, str, MemoryResult](
     name="Forget",
-    positions=frozenset({ForgetState.IDLE, ForgetState.FORGETTING, ForgetState.FORGOTTEN}),
+    positions=frozenset(
+        {ForgetState.IDLE, ForgetState.FORGETTING, ForgetState.FORGOTTEN}
+    ),
     _directions=lambda s: frozenset({str, Any})  # type: ignore[arg-type]
     if s in (ForgetState.IDLE, ForgetState.FORGETTING)
     else frozenset(),
@@ -751,7 +744,9 @@ def _evolve_transition(
             generation=input.generation + 1,
         )
 
-        new_state = EvolveState.CONVERGED if new_fitness > 0.9 else EvolveState.SELECTING
+        new_state = (
+            EvolveState.CONVERGED if new_fitness > 0.9 else EvolveState.SELECTING
+        )
 
         return (
             new_state,
@@ -778,12 +773,14 @@ def _evolve_transition(
 
 EVOLVE = PolyAgent[EvolveState, Organism, Evolution](
     name="Evolve",
-    positions=frozenset({
-        EvolveState.DORMANT,
-        EvolveState.MUTATING,
-        EvolveState.SELECTING,
-        EvolveState.CONVERGED,
-    }),
+    positions=frozenset(
+        {
+            EvolveState.DORMANT,
+            EvolveState.MUTATING,
+            EvolveState.SELECTING,
+            EvolveState.CONVERGED,
+        }
+    ),
     _directions=lambda s: frozenset({Organism, Any})  # type: ignore[arg-type]
     if s != EvolveState.CONVERGED
     else frozenset(),
@@ -832,7 +829,9 @@ def _narrate_transition(
 
 NARRATE = PolyAgent[NarrateState, tuple[Any, ...], Story](
     name="Narrate",
-    positions=frozenset({NarrateState.LISTENING, NarrateState.COMPOSING, NarrateState.TOLD}),
+    positions=frozenset(
+        {NarrateState.LISTENING, NarrateState.COMPOSING, NarrateState.TOLD}
+    ),
     _directions=lambda s: frozenset({tuple, Any})  # type: ignore[arg-type]
     if s in (NarrateState.LISTENING, NarrateState.COMPOSING)
     else frozenset(),

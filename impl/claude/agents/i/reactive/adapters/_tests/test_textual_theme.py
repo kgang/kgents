@@ -344,8 +344,12 @@ class TestThemeBindingLifecycle:
 
     def test_unbind_clears_state(self) -> None:
         """Unbind clears app and unsubscribe."""
+        from typing import cast
+
+        from textual.app import App
+
         binding = ThemeBinding()
-        binding._app = object()  # Mock app
+        binding._app = cast(App[object], object())  # Mock app
         binding._unsubscribe = lambda: None
 
         binding.unbind()

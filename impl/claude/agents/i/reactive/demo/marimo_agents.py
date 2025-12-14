@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Reactive Agents Demo - marimo notebook showcasing Wave 11 integration.
 
@@ -8,6 +9,9 @@ This notebook demonstrates:
 2. Interactive controls that update widget state
 3. AgentTraceWidget for observability
 4. Theme customization
+
+Note: This is a marimo notebook. The @app.cell decorator pattern doesn't
+play well with strict mypy, hence ignore-errors above.
 """
 # /// script
 # requires-python = ">=3.11"

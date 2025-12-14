@@ -91,7 +91,7 @@ class FlexContainer(Container):
         self._computed_rects: dict[str, LayoutRect] = {}
 
     @property
-    def layout(self) -> FlexLayout:
+    def flex_layout(self) -> FlexLayout:
         """Get the FlexLayout configuration."""
         return self._layout
 
@@ -148,7 +148,7 @@ class FlexContainer(Container):
         """Apply CSS styles on mount."""
         css = self.get_css_styles()
         # Dynamic styles are set via inline styles
-        self.styles.parse(css)
+        self.styles.merge(self.styles.parse(css, ("inline", "")))
 
     def on_resize(self, event: Resize) -> None:
         """Recompute layout on resize."""
@@ -206,7 +206,7 @@ class ResponsiveFlexContainer(FlexContainer):
             else:
                 self._layout.direction = self._wide_direction
             # Reapply CSS
-            self.styles.parse(self.get_css_styles())
+            self.styles.merge(self.styles.parse(self.get_css_styles(), ("inline", "")))
 
         super().on_resize(event)
 

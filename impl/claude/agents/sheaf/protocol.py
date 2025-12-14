@@ -167,7 +167,9 @@ class AgentSheaf(Generic[Ctx]):
             True if all overlapping agents are compatible
         """
         if equivalence is None:
-            equivalence = lambda a, b: a == b
+
+            def equivalence(a: Any, b: Any) -> bool:
+                return bool(a == b)
 
         ctx_list = list(locals.keys())
         for i, ctx1 in enumerate(ctx_list):
@@ -261,7 +263,9 @@ AESTHETIC = Context("aesthetic", frozenset({"taste", "beauty", "minimalism"}))
 CATEGORICAL = Context("categorical", frozenset({"structure", "types", "morphisms"}))
 GRATITUDE = Context("gratitude", frozenset({"sacred", "appreciation", "surplus"}))
 HETERARCHY = Context("heterarchy", frozenset({"peer", "forest", "nonhierarchical"}))
-GENERATIVITY = Context("generativity", frozenset({"creation", "emergence", "autopoiesis"}))
+GENERATIVITY = Context(
+    "generativity", frozenset({"creation", "emergence", "autopoiesis"})
+)
 JOY = Context("joy", frozenset({"delight", "play", "fun"}))
 
 

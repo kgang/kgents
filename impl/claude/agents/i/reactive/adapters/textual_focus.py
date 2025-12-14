@@ -86,7 +86,7 @@ class FocusSync:
             sync_from_textual: Whether to update AnimatedFocus when Textual focus changes
         """
         self._focus = animated_focus
-        self._app: App | None = None
+        self._app: App[object] | None = None
         self._widget_map: dict[str, Widget] = {}
         self._sync_to_textual = sync_to_textual
         self._sync_from_textual = sync_from_textual
@@ -108,7 +108,7 @@ class FocusSync:
         """Get currently focused element ID."""
         return self._focus.focused_id
 
-    def bind(self, app: App) -> Callable[[], None]:
+    def bind(self, app: App[object]) -> Callable[[], None]:
         """
         Bind to a Textual App.
 
@@ -208,21 +208,24 @@ class FocusSync:
         """
         return self._focus.move(direction, style)
 
-    def on_focus(self, event: Focus) -> None:
+    def on_focus(self, event: Focus, widget: Widget) -> None:
         """
         Handle Textual Focus event.
 
         Call this from your App's on_focus method to sync
         Textual focus → AnimatedFocus.
 
+        Note: In Textual, Focus events don't carry the widget reference.
+        You must pass the widget that received focus explicitly.
+
         Args:
             event: Textual Focus event
+            widget: Widget that received focus (typically `self` in handler)
         """
         if not self._sync_from_textual or self._updating:
             return
 
         # Find widget ID from the focused widget
-        widget = event.widget
         widget_id = self._get_widget_id(widget)
 
         if widget_id:

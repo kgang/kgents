@@ -32,14 +32,14 @@ class TestFlexContainerCreation:
         layout = FlexLayout(direction=FlexDirection.ROW)
         container = FlexContainer(layout)
 
-        assert container.layout is layout
+        assert container.flex_layout is layout
 
     def test_create_with_column_layout(self) -> None:
         """Create container with column direction."""
         layout = FlexLayout(direction=FlexDirection.COLUMN)
         container = FlexContainer(layout)
 
-        assert container.layout.direction == FlexDirection.COLUMN
+        assert container.flex_layout.direction == FlexDirection.COLUMN
 
     def test_create_with_name(self) -> None:
         """Create container with name."""
@@ -278,31 +278,31 @@ class TestCreateFlexContainer:
         """Factory sets direction."""
         container = create_flex_container(direction=FlexDirection.COLUMN)
 
-        assert container.layout.direction == FlexDirection.COLUMN
+        assert container.flex_layout.direction == FlexDirection.COLUMN
 
     def test_with_gap(self) -> None:
         """Factory sets gap."""
         container = create_flex_container(gap=4)
 
-        assert container.layout.gap == 4
+        assert container.flex_layout.gap == 4
 
     def test_with_justify(self) -> None:
         """Factory sets justify."""
         container = create_flex_container(justify=FlexAlign.CENTER)
 
-        assert container.layout.justify == FlexAlign.CENTER
+        assert container.flex_layout.justify == FlexAlign.CENTER
 
     def test_with_align(self) -> None:
         """Factory sets align."""
         container = create_flex_container(align=FlexAlign.END)
 
-        assert container.layout.align == FlexAlign.END
+        assert container.flex_layout.align == FlexAlign.END
 
     def test_with_wrap(self) -> None:
         """Factory sets wrap."""
         container = create_flex_container(wrap=FlexWrap.WRAP)
 
-        assert container.layout.wrap == FlexWrap.WRAP
+        assert container.flex_layout.wrap == FlexWrap.WRAP
 
 
 class TestFlexRowColumn:
@@ -312,37 +312,37 @@ class TestFlexRowColumn:
         """flex_row creates horizontal container."""
         container = flex_row()
 
-        assert container.layout.direction == FlexDirection.ROW
+        assert container.flex_layout.direction == FlexDirection.ROW
 
     def test_flex_row_with_gap(self) -> None:
         """flex_row respects gap."""
         container = flex_row(gap=2)
 
-        assert container.layout.gap == 2
+        assert container.flex_layout.gap == 2
 
     def test_flex_row_default_align(self) -> None:
         """flex_row defaults to center align."""
         container = flex_row()
 
-        assert container.layout.align == FlexAlign.CENTER
+        assert container.flex_layout.align == FlexAlign.CENTER
 
     def test_flex_column(self) -> None:
         """flex_column creates vertical container."""
         container = flex_column()
 
-        assert container.layout.direction == FlexDirection.COLUMN
+        assert container.flex_layout.direction == FlexDirection.COLUMN
 
     def test_flex_column_with_gap(self) -> None:
         """flex_column respects gap."""
         container = flex_column(gap=3)
 
-        assert container.layout.gap == 3
+        assert container.flex_layout.gap == 3
 
     def test_flex_column_default_align(self) -> None:
         """flex_column defaults to stretch align."""
         container = flex_column()
 
-        assert container.layout.align == FlexAlign.STRETCH
+        assert container.flex_layout.align == FlexAlign.STRETCH
 
 
 # =============================================================================
@@ -366,10 +366,14 @@ class TestFlexContainerIntegration:
         rects = [container.get_child_rect(x) for x in ["a", "b", "c"]]
         assert all(r is not None for r in rects)
 
+        # Type narrow: all are not None after assert above
+        r0, r1, r2 = rects[0], rects[1], rects[2]
+        assert r0 is not None and r1 is not None and r2 is not None
+
         # All should be at same y (horizontal layout)
-        assert rects[0].y == rects[1].y == rects[2].y
+        assert r0.y == r1.y == r2.y
         # X should increase
-        assert rects[0].x < rects[1].x < rects[2].x
+        assert r0.x < r1.x < r2.x
 
     def test_column_layout_with_children(self) -> None:
         """Column layout positions children vertically."""
@@ -384,7 +388,11 @@ class TestFlexContainerIntegration:
         rects = [container.get_child_rect(x) for x in ["a", "b", "c"]]
         assert all(r is not None for r in rects)
 
+        # Type narrow: all are not None after assert above
+        r0, r1, r2 = rects[0], rects[1], rects[2]
+        assert r0 is not None and r1 is not None and r2 is not None
+
         # All should be at same x (vertical layout)
-        assert rects[0].x == rects[1].x == rects[2].x
+        assert r0.x == r1.x == r2.x
         # Y should increase
-        assert rects[0].y < rects[1].y < rects[2].y
+        assert r0.y < r1.y < r2.y

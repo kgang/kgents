@@ -23,7 +23,12 @@ from agents.i.reactive.adapters import (
 )
 from agents.i.reactive.primitives.agent_card import AgentCardState, AgentCardWidget
 from agents.i.reactive.primitives.bar import BarState, BarWidget
-from agents.i.reactive.primitives.glyph import GlyphState, GlyphWidget
+from agents.i.reactive.primitives.glyph import (
+    Animation,
+    GlyphState,
+    GlyphWidget,
+    Phase,
+)
 from agents.i.reactive.primitives.sparkline import SparklineState, SparklineWidget
 from agents.i.reactive.widget import RenderTarget
 
@@ -249,16 +254,14 @@ class TestCrossWidgetIntegration:
         spark = SparklineWidget(SparklineState(values=(0.5,)))
         bar = BarWidget(BarState(value=0.7))
 
-        adapters = [
-            MarimoAdapter(card),
-            MarimoAdapter(spark),
-            MarimoAdapter(bar),
-        ]
+        adapter_card = MarimoAdapter(card)
+        adapter_spark = MarimoAdapter(spark)
+        adapter_bar = MarimoAdapter(bar)
 
         # All should have correct widget types
-        assert adapters[0].kgents_widget is card
-        assert adapters[1].kgents_widget is spark
-        assert adapters[2].kgents_widget is bar
+        assert adapter_card.kgents_widget is card
+        assert adapter_spark.kgents_widget is spark
+        assert adapter_bar.kgents_widget is bar
 
     def test_all_render_targets_consistent(self):
         """All render targets produce consistent data."""
@@ -304,8 +307,10 @@ class TestGlyphWidgetIntegration:
             "complete",
         ]
 
+        from typing import cast
+
         for phase in phases:
-            glyph = GlyphWidget(GlyphState(phase=phase))
+            glyph = GlyphWidget(GlyphState(phase=cast(Phase, phase)))
             json_out = glyph.project(RenderTarget.JSON)
             assert json_out["phase"] == phase
 
@@ -319,10 +324,12 @@ class TestGlyphWidgetIntegration:
 
     def test_glyph_animations(self):
         """Glyph animations in marimo output."""
+        from typing import cast
+
         animations = ["none", "pulse", "blink", "breathe", "wiggle"]
 
         for anim in animations:
-            glyph = GlyphWidget(GlyphState(char="◉", animate=anim))
+            glyph = GlyphWidget(GlyphState(char="◉", animate=cast(Animation, anim)))
             marimo_out = glyph.project(RenderTarget.MARIMO)
 
             if anim != "none":

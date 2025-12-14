@@ -75,8 +75,8 @@ async def main() -> None:
     # 4. Pipeline composition with | operator
     print("\n=== Living Pipeline Demo ===\n")
 
-    # Create another flux agent
-    flux_filter: FluxAgent[int, int | None] = Flux.lift(FilterEvenAgent())
+    # Create another flux agent (shown for demonstration, used in full pipeline)
+    _flux_filter: FluxAgent[int, int | None] = Flux.lift(FilterEvenAgent())
 
     # Compose into a pipeline: double -> filter even
     # (This shows the pattern; actual | operator is on FluxPipeline)
@@ -99,8 +99,9 @@ async def main() -> None:
         feedback_fraction=0.0,  # No ouroboric feedback
     )
 
-    custom_flux: FluxAgent[int, int] = Flux.lift(doubler, config=config)
+    _custom_flux: FluxAgent[int, int] = Flux.lift(doubler, config=config)
     print(f"Flux with custom config: buffer_size={config.buffer_size}")
+    del _custom_flux  # Shown for demonstration
 
 
 if __name__ == "__main__":

@@ -20,7 +20,7 @@ Run:
 import asyncio
 from typing import Generic, TypeVar
 
-from agents.c import Maybe, Just, Nothing, MaybeFunctor
+from agents.c import Just, Maybe, MaybeFunctor, Nothing
 from bootstrap.types import Agent
 
 T = TypeVar("T")

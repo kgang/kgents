@@ -62,7 +62,7 @@ def render_soul_card_cli(
         CLI-formatted string representation of soul state
     """
     widget = create_soul_card_from_manifest(manifest, adapter)
-    return widget.project(RenderTarget.CLI)
+    return str(widget.project(RenderTarget.CLI))
 
 
 async def run_soul_demo(dialogue_prompt: str | None = None) -> None:

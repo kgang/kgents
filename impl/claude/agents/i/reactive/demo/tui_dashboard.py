@@ -34,7 +34,7 @@ from agents.i.reactive.pipeline.focus import FocusTransitionStyle
 from agents.i.reactive.pipeline.theme import ThemeMode, ThemeProvider
 from agents.i.reactive.signal import Signal
 from agents.i.reactive.widget import KgentsWidget, RenderTarget
-from agents.i.reactive.wiring.clock import Clock
+from agents.i.reactive.wiring.clock import Clock, ClockConfig
 from agents.i.reactive.wiring.interactions import FocusDirection
 from rich.text import Text
 from textual.app import App, ComposeResult
@@ -161,7 +161,7 @@ class ClockDisplayWidget(KgentsWidget[ClockDisplayState]):
 # =============================================================================
 
 
-class DashboardApp(App):
+class DashboardApp(App[object]):
     """Wave 10 TUI Dashboard Demo."""
 
     TITLE = "kgents TUI Dashboard"
@@ -226,7 +226,7 @@ class DashboardApp(App):
         self.theme_binding = create_theme_binding()
 
         # Clock
-        self.clock = Clock.create(fps=10)
+        self.clock = Clock.create(ClockConfig(fps=10))
         self.clock_widget = ClockDisplayWidget()
 
         # Agent cards
@@ -268,9 +268,8 @@ class DashboardApp(App):
 
     def on_mount(self) -> None:
         """Handle mount event."""
-        # Start clock
-        self.clock.start()
-        self.clock.subscribe(self._on_clock_tick)
+        # Start clock (auto_start=True by default, so just subscribe)
+        self.clock.state.subscribe(self._on_clock_tick)
 
         # Update clock display
         self._update_clock_display()
@@ -296,12 +295,8 @@ class DashboardApp(App):
         """Toggle between dark and light theme."""
         new_mode = self.theme_provider.toggle_mode()
 
-        # Apply new CSS
-        if new_mode == ThemeMode.DARK:
-            self.stylesheet.parse(get_dark_css())
-        else:
-            self.stylesheet.parse(get_light_css())
-
+        # Theme binding handles CSS updates automatically via subscription
+        # Just refresh the display
         self.refresh()
         self.notify(f"Theme: {new_mode.name}")
 

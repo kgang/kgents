@@ -12,42 +12,7 @@ These tests verify:
 """
 
 import pytest
-
 from agents.poly import (
-    # Types - Bootstrap
-    Antithesis,
-    Claim,
-    ContradictState,
-    Definition,
-    FixState,
-    GroundState,
-    JudgeState,
-    SublateState,
-    Spec,
-    Synthesis,
-    Thesis,
-    Verdict,
-    # Types - Perception
-    Handle,
-    Umwelt,
-    WitnessState,
-    # Types - Entropy
-    EntropyGrant,
-    EntropyRequest,
-    Offering,
-    SipState,
-    TitheState,
-    # Types - Memory (D-gent)
-    ForgetState,
-    Memory,
-    MemoryResult,
-    RememberState,
-    # Types - Teleological (E-gent, N-gent)
-    Evolution,
-    EvolveState,
-    NarrateState,
-    Organism,
-    Story,
     # Primitives
     COMPOSE,
     CONTRADICT,
@@ -67,6 +32,40 @@ from agents.poly import (
     SUBLATE,
     TITHE,
     WITNESS,
+    # Types - Bootstrap
+    Antithesis,
+    Claim,
+    ContradictState,
+    Definition,
+    # Types - Entropy
+    EntropyGrant,
+    EntropyRequest,
+    # Types - Teleological (E-gent, N-gent)
+    Evolution,
+    EvolveState,
+    FixState,
+    # Types - Memory (D-gent)
+    ForgetState,
+    GroundState,
+    # Types - Perception
+    Handle,
+    JudgeState,
+    Memory,
+    MemoryResult,
+    NarrateState,
+    Offering,
+    Organism,
+    RememberState,
+    SipState,
+    Spec,
+    Story,
+    SublateState,
+    Synthesis,
+    Thesis,
+    TitheState,
+    Umwelt,
+    Verdict,
+    WitnessState,
     # Registry
     all_primitives,
     get_primitive,
@@ -176,13 +175,9 @@ class TestBootstrapPrimitives:
     def test_sublate_synthesizes(self) -> None:
         """SUBLATE synthesizes thesis and antithesis."""
         thesis = Thesis(content="Agents are functions")
-        antithesis = Antithesis(
-            thesis=thesis, contradiction="Agents have state"
-        )
+        antithesis = Antithesis(thesis=thesis, contradiction="Agents have state")
 
-        state, synthesis = SUBLATE.invoke(
-            SublateState.ANALYZING, (thesis, antithesis)
-        )
+        state, synthesis = SUBLATE.invoke(SublateState.ANALYZING, (thesis, antithesis))
 
         assert state == SublateState.SYNTHESIZED
         assert isinstance(synthesis, Synthesis)
@@ -227,12 +222,8 @@ class TestPerceptionPrimitives:
         """MANIFEST produces different results for different observers."""
         handle = Handle(path="concept.beauty")
 
-        _, m1 = MANIFEST.invoke(
-            "observing", (handle, Umwelt(observer_type="artist"))
-        )
-        _, m2 = MANIFEST.invoke(
-            "observing", (handle, Umwelt(observer_type="engineer"))
-        )
+        _, m1 = MANIFEST.invoke("observing", (handle, Umwelt(observer_type="artist")))
+        _, m2 = MANIFEST.invoke("observing", (handle, Umwelt(observer_type="engineer")))
 
         assert "[artist]" in m1.perception
         assert "[engineer]" in m2.perception
@@ -318,9 +309,7 @@ class TestPrimitiveComposition:
         _, antithesis = CONTRADICT.invoke(ContradictState.SEEKING, thesis)
 
         # Step 2: Sublate
-        _, synthesis = SUBLATE.invoke(
-            SublateState.ANALYZING, (thesis, antithesis)
-        )
+        _, synthesis = SUBLATE.invoke(SublateState.ANALYZING, (thesis, antithesis))
 
         assert isinstance(synthesis, Synthesis)
         assert synthesis.thesis == thesis
@@ -373,9 +362,7 @@ class TestPrimitiveProperties:
         """All primitives have transition function."""
         for name, primitive in PRIMITIVES.items():
             # All primitives should have a transition
-            assert hasattr(
-                primitive, "_transition"
-            ), f"{name} missing transition"
+            assert hasattr(primitive, "_transition"), f"{name} missing transition"
 
     def test_primitive_names_unique(self) -> None:
         """All primitive names are unique."""
@@ -436,7 +423,11 @@ class TestTeleologicalPrimitives:
         organism = Organism(genome=(1.0, 2.0, 3.0), fitness=0.5, generation=0)
         state, evolution = EVOLVE.invoke(EvolveState.DORMANT, organism)
 
-        assert state in (EvolveState.MUTATING, EvolveState.SELECTING, EvolveState.CONVERGED)
+        assert state in (
+            EvolveState.MUTATING,
+            EvolveState.SELECTING,
+            EvolveState.CONVERGED,
+        )
         assert isinstance(evolution, Evolution)
         assert evolution.organism.generation == 1
         assert len(evolution.organism.genome) == 3
