@@ -1,0 +1,1380 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Tasteful, curated, ethical, joy-inducing agents">
+      
+      
+        <meta name="author" content="Kent Gang">
+      
+      
+        <link rel="canonical" href="https://kentgang.github.io/kgents/_archive/agent-refactoring-fundamentals/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+    
+    
+      
+        <title>Agent Refactoring Fundamentals - kgents Examples</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.618322db.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#agent-refactoring-fundamentals" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="kgents Examples" class="md-header__button md-logo" aria-label="kgents Examples" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            kgents Examples
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Agent Refactoring Fundamentals
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="deep-purple"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/kentgang/kgents" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    kentgang/kgents
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../gallery/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../gallery/examples/hello-world/" class="md-tabs__link">
+          
+  
+  
+  Examples
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="kgents Examples" class="md-nav__button md-logo" aria-label="kgents Examples" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    kgents Examples
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/kentgang/kgents" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    kentgang/kgents
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../gallery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Examples
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../gallery/examples/hello-world/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hello World
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../gallery/examples/composition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Composition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../gallery/examples/functors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Functors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../gallery/examples/soul-dialogue/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Soul Dialogue
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../gallery/examples/streaming/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Streaming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../gallery/examples/custom-archetype/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom Archetype
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-central-thesis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Central Thesis
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-three-laws-of-elegant-derivation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Three Laws of Elegant Derivation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The Three Laws of Elegant Derivation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#law-1-necessity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Law 1: Necessity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#law-2-sufficiency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Law 2: Sufficiency
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#law-3-clarity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Law 3: Clarity
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pattern-catalog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern Catalog
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Pattern Catalog">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pattern-a-the-linear-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern A: The Linear Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-b-the-stratified-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern B: The Stratified Architecture
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-c-the-functor-lift" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern C: The Functor Lift
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-d-the-lazy-tree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern D: The Lazy Tree
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-e-the-separation-of-concerns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern E: The Separation of Concerns
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-derivation-quality-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Derivation Quality Checklist
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The Derivation Quality Checklist">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#structural" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Structural
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#categorical" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Categorical
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#principled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Principled
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-refactoring-process" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Refactoring Process
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The Refactoring Process">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-extract-current-derivation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1: Extract Current Derivation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-apply-necessity-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2: Apply Necessity Test
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-apply-sufficiency-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3: Apply Sufficiency Test
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-apply-clarity-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 4: Apply Clarity Test
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-5-verify-pattern-fit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 5: Verify Pattern Fit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-6-document-refined-derivation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 6: Document Refined Derivation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#agent-derivation-index" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Agent Derivation Index
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-refinement-backlog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Refinement Backlog
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The Refinement Backlog">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#high-priority" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        High Priority
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#medium-priority" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Medium Priority
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#low-priority" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Low Priority
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-aesthetic-standard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Aesthetic Standard
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#maintaining-this-document" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Maintaining This Document
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="agent-refactoring-fundamentals">Agent Refactoring Fundamentals</h1>
+<blockquote>
+<p><em>"Every agent is a poem; derivation is scansion."</em></p>
+</blockquote>
+<p>This document establishes the principles for refining agent derivations to achieve maximal elegance while remaining faithful to <code>spec/principles.md</code>.</p>
+<hr />
+<h2 id="the-central-thesis">The Central Thesis</h2>
+<p><strong>An agent is elegant when its derivation from bootstrap primitives is both necessary and sufficient—no missing steps, no superfluous ones.</strong></p>
+<p>The five bootstrap primitives form an irreducible basis:</p>
+<table>
+<thead>
+<tr>
+<th>Primitive</th>
+<th>Symbol</th>
+<th>Essence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Id</strong></td>
+<td><code>I</code></td>
+<td>Identity morphism—preserve without change</td>
+</tr>
+<tr>
+<td><strong>Compose</strong></td>
+<td><code>&gt;&gt;</code></td>
+<td>Sequential combination—output becomes input</td>
+</tr>
+<tr>
+<td><strong>Ground</strong></td>
+<td><code>G</code></td>
+<td>Reality grounding—connect to the external</td>
+</tr>
+<tr>
+<td><strong>Judge</strong></td>
+<td><code>J</code></td>
+<td>Principle evaluation—apply values</td>
+</tr>
+<tr>
+<td><strong>Contradict</strong></td>
+<td><code>X</code></td>
+<td>Tension detection—surface conflicts</td>
+</tr>
+<tr>
+<td><strong>Sublate</strong></td>
+<td><code>S</code></td>
+<td>Synthesis—resolve or hold tensions</td>
+</tr>
+<tr>
+<td><strong>Fix</strong></td>
+<td><code>F</code></td>
+<td>Convergence—iterate until stable</td>
+</tr>
+</tbody>
+</table>
+<p>Every derived agent must decompose into compositions of these primitives. The question is not <em>whether</em> it decomposes, but <em>how elegantly</em>.</p>
+<hr />
+<h2 id="the-three-laws-of-elegant-derivation">The Three Laws of Elegant Derivation</h2>
+<h3 id="law-1-necessity">Law 1: Necessity</h3>
+<blockquote>
+<p>Every primitive in the derivation must earn its place.</p>
+</blockquote>
+<p>If you can remove a primitive and the agent still functions correctly, the derivation is inelegant. Redundant primitives indicate either misunderstanding of the agent's purpose or over-engineering.</p>
+<p><strong>Test</strong>: For each primitive in the derivation, ask "What breaks if I remove this?"</p>
+<h3 id="law-2-sufficiency">Law 2: Sufficiency</h3>
+<blockquote>
+<p>The derivation must fully explain the agent's behavior.</p>
+</blockquote>
+<p>If the agent does something that cannot be traced back to its constituent primitives, either the derivation is incomplete or the agent is doing something it shouldn't.</p>
+<p><strong>Test</strong>: For each agent behavior, ask "Which primitive(s) produce this?"</p>
+<h3 id="law-3-clarity">Law 3: Clarity</h3>
+<blockquote>
+<p>The derivation should be readable as a sentence.</p>
+</blockquote>
+<p>A well-derived agent reads like prose:
+- "G-gent <strong>Grounds</strong> intent to domain, then <strong>Composes</strong> grammar rules, then <strong>Judges</strong> for constraint satisfaction"
+- "H-gent <strong>Contradicts</strong> to surface tensions, then <strong>Sublates</strong> toward synthesis, using <strong>Fix</strong> when recursive"</p>
+<p>If the derivation requires a flowchart to explain, it may be too complex.</p>
+<hr />
+<h2 id="pattern-catalog">Pattern Catalog</h2>
+<p>From the existing specs, these derivation patterns emerge:</p>
+<h3 id="pattern-a-the-linear-pipeline">Pattern A: The Linear Pipeline</h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Input → P₁ → P₂ → P₃ → Output
+</span></code></pre></div>
+<p><strong>Example</strong>: G-gent (Grammarian)
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Ground(domain) &gt;&gt; Compose(rules) &gt;&gt; Judge(constraints) &gt;&gt; Fix(refine)
+</span></code></pre></div></p>
+<p><strong>When to use</strong>: When the agent transforms input through distinct, sequential stages.</p>
+<p><strong>Elegance criterion</strong>: The number of stages should match the essential complexity of the transformation, no more.</p>
+<h3 id="pattern-b-the-stratified-architecture">Pattern B: The Stratified Architecture</h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Infrastructure Level: Operations (not agents)
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>Composition Level: Agent wrapping operations
+</span></code></pre></div>
+<p><strong>Example</strong>: H-gent (Hegelian), D-gent (Data)
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Infrastructure: Contradict, Sublate (meta-operations)
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>Composition: DialecticAgent = Compose(Contradict, Sublate) : Agent
+</span></code></pre></div></p>
+<p><strong>When to use</strong>: When the domain requires both low-level operations AND higher-level orchestration.</p>
+<p><strong>Elegance criterion</strong>: Clear separation between levels; no leakage.</p>
+<h3 id="pattern-c-the-functor-lift">Pattern C: The Functor Lift</h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>K: Agent[A, B] → Agent[A, B]
+</span></code></pre></div>
+<p><strong>Example</strong>: K-gent (Personalization)
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>K = Fix(λsystem. developer_adapts(system))
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>K.lift(agent) = agent colored by personality field
+</span></code></pre></div></p>
+<p><strong>When to use</strong>: When the agent transforms other agents while preserving their type signature.</p>
+<p><strong>Elegance criterion</strong>: The functor laws must hold (identity preserved, composition preserved).</p>
+<h3 id="pattern-d-the-lazy-tree">Pattern D: The Lazy Tree</h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Root Promise
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>├── Child Promise (deferred)
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>│   └── Leaf (evaluated)
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>└── Child Promise (deferred)
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    └── Leaf (evaluated)
+</span></code></pre></div>
+<p><strong>Example</strong>: J-gent (JIT)
+<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Classify(task) &gt;&gt; match {
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>    DETERMINISTIC → Ground(execute)
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>    PROBABILISTIC → Compose(children) &gt;&gt; Fix(collect)
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    CHAOTIC → Ground(fallback)
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>}
+</span></code></pre></div></p>
+<p><strong>When to use</strong>: When evaluation order matters and some branches may never be needed.</p>
+<p><strong>Elegance criterion</strong>: The lazy structure should reflect the inherent tree structure of the problem.</p>
+<h3 id="pattern-e-the-separation-of-concerns">Pattern E: The Separation of Concerns</h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>Write-Time: Silent recording
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>Read-Time: Interpretive projection
+</span></code></pre></div>
+<p><strong>Example</strong>: N-gent (Narrative)
+<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>Historian: Ground(tap) &gt;&gt; Ground(store)  [no prose]
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>Bard: Ground(crystals) &gt;&gt; Judge(genre) &gt;&gt; Compose(narrative)
+</span></code></pre></div></p>
+<p><strong>When to use</strong>: When the same data needs multiple interpretations, or when recording must not affect execution.</p>
+<p><strong>Elegance criterion</strong>: The separation is clean; neither side knows the other's concerns.</p>
+<hr />
+<h2 id="the-derivation-quality-checklist">The Derivation Quality Checklist</h2>
+<p>For each agent derivation, verify:</p>
+<h3 id="structural">Structural</h3>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <strong>Decomposable</strong>: Can be expressed purely in terms of bootstrap primitives</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <strong>Minimal</strong>: No primitive can be removed without loss of function</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <strong>Complete</strong>: All behaviors traced to primitives</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <strong>Readable</strong>: Derivation reads as natural description</li>
+</ul>
+<h3 id="categorical">Categorical</h3>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <strong>Type-correct</strong>: Input/output types match at each composition point</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <strong>Composable</strong>: The agent itself can be composed with others</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <strong>Law-abiding</strong>: Satisfies associativity, identity where applicable</li>
+</ul>
+<h3 id="principled">Principled</h3>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <strong>Tasteful</strong>: Minimal complexity for the problem</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <strong>Curated</strong>: Deliberate choice of pattern, not accidental</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <strong>Ethical</strong>: Judge primitives appear where value judgments are made</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <strong>Joy-inducing</strong>: The derivation reveals something beautiful about the problem</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> <strong>Composable</strong>: Enables further composition (doesn't dead-end)</li>
+</ul>
+<hr />
+<h2 id="the-refactoring-process">The Refactoring Process</h2>
+<h3 id="step-1-extract-current-derivation">Step 1: Extract Current Derivation</h3>
+<p>Read the agent's README and implementation. Write out the implicit derivation:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>Agent: [Name]
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>Current Derivation: P₁ &gt;&gt; P₂ &gt;&gt; P₃
+</span></code></pre></div>
+<h3 id="step-2-apply-necessity-test">Step 2: Apply Necessity Test</h3>
+<p>For each primitive:
+- What would break if removed?
+- Is that breakage essential or accidental?</p>
+<p>If accidental, the primitive is a candidate for removal.</p>
+<h3 id="step-3-apply-sufficiency-test">Step 3: Apply Sufficiency Test</h3>
+<p>For each documented behavior:
+- Which primitive(s) produce it?
+- Is the mapping clear and direct?</p>
+<p>If unclear, either the derivation or the documentation needs refinement.</p>
+<h3 id="step-4-apply-clarity-test">Step 4: Apply Clarity Test</h3>
+<p>Write the derivation as a sentence:
+- Does it read naturally?
+- Would someone unfamiliar with the system understand the essence?</p>
+<p>If not, refactor for clarity.</p>
+<h3 id="step-5-verify-pattern-fit">Step 5: Verify Pattern Fit</h3>
+<p>Does the agent fit a known pattern?
+- If yes, does it follow the pattern cleanly?
+- If no, is it a genuinely novel pattern worthy of cataloging?</p>
+<h3 id="step-6-document-refined-derivation">Step 6: Document Refined Derivation</h3>
+<p>Update the agent's README with the refined derivation, showing:
+- The primitives used
+- The composition structure
+- The pattern employed
+- Why this is the right decomposition</p>
+<hr />
+<h2 id="agent-derivation-index">Agent Derivation Index</h2>
+<p>Current derivations from the specs (to be refined):</p>
+<table>
+<thead>
+<tr>
+<th>Agent</th>
+<th>Current Derivation</th>
+<th>Pattern</th>
+<th>Elegance Issues</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>A-gent</strong></td>
+<td>Ground + Compose + Judge + Fix</td>
+<td>Pipeline</td>
+<td>Base primitives; inherently elegant</td>
+</tr>
+<tr>
+<td><strong>B-gent</strong></td>
+<td>Ground(resources) + Judge(ethics) + Compose(allocation)</td>
+<td>Pipeline</td>
+<td>Good; could clarify economic Judge</td>
+</tr>
+<tr>
+<td><strong>C-gent</strong></td>
+<td>Pure category theory; IS the composition</td>
+<td>Meta</td>
+<td>Definitionally elegant</td>
+</tr>
+<tr>
+<td><strong>D-gent</strong></td>
+<td>Stratified: Ground(storage) + Compose(agents)</td>
+<td>Stratified</td>
+<td>Clear; infrastructure/composition split good</td>
+</tr>
+<tr>
+<td><strong>E-gent</strong></td>
+<td>Ground(observations) + Contradict(hypotheses) + Fix(evolve)</td>
+<td>Pipeline</td>
+<td>Good; falsification path clear</td>
+</tr>
+<tr>
+<td><strong>F-gent</strong></td>
+<td>Ground(intent) + Compose(artifact) + Judge(quality) + Fix(iterate)</td>
+<td>Pipeline</td>
+<td>Dense; consider staging</td>
+</tr>
+<tr>
+<td><strong>G-gent</strong></td>
+<td>Ground(domain) + Compose(grammar) + Judge(constraints) + Fix(refine)</td>
+<td>Pipeline</td>
+<td>Very clean</td>
+</tr>
+<tr>
+<td><strong>H-gent</strong></td>
+<td>Stratified: (Contradict, Sublate) + DialecticAgent wrapper</td>
+<td>Stratified</td>
+<td>Clean; separation noted</td>
+</tr>
+<tr>
+<td><strong>I-gent</strong></td>
+<td>Ground(state) + Compose(visualization)</td>
+<td>Pipeline</td>
+<td>Light; appropriate for interface</td>
+</tr>
+<tr>
+<td><strong>J-gent</strong></td>
+<td>Classify(Ground+Judge) + Compose(tree) + Fix(evaluate)</td>
+<td>Lazy Tree</td>
+<td>Complex; justified by JIT nature</td>
+</tr>
+<tr>
+<td><strong>K-gent</strong></td>
+<td>Fix(λsystem.developer_adapts)</td>
+<td>Functor</td>
+<td>Beautifully minimal</td>
+</tr>
+<tr>
+<td><strong>L-gent</strong></td>
+<td>Ground(storage) + Compose(search) + Judge(relevance)</td>
+<td>Pipeline</td>
+<td>Good; three-brain architecture maps well</td>
+</tr>
+<tr>
+<td><strong>M-gent</strong></td>
+<td>Ground(hologram) + Compose(resonance) + Fix(consolidate)</td>
+<td>Pipeline</td>
+<td>Poetic; holographic metaphor preserved</td>
+</tr>
+<tr>
+<td><strong>N-gent</strong></td>
+<td>Separation: Ground(tap) // Ground+Judge+Compose(narrate)</td>
+<td>Separation</td>
+<td>Clean; Historian/Bard split elegant</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="the-refinement-backlog">The Refinement Backlog</h2>
+<p>Priority issues discovered in the derivations:</p>
+<h3 id="high-priority">High Priority</h3>
+<ol>
+<li><strong>F-gent Staging</strong>: The Forge does many things. Consider explicit phases:</li>
+<li>Intent Capture (Ground)</li>
+<li>Template Selection (Judge)</li>
+<li>Code Generation (Compose)</li>
+<li>
+<p>Iteration (Fix)</p>
+</li>
+<li>
+<p><strong>B-gent Economic Judge</strong>: The ethical dimension of resource allocation deserves explicit Judge placement, not implicit in Compose.</p>
+</li>
+</ol>
+<h3 id="medium-priority">Medium Priority</h3>
+<ol>
+<li>
+<p><strong>J-gent Complexity</strong>: The JIT pattern is inherently complex, but verify each branch of the classification is necessary.</p>
+</li>
+<li>
+<p><strong>T-gent Derivation</strong>: Not in index—needs full derivation from spec.</p>
+</li>
+</ol>
+<h3 id="low-priority">Low Priority</h3>
+<ol>
+<li><strong>Pattern Catalog Expansion</strong>: Document any novel patterns found during refinement.</li>
+</ol>
+<hr />
+<h2 id="the-aesthetic-standard">The Aesthetic Standard</h2>
+<blockquote>
+<p><em>"Elegance is not a luxury; it is a necessity. An inelegant derivation is a misunderstanding made manifest."</em></p>
+</blockquote>
+<p>The goal is not to impress but to reveal. A good derivation should make the reader say "of course"—the structure was always there, we're just naming it.</p>
+<p><strong>Signs of elegance</strong>:
+- The derivation fits on one line
+- Each primitive appears exactly once (or has clear reason for repetition)
+- The pattern choice is obvious in hindsight
+- The derivation could be taught to a newcomer</p>
+<p><strong>Signs of inelegance</strong>:
+- The derivation requires conditional branches to explain
+- Primitives appear redundantly
+- The pattern is unique to this agent (unless genuinely novel)
+- The derivation requires implementation details to understand</p>
+<hr />
+<h2 id="maintaining-this-document">Maintaining This Document</h2>
+<p>As agents are refined:
+1. Update the Agent Derivation Index
+2. Document new patterns discovered
+3. Add elegance issues to the backlog
+4. Archive resolved issues</p>
+<p>This is a living document tracking the ongoing pursuit of derivational elegance.</p>
+<hr />
+<p><em>"The unexamined agent is not worth composing."</em></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2025 Kent Gang
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/kentgang/kgents" target="_blank" rel="noopener" title="kgents on GitHub" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.copy", "content.code.annotate", "content.tabs.link", "navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "toc.follow"], "search": "../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      
+    
+  </body>
+</html>

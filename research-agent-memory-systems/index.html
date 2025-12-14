@@ -1,0 +1,2358 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Tasteful, curated, ethical, joy-inducing agents">
+      
+      
+        <meta name="author" content="Kent Gang">
+      
+      
+        <link rel="canonical" href="https://kentgang.github.io/kgents/research-agent-memory-systems/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+    
+    
+      
+        <title>Research: Open Source Agent Memory Systems - kgents Examples</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.618322db.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#research-open-source-agent-memory-systems" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="kgents Examples" class="md-header__button md-logo" aria-label="kgents Examples" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            kgents Examples
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Research: Open Source Agent Memory Systems
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="deep-purple"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/kentgang/kgents" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    kentgang/kgents
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../gallery/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../gallery/examples/hello-world/" class="md-tabs__link">
+          
+  
+  
+  Examples
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="kgents Examples" class="md-nav__button md-logo" aria-label="kgents Examples" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    kgents Examples
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/kentgang/kgents" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    kentgang/kgents
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Examples
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/examples/hello-world/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hello World
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/examples/composition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Composition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/examples/functors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Functors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/examples/soul-dialogue/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Soul Dialogue
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/examples/streaming/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Streaming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/examples/custom-archetype/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom Archetype
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#executive-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Executive Summary
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Executive Summary">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#key-systems-analyzed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Systems Analyzed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-i-system-by-system-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part I: System-by-System Analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part I: System-by-System Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-mem0-mem0ai" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Mem0 (mem0.ai)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Mem0 (mem0.ai)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#memory-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Memory Types
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#graph-memory-enhancement-mem0g" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Graph Memory Enhancement (Mem0g)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance-locomo-benchmark" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance (LOCOMO Benchmark)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alignment-with-kgents-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alignment with kgents Principles
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-letta-memgpt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Letta (MemGPT)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Letta (MemGPT)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-llm-os-metaphor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The LLM OS Metaphor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#memory-hierarchy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Memory Hierarchy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#self-editing-memory-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Self-Editing Memory Tools
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sleep-time-agents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sleep-Time Agents
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#skill-learning-2025" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Skill Learning (2025)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alignment-with-kgents-principles_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alignment with kgents Principles
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-zep-getzepcom" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Zep (getzep.com)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Zep (getzep.com)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#temporal-knowledge-graph-graphiti" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Temporal Knowledge Graph (Graphiti)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dual-memory-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dual Memory Structure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retrieval-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Retrieval System
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance-dmr-benchmark" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance (DMR Benchmark)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alignment-with-kgents-principles_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alignment with kgents Principles
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-langchain-langmem-sdk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. LangChain / LangMem SDK
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. LangChain / LangMem SDK">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#memory-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Memory Architecture
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#memory-block-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Memory Block Types
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#memory-update-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Memory Update Patterns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#integration-with-langgraph" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integration with LangGraph
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alignment-with-kgents-principles_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alignment with kgents Principles
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-llamaindex-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. LlamaIndex Memory
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. LlamaIndex Memory">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#memory-component" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Memory Component
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#composable-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Composable Memory
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#key-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alignment-with-kgents-principles_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alignment with kgents Principles
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-ii-comparative-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part II: Comparative Analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part II: Comparative Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#memory-model-comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Memory Model Comparison
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#feature-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Feature Matrix
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-iii-implications-for-m-gent-specification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part III: Implications for M-gent Specification
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part III: Implications for M-gent Specification">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-m-gents-should-adopt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What M-gents Should Adopt
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="What M-gents Should Adopt">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-from-mem0-graph-memory-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. From Mem0: Graph Memory Structure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-from-letta-sleep-time-processing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. From Letta: Sleep-Time Processing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-from-zep-bi-temporal-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. From Zep: Bi-Temporal Model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-from-all-token-budget-awareness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. From All: Token Budget Awareness
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-m-gents-should-reject" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What M-gents Should Reject
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="What M-gents Should Reject">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-storage-first-ontology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Storage-First Ontology
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-wrapper-based-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Wrapper-Based Architecture
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-fixed-memory-hierarchies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Fixed Memory Hierarchies
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-iv-specification-enhancement-proposals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part IV: Specification Enhancement Proposals
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part IV: Specification Enhancement Proposals">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#proposal-1-bi-temporal-memory-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Proposal 1: Bi-Temporal Memory Model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#proposal-2-graph-holographic-duality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Proposal 2: Graph-Holographic Duality
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#proposal-3-foveated-context-injection-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Proposal 3: Foveated Context Injection Protocol
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#proposal-4-sleep-time-consolidation-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Proposal 4: Sleep-Time Consolidation Protocol
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-v-integration-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part V: Integration Architecture
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part V: Integration Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#m-gent-in-the-kgents-ecosystem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        M-gent in the kgents Ecosystem
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#agentese-paths-for-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AGENTESE Paths for Memory
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#appendix-a-benchmark-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Appendix A: Benchmark Considerations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Appendix A: Benchmark Considerations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#proposed-m-gent-benchmarks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Proposed M-gent Benchmarks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comparison-targets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Comparison Targets
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#appendix-b-research-sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Appendix B: Research Sources
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Appendix B: Research Sources">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#primary-sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Primary Sources
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#secondary-sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Secondary Sources
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conclusion
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="research-open-source-agent-memory-systems">Research: Open Source Agent Memory Systems</h1>
+<blockquote>
+<p>A deep analysis of memory architectures for AI agents, with implications for M-gents specification.</p>
+</blockquote>
+<p><strong>Date</strong>: 2025-12-13
+<strong>Status</strong>: Research complete, ready for integration into spec</p>
+<hr />
+<h2 id="executive-summary">Executive Summary</h2>
+<p>This document surveys the current landscape of open source agent memory systems, analyzing their architectures against kgents design principles. The key finding: <strong>existing systems are fundamentally noun-based (storage-centric) while M-gents should be verb-based (reconstruction-centric)</strong>.</p>
+<h3 id="key-systems-analyzed">Key Systems Analyzed</h3>
+<table>
+<thead>
+<tr>
+<th>System</th>
+<th>Architecture</th>
+<th>Strengths</th>
+<th>Limitations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Mem0</strong></td>
+<td>Vector + Graph hybrid</td>
+<td>Production-ready, graph relations</td>
+<td>Storage-first, not generative</td>
+</tr>
+<tr>
+<td><strong>Letta/MemGPT</strong></td>
+<td>Self-editing memory hierarchy</td>
+<td>Agent-controlled, OS metaphor</td>
+<td>Wrapper-based, not composable</td>
+</tr>
+<tr>
+<td><strong>Zep</strong></td>
+<td>Temporal knowledge graph</td>
+<td>Bi-temporal model, excellent recall</td>
+<td>Complex infrastructure</td>
+</tr>
+<tr>
+<td><strong>LangChain/LangMem</strong></td>
+<td>Pluggable memory backends</td>
+<td>Framework agnostic, flexible</td>
+<td>Lacks coherent ontology</td>
+</tr>
+<tr>
+<td><strong>LlamaIndex</strong></td>
+<td>Index-based memory blocks</td>
+<td>Good RAG integration</td>
+<td>Traditional retrieval model</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="part-i-system-by-system-analysis">Part I: System-by-System Analysis</h2>
+<h3 id="1-mem0-mem0ai">1. Mem0 (mem0.ai)</h3>
+<p><strong>Source</strong>: <a href="https://github.com/mem0ai/mem0">GitHub</a> | <a href="https://arxiv.org/abs/2504.19413">Research Paper</a></p>
+<h4 id="architecture">Architecture</h4>
+<p>Mem0 implements a <strong>two-phase memory pipeline</strong>:</p>
+<ol>
+<li><strong>Extraction Phase</strong>:</li>
+<li>Ingests conversation context (latest exchange + rolling summary + recent messages)</li>
+<li>LLM extracts candidate memories as structured facts</li>
+<li>
+<p>Background module maintains long-term summary asynchronously</p>
+</li>
+<li>
+<p><strong>Update Phase</strong>:</p>
+</li>
+<li>Each new fact compared against top-s similar entries in vector database</li>
+<li>Conflict resolution via LLM judgment</li>
+<li>Deduplication and consolidation</li>
+</ol>
+<h4 id="memory-types">Memory Types</h4>
+<ul>
+<li><strong>Episodic</strong>: Specific events and interactions</li>
+<li><strong>Semantic</strong>: General knowledge and facts</li>
+<li><strong>Procedural</strong>: How-to knowledge (emerging)</li>
+<li><strong>Associative</strong>: Relationships between entities</li>
+</ul>
+<h4 id="graph-memory-enhancement-mem0g">Graph Memory Enhancement (Mem0g)</h4>
+<p>Memories represented as directed labeled graph <code>G=(V,E,L)</code>:
+- Nodes (V): Entities (people, locations, objects)
+- Edges (E): Relationships between entities
+- Labels (L): Semantic types</p>
+<p>Two-stage extraction:
+1. Entity extractor identifies key information elements
+2. Relationship generator establishes connections as triplets</p>
+<h4 id="performance-locomo-benchmark">Performance (LOCOMO Benchmark)</h4>
+<ul>
+<li>26% improvement over OpenAI baseline on LLM-as-Judge metric</li>
+<li>91% lower p95 latency</li>
+<li>90%+ token cost reduction</li>
+</ul>
+<h4 id="alignment-with-kgents-principles">Alignment with kgents Principles</h4>
+<table>
+<thead>
+<tr>
+<th>Principle</th>
+<th>Score</th>
+<th>Analysis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tasteful</td>
+<td>7/10</td>
+<td>Clear purpose, but feature-heavy</td>
+</tr>
+<tr>
+<td>Curated</td>
+<td>6/10</td>
+<td>Has decay mechanisms, but sprawl risk</td>
+</tr>
+<tr>
+<td>Composable</td>
+<td>5/10</td>
+<td>Framework-specific integrations</td>
+</tr>
+<tr>
+<td>Generative</td>
+<td>4/10</td>
+<td>Storage-first, not reconstruction-first</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key Insight</strong>: Mem0's graph memory aligns with our L-gent lattice concept but lacks the holographic graceful degradation property central to M-gents.</p>
+<hr />
+<h3 id="2-letta-memgpt">2. Letta (MemGPT)</h3>
+<p><strong>Source</strong>: <a href="https://github.com/letta-ai/letta">GitHub</a> | <a href="https://docs.letta.com/concepts/memgpt/">Docs</a></p>
+<h4 id="the-llm-os-metaphor">The LLM OS Metaphor</h4>
+<p>Letta's core insight: treat memory management like an operating system, where the LLM manages its own virtual memory through tool calls.</p>
+<h4 id="memory-hierarchy">Memory Hierarchy</h4>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>┌─────────────────────────────────────────────────────────────┐
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>│                     LETTA MEMORY TIERS                       │
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>├─────────────────────────────────────────────────────────────┤
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│  IN-CONTEXT MEMORY (Working Memory)                         │
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│  ├── persona block (agent&#39;s self-description)               │
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│  ├── human block (user information)                         │
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>│  └── custom memory blocks                                   │
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>│  [Character limit: ~2k per block]                           │
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>├─────────────────────────────────────────────────────────────┤
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>│  OUT-OF-CONTEXT MEMORY (External Storage)                   │
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>│  ├── Archival Memory (vector DB for long-term storage)      │
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>│  └── Recall Memory (conversation history log)               │
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>└─────────────────────────────────────────────────────────────┘
+</span></code></pre></div>
+<h4 id="self-editing-memory-tools">Self-Editing Memory Tools</h4>
+<p><strong>In-context editing</strong>:
+- <code>memory_insert</code>: Add new content to a block
+- <code>memory_replace</code>: Update existing entries
+- <code>memory_rethink</code>: Revise stored information
+- <code>memory_finish_edits</code>: Finalize changes</p>
+<p><strong>External memory access</strong>:
+- <code>archival_memory_insert</code>: Store to vector DB
+- <code>archival_memory_search</code>: Query vector DB
+- <code>conversation_search</code>: Text-based history retrieval
+- <code>conversation_search_date</code>: Temporal queries</p>
+<h4 id="sleep-time-agents">Sleep-Time Agents</h4>
+<p>Letta's innovative "subconscious" pattern:
+- Sleep-time agents share memory with primary agents
+- Run in background during idle periods
+- Enable memory consolidation without blocking main loop</p>
+<p>This aligns perfectly with our <strong>Hypnagogic Symbiont</strong> concept!</p>
+<h4 id="skill-learning-2025">Skill Learning (2025)</h4>
+<p>Recent addition: agents learn skills through experience:
+- Past experience improves rather than degrades performance
+- Dynamic skill acquisition without retraining</p>
+<h4 id="alignment-with-kgents-principles_1">Alignment with kgents Principles</h4>
+<table>
+<thead>
+<tr>
+<th>Principle</th>
+<th>Score</th>
+<th>Analysis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tasteful</td>
+<td>8/10</td>
+<td>Clean OS metaphor, clear purpose</td>
+</tr>
+<tr>
+<td>Curated</td>
+<td>7/10</td>
+<td>Self-curation via agent control</td>
+</tr>
+<tr>
+<td>Composable</td>
+<td>4/10</td>
+<td>Monolithic agent design, hard to compose</td>
+</tr>
+<tr>
+<td>Generative</td>
+<td>6/10</td>
+<td>Self-editing is generative, but retrieval is not</td>
+</tr>
+<tr>
+<td>Heterarchical</td>
+<td>5/10</td>
+<td>Agent controls memory, but fixed hierarchy</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key Insight</strong>: The self-editing memory pattern is powerful but violates our Symbiont separation principle. Memory editing should be orthogonal to logic.</p>
+<hr />
+<h3 id="3-zep-getzepcom">3. Zep (getzep.com)</h3>
+<p><strong>Source</strong>: <a href="https://github.com/getzep/zep">GitHub</a> | <a href="https://arxiv.org/abs/2501.13956">Paper</a></p>
+<h4 id="temporal-knowledge-graph-graphiti">Temporal Knowledge Graph (Graphiti)</h4>
+<p>Zep's core innovation: <strong>bi-temporal modeling</strong>.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Timeline T:  Event occurrence time (when did this happen in the world?)
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>Timeline T&#39;: Ingestion time (when did we learn about this?)
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>Timestamps:
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>- t_created, t_expired (T&#39;): System audit
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>- t_valid, t_invalid (T): Semantic validity range
+</span></code></pre></div>
+<p>This enables queries like:
+- "What did the user believe on December 1st?"
+- "When did we learn that X was no longer true?"</p>
+<h4 id="dual-memory-structure">Dual Memory Structure</h4>
+<p>Mirrors psychological models:
+- <strong>Episodic Memory</strong>: Distinct events stored as graph episodes
+- <strong>Semantic Memory</strong>: Entity relationships and meanings</p>
+<p>Hierarchical organization:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Episodes → Facts → Entities → Communities
+</span></code></pre></div></p>
+<h4 id="retrieval-system">Retrieval System</h4>
+<p>Multi-modal search with sophisticated reranking:
+1. <strong>Initial Recall</strong>: Vector similarity + BM25 + graph traversal
+2. <strong>Reranking</strong>:
+   - Reciprocal Rank Fusion (RRF)
+   - Maximal Marginal Relevance (MMR)
+   - Graph-based episode-mentions reranker
+   - Node distance reranker
+   - Cross-encoder relevance scoring</p>
+<h4 id="performance-dmr-benchmark">Performance (DMR Benchmark)</h4>
+<ul>
+<li>94.8% accuracy (vs MemGPT's 93.4%)</li>
+<li>Up to 18.5% accuracy improvement over baselines</li>
+<li>90% latency reduction</li>
+<li>&lt;100ms query latency</li>
+</ul>
+<h4 id="alignment-with-kgents-principles_2">Alignment with kgents Principles</h4>
+<table>
+<thead>
+<tr>
+<th>Principle</th>
+<th>Score</th>
+<th>Analysis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tasteful</td>
+<td>7/10</td>
+<td>Complex but justified</td>
+</tr>
+<tr>
+<td>Curated</td>
+<td>8/10</td>
+<td>Temporal decay built in</td>
+</tr>
+<tr>
+<td>Composable</td>
+<td>6/10</td>
+<td>Clean APIs but infrastructure-heavy</td>
+</tr>
+<tr>
+<td>Generative</td>
+<td>5/10</td>
+<td>Sophisticated retrieval, but still retrieval</td>
+</tr>
+<tr>
+<td>Heterarchical</td>
+<td>7/10</td>
+<td>Graph enables flexible relationships</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key Insight</strong>: The bi-temporal model is profound. M-gents should track both "when it happened" and "when we learned it"—this enables the N-gent integration for witness/trace.</p>
+<hr />
+<h3 id="4-langchain-langmem-sdk">4. LangChain / LangMem SDK</h3>
+<p><strong>Source</strong>: <a href="https://blog.langchain.com/memory-for-agents/">Blog</a> | <a href="https://docs.langchain.com/oss/python/concepts/memory">Docs</a></p>
+<h4 id="memory-architecture">Memory Architecture</h4>
+<p>LangChain treats memory as pluggable components:</p>
+<p><strong>Short-term</strong>: FIFO queue of ChatMessage objects
+- Configurable token limit (default: 30000)
+- Auto-flush to long-term when exceeding ratio threshold</p>
+<p><strong>Long-term</strong>: Memory Block objects
+- Process flushed messages to extract information
+- Merged with short-term at retrieval time</p>
+<h4 id="memory-block-types">Memory Block Types</h4>
+<ul>
+<li><strong>StaticMemoryBlock</strong>: Fixed information</li>
+<li><strong>FactExtractionMemoryBlock</strong>: LLM-extracted facts from history</li>
+<li><strong>VectorMemoryBlock</strong>: Vector DB storage for message batches</li>
+</ul>
+<h4 id="memory-update-patterns">Memory Update Patterns</h4>
+<ol>
+<li><strong>Hot Path</strong>: Agent explicitly decides to remember via tool calls</li>
+<li>Lower latency for retrieval</li>
+<li>
+<p>Agent-controlled curation</p>
+</li>
+<li>
+<p><strong>Background</strong>: Separate task for memory formation</p>
+</li>
+<li>Eliminates latency in primary application</li>
+<li>Separates concerns</li>
+</ol>
+<h4 id="integration-with-langgraph">Integration with LangGraph</h4>
+<p>LangGraph provides:
+- Persistent conversation state (MemorySaver → SqliteSaver/PostgresSaver for production)
+- Built-in cross-session context</p>
+<h4 id="alignment-with-kgents-principles_3">Alignment with kgents Principles</h4>
+<table>
+<thead>
+<tr>
+<th>Principle</th>
+<th>Score</th>
+<th>Analysis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tasteful</td>
+<td>5/10</td>
+<td>Kitchen-sink approach</td>
+</tr>
+<tr>
+<td>Curated</td>
+<td>4/10</td>
+<td>Manual curation burden</td>
+</tr>
+<tr>
+<td>Composable</td>
+<td>8/10</td>
+<td>Highly pluggable</td>
+</tr>
+<tr>
+<td>Generative</td>
+<td>3/10</td>
+<td>Traditional RAG model</td>
+</tr>
+<tr>
+<td>Heterarchical</td>
+<td>6/10</td>
+<td>Flexible but no clear hierarchy</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key Insight</strong>: LangChain's pluggability is valuable but lacks a coherent ontology. M-gents need both flexibility AND a clear mental model.</p>
+<hr />
+<h3 id="5-llamaindex-memory">5. LlamaIndex Memory</h3>
+<p><strong>Source</strong>: <a href="https://www.llamaindex.ai/blog/improved-long-and-short-term-memory-for-llamaindex-agents">Blog</a> | <a href="https://docs.llamaindex.ai/en/stable/module_guides/deploying/agents/memory/">Docs</a></p>
+<h4 id="memory-component">Memory Component</h4>
+<p>Similar to LangChain but more structured:</p>
+<p><strong>Short-term</strong>:
+- FIFO queue with configurable flush behavior
+- <code>chat_history_token_ratio</code> controls when to flush (default: 0.7)</p>
+<p><strong>Long-term</strong>:
+- Memory Blocks receive flushed messages
+- Can optionally process/extract information
+- Merged at retrieval time</p>
+<h4 id="composable-memory">Composable Memory</h4>
+<p><code>SimpleComposableMemory</code>:
+- Primary memory as main chat buffer
+- Secondary memory sources inject into system prompt
+- Enables sophisticated context composition</p>
+<h4 id="key-configuration">Key Configuration</h4>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">Memory</span><span class="p">(</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">token_limit</span><span class="o">=</span><span class="mi">30000</span><span class="p">,</span>           <span class="c1"># Total budget</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="n">chat_history_token_ratio</span><span class="o">=</span><span class="mf">0.7</span>  <span class="c1"># When to flush</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="p">)</span>
+</span></code></pre></div>
+<h4 id="alignment-with-kgents-principles_4">Alignment with kgents Principles</h4>
+<table>
+<thead>
+<tr>
+<th>Principle</th>
+<th>Score</th>
+<th>Analysis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tasteful</td>
+<td>6/10</td>
+<td>Clean design, focused</td>
+</tr>
+<tr>
+<td>Curated</td>
+<td>5/10</td>
+<td>Automatic but not intelligent</td>
+</tr>
+<tr>
+<td>Composable</td>
+<td>7/10</td>
+<td>Good composition primitives</td>
+</tr>
+<tr>
+<td>Generative</td>
+<td>4/10</td>
+<td>Index-based, not generative</td>
+</tr>
+<tr>
+<td>Heterarchical</td>
+<td>5/10</td>
+<td>Fixed primary/secondary hierarchy</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="part-ii-comparative-analysis">Part II: Comparative Analysis</h2>
+<h3 id="memory-model-comparison">Memory Model Comparison</h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>                    RETRIEVAL ←───────────────────→ RECONSTRUCTION
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>                    (Storage-first)                 (Generation-first)
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>                         │                                │
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    LangChain ──────────┼─────── Mem0 ────── Letta ─────┼──── M-gent Vision
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>                         │                                │
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>                    &quot;What do I         &quot;What can I    &quot;What pattern
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>                     have?&quot;           find that       will resonate?&quot;
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>                                      relates?&quot;
+</span></code></pre></div>
+<h3 id="feature-matrix">Feature Matrix</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Mem0</th>
+<th>Letta</th>
+<th>Zep</th>
+<th>LangChain</th>
+<th>LlamaIndex</th>
+<th>M-gent Spec</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Vector storage</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Via D-gent</td>
+</tr>
+<tr>
+<td>Graph relations</td>
+<td>Yes</td>
+<td>No</td>
+<td>Yes</td>
+<td>Plugin</td>
+<td>No</td>
+<td>Via L-gent</td>
+</tr>
+<tr>
+<td>Self-editing</td>
+<td>No</td>
+<td>Yes</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>Via Symbiont</td>
+</tr>
+<tr>
+<td>Temporal tracking</td>
+<td>Limited</td>
+<td>Yes</td>
+<td>Yes (bi-temporal)</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Graceful degradation</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td><strong>Core</strong></td>
+</tr>
+<tr>
+<td>Holographic compression</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td><strong>Core</strong></td>
+</tr>
+<tr>
+<td>Sleep consolidation</td>
+<td>No</td>
+<td>Yes</td>
+<td>No</td>
+<td>Background</td>
+<td>No</td>
+<td>Yes (Hypnagogic)</td>
+</tr>
+<tr>
+<td>Forgetting curves</td>
+<td>Decay</td>
+<td>No</td>
+<td>Temporal</td>
+<td>No</td>
+<td>No</td>
+<td><strong>Core</strong></td>
+</tr>
+<tr>
+<td>Composable</td>
+<td>Limited</td>
+<td>No</td>
+<td>Limited</td>
+<td>Yes</td>
+<td>Yes</td>
+<td><strong>Core</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="part-iii-implications-for-m-gent-specification">Part III: Implications for M-gent Specification</h2>
+<h3 id="what-m-gents-should-adopt">What M-gents Should Adopt</h3>
+<h4 id="1-from-mem0-graph-memory-structure">1. From Mem0: Graph Memory Structure</h4>
+<p>The entity-relationship extraction pipeline is valuable:
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Mem0 pattern worth adopting</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">GraphMemoryIntegration</span><span class="p">:</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="sd">    M-gent should integrate with L-gent&#39;s graph for relations.</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="sd">    NOT replace holographic memory, but augment it.</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">extract_entities</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">memory</span><span class="p">:</span> <span class="n">Memory</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Entity</span><span class="p">]:</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract entities for L-gent indexing.&quot;&quot;&quot;</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>        <span class="k">pass</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">extract_relations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">memory</span><span class="p">:</span> <span class="n">Memory</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Relation</span><span class="p">]:</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract relations for L-gent graph.&quot;&quot;&quot;</span>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>        <span class="k">pass</span>
+</span></code></pre></div></p>
+<h4 id="2-from-letta-sleep-time-processing">2. From Letta: Sleep-Time Processing</h4>
+<p>The sleep agent pattern aligns perfectly with Hypnagogic Symbiont:
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Letta pattern worth adopting</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">SleepTimeConsolidation</span><span class="p">:</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="sd">    Background consolidation during idle periods.</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="sd">    This is our HypnagogicSymbiont pattern!</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">consolidate_during_idle</span><span class="p">(</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>        <span class="bp">self</span><span class="p">,</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>        <span class="n">primary_memory</span><span class="p">:</span> <span class="n">HolographicMemory</span><span class="p">,</span>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>        <span class="n">consolidator</span><span class="p">:</span> <span class="n">ConsolidationAgent</span>
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HolographicMemory</span><span class="p">:</span>
+</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Run consolidation when system is idle.&quot;&quot;&quot;</span>
+</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>        <span class="k">pass</span>
+</span></code></pre></div></p>
+<h4 id="3-from-zep-bi-temporal-model">3. From Zep: Bi-Temporal Model</h4>
+<p>This is profound and should be adopted:
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">BiTemporalMemory</span><span class="p">:</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="sd">    Memory with two time dimensions.</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="sd">    t_event: When did this happen in the world?</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="sd">    t_known: When did we learn about it?</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="sd">    This enables:</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="sd">    - &quot;What did I believe on date X?&quot;</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="sd">    - &quot;When did my understanding change?&quot;</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="sd">    - Integration with N-gent witness/trace</span>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>    <span class="n">content</span><span class="p">:</span> <span class="n">Memory</span>
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>    <span class="n">t_event</span><span class="p">:</span> <span class="n">datetime</span>      <span class="c1"># Timeline T</span>
+</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>    <span class="n">t_known</span><span class="p">:</span> <span class="n">datetime</span>      <span class="c1"># Timeline T&#39;</span>
+</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>    <span class="n">t_invalidated</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># When superseded</span>
+</span></code></pre></div></p>
+<h4 id="4-from-all-token-budget-awareness">4. From All: Token Budget Awareness</h4>
+<p>Every system respects token limits. M-gent should too:
+<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">TokenBudgetedRecall</span><span class="p">:</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="sd">    Recall that respects context budget.</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="sd">    This is our Foveation principle!</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">recall_within_budget</span><span class="p">(</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>        <span class="bp">self</span><span class="p">,</span>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>        <span class="n">cue</span><span class="p">:</span> <span class="n">Concept</span><span class="p">,</span>
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>        <span class="n">budget</span><span class="p">:</span> <span class="nb">int</span>
+</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FoveatedRecollection</span><span class="p">:</span>
+</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="sd">        Return memories that fit within token budget.</span>
+</span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="sd">        High-resolution at focal point, blur at periphery.</span>
+</span><span id="__span-8-15"><a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="__span-8-16"><a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a>        <span class="k">pass</span>
+</span></code></pre></div></p>
+<h3 id="what-m-gents-should-reject">What M-gents Should Reject</h3>
+<h4 id="1-storage-first-ontology">1. Storage-First Ontology</h4>
+<p>All existing systems are fundamentally about <strong>storing and retrieving</strong>. M-gents are about <strong>reconstruction</strong>.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># ANTI-PATTERN from existing systems</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">memory</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>  <span class="c1"># Treating memory as database</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="n">result</span> <span class="o">=</span> <span class="n">memory</span><span class="o">.</span><span class="n">retrieve</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>  <span class="c1"># Exact lookup</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="c1"># M-GENT PATTERN</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="n">memory</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">concept</span><span class="p">,</span> <span class="n">experience</span><span class="p">)</span>  <span class="c1"># Holographic encoding</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="n">recollection</span> <span class="o">=</span> <span class="k">await</span> <span class="n">memory</span><span class="o">.</span><span class="n">reconstruct</span><span class="p">(</span><span class="n">cue</span><span class="p">)</span>  <span class="c1"># Generative recall</span>
+</span></code></pre></div>
+<h4 id="2-wrapper-based-architecture">2. Wrapper-Based Architecture</h4>
+<p>Letta's self-editing memory requires agents to be wrapped in the memory system. This violates composability.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># ANTI-PATTERN: Letta&#39;s approach</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">MemGPTAgent</span><span class="p">:</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Agent that manages its own memory via tools.&quot;&quot;&quot;</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>    <span class="c1"># Memory editing is entangled with agent logic</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="c1"># M-GENT PATTERN: Symbiont separation</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="k">class</span><span class="w"> </span><span class="nc">MemoryAwareAgent</span><span class="p">:</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="sd">    Memory is ORTHOGONAL to agent logic.</span>
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="sd">    The Symbiont wrapper handles state, agent is pure.</span>
+</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logic</span><span class="p">:</span> <span class="n">Agent</span><span class="p">[</span><span class="n">I</span><span class="p">,</span> <span class="n">O</span><span class="p">],</span> <span class="n">memory</span><span class="p">:</span> <span class="n">DataAgent</span><span class="p">[</span><span class="n">S</span><span class="p">]):</span>
+</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">logic</span> <span class="o">=</span> <span class="n">logic</span>  <span class="c1"># Pure</span>
+</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">memory</span> <span class="o">=</span> <span class="n">memory</span>  <span class="c1"># Injected</span>
+</span></code></pre></div>
+<h4 id="3-fixed-memory-hierarchies">3. Fixed Memory Hierarchies</h4>
+<p>Existing systems impose fixed tiers (working → short-term → long-term). M-gents should have <strong>fluid resolution</strong>.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># ANTI-PATTERN: Fixed tiers</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">ThreeTierMemory</span><span class="p">:</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>    <span class="n">working</span><span class="p">:</span> <span class="n">Memory</span>      <span class="c1"># Always full resolution</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>    <span class="n">short_term</span><span class="p">:</span> <span class="n">Memory</span>   <span class="c1"># Medium resolution</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>    <span class="n">long_term</span><span class="p">:</span> <span class="n">Memory</span>    <span class="c1"># Low resolution</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="c1"># M-GENT PATTERN: Continuous resolution gradient</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="k">class</span><span class="w"> </span><span class="nc">HolographicMemory</span><span class="p">:</span>
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="sd">    Resolution is continuous, not tiered.</span>
+</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="sd">    Compression doesn&#39;t move memories between tiers;</span>
+</span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a><span class="sd">    it reduces resolution uniformly.</span>
+</span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">compress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ratio</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HolographicMemory</span><span class="p">:</span>
+</span><span id="__span-11-15"><a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;All memories become ratio% fuzzier.&quot;&quot;&quot;</span>
+</span><span id="__span-11-16"><a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a>        <span class="k">pass</span>
+</span></code></pre></div>
+<hr />
+<h2 id="part-iv-specification-enhancement-proposals">Part IV: Specification Enhancement Proposals</h2>
+<p>Based on this research, here are proposed enhancements to the M-gent specification:</p>
+<h3 id="proposal-1-bi-temporal-memory-model">Proposal 1: Bi-Temporal Memory Model</h3>
+<p>Add to <code>spec/m-gents/holographic.md</code>:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nd">@dataclass</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">TemporalCoordinates</span><span class="p">:</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="sd">    Bi-temporal coordinates for memory.</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="sd">    Adopted from Zep&#39;s research, this enables:</span>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="sd">    1. Historical reconstruction (&quot;what did I think on date X?&quot;)</span>
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="sd">    2. Learning tracking (&quot;when did my understanding change?&quot;)</span>
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="sd">    3. N-gent integration (witness/trace alignment)</span>
+</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>    <span class="n">t_event</span><span class="p">:</span> <span class="n">datetime</span>       <span class="c1"># When the remembered event occurred</span>
+</span><span id="__span-12-12"><a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>    <span class="n">t_encoded</span><span class="p">:</span> <span class="n">datetime</span>     <span class="c1"># When memory was formed</span>
+</span><span id="__span-12-13"><a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a>    <span class="n">t_accessed</span><span class="p">:</span> <span class="n">datetime</span>    <span class="c1"># Last retrieval (for forgetting curves)</span>
+</span><span id="__span-12-14"><a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a>    <span class="n">t_invalidated</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># When superseded</span>
+</span></code></pre></div>
+<h3 id="proposal-2-graph-holographic-duality">Proposal 2: Graph-Holographic Duality</h3>
+<p>Add to <code>spec/m-gents/README.md</code>:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">DualMemoryRepresentation</span><span class="p">:</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="sd">    Memory exists in two complementary forms:</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="sd">    1. HOLOGRAPHIC: Distributed, content-addressable, graceful degradation</span>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="sd">       - For: Generative recall, compression, fuzzy matching</span>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="sd">       - Stored: Interference pattern</span>
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>
+</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="sd">    2. GRAPH: Structured, relational, precise</span>
+</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="sd">       - For: Entity relations, lineage, exact queries</span>
+</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="sd">       - Stored: Via L-gent lattice</span>
+</span><span id="__span-13-12"><a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a>
+</span><span id="__span-13-13"><a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a><span class="sd">    Neither is primary. They are dual views of the same information.</span>
+</span><span id="__span-13-14"><a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-13-15"><a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a>    <span class="n">holographic</span><span class="p">:</span> <span class="n">HolographicMemory</span>  <span class="c1"># M-gent core</span>
+</span><span id="__span-13-16"><a id="__codelineno-13-16" name="__codelineno-13-16" href="#__codelineno-13-16"></a>    <span class="n">graph</span><span class="p">:</span> <span class="n">GraphHandle</span>  <span class="c1"># L-gent integration</span>
+</span><span id="__span-13-17"><a id="__codelineno-13-17" name="__codelineno-13-17" href="#__codelineno-13-17"></a>
+</span><span id="__span-13-18"><a id="__codelineno-13-18" name="__codelineno-13-18" href="#__codelineno-13-18"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">sync</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="__span-13-19"><a id="__codelineno-13-19" name="__codelineno-13-19" href="#__codelineno-13-19"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-13-20"><a id="__codelineno-13-20" name="__codelineno-13-20" href="#__codelineno-13-20"></a><span class="sd">        Bidirectional sync between representations.</span>
+</span><span id="__span-13-21"><a id="__codelineno-13-21" name="__codelineno-13-21" href="#__codelineno-13-21"></a><span class="sd">        Graph changes → holographic re-encoding</span>
+</span><span id="__span-13-22"><a id="__codelineno-13-22" name="__codelineno-13-22" href="#__codelineno-13-22"></a><span class="sd">        Holographic consolidation → graph updates</span>
+</span><span id="__span-13-23"><a id="__codelineno-13-23" name="__codelineno-13-23" href="#__codelineno-13-23"></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="__span-13-24"><a id="__codelineno-13-24" name="__codelineno-13-24" href="#__codelineno-13-24"></a>        <span class="k">pass</span>
+</span></code></pre></div>
+<h3 id="proposal-3-foveated-context-injection-protocol">Proposal 3: Foveated Context Injection Protocol</h3>
+<p>Add to <code>spec/m-gents/primitives.md</code>:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nd">@dataclass</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">FoveatedContext</span><span class="p">:</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="sd">    Context injection following foveation principle.</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="sd">    Adopted from LlamaIndex&#39;s composable memory but with</span>
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="sd">    holographic resolution gradients instead of fixed tiers.</span>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>    <span class="c1"># Focal zone: Full resolution</span>
+</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a>    <span class="n">focal</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Memory</span><span class="p">]</span>
+</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a>    <span class="n">focal_tokens</span><span class="p">:</span> <span class="nb">int</span>
+</span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a>
+</span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a>    <span class="c1"># Blur zone: Summarized</span>
+</span><span id="__span-14-14"><a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a>    <span class="n">peripheral</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">MemorySummary</span><span class="p">]</span>
+</span><span id="__span-14-15"><a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a>    <span class="n">peripheral_tokens</span><span class="p">:</span> <span class="nb">int</span>
+</span><span id="__span-14-16"><a id="__codelineno-14-16" name="__codelineno-14-16" href="#__codelineno-14-16"></a>
+</span><span id="__span-14-17"><a id="__codelineno-14-17" name="__codelineno-14-17" href="#__codelineno-14-17"></a>    <span class="c1"># Horizon: Just landmarks</span>
+</span><span id="__span-14-18"><a id="__codelineno-14-18" name="__codelineno-14-18" href="#__codelineno-14-18"></a>    <span class="n">horizon</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Landmark</span><span class="p">]</span>
+</span><span id="__span-14-19"><a id="__codelineno-14-19" name="__codelineno-14-19" href="#__codelineno-14-19"></a>    <span class="n">horizon_tokens</span><span class="p">:</span> <span class="nb">int</span>
+</span><span id="__span-14-20"><a id="__codelineno-14-20" name="__codelineno-14-20" href="#__codelineno-14-20"></a>
+</span><span id="__span-14-21"><a id="__codelineno-14-21" name="__codelineno-14-21" href="#__codelineno-14-21"></a>    <span class="nd">@property</span>
+</span><span id="__span-14-22"><a id="__codelineno-14-22" name="__codelineno-14-22" href="#__codelineno-14-22"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">total_tokens</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+</span><span id="__span-14-23"><a id="__codelineno-14-23" name="__codelineno-14-23" href="#__codelineno-14-23"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">focal_tokens</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">peripheral_tokens</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">horizon_tokens</span>
+</span><span id="__span-14-24"><a id="__codelineno-14-24" name="__codelineno-14-24" href="#__codelineno-14-24"></a>
+</span><span id="__span-14-25"><a id="__codelineno-14-25" name="__codelineno-14-25" href="#__codelineno-14-25"></a>    <span class="nd">@classmethod</span>
+</span><span id="__span-14-26"><a id="__codelineno-14-26" name="__codelineno-14-26" href="#__codelineno-14-26"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">from_budget</span><span class="p">(</span>
+</span><span id="__span-14-27"><a id="__codelineno-14-27" name="__codelineno-14-27" href="#__codelineno-14-27"></a>        <span class="bp">cls</span><span class="p">,</span>
+</span><span id="__span-14-28"><a id="__codelineno-14-28" name="__codelineno-14-28" href="#__codelineno-14-28"></a>        <span class="n">memory</span><span class="p">:</span> <span class="n">HolographicMemory</span><span class="p">,</span>
+</span><span id="__span-14-29"><a id="__codelineno-14-29" name="__codelineno-14-29" href="#__codelineno-14-29"></a>        <span class="n">focus</span><span class="p">:</span> <span class="n">Concept</span><span class="p">,</span>
+</span><span id="__span-14-30"><a id="__codelineno-14-30" name="__codelineno-14-30" href="#__codelineno-14-30"></a>        <span class="n">budget</span><span class="p">:</span> <span class="nb">int</span>
+</span><span id="__span-14-31"><a id="__codelineno-14-31" name="__codelineno-14-31" href="#__codelineno-14-31"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;FoveatedContext&quot;</span><span class="p">:</span>
+</span><span id="__span-14-32"><a id="__codelineno-14-32" name="__codelineno-14-32" href="#__codelineno-14-32"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-14-33"><a id="__codelineno-14-33" name="__codelineno-14-33" href="#__codelineno-14-33"></a><span class="sd">        Generate optimal context within token budget.</span>
+</span><span id="__span-14-34"><a id="__codelineno-14-34" name="__codelineno-14-34" href="#__codelineno-14-34"></a><span class="sd">        This is the answer to: &quot;What is the most perfect</span>
+</span><span id="__span-14-35"><a id="__codelineno-14-35" name="__codelineno-14-35" href="#__codelineno-14-35"></a><span class="sd">        context injection for any given turn?&quot;</span>
+</span><span id="__span-14-36"><a id="__codelineno-14-36" name="__codelineno-14-36" href="#__codelineno-14-36"></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="__span-14-37"><a id="__codelineno-14-37" name="__codelineno-14-37" href="#__codelineno-14-37"></a>        <span class="k">pass</span>
+</span></code></pre></div>
+<h3 id="proposal-4-sleep-time-consolidation-protocol">Proposal 4: Sleep-Time Consolidation Protocol</h3>
+<p>Add to <code>spec/m-gents/primitives.md</code>:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="nd">@dataclass</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">ConsolidationProtocol</span><span class="p">:</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="sd">    Background memory processing during idle periods.</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="sd">    Adopted from Letta&#39;s sleep-time agents but integrated</span>
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="sd">    with our Hypnagogic Symbiont pattern.</span>
+</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>    <span class="c1"># Triggers</span>
+</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>    <span class="n">idle_threshold</span><span class="p">:</span> <span class="n">timedelta</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+</span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a>    <span class="n">memory_pressure_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span>  <span class="c1"># % of budget</span>
+</span><span id="__span-15-12"><a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a>
+</span><span id="__span-15-13"><a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a>    <span class="c1"># Operations</span>
+</span><span id="__span-15-14"><a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a>    <span class="n">operations</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ConsolidationOp</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">[</span>
+</span><span id="__span-15-15"><a id="__codelineno-15-15" name="__codelineno-15-15" href="#__codelineno-15-15"></a>        <span class="n">ConsolidationOp</span><span class="o">.</span><span class="n">COMPRESS_COLD</span><span class="p">,</span>
+</span><span id="__span-15-16"><a id="__codelineno-15-16" name="__codelineno-15-16" href="#__codelineno-15-16"></a>        <span class="n">ConsolidationOp</span><span class="o">.</span><span class="n">STRENGTHEN_HOT</span><span class="p">,</span>
+</span><span id="__span-15-17"><a id="__codelineno-15-17" name="__codelineno-15-17" href="#__codelineno-15-17"></a>        <span class="n">ConsolidationOp</span><span class="o">.</span><span class="n">MERGE_SIMILAR</span><span class="p">,</span>
+</span><span id="__span-15-18"><a id="__codelineno-15-18" name="__codelineno-15-18" href="#__codelineno-15-18"></a>        <span class="n">ConsolidationOp</span><span class="o">.</span><span class="n">UPDATE_GRAPH</span>
+</span><span id="__span-15-19"><a id="__codelineno-15-19" name="__codelineno-15-19" href="#__codelineno-15-19"></a>    <span class="p">])</span>
+</span><span id="__span-15-20"><a id="__codelineno-15-20" name="__codelineno-15-20" href="#__codelineno-15-20"></a>
+</span><span id="__span-15-21"><a id="__codelineno-15-21" name="__codelineno-15-21" href="#__codelineno-15-21"></a>    <span class="c1"># Constraints</span>
+</span><span id="__span-15-22"><a id="__codelineno-15-22" name="__codelineno-15-22" href="#__codelineno-15-22"></a>    <span class="n">max_duration</span><span class="p">:</span> <span class="n">timedelta</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</span><span id="__span-15-23"><a id="__codelineno-15-23" name="__codelineno-15-23" href="#__codelineno-15-23"></a>    <span class="n">max_tokens_consumed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span>
+</span><span id="__span-15-24"><a id="__codelineno-15-24" name="__codelineno-15-24" href="#__codelineno-15-24"></a>
+</span><span id="__span-15-25"><a id="__codelineno-15-25" name="__codelineno-15-25" href="#__codelineno-15-25"></a><span class="k">class</span><span class="w"> </span><span class="nc">ConsolidationOp</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+</span><span id="__span-15-26"><a id="__codelineno-15-26" name="__codelineno-15-26" href="#__codelineno-15-26"></a>    <span class="n">COMPRESS_COLD</span> <span class="o">=</span> <span class="s2">&quot;compress_cold&quot;</span>       <span class="c1"># Reduce resolution of cold memories</span>
+</span><span id="__span-15-27"><a id="__codelineno-15-27" name="__codelineno-15-27" href="#__codelineno-15-27"></a>    <span class="n">STRENGTHEN_HOT</span> <span class="o">=</span> <span class="s2">&quot;strengthen_hot&quot;</span>     <span class="c1"># Increase resolution of hot memories</span>
+</span><span id="__span-15-28"><a id="__codelineno-15-28" name="__codelineno-15-28" href="#__codelineno-15-28"></a>    <span class="n">MERGE_SIMILAR</span> <span class="o">=</span> <span class="s2">&quot;merge_similar&quot;</span>       <span class="c1"># Combine near-duplicate memories</span>
+</span><span id="__span-15-29"><a id="__codelineno-15-29" name="__codelineno-15-29" href="#__codelineno-15-29"></a>    <span class="n">UPDATE_GRAPH</span> <span class="o">=</span> <span class="s2">&quot;update_graph&quot;</span>         <span class="c1"># Sync to L-gent graph</span>
+</span><span id="__span-15-30"><a id="__codelineno-15-30" name="__codelineno-15-30" href="#__codelineno-15-30"></a>    <span class="n">DECAY</span> <span class="o">=</span> <span class="s2">&quot;decay&quot;</span>                       <span class="c1"># Apply forgetting curves</span>
+</span></code></pre></div>
+<hr />
+<h2 id="part-v-integration-architecture">Part V: Integration Architecture</h2>
+<h3 id="m-gent-in-the-kgents-ecosystem">M-gent in the kgents Ecosystem</h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>┌─────────────────────────────────────────────────────────────────┐
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>│                    MEMORY ECOSYSTEM INTEGRATION                  │
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>│                                                                  │
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>│  ┌─────────────┐        ┌─────────────┐       ┌─────────────┐  │
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>│  │   L-gent    │◄──────►│   M-gent    │◄─────►│   N-gent    │  │
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>│  │  (Lattice)  │ graph  │(Holographic)│ trace │  (Witness)  │  │
+</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>│  │  relations  │ sync   │   memory    │ sync  │   traces    │  │
+</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>│  └──────┬──────┘        └──────┬──────┘       └──────┬──────┘  │
+</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a>│         │                      │                      │         │
+</span><span id="__span-16-10"><a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a>│         │                      │                      │         │
+</span><span id="__span-16-11"><a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a>│         ▼                      ▼                      ▼         │
+</span><span id="__span-16-12"><a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a>│  ┌─────────────────────────────────────────────────────────┐   │
+</span><span id="__span-16-13"><a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a>│  │                      D-gent (Persistence)                │   │
+</span><span id="__span-16-14"><a id="__codelineno-16-14" name="__codelineno-16-14" href="#__codelineno-16-14"></a>│  │   VectorAgent | GraphAgent | StreamAgent | PersistentAgent│   │
+</span><span id="__span-16-15"><a id="__codelineno-16-15" name="__codelineno-16-15" href="#__codelineno-16-15"></a>│  └─────────────────────────────────────────────────────────┘   │
+</span><span id="__span-16-16"><a id="__codelineno-16-16" name="__codelineno-16-16" href="#__codelineno-16-16"></a>│                                                                  │
+</span><span id="__span-16-17"><a id="__codelineno-16-17" name="__codelineno-16-17" href="#__codelineno-16-17"></a>└─────────────────────────────────────────────────────────────────┘
+</span></code></pre></div>
+<h3 id="agentese-paths-for-memory">AGENTESE Paths for Memory</h3>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Aspect</th>
+<th>Returns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>self.memory.recall</code></td>
+<td>Perception</td>
+<td>FoveatedContext</td>
+</tr>
+<tr>
+<td><code>self.memory.encode</code></td>
+<td>Generation</td>
+<td>EncodingConfirmation</td>
+</tr>
+<tr>
+<td><code>self.memory.consolidate</code></td>
+<td>Maintenance</td>
+<td>ConsolidationReport</td>
+</tr>
+<tr>
+<td><code>self.memory.forget</code></td>
+<td>Maintenance</td>
+<td>ForgettingReport</td>
+</tr>
+<tr>
+<td><code>self.memory.timeline</code></td>
+<td>Temporal</td>
+<td>MemoryTimeline</td>
+</tr>
+<tr>
+<td><code>self.memory.lens</code></td>
+<td>Composition</td>
+<td>FocusedMemory</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="appendix-a-benchmark-considerations">Appendix A: Benchmark Considerations</h2>
+<h3 id="proposed-m-gent-benchmarks">Proposed M-gent Benchmarks</h3>
+<p>Based on existing benchmarks (LOCOMO, DMR), M-gent should be evaluated on:</p>
+<ol>
+<li><strong>Graceful Degradation</strong>: Does 50% compression preserve 100% of memories at 50% resolution?</li>
+<li><strong>Reconstruction Quality</strong>: How accurate is generative recall vs exact retrieval?</li>
+<li><strong>Temporal Coherence</strong>: Can the system answer "what did I believe at time T?"</li>
+<li><strong>Composition Integrity</strong>: Does memory survive Symbiont composition?</li>
+<li><strong>Consolidation Efficiency</strong>: How much does sleep-time processing improve recall?</li>
+</ol>
+<h3 id="comparison-targets">Comparison Targets</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Mem0</th>
+<th>Zep</th>
+<th>M-gent Target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DMR Accuracy</td>
+<td>93.4%</td>
+<td>94.8%</td>
+<td>95%+</td>
+</tr>
+<tr>
+<td>Latency p95</td>
+<td>~500ms</td>
+<td>~100ms</td>
+<td>&lt;100ms</td>
+</tr>
+<tr>
+<td>Token Efficiency</td>
+<td>90% reduction</td>
+<td>90% reduction</td>
+<td>95% reduction</td>
+</tr>
+<tr>
+<td>Graceful Degradation</td>
+<td>N/A</td>
+<td>N/A</td>
+<td><strong>Yes</strong> (unique)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="appendix-b-research-sources">Appendix B: Research Sources</h2>
+<h3 id="primary-sources">Primary Sources</h3>
+<ul>
+<li><a href="https://github.com/mem0ai/mem0">Mem0 GitHub Repository</a></li>
+<li><a href="https://arxiv.org/abs/2504.19413">Mem0 Research Paper</a></li>
+<li><a href="https://github.com/letta-ai/letta">Letta GitHub Repository</a></li>
+<li><a href="https://docs.letta.com/concepts/memgpt/">MemGPT Documentation</a></li>
+<li><a href="https://docs.letta.com/advanced/memory_management">Letta Memory Management</a></li>
+<li><a href="https://github.com/getzep/zep">Zep GitHub Repository</a></li>
+<li><a href="https://arxiv.org/abs/2501.13956">Zep Research Paper</a></li>
+<li><a href="https://github.com/getzep/graphiti">Graphiti Knowledge Graph</a></li>
+<li><a href="https://docs.langchain.com/oss/python/concepts/memory">LangChain Memory Concepts</a></li>
+<li><a href="https://blog.langchain.com/langmem-sdk-launch/">LangMem SDK Announcement</a></li>
+<li><a href="https://docs.llamaindex.ai/en/stable/module_guides/deploying/agents/memory/">LlamaIndex Memory Documentation</a></li>
+</ul>
+<h3 id="secondary-sources">Secondary Sources</h3>
+<ul>
+<li><a href="https://mem0.ai/blog/memory-in-agents-what-why-and-how">Mem0 AI Agent Memory Overview</a></li>
+<li><a href="https://aws.amazon.com/blogs/database/build-persistent-memory-for-agentic-ai-applications-with-mem0-open-source-amazon-elasticache-for-valkey-and-amazon-neptune-analytics/">AWS Mem0 Integration</a></li>
+<li><a href="https://www.mongodb.com/company/blog/product-release-announcements/powering-long-term-memory-for-agents-langgraph">MongoDB LangGraph Integration</a></li>
+<li><a href="https://www.letta.com/blog/letta-v1-agent">Letta v1 Agent Architecture</a></li>
+</ul>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>The open source agent memory landscape is maturing rapidly, with sophisticated solutions for vector storage, graph relations, and temporal tracking. However, <strong>no existing system implements the holographic memory model</strong> that is central to M-gents.</p>
+<p>M-gents should:
+1. <strong>Adopt</strong> bi-temporal modeling (from Zep)
+2. <strong>Adopt</strong> sleep-time consolidation (from Letta)
+3. <strong>Adopt</strong> graph integration for relations (from Mem0)
+4. <strong>Reject</strong> storage-first ontology (from all)
+5. <strong>Reject</strong> wrapper-based architecture (from Letta)
+6. <strong>Maintain</strong> holographic graceful degradation as the core differentiator</p>
+<p>The holographic principle—"cutting memory in half doesn't lose half the data, it lowers the resolution of the whole"—remains unique to kgents and should be preserved as the foundational insight.</p>
+<hr />
+<p><em>"The mind that forgets nothing remembers nothing; the hologram holds all in each part."</em></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2025 Kent Gang
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/kentgang/kgents" target="_blank" rel="noopener" title="kgents on GitHub" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.copy", "content.code.annotate", "content.tabs.link", "navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "toc.follow"], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      
+    
+  </body>
+</html>
