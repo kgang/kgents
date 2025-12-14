@@ -170,7 +170,7 @@ DashboardApp subscribes via EventBus and pushes FeverOverlay modal.
 
 ---
 
-## K-gent (`agents/k-gent.md`) — 97% [ACTIVE]
+## K-gent (`agents/k-gent.md`) — 100% COMPLETE ✅
 
 | Phase | Component | Status | Tests |
 |-------|-----------|--------|-------|
@@ -180,9 +180,24 @@ DashboardApp subscribes via EventBus and pushes FeverOverlay modal.
 | 4 | Hypnagogia (dream cycle) | ✅ | 38 |
 | 5 | Completion Sprint (Garden, Gatekeeper) | ✅ | 70 |
 | — | Session/Soul Cache (NEW) | ✅ | 58 |
-| — | Deferred (Fractal, Holographic) | 📋 | — |
+| — | K-Terrarium LLM Agents (Crown Jewel) | ✅ | — |
 
-**Total**: 589 tests. Core complete; deferred features remaining.
+**Total**: 589+ tests. **CROWN JEWEL COMPLETE**: Kent said "this is amazing."
+
+---
+
+## CLI Unification (`devex/cli-unification.md`) — 0% [NEXT]
+
+| Phase | Component | Status | Target |
+|-------|-----------|--------|--------|
+| 1 | Shared Infrastructure | 📋 | `cli/shared/` |
+| 2 | Soul Command Refactor | 📋 | 2019→<300 lines |
+| 3 | Agent Command Refactor | 📋 | 1110→<300 lines |
+| 4 | Infra/DevEx Consolidation | 📋 | Merge related |
+| 5 | Flow Composition | 📋 | Pipe support |
+| 6 | Testing & Polish | 📋 | Full coverage |
+
+**Current**: 17,967 lines across 40+ handlers. **Target**: <8,000 lines.
 
 ---
 
@@ -278,4 +293,4 @@ cd impl/claude && uv run mypy .
 
 ---
 
-*Last verified: 2025-12-13 Night session (13,210 tests, mypy clean)*
+*Last verified: 2025-12-14 CP8 REFLECT (12,282 tests, mypy clean)*

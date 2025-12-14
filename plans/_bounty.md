@@ -69,6 +69,10 @@ WIN | 2025-12-12 | [MED] | Soul context is sticky—parameterize Persona type fo
 IDEA | 2025-12-12 | [MED] | pytest fixture `isolated_registry` would fix functor test isolation anti-pattern | #testing #devex
 IDEA | 2025-12-12 | [LOW] | parallel()/fan_out()/branch() should be proper functors, not special-case agents | #c-gent #arch
 WIN | 2025-12-12 | [LOW] | Cross-functor law tests (Soul >> Flux != Flux >> Soul)—composition matrix | #testing #functor
+IDEA | 2025-12-14 | [MED] | FluxStream.pipe() returns FluxStream[Any]—preserve generics through operator chain | #k-gent #flux #types
+IDEA | 2025-12-14 | [MED] | Pipe streaming lacks backpressure—add async queue limits + consumer signaling | #k-gent #flux #perf
+IDEA | 2025-12-14 | [HIGH] | WebSocket + NDJSON merge—C18 endpoint emits NDJSON instead of raw text | #k-gent #streaming
+IDEA | 2025-12-14 | [MED] | FluxStream.merge() multi-source streaming—fan-in from multiple flux sources | #flux #arch
 ```
 
 ---

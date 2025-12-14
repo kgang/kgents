@@ -71,6 +71,7 @@ entropy:
 2025-12-14  Enum identity breaks on reload: compare `.value`, not `is`
 2025-12-14  DI > mocking: `set_soul()` injection pattern beats `patch()` for testability
 2025-12-14  HTTP validation order: 400 (bad request) before 403 (forbidden); record before check for rate limits
+2025-12-14  Re-metabolize reveals health: 22 skills, 5% drift, all holograms present, laws preserved
 ```
 
 ## Anti-Patterns
