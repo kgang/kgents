@@ -175,6 +175,8 @@ class JsonFileSpanExporter(SpanExporter):
             filename = f"{timestamp}_{trace_id[:8]}.json"
             filepath = self.output_dir / filename
 
+            # Ensure directory exists (defensive: may have been deleted since init)
+            self.output_dir.mkdir(parents=True, exist_ok=True)
             with open(filepath, "w") as f:
                 json.dump(
                     {
@@ -281,6 +283,8 @@ class JsonFileMetricExporter(MetricExporter):
 
             data["resource_metrics"].append(rm_data)
 
+        # Ensure directory exists (defensive: may have been deleted since init)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
         with open(filepath, "w") as f:
             json.dump(data, f, indent=2, default=str)
 

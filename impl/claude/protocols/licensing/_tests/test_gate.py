@@ -172,7 +172,7 @@ class TestRequiresTier:
             return "success"
 
         assert hasattr(pro_feature, "__license_tier__")
-        assert pro_feature.__license_tier__ == LicenseTier.PRO  # type: ignore[attr-defined]
+        assert pro_feature.__license_tier__ == LicenseTier.PRO
 
 
 class TestRequiresTierAsync:

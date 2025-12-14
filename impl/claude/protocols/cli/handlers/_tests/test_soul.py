@@ -17,9 +17,11 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from protocols.cli.commands.soul import print_help
+from protocols.cli.commands.soul.ambient import execute_stream
+from protocols.cli.shared.streaming import invoke_with_retry
 
 from ..soul import (
-    _print_help,
     cmd_advise,
     cmd_challenge,
     cmd_explore,
@@ -392,21 +394,20 @@ class TestSoulStreamIntegration:
         from io import StringIO
 
         from agents.k import KgentSoul
-
-        from ..soul import _handle_stream
+        from protocols.cli.shared import InvocationContext
 
         soul = KgentSoul()
+        ctx = InvocationContext(json_mode=False)
 
         # Mock stdin with a single message followed by EOF
         mock_stdin = StringIO("Hello world\n")
 
         with patch("sys.stdin", mock_stdin):
-            result = await _handle_stream(
+            result = await execute_stream(
+                ctx,
                 soul,
                 pulse_interval=100,  # Long interval so no pulses fire
                 show_pulses=False,
-                json_mode=False,
-                ctx=None,
             )
 
         assert result == 0
@@ -425,21 +426,20 @@ class TestSoulStreamIntegration:
         from io import StringIO
 
         from agents.k import KgentSoul
-
-        from ..soul import _handle_stream
+        from protocols.cli.shared import InvocationContext
 
         soul = KgentSoul()
+        ctx = InvocationContext(json_mode=False)
 
         # Mock stdin with mode switch command
         mock_stdin = StringIO("/mode advise\n")
 
         with patch("sys.stdin", mock_stdin):
-            result = await _handle_stream(
+            result = await execute_stream(
+                ctx,
                 soul,
                 pulse_interval=100,
                 show_pulses=False,
-                json_mode=False,
-                ctx=None,
             )
 
         assert result == 0
@@ -457,21 +457,20 @@ class TestSoulStreamIntegration:
         from io import StringIO
 
         from agents.k import KgentSoul
-
-        from ..soul import _handle_stream
+        from protocols.cli.shared import InvocationContext
 
         soul = KgentSoul()
+        ctx = InvocationContext(json_mode=False)
 
         # Mock stdin with invalid mode
         mock_stdin = StringIO("/mode invalid_mode\n")
 
         with patch("sys.stdin", mock_stdin):
-            result = await _handle_stream(
+            result = await execute_stream(
+                ctx,
                 soul,
                 pulse_interval=100,
                 show_pulses=False,
-                json_mode=False,
-                ctx=None,
             )
 
         assert result == 0
@@ -488,32 +487,30 @@ class TestSoulStreamIntegration:
         import asyncio
         from io import StringIO
 
-        import protocols.cli.handlers.soul as soul_module
+        import protocols.cli.commands.soul.ambient as ambient_module
         from agents.k import KgentSoul
+        from protocols.cli.shared import InvocationContext
 
         soul = KgentSoul()
+        ctx = InvocationContext(json_mode=False)
 
         # Mock stdin with a message
         mock_stdin = StringIO("Test message\n")
-
-        # Store original function
-        original_invoke = soul_module._invoke_with_retry
 
         async def timeout_invoke(*args: Any, **kwargs: Any) -> Any:
             raise asyncio.TimeoutError("LLM response timeout")
 
         with patch("sys.stdin", mock_stdin):
             with patch.object(
-                soul_module,
-                "_invoke_with_retry",
+                ambient_module,
+                "invoke_with_retry",
                 side_effect=timeout_invoke,
             ):
-                result = await soul_module._handle_stream(
+                result = await execute_stream(
+                    ctx,
                     soul,
                     pulse_interval=100,
                     show_pulses=False,
-                    json_mode=False,
-                    ctx=None,
                 )
 
         assert result == 0
@@ -531,21 +528,20 @@ class TestSoulStreamIntegration:
         from io import StringIO
 
         from agents.k import KgentSoul
-
-        from ..soul import _handle_stream
+        from protocols.cli.shared import InvocationContext
 
         soul = KgentSoul()
+        ctx = InvocationContext(json_mode=False)
 
         # Mock empty stdin (EOF immediately)
         mock_stdin = StringIO("")
 
         with patch("sys.stdin", mock_stdin):
-            result = await _handle_stream(
+            result = await execute_stream(
+                ctx,
                 soul,
                 pulse_interval=100,
                 show_pulses=False,
-                json_mode=False,
-                ctx=None,
             )
 
         assert result == 0
@@ -558,13 +554,11 @@ class TestSoulStreamIntegration:
         """Retry helper succeeds on first attempt."""
         from unittest.mock import MagicMock
 
-        from ..soul import _invoke_with_retry
-
         mock_flux = MagicMock()
         mock_flux.invoke = AsyncMock(return_value="success")
         mock_event = MagicMock()
 
-        result = await _invoke_with_retry(mock_flux, mock_event, max_retries=2)
+        result = await invoke_with_retry(mock_flux, mock_event, max_retries=2)
 
         assert result == "success"
         assert mock_flux.invoke.call_count == 1
@@ -574,14 +568,12 @@ class TestSoulStreamIntegration:
         """Retry helper retries on transient failure."""
         from unittest.mock import MagicMock
 
-        from ..soul import _invoke_with_retry
-
         mock_flux = MagicMock()
         # First call fails, second succeeds
         mock_flux.invoke = AsyncMock(side_effect=[RuntimeError("transient"), "success"])
         mock_event = MagicMock()
 
-        result = await _invoke_with_retry(
+        result = await invoke_with_retry(
             mock_flux, mock_event, max_retries=2, timeout_seconds=5.0
         )
 
@@ -593,14 +585,12 @@ class TestSoulStreamIntegration:
         """Retry helper raises after max retries exhausted."""
         from unittest.mock import MagicMock
 
-        from ..soul import _invoke_with_retry
-
         mock_flux = MagicMock()
         mock_flux.invoke = AsyncMock(side_effect=RuntimeError("permanent"))
         mock_event = MagicMock()
 
         with pytest.raises(RuntimeError, match="permanent"):
-            await _invoke_with_retry(
+            await invoke_with_retry(
                 mock_flux, mock_event, max_retries=1, timeout_seconds=5.0
             )
 
@@ -613,8 +603,6 @@ class TestSoulStreamIntegration:
         import asyncio
         from unittest.mock import MagicMock
 
-        from ..soul import _invoke_with_retry
-
         async def slow_invoke(*args: Any, **kwargs: Any) -> str:
             await asyncio.sleep(10)
             return "too slow"
@@ -624,6 +612,6 @@ class TestSoulStreamIntegration:
         mock_event = MagicMock()
 
         with pytest.raises(asyncio.TimeoutError):
-            await _invoke_with_retry(
+            await invoke_with_retry(
                 mock_flux, mock_event, max_retries=0, timeout_seconds=0.1
             )

@@ -152,6 +152,40 @@ class TestSubscription:
 
         assert sub.is_active is False
 
+    def test_from_stripe_no_items_raises_error(self) -> None:
+        """Test that from_stripe raises ValueError when subscription has no items."""
+        stripe_sub = {
+            "id": "sub_empty123",
+            "customer": "cus_test",
+            "status": "active",
+            "items": {"data": []},  # Empty items
+            "current_period_start": 1000000,
+            "current_period_end": 2000000,
+            "cancel_at_period_end": False,
+            "canceled_at": None,
+            "metadata": {},
+        }
+
+        with pytest.raises(ValueError, match="has no items"):
+            Subscription.from_stripe(stripe_sub)
+
+    def test_from_stripe_missing_items_key_raises_error(self) -> None:
+        """Test that from_stripe raises ValueError when items key is missing."""
+        stripe_sub = {
+            "id": "sub_noitems123",
+            "customer": "cus_test",
+            "status": "active",
+            # No "items" key at all
+            "current_period_start": 1000000,
+            "current_period_end": 2000000,
+            "cancel_at_period_end": False,
+            "canceled_at": None,
+            "metadata": {},
+        }
+
+        with pytest.raises(ValueError, match="has no items"):
+            Subscription.from_stripe(stripe_sub)
+
 
 class TestSubscriptionManager:
     """Tests for SubscriptionManager."""
@@ -319,3 +353,18 @@ class TestSubscriptionManager:
         mock_stripe.Subscription.modify.assert_called_once_with(
             "sub_reactivate123", cancel_at_period_end=False
         )
+
+    def test_update_subscription_no_items_raises_error(
+        self, subscription_manager: SubscriptionManager
+    ) -> None:
+        """Test that updating subscription with no items raises ValueError."""
+        # Mock retrieve to return subscription with empty items
+        mock_stripe.Subscription.retrieve.return_value = {
+            "id": "sub_empty123",
+            "items": {"data": []},
+        }
+
+        with pytest.raises(ValueError, match="has no items to update"):
+            subscription_manager.update_subscription(
+                "sub_empty123", price_id="price_new"
+            )

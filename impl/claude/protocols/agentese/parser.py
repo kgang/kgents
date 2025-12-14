@@ -47,6 +47,31 @@ class Phase(str, Enum):
     REFLECT = "REFLECT"
 
 
+class AutoInducer(str, Enum):
+    """
+    Auto-Inducer signifiers for phase transition control.
+
+    From spec/protocols/auto-inducer.md:
+    - CONTINUE (⟿): Positive feedback, proceed to next phase
+    - HALT (⟂): Negative feedback, await human input
+
+    Unicode:
+    - ⟿ U+27FF LONG RIGHTWARDS SQUIGGLE ARROW
+    - ⟂ U+27C2 PERPENDICULAR
+    """
+
+    CONTINUE = "⟿"  # U+27FF
+    HALT = "⟂"  # U+27C2
+
+    @classmethod
+    def from_char(cls, char: str) -> "AutoInducer | None":
+        """Get AutoInducer from character."""
+        for inducer in cls:
+            if inducer.value == char:
+                return inducer
+        return None
+
+
 PHASE_NAMES = frozenset(p.value for p in Phase)
 
 
@@ -711,3 +736,197 @@ def try_parse_path(path: str) -> ParsedPath | None:
     parser = PathParser()
     result = parser.parse(path)
     return result.parsed if result.success else None
+
+
+# === Auto-Inducer Signifier Parsing ===
+
+# Extended phase names including transition phases
+EXTENDED_PHASE_NAMES = frozenset(
+    PHASE_NAMES
+    | {
+        "META-RE-METABOLIZE",
+        "DETACH",
+    }
+)
+
+# Valid halt reason tags (kebab-case)
+VALID_HALT_REASONS = frozenset(
+    {
+        "awaiting_human",
+        "cycle_complete",
+        "blocked",
+        "entropy_depleted",
+        "runaway_loop",
+        "human_interrupt",
+    }
+)
+
+
+@dataclass(frozen=True)
+class ParsedSignifier:
+    """
+    A parsed auto-inducer signifier.
+
+    From spec/protocols/auto-inducer.md:
+        ⟿[PHASE] payload
+        ⟂[REASON] payload (optional)
+
+    Attributes:
+        inducer: The signifier type (CONTINUE or HALT)
+        target: The target (phase name for CONTINUE, reason for HALT)
+        payload: Optional payload text following the signifier
+        colon_suffix: Optional suffix after colon in target (e.g., "blocked:impl_incomplete")
+    """
+
+    inducer: AutoInducer
+    target: str
+    payload: str = ""
+    colon_suffix: str = ""
+
+    @property
+    def is_continue(self) -> bool:
+        """Check if this is a continue signifier."""
+        return self.inducer == AutoInducer.CONTINUE
+
+    @property
+    def is_halt(self) -> bool:
+        """Check if this is a halt signifier."""
+        return self.inducer == AutoInducer.HALT
+
+    @property
+    def full_target(self) -> str:
+        """Full target including colon suffix if present."""
+        if self.colon_suffix:
+            return f"{self.target}:{self.colon_suffix}"
+        return self.target
+
+    @property
+    def phase(self) -> Phase | None:
+        """Get the target phase if this is a continue signifier to a known phase."""
+        if self.target in PHASE_NAMES:
+            return Phase(self.target)
+        return None
+
+    def emit(self) -> str:
+        """Emit the signifier as text (round-trip support)."""
+        parts = [self.inducer.value, "[", self.full_target, "]"]
+        if self.payload:
+            parts.append(" ")
+            parts.append(self.payload)
+        return "".join(parts)
+
+
+# Regex for signifier parsing
+# Matches: ⟿[TARGET] or ⟂[TARGET] with optional payload
+# Target can be: PHASE or REASON or REASON:detail
+_SIGNIFIER_PATTERN = re.compile(
+    r"([⟿⟂])\[([A-Za-z_-]+(?::[A-Za-z0-9_-]+)?)\](?:\s+(.+))?$",
+    re.MULTILINE,
+)
+
+
+def parse_signifier(text: str) -> ParsedSignifier | None:
+    """
+    Parse an auto-inducer signifier from text.
+
+    Looks for ⟿[PHASE] or ⟂[REASON] patterns, typically at end of text.
+
+    Args:
+        text: Text that may contain a signifier
+
+    Returns:
+        ParsedSignifier if found, None otherwise
+
+    Examples:
+        >>> parse_signifier("⟿[RESEARCH]")
+        ParsedSignifier(inducer=AutoInducer.CONTINUE, target="RESEARCH", ...)
+
+        >>> parse_signifier("⟂[BLOCKED:impl_incomplete]")
+        ParsedSignifier(inducer=AutoInducer.HALT, target="BLOCKED", colon_suffix="impl_incomplete", ...)
+
+        >>> parse_signifier("Some output\\n⟿[QA] Continue to QA phase")
+        ParsedSignifier(inducer=AutoInducer.CONTINUE, target="QA", payload="Continue to QA phase", ...)
+    """
+    if not text:
+        return None
+
+    # Search for signifier pattern
+    match = _SIGNIFIER_PATTERN.search(text)
+    if not match:
+        return None
+
+    char, target_full, payload = match.groups()
+
+    # Get inducer type
+    inducer = AutoInducer.from_char(char)
+    if inducer is None:
+        return None
+
+    # Parse target (may have colon suffix like BLOCKED:reason)
+    if ":" in target_full:
+        target, colon_suffix = target_full.split(":", 1)
+    else:
+        target = target_full
+        colon_suffix = ""
+
+    return ParsedSignifier(
+        inducer=inducer,
+        target=target,
+        payload=payload.strip() if payload else "",
+        colon_suffix=colon_suffix,
+    )
+
+
+def find_signifier_in_text(text: str) -> tuple[ParsedSignifier | None, int]:
+    """
+    Find a signifier in text and return its position.
+
+    Args:
+        text: Text to search
+
+    Returns:
+        Tuple of (ParsedSignifier or None, position in text or -1)
+    """
+    if not text:
+        return None, -1
+
+    match = _SIGNIFIER_PATTERN.search(text)
+    if not match:
+        return None, -1
+
+    signifier = parse_signifier(text[match.start() :])
+    return signifier, match.start()
+
+
+def emit_signifier(
+    inducer: AutoInducer | Literal["continue", "halt"],
+    target: str,
+    payload: str = "",
+) -> str:
+    """
+    Emit a signifier string.
+
+    Args:
+        inducer: AutoInducer enum or "continue"/"halt" string
+        target: Target phase (for continue) or reason (for halt)
+        payload: Optional payload text
+
+    Returns:
+        Formatted signifier string
+
+    Examples:
+        >>> emit_signifier(AutoInducer.CONTINUE, "QA")
+        "⟿[QA]"
+
+        >>> emit_signifier("halt", "BLOCKED", "impl_incomplete")
+        "⟂[BLOCKED] impl_incomplete"
+    """
+    # Check for AutoInducer first (it's a str subclass, so isinstance(x, str) would be True)
+    if not isinstance(inducer, AutoInducer):
+        inducer = AutoInducer.CONTINUE if inducer == "continue" else AutoInducer.HALT
+
+    parts = [inducer.value, "[", target, "]"]
+    if payload:
+        parts.append(" ")
+        parts.append(payload)
+    return "".join(parts)

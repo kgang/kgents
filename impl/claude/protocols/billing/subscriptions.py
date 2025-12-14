@@ -52,12 +52,22 @@ class Subscription:
 
     @classmethod
     def from_stripe(cls, stripe_subscription: dict[str, Any]) -> "Subscription":
-        """Create Subscription from Stripe subscription object."""
+        """Create Subscription from Stripe subscription object.
+
+        Raises:
+            ValueError: If subscription has no items (should never happen in normal Stripe usage)
+        """
+        items_data = stripe_subscription.get("items", {}).get("data", [])
+        if not items_data:
+            raise ValueError(
+                f"Subscription {stripe_subscription.get('id', 'unknown')} has no items"
+            )
+
         return cls(
             id=stripe_subscription["id"],
             customer_id=stripe_subscription["customer"],
             status=SubscriptionStatus.from_str(stripe_subscription["status"]),
-            price_id=stripe_subscription["items"]["data"][0]["price"]["id"],
+            price_id=items_data[0]["price"]["id"],
             current_period_start=datetime.fromtimestamp(
                 stripe_subscription["current_period_start"]
             ),
@@ -192,7 +202,12 @@ class SubscriptionManager:
         if price_id is not None:
             # Get current subscription to get the item ID
             current_sub = stripe.Subscription.retrieve(subscription_id)
-            item_id = current_sub["items"]["data"][0]["id"]
+            items_data = current_sub.get("items", {}).get("data", [])
+            if not items_data:
+                raise ValueError(
+                    f"Subscription {subscription_id} has no items to update"
+                )
+            item_id = items_data[0]["id"]
             update_params["items"] = [{"id": item_id, "price": price_id}]
 
         if metadata is not None:

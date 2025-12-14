@@ -17,18 +17,25 @@ import pytest
 
 from ..exceptions import PathSyntaxError
 from ..parser import (
+    EXTENDED_PHASE_NAMES,
     PHASE_NAMES,
     VALID_ANNOTATION_MODIFIERS,
     VALID_CLAUSE_MODIFIERS,
+    VALID_HALT_REASONS,
     Annotation,
+    AutoInducer,
     Clause,
     ParsedPath,
+    ParsedSignifier,
     ParseError,
     ParseResult,
     PathParser,
     Phase,
     create_parser,
+    emit_signifier,
+    find_signifier_in_text,
     parse_path,
+    parse_signifier,
     try_parse_path,
 )
 
@@ -713,3 +720,278 @@ class TestSpecCompliance:
         assert result.parsed is not None
         assert len(result.parsed.clauses) == 0
         assert len(result.parsed.annotations) == 0
+
+
+# === Auto-Inducer Signifier Parsing Tests ===
+
+
+class TestAutoInducerEnum:
+    """Tests for AutoInducer enum."""
+
+    def test_continue_value(self) -> None:
+        """CONTINUE has correct unicode value."""
+        assert AutoInducer.CONTINUE.value == "⟿"
+
+    def test_halt_value(self) -> None:
+        """HALT has correct unicode value."""
+        assert AutoInducer.HALT.value == "⟂"
+
+    def test_from_char_continue(self) -> None:
+        """from_char returns CONTINUE for ⟿."""
+        assert AutoInducer.from_char("⟿") == AutoInducer.CONTINUE
+
+    def test_from_char_halt(self) -> None:
+        """from_char returns HALT for ⟂."""
+        assert AutoInducer.from_char("⟂") == AutoInducer.HALT
+
+    def test_from_char_invalid(self) -> None:
+        """from_char returns None for invalid char."""
+        assert AutoInducer.from_char("x") is None
+        assert AutoInducer.from_char("→") is None
+
+
+class TestParsedSignifier:
+    """Tests for ParsedSignifier dataclass."""
+
+    def test_is_continue(self) -> None:
+        """is_continue returns True for CONTINUE signifier."""
+        sig = ParsedSignifier(inducer=AutoInducer.CONTINUE, target="QA")
+        assert sig.is_continue is True
+        assert sig.is_halt is False
+
+    def test_is_halt(self) -> None:
+        """is_halt returns True for HALT signifier."""
+        sig = ParsedSignifier(inducer=AutoInducer.HALT, target="BLOCKED")
+        assert sig.is_halt is True
+        assert sig.is_continue is False
+
+    def test_full_target_without_suffix(self) -> None:
+        """full_target returns target when no colon suffix."""
+        sig = ParsedSignifier(inducer=AutoInducer.CONTINUE, target="QA")
+        assert sig.full_target == "QA"
+
+    def test_full_target_with_suffix(self) -> None:
+        """full_target includes colon suffix when present."""
+        sig = ParsedSignifier(
+            inducer=AutoInducer.HALT, target="BLOCKED", colon_suffix="impl_incomplete"
+        )
+        assert sig.full_target == "BLOCKED:impl_incomplete"
+
+    def test_phase_property_valid(self) -> None:
+        """phase property returns Phase for known phase."""
+        sig = ParsedSignifier(inducer=AutoInducer.CONTINUE, target="QA")
+        assert sig.phase == Phase.QA
+
+    def test_phase_property_none_for_unknown(self) -> None:
+        """phase property returns None for unknown target."""
+        sig = ParsedSignifier(inducer=AutoInducer.HALT, target="BLOCKED")
+        assert sig.phase is None
+
+    def test_emit_simple(self) -> None:
+        """emit produces correct signifier string."""
+        sig = ParsedSignifier(inducer=AutoInducer.CONTINUE, target="QA")
+        assert sig.emit() == "⟿[QA]"
+
+    def test_emit_with_payload(self) -> None:
+        """emit includes payload."""
+        sig = ParsedSignifier(
+            inducer=AutoInducer.CONTINUE, target="QA", payload="Continue to QA phase"
+        )
+        assert sig.emit() == "⟿[QA] Continue to QA phase"
+
+    def test_emit_with_colon_suffix(self) -> None:
+        """emit includes colon suffix in target."""
+        sig = ParsedSignifier(
+            inducer=AutoInducer.HALT, target="BLOCKED", colon_suffix="impl_incomplete"
+        )
+        assert sig.emit() == "⟂[BLOCKED:impl_incomplete]"
+
+
+class TestParseSignifier:
+    """Tests for parse_signifier function."""
+
+    def test_simple_continue(self) -> None:
+        """Parse simple continue signifier."""
+        sig = parse_signifier("⟿[QA]")
+        assert sig is not None
+        assert sig.inducer == AutoInducer.CONTINUE
+        assert sig.target == "QA"
+        assert sig.payload == ""
+
+    def test_simple_halt(self) -> None:
+        """Parse simple halt signifier."""
+        sig = parse_signifier("⟂[BLOCKED]")
+        assert sig is not None
+        assert sig.inducer == AutoInducer.HALT
+        assert sig.target == "BLOCKED"
+
+    def test_continue_with_payload(self) -> None:
+        """Parse continue signifier with payload."""
+        sig = parse_signifier("⟿[RESEARCH] Continue to research phase")
+        assert sig is not None
+        assert sig.inducer == AutoInducer.CONTINUE
+        assert sig.target == "RESEARCH"
+        assert sig.payload == "Continue to research phase"
+
+    def test_halt_with_colon_suffix(self) -> None:
+        """Parse halt signifier with colon suffix."""
+        sig = parse_signifier("⟂[BLOCKED:impl_incomplete]")
+        assert sig is not None
+        assert sig.inducer == AutoInducer.HALT
+        assert sig.target == "BLOCKED"
+        assert sig.colon_suffix == "impl_incomplete"
+
+    def test_halt_with_suffix_and_payload(self) -> None:
+        """Parse halt signifier with both suffix and payload."""
+        sig = parse_signifier("⟂[QA:blocked] mypy errors require resolution")
+        assert sig is not None
+        assert sig.target == "QA"
+        assert sig.colon_suffix == "blocked"
+        assert sig.payload == "mypy errors require resolution"
+
+    def test_signifier_at_end_of_text(self) -> None:
+        """Parse signifier at end of longer text."""
+        text = """Some phase output here...
+
+## Exit
+⟿[QA]"""
+        sig = parse_signifier(text)
+        assert sig is not None
+        assert sig.target == "QA"
+
+    def test_signifier_in_middle_of_text(self) -> None:
+        """Signifier in middle of line is found."""
+        text = "Before ⟿[TEST] After"
+        sig = parse_signifier(text)
+        # Should find it (regex uses $ which matches end of line in MULTILINE)
+        assert sig is not None
+        assert sig.target == "TEST"
+
+    def test_all_phase_targets(self) -> None:
+        """All phase names work as targets."""
+        for phase in PHASE_NAMES:
+            sig = parse_signifier(f"⟿[{phase}]")
+            assert sig is not None, f"Failed for phase: {phase}"
+            assert sig.target == phase
+
+    def test_extended_phase_names(self) -> None:
+        """Extended phase names (META-RE-METABOLIZE, DETACH) work."""
+        for phase in ["META-RE-METABOLIZE", "DETACH"]:
+            sig = parse_signifier(f"⟿[{phase}]")
+            assert sig is not None, f"Failed for phase: {phase}"
+            assert sig.target == phase
+
+    def test_entropy_depleted_halt(self) -> None:
+        """Parse ENTROPY_DEPLETED halt signifier."""
+        sig = parse_signifier("⟂[ENTROPY_DEPLETED]")
+        assert sig is not None
+        assert sig.target == "ENTROPY_DEPLETED"
+        assert sig.is_halt
+
+    def test_detach_with_reason(self) -> None:
+        """Parse DETACH with cycle_complete suffix."""
+        sig = parse_signifier("⟂[DETACH:cycle_complete] Epilogue: 2025-12-14.md")
+        assert sig is not None
+        assert sig.target == "DETACH"
+        assert sig.colon_suffix == "cycle_complete"
+        assert "Epilogue" in sig.payload
+
+    def test_returns_none_for_empty(self) -> None:
+        """Returns None for empty string."""
+        assert parse_signifier("") is None
+
+    def test_returns_none_for_no_signifier(self) -> None:
+        """Returns None for text without signifier."""
+        assert parse_signifier("Just some regular text") is None
+
+    def test_returns_none_for_malformed(self) -> None:
+        """Returns None for malformed signifier."""
+        assert parse_signifier("⟿QA]") is None  # Missing [
+        assert parse_signifier("⟿[QA") is None  # Missing ]
+        assert parse_signifier("[QA]") is None  # Missing inducer
+
+    def test_round_trip(self) -> None:
+        """Parse and emit round-trip produces equivalent signifier."""
+        original = "⟿[QA] Continue to QA"
+        sig = parse_signifier(original)
+        assert sig is not None
+        emitted = sig.emit()
+        reparsed = parse_signifier(emitted)
+        assert reparsed is not None
+        assert reparsed.inducer == sig.inducer
+        assert reparsed.target == sig.target
+        assert reparsed.payload == sig.payload
+
+
+class TestFindSignifierInText:
+    """Tests for find_signifier_in_text function."""
+
+    def test_finds_position(self) -> None:
+        """Returns signifier and position."""
+        text = "Some output\n⟿[QA]"
+        sig, pos = find_signifier_in_text(text)
+        assert sig is not None
+        assert pos == 12  # Position of ⟿
+
+    def test_returns_none_for_empty(self) -> None:
+        """Returns None, -1 for empty text."""
+        sig, pos = find_signifier_in_text("")
+        assert sig is None
+        assert pos == -1
+
+    def test_returns_none_for_no_signifier(self) -> None:
+        """Returns None, -1 for text without signifier."""
+        sig, pos = find_signifier_in_text("Regular text")
+        assert sig is None
+        assert pos == -1
+
+
+class TestEmitSignifier:
+    """Tests for emit_signifier function."""
+
+    def test_emit_continue_enum(self) -> None:
+        """Emit with AutoInducer.CONTINUE."""
+        result = emit_signifier(AutoInducer.CONTINUE, "QA")
+        assert result == "⟿[QA]"
+
+    def test_emit_halt_enum(self) -> None:
+        """Emit with AutoInducer.HALT."""
+        result = emit_signifier(AutoInducer.HALT, "BLOCKED")
+        assert result == "⟂[BLOCKED]"
+
+    def test_emit_continue_string(self) -> None:
+        """Emit with 'continue' string."""
+        result = emit_signifier("continue", "RESEARCH")
+        assert result == "⟿[RESEARCH]"
+
+    def test_emit_halt_string(self) -> None:
+        """Emit with 'halt' string."""
+        result = emit_signifier("halt", "ENTROPY_DEPLETED")
+        assert result == "⟂[ENTROPY_DEPLETED]"
+
+    def test_emit_with_payload(self) -> None:
+        """Emit with payload."""
+        result = emit_signifier(AutoInducer.CONTINUE, "QA", "Continue to QA")
+        assert result == "⟿[QA] Continue to QA"
+
+
+class TestSignifierConstants:
+    """Tests for signifier-related constants."""
+
+    def test_extended_phase_names_superset(self) -> None:
+        """EXTENDED_PHASE_NAMES is superset of PHASE_NAMES."""
+        assert PHASE_NAMES.issubset(EXTENDED_PHASE_NAMES)
+        assert "META-RE-METABOLIZE" in EXTENDED_PHASE_NAMES
+        assert "DETACH" in EXTENDED_PHASE_NAMES
+
+    def test_valid_halt_reasons(self) -> None:
+        """VALID_HALT_REASONS contains expected reasons."""
+        expected = {
+            "awaiting_human",
+            "cycle_complete",
+            "blocked",
+            "entropy_depleted",
+            "runaway_loop",
+            "human_interrupt",
+        }
+        assert VALID_HALT_REASONS == expected

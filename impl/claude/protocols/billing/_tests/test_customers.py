@@ -71,6 +71,28 @@ class TestCustomer:
         assert customer.name is None
         assert customer.metadata is None
 
+    def test_from_stripe_no_email_raises_error(self) -> None:
+        """Test that from_stripe raises ValueError when customer has no email."""
+        stripe_customer = {
+            "id": "cus_noemail123",
+            "email": None,  # No email
+            "name": "Test User",
+        }
+
+        with pytest.raises(ValueError, match="has no email"):
+            Customer.from_stripe(stripe_customer)
+
+    def test_from_stripe_empty_email_raises_error(self) -> None:
+        """Test that from_stripe raises ValueError when customer has empty email."""
+        stripe_customer = {
+            "id": "cus_emptyemail123",
+            "email": "",  # Empty email
+            "name": "Test User",
+        }
+
+        with pytest.raises(ValueError, match="has no email"):
+            Customer.from_stripe(stripe_customer)
+
 
 class TestCustomerManager:
     """Tests for CustomerManager."""

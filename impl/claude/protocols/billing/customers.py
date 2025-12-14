@@ -28,10 +28,19 @@ class Customer:
 
     @classmethod
     def from_stripe(cls, stripe_customer: dict[str, Any]) -> "Customer":
-        """Create Customer from Stripe customer object."""
+        """Create Customer from Stripe customer object.
+
+        Raises:
+            ValueError: If customer has no email (required field)
+        """
+        email = stripe_customer.get("email")
+        if not email:
+            raise ValueError(
+                f"Customer {stripe_customer.get('id', 'unknown')} has no email"
+            )
         return cls(
             id=stripe_customer["id"],
-            email=stripe_customer["email"],
+            email=email,
             name=stripe_customer.get("name"),
             metadata=stripe_customer.get("metadata"),
         )

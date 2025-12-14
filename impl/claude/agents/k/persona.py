@@ -613,6 +613,11 @@ Response length: 2-4 sentences typically. Longer only if the question genuinely 
         """Build user prompt with context."""
         context_parts = []
 
+        # P7: Ambient context - time of day awareness
+        ambient_context = self._get_ambient_context()
+        if ambient_context:
+            context_parts.append(ambient_context)
+
         if prefs:
             context_parts.append(f"Relevant preferences: {', '.join(prefs[:3])}")
 
@@ -653,6 +658,36 @@ Response length: 2-4 sentences typically. Longer only if the question genuinely 
                         referenced_prefs.append(v)
 
         return referenced_prefs
+
+    def _get_ambient_context(self) -> str:
+        """
+        P7: Get ambient context for dialogue.
+
+        Ambient context includes:
+        - Time of day (morning/afternoon/evening/night)
+        - Day of week (optional)
+
+        This makes the soul aware of context without being asked,
+        creating a more natural, personalized interaction.
+        """
+        from datetime import datetime
+
+        now = datetime.now()
+        hour = now.hour
+        weekday = now.strftime("%A")
+
+        # Time of day context
+        if 5 <= hour < 12:
+            time_context = "morning"
+        elif 12 <= hour < 17:
+            time_context = "afternoon"
+        elif 17 <= hour < 21:
+            time_context = "evening"
+        else:
+            time_context = "late night"
+
+        # Build ambient context string
+        return f"Time: {time_context} ({weekday})"
 
     def _find_patterns(self, message: str) -> list[str]:
         """Find patterns that match the message."""

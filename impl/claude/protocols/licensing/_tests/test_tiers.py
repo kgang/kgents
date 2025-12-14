@@ -48,7 +48,7 @@ class TestLicenseTier:
     def test_tier_comparison_invalid_type(self) -> None:
         """Test comparison with invalid type returns NotImplemented."""
         with pytest.raises(TypeError):
-            _ = LicenseTier.FREE < "FREE"  # type: ignore[operator]
+            _ = LicenseTier.FREE < "FREE"
 
 
 class TestTierConfig:
@@ -125,7 +125,7 @@ class TestTierConfig:
         """Test that TierConfig is immutable (frozen)."""
         config = TIER_CONFIGS[LicenseTier.PRO]
         with pytest.raises(Exception):  # FrozenInstanceError
-            config.price_monthly = 2000  # type: ignore[misc]
+            config.price_monthly = 2000
 
 
 class TestTierFeatures:
