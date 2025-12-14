@@ -73,6 +73,12 @@ class WorldRouter(ContextRouter):
             _handle_dev,
             aspects=["start", "stop"],
         )
+        self.register(
+            "town",
+            "Agent Town civilizational simulation",
+            _handle_town,
+            aspects=["start", "step", "observe", "lens", "metrics", "budget"],
+        )
 
 
 # =============================================================================
@@ -120,6 +126,13 @@ def _handle_dev(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     from protocols.cli.handlers.dev import cmd_dev
 
     return cmd_dev(args)
+
+
+def _handle_town(args: list[str], ctx: "InvocationContext | None" = None) -> int:
+    """Handle world town -> delegating to Agent Town handler."""
+    from protocols.cli.handlers.town import cmd_town
+
+    return cmd_town(args, ctx)
 
 
 # =============================================================================

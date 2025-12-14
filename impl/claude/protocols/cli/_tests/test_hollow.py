@@ -78,7 +78,17 @@ class TestCommandResolution:
         from protocols.cli.hollow import COMMAND_REGISTRY, resolve_command
 
         # All registered commands should be resolvable
-        for cmd in ["membrane", "check", "find"]:
+        for cmd in [
+            "self",
+            "world",
+            "concept",
+            "void",
+            "time",
+            "do",
+            "flow",
+            "init",
+            "wipe",
+        ]:
             if cmd in COMMAND_REGISTRY:
                 handler = resolve_command(cmd)
                 assert handler is not None, f"Failed to resolve: {cmd}"
@@ -90,12 +100,24 @@ class TestCommandResolution:
         handler = resolve_command("nonexistent_command_xyz")
         assert handler is None
 
-    def test_soul_resolves(self) -> None:
-        """Soul command resolves to handler."""
+    def test_context_commands_resolve(self) -> None:
+        """AGENTESE context commands resolve to handlers."""
         from protocols.cli.hollow import resolve_command
 
-        handler = resolve_command("soul")
-        assert handler is not None
+        # Context commands are the primary interface
+        for cmd in ["self", "world", "concept", "void", "time"]:
+            handler = resolve_command(cmd)
+            assert handler is not None, f"Context command '{cmd}' should resolve"
+
+    def test_deprecated_commands_removed(self) -> None:
+        """Old deprecated commands no longer resolve."""
+        from protocols.cli.hollow import resolve_command
+
+        # These were deprecated and are now removed
+        deprecated = ["soul", "status", "trace", "infra", "laws", "shadow"]
+        for cmd in deprecated:
+            handler = resolve_command(cmd)
+            assert handler is None, f"Deprecated command '{cmd}' should not resolve"
 
 
 # =============================================================================
@@ -110,9 +132,9 @@ class TestFuzzyMatching:
         """Close typos get suggestions."""
         from protocols.cli.hollow import suggest_similar
 
-        # "sou" should suggest "soul"
-        suggestions = suggest_similar("sou")
-        assert "soul" in suggestions
+        # "sel" should suggest "self"
+        suggestions = suggest_similar("sel")
+        assert "self" in suggestions
 
     def test_suggest_no_match(self) -> None:
         """Completely wrong input gets no suggestions."""
@@ -125,12 +147,12 @@ class TestFuzzyMatching:
         """print_suggestions shows helpful output."""
         from protocols.cli.hollow import print_suggestions
 
-        print_suggestions("sould")
+        print_suggestions("selff")
         out = capsys.readouterr().out
 
         # Now uses sympathetic errors format
-        assert "'sould' isn't a kgents command" in out
-        assert "soul" in out  # Suggestion should appear
+        assert "'selff' isn't a kgents command" in out
+        assert "self" in out  # Suggestion should appear
 
 
 # =============================================================================
@@ -153,48 +175,48 @@ class TestFlagParsing:
         """--format=json is parsed."""
         from protocols.cli.hollow import parse_global_flags
 
-        flags, remaining = parse_global_flags(["--format=json", "pulse"])
+        flags, remaining = parse_global_flags(["--format=json", "self"])
         assert flags["format"] == "json"
-        assert remaining == ["pulse"]
+        assert remaining == ["self"]
 
     def test_parse_format_space(self) -> None:
         """--format json is parsed."""
         from protocols.cli.hollow import parse_global_flags
 
-        flags, remaining = parse_global_flags(["--format", "json", "pulse"])
+        flags, remaining = parse_global_flags(["--format", "json", "self"])
         assert flags["format"] == "json"
-        assert remaining == ["pulse"]
+        assert remaining == ["self"]
 
     def test_parse_budget(self) -> None:
         """--budget=high is parsed."""
         from protocols.cli.hollow import parse_global_flags
 
-        flags, remaining = parse_global_flags(["--budget=high", "check"])
+        flags, remaining = parse_global_flags(["--budget=high", "concept"])
         assert flags["budget"] == "high"
-        assert remaining == ["check"]
+        assert remaining == ["concept"]
 
     def test_parse_explain(self) -> None:
         """--explain flag is parsed."""
         from protocols.cli.hollow import parse_global_flags
 
-        flags, remaining = parse_global_flags(["--explain", "membrane"])
+        flags, remaining = parse_global_flags(["--explain", "self"])
         assert flags["explain"] is True
-        assert remaining == ["membrane"]
+        assert remaining == ["self"]
 
     def test_parse_no_metrics(self) -> None:
         """--no-metrics flag is parsed."""
         from protocols.cli.hollow import parse_global_flags
 
-        flags, remaining = parse_global_flags(["--no-metrics", "pulse"])
+        flags, remaining = parse_global_flags(["--no-metrics", "world"])
         assert flags["no_metrics"] is True
-        assert remaining == ["pulse"]
+        assert remaining == ["world"]
 
     def test_remaining_preserved(self) -> None:
         """Command and args are preserved in remaining."""
         from protocols.cli.hollow import parse_global_flags
 
-        flags, remaining = parse_global_flags(["membrane", "observe", "./path"])
-        assert remaining == ["membrane", "observe", "./path"]
+        flags, remaining = parse_global_flags(["self", "status", "./path"])
+        assert remaining == ["self", "status", "./path"]
 
 
 # =============================================================================

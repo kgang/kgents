@@ -81,229 +81,33 @@ For more: https://github.com/kgents/kgents
 
 COMMAND_REGISTRY: dict[str, str] = {
     # ==========================================================================
-    # AGENTESE Context Commands (Tier 1 - Primary Interface)
+    # AGENTESE Context Commands (Primary Interface)
     # ==========================================================================
+    # These are the ONLY top-level commands. All functionality is accessible
+    # through context routing: kgents <context> <subcommand>
     "self": "protocols.cli.contexts.self_:cmd_self",
     "world": "protocols.cli.contexts.world:cmd_world",
     "concept": "protocols.cli.contexts.concept:cmd_concept",
     "void": "protocols.cli.contexts.void:cmd_void",
     "time": "protocols.cli.contexts.time_:cmd_time",
     # ==========================================================================
-    # Backward Compatibility (Deprecated - use context commands instead)
+    # Intent Layer (Natural Language)
     # ==========================================================================
-    # Intent Layer (Phase 6)
-    "new": "protocols.cli.intent.commands:cmd_new",
-    "run": "protocols.cli.intent.commands:cmd_run",
-    "check": "protocols.cli.intent.commands:cmd_check",
-    "think": "protocols.cli.intent.commands:cmd_think",
-    "watch": "protocols.cli.intent.commands:cmd_watch",
-    "find": "protocols.cli.intent.commands:cmd_find",
-    "fix": "protocols.cli.intent.commands:cmd_fix",
-    "speak": "protocols.cli.intent.commands:cmd_speak",
-    "judge": "protocols.cli.intent.commands:cmd_judge",
     "do": "protocols.cli.intent.router:cmd_do",
-    # Protocols (existing)
-    # NOTE: membrane removed (deprecated, being rebuilt on D-gent + L-gent)
-    # Flow Engine (Phase 3)
+    # ==========================================================================
+    # Pipeline Composition
+    # ==========================================================================
     "flow": "protocols.cli.flow.commands:cmd_flow",
-    # Bootstrap (Phase 2)
+    # ==========================================================================
+    # Bootstrap Commands
+    # ==========================================================================
     "init": "protocols.cli.handlers.init:cmd_init",
     "wipe": "protocols.cli.handlers.wipe:cmd_wipe",
-    "laws": "protocols.cli.bootstrap.laws:cmd_laws",
-    "principles": "protocols.cli.bootstrap.principles:cmd_principles",
-    # Genus Layer (Power User)
-    "capital": "protocols.cli.genus.c_gent:cmd_capital",
-    "grammar": "protocols.cli.genus.g_gent:cmd_grammar",
-    "jit": "protocols.cli.genus.j_gent:cmd_jit",
-    "parse": "protocols.cli.genus.p_gent:cmd_parse",
-    "library": "protocols.cli.genus.l_gent:cmd_library",
-    "witness": "protocols.cli.genus.w_gent:cmd_witness",
-    # Aliases (top-level shortcuts)
-    "observe": "protocols.cli.handlers.observe:cmd_observe",  # Terrarium TUI
-    # NOTE: sense, trace, touch, name removed (membrane aliases, deprecated)
-    # NOTE: garden removed (superseded by dashboard - see agents/i/screens/dashboard.py)
-    # I-gent (Visualization primitives)
-    "whisper": "protocols.cli.handlers.igent:cmd_whisper",
-    "sparkline": "protocols.cli.handlers.igent:cmd_sparkline",
-    "weather": "protocols.cli.handlers.igent:cmd_weather",
-    "glitch": "protocols.cli.handlers.igent:cmd_glitch",
-    # Debug
-    "debug": "protocols.cli.handlers.debug:cmd_debug",
-    # DevEx V4 Phase 1 - Foundation
-    "status": "protocols.cli.handlers.status:cmd_status",
-    "dream": "protocols.cli.handlers.dream:cmd_dream",
-    "map": "protocols.cli.handlers.map:cmd_map",
-    "signal": "protocols.cli.handlers.signal:cmd_signal",
-    # DevEx V4 Phase 2 - Sensorium
-    "ghost": "protocols.cli.handlers.ghost:cmd_ghost",
-    # Trust Loop Integration
-    "flinch": "protocols.cli.handlers.flinch:cmd_flinch",
-    # Phase D - Terrarium TUI + Tether Protocol
-    "terrarium": "protocols.cli.handlers.observe:cmd_observe",  # Alias
-    "tether": "protocols.cli.handlers.tether:cmd_tether",
-    # K-Terrarium (Infrastructure)
-    "infra": "protocols.cli.handlers.infra:cmd_infra",
-    "daemon": "protocols.cli.handlers.daemon:cmd_daemon",  # Cortex daemon lifecycle
-    "exec": "protocols.cli.handlers.exec:cmd_exec",  # Q-gent execution
-    "dev": "protocols.cli.handlers.dev:cmd_dev",  # Live reload dev mode
-    # MCP (Phase 4)
-    "mcp": "protocols.cli.mcp.server:cmd_mcp",
-    # NOTE: dash removed (superseded by handlers/dashboard.py)
-    # Forest Protocol (Plan Management)
-    "forest": "protocols.cli.handlers.forest:cmd_forest",
-    # Metabolic Pressure (Accursed Share)
-    "tithe": "protocols.cli.handlers.tithe:cmd_tithe",
-    # Agent Semaphores (Human-in-the-Loop)
-    "semaphore": "protocols.cli.handlers.semaphore:cmd_semaphore",
-    # K-gent Soul (Digital Simulacra)
-    "soul": "protocols.cli.handlers.soul:cmd_soul",
-    # Soul mode aliases (top-level shortcuts)
-    "reflect": "protocols.cli.handlers.soul:cmd_reflect",
-    "advise": "protocols.cli.handlers.soul:cmd_advise",
-    "challenge": "protocols.cli.handlers.soul:cmd_challenge",
-    "explore": "protocols.cli.handlers.soul:cmd_explore",
-    # Pro Crown Jewels (Track D: Monetization)
-    "whatif": "protocols.cli.handlers.whatif:cmd_whatif",
-    "shadow": "protocols.cli.handlers.shadow:cmd_shadow",
-    "dialectic": "protocols.cli.handlers.dialectic:cmd_dialectic",
-    "gaps": "protocols.cli.handlers.gaps:cmd_gaps",
-    "mirror": "protocols.cli.handlers.mirror:cmd_mirror",
-    "archetype": "protocols.cli.handlers.archetype:cmd_archetype",
-    "continuous": "protocols.cli.handlers.continuous:cmd_continuous",
-    "collective-shadow": "protocols.cli.handlers.collective_shadow:cmd_collective_shadow",
-    # Alethic Architecture (Universal Agent)
-    "a": "protocols.cli.handlers.a_gent:cmd_a",
-    # DevEx - Interactive Playground
-    "play": "protocols.cli.handlers.play:cmd_play",
-    # DevEx - Live Dashboard
-    "dashboard": "protocols.cli.handlers.dashboard:cmd_dashboard",
-    # DevEx - Trace (Static + Runtime)
-    "trace": "protocols.cli.handlers.trace:cmd_trace",
-    # Meta-Construction (Poly/Operad/Sheaf)
-    "operad": "protocols.cli.handlers.operad:cmd_operad",
-    "meta": "protocols.cli.handlers.meta:cmd_meta",
-    # OpenTelemetry Integration
-    "telemetry": "protocols.cli.handlers.telemetry:cmd_telemetry",
-    # Turn-gents Protocol (Turn Debugging & Governance)
-    "turns": "protocols.cli.handlers.turns:cmd_turns",
-    "dag": "protocols.cli.handlers.turns:cmd_dag",
-    "fork": "protocols.cli.handlers.turns:cmd_fork",
-    "pending": "protocols.cli.handlers.approve:cmd_pending",
-    "approve": "protocols.cli.handlers.approve:cmd_approve",
-    "reject": "protocols.cli.handlers.approve:cmd_reject",
-    # HotData Infrastructure (AD-004)
-    "fixture": "protocols.cli.handlers.fixture:cmd_fixture",
-    # Four Pillars Memory (Phase 4)
-    "memory": "protocols.cli.handlers.memory:cmd_memory",
-    # N-Phase Prompt Compiler
-    "nphase": "protocols.cli.handlers.nphase:cmd_nphase",
-    # Agent Town (Civilizational Engine)
+    # ==========================================================================
+    # Agent Town (Crown Jewel)
+    # ==========================================================================
     "town": "protocols.cli.handlers.town:cmd_town",
 }
-
-
-# =============================================================================
-# Deprecation Map (old command -> suggested AGENTESE path)
-# =============================================================================
-# These commands still work but emit a warning suggesting the new path.
-# Format: 'old_command': 'new agentese path'
-
-DEPRECATION_MAP: dict[str, str] = {
-    # self.* (Internal state, memory, soul)
-    "soul": "self soul",
-    "reflect": "self soul reflect",
-    "advise": "self soul advise",
-    "challenge": "self soul challenge",
-    "explore": "self soul explore",
-    "status": "self status",
-    "memory": "self memory",
-    "dream": "self dream",
-    "map": "self map",
-    "signal": "self signal",
-    "ghost": "self ghost",
-    "flinch": "self flinch",
-    "debug": "self debug",
-    "semaphore": "self semaphore",
-    # world.* (Agents, infrastructure, resources)
-    "a": "world agents",
-    "daemon": "world daemon",
-    "infra": "world infra",
-    "exec": "world exec",
-    "dev": "world dev",
-    "fixture": "world fixture",
-    "observe": "world observe",
-    "terrarium": "world terrarium",
-    "tether": "world tether",
-    "play": "world play",
-    "dashboard": "world dashboard",
-    "mcp": "world mcp",
-    # concept.* (Laws, principles, dialectics)
-    "laws": "concept laws",
-    "principles": "concept principles",
-    "dialectic": "concept dialectic",
-    "gaps": "concept gaps",
-    "continuous": "concept continuous",
-    "operad": "concept operad",
-    "meta": "concept meta",
-    # void.* (Entropy, shadow, archetypes)
-    "tithe": "void tithe",
-    "shadow": "void shadow",
-    "archetype": "void archetype",
-    "collective-shadow": "void collective-shadow",
-    "whatif": "void whatif",
-    "mirror": "void mirror",
-    # time.* (Traces, turns, telemetry)
-    "trace": "time trace",
-    "turns": "time turns",
-    "dag": "time dag",
-    "fork": "time fork",
-    "forest": "time forest",
-    "telemetry": "time telemetry",
-    "pending": "time pending",
-    "approve": "time approve",
-    "reject": "time reject",
-    # Intent layer -> do.*
-    "new": "do new",
-    "run": "do run",
-    "check": "do check",
-    "think": "do think",
-    "watch": "do watch",
-    "find": "do find",
-    "fix": "do fix",
-    "speak": "do speak",
-    "judge": "do judge",
-    # Bootstrap (keep at top level for now)
-    "init": "init (no change)",
-    "wipe": "wipe (no change)",
-    # Genus layer (power user)
-    "capital": "capital (power user)",
-    "grammar": "grammar (power user)",
-    "jit": "jit (power user)",
-    "parse": "parse (power user)",
-    "library": "library (power user)",
-    "witness": "witness (power user)",
-    # I-gent visualization
-    "whisper": "whisper (visualization)",
-    "sparkline": "sparkline (visualization)",
-    "weather": "weather (visualization)",
-    "glitch": "glitch (visualization)",
-}
-
-
-def _emit_deprecation_warning(old_cmd: str, new_path: str) -> None:
-    """Emit a deprecation warning for old command usage."""
-    # Skip warning for commands that haven't really changed
-    if (
-        "(no change)" in new_path
-        or "(power user)" in new_path
-        or "(visualization)" in new_path
-    ):
-        return
-
-    print(
-        f"\033[33m⚠ Deprecated:\033[0m 'kgents {old_cmd}' → 'kgents {new_path}'",
-        file=sys.stderr,
-    )
 
 
 # =============================================================================
@@ -319,16 +123,9 @@ def resolve_command(name: str) -> Callable[..., Any] | None:
     - We don't import any command modules at startup
     - We only import the specific module for the invoked command
     - This keeps startup time minimal
-
-    Also emits deprecation warnings for old command names that have
-    AGENTESE equivalents (e.g., 'kgents soul' -> 'kgents self soul').
     """
     if name not in COMMAND_REGISTRY:
         return None
-
-    # Emit deprecation warning if this is an old command
-    if name in DEPRECATION_MAP:
-        _emit_deprecation_warning(name, DEPRECATION_MAP[name])
 
     module_path, func_name = COMMAND_REGISTRY[name].rsplit(":", 1)
 
