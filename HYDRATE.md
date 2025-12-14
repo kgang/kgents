@@ -54,7 +54,7 @@ SENSE → ACT → REFLECT → (loop)
 |------|------|----------|
 | `plans/_focus.md` | Human intent | **Never overwrite** |
 | `plans/_forest.md` | Canopy | Regenerate |
-| `plans/meta.md` | Mycelium | Append, 50-line cap |
+| `plans/meta.md` | Mycelium | Append, 200-line cap |
 | `plans/_epilogues/` | Spores | Write at session end |
 | `docs/skills/` | Patterns | Pull → Apply → Push |
 
