@@ -227,9 +227,17 @@ ls -la plans/_epilogues/
 
 ---
 
+## Grand Initiatives
+
+| Initiative | Status | Prompt | Cycles |
+|------------|--------|--------|--------|
+| **Idea Cultivation** | READY | `prompts/grand-initiative-idea-cultivation.md` | 5 cycles planned |
+
+---
+
 ## Last Session Epilogue
 
-*Latest: `2025-12-13-weekly-summary-website.md`*
+*Latest: `2025-12-14-re-metabolize-report.md`*
 
 ---
 

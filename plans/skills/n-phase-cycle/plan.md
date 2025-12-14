@@ -149,16 +149,23 @@ Next: `research.md` with map targets, unknowns, and files to read.
 
 Emit this prompt (short, AGENTESE-ready) when exiting PLAN:
 
+### Exit Signifier
+
 ```markdown
+# Normal exit (auto-continue):
+⟿[RESEARCH]
 /hydrate
-# RESEARCH ← PLAN
-handles: scope=${scope_summary}; chunks=${chunk_list}; exit=${exit_criteria}; ledger=${phase_ledger}; entropy=${entropy_allocation}; branches=${branch_notes}
+handles: scope=${scope_summary}; chunks=${chunk_list}; exit=${exit_criteria}; ledger={PLAN:touched}; entropy=${entropy_allocation}; branches=${branch_notes}
 mission: map terrain; find invariants/blockers with file:line; avoid duplication (Curated/Composable/Generative).
-actions: parallel Read(${file_1}, ${file_2}, ${file_3}); rg "${key_pattern}"; log metrics tokens/time/entropy/law-checks.
-exit: file map + blockers + unknowns w/ owners; ledger.RESEARCH=touched; branches classified; continuation → DEVELOP.
+actions: parallel Read(${file_1}, ${file_2}, ${file_3}); rg "${key_pattern}"; log metrics.
+exit: file map + blockers + unknowns; ledger.RESEARCH=touched; continuation → DEVELOP.
+
+# Halt conditions:
+⟂[BLOCKED:scope_unclear] Scope needs human clarification before RESEARCH
+⟂[ENTROPY_DEPLETED] Budget exhausted without entropy sip
 ```
 
-Template vars: `${scope_summary}`, `${chunk_list}`, `${exit_criteria}`, `${phase_ledger}`, `${entropy_allocation}`, `${branch_notes}`, `${file_1,2,3}`, `${key_pattern}`.
+Template vars: `${scope_summary}`, `${chunk_list}`, `${exit_criteria}`, `${entropy_allocation}`, `${branch_notes}`, `${file_1,2,3}`, `${key_pattern}`.
 
 ## Related Skills
 - `auto-continuation.md` — The meta-skill defining this generator pattern

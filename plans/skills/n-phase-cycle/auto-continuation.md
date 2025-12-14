@@ -77,6 +77,43 @@ next_prompt = align(
 
 ---
 
+## The Auto-Inducer Signifiers
+
+> *See `spec/protocols/auto-inducer.md` for full specification.*
+
+The missing piece that makes continuation **active** rather than passive:
+
+| Signifier | Unicode | Meaning |
+|-----------|---------|---------|
+| `⟿` | U+27FF | Continue to next phase (positive feedback) |
+| `⟂` | U+27C2 | Halt, await human input (negative feedback) |
+
+### Syntax
+
+```
+⟿[PHASE] payload        # Auto-continue to PHASE
+⟂[REASON] payload       # Halt with REASON
+```
+
+### The Protocol
+
+1. **Positive (`⟿`)**: Parser detects signifier → injects continuation prompt → execution proceeds
+2. **Negative (`⟂`)**: Parser detects signifier → execution halts → human reviews
+3. **Neutral (none)**: Await human input (backwards compatible)
+
+### Halt Conditions (Termination Guarantee)
+
+- `⟂[ENTROPY_DEPLETED]` — Budget exhausted
+- `⟂[RUNAWAY_LOOP]` — 33+ transitions without REFLECT
+- `⟂[HUMAN_INTERRUPT]` — User sent stop signal
+- `⟂[BLOCKED:reason]` — QA/Test failure, blocker found
+- `⟂[DETACH:cycle_complete]` — Scope exhausted
+- `⟂[DETACH:awaiting_human]` — Decision required
+
+**Law**: Every cycle MUST reach `⟂` eventually.
+
+---
+
 ## The Four Layers of Auto-Continuation
 
 ### Layer 1: Phase-Local Generation
@@ -168,9 +205,26 @@ Every phase skill should append this section:
 - Branch notes: ${branch_notes}
 - Metrics snapshot: ${metrics_snapshot}
 
-### Generated Prompt for [NEXT_PHASE]
+### Exit Signifier (spec/protocols/auto-inducer.md)
+
+# Normal exit (auto-continue):
+⟿[NEXT_PHASE]
+/hydrate
+handles: ${handles}; ledger=${ledger}; entropy=${entropy}
+mission: ${mission}
+exit: ${exit_criteria}; continuation → ${phase_after_next}.
+
+# Halt conditions:
+⟂[BLOCKED:${reason}] ${description}
+⟂[ENTROPY_DEPLETED] Budget exhausted
 
 ---
+```
+
+### Full Prompt Template (for complex handoffs)
+
+```markdown
+⟿[NEXT_PHASE]
 
 # [NEXT_PHASE]: Continuation from [CURRENT_PHASE]
 
@@ -198,7 +252,7 @@ This phase emphasizes:
 
 ## Continuation Imperative
 
-Upon completing this phase, generate the prompt for [PHASE_AFTER_NEXT] using the same structure. The form is the function.
+Upon completing this phase, emit ⟿[PHASE_AFTER_NEXT] or ⟂[REASON]. The form is the function.
 
 ---
 ```
@@ -326,6 +380,7 @@ The auto-continuation mechanism makes this real. Each phase doesn't just end—i
 
 ## Related
 
+- `spec/protocols/auto-inducer.md` — The signifier protocol (⟿/⟂)
 - `meta-skill-operad.md` — Lawful mutation of skill structure
 - `meta-re-metabolize.md` — Periodic refresh applying this mechanism
 - `detach-attach.md` — Handle creation at session boundaries

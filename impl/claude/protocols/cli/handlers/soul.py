@@ -46,6 +46,15 @@ def _print_help() -> None:
     print("  challenge           Push back constructively, find weaknesses")
     print("  explore             Follow tangents, generate hypotheses")
     print()
+    print("QUICK COMMANDS:")
+    print("  vibe                One-liner eigenvector summary with emoji")
+    print("  drift               Compare soul vs previous session")
+    print("  tense               Surface current eigenvector tensions")
+    print("  why [prompt]        Quick CHALLENGE mode (alias for challenge)")
+    print()
+    print("PRO CROWN JEWELS:")
+    print("  approve [action]    Would Kent approve this action?")
+    print()
     print("COMMANDS:")
     print("  stream              Ambient FLOWING mode (pulses + dialogue)")
     print("  watch               Ambient file watcher (pair programming)")
@@ -65,6 +74,9 @@ def _print_help() -> None:
     print("  resume <id>         Resume from a crystallized state")
     print()
     print("OPTIONS:")
+    print(
+        "  --stream            Stream response character-by-character with token count"
+    )
     print("  --quick             WHISPER budget (~100 tokens)")
     print("  --deep              DEEP budget (~8000+ tokens, Council of Ghosts)")
     print("  --json              Output as JSON")
@@ -107,6 +119,7 @@ def cmd_soul(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     json_mode = "--json" in args
     quick_mode = "--quick" in args
     deep_mode = "--deep" in args
+    stream_mode = "--stream" in args
 
     # Determine budget tier
     budget = "dialogue"  # Default
@@ -115,6 +128,33 @@ def cmd_soul(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     elif deep_mode:
         budget = "deep"
 
+    # Valid modes and subcommands
+    valid_modes = {
+        "reflect",
+        "advise",
+        "challenge",
+        "explore",
+        "why",
+        "vibe",
+        "drift",
+        "tense",
+        "approve",
+        "stream",
+        "watch",
+        "starters",
+        "manifest",
+        "eigenvectors",
+        "audit",
+        "garden",
+        "validate",
+        "dream",
+        "history",
+        "propose",
+        "commit",
+        "crystallize",
+        "resume",
+    }
+
     # Get mode/subcommand and prompt
     mode = None
     prompt_parts: list[str] = []
@@ -122,7 +162,8 @@ def cmd_soul(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     for arg in args:
         if arg.startswith("-"):
             continue
-        if mode is None:
+        # Only treat as mode if it's a valid mode/subcommand
+        if mode is None and arg.lower() in valid_modes:
             mode = arg
         else:
             prompt_parts.append(arg)
@@ -140,6 +181,7 @@ def cmd_soul(args: list[str], ctx: "InvocationContext | None" = None) -> int:
             prompt=prompt,
             budget=budget,
             json_mode=json_mode,
+            stream_mode=stream_mode,
             ctx=ctx,
             args=args,
         )
@@ -151,6 +193,7 @@ async def _async_soul(
     prompt: str | None,
     budget: str,
     json_mode: bool,
+    stream_mode: bool,
     ctx: "InvocationContext | None",
     args: list[str],
 ) -> int:
@@ -194,6 +237,38 @@ async def _async_soul(
                 break
 
         match mode.lower():
+            case "vibe":
+                return await _handle_vibe(soul, json_mode, ctx)
+            case "drift":
+                return await _handle_drift(soul, json_mode, ctx)
+            case "tense":
+                return await _handle_tense(soul, json_mode, ctx)
+            case "approve":
+                # Pro Crown Jewel: Would Kent approve this action?
+                # Delegate to soul_approve handler
+                from .soul_approve import _async_soul_approve
+
+                return await _async_soul_approve(prompt or "", json_mode, ctx)
+            case "why":
+                # CHALLENGE mode alias
+                # If no prompt provided, enter interactive mode like other modes
+                if prompt is None:
+                    return await _handle_interactive(
+                        soul,
+                        DialogueMode.CHALLENGE,
+                        BudgetTier.DIALOGUE,
+                        json_mode,
+                        ctx,
+                    )
+                # Otherwise, single dialogue turn
+                return await _handle_dialogue(
+                    soul,
+                    DialogueMode.CHALLENGE,
+                    prompt,
+                    BudgetTier.DIALOGUE,
+                    json_mode,
+                    ctx,
+                )
             case "stream":
                 return await _handle_stream(
                     soul,
@@ -298,7 +373,11 @@ async def _async_soul(
                 soul, dialogue_mode, budget_tier, json_mode, ctx
             )
 
-        # Single dialogue turn
+        # Single dialogue turn (with streaming if --stream flag)
+        if stream_mode:
+            return await _handle_streaming_dialogue(
+                soul, dialogue_mode, prompt, budget_tier, json_mode, ctx
+            )
         return await _handle_dialogue(
             soul, dialogue_mode, prompt, budget_tier, json_mode, ctx
         )
@@ -360,6 +439,243 @@ def set_soul(soul: Any) -> None:
     _soul_instance = soul
 
 
+# =============================================================================
+# Quick Win Commands (Tier 1)
+# =============================================================================
+
+
+async def _handle_vibe(
+    soul: Any,
+    json_mode: bool,
+    ctx: "InvocationContext | None",
+) -> int:
+    """
+    Handle 'soul vibe' command - one-liner eigenvector summary.
+
+    Shows personality coordinates with emoji indicators.
+
+    Example output:
+        ✂️ Minimal (0.15) | 🔬 Abstract (0.92) | 🙏 Sacred (0.78) |
+        🌲 Peer (0.88) | 🌱 Generative (0.90) | 🎭 Playful (0.75)
+    """
+    eigenvectors = soul.eigenvectors
+
+    # Emoji mapping for each eigenvector
+    emoji_map = {
+        "aesthetic": ("✂️", "Minimal", "Baroque"),
+        "categorical": ("🔬", "Concrete", "Abstract"),
+        "gratitude": ("🙏", "Util", "Sacred"),
+        "heterarchy": ("🌲", "Hierarchy", "Peer"),
+        "generativity": ("🌱", "Docs", "Gen"),
+        "joy": ("🎭", "Austere", "Playful"),
+    }
+
+    vibe_parts = []
+    for eigen in eigenvectors.all_eigenvectors():
+        name = eigen.name.lower()
+        emoji, low, high = emoji_map.get(name, ("•", "Low", "High"))
+
+        # Pick label based on value
+        if eigen.value < 0.4:
+            label = low
+        elif eigen.value > 0.6:
+            label = high
+        else:
+            label = "Balanced"
+
+        vibe_parts.append(f"{emoji} {label} ({eigen.value:.2f})")
+
+    vibe_string = " | ".join(vibe_parts)
+
+    semantic = {
+        "command": "vibe",
+        "eigenvectors": eigenvectors.to_dict(),
+        "vibe_string": vibe_string,
+    }
+
+    if json_mode:
+        import json
+
+        _emit_output(json.dumps(semantic, indent=2), semantic, ctx)
+    else:
+        _emit_output(f"[SOUL:VIBE] {vibe_string}", semantic, ctx)
+
+    return 0
+
+
+async def _handle_drift(
+    soul: Any,
+    json_mode: bool,
+    ctx: "InvocationContext | None",
+) -> int:
+    """
+    Handle 'soul drift' command - compare eigenvectors vs previous session.
+
+    Shows changes since last session using SoulSession.who_was_i().
+
+    Example output:
+        Since yesterday: Joy +0.02, Aesthetic -0.01. You're loosening up.
+    """
+    from agents.k.session import SoulSession
+
+    session = await SoulSession.load()
+    changes = session.who_was_i(limit=5)
+    current = soul.eigenvectors.to_dict()
+
+    # If no changes, show current state with note
+    if not changes:
+        semantic = {
+            "command": "drift",
+            "current": current,
+            "changes": [],
+            "message": "No historical changes yet. The soul is fresh.",
+        }
+        if json_mode:
+            import json
+
+            _emit_output(json.dumps(semantic, indent=2), semantic, ctx)
+        else:
+            _emit_output(
+                "[SOUL:DRIFT] No drift detected yet. The soul is fresh.",
+                semantic,
+                ctx,
+            )
+        return 0
+
+    # Try to find eigenvector changes in history
+    drift_messages = []
+    total_drift = 0.0
+
+    for change in changes:
+        if "eigenvector" in change.get("aspect", "").lower():
+            desc = change.get("description", "")
+            drift_messages.append(f"• {desc}")
+            # Extract any delta values mentioned
+            if "+" in desc or "-" in desc:
+                total_drift += 0.01  # Approximate
+
+    # Generate a summary message based on changes
+    if drift_messages:
+        summary = "Recent drifts:\n" + "\n".join(drift_messages[:3])
+    else:
+        # No eigenvector-specific changes, give a poetic summary
+        latest = changes[0] if changes else {}
+        felt_sense = latest.get("felt_sense") or "steady"
+        summary = f"Soul feels {felt_sense}. No major coordinate shifts."
+
+    semantic = {
+        "command": "drift",
+        "current": current,
+        "changes": changes[:5],
+        "summary": summary,
+    }
+
+    if json_mode:
+        import json
+
+        _emit_output(json.dumps(semantic, indent=2), semantic, ctx)
+    else:
+        _emit_output(f"[SOUL:DRIFT] {summary}", semantic, ctx)
+
+    return 0
+
+
+async def _handle_tense(
+    soul: Any,
+    json_mode: bool,
+    ctx: "InvocationContext | None",
+) -> int:
+    """
+    Handle 'soul tense' command - surface current eigenvector tensions.
+
+    Identifies pairs of eigenvectors that create productive tension.
+
+    Example output:
+        Tensions detected:
+        ⚡ Minimal (0.15) vs Abstract (0.92): How to be both minimal AND abstract?
+        ⚡ Sacred (0.78) vs Generative (0.90): Generation without utilitarian reduction?
+    """
+    from agents.k.eigenvectors import get_dialectical_prompt
+
+    eigenvectors = soul.eigenvectors
+
+    # Define tension pairs and their descriptions
+    tension_pairs = [
+        (
+            "aesthetic",
+            "categorical",
+            "How to be both minimal AND abstract?",
+        ),
+        (
+            "gratitude",
+            "generativity",
+            "Generation without utilitarian reduction?",
+        ),
+        (
+            "heterarchy",
+            "aesthetic",
+            "Peer coordination while keeping things minimal?",
+        ),
+        (
+            "joy",
+            "categorical",
+            "Playfulness in abstract thinking?",
+        ),
+    ]
+
+    tensions = []
+    for e1, e2, question in tension_pairs:
+        v1 = getattr(eigenvectors, e1).value
+        v2 = getattr(eigenvectors, e2).value
+
+        # Tension is high when both are extreme (away from 0.5)
+        extremity1 = abs(v1 - 0.5)
+        extremity2 = abs(v2 - 0.5)
+        tension_score = extremity1 * extremity2
+
+        if tension_score > 0.1:  # Threshold for "notable" tension
+            tensions.append(
+                {
+                    "pair": (e1, e2),
+                    "values": (v1, v2),
+                    "question": question,
+                    "score": tension_score,
+                }
+            )
+
+    # Sort by tension score
+    tensions.sort(key=lambda t: t["score"], reverse=True)
+
+    semantic = {
+        "command": "tense",
+        "tensions": tensions,
+        "eigenvectors": eigenvectors.to_dict(),
+    }
+
+    if json_mode:
+        import json
+
+        _emit_output(json.dumps(semantic, indent=2), semantic, ctx)
+    else:
+        if tensions:
+            lines = ["[SOUL:TENSE] Tensions detected:", ""]
+            for t in tensions[:3]:
+                e1, e2 = t["pair"]
+                v1, v2 = t["values"]
+                lines.append(f"  ⚡ {e1.title()} ({v1:.2f}) vs {e2.title()} ({v2:.2f})")
+                lines.append(f"     {t['question']}")
+                lines.append("")
+            _emit_output("\n".join(lines), semantic, ctx)
+        else:
+            _emit_output(
+                "[SOUL:TENSE] No significant tensions detected. Eigenvectors are balanced.",
+                semantic,
+                ctx,
+            )
+
+    return 0
+
+
 async def _handle_dialogue(
     soul: Any,
     mode: Any,  # DialogueMode
@@ -410,6 +726,91 @@ async def _handle_dialogue(
         _emit_output("\n".join(lines), semantic, ctx)
 
     return 0
+
+
+async def _handle_streaming_dialogue(
+    soul: Any,
+    mode: Any,  # DialogueMode
+    prompt: str,
+    budget: Any,  # BudgetTier
+    json_mode: bool,
+    ctx: "InvocationContext | None",
+) -> int:
+    """
+    Handle streaming dialogue via dialogue_flux().
+
+    Streams response character-by-character with real-time output,
+    displaying token count on completion. Handles Ctrl+C gracefully.
+
+    Args:
+        soul: KgentSoul instance
+        mode: DialogueMode
+        prompt: User prompt
+        budget: BudgetTier
+        json_mode: Output as JSON
+        ctx: Invocation context
+    """
+    import sys
+
+    # Print mode header
+    mode_icons = {
+        "reflect": "~",
+        "advise": ">",
+        "challenge": "!",
+        "explore": "?",
+    }
+    icon = mode_icons.get(mode.value, "*")
+    header = f"[{icon} SOUL:{mode.value.upper()}]"
+
+    if not json_mode:
+        print(header)
+        print()
+
+    # Track chunks and metadata
+    chunks: list[str] = []
+    final_tokens = 0
+    final_text = ""
+    cancelled = False
+
+    try:
+        async for event in soul.dialogue_flux(prompt, mode=mode, budget=budget):
+            if event.is_data:
+                chunk = event.value
+                chunks.append(chunk)
+                if not json_mode:
+                    # Real-time character output
+                    sys.stdout.write(chunk)
+                    sys.stdout.flush()
+            elif event.is_metadata:
+                final_tokens = event.value.tokens_used
+                final_text = event.value.text
+
+    except (KeyboardInterrupt, asyncio.CancelledError):
+        cancelled = True
+        if not json_mode:
+            print("\n\n[Interrupted]")
+
+    # Build final output
+    response = "".join(chunks) if chunks else final_text
+
+    if json_mode:
+        import json
+
+        semantic = {
+            "mode": mode.value,
+            "response": response,
+            "tokens_used": final_tokens,
+            "streaming": True,
+            "cancelled": cancelled,
+        }
+        _emit_output(json.dumps(semantic, indent=2), semantic, ctx)
+    else:
+        # Add newline and token count after streaming content
+        print()
+        if final_tokens > 0:
+            print(f"\n  [{final_tokens} tokens]")
+
+    return 0 if not cancelled else 130  # 130 = SIGINT
 
 
 async def _handle_interactive(

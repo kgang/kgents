@@ -121,16 +121,24 @@ Next: `implement.md` with selected compositions and constraints.
 
 Emit this when exiting CROSS-SYNERGIZE:
 
+### Exit Signifier
+
 ```markdown
+# Normal exit (auto-continue):
+⟿[IMPLEMENT]
 /hydrate
-# IMPLEMENT ← CROSS-SYNERGIZE
-handles: compositions=${chosen_compositions}; interfaces=${implementation_interfaces}; rejected=${rejected_paths}; laws=${law_verifications}; rationale=${composition_rationale}; constraints=${constraints}; ledger=${phase_ledger}; branches=${branch_notes}
+handles: compositions=${chosen_compositions}; interfaces=${implementation_interfaces}; rejected=${rejected_paths}; laws=${law_verifications}; ledger={CROSS-SYNERGIZE:touched}; branches=${branch_notes}
 mission: write code + tests honoring laws/ethics; keep Minimal Output; start tests in background.
-actions: TodoWrite chunks; run pytest watch; code/test slices; log tokens/time/entropy/law-checks.
+actions: TodoWrite chunks; run pytest watch; code/test slices; log metrics.
 exit: code + tests ready; ledger.IMPLEMENT=touched; QA notes captured; continuation → QA.
+
+# Halt conditions:
+⟂[BLOCKED:composition_conflict] Chosen compositions violate category laws
+⟂[BLOCKED:no_viable_path] All candidate compositions rejected
+⟂[ENTROPY_DEPLETED] Budget exhausted without entropy sip
 ```
 
-Template vars: `${chosen_compositions}`, `${implementation_interfaces}`, `${rejected_paths}`, `${law_verifications}`, `${composition_rationale}`, `${constraints}`, `${phase_ledger}`, `${branch_notes}`.
+Template vars: `${chosen_compositions}`, `${implementation_interfaces}`, `${rejected_paths}`, `${law_verifications}`, `${branch_notes}`.
 
 ## Related Skills
 - `auto-continuation.md` — The meta-skill defining this generator pattern

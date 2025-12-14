@@ -32,6 +32,7 @@ Environment Variables:
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import os
 import signal
@@ -168,6 +169,9 @@ class TerrariumServer:
 
         # Add ready endpoint (more sophisticated than health)
         self._add_ready_endpoint()
+
+        # Add soul stream WebSocket endpoint (C18)
+        self._add_soul_stream_endpoint()
 
         # Create uvicorn config
         uvicorn_config = uvicorn.Config(
@@ -334,6 +338,164 @@ class TerrariumServer:
                     len(self._terrarium.registered_agents) if self._terrarium else 0
                 ),
             }
+
+    def _add_soul_stream_endpoint(self) -> None:
+        """Add WebSocket endpoint for K-gent Soul streaming.
+
+        Endpoint: /ws/soul/stream
+
+        Protocol:
+        1. Client connects via WebSocket
+        2. Client sends JSON: {"message": "...", "mode": "reflect|challenge|advise|explore"}
+        3. Server streams response chunks: {"type": "chunk", "data": "..."}
+        4. Server sends completion: {"type": "done", "tokens": N}
+        5. Connection closes or client sends another message
+
+        Rate limiting: Max 10 concurrent streams per IP (configurable via KGENT_WS_MAX_STREAMS)
+        """
+        if self._terrarium is None:
+            return
+
+        try:
+            from fastapi import WebSocket, WebSocketDisconnect
+        except ImportError:
+            logger.warning("[terrarium] FastAPI not available for soul stream endpoint")
+            return
+
+        app = self._terrarium.app
+
+        # Rate limiting: track active connections per IP
+        active_streams: dict[str, int] = {}
+        max_streams = int(os.environ.get("KGENT_WS_MAX_STREAMS", "10"))
+
+        @app.websocket("/ws/soul/stream")  # type: ignore[untyped-decorator]
+        async def ws_soul_stream(websocket: WebSocket) -> None:
+            """
+            WebSocket endpoint for K-gent Soul streaming dialogue.
+
+            C18: Terrarium Server WebSocket Endpoint
+            """
+            # Get client IP for rate limiting
+            client_ip = "unknown"
+            if websocket.client:
+                client_ip = websocket.client.host
+
+            # Check rate limit
+            current_streams = active_streams.get(client_ip, 0)
+            if current_streams >= max_streams:
+                await websocket.close(
+                    code=4029,
+                    reason=f"Rate limit exceeded: max {max_streams} streams per IP",
+                )
+                return
+
+            await websocket.accept()
+            active_streams[client_ip] = current_streams + 1
+            logger.info(f"[soul-stream] Connection opened from {client_ip}")
+
+            try:
+                while True:
+                    # Receive message
+                    try:
+                        raw_data = await websocket.receive_text()
+                    except WebSocketDisconnect:
+                        break
+
+                    # Parse JSON
+                    try:
+                        data = json.loads(raw_data)
+                    except json.JSONDecodeError as e:
+                        await websocket.send_json(
+                            {
+                                "type": "error",
+                                "error": f"Invalid JSON: {e}",
+                            }
+                        )
+                        continue
+
+                    # Extract message and mode
+                    message = data.get("message", "")
+                    mode_str = data.get("mode", "reflect").lower()
+
+                    if not message or not message.strip():
+                        await websocket.send_json(
+                            {
+                                "type": "error",
+                                "error": "Message is required",
+                            }
+                        )
+                        continue
+
+                    # Map mode string to DialogueMode
+                    try:
+                        from agents.k.persona import DialogueMode
+
+                        mode_map = {
+                            "reflect": DialogueMode.REFLECT,
+                            "advise": DialogueMode.ADVISE,
+                            "challenge": DialogueMode.CHALLENGE,
+                            "explore": DialogueMode.EXPLORE,
+                        }
+                        mode = mode_map.get(mode_str, DialogueMode.REFLECT)
+                    except ImportError:
+                        await websocket.send_json(
+                            {
+                                "type": "error",
+                                "error": "K-gent module not available",
+                            }
+                        )
+                        continue
+
+                    # Create soul and stream response
+                    try:
+                        from agents.k.soul import KgentSoul
+
+                        soul = KgentSoul()
+                        total_tokens = 0
+
+                        # Stream dialogue using dialogue_flux()
+                        async for event in soul.dialogue_flux(message, mode=mode):
+                            if event.is_data:
+                                await websocket.send_json(
+                                    {
+                                        "type": "chunk",
+                                        "data": event.value,
+                                    }
+                                )
+                            elif event.is_metadata:
+                                total_tokens = event.value.tokens_used
+
+                        # Send completion message
+                        await websocket.send_json(
+                            {
+                                "type": "done",
+                                "tokens": total_tokens,
+                            }
+                        )
+
+                    except Exception as e:
+                        logger.error(f"[soul-stream] Error: {e}")
+                        await websocket.send_json(
+                            {
+                                "type": "error",
+                                "error": str(e),
+                            }
+                        )
+
+            except WebSocketDisconnect:
+                pass
+            except Exception as e:
+                logger.error(f"[soul-stream] Unexpected error: {e}")
+            finally:
+                # Decrement active stream count
+                current = active_streams.get(client_ip, 1)
+                if current <= 1:
+                    active_streams.pop(client_ip, None)
+                else:
+                    active_streams[client_ip] = current - 1
+                logger.info(f"[soul-stream] Connection closed from {client_ip}")
+
+        logger.info("[terrarium] Soul stream endpoint added: /ws/soul/stream")
 
     @property
     def purgatory(self) -> "Purgatory | None":

@@ -40,13 +40,25 @@ Usage:
 from __future__ import annotations
 
 import asyncio
+import os
 import uuid
 from dataclasses import dataclass, field
 from datetime import timedelta
 from enum import Enum
-from typing import TYPE_CHECKING, Any, AsyncIterator, Optional
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    AsyncIterator,
+    Generic,
+    Optional,
+    Protocol,
+    TypeVar,
+    Union,
+)
 
 from bootstrap.types import Agent
+
+from .llm import LLMClient, StreamingLLMResponse
 
 from .events import (
     SoulEvent,
@@ -66,6 +78,604 @@ from .soul import BudgetTier, KgentSoul
 
 if TYPE_CHECKING:
     from protocols.terrarium.mirror import HolographicBuffer
+
+
+# =============================================================================
+# FluxEvent: Generic Streaming Event Type
+# =============================================================================
+
+T = TypeVar("T")
+M = TypeVar("M")
+
+
+@dataclass(frozen=True)
+class FluxEvent(Generic[T]):
+    """
+    A streaming event in a Flux stream.
+
+    FluxEvent represents a single item in an async stream, wrapping either:
+    - Data: The actual content (e.g., text chunks)
+    - Metadata: Stream metadata (e.g., token counts, completion signals)
+
+    Type Parameters:
+        T: The type of the data payload (typically str for LLM text)
+
+    Usage:
+        async for event in llm_stream_source(...):
+            if event.is_data:
+                print(event.value, end="", flush=True)
+            elif event.is_metadata:
+                print(f"\\nTotal tokens: {event.value.tokens_used}")
+    """
+
+    _kind: str  # "data" or "metadata"
+    _value: Any  # T for data, StreamingLLMResponse for metadata
+
+    @classmethod
+    def data(cls, value: T) -> "FluxEvent[T]":
+        """Create a data event containing a chunk of content."""
+        return cls(_kind="data", _value=value)
+
+    @classmethod
+    def metadata(cls, meta: StreamingLLMResponse) -> "FluxEvent[T]":
+        """Create a metadata event containing stream completion info."""
+        return cls(_kind="metadata", _value=meta)
+
+    @property
+    def is_data(self) -> bool:
+        """Check if this is a data event."""
+        return self._kind == "data"
+
+    @property
+    def is_metadata(self) -> bool:
+        """Check if this is a metadata event."""
+        return self._kind == "metadata"
+
+    @property
+    def value(self) -> Any:
+        """Get the event value (data or metadata)."""
+        return self._value
+
+
+# Default buffer size from environment or fallback
+DEFAULT_STREAM_BUFFER_SIZE = int(os.environ.get("KGENT_STREAM_BUFFER_SIZE", "64"))
+
+# WebSocket buffer size from environment
+DEFAULT_WS_BUFFER_SIZE = int(os.environ.get("KGENT_WS_BUFFER_SIZE", "32"))
+
+U = TypeVar("U")
+
+
+# =============================================================================
+# FluxOperator Protocol
+# =============================================================================
+
+
+class FluxOperator(Protocol[T, U]):
+    """
+    Protocol for FluxStream transformation operators.
+
+    FluxOperators transform one stream to another while preserving
+    laziness and metadata passthrough.
+    """
+
+    def __call__(
+        self, source: AsyncIterator[FluxEvent[T]]
+    ) -> AsyncIterator[FluxEvent[U]]:
+        """Apply the operator to a source stream."""
+        ...
+
+
+# =============================================================================
+# FluxStream: Composable Async Stream with Operators
+# =============================================================================
+
+
+from typing import Callable
+
+
+class FluxStream(Generic[T]):
+    """
+    Composable async stream of FluxEvents with operators.
+
+    FluxStream wraps an async iterator and provides chainable operators
+    for transformation, filtering, and composition. All operators are lazy -
+    they don't consume the source until iterated.
+
+    Key Properties:
+    - Lazy evaluation: operators don't consume until iterated
+    - Metadata passthrough: metadata events pass through operators unchanged
+    - Composable: operators chain to build complex pipelines
+
+    Usage:
+        stream = FluxStream(llm_source)
+            .filter(lambda e: e.is_data and len(e.value.strip()) > 0)
+            .map(lambda e: FluxEvent.data(e.value.upper()) if e.is_data else e)
+            .take(5)
+
+        async for event in stream:
+            print(event.value)
+    """
+
+    def __init__(self, source: AsyncIterator[FluxEvent[T]]) -> None:
+        """
+        Initialize FluxStream wrapping an async iterator.
+
+        Args:
+            source: The underlying async iterator of FluxEvents
+        """
+        self._source = source
+        self._consumed = False
+
+    def __aiter__(self) -> AsyncIterator[FluxEvent[T]]:
+        """Return self as async iterator."""
+        return self
+
+    async def __anext__(self) -> FluxEvent[T]:
+        """Get next event from the stream."""
+        if self._consumed:
+            raise StopAsyncIteration
+        try:
+            return await self._source.__anext__()
+        except StopAsyncIteration:
+            self._consumed = True
+            raise
+
+    # ─────────────────────────────────────────────────────────────
+    # C14: Stream Operators
+    # ─────────────────────────────────────────────────────────────
+
+    def map(self, fn: Callable[[FluxEvent[T]], FluxEvent[U]]) -> "FluxStream[U]":
+        """
+        Transform data events, pass metadata through unchanged.
+
+        Args:
+            fn: Function to apply to each event. Should return FluxEvent[U].
+                For data events, transform the value. For metadata, pass through.
+
+        Returns:
+            New FluxStream with transformed events.
+
+        Example:
+            stream.map(lambda e: FluxEvent.data(e.value.upper()) if e.is_data else e)
+        """
+        source = self._source
+
+        async def mapped() -> AsyncIterator[FluxEvent[U]]:
+            async for event in source:
+                if event.is_metadata:
+                    # Metadata passes through unchanged
+                    yield event  # type: ignore[misc]
+                else:
+                    yield fn(event)
+
+        return FluxStream(mapped())
+
+    def filter(self, predicate: Callable[[FluxEvent[T]], bool]) -> "FluxStream[T]":
+        """
+        Filter events based on a predicate, metadata always passes through.
+
+        Args:
+            predicate: Function that returns True to keep an event.
+                       Metadata events always pass through regardless of predicate.
+
+        Returns:
+            New FluxStream with filtered events.
+
+        Example:
+            stream.filter(lambda e: e.is_data and len(e.value.strip()) > 0)
+        """
+        source = self._source
+
+        async def filtered() -> AsyncIterator[FluxEvent[T]]:
+            async for event in source:
+                if event.is_metadata:
+                    # Metadata always passes through
+                    yield event
+                elif predicate(event):
+                    yield event
+
+        return FluxStream(filtered())
+
+    def take(self, n: int) -> "FluxStream[T]":
+        """
+        Limit stream to first n data events, metadata always passes through.
+
+        Args:
+            n: Maximum number of data events to emit.
+               Metadata events don't count toward the limit.
+
+        Returns:
+            New FluxStream limited to n data events.
+
+        Example:
+            stream.take(5)  # Only first 5 data events
+        """
+        source = self._source
+
+        async def taken() -> AsyncIterator[FluxEvent[T]]:
+            count = 0
+            async for event in source:
+                if event.is_metadata:
+                    # Metadata always passes through
+                    yield event
+                elif count < n:
+                    count += 1
+                    yield event
+                # Data events after n are dropped
+
+        return FluxStream(taken())
+
+    def tap(self, fn: Callable[[FluxEvent[T]], None]) -> "FluxStream[T]":
+        """
+        Perform side effects without modifying the stream.
+
+        Args:
+            fn: Function called with each event for side effects.
+                Return value is ignored.
+
+        Returns:
+            Same FluxStream (events unchanged).
+
+        Example:
+            stream.tap(lambda e: print(e.value) if e.is_data else None)
+        """
+        source = self._source
+
+        async def tapped() -> AsyncIterator[FluxEvent[T]]:
+            async for event in source:
+                fn(event)
+                yield event
+
+        return FluxStream(tapped())
+
+    # ─────────────────────────────────────────────────────────────
+    # C15: Stream Composition
+    # ─────────────────────────────────────────────────────────────
+
+    @classmethod
+    def chain(cls, *sources: "FluxStream[T]") -> "FluxStream[T]":
+        """
+        Concatenate multiple streams sequentially.
+
+        Streams are consumed one after another. When the first stream
+        exhausts, the second begins, etc.
+
+        Args:
+            *sources: FluxStreams to concatenate in order.
+
+        Returns:
+            New FluxStream that yields all events from all sources in order.
+
+        Example:
+            FluxStream.chain(stream1, stream2, stream3)
+        """
+
+        async def chained() -> AsyncIterator[FluxEvent[T]]:
+            for source in sources:
+                async for event in source:
+                    yield event
+
+        return cls(chained())
+
+    @classmethod
+    def merge(cls, *sources: "FluxStream[T]") -> "FluxStream[T]":
+        """
+        Interleave multiple streams (first-available wins).
+
+        Events from all sources are yielded as they arrive.
+        Metadata events from all streams pass through; token counts
+        are aggregated in a final metadata event.
+
+        Args:
+            *sources: FluxStreams to merge.
+
+        Returns:
+            New FluxStream that interleaves events from all sources.
+
+        Example:
+            FluxStream.merge(stream1, stream2)  # Events interleaved
+        """
+
+        async def merged() -> AsyncIterator[FluxEvent[T]]:
+            # Track metadata for aggregation
+            total_tokens = 0
+            metadata_count = 0
+
+            # Create tasks for each source
+            pending: dict[asyncio.Task[tuple[int, FluxEvent[T] | None]], int] = {}
+            source_iters: list[AsyncIterator[FluxEvent[T]]] = [
+                s.__aiter__() for s in sources
+            ]
+            exhausted: set[int] = set()
+
+            def create_task(idx: int) -> asyncio.Task[tuple[int, FluxEvent[T] | None]]:
+                async def get_next() -> tuple[int, FluxEvent[T] | None]:
+                    try:
+                        event = await source_iters[idx].__anext__()
+                        return (idx, event)
+                    except StopAsyncIteration:
+                        return (idx, None)
+
+                task = asyncio.create_task(get_next())
+                pending[task] = idx
+                return task
+
+            # Start initial tasks for all sources
+            for i in range(len(source_iters)):
+                create_task(i)
+
+            # Process until all sources exhausted
+            while pending:
+                done, _ = await asyncio.wait(
+                    pending.keys(), return_when=asyncio.FIRST_COMPLETED
+                )
+
+                for task in done:
+                    idx = pending.pop(task)
+                    result_idx, event = task.result()
+
+                    if event is None:
+                        # Source exhausted
+                        exhausted.add(result_idx)
+                    elif event.is_metadata:
+                        # Aggregate metadata
+                        metadata_count += 1
+                        if hasattr(event.value, "tokens_used"):
+                            total_tokens += event.value.tokens_used
+                        # Don't yield individual metadata; we'll yield aggregate at end
+                    else:
+                        # Yield data event
+                        yield event
+                        # Request next from this source
+                        if result_idx not in exhausted:
+                            create_task(result_idx)
+
+            # Yield aggregate metadata if any were collected
+            if metadata_count > 0:
+                aggregate_meta = StreamingLLMResponse(
+                    text="",
+                    tokens_used=total_tokens,
+                    model="merged",
+                    raw_metadata={"merged_sources": len(sources)},
+                )
+                yield FluxEvent.metadata(aggregate_meta)
+
+        return cls(merged())
+
+    def zip(self, other: "FluxStream[T]") -> "FluxStream[tuple[T, T]]":
+        """
+        Pair events from two streams.
+
+        Only data events are paired. Metadata from both streams
+        passes through. Stops when either stream exhausts.
+
+        Args:
+            other: FluxStream to zip with.
+
+        Returns:
+            New FluxStream of paired events.
+
+        Example:
+            stream1.zip(stream2)  # Pairs (event1, event2)
+        """
+        source = self._source
+        other_source = other._source
+
+        async def zipped() -> AsyncIterator[FluxEvent[tuple[T, T]]]:
+            # Buffer for pending data events
+            source_buffer: list[FluxEvent[T]] = []
+            other_buffer: list[FluxEvent[T]] = []
+
+            async def fill_buffer(
+                src: AsyncIterator[FluxEvent[T]], buf: list[FluxEvent[T]]
+            ) -> FluxEvent[T] | None:
+                """Get next data event, yielding metadata."""
+                async for event in src:
+                    if event.is_metadata:
+                        # Can't yield from nested function; return for handling
+                        return event
+                    else:
+                        buf.append(event)
+                        return None
+                return None  # Exhausted
+
+            source_iter = source.__aiter__()
+            other_iter = other_source.__aiter__()
+            source_done = False
+            other_done = False
+
+            while not (source_done and other_done):
+                # Fill buffers until we have at least one data event each
+                while not source_buffer and not source_done:
+                    try:
+                        event = await source_iter.__anext__()
+                        if event.is_metadata:
+                            yield event  # type: ignore[misc]
+                        else:
+                            source_buffer.append(event)
+                    except StopAsyncIteration:
+                        source_done = True
+
+                while not other_buffer and not other_done:
+                    try:
+                        event = await other_iter.__anext__()
+                        if event.is_metadata:
+                            yield event  # type: ignore[misc]
+                        else:
+                            other_buffer.append(event)
+                    except StopAsyncIteration:
+                        other_done = True
+
+                # Pair events if both buffers have data
+                if source_buffer and other_buffer:
+                    e1 = source_buffer.pop(0)
+                    e2 = other_buffer.pop(0)
+                    paired: tuple[T, T] = (e1.value, e2.value)
+                    yield FluxEvent.data(paired)
+                elif source_done or other_done:
+                    # One stream exhausted, stop zipping
+                    break
+
+        return FluxStream(zipped())
+
+    async def collect(self) -> list[T]:
+        """
+        Materialize stream to a list of data values.
+
+        Consumes the entire stream and returns all data values.
+        Metadata events are discarded.
+
+        Returns:
+            List of data values from the stream.
+
+        Example:
+            values = await stream.collect()
+        """
+        result: list[T] = []
+        async for event in self:
+            if event.is_data:
+                result.append(event.value)
+        return result
+
+
+# Type alias for backward compatibility
+FluxStreamAlias = AsyncIterator[FluxEvent[str]]
+
+
+# =============================================================================
+# LLMStreamSource: Flux Source Wrapping LLM Streaming
+# =============================================================================
+
+
+class LLMStreamSource:
+    """
+    Wraps an LLMClient's generate_stream() as a Flux source.
+
+    Converts the raw LLM stream (yielding str | StreamingLLMResponse) into
+    FluxEvent[str] events for integration with the Flux streaming system.
+
+    Features:
+    - AsyncIterator[FluxEvent[str]] interface
+    - Backpressure handling via async queue with configurable buffer size
+    - Emits FluxEvent.data(chunk) for text deltas
+    - Emits FluxEvent.metadata(StreamingLLMResponse) on completion
+
+    Usage:
+        source = LLMStreamSource(
+            client=llm_client,
+            system="You are K-gent...",
+            user="What should I focus on?",
+        )
+
+        async for event in source:
+            if event.is_data:
+                print(event.value, end="", flush=True)
+            elif event.is_metadata:
+                print(f"\\n[{event.value.tokens_used} tokens]")
+    """
+
+    def __init__(
+        self,
+        client: LLMClient,
+        system: str,
+        user: str,
+        temperature: float = 0.7,
+        max_tokens: int = 4000,
+        buffer_size: Optional[int] = None,
+    ) -> None:
+        """
+        Initialize the LLM stream source.
+
+        Args:
+            client: The LLM client to use for generation
+            system: System prompt for the LLM
+            user: User message/prompt
+            temperature: Generation temperature (0.0-1.0)
+            max_tokens: Maximum tokens to generate
+            buffer_size: Async queue buffer size for backpressure handling.
+                        Defaults to KGENT_STREAM_BUFFER_SIZE env var or 64.
+        """
+        self._client = client
+        self._system = system
+        self._user = user
+        self._temperature = temperature
+        self._max_tokens = max_tokens
+        self._buffer_size = buffer_size or DEFAULT_STREAM_BUFFER_SIZE
+
+        # Internal state
+        self._queue: asyncio.Queue[FluxEvent[str] | None] = asyncio.Queue(
+            maxsize=self._buffer_size
+        )
+        self._producer_task: Optional[asyncio.Task[None]] = None
+        self._started = False
+        self._completed = False
+
+    async def _produce(self) -> None:
+        """Producer coroutine that reads from LLM and enqueues events."""
+        try:
+            async for item in self._client.generate_stream(
+                system=self._system,
+                user=self._user,
+                temperature=self._temperature,
+                max_tokens=self._max_tokens,
+            ):
+                if isinstance(item, str):
+                    event: FluxEvent[str] = FluxEvent.data(item)
+                else:
+                    # StreamingLLMResponse
+                    event = FluxEvent.metadata(item)
+
+                await self._queue.put(event)
+        except Exception as e:
+            # On error, create a metadata event with empty response
+            # This ensures the consumer knows the stream ended
+            error_meta = StreamingLLMResponse(
+                text="",
+                tokens_used=0,
+                model="error",
+                raw_metadata={"error": str(e)},
+            )
+            await self._queue.put(FluxEvent.metadata(error_meta))
+        finally:
+            # Signal completion
+            await self._queue.put(None)
+
+    def __aiter__(self) -> AsyncIterator[FluxEvent[str]]:
+        """Return self as async iterator."""
+        return self
+
+    async def __anext__(self) -> FluxEvent[str]:
+        """Get next event from the stream."""
+        if not self._started:
+            self._started = True
+            self._producer_task = asyncio.create_task(
+                self._produce(), name="llm-stream-producer"
+            )
+
+        if self._completed:
+            raise StopAsyncIteration
+
+        event = await self._queue.get()
+        if event is None:
+            self._completed = True
+            raise StopAsyncIteration
+
+        return event
+
+    async def cancel(self) -> None:
+        """Cancel the stream source."""
+        if self._producer_task and not self._producer_task.done():
+            self._producer_task.cancel()
+            try:
+                await self._producer_task
+            except asyncio.CancelledError:
+                pass
+
+    @property
+    def is_complete(self) -> bool:
+        """Check if the stream has completed."""
+        return self._completed
 
 
 class KgentFluxState(str, Enum):
@@ -545,9 +1155,10 @@ class KgentFlux:
                 return event
 
     async def _handle_dialogue_turn(self, event: SoulEvent) -> SoulEvent:
-        """Handle a DIALOGUE_TURN event."""
+        """Handle a DIALOGUE_TURN event with streaming support."""
         message = event.payload.get("message", "")
         mode_str = event.payload.get("mode")
+        correlation_id = event.correlation_id
 
         mode: Optional[DialogueMode] = None
         if mode_str:
@@ -556,19 +1167,63 @@ class KgentFlux:
             except ValueError:
                 pass
 
-        # Call KgentSoul.dialogue()
+        # Track chunks for streaming
+        chunk_index = 0
+
+        def on_chunk(chunk_text: str) -> None:
+            """Emit streaming chunk event via mirror."""
+            nonlocal chunk_index
+
+            # Create chunk event
+            chunk_event = dialogue_turn_event(
+                message=message,
+                mode=mode.value if mode else None,
+                is_request=False,
+                correlation_id=correlation_id,
+                soul_state={
+                    "chunk": chunk_text,
+                    "chunk_index": chunk_index,
+                    "is_final": False,
+                },
+            )
+
+            # Emit to mirror if attached (fire-and-forget)
+            if self._mirror is not None:
+                import asyncio
+
+                # Schedule async emit without blocking
+                asyncio.create_task(self._mirror.reflect(chunk_event.to_dict()))
+
+            chunk_index += 1
+
+        # Call KgentSoul.dialogue() with streaming callback
         output = await self.soul.dialogue(
             message=message,
             mode=mode,
             budget=BudgetTier.DIALOGUE,
+            on_chunk=on_chunk,
         )
 
-        # Convert to SoulEvent
-        return from_dialogue_output(
+        # Create final response event
+        final_event = from_dialogue_output(
             output=output,
             original_message=message,
             soul_state=self.soul.manifest(),
-            correlation_id=event.correlation_id,
+            correlation_id=correlation_id,
+        )
+
+        # Add streaming metadata to final event payload
+        # Note: SoulEvent is frozen, so we create a new one with enriched payload
+        enriched_payload = dict(final_event.payload)
+        enriched_payload["is_final"] = True
+        enriched_payload["total_chunks"] = chunk_index
+
+        return SoulEvent(
+            event_type=final_event.event_type,
+            timestamp=final_event.timestamp,
+            payload=enriched_payload,
+            soul_state=final_event.soul_state,
+            correlation_id=final_event.correlation_id,
         )
 
     async def _handle_intercept_request(self, event: SoulEvent) -> SoulEvent:
@@ -836,8 +1491,17 @@ def create_kgent_flux(
 # =============================================================================
 
 __all__ = [
+    # Core flux types
     "KgentFlux",
     "KgentFluxConfig",
     "KgentFluxState",
     "create_kgent_flux",
+    # Streaming types (C11)
+    "FluxEvent",
+    "FluxStream",
+    "FluxStreamAlias",
+    "FluxOperator",
+    "LLMStreamSource",
+    "DEFAULT_STREAM_BUFFER_SIZE",
+    "DEFAULT_WS_BUFFER_SIZE",
 ]

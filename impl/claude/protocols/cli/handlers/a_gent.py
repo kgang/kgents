@@ -35,16 +35,215 @@ if TYPE_CHECKING:
     from protocols.cli.reflector import InvocationContext
 
 
+# --- Dialogue Agent Registry ---
+# Maps agent short names to module:class paths for dialogue-capable agents.
+# Unlike archetypes (Kappa/Lambda/Delta), dialogue agents implement
+# the dialogue(message: str) -> DialogueOutput protocol.
+
+DIALOGUE_AGENTS: dict[str, str] = {
+    "soul": "agents.k.soul:KgentSoul",
+    "kgent": "agents.k.soul:KgentSoul",  # alias
+    "session": "agents.k.session:SoulSession",  # cross-session identity
+}
+
+
+def _resolve_dialogue_agent(name: str) -> Any | None:
+    """
+    Resolve agent name to a dialogue-capable agent instance.
+
+    Returns:
+        Instantiated agent if found and dialogue-capable, None otherwise.
+    """
+    if name not in DIALOGUE_AGENTS:
+        return None
+
+    try:
+        module_path, class_name = DIALOGUE_AGENTS[name].rsplit(":", 1)
+        module = importlib.import_module(module_path)
+        cls = getattr(module, class_name)
+
+        # Instantiate: SoulSession needs no args, KgentSoul needs no args
+        if class_name == "SoulSession":
+            # SoulSession.get() returns singleton
+            return cls.get()
+        else:
+            return cls()
+    except (ImportError, AttributeError) as e:
+        # Graceful degradation: log but don't crash
+        print(f"[A] Warning: Could not load {name}: {e}", file=sys.stderr)
+        return None
+
+
+async def _handle_dialogue(
+    agent_name: str,
+    prompt: str | None,
+    json_mode: bool,
+    ctx: "InvocationContext | None",
+) -> int:
+    """
+    Handle direct dialogue with an agent.
+
+    If prompt is None, enters REPL mode.
+    Otherwise, performs a single dialogue turn.
+    """
+    agent = _resolve_dialogue_agent(agent_name)
+    if agent is None:
+        _emit_output(
+            f"[A] Unknown dialogue agent: {agent_name}\n"
+            f"    Available: {', '.join(DIALOGUE_AGENTS.keys())}",
+            {"error": "unknown_agent", "available": list(DIALOGUE_AGENTS.keys())},
+            ctx,
+        )
+        return 1
+
+    if prompt is None:
+        # Enter REPL mode
+        return await _handle_repl(agent, agent_name, json_mode, ctx)
+
+    # Single dialogue turn
+    try:
+        if hasattr(agent, "dialogue"):
+            output = await agent.dialogue(prompt)
+            response = output.response if hasattr(output, "response") else str(output)
+            mode = getattr(output, "mode", None)
+            mode_str = mode.value if mode else "dialogue"
+        else:
+            # Fallback to invoke() for generic agents
+            output = await agent.invoke(prompt)
+            response = str(output)
+            mode_str = "invoke"
+
+        if json_mode:
+            import json
+
+            result = {
+                "agent": agent_name,
+                "input": prompt,
+                "response": response,
+                "mode": mode_str,
+            }
+            _emit_output(json.dumps(result, indent=2), result, ctx)
+        else:
+            _emit_output(response, {"agent": agent_name, "response": response}, ctx)
+
+        return 0
+
+    except Exception as e:
+        _emit_output(
+            f"[A] Dialogue error: {e}",
+            {"error": str(e)},
+            ctx,
+        )
+        return 1
+
+
+async def _handle_repl(
+    agent: Any,
+    agent_name: str,
+    json_mode: bool,
+    ctx: "InvocationContext | None",
+) -> int:
+    """
+    Interactive REPL for dialogue with an agent.
+
+    Commands:
+        q, quit, exit  - Exit REPL
+        /mode <mode>   - Change dialogue mode (reflect, advise, challenge, explore)
+        /status        - Show agent status
+    """
+    _emit_output(
+        f"[A] {agent_name} REPL\n"
+        f"    Commands: q (quit), /mode <mode>, /status\n"
+        f"    Type your message and press Enter.",
+        {"repl": True, "agent": agent_name},
+        ctx,
+    )
+
+    current_mode = None  # Will use agent's default
+
+    while True:
+        try:
+            user_input = input(f"[{agent_name}] > ").strip()
+        except (KeyboardInterrupt, EOFError):
+            print("\n[A] Goodbye.")
+            return 0
+
+        if not user_input:
+            continue
+
+        # Handle REPL commands
+        if user_input.lower() in ("q", "quit", "exit"):
+            print("[A] Goodbye.")
+            return 0
+
+        if user_input.startswith("/mode "):
+            mode_arg = user_input[6:].strip().lower()
+            try:
+                from agents.k.persona import DialogueMode
+
+                current_mode = DialogueMode(mode_arg)
+                print(f"[A] Mode set to: {current_mode.value}")
+            except (ImportError, ValueError):
+                print(f"[A] Unknown mode: {mode_arg}")
+                print("    Available: reflect, advise, challenge, explore")
+            continue
+
+        if user_input == "/status":
+            if hasattr(agent, "_state"):
+                state = agent._state
+                print(f"[A] Agent: {agent_name}")
+                if hasattr(state, "active_mode"):
+                    print(f"    Mode: {state.active_mode.value}")
+                if hasattr(state, "turns"):
+                    print(f"    Turns: {state.turns}")
+            else:
+                print(f"[A] Agent: {agent_name} (no state available)")
+            continue
+
+        # Dialogue turn
+        try:
+            if hasattr(agent, "dialogue"):
+                if current_mode:
+                    output = await agent.dialogue(user_input, mode=current_mode)
+                else:
+                    output = await agent.dialogue(user_input)
+                response = (
+                    output.response if hasattr(output, "response") else str(output)
+                )
+            else:
+                output = await agent.invoke(user_input)
+                response = str(output)
+
+            if json_mode:
+                import json
+
+                print(json.dumps({"response": response}, indent=2))
+            else:
+                print(response)
+                print()
+
+        except Exception as e:
+            print(f"[A] Error: {e}")
+
+    return 0
+
+
 def _print_help() -> None:
     """Print help for a command."""
     print(__doc__)
     print()
     print("COMMANDS:")
+    print("  <agent> [prompt]    Direct dialogue (e.g., 'kg a soul \"hello\"')")
+    print("  <agent>             Enter REPL mode (e.g., 'kg a soul')")
     print("  inspect <agent>     Show Halo (capabilities) and Nucleus details")
     print("  manifest <agent>    Generate K8s manifests (YAML)")
     print("  run <agent>         Compile and run agent locally")
     print("  list                List available agents")
     print("  new <name>          Scaffold a new agent (interactive)")
+    print()
+    print("DIALOGUE AGENTS:")
+    for name, path in DIALOGUE_AGENTS.items():
+        print(f"  {name:12}        -> {path}")
     print()
     print("OPTIONS:")
     print("  --namespace <ns>    K8s namespace for manifests (default: kgents-agents)")
@@ -56,6 +255,11 @@ def _print_help() -> None:
     )
     print("  --output <path>     Output path for 'new' command")
     print("  --help, -h          Show this help")
+    print()
+    print("EXAMPLES:")
+    print('  kg a soul "What should I focus on today?"')
+    print("  kg a soul                   # Enter REPL")
+    print('  kg a session "Hello"        # Cross-session K-gent')
 
 
 def cmd_a(args: list[str], ctx: "InvocationContext | None" = None) -> int:
@@ -175,6 +379,12 @@ def cmd_a(args: list[str], ctx: "InvocationContext | None" = None) -> int:
             return _handle_new(agent_name, archetype, output_path, ctx)
 
         case _:
+            # Check if subcommand is a dialogue agent
+            if subcommand and subcommand in DIALOGUE_AGENTS:
+                # agent_name becomes the prompt (positional[1] if exists)
+                prompt = agent_name  # agent_name = positional[1], which is the prompt
+                return asyncio.run(_handle_dialogue(subcommand, prompt, json_mode, ctx))
+
             _emit_output(
                 f"[A] Unknown command: {subcommand}",
                 {"error": f"Unknown command: {subcommand}"},

@@ -60,6 +60,11 @@ Each session is a chapter:
 - Write an epilogue at session end
 - The narrative arc spans sessions
 
+**Auto-Inducer Signifiers** (`spec/protocols/auto-inducer.md`):
+- `⟿[PHASE]` — Continue to next phase (auto-execute)
+- `⟂[REASON]` — Halt, await human (DETACH, blocked, entropy depleted)
+- *(none)* — Await human input (backwards compatible)
+
 ---
 
 ## Agent Tenacity
@@ -106,4 +111,4 @@ plans/
 
 ---
 
-*Lines: 80. Ceiling: 100. Prune if exceeded.*
+*Lines: 114. Ceiling: 120. Prune if exceeded.*

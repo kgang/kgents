@@ -79,6 +79,7 @@ await logos.invoke("world.house.manifest", economist_umwelt)  # → Appraisal
 
 - `spec/` - The specification (conceptual, implementation-agnostic)
 - `spec/protocols/agentese.md` - AGENTESE specification
+- `spec/protocols/auto-inducer.md` - Phase transition signifiers (`⟿`/`⟂`)
 - `impl/` - Reference implementations (Claude Code + Open Router)
 - `impl/claude/protocols/agentese/` - AGENTESE implementation (559 tests)
 - `docs/` - Supporting documentation

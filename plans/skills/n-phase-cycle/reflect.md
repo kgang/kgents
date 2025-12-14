@@ -104,7 +104,33 @@ Next: `meta-re-metabolize.md` when the lifecycle or skills need refresh; otherwi
 
 ## Continuation Generator
 
-REFLECT is the terminal phase. It generates one of three continuation types:
+REFLECT is the terminal phase. It generates one of three continuation types.
+
+### Exit Signifiers
+
+REFLECT uses all three signifier modes:
+
+```markdown
+# Continue to new cycle:
+⟿[PLAN]
+/hydrate
+handles: learnings=${meta_learnings}; artifacts=${artifacts_created}; entropy.restored=${entropy_restored}; ledger={REFLECT:touched}
+mission: frame intent for next body of work; incorporate learnings.
+exit: scope + exit criteria + entropy sip; continuation → RESEARCH.
+
+# Trigger skill refresh:
+⟿[META-RE-METABOLIZE]
+/hydrate
+handles: drift=${drift_signals}; learnings=${learnings_for_skills}; ledger={REFLECT:touched}
+mission: re-ingest N-phase skills; apply lawful mutations via operad.
+exit: skills refreshed; laws verified; continuation → PLAN.
+
+# Session end:
+⟂[DETACH:cycle_complete] Epilogue: ${epilogue_ref}
+⟂[DETACH:awaiting_human] Decision required: ${decision_context}
+```
+
+### Detailed Templates
 
 ### Option 1: Loop to PLAN (New Cycle)
 

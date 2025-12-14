@@ -1,0 +1,83 @@
+{
+  "description": "Progressive chunk sequence for streaming dialogue tests",
+  "correlation_id": "stream-001",
+  "mode": "reflect",
+  "original_message": "What should I focus on today?",
+  "chunks": [
+    {
+      "type": "dialogue_turn",
+      "timestamp": "2025-01-15T10:00:00.100+00:00",
+      "payload": {
+        "chunk": "Based on ",
+        "chunk_index": 0,
+        "is_final": false,
+        "mode": "reflect"
+      },
+      "correlation_id": "stream-001"
+    },
+    {
+      "type": "dialogue_turn",
+      "timestamp": "2025-01-15T10:00:00.200+00:00",
+      "payload": {
+        "chunk": "your current ",
+        "chunk_index": 1,
+        "is_final": false,
+        "mode": "reflect"
+      },
+      "correlation_id": "stream-001"
+    },
+    {
+      "type": "dialogue_turn",
+      "timestamp": "2025-01-15T10:00:00.300+00:00",
+      "payload": {
+        "chunk": "context, ",
+        "chunk_index": 2,
+        "is_final": false,
+        "mode": "reflect"
+      },
+      "correlation_id": "stream-001"
+    },
+    {
+      "type": "dialogue_turn",
+      "timestamp": "2025-01-15T10:00:00.400+00:00",
+      "payload": {
+        "chunk": "I'd suggest ",
+        "chunk_index": 3,
+        "is_final": false,
+        "mode": "reflect"
+      },
+      "correlation_id": "stream-001"
+    },
+    {
+      "type": "dialogue_turn",
+      "timestamp": "2025-01-15T10:00:00.500+00:00",
+      "payload": {
+        "chunk": "focusing on ",
+        "chunk_index": 4,
+        "is_final": false,
+        "mode": "reflect"
+      },
+      "correlation_id": "stream-001"
+    },
+    {
+      "type": "dialogue_turn",
+      "timestamp": "2025-01-15T10:00:00.600+00:00",
+      "payload": {
+        "chunk": "depth over breadth.",
+        "chunk_index": 5,
+        "is_final": true,
+        "full_response": "Based on your current context, I'd suggest focusing on depth over breadth.",
+        "mode": "reflect",
+        "tokens_used": 42
+      },
+      "correlation_id": "stream-001"
+    }
+  ],
+  "expected_reassembly": "Based on your current context, I'd suggest focusing on depth over breadth.",
+  "metadata": {
+    "total_chunks": 6,
+    "total_tokens": 42,
+    "avg_chunk_size_chars": 12,
+    "stream_duration_ms": 500
+  }
+}

@@ -206,16 +206,24 @@ Next: `qa.md` for gatekeeping and hygiene before broader testing.
 
 Emit this when exiting IMPLEMENT:
 
+### Exit Signifier
+
 ```markdown
+# Normal exit (auto-continue):
+⟿[QA]
 /hydrate
-# QA ← IMPLEMENT
-handles: code=${files_created_or_modified}; tests=${test_files}; results=${test_count_delta}; summary=${implementation_summary}; laws=${law_checks_performed}; ledger=${phase_ledger}; branches=${branch_notes}; metrics=${metrics_snapshot}
+handles: code=${files_created_or_modified}; tests=${test_files}; results=${test_count_delta}; summary=${implementation_summary}; laws=${law_checks_performed}; ledger={IMPLEMENT:touched}; branches=${branch_notes}
 mission: gate quality/security/lawfulness before broader testing.
-actions: uv run mypy .; uv run ruff check; security sweep; docstring drift check; log tokens/time/entropy/law-checks.
+actions: uv run mypy .; uv run ruff check; security sweep; docstring drift check.
 exit: QA checklist status + ledger.QA=touched; notes for TEST; continuation → TEST.
+
+# Halt conditions:
+⟂[BLOCKED:impl_incomplete] Implementation chunks remain unfinished
+⟂[BLOCKED:tests_failing] New tests failing before QA gate
+⟂[ENTROPY_DEPLETED] Budget exhausted without entropy sip
 ```
 
-Template vars: `${files_created_or_modified}`, `${test_files}`, `${test_count_delta}`, `${implementation_summary}`, `${law_checks_performed}`, `${phase_ledger}`, `${branch_notes}`, `${metrics_snapshot}`.
+Template vars: `${files_created_or_modified}`, `${test_files}`, `${test_count_delta}`, `${implementation_summary}`, `${law_checks_performed}`, `${branch_notes}`.
 
 ## Related Skills
 - `auto-continuation.md` — The meta-skill defining this generator pattern

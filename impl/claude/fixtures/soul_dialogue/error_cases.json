@@ -1,0 +1,177 @@
+{
+  "description": "Error handling fixtures for soul dialogue streaming",
+  "cases": [
+    {
+      "name": "budget_exceeded",
+      "trigger": {
+        "type": "dialogue_turn",
+        "timestamp": "2025-01-15T10:00:00+00:00",
+        "payload": {
+          "message": "Write me a 10,000 word essay on category theory",
+          "is_request": true,
+          "mode": "explore"
+        },
+        "correlation_id": "error-001"
+      },
+      "error_response": {
+        "type": "error",
+        "timestamp": "2025-01-15T10:00:01+00:00",
+        "payload": {
+          "error": "Token budget exceeded for dialogue tier",
+          "error_type": "BudgetExceeded",
+          "original_event_type": "dialogue_turn",
+          "budget_limit": 500,
+          "requested_estimate": 5000
+        },
+        "correlation_id": "error-001"
+      },
+      "recovery": "Retry with shorter prompt or escalate to higher budget tier"
+    },
+    {
+      "name": "llm_timeout",
+      "trigger": {
+        "type": "dialogue_turn",
+        "timestamp": "2025-01-15T10:00:00+00:00",
+        "payload": {
+          "message": "Help me debug this complex issue",
+          "is_request": true,
+          "mode": "advise"
+        },
+        "correlation_id": "error-002"
+      },
+      "partial_chunks": [
+        {
+          "type": "dialogue_turn",
+          "timestamp": "2025-01-15T10:00:00.100+00:00",
+          "payload": {
+            "chunk": "Let me analyze ",
+            "chunk_index": 0,
+            "is_final": false,
+            "mode": "advise"
+          },
+          "correlation_id": "error-002"
+        },
+        {
+          "type": "dialogue_turn",
+          "timestamp": "2025-01-15T10:00:00.200+00:00",
+          "payload": {
+            "chunk": "the issue... ",
+            "chunk_index": 1,
+            "is_final": false,
+            "mode": "advise"
+          },
+          "correlation_id": "error-002"
+        }
+      ],
+      "error_response": {
+        "type": "error",
+        "timestamp": "2025-01-15T10:00:30+00:00",
+        "payload": {
+          "error": "LLM response timeout after 30s",
+          "error_type": "Timeout",
+          "original_event_type": "dialogue_turn",
+          "partial_response": "Let me analyze the issue... ",
+          "chunks_received": 2
+        },
+        "correlation_id": "error-002"
+      },
+      "recovery": "Partial response preserved; user can retry or accept partial"
+    },
+    {
+      "name": "invalid_mode",
+      "trigger": {
+        "type": "mode_change",
+        "timestamp": "2025-01-15T10:00:00+00:00",
+        "payload": {
+          "from_mode": "reflect",
+          "to_mode": "invalid_mode"
+        },
+        "correlation_id": "error-003"
+      },
+      "error_response": {
+        "type": "error",
+        "timestamp": "2025-01-15T10:00:00+00:00",
+        "payload": {
+          "error": "Invalid dialogue mode: 'invalid_mode'. Valid modes: reflect, advise, challenge, explore",
+          "error_type": "InvalidMode",
+          "original_event_type": "mode_change",
+          "valid_modes": ["reflect", "advise", "challenge", "explore"]
+        },
+        "correlation_id": "error-003"
+      },
+      "recovery": "Retry with valid mode"
+    },
+    {
+      "name": "soul_not_ready",
+      "trigger": {
+        "type": "dialogue_turn",
+        "timestamp": "2025-01-15T10:00:00+00:00",
+        "payload": {
+          "message": "Hello?",
+          "is_request": true,
+          "mode": "reflect"
+        },
+        "correlation_id": "error-004"
+      },
+      "error_response": {
+        "type": "error",
+        "timestamp": "2025-01-15T10:00:00+00:00",
+        "payload": {
+          "error": "Soul not initialized. KgentFlux must be in FLOWING state.",
+          "error_type": "SoulNotReady",
+          "original_event_type": "dialogue_turn",
+          "flux_state": "DORMANT"
+        },
+        "correlation_id": "error-004"
+      },
+      "recovery": "Call flux.start() before dialogue"
+    },
+    {
+      "name": "stream_interrupted",
+      "trigger": {
+        "type": "dialogue_turn",
+        "timestamp": "2025-01-15T10:00:00+00:00",
+        "payload": {
+          "message": "Tell me about composability",
+          "is_request": true,
+          "mode": "explore"
+        },
+        "correlation_id": "error-005"
+      },
+      "partial_chunks": [
+        {
+          "type": "dialogue_turn",
+          "timestamp": "2025-01-15T10:00:00.100+00:00",
+          "payload": {
+            "chunk": "Composability is ",
+            "chunk_index": 0,
+            "is_final": false,
+            "mode": "explore"
+          },
+          "correlation_id": "error-005"
+        }
+      ],
+      "error_response": {
+        "type": "error",
+        "timestamp": "2025-01-15T10:00:00.500+00:00",
+        "payload": {
+          "error": "Stream interrupted by client disconnect",
+          "error_type": "StreamInterrupted",
+          "original_event_type": "dialogue_turn",
+          "partial_response": "Composability is ",
+          "chunks_received": 1,
+          "reason": "client_disconnect"
+        },
+        "correlation_id": "error-005"
+      },
+      "recovery": "Log partial; client can reconnect and retry"
+    }
+  ],
+  "error_types": {
+    "BudgetExceeded": "Request would exceed token budget for the tier",
+    "Timeout": "LLM response took too long",
+    "InvalidMode": "Requested mode is not valid",
+    "SoulNotReady": "Soul/Flux not in correct state for operation",
+    "StreamInterrupted": "Streaming connection was broken"
+  }
+}

@@ -30,7 +30,7 @@ entropy:
 
 > *One insight per line. If it takes a paragraph, it's not distilled.*
 
-**Protocol**: Append atomic learnings. Prune monthly. 50-line cap.
+**Protocol**: Append atomic learnings. Prune monthly. 200-line cap.
 
 ---
 
@@ -62,6 +62,15 @@ entropy:
 2025-12-13  Graceful degradation: return informative errors, don't crash
 2025-12-14  Streaming ≠ mutability: ephemeral chunks project immutable Turns
 2025-12-14  Forest handles: plans ARE handles; epilogues ARE witnesses; dormant = accursed share
+2025-12-14  Phase condensation: SENSE→ACT→REFLECT allows merging (e.g., DEVELOP+IMPLEMENT)
+2025-12-14  CLI dialogue: registry pattern + fallback routing keeps match statement clean
+2025-12-14  Duck typing (hasattr) bridges different agent protocols (dialogue vs invoke)
+2025-12-14  Re-metabolize reveals health: 0% drift when all sections present
+2025-12-14  Reactive substrate: pure entropy + time-downward + projections = deterministic widgets
+2025-12-14  Auto-inducer signifiers: ⟿ (continue) / ⟂ (halt) make continuation generators self-executing
+2025-12-14  Enum identity breaks on reload: compare `.value`, not `is`
+2025-12-14  DI > mocking: `set_soul()` injection pattern beats `patch()` for testability
+2025-12-14  HTTP validation order: 400 (bad request) before 403 (forbidden); record before check for rate limits
 ```
 
 ## Anti-Patterns
@@ -86,4 +95,4 @@ entropy:
 
 ---
 
-*Lines: 50/50 | Last pruned: 2025-12-14*
+*Lines: 95/200 | Last pruned: 2025-12-14*

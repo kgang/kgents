@@ -180,7 +180,14 @@ class CLIAgent:
             raise TimeoutError(f"Claude CLI timed out after {self._timeout}s")
 
         if proc.returncode != 0:
-            error_msg = stderr.decode() if stderr else "Unknown error"
+            error_msg = stderr.decode().strip() if stderr else ""
+            if not error_msg:
+                # Try stdout for error info if stderr is empty
+                stdout_text = stdout.decode().strip() if stdout else ""
+                if stdout_text:
+                    error_msg = f"stdout: {stdout_text[:200]}"
+                else:
+                    error_msg = f"exit code {proc.returncode} with no output"
             raise RuntimeError(f"Claude CLI failed: {error_msg}")
 
         response_text = stdout.decode().strip()

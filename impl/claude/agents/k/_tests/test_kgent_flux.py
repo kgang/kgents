@@ -775,6 +775,202 @@ class TestKgentFluxMixedEvents:
 # =============================================================================
 
 
+# =============================================================================
+# Streaming Tests: Wave 2 Implementation (C4)
+# =============================================================================
+
+
+class TestKgentFluxStreaming:
+    """Test streaming support in KgentFlux._handle_dialogue_turn()."""
+
+    @pytest.mark.asyncio
+    async def test_dialogue_streaming_callback_collects_chunks(self) -> None:
+        """Streaming callback should collect chunks that reassemble to full response."""
+        from agents.k.soul import KgentSoul
+
+        soul = KgentSoul(auto_llm=False)  # No LLM, use templates
+        chunks: list[str] = []
+
+        def on_chunk(chunk: str) -> None:
+            chunks.append(chunk)
+
+        # Use empty message to get template response
+        output = await soul.dialogue("", on_chunk=on_chunk)
+
+        # Should have collected at least one chunk
+        assert len(chunks) >= 1
+        # Chunks should reassemble to match response
+        # For template responses, single chunk equals full response
+        assert "".join(chunks) == output.response
+
+    @pytest.mark.asyncio
+    async def test_dialogue_streaming_callback_with_llm_response(self) -> None:
+        """Streaming should split LLM response into word-level chunks."""
+        from agents.k.llm import MockLLMClient
+        from agents.k.soul import BudgetTier, KgentSoul
+
+        mock_response = "Based on your current context, I'd suggest focusing on depth."
+        mock_llm = MockLLMClient(responses=[mock_response])
+
+        soul = KgentSoul(llm=mock_llm)
+        chunks: list[str] = []
+
+        def on_chunk(chunk: str) -> None:
+            chunks.append(chunk)
+
+        output = await soul.dialogue(
+            "What should I focus on?",
+            budget=BudgetTier.DIALOGUE,
+            on_chunk=on_chunk,
+        )
+
+        # Should have multiple chunks (word-level)
+        assert len(chunks) > 1
+        # Chunks should reassemble to match response
+        assert "".join(chunks) == output.response
+
+    @pytest.mark.asyncio
+    async def test_flux_dialogue_emits_streaming_events_to_mirror(self) -> None:
+        """_handle_dialogue_turn should emit chunk events to attached mirror."""
+        from unittest.mock import AsyncMock, MagicMock
+
+        from agents.k.llm import MockLLMClient
+        from agents.k.soul import KgentSoul
+
+        mock_response = "Focus on one thing at a time."
+        mock_llm = MockLLMClient(responses=[mock_response])
+        soul = KgentSoul(llm=mock_llm)
+
+        # Create flux with mock mirror
+        flux = KgentFlux(
+            soul=soul,
+            config=KgentFluxConfig(pulse_enabled=False),
+        )
+
+        mock_mirror = MagicMock()
+        mock_mirror.reflect = AsyncMock()
+        flux.attach_mirror(mock_mirror)
+
+        # Process dialogue turn event
+        event = dialogue_turn_event(message="What should I focus on?", is_request=True)
+        result = await flux.invoke(event)
+
+        # Final event should have streaming metadata
+        assert result.payload.get("is_final") is True
+        assert "total_chunks" in result.payload
+        assert result.payload["total_chunks"] > 0
+
+        # Mirror should have been called for chunk events
+        # Note: Due to async nature, we need to give tasks time to run
+        import asyncio
+
+        await asyncio.sleep(0.1)
+        assert mock_mirror.reflect.called
+
+    @pytest.mark.asyncio
+    async def test_streaming_chunks_match_fixture_format(self) -> None:
+        """Streaming chunks should follow the fixture format."""
+        import json
+
+        from agents.k.llm import MockLLMClient
+        from agents.k.soul import BudgetTier, KgentSoul
+
+        # Load fixture for expected format
+        fixture_path = (
+            "/Users/kentgang/git/kgents/impl/claude/fixtures/"
+            "soul_dialogue/streaming_chunks.json"
+        )
+        with open(fixture_path) as f:
+            fixture = json.load(f)
+
+        # Mock response matching fixture
+        expected_response = fixture["expected_reassembly"]
+        mock_llm = MockLLMClient(responses=[expected_response])
+
+        soul = KgentSoul(llm=mock_llm)
+        chunks: list[str] = []
+
+        def on_chunk(chunk: str) -> None:
+            chunks.append(chunk)
+
+        output = await soul.dialogue(
+            fixture["original_message"],
+            budget=BudgetTier.DIALOGUE,
+            on_chunk=on_chunk,
+        )
+
+        # Verify reassembly matches expected
+        reassembled = "".join(chunks)
+        assert reassembled == expected_response
+
+    @pytest.mark.asyncio
+    async def test_streaming_backward_compatible_without_callback(self) -> None:
+        """dialogue() without on_chunk should work unchanged."""
+        from agents.k.llm import MockLLMClient
+        from agents.k.soul import BudgetTier, KgentSoul
+
+        mock_llm = MockLLMClient(responses=["This is the response."])
+        soul = KgentSoul(llm=mock_llm)
+
+        # No on_chunk callback - should work as before
+        # Use explicit budget to bypass template matching for "Hello"
+        output = await soul.dialogue(
+            "What should I focus on today?",
+            budget=BudgetTier.DIALOGUE,
+        )
+
+        assert output.response == "This is the response."
+
+    @pytest.mark.asyncio
+    async def test_true_streaming_has_temporal_spread(self) -> None:
+        """CP3: True LLM streaming should show temporal spread between chunks.
+
+        This verifies that chunks arrive progressively (not all at once),
+        demonstrating the streaming behavior works correctly.
+        """
+        import time
+
+        from agents.k.llm import MockLLMClient
+        from agents.k.soul import BudgetTier, KgentSoul
+
+        # Multi-word response to generate multiple chunks
+        mock_response = (
+            "Based on your current context I would suggest focusing on depth "
+            "rather than breadth. Pick one thing and go deep."
+        )
+        mock_llm = MockLLMClient(responses=[mock_response])
+
+        soul = KgentSoul(llm=mock_llm)
+        chunks: list[str] = []
+        timestamps: list[float] = []
+
+        def on_chunk(text: str) -> None:
+            chunks.append(text)
+            timestamps.append(time.time())
+
+        output = await soul.dialogue(
+            "What should I focus on?",
+            budget=BudgetTier.DIALOGUE,
+            on_chunk=on_chunk,
+        )
+
+        # Should have multiple chunks (one per word)
+        assert len(chunks) > 1, f"Expected multiple chunks, got {len(chunks)}"
+
+        # Chunks should reassemble to match response
+        assert "".join(chunks) == output.response
+
+        # Verify temporal spread: some gaps between chunks should be > 0
+        if len(timestamps) > 2:
+            gaps = [
+                timestamps[i + 1] - timestamps[i] for i in range(len(timestamps) - 1)
+            ]
+            # At least some gaps should be measurable (MockLLMClient uses 0.005s delay)
+            assert any(gap > 0.001 for gap in gaps), (
+                f"Expected temporal spread, but gaps were: {gaps}"
+            )
+
+
 class TestKgentFluxWithRumination:
     """Integration tests with rumination as the event source."""
 

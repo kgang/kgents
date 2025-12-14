@@ -102,16 +102,24 @@ Next: `test.md` to verify correctness and coverage depth.
 
 Emit this when exiting QA:
 
+### Exit Signifier
+
 ```markdown
+# Normal exit (auto-continue):
+⟿[TEST]
 /hydrate
-# TEST ← QA
-handles: qa=${qa_checklist_status}; static=${static_analysis_results}; security=${security_notes}; degraded=${degraded_mode_tests}; findings=${qa_findings}; rollback=${rollback_plan}; ledger=${phase_ledger}; branches=${branch_notes}; metrics=${metrics_snapshot}
+handles: qa=${qa_checklist_status}; static=${static_analysis_results}; security=${security_notes}; degraded=${degraded_mode_tests}; findings=${qa_findings}; rollback=${rollback_plan}; ledger={QA:touched}; branches=${branch_notes}
 mission: design/run tests that prove grammar + invariants; prefer hotdata; record repros.
-actions: choose strata (unit/property/integration/snapshot); design fixtures with pre-computed richness; uv run pytest -m "not slow" -v; log tokens/time/entropy/law-checks.
+actions: choose strata (unit/property/integration/snapshot); design fixtures; uv run pytest -m "not slow" -v.
 exit: tests aligned to risks + ledger.TEST=touched; repro notes captured; continuation → EDUCATE.
+
+# Halt conditions:
+⟂[QA:blocked] mypy/ruff/security errors require resolution before TEST
+⟂[BLOCKED:security_issue] Security vulnerability detected; human review required
+⟂[ENTROPY_DEPLETED] Budget exhausted without entropy sip
 ```
 
-Template vars: `${qa_checklist_status}`, `${static_analysis_results}`, `${security_notes}`, `${degraded_mode_tests}`, `${qa_findings}`, `${rollback_plan}`, `${phase_ledger}`, `${branch_notes}`, `${metrics_snapshot}`.
+Template vars: `${qa_checklist_status}`, `${static_analysis_results}`, `${security_notes}`, `${degraded_mode_tests}`, `${qa_findings}`, `${rollback_plan}`, `${branch_notes}`.
 
 ## Related Skills
 - `auto-continuation.md` — The meta-skill defining this generator pattern

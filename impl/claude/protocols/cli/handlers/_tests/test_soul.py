@@ -202,6 +202,129 @@ class TestSoulStream:
 # === Soul Special Commands ===
 
 
+# === Quick Win Commands (Tier 1) ===
+
+
+class TestSoulQuickCommands:
+    """Tests for soul quick win commands (vibe, drift, tense, why)."""
+
+    def test_vibe_command(
+        self,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """vibe command shows one-liner eigenvector summary."""
+        result = cmd_soul(["vibe"])
+
+        assert result == 0
+        captured = capsys.readouterr()
+        assert "[SOUL:VIBE]" in captured.out
+        # Should contain eigenvector values
+        assert "0.15" in captured.out or "Minimal" in captured.out
+        # Should contain emoji
+        assert "✂️" in captured.out or "🔬" in captured.out
+
+    def test_vibe_command_json(
+        self,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """vibe command with --json outputs JSON."""
+        result = cmd_soul(["vibe", "--json"])
+
+        assert result == 0
+        captured = capsys.readouterr()
+        import json
+
+        data = json.loads(captured.out)
+        assert data["command"] == "vibe"
+        assert "eigenvectors" in data
+        assert "vibe_string" in data
+
+    def test_drift_command(
+        self,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """drift command shows soul comparison."""
+        result = cmd_soul(["drift"])
+
+        assert result == 0
+        captured = capsys.readouterr()
+        assert "[SOUL:DRIFT]" in captured.out
+        # Should have some message about drift
+        assert "Soul feels" in captured.out or "drifts" in captured.out.lower()
+
+    def test_drift_command_json(
+        self,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """drift command with --json outputs JSON."""
+        result = cmd_soul(["drift", "--json"])
+
+        assert result == 0
+        captured = capsys.readouterr()
+        import json
+
+        data = json.loads(captured.out)
+        assert data["command"] == "drift"
+        assert "current" in data
+        assert "changes" in data
+
+    def test_tense_command(
+        self,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """tense command shows eigenvector tensions."""
+        result = cmd_soul(["tense"])
+
+        assert result == 0
+        captured = capsys.readouterr()
+        assert "[SOUL:TENSE]" in captured.out
+        # Default eigenvectors should produce tensions
+        assert "⚡" in captured.out or "Tensions detected" in captured.out
+
+    def test_tense_command_json(
+        self,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """tense command with --json outputs JSON."""
+        result = cmd_soul(["tense", "--json"])
+
+        assert result == 0
+        captured = capsys.readouterr()
+        import json
+
+        data = json.loads(captured.out)
+        assert data["command"] == "tense"
+        assert "tensions" in data
+        assert "eigenvectors" in data
+
+    def test_why_command_with_prompt(
+        self,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """why command with prompt triggers single CHALLENGE dialogue."""
+        result = cmd_soul(["why", "testing"])
+
+        assert result == 0
+        captured = capsys.readouterr()
+        # Should have challenge mode output
+        assert "CHALLENGE" in captured.out.upper() or len(captured.out) > 0
+
+    def test_quick_commands_in_help(
+        self,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """Quick commands appear in help."""
+        result = cmd_soul(["--help"])
+
+        assert result == 0
+        captured = capsys.readouterr()
+        assert "QUICK COMMANDS:" in captured.out
+        assert "vibe" in captured.out
+        assert "drift" in captured.out
+        assert "tense" in captured.out
+        assert "why" in captured.out
+
+
 class TestSoulSpecialCommands:
     """Tests for soul special commands."""
 

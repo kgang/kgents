@@ -28,6 +28,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal, Optional
 
+# Type for introspection data
+IntrospectionData = dict[str, Any]
+
 from .eigenvectors import KENT_EIGENVECTORS, KentEigenvectors
 from .persona import DialogueMode, PersonaSeed, PersonaState
 from .soul import BudgetTier, KgentSoul, SoulDialogueOutput, SoulState
@@ -142,6 +145,130 @@ class SoulCrystal:
         )
 
 
+# =============================================================================
+# Introspection Records: H-gent Output Persistence
+# =============================================================================
+
+
+IntrospectionType = Literal["shadow", "archetype", "dialectic", "mirror", "gaps"]
+
+
+@dataclass
+class IntrospectionRecord:
+    """
+    A persisted H-gent introspection output.
+
+    Stores the results of shadow, archetype, dialectic, mirror, or gaps
+    analysis for later drift comparison.
+    """
+
+    id: str
+    type: IntrospectionType
+    self_image: str  # The input self-image analyzed
+    data: IntrospectionData  # The semantic output from the H-gent
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    tags: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to dictionary."""
+        return {
+            "id": self.id,
+            "type": self.type,
+            "self_image": self.self_image,
+            "data": self.data,
+            "created_at": self.created_at.isoformat(),
+            "tags": self.tags,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> IntrospectionRecord:
+        """Deserialize from dictionary."""
+        return cls(
+            id=data["id"],
+            type=data["type"],
+            self_image=data.get("self_image", ""),
+            data=data.get("data", {}),
+            created_at=datetime.fromisoformat(data["created_at"])
+            if data.get("created_at")
+            else datetime.now(timezone.utc),
+            tags=data.get("tags", []),
+        )
+
+
+@dataclass
+class DriftReport:
+    """
+    Changes between introspections.
+
+    Tracks what changed between two introspection snapshots,
+    enabling insight into soul evolution over time.
+    """
+
+    type: IntrospectionType
+    previous_timestamp: datetime
+    current_timestamp: datetime
+
+    # What changed
+    added: list[str] = field(default_factory=list)  # New items
+    removed: list[str] = field(default_factory=list)  # Disappeared items
+    changed: list[tuple[str, str, str]] = field(
+        default_factory=list
+    )  # (item, old_value, new_value)
+
+    # Metrics
+    stability_score: float = 0.5  # 0 = volatile, 1 = stable
+    integration_delta: float = 0.0  # Change in integration/balance level
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to dictionary."""
+        return {
+            "type": self.type,
+            "previous_timestamp": self.previous_timestamp.isoformat(),
+            "current_timestamp": self.current_timestamp.isoformat(),
+            "added": self.added,
+            "removed": self.removed,
+            "changed": self.changed,
+            "stability_score": self.stability_score,
+            "integration_delta": self.integration_delta,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> DriftReport:
+        """Deserialize from dictionary."""
+        return cls(
+            type=data["type"],
+            previous_timestamp=datetime.fromisoformat(data["previous_timestamp"]),
+            current_timestamp=datetime.fromisoformat(data["current_timestamp"]),
+            added=data.get("added", []),
+            removed=data.get("removed", []),
+            changed=[tuple(c) for c in data.get("changed", [])],
+            stability_score=data.get("stability_score", 0.5),
+            integration_delta=data.get("integration_delta", 0.0),
+        )
+
+    def is_stable(self) -> bool:
+        """Check if the drift indicates stability."""
+        return self.stability_score > 0.7
+
+    def summary(self) -> str:
+        """Generate human-readable drift summary."""
+        lines = []
+        if self.added:
+            lines.append(f"+ {len(self.added)} new items")
+        if self.removed:
+            lines.append(f"- {len(self.removed)} items removed")
+        if self.changed:
+            lines.append(f"~ {len(self.changed)} items changed")
+        if self.integration_delta != 0:
+            direction = "improved" if self.integration_delta > 0 else "decreased"
+            lines.append(
+                f"Integration {direction} by {abs(self.integration_delta):.2f}"
+            )
+        if not lines:
+            lines.append("No changes detected")
+        return "\n".join(lines)
+
+
 @dataclass
 class SoulHistory:
     """
@@ -246,6 +373,7 @@ class SoulPersistence:
         self._dir = soul_dir or get_soul_dir()
         self._state_file = self._dir / "soul.json"
         self._history_file = self._dir / "history.json"
+        self._introspections_file = self._dir / "introspections.json"
         self._crystals_dir = self._dir / "crystals"
         self._crystals_dir.mkdir(parents=True, exist_ok=True)
 
@@ -298,6 +426,36 @@ class SoulPersistence:
     def list_crystals(self) -> list[str]:
         """List all crystal IDs."""
         return [f.stem for f in self._crystals_dir.glob("*.json")]
+
+    # --- Introspection Persistence ---
+
+    def load_introspections(self) -> list[IntrospectionRecord]:
+        """Load all introspection records."""
+        if not self._introspections_file.exists():
+            return []
+        with open(self._introspections_file) as f:
+            data = json.load(f)
+        return [IntrospectionRecord.from_dict(r) for r in data.get("records", [])]
+
+    def save_introspections(self, records: list[IntrospectionRecord]) -> None:
+        """Save all introspection records."""
+        with open(self._introspections_file, "w") as f:
+            json.dump({"records": [r.to_dict() for r in records]}, f, indent=2)
+
+    def get_introspections_by_type(
+        self, introspection_type: IntrospectionType
+    ) -> list[IntrospectionRecord]:
+        """Get introspections filtered by type, sorted newest first."""
+        records = self.load_introspections()
+        filtered = [r for r in records if r.type == introspection_type]
+        return sorted(filtered, key=lambda r: r.created_at, reverse=True)
+
+    def get_latest_introspection(
+        self, introspection_type: IntrospectionType
+    ) -> Optional[IntrospectionRecord]:
+        """Get the most recent introspection of a given type."""
+        records = self.get_introspections_by_type(introspection_type)
+        return records[0] if records else None
 
 
 # =============================================================================
@@ -718,6 +876,162 @@ class SoulSession:
         changes = self._history.committed_changes()[-limit:]
         return [c.to_dict() for c in reversed(changes)]
 
+    # --- Introspection ---
+
+    async def record_introspection(
+        self,
+        introspection_type: IntrospectionType,
+        data: IntrospectionData,
+        self_image: str = "",
+        tags: list[str] | None = None,
+    ) -> IntrospectionRecord:
+        """
+        Record an H-gent introspection for drift tracking.
+
+        This persists shadow, archetype, dialectic, or mirror analysis
+        so it can be compared to future introspections.
+        """
+        record = IntrospectionRecord(
+            id=str(uuid.uuid4())[:8],
+            type=introspection_type,
+            self_image=self_image,
+            data=data,
+            tags=tags or [],
+        )
+
+        # Load existing, append, save
+        records = self._persistence.load_introspections()
+        records.append(record)
+        self._persistence.save_introspections(records)
+
+        return record
+
+    async def compute_drift(
+        self,
+        introspection_type: IntrospectionType,
+        current_data: IntrospectionData,
+    ) -> Optional[DriftReport]:
+        """
+        Compare current introspection to the most recent saved one.
+
+        Returns None if no previous introspection exists.
+        """
+        previous = self._persistence.get_latest_introspection(introspection_type)
+        if not previous:
+            return None
+
+        return self._compute_drift_between(
+            introspection_type, previous.data, current_data, previous.created_at
+        )
+
+    def _compute_drift_between(
+        self,
+        introspection_type: IntrospectionType,
+        previous_data: IntrospectionData,
+        current_data: IntrospectionData,
+        previous_timestamp: datetime,
+    ) -> DriftReport:
+        """Compute drift between two introspection data dicts."""
+        now = datetime.now(timezone.utc)
+
+        added: list[str] = []
+        removed: list[str] = []
+        changed: list[tuple[str, str, str]] = []
+        integration_delta = 0.0
+
+        if introspection_type == "shadow":
+            # Compare shadow inventories
+            prev_shadows = {
+                s["content"] for s in previous_data.get("shadow_inventory", [])
+            }
+            curr_shadows = {
+                s["content"] for s in current_data.get("shadow_inventory", [])
+            }
+            added = list(curr_shadows - prev_shadows)
+            removed = list(prev_shadows - curr_shadows)
+
+            # Compare balance
+            prev_balance = previous_data.get("balance", 0.5)
+            curr_balance = current_data.get("balance", 0.5)
+            integration_delta = curr_balance - prev_balance
+
+        elif introspection_type == "archetype":
+            # Compare active archetypes
+            prev_active = {
+                a["archetype"] for a in previous_data.get("active_archetypes", [])
+            }
+            curr_active = {
+                a["archetype"] for a in current_data.get("active_archetypes", [])
+            }
+            added = list(curr_active - prev_active)
+            removed = list(prev_active - curr_active)
+
+            # Compare shadow archetypes
+            prev_shadow = {
+                a["archetype"] for a in previous_data.get("shadow_archetypes", [])
+            }
+            curr_shadow = {
+                a["archetype"] for a in current_data.get("shadow_archetypes", [])
+            }
+            if prev_shadow != curr_shadow:
+                for arch in curr_shadow - prev_shadow:
+                    changed.append((arch, "active", "shadow"))
+                for arch in prev_shadow - curr_shadow:
+                    changed.append((arch, "shadow", "active"))
+
+        elif introspection_type == "mirror":
+            # Mirror combines all three - check shadow balance
+            prev_shadow = previous_data.get("shadow", {})
+            curr_shadow = current_data.get("shadow", {})
+            prev_balance = prev_shadow.get("balance", 0.5)
+            curr_balance = curr_shadow.get("balance", 0.5)
+            integration_delta = curr_balance - prev_balance
+
+            # Track shadow inventory changes
+            prev_inv = {s["content"] for s in prev_shadow.get("inventory", [])}
+            curr_inv = {s["content"] for s in curr_shadow.get("inventory", [])}
+            added = list(curr_inv - prev_inv)
+            removed = list(prev_inv - curr_inv)
+
+        # Calculate stability score
+        total_changes = len(added) + len(removed) + len(changed)
+        stability_score = 1.0 / (1.0 + total_changes * 0.2)  # Decreases with changes
+
+        return DriftReport(
+            type=introspection_type,
+            previous_timestamp=previous_timestamp,
+            current_timestamp=now,
+            added=added,
+            removed=removed,
+            changed=changed,
+            stability_score=stability_score,
+            integration_delta=integration_delta,
+        )
+
+    async def get_introspection_history(
+        self,
+        introspection_type: IntrospectionType,
+        limit: int = 10,
+    ) -> list[IntrospectionRecord]:
+        """Get history of introspections for a type."""
+        records = self._persistence.get_introspections_by_type(introspection_type)
+        return records[:limit]
+
+    @property
+    def latest_shadow(self) -> Optional[IntrospectionRecord]:
+        """Get the most recent shadow introspection."""
+        return self._persistence.get_latest_introspection("shadow")
+
+    @property
+    def latest_archetype(self) -> Optional[IntrospectionRecord]:
+        """Get the most recent archetype introspection."""
+        return self._persistence.get_latest_introspection("archetype")
+
+    @property
+    def latest_mirror(self) -> Optional[IntrospectionRecord]:
+        """Get the most recent mirror introspection."""
+        return self._persistence.get_latest_introspection("mirror")
+
     # --- Persistence ---
 
     async def _persist_session(self) -> None:
@@ -774,6 +1088,9 @@ __all__ = [
     "SoulPersistence",
     "PersistedSoulState",
     "SoulSession",
+    "IntrospectionRecord",
+    "IntrospectionType",
+    "DriftReport",
     "load_session",
     "quick_dialogue",
     "get_soul_dir",

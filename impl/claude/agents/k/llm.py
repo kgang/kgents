@@ -40,11 +40,12 @@ Usage:
 
 from __future__ import annotations
 
+import asyncio
 import os
 import shutil
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Optional, Protocol, cast
+from typing import Any, AsyncIterator, Optional, Protocol, Union, cast
 
 
 @dataclass
@@ -54,6 +55,31 @@ class LLMResponse:
     text: str
     model: str = ""
     tokens_used: int = 0
+    raw_metadata: Optional[dict[str, Any]] = None
+
+
+@dataclass
+class StreamingLLMResponse:
+    """Final response from streaming LLM generation.
+
+    Yielded as the last item from generate_stream() to provide:
+    - Complete text (accumulated from all chunks)
+    - Actual token counts from the API
+    - Model metadata
+
+    Usage pattern:
+        async for item in client.generate_stream(...):
+            if isinstance(item, str):
+                chunks.append(item)
+            else:
+                final_response = item  # StreamingLLMResponse
+    """
+
+    text: str
+    tokens_used: int
+    model: str = ""
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
     raw_metadata: Optional[dict[str, Any]] = None
 
 
@@ -70,6 +96,29 @@ class LLMClient(Protocol):
         """Generate a response from the LLM."""
         ...
 
+    def generate_stream(
+        self,
+        system: str,
+        user: str,
+        temperature: float = 0.7,
+        max_tokens: int = 4000,
+    ) -> AsyncIterator[Union[str, StreamingLLMResponse]]:
+        """Generate a streaming response from the LLM.
+
+        Yields:
+            str: Text chunks as they are generated
+            StreamingLLMResponse: Final item with accumulated text and token counts
+
+        Usage:
+            async for item in client.generate_stream(...):
+                if isinstance(item, str):
+                    print(item, end="", flush=True)
+                else:
+                    # item is StreamingLLMResponse with token counts
+                    print(f"\\nTokens used: {item.tokens_used}")
+        """
+        ...
+
 
 class BaseLLMClient(ABC):
     """Base class for LLM clients."""
@@ -84,6 +133,25 @@ class BaseLLMClient(ABC):
     ) -> LLMResponse:
         """Generate a response from the LLM."""
         pass
+
+    @abstractmethod
+    async def generate_stream(
+        self,
+        system: str,
+        user: str,
+        temperature: float = 0.7,
+        max_tokens: int = 4000,
+    ) -> AsyncIterator[Union[str, StreamingLLMResponse]]:
+        """Generate a streaming response from the LLM.
+
+        Yields:
+            str: Text chunks as they are generated
+            StreamingLLMResponse: Final item with accumulated text and token counts
+        """
+        # This yield is needed to make this an async generator
+        # The actual implementation will be in subclasses
+        if False:  # noqa: SIM223
+            yield ""
 
 
 class ClaudeLLMClient(BaseLLMClient):
@@ -153,6 +221,45 @@ class ClaudeLLMClient(BaseLLMClient):
             raw_metadata=metadata,
         )
 
+    async def generate_stream(
+        self,
+        system: str,
+        user: str,
+        temperature: float = 0.7,
+        max_tokens: int = 4000,
+    ) -> AsyncIterator[Union[str, StreamingLLMResponse]]:
+        """Generate a streaming response using ClaudeCLIRuntime.
+
+        Note: CLI doesn't natively support streaming, so we simulate by
+        calling generate() and then yielding the response word-by-word.
+        This provides the streaming interface while maintaining compatibility.
+
+        True streaming can be added when the CLI supports it.
+        """
+        # Get complete response
+        response = await self.generate(
+            system=system,
+            user=user,
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
+
+        # Simulate streaming by yielding words with small delays
+        words = response.text.split()
+        for i, word in enumerate(words):
+            chunk = word if i == 0 else " " + word
+            yield chunk
+            # Small delay to simulate streaming feel
+            await asyncio.sleep(0.01)
+
+        # Yield final StreamingLLMResponse with token counts
+        yield StreamingLLMResponse(
+            text=response.text,
+            tokens_used=response.tokens_used,
+            model=response.model,
+            raw_metadata=response.raw_metadata,
+        )
+
 
 class MockLLMClient(BaseLLMClient):
     """Mock LLM client for testing."""
@@ -209,6 +316,51 @@ class MockLLMClient(BaseLLMClient):
     def call_count(self) -> int:
         """Get number of calls made to this client."""
         return len(self._call_history)
+
+    async def generate_stream(
+        self,
+        system: str,
+        user: str,
+        temperature: float = 0.7,
+        max_tokens: int = 4000,
+    ) -> AsyncIterator[Union[str, StreamingLLMResponse]]:
+        """Generate a streaming mock response.
+
+        Simulates streaming by yielding words with small delays.
+        Yields StreamingLLMResponse as the final item with token counts.
+        """
+        self._call_history.append(
+            {
+                "system": system,
+                "user": user,
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+                "streaming": True,
+            }
+        )
+
+        if self._responses:
+            text = self._responses.pop(0)
+        else:
+            text = self._default_response
+
+        # Yield words with small delays to simulate streaming
+        words = text.split()
+        for i, word in enumerate(words):
+            chunk = word if i == 0 else " " + word
+            yield chunk
+            # Small delay to simulate streaming
+            await asyncio.sleep(0.005)
+
+        # Yield final StreamingLLMResponse with token counts
+        tokens_used = len(text.split()) * 2  # Rough estimate
+        yield StreamingLLMResponse(
+            text=text,
+            tokens_used=tokens_used,
+            model="mock-model",
+            prompt_tokens=len(system.split()) + len(user.split()),
+            completion_tokens=tokens_used,
+        )
 
 
 def morpheus_available() -> bool:

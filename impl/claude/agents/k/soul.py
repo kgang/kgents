@@ -38,10 +38,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, AsyncIterator, Callable, Optional
 
 from .eigenvectors import KENT_EIGENVECTORS, KentEigenvectors
-from .llm import LLMClient, create_llm_client, has_llm_credentials
+from .llm import LLMClient, StreamingLLMResponse, create_llm_client, has_llm_credentials
 from .persona import (
     DialogueInput,
     DialogueMode,
@@ -61,6 +61,7 @@ if TYPE_CHECKING:
     from agents.flux.semaphore.token import SemaphoreToken
 
     from .audit import AuditEntry, AuditTrail
+    from .flux import FluxEvent, FluxStream
 
 
 # --- Budget Tiers ---
@@ -287,6 +288,7 @@ class KgentSoul:
         message: str,
         mode: Optional[DialogueMode] = None,
         budget: BudgetTier = BudgetTier.DIALOGUE,
+        on_chunk: Optional[Callable[[str], None]] = None,
     ) -> SoulDialogueOutput:
         """
         Engage in dialogue with K-gent Soul.
@@ -297,14 +299,19 @@ class KgentSoul:
             message: The user's message
             mode: Dialogue mode (defaults to current active mode)
             budget: Token budget tier
+            on_chunk: Optional callback for streaming. Called with each token/chunk
+                      as it's generated. If None, behavior unchanged (backward compatible).
 
         Returns:
             SoulDialogueOutput with response and metadata
         """
         # Input validation: handle empty/whitespace messages gracefully
         if not message or not message.strip():
+            response = "What's on your mind?"
+            if on_chunk is not None:
+                on_chunk(response)
             return SoulDialogueOutput(
-                response="What's on your mind?",
+                response=response,
                 mode=mode or self._state.active_mode,
                 budget_tier=BudgetTier.DORMANT,
                 tokens_used=0,
@@ -318,6 +325,8 @@ class KgentSoul:
         if budget == BudgetTier.DORMANT or should_use_template(message):
             template_response = try_template_response(message, mode)
             if template_response:
+                if on_chunk is not None:
+                    on_chunk(template_response)
                 self._update_session_stats(0)
                 return SoulDialogueOutput(
                     response=template_response,
@@ -330,6 +339,8 @@ class KgentSoul:
         # WHISPER tier: quick acknowledgment
         if budget == BudgetTier.WHISPER:
             whisper_response = get_whisper_response(message)
+            if on_chunk is not None:
+                on_chunk(whisper_response)
             self._update_session_stats(50)  # Estimate
             return SoulDialogueOutput(
                 response=whisper_response,
@@ -341,6 +352,56 @@ class KgentSoul:
 
         # DIALOGUE/DEEP tier: full LLM response
         input_data = DialogueInput(message=message, mode=mode)
+
+        # Use streaming if callback provided
+        actual_tokens: int = 0
+        if on_chunk is not None:
+            output, actual_tokens = await self._invoke_with_streaming(
+                input_data, mode, message, budget, on_chunk
+            )
+        else:
+            output = await self._invoke_without_streaming(
+                input_data, mode, budget, message
+            )
+
+        # Use actual token count if available, otherwise estimate
+        if actual_tokens > 0:
+            tokens_used = actual_tokens
+        else:
+            # Estimate tokens based on response length
+            tokens_used = len(output.response.split()) * 2
+
+        self._update_session_stats(tokens_used)
+
+        return SoulDialogueOutput(
+            response=output.response,
+            mode=output.mode,
+            referenced_preferences=output.referenced_preferences,
+            referenced_patterns=output.referenced_patterns,
+            budget_tier=budget,
+            tokens_used=tokens_used,
+            eigenvector_context=self._eigenvectors.to_context_prompt()
+            if budget == BudgetTier.DEEP
+            else None,
+            was_template=False,
+        )
+
+    async def _invoke_with_streaming(
+        self,
+        input_data: DialogueInput,
+        mode: DialogueMode,
+        message: str,
+        budget: BudgetTier,
+        on_chunk: Callable[[str], None],
+    ) -> tuple[DialogueOutput, int]:
+        """Invoke agent with true streaming via invoke_stream().
+
+        Returns:
+            Tuple of (DialogueOutput, actual_tokens_used)
+            The token count is from the LLM API when available.
+        """
+        accumulated_response = ""
+        actual_tokens_used = 0
 
         # Trace the LLM invocation for OTEL visibility
         try:
@@ -357,28 +418,209 @@ class KgentSoul:
                 budget_tier=budget.value,
                 message_length=len(message),
             ):
-                output = await self._agent.invoke(input_data)
+                async for chunk, is_final, tokens in self._agent.invoke_stream(
+                    input_data
+                ):
+                    if chunk:
+                        accumulated_response += chunk
+                        on_chunk(chunk)
+                    if is_final:
+                        actual_tokens_used = tokens
+        except ImportError:
+            # Telemetry not available, stream directly
+            async for chunk, is_final, tokens in self._agent.invoke_stream(input_data):
+                if chunk:
+                    accumulated_response += chunk
+                    on_chunk(chunk)
+                if is_final:
+                    actual_tokens_used = tokens
+
+        # Build output from accumulated response
+        output = DialogueOutput(
+            response=accumulated_response,
+            mode=mode,
+            referenced_preferences=self._agent._find_preferences(message)[:3],
+            referenced_patterns=self._agent._find_patterns(message)[:3],
+        )
+        return output, actual_tokens_used
+
+    async def _invoke_without_streaming(
+        self,
+        input_data: DialogueInput,
+        mode: DialogueMode,
+        budget: BudgetTier,
+        message: str,
+    ) -> DialogueOutput:
+        """Invoke agent without streaming via regular invoke()."""
+        # Trace the LLM invocation for OTEL visibility
+        try:
+            from protocols.agentese.telemetry import trace_invocation
+
+            # Create a minimal umwelt-like object for tracing
+            class _TraceUmwelt:
+                id = "kgent-soul"
+                dna = None
+
+            async with trace_invocation(
+                f"self.soul.{mode.value}",
+                _TraceUmwelt(),
+                budget_tier=budget.value,
+                message_length=len(message),
+            ):
+                return await self._agent.invoke(input_data)
         except ImportError:
             # Telemetry not available, invoke directly
-            output = await self._agent.invoke(input_data)
+            return await self._agent.invoke(input_data)
 
-        # Estimate tokens based on response length
-        tokens_estimate = len(output.response.split()) * 2
+    # --- Flux Streaming (C12, C17) ---
 
-        self._update_session_stats(tokens_estimate)
+    def dialogue_flux(
+        self,
+        message: str,
+        mode: Optional[DialogueMode] = None,
+        budget: BudgetTier = BudgetTier.DIALOGUE,
+    ) -> "FluxStream[str]":
+        """
+        Engage in dialogue with K-gent Soul via Flux streaming.
 
-        return SoulDialogueOutput(
-            response=output.response,
-            mode=output.mode,
-            referenced_preferences=output.referenced_preferences,
-            referenced_patterns=output.referenced_patterns,
-            budget_tier=budget,
-            tokens_used=tokens_estimate,
-            eigenvector_context=self._eigenvectors.to_context_prompt()
-            if budget == BudgetTier.DEEP
-            else None,
-            was_template=False,
+        Returns a FluxStream[str] that yields:
+        - FluxEvent.data(chunk): Text chunks as they are generated
+        - FluxEvent.metadata(StreamingLLMResponse): Final event with token counts
+
+        The FluxStream supports operator chaining for transformations:
+        - .map(fn): Transform data events
+        - .filter(pred): Filter events
+        - .take(n): Limit to first n data events
+        - .tap(fn): Side effects without modification
+        - .collect(): Materialize to list
+
+        Args:
+            message: The user's message
+            mode: Dialogue mode (defaults to current active mode)
+            budget: Token budget tier
+
+        Returns:
+            FluxStream[str] for operator chaining
+
+        Usage:
+            # Simple iteration
+            async for event in soul.dialogue_flux("Hello", mode=DialogueMode.REFLECT):
+                if event.is_data:
+                    print(event.value, end="", flush=True)
+                elif event.is_metadata:
+                    print(f"\\n[{event.value.tokens_used} tokens]")
+
+            # With operators
+            stream = (
+                soul.dialogue_flux("Hello", mode=DialogueMode.REFLECT)
+                .filter(lambda e: e.is_data and e.value.strip())
+                .take(5)
+            )
+            values = await stream.collect()
+        """
+        from .flux import FluxStream
+
+        return FluxStream(self._dialogue_flux_generator(message, mode, budget))
+
+    async def _dialogue_flux_generator(
+        self,
+        message: str,
+        mode: Optional[DialogueMode],
+        budget: BudgetTier,
+    ) -> AsyncIterator["FluxEvent[str]"]:
+        """
+        Internal generator for dialogue_flux().
+
+        Yields FluxEvent[str] events for streaming dialogue.
+        """
+        # Import here to avoid circular imports
+        from .flux import FluxEvent, LLMStreamSource
+
+        # Handle empty/whitespace messages
+        if not message or not message.strip():
+            response = "What's on your mind?"
+            yield FluxEvent.data(response)
+            yield FluxEvent.metadata(
+                StreamingLLMResponse(text=response, tokens_used=0, model="template")
+            )
+            return
+
+        resolved_mode = mode or self._state.active_mode
+        self._state.active_mode = resolved_mode
+
+        # For DORMANT/WHISPER tiers, yield template response immediately
+        if budget == BudgetTier.DORMANT:
+            from .templates import try_template_response
+
+            template_response = try_template_response(message, resolved_mode)
+            if template_response:
+                yield FluxEvent.data(template_response)
+                yield FluxEvent.metadata(
+                    StreamingLLMResponse(
+                        text=template_response, tokens_used=0, model="template"
+                    )
+                )
+                return
+
+        if budget == BudgetTier.WHISPER:
+            from .templates import get_whisper_response
+
+            whisper_response = get_whisper_response(message)
+            yield FluxEvent.data(whisper_response)
+            yield FluxEvent.metadata(
+                StreamingLLMResponse(
+                    text=whisper_response, tokens_used=50, model="whisper"
+                )
+            )
+            self._update_session_stats(50)
+            return
+
+        # For DIALOGUE/DEEP tiers, stream from LLM
+        if self._llm is None:
+            # Fallback to template when no LLM available
+            from .templates import try_template_response
+
+            template_response = try_template_response(message, resolved_mode) or (
+                "I'm unable to generate a response without an LLM connection."
+            )
+            yield FluxEvent.data(template_response)
+            yield FluxEvent.metadata(
+                StreamingLLMResponse(
+                    text=template_response, tokens_used=0, model="fallback"
+                )
+            )
+            return
+
+        # Build prompts using agent infrastructure
+        system_prompt = self._agent._build_system_prompt(resolved_mode)
+        # Find matching preferences and patterns for context
+        prefs = self._agent._find_preferences(message)[:3]
+        pats = self._agent._find_patterns(message)[:3]
+        user_prompt = self._agent._build_user_prompt(
+            message, prefs, pats, resolved_mode
         )
+
+        # Create LLM stream source
+        source = LLMStreamSource(
+            client=self._llm,
+            system=system_prompt,
+            user=user_prompt,
+            temperature=0.7 if budget == BudgetTier.DIALOGUE else 0.5,
+            max_tokens=4000 if budget == BudgetTier.DIALOGUE else 8000,
+        )
+
+        # Stream events, tracking accumulated text for stats
+        accumulated_text = ""
+        final_tokens = 0
+
+        async for event in source:
+            if event.is_data:
+                accumulated_text += event.value
+            elif event.is_metadata:
+                final_tokens = event.value.tokens_used
+                self._update_session_stats(final_tokens)
+
+            yield event
 
     # --- Semaphore Mediation ---
 

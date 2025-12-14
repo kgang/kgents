@@ -140,16 +140,24 @@ Next: `develop.md` using gathered invariants to shape APIs/specs.
 
 Emit this when exiting RESEARCH:
 
+### Exit Signifier
+
 ```markdown
+# Normal exit (auto-continue):
+⟿[DEVELOP]
 /hydrate
-# DEVELOP ← RESEARCH
-handles: files=${files_mapped}; invariants=${invariants}; blockers=${blockers_with_evidence}; prior_art=${prior_art}; ledger=${phase_ledger}; entropy=${entropy_spent}/${entropy_remaining}; branches=${branch_notes}
+handles: files=${files_mapped}; invariants=${invariants}; blockers=${blockers_with_evidence}; prior_art=${prior_art}; ledger={RESEARCH:touched}; entropy=${entropy_remaining}; branches=${branch_notes}
 mission: choose representations + contracts; capture laws + hotdata expectations; prototype spec examples.
-actions: pick puppet/functor/operad; define inputs/outputs/errors/privacy; note risks; log metrics tokens/time/law-check count.
-exit: spec/contract + examples + laws; blockers/risks ready for sequencing; ledger.DEVELOP=touched; continuation → STRATEGIZE.
+actions: pick puppet/functor/operad; define inputs/outputs/errors/privacy; note risks; log metrics.
+exit: spec/contract + examples + laws; ledger.DEVELOP=touched; continuation → STRATEGIZE.
+
+# Halt conditions:
+⟂[BLOCKED:prior_art_conflict] Existing implementation conflicts with proposed approach
+⟂[BLOCKED:unknown_unresolved] Critical unknown without resolution path
+⟂[ENTROPY_DEPLETED] Budget exhausted without entropy sip
 ```
 
-Template vars: `${files_mapped}`, `${invariants}`, `${blockers_with_evidence}`, `${prior_art}`, `${phase_ledger}`, `${entropy_spent}`, `${entropy_remaining}`, `${branch_notes}`.
+Template vars: `${files_mapped}`, `${invariants}`, `${blockers_with_evidence}`, `${prior_art}`, `${entropy_remaining}`, `${branch_notes}`.
 
 ## Related Skills
 - `auto-continuation.md` — The meta-skill defining this generator pattern

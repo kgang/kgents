@@ -1,0 +1,53 @@
+{
+  "request": {
+    "type": "dialogue_turn",
+    "timestamp": "2025-01-15T10:00:00+00:00",
+    "payload": {
+      "message": "What should I focus on today?",
+      "is_request": true,
+      "mode": "reflect"
+    },
+    "correlation_id": "test-001"
+  },
+  "response": {
+    "type": "dialogue_turn",
+    "timestamp": "2025-01-15T10:00:01+00:00",
+    "payload": {
+      "message": "What should I focus on today?",
+      "response": "Based on your current context, I'd suggest focusing on the K-gent streaming infrastructure. The fixtures are foundational—once they exist, the streaming core can be tested reliably. Consider: what would make you say 'this is amazing' at the end of today?",
+      "is_request": false,
+      "mode": "reflect",
+      "budget_tier": "dialogue",
+      "tokens_used": 87,
+      "was_template": false
+    },
+    "soul_state": {
+      "mode": "reflect",
+      "interactions_count": 1,
+      "tokens_used_session": 87
+    },
+    "correlation_id": "test-001"
+  },
+  "modes": {
+    "reflect": {
+      "description": "Introspective mode - K-gent helps you think about your work",
+      "example_prompt": "What should I focus on today?",
+      "expected_tone": "thoughtful, probing, non-directive"
+    },
+    "advise": {
+      "description": "Advisory mode - K-gent gives direct recommendations",
+      "example_prompt": "Should I use Redis or SQLite for caching?",
+      "expected_tone": "decisive, practical, opinionated"
+    },
+    "challenge": {
+      "description": "Dialectical mode - K-gent plays devil's advocate",
+      "example_prompt": "I think we should add more features",
+      "expected_tone": "provocative, questioning, Socratic"
+    },
+    "explore": {
+      "description": "Exploratory mode - K-gent brainstorms freely",
+      "example_prompt": "What if agents could dream?",
+      "expected_tone": "creative, associative, playful"
+    }
+  }
+}

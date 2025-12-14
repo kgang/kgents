@@ -106,16 +106,23 @@ Next: `reflect.md` to synthesize learnings and feed the next loop.
 
 Emit this when exiting MEASURE:
 
+### Exit Signifier
+
 ```markdown
+# Normal exit (auto-continue):
+⟿[REFLECT]
 /hydrate
-# REFLECT ← MEASURE
-handles: metrics=${metrics_instrumented}; dashboards=${dashboards}; baselines=${baselines}; alerts=${alert_thresholds}; summary=${measurement_summary}; data=${data_quality_notes}; lookback=${lookback_findings}; ledger=${phase_ledger}; branches=${branch_notes}; metrics_snapshot=${metrics_snapshot}
+handles: metrics=${metrics_instrumented}; dashboards=${dashboards}; baselines=${baselines}; alerts=${alert_thresholds}; summary=${measurement_summary}; data=${data_quality_notes}; lookback=${lookback_findings}; ledger={MEASURE:touched}; branches=${branch_notes}
 mission: synthesize outcomes; distill learnings; choose continuation (PLAN/meta-re-metabolize/DETACH).
-actions: summarize shipped/changed/risks; distill one-line zettels (Molasses Test); epilogue + bounty updates; decide continuation; log tokens/time/entropy.
+actions: summarize shipped/changed/risks; distill one-line zettels (Molasses Test); epilogue + bounty updates; decide continuation.
 exit: epilogue + next-plan entry or DETACH handle; ledger.REFLECT=touched; continuation emitted per choice.
+
+# Halt conditions (rare for MEASURE):
+⟂[BLOCKED:metrics_broken] Instrumentation failed; cannot measure
+⟂[ENTROPY_DEPLETED] Budget exhausted without entropy sip
 ```
 
-Template vars: `${metrics_instrumented}`, `${dashboards}`, `${baselines}`, `${alert_thresholds}`, `${measurement_summary}`, `${data_quality_notes}`, `${lookback_findings}`, `${phase_ledger}`, `${branch_notes}`, `${metrics_snapshot}`.
+Template vars: `${metrics_instrumented}`, `${dashboards}`, `${baselines}`, `${alert_thresholds}`, `${measurement_summary}`, `${data_quality_notes}`, `${lookback_findings}`, `${branch_notes}`.
 
 ## Related Skills
 - `auto-continuation.md` — The meta-skill defining this generator pattern

@@ -91,8 +91,18 @@ PLANNING (Forest Protocol):
   forest    Plan forest health (status|update|check|lint)
 
 SOUL (Digital Simulacra):
-  soul      K-gent self-dialogue (reflect|advise|challenge|explore)
+  soul      K-gent self-dialogue (reflect|advise|challenge|explore|approve)
   semaphore Agent semaphores (list|resolve|cancel|inspect)
+
+PRO CROWN JEWELS (Track D):
+  whatif    Generate N alternative approaches to a problem
+  shadow    Surface shadow content (Jungian analysis)
+  dialectic Hegelian synthesis of opposing concepts
+  gaps      Surface representational gaps (Lacanian analysis)
+  mirror    Full introspection (Jung + Hegel + Lacan combined)
+  archetype Identify active and shadow archetypes
+  continuous Recursive dialectic until stability
+  collective-shadow System-level shadow from agent composition
 
 META-CONSTRUCTION (Generative Machinery):
   meta      Meta-construction health (primitives, operads, sheaves)
@@ -152,8 +162,11 @@ COMMAND_REGISTRY: dict[str, str] = {
     "observe": "protocols.cli.handlers.observe:cmd_observe",  # Terrarium TUI
     # NOTE: sense, trace, touch, name removed (membrane aliases, deprecated)
     # NOTE: garden removed (superseded by dashboard - see agents/i/screens/dashboard.py)
-    # I-gent
+    # I-gent (Visualization primitives)
     "whisper": "protocols.cli.handlers.igent:cmd_whisper",
+    "sparkline": "protocols.cli.handlers.igent:cmd_sparkline",
+    "weather": "protocols.cli.handlers.igent:cmd_weather",
+    "glitch": "protocols.cli.handlers.igent:cmd_glitch",
     # Debug
     "debug": "protocols.cli.handlers.debug:cmd_debug",
     # DevEx V4 Phase 1 - Foundation
@@ -189,6 +202,15 @@ COMMAND_REGISTRY: dict[str, str] = {
     "advise": "protocols.cli.handlers.soul:cmd_advise",
     "challenge": "protocols.cli.handlers.soul:cmd_challenge",
     "explore": "protocols.cli.handlers.soul:cmd_explore",
+    # Pro Crown Jewels (Track D: Monetization)
+    "whatif": "protocols.cli.handlers.whatif:cmd_whatif",
+    "shadow": "protocols.cli.handlers.shadow:cmd_shadow",
+    "dialectic": "protocols.cli.handlers.dialectic:cmd_dialectic",
+    "gaps": "protocols.cli.handlers.gaps:cmd_gaps",
+    "mirror": "protocols.cli.handlers.mirror:cmd_mirror",
+    "archetype": "protocols.cli.handlers.archetype:cmd_archetype",
+    "continuous": "protocols.cli.handlers.continuous:cmd_continuous",
+    "collective-shadow": "protocols.cli.handlers.collective_shadow:cmd_collective_shadow",
     # Alethic Architecture (Universal Agent)
     "a": "protocols.cli.handlers.a_gent:cmd_a",
     # DevEx - Interactive Playground

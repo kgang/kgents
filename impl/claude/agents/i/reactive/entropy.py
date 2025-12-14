@@ -84,6 +84,70 @@ def entropy_to_distortion(
 DENSITY_RUNES = " ·∴∵◦○◎●◉█"
 SPARK_CHARS = "▁▂▃▄▅▆▇█"
 
+# Zalgo combining characters for glitch effects
+# These are Unicode combining diacritical marks that stack above/below text
+ZALGO_ABOVE = [
+    "\u0300",
+    "\u0301",
+    "\u0302",
+    "\u0303",
+    "\u0304",
+    "\u0305",
+    "\u0306",
+    "\u0307",
+    "\u0308",
+    "\u0309",
+    "\u030a",
+    "\u030b",
+    "\u030c",
+    "\u030d",
+    "\u030e",
+    "\u030f",
+    "\u0310",
+    "\u0311",
+    "\u0312",
+    "\u0313",
+    "\u0314",
+    "\u0315",
+    "\u031a",
+]
+ZALGO_MID = [
+    "\u0316",
+    "\u0317",
+    "\u0318",
+    "\u0319",
+    "\u031c",
+    "\u031d",
+    "\u031e",
+    "\u031f",
+    "\u0320",
+    "\u0321",
+    "\u0322",
+    "\u0323",
+    "\u0324",
+    "\u0325",
+    "\u0326",
+    "\u0327",
+]
+ZALGO_BELOW = [
+    "\u0328",
+    "\u0329",
+    "\u032a",
+    "\u032b",
+    "\u032c",
+    "\u032d",
+    "\u032e",
+    "\u032f",
+    "\u0330",
+    "\u0331",
+    "\u0332",
+    "\u0333",
+    "\u0339",
+    "\u033a",
+    "\u033b",
+    "\u033c",
+]
+
 # Phase glyphs - semantic meaning through visual character
 PHASE_GLYPHS: dict[str, str] = {
     "idle": "○",

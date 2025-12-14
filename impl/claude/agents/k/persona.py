@@ -14,7 +14,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Callable, Generic, Optional, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    AsyncIterator,
+    Callable,
+    Generic,
+    Optional,
+    TypeVar,
+)
 
 from agents.a.halo import Capability
 from bootstrap.types import Agent
@@ -439,6 +447,61 @@ class KgentAgent(Agent[DialogueInput, DialogueOutput]):
             referenced_preferences=referenced_prefs[:3],
             referenced_patterns=referenced_pats[:3],
         )
+
+    async def invoke_stream(
+        self, input: DialogueInput
+    ) -> AsyncIterator[tuple[str, bool, int]]:
+        """
+        Engage in streaming dialogue with K-gent.
+
+        Yields (chunk, is_final, tokens_used) tuples:
+        - is_final=False for intermediate chunks (tokens_used=0)
+        - is_final=True for the final chunk with actual tokens_used
+
+        If LLM is configured and supports streaming, uses true streaming.
+        Otherwise falls back to template-based responses (single chunk).
+        """
+        from .llm import StreamingLLMResponse
+
+        mode = input.mode
+        message = input.message
+
+        # Find relevant preferences and patterns
+        referenced_prefs = self._find_preferences(message)
+        referenced_pats = self._find_patterns(message)
+
+        # Use LLM streaming if available
+        if self._llm is not None:
+            system_prompt = self._build_system_prompt(mode)
+            user_prompt = self._build_user_prompt(
+                message, referenced_prefs, referenced_pats, mode
+            )
+            temperature = self.MODE_TEMPERATURES.get(mode, 0.6)
+
+            # Stream chunks from LLM
+            tokens_used = 0
+            async for item in self._llm.generate_stream(
+                system=system_prompt,
+                user=user_prompt,
+                temperature=temperature,
+                max_tokens=500,
+            ):
+                if isinstance(item, str):
+                    yield (item, False, 0)
+                elif isinstance(item, StreamingLLMResponse):
+                    # Final response with token counts
+                    tokens_used = item.tokens_used
+
+            # Final yield with is_final=True and actual token count
+            yield ("", True, tokens_used)
+        else:
+            # Fall back to template-based response (single chunk)
+            response = self._generate_template_response(
+                mode, message, referenced_prefs, referenced_pats
+            )
+            # Estimate tokens for template response
+            tokens_estimate = len(response.split()) * 2
+            yield (response, True, tokens_estimate)
 
     async def _generate_llm_response(
         self,

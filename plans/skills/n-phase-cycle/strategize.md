@@ -105,16 +105,24 @@ Next: `cross-synergize.md` to explore compositions and entanglements.
 
 Emit this when exiting STRATEGIZE:
 
+### Exit Signifier
+
 ```markdown
+# Normal exit (auto-continue):
+⟿[CROSS-SYNERGIZE]
 /hydrate
-# CROSS-SYNERGIZE ← STRATEGIZE
-handles: backlog=${ordered_chunks}; parallel=${parallel_tracks}; checkpoints=${checkpoints}; gates=${decision_gates}; interfaces=${track_interfaces}; decisions=${strategy_decisions}; ledger=${phase_ledger}; branches=${branch_notes}
+handles: backlog=${ordered_chunks}; parallel=${parallel_tracks}; checkpoints=${checkpoints}; gates=${decision_gates}; interfaces=${track_interfaces}; ledger={STRATEGIZE:touched}; branches=${branch_notes}
 mission: hunt compositions/entanglements; probe with hotdata; select law-abiding pipelines.
-actions: enumerate morphisms; micro-prototype with fixtures; test identity/associativity; log tokens/time/entropy/law-checks.
-exit: chosen comps + rationale; rejected paths noted; interfaces ready; ledger.CROSS-SYNERGIZE=touched; continuation → IMPLEMENT.
+actions: enumerate morphisms; micro-prototype with fixtures; test identity/associativity.
+exit: chosen comps + rationale; rejected paths noted; ledger.CROSS-SYNERGIZE=touched; continuation → IMPLEMENT.
+
+# Halt conditions:
+⟂[BLOCKED:dependency_cycle] Circular dependencies detected in backlog ordering
+⟂[BLOCKED:no_safe_order] Cannot find ordering that satisfies all constraints
+⟂[ENTROPY_DEPLETED] Budget exhausted without entropy sip
 ```
 
-Template vars: `${ordered_chunks}`, `${parallel_tracks}`, `${checkpoints}`, `${decision_gates}`, `${track_interfaces}`, `${strategy_decisions}`, `${phase_ledger}`, `${branch_notes}`.
+Template vars: `${ordered_chunks}`, `${parallel_tracks}`, `${checkpoints}`, `${decision_gates}`, `${track_interfaces}`, `${branch_notes}`.
 
 ## Related Skills
 - `auto-continuation.md` — The meta-skill defining this generator pattern

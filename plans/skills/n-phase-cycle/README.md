@@ -98,6 +98,44 @@ IMPLEMENT → QA → TEST → EDUCATE → MEASURE → REFLECT
 
 ---
 
+## Auto-Inducer Signifiers
+
+> *See `spec/protocols/auto-inducer.md` for full specification.*
+
+End phase output with signifiers to control flow:
+
+| Signifier | Unicode | Meaning |
+|-----------|---------|---------|
+| `⟿[PHASE]` | U+27FF | Continue to PHASE (auto-execute) |
+| `⟂[REASON]` | U+27C2 | Halt, await human input |
+| *(none)* | — | Await human (backwards compatible) |
+
+### Quick Example
+
+```markdown
+# After completing PLAN:
+⟿[RESEARCH]
+/hydrate
+handles: scope=...; ledger={PLAN:touched}; entropy=0.07
+mission: map terrain; find blockers.
+exit: file map; continuation → DEVELOP.
+
+# After QA finds errors:
+⟂[QA:blocked] mypy errors require resolution before TEST
+```
+
+### Halt Conditions
+
+- `⟂[ENTROPY_DEPLETED]` — Budget exhausted
+- `⟂[RUNAWAY_LOOP]` — 33+ transitions without REFLECT
+- `⟂[BLOCKED:reason]` — QA/Test/blocker
+- `⟂[DETACH:cycle_complete]` — Scope done
+- `⟂[DETACH:awaiting_human]` — Decision needed
+
+**Law**: Every cycle MUST reach `⟂` eventually.
+
+---
+
 ## When to Use What
 
 | Task | Phases | Accountability |

@@ -114,16 +114,24 @@ Next: `educate.md` to translate validated behavior into guidance.
 
 Emit this when exiting TEST:
 
+### Exit Signifier
+
 ```markdown
+# Normal exit (auto-continue):
+⟿[EDUCATE]
 /hydrate
-# EDUCATE ← TEST
-handles: results=${test_results_summary}; coverage=${coverage_summary}; laws=${law_check_results}; flaky=${flaky_notes}; findings=${test_findings}; repro=${repro_commands}; ledger=${phase_ledger}; branches=${branch_notes}; metrics=${metrics_snapshot}
+handles: results=${test_results_summary}; coverage=${coverage_summary}; laws=${law_check_results}; flaky=${flaky_notes}; findings=${test_findings}; repro=${repro_commands}; ledger={TEST:touched}; branches=${branch_notes}
 mission: translate validated behavior into guidance; keep AGENTESE handles explicit; include degraded paths.
-actions: map audiences; update docs/prompts/quickstarts with runnable examples + hotdata; add repro commands; log tokens/time/entropy/law-checks.
+actions: map audiences; update docs/prompts/quickstarts with runnable examples + hotdata; add repro commands.
 exit: docs/prompts updated or skip debt declared; ledger.EDUCATE=touched; continuation → MEASURE.
+
+# Halt conditions:
+⟂[TEST:blocked] Test failures require resolution before EDUCATE
+⟂[BLOCKED:law_violation] Law checks failed; composition broken
+⟂[ENTROPY_DEPLETED] Budget exhausted without entropy sip
 ```
 
-Template vars: `${test_results_summary}`, `${coverage_summary}`, `${law_check_results}`, `${flaky_notes}`, `${test_findings}`, `${repro_commands}`, `${phase_ledger}`, `${branch_notes}`, `${metrics_snapshot}`.
+Template vars: `${test_results_summary}`, `${coverage_summary}`, `${law_check_results}`, `${flaky_notes}`, `${test_findings}`, `${repro_commands}`, `${branch_notes}`.
 
 ## Related Skills
 - `auto-continuation.md` — The meta-skill defining this generator pattern

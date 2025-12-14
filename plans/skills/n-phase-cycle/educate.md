@@ -103,16 +103,23 @@ Next: `measure.md` to track whether education changed outcomes.
 
 Emit this when exiting EDUCATE:
 
+### Exit Signifier
+
 ```markdown
+# Normal exit (auto-continue):
+⟿[MEASURE]
 /hydrate
-# MEASURE ← EDUCATE
-handles: docs=${docs_created}; quickstarts=${quickstarts}; scripts=${support_scripts}; audiences=${audiences_mapped}; summary=${education_summary}; degraded=${degraded_paths_docs}; ledger=${phase_ledger}; branches=${branch_notes}; metrics=${metrics_snapshot}
+handles: docs=${docs_created}; quickstarts=${quickstarts}; scripts=${support_scripts}; audiences=${audiences_mapped}; summary=${education_summary}; degraded=${degraded_paths_docs}; ledger={EDUCATE:touched}; branches=${branch_notes}
 mission: instrument adoption/latency/error signals; wire dashboards/fixtures; capture baselines.
-actions: define leading indicators via process-metrics schema; add telemetry/flags; create hotloadable dashboards; validate data quality; log tokens/time/entropy.
+actions: define leading indicators via process-metrics schema; add telemetry/flags; create hotloadable dashboards; validate data quality.
 exit: metrics live + baselines captured; ledger.MEASURE=touched; continuation → REFLECT.
+
+# Halt conditions (rare for EDUCATE):
+⟂[BLOCKED:missing_infra] Required docs infrastructure missing
+⟂[ENTROPY_DEPLETED] Budget exhausted without entropy sip
 ```
 
-Template vars: `${docs_created}`, `${quickstarts}`, `${support_scripts}`, `${audiences_mapped}`, `${education_summary}`, `${degraded_paths_docs}`, `${phase_ledger}`, `${branch_notes}`, `${metrics_snapshot}`.
+Template vars: `${docs_created}`, `${quickstarts}`, `${support_scripts}`, `${audiences_mapped}`, `${education_summary}`, `${degraded_paths_docs}`, `${branch_notes}`.
 
 ## Related Skills
 - `auto-continuation.md` — The meta-skill defining this generator pattern

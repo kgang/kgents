@@ -111,16 +111,24 @@ Next: `strategize.md` to order delivery and choose leverage points.
 
 Emit this when exiting DEVELOP:
 
+### Exit Signifier
+
 ```markdown
+# Normal exit (auto-continue):
+⟿[STRATEGIZE]
 /hydrate
-# STRATEGIZE ← DEVELOP
-handles: specs=${specs_created}; laws=${laws_stated}; risks=${risks_noted}; examples=${examples_count}; decisions=${design_decisions}; ledger=${phase_ledger}; branches=${branch_notes}
+handles: specs=${specs_created}; laws=${laws_stated}; risks=${risks_noted}; examples=${examples_count}; decisions=${design_decisions}; ledger={DEVELOP:touched}; branches=${branch_notes}
 mission: order chunks for leverage; set owners/interfaces/checkpoints; prep decision gates.
-actions: impact/effort + dependencies; parallel tracks w/ interfaces; metrics to watch; run lookback-revision; log tokens/time/entropy.
-exit: ordered backlog + owners/checkpoints; ledger.STRATEGIZE=touched; branch handles emitted; continuation → CROSS-SYNERGIZE.
+actions: impact/effort + dependencies; parallel tracks w/ interfaces; metrics to watch; run lookback-revision.
+exit: ordered backlog + owners/checkpoints; ledger.STRATEGIZE=touched; continuation → CROSS-SYNERGIZE.
+
+# Halt conditions:
+⟂[BLOCKED:law_violation] Proposed design violates category laws (identity/associativity)
+⟂[BLOCKED:composition_failure] Spec cannot compose with existing agents
+⟂[ENTROPY_DEPLETED] Budget exhausted without entropy sip
 ```
 
-Template vars: `${specs_created}`, `${laws_stated}`, `${risks_noted}`, `${examples_count}`, `${design_decisions}`, `${phase_ledger}`, `${branch_notes}`.
+Template vars: `${specs_created}`, `${laws_stated}`, `${risks_noted}`, `${examples_count}`, `${design_decisions}`, `${branch_notes}`.
 
 ## Related Skills
 - `auto-continuation.md` — The meta-skill defining this generator pattern

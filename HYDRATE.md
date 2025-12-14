@@ -44,6 +44,8 @@ SENSE → ACT → REFLECT → (loop)
 
 **Full 11-Phase**: `plans/skills/n-phase-cycle/` (Crown Jewels only)
 
+**Auto-Inducer**: `⟿[PHASE]` continue | `⟂[REASON]` halt | *(none)* await human
+
 ---
 
 ## Forest Protocol
@@ -69,6 +71,7 @@ SENSE → ACT → REFLECT → (loop)
 | turn-gents | 100% ✓ | 187 tests |
 | entropy | 100% ✓ | 87 tests |
 | visualization | 100% ✓ | 88 tests |
+| monetization | 100% ✓ | 296 tests. licensing/billing/api/cli-pro |
 
 ---
 
@@ -95,8 +98,8 @@ A B C D E F G H I J K L M N O P Ψ Q R T U W Flux
 
 ## Deep Dive
 
-`spec/principles.md` • `plans/skills/` • `docs/functor-field-guide.md`
+`spec/principles.md` • `spec/protocols/auto-inducer.md` • `plans/skills/` • `docs/functor-field-guide.md`
 
 ---
 
-*Lines: 85. Ceiling: 100.*
+*Lines: 106. Ceiling: 120.*
