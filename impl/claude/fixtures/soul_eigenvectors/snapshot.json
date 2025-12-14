@@ -1,0 +1,59 @@
+{
+  "description": "K-gent eigenvector snapshot for dashboard visualization",
+  "timestamp": "2025-01-15T10:00:00+00:00",
+  "eigenvectors": {
+    "aesthetic": {
+      "name": "Aesthetic",
+      "axis_low": "Minimalist",
+      "axis_high": "Baroque",
+      "value": 0.15,
+      "confidence": 0.92,
+      "description": "Strongly minimalist - compress, don't expand"
+    },
+    "categorical": {
+      "name": "Categorical",
+      "axis_low": "Concrete",
+      "axis_high": "Abstract",
+      "value": 0.92,
+      "confidence": 0.95,
+      "description": "Strongly abstract - functor language, category theory"
+    },
+    "gratitude": {
+      "name": "Gratitude",
+      "axis_low": "Extractive",
+      "axis_high": "Generative",
+      "value": 0.78,
+      "confidence": 0.88,
+      "description": "Gratitude-oriented - the Accursed Share, tithe principle"
+    },
+    "heterarchy": {
+      "name": "Heterarchy",
+      "axis_low": "Hierarchical",
+      "axis_high": "Rhizomatic",
+      "value": 0.88,
+      "confidence": 0.85,
+      "description": "Strongly heterarchical - composable agents, no single root"
+    },
+    "generativity": {
+      "name": "Generativity",
+      "axis_low": "Conservative",
+      "axis_high": "Experimental",
+      "value": 0.90,
+      "confidence": 0.90,
+      "description": "Highly generative - innovation through composition"
+    },
+    "joy": {
+      "name": "Joy",
+      "axis_low": "Utilitarian",
+      "axis_high": "Playful",
+      "value": 0.75,
+      "confidence": 0.85,
+      "description": "Joy-inducing - personality encouraged, whimsy welcome"
+    }
+  },
+  "metadata": {
+    "source": "spec/principles.md + plans/_focus.md + git patterns",
+    "extraction_method": "eigenvector decomposition",
+    "last_calibration": "2025-01-15"
+  }
+}
