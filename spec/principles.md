@@ -719,6 +719,39 @@ spec/agents/*.md  →  Generator  →  K8s Manifests  →  Running Pods
 
 ---
 
+## Operational Principle: Event-Driven Streaming
+
+> Flux > Loop: Streams are event-driven, not timer-driven.
+
+This principle governs all agent streaming and asynchronous behavior. Agents that process continuous data should react to events, not poll on timers.
+
+### The Three Truths
+
+1. **Streams are event-driven**: Process events as they arrive, not on schedule
+2. **Perturbation over bypass**: `invoke()` on a running flux injects into the stream, never bypasses it
+3. **Streaming ≠ mutability**: Ephemeral chunks project immutable Turns; state remains coherent
+
+### The Perturbation Principle
+
+When a FluxAgent is **FLOWING**, calling `invoke()` doesn't bypass the stream—it **perturbs** it. The invocation becomes a high-priority event injected into the flux.
+
+**Why?** If the agent has Symbiont memory, bypassing would cause:
+- State loaded twice (race condition)
+- Inconsistent updates ("schizophrenia")
+
+Perturbation preserves **State Integrity**.
+
+### Anti-Patterns
+
+- Timer-driven loops that poll (creates zombies)
+- Bypassing running loops (causes state schizophrenia)
+- Treating streaming output as mutable (violates immutability)
+- Generator frames that hold state (can't serialize; use Purgatory pattern)
+
+*Zen Principle: The river doesn't ask the clock when to flow.*
+
+---
+
 ## Applying the Principles
 
 When designing or reviewing an agent, ask:
@@ -736,6 +769,7 @@ When designing or reviewing an agent, ask:
 | Graceful Degradation | Does the system work (degraded) when dependencies are missing? |
 | Spec-Driven Infrastructure | Is the deployment derived from spec, or hand-written? |
 | Pre-Computed Richness | Are demos/tests using real pre-computed data, or synthetic stubs? |
+| Event-Driven Streaming | Are streams event-driven? Does invoke() perturb running flux? |
 
 A "no" on any principle is a signal to reconsider.
 
@@ -765,7 +799,7 @@ class UniversalFunctor(Generic[F]):
 - K-gent's `intercept()` becomes a functor (`SoulFunctor`) enabling uniform governance
 - Halo capabilities compile to functor composition
 
-**Implementation**: See `plans/architecture/alethic-algebra-tactics.md`
+**Implementation**: See `docs/architecture/alethic-algebra-tactics.md`
 
 ### AD-002: Polynomial Generalization (2025-12-13)
 
@@ -801,7 +835,7 @@ class PolyAgent(Generic[S, A, B]):
 | **Operads** | Composition grammar | What combinations are valid |
 | **Sheaves** | Gluing local → global | Emergence from composition |
 
-**Implementation**: See `plans/skills/polynomial-agent.md`, `impl/claude/agents/poly/`
+**Implementation**: See `docs/skills/polynomial-agent.md`, `impl/claude/agents/poly/`
 
 ### AD-003: Generative Over Enumerative (2025-12-13)
 
@@ -950,7 +984,7 @@ IMPLEMENT → QA → TEST → EDUCATE → MEASURE → REFLECT
 - **Tithe**: Restore when depleted via `void.gratitude.tithe`
 
 **Consequences**:
-- All non-trivial features use `plans/skills/n-phase-cycle/` skills
+- All non-trivial features use `docs/skills/n-phase-cycle/` skills
 - Phase transitions emit traceable events for process metrics
 - Lookback revision runs after STRATEGIZE and MEASURE to catch double-loop shifts
 - Skills self-regenerate via `meta-skill-operad.md` morphisms
@@ -964,6 +998,6 @@ IMPLEMENT → QA → TEST → EDUCATE → MEASURE → REFLECT
 | Well-understood feature | STRATEGIZE | STRATEGIZE → ... → EDUCATE |
 | Novel feature | Full cycle | All 11 phases |
 
-**Implementation**: See `plans/skills/n-phase-cycle/`
+**Implementation**: See `docs/skills/n-phase-cycle/`
 
 *Zen Principle: The river that knows its course flows without thinking. The river that doubts meanders.*
