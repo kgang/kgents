@@ -72,6 +72,10 @@ entropy:
 2025-12-14  DI > mocking: `set_soul()` injection pattern beats `patch()` for testability
 2025-12-14  HTTP validation order: 400 (bad request) before 403 (forbidden); record before check for rate limits
 2025-12-14  Re-metabolize reveals health: 22 skills, 5% drift, all holograms present, laws preserved
+2025-12-14  REPL observer wrapper: frozen Umwelt needs mutable wrapper for cache tracking
+2025-12-14  REPL architecture: Logos → CLI fallback enables graceful degradation across maturity levels
+2025-12-14  REPL test categories: observer/navigation/pipeline/error/introspection/completion/rendering/degradation/state/integration
+2025-12-14  Ruff autofix: import sorting + f-string cleanup accelerates QA
 ```
 
 ## Anti-Patterns
@@ -96,4 +100,4 @@ entropy:
 
 ---
 
-*Lines: 95/200 | Last pruned: 2025-12-14*
+*Lines: 97/200 | Last pruned: 2025-12-14*
