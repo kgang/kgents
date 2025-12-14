@@ -496,11 +496,12 @@ def create_town_operad() -> Operad:
 
 TOWN_OPERAD = create_town_operad()
 """
-The Town Operad (MPP version).
+The Town Operad (Phase 2 version).
 
 Operations:
 - Universal: seq, par, branch, fix, trace
-- Town: greet, gossip, trade, solo
+- Town MPP: greet, gossip, trade, solo
+- Town Phase 2: dispute, celebrate, mourn, teach
 
 Laws:
 - Universal: seq_associativity, par_associativity
@@ -617,6 +618,11 @@ __all__ = [
     "GOSSIP_METABOLICS",
     "TRADE_METABOLICS",
     "SOLO_METABOLICS",
+    # Phase 2 Metabolics
+    "DISPUTE_METABOLICS",
+    "CELEBRATE_METABOLICS",
+    "MOURN_METABOLICS",
+    "TEACH_METABOLICS",
     # Operad
     "TOWN_OPERAD",
     "create_town_operad",

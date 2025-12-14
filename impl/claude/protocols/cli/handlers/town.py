@@ -16,16 +16,48 @@ Commands:
     kgents town save <path> Save simulation state to YAML
     kgents town load <path> Load simulation state from YAML
 
+    User Modes (Phase 2):
+    kgents town whisper <citizen> "<msg>"  Whisper to a citizen
+    kgents town inhabit <citizen>          See through a citizen's eyes
+    kgents town intervene "<event>"        Inject a world event
+
 See: spec/town/operad.md
 """
 
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING, Any
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
     from protocols.cli.reflector import InvocationContext
+
+
+# =============================================================================
+# TownSession: User Mode State
+# =============================================================================
+
+
+@dataclass
+class TownSession:
+    """
+    Track user's mode in the town simulation.
+
+    Modes:
+    - observe: Default mode, watch the simulation unfold
+    - whisper: Influence a specific citizen
+    - inhabit: See through a citizen's eyes
+    - intervene: Inject world events
+
+    From Barad: The mode is an agential cut—it determines
+    what phenomena are co-constituted.
+    """
+
+    mode: Literal["observe", "whisper", "inhabit", "intervene"] = "observe"
+    target_citizen: str | None = None
+    whisper_history: list[dict[str, Any]] = field(default_factory=list)
+    intervention_history: list[str] = field(default_factory=list)
 
 
 # Global simulation state (in-memory for MPP)
@@ -83,6 +115,24 @@ def cmd_town(args: list[str], ctx: "InvocationContext | None" = None) -> int:
             _emit("[TOWN] Usage: kgents town load <path>", {}, ctx)
             return 1
         return _load_simulation(args[1], ctx)
+    elif subcommand == "whisper":
+        if len(args) < 3:
+            _emit('[TOWN] Usage: kgents town whisper <citizen> "<message>"', {}, ctx)
+            return 1
+        citizen_name = args[1]
+        message = " ".join(args[2:]).strip('"')
+        return _whisper_citizen(citizen_name, message, ctx)
+    elif subcommand == "inhabit":
+        if len(args) < 2:
+            _emit("[TOWN] Usage: kgents town inhabit <citizen>", {}, ctx)
+            return 1
+        return _inhabit_citizen(args[1], ctx)
+    elif subcommand == "intervene":
+        if len(args) < 2:
+            _emit('[TOWN] Usage: kgents town intervene "<event>"', {}, ctx)
+            return 1
+        event_desc = " ".join(args[1:]).strip('"')
+        return _intervene_event(event_desc, ctx)
     elif subcommand == "help":
         _print_help()
         return 0
@@ -125,6 +175,7 @@ def _start_simulation(
     # Store state
     _simulation_state["environment"] = env
     _simulation_state["flux"] = flux
+    _simulation_state["session"] = TownSession()
 
     _emit(
         f"[TOWN] Agent Town '{env.name}' initialized.",
@@ -456,7 +507,7 @@ def _save_simulation(path: str, ctx: "InvocationContext | None") -> int:
 
     try:
         # Save environment state
-        yaml_content = env.to_yaml(path)
+        env.to_yaml(path)
 
         _emit(f"[TOWN] Saved simulation to {path}", {"path": path}, ctx)
         _emit(f"  Citizens: {len(env.citizens)}", {}, ctx)
@@ -487,6 +538,7 @@ def _load_simulation(path: str, ctx: "InvocationContext | None") -> int:
         # Store in simulation state
         _simulation_state["environment"] = env
         _simulation_state["flux"] = flux
+        _simulation_state["session"] = TownSession()
 
         _emit(f"[TOWN] Loaded simulation from {path}", {"path": path}, ctx)
         _emit(f"  Name: {env.name}", {}, ctx)
@@ -501,6 +553,288 @@ def _load_simulation(path: str, ctx: "InvocationContext | None") -> int:
     except Exception as e:
         _emit(f"[TOWN] Error loading: {e}", {"error": str(e)}, ctx)
         return 1
+
+
+# =============================================================================
+# User Modes (Phase 2)
+# =============================================================================
+
+
+def _whisper_citizen(
+    citizen_name: str, message: str, ctx: "InvocationContext | None"
+) -> int:
+    """
+    Whisper to a citizen, influencing their thoughts.
+
+    From Barad: The whisper is an intra-action—it co-constitutes
+    both the whisperer and the citizen.
+    """
+    if "environment" not in _simulation_state:
+        _emit(
+            "[TOWN] No simulation running. Use 'kgents town start' first.",
+            {"error": "not_running"},
+            ctx,
+        )
+        return 1
+
+    env = _simulation_state["environment"]
+    session: TownSession = _simulation_state.get("session", TownSession())
+    citizen = env.get_citizen_by_name(citizen_name)
+
+    if not citizen:
+        _emit(
+            f"[TOWN] Unknown citizen: {citizen_name}",
+            {"error": "unknown_citizen", "name": citizen_name},
+            ctx,
+        )
+        _emit(
+            f"  Available: {', '.join(c.name for c in env.citizens.values())}",
+            {},
+            ctx,
+        )
+        return 1
+
+    # Check if citizen is resting (respect Right to Rest)
+    if citizen.is_resting:
+        _emit(
+            f"[TOWN] {citizen_name} is resting. Respect the Right to Rest.",
+            {"error": "citizen_resting", "name": citizen_name},
+            ctx,
+        )
+        return 1
+
+    # Update session
+    session.mode = "whisper"
+    session.target_citizen = citizen_name
+    session.whisper_history.append(
+        {"citizen": citizen_name, "message": message, "day": _get_current_day()}
+    )
+    _simulation_state["session"] = session
+
+    # Store the whisper in citizen's memory
+    async def _store_whisper() -> None:
+        await citizen.remember(
+            {
+                "type": "whisper",
+                "message": message,
+                "from": "observer",
+                "day": _get_current_day(),
+            },
+            key=f"whisper_{_get_current_day()}_{citizen.id}",
+        )
+
+    asyncio.run(_store_whisper())
+
+    # Subtle influence on eigenvectors based on message sentiment
+    # (simplified: positive words increase warmth, questions increase curiosity)
+    if any(w in message.lower() for w in ["love", "kind", "friend", "thank", "good"]):
+        citizen.eigenvectors.warmth = min(1.0, citizen.eigenvectors.warmth + 0.05)
+        _emit("  (warmth +0.05)", {}, ctx)
+    if "?" in message:
+        citizen.eigenvectors.curiosity = min(1.0, citizen.eigenvectors.curiosity + 0.05)
+        _emit("  (curiosity +0.05)", {}, ctx)
+
+    _emit(f"\n[WHISPER] You whisper to {citizen_name}:", {"target": citizen_name}, ctx)
+    _emit(f'  "{message}"', {"message": message}, ctx)
+    _emit(f"\n{citizen_name} seems to have heard... something.", {}, ctx)
+    _emit("The whisper enters their memory like a half-remembered dream.", {}, ctx)
+
+    return 0
+
+
+def _inhabit_citizen(citizen_name: str, ctx: "InvocationContext | None") -> int:
+    """
+    Inhabit a citizen—see the world through their eyes.
+
+    From Glissant: To inhabit is not to possess. The opacity remains.
+    You see what they see, but not how they see it.
+    """
+    if "environment" not in _simulation_state:
+        _emit(
+            "[TOWN] No simulation running. Use 'kgents town start' first.",
+            {"error": "not_running"},
+            ctx,
+        )
+        return 1
+
+    env = _simulation_state["environment"]
+    session: TownSession = _simulation_state.get("session", TownSession())
+    citizen = env.get_citizen_by_name(citizen_name)
+
+    if not citizen:
+        _emit(
+            f"[TOWN] Unknown citizen: {citizen_name}",
+            {"error": "unknown_citizen", "name": citizen_name},
+            ctx,
+        )
+        _emit(
+            f"  Available: {', '.join(c.name for c in env.citizens.values())}",
+            {},
+            ctx,
+        )
+        return 1
+
+    # Update session
+    session.mode = "inhabit"
+    session.target_citizen = citizen_name
+    _simulation_state["session"] = session
+
+    # Get citizen's view of the world
+    manifest = citizen.manifest(lod=4)  # High detail but not abyss
+
+    _emit(f"\n[INHABIT] You are now {citizen_name}.", {"target": citizen_name}, ctx)
+    _emit("=" * 50, {}, ctx)
+
+    # Current state
+    phase_icon = _phase_icon(manifest.get("phase", "IDLE"))
+    _emit(f"\n  {phase_icon} You are {manifest.get('phase', 'IDLE').lower()}.", {}, ctx)
+    _emit(f"  You are at the {citizen.region}.", {}, ctx)
+
+    # Inner world (cosmotechnics)
+    _emit(f"\n  Your truth: \"{manifest.get('metaphor', '')}\"", {}, ctx)
+
+    # Relationships from their perspective
+    _emit("\n  You think about others:", {}, ctx)
+    rels = manifest.get("relationships", {})
+    if rels:
+        for other_id, weight in rels.items():
+            # Try to find the name
+            other_citizen = env.get_citizen_by_id(other_id)
+            other_name = other_citizen.name if other_citizen else other_id[:6]
+            if weight > 0.5:
+                _emit(f"    {other_name}: You feel warmly toward them.", {}, ctx)
+            elif weight > 0:
+                _emit(f"    {other_name}: An acquaintance.", {}, ctx)
+            elif weight < -0.3:
+                _emit(f"    {other_name}: Something bothers you about them.", {}, ctx)
+            else:
+                _emit(f"    {other_name}: Neutral.", {}, ctx)
+    else:
+        _emit("    (You haven't formed strong opinions yet.)", {}, ctx)
+
+    # Other citizens in same region
+    others_here = [c for c in env.get_citizens_in_region(citizen.region) if c.id != citizen.id]
+    if others_here:
+        _emit(f"\n  You see nearby: {', '.join(c.name for c in others_here)}", {}, ctx)
+
+    # Hint at opacity
+    _emit(f"\n  {citizen.cosmotechnics.opacity_statement}", {}, ctx)
+    _emit("=" * 50, {}, ctx)
+
+    return 0
+
+
+def _intervene_event(event_desc: str, ctx: "InvocationContext | None") -> int:
+    """
+    Inject a world event into the simulation.
+
+    From Morton: You become part of the hyperobject.
+    Your intervention is entangled with the town's becoming.
+    """
+    if "environment" not in _simulation_state:
+        _emit(
+            "[TOWN] No simulation running. Use 'kgents town start' first.",
+            {"error": "not_running"},
+            ctx,
+        )
+        return 1
+
+    env = _simulation_state["environment"]
+    session: TownSession = _simulation_state.get("session", TownSession())
+
+    # Update session
+    session.mode = "intervene"
+    session.intervention_history.append(event_desc)
+    _simulation_state["session"] = session
+
+    _emit(f"\n[INTERVENE] You declare: \"{event_desc}\"", {"event": event_desc}, ctx)
+    _emit("=" * 50, {}, ctx)
+
+    # Parse event type and apply effects
+    event_lower = event_desc.lower()
+
+    effects: list[str] = []
+
+    if any(w in event_lower for w in ["storm", "rain", "weather", "flood"]):
+        # Weather event: citizens move to shelter
+        _emit("  A storm sweeps through the town...", {}, ctx)
+        for citizen in env.citizens.values():
+            if citizen.region not in ["inn", "library"]:
+                citizen.move_to("inn")
+                effects.append(f"{citizen.name} seeks shelter at the inn")
+
+    elif any(w in event_lower for w in ["festival", "celebration", "party"]):
+        # Social event: increase warmth, gather citizens
+        _emit("  A festival atmosphere spreads...", {}, ctx)
+        for citizen in env.citizens.values():
+            citizen.eigenvectors.warmth = min(1.0, citizen.eigenvectors.warmth + 0.1)
+            citizen.move_to("square")
+            effects.append(f"{citizen.name}'s warmth increases")
+
+    elif any(w in event_lower for w in ["rumor", "news", "gossip"]):
+        # Information event: affect trust
+        _emit("  A rumor spreads through the town...", {}, ctx)
+        for citizen in env.citizens.values():
+            # Random trust impact
+            delta = -0.1 if "bad" in event_lower else 0.05
+            citizen.eigenvectors.trust = max(
+                0.0, min(1.0, citizen.eigenvectors.trust + delta)
+            )
+            effects.append(f"{citizen.name}'s trust shifts")
+
+    elif any(w in event_lower for w in ["gift", "windfall", "treasure"]):
+        # Resource event: increase surplus
+        _emit("  Unexpected fortune arrives...", {}, ctx)
+        for citizen in env.citizens.values():
+            citizen.accumulate_surplus(5.0)
+            effects.append(f"{citizen.name} gains surplus")
+
+    elif any(w in event_lower for w in ["quiet", "peace", "rest"]):
+        # Rest event: citizens rest
+        _emit("  A peaceful quiet descends...", {}, ctx)
+        for citizen in env.citizens.values():
+            if citizen.is_available:
+                citizen.rest()
+                effects.append(f"{citizen.name} rests")
+
+    else:
+        # Generic event: store in all citizen memories
+        _emit("  The town takes note...", {}, ctx)
+
+        async def _store_intervention() -> None:
+            for citizen in env.citizens.values():
+                await citizen.remember(
+                    {
+                        "type": "intervention",
+                        "event": event_desc,
+                        "day": _get_current_day(),
+                    },
+                    key=f"intervention_{_get_current_day()}_{citizen.id}",
+                )
+
+        asyncio.run(_store_intervention())
+        effects.append("Event stored in all citizen memories")
+
+    # Report effects
+    if effects:
+        _emit("\n  Effects:", {}, ctx)
+        for effect in effects[:5]:  # Limit display
+            _emit(f"    - {effect}", {}, ctx)
+        if len(effects) > 5:
+            _emit(f"    ... and {len(effects) - 5} more", {}, ctx)
+
+    _emit("\n  Your intervention ripples through the simulation.", {}, ctx)
+    _emit("=" * 50, {}, ctx)
+
+    return 0
+
+
+def _get_current_day() -> int:
+    """Get current simulation day."""
+    flux = _simulation_state.get("flux")
+    if flux:
+        return flux.day
+    return 1
 
 
 # =============================================================================

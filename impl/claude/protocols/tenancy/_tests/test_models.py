@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -210,7 +210,7 @@ class TestApiKey:
             tenant_id=uuid4(),
             key_prefix="kg_abc12",
             name="Valid Key",
-            expires_at=datetime.utcnow() + timedelta(days=30),
+            expires_at=datetime.now(UTC) + timedelta(days=30),
         )
         assert not key.is_expired
         assert key.is_valid
@@ -221,7 +221,7 @@ class TestApiKey:
             tenant_id=uuid4(),
             key_prefix="kg_def34",
             name="Expired Key",
-            expires_at=datetime.utcnow() - timedelta(days=1),
+            expires_at=datetime.now(UTC) - timedelta(days=1),
         )
         assert expired_key.is_expired
         assert not expired_key.is_valid

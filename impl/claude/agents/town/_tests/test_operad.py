@@ -15,10 +15,14 @@ from typing import Any
 import pytest
 from agents.poly import PolyAgent, from_function
 from agents.town.operad import (
+    CELEBRATE_METABOLICS,
+    DISPUTE_METABOLICS,
     GOSSIP_METABOLICS,
     GREET_METABOLICS,
+    MOURN_METABOLICS,
     PRECONDITION_CHECKER,
     SOLO_METABOLICS,
+    TEACH_METABOLICS,
     TOWN_OPERAD,
     TRADE_METABOLICS,
     OperationMetabolics,
@@ -249,3 +253,71 @@ class TestCreateTownOperad:
         assert operad is not None
         assert operad.name == "TownOperad"
         assert "greet" in operad.operations
+
+
+class TestPhase2Operations:
+    """Test Phase 2 operations."""
+
+    def test_has_phase2_operations(self) -> None:
+        """TOWN_OPERAD has Phase 2 operations."""
+        assert "dispute" in TOWN_OPERAD.operations
+        assert "celebrate" in TOWN_OPERAD.operations
+        assert "mourn" in TOWN_OPERAD.operations
+        assert "teach" in TOWN_OPERAD.operations
+
+    def test_dispute_arity(self) -> None:
+        """Dispute has arity 2."""
+        assert TOWN_OPERAD.operations["dispute"].arity == 2
+
+    def test_celebrate_variable_arity(self) -> None:
+        """Celebrate has variable arity (-1)."""
+        assert TOWN_OPERAD.operations["celebrate"].arity == -1
+
+    def test_mourn_variable_arity(self) -> None:
+        """Mourn has variable arity (-1)."""
+        assert TOWN_OPERAD.operations["mourn"].arity == -1
+
+    def test_teach_arity(self) -> None:
+        """Teach has arity 2."""
+        assert TOWN_OPERAD.operations["teach"].arity == 2
+
+    def test_dispute_metabolics(self) -> None:
+        """Dispute has high drama potential."""
+        assert DISPUTE_METABOLICS.token_cost == 600
+        assert DISPUTE_METABOLICS.drama_potential == 0.8
+        assert DISPUTE_METABOLICS.drama_potential > GOSSIP_METABOLICS.drama_potential
+
+    def test_celebrate_metabolics_scaling(self) -> None:
+        """Celebrate scales with arity."""
+        assert CELEBRATE_METABOLICS.scales_with_arity is True
+        assert CELEBRATE_METABOLICS.estimate_tokens(3) == 3 * CELEBRATE_METABOLICS.token_cost
+
+    def test_mourn_metabolics_scaling(self) -> None:
+        """Mourn scales with arity."""
+        assert MOURN_METABOLICS.scales_with_arity is True
+        assert MOURN_METABOLICS.estimate_tokens(5) == 5 * MOURN_METABOLICS.token_cost
+
+    def test_teach_metabolics(self) -> None:
+        """Teach has high token cost."""
+        assert TEACH_METABOLICS.token_cost == 800
+        assert TEACH_METABOLICS.drama_potential == 0.2
+
+    def test_dispute_composition(self) -> None:
+        """Dispute composes two citizens."""
+        citizen_a: PolyAgent[Any, Any, Any] = from_function("Alice", lambda x: x)
+        citizen_b: PolyAgent[Any, Any, Any] = from_function("Bob", lambda x: x)
+
+        composed = TOWN_OPERAD.compose("dispute", citizen_a, citizen_b)
+
+        assert composed is not None
+        assert "dispute" in composed.name.lower()
+
+    def test_teach_composition(self) -> None:
+        """Teach composes teacher and student."""
+        teacher: PolyAgent[Any, Any, Any] = from_function("Eve", lambda x: x)
+        student: PolyAgent[Any, Any, Any] = from_function("Diana", lambda x: x)
+
+        composed = TOWN_OPERAD.compose("teach", teacher, student)
+
+        assert composed is not None
+        assert "teach" in composed.name.lower()

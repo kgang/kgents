@@ -14,7 +14,7 @@ All models are immutable dataclasses for safety and clarity.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any, Optional
 from uuid import UUID
@@ -200,7 +200,7 @@ class ApiKey:
         """Check if key has expired."""
         if self.expires_at is None:
             return False
-        return datetime.utcnow() > self.expires_at
+        return datetime.now(UTC) > self.expires_at
 
     @property
     def is_valid(self) -> bool:

@@ -124,6 +124,10 @@ class TownEnvironment:
                 return citizen
         return None
 
+    def get_citizen_by_id(self, citizen_id: str) -> Citizen | None:
+        """Get a citizen by ID."""
+        return self.citizens.get(citizen_id)
+
     def get_citizens_in_region(self, region_name: str) -> list[Citizen]:
         """Get all citizens in a region."""
         return [c for c in self.citizens.values() if c.region == region_name]

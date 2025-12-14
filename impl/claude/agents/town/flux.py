@@ -114,10 +114,12 @@ class TownFlux:
     ) -> None:
         self.environment = environment
         self.rng = random.Random(seed)
-        self.current_phase = TownPhase.MORNING
+        self.current_phase: TownPhase = TownPhase.MORNING
         self.day = 1
         self.total_events = 0
         self.total_tokens = 0
+        # D-gent memory integration: pending memories to store
+        self._pending_memories: list[tuple[Citizen, str, Any]] = []
 
     @property
     def citizens(self) -> list[Citizen]:
@@ -194,6 +196,10 @@ class TownFlux:
         participants: list[Citizen],
     ) -> TownEvent:
         """Execute an operation and return the event."""
+        # Handle fallback: if binary operation but only 1 participant, do solo
+        if operation in ("greet", "gossip", "trade") and len(participants) == 1:
+            operation = "solo"
+
         # Check preconditions
         preconditions = PRECONDITION_CHECKER.validate_operation(
             operation, participants, self.environment
@@ -266,13 +272,50 @@ class TownFlux:
             metadata={"region": a.region, "warmth_factor": warmth_factor},
         )
 
+    async def _recall_gossip_subjects(self, citizen: Citizen) -> list[str]:
+        """
+        Recall subjects from citizen's gossip memories.
+
+        Returns list of subject names the citizen has gossiped about.
+        """
+        try:
+            response = await citizen.memory.query(limit=20)
+            subjects = []
+            if response.state and isinstance(response.state, dict):
+                for key, value in response.state.items():
+                    if isinstance(value, dict) and value.get("type") == "gossip":
+                        subj = value.get("subject")
+                        if subj:
+                            subjects.append(subj)
+            return subjects
+        except Exception:
+            return []
+
+    def _get_remembered_subjects(self, citizen: Citizen) -> list[str]:
+        """
+        Synchronous access to remembered gossip subjects.
+
+        Uses the memory store directly for synchronous access.
+        """
+        try:
+            store = citizen.memory._store
+            subjects = []
+            for key, value in store.state.items():
+                if isinstance(value, dict) and value.get("type") == "gossip":
+                    subj = value.get("subject")
+                    if subj:
+                        subjects.append(subj)
+            return subjects
+        except Exception:
+            return []
+
     def _execute_gossip(
         self,
         participants: list[Citizen],
         tokens: int,
         drama: float,
     ) -> TownEvent:
-        """Execute a gossip exchange."""
+        """Execute a gossip exchange with memory integration."""
         a, b = participants[:2]
 
         # Need a third party to gossip about
@@ -286,7 +329,17 @@ class TownFlux:
                 message="No one to gossip about.",
             )
 
+        # Prefer subjects with existing memories (30% chance to use memory)
         subject = self.rng.choice(others)
+        if self.rng.random() < 0.3:
+            # Try to find a subject from memory
+            remembered = self._get_remembered_subjects(a)
+            if remembered:
+                # Find citizens matching remembered names
+                for c in others:
+                    if c.name in remembered:
+                        subject = c
+                        break
 
         # Transition to socializing
         a.transition(CitizenInput.greet(b.id))  # Socializing
@@ -298,6 +351,20 @@ class TownFlux:
 
         # Gossip increases drama
         actual_drama = drama * 1.5 if a_opinion < 0 else drama
+
+        # Store gossip event in memory (D-gent integration)
+        gossip_memory = {
+            "type": "gossip",
+            "speaker": a.name,
+            "listener": b.name,
+            "subject": subject.name,
+            "opinion": a_opinion,
+            "phase": self.current_phase.name,
+            "day": self.day,
+        }
+        # Queue memory storage (handled async in step())
+        self._pending_memories.append((a, f"gossip_{self.day}_{a.id}", gossip_memory))
+        self._pending_memories.append((b, f"heard_{self.day}_{b.id}", gossip_memory))
 
         return TownEvent(
             phase=self.current_phase,
@@ -418,6 +485,9 @@ class TownFlux:
                     if self.rng.random() < 0.7:
                         citizen.rest()
 
+        # Process pending memories (D-gent integration)
+        await self._process_pending_memories()
+
         # Advance phase
         self._next_phase()
 
@@ -435,6 +505,16 @@ class TownFlux:
                 return self.rng.randint(2, 4)
             case TownPhase.NIGHT:
                 return self.rng.randint(1, 2)  # Reduced activity
+
+    async def _process_pending_memories(self) -> None:
+        """
+        Process pending memory storage (D-gent integration).
+
+        Stores gossip and other events in citizen memories.
+        """
+        for citizen, key, content in self._pending_memories:
+            await citizen.remember(content, key=key)
+        self._pending_memories.clear()
 
     async def _check_accursed_share(self) -> None:
         """

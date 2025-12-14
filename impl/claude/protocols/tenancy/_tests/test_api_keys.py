@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
 import pytest
@@ -249,7 +249,7 @@ class TestApiKeyService:
         key_model, _ = await service.create_key(
             tenant_id=tenant_id,
             name="Expiring Key",
-            expires_at=datetime.utcnow() + timedelta(days=30),
+            expires_at=datetime.now(UTC) + timedelta(days=30),
         )
 
         assert not key_model.is_expired

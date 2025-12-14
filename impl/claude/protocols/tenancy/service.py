@@ -9,7 +9,7 @@ AGENTESE: self.tenant.{manifest|create|update|delete}
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Optional, Protocol
 from uuid import UUID, uuid4
 
@@ -120,7 +120,7 @@ class TenantService:
             subscription_status=SubscriptionStatus.ACTIVE,
             tokens_limit_month=1_000_000,
             rate_limit_rpm=1000,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
         )
         self._tenants[dev_tenant.id] = dev_tenant
         self._tenants_by_slug[dev_tenant.slug] = dev_tenant.id
@@ -134,7 +134,7 @@ class TenantService:
             role=UserRole.OWNER,
             is_active=True,
             email_verified=True,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
         )
         self._users[dev_user.id] = dev_user
 
@@ -169,7 +169,7 @@ class TenantService:
             subscription_status=SubscriptionStatus.ACTIVE,
             tokens_limit_month=tier.tokens_limit,
             rate_limit_rpm=tier.rate_limit_rpm,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
         )
 
         self._tenants[tenant.id] = tenant
@@ -226,7 +226,7 @@ class TenantService:
             rate_limit_rpm=tenant.rate_limit_rpm,
             settings=new_settings,
             created_at=tenant.created_at,
-            updated_at=datetime.utcnow(),
+            updated_at=datetime.now(UTC),
         )
 
         self._tenants[tenant_id] = updated
@@ -263,7 +263,7 @@ class TenantService:
             rate_limit_rpm=tenant.rate_limit_rpm,
             settings=tenant.settings,
             created_at=tenant.created_at,
-            updated_at=datetime.utcnow(),
+            updated_at=datetime.now(UTC),
         )
 
         self._tenants[tenant_id] = updated
@@ -301,7 +301,7 @@ class TenantService:
             name=name,
             role=role,
             is_active=True,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
         )
 
         self._users[user.id] = user
@@ -349,7 +349,7 @@ class TenantService:
             user_id=user_id,
             title=title,
             agent_type=agent_type,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
         )
 
         self._sessions[session.id] = session
@@ -366,7 +366,9 @@ class TenantService:
         sessions = [s for s in self._sessions.values() if s.tenant_id == tenant_id]
         if user_id:
             sessions = [s for s in sessions if s.user_id == user_id]
-        return sorted(sessions, key=lambda s: s.created_at or datetime.min, reverse=True)
+        return sorted(
+            sessions, key=lambda s: s.created_at or datetime.min, reverse=True
+        )
 
     async def update_session(
         self,
@@ -388,14 +390,12 @@ class TenantService:
             status=session.status,
             context=session.context,
             message_count=(
-                message_count
-                if message_count is not None
-                else session.message_count
+                message_count if message_count is not None else session.message_count
             ),
             tokens_used=(
                 tokens_used if tokens_used is not None else session.tokens_used
             ),
-            last_message_at=datetime.utcnow(),
+            last_message_at=datetime.now(UTC),
             created_at=session.created_at,
         )
 
@@ -427,7 +427,7 @@ class TenantService:
         Returns:
             Created UsageEvent
         """
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         billing_period = now.strftime("%Y-%m")
 
         event = UsageEvent(
@@ -466,7 +466,7 @@ class TenantService:
             Dict with usage totals
         """
         if billing_period is None:
-            billing_period = datetime.utcnow().strftime("%Y-%m")
+            billing_period = datetime.now(UTC).strftime("%Y-%m")
 
         events = [
             e

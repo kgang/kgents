@@ -14,7 +14,7 @@ import hashlib
 import secrets
 import string
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Optional, Protocol
 from uuid import UUID
 
@@ -208,7 +208,7 @@ class ApiKeyService:
             scopes=scopes or ["read", "write"],
             user_id=user_id,
             expires_at=expires_at,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
         )
 
         # Store in memory

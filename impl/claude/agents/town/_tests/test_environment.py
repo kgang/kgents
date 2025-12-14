@@ -493,6 +493,15 @@ class TestPhase2Environment:
         frank = env.get_citizen_by_name("Frank")
         grace = env.get_citizen_by_name("Grace")
 
+        # Assert all citizens exist
+        assert alice is not None
+        assert bob is not None
+        assert clara is not None
+        assert diana is not None
+        assert eve is not None
+        assert frank is not None
+        assert grace is not None
+
         # MPP cosmotechnics
         assert alice.cosmotechnics == GATHERING
         assert bob.cosmotechnics == CONSTRUCTION
@@ -515,6 +524,15 @@ class TestPhase2Environment:
         eve = env.get_citizen_by_name("Eve")
         frank = env.get_citizen_by_name("Frank")
         grace = env.get_citizen_by_name("Grace")
+
+        # Assert all citizens exist
+        assert alice is not None
+        assert bob is not None
+        assert clara is not None
+        assert diana is not None
+        assert eve is not None
+        assert frank is not None
+        assert grace is not None
 
         assert alice.region == "inn"
         assert bob.region == "square"

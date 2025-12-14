@@ -92,6 +92,7 @@ class TestAgentRegistry:
             "q",
             "r",
             "t",
+            "town",
             "u",
             "w",
         }

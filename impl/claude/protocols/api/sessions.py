@@ -145,7 +145,7 @@ def _add_message(
 ) -> dict[str, Any]:
     """Add a message to a session."""
     import uuid
-    from datetime import datetime
+    from datetime import UTC, datetime
 
     msg = {
         "id": str(uuid.uuid4()),
@@ -153,7 +153,7 @@ def _add_message(
         "role": role,
         "content": content,
         "tokens_used": tokens,
-        "created_at": datetime.utcnow().isoformat(),
+        "created_at": datetime.now(UTC).isoformat(),
     }
     _get_messages(session_id).append(msg)
     return msg
@@ -559,35 +559,68 @@ async def _stream_response(
     tenant_id: UUID,
     tenant_service: Any,
 ) -> AsyncIterator[str]:
-    """Generate SSE stream for K-gent response."""
-    from agents.k.events import dialogue_turn_event
+    """
+    Generate real-time SSE stream for K-gent response.
+
+    Uses KgentFlux.soul.dialogue() with on_chunk callback for
+    real streaming instead of simulated chunking.
+    """
+    from agents.k.soul import BudgetTier
 
     chunks: list[str] = []
-    tokens_used = 0
+    chunk_queue: asyncio.Queue[str | None] = asyncio.Queue()
+
+    def on_chunk(chunk_text: str) -> None:
+        """Callback for each streaming chunk from LLM."""
+        chunk_queue.put_nowait(chunk_text)
+
+    # Track dialogue result
+    dialogue_result: Any = None
+    dialogue_error: Exception | None = None
+
+    async def run_dialogue() -> None:
+        """Run dialogue in background, pushing chunks to queue."""
+        nonlocal dialogue_result, dialogue_error
+        try:
+            dialogue_result = await flux.soul.dialogue(
+                message=message,
+                mode=mode,
+                budget=BudgetTier.DIALOGUE,
+                on_chunk=on_chunk,
+            )
+        except Exception as e:
+            dialogue_error = e
+        finally:
+            # Signal completion
+            chunk_queue.put_nowait(None)
+
+    # Start dialogue task
+    dialogue_task = asyncio.create_task(run_dialogue())
 
     try:
-        # Create dialogue event
-        event = dialogue_turn_event(
-            message=message,
-            mode=mode.value if mode else None,
-            is_request=True,
-        )
+        # Stream chunks as they arrive
+        chunk_index = 0
+        while True:
+            chunk = await chunk_queue.get()
 
-        # Process through flux
-        result = await flux.invoke(event)
+            if chunk is None:
+                # Dialogue complete
+                break
 
-        # Get response
-        response_text = result.payload.get("response", "")
-        tokens_used = result.payload.get("tokens_used", 0)
-
-        # Stream chunks (simulate for now - KgentFlux has streaming support)
-        # In production, we'd use the on_chunk callback
-        chunk_size = 20
-        for i in range(0, len(response_text), chunk_size):
-            chunk = response_text[i : i + chunk_size]
             chunks.append(chunk)
-            yield f"event: chunk\ndata: {json.dumps({'text': chunk, 'index': len(chunks) - 1})}\n\n"
-            await asyncio.sleep(0.01)  # Small delay for effect
+            yield f"event: chunk\ndata: {json.dumps({'text': chunk, 'index': chunk_index})}\n\n"
+            chunk_index += 1
+
+        # Wait for dialogue task to complete
+        await dialogue_task
+
+        # Check for errors
+        if dialogue_error is not None:
+            raise dialogue_error
+
+        # Get final results
+        response_text = dialogue_result.response if dialogue_result else "".join(chunks)
+        tokens_used = dialogue_result.tokens_used if dialogue_result else 0
 
         # Store assistant message
         _add_message(session_id, "assistant", response_text, tokens_used)
@@ -601,7 +634,7 @@ async def _stream_response(
             session_id=UUID(session_id),
         )
 
-        # Update session
+        # Update session stats
         messages = _get_messages(session_id)
         await tenant_service.update_session(
             UUID(session_id),
@@ -618,6 +651,14 @@ async def _stream_response(
         yield f"event: complete\ndata: {json.dumps(complete_data)}\n\n"
 
     except Exception as e:
+        # Cancel dialogue task if still running
+        if not dialogue_task.done():
+            dialogue_task.cancel()
+            try:
+                await dialogue_task
+            except asyncio.CancelledError:
+                pass
+
         # Send error event
         error_data = {"error": str(e), "type": type(e).__name__}
         yield f"event: error\ndata: {json.dumps(error_data)}\n\n"

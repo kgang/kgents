@@ -8,6 +8,11 @@ from protocols.billing.customers import (
     CustomerManager,
     CustomerManagerProtocol,
 )
+from protocols.billing.openmeter_client import (
+    OpenMeterClient,
+    OpenMeterConfig,
+    UsageEventSchema,
+)
 from protocols.billing.stripe_client import (
     StripeClient,
     StripeClientProtocol,
@@ -36,4 +41,7 @@ __all__ = [
     "WebhookHandler",
     "WebhookHandlerProtocol",
     "WebhookEvent",
+    "OpenMeterClient",
+    "OpenMeterConfig",
+    "UsageEventSchema",
 ]
