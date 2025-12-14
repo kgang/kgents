@@ -24,7 +24,7 @@ from typing import (
 if TYPE_CHECKING:
     pass
 
-from .exceptions import CompositionViolationError
+from .exceptions import CompositionViolationError, LawCheckFailed
 from .node import Renderable
 
 # Type variables
@@ -570,3 +570,137 @@ def morphism(name: str) -> Callable[[Callable[[T], T]], SimpleMorphism]:
 
 # The identity morphism (singleton)
 IDENTITY: Identity[Any] = Id
+
+
+# === Law Check Events (Track B: Law Enforcer) ===
+
+
+def emit_law_check_event(
+    law: str,
+    result: str,
+    locus: str = "",
+) -> None:
+    """
+    Emit a law_check event to the current span.
+
+    This provides observability for category law verification.
+    Every composition should emit at least one law_check event.
+
+    Args:
+        law: Which law was checked (identity, associativity)
+        result: "pass" or "fail"
+        locus: Dot-path of the composition being checked
+
+    Track B (Law Enforcer) deliverable: B4 - Emit law_check events in spans.
+    """
+    try:
+        from .telemetry import add_event
+    except ImportError:
+        # Telemetry not available, skip event
+        return
+
+    add_event(
+        "law_check",
+        {
+            "law": law,
+            "result": result,
+            "locus": locus,
+        },
+    )
+
+
+async def verify_and_emit_identity(
+    morphism: Composable[A, B],
+    input_val: A,
+    locus: str = "",
+) -> LawVerificationResult:
+    """
+    Verify identity law and emit span event.
+
+    Combines verification with observability.
+
+    Args:
+        morphism: The morphism to verify
+        input_val: Test input value
+        locus: Dot-path for the morphism
+
+    Returns:
+        LawVerificationResult
+
+    Raises:
+        LawCheckFailed: If law fails and raise_on_failure=True
+    """
+    verifier = CategoryLawVerifier()
+    result = await verifier.verify_identity(morphism, input_val)
+
+    emit_law_check_event(
+        law="identity",
+        result="pass" if result.passed else "fail",
+        locus=locus or getattr(morphism, "name", "unknown"),
+    )
+
+    return result
+
+
+async def verify_and_emit_associativity(
+    f: Composable[A, Any],
+    g: Composable[Any, Any],
+    h: Composable[Any, B],
+    input_val: A,
+    locus: str = "",
+) -> LawVerificationResult:
+    """
+    Verify associativity law and emit span event.
+
+    Combines verification with observability.
+
+    Args:
+        f, g, h: Morphisms to compose
+        input_val: Test input value
+        locus: Dot-path for the composition
+
+    Returns:
+        LawVerificationResult
+    """
+    verifier = CategoryLawVerifier()
+    result = await verifier.verify_associativity(f, g, h, input_val)
+
+    # Build locus if not provided
+    if not locus:
+        f_name = getattr(f, "name", "f")
+        g_name = getattr(g, "name", "g")
+        h_name = getattr(h, "name", "h")
+        locus = f"{f_name} >> {g_name} >> {h_name}"
+
+    emit_law_check_event(
+        law="associativity",
+        result="pass" if result.passed else "fail",
+        locus=locus,
+    )
+
+    return result
+
+
+def raise_if_failed(
+    result: LawVerificationResult,
+    locus: str = "",
+) -> None:
+    """
+    Raise LawCheckFailed if verification failed.
+
+    Use this after verify_and_emit_* to convert failures to exceptions.
+
+    Args:
+        result: Verification result to check
+        locus: Dot-path for error context
+
+    Raises:
+        LawCheckFailed: If result.passed is False
+    """
+    if not result.passed:
+        raise LawCheckFailed.from_verification(
+            law=result.law,
+            locus=locus,
+            left_result=result.left_result,
+            right_result=result.right_result,
+        )

@@ -24,7 +24,6 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Grid, Horizontal, Vertical
 from textual.reactive import reactive
-from textual.screen import Screen
 from textual.widget import Widget
 from textual.widgets import Footer, Header, Static
 
@@ -32,6 +31,8 @@ from ..data.lod import LODLevel, LODProjector
 from ..data.ogent import XYZHealth
 from ..data.state import AgentSnapshot, FluxState, create_demo_flux_state
 from ..theme.earth import EARTH_CSS, EARTH_PALETTE
+from ..theme.heartbeat import HeartbeatMixin, get_heartbeat_controller
+from ..theme.posture import PostureMapper, render_posture_with_tooltip
 from ..widgets.agentese_hud import AgentesePath, AgentHUD, CompactAgentHUD
 from ..widgets.density_field import DensityField, Phase
 from ..widgets.glitch import (
@@ -41,13 +42,14 @@ from ..widgets.glitch import (
     get_glitch_controller,
 )
 from ..widgets.health_bar import CompactHealthBar
+from .base import KgentsScreen
 from .overlays import BodyOverlay, HelpOverlay, WireOverlay
 
 if TYPE_CHECKING:
     pass
 
 
-class AgentCard(Widget):
+class AgentCard(Widget, HeartbeatMixin):
     """
     A card displaying an agent in the flux.
 
@@ -103,13 +105,35 @@ class AgentCard(Widget):
         classes: str | None = None,
     ) -> None:
         super().__init__(name=name, id=id, classes=classes)
+        HeartbeatMixin.__init__(self)
         self.snapshot = snapshot
         self.health = health
         self.can_focus = True
 
+        # Set heartbeat BPM based on agent activity
+        bpm = HeartbeatMixin.activity_to_bpm(snapshot.activity)
+        self.set_bpm(bpm)
+
+        # Also consider phase
+        phase_bpm = HeartbeatMixin.phase_to_bpm(snapshot.phase.value)
+        self.set_bpm((bpm + phase_bpm) // 2)  # Average of activity and phase BPM
+
+        # Register with heartbeat controller
+        get_heartbeat_controller().register(self)
+
+        # Initialize posture mapper
+        self._posture_mapper = PostureMapper()
+
     def compose(self) -> ComposeResult:
         """Compose the agent card."""
-        yield Static(self.snapshot.name, classes="agent-header")
+        # Get posture for this agent's phase and activity
+        posture = self._posture_mapper.from_phase(
+            self.snapshot.phase.value,
+            self.snapshot.activity,
+        )
+        posture_display = render_posture_with_tooltip(posture, show_tooltip=False)
+
+        yield Static(f"{posture_display} {self.snapshot.name}", classes="agent-header")
         yield Static(f"[{self.snapshot.phase.value}]", classes="agent-phase")
         with Container(classes="density-container"):
             yield DensityField(
@@ -302,13 +326,16 @@ class StatusBar(Static):
         return f"KGENTS v2.5  │  ⌬ FLUX: {self.flux_level}  │  ⏣ ENTROPY: {self.entropy_status}"
 
 
-class FluxScreen(Screen[None]):
+class FluxScreen(KgentsScreen):
     """
     The Semantic Flux screen.
 
     Navigate currents of cognition. Agents are density fields,
     not rooms to visit.
     """
+
+    # Visual anchor for gentle transitions
+    ANCHOR = "main-container"
 
     CSS = (
         EARTH_CSS

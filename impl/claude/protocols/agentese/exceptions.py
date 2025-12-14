@@ -113,7 +113,9 @@ class PathSyntaxError(AgentesError):
     Raised when an AGENTESE path is malformed.
 
     Provides the correct syntax pattern:
-    <context>.<holon>[.<aspect>]
+    <context>.<holon>[.<aspect>][clause]*[@annotation]*
+
+    Track A (Syntax Architect): Enhanced with locus support.
     """
 
     def __init__(
@@ -121,9 +123,15 @@ class PathSyntaxError(AgentesError):
         message: str,
         *,
         path: str = "",
+        locus: str = "",
+        position: int = 0,
         why: str | None = None,
         suggestion: str | None = None,
     ) -> None:
+        self.path = path
+        self.locus = locus
+        self.position = position
+
         if not why:
             why = "AGENTESE paths require: <context>.<holon>[.<aspect>]"
 
@@ -133,7 +141,112 @@ class PathSyntaxError(AgentesError):
                 "    Examples: world.house.manifest, self.memory.consolidate"
             )
 
-        super().__init__(message, why=why, suggestion=suggestion)
+        # Include locus in related if provided
+        related = [locus] if locus else None
+
+        super().__init__(message, why=why, suggestion=suggestion, related=related)
+
+    @property
+    def locus_path(self) -> str:
+        """
+        Return the error formatted with locus.
+
+        Track A (Syntax Architect) format: MissingAffordance@world.house.manifest
+        """
+        if self.locus:
+            return f"{self.__class__.__name__}@{self.locus}"
+        return self.__class__.__name__
+
+
+class ClauseSyntaxError(PathSyntaxError):
+    """
+    Raised when a clause or annotation is malformed.
+
+    Track A (Syntax Architect) deliverable: Clause-specific errors.
+
+    Provides clause-level locus for precise error location:
+        ClauseSyntaxError@[phase=INVALID]
+    """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        path: str = "",
+        locus: str = "",
+        clause: str = "",
+        modifier: str = "",
+        value: str = "",
+        why: str | None = None,
+        suggestion: str | None = None,
+    ) -> None:
+        self.clause = clause
+        self.modifier = modifier
+        self.value = value
+
+        # Build locus from clause if not provided
+        if not locus and clause:
+            locus = clause
+        elif not locus and modifier:
+            if value:
+                locus = f"[{modifier}={value}]"
+            else:
+                locus = f"[{modifier}]"
+
+        if not why and modifier:
+            why = f"Invalid clause modifier: '{modifier}'"
+
+        super().__init__(
+            message,
+            path=path,
+            locus=locus,
+            why=why,
+            suggestion=suggestion,
+        )
+
+
+class AnnotationSyntaxError(PathSyntaxError):
+    """
+    Raised when an annotation is malformed.
+
+    Track A (Syntax Architect) deliverable: Annotation-specific errors.
+
+    Provides annotation-level locus:
+        AnnotationSyntaxError@span=invalid_value
+    """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        path: str = "",
+        locus: str = "",
+        annotation: str = "",
+        modifier: str = "",
+        value: str = "",
+        why: str | None = None,
+        suggestion: str | None = None,
+    ) -> None:
+        self.annotation = annotation
+        self.modifier = modifier
+        self.value = value
+
+        # Build locus from annotation if not provided
+        if not locus and annotation:
+            locus = annotation
+        elif not locus and modifier:
+            locus = f"@{modifier}={value}" if value else f"@{modifier}"
+
+        if not why and modifier:
+            why = f"Invalid annotation: '@{modifier}'"
+
+        super().__init__(
+            message,
+            path=path,
+            locus=locus,
+            why=why,
+            suggestion=suggestion,
+        )
 
 
 class AffordanceError(AgentesError):
@@ -298,6 +411,106 @@ class CompositionViolationError(AgentesError):
             )
 
         super().__init__(message, why=why, suggestion=suggestion)
+
+
+@dataclass
+class LawCheckFailed(AgentesError):
+    """
+    Raised when a category law verification fails during composition.
+
+    Category laws are VERIFIED, not aspirational (AD-005):
+    - Identity: Id >> f ≡ f ≡ f >> Id
+    - Associativity: (f >> g) >> h ≡ f >> (g >> h)
+
+    Provides dot-level locus for precise error location:
+        LawCheckFailed@concept.forest.manifest >> concept.forest.refine
+
+    Track B (Law Enforcer) deliverable.
+    """
+
+    law: str = ""
+    locus: str = ""
+    left_result: object = None
+    right_result: object = None
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        law: str = "",
+        locus: str = "",
+        left_result: object = None,
+        right_result: object = None,
+        why: str | None = None,
+        suggestion: str | None = None,
+    ) -> None:
+        self.law = law
+        self.locus = locus
+        self.left_result = left_result
+        self.right_result = right_result
+
+        if not why and law:
+            match law:
+                case "identity":
+                    why = "Id >> f should equal f, but results differ"
+                case "left_identity":
+                    why = "Id >> f should equal f, but results differ"
+                case "right_identity":
+                    why = "f >> Id should equal f, but results differ"
+                case "associativity":
+                    why = "(f >> g) >> h should equal f >> (g >> h), but results differ"
+                case _:
+                    why = f"The {law} law was violated"
+
+        if not suggestion:
+            match law:
+                case "identity" | "left_identity" | "right_identity":
+                    suggestion = (
+                        "Check that the morphism is pure (no hidden state).\n"
+                        "    Identity composition should not alter behavior."
+                    )
+                case "associativity":
+                    suggestion = (
+                        "Check that output types match input types at each handoff.\n"
+                        "    Ensure morphisms don't depend on composition order."
+                    )
+                case _:
+                    suggestion = "Verify that the composition preserves category laws."
+
+        super().__init__(
+            message,
+            why=why,
+            suggestion=suggestion,
+            related=[locus] if locus else None,
+        )
+
+    @classmethod
+    def from_verification(
+        cls,
+        law: str,
+        locus: str,
+        left_result: object,
+        right_result: object,
+    ) -> "LawCheckFailed":
+        """
+        Create from a failed law verification result.
+
+        Args:
+            law: Which law failed (identity, associativity)
+            locus: Dot-path of the composition (e.g., "f >> g >> h")
+            left_result: Result from left-grouped composition
+            right_result: Result from right-grouped composition
+
+        Returns:
+            LawCheckFailed with formatted message
+        """
+        return cls(
+            f"Category law '{law}' failed at {locus}",
+            law=law,
+            locus=locus,
+            left_result=left_result,
+            right_result=right_result,
+        )
 
 
 # Convenience constructors for common error patterns

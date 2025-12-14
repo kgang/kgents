@@ -1,6 +1,6 @@
 # Implementation Status Matrix
 
-> Last updated: 2025-12-12 (post-audit)
+> Last updated: 2025-12-13 (Memory Phase 6 complete)
 
 ## Legend
 
@@ -83,7 +83,7 @@
 
 ---
 
-## Entropy/Metabolism (`void/entropy.md`) — 85%
+## Entropy/Metabolism (`void/entropy.md`) — 100% COMPLETE ✅
 
 | Component | Status | Tests |
 |-----------|--------|-------|
@@ -92,19 +92,31 @@
 | FluxMetabolism | ✅ | 21 |
 | AGENTESE MetabolicNode | ✅ | (in void.py) |
 | CLI tithe command | ✅ | 12 |
-| TUI FeverOverlay | 📋 | — |
+| TUI FeverOverlay | ✅ | 18 |
+| FeverOverlay trigger wiring | ✅ | — |
+
+**Complete**: FeverTriggeredEvent emitted when pressure > 0.7 (threshold crossing),
+DashboardApp subscribes via EventBus and pushes FeverOverlay modal.
 
 ---
 
-## Memory (`self/memory.md`) — 30% [ACTIVE]
+## Memory (`self/memory.md`) — 75% [ACTIVE]
 
 | Component | Status | Notes |
 |-----------|--------|-------|
 | Ghost cache | ✅ | Complete |
+| Ghost lifecycle (TTL+labels) | ✅ | 22 tests |
 | StateCrystal | ✅ | self/stream Phase 2.4 provides foundation |
 | CrystallizationEngine | 📋 | Ready for integration |
 | CrystalReaper | 📋 | Ready for integration |
-| AGENTESE paths | 📋 | self.memory.* wiring |
+| AGENTESE paths (Four Pillars) | ✅ | store/retrieve/compress/promote/demote/deposit/sense/play/evaluate |
+| AGENTESE paths (Substrate) | ✅ | allocate/compact/route/substrate_stats (17 tests) |
+| **Phase 6: Semantic Routing** | ✅ | 116 tests |
+| - SemanticRouter | ✅ | Locality-aware gradient sensing |
+| - KgentAllocationManager | ✅ | K→M substrate integration |
+| - SubstrateScreen | ✅ | I-gent allocation dashboard |
+| - Edge cases (EmbeddingSimilarity, quota) | ✅ | Graceful fallback tested |
+| Wire to real SharedSubstrate | 📋 | Replace mocks with real substrate |
 
 ---
 
@@ -208,6 +220,31 @@
 
 **Total**: 187 tests. All phases complete.
 
+---
+
+## Visualization Strategy (`interfaces/visualization-strategy.md`) — 100% COMPLETE ✅
+
+| Phase | Component | Status | Files |
+|-------|-----------|--------|-------|
+| 1.1 | LOD Navigation (Observatory→Terrarium→Cockpit→Debugger) | ✅ | screens/*.py |
+| 1.2 | HeartbeatMixin + Controller | ✅ | theme/heartbeat.py |
+| 2.1 | ReplayController (animated playback) | ✅ | navigation/replay.py |
+| 2.2 | PheromoneManager (stigmergic trails) | ✅ | data/pheromone.py |
+| 2.3 | Posture indicators (visual state) | ✅ | theme/posture.py |
+| 3.1 | AgentChatPanel (Q&A overlay) | ✅ | overlays/chat.py |
+| 3.2 | WeatherEngine (entropy as climate) | ✅ | data/weather.py |
+| 3.3 | GravityLayoutEngine (relevance layout) | ✅ | navigation/gravity.py |
+| 4.1 | Debugger ReplayController wiring | ✅ | screens/debugger_screen.py |
+| 4.2 | WeatherWidget in Observatory/Dashboard | ✅ | widgets/weather_widget.py |
+| 4.3 | Chat keybinding (? in Cockpit) | ✅ | screens/cockpit.py |
+| 4.4 | Posture symbols in AgentCard/GardenCard | ✅ | screens/flux.py, observatory.py |
+| 4.5 | Unit tests (88 new) | ✅ | _tests/*.py |
+| 4.6 | Weather trend forecasting (metabolism→forecast) | ✅ | data/weather.py |
+| 4.7 | Garden lifecycle visualization | ✅ | screens/dashboard.py |
+| 4.8 | HotData "Day in the Life" fixture | ✅ | data/hot_data.py |
+
+**Total**: 9 new modules, 88+ new tests. All phases complete.
+
 **Files**:
 - `weave/turn.py` — Turn, TurnType, YieldTurn
 - `weave/causal_cone.py` — CausalCone, CausalConeStats
@@ -233,4 +270,4 @@ cd impl/claude && uv run mypy .
 
 ---
 
-*Last verified: 2025-12-13 Chief reconciliation (12,515 tests, mypy clean)*
+*Last verified: 2025-12-13 Night session (13,210 tests, mypy clean)*

@@ -103,6 +103,14 @@ def create_context_resolvers(
     entropy_budget: float = 100.0,
     capital_ledger: Any = None,
     purgatory: Any = None,
+    # Phase 5: Substrate integration
+    substrate: Any = None,
+    compactor: Any = None,
+    router: Any = None,
+    # Four Pillars (Phase 6)
+    memory_crystal: Any = None,
+    pheromone_field: Any = None,
+    inference_agent: Any = None,
 ) -> dict[str, Any]:
     """
     Create all five context resolvers with unified configuration.
@@ -116,6 +124,12 @@ def create_context_resolvers(
         entropy_budget: Initial entropy budget for void context
         capital_ledger: EventSourcedLedger for void.capital.* (injected for testing)
         purgatory: Purgatory for semaphore management (self.semaphore.*, world.purgatory.*)
+        substrate: SharedSubstrate for memory allocation (self.memory.allocate/substrate_stats)
+        compactor: Compactor for memory compaction (self.memory.compact)
+        router: CategoricalRouter for task routing (self.memory.route)
+        memory_crystal: MemoryCrystal for Four Pillars holographic memory
+        pheromone_field: PheromoneField for stigmergic coordination
+        inference_agent: ActiveInferenceAgent for free energy-based retention
 
     Returns:
         Dictionary mapping context names to resolvers
@@ -125,7 +139,17 @@ def create_context_resolvers(
             registry=registry, narrator=narrator, purgatory=purgatory
         ),
         "self": create_self_resolver(
-            d_gent=d_gent, n_gent=narrator, purgatory=purgatory
+            d_gent=d_gent,
+            n_gent=narrator,
+            purgatory=purgatory,
+            # Substrate integration (Phase 5)
+            substrate=substrate,
+            compactor=compactor,
+            router=router,
+            # Four Pillars (Phase 6)
+            memory_crystal=memory_crystal,
+            pheromone_field=pheromone_field,
+            inference_agent=inference_agent,
         ),
         "concept": create_concept_resolver(registry=registry, grammarian=grammarian),
         "void": create_void_resolver(

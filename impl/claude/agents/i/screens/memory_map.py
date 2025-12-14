@@ -123,6 +123,7 @@ class MemoryMapScreen(Screen[None]):
         Binding("r", "refresh", "Refresh", show=True),
         Binding("c", "consolidate", "Consolidate", show=True),
         Binding("d", "decay", "Decay", show=True),
+        Binding("s", "toggle_simulation", "Toggle Sim", show=True),
         Binding("q", "quit", "Quit", show=False),
     ]
 
@@ -130,6 +131,7 @@ class MemoryMapScreen(Screen[None]):
     crystal_data: reactive[dict[str, Any]] = reactive({})
     field_data: reactive[dict[str, Any]] = reactive({})
     inference_data: reactive[dict[str, Any]] = reactive({})
+    simulation_active: reactive[bool] = reactive(True)
 
     def __init__(
         self,
@@ -203,6 +205,10 @@ class MemoryMapScreen(Screen[None]):
         """Refresh data when mounted."""
         await self._refresh_data()
 
+        # Start simulation timer in demo mode
+        if self._demo_mode:
+            self.set_interval(0.5, self._simulate_activity)
+
     async def _refresh_data(self) -> None:
         """Refresh all data from sources."""
         # Crystal data
@@ -269,13 +275,102 @@ class MemoryMapScreen(Screen[None]):
 
         self.refresh()
 
+    async def _simulate_activity(self) -> None:
+        """
+        Simulate agent activity for real-time demo visualization.
+
+        This method probabilistically:
+        - Accesses crystal patterns (weighted by resolution)
+        - Deposits pheromone traces simulating agent activity
+        - Slightly updates belief precision (random drift)
+        """
+        if not self.simulation_active:
+            return
+
+        import random
+
+        # Simulate crystal access (promote/demote patterns)
+        if self._crystal:
+            concepts = list(self._crystal.concepts)
+            if concepts:
+                # Weighted selection by resolution
+                resolutions = [
+                    self._crystal.resolution_levels.get(c, 0.5) for c in concepts
+                ]
+                total_weight = sum(resolutions)
+
+                if total_weight > 0:
+                    # Normalize to probabilities
+                    probs = [r / total_weight for r in resolutions]
+
+                    # Select concept based on resolution (higher = more likely)
+                    concept = random.choices(concepts, weights=probs, k=1)[0]
+
+                    # 70% chance to promote (simulate access), 30% to demote (simulate decay)
+                    if random.random() < 0.7:
+                        self._crystal.promote(concept, factor=1.05)  # Small boost
+                    else:
+                        self._crystal.demote(concept, factor=0.98)  # Small decay
+
+        # Simulate pheromone deposits (agent activity traces)
+        if self._field:
+            # Generate random concept from existing concepts or demo concepts
+            demo_concepts = [
+                "python",
+                "rust",
+                "typescript",
+                "functional",
+                "docker",
+                "testing",
+                "memory",
+                "inference",
+            ]
+
+            concept = random.choice(demo_concepts)
+            intensity = random.uniform(0.5, 2.0)
+            agent_id = random.choice(["coder", "reviewer", "tester", "analyst"])
+
+            await self._field.deposit(concept, intensity, f"{agent_id}_agent")
+
+        # Simulate belief precision drift
+        if self._inference:
+            # Small random walk in precision
+            drift = random.uniform(-0.02, 0.03)  # Slight upward bias
+            new_precision = max(0.5, min(2.0, self._inference.belief.precision + drift))
+            self._inference.belief.precision = new_precision
+
+            # Occasionally add/update belief distribution
+            if random.random() < 0.2:
+                concepts = list(self._inference.belief.distribution.keys())
+                if concepts:
+                    # Randomly adjust one concept's probability
+                    concept = random.choice(concepts)
+                    current = self._inference.belief.distribution[concept]
+                    adjustment = random.uniform(-0.05, 0.05)
+                    new_value = max(0.01, min(0.9, current + adjustment))
+
+                    # Renormalize distribution
+                    total = sum(self._inference.belief.distribution.values())
+                    if total > 0:
+                        self._inference.belief.distribution[concept] = new_value
+                        # Renormalize all
+                        total = sum(self._inference.belief.distribution.values())
+                        for k in self._inference.belief.distribution:
+                            self._inference.belief.distribution[k] /= total
+
+        # Refresh the display
+        await self._refresh_data()
+
     def compose(self) -> ComposeResult:
         """Compose the memory map screen."""
         yield Header()
 
         # Header bar
         with Container(classes="header-bar"):
-            yield Static("[bold #f5d08a]MEMORY MAP[/] - Four Pillars Visualization")
+            yield Static(
+                "[bold #f5d08a]MEMORY MAP[/] - Four Pillars Visualization",
+                id="header-text",
+            )
 
         # Main grid
         with Container(id="main-container"):
@@ -322,6 +417,17 @@ class MemoryMapScreen(Screen[None]):
         try:
             content = self.query_one("#inference-content", Static)
             content.update(self._render_inference(data))
+        except Exception:
+            pass
+
+    def watch_simulation_active(self, active: bool) -> None:
+        """Update header when simulation state changes."""
+        try:
+            header = self.query_one("#header-text", Static)
+            sim_status = "[#1dd1a1]SIM:ON[/]" if active else "[#8b7ba5]SIM:OFF[/]"
+            header.update(
+                f"[bold #f5d08a]MEMORY MAP[/] - Four Pillars Visualization  {sim_status}"
+            )
         except Exception:
             pass
 
@@ -549,6 +655,12 @@ class MemoryMapScreen(Screen[None]):
                 self.notify(f"Decay error: {e}", severity="error")
         else:
             self.notify("No pheromone field available", severity="warning")
+
+    def action_toggle_simulation(self) -> None:
+        """Toggle simulation on/off."""
+        self.simulation_active = not self.simulation_active
+        status = "active" if self.simulation_active else "paused"
+        self.notify(f"Simulation {status}")
 
     def action_quit(self) -> None:
         """Quit the application."""

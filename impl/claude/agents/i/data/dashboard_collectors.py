@@ -30,7 +30,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING, Any, Callable
 
 if TYPE_CHECKING:
@@ -55,6 +55,13 @@ class KgentMetrics:
     tokens_used: int = 0  # Session token usage
     last_dream: datetime | None = None  # Last hypnagogia run
     is_online: bool = True
+
+    # Detailed lifecycle counts (for garden visualization)
+    garden_seeds: int = 0  # New, unvalidated patterns
+    garden_saplings: int = 0  # Growing patterns
+    garden_flowers: int = 0  # Peak insight patterns
+    garden_compost: int = 0  # Deprecated patterns
+    garden_season: str = "summer"  # Current garden season
 
     @property
     def dream_age_str(self) -> str:
@@ -86,6 +93,20 @@ class MetabolismMetrics:
     def pressure_pct(self) -> int:
         """Pressure as integer percentage."""
         return int(self.pressure * 100)
+
+    @property
+    def tithe_age_str(self) -> str:
+        """Human-readable time since last tithe."""
+        if self.last_tithe is None:
+            return "never"
+        delta = datetime.now(timezone.utc) - self.last_tithe
+        minutes = delta.total_seconds() / 60
+        if minutes < 1:
+            return "just now"
+        elif minutes < 60:
+            return f"{int(minutes)}m ago"
+        else:
+            return f"{int(minutes / 60)}h ago"
 
     @property
     def status_text(self) -> str:
@@ -267,7 +288,12 @@ async def collect_kgent_metrics() -> KgentMetrics:
     Collect K-gent soul metrics.
 
     Returns empty metrics with is_online=False if unavailable.
+
+    Two-tier collection strategy:
+    1. Full CLI context: Get soul state, garden stats, and hypnagogia
+    2. Fallback: Direct garden access when CLI context unavailable
     """
+    # Try full CLI context first
     try:
         from agents.k import KgentSoul
         from agents.k.garden import get_garden
@@ -301,6 +327,36 @@ async def collect_kgent_metrics() -> KgentMetrics:
             tokens_used=state.tokens_used_session,
             last_dream=last_dream,
             is_online=True,
+            garden_seeds=stats.by_lifecycle.get("seed", 0),
+            garden_saplings=stats.by_lifecycle.get("sapling", 0),
+            garden_flowers=stats.by_lifecycle.get("flower", 0),
+            garden_compost=stats.by_lifecycle.get("compost", 0),
+            garden_season=stats.current_season.value,
+        )
+    except Exception:
+        # Fallback: Direct garden access without CLI context
+        pass
+
+    # Fallback: Direct garden access
+    try:
+        from agents.k.garden import PersonaGarden
+
+        garden = PersonaGarden()
+        stats = await garden.stats()
+
+        return KgentMetrics(
+            mode="reflect",  # Default when not in active CLI session
+            garden_patterns=stats.total_entries,
+            garden_trees=stats.by_lifecycle.get("tree", 0),
+            interactions_count=0,  # Unknown without CLI context
+            tokens_used=0,  # Unknown without CLI context
+            last_dream=None,
+            is_online=True,  # Garden is accessible = partially online
+            garden_seeds=stats.by_lifecycle.get("seed", 0),
+            garden_saplings=stats.by_lifecycle.get("sapling", 0),
+            garden_flowers=stats.by_lifecycle.get("flower", 0),
+            garden_compost=stats.by_lifecycle.get("compost", 0),
+            garden_season=stats.current_season.value,
         )
 
     except ImportError:
@@ -640,8 +696,13 @@ def create_demo_metrics() -> DashboardMetrics:
             garden_trees=5,
             interactions_count=127,
             tokens_used=45231,
-            last_dream=datetime.now(timezone.utc).replace(hour=now.hour - 2),
+            last_dream=now - timedelta(hours=2),
             is_online=True,
+            garden_seeds=2,
+            garden_saplings=4,
+            garden_flowers=1,
+            garden_compost=0,
+            garden_season="autumn",
         ),
         metabolism=MetabolismMetrics(
             pressure=0.42,
@@ -742,6 +803,111 @@ def create_random_metrics() -> DashboardMetrics:
     return base
 
 
+def create_scenario_metrics(hour: int | None = None) -> DashboardMetrics:
+    """
+    Create metrics from the "Day in the Life" scenario.
+
+    This provides a rich, LLM-generated narrative with realistic activity
+    patterns throughout a 24-hour period.
+
+    Args:
+        hour: Hour of day (0-23). Defaults to current hour.
+
+    Returns:
+        Dashboard metrics based on the scenario state at that hour.
+    """
+    from .hot_data import create_day_scenario, get_scenario_metrics_at_hour
+
+    # Get current hour if not specified
+    if hour is None:
+        hour = datetime.now(timezone.utc).hour
+
+    # Create scenario and get metrics for this hour
+    scenario = create_day_scenario()
+    metrics_dict = get_scenario_metrics_at_hour(scenario, hour)
+
+    kgent_data = metrics_dict["kgent"]
+    metab_data = metrics_dict["metabolism"]
+    turns_data = metrics_dict["turns"]
+    traces_data = metrics_dict["traces"]
+
+    # Build trace entries
+    traces = [
+        TraceEntry(
+            timestamp=t["timestamp"],
+            path=t["path"],
+            result=t["result"],
+            latency_ms=t["latency_ms"],
+        )
+        for t in traces_data
+    ]
+
+    return DashboardMetrics(
+        kgent=KgentMetrics(
+            mode=kgent_data["mode"],
+            garden_patterns=kgent_data["garden_patterns"],
+            garden_trees=kgent_data["garden_trees"],
+            interactions_count=kgent_data["interactions_count"],
+            tokens_used=scenario.total_tokens,
+            last_dream=kgent_data["last_dream"],
+            is_online=True,
+            garden_seeds=kgent_data["garden_seeds"],
+            garden_saplings=kgent_data["garden_saplings"],
+            garden_flowers=kgent_data["garden_flowers"],
+            garden_compost=kgent_data["garden_compost"],
+            garden_season=kgent_data["garden_season"],
+        ),
+        metabolism=MetabolismMetrics(
+            pressure=metab_data["pressure"],
+            temperature=metab_data["temperature"],
+            in_fever=metab_data["in_fever"],
+            fever_count=metab_data["fever_count"],
+            last_tithe=metab_data["last_tithe"],
+            is_online=True,
+        ),
+        triad=TriadMetrics(
+            durability=0.95,
+            resonance=0.88,
+            reflex=0.92,
+            cdc_lag_ms=50 + (hour * 5),  # Lag increases through the day
+            synapse_active=True,
+            outbox_pending=turns_data["pending_yields"],
+            is_online=True,
+        ),
+        flux=FluxMetrics(
+            events_per_second=max(0.1, metab_data["pressure"] * 3),
+            queue_depth=turns_data["pending_yields"] * 5,
+            active_agents=3 if 9 <= hour <= 17 else 1,
+            total_events_processed=turns_data["total_turns"] * 10,
+            error_rate=0.01 if not metab_data["in_fever"] else 0.05,
+            is_online=True,
+        ),
+        traces=traces,
+        trace_analysis=TraceAnalysisMetrics(
+            files_analyzed=2582,
+            definitions_found=42189,
+            calls_found=133421,
+            analysis_time_ms=3880,
+            is_online=True,
+            hottest_functions=[
+                {"name": "TraceRenderer.__init__", "callers": 1655},
+                {"name": "CallVisitor.__init__", "callers": 1655},
+                {"name": "StaticCallGraph.__init__", "callers": 1655},
+            ],
+            call_trees=[],
+        ),
+        turns=TurnMetrics(
+            total_turns=turns_data["total_turns"],
+            by_type=turns_data["by_type"],
+            by_source={"K-gent": turns_data["total_turns"]},
+            pending_yields=turns_data["pending_yields"],
+            compression_ratio=0.62,
+            cone_stats={"K-gent": 0.58},
+            is_online=True,
+        ),
+    )
+
+
 # =============================================================================
 # Observable Metrics (for live updates)
 # =============================================================================
@@ -752,6 +918,7 @@ class MetricsObservable:
     Observable wrapper for dashboard metrics.
 
     Allows subscribing to metric updates for live dashboard refresh.
+    Also emits FeverTriggeredEvent when entropy crosses the threshold.
 
     Usage:
         observable = MetricsObservable()
@@ -759,11 +926,15 @@ class MetricsObservable:
         await observable.start_collecting(interval=1.0)
     """
 
+    # Threshold for fever trigger (entropy > 0.7)
+    FEVER_THRESHOLD: float = 0.7
+
     def __init__(self) -> None:
         self._subscribers: list[Callable[[DashboardMetrics], None]] = []
         self._running = False
         self._task: asyncio.Task[None] | None = None
         self._latest: DashboardMetrics | None = None
+        self._previous_pressure: float = 0.0  # Track for threshold crossing
 
     def subscribe(self, callback: Callable[[DashboardMetrics], None]) -> None:
         """Subscribe to metric updates."""
@@ -773,6 +944,22 @@ class MetricsObservable:
         """Unsubscribe from metric updates."""
         if callback in self._subscribers:
             self._subscribers.remove(callback)
+
+    def _emit_fever_event(self, pressure: float) -> None:
+        """Emit FeverTriggeredEvent via EventBus when threshold crossed.
+
+        The Accursed Share becomes visible: entropy has exceeded sustainable
+        levels and creative intervention (oblique strategies) may surface.
+        """
+        from ..services import EventBus, FeverTriggeredEvent
+
+        event = FeverTriggeredEvent(
+            entropy=pressure,  # Pressure maps to entropy for fever purposes
+            pressure=pressure,
+            trigger="pressure_overflow",
+        )
+        EventBus.get().emit(event)
+        logger.debug(f"FeverTriggeredEvent emitted at pressure={pressure:.2f}")
 
     @property
     def latest(self) -> DashboardMetrics | None:
@@ -803,6 +990,17 @@ class MetricsObservable:
                         metrics = await collect_metrics()
 
                     self._latest = metrics
+
+                    # Check for fever threshold crossing
+                    # Emit FeverTriggeredEvent when pressure crosses threshold
+                    current_pressure = metrics.metabolism.pressure
+                    if (
+                        current_pressure > self.FEVER_THRESHOLD
+                        and self._previous_pressure <= self.FEVER_THRESHOLD
+                    ):
+                        # Threshold crossed upward - emit fever event
+                        self._emit_fever_event(current_pressure)
+                    self._previous_pressure = current_pressure
 
                     # Notify subscribers
                     for callback in self._subscribers:
@@ -858,6 +1056,7 @@ __all__ = [
     # Demo data
     "create_demo_metrics",
     "create_random_metrics",
+    "create_scenario_metrics",
     # Observable
     "MetricsObservable",
 ]

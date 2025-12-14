@@ -13,7 +13,9 @@ import pytest
 from ..exceptions import (
     AffordanceError,
     AgentesError,
+    AnnotationSyntaxError,
     BudgetExhaustedError,
+    ClauseSyntaxError,
     CompositionViolationError,
     ObserverRequiredError,
     PathNotFoundError,
@@ -124,6 +126,139 @@ class TestPathSyntaxError:
         err = invalid_path_syntax("bad")
         assert "bad" in str(err)
         assert "malformed" in str(err)
+
+    def test_locus_stored(self) -> None:
+        """Track A: Locus is stored on error."""
+        err = PathSyntaxError(
+            "Bad path",
+            path="world.house.manifest",
+            locus="world.house",
+        )
+        assert err.locus == "world.house"
+        assert err.path == "world.house.manifest"
+
+    def test_locus_path_property(self) -> None:
+        """Track A: locus_path property formats error@locus."""
+        err = PathSyntaxError(
+            "Bad path",
+            path="world.house.manifest",
+            locus="world.house",
+        )
+        assert err.locus_path == "PathSyntaxError@world.house"
+
+    def test_locus_path_without_locus(self) -> None:
+        """Track A: locus_path works without locus."""
+        err = PathSyntaxError("Bad path")
+        assert err.locus_path == "PathSyntaxError"
+
+    def test_locus_in_related(self) -> None:
+        """Track A: Locus appears in related field."""
+        err = PathSyntaxError(
+            "Bad path",
+            locus="world.house.manifest",
+        )
+        assert "world.house.manifest" in str(err)
+
+    def test_position_stored(self) -> None:
+        """Track A: Position is stored for highlighting."""
+        err = PathSyntaxError(
+            "Bad path",
+            position=15,
+        )
+        assert err.position == 15
+
+
+class TestClauseSyntaxError:
+    """Tests for clause syntax errors (Track A: Syntax Architect)."""
+
+    def test_basic_clause_error(self) -> None:
+        """Basic clause syntax error."""
+        err = ClauseSyntaxError(
+            "Unknown clause modifier",
+            modifier="unknown",
+        )
+        assert "unknown" in str(err)
+
+    def test_auto_builds_locus(self) -> None:
+        """Track A: Auto-builds locus from modifier/value."""
+        err = ClauseSyntaxError(
+            "Invalid phase",
+            modifier="phase",
+            value="INVALID",
+        )
+        assert err.locus == "[phase=INVALID]"
+
+    def test_locus_from_clause(self) -> None:
+        """Track A: Locus can come from clause string."""
+        err = ClauseSyntaxError(
+            "Bad clause",
+            clause="[entropy=1.5]",
+        )
+        assert err.locus == "[entropy=1.5]"
+
+    def test_modifier_without_value(self) -> None:
+        """Track A: Handles modifier without value."""
+        err = ClauseSyntaxError(
+            "Unknown modifier",
+            modifier="flag",
+        )
+        assert err.locus == "[flag]"
+
+    def test_inherits_from_path_syntax_error(self) -> None:
+        """ClauseSyntaxError inherits PathSyntaxError."""
+        err = ClauseSyntaxError("Bad clause")
+        assert isinstance(err, PathSyntaxError)
+
+    def test_locus_path_format(self) -> None:
+        """Track A: locus_path has clause-specific format."""
+        err = ClauseSyntaxError(
+            "Bad clause",
+            clause="[phase=INVALID]",
+        )
+        assert err.locus_path == "ClauseSyntaxError@[phase=INVALID]"
+
+
+class TestAnnotationSyntaxError:
+    """Tests for annotation syntax errors (Track A: Syntax Architect)."""
+
+    def test_basic_annotation_error(self) -> None:
+        """Basic annotation syntax error."""
+        err = AnnotationSyntaxError(
+            "Unknown annotation",
+            modifier="unknown",
+            value="value",
+        )
+        assert "unknown" in str(err)
+
+    def test_auto_builds_locus(self) -> None:
+        """Track A: Auto-builds locus from modifier/value."""
+        err = AnnotationSyntaxError(
+            "Invalid annotation",
+            modifier="span",
+            value="bad_span",
+        )
+        assert err.locus == "@span=bad_span"
+
+    def test_locus_from_annotation(self) -> None:
+        """Track A: Locus can come from annotation string."""
+        err = AnnotationSyntaxError(
+            "Bad annotation",
+            annotation="@dot=invalid",
+        )
+        assert err.locus == "@dot=invalid"
+
+    def test_inherits_from_path_syntax_error(self) -> None:
+        """AnnotationSyntaxError inherits PathSyntaxError."""
+        err = AnnotationSyntaxError("Bad annotation")
+        assert isinstance(err, PathSyntaxError)
+
+    def test_locus_path_format(self) -> None:
+        """Track A: locus_path has annotation-specific format."""
+        err = AnnotationSyntaxError(
+            "Bad annotation",
+            annotation="@span",
+        )
+        assert err.locus_path == "AnnotationSyntaxError@@span"
 
 
 class TestAffordanceError:
@@ -273,6 +408,11 @@ class TestSympatheticErrorPrinciple:
         [
             (PathNotFoundError, ("Not found", {"path": "world.x"})),
             (PathSyntaxError, ("Bad syntax",)),
+            (ClauseSyntaxError, ("Bad clause", {"modifier": "phase"})),
+            (
+                AnnotationSyntaxError,
+                ("Bad annotation", {"modifier": "span", "value": "x"}),
+            ),
             (AffordanceError, ("Denied", {"aspect": "x", "available": ["y"]})),
             (ObserverRequiredError, ()),
             (TastefulnessError, ("Bad spec",)),
@@ -307,6 +447,8 @@ class TestSympatheticErrorPrinciple:
         error_classes = [
             PathNotFoundError,
             PathSyntaxError,
+            ClauseSyntaxError,
+            AnnotationSyntaxError,
             AffordanceError,
             ObserverRequiredError,
             TastefulnessError,

@@ -46,7 +46,7 @@ class NavigationController:
 
     def __init__(
         self,
-        app: App[None],
+        app: "App[object]",
         state_manager: StateManager,
         animation_duration_ms: int = 150,
     ) -> None:

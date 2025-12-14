@@ -10,7 +10,7 @@ from collections.abc import Generator
 from dataclasses import dataclass, field
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import pytest
 
@@ -95,9 +95,18 @@ class _MockUmweltImpl:
         return True
 
 
-# Type alias for MockUmwelt that's compatible with Umwelt[Any, Any]
-# Using Any as the underlying type silences the generic parameter requirement
+# Type alias for MockUmwelt
+# This is used for test mocks that duck-type the Umwelt interface
 MockUmwelt = _MockUmweltImpl
+
+
+def create_mock_umwelt(
+    dna: MockDNA | None = None,
+    archetype: str = "default",
+    gravity: tuple[Any, ...] = (),
+) -> _MockUmweltImpl:
+    """Create a mock Umwelt."""
+    return _MockUmweltImpl(dna=dna, archetype=archetype, gravity=gravity)
 
 
 # === Mock Nodes ===
@@ -175,21 +184,21 @@ def poet_dna() -> PoetDNA:
 
 
 @pytest.fixture
-def mock_umwelt() -> _MockUmweltImpl:
-    """Default mock Umwelt."""
-    return MockUmwelt()
+def mock_umwelt() -> Any:
+    """Default mock Umwelt (returns Any for test compatibility with Umwelt protocol)."""
+    return create_mock_umwelt()
 
 
 @pytest.fixture
-def architect_umwelt() -> _MockUmweltImpl:
-    """Architect Umwelt."""
-    return MockUmwelt(dna=ArchitectDNA())
+def architect_umwelt() -> Any:
+    """Architect Umwelt (returns Any for test compatibility with Umwelt protocol)."""
+    return create_mock_umwelt(dna=ArchitectDNA())
 
 
 @pytest.fixture
-def poet_umwelt() -> _MockUmweltImpl:
-    """Poet Umwelt."""
-    return MockUmwelt(dna=PoetDNA())
+def poet_umwelt() -> Any:
+    """Poet Umwelt (returns Any for test compatibility with Umwelt protocol)."""
+    return create_mock_umwelt(dna=PoetDNA())
 
 
 @pytest.fixture

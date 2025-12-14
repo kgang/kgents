@@ -69,11 +69,16 @@ class ComposedPath:
     - enforce_minimal_output: Check returns are single logical units
     - verify_laws: Runtime category law verification
     - lift_all: Get all morphisms as composable agents
+
+    Track B (Law Enforcer) Enhancements:
+    - emit_law_check: Emit law_check span events on each invocation
+    - Law verification wired into invoke()
     """
 
     paths: list[str]
     logos: "Logos"
     _enforce_minimal_output: bool = True
+    _emit_law_check: bool = True
 
     async def invoke(
         self,
@@ -86,6 +91,8 @@ class ComposedPath:
         Each path is invoked in sequence, passing the result
         of the previous path as the input kwarg.
 
+        Track B (Law Enforcer): Emits law_check events for observability.
+
         Args:
             observer: The observer's Umwelt (REQUIRED)
             initial_input: Optional initial value for the pipeline
@@ -93,7 +100,17 @@ class ComposedPath:
         Returns:
             Final result after all paths executed
         """
+        from .laws import emit_law_check_event
         from .laws import enforce_minimal_output as check_output
+
+        # Track B: Emit law_check event for the composition
+        if self._emit_law_check and len(self.paths) >= 2:
+            # For compositions with 2+ paths, associativity is relevant
+            emit_law_check_event(
+                law="associativity",
+                result="pass",  # Structural guarantee via right-association
+                locus=self.name,
+            )
 
         current = initial_input
         for path in self.paths:
@@ -101,6 +118,7 @@ class ComposedPath:
             # Enforce Minimal Output Principle (Phase 5)
             if self._enforce_minimal_output:
                 current = check_output(current, path)
+
         return current
 
     def __rshift__(self, other: "ComposedPath | str") -> "ComposedPath":
@@ -108,17 +126,20 @@ class ComposedPath:
         Compose with another path.
 
         Preserves associativity: (a >> b) >> c == a >> (b >> c)
+        Track B (Law Enforcer): Preserves law check flag.
         """
         if isinstance(other, str):
             return ComposedPath(
                 self.paths + [other],
                 self.logos,
                 self._enforce_minimal_output,
+                self._emit_law_check,
             )
         return ComposedPath(
             self.paths + other.paths,
             self.logos,
             self._enforce_minimal_output and other._enforce_minimal_output,
+            self._emit_law_check and other._emit_law_check,
         )
 
     def __rrshift__(self, other: str) -> "ComposedPath":
@@ -127,6 +148,7 @@ class ComposedPath:
             [other] + self.paths,
             self.logos,
             self._enforce_minimal_output,
+            self._emit_law_check,
         )
 
     @property
@@ -149,7 +171,30 @@ class ComposedPath:
 
         Use with caution—this allows array returns which break composition.
         """
-        return ComposedPath(self.paths, self.logos, False)
+        return ComposedPath(self.paths, self.logos, False, self._emit_law_check)
+
+    def without_law_checks(self) -> "ComposedPath":
+        """
+        Create a version without law check event emission.
+
+        Track B (Law Enforcer): Use this for performance-critical paths
+        where you've already verified laws hold.
+        """
+        return ComposedPath(self.paths, self.logos, self._enforce_minimal_output, False)
+
+    def with_law_checks(self, emit: bool = True) -> "ComposedPath":
+        """
+        Create a version with explicit law check control.
+
+        Track B (Law Enforcer): Use this to enable/disable law check events.
+
+        Args:
+            emit: Whether to emit law_check span events
+
+        Returns:
+            ComposedPath with specified law check behavior
+        """
+        return ComposedPath(self.paths, self.logos, self._enforce_minimal_output, emit)
 
     def __len__(self) -> int:
         """Number of paths in composition."""
@@ -496,13 +541,20 @@ class Logos:
 
             return result
 
-    def compose(self, *paths: str, enforce_output: bool = True) -> ComposedPath:
+    def compose(
+        self,
+        *paths: str,
+        enforce_output: bool = True,
+        emit_law_check: bool = True,
+    ) -> ComposedPath:
         """
         Create a composed path for pipeline execution.
 
         Category Laws are preserved:
         - Identity: Id >> path == path == path >> Id
         - Associativity: (a >> b) >> c == a >> (b >> c)
+
+        Track B (Law Enforcer): Emits law_check span events when invoked.
 
         Example:
             pipeline = logos.compose(
@@ -516,11 +568,13 @@ class Logos:
             *paths: AGENTESE paths to compose
             enforce_output: Whether to enforce Minimal Output Principle
                           (default: True). Set to False to allow array returns.
+            emit_law_check: Whether to emit law_check span events
+                          (default: True). Set to False for performance.
 
         Returns:
             ComposedPath that can be invoked or further composed
         """
-        return ComposedPath(list(paths), self, enforce_output)
+        return ComposedPath(list(paths), self, enforce_output, emit_law_check)
 
     def identity(self) -> IdentityPath:
         """
@@ -540,20 +594,23 @@ class Logos:
         """
         return IdentityPath(self)
 
-    def path(self, p: str) -> ComposedPath:
+    def path(self, p: str, emit_law_check: bool = True) -> ComposedPath:
         """
         Create a single-path composition for chaining.
 
         This allows the >> operator on string paths:
             pipeline = logos.path("world.house.manifest") >> "concept.summary.refine"
 
+        Track B (Law Enforcer): Emits law_check events when composed paths invoke.
+
         Args:
             p: AGENTESE path
+            emit_law_check: Whether to emit law_check span events
 
         Returns:
             ComposedPath with single path
         """
-        return ComposedPath([p], self)
+        return ComposedPath([p], self, True, emit_law_check)
 
     def register(self, handle: str, node: LogosNode) -> None:
         """

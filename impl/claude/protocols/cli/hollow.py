@@ -85,6 +85,7 @@ DEVEX (Trust Loop):
   tether    Attach to agent with signal forwarding
   trace     Static + runtime call graph tracing
   telemetry OpenTelemetry observability (status|traces|metrics)
+  memory    Four Pillars memory health (crystal|field|inference)
 
 PLANNING (Forest Protocol):
   forest    Plan forest health (status|update|check|lint)
@@ -210,6 +211,8 @@ COMMAND_REGISTRY: dict[str, str] = {
     "reject": "protocols.cli.handlers.approve:cmd_reject",
     # HotData Infrastructure (AD-004)
     "fixture": "protocols.cli.handlers.fixture:cmd_fixture",
+    # Four Pillars Memory (Phase 4)
+    "memory": "protocols.cli.handlers.memory:cmd_memory",
 }
 
 

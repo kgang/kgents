@@ -128,6 +128,12 @@ class MemoryNode(BaseLogosNode):
         default_factory=dict
     )  # name -> LanguageGame
 
+    # Substrate integration (Phase 5)
+    _substrate: Any = None  # SharedSubstrate from agents.m
+    _allocation: Any = None  # Agent's Allocation in the substrate
+    _router: Any = None  # CategoricalRouter from agents.m
+    _compactor: Any = None  # Compactor from agents.m
+
     @property
     def handle(self) -> str:
         return self._handle
@@ -197,6 +203,15 @@ class MemoryNode(BaseLogosNode):
                 return await self._evaluate_inference(observer, **kwargs)
             case "inference_consolidate":
                 return await self._inference_consolidate(observer, **kwargs)
+            # Substrate operations (Phase 5)
+            case "allocate":
+                return await self._allocate_in_substrate(observer, **kwargs)
+            case "compact":
+                return await self._compact_allocation(observer, **kwargs)
+            case "route":
+                return await self._route_task(observer, **kwargs)
+            case "substrate_stats":
+                return await self._substrate_stats(observer, **kwargs)
             case _:
                 return {"aspect": aspect, "status": "not implemented"}
 
@@ -976,6 +991,234 @@ class MemoryNode(BaseLogosNode):
         except ImportError:
             return {"error": "agents.m module not available"}
 
+    # --- Substrate Operations (Phase 5) ---
+
+    async def _allocate_in_substrate(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Allocate memory in the shared substrate.
+
+        AGENTESE: self.memory.allocate
+
+        Each agent gets a "room" in the substrate building.
+        The allocation provides namespaced storage with quota limits.
+
+        Args:
+            human_label: Human-readable label (required for no debris)
+            max_patterns: Maximum patterns in allocation (default 1000)
+            ttl_hours: Time-to-live in hours (default 24)
+
+        Returns:
+            Allocation details
+        """
+        if self._substrate is None:
+            return {
+                "error": "SharedSubstrate not configured",
+                "note": "Wire SharedSubstrate to MemoryNode for substrate ops",
+            }
+
+        meta = self._umwelt_to_meta(observer)
+        human_label = kwargs.get("human_label", f"{meta.name} working memory")
+        max_patterns = kwargs.get("max_patterns", 1000)
+        ttl_hours = kwargs.get("ttl_hours", 24)
+
+        try:
+            from agents.m.substrate import LifecyclePolicy, MemoryQuota
+
+            quota = MemoryQuota(max_patterns=max_patterns)
+            lifecycle = LifecyclePolicy(
+                human_label=human_label,
+                ttl=timedelta(hours=ttl_hours),
+            )
+
+            allocation = self._substrate.allocate(
+                agent_id=meta.name,
+                quota=quota,
+                lifecycle=lifecycle,
+            )
+
+            # Store allocation for future use
+            self._allocation = allocation
+
+            return {
+                "status": "allocated",
+                "agent_id": str(allocation.agent_id),
+                "namespace": allocation.namespace,
+                "max_patterns": quota.max_patterns,
+                "human_label": human_label,
+                "ttl_hours": ttl_hours,
+            }
+        except ImportError:
+            return {"error": "agents.m.substrate module not available"}
+        except ValueError as e:
+            return {"error": str(e)}
+
+    async def _compact_allocation(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Compact the agent's memory allocation.
+
+        AGENTESE: self.memory.compact
+
+        Compaction = purposeful forgetting (Accursed Share).
+        Reduces resolution to free space while preserving all concepts.
+
+        Args:
+            force: Force compaction even if below threshold (default False)
+
+        Returns:
+            Compaction event details or None if not needed
+        """
+        if self._allocation is None:
+            return {
+                "error": "No allocation exists",
+                "note": "Use self.memory.allocate first",
+            }
+
+        if self._compactor is None:
+            return {
+                "error": "Compactor not configured",
+                "note": "Wire Compactor to MemoryNode for compaction ops",
+            }
+
+        force = kwargs.get("force", False)
+
+        try:
+            event = await self._compactor.compact_allocation(
+                allocation=self._allocation,
+                force=force,
+            )
+
+            if event is None:
+                return {
+                    "status": "not_needed",
+                    "reason": "Below compaction threshold",
+                    "usage_ratio": self._allocation.usage_ratio(),
+                }
+
+            return {
+                "status": "compacted",
+                "ratio": event.ratio,
+                "patterns_before": event.patterns_before,
+                "patterns_after": event.patterns_after,
+                "resolution_loss": event.resolution_loss,
+                "duration_ms": event.duration_ms,
+                "reason": event.reason,
+            }
+        except Exception as e:
+            return {"error": f"Compaction failed: {e}"}
+
+    async def _route_task(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Route a task to the best agent via pheromone gradients.
+
+        AGENTESE: self.memory.route
+
+        Uses stigmergic routing: tasks follow pheromone trails
+        deposited by previous successful agent-task pairings.
+
+        The adjunction: deposit ⊣ route
+        Depositing creates gradients; routing follows them.
+
+        Args:
+            concept: Primary concept for routing
+            content: Task content/description
+            priority: Task priority (0 to 1)
+            related: Related concepts for multi-gradient routing
+
+        Returns:
+            Routing decision with chosen agent and confidence
+        """
+        if self._router is None:
+            return {
+                "error": "CategoricalRouter not configured",
+                "note": "Wire CategoricalRouter to MemoryNode for routing ops",
+            }
+
+        concept = kwargs.get("concept")
+        if not concept:
+            return {"error": "concept required"}
+
+        try:
+            from agents.m.routing import Task
+
+            task = Task(
+                concept=concept,
+                content=kwargs.get("content", ""),
+                priority=kwargs.get("priority", 0.5),
+                related_concepts=kwargs.get("related", []),
+            )
+
+            decision = await self._router.route(task)
+
+            return {
+                "status": "routed",
+                "agent_id": decision.agent_id,
+                "confidence": decision.confidence,
+                "gradient_strength": decision.gradient_strength,
+                "reasoning": decision.reasoning,
+                "alternatives": [
+                    {"agent_id": aid, "score": score}
+                    for aid, score in decision.alternatives
+                ],
+            }
+        except ImportError:
+            return {"error": "agents.m.routing module not available"}
+        except Exception as e:
+            return {"error": f"Routing failed: {e}"}
+
+    async def _substrate_stats(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Get substrate statistics.
+
+        AGENTESE: self.memory.substrate_stats
+
+        Returns metrics about the shared memory substrate.
+
+        Returns:
+            Substrate statistics including allocation counts, patterns, etc.
+        """
+        if self._substrate is None:
+            return {
+                "error": "SharedSubstrate not configured",
+                "stats": None,
+            }
+
+        stats: dict[str, Any] = self._substrate.stats()
+
+        # Add allocation-specific info if we have one
+        if self._allocation is not None:
+            stats["current_allocation"] = {
+                "agent_id": str(self._allocation.agent_id),
+                "pattern_count": self._allocation.pattern_count,
+                "usage_ratio": self._allocation.usage_ratio(),
+                "is_at_soft_limit": self._allocation.is_at_soft_limit(),
+            }
+
+        # Add compactor stats if available
+        if self._compactor is not None:
+            stats["compactor"] = self._compactor.stats()
+
+        # Add router stats if available
+        if self._router is not None:
+            stats["router"] = self._router.stats()
+
+        return stats
+
 
 # === Capabilities Node ===
 
@@ -1750,6 +1993,11 @@ class SelfContextResolver:
     _inference_agent: Any = None  # ActiveInferenceAgent from agents.m
     _language_games: dict[str, Any] = field(default_factory=dict)
 
+    # Substrate integration (Phase 5)
+    _substrate: Any = None  # SharedSubstrate from agents.m
+    _router: Any = None  # CategoricalRouter from agents.m
+    _compactor: Any = None  # Compactor from agents.m
+
     # Singleton nodes for self context
     _memory: MemoryNode | None = None
     _capabilities: CapabilitiesNode | None = None
@@ -1771,6 +2019,10 @@ class SelfContextResolver:
             _pheromone_field=self._pheromone_field,
             _inference_agent=self._inference_agent,
             _language_games=self._language_games,
+            # Substrate integration (Phase 5)
+            _substrate=self._substrate,
+            _router=self._router,
+            _compactor=self._compactor,
         )
         self._capabilities = CapabilitiesNode()
         self._state = StateNode()
@@ -1870,6 +2122,10 @@ def create_self_resolver(
     pheromone_field: Any = None,
     inference_agent: Any = None,
     language_games: dict[str, Any] | None = None,
+    # Substrate integration (Phase 5)
+    substrate: Any = None,
+    router: Any = None,
+    compactor: Any = None,
 ) -> SelfContextResolver:
     """
     Create a SelfContextResolver with optional integrations.
@@ -1884,6 +2140,9 @@ def create_self_resolver(
         pheromone_field: PheromoneField for stigmergic coordination
         inference_agent: ActiveInferenceAgent for free energy-based retention
         language_games: Dict of language games for Wittgensteinian access
+        substrate: SharedSubstrate for memory allocation and management
+        router: CategoricalRouter for stigmergic task routing
+        compactor: Compactor for graceful memory compaction
 
     Returns:
         Configured SelfContextResolver
@@ -1899,5 +2158,9 @@ def create_self_resolver(
     resolver._pheromone_field = pheromone_field
     resolver._inference_agent = inference_agent
     resolver._language_games = language_games or {}
+    # Substrate
+    resolver._substrate = substrate
+    resolver._router = router
+    resolver._compactor = compactor
     resolver.__post_init__()  # Reinitialize with integrations
     return resolver

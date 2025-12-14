@@ -24,7 +24,6 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Horizontal, Vertical
 from textual.reactive import reactive
-from textual.screen import Screen
 from textual.widgets import Footer, Header, Static
 
 from ..data.core_types import Phase
@@ -35,11 +34,13 @@ from ..data.garden import (
     create_demo_yield_turns,
 )
 from ..data.state import AgentSnapshot, create_demo_flux_state
+from ..overlays.chat import AgentChatPanel
 from ..widgets.density_field import DensityField
 from ..widgets.entropy import entropy_to_params
 from ..widgets.graph_layout import GraphLayout
 from ..widgets.slider import Slider
 from ..widgets.sparkline import Sparkline
+from .base import KgentsScreen
 
 if TYPE_CHECKING:
     pass
@@ -379,7 +380,7 @@ class YieldQueuePanel(Static):
         return "\n".join(lines)
 
 
-class CockpitScreen(Screen[None]):
+class CockpitScreen(KgentsScreen):
     """
     Cockpit View - LOD Level 1 (Surface).
 
@@ -398,6 +399,9 @@ class CockpitScreen(Screen[None]):
       t: Show Loom view
       Esc: Back to Flux
     """
+
+    # Visual anchor for gentle transitions
+    ANCHOR = "header-info"
 
     CSS = """
     CockpitScreen {
@@ -497,7 +501,9 @@ class CockpitScreen(Screen[None]):
         Binding("equal", "zoom_in", "Zoom to MRI", show=False),
         Binding("minus", "zoom_out", "Zoom to Flux", show=True),
         Binding("underscore", "zoom_out", "Zoom to Flux", show=False),
+        Binding("d", "open_debugger", "Debugger", show=True),
         Binding("t", "show_loom", "Loom View", show=True),
+        Binding("question_mark", "open_chat", "Chat", show=True),
         Binding("h", "decrease_temp", "Temp -", show=False),
         Binding("l", "increase_temp", "Temp +", show=False),
         Binding("left", "decrease_temp", "Temp -", show=False),
@@ -796,6 +802,37 @@ class CockpitScreen(Screen[None]):
                 demo_mode=self._demo_mode,
             )
         )
+
+    def action_open_debugger(self) -> None:
+        """Open Debugger view (d key)."""
+        from weave import TheWeave
+
+        from .debugger_screen import DebuggerScreen
+
+        # Create a weave for debugging (in production, this would be the real weave)
+        weave = TheWeave()
+        self.app.push_screen(
+            DebuggerScreen(
+                weave=weave,
+                agent_id=self.agent_id,
+            )
+        )
+
+    def action_open_chat(self) -> None:
+        """Open Agent Chat panel (? key)."""
+        self.app.push_screen(
+            AgentChatPanel(
+                agent_id=self.agent_id,
+                agent_name=self.agent_name,
+                on_turn_link_click=self._on_turn_link_click,
+            )
+        )
+
+    def _on_turn_link_click(self, turn_id: str) -> None:
+        """Handle click on a turn link in the chat panel."""
+        # Navigate to the turn in the debugger
+        self.notify(f"Navigating to turn: {turn_id}")
+        # In production, this would pop the chat and navigate to the debugger
 
     def action_decrease_temp(self) -> None:
         """Decrease temperature (h/left key)."""

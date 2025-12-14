@@ -58,7 +58,18 @@ from ..data.dashboard_collectors import (
     MetricsObservable,
     create_demo_metrics,
 )
+from ..data.replay_integration import ScenarioReplayProvider
+from ..data.weather import WeatherEngine
+from ..widgets.replay_controls import ReplayControlsWidget
 from ..widgets.sparkline import generate_sparkline
+from ..widgets.weather_widget import CompactWeatherWidget, WeatherWidget
+
+# Import mixins for DashboardApp decomposition
+from .mixins import (
+    DashboardHelpMixin,
+    DashboardNavigationMixin,
+    DashboardScreensMixin,
+)
 
 if TYPE_CHECKING:
     pass
@@ -125,14 +136,51 @@ class KgentPanel(Static, can_focus=True):
     last_dream: reactive[str] = reactive("--")
     is_online: reactive[bool] = reactive(True)
 
+    # Detailed lifecycle counts
+    garden_seeds: reactive[int] = reactive(0)
+    garden_saplings: reactive[int] = reactive(0)
+    garden_flowers: reactive[int] = reactive(0)
+    garden_compost: reactive[int] = reactive(0)
+    garden_season: reactive[str] = reactive("summer")
+
+    def _render_lifecycle_bar(self) -> str:
+        """Render garden lifecycle as visual bar: 🌱🌿🌳🌸🍂"""
+        # Icons for each lifecycle stage
+        icons = {
+            "seed": "🌱",
+            "sapling": "🌿",
+            "tree": "🌳",
+            "flower": "🌸",
+            "compost": "🍂",
+        }
+        parts = []
+        for stage, count, icon in [
+            ("seed", self.garden_seeds, icons["seed"]),
+            ("sapling", self.garden_saplings, icons["sapling"]),
+            ("tree", self.garden_trees, icons["tree"]),
+            ("flower", self.garden_flowers, icons["flower"]),
+            ("compost", self.garden_compost, icons["compost"]),
+        ]:
+            if count > 0:
+                parts.append(f"{icon}{count}")
+        return " ".join(parts) if parts else "empty"
+
     def render(self) -> str:
         if not self.is_online:
             return "K-GENT\n├─ [offline]"
 
+        lifecycle_bar = self._render_lifecycle_bar()
+        season_emoji = {
+            "spring": "🌱",
+            "summer": "☀️",
+            "autumn": "🍂",
+            "winter": "❄️",
+        }.get(self.garden_season, "")
+
         return (
-            f"K-GENT\n"
-            f"├─ Mode: {self.mode.upper()}\n"
-            f"├─ Garden: {self.garden_patterns} patterns ({self.garden_trees} trees)\n"
+            f"K-GENT ({self.mode.upper()})\n"
+            f"├─ Garden: {self.garden_patterns} patterns {season_emoji}\n"
+            f"│  └─ {lifecycle_bar}\n"
             f"├─ Interactions: {self.interactions}\n"
             f"└─ Last dream: {self.last_dream}"
         )
@@ -145,6 +193,13 @@ class KgentPanel(Static, can_focus=True):
         self.interactions = metrics.kgent.interactions_count
         self.last_dream = metrics.kgent.dream_age_str
         self.is_online = metrics.kgent.is_online
+
+        # Update lifecycle counts
+        self.garden_seeds = metrics.kgent.garden_seeds
+        self.garden_saplings = metrics.kgent.garden_saplings
+        self.garden_flowers = metrics.kgent.garden_flowers
+        self.garden_compost = metrics.kgent.garden_compost
+        self.garden_season = metrics.kgent.garden_season
 
 
 class MetabolismPanel(Static, can_focus=True):
@@ -179,6 +234,8 @@ class MetabolismPanel(Static, can_focus=True):
     in_fever: reactive[bool] = reactive(False)
     status: reactive[str] = reactive("COOL")
     is_online: reactive[bool] = reactive(True)
+    fever_count: reactive[int] = reactive(0)
+    last_tithe: reactive[str] = reactive("never")
 
     # Pressure history for sparkline
     _pressure_history: list[float] = []
@@ -196,14 +253,21 @@ class MetabolismPanel(Static, can_focus=True):
         # Sparkline
         sparkline = generate_sparkline(self._pressure_history, width=10)
 
-        fever_str = "FEVER!" if self.in_fever else "No"
+        # Fever indicator with history
+        if self.in_fever:
+            fever_str = f"🔥 ACTIVE! ({self.fever_count} total)"
+        elif self.fever_count > 0:
+            fever_str = f"No ({self.fever_count} past)"
+        else:
+            fever_str = "No"
 
         return (
             f"METABOLISM ({self.status})\n"
             f"├─ Pressure: {bar} {pct}%\n"
             f"├─ History: {sparkline}\n"
             f"├─ Temperature: {self.temperature:.2f}\n"
-            f"└─ Fever: {fever_str}"
+            f"├─ Fever: {fever_str}\n"
+            f"└─ Last tithe: {self.last_tithe}"
         )
 
     def update_from_metrics(self, metrics: DashboardMetrics) -> None:
@@ -213,6 +277,8 @@ class MetabolismPanel(Static, can_focus=True):
         self.in_fever = metrics.metabolism.in_fever
         self.status = metrics.metabolism.status_text
         self.is_online = metrics.metabolism.is_online
+        self.fever_count = metrics.metabolism.fever_count
+        self.last_tithe = metrics.metabolism.tithe_age_str
 
         # Track pressure history
         self._pressure_history.append(self.pressure)
@@ -561,15 +627,33 @@ class DashboardScreen(Screen[None]):
         color: #6a6560;
         padding: 0 2;
     }
+
+    DashboardScreen #weather-header {
+        dock: top;
+        height: 2;
+        background: #252525;
+        padding: 0 2;
+        border-bottom: solid #4a4a5c;
+    }
+
+    DashboardScreen #weather-label {
+        width: auto;
+        color: #f5f0e6;
+        padding-right: 1;
+    }
     """
 
     BINDINGS = [
         Binding("q", "quit", "Quit"),
         Binding("r", "refresh", "Refresh"),
         Binding("d", "toggle_demo", "Demo Mode"),
+        Binding("p", "toggle_replay", "Replay Mode"),
+        Binding("space", "play_pause", "Play/Pause", show=False),
+        Binding("s", "cycle_speed", "Speed", show=False),
     ]
 
     demo_mode: reactive[bool] = reactive(False)
+    replay_mode: reactive[bool] = reactive(False)
 
     def on_key(self, event: Key) -> None:
         """Handle key presses for panel focus."""
@@ -589,6 +673,7 @@ class DashboardScreen(Screen[None]):
     def __init__(
         self,
         demo_mode: bool = False,
+        replay_mode: bool = False,
         refresh_interval: float = 1.0,
         name: str | None = None,
         id: str | None = None,
@@ -596,6 +681,7 @@ class DashboardScreen(Screen[None]):
     ) -> None:
         super().__init__(name=name, id=id, classes=classes)
         self.demo_mode = demo_mode
+        self.replay_mode = replay_mode
         self.refresh_interval = refresh_interval
         self._observable = MetricsObservable()
         self._kgent_panel: KgentPanel | None = None
@@ -605,9 +691,21 @@ class DashboardScreen(Screen[None]):
         self._traces_panel: TracesPanel | None = None
         self._trace_analysis_panel: TraceAnalysisPanel | None = None
         self._status_bar: Static | None = None
+        self._weather_widget: WeatherWidget | None = None
+        self._weather_engine = WeatherEngine()
+
+        # Replay provider (only created when replay_mode is enabled)
+        self._replay_provider: ScenarioReplayProvider | None = None
+        self._replay_controls: ReplayControlsWidget | None = None
 
     def compose(self) -> ComposeResult:
         yield Header()
+
+        # Weather widget in header area
+        with Horizontal(id="weather-header"):
+            yield Static("[bold]System Weather:[/] ", id="weather-label")
+            self._weather_widget = WeatherWidget(demo_mode=self.demo_mode)
+            yield self._weather_widget
 
         # Main 2x2 grid of metric panels
         with Grid(id="panels-grid"):
@@ -635,6 +733,11 @@ class DashboardScreen(Screen[None]):
                 )
                 yield self._trace_analysis_panel
 
+        # Replay controls (shown in replay mode)
+        if self.replay_mode:
+            self._replay_controls = ReplayControlsWidget(id="replay-controls")
+            yield self._replay_controls
+
         # Status bar
         self._status_bar = Static("Collecting metrics...", id="status-bar")
         yield self._status_bar
@@ -645,17 +748,33 @@ class DashboardScreen(Screen[None]):
         """Start metrics collection when screen is mounted."""
         self.title = "kgents dashboard"
 
-        # Subscribe to metrics updates
-        self._observable.subscribe(self._on_metrics_update)
+        if self.replay_mode:
+            # Replay mode: drive dashboard from scenario playback
+            self._replay_provider = ScenarioReplayProvider(
+                on_metrics_update=self._on_metrics_update,
+            )
 
-        # Start collecting (demo mode uses randomized data)
-        await self._observable.start_collecting(
-            interval=self.refresh_interval,
-            demo_mode=self.demo_mode,
-        )
+            # Wire replay controls to provider
+            if self._replay_controls:
+                self._replay_controls.set_provider(self._replay_provider)
+
+            # Start replay at 2x speed (covers 24 hours in ~12 minutes)
+            await self._replay_provider.start_replay(speed=2.0)
+        else:
+            # Normal mode: periodic metrics collection
+            # Subscribe to metrics updates
+            self._observable.subscribe(self._on_metrics_update)
+
+            # Start collecting (demo mode uses randomized data)
+            await self._observable.start_collecting(
+                interval=self.refresh_interval,
+                demo_mode=self.demo_mode,
+            )
 
     async def on_unmount(self) -> None:
         """Stop metrics collection when screen is unmounted."""
+        if self._replay_provider:
+            await self._replay_provider.stop()
         await self._observable.stop()
 
     def _on_metrics_update(self, metrics: DashboardMetrics) -> None:
@@ -674,12 +793,51 @@ class DashboardScreen(Screen[None]):
         if self._trace_analysis_panel:
             self._trace_analysis_panel.update_from_metrics(metrics)
 
+        # Update weather widget based on system metrics
+        if self._weather_widget:
+            # Map metabolism metrics to weather
+            # pressure (0.0-1.0) → entropy (cloud cover)
+            # temperature → token rate (warmth)
+            # flux queue depth → pressure (congestion)
+            entropy = metrics.metabolism.pressure if metrics.metabolism else 0.3
+            token_rate = (
+                metrics.metabolism.temperature * 100.0 if metrics.metabolism else 100.0
+            )
+            queue_depth = metrics.flux.queue_depth if metrics.flux else 5
+
+            self._weather_widget.update_metrics(
+                entropy=entropy,
+                token_rate=token_rate,
+                queue_depth=queue_depth,
+            )
+
+            # Update weather engine with pressure trend for forecast
+            if self._metabolism_panel and self._metabolism_panel._pressure_history:
+                history = self._metabolism_panel._pressure_history
+                if len(history) >= 3:
+                    # Calculate trend from last 3 readings
+                    recent_avg = sum(history[-3:]) / 3
+                    older_avg = (
+                        sum(history[-6:-3]) / 3 if len(history) >= 6 else recent_avg
+                    )
+                    self._weather_engine.set_trend(recent_avg - older_avg)
+
         # Update status bar
         if self._status_bar:
-            mode_str = "[DEMO]" if self.demo_mode else "[LIVE]"
-            offline_str = " (some services offline)" if metrics.any_offline else ""
-            ts = metrics.collected_at.strftime("%H:%M:%S")
-            self._status_bar.update(f"{mode_str} Last update: {ts}{offline_str}")
+            if self.replay_mode and self._replay_provider:
+                state = self._replay_provider.state
+                play_str = "▶" if state.state.name == "PLAYING" else "⏸"
+                mode_str = f"[REPLAY {play_str} {state.speed}x]"
+                ts = f"{state.current_hour:02d}:00"
+                progress = f" {state.progress_pct}%"
+                self._status_bar.update(
+                    f"{mode_str} Simulated: {ts}{progress} | p=toggle s=speed"
+                )
+            else:
+                mode_str = "[DEMO]" if self.demo_mode else "[LIVE]"
+                offline_str = " (some services offline)" if metrics.any_offline else ""
+                ts = metrics.collected_at.strftime("%H:%M:%S")
+                self._status_bar.update(f"{mode_str} Last update: {ts}{offline_str}")
 
     async def action_refresh(self) -> None:
         """Force refresh metrics now."""
@@ -707,19 +865,70 @@ class DashboardScreen(Screen[None]):
         mode = "DEMO" if self.demo_mode else "LIVE"
         self.notify(f"Mode: {mode}")
 
+    async def action_toggle_replay(self) -> None:
+        """Toggle replay mode (animated scenario playback)."""
+        self.replay_mode = not self.replay_mode
+
+        if self.replay_mode:
+            # Start replay mode
+            self._replay_provider = ScenarioReplayProvider(
+                on_metrics_update=self._on_metrics_update,
+            )
+            await self._observable.stop()  # Stop regular collection
+            await self._replay_provider.start_replay(speed=2.0)
+            self.notify("Replay: ON (space=play/pause, s=speed)")
+        else:
+            # Stop replay mode
+            if self._replay_provider:
+                await self._replay_provider.stop()
+                self._replay_provider = None
+            # Restart regular collection
+            await self._observable.start_collecting(
+                interval=self.refresh_interval,
+                demo_mode=self.demo_mode,
+            )
+            self.notify("Replay: OFF")
+
+    def action_play_pause(self) -> None:
+        """Toggle replay play/pause."""
+        if self._replay_provider:
+            self._replay_provider.toggle_pause()
+            state = (
+                "Playing"
+                if self._replay_provider.state.state.name == "PLAYING"
+                else "Paused"
+            )
+            self.notify(f"Replay: {state}")
+
+    def action_cycle_speed(self) -> None:
+        """Cycle replay speed."""
+        if self._replay_provider:
+            new_speed = self._replay_provider.cycle_speed()
+            self.notify(f"Speed: {new_speed}x")
+
 
 # =============================================================================
 # Dashboard App (Standalone)
 # =============================================================================
 
 
-class DashboardApp(App[None]):
+class DashboardApp(
+    App[object],
+    DashboardNavigationMixin,
+    DashboardScreensMixin,
+    DashboardHelpMixin,
+):
     """
     Standalone dashboard application with unified navigation.
 
     Can be run directly or embedded in kgents CLI.
     Integrates all screens (Observatory, Cockpit, Forge, Debugger) with
     NavigationController for seamless zoom in/out.
+
+    Uses mixins for separation of concerns:
+    - DashboardNavigationMixin: Keybindings and screen transitions
+    - DashboardScreensMixin: Screen factory methods
+    - DashboardHelpMixin: Help overlays and documentation
     """
 
     CSS = """
@@ -731,26 +940,48 @@ class DashboardApp(App[None]):
     TITLE = "kgents dashboard"
 
     BINDINGS = [
+        # Number key navigation (handled by mixin actions)
+        ("1", "go_screen_1", "Observatory"),
+        ("2", "go_screen_2", "Dashboard"),
+        ("3", "go_screen_3", "Cockpit"),
+        ("4", "go_screen_4", "Flux"),
+        ("5", "go_screen_5", "Loom"),
+        ("6", "go_screen_6", "MRI"),
+        # Zoom navigation
         ("plus", "zoom_in", "Zoom In"),
         ("equal", "zoom_in", "Zoom In"),
         ("minus", "zoom_out", "Zoom Out"),
         ("underscore", "zoom_out", "Zoom Out"),
+        # Tab cycling
+        ("tab", "cycle_next", "Next Screen"),
+        # Special screens
         ("f", "open_forge", "Forge"),
         ("d", "open_debugger", "Debugger"),
+        ("m", "open_memory_map", "Memory Map"),
+        # Help
         ("question_mark", "show_help", "Help"),
+        # Quit
         ("q", "quit", "Quit"),
     ]
 
-    def __init__(self, demo_mode: bool = False, refresh_interval: float = 1.0) -> None:
+    def __init__(
+        self,
+        demo_mode: bool = False,
+        refresh_interval: float = 1.0,
+        replay_mode: bool = False,
+    ) -> None:
         super().__init__()
         self.demo_mode = demo_mode
         self.refresh_interval = refresh_interval
+        self.replay_mode = replay_mode
 
-        # Initialize navigation system
-        from ..navigation import NavigationController, StateManager
+        # Initialize services container (EventBus, StateManager, NavigationController)
+        from ..services import DashboardServices, EventBus, ScreenNavigationEvent
 
-        self._state_manager = StateManager()
-        self._nav_controller = NavigationController(self, self._state_manager)
+        self._services = DashboardServices.create(self, demo_mode=demo_mode)
+        self._state_manager = self._services.state_manager
+        self._nav_controller = self._services.nav_controller
+        self._event_bus = self._services.event_bus
 
         # Track current LOD for screen factories
         self._current_lod = 0
@@ -761,6 +992,14 @@ class DashboardApp(App[None]):
 
     def on_mount(self) -> None:
         """Push the dashboard screen on mount and register navigation."""
+        # Wire EventBus subscriptions for screen navigation
+        from ..services import FeverTriggeredEvent, ScreenNavigationEvent
+
+        self._event_bus.subscribe(ScreenNavigationEvent, self._on_screen_navigation)
+
+        # Wire FeverTriggeredEvent for auto-showing fever overlay
+        self._event_bus.subscribe(FeverTriggeredEvent, self._on_fever_triggered)
+
         # Register screen factories with navigation controller
         self._register_screens()
 
@@ -769,8 +1008,66 @@ class DashboardApp(App[None]):
             DashboardScreen(
                 demo_mode=self.demo_mode,
                 refresh_interval=self.refresh_interval,
+                replay_mode=self.replay_mode,
             )
         )
+
+    def _on_screen_navigation(self, event: Any) -> None:
+        """Handle screen navigation events from EventBus.
+
+        Uses GentleNavigator to determine appropriate transition style
+        based on the source and target screens.
+        """
+        from typing import Callable
+
+        from .transitions import GentleNavigator
+
+        screen_name = event.target_screen.lower()
+        source_screen = getattr(event, "source_screen", None) or ""
+
+        # Map screen names to factory methods
+        screen_factories: dict[str, Callable[[], None]] = {
+            "observatory": self._create_observatory,
+            "dashboard": self._create_dashboard,
+            "cockpit": lambda: self._create_cockpit(),
+            "flux": self._create_flux,
+            "loom": self._create_loom,
+            "mri": self._create_mri,
+            "forge": self._create_forge,
+            "debugger": lambda: self._create_debugger(),
+        }
+
+        factory = screen_factories.get(screen_name)
+        if factory:
+            # Get appropriate transition based on source/target screens
+            # Note: transition computed for future animation support
+            _navigator = GentleNavigator()
+            _ = _navigator.get_transition_for_screens(source_screen, screen_name)
+
+            # Execute the factory to push the screen
+            factory()
+        else:
+            self.notify(f"Unknown screen: {screen_name}")
+
+    def _on_fever_triggered(self, event: Any) -> None:
+        """Handle fever events by showing the FeverOverlay.
+
+        The Accursed Share made visible: when entropy exceeds the threshold,
+        the FeverOverlay surfaces creative oblique strategies from the void.
+        """
+        from ..overlays.fever import (
+            create_fever_overlay,
+            should_show_fever_overlay,
+        )
+
+        # Check if entropy exceeds threshold (0.7)
+        if should_show_fever_overlay(event.entropy):
+            # Create and push the fever overlay
+            overlay = create_fever_overlay(
+                entropy=event.entropy,
+                fever_event=None,  # Could wire to actual FeverEvent if available
+            )
+            self.push_screen(overlay)
 
     def _register_screens(self) -> None:
         """Register all screens with the navigation controller."""
@@ -818,18 +1115,20 @@ class DashboardApp(App[None]):
             )
         )
 
-    def _create_cockpit(self) -> None:
+    def _create_cockpit(self, agent_id: str | None = None) -> None:
         """Create and push Cockpit screen."""
         from .cockpit import CockpitScreen
 
-        # Get focused agent from state manager
-        focus = self._state_manager.get_focus(
-            "observatory"
-        ) or self._state_manager.get_focus("terrarium")
+        # Get focused agent from state manager if not provided
+        if agent_id is None:
+            focus = self._state_manager.get_focus(
+                "observatory"
+            ) or self._state_manager.get_focus("terrarium")
+            agent_id = focus or ""
 
         self.push_screen(
             CockpitScreen(
-                agent_id=focus or "",
+                agent_id=agent_id,
                 demo_mode=self.demo_mode,
             )
         )
@@ -860,47 +1159,38 @@ class DashboardApp(App[None]):
     # ========================================================================
     # Global Actions (Key Bindings)
     # ========================================================================
+    #
+    # Most actions are provided by mixins:
+    # - DashboardNavigationMixin: action_go_screen_1 through action_go_screen_6,
+    #   action_zoom_in, action_zoom_out, action_open_forge, action_open_debugger,
+    #   action_cycle_next, action_cycle_prev
+    # - DashboardHelpMixin: action_show_help
+    #
+    # The actions below are additional or override the mixins.
+    # ========================================================================
 
-    async def action_zoom_in(self) -> None:
-        """Zoom in to next lower LOD (+/=)."""
-        await self._nav_controller.zoom_in()
+    def action_open_memory_map(self) -> None:
+        """Open Memory Map screen (m)."""
+        from .memory_map import MemoryMapScreen
 
-    async def action_zoom_out(self) -> None:
-        """Zoom out to next higher LOD (-/_)."""
-        await self._nav_controller.zoom_out()
+        self.push_screen(
+            MemoryMapScreen(
+                demo_mode=self.demo_mode,
+            )
+        )
 
-    def action_open_forge(self) -> None:
-        """Open Forge screen (f)."""
-        self._nav_controller.go_to_forge()
+    def _navigate_to(self, screen_name: str) -> None:
+        """Navigate to a screen by name.
 
-    def action_open_debugger(self) -> None:
-        """Open Debugger screen (d)."""
-        self._nav_controller.go_to_debugger()
+        This override ensures that navigation events work properly by
+        calling the appropriate factory method directly.
 
-    def action_show_help(self) -> None:
-        """Show help overlay (?)."""
-        help_text = """
-DASHBOARD NAVIGATION
+        Args:
+            screen_name: The target screen identifier
+        """
+        from ..services import EventBus, ScreenNavigationEvent
 
-Zoom:
-  +/=  - Zoom in (more detail)
-  -/_  - Zoom out (broader view)
-
-Screens:
-  f    - Open Forge (agent composition)
-  d    - Open Debugger (turn analysis)
-
-Other:
-  ?    - Show this help
-  q    - Quit
-
-LOD Levels:
-  -1   - Observatory (ecosystem view)
-   0   - Dashboard (system health)
-   1   - Cockpit (single agent)
-   2   - Debugger (forensic analysis)
-"""
-        self.notify(help_text, timeout=10)
+        EventBus.get().emit(ScreenNavigationEvent(target_screen=screen_name))
 
 
 # =============================================================================
@@ -908,15 +1198,35 @@ LOD Levels:
 # =============================================================================
 
 
-def run_dashboard(demo_mode: bool = False, refresh_interval: float = 1.0) -> None:
+def run_dashboard(
+    demo_mode: bool = False,
+    replay_mode: bool = False,
+    refresh_interval: float = 1.0,
+) -> None:
     """
     Run the dashboard TUI.
 
     Args:
         demo_mode: Use demo data instead of live metrics
+        replay_mode: Use animated scenario playback (Day in the Life)
         refresh_interval: Seconds between metric updates
+
+    Modes:
+    - LIVE: Collect real metrics from running services
+    - DEMO: Random synthetic metrics for showcase
+    - REPLAY: Animated 24-hour "Day in the Life" scenario
+
+    Replay controls:
+    - p: Toggle replay mode
+    - space: Play/Pause
+    - s: Cycle speed (0.25x, 0.5x, 1x, 2x, 4x)
     """
-    app = DashboardApp(demo_mode=demo_mode, refresh_interval=refresh_interval)
+    # Pass replay_mode directly to app for proper initialization
+    app = DashboardApp(
+        demo_mode=demo_mode,
+        refresh_interval=refresh_interval,
+        replay_mode=replay_mode,
+    )
     app.run()
 
 

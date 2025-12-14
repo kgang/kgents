@@ -40,10 +40,12 @@ from .proprioception import (
     TraumaIndicator,
     TraumaLevel,
 )
+from .replay_controls import ReplayControlsWidget
 from .slider import SLIDER_CHARS, Slider, clamp, generate_slider_track
 from .sparkline import Sparkline, generate_sparkline
 from .timeline import Timeline
 from .waveform import OperationType, ProcessingWaveform, WaveformDisplay
+from .weather_widget import CompactWeatherWidget, WeatherWidget
 
 __all__ = [
     # Core widgets
@@ -110,4 +112,9 @@ __all__ = [
     "AgentesePath",
     "AgentContext",
     "create_demo_paths",
+    # Weather widget (Visualization Strategy Phase 4)
+    "WeatherWidget",
+    "CompactWeatherWidget",
+    # Replay controls (Dashboard Reality Continuation)
+    "ReplayControlsWidget",
 ]

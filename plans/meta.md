@@ -2,76 +2,55 @@
 
 > *One insight per line. If it takes a paragraph, it's not distilled.*
 
-**Agent Protocol**: Append atomic learnings (one line, dated). Never expand existing entries. 50-line hard cap. If overflow, prune before adding.
-
-**Skills Protocol**: Before implementing a common task, check `plans/skills/`. After learning a novel pattern, document it there. See `plans/skills/README.md`.
-
-## Protocol
-
-- **Add**: One line, dated. No explanation—if unclear, delete it.
-- **Prune**: Monthly. Entries that didn't resonate → delete.
-- **Max**: 50 lines. Hard limit. Overflow → force prune.
+**Protocol**: Append atomic learnings. Prune monthly. 50-line cap.
 
 ---
 
 ## Learnings
 
 ```
-2025-12-12  Skills are crystallized knowledge: pull before doing, push after learning
-2025-12-12  Purgatory > Generator: eject state as data, not pause stack frames
-2025-12-12  Mirror Protocol: observe without disturbing (zero entropy observation)
+2025-12-13  Three Phases (SENSE→ACT→REFLECT) compress 11 without loss
+2025-12-13  Turn is fundamental: single trace derives all panels (holographic)
+2025-12-13  Posture is polynomial: (phase, activity) → symbol
+2025-12-13  Weather metaphors: entropy=clouds, queue=pressure, tokens=temperature
+2025-12-13  Two-tier collection: try context, fallback direct; graceful degradation
+2025-12-13  Operads define grammar; algebras apply grammar to systems
+2025-12-13  Sheaf gluing = emergence: compatible locals → global
+2025-12-13  LLM-once cheap: pre-compute, hotload forever (AD-004)
+2025-12-12  Skills pull before doing, push after learning
+2025-12-12  Purgatory > Generator: eject state as data, not pause frames
 2025-12-12  Flux > Loop: streams are event-driven, not timer-driven
 2025-12-12  Perturbation principle: invoke() on running flux injects, never bypasses
-2025-12-12  Living Pipelines: start() returns AsyncIterator, enabling `|` composition
-2025-12-12  Entropy as budget: depletion collapses to Ground, not error
-2025-12-12  Genealogy enforced: concepts cannot exist ex nihilo (LineageError)
-2025-12-12  Store Comonad > State Monad for context (extract/extend/duplicate)
-2025-12-12  Projector is NOT a lens—compression violates Get-Put law
-2025-12-12  Passive stigmergy: intensity calculated on read, not stored
-2025-12-12  Cognitive probes: LLM health != HTTP 200
-2025-12-12  K-gent is Governance Functor, not chatbot: invalidate violating morphisms
-2025-12-12  The Four Capabilities: Gatekeeper, Fractal Expander, Holographic Constitution, Sommelier
-2025-12-12  Holographic outline: change principle.md → detect drift in implementation
-2025-12-11  T/U split: testing (T) vs tools (U) is categorical, not convenience
-2025-12-11  OCap for trust: BypassToken is unforgeable object capability
-2025-12-11  Event-sourced ledger: balance is projection, not state
-2025-12-12  Symmetric lifting: every functor needs both lift() and unlift()
-2025-12-12  Observation is a functor: O(f) ≅ f with pluggable sinks
-2025-12-12  State threading: StateMonad.lift(agent) makes state transparent to composition
-2025-12-12  Stigmergic surface: living docs where agents append suggestions, humans curate
-2025-12-12  Eigenvectors ARE the PersonalityField: navigate, don't inject personality
-2025-12-12  Changes have teeth: commit() must modify eigenvectors/garden, not just record
-2025-12-13  PolyAgent[S,A,B] > Agent[A,B]: mode-dependent behavior via polynomial positions/directions
-2025-12-13  Operads define composition grammar; algebras apply grammar to specific systems
-2025-12-13  Sheaf gluing = emergence: compatible locals → global with capabilities no local has
-2025-12-13  Test tiering is categorical: partition functor preserves semantics, improves timing (399s→85s)
-2025-12-13  LLM-once is cheap: pre-compute rich data, hotload forever; demo kgents ARE kgents (AD-004)
-2025-12-13  Reconciliation = read forest → fix drift → surface via demo → update status; runnable beats readable
+2025-12-12  Store Comonad > State Monad for context
+2025-12-12  Projector ≠ lens: compression violates Get-Put
+2025-12-12  K-gent = Governance Functor, not chatbot
+2025-12-12  Symmetric lifting: every functor needs lift() AND unlift()
+2025-12-12  Stigmergic surface: agents append, humans curate
+2025-12-12  PolyAgent[S,A,B] > Agent[A,B]: mode-dependent behavior
+2025-12-11  T/U split: testing vs tools is categorical
+2025-12-11  OCap for trust: BypassToken is unforgeable
 ```
 
-## Anti-Patterns (Captured Failures)
+## Anti-Patterns
 
 ```
-2025-12-12  Generator Trap: pickle can't serialize stack frames → use data ejection
-2025-12-12  Head-of-line blocking: one yield shouldn't freeze the whole stream
-2025-12-12  Direct WebSocket to agent: 50 observers → unbounded metabolic drain
-2025-12-12  Timer-driven loops create zombies, not agents
+2025-12-13  Terminology sprawl: one metaphor system, not five competing
+2025-12-12  Generator Trap: pickle can't serialize stack frames
+2025-12-12  Timer-driven loops create zombies
 2025-12-12  Bypassing running loops causes state schizophrenia
+2025-12-12  Context dumping: large payloads tax every turn
+2025-12-12  Keyword intercept dangerous: "delete"→"Minimalism"→auto-approve
 2025-12-11  Full ouroboros (feedback=1.0) → solipsism
-2025-12-11  Context dumping: large payloads in chat history tax every turn
-2025-12-12  Keyword intercept is dangerous: "delete" → "Minimalism" → auto-approve production delete
-2025-12-12  Templates are fine for DORMANT/WHISPER; DIALOGUE/DEEP must use LLM
-2025-12-12  Skills: 7 documented; Commands: /harden, /trace, /diff-spec, /debt for DevEx
 ```
 
-## Unanswered (Parking Lot)
+## Unanswered
 
 ```
-2025-12-12  Should DensityField animate at 30fps always or only when focused?
-2025-12-12  How to wire Flux to existing archetypes (Consolidator, Spawner)?
-2025-12-12  ModalScope: how does duplicate() map to git stash/branch?
+2025-12-12  DensityField animation: 30fps always or only when focused?
+2025-12-12  Flux → archetype wiring (Consolidator, Spawner)?
+2025-12-12  ModalScope: duplicate() → git stash/branch mapping?
 ```
 
 ---
 
-*Lines: 35/50 | Last pruned: never*
+*Lines: 45/50 | Last pruned: 2025-12-13*

@@ -31,20 +31,24 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Horizontal, Vertical
 from textual.reactive import reactive
-from textual.screen import Screen
 from textual.widgets import Footer, Header, Static
 
 from ..data.core_types import Phase
 from ..data.garden import GardenSnapshot, create_demo_gardens
 from ..data.state import AgentSnapshot, FluxState, create_demo_flux_state
+from ..data.weather import SystemMetrics, WeatherEngine, create_demo_weather
+from ..theme.heartbeat import HeartbeatMixin, get_heartbeat_controller
+from ..theme.posture import PostureMapper, render_posture_with_tooltip
 from ..widgets.graph_layout import GraphLayout
 from ..widgets.sparkline import Sparkline
+from ..widgets.weather_widget import WeatherWidget
+from .base import KgentsScreen
 
 if TYPE_CHECKING:
     pass
 
 
-class GardenCard(Static):
+class GardenCard(Static, HeartbeatMixin):
     """
     A card displaying a garden in the observatory view.
 
@@ -102,10 +106,22 @@ class GardenCard(Static):
         classes: str | None = None,
     ) -> None:
         super().__init__(name=name, id=id, classes=classes)
+        HeartbeatMixin.__init__(self)
         self.garden = garden
         self.agents = agents
         self._graph: GraphLayout | None = None
         self._sparkline: Sparkline | None = None
+
+        # Set heartbeat BPM based on garden health (healthier = calmer)
+        # Low health = faster heartbeat (stress), high health = slower (calm)
+        bpm = HeartbeatMixin.activity_to_bpm(1.0 - garden.health)
+        self.set_bpm(bpm)
+
+        # Register with heartbeat controller
+        get_heartbeat_controller().register(self)
+
+        # Initialize posture mapper
+        self._posture_mapper = PostureMapper()
 
     def compose(self) -> ComposeResult:
         """Compose the garden card."""
@@ -116,11 +132,11 @@ class GardenCard(Static):
             nodes = []
             edges: list[tuple[str, str]] = []
 
-            # Add all agents as nodes with phase symbols
+            # Add all agents as nodes with posture symbols
             for agent_id in self.garden.agent_ids:
                 agent = self.agents.get(agent_id)
                 if agent:
-                    symbol = self._phase_to_symbol(agent.phase)
+                    symbol = self._get_posture_symbol(agent)
                     nodes.append(f"{symbol}{agent.name}")
 
                     # Add edges from connections
@@ -128,7 +144,7 @@ class GardenCard(Static):
                         if conn_id in self.garden.agent_ids:
                             conn = self.agents.get(conn_id)
                             if conn:
-                                conn_symbol = self._phase_to_symbol(conn.phase)
+                                conn_symbol = self._get_posture_symbol(conn)
                                 edges.append(
                                     (
                                         f"{symbol}{agent.name}",
@@ -164,16 +180,13 @@ class GardenCard(Static):
             yield Static(f"health: {self.garden.health * 100:.0f}%")
             yield Static(f"flux: {self.garden.flux_rate:.1f} ev/s")
 
-    def _phase_to_symbol(self, phase: Phase) -> str:
-        """Convert phase to symbol."""
-        symbols = {
-            Phase.DORMANT: "○",
-            Phase.WAKING: "◐",
-            Phase.ACTIVE: "●",
-            Phase.WANING: "◑",
-            Phase.VOID: "◌",
-        }
-        return symbols.get(phase, "○")
+    def _get_posture_symbol(self, agent: AgentSnapshot) -> str:
+        """Get posture symbol for an agent."""
+        posture = self._posture_mapper.from_phase(
+            agent.phase.value,
+            agent.activity,
+        )
+        return posture.symbol
 
     def set_focused(self, focused: bool) -> None:
         """Set focus state."""
@@ -231,7 +244,7 @@ Entropy budget: {bar} {self.entropy_budget * 100:.0f}%  │  Suggestion: "{self.
 """
 
 
-class ObservatoryScreen(Screen[None]):
+class ObservatoryScreen(KgentsScreen):
     """
     Observatory Screen - LOD -1 (Orbital).
 
@@ -248,6 +261,9 @@ class ObservatoryScreen(Screen[None]):
       Space: Emergency brake
       Esc/q: Quit
     """
+
+    # Visual anchor for gentle transitions
+    ANCHOR = "header-info"
 
     CSS = """
     ObservatoryScreen {
@@ -328,18 +344,26 @@ class ObservatoryScreen(Screen[None]):
         # Widget references
         self._garden_cards: dict[str, GardenCard] = {}
         self._void_panel: VoidPanel | None = None
+        self._weather_widget: WeatherWidget | None = None
+
+        # Weather engine for system metrics
+        self._weather_engine = WeatherEngine()
 
     def compose(self) -> ComposeResult:
         """Compose the observatory screen."""
         yield Header()
 
-        # Header info
+        # Header info with weather widget
         with Container(id="header-info"):
-            agent_count = sum(len(g.agent_ids) for g in self.gardens)
-            yield Static(
-                f"[bold #f5d08a]OBSERVATORY[/]  │  LOD: ORBITAL  │  "
-                f"Gardens: {len(self.gardens)}  │  Agents: {agent_count}"
-            )
+            with Horizontal():
+                agent_count = sum(len(g.agent_ids) for g in self.gardens)
+                yield Static(
+                    f"[bold #f5d08a]OBSERVATORY[/]  │  LOD: ORBITAL  │  "
+                    f"Gardens: {len(self.gardens)}  │  Agents: {agent_count}  │  "
+                )
+                # Weather widget showing system health as weather
+                self._weather_widget = WeatherWidget(demo_mode=self._demo_mode)
+                yield self._weather_widget
             yield Static("[Tab] cycle  [Enter] zoom  [f] forge  [d] debugger  [?] help")
 
         # Main content area
@@ -408,10 +432,21 @@ class ObservatoryScreen(Screen[None]):
 
     def zoom_to_terrarium(self, garden_id: str) -> None:
         """Zoom into a specific garden's terrarium view."""
-        self.notify(f"Zooming to terrarium for garden: {garden_id}")
-        # TODO: Push TerrariumScreen when implemented
-        # from .terrarium import TerrariumScreen
-        # self.app.push_screen(TerrariumScreen(garden_id=garden_id))
+        # Find the garden
+        garden = next((g for g in self.gardens if g.id == garden_id), None)
+        if not garden:
+            self.notify(f"Garden not found: {garden_id}")
+            return
+
+        from .terrarium import TerrariumScreen
+
+        self.app.push_screen(
+            TerrariumScreen(
+                garden=garden,
+                flux_state=self.flux_state,
+                demo_mode=self._demo_mode,
+            )
+        )
 
     def zoom_to_agent(self, agent_id: str) -> None:
         """Zoom directly to an agent's cockpit view."""
@@ -429,6 +464,24 @@ class ObservatoryScreen(Screen[None]):
             )
         else:
             self.notify(f"Agent not found: {agent_id}")
+
+    def update_weather(
+        self, entropy: float, token_rate: float, queue_depth: int
+    ) -> None:
+        """
+        Update weather widget with system metrics.
+
+        Args:
+            entropy: Current entropy level (0.0-1.0)
+            token_rate: Tokens per second
+            queue_depth: Current queue depth
+        """
+        if self._weather_widget:
+            self._weather_widget.update_metrics(
+                entropy=entropy,
+                token_rate=token_rate,
+                queue_depth=queue_depth,
+            )
 
     # ─────────────────────────────────────────────────────────────
     # Actions
@@ -489,13 +542,28 @@ class ObservatoryScreen(Screen[None]):
 
     def action_open_forge(self) -> None:
         """Open Forge screen (f)."""
-        self.notify("Forge screen not yet implemented")
-        # TODO: Push ForgeScreen when implemented
+        from .forge.screen import ForgeScreen
+
+        self.app.push_screen(ForgeScreen())
 
     def action_open_debugger(self) -> None:
         """Open Debugger screen (d)."""
-        self.notify("Debugger screen not yet implemented")
-        # TODO: Push DebuggerScreen when implemented
+        # Get the first agent from focused garden for debugging context
+        if self.focused_garden_id:
+            garden = next(
+                (g for g in self.gardens if g.id == self.focused_garden_id), None
+            )
+            if garden and garden.agent_ids:
+                agent_id = garden.agent_ids[0]
+                from weave import TheWeave
+
+                from .debugger_screen import DebuggerScreen
+
+                weave = TheWeave()  # Demo weave for now
+                self.app.push_screen(DebuggerScreen(weave=weave, agent_id=agent_id))
+                return
+
+        self.notify("No agent available for debugging")
 
     def action_toggle_graph(self) -> None:
         """Toggle graph layout (g)."""

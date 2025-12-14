@@ -111,8 +111,13 @@ from .contexts import (
 from .exceptions import (
     AffordanceError,
     AgentesError,
+    # Track A (Syntax Architect): Clause/Annotation errors
+    AnnotationSyntaxError,
     BudgetExhaustedError,
+    ClauseSyntaxError,
     CompositionViolationError,
+    # Track B (Law Enforcer): Law check exception
+    LawCheckFailed,
     ObserverRequiredError,
     PathNotFoundError,
     PathSyntaxError,
@@ -176,11 +181,17 @@ from .laws import (
     compose,
     create_enforcing_composition,
     create_verifier,
+    # Track B (Law Enforcer): Emit law check events
+    emit_law_check_event,
     enforce_minimal_output,
     # Minimal output
     is_single_logical_unit,
     morphism,
     pipe,
+    # Track B (Law Enforcer): Verification with events
+    raise_if_failed,
+    verify_and_emit_associativity,
+    verify_and_emit_identity,
 )
 from .logos import ComposedPath, IdentityPath, Logos, create_logos
 from .node import (
@@ -194,6 +205,23 @@ from .node import (
     LogosNode,
     PoeticRendering,
     Renderable,
+)
+
+# Track A (Syntax Architect): Path Parser
+from .parser import (
+    PHASE_NAMES,
+    VALID_ANNOTATION_MODIFIERS,
+    VALID_CLAUSE_MODIFIERS,
+    Annotation,
+    Clause,
+    ParsedPath,
+    ParseError,
+    ParseResult,
+    PathParser,
+    Phase,
+    create_parser,
+    parse_path,
+    try_parse_path,
 )
 
 # Phase 3: Renderings
@@ -240,11 +268,29 @@ __all__ = [
     "AgentesError",
     "PathNotFoundError",
     "PathSyntaxError",
+    "ClauseSyntaxError",
+    "AnnotationSyntaxError",
     "AffordanceError",
     "ObserverRequiredError",
     "TastefulnessError",
     "BudgetExhaustedError",
     "CompositionViolationError",
+    # Track B (Law Enforcer)
+    "LawCheckFailed",
+    # Track A (Syntax Architect): Parser
+    "PathParser",
+    "ParsedPath",
+    "ParseResult",
+    "ParseError",
+    "Clause",
+    "Annotation",
+    "Phase",
+    "PHASE_NAMES",
+    "VALID_CLAUSE_MODIFIERS",
+    "VALID_ANNOTATION_MODIFIERS",
+    "create_parser",
+    "parse_path",
+    "try_parse_path",
     # Phase 3: Affordances
     "AspectCategory",
     "Aspect",
@@ -342,6 +388,11 @@ __all__ = [
     "morphism",
     "create_verifier",
     "create_enforcing_composition",
+    # Track B (Law Enforcer): Law check event emission
+    "emit_law_check_event",
+    "verify_and_emit_identity",
+    "verify_and_emit_associativity",
+    "raise_if_failed",
     # Phase 6: Integration Layer
     "UmweltIntegration",
     "create_umwelt_integration",

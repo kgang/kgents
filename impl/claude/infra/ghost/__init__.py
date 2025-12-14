@@ -49,6 +49,16 @@ from .collectors import (
 )
 from .daemon import GhostDaemon, create_ghost_daemon
 from .health import CompositeHealth, HealthLevel, create_composite_health
+from .lifecycle import (
+    ExpirationEvent,
+    LifecycleAwareCache,
+    LifecycleCacheEntry,
+    LifecycleStats,
+    create_entry,
+    create_from_allocation,
+    get_lifecycle_cache,
+    sync_allocation_to_cache,
+)
 
 __all__ = [
     # Collectors
@@ -72,4 +82,13 @@ __all__ = [
     "seed_glass_cache",
     "clear_glass_cache",
     "GLASS_CACHE_DIR",
+    # Lifecycle-Aware Cache
+    "LifecycleAwareCache",
+    "LifecycleCacheEntry",
+    "LifecycleStats",
+    "ExpirationEvent",
+    "get_lifecycle_cache",
+    "create_entry",
+    "create_from_allocation",
+    "sync_allocation_to_cache",
 ]

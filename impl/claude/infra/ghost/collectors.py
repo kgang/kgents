@@ -6,6 +6,7 @@ Each collector is responsible for one domain of truth:
 - FlinchCollector: Test failure patterns
 - InfraCollector: K-Terrarium cluster status
 - TraceGhostCollector: Trace analysis data
+- MemoryCollector: Four Pillars memory statistics
 
 Collectors are composable and fail gracefully with proper timeout handling.
 """
@@ -20,7 +21,10 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from infra.ghost.cache import GlassCacheManager
 
 logger = logging.getLogger(__name__)
 
@@ -717,6 +721,138 @@ class TraceGhostCollector(GhostCollector):
             )
 
 
+class MemoryCollector(GhostCollector):
+    """
+    Collect Four Pillars memory data for ghost projection.
+
+    Uses MemoryDataProvider to gather:
+    - Memory Crystal statistics (dimension, resolution, hot concepts)
+    - Pheromone Field statistics (traces, deposits, evaporation)
+    - Active Inference statistics (precision, entropy, beliefs)
+    - Overall memory health metrics
+
+    Projects to memory_summary.json in ghost directory.
+    """
+
+    def __init__(self, cache_manager: "GlassCacheManager | None" = None):
+        """
+        Initialize MemoryCollector.
+
+        Args:
+            cache_manager: Optional GlassCacheManager for writing to cache.
+                          If None, collector only returns data without caching.
+        """
+        self.cache_manager = cache_manager
+
+    @property
+    def name(self) -> str:
+        return "memory"
+
+    async def collect(self) -> CollectorResult:
+        timestamp = datetime.now().isoformat()
+
+        try:
+            from agents.i.data.memory_provider import (
+                MemoryDataProvider,
+                create_memory_provider_async,
+            )
+
+            # Create provider in demo mode for now
+            # In the future, this will connect to live agent memory
+            provider: MemoryDataProvider = await create_memory_provider_async(
+                demo_mode=True
+            )
+
+            # Gather all Four Pillars stats
+            crystal_stats = provider.get_crystal_stats()
+            field_stats = await provider.get_field_stats()
+            inference_stats = provider.get_inference_stats()
+            health_report = provider.compute_health()
+
+            # Build data payload
+            data: dict[str, Any] = {
+                "crystal": crystal_stats,
+                "field": field_stats,
+                "inference": inference_stats,
+                "health": health_report,
+            }
+
+            # Write to cache if manager is available
+            if self.cache_manager is not None:
+                if crystal_stats:
+                    self.cache_manager.write(
+                        key="memory/crystal",
+                        data=crystal_stats,
+                        agentese_path="self.memory.crystal.manifest",
+                    )
+                if field_stats:
+                    self.cache_manager.write(
+                        key="memory/field",
+                        data=field_stats,
+                        agentese_path="self.memory.field.manifest",
+                    )
+                if inference_stats:
+                    self.cache_manager.write(
+                        key="memory/inference",
+                        data=inference_stats,
+                        agentese_path="self.memory.inference.manifest",
+                    )
+                self.cache_manager.write(
+                    key="memory/health",
+                    data=health_report,
+                    agentese_path="self.memory.health.manifest",
+                )
+
+            # Build health line
+            if health_report["status"] == "HEALTHY":
+                health_parts = [
+                    f"memory:{health_report['status'].lower()}",
+                    f"score:{health_report['health_score']:.0%}",
+                ]
+            elif health_report["status"] == "DEGRADED":
+                health_parts = [
+                    f"memory:{health_report['status'].lower()}",
+                    f"score:{health_report['health_score']:.0%}",
+                ]
+            else:
+                health_parts = [
+                    f"memory:{health_report['status'].lower()}",
+                    f"score:{health_report['health_score']:.0%}",
+                ]
+
+            # Add concept count if available
+            if crystal_stats:
+                health_parts.append(f"concepts:{crystal_stats['concept_count']}")
+
+            health_line = " ".join(health_parts)
+            data["health_line"] = health_line
+
+            return CollectorResult(
+                source=self.name,
+                timestamp=timestamp,
+                success=True,
+                data=data,
+            )
+
+        except ImportError as e:
+            return CollectorResult(
+                source=self.name,
+                timestamp=timestamp,
+                success=True,  # Graceful degradation
+                data={
+                    "health_line": "memory:not_available",
+                    "error": f"MemoryDataProvider not available: {e}",
+                },
+            )
+        except Exception as e:
+            return CollectorResult(
+                source=self.name,
+                timestamp=timestamp,
+                success=False,
+                error=str(e),
+            )
+
+
 def create_all_collectors(project_root: Path | None = None) -> list[GhostCollector]:
     """
     Create all available collectors.
@@ -736,4 +872,5 @@ def create_all_collectors(project_root: Path | None = None) -> list[GhostCollect
         InfraCollector(),
         MetaGhostCollector(),
         TraceGhostCollector(base_path=project_root),
+        MemoryCollector(),
     ]

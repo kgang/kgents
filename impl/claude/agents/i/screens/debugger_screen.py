@@ -7,6 +7,7 @@ The Debugger provides deep forensic analysis with:
 - Causal cone panel
 - State diff panel
 - Timeline scrubber at bottom
+- ReplayController for animated playback
 
 This is Track C of the Dashboard Overhaul.
 
@@ -18,6 +19,8 @@ Bindings:
     f: Fork from cursor
     x: Export trace
     Tab: Cycle modes
+    Space: Play/Pause replay
+    s: Change speed
     Esc: Back
 """
 
@@ -25,7 +28,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
-from textual import on
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Horizontal, Vertical
@@ -33,6 +35,13 @@ from textual.reactive import reactive
 from textual.screen import Screen
 from textual.widgets import Footer, Header, Static
 
+from ..navigation.replay import (
+    PlaybackState,
+    ReplayController,
+    Turn,
+    TurnHighlightEvent,
+    create_demo_turns,
+)
 from .debugger import (
     CausalConeWidget,
     StateDiffWidget,
@@ -60,6 +69,8 @@ class ModeIndicator(Static):
     """
 
     mode: reactive[str] = reactive("forensic")
+    playback_state: reactive[str] = reactive("stopped")
+    playback_speed: reactive[float] = reactive(1.0)
 
     def render(self) -> str:
         """Render the mode indicator."""
@@ -68,7 +79,113 @@ class ModeIndicator(Static):
             "replay": "MODE: REPLAY (Time Travel)",
             "diff": "MODE: DIFF (State Comparison)",
         }
-        return mode_labels.get(self.mode, f"MODE: {self.mode.upper()}")
+        mode_str = mode_labels.get(self.mode, f"MODE: {self.mode.upper()}")
+
+        # Add playback status if in replay mode
+        if self.mode == "replay":
+            state_icons = {
+                "stopped": "⏹",
+                "playing": "▶",
+                "paused": "⏸",
+            }
+            icon = state_icons.get(self.playback_state, "⏹")
+            speed_str = f"{self.playback_speed:.1f}x"
+            return f"{mode_str}  │  {icon} {self.playback_state.upper()} @ {speed_str}"
+
+        return mode_str
+
+
+class PlaybackControlPanel(Static):
+    """
+    Playback controls for replay mode.
+
+    Shows play/pause, speed, and progress indicators.
+    """
+
+    DEFAULT_CSS = """
+    PlaybackControlPanel {
+        height: 3;
+        width: 100%;
+        background: #2a2a2a;
+        padding: 0 2;
+        border: solid #4a4a5c;
+    }
+
+    PlaybackControlPanel.hidden {
+        display: none;
+    }
+
+    PlaybackControlPanel .playback-progress {
+        color: #e6a352;
+    }
+
+    PlaybackControlPanel .playback-time {
+        color: #b3a89a;
+    }
+
+    PlaybackControlPanel .playback-hint {
+        color: #6a6560;
+    }
+    """
+
+    def __init__(
+        self,
+        name: str | None = None,
+        id: str | None = None,  # noqa: A002
+        classes: str | None = None,
+    ) -> None:
+        super().__init__(name=name, id=id, classes=classes)
+        self._state = PlaybackState.STOPPED
+        self._progress = 0.0
+        self._speed = 1.0
+        self._current_turn = 0
+        self._total_turns = 0
+        self._current_content = ""
+
+    def update_from_event(self, event: TurnHighlightEvent) -> None:
+        """Update display from a replay event."""
+        self._current_turn = event.playhead + 1
+        self._total_turns = event.total_turns
+        self._speed = event.speed
+        self._progress = event.playhead / max(1, event.total_turns - 1)
+        self._current_content = event.turn.content[:50] if event.turn else ""
+        self.refresh()
+
+    def update_state(self, state: PlaybackState, speed: float) -> None:
+        """Update playback state."""
+        self._state = state
+        self._speed = speed
+        self.refresh()
+
+    def render(self) -> str:
+        """Render playback controls."""
+        # State icon
+        state_icons = {
+            PlaybackState.STOPPED: "[dim]⏹ STOPPED[/]",
+            PlaybackState.PLAYING: "[#7bc275]▶ PLAYING[/]",
+            PlaybackState.PAUSED: "[#f5d08a]⏸ PAUSED[/]",
+        }
+        state_str = state_icons.get(self._state, "⏹ STOPPED")
+
+        # Progress bar (30 chars wide)
+        filled = int(self._progress * 30)
+        bar = "[#e6a352]" + "█" * filled + "[/][dim]" + "░" * (30 - filled) + "[/]"
+
+        # Turn counter
+        turn_str = f"Turn {self._current_turn}/{self._total_turns}"
+
+        # Speed
+        speed_str = f"[#8ac4e8]{self._speed:.1f}x[/]"
+
+        # Content preview
+        content = self._current_content[:40] if self._current_content else "[dim]---[/]"
+
+        lines = [
+            f"{state_str}  {bar}  {turn_str}  {speed_str}",
+            f"[dim]Current:[/] {content}",
+            "[dim]Space: play/pause  s: speed  ◀/▶: step  Esc: stop[/]",
+        ]
+        return "\n".join(lines)
 
 
 class DebuggerScreen(Screen[None]):
@@ -80,10 +197,11 @@ class DebuggerScreen(Screen[None]):
     - Causal cone analysis
     - State diff comparison
     - Timeline scrubbing and forking
+    - Animated replay via ReplayController
 
     Modes:
         forensic: Full DAG + cone + diff (default)
-        replay: Time-travel through execution
+        replay: Time-travel through execution with playback controls
         diff: Side-by-side state comparison
     """
 
@@ -117,6 +235,15 @@ class DebuggerScreen(Screen[None]):
         dock: bottom;
         height: 7;
     }
+
+    DebuggerScreen #playback-container {
+        dock: bottom;
+        height: 5;
+    }
+
+    DebuggerScreen #playback-container.hidden {
+        display: none;
+    }
     """
 
     BINDINGS = [
@@ -133,6 +260,9 @@ class DebuggerScreen(Screen[None]):
         Binding("right", "timeline_step", "▶ Step", show=False),
         Binding("escape", "back", "Back", show=True),
         Binding("q", "quit", "Quit", show=False),
+        # Replay controls
+        Binding("space", "toggle_playback", "Play/Pause", show=True),
+        Binding("s", "cycle_speed", "Speed", show=True),
     ]
 
     # Reactive properties
@@ -169,6 +299,11 @@ class DebuggerScreen(Screen[None]):
         self._causal_cone: CausalConeWidget | None = None
         self._state_diff: StateDiffWidget | None = None
         self._timeline: TimelineScrubber | None = None
+        self._playback_panel: PlaybackControlPanel | None = None
+
+        # Replay controller
+        self._replay_controller: ReplayController | None = None
+        self._replay_task: object | None = None  # Worker task for replay
 
     def compose(self) -> ComposeResult:
         """Compose the debugger screen."""
@@ -209,6 +344,11 @@ class DebuggerScreen(Screen[None]):
                 self._state_diff = StateDiffWidget(weave=self.weave)
                 yield self._state_diff
 
+        # Playback control panel (shown in replay mode)
+        with Container(id="playback-container", classes="hidden"):
+            self._playback_panel = PlaybackControlPanel()
+            yield self._playback_panel
+
         # Timeline scrubber at bottom
         with Container(id="timeline-container"):
             self._timeline = TimelineScrubber(weave=self.weave)
@@ -221,11 +361,62 @@ class DebuggerScreen(Screen[None]):
         # Sync widgets to initial state
         self._sync_widgets_to_mode()
 
+        # Initialize replay controller with demo turns
+        # In production, these would come from the weave
+        self._init_replay_controller()
+
         # If we have an agent, set up initial state
         if self.agent_id and self._turn_dag:
             # Auto-select first turn for diff
             if self._turn_dag.get_turn_count() >= 2:
                 self._update_diff_from_dag()
+
+    def _init_replay_controller(self) -> None:
+        """Initialize the replay controller with turns from the weave."""
+        # Build turns from weave events
+        turns = self._build_turns_from_weave()
+
+        # If no turns from weave, use demo turns
+        if not turns:
+            turns = create_demo_turns(15)
+
+        self._replay_controller = ReplayController(
+            turns=turns,
+            auto_pause_on_key_moments=True,
+            on_key_moment=self._on_key_moment,
+        )
+
+    def _build_turns_from_weave(self) -> list[Turn]:
+        """Build Turn objects from weave events."""
+        from datetime import datetime
+
+        turns: list[Turn] = []
+
+        for event in self.weave.monoid.events:
+            # Map weave event to Turn
+            turn_type = "ACTION"
+            if hasattr(event, "turn_type"):
+                turn_type = event.turn_type.name
+
+            content = str(getattr(event, "content", ""))[:100]
+            source = getattr(event, "source", "unknown")
+
+            turn = Turn(
+                id=event.id,
+                turn_type=turn_type,
+                content=content,
+                timestamp=datetime.fromtimestamp(event.timestamp),
+                duration=0.1,  # Default duration
+                agent_id=source,
+                confidence=getattr(event, "confidence", 1.0),
+            )
+            turns.append(turn)
+
+        return turns
+
+    def _on_key_moment(self, turn: Turn) -> None:
+        """Handle key moments during replay (YIELD, errors, etc.)."""
+        self.notify(f"Key moment: {turn.turn_type} - {turn.content[:30]}...")
 
     def navigate_to_turn(self, turn_id: str) -> None:
         """
@@ -362,11 +553,112 @@ class DebuggerScreen(Screen[None]):
 
     def action_back(self) -> None:
         """Go back (Escape)."""
+        # Stop replay if playing
+        if self._replay_controller and not self._replay_controller.stopped:
+            self._replay_controller.stop()
+            self._update_playback_state()
+            return
         self.app.pop_screen()
 
     def action_quit(self) -> None:
         """Quit application (q)."""
+        # Stop replay first
+        if self._replay_controller:
+            self._replay_controller.stop()
         self.app.exit()
+
+    def action_toggle_playback(self) -> None:
+        """Toggle play/pause (Space key)."""
+        if not self._replay_controller:
+            return
+
+        if self._replay_controller.stopped:
+            # Start playback from current position
+            self.run_worker(self._run_replay())
+        elif self._replay_controller.playing:
+            self._replay_controller.pause()
+            self._update_playback_state()
+        elif self._replay_controller.paused:
+            self._replay_controller.resume()
+            self._update_playback_state()
+
+    def action_cycle_speed(self) -> None:
+        """Cycle playback speed (s key)."""
+        if not self._replay_controller:
+            return
+
+        new_speed = self._replay_controller.cycle_speed()
+        self._update_playback_state()
+        self.notify(f"Playback speed: {new_speed:.2f}x")
+
+    async def _run_replay(self) -> None:
+        """Run the replay playback as a worker task."""
+        if not self._replay_controller:
+            return
+
+        self._update_playback_state()
+
+        async for event in self._replay_controller.play():
+            # Update playback panel
+            if self._playback_panel:
+                self._playback_panel.update_from_event(event)
+
+            # Update mode indicator
+            self._update_playback_state()
+
+            # Sync DAG to current position
+            if self._turn_dag and self._replay_controller:
+                turn = self._replay_controller.get_current_turn()
+                if turn:
+                    # Navigate DAG to this turn
+                    self._sync_dag_to_replay_position()
+
+        # Playback finished
+        self._update_playback_state()
+        self.notify("Replay finished")
+
+    def _update_playback_state(self) -> None:
+        """Update UI to reflect current playback state."""
+        if not self._replay_controller:
+            return
+
+        state = self._replay_controller._state
+        speed = self._replay_controller.speed
+
+        # Update mode indicator
+        if self._mode_indicator:
+            self._mode_indicator.playback_state = state.name.lower()
+            self._mode_indicator.playback_speed = speed
+
+        # Update playback panel
+        if self._playback_panel:
+            self._playback_panel.update_state(state, speed)
+
+    def _sync_dag_to_replay_position(self) -> None:
+        """Sync DAG to current replay position."""
+        if not self._replay_controller or not self._turn_dag:
+            return
+
+        turn = self._replay_controller.get_current_turn()
+        if not turn:
+            return
+
+        # Navigate to the turn in DAG
+        playhead = self._replay_controller.playhead
+        current = self._turn_dag.get_current_index()
+
+        while current < playhead:
+            if not self._turn_dag.navigate_next():
+                break
+            current = self._turn_dag.get_current_index()
+
+        while current > playhead:
+            if not self._turn_dag.navigate_prev():
+                break
+            current = self._turn_dag.get_current_index()
+
+        # Update diff
+        self._update_diff_from_dag()
 
     # ========================================================================
     # Internal Sync Methods
@@ -374,14 +666,26 @@ class DebuggerScreen(Screen[None]):
 
     def _sync_widgets_to_mode(self) -> None:
         """Sync widget visibility based on current mode."""
+        # Get the playback container
+        try:
+            playback_container = self.query_one("#playback-container", Container)
+        except Exception:
+            playback_container = None
+
         if self.mode == "forensic":
-            # Show all widgets
+            # Hide playback panel
+            if playback_container:
+                playback_container.add_class("hidden")
             self._show_all_widgets()
         elif self.mode == "replay":
-            # Focus on timeline and DAG
+            # Show playback panel
+            if playback_container:
+                playback_container.remove_class("hidden")
             self._show_replay_widgets()
         elif self.mode == "diff":
-            # Focus on state diff
+            # Hide playback panel
+            if playback_container:
+                playback_container.add_class("hidden")
             self._show_diff_widgets()
 
     def _show_all_widgets(self) -> None:
@@ -391,8 +695,10 @@ class DebuggerScreen(Screen[None]):
 
     def _show_replay_widgets(self) -> None:
         """Show replay-focused widgets."""
-        # Could hide cone/diff, but for now keep all visible
-        pass
+        # Update playback panel with current state
+        if self._playback_panel and self._replay_controller:
+            stats = self._replay_controller.get_stats()
+            self._playback_panel.update_state(stats.state, stats.speed)
 
     def _show_diff_widgets(self) -> None:
         """Show diff-focused widgets."""

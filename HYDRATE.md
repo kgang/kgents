@@ -1,75 +1,83 @@
-# HYDRATE.md — kgents Context Seed
+# HYDRATE.md — The Seed
 
 > *"To read is to invoke. There is no view from nowhere."*
 
-## Agent Boundaries
+---
 
-**Before editing any meta file, read `plans/_focus.md`** — Kent's intent. Never overwrite.
+## Ground (The Seven Principles)
 
-| File | Agent May | Agent Must NOT |
-|------|-----------|----------------|
-| `plans/_focus.md` | Read | Write Things Non-personal to Kent |
-| `plans/_forest.md` | Regenerate | Add prose |
-| `plans/meta.md` | Append (one line) | Expand (50-line cap) |
-| `HYDRATE.md` | Update facts | Bloat |
+1. **Tasteful** — Each agent serves a clear, justified purpose
+2. **Curated** — Quality over quantity; evolve, don't accumulate
+3. **Ethical** — Augment human capability, never replace judgment
+4. **Joy-Inducing** — Personality matters; delight in interaction
+5. **Composable** — Agents are morphisms; `f >> g` is primary
+6. **Heterarchical** — No fixed hierarchy; leadership is contextual
+7. **Generative** — Spec is compression; implementation follows mechanically
+
+**Meta**: Accursed Share • AGENTESE • Personality Space
 
 ---
 
-## Status
+## The Five Contexts (AGENTESE)
 
-**Tests**: 12,515 | **Mypy**: Strict (0 errors) | **Branch**: `feat/forge`
-
----
-
-## AGENTESE (The Five Contexts)
-
-```
-world.*    — External (entities, tools)
-self.*     — Internal (memory, state)
-concept.*  — Abstract (platonics, logic)
-void.*     — Accursed Share (entropy, slop)
-time.*     — Temporal (traces, forecasts)
-```
+| Context | Domain | Key Affordances |
+|---------|--------|-----------------|
+| `world.*` | External | entities, tools, code |
+| `self.*` | Internal | memory, state, capability |
+| `concept.*` | Abstract | specs, definitions, skills |
+| `void.*` | Entropy | accursed share, slop |
+| `time.*` | Temporal | traces, history |
 
 **Aspects**: `manifest` • `witness` • `refine` • `sip` • `tithe` • `lens` • `define`
 
 ---
 
-## Active Plans (see `plans/_forest.md`)
+## The Three Phases
 
-| Plan | Progress | Next |
-|------|----------|------|
-| `agents/k-gent` | 97% | Deferred: Fractal, Holographic |
-| `self/memory` | 30% | Four Pillars integration |
-| `architecture/turn-gents` | 0% | Chronos-Kairos Protocol (proposed) |
+```
+SENSE → ACT → REFLECT → (loop)
+```
 
-## Completed (Recent)
+| Phase | Contains | When |
+|-------|----------|------|
+| **SENSE** | Plan, Research, Develop, Strategize, Cross-Synergize | Understanding |
+| **ACT** | Implement, QA, Test, Educate | Execution |
+| **REFLECT** | Measure, Reflect, Re-Metabolize | Learning |
 
-- **DevEx Dashboard** — `kg dashboard`, 4-panel TUI, graceful degradation, 50+ tests
-- **DevEx Watch Mode** — `kg soul watch`, 5 heuristics (complexity, naming, patterns, tests, docs), 28 tests
-- **DevEx Gallery** — MkDocs site, 6 examples (composition, functors, soul, streaming), GitHub Actions
-- **Telemetry (O-gent Dim X)** — TelemetryMiddleware, OTEL spans, metrics, CLI, K8s stack (Tempo/Prometheus/Grafana)
-- **Trace Integration** — TraceDataProvider, Ghost/Status/Dashboard/Flinch/MRI integration, 101+ tests
-- **DevEx Playground** — `kgents play`, 4 tutorials + REPL, 32 tests
-- **Alethic Architecture** — 337 tests, Phases 1-6 (Functor, Halo, Archetypes, Projectors)
+**Full N-Phase**: `plans/skills/n-phase-cycle/` — Use for Crown Jewels only.
 
-## Sprint Prompts
+---
 
-| Sprint | Prompt |
-|--------|--------|
-| Dashboard Consolidation | `prompts/dashboard-demo-consolidation.md` — The dashboard IS the demo |
-| HotData | `prompts/hotdata-realization.md` — Pre-computed richness, demo kgents ARE kgents |
-| Polyfunctor | `prompts/polyfunctor-realization.md` — Spec poly/operad/sheaf, migrate genera |
-| DevEx | `prompts/devex-continuation.md` — Dashboard, watch-mode, gallery |
+## The Forest
+
+| File | Role | Agent Protocol |
+|------|------|----------------|
+| `plans/_focus.md` | Human intent | **Never overwrite** |
+| `plans/_forest.md` | Canopy (visible state) | Regenerate |
+| `plans/meta.md` | Mycelium (learnings) | Append, 50-line cap |
+| `plans/_epilogues/` | Spores (session handoffs) | Write at session end |
+| `plans/skills/` | Patterns | Pull → Apply → Push |
+
+---
+
+## Status
+
+**Tests**: 13,210 | **Mypy**: Strict (0 errors) | **Branch**: `main`
+
+| Tree | Progress | Status |
+|------|----------|--------|
+| k-gent | 97% | Deferred: Fractal, Holographic |
+| memory | 40% | Four Pillars + Substrate |
+| turn-gents | 100% ✓ | 187 tests |
 
 ---
 
 ## Commands
 
 ```bash
-cd impl/claude && uv run mypy .       # Must pass
-cd impl/claude && uv run ruff check   # Must pass
-pytest -m "not slow" -q               # Must pass
+cd impl/claude && uv run pytest -q   # Tests
+cd impl/claude && uv run mypy .      # Types
+cat plans/_forest.md                 # Canopy
 ```
 
 ---
@@ -84,23 +92,20 @@ A(abstract) B(economics) C(category) D(memory) E(evolution) F(futures) G(generat
 
 - Python 3.12: `Generic[A]` + `TypeVar`, not `class Foo[A]:`
 - Imports: Prefer absolute (`from agents.x import Y`)
-- Cross-agent: `*_integration.py` or SemanticField
 - Foundational modules: `shared`, `a`, `d`, `l`, `c`, `poly`, `operad`, `sheaf`
 
 ---
 
 ## Deep Dive
 
-For details beyond this seed:
-- **Functor Field Guide**: `docs/functor-field-guide.md` — Alethic Algebra without category theory
-- **Operator's Guide**: `docs/operators-guide.md` — Scenarios, eigenvectors, stigmergic surface
-- **Categorical Foundations**: `docs/categorical-foundations.md` — Category theory, principles
-- **Forest canopy**: `plans/_forest.md`
-- **Human intent**: `plans/_focus.md`
-- **Principles**: `spec/principles.md`
-- **Skills**: `plans/skills/` — patterns for common tasks
-- **DevEx**: `/harden`, `/trace`, `/diff-spec`, `/debt`
+| Resource | Purpose |
+|----------|---------|
+| `spec/principles.md` | Full principles + meta-principles |
+| `plans/skills/` | HOW-TO guides (pull before doing) |
+| `docs/functor-field-guide.md` | Alethic Algebra |
+| `docs/operators-guide.md` | K-gent eigenvectors |
+| `/harden`, `/trace`, `/diff-spec`, `/debt` | DevEx commands |
 
 ---
 
-*Compress, don't expand. If this file exceeds 125 lines, prune it immediately.*
+*Lines: 90. Ceiling: 100. Prune if exceeded.*

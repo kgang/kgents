@@ -163,6 +163,16 @@ from .llm import (
     has_llm_credentials,
     morpheus_available,
 )
+
+# Phase 6: Memory Allocation (M-gent Substrate Integration)
+from .memory_allocation import (
+    AllocationStats,
+    KgentAllocationManager,
+    KgentMemoryProfile,
+    KgentPheromoneDepositor,
+    create_kgent_allocation,
+    create_kgent_depositor,
+)
 from .persistent_persona import (
     PersistentPersonaAgent,
     PersistentPersonaQueryAgent,
@@ -484,4 +494,11 @@ __all__ = [
     "PatternHeuristic",
     "TestsHeuristic",
     "DocsHeuristic",
+    # Phase 6: Memory Allocation (M-gent Substrate Integration)
+    "KgentMemoryProfile",
+    "KgentAllocationManager",
+    "AllocationStats",
+    "KgentPheromoneDepositor",
+    "create_kgent_allocation",
+    "create_kgent_depositor",
 ]

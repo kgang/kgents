@@ -18,7 +18,7 @@ from typing import Any, AsyncGenerator, cast
 
 import pytest
 
-from ..exceptions import CompositionViolationError
+from ..exceptions import CompositionViolationError, LawCheckFailed
 from ..laws import (
     IDENTITY,
     # Law verification
@@ -28,16 +28,23 @@ from ..laws import (
     # Core types
     Id,
     LawEnforcingComposition,
+    LawVerificationResult,
     SimpleMorphism,
     # Helpers
     compose,
     create_enforcing_composition,
     create_verifier,
+    # Track B (Law Enforcer): Event emission
+    emit_law_check_event,
     enforce_minimal_output,
     # Minimal output
     is_single_logical_unit,
     morphism,
     pipe,
+    # Track B (Law Enforcer): Verification with events
+    raise_if_failed,
+    verify_and_emit_associativity,
+    verify_and_emit_identity,
 )
 from ..logos import ComposedPath, Logos
 from ..node import BasicRendering
@@ -766,3 +773,181 @@ class TestFactoryFunctions:
         """create_enforcing_composition() with single morphism."""
         ec = create_enforcing_composition(IncrementMorphism())
         assert isinstance(ec, LawEnforcingComposition)
+
+
+# === Track B (Law Enforcer): LawCheckFailed Tests ===
+
+
+class TestLawCheckFailed:
+    """Tests for LawCheckFailed exception (Track B: Law Enforcer)."""
+
+    def test_basic_construction(self) -> None:
+        """LawCheckFailed can be constructed with basic args."""
+        exc = LawCheckFailed("test message", law="identity", locus="f >> g")
+        assert exc.law == "identity"
+        assert exc.locus == "f >> g"
+        assert "test message" in str(exc)
+
+    def test_identity_law_why(self) -> None:
+        """LawCheckFailed provides why for identity law."""
+        exc = LawCheckFailed("test", law="identity")
+        assert exc.why is not None
+        assert "Id >> f" in exc.why or "should equal" in exc.why
+
+    def test_associativity_law_why(self) -> None:
+        """LawCheckFailed provides why for associativity law."""
+        exc = LawCheckFailed("test", law="associativity")
+        assert exc.why is not None
+        assert "(f >> g) >> h" in exc.why or "should equal" in exc.why
+
+    def test_identity_law_suggestion(self) -> None:
+        """LawCheckFailed provides suggestion for identity law."""
+        exc = LawCheckFailed("test", law="identity")
+        assert exc.suggestion is not None
+        assert "pure" in exc.suggestion.lower() or "state" in exc.suggestion.lower()
+
+    def test_associativity_law_suggestion(self) -> None:
+        """LawCheckFailed provides suggestion for associativity law."""
+        exc = LawCheckFailed("test", law="associativity")
+        assert exc.suggestion is not None
+        assert "output" in exc.suggestion.lower() or "type" in exc.suggestion.lower()
+
+    def test_from_verification_factory(self) -> None:
+        """from_verification creates LawCheckFailed from verification result."""
+        exc = LawCheckFailed.from_verification(
+            law="associativity",
+            locus="a >> b >> c",
+            left_result="left",
+            right_result="right",
+        )
+        assert exc.law == "associativity"
+        assert exc.locus == "a >> b >> c"
+        assert exc.left_result == "left"
+        assert exc.right_result == "right"
+        assert "a >> b >> c" in str(exc)
+
+    def test_related_includes_locus(self) -> None:
+        """LawCheckFailed includes locus in related paths."""
+        exc = LawCheckFailed("test", law="identity", locus="test.path")
+        assert exc.related is not None
+        assert "test.path" in exc.related
+
+
+# === Track B (Law Enforcer): Event Emission Tests ===
+
+
+class TestLawCheckEventEmission:
+    """Tests for law check event emission (Track B: Law Enforcer)."""
+
+    def test_emit_law_check_event_without_span(self) -> None:
+        """emit_law_check_event works even without active span."""
+        # Should not raise - silently succeeds
+        emit_law_check_event("identity", "pass", "test.path")
+
+    def test_raise_if_failed_passes_on_success(self) -> None:
+        """raise_if_failed does not raise on passing result."""
+        result = LawVerificationResult(law="identity", passed=True)
+        raise_if_failed(result, "test.path")  # Should not raise
+
+    def test_raise_if_failed_raises_on_failure(self) -> None:
+        """raise_if_failed raises LawCheckFailed on failing result."""
+        result = LawVerificationResult(
+            law="associativity",
+            passed=False,
+            left_result="a",
+            right_result="b",
+        )
+        with pytest.raises(LawCheckFailed) as exc_info:
+            raise_if_failed(result, "f >> g >> h")
+
+        exc = exc_info.value
+        assert exc.law == "associativity"
+        assert exc.locus == "f >> g >> h"
+
+
+class TestVerifyAndEmitFunctions:
+    """Tests for verify_and_emit_* functions (Track B: Law Enforcer)."""
+
+    @pytest.mark.asyncio
+    async def test_verify_and_emit_identity(self) -> None:
+        """verify_and_emit_identity verifies and returns result."""
+        morphism = IncrementMorphism()
+        result = await verify_and_emit_identity(morphism, 5, "increment")
+        assert result.passed is True
+        assert result.law == "identity"
+
+    @pytest.mark.asyncio
+    async def test_verify_and_emit_associativity(self) -> None:
+        """verify_and_emit_associativity verifies and returns result."""
+        f = IncrementMorphism()
+        g = DoubleMorphism()
+        h = SquareMorphism()
+        result = await verify_and_emit_associativity(f, g, h, 5, "f >> g >> h")
+        assert result.passed is True
+        assert result.law == "associativity"
+
+    @pytest.mark.asyncio
+    async def test_verify_and_emit_associativity_builds_locus(self) -> None:
+        """verify_and_emit_associativity builds locus from morphism names."""
+        f = IncrementMorphism()
+        g = DoubleMorphism()
+        h = SquareMorphism()
+        # Call without providing locus
+        result = await verify_and_emit_associativity(f, g, h, 5)
+        assert result.passed is True
+
+
+# === Track B (Law Enforcer): ComposedPath Law Check Tests ===
+
+
+class TestComposedPathLawChecks:
+    """Tests for ComposedPath law check features (Track B: Law Enforcer)."""
+
+    @pytest.fixture
+    def logos(self) -> Logos:
+        return Logos()
+
+    def test_composed_path_default_emit_law_check(self, logos: Logos) -> None:
+        """ComposedPath emits law checks by default."""
+        path = logos.compose("a.b.c", "d.e.f")
+        assert path._emit_law_check is True
+
+    def test_without_law_checks(self, logos: Logos) -> None:
+        """without_law_checks disables law check emission."""
+        path = logos.compose("a.b.c", "d.e.f")
+        relaxed = path.without_law_checks()
+        assert relaxed._emit_law_check is False
+        # Other settings preserved
+        assert relaxed._enforce_minimal_output is True
+
+    def test_with_law_checks(self, logos: Logos) -> None:
+        """with_law_checks explicitly controls law check emission."""
+        path = logos.compose("a.b.c", "d.e.f")
+        relaxed = path.with_law_checks(False)
+        assert relaxed._emit_law_check is False
+        enabled = relaxed.with_law_checks(True)
+        assert enabled._emit_law_check is True
+
+    def test_rshift_preserves_law_check(self, logos: Logos) -> None:
+        """>> operator preserves law check setting."""
+        path = logos.path("a.b.c", emit_law_check=False)
+        extended = path >> "d.e.f"
+        assert extended._emit_law_check is False
+
+    def test_rshift_combined_paths_and_flags(self, logos: Logos) -> None:
+        """>> with ComposedPath combines law check flags (AND)."""
+        path1 = logos.compose("a.b.c", emit_law_check=True)
+        path2 = logos.compose("d.e.f", emit_law_check=False)
+        combined = path1 >> path2
+        # Should be False because both must be True
+        assert combined._emit_law_check is False
+
+    def test_logos_compose_emit_law_check_param(self, logos: Logos) -> None:
+        """logos.compose accepts emit_law_check parameter."""
+        path = logos.compose("a.b.c", "d.e.f", emit_law_check=False)
+        assert path._emit_law_check is False
+
+    def test_logos_path_emit_law_check_param(self, logos: Logos) -> None:
+        """logos.path accepts emit_law_check parameter."""
+        path = logos.path("a.b.c", emit_law_check=False)
+        assert path._emit_law_check is False

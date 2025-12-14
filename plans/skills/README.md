@@ -34,7 +34,25 @@ plans/skills/
 ├── plan-file.md                 # Writing plan files (Forest Protocol)
 ├── polynomial-agent.md          # Create PolyAgent[S, A, B] with modes
 ├── reconciliation-session.md    # Audit and sync forest state
-└── test-patterns.md             # Testing patterns and conventions
+├── test-patterns.md             # Testing patterns and conventions
+└── n-phase-cycle/               # Implementation lifecycle skills
+    ├── README.md                # Index and usage guide
+    ├── plan.md                  # PLAN phase skill
+    ├── research.md              # RESEARCH phase skill
+    ├── develop.md               # DEVELOP phase skill
+    ├── strategize.md            # STRATEGIZE phase skill
+    ├── cross-synergize.md       # CROSS-SYNERGIZE phase skill
+    ├── implement.md             # IMPLEMENT phase skill
+    ├── qa.md                    # QA phase skill
+    ├── test.md                  # TEST phase skill
+    ├── educate.md               # EDUCATE phase skill
+    ├── measure.md               # MEASURE phase skill
+    ├── reflect.md               # REFLECT phase skill
+    ├── meta-skill-operad.md     # Category-theoretic skill mutation
+    ├── meta-re-metabolize.md    # Lifecycle refresh protocol
+    ├── lookback-revision.md     # Oblique retrospection cycle
+    ├── process-metrics.md       # Lifecycle instrumentation
+    └── re-metabolize-slash-command.md  # /re-metabolize design
 ```
 
 ---
@@ -143,6 +161,24 @@ How to confirm the skill was applied correctly.
 | [polynomial-agent](polynomial-agent.md) | Create `PolyAgent[S, A, B]` with state-dependent behavior | Medium-Advanced |
 | [reconciliation-session](reconciliation-session.md) | Audit, surface, and sync forest state | Medium |
 | [test-patterns](test-patterns.md) | Testing patterns and conventions | Easy-Medium |
+| **Lifecycle** | | |
+| [three-phase](three-phase.md) | **Default**: SENSE→ACT→REFLECT (compresses 11 phases) | Easy |
+| [n-phase-cycle/](n-phase-cycle/README.md) | Full 11-phase lifecycle (Crown Jewels only) | Varies |
+| [n-phase-cycle/plan](n-phase-cycle/plan.md) | Frame intent, scope, and constraints | Easy |
+| [n-phase-cycle/research](n-phase-cycle/research.md) | Map terrain, surface blockers | Medium |
+| [n-phase-cycle/develop](n-phase-cycle/develop.md) | Shape specs/APIs, sharpen edges | Medium |
+| [n-phase-cycle/strategize](n-phase-cycle/strategize.md) | Sequence moves for leverage | Medium |
+| [n-phase-cycle/cross-synergize](n-phase-cycle/cross-synergize.md) | Find combinatorial lifts | Medium |
+| [n-phase-cycle/implement](n-phase-cycle/implement.md) | Ship code with compositional fidelity | Medium |
+| [n-phase-cycle/qa](n-phase-cycle/qa.md) | Quality gates, checklists, hygiene | Easy-Medium |
+| [n-phase-cycle/test](n-phase-cycle/test.md) | Verification depth and coverage | Medium |
+| [n-phase-cycle/educate](n-phase-cycle/educate.md) | Teach users how to wield the work | Easy |
+| [n-phase-cycle/measure](n-phase-cycle/measure.md) | Instrumentation and effect tracking | Medium |
+| [n-phase-cycle/reflect](n-phase-cycle/reflect.md) | Distill learnings, seed next loop | Easy |
+| [n-phase-cycle/meta-skill-operad](n-phase-cycle/meta-skill-operad.md) | Category-theoretic mutation protocol | Medium |
+| [n-phase-cycle/meta-re-metabolize](n-phase-cycle/meta-re-metabolize.md) | Lifecycle refresh endofunctor | Medium |
+| [n-phase-cycle/lookback-revision](n-phase-cycle/lookback-revision.md) | Oblique retrospection (double-loop) | Medium |
+| [n-phase-cycle/process-metrics](n-phase-cycle/process-metrics.md) | Lifecycle instrumentation/tracing | Medium |
 
 ---
 

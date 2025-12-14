@@ -22,23 +22,26 @@ from typing import TYPE_CHECKING
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Horizontal, Vertical
-from textual.screen import Screen
 from textual.widgets import Footer, Header, Static
 
 from ..data.state import AgentSnapshot
 from ..widgets.density_field import DensityField
+from .base import KgentsScreen
 
 if TYPE_CHECKING:
-    pass
+    from ..data.memory_provider import MemoryDataProvider
 
 
-class MRIScreen(Screen[None]):
+class MRIScreen(KgentsScreen):
     """
     MRI View - LOD Level 2 (Internal).
 
     The deepest zoom showing raw agent internals.
     This is for debugging and deep inspection.
     """
+
+    # Visual anchor for gentle transitions
+    ANCHOR = "agent-header"
 
     CSS = """
     MRIScreen {
@@ -129,6 +132,10 @@ class MRIScreen(Screen[None]):
         self.agent_id = agent_id or (agent_snapshot.id if agent_snapshot else "")
         self.agent_name = agent_name or (agent_snapshot.name if agent_snapshot else "")
 
+        # Memory provider for Four Pillars data
+        self._memory_provider: "MemoryDataProvider | None" = None
+        self._setup_memory_provider()
+
     def compose(self) -> ComposeResult:
         """Compose the MRI screen."""
         yield Header()
@@ -198,17 +205,19 @@ class MRIScreen(Screen[None]):
                 else:
                     yield Static("[#c97b84]No snapshot data available[/]")
 
-            # Panel 4: Memory Crystals
+            # Panel 4: Memory Crystals (Four Pillars)
             with Container(classes="panel"):
                 yield Static("[Memory Crystals]", classes="panel-title")
                 yield Static("")
-                yield Static("[#8b7ba5]Memory list - not yet implemented[/]")
-                yield Static("")
-                yield Static("This would show:")
-                yield Static("  • Crystallized moments (from Loom)")
-                yield Static("  • Long-term memory entries")
-                yield Static("  • Memory formation timestamps")
-                yield Static("  • Recall frequency")
+                crystal_content = self._get_crystal_content()
+                if crystal_content:
+                    for line in crystal_content:
+                        yield Static(line)
+                else:
+                    yield Static("[#8b7ba5]No memory crystal data[/]")
+                    yield Static("")
+                    yield Static("Press 'm' in Dashboard to view")
+                    yield Static("the full Memory Map screen")
 
             # Panel 5: Full State Dump
             with Container(classes="panel"):
@@ -339,5 +348,87 @@ class MRIScreen(Screen[None]):
 
         except ImportError:
             return []
+        except Exception:
+            return []
+
+    def _setup_memory_provider(self) -> None:
+        """Set up the memory data provider for Four Pillars integration."""
+        try:
+            from ..data.memory_provider import MemoryDataProvider
+
+            self._memory_provider = MemoryDataProvider(demo_mode=self._demo_mode)
+        except ImportError:
+            pass
+
+    def _get_crystal_content(self) -> list[str]:
+        """
+        Get memory crystal content from MemoryDataProvider.
+
+        Returns formatted lines showing crystal stats and patterns.
+        """
+        if (
+            self._memory_provider is None
+            or self._memory_provider.memory_crystal is None
+        ):
+            return []
+
+        try:
+            crystal = self._memory_provider.memory_crystal
+            stats = crystal.stats()
+
+            lines: list[str] = []
+
+            # Stats summary
+            lines.append(
+                f"[#b3a89a]Concepts:[/] [#f5d08a]{stats['concept_count']}[/]  "
+                f"[#b3a89a]Hot:[/] [#ff6b6b]{stats['hot_count']}[/]"
+            )
+            lines.append(
+                f"[#b3a89a]Avg Resolution:[/] [#f5d08a]{stats['avg_resolution']:.2f}[/]"
+            )
+            lines.append("")
+
+            # Top patterns by resolution
+            if crystal.concepts:
+                lines.append("[#e6a352]Top Patterns:[/]")
+                sorted_concepts = sorted(
+                    crystal.resolution_levels.items(),
+                    key=lambda x: -x[1],
+                )[:5]
+
+                for cid, resolution in sorted_concepts:
+                    # Resolution bar
+                    bar_len = int(resolution * 10)
+                    bar = "█" * bar_len + "░" * (10 - bar_len)
+
+                    # Color based on resolution
+                    if resolution >= 0.8:
+                        color = "#ff6b6b"  # hot
+                    elif resolution >= 0.5:
+                        color = "#feca57"  # warm
+                    else:
+                        color = "#8b7ba5"  # cool
+
+                    # Hot marker
+                    hot = "🔥" if cid in crystal.hot_patterns else "  "
+
+                    # Truncate concept id
+                    display_cid = cid[:12] if len(cid) > 12 else cid.ljust(12)
+
+                    lines.append(f"  {hot} {display_cid} [{color}]{bar}[/]")
+
+            # Health indicator
+            report = self._memory_provider.compute_health()
+            lines.append("")
+
+            if report["status"] == "HEALTHY":
+                lines.append("[#1dd1a1]● Memory health: HEALTHY[/]")
+            elif report["status"] == "DEGRADED":
+                lines.append("[#feca57]◐ Memory health: DEGRADED[/]")
+            else:
+                lines.append("[#ff6b6b]○ Memory health: CRITICAL[/]")
+
+            return lines
+
         except Exception:
             return []

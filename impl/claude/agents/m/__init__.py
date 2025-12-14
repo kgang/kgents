@@ -105,6 +105,19 @@ from .cartography_integrations import (
     create_map_renderer,
     create_metaphor_locator,
 )
+
+# Phase 5: Compaction
+from .compaction import (
+    AutoCompactionDaemon,
+    CompactionEvent,
+    CompactionPolicy,
+    Compactor,
+    StrategyResult,
+    apply_pressure_based_strategy,
+    apply_uniform_strategy,
+    create_compactor,
+    create_daemon,
+)
 from .consolidation import (
     ConsolidationAgent,
     ConsolidationResult,
@@ -232,6 +245,34 @@ from .recollection import (
     RecollectionAgent,
     ReconstructionRequest,
 )
+
+# Phase 5: Routing
+from .routing import (
+    CategoricalRouter,
+    GradientMap,
+    RouteTrace,
+    RoutingDecision,
+    Task,
+    TaskMorphism,
+    create_router,
+    create_task,
+    verify_adjunction,
+)
+
+# Phase 6: Semantic Routing
+from .semantic_routing import (
+    EmbeddingSimilarity,
+    FilteredSenseResult,
+    GraphSimilarity,
+    KeywordSimilarity,
+    LocalityConfig,
+    PrefixSimilarity,
+    SemanticGradientMap,
+    SemanticRouter,
+    SimilarityProvider,
+    create_lgent_semantic_router,
+    create_semantic_router,
+)
 from .stigmergy import (
     EnhancedStigmergicAgent,
     PheromoneField,
@@ -240,6 +281,21 @@ from .stigmergy import (
     StigmergicAgent,
     Trace,
     create_ant_colony_optimization,
+)
+
+# Phase 5: Substrate
+from .substrate import (
+    AgentId,
+    Allocation,
+    CompactionTrigger,
+    CrystalPolicy,
+    DedicatedCrystal,
+    LifecyclePolicy,
+    MemoryQuota,
+    PromotionDecision,
+    SharedSubstrate,
+    create_allocation_for_agent,
+    create_substrate,
 )
 from .tiered import (
     AttentionFilter,
@@ -427,4 +483,48 @@ __all__ = [
     "MemoryMode",
     "create_memory_polynomial",
     "polynomial_game_to_polynomial",
+    # Phase 5: Substrate
+    "AgentId",
+    "MemoryQuota",
+    "CompactionTrigger",
+    "LifecyclePolicy",
+    "Allocation",
+    "PromotionDecision",
+    "CrystalPolicy",
+    "DedicatedCrystal",
+    "SharedSubstrate",
+    "create_substrate",
+    "create_allocation_for_agent",
+    # Phase 5: Routing
+    "Task",
+    "TaskMorphism",
+    "RoutingDecision",
+    "GradientMap",
+    "RouteTrace",
+    "CategoricalRouter",
+    "verify_adjunction",
+    "create_router",
+    "create_task",
+    # Phase 6: Semantic Routing
+    "SimilarityProvider",
+    "PrefixSimilarity",
+    "KeywordSimilarity",
+    "EmbeddingSimilarity",
+    "GraphSimilarity",
+    "LocalityConfig",
+    "FilteredSenseResult",
+    "SemanticGradientMap",
+    "SemanticRouter",
+    "create_semantic_router",
+    "create_lgent_semantic_router",
+    # Phase 5: Compaction
+    "CompactionPolicy",
+    "CompactionEvent",
+    "Compactor",
+    "AutoCompactionDaemon",
+    "StrategyResult",
+    "apply_uniform_strategy",
+    "apply_pressure_based_strategy",
+    "create_compactor",
+    "create_daemon",
 ]

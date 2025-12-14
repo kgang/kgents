@@ -1,8 +1,8 @@
-# Forest Health: 2025-12-13 (Evening Reconciliation)
+# Forest Health: 2025-12-13 (Night Reconciliation)
 
 > *"A single mighty oak casts too much shadow. We cultivate a forest where many trees grow."*
 
-**Agent Protocol**: This file is auto-generated from plan YAML headers. Agents may regenerate it but should not add prose. For human intent, read `_focus.md`.
+**Agent Protocol**: This file is auto-generated from plan YAML headers. Agents may regenerate it but should not add prose. For human intent, read `_focus.md`. For detailed component-level status, read `_status.md`.
 
 ---
 
@@ -11,10 +11,12 @@
 | Plan | Progress | Status | Notes |
 |------|----------|--------|-------|
 | agents/k-gent | 97% | active | 589 tests. Session/cache added. Deferred: Fractal, Holographic. |
-| self/memory | 30% | active | Four Pillars (Stigmergy, Wittgenstein, Active Inference, Accursed Share). Phase 2 next. |
+| self/memory | 40% | active | Four Pillars + Substrate AGENTESE wired. Real substrate wiring next. |
+| self/memory-phase5-substrate | 0% | proposed | Shared substrate architecture. N-Phase Cycle: Full 11-phase. |
 | architecture/turn-gents | 100% | complete | Chronos-Kairos Protocol. 187 tests. All 7 phases complete. |
-| devex/hotdata-infrastructure | 80% | active | HotData core + CLI + 11 fixtures. Next: Dashboard consolidation. |
-| interfaces/dashboard-consolidation | 0% | proposed | The dashboard IS the demo. Remove standalone scripts. |
+| devex/hotdata-infrastructure | 100% | complete | HotData core + CLI + 11 fixtures + Dashboard consolidation done. |
+| interfaces/dashboard-consolidation | 100% | complete | The dashboard IS the demo. Standalone script removed. |
+| interfaces/dashboard-textual-refactor | 0% | proposed | EventBus, Base Screen, Mixins (zenportal patterns). Fix key eating. |
 
 ---
 
@@ -23,7 +25,7 @@
 | Plan | Progress | Last Touched | Notes |
 |------|----------|--------------|-------|
 | agents/t-gent | 90% | 2025-12-12 | Types I-IV complete, Type V (AdversarialGym) remaining. |
-| void/entropy | 85% | 2025-12-13 | 69 tests. CLI tithe done. Only TUI FeverOverlay remaining. |
+| void/entropy | 95% | 2025-12-13 | 87 tests. FeverOverlay done. Only trigger wiring remaining. |
 
 ---
 
@@ -69,20 +71,22 @@
 
 | Metric | Value |
 |--------|-------|
-| Active trees | 5 |
+| Active trees | 3 |
+| Complete | 4 |
+| Proposed | 2 |
 | Dormant | 2 |
 | Archived-partial | 1 |
 | Blocked | 0 |
-| Newly archived | 17 |
-| Tests | 12,515 |
+| Newly archived | 19 |
+| Tests | 13,210 |
 | Mypy (prod) | 0 errors |
-| Last verified | 2025-12-13 evening |
+| Last verified | 2025-12-13 night (Chief reconciliation) |
 
 ---
 
 ## Session Attention Budget
 
-Aligned with `_focus.md` (2025-12-12 evening):
+Aligned with `_focus.md` (2025-12-13):
 
 | Category | Allocation | Trees |
 |----------|------------|-------|
@@ -113,8 +117,10 @@ devex/playground (ARCHIVED) ──enables──▶ devex/gallery (ARCHIVED)
 devex/dashboard (ARCHIVED) ──uses──▶ agents/k-gent (collectors)
 devex/watch-mode (ARCHIVED) ──uses──▶ agents/k-gent (heuristics)
 
-devex/hotdata-infrastructure (80% ACTIVE) ──enables──▶ interfaces/dashboard-consolidation (PROPOSED)
-interfaces/dashboard-consolidation (PROPOSED) ──consumes──▶ devex/dashboard (ARCHIVED)
+devex/hotdata-infrastructure (COMPLETE) ──enables──▶ interfaces/dashboard-consolidation (COMPLETE)
+interfaces/dashboard-consolidation (COMPLETE) ──consumes──▶ devex/dashboard (ARCHIVED)
+interfaces/dashboard-textual-refactor (PROPOSED) ──refines──▶ interfaces/dashboard-consolidation (COMPLETE)
+interfaces/dashboard-textual-refactor (PROPOSED) ──ports-from──▶ zenportal (EventBus, Base Screen, Mixins)
 
 ## Turn-gents Synergies (NEW)
 

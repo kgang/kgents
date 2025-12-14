@@ -64,6 +64,7 @@ class GhostDaemon:
     TENSION_MAP = "tension_map.json"
     FLINCH_SUMMARY = "flinch_summary.json"
     TRACE_SUMMARY = "trace_summary.json"
+    MEMORY_SUMMARY = "memory_summary.json"
 
     def __init__(
         self,
@@ -187,6 +188,15 @@ class GhostDaemon:
             except Exception as e:
                 errors.append(f"trace_summary.json: {e}")
 
+        # Write memory summary if memory data exists
+        memory_result = health.collectors.get("memory")
+        if memory_result and memory_result.success:
+            try:
+                await self._write_memory_summary(memory_result)
+                files_written.append(self.MEMORY_SUMMARY)
+            except Exception as e:
+                errors.append(f"memory_summary.json: {e}")
+
         self._projection_count += 1
 
         return ProjectionResult(
@@ -272,6 +282,11 @@ class GhostDaemon:
         """Write trace_summary.json."""
         path = self.ghost_dir / self.TRACE_SUMMARY
         path.write_text(json.dumps(trace_result.data, indent=2))
+
+    async def _write_memory_summary(self, memory_result: CollectorResult) -> None:
+        """Write memory_summary.json (Four Pillars data)."""
+        path = self.ghost_dir / self.MEMORY_SUMMARY
+        path.write_text(json.dumps(memory_result.data, indent=2))
 
     async def start(self) -> None:
         """Start the daemon in background mode."""

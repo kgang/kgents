@@ -58,7 +58,7 @@ AGENTESE is a hierarchical, dot-notation language for agent-world interaction. I
 ### 2.1 The Syntax
 
 ```
-<Context> . <Holon> . <Aspect>
+<Context> . <Holon> . <Aspect> [<Clause>]* [@<Annotation>]*
 ```
 
 | Component | Purpose | Examples |
@@ -66,6 +66,43 @@ AGENTESE is a hierarchical, dot-notation language for agent-world interaction. I
 | **Context** | The domain of interaction | `world`, `self`, `concept`, `void`, `time` |
 | **Holon** | The referent being grasped (part-whole) | `house`, `memory`, `justice`, `entropy` |
 | **Aspect** | The mode of engagement (verb) | `manifest`, `witness`, `refine`, `sip` |
+| **Clause** | Inline modifiers (optional) | `[phase=DEVELOP]`, `[entropy=0.07]` |
+| **Annotation** | Span/metric markers (optional) | `@span=research_001`, `@law_check=true` |
+
+### 2.1.1 Clause Grammar (N-Phase Integration)
+
+Clauses extend paths with enforcement and observability. BNF:
+
+```bnf
+PATH        ::= CONTEXT "." HOLON "." ASPECT CLAUSE* ANNOTATION*
+CLAUSE      ::= "[" MODIFIER ("=" VALUE)? "]"
+ANNOTATION  ::= "@" MODIFIER "=" VALUE
+MODIFIER    ::= "phase" | "entropy" | "law_check" | "span" | "rollback" | "minimal_output"
+VALUE       ::= FLOAT | BOOL | STRING | PHASE_NAME
+PHASE_NAME  ::= "PLAN" | "RESEARCH" | "DEVELOP" | "STRATEGIZE" | "IMPLEMENT" | "QA" | "TEST" | "EDUCATE" | "MEASURE" | "REFLECT"
+```
+
+**Examples**:
+
+| Path | Meaning |
+|------|---------|
+| `concept.justice.refine[phase=DEVELOP]` | Refine justice in DEVELOP phase |
+| `void.entropy.sip[entropy=0.07]@span=dev_001` | Sip 0.07 entropy, emit span |
+| `self.liturgy.simulate[rollback=true][law_check=true]` | Simulate with rollback + law checks |
+| `world.code.manifest[minimal_output=true]@phase=IMPLEMENT` | Single output per Minimal Output principle |
+
+**Clause Semantics**:
+
+| Clause | Effect |
+|--------|--------|
+| `[phase=X]` | Associates invocation with N-phase stage; enables span grouping |
+| `[entropy=0.XX]` | Sets Accursed Share budget for this operation (0.05–0.10 band) |
+| `[law_check=true]` | Triggers identity/associativity verification on composition |
+| `[rollback=true]` | Creates rollback token before mutation; enables recovery |
+| `[minimal_output=true]` | Enforces single-output constraint per AD-003 |
+| `@span=ID` | Emits observability span with given ID |
+
+**Principle Alignment**: Clauses are optional modifiers, not required syntax. An unadorned path `world.house.manifest` remains valid. This preserves the Orthogonality Principle: metadata doesn't break composition.
 
 ### 2.2 The Five Strict Contexts
 
