@@ -101,6 +101,20 @@ Memory compression isn't loss—it's transformation of energy from specific to g
 
 ---
 
+## Agent Town Integration (Research-leveraged)
+
+Recent multi-agent sim work (Arena, OASIS, CAMEL extensions) shows graph-based episodic memory + lightweight reward shaping stabilizes behavior and reduces cost. M-gents already provide the needed substrate:
+
+- **Graph episodic memory**: Cartography builds HoloMaps with attractors and weighted desire lines (`impl/claude/agents/m/cartography.py`, `cartographer.py`). Use these maps as the citizen memory graph; k-hop queries replace full-text replays.
+- **Tiered holography**: TieredMemory (`impl/claude/agents/m/tiered.py`) stages sensory→working→holographic. Run consolidation hooks to promote coherent/prosocial edges and demote contradictory ones (reward shaping).
+- **LOD-aware retrieval**: Compression levels and cartography blur/foveation support low-LOD (summaries, 8B frontier) vs high-LOD (full recollections, 70B/premium) without changing semantics.
+- **Programmatic evaluators**: Pair ethical geometry and cartography edges with deterministic pre/post checks; block or quarantine traversals with high error_rate/drift before LLM critique.
+- **Stigmergy as traces**: Pheromone traces (`impl/claude/agents/m/stigmergy.py`) are edge updates with decay—matches Arena/OASIS indirect signals.
+
+Adopt these as defaults for Agent Town citizens: every interaction updates the HoloMap; drama/trust metrics read from edge weights/variance; budget-aware LOD routing uses holographic compression + model tiering.
+
+---
+
 ## The Superspace Model
 
 Concepts and ideas exist in a high-dimensional superspace. Words and tokens are low-dimensional projections:

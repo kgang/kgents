@@ -1,0 +1,422 @@
+# Town Manifest Schema: Declarative Simulation Definition
+#
+# This schema defines the structure of town.manifest.yaml files.
+# Manifests are generative, not aspirational: every field maps to testable
+# implementation artifacts.
+#
+# Usage:
+#   1. Define town in plans/town/my-town.manifest.yaml
+#   2. Validate: kgents town validate plans/town/my-town.manifest.yaml
+#   3. Generate: kgents town generate plans/town/my-town.manifest.yaml
+#   4. Run: kgents town start --manifest plans/town/my-town.manifest.yaml
+#
+# Integration Points:
+#   - CitizenPolynomial: impl/claude/agents/town/polynomial.py
+#   - TownOperad: impl/claude/agents/town/operad.py
+#   - TownFlux: impl/claude/agents/town/flux.py
+#   - HolographicMemory: impl/claude/agents/d/polynomial.py (extends MemoryPolynomialAgent)
+
+$schema: "http://json-schema.org/draft-07/schema#"
+$id: "https://kgents.dev/schemas/town.manifest.schema.yaml"
+title: "Town Manifest"
+description: "Declarative definition of an Agent Town simulation"
+
+type: object
+required:
+  - version
+  - name
+  - citizens
+  - regions
+  - operad
+
+properties:
+  version:
+    type: string
+    enum: ["1.0"]
+    description: "Manifest schema version"
+
+  name:
+    type: string
+    minLength: 1
+    maxLength: 64
+    pattern: "^[a-z][a-z0-9-]*$"
+    description: "Town identifier (kebab-case)"
+
+  description:
+    type: string
+    maxLength: 500
+    description: "Human-readable town description"
+
+  # ==========================================================================
+  # CITIZENS: The Founding Members
+  # ==========================================================================
+  citizens:
+    type: array
+    minItems: 3
+    maxItems: 25
+    items:
+      $ref: "#/definitions/Citizen"
+    description: "Town citizens (agents)"
+
+  # ==========================================================================
+  # REGIONS: The Environment Graph
+  # ==========================================================================
+  regions:
+    type: array
+    minItems: 1
+    items:
+      $ref: "#/definitions/Region"
+    description: "Town regions (locations)"
+
+  # ==========================================================================
+  # OPERAD: Interaction Grammar
+  # ==========================================================================
+  operad:
+    type: object
+    required:
+      - operations
+    properties:
+      extends:
+        type: string
+        enum: ["SOUL_OPERAD", "MEMORY_OPERAD", "NARRATIVE_OPERAD"]
+        description: "Base operad to extend (from agents/operad/domains.py)"
+      operations:
+        type: array
+        items:
+          $ref: "#/definitions/Operation"
+        description: "Town-specific operations"
+
+  # ==========================================================================
+  # DAILY CYCLE: Time Slices
+  # ==========================================================================
+  daily_cycle:
+    type: object
+    properties:
+      phases:
+        type: array
+        items:
+          $ref: "#/definitions/Phase"
+        default:
+          - name: "dawn"
+            token_budget: 10000
+            activities: ["wake", "recall_dreams", "plan_day"]
+          - name: "morning"
+            token_budget: 30000
+            activities: ["work", "encounter", "gossip"]
+          - name: "noon"
+            token_budget: 20000
+            activities: ["gather", "rumor", "tension"]
+          - name: "afternoon"
+            token_budget: 30000
+            activities: ["project", "problem", "solution"]
+          - name: "evening"
+            token_budget: 10000
+            activities: ["reflect", "relationship_update"]
+          - name: "night"
+            token_budget: 5000
+            activities: ["consolidate", "dream"]
+
+  # ==========================================================================
+  # TOKEN ECONOMICS
+  # ==========================================================================
+  budget:
+    type: object
+    properties:
+      monthly_cap:
+        type: integer
+        default: 10000000
+        description: "Maximum tokens per month"
+      daily_target:
+        type: integer
+        default: 333000
+        description: "Target tokens per simulated day"
+      lod_tiers:
+        type: object
+        properties:
+          lod_0_1:
+            type: object
+            properties:
+              model: { type: string, default: "claude-3-5-haiku-20241022" }
+              max_tokens: { type: integer, default: 500 }
+          lod_2_3:
+            type: object
+            properties:
+              model: { type: string, default: "claude-sonnet-4-20250514" }
+              max_tokens: { type: integer, default: 2000 }
+          lod_4_5:
+            type: object
+            properties:
+              model: { type: string, default: "claude-opus-4-5-20251101" }
+              max_tokens: { type: integer, default: 8000 }
+
+  # ==========================================================================
+  # OBSERVABILITY: Emergence Metrics
+  # ==========================================================================
+  metrics:
+    type: object
+    properties:
+      tension_index:
+        type: object
+        description: "Edge weight variance across relationship graph"
+        properties:
+          enabled: { type: boolean, default: true }
+          threshold_drama: { type: number, default: 0.7 }
+      cooperation_level:
+        type: object
+        description: "Sum of positive interaction payoffs per epoch"
+        properties:
+          enabled: { type: boolean, default: true }
+      trust_density:
+        type: object
+        description: "Graph density of trust relationships"
+        properties:
+          enabled: { type: boolean, default: true }
+      culture_motifs:
+        type: object
+        description: "Frequency of recurring behavioral patterns"
+        properties:
+          enabled: { type: boolean, default: true }
+          min_recurrence: { type: integer, default: 3 }
+      rituality:
+        type: object
+        description: "Periodicity of repeated collective acts"
+        properties:
+          enabled: { type: boolean, default: true }
+
+  # ==========================================================================
+  # ETHICS: Consent and Rights
+  # ==========================================================================
+  ethics:
+    type: object
+    properties:
+      right_to_coherence:
+        type: boolean
+        default: true
+        description: "Agents cannot be made to contradict themselves"
+      right_to_memory:
+        type: boolean
+        default: true
+        description: "Agent memories cannot be arbitrarily deleted"
+      right_to_rest:
+        type: boolean
+        default: true
+        description: "Hypnagogic cycles are mandatory"
+      consent_gate:
+        type: boolean
+        default: true
+        description: "Scripted memory overrides require logged rationale"
+      observer_duty:
+        type: boolean
+        default: true
+        description: "Users are reminded of non-deception duty"
+
+  # ==========================================================================
+  # SEED: Entropy Configuration
+  # ==========================================================================
+  seed:
+    type: object
+    properties:
+      entropy_source:
+        type: string
+        enum: ["void.entropy.sip", "deterministic", "system_random"]
+        default: "void.entropy.sip"
+      initial_seed:
+        type: integer
+        description: "Seed for reproducible runs (if deterministic)"
+      accursed_share:
+        type: number
+        minimum: 0.05
+        maximum: 0.15
+        default: 0.10
+        description: "Exploration budget per cycle"
+
+# ==============================================================================
+# DEFINITIONS
+# ==============================================================================
+
+definitions:
+  Citizen:
+    type: object
+    required:
+      - name
+      - archetype
+    properties:
+      name:
+        type: string
+        minLength: 1
+        maxLength: 32
+        pattern: "^[A-Z][a-z]+$"
+        description: "Citizen name (Title case)"
+      archetype:
+        type: string
+        description: "Archetype defining base personality"
+      metaphor:
+        type: string
+        description: "Core metaphor (e.g., 'Life is a gathering')"
+      initial_region:
+        type: string
+        description: "Starting location"
+      polynomial:
+        type: object
+        properties:
+          positions:
+            type: array
+            items: { type: string }
+            default: ["IDLE", "WORKING", "SOCIALIZING", "REFLECTING", "RESTING"]
+          initial_position:
+            type: string
+            default: "IDLE"
+      eigenvectors:
+        type: object
+        description: "Initial soul eigenvectors (K-gent integration)"
+        properties:
+          warmth: { type: number, minimum: 0, maximum: 1, default: 0.5 }
+          curiosity: { type: number, minimum: 0, maximum: 1, default: 0.5 }
+          trust: { type: number, minimum: 0, maximum: 1, default: 0.5 }
+          creativity: { type: number, minimum: 0, maximum: 1, default: 0.5 }
+          patience: { type: number, minimum: 0, maximum: 1, default: 0.5 }
+      memory:
+        type: object
+        properties:
+          tier:
+            type: string
+            enum: ["holographic", "graph_episodic", "simple"]
+            default: "holographic"
+          k_hop_retrieval:
+            type: integer
+            minimum: 1
+            maximum: 5
+            default: 2
+            description: "Graph traversal depth for retrieval"
+
+  Region:
+    type: object
+    required:
+      - name
+    properties:
+      name:
+        type: string
+        description: "Region identifier"
+      description:
+        type: string
+      connections:
+        type: array
+        items: { type: string }
+        description: "Connected region names"
+      capacity:
+        type: integer
+        minimum: 1
+        default: 10
+        description: "Maximum citizens at once"
+      properties:
+        type: object
+        additionalProperties: true
+        description: "Custom region properties"
+
+  Operation:
+    type: object
+    required:
+      - name
+      - arity
+    properties:
+      name:
+        type: string
+        pattern: "^[a-z][a-z0-9_]*$"
+        description: "Operation name (snake_case)"
+      arity:
+        type: integer
+        minimum: 0
+        maximum: 10
+        description: "Number of agents involved"
+      signature:
+        type: string
+        description: "Type signature (e.g., 'Citizen × Citizen → Interaction')"
+      preconditions:
+        type: array
+        items: { type: string }
+        description: "Required conditions (Code-as-Policies style)"
+      postconditions:
+        type: array
+        items: { type: string }
+        description: "Guaranteed effects"
+      metabolics:
+        type: object
+        properties:
+          token_cost:
+            type: integer
+            description: "Estimated tokens"
+          drama_potential:
+            type: number
+            minimum: 0
+            maximum: 1
+            description: "Tension contribution"
+      description:
+        type: string
+
+  Phase:
+    type: object
+    required:
+      - name
+    properties:
+      name:
+        type: string
+      token_budget:
+        type: integer
+      activities:
+        type: array
+        items: { type: string }
+      mandatory:
+        type: boolean
+        default: true
+        description: "Cannot be skipped (Right to Rest enforcement)"
+
+# ==============================================================================
+# EXAMPLE MANIFEST
+# ==============================================================================
+#
+# version: "1.0"
+# name: "smallville"
+# description: "A small town with 7 founding citizens"
+#
+# citizens:
+#   - name: Alice
+#     archetype: Innkeeper
+#     metaphor: "Life is a gathering"
+#     initial_region: inn
+#     eigenvectors:
+#       warmth: 0.8
+#       curiosity: 0.6
+#       trust: 0.7
+#   - name: Bob
+#     archetype: Builder
+#     metaphor: "Life is construction"
+#     initial_region: workshop
+#
+# regions:
+#   - name: inn
+#     description: "Alice's gathering place"
+#     connections: [square, clinic]
+#     capacity: 15
+#   - name: square
+#     description: "Town center"
+#     connections: [inn, workshop, garden, library, shop]
+#     capacity: 25
+#
+# operad:
+#   extends: SOUL_OPERAD
+#   operations:
+#     - name: greet
+#       arity: 2
+#       signature: "Citizen × Citizen → Greeting"
+#       preconditions: ["citizens_in_same_region", "neither_resting"]
+#     - name: trade
+#       arity: 2
+#       signature: "Citizen × Citizen → Exchange"
+#       metabolics:
+#         token_cost: 500
+#         drama_potential: 0.3
+#
+# metrics:
+#   tension_index:
+#     enabled: true
+#     threshold_drama: 0.7

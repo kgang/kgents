@@ -878,7 +878,7 @@ wheels = [
 
 [[package]]
 name = "kgents-runtime"
-version = "0.1.0"
+version = "1.0.0"
 source = { editable = "impl/claude" }
 dependencies = [
     { name = "aiosqlite" },
@@ -929,7 +929,7 @@ requires-dist = [
 
 [[package]]
 name = "kgents-workspace"
-version = "0.1.0"
+version = "1.0.0"
 source = { virtual = "." }
 dependencies = [
     { name = "anywidget" },
