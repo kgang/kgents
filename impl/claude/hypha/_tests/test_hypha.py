@@ -17,8 +17,8 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+from field.holographic import HolographicField
 
-from ...field.holographic import HolographicField
 from ..foraging import ForageAction, ForagingPolicy
 from ..free_energy import FreeEnergyState
 from ..hypha import (
