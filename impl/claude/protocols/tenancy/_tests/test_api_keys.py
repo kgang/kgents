@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
-
 from protocols.tenancy.api_keys import (
     ApiKeyService,
     extract_key_prefix,
@@ -24,9 +23,11 @@ class TestKeyGeneration:
         full_key, key_prefix, key_hash = generate_api_key()
 
         # Full key format: kg_{prefix}_{secret}
+        # Note: secret may contain underscores (from token_urlsafe)
         assert full_key.startswith("kg_")
-        parts = full_key.split("_")
+        parts = full_key.split("_", 2)  # Split on first 2 underscores only
         assert len(parts) == 3
+        assert parts[0] == "kg"
         assert len(parts[1]) == 5  # Prefix length
 
         # Key prefix format: kg_{prefix}
@@ -110,7 +111,7 @@ class TestApiKeyService:
         return ApiKeyService()
 
     @pytest.fixture
-    def tenant_id(self) -> uuid4:
+    def tenant_id(self) -> UUID:
         """Sample tenant ID."""
         return uuid4()
 
@@ -118,7 +119,7 @@ class TestApiKeyService:
     async def test_create_key(
         self,
         service: ApiKeyService,
-        tenant_id: uuid4,
+        tenant_id: UUID,
     ) -> None:
         """Test creating an API key."""
         key_model, full_key = await service.create_key(
@@ -135,7 +136,7 @@ class TestApiKeyService:
     async def test_create_key_with_scopes(
         self,
         service: ApiKeyService,
-        tenant_id: uuid4,
+        tenant_id: UUID,
     ) -> None:
         """Test creating key with custom scopes."""
         key_model, _ = await service.create_key(
@@ -152,7 +153,7 @@ class TestApiKeyService:
     async def test_validate_key(
         self,
         service: ApiKeyService,
-        tenant_id: uuid4,
+        tenant_id: UUID,
     ) -> None:
         """Test validating a key."""
         key_model, full_key = await service.create_key(
@@ -189,7 +190,7 @@ class TestApiKeyService:
     async def test_revoke_key(
         self,
         service: ApiKeyService,
-        tenant_id: uuid4,
+        tenant_id: UUID,
     ) -> None:
         """Test revoking a key."""
         key_model, full_key = await service.create_key(
@@ -221,7 +222,7 @@ class TestApiKeyService:
     async def test_list_keys(
         self,
         service: ApiKeyService,
-        tenant_id: uuid4,
+        tenant_id: UUID,
     ) -> None:
         """Test listing keys for a tenant."""
         # Create multiple keys
@@ -242,7 +243,7 @@ class TestApiKeyService:
     async def test_key_with_expiration(
         self,
         service: ApiKeyService,
-        tenant_id: uuid4,
+        tenant_id: UUID,
     ) -> None:
         """Test key with expiration date."""
         key_model, _ = await service.create_key(

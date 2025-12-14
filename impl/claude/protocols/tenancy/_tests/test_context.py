@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from uuid import uuid4
 
 import pytest
-
 from protocols.tenancy.context import (
     InsufficientPermissionError,
     TenantContext,
@@ -64,10 +64,10 @@ def sample_api_key(sample_tenant: Tenant) -> ApiKey:
 
 
 @pytest.fixture(autouse=True)
-def clear_context() -> None:
+def clear_context() -> Iterator[None]:
     """Clear context before and after each test."""
     clear_tenant_context()
-    yield  # type: ignore
+    yield
     clear_tenant_context()
 
 

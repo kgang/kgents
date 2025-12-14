@@ -6,10 +6,10 @@ from datetime import datetime, timedelta
 from uuid import uuid4
 
 import pytest
-
 from protocols.tenancy.models import (
     ApiKey,
     Session,
+    SessionStatus,
     SubscriptionStatus,
     SubscriptionTier,
     Tenant,
@@ -252,7 +252,7 @@ class TestSession:
         )
 
         assert session.agent_type == "kgent"
-        assert session.status == "active"
+        assert session.status == SessionStatus.ACTIVE
         assert session.is_active
         assert session.message_count == 0
 

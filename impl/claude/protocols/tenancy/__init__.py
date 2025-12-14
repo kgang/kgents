@@ -11,32 +11,32 @@ This module provides:
 AGENTESE: self.tenant.*
 """
 
-from protocols.tenancy.context import (
-    TenantContext,
-    get_current_tenant,
-    set_tenant_context,
-    clear_tenant_context,
-    require_tenant,
-)
-from protocols.tenancy.models import (
-    Tenant,
-    TenantUser,
-    ApiKey,
-    Session,
-    UsageEvent,
-    SubscriptionTier,
-    SubscriptionStatus,
-    UserRole,
-)
-from protocols.tenancy.service import (
-    TenantService,
-    TenantServiceProtocol,
-)
 from protocols.tenancy.api_keys import (
     ApiKeyService,
     generate_api_key,
     hash_api_key,
     validate_api_key_format,
+)
+from protocols.tenancy.context import (
+    TenantContext,
+    clear_tenant_context,
+    get_current_tenant,
+    require_tenant,
+    set_tenant_context,
+)
+from protocols.tenancy.models import (
+    ApiKey,
+    Session,
+    SubscriptionStatus,
+    SubscriptionTier,
+    Tenant,
+    TenantUser,
+    UsageEvent,
+    UserRole,
+)
+from protocols.tenancy.service import (
+    TenantService,
+    TenantServiceProtocol,
 )
 
 __all__ = [

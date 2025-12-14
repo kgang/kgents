@@ -94,6 +94,14 @@ class UserRole(Enum):
         return self in {UserRole.OWNER, UserRole.ADMIN, UserRole.MEMBER}
 
 
+class SessionStatus(Enum):
+    """Session status values."""
+
+    ACTIVE = "active"
+    ARCHIVED = "archived"
+    CLOSED = "closed"
+
+
 @dataclass(frozen=True)
 class Tenant:
     """
@@ -217,17 +225,24 @@ class Session:
     user_id: Optional[UUID] = None
     title: Optional[str] = None
     agent_type: str = "kgent"
-    status: str = "active"
+    status: Optional["SessionStatus"] = None  # Set to ACTIVE in __post_init__
     context: dict[str, Any] = field(default_factory=dict)
     message_count: int = 0
     tokens_used: int = 0
     last_message_at: Optional[datetime] = None
     created_at: Optional[datetime] = None
 
+    def __post_init__(self) -> None:
+        # Handle status default
+        if self.status is None:
+            object.__setattr__(self, "status", SessionStatus.ACTIVE)
+        elif isinstance(self.status, str):
+            object.__setattr__(self, "status", SessionStatus(self.status))
+
     @property
     def is_active(self) -> bool:
         """Check if session is active."""
-        return self.status == "active"
+        return self.status == SessionStatus.ACTIVE
 
 
 class UsageEventType(Enum):
@@ -235,6 +250,8 @@ class UsageEventType(Enum):
 
     AGENTESE_INVOKE = "agentese_invoke"
     KGENT_MESSAGE = "kgent_message"
+    SESSION_CREATE = "session_create"
+    LLM_CALL = "llm_call"
     STORAGE_WRITE = "storage_write"
     STORAGE_READ = "storage_read"
     EMBEDDING = "embedding"

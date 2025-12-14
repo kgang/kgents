@@ -20,7 +20,6 @@ from uuid import UUID
 
 from protocols.tenancy.models import ApiKey
 
-
 # Key format: kg_{random_prefix}_{random_secret}
 # Example: kg_abc12_x7Kp9mQ3nR5tY2wZ
 KEY_PREFIX_CHARS = string.ascii_lowercase + string.digits

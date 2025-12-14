@@ -15,7 +15,6 @@ Test Categories:
 from __future__ import annotations
 
 import pytest
-
 from agents.flux.synapse import CDCLagTracker
 from protocols.terrarium.semantic_metrics import (
     DurabilitySignal,
@@ -28,7 +27,6 @@ from protocols.terrarium.semantic_metrics import (
     SemanticMetricsCollector,
     TriadHealth,
 )
-
 
 # ===========================================================================
 # Health Level Tests
@@ -566,7 +564,9 @@ class TestNaturalTransformationLaws:
             HealthLevel.HEALTHY,
             HealthLevel.THRIVING,
         ]
-        assert health_order.index(signal_a.health) >= health_order.index(signal_b.health)
+        assert health_order.index(signal_a.health) >= health_order.index(
+            signal_b.health
+        )
 
     def test_redis_transformation_preserves_ordering(self) -> None:
         """
@@ -596,7 +596,9 @@ class TestNaturalTransformationLaws:
             HealthLevel.HEALTHY,
             HealthLevel.THRIVING,
         ]
-        assert health_order.index(signal_a.health) >= health_order.index(signal_b.health)
+        assert health_order.index(signal_a.health) >= health_order.index(
+            signal_b.health
+        )
 
     def test_qdrant_transformation_preserves_ordering(self) -> None:
         """
@@ -623,7 +625,9 @@ class TestNaturalTransformationLaws:
             HealthLevel.HEALTHY,
             HealthLevel.THRIVING,
         ]
-        assert health_order.index(signal_a.health) >= health_order.index(signal_b.health)
+        assert health_order.index(signal_a.health) >= health_order.index(
+            signal_b.health
+        )
 
     def test_coherency_is_monotonic_in_lag(self) -> None:
         """
@@ -817,20 +821,34 @@ class TestHealthTransitions:
         # Just under threshold (latency)
         not_thriving = PostgresPulse(9, 20, 0, 21.0)
 
-        assert DurabilitySignal.from_postgres_pulse(thriving).health == HealthLevel.THRIVING
         assert (
-            DurabilitySignal.from_postgres_pulse(not_thriving).health != HealthLevel.THRIVING
+            DurabilitySignal.from_postgres_pulse(thriving).health
+            == HealthLevel.THRIVING
+        )
+        assert (
+            DurabilitySignal.from_postgres_pulse(not_thriving).health
+            != HealthLevel.THRIVING
         )
 
     def test_resonance_health_depends_on_coherency(self) -> None:
         """Resonance health degrades with coherency."""
         pulse = QdrantPulse(10000, 30.0, 256.0)
 
-        thriving = ResonanceSignal.from_qdrant_pulse(pulse, cdc_lag_ms=0)  # 100% coherency
-        healthy = ResonanceSignal.from_qdrant_pulse(pulse, cdc_lag_ms=1000)  # 80% coherency
-        strained = ResonanceSignal.from_qdrant_pulse(pulse, cdc_lag_ms=2000)  # 60% coherency
-        degraded = ResonanceSignal.from_qdrant_pulse(pulse, cdc_lag_ms=3500)  # 30% coherency
-        critical = ResonanceSignal.from_qdrant_pulse(pulse, cdc_lag_ms=4500)  # 10% coherency
+        thriving = ResonanceSignal.from_qdrant_pulse(
+            pulse, cdc_lag_ms=0
+        )  # 100% coherency
+        healthy = ResonanceSignal.from_qdrant_pulse(
+            pulse, cdc_lag_ms=1000
+        )  # 80% coherency
+        strained = ResonanceSignal.from_qdrant_pulse(
+            pulse, cdc_lag_ms=2000
+        )  # 60% coherency
+        degraded = ResonanceSignal.from_qdrant_pulse(
+            pulse, cdc_lag_ms=3500
+        )  # 30% coherency
+        critical = ResonanceSignal.from_qdrant_pulse(
+            pulse, cdc_lag_ms=4500
+        )  # 10% coherency
 
         assert thriving.health == HealthLevel.THRIVING
         assert healthy.health == HealthLevel.HEALTHY

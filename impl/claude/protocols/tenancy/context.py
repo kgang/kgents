@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Any, Callable, Optional, TypeVar
 from uuid import UUID
 
 if TYPE_CHECKING:
-    from protocols.tenancy.models import Tenant, TenantUser, ApiKey
+    from protocols.tenancy.models import ApiKey, Tenant, TenantUser
 
 # Context variables for tenant state
 _current_tenant: ContextVar[Optional["Tenant"]] = ContextVar(
@@ -51,7 +51,7 @@ class TenantContext:
     @property
     def tenant_id(self) -> UUID:
         """Get the tenant ID."""
-        return self.tenant.id
+        return UUID(str(self.tenant.id))
 
     @property
     def user_id(self) -> Optional[UUID]:
@@ -67,18 +67,18 @@ class TenantContext:
     def can_write(self) -> bool:
         """Check if context has write permission."""
         if self.api_key:
-            return self.api_key.has_scope("write")
+            return bool(self.api_key.has_scope("write"))
         if self.user:
-            return self.user.role.value != "readonly"
+            return bool(self.user.role.value != "readonly")
         return False
 
     @property
     def can_admin(self) -> bool:
         """Check if context has admin permission."""
         if self.api_key:
-            return self.api_key.has_scope("admin")
+            return bool(self.api_key.has_scope("admin"))
         if self.user:
-            return self.user.role.can_manage_users
+            return bool(self.user.role.can_manage_users)
         return False
 
 
