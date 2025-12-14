@@ -26,8 +26,12 @@ from typing import Any, Iterator
 import yaml
 from agents.town.citizen import (
     CONSTRUCTION,
+    CULTIVATION,
+    EXCHANGE,
     EXPLORATION,
     GATHERING,
+    HEALING,
+    MEMORY,
     Citizen,
     Cosmotechnics,
     Eigenvectors,
@@ -250,6 +254,54 @@ class TownEnvironment:
         env.total_token_spend = data.get("total_token_spend", 0)
         return env
 
+    def to_yaml(self, path: str | Path | None = None) -> str:
+        """
+        Serialize environment to YAML.
+
+        Args:
+            path: Optional path to write to. If None, returns YAML string.
+
+        Returns:
+            YAML string representation.
+        """
+        # Build serializable data
+        data = {
+            "name": self.name,
+            "version": "2.0.0",  # Phase 2 schema version
+            "regions": [
+                {
+                    "name": r.name,
+                    "description": r.description,
+                    "connections": r.connections,
+                    "capacity": r.capacity,
+                    "properties": r.properties,
+                }
+                for r in self.regions.values()
+            ],
+            "citizens": [
+                {
+                    "name": c.name,
+                    "archetype": c.archetype,
+                    "initial_region": c.region,
+                    "eigenvectors": c.eigenvectors.to_dict(),
+                    "cosmotechnics": c.cosmotechnics.name,
+                    "phase": c.phase.name,
+                    "relationships": dict(c.relationships),
+                    "accursed_surplus": c.accursed_surplus,
+                }
+                for c in self.citizens.values()
+            ],
+            "total_token_spend": self.total_token_spend,
+        }
+
+        yaml_content = yaml.dump(data, default_flow_style=False, sort_keys=False)
+
+        if path is not None:
+            with open(path, "w") as f:
+                f.write(yaml_content)
+
+        return yaml_content
+
     @classmethod
     def from_yaml(cls, path: str | Path) -> TownEnvironment:
         """Load environment from YAML fixture file."""
@@ -267,7 +319,15 @@ class TownEnvironment:
             "gathering": GATHERING,
             "construction": CONSTRUCTION,
             "exploration": EXPLORATION,
+            # Phase 2 cosmotechnics
+            "healing": HEALING,
+            "memory": MEMORY,
+            "exchange": EXCHANGE,
+            "cultivation": CULTIVATION,
         }
+
+        # Import CitizenPhase for state restoration
+        from agents.town.polynomial import CitizenPhase
 
         # Load citizens
         for citizen_data in data.get("citizens", []):
@@ -276,14 +336,30 @@ class TownEnvironment:
                 citizen_data.get("cosmotechnics", "gathering"), GATHERING
             )
 
+            # Parse phase if present
+            phase_name = citizen_data.get("phase", "IDLE")
+            phase = CitizenPhase[phase_name]
+
             citizen = Citizen(
                 name=citizen_data["name"],
                 archetype=citizen_data["archetype"],
                 region=citizen_data.get("initial_region", list(env.regions.keys())[0]),
                 eigenvectors=eigenvectors,
                 cosmotechnics=cosmo,
+                _phase=phase,
             )
+
+            # Restore relationships (Phase 2)
+            for other_id, weight in citizen_data.get("relationships", {}).items():
+                citizen.relationships[other_id] = weight
+
+            # Restore accursed surplus (Phase 2)
+            citizen.accursed_surplus = citizen_data.get("accursed_surplus", 0.0)
+
             env.add_citizen(citizen)
+
+        # Restore total token spend
+        env.total_token_spend = data.get("total_token_spend", 0)
 
         return env
 
@@ -362,6 +438,149 @@ def create_mpp_environment() -> TownEnvironment:
     return env
 
 
+def create_phase2_environment() -> TownEnvironment:
+    """
+    Create the Phase 2 environment.
+
+    7 citizens, 5 regions.
+
+    Phase 2 adds:
+    - Citizens: Diana (healer), Eve (elder), Frank (merchant), Grace (gardener)
+    - Regions: garden, market, library
+    """
+    env = TownEnvironment(name="smallville-phase2")
+
+    # Add regions (5 total)
+    env.add_region(
+        Region(
+            name="inn",
+            description="Alice's gathering place. Warm hearth, shared stories.",
+            connections=["square", "garden"],
+            capacity=10,
+            properties={"warmth_bonus": 0.1, "is_shelter": True},
+        )
+    )
+    env.add_region(
+        Region(
+            name="square",
+            description="The town center. Open sky, chance encounters.",
+            connections=["inn", "market", "library"],
+            capacity=20,
+            properties={"visibility": "high", "is_public": True},
+        )
+    )
+    env.add_region(
+        Region(
+            name="garden",
+            description="Grace's cultivated space. Growth, patience, seasons.",
+            connections=["inn", "library"],
+            capacity=8,
+            properties={"nature_bonus": 0.2, "healing_bonus": 0.1},
+        )
+    )
+    env.add_region(
+        Region(
+            name="market",
+            description="Frank's domain of exchange. Value, negotiation, surplus.",
+            connections=["square"],
+            capacity=15,
+            properties={"trade_bonus": 0.2, "is_public": True},
+        )
+    )
+    env.add_region(
+        Region(
+            name="library",
+            description="Eve's repository of memory. Wisdom, silence, recall.",
+            connections=["square", "garden"],
+            capacity=6,
+            properties={"memory_bonus": 0.2, "reflection_bonus": 0.1},
+        )
+    )
+
+    # Add MPP citizens (3)
+    env.add_citizen(
+        Citizen(
+            name="Alice",
+            archetype="Innkeeper",
+            region="inn",
+            eigenvectors=Eigenvectors(
+                warmth=0.8, curiosity=0.6, trust=0.7, creativity=0.5, patience=0.6
+            ),
+            cosmotechnics=GATHERING,
+        )
+    )
+    env.add_citizen(
+        Citizen(
+            name="Bob",
+            archetype="Builder",
+            region="square",
+            eigenvectors=Eigenvectors(
+                warmth=0.5, curiosity=0.4, trust=0.6, creativity=0.7, patience=0.3
+            ),
+            cosmotechnics=CONSTRUCTION,
+        )
+    )
+    env.add_citizen(
+        Citizen(
+            name="Clara",
+            archetype="Explorer",
+            region="inn",
+            eigenvectors=Eigenvectors(
+                warmth=0.6, curiosity=0.9, trust=0.5, creativity=0.8, patience=0.4
+            ),
+            cosmotechnics=EXPLORATION,
+        )
+    )
+
+    # Add Phase 2 citizens (4)
+    env.add_citizen(
+        Citizen(
+            name="Diana",
+            archetype="Healer",
+            region="garden",
+            eigenvectors=Eigenvectors(
+                warmth=0.7, curiosity=0.5, trust=0.8, creativity=0.4, patience=0.9
+            ),
+            cosmotechnics=HEALING,
+        )
+    )
+    env.add_citizen(
+        Citizen(
+            name="Eve",
+            archetype="Elder",
+            region="library",
+            eigenvectors=Eigenvectors(
+                warmth=0.6, curiosity=0.7, trust=0.7, creativity=0.7, patience=0.8
+            ),
+            cosmotechnics=MEMORY,
+        )
+    )
+    env.add_citizen(
+        Citizen(
+            name="Frank",
+            archetype="Merchant",
+            region="market",
+            eigenvectors=Eigenvectors(
+                warmth=0.5, curiosity=0.8, trust=0.4, creativity=0.6, patience=0.5
+            ),
+            cosmotechnics=EXCHANGE,
+        )
+    )
+    env.add_citizen(
+        Citizen(
+            name="Grace",
+            archetype="Gardener",
+            region="garden",
+            eigenvectors=Eigenvectors(
+                warmth=0.8, curiosity=0.4, trust=0.7, creativity=0.5, patience=0.9
+            ),
+            cosmotechnics=CULTIVATION,
+        )
+    )
+
+    return env
+
+
 # =============================================================================
 # Exports
 # =============================================================================
@@ -371,4 +590,5 @@ __all__ = [
     "Region",
     "TownEnvironment",
     "create_mpp_environment",
+    "create_phase2_environment",
 ]

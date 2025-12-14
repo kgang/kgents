@@ -19,13 +19,15 @@ class TestTownPhase:
     """Test TownPhase enum."""
 
     def test_phases_exist(self) -> None:
-        """MPP phases exist."""
+        """Phase 2 phases exist."""
         assert TownPhase.MORNING
+        assert TownPhase.AFTERNOON
         assert TownPhase.EVENING
+        assert TownPhase.NIGHT
 
     def test_phase_count(self) -> None:
-        """MPP has 2 phases."""
-        assert len(TownPhase) == 2
+        """Phase 2 has 4 phases."""
+        assert len(TownPhase) == 4
 
 
 class TestTownEvent:
@@ -102,21 +104,30 @@ class TestTownFlux:
         assert len(flux.citizens) == 3
 
     def test_phase_advancement(self) -> None:
-        """Phases advance correctly."""
+        """Phases advance correctly (4-phase cycle)."""
         env = create_mpp_environment()
         flux = TownFlux(env)
 
-        phase1 = flux.current_phase
-        assert phase1 == TownPhase.MORNING
+        # Start at morning
+        assert flux.current_phase == TownPhase.MORNING
+        assert flux.day == 1
 
+        # MORNING -> AFTERNOON
         flux._next_phase()
-        phase2 = flux.current_phase
-        assert phase2 == TownPhase.EVENING
+        assert flux.current_phase == TownPhase.AFTERNOON
 
+        # AFTERNOON -> EVENING
         flux._next_phase()
-        phase3 = flux.current_phase
-        assert phase3 == TownPhase.MORNING
-        assert flux.day == 2  # Day increments after evening
+        assert flux.current_phase == TownPhase.EVENING
+
+        # EVENING -> NIGHT
+        flux._next_phase()
+        assert flux.current_phase == TownPhase.NIGHT
+
+        # NIGHT -> MORNING (day increments)
+        flux._next_phase()
+        assert flux.current_phase == TownPhase.MORNING
+        assert flux.day == 2
 
     def test_select_operation(self) -> None:
         """Select operation returns valid operation."""

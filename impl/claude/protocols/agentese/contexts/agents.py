@@ -177,6 +177,12 @@ AGENT_REGISTRY: dict[str, dict[str, Any]] = {
         "description": "Event-driven stream processing, living pipelines, perturbation principle",
         "tests": 282,
     },
+    "town": {
+        "name": "Town",
+        "theme": "Multi-Party Protocol (agent civilizations)",
+        "status": "active",
+        "description": "Seance-based agent interaction via Morton/Porras-Kim metaphysics",
+    },
 }
 
 

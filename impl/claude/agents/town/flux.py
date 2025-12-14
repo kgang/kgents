@@ -43,12 +43,14 @@ class TownPhase(Enum):
     """
     Phases in the daily cycle.
 
-    MPP has only 2 phases: MORNING and EVENING.
-    Full implementation would have 6 phases.
+    Phase 2 has 4 phases: MORNING, AFTERNOON, EVENING, NIGHT.
+    Each phase has different activity weights and token costs.
     """
 
     MORNING = auto()
+    AFTERNOON = auto()
     EVENING = auto()
+    NIGHT = auto()
 
 
 # =============================================================================
@@ -124,11 +126,16 @@ class TownFlux:
 
     def _next_phase(self) -> TownPhase:
         """Advance to the next phase."""
-        if self.current_phase == TownPhase.MORNING:
-            self.current_phase = TownPhase.EVENING
-        else:
-            self.current_phase = TownPhase.MORNING
-            self.day += 1
+        match self.current_phase:
+            case TownPhase.MORNING:
+                self.current_phase = TownPhase.AFTERNOON
+            case TownPhase.AFTERNOON:
+                self.current_phase = TownPhase.EVENING
+            case TownPhase.EVENING:
+                self.current_phase = TownPhase.NIGHT
+            case TownPhase.NIGHT:
+                self.current_phase = TownPhase.MORNING
+                self.day += 1
         return self.current_phase
 
     def _select_operation(self) -> str:
@@ -138,13 +145,20 @@ class TownFlux:
         town_ops = ["greet", "gossip", "trade", "solo"]
         ops = [op for op in ops if op in town_ops]
 
-        # Weight by phase
-        if self.current_phase == TownPhase.MORNING:
-            # Morning: more work, less socializing
-            weights = {"greet": 0.2, "gossip": 0.1, "trade": 0.3, "solo": 0.4}
-        else:
-            # Evening: more socializing
-            weights = {"greet": 0.3, "gossip": 0.3, "trade": 0.2, "solo": 0.2}
+        # Weight by phase (Phase 2: 4-phase cycle)
+        match self.current_phase:
+            case TownPhase.MORNING:
+                # Morning: more work, less socializing
+                weights = {"greet": 0.2, "gossip": 0.1, "trade": 0.3, "solo": 0.4}
+            case TownPhase.AFTERNOON:
+                # Afternoon: peak activity, balanced
+                weights = {"greet": 0.25, "gossip": 0.2, "trade": 0.35, "solo": 0.2}
+            case TownPhase.EVENING:
+                # Evening: more socializing
+                weights = {"greet": 0.3, "gossip": 0.3, "trade": 0.2, "solo": 0.2}
+            case TownPhase.NIGHT:
+                # Night: consolidation, reflection, less activity
+                weights = {"greet": 0.1, "gossip": 0.2, "trade": 0.1, "solo": 0.6}
 
         return self.rng.choices(
             list(weights.keys()), weights=list(weights.values()), k=1
@@ -366,14 +380,15 @@ class TownFlux:
         Execute one phase step and yield events.
 
         This is the main simulation loop entry point.
+        Phase 2: 4-phase cycle with different activity levels.
         """
         # Wake all resting citizens at start of morning
         if self.current_phase == TownPhase.MORNING:
             for citizen in self.environment.resting_citizens():
                 citizen.wake()
 
-        # Generate some events for this phase
-        num_events = self.rng.randint(2, 4)
+        # Generate events for this phase (varies by phase)
+        num_events = self._events_for_phase()
 
         for _ in range(num_events):
             operation = self._select_operation()
@@ -390,17 +405,36 @@ class TownFlux:
 
             yield event
 
-        # Rest some citizens at end of evening
-        if self.current_phase == TownPhase.EVENING:
-            for citizen in self.environment.available_citizens():
-                if self.rng.random() < 0.5:
-                    citizen.rest()
+        # Phase-specific end-of-phase actions
+        match self.current_phase:
+            case TownPhase.EVENING:
+                # Some citizens begin to rest
+                for citizen in self.environment.available_citizens():
+                    if self.rng.random() < 0.3:
+                        citizen.rest()
+            case TownPhase.NIGHT:
+                # Most citizens rest during night
+                for citizen in self.environment.available_citizens():
+                    if self.rng.random() < 0.7:
+                        citizen.rest()
 
         # Advance phase
         self._next_phase()
 
         # Check accursed share (from Bataille)
         await self._check_accursed_share()
+
+    def _events_for_phase(self) -> int:
+        """Get number of events for current phase."""
+        match self.current_phase:
+            case TownPhase.MORNING:
+                return self.rng.randint(2, 4)
+            case TownPhase.AFTERNOON:
+                return self.rng.randint(3, 5)  # Peak activity
+            case TownPhase.EVENING:
+                return self.rng.randint(2, 4)
+            case TownPhase.NIGHT:
+                return self.rng.randint(1, 2)  # Reduced activity
 
     async def _check_accursed_share(self) -> None:
         """

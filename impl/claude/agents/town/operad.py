@@ -68,6 +68,16 @@ GOSSIP_METABOLICS = OperationMetabolics(token_cost=500, drama_potential=0.4)
 TRADE_METABOLICS = OperationMetabolics(token_cost=400, drama_potential=0.3)
 SOLO_METABOLICS = OperationMetabolics(token_cost=300, drama_potential=0.1)
 
+# Phase 2 operations
+DISPUTE_METABOLICS = OperationMetabolics(token_cost=600, drama_potential=0.8)
+CELEBRATE_METABOLICS = OperationMetabolics(
+    token_cost=400, drama_potential=0.2, scales_with_arity=True
+)
+MOURN_METABOLICS = OperationMetabolics(
+    token_cost=500, drama_potential=0.5, scales_with_arity=True
+)
+TEACH_METABOLICS = OperationMetabolics(token_cost=800, drama_potential=0.2)
+
 
 def _greet_compose(
     citizen_a: PolyAgent[Any, Any, Any],
@@ -179,6 +189,124 @@ def _solo_compose(
         }
 
     return from_function(f"solo({citizen.name})", solo_fn)
+
+
+# =============================================================================
+# Phase 2 Operations
+# =============================================================================
+
+
+def _dispute_compose(
+    citizen_a: PolyAgent[Any, Any, Any],
+    citizen_b: PolyAgent[Any, Any, Any],
+) -> PolyAgent[Any, Any, Any]:
+    """
+    Compose a dispute interaction.
+
+    Dispute: Citizen × Citizen → Tension
+
+    Citizens have a disagreement. Increases tension index.
+    May damage relationship but can lead to resolution.
+    """
+
+    def dispute_fn(input: Any) -> dict[str, Any]:
+        return {
+            "operation": "dispute",
+            "participants": [citizen_a.name, citizen_b.name],
+            "input": input,
+            "metabolics": {
+                "tokens": DISPUTE_METABOLICS.token_cost,
+                "drama": DISPUTE_METABOLICS.drama_potential,
+            },
+            "effects": {"tension_delta": +0.3, "relationship_risk": True},
+        }
+
+    return from_function(f"dispute({citizen_a.name},{citizen_b.name})", dispute_fn)
+
+
+def _celebrate_compose(
+    *citizens: PolyAgent[Any, Any, Any],
+) -> PolyAgent[Any, Any, Any]:
+    """
+    Compose a celebration interaction.
+
+    Celebrate: Citizen* → Festival
+
+    Multiple citizens celebrate together. Spends accursed surplus.
+    Variable arity: any number of citizens can participate.
+    """
+    names = [c.name for c in citizens]
+
+    def celebrate_fn(input: Any) -> dict[str, Any]:
+        return {
+            "operation": "celebrate",
+            "participants": names,
+            "input": input,
+            "metabolics": {
+                "tokens": CELEBRATE_METABOLICS.estimate_tokens(len(citizens)),
+                "drama": CELEBRATE_METABOLICS.drama_potential,
+            },
+            "effects": {"surplus_spend": True, "relationship_boost": +0.1},
+        }
+
+    return from_function(f"celebrate({','.join(names)})", celebrate_fn)
+
+
+def _mourn_compose(
+    *citizens: PolyAgent[Any, Any, Any],
+) -> PolyAgent[Any, Any, Any]:
+    """
+    Compose a mourning interaction.
+
+    Mourn: Citizen* → Grief
+
+    Citizens mourn collectively. Expenditure of emotional surplus.
+    Variable arity: collective mourning strengthens bonds.
+    """
+    names = [c.name for c in citizens]
+
+    def mourn_fn(input: Any) -> dict[str, Any]:
+        return {
+            "operation": "mourn",
+            "participants": names,
+            "input": input,
+            "metabolics": {
+                "tokens": MOURN_METABOLICS.estimate_tokens(len(citizens)),
+                "drama": MOURN_METABOLICS.drama_potential,
+            },
+            "effects": {"surplus_spend": True, "bond_strengthening": True},
+        }
+
+    return from_function(f"mourn({','.join(names)})", mourn_fn)
+
+
+def _teach_compose(
+    teacher: PolyAgent[Any, Any, Any],
+    student: PolyAgent[Any, Any, Any],
+) -> PolyAgent[Any, Any, Any]:
+    """
+    Compose a teaching interaction.
+
+    Teach: Citizen × Citizen → SkillTransfer
+
+    Teacher transfers skill to student. Non-destructive.
+    Requires teacher.skill > student.skill for the relevant domain.
+    """
+
+    def teach_fn(input: Any) -> dict[str, Any]:
+        return {
+            "operation": "teach",
+            "teacher": teacher.name,
+            "student": student.name,
+            "input": input,
+            "metabolics": {
+                "tokens": TEACH_METABOLICS.token_cost,
+                "drama": TEACH_METABOLICS.drama_potential,
+            },
+            "effects": {"skill_transfer": True, "relationship_boost": +0.15},
+        }
+
+    return from_function(f"teach({teacher.name},{student.name})", teach_fn)
 
 
 # =============================================================================
@@ -296,6 +424,39 @@ def create_town_operad() -> Operad:
         signature="Citizen → Activity",
         compose=_solo_compose,
         description="Individual activity (work, reflect, create)",
+    )
+
+    # Phase 2 operations
+    ops["dispute"] = Operation(
+        name="dispute",
+        arity=2,
+        signature="Citizen × Citizen → Tension",
+        compose=_dispute_compose,
+        description="Disagreement that increases tension (Phase 2)",
+    )
+
+    ops["celebrate"] = Operation(
+        name="celebrate",
+        arity=-1,  # Variable arity
+        signature="Citizen* → Festival",
+        compose=_celebrate_compose,
+        description="Collective celebration that spends surplus (Phase 2)",
+    )
+
+    ops["mourn"] = Operation(
+        name="mourn",
+        arity=-1,  # Variable arity
+        signature="Citizen* → Grief",
+        compose=_mourn_compose,
+        description="Collective mourning that strengthens bonds (Phase 2)",
+    )
+
+    ops["teach"] = Operation(
+        name="teach",
+        arity=2,
+        signature="Citizen × Citizen → SkillTransfer",
+        compose=_teach_compose,
+        description="Skill transfer from teacher to student (Phase 2)",
     )
 
     # Inherit universal laws and add town-specific ones

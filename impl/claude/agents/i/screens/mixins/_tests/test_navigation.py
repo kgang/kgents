@@ -314,5 +314,5 @@ def test_all_special_navigation_methods_exist():
     """Special navigation methods should exist."""
     mixin = DashboardNavigationMixin
 
-    assert hasattr(mixin, "action_open_forge")
+    # Note: action_open_forge removed as forge was deprecated
     assert hasattr(mixin, "action_open_debugger")

@@ -13,12 +13,21 @@ from __future__ import annotations
 import pytest
 from agents.town.citizen import (
     CONSTRUCTION,
+    CULTIVATION,
+    EXCHANGE,
     EXPLORATION,
     GATHERING,
+    HEALING,
+    MEMORY,
     Citizen,
     Eigenvectors,
 )
-from agents.town.environment import Region, TownEnvironment, create_mpp_environment
+from agents.town.environment import (
+    Region,
+    TownEnvironment,
+    create_mpp_environment,
+    create_phase2_environment,
+)
 
 
 class TestRegion:
@@ -408,3 +417,119 @@ class TestSerialization:
         assert restored.name == original.name
         assert len(restored.regions) == len(original.regions)
         assert len(restored.citizens) == len(original.citizens)
+
+
+class TestPhase2Environment:
+    """Test Phase 2 environment factory."""
+
+    def test_create_phase2_environment(self) -> None:
+        """Creates valid Phase 2 environment."""
+        env = create_phase2_environment()
+
+        assert env.name == "smallville-phase2"
+        assert len(env.regions) == 5
+        assert len(env.citizens) == 7
+
+    def test_phase2_regions(self) -> None:
+        """Phase 2 has correct regions with adjacency."""
+        env = create_phase2_environment()
+
+        # All 5 regions exist
+        assert "inn" in env.regions
+        assert "square" in env.regions
+        assert "garden" in env.regions
+        assert "market" in env.regions
+        assert "library" in env.regions
+
+        # Check adjacency graph
+        assert env.are_adjacent("inn", "square")
+        assert env.are_adjacent("inn", "garden")
+        assert env.are_adjacent("square", "market")
+        assert env.are_adjacent("square", "library")
+        assert env.are_adjacent("garden", "library")
+
+    def test_phase2_citizens(self) -> None:
+        """Phase 2 has correct citizens."""
+        env = create_phase2_environment()
+
+        # MPP citizens
+        alice = env.get_citizen_by_name("Alice")
+        bob = env.get_citizen_by_name("Bob")
+        clara = env.get_citizen_by_name("Clara")
+
+        # Phase 2 citizens
+        diana = env.get_citizen_by_name("Diana")
+        eve = env.get_citizen_by_name("Eve")
+        frank = env.get_citizen_by_name("Frank")
+        grace = env.get_citizen_by_name("Grace")
+
+        # All exist
+        assert alice is not None
+        assert bob is not None
+        assert clara is not None
+        assert diana is not None
+        assert eve is not None
+        assert frank is not None
+        assert grace is not None
+
+        # Check archetypes
+        assert alice.archetype == "Innkeeper"
+        assert bob.archetype == "Builder"
+        assert clara.archetype == "Explorer"
+        assert diana.archetype == "Healer"
+        assert eve.archetype == "Elder"
+        assert frank.archetype == "Merchant"
+        assert grace.archetype == "Gardener"
+
+    def test_phase2_cosmotechnics(self) -> None:
+        """Phase 2 citizens have correct cosmotechnics."""
+        env = create_phase2_environment()
+
+        alice = env.get_citizen_by_name("Alice")
+        bob = env.get_citizen_by_name("Bob")
+        clara = env.get_citizen_by_name("Clara")
+        diana = env.get_citizen_by_name("Diana")
+        eve = env.get_citizen_by_name("Eve")
+        frank = env.get_citizen_by_name("Frank")
+        grace = env.get_citizen_by_name("Grace")
+
+        # MPP cosmotechnics
+        assert alice.cosmotechnics == GATHERING
+        assert bob.cosmotechnics == CONSTRUCTION
+        assert clara.cosmotechnics == EXPLORATION
+
+        # Phase 2 cosmotechnics
+        assert diana.cosmotechnics == HEALING
+        assert eve.cosmotechnics == MEMORY
+        assert frank.cosmotechnics == EXCHANGE
+        assert grace.cosmotechnics == CULTIVATION
+
+    def test_phase2_citizen_locations(self) -> None:
+        """Phase 2 citizens start in correct locations."""
+        env = create_phase2_environment()
+
+        alice = env.get_citizen_by_name("Alice")
+        bob = env.get_citizen_by_name("Bob")
+        clara = env.get_citizen_by_name("Clara")
+        diana = env.get_citizen_by_name("Diana")
+        eve = env.get_citizen_by_name("Eve")
+        frank = env.get_citizen_by_name("Frank")
+        grace = env.get_citizen_by_name("Grace")
+
+        assert alice.region == "inn"
+        assert bob.region == "square"
+        assert clara.region == "inn"
+        assert diana.region == "garden"
+        assert eve.region == "library"
+        assert frank.region == "market"
+        assert grace.region == "garden"
+
+    def test_phase2_roundtrip(self) -> None:
+        """Phase 2 environment can roundtrip through dict."""
+        original = create_phase2_environment()
+        d = original.to_dict()
+        restored = TownEnvironment.from_dict(d)
+
+        assert restored.name == original.name
+        assert len(restored.regions) == 5
+        assert len(restored.citizens) == 7

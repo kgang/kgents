@@ -136,6 +136,35 @@ EXPLORATION = Cosmotechnics(
     opacity_statement="There are frontiers I will not map for you.",
 )
 
+# Phase 2 cosmotechnics
+HEALING = Cosmotechnics(
+    name="healing",
+    description="Meaning arises through restoration",
+    metaphor="Life is restoration",
+    opacity_statement="There are wounds I heal only in solitude.",
+)
+
+MEMORY = Cosmotechnics(
+    name="memory",
+    description="Meaning arises through remembering",
+    metaphor="Life is remembering",
+    opacity_statement="There are memories I guard alone.",
+)
+
+EXCHANGE = Cosmotechnics(
+    name="exchange",
+    description="Meaning arises through trade",
+    metaphor="Life is trade",
+    opacity_statement="There are bargains I make only with myself.",
+)
+
+CULTIVATION = Cosmotechnics(
+    name="cultivation",
+    description="Meaning arises through tending",
+    metaphor="Life is tending",
+    opacity_statement="There are gardens I tend in secret.",
+)
+
 
 # =============================================================================
 # Citizen Entity
@@ -367,6 +396,11 @@ class Citizen:
             "gathering": GATHERING,
             "construction": CONSTRUCTION,
             "exploration": EXPLORATION,
+            # Phase 2 cosmotechnics
+            "healing": HEALING,
+            "memory": MEMORY,
+            "exchange": EXCHANGE,
+            "cultivation": CULTIVATION,
         }
         cosmo = cosmo_map.get(data.get("cosmotechnics", "gathering"), GATHERING)
 
@@ -406,8 +440,14 @@ class Citizen:
 __all__ = [
     "Eigenvectors",
     "Cosmotechnics",
+    # MPP cosmotechnics
     "GATHERING",
     "CONSTRUCTION",
     "EXPLORATION",
+    # Phase 2 cosmotechnics
+    "HEALING",
+    "MEMORY",
+    "EXCHANGE",
+    "CULTIVATION",
     "Citizen",
 ]

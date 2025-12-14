@@ -7,11 +7,14 @@ The observer is part of the phenomenon.
 
 Commands:
     kgents town start       Initialize a new simulation
+    kgents town start2      Initialize Phase 2 simulation (7 citizens, 5 regions)
     kgents town step        Advance one phase
     kgents town observe     Show current state (MESA view)
     kgents town lens <name> Zoom into a citizen (LOD 0-5)
     kgents town metrics     Show emergence metrics
     kgents town budget      Show token budget status
+    kgents town save <path> Save simulation state to YAML
+    kgents town load <path> Load simulation state from YAML
 
 See: spec/town/operad.md
 """
@@ -51,7 +54,9 @@ def cmd_town(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     subcommand = args[0].lower()
 
     if subcommand == "start":
-        return _start_simulation(args[1:], ctx)
+        return _start_simulation(args[1:], ctx, phase2=False)
+    elif subcommand == "start2":
+        return _start_simulation(args[1:], ctx, phase2=True)
     elif subcommand == "step":
         return _step_simulation(ctx)
     elif subcommand == "observe":
@@ -68,6 +73,16 @@ def cmd_town(args: list[str], ctx: "InvocationContext | None" = None) -> int:
         return _show_budget(ctx)
     elif subcommand == "status":
         return _show_status(ctx)
+    elif subcommand == "save":
+        if len(args) < 2:
+            _emit("[TOWN] Usage: kgents town save <path>", {}, ctx)
+            return 1
+        return _save_simulation(args[1], ctx)
+    elif subcommand == "load":
+        if len(args) < 2:
+            _emit("[TOWN] Usage: kgents town load <path>", {}, ctx)
+            return 1
+        return _load_simulation(args[1], ctx)
     elif subcommand == "help":
         _print_help()
         return 0
@@ -76,9 +91,14 @@ def cmd_town(args: list[str], ctx: "InvocationContext | None" = None) -> int:
         return 1
 
 
-def _start_simulation(args: list[str], ctx: "InvocationContext | None") -> int:
+def _start_simulation(
+    args: list[str], ctx: "InvocationContext | None", phase2: bool = False
+) -> int:
     """Initialize a new Agent Town simulation."""
-    from agents.town.environment import create_mpp_environment
+    from agents.town.environment import (
+        create_mpp_environment,
+        create_phase2_environment,
+    )
     from agents.town.flux import TownFlux
 
     # Check if simulation already running
@@ -91,7 +111,10 @@ def _start_simulation(args: list[str], ctx: "InvocationContext | None") -> int:
         return 0
 
     # Create environment
-    env = create_mpp_environment()
+    if phase2:
+        env = create_phase2_environment()
+    else:
+        env = create_mpp_environment()
 
     # Create flux
     seed = None
@@ -416,6 +439,68 @@ def _show_status(ctx: "InvocationContext | None") -> int:
     )
 
     return 0
+
+
+def _save_simulation(path: str, ctx: "InvocationContext | None") -> int:
+    """Save simulation state to YAML."""
+    if "environment" not in _simulation_state:
+        _emit(
+            "[TOWN] No simulation running. Use 'kgents town start' first.",
+            {"error": "not_running"},
+            ctx,
+        )
+        return 1
+
+    env = _simulation_state["environment"]
+    flux = _simulation_state.get("flux")
+
+    try:
+        # Save environment state
+        yaml_content = env.to_yaml(path)
+
+        _emit(f"[TOWN] Saved simulation to {path}", {"path": path}, ctx)
+        _emit(f"  Citizens: {len(env.citizens)}", {}, ctx)
+        _emit(f"  Regions: {len(env.regions)}", {}, ctx)
+        if flux:
+            status = flux.get_status()
+            _emit(f"  Day: {status['day']}, Phase: {status['phase']}", {}, ctx)
+            _emit(f"  Total Events: {status['total_events']}", {}, ctx)
+
+        return 0
+    except Exception as e:
+        _emit(f"[TOWN] Error saving: {e}", {"error": str(e)}, ctx)
+        return 1
+
+
+def _load_simulation(path: str, ctx: "InvocationContext | None") -> int:
+    """Load simulation state from YAML."""
+    from agents.town.environment import TownEnvironment
+    from agents.town.flux import TownFlux
+
+    try:
+        # Load environment
+        env = TownEnvironment.from_yaml(path)
+
+        # Create flux with loaded environment
+        flux = TownFlux(env)
+
+        # Store in simulation state
+        _simulation_state["environment"] = env
+        _simulation_state["flux"] = flux
+
+        _emit(f"[TOWN] Loaded simulation from {path}", {"path": path}, ctx)
+        _emit(f"  Name: {env.name}", {}, ctx)
+        _emit(f"  Citizens: {len(env.citizens)}", {}, ctx)
+        _emit(f"  Regions: {len(env.regions)}", {}, ctx)
+        _emit("\nUse 'kgents town step' to advance the simulation.", {}, ctx)
+
+        return 0
+    except FileNotFoundError:
+        _emit(f"[TOWN] File not found: {path}", {"error": "not_found"}, ctx)
+        return 1
+    except Exception as e:
+        _emit(f"[TOWN] Error loading: {e}", {"error": str(e)}, ctx)
+        return 1
 
 
 # =============================================================================

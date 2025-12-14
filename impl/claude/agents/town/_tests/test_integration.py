@@ -21,7 +21,7 @@ class TestEndToEndSimulation:
 
     @pytest.mark.asyncio
     async def test_full_day_simulation(self) -> None:
-        """Run a full simulated day."""
+        """Run a full simulated day (4-phase cycle)."""
         env = create_mpp_environment()
         flux = TownFlux(env, seed=42)
 
@@ -34,9 +34,21 @@ class TestEndToEndSimulation:
         async for event in flux.step():
             events_collected.append(event)
 
-        # Run evening
+        # Run afternoon
         phase2 = flux.current_phase
-        assert phase2 == TownPhase.EVENING
+        assert phase2 == TownPhase.AFTERNOON
+        async for event in flux.step():
+            events_collected.append(event)
+
+        # Run evening
+        phase3 = flux.current_phase
+        assert phase3 == TownPhase.EVENING
+        async for event in flux.step():
+            events_collected.append(event)
+
+        # Run night
+        phase4 = flux.current_phase
+        assert phase4 == TownPhase.NIGHT
         async for event in flux.step():
             events_collected.append(event)
 
@@ -49,15 +61,15 @@ class TestEndToEndSimulation:
 
     @pytest.mark.asyncio
     async def test_multi_day_simulation(self) -> None:
-        """Run multiple days."""
+        """Run multiple days (4-phase cycle)."""
         env = create_mpp_environment()
         flux = TownFlux(env, seed=42)
 
-        for _ in range(6):  # 3 days
+        for _ in range(12):  # 3 days = 12 phases (4 per day)
             async for _ in flux.step():
                 pass
 
-        assert flux.day >= 4  # Started at 1, 6 steps = 3 days = day 4
+        assert flux.day >= 4  # Started at 1, 12 steps = 3 days = day 4
 
     @pytest.mark.asyncio
     async def test_simulation_produces_metrics(self) -> None:
