@@ -58,8 +58,6 @@ from typing import (
 
 from bootstrap.types import Agent
 
-from .llm import LLMClient, StreamingLLMResponse
-
 from .events import (
     SoulEvent,
     SoulEventType,
@@ -73,6 +71,7 @@ from .events import (
     pulse_event,
     state_snapshot_event,
 )
+from .llm import LLMClient, StreamingLLMResponse
 from .persona import DialogueMode
 from .soul import BudgetTier, KgentSoul
 
@@ -412,7 +411,7 @@ class FluxStream(Generic[T]):
                 )
 
                 for task in done:
-                    idx = pending.pop(task)
+                    _ = pending.pop(task)  # Remove from tracking
                     result_idx, event = task.result()
 
                     if event is None:
@@ -536,6 +535,59 @@ class FluxStream(Generic[T]):
         async for event in self:
             if event.is_data:
                 result.append(event.value)
+        return result
+
+    # ─────────────────────────────────────────────────────────────
+    # C20: Stream Pipe Composition
+    # ─────────────────────────────────────────────────────────────
+
+    def pipe(
+        self,
+        *operators: Callable[["FluxStream[Any]"], "FluxStream[Any]"],
+    ) -> "FluxStream[Any]":
+        """
+        Apply a sequence of operators to this stream.
+
+        Operators are functions that transform FluxStream[A] -> FluxStream[B].
+        The pipe method composes operators sequentially, enabling functional
+        pipeline composition.
+
+        Composition is associative:
+            stream.pipe(f, g) == stream.pipe(f).pipe(g)
+
+        Args:
+            *operators: Functions that transform FluxStream to FluxStream.
+                       Each operator receives the stream from the previous
+                       stage and returns a transformed stream.
+
+        Returns:
+            The transformed FluxStream after all operators have been applied.
+
+        Example:
+            # Define operators as functions
+            filter_empty = lambda s: s.filter(lambda e: e.is_data and e.value.strip())
+            take_n = lambda n: lambda s: s.take(n)
+            log_chunks = lambda s: s.tap(lambda e: print(e.value) if e.is_data else None)
+
+            # Compose pipeline
+            result = await (
+                source
+                .pipe(filter_empty, take_n(5), log_chunks)
+                .collect()
+            )
+
+            # Equivalent to:
+            result = await (
+                source
+                .pipe(filter_empty)
+                .pipe(take_n(5))
+                .pipe(log_chunks)
+                .collect()
+            )
+        """
+        result: FluxStream[Any] = self
+        for op in operators:
+            result = op(result)
         return result
 
 

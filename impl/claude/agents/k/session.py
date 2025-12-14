@@ -993,6 +993,57 @@ class SoulSession:
             added = list(curr_inv - prev_inv)
             removed = list(prev_inv - curr_inv)
 
+        elif introspection_type == "gaps":
+            # Compare gaps (what cannot be represented)
+            prev_gaps = set(previous_data.get("gaps", []))
+            curr_gaps = set(current_data.get("gaps", []))
+            added = list(curr_gaps - prev_gaps)
+            removed = list(prev_gaps - curr_gaps)
+
+            # Compare register locations
+            prev_reg = previous_data.get("register_location", {})
+            curr_reg = current_data.get("register_location", {})
+            for register in ["symbolic", "imaginary", "real_proximity"]:
+                prev_val = prev_reg.get(register, 0.5)
+                curr_val = curr_reg.get(register, 0.5)
+                if abs(curr_val - prev_val) > 0.1:
+                    changed.append((register, f"{prev_val:.2f}", f"{curr_val:.2f}"))
+
+            # Knot status change
+            prev_knot = previous_data.get("knot_status", "stable")
+            curr_knot = current_data.get("knot_status", "stable")
+            if prev_knot != curr_knot:
+                changed.append(("knot_status", prev_knot, curr_knot))
+
+        elif introspection_type == "dialectic":
+            # Compare thesis/antithesis/synthesis
+            prev_thesis = previous_data.get("thesis", "")
+            curr_thesis = current_data.get("thesis", "")
+            if prev_thesis != curr_thesis:
+                changed.append(("thesis", prev_thesis, curr_thesis))
+
+            prev_synthesis = previous_data.get("synthesis")
+            curr_synthesis = current_data.get("synthesis")
+            if prev_synthesis != curr_synthesis:
+                if prev_synthesis and not curr_synthesis:
+                    removed.append(f"synthesis: {prev_synthesis}")
+                elif curr_synthesis and not prev_synthesis:
+                    added.append(f"synthesis: {curr_synthesis}")
+                elif prev_synthesis and curr_synthesis:
+                    changed.append(("synthesis", prev_synthesis, curr_synthesis))
+
+            # Track tension changes
+            prev_tension = previous_data.get("productive_tension", False)
+            curr_tension = current_data.get("productive_tension", False)
+            if prev_tension != curr_tension:
+                changed.append(
+                    (
+                        "productive_tension",
+                        "held" if prev_tension else "resolved",
+                        "held" if curr_tension else "resolved",
+                    )
+                )
+
         # Calculate stability score
         total_changes = len(added) + len(removed) + len(changed)
         stability_score = 1.0 / (1.0 + total_changes * 0.2)  # Decreases with changes

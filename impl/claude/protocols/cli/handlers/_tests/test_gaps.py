@@ -9,11 +9,14 @@ Tests verify:
 3. Gaps analysis with custom text
 4. --json output mode
 5. Register location output
+6. --save persistence mode
+7. --drift comparison mode
 """
 
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -195,3 +198,130 @@ class TestGapsIntegration:
         captured = capsys.readouterr()
         # Should show knot status
         assert "Knot" in captured.out or "knot" in captured.out.lower()
+
+
+# === Save Mode Tests ===
+
+
+class TestGapsSaveMode:
+    """Tests for --save persistence mode."""
+
+    def test_save_flag_in_help(
+        self,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """--save flag is documented in help."""
+        result = cmd_gaps(["--help"])
+
+        assert result == 0
+        captured = capsys.readouterr()
+        assert "--save" in captured.out
+
+    def test_save_mode_confirms_save(
+        self,
+        capsys: pytest.CaptureFixture[str],
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+    ) -> None:
+        """--save flag shows confirmation message."""
+        # Use temp directory for soul persistence
+        monkeypatch.setenv("HOME", str(tmp_path))
+
+        result = cmd_gaps(["helpful", "--save"])
+
+        assert result == 0
+        captured = capsys.readouterr()
+        assert "Saved" in captured.out or "saved" in captured.out.lower()
+
+    def test_save_mode_json_has_saved_field(
+        self,
+        capsys: pytest.CaptureFixture[str],
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+    ) -> None:
+        """--save --json includes saved field."""
+        monkeypatch.setenv("HOME", str(tmp_path))
+
+        result = cmd_gaps(["helpful", "--save", "--json"])
+
+        assert result == 0
+        captured = capsys.readouterr()
+        data = json.loads(captured.out)
+        assert data.get("saved") is True
+
+
+# === Drift Mode Tests ===
+
+
+class TestGapsDriftMode:
+    """Tests for --drift comparison mode."""
+
+    def test_drift_flag_in_help(
+        self,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """--drift flag is documented in help."""
+        result = cmd_gaps(["--help"])
+
+        assert result == 0
+        captured = capsys.readouterr()
+        assert "--drift" in captured.out
+
+    def test_drift_mode_no_baseline(
+        self,
+        capsys: pytest.CaptureFixture[str],
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+    ) -> None:
+        """--drift with no previous save shows appropriate message."""
+        monkeypatch.setenv("HOME", str(tmp_path))
+
+        result = cmd_gaps(["helpful", "--drift"])
+
+        assert result == 0
+        captured = capsys.readouterr()
+        # Should mention no previous analysis
+        assert "No previous" in captured.out or "baseline" in captured.out.lower()
+
+    def test_drift_mode_with_baseline(
+        self,
+        capsys: pytest.CaptureFixture[str],
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+    ) -> None:
+        """--drift after --save shows drift report."""
+        monkeypatch.setenv("HOME", str(tmp_path))
+
+        # First save a baseline
+        result1 = cmd_gaps(["helpful", "--save"])
+        assert result1 == 0
+
+        # Then check drift
+        result2 = cmd_gaps(["helpful", "--drift"])
+        assert result2 == 0
+
+        captured = capsys.readouterr()
+        # Should show drift report section
+        assert "Drift" in captured.out or "Stability" in captured.out
+
+    def test_drift_mode_json_has_drift_field(
+        self,
+        capsys: pytest.CaptureFixture[str],
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+    ) -> None:
+        """--drift --json includes drift field when baseline exists."""
+        monkeypatch.setenv("HOME", str(tmp_path))
+
+        # Save baseline first
+        cmd_gaps(["helpful", "--save"])
+        capsys.readouterr()  # Clear capture buffer
+
+        # Get drift as JSON
+        result = cmd_gaps(["helpful", "--drift", "--json"])
+
+        assert result == 0
+        captured = capsys.readouterr()
+        data = json.loads(captured.out)
+        assert "drift" in data
+        assert "stability_score" in data["drift"]

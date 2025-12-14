@@ -43,12 +43,16 @@ def _print_help() -> None:
     print()
     print("OPTIONS:")
     print("  --json              Output as JSON")
+    print("  --save              Save analysis to SoulSession for drift tracking")
+    print("  --drift             Compare to previous saved analysis")
     print("  --help, -h          Show this help")
     print()
     print("EXAMPLES:")
     print("  kgents gaps")
     print('  kgents gaps "We are a helpful AI assistant"')
     print("  kgents gaps --json")
+    print("  kgents gaps --save          # Persist for later comparison")
+    print("  kgents gaps --drift         # Show what changed since last save")
     print()
     print("ABOUT LACANIAN ANALYSIS:")
     print("  The Real is what cannot be symbolized - the impossible kernel.")
@@ -61,7 +65,7 @@ def cmd_gaps(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     Gaps analysis using H-gent LacanAgent.
 
     Usage:
-        kgents gaps [text] [--json]
+        kgents gaps [text] [--json] [--save] [--drift]
 
     Returns:
         0 on success, 1 on error
@@ -82,6 +86,8 @@ def cmd_gaps(args: list[str], ctx: "InvocationContext | None" = None) -> int:
 
     # Parse flags
     json_mode = "--json" in args
+    save_mode = "--save" in args
+    drift_mode = "--drift" in args
 
     # Extract text (everything that's not a flag)
     text_parts: list[str] = []
@@ -97,17 +103,20 @@ def cmd_gaps(args: list[str], ctx: "InvocationContext | None" = None) -> int:
         text = " ".join(text_parts)
 
     # Run async handler
-    return asyncio.run(_async_gaps(text, json_mode, ctx))
+    return asyncio.run(_async_gaps(text, json_mode, save_mode, drift_mode, ctx))
 
 
 async def _async_gaps(
     text: str,
     json_mode: bool,
+    save_mode: bool,
+    drift_mode: bool,
     ctx: "InvocationContext | None",
 ) -> int:
     """Async implementation of gaps command using LacanAgent."""
     try:
         from agents.h.lacan import LacanAgent, LacanError, LacanInput, LacanOutput
+        from agents.k.session import SoulSession
 
         # Build input for LacanAgent
         input_data = LacanInput(output=text)
@@ -148,7 +157,21 @@ async def _async_gaps(
             "objet_petit_a": output.objet_petit_a,
         }
 
+        # Handle drift mode - compare to previous
+        drift_report = None
+        if drift_mode:
+            session = await SoulSession.load()
+            drift_report = await session.compute_drift("gaps", semantic)
+
+        # Handle save mode - persist to SoulSession
+        if save_mode:
+            session = await SoulSession.load()
+            await session.record_introspection("gaps", semantic, text)
+            semantic["saved"] = True
+
         if json_mode:
+            if drift_report:
+                semantic["drift"] = drift_report.to_dict()
             _emit_output(json.dumps(semantic, indent=2), semantic, ctx)
         else:
             # Human-friendly output
@@ -205,6 +228,47 @@ async def _async_gaps(
                 lines.append("Objet petit a:")
                 lines.append(f'  "{output.objet_petit_a}"')
                 lines.append("  This is what the system is organized around lacking.")
+
+            # Drift report
+            if drift_report:
+                lines.extend(
+                    [
+                        "",
+                        "--- Drift Report ---",
+                        f"Since: {drift_report.previous_timestamp.strftime('%Y-%m-%d %H:%M')}",
+                        "",
+                    ]
+                )
+                if drift_report.added:
+                    lines.append("New gaps emerged:")
+                    for item in drift_report.added[:3]:
+                        lines.append(f"  + {item[:60]}...")
+                if drift_report.removed:
+                    lines.append("Gaps resolved:")
+                    for item in drift_report.removed[:3]:
+                        lines.append(f"  - {item[:60]}...")
+                if drift_report.changed:
+                    lines.append("Register shifts:")
+                    for item, old_val, new_val in drift_report.changed[:3]:
+                        lines.append(f"  ~ {item}: {old_val} -> {new_val}")
+                lines.append(f"Stability: {drift_report.stability_score:.2f}")
+            elif drift_mode:
+                lines.extend(
+                    [
+                        "",
+                        "--- Drift Report ---",
+                        "No previous gaps analysis found. Use --save to create baseline.",
+                    ]
+                )
+
+            # Save confirmation
+            if save_mode:
+                lines.extend(
+                    [
+                        "",
+                        "[Saved to SoulSession for drift tracking]",
+                    ]
+                )
 
             _emit_output("\n".join(lines), semantic, ctx)
 

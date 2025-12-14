@@ -2,7 +2,7 @@
 path: plans/skills/three-phase
 status: active
 progress: 0
-last_touched: 2025-12-13
+last_touched: 2025-12-14
 touched_by: gpt-5-codex
 blocking: []
 enables: []
@@ -146,6 +146,42 @@ Each phase also contains the full cycle:
 ---
 
 ## Continuation Generation
+
+Use the auto-inducer signifiers (`⟿`/`⟂`) for condensed handoffs. Keep the snap prompts to five lines (Minimal Output) and include ledger + entropy to preserve accountability.
+
+### Snap Prompts (Auto-Inducer Ready)
+
+- **SENSE → ACT**
+```markdown
+⟿[ACT]
+/hydrate
+handles: senses=${artifacts}; ledger={SENSE:touched}; entropy=${entropy_spent}/${entropy_remaining}; branches=${branch_notes}
+mission: execute the chosen approach; line up QA/TEST intent; keep scope to one diff.
+exit: draft diff + QA/TEST plan noted; continuation → REFLECT.
+⟂[BLOCKED:scope_unclear] need a tighter target before ACT
+```
+
+- **ACT → REFLECT**
+```markdown
+⟿[REFLECT]
+/hydrate
+handles: impl=${diff_handles}; ledger={ACT:touched}; entropy=${entropy_spent}/${entropy_remaining}; qa=${qa_status}
+mission: capture learnings/debts/metrics; decide whether to loop or detach.
+exit: learnings + debts recorded; continuation → PLAN or DETACH decision.
+⟂[TEST:blocked] checks failing; resolve before REFLECT
+```
+
+- **REFLECT → PLAN | DETACH**
+```markdown
+⟿[PLAN]
+/hydrate
+handles: learnings=${notes}; ledger={REFLECT:touched}; entropy=${entropy_spent}/${entropy_remaining}; branches=${branch_notes}
+mission: seed next SENSE with scope, non-goals, exits, and any branch handles.
+exit: PLAN ledger seeded; continuation → SENSE.
+⟂[DETACH:cycle_complete] scope exhausted; epilogue ready | ⟂[DETACH:awaiting_human] decision needed
+```
+
+### Full Prompt (Context-Rich)
 
 At the end of a session, generate a continuation prompt with:
 

@@ -77,6 +77,7 @@ def _print_help() -> None:
     print(
         "  --stream            Stream response character-by-character with token count"
     )
+    print("  --pipe              JSON-line output (one chunk per line) for shell pipes")
     print("  --quick             WHISPER budget (~100 tokens)")
     print("  --deep              DEEP budget (~8000+ tokens, Council of Ghosts)")
     print("  --json              Output as JSON")
@@ -120,6 +121,7 @@ def cmd_soul(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     quick_mode = "--quick" in args
     deep_mode = "--deep" in args
     stream_mode = "--stream" in args
+    pipe_mode = "--pipe" in args
 
     # Determine budget tier
     budget = "dialogue"  # Default
@@ -182,6 +184,7 @@ def cmd_soul(args: list[str], ctx: "InvocationContext | None" = None) -> int:
             budget=budget,
             json_mode=json_mode,
             stream_mode=stream_mode,
+            pipe_mode=pipe_mode,
             ctx=ctx,
             args=args,
         )
@@ -194,6 +197,7 @@ async def _async_soul(
     budget: str,
     json_mode: bool,
     stream_mode: bool,
+    pipe_mode: bool,
     ctx: "InvocationContext | None",
     args: list[str],
 ) -> int:
@@ -373,10 +377,10 @@ async def _async_soul(
                 soul, dialogue_mode, budget_tier, json_mode, ctx
             )
 
-        # Single dialogue turn (with streaming if --stream flag)
-        if stream_mode:
+        # Single dialogue turn (with streaming if --stream or --pipe flag)
+        if stream_mode or pipe_mode:
             return await _handle_streaming_dialogue(
-                soul, dialogue_mode, prompt, budget_tier, json_mode, ctx
+                soul, dialogue_mode, prompt, budget_tier, json_mode, pipe_mode, ctx
             )
         return await _handle_dialogue(
             soul, dialogue_mode, prompt, budget_tier, json_mode, ctx
@@ -734,6 +738,7 @@ async def _handle_streaming_dialogue(
     prompt: str,
     budget: Any,  # BudgetTier
     json_mode: bool,
+    pipe_mode: bool,
     ctx: "InvocationContext | None",
 ) -> int:
     """
@@ -748,9 +753,19 @@ async def _handle_streaming_dialogue(
         prompt: User prompt
         budget: BudgetTier
         json_mode: Output as JSON
+        pipe_mode: Output as JSON-lines (one chunk per line) for shell pipes
         ctx: Invocation context
     """
+    import json
     import sys
+
+    # Auto-detect pipe mode when stdout is not a TTY
+    if not pipe_mode and not sys.stdout.isatty():
+        pipe_mode = True
+
+    # In pipe mode, emit JSON-lines format
+    if pipe_mode:
+        return await _handle_pipe_streaming(soul, mode, prompt, budget, ctx)
 
     # Print mode header
     mode_icons = {
@@ -794,8 +809,6 @@ async def _handle_streaming_dialogue(
     response = "".join(chunks) if chunks else final_text
 
     if json_mode:
-        import json
-
         semantic = {
             "mode": mode.value,
             "response": response,
@@ -809,6 +822,90 @@ async def _handle_streaming_dialogue(
         print()
         if final_tokens > 0:
             print(f"\n  [{final_tokens} tokens]")
+
+    return 0 if not cancelled else 130  # 130 = SIGINT
+
+
+async def _handle_pipe_streaming(
+    soul: Any,
+    mode: Any,  # DialogueMode
+    prompt: str,
+    budget: Any,  # BudgetTier
+    ctx: "InvocationContext | None",
+) -> int:
+    """
+    Handle streaming dialogue with JSON-line (NDJSON) output for shell pipes.
+
+    Emits one JSON object per line:
+    - {"type": "chunk", "data": "..."} for each text chunk
+    - {"type": "metadata", "tokens_used": N, "model": "..."} on completion
+    - {"type": "error", "message": "..."} on error/cancellation
+
+    This format enables shell pipeline composition:
+        kg soul --pipe "hello" | jq -r 'select(.type == "chunk") | .data'
+
+    Args:
+        soul: KgentSoul instance
+        mode: DialogueMode
+        prompt: User prompt
+        budget: BudgetTier
+        ctx: Invocation context
+    """
+    import json
+    import sys
+
+    chunk_index = 0
+    cancelled = False
+
+    try:
+        async for event in soul.dialogue_flux(prompt, mode=mode, budget=budget):
+            if event.is_data:
+                # Emit chunk as JSON line
+                line = json.dumps(
+                    {
+                        "type": "chunk",
+                        "index": chunk_index,
+                        "data": event.value,
+                    }
+                )
+                print(line, flush=True)
+                chunk_index += 1
+            elif event.is_metadata:
+                # Emit metadata as JSON line
+                line = json.dumps(
+                    {
+                        "type": "metadata",
+                        "tokens_used": event.value.tokens_used,
+                        "model": event.value.model,
+                        "text": event.value.text,
+                        "total_chunks": chunk_index,
+                    }
+                )
+                print(line, flush=True)
+
+    except (KeyboardInterrupt, asyncio.CancelledError):
+        cancelled = True
+        # Emit cancellation as JSON line
+        line = json.dumps(
+            {
+                "type": "error",
+                "message": "Interrupted",
+                "chunks_emitted": chunk_index,
+            }
+        )
+        print(line, flush=True)
+
+    except Exception as e:
+        # Emit error as JSON line
+        line = json.dumps(
+            {
+                "type": "error",
+                "message": str(e),
+                "chunks_emitted": chunk_index,
+            }
+        )
+        print(line, flush=True)
+        return 1
 
     return 0 if not cancelled else 130  # 130 = SIGINT
 
