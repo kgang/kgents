@@ -1,3 +1,31 @@
+---
+path: plans/meta
+status: active
+progress: 0
+last_touched: 2025-12-13
+touched_by: gpt-5-codex
+blocking: []
+enables: []
+session_notes: |
+  Header added for forest compliance (STRATEGIZE).
+phase_ledger:
+  PLAN: touched
+  RESEARCH: touched
+  DEVELOP: skipped  # reason: doc-only
+  STRATEGIZE: touched
+  CROSS-SYNERGIZE: skipped  # reason: doc-only
+  IMPLEMENT: skipped  # reason: doc-only
+  QA: skipped  # reason: doc-only
+  TEST: skipped  # reason: doc-only
+  EDUCATE: skipped  # reason: doc-only
+  MEASURE: deferred  # reason: metrics backlog
+  REFLECT: touched
+entropy:
+  planned: 0.05
+  spent: 0.0
+  returned: 0.05
+---
+
 # meta.md — Mycelium
 
 > *One insight per line. If it takes a paragraph, it's not distilled.*
@@ -29,6 +57,11 @@
 2025-12-12  PolyAgent[S,A,B] > Agent[A,B]: mode-dependent behavior
 2025-12-11  T/U split: testing vs tools is categorical
 2025-12-11  OCap for trust: BypassToken is unforgeable
+2025-12-13  Wiring is composition: factory→factory→node forms morphism chain
+2025-12-13  Mock+Real test pairs: isolation tests + integration verification
+2025-12-13  Graceful degradation: return informative errors, don't crash
+2025-12-14  Streaming ≠ mutability: ephemeral chunks project immutable Turns
+2025-12-14  Forest handles: plans ARE handles; epilogues ARE witnesses; dormant = accursed share
 ```
 
 ## Anti-Patterns
@@ -53,4 +86,4 @@
 
 ---
 
-*Lines: 45/50 | Last pruned: 2025-12-13*
+*Lines: 50/50 | Last pruned: 2025-12-14*

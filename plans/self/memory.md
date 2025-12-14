@@ -1,16 +1,20 @@
 ---
 path: self/memory
 status: active
-progress: 30
+progress: 75
 last_touched: 2025-12-13
 touched_by: claude-opus-4.5
 blocking: []
 enables: [agents/k-gent, interfaces/interaction-flows]
 session_notes: |
-  UNBLOCKED. Ghost cache complete. Research synthesized (docs/research-autopoietic-dynamics.md).
-  Four Pillars codified in spec/m-gents/README.md: Stigmergy, Wittgenstein, Active Inference, Accursed Share.
-  Phase 1 (Ghost Cache) DONE. Phase 2 (Memory Crystal Formation) NEXT.
-  Key insight: Memory is reconstruction, not retrieval. Stigmergy enables collective memory without central store.
+  Phase 1 (Ghost Cache): COMPLETE - 22 tests
+  Phase 2-5 (Crystallization, Stigmergy, Wittgenstein, Active Inference): READY for integration
+  Phase 6 (Semantic Routing): COMPLETE - 116 tests
+    - SemanticRouter with locality-aware gradient sensing
+    - KgentAllocationManager for K→M substrate integration
+    - SubstrateScreen for I-gent allocation dashboard
+  AGENTESE Four Pillars + Substrate paths wired (17 tests)
+  Remaining: Wire to real SharedSubstrate (replace mocks)
 ---
 
 # Memory Architecture: The Autopoietic Weave

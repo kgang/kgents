@@ -544,6 +544,14 @@ impl/claude/
 
 ---
 
+## New/Experimental
+- `docs/weekly-summary/index.html` — Operators/observers: weekly forest health dashboard + status snapshots.  
+- `kgents_ A Next-Generation Agentic Memory Architecture.pdf` — Leadership/partners: narrative framing of memory architecture.  
+- `Radical Redesign Proposal for the Kgents UI_UX Ecosystem.pdf` — Design/UX: exploratory layout and interaction treatments.  
+- `Visualization & Interactivity_ A Synthesis (Enhanced with Category Theory & UX Patterns).pdf` — Visualization/education: patterns for interactive explainability.
+
+---
+
 ## Further Reading
 
 - `spec/principles.md` — Design principles and architectural decisions

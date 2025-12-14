@@ -1,3 +1,31 @@
+---
+path: plans/skills/n-phase-cycle/plan
+status: active
+progress: 0
+last_touched: 2025-12-13
+touched_by: gpt-5-codex
+blocking: []
+enables: []
+session_notes: |
+  Header added for forest compliance (STRATEGIZE).
+phase_ledger:
+  PLAN: touched
+  RESEARCH: touched
+  DEVELOP: skipped  # reason: doc-only
+  STRATEGIZE: touched
+  CROSS-SYNERGIZE: skipped  # reason: doc-only
+  IMPLEMENT: skipped  # reason: doc-only
+  QA: skipped  # reason: doc-only
+  TEST: skipped  # reason: doc-only
+  EDUCATE: skipped  # reason: doc-only
+  MEASURE: deferred  # reason: metrics backlog
+  REFLECT: touched
+entropy:
+  planned: 0.05
+  spent: 0.0
+  returned: 0.05
+---
+
 # Skill: PLAN (N-Phase Cycle)
 
 > Shape intention into composable chunks with explicit constraints and exits.
@@ -5,6 +33,17 @@
 **Difficulty**: Easy
 **Prerequisites**: HYDRATE.md, plans/principles.md, spec/principles.md
 **Files Touched**: plans/_focus.md (read-only), plans/*/*.md headers, plans/_forest.md (auto)
+
+---
+
+## Quick Wield
+- **Snap prompt**:
+```markdown
+/hydrate → PLAN | intent + non-goals | exit criteria | attention budget (incl. 0.05–0.10 entropy) | ledger.PLAN=touched | next=RESEARCH
+```
+- **Minimal artifacts**: scope + non-goals, exit criteria, chunk list, entropy sip + ledger snippet, branch candidates (if any).
+- **Signals**: log tokens/time/entropy + branch count for `process-metrics.md`; update `phase_ledger` + `entropy` in plan header for `_forest.md`.
+- **Branch check**: classify branches per `branching-protocol.md`; emit handles or bounty entries before exiting.
 
 ---
 
@@ -46,14 +85,20 @@ PLAN defines the container for the entire cycle: why this work exists, what succ
    ```
    Not: "You should read these files"
 
-2. **Frame scope + exits** (Decisive declaration):
+2. **Strategic research** (When novel domain):
+   - Use `WebSearch` for domain expertise, frameworks, prior art
+   - Example: "kubernetes operator patterns 2025", "OODA loop decision cycle"
+   - Integrate insights into scope definition (don't cargo-cult)
+
+3. **Frame scope + exits** (Decisive declaration):
    - Write TodoWrite with chunks as PENDING
    - Declare: "I WILL implement Track A"
    - Not: "One option would be Track A"
 
-3. **Chunk and schedule** (Commit to parallelization):
+4. **Chunk and schedule** (Commit to parallelization):
    - Identify which chunks can run as parallel agents
    - Mark dependencies explicitly
+   - Surface potential branches (see `branching-protocol.md`)
    - Exit to RESEARCH immediately
 
 ---
@@ -61,6 +106,20 @@ PLAN defines the container for the entire cycle: why this work exists, what succ
 ## Recursive Hologram
 - Run a micro PLAN→RESEARCH→DEVELOP loop on this plan artifact: What is unknown about the scope? Which specs clarify it? What refinement is needed before others can compose with it?
 - Register the plan as a morphism via `meta-skill-operad.md` so future mutations are lawful (identity/associativity preserved).
+
+---
+
+## Accursed Share (Entropy Budget)
+
+PLAN reserves 5-10% for exploration:
+
+- **Scope uncertainty**: Not all boundaries are clear at the start. Budget for discovery.
+- **Alternative framings**: The first framing isn't always best. Try 2-3 mental models before committing.
+- **Adjacent possibilities**: What else could this enable? Note serendipitous connections.
+- **Dormant tree reconnaissance**: What exists in the forest that might compose with this?
+
+Draw: `void.entropy.sip(amount=0.07)`
+Return unused: `void.entropy.pour`
 
 ---
 
@@ -88,98 +147,23 @@ Next: `research.md` with map targets, unknowns, and files to read.
 
 ## Continuation Generator
 
-Upon exiting PLAN, generate the following prompt for invoking RESEARCH:
-
----
-
-### Generated Prompt: RESEARCH after PLAN
+Emit this prompt (short, AGENTESE-ready) when exiting PLAN:
 
 ```markdown
-# RESEARCH: Continuation from PLAN
-
-## ATTACH
-
 /hydrate
-
-You are entering RESEARCH phase of the N-Phase Cycle (AD-005).
-
-Previous phase (PLAN) created these handles:
-- Scope definition: ${scope_summary}
-- Chunks identified: ${chunk_list}
-- Exit criteria declared: ${exit_criteria}
-- Entropy budget: ${entropy_allocation}
-
-Key decisions made:
-- ${key_decisions}
-
-Blockers to investigate:
-- ${blockers_or_unknowns}
-
-## Your Mission
-
-Map the terrain to de-risk later phases. You are reducing entropy by discovering:
-- Prior art (existing code, skills, specs)
-- Invariants (contracts, laws, hotdata expectations)
-- Blockers (with file:line evidence)
-
-**Principles Alignment** (from spec/principles.md):
-- **Curated**: Prevent redundant work by finding what exists
-- **Composable**: Note contracts and functor laws
-- **Generative**: Identify compression opportunities
-
-## Actions to Take NOW
-
-1. Parallel reads:
-   ```python
-   Read("${file_1}")  # In parallel
-   Read("${file_2}")  # In parallel
-   Read("${file_3}")  # In parallel
-   ```
-
-2. Search for prior art:
-   ```python
-   Grep(pattern="${key_pattern}", type="py")
-   Glob(pattern="**/skills/*.md")
-   ```
-
-3. Surface blockers with evidence (file:line)
-
-## Exit Criteria
-
-- File map with references and blockers captured
-- Unknowns enumerated with owners or resolution paths
-- No code changes made; knowledge ready for DEVELOP
-
-## Continuation Imperative
-
-Upon completing RESEARCH, generate the prompt for DEVELOP using this same structure:
-- ATTACH with /hydrate
-- Context from RESEARCH (invariants found, blockers surfaced)
-- Mission aligned with DEVELOP's purpose
-- Continuation imperative for STRATEGIZE
-
-The form is the function. The cycle perpetuates through principled generation.
+# RESEARCH ← PLAN
+handles: scope=${scope_summary}; chunks=${chunk_list}; exit=${exit_criteria}; ledger=${phase_ledger}; entropy=${entropy_allocation}; branches=${branch_notes}
+mission: map terrain; find invariants/blockers with file:line; avoid duplication (Curated/Composable/Generative).
+actions: parallel Read(${file_1}, ${file_2}, ${file_3}); rg "${key_pattern}"; log metrics tokens/time/entropy/law-checks.
+exit: file map + blockers + unknowns w/ owners; ledger.RESEARCH=touched; branches classified; continuation → DEVELOP.
 ```
 
----
-
-### Template Variables
-
-| Variable | Source |
-|----------|--------|
-| `${scope_summary}` | From PLAN step 2 (frame scope) |
-| `${chunk_list}` | From TodoWrite items created |
-| `${exit_criteria}` | From Verification section |
-| `${entropy_allocation}` | From Accursed Share allocation |
-| `${key_decisions}` | Decisions made during PLAN |
-| `${blockers_or_unknowns}` | Questions for RESEARCH to answer |
-| `${file_1,2,3}` | Target files from scope |
-| `${key_pattern}` | Search pattern for prior art |
-
----
+Template vars: `${scope_summary}`, `${chunk_list}`, `${exit_criteria}`, `${phase_ledger}`, `${entropy_allocation}`, `${branch_notes}`, `${file_1,2,3}`, `${key_pattern}`.
 
 ## Related Skills
 - `auto-continuation.md` — The meta-skill defining this generator pattern
+- `branching-protocol.md` — Surface new trees at transitions
+- `phase-accountability.md` — Track phase execution
 - `meta-skill-operad.md`
 - `meta-re-metabolize.md`
 - `../plan-file.md`
@@ -187,5 +171,7 @@ The form is the function. The cycle perpetuates through principled generation.
 ---
 
 ## Changelog
+- 2025-12-13: Added strategic research step and branching reference.
+- 2025-12-13: Added Accursed Share section (meta-re-metabolize).
 - 2025-12-13: Added Continuation Generator section (auto-continuation).
 - 2025-12-13: Initial version.

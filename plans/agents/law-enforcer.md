@@ -21,6 +21,8 @@ session_notes: |
 **Status**: Tentative (proposed for AGENTESE realization)
 **Principles**: Composable (laws are verified, not aspirational), Ethical (transparency about violations), Generative (laws generate valid compositions)
 
+AGENTESE pointer: authoritative law/entropy guard clauses sit in `spec/protocols/agentese.md`; update this role when canonical flow shifts.
+
 ---
 
 ## Purpose

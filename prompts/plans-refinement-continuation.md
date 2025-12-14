@@ -1,4 +1,4 @@
-# Continuation: Plans Directory Refinement (Phase 2)
+# Continuation: Post-Plans Refinement
 
 ## ATTACH
 
@@ -6,95 +6,66 @@
 
 ---
 
-## Context from Previous Phase (SENSE + ACT)
+## Context from Plans Refinement (Complete)
 
 **What was accomplished**:
-1. Deep audit of `plans/` directory identified terminology proliferation (5+ competing metaphors)
-2. Brainstormed 3 evolution paths: Compression, Layered, AGENTESE-Pure
-3. Chose synthesis: **Layered AGENTESE** with Three-Phase simplification
-4. Refactored:
-   - `HYDRATE.md`: Compressed from 124 → 90 lines, introduced Three Phases
-   - `plans/meta.md`: Pruned from 83 → 56 lines, within 50-line spirit
-   - `plans/skills/n-phase-cycle/README.md`: Added Three-Phase as default, 11-Phase as Crown Jewels
+1. Consolidated `plans/principles.md`: 728 → 80 lines (pointer + Forest Protocol essentials)
+2. Minimized `plans/README.md`: 124 → 35 lines (pointer only)
+3. Kept `_forest.md` and `_status.md` as two LODs (canopy vs detailed)
+4. Created `plans/skills/three-phase.md` as default lifecycle skill
+5. Updated `plans/skills/README.md` to reference three-phase.md
 
-**Key Decisions Made**:
-- **Three Phases** (SENSE → ACT → REFLECT) compress 11 phases without loss
-- **Unified terminology**: Ground, Canopy, Mycelium, Roots, Spores, Skills
-- **LOD structure**: One-liner → HYDRATE → Protocol → Deep dives
+**Key Learnings**:
+- Three Phases (SENSE → ACT → REFLECT) compress 11 without loss
+- Pointer pattern reduces redundancy while preserving access
+- Two LODs for status: canopy (`_forest.md`) and detailed (`_status.md`)
+- Line caps enforce discipline: 80/50/100 for principles/meta/HYDRATE
 
----
-
-## Your Mission (REFLECT Phase)
-
-Complete the refinement by:
-
-### 1. Consolidate Redundant Files
-
-The audit identified redundancy:
-- `plans/principles.md` (728 lines) overlaps with `spec/principles.md` (970 lines)
-- `plans/README.md` duplicates HYDRATE.md
-- `plans/_status.md` duplicates `_forest.md`
-
-**Action**:
-- Merge essential unique content from `plans/principles.md` into `spec/principles.md` (if any)
-- Delete `plans/principles.md` or reduce to a pointer
-- Update `plans/README.md` to be a minimal pointer to HYDRATE.md
-- Merge `plans/_status.md` into `_forest.md` if needed, or delete
-
-### 2. Update Cross-References
-
-Files that reference old terminology:
-- `plans/skills/README.md` - update to use unified terms
-- Individual skill files may reference old 11-phase as primary
-
-### 3. Create the Three-Phase Skill Document
-
-**File**: `plans/skills/three-phase.md`
-
-A single skill document that captures:
-- When to use Three-Phase (default)
-- When to escalate to 11-Phase (Crown Jewels)
-- How SENSE/ACT/REFLECT map to AGENTESE contexts
-- Continuation generation for each phase
-
-### 4. Write Epilogue
-
-Write to `plans/_epilogues/2025-12-13-plans-refinement.md`:
-- What was changed
-- What learnings emerged
-- What remains for future sessions
+**Files Modified**:
+- `plans/principles.md` (rewritten)
+- `plans/README.md` (rewritten)
+- `plans/_forest.md` (+1 line, `_status.md` reference)
+- `plans/skills/README.md` (added three-phase.md)
+- `plans/skills/three-phase.md` (new)
+- `plans/_epilogues/2025-12-13-plans-refinement.md` (updated)
 
 ---
 
-## Principles Alignment
+## Remaining Terminology Debt
 
-This work embodies:
-- **Tasteful** — Prune what doesn't serve
-- **Curated** — Quality over quantity
-- **Composable** — Three phases compose into any workflow
-- **Generative** — Simpler seed, same generative power
+1. **Older plan files** may reference 11-phase as primary (should mention three-phase)
+2. **`_forest.md` auto-generation**: File claims to be auto-generated but isn't
+3. **Naming inconsistency**: `_forest.md` vs unified "Canopy" terminology
 
 ---
 
-## Exit Criteria
+## Next Work Options
 
-- [ ] No redundant meta files
-- [ ] HYDRATE.md under 100 lines
-- [ ] meta.md under 50 lines
-- [ ] Three-Phase documented as primary approach
-- [ ] Cross-references updated
-- [ ] Epilogue written
+Per `_focus.md`, two main tracks:
 
----
+### Track A: Memory Substrate (self/memory)
+- **Current**: 40% complete, Four Pillars + Substrate AGENTESE wired
+- **Next**: Wire to real SharedSubstrate, replace mocks
+- **Continuation**: `prompts/memory-substrate-continuation.md`
 
-## Continuation Imperative
-
-Upon completing this phase, generate a prompt for the next observer that:
-1. References `/hydrate` for grounding
-2. Summarizes what was learned about plans/ architecture
-3. Identifies any remaining terminology debt
-4. Points to next work (likely memory substrate or dashboard textual refactor)
+### Track B: Dashboard Textual Refactor (interfaces/dashboard-textual-refactor)
+- **Current**: Proposed, 0%
+- **Next**: Port EventBus, Base Screen, Mixins from zenportal patterns
+- **Focus**: Fix key eating, improve screen architecture
+- **Continuation**: `prompts/dashboard-textual-refinement.md`
 
 ---
 
-*"Compress, don't expand. The butterfly must escape the molasses."*
+## Session Workflow
+
+```bash
+cat HYDRATE.md                          # Ground
+cat plans/_forest.md                    # Canopy
+cat plans/_focus.md                     # Human intent (decide track)
+cat prompts/memory-substrate-*.md       # If Track A
+cat prompts/dashboard-textual-*.md      # If Track B
+```
+
+---
+
+*"The butterfly escaped. Now: memory substrate or dashboard refinement?"*

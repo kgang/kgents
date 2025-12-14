@@ -138,6 +138,17 @@ from .crystal import (
     ResonanceMatch,
     create_crystal,
 )
+
+# Phase 7: Crystallization Integration
+from .crystallization_integration import (
+    CrystallizationEvent,
+    KgentCrystallizer,
+    ReaperIntegration,
+    SubstrateCrystallizer,
+    create_kgent_crystallizer,
+    create_reaper_integration,
+    create_substrate_crystallizer,
+)
 from .dgent_backend import (
     AssociativeWebMemory,
     DgentBackedHolographicMemory,
@@ -160,6 +171,17 @@ from .games import (
     create_recall_game,
     game_to_polynomial,
     polynomial_signature,
+)
+
+# Phase 8: Ghost ↔ Substrate Sync
+from .ghost_sync import (
+    GhostAwareReaperIntegration,
+    GhostSyncAllocation,
+    GhostSyncEvent,
+    GhostSyncManager,
+    create_ghost_aware_reaper,
+    create_ghost_sync_manager,
+    wrap_with_ghost_sync,
 )
 from .holographic import (
     CompressionLevel,
@@ -527,4 +549,20 @@ __all__ = [
     "apply_pressure_based_strategy",
     "create_compactor",
     "create_daemon",
+    # Phase 7: Crystallization Integration
+    "CrystallizationEvent",
+    "SubstrateCrystallizer",
+    "ReaperIntegration",
+    "KgentCrystallizer",
+    "create_substrate_crystallizer",
+    "create_reaper_integration",
+    "create_kgent_crystallizer",
+    # Phase 8: Ghost ↔ Substrate Sync
+    "GhostSyncEvent",
+    "GhostSyncManager",
+    "GhostSyncAllocation",
+    "GhostAwareReaperIntegration",
+    "create_ghost_sync_manager",
+    "create_ghost_aware_reaper",
+    "wrap_with_ghost_sync",
 ]

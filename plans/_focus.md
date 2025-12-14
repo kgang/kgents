@@ -11,8 +11,8 @@
 
 ---
 ## KENT's WISHES
-* More interactivity with all of kgents
-* More refined meta-cognition from his ai agent and ai agent systems
+* TOP PRIORITY: Functioning, sophisticated LLM-backed agents, live in k-terrarium
+  - Kent says "this is amazing" to the agent (HARD REQUIREMENT)
 
 ## KENT's NEVERS
 * Do not place requirements for hitting some number of tests. Describe the tests themselves conceptually. Apply the principle Generativity

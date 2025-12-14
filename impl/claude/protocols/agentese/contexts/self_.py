@@ -60,6 +60,9 @@ SELF_AFFORDANCES: dict[str, tuple[str, ...]] = {
         "play",  # Play language game move
         "evaluate",  # Active inference evaluation
         "inference_consolidate",  # Active inference-guided consolidation
+        # Phase 7: Crystallization Integration
+        "reap",  # Trigger TTL-based reaping
+        "expiring_soon",  # Get allocations expiring soon
     ),
     "capabilities": ("list", "acquire", "release"),
     "state": ("checkpoint", "restore", "inspect"),
@@ -212,6 +215,11 @@ class MemoryNode(BaseLogosNode):
                 return await self._route_task(observer, **kwargs)
             case "substrate_stats":
                 return await self._substrate_stats(observer, **kwargs)
+            # Phase 7: Crystallization Integration
+            case "reap":
+                return await self._reap(observer, **kwargs)
+            case "expiring_soon":
+                return await self._expiring_soon(observer, **kwargs)
             case _:
                 return {"aspect": aspect, "status": "not implemented"}
 
@@ -992,6 +1000,20 @@ class MemoryNode(BaseLogosNode):
             return {"error": "agents.m module not available"}
 
     # --- Substrate Operations (Phase 5) ---
+    #
+    # Memory Flow:
+    #
+    #   SharedSubstrate (building)
+    #        │
+    #        ├── allocate() ──► Allocation (room)
+    #        │                      │
+    #        │                      ├── store/retrieve
+    #        │                      │
+    #        │                      └── compact() ──► Resolution↓
+    #        │
+    #        └── route() ─────► Task → Agent (via pheromone gradients)
+    #
+    # Adjunction: deposit ⊣ route (left adjoint creates gradients)
 
     async def _allocate_in_substrate(
         self,
@@ -1218,6 +1240,145 @@ class MemoryNode(BaseLogosNode):
             stats["router"] = self._router.stats()
 
         return stats
+
+    # =========================================================================
+    # Phase 7: Crystallization Integration
+    # =========================================================================
+
+    async def _reap(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Trigger TTL-based reaping of expired allocations.
+
+        AGENTESE: self.memory.reap
+                  self.memory.reap[policy=ttl]
+
+        This triggers the ReaperIntegration to reap:
+        1. Expired allocations (based on TTL)
+        2. Expired crystals (via CrystalReaper)
+
+        Args:
+            policy: Optional policy type (default: "ttl")
+
+        Returns:
+            Dict with reap results including events emitted
+        """
+        if self._substrate is None:
+            return {
+                "error": "SharedSubstrate not configured",
+                "reaped": 0,
+            }
+
+        # Import ReaperIntegration
+        from agents.m.crystallization_integration import ReaperIntegration
+
+        # Check if we have a reaper integration wired
+        reaper_integration = getattr(self, "_reaper_integration", None)
+
+        if reaper_integration is None:
+            # Create a minimal reaper integration with mock CrystalReaper
+            from agents.d.crystal import CrystalReaper
+
+            reaper_integration = ReaperIntegration(
+                reaper=CrystalReaper(),
+                substrate=self._substrate,
+            )
+
+        events = await reaper_integration.reap_all()
+
+        return {
+            "reaped": len(events),
+            "events": [
+                {
+                    "event_type": e.event_type,
+                    "agent_id": e.agent_id,
+                    "patterns_affected": e.patterns_affected,
+                    "reason": e.reason,
+                }
+                for e in events
+            ],
+            "allocations_remaining": len(self._substrate.allocations),
+        }
+
+    async def _expiring_soon(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Get allocations expiring soon.
+
+        AGENTESE: self.memory.expiring_soon
+                  self.memory.expiring_soon[threshold=1h]
+
+        Args:
+            threshold: Time until expiration to consider "soon" (default 1 hour)
+                      Format: "1h", "30m", "2d"
+
+        Returns:
+            List of allocations that will expire within threshold
+        """
+        from datetime import timedelta
+
+        if self._substrate is None:
+            return {
+                "error": "SharedSubstrate not configured",
+                "expiring": [],
+            }
+
+        # Parse threshold
+        threshold_str = kwargs.get("threshold", "1h")
+        threshold = self._parse_timedelta(threshold_str)
+
+        # Find expiring allocations
+        expiring = []
+        now = datetime.now()
+        for agent_id, allocation in self._substrate.allocations.items():
+            expires_at = allocation.created_at + allocation.lifecycle.ttl
+            time_remaining = expires_at - now
+            if timedelta(0) < time_remaining < threshold:
+                expiring.append(
+                    {
+                        "agent_id": str(agent_id),
+                        "human_label": allocation.lifecycle.human_label,
+                        "expires_at": expires_at.isoformat(),
+                        "time_remaining_seconds": time_remaining.total_seconds(),
+                        "pattern_count": allocation.pattern_count,
+                    }
+                )
+
+        return {
+            "threshold": threshold_str,
+            "threshold_seconds": threshold.total_seconds(),
+            "expiring": expiring,
+            "count": len(expiring),
+        }
+
+    def _parse_timedelta(self, s: str) -> timedelta:
+        """Parse a duration string like '1h', '30m', '2d' to timedelta."""
+        import re
+
+        # Pattern: digits + unit (s=seconds, m=minutes, h=hours, d=days)
+        match = re.match(r"^(\d+)([smhd])$", s.lower())
+        if not match:
+            return timedelta(hours=1)  # Default
+
+        value = int(match.group(1))
+        unit = match.group(2)
+
+        if unit == "s":
+            return timedelta(seconds=value)
+        elif unit == "m":
+            return timedelta(minutes=value)
+        elif unit == "h":
+            return timedelta(hours=value)
+        elif unit == "d":
+            return timedelta(days=value)
+        else:
+            return timedelta(hours=1)
 
 
 # === Capabilities Node ===

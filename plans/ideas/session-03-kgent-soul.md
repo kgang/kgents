@@ -1,3 +1,31 @@
+---
+path: plans/ideas/session-03-kgent-soul
+status: dormant
+progress: 0
+last_touched: 2025-12-13
+touched_by: gpt-5-codex
+blocking: []
+enables: []
+session_notes: |
+  Header added for forest compliance (STRATEGIZE).
+phase_ledger:
+  PLAN: touched
+  RESEARCH: touched
+  DEVELOP: skipped  # reason: doc-only
+  STRATEGIZE: touched
+  CROSS-SYNERGIZE: skipped  # reason: doc-only
+  IMPLEMENT: skipped  # reason: doc-only
+  QA: skipped  # reason: doc-only
+  TEST: skipped  # reason: doc-only
+  EDUCATE: skipped  # reason: doc-only
+  MEASURE: deferred  # reason: metrics backlog
+  REFLECT: touched
+entropy:
+  planned: 0.05
+  spent: 0.0
+  returned: 0.05
+---
+
 # Session 3: K-gent — The Soul
 
 > *"K-gent doesn't add personality—it navigates to specific coordinates in the inherent personality-space of LLMs. The question isn't whether the soul exists. The question is whether we've connected the wires."*

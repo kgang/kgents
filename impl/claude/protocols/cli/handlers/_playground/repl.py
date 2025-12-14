@@ -69,14 +69,14 @@ def start_repl_sync(
 
     # Try to use IPython if available (best experience)
     try:
-        from IPython import embed  # type: ignore[import-not-found]
+        from IPython import embed
 
         _emit_output(
             "\nUsing IPython. Use run_async(coro) for async code.",
             {"repl": "ipython"},
             ctx,
         )
-        embed(
+        embed(  # type: ignore[no-untyped-call]
             user_ns=namespace,
             banner1="",
             confirm_exit=False,

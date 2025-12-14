@@ -465,6 +465,51 @@ class KgentAllocationManager:
 
         return await self._substrate.compact(self._dream)
 
+    async def crystallize(
+        self,
+        tier: str = "dialogue",
+    ) -> dict[str, Any]:
+        """
+        Trigger crystallization for a specific tier.
+
+        This creates a semantic checkpoint (StateCrystal) of the tier's
+        allocation state. Requires external wiring to CrystallizationEngine.
+
+        Args:
+            tier: Which tier to crystallize (working, eigenvector, dialogue, dream)
+
+        Returns:
+            Dict with crystallization info (requires KgentCrystallizer wiring)
+
+        Note:
+            For full crystallization, use KgentCrystallizer which provides
+            the integration with D-gent's CrystallizationEngine.
+        """
+        self._ensure_initialized()
+
+        tier_map = {
+            "working": self._working,
+            "eigenvector": self._eigenvector,
+            "dialogue": self._dialogue,
+            "dream": self._dream,
+        }
+
+        allocation = tier_map.get(tier)
+        if allocation is None:
+            return {"error": f"Unknown tier: {tier}"}
+
+        # Return allocation state for external crystallization
+        return {
+            "tier": tier,
+            "agent_id": str(allocation.agent_id),
+            "pattern_count": allocation.pattern_count,
+            "usage_ratio": allocation.usage_ratio(),
+            "human_label": allocation.lifecycle.human_label,
+            "avg_resolution": allocation._crystal.stats().get("avg_resolution", 1.0),
+            "ready_for_crystallization": True,
+            "note": "Use KgentCrystallizer for full crystallization with CrystallizationEngine",
+        }
+
     # -------------------------------------------------------------------------
     # Statistics
     # -------------------------------------------------------------------------

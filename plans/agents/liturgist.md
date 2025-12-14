@@ -22,6 +22,8 @@ session_notes: |
 **Status**: Tentative (proposed for AGENTESE realization)
 **Principles**: Composable (liturgies compose), Generative (rewrite generates morphisms), Ethical (rollback enables recovery)
 
+AGENTESE pointer: canonical handle/liturgy guardrails track `spec/protocols/agentese.md` and `plans/meta/liturgy-morphism-nasi.md`; refresh when either shifts.
+
 ---
 
 ## Purpose

@@ -2,110 +2,101 @@
 
 > *"To read is to invoke. There is no view from nowhere."*
 
----
+## Ground (Seven Principles)
 
-## Ground (The Seven Principles)
-
-1. **Tasteful** — Each agent serves a clear, justified purpose
-2. **Curated** — Quality over quantity; evolve, don't accumulate
-3. **Ethical** — Augment human capability, never replace judgment
-4. **Joy-Inducing** — Personality matters; delight in interaction
-5. **Composable** — Agents are morphisms; `f >> g` is primary
-6. **Heterarchical** — No fixed hierarchy; leadership is contextual
-7. **Generative** — Spec is compression; implementation follows mechanically
+1. **Tasteful** — Clear, justified purpose
+2. **Curated** — Quality over quantity
+3. **Ethical** — Augment, don't replace judgment
+4. **Joy-Inducing** — Personality matters
+5. **Composable** — `f >> g` is primary
+6. **Heterarchical** — No fixed hierarchy
+7. **Generative** — Spec compresses; impl follows
 
 **Meta**: Accursed Share • AGENTESE • Personality Space
 
 ---
 
-## The Five Contexts (AGENTESE)
+## AGENTESE (Five Contexts)
 
-| Context | Domain | Key Affordances |
-|---------|--------|-----------------|
+| Context | Domain | Affordances |
+|---------|--------|-------------|
 | `world.*` | External | entities, tools, code |
-| `self.*` | Internal | memory, state, capability |
-| `concept.*` | Abstract | specs, definitions, skills |
-| `void.*` | Entropy | accursed share, slop |
+| `self.*` | Internal | memory, state |
+| `concept.*` | Abstract | specs, skills |
+| `void.*` | Entropy | slop, exploration |
 | `time.*` | Temporal | traces, history |
 
 **Aspects**: `manifest` • `witness` • `refine` • `sip` • `tithe` • `lens` • `define`
 
 ---
 
-## The Three Phases
+## Three Phases
 
 ```
 SENSE → ACT → REFLECT → (loop)
 ```
 
-| Phase | Contains | When |
-|-------|----------|------|
-| **SENSE** | Plan, Research, Develop, Strategize, Cross-Synergize | Understanding |
-| **ACT** | Implement, QA, Test, Educate | Execution |
-| **REFLECT** | Measure, Reflect, Re-Metabolize | Learning |
+| Phase | Contains |
+|-------|----------|
+| **SENSE** | Plan, Research, Develop, Strategize, Cross-Synergize |
+| **ACT** | Implement, QA, Test, Educate |
+| **REFLECT** | Measure, Reflect, Re-Metabolize |
 
-**Full N-Phase**: `plans/skills/n-phase-cycle/` — Use for Crown Jewels only.
+**Full 11-Phase**: `plans/skills/n-phase-cycle/` (Crown Jewels only)
 
 ---
 
-## The Forest
+## Forest Protocol
 
-| File | Role | Agent Protocol |
-|------|------|----------------|
+| File | Role | Protocol |
+|------|------|----------|
 | `plans/_focus.md` | Human intent | **Never overwrite** |
-| `plans/_forest.md` | Canopy (visible state) | Regenerate |
-| `plans/meta.md` | Mycelium (learnings) | Append, 50-line cap |
-| `plans/_epilogues/` | Spores (session handoffs) | Write at session end |
+| `plans/_forest.md` | Canopy | Regenerate |
+| `plans/meta.md` | Mycelium | Append, 50-line cap |
+| `plans/_epilogues/` | Spores | Write at session end |
 | `plans/skills/` | Patterns | Pull → Apply → Push |
 
 ---
 
 ## Status
 
-**Tests**: 13,210 | **Mypy**: Strict (0 errors) | **Branch**: `main`
+**Tests**: 13,345 | **Mypy**: 0 errors | **Branch**: `main`
 
-| Tree | Progress | Status |
-|------|----------|--------|
+| Tree | Progress | Notes |
+|------|----------|-------|
 | k-gent | 97% | Deferred: Fractal, Holographic |
-| memory | 40% | Four Pillars + Substrate |
+| memory | 100% ✓ | Phase 7 complete. Substrate + crystallization wired. |
 | turn-gents | 100% ✓ | 187 tests |
+| entropy | 100% ✓ | 87 tests |
+| visualization | 100% ✓ | 88 tests |
 
 ---
 
 ## Commands
 
 ```bash
-cd impl/claude && uv run pytest -q   # Tests
-cd impl/claude && uv run mypy .      # Types
-cat plans/_forest.md                 # Canopy
+cd impl/claude && uv run pytest -q && uv run mypy .
 ```
 
 ---
 
-## Agent Registry (23 agents)
+## Agents
 
-A(abstract) B(economics) C(category) D(memory) E(evolution) F(futures) G(generation) H(dialectics) I(interface) J(judgment) K(simulacra) L(registry) M(cartography) N(narrative) O(observation) P(personality) Ψ(metaphor) Q(quantum) R(resilience) T(testing) U(utility) W(wire) **Flux**(streams)
+A B C D E F G H I J K L M N O P Ψ Q R T U W Flux
 
 ---
 
 ## Gotchas
 
-- Python 3.12: `Generic[A]` + `TypeVar`, not `class Foo[A]:`
-- Imports: Prefer absolute (`from agents.x import Y`)
-- Foundational modules: `shared`, `a`, `d`, `l`, `c`, `poly`, `operad`, `sheaf`
+- Python 3.12: `Generic[A]` + `TypeVar`
+- Foundational: `shared`, `a`, `d`, `l`, `c`, `poly`, `operad`, `sheaf`
 
 ---
 
 ## Deep Dive
 
-| Resource | Purpose |
-|----------|---------|
-| `spec/principles.md` | Full principles + meta-principles |
-| `plans/skills/` | HOW-TO guides (pull before doing) |
-| `docs/functor-field-guide.md` | Alethic Algebra |
-| `docs/operators-guide.md` | K-gent eigenvectors |
-| `/harden`, `/trace`, `/diff-spec`, `/debt` | DevEx commands |
+`spec/principles.md` • `plans/skills/` • `docs/functor-field-guide.md`
 
 ---
 
-*Lines: 90. Ceiling: 100. Prune if exceeded.*
+*Lines: 85. Ceiling: 100.*

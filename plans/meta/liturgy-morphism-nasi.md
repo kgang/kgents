@@ -8,6 +8,22 @@ blocking: []
 enables: [spec/protocols/agentese.md, plans/_forest.md, plans/skills/agentese-path.md]
 session_notes: |
   Standing up N-NASI ("The Liturgical Morphism"): AGENTESE as internal language + liturgy compiler. This pass is planning-only; no code written. Captured grammar/handle milestones and risk-tiered deliverables.
+phase_ledger:
+  PLAN: touched
+  RESEARCH: touched
+  DEVELOP: planned  # reason: bridge agentese law guards into liturgy morphism
+  STRATEGIZE: touched  # reason: adapter sequencing
+  CROSS-SYNERGIZE: touched  # reason: polyfunctor + forest hooks
+  IMPLEMENT: skipped  # reason: doc-only
+  QA: planned  # reason: law/entropy guard check
+  TEST: skipped  # reason: doc-only
+  EDUCATE: planned  # reason: quickstart pending
+  MEASURE: deferred  # reason: spans deferred
+  REFLECT: planned  # reason: doc reflection
+entropy:
+  planned: 0.07
+  spent: 0.00
+  returned: 0.07
 ---
 
 # Plan: The Liturgical Morphism (N-NASI)
@@ -16,6 +32,8 @@ session_notes: |
 
 ## Thesis
 AGENTESE graduates from naming system to internal programming language. Agents become sentences; code is generated from liturgical morphisms (`@liturgy`), enabling self-hosted rewriting via `self.liturgy.*` handles.
+
+**Bridge [phase=DEVELOP][entropy=0.07][law_check=true][rollback=doc-only][rollback_token=liturgical-doc-roll]:** Anchor liturgy morphism law checks to `spec/protocols/agentese.md` identity/associativity guard; pour unused entropy at REFLECT.
 
 ## Objectives (near-term cycle)
 - Define grammar + type surface for liturgical sentences (concatenative, Minimal Output).

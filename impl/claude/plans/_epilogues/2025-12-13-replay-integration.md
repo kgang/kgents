@@ -73,3 +73,60 @@ uv run python -c "from impl.claude.agents.i.screens.dashboard import run_dashboa
 *"The demo IS the system showing itself."* (AD-004)
 
 The replay mode doesn't simulate a dashboard—it replays actual scenario data through the same metrics pipeline used in production. The form is the function.
+
+---
+
+## Continuation Session: Tracks D & E (Night)
+
+### Track D: Dynamic Widget Mounting (COMPLETE)
+
+Fixed `action_toggle_replay()` to dynamically mount/unmount the `ReplayControlsWidget`:
+
+```python
+async def action_toggle_replay(self) -> None:
+    if self.replay_mode:
+        # Dynamically mount replay controls widget
+        if self._replay_controls is None:
+            self._replay_controls = ReplayControlsWidget(id="replay-controls")
+            await self.mount(self._replay_controls, before=self._status_bar)
+        self._replay_controls.set_provider(self._replay_provider)
+    else:
+        if self._replay_controls:
+            await self._replay_controls.remove()
+            self._replay_controls = None
+```
+
+**Key insight**: Use `before=` parameter for visual ordering.
+
+### Track E: Hour Jump Key Propagation (COMPLETE)
+
+Added hour jumping at DashboardScreen level via `on_key()`:
+
+```python
+def on_key(self, event: Key) -> None:
+    if self.replay_mode and self._replay_provider:
+        hour_map = {"0": 0, "1": 3, "2": 6, "3": 9, "4": 12, "5": 15, "6": 18, "7": 21}
+        if event.key in hour_map:
+            self._replay_provider.seek_to_hour(hour_map[event.key])
+            event.prevent_default()
+            return
+```
+
+Added actions for bracket keys:
+- `[` - `action_seek_hour_back` - Decrement hour
+- `]` - `action_seek_hour_forward` - Increment hour
+
+### Complete Keybinding Summary (Replay Mode)
+
+| Key | Action |
+|-----|--------|
+| `p` | Toggle replay mode |
+| `space` | Play/Pause |
+| `s` | Cycle speed (0.25x → 4x) |
+| `0-7` | Jump to hour (0=00:00, 7=21:00) |
+| `[` | Seek hour back |
+| `]` | Seek hour forward |
+
+### Remaining Tracks
+- **Track A**: Triad Reality Wiring (production DB health checks)
+- **Track C**: Pheromone Visualization (stigmergic trails)

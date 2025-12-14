@@ -221,3 +221,4 @@ impl/claude/.evolve_logs/
 # macOS
 .DS_Store
 plans/_epilogues/
+plans/_archive/

@@ -1,69 +1,139 @@
-# Forest Health: 2025-12-13 (Night Reconciliation)
+# Forest Health: 2025-12-14
 
 > *"A single mighty oak casts too much shadow. We cultivate a forest where many trees grow."*
 
-**Agent Protocol**: This file is auto-generated from plan YAML headers. Agents may regenerate it but should not add prose. For human intent, read `_focus.md`. For detailed component-level status, read `_status.md`.
+This file provides a canopy view of all active plans. Read this at session start.
 
 ---
 
 ## Active Trees
 
-| Plan | Progress | Status | Notes |
-|------|----------|--------|-------|
-| agents/k-gent | 97% | active | 589 tests. Session/cache added. Deferred: Fractal, Holographic. |
-| self/memory | 40% | active | Four Pillars + Substrate AGENTESE wired. Real substrate wiring next. |
-| self/memory-phase5-substrate | 0% | proposed | Shared substrate architecture. N-Phase Cycle: Full 11-phase. |
-| architecture/turn-gents | 100% | complete | Chronos-Kairos Protocol. 187 tests. All 7 phases complete. |
-| devex/hotdata-infrastructure | 100% | complete | HotData core + CLI + 11 fixtures + Dashboard consolidation done. |
-| interfaces/dashboard-consolidation | 100% | complete | The dashboard IS the demo. Standalone script removed. |
-| interfaces/dashboard-textual-refactor | 0% | proposed | EventBus, Base Screen, Mixins (zenportal patterns). Fix key eating. |
-
----
-
-## Dormant Trees
-
-| Plan | Progress | Last Touched | Notes |
-|------|----------|--------------|-------|
-| agents/t-gent | 90% | 2025-12-12 | Types I-IV complete, Type V (AdversarialGym) remaining. |
-| void/entropy | 95% | 2025-12-13 | 87 tests. FeverOverlay done. Only trigger wiring remaining. |
-
----
-
-## Archived-Partial Trees
-
-| Plan | Progress | Notes |
-|------|----------|-------|
-| self/cli-refactor | 75% | Reflector+FD3 done. ProposalQueue remaining. |
+| Plan | Progress | Last Touched | Status | Notes |
+|------|----------|--------------|--------|-------|
+| agents/k-gent | 97% | 2025-12-12 | active | PHASE 1 COMPLETE (88 tests): LLM-backed dialogue,  |
+| self/memory | 75% | 2025-12-13 | active | Phase 1 (Ghost Cache): COMPLETE - 22 tests |
+| meta/forest-agentese | 35% | 2025-12-13 | active | Added forest handle appendix + single-hop schema ( |
+| meta/liturgy-morphism-nasi | 5% | 2025-12-13 | active | Standing up N-NASI ("The Liturgical Morphism"): AG |
+| n-phase-accursed-share-completion | 5% | 2025-12-13 | active |  |
+| devex/hotdata-infrastructure | 0% | 2025-12-13 | active | Initial creation. Implements AD-004 (Pre-Computed  |
+| hardening-2025-12-12 | 0% | 2025-12-12 | active | Focused hardening sprint prioritizing tight devex  |
+| ideas/impl/categorical-critique | 0% | 2025-12-13 | active | Category-theoretic critique of all plans/ideas wor |
+| ideas/impl/cross-synergy | 0% | 2025-12-13 | active | Cross-synergy analysis across all 15 sessions. |
+| ideas/impl/crown-jewels | 0% | 2025-12-13 | active | All 45+ Crown Jewels (Perfect 10.0 priority ideas) |
+| ideas/impl/developer-education | 0% | 2025-12-13 | active | Developer education guide for the kgents implement |
+| ideas/impl/execution-prompt | 0% | 2025-12-13 | active | Enhanced execution prompt for parallel agent imple |
+| ideas/impl/master-plan | 0% | 2025-12-13 | active | Master orchestration for implementing ALL ideas fr |
+| ideas/impl/medium-complexity | 0% | 2025-12-13 | active | All 85+ Medium Complexity projects from creative e |
+| ideas/impl/meta-construction | 0% | 2025-12-13 | active | Meta-Construction System for Emergent Agent Compos |
+| ideas/impl/metrics-reflection | 0% | 2025-12-13 | active | Metrics measurement and reflection framework. |
+| ideas/impl/qa-strategy | 0% | 2025-12-13 | active | QA and Testing Strategy for all implementation wor |
+| ideas/impl/quick-wins | 0% | 2025-12-13 | active | All 70+ Quick Wins from creative exploration sessi |
+| plans/architecture | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/architecture/alethic-algebra-tactics | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/architecture/live-infrastructure | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/architecture/statefulness-analysis | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/creative-exploration-continuation | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/creative-exploration-strategy | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/dashboard-textual-refactor | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/deployment/_research/kgent-chatbot-research-notes | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/devex/memory-dashboard | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/meta | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/agent-observability | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/agentese-path | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/building-agent | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/cli-command | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/flux-agent | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/handler-patterns | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/hotdata-pattern | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/n-phase-cycle/auto-continuation | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/n-phase-cycle/branching-protocol | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/n-phase-cycle/cross-synergize | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/n-phase-cycle/detach-attach | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/n-phase-cycle/develop | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/n-phase-cycle/educate | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/n-phase-cycle/implement | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/n-phase-cycle/lookback-revision | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/n-phase-cycle/measure | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/n-phase-cycle/meta-re-metabolize | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/n-phase-cycle/meta-skill-operad | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/n-phase-cycle/metatheory | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/n-phase-cycle/phase-accountability | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/n-phase-cycle/plan | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/n-phase-cycle/process-metrics | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/n-phase-cycle/qa | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/n-phase-cycle/re-metabolize-slash-command | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/n-phase-cycle/reflect | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/n-phase-cycle/research | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/n-phase-cycle/strategize | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/n-phase-cycle/test | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/plan-file | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/polynomial-agent | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/reconciliation-session | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/test-optimization | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/test-patterns | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/skills/three-phase | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/soul-interface | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/triad-deep-integration | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
 
 ---
 
 ## Blocked Trees
 
-*(none)*
+| Plan | Progress | Blocked By | Since | Notes |
+|------|----------|------------|-------|-------|
+| (none) | - | - | - | - |
 
 ---
 
-## Recently Archived (2025-12-13 DevEx Audit)
+## Dormant Trees (Awaiting Accursed Share)
 
-| Plan | Archive Path | Tests | Notes |
-|------|--------------|-------|-------|
-| DevEx Dashboard | `_archive/dashboard-v1.0-complete.md` | 74 | `kg dashboard` — 4-panel TUI |
-| DevEx Trace Integration | `_archive/trace-integration-v1.0-complete.md` | 101+ | TraceDataProvider, 8 integrations |
-| DevEx Watch Mode | `_archive/watch-mode-v1.0-complete.md` | 28 | `kg soul watch` — 5 heuristics |
-| DevEx Gallery | `_archive/gallery-v1.0-complete.md` | — | MkDocs site, 6 examples |
-| DevEx Telemetry | `_archive/telemetry-v1.0-complete.md` | 50 | O-gent Dim X: OTEL spans, metrics |
-| Polyfunctor | `_archive/polyfunctor-v1.0-complete.md` | 201 | All 4 phases, 4 agent polynomials |
-| DevEx Playground | `_archive/playground-v1.0-complete.md` | 32 | `kg play` — Interactive tutorials |
-| DevEx Scaffolding | `_archive/scaffolding-v1.0-complete.md` | — | `kg new` — Agent generator |
-| DevEx Trace | `_archive/trace-v1.0-complete.md` | 252 | StaticCallGraph, RuntimeTrace |
-| Alethic Architecture | `_archive/alethic-v1.0-complete.md` | 337 | Functor, Halo, Archetypes |
-| Categorical Consolidation | `_archive/categorical-consolidation-v1.0-complete.md` | — | Symmetric lifting |
-| Agent Semaphores | `_archive/semaphores-v1.0-complete.md` | 182 | Rodizio pattern |
-| Terrarium | `_archive/terrarium-v1.0-complete.md` | 176+ | Mirror Protocol, K8s |
-| Self Stream | `_archive/stream-v1.0-complete.md` | 302 | ContextWindow, ModalScope |
-| Concept Lattice | `_archive/lattice-v1.0-complete.md` | 69 | Lineage enforcement |
-| Concept Creativity | `_archive/creativity-v2.5-complete.md` | 146+ | PAYADOR, Pataphysics |
-| Cluster Native Runtime | `_archive/cluster-native-runtime-v1.0-complete.md` | 145 | K8sProjector |
+| Plan | Progress | Last Touched | Days Since | Suggested Action |
+|------|----------|--------------|------------|------------------|
+| agents/t-gent | 90% | 2025-12-12 | 1 | Continue work |
+| plans/ideas/idea-audit-summary | 0% | 2025-12-13 | 0 | Read spec, draft approach |
+| plans/ideas/kentspicks | 0% | 2025-12-13 | 0 | Read spec, draft approach |
+| plans/ideas/session-01-bootstrap-playground | 0% | 2025-12-13 | 0 | Read spec, draft approach |
+| plans/ideas/session-02-archetypes-in-action | 0% | 2025-12-13 | 0 | Read spec, draft approach |
+| plans/ideas/session-03-kgent-soul | 0% | 2025-12-13 | 0 | Read spec, draft approach |
+| plans/ideas/session-04-hgents-thinking | 0% | 2025-12-13 | 0 | Read spec, draft approach |
+| plans/ideas/session-05-mgents-memory | 0% | 2025-12-13 | 0 | Read spec, draft approach |
+| plans/ideas/session-06-agents-creation | 0% | 2025-12-13 | 0 | Read spec, draft approach |
+| plans/ideas/session-07-bgents-evolution | 0% | 2025-12-13 | 0 | Read spec, draft approach |
+| plans/ideas/session-08-omega-infrastructure | 0% | 2025-12-13 | 0 | Read spec, draft approach |
+| plans/ideas/session-09-dgents-state | 0% | 2025-12-13 | 0 | Read spec, draft approach |
+| plans/ideas/session-10-tgents-testing | 0% | 2025-12-13 | 0 | Read spec, draft approach |
+| plans/ideas/session-11-igent-visualization | 0% | 2025-12-13 | 0 | Read spec, draft approach |
+| plans/ideas/session-12-tools-parsing-jit | 0% | 2025-12-13 | 0 | Read spec, draft approach |
+| plans/ideas/session-13-o-gents-observation | 0% | 2025-12-13 | 0 | Read spec, draft approach |
+| plans/ideas/session-14-cross-pollination | 0% | 2025-12-13 | 0 | Read spec, draft approach |
+| plans/ideas/session-15-sixty-second-tour | 0% | 2025-12-13 | 0 | Read spec, draft approach |
+| plans/ideas/strategic-recommendations-2025-12-13 | 0% | 2025-12-13 | 0 | Read spec, draft approach |
+
+---
+
+## Complete Trees (Recently Archived)
+
+| Plan | Archived | Location |
+|------|----------|----------|
+| void/entropy | 2025-12-14 | `_archive/entropy-v1.0-complete.md` |
+| interfaces/visualization-strategy | 2025-12-14 | `_archive/visualization-strategy-v1.0-complete.md` |
+| interfaces/alethic-workbench | 2025-12-14 | `_archive/alethic-workbench-v1.0-complete.md` |
+| interfaces/implementation-roadmap | 2025-12-14 | `_archive/implementation-roadmap-v1.0-complete.md` |
+| interfaces/primitives | 2025-12-14 | `_archive/primitives-v1.0-complete.md` |
+| architecture/turn-gents | 2025-12-14 | `_archive/turn-gents-v1.0-complete.md` |
+
+---
+
+## Session Attention Budget (Suggested)
+
+Per `plans/principles.md` §3:
+
+```
+Primary Focus (60%):    [your choice from Active Trees]
+Secondary (25%):        [another Active Tree]
+Maintenance (10%):      [check in on Blocked/Dormant]
+Accursed Share (5%):    agents/t-gent (rotation)
+```
 
 ---
 
@@ -71,65 +141,95 @@
 
 | Metric | Value |
 |--------|-------|
-| Active trees | 3 |
-| Complete | 4 |
-| Proposed | 2 |
-| Dormant | 2 |
-| Archived-partial | 1 |
-| Blocked | 0 |
-| Newly archived | 19 |
-| Tests | 13,210 |
-| Mypy (prod) | 0 errors |
-| Last verified | 2025-12-13 night (Chief reconciliation) |
-
----
-
-## Session Attention Budget
-
-Aligned with `_focus.md` (2025-12-13):
-
-| Category | Allocation | Trees |
-|----------|------------|-------|
-| Visual UIs/Refined Interactions | 50% | turn-gents, k-gent |
-| Self/Memory | 30% | memory |
-| Accursed Share | 20% | exploration, entropy |
+| Total trees | 95 |
+| Active | 62 (65%) |
+| Dormant | 19 (20%) |
+| Blocked | 0 (0%) |
+| Archived | 6 (new today) |
+| Average progress | 10% |
+| Longest untouched | agents/t-gent (2 days) |
+| Accursed share next | agents/t-gent |
 
 ---
 
 ## Dependency Graph
 
 ```
-self/stream (ARCHIVED) ──enables──▶ self/memory (30% ACTIVE)
-concept/lattice (ARCHIVED) ──enables──▶ concept/creativity (ARCHIVED)
-void/entropy (85% DORMANT) ── Flux integration + CLI tithe
-agents/semaphores (ARCHIVED) ──enables──▶ void/entropy
-agents/terrarium (ARCHIVED) ──uses──▶ agents/semaphores
-agents/k-gent (97% ACTIVE) ──uses──▶ agents/semaphores
-infra/cluster-native-runtime (ARCHIVED) ──enables──▶ agents/k-gent
-architecture/alethic (ARCHIVED) ──enables──▶ agents/k-gent
-architecture/polyfunctor (ARCHIVED) ──enables──▶ architecture/turn-gents (100% COMPLETE)
-
-devex/trace (ARCHIVED) ──enables──▶ devex/trace-integration (ARCHIVED)
-devex/trace (ARCHIVED) ──enables──▶ devex/telemetry (ARCHIVED)
-devex/trace-integration (ARCHIVED) ──enhances──▶ devex/dashboard (ARCHIVED)
-devex/telemetry (ARCHIVED) ──realizes──▶ spec/o-gents Dimension X
-devex/playground (ARCHIVED) ──enables──▶ devex/gallery (ARCHIVED)
-devex/dashboard (ARCHIVED) ──uses──▶ agents/k-gent (collectors)
-devex/watch-mode (ARCHIVED) ──uses──▶ agents/k-gent (heuristics)
-
-devex/hotdata-infrastructure (COMPLETE) ──enables──▶ interfaces/dashboard-consolidation (COMPLETE)
-interfaces/dashboard-consolidation (COMPLETE) ──consumes──▶ devex/dashboard (ARCHIVED)
-interfaces/dashboard-textual-refactor (PROPOSED) ──refines──▶ interfaces/dashboard-consolidation (COMPLETE)
-interfaces/dashboard-textual-refactor (PROPOSED) ──ports-from──▶ zenportal (EventBus, Base Screen, Mixins)
-
-## Turn-gents Synergies (NEW)
-
-architecture/turn-gents (100% COMPLETE) ──integrates──▶
-├── self/memory (Phase 7: CausalConeAgent, TraceMemory)
-├── interfaces/dashboard-overhaul (Debugger Screen LOD 2, TurnDAGRenderer)
-├── agents/k-gent (Soul intercept via TurnBasedCapability)
-└── polynomial-agent (State transitions emit Turns)
+n-phase-accursed-share-completion (5%) ──enables──▶ re-metabolize-health
+meta/liturgy-morphism-nasi (5%) ──enables──▶ spec/protocols/agentese.md
+meta/liturgy-morphism-nasi (5%) ──enables──▶ plans/_forest.md
+meta/liturgy-morphism-nasi (5%) ──enables──▶ plans/skills/agentese-path.md
+meta/forest-agentese (35%) ──enables──▶ plans/_forest.md
+meta/forest-agentese (35%) ──enables──▶ plans/_status.md
+agents/liturgist (0%) ──enables──▶ agentese/liturgy
+agents/liturgist (0%) ──enables──▶ protocols/liturgy
+agents/forest-keeper (0%) ──enables──▶ agentese/forest
+agents/forest-keeper (0%) ──enables──▶ plans/_forest
+agents/integration-weaver (0%) ──enables──▶ agentese/*
+agents/integration-weaver (0%) ──enables──▶ all-tracks
+agents/polynomial-wrangler (0%) ──enables──▶ agentese/directions
+agents/polynomial-wrangler (0%) ──enables──▶ poly/agent
+agents/law-enforcer (0%) ──enables──▶ agentese/laws
+agents/law-enforcer (0%) ──enables──▶ agentese/logos
+agents/observability-engineer (0%) ──enables──▶ agentese/spans
+agents/observability-engineer (0%) ──enables──▶ n-phase-cycle/metrics
+agents/entropy-steward (0%) ──enables──▶ agentese/void
+agents/entropy-steward (0%) ──enables──▶ agentese/guards
+agents/k-gent (97%) ──enables──▶ void/entropy
+agents/k-gent (97%) ──enables──▶ self/stream
+agents/syntax-architect (0%) ──enables──▶ agentese/parser
+agents/syntax-architect (0%) ──enables──▶ agentese/exceptions
+architecture/turn-gents (100%) ──enables──▶ architecture/polyfunctor
+architecture/turn-gents (100%) ──enables──▶ devex/trace-integration
+self/memory (75%) ──enables──▶ agents/k-gent
+self/memory (75%) ──enables──▶ interfaces/interaction-flows
+self/memory-phase5-substrate (0%) ──enables──▶ agents/k-gent
+self/memory-phase5-substrate (0%) ──enables──▶ self/memory
+void/entropy (100%) ──enables──▶ self/stream
+deployment/permanent-kgent-chatbot (0%) ──enables──▶ interfaces/swarm-execution
+deployment/permanent-kgent-chatbot (0%) ──enables──▶ devex/showcase
+interfaces/dashboard-overhaul (0%) ──enables──▶ interfaces/interaction-flows
+interfaces/dashboard-overhaul (0%) ──enables──▶ interfaces/swarm-execution
+interfaces/visualization-strategy (100%) ──enables──▶ interfaces/dashboard-overhaul
+interfaces/visualization-strategy (100%) ──enables──▶ interfaces/interaction-flows
+interfaces/alethic-workbench (112%) ──enables──▶ interfaces/agent-cards
+interfaces/alethic-workbench (112%) ──enables──▶ interfaces/cognitive-loom
+interfaces/alethic-workbench (112%) ──enables──▶ interfaces/entropy-scanner
+interfaces/primitives (100%) ──enables──▶ interfaces/alethic-workbench
+ideas/impl/categorical-critique (0%) ──enables──▶ ideas/impl/meta-construction
+ideas/impl/quick-wins (0%) ──enables──▶ ideas/impl/crown-jewels
+ideas/impl/crown-jewels (0%) ──enables──▶ ideas/impl/cross-synergy
+ideas/impl/master-plan (0%) ──enables──▶ ideas/impl/quick-wins
+ideas/impl/master-plan (0%) ──enables──▶ ideas/impl/crown-jewels
+ideas/impl/master-plan (0%) ──enables──▶ ideas/impl/medium-complexity
 ```
+
+---
+
+## Quick Reference
+
+```bash
+# Read session principles
+cat plans/principles.md
+
+# Read specific plan
+cat plans/<path>.md
+
+# Check detailed status
+cat plans/_status.md
+
+# Read last epilogue
+ls -la plans/_epilogues/
+
+# After session: write epilogue
+# plans/_epilogues/YYYY-MM-DD-<session>.md
+```
+
+---
+
+## Last Session Epilogue
+
+*Latest: `2025-12-13-weekly-summary-website.md`*
 
 ---
 

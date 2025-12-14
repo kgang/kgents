@@ -1,3 +1,31 @@
+---
+path: plans/skills/n-phase-cycle/auto-continuation
+status: active
+progress: 0
+last_touched: 2025-12-13
+touched_by: gpt-5-codex
+blocking: []
+enables: []
+session_notes: |
+  Header added for forest compliance (STRATEGIZE).
+phase_ledger:
+  PLAN: touched
+  RESEARCH: touched
+  DEVELOP: skipped  # reason: doc-only
+  STRATEGIZE: touched
+  CROSS-SYNERGIZE: skipped  # reason: doc-only
+  IMPLEMENT: skipped  # reason: doc-only
+  QA: skipped  # reason: doc-only
+  TEST: skipped  # reason: doc-only
+  EDUCATE: skipped  # reason: doc-only
+  MEASURE: deferred  # reason: metrics backlog
+  REFLECT: touched
+entropy:
+  planned: 0.05
+  spent: 0.0
+  returned: 0.05
+---
+
 # Meta Skill: Auto-Continuation (Principled Self-Generation)
 
 > *"The form is the function. Every prompt generates its successor by the same principles that generated itself."*
@@ -39,6 +67,9 @@ next_prompt = align(
     phase=next_phase,
     entropy=remaining_budget,
     handles=created_artifacts,
+    ledger=phase_ledger,
+    branches=branch_candidates,
+    metrics=process_metrics_snapshot,
 )
 ```
 
@@ -130,9 +161,12 @@ Every phase skill should append this section:
 
 ### Context Handoff
 - Artifacts created: ${artifacts}
+- Ledger: ${phase_ledger}
 - Entropy spent/remaining: ${entropy_spent} / ${entropy_remaining}
 - Decisions made: ${key_decisions}
 - Blockers for next phase: ${blockers}
+- Branch notes: ${branch_notes}
+- Metrics snapshot: ${metrics_snapshot}
 
 ### Generated Prompt for [NEXT_PHASE]
 
@@ -146,11 +180,7 @@ Every phase skill should append this section:
 
 You are entering [NEXT_PHASE] of the N-Phase Cycle (AD-005).
 
-Previous phase created these handles:
-${artifacts_list}
-
-Key context:
-${context_summary}
+handles: artifacts=${artifacts_list}; ledger=${phase_ledger}; entropy=${entropy_spent}/${entropy_remaining}; decisions=${key_decisions}; blockers=${blockers}; branches=${branch_notes}; metrics=${metrics_snapshot}
 
 ## Your Mission
 
@@ -164,7 +194,7 @@ This phase emphasizes:
 
 ## Exit Criteria
 
-[From NEXT_PHASE skill's Verification section]
+[From NEXT_PHASE skill's Verification section] + ledger + branch decision updated
 
 ## Continuation Imperative
 
@@ -176,6 +206,8 @@ Upon completing this phase, generate the prompt for [PHASE_AFTER_NEXT] using the
 ---
 
 ## Implementation Strategy (Bottom-Up)
+
+**Micro-prompt default**: Continuations should fit the 5-line quick-card shape used in each phase (`/hydrate → phase | handles/ledger/entropy | mission | actions | exit+next`). This keeps prompts wieldable while remaining principled.
 
 ### Step 1: Instrument REFLECT
 

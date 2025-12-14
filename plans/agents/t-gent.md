@@ -2,8 +2,8 @@
 path: agents/t-gent
 status: dormant
 progress: 90
-last_touched: 2025-12-12
-touched_by: claude-opus-4.5
+last_touched: 2025-12-13
+touched_by: gpt-5-codex
 blocking: []
 enables: []
 session_notes: |
@@ -18,6 +18,7 @@ session_notes: |
 **Status**: Types I-IV Implemented, Type V Planned
 **Categorical Role**: `T: Cat_Agent → Cat_Agent` (endofunctor)
 **Principles**: Composable, Tasteful
+AGENTESE pointer: route any T-gent handles/guards through `spec/protocols/agentese.md` when exposing testing paths; keep clause/law alignment in sync.
 
 ---
 

@@ -43,6 +43,18 @@ from .concept_blend import (
     create_blend_node,
     forge_blend,
 )
+from .forest import (
+    FOREST_ROLE_AFFORDANCES,
+    EpilogueEntry,
+    ForestContextResolver,
+    ForestLawCheck,
+    ForestManifest,
+    ForestNode,
+    ParsedTree,
+    create_forest_node,
+    create_forest_resolver,
+    parse_forest_md,
+)
 from .self_ import (
     SELF_AFFORDANCES,
     CapabilitiesNode,
@@ -226,6 +238,17 @@ __all__ = [
     "AgentListNode",
     "create_agent_resolver",
     "create_agent_node",
+    # Forest context (concept.forest.*)
+    "FOREST_ROLE_AFFORDANCES",
+    "EpilogueEntry",
+    "ForestContextResolver",
+    "ForestLawCheck",
+    "ForestManifest",
+    "ForestNode",
+    "ParsedTree",
+    "create_forest_node",
+    "create_forest_resolver",
+    "parse_forest_md",
     # Unified factory
     "create_context_resolvers",
 ]

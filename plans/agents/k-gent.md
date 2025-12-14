@@ -2,8 +2,8 @@
 path: agents/k-gent
 status: active
 progress: 97
-last_touched: 2025-12-12
-touched_by: claude-opus-4.5
+last_touched: 2025-12-13
+touched_by: gpt-5-codex
 blocking: []
 enables: [void/entropy, self/stream]
 session_notes: |
@@ -24,6 +24,7 @@ session_notes: |
 **AGENTESE Context**: `self.soul.*`, `void.hypnagogia.*`
 **Status**: Active (20% - base scaffold exists, governance wiring needed)
 **Principles**: Ethical (human agency), Joy-Inducing (Mirror Test), Composable (Flux stream), Heterarchical (dual mode)
+AGENTESE pointer: canonical soul/hypnagogia handles + law/entropy clauses live in `spec/protocols/agentese.md`; refresh this role when the spec shifts.
 
 ---
 

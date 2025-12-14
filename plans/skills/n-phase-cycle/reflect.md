@@ -1,3 +1,31 @@
+---
+path: plans/skills/n-phase-cycle/reflect
+status: active
+progress: 0
+last_touched: 2025-12-13
+touched_by: gpt-5-codex
+blocking: []
+enables: []
+session_notes: |
+  Header added for forest compliance (STRATEGIZE).
+phase_ledger:
+  PLAN: touched
+  RESEARCH: touched
+  DEVELOP: skipped  # reason: doc-only
+  STRATEGIZE: touched
+  CROSS-SYNERGIZE: skipped  # reason: doc-only
+  IMPLEMENT: skipped  # reason: doc-only
+  QA: skipped  # reason: doc-only
+  TEST: skipped  # reason: doc-only
+  EDUCATE: skipped  # reason: doc-only
+  MEASURE: deferred  # reason: metrics backlog
+  REFLECT: touched
+entropy:
+  planned: 0.05
+  spent: 0.0
+  returned: 0.05
+---
+
 # Skill: REFLECT (N-Phase Cycle)
 
 > Synthesize outcomes, extract learnings, and prepare the next loop.
@@ -5,6 +33,17 @@
 **Difficulty**: Easy  
 **Prerequisites**: `measure.md`, epilogues, bounty board signals  
 **Files Touched**: plans/_epilogues/, plans/meta.md (only if distilled), plans/_bounty.md
+
+---
+
+## Quick Wield
+- **Snap prompt**:
+```markdown
+/hydrate → REFLECT | outcomes + learnings | ledger.REFLECT=touched | entropy.sip(0.05–0.10) | next=PLAN/meta-re-metabolize/DETACH
+```
+- **Minimal artifacts**: epilogue, one-line zettels (Molasses Test), bounty updates, continuation decision, ledger update, branch list.
+- **Signals**: log tokens/time/entropy + branch count + continuation type for `process-metrics.md`.
+- **Branch check**: capture new seeds for future cycles; emit handles before exit.
 
 ---
 
@@ -22,8 +61,22 @@ REFLECT closes the current cycle by distilling what mattered—successes, failur
 ---
 
 ## Recursive Hologram
-- Mini-cycle the reflection: PLAN (questions), RESEARCH (signals), DEVELOP (insight framing), STRATEGIZE (what to re-metabolize).  
+- Mini-cycle the reflection: PLAN (questions), RESEARCH (signals), DEVELOP (insight framing), STRATEGIZE (what to re-metabolize).
 - Use `meta-skill-operad.md` to make learnings composable morphisms; schedule `meta-re-metabolize.md` if drift detected.
+
+---
+
+## Accursed Share (Entropy Budget)
+
+REFLECT reserves 5-10% for exploration:
+
+- **Counterfactual thinking**: What if we'd taken the other path? Document the road not taken.
+- **Meta-pattern recognition**: Is this the third time we've hit this issue? It might be systemic.
+- **Gratitude practice**: What worked that we didn't expect? Acknowledge the gifts.
+- **Skill gap identification**: What would have made this easier? That's a future skill to develop.
+
+Draw: `void.entropy.sip(amount=0.10)`
+Return unused: `void.entropy.pour`
 
 ---
 
@@ -71,6 +124,8 @@ Accumulated handles from prior cycle:
 - ${artifacts_created}
 
 Entropy restored via tithe: ${entropy_restored}
+Phase ledger to reconcile: ${phase_ledger}
+Process metrics snapshot: ${metrics_snapshot}
 
 ## Your Mission
 
@@ -108,6 +163,8 @@ Drift signals:
 
 Learnings to integrate:
 - ${learnings_for_skills}
+Phase ledger to reconcile: ${phase_ledger}
+Process metrics snapshot: ${metrics_snapshot}
 
 ## Your Mission
 
@@ -153,6 +210,8 @@ Entropy remaining: ${entropy}
 
 Suggested next tracks:
 - ${suggested_tracks}
+Phase ledger to reconcile: ${phase_ledger}
+Process metrics snapshot: ${metrics_snapshot}
 
 ## For Future Observer
 
@@ -207,5 +266,6 @@ This is the double-loop from lookback-revision.md made operational.
 ---
 
 ## Changelog
+- 2025-12-13: Added Accursed Share section (re-metabolize).
 - 2025-12-13: Added Continuation Generator section with three options.
 - 2025-12-13: Initial version.

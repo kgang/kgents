@@ -650,13 +650,36 @@ class DashboardScreen(Screen[None]):
         Binding("p", "toggle_replay", "Replay Mode"),
         Binding("space", "play_pause", "Play/Pause", show=False),
         Binding("s", "cycle_speed", "Speed", show=False),
+        # Replay hour jumping (only active in replay mode)
+        Binding("0", "jump_hour_0", "00:00", show=False),
+        Binding("bracketleft", "seek_hour_back", "Hour-", show=False),
+        Binding("bracketright", "seek_hour_forward", "Hour+", show=False),
     ]
 
     demo_mode: reactive[bool] = reactive(False)
     replay_mode: reactive[bool] = reactive(False)
 
     def on_key(self, event: Key) -> None:
-        """Handle key presses for panel focus."""
+        """Handle key presses for panel focus and replay hour jumping."""
+        # In replay mode, 0-7 keys jump to hours
+        if self.replay_mode and self._replay_provider:
+            hour_map = {
+                "0": 0,  # midnight
+                "1": 3,  # 03:00
+                "2": 6,  # 06:00
+                "3": 9,  # 09:00
+                "4": 12,  # 12:00
+                "5": 15,  # 15:00
+                "6": 18,  # 18:00
+                "7": 21,  # 21:00
+            }
+            if event.key in hour_map:
+                self._replay_provider.seek_to_hour(hour_map[event.key])
+                self.notify(f"Jump to {hour_map[event.key]:02d}:00")
+                event.prevent_default()
+                return
+
+        # Normal mode: 1-4 focus panels
         if event.key == "1":
             if self._kgent_panel:
                 self._kgent_panel.focus()
@@ -875,13 +898,32 @@ class DashboardScreen(Screen[None]):
                 on_metrics_update=self._on_metrics_update,
             )
             await self._observable.stop()  # Stop regular collection
+
+            # Dynamically mount replay controls widget
+            if self._replay_controls is None:
+                self._replay_controls = ReplayControlsWidget(id="replay-controls")
+                # Mount before the status bar
+                if self._status_bar:
+                    await self.mount(self._replay_controls, before=self._status_bar)
+                else:
+                    await self.mount(self._replay_controls)
+
+            # Wire replay controls to provider
+            self._replay_controls.set_provider(self._replay_provider)
+
             await self._replay_provider.start_replay(speed=2.0)
-            self.notify("Replay: ON (space=play/pause, s=speed)")
+            self.notify("Replay: ON (space=play/pause, s=speed, 0-7=hour)")
         else:
             # Stop replay mode
             if self._replay_provider:
                 await self._replay_provider.stop()
                 self._replay_provider = None
+
+            # Dynamically unmount replay controls widget
+            if self._replay_controls:
+                await self._replay_controls.remove()
+                self._replay_controls = None
+
             # Restart regular collection
             await self._observable.start_collecting(
                 interval=self.refresh_interval,
@@ -905,6 +947,28 @@ class DashboardScreen(Screen[None]):
         if self._replay_provider:
             new_speed = self._replay_provider.cycle_speed()
             self.notify(f"Speed: {new_speed}x")
+
+    def action_jump_hour_0(self) -> None:
+        """Jump to midnight (00:00) in replay mode."""
+        if self._replay_provider:
+            self._replay_provider.seek_to_hour(0)
+            self.notify("Jump to 00:00")
+
+    def action_seek_hour_back(self) -> None:
+        """Seek one hour back in replay mode."""
+        if self._replay_provider:
+            current = self._replay_provider.state.current_hour
+            new_hour = max(0, current - 1)
+            self._replay_provider.seek_to_hour(new_hour)
+            self.notify(f"Seek to {new_hour:02d}:00")
+
+    def action_seek_hour_forward(self) -> None:
+        """Seek one hour forward in replay mode."""
+        if self._replay_provider:
+            current = self._replay_provider.state.current_hour
+            new_hour = min(23, current + 1)
+            self._replay_provider.seek_to_hour(new_hour)
+            self.notify(f"Seek to {new_hour:02d}:00")
 
 
 # =============================================================================

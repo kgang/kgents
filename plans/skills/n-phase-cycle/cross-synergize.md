@@ -1,3 +1,31 @@
+---
+path: plans/skills/n-phase-cycle/cross-synergize
+status: active
+progress: 0
+last_touched: 2025-12-13
+touched_by: gpt-5-codex
+blocking: []
+enables: []
+session_notes: |
+  Header added for forest compliance (STRATEGIZE).
+phase_ledger:
+  PLAN: touched
+  RESEARCH: touched
+  DEVELOP: skipped  # reason: doc-only
+  STRATEGIZE: touched
+  CROSS-SYNERGIZE: touched
+  IMPLEMENT: skipped  # reason: doc-only
+  QA: skipped  # reason: doc-only
+  TEST: skipped  # reason: doc-only
+  EDUCATE: skipped  # reason: doc-only
+  MEASURE: deferred  # reason: metrics backlog
+  REFLECT: touched
+entropy:
+  planned: 0.05
+  spent: 0.01
+  returned: 0.04
+---
+
 # Skill: CROSS-SYNERGIZE (N-Phase Cycle)
 
 > Discover compositions and entanglements that unlock nonlinear value.
@@ -5,6 +33,17 @@
 **Difficulty**: Medium  
 **Prerequisites**: `strategize.md`, composability laws (spec/principles.md §5)  
 **Files Touched**: design notes, prototype pipelines, agent registries
+
+---
+
+## Quick Wield
+- **Snap prompt**:
+```markdown
+/hydrate → CROSS-SYNERGIZE | comps to probe | fixtures ready | ledger.CROSS-SYNERGIZE=touched | entropy.sip(0.05–0.10) | next=IMPLEMENT
+```
+- **Minimal artifacts**: candidate compositions + probes, law checks, chosen + rejected paths, ledger update, branch handles if new tracks appear.
+- **Signals**: log tokens/time/entropy + law-check counts + branch count for `process-metrics.md`.
+- **Branch check**: emit handles for new primitives or missing components discovered.
 
 ---
 
@@ -21,9 +60,30 @@ CROSS-SYNERGIZE tests combinations across agents, functors, and puppets to find 
 
 ---
 
+## Interfaces (Headers ↔ Continuations ↔ Metrics)
+- **Ledger/entropy contract**: Every continuation generator in SENSE/ACT must emit `phase_ledger` + `entropy` snippet per `phase-accountability.md` so `_forest.md` and metrics spans stay in sync.
+- **Span-ready attrs**: When wiring OTEL later (Track C), emit `{phase, phase_group, tokens_in, tokens_out, duration_ms, entropy_spent, entropy_remaining, law_checks_run, law_checks_failed, observer_role, branch_count, ledger}` matching `process-metrics.md` + `metrics/fixtures/process-metrics.jsonl`.
+- **Drop point**: Until emitters exist, stage offline outputs in `metrics/fixtures/process-metrics.jsonl` and include branch/owner notes from continuation prompts to keep Track C hotloadable.
+
+---
+
 ## Recursive Hologram
-- Apply PLAN→RESEARCH→DEVELOP on the set of compositions: Which deserve deeper development? Which are void/entropy exploration?  
+- Apply PLAN→RESEARCH→DEVELOP on the set of compositions: Which deserve deeper development? Which are void/entropy exploration?
 - Use `meta-skill-operad.md` to register new operations; ensure they remain valid under future mutations (operad closure).
+
+---
+
+## Accursed Share (Entropy Budget)
+
+CROSS-SYNERGIZE reserves 5-10% for exploration:
+
+- **Dormant tree awakening**: Skim `plans/_forest.md` for forgotten plans that might compose.
+- **Functor hunting**: What existing functors could lift this work? Check `FunctorRegistry`.
+- **Unexpected compositions**: Try composing with something that "shouldn't" work. Sometimes it does.
+- **Bounty board scan**: Read `plans/_bounty.md`—your work might resolve an open gripe.
+
+Draw: `void.entropy.sip(amount=0.10)`
+Return unused: `void.entropy.pour`
 
 ---
 
@@ -57,5 +117,31 @@ Next: `implement.md` with selected compositions and constraints.
 
 ---
 
+## Continuation Generator
+
+Emit this when exiting CROSS-SYNERGIZE:
+
+```markdown
+/hydrate
+# IMPLEMENT ← CROSS-SYNERGIZE
+handles: compositions=${chosen_compositions}; interfaces=${implementation_interfaces}; rejected=${rejected_paths}; laws=${law_verifications}; rationale=${composition_rationale}; constraints=${constraints}; ledger=${phase_ledger}; branches=${branch_notes}
+mission: write code + tests honoring laws/ethics; keep Minimal Output; start tests in background.
+actions: TodoWrite chunks; run pytest watch; code/test slices; log tokens/time/entropy/law-checks.
+exit: code + tests ready; ledger.IMPLEMENT=touched; QA notes captured; continuation → QA.
+```
+
+Template vars: `${chosen_compositions}`, `${implementation_interfaces}`, `${rejected_paths}`, `${law_verifications}`, `${composition_rationale}`, `${constraints}`, `${phase_ledger}`, `${branch_notes}`.
+
+## Related Skills
+- `auto-continuation.md` — The meta-skill defining this generator pattern
+- `meta-skill-operad.md`
+- `meta-re-metabolize.md`
+- `../flux-agent.md`
+- `../polynomial-agent.md`
+
+---
+
 ## Changelog
+- 2025-12-13: Added Accursed Share section (re-metabolize).
+- 2025-12-13: Added Continuation Generator section (auto-continuation).
 - 2025-12-13: Initial version.

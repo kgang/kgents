@@ -1,3 +1,31 @@
+---
+path: plans/skills/n-phase-cycle/detach-attach
+status: active
+progress: 0
+last_touched: 2025-12-13
+touched_by: gpt-5-codex
+blocking: []
+enables: []
+session_notes: |
+  Header added for forest compliance (STRATEGIZE).
+phase_ledger:
+  PLAN: touched
+  RESEARCH: touched
+  DEVELOP: skipped  # reason: doc-only
+  STRATEGIZE: touched
+  CROSS-SYNERGIZE: skipped  # reason: doc-only
+  IMPLEMENT: skipped  # reason: doc-only
+  QA: skipped  # reason: doc-only
+  TEST: skipped  # reason: doc-only
+  EDUCATE: skipped  # reason: doc-only
+  MEASURE: deferred  # reason: metrics backlog
+  REFLECT: touched
+entropy:
+  planned: 0.05
+  spent: 0.0
+  returned: 0.05
+---
+
 # DETACH / ATTACH: The Morphism of Continuity
 
 > *"There is no view from nowhere. To observe is to disturb. To leave is to create a handle. To arrive is to grasp it."*
@@ -283,6 +311,55 @@ ATTACH     → Reality as becoming
 | `self.continuity.ground` | Return to principles (identity morphism) |
 | `concept.principles.manifest` | The fixed point |
 | `void.gratitude.tithe` | Pay for the order received |
+
+---
+
+---
+
+## Recursive Hologram
+
+DETACH/ATTACH applies to itself:
+
+- **PLAN this skill**: Define what continuity means (handle ontology)
+- **RESEARCH**: Survey existing handle patterns across the codebase
+- **DEVELOP**: Design the morphism signatures and templates
+- **STRATEGIZE**: Order of DETACH vs ATTACH; which comes first?
+- **IMPLEMENT**: Write the AGENTESE paths (`self.continuity.*`)
+- **TEST**: Verify handle composition (Handle₁ >> Handle₂ = valid?)
+- **REFLECT**: Does the system create handles correctly? Are observers using them?
+
+The skill for creating handles should itself be creatable as a handle.
+
+### Self-Application
+
+When you DETACH from working on DETACH/ATTACH:
+1. Create an epilogue noting the handle refinements
+2. The continuation prompt references `/hydrate` → principles → this skill
+3. Future observers can ATTACH to your refinements
+
+When you ATTACH to refine DETACH/ATTACH:
+1. Ground in principles first
+2. Grasp the previous observer's handle
+3. Collapse into the refinement role
+4. Your movement IS the skill expressing itself
+
+---
+
+## Related
+
+- `auto-continuation.md` — Generates continuations from phase execution
+- `meta-skill-operad.md` — Lawful mutation of this skill
+- `meta-re-metabolize.md` — Periodic refresh of all skills including this one
+- `lookback-revision.md` — Double-loop refinement of handle patterns
+- `process-metrics.md` — Track handle creation/attachment metrics
+- `reflect.md` — Terminal phase that may trigger DETACH
+
+---
+
+## Changelog
+
+- 2025-12-13: Added Recursive Hologram and Related sections.
+- 2025-12-13: Initial version.
 
 ---
 

@@ -6,20 +6,32 @@ These tests verify the substrate integration added in Phase 5:
 - self.memory.compact - Compact agent's allocation
 - self.memory.route - Route tasks via pheromone gradients
 - self.memory.substrate_stats - Get substrate statistics
+
+Property-based tests verify invariants (Phase 6 QA):
+- ∀ allocation: usage_ratio ∈ [0.0, 1.0]
+- ∀ allocation: pattern_count ≤ quota.max_patterns
+- ∀ compaction: patterns_after ≤ patterns_before
+- ∀ compaction: resolution_after ≤ resolution_before
 """
 
 from __future__ import annotations
 
-from datetime import timedelta
-from typing import Any, cast
+from datetime import datetime, timedelta
+from typing import TYPE_CHECKING, Any, cast
 
 import pytest
+from hypothesis import given, settings
+from hypothesis import strategies as st
 from protocols.agentese.contexts.self_ import (
     MemoryNode,
     SelfContextResolver,
     create_self_resolver,
 )
 from protocols.agentese.node import BasicRendering
+
+if TYPE_CHECKING:
+    from agents.m.compaction import Compactor
+    from agents.m.substrate import SharedSubstrate
 
 # Note: mock_umwelt fixture returns Any for type compatibility
 # Use Any type annotation for mock_umwelt parameters
@@ -510,3 +522,586 @@ class TestSelfContextResolverSubstrate:
         assert stats_result["allocation_count"] == 1
         assert stats_result["compactor"]["total_compactions"] == 1
         assert stats_result["router"]["route_count"] == 1
+
+
+# === Integration Tests with Real Components ===
+
+
+class TestRealSubstrateIntegration:
+    """
+    Tests using real SharedSubstrate, Compactor instances (not mocks).
+
+    These tests verify the wiring works end-to-end with actual implementations.
+    """
+
+    @pytest.fixture
+    def real_substrate(self) -> "SharedSubstrate[Any]":
+        """Create a real SharedSubstrate instance."""
+        from agents.m.substrate import SharedSubstrate
+
+        return SharedSubstrate()
+
+    @pytest.fixture
+    def real_compactor(self) -> "Compactor[Any]":
+        """Create a real Compactor instance."""
+        from agents.m.compaction import Compactor
+
+        return Compactor()
+
+    @pytest.fixture
+    def real_memory_node(
+        self,
+        real_substrate: "SharedSubstrate[Any]",
+        real_compactor: "Compactor[Any]",
+    ) -> MemoryNode:
+        """Create a MemoryNode with real substrate integration."""
+        return MemoryNode(
+            _substrate=real_substrate,
+            _compactor=real_compactor,
+        )
+
+    async def test_real_allocate_creates_allocation(
+        self,
+        real_memory_node: MemoryNode,
+        mock_umwelt: Any,
+    ) -> None:
+        """Real allocation creates an entry in the real substrate."""
+        result = await real_memory_node._invoke_aspect(
+            "allocate",
+            mock_umwelt,
+            human_label="real test memory",
+            max_patterns=500,
+            ttl_hours=12,
+        )
+
+        assert result["status"] == "allocated"
+        assert result["agent_id"] == "test_agent"
+        assert result["max_patterns"] == 500
+        assert result["namespace"] == "test_agent"
+
+        # Verify allocation is stored
+        assert real_memory_node._allocation is not None
+
+    async def test_real_substrate_stats_returns_metrics(
+        self,
+        real_memory_node: MemoryNode,
+        mock_umwelt: Any,
+    ) -> None:
+        """Real substrate stats returns actual substrate metrics."""
+        # First allocate
+        await real_memory_node._invoke_aspect(
+            "allocate", mock_umwelt, human_label="stats test"
+        )
+
+        result = await real_memory_node._invoke_aspect("substrate_stats", mock_umwelt)
+
+        assert result["allocation_count"] == 1
+        assert result["dedicated_count"] == 0
+        assert "current_allocation" in result
+        assert result["current_allocation"]["agent_id"] == "test_agent"
+        assert result["current_allocation"]["usage_ratio"] == 0.0
+
+    async def test_real_compact_below_threshold_not_needed(
+        self,
+        real_memory_node: MemoryNode,
+        mock_umwelt: Any,
+    ) -> None:
+        """Real compaction below threshold returns not_needed."""
+        # First allocate
+        await real_memory_node._invoke_aspect(
+            "allocate", mock_umwelt, human_label="compact test"
+        )
+
+        # Compact without force (allocation is empty, below threshold)
+        result = await real_memory_node._invoke_aspect(
+            "compact", mock_umwelt, force=False
+        )
+
+        assert result["status"] == "not_needed"
+        assert result["usage_ratio"] == 0.0
+
+    async def test_real_compact_force_executes(
+        self,
+        real_memory_node: MemoryNode,
+        mock_umwelt: Any,
+    ) -> None:
+        """Real force compaction executes even below threshold."""
+        # First allocate
+        await real_memory_node._invoke_aspect(
+            "allocate", mock_umwelt, human_label="force compact test"
+        )
+
+        # Force compact
+        result = await real_memory_node._invoke_aspect(
+            "compact", mock_umwelt, force=True
+        )
+
+        assert result["status"] == "compacted"
+        assert "ratio" in result
+        assert "duration_ms" in result
+
+    async def test_real_full_workflow(
+        self,
+        real_substrate: "SharedSubstrate[Any]",
+        real_compactor: "Compactor[Any]",
+        mock_umwelt: Any,
+    ) -> None:
+        """
+        Full integration test: allocate → store → compact → stats.
+
+        This tests the complete substrate workflow with real components.
+        """
+        # Create resolver with real components
+        resolver = create_self_resolver(
+            substrate=real_substrate,
+            compactor=real_compactor,
+        )
+
+        memory_node = resolver.resolve("memory", [])
+
+        # Step 1: Allocate
+        alloc_result = await memory_node._invoke_aspect(
+            "allocate", mock_umwelt, human_label="full workflow test"
+        )
+        assert alloc_result["status"] == "allocated"
+
+        # Step 2: Verify stats
+        stats_result = await memory_node._invoke_aspect("substrate_stats", mock_umwelt)
+        assert stats_result["allocation_count"] == 1
+
+        # Step 3: Compact (forced since allocation is empty)
+        compact_result = await memory_node._invoke_aspect(
+            "compact", mock_umwelt, force=True
+        )
+        assert compact_result["status"] == "compacted"
+
+        # Step 4: Verify compaction recorded
+        stats_after = await memory_node._invoke_aspect("substrate_stats", mock_umwelt)
+        assert stats_after["compactor"]["total_compactions"] == 1
+
+
+class TestCreateContextResolversSubstrate:
+    """Test create_context_resolvers passes substrate to self resolver."""
+
+    def test_substrate_passed_to_self_resolver(
+        self, mock_substrate: MockSubstrate
+    ) -> None:
+        """create_context_resolvers passes substrate to self resolver."""
+        from protocols.agentese.contexts import create_context_resolvers
+
+        resolvers = create_context_resolvers(substrate=mock_substrate)
+
+        self_resolver = resolvers["self"]
+        assert self_resolver._substrate is mock_substrate
+
+    def test_compactor_passed_to_self_resolver(
+        self, mock_compactor: MockCompactor
+    ) -> None:
+        """create_context_resolvers passes compactor to self resolver."""
+        from protocols.agentese.contexts import create_context_resolvers
+
+        resolvers = create_context_resolvers(compactor=mock_compactor)
+
+        self_resolver = resolvers["self"]
+        assert self_resolver._compactor is mock_compactor
+
+    def test_router_passed_to_self_resolver(self, mock_router: MockRouter) -> None:
+        """create_context_resolvers passes router to self resolver."""
+        from protocols.agentese.contexts import create_context_resolvers
+
+        resolvers = create_context_resolvers(router=mock_router)
+
+        self_resolver = resolvers["self"]
+        assert self_resolver._router is mock_router
+
+    def test_all_substrate_components_passed(
+        self,
+        mock_substrate: MockSubstrate,
+        mock_compactor: MockCompactor,
+        mock_router: MockRouter,
+    ) -> None:
+        """create_context_resolvers passes all substrate components."""
+        from protocols.agentese.contexts import create_context_resolvers
+
+        resolvers = create_context_resolvers(
+            substrate=mock_substrate,
+            compactor=mock_compactor,
+            router=mock_router,
+        )
+
+        self_resolver = resolvers["self"]
+        memory_node = self_resolver.resolve("memory", [])
+
+        assert memory_node._substrate is mock_substrate
+        assert memory_node._compactor is mock_compactor
+        assert memory_node._router is mock_router
+
+
+# === Property-Based Tests (Hypothesis) ===
+
+
+class TestAllocationInvariants:
+    """
+    Property-based tests for allocation lifecycle invariants.
+
+    These tests verify mathematical properties that must hold
+    for all valid inputs, using Hypothesis for fuzzing.
+    """
+
+    @given(
+        pattern_count=st.integers(min_value=0, max_value=5000),
+        max_patterns=st.integers(min_value=1, max_value=5000),
+    )
+    @settings(max_examples=100)
+    def test_usage_ratio_bounded_when_enforced(
+        self, pattern_count: int, max_patterns: int
+    ) -> None:
+        """
+        usage_ratio in [0.0, 1.0] when pattern_count clamped to max_patterns.
+
+        Note: The usage_ratio() method just divides pattern_count by max_patterns.
+        The store() method enforces the constraint that pattern_count <= max_patterns.
+        """
+        from agents.m.substrate import (
+            AgentId,
+            Allocation,
+            LifecyclePolicy,
+            MemoryQuota,
+        )
+
+        # Only test valid states (enforced by store())
+        clamped_pattern_count = min(pattern_count, max_patterns)
+
+        allocation: Allocation[str] = Allocation(
+            agent_id=AgentId("test"),
+            namespace="test",
+            quota=MemoryQuota(max_patterns=max_patterns),
+            lifecycle=LifecyclePolicy(human_label="property test"),
+        )
+        allocation.pattern_count = clamped_pattern_count
+
+        ratio = allocation.usage_ratio()
+
+        assert 0.0 <= ratio <= 1.0, f"usage_ratio={ratio} out of bounds"
+
+    @given(
+        max_patterns=st.integers(min_value=1, max_value=1000),
+        store_attempts=st.integers(min_value=0, max_value=2000),
+    )
+    @settings(max_examples=50)
+    @pytest.mark.asyncio
+    async def test_pattern_count_respects_quota(
+        self, max_patterns: int, store_attempts: int
+    ) -> None:
+        """
+        pattern_count <= quota.max_patterns.
+
+        The store() method must reject stores when at quota.
+        """
+        from agents.m.substrate import (
+            AgentId,
+            Allocation,
+            LifecyclePolicy,
+            MemoryQuota,
+        )
+
+        allocation: Allocation[str] = Allocation(
+            agent_id=AgentId("test"),
+            namespace="test",
+            quota=MemoryQuota(max_patterns=max_patterns),
+            lifecycle=LifecyclePolicy(human_label="property test"),
+        )
+
+        # Attempt to store more than quota
+        for i in range(store_attempts):
+            await allocation.store(f"concept_{i}", f"content_{i}", [0.1] * 10)
+
+        assert allocation.pattern_count <= max_patterns, (
+            f"pattern_count={allocation.pattern_count} "
+            f"exceeds max_patterns={max_patterns}"
+        )
+
+    @given(
+        soft_limit_ratio=st.floats(min_value=0.01, max_value=0.99),
+        max_patterns=st.integers(min_value=10, max_value=1000),
+    )
+    @settings(max_examples=50)
+    def test_soft_limit_less_than_max(
+        self, soft_limit_ratio: float, max_patterns: int
+    ) -> None:
+        """Soft limit should always be less than max."""
+        from agents.m.substrate import MemoryQuota
+
+        quota = MemoryQuota(
+            max_patterns=max_patterns, soft_limit_ratio=soft_limit_ratio
+        )
+
+        assert quota.soft_limit_patterns() < quota.max_patterns
+
+
+class TestCompactionInvariants:
+    """
+    Property-based tests for compaction invariants.
+
+    These verify the holographic property: all patterns preserved,
+    only resolution is reduced.
+    """
+
+    @given(ratio=st.floats(min_value=0.1, max_value=1.0))
+    @settings(max_examples=50)
+    def test_compression_preserves_patterns(self, ratio: float) -> None:
+        """
+        patterns_after == patterns_before (holographic).
+
+        Compaction should never lose patterns, only reduce resolution.
+        """
+        from agents.m.crystal import MemoryCrystal
+
+        crystal: MemoryCrystal[str] = MemoryCrystal(dimension=32)
+
+        # Add some patterns
+        for i in range(10):
+            crystal.store(f"concept_{i}", f"content_{i}", [float(i) / 10] * 32)
+
+        patterns_before = len(crystal.concepts)
+
+        compressed = crystal.compress(ratio)
+
+        patterns_after = len(compressed.concepts)
+
+        assert patterns_after == patterns_before, (
+            f"Patterns lost: before={patterns_before}, after={patterns_after}"
+        )
+
+    @given(ratio=st.floats(min_value=0.1, max_value=0.99))
+    @settings(max_examples=50)
+    def test_compression_reduces_resolution(self, ratio: float) -> None:
+        """
+        resolution_after <= resolution_before.
+
+        Compression ratio < 1.0 should reduce resolution.
+        """
+        from agents.m.crystal import MemoryCrystal
+
+        crystal: MemoryCrystal[str] = MemoryCrystal(dimension=32)
+
+        # Add patterns with resolution
+        for i in range(5):
+            crystal.store(f"concept_{i}", f"content_{i}", [float(i) / 10] * 32)
+
+        resolution_before = crystal.stats().get("avg_resolution", 1.0)
+
+        compressed = crystal.compress(ratio)
+
+        resolution_after = compressed.stats().get("avg_resolution", 1.0)
+
+        # Resolution should decrease (or stay same if already at minimum)
+        assert resolution_after <= resolution_before + 0.001, (  # small epsilon
+            f"Resolution increased: before={resolution_before}, after={resolution_after}"
+        )
+
+
+class TestPressureThresholds:
+    """
+    Tests for compaction pressure threshold behavior.
+
+    Verifies correct triggering at different pressure levels:
+    - Below 0.8: not_needed
+    - 0.8-0.95: normal_ratio (0.8)
+    - Above 0.95: aggressive_ratio (0.5)
+    - Rate limiting: max 4 compactions per hour
+    """
+
+    @given(pressure=st.floats(min_value=0.0, max_value=0.79))
+    @settings(max_examples=50)
+    def test_below_threshold_not_needed(self, pressure: float) -> None:
+        """Below 80% pressure: no compaction needed."""
+        from agents.m.compaction import CompactionPolicy
+
+        policy = CompactionPolicy(
+            pressure_threshold=0.8,
+            critical_threshold=0.95,
+        )
+
+        should, ratio, reason = policy.should_compact(
+            current_pressure=pressure,
+            last_compaction=None,
+            compactions_last_hour=0,
+        )
+
+        assert should is False
+        assert "Pressure OK" in reason
+
+    @given(pressure=st.floats(min_value=0.80, max_value=0.94))
+    @settings(max_examples=50)
+    def test_normal_threshold_uses_normal_ratio(self, pressure: float) -> None:
+        """80-95% pressure: use normal_ratio (0.8)."""
+        from agents.m.compaction import CompactionPolicy
+
+        policy = CompactionPolicy(
+            pressure_threshold=0.8,
+            critical_threshold=0.95,
+            normal_ratio=0.8,
+        )
+
+        should, ratio, reason = policy.should_compact(
+            current_pressure=pressure,
+            last_compaction=None,
+            compactions_last_hour=0,
+        )
+
+        assert should is True
+        assert ratio == 0.8
+        assert "High pressure" in reason
+
+    @given(pressure=st.floats(min_value=0.95, max_value=1.0))
+    @settings(max_examples=50)
+    def test_critical_threshold_uses_aggressive_ratio(self, pressure: float) -> None:
+        """Above 95% pressure: use aggressive_ratio (0.5)."""
+        from agents.m.compaction import CompactionPolicy
+
+        policy = CompactionPolicy(
+            pressure_threshold=0.8,
+            critical_threshold=0.95,
+            aggressive_ratio=0.5,
+        )
+
+        should, ratio, reason = policy.should_compact(
+            current_pressure=pressure,
+            last_compaction=None,
+            compactions_last_hour=0,
+        )
+
+        assert should is True
+        assert ratio == 0.5
+        assert "Critical" in reason
+
+    @given(compactions=st.integers(min_value=4, max_value=100))
+    @settings(max_examples=50)
+    def test_rate_limiting_enforced(self, compactions: int) -> None:
+        """Max 4 compactions per hour enforced."""
+        from agents.m.compaction import CompactionPolicy
+
+        policy = CompactionPolicy(max_compactions_per_hour=4)
+
+        should, ratio, reason = policy.should_compact(
+            current_pressure=0.9,  # Would normally trigger
+            last_compaction=None,
+            compactions_last_hour=compactions,
+        )
+
+        assert should is False
+        assert "Rate limit" in reason
+
+    def test_rate_limit_allows_below_max(self) -> None:
+        """Rate limiting allows compaction when below max."""
+        from agents.m.compaction import CompactionPolicy
+
+        policy = CompactionPolicy(max_compactions_per_hour=4)
+
+        should, ratio, reason = policy.should_compact(
+            current_pressure=0.9,
+            last_compaction=None,
+            compactions_last_hour=3,  # Below max
+        )
+
+        assert should is True
+
+    def test_critical_overrides_interval(self) -> None:
+        """Critical pressure overrides minimum interval."""
+        from agents.m.compaction import CompactionPolicy
+
+        policy = CompactionPolicy(
+            min_interval=timedelta(minutes=30),
+            critical_threshold=0.95,
+        )
+
+        # Compacted 5 minutes ago (below min_interval)
+        should, ratio, reason = policy.should_compact(
+            current_pressure=0.98,  # Critical
+            last_compaction=datetime.now() - timedelta(minutes=5),
+            compactions_last_hour=0,
+        )
+
+        assert should is True
+        assert "Critical pressure override" in reason
+
+
+class TestEdgeCases:
+    """
+    Edge case tests drawn from entropy budget exploration.
+
+    These test boundary conditions and graceful degradation.
+    """
+
+    def test_zero_patterns_usage_ratio(self) -> None:
+        """Zero patterns should have 0.0 usage_ratio."""
+        from agents.m.substrate import (
+            AgentId,
+            Allocation,
+            LifecyclePolicy,
+            MemoryQuota,
+        )
+
+        allocation: Allocation[str] = Allocation(
+            agent_id=AgentId("test"),
+            namespace="test",
+            quota=MemoryQuota(max_patterns=1000),
+            lifecycle=LifecyclePolicy(human_label="edge case test"),
+        )
+        allocation.pattern_count = 0
+
+        assert allocation.usage_ratio() == 0.0
+
+    def test_max_patterns_usage_ratio(self) -> None:
+        """Max patterns should have 1.0 usage_ratio."""
+        from agents.m.substrate import (
+            AgentId,
+            Allocation,
+            LifecyclePolicy,
+            MemoryQuota,
+        )
+
+        allocation: Allocation[str] = Allocation(
+            agent_id=AgentId("test"),
+            namespace="test",
+            quota=MemoryQuota(max_patterns=100),
+            lifecycle=LifecyclePolicy(human_label="edge case test"),
+        )
+        allocation.pattern_count = 100
+
+        assert allocation.usage_ratio() == 1.0
+
+    def test_empty_crystal_compression(self) -> None:
+        """Empty crystal compression should be safe."""
+        from agents.m.crystal import MemoryCrystal
+
+        crystal: MemoryCrystal[str] = MemoryCrystal(dimension=32)
+
+        compressed = crystal.compress(0.5)
+
+        assert len(compressed.concepts) == 0
+
+    @pytest.mark.asyncio
+    async def test_allocation_at_exactly_soft_limit(self) -> None:
+        """Allocation at exactly soft limit should report is_at_soft_limit True."""
+        from agents.m.substrate import (
+            AgentId,
+            Allocation,
+            LifecyclePolicy,
+            MemoryQuota,
+        )
+
+        allocation: Allocation[str] = Allocation(
+            agent_id=AgentId("test"),
+            namespace="test",
+            quota=MemoryQuota(max_patterns=100, soft_limit_ratio=0.8),
+            lifecycle=LifecyclePolicy(human_label="edge case test"),
+        )
+
+        # Store exactly to soft limit
+        for i in range(80):
+            await allocation.store(f"concept_{i}", f"content_{i}", [0.1] * 10)
+
+        assert allocation.pattern_count == 80
+        assert allocation.is_at_soft_limit() is True

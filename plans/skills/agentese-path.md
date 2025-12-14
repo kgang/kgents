@@ -1,3 +1,31 @@
+---
+path: plans/skills/agentese-path
+status: active
+progress: 45
+last_touched: 2025-12-13
+touched_by: gpt-5-codex
+blocking: []
+enables: []
+session_notes: |
+  Added forest handle appendix with Minimal Output contracts, clause micro-prompts, and role/law gates.
+phase_ledger:
+  PLAN: touched
+  RESEARCH: touched
+  DEVELOP: touched  # reason: forest handle contract drafted
+  STRATEGIZE: touched  # reason: rollout sequencing noted
+  CROSS-SYNERGIZE: touched  # reason: n-phase/forest bridge
+  IMPLEMENT: skipped  # reason: doc-only
+  QA: touched  # reason: law/entropy guardrails documented
+  TEST: skipped  # reason: doc-only
+  EDUCATE: touched  # reason: usage notes added
+  MEASURE: deferred  # reason: metrics backlog
+  REFLECT: touched
+entropy:
+  planned: 0.05
+  spent: 0.03
+  returned: 0.02
+---
+
 # Skill: Adding an AGENTESE Path
 
 > Add a new path to the AGENTESE system (e.g., `self.soul.*` or `world.calendar.*`).
@@ -23,6 +51,11 @@ AGENTESE paths follow the structure `<context>.<holon>.<aspect>`. There are exac
 Adding a new path involves:
 1. **Adding to an existing context** (most common) - Add a new holon to a context
 2. **Adding a new aspect** to an existing holon - Extend an existing node
+
+---
+
+## N-cycle Quickrun (doc-only)
+- PLAN→REFLECT: `concept.agentese.manifest[phase=PLAN][minimal_output=true]` scope; `concept.agentese.refine[phase=DEVELOP][rollback=true][law_check=true]` draft handles; `void.entropy.sip[entropy=0.07]` budget; `time.agentese.witness[phase=REFLECT]` log; ops apply when code gates open.
 
 ---
 
@@ -368,6 +401,56 @@ Add test cases for the new aspect.
 
 ---
 
+## Forest Handle Appendix (AGENTESE x Plans) - Doc Only
+
+Forest handles are functor views over planning artifacts. Preserve Minimal Output (one renderable/dict) and category laws (identity/associativity). Use streams over arrays when multiple items are needed.
+
+| Handle | Inputs | Output (Minimal Output) | Roles (guest/meta/ops) | Notes |
+|--------|--------|-------------------------|------------------------|-------|
+| `concept.forest.manifest[phase=PLAN][minimal_output=true]` | observer role, optional `{path?, status?, span?}` | Renderable dict `{canopy, ledger_state, affordances}` | guest: manifest, meta: manifest+affordances, ops: add lint flag | Single canopy view; stream sequential manifests if many plans. |
+| `time.forest.witness[phase=REFLECT][law_check=true]` | `{range?, filter?}` | Iterator over epilogue events (one per call) | guest: read, meta: filter, ops: annotate spans | Law check = epilogue order + identity (idempotent replay). |
+| `concept.forest.refine[phase=DEVELOP][rollback=true][law_check=true]` | mutation patch `{add|prune|fuse}` | Sympathetic dict `{status, applied_patch?, rollback_token?}` | meta: propose, ops: apply/rollback, guest: read-only | Associativity enforced on patch composition; rollback token required for ops. |
+| `void.forest.sip[phase=RESEARCH][entropy=0.07]` | `{seed?, selector?}` | `{selection, entropy_spent}` | guest/meta: suggest dormant, ops: approve | Accursed Share draw; returns single selection not list. |
+| `self.forest.define[phase=IMPLEMENT][minimal_output=true]` | `{path, scaffold}` | `{status, draft_header}` | meta: scaffold, ops: promote, guest: request only | Yoneda hint: handle is view; scaffold emitted, not persisted. |
+
+### Category/Law Notes
+- Identity: `concept.forest.refine` with noop patch is neutral; `manifest >> Id = manifest`.  
+- Associativity: mutation pipelines respect `(a >> b) >> c == a >> (b >> c)`; reject reorderings that break ledger consistency.  
+- Minimal Output: never return raw arrays; emit iterator/stream or single renderable.  
+- Yoneda: handles are observer-indexed views; changing observer role changes affordance surface without changing the handle string.
+
+### Clause Micro-Prompts (phase ledger ready)
+- `void.entropy.sip[phase=PLAN][entropy=0.07]@span=forest_plan` -> record `entropy.spent += 0.07`.  
+- `concept.forest.manifest[phase=RESEARCH][minimal_output=true]@span=forest_trace` -> map headers/ledgers, log deviations; sample epilogue via `time.forest.witness`.  
+- `concept.forest.refine[phase=DEVELOP][rollback=true][law_check=true]@span=forest_dev` -> apply patch; rollback token required on failure.  
+- `time.forest.witness[phase=REFLECT]@span=forest_trace` -> stream last epilogue; log ledger delta.  
+- `void.entropy.pour[phase=REFLECT]@span=entropy_return` -> return unused Accursed Share.  
+
+### N-Phase Continuation (doc-only; forest)
+- **PLAN**: `concept.forest.manifest[phase=PLAN][minimal_output=true]@span=forest_plan` → declare scope, non-goals, roles (ops/meta/guest); draw `void.entropy.sip[entropy=0.07]`.  
+- **RESEARCH**: `concept.forest.manifest[phase=RESEARCH]` to map headers/ledgers and log deviations; sample epilogues via `time.forest.witness@span=forest_trace`.  
+- **DEVELOP**: `concept.forest.refine[phase=DEVELOP][rollback=true][law_check=true]@span=forest_dev` → draft handle/IO/law notes; enforce Minimal Output; persist rollback token.  
+- **STRATEGIZE**: Order rollout docs → skills → dry-run adapters; set observer gating matrix; budget entropy return.  
+- **CROSS-SYNERGIZE**: Align with `process-metrics.md`, `phase-accountability.md`, `meta-skill-operad.md`; declare Accursed Share rotation `void.forest.sip`.  
+- **IMPLEMENT**: Doc-only edits in `plans/skills/agentese-path.md` and forest/n-phase meta plan; no CLI/impl code.  
+- **QA/TEST**: Headers ≤100 lines; `phase_ledger` + `entropy` present; clauses carry `[phase]`, `[entropy]`, `[law_check]`, `[rollback]`, `[minimal_output]`; dry-run = single renderable per handle, witness ordering stable, refine emits rollback token.  
+- **EDUCATE**: Capture usage snippets + clause patterns in `plans/skills/n-phase-cycle/*` meta skills.  
+- **MEASURE**: Desired spans `{phase,tokens_in/out,duration_ms,entropy,law_checks}` recorded (deferred).  
+- **REFLECT**: Log learnings/risks; `void.entropy.pour` unused; tithe if overdrawn.  
+
+### Rollout (doc -> skill -> adapter -> code deferred)
+1. Docs (this file + meta plan) define contracts and roles.  
+2. N-phase skills embed clause-aware prompts for ledger capture.  
+3. Adapter spec (forest meta plan) maps handles to CLI once wiring allowed.  
+4. Code hooks (forest CLI, spans) are deferred; keep Minimal Output until live.
+
+### QA/Verification (doc scope)
+- Handles declare roles, law checks, and entropy band 0.05-0.10.  
+- Outputs are single renderables or iterators; no arrays.  
+- Clause examples include `[phase]`, `[entropy]`, `[law_check]`, `[rollback]`.
+
+---
+
 ## Verification
 
 ### Test 1: Resolve path
@@ -525,9 +608,11 @@ The semaphore path was added in this order:
 - [cli-command](cli-command.md) - Adding CLI commands
 - [handler-patterns](handler-patterns.md) - Common handler patterns
 - [test-patterns](test-patterns.md) - Testing patterns
+- [polynomial-agent](polynomial-agent.md) - Operads and law checks
 
 ---
 
 ## Changelog
 
 - 2025-12-12: Initial version based on `self.semaphore.*` and `world.purgatory.*` implementations
+- 2025-12-13: Added forest handle appendix, clause micro-prompts, and law/role gates (doc-only)

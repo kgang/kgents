@@ -1,3 +1,31 @@
+---
+path: plans/skills/n-phase-cycle/meta-re-metabolize
+status: active
+progress: 0
+last_touched: 2025-12-13
+touched_by: gpt-5-codex
+blocking: []
+enables: []
+session_notes: |
+  Header added for forest compliance (STRATEGIZE).
+phase_ledger:
+  PLAN: touched
+  RESEARCH: touched
+  DEVELOP: skipped  # reason: doc-only
+  STRATEGIZE: touched
+  CROSS-SYNERGIZE: skipped  # reason: doc-only
+  IMPLEMENT: skipped  # reason: doc-only
+  QA: skipped  # reason: doc-only
+  TEST: skipped  # reason: doc-only
+  EDUCATE: skipped  # reason: doc-only
+  MEASURE: deferred  # reason: metrics backlog
+  REFLECT: touched
+entropy:
+  planned: 0.05
+  spent: 0.0
+  returned: 0.05
+---
+
 # Meta Skill: Re-Metabolize the Lifecycle
 
 > Periodically re-ingest the N-phase cycle and its skills so the factory stays alive, not ossified.
@@ -27,6 +55,7 @@ Re-metabolization is an endofunctor on the skill category: it takes the current 
 ## Verification
 - All phase skills still contain `Recursive Hologram` sections and current exit criteria.
 - All phase skills contain `Continuation Generator` sections (auto-continuation).
+- Quick-card + ledger/entropy snippets stay consistent across phases (for `_forest` ingestion).
 - Redundant skills merged or archived; new needs captured.
 - Next PLAN entry point recorded; Accursed Share preserved.
 - Lookback deltas incorporated; slash command plan updated if needed.

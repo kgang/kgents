@@ -1,3 +1,31 @@
+---
+path: plans/skills/n-phase-cycle/meta-skill-operad
+status: active
+progress: 0
+last_touched: 2025-12-13
+touched_by: gpt-5-codex
+blocking: []
+enables: []
+session_notes: |
+  Header added for forest compliance (STRATEGIZE).
+phase_ledger:
+  PLAN: touched
+  RESEARCH: touched
+  DEVELOP: skipped  # reason: doc-only
+  STRATEGIZE: touched
+  CROSS-SYNERGIZE: skipped  # reason: doc-only
+  IMPLEMENT: skipped  # reason: doc-only
+  QA: skipped  # reason: doc-only
+  TEST: skipped  # reason: doc-only
+  EDUCATE: skipped  # reason: doc-only
+  MEASURE: deferred  # reason: metrics backlog
+  REFLECT: touched
+entropy:
+  planned: 0.05
+  spent: 0.0
+  returned: 0.05
+---
+
 # Meta Skill: Skill Operad (Category-Theoretic Mutation)
 
 > Treat skills as objects in a category and edits as morphisms; mutate lawfully so the library stays composable and durable.
@@ -35,10 +63,27 @@ The goal is **lawful mutation**: identity and associativity preserved across ses
 ---
 
 ## Mutation Patterns (Operad)
-- **AddSkill(skill)**: Introduce new object with template compliance and hologram.  
-- **RefineSection(skill, section)**: Associative; compose multiple refinements without conflict.  
-- **Prune(skill)**: Remove or archive when redundant; ensure incoming morphisms reroute or dissolve (no dangling references).  
+- **AddSkill(skill)**: Introduce new object with template compliance and hologram.
+- **RefineSection(skill, section)**: Associative; compose multiple refinements without conflict.
+- **Prune(skill)**: Remove or archive when redundant; ensure incoming morphisms reroute or dissolve (no dangling references).
 - **Fuse(skill_a, skill_b)**: When overlap >70%, merge into single object; update links; preserve Accursed Share notes.
+- **N-Phase mutation hook**: When touching AD-005 skills, always preserve quick-card shape, ledger/entropy fields, and Continuation Generators; compose refinements via `RefineSection` instead of ad-hoc edits.
+
+---
+
+## Recursive Hologram
+
+Apply PLAN→RESEARCH→DEVELOP to skill mutations:
+
+- **PLAN**: What skill object and morphism type? (add/refine/prune/fuse)
+- **RESEARCH**: What cross-links and dependencies exist? Which skills reference this one?
+- **DEVELOP**: Design the mutation preserving laws (identity/associativity)
+- **STRATEGIZE**: Order mutations to minimize churn
+- **IMPLEMENT**: Apply via operad grammar
+- **TEST**: Verify identity (no-op preserves meaning) and associativity (order-independent)
+- **REFLECT**: Did the mutation improve the system? Update this skill if patterns emerge.
+
+The meta-skill is itself an object in the category it describes. Mutations to this file must pass through the same operad it defines.
 
 ---
 
@@ -50,4 +95,5 @@ The goal is **lawful mutation**: identity and associativity preserved across ses
 ---
 
 ## Changelog
+- 2025-12-13: Added Recursive Hologram section (re-metabolize).
 - 2025-12-13: Initial version.

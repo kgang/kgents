@@ -1,3 +1,31 @@
+---
+path: plans/ideas/kentspicks
+status: dormant
+progress: 0
+last_touched: 2025-12-13
+touched_by: gpt-5-codex
+blocking: []
+enables: []
+session_notes: |
+  Header added for forest compliance (STRATEGIZE).
+phase_ledger:
+  PLAN: touched
+  RESEARCH: touched
+  DEVELOP: skipped  # reason: doc-only
+  STRATEGIZE: touched
+  CROSS-SYNERGIZE: skipped  # reason: doc-only
+  IMPLEMENT: skipped  # reason: doc-only
+  QA: skipped  # reason: doc-only
+  TEST: skipped  # reason: doc-only
+  EDUCATE: skipped  # reason: doc-only
+  MEASURE: deferred  # reason: metrics backlog
+  REFLECT: touched
+entropy:
+  planned: 0.05
+  spent: 0.0
+  returned: 0.05
+---
+
 **24. Dynamic Prompt Character (PERFECT 8.7)**
 **Priority: 8.7** | FUN: 5 | EFFORT: 1 | SHOWABLE: 5 | PRACTICAL: 3
 **Philosophy**: The agent decides how it appears. Visual representation adapts to internal state.

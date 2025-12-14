@@ -1,3 +1,31 @@
+---
+path: plans/skills/n-phase-cycle/educate
+status: active
+progress: 0
+last_touched: 2025-12-13
+touched_by: gpt-5-codex
+blocking: []
+enables: []
+session_notes: |
+  Header added for forest compliance (STRATEGIZE).
+phase_ledger:
+  PLAN: touched
+  RESEARCH: touched
+  DEVELOP: skipped  # reason: doc-only
+  STRATEGIZE: touched
+  CROSS-SYNERGIZE: touched
+  IMPLEMENT: touched
+  QA: touched
+  TEST: touched
+  EDUCATE: touched
+  MEASURE: touched
+  REFLECT: touched
+entropy:
+  planned: 0.05
+  spent: 0.035
+  returned: 0.015
+---
+
 # Skill: EDUCATE (N-Phase Cycle)
 
 > Teach humans and agents how to wield the shipped capability.
@@ -5,6 +33,17 @@
 **Difficulty**: Easy  
 **Prerequisites**: `test.md`, user journey knowledge, docs style guides  
 **Files Touched**: docs/, prompts/, plans/skills/, release notes
+
+---
+
+## Quick Wield
+- **Snap prompt**:
+```markdown
+/hydrate → EDUCATE | audiences + artifacts | ledger.EDUCATE=touched | entropy.sip(0.05–0.10) | next=MEASURE
+```
+- **Minimal artifacts**: audience map, docs/prompts/quickstarts with runnable examples or explicit skip debt, degraded-mode notes, ledger update, branch/bounty entries for missing infra.
+- **Signals**: log tokens/time/entropy + adoption hooks added for `process-metrics.md`.
+- **Branch check**: emit follow-up branches for observability gaps or missing demos.
 
 ---
 
@@ -22,8 +61,22 @@ EDUCATE converts validated behavior into accessible guidance (operator guides, p
 ---
 
 ## Recursive Hologram
-- PLAN→RESEARCH→DEVELOP the docs themselves: what minimum grammar communicates the capability?  
+- PLAN→RESEARCH→DEVELOP the docs themselves: what minimum grammar communicates the capability?
 - Use `meta-skill-operad.md` to keep documentation morphisms composable (snippets as reusable arrows).
+
+---
+
+## Accursed Share (Entropy Budget)
+
+EDUCATE reserves 5-10% for exploration:
+
+- **Alternative explanations**: Try explaining to three different personas. One framing will click.
+- **Demo discovery**: What's the smallest runnable example? Sometimes the demo IS the documentation.
+- **Failure documentation**: What happens when it breaks? Users need error paths too.
+- **Personality injection**: Where can joy live in this documentation? Find the human moment.
+
+Draw: `void.entropy.sip(amount=0.05)`
+Return unused: `void.entropy.pour`
 
 ---
 
@@ -46,5 +99,30 @@ Next: `measure.md` to track whether education changed outcomes.
 
 ---
 
+## Continuation Generator
+
+Emit this when exiting EDUCATE:
+
+```markdown
+/hydrate
+# MEASURE ← EDUCATE
+handles: docs=${docs_created}; quickstarts=${quickstarts}; scripts=${support_scripts}; audiences=${audiences_mapped}; summary=${education_summary}; degraded=${degraded_paths_docs}; ledger=${phase_ledger}; branches=${branch_notes}; metrics=${metrics_snapshot}
+mission: instrument adoption/latency/error signals; wire dashboards/fixtures; capture baselines.
+actions: define leading indicators via process-metrics schema; add telemetry/flags; create hotloadable dashboards; validate data quality; log tokens/time/entropy.
+exit: metrics live + baselines captured; ledger.MEASURE=touched; continuation → REFLECT.
+```
+
+Template vars: `${docs_created}`, `${quickstarts}`, `${support_scripts}`, `${audiences_mapped}`, `${education_summary}`, `${degraded_paths_docs}`, `${phase_ledger}`, `${branch_notes}`, `${metrics_snapshot}`.
+
+## Related Skills
+- `auto-continuation.md` — The meta-skill defining this generator pattern
+- `meta-skill-operad.md`
+- `meta-re-metabolize.md`
+- `../hotdata-pattern.md`
+
+---
+
 ## Changelog
+- 2025-12-13: Added Accursed Share section (re-metabolize).
+- 2025-12-13: Added Continuation Generator section (auto-continuation).
 - 2025-12-13: Initial version.

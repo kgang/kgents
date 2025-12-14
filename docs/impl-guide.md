@@ -174,6 +174,30 @@ holo_map = await cartographer.invoke(context_vector, Resolution.ADAPTIVE)
 
 **Files**: `agents/m/cartographer.py`, `agents/m/attractors.py`
 
+### Ghost ↔ Substrate Sync (Phase 8)
+
+Bidirectional Galois link between ghost cache and substrate allocations (Phase 8 drift fix).
+
+```python
+# Events emitted by impl/claude/agents/m/ghost_sync.py
+event_types = ["store_to_ghost", "ghost_access", "invalidate"]
+span_names = ["m.ghost_sync.store", "m.ghost_sync.access", "m.ghost_sync.invalidate"]
+payload = {
+    "agent_id": str(allocation.agent_id),
+    "concept_id": concept_id,
+    "ghost_key": ghost_key,
+    "namespace": allocation.namespace,
+    "ttl_ms": allocation.lifecycle.ttl.total_seconds() * 1000,
+    "success": success,
+    "reason": reason,
+    "law_check": True,  # floor ⊣ ceiling
+}
+```
+
+- **Law**: `floor(ceiling(a)) ≅ a` (metadata only; content stays in substrate).  
+- **Failure handling**: Ghost write failure does NOT roll back the substrate write. Emit span with `success=false`, record reason in `GhostSyncEvent`, and enqueue reconciliation. Missing allocation on ghost access marks `success=false` and emits `law_check` span with `result=fail`.  
+- **Metrics**: `ghost_sync.events_total{event_type}`, `ghost_sync.failures_total{event_type}`, `ghost_sync.drift_ms` (ghost touch → allocation access lag).
+
 ### Ψ-gent Metaphor Engine
 
 Six-stage reasoning pipeline:

@@ -96,6 +96,11 @@ Memory compression isn't loss—it's transformation of energy from specific to g
 
 ---
 
+## Phase Deltas
+- **Phase 8: Ghost ↔ Substrate Galois link** — See `phase8-ghost-substrate-galois-link.md` for floor ⊣ ceiling law, observability spans, and failure handling.
+
+---
+
 ## The Superspace Model
 
 Concepts and ideas exist in a high-dimensional superspace. Words and tokens are low-dimensional projections:

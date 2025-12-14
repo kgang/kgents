@@ -115,6 +115,11 @@ kgents signal               # Semantic field
 | [Operator's Guide](operators-guide.md) | Production scenarios |
 | [Categorical Foundations](categorical-foundations.md) | The math behind it |
 
+## Forest Protocol (Navigation)
+- **Canopy view**: `plans/_forest.md` — forest health and active trees. Invoke via `concept.forest.manifest` (read) or `concept.forest.refine` (update with law_check).  
+- **Weekly dashboard**: `docs/weekly-summary/index.html` — status snapshots. Surface via `time.forest.witness` (temporal view).  
+- **Accursed Share rotation**: `void.forest.sip[entropy=0.05–0.10]` — pick dormant trees to spend exploration budget.
+
 ---
 
 *"The difference between a good system and a great one is the last 5%."*

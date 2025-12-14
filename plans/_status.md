@@ -100,6 +100,14 @@ DashboardApp subscribes via EventBus and pushes FeverOverlay modal.
 
 ---
 
+## AGENTESE Docs Alignment — In Progress 🚧
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Spec + plans harmonization | 🚧 | Aligning N-cycle clauses and law/entropy guards across `spec/protocols/agentese.md` + plans (`meta→ops`, doc-only sweep). |
+
+---
+
 ## Memory (`self/memory.md`) — 75% [ACTIVE]
 
 | Component | Status | Notes |

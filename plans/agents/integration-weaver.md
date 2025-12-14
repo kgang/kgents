@@ -21,6 +21,8 @@ session_notes: |
 **Status**: Tentative (proposed for AGENTESE realization)
 **Principles**: Composable (weaving is composition), Heterarchical (no fixed hierarchy), Generative (coherence emerges)
 
+AGENTESE pointer: composition rules and clause guards anchor to `spec/protocols/agentese.md`; refresh this weave when canonical flow updates.
+
 ---
 
 ## Purpose

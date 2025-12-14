@@ -21,6 +21,8 @@ session_notes: |
 **Status**: Tentative (proposed for AGENTESE realization)
 **Principles**: Transparent Infrastructure (communicate what's happening), AGENTESE (observation is interaction), Generative (spans from phase transitions)
 
+AGENTESE pointer: align spans/clauses with `spec/protocols/agentese.md`; update this role when canonical flow changes.
+
 ---
 
 ## Purpose

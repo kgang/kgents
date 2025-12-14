@@ -161,7 +161,7 @@ class TerrariumWebSocketSource:
         Internal helper that handles a single connection session.
         """
         try:
-            import websockets  # type: ignore[import-not-found]
+            import websockets
         except ImportError as e:
             raise ImportError(
                 "websockets is required for TerrariumWebSocketSource. "
@@ -187,7 +187,12 @@ class TerrariumWebSocketSource:
                             yield metrics
 
                     except json.JSONDecodeError:
-                        logger.warning(f"Invalid JSON from {agent_id}: {message[:50]}")
+                        msg_preview = (
+                            message[:50]
+                            if isinstance(message, str)
+                            else str(message)[:50]
+                        )
+                        logger.warning(f"Invalid JSON from {agent_id}: {msg_preview}")
 
             finally:
                 self._connections.pop(agent_id, None)

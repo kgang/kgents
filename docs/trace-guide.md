@@ -50,6 +50,12 @@ The trace system has three layers:
 | **Runtime** | Actual execution trace | Slower | 100% accurate |
 | **Hybrid** | Both combined | Medium | Best of both |
 
+## Law Checks + Observability
+- **Span**: `agentese.law_check` emitted whenever `[law_check=true]` is present on a handle or when composition verification runs in the resolver.  
+- **Payload**: `{law, locus, observer, result, left_digest, right_digest, suggestion, duration_ms, phase}`. `locus` is the dot-path (e.g., `concept.forest.manifest >> concept.forest.refine`).  
+- **Failure propagation**: `result=fail` marks trace nodes in red, surfaces in dashboards, and is handed to Law Enforcer (`plans/agents/law-enforcer.md`) for remediation. CLI commands return non-zero exit when a law check span fails unless `[rollback=true]` was set.  
+- **Metrics**: `law_check.total{law}`, `law_check.failures{law}`, `law_check.latency_ms`. Observability Engineer binds these to OTEL exporters.
+
 ---
 
 ## CLI Usage

@@ -20,6 +20,8 @@ session_notes: |
 **Principles**: AD-004 (Pre-Computed Richness), Generative, Accursed Share
 **Cross-refs**: `spec/principles.md` §AD-004, `impl/claude/qa/`, `impl/claude/agents/i/data/`
 
+AGENTESE pointer: keep handles/law guards in sync with `spec/protocols/agentese.md`; update this plan when canonical flow shifts.
+
 ---
 
 ## Core Insight

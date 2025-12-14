@@ -21,6 +21,8 @@ session_notes: |
 **Status**: Tentative (proposed for AGENTESE realization)
 **Principles**: Generative (grammar generates instances), Composable (clause syntax composes), Tasteful (five contexts only)
 
+AGENTESE pointer: canonical clause/handle law spec lives in `spec/protocols/agentese.md`; refresh this role when grammar shifts.
+
 ---
 
 ## Purpose

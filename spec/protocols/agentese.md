@@ -8,6 +8,7 @@
 **Date:** 2025-12-10
 **Prerequisites:** `../principles.md`, `../c-gents/composition.md`
 **Integrations:** L-gents (Registry), K-gents (Observer Context), J-gents (JIT Reification), Umwelt (Observer Isolation)
+**Guard [phase=PLAN][entropy=0.07][law_check=true][minimal_output=true][rollback=doc-only]:** Identity/associativity must hold for every handle; liturgy bridge lives in `plans/meta/liturgy-morphism-nasi.md`.
 
 ---
 

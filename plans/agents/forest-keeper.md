@@ -22,6 +22,8 @@ session_notes: |
 **Status**: Tentative (proposed for AGENTESE realization)
 **Principles**: Heterarchical (no fixed plan hierarchy), Generative (plans from seeds), Accursed Share (dormant plan entropy)
 
+AGENTESE pointer: canonical forest handle/law clauses mirror `spec/protocols/agentese.md` + `plans/meta/forest-agentese-n-phase.md`; update when either changes.
+
 ---
 
 ## Purpose

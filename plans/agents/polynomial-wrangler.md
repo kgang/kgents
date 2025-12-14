@@ -22,6 +22,8 @@ session_notes: |
 **Status**: Tentative (proposed for AGENTESE realization)
 **Principles**: Composable (AD-002), Heterarchical (state-dependent modes), Generative (directions from state)
 
+AGENTESE pointer: canonical handle + law/entropy clauses live in `spec/protocols/agentese.md`; refresh this role when those shift.
+
 ---
 
 ## Purpose

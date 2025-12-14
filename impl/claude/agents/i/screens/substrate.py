@@ -32,6 +32,7 @@ if TYPE_CHECKING:
         SharedSubstrate,
     )
     from agents.m.compaction import Compactor
+    from agents.m.crystallization_integration import CrystallizationEvent
 
 
 # =============================================================================
@@ -72,6 +73,19 @@ class CompactionEventView:
     patterns_after: int
     strategy: str
     timestamp: datetime
+
+
+@dataclass
+class CrystallizationView:
+    """View model for crystallization events (Phase 8)."""
+
+    timestamp: datetime
+    event_type: str  # "crystallize", "reap", "promote"
+    agent_id: str
+    crystal_id: str | None = None
+    patterns_affected: int = 0
+    resolution_loss: float = 0.0
+    reason: str = ""
 
 
 # =============================================================================
@@ -256,6 +270,68 @@ class CompactionTimelineWidget(Static):
         return "\n".join(lines)
 
 
+class CrystallizationTimelineWidget(Static):
+    """Widget showing crystallization events (Phase 8)."""
+
+    def __init__(
+        self,
+        events: list[CrystallizationView],
+        name: str | None = None,
+        id: str | None = None,  # noqa: A002
+        classes: str | None = None,
+    ) -> None:
+        super().__init__(name=name, id=id, classes=classes)
+        self._events = events
+
+    def render(self) -> str:
+        """Render the crystallization timeline."""
+        if not self._events:
+            return "[dim]No crystallization events[/]"
+
+        lines = ["[bold]Crystallization Events[/]\n"]
+
+        # Most recent first
+        sorted_events = sorted(self._events, key=lambda e: e.timestamp, reverse=True)[
+            :5
+        ]  # Last 5
+
+        for e in sorted_events:
+            # Time ago
+            age = (datetime.now() - e.timestamp).total_seconds()
+            if age < 60:
+                time_str = f"{int(age)}s ago"
+            elif age < 3600:
+                time_str = f"{int(age / 60)}m ago"
+            else:
+                time_str = f"{int(age / 3600)}h ago"
+
+            # Color based on event type
+            if e.event_type == "crystallize":
+                color = "cyan"
+                icon = "💎"
+            elif e.event_type == "reap":
+                color = "red"
+                icon = "🪦"
+            elif e.event_type == "promote":
+                color = "magenta"
+                icon = "⬆️"
+            else:
+                color = "white"
+                icon = "●"
+
+            # Crystal ID (truncated)
+            crystal_str = f"→ {e.crystal_id[:8]}..." if e.crystal_id else ""
+
+            lines.append(
+                f"  [{color}]{icon}[/] {time_str}: {e.agent_id}\n"
+                f"    {e.event_type.upper()} {crystal_str}\n"
+                f"    {e.patterns_affected} patterns"
+                f"{f', {e.resolution_loss:.0%} loss' if e.resolution_loss > 0 else ''}"
+            )
+
+        return "\n".join(lines)
+
+
 class SubstrateSummaryWidget(Static):
     """Widget showing overall substrate summary."""
 
@@ -378,6 +454,7 @@ class SubstrateScreen(KgentsScreen):
     allocations: reactive[list[AllocationView]] = reactive([])
     gradients: reactive[list[GradientView]] = reactive([])
     compaction_events: reactive[list[CompactionEventView]] = reactive([])
+    crystallization_events: reactive[list[CrystallizationView]] = reactive([])
     substrate_stats: reactive[dict[str, Any]] = reactive({})
 
     def __init__(
@@ -411,10 +488,11 @@ class SubstrateScreen(KgentsScreen):
                 yield Static("[bold]Routing Gradients[/]", classes="panel-title")
                 yield Static(id="gradients-content")
 
-            # Bottom-right: Summary and timeline
+            # Bottom-right: Summary and timelines
             with Vertical(id="summary-panel", classes="panel"):
                 yield Static(id="summary-content")
-                yield Static(id="timeline-content")
+                yield Static(id="compaction-timeline-content")
+                yield Static(id="crystallization-timeline-content")
 
         yield Footer()
 
@@ -493,6 +571,34 @@ class SubstrateScreen(KgentsScreen):
                 patterns_after=350,
                 strategy="pressure_based",
                 timestamp=datetime.now(),
+            ),
+        ]
+
+        # Demo crystallization events (Phase 8)
+        self.crystallization_events = [
+            CrystallizationView(
+                timestamp=datetime.now(),
+                event_type="crystallize",
+                agent_id="kgent:dialogue",
+                crystal_id="c7f8a9b0-1234-5678-abcd-ef0123456789",
+                patterns_affected=42,
+                reason="Promotion threshold reached",
+            ),
+            CrystallizationView(
+                timestamp=datetime.now(),
+                event_type="reap",
+                agent_id="tmp:ephemeral",
+                patterns_affected=15,
+                resolution_loss=1.0,
+                reason="TTL expired",
+            ),
+            CrystallizationView(
+                timestamp=datetime.now(),
+                event_type="promote",
+                agent_id="kgent:working",
+                crystal_id="d8e9f0a1-2345-6789-bcde-f01234567890",
+                patterns_affected=128,
+                reason="High access rate",
             ),
         ]
 
@@ -583,10 +689,15 @@ class SubstrateScreen(KgentsScreen):
         summary_widget = SubstrateSummaryWidget(self.substrate_stats)
         summary_content.update(summary_widget.render())
 
-        # Update timeline
-        timeline_content = self.query_one("#timeline-content", Static)
-        timeline_widget = CompactionTimelineWidget(self.compaction_events)
-        timeline_content.update(timeline_widget.render())
+        # Update compaction timeline
+        compaction_content = self.query_one("#compaction-timeline-content", Static)
+        compaction_widget = CompactionTimelineWidget(self.compaction_events)
+        compaction_content.update(compaction_widget.render())
+
+        # Update crystallization timeline (Phase 8)
+        crystal_content = self.query_one("#crystallization-timeline-content", Static)
+        crystal_widget = CrystallizationTimelineWidget(self.crystallization_events)
+        crystal_content.update(crystal_widget.render())
 
     def action_back(self) -> None:
         """Go back to previous screen."""

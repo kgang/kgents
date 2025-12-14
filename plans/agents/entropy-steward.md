@@ -21,6 +21,8 @@ session_notes: |
 **Status**: Tentative (proposed for AGENTESE realization)
 **Principles**: Accursed Share (5-10% exploration), Composable (Minimal Output), Tasteful (budget enforcement)
 
+AGENTESE pointer: canonical entropy/law guard spec is `spec/protocols/agentese.md`; update this role when handles/clauses change.
+
 ---
 
 ## Purpose
