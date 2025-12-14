@@ -10,9 +10,6 @@ These tests ensure the mathematical foundations are sound.
 """
 
 import pytest
-from hypothesis import assume, given, settings
-from hypothesis import strategies as st
-
 from agents.operad.core import AGENT_OPERAD
 from agents.poly import (
     ID,
@@ -22,7 +19,8 @@ from agents.poly import (
     parallel,
     sequential,
 )
-
+from hypothesis import assume, given, settings
+from hypothesis import strategies as st
 
 # =============================================================================
 # Strategies
@@ -45,9 +43,13 @@ def simple_agents(draw: st.DrawFn) -> PolyAgent:
     if fn_type == 0:
         return ID
     elif fn_type == 1:
-        return from_function("Inc", lambda x: x + 1 if isinstance(x, (int, float)) else x)
+        return from_function(
+            "Inc", lambda x: x + 1 if isinstance(x, (int, float)) else x
+        )
     elif fn_type == 2:
-        return from_function("Double", lambda x: x * 2 if isinstance(x, (int, float)) else x)
+        return from_function(
+            "Double", lambda x: x * 2 if isinstance(x, (int, float)) else x
+        )
     else:
         return from_function("Const", lambda x: "const")
 

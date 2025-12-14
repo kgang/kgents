@@ -985,8 +985,8 @@ class DashboardApp(
     """
     Standalone dashboard application with unified navigation.
 
-    Can be run directly or embedded in kgents CLI.
-    Integrates all screens (Observatory, Cockpit, Forge, Debugger) with
+    Can be run directly or embedded in kg CLI.
+    Integrates all screens (Observatory, Cockpit, Debugger) with
     NavigationController for seamless zoom in/out.
 
     Uses mixins for separation of concerns:
@@ -1019,7 +1019,6 @@ class DashboardApp(
         # Tab cycling
         ("tab", "cycle_next", "Next Screen"),
         # Special screens
-        ("f", "open_forge", "Forge"),
         ("d", "open_debugger", "Debugger"),
         ("m", "open_memory_map", "Memory Map"),
         # Help
@@ -1097,7 +1096,6 @@ class DashboardApp(
             "flux": self._create_flux,
             "loom": self._create_loom,
             "mri": self._create_mri,
-            "forge": self._create_forge,
             "debugger": lambda: self._create_debugger(),
         }
 
@@ -1148,7 +1146,6 @@ class DashboardApp(
         # Debugger requires weave, so we don't register it here
 
         # Special screens
-        self._nav_controller.register_forge(self._create_forge)
         self._nav_controller.register_debugger(self._create_debugger)
 
     def _create_observatory(self) -> None:
@@ -1196,12 +1193,6 @@ class DashboardApp(
                 demo_mode=self.demo_mode,
             )
         )
-
-    def _create_forge(self) -> None:
-        """Create and push Forge screen."""
-        from .forge.screen import ForgeScreen
-
-        self.push_screen(ForgeScreen())
 
     def _create_debugger(self, turn_id: str | None = None) -> None:
         """Create and push Debugger screen."""

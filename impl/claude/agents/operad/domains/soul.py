@@ -15,7 +15,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from agents.operad.core import AGENT_OPERAD, Law, LawStatus, LawVerification, Operad, Operation
+from agents.operad.core import (
+    AGENT_OPERAD,
+    Law,
+    LawStatus,
+    LawVerification,
+    Operad,
+    Operation,
+)
 from agents.poly import (
     CONTRADICT,
     GROUND,

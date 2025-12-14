@@ -10,7 +10,6 @@ LOD  1: Cockpit (single agent)
 LOD  2: Debugger (forensic/turn analysis)
 
 Special screens:
-- Forge: Agent composition (accessible from any LOD)
 - Debugger: Turn analysis (accessible from any LOD)
 
 Philosophy: "Zooming is semantic, not just visual."
@@ -33,7 +32,7 @@ class NavigationController:
 
     The controller manages:
     - LOD transitions (zoom in/out)
-    - Special screen navigation (Forge, Debugger)
+    - Special screen navigation (Debugger)
     - State preservation across transitions
     - Global keybindings
 
@@ -68,7 +67,6 @@ class NavigationController:
         self._lod_screens: dict[int, Callable[[], None]] = {}
 
         # Special screen factories
-        self._forge_factory: Callable[[], None] | None = None
         self._debugger_factory: Callable[[str | None], None] | None = None
 
         # Animation state
@@ -83,15 +81,6 @@ class NavigationController:
             factory: Callable that pushes the screen onto app
         """
         self._lod_screens[lod] = factory
-
-    def register_forge(self, factory: Callable[[], None]) -> None:
-        """
-        Register the Forge screen factory.
-
-        Args:
-            factory: Callable that pushes the Forge screen
-        """
-        self._forge_factory = factory
 
     def register_debugger(self, factory: Callable[[str | None], None]) -> None:
         """
@@ -186,24 +175,6 @@ class NavigationController:
         # Update screen stack
         screen_name = self._lod_to_screen_name(lod)
         self._screen_stack.append(screen_name)
-
-    def go_to_forge(self) -> None:
-        """
-        Navigate to the Forge screen.
-
-        The Forge is accessible from any LOD and doesn't change
-        the current LOD.
-        """
-        if not self._forge_factory:
-            return
-
-        # Save current screen to state
-        current_screen = self._lod_to_screen_name(self._current_lod)
-        self.state.push_history(current_screen)
-
-        # Push Forge screen
-        self._forge_factory()
-        self._screen_stack.append("forge")
 
     def go_to_debugger(self, turn_id: str | None = None) -> None:
         """

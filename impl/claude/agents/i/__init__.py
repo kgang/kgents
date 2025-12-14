@@ -137,24 +137,6 @@ from .field import (
     create_default_field,
     create_demo_field,
 )
-
-# Forge View (composition mode)
-from .forge_view import (
-    DEFAULT_ARCHETYPES,
-    Archetype,
-    ArchetypeLevel,
-    ForgeViewKeyHandler,
-    ForgeViewRenderer,
-    ForgeViewState,
-    Pipeline,
-    PipelineSlot,
-    archetype_from_catalog_entry,
-    create_demo_forge_state,
-    create_forge_state_from_registry,
-    load_archetypes_from_entries,
-    load_archetypes_from_registry,
-    render_forge_view_once,
-)
 from .observe import GardenObserver, ObserveAction
 from .renderers import (
     CardRenderer,
@@ -202,21 +184,6 @@ __all__ = [
     # W-gent Integration
     "ObserveAction",
     "GardenObserver",
-    # Forge View (composition mode)
-    "Archetype",
-    "ArchetypeLevel",
-    "Pipeline",
-    "PipelineSlot",
-    "ForgeViewState",
-    "ForgeViewRenderer",
-    "ForgeViewKeyHandler",
-    "DEFAULT_ARCHETYPES",
-    "create_demo_forge_state",
-    "render_forge_view_once",
-    "archetype_from_catalog_entry",
-    "load_archetypes_from_registry",
-    "create_forge_state_from_registry",
-    "load_archetypes_from_entries",
     # Stigmergic Field (new)
     "Entity",
     "EntityType",

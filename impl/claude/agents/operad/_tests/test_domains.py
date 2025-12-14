@@ -9,7 +9,6 @@ These tests verify:
 """
 
 import pytest
-
 from agents.operad import (
     AGENT_OPERAD,
     PARSE_OPERAD,

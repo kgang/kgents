@@ -174,35 +174,6 @@ class TestNavigationController:
         assert len(history) == 1
         assert history[0] == ("terrarium", "agent-123")
 
-    def test_register_forge(self) -> None:
-        """Test registering Forge screen."""
-        app = MockApp()
-        state = StateManager()
-        nav = NavigationController(app, state)  # type: ignore
-
-        called = False
-
-        def factory() -> None:
-            nonlocal called
-            called = True
-
-        nav.register_forge(factory)
-        nav.go_to_forge()
-
-        assert called
-
-    def test_go_to_forge_adds_to_stack(self) -> None:
-        """Test that go_to_forge adds to screen stack."""
-        app = MockApp()
-        state = StateManager()
-        nav = NavigationController(app, state)  # type: ignore
-
-        nav.register_forge(lambda: None)
-        nav.go_to_forge()
-
-        stack = nav.get_screen_stack()
-        assert "forge" in stack
-
     def test_register_debugger(self) -> None:
         """Test registering Debugger screen."""
         app = MockApp()
@@ -257,9 +228,9 @@ class TestNavigationController:
         state = StateManager()
         nav = NavigationController(app, state)  # type: ignore
 
-        # Push Forge
-        nav.register_forge(lambda: None)
-        nav.go_to_forge()
+        # Push Debugger
+        nav.register_debugger(lambda turn_id: None)  # type: ignore[arg-type,return-value]
+        nav.go_to_debugger()
 
         assert len(nav.get_screen_stack()) == 1
 
@@ -309,18 +280,6 @@ class TestNavigationController:
         # LOD should NOT be incremented because go_to_lod returns early
         # when screen is not registered
         assert nav.get_current_lod() == 0
-
-    def test_forge_without_registration(self) -> None:
-        """Test that go_to_forge gracefully handles no registration."""
-        app = MockApp()
-        state = StateManager()
-        nav = NavigationController(app, state)  # type: ignore
-
-        # Should not crash
-        nav.go_to_forge()
-
-        # Nothing should be added to stack
-        assert nav.get_screen_stack() == []
 
     def test_debugger_without_registration(self) -> None:
         """Test that go_to_debugger gracefully handles no registration."""

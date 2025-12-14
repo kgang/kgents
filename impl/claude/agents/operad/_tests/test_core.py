@@ -10,7 +10,6 @@ These tests verify:
 """
 
 import pytest
-
 from agents.operad import (
     AGENT_OPERAD,
     Law,
@@ -132,7 +131,7 @@ class TestAgentOperad:
     def test_par_operation(self) -> None:
         """par operation composes in parallel."""
         double = from_function("Double", lambda x: x * 2)
-        square = from_function("Square", lambda x: x ** 2)
+        square = from_function("Square", lambda x: x**2)
 
         composed = AGENT_OPERAD.compose("par", double, square)
 
@@ -196,7 +195,7 @@ class TestOperadEnumeration:
 
     def test_enumerate_depth_zero(self) -> None:
         """Depth 0 enumeration returns primitives only."""
-        from agents.poly import ID, GROUND, all_primitives
+        from agents.poly import GROUND, all_primitives
 
         primitives = [ID, GROUND]
         compositions = AGENT_OPERAD.enumerate(primitives, depth=0)
@@ -268,14 +267,10 @@ class TestCompositionLaws:
         h = from_function("H", lambda x: x - 1)
 
         # (f >> g) >> h
-        left = AGENT_OPERAD.compose(
-            "seq", AGENT_OPERAD.compose("seq", f, g), h
-        )
+        left = AGENT_OPERAD.compose("seq", AGENT_OPERAD.compose("seq", f, g), h)
 
         # f >> (g >> h)
-        right = AGENT_OPERAD.compose(
-            "seq", f, AGENT_OPERAD.compose("seq", g, h)
-        )
+        right = AGENT_OPERAD.compose("seq", f, AGENT_OPERAD.compose("seq", g, h))
 
         # Both should produce same result
         # Left state: ((ready, ready), ready)
@@ -293,14 +288,10 @@ class TestCompositionLaws:
         h = from_function("H", lambda x: x - 1)
 
         # (f || g) || h
-        left = AGENT_OPERAD.compose(
-            "par", AGENT_OPERAD.compose("par", f, g), h
-        )
+        left = AGENT_OPERAD.compose("par", AGENT_OPERAD.compose("par", f, g), h)
 
         # f || (g || h)
-        right = AGENT_OPERAD.compose(
-            "par", f, AGENT_OPERAD.compose("par", g, h)
-        )
+        right = AGENT_OPERAD.compose("par", f, AGENT_OPERAD.compose("par", g, h))
 
         # Execute both
         _, result_left = left.invoke((("ready", "ready"), "ready"), 5)

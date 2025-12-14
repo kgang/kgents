@@ -21,7 +21,7 @@ class DashboardNavigationMixin:
     This mixin handles:
     - Direct screen navigation (go_screen_1 through go_screen_6)
     - Zoom in/out actions
-    - Special screen navigation (forge, debugger)
+    - Special screen navigation (debugger)
     - Help overlay display
 
     Expects the implementing class to have:
@@ -119,13 +119,6 @@ class DashboardNavigationMixin:
     # ========================================================================
     # Special Screen Navigation
     # ========================================================================
-
-    def action_open_forge(self) -> None:
-        """Open Forge screen (f).
-
-        Forge is a special screen (not LOD-based) for agent composition.
-        """
-        self._nav_controller.go_to_forge()
 
     def action_open_debugger(self) -> None:
         """Open Debugger screen (d).

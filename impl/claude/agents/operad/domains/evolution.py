@@ -16,7 +16,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from agents.operad.core import AGENT_OPERAD, Law, LawStatus, LawVerification, Operad, Operation
+from agents.operad.core import (
+    AGENT_OPERAD,
+    Law,
+    LawStatus,
+    LawVerification,
+    Operad,
+    Operation,
+)
 from agents.poly import (
     EVOLVE,
     JUDGE,
@@ -129,7 +136,9 @@ def _fitness_landscape_compose() -> PolyAgent[Any, Any, Any]:
     def landscape_fn(population: Any) -> dict[str, Any]:
         return {
             "landscape": "fitness distribution",
-            "population_size": 1 if not isinstance(population, (list, tuple)) else len(population),
+            "population_size": 1
+            if not isinstance(population, (list, tuple))
+            else len(population),
             "topology": "single-peak",
         }
 

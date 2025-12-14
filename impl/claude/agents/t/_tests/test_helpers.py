@@ -1,7 +1,6 @@
 """Tests for agents.t.helpers - Test convenience functions."""
 
 import pytest
-
 from agents.a.quick import agent
 from agents.t.helpers import (
     assert_agent_output,
