@@ -606,6 +606,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#law-checks-observability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Law Checks + Observability
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cli-usage" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1168,6 +1179,13 @@
 </tr>
 </tbody>
 </table>
+<h2 id="law-checks-observability">Law Checks + Observability</h2>
+<ul>
+<li><strong>Span</strong>: <code>agentese.law_check</code> emitted whenever <code>[law_check=true]</code> is present on a handle or when composition verification runs in the resolver.  </li>
+<li><strong>Payload</strong>: <code>{law, locus, observer, result, left_digest, right_digest, suggestion, duration_ms, phase}</code>. <code>locus</code> is the dot-path (e.g., <code>concept.forest.manifest &gt;&gt; concept.forest.refine</code>).  </li>
+<li><strong>Failure propagation</strong>: <code>result=fail</code> marks trace nodes in red, surfaces in dashboards, and is handed to Law Enforcer (<code>plans/agents/law-enforcer.md</code>) for remediation. CLI commands return non-zero exit when a law check span fails unless <code>[rollback=true]</code> was set.  </li>
+<li><strong>Metrics</strong>: <code>law_check.total{law}</code>, <code>law_check.failures{law}</code>, <code>law_check.latency_ms</code>. Observability Engineer binds these to OTEL exporters.</li>
+</ul>
 <hr />
 <h2 id="cli-usage">CLI Usage</h2>
 <h3 id="basic-syntax">Basic Syntax</h3>
