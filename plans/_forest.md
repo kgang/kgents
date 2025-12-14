@@ -10,19 +10,19 @@ This file provides a canopy view of all active plans. Read this at session start
 
 | Plan | Progress | Last Touched | Status | Notes |
 |------|----------|--------------|--------|-------|
-| plans/meta/nphase-prompt-compiler | 0% | 2025-12-14 | active | CROWN JEWEL (P10.0): Meta-meta-prompt system. Compiles ProjectDef → N-Phase prompt. |
 | plans/meta/v0-ui-learnings-synthesis | 100% | 2025-12-14 | active | RESEARCH phase complete. Deep study of v0-ui-mock  |
 | agents/k-gent | 97% | 2025-12-13 | active | PHASE 1 COMPLETE (88 tests): LLM-backed dialogue,  |
 | meta/forest-agentese | 95% | 2025-12-14 | active | Week 3 IMPLEMENT (95%): Live wiring complete. Fore |
 | self/memory | 75% | 2025-12-13 | active | Phase 1 (Ghost Cache): COMPLETE - 22 tests |
+| plans/devex/cli-unification | 65% | 2025-12-14 | active | QA COMPLETE: 7 type errors fixed, 69 deprecation w |
 | plans/ideas/master-plan-current | 35% | 2025-12-14 | active | Cycle 1 HARVEST & TRIAGE complete. Ideas mapped to |
+| plans/crown-jewel-next | 25% | 2025-12-14 | active | SCOPE EXPANDED 4X: Agent Town is now THE soul conv |
 | meta/system-audit-2025-12-14 | 15% | 2025-12-14 | active | Created to capture a whole-system audit anchored i |
-| plans/crown-jewel-next | 30% | 2025-12-14 | active | AGENT TOWN: Metaphysics spec (Porras-Kim, Morton, Barad, Glissant, Hui, Bataille). Seance, not sim. |
 | plans/reactive-substrate-unification | 15% | 2025-12-14 | active | CROWN JEWEL EXTENSION: Unified Reactive Substrate |
 | plans/ideas-consolidation | 10% | 2025-12-14 | active | Grand strategy for consolidating, refining, and CU |
 | meta/liturgy-morphism-nasi | 5% | 2025-12-13 | active | Standing up N-NASI ("The Liturgical Morphism"): AG |
 | n-phase-accursed-share-completion | 5% | 2025-12-13 | active |  |
-| plans/k-terrarium-llm-agents | 100% | 2025-12-14 | complete | CROWN JEWEL COMPLETE: Kent said "amazing". All pha |
+| plans/k-terrarium-llm-agents | 5% | 2025-12-14 | active | Crown jewel plan: Sophisticated, live LLM-backed a |
 | deployment/_strategy/kgent-chatbot-strategy | 0% | 2025-12-14 | active | STRATEGIZE phase output. Ordered backlog with 3 wa |
 | devex/hotdata-infrastructure | 0% | 2025-12-13 | active | Initial creation. Implements AD-004 (Pre-Computed  |
 | ideas/impl/categorical-critique | 0% | 2025-12-13 | active | Category-theoretic critique of all plans/ideas wor |
@@ -39,11 +39,13 @@ This file provides a canopy view of all active plans. Read this at session start
 | monetization/grand-initiative-monetization | 0% | 2025-12-14 | active | GRAND INITIATIVE: Comprehensive monetization strat |
 | plans/_epilogues/2025-12-14-n-phase-hardening-plan | 0% | 2025-12-14 | active | Crown jewel hardening: Make N-Phase Cycle machine- |
 | plans/agentese-universal-protocol | 0% | 2025-12-14 | active | NEW CROWN JEWEL: The AGENTESE Universal Protocol ( |
+| plans/architecture | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
 | plans/creative-exploration-strategy | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
 | plans/deployment/_research/kgent-chatbot-research-notes | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
-| plans/devex/cli-unification | 0% | 2025-12-14 | active | CLI has grown organically to 17,967 lines across 4 |
 | plans/devex/memory-dashboard | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
 | plans/meta | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
+| plans/meta/nphase-do-integration | 0% | 2025-12-14 | active | CROWN JEWEL: Deep integration of nphase compiler w |
+| plans/meta/nphase-prompt-compiler | 0% | 2025-12-14 | active | ORIGIN: Discovered during kgent-chatbot prompt con |
 | plans/soul-interface | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
 | plans/triad-deep-integration | 0% | 2025-12-13 | active | Header added for forest compliance (STRATEGIZE). |
 | plans/ui-ux-crown-jewel-strategy-v2 | 0% | 2025-12-14 | active | Enhanced Crown Jewel Strategy v2.0 |
@@ -88,7 +90,8 @@ This file provides a canopy view of all active plans. Read this at session start
 
 | Plan | Completed | Notes |
 |------|-----------|-------|
-| (none) | - | - |
+| plans/meta/_research/nphase-prompt-compiler-research | 2025-12-14 | Done |
+| plans/meta/_research/nphase-prompt-compiler-develop | 2025-12-14 | Done |
 
 ---
 
@@ -109,12 +112,12 @@ Accursed Share (5%):    agents/t-gent (rotation)
 
 | Metric | Value |
 |--------|-------|
-| Total trees | 73 |
-| Active | 38 (52%) |
-| Dormant | 19 (26%) |
+| Total trees | 76 |
+| Active | 39 (51%) |
+| Dormant | 19 (25%) |
 | Blocked | 0 (0%) |
-| Complete | 1 (1%) |
-| Average progress | 15% |
+| Complete | 2 (2%) |
+| Average progress | 12% |
 | Longest untouched | agents/t-gent (1 days) |
 | Accursed share next | agents/t-gent |
 
@@ -123,10 +126,6 @@ Accursed Share (5%):    agents/t-gent (rotation)
 ## Dependency Graph
 
 ```
-plans/meta/nphase-prompt-compiler (0%) ──enables──▶ all-future-multi-phase-work
-plans/meta/nphase-prompt-compiler (0%) ──enables──▶ prompt-engineering-automation
-plans/meta/nphase-prompt-compiler (0%) ──enables──▶ agent-autonomy-increase
-plans/meta/nphase-prompt-compiler (0%) ──enables──▶ n-phase-ecosystem-completion
 plans/ideas-consolidation (10%) ──enables──▶ k-terrarium-llm-agents
 plans/ideas-consolidation (10%) ──enables──▶ reactive-substrate-unification
 plans/ideas-consolidation (10%) ──enables──▶ clarity
@@ -134,8 +133,8 @@ n-phase-accursed-share-completion (5%) ──enables──▶ re-metabolize-heal
 plans/ui-ux-crown-jewel-strategy-v2 (0%) ──enables──▶ dashboard-textual-refactor
 plans/ui-ux-crown-jewel-strategy-v2 (0%) ──enables──▶ i-gent-radical-redesign
 plans/ui-ux-crown-jewel-strategy-v2 (0%) ──enables──▶ marimo-integration
-plans/crown-jewel-next (15%) ──enables──▶ agent-town-mvp
-plans/crown-jewel-next (15%) ──enables──▶ civilizational-engine
+plans/crown-jewel-next (25%) ──enables──▶ agent-town-mvp
+plans/crown-jewel-next (25%) ──enables──▶ civilizational-engine
 plans/reactive-substrate-unification (15%) ──enables──▶ agentese-universal-protocol
 plans/reactive-substrate-unification (15%) ──enables──▶ marimo-integration
 plans/reactive-substrate-unification (15%) ──enables──▶ dashboard-textual-refactor
@@ -145,12 +144,17 @@ plans/agentese-universal-protocol (0%) ──enables──▶ interfaces/dashboa
 plans/k-terrarium-llm-agents (5%) ──enables──▶ k-gent-live
 plans/k-terrarium-llm-agents (5%) ──enables──▶ terrarium-dashboard
 plans/k-terrarium-llm-agents (5%) ──enables──▶ permanent-chatbot
-plans/devex/cli-unification (0%) ──enables──▶ agent-town-cli
-plans/devex/cli-unification (0%) ──enables──▶ k-gent-ambient
-plans/devex/cli-unification (0%) ──enables──▶ unified-streaming
+plans/devex/cli-unification (65%) ──enables──▶ agent-town-cli
+plans/devex/cli-unification (65%) ──enables──▶ k-gent-ambient
+plans/devex/cli-unification (65%) ──enables──▶ unified-streaming
+plans/meta/nphase-prompt-compiler (0%) ──enables──▶ all-future-multi-phase-work
+plans/meta/nphase-prompt-compiler (0%) ──enables──▶ prompt-engineering-automation
+plans/meta/nphase-prompt-compiler (0%) ──enables──▶ agent-autonomy-increase
+plans/meta/nphase-prompt-compiler (0%) ──enables──▶ n-phase-ecosystem-completion
+plans/meta/nphase-do-integration (0%) ──enables──▶ plans/devex/cli-unification
 meta/liturgy-morphism-nasi (5%) ──enables──▶ spec/protocols/agentese.md
 meta/liturgy-morphism-nasi (5%) ──enables──▶ plans/_forest.md
-meta/liturgy-morphism-nasi (5%) ──enables──▶ docs/skills/agentese-path.md
+meta/liturgy-morphism-nasi (5%) ──enables──▶ plans/skills/agentese-path.md
 meta/forest-agentese (95%) ──enables──▶ plans/_forest.md
 meta/forest-agentese (95%) ──enables──▶ plans/_status.md
 plans/meta/v0-ui-learnings-synthesis (100%) ──enables──▶ reactive-substrate-unification

@@ -16,8 +16,8 @@ cd kgents
 # Install (uv recommended)
 uv sync
 
-# Verify
-kgents --help
+# Verify (both `kg` and `kgents` work)
+kg --help
 ```
 
 ---
@@ -85,24 +85,24 @@ await safe_divide.invoke(Nothing)         # Nothing (no error!)
 ### K-gent (Persona)
 
 ```bash
-kgents soul                  # Interactive chat
-kgents soul challenge "idea" # Dialectic challenge
-kgents soul dream            # Trigger dream cycle
+kg soul                  # Interactive chat
+kg soul challenge "idea" # Dialectic challenge
+kg soul dream            # Trigger dream cycle
 ```
 
 ### Infrastructure
 
 ```bash
-kgents status               # System health
-kgents a list               # List archetypes
-kgents a inspect Kappa      # Inspect capabilities
+kg status               # System health
+kg a list               # List archetypes
+kg a inspect Kappa      # Inspect capabilities
 ```
 
 ### Observation
 
 ```bash
-kgents observe trace        # Execution traces
-kgents signal               # Semantic field
+kg observe trace        # Execution traces
+kg signal               # Semantic field
 ```
 
 ---

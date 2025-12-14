@@ -88,33 +88,33 @@ uv sync
 # Or with pip
 pip install -e "impl/claude[dev]"
 
-# Verify
-kgents --help
+# Verify (both `kg` and `kgents` work)
+kg --help
 ```
 
 ## Quick Start
 
 ```bash
 # K-gent: Interactive persona
-kgents soul                    # Chat with K-gent (REFLECT mode)
-kgents soul challenge "idea"   # Dialectic challenge
-kgents soul dream              # Trigger hypnagogia cycle
+kg soul                    # Chat with K-gent (REFLECT mode)
+kg soul challenge "idea"   # Dialectic challenge
+kg soul dream              # Trigger hypnagogia cycle
 
 # Infrastructure
-kgents infra init              # Create Kind cluster
-kgents a list                  # List agent archetypes
-kgents a inspect Kappa         # Inspect agent capabilities
-kgents a manifest Kappa        # Generate K8s manifests
+kg infra init              # Create Kind cluster
+kg a list                  # List agent archetypes
+kg a inspect Kappa         # Inspect agent capabilities
+kg a manifest Kappa        # Generate K8s manifests
 
 # Developer experience
-kgents status                  # Cortex health dashboard
-kgents signal                  # Semantic field state
-kgents map                     # M-gent holographic map
-kgents tithe                   # Discharge entropy pressure
+kg status                  # Cortex health dashboard
+kg signal                  # Semantic field state
+kg map                     # M-gent holographic map
+kg tithe                   # Discharge entropy pressure
 
 # Observation
-kgents observe trace           # Execution traces
-kgents observe metrics         # Metrics snapshot
+kg observe trace           # Execution traces
+kg observe metrics         # Metrics snapshot
 ```
 
 ## Project Structure

@@ -2,281 +2,217 @@
 
 > *"Every command is a morphism."*
 
-Complete reference for all `kgents` CLI commands.
+Reference for `kg` CLI commands. (`kgents` also works.)
 
 ---
 
-## Command Overview
+## AGENTESE Contexts (Primary Interface)
 
-| Category | Commands | Purpose |
-|----------|----------|---------|
-| **Soul** | `soul`, `soul challenge`, `soul watch` | K-gent persona interaction |
-| **DevEx** | `dashboard`, `play`, `new` | Developer experience |
-| **Alethic** | `a list`, `a inspect`, `a manifest` | Agent architecture |
-| **Infrastructure** | `infra init`, `status`, `signal` | System management |
-| **Observation** | `observe trace`, `observe metrics` | Telemetry |
-| **Entropy** | `tithe` | Discharge metabolic pressure |
-| **Memory** | `ghost`, `map` | State and navigation |
-| **Development** | `dev`, `exec` | Development utilities |
+The CLI is organized around five AGENTESE contexts:
 
----
+| Context | Domain | Subcommands |
+|---------|--------|-------------|
+| `self` | Internal state | `status`, `memory`, `dream`, `soul`, `capabilities` |
+| `world` | External resources | `agents`, `daemon`, `infra`, `fixture`, `exec`, `dev` |
+| `concept` | Abstract concepts | `laws`, `principles`, `dialectic`, `gaps`, `continuous` |
+| `void` | Entropy/shadow | `tithe`, `shadow`, `archetype`, `whatif`, `mirror` |
+| `time` | Temporal traces | `trace`, `turns`, `dag`, `forest`, `telemetry`, `pending`, `approve` |
 
-## Soul Commands (K-gent)
-
-### `kgents soul`
-
-Interactive chat with K-gent in REFLECT mode.
+### Usage Pattern
 
 ```bash
-kgents soul
-kgents soul --quick   # WHISPER mode (~100 tokens)
-kgents soul --deep    # DEEP mode (~8000+ tokens)
+kgents <context> <subcommand> [args...]
+kgents <context>                 # Show available subcommands
+kgents <context> --help          # Detailed help
 ```
 
-### `kgents soul reflect [prompt]`
-
-Introspective dialogue.
+### Examples
 
 ```bash
-kgents soul reflect "What's my architectural philosophy?"
-```
-
-### `kgents soul advise [prompt]`
-
-Request guidance.
-
-```bash
-kgents soul advise "Should I use Redis or etcd?"
-```
-
-### `kgents soul challenge [prompt]`
-
-Dialectic challenge (most powerful mode).
-
-```bash
-kgents soul challenge "Singletons are fine for this use case"
-```
-
-### `kgents soul explore [prompt]`
-
-Discovery and brainstorming.
-
-```bash
-kgents soul explore "What if agents could dream?"
-```
-
-### `kgents soul dream`
-
-Trigger hypnagogia cycle (eigenvector evolution).
-
-```bash
-kgents soul dream
-```
-
-### `kgents soul validate [path]`
-
-Check file against principles.
-
-```bash
-kgents soul validate impl/claude/agents/k/persona.py
-```
-
-### `kgents soul garden`
-
-View PersonaGarden state.
-
-```bash
-kgents soul garden
-```
-
-### `kgents soul watch`
-
-Ambient K-gent file watcher with 5 heuristics.
-
-```bash
-kgents soul watch              # Watch current directory
-kgents soul watch --path ./src # Watch specific path
-```
-
-Heuristics:
-- **Complexity**: Warns on functions >40 lines
-- **Naming**: Detects non-descriptive variables
-- **Patterns**: Suggests design patterns
-- **Tests**: Reminds about untested code
-- **Docs**: Highlights missing docstrings
-
----
-
-## DevEx Commands
-
-### `kgents dashboard`
-
-Real-time TUI showing system metabolism.
-
-```bash
-kgents dashboard
-kgents dashboard --demo  # Use demo metrics
-```
-
-Panels: K-gent state, Metabolism pressure, Triad health, Flux throughput.
-
-Keybindings: `q` quit, `r` refresh, `1-4` focus panel.
-
-### `kgents play`
-
-Interactive tutorial playground.
-
-```bash
-kgents play           # List tutorials
-kgents play 1         # Run tutorial 1 (hello world)
-kgents play repl      # Start REPL mode
-```
-
-### `kgents new`
-
-Scaffold new agents from templates.
-
-```bash
-kgents new agent my-agent          # Create new agent
-kgents new agent my-agent --alpha  # Use Alpha archetype
-kgents new agent my-agent --kappa  # Use Kappa archetype
+kgents self status               # System health
+kgents self soul reflect         # K-gent reflection
+kgents world agents list         # List registered agents
+kgents concept laws              # Category laws
+kgents void shadow               # Jungian shadow analysis
+kgents time trace                # Call graph tracing
 ```
 
 ---
 
-## Alethic Commands (Agent Architecture)
+## Self Context
 
-### `kgents a list`
+### `kg self status`
 
-List available archetypes.
+System health at a glance.
 
 ```bash
-kgents a list
-# Output:
-# Kappa   - Full-stack: Stateful + Soulful + Observable + Streamable
-# Lambda  - Minimal: Observable only
-# Delta   - Data-focused: Stateful + Observable
+kg self status
 ```
 
-### `kgents a inspect <archetype>`
+### `kg self soul`
 
-Inspect agent capabilities.
+K-gent soul dialogue. Modes: `reflect`, `advise`, `challenge`, `explore`.
 
 ```bash
-kgents a inspect Kappa
+kg self soul                           # Interactive chat
+kg self soul reflect "question"        # Introspective dialogue
+kg self soul challenge "assumption"    # Dialectic challenge
 ```
 
-### `kgents a manifest <archetype>`
+### `kg self memory`
 
-Generate K8s manifests.
+Four Pillars memory status.
 
 ```bash
-kgents a manifest Kappa --namespace production > deployment.yaml
-kgents a manifest Kappa --validate  # Validate only
-kgents a manifest Kappa --json      # JSON output
+kg self memory
 ```
 
----
+### `kg self dream`
 
-## Infrastructure Commands
-
-### `kgents infra init`
-
-Initialize Kind cluster for K-Terrarium.
+LucidDreamer morning briefing.
 
 ```bash
-kgents infra init
-```
-
-### `kgents status`
-
-Show cortex health dashboard.
-
-```bash
-kgents status
-```
-
-### `kgents signal`
-
-Show semantic field (pheromone) state.
-
-```bash
-kgents signal
+kg self dream
 ```
 
 ---
 
-## Observation Commands
+## World Context
 
-### `kgents observe trace`
+### `kg world agents`
 
-View execution traces.
+Agent operations.
 
 ```bash
-kgents observe trace
-kgents observe trace --limit 10
+kg world agents list             # List registered agents
+kg world agents inspect Kappa    # Inspect archetype
+kg world agents manifest Kappa   # Generate K8s manifest
 ```
 
-### `kgents observe metrics`
+### `kg world infra`
 
-View metrics snapshot.
+K-Terrarium infrastructure.
 
 ```bash
-kgents observe metrics
+kg world infra init              # Create Kind cluster
+kg world infra status            # Cluster status
+kg world infra apply b-gent      # Deploy agent
+kg world infra destroy           # Remove cluster
 ```
 
----
+### `kg world daemon`
 
-## Entropy Commands
-
-### `kgents tithe`
-
-Voluntarily discharge metabolic pressure.
+Cortex daemon lifecycle.
 
 ```bash
-kgents tithe               # Default amount
-kgents tithe --amount 0.3  # Discharge more
-```
-
----
-
-## Memory Commands
-
-### `kgents ghost`
-
-Show ghost cache status (offline mode).
-
-```bash
-kgents ghost
-```
-
-### `kgents map`
-
-M-gent holographic map.
-
-```bash
-kgents map
-kgents map --lattice  # Show lattice structure
+kg world daemon start
+kg world daemon stop
+kg world daemon status
 ```
 
 ---
 
-## Development Commands
+## Concept Context
 
-### `kgents dev <agent>`
+### `kg concept laws`
 
-Live reload development for an agent.
+Category laws (identity, associativity, composition).
 
 ```bash
-kgents dev my-agent
+kg concept laws
+kg concept laws verify
 ```
 
-### `kgents exec <code>`
+### `kg concept principles`
 
-Execute code in agent context.
+The 7 design principles.
 
 ```bash
-kgents exec "print('hello')"
+kg concept principles
+```
+
+### `kg concept dialectic`
+
+Hegelian synthesis.
+
+```bash
+kg concept dialectic "thesis" "antithesis"
+```
+
+---
+
+## Void Context
+
+### `kg void tithe`
+
+Discharge metabolic pressure (Accursed Share).
+
+```bash
+kg void tithe
+kg void tithe --amount 0.3
+```
+
+### `kg void shadow`
+
+Jungian shadow analysis.
+
+```bash
+kg void shadow
+```
+
+### `kg void whatif`
+
+Generate alternative approaches.
+
+```bash
+kg void whatif "design decision"
+```
+
+### `kg void mirror`
+
+Full introspection (Jung + Hegel + Lacan).
+
+```bash
+kg void mirror
+```
+
+---
+
+## Time Context
+
+### `kg time trace`
+
+Call graph tracing.
+
+```bash
+kg time trace mymodule.py           # Static analysis
+kg time trace --runtime mymodule    # Runtime tracing
+kg time trace --export trace.json   # Export to file
+```
+
+### `kg time turns`
+
+Turn history for agents.
+
+```bash
+kg time turns --agent my-agent
+```
+
+### `kg time forest`
+
+Plan forest health (Forest Protocol).
+
+```bash
+kg time forest
+kg time forest --update
+```
+
+### `kg time telemetry`
+
+OpenTelemetry status.
+
+```bash
+kg time telemetry status
 ```
 
 ---
@@ -285,9 +221,11 @@ kgents exec "print('hello')"
 
 | Option | Description |
 |--------|-------------|
+| `--help`, `-h` | Show help |
+| `--version` | Show version |
 | `--verbose`, `-v` | Verbose output |
-| `--quiet`, `-q` | Suppress non-essential output |
-| `--help` | Show help |
+| `--explain` | Show AGENTESE path |
+| `--no-bootstrap` | Skip cortex initialization |
 
 ---
 

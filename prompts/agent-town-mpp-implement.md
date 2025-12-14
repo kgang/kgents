@@ -73,7 +73,10 @@ Execute IMPLEMENT phase for Agent Town MPP (Minimal Playable Prototype).
 | Cycle | 2 phases (morning, evening) |
 | Memory | MemoryPolynomialAgent (existing) |
 | Metrics | tension_index + token_spend |
-| CLI | `kgents town {start,step,observe}` |
+| CLI | `kgents town {start,step,observe,lens}` |
+| **UI: MESA** | Terminal overview (Rich-based) |
+| **UI: LENS** | LOD 0-3 zoom per citizen |
+| **UI: TRACE** | OpenTelemetry span visualization |
 
 ### Implementation Sequence (Metaphysically Grounded)
 
@@ -203,6 +206,66 @@ Execute IMPLEMENT phase for Agent Town MPP (Minimal Playable Prototype).
      opacity_index: # Irreducible unknowability—should increase with LOD
    ```
 
+8. **UI: THE MESA** (Day 15-17) — *The Seance Table*
+   - Create `impl/claude/agents/town/ui/mesa.py`
+   - Terminal UI using Rich library
+   - **Key insight**: The control room respects Glissant's opacity
+   - You cannot see everything. Citizens have the right to remain mysterious.
+
+   ```python
+   # The MESA is not Westworld's control room—it's a seance table
+   class MesaView:
+       """Terminal overview of Agent Town."""
+
+       def render(self, town: TownEnvironment) -> Panel:
+           """Render town map with citizen positions and metrics."""
+           return Panel(
+               Group(
+                   self._render_map(town),
+                   self._render_metrics(town),
+                   self._render_controls(),
+               ),
+               title=f"AGENT TOWN: {town.name}",
+           )
+   ```
+
+9. **UI: THE LENS** (Day 18-19) — *The LOD Zoom*
+   - Create `impl/claude/agents/town/ui/lens.py`
+   - LOD 0-3 for MPP (defer LOD 4-5 to Phase 2)
+   - **Key insight**: Different observers see different manifestations
+   - Tiered model routing: cache → haiku → sonnet
+
+   ```python
+   # From Morton: The deeper you look, the less certain you become
+   LOD_MODEL_MAP = {
+       0: "cache",   # Silhouette: name, location, emoji
+       1: "haiku",   # Posture: action, mood
+       2: "haiku",   # Dialogue: speech, inner monologue
+       3: "sonnet",  # Memory: active memories, goals
+   }
+
+   async def manifest_citizen(citizen: Citizen, lod: int) -> str:
+       """Zoom into a citizen at specified LOD."""
+   ```
+
+10. **UI: THE TRACE** (Day 20-21) — *The Observability Layer*
+    - Create `impl/claude/agents/town/ui/trace.py`
+    - OpenTelemetry span visualization
+    - **Key insight**: Debugging is part of the phenomenon
+    - Integrate with existing metrics.py patterns
+
+    ```python
+    # Trace visualization for agent operations
+    class TraceView:
+        def render_span(self, span: Span) -> Panel:
+            """Render a single OpenTelemetry span."""
+            return Panel(
+                f"[bold]{span.name}[/bold]\n"
+                f"duration: {span.duration_ms}ms\n"
+                f"tokens: {span.attributes.get('tokens', 0)}",
+            )
+    ```
+
 ### Exit Criteria
 
 - [ ] `impl/claude/agents/town/` directory exists with all modules
@@ -212,7 +275,10 @@ Execute IMPLEMENT phase for Agent Town MPP (Minimal Playable Prototype).
 - [ ] `kgents town step` advances simulation by one phase
 - [ ] tension_index computes from citizen interactions
 - [ ] Budget dashboard shows token spend
-- [ ] All tests pass (target: 20+ new tests)
+- [ ] **MESA view renders town map in terminal**
+- [ ] **LENS mode shows citizen details at LOD 0-3**
+- [ ] **TRACE view shows OpenTelemetry spans**
+- [ ] All tests pass (target: 25+ new tests)
 
 ### Non-Goals (Explicit)
 
@@ -233,6 +299,12 @@ impl/claude/agents/town/
 ├── environment.py      # TownEnvironment
 ├── flux.py             # TownFlux
 ├── metrics.py          # Town-specific metrics
+├── ui/                 # THE MESA UI Layer
+│   ├── __init__.py
+│   ├── mesa.py         # Town overview (Rich-based)
+│   ├── lens.py         # LOD zoom per citizen
+│   ├── trace.py        # OpenTelemetry span view
+│   └── widgets.py      # Shared Rich widgets
 ├── fixtures/
 │   └── mpp_citizens.yaml
 └── _tests/
@@ -242,10 +314,11 @@ impl/claude/agents/town/
     ├── test_citizen.py
     ├── test_environment.py
     ├── test_flux.py
+    ├── test_ui.py          # UI component tests
     └── test_integration.py
 
 impl/claude/protocols/cli/handlers/
-└── town.py             # CLI handler
+└── town.py             # CLI handler (observe, step, lens, trace)
 ```
 
 ### Branch Candidates

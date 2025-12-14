@@ -1,6 +1,6 @@
 # Implementation Status Matrix
 
-> Last updated: 2025-12-13 (Memory Phase 6 complete)
+> Last updated: 2025-12-14 (SaaS Phase 1 complete)
 
 ## Legend
 
@@ -186,18 +186,19 @@ DashboardApp subscribes via EventBus and pushes FeverOverlay modal.
 
 ---
 
-## CLI Unification (`devex/cli-unification.md`) — 0% [NEXT]
+## CLI Unification (`devex/cli-unification.md`) — 40% [ACTIVE]
 
-| Phase | Component | Status | Target |
+| Phase | Component | Status | Result |
 |-------|-----------|--------|--------|
-| 1 | Shared Infrastructure | 📋 | `cli/shared/` |
-| 2 | Soul Command Refactor | 📋 | 2019→<300 lines |
-| 3 | Agent Command Refactor | 📋 | 1110→<300 lines |
+| 1 | Shared Infrastructure | ✅ | `cli/shared/` — 439 lines |
+| 2 | Soul Command Refactor | ✅ | 2019→283 lines (-86%) |
+| 3 | Agent Command Refactor | 🚧 | 1110→<300 lines (next) |
 | 4 | Infra/DevEx Consolidation | 📋 | Merge related |
 | 5 | Flow Composition | 📋 | Pipe support |
 | 6 | Testing & Polish | 📋 | Full coverage |
 
-**Current**: 17,967 lines across 40+ handlers. **Target**: <8,000 lines.
+**Artifacts**: `cli/shared/` (439), `cli/commands/soul/` (1379), `handlers/soul.py` (283).
+**Tests**: 34 passing. **Next**: Phase 3 (a_gent.py).
 
 ---
 
@@ -226,6 +227,24 @@ DashboardApp subscribes via EventBus and pushes FeverOverlay modal.
 | Synapse core | ✅ | 44 |
 | Outbox integration | ✅ | — |
 | Robustification | 🚧 | — |
+
+---
+
+## SaaS Foundation (`saas/strategy-implementation.md`) — Phase 1 COMPLETE ✅
+
+| Phase | Component | Status | Tests |
+|-------|-----------|--------|-------|
+| 1 | Multi-tenant Auth (API Keys, Scopes) | ✅ | 69 |
+| 1 | AGENTESE REST API (3 endpoints) | ✅ | 13 |
+| 1 | K-gent Sessions API (5 endpoints) | ✅ | 17 |
+| 1 | Usage Metering (in-memory) | ✅ | — |
+| 2 | NATS JetStream | 📋 | — |
+| 2 | OpenMeter Integration | 📋 | — |
+| 2 | Real SSE Streaming | 📋 | — |
+| 3 | Dashboard UI | 📋 | — |
+| 3 | Playground UI | 📋 | — |
+
+**Total Phase 1**: 215 tests, 3,769 LOC source, 2,485 LOC tests.
 
 ---
 
@@ -293,4 +312,4 @@ cd impl/claude && uv run mypy .
 
 ---
 
-*Last verified: 2025-12-14 CP8 REFLECT (12,282 tests, mypy clean)*
+*Last verified: 2025-12-14 SaaS Phase 1 COMPLETE (215 tests, mypy clean)*

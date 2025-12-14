@@ -125,3 +125,19 @@ await logos.invoke("world.house.manifest", economist_umwelt)  # → Appraisal
 4. **Joy-Inducing** - Personality encouraged
 5. **Composable** - Agents are morphisms; composition is primary
 6. **AGENTESE** - No view from nowhere; observation is interaction
+
+## The Unified Categorical Foundation
+
+> *"The same categorical structure underlies everything. This is not coincidence—it is the ground."*
+
+All kgents domains instantiate the same three-layer pattern:
+
+| Layer | Purpose | Examples |
+|-------|---------|----------|
+| **PolyAgent** | State machine with mode-dependent inputs | CitizenPolynomial, SOUL_POLYNOMIAL, MEMORY_POLYNOMIAL |
+| **Operad** | Composition grammar with laws | TOWN_OPERAD, NPHASE_OPERAD, SOUL_OPERAD |
+| **Sheaf** | Global coherence from local views | TownSheaf, ProjectSheaf, EigenvectorCoherence |
+
+**Key Insight**: The N-Phase development workflow uses the same structure as Agent Town citizens. Understanding one domain teaches you the others.
+
+See: `spec/principles.md` AD-006, `plans/meta/unified-engine-master-prompt.md`

@@ -161,7 +161,25 @@ Overlap: {Bob}
 If A.Bob ≅ B.Bob, sheaf guarantees global coherence
 ```
 
-### 2.4 Proprioception: Agents Sensing Themselves
+### 2.4 The Unified Categorical Foundation (AD-006)
+
+> *"The same categorical structure underlies everything. This is not coincidence—it is the ground."*
+
+Deep analysis revealed that ALL kgents domains instantiate the same three-layer pattern:
+
+| Domain | Polynomial | Operad | Sheaf |
+|--------|-----------|--------|-------|
+| Agent Town | `CitizenPolynomial` | `TOWN_OPERAD` | `TownSheaf` |
+| N-Phase (development) | `NPhasePolynomial` | `NPHASE_OPERAD` | `ProjectSheaf` |
+| K-gent Soul | `SOUL_POLYNOMIAL` | `SOUL_OPERAD` | `EigenvectorCoherence` |
+| D-gent Memory | `MEMORY_POLYNOMIAL` | `MEMORY_OPERAD` | `MemoryConsistency` |
+| E-gent Evolution | `EVOLUTION_POLYNOMIAL` | `EVOLUTION_OPERAD` | `ThermodynamicBalance` |
+
+**The Meta-Insight**: The workflow used to develop kgents (N-Phase) has the exact same categorical structure as the agents being developed (Agent Town citizens). Understanding one domain teaches you the others. This is the signature of a well-designed system.
+
+See: `spec/principles.md` AD-006 for the full specification.
+
+### 2.5 Proprioception: Agents Sensing Themselves
 
 **Extension beyond heritage**: Heritage agents don't know they're agents. They operate but don't observe their own operation.
 
@@ -174,7 +192,7 @@ kgents adds **proprioception**:
 
 **Omega-gent** (Ω) provides the proprioceptive substrate—the "body sense" that lets agents feel their own operation.
 
-### 2.5 Self-Modifying Deployment
+### 2.6 Self-Modifying Deployment
 
 **Extension beyond heritage**: Heritage agents are static deployments. Voyager adds skills, but can't modify its own architecture.
 
