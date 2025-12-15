@@ -156,6 +156,18 @@ entropy:
 2025-12-15  Type narrowing in tests: use `result: ComposableWidget` annotation when chaining >> to avoid mypy errors
 2025-12-15  LogosCell pattern: AGENTESE paths → marimo cells via LogosCellResult(_repr_html_ for mo.Html)
 2025-12-15  to_marimo() universal: check HStack/VStack first (use_anywidget param), then KgentsWidget (no param)
+2025-12-15  INHABIT consent debt: continuous [0,1] variable beats binary accept/reject—enables nuanced relationships
+2025-12-15  Alignment thresholds: >0.5 enact, 0.3-0.5 negotiate, <0.3 resist—negotiation band prevents frustration
+2025-12-15  Heuristic alignment fallback: keyword→eigenvector mapping enables graceful LLM degradation
+2025-12-15  Force mechanic ethics: expensive (3x tokens) + limited (3/session) + logged = agency by design
+2025-12-15  Counter-metrics for UX: force-to-suggest ratio > 0.3 reveals alignment threshold too strict
+2025-12-15  Punchdrunk principle: collaboration > control; citizen refusal is core feature, not bug
+2025-12-15  16 production systems built: AGENTESE/PolyAgent/Operad/Sheaf/Flux/Town/K-gent/M-gent/Reactive/N-Phase/Terrarium/API/Billing/Licensing/Tenancy
+2025-12-15  Unified categorical stack: PolyAgent (state machines) + Operad (grammar) + Sheaf (emergence) → any domain
+2025-12-15  Projection Protocol: widget.to_cli()/to_marimo()/to_json()—same state, multiple targets, zero rewrites
+2025-12-15  SaaS infrastructure complete: Stripe billing, OpenMeter usage, multi-tenant RLS, feature gating decorators
+2025-12-15  AGENTESE 8-phase impl: parser→affordances→JIT→laws→integration→wiring→adapter—all phases shipped
+2025-12-15  Memory substrate shipped: crystals, cartography, stigmergy, semantic routing, ghost sync—8 phases complete
 ```
 
 ## Anti-Patterns
@@ -179,4 +191,4 @@ entropy:
 
 ---
 
-*Lines: 155/200 | Last pruned: 2025-12-15*
+*Lines: 167/200 | Last pruned: 2025-12-15*

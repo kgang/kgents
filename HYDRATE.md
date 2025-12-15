@@ -2,85 +2,92 @@
 
 > *"To read is to invoke. There is no view from nowhere."*
 
-## Ground (Seven Principles)
+## Principles
 
-1. **Tasteful** — Clear, justified purpose
-2. **Curated** — Quality over quantity
-3. **Ethical** — Augment, don't replace judgment
-4. **Joy-Inducing** — Personality matters
-5. **Composable** — `f >> g` is primary
-6. **Heterarchical** — No fixed hierarchy
-7. **Generative** — Spec compresses; impl follows
-
-**Meta**: Accursed Share • AGENTESE • Personality Space
+Tasteful • Curated • Ethical • Joy-Inducing • Composable • Heterarchical • Generative
 
 ---
 
 ## AGENTESE (Five Contexts)
 
-| Context | Domain | Affordances |
-|---------|--------|-------------|
-| `world.*` | External | entities, tools, code |
-| `self.*` | Internal | memory, state |
-| `concept.*` | Abstract | specs, skills |
-| `void.*` | Entropy | slop, exploration |
-| `time.*` | Temporal | traces, history |
-
+`world.*` `self.*` `concept.*` `void.*` `time.*`
 **Aspects**: `manifest` • `witness` • `refine` • `sip` • `tithe` • `lens` • `define`
+
+---
+
+## Built Systems (USE THESE!)
+
+| System | Module | What It Does |
+|--------|--------|--------------|
+| **AGENTESE** | `protocols/agentese/` | Verb-first ontology: Logos resolver, path parser, JIT compiler, wiring |
+| **PolyAgent** | `agents/poly/` | State-dependent agents: 17 primitives (MANIFEST, WITNESS, SIP, TITHE...) |
+| **Operad** | `agents/operad/` | Composition grammar: AGENT_OPERAD, SOUL_OPERAD, CLI/Test algebras |
+| **Sheaf** | `agents/sheaf/` | Emergence: KENT_SOUL glues 6 local souls (aesthetic, joy, gratitude...) |
+| **Flux** | `agents/flux/` | Stream processing: `Agent[A,B] → Agent[Flux[A], Flux[B]]` |
+| **Town** | `agents/town/` | Multi-agent sim: CitizenPolynomial, TownOperad, k-clique coalitions |
+| **K-gent** | `agents/k/` | Soul middleware: LLM dialogue, hypnagogia, garden, gatekeeper |
+| **M-gent** | `agents/m/` | Holographic memory: crystals, cartography, stigmergy, routing |
+| **Reactive** | `agents/i/reactive/` | Widgets: Signal/Computed/Effect, multi-target (CLI/TUI/marimo/JSON) |
+| **N-Phase** | `protocols/nphase/` | Prompt compiler: YAML→prompt, state tracking, 11-phase lifecycle |
+| **Terrarium** | `protocols/terrarium/` | Agent gateway: HolographicBuffer, PrismRestBridge, metrics |
+| **API** | `protocols/api/` | FastAPI: `/v1/soul/governance`, `/v1/soul/dialogue`, auth |
+| **Billing** | `protocols/billing/` | Stripe: subscriptions, customers, OpenMeter usage |
+| **Licensing** | `protocols/licensing/` | Tiers: FREE/PRO/ENTERPRISE, feature flags, decorators |
+| **Tenancy** | `protocols/tenancy/` | Multi-tenant: API keys, RLS context, usage events |
+
+---
+
+## Composition Patterns
+
+```python
+# 1. Agent composition
+pipeline = AgentA >> AgentB >> AgentC
+
+# 2. Flux lifting
+flux_agent = Flux.lift(discrete_agent)
+async for result in flux_agent.start(source): ...
+
+# 3. AGENTESE paths
+await logos.invoke("world.house.manifest", umwelt)
+
+# 4. PolyAgent modes
+poly = PolyAgent[S, A, B](state, directions, transition)
+
+# 5. Widget projection
+widget.to_cli() | widget.to_marimo() | widget.to_json()
+```
 
 ---
 
 ## Three Phases
 
-```
-SENSE → ACT → REFLECT → (loop)
-```
-
-| Phase | Contains |
-|-------|----------|
-| **SENSE** | Plan, Research, Develop, Strategize, Cross-Synergize |
-| **ACT** | Implement, QA, Test, Educate |
-| **REFLECT** | Measure, Reflect, Re-Metabolize |
-
-**Full 11-Phase**: `docs/skills/n-phase-cycle/` (Crown Jewels only)
-
-**Auto-Inducer**: `⟿[PHASE]` continue | `⟂[REASON]` halt | *(none)* await human
+`SENSE → ACT → REFLECT → (loop)`
+Full 11-phase: `docs/skills/n-phase-cycle/`
 
 ---
 
 ## Forest Protocol
 
-| File | Role | Protocol |
-|------|------|----------|
-| `plans/_focus.md` | Human intent | **Never overwrite** |
-| `plans/_forest.md` | Canopy | Regenerate |
-| `plans/meta.md` | Mycelium | Append, 200-line cap |
-| `plans/_epilogues/` | Spores | Write at session end |
-| `docs/skills/` | Patterns | Pull → Apply → Push |
+| `_focus.md` | Human intent (never overwrite) |
+| `_forest.md` | Canopy (regenerate) |
+| `meta.md` | Learnings (append, 200-line cap) |
+| `_epilogues/` | Session records |
 
 ---
 
 ## Status
 
-**Tests**: 17,211 | **Mypy**: 0 errors | **Branch**: `main`
-
-| Tree | Progress | Notes |
-|------|----------|-------|
-| **visionary-ux** | 100% ✓ | Wave 3 COMPLETE. 1708 reactive tests; LogosCell, to_marimo(), to_textual(). |
-| **saas** | 100% ✓ | Phase 11 COMPLETE. DR foundation shipped; S3 awaits funding. |
-| **agentese-repl** | 100% ✓ | Wave 7 COMPLETE. Mastery tier, 18 skills, celebration. |
-| **agent-town** | 100% ✓ | Phase 7 TEST COMPLETE. 696 tests; DialogueEngine + live integration. |
-| **aup** | 100% ✓ | Implement COMPLETE. 80 tests; bridge, router, SSE. |
-| k-gent | 97% | Deferred: Fractal, Holographic |
-| memory | 100% ✓ | Phase 7 complete. Substrate + crystallization wired. |
-| turn-gents | 100% ✓ | 187 tests |
-| entropy | 100% ✓ | 87 tests |
-| visualization | 100% ✓ | 87 tests |
-| monetization | 100% ✓ | 296 tests. licensing/billing/api/cli-pro |
+**Tests**: 17,211 | **Mypy**: 0 | Agents: A B C D E F G H I J K L M N O P Ψ Q R T U W Flux
 
 ---
 
-## Commands
+## Skills (docs/skills/)
+
+agentese-path • building-agent • cli-command • flux-agent • polynomial-agent • plan-file • test-patterns • reactive-primitives • modal-scope-branching • turn-projectors • saas-patterns • agent-town-*
+
+---
+
+## Quick Commands
 
 ```bash
 cd impl/claude && uv run pytest -q && uv run mypy .
@@ -88,23 +95,4 @@ cd impl/claude && uv run pytest -q && uv run mypy .
 
 ---
 
-## Agents
-
-A B C D E F G H I J K L M N O P Ψ Q R T U W Flux
-
----
-
-## Gotchas
-
-- Python 3.12: `Generic[A]` + `TypeVar`
-- Foundational: `shared`, `a`, `d`, `l`, `c`, `poly`, `operad`, `sheaf`
-
----
-
-## Deep Dive
-
-`spec/principles.md` • `spec/protocols/auto-inducer.md` • `docs/skills/` • `docs/functor-field-guide.md`
-
----
-
-*Lines: 106. Ceiling: 120.*
+*Lines: 80. Ceiling: 120.*

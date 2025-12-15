@@ -75,18 +75,39 @@ await logos.invoke("world.house.manifest", economist_umwelt)  # → Appraisal
 | `lens` | Composition | Get composable agent |
 | `define` | Generation | Autopoiesis (create new) |
 
+## Built Infrastructure (CHECK FIRST!)
+
+**16 production systems** are fully implemented. Before building anything new, check `docs/systems-reference.md`.
+
+| Category | Systems |
+|----------|---------|
+| **Categorical** | PolyAgent, Operad, Sheaf (use for ANY domain) |
+| **Streaming** | Flux (discrete → continuous agents) |
+| **Semantics** | AGENTESE (8 phases shipped: parser, JIT, laws, wiring) |
+| **Simulation** | Agent Town (citizens, coalitions, dialogue) |
+| **Soul** | K-gent (LLM dialogue, hypnagogia, gatekeeper) |
+| **Memory** | M-gent (crystals, cartography, stigmergy) |
+| **UI** | Reactive (Signal/Computed/Effect → CLI/marimo/JSON) |
+| **Lifecycle** | N-Phase compiler (YAML → prompts) |
+| **Gateway** | Terrarium (REST bridge, metrics) |
+| **SaaS** | API, Billing (Stripe), Licensing (tiers), Tenancy (multi-tenant) |
+
 ## Key Directories
 
 - `spec/` - The specification (conceptual, implementation-agnostic)
 - `spec/protocols/agentese.md` - AGENTESE specification
+- `spec/protocols/projection.md` - Projection Protocol (CLI/TUI/marimo/JSON/VR)
 - `spec/protocols/auto-inducer.md` - Phase transition signifiers (`⟿`/`⟂`)
 - `impl/` - Reference implementations (Claude Code + Open Router)
 - `impl/claude/protocols/agentese/` - AGENTESE implementation (559 tests)
+- `impl/claude/agents/i/reactive/` - Reactive substrate (widgets, projections)
 - `docs/` - Supporting documentation
 - `docs/skills` - Project specific procedural knowledge
+- `docs/systems-reference.md` - **Full inventory of built systems**
 
 ## Working With This Repo
 
+- **CHECK `docs/systems-reference.md` BEFORE assuming you need to build something new**
 - When adding new agent concepts, **start in `spec/`**
 - Implementations should faithfully follow specs
 - Composability is paramount (C-gents principles apply everywhere)

@@ -86,6 +86,7 @@ This file provides a canopy view of all active plans. Read this at session start
 | visionary-ux-wave1 | 2025-12-14 | 591 tests; Signal/Computed/Effect/ModalScope/Turn |
 | saas-phase11 | 2025-12-14 | DR foundation shipped; S3 awaits funding |
 | agent-town-phase7 | 2025-12-14 | 696 tests; DialogueEngine + live integration |
+| agent-town-phase8 | 2025-12-15 | 91 tests; INHABIT mode complete (all 11 phases) |
 
 ---
 
@@ -106,7 +107,7 @@ Accursed Share (5%):    agents/t-gent (rotation)
 
 | Metric | Value |
 |--------|-------|
-| Test count | 17,211 |
+| Test count | 17,585 |
 | Active trees | 23 |
 | Dormant trees | 19 |
 | Blocked | 0 |

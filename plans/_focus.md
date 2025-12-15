@@ -11,12 +11,17 @@
 
 ---
 ## KENT's WISHES
-* MAKE MONEY WITH AGENT TOWN!!!!
-* BEST IN CLASS UX/DEVEX/Theoretical Foundation
-* VERY ROBUST META-INFRA at EVERY LEVEL!!!
-* COMPOSITIONAL GENERATIVE VISUALIZATIONS. BEUATIFUL ASCII.
-* KGENTS UI is STUNNING and PROFOUND while RELAXING
-* Important: MORE LOW-CODE, IN-PLACE ADAPTIVE LEARNING
+* COMPOSITIONAL GENERATIVE UI
+* IN-PLACE, ADAPTIVE LEARNING
+* LLMAgents using haiku tokens liberally in agent town
+* "MAKE MONEY WITH AGENT TOWN!!!!" Create a shockingly delightful consumer, prosumer, and professional experience
+* "Grandest meta-narratives... Westworld-like simulation park"
+* "holographic metaphor reification"
+* Agent Town's default isn't a generic simulation - it's AI that help you build. The metaphors:
+  - Chefs in a kitchen (expertise, collaboration, mise en place)
+  - Cooks in a garden (cultivation, patience, seasonality)
+  - Kids on a playground (play, exploration, joy)
+
 
 ```original_prompt
 Let's REALLY go hard with Agent Town (bigger, emergent), in fact i'll update focus now.
