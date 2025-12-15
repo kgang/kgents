@@ -116,8 +116,10 @@ class TestTownCommands:
 
         assert alice.eigenvectors.curiosity > initial_curiosity
 
-    def test_inhabit_success(self) -> None:
+    def test_inhabit_success(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Inhabit command succeeds."""
+        # Mock input to immediately quit inhabit mode
+        monkeypatch.setattr("builtins.input", lambda _: "q")
         result = _inhabit_citizen("Alice", None)
         assert result == 0
 
@@ -232,11 +234,13 @@ class TestUserModeIntegration:
         yield
         _simulation_state.clear()
 
-    def test_mode_transitions(self) -> None:
+    def test_mode_transitions(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Can transition between modes."""
         _whisper_citizen("Alice", "Hello", None)
         assert _simulation_state["session"].mode == "whisper"
 
+        # Mock input to immediately quit inhabit mode
+        monkeypatch.setattr("builtins.input", lambda _: "q")
         _inhabit_citizen("Bob", None)
         assert _simulation_state["session"].mode == "inhabit"
 

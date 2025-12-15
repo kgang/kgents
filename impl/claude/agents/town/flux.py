@@ -33,9 +33,12 @@ from agents.town.operad import (
     TRADE_METABOLICS,
 )
 from agents.town.polynomial import CitizenInput, CitizenPhase
+from agents.town.trace_bridge import TownTrace, TownTraceEvent
 from protocols.nphase.operad import NPhase
 
 if TYPE_CHECKING:
+    from agents.town.dialogue_engine import CitizenDialogueEngine
+    from agents.town.event_bus import EventBus
     from agents.town.visualization import TownNATSBridge, TownSSEEndpoint
 # =============================================================================
 # Town Phase (Time Slices)
@@ -68,6 +71,8 @@ class TownEvent:
 
     Events are the outputs of the flux stream.
     They can be observed, piped, and recorded.
+
+    Phase 7: Added dialogue fields for LLM-backed citizen speech.
     """
 
     phase: TownPhase
@@ -80,9 +85,16 @@ class TownEvent:
     drama_contribution: float = 0.0
     metadata: dict[str, Any] = field(default_factory=dict)
 
+    # Phase 7: Dialogue fields
+    dialogue: str | None = None  # Generated citizen speech
+    dialogue_tokens: int = 0  # LLM tokens for dialogue
+    dialogue_model: str = ""  # Model used (haiku/sonnet/template)
+    dialogue_was_template: bool = False  # Was template fallback used?
+    dialogue_grounded: list[str] = field(default_factory=list)  # Memory refs
+
     def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
-        return {
+        result = {
             "phase": self.phase.name,
             "operation": self.operation,
             "participants": list(self.participants),
@@ -93,6 +105,14 @@ class TownEvent:
             "drama_contribution": self.drama_contribution,
             "metadata": dict(self.metadata),
         }
+        # Phase 7: Include dialogue fields if present
+        if self.dialogue is not None:
+            result["dialogue"] = self.dialogue
+            result["dialogue_tokens"] = self.dialogue_tokens
+            result["dialogue_model"] = self.dialogue_model
+            result["dialogue_was_template"] = self.dialogue_was_template
+            result["dialogue_grounded"] = list(self.dialogue_grounded)
+        return result
 
 
 # =============================================================================
@@ -114,6 +134,8 @@ class TownFlux:
         self,
         environment: TownEnvironment,
         seed: int | None = None,
+        dialogue_engine: "CitizenDialogueEngine | None" = None,
+        event_bus: "EventBus[TownEvent] | None" = None,
     ) -> None:
         self.environment = environment
         self.rng = random.Random(seed)
@@ -123,11 +145,69 @@ class TownFlux:
         self.total_tokens = 0
         # D-gent memory integration: pending memories to store
         self._pending_memories: list[tuple[Citizen, str, Any]] = []
+        # Trace integration: append events for replay scrubber
+        self.trace = TownTrace()
+        # Phase 7: Optional dialogue engine for LLM-backed speech
+        self._dialogue_engine = dialogue_engine
+        # Phase 8: Optional event bus for fan-out to SSE/NATS/widgets
+        self._event_bus = event_bus
 
     @property
     def citizens(self) -> list[Citizen]:
         """All citizens in the environment."""
         return list(self.environment.citizens.values())
+
+    def set_event_bus(self, event_bus: "EventBus[TownEvent]") -> None:
+        """
+        Wire event bus for fan-out to subscribers.
+
+        Call this to enable live streaming of events to
+        SSE endpoints, NATS bridges, and widget updates.
+        """
+        self._event_bus = event_bus
+
+    @property
+    def event_bus(self) -> "EventBus[TownEvent] | None":
+        """Get the wired event bus, if any."""
+        return self._event_bus
+
+    def _emit_flux_metric(
+        self,
+        operation: str,
+        participants: list[Citizen],
+        tokens_used: int,
+        dialogue_tokens: int,
+        model: str,
+    ) -> None:
+        """
+        Emit action metric for flux operation (Track B).
+
+        These are system-generated events, not user-initiated,
+        so they don't charge credits but do track token consumption
+        for cost analysis.
+        """
+        try:
+            from protocols.api.action_metrics import emit_action_metric
+
+            emit_action_metric(
+                action_type=f"flux_{operation}",
+                user_id="system",
+                town_id=getattr(self.environment, "name", "unknown"),
+                citizen_id=participants[0].id if participants else None,
+                tokens_in=0,
+                tokens_out=dialogue_tokens,
+                model=model,
+                latency_ms=0,
+                credits_charged=0,
+                metadata={
+                    "operation": operation,
+                    "phase": self.current_phase.name,
+                    "participants": [c.name for c in participants],
+                    "total_tokens": tokens_used,
+                },
+            )
+        except ImportError:
+            pass  # Metrics not available
 
     def _next_phase(self) -> TownPhase:
         """Advance to the next phase."""
@@ -193,7 +273,7 @@ class TownFlux:
             region_citizens = self.rng.choice(candidates)
             return self.rng.sample(region_citizens, 2)
 
-    def _execute_operation(
+    async def _execute_operation(
         self,
         operation: str,
         participants: list[Citizen],
@@ -228,15 +308,15 @@ class TownFlux:
         tokens = metabolics.token_cost if metabolics else 100
         drama = metabolics.drama_potential if metabolics else 0.1
 
-        # Execute the operation
+        # Execute the operation (Phase 7: async for dialogue)
         if operation == "greet":
-            return self._execute_greet(participants, tokens, drama)
+            return await self._execute_greet(participants, tokens, drama)
         elif operation == "gossip":
-            return self._execute_gossip(participants, tokens, drama)
+            return await self._execute_gossip(participants, tokens, drama)
         elif operation == "trade":
-            return self._execute_trade(participants, tokens, drama)
+            return await self._execute_trade(participants, tokens, drama)
         elif operation == "solo":
-            return self._execute_solo(participants[0], tokens, drama)
+            return await self._execute_solo(participants[0], tokens, drama)
         else:
             return TownEvent(
                 phase=self.current_phase,
@@ -246,13 +326,13 @@ class TownFlux:
                 message=f"Unknown operation: {operation}",
             )
 
-    def _execute_greet(
+    async def _execute_greet(
         self,
         participants: list[Citizen],
         tokens: int,
         drama: float,
     ) -> TownEvent:
-        """Execute a greeting."""
+        """Execute a greeting with optional dialogue generation."""
         a, b = participants[:2]
 
         # Transition to socializing
@@ -264,6 +344,25 @@ class TownFlux:
         a.update_relationship(b.id, 0.1 * warmth_factor)
         b.update_relationship(a.id, 0.1 * warmth_factor)
 
+        # Phase 7: Generate dialogue if engine available
+        dialogue_result = None
+        if self._dialogue_engine is not None:
+            dialogue_result = await self._dialogue_engine.generate(
+                speaker=a,
+                listener=b,
+                operation="greet",
+                phase=self.current_phase,
+            )
+
+        # Track B: Emit metric for town operation
+        self._emit_flux_metric(
+            operation="greet",
+            participants=[a, b],
+            tokens_used=tokens,
+            dialogue_tokens=dialogue_result.tokens_used if dialogue_result else 0,
+            model=dialogue_result.model if dialogue_result else "template",
+        )
+
         return TownEvent(
             phase=self.current_phase,
             operation="greet",
@@ -273,6 +372,16 @@ class TownFlux:
             tokens_used=tokens,
             drama_contribution=drama,
             metadata={"region": a.region, "warmth_factor": warmth_factor},
+            # Phase 7: Dialogue fields
+            dialogue=dialogue_result.text if dialogue_result else None,
+            dialogue_tokens=dialogue_result.tokens_used if dialogue_result else 0,
+            dialogue_model=dialogue_result.model if dialogue_result else "",
+            dialogue_was_template=dialogue_result.was_template
+            if dialogue_result
+            else False,
+            dialogue_grounded=dialogue_result.grounded_memories
+            if dialogue_result
+            else [],
         )
 
     async def _recall_gossip_subjects(self, citizen: Citizen) -> list[str]:
@@ -312,13 +421,13 @@ class TownFlux:
         except Exception:
             return []
 
-    def _execute_gossip(
+    async def _execute_gossip(
         self,
         participants: list[Citizen],
         tokens: int,
         drama: float,
     ) -> TownEvent:
-        """Execute a gossip exchange with memory integration."""
+        """Execute a gossip exchange with memory integration and dialogue."""
         a, b = participants[:2]
 
         # Need a third party to gossip about
@@ -369,6 +478,26 @@ class TownFlux:
         self._pending_memories.append((a, f"gossip_{self.day}_{a.id}", gossip_memory))
         self._pending_memories.append((b, f"heard_{self.day}_{b.id}", gossip_memory))
 
+        # Phase 7: Generate dialogue if engine available
+        dialogue_result = None
+        if self._dialogue_engine is not None:
+            dialogue_result = await self._dialogue_engine.generate(
+                speaker=a,
+                listener=b,
+                operation="gossip",
+                phase=self.current_phase,
+                recent_events=[f"talking about {subject.name}"],
+            )
+
+        # Track B: Emit metric
+        self._emit_flux_metric(
+            operation="gossip",
+            participants=[a, b],
+            tokens_used=tokens,
+            dialogue_tokens=dialogue_result.tokens_used if dialogue_result else 0,
+            model=dialogue_result.model if dialogue_result else "template",
+        )
+
         return TownEvent(
             phase=self.current_phase,
             operation="gossip",
@@ -378,15 +507,25 @@ class TownFlux:
             tokens_used=tokens,
             drama_contribution=actual_drama,
             metadata={"subject": subject.name, "opinion": a_opinion},
+            # Phase 7: Dialogue fields
+            dialogue=dialogue_result.text if dialogue_result else None,
+            dialogue_tokens=dialogue_result.tokens_used if dialogue_result else 0,
+            dialogue_model=dialogue_result.model if dialogue_result else "",
+            dialogue_was_template=dialogue_result.was_template
+            if dialogue_result
+            else False,
+            dialogue_grounded=dialogue_result.grounded_memories
+            if dialogue_result
+            else [],
         )
 
-    def _execute_trade(
+    async def _execute_trade(
         self,
         participants: list[Citizen],
         tokens: int,
         drama: float,
     ) -> TownEvent:
-        """Execute a trade."""
+        """Execute a trade with optional dialogue generation."""
         a, b = participants[:2]
 
         # Transition to socializing
@@ -403,6 +542,25 @@ class TownFlux:
         a.accumulate_surplus(surplus / 2)
         b.accumulate_surplus(surplus / 2)
 
+        # Phase 7: Generate dialogue if engine available
+        dialogue_result = None
+        if self._dialogue_engine is not None:
+            dialogue_result = await self._dialogue_engine.generate(
+                speaker=a,
+                listener=b,
+                operation="trade",
+                phase=self.current_phase,
+            )
+
+        # Track B: Emit metric
+        self._emit_flux_metric(
+            operation="trade",
+            participants=[a, b],
+            tokens_used=tokens,
+            dialogue_tokens=dialogue_result.tokens_used if dialogue_result else 0,
+            model=dialogue_result.model if dialogue_result else "template",
+        )
+
         return TownEvent(
             phase=self.current_phase,
             operation="trade",
@@ -412,15 +570,25 @@ class TownFlux:
             tokens_used=tokens,
             drama_contribution=drama,
             metadata={"trust_factor": trust_factor, "surplus_generated": surplus},
+            # Phase 7: Dialogue fields
+            dialogue=dialogue_result.text if dialogue_result else None,
+            dialogue_tokens=dialogue_result.tokens_used if dialogue_result else 0,
+            dialogue_model=dialogue_result.model if dialogue_result else "",
+            dialogue_was_template=dialogue_result.was_template
+            if dialogue_result
+            else False,
+            dialogue_grounded=dialogue_result.grounded_memories
+            if dialogue_result
+            else [],
         )
 
-    def _execute_solo(
+    async def _execute_solo(
         self,
         citizen: Citizen,
         tokens: int,
         drama: float,
     ) -> TownEvent:
-        """Execute a solo activity."""
+        """Execute a solo activity with optional dialogue generation."""
         activities = ["working", "reflecting", "creating"]
         activity = self.rng.choice(activities)
 
@@ -434,6 +602,26 @@ class TownFlux:
         # Solo activities build surplus
         citizen.accumulate_surplus(0.05 * tokens)
 
+        # Phase 7: Generate solo dialogue (inner monologue) if engine available
+        # Note: For solo, we use a "phantom listener" (self)
+        dialogue_result = None
+        if self._dialogue_engine is not None and activity == "reflecting":
+            dialogue_result = await self._dialogue_engine.generate(
+                speaker=citizen,
+                listener=citizen,  # Self-dialogue
+                operation="solo_reflect",
+                phase=self.current_phase,
+            )
+
+        # Track B: Emit metric
+        self._emit_flux_metric(
+            operation="solo",
+            participants=[citizen],
+            tokens_used=tokens,
+            dialogue_tokens=dialogue_result.tokens_used if dialogue_result else 0,
+            model=dialogue_result.model if dialogue_result else "template",
+        )
+
         return TownEvent(
             phase=self.current_phase,
             operation="solo",
@@ -443,6 +631,16 @@ class TownFlux:
             tokens_used=tokens,
             drama_contribution=drama,
             metadata={"activity": activity},
+            # Phase 7: Dialogue fields
+            dialogue=dialogue_result.text if dialogue_result else None,
+            dialogue_tokens=dialogue_result.tokens_used if dialogue_result else 0,
+            dialogue_model=dialogue_result.model if dialogue_result else "",
+            dialogue_was_template=dialogue_result.was_template
+            if dialogue_result
+            else False,
+            dialogue_grounded=dialogue_result.grounded_memories
+            if dialogue_result
+            else [],
         )
 
     async def emit_nphase_transition(
@@ -490,13 +688,21 @@ class TownFlux:
             if not participants:
                 continue
 
-            event = self._execute_operation(operation, participants)
+            # Phase 7: async execute for dialogue generation
+            event = await self._execute_operation(operation, participants)
 
             self.total_events += 1
             self.total_tokens += event.tokens_used
             self.environment.total_token_spend += event.tokens_used
 
+            # Append to trace for replay scrubber
+            self.trace.append(event)
+
             yield event
+
+            # Phase 8: Publish to event bus for SSE/NATS/widget subscribers
+            if self._event_bus is not None:
+                await self._event_bus.publish(event)
 
         # Phase-specific end-of-phase actions
         match self.current_phase:
@@ -575,6 +781,79 @@ class TownFlux:
             },
         }
 
+    async def perturb(
+        self,
+        operation: str,
+        participant_ids: list[str] | None = None,
+    ) -> TownEvent | None:
+        """
+        Inject a perturbation event into the flux.
+
+        Perturbation Principle (spec/principles.md §6):
+        - Pads inject events, never bypass state
+        - Events go through normal execution path
+        - Trace captures perturbation origin
+
+        Args:
+            operation: Operation to execute ("greet", "gossip", "trade", "solo")
+            participant_ids: Optional specific participants (random if None)
+
+        Returns:
+            The generated TownEvent, or None if operation couldn't execute
+
+        Note: Phase 7 made this async to support dialogue generation.
+        """
+        # Validate operation
+        valid_ops = {"greet", "gossip", "trade", "solo"}
+        if operation not in valid_ops:
+            return None
+
+        # Select participants
+        participants: list[Citizen]
+        if participant_ids:
+            participant_list: list[Citizen | None] = [
+                self.environment.citizens.get(pid)
+                for pid in participant_ids
+                if pid in self.environment.citizens
+            ]
+            participants = [p for p in participant_list if p is not None]
+        else:
+            participants = self._select_participants(operation)
+
+        if not participants:
+            return None
+
+        # Execute through normal path (perturbation principle: inject, don't bypass)
+        # Phase 7: async for dialogue generation
+        event = await self._execute_operation(operation, participants)
+
+        # Track perturbation metadata
+        event.metadata["perturbation"] = True
+        event.metadata["perturbation_source"] = "hitl_pad"
+
+        self.total_events += 1
+        self.total_tokens += event.tokens_used
+        self.environment.total_token_spend += event.tokens_used
+
+        # Append to trace with perturbation marker
+        trace_event = self.trace.append(event)
+        trace_event.metadata["perturbation"] = True
+
+        return event
+
+    async def perturb_async(
+        self,
+        operation: str,
+        participant_ids: list[str] | None = None,
+    ) -> TownEvent | None:
+        """
+        Async version of perturb for API integration.
+
+        Same as perturb() but awaitable for use in FastAPI endpoints.
+        Kept for backward compatibility—perturb() is now async.
+        """
+        return await self.perturb(operation, participant_ids)
+
 
 # =============================================================================
 # Exports
@@ -585,4 +864,6 @@ __all__ = [
     "TownPhase",
     "TownEvent",
     "TownFlux",
+    "TownTrace",
+    "TownTraceEvent",
 ]

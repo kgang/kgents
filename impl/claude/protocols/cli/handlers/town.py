@@ -15,11 +15,17 @@ Commands:
     kgents town budget      Show token budget status
     kgents town save <path> Save simulation state to YAML
     kgents town load <path> Load simulation state from YAML
+    kgents town demo        Run the Micro-Experience Factory demo
 
     User Modes (Phase 2):
     kgents town whisper <citizen> "<msg>"  Whisper to a citizen
     kgents town inhabit <citizen>          See through a citizen's eyes
     kgents town intervene "<event>"        Inject a world event
+
+    Notifications (Kent's Motivation Loop):
+    kgents town telegram status   Show Telegram notifier status
+    kgents town telegram test     Send a test notification
+    kgents town telegram payment  Simulate a payment notification
 
 See: spec/town/operad.md
 """
@@ -31,6 +37,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
+    from agents.town.inhabit_session import InhabitSession
     from protocols.cli.reflector import InvocationContext
 
 
@@ -133,6 +140,10 @@ def cmd_town(args: list[str], ctx: "InvocationContext | None" = None) -> int:
             return 1
         event_desc = " ".join(args[1:]).strip('"')
         return _intervene_event(event_desc, ctx)
+    elif subcommand == "demo":
+        return _demo(args[1:], ctx)
+    elif subcommand == "telegram":
+        return _telegram_command(args[1:], ctx)
     elif subcommand == "help":
         _print_help()
         return 0
@@ -492,6 +503,170 @@ def _show_status(ctx: "InvocationContext | None") -> int:
     return 0
 
 
+def _demo(args: list[str], ctx: "InvocationContext | None") -> int:
+    """
+    Run the Micro-Experience Factory demo.
+
+    Boots an isometric lattice with citizens, runs through phases,
+    and shows beautiful ASCII visualization with live updates.
+
+    Crown Jewel: plans/micro-experience-factory.md
+
+    Demo Beat Sequence:
+    1. world.town init - Plaza manifests with glyph rain
+    2. Run 4 phases automatically (MORNING -> AFTERNOON -> EVENING -> NIGHT)
+    3. Show each event as it happens with ASCII update
+    4. End with perturbation pad prompt
+    5. Accept input for HITL interaction
+    """
+    from agents.town.environment import create_phase2_environment
+    from agents.town.factory_bridge import FactoryBridge, FactoryBridgeConfig
+    from agents.town.flux import TownFlux
+
+    # Parse args
+    num_phases = 4  # Default: one full day
+    interactive = True
+    seed = 42
+
+    for arg in args:
+        if arg.isdigit():
+            num_phases = int(arg)
+        elif arg == "--no-interactive":
+            interactive = False
+        elif arg.startswith("--seed="):
+            seed = int(arg.split("=")[1])
+
+    # Create Phase 2 environment (7 citizens, 5 regions)
+    env = create_phase2_environment()
+    flux = TownFlux(env, seed=seed)
+
+    # Create factory bridge
+    config = FactoryBridgeConfig(
+        grid_width=12,
+        grid_height=12,
+        enable_pads=True,
+        perturbation_cooldown_ms=1000,  # Faster for demo
+    )
+    bridge = FactoryBridge(flux, config)
+
+    _emit("\n[DEMO] Micro-Experience Factory", {}, ctx)
+    _emit("=" * 58, {}, ctx)
+    _emit(f"  Environment: {env.name}", {"env_name": env.name}, ctx)
+    _emit(f"  Citizens: {len(env.citizens)}", {"citizen_count": len(env.citizens)}, ctx)
+    _emit(f"  Phases: {num_phases} (one phase = ~1/4 day)", {"phases": num_phases}, ctx)
+    _emit("=" * 58, {}, ctx)
+    _emit("", {}, ctx)
+
+    # Run the demo
+    async def _run_demo() -> list[str]:
+        frames: list[str] = []
+        async for frame in bridge.run(num_phases=num_phases):
+            frames.append(frame)
+        return frames
+
+    frames = asyncio.run(_run_demo())
+
+    # Show final frame
+    if frames:
+        _emit(frames[-1], {"frame_type": "final"}, ctx)
+
+    # Show event summary
+    status = flux.get_status()
+    _emit("", {}, ctx)
+    _emit("[SUMMARY]", {}, ctx)
+    _emit(f"  Day: {status['day']}, Phase: {status['phase']}", status, ctx)
+    _emit(f"  Events: {status['total_events']}", {}, ctx)
+    _emit(f"  Tokens: {status['total_tokens']}", {}, ctx)
+    _emit(f"  Tension: {status['tension_index']:.4f}", {}, ctx)
+    _emit(f"  Cooperation: {status['cooperation_level']:.2f}", {}, ctx)
+
+    # Show trace info
+    trace_events = len(flux.trace.events)
+    _emit(f"  Trace Events: {trace_events}", {"trace_events": trace_events}, ctx)
+
+    # Interactive mode
+    if interactive:
+        _emit("", {}, ctx)
+        _emit("[INTERACTIVE MODE]", {}, ctx)
+        _emit("  Commands:", {}, ctx)
+        _emit("    Enter/n = Advance one phase", {}, ctx)
+        _emit("    g = Greet (50 tokens)", {}, ctx)
+        _emit("    s = Gossip (150 tokens)", {}, ctx)
+        _emit("    t = Trade (200 tokens)", {}, ctx)
+        _emit("    o = Solo (75 tokens)", {}, ctx)
+        _emit("    b = Toggle Bloom", {}, ctx)
+        _emit("    ? = Help", {}, ctx)
+        _emit("    q = Quit", {}, ctx)
+        _emit("", {}, ctx)
+
+        # Store simulation state for future interactions
+        _simulation_state["environment"] = env
+        _simulation_state["flux"] = flux
+        _simulation_state["bridge"] = bridge
+        _simulation_state["session"] = TownSession()
+
+        # Interactive loop - keep going until 'q' or interrupt
+        try:
+            while True:
+                user_input = input("  > ").strip().lower()
+
+                if user_input == "q":
+                    _emit("[DEMO] Exiting.", {}, ctx)
+                    break
+                elif user_input == "b":
+                    bridge.toggle_bloom()
+                    _emit(bridge.get_frame(), {"frame_type": "bloom_toggle"}, ctx)
+                elif user_input == "n" or user_input == "":
+                    # Advance one phase (empty enter = next)
+                    async def _step() -> list[str]:
+                        step_frames: list[str] = []
+                        async for frame in bridge.run(num_phases=1):
+                            step_frames.append(frame)
+                        return step_frames
+
+                    step_frames = asyncio.run(_step())
+                    if step_frames:
+                        _emit(step_frames[-1], {"frame_type": "step"}, ctx)
+                    status = flux.get_status()
+                    _emit(f"  Day {status['day']} - {status['phase']}", status, ctx)
+                elif user_input in ("g", "s", "t", "o"):
+                    pad_map = {"g": "greet", "s": "gossip", "t": "trade", "o": "solo"}
+                    pad_id = pad_map[user_input]
+
+                    async def _perturb() -> Any:
+                        return await bridge.perturb(pad_id)
+
+                    event = asyncio.run(_perturb())
+
+                    if event:
+                        _emit(
+                            f"[PERTURB] {event.operation}: {event.message}",
+                            event.to_dict(),
+                            ctx,
+                        )
+                        _emit(bridge.get_frame(), {"frame_type": "perturbation"}, ctx)
+                    else:
+                        _emit("[PERTURB] Failed (cooldown or no participants)", {}, ctx)
+                elif user_input == "?":
+                    _emit(
+                        "  Commands: g=greet, s=gossip, t=trade, o=solo, b=bloom, n/Enter=next phase, q=quit",
+                        {},
+                        ctx,
+                    )
+                else:
+                    _emit(f"  Unknown: '{user_input}' (try '?' for help)", {}, ctx)
+
+        except (EOFError, KeyboardInterrupt):
+            _emit("\n[DEMO] Interrupted.", {}, ctx)
+
+    _emit("", {}, ctx)
+    _emit(
+        "[DEMO] Complete. Use 'kgents town step' to continue the simulation.", {}, ctx
+    )
+
+    return 0
+
+
 def _save_simulation(path: str, ctx: "InvocationContext | None") -> int:
     """Save simulation state to YAML."""
     if "environment" not in _simulation_state:
@@ -646,9 +821,14 @@ def _inhabit_citizen(citizen_name: str, ctx: "InvocationContext | None") -> int:
     """
     Inhabit a citizen—see the world through their eyes.
 
+    Track A: INHABIT mode with consent tracking, force mechanic,
+    and session caps. Respects citizen autonomy.
+
     From Glissant: To inhabit is not to possess. The opacity remains.
     You see what they see, but not how they see it.
     """
+    from agents.town.inhabit_session import InhabitSession, SubscriptionTier
+
     if "environment" not in _simulation_state:
         _emit(
             "[TOWN] No simulation running. Use 'kgents town start' first.",
@@ -658,7 +838,6 @@ def _inhabit_citizen(citizen_name: str, ctx: "InvocationContext | None") -> int:
         return 1
 
     env = _simulation_state["environment"]
-    session: TownSession = _simulation_state.get("session", TownSession())
     citizen = env.get_citizen_by_name(citizen_name)
 
     if not citizen:
@@ -674,15 +853,131 @@ def _inhabit_citizen(citizen_name: str, ctx: "InvocationContext | None") -> int:
         )
         return 1
 
-    # Update session
+    # Create INHABIT session (for MPP demo, use CITIZEN tier)
+    user_tier = SubscriptionTier.CITIZEN  # Full INHABIT with force
+    inhabit = InhabitSession(citizen=citizen, user_tier=user_tier)
+    inhabit.force_enabled = True  # Enable Advanced INHABIT (opt-in)
+
+    # Store in simulation state
+    _simulation_state["inhabit_session"] = inhabit
+    session: TownSession = _simulation_state.get("session", TownSession())
     session.mode = "inhabit"
     session.target_citizen = citizen_name
     _simulation_state["session"] = session
 
-    # Get citizen's view of the world
-    manifest = citizen.manifest(lod=4)  # High detail but not abyss
+    # Show initial view
+    _show_inhabit_view(inhabit, ctx)
 
-    _emit(f"\n[INHABIT] You are now {citizen_name}.", {"target": citizen_name}, ctx)
+    # Interactive INHABIT loop
+    _emit("\n[INHABIT MODE]", {}, ctx)
+    _emit("  Commands:", {}, ctx)
+    _emit("    s <action>  = Suggest action to citizen", {}, ctx)
+    _emit("    f <action>  = Force action (expensive, limited)", {}, ctx)
+    _emit("    a           = Apologize (reduce consent debt)", {}, ctx)
+    _emit("    v           = View current state", {}, ctx)
+    _emit("    c           = Check consent status", {}, ctx)
+    _emit("    ?           = Help", {}, ctx)
+    _emit("    q           = Exit INHABIT mode", {}, ctx)
+    _emit("", {}, ctx)
+
+    # Interactive loop
+    try:
+        while True:
+            # Update session (track time, decay debt)
+            inhabit.update()
+
+            # Check if session expired
+            if inhabit.is_expired():
+                _emit(
+                    "\n[INHABIT] Session time limit reached. Exiting.",
+                    {"reason": "time_limit"},
+                    ctx,
+                )
+                break
+
+            # Get user input
+            user_input = input("  inhabit> ").strip()
+
+            if not user_input:
+                continue
+
+            if user_input == "q":
+                _emit("[INHABIT] Exiting.", {}, ctx)
+                break
+
+            elif user_input == "v":
+                _show_inhabit_view(inhabit, ctx)
+
+            elif user_input == "c":
+                _show_consent_status(inhabit, ctx)
+
+            elif user_input == "a":
+                result = inhabit.apologize()
+                _emit(f"[APOLOGIZE] {result['message']}", result, ctx)
+
+            elif user_input.startswith("s "):
+                action = user_input[2:].strip()
+                result = inhabit.suggest_action(action)
+                if result["success"]:
+                    _emit(f"[SUGGEST] {result['message']}", result, ctx)
+                else:
+                    _emit(f"[SUGGEST] {result['message']}", result, ctx)
+
+            elif user_input.startswith("f "):
+                action = user_input[2:].strip()
+                try:
+                    result = inhabit.force_action(action)
+                    _emit(f"[FORCE] {result['message']}", result, ctx)
+                    _emit(
+                        f"  Forces remaining: {result['forces_remaining']}/{inhabit.max_forces}",
+                        {},
+                        ctx,
+                    )
+                    _emit(
+                        f"  Consent debt: {result['debt']:.2f}/1.0",
+                        {},
+                        ctx,
+                    )
+                except ValueError as e:
+                    _emit(f"[FORCE] Cannot force: {e}", {"error": str(e)}, ctx)
+
+            elif user_input == "?":
+                _emit(
+                    "  Commands: s=suggest, f=force, a=apologize, v=view, c=consent, q=quit",
+                    {},
+                    ctx,
+                )
+
+            else:
+                _emit(f"  Unknown command: '{user_input}' (try '?' for help)", {}, ctx)
+
+    except (EOFError, KeyboardInterrupt):
+        _emit("\n[INHABIT] Interrupted.", {}, ctx)
+
+    # Show session summary
+    status = inhabit.get_status()
+    _emit("\n[SESSION SUMMARY]", {}, ctx)
+    _emit(f"  Duration: {status['duration']:.0f}s", {}, ctx)
+    _emit(f"  Actions: {status['actions_count']}", {}, ctx)
+    _emit(
+        f"  Forces used: {status['force']['used']}/{status['force']['limit']}", {}, ctx
+    )
+    _emit(f"  Final consent debt: {status['consent']['debt']:.2f}", {}, ctx)
+    _emit(f"  Status: {status['consent']['status']}", {}, ctx)
+
+    return 0
+
+
+def _show_inhabit_view(
+    inhabit: "InhabitSession", ctx: "InvocationContext | None"
+) -> None:
+    """Show the citizen's current view of the world."""
+    from agents.town.inhabit_session import InhabitSession
+
+    citizen = inhabit.citizen
+    manifest = citizen.manifest(lod=4)
+
+    _emit(f"\n[VIEW] You are {citizen.name}", {"citizen": citizen.name}, ctx)
     _emit("=" * 50, {}, ctx)
 
     # Current state
@@ -697,10 +992,15 @@ def _inhabit_citizen(citizen_name: str, ctx: "InvocationContext | None") -> int:
     _emit("\n  You think about others:", {}, ctx)
     rels = manifest.get("relationships", {})
     if rels:
-        for other_id, weight in rels.items():
-            # Try to find the name
-            other_citizen = env.get_citizen_by_id(other_id)
-            other_name = other_citizen.name if other_citizen else other_id[:6]
+        # Get environment for name lookup
+        env = _simulation_state.get("environment")
+        for other_id, weight in list(rels.items())[:5]:  # Limit to 5
+            if env:
+                other_citizen = env.get_citizen_by_id(other_id)
+                other_name = other_citizen.name if other_citizen else other_id[:6]
+            else:
+                other_name = other_id[:6]
+
             if weight > 0.5:
                 _emit(f"    {other_name}: You feel warmly toward them.", {}, ctx)
             elif weight > 0:
@@ -712,18 +1012,56 @@ def _inhabit_citizen(citizen_name: str, ctx: "InvocationContext | None") -> int:
     else:
         _emit("    (You haven't formed strong opinions yet.)", {}, ctx)
 
-    # Other citizens in same region
-    others_here = [
-        c for c in env.get_citizens_in_region(citizen.region) if c.id != citizen.id
-    ]
-    if others_here:
-        _emit(f"\n  You see nearby: {', '.join(c.name for c in others_here)}", {}, ctx)
+    # Consent status
+    status = inhabit.consent.status_message()
+    _emit(f"\n  Consent: {status} (debt: {inhabit.consent.debt:.2f})", {}, ctx)
 
     # Hint at opacity
     _emit(f"\n  {citizen.cosmotechnics.opacity_statement}", {}, ctx)
     _emit("=" * 50, {}, ctx)
 
-    return 0
+
+def _show_consent_status(
+    inhabit: "InhabitSession", ctx: "InvocationContext | None"
+) -> None:
+    """Show detailed consent and session status."""
+    from agents.town.inhabit_session import InhabitSession
+
+    status = inhabit.get_status()
+
+    _emit("\n[CONSENT STATUS]", {}, ctx)
+    _emit("=" * 50, {}, ctx)
+
+    # Consent meter
+    debt = status["consent"]["debt"]
+    debt_bar = _render_bar(debt, max_val=1.0, width=20)
+    _emit(f"  Debt: {debt_bar} {debt:.2f}/1.0", {}, ctx)
+    _emit(f"  Status: {status['consent']['status']}", {}, ctx)
+
+    if status["consent"]["cooldown"] > 0:
+        _emit(
+            f"  Cooldown: {status['consent']['cooldown']:.0f}s until next force",
+            {},
+            ctx,
+        )
+
+    # Force usage
+    _emit(f"\n  Forces: {status['force']['used']}/{status['force']['limit']}", {}, ctx)
+    if status["force"]["enabled"]:
+        if status["consent"]["can_force"]:
+            _emit("  Force available: YES", {}, ctx)
+        else:
+            _emit("  Force available: NO", {}, ctx)
+    else:
+        _emit("  Force: DISABLED (opt-in required)", {}, ctx)
+
+    # Time
+    time_remaining = status["time_remaining"]
+    mins = int(time_remaining / 60)
+    secs = int(time_remaining % 60)
+    _emit(f"\n  Time remaining: {mins}m {secs}s", {}, ctx)
+
+    _emit("=" * 50, {}, ctx)
 
 
 def _intervene_event(event_desc: str, ctx: "InvocationContext | None") -> int:
@@ -829,6 +1167,132 @@ def _intervene_event(event_desc: str, ctx: "InvocationContext | None") -> int:
     _emit("=" * 50, {}, ctx)
 
     return 0
+
+
+# =============================================================================
+# Telegram Notifier Commands
+# =============================================================================
+
+
+def _telegram_command(args: list[str], ctx: "InvocationContext | None") -> int:
+    """
+    Telegram notification management.
+
+    Subcommands:
+        kgents town telegram status   Show Telegram notifier status
+        kgents town telegram test     Send a test notification
+        kgents town telegram payment  Simulate a payment notification
+
+    Kent's Motivation Loop: Get notified when revenue flows!
+    """
+    if not args:
+        args = ["status"]
+
+    subcommand = args[0].lower()
+
+    if subcommand == "status":
+        return _telegram_status(ctx)
+    elif subcommand == "test":
+        return _telegram_test(ctx)
+    elif subcommand == "payment":
+        amount = float(args[1]) if len(args) > 1 else 9.99
+        tier = args[2] if len(args) > 2 else "RESIDENT"
+        return _telegram_payment(amount, tier, ctx)
+    elif subcommand == "help":
+        _emit(_telegram_command.__doc__ or "", {}, ctx)
+        return 0
+    else:
+        _emit(f"[TELEGRAM] Unknown: {subcommand}. Try: status, test, payment", {}, ctx)
+        return 1
+
+
+def _telegram_status(ctx: "InvocationContext | None") -> int:
+    """Show Telegram notifier status."""
+    try:
+        from agents.town.telegram_notifier import TelegramNotifier
+
+        notifier = TelegramNotifier.from_env()
+        status = notifier.get_status()
+
+        _emit("\n[TELEGRAM] Notifier Status", status, ctx)
+        _emit(f"  Enabled: {status['enabled']}", {}, ctx)
+        _emit(f"  Configured: {status['configured']}", {}, ctx)
+        _emit(f"  Bot token set: {status['bot_token_set']}", {}, ctx)
+        _emit(f"  Chat ID set: {status['chat_id_set']}", {}, ctx)
+
+        if not status["configured"]:
+            _emit("\n  To configure:", {}, ctx)
+            _emit("    export TELEGRAM_BOT_TOKEN=<from @BotFather>", {}, ctx)
+            _emit("    export TELEGRAM_CHAT_ID=<your chat id>", {}, ctx)
+            _emit("    export TELEGRAM_ENABLED=true", {}, ctx)
+
+        return 0
+    except ImportError as e:
+        _emit(f"[TELEGRAM] Import error: {e}", {"error": str(e)}, ctx)
+        return 1
+
+
+def _telegram_test(ctx: "InvocationContext | None") -> int:
+    """Send a test notification to Telegram."""
+    try:
+        from agents.town.telegram_notifier import TelegramNotifier
+
+        notifier = TelegramNotifier.from_env()
+
+        if not notifier.is_enabled:
+            _emit("[TELEGRAM] Not enabled. Set TELEGRAM_ENABLED=true", {}, ctx)
+            _emit("  Status:", notifier.get_status(), ctx)
+            return 1
+
+        _emit("[TELEGRAM] Sending test notification...", {}, ctx)
+
+        async def _send() -> bool:
+            return await notifier.send_test()
+
+        result = asyncio.run(_send())
+
+        if result:
+            _emit("[TELEGRAM] Test notification sent!", {"success": True}, ctx)
+            return 0
+        else:
+            _emit("[TELEGRAM] Failed to send. Check logs.", {"success": False}, ctx)
+            return 1
+    except Exception as e:
+        _emit(f"[TELEGRAM] Error: {e}", {"error": str(e)}, ctx)
+        return 1
+
+
+def _telegram_payment(amount: float, tier: str, ctx: "InvocationContext | None") -> int:
+    """Simulate a payment notification (for testing)."""
+    try:
+        from agents.town.telegram_notifier import TelegramNotifier
+
+        notifier = TelegramNotifier.from_env()
+
+        if not notifier.is_enabled:
+            _emit("[TELEGRAM] Not enabled. Set TELEGRAM_ENABLED=true", {}, ctx)
+            return 1
+
+        _emit(f"[TELEGRAM] Simulating ${amount:.2f} {tier} payment...", {}, ctx)
+
+        async def _send() -> bool:
+            return await notifier.notify_payment(
+                user_id="test_user_123",
+                amount=amount,
+                tier=tier,
+            )
+
+        result = asyncio.run(_send())
+
+        if result:
+            _emit("[TELEGRAM] Payment notification sent!", {"success": True}, ctx)
+            return 0
+        else:
+            _emit("[TELEGRAM] Failed to send. Check logs.", {"success": False}, ctx)
+            return 1
+    except Exception as e:
+        _emit(f"[TELEGRAM] Error: {e}", {"error": str(e)}, ctx)
+        return 1
 
 
 def _get_current_day() -> int:

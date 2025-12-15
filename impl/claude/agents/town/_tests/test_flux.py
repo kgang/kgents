@@ -213,9 +213,10 @@ class TestFluxStep:
 
 
 class TestFluxOperations:
-    """Test operation execution."""
+    """Test operation execution (Phase 7: async)."""
 
-    def test_execute_greet(self) -> None:
+    @pytest.mark.asyncio
+    async def test_execute_greet(self) -> None:
         """Greet operation produces valid event."""
         env = create_mpp_environment()
         flux = TownFlux(env, seed=42)
@@ -225,14 +226,15 @@ class TestFluxOperations:
         assert alice is not None
         assert clara is not None
 
-        event = flux._execute_greet([alice, clara], 200, 0.1)
+        event = await flux._execute_greet([alice, clara], 200, 0.1)
 
         assert event.operation == "greet"
         assert event.success
         assert "Alice" in event.participants
         assert "Clara" in event.participants
 
-    def test_execute_solo(self) -> None:
+    @pytest.mark.asyncio
+    async def test_execute_solo(self) -> None:
         """Solo operation produces valid event."""
         env = create_mpp_environment()
         flux = TownFlux(env, seed=42)
@@ -240,13 +242,14 @@ class TestFluxOperations:
         alice = env.get_citizen_by_name("Alice")
         assert alice is not None
 
-        event = flux._execute_solo(alice, 300, 0.1)
+        event = await flux._execute_solo(alice, 300, 0.1)
 
         assert event.operation == "solo"
         assert event.success
         assert "Alice" in event.participants
 
-    def test_execute_gossip_needs_third_party(self) -> None:
+    @pytest.mark.asyncio
+    async def test_execute_gossip_needs_third_party(self) -> None:
         """Gossip needs a third party to gossip about."""
         env = create_mpp_environment()
         flux = TownFlux(env, seed=42)
@@ -256,13 +259,14 @@ class TestFluxOperations:
         assert alice is not None
         assert clara is not None
 
-        event = flux._execute_gossip([alice, clara], 500, 0.4)
+        event = await flux._execute_gossip([alice, clara], 500, 0.4)
 
         assert event.operation == "gossip"
         # Should succeed because Bob exists
         assert event.success
 
-    def test_execute_trade(self) -> None:
+    @pytest.mark.asyncio
+    async def test_execute_trade(self) -> None:
         """Trade operation updates relationships."""
         env = create_mpp_environment()
         flux = TownFlux(env, seed=42)
@@ -276,7 +280,7 @@ class TestFluxOperations:
         initial_a_c = alice.get_relationship(clara.id)
         initial_c_a = clara.get_relationship(alice.id)
 
-        event = flux._execute_trade([alice, clara], 400, 0.3)
+        event = await flux._execute_trade([alice, clara], 400, 0.3)
 
         assert event.operation == "trade"
         assert event.success
@@ -353,7 +357,8 @@ class TestMemoryIntegration:
         assert hasattr(flux, "_pending_memories")
         assert flux._pending_memories == []
 
-    def test_gossip_stores_memory(self) -> None:
+    @pytest.mark.asyncio
+    async def test_gossip_stores_memory(self) -> None:
         """Gossip operation queues memory storage."""
         env = create_mpp_environment()
         flux = TownFlux(env, seed=42)
@@ -366,8 +371,8 @@ class TestMemoryIntegration:
         # Clear any existing pending memories
         flux._pending_memories.clear()
 
-        # Execute gossip
-        event = flux._execute_gossip([alice, clara], 500, 0.4)
+        # Execute gossip (Phase 7: now async)
+        event = await flux._execute_gossip([alice, clara], 500, 0.4)
 
         assert event.success
         # Should have queued 2 memories (one for each participant)
@@ -459,3 +464,232 @@ class TestMemoryIntegration:
 
         subjects = await flux._recall_gossip_subjects(alice)
         assert "Clara" in subjects
+
+
+# =============================================================================
+# TownFlux → TownTrace Integration Tests (Step 1)
+# =============================================================================
+
+
+class TestTownFluxTraceIntegration:
+    """Tests for TownFlux → TownTrace wiring."""
+
+    def test_flux_has_trace(self) -> None:
+        """TownFlux initializes with empty trace."""
+        env = create_mpp_environment()
+        flux = TownFlux(env)
+
+        assert hasattr(flux, "trace")
+        assert len(flux.trace.events) == 0
+
+    @pytest.mark.asyncio
+    async def test_step_appends_to_trace(self) -> None:
+        """TownFlux.step() appends events to trace."""
+        env = create_mpp_environment()
+        flux = TownFlux(env, seed=42)
+
+        # Run a step
+        events_generated = 0
+        async for event in flux.step():
+            events_generated += 1
+
+        # Trace should have the same number of events
+        assert len(flux.trace.events) == events_generated
+        assert events_generated > 0  # At least one event
+
+    @pytest.mark.asyncio
+    async def test_trace_events_match_generated(self) -> None:
+        """Trace events match the generated events."""
+        env = create_mpp_environment()
+        flux = TownFlux(env, seed=123)
+
+        generated: list[TownEvent] = []
+        async for event in flux.step():
+            generated.append(event)
+
+        # Check trace events match
+        for i, event in enumerate(generated):
+            trace_event = flux.trace.events[i]
+            assert trace_event.operation == event.operation
+            assert list(trace_event.participants) == event.participants
+            assert trace_event.success == event.success
+
+    @pytest.mark.asyncio
+    async def test_trace_creates_valid_replay_state(self) -> None:
+        """Trace can create valid ReplayState after step()."""
+        env = create_mpp_environment()
+        flux = TownFlux(env, seed=456)
+
+        # Run multiple steps
+        for _ in range(3):
+            async for _ in flux.step():
+                pass
+
+        replay_state = flux.trace.create_replay_state()
+
+        assert replay_state.max_tick == len(flux.trace.events)
+        assert replay_state.max_tick > 0
+        assert replay_state.start_time is not None
+
+
+# =============================================================================
+# TownFlux Perturbation Tests (Step 5)
+# =============================================================================
+
+
+class TestTownFluxPerturbation:
+    """Tests for TownFlux.perturb() - HITL perturbation injection."""
+
+    @pytest.mark.asyncio
+    async def test_perturb_valid_operation(self) -> None:
+        """Perturb with valid operation returns event."""
+        env = create_mpp_environment()
+        flux = TownFlux(env, seed=42)
+
+        event = await flux.perturb("solo")
+
+        assert event is not None
+        assert event.operation == "solo"
+        assert event.success
+
+    @pytest.mark.asyncio
+    async def test_perturb_invalid_operation_returns_none(self) -> None:
+        """Perturb with invalid operation returns None."""
+        env = create_mpp_environment()
+        flux = TownFlux(env, seed=42)
+
+        event = await flux.perturb("invalid_op")
+
+        assert event is None
+
+    @pytest.mark.asyncio
+    async def test_perturb_greet(self) -> None:
+        """Perturb with greet operation works."""
+        env = create_mpp_environment()
+        flux = TownFlux(env, seed=42)
+
+        event = await flux.perturb("greet")
+
+        assert event is not None
+        assert event.operation == "greet"
+        # Greet needs 2 participants
+        assert len(event.participants) >= 1
+
+    @pytest.mark.asyncio
+    async def test_perturb_gossip(self) -> None:
+        """Perturb with gossip operation works."""
+        env = create_mpp_environment()
+        flux = TownFlux(env, seed=42)
+
+        event = await flux.perturb("gossip")
+
+        assert event is not None
+        assert event.operation == "gossip"
+
+    @pytest.mark.asyncio
+    async def test_perturb_trade(self) -> None:
+        """Perturb with trade operation works."""
+        env = create_mpp_environment()
+        flux = TownFlux(env, seed=42)
+
+        event = await flux.perturb("trade")
+
+        assert event is not None
+        assert event.operation == "trade"
+
+    @pytest.mark.asyncio
+    async def test_perturb_marks_metadata(self) -> None:
+        """Perturb marks event with perturbation metadata."""
+        env = create_mpp_environment()
+        flux = TownFlux(env, seed=42)
+
+        event = await flux.perturb("solo")
+
+        assert event is not None
+        assert event.metadata.get("perturbation") is True
+        assert event.metadata.get("perturbation_source") == "hitl_pad"
+
+    @pytest.mark.asyncio
+    async def test_perturb_appends_to_trace(self) -> None:
+        """Perturb appends event to trace."""
+        env = create_mpp_environment()
+        flux = TownFlux(env, seed=42)
+
+        initial_count = len(flux.trace.events)
+        await flux.perturb("solo")
+
+        assert len(flux.trace.events) == initial_count + 1
+
+    @pytest.mark.asyncio
+    async def test_perturb_updates_counters(self) -> None:
+        """Perturb updates event and token counters."""
+        env = create_mpp_environment()
+        flux = TownFlux(env, seed=42)
+
+        initial_events = flux.total_events
+        initial_tokens = flux.total_tokens
+
+        await flux.perturb("solo")
+
+        assert flux.total_events == initial_events + 1
+        assert flux.total_tokens > initial_tokens
+
+    @pytest.mark.asyncio
+    async def test_perturb_with_specific_participants(self) -> None:
+        """Perturb with specific participants uses them."""
+        env = create_mpp_environment()
+        flux = TownFlux(env, seed=42)
+
+        # Get citizen IDs
+        alice = env.get_citizen_by_name("Alice")
+        assert alice is not None
+
+        event = await flux.perturb("solo", participant_ids=[alice.id])
+
+        assert event is not None
+        assert alice.name in event.participants
+
+    @pytest.mark.asyncio
+    async def test_perturb_with_invalid_participants_falls_back(self) -> None:
+        """Perturb with invalid participant IDs returns None."""
+        env = create_mpp_environment()
+        flux = TownFlux(env, seed=42)
+
+        event = await flux.perturb(
+            "greet", participant_ids=["invalid_id_1", "invalid_id_2"]
+        )
+
+        # Should return None because participants don't exist
+        assert event is None
+
+    @pytest.mark.asyncio
+    async def test_perturb_async(self) -> None:
+        """Async perturb works."""
+        env = create_mpp_environment()
+        flux = TownFlux(env, seed=42)
+
+        event = await flux.perturb_async("solo")
+
+        assert event is not None
+        assert event.operation == "solo"
+
+    @pytest.mark.asyncio
+    async def test_perturb_goes_through_normal_execution(self) -> None:
+        """Perturb uses normal execution path (perturbation principle)."""
+        env = create_mpp_environment()
+        flux = TownFlux(env, seed=42)
+
+        alice = env.get_citizen_by_name("Alice")
+        clara = env.get_citizen_by_name("Clara")
+        assert alice is not None
+        assert clara is not None
+
+        # Record initial relationship
+        initial_rel = alice.get_relationship(clara.id)
+
+        # Execute trade via perturb (should update relationship)
+        event = await flux.perturb("trade", participant_ids=[alice.id, clara.id])
+
+        if event and event.success:
+            # Relationship should be updated (trade improves relationships)
+            assert alice.get_relationship(clara.id) > initial_rel
