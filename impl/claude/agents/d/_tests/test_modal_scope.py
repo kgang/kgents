@@ -544,6 +544,137 @@ class TestComonadProperties:
             assert turn.content == f"Message {i}"
 
 
+class TestDuplicate:
+    """Tests for duplicate() operation—true independent branching."""
+
+    def test_duplicate_creates_independent_scope(self) -> None:
+        """duplicate() creates completely independent scope."""
+        root = ModalScope.create_root()
+        root.window.append(TurnRole.USER, "Hello")
+
+        duplicate = root.duplicate()
+
+        # Duplicate has same content but different identity
+        assert duplicate.scope_id != root.scope_id
+        assert len(duplicate.window) == len(root.window)
+        assert duplicate.window.all_turns()[0].content == "Hello"
+
+    def test_duplicate_not_registered_as_child(self) -> None:
+        """duplicate() doesn't register as child (unlike branch())."""
+        root = ModalScope.create_root()
+        root.window.append(TurnRole.USER, "Hello")
+
+        _duplicate = root.duplicate()
+
+        # Root should have no children
+        assert len(root.children) == 0
+
+    def test_duplicate_tracks_lineage(self) -> None:
+        """Duplicate records parent for lineage tracking."""
+        root = ModalScope.create_root()
+        duplicate = root.duplicate()
+
+        assert duplicate.parent_scope == root.scope_id
+
+    def test_duplicate_both_can_evolve(self) -> None:
+        """Both original and duplicate can evolve independently."""
+        root = ModalScope.create_root()
+        root.window.append(TurnRole.USER, "Start")
+
+        duplicate = root.duplicate()
+
+        # Evolve both
+        root.window.append(TurnRole.ASSISTANT, "Root path")
+        duplicate.window.append(TurnRole.ASSISTANT, "Duplicate path")
+
+        root_turns = root.window.all_turns()
+        dup_turns = duplicate.window.all_turns()
+
+        assert len(root_turns) == 2
+        assert len(dup_turns) == 2
+        assert root_turns[-1].content == "Root path"
+        assert dup_turns[-1].content == "Duplicate path"
+
+    def test_duplicate_preserves_settings(self) -> None:
+        """Duplicate preserves entropy budget and merge strategy."""
+        root = ModalScope.create_root()
+        root.entropy_budget = 0.5
+        root.merge_strategy = MergeStrategy.SQUASH
+
+        duplicate = root.duplicate()
+
+        assert duplicate.entropy_budget == 0.5
+        assert duplicate.merge_strategy == MergeStrategy.SQUASH
+
+    def test_duplicate_has_unique_scope_id(self) -> None:
+        """Each duplicate has unique scope ID."""
+        root = ModalScope.create_root()
+
+        dup1 = root.duplicate()
+        dup2 = root.duplicate()
+        dup3 = root.duplicate()
+
+        scope_ids = [dup1.scope_id, dup2.scope_id, dup3.scope_id]
+        assert len(set(scope_ids)) == 3  # All unique
+
+    def test_duplicate_can_be_branched(self) -> None:
+        """Duplicate can create its own branches."""
+        root = ModalScope.create_root()
+        root.window.append(TurnRole.USER, "Start")
+
+        duplicate = root.duplicate()
+        child = duplicate.branch("child")
+
+        assert child.parent_scope == duplicate.scope_id
+        assert len(duplicate.children) == 1
+
+    def test_cannot_duplicate_merged_scope(self) -> None:
+        """Cannot duplicate a merged scope."""
+        root = ModalScope.create_root()
+        branch = root.branch("child")
+        root.merge(branch)
+
+        with pytest.raises(ValueError, match="merged"):
+            branch.duplicate()
+
+    def test_cannot_duplicate_discarded_scope(self) -> None:
+        """Cannot duplicate a discarded scope."""
+        root = ModalScope.create_root()
+        branch = root.branch("child")
+        root.discard(branch)
+
+        with pytest.raises(ValueError, match="discarded"):
+            branch.duplicate()
+
+    def test_duplicate_starts_with_empty_children(self) -> None:
+        """Duplicate starts fresh with no children (even if original had some)."""
+        root = ModalScope.create_root()
+        root.window.append(TurnRole.USER, "Start")
+        _child = root.branch("child")
+
+        duplicate = root.duplicate()
+
+        # Original has child, duplicate doesn't
+        assert len(root.children) == 1
+        assert len(duplicate.children) == 0
+
+    def test_duplicate_scope_id_format(self) -> None:
+        """Duplicate scope ID has correct format."""
+        root = ModalScope.create_root()
+        duplicate = root.duplicate()
+
+        assert ":dup-" in duplicate.scope_id
+        assert duplicate.scope_id.startswith(root.scope_id)
+
+    def test_duplicate_has_commit_message(self) -> None:
+        """Duplicate has informative commit message."""
+        root = ModalScope.create_root()
+        duplicate = root.duplicate()
+
+        assert duplicate.commit_message is not None
+        assert root.scope_id in duplicate.commit_message
+
+
 class TestStateTransitions:
     """Tests for branch state transitions."""
 

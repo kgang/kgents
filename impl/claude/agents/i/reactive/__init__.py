@@ -32,6 +32,7 @@ Key Abstractions:
     - Effect: Side effects container
     - KgentsWidget[S]: Base widget class with project() for multiple targets
     - CompositeWidget[S]: Widget that composes child widgets in slots
+    - HStack/VStack: Composition containers via >> and // operators
 
 Principles:
     1. Pure Entropy Algebra - No random.random() in render paths
@@ -63,6 +64,22 @@ from agents.i.reactive.adapters import (
     inject_theme_css,
     is_anywidget_available,
 )
+from agents.i.reactive.colony_bridge import (
+    ActivityBuffer,
+    ColonyDashboardBridge,
+    create_bridge_and_dashboard,
+)
+from agents.i.reactive.colony_dashboard import (
+    ColonyDashboard,
+    ColonyState,
+    TownPhase,
+)
+from agents.i.reactive.composable import (
+    ComposableMixin,
+    ComposableWidget,
+    HStack,
+    VStack,
+)
 
 # Re-export primitives
 from agents.i.reactive.primitives import (
@@ -86,6 +103,14 @@ from agents.i.reactive.primitives import (
     YieldCardState,
     YieldCardWidget,
 )
+
+# Wave 4: Agent Town Citizen Dashboard
+from agents.i.reactive.primitives.citizen_card import (
+    NPHASE_LABELS,
+    PHASE_GLYPHS,
+    CitizenState,
+    CitizenWidget,
+)
 from agents.i.reactive.signal import Computed, Effect, Signal
 from agents.i.reactive.widget import CompositeWidget, KgentsWidget, RenderTarget
 
@@ -99,6 +124,11 @@ __all__ = [
     "KgentsWidget",
     "CompositeWidget",
     "RenderTarget",
+    # Composition
+    "ComposableWidget",
+    "ComposableMixin",
+    "HStack",
+    "VStack",
     # Primitives - Atomic
     "GlyphWidget",
     "GlyphState",
@@ -142,6 +172,17 @@ __all__ = [
     "AgentTraceState",
     "SpanData",
     "create_trace_widget",
+    # Wave 4: Agent Town Citizen Dashboard
+    "CitizenWidget",
+    "CitizenState",
+    "PHASE_GLYPHS",
+    "NPHASE_LABELS",
+    "ColonyDashboard",
+    "ColonyState",
+    "TownPhase",
+    "ActivityBuffer",
+    "ColonyDashboardBridge",
+    "create_bridge_and_dashboard",
     # Meta
     "__version__",
 ]

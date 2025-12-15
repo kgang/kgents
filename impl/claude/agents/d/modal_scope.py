@@ -23,6 +23,7 @@ Phase 2.2 Implementation.
 
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from enum import Enum
@@ -214,6 +215,59 @@ class ModalScope:
 
         self._children[name] = child
         return child
+
+    def duplicate(self) -> "ModalScope":
+        """
+        Create an independent deep copy of this scope.
+
+        Unlike branch() which creates a child with parent tracking,
+        duplicate() creates a completely independent scope that can
+        evolve separately. The duplicate tracks its lineage via parent
+        reference but is not registered as a child.
+
+        This enables true parallel exploration without merge semantics:
+        - Original and duplicate can both evolve independently
+        - Neither affects the other
+        - Both can be branched further
+        - No merge/discard required
+
+        Category Theory: This is the comonadic duplicate() made concrete.
+        From one context, we get two contexts that share history but
+        diverge going forward.
+
+        Example:
+            scope_a = ModalScope.create_root()
+            scope_a.window.append(TurnRole.USER, "Hello")
+
+            scope_b = scope_a.duplicate()
+            scope_a.window.append(TurnRole.ASSISTANT, "Path A")
+            scope_b.window.append(TurnRole.ASSISTANT, "Path B")
+
+            # scope_a and scope_b now have different histories
+
+        Returns:
+            New independent ModalScope with deep-copied context
+        """
+        if self._is_merged:
+            raise ValueError(f"Cannot duplicate merged scope {self.scope_id}")
+        if self._is_discarded:
+            raise ValueError(f"Cannot duplicate discarded scope {self.scope_id}")
+
+        # Deep copy the context window
+        duplicated_window = ContextWindow.from_dict(self.window.to_dict())
+
+        return ModalScope(
+            scope_id=f"{self.scope_id}:dup-{uuid4().hex[:8]}",
+            parent_scope=self.scope_id,  # Track lineage
+            branch_name=f"duplicate-of-{self.branch_name}",
+            created_at=datetime.now(UTC),
+            window=duplicated_window,
+            entropy_budget=self.entropy_budget,
+            merge_strategy=self.merge_strategy,
+            commit_message=f"Duplicated from {self.scope_id}",
+            _parent_token_count=self._parent_token_count,
+            # Note: _children not copied—duplicate starts fresh
+        )
 
     def merge(
         self,

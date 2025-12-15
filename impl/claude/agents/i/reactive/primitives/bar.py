@@ -18,6 +18,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal
 
+from agents.i.reactive.composable import ComposableMixin
 from agents.i.reactive.entropy import entropy_to_distortion
 from agents.i.reactive.primitives.glyph import GlyphState, GlyphWidget
 from agents.i.reactive.signal import Signal
@@ -59,7 +60,7 @@ class BarState:
     label: str | None = None  # Optional label
 
 
-class BarWidget(KgentsWidget[BarState]):
+class BarWidget(ComposableMixin, KgentsWidget[BarState]):
     """
     A bar visualization composed of glyphs.
 

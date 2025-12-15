@@ -16,6 +16,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal
 
+from agents.i.reactive.composable import ComposableMixin
 from agents.i.reactive.entropy import (
     PHASE_GLYPHS,
     distortion_to_css,
@@ -52,7 +53,7 @@ class GlyphState:
     animate: Animation = "none"
 
 
-class GlyphWidget(KgentsWidget[GlyphState]):
+class GlyphWidget(ComposableMixin, KgentsWidget[GlyphState]):
     """
     The atomic visual unit.
 
@@ -83,6 +84,29 @@ class GlyphWidget(KgentsWidget[GlyphState]):
 
     def __init__(self, initial: GlyphState | None = None) -> None:
         self.state = Signal.of(initial or GlyphState())
+
+    @classmethod
+    def from_signal(cls, signal: Signal[GlyphState]) -> GlyphWidget:
+        """
+        Create a GlyphWidget that subscribes to an external Signal.
+
+        The widget's state tracks the external signal, enabling
+        reactive composition where state changes propagate automatically.
+
+        Args:
+            signal: External Signal[GlyphState] to subscribe to
+
+        Returns:
+            GlyphWidget bound to the external signal
+
+        Example:
+            state_signal = Signal.of(GlyphState(char="X"))
+            glyph = GlyphWidget.from_signal(state_signal)
+            state_signal.set(GlyphState(char="Y"))  # glyph updates
+        """
+        widget = cls.__new__(cls)
+        widget.state = signal
+        return widget
 
     def with_time(self, t: float) -> GlyphWidget:
         """

@@ -16,6 +16,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
+from agents.i.reactive.composable import ComposableMixin
 from agents.i.reactive.entropy import SPARK_CHARS, entropy_to_distortion
 from agents.i.reactive.primitives.glyph import GlyphState, GlyphWidget
 from agents.i.reactive.signal import Signal
@@ -45,7 +46,7 @@ class SparklineState:
     show_bounds: bool = False  # Show min/max values
 
 
-class SparklineWidget(KgentsWidget[SparklineState]):
+class SparklineWidget(ComposableMixin, KgentsWidget[SparklineState]):
     """
     A sparkline visualization for time-series data.
 
@@ -77,6 +78,29 @@ class SparklineWidget(KgentsWidget[SparklineState]):
 
     def __init__(self, initial: SparklineState | None = None) -> None:
         self.state = Signal.of(initial or SparklineState())
+
+    @classmethod
+    def from_signal(cls, signal: Signal[SparklineState]) -> SparklineWidget:
+        """
+        Create a SparklineWidget that subscribes to an external Signal.
+
+        The widget's state tracks the external signal, enabling
+        reactive composition where state changes propagate automatically.
+
+        Args:
+            signal: External Signal[SparklineState] to subscribe to
+
+        Returns:
+            SparklineWidget bound to the external signal
+
+        Example:
+            state_signal = Signal.of(SparklineState(values=(0.1, 0.5, 0.9)))
+            spark = SparklineWidget.from_signal(state_signal)
+            state_signal.set(SparklineState(values=(0.2, 0.6, 1.0)))  # spark updates
+        """
+        widget = cls.__new__(cls)
+        widget.state = signal
+        return widget
 
     def push(self, value: float) -> SparklineWidget:
         """

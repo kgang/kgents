@@ -23,6 +23,7 @@ Effect is a side-effect container - equivalent to:
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Callable, Generic, TypeVar
 
@@ -33,25 +34,60 @@ T = TypeVar("T")
 U = TypeVar("U")
 
 
+@dataclass(frozen=True)
+class Snapshot(Generic[T]):
+    """
+    Immutable point-in-time capture of Signal state.
+
+    Used for time-travel debugging and branching explorations.
+    The snapshot captures not just the value but its lineage (generation).
+
+    Category Theory: This is the coalgebraic observation—a way to
+    "remember" state without coupling to the Signal itself.
+
+    Attributes:
+        value: The captured value at snapshot time
+        timestamp: When the snapshot was taken (monotonic time)
+        generation: How many times the Signal had been set when captured
+    """
+
+    value: T
+    timestamp: float
+    generation: int
+
+
 @dataclass
 class Signal(Generic[T]):
     """
-    Observable state primitive.
+    Observable state primitive with time-travel support.
 
     A Signal holds a value and notifies subscribers when it changes.
     This is the shared abstraction across ALL rendering targets.
 
     Key: Pure, no side effects in the primitive itself.
 
+    Time Travel: Signals support snapshot/restore for branching explorations:
+        snap = signal.snapshot()  # Capture current state
+        signal.set(new_value)     # Explore different path
+        signal.restore(snap)      # Return to captured state
+
     Example:
         count = Signal.of(0)
         count.subscribe(lambda v: print(f"Count: {v}"))
         count.set(1)  # prints "Count: 1"
         count.update(lambda v: v + 1)  # prints "Count: 2"
+
+        # Time travel
+        snap = count.snapshot()
+        count.set(100)
+        assert count.value == 100
+        count.restore(snap)
+        assert count.value == 2
     """
 
     _value: T
     _subscribers: list[Callable[[T], None]] = field(default_factory=list)
+    _generation: int = field(default=0)
 
     @classmethod
     def of(cls, value: T) -> Signal[T]:
@@ -67,6 +103,7 @@ class Signal(Generic[T]):
         """Set new value and notify subscribers if changed."""
         if new_value != self._value:
             self._value = new_value
+            self._generation += 1
             for sub in self._subscribers:
                 sub(new_value)
 
@@ -99,6 +136,56 @@ class Signal(Generic[T]):
             assert doubled.value == 10
         """
         return Computed.of(compute=lambda: fn(self._value), sources=[self])
+
+    def snapshot(self) -> Snapshot[T]:
+        """
+        Capture current state as an immutable snapshot.
+
+        The snapshot preserves:
+        - The current value
+        - The timestamp (monotonic time)
+        - The generation count (how many mutations have occurred)
+
+        Use restore() to return to this captured state.
+
+        Example:
+            sig = Signal.of(42)
+            snap = sig.snapshot()
+            sig.set(100)
+            sig.restore(snap)
+            assert sig.value == 42
+
+        Returns:
+            Immutable Snapshot with captured state
+        """
+        return Snapshot(
+            value=self._value,
+            timestamp=time.monotonic(),
+            generation=self._generation,
+        )
+
+    def restore(self, snapshot: Snapshot[T]) -> None:
+        """
+        Restore signal to a previously captured snapshot.
+
+        This sets the value and notifies subscribers if the value
+        differs from current. The generation counter continues from
+        current (does not reset to snapshot's generation).
+
+        Args:
+            snapshot: Previously captured Snapshot from this signal
+
+        Example:
+            snap = sig.snapshot()
+            sig.set(999)
+            sig.restore(snap)  # Back to original value
+        """
+        self.set(snapshot.value)
+
+    @property
+    def generation(self) -> int:
+        """Current generation (mutation count) of this signal."""
+        return self._generation
 
 
 @dataclass
