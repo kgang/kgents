@@ -18,7 +18,11 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from agents.town.event_bus import EventBus
+    from protocols.nphase.events import NPhaseEvent
 
 from protocols.nphase.operad import (
     NPhase,
@@ -169,6 +173,7 @@ class NPhaseSession:
     - Checkpoint/restore for recovery
     - Handle accumulation per phase
     - Audit trail via ledger
+    - Optional event bus integration (Wave 4)
 
     Decision D1: Phase state lives here, not in LLM context.
 
@@ -177,6 +182,12 @@ class NPhaseSession:
         session.advance_phase(NPhase.ACT)
         session.add_handle("world.file.content", {"file": "foo.py"})
         checkpoint = session.checkpoint({"reason": "before test run"})
+
+        # With event bus (Wave 4):
+        from agents.town.event_bus import EventBus
+        bus = EventBus()
+        session.set_event_bus(bus)
+        # Events now emitted on phase transitions
     """
 
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
@@ -189,6 +200,7 @@ class NPhaseSession:
     created_at: datetime = field(default_factory=datetime.now)
     last_touched: datetime = field(default_factory=datetime.now)
     metadata: dict[str, Any] = field(default_factory=dict)
+    _event_bus: "EventBus[NPhaseEvent] | None" = field(default=None, repr=False)
 
     @property
     def current_phase(self) -> NPhase:
@@ -199,6 +211,39 @@ class NPhaseSession:
     def cycle_count(self) -> int:
         """Get current cycle count."""
         return self.phase_state.cycle_count
+
+    # --- Event Bus Integration (Wave 4 Task 4.4) ---
+
+    @property
+    def event_bus(self) -> "EventBus[NPhaseEvent] | None":
+        """Get the optional event bus."""
+        return self._event_bus
+
+    def set_event_bus(self, bus: "EventBus[NPhaseEvent] | None") -> None:
+        """
+        Set the event bus for event emission.
+
+        When set, the session will emit NPhaseEvent instances
+        on phase transitions and checkpoints.
+        """
+        self._event_bus = bus
+
+    def _emit_event(self, event: "NPhaseEvent") -> None:
+        """
+        Emit an event to the bus if configured.
+
+        Note: This uses asyncio.create_task to avoid making the
+        calling method async. Events are fire-and-forget.
+        """
+        if self._event_bus is not None:
+            import asyncio
+
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(self._event_bus.publish(event))
+            except RuntimeError:
+                # No event loop running - skip event emission
+                pass
 
     def can_advance_to(self, target: NPhase) -> bool:
         """Check if transition to target is valid."""
@@ -254,6 +299,19 @@ class NPhaseSession:
         )
         self.ledger.append(entry)
 
+        # Emit event if bus configured (Wave 4 Task 4.4)
+        if self._event_bus is not None:
+            from protocols.nphase.events import phase_transition_event
+
+            event = phase_transition_event(
+                session_id=self.id,
+                from_phase=from_phase,
+                to_phase=target,
+                cycle_count=self.cycle_count,
+                payload=payload,
+            )
+            self._emit_event(event)
+
         return entry
 
     def checkpoint(self, metadata: dict[str, Any] | None = None) -> SessionCheckpoint:
@@ -277,6 +335,20 @@ class NPhaseSession:
             metadata=metadata or {},
         )
         self.checkpoints.append(cp)
+
+        # Emit checkpoint event if bus configured (Wave 4 Task 4.4)
+        if self._event_bus is not None:
+            from protocols.nphase.events import checkpoint_event
+
+            event = checkpoint_event(
+                session_id=self.id,
+                checkpoint_id=cp.id,
+                phase=self.current_phase,
+                cycle_count=self.cycle_count,
+                handle_count=len(self.handles),
+            )
+            self._emit_event(event)
+
         return cp
 
     def restore(self, checkpoint_id: str) -> None:
@@ -383,7 +455,9 @@ class NPhaseSession:
         )
 
         # Restore phase state
-        session.phase_state.current_phase = NPhase[data.get("current_phase", "UNDERSTAND")]
+        session.phase_state.current_phase = NPhase[
+            data.get("current_phase", "UNDERSTAND")
+        ]
         session.phase_state.cycle_count = data.get("cycle_count", 0)
 
         # Restore checkpoints
@@ -395,9 +469,7 @@ class NPhaseSession:
         session.handles = [Handle.from_dict(h) for h in data.get("handles", [])]
 
         # Restore ledger
-        session.ledger = [
-            PhaseLedgerEntry.from_dict(e) for e in data.get("ledger", [])
-        ]
+        session.ledger = [PhaseLedgerEntry.from_dict(e) for e in data.get("ledger", [])]
 
         # Restore entropy
         session.entropy_spent = dict(data.get("entropy_spent", {}))
@@ -445,7 +517,9 @@ class SessionStore:
     def __init__(self) -> None:
         self._sessions: dict[str, NPhaseSession] = {}
 
-    def create(self, title: str = "", metadata: dict[str, Any] | None = None) -> NPhaseSession:
+    def create(
+        self, title: str = "", metadata: dict[str, Any] | None = None
+    ) -> NPhaseSession:
         """Create a new N-Phase session."""
         session = NPhaseSession(title=title, metadata=metadata or {})
         self._sessions[session.id] = session
@@ -494,7 +568,9 @@ def reset_session_store() -> None:
 # =============================================================================
 
 
-def create_session(title: str = "", metadata: dict[str, Any] | None = None) -> NPhaseSession:
+def create_session(
+    title: str = "", metadata: dict[str, Any] | None = None
+) -> NPhaseSession:
     """Create a new N-Phase session."""
     return _session_store.create(title=title, metadata=metadata)
 

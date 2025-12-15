@@ -15,7 +15,7 @@ const PHASES: Array<{ phase: WorkshopPhase; archetype: BuilderArchetype }> = [
  */
 export function TaskProgress() {
   const { currentPhase, activeTask, metrics } = useWorkshopStore();
-  const progress = useWorkshopStore(selectPhaseProgress());
+  const _progress = useWorkshopStore(selectPhaseProgress()); // Reserved for progress animation
 
   const currentPhaseIndex = PHASES.findIndex((p) => p.phase === currentPhase);
 
@@ -26,9 +26,7 @@ export function TaskProgress() {
         <div className="text-sm text-gray-300 mb-2 flex items-center gap-2">
           <span className="font-medium">Task:</span>
           <span className="truncate">{activeTask.description}</span>
-          <span className="text-gray-500">
-            (Priority {activeTask.priority})
-          </span>
+          <span className="text-gray-500">(Priority {activeTask.priority})</span>
         </div>
       )}
 
@@ -39,21 +37,18 @@ export function TaskProgress() {
           const icon = BUILDER_ICONS[archetype];
           const isCompleted = index < currentPhaseIndex;
           const isCurrent = index === currentPhaseIndex;
-          const isPending = index > currentPhaseIndex;
+          const _isPending = index > currentPhaseIndex; // Reserved for pending state UI
 
           return (
-            <div
-              key={phase}
-              className="flex items-center flex-1"
-            >
+            <div key={phase} className="flex items-center flex-1">
               {/* Phase Node */}
               <div
                 className={`flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all ${
                   isCompleted
                     ? 'bg-green-500/20 border-green-500'
                     : isCurrent
-                    ? 'border-current animate-pulse'
-                    : 'border-gray-600 bg-gray-800/50'
+                      ? 'border-current animate-pulse'
+                      : 'border-gray-600 bg-gray-800/50'
                 }`}
                 style={{
                   borderColor: isCurrent ? color : undefined,
@@ -61,11 +56,7 @@ export function TaskProgress() {
                 }}
                 title={`${archetype}: ${phase}`}
               >
-                <span
-                  className={`text-xs ${
-                    isCompleted || isCurrent ? '' : 'opacity-50'
-                  }`}
-                >
+                <span className={`text-xs ${isCompleted || isCurrent ? '' : 'opacity-50'}`}>
                   {isCompleted ? '✓' : icon}
                 </span>
               </div>
@@ -90,9 +81,7 @@ export function TaskProgress() {
               : 'border-gray-600 bg-gray-800/50'
           }`}
         >
-          <span
-            className={currentPhase === 'COMPLETE' ? 'text-emerald-400' : 'text-gray-500'}
-          >
+          <span className={currentPhase === 'COMPLETE' ? 'text-emerald-400' : 'text-gray-500'}>
             🎉
           </span>
         </div>

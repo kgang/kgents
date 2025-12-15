@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 export function BuilderPanel() {
   const { selectedBuilder, selectBuilder, builders } = useWorkshopStore();
   const selectedBuilderData = useWorkshopStore(selectSelectedBuilderData());
-  const { tier } = useUserStore();
+  const { tier: _tier } = useUserStore(); // Reserved for future tier-specific UI
   const canInhabit = useUserStore(selectCanInhabit());
 
   const [whisperInput, setWhisperInput] = useState('');
@@ -75,18 +75,12 @@ export function BuilderPanel() {
           <span className="text-3xl">{icon}</span>
           <div>
             <h2 className="text-xl font-bold">{selectedBuilderData.name}</h2>
-            <p
-              className="text-sm font-medium"
-              style={{ color }}
-            >
+            <p className="text-sm font-medium" style={{ color }}>
               {selectedBuilderData.archetype}
             </p>
           </div>
         </div>
-        <button
-          onClick={() => selectBuilder(null)}
-          className="text-gray-400 hover:text-white"
-        >
+        <button onClick={() => selectBuilder(null)} className="text-gray-400 hover:text-white">
           ✕
         </button>
       </div>
@@ -105,22 +99,14 @@ export function BuilderPanel() {
           </div>
           <div className="flex justify-between">
             <span className="text-gray-400">Active</span>
-            <span
-              className={
-                selectedBuilderData.is_active ? 'text-green-400' : 'text-gray-500'
-              }
-            >
+            <span className={selectedBuilderData.is_active ? 'text-green-400' : 'text-gray-500'}>
               {selectedBuilderData.is_active ? 'Yes' : 'No'}
             </span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-400">In Specialty</span>
             <span
-              className={
-                selectedBuilderData.is_in_specialty
-                  ? 'text-purple-400'
-                  : 'text-gray-500'
-              }
+              className={selectedBuilderData.is_in_specialty ? 'text-purple-400' : 'text-gray-500'}
             >
               {selectedBuilderData.is_in_specialty ? 'Yes' : 'No'}
             </span>

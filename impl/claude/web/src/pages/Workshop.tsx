@@ -13,7 +13,7 @@ type LoadingState = 'loading' | 'loaded' | 'error';
 
 export default function Workshop() {
   const {
-    workshopId,
+    workshopId: _workshopId, // Reserved for workshop routing
     setWorkshopId,
     builders,
     setBuilders,
@@ -26,7 +26,7 @@ export default function Workshop() {
     setRunning,
     speed,
     setSpeed,
-    metrics,
+    metrics: _metrics, // Reserved for metrics display
     selectedBuilder,
     selectBuilder,
   } = useWorkshopStore();
@@ -159,17 +159,13 @@ export default function Workshop() {
         <div className="flex items-center gap-4">
           <h1 className="font-semibold">🔧 Workshop</h1>
           <div className="flex items-center gap-2 text-sm text-gray-400">
-            <span className={`font-medium ${getPhaseColor(currentPhase)}`}>
-              {currentPhase}
-            </span>
+            <span className={`font-medium ${getPhaseColor(currentPhase)}`}>{currentPhase}</span>
             <span>•</span>
             <span>{builders.length} builders</span>
             {activeTask && (
               <>
                 <span>•</span>
-                <span className="text-white truncate max-w-[200px]">
-                  {activeTask.description}
-                </span>
+                <span className="text-white truncate max-w-[200px]">{activeTask.description}</span>
               </>
             )}
           </div>

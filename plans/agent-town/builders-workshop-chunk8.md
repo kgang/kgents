@@ -1,7 +1,7 @@
 ---
 path: agent-town/builders-workshop-chunk8
-status: active
-progress: 0
+status: complete
+progress: 100
 last_touched: 2025-12-15
 touched_by: claude-opus-4-5
 blocking: []
@@ -9,24 +9,34 @@ enables:
   - agent-town/builders-workshop
   - agent-town/builders-workshop-chunk9
 session_notes: |
-  CONTINUATION from Chunk 7 (WorkshopFlux complete, 65 tests).
-  Now implementing web projection - React components for workshop visualization.
+  COMPLETE: Web Projection for Builder's Workshop.
+
+  Deliverables (124 new tests):
+  - Backend: protocols/api/workshop.py (26 tests)
+  - Frontend: Workshop.tsx page, WorkshopMesa.tsx, BuilderPanel.tsx,
+    TaskProgress.tsx, ArtifactFeed.tsx (98 tests)
+  - Store: workshopStore.ts with Zustand + immer
+  - Hook: useWorkshopStream.ts for SSE streaming
+  - Types: Workshop types added to api/types.ts
+  - Route: /workshop accessible from app
+
+  Pattern synergy: Followed Town.tsx → Workshop.tsx projection.
 phase_ledger:
   PLAN: touched
-  RESEARCH: pending
-  DEVELOP: pending
+  RESEARCH: complete
+  DEVELOP: complete
   STRATEGIZE: skipped  # Strategy set in parent plan
-  CROSS-SYNERGIZE: pending  # Town.tsx, Mesa, SSE patterns
-  IMPLEMENT: pending
-  QA: pending
-  TEST: pending
+  CROSS-SYNERGIZE: complete  # Town.tsx, Mesa, SSE patterns
+  IMPLEMENT: complete
+  QA: complete
+  TEST: complete
   EDUCATE: skipped  # Doc-only deferred
   MEASURE: deferred
-  REFLECT: pending
+  REFLECT: complete
 entropy:
   planned: 0.12
-  spent: 0.0
-  remaining: 0.12
+  spent: 0.10
+  remaining: 0.02
 ---
 
 # Builder's Workshop: Chunk 8 - Web Projection
@@ -554,19 +564,19 @@ interface WorkshopState {
 
 ## Exit Criteria
 
-- [ ] `Workshop.tsx` page renders with header, mesa, sidebar
-- [ ] `WorkshopMesa.tsx` shows builders in pipeline layout
-- [ ] `BuilderPanel.tsx` shows selected builder details
-- [ ] `TaskProgress.tsx` shows phase progress
-- [ ] `ArtifactFeed.tsx` streams artifacts and events
-- [ ] `useWorkshopStream.ts` handles SSE connection
-- [ ] API endpoints for workshop operations
-- [ ] TypeScript types for workshop data
-- [ ] Zustand store for workshop state
-- [ ] 45+ tests passing (frontend + backend)
-- [ ] Route `/workshop` accessible from nav
-- [ ] Builder selection works
-- [ ] WHISPER sends message (if backend supports)
+- [x] `Workshop.tsx` page renders with header, mesa, sidebar
+- [x] `WorkshopMesa.tsx` shows builders in pipeline layout
+- [x] `BuilderPanel.tsx` shows selected builder details
+- [x] `TaskProgress.tsx` shows phase progress
+- [x] `ArtifactFeed.tsx` streams artifacts and events
+- [x] `useWorkshopStream.ts` handles SSE connection
+- [x] API endpoints for workshop operations
+- [x] TypeScript types for workshop data
+- [x] Zustand store for workshop state
+- [x] 45+ tests passing (frontend + backend) → **124 tests!**
+- [x] Route `/workshop` accessible from nav
+- [x] Builder selection works
+- [x] WHISPER sends message (if backend supports)
 
 ---
 
@@ -793,17 +803,17 @@ from agents.town.builders import (
 
 | Phase | Status | Artifact |
 |-------|--------|----------|
-| PLAN | touched | This document |
-| RESEARCH | pending | - |
-| DEVELOP | pending | - |
-| STRATEGIZE | skipped | - |
-| CROSS-SYNERGIZE | pending | - |
-| IMPLEMENT | pending | - |
-| QA | pending | - |
-| TEST | pending | - |
-| EDUCATE | skipped | - |
+| PLAN | complete | This document |
+| RESEARCH | complete | Town.tsx, Mesa.tsx, useTownStream patterns studied |
+| DEVELOP | complete | TypeScript types, component interfaces |
+| STRATEGIZE | skipped | Strategy set in parent plan |
+| CROSS-SYNERGIZE | complete | Town → Workshop projection pattern |
+| IMPLEMENT | complete | All components, store, hooks, API |
+| QA | complete | Linting, TypeScript compilation |
+| TEST | complete | 124 tests (26 backend + 98 frontend) |
+| EDUCATE | skipped | Doc-only deferred |
 | MEASURE | deferred | - |
-| REFLECT | pending | - |
+| REFLECT | complete | This session |
 
 ---
 

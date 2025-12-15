@@ -89,9 +89,7 @@ describe('useWidgetState', () => {
   it('calls onUpdate callback when state changes', () => {
     const onUpdate = vi.fn();
     const initial = createCitizenCard();
-    const { result } = renderHook(() =>
-      useWidgetState({ initialState: initial, onUpdate })
-    );
+    const { result } = renderHook(() => useWidgetState({ initialState: initial, onUpdate }));
 
     act(() => {
       result.current.updateState(createCitizenCard({ name: 'Updated' }));
@@ -104,9 +102,7 @@ describe('useWidgetState', () => {
   it('does not update if state is equal', () => {
     const onUpdate = vi.fn();
     const initial = createCitizenCard({ name: 'Same' });
-    const { result } = renderHook(() =>
-      useWidgetState({ initialState: initial, onUpdate })
-    );
+    const { result } = renderHook(() => useWidgetState({ initialState: initial, onUpdate }));
 
     const genBefore = result.current.generation;
 
@@ -271,9 +267,7 @@ describe('useWidgetStream', () => {
 
     // Get the event handler
     const addEventListenerCalls = mockEventSource.addEventListener.mock.calls;
-    const stateHandler = addEventListenerCalls.find(
-      ([name]: [string]) => name === 'live.state'
-    )?.[1];
+    const stateHandler = addEventListenerCalls.find((call) => call[0] === 'live.state')?.[1];
 
     expect(stateHandler).toBeDefined();
 

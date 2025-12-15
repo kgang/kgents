@@ -1277,6 +1277,7 @@ class WorkshopFlux:
 
         Called after workshop phase transitions to keep N-Phase in sync.
         Only advances if the mapped N-Phase is different from current.
+        Also propagates N-Phase context to active builder (Wave 4 Task 4.2).
         """
         if self._nphase_session is None:
             return
@@ -1296,6 +1297,29 @@ class WorkshopFlux:
                 payload={"workshop_phase": self.current_phase.name},
             )
             self._last_nphase = target_nphase
+
+        # Propagate N-Phase context to active builder (Wave 4 Task 4.2)
+        self._propagate_nphase_context()
+
+    def _propagate_nphase_context(self) -> None:
+        """
+        Propagate N-Phase context to active builder (Wave 4 Task 4.2).
+
+        Sets the nphase_context on the active builder so it can adapt
+        its behavior based on the current development phase.
+        """
+        if self._nphase_session is None:
+            return
+
+        active = self.active_builder
+        if active is None:
+            return
+
+        active.set_nphase_context(
+            phase=self._nphase_session.current_phase.name,
+            cycle_count=self._nphase_session.cycle_count,
+            session_id=self._nphase_session.id,
+        )
 
     async def start(
         self,

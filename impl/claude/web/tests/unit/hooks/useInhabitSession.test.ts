@@ -1,6 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
-import { useInhabitSession, type InhabitStatus, type InhabitResponse } from '@/hooks/useInhabitSession';
+import { renderHook, act } from '@testing-library/react';
+import {
+  useInhabitSession,
+  type InhabitStatus,
+  type InhabitResponse,
+} from '@/hooks/useInhabitSession';
 
 // Mock the API client
 vi.mock('@/api/client', () => ({
@@ -239,9 +243,7 @@ describe('useInhabitSession', () => {
       vi.mocked(inhabitApi.suggest).mockResolvedValueOnce({ data: rupturedResponse } as any);
 
       const onRupture = vi.fn();
-      const { result } = renderHook(() =>
-        useInhabitSession({ ...defaultOptions, onRupture })
-      );
+      const { result } = renderHook(() => useInhabitSession({ ...defaultOptions, onRupture }));
 
       await act(async () => {
         await result.current.start();
@@ -263,9 +265,7 @@ describe('useInhabitSession', () => {
       vi.mocked(inhabitApi.suggest).mockResolvedValueOnce({ data: exitResponse } as any);
 
       const onSessionEnd = vi.fn();
-      const { result } = renderHook(() =>
-        useInhabitSession({ ...defaultOptions, onSessionEnd })
-      );
+      const { result } = renderHook(() => useInhabitSession({ ...defaultOptions, onSessionEnd }));
 
       await act(async () => {
         await result.current.start();
@@ -309,7 +309,13 @@ describe('useInhabitSession', () => {
         message: 'Alice reluctantly agrees',
         status: createMockStatus({
           force: { enabled: true, used: 1, remaining: 2, limit: 3 },
-          consent: { debt: 0.5, status: 'strained', at_rupture: false, can_force: true, cooldown: 0 },
+          consent: {
+            debt: 0.5,
+            status: 'strained',
+            at_rupture: false,
+            can_force: true,
+            cooldown: 0,
+          },
         }),
       });
 
@@ -367,7 +373,13 @@ describe('useInhabitSession', () => {
       const mockStatus = createMockStatus();
       const rupturedResponse = createMockResponse({
         status: createMockStatus({
-          consent: { debt: 1.0, status: 'ruptured', at_rupture: true, can_force: false, cooldown: 120 },
+          consent: {
+            debt: 1.0,
+            status: 'ruptured',
+            at_rupture: true,
+            can_force: false,
+            cooldown: 120,
+          },
         }),
       });
 
@@ -375,9 +387,7 @@ describe('useInhabitSession', () => {
       vi.mocked(inhabitApi.force).mockResolvedValueOnce({ data: rupturedResponse } as any);
 
       const onRupture = vi.fn();
-      const { result } = renderHook(() =>
-        useInhabitSession({ ...defaultOptions, onRupture })
-      );
+      const { result } = renderHook(() => useInhabitSession({ ...defaultOptions, onRupture }));
 
       await act(async () => {
         await result.current.start();
@@ -394,13 +404,25 @@ describe('useInhabitSession', () => {
   describe('apologize', () => {
     it('should apologize successfully', async () => {
       const mockStatus = createMockStatus({
-        consent: { debt: 0.6, status: 'strained', at_rupture: false, can_force: false, cooldown: 0 },
+        consent: {
+          debt: 0.6,
+          status: 'strained',
+          at_rupture: false,
+          can_force: false,
+          cooldown: 0,
+        },
       });
       const mockResponse = createMockResponse({
         type: 'negotiate',
         message: 'Alice accepts your apology',
         status: createMockStatus({
-          consent: { debt: 0.3, status: 'recovering', at_rupture: false, can_force: true, cooldown: 0 },
+          consent: {
+            debt: 0.3,
+            status: 'recovering',
+            at_rupture: false,
+            can_force: true,
+            cooldown: 0,
+          },
         }),
       });
 
@@ -464,9 +486,7 @@ describe('useInhabitSession', () => {
       vi.mocked(inhabitApi.end).mockResolvedValueOnce({} as any);
 
       const onSessionEnd = vi.fn();
-      const { result } = renderHook(() =>
-        useInhabitSession({ ...defaultOptions, onSessionEnd })
-      );
+      const { result } = renderHook(() => useInhabitSession({ ...defaultOptions, onSessionEnd }));
 
       await act(async () => {
         await result.current.start();
@@ -500,9 +520,7 @@ describe('useInhabitSession', () => {
       vi.mocked(inhabitApi.end).mockRejectedValueOnce(new Error('Session already ended'));
 
       const onSessionEnd = vi.fn();
-      const { result } = renderHook(() =>
-        useInhabitSession({ ...defaultOptions, onSessionEnd })
-      );
+      const { result } = renderHook(() => useInhabitSession({ ...defaultOptions, onSessionEnd }));
 
       await act(async () => {
         await result.current.start();
@@ -619,7 +637,13 @@ describe('useInhabitSession', () => {
 
     it('should compute consentDebt from status', async () => {
       const mockStatus = createMockStatus({
-        consent: { debt: 0.7, status: 'strained', at_rupture: false, can_force: false, cooldown: 0 },
+        consent: {
+          debt: 0.7,
+          status: 'strained',
+          at_rupture: false,
+          can_force: false,
+          cooldown: 0,
+        },
       });
       vi.mocked(inhabitApi.start).mockResolvedValueOnce({ data: mockStatus } as any);
 
@@ -649,7 +673,13 @@ describe('useInhabitSession', () => {
 
     it('should compute isRuptured from status', async () => {
       const mockStatus = createMockStatus({
-        consent: { debt: 1.0, status: 'ruptured', at_rupture: true, can_force: false, cooldown: 120 },
+        consent: {
+          debt: 1.0,
+          status: 'ruptured',
+          at_rupture: true,
+          can_force: false,
+          cooldown: 120,
+        },
       });
       vi.mocked(inhabitApi.start).mockResolvedValueOnce({ data: mockStatus } as any);
 

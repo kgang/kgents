@@ -36,12 +36,12 @@ Copy `.env.example` to `.env`:
 cp .env.example .env
 ```
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `VITE_API_URL` | Backend API URL | `http://localhost:8000` |
-| `VITE_WS_URL` | WebSocket URL | `ws://localhost:8000` |
-| `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe test key | - |
-| `VITE_AUTH_PROVIDER` | Auth provider | `mock` |
+| Variable                      | Description     | Default                 |
+| ----------------------------- | --------------- | ----------------------- |
+| `VITE_API_URL`                | Backend API URL | `http://localhost:8000` |
+| `VITE_WS_URL`                 | WebSocket URL   | `ws://localhost:8000`   |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe test key | -                       |
+| `VITE_AUTH_PROVIDER`          | Auth provider   | `mock`                  |
 
 ### Mock Login (Development)
 
@@ -49,32 +49,35 @@ The app requires authentication for some features. For development, use the brow
 
 ```javascript
 // Paste in browser console (F12) to mock login
-localStorage.setItem('agent-town-user', JSON.stringify({
-  state: {
-    isAuthenticated: true,
-    userId: 'dev-user-001',
-    apiKey: 'dev-api-key',
-    tier: 'CITIZEN',  // TOURIST, RESIDENT, CITIZEN, or FOUNDER
-    credits: 500,
-    monthlyUsage: {}
-  },
-  version: 0
-}));
+localStorage.setItem(
+  'agent-town-user',
+  JSON.stringify({
+    state: {
+      isAuthenticated: true,
+      userId: 'dev-user-001',
+      apiKey: 'dev-api-key',
+      tier: 'CITIZEN', // TOURIST, RESIDENT, CITIZEN, or FOUNDER
+      credits: 500,
+      monthlyUsage: {},
+    },
+    version: 0,
+  })
+);
 location.reload();
 ```
 
 ### Available Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start dev server (port 3000) |
-| `npm run build` | Production build |
-| `npm run typecheck` | TypeScript type checking |
-| `npm run test` | Run tests (watch mode) |
-| `npm run test -- --run` | Run tests once |
-| `npm run test:ui` | Run tests with UI |
-| `npm run test:coverage` | Run tests with coverage |
-| `npm run lint` | ESLint |
+| Command                 | Description                  |
+| ----------------------- | ---------------------------- |
+| `npm run dev`           | Start dev server (port 3000) |
+| `npm run build`         | Production build             |
+| `npm run typecheck`     | TypeScript type checking     |
+| `npm run test`          | Run tests (watch mode)       |
+| `npm run test -- --run` | Run tests once               |
+| `npm run test:ui`       | Run tests with UI            |
+| `npm run test:coverage` | Run tests with coverage      |
+| `npm run lint`          | ESLint                       |
 
 ### Running Tests
 
@@ -117,23 +120,15 @@ Backend (Python)                    Frontend (React)
 
 ### Key Files
 
-| File | Purpose |
-|------|---------|
-| `src/hooks/useTownStreamWidget.ts` | Widget SSE streaming hook |
-| `src/reactive/types.ts` | Widget JSON type definitions |
-| `src/reactive/WidgetRenderer.tsx` | Type-discriminated dispatcher |
-| `src/widgets/` | Widget component implementations |
-| `src/pages/TownV2.tsx` | Widget-based Town page (new) |
-| `src/components/town/MesaV2.tsx` | Props-based Mesa canvas |
-| `src/components/town/CitizenPanelV2.tsx` | Props-based citizen panel |
-
-### Migration Status
-
-TownV2 (`/town-v2/:townId`) runs in parallel with Town (`/town/:townId`):
-- **TownV2**: Uses `useTownStreamWidget` + local state (widget-based)
-- **Town**: Uses `useTownStore` + Zustand (legacy, deprecated)
-
-Once TownV2 is stable, it will replace Town.tsx and Zustand dependencies will be removed.
+| File                                   | Purpose                          |
+| -------------------------------------- | -------------------------------- |
+| `src/hooks/useTownStreamWidget.ts`     | Widget SSE streaming hook        |
+| `src/reactive/types.ts`                | Widget JSON type definitions     |
+| `src/reactive/WidgetRenderer.tsx`      | Type-discriminated dispatcher    |
+| `src/widgets/`                         | Widget component implementations |
+| `src/pages/Town.tsx`                   | Widget-based Town page           |
+| `src/components/town/Mesa.tsx`         | Props-based Mesa canvas          |
+| `src/components/town/CitizenPanel.tsx` | Props-based citizen panel        |
 
 ### Directory Structure
 
@@ -144,16 +139,14 @@ src/
 │   ├── landing/   # Landing page components (DemoPreview)
 │   ├── layout/    # Layout wrapper
 │   ├── paywall/   # LODGate, UpgradeModal
-│   └── town/      # Town visualization (Mesa, MesaV2, CitizenPanel, etc.)
+│   └── town/      # Town visualization (Mesa, CitizenPanel)
 ├── hooks/         # Custom React hooks
 │   ├── useInhabitSession.ts   # INHABIT session management
-│   ├── useTownStream.ts       # SSE stream handling (legacy)
-│   └── useTownStreamWidget.ts # Widget SSE streaming (new)
+│   └── useTownStreamWidget.ts # Widget SSE streaming
 ├── lib/           # Utilities (Stripe, grid math)
 ├── pages/         # Route pages
 │   ├── Landing.tsx
-│   ├── Town.tsx            # Legacy Zustand-based
-│   ├── TownV2.tsx          # Widget-based (new)
+│   ├── Town.tsx            # Widget-based Town page
 │   ├── Inhabit.tsx
 │   ├── Dashboard.tsx
 │   └── CheckoutSuccess.tsx
@@ -166,9 +159,8 @@ src/
 │   ├── layout/      # HStack, VStack
 │   ├── cards/       # CitizenCard, EigenvectorDisplay
 │   └── dashboards/  # ColonyDashboard
-└── stores/        # Zustand state stores (deprecated for Town)
-    ├── userStore.ts   # Auth, tier, credits (still used)
-    ├── townStore.ts   # Town state (deprecated, use useTownStreamWidget)
+└── stores/        # Zustand state stores
+    ├── userStore.ts   # Auth, tier, credits
     └── uiStore.ts     # Modals, notifications
 ```
 
@@ -176,16 +168,17 @@ src/
 
 ### Subscription Tiers
 
-| Tier | Price | Features |
-|------|-------|----------|
-| TOURIST | Free | LOD 0-1, Demo only |
-| RESIDENT | $9.99/mo | LOD 0-3, Basic INHABIT |
-| CITIZEN | $29.99/mo | LOD 0-4, Full INHABIT + Force |
-| FOUNDER | $99.99/yr | LOD 0-5, Unlimited everything |
+| Tier     | Price     | Features                      |
+| -------- | --------- | ----------------------------- |
+| TOURIST  | Free      | LOD 0-1, Demo only            |
+| RESIDENT | $9.99/mo  | LOD 0-3, Basic INHABIT        |
+| CITIZEN  | $29.99/mo | LOD 0-4, Full INHABIT + Force |
+| FOUNDER  | $99.99/yr | LOD 0-5, Unlimited everything |
 
 ### INHABIT Mode
 
 Step into a citizen's perspective and guide their choices:
+
 - **Suggest actions** - Propose what the citizen should do
 - **Force actions** - Override citizen will (CITIZEN+ tier)
 - **Apologize** - Repair consent debt after forcing
@@ -196,6 +189,7 @@ Step into a citizen's perspective and guide their choices:
 ### "Demo unavailable" on Landing Page
 
 Backend API not running. Start it with:
+
 ```bash
 uv run uvicorn protocols.api.app:create_app --factory --reload --port 8000
 ```

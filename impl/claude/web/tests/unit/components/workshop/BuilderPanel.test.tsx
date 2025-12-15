@@ -54,23 +54,23 @@ describe('BuilderPanel', () => {
   describe('without selection', () => {
     it('should show placeholder when no builder selected', () => {
       render(<BuilderPanel />);
-      expect(
-        screen.getByText(/click a builder on the canvas/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/click a builder on the canvas/i)).toBeInTheDocument();
     });
 
     it('should show available builders list', () => {
       render(<BuilderPanel />);
-      expect(screen.getByText('Scout')).toBeInTheDocument();
-      expect(screen.getByText('Sage')).toBeInTheDocument();
-      expect(screen.getByText('Spark')).toBeInTheDocument();
-      expect(screen.getByText('Steady')).toBeInTheDocument();
-      expect(screen.getByText('Sync')).toBeInTheDocument();
+      // Text includes icon + name, use regex for flexible matching
+      expect(screen.getByText(/Scout/)).toBeInTheDocument();
+      expect(screen.getByText(/Sage/)).toBeInTheDocument();
+      expect(screen.getByText(/Spark/)).toBeInTheDocument();
+      expect(screen.getByText(/Steady/)).toBeInTheDocument();
+      expect(screen.getByText(/Sync/)).toBeInTheDocument();
     });
 
     it('should allow selecting builder from list', async () => {
       render(<BuilderPanel />);
-      fireEvent.click(screen.getByText('Scout'));
+      // Click the button containing "Scout"
+      fireEvent.click(screen.getByText(/Scout/));
 
       await waitFor(() => {
         expect(useWorkshopStore.getState().selectedBuilder).toBe('Scout');
@@ -87,7 +87,8 @@ describe('BuilderPanel', () => {
 
     it('should show builder name and archetype', () => {
       render(<BuilderPanel />);
-      expect(screen.getByText('Scout')).toBeInTheDocument();
+      // Multiple elements may have "Scout" - check at least one exists
+      expect(screen.getAllByText('Scout').length).toBeGreaterThan(0);
       expect(screen.getByText('🔍')).toBeInTheDocument(); // Scout icon
     });
 
@@ -102,16 +103,12 @@ describe('BuilderPanel', () => {
     it('should show specialty description', () => {
       render(<BuilderPanel />);
       expect(screen.getByText('Specialty')).toBeInTheDocument();
-      expect(
-        screen.getByText(/exploration.*research/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/exploration.*research/i)).toBeInTheDocument();
     });
 
     it('should have whisper input', () => {
       render(<BuilderPanel />);
-      expect(
-        screen.getByPlaceholderText(/say something/i)
-      ).toBeInTheDocument();
+      expect(screen.getByPlaceholderText(/say something/i)).toBeInTheDocument();
     });
 
     it('should allow deselecting builder', () => {

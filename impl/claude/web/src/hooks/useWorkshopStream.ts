@@ -72,7 +72,7 @@ export function useWorkshopStream({
     });
 
     // Handle workshop.idle event (workshop not running)
-    eventSource.addEventListener('workshop.idle', (e) => {
+    eventSource.addEventListener('workshop.idle', () => {
       console.log('[Workshop SSE] Workshop idle');
       handlersRef.current.setRunning(false);
     });
@@ -125,18 +125,14 @@ export function useWorkshopStream({
   return {
     connect,
     disconnect,
-    isConnected:
-      !!eventSourceRef.current &&
-      eventSourceRef.current.readyState === EventSource.OPEN,
+    isConnected: !!eventSourceRef.current && eventSourceRef.current.readyState === EventSource.OPEN,
   };
 }
 
 /**
  * Hook for reconnecting SSE with exponential backoff.
  */
-export function useReconnectingWorkshopStream(
-  options: SSEOptions & { maxRetries?: number }
-) {
+export function useReconnectingWorkshopStream(options: SSEOptions & { maxRetries?: number }) {
   const { maxRetries = 5, ...sseOptions } = options;
   const retriesRef = useRef(0);
   const { connect, disconnect, isConnected } = useWorkshopStream({

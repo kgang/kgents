@@ -62,7 +62,11 @@ function shallowEqual<T extends WidgetJSON>(a: T, b: T): boolean {
   if (keysA.length !== keysB.length) return false;
 
   for (const key of keysA) {
-    if ((a as Record<string, unknown>)[key] !== (b as Record<string, unknown>)[key]) {
+    // Use unknown intermediate to satisfy TypeScript's strict checks
+    if (
+      (a as unknown as Record<string, unknown>)[key] !==
+      (b as unknown as Record<string, unknown>)[key]
+    ) {
       return false;
     }
   }

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useWorkshopStore, selectPhaseProgress } from '@/stores/workshopStore';
-import type { BuilderSummary, WorkshopEvent, WorkshopArtifact, WorkshopPhase } from '@/api/types';
+import type { BuilderSummary, WorkshopEvent, WorkshopArtifact } from '@/api/types';
 
 // Helper to create mock builder
 const createMockBuilder = (

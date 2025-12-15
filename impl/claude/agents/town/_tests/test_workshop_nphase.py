@@ -317,6 +317,112 @@ class TestResetBehavior:
 
 
 # =============================================================================
+# Builder Phase Awareness Tests (Task 4.2)
+# =============================================================================
+
+
+class TestBuilderPhaseAwareness:
+    """Test that builders receive N-Phase context from flux."""
+
+    def test_builder_has_nphase_context_property(self) -> None:
+        """Builder has nphase_context property."""
+        from agents.town.builders import create_sage
+
+        sage = create_sage("Test Sage")
+        # Initially empty
+        assert sage.nphase_context == {}
+
+    def test_set_nphase_context(self) -> None:
+        """set_nphase_context() updates builder state."""
+        from agents.town.builders import create_spark
+
+        spark = create_spark("Test Spark")
+        spark.set_nphase_context(
+            phase="ACT",
+            cycle_count=2,
+            session_id="test-123",
+        )
+
+        ctx = spark.nphase_context
+        assert ctx["phase"] == "ACT"
+        assert ctx["cycle_count"] == 2
+        assert ctx["session_id"] == "test-123"
+
+    def test_is_understanding_property(self) -> None:
+        """is_understanding property works correctly."""
+        from agents.town.builders import create_scout
+
+        scout = create_scout("Test Scout")
+        assert not scout.is_understanding
+
+        scout.set_nphase_context(phase="UNDERSTAND")
+        assert scout.is_understanding
+        assert not scout.is_acting
+        assert not scout.is_reflecting
+
+    def test_is_acting_property(self) -> None:
+        """is_acting property works correctly."""
+        from agents.town.builders import create_steady
+
+        steady = create_steady("Test Steady")
+        steady.set_nphase_context(phase="ACT")
+        assert not steady.is_understanding
+        assert steady.is_acting
+        assert not steady.is_reflecting
+
+    def test_is_reflecting_property(self) -> None:
+        """is_reflecting property works correctly."""
+        from agents.town.builders import create_sync
+
+        sync = create_sync("Test Sync")
+        sync.set_nphase_context(phase="REFLECT")
+        assert not sync.is_understanding
+        assert not sync.is_acting
+        assert sync.is_reflecting
+
+    def test_clear_nphase_context(self) -> None:
+        """clear_nphase_context() resets builder context."""
+        from agents.town.builders import create_sage
+
+        sage = create_sage("Test Sage")
+        sage.set_nphase_context(phase="ACT", cycle_count=5)
+        sage.clear_nphase_context()
+        assert sage.nphase_context == {}
+
+    @pytest.mark.asyncio
+    async def test_flux_propagates_context_to_builder(
+        self, workshop: WorkshopEnvironment, nphase_session: NPhaseSession
+    ) -> None:
+        """WorkshopFlux propagates N-Phase context to active builder."""
+        flux = WorkshopFlux(workshop, nphase_session=nphase_session, auto_advance=False)
+
+        await flux.start("Explore something")
+
+        # Active builder should have context set
+        active = flux.active_builder
+        assert active is not None
+        ctx = active.nphase_context
+        assert ctx["phase"] == "UNDERSTAND"
+        assert ctx["session_id"] == nphase_session.id
+
+    @pytest.mark.asyncio
+    async def test_builder_manifest_includes_nphase(
+        self, workshop: WorkshopEnvironment, nphase_session: NPhaseSession
+    ) -> None:
+        """Builder manifest at LOD 1+ includes N-Phase context."""
+        flux = WorkshopFlux(workshop, nphase_session=nphase_session, auto_advance=False)
+
+        await flux.start("Design something")
+
+        active = flux.active_builder
+        assert active is not None
+        manifest = active.manifest(lod=1)
+        assert "builder" in manifest
+        assert "nphase" in manifest["builder"]
+        assert manifest["builder"]["nphase"]["phase"] == "UNDERSTAND"
+
+
+# =============================================================================
 # Integration Test
 # =============================================================================
 

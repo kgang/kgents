@@ -26,7 +26,10 @@ import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Literal, Optional
+from typing import TYPE_CHECKING, Any, Literal, Optional
+
+if TYPE_CHECKING:
+    from protocols.nphase.session import NPhaseSession
 
 # Type for introspection data
 IntrospectionData = dict[str, Any]
@@ -473,6 +476,7 @@ class SoulSession:
     - Self-modification proposals
     - Change history
     - Reflection capabilities
+    - Optional N-Phase tracking (Wave 4)
     """
 
     def __init__(
@@ -481,6 +485,7 @@ class SoulSession:
         persistence: SoulPersistence,
         history: SoulHistory,
         persisted_state: Optional[PersistedSoulState] = None,
+        nphase_session: Optional["NPhaseSession"] = None,
     ) -> None:
         """Initialize session."""
         self._soul = soul
@@ -489,6 +494,7 @@ class SoulSession:
         self._persisted_state = persisted_state
         self._pending_changes: list[SoulChange] = []
         self._session_start = datetime.now(timezone.utc)
+        self._nphase_session = nphase_session
 
     @property
     def soul(self) -> KgentSoul:
@@ -513,14 +519,92 @@ class SoulSession:
         """Get pending changes."""
         return self._pending_changes + self._history.pending_changes()
 
+    # --- N-Phase Bridge (Wave 4 Task 4.3) ---
+
+    @property
+    def nphase_session(self) -> Optional["NPhaseSession"]:
+        """Get the optional N-Phase session for phase tracking."""
+        return self._nphase_session
+
+    @nphase_session.setter
+    def nphase_session(self, session: Optional["NPhaseSession"]) -> None:
+        """Set the N-Phase session for phase tracking."""
+        self._nphase_session = session
+
+    def get_nphase_context(self) -> dict[str, Any]:
+        """
+        Get current N-Phase context for use in dialogue/reflection.
+
+        Returns empty dict if no N-Phase session is set.
+        """
+        if self._nphase_session is None:
+            return {}
+        return {
+            "session_id": self._nphase_session.id,
+            "current_phase": self._nphase_session.current_phase.name,
+            "cycle_count": self._nphase_session.cycle_count,
+            "checkpoint_count": len(self._nphase_session.checkpoints),
+        }
+
+    def advance_nphase(
+        self,
+        target_phase: str,
+        payload: Optional[dict[str, Any]] = None,
+    ) -> bool:
+        """
+        Advance N-Phase session to target phase.
+
+        Maps dialogue mode to N-Phase:
+        - REFLECTIVE → UNDERSTAND (introspection, context gathering)
+        - GENERATIVE, PHILOSOPHICAL → ACT (producing output)
+        - RECURSIVE → REFLECT (meta-reflection)
+
+        Args:
+            target_phase: "UNDERSTAND", "ACT", or "REFLECT"
+            payload: Optional metadata for the transition
+
+        Returns:
+            True if transition occurred, False otherwise.
+        """
+        if self._nphase_session is None:
+            return False
+
+        from protocols.nphase.operad import NPhase
+
+        # Parse target
+        try:
+            phase = NPhase[target_phase]
+        except KeyError:
+            return False
+
+        # Only advance if different and allowed
+        if (
+            phase != self._nphase_session.current_phase
+            and self._nphase_session.can_advance_to(phase)
+        ):
+            final_payload = payload or {}
+            final_payload["source"] = "soul_session"
+            self._nphase_session.advance_phase(phase, payload=final_payload)
+            return True
+
+        return False
+
     # --- Class Methods ---
 
     @classmethod
-    async def load(cls, soul_dir: Optional[Path] = None) -> SoulSession:
+    async def load(
+        cls,
+        soul_dir: Optional[Path] = None,
+        nphase_session: Optional["NPhaseSession"] = None,
+    ) -> SoulSession:
         """
         Load or create a soul session.
 
         This is the main entry point for using K-gent.
+
+        Args:
+            soul_dir: Optional custom directory for soul persistence.
+            nphase_session: Optional N-Phase session for phase tracking (Wave 4).
         """
         persistence = SoulPersistence(soul_dir)
         history = persistence.load_history()
@@ -549,6 +633,7 @@ class SoulSession:
             persistence=persistence,
             history=history,
             persisted_state=persisted,
+            nphase_session=nphase_session,
         )
 
     @staticmethod
