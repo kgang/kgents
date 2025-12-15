@@ -1,0 +1,43 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# =============================================================================
+# PRE-COMMIT HOOK
+# =============================================================================
+#
+# Philosophy: Fast feedback, don't block flow
+#
+# What runs:
+#   1. lint-staged (ESLint + Prettier on staged files only)
+#   2. Auto-fixes applied where possible
+#
+# What doesn't run (too slow):
+#   - Full test suite (runs on push)
+#   - Full type check (runs on push)
+#   - E2E tests (run in CI)
+#
+# Exit codes:
+#   0 = All good, commit proceeds
+#   1 = Errors found, commit blocked
+#
+# To bypass (emergency only):
+#   git commit --no-verify
+#
+# =============================================================================
+
+echo "🔍 Running pre-commit checks..."
+
+# Run lint-staged (lints + formats staged files)
+npx lint-staged --concurrent false
+
+# Check exit code
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "❌ Pre-commit checks failed."
+  echo ""
+  echo "Fix the errors above, then try again."
+  echo "To bypass (not recommended): git commit --no-verify"
+  exit 1
+fi
+
+echo "✅ Pre-commit checks passed."

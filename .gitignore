@@ -225,6 +225,28 @@ plans/_archive/
 impl/claude/plans/_epilogues/
 prompts/
 
-# Web UI build artifacts
+# Web UI (React/TypeScript/Vite)
 impl/claude/web/node_modules/
 impl/claude/web/dist/
+impl/claude/web/.vite/
+impl/claude/web/*.local
+impl/claude/web/.eslintcache
+
+# TypeScript
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Playwright
+playwright-report/
+playwright/.cache/
+test-results/
+blob-report/
+
+# Vitest
+coverage/
+
+# Generic node patterns (in case of other web projects)
+node_modules/
+*.local
+.eslintcache
+.vite/

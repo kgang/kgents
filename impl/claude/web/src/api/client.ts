@@ -6,6 +6,9 @@ import type {
   CitizenDetailResponse,
   CoalitionsResponse,
   CheckoutSession,
+  WorkshopStatus,
+  WorkshopPlan,
+  BuilderSummary,
 } from './types';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
@@ -145,4 +148,37 @@ export const userApi = {
 
   updateProfile: (data: { name?: string; email?: string }) =>
     apiClient.put('/api/user/profile', data),
+};
+
+// =============================================================================
+// Workshop API
+// =============================================================================
+
+export const workshopApi = {
+  get: () =>
+    apiClient.get<WorkshopStatus>('/v1/workshop'),
+
+  assignTask: (description: string, priority: number = 1) =>
+    apiClient.post<WorkshopPlan>('/v1/workshop/task', { description, priority }),
+
+  getStatus: () =>
+    apiClient.get<WorkshopStatus>('/v1/workshop/status'),
+
+  getBuilders: () =>
+    apiClient.get<{ builders: BuilderSummary[]; count: number }>('/v1/workshop/builders'),
+
+  getBuilder: (archetype: string, lod: number = 1) =>
+    apiClient.get(`/v1/workshop/builder/${archetype}?lod=${lod}`),
+
+  whisper: (archetype: string, message: string) =>
+    apiClient.post(`/v1/workshop/builder/${archetype}/whisper`, { message }),
+
+  perturb: (action: string, builder?: string, artifact?: unknown) =>
+    apiClient.post('/v1/workshop/perturb', { action, builder, artifact }),
+
+  reset: () =>
+    apiClient.post('/v1/workshop/reset'),
+
+  getArtifacts: () =>
+    apiClient.get('/v1/workshop/artifacts'),
 };

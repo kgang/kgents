@@ -24,6 +24,8 @@ from uuid import UUID, uuid4
 if TYPE_CHECKING:
     from fastapi import APIRouter
 
+    from agents.town.flux import TownEvent
+
 logger = logging.getLogger(__name__)
 
 # Graceful FastAPI import
@@ -188,6 +190,88 @@ def _get_town(town_id: str) -> dict[str, Any]:
     if town_id not in _towns:
         raise HTTPException(status_code=404, detail=f"Town {town_id} not found")
     return _towns[town_id]
+
+
+# --- Live State Helpers ---
+
+
+def should_emit_state(tick: int, event: "TownEvent") -> bool:
+    """
+    Determine if we should emit a full state projection.
+
+    Emits every 5 ticks or on significant operations.
+    """
+    return tick % 5 == 0 or event.operation in (
+        "evolve",
+        "coalition_formed",
+        "coalition_dissolved",
+    )
+
+
+def build_colony_dashboard(
+    env: Any,
+    flux: Any,
+    tick: int,
+) -> Any:
+    """
+    Build ColonyDashboard widget from current environment state.
+
+    Args:
+        env: TownEnvironment
+        flux: TownFlux
+        tick: Current tick count
+
+    Returns:
+        ColonyDashboard widget ready for .to_json()
+    """
+    from agents.i.reactive.colony_dashboard import ColonyState, ColonyDashboard, TownPhase
+    from agents.i.reactive.primitives.citizen_card import CitizenState
+    from agents.town.polynomial import CitizenPhase
+
+    # Map flux phase to dashboard phase
+    phase_name = getattr(flux.current_phase, "name", "MORNING")
+    phase_mapping = {
+        "MORNING": TownPhase.MORNING,
+        "AFTERNOON": TownPhase.AFTERNOON,
+        "EVENING": TownPhase.EVENING,
+        "NIGHT": TownPhase.NIGHT,
+    }
+    town_phase = phase_mapping.get(phase_name, TownPhase.MORNING)
+
+    # Build citizen states
+    citizen_states = []
+    for citizen in env.citizens.values():
+        # Extract citizen state with minimal activity samples
+        state = CitizenState(
+            citizen_id=citizen.id,
+            name=citizen.name,
+            archetype=citizen.archetype,
+            phase=citizen._phase,
+            nphase=citizen.nphase_state.current_phase,
+            activity=(),  # Could be populated from flux trace
+            capability=max(0.0, 1.0 - citizen.accursed_surplus / 10.0),
+            entropy=min(1.0, citizen.accursed_surplus / 10.0),
+            region=citizen.region,
+            mood=citizen._infer_mood(),
+            warmth=citizen.eigenvectors.warmth,
+            curiosity=citizen.eigenvectors.curiosity,
+            trust=citizen.eigenvectors.trust,
+        )
+        citizen_states.append(state)
+
+    # Build colony state
+    colony_state = ColonyState(
+        colony_id=env.name or "town",
+        citizens=tuple(citizen_states),
+        phase=town_phase,
+        day=flux.day,
+        total_events=tick,
+        total_tokens=env.total_token_spend,
+        entropy_budget=getattr(flux, "entropy_budget", 1.0),
+        grid_cols=5,  # Default 5 columns
+    )
+
+    return ColonyDashboard(colony_state)
 
 
 # --- Router Factory ---
@@ -724,6 +808,15 @@ def create_town_router() -> "APIRouter | None":
 
                     event_data = json.dumps(event_data_dict)
                     yield f"event: live.event\ndata: {event_data}\n\n"
+
+                    # Emit full state projection periodically
+                    if should_emit_state(tick, event):
+                        try:
+                            dashboard = build_colony_dashboard(env, flux, tick)
+                            state_json = dashboard._to_json()
+                            yield f"event: live.state\ndata: {json.dumps(state_json)}\n\n"
+                        except Exception as e:
+                            logger.warning(f"Failed to emit live.state: {e}")
 
             except asyncio.CancelledError:
                 pass

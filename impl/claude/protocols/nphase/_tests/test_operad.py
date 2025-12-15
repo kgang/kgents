@@ -41,12 +41,13 @@ class TestPhaseFamilies:
     """Tests for phase family mappings."""
 
     def test_sense_family(self) -> None:
-        """Test SENSE includes PLAN, RESEARCH, DEVELOP."""
-        assert PHASE_FAMILIES[NPhase.SENSE] == ["PLAN", "RESEARCH", "DEVELOP"]
+        """Test UNDERSTAND includes PLAN, RESEARCH, DEVELOP, STRATEGIZE, CROSS-SYNERGIZE."""
+        expected = ["PLAN", "RESEARCH", "DEVELOP", "STRATEGIZE", "CROSS-SYNERGIZE"]
+        assert PHASE_FAMILIES[NPhase.UNDERSTAND] == expected
 
     def test_act_family(self) -> None:
         """Test ACT includes implementation phases."""
-        expected = ["STRATEGIZE", "CROSS-SYNERGIZE", "IMPLEMENT", "QA", "TEST"]
+        expected = ["IMPLEMENT", "QA", "TEST"]
         assert PHASE_FAMILIES[NPhase.ACT] == expected
 
     def test_reflect_family(self) -> None:
@@ -62,7 +63,7 @@ class TestPhaseFamilies:
 
     def test_reverse_mapping(self) -> None:
         """Test DETAILED_TO_COMPRESSED reverse mapping."""
-        assert DETAILED_TO_COMPRESSED["PLAN"] == NPhase.SENSE
+        assert DETAILED_TO_COMPRESSED["PLAN"] == NPhase.UNDERSTAND
         assert DETAILED_TO_COMPRESSED["IMPLEMENT"] == NPhase.ACT
         assert DETAILED_TO_COMPRESSED["MEASURE"] == NPhase.REFLECT
 
@@ -73,7 +74,7 @@ class TestNPhaseState:
     def test_default_state(self) -> None:
         """Test default state initialization."""
         state = NPhaseState()
-        assert state.current_phase == NPhase.SENSE
+        assert state.current_phase == NPhase.UNDERSTAND
         assert state.cycle_count == 0
         assert all(phase in state.phase_outputs for phase in NPhase)
 

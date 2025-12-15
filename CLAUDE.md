@@ -104,6 +104,23 @@ await logos.invoke("world.house.manifest", economist_umwelt)  # → Appraisal
 - `docs/` - Supporting documentation
 - `docs/skills` - Project specific procedural knowledge
 - `docs/systems-reference.md` - **Full inventory of built systems**
+- `docs/local-development.md` - **Local dev setup guide**
+- `impl/claude/web/` - Agent Town React frontend (see `web/README.md`)
+
+## Running Locally
+
+```bash
+# Terminal 1: Backend API
+cd impl/claude
+uv run uvicorn protocols.api.app:create_app --factory --reload --port 8000
+
+# Terminal 2: Web UI
+cd impl/claude/web
+npm install && npm run dev
+# Visit http://localhost:3000
+```
+
+See `docs/local-development.md` for detailed setup and troubleshooting.
 
 ## Working With This Repo
 

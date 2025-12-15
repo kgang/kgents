@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { townApi } from '@/api/client';
 import { REGION_GRID_POSITIONS, gridToScreen } from '@/lib/regionGrid';
@@ -9,17 +9,35 @@ import type { CitizenSummary, TownEvent } from '@/api/types';
 // =============================================================================
 
 const GRID_SIZE = 20;
-const CELL_SIZE = 16; // Smaller for preview
-const CANVAS_WIDTH = 480;
-const CANVAS_HEIGHT = 320;
+const CELL_SIZE = 16;
 
-// Archetype colors
+// Use device pixel ratio for sharp rendering
+const getCanvasDimensions = () => {
+  const dpr = window.devicePixelRatio || 1;
+  const width = 480;
+  const height = 320;
+  return { width, height, dpr, scaledWidth: width * dpr, scaledHeight: height * dpr };
+};
+
+// Archetype colors - match actual archetypes from API
 const ARCHETYPE_COLORS: Record<string, string> = {
+  // Base archetypes
   Builder: '#3b82f6',
-  Trader: '#f59e0b',
+  Innkeeper: '#f59e0b',
+  Explorer: '#10b981',
   Healer: '#22c55e',
+  Elder: '#8b5cf6',
+  Merchant: '#f59e0b',
+  Gardener: '#22c55e',
   Scholar: '#8b5cf6',
   Watcher: '#6b7280',
+  Trader: '#f59e0b',
+  // Evolved archetypes
+  'Gardener-Sage': '#a855f7',
+  'Scout-Adapter': '#06b6d4',
+  'Scholar-Synthesizer': '#ec4899',
+  // Fallback
+  default: '#6b7280',
 };
 
 // =============================================================================
@@ -41,7 +59,6 @@ interface DemoState {
 export function DemoPreview() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
-  const animationFrameRef = useRef<number>(0);
 
   const [state, setState] = useState<DemoState>({
     townId: null,
@@ -51,65 +68,30 @@ export function DemoPreview() {
     error: null,
   });
 
-  // Calculate citizen screen positions
-  const getCitizenPositions = useCallback(() => {
-    const offsetX = CANVAS_WIDTH / 2;
-    const offsetY = CANVAS_HEIGHT / 4;
-
-    // Group citizens by region
-    const byRegion = new Map<string, CitizenSummary[]>();
-    state.citizens.forEach((c) => {
-      const list = byRegion.get(c.region) || [];
-      list.push(c);
-      byRegion.set(c.region, list);
-    });
-
-    const positions: Array<{ citizen: CitizenSummary; x: number; y: number }> = [];
-
-    byRegion.forEach((regionCitizens, region) => {
-      const basePos = REGION_GRID_POSITIONS[region] || { x: 10, y: 10 };
-
-      regionCitizens.forEach((citizen, index) => {
-        let gridX = basePos.x;
-        let gridY = basePos.y;
-
-        if (regionCitizens.length > 1) {
-          const angleStep = (2 * Math.PI) / regionCitizens.length;
-          const angle = angleStep * index;
-          const radius = 1.5;
-          gridX += Math.cos(angle) * radius;
-          gridY += Math.sin(angle) * radius;
-        }
-
-        const screen = gridToScreen(gridX, gridY, CELL_SIZE, offsetX, offsetY);
-        positions.push({ citizen, x: screen.x, y: screen.y });
-      });
-    });
-
-    return positions;
-  }, [state.citizens]);
-
-  // Draw the canvas
-  const draw = useCallback(() => {
+  // Draw the canvas (called when citizens change)
+  const drawCanvas = (citizens: CitizenSummary[]) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    const { width, height, dpr } = getCanvasDimensions();
+    const offsetX = width / 2;
+    const offsetY = height / 4;
+
+    // Scale for retina displays
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
     // Clear
     ctx.fillStyle = '#1a1a2e';
-    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
-    const offsetX = CANVAS_WIDTH / 2;
-    const offsetY = CANVAS_HEIGHT / 4;
+    ctx.fillRect(0, 0, width, height);
 
     // Draw subtle grid
     ctx.strokeStyle = 'rgba(22, 33, 62, 0.3)';
     ctx.lineWidth = 1;
 
     for (let i = 0; i <= GRID_SIZE; i += 2) {
-      // Horizontal lines
       const startH = gridToScreen(i, 0, CELL_SIZE, offsetX, offsetY);
       const endH = gridToScreen(i, GRID_SIZE, CELL_SIZE, offsetX, offsetY);
       ctx.beginPath();
@@ -117,7 +99,6 @@ export function DemoPreview() {
       ctx.lineTo(endH.x, endH.y);
       ctx.stroke();
 
-      // Vertical lines
       const startV = gridToScreen(0, i, CELL_SIZE, offsetX, offsetY);
       const endV = gridToScreen(GRID_SIZE, i, CELL_SIZE, offsetX, offsetY);
       ctx.beginPath();
@@ -135,36 +116,57 @@ export function DemoPreview() {
       ctx.fill();
     });
 
-    // Draw citizens
-    const positions = getCitizenPositions();
-    positions.forEach(({ citizen, x, y }) => {
-      const color = ARCHETYPE_COLORS[citizen.archetype] || '#6b7280';
-
-      // Citizen circle
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.arc(x, y, 8, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Initial letter
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 10px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(citizen.name[0], x, y);
-
-      // Evolving indicator
-      if (citizen.is_evolving) {
-        ctx.strokeStyle = '#e94560';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(x, y, 10, 0, Math.PI * 2);
-        ctx.stroke();
-      }
+    // Group citizens by region for positioning
+    const byRegion = new Map<string, CitizenSummary[]>();
+    citizens.forEach((c) => {
+      const list = byRegion.get(c.region) || [];
+      list.push(c);
+      byRegion.set(c.region, list);
     });
 
-    animationFrameRef.current = requestAnimationFrame(draw);
-  }, [getCitizenPositions]);
+    // Draw citizens
+    byRegion.forEach((regionCitizens, region) => {
+      const basePos = REGION_GRID_POSITIONS[region] || { x: 10, y: 10 };
+
+      regionCitizens.forEach((citizen, index) => {
+        let gridX = basePos.x;
+        let gridY = basePos.y;
+
+        if (regionCitizens.length > 1) {
+          const angleStep = (2 * Math.PI) / regionCitizens.length;
+          const angle = angleStep * index;
+          const radius = 1.5;
+          gridX += Math.cos(angle) * radius;
+          gridY += Math.sin(angle) * radius;
+        }
+
+        const { x, y } = gridToScreen(gridX, gridY, CELL_SIZE, offsetX, offsetY);
+        const color = ARCHETYPE_COLORS[citizen.archetype] || ARCHETYPE_COLORS.default;
+
+        // Citizen circle
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(x, y, 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Initial letter
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(citizen.name[0], x, y);
+
+        // Evolving indicator
+        if (citizen.is_evolving) {
+          ctx.strokeStyle = '#e94560';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(x, y, 10, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      });
+    });
+  };
 
   // Initialize demo town
   useEffect(() => {
@@ -172,31 +174,32 @@ export function DemoPreview() {
 
     const initDemo = async () => {
       try {
-        // Create a demo town (or use existing)
+        console.log('[DemoPreview] Creating demo town...');
         const response = await townApi.create({
           name: 'demo-preview',
-          phase: 3, // Smaller town (10 citizens)
+          phase: 3,
           enable_dialogue: false,
         });
 
         if (!mounted) return;
 
         const townId = response.data.id;
-        setState((s) => ({ ...s, townId }));
+        console.log('[DemoPreview] Town created:', townId);
 
-        // Load citizens
         const citizensRes = await townApi.getCitizens(townId);
         if (!mounted) return;
 
+        console.log('[DemoPreview] Citizens loaded:', citizensRes.data.citizens.length);
         setState((s) => ({
           ...s,
+          townId,
           citizens: citizensRes.data.citizens,
         }));
 
         // Connect to SSE
         connectSSE(townId);
       } catch (err) {
-        console.error('Failed to init demo:', err);
+        console.error('[DemoPreview] Failed to init:', err);
         if (mounted) {
           setState((s) => ({ ...s, error: 'Demo unavailable' }));
         }
@@ -205,37 +208,46 @@ export function DemoPreview() {
 
     const connectSSE = (townId: string) => {
       const url = `/v1/town/${townId}/live?speed=2&phases=100`;
+      console.log('[DemoPreview] Connecting SSE:', url);
       const eventSource = new EventSource(url);
       eventSourceRef.current = eventSource;
 
       eventSource.onopen = () => {
-        setState((s) => ({ ...s, isConnected: true }));
+        console.log('[DemoPreview] SSE connected');
+        if (mounted) {
+          setState((s) => ({ ...s, isConnected: true }));
+        }
       };
 
       eventSource.addEventListener('live.event', (e) => {
+        if (!mounted) return;
         const event: TownEvent = JSON.parse(e.data);
-        setState((s) => ({
-          ...s,
-          events: [event, ...s.events.slice(0, 4)], // Keep last 5 events
-        }));
+        console.log('[DemoPreview] Event:', event.operation, event.participants);
 
-        // Update citizen positions based on event
-        if (event.participants && event.participants.length > 0) {
-          setState((s) => {
-            const updatedCitizens = s.citizens.map((c) => {
+        setState((s) => {
+          // Update events
+          const newEvents = [event, ...s.events.slice(0, 4)];
+
+          // Update citizen phases if participants
+          let newCitizens = s.citizens;
+          if (event.participants && event.participants.length > 0) {
+            newCitizens = s.citizens.map((c) => {
               if (event.participants.includes(c.name)) {
                 return { ...c, phase: getPhaseFromOperation(event.operation) };
               }
               return c;
             });
-            return { ...s, citizens: updatedCitizens };
-          });
-        }
+          }
+
+          return { ...s, events: newEvents, citizens: newCitizens };
+        });
       });
 
       eventSource.onerror = () => {
-        setState((s) => ({ ...s, isConnected: false }));
-        // Reconnect after 3 seconds
+        console.log('[DemoPreview] SSE error, will reconnect...');
+        if (mounted) {
+          setState((s) => ({ ...s, isConnected: false }));
+        }
         setTimeout(() => {
           if (mounted && eventSourceRef.current?.readyState === EventSource.CLOSED) {
             connectSSE(townId);
@@ -251,23 +263,25 @@ export function DemoPreview() {
       if (eventSourceRef.current) {
         eventSourceRef.current.close();
       }
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
     };
   }, []);
 
-  // Start drawing when citizens load
+  // Redraw when citizens change
   useEffect(() => {
     if (state.citizens.length > 0) {
-      draw();
+      drawCanvas(state.citizens);
     }
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-  }, [state.citizens.length, draw]);
+  }, [state.citizens]);
+
+  // Set up canvas dimensions on mount
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const { scaledWidth, scaledHeight } = getCanvasDimensions();
+    canvas.width = scaledWidth;
+    canvas.height = scaledHeight;
+  }, []);
 
   // Error state
   if (state.error) {
@@ -284,16 +298,16 @@ export function DemoPreview() {
     );
   }
 
+  const { width, height } = getCanvasDimensions();
+
   return (
     <div className="bg-town-surface/50 rounded-2xl border border-town-accent/30 overflow-hidden">
       {/* Canvas */}
       <div className="relative">
         <canvas
           ref={canvasRef}
-          width={CANVAS_WIDTH}
-          height={CANVAS_HEIGHT}
-          className="w-full"
-          style={{ aspectRatio: `${CANVAS_WIDTH}/${CANVAS_HEIGHT}` }}
+          style={{ width: `${width}px`, height: `${height}px`, maxWidth: '100%' }}
+          className="mx-auto block"
         />
 
         {/* Loading overlay */}
@@ -318,13 +332,13 @@ export function DemoPreview() {
           </span>
         </div>
 
-        {/* Legend */}
-        <div className="absolute bottom-3 left-3 flex gap-3 text-xs">
-          {Object.entries(ARCHETYPE_COLORS).slice(0, 4).map(([name, color]) => (
+        {/* Legend - show actual archetypes */}
+        <div className="absolute bottom-3 left-3 flex flex-wrap gap-2 text-xs">
+          {['Builder', 'Merchant', 'Healer', 'Scholar'].map((name) => (
             <div key={name} className="flex items-center gap-1">
               <div
-                className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: color }}
+                className="w-2 h-2 rounded-full"
+                style={{ backgroundColor: ARCHETYPE_COLORS[name] }}
               />
               <span className="text-gray-400">{name}</span>
             </div>

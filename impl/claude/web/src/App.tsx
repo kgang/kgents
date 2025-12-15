@@ -5,9 +5,11 @@ import { Layout } from './components/layout/Layout';
 // Lazy load pages for code splitting
 const Landing = lazy(() => import('./pages/Landing'));
 const Town = lazy(() => import('./pages/Town'));
+const TownV2 = lazy(() => import('./pages/TownV2'));
 const Inhabit = lazy(() => import('./pages/Inhabit'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const CheckoutSuccess = lazy(() => import('./pages/CheckoutSuccess'));
+const Workshop = lazy(() => import('./pages/Workshop'));
 
 function LoadingFallback() {
   return (
@@ -27,7 +29,9 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route element={<Layout />}>
           <Route path="/town/:townId" element={<Town />} />
+          <Route path="/town-v2/:townId" element={<TownV2 />} />
           <Route path="/town/:townId/inhabit/:citizenId" element={<Inhabit />} />
+          <Route path="/workshop" element={<Workshop />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/checkout/success" element={<CheckoutSuccess />} />
         </Route>

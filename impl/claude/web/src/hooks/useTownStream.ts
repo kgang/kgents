@@ -36,15 +36,25 @@ export function useTownStream({
     incrementDay,
     setPlaying,
     isPlaying,
-    currentPhase,
   } = useTownStore();
 
+  // Use ref to avoid stale closure in event handlers
+  const handlersRef = useRef({ addEvent, addInteraction, clearInteraction, setPhase, incrementDay, setPlaying });
+  handlersRef.current = { addEvent, addInteraction, clearInteraction, setPhase, incrementDay, setPlaying };
+
   const connect = useCallback(() => {
+    if (!townId) {
+      console.log('[SSE] No townId, skipping connect');
+      return;
+    }
+
     if (eventSourceRef.current) {
+      console.log('[SSE] Closing existing connection');
       eventSourceRef.current.close();
     }
 
     const url = `/v1/town/${townId}/live?speed=${speed}&phases=${phases}`;
+    console.log('[SSE] Connecting to:', url);
     const eventSource = new EventSource(url);
     eventSourceRef.current = eventSource;
 
@@ -57,71 +67,22 @@ export function useTownStream({
     eventSource.addEventListener('live.start', (e) => {
       const data = JSON.parse(e.data);
       console.log('[SSE] Stream started:', data);
-      setPlaying(true);
+      handlersRef.current.setPlaying(true);
     });
 
     // Handle live.event event (main simulation events)
     eventSource.addEventListener('live.event', (e) => {
       const event: TownEvent = JSON.parse(e.data);
-      handleLiveEvent(event);
-    });
+      console.log('[SSE] Event:', event.operation, event.participants);
 
-    // Handle live.phase event (phase transitions)
-    eventSource.addEventListener('live.phase', (e) => {
-      const data = JSON.parse(e.data);
-      const newPhase = data.phase as TownPhase;
-
-      // Check for day transition (NIGHT -> MORNING)
-      if (newPhase === 'MORNING' && currentPhase === 'NIGHT') {
-        incrementDay();
-      }
-
-      setPhase(newPhase);
-      console.log('[SSE] Phase change:', newPhase);
-    });
-
-    // Handle live.end event
-    eventSource.addEventListener('live.end', (e) => {
-      const data = JSON.parse(e.data);
-      console.log('[SSE] Stream ended:', data);
-      setPlaying(false);
-      onDisconnect?.();
-    });
-
-    eventSource.onerror = (error) => {
-      console.error('[SSE] Error:', error);
-      onError?.(error);
-
-      if (eventSource.readyState === EventSource.CLOSED) {
-        console.log('[SSE] Connection closed');
-        setPlaying(false);
-        onDisconnect?.();
-      }
-    };
-
-    return eventSource;
-  }, [townId, speed, phases, currentPhase, setPhase, setPlaying, incrementDay, onConnect, onDisconnect, onError]);
-
-  const disconnect = useCallback(() => {
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-      eventSourceRef.current = null;
-      setPlaying(false);
-      onDisconnect?.();
-    }
-  }, [setPlaying, onDisconnect]);
-
-  // Handle individual town events
-  const handleLiveEvent = useCallback(
-    (event: TownEvent) => {
       // Add to event store
-      addEvent(event);
+      handlersRef.current.addEvent(event);
 
       // Create interaction line for binary operations
       if (event.participants?.length >= 2) {
         const interactionId = `${event.tick}-${event.operation}`;
 
-        addInteraction({
+        handlersRef.current.addInteraction({
           id: interactionId,
           participants: event.participants,
           operation: event.operation,
@@ -135,17 +96,55 @@ export function useTownStream({
           progress += 0.05;
           if (progress >= 1) {
             clearInterval(fadeInterval);
-            clearInteraction(interactionId);
+            handlersRef.current.clearInteraction(interactionId);
           }
         }, 100);
       }
-    },
-    [addEvent, addInteraction, clearInteraction]
-  );
+    });
+
+    // Handle live.phase event (phase transitions)
+    eventSource.addEventListener('live.phase', (e) => {
+      const data = JSON.parse(e.data);
+      const newPhase = data.phase as TownPhase;
+      console.log('[SSE] Phase change:', newPhase);
+      handlersRef.current.setPhase(newPhase);
+    });
+
+    // Handle live.end event
+    eventSource.addEventListener('live.end', (e) => {
+      const data = JSON.parse(e.data);
+      console.log('[SSE] Stream ended:', data);
+      handlersRef.current.setPlaying(false);
+      onDisconnect?.();
+    });
+
+    eventSource.onerror = (error) => {
+      console.error('[SSE] Error:', error);
+      onError?.(error);
+
+      if (eventSource.readyState === EventSource.CLOSED) {
+        console.log('[SSE] Connection closed');
+        handlersRef.current.setPlaying(false);
+        onDisconnect?.();
+      }
+    };
+
+    return eventSource;
+  }, [townId, speed, phases, onConnect, onDisconnect, onError]);
+
+  const disconnect = useCallback(() => {
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
+      setPlaying(false);
+      onDisconnect?.();
+    }
+  }, [setPlaying, onDisconnect]);
 
   // Auto-connect when isPlaying changes
   useEffect(() => {
-    if (autoConnect && isPlaying) {
+    console.log('[SSE] Effect running - autoConnect:', autoConnect, 'isPlaying:', isPlaying, 'townId:', townId);
+    if (autoConnect && isPlaying && townId) {
       connect();
     } else if (!isPlaying) {
       disconnect();
@@ -154,7 +153,7 @@ export function useTownStream({
     return () => {
       disconnect();
     };
-  }, [autoConnect, isPlaying, connect, disconnect]);
+  }, [autoConnect, isPlaying, townId, connect, disconnect]);
 
   return {
     connect,

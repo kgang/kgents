@@ -29,6 +29,18 @@ from .citizen import Citizen, Eigenvectors
 from .environment import Region, TownEnvironment
 from .flux import TownEvent, TownFlux
 from .operad import TOWN_OPERAD, create_town_operad
+from .workshop import (
+    WorkshopArtifact,
+    WorkshopEnvironment,
+    WorkshopEvent,
+    WorkshopEventType,
+    WorkshopPhase,
+    WorkshopPlan,
+    WorkshopState,
+    WorkshopTask,
+    create_workshop,
+    create_workshop_with_builders,
+)
 from .polynomial import (
     CITIZEN_POLYNOMIAL,
     CitizenInput,
@@ -58,4 +70,15 @@ __all__ = [
     # Flux
     "TownFlux",
     "TownEvent",
+    # Workshop
+    "WorkshopEnvironment",
+    "WorkshopPhase",
+    "WorkshopEventType",
+    "WorkshopEvent",
+    "WorkshopTask",
+    "WorkshopArtifact",
+    "WorkshopPlan",
+    "WorkshopState",
+    "create_workshop",
+    "create_workshop_with_builders",
 ]

@@ -1,0 +1,88 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# =============================================================================
+# PRE-PUSH HOOK
+# =============================================================================
+#
+# Philosophy: Thorough validation before sharing code
+#
+# What runs:
+#   1. Full TypeScript type check
+#   2. Unit tests (fast, ~5 seconds)
+#   3. Build verification (ensures it compiles)
+#
+# What doesn't run (too slow for push):
+#   - E2E tests (run in CI)
+#   - Full coverage report (run in CI)
+#
+# Timing:
+#   - Type check: ~3 seconds
+#   - Unit tests: ~5 seconds
+#   - Build: ~10 seconds
+#   - Total: ~20 seconds
+#
+# To bypass (emergency only):
+#   git push --no-verify
+#
+# =============================================================================
+
+echo "🚀 Running pre-push checks..."
+echo ""
+
+# Track if any check fails
+FAILED=0
+
+# -----------------------------------------------------------------------------
+# 1. TypeScript Type Check
+# -----------------------------------------------------------------------------
+echo "📝 Type checking..."
+npm run typecheck
+if [ $? -ne 0 ]; then
+  echo "❌ Type check failed."
+  FAILED=1
+else
+  echo "✅ Type check passed."
+fi
+echo ""
+
+# -----------------------------------------------------------------------------
+# 2. Unit Tests
+# -----------------------------------------------------------------------------
+echo "🧪 Running unit tests..."
+npm test -- --run --reporter=basic
+if [ $? -ne 0 ]; then
+  echo "❌ Unit tests failed."
+  FAILED=1
+else
+  echo "✅ Unit tests passed."
+fi
+echo ""
+
+# -----------------------------------------------------------------------------
+# 3. Build Verification (only if tests pass)
+# -----------------------------------------------------------------------------
+if [ $FAILED -eq 0 ]; then
+  echo "🏗️  Verifying build..."
+  npm run build
+  if [ $? -ne 0 ]; then
+    echo "❌ Build failed."
+    FAILED=1
+  else
+    echo "✅ Build succeeded."
+  fi
+  echo ""
+fi
+
+# -----------------------------------------------------------------------------
+# Final Result
+# -----------------------------------------------------------------------------
+if [ $FAILED -ne 0 ]; then
+  echo "❌ Pre-push checks failed."
+  echo ""
+  echo "Fix the errors above, then try again."
+  echo "To bypass (not recommended): git push --no-verify"
+  exit 1
+fi
+
+echo "✅ All pre-push checks passed. Pushing..."

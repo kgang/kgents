@@ -36,7 +36,7 @@ export interface CreateTownRequest {
   enable_dialogue?: boolean;
 }
 
-export interface TownResponse extends Town {}
+export type TownResponse = Town;
 
 // =============================================================================
 // Citizen
@@ -259,4 +259,123 @@ export const LOD_INCLUDED_BY_TIER: Record<SubscriptionTier, number[]> = {
   RESIDENT: [0, 1, 2, 3],
   CITIZEN: [0, 1, 2, 3, 4],
   FOUNDER: [0, 1, 2, 3, 4, 5],
+};
+
+// =============================================================================
+// Workshop
+// =============================================================================
+
+export type WorkshopPhase =
+  | 'IDLE'
+  | 'EXPLORING'
+  | 'DESIGNING'
+  | 'PROTOTYPING'
+  | 'REFINING'
+  | 'INTEGRATING'
+  | 'COMPLETE';
+
+export type BuilderArchetype = 'Scout' | 'Sage' | 'Spark' | 'Steady' | 'Sync';
+
+export type BuilderPhase =
+  | 'IDLE'
+  | 'EXPLORING'
+  | 'DESIGNING'
+  | 'PROTOTYPING'
+  | 'REFINING'
+  | 'INTEGRATING';
+
+export interface BuilderSummary {
+  archetype: BuilderArchetype;
+  name: string;
+  phase: BuilderPhase;
+  is_active: boolean;
+  is_in_specialty: boolean;
+}
+
+export interface WorkshopTask {
+  id: string;
+  description: string;
+  priority: number;
+  created_at: string;
+}
+
+export interface WorkshopArtifact {
+  id: string;
+  task_id: string;
+  builder: string;
+  phase: WorkshopPhase;
+  content: unknown;
+  created_at: string;
+}
+
+export interface WorkshopMetrics {
+  total_steps: number;
+  total_events: number;
+  total_tokens: number;
+  dialogue_tokens: number;
+  artifacts_produced: number;
+  phases_completed: number;
+  handoffs: number;
+  perturbations: number;
+  duration_seconds: number;
+}
+
+export interface WorkshopPlan {
+  task: WorkshopTask;
+  assignments: Record<string, string[]>;
+  estimated_phases: WorkshopPhase[];
+  lead_builder: string;
+}
+
+export interface WorkshopStatus {
+  id: string;
+  phase: WorkshopPhase;
+  active_task: WorkshopTask | null;
+  builders: BuilderSummary[];
+  artifacts: WorkshopArtifact[];
+  metrics: WorkshopMetrics;
+  is_running: boolean;
+}
+
+export type WorkshopEventType =
+  | 'TASK_ASSIGNED'
+  | 'PLAN_CREATED'
+  | 'PHASE_STARTED'
+  | 'PHASE_COMPLETED'
+  | 'HANDOFF'
+  | 'ARTIFACT_PRODUCED'
+  | 'USER_QUERY'
+  | 'USER_RESPONSE'
+  | 'TASK_COMPLETED'
+  | 'ERROR';
+
+export interface WorkshopEvent {
+  type: WorkshopEventType;
+  builder: string | null;
+  phase: WorkshopPhase;
+  message: string;
+  artifact: unknown | null;
+  timestamp: string;
+  metadata: {
+    dialogue?: string;
+    perturbation?: boolean;
+    [key: string]: unknown;
+  };
+}
+
+// Builder visual config
+export const BUILDER_COLORS: Record<BuilderArchetype, string> = {
+  Scout: '#22c55e',  // green
+  Sage: '#8b5cf6',   // purple
+  Spark: '#f59e0b',  // amber
+  Steady: '#3b82f6', // blue
+  Sync: '#ec4899',   // pink
+};
+
+export const BUILDER_ICONS: Record<BuilderArchetype, string> = {
+  Scout: '🔍',
+  Sage: '📐',
+  Spark: '⚡',
+  Steady: '🔧',
+  Sync: '🔗',
 };

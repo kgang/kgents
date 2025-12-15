@@ -28,6 +28,18 @@ Before adding to ANY meta file:
 
 Update facts (test counts, phase status). Do NOT add new sections. Compress, don't expand.
 
+## Phase Detection
+
+Based on session activity, suggest current phase:
+
+| Activity Pattern | Suggested Phase |
+|------------------|-----------------|
+| Many file reads, no writes | **UNDERSTAND** |
+| Code changes, tests running | **ACT** |
+| Tests pass, writing notes/epilogue | **REFLECT** |
+
+Include suggested phase in hydration output when pattern is clear.
+
 ## Arguments
 
 If user provides arguments, treat them as focus guidance for the session.

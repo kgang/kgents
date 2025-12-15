@@ -6,13 +6,27 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
     "preview": "vite preview",
+
+    "lint": "eslint . --cache --cache-location node_modules/.cache/eslint",
+    "lint:fix": "eslint . --fix --cache --cache-location node_modules/.cache/eslint",
+    "format": "prettier --write \"src/**/*.{ts,tsx,json,css,md}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,json,css,md}\"",
+
     "test": "vitest",
+    "test:run": "vitest --run",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "test:e2e": "playwright test",
-    "typecheck": "tsc --noEmit"
+    "test:e2e:ui": "playwright test --ui",
+
+    "typecheck": "tsc --noEmit",
+    "typecheck:watch": "tsc --noEmit --watch",
+
+    "validate": "npm run typecheck && npm run lint && npm run test:run",
+    "validate:fix": "npm run lint:fix && npm run format && npm run typecheck && npm run test:run",
+
+    "prepare": "cd ../../.. && husky impl/claude/web/.husky"
   },
   "dependencies": {
     "@pixi/react": "^7.1.2",
@@ -52,8 +66,11 @@
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.14",
     "globals": "^15.11.0",
+    "husky": "^9.1.7",
     "jsdom": "^25.0.1",
+    "lint-staged": "^15.2.10",
     "postcss": "^8.4.47",
+    "prettier": "^3.4.2",
     "tailwindcss": "^3.4.14",
     "typescript": "~5.6.3",
     "typescript-eslint": "^8.11.0",

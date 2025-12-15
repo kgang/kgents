@@ -143,6 +143,27 @@ def create_app(
     if metrics_router is not None:
         app.include_router(metrics_router)
 
+    # Agent Town endpoints
+    from .town import create_town_router
+
+    town_router = create_town_router()
+    if town_router is not None:
+        app.include_router(town_router)
+
+    # N-Phase Session endpoints
+    from .nphase import create_nphase_router
+
+    nphase_router = create_nphase_router()
+    if nphase_router is not None:
+        app.include_router(nphase_router)
+
+    # Workshop endpoints
+    from .workshop import create_workshop_router
+
+    workshop_router = create_workshop_router()
+    if workshop_router is not None:
+        app.include_router(workshop_router)
+
     # Health check endpoint
     @app.get("/health", response_model=HealthResponse, tags=["system"])
     async def health_check(
@@ -273,6 +294,34 @@ def create_app(
                 "webhooks": {
                     "stripe": "/webhooks/stripe",
                     "stripe_health": "/webhooks/stripe/health",
+                },
+                "town": {
+                    "create": "POST /v1/town",
+                    "get": "GET /v1/town/{town_id}",
+                    "citizens": "GET /v1/town/{town_id}/citizens",
+                    "citizen": "GET /v1/town/{town_id}/citizen/{name}",
+                    "live": "GET /v1/town/{town_id}/live",
+                },
+                "nphase": {
+                    "sessions": "GET /v1/nphase/sessions",
+                    "create": "POST /v1/nphase/sessions",
+                    "get": "GET /v1/nphase/sessions/{id}",
+                    "advance": "POST /v1/nphase/sessions/{id}/advance",
+                    "checkpoint": "POST /v1/nphase/sessions/{id}/checkpoint",
+                    "handles": "GET /v1/nphase/sessions/{id}/handles",
+                    "detect": "POST /v1/nphase/sessions/{id}/detect",
+                },
+                "workshop": {
+                    "get": "GET /v1/workshop",
+                    "assign_task": "POST /v1/workshop/task",
+                    "stream": "GET /v1/workshop/stream",
+                    "status": "GET /v1/workshop/status",
+                    "builders": "GET /v1/workshop/builders",
+                    "builder": "GET /v1/workshop/builder/{archetype}",
+                    "whisper": "POST /v1/workshop/builder/{archetype}/whisper",
+                    "perturb": "POST /v1/workshop/perturb",
+                    "reset": "POST /v1/workshop/reset",
+                    "artifacts": "GET /v1/workshop/artifacts",
                 },
             },
         }

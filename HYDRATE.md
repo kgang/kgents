@@ -77,7 +77,7 @@ Full 11-phase: `docs/skills/n-phase-cycle/`
 
 ## Status
 
-**Tests**: 17,211 | **Mypy**: 0 | Agents: A B C D E F G H I J K L M N O P Ψ Q R T U W Flux
+**Tests**: 17,585+ | **Mypy**: 0 | Agents: A B C D E F G H I J K L M N O P Ψ Q R T U W Flux
 
 ---
 

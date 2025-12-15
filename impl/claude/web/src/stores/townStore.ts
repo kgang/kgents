@@ -1,3 +1,15 @@
+/**
+ * @deprecated Use useTownStreamWidget hook instead.
+ *
+ * Migration guide:
+ * - Replace `useTownStore().citizens` with `useTownStreamWidget().dashboard.citizens`
+ * - Replace `useTownStore().events` with `useTownStreamWidget().events`
+ * - Replace `useTownStore().currentPhase` with `useTownStreamWidget().dashboard.phase`
+ * - Use local React state for selection and UI state
+ *
+ * This store will be removed in favor of the widget-based architecture.
+ * See TownV2.tsx for the new implementation pattern.
+ */
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import type {

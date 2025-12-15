@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import { useTownStore } from '@/stores/townStore';
 import { useUIStore } from '@/stores/uiStore';
@@ -7,37 +7,93 @@ import { Mesa } from '@/components/town/Mesa';
 import { CitizenPanel } from '@/components/town/CitizenPanel';
 import { useTownStream } from '@/hooks/useTownStream';
 
+type LoadingState = 'loading' | 'loaded' | 'error' | 'creating';
+
 export default function Town() {
-  const { townId } = useParams<{ townId: string }>();
-  const { setTownId, setTownName, setCitizens, currentPhase, currentDay, events, isPlaying, setPlaying, speed, setSpeed } = useTownStore();
+  const { townId: paramTownId } = useParams<{ townId: string }>();
+  const { setTownId, setTownName, setCitizens, currentPhase, currentDay, events, isPlaying, setPlaying, speed, setSpeed, townId, citizens } = useTownStore();
   const { isEventFeedOpen, toggleEventFeed } = useUIStore();
   const mesaContainerRef = useRef<HTMLDivElement>(null);
   const [mesaSize, setMesaSize] = useState({ width: 800, height: 600 });
+  const [loadingState, setLoadingState] = useState<LoadingState>('loading');
+  const [error, setError] = useState<string | null>(null);
 
-  // Connect SSE stream when playing
+  // Connect SSE stream when playing (use actual townId from store, not param)
   useTownStream({ townId: townId || '', speed, autoConnect: true });
 
   // Load town data on mount
   useEffect(() => {
-    if (!townId) return;
+    if (!paramTownId) return;
 
-    setTownId(townId);
-
-    const loadTown = async () => {
+    const loadTown = async (id: string) => {
+      setLoadingState('loading');
+      setError(null);
       try {
+        console.log('[Town] Loading town:', id);
         const [townRes, citizensRes] = await Promise.all([
-          townApi.get(townId),
-          townApi.getCitizens(townId),
+          townApi.get(id),
+          townApi.getCitizens(id),
         ]);
+        console.log('[Town] Loaded:', townRes.data, citizensRes.data);
+        setTownId(id);
         setTownName(townRes.data.name);
         setCitizens(citizensRes.data.citizens);
-      } catch (err) {
-        console.error('Failed to load town:', err);
+        setLoadingState('loaded');
+        // Auto-start simulation after loading citizens
+        setPlaying(true);
+      } catch (err: unknown) {
+        console.error('[Town] Failed to load town:', err);
+        const axiosErr = err as { response?: { status?: number; data?: { detail?: string } } };
+        if (axiosErr.response?.status === 404) {
+          setError(`Town "${id}" not found`);
+        } else {
+          setError(axiosErr.response?.data?.detail || 'Failed to load town');
+        }
+        setLoadingState('error');
       }
     };
 
-    loadTown();
-  }, [townId, setTownId, setTownName, setCitizens]);
+    const createAndLoadTown = async () => {
+      setLoadingState('creating');
+      setError(null);
+      try {
+        console.log('[Town] Creating demo town...');
+        const response = await townApi.create({
+          name: 'Demo Town',
+          phase: 3, // 10 citizens
+          enable_dialogue: false,
+        });
+        const newTownId = response.data.id;
+        console.log('[Town] Created town:', newTownId);
+
+        // Update URL without full navigation (prevents re-mount issues)
+        window.history.replaceState(null, '', `/town/${newTownId}`);
+
+        // Load citizens for the new town
+        console.log('[Town] Loading citizens...');
+        const citizensRes = await townApi.getCitizens(newTownId);
+        console.log('[Town] Citizens loaded:', citizensRes.data);
+
+        setTownId(newTownId);
+        setTownName(response.data.name);
+        setCitizens(citizensRes.data.citizens);
+        setLoadingState('loaded');
+        setPlaying(true);
+      } catch (err: unknown) {
+        console.error('[Town] Failed to create demo town:', err);
+        const axiosErr = err as { response?: { data?: { detail?: string } } };
+        setError(axiosErr.response?.data?.detail || 'Failed to create demo town');
+        setLoadingState('error');
+      }
+    };
+
+    // Handle "demo" as a special case - create a new town
+    if (paramTownId === 'demo') {
+      createAndLoadTown();
+    } else {
+      loadTown(paramTownId);
+    }
+  }, [paramTownId, setTownId, setTownName, setCitizens, setPlaying]);
 
   // Track mesa container size
   useEffect(() => {
@@ -58,6 +114,47 @@ export default function Town() {
     return () => observer.disconnect();
   }, []);
 
+  // Loading state
+  if (loadingState === 'loading' || loadingState === 'creating') {
+    return (
+      <div className="h-[calc(100vh-64px)] flex items-center justify-center bg-town-bg">
+        <div className="text-center">
+          <div className="animate-pulse text-6xl mb-4">🏘️</div>
+          <p className="text-gray-400 text-lg">
+            {loadingState === 'creating' ? 'Creating your town...' : 'Loading town...'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (loadingState === 'error') {
+    return (
+      <div className="h-[calc(100vh-64px)] flex items-center justify-center bg-town-bg">
+        <div className="text-center max-w-md">
+          <div className="text-6xl mb-4">🏚️</div>
+          <h2 className="text-xl font-semibold mb-2 text-red-400">Town Not Found</h2>
+          <p className="text-gray-400 mb-6">{error}</p>
+          <div className="flex gap-4 justify-center">
+            <Link
+              to="/town/demo"
+              className="px-6 py-2 bg-town-highlight hover:bg-town-highlight/80 rounded-lg font-medium transition-colors"
+            >
+              Create New Town
+            </Link>
+            <Link
+              to="/"
+              className="px-6 py-2 bg-town-accent hover:bg-town-accent/80 rounded-lg font-medium transition-colors"
+            >
+              Back to Home
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-[calc(100vh-64px)] flex flex-col">
       {/* Town Header */}
@@ -68,6 +165,8 @@ export default function Town() {
             <span>Day {currentDay}</span>
             <span>•</span>
             <span className={`font-medium ${getPhaseColor(currentPhase)}`}>{currentPhase}</span>
+            <span>•</span>
+            <span>{citizens.length} citizens</span>
           </div>
         </div>
         <div className="flex items-center gap-4">

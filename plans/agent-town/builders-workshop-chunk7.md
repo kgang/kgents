@@ -1,7 +1,7 @@
 ---
 path: agent-town/builders-workshop-chunk7
-status: active
-progress: 0
+status: complete
+progress: 100
 last_touched: 2025-12-15
 touched_by: claude-opus-4-5
 blocking: []
@@ -9,24 +9,26 @@ enables:
   - agent-town/builders-workshop
   - agent-town/builders-workshop-chunk8
 session_notes: |
-  CONTINUATION from Chunk 6 (WorkshopEnvironment complete, 93 tests).
-  Now implementing WorkshopFlux - streaming execution layer.
+  COMPLETE: WorkshopFlux - streaming execution layer.
+  Implemented WorkshopFlux, WorkshopMetrics, WorkshopDialogueContext, BUILDER_DIALOGUE_TEMPLATES.
+  65 new tests (total workshop tests: 158).
+  Key insight: auto_advance in step() needs to check TASK_COMPLETED to stop running.
 phase_ledger:
-  PLAN: touched
-  RESEARCH: pending
-  DEVELOP: pending
+  PLAN: complete
+  RESEARCH: complete
+  DEVELOP: complete
   STRATEGIZE: skipped  # Strategy set in parent plan
-  CROSS-SYNERGIZE: pending  # TownFlux, DialogueEngine patterns
-  IMPLEMENT: pending
-  QA: pending
-  TEST: pending
+  CROSS-SYNERGIZE: complete  # TownFlux, DialogueEngine patterns
+  IMPLEMENT: complete
+  QA: complete
+  TEST: complete
   EDUCATE: skipped  # Doc-only deferred
   MEASURE: deferred
-  REFLECT: pending
+  REFLECT: complete
 entropy:
   planned: 0.10
-  spent: 0.0
-  remaining: 0.10
+  spent: 0.08
+  remaining: 0.02
 ---
 
 # Builder's Workshop: Chunk 7 - WorkshopFlux
@@ -614,17 +616,17 @@ from agents.town.builders import (
 
 | Phase | Status | Artifact |
 |-------|--------|----------|
-| PLAN | touched | This document |
-| RESEARCH | pending | - |
-| DEVELOP | pending | - |
+| PLAN | complete | This document |
+| RESEARCH | complete | TownFlux pattern analysis |
+| DEVELOP | complete | WorkshopFlux API design |
 | STRATEGIZE | skipped | - |
-| CROSS-SYNERGIZE | pending | - |
-| IMPLEMENT | pending | - |
-| QA | pending | - |
-| TEST | pending | - |
+| CROSS-SYNERGIZE | complete | DialogueEngine integration strategy |
+| IMPLEMENT | complete | WorkshopFlux, WorkshopMetrics, templates |
+| QA | complete | Mypy clean |
+| TEST | complete | 65 tests (158 total) |
 | EDUCATE | skipped | - |
 | MEASURE | deferred | - |
-| REFLECT | pending | - |
+| REFLECT | complete | This update |
 
 ---
 

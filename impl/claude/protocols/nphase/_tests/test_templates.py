@@ -76,15 +76,23 @@ class TestPhaseFamilies:
             all_phases.update(phases)
         assert all_phases == set(PHASE_TEMPLATES.keys())
 
-    def test_get_compressed_template_sense(self) -> None:
-        """SENSE family combines PLAN, RESEARCH, DEVELOP."""
-        tmpl = get_compressed_template("SENSE")
-        assert tmpl.name == "SENSE"
+    def test_get_compressed_template_understand(self) -> None:
+        """UNDERSTAND family combines PLAN, RESEARCH, DEVELOP, STRATEGIZE, CROSS-SYNERGIZE."""
+        tmpl = get_compressed_template("UNDERSTAND")
+        assert tmpl.name == "UNDERSTAND"
         assert tmpl.continuation == "ACT"
-        # Should include content from all three phases
+        # Should include content from all five phases
         assert "PLAN" in tmpl.actions
         assert "RESEARCH" in tmpl.actions
         assert "DEVELOP" in tmpl.actions
+        assert "STRATEGIZE" in tmpl.actions
+        assert "CROSS-SYNERGIZE" in tmpl.actions
+
+    def test_get_compressed_template_sense_alias(self) -> None:
+        """SENSE alias resolves to UNDERSTAND."""
+        tmpl = get_compressed_template("SENSE")
+        assert tmpl.name == "UNDERSTAND"  # Resolved to canonical name
+        assert tmpl.continuation == "ACT"
 
     def test_get_compressed_template_act(self) -> None:
         """ACT family combines middle phases."""

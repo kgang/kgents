@@ -12,14 +12,13 @@
 ---
 ## KENT's WISHES
 * COMPOSITIONAL GENERATIVE UI
-* IN-PLACE, ADAPTIVE LEARNING
-* LLMAgents using haiku tokens liberally in agent town
-* "MAKE MONEY WITH AGENT TOWN!!!!" Create a shockingly delightful consumer, prosumer, and professional experience
-* "Grandest meta-narratives... Westworld-like simulation park"
+* LLMAgents using haiku tokens liberally in agent town, running on our cluster
+* Create a shockingly delightful consumer, prosumer, and professional experience
+* Builder Workshop
 * "holographic metaphor reification"
-* Agent Town's default isn't a generic simulation - it's AI that help you build. The metaphors:
+* Agent Town's builders:
   - Chefs in a kitchen (expertise, collaboration, mise en place)
-  - Cooks in a garden (cultivation, patience, seasonality)
+  - Gardeners in a garden (cultivation, patience, seasonality)
   - Kids on a playground (play, exploration, joy)
 
 

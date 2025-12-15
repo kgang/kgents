@@ -621,11 +621,11 @@ This plan does not include time estimates per kgents principles. Phases should b
 
 - [x] Phase 1: Bridge module created with types and renderer
 - [x] Phase 1: Unit tests pass for WidgetRenderer (76 tests)
-- [ ] Phase 2: Widget components render correctly
-- [ ] Phase 2: Composition laws verified
-- [ ] Phase 3: SSE emits `live.state` events
-- [ ] Phase 3: Frontend consumes projections
-- [ ] Phase 4: Town page migrated
+- [x] Phase 2: Widget components extracted to /widgets/ directory
+- [x] Phase 2: Composition laws verified (109 tests total)
+- [x] Phase 3: SSE emits `live.state` events (19 backend tests)
+- [x] Phase 3: Frontend consumes projections via useTownStreamWidget (25 tests)
+- [ ] Phase 4: Town page migrated (TownV2, MesaV2, CitizenPanelV2)
 - [ ] Phase 4: Feature parity with current implementation
 - [ ] Phase 5: Zustand removed
 - [ ] Phase 5: Documentation updated

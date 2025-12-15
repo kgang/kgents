@@ -24,11 +24,17 @@ class PhaseTemplate(NamedTuple):
     minimum_artifact: str
 
 
-# Phase family mapping for 3-phase compression
+# Phase family mapping for 3-phase mode
+# UNDERSTAND is the primary name (more actionable), SENSE is kept as alias for compatibility
 PHASE_FAMILIES: dict[str, list[str]] = {
-    "SENSE": ["PLAN", "RESEARCH", "DEVELOP"],
-    "ACT": ["STRATEGIZE", "CROSS-SYNERGIZE", "IMPLEMENT", "QA", "TEST"],
+    "UNDERSTAND": ["PLAN", "RESEARCH", "DEVELOP", "STRATEGIZE", "CROSS-SYNERGIZE"],
+    "ACT": ["IMPLEMENT", "QA", "TEST"],
     "REFLECT": ["EDUCATE", "MEASURE", "REFLECT"],
+}
+
+# Alias for backwards compatibility
+PHASE_ALIASES: dict[str, str] = {
+    "SENSE": "UNDERSTAND",  # Legacy name maps to new primary
 }
 
 
@@ -210,24 +216,26 @@ def get_template(phase: str) -> PhaseTemplate:
 
 def get_compressed_template(family: str) -> PhaseTemplate:
     """Get compressed template for 3-phase mode."""
-    phases = PHASE_FAMILIES.get(family, [])
+    # Resolve alias if provided
+    resolved_family = PHASE_ALIASES.get(family, family)
+
+    phases = PHASE_FAMILIES.get(resolved_family, [])
     if not phases:
-        raise ValueError(
-            f"Unknown family: {family}. Valid: {list(PHASE_FAMILIES.keys())}"
-        )
+        valid = list(PHASE_FAMILIES.keys()) + list(PHASE_ALIASES.keys())
+        raise ValueError(f"Unknown family: {family}. Valid: {valid}")
 
     # Combine phase templates
     missions = [PHASE_TEMPLATES[p].mission for p in phases]
     actions = [f"### {p}\n{PHASE_TEMPLATES[p].actions}" for p in phases]
     criteria = [f"### {p}\n{PHASE_TEMPLATES[p].exit_criteria}" for p in phases]
 
-    next_family = {"SENSE": "ACT", "ACT": "REFLECT", "REFLECT": "COMPLETE"}
+    next_family = {"UNDERSTAND": "ACT", "ACT": "REFLECT", "REFLECT": "COMPLETE"}
 
     return PhaseTemplate(
-        name=family,
+        name=resolved_family,
         mission=" | ".join(missions),
         actions="\n\n".join(actions),
         exit_criteria="\n\n".join(criteria),
-        continuation=next_family[family],
+        continuation=next_family[resolved_family],
         minimum_artifact=", ".join(PHASE_TEMPLATES[p].minimum_artifact for p in phases),
     )

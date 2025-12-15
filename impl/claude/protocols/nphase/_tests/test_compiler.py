@@ -150,8 +150,8 @@ class TestNPhasePromptCompiler:
         )
         prompt = compiler.compile(project)
         content = str(prompt)
-        # Should have SENSE, ACT, REFLECT
-        assert "Phase: SENSE" in content
+        # Should have UNDERSTAND, ACT, REFLECT
+        assert "Phase: UNDERSTAND" in content
         assert "Phase: ACT" in content
         assert "Phase: REFLECT" in content
         # Should NOT have individual phases

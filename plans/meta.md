@@ -182,6 +182,8 @@ entropy:
 2025-12-15  EventBus reuse: same pattern for TownEvent and WorkshopEvent—generic typing works
 2025-12-15  Widget JSON bridge: TS discriminated union mirrors Python _to_json(); exhaustive switch enables type-safe dispatch
 2025-12-15  React hooks ref pattern: store callbacks in ref to avoid stale closures in SSE event handlers
+2025-12-15  Widget context pattern: useWidgetRenderOptional() enables layout components to work in isolation and with WidgetRenderer
+2025-12-15  WorkshopFlux auto_advance: must check TASK_COMPLETED after _advance_phase() to stop running—infinite loop otherwise
 ```
 
 ## Anti-Patterns

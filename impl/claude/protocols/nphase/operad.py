@@ -27,15 +27,19 @@ from agents.poly import PolyAgent
 class NPhase(Enum):
     """The three compressed phases of development."""
 
-    SENSE = auto()  # PLAN, RESEARCH, DEVELOP
-    ACT = auto()  # STRATEGIZE, CROSS-SYNERGIZE, IMPLEMENT, QA, TEST
+    # UNDERSTAND is the primary name (more actionable than SENSE)
+    UNDERSTAND = auto()  # PLAN, RESEARCH, DEVELOP, STRATEGIZE, CROSS-SYNERGIZE
+    ACT = auto()  # IMPLEMENT, QA, TEST
     REFLECT = auto()  # EDUCATE, MEASURE, REFLECT
+
+    # Alias for backwards compatibility
+    SENSE = UNDERSTAND
 
 
 # Phase family mapping (which detailed phases belong to which compressed phase)
 PHASE_FAMILIES: dict[NPhase, list[str]] = {
-    NPhase.SENSE: ["PLAN", "RESEARCH", "DEVELOP"],
-    NPhase.ACT: ["STRATEGIZE", "CROSS-SYNERGIZE", "IMPLEMENT", "QA", "TEST"],
+    NPhase.UNDERSTAND: ["PLAN", "RESEARCH", "DEVELOP", "STRATEGIZE", "CROSS-SYNERGIZE"],
+    NPhase.ACT: ["IMPLEMENT", "QA", "TEST"],
     NPhase.REFLECT: ["EDUCATE", "MEASURE", "REFLECT"],
 }
 
@@ -51,7 +55,7 @@ DETAILED_TO_COMPRESSED: dict[str, NPhase] = {
 class NPhaseState:
     """State for N-Phase operations."""
 
-    current_phase: NPhase = NPhase.SENSE
+    current_phase: NPhase = NPhase.UNDERSTAND
     cycle_count: int = 0
     phase_outputs: dict[NPhase, list[Any]] = field(default_factory=dict)
 
@@ -220,19 +224,27 @@ def _verify_identity(
 
 
 NPHASE_OPERATIONS: dict[str, Operation] = {
+    "understand": Operation(
+        name="understand",
+        arity=1,
+        signature="Agent[A, B] -> Agent[A, UnderstoodState]",
+        compose=_sense_compose,
+        description="Map the terrain (PLAN, RESEARCH, DEVELOP, STRATEGIZE, CROSS-SYNERGIZE)",
+    ),
+    # Alias for backwards compatibility
     "sense": Operation(
         name="sense",
         arity=1,
-        signature="Agent[A, B] -> Agent[A, SensedState]",
+        signature="Agent[A, B] -> Agent[A, UnderstoodState]",
         compose=_sense_compose,
-        description="Perceive the world (PLAN, RESEARCH, DEVELOP)",
+        description="Alias for understand",
     ),
     "act": Operation(
         name="act",
         arity=1,
-        signature="Agent[SensedState, B] -> Agent[SensedState, ActionResult]",
+        signature="Agent[UnderstoodState, B] -> Agent[UnderstoodState, ActionResult]",
         compose=_act_compose,
-        description="Take action (STRATEGIZE, IMPLEMENT, TEST)",
+        description="Execute and verify (IMPLEMENT, QA, TEST)",
     ),
     "reflect": Operation(
         name="reflect",
@@ -246,7 +258,7 @@ NPHASE_OPERATIONS: dict[str, Operation] = {
         arity=3,
         signature="(Agent, Agent, Agent) -> Agent[A, Reflection]",
         compose=_cycle_compose,
-        description="Full SENSE >> ACT >> REFLECT cycle",
+        description="Full UNDERSTAND >> ACT >> REFLECT cycle",
     ),
 }
 
@@ -257,15 +269,15 @@ NPHASE_OPERATIONS: dict[str, Operation] = {
 NPHASE_LAWS: list[Law] = [
     Law(
         name="phase_order",
-        equation="SENSE >> ACT >> REFLECT",
+        equation="UNDERSTAND >> ACT >> REFLECT",
         verify=_verify_phase_order,
-        description="ACT requires SENSE; REFLECT requires ACT",
+        description="ACT requires UNDERSTAND; REFLECT requires ACT",
     ),
     Law(
         name="cycle",
-        equation="REFLECT -> SENSE (allowed)",
+        equation="REFLECT -> UNDERSTAND (allowed)",
         verify=_verify_cycle_closure,
-        description="REFLECT may trigger new SENSE cycle",
+        description="REFLECT may trigger new UNDERSTAND cycle",
     ),
     Law(
         name="identity",
@@ -289,7 +301,7 @@ def create_nphase_operad() -> Operad:
         name="NPHASE",
         operations=NPHASE_OPERATIONS,
         laws=NPHASE_LAWS,
-        description="Operad for N-Phase development cycle (SENSE -> ACT -> REFLECT)",
+        description="Operad for N-Phase development cycle (UNDERSTAND -> ACT -> REFLECT)",
     )
 
 
@@ -318,18 +330,18 @@ def is_valid_transition(from_phase: NPhase, to_phase: NPhase) -> bool:
     Check if a phase transition is valid.
 
     Valid transitions:
-    - SENSE -> ACT
+    - UNDERSTAND -> ACT
     - ACT -> REFLECT
-    - REFLECT -> SENSE (cycle)
+    - REFLECT -> UNDERSTAND (cycle)
     - Same phase (stay)
     """
     if from_phase == to_phase:
         return True
 
     valid_transitions = {
-        NPhase.SENSE: {NPhase.ACT},
+        NPhase.UNDERSTAND: {NPhase.ACT},
         NPhase.ACT: {NPhase.REFLECT},
-        NPhase.REFLECT: {NPhase.SENSE},  # Cycle back
+        NPhase.REFLECT: {NPhase.UNDERSTAND},  # Cycle back
     }
 
     return to_phase in valid_transitions.get(from_phase, set())
@@ -338,9 +350,9 @@ def is_valid_transition(from_phase: NPhase, to_phase: NPhase) -> bool:
 def next_phase(current: NPhase) -> NPhase:
     """Get the next phase in the cycle."""
     match current:
-        case NPhase.SENSE:
+        case NPhase.UNDERSTAND:
             return NPhase.ACT
         case NPhase.ACT:
             return NPhase.REFLECT
         case NPhase.REFLECT:
-            return NPhase.SENSE  # Cycle back
+            return NPhase.UNDERSTAND  # Cycle back

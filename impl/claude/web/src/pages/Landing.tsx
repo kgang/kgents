@@ -1,5 +1,9 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { DemoPreview } from '@/components/landing/DemoPreview';
+import { createSubscriptionCheckout } from '@/api/payments';
+import { useUserStore } from '@/stores/userStore';
+import type { SubscriptionTier } from '@/api/types';
 
 const FEATURES = [
   {
@@ -55,11 +59,29 @@ const PRICING = [
 ];
 
 export default function Landing() {
+  const [loading, setLoading] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const { userId, isAuthenticated } = useUserStore();
+
   const handleSubscribe = async (tier: string) => {
-    // For now, just log and show coming soon
-    // In production, this would create a Stripe checkout session
-    console.log('Subscribe to:', tier);
-    alert(`Subscription to ${tier} coming soon! For now, enjoy the demo.`);
+    if (tier === 'TOURIST') return;
+
+    // Require authentication for paid tiers
+    if (!isAuthenticated || !userId) {
+      setError('Please sign in to subscribe. Create an account in the dashboard.');
+      return;
+    }
+
+    setLoading(tier);
+    setError(null);
+    try {
+      await createSubscriptionCheckout(tier as Exclude<SubscriptionTier, 'TOURIST'>, userId);
+      // User will be redirected to Stripe Checkout
+    } catch (err) {
+      console.error('Checkout error:', err);
+      setError('Failed to start checkout. Please try again.');
+      setLoading(null);
+    }
   };
 
   return (
@@ -123,51 +145,63 @@ export default function Landing() {
           <h2 className="text-3xl font-bold text-center mb-4">Choose Your Path</h2>
           <p className="text-gray-400 text-center mb-12">Start free, upgrade when ready</p>
 
+          {error && (
+            <div className="max-w-md mx-auto mb-8 p-4 bg-red-900/30 border border-red-500/30 rounded-lg text-red-300 text-center">
+              {error}
+            </div>
+          )}
+
           <div className="grid md:grid-cols-4 gap-6">
-            {PRICING.map((plan) => (
-              <div
-                key={plan.tier}
-                className={`rounded-xl p-6 border ${
-                  plan.highlighted
-                    ? 'bg-town-highlight/10 border-town-highlight'
-                    : 'bg-town-surface/30 border-town-accent/20'
-                }`}
-              >
-                {plan.highlighted && (
-                  <div className="text-xs font-semibold text-town-highlight mb-2">MOST POPULAR</div>
-                )}
-                <h3 className="text-lg font-semibold">{plan.tier}</h3>
-                <div className="text-3xl font-bold my-3">{plan.price}</div>
-                <p className="text-sm text-gray-400 mb-4">{plan.description}</p>
-                <ul className="space-y-2 mb-6">
-                  {plan.features.map((feature, i) => (
-                    <li key={i} className="text-sm text-gray-300 flex items-center gap-2">
-                      <span className="text-green-500">✓</span>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                {plan.tier === 'TOURIST' ? (
-                  <Link
-                    to="/town/demo"
-                    className={`block w-full py-2 rounded-lg font-medium text-center transition-colors bg-town-accent hover:bg-town-accent/80`}
-                  >
-                    {plan.cta}
-                  </Link>
-                ) : (
-                  <button
-                    onClick={() => handleSubscribe(plan.tier)}
-                    className={`w-full py-2 rounded-lg font-medium transition-colors ${
-                      plan.highlighted
-                        ? 'bg-town-highlight hover:bg-town-highlight/80'
-                        : 'bg-town-accent hover:bg-town-accent/80'
-                    }`}
-                  >
-                    {plan.cta}
-                  </button>
-                )}
-              </div>
-            ))}
+            {PRICING.map((plan) => {
+              const isLoading = loading === plan.tier;
+              return (
+                <div
+                  key={plan.tier}
+                  className={`rounded-xl p-6 border ${
+                    plan.highlighted
+                      ? 'bg-town-highlight/10 border-town-highlight'
+                      : 'bg-town-surface/30 border-town-accent/20'
+                  }`}
+                >
+                  {plan.highlighted && (
+                    <div className="text-xs font-semibold text-town-highlight mb-2">MOST POPULAR</div>
+                  )}
+                  <h3 className="text-lg font-semibold">{plan.tier}</h3>
+                  <div className="text-3xl font-bold my-3">{plan.price}</div>
+                  <p className="text-sm text-gray-400 mb-4">{plan.description}</p>
+                  <ul className="space-y-2 mb-6">
+                    {plan.features.map((feature, i) => (
+                      <li key={i} className="text-sm text-gray-300 flex items-center gap-2">
+                        <span className="text-green-500">✓</span>
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                  {plan.tier === 'TOURIST' ? (
+                    <Link
+                      to="/town/demo"
+                      className={`block w-full py-2 rounded-lg font-medium text-center transition-colors bg-town-accent hover:bg-town-accent/80`}
+                    >
+                      {plan.cta}
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={() => handleSubscribe(plan.tier)}
+                      disabled={loading !== null}
+                      className={`w-full py-2 rounded-lg font-medium transition-colors ${
+                        loading !== null
+                          ? 'bg-gray-600 cursor-not-allowed'
+                          : plan.highlighted
+                          ? 'bg-town-highlight hover:bg-town-highlight/80'
+                          : 'bg-town-accent hover:bg-town-accent/80'
+                      }`}
+                    >
+                      {isLoading ? 'Processing...' : plan.cta}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
