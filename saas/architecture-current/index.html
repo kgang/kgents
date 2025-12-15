@@ -12,7 +12,7 @@
         <meta name="author" content="Kent Gang">
       
       
-        <link rel="canonical" href="https://kentgang.github.io/kgents/skills/n-phase-cycle/">
+        <link rel="canonical" href="https://kentgang.github.io/kgents/saas/architecture-current/">
       
       
       
@@ -25,7 +25,7 @@
     
     
       
-        <title>N-Phase Cycle Skills - kgents Examples</title>
+        <title>Current Architecture: Single-Region Deployment - kgents Examples</title>
       
     
     
@@ -76,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#n-phase-cycle-skills" class="md-skip">
+        <a href="#current-architecture-single-region-deployment" class="md-skip">
           Skip to content
         </a>
       
@@ -110,7 +110,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              N-Phase Cycle Skills
+              Current Architecture: Single-Region Deployment
             
           </span>
         </div>
@@ -584,10 +584,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#the-three-phases-default" class="md-nav__link">
+  <a href="#overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The Three Phases (Default)
+        Overview
       
     </span>
   </a>
@@ -595,10 +595,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-eleven-phases-crown-jewels-only" class="md-nav__link">
+  <a href="#namespaces" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The Eleven Phases (Crown Jewels Only)
+        Namespaces
       
     </span>
   </a>
@@ -606,22 +606,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-seven-properties" class="md-nav__link">
+  <a href="#component-inventory" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The Seven Properties
+        Component Inventory
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="The Seven Properties">
+    <nav class="md-nav" aria-label="Component Inventory">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#minimal-phase-artifacts-checklist" class="md-nav__link">
+  <a href="#1-api-service-kgent-api" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Minimal phase artifacts (checklist)
+        1. API Service (kgent-api)
       
     </span>
   </a>
@@ -629,10 +629,43 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#quick-cards-micro-prompts" class="md-nav__link">
+  <a href="#2-nats-cluster" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Quick cards (micro-prompts)
+        2. NATS Cluster
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-redis-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Redis Cache
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-observability-stack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Observability Stack
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-network-policies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Network Policies
       
     </span>
   </a>
@@ -645,10 +678,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#entropy-budget" class="md-nav__link">
+  <a href="#external-dependencies" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Entropy Budget
+        External Dependencies
       
     </span>
   </a>
@@ -656,22 +689,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#auto-inducer-signifiers" class="md-nav__link">
+  <a href="#current-backuprecovery-state" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Auto-Inducer Signifiers
+        Current Backup/Recovery State
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Auto-Inducer Signifiers">
+    <nav class="md-nav" aria-label="Current Backup/Recovery State">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#quick-example" class="md-nav__link">
+  <a href="#whats-backed-up" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Quick Example
+        What's Backed Up
       
     </span>
   </a>
@@ -679,10 +712,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#halt-conditions" class="md-nav__link">
+  <a href="#whats-not-backed-up" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Halt Conditions
+        What's NOT Backed Up
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recovery-targets-current-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recovery Targets (Current State)
       
     </span>
   </a>
@@ -695,60 +739,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#when-to-use-what" class="md-nav__link">
+  <a href="#single-points-of-failure" class="md-nav__link">
     <span class="md-ellipsis">
       
-        When to Use What
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="When to Use What">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#usage-selector-decision-table" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Usage Selector (decision table)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#transition-checks-branch-surfacing" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Transition checks (branch surfacing)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#phase-specific-anti-patterns-spotters-guide" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Phase-specific anti-patterns (spotter's guide)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#phase-accountability" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Phase Accountability
+        Single Points of Failure
       
     </span>
   </a>
@@ -756,10 +750,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#branching-at-transitions" class="md-nav__link">
+  <a href="#network-topology" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Branching at Transitions
+        Network Topology
       
     </span>
   </a>
@@ -767,10 +761,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-courage-imperative" class="md-nav__link">
+  <a href="#resource-summary" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The Courage Imperative
+        Resource Summary
       
     </span>
   </a>
@@ -778,32 +772,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#meta-skills" class="md-nav__link">
+  <a href="#configuration-references" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Meta Skills
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#metatheoretical-grounding" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Metatheoretical Grounding
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#quick-reference" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Quick Reference
+        Configuration References
       
     </span>
   </a>
@@ -830,510 +802,508 @@
   
 
 
-<h1 id="n-phase-cycle-skills">N-Phase Cycle Skills</h1>
+<h1 id="current-architecture-single-region-deployment">Current Architecture: Single-Region Deployment</h1>
 <blockquote>
-<p><em>"SENSE → ACT → REFLECT. The rest is detail."</em></p>
+<p>Phase 10 Documentation: Baseline for multi-region evaluation.</p>
 </blockquote>
-<p><strong>Architectural Decision</strong>: AD-005 (see <code>spec/principles.md</code>)</p>
-<hr />
-<h2 id="the-three-phases-default">The Three Phases (Default)</h2>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>SENSE → ACT → REFLECT → (loop)
+<h2 id="overview">Overview</h2>
+<p>kgents SaaS operates in a <strong>single-region Kubernetes cluster</strong> with the following topology:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>                            Internet
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>                               │
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>                               ▼
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>                      ┌────────────────┐
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>                      │   Kong/Ingress │
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>                      │   (Gateway)    │
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>                      └───────┬────────┘
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>                              │
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>              ┌───────────────┴───────────────┐
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>              ▼                               ▼
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>     ┌─────────────────┐             ┌─────────────────┐
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>     │   kgent-api     │             │   kgent-api     │
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>     │   (Replica 1)   │             │   (Replica 2)   │
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>     │   :8000         │             │   :8000         │
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>     └───────┬─────────┘             └────────┬────────┘
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>             │                                │
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>     ┌───────┴────────────────────────────────┴───────┐
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>     │                                                │
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>     ▼                                                ▼
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>│    NATS      │  │    Redis     │  │  Prometheus  │  │    Loki      │
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>│   Cluster    │  │   (Cache)    │  │   (Metrics)  │  │   (Logs)     │
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>│  (3 nodes)   │  │  (1 node)    │  │              │  │              │
+</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>└──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘
 </span></code></pre></div>
+<h2 id="namespaces">Namespaces</h2>
 <table>
 <thead>
 <tr>
-<th>Phase</th>
-<th>What You Do</th>
-<th>Exit Criterion</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>SENSE</strong></td>
-<td>Understand the terrain</td>
-<td>Have a plan with dependencies mapped</td>
-</tr>
-<tr>
-<td><strong>ACT</strong></td>
-<td>Execute the plan</td>
-<td>Tests pass, code shipped</td>
-</tr>
-<tr>
-<td><strong>REFLECT</strong></td>
-<td>Learn from the work</td>
-<td>Insights captured, mycelium updated</td>
-</tr>
-</tbody>
-</table>
-<p><strong>Use this</strong> for 90% of work. It's enough.</p>
-<hr />
-<h2 id="the-eleven-phases-crown-jewels-only">The Eleven Phases (Crown Jewels Only)</h2>
-<p>When you need full ceremony (multi-session, high-complexity):</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>PLAN → RESEARCH → DEVELOP → STRATEGIZE → CROSS-SYNERGIZE
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>                    ↓                         ↓
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>              (branches may spawn)      (branches may spawn)
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>                    ↓                         ↓
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>IMPLEMENT → QA → TEST → EDUCATE → MEASURE → REFLECT
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>                                              ↓
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>                                      (loop or detach)
-</span></code></pre></div>
-<table>
-<thead>
-<tr>
-<th>Phase</th>
-<th>Maps To</th>
-<th>Skill File</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>PLAN</td>
-<td>SENSE</td>
-<td><code>plan.md</code></td>
-</tr>
-<tr>
-<td>RESEARCH</td>
-<td>SENSE</td>
-<td><code>research.md</code></td>
-</tr>
-<tr>
-<td>DEVELOP</td>
-<td>SENSE</td>
-<td><code>develop.md</code></td>
-</tr>
-<tr>
-<td>STRATEGIZE</td>
-<td>SENSE</td>
-<td><code>strategize.md</code></td>
-</tr>
-<tr>
-<td>CROSS-SYNERGIZE</td>
-<td>SENSE</td>
-<td><code>cross-synergize.md</code></td>
-</tr>
-<tr>
-<td>IMPLEMENT</td>
-<td>ACT</td>
-<td><code>implement.md</code></td>
-</tr>
-<tr>
-<td>QA</td>
-<td>ACT</td>
-<td><code>qa.md</code></td>
-</tr>
-<tr>
-<td>TEST</td>
-<td>ACT</td>
-<td><code>test.md</code></td>
-</tr>
-<tr>
-<td>EDUCATE</td>
-<td>ACT</td>
-<td><code>educate.md</code></td>
-</tr>
-<tr>
-<td>MEASURE</td>
-<td>REFLECT</td>
-<td><code>measure.md</code></td>
-</tr>
-<tr>
-<td>REFLECT</td>
-<td>REFLECT</td>
-<td><code>reflect.md</code></td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2 id="the-seven-properties">The Seven Properties</h2>
-<ol>
-<li><strong>Self-Similar</strong> — Each phase is a hologram of the full cycle</li>
-<li><strong>Category-Theoretic</strong> — Phases compose: <code>(A &gt;&gt; B) &gt;&gt; C ≡ A &gt;&gt; (B &gt;&gt; C)</code></li>
-<li><strong>Agent-Human Parity</strong> — No privileged author</li>
-<li><strong>Mutable</strong> — The cycle evolves via <code>meta-re-metabolize.md</code></li>
-<li><strong>Auto-Continuative</strong> — Each phase generates the next prompt</li>
-<li><strong>Accountable</strong> — Skipped phases leave debt; explicit declaration required</li>
-<li><strong>Archiving-First</strong> — Plans are scaffolding; QA/TEST/REFLECT gates must archive or upgrade</li>
-</ol>
-<h3 id="minimal-phase-artifacts-checklist">Minimal phase artifacts (checklist)</h3>
-<table>
-<thead>
-<tr>
-<th>Phase</th>
-<th>Minimum artifact to count as touched</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>PLAN</td>
-<td>Scope, exit criteria, attention budget, entropy sip</td>
-</tr>
-<tr>
-<td>RESEARCH</td>
-<td>File map + blockers with refs</td>
-</tr>
-<tr>
-<td>DEVELOP</td>
-<td>Contract/API deltas or law assertions</td>
-</tr>
-<tr>
-<td>STRATEGIZE</td>
-<td>Sequencing with rationale</td>
-</tr>
-<tr>
-<td>CROSS-SYNERGIZE</td>
-<td>Named compositions/opportunities or explicit skip</td>
-</tr>
-<tr>
-<td>IMPLEMENT</td>
-<td>Code changes or commit-ready diff</td>
-</tr>
-<tr>
-<td>QA</td>
-<td>Checklist run (lint/type/sec) with result</td>
-</tr>
-<tr>
-<td>TEST</td>
-<td>Tests added/updated or explicit no-op with risk</td>
-</tr>
-<tr>
-<td>EDUCATE</td>
-<td>User/maintainer note, doc link, or explicit skip</td>
-</tr>
-<tr>
-<td>MEASURE</td>
-<td>Metric hook/plan or defer with owner/timebox</td>
-</tr>
-<tr>
-<td>REFLECT</td>
-<td>Learnings + next-loop seeds</td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h3 id="quick-cards-micro-prompts">Quick cards (micro-prompts)</h3>
-<ul>
-<li><strong>Shape</strong>: 5 lines max → <code>ATTACH /hydrate → intent → ledger update → actions → exit + next-phase prompt</code>.</li>
-<li><strong>Ledger hook</strong>: Embed <code>phase_ledger</code> + <code>entropy</code> snippet (phase-accountability.md) so <code>_forest.md</code> can ingest without manual reconciliation.</li>
-<li><strong>Branch check</strong>: At every transition, capture candidates and classify (blocking/parallel/deferred/void) per <code>branching-protocol.md</code>.</li>
-<li><strong>Signals</strong>: Log tokens/time/entropy/law checks to feed <code>process-metrics.md</code> dashboards (hotloadable fixtures encouraged).</li>
-<li><strong>Kill-switch</strong>: If momentum stalls, collapse to 3-phase and declare the skip debt.</li>
-<li><strong>AGENTESE clauses</strong>: Prefix phase prompts with handles, e.g., <code>concept.forest.manifest[phase=PLAN][minimal_output=true]@span=forest_plan</code>, <code>void.entropy.sip[phase=RESEARCH][entropy=0.07]</code>, <code>time.forest.witness[phase=REFLECT][law_check=true]@span=forest_trace</code>.</li>
-</ul>
-<hr />
-<h2 id="entropy-budget">Entropy Budget</h2>
-<ul>
-<li><strong>Per phase</strong>: 0.05–0.10 (5-10% for exploration)</li>
-<li><strong>Draw</strong>: <code>void.entropy.sip(amount=0.07)</code></li>
-<li><strong>Return unused</strong>: <code>void.entropy.pour</code></li>
-<li><strong>Replenish</strong>: <code>void.gratitude.tithe</code></li>
-</ul>
-<hr />
-<h2 id="auto-inducer-signifiers">Auto-Inducer Signifiers</h2>
-<blockquote>
-<p><em>See <code>spec/protocols/auto-inducer.md</code> for full specification.</em></p>
-</blockquote>
-<p>End phase output with signifiers to control flow:</p>
-<table>
-<thead>
-<tr>
-<th>Signifier</th>
-<th>Unicode</th>
-<th>Meaning</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>⟿[PHASE]</code></td>
-<td>U+27FF</td>
-<td>Continue to PHASE (auto-execute)</td>
-</tr>
-<tr>
-<td><code>⟂[REASON]</code></td>
-<td>U+27C2</td>
-<td>Halt, await human input</td>
-</tr>
-<tr>
-<td><em>(none)</em></td>
-<td>—</td>
-<td>Await human (backwards compatible)</td>
-</tr>
-</tbody>
-</table>
-<h3 id="quick-example">Quick Example</h3>
-<div class="language-markdown highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="gh"># After completing PLAN:</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>⟿[RESEARCH]
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>/hydrate
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>handles: scope=...; ledger={PLAN:touched}; entropy=0.07
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>mission: map terrain; find blockers.
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>exit: file map; continuation → DEVELOP.
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="gh"># After QA finds errors:</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>⟂[QA:blocked] mypy errors require resolution before TEST
-</span></code></pre></div>
-<h3 id="halt-conditions">Halt Conditions</h3>
-<ul>
-<li><code>⟂[ENTROPY_DEPLETED]</code> — Budget exhausted</li>
-<li><code>⟂[RUNAWAY_LOOP]</code> — 33+ transitions without REFLECT</li>
-<li><code>⟂[BLOCKED:reason]</code> — QA/Test/blocker</li>
-<li><code>⟂[DETACH:cycle_complete]</code> — Scope done</li>
-<li><code>⟂[DETACH:awaiting_human]</code> — Decision needed</li>
-</ul>
-<p><strong>Law</strong>: Every cycle MUST reach <code>⟂</code> eventually.</p>
-<hr />
-<h2 id="when-to-use-what">When to Use What</h2>
-<table>
-<thead>
-<tr>
-<th>Task</th>
-<th>Phases</th>
-<th>Accountability</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Typo fix</td>
-<td>None (just do it)</td>
-<td>Implicit</td>
-</tr>
-<tr>
-<td>Quick win (Effort ≤ 2)</td>
-<td>ACT only</td>
-<td>Light</td>
-</tr>
-<tr>
-<td>Standard feature</td>
-<td>SENSE → ACT → REFLECT</td>
-<td>Standard</td>
-</tr>
-<tr>
-<td>Crown Jewel</td>
-<td>Full 11 phases</td>
-<td>Full trace required</td>
-</tr>
-</tbody>
-</table>
-<h3 id="usage-selector-decision-table">Usage Selector (decision table)</h3>
-<table>
-<thead>
-<tr>
-<th>Signal</th>
-<th>Default</th>
-<th>Escalate to Full 11</th>
-<th>Ceremony Kill-Switch</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Estimated effort</td>
-<td>≤ 45 min</td>
-<td>&gt; 2 hours or multi-agent</td>
-<td>Drop back to 3-phase if progress &lt;20% after 30 min</td>
-</tr>
-<tr>
-<td>Blast radius</td>
-<td>Single file/CLI flag</td>
-<td>Cross-cutting (spec + impl + docs)</td>
-<td>Compress if blockers are purely external</td>
-</tr>
-<tr>
-<td>Novelty</td>
-<td>Known pattern</td>
-<td>New operad/functor wiring</td>
-<td>If novelty resolves, collapse to ACT-only to ship</td>
-</tr>
-<tr>
-<td>Stakeholders</td>
-<td>Solo</td>
-<td>Multiple teams/users</td>
-<td>If stakeholder sync done, skip STRATEGIZE with explicit debt</td>
-</tr>
-<tr>
-<td>Tests impact</td>
-<td>None/minor</td>
-<td>Adds or mutates test harnesses</td>
-<td>If harness churn stalls, park in REFLECT and re-PLAN</td>
-</tr>
-</tbody>
-</table>
-<p><strong>Principle</strong>: Tasteful/Curated scope wins—start smaller, then re-metabolize upward. The kill-switch prevents ceremony lock-in when momentum stalls.</p>
-<h3 id="transition-checks-branch-surfacing">Transition checks (branch surfacing)</h3>
-<p>At every phase exit, ask and record (even if “none”):
-- <strong>Branch candidates</strong>: any new tracks that should split off?
-- <strong>Blockers</strong>: anything that forces re-plan?
-- <strong>Composition hooks</strong>: agents/operads this work should align with?</p>
-<h3 id="phase-specific-anti-patterns-spotters-guide">Phase-specific anti-patterns (spotter's guide)</h3>
-<ul>
-<li>PLAN: endless option listing; no non-goals; no attention budget.</li>
-<li>RESEARCH: coding before mapping; no citations; ignoring prior art in <code>spec/</code>.</li>
-<li>DEVELOP: hand-wavy contracts; skipping law assertions for functors/operads.</li>
-<li>STRATEGIZE: sequencing by convenience; ignoring dependencies; no leverage plan.</li>
-<li>CROSS-SYNERGIZE: linearizing; missing dormant plan ties; “none” without check.</li>
-<li>IMPLEMENT: bypassing functor/category laws; monolithic diffs without composition.</li>
-<li>QA: checklist theater; skipping type/security passes; silent lint debt.</li>
-<li>TEST: synthetic stubs violating AD-004; array outputs violating Minimal Output.</li>
-<li>EDUCATE: shipping without usage notes; no handles/paths for AGENTESE.</li>
-<li>MEASURE: no metrics hook; no owner/timebox; silent entropy spend.</li>
-<li>REFLECT: no learnings; no double-loop; missing next-loop seeds.</li>
-</ul>
-<hr />
-<h2 id="phase-accountability">Phase Accountability</h2>
-<p><strong>Every phase touched leaves a trace. Every phase skipped leaves a debt.</strong></p>
-<p>For Crown Jewel work, all 11 phases must be <strong>touched</strong>—even if briefly. A "touch" means:
-- Explicit mention in continuation prompt
-- Skip declaration with reason, risk, fallback</p>
-<p>Agents who skip phases without declaration are <strong>liable</strong> for consequences. See <code>phase-accountability.md</code>.</p>
-<hr />
-<h2 id="branching-at-transitions">Branching at Transitions</h2>
-<p>At each phase transition, new work may surface. The cycle is a <strong>tree generator</strong>, not a linear pipe.</p>
-<table>
-<thead>
-<tr>
-<th>At Transition</th>
-<th>Ask</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>PLAN → RESEARCH</td>
-<td>Is scope too large? Split tracks?</td>
-</tr>
-<tr>
-<td>RESEARCH → DEVELOP</td>
-<td>Did prior art suggest alternatives?</td>
-</tr>
-<tr>
-<td>DEVELOP → STRATEGIZE</td>
-<td>Multiple valid architectures?</td>
-</tr>
-<tr>
-<td>...</td>
-<td>...</td>
-</tr>
-</tbody>
-</table>
-<p>See <code>branching-protocol.md</code> for full protocol on surfacing, classifying, and emitting branch handles.</p>
-<hr />
-<h2 id="the-courage-imperative">The Courage Imperative</h2>
-<blockquote>
-<p><em>"The agent does not describe work. The agent DOES work."</em></p>
-</blockquote>
-<table>
-<thead>
-<tr>
-<th>Wrong</th>
-<th>Right</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>"Consider these options..."</td>
-<td>"I choose Track A. TodoWrite tracking."</td>
-</tr>
-<tr>
-<td>"You might want to read..."</td>
-<td>"Reading 5 files NOW."</td>
-</tr>
-<tr>
-<td>"Next steps would be..."</td>
-<td>"Implementation COMPLETE. Tests passing."</td>
-</tr>
-</tbody>
-</table>
-<p><strong>The ground is always there</strong>: <code>/hydrate</code> → <code>spec/principles.md</code> → correctness.</p>
-<hr />
-<h2 id="meta-skills">Meta Skills</h2>
-<table>
-<thead>
-<tr>
-<th>Skill</th>
+<th>Namespace</th>
 <th>Purpose</th>
+<th>Components</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>auto-continuation.md</code></td>
-<td>Generate the next prompt</td>
+<td><code>kgents-triad</code></td>
+<td>Core data services</td>
+<td>API, Redis, Postgres, Kong</td>
 </tr>
 <tr>
-<td><code>meta-skill-operad.md</code></td>
-<td>Category-theoretic skill mutation</td>
+<td><code>kgents-agents</code></td>
+<td>Agent runtime</td>
+<td>NATS cluster</td>
 </tr>
 <tr>
-<td><code>meta-re-metabolize.md</code></td>
-<td>Lifecycle refresh protocol</td>
-</tr>
-<tr>
-<td><code>lookback-revision.md</code></td>
-<td>Double-loop retrospection</td>
-</tr>
-<tr>
-<td><code>process-metrics.md</code></td>
-<td>Trace the generation chain</td>
-</tr>
-<tr>
-<td><code>detach-attach.md</code></td>
-<td>Session boundary handling</td>
-</tr>
-<tr>
-<td><code>branching-protocol.md</code></td>
-<td>Surface and classify new trees at transitions</td>
-</tr>
-<tr>
-<td><code>metatheory.md</code></td>
-<td>Theoretical grounding (OODA, PDCA, Argyris)</td>
-</tr>
-<tr>
-<td><code>phase-accountability.md</code></td>
-<td>Liability for skipped phases</td>
+<td><code>kgents-observability</code></td>
+<td>Monitoring</td>
+<td>Prometheus, Grafana, Loki, Tempo, OTEL</td>
 </tr>
 </tbody>
 </table>
-<hr />
-<h2 id="metatheoretical-grounding">Metatheoretical Grounding</h2>
-<p>The N-Phase Cycle synthesizes established frameworks:</p>
+<h2 id="component-inventory">Component Inventory</h2>
+<h3 id="1-api-service-kgent-api">1. API Service (<code>kgent-api</code>)</h3>
+<p><strong>Location:</strong> <code>kgents-triad</code> namespace</p>
 <table>
 <thead>
 <tr>
-<th>Framework</th>
-<th>Contribution</th>
+<th>Property</th>
+<th>Value</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>OODA (Boyd)</td>
-<td>Tempo, iteration, competitive advantage</td>
+<td>Replicas</td>
+<td>2</td>
 </tr>
 <tr>
-<td>PDCA (Deming)</td>
-<td>Control loop, hypothesis testing</td>
+<td>Image</td>
+<td><code>kgents/api:latest</code></td>
 </tr>
 <tr>
-<td>Double-Loop (Argyris)</td>
-<td>Question the question, change frames</td>
+<td>Port</td>
+<td>8000</td>
 </tr>
 <tr>
-<td>Reflection-in-Action (Schön)</td>
-<td>Real-time adjustment within phases</td>
+<td>CPU Request/Limit</td>
+<td>100m / 500m</td>
 </tr>
 <tr>
-<td>Category Theory</td>
-<td>Lawful composition, identity, associativity</td>
+<td>Memory Request/Limit</td>
+<td>256Mi / 512Mi</td>
+</tr>
+<tr>
+<td>HPA</td>
+<td>2-10 replicas, CPU target 70%</td>
+</tr>
+<tr>
+<td>PDB</td>
+<td>minAvailable: 1</td>
 </tr>
 </tbody>
 </table>
-<p>See <code>metatheory.md</code> for full treatment with sources.</p>
-<hr />
-<h2 id="quick-reference">Quick Reference</h2>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Intent unclear?        → SENSE (start with PLAN)
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>Ready to code?         → ACT (start with IMPLEMENT)
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>Cycle complete?        → REFLECT (capture learnings)
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>Need full ceremony?    → Read individual phase skills
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>New work emerged?      → branching-protocol.md
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>Skipping a phase?      → phase-accountability.md
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>Why does this exist?   → metatheory.md
+<p><strong>Dependencies:</strong>
+- NATS (<code>nats.kgents-agents.svc:4222</code>)
+- Redis (<code>triad-redis.kgents-triad.svc:6379</code>)
+- OpenMeter (external SaaS)
+- Stripe (external SaaS)</p>
+<p><strong>Endpoints:</strong>
+- <code>/health</code> - Basic health check
+- <code>/health/saas</code> - SaaS infrastructure status (NATS, OpenMeter)
+- <code>/metrics</code> - Prometheus metrics
+- <code>/webhooks/stripe</code> - Stripe webhook receiver</p>
+<h3 id="2-nats-cluster">2. NATS Cluster</h3>
+<p><strong>Location:</strong> <code>kgents-agents</code> namespace</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Replicas</td>
+<td>3 (StatefulSet)</td>
+</tr>
+<tr>
+<td>Image</td>
+<td><code>nats:2.10-alpine</code></td>
+</tr>
+<tr>
+<td>Ports</td>
+<td>4222 (client), 6222 (cluster), 8222 (monitor)</td>
+</tr>
+<tr>
+<td>CPU Request/Limit</td>
+<td>100m / 500m</td>
+</tr>
+<tr>
+<td>Memory Request/Limit</td>
+<td>256Mi / 1Gi</td>
+</tr>
+<tr>
+<td>Storage</td>
+<td>10Gi per node (PVC)</td>
+</tr>
+<tr>
+<td>PDB</td>
+<td>minAvailable: 2</td>
+</tr>
+</tbody>
+</table>
+<p><strong>JetStream Streams:</strong>
+- <code>AGENTESE</code> - Agent-world interaction events
+- <code>EVENTS</code> - System event bus</p>
+<p><strong>Backup:</strong>
+- Daily CronJob at 02:00 UTC
+- Retention: 7 days
+- Storage: <code>nats-backup-pvc</code></p>
+<h3 id="3-redis-cache">3. Redis Cache</h3>
+<p><strong>Location:</strong> <code>kgents-triad</code> namespace</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Replicas</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Image</td>
+<td><code>redis:7-alpine</code></td>
+</tr>
+<tr>
+<td>Port</td>
+<td>6379</td>
+</tr>
+<tr>
+<td>Memory</td>
+<td>128MB max (allkeys-lru)</td>
+</tr>
+<tr>
+<td>CPU Request/Limit</td>
+<td>50m / 200m</td>
+</tr>
+<tr>
+<td>Memory Request/Limit</td>
+<td>64Mi / 256Mi</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Purpose:</strong>
+- Idempotency key store (Stripe webhooks)
+- Rate limiting counters
+- Session cache</p>
+<p><strong>Note:</strong> No persistence configured. Data loss acceptable (short TTL keys).</p>
+<h3 id="4-observability-stack">4. Observability Stack</h3>
+<p><strong>Location:</strong> <code>kgents-observability</code> namespace</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Purpose</th>
+<th>Retention</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Prometheus</td>
+<td>Metrics collection</td>
+<td>15 days</td>
+</tr>
+<tr>
+<td>Grafana</td>
+<td>Dashboards</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>Loki</td>
+<td>Log aggregation</td>
+<td>7 days</td>
+</tr>
+<tr>
+<td>Tempo</td>
+<td>Distributed tracing</td>
+<td>7 days</td>
+</tr>
+<tr>
+<td>OTEL Collector</td>
+<td>Telemetry gateway</td>
+<td>N/A</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Alert Rules:</strong> 8 configured (see <code>production-checklist.md</code>)</p>
+<h3 id="5-network-policies">5. Network Policies</h3>
+<table>
+<thead>
+<tr>
+<th>Policy</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>default-deny</code></td>
+<td>Block all inter-namespace traffic by default</td>
+</tr>
+<tr>
+<td><code>nats-policy</code></td>
+<td>Allow API → NATS on port 4222</td>
+</tr>
+<tr>
+<td><code>redis-policy</code></td>
+<td>Allow API → Redis on port 6379</td>
+</tr>
+</tbody>
+</table>
+<h2 id="external-dependencies">External Dependencies</h2>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Purpose</th>
+<th>Recovery</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OpenMeter</td>
+<td>Usage metering</td>
+<td>Buffer locally, retry with backoff</td>
+</tr>
+<tr>
+<td>Stripe</td>
+<td>Billing webhooks</td>
+<td>Stripe retries for 72h</td>
+</tr>
+<tr>
+<td>CloudFlare/Route53</td>
+<td>DNS</td>
+<td>Manual failover</td>
+</tr>
+</tbody>
+</table>
+<h2 id="current-backuprecovery-state">Current Backup/Recovery State</h2>
+<h3 id="whats-backed-up">What's Backed Up</h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Method</th>
+<th>Frequency</th>
+<th>Location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NATS streams</td>
+<td>CronJob</td>
+<td>Daily</td>
+<td>Local PVC</td>
+</tr>
+<tr>
+<td>K8s manifests</td>
+<td>GitOps</td>
+<td>On commit</td>
+<td>GitHub</td>
+</tr>
+<tr>
+<td>Secrets</td>
+<td>External Secrets Operator</td>
+<td>5min sync</td>
+<td>Cloud Secret Manager</td>
+</tr>
+</tbody>
+</table>
+<h3 id="whats-not-backed-up">What's NOT Backed Up</h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Risk</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Redis data</td>
+<td>Short-TTL keys</td>
+<td>Acceptable loss</td>
+</tr>
+<tr>
+<td>In-flight NATS messages</td>
+<td>Up to 5 min</td>
+<td>Circuit breaker fallback</td>
+</tr>
+<tr>
+<td>Grafana dashboards</td>
+<td>Manual recreation</td>
+<td>JSON in git repo</td>
+</tr>
+</tbody>
+</table>
+<h3 id="recovery-targets-current-state">Recovery Targets (Current State)</h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>RTO</th>
+<th>RPO</th>
+<th>Achievable?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>API</td>
+<td>&lt; 5 min</td>
+<td>N/A</td>
+<td>Yes (HPA + PDB)</td>
+</tr>
+<tr>
+<td>NATS</td>
+<td>&lt; 15 min</td>
+<td>&lt; 5 min</td>
+<td>Partial (no DR region)</td>
+</tr>
+<tr>
+<td>Secrets</td>
+<td>&lt; 30 min</td>
+<td>&lt; 1 hour</td>
+<td>Yes (ESO sync)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="single-points-of-failure">Single Points of Failure</h2>
+<table>
+<thead>
+<tr>
+<th>SPOF</th>
+<th>Impact</th>
+<th>Phase 11+ Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Single region</td>
+<td>Total outage</td>
+<td>DR region</td>
+</tr>
+<tr>
+<td>Redis (1 replica)</td>
+<td>Cache miss</td>
+<td>Redis Cluster or Sentinel</td>
+</tr>
+<tr>
+<td>NATS backup PVC</td>
+<td>Backup loss</td>
+<td>Cross-region S3/GCS</td>
+</tr>
+</tbody>
+</table>
+<h2 id="network-topology">Network Topology</h2>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>┌─────────────────────────────────────────────────────────────────┐
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>│                     Kubernetes Cluster                          │
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>│                                                                 │
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>│  ┌─────────────────────────────────────────────────────────┐   │
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>│  │ kgents-triad                                             │   │
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐              │   │
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>│  │  │  API x2  │──│  Redis   │  │ Postgres │              │   │
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>│  │  └────┬─────┘  └──────────┘  └──────────┘              │   │
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>│  └───────┼──────────────────────────────────────────────────┘   │
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>│          │ NetworkPolicy: nats-policy                           │
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>│  ┌───────┼──────────────────────────────────────────────────┐   │
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>│  │ kgents-agents                                            │   │
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>│  │       ▼                                                  │   │
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐              │   │
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>│  │  │  NATS-0  │──│  NATS-1  │──│  NATS-2  │              │   │
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>│  │  └──────────┘  └──────────┘  └──────────┘              │   │
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>│  └──────────────────────────────────────────────────────────┘   │
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>│                                                                 │
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>│  ┌──────────────────────────────────────────────────────────┐   │
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>│  │ kgents-observability                                     │   │
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>│  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐   │   │
+</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>│  │  │Prometheus│ │ Grafana  │ │   Loki   │ │  Tempo   │   │   │
+</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>│  │  └──────────┘ └──────────┘ └──────────┘ └──────────┘   │   │
+</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>│  └──────────────────────────────────────────────────────────┘   │
+</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>│                                                                 │
+</span><span id="__span-1-26"><a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>└─────────────────────────────────────────────────────────────────┘
 </span></code></pre></div>
+<h2 id="resource-summary">Resource Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>vCPU (request)</th>
+<th>Memory (request)</th>
+<th>Storage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>API x2</td>
+<td>200m</td>
+<td>512Mi</td>
+<td>-</td>
+</tr>
+<tr>
+<td>NATS x3</td>
+<td>300m</td>
+<td>768Mi</td>
+<td>30Gi</td>
+</tr>
+<tr>
+<td>Redis x1</td>
+<td>50m</td>
+<td>64Mi</td>
+<td>-</td>
+</tr>
+<tr>
+<td>Prometheus</td>
+<td>100m</td>
+<td>512Mi</td>
+<td>50Gi</td>
+</tr>
+<tr>
+<td>Grafana</td>
+<td>100m</td>
+<td>256Mi</td>
+<td>1Gi</td>
+</tr>
+<tr>
+<td>Loki</td>
+<td>100m</td>
+<td>256Mi</td>
+<td>10Gi</td>
+</tr>
+<tr>
+<td>Tempo</td>
+<td>100m</td>
+<td>256Mi</td>
+<td>10Gi</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>~1 vCPU</strong></td>
+<td><strong>~2.5Gi</strong></td>
+<td><strong>~100Gi</strong></td>
+</tr>
+</tbody>
+</table>
+<h2 id="configuration-references">Configuration References</h2>
+<ul>
+<li>API Deployment: <code>impl/claude/infra/k8s/manifests/api/deployment.yaml</code></li>
+<li>NATS StatefulSet: <code>impl/claude/infra/k8s/manifests/nats/statefulset.yaml</code></li>
+<li>Redis: <code>impl/claude/infra/k8s/manifests/triad/03-redis.yaml</code></li>
+<li>Network Policies: <code>impl/claude/infra/k8s/manifests/network-policies/</code></li>
+<li>Observability: <code>impl/claude/infra/k8s/manifests/observability/</code></li>
+</ul>
 <hr />
-<p><em>"The form is the function. Each prompt generates its successor by the same principles that generated itself."</em></p>
+<p><em>Last Updated: 2025-12-14 | Phase 10: STRATEGIZE</em></p>
 
 
 
