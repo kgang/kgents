@@ -10,13 +10,13 @@ from typing import Any, Optional, Protocol
 
 # Try to import stripe, but don't fail if it's not installed
 try:
-    import stripe
+    import stripe  # type: ignore[import-not-found]
     from stripe import StripeError
 
     STRIPE_AVAILABLE = True
 except ImportError:
     STRIPE_AVAILABLE = False
-    StripeError = Exception
+    StripeError = Exception  # noqa: N816
 
 
 @dataclass(frozen=True)

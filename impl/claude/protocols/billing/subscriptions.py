@@ -10,13 +10,13 @@ from enum import Enum
 from typing import Any, Optional, Protocol
 
 try:
-    import stripe
+    import stripe  # type: ignore[import-not-found]
     from stripe import StripeError
 
     STRIPE_AVAILABLE = True
 except ImportError:
     STRIPE_AVAILABLE = False
-    StripeError = Exception
+    StripeError = Exception  # noqa: N816
 
 
 class SubscriptionStatus(Enum):
