@@ -501,13 +501,122 @@ if __name__ == "__main__":
 
 ---
 
+## Case Study: TownFlux
+
+`TownFlux` demonstrates the Flux pattern for Agent Town simulation.
+
+### Overview
+
+TownFlux emits `TownEvent` objects as an async stream:
+
+```python
+from agents.town.flux import TownFlux, TownPhase, TownEvent
+from agents.town.environment import TownEnvironment
+
+# Create environment with citizens
+env = TownEnvironment(name="Harmony", citizens={...})
+
+# Create flux
+flux = TownFlux(environment=env, seed=42)
+
+# Process events
+async for event in flux.step():
+    print(f"[{event.phase.name}] {event.operation}: {event.participants}")
+```
+
+### TownPhase (Daily Cycle)
+
+```python
+class TownPhase(Enum):
+    MORNING = auto()    # Social activities weighted
+    AFTERNOON = auto()  # Work activities weighted
+    EVENING = auto()    # Mixed activities
+    NIGHT = auto()      # Reflection weighted
+```
+
+### TownEvent Structure
+
+```python
+@dataclass
+class TownEvent:
+    phase: TownPhase           # Time of day
+    operation: str             # greet, gossip, trade, solo, etc.
+    participants: list[str]    # Citizen names
+    success: bool              # Operation succeeded
+    message: str               # Human-readable description
+    tokens_used: int           # LLM token cost
+    drama_contribution: float  # Event drama level [0, 1]
+```
+
+### Integration with Visualization
+
+TownFlux integrates with SSE and NATS for real-time updates:
+
+```python
+from agents.town.visualization import TownSSEEndpoint, TownNATSBridge
+
+async def run_with_streaming(flux: TownFlux, town_id: str):
+    sse = TownSSEEndpoint(town_id)
+    nats = TownNATSBridge()
+
+    async for event in flux.step():
+        # Push to SSE clients
+        await sse.push_event(event)
+
+        # Publish to NATS
+        await nats.publish_town_event(town_id, event)
+
+        yield event
+```
+
+### Perturbation (Intervention)
+
+Users can inject events into a running flux:
+
+```python
+# User triggers a festival (intervention)
+result = await flux.invoke_intervention("festival", target_citizens=["bob", "eve"])
+```
+
+### Bataille's Insight: Expenditure
+
+From the docstring:
+
+> *"The flux is not just time—it is expenditure. Each phase accumulates surplus that must be spent. If not spent gloriously, it will be spent catastrophically."*
+
+This maps to the drama potential and token budgets in TownFlux.
+
+### Usage Pattern
+
+```python
+import asyncio
+from agents.town.flux import TownFlux
+from agents.town.environment import create_phase4_environment
+
+async def main():
+    # Create 25-citizen town
+    env = create_phase4_environment("Metropolis")
+    flux = TownFlux(environment=env, seed=42)
+
+    # Run 4 phases (one day)
+    for _ in range(4):
+        async for event in flux.step():
+            print(f"Day {flux.day} {event.phase.name}: {event.operation}")
+
+asyncio.run(main())
+```
+
+---
+
 ## Related Skills
 
 - [agentese-path](agentese-path.md) - Adding AGENTESE paths
 - [test-patterns](test-patterns.md) - Testing async agents
+- [agent-town-visualization](agent-town-visualization.md) - SSE/NATS integration
 
 ---
 
 ## Changelog
 
+- 2025-12-14: Added TownFlux case study (RE-METABOLIZE cycle)
 - 2025-12-12: Initial version based on flux implementation

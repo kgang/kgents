@@ -759,16 +759,224 @@ from testing import (
 
 ---
 
+## Stress Testing Patterns
+
+The Wave 1 stress tests demonstrate three key patterns for high-confidence reactive code.
+
+### Property-Based Testing (Hypothesis)
+
+Use Hypothesis to test invariants across many generated inputs:
+
+```python
+from hypothesis import given, settings, strategies as st
+import pytest
+
+from agents.i.reactive.signal import Signal, Snapshot
+
+@given(st.integers())
+def test_snapshot_restore_roundtrip(value: int) -> None:
+    """Any value can be snapshot and restored."""
+    sig = Signal.of(value)
+    snap = sig.snapshot()
+    sig.set(value + 1)
+    sig.restore(snap)
+    assert sig.value == value
+
+@given(st.lists(st.integers(min_value=-1000, max_value=1000), min_size=1, max_size=50))
+def test_generation_monotonic(values: list[int]) -> None:
+    """Generation always increases on distinct value changes."""
+    sig = Signal.of(values[0])
+    prev_gen = sig.generation
+    for v in values[1:]:
+        if v != sig.value:
+            sig.set(v)
+            assert sig.generation > prev_gen
+            prev_gen = sig.generation
+
+@given(st.text(min_size=0, max_size=100))
+def test_signal_text_values(text: str) -> None:
+    """Signal works with arbitrary text values."""
+    sig = Signal.of(text)
+    snap = sig.snapshot()
+    sig.set("changed")
+    sig.restore(snap)
+    assert sig.value == text
+```
+
+**Key strategies**:
+- `st.integers()` - arbitrary integers
+- `st.text()` - unicode strings
+- `st.floats(allow_nan=False)` - safe floats
+- `st.lists()` - lists of other strategies
+
+### Performance Baselines
+
+Set performance budgets that fail if violated:
+
+```python
+import time
+
+def test_signal_snapshot_performance() -> None:
+    """Signal snapshot/restore should be fast."""
+    sig = Signal.of(0)
+
+    start = time.perf_counter()
+    for i in range(10000):
+        sig.set(i)
+        snap = sig.snapshot()
+        sig.restore(snap)
+    elapsed = time.perf_counter() - start
+
+    # Should complete 10000 cycles in under 1 second
+    assert elapsed < 1.0, f"Signal snapshot cycle too slow: {elapsed:.3f}s"
+
+def test_computed_recompute_performance() -> None:
+    """Computed recomputation should be fast."""
+    sig = Signal.of(0)
+    computed = sig.map(lambda x: x * 2 + 1)
+
+    start = time.perf_counter()
+    for i in range(10000):
+        sig.set(i)
+        _ = computed.value
+    elapsed = time.perf_counter() - start
+
+    assert elapsed < 1.0, f"Computed recompute too slow: {elapsed:.3f}s"
+
+def test_subscriber_notification_performance() -> None:
+    """Subscriber notifications should be fast."""
+    sig = Signal.of(-1)
+    count = [0]
+
+    for _ in range(10):
+        sig.subscribe(lambda v: count.__setitem__(0, count[0] + 1))
+
+    start = time.perf_counter()
+    for i in range(10000):
+        sig.set(i)
+    elapsed = time.perf_counter() - start
+
+    assert elapsed < 1.0, f"Subscriber notification too slow: {elapsed:.3f}s"
+    assert count[0] == 100000  # 10 subscribers * 10000 updates
+```
+
+### High-Iteration Stress Tests
+
+Test stability under load:
+
+```python
+import random
+
+def test_signal_1000_snapshots() -> None:
+    """Signal handles 1000 snapshots without degradation."""
+    sig = Signal.of(0)
+    snapshots: list[Snapshot[int]] = []
+
+    for i in range(1000):
+        sig.set(i)
+        snapshots.append(sig.snapshot())
+
+    # Restore 100 random snapshots
+    sample = random.sample(snapshots, 100)
+    for snap in sample:
+        sig.restore(snap)
+        assert sig.value == snap.value
+
+def test_signal_100_subscribers() -> None:
+    """Signal handles 100 concurrent subscribers."""
+    sig = Signal.of(0)
+    results: list[list[int]] = [[] for _ in range(100)]
+
+    unsubs = []
+    for i in range(100):
+        idx = i
+        def callback(v: int, idx: int = idx) -> None:
+            results[idx].append(v)
+        unsubs.append(sig.subscribe(callback))
+
+    for j in range(1, 51):
+        sig.set(j)
+
+    for r in results:
+        assert r == list(range(1, 51))
+
+    for unsub in unsubs:
+        unsub()
+
+def test_modal_scope_deep_nesting() -> None:
+    """ModalScope handles 50-deep branch nesting."""
+    from agents.d.modal_scope import ModalScope
+
+    root = ModalScope.create_root()
+    current = root
+
+    for i in range(50):
+        current = current.branch(f"level-{i}", budget=0.99)
+
+    assert current.depth == 50
+```
+
+### Boundary Value Tests
+
+Test edge cases explicitly:
+
+```python
+@pytest.mark.parametrize("entropy", [0.0, 0.5, 1.0, 0.001, 0.999])
+def test_entropy_boundary_values(entropy: float) -> None:
+    """entropy_to_distortion handles boundary values."""
+    from agents.i.reactive.entropy import entropy_to_distortion
+
+    distortion = entropy_to_distortion(entropy, seed=42, t=0.0)
+    assert isinstance(distortion.blur, float)
+    assert isinstance(distortion.skew, float)
+
+def test_turn_empty_content() -> None:
+    """Turn handles empty content."""
+    from protocols.api.turn import Turn
+
+    turn = Turn(speaker="test", content="", timestamp=0.0)
+    assert turn.to_cli() == "[test]: "
+
+def test_turn_unicode_content() -> None:
+    """Turn handles unicode/emoji content."""
+    from protocols.api.turn import Turn
+
+    turn = Turn(speaker="🤖", content="Hello 世界! 🌍", timestamp=0.0)
+    cli = turn.to_cli()
+    assert "🤖" in cli
+    assert "世界" in cli
+```
+
+### Running Stress Tests
+
+```bash
+cd impl/claude
+
+# Run all stress tests
+uv run pytest -k "stress" -v
+
+# Run property-based tests
+uv run pytest agents/i/reactive/_tests/test_wave1_stress.py -v
+
+# Run with verbose hypothesis output
+uv run pytest --hypothesis-show-statistics agents/i/reactive/_tests/test_wave1_stress.py
+```
+
+---
+
 ## Related Skills
 
 - [building-agent](building-agent.md) - Creating well-formed agents
 - [flux-agent](flux-agent.md) - Testing async streaming agents
 - [handler-patterns](handler-patterns.md) - Testing CLI handlers
 - [agent-observability](agent-observability.md) - Metrics and debugging
+- [reactive-primitives](reactive-primitives.md) - Signal/Computed/Effect
+- [modal-scope-branching](modal-scope-branching.md) - Context branching
 
 ---
 
 ## Changelog
 
+- 2025-12-14: Added stress testing patterns (property-based, performance baselines, boundary tests)
 - 2025-12-12: Added T-gent Types I-V taxonomy, T-gent test agents, Oracle, Cortex patterns
 - 2025-12-12: Initial version based on conftest.py and testing patterns

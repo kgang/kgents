@@ -694,7 +694,379 @@ async def connect_town(town_id_input, scatter, fetch_scatter_data):
 
 The pattern: try the operation, catch exceptions, maintain previous state. Users see no crash; the widget simply doesn't update.
 
-### Verification Commands
+---
+
+## Phase 7: LLM-Backed Citizen Dialogue
+
+This section documents the dialogue generation system for Agent Town citizens.
+
+### Overview
+
+Phase 7 adds speech to citizens. When citizens interact (greet, gossip, trade), they generate dialogue via LLM calls, grounded in their memories and consistent with their archetype personality.
+
+**Key Features**:
+- Budget-aware routing: citizen tiers → model selection
+- Template fallback: always produces dialogue (never fails silently)
+- Memory grounding: dialogue references past interactions
+- Archetype voice: personality-consistent speech
+
+### Quick Start
+
+```python
+from agents.town.dialogue_engine import (
+    CitizenDialogueEngine,
+    DialogueBudgetConfig,
+    MockLLMClient,
+)
+
+# Create engine with mock LLM (for testing)
+engine = CitizenDialogueEngine(
+    llm_client=MockLLMClient(),
+    budget_config=DialogueBudgetConfig(),
+)
+
+# Register citizens with budget tiers
+engine.register_citizen("alice", tier="evolving")  # Full LLM
+engine.register_citizen("bob", tier="leader")      # Sampled LLM
+engine.register_citizen("carol", tier="standard")  # Template/cached
+
+# Generate dialogue
+from agents.town.flux import TownPhase
+result = await engine.generate(
+    speaker=alice,
+    listener=bob,
+    operation="greet",
+    phase=TownPhase.MORNING,
+)
+print(result.text)  # "Good morning, Bob. The structure holds..."
+```
+
+### Budget Tiers
+
+Citizens receive different dialogue quality based on their tier:
+
+| Tier | Daily Tokens | Model Access | Use Case |
+|------|--------------|--------------|----------|
+| `evolving` | 2000 | SONNET/HAIKU | 3-5 evolving citizens |
+| `leader` | 500 | HAIKU/CACHED | 5 archetype leaders |
+| `standard` | 100 | CACHED/TEMPLATE | 15+ standard citizens |
+
+**Cascade Behavior**:
+```
+SONNET (budget OK) → HAIKU (budget low) → CACHED (similar dialogue exists) → TEMPLATE (fallback)
+```
+
+Evolving citizens NEVER get TEMPLATE—they cascade to HAIKU even when budget is low.
+
+### Registering Citizens
+
+```python
+# Register at town initialization
+for citizen_id, citizen in town.citizens.items():
+    if citizen_id in town.evolving_ids:
+        tier = "evolving"
+    elif citizen.is_archetype_leader:
+        tier = "leader"
+    else:
+        tier = "standard"
+    engine.register_citizen(citizen_id, tier=tier)
+```
+
+### Configuring Budget
+
+```python
+from agents.town.dialogue_engine import DialogueBudgetConfig
+
+config = DialogueBudgetConfig(
+    # Model routing by operation
+    model_routing={
+        "greet": "haiku",       # Quick greetings
+        "gossip": "haiku",      # Social chatter
+        "trade": "sonnet",      # Nuanced negotiation
+        "council": "sonnet",    # Coalition decisions
+        "solo_reflect": "haiku",
+    },
+    # Daily token limits by tier
+    tier_budgets={
+        "evolving": 2000,
+        "leader": 500,
+        "standard": 100,
+    },
+    # Estimated tokens per operation
+    operation_estimates={
+        "greet": 50,
+        "gossip": 100,
+        "trade": 200,
+        "council": 500,
+        "solo_reflect": 75,
+    },
+)
+
+engine = CitizenDialogueEngine(
+    llm_client=create_llm_client(),  # Real LLM
+    budget_config=config,
+)
+```
+
+### Streaming Dialogue
+
+```python
+async for chunk in engine.generate_stream(
+    speaker=alice,
+    listener=bob,
+    operation="trade",
+    phase=TownPhase.AFTERNOON,
+):
+    if isinstance(chunk, str):
+        # Text chunk - display progressively
+        print(chunk, end="", flush=True)
+    else:
+        # DialogueResult - final stats
+        print(f"\n[Tokens: {chunk.tokens_used}, Model: {chunk.model}]")
+```
+
+### Archetype Voices
+
+Each archetype has a distinct voice pattern derived from their cosmotechnics:
+
+| Archetype | Voice Pattern | Temperature |
+|-----------|---------------|-------------|
+| Builder | Construction metaphors, practical | 0.5 |
+| Trader | Exchange framing, calculating | 0.6 |
+| Healer | Restoration language, empathetic | 0.7 |
+| Scholar | Curious, probing, pattern-seeking | 0.4 |
+| Watcher | Historical references, patient | 0.5 |
+
+**Example Builder Voice**:
+```
+"Good to see you, Bob. Working on any new projects?"
+"The foundation's looking solid today."
+```
+
+**Example Healer Voice**:
+```
+"Hello, Bob. How are you feeling today?"
+"I sensed someone needed company. Are you alright?"
+```
+
+### Memory Grounding
+
+Dialogue uses M-gent's foveation pattern for memory context:
+
+```python
+@dataclass
+class DialogueContext:
+    focal_memories: list[str]      # Top 3 by relevance
+    peripheral_memories: list[str]  # Next 2
+    relationship: float             # [-1, 1]
+    phase_name: str
+    region: str
+    recent_events: list[str]
+    shared_coalition: str | None
+```
+
+Memories mentioning the listener are prioritized. Relationship affects tone.
+
+### DialogueResult
+
+```python
+@dataclass
+class DialogueResult:
+    text: str                       # The dialogue
+    tokens_used: int                # Actual token count
+    model: str                      # "claude-3-haiku" / "template" / "cached"
+    grounded_memories: list[str]    # Memories referenced
+    was_template: bool              # True if template fallback
+    was_cached: bool                # True if cache hit
+    speaker_id: str
+    listener_id: str
+    operation: str                  # "greet" / "gossip" / "trade"
+```
+
+### ADR: Key Design Decisions
+
+#### ADR-1: Evolving Citizens Always Get LLM
+
+**Context**: Some citizens are marked "evolving" because they're under active observation for eigenvector drift.
+
+**Decision**: Evolving citizens NEVER fall back to TEMPLATE, only HAIKU.
+
+**Rationale**: Template dialogue doesn't create enough variation for eigenvector evolution. Even budget-constrained evolving citizens need some LLM diversity.
+
+#### ADR-2: Reuse K-gent LLM Infrastructure
+
+**Context**: K-gent already has LLMClient, MockLLMClient, and streaming patterns.
+
+**Decision**: Direct import from `agents.k.llm` rather than duplicating.
+
+**Rationale**: `Cross-agent import OK: Town→K-gent LLM; reuse > duplicate` (meta.md 2025-12-14). The LLM interface is stable and well-tested.
+
+#### ADR-3: Foveation Pattern for Memory Grounding
+
+**Context**: Citizens have potentially many memories of each other.
+
+**Decision**: Use M-gent's foveation pattern: 3 focal + 2 peripheral memories.
+
+**Rationale**: 5 memories provide sufficient context without overwhelming the prompt. Focal/peripheral split mirrors human attention.
+
+#### ADR-4: Template Fallback Never Fails
+
+**Context**: LLM calls can fail, budgets can be exhausted.
+
+**Decision**: Template tier always produces coherent dialogue.
+
+**Rationale**: `Tier cascade: TEMPLATE never fails; budget exhaustion → graceful fallback` (meta.md 2025-12-14).
+
+### Verification Commands (Phase 7)
+
+```bash
+# Run dialogue engine tests
+uv run pytest agents/town/_tests/test_dialogue_engine.py -v
+
+# Run live LLM integration tests (requires credentials)
+uv run pytest agents/town/_tests/test_integration.py -v -k "dialogue"
+
+# Check budget cascade behavior
+uv run pytest agents/town/_tests/test_dialogue_engine.py -v -k "tier or cascade"
+
+# Full town test suite (696 tests)
+uv run pytest agents/town/_tests/ -v --tb=short
+```
+
+### Teaching Example: Budget Tier Selection
+
+```python
+def test_tier_cascade(engine: CitizenDialogueEngine) -> None:
+    """Test: evolving → leader → standard tier behavior.
+
+    Evolving citizens cascade: SONNET → HAIKU (never TEMPLATE).
+    Leaders cascade: HAIKU → CACHED → TEMPLATE.
+    Standard: CACHED → TEMPLATE.
+    """
+    # Register citizens
+    engine.register_citizen("evolving_1", tier="evolving")
+    engine.register_citizen("leader_1", tier="leader")
+    engine.register_citizen("standard_1", tier="standard")
+
+    # Evolving gets SONNET initially
+    tier = engine.get_tier(evolving_citizen)
+    assert tier in (DialogueTier.SONNET, DialogueTier.HAIKU)
+    assert tier != DialogueTier.TEMPLATE  # Never template
+
+    # Leader gets HAIKU or CACHED
+    tier = engine.get_tier(leader_citizen)
+    assert tier in (DialogueTier.HAIKU, DialogueTier.CACHED, DialogueTier.TEMPLATE)
+
+    # Standard gets CACHED or TEMPLATE
+    tier = engine.get_tier(standard_citizen)
+    assert tier in (DialogueTier.CACHED, DialogueTier.TEMPLATE)
+```
+
+### Teaching Example: Streaming Accumulation
+
+```python
+async def test_streaming_accumulation(engine: CitizenDialogueEngine) -> None:
+    """Test: streaming yields chunks + final result.
+
+    Stream yields strings (chunks) during generation,
+    then DialogueResult at the end with token counts.
+    """
+    chunks = []
+    final_result = None
+
+    async for item in engine.generate_stream(
+        speaker=alice,
+        listener=bob,
+        operation="greet",
+        phase=TownPhase.MORNING,
+    ):
+        if isinstance(item, str):
+            chunks.append(item)
+        else:
+            final_result = item
+
+    # Chunks accumulated to full text
+    assert "".join(chunks) == final_result.text
+    # Result has token accounting
+    assert final_result.tokens_used >= 0
+```
+
+---
+
+## Phase 7: Metrics and Measurement (MEASURE)
+
+This section documents the quantitative metrics for the Phase 7 dialogue system.
+
+### Code Metrics
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| Town tests total | 696 | +71 from Phase 7 |
+| Dialogue tests | 71 | test_dialogue_engine.py |
+| Integration tests | 16 | test_integration.py (dialogue) |
+| Production lines | 880 | dialogue_engine.py + dialogue_voice.py |
+| Test lines | 1482 | test_dialogue_engine.py |
+| Modules added | 2 | dialogue_engine, dialogue_voice |
+| Cross-agent deps | +1 | K-gent LLM (direct import) |
+
+### Leading Indicators
+
+| Audience | Goal | Signal | Source |
+|----------|------|--------|--------|
+| **Operator** | Run dialogue demo | Template fallback rate | DialogueResult.was_template |
+| **Operator** | Budget stays healthy | Daily token burn rate | CitizenBudget.tokens_used_today |
+| **Maintainer** | Extend archetypes safely | Voice test coverage | test_dialogue_engine.py |
+| **Maintainer** | Understand cascade | Tier transition logs | DialogueTier changes |
+| **Contributor** | Add features confidently | Test regression rate | CI pipeline |
+| **User** | Dialogue feels authentic | Memory grounding rate | DialogueResult.grounded_memories |
+
+### Baselines and Thresholds
+
+| Metric | Baseline | Alert Threshold | Rationale |
+|--------|----------|-----------------|-----------|
+| Template fallback rate | <20% (evolving) | >50% | Budget too tight |
+| Dialogue test suite | 15.83s | >30s | CI feedback loop |
+| Memory grounding | 2+ memories | 0 memories | Context missing |
+| Tokens per greet | ~50 | >100 | Prompt bloat |
+| Tokens per trade | ~200 | >400 | Model inefficiency |
+| Daily budget burn | <80% | >95% | Budget exhaustion risk |
+
+### Counter-Metrics
+
+What would indicate this feature is harmful?
+
+| Signal | Counter-Signal | Mitigation |
+|--------|----------------|------------|
+| High dialogue quality | Token cost explosion | Tier budgets, cascade |
+| Memory grounding | Slow context build | Foveation limit (5 max) |
+| Archetype consistency | Repetitive dialogue | Temperature tuning |
+| Fast generation | Model quality drop | Tier selection logic |
+| Many tests | Slow CI | Parallel execution |
+
+### Budget Model Validation
+
+| Tier | Daily Limit | Est. Interactions | Burn Rate |
+|------|-------------|-------------------|-----------|
+| Evolving | 2000 tokens | ~20 trades | 100%/day sustainable |
+| Leader | 500 tokens | ~10 greets | 50%/day expected |
+| Standard | 100 tokens | Template only | 0% (cached/template) |
+
+### Verification Commands (Metrics)
+
+```bash
+# Check dialogue test duration (baseline: 15.83s)
+uv run pytest agents/town/_tests/test_dialogue_engine.py -q --tb=no
+
+# Check total town tests (baseline: 696)
+uv run pytest agents/town/_tests/ --collect-only -q 2>/dev/null | tail -1
+
+# Run full suite with durations
+uv run pytest agents/town/_tests/ -v --durations=10 --tb=short
+```
+
+---
+
+### Verification Commands (Phase 6)
 
 ```bash
 # Run all Phase 6 tests
@@ -720,8 +1092,134 @@ uv run pytest agents/town/_tests/ -v --tb=short
 
 ---
 
+## Phase 6: Metrics and Measurement (MEASURE)
+
+This section documents the leading indicators, baselines, and alert thresholds for Agent Town visualization.
+
+### Leading Indicators
+
+| Audience | Goal | Signal | Source |
+|----------|------|--------|--------|
+| **Operator** | Run the demo successfully | Demo launch success rate | API `/v1/town/` |
+| **Operator** | Stable SSE connections | SSE disconnection rate | `TownSSEEndpoint` |
+| **Maintainer** | Extend widgets safely | Functor law test coverage | `test_functor.py` |
+| **Maintainer** | Understand widget state | Documentation completeness | Skill doc |
+| **Contributor** | Add features with confidence | Test regression rate | CI pipeline |
+| **Contributor** | Quick feedback loop | Test suite duration | `pytest --durations` |
+
+### Baselines and Thresholds
+
+| Metric | Baseline | Alert Threshold | Rationale |
+|--------|----------|-----------------|-----------|
+| Widget render (25 citizens) | 0.03ms p50 | >10ms | 300x regression |
+| SSE connection time | <100ms | >500ms | User-perceptible delay |
+| CSS transition duration | 300ms | Fixed | Design constant |
+| Test count | 529 | <500 | Regression indicator |
+| Test suite duration | 1.51s | >5s | CI feedback loop |
+| Functor law tests | 33 | <30 | Law coverage |
+| Marimo integration tests | 24 | <20 | Widget coverage |
+
+### Counter-Metrics
+
+What would indicate this feature is harmful?
+
+| Signal | Counter-Signal | Mitigation |
+|--------|----------------|------------|
+| High adoption (many demos) | Memory exhaustion from SSE | Connection pooling, max concurrent |
+| Fast render | CPU spike during PCA | Cache PCA results |
+| Many tests | Slow CI feedback | Parallel test execution |
+| Rich documentation | Stale docs | Changelog discipline |
+
+### Metric Locations
+
+| Metric | Location | How to Check |
+|--------|----------|--------------|
+| Test count | `pytest --collect-only` | `uv run pytest agents/town/_tests/ --collect-only \| grep "test" \| wc -l` |
+| Test duration | pytest output | `uv run pytest agents/town/_tests/ -q --tb=no` |
+| Render benchmark | `test_visualization_contracts.py` | See `TestScatterPerformance` |
+| Functor laws | `test_functor.py` | `uv run pytest agents/town/_tests/test_functor.py -v -k "law"` |
+
+### Dashboard Sketch (Future)
+
+```
++----------------------------------------------------------+
+|                 Agent Town Metrics                        |
++----------------------------------------------------------+
+| Test Health                | Widget Performance          |
+| ========================== | =========================== |
+| Tests: 529 ✓               | Render p50: 0.03ms ✓        |
+| Duration: 1.51s ✓          | SSE connect: <100ms ✓       |
+| Functor laws: 33 ✓         | Memory: N/A                 |
++----------------------------------------------------------+
+| SSE Connections            | Demo Usage                  |
+| ========================== | =========================== |
+| Active: 0                  | Today: N/A                  |
+| Disconnects: 0             | This week: N/A              |
++----------------------------------------------------------+
+```
+
+### Verification Commands (Metrics)
+
+```bash
+# Check current test count (baseline: 529)
+uv run pytest agents/town/_tests/ --collect-only -q 2>/dev/null | tail -1
+
+# Run performance tests
+uv run pytest agents/town/_tests/test_visualization_contracts.py -v -k "Performance"
+
+# Check functor law coverage
+uv run pytest agents/town/_tests/test_functor.py -v --tb=short
+
+# Full metrics check
+uv run pytest agents/town/_tests/ -v --durations=10 --tb=short
+```
+
+---
+
+## Recursive Hologram
+
+This skill unfolds from the unified categorical foundation:
+
+```
+PolyAgent[S, A, B]  →  TOWN_OPERAD  →  TownSheaf (future)
+        ↓                   ↓                  ↓
+  ScatterState       town.*.* paths      global coherence
+        ↓                   ↓                  ↓
+  Functor Laws       Phase transitions   Eigenvector centroid
+```
+
+**Self-Similarity**: The widget's `map(f)` operation IS a functor; the functor IS the pattern; the pattern IS the skill.
+
+---
+
+## Continuation Generator
+
+```
+⟿[REFLECT]
+/hydrate prompts/agent-town-phase7-reflect.md
+handles: metrics_recorded=true; budget_model=validated; baselines=captured
+mission: synthesize Phase 7 learnings, identify patterns for Phase 8
+```
+
+**Exploration Seeds** (Accursed Share for Phase 7+):
+
+| Seed | Domain | Entropy Budget |
+|------|--------|----------------|
+| LLM-backed citizen dialogue | `void.llm.*` | 0.15 |
+| Procedural town generation | `void.generation.*` | 0.10 |
+| Inter-town communication | `void.network.*` | 0.10 |
+| Time-travel debugging | `void.temporal.*` | 0.05 |
+| Citizen death/rebirth | `void.lifecycle.*` | 0.05 |
+| TownSheaf coherence | `concept.sheaf.*` | 0.10 |
+
+---
+
 ## Changelog
 
+- 2025-12-14: Phase 7 MEASURE - Code metrics, leading indicators, budget model validation
+- 2025-12-14: Phase 7 EDUCATE - DialogueEngine API, budget tiers, archetype voices, ADRs
+- 2025-12-14: Added Recursive Hologram and Continuation Generator (RE-METABOLIZE)
+- 2025-12-14: Phase 6 MEASURE - Metrics, baselines, thresholds, counter-metrics
 - 2025-12-14: Phase 6 EDUCATE - Teaching examples, demo guide, verification commands
 - 2025-12-14: Phase 6 RESEARCH - Live marimo notebook patterns
 - 2025-12-14: Initial version (Phase 5 EDUCATE)

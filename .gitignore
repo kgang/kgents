@@ -222,3 +222,5 @@ impl/claude/.evolve_logs/
 .DS_Store
 plans/_epilogues/
 plans/_archive/
+impl/claude/plans/_epilogues/
+prompts/

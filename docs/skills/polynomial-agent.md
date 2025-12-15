@@ -417,6 +417,93 @@ result = await agent.invoke(21)  # Returns 42
 | **Soul** | `agents/k/polynomial.py` | 7 eigenvector contexts | Maps to SOUL_SHEAF |
 | **Memory** | `agents/d/polynomial.py` | IDLE, LOADING, STORING, QUERYING, STREAMING, FORGETTING | Instance isolation pattern |
 | **Evolution** | `agents/e/polynomial.py` | IDLE, SUN, MUTATE, SELECT, WAGER, INFECT, PAYOFF, COMPLETE | Thermodynamic cycle |
+| **Citizen** | `agents/town/polynomial.py` | IDLE, SOCIALIZING, WORKING, REFLECTING, RESTING | Right to Rest pattern |
+
+---
+
+## Case Study: CitizenPolynomial
+
+The `CitizenPolynomial` demonstrates the polynomial functor in Agent Town simulation.
+
+### Positions (5 Phases)
+
+```python
+class CitizenPhase(Enum):
+    IDLE = auto()        # Ready for new interactions
+    SOCIALIZING = auto() # Engaged in social activity
+    WORKING = auto()     # Performing solo work
+    REFLECTING = auto()  # Internal contemplation
+    RESTING = auto()     # Mandatory rest (Right to Rest)
+```
+
+### Directions (Mode-Dependent Inputs)
+
+```python
+def citizen_directions(phase: CitizenPhase) -> FrozenSet[Any]:
+    match phase:
+        case CitizenPhase.IDLE:
+            # Can do anything except wake
+            return frozenset({SocializeInput, WorkInput, ReflectInput, RestInput})
+        case CitizenPhase.RESTING:
+            # RIGHT TO REST: Only wake is valid
+            return frozenset({WakeInput})
+        case _:
+            # Contextual options
+            ...
+```
+
+### The Right to Rest Pattern
+
+A key design insight: citizens in RESTING phase **cannot be disturbed**:
+
+```python
+case CitizenPhase.RESTING:
+    if isinstance(input, WakeInput):
+        return CitizenPhase.IDLE, CitizenOutput(success=True, message="Woke from rest")
+    else:
+        # Reject ALL other inputs
+        return CitizenPhase.RESTING, CitizenOutput(
+            success=False,
+            message="Cannot be disturbed while resting (Right to Rest)",
+        )
+```
+
+This is enforced by:
+1. **Directions**: Only `WakeInput` is valid during RESTING
+2. **Transition**: All other inputs return failure without state change
+
+### Usage
+
+```python
+from agents.town.polynomial import CITIZEN_POLYNOMIAL, CitizenInput, CitizenPhase
+
+# Start idle
+phase = CitizenPhase.IDLE
+
+# Transition to socializing
+phase, output = CITIZEN_POLYNOMIAL.invoke(phase, CitizenInput.greet("alice"))
+# → (SOCIALIZING, CitizenOutput(success=True, ...))
+
+# Transition to resting
+phase, output = CITIZEN_POLYNOMIAL.invoke(phase, CitizenInput.rest())
+# → (RESTING, CitizenOutput(success=True, ...))
+
+# Try to interrupt (fails)
+phase, output = CITIZEN_POLYNOMIAL.invoke(phase, CitizenInput.greet("bob"))
+# → (RESTING, CitizenOutput(success=False, message="Cannot be disturbed..."))
+
+# Wake up
+phase, output = CITIZEN_POLYNOMIAL.invoke(phase, CitizenInput.wake())
+# → (IDLE, CitizenOutput(success=True, ...))
+```
+
+### Key Insight: Barad's Agential Realism
+
+From the docstring:
+
+> *"Positions are not states but interpretive frames. The citizen does not 'change state'—the observer makes a different agential cut. Each transition reconfigures the phenomenon, not the entity."*
+
+This philosophical framing helps understand why polynomial agents are powerful: they model mode-dependent behavior as **observation-dependent morphisms**, not internal state changes
 
 ---
 

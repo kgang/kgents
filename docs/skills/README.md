@@ -164,6 +164,7 @@ How to confirm the skill was applied correctly.
 | [plan-file](plan-file.md) | Write plan files following the Forest Protocol | Easy |
 | [polynomial-agent](polynomial-agent.md) | Create `PolyAgent[S, A, B]` with state-dependent behavior | Medium-Advanced |
 | [reconciliation-session](reconciliation-session.md) | Audit, surface, and sync forest state | Medium |
+| [saas-patterns](saas-patterns.md) | SaaS infrastructure patterns (webhooks, NATS, NetworkPolicy, Kind) | Medium |
 | [test-patterns](test-patterns.md) | Testing patterns and conventions | Easy-Medium |
 | **Lifecycle** | | |
 | [three-phase](three-phase.md) | **Default**: SENSE→ACT→REFLECT (compresses 11 phases) | Easy |
