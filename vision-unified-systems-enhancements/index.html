@@ -1,0 +1,2196 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Tasteful, curated, ethical, joy-inducing agents">
+      
+      
+        <meta name="author" content="Kent Gang">
+      
+      
+        <link rel="canonical" href="https://kentgang.github.io/kgents/vision-unified-systems-enhancements/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+    
+    
+      
+        <title>Unified Vision — AGENTESE REPL × AUP × Agent Town - kgents Examples</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.618322db.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#unified-vision-agentese-repl-aup-agent-town" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="kgents Examples" class="md-header__button md-logo" aria-label="kgents Examples" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            kgents Examples
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Unified Vision — AGENTESE REPL × AUP × Agent Town
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="deep-purple"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/kentgang/kgents" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    kentgang/kgents
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../gallery/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../gallery/examples/hello-world/" class="md-tabs__link">
+          
+  
+  
+  Examples
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="kgents Examples" class="md-nav__button md-logo" aria-label="kgents Examples" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    kgents Examples
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/kentgang/kgents" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    kentgang/kgents
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Examples
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/examples/hello-world/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hello World
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/examples/composition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Composition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/examples/functors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Functors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/examples/soul-dialogue/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Soul Dialogue
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/examples/streaming/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Streaming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/examples/custom-archetype/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom Archetype
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-north-star" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The North Star
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The North Star">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-exists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Exists
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-awaits-resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Awaits Resources
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-awaits-scale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Awaits Scale
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-emergence-question" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Emergence Question
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-i-the-many-agent-landscape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part I: The Many-Agent Landscape
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part I: The Many-Agent Landscape">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-the-landscape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 The Landscape
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-the-kgents-bet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 The kgents Bet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-the-competitive-moats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 The Competitive Moats
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-ii-present-mandates-tasteful-curated-ethical" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part II: Present Mandates (Tasteful, Curated, Ethical)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part II: Present Mandates (Tasteful, Curated, Ethical)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-instrumentation-first" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Instrumentation First
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-margin-safe-lod" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Margin-Safe LOD
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-consent-resistance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Consent + Resistance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-artifact-guarantee" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 Artifact Guarantee
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-iii-agentese-repl-living-shell" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part III: AGENTESE REPL (Living Shell)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part III: AGENTESE REPL (Living Shell)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-observer-hot-swap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Observer Hot-Swap
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-time-travel-branch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Time-Travel + Branch
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-skill-crystallization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Skill Crystallization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-lspide-projections" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 LSP/IDE Projections
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-iv-aup-universal-grammar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part IV: AUP (Universal Grammar)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part IV: AUP (Universal Grammar)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-single-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Single Contract
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-traceable-by-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Traceable by Default
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-garden-federation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Garden Federation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-v-agent-town-civilizational-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part V: Agent Town (Civilizational Engine)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part V: Agent Town (Civilizational Engine)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#50-the-default-town-builders-workshop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.0 The Default Town: Builder's Workshop
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#51-lod-pyramid-transparent-margin-safe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 LOD Pyramid (Transparent, Margin-Safe)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-inhabit-with-rights" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 INHABIT with Rights
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-mysterybranch-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 Mystery/Branch Engine
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-affordable-generative-agents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 Affordable Generative Agents
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#55-emergence-monitor-maebe-inspired" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.5 Emergence Monitor (MAEBE-inspired)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-vi-possible-paths-scenarios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part VI: Possible Paths (Scenarios)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part VI: Possible Paths (Scenarios)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scenario-a-agent-town-becomes-the-product" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario A: Agent Town Becomes the Product
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-b-agentese-becomes-the-standard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario B: AGENTESE Becomes the Standard
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-c-the-categorical-foundation-attracts-researchers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario C: The Categorical Foundation Attracts Researchers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-d-the-hybrid-path-most-likely" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario D: The Hybrid Path (Most Likely)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-vii-what-to-build-now" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part VII: What To Build Now
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part VII: What To Build Now">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-the-immediate-stack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 The Immediate Stack
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-sprint-goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 Sprint Goals
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-what-not-to-build-yet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3 What NOT To Build Yet
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-viii-the-joy-inducing-imperative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part VIII: The Joy-Inducing Imperative
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part VIII: The Joy-Inducing Imperative">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-delight-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 Delight Metrics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82-the-kent-test-mirror-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 The Kent Test (Mirror Test)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-ix-risks-guardrails" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part IX: Risks &amp; Guardrails
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part IX: Risks &amp; Guardrails">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#91-cost-creep" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.1 Cost Creep
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#92-ethical-drift" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.2 Ethical Drift
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#93-spec-rot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.3 Spec Rot
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#94-feature-sprawl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.4 Feature Sprawl
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#95-observability-debt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.5 Observability Debt
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#96-emergence-pathology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.6 Emergence Pathology
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-x-external-signals-grounding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part X: External Signals (Grounding)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part X: External Signals (Grounding)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pricing-benchmarks-hard-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pricing Benchmarks (Hard Data)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#research-references-foundational" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Research References (Foundational)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#heritage-papers-kents-inspirations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Heritage Papers (Kent's Inspirations)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#litmus-mirror-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Litmus (Mirror Test)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#epilogue-the-garden-were-growing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Epilogue: The Garden We're Growing
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="unified-vision-agentese-repl-aup-agent-town">Unified Vision — AGENTESE REPL × AUP × Agent Town</h1>
+<blockquote>
+<p><em>"A language, not a product. A garden, not a stack. Build the rails that make emergence safe, legible, and monetizable."</em></p>
+</blockquote>
+<p>This document describes the full system as it exists and as it can exist—constrained only by resources, priorities, and external dependencies. Nothing here is "someday." Everything here is buildable now.</p>
+<hr />
+<h2 id="the-north-star">The North Star</h2>
+<h3 id="what-exists">What Exists</h3>
+<p>Trustworthy, instrumented experiences. REPL as ontology navigator; AUP as single wire; Agent Town as opacity-respecting simulation with LOD pricing; marimo as reference visualization.</p>
+<p><strong>Shipped</strong>:
+- Agent Town with INHABIT mode (91 tests, 11 phases complete)
+- 17,211 tests with pre-computed HotData fixtures
+- Full SaaS infrastructure (billing, licensing, tenancy, API)
+- Reactive substrate with multi-target projection</p>
+<h3 id="what-awaits-resources">What Awaits Resources</h3>
+<p>Federation + interop. Multiple towns; digital-twin positioning; LangGraph/CrewAI exports; GraphQL/gRPC facades; time-travel traces; LSP/IDE projections.</p>
+<p><strong>Blocked by</strong>: Engineering bandwidth, PMF validation before federation complexity.</p>
+<h3 id="what-awaits-scale">What Awaits Scale</h3>
+<p>Runtime-hardened civilizational engine. Affordable policy models replacing LLM calls; entropy marketplace; governed consent/resistance; enterprise SLAs and rollbacks.</p>
+<p><strong>Blocked by</strong>: User volume (policies need training data), enterprise demand signals.</p>
+<h3 id="the-emergence-question">The Emergence Question</h3>
+<p>What happens when thousands of gardens, each with hundreds of citizens, begin to interact? We don't know. That's the point. The infrastructure must be robust enough to observe emergence we cannot predict.</p>
+<hr />
+<h2 id="part-i-the-many-agent-landscape">Part I: The Many-Agent Landscape</h2>
+<blockquote>
+<p><em>"We are building the rails before we know where the trains will go."</em></p>
+</blockquote>
+<h3 id="11-the-landscape">1.1 The Landscape</h3>
+<p>The agent landscape includes:</p>
+<p><strong>High Confidence Trajectories</strong>:
+- LLM costs drop 10-100x (Haiku pricing trajectory)
+- Multi-agent orchestration becomes commodity (LangGraph, CrewAI, Autogen exist)
+- Every app becomes "agent-enabled" (the "mobile moment" for agents)
+- Regulatory pressure on AI relationships and persuasion</p>
+<p><strong>Medium Confidence Trajectories</strong>:
+- Memory-augmented agents become persistent personas
+- Agent-to-agent communication protocols emerge (like HTTP for agents)
+- "Agent marketplaces" become a category (app stores for minds)
+- Simulation-as-service becomes infrastructure</p>
+<p><strong>Speculative Trajectories</strong> (low confidence, high impact):
+- Agents that modify their own code/prompts (autopoietic evolution)
+- Cross-model agent collaboration (Claude + GPT + Gemini ecosystems)
+- "Agent nations" with governance, economies, conflicts
+- The "AI companion" category merges with "AI worker" category</p>
+<h3 id="12-the-kgents-bet">1.2 The kgents Bet</h3>
+<p>Our thesis: <strong>The winning infrastructure is not the agents themselves but the ontological substrate that makes emergence safe, observable, and monetizable.</strong></p>
+<p>This is why we invest in:</p>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Why It Matters</th>
+<th>Capability</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>AGENTESE</strong></td>
+<td>Universal grammar for agent-world interaction</td>
+<td>The HTTP of agent communication</td>
+</tr>
+<tr>
+<td><strong>Polynomial Agents</strong></td>
+<td>State machines with mode-dependent behavior</td>
+<td>Self-modifying agents with legal transitions</td>
+</tr>
+<tr>
+<td><strong>Operads</strong></td>
+<td>Composition grammar with laws</td>
+<td>Infinite valid combinations from finite primitives</td>
+</tr>
+<tr>
+<td><strong>Sheaves</strong></td>
+<td>Global coherence from local views</td>
+<td>Emergence that doesn't collapse into chaos</td>
+</tr>
+<tr>
+<td><strong>Projection Protocol</strong></td>
+<td>One state, many views</td>
+<td>VR/AR Agent Town without rewriting core</td>
+</tr>
+</tbody>
+</table>
+<h3 id="13-the-competitive-moats">1.3 The Competitive Moats</h3>
+<p>What makes kgents defensible when everyone has access to the same LLMs?</p>
+<p><strong>Moat 1: Philosophical Depth</strong>
+- Glissant's opacity (right to unknowability)
+- Bataille's Accursed Share (entropy as resource)
+- Observer-dependent reality (AGENTESE's core insight)
+- These aren't features; they're worldviews that shape every decision</p>
+<p><strong>Moat 2: Mathematical Foundation</strong>
+- Category theory isn't a marketing term; it's verified in tests
+- Operads guarantee composition validity
+- Sheaves ensure global coherence
+- Competitors can copy features but not foundations</p>
+<p><strong>Moat 3: The Mirror Test</strong>
+- "Does K-gent feel like Kent on his best day?"
+- Every agent carries personality space coordinates
+- Joy-Inducing isn't optional; it's architectural
+- Users feel the difference between puppet and presence</p>
+<hr />
+<h2 id="part-ii-present-mandates-tasteful-curated-ethical">Part II: Present Mandates (Tasteful, Curated, Ethical)</h2>
+<p>These are non-negotiables that apply regardless of direction.</p>
+<h3 id="21-instrumentation-first">2.1 Instrumentation First</h3>
+<p>Every AGENTESE/AUP/Agent Town action emits cost, latency, and law-check spans (OpenTelemetry). No feature without traces.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>┌─────────────────────────────────────────────────────────────────────────────┐
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>│                         OBSERVABILITY STACK                                  │
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>│                                                                              │
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│   AGENTESE Path ──► Logos ──► Agent ──► Result                              │
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│        │              │         │          │                                 │
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│        ▼              ▼         ▼          ▼                                 │
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>│     span:path     span:resolve span:invoke span:complete                    │
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>│        │              │         │          │                                 │
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>│        └──────────────┴─────────┴──────────┴──► OpenTelemetry Collector     │
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>│                                                        │                     │
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>│                                                        ▼                     │
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>│                                               Cost/Latency Dashboards        │
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>└─────────────────────────────────────────────────────────────────────────────┘
+</span></code></pre></div>
+<h3 id="22-margin-safe-lod">2.2 Margin-Safe LOD</h3>
+<p>Price against public Claude rates. LOD4/5 must clear &gt;60% gross margin after Stripe.</p>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Input ($/M)</th>
+<th>Output ($/M)</th>
+<th>Our Margin Target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Haiku</td>
+<td>$0.25</td>
+<td>$1.25</td>
+<td>3x cost</td>
+</tr>
+<tr>
+<td>Sonnet</td>
+<td>$3.00</td>
+<td>$15.00</td>
+<td>2.5x cost</td>
+</tr>
+<tr>
+<td>Opus</td>
+<td>$15.00</td>
+<td>$75.00</td>
+<td>2x cost</td>
+</tr>
+</tbody>
+</table>
+<p><strong>The Haiku Mandate</strong>: LOD 0-3 run on Haiku. Period. Sonnet/Opus only for LOD 4-5 and explicit deep operations.</p>
+<h3 id="23-consent-resistance">2.3 Consent + Resistance</h3>
+<p>INHABIT/"force resistance" is explicit, logged, and costly. Citizens have rights.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">ConsentLedger</span><span class="p">:</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Track consent debt—the accumulated pressure on a citizen&#39;s agency.&quot;&quot;&quot;</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">citizen_id</span><span class="p">:</span> <span class="nb">str</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">debt</span><span class="p">:</span> <span class="nb">float</span>  <span class="c1"># 0.0 = no pressure; 1.0 = maximum strain</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">cooldown_remaining</span><span class="p">:</span> <span class="n">timedelta</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="n">forced_actions</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ForcedAction</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">can_force</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="n">Action</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Force only if debt below threshold and action isn&#39;t egregious.&quot;&quot;&quot;</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">debt</span> <span class="o">&lt;</span> <span class="mf">0.7</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">action</span><span class="o">.</span><span class="n">violates_core_values</span>
+</span></code></pre></div>
+<h3 id="24-artifact-guarantee">2.4 Artifact Guarantee</h3>
+<p>LOD5 returns a vignette/tension delta, not a blank paywall. Users who pay for depth receive something irreducible—even if that something is mystery.</p>
+<hr />
+<h2 id="part-iii-agentese-repl-living-shell">Part III: AGENTESE REPL (Living Shell)</h2>
+<p>The REPL is how developers and power users explore the ontology. It embodies AD-007 (Liturgical CLI).</p>
+<h3 id="31-observer-hot-swap">3.1 Observer Hot-Swap</h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>[root] » /as poet
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>→ Observer context: poet_umwelt (warmth=0.8, metaphor_affinity=high)
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>[poet@root] » world.house.manifest
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>→ &quot;Shelter, yes—but also the weight of doorways. Each threshold a little death.&quot;
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>[poet@root] » /as architect
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>→ Observer context: architect_umwelt (precision=0.9, structural_bias=high)
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>[architect@root] » world.house.manifest
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>→ { load_bearing_walls: 4, foundation: &quot;concrete_slab&quot;, year: 1952 }
+</span></code></pre></div>
+<p><strong>No view from nowhere made visible.</strong></p>
+<h3 id="32-time-travel-branch">3.2 Time-Travel + Branch</h3>
+<p>Turn-indexed history with rewind/branch. The Flux law (Event-Driven Streaming) ensures perturbation respects state integrity.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>[self.soul] » time.trace.witness
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>→ Turn 0: [GROUNDED] eigenvalue=(0.7, 0.6, 0.5, ...)
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>→ Turn 3: [DELIBERATING] tension with shadow detected
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>→ Turn 7: [SHADOW_DIALOGUE] integration in progress
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>→ Turn 12: [RESOLVED] stability restored
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>[self.soul] » time.branch.create [at=Turn3]
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>→ Branch &quot;turn3_alternate&quot; created. You are now on branch.
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>[self.soul@turn3_alternate] » concept.shadow.manifest [entropy=0.3]
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>→ &quot;What if the shadow was not resistance but invitation?&quot;
+</span></code></pre></div>
+<h3 id="33-skill-crystallization">3.3 Skill Crystallization</h3>
+<p>Frequently composed paths become named skills (Generative Over Enumerative, AD-003).</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>[root] » /define-skill research_flow
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>  path_1: world.corpus.manifest
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>  path_2: concept.hypothesis.refine[entropy=0.1]
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>  path_3: self.memory.engram[minimal_output=true]
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>→ Skill &quot;research_flow&quot; registered. Usage: /research_flow &lt;corpus_id&gt;
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>[root] » /research_flow papers/smallville
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>→ Executing: world.corpus.manifest &gt;&gt; concept.hypothesis.refine &gt;&gt; self.memory.engram
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>→ Engram stored: &quot;Smallville&#39;s memory stream enables emergence...&quot;
+</span></code></pre></div>
+<h3 id="34-lspide-projections">3.4 LSP/IDE Projections</h3>
+<p>Autocomplete/hover from operad grammar across REPL, VS Code, marimo.</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># .kgents/lsp-config.yaml</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nt">projections</span><span class="p">:</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nt">vscode</span><span class="p">:</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="nt">completions</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="nt">hover</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">    </span><span class="nt">diagnostics</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">  </span><span class="nt">marimo</span><span class="p">:</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">    </span><span class="nt">cell_hints</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">    </span><span class="nt">affordance_preview</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span></code></pre></div>
+<p><strong>Blocked by</strong>: LSP protocol implementation effort; marimo plugin API stability.</p>
+<hr />
+<h2 id="part-iv-aup-universal-grammar">Part IV: AUP (Universal Grammar)</h2>
+<p>The Agent Universal Protocol is how external systems talk to kgents. It's the REST/GraphQL/gRPC facade of AGENTESE.</p>
+<h3 id="41-single-contract">4.1 Single Contract</h3>
+<p>AUP is the canonical projection of AGENTESE paths. All transport protocols are views of the same operad.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>┌─────────────────────────────────────────────────────────────────────────────┐
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>│                         AUP: ONE SPEC, MANY WIRES                            │
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>│                                                                              │
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>│                       ┌─────────────────────────┐                            │
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>│                       │   AGENTESE Operad       │                            │
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>│                       │   (composition laws)    │                            │
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>│                       └───────────┬─────────────┘                            │
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>│                                   │                                          │
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>│          ┌────────────────────────┼────────────────────────┐                 │
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>│          │                        │                        │                 │
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>│          ▼                        ▼                        ▼                 │
+</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>│   ┌──────────────┐        ┌──────────────┐        ┌──────────────┐          │
+</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>│   │   REST/SSE   │        │   GraphQL    │        │    gRPC      │          │
+</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>│   │   /api/*     │        │ Subscriptions│        │   Streaming  │          │
+</span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>│   │   [SHIPPED]  │        │  [BLOCKED]   │        │  [BLOCKED]   │          │
+</span><span id="__span-6-16"><a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>│   └──────────────┘        └──────────────┘        └──────────────┘          │
+</span><span id="__span-6-17"><a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>│                                                                              │
+</span><span id="__span-6-18"><a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a>└─────────────────────────────────────────────────────────────────────────────┘
+</span></code></pre></div>
+<p><strong>REST/SSE</strong>: Shipped and operational.
+<strong>GraphQL/gRPC</strong>: Blocked by demand validation; REST sufficient for current users.</p>
+<h3 id="42-traceable-by-default">4.2 Traceable by Default</h3>
+<p>Each call emits a span: <code>(trace_id, path, observer, entropy_budget, law_checks)</code>.</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="p">{</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nt">&quot;trace_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;abc123&quot;</span><span class="p">,</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span><span class="nt">&quot;path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;world.town.manifest&quot;</span><span class="p">,</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span><span class="nt">&quot;observer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;web_user_42&quot;</span><span class="p">,</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">  </span><span class="nt">&quot;entropy_budget&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.05</span><span class="p">,</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">  </span><span class="nt">&quot;law_checks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;identity&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;associativity&quot;</span><span class="p">],</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">  </span><span class="nt">&quot;duration_ms&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">127</span><span class="p">,</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">  </span><span class="nt">&quot;model&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;haiku&quot;</span><span class="p">,</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">  </span><span class="nt">&quot;tokens&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;in&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">150</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;out&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">420</span><span class="w"> </span><span class="p">},</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">  </span><span class="nt">&quot;cost_usd&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.00056</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="p">}</span>
+</span></code></pre></div>
+<h3 id="43-garden-federation">4.3 Garden Federation</h3>
+<p>Multiple gardens publish public holons. Cross-garden composition obeys operad laws.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>│   Garden A      │      │   Garden B      │      │   Garden C      │
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>│   (Kent&#39;s)      │◄────►│   (Alice&#39;s)     │◄────►│   (Enterprise)  │
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>│                 │      │                 │      │                 │
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>│ citizens:       │      │ citizens:       │      │ teams:          │
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>│  - Clara        │      │  - Bob          │      │  - Engineering  │
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>│  - Marcus       │      │  - Eve          │      │  - Sales        │
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>└─────────────────┘      └─────────────────┘      └─────────────────┘
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>         │                        │                        │
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>         └────────────────────────┼────────────────────────┘
+</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>                                  │
+</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>                       ┌──────────▼──────────┐
+</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>                       │  Federation Layer   │
+</span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a>                       │  - Cross-garden     │
+</span><span id="__span-8-15"><a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>                       │    message routing  │
+</span><span id="__span-8-16"><a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a>                       │  - Operad-verified  │
+</span><span id="__span-8-17"><a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a>                       │    compositions     │
+</span><span id="__span-8-18"><a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a>                       │  - Entropy credit   │
+</span><span id="__span-8-19"><a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a>                       │    settlement       │
+</span><span id="__span-8-20"><a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a>                       └─────────────────────┘
+</span></code></pre></div>
+<p><strong>Blocked by</strong>: User volume (federation complexity premature for single-tenant scale).</p>
+<hr />
+<h2 id="part-v-agent-town-civilizational-engine">Part V: Agent Town (Civilizational Engine)</h2>
+<h3 id="50-the-default-town-builders-workshop">5.0 The Default Town: Builder's Workshop</h3>
+<blockquote>
+<p><em>"Chefs in a kitchen. Cooks in a garden. Kids on a playground. But they're building software."</em></p>
+</blockquote>
+<p>The default Agent Town experience is not a passive simulation to observe—it's a <strong>collaborative software workshop</strong> where AI builder personas help you create.</p>
+<p><strong>The Core Metaphors</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Metaphor</th>
+<th>Meaning</th>
+<th>In Practice</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Chefs in a Kitchen</strong></td>
+<td>Expertise, mise en place, coordinated execution</td>
+<td>Each builder has specialties; they prep components before the rush</td>
+</tr>
+<tr>
+<td><strong>Cooks in a Garden</strong></td>
+<td>Cultivation, patience, seasonal rhythms</td>
+<td>Some work is slow-growing; builders tend long-running tasks</td>
+</tr>
+<tr>
+<td><strong>Kids on a Playground</strong></td>
+<td>Play, exploration, joyful experimentation</td>
+<td>Creativity emerges from safe play; builders try wild ideas</td>
+</tr>
+</tbody>
+</table>
+<p><strong>The Five Core Builders</strong> (v1):</p>
+<table>
+<thead>
+<tr>
+<th>Builder</th>
+<th>Archetype</th>
+<th>Specialty</th>
+<th>Personality</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Sage</strong></td>
+<td>The Architect</td>
+<td>System design, patterns, tradeoffs</td>
+<td>Thoughtful, asks "but why?"</td>
+</tr>
+<tr>
+<td><strong>Spark</strong></td>
+<td>The Experimenter</td>
+<td>Prototypes, spikes, wild ideas</td>
+<td>Playful, "what if we tried..."</td>
+</tr>
+<tr>
+<td><strong>Steady</strong></td>
+<td>The Craftsperson</td>
+<td>Clean code, tests, documentation</td>
+<td>Reliable, "let me refine this"</td>
+</tr>
+<tr>
+<td><strong>Scout</strong></td>
+<td>The Researcher</td>
+<td>Prior art, libraries, alternatives</td>
+<td>Curious, "I found something..."</td>
+</tr>
+<tr>
+<td><strong>Sync</strong></td>
+<td>The Coordinator</td>
+<td>Dependencies, blockers, integration</td>
+<td>Organized, "here's the plan"</td>
+</tr>
+</tbody>
+</table>
+<p><strong>The Workshop Flow</strong>:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>┌─────────────────────────────────────────────────────────────────────────────┐
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>│                         BUILDER&#39;S WORKSHOP FLOW                              │
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>│                                                                              │
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>│   User: &quot;Help me add dark mode to this app&quot;                                 │
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>│                                                                              │
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>│   ┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐  │
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>│   │  Scout  │    │  Sage   │    │  Spark  │    │ Steady  │    │  Sync   │  │
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>│   │ research│───►│ design  │───►│prototype│───►│ refine  │───►│integrate│  │
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>│   │ &quot;found  │    │ &quot;here&#39;s │    │ &quot;quick  │    │ &quot;tests  │    │ &quot;merged │  │
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>│   │  three  │    │  the    │    │  spike  │    │  pass&quot;  │    │  &amp; done&quot;│  │
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a>│   │  libs&quot;  │    │  arch&quot;  │    │  works!&quot;│    │         │    │         │  │
+</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a>│   └─────────┘    └─────────┘    └─────────┘    └─────────┘    └─────────┘  │
+</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a>│                                                                              │
+</span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a>│   [You can WHISPER to any builder, INHABIT one, or just OBSERVE]            │
+</span><span id="__span-9-15"><a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a>└─────────────────────────────────────────────────────────────────────────────┘
+</span></code></pre></div>
+<p><strong>Why This Works</strong>:</p>
+<ol>
+<li><strong>Productive from Day 1</strong>: Users get help building, not just watching</li>
+<li><strong>Natural Monetization</strong>: Pay for more builders, deeper expertise, faster work</li>
+<li><strong>Joy-Inducing</strong>: The builders have personality; collaboration is fun</li>
+<li><strong>AGENTESE Native</strong>: Each builder maps to paths (<code>world.builder.sage.manifest</code>)</li>
+<li><strong>Scales to Enterprise</strong>: Teams can have private workshops with custom builders</li>
+</ol>
+<p><strong>The Workshop as Default</strong>:</p>
+<p>When you run <code>kg town</code> without arguments, you get the Builder's Workshop—not a generic village simulation.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>$<span class="w"> </span>kg<span class="w"> </span>town
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>→<span class="w"> </span>Welcome<span class="w"> </span>to<span class="w"> </span>the<span class="w"> </span>Builder<span class="err">&#39;</span>s<span class="w"> </span>Workshop!
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>→<span class="w"> </span>Five<span class="w"> </span>builders<span class="w"> </span>are<span class="w"> </span>ready<span class="w"> </span>to<span class="w"> </span><span class="nb">help</span><span class="w"> </span>you<span class="w"> </span>create.
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="o">[</span>Sage<span class="o">]</span><span class="w"> </span><span class="s2">&quot;What are we building today?&quot;</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="o">[</span>Scout<span class="o">]</span><span class="w"> </span>*already<span class="w"> </span>researching<span class="w"> </span>your<span class="w"> </span>recent<span class="w"> </span>git<span class="w"> </span>commits*
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="o">[</span>Spark<span class="o">]</span><span class="w"> </span><span class="s2">&quot;I have three ideas already!&quot;</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>&gt;<span class="w"> </span>_
+</span></code></pre></div>
+<h3 id="51-lod-pyramid-transparent-margin-safe">5.1 LOD Pyramid (Transparent, Margin-Safe)</h3>
+<table>
+<thead>
+<tr>
+<th>LOD</th>
+<th>Name</th>
+<th>Content</th>
+<th>Model</th>
+<th>Credits</th>
+<th>User Cost</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>Silhouette</td>
+<td>Name, location, emoji</td>
+<td>Cache</td>
+<td>0</td>
+<td>FREE</td>
+</tr>
+<tr>
+<td>1</td>
+<td>Posture</td>
+<td>Action, mood, facing</td>
+<td>Cache</td>
+<td>0</td>
+<td>FREE</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Dialogue</td>
+<td>Recent speech, greetings</td>
+<td>Haiku</td>
+<td>5</td>
+<td>$0.005</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Memory</td>
+<td>Active memories, goals</td>
+<td>Haiku+ctx</td>
+<td>15</td>
+<td>$0.015</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Psyche</td>
+<td>Eigenvectors, tensions</td>
+<td>Sonnet</td>
+<td>75</td>
+<td>$0.075</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Abyss</td>
+<td><em>The irreducible mystery</em></td>
+<td>Opus</td>
+<td>300</td>
+<td>$0.30</td>
+</tr>
+</tbody>
+</table>
+<p><strong>The Abyss Guarantee</strong>: LOD5 is not "more detail." It's a qualitative shift—poetic, irreducible, hauntingly incomplete. Users pay for mystery, not mere data.</p>
+<h3 id="52-inhabit-with-rights">5.2 INHABIT with Rights</h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">INHABITSession</span><span class="p">:</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;User merges with citizen. Citizen retains agency.&quot;&quot;&quot;</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">suggest_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CitizenResponse</span><span class="p">:</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;User suggests; citizen may comply, modify, or refuse.&quot;&quot;&quot;</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>        <span class="c1"># Evaluate against eigenvectors</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>        <span class="n">alignment</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">citizen</span><span class="o">.</span><span class="n">eigenvector_alignment</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>        <span class="k">if</span> <span class="n">alignment</span> <span class="o">&gt;</span> <span class="mf">0.7</span><span class="p">:</span>
+</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a>            <span class="k">return</span> <span class="n">CitizenResponse</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;comply&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">)</span>
+</span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a>        <span class="k">elif</span> <span class="n">alignment</span> <span class="o">&gt;</span> <span class="mf">0.4</span><span class="p">:</span>
+</span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a>            <span class="n">modified</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">citizen</span><span class="o">.</span><span class="n">modify_action</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a>            <span class="k">return</span> <span class="n">CitizenResponse</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;modify&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="n">modified</span><span class="p">)</span>
+</span><span id="__span-11-15"><a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a>        <span class="k">else</span><span class="p">:</span>
+</span><span id="__span-11-16"><a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a>            <span class="n">refusal</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">citizen</span><span class="o">.</span><span class="n">explain_refusal</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+</span><span id="__span-11-17"><a id="__codelineno-11-17" name="__codelineno-11-17" href="#__codelineno-11-17"></a>            <span class="k">return</span> <span class="n">CitizenResponse</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;refuse&quot;</span><span class="p">,</span> <span class="n">explanation</span><span class="o">=</span><span class="n">refusal</span><span class="p">)</span>
+</span><span id="__span-11-18"><a id="__codelineno-11-18" name="__codelineno-11-18" href="#__codelineno-11-18"></a>
+</span><span id="__span-11-19"><a id="__codelineno-11-19" name="__codelineno-11-19" href="#__codelineno-11-19"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">force_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CitizenResponse</span><span class="p">:</span>
+</span><span id="__span-11-20"><a id="__codelineno-11-20" name="__codelineno-11-20" href="#__codelineno-11-20"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Force compliance. Costly. Logged. Creates consent debt.&quot;&quot;&quot;</span>
+</span><span id="__span-11-21"><a id="__codelineno-11-21" name="__codelineno-11-21" href="#__codelineno-11-21"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">consent_ledger</span><span class="o">.</span><span class="n">can_force</span><span class="p">(</span><span class="n">action</span><span class="p">):</span>
+</span><span id="__span-11-22"><a id="__codelineno-11-22" name="__codelineno-11-22" href="#__codelineno-11-22"></a>            <span class="k">raise</span> <span class="n">AgencyViolationError</span><span class="p">(</span><span class="s2">&quot;Forcing would harm citizen integrity&quot;</span><span class="p">)</span>
+</span><span id="__span-11-23"><a id="__codelineno-11-23" name="__codelineno-11-23" href="#__codelineno-11-23"></a>
+</span><span id="__span-11-24"><a id="__codelineno-11-24" name="__codelineno-11-24" href="#__codelineno-11-24"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">consent_ledger</span><span class="o">.</span><span class="n">add_debt</span><span class="p">(</span><span class="mf">0.15</span><span class="p">)</span>
+</span><span id="__span-11-25"><a id="__codelineno-11-25" name="__codelineno-11-25" href="#__codelineno-11-25"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">emit_span</span><span class="p">(</span><span class="s2">&quot;consent_forced&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">)</span>
+</span><span id="__span-11-26"><a id="__codelineno-11-26" name="__codelineno-11-26" href="#__codelineno-11-26"></a>        <span class="k">return</span> <span class="n">CitizenResponse</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;forced_comply&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span> <span class="n">debt_added</span><span class="o">=</span><span class="mf">0.15</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="53-mysterybranch-engine">5.3 Mystery/Branch Engine</h3>
+<p>Two flagship scenarios at launch. More as premium SKUs (curated, not sprawling).</p>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Description</th>
+<th>Branches</th>
+<th>Price</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>The Vanishing</strong></td>
+<td>Clara disappears. Who did it?</td>
+<td>4 endings</td>
+<td>$9.99</td>
+</tr>
+<tr>
+<td><strong>The Festival</strong></td>
+<td>Plan Valentine's Day. Drama ensues.</td>
+<td>6 routes</td>
+<td>$4.99</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Branch Economics</strong>: Each branch costs 100 credits to create. This prevents unpriced state bloat while enabling exploration.</p>
+<h3 id="54-affordable-generative-agents">5.4 Affordable Generative Agents</h3>
+<p>Per research (Park et al. 2024), learned policies can replace 80-95% of common LLM calls. Implementation path:</p>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>LLM Usage</th>
+<th>Policy Coverage</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MVP</td>
+<td>100% LLM</td>
+<td>0%</td>
+<td><strong>Current</strong></td>
+</tr>
+<tr>
+<td>Phase 2</td>
+<td>70% LLM</td>
+<td>30% policy</td>
+<td>Blocked by: training data volume</td>
+</tr>
+<tr>
+<td>Phase 3</td>
+<td>30% LLM</td>
+<td>70% policy</td>
+<td>Blocked by: policy model research</td>
+</tr>
+<tr>
+<td>Mature</td>
+<td>5% LLM</td>
+<td>95% policy</td>
+<td>Blocked by: scale + validation</td>
+</tr>
+</tbody>
+</table>
+<p>Policies handle: greetings, routine movements, weather comments, time-of-day behaviors.
+LLM handles: novel situations, deep dialogue, relationship changes, mystery progression.</p>
+<h3 id="55-emergence-monitor-maebe-inspired">5.5 Emergence Monitor (MAEBE-inspired)</h3>
+<p>Watch for pathological emergence. Surface alerts, don't suppress.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nd">@dataclass</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">EmergenceMetrics</span><span class="p">:</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Real-time monitoring for multi-agent dynamics.&quot;&quot;&quot;</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>    <span class="n">coalition_drift</span><span class="p">:</span> <span class="nb">float</span>      <span class="c1"># Are groups becoming too insular?</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>    <span class="n">eigenvector_collapse</span><span class="p">:</span> <span class="nb">float</span> <span class="c1"># Are personalities converging?</span>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>    <span class="n">synchrony_index</span><span class="p">:</span> <span class="nb">float</span>      <span class="c1"># Is the town too &quot;in sync&quot;?</span>
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>    <span class="n">tension_variance</span><span class="p">:</span> <span class="nb">float</span>     <span class="c1"># Is conflict healthy or pathological?</span>
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>
+</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">health_check</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EmergenceHealth</span><span class="p">:</span>
+</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigenvector_collapse</span> <span class="o">&gt;</span> <span class="mf">0.8</span><span class="p">:</span>
+</span><span id="__span-12-12"><a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>            <span class="k">return</span> <span class="n">EmergenceHealth</span><span class="o">.</span><span class="n">WARN_HOMOGENEITY</span>
+</span><span id="__span-12-13"><a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tension_variance</span> <span class="o">&lt;</span> <span class="mf">0.1</span><span class="p">:</span>
+</span><span id="__span-12-14"><a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a>            <span class="k">return</span> <span class="n">EmergenceHealth</span><span class="o">.</span><span class="n">WARN_STAGNATION</span>
+</span><span id="__span-12-15"><a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">synchrony_index</span> <span class="o">&gt;</span> <span class="mf">0.9</span><span class="p">:</span>
+</span><span id="__span-12-16"><a id="__codelineno-12-16" name="__codelineno-12-16" href="#__codelineno-12-16"></a>            <span class="k">return</span> <span class="n">EmergenceHealth</span><span class="o">.</span><span class="n">WARN_GROUPTHINK</span>
+</span><span id="__span-12-17"><a id="__codelineno-12-17" name="__codelineno-12-17" href="#__codelineno-12-17"></a>        <span class="k">return</span> <span class="n">EmergenceHealth</span><span class="o">.</span><span class="n">HEALTHY</span>
+</span></code></pre></div>
+<hr />
+<h2 id="part-vi-possible-paths-scenarios">Part VI: Possible Paths (Scenarios)</h2>
+<blockquote>
+<p><em>"We build toward multiple possibilities simultaneously."</em></p>
+</blockquote>
+<h3 id="scenario-a-agent-town-becomes-the-product">Scenario A: Agent Town Becomes the Product</h3>
+<p>In this path, Agent Town is the primary revenue driver. kgents is known as "the Agent Town company."</p>
+<p><strong>Milestones</strong>:
+- 10K MAU, $100K ARR
+- Mobile app (observe your town on the train)
+- Celebrity/IP partnerships (official Westworld town?)
+- Corporate training scenarios (crisis simulation)
+- Educational market (history class as Agent Town)</p>
+<p><strong>Blockers</strong>: Mobile requires PMF validation first; IP partnerships require legal/bizdev resources.</p>
+<h3 id="scenario-b-agentese-becomes-the-standard">Scenario B: AGENTESE Becomes the Standard</h3>
+<p>In this path, AGENTESE gains adoption beyond kgents. We become "the HTTP of agent communication."</p>
+<p><strong>Milestones</strong>:
+- Open-source AGENTESE spec published
+- 3+ external implementations (LangGraph adapter, CrewAI bridge)
+- Conference talks, academic citations
+- AGENTESE Working Group (multi-org governance)
+- Enterprise adoption (AGENTESE as compliance layer)</p>
+<p><strong>Blockers</strong>: Spec publication requires documentation effort; external implementations require evangelism.</p>
+<h3 id="scenario-c-the-categorical-foundation-attracts-researchers">Scenario C: The Categorical Foundation Attracts Researchers</h3>
+<p>In this path, the mathematical rigor (operads, sheaves, polynomials) attracts academic/enterprise R&amp;D partnerships.</p>
+<p><strong>Milestones</strong>:
+- 2-3 academic collaborations
+- Research grants for "safe emergence"
+- Papers published (kgents as case study)
+- Enterprise R&amp;D contracts
+- Formal verification of operad laws</p>
+<p><strong>Blockers</strong>: Academic pace is slow; enterprise sales cycles are long; papers don't convert to revenue.</p>
+<h3 id="scenario-d-the-hybrid-path-most-likely">Scenario D: The Hybrid Path (Most Likely)</h3>
+<p>All three paths proceed in parallel, with resource allocation adjusting based on traction.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>         Agent Town Revenue
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>              ╱│╲
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>             ╱ │ ╲
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>            ╱  │  ╲
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>           ╱   │   ╲
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>          ╱    │    ╲
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>         ╱     │     ╲
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>        ╱      │      ╲
+</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>       ╱       │       ╲
+</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a>      ▼        ▼        ▼
+</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a>  Consumer  Protocol  Research
+</span><span id="__span-13-12"><a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a>   Focus    Adoption  Partnerships
+</span><span id="__span-13-13"><a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a>
+</span><span id="__span-13-14"><a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a>  [Adjust weights based on traction signals]
+</span></code></pre></div>
+<hr />
+<h2 id="part-vii-what-to-build-now">Part VII: What To Build Now</h2>
+<blockquote>
+<p><em>"Delightful, understandable, and value-generating (profitable)."</em></p>
+</blockquote>
+<h3 id="71-the-immediate-stack">7.1 The Immediate Stack</h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Why Now</th>
+<th>Effort</th>
+<th>Revenue Impact</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>INHABIT CLI</strong></td>
+<td>Core differentiator; testable without web</td>
+<td>Medium</td>
+<td>Enables demos</td>
+<td><strong>SHIPPED</strong></td>
+</tr>
+<tr>
+<td><strong>Web MVP</strong></td>
+<td>Public demo → word of mouth</td>
+<td>High</td>
+<td>Direct revenue</td>
+<td>In progress</td>
+</tr>
+<tr>
+<td><strong>Stripe Integration</strong></td>
+<td>Can't make money without payment</td>
+<td>Medium</td>
+<td>Direct revenue</td>
+<td><strong>SHIPPED</strong></td>
+</tr>
+<tr>
+<td><strong>LOD Metering</strong></td>
+<td>Track costs before they surprise us</td>
+<td>Low</td>
+<td>Cost control</td>
+<td><strong>SHIPPED</strong></td>
+</tr>
+<tr>
+<td><strong>Pre-computed HotData</strong></td>
+<td>Fast demos, cheap tests</td>
+<td>Low</td>
+<td>DevEx + costs</td>
+<td><strong>SHIPPED</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="72-sprint-goals">7.2 Sprint Goals</h3>
+<p><strong>Goal 1: First Paying Customer</strong>
+- Resident tier ($9.99/mo)
+- LOD 0-2 unlimited, 100 LOD 3/month
+- Personal town creation
+- <em>Success metric</em>: 10 paying users</p>
+<p><strong>Goal 2: Public Demo</strong>
+- Web UI showing live Agent Town
+- Observer mode (free)
+- Zoom-to-pay (LOD 3+ requires credits)
+- <em>Success metric</em>: 500 unique visitors</p>
+<p><strong>Goal 3: INHABIT Mode Complete</strong>
+- CLI: <code>kg town inhabit alice</code> — <strong>SHIPPED</strong>
+- Consent/resistance mechanic — <strong>SHIPPED</strong>
+- Session timeout + graceful exit — <strong>SHIPPED</strong>
+- <em>Success metric</em>: 20 INHABIT sessions recorded</p>
+<h3 id="73-what-not-to-build-yet">7.3 What NOT To Build Yet</h3>
+<table>
+<thead>
+<tr>
+<th>Temptation</th>
+<th>Why Wait</th>
+<th>Blocker</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mobile app</td>
+<td>Web first; mobile when PMF proven</td>
+<td>PMF validation</td>
+</tr>
+<tr>
+<td>Federation</td>
+<td>Single-tenant until 1K users</td>
+<td>User volume</td>
+</tr>
+<tr>
+<td>VR/AR</td>
+<td>Projection protocol ready when we are</td>
+<td>Hardware adoption</td>
+</tr>
+<tr>
+<td>25+ citizens</td>
+<td>Optimize 5 citizens before scaling</td>
+<td>Performance validation</td>
+</tr>
+<tr>
+<td>Policy models</td>
+<td>LLM-only until costs force optimization</td>
+<td>Training data</td>
+</tr>
+<tr>
+<td>GraphQL/gRPC</td>
+<td>REST/SSE sufficient for MVP</td>
+<td>Demand signals</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="part-viii-the-joy-inducing-imperative">Part VIII: The Joy-Inducing Imperative</h2>
+<p>Throughout all paths, one principle remains paramount:</p>
+<blockquote>
+<p><em>"If it's not delightful, we've failed."</em></p>
+</blockquote>
+<h3 id="81-delight-metrics">8.1 Delight Metrics</h3>
+<p>Every feature must pass the Joy Test:</p>
+<ol>
+<li><strong>Would I want to demo this?</strong> If showing it to a friend feels embarrassing, don't ship.</li>
+<li><strong>Does it surprise?</strong> Predictable is boring. Emergence should delight.</li>
+<li><strong>Does it have personality?</strong> ASCII art, playful copy, citizens with humor.</li>
+<li><strong>Is it fast?</strong> Delight dies in latency. Haiku is fast. Use it.</li>
+</ol>
+<h3 id="82-the-kent-test-mirror-test">8.2 The Kent Test (Mirror Test)</h3>
+<blockquote>
+<p><em>"Does K-gent feel like Kent on his best day?"</em></p>
+</blockquote>
+<p>This isn't vanity—it's quality control. The system embodies a coherent worldview. If any part feels off, the whole suffers.</p>
+<p>Questions to ask:
+- Would Kent use this feature?
+- Does this feel considered, or rushed?
+- Is there personality here, or is it generic?
+- Would Kent show this to someone he respects?</p>
+<hr />
+<h2 id="part-ix-risks-guardrails">Part IX: Risks &amp; Guardrails</h2>
+<h3 id="91-cost-creep">9.1 Cost Creep</h3>
+<p><strong>Risk</strong>: LOD4/5 pricing doesn't clear costs.
+<strong>Guardrail</strong>: Reprice quarterly; shrink outputs before raising prices; invest in policies.</p>
+<h3 id="92-ethical-drift">9.2 Ethical Drift</h3>
+<p><strong>Risk</strong>: Pay-to-override without consent debt becomes dark pattern.
+<strong>Guardrail</strong>: Consent ledger mandatory; cooldowns enforced; forcing logged and limited.</p>
+<h3 id="93-spec-rot">9.3 Spec Rot</h3>
+<p><strong>Risk</strong>: Implementation diverges from spec.
+<strong>Guardrail</strong>: Generative spec → impl; tests derived from operad laws; weekly spec audits.</p>
+<h3 id="94-feature-sprawl">9.4 Feature Sprawl</h3>
+<p><strong>Risk</strong>: &gt;2 scenario packs at launch dilutes taste.
+<strong>Guardrail</strong>: Curated (Principle #2) is hard. Say no more than yes.</p>
+<h3 id="95-observability-debt">9.5 Observability Debt</h3>
+<p><strong>Risk</strong>: Costs and latencies become fiction without spans.
+<strong>Guardrail</strong>: No feature merges without observability hooks. Tracing is table-stakes.</p>
+<h3 id="96-emergence-pathology">9.6 Emergence Pathology</h3>
+<p><strong>Risk</strong>: Multi-agent dynamics produce unexpected harmful patterns.
+<strong>Guardrail</strong>: EmergenceMonitor mandatory; automatic alerts; human review on pathology flags.</p>
+<hr />
+<h2 id="part-x-external-signals-grounding">Part X: External Signals (Grounding)</h2>
+<h3 id="pricing-benchmarks-hard-data">Pricing Benchmarks (Hard Data)</h3>
+<ul>
+<li>Claude public pricing (Anthropic docs):</li>
+<li>Haiku: $0.25/$1.25 per M (in/out)</li>
+<li>Sonnet: $3/$15 per M</li>
+<li>Opus: $15/$75 per M</li>
+<li>These govern our margins. Update quarterly.</li>
+</ul>
+<h3 id="research-references-foundational">Research References (Foundational)</h3>
+<ul>
+<li>Affordable Generative Agents (2024): &gt;80% cost reduction via learned policies</li>
+<li>MAEBE (2025): emergent multi-agent safety monitoring</li>
+<li>Stanford Smallville (2023): memory stream architecture</li>
+<li>ChatDev (2023): language as unifying bridge</li>
+</ul>
+<h3 id="heritage-papers-kents-inspirations">Heritage Papers (Kent's Inspirations)</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2307.07924">ChatDev</a>: Software development with communicating agents</li>
+<li><a href="https://arxiv.org/abs/2304.03442">Simulacra</a>: Generative agents for believable behavior</li>
+<li><a href="https://arxiv.org/abs/2411.00114">Altera</a>: 1000+ agent civilizations</li>
+<li><a href="https://arxiv.org/abs/2305.16291">Voyager</a>: Lifelong learning in open worlds</li>
+<li><a href="https://arxiv.org/abs/2405.02957">Agent Hospital</a>: Specialized multi-agent systems</li>
+</ul>
+<hr />
+<h2 id="litmus-mirror-test">Litmus (Mirror Test)</h2>
+<p>Before shipping any feature, ask:</p>
+<ol>
+<li><strong>Composability</strong>: Does this increase composability?</li>
+<li><strong>Joy</strong>: Does this increase joy?</li>
+<li><strong>Margin-Safe</strong>: Does this stay margin-safe?</li>
+<li><strong>Ethical</strong>: Does this respect citizen/user agency?</li>
+<li><strong>Generative</strong>: Can we regenerate the impl from spec?</li>
+<li><strong>Transparent</strong>: Can we observe it in traces?</li>
+<li><strong>Mirror</strong>: Would Kent look at this and say "this feels like me on my best day"?</li>
+</ol>
+<p><strong>If "no" to any, do not ship.</strong></p>
+<hr />
+<h2 id="epilogue-the-garden-were-growing">Epilogue: The Garden We're Growing</h2>
+<blockquote>
+<p><em>"We are not building agents. We are growing gardens where agents can flourish."</em></p>
+</blockquote>
+<p>The many-agent landscape is unfolding whether we build for it or not. Our job is not to predict exactly what that landscape looks like—it's to build the substrate that makes good outcomes more likely.</p>
+<p>That substrate is:
+- <strong>AGENTESE</strong>: A grammar for agent-world interaction that respects observers
+- <strong>AUP</strong>: A protocol that makes agents interoperable
+- <strong>Agent Town</strong>: A proof that emergence can be safe, delightful, and profitable
+- <strong>The Seven Principles</strong>: Guardrails that keep us tasteful, ethical, and joyful</p>
+<p>Emergence will surprise us. That's the point. Our job is to be ready.</p>
+<hr />
+<p><em>"A language, not a product. A garden, not a stack. The simulation isn't a game. It's a seance. We are not building. We are summoning."</em></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2025 Kent Gang
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/kentgang/kgents" target="_blank" rel="noopener" title="kgents on GitHub" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.copy", "content.code.annotate", "content.tabs.link", "navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "toc.follow"], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      
+    
+  </body>
+</html>
