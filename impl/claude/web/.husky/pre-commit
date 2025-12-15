@@ -1,43 +1,56 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
+#!/bin/sh
 # =============================================================================
-# PRE-COMMIT HOOK
+# PRE-COMMIT HOOK (Unified: Python + JS)
 # =============================================================================
 #
-# Philosophy: Fast feedback, don't block flow
-#
-# What runs:
-#   1. lint-staged (ESLint + Prettier on staged files only)
-#   2. Auto-fixes applied where possible
-#
-# What doesn't run (too slow):
-#   - Full test suite (runs on push)
-#   - Full type check (runs on push)
-#   - E2E tests (run in CI)
-#
-# Exit codes:
-#   0 = All good, commit proceeds
-#   1 = Errors found, commit blocked
-#
-# To bypass (emergency only):
-#   git commit --no-verify
+# Runs both:
+#   1. Python checks (ruff, mypy) via scripts/hooks/pre-commit
+#   2. JS/TS checks (eslint, prettier) via lint-staged
 #
 # =============================================================================
 
-echo "🔍 Running pre-commit checks..."
+# Get repo root (using git to be reliable regardless of how hook is invoked)
+REPO_ROOT="$(git rev-parse --show-toplevel)"
 
-# Run lint-staged (lints + formats staged files)
-npx lint-staged --concurrent false
-
-# Check exit code
-if [ $? -ne 0 ]; then
-  echo ""
-  echo "❌ Pre-commit checks failed."
-  echo ""
-  echo "Fix the errors above, then try again."
-  echo "To bypass (not recommended): git commit --no-verify"
-  exit 1
+# -----------------------------------------------------------------------------
+# 1. Run Python pre-commit hook
+# -----------------------------------------------------------------------------
+PYTHON_HOOK="$REPO_ROOT/scripts/hooks/pre-commit"
+if [ -f "$PYTHON_HOOK" ]; then
+    echo "=== Python checks ==="
+    "$PYTHON_HOOK"
+    PYTHON_EXIT=$?
+    if [ $PYTHON_EXIT -ne 0 ]; then
+        exit $PYTHON_EXIT
+    fi
+    echo ""
 fi
 
-echo "✅ Pre-commit checks passed."
+# -----------------------------------------------------------------------------
+# 2. Run JS/TS pre-commit hook (lint-staged)
+# -----------------------------------------------------------------------------
+# Check if there are any staged web files
+STAGED_WEB=$(git diff --cached --name-only --diff-filter=ACMR | grep "^impl/claude/web/" || true)
+
+if [ -z "$STAGED_WEB" ]; then
+    echo "=== JS/TS checks ==="
+    echo "No web files staged. Skipping."
+    exit 0
+fi
+
+echo "=== JS/TS checks ==="
+
+# Change to web directory
+cd "$REPO_ROOT/impl/claude/web" || exit 1
+
+# Run lint-staged
+npx lint-staged --concurrent false
+
+if [ $? -ne 0 ]; then
+    echo ""
+    echo "JS/TS checks failed."
+    echo "To bypass (not recommended): git commit --no-verify"
+    exit 1
+fi
+
+echo "JS/TS checks passed."

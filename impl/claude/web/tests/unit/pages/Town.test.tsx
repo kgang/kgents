@@ -1,14 +1,13 @@
 /**
- * Tests for TownV2: Widget-based Agent Town visualization.
+ * Tests for Town: Widget-based Agent Town visualization.
  *
- * TownV2 uses useTownStreamWidget hook to consume ColonyDashboardJSON
- * instead of building state incrementally via Zustand.
+ * Uses useTownStreamWidget hook to consume ColonyDashboardJSON.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import TownV2 from '@/pages/TownV2';
+import Town from '@/pages/Town';
 
 // =============================================================================
 // Mocks
@@ -95,9 +94,13 @@ vi.mock('@/stores/userStore', () => ({
 
 // Mock PixiJS Stage for Mesa - need to return a simpler component
 vi.mock('@pixi/react', () => ({
-  Stage: ({ children }: { children: React.ReactNode }) => <div data-testid="pixi-stage">{children}</div>,
+  Stage: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="pixi-stage">{children}</div>
+  ),
   Container: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  Graphics: ({ draw }: { draw: () => void }) => <div data-testid="pixi-graphics" onClick={() => draw} />,
+  Graphics: ({ draw }: { draw: () => void }) => (
+    <div data-testid="pixi-graphics" onClick={() => draw} />
+  ),
   Text: ({ text }: { text: string }) => <span>{text}</span>,
 }));
 
@@ -105,11 +108,11 @@ vi.mock('@pixi/react', () => ({
 // Test Helpers
 // =============================================================================
 
-function renderTownV2(townId: string = 'test-town') {
+function renderTown(townId: string = 'test-town') {
   return render(
-    <MemoryRouter initialEntries={[`/town-v2/${townId}`]}>
+    <MemoryRouter initialEntries={[`/town/${townId}`]}>
       <Routes>
-        <Route path="/town-v2/:townId" element={<TownV2 />} />
+        <Route path="/town/:townId" element={<Town />} />
       </Routes>
     </MemoryRouter>
   );
@@ -119,14 +122,14 @@ function renderTownV2(townId: string = 'test-town') {
 // Tests
 // =============================================================================
 
-describe('TownV2', () => {
+describe('Town', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   describe('rendering', () => {
     it('should render town header with phase and day', async () => {
-      renderTownV2();
+      renderTown();
 
       await waitFor(() => {
         // Use getAllBy since Day 1 appears in multiple places (header and dashboard)
@@ -136,7 +139,7 @@ describe('TownV2', () => {
     });
 
     it('should display citizen count from dashboard', async () => {
-      renderTownV2();
+      renderTown();
 
       await waitFor(() => {
         expect(screen.getByText(/2 citizens/)).toBeInTheDocument();
@@ -144,7 +147,7 @@ describe('TownV2', () => {
     });
 
     it('should display town ID', async () => {
-      renderTownV2();
+      renderTown();
 
       await waitFor(() => {
         expect(screen.getByText(/Town: test-town/)).toBeInTheDocument();
@@ -154,7 +157,7 @@ describe('TownV2', () => {
 
   describe('controls', () => {
     it('should have play/pause button', async () => {
-      renderTownV2();
+      renderTown();
 
       await waitFor(() => {
         // isPlaying is true in mock, so should show Pause
@@ -163,7 +166,7 @@ describe('TownV2', () => {
     });
 
     it('should have speed selector with options', async () => {
-      renderTownV2();
+      renderTown();
 
       await waitFor(() => {
         const speedSelect = screen.getByRole('combobox');
@@ -178,7 +181,7 @@ describe('TownV2', () => {
     });
 
     it('should call disconnect when clicking pause', async () => {
-      renderTownV2();
+      renderTown();
 
       await waitFor(() => {
         const pauseButton = screen.getByText(/Pause/);
@@ -191,7 +194,7 @@ describe('TownV2', () => {
 
   describe('event feed', () => {
     it('should show event count', async () => {
-      renderTownV2();
+      renderTown();
 
       await waitFor(() => {
         expect(screen.getByText(/Event Feed \(2\)/)).toBeInTheDocument();
@@ -199,7 +202,7 @@ describe('TownV2', () => {
     });
 
     it('should toggle event feed on click', async () => {
-      renderTownV2();
+      renderTown();
 
       await waitFor(() => {
         const feedToggle = screen.getByText(/Event Feed \(2\)/);
@@ -215,7 +218,7 @@ describe('TownV2', () => {
 
   describe('sidebar', () => {
     it('should show "Click a citizen" when none selected', async () => {
-      renderTownV2();
+      renderTown();
 
       await waitFor(() => {
         expect(screen.getByText(/Click a citizen on the map/)).toBeInTheDocument();
@@ -223,7 +226,7 @@ describe('TownV2', () => {
     });
 
     it('should display ColonyDashboard when no citizen selected', async () => {
-      renderTownV2();
+      renderTown();
 
       await waitFor(() => {
         // The ColonyDashboard component should be rendered
@@ -234,7 +237,7 @@ describe('TownV2', () => {
 
   describe('mesa canvas', () => {
     it('should render the PixiJS Stage', async () => {
-      renderTownV2();
+      renderTown();
 
       await waitFor(() => {
         expect(screen.getByTestId('pixi-stage')).toBeInTheDocument();
@@ -243,12 +246,12 @@ describe('TownV2', () => {
   });
 });
 
-describe('TownV2 loading and error states', () => {
+describe('Town loading and error states', () => {
   // These states are tested implicitly through the mocks above
   // The mock returns resolved values, so loading states are transient
 
   it('should handle successful town load', async () => {
-    renderTownV2();
+    renderTown();
 
     // Wait for content to appear (proves loading completed)
     await waitFor(() => {

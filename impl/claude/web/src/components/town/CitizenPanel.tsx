@@ -1,46 +1,45 @@
-import { useEffect, useState } from 'react';
+/**
+ * CitizenPanel: Props-based citizen detail panel.
+ *
+ * Receives citizen as props for displaying detailed citizen information.
+ */
+
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useTownStore } from '@/stores/townStore';
 import { useUserStore, selectCanInhabit } from '@/stores/userStore';
 import { townApi } from '@/api/client';
 import { LODGate } from '@/components/paywall/LODGate';
 import { cn, getArchetypeColor, getPhaseColor } from '@/lib/utils';
-import type { CitizenManifest, Eigenvectors } from '@/api/types';
+import type { CitizenCardJSON } from '@/reactive/types';
+import type { CitizenManifest } from '@/api/types';
 
-/**
- * CitizenPanel displays detailed citizen information with LOD gating.
- *
- * LOD 0-2: Always visible (for paid tiers)
- * LOD 3-5: Gated by credits or subscription tier
- */
-export function CitizenPanel() {
-  const { selectedCitizenId, townId, currentLOD, setLOD, setSelectedManifest, citizens } =
-    useTownStore();
+interface CitizenPanelProps {
+  citizen: CitizenCardJSON;
+  townId: string;
+  onClose: () => void;
+}
+
+export function CitizenPanel({ citizen, townId, onClose }: CitizenPanelProps) {
   const { userId, tier } = useUserStore();
   const canInhabit = useUserStore(selectCanInhabit());
   const [manifest, setManifest] = useState<CitizenManifest | null>(null);
+  const [currentLOD, setCurrentLOD] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Get selected citizen summary
-  const selectedCitizen = citizens.find((c) => c.id === selectedCitizenId);
-
-  // Fetch citizen data when selection or LOD changes
+  // Fetch citizen manifest when citizen or LOD changes
   useEffect(() => {
-    if (!selectedCitizenId || !townId || !selectedCitizen) return;
-
-    const fetchCitizen = async () => {
+    const fetchManifest = async () => {
       setLoading(true);
       setError(null);
       try {
         const res = await townApi.getCitizen(
           townId,
-          selectedCitizen.name,
+          citizen.name,
           currentLOD,
           userId || 'anonymous'
         );
         setManifest(res.data.citizen);
-        setSelectedManifest(res.data.citizen);
       } catch (err) {
         console.error('Failed to fetch citizen:', err);
         setError('Failed to load citizen details');
@@ -49,17 +48,8 @@ export function CitizenPanel() {
       }
     };
 
-    fetchCitizen();
-  }, [selectedCitizenId, townId, currentLOD, userId, selectedCitizen, setSelectedManifest]);
-
-  if (!selectedCitizenId || !selectedCitizen) {
-    return (
-      <div className="p-6 text-center text-gray-500">
-        <div className="text-4xl mb-4">👆</div>
-        <p>Click a citizen on the map to see their details</p>
-      </div>
-    );
-  }
+    fetchManifest();
+  }, [citizen.name, townId, currentLOD, userId]);
 
   if (loading) {
     return (
@@ -74,7 +64,7 @@ export function CitizenPanel() {
       <div className="p-6 text-center text-red-400">
         <p>{error}</p>
         <button
-          onClick={() => setLOD(0)}
+          onClick={() => setCurrentLOD(0)}
           className="mt-2 text-sm text-gray-400 hover:text-white"
         >
           Reset to LOD 0
@@ -87,11 +77,8 @@ export function CitizenPanel() {
     <div className="p-4 space-y-4 overflow-y-auto h-full">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold">{manifest?.name || selectedCitizen.name}</h2>
-        <button
-          onClick={() => useTownStore.getState().selectCitizen(null)}
-          className="text-gray-400 hover:text-white"
-        >
+        <h2 className="text-xl font-bold">{citizen.name}</h2>
+        <button onClick={onClose} className="text-gray-400 hover:text-white">
           ✕
         </button>
       </div>
@@ -99,18 +86,9 @@ export function CitizenPanel() {
       {/* LOD 0: Silhouette - Always visible */}
       <LODSection level={0} title="Silhouette" icon="👤">
         <div className="space-y-2 text-sm">
-          <InfoRow label="Region" value={manifest?.region || selectedCitizen.region} />
-          <InfoRow
-            label="Phase"
-            value={manifest?.phase || selectedCitizen.phase}
-            valueClass={getPhaseColor(manifest?.phase || selectedCitizen.phase)}
-          />
-          {manifest?.nphase && (
-            <InfoRow
-              label="N-Phase"
-              value={`${manifest.nphase.current} (cycle ${manifest.nphase.cycle_count})`}
-            />
-          )}
+          <InfoRow label="Region" value={citizen.region} />
+          <InfoRow label="Phase" value={citizen.phase} valueClass={getPhaseColor(citizen.phase)} />
+          <InfoRow label="N-Phase" value={citizen.nphase} />
         </div>
       </LODSection>
 
@@ -119,10 +97,10 @@ export function CitizenPanel() {
         <div className="space-y-2 text-sm">
           <InfoRow
             label="Archetype"
-            value={manifest?.archetype || selectedCitizen.archetype}
-            valueClass={getArchetypeColor(manifest?.archetype || selectedCitizen.archetype)}
+            value={citizen.archetype}
+            valueClass={getArchetypeColor(citizen.archetype)}
           />
-          {manifest?.mood && <InfoRow label="Mood" value={manifest.mood} />}
+          <InfoRow label="Mood" value={citizen.mood} />
         </div>
       </LODSection>
 
@@ -139,14 +117,52 @@ export function CitizenPanel() {
       </LODSection>
 
       {/* LOD 3: Memory - Gated */}
-      <LODGate level={3} onUnlock={() => setLOD(3)}>
+      <LODGate level={3} onUnlock={() => setCurrentLOD(3)}>
         <LODSection level={3} title="Memory" icon="🧠">
           <div className="space-y-3">
+            {/* Display eigenvectors from CitizenCardJSON */}
+            <div>
+              <h4 className="font-medium text-sm mb-2">Eigenvectors</h4>
+              <EigenvectorBar
+                label="Warmth"
+                value={citizen.eigenvectors.warmth}
+                color="bg-red-500"
+              />
+              <EigenvectorBar
+                label="Curiosity"
+                value={citizen.eigenvectors.curiosity}
+                color="bg-yellow-500"
+              />
+              <EigenvectorBar
+                label="Trust"
+                value={citizen.eigenvectors.trust}
+                color="bg-green-500"
+              />
+            </div>
+            {/* Full eigenvectors from manifest if available */}
             {manifest?.eigenvectors && (
-              <>
-                <h4 className="font-medium text-sm">Eigenvectors</h4>
-                <EigenvectorDisplay values={manifest.eigenvectors} />
-              </>
+              <div className="mt-2">
+                <EigenvectorBar
+                  label="Creativity"
+                  value={manifest.eigenvectors.creativity}
+                  color="bg-purple-500"
+                />
+                <EigenvectorBar
+                  label="Patience"
+                  value={manifest.eigenvectors.patience}
+                  color="bg-blue-500"
+                />
+                <EigenvectorBar
+                  label="Resilience"
+                  value={manifest.eigenvectors.resilience}
+                  color="bg-orange-500"
+                />
+                <EigenvectorBar
+                  label="Ambition"
+                  value={manifest.eigenvectors.ambition}
+                  color="bg-pink-500"
+                />
+              </div>
             )}
             {manifest?.relationships && Object.keys(manifest.relationships).length > 0 && (
               <>
@@ -159,14 +175,13 @@ export function CitizenPanel() {
       </LODGate>
 
       {/* LOD 4: Psyche - Gated */}
-      <LODGate level={4} onUnlock={() => setLOD(4)}>
+      <LODGate level={4} onUnlock={() => setCurrentLOD(4)}>
         <LODSection level={4} title="Psyche" icon="✨">
           <div className="space-y-2 text-sm">
+            <InfoRow label="Capability" value={`${(citizen.capability * 100).toFixed(0)}%`} />
+            <InfoRow label="Entropy" value={citizen.entropy.toFixed(3)} />
             {manifest?.accursed_surplus !== undefined && (
-              <InfoRow
-                label="Accursed Surplus"
-                value={manifest.accursed_surplus.toFixed(3)}
-              />
+              <InfoRow label="Accursed Surplus" value={manifest.accursed_surplus.toFixed(3)} />
             )}
             {manifest?.id && <InfoRow label="ID" value={manifest.id} mono />}
           </div>
@@ -174,7 +189,7 @@ export function CitizenPanel() {
       </LODGate>
 
       {/* LOD 5: Abyss - Gated */}
-      <LODGate level={5} onUnlock={() => setLOD(5)}>
+      <LODGate level={5} onUnlock={() => setCurrentLOD(5)}>
         <LODSection level={5} title="Abyss" icon="🌀">
           {manifest?.opacity && (
             <div className="bg-purple-900/30 p-4 rounded-lg border border-purple-500/20">
@@ -189,10 +204,10 @@ export function CitizenPanel() {
       <div className="pt-4 border-t border-town-accent/30 space-y-2">
         {canInhabit && townId && (
           <Link
-            to={`/town/${townId}/inhabit/${selectedCitizen.id}`}
+            to={`/town/${townId}/inhabit/${citizen.citizen_id}`}
             className="block w-full py-2 px-4 bg-town-highlight hover:bg-town-highlight/80 rounded-lg text-center font-medium transition-colors"
           >
-            🎭 INHABIT {selectedCitizen.name}
+            🎭 INHABIT {citizen.name}
           </Link>
         )}
         {tier === 'TOURIST' && (
@@ -247,35 +262,20 @@ function InfoRow({ label, value, valueClass, mono }: InfoRowProps) {
   );
 }
 
-interface EigenvectorDisplayProps {
-  values: Eigenvectors;
+interface EigenvectorBarProps {
+  label: string;
+  value: number;
+  color: string;
 }
 
-function EigenvectorDisplay({ values }: EigenvectorDisplayProps) {
-  const eigenvectors = [
-    { name: 'Warmth', value: values.warmth, color: 'bg-red-500' },
-    { name: 'Curiosity', value: values.curiosity, color: 'bg-yellow-500' },
-    { name: 'Trust', value: values.trust, color: 'bg-green-500' },
-    { name: 'Creativity', value: values.creativity, color: 'bg-purple-500' },
-    { name: 'Patience', value: values.patience, color: 'bg-blue-500' },
-    { name: 'Resilience', value: values.resilience, color: 'bg-orange-500' },
-    { name: 'Ambition', value: values.ambition, color: 'bg-pink-500' },
-  ];
-
+function EigenvectorBar({ label, value, color }: EigenvectorBarProps) {
   return (
-    <div className="space-y-2">
-      {eigenvectors.map((ev) => (
-        <div key={ev.name} className="flex items-center gap-2">
-          <span className="text-xs text-gray-400 w-20">{ev.name}</span>
-          <div className="flex-1 h-2 bg-town-surface rounded-full overflow-hidden">
-            <div
-              className={cn('h-full transition-all', ev.color)}
-              style={{ width: `${ev.value * 100}%` }}
-            />
-          </div>
-          <span className="text-xs text-gray-500 w-8">{ev.value.toFixed(2)}</span>
-        </div>
-      ))}
+    <div className="flex items-center gap-2">
+      <span className="text-xs text-gray-400 w-20">{label}</span>
+      <div className="flex-1 h-2 bg-town-surface rounded-full overflow-hidden">
+        <div className={cn('h-full transition-all', color)} style={{ width: `${value * 100}%` }} />
+      </div>
+      <span className="text-xs text-gray-500 w-8">{value.toFixed(2)}</span>
     </div>
   );
 }
@@ -303,9 +303,7 @@ function RelationshipList({ relationships }: RelationshipListProps) {
           </span>
         </div>
       ))}
-      {sorted.length > 5 && (
-        <p className="text-xs text-gray-500">+{sorted.length - 5} more</p>
-      )}
+      {sorted.length > 5 && <p className="text-xs text-gray-500">+{sorted.length - 5} more</p>}
     </div>
   );
 }

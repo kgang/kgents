@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useUserStore, selectCanInhabit, selectCanForce } from '@/stores/userStore';
-import { useTownStore } from '@/stores/townStore';
+import { townApi } from '@/api/client';
 import { useInhabitSession } from '@/hooks/useInhabitSession';
 
 export default function Inhabit() {
@@ -10,14 +10,30 @@ export default function Inhabit() {
   const { tier: _tier } = useUserStore();
   const canInhabit = useUserStore(selectCanInhabit());
   const canUseForce = useUserStore(selectCanForce());
-  const { citizens } = useTownStore();
 
   const [actionInput, setActionInput] = useState('');
   const [forceEnabled, setForceEnabled] = useState(false);
+  const [citizenName, setCitizenName] = useState<string>(citizenId || '');
 
-  // Find citizen name from ID
-  const citizen = citizens.find((c) => c.id === citizenId);
-  const citizenName = citizen?.name || citizenId || '';
+  // Fetch citizen name from API
+  useEffect(() => {
+    if (!townId || !citizenId) return;
+
+    const fetchCitizenName = async () => {
+      try {
+        // Use the citizen ID to fetch the citizen manifest
+        const res = await townApi.getCitizen(townId, citizenId, 0, 'anonymous');
+        if (res.data.citizen?.name) {
+          setCitizenName(res.data.citizen.name);
+        }
+      } catch {
+        // Keep using citizenId as fallback
+        console.warn('Could not fetch citizen name, using ID');
+      }
+    };
+
+    fetchCitizenName();
+  }, [townId, citizenId]);
 
   // INHABIT session hook
   const {
@@ -132,9 +148,7 @@ export default function Inhabit() {
           <span className="text-2xl">🎭</span>
           <div>
             <h1 className="font-semibold">INHABIT: {citizenName}</h1>
-            <p className="text-sm text-gray-400">
-              {status?.consent.status || 'Connecting...'}
-            </p>
+            <p className="text-sm text-gray-400">{status?.consent.status || 'Connecting...'}</p>
           </div>
         </div>
         <div className="flex items-center gap-6">
@@ -147,15 +161,13 @@ export default function Inhabit() {
                   consentDebt < 0.5
                     ? 'bg-green-500'
                     : consentDebt < 0.8
-                    ? 'bg-yellow-500'
-                    : 'bg-red-500'
+                      ? 'bg-yellow-500'
+                      : 'bg-red-500'
                 }`}
                 style={{ width: `${consentDebt * 100}%` }}
               />
             </div>
-            {isRuptured && (
-              <p className="text-xs text-red-400 mt-1">RUPTURED</p>
-            )}
+            {isRuptured && <p className="text-xs text-red-400 mt-1">RUPTURED</p>}
           </div>
 
           {/* Force Status */}
@@ -171,9 +183,7 @@ export default function Inhabit() {
           {/* Session Timer */}
           <div className="text-sm">
             <span className="text-gray-400">Time:</span>
-            <span
-              className={`ml-2 font-mono ${timeRemaining < 60 ? 'text-red-500' : ''}`}
-            >
+            <span className={`ml-2 font-mono ${timeRemaining < 60 ? 'text-red-500' : ''}`}>
               {formatTime(timeRemaining)}
             </span>
           </div>
@@ -196,8 +206,7 @@ export default function Inhabit() {
             <div className="bg-town-surface/30 rounded-xl p-6 border border-town-accent/20">
               <h2 className="text-sm text-gray-400 mb-2">SCENE</h2>
               <p className="text-lg leading-relaxed">
-                You are now connected to {citizenName}'s perspective. What would
-                you like to do?
+                You are now connected to {citizenName}'s perspective. What would you like to do?
               </p>
             </div>
           )}
@@ -210,10 +219,10 @@ export default function Inhabit() {
                   response.type === 'enact'
                     ? 'border-green-500/30'
                     : response.type === 'resist'
-                    ? 'border-red-500/30'
-                    : response.type === 'negotiate'
-                    ? 'border-yellow-500/30'
-                    : 'border-town-accent/20'
+                      ? 'border-red-500/30'
+                      : response.type === 'negotiate'
+                        ? 'border-yellow-500/30'
+                        : 'border-town-accent/20'
                 }`}
               >
                 <div className="flex items-center gap-2 mb-2">
@@ -222,10 +231,10 @@ export default function Inhabit() {
                       response.type === 'enact'
                         ? 'text-green-400'
                         : response.type === 'resist'
-                        ? 'text-red-400'
-                        : response.type === 'negotiate'
-                        ? 'text-yellow-400'
-                        : 'text-gray-400'
+                          ? 'text-red-400'
+                          : response.type === 'negotiate'
+                            ? 'text-yellow-400'
+                            : 'text-gray-400'
                     }`}
                   >
                     {response.type.toUpperCase()}
@@ -248,9 +257,7 @@ export default function Inhabit() {
               {response.inner_voice && (
                 <div className="bg-town-surface/30 rounded-xl p-6 border border-purple-500/20">
                   <h2 className="text-sm text-purple-400 mb-2">INNER VOICE</h2>
-                  <p className="text-lg italic text-gray-300">
-                    {response.inner_voice}
-                  </p>
+                  <p className="text-lg italic text-gray-300">{response.inner_voice}</p>
                 </div>
               )}
             </div>
@@ -272,9 +279,7 @@ export default function Inhabit() {
         {!isRuptured && !isExpired && (
           <form onSubmit={handleSubmitAction}>
             <div className="bg-town-surface/50 rounded-xl p-4 border border-town-accent/30">
-              <label className="text-sm text-gray-400 block mb-2">
-                What do you do?
-              </label>
+              <label className="text-sm text-gray-400 block mb-2">What do you do?</label>
               <div className="flex gap-3">
                 <input
                   type="text"
@@ -319,18 +324,21 @@ export default function Inhabit() {
               {/* Suggestions */}
               <div className="flex gap-2 mt-3 flex-wrap">
                 <span className="text-xs text-gray-500">Suggestions:</span>
-                {['look around', 'greet nearby citizen', 'walk to market', 'reflect on the day'].map(
-                  (suggestion) => (
-                    <button
-                      key={suggestion}
-                      type="button"
-                      onClick={() => setActionInput(suggestion)}
-                      className="text-xs px-2 py-1 bg-town-accent/20 rounded hover:bg-town-accent/40 transition-colors"
-                    >
-                      {suggestion}
-                    </button>
-                  )
-                )}
+                {[
+                  'look around',
+                  'greet nearby citizen',
+                  'walk to market',
+                  'reflect on the day',
+                ].map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    onClick={() => setActionInput(suggestion)}
+                    className="text-xs px-2 py-1 bg-town-accent/20 rounded hover:bg-town-accent/40 transition-colors"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
               </div>
             </div>
           </form>

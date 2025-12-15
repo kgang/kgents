@@ -1,8 +1,8 @@
-# Enhanced Systems Vision: The 2×3 Architecture (Constrained)
+# Enhanced Systems Vision: H-gents as Hybrid Minds
 
-**Status:** Specification Draft v2.1
+**Status:** Specification Draft v3.0
 **Phase:** STRATEGIZE
-**Prerequisites:** `../principles.md`, `docs/vision-unified-systems-enhancements.md`
+**Prerequisites:** `../principles.md`, `spec/h-gents/README.md`, `docs/vision-unified-systems-enhancements.md`
 **Guard [phase=STRATEGIZE][entropy=0.08][law_check=true]:** This is strategy, not implementation.
 
 ---
@@ -11,19 +11,26 @@
 
 > *"The agent must always be able to decide for itself how to approach the situation."*
 
-The working idea spine is a **2×3 architecture** that extends polynomial functors with hidden internal dispositions and grounds all action across three orthogonal planes.
+This document proposes extending H-gents from their current "Hegelian/Hermeneutic" semantics to encompass a second interpretation: **Hybrid Minds**—the dual-process architecture of learned policies (fast) and LLM actors (slow).
+
+**The Dual H**: H-gents retain their dialectical introspection capabilities while gaining a new operational dimension:
+
+| H-gent Interpretation | Purpose | Mechanism |
+|----------------------|---------|-----------|
+| **Hegelian** (existing) | Dialectical synthesis, shadow integration | Thesis + Antithesis → Synthesis |
+| **Hybrid** (new) | Cost-effective inference through progressive downgrade | Policy + Actor → Behavior |
 
 **Constraint:** To avoid category explosion, we implement **sparse projections**—the full theoretical richness exists, but practice uses constrained instantiations.
 
 ---
 
-## Part I: The Two Minds
+## Part I: The Two Minds Architecture
 
-### 1.1 Architecture
+### 1.1 The Hybrid Mind Model
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                           THE TWO MINDS                                      │
+│                           H-GENT: HYBRID MINDS                              │
 │                                                                              │
 │   ┌─────────────────────────────────────┐   ┌─────────────────────────────┐ │
 │   │         LEARNED POLICIES            │   │          ACTOR              │ │
@@ -42,6 +49,15 @@ The working idea spine is a **2×3 architecture** that extends polynomial functo
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
+The dual-process theory (Kahneman's System 1/System 2) maps naturally to agent architectures:
+
+| System | Characteristics | H-gent Implementation |
+|--------|----------------|----------------------|
+| **System 1** | Fast, automatic, low-cost | Decision trees, lookup tables, fine-tuned small models |
+| **System 2** | Slow, deliberate, expensive | Full LLM calls with reasoning chains |
+
+**The Key Insight:** These systems are **categorically substitutable**. If a policy produces outputs equivalent to the actor for a given input distribution, they are interchangeable morphisms.
+
 ### 1.2 The Progressive Downgrade Functor
 
 **The Categorical Insight:** If two morphisms `f: A → B` and `g: A → B` produce equivalent outputs for the same inputs (within tolerance), they are **substitutable**. The category doesn't care which one you use.
@@ -54,7 +70,7 @@ Precision: ImplementationSpace → ImplementationSpace
 Where ImplementationSpace has objects:
   - LLM-backed (expensive, high-precision, novel-capable)
   - Fine-tuned (moderate, domain-specific)
-  - Neurosymbolic (cheap, fast, verifiable)
+  - Policy-based (cheap, fast, verifiable)
 
 And morphisms are verified-equivalent transformations.
 ```
@@ -62,27 +78,29 @@ And morphisms are verified-equivalent transformations.
 **The Protocol:**
 
 ```python
-class ProgressiveDowngrade(Functor[Agent, Agent]):
+class HybridMind(Functor[Agent, Agent]):
     """
-    Functor that progressively substitutes expensive operations
+    H-gent functor that progressively substitutes expensive operations
     with cheaper equivalents as evidence accumulates.
 
-    The key insight: Every interaction can be probabilistically
-    hotswapped. The category theory fundamentals guarantee that
-    if f ≅ g (isomorphic in output), they are interchangeable.
+    This is the operational dual of Hegelian H-gents:
+    - Hegelian: Thesis + Antithesis → Synthesis (dialectic on ideas)
+    - Hybrid: Actor + Evidence → Policy (dialectic on computation)
+
+    Both are synthesis operations; both preserve categorical laws.
     """
 
     def lift(self, agent: Agent[A, B]) -> Agent[A, B]:
-        """Wrap agent with downgrade capability."""
-        return DowngradingAgent(
-            expensive=agent,
+        """Wrap agent with hybrid mind capability."""
+        return HybridAgent(
+            actor=agent,  # System 2: The expensive, deliberate mind
             precision_ladder=[
                 self.try_decision_tree,   # Cheapest, fastest, interpretable
                 self.try_finetuned,       # Middle ground
                 self.try_cached,          # Pattern match
                 agent.invoke,             # Fallback to full LLM
             ],
-            substitution_evidence=SubstitutionEvidence(),
+            evidence=SubstitutionEvidence(),
         )
 
     async def try_decision_tree(
@@ -106,7 +124,73 @@ class ProgressiveDowngrade(Functor[Agent, Agent]):
         return NotConfident()
 ```
 
-### 1.3 The Elaborateness Metric
+### 1.3 Research Foundation: Policy Distillation
+
+The Two Minds architecture draws on established research in making LLMs more cost-effective:
+
+#### 1.3.1 Knowledge Distillation (Hinton et al.)
+
+The foundational technique: train a smaller "student" model to match the soft probability distributions of a larger "teacher" model, not just its hard labels.
+
+```
+Student Loss = α × CrossEntropy(student, labels) + (1-α) × KL(student_soft, teacher_soft)
+```
+
+**Relevance to H-gents:** The "actor" (LLM) is the teacher; the "policy" (decision tree, fine-tuned model) is the student.
+
+#### 1.3.2 Step-by-Step Distillation
+
+Rather than distilling only final outputs, capture the reasoning chain:
+
+```python
+# Anti-pattern: Outcome-only distillation
+student.train(inputs=queries, targets=llm_final_answers)
+
+# Pattern: Process distillation
+student.train(
+    inputs=queries,
+    targets=llm_reasoning_chains,  # Include the "why"
+    process_reward=True,           # Reward correct intermediate steps
+)
+```
+
+**Relevance to H-gents:** Policies learn not just "what" but "how"—preserving explainability.
+
+#### 1.3.3 Router Models (Speculative Decoding)
+
+Use a small model to predict when a large model is necessary:
+
+```python
+class HybridRouter:
+    """Decide which mind to use."""
+
+    def route(self, input: A) -> Mind:
+        complexity = self.small_model.estimate_complexity(input)
+        if complexity < THRESHOLD_TRIVIAL:
+            return Mind.POLICY  # Decision tree handles this
+        elif complexity < THRESHOLD_MODERATE:
+            return Mind.FINETUNED  # Small LLM handles this
+        else:
+            return Mind.ACTOR  # Full LLM required
+```
+
+**Relevance to H-gents:** The router itself is a learned policy—meta-cognition about which mind to invoke.
+
+#### 1.3.4 Process Reward Models (PRMs)
+
+Instead of rewarding only correct final answers, reward correct reasoning steps:
+
+```python
+# Outcome Reward Model (ORM)
+reward = 1.0 if final_answer_correct else 0.0
+
+# Process Reward Model (PRM)
+reward = sum(step_correctness for step in reasoning_chain) / len(chain)
+```
+
+**Relevance to H-gents:** PRMs enable training policies that reason correctly, not just produce correct outputs by luck.
+
+### 1.4 The Elaborateness Metric
 
 **Observation:** The "precision" of a response can be proxied by:
 1. **Elaborateness of invocation** — How many sub-agents were spawned?
@@ -115,15 +199,150 @@ class ProgressiveDowngrade(Functor[Agent, Agent]):
 
 As data accumulates, these metrics should trend downward for common situations while maintaining output quality.
 
+```python
+@dataclass
+class ElaboratenessMetric:
+    """Track the cost of agent responses over time."""
+
+    agent_spawns: int        # How many sub-agents were called?
+    model_tier: ModelTier    # OPUS > SONNET > HAIKU > POLICY
+    tokens_consumed: int     # Total token usage
+    wall_time_ms: float      # Response latency
+
+    @property
+    def cost_score(self) -> float:
+        """Lower is better. Tracks efficiency improvement."""
+        return (
+            self.agent_spawns * 10 +
+            self.model_tier.value * 5 +
+            self.tokens_consumed * 0.001 +
+            self.wall_time_ms * 0.01
+        )
+```
+
+**The Goal:** For a mature H-gent system, the average `cost_score` decreases over time while output quality remains constant or improves.
+
 ---
 
-## Part II: The Three Planes (Deferred)
+## Part II: H-gent as Hybrid Mind Polynomial
 
-> **Status:** This section requires deeper rethinking. The three planes (idea/time/physical) are a useful intuition but the formal mapping to AGENTESE contexts is not yet coherent.
+### 2.1 The H-MIND Polynomial
 
-**For now:** The agent decides its approach implicitly through existing AGENTESE context selection. The three planes remain as **design heuristics**, not formal structures.
+Extending AD-002 (Polynomial Generalization), we define the Hybrid Mind polynomial:
 
-**Future work:** Revisit when the disposition layer is validated in practice.
+```python
+H_MIND_POLYNOMIAL = PolyAgent(
+    positions=frozenset([
+        HMindPhase.ROUTING,      # Deciding which mind to use
+        HMindPhase.POLICY_EXEC,  # Executing learned policy
+        HMindPhase.ACTOR_EXEC,   # Executing LLM actor
+        HMindPhase.LEARNING,     # Updating policies from actor traces
+        HMindPhase.VALIDATING,   # Verifying policy ≅ actor equivalence
+    ]),
+    directions=lambda phase: VALID_INPUTS[phase],
+    transition=h_mind_transition,
+)
+
+VALID_INPUTS = {
+    HMindPhase.ROUTING: frozenset([
+        RouteInput,      # Query to classify
+    ]),
+    HMindPhase.POLICY_EXEC: frozenset([
+        PolicyInput,     # Execute learned policy
+    ]),
+    HMindPhase.ACTOR_EXEC: frozenset([
+        ActorInput,      # Execute LLM actor
+    ]),
+    HMindPhase.LEARNING: frozenset([
+        TraceInput,      # (input, actor_trace, output) triple
+    ]),
+    HMindPhase.VALIDATING: frozenset([
+        ValidationInput, # Compare policy vs actor outputs
+    ]),
+}
+```
+
+### 2.2 The H-MIND Operad
+
+The composition grammar for Hybrid Mind operations:
+
+```python
+H_MIND_OPERAD = Operad(
+    operations={
+        "route": Operation(
+            arity=1,
+            signature="Query → Mind",
+            description="Decide which mind handles the query",
+        ),
+        "execute": Operation(
+            arity=2,
+            signature="(Mind, Query) → Response",
+            description="Execute the selected mind on the query",
+        ),
+        "learn": Operation(
+            arity=1,
+            signature="Trace → PolicyUpdate",
+            description="Extract policy from actor trace",
+        ),
+        "validate": Operation(
+            arity=2,
+            signature="(Policy, Actor) → EquivalenceEvidence",
+            description="Verify policy produces same outputs as actor",
+        ),
+        "downgrade": Operation(
+            arity=2,
+            signature="(Agent, Evidence) → Agent",
+            description="Replace expensive ops with cheap equivalents",
+        ),
+    },
+    laws=[
+        # Idempotence: validating twice is same as once
+        Law("validate(validate(p, a), a) ≡ validate(p, a)"),
+        # Monotonicity: more evidence → more downgrade
+        Law("evidence₁ ⊆ evidence₂ ⟹ cost(downgrade(a, e₁)) ≥ cost(downgrade(a, e₂))"),
+    ],
+)
+```
+
+### 2.3 Integration with Existing H-gents
+
+The Hybrid Mind interpretation **composes** with existing Hegelian H-gents:
+
+```python
+class UnifiedHGent(Agent[HGentInput, HGentOutput]):
+    """
+    H-gent that combines both interpretations:
+    - Hegelian: Dialectical synthesis on concepts
+    - Hybrid: Cost-effective inference through policy learning
+
+    The synthesis: Use cheap policies to detect when expensive
+    dialectic synthesis is actually needed.
+    """
+
+    def __init__(
+        self,
+        hegelian: HegelAgent,
+        hybrid_mind: HybridMind,
+    ):
+        self.hegelian = hegelian
+        self.hybrid_mind = hybrid_mind
+
+    async def invoke(self, input: HGentInput) -> HGentOutput:
+        # Hybrid decides if we need full dialectic
+        routing = await self.hybrid_mind.route(input)
+
+        if routing.mind == Mind.POLICY:
+            # Fast path: Learned policy handles common tensions
+            return await self.hybrid_mind.policy.invoke(input)
+        else:
+            # Slow path: Full Hegelian synthesis for novel tensions
+            return await self.hegelian.invoke(input)
+```
+
+**The Meta-Insight:** The Hybrid Mind is itself a dialectic:
+- **Thesis:** Expensive, thorough LLM reasoning (Actor)
+- **Antithesis:** Cheap, fast learned behavior (Policy)
+- **Synthesis:** Adaptive selection that preserves quality while minimizing cost
 
 ---
 
@@ -234,7 +453,7 @@ class DispositionModifiedPoly(Generic[S, A, B]):
 
 ### 3.3 The Indirection Layer
 
-**The Key Insight from Your Feedback:**
+**The Key Insight:**
 
 > "This acts as an extension to polynomial functions by adding indirection to the postures and directions of interaction → the hidden internal model."
 
@@ -265,10 +484,8 @@ class HiddenInternalModel:
         """Apply disposition to polynomial, yielding modified behavior."""
         return DispositionModifiedPoly(
             base=poly,
-            dispositions=frozenset([self.disposition]),
-            modified_directions=self._color_directions,
-            modified_transition=self._color_transition,
-        ).at_disposition(self.disposition)
+            active_disposition=self.disposition,
+        )
 ```
 
 ---
@@ -327,7 +544,7 @@ async def rederive_agentese(
     Many will attach to the first derivation, but the most
     functional implementations re-derive from principles.
     """
-    # Start from the six DNA axioms
+    # Start from the seven DNA axioms
     axioms = seed.axioms
 
     # Derive context resolvers from axioms + local constraints
@@ -360,7 +577,7 @@ Benefits of re-derivation:
 
 ### 5.1 The Full System
 
-The 2×3 architecture integrates with the existing Workshop Manager to enable generative completion on objectives:
+The H-gent Hybrid Mind architecture integrates with the existing Workshop Manager to enable generative completion on objectives:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -374,14 +591,14 @@ The 2×3 architecture integrates with the existing Workshop Manager to enable ge
 │                                    │                                         │
 │                                    ▼                                         │
 │   ┌───────────────────────────────────────────────────────────────────────┐ │
-│   │                       2×3 ARCHITECTURE                                 │ │
+│   │                       H-GENT HYBRID MINDS                              │ │
 │   │                                                                        │ │
-│   │   TWO MINDS          ×         THREE PLANES                           │ │
-│   │   ┌─────────────┐              ┌────────────┐                         │ │
-│   │   │ Policies    │              │ Idea       │                         │ │
-│   │   │ Actor       │      ×       │ Time       │                         │ │
-│   │   └─────────────┘              │ Physical   │                         │ │
-│   │                                └────────────┘                         │ │
+│   │   ┌─────────────────────────────────────────────────────────────────┐ │ │
+│   │   │  POLICY (System 1)          ACTOR (System 2)                    │ │ │
+│   │   │  ├─ Decision Trees           ├─ Full LLM Reasoning              │ │ │
+│   │   │  ├─ Cached Patterns          ├─ Novel Situation Handling        │ │ │
+│   │   │  └─ Fine-tuned Models        └─ Creative Generation             │ │ │
+│   │   └─────────────────────────────────────────────────────────────────┘ │ │
 │   └───────────────────────────────────────────────────────────────────────┘ │
 │                                    │                                         │
 │                                    ▼                                         │
@@ -410,8 +627,8 @@ The 2×3 architecture integrates with the existing Workshop Manager to enable ge
 **The Loop:**
 
 1. **User states objective** → Workshop Manager assigns builders
-2. **Builders decompose** → Tasks across idea/time/physical planes
-3. **Each task invokes** → 2×3 architecture (mind selection, plane emphasis)
+2. **Builders decompose** → Tasks for each builder archetype
+3. **Each task invokes** → H-gent Hybrid Mind (router selects Policy or Actor)
 4. **Progressive downgrade** → As patterns emerge, cheaper implementations
 5. **Disposition colors** → Hidden internal model modifies behavior
 6. **AGENTESE resolves** → Semantic paths to concrete operations
@@ -421,46 +638,41 @@ The 2×3 architecture integrates with the existing Workshop Manager to enable ge
 
 ## Part VI: Work Organization
 
-### Wave 1: Hidden Internal Model Foundation
+### Wave 1: H-gent Hybrid Mind Foundation
 
-**Scope:** Extend polynomial functors with disposition layer.
+**Scope:** Extend H-gents with Hybrid Mind architecture.
 
-#### Chunk 1.1: Disposition Algebra
-- **Task:** Define `Disposition` type with composition laws
-- **Task:** Implement `DispositionModifiedPoly` dataclass
-- **Task:** Verify disposition composition preserves polynomial laws
+#### Chunk 1.1: Hybrid Mind Core
+- **Task:** Define `HybridMind` functor with precision ladder
+- **Task:** Implement `SubstitutionEvidence` accumulator
+- **Task:** Create `HMindPhase` polynomial positions
 
-#### Chunk 1.2: K-gent Integration
-- **Task:** Add disposition field to K-gent eigenvector space
-- **Task:** Implement `manifest_through` for disposition coloring
-- **Task:** Wire disposition to Gatekeeper reasoning
-
-#### Chunk 1.3: Psi-gent Plane Rotation
-- **Task:** Define `PlaneEmphasis` type
-- **Task:** Implement metaphor → plane emphasis derivation
-- **Task:** Test rotation across idea/time/physical
-
----
-
-### Wave 2: Two Minds Architecture
-
-**Scope:** Implement learned policies with progressive downgrade.
-
-#### Chunk 2.1: Precision Functor
-- **Task:** Define `ProgressiveDowngrade` functor
-- **Task:** Implement precision ladder with fallback chain
-- **Task:** Add substitution evidence collection
-
-#### Chunk 2.2: Decision Tree Extraction
+#### Chunk 1.2: Decision Tree Extraction
 - **Task:** Collect (input, LLM_reasoning, output) triples
 - **Task:** Fit decision trees to predict output from input features
 - **Task:** Wire trees to precision functor as cheapest option
 - **Task:** Define confidence threshold for tree vs LLM fallback
 
-#### Chunk 2.3: Fine-Tune Pipeline (Haiku)
-- **Task:** Define training data schema
-- **Task:** Implement data collection hooks
-- **Task:** Create fine-tuning workflow scaffold
+#### Chunk 1.3: Router Model
+- **Task:** Train small model to predict query complexity
+- **Task:** Implement routing logic (Policy vs FineTuned vs Actor)
+- **Task:** Add elaborateness metric tracking
+
+---
+
+### Wave 2: Disposition Layer
+
+**Scope:** Add hidden internal model to polynomial agents.
+
+#### Chunk 2.1: Disposition Algebra
+- **Task:** Define `Disposition` type with composition laws
+- **Task:** Implement `DispositionModifiedPoly` dataclass
+- **Task:** Verify disposition composition preserves polynomial laws
+
+#### Chunk 2.2: K-gent Integration
+- **Task:** Add disposition field to K-gent eigenvector space
+- **Task:** Implement `manifest_through` for disposition coloring
+- **Task:** Wire disposition to Gatekeeper reasoning
 
 ---
 
@@ -516,11 +728,16 @@ The 2×3 architecture integrates with the existing Workshop Manager to enable ge
 
 This bounds the combinatorial space to ~10 valid combinations.
 
-### Q2: Three Planes vs Five Contexts → Deferred
+### Q2: Two Minds vs Full LLM → Progressive Downgrade
 
-**Resolution:** Scrap formal mapping. The three planes remain design heuristics, not formal structures.
+**Resolution:** Not a binary choice. The precision ladder enables graceful degradation:
 
-Revisit when disposition layer is validated in practice.
+1. **Decision Tree**: Fastest, cheapest, most interpretable
+2. **Cached Pattern**: Fast, cheap, requires exact match
+3. **Fine-tuned Model**: Moderate cost, domain-specific
+4. **Full LLM**: Expensive, handles novel situations
+
+Evidence accumulates → more queries handled at cheaper levels.
 
 ### Q3: Minimal Seed for Re-Derivation → 7 Axioms
 
@@ -534,14 +751,14 @@ Revisit when disposition layer is validated in practice.
 6. Nouns Are Frozen Verbs
 7. **The Accursed Share** (entropy budget, sip, tithe)
 
-### Q4: Neurosymbolic Architecture → Decision Trees
+### Q4: H-gent Dual Interpretation → Composition
 
-**Resolution:** Start with decision trees extracted from LLM traces.
+**Resolution:** The Hegelian and Hybrid interpretations compose:
 
-1. Collect (input, LLM_reasoning, output) triples
-2. Fit decision tree to predict output from input features
-3. Use tree for high-confidence cases, LLM fallback otherwise
-4. Graduate to differentiable logic later if needed
+- **Hegelian H-gent**: Dialectic synthesis on concepts (thesis + antithesis → synthesis)
+- **Hybrid H-gent**: Dialectic on computation (actor + evidence → policy)
+
+Both are synthesis operations that preserve categorical structure.
 
 ### Q5: Federation at $1K MRR → Minimum Viable
 
@@ -557,14 +774,14 @@ This provides federation value without coordination complexity.
 
 ## Part VIII: Principles Alignment Check
 
-| Principle | 2×3 Architecture Alignment |
-|-----------|---------------------------|
-| **Tasteful** | Two minds, three planes—not kitchen sink |
-| **Curated** | Progressive downgrade curates implementation |
+| Principle | H-gent Hybrid Mind Alignment |
+|-----------|------------------------------|
+| **Tasteful** | Two minds—not kitchen sink; policy + actor only |
+| **Curated** | Progressive downgrade curates which implementation handles each query |
 | **Ethical** | Hidden disposition doesn't hide ethics (gatekeeper still applies) |
-| **Joy-Inducing** | Disposition layer enables personality |
+| **Joy-Inducing** | Disposition layer enables personality; cost savings → more interactions |
 | **Composable** | Disposition is natural transformation (preserves composition) |
-| **Heterarchical** | Agent decides emphasis, not predetermined |
+| **Heterarchical** | Agent decides which mind to use, not predetermined |
 | **Generative** | Re-derivation in situ is ultimate generativity |
 
 ---
@@ -616,6 +833,23 @@ Laws:
 5. CategoryLaws:         Id >> f ≡ f ≡ f >> Id; (f >> g) >> h ≡ f >> (g >> h)
 6. NounsAreFrozenVerbs:  read(x) ≡ invoke(x.manifest)
 7. AccursedShare:        ∃ budget b. sip(b) ∧ tithe(b) (entropy management)
+```
+
+### A.4 H-gent Dual Interpretation
+
+```
+H-GENT = HEGELIAN ⊕ HYBRID
+
+Where:
+  HEGELIAN: (Thesis, Antithesis) → Synthesis     (dialectic on concepts)
+  HYBRID:   (Actor, Evidence) → Policy           (dialectic on computation)
+
+Composition law:
+  The result of HYBRID can be input to HEGELIAN:
+  HEGELIAN(Policy₁, Policy₂) → SynthesizedPolicy
+
+  The process of HEGELIAN can be optimized by HYBRID:
+  HYBRID(HEGELIAN) → CheapDialectic (for common tensions)
 ```
 
 ---

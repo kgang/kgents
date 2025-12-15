@@ -16,8 +16,14 @@ Chunk 7: WorkshopFlux - streaming execution layer.
     From Bataille: The flux is not just time—it is *expenditure*.
     Each phase accumulates artifacts that must be integrated.
 
+Wave 4: N-Phase Integration.
+    WorkshopFlux optionally tracks N-Phase session state.
+    Phase transitions are detected from builder output.
+    Maps WorkshopPhase (5 phases) → NPhase (3 phases).
+
 See: plans/agent-town/builders-workshop-chunk6.md
 See: plans/agent-town/builders-workshop-chunk7.md
+See: plans/nphase-native-integration-wave4-prompt.md
 """
 
 from __future__ import annotations
@@ -36,6 +42,7 @@ from agents.town.event_bus import EventBus
 
 if TYPE_CHECKING:
     from agents.town.dialogue_engine import CitizenDialogueEngine
+    from protocols.nphase.session import NPhaseSession
 
 
 # =============================================================================
@@ -77,6 +84,35 @@ PHASE_TO_ARCHETYPE: dict[WorkshopPhase, str] = {
 ARCHETYPE_TO_PHASE: dict[str, WorkshopPhase] = {
     v: k for k, v in PHASE_TO_ARCHETYPE.items()
 }
+
+
+# =============================================================================
+# N-Phase Mapping (Wave 4)
+# =============================================================================
+
+
+def _get_nphase_for_workshop_phase(workshop_phase: WorkshopPhase) -> "Any":
+    """
+    Map WorkshopPhase (5 phases) to NPhase (3 phases).
+
+    Mapping:
+    - EXPLORING, DESIGNING → UNDERSTAND (gathering context)
+    - PROTOTYPING, REFINING → ACT (doing work)
+    - INTEGRATING → REFLECT (synthesizing results)
+    - IDLE, COMPLETE → current phase (no change)
+
+    Returns NPhase enum or None if no mapping (IDLE/COMPLETE).
+    """
+    from protocols.nphase.operad import NPhase
+
+    mapping = {
+        WorkshopPhase.EXPLORING: NPhase.UNDERSTAND,
+        WorkshopPhase.DESIGNING: NPhase.UNDERSTAND,
+        WorkshopPhase.PROTOTYPING: NPhase.ACT,
+        WorkshopPhase.REFINING: NPhase.ACT,
+        WorkshopPhase.INTEGRATING: NPhase.REFLECT,
+    }
+    return mapping.get(workshop_phase)
 
 
 # =============================================================================
@@ -429,10 +465,9 @@ class WorkshopDialogueContext:
 
         if self.artifacts_so_far:
             artifact_summaries = [
-                f"- {a.builder}: {a.phase.name}"
-                for a in self.artifacts_so_far[-3:]
+                f"- {a.builder}: {a.phase.name}" for a in self.artifacts_so_far[-3:]
             ]
-            parts.append(f"Previous work:\n" + "\n".join(artifact_summaries))
+            parts.append("Previous work:\n" + "\n".join(artifact_summaries))
 
         if self.recent_events:
             parts.append(f"Recent: {'; '.join(self.recent_events[-3:])}")
@@ -718,7 +753,9 @@ class WorkshopEnvironment:
             return await self._advance_phase()
 
         # Builder does work
-        output = active.continue_work(f"Working on {self._state.active_task.description}")
+        output = active.continue_work(
+            f"Working on {self._state.active_task.description}"
+        )
 
         # Check if builder returned to IDLE (completed their part)
         if output.phase == BuilderPhase.IDLE:
@@ -983,9 +1020,7 @@ class WorkshopEnvironment:
 
         if lod >= 1:
             result["task"] = (
-                self._state.active_task.to_dict()
-                if self._state.active_task
-                else None
+                self._state.active_task.to_dict() if self._state.active_task else None
             )
             result["active_builder"] = (
                 self._state.active_builder.archetype
@@ -1136,6 +1171,11 @@ class WorkshopFlux:
     From Bataille: The flux is expenditure.
     Each phase accumulates artifacts that must be integrated.
 
+    Wave 4: N-Phase Integration.
+        Optionally tracks NPhaseSession state during execution.
+        Phase transitions are detected from builder output.
+        Emits N-Phase events to event bus.
+
     Example:
         workshop = create_workshop()
         flux = WorkshopFlux(workshop)
@@ -1150,6 +1190,12 @@ class WorkshopFlux:
         # Get metrics
         metrics = flux.get_metrics()
         print(f"Completed in {metrics.duration_seconds}s")
+
+        # With N-Phase tracking:
+        from protocols.nphase.session import create_session
+        session = create_session("Feature implementation")
+        flux = WorkshopFlux(workshop, nphase_session=session)
+        # Phase transitions now tracked in session
     """
 
     def __init__(
@@ -1159,6 +1205,7 @@ class WorkshopFlux:
         seed: int | None = None,
         auto_advance: bool = True,
         max_steps_per_phase: int = 5,
+        nphase_session: "NPhaseSession | None" = None,
     ) -> None:
         """
         Initialize workshop flux.
@@ -1169,18 +1216,21 @@ class WorkshopFlux:
             seed: Random seed for reproducibility.
             auto_advance: If True, automatically advance phases.
             max_steps_per_phase: Max work steps before auto-advancing.
+            nphase_session: Optional NPhaseSession for phase tracking (Wave 4).
         """
         self._workshop = workshop
         self._dialogue_engine = dialogue_engine
         self._rng = random.Random(seed)
         self._auto_advance = auto_advance
         self._max_steps_per_phase = max_steps_per_phase
+        self._nphase_session = nphase_session
 
         # Execution state
         self._is_running = False
         self._step_count = 0
         self._phase_step_count = 0
         self._recent_events: list[str] = []
+        self._last_nphase: Any = None  # Track last N-Phase for transition detection
 
         # Metrics
         self._metrics = WorkshopMetrics()
@@ -1205,6 +1255,48 @@ class WorkshopFlux:
         """The underlying workshop environment."""
         return self._workshop
 
+    @property
+    def nphase_session(self) -> "NPhaseSession | None":
+        """Optional N-Phase session for phase tracking (Wave 4)."""
+        return self._nphase_session
+
+    @property
+    def current_nphase(self) -> "Any":
+        """
+        Current N-Phase derived from workshop phase.
+
+        Returns None if nphase_session is not set.
+        """
+        if self._nphase_session is None:
+            return None
+        return self._nphase_session.current_phase
+
+    def _sync_nphase(self) -> None:
+        """
+        Sync N-Phase session state with workshop phase.
+
+        Called after workshop phase transitions to keep N-Phase in sync.
+        Only advances if the mapped N-Phase is different from current.
+        """
+        if self._nphase_session is None:
+            return
+
+        # Get the N-Phase corresponding to current workshop phase
+        target_nphase = _get_nphase_for_workshop_phase(self.current_phase)
+        if target_nphase is None:
+            return  # IDLE/COMPLETE - no N-Phase mapping
+
+        # Only advance if different
+        current = self._nphase_session.current_phase
+        if target_nphase != current and self._nphase_session.can_advance_to(
+            target_nphase
+        ):
+            self._nphase_session.advance_phase(
+                target_nphase,
+                payload={"workshop_phase": self.current_phase.name},
+            )
+            self._last_nphase = target_nphase
+
     async def start(
         self,
         task: str | WorkshopTask,
@@ -1226,7 +1318,9 @@ class WorkshopFlux:
             RuntimeError: If already running.
         """
         if self._is_running:
-            raise RuntimeError("Flux is already running. Call stop() or wait for completion.")
+            raise RuntimeError(
+                "Flux is already running. Call stop() or wait for completion."
+            )
 
         # Reset metrics
         self._metrics = WorkshopMetrics(start_time=datetime.now())
@@ -1239,6 +1333,9 @@ class WorkshopFlux:
 
         self._is_running = True
         self._metrics.total_events += 3  # task_assigned, plan_created, phase_started
+
+        # Initialize N-Phase tracking if session provided (Wave 4)
+        self._sync_nphase()
 
         # Generate dialogue for task start if engine available
         active = self.active_builder
@@ -1293,17 +1390,31 @@ class WorkshopFlux:
         elif event.type == WorkshopEventType.PHASE_COMPLETED:
             self._metrics.phases_completed += 1
             self._phase_step_count = 0
+            # Sync N-Phase after workshop phase transition (Wave 4)
+            self._sync_nphase()
         elif event.type == WorkshopEventType.HANDOFF:
             self._metrics.handoffs += 1
+            # Sync N-Phase after handoff (new builder = potentially new phase)
+            self._sync_nphase()
             # Generate handoff dialogue
             next_builder = self.active_builder
             if next_builder is not None:
-                await self._generate_dialogue(active, "handoff", next_builder=next_builder.archetype)
+                await self._generate_dialogue(
+                    active, "handoff", next_builder=next_builder.archetype
+                )
         elif event.type == WorkshopEventType.TASK_COMPLETED:
             self._is_running = False
             self._metrics.end_time = datetime.now()
             # Generate completion dialogue
             await self._generate_dialogue(active, "complete")
+
+        # Add N-Phase info to event metadata if tracking (Wave 4)
+        if self._nphase_session is not None:
+            event.metadata["nphase"] = {
+                "session_id": self._nphase_session.id,
+                "current_phase": self._nphase_session.current_phase.name,
+                "cycle_count": self._nphase_session.cycle_count,
+            }
 
         yield event
 
@@ -1316,6 +1427,15 @@ class WorkshopFlux:
             try:
                 advance_event = await self._workshop._advance_phase()
                 self._phase_step_count = 0
+                # Sync N-Phase after auto-advance (Wave 4)
+                self._sync_nphase()
+                # Add N-Phase info to advance event
+                if self._nphase_session is not None:
+                    advance_event.metadata["nphase"] = {
+                        "session_id": self._nphase_session.id,
+                        "current_phase": self._nphase_session.current_phase.name,
+                        "cycle_count": self._nphase_session.cycle_count,
+                    }
                 yield advance_event
                 # Check if the advance completed the task
                 if advance_event.type == WorkshopEventType.TASK_COMPLETED:
@@ -1372,6 +1492,8 @@ class WorkshopFlux:
             event.metadata["perturbation"] = True
             event.metadata["perturbation_source"] = "manual_advance"
             self._phase_step_count = 0
+            # Sync N-Phase after manual advance (Wave 4)
+            self._sync_nphase()
             return event
 
         elif action == "handoff":
@@ -1387,10 +1509,14 @@ class WorkshopFlux:
             )
             event.metadata["perturbation"] = True
             event.metadata["perturbation_source"] = "manual_handoff"
+            # Sync N-Phase after manual handoff (Wave 4)
+            self._sync_nphase()
             return event
 
         elif action == "complete":
-            event = await self._workshop.complete(summary=str(artifact) if artifact else "")
+            event = await self._workshop.complete(
+                summary=str(artifact) if artifact else ""
+            )
             self._is_running = False
             self._metrics.end_time = datetime.now()
             event.metadata["perturbation"] = True
@@ -1402,7 +1528,9 @@ class WorkshopFlux:
                 raise ValueError("No active task to inject artifact into")
             ws_artifact = WorkshopArtifact.create(
                 task_id=self._workshop.state.active_task.id,
-                builder=self.active_builder.archetype if self.active_builder else "Unknown",
+                builder=self.active_builder.archetype
+                if self.active_builder
+                else "Unknown",
                 phase=self.current_phase,
                 content=artifact,
                 injected=True,
@@ -1413,7 +1541,7 @@ class WorkshopFlux:
                 type=WorkshopEventType.ARTIFACT_PRODUCED,
                 builder=self.active_builder.archetype if self.active_builder else None,
                 phase=self.current_phase,
-                message=f"Artifact injected via perturbation",
+                message="Artifact injected via perturbation",
                 artifact=artifact,
                 metadata={
                     "perturbation": True,
@@ -1443,11 +1571,13 @@ class WorkshopFlux:
         return None
 
     def get_status(self) -> dict[str, Any]:
-        """Get current flux status including metrics."""
-        return {
+        """Get current flux status including metrics and N-Phase state (Wave 4)."""
+        status: dict[str, Any] = {
             "is_running": self._is_running,
             "phase": self.current_phase.name,
-            "active_builder": self.active_builder.archetype if self.active_builder else None,
+            "active_builder": self.active_builder.archetype
+            if self.active_builder
+            else None,
             "step_count": self._step_count,
             "phase_step_count": self._phase_step_count,
             "task": (
@@ -1457,6 +1587,18 @@ class WorkshopFlux:
             ),
             "metrics": self._metrics.to_dict(),
         }
+
+        # Add N-Phase state if session is set (Wave 4)
+        if self._nphase_session is not None:
+            status["nphase"] = {
+                "session_id": self._nphase_session.id,
+                "current_phase": self._nphase_session.current_phase.name,
+                "cycle_count": self._nphase_session.cycle_count,
+                "checkpoint_count": len(self._nphase_session.checkpoints),
+                "handle_count": len(self._nphase_session.handles),
+            }
+
+        return status
 
     def get_metrics(self) -> WorkshopMetrics:
         """Get execution metrics."""
@@ -1486,11 +1628,15 @@ class WorkshopFlux:
         )
 
         # If we have a dialogue engine, try LLM generation
-        if self._dialogue_engine is not None and self._workshop.state.active_task is not None:
+        if (
+            self._dialogue_engine is not None
+            and self._workshop.state.active_task is not None
+        ):
             try:
                 # Use the dialogue engine for richer dialogue
                 # Create a phantom listener (workshop itself)
-                context = WorkshopDialogueContext(
+                # TODO: Wire up context to dialogue engine when LLM integration is added
+                _context = WorkshopDialogueContext(
                     task=self._workshop.state.active_task,
                     phase=self.current_phase,
                     builder=builder,
@@ -1500,6 +1646,7 @@ class WorkshopFlux:
                 )
                 # For now, just use template - LLM integration can be added later
                 # This avoids import cycle issues
+                del _context  # Silence unused variable until wired up
                 self._metrics.dialogue_tokens += 0
             except Exception:
                 pass  # Graceful degradation
@@ -1507,13 +1654,16 @@ class WorkshopFlux:
         return dialogue
 
     def reset(self) -> None:
-        """Reset flux to initial state."""
+        """Reset flux to initial state (N-Phase session is preserved, not reset)."""
         self._is_running = False
         self._step_count = 0
         self._phase_step_count = 0
         self._recent_events.clear()
+        self._last_nphase = None
         self._metrics = WorkshopMetrics()
         self._workshop.reset()
+        # Note: N-Phase session is NOT reset here—it persists across workshop resets
+        # to allow session continuity. Create new flux with new session if full reset needed.
 
 
 # =============================================================================

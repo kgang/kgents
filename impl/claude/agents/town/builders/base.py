@@ -51,6 +51,7 @@ class Builder(Citizen):
     - specialty: Their preferred BuilderPhase (where they excel)
     - voice_patterns: Characteristic speech patterns
     - _builder_phase: Current phase in the builder polynomial
+    - _nphase_context: Optional N-Phase context (Wave 4)
 
     The builder has two state machines:
     1. CitizenPolynomial: Life phases (IDLE, WORKING, SOCIALIZING, etc.)
@@ -58,11 +59,17 @@ class Builder(Citizen):
 
     These operate in parallel—a builder can be SOCIALIZING (citizen)
     while in DESIGNING (builder) phase.
+
+    Wave 4 Enhancement:
+        Builders can receive N-Phase context from their containing WorkshopFlux.
+        This allows builders to adapt behavior based on whether we're in
+        UNDERSTAND, ACT, or REFLECT phase.
     """
 
     specialty: BuilderPhase = field(default=BuilderPhase.IDLE)
     voice_patterns: tuple[str, ...] = field(default_factory=tuple)
     _builder_phase: BuilderPhase = field(default=BuilderPhase.IDLE, repr=False)
+    _nphase_context: dict[str, Any] = field(default_factory=dict, repr=False)
 
     @property
     def builder_phase(self) -> BuilderPhase:
@@ -78,6 +85,61 @@ class Builder(Citizen):
     def specialty_name(self) -> str:
         """Human-readable specialty name."""
         return self.specialty.name.lower().capitalize()
+
+    @property
+    def nphase_context(self) -> dict[str, Any]:
+        """
+        Current N-Phase context (Wave 4).
+
+        Returns dict with keys:
+        - phase: Current N-Phase name (UNDERSTAND, ACT, REFLECT) or None
+        - cycle_count: How many U→A→R cycles completed
+        - session_id: Session ID if available
+
+        Empty dict if no context set.
+        """
+        return self._nphase_context
+
+    def set_nphase_context(
+        self,
+        phase: str | None = None,
+        cycle_count: int = 0,
+        session_id: str | None = None,
+    ) -> None:
+        """
+        Set N-Phase context for this builder (Wave 4).
+
+        Called by WorkshopFlux to inject N-Phase state.
+
+        Args:
+            phase: Current N-Phase name (UNDERSTAND, ACT, REFLECT)
+            cycle_count: How many U→A→R cycles completed
+            session_id: Session ID for tracking
+        """
+        self._nphase_context = {
+            "phase": phase,
+            "cycle_count": cycle_count,
+            "session_id": session_id,
+        }
+
+    def clear_nphase_context(self) -> None:
+        """Clear N-Phase context."""
+        self._nphase_context = {}
+
+    @property
+    def is_understanding(self) -> bool:
+        """Check if currently in UNDERSTAND phase (gathering context)."""
+        return self._nphase_context.get("phase") == "UNDERSTAND"
+
+    @property
+    def is_acting(self) -> bool:
+        """Check if currently in ACT phase (doing work)."""
+        return self._nphase_context.get("phase") == "ACT"
+
+    @property
+    def is_reflecting(self) -> bool:
+        """Check if currently in REFLECT phase (synthesizing)."""
+        return self._nphase_context.get("phase") == "REFLECT"
 
     def builder_transition(self, input: Any) -> BuilderOutput:
         """
@@ -130,9 +192,7 @@ class Builder(Citizen):
         """Continue current work."""
         return self.builder_transition(BuilderInput.continue_work(note))
 
-    def complete_work(
-        self, artifact: Any = None, summary: str = ""
-    ) -> BuilderOutput:
+    def complete_work(self, artifact: Any = None, summary: str = "") -> BuilderOutput:
         """Complete current work and return to IDLE."""
         return self.builder_transition(BuilderInput.complete(artifact, summary))
 
@@ -163,6 +223,9 @@ class Builder(Citizen):
                 "specialty": self.specialty.name,
                 "is_in_specialty": self.is_in_specialty,
             }
+            # Add N-Phase context if set (Wave 4)
+            if self._nphase_context:
+                base["builder"]["nphase"] = self._nphase_context
 
         if lod >= 2:
             base["builder"]["voice_patterns"] = list(self.voice_patterns[:3])
@@ -211,6 +274,7 @@ class Builder(Citizen):
         if cosmo is None:
             # Fall back to parent cosmotechnics lookup
             from agents.town.citizen import GATHERING
+
             cosmo = GATHERING
 
         builder = cls(
@@ -234,9 +298,7 @@ class Builder(Citizen):
         return builder
 
     def __repr__(self) -> str:
-        return (
-            f"Builder({self.name}, {self.archetype}, {self._builder_phase.name})"
-        )
+        return f"Builder({self.name}, {self.archetype}, {self._builder_phase.name})"
 
 
 # =============================================================================

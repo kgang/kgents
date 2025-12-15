@@ -1,88 +1,81 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
+#!/bin/sh
 # =============================================================================
-# PRE-PUSH HOOK
+# PRE-PUSH HOOK (Unified: Python + JS)
 # =============================================================================
 #
-# Philosophy: Thorough validation before sharing code
-#
-# What runs:
-#   1. Full TypeScript type check
-#   2. Unit tests (fast, ~5 seconds)
-#   3. Build verification (ensures it compiles)
-#
-# What doesn't run (too slow for push):
-#   - E2E tests (run in CI)
-#   - Full coverage report (run in CI)
-#
-# Timing:
-#   - Type check: ~3 seconds
-#   - Unit tests: ~5 seconds
-#   - Build: ~10 seconds
-#   - Total: ~20 seconds
-#
-# To bypass (emergency only):
-#   git push --no-verify
+# Runs both:
+#   1. Python checks (heavy tests) via scripts/hooks/pre-push
+#   2. JS/TS checks (typecheck, tests, build) on web directory
 #
 # =============================================================================
 
-echo "🚀 Running pre-push checks..."
-echo ""
+# Get repo root (using git to be reliable regardless of how hook is invoked)
+REPO_ROOT="$(git rev-parse --show-toplevel)"
 
-# Track if any check fails
+# -----------------------------------------------------------------------------
+# 1. Run Python pre-push hook
+# -----------------------------------------------------------------------------
+PYTHON_HOOK="$REPO_ROOT/scripts/hooks/pre-push"
+if [ -f "$PYTHON_HOOK" ]; then
+    echo "=== Python checks ==="
+    "$PYTHON_HOOK" "$@"
+    PYTHON_EXIT=$?
+    if [ $PYTHON_EXIT -ne 0 ]; then
+        exit $PYTHON_EXIT
+    fi
+    echo ""
+fi
+
+# -----------------------------------------------------------------------------
+# 2. Run JS/TS pre-push checks
+# -----------------------------------------------------------------------------
+echo "=== JS/TS checks ==="
+
+# Change to web directory
+cd "$REPO_ROOT/impl/claude/web" || exit 1
+
 FAILED=0
 
-# -----------------------------------------------------------------------------
-# 1. TypeScript Type Check
-# -----------------------------------------------------------------------------
-echo "📝 Type checking..."
-npm run typecheck
+# Type check
+echo "TypeScript type check..."
+npm run typecheck --silent
 if [ $? -ne 0 ]; then
-  echo "❌ Type check failed."
-  FAILED=1
+    echo "Type check failed."
+    FAILED=1
 else
-  echo "✅ Type check passed."
+    echo "Type check passed."
 fi
-echo ""
 
-# -----------------------------------------------------------------------------
-# 2. Unit Tests
-# -----------------------------------------------------------------------------
-echo "🧪 Running unit tests..."
+# Unit tests
+echo ""
+echo "Unit tests..."
 npm test -- --run --reporter=basic
 if [ $? -ne 0 ]; then
-  echo "❌ Unit tests failed."
-  FAILED=1
-else
-  echo "✅ Unit tests passed."
-fi
-echo ""
-
-# -----------------------------------------------------------------------------
-# 3. Build Verification (only if tests pass)
-# -----------------------------------------------------------------------------
-if [ $FAILED -eq 0 ]; then
-  echo "🏗️  Verifying build..."
-  npm run build
-  if [ $? -ne 0 ]; then
-    echo "❌ Build failed."
+    echo "Unit tests failed."
     FAILED=1
-  else
-    echo "✅ Build succeeded."
-  fi
-  echo ""
+else
+    echo "Unit tests passed."
 fi
 
-# -----------------------------------------------------------------------------
-# Final Result
-# -----------------------------------------------------------------------------
+# Build (only if other checks pass)
+if [ $FAILED -eq 0 ]; then
+    echo ""
+    echo "Build verification..."
+    npm run build --silent
+    if [ $? -ne 0 ]; then
+        echo "Build failed."
+        FAILED=1
+    else
+        echo "Build passed."
+    fi
+fi
+
 if [ $FAILED -ne 0 ]; then
-  echo "❌ Pre-push checks failed."
-  echo ""
-  echo "Fix the errors above, then try again."
-  echo "To bypass (not recommended): git push --no-verify"
-  exit 1
+    echo ""
+    echo "JS/TS pre-push checks failed."
+    echo "To bypass (not recommended): git push --no-verify"
+    exit 1
 fi
 
-echo "✅ All pre-push checks passed. Pushing..."
+echo ""
+echo "All checks passed."
