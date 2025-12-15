@@ -176,7 +176,10 @@ class TestCitizenDetail:
 
     def test_get_citizen_lod_3(self, client: TestClient, town_id: str) -> None:
         """GET /v1/town/{id}/citizen/{name}?lod=3 should include eigenvectors."""
-        response = client.get(f"/v1/town/{town_id}/citizen/Alice?lod=3")
+        # Use FOUNDER tier user who has LOD 3-5 access
+        response = client.get(
+            f"/v1/town/{town_id}/citizen/Alice?lod=3&user_id=founder_test"
+        )
         assert response.status_code == 200
 
         data = response.json()
@@ -189,7 +192,10 @@ class TestCitizenDetail:
 
     def test_get_citizen_lod_5(self, client: TestClient, town_id: str) -> None:
         """GET /v1/town/{id}/citizen/{name}?lod=5 should include opacity."""
-        response = client.get(f"/v1/town/{town_id}/citizen/Alice?lod=5")
+        # Use FOUNDER tier user who has LOD 3-5 access
+        response = client.get(
+            f"/v1/town/{town_id}/citizen/Alice?lod=5&user_id=founder_test"
+        )
         assert response.status_code == 200
 
         data = response.json()

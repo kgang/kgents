@@ -1,0 +1,114 @@
+# Agent Town Service Deployment
+#
+# Standalone microservice for live Agent Town orchestration.
+#
+# Apply: kubectl apply -k infra/k8s/manifests/town/
+# See: plans/velvety-mapping-puddle.md Phase 5
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: town-service
+  namespace: kgents-triad
+  labels:
+    app.kubernetes.io/name: town-service
+    app.kubernetes.io/component: simulation
+    app.kubernetes.io/part-of: kgents
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: town-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: town-service
+        app.kubernetes.io/component: simulation
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8001"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: default
+      terminationGracePeriodSeconds: 30
+
+      containers:
+        - name: town
+          image: kgents/town:latest
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - name: http
+              containerPort: 8001
+              protocol: TCP
+
+          env:
+            # LLM Gateway
+            - name: MORPHEUS_URL
+              value: "http://morpheus-gateway.kgents.svc.cluster.local:8080/v1"
+
+            # Redis for budget persistence
+            - name: REDIS_URL
+              value: "redis://triad-redis.kgents-triad.svc.cluster.local:6379"
+
+            # NATS for event streaming
+            - name: NATS_SERVERS
+              value: "nats://nats.kgents-agents.svc.cluster.local:4222"
+
+            # OpenTelemetry
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://otel-collector.kgents-observability.svc.cluster.local:4317"
+            - name: OTEL_SERVICE_NAME
+              value: "town-service"
+
+            # Logging
+            - name: LOG_LEVEL
+              value: "INFO"
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8001
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8001
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+
+      volumes:
+        - name: tmp
+          emptyDir: {}

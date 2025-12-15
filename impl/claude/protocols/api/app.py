@@ -122,6 +122,13 @@ def create_app(
     if sessions_router is not None:
         app.include_router(sessions_router)
 
+    # AGENTESE Universal Protocol (AUP) endpoints
+    from .aup import create_aup_router
+
+    aup_router = create_aup_router()
+    if aup_router is not None:
+        app.include_router(aup_router)
+
     # Webhook endpoints (Stripe → OpenMeter bridge)
     from .webhooks import create_webhooks_router
 
@@ -249,6 +256,15 @@ def create_app(
                     "invoke": "/v1/agentese/invoke",
                     "resolve": "/v1/agentese/resolve",
                     "affordances": "/v1/agentese/affordances",
+                },
+                "aup": {
+                    "manifest": "/api/v1/{context}/{holon}/manifest",
+                    "invoke": "/api/v1/{context}/{holon}/{aspect}",
+                    "affordances": "/api/v1/{context}/{holon}/affordances",
+                    "compose": "/api/v1/compose",
+                    "stream": "/api/v1/{context}/{holon}/{aspect}/stream",
+                    "resolve": "/api/v1/{context}/{holon}/resolve",
+                    "verify_laws": "/api/v1/verify-laws",
                 },
                 "kgent": {
                     "sessions": "/v1/kgent/sessions",

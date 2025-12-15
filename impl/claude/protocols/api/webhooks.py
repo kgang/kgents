@@ -9,6 +9,10 @@ Security:
 - Idempotency handling to prevent duplicate processing
 - Non-blocking processing via asyncio.create_task
 
+Integration:
+- Updates BudgetStore on payment events (unified-v2.md Track C)
+- Forwards events to OpenMeter for billing reconciliation
+
 Usage:
     from protocols.api.webhooks import create_webhooks_router
 
@@ -20,7 +24,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 # Graceful FastAPI import
 try:
@@ -35,6 +39,33 @@ except ImportError:
     Request = None  # type: ignore[misc, assignment]
 
 logger = logging.getLogger(__name__)
+
+# BudgetStore import for payment → credits wiring
+try:
+    from agents.town.budget_store import BudgetStore, InMemoryBudgetStore
+
+    HAS_BUDGET_STORE = True
+except ImportError:
+    HAS_BUDGET_STORE = False
+    BudgetStore = None  # type: ignore[misc, assignment]
+    InMemoryBudgetStore = None  # type: ignore[misc, assignment]
+
+# Payment handlers import
+try:
+    from protocols.api.payments import (
+        handle_payment_succeeded,
+        handle_subscription_created,
+        handle_subscription_deleted,
+        handle_subscription_updated,
+    )
+
+    HAS_PAYMENT_HANDLERS = True
+except ImportError:
+    HAS_PAYMENT_HANDLERS = False
+    handle_payment_succeeded = None  # type: ignore[assignment]
+    handle_subscription_created = None  # type: ignore[assignment]
+    handle_subscription_deleted = None  # type: ignore[assignment]
+    handle_subscription_updated = None  # type: ignore[assignment]
 
 # Stripe webhook handling
 try:
@@ -68,8 +99,59 @@ except ImportError:
     HAS_SAAS_CONFIG = False
     get_saas_clients = None  # type: ignore[assignment]
 
-# Singleton bridge instance
+# Singleton instances
 _stripe_bridge: Optional["StripeToOpenMeterBridge"] = None
+_budget_store: Optional["BudgetStore"] = None
+_telegram_notifier: Optional[Any] = None  # TelegramNotifier (lazy import)
+
+
+def _get_budget_store() -> Optional["BudgetStore"]:
+    """Get or create BudgetStore singleton."""
+    global _budget_store
+
+    if _budget_store is not None:
+        return _budget_store
+
+    if not HAS_BUDGET_STORE:
+        logger.warning("BudgetStore not available, payment → credits disabled")
+        return None
+
+    _budget_store = InMemoryBudgetStore()
+    logger.info("BudgetStore initialized for webhook processing")
+    return _budget_store
+
+
+def set_budget_store(store: "BudgetStore") -> None:
+    """Set the BudgetStore instance (for dependency injection)."""
+    global _budget_store
+    _budget_store = store
+
+
+def _get_telegram_notifier() -> Optional[Any]:
+    """Get or create TelegramNotifier singleton."""
+    global _telegram_notifier
+
+    if _telegram_notifier is not None:
+        return _telegram_notifier
+
+    try:
+        from agents.town.telegram_notifier import get_telegram_notifier
+
+        _telegram_notifier = get_telegram_notifier()
+        if _telegram_notifier.is_enabled:
+            logger.info("TelegramNotifier initialized for webhook notifications")
+        else:
+            logger.debug("TelegramNotifier available but not enabled")
+        return _telegram_notifier
+    except ImportError:
+        logger.debug("TelegramNotifier not available")
+        return None
+
+
+def set_telegram_notifier(notifier: Any) -> None:
+    """Set the TelegramNotifier instance (for dependency injection/testing)."""
+    global _telegram_notifier
+    _telegram_notifier = notifier
 
 
 def _get_stripe_bridge() -> Optional["StripeToOpenMeterBridge"]:
@@ -240,16 +322,156 @@ async def _process_stripe_event(
     """
     Process Stripe event asynchronously.
 
-    Handles errors gracefully without affecting webhook response.
+    Handles:
+    1. BudgetStore updates (payment → credits, subscription → tier)
+    2. OpenMeter forwarding (for billing reconciliation)
+
+    Errors are handled gracefully without affecting webhook response.
     """
+    # Process BudgetStore updates
+    await _process_budget_update(event)
+
+    # Forward to OpenMeter
     try:
         processed = await bridge.process_event(event)
         if processed:
-            logger.debug(f"Processed Stripe event: {event.id}")
+            logger.debug(f"Processed Stripe event via OpenMeter: {event.id}")
         else:
-            logger.debug(f"Skipped Stripe event: {event.id}")
+            logger.debug(f"Skipped Stripe event via OpenMeter: {event.id}")
     except Exception as e:
-        logger.error(f"Failed to process Stripe event {event.id}: {e}")
+        logger.error(f"Failed to process Stripe event via OpenMeter {event.id}: {e}")
+
+
+async def _process_budget_update(event: "WebhookEvent") -> None:
+    """
+    Process payment events and update BudgetStore.
+
+    Per unified-v2.md Track C: Wire webhook → BudgetStore.
+    Also sends Telegram notifications for Kent's motivation loop.
+    """
+    if not HAS_PAYMENT_HANDLERS or not HAS_BUDGET_STORE:
+        logger.debug(
+            "Payment handlers or BudgetStore not available, skipping budget update"
+        )
+        return
+
+    budget_store = _get_budget_store()
+    if budget_store is None:
+        return
+
+    # Get Telegram notifier (may be None if not configured)
+    telegram = _get_telegram_notifier()
+
+    event_type = event.type
+    event_data = {"object": event.data}
+
+    try:
+        if event_type == "customer.subscription.created":
+            result = handle_subscription_created(event_data)
+            if result.get("user_id"):
+                await budget_store.get_or_create(
+                    result["user_id"], result.get("tier", "RESIDENT")
+                )
+                await budget_store.update_subscription(
+                    result["user_id"],
+                    result["tier"],
+                    result["renews_at"],
+                )
+                logger.info(
+                    f"BudgetStore: Created/updated subscription for {result['user_id']} → {result['tier']}"
+                )
+
+                # Kent's motivation loop: Telegram notification
+                if telegram:
+                    tier_prices = {"RESIDENT": 9.99, "CITIZEN": 29.99, "FOUNDER": 99.99}
+                    amount = tier_prices.get(result["tier"], 0.0)
+                    await telegram.notify_subscription(
+                        user_id=result["user_id"],
+                        tier=result["tier"],
+                        renews_at=result["renews_at"],
+                    )
+                    if amount > 0:
+                        await telegram.notify_payment(
+                            user_id=result["user_id"],
+                            amount=amount,
+                            tier=result["tier"],
+                        )
+
+        elif event_type == "customer.subscription.updated":
+            result = handle_subscription_updated(event_data)
+            if result.get("user_id"):
+                # Handle status changes (e.g., cancel, pause)
+                if result.get("status") in ("canceled", "unpaid"):
+                    await budget_store.update_subscription(
+                        result["user_id"],
+                        "TOURIST",
+                        result["renews_at"],
+                    )
+                    logger.info(
+                        f"BudgetStore: Downgraded {result['user_id']} → TOURIST (status={result['status']})"
+                    )
+                else:
+                    await budget_store.update_subscription(
+                        result["user_id"],
+                        result["tier"],
+                        result["renews_at"],
+                    )
+                    logger.info(
+                        f"BudgetStore: Updated subscription for {result['user_id']} → {result['tier']}"
+                    )
+
+        elif event_type == "customer.subscription.deleted":
+            result = handle_subscription_deleted(event_data)
+            if result.get("user_id"):
+                # Downgrade to TOURIST on subscription cancellation
+                from datetime import datetime
+
+                await budget_store.update_subscription(
+                    result["user_id"],
+                    "TOURIST",
+                    datetime.now(),
+                )
+                logger.info(
+                    f"BudgetStore: Subscription deleted, downgraded {result['user_id']} → TOURIST"
+                )
+
+                # Telegram notification for cancellation (awareness, not celebration)
+                if telegram:
+                    await telegram.notify_cancellation(
+                        user_id=result["user_id"],
+                        tier=result.get("tier", "UNKNOWN"),
+                    )
+
+        elif event_type == "payment_intent.succeeded":
+            result = handle_payment_succeeded(event_data)
+            if result.get("user_id") and result.get("credits", 0) > 0:
+                # Add credits from credit pack purchase
+                await budget_store.get_or_create(
+                    result["user_id"]
+                )  # Ensure user exists
+                await budget_store.add_credits(result["user_id"], result["credits"])
+                logger.info(
+                    f"BudgetStore: Added {result['credits']} credits to {result['user_id']} (pack={result.get('pack')})"
+                )
+
+                # Kent's motivation loop: Credit pack sold!
+                if telegram:
+                    pack_prices = {
+                        "STARTER": 5.00,
+                        "EXPLORER": 20.00,
+                        "ADVENTURER": 60.00,
+                    }
+                    amount = pack_prices.get(result.get("pack", ""), 0.0)
+                    await telegram.notify_payment(
+                        user_id=result["user_id"],
+                        amount=amount,
+                        tier="CREDITS",
+                        pack=result.get("pack"),
+                        credits=result["credits"],
+                    )
+
+    except Exception as e:
+        logger.error(f"Failed to update BudgetStore for {event_type}: {e}")
 
 
 def reset_stripe_bridge() -> None:
@@ -260,3 +482,34 @@ def reset_stripe_bridge() -> None:
     """
     global _stripe_bridge
     _stripe_bridge = None
+
+
+def reset_budget_store() -> None:
+    """
+    Reset BudgetStore singleton.
+
+    For testing only.
+    """
+    global _budget_store
+    _budget_store = None
+
+
+def reset_telegram_notifier() -> None:
+    """
+    Reset TelegramNotifier singleton.
+
+    For testing only.
+    """
+    global _telegram_notifier
+    _telegram_notifier = None
+
+
+def reset_all() -> None:
+    """
+    Reset all singletons.
+
+    For testing only.
+    """
+    reset_stripe_bridge()
+    reset_budget_store()
+    reset_telegram_notifier()
