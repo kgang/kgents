@@ -1,4 +1,4 @@
-# Forest Health: 2025-12-14
+# Forest Health: 2025-12-15
 
 > *"A single mighty oak casts too much shadow. We cultivate a forest where many trees grow."*
 
@@ -106,12 +106,12 @@ Accursed Share (5%):    agents/t-gent (rotation)
 
 | Metric | Value |
 |--------|-------|
-| Test count | 16,892 |
+| Test count | 17,211 |
 | Active trees | 23 |
 | Dormant trees | 19 |
 | Blocked | 0 |
 | Complete | 11 |
-| Archived this session | 21 (10 plans + 11 reclassified) |
+| Archived this session | 0 |
 | Accursed share next | agents/t-gent |
 
 ---
@@ -239,7 +239,7 @@ ls -la plans/_epilogues/
 
 ## Last Session Epilogue
 
-*Latest: `2025-12-14-agent-town-phase5-reflect.md`*
+*Latest: `2025-12-15-chief-reconciliation.md`*
 
 ---
 

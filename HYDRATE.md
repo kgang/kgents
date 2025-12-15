@@ -62,13 +62,15 @@ SENSE → ACT → REFLECT → (loop)
 
 ## Status
 
-**Tests**: 16,366 | **Mypy**: 0 errors (handlers fixed) | **Branch**: `main`
+**Tests**: 17,211 | **Mypy**: 0 errors | **Branch**: `main`
 
 | Tree | Progress | Notes |
 |------|----------|-------|
-| **saas** | 98% | Phase 9 COMPLETE. Soak tests, blue/green, chaos baseline. |
-| **agentese-repl** | 90% | Wave 7 COMPLETE. Mastery tier, 18 skills, celebration. |
-| **agent-town** | 85% | Phase 5 COMPLETE (87 viz tests). Scatter, SSE, NATS done. |
+| **visionary-ux** | 100% ✓ | Wave 3 COMPLETE. 1708 reactive tests; LogosCell, to_marimo(), to_textual(). |
+| **saas** | 100% ✓ | Phase 11 COMPLETE. DR foundation shipped; S3 awaits funding. |
+| **agentese-repl** | 100% ✓ | Wave 7 COMPLETE. Mastery tier, 18 skills, celebration. |
+| **agent-town** | 100% ✓ | Phase 7 TEST COMPLETE. 696 tests; DialogueEngine + live integration. |
+| **aup** | 100% ✓ | Implement COMPLETE. 80 tests; bridge, router, SSE. |
 | k-gent | 97% | Deferred: Fractal, Holographic |
 | memory | 100% ✓ | Phase 7 complete. Substrate + crystallization wired. |
 | turn-gents | 100% ✓ | 187 tests |
