@@ -52,7 +52,7 @@ IMPLEMENT → QA → TEST → EDUCATE → MEASURE → REFLECT
 
 ---
 
-## The Seven Properties
+## The Eight Properties
 
 1. **Self-Similar** — Each phase is a hologram of the full cycle
 2. **Category-Theoretic** — Phases compose: `(A >> B) >> C ≡ A >> (B >> C)`
@@ -61,6 +61,23 @@ IMPLEMENT → QA → TEST → EDUCATE → MEASURE → REFLECT
 5. **Auto-Continuative** — Each phase generates the next prompt
 6. **Accountable** — Skipped phases leave debt; explicit declaration required
 7. **Archiving-First** — Plans are scaffolding; QA/TEST/REFLECT gates must archive or upgrade
+8. **Elastic** — The cycle stretches, compresses, branches, and recombines based on situational dynamics
+
+### The Elasticity Imperative
+
+> *"The river does not ask permission to fork around a boulder."*
+
+The N-Phase Cycle is an **elastic tree generator**, not a fixed sequence:
+
+| Signal | Response | Signifier |
+|--------|----------|-----------|
+| Complexity spike | Expand (3→11) | `⤳[EXPAND:phase]` |
+| Momentum gain | Compress (11→3) | `⤳[COMPRESS:phases]` |
+| Independent scope | Branch | `⤳[BRANCH:name]` |
+| Tracks converge | Join | `⤳[JOIN:tracks]` |
+| Serendipity | Lean in | `void.entropy.sip` → decide |
+
+At every transition, evaluate: **Should I expand, compress, branch, join, or continue linearly?**
 
 ### Minimal phase artifacts (checklist)
 
@@ -235,6 +252,7 @@ See `branching-protocol.md` for full protocol on surfacing, classifying, and emi
 | `branching-protocol.md` | Surface and classify new trees at transitions |
 | `metatheory.md` | Theoretical grounding (OODA, PDCA, Argyris) |
 | `phase-accountability.md` | Liability for skipped phases |
+| `scientific-audit.md` | Hypotheses and experiments for effectiveness validation |
 
 ---
 

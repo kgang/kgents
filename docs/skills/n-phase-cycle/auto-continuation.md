@@ -85,15 +85,36 @@ The missing piece that makes continuation **active** rather than passive:
 
 | Signifier | Unicode | Meaning |
 |-----------|---------|---------|
-| `⟿` | U+27FF | Continue to next phase (positive feedback) |
-| `⟂` | U+27C2 | Halt, await human input (negative feedback) |
+| `⟿` | U+27FF | Continue to next phase (linear) |
+| `⟂` | U+27C2 | Halt, await human input |
+| `⤳` | U+2933 | Elastic tree operation (branch/join/compress/expand) |
 
 ### Syntax
 
 ```
-⟿[PHASE] payload        # Auto-continue to PHASE
-⟂[REASON] payload       # Halt with REASON
+⟿[PHASE] payload                    # Auto-continue to PHASE (linear)
+⟂[REASON] payload                   # Halt with REASON
+⤳[BRANCH:name] payload              # Fork new parallel track
+⤳[JOIN:tracks] payload              # Merge tracks at sync point
+⤳[COMPRESS:phases] payload          # Condense phases (11→3)
+⤳[EXPAND:phase] payload             # Expand phase (3→11)
 ```
+
+### The Elasticity Decision
+
+At every phase transition, before emitting a signifier, evaluate:
+
+```
+Should I:
+  EXPAND?   → Complexity > threshold, uncertainty high, or serendipity reveals depth
+  COMPRESS? → Momentum > 80%, pattern known, or entropy depleted
+  BRANCH?   → Independent tracks discovered, or serendipity reveals opportunity
+  JOIN?     → Parallel tracks converging, ready to reconcile
+  CONTINUE? → None of the above (default linear ⟿)
+  HALT?     → Blocked, human decision needed, or budget exhausted (⟂)
+```
+
+This decision is **situationally emergent**, not pre-planned
 
 ### The Protocol
 

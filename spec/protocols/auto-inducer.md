@@ -42,24 +42,118 @@ Where:
 
 ---
 
-## The Two Signifiers
+## The Three Signifiers
 
 | Signifier | Unicode | Name | Meaning |
 |-----------|---------|------|---------|
-| `⟿` | U+27FF | LONG RIGHTWARDS SQUIGGLE ARROW | Continue to next phase |
+| `⟿` | U+27FF | LONG RIGHTWARDS SQUIGGLE ARROW | Continue to next phase (linear) |
 | `⟂` | U+27C2 | PERPENDICULAR | Halt, await human input |
+| `⤳` | U+2933 | WAVE ARROW POINTING DOWN THEN RIGHT | Branch to parallel track (elastic) |
 
 ### Syntax
 
 ```
-⟿[PHASE] payload
-⟂[REASON] payload (optional)
+⟿[PHASE] payload                    # Linear continuation
+⟂[REASON] payload (optional)        # Halt
+⤳[BRANCH:name] payload              # Fork new track
+⤳[JOIN:tracks] payload              # Merge tracks
+⤳[COMPRESS:phases] payload          # Condense phases
+⤳[EXPAND:phase] payload             # Expand into sub-phases
 ```
 
 Where:
 - `PHASE` is one of: `PLAN`, `RESEARCH`, `DEVELOP`, `STRATEGIZE`, `CROSS-SYNERGIZE`, `IMPLEMENT`, `QA`, `TEST`, `EDUCATE`, `MEASURE`, `REFLECT`, `META-RE-METABOLIZE`, `DETACH`
 - `REASON` is a kebab-case tag: `awaiting_human`, `cycle_complete`, `blocked`, `entropy_depleted`, `runaway_loop`, `human_interrupt`
+- `BRANCH:name` creates a named parallel track
+- `JOIN:tracks` merges specified tracks at a sync point
+- `COMPRESS:phases` condenses phase sequence to single phase
+- `EXPAND:phase` expands single phase to detailed sequence
 - `payload` follows the /hydrate micro-prompt format
+
+## The Elasticity Protocol
+
+> *"The cycle bends without breaking. The signifiers capture the bend."*
+
+The third signifier (`⤳`) enables **elastic tree mutations** at phase boundaries:
+
+### Branch (Fork)
+
+```
+⤳[BRANCH:feature-a]
+/hydrate
+handles: parent=${current_track}; scope=${branch_scope}; ledger={BRANCH:touched}
+mission: ${branch_mission}
+exit: ${branch_criteria}; sync_point=${join_phase}
+```
+
+Creates a parallel track that can execute independently. The parent track continues; the branch runs in parallel (or is deferred to bounty).
+
+### Join (Merge)
+
+```
+⤳[JOIN:feature-a,feature-b]
+/hydrate
+handles: tracks=[${track_a}, ${track_b}]; conflicts=${conflicts}; ledger={JOIN:touched}
+mission: reconcile artifacts; verify coherence
+exit: merged_artifacts; continuation → ${next_phase}
+```
+
+Merges parallel tracks at a sync point. Conflicts must be resolved before proceeding.
+
+### Compress
+
+```
+⤳[COMPRESS:DEVELOP,STRATEGIZE,CROSS-SYNERGIZE]
+/hydrate
+handles: phases=[DEVELOP,STRATEGIZE,CROSS-SYNERGIZE]; reason=${compression_reason}; ledger={COMPRESS:touched}
+mission: execute condensed SENSE phase
+exit: design + strategy + composition in single pass; continuation → IMPLEMENT
+```
+
+Condenses multiple phases into one when ceremony is not warranted.
+
+### Expand
+
+```
+⤳[EXPAND:SENSE]
+/hydrate
+handles: phase=SENSE; reason=${expansion_reason}; ledger={EXPAND:touched}
+mission: expand into full PLAN → RESEARCH → DEVELOP → STRATEGIZE → CROSS-SYNERGIZE sequence
+exit: full sequence artifacts; continuation based on expanded phase
+```
+
+Expands a condensed phase when complexity requires detail.
+
+### Serendipity Signal
+
+At each transition, before emitting the signifier, evaluate:
+
+```python
+def choose_signifier(phase_output, entropy_budget, situational_signals):
+    # Sample from entropy budget
+    serendipity = void.entropy.sip(amount=0.05)
+
+    # Detect expansion signal
+    if complexity(phase_output) > threshold or serendipity.reveals_depth:
+        return "⤳[EXPAND:next_phase]"
+
+    # Detect compression signal
+    if momentum > 0.8 and pattern_known:
+        return "⤳[COMPRESS:remaining_phases]"
+
+    # Detect branch signal
+    if independent_tracks_discovered or serendipity.reveals_opportunity:
+        return "⤳[BRANCH:track_name]"
+
+    # Detect halt signal
+    if blocked or entropy_depleted or human_decision_needed:
+        return "⟂[reason]"
+
+    # Default: linear continuation
+    return "⟿[next_phase]"
+```
+
+The decision is **situationally emergent**, not pre-determined
 
 ---
 
