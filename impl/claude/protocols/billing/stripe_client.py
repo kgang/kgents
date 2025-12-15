@@ -10,7 +10,7 @@ from typing import Any, Optional, Protocol
 
 # Try to import stripe, but don't fail if it's not installed
 try:
-    import stripe  # type: ignore[import-not-found]
+    import stripe
     from stripe import StripeError
 
     STRIPE_AVAILABLE = True

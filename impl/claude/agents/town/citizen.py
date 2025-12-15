@@ -34,6 +34,14 @@ from agents.town.polynomial import (
     CitizenOutput,
     CitizenPhase,
 )
+from protocols.nphase.operad import (
+    NPhase,
+    NPhaseState,
+    is_valid_transition,
+)
+from protocols.nphase.operad import (
+    next_phase as nphase_next,
+)
 
 # =============================================================================
 # Eigenvectors (Soul Fingerprint)
@@ -43,7 +51,7 @@ from agents.town.polynomial import (
 @dataclass
 class Eigenvectors:
     """
-    The citizen's soul eigenvectors.
+    The citizen's soul eigenvectors (7D personality space).
 
     These are not fixed traits but shifting interpretations.
     Like the "meaning" of a museum artifact, they change
@@ -51,6 +59,8 @@ class Eigenvectors:
 
     From Hui: Each citizen embodies a different cosmotechnics—
     a different relationship between cosmos (meaning) and technics (action).
+
+    Phase 4: Extended from 5D to 7D (added resilience, ambition).
     """
 
     warmth: float = 0.5  # 0 = cold, 1 = warm
@@ -58,6 +68,9 @@ class Eigenvectors:
     trust: float = 0.5  # 0 = suspicious, 1 = trusting
     creativity: float = 0.5  # 0 = conventional, 1 = inventive
     patience: float = 0.5  # 0 = impatient, 1 = patient
+    # Phase 4 additions
+    resilience: float = 0.5  # 0 = fragile, 1 = antifragile
+    ambition: float = 0.5  # 0 = content, 1 = driven
 
     def __post_init__(self) -> None:
         """Clamp values to [0, 1]."""
@@ -66,6 +79,8 @@ class Eigenvectors:
         self.trust = max(0.0, min(1.0, self.trust))
         self.creativity = max(0.0, min(1.0, self.creativity))
         self.patience = max(0.0, min(1.0, self.patience))
+        self.resilience = max(0.0, min(1.0, self.resilience))
+        self.ambition = max(0.0, min(1.0, self.ambition))
 
     def to_dict(self) -> dict[str, float]:
         """Convert to dictionary."""
@@ -75,6 +90,8 @@ class Eigenvectors:
             "trust": self.trust,
             "creativity": self.creativity,
             "patience": self.patience,
+            "resilience": self.resilience,
+            "ambition": self.ambition,
         }
 
     @classmethod
@@ -86,7 +103,87 @@ class Eigenvectors:
             trust=data.get("trust", 0.5),
             creativity=data.get("creativity", 0.5),
             patience=data.get("patience", 0.5),
+            resilience=data.get("resilience", 0.5),
+            ambition=data.get("ambition", 0.5),
         )
+
+    def drift(self, other: "Eigenvectors") -> float:
+        """
+        Calculate L2 distance (drift) between eigenvector spaces.
+
+        Metric space laws preserved:
+        - L1: drift(x, x) = 0 (identity)
+        - L2: drift(x, y) = drift(y, x) (symmetry)
+        - L3: drift(x, z) <= drift(x, y) + drift(y, z) (triangle)
+        """
+        sum_squares = (
+            (self.warmth - other.warmth) ** 2
+            + (self.curiosity - other.curiosity) ** 2
+            + (self.trust - other.trust) ** 2
+            + (self.creativity - other.creativity) ** 2
+            + (self.patience - other.patience) ** 2
+            + (self.resilience - other.resilience) ** 2
+            + (self.ambition - other.ambition) ** 2
+        )
+        return float(sum_squares**0.5)
+
+    def similarity(self, other: "Eigenvectors") -> float:
+        """
+        Cosine similarity for coalition formation.
+
+        Returns value in [-1, 1] where 1 = identical direction.
+        """
+        # Convert to vectors
+        v1 = [
+            self.warmth,
+            self.curiosity,
+            self.trust,
+            self.creativity,
+            self.patience,
+            self.resilience,
+            self.ambition,
+        ]
+        v2 = [
+            other.warmth,
+            other.curiosity,
+            other.trust,
+            other.creativity,
+            other.patience,
+            other.resilience,
+            other.ambition,
+        ]
+
+        dot = sum(a * b for a, b in zip(v1, v2))
+        norm1 = sum(a * a for a in v1) ** 0.5
+        norm2 = sum(b * b for b in v2) ** 0.5
+
+        if norm1 == 0 or norm2 == 0:
+            return 0.0
+        return float(dot / (norm1 * norm2))
+
+    def apply_bounded_drift(
+        self, deltas: dict[str, float], max_drift: float = 0.1
+    ) -> "Eigenvectors":
+        """
+        Apply bounded drift to create new eigenvectors.
+
+        Ensures no dimension changes more than max_drift.
+        """
+        new_values = {}
+        for key in [
+            "warmth",
+            "curiosity",
+            "trust",
+            "creativity",
+            "patience",
+            "resilience",
+            "ambition",
+        ]:
+            current = getattr(self, key)
+            delta = deltas.get(key, 0.0)
+            bounded_delta = max(-max_drift, min(max_drift, delta))
+            new_values[key] = max(0.0, min(1.0, current + bounded_delta))
+        return Eigenvectors(**new_values)
 
 
 # =============================================================================
@@ -165,6 +262,42 @@ CULTIVATION = Cosmotechnics(
     opacity_statement="There are gardens I tend in secret.",
 )
 
+# Phase 4 cosmotechnics (5 new archetypes)
+CONSTRUCTION_V2 = Cosmotechnics(
+    name="construction_v2",
+    description="Meaning arises through structured creation",
+    metaphor="Life is architecture",
+    opacity_statement="There are blueprints I draft in solitude.",
+)
+
+EXCHANGE_V2 = Cosmotechnics(
+    name="exchange_v2",
+    description="Meaning arises through fair value exchange",
+    metaphor="Life is negotiation",
+    opacity_statement="There are bargains I make with myself alone.",
+)
+
+RESTORATION = Cosmotechnics(
+    name="restoration",
+    description="Meaning arises through healing and repair",
+    metaphor="Life is mending",
+    opacity_statement="There are wounds I bind in darkness.",
+)
+
+SYNTHESIS_V2 = Cosmotechnics(
+    name="synthesis_v2",
+    description="Meaning arises through knowledge integration",
+    metaphor="Life is discovery",
+    opacity_statement="There are connections I perceive that I cannot share.",
+)
+
+MEMORY_V2 = Cosmotechnics(
+    name="memory_v2",
+    description="Meaning arises through witnessing and recording",
+    metaphor="Life is testimony",
+    opacity_statement="There are histories I carry alone.",
+)
+
 
 # =============================================================================
 # Citizen Entity
@@ -210,6 +343,10 @@ class Citizen:
     # Accursed share: accumulated surplus that must be spent
     accursed_surplus: float = 0.0
 
+    # N-Phase compressed state (SENSE/ACT/REFLECT)
+    nphase_state: NPhaseState = field(default_factory=NPhaseState)
+    nphase_history: list[dict[str, Any]] = field(default_factory=list, repr=False)
+
     def __post_init__(self) -> None:
         """Initialize memory if not provided."""
         if self._memory is None:
@@ -236,6 +373,11 @@ class Citizen:
     def is_available(self) -> bool:
         """Check if citizen is available for interaction."""
         return self._phase != CitizenPhase.RESTING
+
+    @property
+    def nphase_phase(self) -> NPhase:
+        """Current compressed N-Phase state (SENSE/ACT/REFLECT)."""
+        return self.nphase_state.current_phase
 
     def transition(self, input: Any) -> CitizenOutput:
         """
@@ -267,6 +409,48 @@ class Citizen:
     def wake(self) -> CitizenOutput:
         """Wake from rest."""
         return self.transition(CitizenInput.wake())
+
+    def advance_nphase(
+        self,
+        target: NPhase | str | None = None,
+        payload: Any | None = None,
+    ) -> dict[str, Any]:
+        """
+        Advance the citizen's compressed N-Phase state.
+
+        If target is None, advances to the next phase in SENSE→ACT→REFLECT.
+        Validates transitions via operad law (SENSE->ACT->REFLECT->SENSE).
+        """
+        from_phase = self.nphase_state.current_phase
+        if target is None:
+            to_phase = nphase_next(from_phase)
+        elif isinstance(target, NPhase):
+            to_phase = target
+        else:
+            to_phase = NPhase[target.upper()]
+
+        if not is_valid_transition(from_phase, to_phase):
+            raise ValueError(
+                f"Invalid N-Phase transition: {from_phase.name} -> {to_phase.name}"
+            )
+
+        # Track cycles when closing REFLECT → SENSE
+        if from_phase == NPhase.REFLECT and to_phase == NPhase.SENSE:
+            self.nphase_state.cycle_count += 1
+
+        self.nphase_state.current_phase = to_phase
+        self.nphase_state.phase_outputs[to_phase].append(payload)
+
+        record = {
+            "citizen_id": self.id,
+            "from": from_phase.name,
+            "to": to_phase.name,
+            "cycle": self.nphase_state.cycle_count,
+            "payload": payload,
+            "timestamp": datetime.now().isoformat(),
+        }
+        self.nphase_history.append(record)
+        return record
 
     def move_to(self, region: str) -> None:
         """Move to a different region."""
@@ -326,6 +510,10 @@ class Citizen:
             "name": self.name,
             "region": self.region,
             "phase": self._phase.name,
+            "nphase": {
+                "current": self.nphase_state.current_phase.name,
+                "cycle_count": self.nphase_state.cycle_count,
+            },
         }
 
         if lod >= 1:
@@ -339,6 +527,10 @@ class Citizen:
         if lod >= 3:
             base["eigenvectors"] = self.eigenvectors.to_dict()
             base["relationships"] = dict(self.relationships)
+            base["nphase"]["phase_outputs"] = {
+                phase.name: list(outputs)
+                for phase, outputs in self.nphase_state.phase_outputs.items()
+            }
 
         if lod >= 4:
             base["accursed_surplus"] = self.accursed_surplus
@@ -386,6 +578,26 @@ class Citizen:
             "phase": self._phase.name,
             "relationships": dict(self.relationships),
             "accursed_surplus": self.accursed_surplus,
+            "nphase": {
+                "current": self.nphase_state.current_phase.name,
+                "cycle_count": self.nphase_state.cycle_count,
+                "phase_outputs": {
+                    phase.name: list(outputs)
+                    for phase, outputs in self.nphase_state.phase_outputs.items()
+                },
+            },
+        }
+
+    def nphase_ledger(self) -> dict[str, Any]:
+        """Return a JSON-serializable ledger of N-Phase transitions."""
+        return {
+            "current": self.nphase_state.current_phase.name,
+            "cycle_count": self.nphase_state.cycle_count,
+            "history": list(self.nphase_history),
+            "phase_outputs": {
+                phase.name: list(outputs)
+                for phase, outputs in self.nphase_state.phase_outputs.items()
+            },
         }
 
     @classmethod
@@ -401,6 +613,12 @@ class Citizen:
             "memory": MEMORY,
             "exchange": EXCHANGE,
             "cultivation": CULTIVATION,
+            # Phase 4 cosmotechnics
+            "construction_v2": CONSTRUCTION_V2,
+            "exchange_v2": EXCHANGE_V2,
+            "restoration": RESTORATION,
+            "synthesis_v2": SYNTHESIS_V2,
+            "memory_v2": MEMORY_V2,
         }
         cosmo = cosmo_map.get(data.get("cosmotechnics", "gathering"), GATHERING)
 
@@ -423,6 +641,18 @@ class Citizen:
             citizen.relationships = dict(data["relationships"])
         if "accursed_surplus" in data:
             citizen.accursed_surplus = data["accursed_surplus"]
+        if "nphase" in data:
+            nphase_data = data.get("nphase", {})
+            outputs = nphase_data.get("phase_outputs", {})
+            phase_outputs = {
+                phase: list(outputs.get(phase.name, [])) for phase in NPhase
+            }
+            citizen.nphase_state = NPhaseState(
+                current_phase=NPhase[nphase_data.get("current", "SENSE")],
+                cycle_count=int(nphase_data.get("cycle_count", 0)),
+                phase_outputs=phase_outputs,
+            )
+            citizen.nphase_history = list(nphase_data.get("history", []))
 
         return citizen
 
@@ -449,5 +679,11 @@ __all__ = [
     "MEMORY",
     "EXCHANGE",
     "CULTIVATION",
+    # Phase 4 cosmotechnics
+    "CONSTRUCTION_V2",
+    "EXCHANGE_V2",
+    "RESTORATION",
+    "SYNTHESIS_V2",
+    "MEMORY_V2",
     "Citizen",
 ]

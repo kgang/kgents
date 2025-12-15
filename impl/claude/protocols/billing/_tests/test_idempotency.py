@@ -74,6 +74,7 @@ class TestInMemoryIdempotencyStore:
         assert await store.check_and_set("event-3") is True
 
     @pytest.mark.asyncio
+    @pytest.mark.slow
     async def test_cleanup_removes_expired(
         self, store: InMemoryIdempotencyStore
     ) -> None:

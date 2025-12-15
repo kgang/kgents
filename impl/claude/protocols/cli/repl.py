@@ -4,7 +4,30 @@ AGENTESE REPL: Interactive navigation through the five contexts.
 The REPL embodies the verb-first ontology: commands are invocations,
 not queries. Navigation feels like grasping handles in a living world.
 
-Wave 2 Enhancements:
+Version: 1.0.0
+
+Wave 6 Tutorial Mode (v1.0):
+    - Tutorial mode (--tutorial) - guided learning of AGENTESE ontology
+    - Auto-constructing lessons from REPL structure
+    - Progress persistence and resume across sessions
+    - Hot data caching for fast lesson loading
+
+Wave 3 Intelligence Features:
+    - Fuzzy matching for typo correction (rapidfuzz)
+    - LLM suggestions for semantic matches (costs entropy)
+    - Dynamic completion from live Logos registry
+    - Session persistence across restarts
+    - Script mode for non-interactive execution
+    - Command history search (Ctrl+R behavior)
+
+Wave 2.5 Hardening (73 tests):
+    - Edge case handling (unicode, long paths, special chars)
+    - Security audit (shell injection prevention, input validation)
+    - Performance benchmarks (navigation < 5ms, completion < 5ms)
+    - Stress tested (1000+ rapid commands stable)
+    - Input length limits (DoS protection)
+
+Wave 2 Features:
     - Async execution via Logos (proper AGENTESE resolution)
     - Pipeline execution (>> composition actually runs)
     - Observer/Umwelt context switching (/observer command)
@@ -14,6 +37,9 @@ Wave 2 Enhancements:
 Usage:
     kgents -i              # Enter interactive mode
     kgents --interactive   # Same as above
+    kgents -i --restore    # Restore previous session
+    kgents -i --script f   # Run script file non-interactively
+    kgents -i --tutorial   # Start guided tutorial
 
 Design Principles Applied:
     - Liturgical: Commands read like invocations
@@ -21,6 +47,7 @@ Design Principles Applied:
     - Transparent Infrastructure: Always shows what's happening
     - Graceful Degradation: Works even when subsystems are offline
     - Composable: Supports >> operator for path composition
+    - Anticipatory: Fuzzy matching anticipates user intent
 
 Navigation:
     self, world, concept, void, time  # Enter context
@@ -36,6 +63,7 @@ Commands:
     ?                      # Show affordances
     ??                     # Detailed help
     /observer <archetype>  # Switch observer context
+    /history [query]       # Search command history
     help                   # Show help
     exit, quit, q          # Leave REPL
 """
@@ -43,11 +71,39 @@ Commands:
 from __future__ import annotations
 
 import asyncio
+import random
 import readline  # noqa: F401 - imported for side effects (history, editing)
 import sys
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional, Sequence
+
+# Wave 3: Intelligence imports (graceful degradation)
+try:
+    from .repl_fuzzy import FuzzyMatcher, LLMSuggester, is_fuzzy_available
+
+    FUZZY_AVAILABLE = is_fuzzy_available()
+except ImportError:
+    FUZZY_AVAILABLE = False
+    FuzzyMatcher = None  # type: ignore[assignment,misc]
+    LLMSuggester = None  # type: ignore[assignment,misc]
+
+try:
+    from .repl_session import (
+        clear_session,
+        load_session,
+        restore_session_to_state,
+        save_session,
+    )
+
+    SESSION_AVAILABLE = True
+except ImportError:
+    SESSION_AVAILABLE = False
+    clear_session = None  # type: ignore[assignment]
+    load_session = None  # type: ignore[assignment]
+    restore_session_to_state = None  # type: ignore[assignment]
+    save_session = None  # type: ignore[assignment]
 
 # Rich imports for beautiful output (graceful degradation if unavailable)
 try:
@@ -72,6 +128,10 @@ if TYPE_CHECKING:
 # =============================================================================
 
 CONTEXTS = frozenset({"self", "world", "concept", "void", "time"})
+
+# Security: Maximum input length to prevent DoS
+MAX_INPUT_LENGTH = 10000  # 10KB max
+MAX_PATH_DEPTH = 100  # Maximum path segments
 
 # Context -> Holons mapping (lazily populated)
 CONTEXT_HOLONS: dict[str, list[str]] = {
@@ -106,6 +166,93 @@ OBSERVER_ARCHETYPES = {
     "admin": "Full access, sees all affordances including dangerous",
 }
 
+# =============================================================================
+# Wave 4: Joy-Inducing Constants
+# =============================================================================
+
+# J1: Welcome message variations by time of day
+WELCOME_VARIANTS = {
+    "morning": [
+        "Good morning. The forest awaits.",
+        "Dawn breaks. What shall we explore?",
+        "Morning light. Ready to navigate?",
+    ],
+    "afternoon": [
+        "Good afternoon. Where to?",
+        "The day is young. Navigate wisely.",
+        "Afternoon. The paths are clear.",
+    ],
+    "evening": [
+        "Good evening. The stars are watching.",
+        "Night falls. Perfect time to explore the void.",
+        "Evening. The forest grows quiet.",
+    ],
+    "returning": [
+        "Welcome back. You were in {context}.",
+        "Resuming from {context}. The river continues.",
+        "Back again. {context} awaits.",
+    ],
+}
+
+# J2: K-gent personality triggers
+KGENT_TRIGGERS = frozenset(
+    {
+        "reflect",
+        "advice",
+        "feeling",
+        "wisdom",
+        "meaning",
+        "advise",
+        "challenge",
+        "think",
+        "ponder",
+    }
+)
+
+# J2: Rate limiting interval (seconds between K-gent invocations)
+KGENT_RATE_LIMIT_SECONDS = 30
+
+# J3: Easter eggs - hidden delights
+EASTER_EGGS = {
+    "void.entropy.dance": "_easter_entropy_dance",
+    "self.soul.sing": "_easter_soul_sing",
+    "concept.zen": "_easter_concept_zen",
+    "time.flow": "_easter_time_flow",
+    "world.hello": "_easter_world_hello",
+    "..........": "_easter_too_far",
+}
+
+# J3: Zen principles for concept.zen easter egg
+ZEN_PRINCIPLES = [
+    "The noun is a lie. There is only the rate of change.",
+    "Agents are morphisms, not objects.",
+    "Everything is slop or comes from slop.",
+    "The observer is the observation.",
+    "Compose, don't construct.",
+    "Fun is free. Being/having fun is free.",
+    "Say no more than yes.",
+    "There is no view from nowhere.",
+]
+
+# Wave 4: Slash command shortcuts for joy-inducing commands
+SLASH_SHORTCUTS = {
+    "/oblique": "concept.creativity.oblique",
+    "/constrain": "concept.creativity.constrain",
+    "/yes-and": "concept.creativity.expand",
+    "/expand": "concept.creativity.expand",
+    "/surprise": "void.serendipity.prompt",
+    "/surprise-me": "void.serendipity.prompt",
+    "/project": "void.shadow.project",
+    "/sparkline": "world.viz.sparkline",
+    "/why": "self.soul.why",
+    "/tension": "self.soul.tension",
+    "/challenge": "self.soul.challenge",
+    "/nphase": "concept.nphase.compile",
+    "/nphase-validate": "concept.nphase.validate",
+    "/nphase-template": "concept.nphase.template",
+    "/nphase-bootstrap": "concept.nphase.bootstrap",
+}
+
 HELP_TEXT = """\
 \033[1mAGENTESE REPL\033[0m - Navigate the five contexts
 
@@ -131,6 +278,29 @@ HELP_TEXT = """\
   /observer <archetype>    Switch observer (explorer, developer, architect, admin)
   /observers               List all available archetypes
 
+\033[1mLearning Mode:\033[0m (Wave 6)
+  --learn                  Enable adaptive learning guide
+  /learn                   See what to learn next
+  /learn <topic>           Learn about specific topic
+  /learn list              List all available topics
+  /fluency                 See your skill progress
+  /hint                    Get contextual hint
+
+\033[1mTutorial Mode:\033[0m (Wave 6 - for absolute beginners)
+  --tutorial               Linear guided intro to AGENTESE
+  --tutorial --reset       Start tutorial from beginning
+
+\033[1mAmbient Mode:\033[0m (Wave 5)
+  --ambient                Launch passive dashboard (shows live system status)
+  --interval <secs>        Set refresh interval (default: 5s)
+  \033[90mKeybindings in ambient:\033[0m q=quit, r=refresh, space=pause, 1-5=focus
+
+\033[1mJoy Features:\033[0m (Waves 4-6)
+  - Time-aware welcomes (morning/afternoon/evening)
+  - K-gent soul responses for philosophical queries
+  - Contextual hints when you're stuck
+  - Hidden easter eggs (discover them!)
+
 \033[1mExamples:\033[0m
   \033[33mself\033[0m                       Enter self context
   \033[33msoul reflect\033[0m               Invoke self.soul.reflect
@@ -138,12 +308,16 @@ HELP_TEXT = """\
   \033[33mvoid entropy sip\033[0m           Draw from Accursed Share
   \033[33mworld.agents >> count\033[0m      Pipeline: list then count
   \033[33m/observer developer\033[0m        Switch to developer observer
+  \033[33m/nphase my.yml\033[0m             Compile ProjectDefinition (defaults to compile)
+  \033[33m/nphase-validate my.yml\033[0m    Validate ProjectDefinition only
+  \033[33m/nphase-template PLAN\033[0m      Show phase template
   \033[33m..\033[0m                         Go back up
 
 \033[1mMeta:\033[0m
   exit, quit, q            Leave the REPL
   clear                    Clear screen
   history                  Show command history
+  /history <query>         Search command history
 """
 
 
@@ -211,6 +385,16 @@ class ReplState:
 
     Principle: Transparent Infrastructure - state is always visible.
 
+    Wave 5 Enhancements:
+    - Ambient mode (passive dashboard)
+    - Non-blocking keyboard for ambient keybindings
+
+    Wave 3 Enhancements:
+    - Fuzzy matcher for typo correction
+    - LLM suggester for semantic matches
+    - Entropy budget tracking
+    - Session restoration flag
+
     Wave 2 Enhancements:
     - Observer archetype for affordance filtering
     - Logos integration for proper AGENTESE resolution
@@ -235,11 +419,40 @@ class ReplState:
     # Verbosity level
     verbose: bool = False
 
+    # Wave 3: Entropy budget for LLM suggestions (refills each session)
+    entropy_budget: float = 0.10  # 10% entropy per session
+
+    # Wave 3: Session was restored from disk
+    restored_session: bool = False
+
+    # Wave 4: Consecutive error tracking for hints
+    consecutive_errors: int = 0
+
+    # Wave 4: Last K-gent invocation time for rate limiting
+    last_kgent_time: Optional[datetime] = None
+
+    # Wave 5: Ambient mode state
+    ambient_paused: bool = False  # Is ambient refresh paused?
+    ambient_focus: Optional[int] = None  # Focused panel (1-5, None = all)
+    ambient_interval: float = 5.0  # Refresh interval in seconds
+
     # Logos resolver (lazy-loaded)
     _logos: Any = field(default=None, repr=False)
 
     # Umwelt for observer (lazy-loaded)
     _umwelt: Any = field(default=None, repr=False)
+
+    # Wave 3: Fuzzy matcher (lazy-loaded)
+    _fuzzy: Any = field(default=None, repr=False)
+
+    # Wave 3: LLM suggester (lazy-loaded)
+    _llm_suggester: Any = field(default=None, repr=False)
+
+    # Wave 6: Adaptive learning guide (lazy-loaded)
+    _guide: Any = field(default=None, repr=False)
+
+    # Wave 6: Learning mode enabled
+    learning_mode: bool = False
 
     @property
     def current_path(self) -> str:
@@ -248,7 +461,17 @@ class ReplState:
 
     @property
     def prompt(self) -> str:
-        """Generate the prompt string with observer indicator."""
+        """Generate the prompt string with observer indicator.
+
+        ANSI escape codes are wrapped with \\001 and \\002 markers so
+        readline correctly calculates prompt width for cursor positioning.
+        """
+
+        # Helper to wrap ANSI codes for readline
+        def rl(code: str) -> str:
+            """Wrap ANSI code for readline (marks as non-printing)."""
+            return f"\001{code}\002"
+
         # Observer indicator (abbreviated)
         obs_abbrev = {
             "explorer": "E",
@@ -258,27 +481,32 @@ class ReplState:
         }
         obs = obs_abbrev.get(self.observer, "?")
 
+        gray = rl("\033[90m")
+        reset = rl("\033[0m")
+        cyan = rl("\033[36m")
+        yellow = rl("\033[33m")
+
         if not self.path:
-            return f"\033[90m({obs})\033[0m \033[36m[root]\033[0m \033[33m»\033[0m "
+            return f"{gray}({obs}){reset} {cyan}[root]{reset} {yellow}»{reset} "
 
         # Color the context differently
         context = self.path[0]
         rest = ".".join(self.path[1:])
 
         context_colors = {
-            "self": "\033[32m",  # green
-            "world": "\033[34m",  # blue
-            "concept": "\033[35m",  # magenta
-            "void": "\033[90m",  # gray
-            "time": "\033[33m",  # yellow
+            "self": rl("\033[32m"),  # green
+            "world": rl("\033[34m"),  # blue
+            "concept": rl("\033[35m"),  # magenta
+            "void": rl("\033[90m"),  # gray
+            "time": rl("\033[33m"),  # yellow
         }
 
-        color = context_colors.get(context, "\033[36m")
+        color = context_colors.get(context, cyan)
 
         if rest:
-            return f"\033[90m({obs})\033[0m {color}[{context}\033[0m.{rest}{color}]\033[0m \033[33m»\033[0m "
+            return f"{gray}({obs}){reset} {color}[{context}{reset}.{rest}{color}]{reset} {yellow}»{reset} "
         else:
-            return f"\033[90m({obs})\033[0m {color}[{context}]\033[0m \033[33m»\033[0m "
+            return f"{gray}({obs}){reset} {color}[{context}]{reset} {yellow}»{reset} "
 
     def get_logos(self) -> Any:
         """Get or create the Logos resolver (lazy initialization)."""
@@ -331,10 +559,78 @@ class ReplState:
                 pass  # Umwelt not available
         return self._umwelt
 
+    def get_fuzzy(self) -> Any:
+        """Get or create the fuzzy matcher (lazy initialization)."""
+        if self._fuzzy is None and FuzzyMatcher is not None:
+            self._fuzzy = FuzzyMatcher(threshold=80, limit=5)
+        return self._fuzzy
+
+    def get_llm_suggester(self) -> Any:
+        """Get or create the LLM suggester (lazy initialization)."""
+        if self._llm_suggester is None and LLMSuggester is not None:
+            self._llm_suggester = LLMSuggester(entropy_cost=0.01)
+        return self._llm_suggester
+
+    def get_guide(self) -> Any:
+        """Get or create the adaptive learning guide (lazy initialization)."""
+        if self._guide is None:
+            try:
+                from protocols.cli.repl_guide import AdaptiveGuide, load_fluency
+
+                tracker = load_fluency()
+                self._guide = AdaptiveGuide(tracker=tracker, enabled=self.learning_mode)
+            except ImportError:
+                pass  # Guide not available
+        return self._guide
+
 
 # =============================================================================
 # Command Handlers
 # =============================================================================
+
+
+def _parse_path_input(line: str) -> list[str]:
+    """
+    Parse input line into path parts, supporting both formats.
+
+    Wave 5.1: Supports dotted paths for fast-forward navigation.
+
+    Formats supported:
+        "world dev"           → ["world", "dev"]       (space-separated)
+        "world.dev"           → ["world", "dev"]       (dotted)
+        "self.soul.reflect"   → ["self", "soul", "reflect"]
+        "self soul reflect"   → ["self", "soul", "reflect"]
+        "self.soul reflect"   → ["self", "soul", "reflect"]  (mixed)
+        ".."                  → [".."]                 (special, preserved)
+        "."                   → ["."]                  (special, preserved)
+
+    Args:
+        line: Raw input line from user
+
+    Returns:
+        List of path segments
+    """
+    # Handle special navigation commands that use dots
+    if line in (".", "..", "..."):
+        return [line]
+
+    # Split by spaces first
+    space_parts = line.split()
+
+    # Then expand any dotted segments
+    result = []
+    for part in space_parts:
+        # Don't split special commands or things starting with /
+        if part in (".", "..") or part.startswith("/"):
+            result.append(part)
+        elif "." in part:
+            # Split dotted path: "self.soul" → ["self", "soul"]
+            result.extend(part.split("."))
+        else:
+            result.append(part)
+
+    # Filter out empty strings (from leading/trailing dots)
+    return [p for p in result if p]
 
 
 def handle_navigation(state: ReplState, parts: list[str]) -> str | None:
@@ -521,8 +817,27 @@ def handle_invocation(state: ReplState, parts: list[str]) -> str:
     """
     Handle path invocation.
 
+    Wave 3: Adds fuzzy matching for typo correction.
     Wave 2: Tries async Logos first, falls back to CLI routing.
     """
+    # Handle empty input
+    if not parts:
+        return _error_with_sympathy(
+            "No path specified",
+            suggestion="Navigate to a context first: self, world, concept, void, time",
+        )
+
+    # Wave 3: Try fuzzy correction for context typos
+    first_part = parts[0].lower()
+    if first_part not in CONTEXTS and state.path == []:
+        fuzzy = state.get_fuzzy()
+        if fuzzy is not None:
+            corrected = fuzzy.suggest(first_part, list(CONTEXTS))
+            if corrected:
+                # Auto-correct and notify user
+                parts = [corrected] + parts[1:]
+                print(f"\033[90m(corrected: {first_part} → {corrected})\033[0m")
+
     # Build full path
     if parts[0] in CONTEXTS:
         full_path = parts
@@ -571,17 +886,29 @@ def handle_invocation(state: ReplState, parts: list[str]) -> str:
     except Exception as e:
         return _error_with_sympathy(
             str(e),
-            suggestion=_suggest_for_path(full_path),
+            suggestion=_suggest_for_path(full_path, state),
         )
 
 
-def _suggest_for_path(path: list[str]) -> str | None:
-    """Generate a helpful suggestion for a failed path."""
+def _suggest_for_path(path: list[str], state: ReplState | None = None) -> str | None:
+    """
+    Generate a helpful suggestion for a failed path.
+
+    Wave 3 Enhancement: Uses fuzzy matching for typo correction.
+    """
     if not path:
         return "Try: self, world, concept, void, time"
 
     context = path[0]
     if context not in CONTEXTS:
+        # Wave 3: Try fuzzy matching for context typos
+        if state is not None:
+            fuzzy = state.get_fuzzy()
+            if fuzzy is not None:
+                ctx_suggestion: str | None = fuzzy.did_you_mean(context, list(CONTEXTS))
+                if ctx_suggestion:
+                    return ctx_suggestion
+
         return (
             f"'{context}' is not a valid context. Try: self, world, concept, void, time"
         )
@@ -592,6 +919,15 @@ def _suggest_for_path(path: list[str]) -> str | None:
             return f"Available in {context}: {', '.join(holons[:5])}"
 
     if len(path) >= 2:
+        # Wave 3: Try fuzzy matching for holon typos
+        if state is not None and len(path) >= 2:
+            fuzzy = state.get_fuzzy()
+            holons = CONTEXT_HOLONS.get(context, [])
+            if fuzzy is not None and holons:
+                suggestion: str | None = fuzzy.did_you_mean(path[1], holons)
+                if suggestion:
+                    return suggestion
+
         return f"Use ? to see affordances at {'.'.join(path[:2])}"
 
     return None
@@ -870,6 +1206,53 @@ def _execute_pipeline_cli(
     return "\n".join(lines)
 
 
+def handle_history_search(state: ReplState, line: str) -> str:
+    """
+    Handle /history command for searching command history.
+
+    Wave 3 Intelligence: Fuzzy search through command history.
+
+    Commands:
+        /history           - Show recent history
+        /history <query>   - Search history for query
+    """
+    parts = line.strip().split(maxsplit=1)
+    query = parts[1] if len(parts) > 1 else ""
+
+    if not state.history:
+        return "\033[90m(no history yet)\033[0m"
+
+    if not query:
+        # Show last 10 commands
+        lines = ["\033[1mRecent history:\033[0m", ""]
+        for i, cmd in enumerate(state.history[-10:], 1):
+            lines.append(f"  {i:3}  {cmd}")
+        return "\n".join(lines)
+
+    # Wave 3: Fuzzy search if available
+    fuzzy = state.get_fuzzy()
+    if fuzzy is not None:
+        matches = fuzzy.match(query, state.history)
+        if matches:
+            lines = [f"\033[1mHistory matching '{query}':\033[0m", ""]
+            for cmd, score in matches[:10]:
+                # Highlight the match
+                highlighted = cmd.replace(query, f"\033[33m{query}\033[0m")
+                lines.append(f"  \033[90m({score}%)\033[0m {highlighted}")
+            return "\n".join(lines)
+    else:
+        # Simple substring search
+        matching = [h for h in state.history if query.lower() in h.lower()]
+        if matching:
+            lines = [f"\033[1mHistory containing '{query}':\033[0m", ""]
+            for cmd in matching[-10:]:
+                highlighted = cmd.replace(query, f"\033[33m{query}\033[0m")
+                lines.append(f"  {highlighted}")
+            return "\n".join(lines)
+
+    return f"\033[90mNo history matching '{query}'\033[0m"
+
+
 def handle_observer_command(state: ReplState, line: str) -> str:
     """
     Handle /observer commands for switching observer context.
@@ -922,12 +1305,706 @@ def handle_observer_command(state: ReplState, line: str) -> str:
 
 
 # =============================================================================
+# Wave 4: Joy-Inducing Functions
+# =============================================================================
+
+
+def handle_slash_shortcut(state: ReplState, line: str) -> str | None:
+    """
+    Handle /shortcut commands for Wave 4 joy-inducing commands.
+
+    Directly invokes handlers for slash shortcuts.
+
+    Returns:
+        Result string or None if not a shortcut
+    """
+    import io
+    import sys
+
+    parts = line.strip().split(maxsplit=1)
+    cmd = parts[0].lower()
+
+    if cmd not in SLASH_SHORTCUTS:
+        return None
+
+    # Parse args
+    args = parts[1].split() if len(parts) > 1 else []
+
+    # Direct handler mapping
+    try:
+        if cmd in ("/oblique",):
+            from protocols.cli.handlers.oblique import cmd_oblique
+
+            handler = cmd_oblique
+        elif cmd in ("/constrain",):
+            from protocols.cli.handlers.constrain import cmd_constrain
+
+            handler = cmd_constrain
+        elif cmd in ("/yes-and", "/expand"):
+            from protocols.cli.handlers.yes_and import cmd_yes_and
+
+            handler = cmd_yes_and
+        elif cmd in ("/surprise", "/surprise-me"):
+            from protocols.cli.handlers.surprise_me import cmd_surprise_me
+
+            handler = cmd_surprise_me
+        elif cmd in ("/project",):
+            from protocols.cli.handlers.project import cmd_project
+
+            handler = cmd_project
+        elif cmd in ("/sparkline",):
+            from protocols.cli.handlers.sparkline import cmd_sparkline
+
+            handler = cmd_sparkline
+        elif cmd in ("/why",):
+            from protocols.cli.handlers.why import cmd_why
+
+            handler = cmd_why
+        elif cmd in ("/tension",):
+            from protocols.cli.handlers.tension import cmd_tension
+
+            handler = cmd_tension
+        elif cmd in ("/challenge",):
+            from protocols.cli.handlers.challenge import cmd_challenge
+
+            handler = cmd_challenge
+        elif cmd in (
+            "/nphase",
+            "/nphase-validate",
+            "/nphase-template",
+            "/nphase-bootstrap",
+        ):
+            from protocols.cli.handlers.nphase import cmd_nphase
+
+            def _build_nphase_args(base_cmd: str, extra_args: list[str]) -> list[str]:
+                """Construct args for nphase CLI wrapper."""
+                cli_args = []
+                if base_cmd == "/nphase-validate":
+                    cli_args.append("validate")
+                elif base_cmd == "/nphase-template":
+                    cli_args.append("template")
+                elif base_cmd == "/nphase-bootstrap":
+                    cli_args.append("bootstrap")
+
+                # Default /nphase to compile if the user passed a path directly
+                if base_cmd == "/nphase" and extra_args:
+                    if extra_args[0] not in {
+                        "compile",
+                        "validate",
+                        "bootstrap",
+                        "template",
+                    }:
+                        cli_args.append("compile")
+
+                cli_args.extend(extra_args)
+                return cli_args
+
+            cli_args = _build_nphase_args(cmd, args)
+
+            def nphase_handler(
+                args: list[str], ctx: InvocationContext | None = None
+            ) -> int:
+                """Thin wrapper to match handler signature used below."""
+                del args, ctx  # Unused, using cli_args from closure
+                return cmd_nphase(cli_args)
+
+            handler = nphase_handler
+        else:
+            return None
+
+        # Capture stdout to return as string
+        old_stdout = sys.stdout
+        sys.stdout = captured = io.StringIO()
+
+        try:
+            handler(args, None)
+            return captured.getvalue().rstrip()
+        finally:
+            sys.stdout = old_stdout
+
+    except Exception as e:
+        return f"\033[31mError:\033[0m {e}"
+
+
+def _get_hour() -> int:
+    """Get current hour (0-23). Separated for testing."""
+    return datetime.now().hour
+
+
+def get_welcome_message(state: ReplState) -> str:
+    """
+    Generate a context-aware welcome message.
+
+    J1: Varies by:
+    - Time of day (morning/afternoon/evening)
+    - Session restoration status (returning user)
+
+    Args:
+        state: Current REPL state
+
+    Returns:
+        A personalized welcome message
+    """
+    # Returning user takes priority
+    if state.restored_session and state.path:
+        context = ".".join(state.path)
+        template = random.choice(WELCOME_VARIANTS["returning"])
+        return template.format(context=context)
+
+    # Time-based welcome
+    hour = _get_hour()
+    if 5 <= hour < 12:
+        return random.choice(WELCOME_VARIANTS["morning"])
+    elif 12 <= hour < 18:
+        return random.choice(WELCOME_VARIANTS["afternoon"])
+    else:
+        return random.choice(WELCOME_VARIANTS["evening"])
+
+
+async def maybe_invoke_kgent(cmd: str, state: ReplState) -> str | None:
+    """
+    Route philosophical queries to K-gent soul.
+
+    J2: Checks for trigger words and invokes K-gent with rate limiting.
+
+    Args:
+        cmd: The user's command
+        state: Current REPL state
+
+    Returns:
+        K-gent response (purple colored) or None if not triggered
+    """
+    # Check for trigger words
+    cmd_lower = cmd.lower()
+    if not any(trigger in cmd_lower for trigger in KGENT_TRIGGERS):
+        return None
+
+    # Rate limiting
+    now = datetime.now()
+    if state.last_kgent_time is not None:
+        elapsed = (now - state.last_kgent_time).total_seconds()
+        if elapsed < KGENT_RATE_LIMIT_SECONDS:
+            return None  # Rate limited, silently skip
+
+    # Try to invoke K-gent
+    try:
+        from agents.k.soul import BudgetTier, KgentSoul
+
+        soul = KgentSoul(auto_llm=True)
+        if not soul.has_llm:
+            # No LLM available, use template
+            return None
+
+        response = await soul.dialogue(
+            cmd,
+            budget=BudgetTier.WHISPER,  # Conservative budget
+        )
+
+        # Update rate limit tracker
+        state.last_kgent_time = now
+
+        # Return in purple (K-gent's color)
+        return f"\033[35m{response.response}\033[0m"
+
+    except ImportError:
+        return None
+    except Exception:
+        return None
+
+
+def handle_easter_egg(path: str, state: ReplState) -> str | None:
+    """
+    Handle easter egg commands.
+
+    J3: Hidden delights discovered naturally by curious users.
+
+    Args:
+        path: The command path to check
+        state: Current REPL state
+
+    Returns:
+        Easter egg output or None if not an easter egg
+    """
+    # Normalize path
+    normalized = path.replace(" ", ".").lower()
+
+    # Check for excessive dots
+    if normalized.count(".") >= 9 or normalized == "..........":
+        return _easter_too_far()
+
+    # Check known easter eggs
+    handler_name = EASTER_EGGS.get(normalized)
+    if handler_name is None:
+        return None
+
+    # Dispatch to handler
+    handlers = {
+        "_easter_entropy_dance": _easter_entropy_dance,
+        "_easter_soul_sing": _easter_soul_sing,
+        "_easter_concept_zen": _easter_concept_zen,
+        "_easter_time_flow": _easter_time_flow,
+        "_easter_world_hello": _easter_world_hello,
+        "_easter_too_far": _easter_too_far,
+    }
+
+    handler = handlers.get(handler_name)
+    if handler:
+        return handler()
+    return None
+
+
+def _easter_entropy_dance() -> str:
+    """ASCII animation of spinning entropy gauge."""
+    frames = [
+        "  ◐  \n░▒█▒░\n  ◓  ",
+        "  ◑  \n░▓█▓░\n  ◒  ",
+        "  ◒  \n░█▓█░\n  ◐  ",
+        "  ◓  \n▒█░█▒\n  ◑  ",
+    ]
+    # Return a random frame with some flair
+    frame = random.choice(frames)
+    return f"\033[36m{frame}\033[0m\n\n\033[90mEntropy dances. The void watches.\033[0m"
+
+
+def _easter_soul_sing() -> str:
+    """Generate a haiku about the current moment."""
+    haikus = [
+        "Agents compose paths\nMorphisms flow through the forest\nThe void exhales slop",
+        "Dawn breaks on the code\nFunctors lift the weary soul\nComposition wins",
+        "Entropy whispers\nGratitude returns to void\nThe river flows on",
+        "Handles yield insight\nObservers become observed\nNo view from nowhere",
+    ]
+    haiku = random.choice(haikus)
+    return f"\033[35m{haiku}\033[0m"
+
+
+def _easter_concept_zen() -> str:
+    """Return a random principle from spec/principles.md."""
+    principle = random.choice(ZEN_PRINCIPLES)
+    return f"\033[33m✧ {principle}\033[0m"
+
+
+def _easter_time_flow() -> str:
+    """Animated time visualization."""
+    now = datetime.now()
+    hour = now.hour
+    minute = now.minute
+
+    # Time bar
+    progress = (hour * 60 + minute) / (24 * 60)
+    bar_width = 20
+    filled = int(progress * bar_width)
+    bar = "█" * filled + "░" * (bar_width - filled)
+
+    return (
+        f"\033[33m╭─ time.flow ─╮\033[0m\n"
+        f"\033[33m│\033[0m {bar} \033[33m│\033[0m\n"
+        f"\033[33m│\033[0m   {hour:02d}:{minute:02d}       \033[33m│\033[0m\n"
+        f"\033[33m╰─────────────╯\033[0m\n"
+        f"\033[90mThe river flows. Time is just a handle.\033[0m"
+    )
+
+
+def _easter_world_hello() -> str:
+    """The classic."""
+    return "\033[32mHello, World!\033[0m\n\n\033[90m(Some traditions are worth keeping.)\033[0m"
+
+
+def _easter_too_far() -> str:
+    """You've gone too far."""
+    return (
+        "\033[31m⚠\033[0m You've gone too far.\n"
+        "\033[90mHere there be dragons.\033[0m\n"
+        "\n"
+        "    🐉"
+    )
+
+
+def get_contextual_hint(state: ReplState) -> str | None:
+    """
+    Generate proactive hints based on user behavior.
+
+    J5: Contextual hints guide stuck users.
+
+    Args:
+        state: Current REPL state
+
+    Returns:
+        A hint string or None if no hint needed
+    """
+    # Hint for repeated errors
+    if state.consecutive_errors >= 3:
+        return "\033[33mHint:\033[0m Try '?' to see available affordances"
+
+    # Hint for long session at root
+    if len(state.history) > 20 and not state.path:
+        return "\033[33mHint:\033[0m Try 'self status' for a system overview"
+
+    # Hint in void context
+    if state.path == ["void"]:
+        return "\033[33mHint:\033[0m 'entropy sip' draws from the Accursed Share"
+
+    # No hint needed
+    return None
+
+
+# =============================================================================
+# Wave 5: Ambient Mode Functions
+# =============================================================================
+
+
+def _get_key_nonblocking() -> str | None:
+    """
+    Get a single keypress without blocking.
+
+    Returns None if no key pressed, or the key character.
+    Only works on Unix-like systems (uses select + termios).
+    On Windows, returns None (ambient mode keybindings not supported).
+
+    Wave 5: Non-blocking keyboard for ambient mode.
+    """
+    try:
+        import select
+
+        # Check if stdin has data ready
+        if select.select([sys.stdin], [], [], 0.0)[0]:
+            return sys.stdin.read(1)
+        return None
+    except Exception:
+        # On Windows or if stdin not available, return None
+        return None
+
+
+def _handle_ambient_key(key: str, state: ReplState) -> bool:
+    """
+    Handle a keypress in ambient mode.
+
+    Args:
+        key: The pressed key
+        state: Current REPL state
+
+    Returns:
+        True if a refresh should be triggered, False otherwise.
+
+    Wave 5: Keybindings for ambient mode.
+    """
+    if key == "q":
+        # Quit
+        state.running = False
+        return False
+
+    elif key == "r":
+        # Force refresh
+        return True
+
+    elif key == " ":
+        # Toggle pause
+        state.ambient_paused = not state.ambient_paused
+        return True  # Refresh to show pause indicator
+
+    elif key in "12345":
+        # Focus panel
+        state.ambient_focus = int(key)
+        return True  # Refresh to show focus
+
+    elif key == "0":
+        # Clear focus (show all panels)
+        state.ambient_focus = None
+        return True
+
+    return False
+
+
+def _render_ambient_screen(metrics: Any, paused: bool, focus: int | None = None) -> str:
+    """
+    Render the ambient mode display.
+
+    Args:
+        metrics: DashboardMetrics from collectors
+        paused: Whether refresh is paused
+        focus: Focused panel number (1-5) or None for all
+
+    Returns:
+        The rendered screen as a string.
+
+    Wave 5: Passive dashboard rendering.
+    """
+    lines = []
+
+    # Header
+    pause_indicator = " \033[33m[PAUSED]\033[0m" if paused else ""
+    lines.append(f"\033[36m╭─── kgents ambient{pause_indicator} ───╮\033[0m")
+    lines.append(
+        "\033[36m│\033[0m [q]uit [r]efresh [space]pause [1-5]focus  \033[36m│\033[0m"
+    )
+    lines.append("\033[36m├───────────────────────────────────────────╯\033[0m")
+    lines.append("")
+
+    # K-gent Panel (1)
+    if focus is None or focus == 1:
+        lines.append("\033[32m K-GENT SOUL \033[0m")
+        if metrics.kgent.is_online:
+            lines.append(f"  Mode: {metrics.kgent.mode.upper()}")
+            lines.append(
+                f"  Garden: {metrics.kgent.garden_patterns} patterns "
+                f"({metrics.kgent.garden_trees} trees)"
+            )
+            lines.append(f"  Dream: {metrics.kgent.dream_age_str}")
+        else:
+            lines.append("  \033[90m[offline]\033[0m")
+        lines.append("")
+
+    # Metabolism Panel (2)
+    if focus is None or focus == 2:
+        lines.append("\033[33m METABOLISM \033[0m")
+        if metrics.metabolism.is_online:
+            pct = int(metrics.metabolism.pressure * 100)
+            bar = "█" * (pct // 10) + "░" * (10 - pct // 10)
+            lines.append(f"  Pressure: {bar} {pct}%")
+            lines.append(f"  Status: {metrics.metabolism.status_text}")
+            fever_str = "\033[31mYES\033[0m" if metrics.metabolism.in_fever else "No"
+            lines.append(f"  Fever: {fever_str}")
+        else:
+            lines.append("  \033[90m[offline]\033[0m")
+        lines.append("")
+
+    # Flux Panel (3)
+    if focus is None or focus == 3:
+        lines.append("\033[34m FLUX \033[0m")
+        if metrics.flux.is_online:
+            lines.append(f"  Events/sec: {metrics.flux.events_per_second:.1f}")
+            lines.append(f"  Queue: {metrics.flux.queue_depth} pending")
+            lines.append(f"  Agents: {metrics.flux.active_agents} active")
+        else:
+            lines.append("  \033[90m[offline]\033[0m")
+        lines.append("")
+
+    # Triad Panel (4)
+    if focus is None or focus == 4:
+        lines.append("\033[35m TRIAD \033[0m")
+        if metrics.triad.is_online:
+
+            def _bar(val: float) -> str:
+                filled = int(val * 10)
+                return "█" * filled + "░" * (10 - filled)
+
+            lines.append(f"  D {_bar(metrics.triad.durability)} PG")
+            lines.append(f"  R {_bar(metrics.triad.resonance)} Qd")
+            lines.append(f"  F {_bar(metrics.triad.reflex)} Rd")
+        else:
+            lines.append("  \033[90m[offline]\033[0m")
+        lines.append("")
+
+    # Traces Panel (5)
+    if focus is None or focus == 5:
+        lines.append("\033[90m RECENT TRACES \033[0m")
+        if metrics.traces:
+            for trace in metrics.traces[:5]:
+                line = trace.render(show_timestamp=True)
+                lines.append(f"  {line[:50]}")
+        else:
+            lines.append("  \033[90m(no traces)\033[0m")
+        lines.append("")
+
+    # Entropy gauge
+    entropy_val = metrics.metabolism.pressure if metrics.metabolism.is_online else 0.0
+    entropy_pct = int(entropy_val * 100)
+    entropy_bar = "█" * (entropy_pct // 5) + "░" * (20 - entropy_pct // 5)
+    lines.append(f"\033[90m Entropy: {entropy_bar} {entropy_pct}%\033[0m")
+
+    # Footer
+    lines.append("")
+    collected = (
+        metrics.collected_at.strftime("%H:%M:%S")
+        if hasattr(metrics, "collected_at")
+        else "--:--:--"
+    )
+    lines.append(f"\033[90m Last refresh: {collected}\033[0m")
+
+    # In raw terminal mode, \n doesn't include carriage return
+    # Use \r\n for proper line breaks
+    return "\r\n".join(lines)
+
+
+def run_ambient_mode(state: ReplState) -> int:
+    """
+    Run REPL in ambient mode - passive dashboard.
+
+    Shows live system status without interactive prompt.
+    Refreshes at configurable interval (default 5s).
+
+    Wave 5: Ambient mode for passive monitoring.
+
+    Args:
+        state: ReplState with ambient_interval set
+
+    Returns:
+        Exit code (0 for success)
+    """
+    import asyncio
+    import time
+
+    # Import collectors
+    try:
+        from agents.i.data.dashboard_collectors import (
+            collect_metrics,
+            create_demo_metrics,
+        )
+    except ImportError:
+        print("\033[31mError:\033[0m Dashboard collectors not available")
+        return 1
+
+    # Check if we have a terminal
+    if not sys.stdin.isatty():
+        print(
+            "\033[33mWarning:\033[0m Ambient mode requires a terminal. Using single snapshot."
+        )
+        # Single snapshot mode
+        try:
+            metrics = asyncio.run(collect_metrics())
+        except Exception:
+            metrics = create_demo_metrics()
+        print(_render_ambient_screen(metrics, paused=False, focus=state.ambient_focus))
+        return 0
+
+    # Set up raw mode for non-blocking keyboard
+    try:
+        import termios
+        import tty
+
+        old_settings = termios.tcgetattr(sys.stdin)
+        tty.setraw(sys.stdin.fileno())
+        have_raw_mode = True
+    except (ImportError, termios.error):
+        have_raw_mode = False
+        old_settings = None
+
+    # Hide cursor
+    print("\033[?25l", end="", flush=True)
+
+    try:
+        last_refresh = 0.0
+        while state.running:
+            current_time = time.time()
+
+            # Check for keypress
+            key = _get_key_nonblocking()
+            if key:
+                should_refresh = _handle_ambient_key(key, state)
+                if should_refresh:
+                    last_refresh = 0.0  # Force refresh
+
+            # Refresh if not paused and interval elapsed
+            if (
+                not state.ambient_paused
+                and (current_time - last_refresh) >= state.ambient_interval
+            ):
+                # Clear screen
+                print("\033[2J\033[H", end="", flush=True)
+
+                # Collect and render metrics
+                try:
+                    metrics = asyncio.run(collect_metrics())
+                except Exception:
+                    metrics = create_demo_metrics()
+
+                screen = _render_ambient_screen(
+                    metrics,
+                    paused=state.ambient_paused,
+                    focus=state.ambient_focus,
+                )
+                print(screen, end="", flush=True)
+                last_refresh = current_time
+
+            # Small sleep to prevent CPU spin
+            time.sleep(0.05)
+
+    finally:
+        # Show cursor
+        print("\033[?25h", end="", flush=True)
+
+        # Restore terminal settings
+        if have_raw_mode and old_settings is not None:
+            import termios
+
+            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
+
+        # Clear screen one more time
+        print("\033[2J\033[H", end="")
+        print("\033[90mAmbient mode ended. The forest rests.\033[0m")
+
+    return 0
+
+
+# =============================================================================
 # Tab Completion
 # =============================================================================
 
 
+def _display_matches(
+    substitution: str, matches: Sequence[str], longest_match_length: int
+) -> None:
+    """
+    Custom display hook for showing completion matches.
+
+    Called by readline when there are multiple matches to display.
+    Renders completions in a compact format.
+
+    Args:
+        substitution: The text being completed
+        matches: List of possible completions
+        longest_match_length: Length of the longest match
+    """
+    # Print newline to separate from prompt
+    print()
+
+    # Group by type for better organization
+    contexts_list = [m for m in matches if m in CONTEXTS]
+    commands = [
+        m
+        for m in matches
+        if m.startswith("/")
+        or m in ("help", "exit", "quit", "clear", "?", "??", "..", ".", "/")
+    ]
+    others = [m for m in matches if m not in contexts_list and m not in commands]
+
+    # Display contexts first (compact)
+    if contexts_list:
+        print(f"\033[36m{' '.join(sorted(contexts_list))}\033[0m")
+
+    # Display other completions (holons, aspects) - compact
+    if others:
+        print(f"\033[33m{' '.join(sorted(others))}\033[0m")
+
+    # Display commands last (compact, dimmed)
+    if commands:
+        print(f"\033[90m{' '.join(sorted(commands))}\033[0m")
+
+    # Redisplay the prompt with current input
+    print()
+    sys.stdout.flush()
+
+    # Force readline to redisplay the prompt
+    try:
+        readline.redisplay()
+    except Exception:
+        pass  # Some readline implementations don't support this
+
+
 class Completer:
-    """Tab completion for AGENTESE paths."""
+    """
+    Tab completion for AGENTESE paths.
+
+    Wave 5: Enhanced completion with display hook for showing available options.
+    Wave 5.1: Dotted path completion (fast-forward with '.')
+
+    Features:
+    - Press TAB to see all available options
+    - Type partial text + TAB to autocomplete
+    - Context-aware: shows holons in context, aspects in holon
+    - Dynamic completions from Logos registry (Wave 3)
+    - Dotted paths: type "self." to see self's children (Wave 5.1)
+    """
 
     def __init__(self, state: ReplState):
         self.state = state
@@ -943,18 +2020,59 @@ class Completer:
         return None
 
     def _get_matches(self, text: str) -> list[str]:
-        """Get all completions matching text."""
+        """
+        Get all completions matching text.
+
+        Wave 3 Enhancement: Dynamic completion from Logos registry.
+        Wave 5 Enhancement: Better organization for display.
+        Wave 5.1 Enhancement: Dotted path completion (fast-forward).
+
+        Dotted path examples:
+            "self."      → ["self.status", "self.memory", "self.soul", ...]
+            "self.so"    → ["self.soul"]
+            "self.soul." → ["self.soul.manifest", "self.soul.witness", ...]
+        """
+        # Wave 5.1: Handle dotted paths for fast-forward completion
+        if "." in text and not text.startswith("."):
+            return self._get_dotted_matches(text)
+
         matches = []
 
-        # At root, complete contexts
-        if not self.state.path:
-            matches = [c for c in CONTEXTS if c.startswith(text)]
+        # Handle empty input at root - show contexts
+        if not self.state.path and not text:
+            matches = list(CONTEXTS)
+
+        # At root with input, complete contexts
+        elif not self.state.path:
+            matches = [c for c in CONTEXTS if c.startswith(text.lower())]
 
         # In context, complete holons
         elif len(self.state.path) == 1:
             context = self.state.path[0]
             holons = CONTEXT_HOLONS.get(context, [])
-            matches = [h for h in holons if h.startswith(text)]
+
+            if not text:
+                # No input - show all holons for this context
+                matches = list(holons)
+            else:
+                matches = [h for h in holons if h.startswith(text.lower())]
+
+            # Wave 3: Add dynamic completions from Logos registry
+            logos = self.state.get_logos()
+            if logos is not None:
+                try:
+                    registry_handles = logos.list_handles(context)
+                    for handle in registry_handles:
+                        # Extract just the holon part (e.g., "self.soul" -> "soul")
+                        parts = handle.split(".")
+                        if len(parts) >= 2:
+                            holon = parts[1]
+                            if (
+                                not text or holon.startswith(text.lower())
+                            ) and holon not in matches:
+                                matches.append(holon)
+                except Exception:
+                    pass  # Graceful degradation
 
         # In holon, complete aspects
         else:
@@ -968,9 +2086,12 @@ class Completer:
                 "sip",
                 "tithe",
             ]
-            matches = [a for a in aspects if a.startswith(text)]
+            if not text:
+                matches = list(aspects)
+            else:
+                matches = [a for a in aspects if a.startswith(text.lower())]
 
-        # Add special commands
+        # Add special commands (always available)
         special = [
             "..",
             ".",
@@ -983,8 +2104,24 @@ class Completer:
             "clear",
             "/observer",
             "/observers",
+            "/history",  # Wave 3
+            # Wave 4: Joy-inducing shortcuts
+            "/oblique",
+            "/constrain",
+            "/yes-and",
+            "/expand",
+            "/surprise",
+            "/surprise-me",
+            "/project",
+            "/sparkline",
+            "/why",
+            "/tension",
+            "/challenge",
         ]
-        matches.extend([s for s in special if s.startswith(text)])
+        if not text:
+            matches.extend(special)
+        else:
+            matches.extend([s for s in special if s.startswith(text)])
 
         # Complete archetype names after /observer
         if text.startswith("/observer "):
@@ -995,29 +2132,257 @@ class Completer:
 
         return sorted(set(matches))
 
+    def _get_dotted_matches(self, text: str) -> list[str]:
+        """
+        Handle dotted path completion (Wave 5.1 fast-forward).
+
+        Parses dotted paths and returns completions with full prefix.
+        Supports both absolute paths (self.soul.) and relative paths (soul. when in [self]).
+
+        Args:
+            text: Input like "self.", "soul." (relative), "self.soul.ref"
+
+        Returns:
+            List of completions with dotted prefix, e.g.:
+            - At root, "self." → ["self.status", "self.soul", ...]
+            - At [self], "soul." → ["soul.manifest", "soul.witness", ...]
+            - At [self], "self.soul." → ["self.soul.manifest", ...] (absolute)
+        """
+        # Split on dots: "soul.ref" → ["soul", "ref"]
+        parts = text.split(".")
+
+        # If ends with dot, completing is empty: "soul." → parts=["soul", ""]
+        # Otherwise, last part is what we're completing: "soul.re" → parts=["soul", "re"]
+        completing = parts[-1].lower()
+        input_path_parts = parts[:-1]  # The typed path prefix
+
+        # Build the prefix for completions (preserves user's input format)
+        prefix = ".".join(input_path_parts) + "." if input_path_parts else ""
+
+        # Resolve the full path by combining current state path with input
+        # Check if input starts with a context (absolute path) or is relative
+        if input_path_parts and input_path_parts[0].lower() in CONTEXTS:
+            # Absolute path: "self.soul." - use as-is
+            full_path_parts = [p.lower() for p in input_path_parts]
+        else:
+            # Relative path: "soul." at [self] → full path is ["self", "soul"]
+            full_path_parts = self.state.path + [p.lower() for p in input_path_parts]
+
+        # Determine what to complete based on resolved path depth
+        if len(full_path_parts) == 0:
+            # Just "." at root - shouldn't happen due to guard, but handle it
+            return []
+
+        elif len(full_path_parts) == 1:
+            # Completing holons for a context
+            context = full_path_parts[0]
+            if context not in CONTEXTS:
+                return []
+
+            holons = CONTEXT_HOLONS.get(context, [])
+            candidates = list(holons)
+
+            # Wave 3: Add dynamic completions from Logos registry
+            logos = self.state.get_logos()
+            if logos is not None:
+                try:
+                    registry_handles = logos.list_handles(context)
+                    for handle in registry_handles:
+                        handle_parts = handle.split(".")
+                        if len(handle_parts) >= 2:
+                            holon = handle_parts[1]
+                            if holon not in candidates:
+                                candidates.append(holon)
+                except Exception:
+                    pass  # Graceful degradation
+
+            # Filter by completing prefix and add input prefix
+            matches = [
+                f"{prefix}{h}" for h in candidates if h.lower().startswith(completing)
+            ]
+
+        elif len(full_path_parts) == 2:
+            # Completing aspects for a holon
+            aspects = [
+                "manifest",
+                "witness",
+                "affordances",
+                "refine",
+                "lens",
+                "define",
+                "sip",
+                "tithe",
+            ]
+            matches = [
+                f"{prefix}{a}" for a in aspects if a.lower().startswith(completing)
+            ]
+
+        else:
+            # Deeper paths - no standard completions
+            matches = []
+
+        return sorted(set(matches))
+
 
 # =============================================================================
 # Main REPL Loop
 # =============================================================================
 
 
+def run_script(script_path: Path, verbose: bool = False) -> int:
+    """
+    Run REPL commands from a script file (non-interactive).
+
+    Wave 3 Intelligence: Script mode for automation.
+
+    Script syntax:
+        - One command per line
+        - Lines starting with # are comments
+        - Empty lines are ignored
+        - exit/quit terminates early
+
+    Args:
+        script_path: Path to the .repl script file
+        verbose: Enable verbose output
+
+    Returns:
+        Exit code (0 for success)
+    """
+    if not script_path.exists():
+        print(f"\033[31mError:\033[0m Script not found: {script_path}")
+        return 1
+
+    state = ReplState(verbose=verbose)
+
+    try:
+        lines = script_path.read_text().splitlines()
+    except (OSError, PermissionError) as e:
+        print(f"\033[31mError:\033[0m Cannot read script: {e}")
+        return 1
+
+    for line_num, line in enumerate(lines, 1):
+        line = line.strip()
+
+        # Skip empty lines and comments
+        if not line or line.startswith("#"):
+            continue
+
+        # Early exit
+        if line.lower() in ("exit", "quit", "q"):
+            break
+
+        # Print command being executed (with line number)
+        if verbose:
+            print(f"\033[90m[{line_num}]\033[0m {line}")
+        else:
+            print(f"\033[36m»\033[0m {line}")
+
+        # Process the command
+        result = _process_script_command(state, line)
+        if result:
+            print(result)
+            print()  # Blank line between results
+
+    return 0
+
+
+def _process_script_command(state: ReplState, line: str) -> str | None:
+    """Process a single script command and return the result."""
+    # Handle special commands
+    if line.lower() == "help":
+        return HELP_TEXT
+
+    # Check for /observer commands
+    if line.startswith("/observer") or line == "/observers":
+        return handle_observer_command(state, line)
+
+    # Check for /history commands
+    if line.startswith("/history"):
+        return handle_history_search(state, line)
+
+    # Check for introspection
+    intro_result = handle_introspection(state, line)
+    if intro_result is not None:
+        return intro_result
+
+    # Check for composition
+    if ">>" in line:
+        return handle_composition(state, line)
+
+    # Parse command - support both space-separated and dotted paths (Wave 5.1)
+    parts = _parse_path_input(line)
+
+    # Check for navigation
+    nav_result = handle_navigation(state, parts)
+    if nav_result is not None:
+        return nav_result
+
+    # Otherwise, treat as invocation
+    return handle_invocation(state, parts)
+
+
 def run_repl(
     ctx: "InvocationContext | None" = None,
     verbose: bool = False,
+    restore: bool = False,
+    learning: bool = False,
 ) -> int:
     """
     Run the AGENTESE REPL.
 
     This is a synchronous function that blocks until the user exits.
 
+    Wave 6 Learning Mode:
+    - Adaptive guide tracks fluency (/fluency)
+    - Contextual hints based on skill level
+    - On-demand lessons (/learn <topic>)
+
+    Wave 3 Intelligence:
+    - Session restoration (--restore flag)
+    - History search (/history command)
+    - Fuzzy matching for typo correction
+
+    Wave 4 Joy-Inducing:
+    - Time-aware welcome messages (J1)
+    - K-gent personality integration (J2)
+    - Easter eggs (J3)
+    - Contextual hints (J5)
+
     Principle: Joy-Inducing - the REPL should feel warm and responsive.
     """
-    state = ReplState(verbose=verbose)
+    state = ReplState(verbose=verbose, learning_mode=learning)
+
+    # Wave 3: Restore previous session if requested
+    if restore and SESSION_AVAILABLE and restore_session_to_state is not None:
+        if restore_session_to_state(state):
+            state.restored_session = True
 
     # Set up tab completion
+    # Wave 5: Changed to 'complete' for showing all options on ambiguous input
     completer = Completer(state)
     readline.set_completer(completer.complete)
-    readline.parse_and_bind("tab: complete")
+
+    # Detect libedit (macOS) vs GNU readline - they use different binding syntax
+    is_libedit = "libedit" in (readline.__doc__ or "").lower()
+    if is_libedit:
+        # libedit (macOS) binding syntax
+        readline.parse_and_bind("bind ^I rl_complete")
+        # Show all completions immediately when ambiguous (single TAB press)
+        readline.parse_and_bind("set show-all-if-ambiguous on")
+    else:
+        # GNU readline binding syntax
+        readline.parse_and_bind("tab: complete")
+        readline.parse_and_bind("set show-all-if-ambiguous on")
+
+    # Set up custom display hook for pretty-printing completions
+    try:
+        readline.set_completion_display_matches_hook(_display_matches)
+    except AttributeError:
+        pass  # Not all readline implementations support this
+
+    # Configure completer delimiters - keep space as delimiter for multi-word commands
+    # but preserve dots for AGENTESE path completion
+    readline.set_completer_delims(" \t\n")
 
     # Set up history file
     history_file = Path.home() / ".kgents_repl_history"
@@ -1029,6 +2394,17 @@ def run_repl(
     # Print welcome banner
     print(WELCOME_BANNER)
 
+    # Wave 4: Personalized welcome message (J1)
+    welcome_msg = get_welcome_message(state)
+    print(f"\033[36m{welcome_msg}\033[0m\n")
+
+    # Wave 6: Learning mode welcome
+    if state.learning_mode:
+        guide = state.get_guide()
+        if guide:
+            learning_welcome = guide.welcome_message(state.path)
+            print(f"\033[33m{learning_welcome}\033[0m\n")
+
     # Main loop
     while state.running:
         try:
@@ -1037,11 +2413,31 @@ def run_repl(
             if not line:
                 continue
 
+            # Security: Input length limit
+            if len(line) > MAX_INPUT_LENGTH:
+                print(
+                    f"\033[31mError:\033[0m Input too long ({len(line)} chars, max {MAX_INPUT_LENGTH})"
+                )
+                continue
+
             # Add to history
             state.history.append(line)
 
             # Handle special commands
             if line.lower() in ("exit", "quit", "q"):
+                # Wave 3: Save session on exit
+                if SESSION_AVAILABLE and save_session is not None:
+                    save_session(state.path, state.observer)
+                # Wave 6: Save fluency on exit
+                if state.learning_mode:
+                    guide = state.get_guide()
+                    if guide:
+                        try:
+                            from protocols.cli.repl_guide import save_fluency
+
+                            save_fluency(guide.tracker)
+                        except ImportError:
+                            pass
                 print("\033[90mFarewell. The river flows.\033[0m")
                 break
 
@@ -1058,48 +2454,159 @@ def run_repl(
                     print(f"  {i:3}  {cmd}")
                 continue
 
+            # Wave 3: Check for /history commands
+            if line.startswith("/history"):
+                history_result = handle_history_search(state, line)
+                print(history_result)
+                continue
+
             # Check for /observer commands (Wave 2)
             if line.startswith("/observer") or line == "/observers":
                 observer_result = handle_observer_command(state, line)
                 print(observer_result)
                 continue
 
+            # Wave 6: Learning guide commands
+            if line.startswith("/learn"):
+                guide = state.get_guide()
+                if guide:
+                    from protocols.cli.repl_guide import handle_learn_command
+
+                    args = line.split()[1:] if len(line.split()) > 1 else [""]
+                    learn_result = handle_learn_command(guide, args)
+                    print(learn_result)
+                else:
+                    print(
+                        "\033[33mLearning mode not available.\033[0m Enable with: kg -i --learn"
+                    )
+                continue
+
+            if line == "/fluency":
+                guide = state.get_guide()
+                if guide:
+                    from protocols.cli.repl_guide import handle_fluency_command
+
+                    fluency_result = handle_fluency_command(guide)
+                    print(fluency_result)
+                else:
+                    print(
+                        "\033[33mLearning mode not available.\033[0m Enable with: kg -i --learn"
+                    )
+                continue
+
+            if line == "/hint":
+                guide = state.get_guide()
+                if guide:
+                    from protocols.cli.repl_guide import handle_hint_command
+
+                    hint_result = handle_hint_command(guide, state.path)
+                    print(hint_result)
+                else:
+                    hint = get_contextual_hint(state)
+                    print(hint if hint else "Type '?' for available commands.")
+                continue
+
+            # Wave 4: Check for slash shortcuts (joy-inducing commands)
+            if line.startswith("/") and line.split()[0].lower() in SLASH_SHORTCUTS:
+                shortcut_result = handle_slash_shortcut(state, line)
+                if shortcut_result is not None:
+                    print(shortcut_result)
+                    state.consecutive_errors = 0
+                continue
+
             # Check for introspection
             intro_result = handle_introspection(state, line)
             if intro_result is not None:
                 print(intro_result)
+                state.consecutive_errors = 0  # Reset on success
+                continue
+
+            # Wave 4: Check for easter eggs (J3)
+            easter_result = handle_easter_egg(line, state)
+            if easter_result is not None:
+                print(easter_result)
+                state.consecutive_errors = 0
                 continue
 
             # Check for composition
             if ">>" in line:
                 comp_result = handle_composition(state, line)
                 print(comp_result)
+                state.consecutive_errors = 0
                 continue
 
-            # Parse command
-            parts = line.split()
+            # Parse command - support both space-separated and dotted paths
+            # Wave 5.1: "world.dev" → ["world", "dev"], "self.soul.reflect" → ["self", "soul", "reflect"]
+            parts = _parse_path_input(line)
 
             # Check for navigation
             nav_result = handle_navigation(state, parts)
             if nav_result is not None:
                 print(nav_result)
+                state.consecutive_errors = 0
+                # Wave 6: Track for learning guide
+                guide = state.get_guide()
+                if guide and state.learning_mode:
+                    newly_mastered, msg = guide.on_command(line, state.path)
+                    if msg:
+                        print(f"\033[32m{msg}\033[0m")
                 continue
 
             # Otherwise, treat as invocation
             result = handle_invocation(state, parts)
             if result:
                 print(result)
+                # Track consecutive errors
+                if "Error" in result or "error" in result.lower():
+                    state.consecutive_errors += 1
+                    # Wave 6: Guide hint in learning mode
+                    guide = state.get_guide()
+                    if guide and state.learning_mode:
+                        hint = guide.contextual_hint(state.path, last_error=True)
+                        if hint:
+                            print(hint)
+                    else:
+                        # Wave 4: Show contextual hint (J5)
+                        hint = get_contextual_hint(state)
+                        if hint:
+                            print(hint)
+                else:
+                    state.consecutive_errors = 0
+                    # Wave 6: Track for learning guide
+                    guide = state.get_guide()
+                    if guide and state.learning_mode:
+                        newly_mastered, msg = guide.on_command(line, state.path)
+                        if msg:
+                            print(f"\033[32m{msg}\033[0m")
 
         except KeyboardInterrupt:
             print("\n\033[90m(use 'exit' to leave)\033[0m")
             continue
 
         except EOFError:
+            # Wave 3: Save session on EOF
+            if SESSION_AVAILABLE and save_session is not None:
+                save_session(state.path, state.observer)
+            # Wave 6: Save fluency on EOF
+            if state.learning_mode:
+                guide = state.get_guide()
+                if guide:
+                    try:
+                        from protocols.cli.repl_guide import save_fluency
+
+                        save_fluency(guide.tracker)
+                    except ImportError:
+                        pass
             print("\n\033[90mFarewell. The river flows.\033[0m")
             break
 
         except Exception as e:
             print(f"\033[31mError:\033[0m {e}")
+            state.consecutive_errors += 1
+            # Wave 4: Show contextual hint (J5)
+            hint = get_contextual_hint(state)
+            if hint:
+                print(hint)
             if verbose:
                 import traceback
 
@@ -1123,12 +2630,65 @@ def cmd_interactive(args: list[str], ctx: "InvocationContext | None" = None) -> 
     """
     Enter the AGENTESE REPL.
 
+    Wave 6 Features:
+    - Learning mode (--learn) - adaptive guide tracks fluency, offers hints
+    - Tutorial mode (--tutorial) - linear guided intro (for absolute beginners)
+
+    Wave 5 Features:
+    - Ambient mode (--ambient) - passive dashboard
+    - Configurable refresh interval (--interval <secs>)
+
+    Wave 3 Features:
+    - Session restoration (--restore)
+    - Script mode (--script <file>)
+    - Fuzzy matching for typo correction
+    - History search (/history command)
+
     The REPL provides interactive navigation through the five contexts,
     with tab completion, history, and path composition.
     """
     verbose = "--verbose" in args or "-v" in args
+    restore = "--restore" in args or "-r" in args
+    learning = "--learn" in args or "-l" in args
 
-    return run_repl(ctx=ctx, verbose=verbose)
+    # Wave 3: Script mode
+    if "--script" in args:
+        idx = args.index("--script")
+        if idx + 1 < len(args):
+            script_path = Path(args[idx + 1])
+            return run_script(script_path, verbose=verbose)
+        else:
+            print("\033[31mError:\033[0m --script requires a file path")
+            return 1
+
+    # Wave 5: Ambient mode
+    if "--ambient" in args:
+        state = ReplState(verbose=verbose)
+
+        # Parse interval flag
+        if "--interval" in args:
+            idx = args.index("--interval")
+            if idx + 1 < len(args):
+                try:
+                    state.ambient_interval = float(args[idx + 1])
+                except ValueError:
+                    print(f"\033[31mError:\033[0m Invalid interval: {args[idx + 1]}")
+                    return 1
+
+        return run_ambient_mode(state)
+
+    # Wave 6: Tutorial mode (linear, for absolute beginners)
+    if "--tutorial" in args:
+        try:
+            from protocols.cli.repl_tutorial import run_tutorial_mode
+
+            reset = "--reset" in args
+            return run_tutorial_mode(reset=reset)
+        except ImportError as e:
+            print(f"\033[31mError:\033[0m Tutorial module not available: {e}")
+            return 1
+
+    return run_repl(ctx=ctx, verbose=verbose, restore=restore, learning=learning)
 
 
 if __name__ == "__main__":

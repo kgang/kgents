@@ -125,7 +125,7 @@ class TestTierConfig:
         """Test that TierConfig is immutable (frozen)."""
         config = TIER_CONFIGS[LicenseTier.PRO]
         with pytest.raises(Exception):  # FrozenInstanceError
-            config.price_monthly = 2000
+            config.price_monthly = 2000  # type: ignore[misc]
 
 
 class TestTierFeatures:

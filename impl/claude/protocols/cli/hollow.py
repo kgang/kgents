@@ -43,6 +43,7 @@ kgents - K-gents Agent Framework
 USAGE:
   kgents <context> [subcommand] [args...]
   kgents <context> --help
+  kgents -i                    # Interactive REPL mode
 
 COMMANDS (AGENTESE Contexts):
   self      Internal state, memory, soul
@@ -56,11 +57,13 @@ COMMANDS (AGENTESE Contexts):
 Run 'kgents <context>' for subcommands.
 
 OPTIONS:
-  --version     Show version
-  --help, -h    Show this help
-  --explain     Show AGENTESE path for command
+  -i, --interactive   Enter AGENTESE REPL (interactive mode)
+  --version           Show version
+  --help, -h          Show this help
+  --explain           Show AGENTESE path for command
 
 EXAMPLES:
+  kgents -i                    # Interactive REPL
   kgents self status           # System health
   kgents self soul reflect     # K-gent reflection
   kgents world agents list     # List registered agents
@@ -107,6 +110,22 @@ COMMAND_REGISTRY: dict[str, str] = {
     # Agent Town (Crown Jewel)
     # ==========================================================================
     "town": "protocols.cli.handlers.town:cmd_town",
+    # ==========================================================================
+    # Shortcuts (ergonomic aliases for common operations)
+    # ==========================================================================
+    "dashboard": "protocols.cli.handlers.dashboard:cmd_dashboard",
+    # ==========================================================================
+    # Wave 4: Joy-Inducing Commands (CLI Quick Wins)
+    # ==========================================================================
+    "sparkline": "protocols.cli.handlers.sparkline:cmd_sparkline",
+    "challenge": "protocols.cli.handlers.challenge:cmd_challenge",
+    "oblique": "protocols.cli.handlers.oblique:cmd_oblique",
+    "constrain": "protocols.cli.handlers.constrain:cmd_constrain",
+    "yes-and": "protocols.cli.handlers.yes_and:cmd_yes_and",
+    "surprise-me": "protocols.cli.handlers.surprise_me:cmd_surprise_me",
+    "project": "protocols.cli.handlers.project:cmd_project",
+    "why": "protocols.cli.handlers.why:cmd_why",
+    "tension": "protocols.cli.handlers.tension:cmd_tension",
 }
 
 
@@ -383,11 +402,12 @@ def parse_global_flags(args: list[str]) -> tuple[dict[str, Any], list[str]]:
     Parse global flags without importing argparse.
 
     Returns (flags, remaining_args).
-    This is fast path for --help, --version.
+    This is fast path for --help, --version, -i.
     """
     flags = {
         "help": False,
         "version": False,
+        "interactive": False,
         "format": "rich",
         "budget": "medium",
         "persona": "minimal",
@@ -407,6 +427,8 @@ def parse_global_flags(args: list[str]) -> tuple[dict[str, Any], list[str]]:
             flags["help"] = True
         elif arg == "--version":
             flags["version"] = True
+        elif arg in ("-i", "--interactive"):
+            flags["interactive"] = True
         elif arg == "--explain":
             flags["explain"] = True
         elif arg == "--no-metrics":
@@ -542,6 +564,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     if flags["version"]:
         print(f"kgents {__version__}")
         return 0
+
+    # Interactive mode: -i / --interactive
+    if flags["interactive"]:
+        from protocols.cli.repl import cmd_interactive
+
+        return cmd_interactive(remaining)
 
     # No command given
     if not remaining:

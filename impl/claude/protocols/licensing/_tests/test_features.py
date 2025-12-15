@@ -187,7 +187,7 @@ class TestFeatureInfo:
             category="soul",
         )
         with pytest.raises(Exception):  # FrozenInstanceError
-            info.tier = LicenseTier.FREE
+            info.tier = LicenseTier.FREE  # type: ignore[misc]
 
 
 class TestHelperFunctions:

@@ -60,6 +60,29 @@ Each session is a chapter:
 - Write an epilogue at session end
 - The narrative arc spans sessions
 
+---
+
+## Aggressive Archiving (The Breathing Forest)
+
+> *"Dead plans choke new growth. Archive or upgrade—never hoard."*
+
+**Every session must shrink or justify the forest:**
+
+| Gate | Archiving Requirement |
+|------|----------------------|
+| QA | Identify archive/upgrade candidates for plans touched |
+| TEST | Flag plans made redundant by passing tests |
+| REFLECT | Execute archiving: move to `_archive/` or upgrade to `spec/` |
+
+**The Three Paths**:
+1. **Archive**: Goal achieved, superseded, or zombie → `plans/_archive/`
+2. **Upgrade**: Reusable insight → distill to `spec/` or `docs/skills/`, then archive
+3. **Retain**: Active with clear next step → update YAML header
+
+**Zombie Detection** (>14 days old, <25% progress, no dependents): Archive with reason.
+
+See `docs/skills/n-phase-cycle/reflect.md` for full protocol.
+
 **Auto-Inducer Signifiers** (`spec/protocols/auto-inducer.md`):
 - `⟿[PHASE]` — Continue to next phase (auto-execute)
 - `⟂[REASON]` — Halt, await human (DETACH, blocked, entropy depleted)

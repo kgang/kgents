@@ -29,7 +29,6 @@ class DashboardScreensMixin:
     - Flux (LOD 1): Stream processing
     - Loom (LOD 1): Pattern weaving
     - MRI (LOD 1): Memory inspection
-    - Forge (Special): Agent composition
     - Debugger (LOD 2): Forensic analysis
 
     Expects the implementing class to have:
@@ -198,24 +197,6 @@ class DashboardScreensMixin:
                 demo_mode=self.demo_mode,
             )
         )
-
-    # ========================================================================
-    # Special: Forge (Agent Composition)
-    # ========================================================================
-
-    def _create_forge(self) -> None:
-        """Create and push Forge screen (special).
-
-        Forge is a special screen (not LOD-based) for interactive
-        agent composition:
-        - Compose mode: Build agents from primitives
-        - Simulate mode: Test agent behavior
-        - Visual composition graph
-        - Type checking and validation
-        """
-        from ..forge.screen import ForgeScreen
-
-        self.push_screen(ForgeScreen())
 
     # ========================================================================
     # LOD 2: Debugger (Forensic Analysis)

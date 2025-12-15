@@ -87,7 +87,8 @@ class K8sResource:
         try:
             import yaml
 
-            return yaml.dump(self.to_dict(), default_flow_style=False)
+            result: str = yaml.dump(self.to_dict(), default_flow_style=False)
+            return result
         except ImportError:
             # Fallback to basic formatting
             import json

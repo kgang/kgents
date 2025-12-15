@@ -83,6 +83,7 @@ await logos.invoke("world.house.manifest", economist_umwelt)  # → Appraisal
 - `impl/` - Reference implementations (Claude Code + Open Router)
 - `impl/claude/protocols/agentese/` - AGENTESE implementation (559 tests)
 - `docs/` - Supporting documentation
+- `docs/skills` - Project specific procedural knowledge
 
 ## Working With This Repo
 

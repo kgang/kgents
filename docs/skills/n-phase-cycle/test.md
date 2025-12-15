@@ -54,9 +54,34 @@ TEST executes targeted suites to confirm laws, behaviors, and regressions. It op
 
 ## Step-by-Step
 
-1. **Select strata**: Unit → property → integration → snapshot (prefer hotdata). Emphasize law checks (identity, associativity, operad closure).  
-2. **Design fixtures**: Use pre-computed richness; avoid synthetic stubs unless isolated.  
+1. **Select strata**: Unit → property → integration → snapshot (prefer hotdata). Emphasize law checks (identity, associativity, operad closure).
+2. **Design fixtures**: Use pre-computed richness; avoid synthetic stubs unless isolated.
 3. **Run + triage**: Execute focused markers first (`-m "not slow"`), then broader; log failures with repro commands and suspected invariants.
+4. **Test doc alignment**: Ensure test documentation matches spec; flag plan drift for archival.
+
+---
+
+## Test-Doc Reconciliation
+
+> *"If tests prove the behavior, specs should capture it. Plans become redundant."*
+
+**During TEST phase, reconcile documentation:**
+
+| If Tests Prove... | Then... |
+|-------------------|---------|
+| Feature works as designed | Plan can be archived; insights go to spec/skill |
+| Feature differs from plan | Update spec, then archive outdated plan |
+| Feature requires new patterns | Create skill doc, then archive plan |
+
+**TEST Phase Doc Checklist**:
+```markdown
+- [ ] Tests cover the plan's claimed behavior
+- [ ] Spec accurately describes tested behavior
+- [ ] Plan is now redundant: [yes/no]
+- [ ] If yes, archive candidate: [path]
+```
+
+**Upgrade Path**: Test → passes → spec captures behavior → plan archives → forest shrinks.
 
 ---
 

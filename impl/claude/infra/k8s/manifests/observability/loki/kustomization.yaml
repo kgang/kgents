@@ -1,0 +1,17 @@
+# Kustomization for Loki log aggregation
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: kgents-observability
+
+resources:
+  - loki.yaml
+  - promtail.yaml
+
+labels:
+  - pairs:
+      app.kubernetes.io/managed-by: kustomize
+    includeSelectors: false
+
+commonAnnotations:
+  kgents.io/phase: "saas-phase8"

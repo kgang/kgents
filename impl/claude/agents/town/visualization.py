@@ -353,6 +353,7 @@ class TownSSEEndpointProtocol(Protocol):
         - town.event: TownEvent (greet, gossip, trade, solo)
         - town.coalition: Coalition changes (formed, dissolved)
         - town.eigenvector: Eigenvector drift events
+        - town.nphase: N-Phase compressed cycle transitions
 
         Example output:
             event: town.event
@@ -424,6 +425,8 @@ class TownEventType(Enum):
     CITIZEN_EVOLVED = "citizen.evolved"
     CITIZEN_RESTED = "citizen.rested"
     CITIZEN_WOKE = "citizen.woke"
+    # N-Phase events
+    NPHASE_TRANSITION = "nphase.transition"
 
 
 @dataclass(frozen=True)
@@ -486,6 +489,15 @@ class TownNATSSubject:
             town_id=town_id,
             phase="coalition",
             operation=change_type,
+        )
+
+    @classmethod
+    def for_nphase_transition(cls, town_id: str) -> "TownNATSSubject":
+        """Create subject for N-Phase transition events."""
+        return cls(
+            town_id=town_id,
+            phase="nphase",
+            operation="transition",
         )
 
     @classmethod
@@ -562,6 +574,15 @@ class TownNATSBridgeProtocol(Protocol):
         new_eigenvectors: "Eigenvectors",
     ) -> None:
         """Publish an eigenvector drift event."""
+        ...
+
+    async def publish_nphase_transition(
+        self,
+        town_id: str,
+        citizen_id: str,
+        ledger: dict[str, Any],
+    ) -> None:
+        """Publish compressed N-Phase transition (SENSE/ACT/REFLECT)."""
         ...
 
     # --- Subscribing ---
@@ -1251,6 +1272,16 @@ class TownSSEEndpoint:
         sse = SSEEvent(event="town.eigenvector.drift", data=data)
         await self._queue.put(sse)
 
+    async def push_nphase_transition(
+        self,
+        citizen_id: str,
+        ledger: dict[str, Any],
+    ) -> None:
+        """Push an N-Phase transition event (compressed SENSE/ACT/REFLECT)."""
+        data = {"citizen_id": citizen_id, **ledger}
+        sse = SSEEvent(event="town.nphase.transition", data=data)
+        await self._queue.put(sse)
+
     def close(self) -> None:
         """Close the SSE endpoint and cleanup."""
         self._closed = True
@@ -1424,6 +1455,17 @@ class TownNATSBridge:
             "new": new_eigenvectors,
             "drift": _compute_drift_magnitude(old_eigenvectors, new_eigenvectors),
         }
+        await self._publish(subject, data)
+
+    async def publish_nphase_transition(
+        self,
+        town_id: str,
+        citizen_id: str,
+        ledger: dict[str, Any],
+    ) -> None:
+        """Publish compressed N-Phase transition event."""
+        subject = TownNATSSubject.for_nphase_transition(town_id).to_subject()
+        data = {"citizen_id": citizen_id, **ledger}
         await self._publish(subject, data)
 
     async def _publish(self, subject: str, data: dict[str, Any]) -> None:

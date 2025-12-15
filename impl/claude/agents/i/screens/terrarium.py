@@ -14,7 +14,6 @@ Navigation:
   Tab        - Cycle focus between agents
   Enter/+    - Zoom into focused agent (→ Cockpit)
   -/Esc      - Zoom out to Observatory
-  f          - Open Forge
   d          - Open Debugger for focused agent
   1-4        - Switch sub-views (FIELD/TRACES/FLUX/TURNS)
   Space      - Emergency brake (pause all flux)
@@ -394,7 +393,6 @@ class TerrariumScreen(Screen[None]):
       Tab: Cycle focus between agents
       Enter/+: Zoom into focused agent (→ Cockpit)
       -/Esc: Zoom out to Observatory
-      f: Open Forge
       d: Open Debugger
       1-4: Switch sub-views
       Space: Emergency brake
@@ -473,7 +471,6 @@ class TerrariumScreen(Screen[None]):
         Binding("equal", "zoom_to_cockpit", "Zoom to Cockpit", show=False),
         Binding("minus", "zoom_to_observatory", "Zoom Out", show=True),
         Binding("underscore", "zoom_to_observatory", "Zoom Out", show=False),
-        Binding("f", "open_forge", "Forge", show=True),
         Binding("d", "open_debugger", "Debugger", show=True),
         Binding("1", "subview_field", "Field", show=False),
         Binding("2", "subview_traces", "Traces", show=False),
@@ -674,12 +671,6 @@ class TerrariumScreen(Screen[None]):
         """Zoom out to Observatory (-/Esc)."""
         self.app.pop_screen()
 
-    def action_open_forge(self) -> None:
-        """Open Forge screen (f)."""
-        from .forge.screen import ForgeScreen
-
-        self.app.push_screen(ForgeScreen())
-
     def action_open_debugger(self) -> None:
         """Open Debugger screen (d)."""
         if self.focused_agent_id:
@@ -739,7 +730,6 @@ Sub-views:
   4          - TURNS (turn counts)
 
 Special:
-  f          - Open Forge
   d          - Open Debugger
   Space      - Emergency brake
   q          - Quit

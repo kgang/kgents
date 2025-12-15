@@ -24,7 +24,6 @@ class MockNavController:
     def __init__(self) -> None:
         self.zoom_in = AsyncMock()
         self.zoom_out = AsyncMock()
-        self.go_to_forge = Mock()
         self.go_to_debugger = Mock()
 
 
@@ -219,13 +218,6 @@ def test_action_cycle_prev_emits_event(app, event_bus):
 # =============================================================================
 
 
-def test_action_open_forge_delegates_to_controller(app):
-    """action_open_forge should delegate to NavigationController."""
-    app.action_open_forge()
-
-    app._nav_controller.go_to_forge.assert_called_once()
-
-
 def test_action_open_debugger_delegates_to_controller(app):
     """action_open_debugger should delegate to NavigationController."""
     app.action_open_debugger()
@@ -314,5 +306,4 @@ def test_all_special_navigation_methods_exist():
     """Special navigation methods should exist."""
     mixin = DashboardNavigationMixin
 
-    # Note: action_open_forge removed as forge was deprecated
     assert hasattr(mixin, "action_open_debugger")

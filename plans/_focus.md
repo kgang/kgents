@@ -11,8 +11,12 @@
 
 ---
 ## KENT's WISHES
-* TOP PRIORITY: Agent Town (bigger, emergent)
-* MAKE MONEY WITH AGENT TOWN!!!!!!!!!!!!!!
+* MAKE MONEY WITH AGENT TOWN!!!!
+* BEST IN CLASS UX/DEVEX/Theoretical Foundation
+* VERY ROBUST META-INFRA at EVERY LEVEL!!!
+* COMPOSITIONAL GENERATIVE VISUALIZATIONS. BEUATIFUL ASCII.
+* KGENTS UI is STUNNING and PROFOUND while RELAXING
+* Important: MORE LOW-CODE, IN-PLACE ADAPTIVE LEARNING
 
 ```original_prompt
 Let's REALLY go hard with Agent Town (bigger, emergent), in fact i'll update focus now.
@@ -72,47 +76,6 @@ re-formulate, re-imagined, and transformed to serve these ideas.
 - Tests must pass before commit
 - Mypy strict, no regressions
 - The persona is a garden, not a museum
-
 ---
 
-## Archived Intent
-
-<details>
-<summary>2025-12-12 (afternoon)</summary>
-
-**Focus**: K-gent Phase 1 + self/stream Phases 2.3-2.4
-**Outcome**: Both complete. K-gent has LLM-backed dialogue (88 tests). self/stream has Pulse + StateCrystal (302 tests total). self/memory is now unblocked.
-**Learning**: The soul exists. The wires are connected. Now make it ambient.
-
-</details>
-
-<details>
-<summary>2025-12-12 (morning)</summary>
-
-**Focus**: Lattice wiring + Creativity polish
-**Outcome**: Both 100% complete. Lattice has lineage enforcement. Creativity has PAYADOR, Pataphysics.
-**Learning**: Genealogy is foundational—concepts cannot exist ex nihilo.
-
-</details>
-
-<details>
-<summary>2025-12-11</summary>
-
-**Focus**: Flux Functor implementation
-**Outcome**: Complete (261 tests). Living Pipelines work.
-**Learning**: Event-driven > timer-driven. Perturbation > bypass.
-
-</details>
-
-<details>
-<summary>2025-12-10</summary>
-
-**Focus**: I-gent v2.5, Reflector Pattern
-**Outcome**: Phases 1-5 complete (137 tests). FluxReflector bridges CLI↔TUI.
-**Learning**: Textual reactive model maps cleanly to density fields.
-
-</details>
-
----
-
-*This file belongs to the human. Agents: read, respect, respond—but never rewrite.*
+*This file belongs to the human. Agents: read, respect, embody.*

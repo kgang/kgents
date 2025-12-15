@@ -691,7 +691,7 @@ def _inhabit_citizen(citizen_name: str, ctx: "InvocationContext | None") -> int:
     _emit(f"  You are at the {citizen.region}.", {}, ctx)
 
     # Inner world (cosmotechnics)
-    _emit(f"\n  Your truth: \"{manifest.get('metaphor', '')}\"", {}, ctx)
+    _emit(f'\n  Your truth: "{manifest.get("metaphor", "")}"', {}, ctx)
 
     # Relationships from their perspective
     _emit("\n  You think about others:", {}, ctx)
@@ -713,7 +713,9 @@ def _inhabit_citizen(citizen_name: str, ctx: "InvocationContext | None") -> int:
         _emit("    (You haven't formed strong opinions yet.)", {}, ctx)
 
     # Other citizens in same region
-    others_here = [c for c in env.get_citizens_in_region(citizen.region) if c.id != citizen.id]
+    others_here = [
+        c for c in env.get_citizens_in_region(citizen.region) if c.id != citizen.id
+    ]
     if others_here:
         _emit(f"\n  You see nearby: {', '.join(c.name for c in others_here)}", {}, ctx)
 
@@ -747,7 +749,7 @@ def _intervene_event(event_desc: str, ctx: "InvocationContext | None") -> int:
     session.intervention_history.append(event_desc)
     _simulation_state["session"] = session
 
-    _emit(f"\n[INTERVENE] You declare: \"{event_desc}\"", {"event": event_desc}, ctx)
+    _emit(f'\n[INTERVENE] You declare: "{event_desc}"', {"event": event_desc}, ctx)
     _emit("=" * 50, {}, ctx)
 
     # Parse event type and apply effects
@@ -833,7 +835,8 @@ def _get_current_day() -> int:
     """Get current simulation day."""
     flux = _simulation_state.get("flux")
     if flux:
-        return flux.day
+        day: int = flux.day
+        return day
     return 1
 
 

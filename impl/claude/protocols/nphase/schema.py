@@ -482,7 +482,10 @@ class ProjectDefinition:
 
     def to_yaml(self) -> str:
         """Serialize to YAML string."""
-        return yaml.dump(self.to_dict(), default_flow_style=False, sort_keys=False)
+        result: str = yaml.dump(
+            self.to_dict(), default_flow_style=False, sort_keys=False
+        )
+        return result
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> ProjectDefinition:

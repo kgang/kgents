@@ -1217,7 +1217,7 @@ class DashboardApp(
     #
     # Most actions are provided by mixins:
     # - DashboardNavigationMixin: action_go_screen_1 through action_go_screen_6,
-    #   action_zoom_in, action_zoom_out, action_open_forge, action_open_debugger,
+    #   action_zoom_in, action_zoom_out, action_open_debugger,
     #   action_cycle_next, action_cycle_prev
     # - DashboardHelpMixin: action_show_help
     #

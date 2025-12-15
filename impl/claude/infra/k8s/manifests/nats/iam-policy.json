@@ -1,0 +1,39 @@
+{
+  "_comment": "IAM Policy for NATS S3 Backup - Least Privilege",
+  "_usage": "Create IAM user/role with this policy for backup service account",
+  "_agentese": "world.gateway.nats.backup.iam",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "NATSBackupWrite",
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:PutObjectAcl"
+      ],
+      "Resource": "arn:aws:s3:::kgents-dr-backups/nats/*"
+    },
+    {
+      "Sid": "NATSBackupRead",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:GetObjectVersion"
+      ],
+      "Resource": "arn:aws:s3:::kgents-dr-backups/nats/*"
+    },
+    {
+      "Sid": "NATSBackupList",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Resource": "arn:aws:s3:::kgents-dr-backups",
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": "nats/*"
+        }
+      }
+    }
+  ]
+}

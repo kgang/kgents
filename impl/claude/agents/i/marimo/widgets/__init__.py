@@ -11,6 +11,7 @@ by the Textual TUI, creating a unified data model across surfaces.
 
 from .base import KgentsWidget
 from .dialectic import DialecticWidget
+from .scatter import EigenvectorScatterWidgetMarimo
 from .stigmergic_field import StigmergicFieldWidget
 from .timeline import TimelineWidget
 
@@ -19,4 +20,5 @@ __all__ = [
     "StigmergicFieldWidget",
     "DialecticWidget",
     "TimelineWidget",
+    "EigenvectorScatterWidgetMarimo",
 ]

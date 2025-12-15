@@ -9,12 +9,15 @@ Tracks:
 
 Architecture:
     - Middleware intercepts all requests
-    - Tracks usage in-memory (production would use Redis/DB)
+    - Tracks usage in-memory for rate limiting (synchronous, low-latency)
+    - Records to OpenMeter for billing (async, batched)
     - Provides usage statistics endpoint
 """
 
 from __future__ import annotations
 
+import asyncio
+import logging
 import time
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -33,6 +36,17 @@ except ImportError:
     Request = Any  # type: ignore[misc, assignment]
     Response = Any  # type: ignore[misc, assignment]
     BaseHTTPMiddleware = object  # type: ignore[misc, assignment]
+
+# SaaS infrastructure (optional)
+try:
+    from protocols.config import get_saas_clients
+
+    HAS_SAAS_CONFIG = True
+except ImportError:
+    HAS_SAAS_CONFIG = False
+    get_saas_clients = None  # type: ignore[assignment]
+
+logger = logging.getLogger(__name__)
 
 
 # --- Usage Tracking ---
@@ -187,6 +201,7 @@ class MeteringMiddleware(BaseHTTPMiddleware):
     Middleware for tracking API usage.
 
     Tracks requests, tokens, and enforces rate limits.
+    Records to OpenMeter for billing when configured.
     """
 
     async def dispatch(
@@ -208,8 +223,9 @@ class MeteringMiddleware(BaseHTTPMiddleware):
         # Track start time
         start_time = time.time()
 
-        # Get user_id from request state (set by auth middleware)
+        # Get user_id and tenant_id from request state (set by auth middleware)
         user_id = getattr(request.state, "user_id", None)
+        tenant_id = getattr(request.state, "tenant_id", None)
 
         # Process request
         response: Response = await call_next(request)
@@ -225,7 +241,7 @@ class MeteringMiddleware(BaseHTTPMiddleware):
             # Get tokens from response (if available)
             tokens_used = getattr(request.state, "tokens_used", 0)
 
-            # Record request
+            # Record request to in-memory store (for rate limiting)
             record_request(
                 user_id=user_id,
                 endpoint=request.url.path,
@@ -240,7 +256,39 @@ class MeteringMiddleware(BaseHTTPMiddleware):
             response.headers["X-Tokens-Today"] = str(stats.tokens_today)
             response.headers["X-Tokens-Month"] = str(stats.tokens_month)
 
+            # Record to OpenMeter for billing (async, non-blocking)
+            if HAS_SAAS_CONFIG and get_saas_clients is not None:
+                asyncio.create_task(
+                    self._record_to_openmeter(
+                        tenant_id=str(tenant_id) if tenant_id else user_id,
+                        endpoint=request.url.path,
+                        method=request.method,
+                        status_code=response.status_code,
+                    )
+                )
+
         return response
+
+    async def _record_to_openmeter(
+        self,
+        tenant_id: str,
+        endpoint: str,
+        method: str,
+        status_code: int,
+    ) -> None:
+        """Record request to OpenMeter for billing."""
+        try:
+            clients = get_saas_clients()
+            if clients.openmeter is not None:
+                await clients.openmeter.record_request(
+                    tenant_id=tenant_id,
+                    endpoint=endpoint,
+                    method=method,
+                    status_code=status_code,
+                )
+        except Exception as e:
+            # Non-blocking - log and continue
+            logger.warning(f"Failed to record to OpenMeter: {e}")
 
 
 # --- Usage Endpoint Helpers ---

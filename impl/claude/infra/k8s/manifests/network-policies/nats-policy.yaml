@@ -1,0 +1,52 @@
+# NATS Network Policy
+# Restricts access to NATS cluster - only gateway tier can access client port
+# Phase 6: Launch Prep - HIGH priority security item
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: nats-access
+  namespace: kgents-agents
+  labels:
+    app.kubernetes.io/name: nats-access
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: kgents
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: nats
+  policyTypes:
+    - Ingress
+  ingress:
+    # Allow client connections from gateway tier (API servers)
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kgents.io/tier: gateway
+      ports:
+        - protocol: TCP
+          port: 4222
+    # Allow cluster communication between NATS pods
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: nats
+      ports:
+        - protocol: TCP
+          port: 6222
+    # Allow monitoring access from observability namespace
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kgents.io/tier: observability
+      ports:
+        - protocol: TCP
+          port: 8222
+        - protocol: TCP
+          port: 7777
+    # Allow internal agent namespace pods to connect (for testing/development)
+    - from:
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 4222

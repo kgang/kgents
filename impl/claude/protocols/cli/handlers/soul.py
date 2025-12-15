@@ -182,8 +182,22 @@ async def _async_route(
                 )
 
             case "why":
-                # CHALLENGE mode alias
-                return await dialogue.execute_dialogue("challenge", prompt, ctx, soul)
+                # Recursive why - delegates to dedicated handler
+                from .why import cmd_why
+
+                # Re-assemble args for why handler
+                why_args = [a for a in args if a != "why"]
+                if prompt:
+                    why_args.insert(0, prompt)
+                return cmd_why(why_args, ctx._reflector_ctx)
+
+            case "tension":
+                # Tension detection - delegates to dedicated handler
+                from .tension import cmd_tension
+
+                # Re-assemble args for tension handler
+                tension_args = [a for a in args if a != "tension"]
+                return cmd_tension(tension_args, ctx._reflector_ctx)
 
             # Ambient commands
             case "stream":

@@ -25,7 +25,9 @@ This creates a **flywheel of knowledge accumulation**:
 docs/skills/
 ├── README.md                    # This file
 ├── agentese-path.md             # How to add an AGENTESE path
+├── agentese-repl.md             # Interactive REPL guide (Wave 2)
 ├── agent-observability.md       # Adding observability to agents
+├── agent-town-visualization.md  # Scatter plots, SSE, NATS for Agent Town
 ├── building-agent.md            # Create Agent[A, B] with functors
 ├── cli-command.md               # How to add a CLI command
 ├── flux-agent.md                # How to create a Flux agent
@@ -151,7 +153,9 @@ How to confirm the skill was applied correctly.
 | Skill | Description | Difficulty |
 |-------|-------------|------------|
 | [agentese-path](agentese-path.md) | Add a new AGENTESE path (e.g., `self.soul.*`) | Medium |
+| [agentese-repl](agentese-repl.md) | Interactive REPL for AGENTESE navigation and composition | Easy-Medium |
 | [agent-observability](agent-observability.md) | Adding observability to agents | Medium |
+| [agent-town-visualization](agent-town-visualization.md) | Eigenvector scatter, SSE streaming, NATS bridge | Medium |
 | [building-agent](building-agent.md) | Create a well-formed `Agent[A, B]` with functors | Medium |
 | [cli-command](cli-command.md) | Add a new CLI command to kgents | Easy |
 | [flux-agent](flux-agent.md) | Lift an agent to continuous stream processing | Medium |

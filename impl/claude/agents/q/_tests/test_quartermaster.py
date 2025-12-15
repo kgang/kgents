@@ -193,6 +193,7 @@ class TestQuartermasterSubprocess:
         assert result.mode == ExecutionMode.SUBPROCESS
 
     @pytest.mark.asyncio
+    @pytest.mark.slow
     async def test_execution_timeout(self) -> None:
         """Execution times out gracefully."""
         q = create_quartermaster(fallback=True)

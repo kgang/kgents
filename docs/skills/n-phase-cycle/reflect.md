@@ -54,9 +54,71 @@ REFLECT closes the current cycle by distilling what mattered—successes, failur
 
 ## Step-by-Step
 
-1. **Summarize outcomes**: Capture what shipped, what changed, and remaining risks.  
-2. **Distill learnings**: One-line zettels only; promote to `plans/meta.md` sparingly (pass Molasses Test).  
+1. **Summarize outcomes**: Capture what shipped, what changed, and remaining risks.
+2. **Distill learnings**: One-line zettels only; promote to `plans/meta.md` sparingly (pass Molasses Test).
 3. **Seed next cycle**: Write epilogue, open/resolve bounties, and propose entry point for PLAN.
+4. **Archive or upgrade**: Every REFLECT must decide: archive plans, upgrade to spec, or justify retention.
+
+---
+
+## Aggressive Archiving Protocol
+
+> *"The forest must breathe. Dead plans choke new growth."*
+
+**REFLECT is the archiving gate.** Every cycle that touches plans must end with explicit archiving decisions:
+
+### The Three Paths for Every Plan
+
+| Path | When | Action |
+|------|------|--------|
+| **Archive** | Goal achieved, superseded, or abandoned | Move to `plans/_archive/YYYY-MM-DD-{name}.md` |
+| **Upgrade** | Contains reusable patterns/insights | Distill to `spec/` or `docs/skills/`, then archive original |
+| **Retain** | Active work, clear next steps | Update YAML header with current session_notes |
+
+### Archiving Criteria (Mandatory Check)
+
+```markdown
+## REFLECT Archiving Checklist
+
+For each plan touched this cycle:
+- [ ] **{plan_name}**: [Archive / Upgrade / Retain]
+  - Reason: [goal achieved / superseded by {x} / still active]
+  - If Upgrade: Target spec/skill: [path]
+  - If Retain: Next step: [what]
+
+Plans archived this session: [count]
+Plans upgraded to spec: [count]
+```
+
+### Upgrade-to-Spec Triggers
+
+Promote to spec/skill when:
+- Pattern used 3+ times across plans
+- Insight applies beyond single feature
+- Learning is stable (won't change next week)
+
+### Anti-Pattern: Zombie Plans
+
+**Zombie detection** (check in REFLECT):
+- Last touched >14 days ago
+- Progress <25%
+- No dependencies (nothing blocks on it)
+- **Action**: Archive with reason "zombie: [explanation]"
+
+### Archive File Format
+
+```markdown
+# Archived: {original_name}
+
+**Archived**: YYYY-MM-DD
+**Reason**: {goal achieved | superseded | zombie | merged into X}
+**Learnings Preserved**:
+- {one-liner to meta.md if worthy}
+- {or "none - tactical only"}
+
+---
+{original content below for archaeology}
+```
 
 ---
 

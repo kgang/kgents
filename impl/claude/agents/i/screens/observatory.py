@@ -13,7 +13,6 @@ Navigation:
   Tab        - Cycle focus between gardens
   Enter      - Zoom into focused garden (→ Terrarium)
   +          - Zoom to focused agent (→ Cockpit)
-  f          - Open Forge
   d          - Open Debugger for focused agent
   g          - Toggle graph layout (semantic/tree)
   Space      - Emergency brake (pause all flux)
@@ -255,7 +254,6 @@ class ObservatoryScreen(KgentsScreen):
       Tab: Cycle focus between gardens
       Enter: Zoom into focused garden (→ Terrarium)
       +: Zoom to focused agent (→ Cockpit)
-      f: Open Forge
       d: Open Debugger
       g: Toggle graph layout
       Space: Emergency brake
@@ -309,7 +307,6 @@ class ObservatoryScreen(KgentsScreen):
         Binding("enter", "zoom_to_terrarium", "Zoom to Terrarium", show=True),
         Binding("plus", "zoom_to_agent", "Zoom to Agent", show=True),
         Binding("equal", "zoom_to_agent", "Zoom to Agent", show=False),
-        Binding("f", "open_forge", "Forge", show=True),
         Binding("d", "open_debugger", "Debugger", show=True),
         Binding("g", "toggle_graph", "Toggle Graph", show=False),
         Binding("space", "emergency_brake", "Emergency Brake", show=False),
@@ -364,7 +361,7 @@ class ObservatoryScreen(KgentsScreen):
                 # Weather widget showing system health as weather
                 self._weather_widget = WeatherWidget(demo_mode=self._demo_mode)
                 yield self._weather_widget
-            yield Static("[Tab] cycle  [Enter] zoom  [f] forge  [d] debugger  [?] help")
+            yield Static("[Tab] cycle  [Enter] zoom  [d] debugger  [?] help")
 
         # Main content area
         with Container(id="main-container"):
@@ -539,12 +536,6 @@ class ObservatoryScreen(KgentsScreen):
             self.zoom_to_agent(first_agent_id)
         else:
             self.notify("No agents in focused garden")
-
-    def action_open_forge(self) -> None:
-        """Open Forge screen (f)."""
-        from .forge.screen import ForgeScreen
-
-        self.app.push_screen(ForgeScreen())
 
     def action_open_debugger(self) -> None:
         """Open Debugger screen (d)."""

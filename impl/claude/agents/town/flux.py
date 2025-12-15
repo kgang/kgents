@@ -20,7 +20,7 @@ import random
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, auto
-from typing import Any, AsyncIterator
+from typing import TYPE_CHECKING, Any, AsyncIterator
 
 from agents.town.citizen import Citizen
 from agents.town.environment import TownEnvironment
@@ -33,7 +33,10 @@ from agents.town.operad import (
     TRADE_METABOLICS,
 )
 from agents.town.polynomial import CitizenInput, CitizenPhase
+from protocols.nphase.operad import NPhase
 
+if TYPE_CHECKING:
+    from agents.town.visualization import TownNATSBridge, TownSSEEndpoint
 # =============================================================================
 # Town Phase (Time Slices)
 # =============================================================================
@@ -441,6 +444,29 @@ class TownFlux:
             drama_contribution=drama,
             metadata={"activity": activity},
         )
+
+    async def emit_nphase_transition(
+        self,
+        town_id: str,
+        citizen: Citizen,
+        target: NPhase | str | None = None,
+        *,
+        nats: "TownNATSBridge" | None = None,
+        sse: "TownSSEEndpoint" | None = None,
+        payload: Any | None = None,
+    ) -> dict[str, Any]:
+        """
+        Advance a citizen's compressed N-Phase state and emit events.
+
+        Publishes to NATS (`town.{town_id}.nphase.transition`) and optionally
+        to the SSE endpoint for dashboards.
+        """
+        ledger = citizen.advance_nphase(target, payload)
+        if nats:
+            await nats.publish_nphase_transition(town_id, citizen.id, ledger)
+        if sse:
+            await sse.push_nphase_transition(citizen.id, ledger)
+        return ledger
 
     async def step(self) -> AsyncIterator[TownEvent]:
         """

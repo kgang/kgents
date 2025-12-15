@@ -227,8 +227,17 @@ class KgentSoul:
         self._budget = budget_config or BudgetConfig()
 
         # LLM client setup
+        # KGENTS_NO_AUTO_LLM environment variable disables auto-LLM creation in tests
+        # This prevents slow subprocess calls to Claude CLI during test runs
+        import os
+
+        no_auto_llm = os.environ.get("KGENTS_NO_AUTO_LLM", "").lower() in (
+            "1",
+            "true",
+            "yes",
+        )
         self._llm: Optional[LLMClient] = llm
-        if self._llm is None and auto_llm and has_llm_credentials():
+        if self._llm is None and auto_llm and not no_auto_llm and has_llm_credentials():
             self._llm = create_llm_client()
 
         # Create agent with LLM support

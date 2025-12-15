@@ -54,9 +54,37 @@ QA verifies the work is clean, explainable, and reversible. It ensures Transpare
 
 ## Step-by-Step
 
-1. **Checklist pass**: Run lint/mypy/unit tests; check logging clarity, error messages, degraded-mode behavior, and privacy defaults.  
-2. **Narrate intent**: Ensure commit/notes explain what changed and why (tasteful, curated).  
+1. **Checklist pass**: Run lint/mypy/unit tests; check logging clarity, error messages, degraded-mode behavior, and privacy defaults.
+2. **Narrate intent**: Ensure commit/notes explain what changed and why (tasteful, curated).
 3. **Risk sweep**: Identify failure domains, feature flags, rollback plan, and data migration safety.
+4. **Documentation hygiene**: Audit plan files for archival or spec promotion (see below).
+
+---
+
+## Documentation Hygiene (Archiving Gate)
+
+> *"Planning docs are scaffolding. Ship them or demolish them."*
+
+**Every QA pass must audit associated planning documentation:**
+
+| Check | Action if True |
+|-------|----------------|
+| Plan achieved its goal | **Archive** to `plans/_archive/` or **Promote** distilled insights to `spec/` |
+| Plan is >7 days old with <50% progress | **Re-assess**: still relevant? Merge, archive, or re-scope |
+| Plan duplicates another plan | **Merge** into single source of truth, archive redundant |
+| Plan's insights are spec-worthy | **Upgrade**: distill to `spec/` or `docs/skills/`, then archive original |
+
+**The Molasses Test**: If a planning doc can't be deleted in 30 days, it's either:
+- Needed (promote to spec/skill)
+- Abandoned (archive with reason)
+- Duplicative (merge and archive)
+
+**QA Checklist Addition**:
+```markdown
+- [ ] Plans touched during this work: [list]
+- [ ] Archive candidates identified: [list or "none"]
+- [ ] Spec promotion candidates: [list or "none"]
+```
 
 ---
 

@@ -5,16 +5,31 @@ Exposes AGENTESE Logos resolver via REST API:
 - POST /v1/agentese/invoke - Invoke an AGENTESE path
 - GET /v1/agentese/resolve - Resolve path to node info
 - GET /v1/agentese/affordances - List available affordances
+
+Records usage to OpenMeter for billing when configured.
 """
 
 from __future__ import annotations
 
+import asyncio
+import logging
 from typing import TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:
     from fastapi import APIRouter
 
     from .auth import ApiKeyData
+
+# SaaS infrastructure (optional)
+try:
+    from protocols.config import get_saas_clients
+
+    HAS_SAAS_CONFIG = True
+except ImportError:
+    HAS_SAAS_CONFIG = False
+    get_saas_clients = None  # type: ignore[assignment]
+
+logger = logging.getLogger(__name__)
 
 # Graceful FastAPI import
 try:
@@ -238,6 +253,15 @@ def create_agentese_router() -> "APIRouter":
                     agentese_path=request.path,
                 )
 
+                # Record to OpenMeter for billing (async, non-blocking)
+                if HAS_SAAS_CONFIG and get_saas_clients is not None:
+                    asyncio.create_task(
+                        _record_agentese_to_openmeter(
+                            tenant_id=str(tenant.id),
+                            path=request.path,
+                        )
+                    )
+
             # Handle result serialization
             serialized_result = result
             if hasattr(result, "to_dict"):
@@ -377,3 +401,28 @@ def create_agentese_router() -> "APIRouter":
             raise HTTPException(status_code=404, detail=str(e))
 
     return router
+
+
+async def _record_agentese_to_openmeter(
+    tenant_id: str,
+    path: str,
+    tokens_used: int = 0,
+) -> None:
+    """
+    Record AGENTESE invocation to OpenMeter for billing.
+
+    Non-blocking helper that logs errors but doesn't raise.
+    """
+    try:
+        clients = get_saas_clients()
+        if clients.openmeter is not None:
+            # Extract aspect from path (e.g., "self.soul.challenge" -> "challenge")
+            aspect = path.split(".")[-1] if "." in path else path
+            await clients.openmeter.record_agentese_invoke(
+                tenant_id=tenant_id,
+                path=path,
+                aspect=aspect,
+                tokens_used=tokens_used,
+            )
+    except Exception as e:
+        logger.warning(f"Failed to record AGENTESE to OpenMeter: {e}")

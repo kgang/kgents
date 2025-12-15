@@ -2,11 +2,11 @@
 
 > *"The interface that teaches its own structure through use is no interface at all."*
 
-**Status**: REFLECT phase (Wave 2 QA complete)
-**Progress**: 75%
+**Status**: COMPLETE (Wave 7 Mastery complete, hardened)
+**Progress**: 95%
 **Last Touched**: 2025-12-14
-**Phase Ledger**: `{PLAN:touched, RESEARCH:touched, DEVELOP:skipped, STRATEGIZE:touched, IMPLEMENT:touched, QA:touched, TEST:touched}`
-**Entropy Budget**: 0.05
+**Phase Ledger**: `{PLAN:touched, RESEARCH:touched, DEVELOP:touched, STRATEGIZE:touched, IMPLEMENT:touched, QA:touched, TEST:touched, REFLECT:touched}`
+**Entropy Budget**: 0.02
 
 ---
 
@@ -45,14 +45,16 @@ Transform the kgents CLI into a **liturgical navigation experience** where users
 | Rich output rendering | ✅ | `repl.py:_render_result` |
 | Error sympathy | ✅ | `repl.py:_error_with_sympathy` |
 
-### Not Yet Implemented
+### All Features Implemented ✅
 
-| Component | Priority | Notes |
-|-----------|----------|-------|
-| Fuzzy matching for paths | LOW | Typo tolerance |
-| Session state persistence | LOW | Resume from last location |
-| LLM suggestions | FUTURE | "Did you mean..." with semantic understanding |
-| Tutorial mode | FUTURE | `--tutorial` flag |
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Fuzzy matching for paths | ✅ | `repl_fuzzy.py` - rapidfuzz with fallback |
+| Session state persistence | ✅ | `repl_session.py` - save/restore/clear |
+| LLM suggestions | ✅ | `LLMSuggester` with entropy budget |
+| Tutorial mode | ✅ | `repl_tutorial.py` - `--tutorial` flag |
+| Adaptive learning guide | ✅ | `repl_guide.py` - `--learn` flag |
+| Mastery tier skills | ✅ | Wave 7 - 18 skills with progression |
 
 ---
 
@@ -79,7 +81,7 @@ Transform the kgents CLI into a **liturgical navigation experience** where users
 | Pipeline execution | Actually run `>>` compositions | `world.agents >> concept.count` works | ✅ |
 | Error sympathy | Errors suggest next actions | User never stuck | ✅ |
 
-### Phase 3: Intelligence (FUTURE)
+### Phase 3: Intelligence
 
 | Task | Description |
 |------|-------------|
@@ -88,14 +90,24 @@ Transform the kgents CLI into a **liturgical navigation experience** where users
 | Command history search | Fuzzy search through history |
 | Session replay | Re-run previous exploration paths |
 
-### Phase 4: Joy-Inducing Polish (FUTURE)
+### Phase 4: Joy-Inducing Polish (COMPLETE ✅)
 
-| Task | Description |
-|------|-------------|
-| Welcome variations | Context-aware greetings |
-| Easter eggs | Hidden commands for delight |
-| Personality integration | K-gent can respond in REPL |
-| Ambient mode | REPL as passive dashboard |
+| Task | Description | Status |
+|------|-------------|--------|
+| Welcome variations | Context-aware greetings | ✅ |
+| Easter eggs | Hidden commands for delight | ✅ |
+| Personality integration | K-gent can respond in REPL | ✅ |
+| Ambient mode | REPL as passive dashboard | ✅ |
+
+### Phase 5: Ambient & Polish (COMPLETE ✅)
+
+| Task | Description | Status |
+|------|-------------|--------|
+| --ambient flag | Launch passive dashboard mode | ✅ |
+| Configurable interval | --interval <secs> (default 5s) | ✅ |
+| Non-blocking keybindings | q/r/space/1-5 for control | ✅ |
+| Help text polish | Full documentation in HELP_TEXT | ✅ |
+| 16 new tests | Wave 5 coverage | ✅ |
 
 ---
 
@@ -211,6 +223,38 @@ Wave 2 QA Complete. Next steps:
 | Graceful Degradation | 2 | Logos unavailable, Umwelt unavailable |
 | State Management | 4 | Initial state, history, cache invalidation |
 | Integration | 2 | Full navigation flow, observer→umwelt |
+
+---
+
+## Wave 5 Test Coverage (2025-12-14)
+
+**Total Tests**: 16 new tests
+
+| Test Class | Tests | Coverage |
+|------------|-------|----------|
+| TestAmbientModeFlag | 2 | --ambient flag parsing, state attributes |
+| TestAmbientScreenRendering | 4 | Returns string, shows K-gent, metabolism, pause |
+| TestAmbientKeyBindings | 4 | q/r/space/1-5 keys |
+| TestAmbientRefreshLoop | 2 | Default interval, configurable |
+| TestAmbientNonBlockingKeyboard | 2 | Function exists, returns correctly |
+| TestAmbientHelpText | 2 | Mentions ambient, mentions waves |
+
+---
+
+## Total Test Count
+
+| Wave | Tests | Status |
+|------|-------|--------|
+| Wave 2 | 44 | ✅ |
+| Wave 2.5 | 29 | ✅ |
+| Wave 3 | 25 | ✅ |
+| Wave 4 | 23 | ✅ |
+| Wave 5 | 16 | ✅ |
+| Wave 5.1 | 12 | ✅ (dotted completion) |
+| Wave 6 (Guide) | 82 | ✅ (repl_guide.py) |
+| Wave 6 (Tutorial) | 54 | ✅ (repl_tutorial.py) |
+| Wave 7 (Mastery) | 4 | ✅ (mastery tier skills) |
+| **Total** | **289** | **All passing, mypy clean** |
 
 ---
 

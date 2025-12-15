@@ -31,6 +31,21 @@ from .metering import MeteringMiddleware
 from .models import HealthResponse
 from .soul import create_soul_router
 
+# SaaS infrastructure (optional)
+try:
+    from protocols.config import (
+        get_saas_clients,
+        init_saas_clients,
+        shutdown_saas_clients,
+    )
+
+    HAS_SAAS_CONFIG = True
+except ImportError:
+    HAS_SAAS_CONFIG = False
+    get_saas_clients = None  # type: ignore[assignment]
+    init_saas_clients = None  # type: ignore[assignment]
+    shutdown_saas_clients = None  # type: ignore[assignment]
+
 
 def create_app(
     title: str = "kgents SaaS API",
@@ -107,6 +122,20 @@ def create_app(
     if sessions_router is not None:
         app.include_router(sessions_router)
 
+    # Webhook endpoints (Stripe → OpenMeter bridge)
+    from .webhooks import create_webhooks_router
+
+    webhooks_router = create_webhooks_router()
+    if webhooks_router is not None:
+        app.include_router(webhooks_router)
+
+    # Prometheus metrics endpoint
+    from .metrics import create_metrics_router
+
+    metrics_router = create_metrics_router()
+    if metrics_router is not None:
+        app.include_router(metrics_router)
+
     # Health check endpoint
     @app.get("/health", response_model=HealthResponse, tags=["system"])
     async def health_check(
@@ -151,6 +180,52 @@ def create_app(
             },
         )
 
+    # SaaS infrastructure health endpoint
+    @app.get("/health/saas", tags=["system"])
+    async def saas_health_check() -> dict[str, Any]:
+        """
+        SaaS infrastructure health check.
+
+        Returns status of NATS and OpenMeter clients.
+        No authentication required.
+        """
+        if not HAS_SAAS_CONFIG or get_saas_clients is None:
+            return {
+                "status": "not_configured",
+                "message": "SaaS infrastructure not available",
+            }
+
+        clients = get_saas_clients()
+        health = await clients.health_check()
+
+        # Determine overall status
+        overall_status = "ok"
+        if not clients.is_started:
+            overall_status = "not_started"
+        elif health.get("openmeter", {}).get("status") == "error":
+            overall_status = "degraded"
+        elif health.get("nats", {}).get("status") == "error":
+            overall_status = "degraded"
+
+        return {
+            "status": overall_status,
+            **health,
+        }
+
+    # SaaS lifecycle events
+    if HAS_SAAS_CONFIG and init_saas_clients is not None:
+
+        @app.on_event("startup")
+        async def startup_saas_clients() -> None:
+            """Initialize SaaS infrastructure on app startup."""
+            await init_saas_clients()
+
+        @app.on_event("shutdown")
+        async def shutdown_saas_clients_handler() -> None:
+            """Shutdown SaaS infrastructure on app shutdown."""
+            if shutdown_saas_clients is not None:
+                await shutdown_saas_clients()
+
     # Root endpoint
     @app.get("/", tags=["system"])
     async def root() -> dict[str, Any]:
@@ -178,6 +253,10 @@ def create_app(
                 "kgent": {
                     "sessions": "/v1/kgent/sessions",
                     "messages": "/v1/kgent/sessions/{id}/messages",
+                },
+                "webhooks": {
+                    "stripe": "/webhooks/stripe",
+                    "stripe_health": "/webhooks/stripe/health",
                 },
             },
         }

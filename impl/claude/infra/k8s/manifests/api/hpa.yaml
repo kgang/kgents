@@ -1,0 +1,58 @@
+# kgents API Horizontal Pod Autoscaler
+#
+# Scale based on CPU utilization with floor of 2 replicas for HA.
+# Based on load test baseline: 478 req/s at ~500m CPU sustained.
+#
+# AGENTESE: world.gateway.api.scaling
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: kgent-api
+  namespace: kgents-triad
+  labels:
+    app.kubernetes.io/name: kgent-api
+    app.kubernetes.io/component: autoscaling
+    app.kubernetes.io/part-of: kgents
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: kgent-api
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    # Scale based on CPU usage
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+
+    # Optional: Scale based on memory if needed
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+
+  # Scaling behavior (conservative)
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300  # 5 min cooldown
+      policies:
+        - type: Percent
+          value: 25
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+        - type: Pods
+          value: 4
+          periodSeconds: 15
+      selectPolicy: Max

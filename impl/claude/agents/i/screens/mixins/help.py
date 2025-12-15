@@ -51,7 +51,6 @@ Zoom:
 
 Screens:
   1-6  - Jump to specific screen
-  f    - Open Forge (agent composition)
   d    - Open Debugger (turn analysis)
   m    - Open Memory Map
 
@@ -86,7 +85,6 @@ Navigation:
   Tab       - Cycle to next screen
 
 Screens:
-  f         - Forge (composition)
   d         - Debugger (forensics)
   m         - Memory Map
 
@@ -129,7 +127,6 @@ aspects of the system.
     Like viewing inside a single room.
 
 Special Screens (Non-LOD):
-  - Forge (f): Agent composition studio
   - Debugger (d): Turn DAG, execution traces
   - Memory Map (m): Four Pillars visualization
 

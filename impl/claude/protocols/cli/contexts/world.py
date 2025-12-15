@@ -79,6 +79,12 @@ class WorldRouter(ContextRouter):
             _handle_town,
             aspects=["start", "step", "observe", "lens", "metrics", "budget"],
         )
+        self.register(
+            "viz",
+            "Visualization utilities (sparkline, graphs)",
+            _handle_viz,
+            aspects=["sparkline", "graph", "table"],
+        )
 
 
 # =============================================================================
@@ -133,6 +139,40 @@ def _handle_town(args: list[str], ctx: "InvocationContext | None" = None) -> int
     from protocols.cli.handlers.town import cmd_town
 
     return cmd_town(args, ctx)
+
+
+def _handle_viz(args: list[str], ctx: "InvocationContext | None" = None) -> int:
+    """
+    Handle world viz -> routes to visualization handlers.
+
+    Usage:
+        world viz sparkline <numbers>  -> Unicode sparkline
+        world viz graph <data>         -> ASCII graph (future)
+        world viz table <data>         -> Formatted table (future)
+    """
+    if not args:
+        print("world.viz - Visualization utilities")
+        print()
+        print("Aspects:")
+        print("  sparkline  - Render numbers as Unicode sparkline")
+        print("  graph      - ASCII graphs (coming soon)")
+        print("  table      - Formatted tables (coming soon)")
+        print()
+        print("Usage:")
+        print("  kgents world viz sparkline 1 2 3 4 5")
+        return 0
+
+    aspect = args[0].lower()
+    rest = args[1:]
+
+    if aspect == "sparkline":
+        from protocols.cli.handlers.sparkline import cmd_sparkline
+
+        return cmd_sparkline(rest, ctx)
+    else:
+        print(f"Unknown viz aspect: {aspect}")
+        print("  Available: sparkline")
+        return 1
 
 
 # =============================================================================

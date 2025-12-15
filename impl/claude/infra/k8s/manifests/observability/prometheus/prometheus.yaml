@@ -12,6 +12,9 @@ data:
       scrape_interval: 15s
       evaluation_interval: 15s
 
+    rule_files:
+      - /etc/prometheus/rules/*.yaml
+
     scrape_configs:
       # Scrape OTEL collector's prometheus exporter
       - job_name: 'otel-collector'
@@ -65,6 +68,8 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /etc/prometheus
+            - name: alerting-rules
+              mountPath: /etc/prometheus/rules
             - name: data
               mountPath: /prometheus
           resources:
@@ -90,6 +95,9 @@ spec:
         - name: config
           configMap:
             name: prometheus-config
+        - name: alerting-rules
+          configMap:
+            name: prometheus-alerting-rules
         - name: data
           emptyDir: {}
 ---

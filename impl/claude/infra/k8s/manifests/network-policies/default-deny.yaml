@@ -1,0 +1,33 @@
+# Default Deny Policies
+# Defense-in-depth: deny all ingress by default in sensitive namespaces
+# Phase 6: Launch Prep - security hardening
+---
+# Default deny for kgents-agents namespace
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: kgents-agents
+  labels:
+    app.kubernetes.io/name: default-deny
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: kgents
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+---
+# Default deny for kgents-triad namespace
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: kgents-triad
+  labels:
+    app.kubernetes.io/name: default-deny
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: kgents
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress

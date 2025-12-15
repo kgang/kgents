@@ -52,3 +52,21 @@ spec:
         cpu: "500m"
         memory: "512Mi"
       type: Container
+---
+# Gateway namespace for API and ingress workloads
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kgents-gateway
+  labels:
+    app.kubernetes.io/part-of: kgents
+    kgents.io/tier: gateway
+---
+# Observability namespace for monitoring
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kgents-observability
+  labels:
+    app.kubernetes.io/part-of: kgents
+    kgents.io/tier: observability

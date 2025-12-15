@@ -68,6 +68,12 @@ class ConceptRouter(ContextRouter):
             _handle_continuous,
             aspects=["run", "status"],
         )
+        self.register(
+            "creativity",
+            "Creative tools (oblique strategies, constraints, expansion)",
+            _handle_creativity,
+            aspects=["oblique", "constrain", "expand"],
+        )
 
 
 # =============================================================================
@@ -108,6 +114,51 @@ def _handle_continuous(args: list[str], ctx: "InvocationContext | None" = None) 
     from protocols.cli.handlers.continuous import cmd_continuous
 
     return cmd_continuous(args, ctx)
+
+
+def _handle_creativity(args: list[str], ctx: "InvocationContext | None" = None) -> int:
+    """
+    Handle concept creativity -> routes to oblique, constrain, expand handlers.
+
+    Usage:
+        concept creativity oblique     -> kg oblique
+        concept creativity constrain   -> kg constrain
+        concept creativity expand      -> kg yes-and
+    """
+    if not args:
+        # Show help for creativity sub-context
+        print("concept.creativity - Creative tools")
+        print()
+        print("Aspects:")
+        print("  oblique    - Brian Eno's lateral thinking prompts")
+        print("  constrain  - Generate productive constraints")
+        print("  expand     - Improv-style 'yes, and...' expansion")
+        print()
+        print("Usage:")
+        print("  kgents concept creativity oblique")
+        print("  kgents concept creativity constrain <topic>")
+        print("  kgents concept creativity expand <idea>")
+        return 0
+
+    aspect = args[0].lower()
+    rest = args[1:]
+
+    if aspect == "oblique":
+        from protocols.cli.handlers.oblique import cmd_oblique
+
+        return cmd_oblique(rest, ctx)
+    elif aspect == "constrain":
+        from protocols.cli.handlers.constrain import cmd_constrain
+
+        return cmd_constrain(rest, ctx)
+    elif aspect in ("expand", "yes-and"):
+        from protocols.cli.handlers.yes_and import cmd_yes_and
+
+        return cmd_yes_and(rest, ctx)
+    else:
+        print(f"Unknown creativity aspect: {aspect}")
+        print("  Available: oblique, constrain, expand")
+        return 1
 
 
 # =============================================================================

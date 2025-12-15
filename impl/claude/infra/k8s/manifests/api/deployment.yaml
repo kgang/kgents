@@ -1,0 +1,157 @@
+# kgents SaaS API Deployment
+#
+# Multi-tenant API serving K-gent Soul, AGENTESE, and Sessions
+# with metering, NATS streaming, and observability.
+#
+# AGENTESE: world.gateway.api
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kgent-api
+  namespace: kgents-triad
+  labels:
+    app.kubernetes.io/name: kgent-api
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: kgents
+spec:
+  replicas: 2
+  # Rolling update strategy for zero-downtime deployments
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1        # Allow 1 extra pod during rollout
+      maxUnavailable: 0  # Never reduce below desired count
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kgent-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kgent-api
+        app.kubernetes.io/component: api
+        app.kubernetes.io/part-of: kgents
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      # Spread across nodes for HA
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: kgent-api
+                topologyKey: kubernetes.io/hostname
+
+      serviceAccountName: default
+      terminationGracePeriodSeconds: 30
+
+      containers:
+        - name: api
+          image: kgents/api:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          env:
+            # API configuration
+            - name: API_HOST
+              value: "0.0.0.0"
+            - name: API_PORT
+              value: "8000"
+
+            # NATS configuration
+            - name: NATS_SERVERS
+              value: "nats://nats.kgents-agents.svc.cluster.local:4222"
+            - name: NATS_ENABLED
+              value: "true"
+
+            # Redis configuration (for idempotency)
+            - name: REDIS_URL
+              value: "redis://triad-redis.kgents-triad.svc.cluster.local:6379"
+
+            # OpenMeter API Key (from secret)
+            - name: OPENMETER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: kgents-api-secrets
+                  key: OPENMETER_API_KEY
+                  optional: true
+
+            # Stripe configuration (from secret)
+            - name: STRIPE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: kgents-api-secrets
+                  key: STRIPE_API_KEY
+                  optional: true
+            - name: STRIPE_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: kgents-api-secrets
+                  key: STRIPE_WEBHOOK_SECRET
+                  optional: true
+
+            # OpenTelemetry configuration
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://otel-collector.kgents-observability.svc.cluster.local:4317"
+            - name: OTEL_SERVICE_NAME
+              value: "kgent-api"
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.namespace=kgents,deployment.environment=production"
+
+          # Resource limits based on load test baseline (478 req/s)
+          # Conservative start; adjust based on production metrics
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+          # Liveness probe: Is the process healthy?
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          # Readiness probe: Is the service ready to accept traffic?
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          # Startup probe: Give slow containers time to start
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 30
+
+          # Graceful shutdown handling
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sleep", "5"]
+
+      # Init container to wait for dependencies (optional)
+      # initContainers:
+      #   - name: wait-for-nats
+      #     image: busybox:1.35
+      #     command: ['sh', '-c', 'until nc -z nats.kgents-agents.svc.cluster.local 4222; do sleep 2; done']

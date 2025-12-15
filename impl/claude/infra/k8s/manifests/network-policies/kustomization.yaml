@@ -1,0 +1,17 @@
+# Network Policies Kustomization
+# Apply in order: default-deny first, then specific allow rules
+# NOTE: Using 'labels' instead of 'commonLabels' to avoid polluting podSelector
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - default-deny.yaml
+  - nats-policy.yaml
+  - redis-policy.yaml
+
+# Only add labels to metadata, not to selectors
+labels:
+  - pairs:
+      app.kubernetes.io/managed-by: kustomize
+      kgents.io/security-tier: network-policy
+    includeSelectors: false

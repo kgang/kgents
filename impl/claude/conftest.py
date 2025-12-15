@@ -257,6 +257,12 @@ async def verified_bootstrap(bootstrap_witness: Any) -> Any:
 
 def pytest_configure(config: Any) -> None:
     """Register custom markers for kgents testing."""
+    import os
+
+    # Disable auto-LLM creation during tests to avoid slow subprocess calls
+    # Tests that need actual LLM should use MockLLMClient or explicitly set auto_llm=True
+    os.environ.setdefault("KGENTS_NO_AUTO_LLM", "1")
+
     # Law markers
     config.addinivalue_line(
         "markers", "law(name): mark test as category law verification"
@@ -283,6 +289,9 @@ def pytest_configure(config: Any) -> None:
     )
     config.addinivalue_line(
         "markers", "property: mark test as property-based (Phase 3)"
+    )
+    config.addinivalue_line(
+        "markers", "needs_llm: mark test as requiring real LLM (auto_llm enabled)"
     )
 
     # Register WitnessPlugin if --witness flag is used

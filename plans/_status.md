@@ -27,6 +27,21 @@
 
 ---
 
+## N-Phase Prompt Compiler — 100% COMPLETE ✅
+
+| Component | Status | Tests/Notes |
+|-----------|--------|-------------|
+| Schema/Parser/Validator | ✅ | `protocols/nphase/schema.py` + `ProjectDefinition.validate` |
+| Phase Templates (11) | ✅ | `protocols/nphase/templates/` |
+| Compiler | ✅ | `protocols/nphase/compiler.py` |
+| State Updater | ✅ | `protocols/nphase/state.py` |
+| Operad (compressed phases) | ✅ | `protocols/nphase/operad.py` |
+| CLI (`kgents nphase …`) | ✅ | `protocols/cli/handlers/nphase.py` |
+| Test Suite | ✅ | `protocols/nphase/_tests` (compiler/schema/state/templates/operad) |
+| EDUCATE/MEASURE | ⚠️ pending | Docs/tutorial + metrics hook to be added |
+
+---
+
 ## Context Management (`self/stream.md`) — 100% COMPLETE ✅
 
 **ALL PHASES COMPLETE** (302 tests):
@@ -199,6 +214,30 @@ DashboardApp subscribes via EventBus and pushes FeverOverlay modal.
 
 **Artifacts**: `cli/shared/` (439), `cli/commands/soul/` (1379), `handlers/soul.py` (283).
 **Tests**: 34 passing. **Next**: Phase 3 (a_gent.py).
+
+---
+
+## AGENTESE REPL (`devex/agentese-repl-crown-jewel.md`) — 95% COMPLETE ✅
+
+| Wave | Component | Status | Tests |
+|------|-----------|--------|-------|
+| 1 | Core REPL, Navigation, Tab Completion | ✅ | 44 |
+| 2 | Async Logos, Pipelines, Observer/Umwelt | ✅ | — |
+| 2.5 | Hardening (edge cases, security, stress) | ✅ | 29 |
+| 3 | Fuzzy matching, LLM suggestions, Session persistence | ✅ | 25 |
+| 4 | Joy-inducing (K-gent, easter eggs, welcome variations) | ✅ | 23 |
+| 5 | Ambient mode, Dotted path completion | ✅ | 28 |
+| 6 | Adaptive learning guide, Tutorial mode | ✅ | 136 |
+| 7 | Mastery tier skills | ✅ | 4 |
+
+**Total**: 289 tests, mypy clean, security audited.
+
+**Files**:
+- `protocols/cli/repl.py` — Core REPL engine
+- `protocols/cli/repl_fuzzy.py` — Fuzzy matching, LLM suggester
+- `protocols/cli/repl_session.py` — Session persistence
+- `protocols/cli/repl_guide.py` — Adaptive learning guide
+- `protocols/cli/repl_tutorial.py` — Tutorial mode
 
 ---
 

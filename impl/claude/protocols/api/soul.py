@@ -4,10 +4,14 @@ Soul API Endpoints.
 Exposes K-gent Soul capabilities via REST API:
 - POST /v1/soul/governance - Semantic gatekeeper for operations
 - POST /v1/soul/dialogue - Interactive dialogue with K-gent
+
+Records token usage to OpenMeter for billing when configured.
 """
 
 from __future__ import annotations
 
+import asyncio
+import logging
 from typing import TYPE_CHECKING, Optional
 
 from .models import (
@@ -21,6 +25,17 @@ if TYPE_CHECKING:
     from fastapi import APIRouter
 
     from .auth import ApiKeyData
+
+# SaaS infrastructure (optional)
+try:
+    from protocols.config import get_saas_clients
+
+    HAS_SAAS_CONFIG = True
+except ImportError:
+    HAS_SAAS_CONFIG = False
+    get_saas_clients = None  # type: ignore[assignment]
+
+logger = logging.getLogger(__name__)
 
 # Graceful FastAPI import
 try:
@@ -238,6 +253,15 @@ def create_soul_router() -> "APIRouter":
             budget=budget,
         )
 
+        # Record token usage to OpenMeter for billing (async, non-blocking)
+        if HAS_SAAS_CONFIG and get_saas_clients is not None:
+            asyncio.create_task(
+                _record_tokens_to_openmeter(
+                    user_id=api_key.user_id,
+                    tokens_used=output.tokens_used,
+                )
+            )
+
         # Return response
         return DialogueResponse(
             response=output.response,
@@ -264,3 +288,29 @@ def get_soul_instance() -> Optional[KgentSoul]:
         return KgentSoul()
     except Exception:
         return None
+
+
+async def _record_tokens_to_openmeter(
+    user_id: str,
+    tokens_used: int,
+    session_id: str = "",
+) -> None:
+    """
+    Record token usage to OpenMeter for billing.
+
+    Non-blocking helper that logs errors but doesn't raise.
+    """
+    try:
+        clients = get_saas_clients()
+        if clients.openmeter is not None:
+            # For soul.dialogue, we record total tokens as output
+            # (input tokens are minimal for the prompt)
+            await clients.openmeter.record_tokens(
+                tenant_id=user_id,  # Use user_id as tenant for now
+                session_id=session_id or user_id,
+                tokens_in=0,
+                tokens_out=tokens_used,
+                model="kgent-soul",
+            )
+    except Exception as e:
+        logger.warning(f"Failed to record tokens to OpenMeter: {e}")

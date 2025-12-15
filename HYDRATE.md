@@ -62,15 +62,18 @@ SENSE → ACT → REFLECT → (loop)
 
 ## Status
 
-**Tests**: 13,345 | **Mypy**: 0 errors | **Branch**: `main`
+**Tests**: 16,366 | **Mypy**: 0 errors (handlers fixed) | **Branch**: `main`
 
 | Tree | Progress | Notes |
 |------|----------|-------|
+| **saas** | 98% | Phase 9 COMPLETE. Soak tests, blue/green, chaos baseline. |
+| **agentese-repl** | 90% | Wave 7 COMPLETE. Mastery tier, 18 skills, celebration. |
+| **agent-town** | 85% | Phase 5 COMPLETE (87 viz tests). Scatter, SSE, NATS done. |
 | k-gent | 97% | Deferred: Fractal, Holographic |
 | memory | 100% ✓ | Phase 7 complete. Substrate + crystallization wired. |
 | turn-gents | 100% ✓ | 187 tests |
 | entropy | 100% ✓ | 87 tests |
-| visualization | 100% ✓ | 88 tests |
+| visualization | 100% ✓ | 87 tests |
 | monetization | 100% ✓ | 296 tests. licensing/billing/api/cli-pro |
 
 ---

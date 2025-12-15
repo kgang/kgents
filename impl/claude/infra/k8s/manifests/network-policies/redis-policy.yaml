@@ -1,0 +1,42 @@
+# Redis Network Policy
+# Restricts access to Redis cache - only agents and gateway tiers can access
+# Phase 6: Launch Prep - security hardening
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: redis-access
+  namespace: kgents-triad
+  labels:
+    app.kubernetes.io/name: redis-access
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: kgents
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: triad-redis
+  policyTypes:
+    - Ingress
+  ingress:
+    # Allow access from agent workloads
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kgents.io/tier: agents
+      ports:
+        - protocol: TCP
+          port: 6379
+    # Allow access from gateway (API servers)
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kgents.io/tier: gateway
+      ports:
+        - protocol: TCP
+          port: 6379
+    # Allow access from triad namespace (other triad components)
+    - from:
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 6379

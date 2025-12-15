@@ -318,6 +318,7 @@ class TestFlinchStoreSync:
         content = jsonl_path.read_text()
         assert "test_foo.py::test_bar" in content
 
+    @pytest.mark.slow
     def test_emit_sync_queues_for_telemetry(
         self, telemetry_store: Any, temp_dir: Path
     ) -> None:

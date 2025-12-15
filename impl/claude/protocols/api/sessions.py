@@ -7,12 +7,15 @@ Exposes KgentFlux via REST/SSE API:
 - GET /v1/kgent/sessions/{id} - Get session details
 - POST /v1/kgent/sessions/{id}/messages - Send message (returns SSE stream)
 - GET /v1/kgent/sessions/{id}/messages - Get message history
+
+Integrates with NATS for multi-consumer streaming when configured.
 """
 
 from __future__ import annotations
 
 import asyncio
 import json
+import logging
 from typing import TYPE_CHECKING, Any, AsyncIterator, Optional
 from uuid import UUID
 
@@ -20,6 +23,17 @@ if TYPE_CHECKING:
     from fastapi import APIRouter
 
     from .auth import ApiKeyData
+
+# SaaS infrastructure (optional)
+try:
+    from protocols.config import get_saas_clients
+
+    HAS_SAAS_CONFIG = True
+except ImportError:
+    HAS_SAAS_CONFIG = False
+    get_saas_clients = None  # type: ignore[assignment]
+
+logger = logging.getLogger(__name__)
 
 # Graceful FastAPI import
 try:
@@ -564,15 +578,41 @@ async def _stream_response(
 
     Uses KgentFlux.soul.dialogue() with on_chunk callback for
     real streaming instead of simulated chunking.
+
+    Also publishes chunks to NATS for multi-consumer scenarios
+    when SaaS infrastructure is configured.
     """
     from agents.k.soul import BudgetTier
 
     chunks: list[str] = []
     chunk_queue: asyncio.Queue[str | None] = asyncio.Queue()
+    chunk_index_counter = [0]  # Use list for closure mutability
+
+    # Get NATS bridge for multi-consumer streaming (if available)
+    nats_bridge = None
+    if HAS_SAAS_CONFIG and get_saas_clients is not None:
+        try:
+            clients = get_saas_clients()
+            nats_bridge = clients.nats
+        except Exception as e:
+            logger.warning(f"Failed to get NATS bridge: {e}")
 
     def on_chunk(chunk_text: str) -> None:
         """Callback for each streaming chunk from LLM."""
         chunk_queue.put_nowait(chunk_text)
+
+        # Also publish to NATS for multi-consumer scenarios
+        if nats_bridge is not None:
+            # Fire-and-forget publish (non-blocking)
+            asyncio.create_task(
+                _publish_chunk_to_nats(
+                    nats_bridge,
+                    session_id,
+                    chunk_text,
+                    chunk_index_counter[0],
+                )
+            )
+        chunk_index_counter[0] += 1
 
     # Track dialogue result
     dialogue_result: Any = None
@@ -662,6 +702,27 @@ async def _stream_response(
         # Send error event
         error_data = {"error": str(e), "type": type(e).__name__}
         yield f"event: error\ndata: {json.dumps(error_data)}\n\n"
+
+
+async def _publish_chunk_to_nats(
+    nats_bridge: Any,
+    session_id: str,
+    chunk_text: str,
+    chunk_index: int,
+) -> None:
+    """
+    Publish chunk to NATS for multi-consumer streaming.
+
+    Non-blocking helper that logs errors but doesn't raise.
+    """
+    try:
+        await nats_bridge.publish_chunk(
+            session_id=session_id,
+            chunk_text=chunk_text,
+            chunk_index=chunk_index,
+        )
+    except Exception as e:
+        logger.warning(f"Failed to publish chunk to NATS: {e}")
 
 
 # Import for type checking

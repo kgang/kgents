@@ -81,4 +81,7 @@ markers = [
     "e2e: end-to-end Kubernetes tests (require kind cluster)",
 ]
 
+[dependency-groups]
+dev = []
+
 # Note: mypy configuration is in mypy.ini - it provides more granular control

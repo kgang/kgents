@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import Any, Optional, Protocol
 
 try:
-    import stripe  # type: ignore[import-not-found]
+    import stripe
     from stripe import StripeError
 
     STRIPE_AVAILABLE = True

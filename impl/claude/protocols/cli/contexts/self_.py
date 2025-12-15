@@ -19,6 +19,8 @@ Usage:
     kgents self soul advise        # Advise mode
     kgents self soul challenge     # Challenge mode
     kgents self soul explore       # Explore mode
+    kgents self dashboard          # Real-time TUI dashboard
+    kgents self dashboard --demo   # Dashboard with demo data
 """
 
 from __future__ import annotations
@@ -61,13 +63,28 @@ class SelfRouter(ContextRouter):
             "soul",
             "K-gent soul dialogue",
             _handle_soul,
-            aspects=["reflect", "advise", "challenge", "explore", "vibe", "stream"],
+            aspects=[
+                "reflect",
+                "advise",
+                "challenge",
+                "explore",
+                "vibe",
+                "stream",
+                "why",
+                "tension",
+            ],
         )
         self.register(
             "capabilities",
             "What can I do? (affordances)",
             _handle_capabilities,
             aspects=["list", "acquire", "release"],
+        )
+        self.register(
+            "dashboard",
+            "Real-time TUI dashboard",
+            _handle_dashboard,
+            aspects=["demo"],
         )
 
 
@@ -102,6 +119,13 @@ def _handle_soul(args: list[str], ctx: "InvocationContext | None" = None) -> int
     from protocols.cli.handlers.soul import cmd_soul
 
     return cmd_soul(args, ctx)
+
+
+def _handle_dashboard(args: list[str], ctx: "InvocationContext | None" = None) -> int:
+    """Handle self dashboard -> delegating to existing dashboard handler."""
+    from protocols.cli.handlers.dashboard import cmd_dashboard
+
+    return cmd_dashboard(args, ctx)
 
 
 def _handle_capabilities(

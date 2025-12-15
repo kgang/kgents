@@ -145,6 +145,58 @@ SKILL_TREE: dict[str, dict[str, Any]] = {
         "demos": ["explored_void_entropy", "explored_void_shadow", "used_sip"],
         "threshold": 2,
     },
+    # ==========================================================================
+    # Mastery Tier - Advanced skills for those who've mastered the basics
+    # ==========================================================================
+    "master_composition": {
+        "name": "Composition Mastery",
+        "description": "Build multi-stage pipelines with 3+ operators",
+        "prerequisites": ["compose_chain"],
+        "demos": [
+            "used_triple_pipeline",
+            "used_quad_pipeline",
+            "used_quintuple_pipeline",
+        ],
+        "threshold": 5,  # 5 uses of advanced pipelines
+    },
+    "master_observers": {
+        "name": "Observer Mastery",
+        "description": "All archetypes, deep umwelt manipulation",
+        "prerequisites": ["observer_switch"],
+        "demos": [
+            "switched_to_explorer",
+            "switched_to_developer",
+            "switched_to_architect",
+            "switched_to_admin",
+        ],
+        "threshold": 3,  # Use 3 of 4 archetypes
+    },
+    "master_dialectic": {
+        "name": "Dialectic Mastery",
+        "description": "Hegelian synthesis through refine operations",
+        "prerequisites": ["invoke_aspect"],
+        "demos": ["used_refine", "used_dialectic", "used_synthesis"],
+        "threshold": 3,  # 3 dialectical operations
+    },
+    "master_entropy": {
+        "name": "Entropy Mastery",
+        "description": "Full void operations: sip, tithe, pour",
+        "prerequisites": ["master_void"],
+        "demos": ["used_sip", "used_tithe", "used_pour", "used_serendipity"],
+        "threshold": 5,  # 5 entropy operations
+    },
+    "mastery_achieved": {
+        "name": "AGENTESE Master",
+        "description": "All mastery skills unlocked - you've achieved true fluency",
+        "prerequisites": [
+            "master_composition",
+            "master_observers",
+            "master_dialectic",
+            "master_entropy",
+        ],
+        "demos": [],  # Auto-unlocked when all prerequisites met
+        "threshold": 0,  # No demos needed, prereqs are sufficient
+    },
 }
 
 # Beginner path - suggested order for absolute beginners
@@ -170,6 +222,7 @@ class FluencyLevel(Enum):
     BEGINNER = "beginner"  # Knows basics, exploring
     INTERMEDIATE = "intermediate"  # Comfortable, learning advanced
     FLUENT = "fluent"  # Knows the system well
+    MASTER = "master"  # Achieved mastery_achieved skill
 
 
 # =============================================================================
@@ -192,6 +245,10 @@ class Skill:
     @property
     def progress(self) -> float:
         """Progress toward mastery (0.0 to 1.0)."""
+        if not self.demos_required and self.threshold == 0:
+            # Special case: skill with no demos relies purely on prerequisites
+            # Progress is handled externally by FluencyTracker
+            return 0.0  # Will be overridden when prerequisites met
         if not self.demos_required:
             return 1.0
         completed = len(self.demos_completed & set(self.demos_required))
@@ -200,6 +257,10 @@ class Skill:
     @property
     def is_mastered(self) -> bool:
         """Whether this skill is mastered."""
+        # Skills with threshold=0 and no demos are "meta-skills"
+        # They're mastered when all prerequisites are mastered (checked externally)
+        if not self.demos_required and self.threshold == 0:
+            return False  # Will be determined by FluencyTracker based on prerequisites
         return self.progress >= 1.0
 
     @property
@@ -352,6 +413,98 @@ class MicroLesson:
             next_topics=["composition", "time_context"],
         )
 
+    # =========================================================================
+    # Mastery Tier Lessons
+    # =========================================================================
+
+    @classmethod
+    def for_master_composition(cls) -> "MicroLesson":
+        """Lesson on advanced composition (mastery tier)."""
+        return cls(
+            topic="master_composition",
+            title="Composition Mastery: Multi-Stage Pipelines",
+            context="any",
+            explanation="True AGENTESE fluency means thinking in compositions:\n"
+            "  - Chain 3+ operations in a single pipeline\n"
+            "  - Each >> passes the result to the next stage\n"
+            "  - The composition IS the program\n"
+            "Composition over construction. Morphisms over methods.",
+            examples=[
+                "self.status >> concept.count >> void.entropy.sip",
+                "world.agents >> self.memory.store >> time.trace",
+                "concept.laws >> self.soul.reflect >> void.shadow.project >> time.witness",
+            ],
+            try_it="self.status >> concept.count >> void.entropy.sip",
+            next_topics=["master_dialectic", "master_entropy"],
+        )
+
+    @classmethod
+    def for_master_observers(cls) -> "MicroLesson":
+        """Lesson on observer archetypes (mastery tier)."""
+        return cls(
+            topic="master_observers",
+            title="Observer Mastery: The Umwelt Shapes Reality",
+            context="any",
+            explanation="Different observers see different affordances:\n"
+            "  - explorer: Pedagogical view, safe exploration\n"
+            "  - developer: Technical details, debugging\n"
+            "  - architect: System structure, dependencies\n"
+            "  - admin: Full access, all affordances visible\n"
+            "'There is no view from nowhere.'",
+            examples=[
+                "/observer explorer",
+                "/observer developer",
+                "/observer architect",
+                "/observer admin",
+            ],
+            try_it="/observer architect",
+            next_topics=["master_composition", "master_dialectic"],
+        )
+
+    @classmethod
+    def for_master_dialectic(cls) -> "MicroLesson":
+        """Lesson on dialectical operations (mastery tier)."""
+        return cls(
+            topic="master_dialectic",
+            title="Dialectic Mastery: Hegelian Synthesis",
+            context="any",
+            explanation="AGENTESE supports dialectical reasoning:\n"
+            "  - refine: Challenge and improve a concept\n"
+            "  - dialectic: Thesis → Antithesis → Synthesis\n"
+            "  - synthesize: Merge multiple views\n"
+            "The dialectic IS the path to truth.",
+            examples=[
+                "concept.refine",
+                "self.soul.refine",
+                "concept.dialectic >> self.synthesis",
+            ],
+            try_it="concept.refine",
+            next_topics=["master_entropy", "master_composition"],
+        )
+
+    @classmethod
+    def for_master_entropy(cls) -> "MicroLesson":
+        """Lesson on entropy operations (mastery tier)."""
+        return cls(
+            topic="master_entropy",
+            title="Entropy Mastery: The Accursed Share",
+            context="void",
+            explanation="True mastery embraces entropy:\n"
+            "  - sip: Draw from the random pool\n"
+            "  - tithe: Return gratitude to the void\n"
+            "  - pour: Flood entropy into a context\n"
+            "  - serendipity: Request beautiful accidents\n"
+            "'Everything is slop or comes from slop.'",
+            examples=[
+                "void.entropy.sip",
+                "void.tithe",
+                "void.pour",
+                "void.serendipity",
+            ],
+            try_it="void.serendipity",
+            next_topics=["master_dialectic", "master_composition"],
+        )
+
 
 # =============================================================================
 # Fluency Tracker
@@ -454,8 +607,16 @@ class FluencyTracker:
         # Composition demos
         if ">>" in cmd_lower:
             newly_mastered.extend(self.record_demo("used_pipeline"))
-            if cmd_lower.count(">>") >= 2:
+            pipe_count = cmd_lower.count(">>")
+            if pipe_count >= 2:
                 newly_mastered.extend(self.record_demo("used_multi_pipeline"))
+            # Mastery tier: advanced pipelines
+            if pipe_count >= 3:
+                newly_mastered.extend(self.record_demo("used_triple_pipeline"))
+            if pipe_count >= 4:
+                newly_mastered.extend(self.record_demo("used_quad_pipeline"))
+            if pipe_count >= 5:
+                newly_mastered.extend(self.record_demo("used_quintuple_pipeline"))
 
         # Observer demos
         if cmd_lower == "/observer":
@@ -463,6 +624,10 @@ class FluencyTracker:
 
         if cmd_lower.startswith("/observer ") and len(cmd_lower.split()) > 1:
             newly_mastered.extend(self.record_demo("switched_observer"))
+            # Mastery tier: track specific archetypes
+            archetype = cmd_lower.split()[1].lower()
+            if archetype in ("explorer", "developer", "architect", "admin"):
+                newly_mastered.extend(self.record_demo(f"switched_to_{archetype}"))
 
         # Context mastery demos
         if context and context[0] == "self":
@@ -480,15 +645,55 @@ class FluencyTracker:
                     newly_mastered.extend(self.record_demo("explored_void_entropy"))
                 elif context[1] == "shadow":
                     newly_mastered.extend(self.record_demo("explored_void_shadow"))
+            # Entropy operations (mastery tier)
             if "sip" in cmd_lower:
                 newly_mastered.extend(self.record_demo("used_sip"))
+            if "tithe" in cmd_lower:
+                newly_mastered.extend(self.record_demo("used_tithe"))
+            if "pour" in cmd_lower:
+                newly_mastered.extend(self.record_demo("used_pour"))
+            if "serendipity" in cmd_lower:
+                newly_mastered.extend(self.record_demo("used_serendipity"))
+
+        # Dialectic operations (mastery tier) - anywhere in the REPL
+        if "refine" in cmd_lower:
+            newly_mastered.extend(self.record_demo("used_refine"))
+        if "dialectic" in cmd_lower:
+            newly_mastered.extend(self.record_demo("used_dialectic"))
+        if "synthesis" in cmd_lower or "synthesize" in cmd_lower:
+            newly_mastered.extend(self.record_demo("used_synthesis"))
 
         return list(set(newly_mastered))
+
+    def _is_meta_skill_mastered(self, skill_id: str) -> bool:
+        """Check if a meta-skill (no demos, threshold=0) is mastered via prerequisites."""
+        skill = self.skills.get(skill_id)
+        if not skill:
+            return False
+        # Only for meta-skills (no demos, threshold 0)
+        if skill.demos_required or skill.threshold > 0:
+            return skill.is_mastered
+        # Check if all prerequisites are mastered
+        return all(self._is_skill_mastered(p) for p in skill.prerequisites)
+
+    def _is_skill_mastered(self, skill_id: str) -> bool:
+        """Check if a skill is mastered, including meta-skills."""
+        skill = self.skills.get(skill_id)
+        if not skill:
+            return False
+        # Meta-skill check
+        if not skill.demos_required and skill.threshold == 0:
+            return self._is_meta_skill_mastered(skill_id)
+        return skill.is_mastered
 
     @property
     def level(self) -> FluencyLevel:
         """Calculate overall fluency level."""
-        mastered = sum(1 for s in self.skills.values() if s.is_mastered)
+        # Check for mastery achievement first (meta-skill)
+        if self._is_meta_skill_mastered("mastery_achieved"):
+            return FluencyLevel.MASTER
+
+        mastered = sum(1 for s in self.skills.values() if self._is_skill_mastered(s.id))
         total = len(self.skills)
         ratio = mastered / total if total > 0 else 0
 
@@ -504,7 +709,7 @@ class FluencyTracker:
     @property
     def mastered_skills(self) -> list[str]:
         """List of mastered skill IDs."""
-        return [s.id for s in self.skills.values() if s.is_mastered]
+        return [s.id for s in self.skills.values() if self._is_skill_mastered(s.id)]
 
     @property
     def available_skills(self) -> list[str]:
@@ -512,7 +717,7 @@ class FluencyTracker:
         mastered = set(self.mastered_skills)
         available = []
         for skill in self.skills.values():
-            if skill.is_mastered:
+            if self._is_skill_mastered(skill.id):
                 continue
             if all(p in mastered for p in skill.prerequisites):
                 available.append(skill.id)
@@ -598,6 +803,11 @@ class AdaptiveGuide:
                 "composition": MicroLesson.for_composition(),
                 "observers": MicroLesson.for_observers(),
                 "void_context": MicroLesson.for_void(),
+                # Mastery tier lessons
+                "master_composition": MicroLesson.for_master_composition(),
+                "master_observers": MicroLesson.for_master_observers(),
+                "master_dialectic": MicroLesson.for_master_dialectic(),
+                "master_entropy": MicroLesson.for_master_entropy(),
             }
             # Add context lessons
             for ctx in ("self", "world", "concept", "void", "time"):
@@ -613,6 +823,33 @@ class AdaptiveGuide:
         contexts = ("self", "world", "concept", "void", "time")
         if topic in contexts:
             return self._lessons.get(f"context_{topic}")
+
+        # Skill ID to lesson topic mapping
+        skill_to_lesson: dict[str, str] = {
+            # Navigation skills
+            "nav_context": "navigation",
+            "nav_up": "navigation",
+            "nav_root": "navigation",
+            # Introspection skills
+            "introspect_basic": "introspection",
+            "introspect_deep": "introspection",
+            # Invocation skills
+            "invoke_basic": "invocation",
+            "invoke_aspect": "invocation",
+            # Composition skills
+            "compose_basic": "composition",
+            "compose_chain": "composition",
+            # Observer skills
+            "observer_check": "observers",
+            "observer_switch": "observers",
+            # Context mastery skills
+            "master_self": "context_self",
+            "master_void": "void_context",
+            # Mastery tier (direct match in _lessons)
+            # master_composition, master_observers, master_dialectic, master_entropy
+        }
+        if topic in skill_to_lesson:
+            return self._lessons.get(skill_to_lesson[topic])
 
         # Common abbreviations and alternatives
         aliases: dict[str, str] = {
@@ -707,6 +944,8 @@ class AdaptiveGuide:
             mastered = len(self.tracker.mastered_skills)
             total = len(self.tracker.skills)
             return f"Welcome back. {mastered}/{total} skills mastered. Type '/fluency' for details."
+        elif level == FluencyLevel.MASTER:
+            return "Welcome back, Master. The REPL awaits your compositions."
         else:
             return "Welcome back. You're fluent in AGENTESE. Learning mode is here if you need it."
 
@@ -718,17 +957,62 @@ class AdaptiveGuide:
         """
         newly_mastered = self.tracker.record_command(command, context)
 
+        # Check for mastery_achieved unlock (special case)
+        mastery_skill = self.tracker.skills.get("mastery_achieved")
+        if (
+            mastery_skill
+            and mastery_skill.is_mastered
+            and "mastery_achieved" not in newly_mastered
+        ):
+            # Check if all 4 prerequisites were just completed
+            prereqs = [
+                "master_composition",
+                "master_observers",
+                "master_dialectic",
+                "master_entropy",
+            ]
+            if all(p in self.tracker.mastered_skills for p in prereqs):
+                # This might be the moment mastery was achieved
+                if not hasattr(self, "_mastery_celebrated"):
+                    self._mastery_celebrated = False
+                if not self._mastery_celebrated:
+                    newly_mastered.append("mastery_achieved")
+                    self._mastery_celebrated = True
+
         message = None
         if newly_mastered:
-            skill_names = [
-                self.tracker.skills[s].name
-                for s in newly_mastered
-                if s in self.tracker.skills
-            ]
-            if skill_names:
-                message = f"Skill unlocked: {', '.join(skill_names)}"
+            # Check for mastery celebration (Easter egg!)
+            if "mastery_achieved" in newly_mastered:
+                message = self._mastery_celebration()
+            else:
+                skill_names = [
+                    self.tracker.skills[s].name
+                    for s in newly_mastered
+                    if s in self.tracker.skills
+                ]
+                if skill_names:
+                    message = f"Skill unlocked: {', '.join(skill_names)}"
 
         return newly_mastered, message
+
+    def _mastery_celebration(self) -> str:
+        """The Easter egg celebration for achieving mastery."""
+        return f"""
+{BOLD}{CYAN}╔══════════════════════════════════════════════════════════════╗
+║                                                                ║
+║   ✨  AGENTESE MASTER ACHIEVED  ✨                             ║
+║                                                                ║
+║   "The noun is a lie. There is only the rate of change."       ║
+║                                                                ║
+║   You have transcended the beginner's path.                    ║
+║   You compose where others construct.                          ║
+║   You see through the umwelt.                                  ║
+║   You embrace the accursed share.                              ║
+║                                                                ║
+║   The REPL is now your instrument.                             ║
+║                                                                ║
+╚══════════════════════════════════════════════════════════════╝{RESET}
+"""
 
     def suggest_next(self) -> str:
         """Suggest what to learn next."""
@@ -748,6 +1032,12 @@ class AdaptiveGuide:
                     lines.append(f"  Try: {lesson.try_it}")
                 lines.append(f"\n  Type '/learn {next_skill_id}' for full lesson.")
                 return "\n".join(lines)
+
+        if level == FluencyLevel.MASTER:
+            return (
+                "You are an AGENTESE Master. The REPL is your instrument.\n"
+                "Compose freely, or teach others the way."
+            )
 
         if level == FluencyLevel.FLUENT:
             return (

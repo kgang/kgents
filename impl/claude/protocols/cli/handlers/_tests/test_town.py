@@ -9,6 +9,8 @@ Verifies:
 
 from __future__ import annotations
 
+from collections.abc import Generator
+
 import pytest
 from agents.town.environment import create_mpp_environment
 from agents.town.flux import TownFlux
@@ -51,7 +53,7 @@ class TestTownCommands:
     """Test town CLI commands."""
 
     @pytest.fixture(autouse=True)
-    def setup_simulation(self) -> None:
+    def setup_simulation(self) -> Generator[None, None, None]:
         """Set up simulation state for each test."""
         # Clear state
         _simulation_state.clear()
@@ -175,7 +177,7 @@ class TestTownCommandDispatch:
     """Test command dispatch."""
 
     @pytest.fixture(autouse=True)
-    def setup_simulation(self) -> None:
+    def setup_simulation(self) -> Generator[None, None, None]:
         """Set up simulation state."""
         _simulation_state.clear()
         yield
@@ -219,7 +221,7 @@ class TestUserModeIntegration:
     """Integration tests for user modes."""
 
     @pytest.fixture(autouse=True)
-    def setup_simulation(self) -> None:
+    def setup_simulation(self) -> Generator[None, None, None]:
         """Set up simulation state."""
         _simulation_state.clear()
         env = create_mpp_environment()
@@ -252,7 +254,8 @@ class TestUserModeIntegration:
         store = alice.memory._store
         # At least one whisper memory should be stored
         whisper_memories = [
-            v for v in store.state.values()
+            v
+            for v in store.state.values()
             if isinstance(v, dict) and v.get("type") == "whisper"
         ]
         assert len(whisper_memories) >= 1
@@ -313,7 +316,8 @@ class TestUserModeIntegration:
         alice = env.get_citizen_by_name("Alice")
         store = alice.memory._store
         intervention_memories = [
-            v for v in store.state.values()
+            v
+            for v in store.state.values()
             if isinstance(v, dict) and v.get("type") == "intervention"
         ]
         assert len(intervention_memories) >= 1

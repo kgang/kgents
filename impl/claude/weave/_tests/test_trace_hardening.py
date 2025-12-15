@@ -189,6 +189,7 @@ class TestTraceRendererResilience:
 class TestPerformance:
     """Performance tests for trace stack."""
 
+    @pytest.mark.slow
     def test_static_analysis_under_5s(self) -> None:
         """Static analysis of impl/ completes in < 5s."""
         from weave.static_trace import StaticCallGraph

@@ -1,0 +1,155 @@
+# Prometheus Alerting Rules for kgents SaaS Infrastructure
+# Extracted from docs/saas/runbook.md with additional critical alerts
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-alerting-rules
+  namespace: kgents-observability
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/component: alerting
+    app.kubernetes.io/part-of: kgents
+data:
+  alerting-rules.yaml: |
+    groups:
+      - name: kgents-saas
+        rules:
+          # NATS Circuit Breaker Alerts
+          - alert: NATSCircuitOpen
+            expr: kgents_nats_circuit_state == 1
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: NATS circuit breaker is open
+              description: NATS circuit breaker has been open for 5 minutes
+              runbook_url: docs/saas/runbook.md#nats-circuit-breaker-open
+
+          - alert: NATSCircuitOpenCritical
+            expr: kgents_nats_circuit_state == 1
+            for: 15m
+            labels:
+              severity: critical
+            annotations:
+              summary: NATS circuit breaker is stuck open
+              description: NATS circuit breaker has been open for 15 minutes - requires investigation
+              runbook_url: docs/saas/runbook.md#nats-circuit-breaker-open
+
+          # NATS Pod Health
+          - alert: NATSPodNotReady
+            expr: kube_pod_status_ready{namespace="kgents-agents",pod=~"nats-.*"} == 0
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: NATS pod is not ready
+              description: "NATS pod {{ $labels.pod }} is not ready for 5 minutes"
+              runbook_url: docs/saas/runbook.md#common-issues
+
+          # OpenMeter Alerts
+          - alert: OpenMeterFlushErrors
+            expr: rate(kgents_openmeter_flush_errors_total[5m]) > 0.1
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: OpenMeter flush errors detected
+              description: OpenMeter is experiencing flush errors
+              runbook_url: docs/saas/runbook.md#openmeter-flush-failures
+
+          - alert: OpenMeterBufferFull
+            expr: kgents_openmeter_events_buffered > 1000
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: OpenMeter buffer is filling up
+              description: "OpenMeter buffer has {{ $value }} events - may indicate flush failures"
+              runbook_url: docs/saas/runbook.md#openmeter-flush-failures
+
+          # Stripe Webhook Alerts
+          - alert: StripeWebhookErrors
+            expr: rate(kgents_stripe_webhooks_errors_total[5m]) > 0.1
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: Stripe webhook errors detected
+              description: Stripe webhooks are failing
+              runbook_url: docs/saas/runbook.md#stripe-webhook-failures
+
+          # API Latency
+          - alert: HighAPILatency
+            expr: histogram_quantile(0.95, rate(kgents_api_request_latency_seconds_bucket[5m])) > 2
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: High API latency detected
+              description: "95th percentile API latency is {{ $value | humanizeDuration }} (threshold: 2s)"
+
+      - name: kgents-backup
+        rules:
+          # NATS Backup Job Health
+          - alert: NATSBackupFailed
+            expr: kube_job_status_failed{job_name=~"nats-backup.*"} > 0
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: NATS backup job failed
+              description: "NATS backup job {{ $labels.job_name }} has failed"
+              runbook_url: docs/saas/runbook.md#backup-job-failing
+
+          - alert: NATSBackupMissing
+            expr: time() - kube_job_status_completion_time{job_name=~"nats-backup.*"} > 90000
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: NATS backup not completed in 25 hours
+              description: "No successful NATS backup in the last 25 hours. RPO at risk."
+              runbook_url: docs/saas/runbook.md#cronjob-not-running
+
+          - alert: NATSBackupMissingCritical
+            expr: time() - kube_job_status_completion_time{job_name=~"nats-backup.*"} > 172800
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: NATS backup missing for 48+ hours
+              description: "No successful NATS backup in 48 hours. Immediate investigation required."
+              runbook_url: docs/saas/runbook.md#cronjob-not-running
+
+          # Backup PVC Capacity
+          - alert: BackupPVCNearCapacity
+            expr: kubelet_volume_stats_used_bytes{persistentvolumeclaim="nats-backup-pvc"} / kubelet_volume_stats_capacity_bytes{persistentvolumeclaim="nats-backup-pvc"} > 0.8
+            for: 15m
+            labels:
+              severity: warning
+            annotations:
+              summary: Backup PVC approaching capacity
+              description: "NATS backup PVC is {{ $value | humanizePercentage }} full. Cleanup may be needed."
+              runbook_url: docs/saas/runbook.md#pvc-full-cleanup-not-running
+
+          - alert: BackupPVCCritical
+            expr: kubelet_volume_stats_used_bytes{persistentvolumeclaim="nats-backup-pvc"} / kubelet_volume_stats_capacity_bytes{persistentvolumeclaim="nats-backup-pvc"} > 0.95
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: Backup PVC nearly full
+              description: "NATS backup PVC is {{ $value | humanizePercentage }} full. Backups may fail."
+              runbook_url: docs/saas/runbook.md#pvc-full-cleanup-not-running
+
+          # S3 Upload Health (if enabled)
+          - alert: S3UploadStale
+            expr: time() - kgents_backup_s3_last_upload_timestamp > 172800
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: S3 backup upload stale
+              description: "No S3 backup upload in 48 hours. Off-site protection degraded."
+              runbook_url: docs/saas/runbook.md#s3-upload-failing

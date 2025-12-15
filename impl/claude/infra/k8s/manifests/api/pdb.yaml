@@ -1,0 +1,25 @@
+# kgents API PodDisruptionBudget
+#
+# Ensures at least 1 API pod is always available during:
+#   - Node drains
+#   - Cluster upgrades
+#   - Voluntary disruptions
+#
+# AGENTESE: world.gateway.api.resilience
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: kgent-api-pdb
+  namespace: kgents-triad
+  labels:
+    app.kubernetes.io/name: kgent-api
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: kgents
+spec:
+  # Minimum 1 pod must remain available
+  # With 2 replicas, this allows 1 pod to be disrupted at a time
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kgent-api

@@ -29,7 +29,6 @@ class TestKgentsScreen:
             # Screen cycling
             "tab",
             # Special screen shortcuts
-            "f",  # Forge
             "d",  # Debugger
             "m",  # Memory map
             # Global commands

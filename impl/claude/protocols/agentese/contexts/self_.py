@@ -2197,7 +2197,7 @@ class SelfContextResolver:
         Resolve a self.* path to a node.
 
         Args:
-            holon: The self subsystem (memory, capabilities, state, identity, judgment, semaphore, vitals)
+            holon: The self subsystem (memory, capabilities, state, identity, judgment, semaphore, vitals, dashboard)
             rest: Additional path components
 
         Returns:
@@ -2220,6 +2220,9 @@ class SelfContextResolver:
                 return self._judgment or JudgmentNode()
             case "semaphore":
                 return self._semaphore or SemaphoreNode()
+            case "dashboard":
+                # Delegate to CLI handler (TUI takes over terminal)
+                return DashboardNode()
             case "vitals":
                 # Delegate to vitals resolver
                 if self._vitals_resolver is None:
@@ -2232,6 +2235,67 @@ class SelfContextResolver:
             case _:
                 # Generic self node for undefined holons
                 return GenericSelfNode(holon)
+
+
+# === Dashboard Node ===
+
+
+@dataclass
+class DashboardNode(BaseLogosNode):
+    """
+    self.dashboard - Real-time TUI dashboard.
+
+    Delegates to the CLI dashboard handler since the TUI
+    doesn't fit the Logos render model (it takes over the terminal).
+
+    AGENTESE: self.dashboard
+              self.dashboard.manifest  (launches TUI)
+              self.dashboard.demo      (launches TUI with demo data)
+    """
+
+    _handle: str = "self.dashboard"
+
+    @property
+    def handle(self) -> str:
+        return self._handle
+
+    def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
+        return ("manifest", "demo")
+
+    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+        """Launch the dashboard TUI."""
+        from protocols.cli.handlers.dashboard import cmd_dashboard
+
+        # Run the dashboard (this takes over the terminal)
+        cmd_dashboard([], None)
+
+        # Return a simple acknowledgment after dashboard exits
+        return BasicRendering(
+            summary="Dashboard",
+            content="Dashboard session ended.",
+            metadata={"status": "exited"},
+        )
+
+    async def _invoke_aspect(
+        self,
+        aspect: str,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> Any:
+        """Handle dashboard aspects."""
+        from protocols.cli.handlers.dashboard import cmd_dashboard
+
+        match aspect:
+            case "demo":
+                cmd_dashboard(["--demo"], None)
+                return BasicRendering(
+                    summary="Dashboard (Demo)",
+                    content="Dashboard demo session ended.",
+                    metadata={"status": "exited", "mode": "demo"},
+                )
+            case _:
+                # Default to manifest behavior
+                return await self.manifest(observer)
 
 
 # === Generic Self Node ===

@@ -693,6 +693,21 @@ class ConceptContextResolver:
         if handle in self._cache:
             return self._cache[handle]
 
+        # Special-case: N-Phase prompt compiler handles
+        if holon == "nphase":
+            node = ConceptNode(
+                _handle=handle,
+                name="nphase",
+                domain="compiler",
+                definition="N-Phase prompt compiler (compile/validate/template/bootstrap)",
+                examples=("concept.nphase.compile", "concept.nphase.validate"),
+                related_concepts=("forest", "do", "agent-town"),
+                _registry=self.registry,
+                _grammarian=self.grammarian,
+            )
+            self._cache[handle] = node
+            return node
+
         # Check registry if available
         if self.registry:
             try:

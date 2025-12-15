@@ -162,7 +162,6 @@ class GentleNavigator:
             "observatory": 0,  # Strategy
             "flux": 1,  # Tactical
             "mri": 1,  # Tactical
-            "forge": 1,  # Tactical
             "terrarium": 1,  # Tactical
             "debugger": 2,  # Forensic
         }

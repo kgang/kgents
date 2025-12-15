@@ -13,7 +13,6 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-
 from infra.cortex.probes import (
     CognitiveProbe,
     PathProbe,
@@ -23,7 +22,6 @@ from infra.cortex.probes import (
     full_probe_suite,
     probe_runtime,
 )
-
 
 # =============================================================================
 # Mock Runtimes
@@ -126,6 +124,7 @@ class TestCognitiveProbe:
         assert "Unexpected" in result.message
 
     @pytest.mark.asyncio
+    @pytest.mark.slow
     async def test_degraded_on_high_latency(self) -> None:
         """Test probe marks degraded on high latency."""
         runtime = SlowRuntime(response="HEALTHY", delay=6.0)
@@ -213,6 +212,7 @@ class TestPathProbe:
     @pytest.mark.asyncio
     async def test_successful_path_resolution(self) -> None:
         """Test probe with successful path invocation."""
+
         # Create mock cortex servicer
         @dataclass
         class MockInvokeResult:
@@ -232,6 +232,7 @@ class TestPathProbe:
     @pytest.mark.asyncio
     async def test_path_error(self) -> None:
         """Test probe handles path errors."""
+
         @dataclass
         class MockInvokeResult:
             result: Any = None
@@ -249,6 +250,7 @@ class TestPathProbe:
     @pytest.mark.asyncio
     async def test_empty_result(self) -> None:
         """Test probe handles empty results."""
+
         @dataclass
         class MockInvokeResult:
             result: Any = None
@@ -289,15 +291,14 @@ class TestConvenienceFunctions:
     @pytest.mark.asyncio
     async def test_probe_runtime_with_reasoning(self) -> None:
         """Test probe_runtime with reasoning probe - degraded counts as healthy."""
+
         # Runtime that responds HEALTHY for cognitive but wrong for arithmetic
         # Note: DEGRADED status still counts as "healthy" in the probe system
         # because it indicates the LLM is responsive, just not ideal
         class MixedRuntime:
             call_count = 0
 
-            async def raw_completion(
-                self, context: Any
-            ) -> tuple[str, dict[str, Any]]:
+            async def raw_completion(self, context: Any) -> tuple[str, dict[str, Any]]:
                 self.call_count += 1
                 if self.call_count == 1:
                     return "HEALTHY", {}
@@ -311,13 +312,12 @@ class TestConvenienceFunctions:
     @pytest.mark.asyncio
     async def test_probe_runtime_with_reasoning_error(self) -> None:
         """Test probe_runtime fails when reasoning probe errors."""
+
         # Runtime that responds HEALTHY for cognitive but errors for arithmetic
         class ErrorOnSecondRuntime:
             call_count = 0
 
-            async def raw_completion(
-                self, context: Any
-            ) -> tuple[str, dict[str, Any]]:
+            async def raw_completion(self, context: Any) -> tuple[str, dict[str, Any]]:
                 self.call_count += 1
                 if self.call_count == 1:
                     return "HEALTHY", {}
@@ -349,18 +349,10 @@ class TestProbeResult:
 
     def test_healthy_statuses(self) -> None:
         """Test healthy property for various statuses."""
-        healthy_result = ProbeResult(
-            status=ProbeStatus.HEALTHY, latency_ms=100.0
-        )
-        degraded_result = ProbeResult(
-            status=ProbeStatus.DEGRADED, latency_ms=100.0
-        )
-        unhealthy_result = ProbeResult(
-            status=ProbeStatus.UNHEALTHY, latency_ms=100.0
-        )
-        timeout_result = ProbeResult(
-            status=ProbeStatus.TIMEOUT, latency_ms=100.0
-        )
+        healthy_result = ProbeResult(status=ProbeStatus.HEALTHY, latency_ms=100.0)
+        degraded_result = ProbeResult(status=ProbeStatus.DEGRADED, latency_ms=100.0)
+        unhealthy_result = ProbeResult(status=ProbeStatus.UNHEALTHY, latency_ms=100.0)
+        timeout_result = ProbeResult(status=ProbeStatus.TIMEOUT, latency_ms=100.0)
         error_result = ProbeResult(status=ProbeStatus.ERROR, latency_ms=100.0)
 
         assert healthy_result.healthy is True

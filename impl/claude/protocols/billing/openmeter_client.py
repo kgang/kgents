@@ -35,6 +35,16 @@ from enum import Enum
 from typing import Any, Optional
 from uuid import UUID, uuid4
 
+# OpenTelemetry tracing (optional)
+try:
+    from opentelemetry import trace
+
+    _tracer = trace.get_tracer("kgents.billing.openmeter", "0.1.0")
+    HAS_OTEL = True
+except ImportError:
+    _tracer = None  # type: ignore[assignment]
+    HAS_OTEL = False
+
 logger = logging.getLogger(__name__)
 
 
@@ -377,11 +387,29 @@ class OpenMeterClient:
                 await self.flush()
 
     async def _send_to_openmeter(self, events: list[UsageEventSchema]) -> None:
-        """Send events to OpenMeter API."""
+        """
+        Send events to OpenMeter API.
+
+        Creates OpenTelemetry span when tracing is enabled.
+        """
         if not events:
             return
 
+        # Create span if tracing enabled
+        span_context = None
+        if HAS_OTEL and _tracer is not None:
+            span_context = _tracer.start_as_current_span(
+                "openmeter.flush",
+                attributes={
+                    "openmeter.event_count": len(events),
+                    "openmeter.base_url": self.config.base_url,
+                },
+            )
+
         try:
+            if span_context:
+                span_context.__enter__()
+
             import httpx
 
             payload = [e.to_dict() for e in events]
@@ -431,6 +459,9 @@ class OpenMeterClient:
         except Exception as e:
             self._events_failed += len(events)
             logger.error(f"OpenMeter error: {e}")
+        finally:
+            if span_context:
+                span_context.__exit__(None, None, None)
 
     # ─────────────────────────────────────────────────────────────
     # Metrics and Health

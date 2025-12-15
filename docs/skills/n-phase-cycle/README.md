@@ -52,7 +52,7 @@ IMPLEMENT → QA → TEST → EDUCATE → MEASURE → REFLECT
 
 ---
 
-## The Six Properties
+## The Seven Properties
 
 1. **Self-Similar** — Each phase is a hologram of the full cycle
 2. **Category-Theoretic** — Phases compose: `(A >> B) >> C ≡ A >> (B >> C)`
@@ -60,6 +60,7 @@ IMPLEMENT → QA → TEST → EDUCATE → MEASURE → REFLECT
 4. **Mutable** — The cycle evolves via `meta-re-metabolize.md`
 5. **Auto-Continuative** — Each phase generates the next prompt
 6. **Accountable** — Skipped phases leave debt; explicit declaration required
+7. **Archiving-First** — Plans are scaffolding; QA/TEST/REFLECT gates must archive or upgrade
 
 ### Minimal phase artifacts (checklist)
 

@@ -9,7 +9,7 @@ from enum import Enum
 from typing import Any, Callable, Optional, Protocol
 
 try:
-    import stripe  # type: ignore[import-not-found]
+    import stripe
     from stripe import StripeError
 
     STRIPE_AVAILABLE = True

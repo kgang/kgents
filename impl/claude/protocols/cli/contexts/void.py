@@ -74,6 +74,18 @@ class VoidRouter(ContextRouter):
             _handle_mirror,
             aspects=["reflect", "analyze"],
         )
+        self.register(
+            "serendipity",
+            "Random creative prompts from the Accursed Share",
+            _handle_serendipity,
+            aspects=["prompt", "surprise"],
+        )
+        self.register(
+            "project",
+            "Projection analysis (where are you projecting?)",
+            _handle_project,
+            aspects=["analyze", "surface"],
+        )
 
 
 # =============================================================================
@@ -123,6 +135,20 @@ def _handle_mirror(args: list[str], ctx: "InvocationContext | None" = None) -> i
     from protocols.cli.handlers.mirror import cmd_mirror
 
     return cmd_mirror(args, ctx)
+
+
+def _handle_serendipity(args: list[str], ctx: "InvocationContext | None" = None) -> int:
+    """Handle void serendipity -> delegating to surprise_me handler."""
+    from protocols.cli.handlers.surprise_me import cmd_surprise_me
+
+    return cmd_surprise_me(args, ctx)
+
+
+def _handle_project(args: list[str], ctx: "InvocationContext | None" = None) -> int:
+    """Handle void project -> delegating to project handler."""
+    from protocols.cli.handlers.project import cmd_project
+
+    return cmd_project(args, ctx)
 
 
 # =============================================================================

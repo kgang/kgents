@@ -1,0 +1,59 @@
+# NATS Services
+# - Headless service for StatefulSet peer discovery
+# - ClusterIP service for client connections
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nats-headless
+  namespace: kgents-agents
+  labels:
+    app.kubernetes.io/name: nats
+    app.kubernetes.io/component: streaming
+    app.kubernetes.io/part-of: kgents
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  selector:
+    app.kubernetes.io/name: nats
+  ports:
+    - name: client
+      port: 4222
+      targetPort: client
+    - name: cluster
+      port: 6222
+      targetPort: cluster
+    - name: monitor
+      port: 8222
+      targetPort: monitor
+    - name: metrics
+      port: 7777
+      targetPort: metrics
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nats
+  namespace: kgents-agents
+  labels:
+    app.kubernetes.io/name: nats
+    app.kubernetes.io/component: streaming
+    app.kubernetes.io/part-of: kgents
+  annotations:
+    # For Prometheus ServiceMonitor discovery
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "7777"
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: nats
+  ports:
+    - name: client
+      port: 4222
+      targetPort: client
+    - name: monitor
+      port: 8222
+      targetPort: monitor
+    - name: metrics
+      port: 7777
+      targetPort: metrics
