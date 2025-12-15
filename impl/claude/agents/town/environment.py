@@ -24,6 +24,14 @@ from pathlib import Path
 from typing import Any, Iterator
 
 import yaml
+from agents.town.archetypes import (
+    ArchetypeKind,
+    create_builder,
+    create_healer,
+    create_scholar,
+    create_trader,
+    create_watcher,
+)
 from agents.town.citizen import (
     CONSTRUCTION,
     CULTIVATION,
@@ -35,6 +43,13 @@ from agents.town.citizen import (
     Citizen,
     Cosmotechnics,
     Eigenvectors,
+)
+from agents.town.evolving import (
+    ADAPTATION,
+    GROWTH,
+    SYNTHESIS,
+    EvolvingCitizen,
+    create_evolving_citizen,
 )
 
 # =============================================================================
@@ -298,7 +313,7 @@ class TownEnvironment:
             "total_token_spend": self.total_token_spend,
         }
 
-        yaml_content = yaml.dump(data, default_flow_style=False, sort_keys=False)
+        yaml_content: str = yaml.dump(data, default_flow_style=False, sort_keys=False)
 
         if path is not None:
             with open(path, "w") as f:
@@ -585,6 +600,167 @@ def create_phase2_environment() -> TownEnvironment:
     return env
 
 
+def create_phase3_environment() -> TownEnvironment:
+    """
+    Create the Phase 3 environment.
+
+    10 citizens: 7 static + 3 evolving (Hana, Igor, Juno).
+
+    Phase 3 adds:
+    - Citizens: Hana (GROWTH), Igor (ADAPTATION), Juno (SYNTHESIS)
+    - New region: observatory (for evolving citizens)
+    - EvolvingCitizen type for citizens that grow via SENSE→ACT→REFLECT
+    """
+    # Start with Phase 2 environment
+    env = create_phase2_environment()
+    env.name = "smallville-phase3"
+
+    # Add observatory region for evolving citizens
+    env.add_region(
+        Region(
+            name="observatory",
+            description="A place for observation and evolution. Stars, patterns, becoming.",
+            connections=["library", "garden"],
+            capacity=6,
+            properties={"evolution_bonus": 0.2, "reflection_bonus": 0.15},
+        )
+    )
+
+    # Add Phase 3 evolving citizens (3)
+    # Note: EvolvingCitizen is also a Citizen (subclass), so add_citizen works
+
+    hana = create_evolving_citizen(
+        name="Hana",
+        archetype="Gardener-Sage",
+        region="garden",
+        cosmotechnics=GROWTH,
+        eigenvectors=Eigenvectors(
+            warmth=0.7, curiosity=0.8, trust=0.6, creativity=0.7, patience=0.8
+        ),
+        max_drift=0.1,
+    )
+    env.add_citizen(hana)
+
+    igor = create_evolving_citizen(
+        name="Igor",
+        archetype="Scout-Adapter",
+        region="observatory",
+        cosmotechnics=ADAPTATION,
+        eigenvectors=Eigenvectors(
+            warmth=0.5, curiosity=0.9, trust=0.5, creativity=0.6, patience=0.5
+        ),
+        max_drift=0.1,
+    )
+    env.add_citizen(igor)
+
+    juno = create_evolving_citizen(
+        name="Juno",
+        archetype="Scholar-Synthesizer",
+        region="library",
+        cosmotechnics=SYNTHESIS,
+        eigenvectors=Eigenvectors(
+            warmth=0.6, curiosity=0.7, trust=0.7, creativity=0.8, patience=0.7
+        ),
+        max_drift=0.1,
+    )
+    env.add_citizen(juno)
+
+    return env
+
+
+def get_evolving_citizens(env: TownEnvironment) -> list[EvolvingCitizen]:
+    """Get all EvolvingCitizen instances from the environment."""
+    return [c for c in env.citizens.values() if isinstance(c, EvolvingCitizen)]
+
+
+def create_phase4_environment() -> TownEnvironment:
+    """
+    Create the Phase 4 environment.
+
+    25 citizens: 10 from Phase 3 + 15 new (5 archetypes × 3 each).
+    8 regions (6 from Phase 3 + 2 new: workshop, archive).
+
+    Phase 4 adds:
+    - Citizens: 15 new (Builders, Traders, Healers, Scholars, Watchers)
+    - Regions: workshop (Builders), archive (Watchers)
+    - Evolving: 5 of 25 are EvolvingCitizen (Hana, Igor, Juno, Kai, Luna)
+
+    Heritage papers realized:
+    - CHATDEV: Multi-agent roles (Builder, Trader, Healer, Scholar, Watcher)
+    - SIMULACRA: Memory streams via GraphMemory
+    - ALTERA: Long-horizon via NPHASE cycles
+    - VOYAGER: Skill libraries via cosmotechnics
+    - AGENT HOSPITAL: Domain simulation template
+    """
+    # Start with Phase 3 environment (10 citizens, 6 regions)
+    env = create_phase3_environment()
+    env.name = "smallville-phase4"
+
+    # Add new regions for Phase 4 archetypes
+    env.add_region(
+        Region(
+            name="workshop",
+            description="Builder's domain. Tools, materials, creation in progress.",
+            connections=["square", "market"],
+            capacity=10,
+            properties={"creation_bonus": 0.2, "resilience_bonus": 0.1},
+        )
+    )
+    env.add_region(
+        Region(
+            name="archive",
+            description="Watcher's sanctuary. Records, testimonies, collective memory.",
+            connections=["library", "observatory"],
+            capacity=8,
+            properties={"memory_bonus": 0.3, "patience_bonus": 0.1},
+        )
+    )
+
+    # =========================================================================
+    # Add 15 new citizens (5 archetypes × 3 each)
+    # =========================================================================
+
+    # Builders (3) - Infrastructure creation
+    env.add_citizen(create_builder("Marcus", "workshop"))
+    env.add_citizen(create_builder("Nadia", "square"))
+    env.add_citizen(create_builder("Oscar", "workshop", evolving=True))  # Evolving
+
+    # Traders (3) - Resource exchange
+    env.add_citizen(create_trader("Petra", "market"))
+    env.add_citizen(create_trader("Quinn", "square"))
+    env.add_citizen(create_trader("Rosa", "market"))
+
+    # Healers (3) - Social/emotional repair
+    env.add_citizen(create_healer("Soren", "garden"))
+    env.add_citizen(create_healer("Tara", "inn"))
+    env.add_citizen(create_healer("Uma", "garden"))
+
+    # Scholars (3) - Knowledge synthesis
+    env.add_citizen(create_scholar("Victor", "library"))
+    env.add_citizen(create_scholar("Wren", "observatory"))
+    env.add_citizen(create_scholar("Xena", "library", evolving=True))  # Evolving
+
+    # Watchers (3) - Memory witnesses
+    env.add_citizen(create_watcher("Yuki", "archive"))
+    env.add_citizen(create_watcher("Zara", "archive"))
+    env.add_citizen(create_watcher("Kai", "observatory"))
+
+    return env
+
+
+def get_citizens_by_archetype(env: TownEnvironment, archetype: str) -> list[Citizen]:
+    """Get all citizens of a specific archetype."""
+    return [c for c in env.citizens.values() if c.archetype == archetype]
+
+
+def get_citizen_count_by_region(env: TownEnvironment) -> dict[str, int]:
+    """Get count of citizens in each region."""
+    counts: dict[str, int] = {}
+    for region_name in env.regions:
+        counts[region_name] = len(env.get_citizens_in_region(region_name))
+    return counts
+
+
 # =============================================================================
 # Exports
 # =============================================================================
@@ -595,4 +771,9 @@ __all__ = [
     "TownEnvironment",
     "create_mpp_environment",
     "create_phase2_environment",
+    "create_phase3_environment",
+    "create_phase4_environment",
+    "get_evolving_citizens",
+    "get_citizens_by_archetype",
+    "get_citizen_count_by_region",
 ]

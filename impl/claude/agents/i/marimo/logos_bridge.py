@@ -293,9 +293,9 @@ async def invoke_with_marimo_output(
     Returns:
         marimo-formatted result (md, table, or raw value)
     """
-    mo: Any = None
+    mo_module: Any = None
     try:
-        import marimo as mo  # noqa: F811
+        import marimo as mo_module  # noqa: F811
     except ImportError:
         pass
 
@@ -309,23 +309,23 @@ async def invoke_with_marimo_output(
 
     result = await logos.invoke(handle, observer)
 
-    if mo is None:
+    if mo_module is None:
         return result
 
     # Format result based on type
     if isinstance(result, str):
-        return mo.md(result)
+        return mo_module.md(result)
     elif isinstance(result, dict):
         # Render as formatted markdown
         lines = [f"**{k}**: {v}" for k, v in result.items()]
-        return mo.md("\n\n".join(lines))
+        return mo_module.md("\n\n".join(lines))
     elif isinstance(result, list):
         if result and isinstance(result[0], dict):
             # Render as table
-            return mo.ui.table(result)
-        return mo.md(f"```\n{result}\n```")
+            return mo_module.ui.table(result)
+        return mo_module.md(f"```\n{result}\n```")
     else:
-        return mo.md(f"```\n{result}\n```")
+        return mo_module.md(f"```\n{result}\n```")
 
 
 # Convenience function for synchronous contexts

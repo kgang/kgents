@@ -31,8 +31,19 @@ import json
 import logging
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any, AsyncIterator, Optional
+from enum import Enum
+from typing import TYPE_CHECKING, Any, AsyncIterator, Literal, Optional
 from uuid import UUID
+
+# OpenTelemetry tracing (optional)
+try:
+    from opentelemetry import trace
+
+    _tracer = trace.get_tracer("kgents.streaming.nats", "0.1.0")
+    HAS_OTEL = True
+except ImportError:
+    _tracer = None  # type: ignore[assignment]
+    HAS_OTEL = False
 
 if TYPE_CHECKING:
     from agents.k.events import SoulEvent
@@ -44,6 +55,121 @@ class NATSConnectionError(Exception):
     """Raised when NATS connection fails."""
 
     pass
+
+
+class CircuitState(str, Enum):
+    """Circuit breaker states."""
+
+    CLOSED = "closed"  # Normal operation
+    OPEN = "open"  # Failing, using fallback
+    HALF_OPEN = "half_open"  # Testing recovery
+
+
+@dataclass
+class CircuitBreaker:
+    """
+    Circuit breaker for NATS connection resilience.
+
+    Prevents cascade failures by stopping attempts to use NATS
+    when it's consistently failing, and automatically recovers
+    when the connection is healthy again.
+    """
+
+    failure_threshold: int = 5
+    recovery_timeout: float = 30.0  # seconds
+
+    # State
+    _state: CircuitState = field(default=CircuitState.CLOSED, init=False)
+    _failures: int = field(default=0, init=False)
+    _last_failure: Optional[datetime] = field(default=None, init=False)
+    _successes_in_half_open: int = field(default=0, init=False)
+
+    @property
+    def state(self) -> CircuitState:
+        """Get current circuit state."""
+        return self._state
+
+    @property
+    def is_closed(self) -> bool:
+        """Check if circuit is closed (normal operation)."""
+        return self._state == CircuitState.CLOSED
+
+    def should_allow_request(self) -> bool:
+        """
+        Determine if a request should be allowed.
+
+        Returns:
+            True if request should proceed, False to use fallback.
+        """
+        if self._state == CircuitState.CLOSED:
+            return True
+
+        if self._state == CircuitState.OPEN:
+            # Check if we should try half-open
+            if self._last_failure and self._should_attempt_recovery():
+                self._state = CircuitState.HALF_OPEN
+                self._successes_in_half_open = 0
+                logger.info("Circuit breaker entering half-open state")
+                return True
+            return False
+
+        # Half-open: allow limited requests to test recovery
+        return True
+
+    def _should_attempt_recovery(self) -> bool:
+        """Check if enough time has passed to attempt recovery."""
+        if self._last_failure is None:
+            return True
+        elapsed = (datetime.now(UTC) - self._last_failure).total_seconds()
+        return elapsed >= self.recovery_timeout
+
+    def record_success(self) -> None:
+        """Record a successful operation."""
+        if self._state == CircuitState.HALF_OPEN:
+            self._successes_in_half_open += 1
+            # Require 3 successes to close circuit
+            if self._successes_in_half_open >= 3:
+                self._state = CircuitState.CLOSED
+                self._failures = 0
+                logger.info("Circuit breaker closed after recovery")
+        elif self._state == CircuitState.CLOSED:
+            # Reset failure count on success
+            self._failures = 0
+
+    def record_failure(self) -> None:
+        """Record a failed operation."""
+        self._failures += 1
+        self._last_failure = datetime.now(UTC)
+
+        if self._state == CircuitState.HALF_OPEN:
+            # Immediately open on any failure in half-open
+            self._state = CircuitState.OPEN
+            logger.warning("Circuit breaker re-opened after half-open failure")
+        elif self._state == CircuitState.CLOSED:
+            if self._failures >= self.failure_threshold:
+                self._state = CircuitState.OPEN
+                logger.warning(
+                    f"Circuit breaker opened after {self._failures} failures"
+                )
+
+    def reset(self) -> None:
+        """Reset circuit breaker to initial state."""
+        self._state = CircuitState.CLOSED
+        self._failures = 0
+        self._last_failure = None
+        self._successes_in_half_open = 0
+
+    def to_dict(self) -> dict[str, Any]:
+        """Get circuit breaker status as dictionary."""
+        return {
+            "state": self._state.value,
+            "failures": self._failures,
+            "last_failure": self._last_failure.isoformat()
+            if self._last_failure
+            else None,
+            "failure_threshold": self.failure_threshold,
+            "recovery_timeout": self.recovery_timeout,
+        }
 
 
 @dataclass
@@ -78,6 +204,8 @@ class NATSBridge:
 
     Provides publish/subscribe for KgentFlux events via NATS JetStream,
     enabling multi-consumer scenarios (SSE, metering, observability).
+
+    Includes circuit breaker for resilience against cascading failures.
     """
 
     config: NATSBridgeConfig = field(default_factory=NATSBridgeConfig)
@@ -87,10 +215,18 @@ class NATSBridge:
     _js: Any = field(default=None, init=False, repr=False)
     _connected: bool = field(default=False, init=False)
 
+    # Circuit breaker for resilience
+    _circuit: CircuitBreaker = field(default_factory=CircuitBreaker, init=False)
+
     # Graceful degradation when NATS unavailable
     _fallback_queues: dict[str, asyncio.Queue[dict[str, Any]]] = field(
         default_factory=dict, init=False, repr=False
     )
+
+    @property
+    def circuit_breaker(self) -> CircuitBreaker:
+        """Get the circuit breaker instance."""
+        return self._circuit
 
     async def connect(self) -> None:
         """
@@ -182,6 +318,8 @@ class NATSBridge:
         """
         Publish a SoulEvent to JetStream.
 
+        Uses circuit breaker to prevent cascade failures.
+
         Args:
             session_id: Session identifier
             event: SoulEvent to publish
@@ -190,13 +328,20 @@ class NATSBridge:
         subject = f"kgent.session.{session_id_str}.{event.event_type.value}"
         payload = event.to_dict()
 
+        # Check circuit breaker first
+        if not self._circuit.should_allow_request():
+            await self._fallback_publish(session_id_str, payload)
+            return
+
         if self.is_connected:
             try:
                 await self._js.publish(
                     subject,
                     json.dumps(payload).encode("utf-8"),
                 )
+                self._circuit.record_success()
             except Exception as e:
+                self._circuit.record_failure()
                 logger.warning(f"NATS publish failed, using fallback: {e}")
                 await self._fallback_publish(session_id_str, payload)
         else:
@@ -210,6 +355,9 @@ class NATSBridge:
     ) -> None:
         """
         Publish a streaming chunk to JetStream.
+
+        Uses circuit breaker to prevent cascade failures.
+        Creates OpenTelemetry span when tracing is enabled.
 
         Args:
             session_id: Session identifier
@@ -226,17 +374,46 @@ class NATSBridge:
             "timestamp": datetime.now(UTC).isoformat(),
         }
 
-        if self.is_connected:
-            try:
-                await self._js.publish(
-                    subject,
-                    json.dumps(payload).encode("utf-8"),
-                )
-            except Exception as e:
-                logger.warning(f"NATS chunk publish failed: {e}")
+        # Create span if tracing enabled
+        span_context = None
+        if HAS_OTEL and _tracer is not None:
+            span_context = _tracer.start_as_current_span(
+                "nats.publish_chunk",
+                attributes={
+                    "nats.session_id": session_id_str,
+                    "nats.chunk_index": chunk_index,
+                    "nats.subject": subject,
+                    "nats.circuit_state": self._circuit.state.value,
+                },
+            )
+
+        try:
+            if span_context:
+                span_context.__enter__()
+
+            # Check circuit breaker first
+            if not self._circuit.should_allow_request():
+                if span_context:
+                    span_context.__exit__(None, None, None)
                 await self._fallback_publish(session_id_str, payload)
-        else:
-            await self._fallback_publish(session_id_str, payload)
+                return
+
+            if self.is_connected:
+                try:
+                    await self._js.publish(
+                        subject,
+                        json.dumps(payload).encode("utf-8"),
+                    )
+                    self._circuit.record_success()
+                except Exception as e:
+                    self._circuit.record_failure()
+                    logger.warning(f"NATS chunk publish failed: {e}")
+                    await self._fallback_publish(session_id_str, payload)
+            else:
+                await self._fallback_publish(session_id_str, payload)
+        finally:
+            if span_context:
+                span_context.__exit__(None, None, None)
 
     async def _fallback_publish(
         self,
@@ -413,26 +590,41 @@ class NATSBridge:
         Check NATS connection health.
 
         Returns:
-            Health status dictionary
+            Health status dictionary including circuit breaker status
         """
+        base_status = {
+            "circuit_breaker": self._circuit.to_dict(),
+            "fallback_queues": len(self._fallback_queues),
+        }
+
         if not self.config.enabled:
             return {
+                **base_status,
                 "status": "disabled",
                 "mode": "fallback",
-                "fallback_queues": len(self._fallback_queues),
             }
 
         if not self.is_connected:
             return {
+                **base_status,
                 "status": "disconnected",
                 "mode": "fallback",
-                "fallback_queues": len(self._fallback_queues),
+            }
+
+        # Check if circuit is open
+        if not self._circuit.is_closed:
+            return {
+                **base_status,
+                "status": "circuit_open",
+                "mode": "fallback",
+                "servers": self.config.servers,
             }
 
         try:
             # Try to get stream info as health probe
             await self._js.stream_info(self.config.stream_name)
             return {
+                **base_status,
                 "status": "healthy",
                 "mode": "jetstream",
                 "servers": self.config.servers,
@@ -440,6 +632,7 @@ class NATSBridge:
             }
         except Exception as e:
             return {
+                **base_status,
                 "status": "unhealthy",
                 "mode": "fallback",
                 "error": str(e),

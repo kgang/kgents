@@ -21,7 +21,7 @@ from agents.i.data.terrarium_source import (
 
 # Check if websockets is available
 try:
-    import websockets  # type: ignore[import-not-found]  # noqa: F401
+    import websockets  # noqa: F401
 
     HAS_WEBSOCKETS = True
 except ImportError:
