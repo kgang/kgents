@@ -978,6 +978,100 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#case-study-townflux" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Case Study: TownFlux
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Case Study: TownFlux">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#overview_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#townphase-daily-cycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TownPhase (Daily Cycle)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#townevent-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TownEvent Structure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#integration-with-visualization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integration with Visualization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#perturbation-intervention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Perturbation (Intervention)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#batailles-insight-expenditure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bataille's Insight: Expenditure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#usage-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage Pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#related-skills" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1413,14 +1507,97 @@
 </span><span id="__span-27-53"><a id="__codelineno-27-53" name="__codelineno-27-53" href="#__codelineno-27-53"></a>    <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
 </span></code></pre></div>
 <hr />
+<h2 id="case-study-townflux">Case Study: TownFlux</h2>
+<p><code>TownFlux</code> demonstrates the Flux pattern for Agent Town simulation.</p>
+<h3 id="overview_1">Overview</h3>
+<p>TownFlux emits <code>TownEvent</code> objects as an async stream:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.town.flux</span><span class="w"> </span><span class="kn">import</span> <span class="n">TownFlux</span><span class="p">,</span> <span class="n">TownPhase</span><span class="p">,</span> <span class="n">TownEvent</span>
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.town.environment</span><span class="w"> </span><span class="kn">import</span> <span class="n">TownEnvironment</span>
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a>
+</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a><span class="c1"># Create environment with citizens</span>
+</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a><span class="n">env</span> <span class="o">=</span> <span class="n">TownEnvironment</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Harmony&quot;</span><span class="p">,</span> <span class="n">citizens</span><span class="o">=</span><span class="p">{</span><span class="o">...</span><span class="p">})</span>
+</span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a>
+</span><span id="__span-28-7"><a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a><span class="c1"># Create flux</span>
+</span><span id="__span-28-8"><a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a><span class="n">flux</span> <span class="o">=</span> <span class="n">TownFlux</span><span class="p">(</span><span class="n">environment</span><span class="o">=</span><span class="n">env</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+</span><span id="__span-28-9"><a id="__codelineno-28-9" name="__codelineno-28-9" href="#__codelineno-28-9"></a>
+</span><span id="__span-28-10"><a id="__codelineno-28-10" name="__codelineno-28-10" href="#__codelineno-28-10"></a><span class="c1"># Process events</span>
+</span><span id="__span-28-11"><a id="__codelineno-28-11" name="__codelineno-28-11" href="#__codelineno-28-11"></a><span class="k">async</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">flux</span><span class="o">.</span><span class="n">step</span><span class="p">():</span>
+</span><span id="__span-28-12"><a id="__codelineno-28-12" name="__codelineno-28-12" href="#__codelineno-28-12"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">phase</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">operation</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">participants</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="townphase-daily-cycle">TownPhase (Daily Cycle)</h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">TownPhase</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a>    <span class="n">MORNING</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>    <span class="c1"># Social activities weighted</span>
+</span><span id="__span-29-3"><a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a>    <span class="n">AFTERNOON</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>  <span class="c1"># Work activities weighted</span>
+</span><span id="__span-29-4"><a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a>    <span class="n">EVENING</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>    <span class="c1"># Mixed activities</span>
+</span><span id="__span-29-5"><a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a>    <span class="n">NIGHT</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>      <span class="c1"># Reflection weighted</span>
+</span></code></pre></div>
+<h3 id="townevent-structure">TownEvent Structure</h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="nd">@dataclass</span>
+</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">TownEvent</span><span class="p">:</span>
+</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a>    <span class="n">phase</span><span class="p">:</span> <span class="n">TownPhase</span>           <span class="c1"># Time of day</span>
+</span><span id="__span-30-4"><a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a>    <span class="n">operation</span><span class="p">:</span> <span class="nb">str</span>             <span class="c1"># greet, gossip, trade, solo, etc.</span>
+</span><span id="__span-30-5"><a id="__codelineno-30-5" name="__codelineno-30-5" href="#__codelineno-30-5"></a>    <span class="n">participants</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>    <span class="c1"># Citizen names</span>
+</span><span id="__span-30-6"><a id="__codelineno-30-6" name="__codelineno-30-6" href="#__codelineno-30-6"></a>    <span class="n">success</span><span class="p">:</span> <span class="nb">bool</span>              <span class="c1"># Operation succeeded</span>
+</span><span id="__span-30-7"><a id="__codelineno-30-7" name="__codelineno-30-7" href="#__codelineno-30-7"></a>    <span class="n">message</span><span class="p">:</span> <span class="nb">str</span>               <span class="c1"># Human-readable description</span>
+</span><span id="__span-30-8"><a id="__codelineno-30-8" name="__codelineno-30-8" href="#__codelineno-30-8"></a>    <span class="n">tokens_used</span><span class="p">:</span> <span class="nb">int</span>           <span class="c1"># LLM token cost</span>
+</span><span id="__span-30-9"><a id="__codelineno-30-9" name="__codelineno-30-9" href="#__codelineno-30-9"></a>    <span class="n">drama_contribution</span><span class="p">:</span> <span class="nb">float</span>  <span class="c1"># Event drama level [0, 1]</span>
+</span></code></pre></div>
+<h3 id="integration-with-visualization">Integration with Visualization</h3>
+<p>TownFlux integrates with SSE and NATS for real-time updates:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.town.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">TownSSEEndpoint</span><span class="p">,</span> <span class="n">TownNATSBridge</span>
+</span><span id="__span-31-2"><a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a>
+</span><span id="__span-31-3"><a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">run_with_streaming</span><span class="p">(</span><span class="n">flux</span><span class="p">:</span> <span class="n">TownFlux</span><span class="p">,</span> <span class="n">town_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="__span-31-4"><a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a>    <span class="n">sse</span> <span class="o">=</span> <span class="n">TownSSEEndpoint</span><span class="p">(</span><span class="n">town_id</span><span class="p">)</span>
+</span><span id="__span-31-5"><a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a>    <span class="n">nats</span> <span class="o">=</span> <span class="n">TownNATSBridge</span><span class="p">()</span>
+</span><span id="__span-31-6"><a id="__codelineno-31-6" name="__codelineno-31-6" href="#__codelineno-31-6"></a>
+</span><span id="__span-31-7"><a id="__codelineno-31-7" name="__codelineno-31-7" href="#__codelineno-31-7"></a>    <span class="k">async</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">flux</span><span class="o">.</span><span class="n">step</span><span class="p">():</span>
+</span><span id="__span-31-8"><a id="__codelineno-31-8" name="__codelineno-31-8" href="#__codelineno-31-8"></a>        <span class="c1"># Push to SSE clients</span>
+</span><span id="__span-31-9"><a id="__codelineno-31-9" name="__codelineno-31-9" href="#__codelineno-31-9"></a>        <span class="k">await</span> <span class="n">sse</span><span class="o">.</span><span class="n">push_event</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+</span><span id="__span-31-10"><a id="__codelineno-31-10" name="__codelineno-31-10" href="#__codelineno-31-10"></a>
+</span><span id="__span-31-11"><a id="__codelineno-31-11" name="__codelineno-31-11" href="#__codelineno-31-11"></a>        <span class="c1"># Publish to NATS</span>
+</span><span id="__span-31-12"><a id="__codelineno-31-12" name="__codelineno-31-12" href="#__codelineno-31-12"></a>        <span class="k">await</span> <span class="n">nats</span><span class="o">.</span><span class="n">publish_town_event</span><span class="p">(</span><span class="n">town_id</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span>
+</span><span id="__span-31-13"><a id="__codelineno-31-13" name="__codelineno-31-13" href="#__codelineno-31-13"></a>
+</span><span id="__span-31-14"><a id="__codelineno-31-14" name="__codelineno-31-14" href="#__codelineno-31-14"></a>        <span class="k">yield</span> <span class="n">event</span>
+</span></code></pre></div>
+<h3 id="perturbation-intervention">Perturbation (Intervention)</h3>
+<p>Users can inject events into a running flux:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a><span class="c1"># User triggers a festival (intervention)</span>
+</span><span id="__span-32-2"><a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a><span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">flux</span><span class="o">.</span><span class="n">invoke_intervention</span><span class="p">(</span><span class="s2">&quot;festival&quot;</span><span class="p">,</span> <span class="n">target_citizens</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;bob&quot;</span><span class="p">,</span> <span class="s2">&quot;eve&quot;</span><span class="p">])</span>
+</span></code></pre></div>
+<h3 id="batailles-insight-expenditure">Bataille's Insight: Expenditure</h3>
+<p>From the docstring:</p>
+<blockquote>
+<p><em>"The flux is not just time—it is expenditure. Each phase accumulates surplus that must be spent. If not spent gloriously, it will be spent catastrophically."</em></p>
+</blockquote>
+<p>This maps to the drama potential and token budgets in TownFlux.</p>
+<h3 id="usage-pattern">Usage Pattern</h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+</span><span id="__span-33-2"><a id="__codelineno-33-2" name="__codelineno-33-2" href="#__codelineno-33-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.town.flux</span><span class="w"> </span><span class="kn">import</span> <span class="n">TownFlux</span>
+</span><span id="__span-33-3"><a id="__codelineno-33-3" name="__codelineno-33-3" href="#__codelineno-33-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.town.environment</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_phase4_environment</span>
+</span><span id="__span-33-4"><a id="__codelineno-33-4" name="__codelineno-33-4" href="#__codelineno-33-4"></a>
+</span><span id="__span-33-5"><a id="__codelineno-33-5" name="__codelineno-33-5" href="#__codelineno-33-5"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+</span><span id="__span-33-6"><a id="__codelineno-33-6" name="__codelineno-33-6" href="#__codelineno-33-6"></a>    <span class="c1"># Create 25-citizen town</span>
+</span><span id="__span-33-7"><a id="__codelineno-33-7" name="__codelineno-33-7" href="#__codelineno-33-7"></a>    <span class="n">env</span> <span class="o">=</span> <span class="n">create_phase4_environment</span><span class="p">(</span><span class="s2">&quot;Metropolis&quot;</span><span class="p">)</span>
+</span><span id="__span-33-8"><a id="__codelineno-33-8" name="__codelineno-33-8" href="#__codelineno-33-8"></a>    <span class="n">flux</span> <span class="o">=</span> <span class="n">TownFlux</span><span class="p">(</span><span class="n">environment</span><span class="o">=</span><span class="n">env</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+</span><span id="__span-33-9"><a id="__codelineno-33-9" name="__codelineno-33-9" href="#__codelineno-33-9"></a>
+</span><span id="__span-33-10"><a id="__codelineno-33-10" name="__codelineno-33-10" href="#__codelineno-33-10"></a>    <span class="c1"># Run 4 phases (one day)</span>
+</span><span id="__span-33-11"><a id="__codelineno-33-11" name="__codelineno-33-11" href="#__codelineno-33-11"></a>    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+</span><span id="__span-33-12"><a id="__codelineno-33-12" name="__codelineno-33-12" href="#__codelineno-33-12"></a>        <span class="k">async</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">flux</span><span class="o">.</span><span class="n">step</span><span class="p">():</span>
+</span><span id="__span-33-13"><a id="__codelineno-33-13" name="__codelineno-33-13" href="#__codelineno-33-13"></a>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Day </span><span class="si">{</span><span class="n">flux</span><span class="o">.</span><span class="n">day</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">phase</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">operation</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-33-14"><a id="__codelineno-33-14" name="__codelineno-33-14" href="#__codelineno-33-14"></a>
+</span><span id="__span-33-15"><a id="__codelineno-33-15" name="__codelineno-33-15" href="#__codelineno-33-15"></a><span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</span></code></pre></div>
+<hr />
 <h2 id="related-skills">Related Skills</h2>
 <ul>
 <li><a href="../agentese-path/">agentese-path</a> - Adding AGENTESE paths</li>
 <li><a href="../test-patterns/">test-patterns</a> - Testing async agents</li>
+<li><a href="../agent-town-visualization/">agent-town-visualization</a> - SSE/NATS integration</li>
 </ul>
 <hr />
 <h2 id="changelog">Changelog</h2>
 <ul>
+<li>2025-12-14: Added TownFlux case study (RE-METABOLIZE cycle)</li>
 <li>2025-12-12: Initial version based on flux implementation</li>
 </ul>
 

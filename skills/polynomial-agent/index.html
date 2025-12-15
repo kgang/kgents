@@ -856,6 +856,78 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#case-study-citizenpolynomial" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Case Study: CitizenPolynomial
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Case Study: CitizenPolynomial">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#positions-5-phases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Positions (5 Phases)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#directions-mode-dependent-inputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Directions (Mode-Dependent Inputs)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-right-to-rest-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Right to Rest Pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#key-insight-barads-agential-realism" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Insight: Barad's Agential Realism
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#common-mistakes" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1283,8 +1355,81 @@ Where S is positions, E(s) is directions at position s.</p>
 <td>IDLE, SUN, MUTATE, SELECT, WAGER, INFECT, PAYOFF, COMPLETE</td>
 <td>Thermodynamic cycle</td>
 </tr>
+<tr>
+<td><strong>Citizen</strong></td>
+<td><code>agents/town/polynomial.py</code></td>
+<td>IDLE, SOCIALIZING, WORKING, REFLECTING, RESTING</td>
+<td>Right to Rest pattern</td>
+</tr>
 </tbody>
 </table>
+<hr />
+<h2 id="case-study-citizenpolynomial">Case Study: CitizenPolynomial</h2>
+<p>The <code>CitizenPolynomial</code> demonstrates the polynomial functor in Agent Town simulation.</p>
+<h3 id="positions-5-phases">Positions (5 Phases)</h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">CitizenPhase</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>    <span class="n">IDLE</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>        <span class="c1"># Ready for new interactions</span>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>    <span class="n">SOCIALIZING</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span> <span class="c1"># Engaged in social activity</span>
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>    <span class="n">WORKING</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>     <span class="c1"># Performing solo work</span>
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>    <span class="n">REFLECTING</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>  <span class="c1"># Internal contemplation</span>
+</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>    <span class="n">RESTING</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>     <span class="c1"># Mandatory rest (Right to Rest)</span>
+</span></code></pre></div>
+<h3 id="directions-mode-dependent-inputs">Directions (Mode-Dependent Inputs)</h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">citizen_directions</span><span class="p">(</span><span class="n">phase</span><span class="p">:</span> <span class="n">CitizenPhase</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenSet</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>    <span class="k">match</span> <span class="n">phase</span><span class="p">:</span>
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>        <span class="k">case</span> <span class="n">CitizenPhase</span><span class="o">.</span><span class="n">IDLE</span><span class="p">:</span>
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a>            <span class="c1"># Can do anything except wake</span>
+</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>            <span class="k">return</span> <span class="nb">frozenset</span><span class="p">({</span><span class="n">SocializeInput</span><span class="p">,</span> <span class="n">WorkInput</span><span class="p">,</span> <span class="n">ReflectInput</span><span class="p">,</span> <span class="n">RestInput</span><span class="p">})</span>
+</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>        <span class="k">case</span> <span class="n">CitizenPhase</span><span class="o">.</span><span class="n">RESTING</span><span class="p">:</span>
+</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a>            <span class="c1"># RIGHT TO REST: Only wake is valid</span>
+</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a>            <span class="k">return</span> <span class="nb">frozenset</span><span class="p">({</span><span class="n">WakeInput</span><span class="p">})</span>
+</span><span id="__span-20-9"><a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a>        <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
+</span><span id="__span-20-10"><a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a>            <span class="c1"># Contextual options</span>
+</span><span id="__span-20-11"><a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a>            <span class="o">...</span>
+</span></code></pre></div>
+<h3 id="the-right-to-rest-pattern">The Right to Rest Pattern</h3>
+<p>A key design insight: citizens in RESTING phase <strong>cannot be disturbed</strong>:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="k">case</span> <span class="n">CitizenPhase</span><span class="o">.</span><span class="n">RESTING</span><span class="p">:</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">WakeInput</span><span class="p">):</span>
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>        <span class="k">return</span> <span class="n">CitizenPhase</span><span class="o">.</span><span class="n">IDLE</span><span class="p">,</span> <span class="n">CitizenOutput</span><span class="p">(</span><span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="s2">&quot;Woke from rest&quot;</span><span class="p">)</span>
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a>    <span class="k">else</span><span class="p">:</span>
+</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a>        <span class="c1"># Reject ALL other inputs</span>
+</span><span id="__span-21-6"><a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a>        <span class="k">return</span> <span class="n">CitizenPhase</span><span class="o">.</span><span class="n">RESTING</span><span class="p">,</span> <span class="n">CitizenOutput</span><span class="p">(</span>
+</span><span id="__span-21-7"><a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a>            <span class="n">success</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span id="__span-21-8"><a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a>            <span class="n">message</span><span class="o">=</span><span class="s2">&quot;Cannot be disturbed while resting (Right to Rest)&quot;</span><span class="p">,</span>
+</span><span id="__span-21-9"><a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a>        <span class="p">)</span>
+</span></code></pre></div>
+<p>This is enforced by:
+1. <strong>Directions</strong>: Only <code>WakeInput</code> is valid during RESTING
+2. <strong>Transition</strong>: All other inputs return failure without state change</p>
+<h3 id="usage">Usage</h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.town.polynomial</span><span class="w"> </span><span class="kn">import</span> <span class="n">CITIZEN_POLYNOMIAL</span><span class="p">,</span> <span class="n">CitizenInput</span><span class="p">,</span> <span class="n">CitizenPhase</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="c1"># Start idle</span>
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="n">phase</span> <span class="o">=</span> <span class="n">CitizenPhase</span><span class="o">.</span><span class="n">IDLE</span>
+</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a>
+</span><span id="__span-22-6"><a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a><span class="c1"># Transition to socializing</span>
+</span><span id="__span-22-7"><a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a><span class="n">phase</span><span class="p">,</span> <span class="n">output</span> <span class="o">=</span> <span class="n">CITIZEN_POLYNOMIAL</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="n">phase</span><span class="p">,</span> <span class="n">CitizenInput</span><span class="o">.</span><span class="n">greet</span><span class="p">(</span><span class="s2">&quot;alice&quot;</span><span class="p">))</span>
+</span><span id="__span-22-8"><a id="__codelineno-22-8" name="__codelineno-22-8" href="#__codelineno-22-8"></a><span class="c1"># → (SOCIALIZING, CitizenOutput(success=True, ...))</span>
+</span><span id="__span-22-9"><a id="__codelineno-22-9" name="__codelineno-22-9" href="#__codelineno-22-9"></a>
+</span><span id="__span-22-10"><a id="__codelineno-22-10" name="__codelineno-22-10" href="#__codelineno-22-10"></a><span class="c1"># Transition to resting</span>
+</span><span id="__span-22-11"><a id="__codelineno-22-11" name="__codelineno-22-11" href="#__codelineno-22-11"></a><span class="n">phase</span><span class="p">,</span> <span class="n">output</span> <span class="o">=</span> <span class="n">CITIZEN_POLYNOMIAL</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="n">phase</span><span class="p">,</span> <span class="n">CitizenInput</span><span class="o">.</span><span class="n">rest</span><span class="p">())</span>
+</span><span id="__span-22-12"><a id="__codelineno-22-12" name="__codelineno-22-12" href="#__codelineno-22-12"></a><span class="c1"># → (RESTING, CitizenOutput(success=True, ...))</span>
+</span><span id="__span-22-13"><a id="__codelineno-22-13" name="__codelineno-22-13" href="#__codelineno-22-13"></a>
+</span><span id="__span-22-14"><a id="__codelineno-22-14" name="__codelineno-22-14" href="#__codelineno-22-14"></a><span class="c1"># Try to interrupt (fails)</span>
+</span><span id="__span-22-15"><a id="__codelineno-22-15" name="__codelineno-22-15" href="#__codelineno-22-15"></a><span class="n">phase</span><span class="p">,</span> <span class="n">output</span> <span class="o">=</span> <span class="n">CITIZEN_POLYNOMIAL</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="n">phase</span><span class="p">,</span> <span class="n">CitizenInput</span><span class="o">.</span><span class="n">greet</span><span class="p">(</span><span class="s2">&quot;bob&quot;</span><span class="p">))</span>
+</span><span id="__span-22-16"><a id="__codelineno-22-16" name="__codelineno-22-16" href="#__codelineno-22-16"></a><span class="c1"># → (RESTING, CitizenOutput(success=False, message=&quot;Cannot be disturbed...&quot;))</span>
+</span><span id="__span-22-17"><a id="__codelineno-22-17" name="__codelineno-22-17" href="#__codelineno-22-17"></a>
+</span><span id="__span-22-18"><a id="__codelineno-22-18" name="__codelineno-22-18" href="#__codelineno-22-18"></a><span class="c1"># Wake up</span>
+</span><span id="__span-22-19"><a id="__codelineno-22-19" name="__codelineno-22-19" href="#__codelineno-22-19"></a><span class="n">phase</span><span class="p">,</span> <span class="n">output</span> <span class="o">=</span> <span class="n">CITIZEN_POLYNOMIAL</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="n">phase</span><span class="p">,</span> <span class="n">CitizenInput</span><span class="o">.</span><span class="n">wake</span><span class="p">())</span>
+</span><span id="__span-22-20"><a id="__codelineno-22-20" name="__codelineno-22-20" href="#__codelineno-22-20"></a><span class="c1"># → (IDLE, CitizenOutput(success=True, ...))</span>
+</span></code></pre></div>
+<h3 id="key-insight-barads-agential-realism">Key Insight: Barad's Agential Realism</h3>
+<p>From the docstring:</p>
+<blockquote>
+<p><em>"Positions are not states but interpretive frames. The citizen does not 'change state'—the observer makes a different agential cut. Each transition reconfigures the phenomenon, not the entity."</em></p>
+</blockquote>
+<p>This philosophical framing helps understand why polynomial agents are powerful: they model mode-dependent behavior as <strong>observation-dependent morphisms</strong>, not internal state changes</p>
 <hr />
 <h2 id="common-mistakes">Common Mistakes</h2>
 <table>
