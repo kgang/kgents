@@ -14,14 +14,14 @@ This file provides a canopy view of all active plans. Read this at session start
 | agents/k-gent | 97% | 2025-12-13 | active | PHASE 1 COMPLETE (88 tests): LLM-backed dialogue,  |
 | meta/forest-agentese | 95% | 2025-12-14 | active | Week 3 IMPLEMENT (95%): Live wiring complete. Fore |
 | plans/devex/cli-unification | 65% | 2025-12-14 | active | QA COMPLETE: 7 type errors fixed, 69 deprecation w |
-| plans/ideas/master-plan-current | 35% | 2025-12-14 | superseded | Superseded by newer planning stacks; kept for archival context |
+| plans/ideas/master-plan-current | — | 2025-12-14 | archived | → plans/_archive/2025-12-14-superseded/ |
 | plans/crown-jewel-next | 25% | 2025-12-14 | active | SCOPE EXPANDED 4X: Agent Town is now THE soul conv |
 | meta/system-audit-2025-12-14 | 15% | 2025-12-14 | active | Created to capture a whole-system audit anchored i |
 | plans/reactive-substrate-unification | 15% | 2025-12-14 | active | CROWN JEWEL EXTENSION: Unified Reactive Substrate |
 | plans/ideas-consolidation | — | — | removed | File deleted; consolidation now folds into crown-jewel-next / agent town |
 | meta/liturgy-morphism-nasi | 5% | 2025-12-13 | active | Standing up N-NASI ("The Liturgical Morphism"): AG |
 | n-phase-accursed-share-completion | 5% | 2025-12-13 | active |  |
-| plans/k-terrarium-llm-agents | 5% | 2025-12-14 | superseded | Superseded by Agent Town scope; references flow via crown-jewel-next |
+| plans/k-terrarium-llm-agents | — | 2025-12-14 | archived | → plans/_archive/2025-12-14-superseded/ |
 | deployment/_strategy/kgent-chatbot-strategy | 0% | 2025-12-14 | active | STRATEGIZE phase output. Ordered backlog with 3 wa |
 | devex/hotdata-infrastructure | 0% | 2025-12-13 | active | Initial creation. Implements AD-004 (Pre-Computed  |
 | monetization/grand-initiative-monetization | 0% | 2025-12-14 | active | GRAND INITIATIVE: Comprehensive monetization strat |
@@ -83,6 +83,9 @@ This file provides a canopy view of all active plans. Read this at session start
 | self/memory | 2025-12-14 | 1104 tests (707 M-gent + 397 weave) |
 | self/memory-completion | 2025-12-14 | Verified complete, archived |
 | self/memory-phase5-substrate | 2025-12-14 | SharedSubstrate implemented |
+| visionary-ux-wave1 | 2025-12-14 | 591 tests; Signal/Computed/Effect/ModalScope/Turn |
+| saas-phase11 | 2025-12-14 | DR foundation shipped; S3 awaits funding |
+| agent-town-phase7 | 2025-12-14 | 696 tests; DialogueEngine + live integration |
 
 ---
 
@@ -103,12 +106,12 @@ Accursed Share (5%):    agents/t-gent (rotation)
 
 | Metric | Value |
 |--------|-------|
-| Test count | 16,720+ |
+| Test count | 16,892 |
 | Active trees | 23 |
 | Dormant trees | 19 |
 | Blocked | 0 |
-| Complete | 8 |
-| Archived this session | 13 (2 plans + 11 reclassified) |
+| Complete | 11 |
+| Archived this session | 21 (10 plans + 11 reclassified) |
 | Accursed share next | agents/t-gent |
 
 ---
@@ -128,6 +131,9 @@ Per `plans/principles.md` §Aggressive Archiving:
 | plans/self/memory.md | Deleted | ✓ Previously removed |
 | plans/self/memory-phase5-substrate.md | Deleted | ✓ Previously removed |
 | ideas/impl/* (11 files) | Reclassified | ✓ → docs/ideas-synthesis/ (reference material) |
+| plans/k-terrarium-llm-agents | Archived | ✓ → plans/_archive/2025-12-14-superseded/ (superseded by crown-jewel-next) |
+| plans/ideas/master-plan-current | Archived | ✓ → plans/_archive/2025-12-14-superseded/ (superseded by newer stacks) |
+| plans/agent-town/phase4-* (5 files) | Archived | ✓ → plans/_archive/2025-12-14-agent-town-phase4-complete/ |
 
 ---
 
@@ -147,7 +153,7 @@ plans/reactive-substrate-unification (15%) ──enables──▶ dashboard-text
 plans/agentese-universal-protocol (0%) ──enables──▶ marimo-integration
 plans/agentese-universal-protocol (0%) ──enables──▶ deployment/permanent-kgent-chatbot
 plans/agentese-universal-protocol (0%) ──enables──▶ interfaces/dashboard-overhaul
-plans/k-terrarium-llm-agents (superseded) ──superseded──▶ folded into crown-jewel-next / agent-town
+plans/k-terrarium-llm-agents (archived) ──superseded──▶ folded into crown-jewel-next / agent-town
 plans/devex/cli-unification (65%) ──enables──▶ agent-town-cli
 plans/devex/cli-unification (65%) ──enables──▶ k-gent-ambient
 plans/devex/cli-unification (65%) ──enables──▶ unified-streaming
@@ -155,10 +161,10 @@ plans/devex/cli-unification (65%) ──enables──▶ agentese-repl-crown-jew
 plans/devex/agentese-repl-crown-jewel (95% ✓) ──enables──▶ discoverability
 plans/devex/agentese-repl-crown-jewel (95% ✓) ──enables──▶ pedagogical-cli
 plans/devex/agentese-repl-crown-jewel (95% ✓) ──enables──▶ k-gent-ambient
-plans/meta/nphase-prompt-compiler (0%) ──enables──▶ all-future-multi-phase-work
-plans/meta/nphase-prompt-compiler (0%) ──enables──▶ prompt-engineering-automation
-plans/meta/nphase-prompt-compiler (0%) ──enables──▶ agent-autonomy-increase
-plans/meta/nphase-prompt-compiler (0%) ──enables──▶ n-phase-ecosystem-completion
+plans/meta/nphase-prompt-compiler (100% ✓) ──enables──▶ all-future-multi-phase-work
+plans/meta/nphase-prompt-compiler (100% ✓) ──enables──▶ prompt-engineering-automation
+plans/meta/nphase-prompt-compiler (100% ✓) ──enables──▶ agent-autonomy-increase
+plans/meta/nphase-prompt-compiler (100% ✓) ──enables──▶ n-phase-ecosystem-completion
 plans/meta/nphase-do-integration (0%) ──enables──▶ plans/devex/cli-unification
 meta/liturgy-morphism-nasi (5%) ──enables──▶ spec/protocols/agentese.md
 meta/liturgy-morphism-nasi (5%) ──enables──▶ plans/_forest.md
@@ -196,7 +202,7 @@ deployment/permanent-kgent-chatbot (0%) ──enables──▶ interfaces/swarm-
 deployment/permanent-kgent-chatbot (0%) ──enables──▶ devex/showcase
 reactive-substrate/wave11 (0%) ──enables──▶ wave12-unified-demo
 reactive-substrate/wave11 (0%) ──enables──▶ agent-observability-notebooks
-plans/ideas/master-plan-current (superseded) ──superseded──▶ replaced by newer planning stacks
+plans/ideas/master-plan-current (archived) ──superseded──▶ replaced by newer planning stacks
 monetization/grand-initiative-monetization (0%) ──enables──▶ deployment/permanent-kgent-chatbot
 monetization/grand-initiative-monetization (0%) ──enables──▶ interfaces/dashboard-overhaul
 monetization/grand-initiative-monetization (0%) ──enables──▶ docs/ideas-synthesis/crown-jewels (reference)
