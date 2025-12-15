@@ -216,3 +216,103 @@ def create_textual_adapter(
     if use_reactive:
         return ReactiveTextualAdapter(widget, name=name, id=id, classes=classes)
     return TextualAdapter(widget, name=name, id=id, classes=classes)
+
+
+def to_textual(
+    widget: Any,
+    *,
+    id: str | None = None,
+    classes: str | None = None,
+) -> Widget:
+    """
+    Convert any KgentsWidget or composed widget to a Textual widget tree.
+
+    This is the universal entry point for composed widget conversion:
+    - HStack/VStack: calls to_textual() recursively
+    - KgentsWidget: wraps in TextualAdapter
+    - Already a Textual Widget: returns as-is
+
+    Args:
+        widget: Any KgentsWidget, HStack, VStack, or Textual Widget
+        id: Textual widget ID (for composed widgets)
+        classes: Textual CSS classes
+
+    Returns:
+        Textual Widget (Horizontal, Vertical, or TextualAdapter)
+
+    Example:
+        # From composition
+        dashboard = header // (cpu >> mem) // footer
+        textual_tree = to_textual(dashboard, id="dash")
+
+        # In compose()
+        yield textual_tree
+    """
+    # Check for to_textual method (HStack, VStack)
+    if hasattr(widget, "to_textual"):
+        result: Widget = widget.to_textual(id=id, classes=classes)
+        return result
+
+    # KgentsWidget: wrap in TextualAdapter
+    if isinstance(widget, KgentsWidget):
+        return TextualAdapter(widget, id=id, classes=classes)
+
+    # Already a Textual Widget
+    if isinstance(widget, Widget):
+        return widget
+
+    # Fallback: try TextualAdapter (duck typing for non-standard widgets)
+    return TextualAdapter(widget, id=id, classes=classes)
+
+
+def to_marimo(
+    widget: Any,
+    *,
+    use_anywidget: bool = True,
+) -> Any:
+    """
+    Convert any KgentsWidget or composed widget to a marimo-compatible output.
+
+    This is the universal entry point for marimo rendering:
+    - HStack/VStack: calls to_marimo() for MarimoAdapter or HTML
+    - KgentsWidget: wraps in MarimoAdapter
+    - Already has _repr_html_: returns as-is
+
+    Args:
+        widget: Any KgentsWidget, HStack, VStack, or marimo-compatible object
+        use_anywidget: If True, prefer anywidget for interactive rendering
+
+    Returns:
+        MarimoAdapter (if anywidget available) or HTML string
+
+    Example:
+        # From composition
+        dashboard = header // (cpu >> mem) // footer
+
+        # In marimo cell
+        mo.ui.anywidget(to_marimo(dashboard))
+        # Or for HTML
+        mo.Html(to_marimo(dashboard, use_anywidget=False))
+    """
+    from agents.i.reactive.adapters.marimo_widget import (
+        MarimoAdapter,
+        is_anywidget_available,
+    )
+    from agents.i.reactive.composable import HStack, VStack
+
+    # Check for HStack/VStack which have use_anywidget parameter
+    if isinstance(widget, (HStack, VStack)):
+        return widget.to_marimo(use_anywidget=use_anywidget)
+
+    # KgentsWidget: wrap in MarimoAdapter or project to MARIMO
+    if isinstance(widget, KgentsWidget):
+        if use_anywidget and is_anywidget_available():
+            return MarimoAdapter(widget)
+        return widget.project(RenderTarget.MARIMO)
+
+    # Already marimo-compatible (_repr_html_)
+    if hasattr(widget, "_repr_html_"):
+        return widget
+
+    # Fallback: string representation
+    return str(widget)

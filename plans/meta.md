@@ -2,8 +2,8 @@
 path: plans/meta
 status: active
 progress: 0
-last_touched: 2025-12-13
-touched_by: gpt-5-codex
+last_touched: 2025-12-15
+touched_by: claude-opus-4-5
 blocking: []
 enables: []
 session_notes: |
@@ -37,6 +37,9 @@ entropy:
 ## Learnings
 
 ```
+2025-12-14  Tier cascade: TEMPLATE never fails; budget exhaustion → graceful fallback
+2025-12-14  Cross-agent import OK: Town→K-gent LLM; reuse > duplicate
+2025-12-14  Async migration: make _execute_* async first, then update tests
 2025-12-13  Three Phases (SENSE→ACT→REFLECT) compress 11 without loss
 2025-12-13  Turn is fundamental: single trace derives all panels (holographic)
 2025-12-13  Posture is polynomial: (phase, activity) → symbol
@@ -106,6 +109,53 @@ entropy:
 2025-12-14  Agent Town GardenState ≡ AUP GardenState—no translation layer needed
 2025-12-14  TUI remote mode DEFERRED not BLOCKED—local TUI continues working independently
 2025-12-14  Teaching examples > reference docs: show the pattern in action, not just describe it
+2025-12-14  Runbook-first: write operator docs before infrastructure—surfaces edge cases early
+2025-12-14  Counter-metrics force harm-thinking: "what makes this feature bad?" reveals blind spots
+2025-12-14  Dashboard sketch before infra: if you can't draw it, you don't understand it
+2025-12-14  SVG > Canvas for <100 elements: native click handling, CSS transitions, no hit-testing
+2025-12-14  Non-blocking webhook: asyncio.create_task() for fire-and-forget ingestion
+2025-12-14  Idempotency pattern: in-memory store (MVP) → Redis (production) with TTL
+2025-12-14  Latency growth as memory leak proxy: simpler than direct measurement in soak tests
+2025-12-14  PDB essential: prevents all-pod eviction during node drains
+2025-12-14  Runbook URLs in alerts reduce MTTR: operator jumps directly to procedure
+2025-12-14  404 (not 403) for cross-tenant access: prevents tenant enumeration attack
+2025-12-14  Wiring > Creation: check if infrastructure exists before building new (Phase 2)
+2025-12-14  Binary fallback: operations gracefully degrade to solo when only 1 participant
+2025-12-14  Right to Rest: citizen polynomial RESTING phase accepts only WakeInput—uninterruptible
+2025-12-14  Archetype eigenvector bias: spec → variance(0.1) → citizen; biases compound at coalition level
+2025-12-14  k-clique percolation: k=3 for towns; scales to ~100 citizens before O(n²) dominates
+2025-12-14  CROSS-SYNERGIZE verdict: direct import when protocol matches; pattern reuse when memory model differs
+2025-12-14  Glyph grammar: middle dot (·) > period; box-drawing chars (═ ─ │) add polish
+2025-12-14  Viewport windowing: render subset of grid for cleaner CLI output
+2025-12-14  Bridge pattern: environment → scatter → isometric is clean functor chain
+2025-12-14  QA edge cases reveal working graceful degradation: budget → cached → template cascade reliable
+2025-12-14  FastAPI route order matters: specific routes (e.g., /town/{id}/init) must come before generic patterns (/{context}/{holon}/*)
+2025-12-14  Kind image loading: use versioned tags (v2, v3) to force pod recreation; imagePullPolicy=IfNotPresent caches aggressively
+2025-12-14  Signal generation monotonic: only increments on distinct value changes—enables change detection
+2025-12-14  Snapshot captures (value, timestamp, generation): restore notifies subscribers but generation continues forward
+2025-12-14  Computed lazy: only recomputes on access after invalidation—saves CPU on unused derivations
+2025-12-14  Effect cleanup pattern: return cleanup fn from effect fn; called before next run and on dispose
+2025-12-14  ModalScope merge strategies map to git: SUMMARIZE≈squash+message, REBASE≈replay, SQUASH≈single commit
+2025-12-14  Turn projectors are natural transformations: Turn → CLI/TUI/JSON/marimo/SSE preserve structure
+2025-12-14  Property-based tests catch edge cases: Hypothesis found boundary issues humans missed
+2025-12-14  Performance baselines as assertions: `assert elapsed < 1.0` catches regressions automatically
+2025-12-14  Wave 1 reactive: 591 tests in 4.71s; sub-10ms per test enables fast CI feedback
+2025-12-15  JetStream StreamConfig: omit max_age for defaults; large nanosecond values cause "invalid JSON" (10025)
+2025-12-15  NetworkPolicy cross-namespace: label target namespace with ingress selector (kgents.io/tier=gateway)
+2025-12-15  Stream pre-creation: when auto-create fails, manually create minimal config then restart deployment
+2025-12-15  Dev API keys built-in: kg_dev_alice (FREE/read), kg_dev_bob (PRO/rw), kg_dev_carol (ENTERPRISE/admin)
+2025-12-15  NATS circuit breaker works: fallback mode serves requests while reconnecting; health endpoint shows status
+2025-12-15  Composition tiering: primitives first (atomic), then composites (cards), defer 2D grids (semantic mismatch)
+2025-12-15  Layout presets > manual composition: metric_row(), panel(), status_row() reduce cognitive load
+2025-12-15  Projection = batteries: developers design state, not rendering; CLI/TUI/marimo/JSON/VR are targets
+2025-12-15  StatefulWidget protocol: use Protocol[S] for widgets with `.state` to enable law verification without inheritance
+2025-12-15  Registry singleton + reset(): class-level state works with pytest fixtures via reset() for test isolation
+2025-12-15  Functor law verification proves composition: if laws pass, arbitrary nesting is safe
+2025-12-15  Wave 2.1 >> and // operators: associative, flatten automatically, 100-widget chains in <10ms
+2025-12-15  ComposableMixin pattern: add to existing widget class to gain >> and // without modifying base
+2025-12-15  Type narrowing in tests: use `result: ComposableWidget` annotation when chaining >> to avoid mypy errors
+2025-12-15  LogosCell pattern: AGENTESE paths → marimo cells via LogosCellResult(_repr_html_ for mo.Html)
+2025-12-15  to_marimo() universal: check HStack/VStack first (use_anywidget param), then KgentsWidget (no param)
 ```
 
 ## Anti-Patterns
@@ -125,9 +175,8 @@ entropy:
 ```
 2025-12-12  DensityField animation: 30fps always or only when focused?
 2025-12-12  Flux → archetype wiring (Consolidator, Spawner)?
-2025-12-12  ModalScope: duplicate() → git stash/branch mapping?
 ```
 
 ---
 
-*Lines: 110/200 | Last pruned: 2025-12-14*
+*Lines: 155/200 | Last pruned: 2025-12-15*

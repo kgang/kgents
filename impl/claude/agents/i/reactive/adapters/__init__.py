@@ -21,6 +21,12 @@ The adapter is invisible when working - just reactive widgets rendered.
 
 from __future__ import annotations
 
+from agents.i.reactive.adapters.marimo_logos import (
+    LogosCell,
+    LogosCellPath,
+    LogosCellResult,
+    create_logos_cell,
+)
 from agents.i.reactive.adapters.marimo_theme import (
     NotebookTheme,
     create_notebook_theme,
@@ -48,16 +54,25 @@ from agents.i.reactive.adapters.textual_theme import ThemeBinding, create_theme_
 from agents.i.reactive.adapters.textual_widget import (
     TextualAdapter,
     create_textual_adapter,
+    to_marimo,
+    to_textual,
 )
 
 __all__ = [
     # Textual adapters
     "TextualAdapter",
     "create_textual_adapter",
+    "to_textual",
     "FlexContainer",
     "create_flex_container",
     "ThemeBinding",
     "create_theme_binding",
+    # Marimo adapters (AGENTESE)
+    "LogosCell",
+    "LogosCellPath",
+    "LogosCellResult",
+    "create_logos_cell",
+    "to_marimo",
     "FocusSync",
     "create_focus_sync",
     # Marimo adapters
