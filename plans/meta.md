@@ -185,6 +185,9 @@ entropy:
 2025-12-15  Widget context pattern: useWidgetRenderOptional() enables layout components to work in isolation and with WidgetRenderer
 2025-12-15  WorkshopFlux auto_advance: must check TASK_COMPLETED after _advance_phase() to stop running—infinite loop otherwise
 2025-12-15  Web projection pattern: Town.tsx→Workshop.tsx mirrors Python town→workshop; same types, stores, hooks structure
+2025-12-15  V2 parallel migration: run TownV2 alongside Town, then git-mv when stable—zero downtime refactor
+2025-12-15  Partial store removal: keep zustand when any store needs persistence/immer; remove only isolated stores
+2025-12-15  API > store for cross-page data: Inhabit fetches citizen name via API vs. relying on populated store
 ```
 
 ## Anti-Patterns

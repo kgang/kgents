@@ -84,12 +84,14 @@ class PhaseTransitionEvent(NPhaseEvent):
     def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         base = super().to_dict()
-        base.update({
-            "from_phase": self.from_phase.name,
-            "to_phase": self.to_phase.name,
-            "cycle_count": self.cycle_count,
-            "payload": self.payload,
-        })
+        base.update(
+            {
+                "from_phase": self.from_phase.name,
+                "to_phase": self.to_phase.name,
+                "cycle_count": self.cycle_count,
+                "payload": self.payload,
+            }
+        )
         return base
 
 
@@ -114,12 +116,14 @@ class PhaseCheckpointEvent(NPhaseEvent):
     def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         base = super().to_dict()
-        base.update({
-            "checkpoint_id": self.checkpoint_id,
-            "phase": self.phase.name,
-            "cycle_count": self.cycle_count,
-            "handle_count": self.handle_count,
-        })
+        base.update(
+            {
+                "checkpoint_id": self.checkpoint_id,
+                "phase": self.phase.name,
+                "cycle_count": self.cycle_count,
+                "handle_count": self.handle_count,
+            }
+        )
         return base
 
 
@@ -143,11 +147,15 @@ class PhaseSignalDetectedEvent(NPhaseEvent):
     def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         base = super().to_dict()
-        base.update({
-            "signal": self.signal.to_dict() if self.signal else None,
-            "output_text_preview": self.output_text[:200] if self.output_text else "",
-            "auto_advanced": self.auto_advanced,
-        })
+        base.update(
+            {
+                "signal": self.signal.to_dict() if self.signal else None,
+                "output_text_preview": self.output_text[:200]
+                if self.output_text
+                else "",
+                "auto_advanced": self.auto_advanced,
+            }
+        )
         return base
 
 
@@ -169,10 +177,12 @@ class SessionCreatedEvent(NPhaseEvent):
     def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         base = super().to_dict()
-        base.update({
-            "title": self.title,
-            "initial_phase": self.initial_phase.name,
-        })
+        base.update(
+            {
+                "title": self.title,
+                "initial_phase": self.initial_phase.name,
+            }
+        )
         return base
 
 
@@ -198,14 +208,16 @@ class SessionEndedEvent(NPhaseEvent):
     def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         base = super().to_dict()
-        base.update({
-            "final_phase": self.final_phase.name,
-            "total_cycles": self.total_cycles,
-            "total_handles": self.total_handles,
-            "total_checkpoints": self.total_checkpoints,
-            "total_entropy": dict(self.total_entropy),
-            "reason": self.reason,
-        })
+        base.update(
+            {
+                "final_phase": self.final_phase.name,
+                "total_cycles": self.total_cycles,
+                "total_handles": self.total_handles,
+                "total_checkpoints": self.total_checkpoints,
+                "total_entropy": dict(self.total_entropy),
+                "reason": self.reason,
+            }
+        )
         return base
 
 
@@ -227,10 +239,12 @@ class HandleAddedEvent(NPhaseEvent):
     def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         base = super().to_dict()
-        base.update({
-            "path": self.path,
-            "phase": self.phase.name,
-        })
+        base.update(
+            {
+                "path": self.path,
+                "phase": self.phase.name,
+            }
+        )
         return base
 
 
@@ -253,11 +267,13 @@ class EntropySpentEvent(NPhaseEvent):
     def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         base = super().to_dict()
-        base.update({
-            "category": self.category,
-            "amount": self.amount,
-            "phase": self.phase.name,
-        })
+        base.update(
+            {
+                "category": self.category,
+                "amount": self.amount,
+                "phase": self.phase.name,
+            }
+        )
         return base
 
 
@@ -277,6 +293,7 @@ def phase_transition_event(
     """Create a phase transition event."""
     return PhaseTransitionEvent(
         session_id=session_id,
+        event_type=NPhaseEventType.PHASE_TRANSITION,
         from_phase=from_phase,
         to_phase=to_phase,
         cycle_count=cycle_count,
@@ -296,6 +313,7 @@ def checkpoint_event(
     """Create a checkpoint event."""
     return PhaseCheckpointEvent(
         session_id=session_id,
+        event_type=NPhaseEventType.PHASE_CHECKPOINT,
         checkpoint_id=checkpoint_id,
         phase=phase,
         cycle_count=cycle_count,
@@ -314,6 +332,7 @@ def signal_detected_event(
     """Create a signal detected event."""
     return PhaseSignalDetectedEvent(
         session_id=session_id,
+        event_type=NPhaseEventType.SIGNAL_DETECTED,
         signal=signal,
         output_text=output_text,
         auto_advanced=auto_advanced,
@@ -330,6 +349,7 @@ def session_created_event(
     """Create a session created event."""
     return SessionCreatedEvent(
         session_id=session_id,
+        event_type=NPhaseEventType.SESSION_CREATED,
         title=title,
         initial_phase=initial_phase,
         metadata=metadata,
@@ -349,6 +369,7 @@ def session_ended_event(
     """Create a session ended event."""
     return SessionEndedEvent(
         session_id=session_id,
+        event_type=NPhaseEventType.SESSION_ENDED,
         final_phase=final_phase,
         total_cycles=total_cycles,
         total_handles=total_handles,

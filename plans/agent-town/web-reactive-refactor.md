@@ -4,7 +4,7 @@
 
 ```yaml
 plan_id: web-reactive-refactor
-status: APPROVED
+status: COMPLETE
 priority: HIGH
 effort: 4
 risk: MEDIUM
@@ -625,10 +625,24 @@ This plan does not include time estimates per kgents principles. Phases should b
 - [x] Phase 2: Composition laws verified (109 tests total)
 - [x] Phase 3: SSE emits `live.state` events (19 backend tests)
 - [x] Phase 3: Frontend consumes projections via useTownStreamWidget (25 tests)
-- [ ] Phase 4: Town page migrated (TownV2, MesaV2, CitizenPanelV2)
-- [ ] Phase 4: Feature parity with current implementation
-- [ ] Phase 5: Zustand removed
-- [ ] Phase 5: Documentation updated
+- [x] Phase 4: Town page migrated (TownV2→Town, MesaV2→Mesa, CitizenPanelV2→CitizenPanel)
+- [x] Phase 4: Feature parity with current implementation (38 tests pass)
+- [x] Phase 5: townStore removed (Zustand kept for userStore/uiStore/workshopStore)
+- [x] Phase 5: Documentation updated (README cleaned)
+
+---
+
+## Completion Notes
+
+**Phase 5 completed 2025-12-15**:
+- Removed legacy Town.tsx, Mesa.tsx, CitizenPanel.tsx, useTownStream.ts
+- Renamed V2 files to primary (Town, Mesa, CitizenPanel)
+- Deleted townStore.ts and its tests
+- Fixed Inhabit.tsx to fetch citizen name via API instead of store
+- Kept zustand/immer (still used by userStore, uiStore, workshopStore)
+- Updated README: removed migration notes, updated architecture docs
+
+**Key insight**: Zustand removal was partial—only townStore could be removed. The persistence layer for userStore and the immer middleware for workshopStore require keeping the dependencies.
 
 ---
 

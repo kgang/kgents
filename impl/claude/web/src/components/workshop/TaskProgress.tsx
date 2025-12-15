@@ -1,4 +1,4 @@
-import { useWorkshopStore, selectPhaseProgress } from '@/stores/workshopStore';
+import { useWorkshopStore } from '@/stores/workshopStore';
 import { BUILDER_COLORS, BUILDER_ICONS } from '@/api/types';
 import type { WorkshopPhase, BuilderArchetype } from '@/api/types';
 
@@ -15,7 +15,6 @@ const PHASES: Array<{ phase: WorkshopPhase; archetype: BuilderArchetype }> = [
  */
 export function TaskProgress() {
   const { currentPhase, activeTask, metrics } = useWorkshopStore();
-  const _progress = useWorkshopStore(selectPhaseProgress()); // Reserved for progress animation
 
   const currentPhaseIndex = PHASES.findIndex((p) => p.phase === currentPhase);
 
@@ -37,7 +36,6 @@ export function TaskProgress() {
           const icon = BUILDER_ICONS[archetype];
           const isCompleted = index < currentPhaseIndex;
           const isCurrent = index === currentPhaseIndex;
-          const _isPending = index > currentPhaseIndex; // Reserved for pending state UI
 
           return (
             <div key={phase} className="flex items-center flex-1">

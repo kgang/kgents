@@ -228,6 +228,11 @@ class NPhaseSession:
         """
         self._event_bus = bus
 
+    async def _emit_event_async(self, event: "NPhaseEvent") -> None:
+        """Emit an event to the bus asynchronously."""
+        if self._event_bus is not None:
+            await self._event_bus.publish(event)
+
     def _emit_event(self, event: "NPhaseEvent") -> None:
         """
         Emit an event to the bus if configured.
@@ -240,7 +245,7 @@ class NPhaseSession:
 
             try:
                 loop = asyncio.get_running_loop()
-                loop.create_task(self._event_bus.publish(event))
+                loop.create_task(self._emit_event_async(event))
             except RuntimeError:
                 # No event loop running - skip event emission
                 pass
