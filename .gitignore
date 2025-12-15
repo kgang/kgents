@@ -224,3 +224,7 @@ plans/_epilogues/
 plans/_archive/
 impl/claude/plans/_epilogues/
 prompts/
+
+# Web UI build artifacts
+impl/claude/web/node_modules/
+impl/claude/web/dist/

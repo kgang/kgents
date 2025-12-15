@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 26 26 46;
+    --foreground: 255 255 255;
+    --muted: 100 100 120;
+    --accent: 233 69 96;
+  }
+
+  body {
+    @apply bg-town-bg text-white;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-town-surface;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-town-accent rounded;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-town-highlight;
+}
+
+/* LOD blur effect */
+.lod-blur {
+  filter: blur(8px);
+  transition: filter 0.3s ease;
+}
+
+.lod-blur:hover {
+  filter: blur(4px);
+}
+
+/* Phase indicator glow */
+.phase-glow {
+  box-shadow: 0 0 20px currentColor;
+}
+
+/* Citizen sprite hover effect */
+.citizen-hover {
+  transition: transform 0.2s ease;
+}
+
+.citizen-hover:hover {
+  transform: scale(1.1);
+}

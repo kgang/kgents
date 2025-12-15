@@ -1,0 +1,95 @@
+import '@testing-library/jest-dom';
+import { cleanup } from '@testing-library/react';
+import { afterEach, beforeEach, vi } from 'vitest';
+import { enableMapSet } from 'immer';
+
+// Enable Immer's MapSet plugin for Map/Set support
+enableMapSet();
+
+// Cleanup after each test
+afterEach(() => {
+  cleanup();
+});
+
+// Reset mocks before each test
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
+// Mock window.matchMedia
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
+
+// Mock ResizeObserver
+class MockResizeObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+window.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
+
+// Mock IntersectionObserver
+class MockIntersectionObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+window.IntersectionObserver = MockIntersectionObserver as unknown as typeof IntersectionObserver;
+
+// Mock crypto.randomUUID
+if (!crypto.randomUUID) {
+  crypto.randomUUID = vi.fn(() =>
+    `${Math.random().toString(36).substring(2)}-${Math.random().toString(36).substring(2)}-${Math.random().toString(36).substring(2)}-${Math.random().toString(36).substring(2)}-${Math.random().toString(36).substring(2)}`
+  ) as unknown as () => `${string}-${string}-${string}-${string}-${string}`;
+}
+
+// Mock localStorage
+const localStorageMock = {
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
+  length: 0,
+  key: vi.fn(),
+};
+Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+
+// Mock EventSource for SSE tests
+class MockEventSource {
+  url: string;
+  readyState = 0;
+  onopen: ((event: Event) => void) | null = null;
+  onmessage: ((event: MessageEvent) => void) | null = null;
+  onerror: ((event: Event) => void) | null = null;
+
+  static readonly CONNECTING = 0;
+  static readonly OPEN = 1;
+  static readonly CLOSED = 2;
+
+  constructor(url: string) {
+    this.url = url;
+    setTimeout(() => {
+      this.readyState = 1;
+      this.onopen?.(new Event('open'));
+    }, 0);
+  }
+
+  addEventListener = vi.fn();
+  removeEventListener = vi.fn();
+  close = vi.fn(() => {
+    this.readyState = 2;
+  });
+  dispatchEvent = vi.fn();
+}
+window.EventSource = MockEventSource as unknown as typeof EventSource;
