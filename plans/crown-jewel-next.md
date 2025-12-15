@@ -1,6 +1,6 @@
 ---
 path: plans/crown-jewel-next
-status: mpp_complete
+status: complete
 progress: 100
 last_touched: 2025-12-14
 touched_by: claude-opus-4.5

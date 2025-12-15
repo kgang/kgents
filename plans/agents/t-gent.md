@@ -1,14 +1,15 @@
 ---
 path: agents/t-gent
-status: dormant
+status: active
 progress: 90
-last_touched: 2025-12-13
-touched_by: gpt-5-codex
+last_touched: 2025-12-15
+touched_by: opus-4.5
 blocking: []
-enables: []
+enables: [stress-testing, chaos-engineering]
 session_notes: |
   Types I-IV complete. Type V (AdversarialGym) remaining.
   U-gent separation complete.
+  WOKEN UP 2025-12-15: Ready for Type V implementation.
 ---
 
 # T-gents: Testing Agents (Types I-V)
@@ -217,6 +218,61 @@ from .oracle import OracleAgent
 - **Plans**: `agents/u-gent.md` (Tool use separation), `world/k8-gents.md` (Webhook)
 - **Impl**: `agents/t/` (current implementation)
 - **Spec**: `spec/t-gents/README.md`
+
+---
+
+## Next Step: Type V Implementation
+
+**Status**: Ready to implement
+**Entropy Budget**: 0.15 (medium complexity)
+
+### Chunk: AdversarialGym
+
+| Task | Description | Effort |
+|------|-------------|--------|
+| 1. StressCoordinate | Dataclass for stress test parameters | Low |
+| 2. GymReport | Result container with resilience metrics | Low |
+| 3. AdversarialGym.stress_test | Monte Carlo composition of Types I-IV | Medium |
+| 4. Tests | Property tests for functor laws under stress | Medium |
+
+### Implementation Sketch
+
+```python
+# agents/t/adversarial.py
+
+@dataclass
+class GymReport:
+    """Results from stress testing."""
+    iterations: int
+    failures: int
+    mean_latency_ms: float
+    resilience_score: float  # 0.0 - 1.0
+    worst_coordinate: StressCoordinate | None
+
+class AdversarialGym:
+    def __init__(self, seed: int = 42):
+        self.rng = random.Random(seed)
+
+    async def stress_test(
+        self,
+        agent: Agent[A, B],
+        coordinates: list[StressCoordinate],
+        iterations: int = 100,
+    ) -> GymReport:
+        # For each iteration:
+        # 1. Sample a coordinate
+        # 2. Compose agent with T-gents based on coordinate
+        # 3. Run and record outcome
+        # 4. Aggregate into GymReport
+        ...
+```
+
+### Success Criteria
+
+- [ ] `AdversarialGym` is a functor: `Gym: Agent → GymReport`
+- [ ] Composing with zero-stress coordinate ≈ identity (within tolerance)
+- [ ] At least 10 tests covering edge cases
+- [ ] Integrates with existing T-gent types
 
 ---
 

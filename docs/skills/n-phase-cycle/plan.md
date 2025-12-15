@@ -1,31 +1,3 @@
----
-path: docs/skills/n-phase-cycle/plan
-status: active
-progress: 0
-last_touched: 2025-12-13
-touched_by: gpt-5-codex
-blocking: []
-enables: []
-session_notes: |
-  Header added for forest compliance (STRATEGIZE).
-phase_ledger:
-  PLAN: touched
-  RESEARCH: touched
-  DEVELOP: skipped  # reason: doc-only
-  STRATEGIZE: touched
-  CROSS-SYNERGIZE: skipped  # reason: doc-only
-  IMPLEMENT: skipped  # reason: doc-only
-  QA: skipped  # reason: doc-only
-  TEST: skipped  # reason: doc-only
-  EDUCATE: skipped  # reason: doc-only
-  MEASURE: deferred  # reason: metrics backlog
-  REFLECT: touched
-entropy:
-  planned: 0.05
-  spent: 0.0
-  returned: 0.05
----
-
 # Skill: PLAN (N-Phase Cycle)
 
 > Shape intention into composable chunks with explicit constraints and exits.

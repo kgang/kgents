@@ -1,31 +1,3 @@
----
-path: docs/skills/n-phase-cycle/educate
-status: active
-progress: 0
-last_touched: 2025-12-13
-touched_by: gpt-5-codex
-blocking: []
-enables: []
-session_notes: |
-  Header added for forest compliance (STRATEGIZE).
-phase_ledger:
-  PLAN: touched
-  RESEARCH: touched
-  DEVELOP: skipped  # reason: doc-only
-  STRATEGIZE: touched
-  CROSS-SYNERGIZE: touched
-  IMPLEMENT: touched
-  QA: touched
-  TEST: touched
-  EDUCATE: touched
-  MEASURE: touched
-  REFLECT: touched
-entropy:
-  planned: 0.05
-  spent: 0.035
-  returned: 0.015
----
-
 # Skill: EDUCATE (N-Phase Cycle)
 
 > Teach humans and agents how to wield the shipped capability.

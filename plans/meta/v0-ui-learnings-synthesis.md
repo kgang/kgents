@@ -1,6 +1,6 @@
 ---
 path: plans/meta/v0-ui-learnings-synthesis
-status: active
+status: complete
 progress: 100
 last_touched: 2025-12-14
 touched_by: opus-4.5

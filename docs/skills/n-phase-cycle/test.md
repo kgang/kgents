@@ -1,31 +1,3 @@
----
-path: docs/skills/n-phase-cycle/test
-status: active
-progress: 0
-last_touched: 2025-12-13
-touched_by: gpt-5-codex
-blocking: []
-enables: []
-session_notes: |
-  Header added for forest compliance (STRATEGIZE).
-phase_ledger:
-  PLAN: touched
-  RESEARCH: touched
-  DEVELOP: skipped  # reason: doc-only
-  STRATEGIZE: touched
-  CROSS-SYNERGIZE: touched
-  IMPLEMENT: touched
-  QA: touched
-  TEST: touched
-  EDUCATE: skipped  # reason: doc-only
-  MEASURE: deferred  # reason: metrics backlog
-  REFLECT: touched
-entropy:
-  planned: 0.05
-  spent: 0.02
-  returned: 0.03
----
-
 # Skill: TEST (N-Phase Cycle)
 
 > Verify correctness, coverage, and lawfulness with intentional depth.

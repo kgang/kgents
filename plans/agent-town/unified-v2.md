@@ -22,15 +22,15 @@ session_notes: |
 phase_ledger:
   PLAN: touched
   RESEARCH: touched
-  DEVELOP: pending
-  STRATEGIZE: pending
-  CROSS-SYNERGIZE: pending
-  IMPLEMENT: pending
-  QA: pending
-  TEST: pending
+  DEVELOP: touched
+  STRATEGIZE: touched
+  CROSS-SYNERGIZE: touched
+  IMPLEMENT: touched
+  QA: touched
+  TEST: touched
+  MEASURE: touched
+  REFLECT: touched
   EDUCATE: pending
-  MEASURE: pending
-  REFLECT: pending
 entropy:
   planned: 0.15
   spent: 0.05

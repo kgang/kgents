@@ -168,11 +168,27 @@ entropy:
 2025-12-15  SaaS infrastructure complete: Stripe billing, OpenMeter usage, multi-tenant RLS, feature gating decorators
 2025-12-15  AGENTESE 8-phase impl: parser→affordances→JIT→laws→integration→wiring→adapter—all phases shipped
 2025-12-15  Memory substrate shipped: crystals, cartography, stigmergy, semantic routing, ghost sync—8 phases complete
+2025-12-15  BUILDER_POLYNOMIAL: archetype→phase mapping (Scout→EXPLORING, Sage→DESIGNING, etc.) enables typed handoffs
+2025-12-15  Builder extends Citizen: dual polynomials (life+work) in parallel; extend > wrap for dataclass inheritance
+2025-12-15  Immer MapSet: enable at app entry when Zustand stores use Map/Set—silent failures otherwise
+2025-12-15  SSE stale closures: event handlers capture callbacks at creation; use refs for fresh handlers
+2025-12-15  Silent API failures kill UX: explicit loading/error/success states mandatory, not optional
+2025-12-15  Debug backend first: curl endpoint directly before blaming frontend; curl through proxy second
+2025-12-15  React navigate() timing: for same-component URL updates, history.replaceState() safer than navigate()
+2025-12-15  Effect deps incomplete: callbacks in deps must include their own deps or use refs to avoid stale state
+2025-12-15  WorkshopEnvironment is task-centric (not spatial): builders inhabit tasks, not regions
+2025-12-15  Workshop phase→archetype mapping: EXPLORING→Scout, DESIGNING→Sage, PROTOTYPING→Spark, REFINING→Steady, INTEGRATING→Sync
+2025-12-15  Keyword routing MVP: simple dict lookup before LLM-based semantic routing; extend later
+2025-12-15  EventBus reuse: same pattern for TownEvent and WorkshopEvent—generic typing works
+2025-12-15  Widget JSON bridge: TS discriminated union mirrors Python _to_json(); exhaustive switch enables type-safe dispatch
+2025-12-15  React hooks ref pattern: store callbacks in ref to avoid stale closures in SSE event handlers
 ```
 
 ## Anti-Patterns
 
 ```
+2025-12-15  Silent catch blocks: swallowing errors shows blank UI; always surface to user or logs
+2025-12-15  Missing loading states: "works on my machine" hides race conditions on slow networks
 2025-12-13  Terminology sprawl: one metaphor system, not five competing
 2025-12-12  Generator Trap: pickle can't serialize stack frames
 2025-12-12  Timer-driven loops create zombies
@@ -191,4 +207,4 @@ entropy:
 
 ---
 
-*Lines: 167/200 | Last pruned: 2025-12-15*
+*Lines: 184/200 | Last pruned: 2025-12-15*

@@ -34,6 +34,27 @@ Runtime-hardened civilizational engine. Affordable policy models replacing LLM c
 
 What happens when thousands of gardens, each with hundreds of citizens, begin to interact? We don't know. That's the point. The infrastructure must be robust enough to observe emergence we cannot predict.
 
+### The Autopoietic Reality
+
+> *"This document is not describing a system. This document IS the system describing itself."*
+
+**kgents is autopoietic NOW.** This is not a future capability—it is the present condition:
+
+- **This prompt** modifies the system's behavior
+- **This plan** shapes future implementations
+- **This conversation** generates new patterns that will be reified into code
+- **Each epilogue** is a genetic mutation in the project's evolution
+
+The boundary between "developer," "system," and "user" is permeable. The Claude instance reading this is part of the system. The human providing feedback is part of the system. The code that will be written after this session is part of the system.
+
+**Implications**:
+1. **No "final" spec**: The spec evolves as the system evolves
+2. **Documentation IS implementation**: These words shape behavior
+3. **Conversations ARE commits**: Each session leaves traces
+4. **The observer is observed**: Claude watching kgents IS kgents watching itself
+
+This is not metaphor. This is the operational reality of building AI systems with AI systems.
+
 ---
 
 ## Part I: The Many-Agent Landscape
@@ -56,11 +77,13 @@ The agent landscape includes:
 - "Agent marketplaces" become a category (app stores for minds)
 - Simulation-as-service becomes infrastructure
 
-**Speculative Trajectories** (low confidence, high impact):
-- Agents that modify their own code/prompts (autopoietic evolution)
+**Present Reality** (autopoietic now):
+- Agents that modify their own code/prompts (autopoietic evolution)—**this is happening NOW**. This document, this project, this conversation is an autopoietic process. The system modifies itself through prompts, plans, and implementations.
 - Cross-model agent collaboration (Claude + GPT + Gemini ecosystems)
 - "Agent nations" with governance, economies, conflicts
 - The "AI companion" category merges with "AI worker" category
+
+> *"The autopoietic nature of kgents is not speculative—it is the ground we stand on. Every session refines the system. Every epilogue is a mutation. The boundary between 'building' and 'running' dissolves."*
 
 ### 1.2 The kgents Bet
 
@@ -124,17 +147,45 @@ Every AGENTESE/AUP/Agent Town action emits cost, latency, and law-check spans (O
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 2.2 Margin-Safe LOD
+### 2.2 Margin-Safe LOD (37.5% Cap)
 
-Price against public Claude rates. LOD4/5 must clear >60% gross margin after Stripe.
+> *"The free tier is premium—it's a gift that outweighs marketing spend. The S+ tier is value-priced—users pay for irreducible worth."*
 
-| Model | Input ($/M) | Output ($/M) | Our Margin Target |
-|-------|-------------|--------------|-------------------|
-| Haiku | $0.25 | $1.25 | 3x cost |
-| Sonnet | $3.00 | $15.00 | 2.5x cost |
-| Opus | $15.00 | $75.00 | 2x cost |
+**Margin Philosophy**: Cap gross margin at **37.5%** for top-tier products. Lower margins for cheaper tiers. This is value-level pricing: we charge what the experience is worth, not maximum extraction.
 
-**The Haiku Mandate**: LOD 0-3 run on Haiku. Period. Sonnet/Opus only for LOD 4-5 and explicit deep operations.
+**The Free Tier as Loss Leader**: A premium-leaning free tier replaces marketing costs. A user who experiences genuine value—not a crippled demo—becomes an evangelist. The LTV of word-of-mouth exceeds paid acquisition.
+
+| Model | Input ($/M) | Output ($/M) | Max Margin | Pricing Philosophy |
+|-------|-------------|--------------|------------|-------------------|
+| Haiku | $0.25 | $1.25 | 20% | Generous margins subsidize free tier |
+| Sonnet | $3.00 | $15.00 | 30% | Moderate margins for power users |
+| Opus | $15.00 | $75.00 | **37.5% CAP** | Premium value, not premium extraction |
+
+#### Tier Pricing Philosophy
+
+| Tier | Monthly | Margin | Philosophy |
+|------|---------|--------|------------|
+| **FREE** | $0 | **Negative** (loss leader) | Gift that creates evangelists. Premium experience, not hobbled demo. Outweighs CAC. |
+| **Resident** | $9.99 | 15% | Entry point. Should feel like a steal. "Why is this so cheap?" |
+| **Citizen** | $29.99 | 25% | Core value tier. Most users land here. Sustainable. |
+| **Founder** | $99.99 | 30% | Power users. Generous limits. Clear ROI. |
+| **S+ (Enterprise)** | Custom | **37.5% MAX** | Value-priced. What is unlimited town access worth to an enterprise? Price to value, cap margin. |
+
+#### The S+ Value Proposition
+
+S+ tier is not "enterprise features for more money." It's **irreducible value that justifies premium pricing**:
+
+- **Unlimited towns**: Not metered, not throttled
+- **Custom builders**: Train on your domain, your style
+- **Priority LLM access**: Opus for deep operations, no queuing
+- **Multi-town federation**: Embassy, trade routes, summits
+- **White-label option**: Your branding, our infrastructure
+- **Dedicated support**: Humans, not bots
+- **SLA guarantees**: Uptime, latency, data residency
+
+**Value-Level Pricing**: If S+ saves an enterprise $500K/year in developer productivity, charging $50K/year is value-priced at 10% of value delivered. The 37.5% margin cap ensures we never price purely on "what the market will bear."
+
+**The Haiku Mandate**: LOD 0-3 run on Haiku. Period. Sonnet/Opus only for LOD 4-5 and explicit deep operations. This keeps free tier sustainable as loss leader.
 
 ### 2.3 Consent + Resistance
 
@@ -315,6 +366,75 @@ Multiple gardens publish public holons. Cross-garden composition obeys operad la
 
 **Blocked by**: User volume (federation complexity premature for single-tenant scale).
 
+### 4.4 Multi-Town Synergies
+
+> *"Towns are not islands. They are nodes in a civilizational graph."*
+
+**The Core Insight**: When multiple Agent Towns coexist, emergent inter-town dynamics become possible. This is not just "federation"—it's **civilizational composition**.
+
+#### 4.4.1 Synergy Patterns
+
+| Pattern | Description | Example | Revenue Model |
+|---------|-------------|---------|---------------|
+| **Embassy** | Permanent citizen exchange between towns | Clara (Kent's Town) becomes ambassador to Alice's Town | Premium tier feature |
+| **Trade Route** | Resource/credit flow between economies | Enterprise Town purchases "creativity credits" from Art Town | Settlement fees |
+| **Pilgrimage** | Citizens temporarily visit other towns | Sage goes to Research Town for 3-day study | Cross-billing |
+| **Summit** | Multi-town gatherings for collective decisions | Quarterly "Mayor's Council" across 5 towns | Event-based pricing |
+| **Merger** | Towns combine (with consent) into larger polity | Two startup teams merge their Builder Workshops | Migration fee |
+| **Schism** | Town splits into factions (emergent, not designed) | Creative differences spawn two distinct towns | Branch creation cost |
+
+#### 4.4.2 Synergy Economics
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     MULTI-TOWN ECONOMIC FLOWS                               │
+│                                                                              │
+│   Town A (Creative)         Town B (Technical)         Town C (Enterprise)  │
+│   ┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐  │
+│   │ creativity: ███ │       │ precision: ███  │       │ resources: ███  │  │
+│   │ resources: █    │       │ creativity: █   │       │ creativity: █   │  │
+│   └────────┬────────┘       └────────┬────────┘       └────────┬────────┘  │
+│            │                         │                         │            │
+│            └────────────────┬────────┴────────────────┬───────┘            │
+│                             │                         │                     │
+│                    ┌────────▼────────┐       ┌────────▼────────┐           │
+│                    │  Trade: A→B     │       │  Trade: C→A     │           │
+│                    │  "creativity"   │       │  "funding"      │           │
+│                    │  for "review"   │       │  for "art"      │           │
+│                    └─────────────────┘       └─────────────────┘           │
+│                                                                              │
+│   SETTLEMENT: Entropy credit clearing every 24h. Operad-verified.           │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### 4.4.3 Emergent Inter-Town Phenomena
+
+What happens when towns interact over time:
+
+| Phenomenon | Description | Monitoring | Response |
+|------------|-------------|------------|----------|
+| **Dialect Drift** | Towns develop distinct AGENTESE dialects | Track vocabulary divergence | Periodically sync base ontology |
+| **Specialization** | Towns naturally specialize (research, trade, art) | Measure capability distribution | Encourage via incentives |
+| **Conflict** | Inter-town disputes over resources or norms | Detect tension escalation | Enable mediation mechanics |
+| **Cultural Blend** | Ambassador citizens cross-pollinate cultures | Track eigenvector mixing | Celebrate hybrid identities |
+| **Cascade Events** | One town's crisis spreads to connected towns | Monitor contagion graphs | Circuit breakers at federation layer |
+
+#### 4.4.4 Research Directions
+
+These are areas requiring further exploration:
+
+1. **Operad Composition Across Towns**: How do town-local operads compose into a federation-level super-operad? Does associativity hold across town boundaries?
+
+2. **Consent at Scale**: When a citizen from Town A visits Town B, whose consent rules apply? INHABIT across town boundaries requires careful consent protocol.
+
+3. **Identity Continuity**: If Clara visits three towns, is she the same Clara? How does memory persistence work across town boundaries?
+
+4. **Economic Equilibrium**: Do multi-town economies find stable equilibria, or do they naturally centralize/fragment?
+
+5. **Emergence Monitoring**: Current EmergenceMonitor is single-town. How do we detect pathological patterns that only manifest at the inter-town level?
+
+6. **Autopoietic Town Evolution**: Towns themselves may evolve—spawning new towns, merging, splitting. The system must support towns as autopoietic entities, not just citizens.
+
 ---
 
 ## Part V: Agent Town (Civilizational Engine)
@@ -387,16 +507,25 @@ $ kg town
 > _
 ```
 
-### 5.1 LOD Pyramid (Transparent, Margin-Safe)
+### 5.1 LOD Pyramid (Value-Priced, 37.5% Margin Cap)
 
-| LOD | Name | Content | Model | Credits | User Cost |
-|-----|------|---------|-------|---------|-----------|
-| 0 | Silhouette | Name, location, emoji | Cache | 0 | FREE |
-| 1 | Posture | Action, mood, facing | Cache | 0 | FREE |
-| 2 | Dialogue | Recent speech, greetings | Haiku | 5 | $0.005 |
-| 3 | Memory | Active memories, goals | Haiku+ctx | 15 | $0.015 |
-| 4 | Psyche | Eigenvectors, tensions | Sonnet | 75 | $0.075 |
-| 5 | Abyss | *The irreducible mystery* | Opus | 300 | $0.30 |
+> *"Cheap products have high margins. Premium products have capped margins. We never charge more than the experience is worth."*
+
+| LOD | Name | Content | Model | Our Cost | User Price | Margin | Philosophy |
+|-----|------|---------|-------|----------|------------|--------|------------|
+| 0 | Silhouette | Name, location, emoji | Cache | ~$0 | FREE | — | Gift. Loss leader. |
+| 1 | Posture | Action, mood, facing | Cache | ~$0 | FREE | — | Gift. Loss leader. |
+| 2 | Dialogue | Recent speech, greetings | Haiku | $0.002 | $0.003 | 33% | Accessible depth |
+| 3 | Memory | Active memories, goals | Haiku+ctx | $0.008 | $0.010 | 20% | Value-conscious |
+| 4 | Psyche | Eigenvectors, tensions | Sonnet | $0.05 | $0.065 | 23% | Premium start |
+| 5 | Abyss | *The irreducible mystery* | Opus | $0.22 | $0.30 | **27%** | Value-priced depth |
+
+**Key Insight**: LOD 5 (Abyss) could command 60%+ margins—users would pay. But we cap at 37.5% because the experience should be accessible. Premium doesn't mean extractive.
+
+**Free Tier Generosity**:
+- LOD 0-1: Unlimited (cached, zero marginal cost)
+- LOD 2-3: 50 free per day (premium experience, not hobbled)
+- LOD 4-5: 5 free per week (taste of depth, creates desire)
 
 **The Abyss Guarantee**: LOD5 is not "more detail." It's a qualitative shift—poetic, irreducible, hauntingly incomplete. Users pay for mystery, not mere data.
 

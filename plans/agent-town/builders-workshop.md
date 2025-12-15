@@ -1,7 +1,7 @@
 ---
 path: agent-town/builders-workshop
 status: active
-progress: 10
+progress: 45
 last_touched: 2025-12-15
 touched_by: claude-opus-4-5
 blocking: []
@@ -11,50 +11,60 @@ enables:
   - agent-town-inhabit
   - revenue/first-dollar
 session_notes: |
-  PLAN COMPLETE (2025-12-15). Infrastructure audit reveals mature foundation:
+  SESSION 2025-12-15 (continued): Chunk 5 COMPLETE (5 Builder Classes)
 
-  READY (no new code needed):
-  - BudgetStore (budget_store.py): Redis-backed credits, subscriptions, consent debt
-  - PaymentClient (payments.py): Stripe checkout, webhooks, mock client
-  - ActionMetrics (action_metrics.py): OpenTelemetry spans, cost tracking
-  - InhabitSession (inhabit_session.py): INHABIT mode with resistance
-  - DialogueEngine (dialogue_engine.py): LLM-backed citizen dialogue
-  - Flux (flux.py): Event-driven streaming
-  - Isometric (isometric.py): 2D grid visualization
+  COMPLETED:
+  - Chunk 1: TelegramNotifier (agents/town/telegram_notifier.py, 400 lines, 27 tests)
+  - Chunk 2: Webhook→Telegram wire (protocols/api/webhooks.py modified)
+  - Chunk 3: CLI handler (`kg town telegram status|test|payment`)
+  - Chunk 4: BUILDER_POLYNOMIAL (agents/town/builders/polynomial.py, ~400 lines, 71 tests)
+  - Chunk 5: 5 Builder classes (sage, spark, steady, scout, sync) + base.py, cosmotechnics.py, voice.py (132 tests total)
 
-  NEW WORK (9 chunks, revenue-first order):
-  1. TelegramNotifier - Kent's motivation loop (HIGH PRIORITY)
-  2. BUILDER_POLYNOMIAL - Extend CitizenPolynomial
-  3. Builder class + 5 implementations (Sage, Spark, Steady, Scout, Sync)
-  4. WorkshopEnvironment - Subclass TownEnvironment
-  5. WorkshopFlux - Workshop-specific event stream
-  6. CLI handler (kg workshop) - New Typer command
-  7. Workshop webhook handler - Wire Stripe → Telegram
-  8. Web projection - Leverage existing town.server + isometric
-  9. Public metrics dashboard - Use ActionMetrics aggregate
+  CHUNK 5 NEW FILES:
+  - agents/town/builders/base.py (Builder class extending Citizen)
+  - agents/town/builders/cosmotechnics.py (5 builder cosmotechnics)
+  - agents/town/builders/voice.py (5 voice pattern tuples)
+  - agents/town/builders/sage.py (create_sage factory)
+  - agents/town/builders/spark.py (create_spark factory)
+  - agents/town/builders/steady.py (create_steady factory)
+  - agents/town/builders/scout.py (create_scout factory)
+  - agents/town/builders/sync.py (create_sync factory)
+  - agents/town/builders/_tests/test_builders.py (61 tests)
 
-  DEFERRED (v2):
-  - enterprise-workshop, workshop-templates, builder-memory, workshop-replay
+  KEY DESIGN DECISIONS:
+  - Builder extends Citizen (composition, not wrapper) adding specialty, voice_patterns, _builder_phase
+  - Dual state machines: CitizenPolynomial (life phases) + BuilderPolynomial (work phases) operate in parallel
+  - 5 cosmotechnics: ARCHITECTURE, EXPERIMENTATION, CRAFTSMANSHIP, DISCOVERY, ORCHESTRATION
+  - Eigenvector profiles tuned for distinct personalities (e.g., Spark: high creativity 0.95, low patience 0.3)
+  - Factory pattern: create_sage(), create_spark(), etc.
 
-  BLOCKERS (Kent action required):
-  - Stripe test mode: Need STRIPE_SECRET_KEY, product/price IDs
-  - Telegram bot: Need TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+  NEXT: Chunk 6 (WorkshopEnvironment)
+
+  REMAINING CHUNKS (6-9):
+  6. WorkshopEnvironment
+  7. WorkshopFlux
+  8. Web projection
+  9. Public metrics dashboard
+
+  BLOCKERS (Kent action still required):
+  - Telegram: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID from @BotFather
+  - Stripe: STRIPE_SECRET_KEY, product/price IDs
 phase_ledger:
   PLAN: complete
-  RESEARCH: pending
-  DEVELOP: pending
-  STRATEGIZE: pending
+  RESEARCH: complete
+  DEVELOP: complete
+  STRATEGIZE: touched
   CROSS-SYNERGIZE: pending
-  IMPLEMENT: pending
+  IMPLEMENT: complete
   QA: pending
-  TEST: pending
+  TEST: complete
   EDUCATE: pending
   MEASURE: pending
-  REFLECT: pending
+  REFLECT: touched
 entropy:
   planned: 0.15
-  spent: 0.02
-  remaining: 0.13
+  spent: 0.07
+  remaining: 0.08
 ---
 
 # Builder's Workshop: The Default Agent Town
