@@ -141,32 +141,32 @@ class TestSemanticLayers:
 
 
 class TestNamespaceClustering:
-    """Tests for namespace-based clustering."""
+    """Tests for namespace-based clustering (v2: Z-axis for namespaces)."""
 
-    def test_entities_grouped_by_namespace(
+    def test_entities_grouped_by_namespace_in_z(
         self,
         sample_entities: list[InfraEntity],
         sample_connections: list[InfraConnection],
     ) -> None:
-        """Entities in same namespace should be clustered together."""
+        """Namespaces should be separated in Z (depth)."""
         calculate_semantic_layout(sample_entities, sample_connections)
 
-        # Get average X for each namespace
+        # Get average Z for each namespace (base depth, before health adjustment)
         by_ns: dict[str, list[float]] = {}
         for e in sample_entities:
             ns = e.namespace or "(none)"
             if ns not in by_ns:
                 by_ns[ns] = []
-            by_ns[ns].append(e.x)
+            by_ns[ns].append(e.z)
 
-        # Calculate cluster centers
-        centers = {ns: sum(xs) / len(xs) for ns, xs in by_ns.items()}
+        # Calculate average Z per namespace
+        avg_z = {ns: sum(zs) / len(zs) for ns, zs in by_ns.items()}
 
-        # Namespaces should have distinct centers
-        ns_list = list(centers.keys())
+        # Namespaces should have distinct Z positions
+        ns_list = list(avg_z.keys())
         if len(ns_list) >= 2:
-            # Centers should be separated
-            assert abs(centers[ns_list[0]] - centers[ns_list[1]]) > 1.0
+            # Z positions should be separated
+            assert abs(avg_z[ns_list[0]] - avg_z[ns_list[1]]) > 1.0
 
 
 # =============================================================================
@@ -224,47 +224,65 @@ class TestVerticalHierarchy:
 
 
 class TestHealthDepth:
-    """Tests for health-based Z positioning (attention principle)."""
+    """Tests for health-based Z positioning (v2: relative to namespace slice)."""
 
-    def test_healthy_entities_at_background(
+    def test_unhealthy_entities_forward_within_namespace(
         self,
         sample_entities: list[InfraEntity],
         sample_connections: list[InfraConnection],
     ) -> None:
-        """Healthy entities should be at z≈0."""
+        """Unhealthy entities should be more forward than healthy ones in same namespace."""
         calculate_semantic_layout(sample_entities, sample_connections)
 
-        healthy = [e for e in sample_entities if e.health >= 0.9]
-        for entity in healthy:
-            assert abs(entity.z) < 1.0, f"Healthy entity {entity.name} should be near z=0"
+        # Group by namespace
+        by_ns: dict[str, list[InfraEntity]] = {}
+        for e in sample_entities:
+            ns = e.namespace or "(none)"
+            if ns not in by_ns:
+                by_ns[ns] = []
+            by_ns[ns].append(e)
 
-    def test_warning_entities_forward(
+        # Within each namespace, unhealthy should be more forward (higher Z)
+        for ns, entities in by_ns.items():
+            healthy = [e for e in entities if e.health >= 0.9]
+            unhealthy = [e for e in entities if e.health < 0.7]
+
+            if healthy and unhealthy:
+                max_healthy_z = max(e.z for e in healthy)
+                min_unhealthy_z = min(e.z for e in unhealthy)
+                # Unhealthy should have higher Z (more forward)
+                assert min_unhealthy_z >= max_healthy_z, (
+                    f"In {ns}: unhealthy Z ({min_unhealthy_z}) should be >= healthy Z ({max_healthy_z})"
+                )
+
+    def test_critical_more_forward_than_warning(
         self,
         sample_entities: list[InfraEntity],
         sample_connections: list[InfraConnection],
     ) -> None:
-        """Warning entities should come forward (z > 0)."""
+        """Critical entities should be more forward than warning in same namespace."""
         calculate_semantic_layout(sample_entities, sample_connections)
 
-        warning = [e for e in sample_entities if 0.5 <= e.health < 0.7]
-        for entity in warning:
-            assert entity.z > 0, f"Warning entity {entity.name} should be forward"
+        # Group by namespace
+        by_ns: dict[str, list[InfraEntity]] = {}
+        for e in sample_entities:
+            ns = e.namespace or "(none)"
+            if ns not in by_ns:
+                by_ns[ns] = []
+            by_ns[ns].append(e)
 
-    def test_critical_entities_most_forward(
-        self,
-        sample_entities: list[InfraEntity],
-        sample_connections: list[InfraConnection],
-    ) -> None:
-        """Critical entities should be furthest forward."""
-        calculate_semantic_layout(sample_entities, sample_connections)
+        # Within each namespace, critical should be more forward than warning
+        for ns, entities in by_ns.items():
+            critical = [e for e in entities if e.health < 0.5]
+            warning = [e for e in entities if 0.5 <= e.health < 0.7]
 
-        critical = [e for e in sample_entities if e.health < 0.5]
-        warning = [e for e in sample_entities if 0.5 <= e.health < 0.7]
-
-        if critical and warning:
-            max_critical_z = max(e.z for e in critical)
-            max_warning_z = max(e.z for e in warning)
-            assert max_critical_z > max_warning_z, "Critical should be more forward than warning"
+            if critical and warning:
+                max_warning_z = max(e.z for e in warning)
+                min_critical_z = min(e.z for e in critical)
+                # Critical should be at least as forward as warning
+                assert min_critical_z >= max_warning_z - 0.1, (
+                    f"In {ns}: critical Z should be >= warning Z"
+                )
 
 
 # =============================================================================

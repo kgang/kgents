@@ -10,6 +10,8 @@ Components:
 - Combinators: Sequence and Parallel for composition
 - Spring: Physics-based spring dynamics
 - Animated: AnimatedWidget base class
+- Cymatics: Vibration visualization through wave interference
+- Growth: Differential growth for organic forms
 
 Key insight: Animation is time.* context manifesting.
 """
@@ -22,6 +24,14 @@ from agents.i.reactive.animation.combinators import (
     AnimationCombinator,
     Parallel,
     Sequence,
+)
+from agents.i.reactive.animation.cymatics import (
+    ChladniPattern,
+    CymaticsEngine,
+    VibrationSource,
+    create_dissonant_sources,
+    create_harmonic_sources,
+    pattern_stability,
 )
 from agents.i.reactive.animation.easing import (
     Easing,
@@ -37,6 +47,12 @@ from agents.i.reactive.animation.frame import (
     FrameCallback,
     FrameScheduler,
     FrameSchedulerConfig,
+)
+from agents.i.reactive.animation.growth import (
+    GrowthEdge,
+    GrowthEngine,
+    GrowthNode,
+    GrowthRules,
 )
 from agents.i.reactive.animation.spring import (
     Spring,
@@ -80,4 +96,16 @@ __all__ = [
     # Animated
     "AnimatedWidget",
     "AnimationMixin",
+    # Cymatics
+    "CymaticsEngine",
+    "VibrationSource",
+    "ChladniPattern",
+    "create_harmonic_sources",
+    "create_dissonant_sources",
+    "pattern_stability",
+    # Growth
+    "GrowthEngine",
+    "GrowthNode",
+    "GrowthEdge",
+    "GrowthRules",
 ]

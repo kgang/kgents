@@ -112,9 +112,17 @@ COMMAND_REGISTRY: dict[str, str] = {
     # ==========================================================================
     "town": "protocols.cli.handlers.town:cmd_town",
     # ==========================================================================
+    # Punchdrunk Park (Crown Jewel - Wave 3)
+    # ==========================================================================
+    "park": "protocols.cli.handlers.park:cmd_park",
+    # ==========================================================================
     # Tiny Atelier (Demo Workshop)
     # ==========================================================================
     "atelier": "protocols.cli.handlers.atelier:cmd_atelier",
+    # ==========================================================================
+    # Holographic Brain (Crown Jewel - Memory)
+    # ==========================================================================
+    "brain": "protocols.cli.handlers.brain:cmd_brain",
     # ==========================================================================
     # Shortcuts (ergonomic aliases for common operations)
     # ==========================================================================
@@ -157,6 +165,19 @@ COMMAND_REGISTRY: dict[str, str] = {
     # Wave 1: Hero Path Polish
     # ==========================================================================
     "gardener": "protocols.cli.handlers.gardener:cmd_gardener",
+    # ==========================================================================
+    # Gardener-Logos: Garden Tending (Phase 2 CLI)
+    # ==========================================================================
+    "garden": "protocols.cli.handlers.garden:cmd_garden",
+    "tend": "protocols.cli.handlers.tend:cmd_tend",
+    "plot": "protocols.cli.handlers.plot:cmd_plot",
+    # Tending verb aliases (shortcuts)
+    "observe": "protocols.cli.handlers.tend:cmd_observe",
+    "prune": "protocols.cli.handlers.tend:cmd_prune",
+    "graft": "protocols.cli.handlers.tend:cmd_graft",
+    "water": "protocols.cli.handlers.tend:cmd_water",
+    "rotate": "protocols.cli.handlers.tend:cmd_rotate",
+    # Note: "wait" conflicts with potential shell command, use "kg tend wait"
 }
 
 

@@ -12,8 +12,20 @@ dynamics visible and delightful.
 
 Crown Jewel #2 in the Seven Jewel Crown.
 See: plans/core-apps/coalition-forge.md
+
+Wave 2 Synergy Integration:
+- Coalition → Brain: Auto-capture task completions
+- Brain → Coalition: Query relevant context before formation
+- Coalition → Gardener: Bridge to session orchestration
 """
 
+from agents.forge.synergy import (
+    SynergyAwareForge,
+    emit_coalition_formed,
+    emit_task_complete,
+    query_context_for_coalition,
+    query_relevant_context,
+)
 from agents.forge.visualization import (
     BuilderEntry,
     CoalitionFormationView,
@@ -71,4 +83,10 @@ __all__ = [
     "create_formation_view",
     "create_dialogue_stream",
     "create_handoff_animation",
+    # Synergy (Wave 2: Brain integration)
+    "emit_coalition_formed",
+    "emit_task_complete",
+    "query_relevant_context",
+    "query_context_for_coalition",
+    "SynergyAwareForge",
 ]

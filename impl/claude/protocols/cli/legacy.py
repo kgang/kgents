@@ -47,11 +47,9 @@ LEGACY_COMMANDS: dict[str, str] = {
     "memory field": "self.memory.field",
     "memory recall": "self.memory.recall",
     # Brain / Crown Jewel
-    "brain": "self.memory.manifest",
-    "brain capture": "self.memory.capture",
-    "brain ghost": "self.memory.ghost.surface",
-    "brain map": "self.memory.cartography.manifest",
-    "brain status": "self.memory.manifest",
+    # NOTE: "brain" is now a first-class command in COMMAND_REGISTRY
+    # Use `kg brain capture|ghost|map|status` directly
+    # Legacy entries removed to prevent routing conflict
     # Status
     "status": "self.status.manifest",
     "status full": "self.status.full",

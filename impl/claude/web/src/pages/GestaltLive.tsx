@@ -301,8 +301,8 @@ function InfraNode({ entity, isSelected, onClick, animationState, density }: Inf
 
       {/* Label on hover */}
       {(hovered || isSelected) && (
-        <Html center distanceFactor={10}>
-          <div className="bg-gray-900/95 backdrop-blur-sm px-2 py-1 rounded text-xs text-white whitespace-nowrap shadow-lg border border-gray-700">
+        <Html center distanceFactor={10} style={{ pointerEvents: 'none' }}>
+          <div className="bg-gray-900/95 backdrop-blur-sm px-2 py-1 rounded text-xs text-white whitespace-nowrap shadow-lg border border-gray-700 pointer-events-none">
             <div className="font-semibold">{entity.name}</div>
             <div className="text-gray-400">{entity.kind} • {entity.namespace || 'default'}</div>
           </div>
@@ -589,13 +589,45 @@ interface EntityDetailPanelProps {
   onClose: () => void;
   density: Density;
   isDrawer?: boolean;
+  topology?: InfraTopologyResponse | null;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
+  onEntitySelect?: (entity: InfraEntity) => void;
 }
 
-function EntityDetailPanel({ entity, onClose, density, isDrawer }: EntityDetailPanelProps) {
+function EntityDetailPanel({
+  entity,
+  onClose,
+  density,
+  isDrawer,
+  topology,
+  onRefresh,
+  isRefreshing,
+  onEntitySelect,
+}: EntityDetailPanelProps) {
   const config = INFRA_ENTITY_CONFIG[entity.kind as InfraEntityKind] || INFRA_ENTITY_CONFIG.custom;
   const gradeConfig = HEALTH_GRADE_CONFIG[entity.health_grade] || HEALTH_GRADE_CONFIG['?'];
   const isCompact = density === 'compact';
   const panelWidth = fromDensity(ENTITY_PANEL_WIDTH, density);
+
+  // Calculate connections for this entity
+  const connections = useMemo(() => {
+    if (!topology) return { incoming: [], outgoing: [] };
+
+    const entityMap = new Map(topology.entities.map((e) => [e.id, e]));
+
+    const incoming = topology.connections
+      .filter((c) => c.target_id === entity.id)
+      .map((c) => ({ connection: c, entity: entityMap.get(c.source_id) }))
+      .filter((c) => c.entity);
+
+    const outgoing = topology.connections
+      .filter((c) => c.source_id === entity.id)
+      .map((c) => ({ connection: c, entity: entityMap.get(c.target_id) }))
+      .filter((c) => c.entity);
+
+    return { incoming, outgoing };
+  }, [topology, entity.id]);
 
   return (
     <div
@@ -619,17 +651,33 @@ function EntityDetailPanel({ entity, onClose, density, isDrawer }: EntityDetailP
               {entity.namespace || 'default'} / {entity.kind}
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white text-xl p-1 -mr-1 -mt-1 rounded hover:bg-gray-700 transition-colors flex-shrink-0"
-            aria-label="Close panel"
-            style={{
-              minWidth: PHYSICAL_CONSTRAINTS.minTouchTarget,
-              minHeight: PHYSICAL_CONSTRAINTS.minTouchTarget,
-            }}
-          >
-            ×
-          </button>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {onRefresh && (
+              <button
+                onClick={onRefresh}
+                disabled={isRefreshing}
+                className="text-gray-400 hover:text-white p-1 rounded hover:bg-gray-700 transition-colors disabled:opacity-50"
+                aria-label="Refresh entity details"
+                style={{
+                  minWidth: PHYSICAL_CONSTRAINTS.minTouchTarget,
+                  minHeight: PHYSICAL_CONSTRAINTS.minTouchTarget,
+                }}
+              >
+                <span className={isRefreshing ? 'animate-spin inline-block' : ''}>🔄</span>
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-white text-xl p-1 rounded hover:bg-gray-700 transition-colors"
+              aria-label="Close panel"
+              style={{
+                minWidth: PHYSICAL_CONSTRAINTS.minTouchTarget,
+                minHeight: PHYSICAL_CONSTRAINTS.minTouchTarget,
+              }}
+            >
+              ×
+            </button>
+          </div>
         </div>
 
         {/* Status badges */}
@@ -704,7 +752,7 @@ function EntityDetailPanel({ entity, onClose, density, isDrawer }: EntityDetailP
 
         {/* Labels */}
         {Object.keys(entity.labels).length > 0 && (
-          <div>
+          <div className="mb-4">
             <h4 className="text-xs text-gray-400 mb-2">Labels</h4>
             <div className="flex flex-wrap gap-1">
               {Object.entries(entity.labels).slice(0, 6).map(([key, value]) => (
@@ -717,6 +765,93 @@ function EntityDetailPanel({ entity, onClose, density, isDrawer }: EntityDetailP
                 </span>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Connections - clickable to navigate */}
+        {(connections.incoming.length > 0 || connections.outgoing.length > 0) && (
+          <div className="mb-4">
+            <h4 className="text-xs text-gray-400 mb-2">Connections</h4>
+
+            {/* Incoming */}
+            {connections.incoming.length > 0 && (
+              <div className="mb-2">
+                <p className="text-[10px] text-gray-500 mb-1">← Incoming ({connections.incoming.length})</p>
+                <div className="space-y-1">
+                  {connections.incoming.slice(0, 5).map(({ connection, entity: connEntity }) => {
+                    const connConfig = INFRA_ENTITY_CONFIG[connEntity!.kind as InfraEntityKind] || INFRA_ENTITY_CONFIG.custom;
+                    return (
+                      <button
+                        key={connection.id}
+                        onClick={() => onEntitySelect?.(connEntity!)}
+                        className="w-full flex items-center gap-2 p-1.5 rounded bg-gray-700/30 hover:bg-gray-700/60 transition-colors text-left group"
+                        style={{
+                          minHeight: PHYSICAL_CONSTRAINTS.minTouchTarget,
+                        }}
+                      >
+                        <span className="text-sm">{connConfig.icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-white truncate group-hover:text-blue-300">
+                            {connEntity!.name}
+                          </p>
+                          <p className="text-[10px] text-gray-500">{connection.kind}</p>
+                        </div>
+                        <span className="text-gray-500 text-xs">→</span>
+                      </button>
+                    );
+                  })}
+                  {connections.incoming.length > 5 && (
+                    <p className="text-[10px] text-gray-500 pl-1">
+                      +{connections.incoming.length - 5} more
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Outgoing */}
+            {connections.outgoing.length > 0 && (
+              <div>
+                <p className="text-[10px] text-gray-500 mb-1">→ Outgoing ({connections.outgoing.length})</p>
+                <div className="space-y-1">
+                  {connections.outgoing.slice(0, 5).map(({ connection, entity: connEntity }) => {
+                    const connConfig = INFRA_ENTITY_CONFIG[connEntity!.kind as InfraEntityKind] || INFRA_ENTITY_CONFIG.custom;
+                    return (
+                      <button
+                        key={connection.id}
+                        onClick={() => onEntitySelect?.(connEntity!)}
+                        className="w-full flex items-center gap-2 p-1.5 rounded bg-gray-700/30 hover:bg-gray-700/60 transition-colors text-left group"
+                        style={{
+                          minHeight: PHYSICAL_CONSTRAINTS.minTouchTarget,
+                        }}
+                      >
+                        <span className="text-gray-500 text-xs">→</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-white truncate group-hover:text-blue-300">
+                            {connEntity!.name}
+                          </p>
+                          <p className="text-[10px] text-gray-500">{connection.kind}</p>
+                        </div>
+                        <span className="text-sm">{connConfig.icon}</span>
+                      </button>
+                    );
+                  })}
+                  {connections.outgoing.length > 5 && (
+                    <p className="text-[10px] text-gray-500 pl-1">
+                      +{connections.outgoing.length - 5} more
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Created timestamp */}
+        {entity.created_at && (
+          <div className="mb-4">
+            <h4 className="text-xs text-gray-400 mb-1">Created</h4>
+            <p className="text-xs text-gray-300">{formatRelativeTime(entity.created_at)}</p>
           </div>
         )}
 
@@ -848,6 +983,7 @@ export default function GestaltLive() {
   const [selectedEntity, setSelectedEntity] = useState<InfraEntity | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [entityRefreshing, setEntityRefreshing] = useState(false);
 
   // Panel state for mobile drawers
   const [panelState, setPanelState] = useState<PanelState>({
@@ -996,6 +1132,23 @@ export default function GestaltLive() {
     setSelectedEntity(null);
     setPanelState((s) => ({ ...s, details: false }));
   }, []);
+
+  // Refresh entity details from backend
+  const handleRefreshEntity = useCallback(async () => {
+    if (!selectedEntity) return;
+
+    setEntityRefreshing(true);
+    try {
+      const response = await infraApi.getEntity(selectedEntity.id);
+      // Update selected entity with fresh data
+      setSelectedEntity(response.data);
+    } catch (err) {
+      console.error('Failed to refresh entity:', err);
+      // Keep existing entity data on error
+    } finally {
+      setEntityRefreshing(false);
+    }
+  }, [selectedEntity]);
 
   // Combined error state
   const error = loadError || streamError;
@@ -1181,6 +1334,10 @@ export default function GestaltLive() {
               onClose={handleCloseDetails}
               density={density}
               isDrawer
+              topology={topology}
+              onRefresh={handleRefreshEntity}
+              isRefreshing={entityRefreshing}
+              onEntitySelect={handleEntitySelect}
             />
           )}
         </BottomDrawer>
@@ -1210,6 +1367,10 @@ export default function GestaltLive() {
       entity={selectedEntity}
       onClose={handleCloseDetails}
       density={density}
+      topology={topology}
+      onRefresh={handleRefreshEntity}
+      isRefreshing={entityRefreshing}
+      onEntitySelect={handleEntitySelect}
     />
   );
 

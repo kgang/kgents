@@ -235,14 +235,17 @@ def display_path_header(
 
 def _display_rich(info: PathInfo, verbose: bool) -> None:
     """Display path header with rich formatting."""
+    from rich.markup import escape
+
     console = _get_console()
 
     # Get context color
     color = CONTEXT_COLORS.get(info.context or "", "white")
 
-    # Build header text
+    # Build header text - escape special characters to prevent markup errors
+    escaped_path = escape(info.path)
     header = Text()
-    header.append(info.path, style=f"bold {color}")
+    header.append(escaped_path, style=f"bold {color}")
 
     # Build body
     body_parts = [f"Aspect: {info.aspect}"]
@@ -253,10 +256,10 @@ def _display_rich(info: PathInfo, verbose: bool) -> None:
 
     body = Text(" | ".join(body_parts), style="dim")
 
-    # Create panel
+    # Create panel - use Text object for title to avoid markup parsing
     panel = Panel(
         body,
-        title=str(header),
+        title=header,  # Pass Text object directly
         title_align="left",
         border_style=color,
         padding=(0, 1),
@@ -267,7 +270,7 @@ def _display_rich(info: PathInfo, verbose: bool) -> None:
     if _config.show_tip:
         tip = Text()
         tip.append("Tip: ", style="dim")
-        tip.append(f"kg {info.path}", style=f"bold {color}")
+        tip.append(f"kg {escaped_path}", style=f"bold {color}")
         tip.append(" --help", style="dim")
         console.print(tip)
         console.print()

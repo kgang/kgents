@@ -217,7 +217,14 @@ export function useInfraStream(
           // Ignore error messages
           if ('error' in infraEvent) return;
 
-          setEvents((prev) => [infraEvent, ...prev].slice(0, maxEvents));
+          setEvents((prev) => {
+            // Deduplicate by id to avoid React key warnings
+            const seen = new Set(prev.map((e) => e.id));
+            if (seen.has(infraEvent.id)) {
+              return prev; // Skip duplicate
+            }
+            return [infraEvent, ...prev].slice(0, maxEvents);
+          });
         } catch (e) {
           console.error('Failed to parse event:', e);
         }

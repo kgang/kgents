@@ -833,15 +833,19 @@ class TestComposedProjectionLaws:
 
     def test_long_chain_identity_law(self) -> None:
         """Long HStack chain satisfies identity law."""
+        from typing import cast
+
         from agents.i.reactive.projection import ExtendedTarget, verify_identity_law
+        from agents.i.reactive.widget import KgentsWidget
 
         widgets = [GlyphWidget(GlyphState(char=c)) for c in "ABCDEFGH"]
-        chain = widgets[0]
+        chain: ComposableWidget = widgets[0]
         for w in widgets[1:]:
             chain = chain >> w
 
-        assert verify_identity_law(chain, ExtendedTarget.CLI)
-        assert verify_identity_law(chain, ExtendedTarget.JSON)
+        # Cast needed because ComposableWidget protocol doesn't expose KgentsWidget
+        assert verify_identity_law(cast(KgentsWidget[None], chain), ExtendedTarget.CLI)
+        assert verify_identity_law(cast(KgentsWidget[None], chain), ExtendedTarget.JSON)
 
     def test_mixed_widget_composition_laws(self) -> None:
         """Mixed widget types in composition satisfy laws."""
